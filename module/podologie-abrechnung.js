@@ -50,7 +50,7 @@
 import { parseIcdList, matchIcdToDg, soleIcdForDg } from '../icd-dg-match.js?v=20260810e';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20260817';
 import { attachPatientSearch } from '../patient-suche.js?v=20260817';
-import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260902';
+import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260903';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260816';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { wireArztFeld } from './arzt-register.js?v=20260816';
@@ -59,9 +59,15 @@ import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=2026
 import { alsISODatum } from './datum.js?v=20260901';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
 // dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
-import { darf78040, darf78100, POD_EINGANGSBEFUNDUNG, POD_BEFUNDPAUSCHALE,
-         POD_ERSTBEFUNDUNG_GROSS }
-  from './eingangsbefundung-regel.js?v=20260903';
+import { darf78040, darf78100, darfErstbefundungNagel,
+         POD_EINGANGSBEFUNDUNG, POD_BEFUNDPAUSCHALE,
+         POD_ERSTBEFUNDUNG_GROSS, POD_ERSTBEFUNDUNGEN,
+         NAGEL_WERTE, nagelLabel }
+  from './eingangsbefundung-regel.js?v=20260904';
+// Seit 04.09.2026 gibt es EINEN Verordnungstopf (`prescriptions`). Diese Datei
+// behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
+import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, inTopf, statusInTopf }
+  from './verordnung-topf.js?v=20260904';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -170,7 +176,7 @@ const POD_HEILMITTEL_DGS  = ['DF', 'NF', 'QF'];  // UI1/UI2 haben keinen a/b/c-K
  * frisch migrierten Praxis in keiner Datenbank; dafür braucht es eine
  * quittierte Anamneseangabe am Patienten (eigene Aufgabe, Ops-Dashboard).
  *
- * @param {object} vord   Zeile aus `verordnungen` (braucht lead_id ODER patient_name)
+ * @param {object} vord   Zeile im podologischen Wortschatz (verordnung-topf.js), braucht lead_id ODER patient_name
  * @param {string} datum  geplanter Behandlungstag, `YYYY-MM-DD`
  * @returns {Promise<{erlaubt:boolean, grund:string, schonAm:?string, ersteAm:?string}>}
  */
@@ -179,9 +185,9 @@ const POD_HEILMITTEL_DGS  = ['DF', 'NF', 'QF'];  // UI1/UI2 haben keinen a/b/c-K
  * abgeschlossene. Die Grundlage jeder Frequenzregel (78040, 78100).
  *
  * Kein Standort-Zuschnitt: die Verordnung gehoert der Praxis, nicht der
- * Filiale (standort-zuschnitt.js) — und `verordnungen` fuehrt ohnehin kein
- * `business_id`. Die Sperren muessen praxisweit greifen, sonst umgeht ein
- * Standortwechsel sie.
+ * Filiale (standort-zuschnitt.js) — auch wenn die Zieltabelle seit der
+ * Zusammenlegung `business_id` fuehrt, bleibt diese Sperre praxisweit,
+ * sonst umgeht ein Standortwechsel sie.
  *
  * ⚠️ Der `patient_name`-Zweig ist ein reiner Zeichenkettenvergleich und
  * greift nur bei Verordnungen ohne `lead_id` (Altbestand). Zwei gleichnamige
@@ -190,14 +196,24 @@ const POD_HEILMITTEL_DGS  = ['DF', 'NF', 'QF'];  // UI1/UI2 haben keinen a/b/c-K
  * sofort — eine faelschlich DURCHGELASSENE Position faellt dagegen erst als
  * Absetzung auf, Monate spaeter.
  *
- * @param {object} vord  Zeile aus `verordnungen` (braucht lead_id ODER patient_name)
- * @returns {Promise<Array<{behandlungsdatum:string, hpnr_codes:?Array<string>}>>}
+ * Jede Zeile traegt zusaetzlich den `nagel` IHRER Verordnung — die
+ * Serienregel (§ 3b lit. a) braucht ihn, und ohne ihn hier waere eine dritte
+ * Rundreise noetig.
+ *
+ * @param {object} vord  Zeile im podologischen Wortschatz (verordnung-topf.js), braucht lead_id ODER patient_name
+ * @returns {Promise<Array<{behandlungsdatum:string, hpnr_codes:?Array<string>, nagel:?string}>>}
  */
 async function podPatientBehandlungen(vord) {
   if (!vord || !(vord.lead_id || vord.patient_name)) return [];
 
-  let q = ctx.supabase.from('verordnungen').select('id').eq('owner_id', ctx.getOwnerId());
-  q = vord.lead_id ? q.eq('lead_id', vord.lead_id) : q.eq('patient_name', vord.patient_name);
+  // `therapie_bereich` gehoert dazu, seit beide Verordnungstoepfe eine Tabelle
+  // sind: ohne ihn nimmt die `.in()`-Liste auch Physio-Verordnungen auf. Heute
+  // folgenlos (an denen haengt keine `podologie_behandlungen`-Zeile), aber eine
+  // einzige Fehlzuordnung wuerde diese Sperren still oeffnen.
+  let q = ctx.supabase.from(TOPF).select('id, nagel')
+    .eq('owner_id', ctx.getOwnerId())
+    .eq('therapie_bereich', 'podo');
+  q = vord.lead_id ? q.eq('patient_id', vord.lead_id) : q.eq('patient_name', vord.patient_name);
   const { data: allVords } = await q;
   if (!allVords?.length) return [];
 
@@ -205,11 +221,13 @@ async function podPatientBehandlungen(vord) {
   // ausgewertet, nicht per `.contains()` gefiltert, sonst braeuchte jede
   // Regel ihre eigene Rundreise.
   const { data: behs } = await ctx.supabase
-    .from('podologie_behandlungen').select('behandlungsdatum, hpnr_codes')
+    .from('podologie_behandlungen').select('verordnung_id, behandlungsdatum, hpnr_codes')
     .eq('owner_id', ctx.getOwnerId())
     .in('verordnung_id', allVords.map(v => v.id))
     .order('behandlungsdatum', { ascending: true });
-  return behs || [];
+
+  const nagelJeVord = new Map(allVords.map(v => [v.id, v.nagel || null]));
+  return (behs || []).map(b => ({ ...b, nagel: nagelJeVord.get(b.verordnung_id) || null }));
 }
 
 async function podEingangsbefundungLage(vord, datum) {
@@ -231,7 +249,7 @@ async function podEingangsbefundungLage(vord, datum) {
  * Podologe darf jedes Kaestchen aendern: geplant und tatsaechlich erbracht sind
  * nicht dasselbe.
  *
- * @param {object} vord   Zeile aus `verordnungen`
+ * @param {object} vord   Zeile im podologischen Wortschatz (verordnung-topf.js)
  * @param {string} datum  `YYYY-MM-DD`
  * @returns {Promise<Set<string>>} HPNR der geplanten Leistungen
  */
@@ -260,7 +278,7 @@ async function podGeplanteHpnr(vord, datum) {
  * Darf am `datum` noch die Erstbefundung gross (78100) gesetzt werden?
  * Regel und Fundstelle in `eingangsbefundung-regel.js` → `darf78100`.
  *
- * @param {object} vord   Zeile aus `verordnungen`
+ * @param {object} vord   Zeile im podologischen Wortschatz (verordnung-topf.js)
  * @param {string} datum  geplanter Behandlungstag, `YYYY-MM-DD`
  * @returns {Promise<{erlaubt:boolean, grund:string, schonAm:?string}>}
  */
@@ -268,6 +286,29 @@ async function podErstbefundungGrossLage(vord, datum) {
   const behs = await podPatientBehandlungen(vord);
   if (!behs.length) return { erlaubt: true, grund: '', schonAm: null };
   return darf78100(behs, datum);
+}
+
+/**
+ * Darf am `datum` in DIESER Nagelspangen-Serie noch eine Erstbefundung
+ * (78110 oder 78100) abgerechnet werden?
+ *
+ * Die zweite, von `podErstbefundungGrossLage` unabhaengige Grenze: § 3b lit. a
+ * erlaubt die Erstbefundung einmalig zu Beginn einer Serie, und die Serie
+ * gehoert zu EINEM Nagel — ueber Verordnungsgrenzen hinweg. Deshalb wird nicht
+ * nach `verordnung_id` gefiltert, sondern nach dem Nagel: alle Behandlungen
+ * des Patienten, deren Verordnung denselben Nagel traegt.
+ *
+ * Regel und Fundstelle in `eingangsbefundung-regel.js` → `darfErstbefundungNagel`.
+ *
+ * @param {object} vord   Zeile im podologischen Wortschatz (verordnung-topf.js)
+ * @param {string} datum  geplanter Behandlungstag, `YYYY-MM-DD`
+ * @returns {Promise<{erlaubt:boolean, grund:string, schonAm:?string, schonCode:?string, serieSeit:?string}>}
+ */
+async function podErstbefundungSerieLage(vord, datum) {
+  const nagel = vord?.nagel || '';
+  if (!nagel) return darfErstbefundungNagel([], '', datum);
+  const behs = await podPatientBehandlungen(vord);
+  return darfErstbefundungNagel(behs.filter(b => b.nagel === nagel), nagel, datum);
 }
 
 /**
@@ -407,28 +448,43 @@ async function loadPodologieBilling() {
   }
 
   const ownerId = ctx.getOwnerId();
-  const { data: vords, error } = await ctx.supabase
-    .from('verordnungen')
-    // leads(patientennummer) nur für die Nummer neben dem Namen — `belegnummer`
-    // ist bis zur Abrechnung leer, sie muss zusammengesetzt werden.
-    // leads(business_id) traegt den Standort, siehe standort-zuschnitt.js.
-    .select('*, leads!lead_id(patientennummer, business_id)')
+  // Seit 04.09.2026 EIN Topf: die Arbeitsliste liest `prescriptions`. Damit
+  // erscheinen hier endlich auch die podologischen Rezepte, die ueber die
+  // Muster-13-Maske oder den KI-Scan hereinkamen — live waren das neun Stueck,
+  // die bis dahin nie abgerechnet werden konnten, weil die §-302-Kette sie
+  // schlicht nicht sah.
+  //
+  // Der Statusfilter steht in `verordnung-topf.js` (`aktiv` ist dort NULL, und
+  // `.in()` trifft NULL nicht — deshalb die `or`-Form).
+  //
+  // ⚠️ SPIEGEL von `VERORDNUNG_EINREICHBAR` in
+  // `api-backend/billing/utils/einreichbar.js`. Dieselbe Liste, zwei Deploys
+  // (Vercel hier, Docker dort) — ein gemeinsamer Import ginge nur ueber einen
+  // Build-Schritt, den es nicht gibt. Wer eine der beiden aendert, aendert
+  // BEIDE: sonst zeigt die Arbeitsliste eine Verordnung an, die das Backend
+  // beim Abrechnen mit 409 zurueckweist. (fonksiyon-ustasi, 28.08.2026)
+  // ⚠️ `therapie_bereich = 'podo'` ist Pflicht, nicht Kosmetik: ohne diesen
+  // Filter zeigt diese Arbeitsliste JEDE abrechnungsbereite Verordnung des
+  // Mandanten — bei einer interdisziplinären Praxis (Podologie + Physio unter
+  // demselben owner_id) auch die physiotherapeutischen. Live bestaetigt: eine
+  // Zeile ohne therapie_bereich trug „Krankengymnastik am Gerät" unter einem
+  // Podologie-Mandanten — eindeutig kein Podologie-Fall, gehoert nicht hierher.
+  const { data: rohZeilen, error } = await ctx.supabase
+    .from(TOPF)
+    .select(PODO_SELECT)
     .eq('owner_id', ownerId)
-    // Abgesetzte gehören in die Arbeitsliste — sonst bleibt ausgefallenes Geld unsichtbar.
-    //
-    // ⚠️ SPIEGEL von `VERORDNUNG_EINREICHBAR` in
-    // `api-backend/billing/utils/einreichbar.js`. Dieselbe Liste, zwei Deploys
-    // (Vercel hier, Docker dort) — ein gemeinsamer Import ginge nur ueber einen
-    // Build-Schritt, den es nicht gibt. Wer eine der beiden aendert, aendert
-    // BEIDE: sonst zeigt die Arbeitsliste eine Verordnung an, die das Backend
-    // beim Abrechnen mit 409 zurueckweist. (fonksiyon-ustasi, 28.08.2026)
-    .in('status', ['aktiv', 'abrechenbar', 'abgesetzt', 'teilabsetzung'])
+    .eq('therapie_bereich', 'podo')
+    .or(PODO_ARBEITSLISTE_OR)
     .order('created_at', { ascending: false });
 
   if (error) { el.innerHTML = `<p style="color:var(--danger)">Fehler: ${ctx.escapeHtml(error.message)}</p>`; return; }
+
+  // Ab hier spricht diese Datei weiter podologisch (`lead_id`,
+  // `behandlungseinheiten`, `status='aktiv'`) — uebersetzt wird nur hier.
+  const vords = (rohZeilen || []).map(ausTopf);
   // Standort-Zuschnitt: Regel und Begruendung stehen in standort-zuschnitt.js,
-  // dort liegt sie neben ihrem Test. Kurz: `verordnungen` hat keine Spalte
-  // `business_id`, deshalb kein `bizScope`; Vorgabe ist praxisweit, gefiltert
+  // dort liegt sie neben ihrem Test. Kurz: die podologische Verordnung ist
+  // praxisweit, nicht standortgebunden — deshalb kein `bizScope` hier; gefiltert
   // wird nur auf ausdruecklichen Wunsch des Inhabers, und Zeilen ohne
   // Standortzuordnung verschwinden nie.
   const zuschnitt = standortZuschnitt(vords || [], ctx.aktiverStandort?.());
@@ -568,9 +624,18 @@ async function loadPodologieBilling() {
             }).join('')}
           </div>
         </div>
+        <!-- Lokalisation: seit dem 04.09.2026 steht der Nagel an der
+             VERORDNUNG (§ 3b Satz 3-5) und wird hier nur noch angezeigt. Die
+             Spalte podologie_behandlungen.lokalisation wird weiter
+             mitgeschrieben, weil Verordnungsdetail und Rechnungsbruecke sie
+             lesen. Das Freitextfeld bleibt nur fuer Verordnungen aus der Zeit
+             davor, die noch keinen Nagel tragen — sonst laesst sich so eine
+             Behandlung gar nicht mehr speichern. -->
         <div id="podLokalisationWrap" style="display:${isUI?'block':'none'};">
-          <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_lokalisation')} <span style="color:#ef4444;">*</span></label>
-          <input type="text" id="podLokalisation" placeholder="z. B. Zehe II rechts" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+          <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_lokalisation')} ${selectedVord?.nagel ? '' : '<span style="color:#ef4444;">*</span>'}</label>
+          ${selectedVord?.nagel
+            ? `<div style="padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">${ctx.escapeHtml(nagelLabel(selectedVord.nagel))}<span style="color:var(--text-muted);font-size:12px;"> — aus der Verordnung</span></div>`
+            : `<input type="text" id="podLokalisation" placeholder="z. B. Zehe II rechts" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">`}
         </div>
         <div>
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_notizen')}</label>
@@ -582,6 +647,9 @@ async function loadPodologieBilling() {
     </div>` : `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
 
   const editVord = _podState.editVordId ? _podState.verordnungen.find(v => v.id === _podState.editVordId) : null;
+  // Beim Bearbeiten steht die Diagnosegruppe schon fest — dann muss die
+  // Nagelauswahl sofort sichtbar sein und nicht erst nach einem change-Event.
+  const editIstUI = ['UI1', 'UI2'].includes(podDiagRoot(editVord?.diagnosegruppe || ''));
 
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
@@ -676,6 +744,21 @@ async function loadPodologieBilling() {
                 <option value="4">Grad 4 – Begrenzte Gangrän</option>
                 <option value="5">Grad 5 – Ausgedehnte Gangrän</option>
               </select>
+            </div>
+            <!-- Nagelspange: der behandelte Zehennagel gehoert an die VERORDNUNG,
+                 nicht an die einzelne Behandlung. § 3b Satz 3-4 der
+                 Aenderungsvereinbarung vom 16.06.2025: „Die Nagelspangen-
+                 behandlung eines Zehennagels (Lokalisation) stellt einen
+                 eigenen Verordnungsfall dar. Eine Verordnung bezieht sich
+                 jeweils auf die Behandlung eines Zehennagels." Nur so laesst
+                 sich die Serie ueber mehrere Verordnungen hinweg erkennen. -->
+            <div id="podNagelWrap" style="display:${editIstUI ? 'block' : 'none'};">
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Behandelter Zehennagel <span style="color:#ef4444;">*</span></label>
+              <select id="podNewNagel" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+                <option value="">— Nagel wählen —</option>
+                ${NAGEL_WERTE.map(w => `<option value="${ctx.escapeHtml(w)}">${ctx.escapeHtml(nagelLabel(w))}</option>`).join('')}
+              </select>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Eine Verordnung = ein Nagel. Der Nagel hält die Behandlungsserie über mehrere Verordnungen zusammen.</div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
               <div>
@@ -794,6 +877,20 @@ async function loadPodologieBilling() {
 
     const diagRoot = podDiagRoot(diagVal);
 
+    // Der Nagel ist bei UI1/UI2 Pflichtangabe (Anlage 3 o2). Er entscheidet
+    // spaeter, ob die Erstbefundung in dieser Serie schon abgerechnet wurde —
+    // fehlt er, laeuft die Sperre ins Leere und niemand merkt es.
+    const nagelRaw = document.getElementById('podNewNagel')?.value || '';
+    const istNagelzweig = diagRoot === 'UI1' || diagRoot === 'UI2';
+    const nagel = istNagelzweig ? nagelRaw : null;
+    if (istGkv && istNagelzweig && !nagel) {
+      errEl.textContent = 'Bitte den behandelten Zehennagel wählen — eine '
+        + 'Nagelspangen-Verordnung bezieht sich immer auf genau einen Nagel '
+        + '(§ 3b Satz 3-4, Änderungsvereinbarung vom 16.06.2025).';
+      errEl.style.display = 'block';
+      return;
+    }
+
     // ICD-10: read from form input (user may have edited it)
     const icd10 = icd10Raw.split(',').map(s => s.trim()).filter(Boolean);
 
@@ -866,8 +963,7 @@ async function loadPodologieBilling() {
       owner_id: ctx.getOwnerId(),
       patient_name: patient,
       ausstellungsdatum: datum,
-      // podDiagRoot('') liefert einen Leerstring — der würde am Fremdschlüssel
-      // verordnungen_diagnosegruppe_fkey scheitern. Leer heißt NULL.
+      // podDiagRoot('') liefert einen Leerstring — leer heißt NULL.
       diagnosegruppe: diagRoot || null,
       // Buchstabe a/b/c wie im übrigen System (prescriptions führt ihn ebenso).
       // Bisher stand hier "DF-a" — die Diagnosegruppe steht schon in der Spalte
@@ -883,6 +979,9 @@ async function loadPodologieBilling() {
       beginn_spaetestens,
       heilmittel_items: heilmittelItems,
       wagner_grad: wagnerGrad,
+      // Ausserhalb des Nagelzweigs hart auf null: eine umgewidmete Verordnung
+      // soll ihren alten Nagel nicht behalten.
+      nagel,
       lead_id: leadId,
       versichertennummer: vsnr,
       arzt_id: arztId,
@@ -895,19 +994,21 @@ async function loadPodologieBilling() {
 
     let _saveError;
     if (_podState.editVordId) {
-      // UPDATE: status-Feld NICHT überschreiben — ein 'abrechenbar'-Datensatz
-      // darf nicht auf 'aktiv' zurückfallen (Retaxation-Risiko).
+      // UPDATE: status-Feld NICHT mitgeben — ein 'abrechenbar'-Datensatz darf
+      // nicht auf 'aktiv' zurückfallen (Retaxation-Risiko). `inTopf()` schreibt
+      // `abrechnung_status` nur, wenn `status` im Objekt steht — hier steht es
+      // absichtlich nicht drin.
       const { error: ue } = await ctx.supabase
-        .from('verordnungen')
-        .update(_payload)
+        .from(TOPF)
+        .update(inTopf(_payload))
         .eq('id', _podState.editVordId)
         .eq('owner_id', ctx.getOwnerId());
       _saveError = ue;
     } else {
-      // INSERT: 'aktiv' als Startstatus
+      // INSERT: 'aktiv' als Startstatus → abrechnung_status bleibt NULL.
       const { error: ie } = await ctx.supabase
-        .from('verordnungen')
-        .insert({ ..._payload, status: 'aktiv' });
+        .from(TOPF)
+        .insert({ ...inTopf(_payload), status: 'confirmed' });
       _saveError = ie;
     }
 
@@ -1105,6 +1206,14 @@ async function loadPodologieBilling() {
     const wagnerWrap = document.getElementById('podWagnerWrap');
     if (wagnerWrap) wagnerWrap.style.display = diagRootVal === 'DF' ? 'block' : 'none';
 
+    // Nagel nur im Nagelzweig. Beim Wechsel WEG von UI1/UI2 die Auswahl
+    // leeren — sonst schleppt eine umgewidmete Verordnung einen Nagel mit,
+    // den sie gar nicht mehr hat.
+    const nagelWrap = document.getElementById('podNagelWrap');
+    const istUIx = diagRootVal === 'UI1' || diagRootVal === 'UI2';
+    if (nagelWrap) nagelWrap.style.display = istUIx ? 'block' : 'none';
+    if (!istUIx) { const n = document.getElementById('podNewNagel'); if (n) n.value = ''; }
+
     // Untergruppe der Diagnosegruppe (DF-a/b/c) ist derselbe Buchstabe wie das
     // Heilmittel — Auswahlfeld nachziehen, damit beide nicht auseinanderlaufen.
     const hmSel = document.getElementById('podNewHeilmittel');
@@ -1177,6 +1286,7 @@ async function loadPodologieBilling() {
     _set('podNewVsnr',     v.versichertennummer || '');
     _set('podNewAusstelldatum', v.ausstellungsdatum || '');
     _set('podNewWagner',   v.wagner_grad != null ? String(v.wagner_grad) : '');
+    _set('podNewNagel',    v.nagel || '');
     _set('podNewEinheiten', v.behandlungseinheiten || '');
     _set('podNewFrequenz',  v.therapiefrequenz || '');
     _chk('podNewDringend',  v.dringend);
@@ -1321,7 +1431,9 @@ async function loadPodologieBilling() {
   document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {
     const datum   = document.getElementById('podBehDatum').value;
     const checks  = [...document.querySelectorAll('.pod-hpnr-cb:checked')].map(cb => cb.value);
-    const lokal   = (document.getElementById('podLokalisation')?.value || '').trim();
+    // Der Nagel der Verordnung hat Vorrang vor dem Freitextfeld; das Feld
+    // existiert nur noch bei Verordnungen ohne Nagel (Altbestand).
+    const lokalFrei = (document.getElementById('podLokalisation')?.value || '').trim();
     const notiz   = document.getElementById('podBehNotizen').value.trim();
     const errEl   = document.getElementById('podBehError');
 
@@ -1335,6 +1447,9 @@ async function loadPodologieBilling() {
     const isUIx = dRoot === 'UI1' || dRoot === 'UI2';
     const icd10 = vord?.icd10 || [];
     const uiRule = (_dgIcdRules || {})[dRoot];
+    // Der Nagel aus der Verordnung ist die Lokalisation. Nur wo er fehlt
+    // (Verordnung von vor dem 04.09.2026), zaehlt noch der Freitext.
+    const lokal = vord?.nagel || lokalFrei;
 
     // Validasyon
     let err = '';
@@ -1397,6 +1512,26 @@ async function loadPodologieBilling() {
       }
     }
 
+    // Zweite, unabhaengige Grenze: die Erstbefundung — gross ODER klein —
+    // gehoert einmalig an den Anfang einer Nagelspangen-Serie, und die Serie
+    // haengt am Nagel, nicht an der Verordnung (§ 3b lit. a). Eine Folge-
+    // verordnung fuer denselben Nagel setzt sie also NICHT zurueck; erst der
+    // Behandlungsabschluss 78520 beginnt eine neue Serie.
+    if (checks.some(c => POD_ERSTBEFUNDUNGEN.includes(c))) {
+      const lage = await podErstbefundungSerieLage(vord, datum);
+      if (!lage.erlaubt) {
+        errEl.textContent = `Für ${nagelLabel(vord?.nagel)} wurde am `
+          + `${new Date(lage.schonAm).toLocaleDateString('de-DE')} bereits eine `
+          + `Erstbefundung (${lage.schonCode}) abgerechnet. Sie ist einmalig zu Beginn `
+          + `einer Nagelspangen-Behandlungsserie abrechenbar und gilt über mehrere `
+          + `Verordnungen hinweg (§ 3b lit. a, Änderungsvereinbarung vom 16.06.2025). `
+          + `Erst nach dem Behandlungsabschluss (78520) beginnt an diesem Nagel eine `
+          + `neue Serie.`;
+        errEl.style.display = 'block';
+        return;
+      }
+    }
+
     // beginn_spaetestens check: warn if first treatment is after deadline
     if (vord && !vord.behandlungsstart && datum) {
       let deadline = null;
@@ -1439,11 +1574,12 @@ async function loadPodologieBilling() {
         .select('*', { count: 'exact', head: true })
         .eq('verordnung_id', _podState.selectedVordId);
       if (count != null && count >= vord.behandlungseinheiten) {
-        await ctx.supabase.from('verordnungen')
-          .update({ status: 'abrechenbar' })
-          // Nur aus 'aktiv' heraus: sonst holt eine nachgetragene Behandlung eine
-          // bereits eingereichte oder stornierte Verordnung zurück in die Abrechnung.
-          .eq('id', _podState.selectedVordId).eq('status', 'aktiv');
+        await ctx.supabase.from(TOPF)
+          .update({ abrechnung_status: statusInTopf('abrechenbar') })
+          // Nur aus 'aktiv' (= abrechnung_status IS NULL) heraus: sonst holt
+          // eine nachgetragene Behandlung eine bereits eingereichte oder
+          // stornierte Verordnung zurück in die Abrechnung.
+          .eq('id', _podState.selectedVordId).is('abrechnung_status', null);
         ctx.showToast('Alle Einheiten aufgebraucht — Verordnung bereit zur Abrechnung ✓', 'info');
       } else {
         ctx.showToast('Behandlung gespeichert ✓');

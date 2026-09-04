@@ -43,15 +43,12 @@
  * dieselbe Zusammenführung steht.
  */
 
-import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260902';
-import { statusBadgeGross } from './abrechnungsstatus.js?v=20260902';
-import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260902';
+import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260903';
+import { statusBadgeGross, bereichBadge } from './abrechnungsstatus.js?v=20260903';
+import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260903';
 import { on } from './signal.js?v=20260813';
 
 const SPALTEN = 7;
-
-const QUELLE_LABEL = { physio: 'Heilmittel', podologie: 'Podologie' };
-const QUELLE_FARBE = { physio: '#7c3aed', podologie: '#15803d' };
 
 /**
  * Die aktuell aufgeschlagene Verordnung. Modulweit, weil es genau EINE untere
@@ -125,7 +122,6 @@ export async function verordnungenListeLaden(ctx) {
 
 function zeileHtml(v, esc) {
   const datum = v.datum ? new Date(v.datum).toLocaleDateString('de-DE') : '—';
-  const farbe = QUELLE_FARBE[v.quelle] || 'var(--text-muted)';
   const gewaehlt = _auswahl && _auswahl.id === v.id && _auswahl.quelle === v.quelle;
 
   // Ohne Belegnummer bleibt die Zelle leer statt „—": eine Verordnung ohne
@@ -146,7 +142,7 @@ function zeileHtml(v, esc) {
     <td style="color:var(--text-main);">${esc(v.vorname || '—')}</td>
     <td style="white-space:nowrap;">${datum}</td>
     <td style="white-space:nowrap;">${nummer}</td>
-    <td><span style="font-size:11px;font-weight:700;color:${farbe};text-transform:uppercase;letter-spacing:.04em;">${QUELLE_LABEL[v.quelle] || ''}</span></td>
+    <td>${bereichBadge(v.quelle)}</td>
     <td style="text-align:center;white-space:nowrap;color:var(--text-muted);">${zaehler}</td>
     <td>${statusBadgeGross(v.quelle, v.status)}</td>
   </tr>`;

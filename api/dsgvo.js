@@ -110,7 +110,9 @@ const USER_TABLES = [
   // Fachrichtung, die gerade zuerst fertiggestellt wird, und auf der
   // vollständigen Patientenakte (Verordnungen, Behandlungen, Fußbefunde).
   // Eine Art.-15-Auskunft ohne diese Tabellen war schlicht unvollständig.
-  { table: 'verordnungen',                 filter: 'owner_id'  },
+  // `verordnungen` stand hier bis 04.09.2026 — Zusammenlegung der zwei
+  // Verordnungstöpfe: die podologischen Zeilen leben jetzt in `prescriptions`
+  // (oben bereits gelistet), die alte Tabelle wurde gedroppt.
   { table: 'podologie_behandlungen',       filter: 'owner_id'  },
   { table: 'fußstatus',                    filter: 'owner_id'  },
   { table: 'pat_fussbefund',               filter: 'owner_id'  },
@@ -218,11 +220,17 @@ const ANONYMIZE_TABLES = [
 //      am Ende dieser Kette für jede echte Praxis fehlgeschlagen. Der Endpunkt
 //      meldete trotzdem `success: true`. Das ist der ernsteste Teil des Befunds.
 const DELETE_TABLES = [
-  // Patientennahe Fachdaten zuerst: `verordnungen`, `podologie_behandlungen`,
-  // `fußstatus`, `messreihen` und `booking_requests` zeigen mit NO ACTION auf
-  // `profiles` und blockieren sonst das Löschen des Profils.
+  // Patientennahe Fachdaten zuerst: `podologie_behandlungen`, `fußstatus`,
+  // `messreihen` und `booking_requests` zeigen mit NO ACTION auf `profiles`
+  // und blockieren sonst das Löschen des Profils.
+  //
+  // `verordnungen` stand hier bis 04.09.2026 — Zusammenlegung der zwei
+  // Verordnungstöpfe: `podologie_behandlungen.verordnung_id` zeigt seit dem
+  // auf `prescriptions` (weiter unten in dieser Liste, Zeile mit
+  // 'prescriptions'), die alte Tabelle wurde gedroppt. Reihenfolge bleibt
+  // trotzdem richtig: podologie_behandlungen muss vor prescriptions weg.
   'prescription_documents', 'mahnungen', 'ausfallrechnungen',
-  'podologie_behandlungen', 'verordnungen',
+  'podologie_behandlungen',
   'messreihen', 'pat_fussbefund', 'fußstatus',
   'warteliste', 'booking_requests',
 

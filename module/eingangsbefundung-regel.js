@@ -297,11 +297,12 @@ export function befundungFuerLeistung({
  * Mal ankreuzen, und die Kasse setzte es ab.
  *
  * ⚠️ Die zweite Grenze aus § 3b lit. a — Erstbefundung einmalig zu Beginn
- * einer Nagelspangen-Serie, und eine Serie gehoert zu EINEM Nagel und kann
- * mehrere Verordnungen umfassen — ist hier NICHT geprueft. Dafuer muesste die
- * Behandlung wissen, zu welcher Serie sie gehoert; `lokalisation` ist ein
- * freies Textfeld und traegt das nicht verlaesslich. Bewusst offen gelassen:
- * lieber eine Regel, die stimmt, als zwei, von denen eine raet.
+ * einer Nagelspangen-Serie, je Nagel und ueber Verordnungen hinweg — steht
+ * NICHT hier, sondern in `darfErstbefundungNagel()` weiter unten. Sie war bis
+ * zum 04.09.2026 offen, weil die Behandlung nicht wusste, zu welcher Serie sie
+ * gehoert; seither traegt die Verordnung den Nagel (`prescriptions.nagel`).
+ * Beide Grenzen gelten nebeneinander und werden getrennt geprueft: diese hier
+ * nur fuer 78100, jene fuer 78100 und 78110.
  *
  * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>}>} behandlungen
  *        alle `podologie_behandlungen` des Patienten, ueber alle Verordnungen
@@ -322,4 +323,147 @@ export function darf78100(behandlungen, datum) {
   return schon
     ? { erlaubt: false, grund: 'kalenderjahr_verbraucht', schonAm: schon.behandlungsdatum }
     : { erlaubt: true, grund: '', schonAm: null };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Die Nagelspangen-Serie (Ops-Aufgabe 245, 04.09.2026)
+//
+// § 3b lit. a) der Aenderungsvereinbarung vom 16.06.2025 (gilt fuer ab dem
+// 01.10.2025 verordnete Nagelspangenbehandlungen):
+//
+//   „Die Leistung nach Anlage 1c Teil 2 Ziffer I.1 (Erstbefundung) kann
+//    EINMALIG ZU BEGINN EINER NAGELSPANGENBEHANDLUNGSSERIE erfolgen. Eine
+//    Behandlungsserie bezieht sich stets auf EINEN zu behandelnden Nagel und
+//    KANN MEHRERE VERORDNUNGEN UMFASSEN."
+//
+// Zwei Saetze, zwei Folgen:
+//  1. Die Sperre laeuft NICHT je Verordnung. Eine Folgeverordnung fuer
+//     denselben Nagel setzt die Erstbefundung nicht zurueck.
+//  2. Zusammengehalten wird die Serie allein vom NAGEL. Deshalb steht der
+//     Nagel seit dem 04.09.2026 als `prescriptions.nagel` an der Verordnung
+//     und nicht mehr als Freitext an der einzelnen Behandlung — § 3b Satz 3-4
+//     sagt ausdruecklich, dass ein Zehennagel ein eigener Verordnungsfall ist
+//     und eine Verordnung sich auf EINEN Nagel bezieht.
+//
+// Wo die Serie endet, sagt der Vertrag nicht als Datum, sondern als Leistung:
+// 78520 „Behandlungsabschluss / Entfernung der Nagelkorrekturspange". Danach
+// beginnt am selben Nagel eine neue Serie und damit eine neue Erstbefundung.
+// Solange kein 78520 steht, laeuft die Serie weiter — auch ueber Jahre.
+//
+// ⚠️ Nicht verwechseln mit `darf78100`: das ist die ZWEITE, unabhaengige
+// Grenze (78100 „gross" hoechstens einmal je Patient und Kalenderjahr). Beide
+// gelten nebeneinander; die Serie sperrt auch die kleine 78110, das
+// Kalenderjahr sperrt nur die grosse 78100.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** HPNR des Behandlungsabschlusses — sie beendet die Serie an diesem Nagel. */
+export const POD_NAGEL_ABSCHLUSS = '78520';
+
+/** Beide Formen der Erstbefundung. Die Serienregel kennt keinen Unterschied. */
+export const POD_ERSTBEFUNDUNGEN = [POD_ERSTBEFUNDUNG_GROSS, POD_ERSTBEFUNDUNG_KLEIN];
+
+/**
+ * Die zehn zulaessigen Nagelwerte, Schreibweise aus § 3b Satz 5:
+ * „unter Verwendung des Kuerzels ‚U' fuer Unguis, der Ziffern 1 bis 5 und der
+ * Seite … (z. B. U1 links, U2 rechts)".
+ *
+ * ⚠️ SPIEGEL des CHECK `prescriptions_nagel_check`. Wer hier etwas hinzufuegt,
+ * ohne die Datenbank zu aendern, bekommt beim Speichern einen 400er.
+ */
+export const NAGEL_WERTE = Object.freeze([
+  'U1 links', 'U2 links', 'U3 links', 'U4 links', 'U5 links',
+  'U1 rechts', 'U2 rechts', 'U3 rechts', 'U4 rechts', 'U5 rechts',
+]);
+
+/** Klartext fuer die Oberflaeche — „U1 links" → „Grosszehe links (U1)". */
+const ZEHENNAMEN = ['', 'Großzehe', '2. Zehe', '3. Zehe', '4. Zehe', 'Kleinzehe'];
+
+/**
+ * Lesbare Form eines Nagelwerts. Unbekannte Eingabe kommt unveraendert
+ * zurueck — im Zweifel lieber der Rohwert als ein leeres Feld.
+ *
+ * @param {?string} nagel  z. B. `'U1 links'`
+ * @returns {string}       z. B. `'Großzehe links (U1)'`
+ */
+export function nagelLabel(nagel) {
+  const roh = String(nagel || '').trim();
+  const m = roh.match(/^U([1-5])\s+(links|rechts)$/);
+  if (!m) return roh;
+  return `${ZEHENNAMEN[Number(m[1])]} ${m[2]} (U${m[1]})`;
+}
+
+/**
+ * Darf am `datum` fuer diesen Nagel eine Erstbefundung (78110/78100) auf die
+ * Rechnung?
+ *
+ * Reine Entscheidung, keine Abfrage: der Aufrufer reicht die Behandlungen
+ * DIESES Nagels herein — also alle Zeilen aus `podologie_behandlungen`, deren
+ * Verordnung denselben `prescriptions.nagel` traegt, ueber alle Verordnungen
+ * des Patienten hinweg.
+ *
+ * Die laufende Serie wird von hinten aufgezaeumt: der letzte Abschluss (78520)
+ * VOR dem geplanten Tag ist die untere Grenze, der naechste Abschluss ab dem
+ * geplanten Tag die obere. Steht in diesem Fenster schon eine Erstbefundung,
+ * ist sie verbraucht — egal an welcher Verordnung sie haengt.
+ *
+ * Das Fenster hat eine obere Grenze, damit ein NACHTRAG nicht faelschlich
+ * durchgeht: wer eine Behandlung vom letzten Monat nachtraegt, deren Serie
+ * inzwischen abgeschlossen ist, gehoert trotzdem in die alte Serie.
+ *
+ * Ohne bekannten Nagel wird NICHT gesperrt. Eine Sperre, die raet, kostet eine
+ * zu Recht erbrachte Leistung; die Luecke faellt spaeter als Absetzung auf.
+ * Beides ist teuer — aber nur die falsche Sperre trifft den Podologen sofort
+ * und ohne dass er etwas dagegen tun koennte.
+ *
+ * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>}>} behandlungen
+ *        Behandlungen DIESES Nagels, Reihenfolge egal
+ * @param {?string} nagel  Nagel der Verordnung (`'U1 links'` …) oder leer
+ * @param {string}  datum  geplanter Behandlungstag, `YYYY-MM-DD`
+ * @returns {{erlaubt:boolean, grund:string, schonAm:?string, schonCode:?string,
+ *           serieSeit:?string}}
+ *   `grund`: `''` erlaubt · `'nagel_unbekannt'` erlaubt, aber ungeprueft ·
+ *   `'serie_hat_erstbefundung'` gesperrt. `serieSeit` = Tag des Abschlusses,
+ *   mit dem die laufende Serie beginnt (`null` = erste Serie an diesem Nagel).
+ */
+export function darfErstbefundungNagel(behandlungen, nagel, datum) {
+  const frei = (grund = '') => ({
+    erlaubt: true, grund, schonAm: null, schonCode: null, serieSeit: null,
+  });
+
+  if (!String(nagel || '').trim()) return frei('nagel_unbekannt');
+  const tag = String(datum || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(tag)) return frei('kein_datum');
+
+  const behs = (behandlungen || [])
+    .filter(b => b && b.behandlungsdatum)
+    .map(b => ({ am: String(b.behandlungsdatum), codes: b.hpnr_codes || [] }))
+    .sort((a, b) => a.am.localeCompare(b.am));
+  if (!behs.length) return frei();
+
+  const abschluesse = behs.filter(b => b.codes.includes(POD_NAGEL_ABSCHLUSS));
+
+  // Untere Grenze: der letzte Abschluss VOR dem geplanten Tag. Ein Abschluss
+  // am selben Tag beendet die Serie erst nach der Behandlung dieses Tages —
+  // deshalb streng frueher.
+  const davor = abschluesse.filter(b => b.am < tag);
+  const serieSeit = davor.length ? davor[davor.length - 1].am : null;
+
+  // Obere Grenze: der erste Abschluss AB dem geplanten Tag.
+  const danach = abschluesse.find(b => b.am >= tag);
+  const serieBis = danach ? danach.am : null;
+
+  const schon = behs.find(b =>
+    (serieSeit === null || b.am > serieSeit)
+    && (serieBis === null || b.am <= serieBis)
+    && b.codes.some(c => POD_ERSTBEFUNDUNGEN.includes(c)));
+
+  if (!schon) return { ...frei(), serieSeit };
+
+  return {
+    erlaubt: false,
+    grund: 'serie_hat_erstbefundung',
+    schonAm: schon.am,
+    schonCode: schon.codes.find(c => POD_ERSTBEFUNDUNGEN.includes(c)) || null,
+    serieSeit,
+  };
 }

@@ -5408,34 +5408,6 @@ textarea {
   margin-left: 6px;
 }
 
-.bk-dur-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg-card);
-  cursor: pointer;
-  font-size: 13px;
-  transition: all var(--transition);
-}
-
-.bk-dur-option:hover {
-  border-color: var(--primary);
-}
-
-.bk-dur-option:has(input:checked) {
-  background: var(--primary-dim);
-  border-color: var(--primary);
-  color: var(--primary);
-  font-weight: 600;
-}
-
-.bk-dur-option input {
-  margin: 0;
-}
-
 .patient-search-list .cust-new-item {
   color: var(--primary);
   font-weight: 600;

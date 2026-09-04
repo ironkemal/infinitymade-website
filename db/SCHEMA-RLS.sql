@@ -1,8 +1,22 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-03 (booking_leistungen — mehrere Leistungen je Termin)
--- LETZTE MIGRATION:  20260903170448_booking_leistungen
+-- ERZEUGT AM:        2026-09-04 — Zusammenlegung der zwei Verordnungstöpfe,
+--                    Faz 1-5: `verordnungen` ist GEDROPPT (auf Nutzerwunsch
+--                    vorgezogen aus der 90-Tage-Frist). naechste_verordnungs-
+--                    nummer() zaehlt jetzt nur noch gegen `prescriptions`;
+--                    vergebe_verordnungsnummer_vo() und der komplette Trigger-
+--                    /Policy-/Index-Satz der alten Tabelle sind mit ihr weg.
+--                    pruefe_booking_verordnung_owner() prueft gegen
+--                    prescriptions.owner_id (vorher verordnungen.owner_id).
+--                    Details: module/verordnung-topf.js, db/SCHEMA.sql
+-- LETZTE MIGRATION:  verordnungstopf_faz5c_naechste_verordnungsnummer_fix
+--                    davor: verordnungstopf_faz5b_verordnungen_droppen
+--                    davor: 20260903202143_verordnungstopf_faz3_fk_auf_prescriptions_umhaengen
+--                    davor: 20260903202025_verordnungstopf_faz2_vier_zeilen_kopieren
+--                    davor: 20260903201633_verordnungstopf_faz1_prescriptions_spalten
+--                    davor: 20260903205029_bookings_dauer_quelle
+--                    davor: 20260903170448_booking_leistungen
 --                    davor: 20260903165452_verordnungen_podologie_behandlungen_team_select
 --                    davor: 20260903132042_verordnungen_gobd_festschreibung
 --                    davor: 20260903075503_pruefe_booking_verordnung_owner_execute_revoke
@@ -360,11 +374,14 @@
 --   vehicles update/delete policy — owner_id = auth.uid() OR (kind='privat' AND created_by = auth.uid())
 --   → Privatfahrzeuge eines Mitarbeiters bleiben vor Kollegen verborgen.
 
--- verordnungen
---   owner_verordnungen [ALL] USING (owner_id = auth.uid())
---   Employees can view team verordnungen [SELECT]
---     EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.owner_id = verordnungen.owner_id)
---   ⚠️ Team darf seit 03.09.2026 LESEN, Schreiben bleibt beim Inhaber (verordnungen.status haengt an der serverseitigen Uebergangspruefung in verordnung-status.routes.js, kein direktes Schreiben via PostgREST vorgesehen).
+-- verordnungen — GEDROPPT 04.09.2026 (siehe db/SCHEMA.sql). `owner_verordnungen`
+-- und `Employees can view team verordnungen` gingen mit der Tabelle. Die
+-- entsprechenden Regeln (Team liest, Inhaber schreibt) gelten für den
+-- podologischen Zweig jetzt über `prescriptions`s eigene Policies
+-- (`prescriptions_owner_all` oben) — SCHÄRFER als vorher: dort duerfen
+-- Mitarbeiter auch schreiben, die alte Team-Read-only-Sperre ist damit weg.
+-- Wer das fuer die Podologie wieder einschraenken will, braucht eine neue,
+-- eigene Policy — nicht eine neue Tabelle.
 
 -- visibility_reports
 --   vr_admin_read [SELECT] is_admin() · vr_admin_delete [DELETE] is_admin()
@@ -400,10 +417,10 @@
 -- (fußstatus, patient_notes, warteliste):
 -- Nur der Inhaber sieht die Daten, angestellte Therapeuten nicht — bewusst offen
 -- gelassene Produktfrage, nicht stillschweigend "korrigieren".
--- Die Podologie-Tabellen (podologie_behandlungen, verordnungen) sind seit
--- 03.09.2026 kein Sonderfall mehr: Team-SELECT hinzugefuegt (Migration
--- verordnungen_podologie_behandlungen_team_select), Schreiben bleibt weiter
--- beim Inhaber — Details bei den beiden Tabellen oben.
+-- `podologie_behandlungen` bekam am 03.09.2026 Team-SELECT (Migration
+-- verordnungen_podologie_behandlungen_team_select) — der podologische
+-- Verordnungszweig selbst haengt seit 04.09.2026 an `prescriptions`s eigenen,
+-- laengeren Policies (Team liest UND schreibt dort), siehe oben.
 
 
 -- =====================================================================
@@ -536,13 +553,16 @@ $function$;
 --   pg_advisory_xact_lock je owner_id: legen zwei Mitarbeiter gleichzeitig an,
 --   laesen sonst beide dasselbe Maximum und die Nummer waere doppelt vergeben.
 -- naechste_verordnungsnummer(p_owner, p_lead) -> integer  [SECURITY DEFINER]
---   Fortlaufende Verordnungsnummer JE PATIENT, ab 1. Zaehlt ueber BEIDE Toepfe
---   (prescriptions + verordnungen) — derselbe Patient darf nicht zweimal die 3
---   bekommen, sonst steht dieselbe Belegnummer zweimal in derselben DTA-Datei
---   (preflight P:01007). Sperre wie oben, je (owner_id, lead_id).
--- vergebe_verordnungsnummer_rx() / _vo() -> trigger        [SECURITY DEFINER]
---   Rufen sie auf. Wechselt die Verordnung den Patienten, wird die Nummer
+--   Fortlaufende Verordnungsnummer JE PATIENT, ab 1 — zaehlt gegen `prescriptions`
+--   (bis 04.09.2026: UNION ALL ueber ZWEI Toepfe, prescriptions + verordnungen;
+--   seit dem einen SELECT, weil `verordnungen` gedroppt ist). Derselbe Patient
+--   darf nicht zweimal die 3 bekommen, sonst steht dieselbe Belegnummer zweimal
+--   in derselben DTA-Datei (preflight P:01007). Sperre wie oben, je (owner_id, lead_id).
+-- vergebe_verordnungsnummer_rx() -> trigger                [SECURITY DEFINER]
+--   Ruft sie auf. Wechselt die Verordnung den Patienten, wird die Nummer
 --   verworfen und neu vergeben; die eingereichte `belegnummer` bleibt stehen.
+--   Das podologische Gegenstueck `vergebe_verordnungsnummer_vo()` ist am
+--   04.09.2026 mit der Tabelle `verordnungen` gedroppt.
 -- pruefe_booking_leistung_owner() -> trigger               [SECURITY DEFINER]
 --   Owner-Riegel fuer booking_leistungen (seit 03.09.2026, Ops-Karte 235):
 --   vergleicht bookings.owner_id mit der owner_id der Zeile und wirft 42501,
@@ -555,8 +575,10 @@ $function$;
 --   und schreibt nur, wenn sich der Wert wirklich aendert.
 -- pruefe_booking_verordnung_owner() -> trigger             [SECURITY DEFINER]
 --   Owner-Riegel fuer bookings.verordnung_id (seit 03.09.2026): vergleicht
---   verordnungen.owner_id mit bookings.owner_id und wirft 42501, wenn sie
---   auseinanderfallen. Noetig, weil ein FREMDSCHLUESSEL KEINE RLS PRUEFT — ohne
+--   prescriptions.owner_id mit bookings.owner_id und wirft 42501, wenn sie
+--   auseinanderfallen. Seit 04.09.2026 gegen `prescriptions` statt der
+--   frueheren eigenen Tabelle `verordnungen` (Zusammenlegung der Verordnungs-
+--   toepfe, ids unveraendert). Noetig, weil ein FREMDSCHLUESSEL KEINE RLS PRUEFT — ohne
 --   den Riegel liesse sich die Id einer fremden Verordnung in einen eigenen
 --   Termin schreiben (lesbar waere sie nicht, die Zuordnung aber verschmutzt).
 --   SECURITY DEFINER ist hier kein Komfort: ein SELECT im Rumpf unterlaege
@@ -574,13 +596,26 @@ $function$;
 -- prevent_zuzahlung_korrekturen_mod() -> trigger
 --   GoBD, gleiche Absicht wie oben, fuer zuzahlung_korrekturen. Eigene Funktion,
 --   damit die Fehlermeldung den richtigen Weg nennt: neue Korrektur statt Aenderung.
--- verordnung_festschreibung() -> trigger
---   GoBD, gleiche Absicht wie prevent_belegliste_mod()/invoice_festschreibung(),
---   fuer verordnungen (Podologie-Topf). Sobald belegnummer gesetzt ist, sperrt
---   sie NUR die Spalten, die tatsaechlich in die DTA-Datei eingehen
---   (mapVerordnungToDtaShape()) — nicht die ganze Zeile wie bei belegliste/
---   invoices. status/absetzung_*/storno_*/abrechnung_id bleiben offen, das ist
---   der Korrekturweg selbst. Details + Spaltenliste: db/REGISTER.md, verordnungen.
+-- verordnung_festschreibung() -> trigger  ⚠️ VERWAIST seit 04.09.2026
+--   GoBD, gleiche Absicht wie prevent_belegliste_mod()/invoice_festschreibung().
+--   Sass bis 04.09.2026 auf der TABELLE `verordnungen` — die podologischen
+--   Zeilen zogen an dem Tag nach `prescriptions` um, der Trigger nicht (ein
+--   Trigger sitzt auf einer Tabelle, nicht auf Zeilen — er kann nicht
+--   "mitziehen"). Als `verordnungen` am selben Tag gedroppt wurde, ist dieser
+--   Trigger mit ihr verschwunden (Kind-Objekt der Tabelle). Die Funktion
+--   `verordnung_festschreibung()` selbst existiert noch (kein DROP FUNCTION),
+--   haengt aber an keinem Trigger mehr — reiner Rumpf.
+--   ⚠️⚠️⚠️ OFFENE LUECKE, unveraendert: `prescriptions` hat KEINEN
+--      aequivalenten Festschreibungs-Trigger — weder fuer Physio/Ergo/Logo
+--      (hatte nie einen) noch fuer die migrierten Podologie-Zeilen (hatten
+--      einen, drei Tage lang, jetzt nicht mehr — und jetzt auch keinen Weg
+--      mehr, ihn wiederherzustellen, ohne ihn neu zu bauen). Eine Podologie-
+--      Verordnung, die ueber /abrechnung/create-podologie eine `belegnummer`
+--      bekommt, ist in `prescriptions` NICHT gegen nachtraegliche Aenderung
+--      gesperrt. Nachziehen (neuer Trigger auf prescriptions, Spaltenliste um
+--      die physiospezifischen Felder erweitert, alte Funktion als Vorlage)
+--      ist bewusst NICHT Teil dieser Migration. Vor der Umsetzung: gkv-302
+--      UND legal-de, echtes Geld/GoBD-Pflicht.
 -- fn_zuzahlung_guthaben_status() -> trigger
 --   Leitet zuzahlung_guthaben.status aus rest_eur ab (0 = verrechnet,
 --   < betrag_eur = teilweise_verrechnet, sonst offen) und setzt updated_at.
@@ -668,10 +703,10 @@ $function$;
 --   leads                 trg_normalize_lead_phone       BEFORE INSERT/UPDATE
 --                         trg_leads_patientennummer      BEFORE INSERT (Nummernvergabe)
 --   prescriptions         trg_prescriptions_verordnungsnummer BEFORE INSERT/UPDATE OF patient_id
---   verordnungen          trg_verordnungen_verordnungsnummer  BEFORE INSERT/UPDATE OF lead_id
---                         trg_verordnungen_festschreibung BEFORE UPDATE          (GoBD)
---                         → verordnung_festschreibung(): sobald belegnummer gesetzt ist,
---                           sind die DTA-relevanten Felder gesperrt (Liste: REGISTER.md).
+--                         ⚠️ KEIN Festschreibungs-Trigger (GoBD) — offene Luecke,
+--                           siehe verordnung_festschreibung() weiter oben in dieser Datei.
+--   (verordnungen — gedroppt 04.09.2026, trug bis dahin trg_verordnungen_verordnungsnummer
+--    + trg_verordnungen_festschreibung; beide sind mit der Tabelle verschwunden)
 --                         trg_sync_leads_location        BEFORE INSERT/UPDATE OF lat, lng
 --   profiles              trg_sync_profiles_clinic_location BEFORE INSERT/UPDATE OF clinic_lat, clinic_lng
 --   businesses            trg_seed_default_groups        AFTER INSERT
@@ -816,7 +851,7 @@ CREATE INDEX idx_leads_business ON public.leads USING btree (business_id);
 CREATE INDEX idx_leads_handy_normalized ON public.leads USING btree (owner_id, handy_normalized) WHERE (handy_normalized IS NOT NULL);
 CREATE UNIQUE INDEX leads_patientennummer_uniq ON public.leads USING btree (owner_id, patientennummer) WHERE (patientennummer IS NOT NULL);
 CREATE UNIQUE INDEX prescriptions_verordnungsnummer_uniq ON public.prescriptions USING btree (owner_id, patient_id, verordnungsnummer) WHERE (verordnungsnummer IS NOT NULL);
-CREATE UNIQUE INDEX verordnungen_verordnungsnummer_uniq ON public.verordnungen USING btree (owner_id, lead_id, verordnungsnummer) WHERE (verordnungsnummer IS NOT NULL);
+-- verordnungen_verordnungsnummer_uniq entfiel mit der Tabelle (gedroppt 04.09.2026).
 CREATE INDEX idx_leads_insurance_type ON public.leads USING btree (insurance_type) WHERE (insurance_type IS NOT NULL);
 CREATE INDEX idx_leads_location ON public.leads USING gist (location);
 CREATE INDEX idx_leads_name_dob ON public.leads USING btree (owner_id, lower(COALESCE(first_name, ''::text)), lower(COALESCE(last_name, ''::text)), geburtsdatum);
@@ -902,11 +937,6 @@ CREATE INDEX idx_user_preferences_user ON public.user_preferences USING btree (u
 CREATE INDEX idx_vehicles_business ON public.vehicles USING btree (business_id);
 CREATE INDEX idx_vehicles_created_by ON public.vehicles USING btree (created_by);
 CREATE INDEX idx_vehicles_owner_kind ON public.vehicles USING btree (owner_id, kind);
-CREATE INDEX idx_verordnungen_abrechnung_id ON public.verordnungen USING btree (abrechnung_id) WHERE (abrechnung_id IS NOT NULL);
-CREATE INDEX idx_verordnungen_arzt ON public.verordnungen USING btree (owner_id, arzt_id) WHERE (arzt_id IS NOT NULL);
-CREATE INDEX idx_verordnungen_arzt_id ON public.verordnungen USING btree (arzt_id);
-CREATE INDEX idx_verordnungen_lead_id ON public.verordnungen USING btree (lead_id);
-CREATE INDEX idx_verordnungen_owner_status_lead ON public.verordnungen USING btree (owner_id, status, lead_id);
 CREATE INDEX idx_warteliste_owner ON public.warteliste USING btree (owner_id);
 CREATE INDEX idx_warteliste_status ON public.warteliste USING btree (owner_id, status);
 CREATE INDEX idx_working_hours_business ON public.working_hours USING btree (business_id);
@@ -922,5 +952,10 @@ CREATE INDEX idx_zuzahlung_guthaben_patient_offen ON public.zuzahlung_guthaben U
 CREATE INDEX idx_zuzahlung_korrekturen_owner ON public.zuzahlung_korrekturen USING btree (owner_id, erfasst_am DESC);
 CREATE INDEX idx_zuzahlung_korrekturen_rezept ON public.zuzahlung_korrekturen USING btree (prescription_id, erfasst_am DESC);
 CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON public.zuzahlung_korrekturen USING btree (verordnung_id, erfasst_am DESC);
--- Zwei getrennte Indizes, weil die zwei Verordnungstoepfe getrennt bleiben
--- (prescriptions: Physio/Ergo/Logo · verordnungen: Podologie).
+-- Zwei getrennte Spalten/Indizes (prescription_id, verordnung_id) aus der Zeit
+-- der zwei getrennten Verordnungstoepfe. Seit der Zusammenlegung (04.09.2026)
+-- zeigen BEIDE FKs auf `prescriptions` — die Spaltentrennung besteht nur noch
+-- als Altlast (die CHECK-Regel, die verhinderte, dass beide gleichzeitig
+-- gesetzt sind, ist damit ebenfalls nur noch historisch sinnvoll). Nicht
+-- konsolidiert, weil ausserhalb des Umfangs dieser Migration — betrifft
+-- niemanden akut, live 0 Zeilen mit `verordnung_id` gesetzt.

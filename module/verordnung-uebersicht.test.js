@@ -10,20 +10,71 @@ import {
 // und weil die Akte sie nicht nebeneinander zeigte, legte die Praxis für einen
 // Patienten zwei Akten an. Der Test, der das festnagelt, ist der letzte hier:
 // zwei parallele Verordnungen, zwei getrennte Zähler, keine Vermischung.
+//
+// Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`): Physio- und
+// Podologie-Zeilen liegen in derselben Fixture-Tabelle, unterschieden durch
+// `therapie_bereich`. Die Fixtures unten stehen deshalb in den nativen
+// `prescriptions`-Feldnamen (patient_id, anzahl_einheiten, abrechnung_status,
+// icd10 + icd10_2) — `ladeAktiveVerordnungen()` übersetzt den podologischen
+// Zweig selbst über `verordnung-topf.js` (`ausTopf`), genau wie live.
 
-/** Minimaler Supabase-Ersatz (Vorbild: rechnung-verordnung.test.js). */
+/**
+ * Minimaler, aber FILTERNDER Supabase-Ersatz.
+ *
+ * Seit der Zusammenlegung der Verordnungstöpfe fragen `rxQ` und `voQ` beide
+ * `.from('prescriptions')` ab — nur noch `.eq('therapie_bereich', 'podo')`
+ * bzw. der gegenteilige `.or(...)`-Ausschluss trennt sie. Ein Mock, der
+ * `.eq()`/`.or()`/`.not()` ignoriert (wie vor dieser Datei), gäbe beiden
+ * Abfragen dieselben Zeilen zurück — das genau ist die Doppelzählung, die die
+ * echten Filter verhindern sollen. Der Mock muss sie deshalb ausführen.
+ */
 function fakeSb(tabellen) {
   const kette = (tabelle) => {
-    const antwort = { data: tabellen[tabelle] || [], error: null };
+    const zeilen = tabellen[tabelle] || [];
+    let bedingungen = [];
+
+    const passt = (row) => bedingungen.every(b => b(row));
+
     const selbst = {
       select: () => selbst,
-      eq: () => selbst,
-      in: () => selbst,
-      not: () => selbst,
+      // `owner_id` bewusst NICHT scharf geschaltet: das ist ein reiner
+      // Durchreich-Parameter, keine Logik dieses Moduls — die Fixtures unten
+      // tragen ihn nicht. Was hier wirklich geprüft wird (therapie_bereich,
+      // patient_id, Status), bleibt real gefiltert.
+      eq: (col, val) => {
+        if (col === 'owner_id') return selbst;
+        bedingungen.push(row => row[col] === val);
+        return selbst;
+      },
+      in: (col, arr) => { bedingungen.push(row => arr.includes(row[col])); return selbst; },
+      // `.not(col, 'in', '("a","b")')` — NULL zählt (wie in Postgres) als
+      // nicht-getroffen und fällt damit aus der Ausschlussliste heraus.
+      not: (col, _op, pgListe) => {
+        const werte = String(pgListe).replace(/^\(|\)$/g, '').split(',')
+          .map(s => s.trim().replace(/^"|"$/g, ''));
+        bedingungen.push(row => row[col] != null && !werte.includes(row[col]));
+        return selbst;
+      },
+      // `.or('col.is.null,col.in.(a,b)')` / `.or('col.is.null,col.neq.val')`
+      // Nicht blind auf `,` splitten: `col.in.(a,b,c)` traegt selbst Kommas.
+      or: (ausdruck) => {
+        const teile = ausdruck.match(/[a-z_]+\.(is\.null|neq\.[^,]+|in\.\([^)]*\))/g) || [];
+        const klauseln = teile.map(teil => {
+          const nullM = teil.match(/^([a-z_]+)\.is\.null$/);
+          if (nullM) return row => row[nullM[1]] == null;
+          const inM = teil.match(/^([a-z_]+)\.in\.\(([^)]*)\)$/);
+          if (inM) return row => inM[2].split(',').includes(row[inM[1]]);
+          const neqM = teil.match(/^([a-z_]+)\.neq\.(.+)$/);
+          if (neqM) return row => row[neqM[1]] !== neqM[2];
+          throw new Error('fakeSb: unbekannte or()-Klausel: ' + teil);
+        });
+        bedingungen.push(row => klauseln.some(k => k(row)));
+        return selbst;
+      },
       limit: () => selbst,
-      order: () => Promise.resolve(antwort),
-      maybeSingle: () => Promise.resolve({ data: (tabellen[tabelle] || [])[0] || null, error: null }),
-      then: (res) => res(antwort),
+      order: () => Promise.resolve({ data: zeilen.filter(passt), error: null }),
+      maybeSingle: () => Promise.resolve({ data: zeilen.filter(passt)[0] || null, error: null }),
+      then: (res) => res({ data: zeilen.filter(passt), error: null }),
     };
     return selbst;
   };
@@ -94,13 +145,14 @@ test('praxisweit: ohne leadId kommen die Zeilen mit Nach- und Vorname', async ()
 });
 
 test('Podologie ohne Patientenakte: Name aus dem Freitextfeld, Nummer bleibt leer', async () => {
-  // Altbestand: `verordnungen.lead_id` ist NULL (2 von 4 Zeilen, Stand
-  // 02.09.2026). Dann vergibt der Trigger keine Verordnungsnummer — die
+  // Altbestand: `patient_id` ist NULL (Zeilen, die vor der Kartei-Pflicht
+  // angelegt wurden). Dann vergibt der Trigger keine Verordnungsnummer — die
   // Belegnummer muss LEER bleiben und darf nichts erfinden.
   const [v] = await ladeAktiveVerordnungen(fakeSb({
-    verordnungen: [{
-      id: 'v1', lead_id: null, patient_name: 'Werner Müller · 1955-12-19',
-      ausstellungsdatum: '2026-08-02', behandlungseinheiten: 4, diagnosegruppe: 'DF2',
+    prescriptions: [{
+      id: 'v1', patient_id: null, patient_name: 'Werner Müller · 1955-12-19',
+      therapie_bereich: 'podo',
+      ausstellungsdatum: '2026-08-02', anzahl_einheiten: 4, diagnosegruppe: 'DF2',
       verordnungsnummer: null, belegnummer: null,
     }],
   }), { ownerId: 'o1' });
@@ -113,26 +165,30 @@ test('Podologie ohne Patientenakte: Name aus dem Freitextfeld, Nummer bleibt lee
 
 test('nurAktive:false lädt auch Abgerechnetes — sonst sieht es wie Datenverlust aus', async () => {
   const liste = await ladeAktiveVerordnungen(fakeSb({
-    prescriptions: [{ id: 'rx1', ausstellungsdatum: '2026-07-01', status: 'billed', anzahl_einheiten: 6 }],
-    verordnungen: [{ id: 'v1', ausstellungsdatum: '2026-07-02', status: 'abgerechnet', behandlungseinheiten: 4 }],
+    prescriptions: [
+      { id: 'rx1', ausstellungsdatum: '2026-07-01', status: 'billed', anzahl_einheiten: 6 },
+      { id: 'v1', therapie_bereich: 'podo', ausstellungsdatum: '2026-07-02', abrechnung_status: 'gesendet', anzahl_einheiten: 4 },
+    ],
   }), { ownerId: 'o1', nurAktive: false });
 
   assert.equal(liste.length, 2);
 });
 
-test('beide Töpfe kommen in EINE Liste, neueste zuerst', async () => {
-  // Eine interdisziplinäre Praxis führt denselben Patienten in beiden Töpfen.
+test('beide Zweige kommen in EINE Liste, neueste zuerst', async () => {
+  // Eine interdisziplinäre Praxis führt denselben Patienten in beiden Zweigen.
   // Nach `sector` zu filtern würde hier eine der beiden Verordnungen verstecken.
   const liste = await ladeAktiveVerordnungen(fakeSb({
-    prescriptions: [{
-      id: 'rx1', ausstellungsdatum: '2026-08-01', heilmittel: 'KG',
-      anzahl_einheiten: 6, status: 'in_therapy',
-      prescription_sessions: [{ status: 'done' }],
-    }],
-    verordnungen: [{
-      id: 'v1', ausstellungsdatum: '2026-08-20', diagnosegruppe: 'DF2',
-      behandlungseinheiten: 4, status: 'aktiv', icd10: ['E11.40'],
-    }],
+    prescriptions: [
+      {
+        id: 'rx1', patient_id: 'p1', ausstellungsdatum: '2026-08-01', heilmittel: 'KG',
+        anzahl_einheiten: 6, status: 'in_therapy',
+        prescription_sessions: [{ status: 'done' }],
+      },
+      {
+        id: 'v1', therapie_bereich: 'podo', patient_id: 'p1', ausstellungsdatum: '2026-08-20', diagnosegruppe: 'DF2',
+        anzahl_einheiten: 4, icd10: 'E11.40',
+      },
+    ],
     podologie_behandlungen: [{ id: 'b1', verordnung_id: 'v1' }],
     leads: [{ patientennummer: 12 }],
   }), OPTS);
@@ -145,18 +201,22 @@ test('beide Töpfe kommen in EINE Liste, neueste zuerst', async () => {
 
 test('Sprungziel je Topf — sonst landet der Klick im falschen Panel', async () => {
   const liste = await ladeAktiveVerordnungen(fakeSb({
-    prescriptions: [{ id: 'rx1', ausstellungsdatum: '2026-08-01', anzahl_einheiten: 6 }],
-    verordnungen: [{ id: 'v1', ausstellungsdatum: '2026-08-02', behandlungseinheiten: 4, diagnosegruppe: 'UI2' }],
+    prescriptions: [
+      // status ist bei prescriptions NOT NULL (DEFAULT 'parsed') — eine echte
+      // Zeile ohne Wert gibt es nicht.
+      { id: 'rx1', patient_id: 'p1', ausstellungsdatum: '2026-08-01', anzahl_einheiten: 6, status: 'confirmed' },
+      { id: 'v1', therapie_bereich: 'podo', patient_id: 'p1', ausstellungsdatum: '2026-08-02', anzahl_einheiten: 4, diagnosegruppe: 'UI2' },
+    ],
   }), OPTS);
   assert.equal(liste.find(v => v.quelle === 'physio').ziel, 'verordnungen');
   assert.equal(liste.find(v => v.quelle === 'podologie').ziel, 'podologie');
 });
 
-test('Podologie-icd10 ist ein Array — es darf nicht als "[object Object]" landen', async () => {
+test('Podologie-icd10 ist zusammengesetzt aus icd10 + icd10_2 — es darf nicht als "[object Object]" landen', async () => {
   const [v] = await ladeAktiveVerordnungen(fakeSb({
-    verordnungen: [{
-      id: 'v1', ausstellungsdatum: '2026-08-02', behandlungseinheiten: 4,
-      diagnosegruppe: 'DF2', icd10: ['E11.40', 'E11.74'],
+    prescriptions: [{
+      id: 'v1', therapie_bereich: 'podo', patient_id: 'p1', ausstellungsdatum: '2026-08-02', anzahl_einheiten: 4,
+      diagnosegruppe: 'DF2', icd10: 'E11.40', icd10_2: 'E11.74',
     }],
   }), OPTS);
   assert.equal(v.diagnose, 'E11.40, E11.74 · DF2');
@@ -166,9 +226,9 @@ test('Podologie-icd10 ist ein Array — es darf nicht als "[object Object]" land
 // parallele Verordnungen sind zulässig, und die Akte muss sie getrennt zählen.
 test('Nagelspange (UI2) und Komplexbehandlung (DF) parallel, getrennte Zähler', async () => {
   const liste = await ladeAktiveVerordnungen(fakeSb({
-    verordnungen: [
-      { id: 'ui2', ausstellungsdatum: '2026-08-10', diagnosegruppe: 'UI2', behandlungseinheiten: 3, status: 'aktiv' },
-      { id: 'df2', ausstellungsdatum: '2026-08-05', diagnosegruppe: 'DF2', behandlungseinheiten: 6, status: 'aktiv' },
+    prescriptions: [
+      { id: 'ui2', therapie_bereich: 'podo', patient_id: 'p1', ausstellungsdatum: '2026-08-10', diagnosegruppe: 'UI2', anzahl_einheiten: 3 },
+      { id: 'df2', therapie_bereich: 'podo', patient_id: 'p1', ausstellungsdatum: '2026-08-05', diagnosegruppe: 'DF2', anzahl_einheiten: 6 },
     ],
     podologie_behandlungen: [
       { id: 'b1', verordnung_id: 'ui2' },
@@ -184,4 +244,19 @@ test('Nagelspange (UI2) und Komplexbehandlung (DF) parallel, getrennte Zähler',
   // Die Überschrift ist das, worüber in der Praxis gesprochen wird.
   assert.equal(ui2.titel, 'UI2 · Nagelspange');
   assert.match(df2.titel, /^DF2/);
+});
+
+test('eine podologische Zeile erscheint nur einmal, nicht doppelt', () => {
+  // Regression zur Zusammenlegung der Verordnungstöpfe (04.09.2026): rxQ und
+  // voQ treffen jetzt dieselbe Tabelle. Ohne den therapie_bereich-Filter auf
+  // BEIDEN Seiten stünde diese eine Zeile zweimal in der Liste — einmal aus
+  // jeder Abfrage.
+  return ladeAktiveVerordnungen(fakeSb({
+    prescriptions: [
+      { id: 'v1', therapie_bereich: 'podo', patient_id: 'p1', ausstellungsdatum: '2026-08-20', anzahl_einheiten: 4 },
+    ],
+  }), OPTS).then(liste => {
+    assert.equal(liste.length, 1);
+    assert.equal(liste[0].quelle, 'podologie');
+  });
 });

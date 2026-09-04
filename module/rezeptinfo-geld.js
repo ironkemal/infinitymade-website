@@ -384,14 +384,16 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     }
 
     // Privat: die volle Leistung. Die Podologie hat dafuer eine gebaute
-    // Bruecke (podologie_behandlungen → Rechnungszeilen); sie haengt an
-    // `verordnungen` und wird ueber den PATIENTEN gefunden — zwischen
-    // `prescriptions` und `verordnungen` gibt es keine Verbindung. Ohne solche
-    // Verordnung bleibt der vorhandene Rechnungseditor.
+    // Bruecke (podologie_behandlungen → Rechnungszeilen); sie wird ueber den
+    // PATIENTEN gefunden, gefiltert auf therapie_bereich='podo' (seit der
+    // Zusammenlegung der Verordnungstöpfe, 04.09.2026, dieselbe Tabelle wie
+    // `prescriptions`). Ohne solche Verordnung bleibt der vorhandene
+    // Rechnungseditor.
     if (aktion === 'rechnung') {
       if (sector === 'podologie' && booking.lead_id) {
-        const { data: vs } = await sb.from('verordnungen')
-          .select('id').eq('owner_id', ownerId).eq('lead_id', booking.lead_id)
+        const { data: vs } = await sb.from('prescriptions')
+          .select('id').eq('owner_id', ownerId).eq('patient_id', booking.lead_id)
+          .eq('therapie_bereich', 'podo')
           .order('ausstellungsdatum', { ascending: false }).limit(1);
         if (vs?.[0]) { panelSchliessen(); return rechnungAusVerordnung(vs[0].id); }
       }

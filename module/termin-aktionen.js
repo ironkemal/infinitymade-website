@@ -228,10 +228,22 @@ export async function waehleVerordnungFuerPanel({ supabase, booking, verknuepfte
 
   // Auch abgeschlossene Verordnungen gehören in die Liste: die abgelaufene ist
   // genau die, deren Angaben man in die Folgeverordnung übernehmen will.
+  //
+  // ⚠️ Podologie ausgeschlossen (`therapie_bereich`): seit der Zusammenlegung
+  // der beiden Verordnungstöpfe (04.09.2026) stehen podologische Zeilen in
+  // derselben Tabelle. Dieses Panel füttert aber `gleicheSitzungenAb()` —
+  // ein Einheiten-Hauptbuch, das die Podologie bewusst NICHT führt (Begründung:
+  // module/verordnung-termine.js). Ohne diesen Filter bekäme die erste
+  // podologische Verordnung mit `patient_id` hier ein Sitzungsbuch angelegt,
+  // das niemand pflegt und das `terminZaehler()` widerspräche.
+  // `.or()` statt `.neq()`: die meisten physio/ergo/logo-Zeilen führen
+  // `therapie_bereich = NULL`, und `col <> 'podo'` liesse NULL-Zeilen in SQL
+  // aus dem Ergebnis fallen — das hätte das Panel für den Regelfall geleert.
   const { data: liste, error } = await supabase.from('prescriptions')
     .select(RX_FELDER)
     .eq('patient_id', patientId)
     .not('status', 'in', '("cancelled")')
+    .or('therapie_bereich.is.null,therapie_bereich.neq.podo')
     .order('ausstellungsdatum', { ascending: false, nullsFirst: false })
     .limit(12);
   if (error || !liste?.length) return leer;

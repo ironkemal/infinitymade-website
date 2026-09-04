@@ -27,7 +27,10 @@ import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
 import { calcAbrechnungsfallZuzahlung } from '../zuzahlung/calculator.js';
 import { resolvePreis } from '../preise/resolver.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
-import { istEinreichbar, einreichbarFilter } from '../utils/einreichbar.js';
+import {
+  istEinreichbar, einreichbarFilterAbrechnungStatus,
+  statusAusAbrechnungStatus, abrechnungStatusAusStatus,
+} from '../utils/einreichbar.js';
 import {
   legsFuer, LEGS_BY_FACHBEREICH,
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
@@ -478,7 +481,7 @@ router.post('/abrechnung/create', async (req, res) => {
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
         zuzahlung_eur, zuzahlung_befreit,
-        abrechnung_status,
+        abrechnung_status, therapie_bereich,
         bericht_angefordert,
         bericht_status,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer),
@@ -499,6 +502,16 @@ router.post('/abrechnung/create', async (req, res) => {
       return res.status(400).json({ error: 'Einige Rezepte wurden nicht gefunden oder gehören nicht zu Ihnen.' });
     }
     for (const r of rxRows) {
+      // Seit der Zusammenlegung der Verordnungstöpfe (04.09.2026) stehen
+      // podologische Zeilen in derselben Tabelle. Dieser Weg baut mit
+      // `mapPrescriptionToDtaShape()` — dem PHYSIO-Mapper, physiotherapeutische
+      // Positionsnummern statt podologischer 78xxx-HPNR. Podologie gehört
+      // ausschliesslich über /abrechnung/create-podologie.
+      if (r.therapie_bereich === 'podo') {
+        return res.status(400).json({
+          error: `Rezept ${r.id.slice(0,8)} ist eine podologische Verordnung — bitte über die Podologie-Abrechnung einreichen.`,
+        });
+      }
       if (r.kostentraeger_ik !== kostentraegerIk) {
         return res.status(400).json({ error: `Rezept ${r.id.slice(0,8)} gehört zu einer anderen Krankenkasse.` });
       }
@@ -905,33 +918,28 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
 
-    // Pull all prescriptions linked to this abrechnung to map belegnummer → prescription_id.
+    // Alle Zeilen dieser Abrechnung, um belegnummer → id zu mappen.
     // Die Zuordnung laeuft ueber die eingefrorene `belegnummer` der Zeile.
     // Der UUID-Anfang bleibt als zweiter Schluessel bestehen: Dateien, die vor
     // der Umstellung auf <Patientennummer>-<Verordnungsnummer> rausgingen,
     // tragen ihn noch, und eine Kassenrueckmeldung kann Monate spaeter kommen.
     // Faende sie ihren Beleg nicht, bliebe die Absetzung unsichtbar — kein
     // Fehler auf dem Bildschirm, nur fehlendes Geld.
+    //
+    // Seit 04.09.2026 EIN Verordnungstopf: eine Sammelabrechnung kann Physio-
+    // UND Podologie-Zeilen tragen, aber beide stehen jetzt in `prescriptions` —
+    // ein Fetch statt vorher zwei, `therapie_bereich` entscheidet unten, welcher
+    // Zweig eine Zeile durchlaeuft.
     const { data: rxRows } = await supabase
       .from('prescriptions')
-      .select('id, belegnummer')
+      .select('id, belegnummer, therapie_bereich')
       .eq('abrechnung_id', req.params.id);
     const belegToRxId = new Map();
+    const podoIds = new Set();
     for (const r of (rxRows || [])) {
       if (r.belegnummer) belegToRxId.set(r.belegnummer, r.id);
       belegToRxId.set(r.id.slice(0, 10), r.id);
-    }
-
-    // Dasselbe fuer den Podologie-Topf. Beide Toepfe koennen in derselben
-    // DTA-Datei stecken.
-    const { data: vordRows } = await supabase
-      .from('verordnungen')
-      .select('id, belegnummer')
-      .eq('abrechnung_id', req.params.id);
-    const belegToVordId = new Map();
-    for (const v of (vordRows || [])) {
-      if (v.belegnummer) belegToVordId.set(v.belegnummer, v.id);
-      belegToVordId.set(v.id.slice(0, 10), v.id);
+      if (r.therapie_bereich === 'podo') podoIds.add(r.id);
     }
 
     const parsed = parseZaaFile(buf);
@@ -961,37 +969,47 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
       zaa_uploaded_at: new Date().toISOString(),
     }).eq('id', req.params.id);
 
-    // Flip affected prescriptions back to 'bereit' so they can be re-billed after fix.
-    const rejectedRxIds = [...new Set(inserts.map(e => e.prescription_id).filter(Boolean))];
-    if (rejectedRxIds.length) {
-      await supabase.from('prescriptions').update({
-        abrechnung_status: 'bereit',
-        status: 'aktiv',
-      }).in('id', rejectedRxIds);
-    }
-
-    // Podologie-Verordnungen: die Kasse hat diese Belege abgesetzt.
+    // Die zwei Zweige reagieren unterschiedlich auf eine Absetzung — das war
+    // schon vor der Zusammenlegung so und bleibt so, nur die Zieltabelle ist
+    // jetzt eine:
+    //
+    //   Physio/Ergo/Logo: zurueck auf 'bereit' — stiller Retry, die Praxis
+    //   korrigiert und rechnet erneut ab, ohne eigenen Absetzungs-Datensatz.
+    //
+    //   Podologie: bewusst NICHT stillschweigend zurueck — 'abgesetzt' mit
+    //   Grund und Datum auf der Zeile selbst, weil dort ein manueller
+    //   Korrekturweg existiert (PATCH /verordnung/:id/abrechnungsstatus) und
+    //   die Praxis den Grund sehen soll, bevor sie erneut einreicht.
     //
     // Warum 'abgesetzt' und nicht 'teilabsetzung': die ZAA-Datei nennt Fehler
     // je Beleg, keine Betraege und keine Positionen. Ob die Kasse gekuerzt oder
     // ganz abgesetzt hat, steht erst im Zahlungsavis. Ein automatisch geratenes
-    // 'teilabsetzung' waere eine erfundene Zahl in der Buchhaltung — die
-    // Teilabsetzung setzt deshalb der Anwender mit Betrag (siehe PATCH
-    // /verordnung/:id/abrechnungsstatus).
+    // 'teilabsetzung' waere eine erfundene Zahl in der Buchhaltung.
+    const rejectedRxIds = [...new Set(inserts.map(e => e.prescription_id).filter(Boolean))];
+    const rejectedPhysio = rejectedRxIds.filter(id => !podoIds.has(id));
+    if (rejectedPhysio.length) {
+      // status: 'confirmed' — die Bearbeitungsachse, nicht 'aktiv' (das gibt
+      // es in dieser Spalte nicht; CHECK liesse den Schreibversuch scheitern).
+      await supabase.from('prescriptions').update({
+        abrechnung_status: 'bereit',
+        status: 'confirmed',
+      }).in('id', rejectedPhysio);
+    }
+
     const vordGrund = new Map();
     for (const e of parsed.errors) {
       if (!e.belegnummer) continue;
-      const vId = belegToVordId.get(e.belegnummer);
-      if (!vId) continue;
+      const vId = belegToRxId.get(e.belegnummer);
+      if (!vId || !podoIds.has(vId)) continue;
       const txt = [e.code, e.uebersetzung || e.text].filter(Boolean).join(' — ');
       vordGrund.set(vId, [...(vordGrund.get(vId) || []), txt]);
     }
     const heute = new Date().toISOString().slice(0, 10);
     for (const [vId, gruende] of vordGrund) {
-      await supabase.from('verordnungen').update({
-        status:          'abgesetzt',
-        absetzung_grund: gruende.join('\n').slice(0, 2000),
-        absetzung_am:    heute,
+      await supabase.from('prescriptions').update({
+        abrechnung_status: abrechnungStatusAusStatus('abgesetzt'),
+        absetzung_grund:   gruende.join('\n').slice(0, 2000),
+        absetzung_am:      heute,
       }).eq('id', vId).eq('owner_id', tenantId);
     }
 
@@ -1921,7 +1939,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
         zuzahlung_eur, zuzahlung_befreit,
-        abrechnung_status,
+        abrechnung_status, therapie_bereich,
         bericht_angefordert,
         bericht_status,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer),
@@ -1940,6 +1958,15 @@ router.post('/abrechnung/preflight', async (req, res) => {
     if (rxErr) return res.status(500).json({ error: rxErr.message });
     if (!rxRows || rxRows.length !== prescriptionIds.length) {
       return res.status(400).json({ error: 'Einige Rezepte wurden nicht gefunden.' });
+    }
+    // Gleicher Riegel wie /abrechnung/create: dieser Preflight prüft mit dem
+    // PHYSIO-Mapper — eine podologische Zeile bekäme falsche Positionsnummern
+    // vorgerechnet.
+    const podoTreffer = rxRows.filter(r => r.therapie_bereich === 'podo');
+    if (podoTreffer.length) {
+      return res.status(400).json({
+        error: `${podoTreffer.length} Rezept(e) sind podologische Verordnungen — Preflight läuft nur für Physio/Ergo/Logo.`,
+      });
     }
 
     const firstRx = rxRows[0];
@@ -1983,9 +2010,21 @@ router.post('/abrechnung/preflight', async (req, res) => {
 //
 // POST /abrechnung/create-podologie
 //   body: { kostentraegerIk, verordnungIds[] }
-//   Reads from verordnungen + podologie_behandlungen (NOT prescriptions).
+//   Seit 04.09.2026: liest aus prescriptions (therapie_bereich='podo') +
+//   podologie_behandlungen. Vor der Zusammenlegung der zwei Verordnungstöpfe
+//   stand hier `verordnungen` — die Tabelle existiert noch (Altdaten,
+//   read-only), wird aber nicht mehr beschrieben.
 //   Existing /abrechnung/create (Physio) is untouched.
 
+// Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `vord` hier ist eine
+// Zeile daraus, gefiltert auf `therapie_bereich = 'podo'` — aber unter dem
+// gewohnten podologischen Feldnamen weitergereicht, wo die Namen sich
+// unterscheiden (`dringend` statt `is_dringend`, `therapiefrequenz` statt
+// `frequenz`, `icd10` als kommagetrennter String statt `icd10 + icd10_2`).
+// Übersetzt wird in `/abrechnung/create-podologie` direkt nach dem Fetch —
+// dieselbe Grenzidee wie `module/verordnung-topf.js` im Frontend, hier lokal
+// nachgebaut, weil der Docker-Build `module/` nicht einschliesst (kein
+// gemeinsamer Import zwischen den zwei Deploys, siehe VERORDNUNG_EINREICHBAR).
 // `bundesland` war hier ein Parameter mit Vorgabewert 'NW' — benutzt hat ihn
 // der Rumpf nie. Podologie kennt keinen regionalen Tarif-Override
 // (preise/resolver.js: „Podologie kennt keinen Tarif-Override"), es gibt hier
@@ -1999,7 +2038,7 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
 
   const np = nameParts(lead);
   // Der Name kommt ausschliesslich aus der Patientenakte (leads), nie aus dem
-  // Freitextfeld verordnungen.patient_name. Dieses Feld ist eine Kopie vom
+  // Freitextfeld prescriptions.patient_name. Dieses Feld ist eine Kopie vom
   // Anlagezeitpunkt — nach einer Namenskorrektur stuende dort weiter der alte
   // Name. Lieber die Abrechnung stoppen als sie mit einem falschen Namen an die
   // Kasse schicken; eine Korrektur dort ist ungleich aufwendiger.
@@ -2047,8 +2086,9 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
     e.status = 422; throw e;
   }
 
-  // icd10 can be array or string in verordnungen
-  const icd10 = Array.isArray(vord.icd10) ? vord.icd10.join(',') : (vord.icd10 || '');
+  // icd10 steht in `prescriptions` als zwei Einzelfelder (icd10 + icd10_2),
+  // nicht mehr als Array wie im alten Podologie-Topf.
+  const icd10 = [vord.icd10, vord.icd10_2].filter(Boolean).join(',');
 
   return {
     patient: {
@@ -2075,9 +2115,9 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
       hausbesuch:            !!vord.hausbesuch,
       leitsymptomatik:       vord.leitsymptomatik || vord.diagnosegruppe || '',
       patLeitsymptomatik:    vord.pat_leitsymptomatik || '',
-      dringend:              !!vord.dringend,
+      dringend:              !!vord.is_dringend,
       heilmittelBereich:     '5', // Podologie
-      therapiefrequenz:      frequenzToDigit(vord.therapiefrequenz),
+      therapiefrequenz:      frequenzToDigit(vord.frequenz),
       zuzahlungskennzeichen: vord.zuzahlung_befreit ? '1' : '0',
       kostentraegerIk:       vord.kostentraeger_ik,
       krankenkasseIk:        vord.kostentraeger_ik,
@@ -2133,28 +2173,42 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     const dasIk  = kk?.das_ik || kostentraegerIk;
     const dasName = kk?.name  || 'Krankenkasse';
 
-    // ---- fetch verordnungen with patient + arzt join ----
-    const { data: vords, error: vErr } = await supabase
-      .from('verordnungen')
+    // ---- fetch prescriptions (podologischer Zweig) with patient + arzt join ----
+    //
+    // Seit 04.09.2026 EIN Verordnungstopf: gelesen wird `prescriptions`,
+    // gefiltert auf `therapie_bereich = 'podo'`. Dieser Filter ist Pflicht,
+    // nicht Kosmetik — ohne ihn koennte eine physiotherapeutische Id, die
+    // versehentlich in `verordnungIds` landet, hier durchlaufen und mit
+    // `mapVerordnungToDtaShape()` (podologische 78xxx-HPNR) falsch gerechnet
+    // werden.
+    const { data: vordsRoh, error: vErr } = await supabase
+      .from('prescriptions')
       .select(`
         *,
-        leads:lead_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer),
+        leads:patient_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer),
         aerzte:arzt_id (id, arzt_name, lanr, bsnr)
       `)
       .eq('owner_id', tenantId)
+      .eq('therapie_bereich', 'podo')
       .in('id', verordnungIds);
     if (vErr) return res.status(500).json({ error: vErr.message });
 
-    // Fehlt eine angeforderte Id (geloescht, fremder Mandant), darf der Rest
-    // nicht stillschweigend durchlaufen — sonst enthaelt die DTA-Datei weniger
-    // Verordnungen als die Praxis abgeschickt hat, ohne dass es jemand sieht.
-    if ((vords || []).length !== verordnungIds.length) {
-      const gefunden = new Set((vords || []).map(v => v.id));
+    // Fehlt eine angeforderte Id (geloescht, fremder Mandant, oder eben KEINE
+    // podologische Zeile), darf der Rest nicht stillschweigend durchlaufen —
+    // sonst enthaelt die DTA-Datei weniger Verordnungen als die Praxis
+    // abgeschickt hat, ohne dass es jemand sieht.
+    if ((vordsRoh || []).length !== verordnungIds.length) {
+      const gefunden = new Set((vordsRoh || []).map(v => v.id));
       const fehlend  = verordnungIds.filter(id => !gefunden.has(id));
       return res.status(404).json({
         error: `Verordnung(en) nicht gefunden: ${fehlend.map(id => String(id).slice(0,8)).join(', ')}`,
       });
     }
+
+    // Ab hier spricht diese Route weiter podologisch (`v.status` statt
+    // `v.abrechnung_status`) — uebersetzt wird nur hier, SPIEGEL von
+    // `module/verordnung-topf.js` (`ausTopf`) im Frontend.
+    const vords = vordsRoh.map(v => ({ ...v, status: statusAusAbrechnungStatus(v.abrechnung_status) }));
 
     // ---- validate each verordnung ----
     for (const v of (vords || [])) {
@@ -2230,7 +2284,9 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       //    Fehlt der ICD ganz, wird NICHT gesperrt — auf Muster 13 ist der
       //    ICD-Kode keine Pflichtangabe, die Diagnose darf im Klartext stehen
       //    (Anlage 3 k).
-      const kodes = String(v.icd10 || '')
+      //    `prescriptions` fuehrt zwei ICD-Spalten (icd10 + icd10_2) statt
+      //    des frueheren Arrays — beide muessen geprueft werden.
+      const kodes = [v.icd10, v.icd10_2].filter(Boolean).join(',')
         .split(/[,;]/).map(s => s.replace(/\s+/g, '').toUpperCase()).filter(Boolean);
       if (kodes.length > 0 && !kodes.includes('L60.0')) {
         sperren.push(
@@ -2347,10 +2403,11 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // Zeilen zurueck als sie angefordert hat und raeumt ihre eigene Abrechnung
     // wieder ab. Eine reine Vorabpruefung reichte dafuer nicht: beide Anfragen
     // lesen den alten Zustand, bevor eine von beiden schreibt.
-    const { data: uebernommen, error: updErr } = await supabase.from('verordnungen')
-      .update({ status: 'abgerechnet', abrechnung_id: ab.id })
+    const { data: uebernommen, error: updErr } = await supabase.from('prescriptions')
+      .update({ abrechnung_status: abrechnungStatusAusStatus('abgerechnet'), abrechnung_id: ab.id })
       .in('id', verordnungIds)
-      .or(einreichbarFilter())
+      .eq('therapie_bereich', 'podo')
+      .or(einreichbarFilterAbrechnungStatus())
       .select('id');
     if (updErr || (uebernommen || []).length !== verordnungIds.length) {
       // Zuerst die Zeilen zurueckdrehen, die WIR uns geholt haben. Eine
@@ -2360,10 +2417,10 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       const vorher = new Map((vords || []).map(v => [v.id, v]));
       for (const row of (uebernommen || [])) {
         const v = vorher.get(row.id);
-        const { error: rbErr } = await supabase.from('verordnungen')
+        const { error: rbErr } = await supabase.from('prescriptions')
           .update({
-            status:        v ? (v.status ?? null) : 'abrechenbar',
-            abrechnung_id: v ? (v.abrechnung_id ?? null) : null,
+            abrechnung_status: abrechnungStatusAusStatus(v ? v.status : 'abrechenbar'),
+            abrechnung_id:     v ? (v.abrechnung_id ?? null) : null,
           })
           .eq('id', row.id);
         if (rbErr) console.error('[abrechnung-podo] Ruecknahme fehlgeschlagen:', row.id, rbErr.message);
@@ -2381,7 +2438,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // Belegnummer einfrieren — siehe /abrechnung/create, gleiche Begruendung.
     for (let i = 0; i < (vords || []).length; i++) {
       if (vords[i].belegnummer) continue;
-      const { error: bnErr } = await supabase.from('verordnungen')
+      const { error: bnErr } = await supabase.from('prescriptions')
         .update({ belegnummer: prescriptions[i].patient.belegnummer })
         .eq('id', vords[i].id);
       if (bnErr) console.warn('[abrechnung-podo] belegnummer persist failed:', vords[i].id, bnErr.message);

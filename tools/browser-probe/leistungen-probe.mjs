@@ -21,7 +21,7 @@ const p = (t, ok, z = '') => { if (!ok) schlecht++; console.log(`   ${ok ? '✓'
 
 const zeilen = () => page.locator('#bkLeistungExtra > div').count();
 const dauer = () => page.evaluate(() =>
-  Number(document.querySelector('#bkDurationOptions input[type=radio]:checked')?.value || 0));
+  Number(document.getElementById('bkDurationValue')?.value || 0));
 const hinweis = () => page.evaluate(() => {
   const el = document.getElementById('bkLeistungHinweis');
   return el.hidden ? '' : el.textContent.trim();

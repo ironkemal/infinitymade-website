@@ -61,3 +61,73 @@ export function istEinreichbar(status) {
 export function einreichbarFilter() {
   return `status.in.(${VERORDNUNG_EINREICHBAR.join(',')}),status.is.null`;
 }
+
+// ── Seit 04.09.2026: EIN Verordnungstopf ────────────────────────────────────
+//
+// Podologie und Physio/Ergo/Logo stehen seit der Zusammenlegung der zwei
+// Verordnungstöpfe in derselben Tabelle (`prescriptions`). Die Spalte heisst
+// dort `abrechnung_status`, nicht `status`, und ihre Werte sind andere
+// (bereit/in_abrechnung/gesendet/accepted/rejected/paid/…). Alles OBEN in
+// dieser Datei — `VERORDNUNG_EINREICHBAR`, `istEinreichbar`,
+// `einreichbarFilter` — spricht weiter die podologische Statusachse
+// (aktiv/abrechenbar/abgesetzt/…), weil `/abrechnung/create-podologie` und
+// die Frontend-Arbeitsliste sie so lesen und schreiben.
+//
+// SPIEGEL von `module/verordnung-topf.js` (`AUS_TOPF`/`statusAusTopf`) im
+// Frontend-Repo. Zwei Deploys, kein gemeinsamer Import (der Docker-Build
+// schliesst `module/` nicht ein) — wer eine Tabelle aendert, aendert beide.
+
+/** alter verordnungen.status → prescriptions.abrechnung_status */
+const NACH_ABRECHNUNG_STATUS = Object.freeze({
+  aktiv: null, abrechenbar: 'bereit', abgerechnet: 'gesendet', abgesetzt: 'rejected',
+  teilabsetzung: 'teilabsetzung', storniert: 'storniert', archiviert: 'archiviert',
+});
+
+/**
+ * prescriptions.abrechnung_status → podologische Statusachse.
+ *
+ * Nicht die reine Umkehrung: `in_abrechnung`/`accepted`/`paid` gab es im
+ * podologischen Zweig nie — sie bedeuten dort „ist raus", also `abgerechnet`.
+ * Sie auf `aktiv` fallen zu lassen wäre der teure Fehler: eine bereits
+ * eingereichte Verordnung stünde wieder in der Arbeitsliste.
+ *
+ * @param {string|null} abrechnungStatus
+ * @returns {string}
+ */
+export function statusAusAbrechnungStatus(abrechnungStatus) {
+  if (!abrechnungStatus) return 'aktiv';
+  const AUS = {
+    bereit: 'abrechenbar', in_abrechnung: 'abgerechnet', gesendet: 'abgerechnet',
+    accepted: 'abgerechnet', paid: 'abgerechnet', rejected: 'abgesetzt',
+    teilabsetzung: 'teilabsetzung', storniert: 'storniert', archiviert: 'archiviert',
+  };
+  return AUS[abrechnungStatus] || 'aktiv';
+}
+
+/**
+ * Podologische Statusachse → prescriptions.abrechnung_status.
+ * `undefined` heisst „nicht anfassen" — kein blindes `null` in ein UPDATE
+ * schreiben, das eine bereits eingereichte Verordnung zurückholen würde.
+ *
+ * @param {?string} status
+ * @returns {string|null|undefined}
+ */
+export function abrechnungStatusAusStatus(status) {
+  if (status == null) return undefined;
+  return Object.prototype.hasOwnProperty.call(NACH_ABRECHNUNG_STATUS, status)
+    ? NACH_ABRECHNUNG_STATUS[status] : undefined;
+}
+
+/**
+ * `einreichbarFilter()` auf die Spalte `abrechnung_status` übersetzt — für den
+ * atomaren UPDATE-Anspruch in `/abrechnung/create-podologie` (die Tabelle
+ * `prescriptions` kennt keine Spalte `status` in der podologischen Bedeutung
+ * mehr, dort heisst die Bearbeitungsachse `status` UND meint etwas anderes).
+ * @returns {string}
+ */
+export function einreichbarFilterAbrechnungStatus() {
+  const werte = [...new Set(
+    VERORDNUNG_EINREICHBAR.map(abrechnungStatusAusStatus).filter(v => v != null)
+  )];
+  return `abrechnung_status.in.(${werte.join(',')}),abrechnung_status.is.null`;
+}

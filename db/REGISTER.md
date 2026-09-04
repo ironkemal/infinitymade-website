@@ -159,13 +159,20 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Status:** aktiv
 - **Wer:** 15 Dateien, 9 schreibende Funktionen — Dashboard-Kalender, öffentliche Buchungsseite, Backend-Booking-Routen, Fußbefund, Rechnungsmodule.
 - **Achtung:** Doppelbuchung verhindert die **Datenbank**, nicht der Code: `EXCLUDE USING gist` auf `(user_id, tstzrange(start_time, end_time))` bei `status='confirmed' AND group_parent_id IS NULL`. Den Constraint-Fehler abfangen und übersetzen — nicht in der Anwendung nachbauen. `bookings` ist außerdem in der Realtime-Publication (seit `enable_realtime_bookings`).
-- **Achtung — `verordnung_id` (seit 03.09.2026):** die Spalte bindet einen Termin an eine **podologische** Verordnung (`verordnungen`). Sie ist der Podologie-Ersatz für etwas, das es dort nicht gibt: ein Einheiten-Hauptbuch.
+- **Achtung — `verordnung_id` (seit 03.09.2026):** die Spalte bindet einen Termin an eine **podologische** Verordnung. Zeigt seit 04.09.2026 auf `prescriptions` (`therapie_bereich='podo'`) — vorher eine eigene Tabelle `verordnungen`, am selben Tag gedroppt, ids der migrierten Zeilen unverändert. Sie ist der Podologie-Ersatz für etwas, das es dort nicht gibt: ein Einheiten-Hauptbuch.
   - ⚠️ **Hier gehört NIE eine `prescriptions.id` hinein.** Der Physio/Ergo/Logo-Topf verknüpft über `prescription_sessions.booking_id`, und das ist kein Umweg, sondern die einzige Stelle, an der die Information hinpasst: `prescription_sessions` hält je verordneter Einheit eine Zeile (auch ohne Termin, siehe `module/sitzung-abgleich.js`). Die Frage lautet dort „welche der 18 Einheiten hat dieser Termin erfüllt?" — das lässt sich an `bookings` gar nicht ausdrücken. In der Podologie lautet die Frage „zu welcher Verordnung gehört dieser Termin?", und die gehört an den Termin. Wer hier eine zweite Spalte `prescription_id` danebenhängt, erzeugt einen zweiten Weg für den Physio-Topf — genau die Sorte Parallelwahrheit, die uns `heilmittel_catalog` ↔ `heilmittel_katalog` gekostet hat.
   - Warum die Spalte **nicht** `podologie_behandlungen.booking_id` + Platzhalterzeilen geworden ist (Variante B der Vorlage vom 03.09.): `podologie_behandlungen` ist ein **Leistungsnachweis**, die Zeile *ist* die erbrachte Behandlung. Vorab angelegte Zeilen hätten vier laufende Regeln gebrochen — den Einheiten-Zähler nach `abrechenbar` (`module/podologie-abrechnung.js:1343-1349`), die §302-Sperre „noch keine Behandlung dokumentiert" (`api-backend/billing/api/verordnung-status.routes.js:126-136`), die 78040-Eingangsbefundungsregel (`module/eingangsbefundung-regel.js`, jede Zeile mit `behandlungsdatum` gilt als erbracht) und den offenen Rechnungsentwurf (`module/rechnung-bruecke.js:63-75`). Kein Abrechnungs-, Belegliste- oder GoBD-Pfad liest dagegen `bookings` — deshalb ist diese Spalte an der Geldseite risikofrei.
-  - **`ON DELETE SET NULL` ist Pflicht, nicht Geschmack:** `api/dsgvo.js` löscht `verordnungen` **vor** `bookings`. Mit RESTRICT/NO ACTION bräche die DSGVO-Löschkette an dieser Stelle. In `USER_TABLES`/`DELETE_TABLES` war keine Ergänzung nötig — `bookings` steht dort längst.
-  - **Owner-Riegel:** `trg_booking_verordnung_owner` (BEFORE INSERT/UPDATE OF `verordnung_id`, `owner_id`) prüft `verordnungen.owner_id = bookings.owner_id`. Ein Fremdschlüssel prüft **keine RLS** — ohne den Riegel könnte ein Mitarbeiter die Id einer fremden Verordnung in einen eigenen Termin schreiben. Die Triggerfunktion ist `SECURITY DEFINER`, und das ist der Punkt: ein SELECT im Rumpf unterläge sonst der RLS des Aufrufers, die fremde Zeile wäre unsichtbar, `NOT FOUND` griffe — der Riegel fiele genau im Angriffsfall offen auf.
-  - ⚠️ **Sichtbarkeits-Asymmetrie, betrifft die Oberfläche:** `bookings` hat Team-Zugriff, `verordnungen` und `podologie_behandlungen` haben ihn nicht (`owner_id = auth.uid()`). Ein angestellter Therapeut sieht den Termin samt `verordnung_id`, kann die Verordnung aber nicht lesen. Das ist die bekannte offene Produktfrage der fünf Tabellen ohne Team-Zugriff (`db/README.md`), kein Fehler dieser Spalte.
-  - **Wer schreibt:** die Seite „Verordnungen" (`module/verordnung-detail.js`, untere Hälfte, rechte Spalte) beim gezielten Vergeben eines einzelnen Termins. „Unvergeben" ist dort **keine Zeile**, sondern gerechnet: `verordnungen.behandlungseinheiten` minus Zahl der Termine mit dieser `verordnung_id`. Anlass: Beta-1, 31.08.2026.
+  - **`ON DELETE SET NULL` ist Pflicht, nicht Geschmack:** `api/dsgvo.js` löscht `prescriptions` **vor** `bookings`. Mit RESTRICT/NO ACTION bräche die DSGVO-Löschkette an dieser Stelle. In `USER_TABLES`/`DELETE_TABLES` war keine Ergänzung nötig — `bookings` steht dort längst. (Bis 04.09.2026 war es `verordnungen` statt `prescriptions`, gleiches Prinzip.)
+  - **Owner-Riegel:** `trg_booking_verordnung_owner` (BEFORE INSERT/UPDATE OF `verordnung_id`, `owner_id`) prüft seit 04.09.2026 `prescriptions.owner_id = bookings.owner_id` (vorher `verordnungen.owner_id`). Ein Fremdschlüssel prüft **keine RLS** — ohne den Riegel könnte ein Mitarbeiter die Id einer fremden Verordnung in einen eigenen Termin schreiben. Die Triggerfunktion ist `SECURITY DEFINER`, und das ist der Punkt: ein SELECT im Rumpf unterläge sonst der RLS des Aufrufers, die fremde Zeile wäre unsichtbar, `NOT FOUND` griffe — der Riegel fiele genau im Angriffsfall offen auf.
+  - ⚠️ **Sichtbarkeits-Asymmetrie AUFGELÖST (04.09.2026, Nutzerentscheidung):** bis dahin hatte `bookings` Team-Zugriff, `verordnungen` und `podologie_behandlungen` nicht (`owner_id = auth.uid()`) — ein angestellter Therapeut sah den Termin samt `verordnung_id`, konnte die Verordnung aber nicht lesen. Seit der Zusammenlegung gilt für podologische Zeilen dieselbe Policy wie für Physio/Ergo/Logo (`prescriptions_owner_all`) — Team darf jetzt lesen UND schreiben. `podologie_behandlungen` bleibt bei Team-SELECT-only (eigene Tabelle, unverändert).
+  - **Wer schreibt:** die Seite „Verordnungen" (`module/verordnung-detail.js`, untere Hälfte, rechte Spalte) beim gezielten Vergeben eines einzelnen Termins. „Unvergeben" ist dort **keine Zeile**, sondern gerechnet: `prescriptions.anzahl_einheiten` (vorher `verordnungen.behandlungseinheiten`) minus Zahl der Termine mit dieser `verordnung_id`. Anlass: Beta-1, 31.08.2026.
+- **Achtung — `dauer_quelle` (seit 03.09.2026):** die Spalte sagt, **woher die Dauer eines Termins stammt**, nicht wie lang er war. Vier Werte: `NULL` = nicht erfasst · `'vorschlag'` = der vorgeschlagene Wert wurde unverändert übernommen · `'manuell'` = jemand hat im Dauer-Feld getippt · `'serie'` = aus einem Batch-Lauf.
+  - **Warum sie existieren muss:** `module/termin-dauer.js` (`gelernteDauer()`) soll aus der Historie lernen, wie lange eine Leistung wirklich dauert. Die naheliegende Quelle — `end_time - start_time` — ist dafür **wertlos**: Termine werden in Praxura nie von Hand geschlossen, es gibt kein Check-out. `end_time` ist immer exakt `start_time` + der Wert, der beim Anlegen im Dauer-Feld stand. Der Median dieser Differenz misst also nur, was die Software selbst vorgeschlagen hat. Ein einmal falscher Vorschlag hätte sich über die eigene Historie bestätigt — eine sich selbst erfüllende Voreinstellung. Einwand kam von der Praxisseite, 03.09.2026; er ist richtig und die Spalte ist die Antwort darauf.
+  - **Warum `text` + CHECK und nicht `boolean dauer_manuell`:** in `bookings` schreiben **sechs** Wege — Terminmaske (`dashboard.js`), Gruppentermin-Kinder, Serientermine (`/booking/batch-create`), Termin-Anfrage (`api-backend/booking/from-request.js`), Warteliste-Nachrücker (`module/warteliste-nachruecker.js`), öffentliche Buchung. Nur der erste kennt die Spalte. Ein `NOT NULL DEFAULT false` hätte „Vorschlag akzeptiert“ und „dieser Weg erfasst das gar nicht“ in denselben Wert gepresst; in sechs Monaten wäre nicht mehr entscheidbar, was ein `false` bedeutet. `NULL` sagt die Wahrheit. Nebeneffekt, der die Entscheidung trägt: `'vorschlag'` gegen `'manuell'` gezählt ergibt die **Annahmequote des Vorschlags** — die einzige Zahl, an der sich später ablesen lässt, ob die Schätzung taugt. Mit einem Boolean wäre sie nicht messbar.
+  - ⚠️ **Kein Backfill.** Von 288 Altterminen weichen nur **11** von der Standarddauer ihrer Leistung ab — zu dünn für einen Median und in der Sache Ausnahmen, keine Regel. Die Lernfunktion beginnt bewusst kalt und fällt bis dahin auf `price_config` / `duration_minutes` zurück.
+  - ⚠️ **Auswahlverzerrung, bekannt und in Kauf genommen:** wer nur aus korrigierten Werten lernt, lernt aus **Ausnahmen**. Tippt jemand 45 nur beim komplizierten Patienten, wandert der Vorschlag für alle auf 45. Gegenmittel liegt in der Oberfläche, nicht im Schema: erst ab mehreren übereinstimmenden Handeingaben übernehmen und die Stichprobengröße am Feld anzeigen.
+  - **Kombi-Termine** (mehr als eine Zeile in `booking_leistungen`) speisen die Lernfunktion **nicht** — dort ist die Dauer eine Summe und sagt über die einzelne Leistung nichts. Bewusst außerhalb des Umfangs.
+  - **RLS/DSGVO:** nichts zu tun. Die Rechte auf `bookings` sind tabellenweit vergeben (keine Spaltenrechte), die acht Policies gelten unverändert; `anon` hat zwar GRANT, aber **keine** passende Policy — von der öffentlichen Buchungsseite lässt sich hier nichts hineinschreiben, der Vergiftungsweg auf die gelernte Voreinstellung ist damit von vornherein zu. `bookings` steht in `api/dsgvo.js` bereits in `USER_TABLES` und `DELETE_TABLES`. **Kein Index** — 289 Zeilen, 408 kB; `idx_bookings_service` reicht. Wieder anschauen, wenn die Tabelle fünfstellig wird.
 
 ### `services`
 - **Warum:** Was die Praxis anbietet, mit Dauer und Preis. Grundlage für Slot-Berechnung und Abrechnung.
@@ -295,16 +302,35 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 
 ---
 
-## 4. Verordnung — Physio · Ergo · Logopädie
+## 4. Verordnung — ALLE Fachbereiche (seit 04.09.2026 EIN Topf)
 
-> Zweiter Verordnungstopf (Podologie) siehe Abschnitt 5. Die Trennung ist **gewollt**.
+> Bis 04.09.2026 gab es hier zwei getrennte Töpfe (Physio/Ergo/Logo hier,
+> Podologie in Abschnitt 5, eigene Tabelle `verordnungen`). Grund der Trennung
+> damals: zwei Formulare, die unabhängig voneinander wuchsen. Grund der
+> Zusammenlegung heute (Kemal, 04.09.2026): dieselbe Trennung erzeugte zwei
+> §302-Ketten, zwei Statistik-Abfragen, zwei RLS-Modelle — jede Korrektur
+> musste zweimal gemacht werden, und die Podologie-Verordnungen aus dem
+> Rezept-Scan/Muster-13 (dem hier, `prescriptions`) waren für die podologische
+> §302-Kette (die las nur `verordnungen`) unsichtbar: 13 Verordnungen konnten
+> nie abgerechnet werden, bevor das auffiel. Details, Gründe für die Richtung
+> (statt umgekehrt) und die Spaltenübersetzung: `module/verordnung-topf.js`.
+> Migrationen: `verordnungstopf_faz1_prescriptions_spalten` (Spalten),
+> `_faz2_vier_zeilen_kopieren` (die 4 Zeilen aus `verordnungen`, ids
+> unverändert), `_faz3_fk_auf_prescriptions_umhaengen` (5 Fremdschlüssel),
+> `_faz5b_verordnungen_droppen` + `_faz5c_naechste_verordnungsnummer_fix`
+> (`verordnungen` gedroppt, auf Nutzerwunsch vorgezogen aus der ursprünglich
+> geplanten 90-Tage-Frist — Details im Eintrag `verordnungen` unten).
+> **Offener Rest, überlebt Faz 5:** kein GoBD-Festschreibungs-Trigger auf
+> `prescriptions` — siehe Warnung in `db/SCHEMA-RLS.sql` bei
+> `verordnung_festschreibung()`.
 
 ### `prescriptions`
-- **Warum:** Die Verordnung (Muster 13) für Physio/Ergo/Logopädie: Diagnose, Heilmittel, Frequenz, Genehmigung — die Grundlage jeder GKV-Abrechnung.
-- **Seit:** 16.05.2026 · `v10_prescriptions`
+- **Warum:** Die Verordnung (Muster 13) für ALLE vier Fachbereiche — Physio, Ergo, Logopädie UND (seit 04.09.2026) Podologie. `therapie_bereich` unterscheidet; Podologie-Zeilen tragen zusätzlich neun aus `verordnungen` übernommene Spalten (`patient_name`, `wagner_grad`, `versichertennummer`, `behandlungsanlass`, `absetzung_*`, `storno_*`, `rezeptart`).
+- **Seit:** 16.05.2026 · `v10_prescriptions` (Podologie-Zusammenlegung: 04.09.2026, siehe Kasten oben)
 - **Status:** aktiv
-- **Wer:** 15 Dateien, 8 schreibende Funktionen — Rezept-Scan, Verordnungsliste und -detail, Abrechnung, Rechnung, Mahnwesen, Statistik.
-- **Achtung:** Zwei getrennte ICD-Spalten (`icd10`, `icd10_2`) — bei `verordnungen` ist es dagegen ein `text[]`. Wer Code zwischen den Töpfen kopiert, produziert hier einen stillen Typfehler.
+- **Wer:** 15+ Dateien — Rezept-Scan, Verordnungsliste und -detail, Abrechnung, Rechnung, Mahnwesen, Statistik, **plus seit 04.09.2026** `module/podologie-abrechnung.js`, `verordnung-uebersicht.js`, `abrechnungsstatus.js`, `verordnung-status.routes.js`, `/abrechnung/create-podologie` (Podologie-Zweig).
+- **Achtung:** Zwei getrennte ICD-Spalten (`icd10`, `icd10_2`) — der frühere Podologie-Topf führte `text[]`. `status` ist die BEARBEITUNGSachse (parsed→confirmed→…), NICHT die Abrechnungsachse — die heisst `abrechnung_status` und ist das Gegenstück zum alten `verordnungen.status` (Wertetabelle in `module/verordnung-topf.js`). `rezeptart` ≠ `rezept_typ` (Zahler- vs. Formachse, bewusst nicht gefaltet).
+- **Achtung — `nagel` (seit 04.09.2026, Ops-Aufgabe 245):** der behandelte Zehennagel einer Nagelspangen-Verordnung, zehn Werte per CHECK (`U1 links` … `U5 rechts`). Die Schreibweise ist nicht erfunden, sie steht in § 3b Satz 5 der Änderungsvereinbarung vom 16.06.2025. Warum die Spalte HIER sitzt und nicht an `podologie_behandlungen`: § 3b Satz 3-4 sagt, dass ein Zehennagel ein eigener Verordnungsfall ist und eine Verordnung sich auf **einen** Nagel bezieht — an der Behandlung stünde derselbe Wert auf jeder Zeile und könnte auseinanderlaufen. Gebraucht wird er für die Erstbefundungs-Sperre (78110/78100), die **je Serie und je Nagel über mehrere Verordnungen hinweg** gilt: `module/eingangsbefundung-regel.js` → `darfErstbefundungNagel()`. Ausserhalb UI1/UI2 immer NULL. **Kein NOT NULL und kein bedingter CHECK:** eine Verordnung entsteht zuerst aus dem OCR-Lauf (`/rezept/save`) und wird danach ergänzt — ein harter CHECK würde den Scan-Weg beim INSERT abweisen. Die Pflicht sitzt deshalb im Verordnungsformular (`module/podologie-abrechnung.js`); für OCR-Verordnungen ohne Nagel läuft die Serien-Sperre bewusst ins Leere (`grund: 'nagel_unbekannt'`) statt zu raten. Offen: dieselbe Pflicht bei der Freigabe zur Abrechnung.
 
 ### `prescription_sessions`
 - **Warum:** Die einzelne Behandlungseinheit auf der Verordnung. Ohne sie ließe sich nicht sagen, wie viele der verordneten Einheiten schon geleistet sind.
@@ -329,38 +355,22 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 
 ## 5. Podologie
 
-### `verordnungen`
-- **Warum:** Die podologische Verordnung. Eigener Topf, weil Podologie andere Pflichtfelder hat (Wagner-Armstrong-Grad, Fußstatus-Bezug) und die Abrechnung über HPNR 78xxx läuft.
+### `verordnungen` — ★★★ GEDROPPT 04.09.2026. NICHT WIEDER ANLEGEN. ★★★
+- **Warum es sie gab:** Die podologische Verordnung, als eigener Topf getrennt von `prescriptions` — Podologie hatte andere Pflichtfelder (Wagner-Armstrong-Grad, Fußstatus-Bezug) und rechnet über HPNR 78xxx ab.
 - **Seit:** 13.06.2026 · `create_verordnungen` (GoBD-Riegel nachgezogen: 03.09.2026 · `verordnungen_gobd_festschreibung`)
-- **Status:** aktiv
-- **Wer:** `module/podologie-abrechnung.js`, `verordnung-uebersicht.js`, `abrechnungsstatus.js`, Backend-Abrechnung und Verordnungsstatus.
-- **Achtung:** `icd10` ist ein `text[]` (bei `prescriptions` zwei Einzelspalten). Team darf seit 03.09.2026 LESEN (Policy `Employees can view team verordnungen`), Schreiben bleibt beim Inhaber — `status` haengt an der serverseitigen Uebergangspruefung in `verordnung-status.routes.js`, ein direkter Team-Schreibzugriff wuerde daran vorbei gehen.
-- **Achtung — GoBD-Riegel seit 03.09.2026:** Trigger `trg_verordnungen_festschreibung` →
-  `verordnung_festschreibung()`. Sobald `belegnummer` gesetzt ist (einmalig bei der
-  DTA-Erzeugung, `/abrechnung/create-podologie`), sperrt er per `UPDATE` genau die Spalten,
-  die in `mapVerordnungToDtaShape()` tatsächlich in die DTA-Datei eingehen:
-  `ausstellungsdatum, diagnosegruppe, icd10, leitsymptomatik, pat_leitsymptomatik, dringend,
-  hausbesuch, therapiefrequenz, rezeptart, zuzahlung_befreit, kostentraeger_ik,
-  versichertennummer, lead_id, arzt_id, belegnummer` selbst. Vergleicht `NEW` gegen `OLD`
-  (`IS DISTINCT FROM`) — ein unveränderter Re-Save (der Podologie-Bearbeiten-Dialog schreibt
-  beim Speichern pauschal alle Formularfelder) geht durch, nur eine echte Änderung wirft
-  `check_violation` mit Verweis auf das Korrekturverfahren.
-  Bewusst **nicht** gesperrt, weil nicht Teil der DTA bzw. weiter gebraucht:
-  `status, absetzung_betrag, absetzung_grund, absetzung_am, storno_grund, storno_am,
-  abrechnung_id` (das ist der Korrekturweg selbst — `PATCH /verordnung/:id/abrechnungsstatus`,
-  ZAA-Import), `patient_name` (DTA nimmt den Namen immer aus `leads`), `behandlungseinheiten`
-  (kommt in keiner Zeile der Backend-Abrechnungskette vor — nur Arbeitslisten-Anzeige,
-  siehe `module/verordnung-einheiten.js`), `heilmittel_items` (speist nur
-  `statistik.routes.js`), `wagner_grad, behandlungsanlass, notizen, behandlungsstart,
-  beginn_spaetestens, therapiebericht`. Gegenstück zu `invoice_festschreibung()` bei
-  `invoices`, andere Spaltenliste. Löschung (`DELETE`, `api/dsgvo.js`) ist von diesem Trigger
-  nicht betroffen — er hängt nur an `BEFORE UPDATE`.
+- **Warum sie weg ist:** Kemal, 04.09.2026: *"2 tablo olduğu için her tarafta arızalar çıkıyor, biri oraya biri buraya çıkıyor, tek tablo olması şart bu iş için."* Zwei Verordnungstöpfe hiessen zwei Wahrheiten — ein gescanntes podologisches Rezept landete in `prescriptions`, die §302-Kette las aber nur `verordnungen`: live standen 9 Verordnungen im falschen Topf und waren nie abrechenbar. Zusammenlegung in `prescriptions` (Details, Kolonübersetzung, Gerechtfertigung der Zieltabelle: `module/verordnung-topf.js`). Erst 3 Tage lang read-only stillgelegt (ids unverändert übernommen), dann auf ausdrücklichen Nutzerwunsch sofort gedroppt — statt der ursprünglich vorgesehenen 90-Tage-Frist.
+- **Die 4 Zeilen:** vollständig und mit unveränderten ids in `prescriptions` erhalten. Keine Datei im Repo enthält sie (DSGVO) — eine lokale Sicherung liegt ausserhalb der DB und ausserhalb des Repos.
+- **`api/dsgvo.js`** ist bereinigt: die Tabelle steht in keiner Auskunfts- oder Löschliste mehr.
+- **Aufräumarbeiten beim Drop:** `naechste_verordnungsnummer()` zählte per `UNION ALL` über beide Töpfe — musste VOR dem `DROP TABLE` auf ein einzelnes `SELECT` gegen `prescriptions` umgebaut werden, sonst wäre jede neue Verordnungsnummer-Vergabe (jeder `saveRezept()`-Aufruf mit `patient_id`) mit `relation verordnungen does not exist` gescheitert. `vergebe_verordnungsnummer_vo()` ist mit der Tabelle verwaist und separat gedroppt. Trigger (`trg_verordnungen_verordnungsnummer`, `trg_verordnungen_festschreibung`) und RLS-Policies (`owner_verordnungen`, `Employees can view team verordnungen`) sind als Kind-Objekte automatisch mit der Tabelle verschwunden.
+- **⚠️ Offene Lücke, überlebt den Drop:** `prescriptions` hat weiterhin KEINEN GoBD-Festschreibungs-Trigger — weder für Physio/Ergo/Logo (hatte nie einen) noch für die drei Tage lang geschützten Podologie-Zeilen. Die Spaltenliste, die `trg_verordnungen_festschreibung` sperrte, bevor er verschwand (für den Wiederaufbau als Vorlage): `ausstellungsdatum, diagnosegruppe, icd10, leitsymptomatik, pat_leitsymptomatik, dringend, hausbesuch, therapiefrequenz, rezeptart, zuzahlung_befreit, kostentraeger_ik, versichertennummer, lead_id, arzt_id, belegnummer`. Bewusst NICHT gesperrt: `status, absetzung_*, storno_*, abrechnung_id` (Korrekturweg selbst), `patient_name`, `behandlungseinheiten`, `heilmittel_items`, `wagner_grad, behandlungsanlass, notizen, behandlungsstart, beginn_spaetestens, therapiebericht`. Nachbau auf `prescriptions` (Spaltenliste um physiospezifische Felder erweitert) ist bewusst NICHT Teil dieser Migration — braucht `gkv-302` UND `legal-de` vorher, echtes Geld/GoBD-Pflicht.
+- **★ FÜR DIE ZUKUNFT — an db-ustasi und jede künftige Sitzung:** Für Podologie, Verordnungen, Muster 13, Rezepte gibt es genau EINE Tabelle: `prescriptions` (`therapie_bereich` unterscheidet die Fachbereiche). Vor jeder neuen Tabelle mit "Verordnung"/"Rezept" im Namen — für Podologie oder sonst einen Fachbereich — erst diesen Eintrag lesen und die Frage stellen, ob eine neue Spalte auf `prescriptions` nicht reicht. Die Kosten eines zweiten Topfes sind hier oben dokumentiert: neun Monate lang unbemerkt unbezahlbare Verordnungen.
 
 ### `podologie_behandlungen`
-- **Warum:** Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions` im anderen Topf.
+- **Warum:** Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions`. `verordnung_id` zeigt seit 04.09.2026 auf `prescriptions` (Zusammenlegung der Verordnungstöpfe, ids unverändert) — vorher auf die eigene Tabelle `verordnungen`.
 - **Seit:** 13.06.2026 · `create_podologie_behandlungen` (Team-SELECT nachgezogen: 03.09.2026 · `verordnungen_podologie_behandlungen_team_select`)
 - **Status:** aktiv
 - **Wer:** `loadPodologieBilling()`, Patientenkarte, Rechnungsbrücke, Backend-Abrechnung.
+- **Achtung — `lokalisation` ist seit 04.09.2026 nicht mehr die Quelle:** der behandelte Nagel steht jetzt an der Verordnung (`prescriptions.nagel`, siehe dort). Die Spalte wird weiter mitgeschrieben, weil `module/verordnung-detail.js` und `module/rechnung-bruecke.js` sie anzeigen — sie bekommt den Wert der Verordnung. Das Freitextfeld im Formular existiert nur noch für Verordnungen von vor diesem Datum, die keinen Nagel tragen. Ein DROP ist erst nach Umstellung dieser beiden Anzeigen sinnvoll und ist eine eigene Entscheidung.
 - **Achtung:** Team darf seit 03.09.2026 LESEN (Policy `Employees can view team podologie_behandlungen`), Schreiben bleibt beim Inhaber — die Tabelle hat keine Spalte fuer den behandelnden Mitarbeiter, teamweites Schreiben waere die falsche Granularitaet fuer eine Dokumentation nach § 630f BGB. Kein UI dafuer: `podologie-billing` ist in `nav-registry.js` `roles: ['owner']`.
 
 ### `pat_fussbefund`
@@ -695,10 +705,11 @@ Transaktion mit anschließendem ROLLBACK ausgeführt und danach nachgezählt wur
 Datensatz wurde dabei verändert.
 
 **Die Reihenfolge ist keine Kosmetik.** Diese Tabellen zeigen ohne CASCADE auf `profiles`
-und müssen vorher weg, sonst scheitert der letzte Schritt: `verordnungen`,
-`podologie_behandlungen`, `fußstatus`, `messreihen`, `booking_requests`. Bis zum 28.08.2026
-standen sie in keiner Löschliste — die Löschung ist deshalb für jede echte Praxis am
-Profil gescheitert, und der Endpunkt meldete trotzdem Erfolg.
+und müssen vorher weg, sonst scheitert der letzte Schritt: `podologie_behandlungen`,
+`fußstatus`, `messreihen`, `booking_requests` (bis 04.09.2026 stand hier zusätzlich
+`verordnungen` — gedroppt, siehe Abschnitt 4/5 oben, kein Auftauchen mehr nötig). Bis zum
+28.08.2026 standen sie in keiner Löschliste — die Löschung ist deshalb für jede echte Praxis
+am Profil gescheitert, und der Endpunkt meldete trotzdem Erfolg.
 
 **Zwei Sperren sind vermutlich Absicht und dürfen nicht „weggeräumt" werden:**
 

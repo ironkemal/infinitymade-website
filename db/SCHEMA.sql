@@ -1,8 +1,26 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-03 (booking_leistungen — mehrere Leistungen je Termin)
--- LETZTE MIGRATION:  20260903170448_booking_leistungen
+-- ERZEUGT AM:        2026-09-04 (zuletzt nachgezogen: prescriptions.nagel,
+--                    Ops-Aufgabe 245) — Zusammenlegung der zwei Verordnungstöpfe:
+--                    prescriptions (+11 Spalten aus `verordnungen`) wird der
+--                    EINE Topf für Physio/Ergo/Logo UND Podologie. Details,
+--                    Begründung und Spaltenübersetzung: module/verordnung-topf.js
+--                    (Faz 1-3 dieser Datei: SCHEMA per Hand nachgezogen, KEIN
+--                    voller Neu-Dump aller 80 Tabellen — "schema aktualisieren"
+--                    für einen vollen Refresh steht noch aus)
+--                    Faz 5 (04.09.2026, auf Nutzerwunsch vorgezogen aus der
+--                    90-Tage-Frist): `verordnungen` GEDROPPT. Siehe Eintrag
+--                    an der Stelle, wo die Tabelle frueher im Dump stand
+--                    (nach `vehicles`, vor `visibility_reports`).
+-- LETZTE MIGRATION:  verordnungstopf_faz5c_naechste_verordnungsnummer_fix
+--                    davor: verordnungstopf_faz5b_verordnungen_droppen
+--                    davor: 20260904085612_prescriptions_nagel_lokalisation
+--                    davor: 20260903202143_verordnungstopf_faz3_fk_auf_prescriptions_umhaengen
+--                    davor: 20260903202025_verordnungstopf_faz2_vier_zeilen_kopieren
+--                    davor: 20260903201633_verordnungstopf_faz1_prescriptions_spalten
+--                    davor: 20260903205029_bookings_dauer_quelle
+--                    davor: 20260903170448_booking_leistungen
 --                    davor: 20260903165452_verordnungen_podologie_behandlungen_team_select
 --                    davor: 20260903132042_verordnungen_gobd_festschreibung
 --                    davor: 20260903075503_pruefe_booking_verordnung_owner_execute_revoke
@@ -32,8 +50,11 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            83 Tabellen · 1219 Spalten · 158 RLS-Policies
+-- UMFANG:            83 Tabellen · 1231 Spalten · 158 RLS-Policies
 --                    301 Indizes · 66 Trigger · 67 Funktionen · 4 Views
+--                    (03.09.2026 abends: die Spaltenzahl stand auf 1219 und war
+--                     um 12 zu niedrig — gegen die Live-DB nach der dokumentierten
+--                     Zählweise nachgezählt, nicht fortgeschrieben.)
 --                    (03.09.2026: die Triggerzahl stand hier auf 60 und war
 --                     seit zwei Migrationen zu niedrig — gegen die Live-DB
 --                     nachgezählt, nicht fortgeschrieben.)
@@ -416,36 +437,63 @@ CREATE TABLE bookings (
   rezeptart text
   payment_method text
   verordnung_id uuid
+  dauer_quelle text
 );
 --   CHECK status IN (confirmed, cancelled, completed, pending, no_show)
+--   CHECK dauer_quelle IS NULL OR IN (vorschlag, manuell, serie)
 --   CHECK fahrt_status IN (fahrt_started, fahrt_arrived, fahrt_return_pending, fahrt_completed)
 --   FK group_parent_id -> bookings(id) ON DELETE CASCADE (Gruppentermine)
 --   FK lead_id -> leads(id) · vehicle_id -> vehicles(id) · service_id -> services(id)
---   FK verordnung_id -> verordnungen(id) ON DELETE SET NULL   (Podologie, 03.09.2026)
+--   FK verordnung_id -> prescriptions(id) ON DELETE SET NULL   (Podologie, 03.09.2026;
+--      Ziel seit 04.09.2026 prescriptions — vorher eigene Tabelle `verordnungen`, ids unveraendert)
 --   PK (id)
 --   ★ EXCLUDE no_overlapping_bookings USING gist
 --       (user_id WITH =, tstzrange(start_time, end_time, '[)') WITH &&)
 --       WHERE status='confirmed' AND group_parent_id IS NULL
 --     → Doppelbuchung ist auf DB-Ebene unmöglich. Nicht im Code nachbauen.
 --   ★ In der Realtime-Publication (Übersicht aktualisiert sich ohne Reload).
+--   ★ dauer_quelle — woher stammt die Dauer? (seit 03.09.2026)
+--     NULL = nicht erfasst (Altbestand + alle Backend-Wege) · 'vorschlag' =
+--     Vorschlag unverändert übernommen · 'manuell' = von Hand eingetippt ·
+--     'serie' = aus einem Batch-Lauf.
+--     ⚠️ Nur 'manuell' darf in gelernteDauer() (module/termin-dauer.js).
+--        end_time - start_time ist als Lernquelle ZIRKULÄR: Termine werden nie
+--        von Hand geschlossen, end_time ist immer genau der Wert, der beim
+--        Anlegen im Dauer-Feld stand. Ein falscher Vorschlag bestätigt sich
+--        sonst selbst.
+--     ⚠️ NULL ist nicht 'vorschlag'. Sechs Wege schreiben in bookings; nur die
+--        Terminmaske kennt die Spalte. Wer den Unterschied einebnet, verliert
+--        genau die Information, wegen der die Spalte existiert.
 --   TRIGGER: fn_check_booking_closed_day() · Telefon-Normalisierung · business_id-Default
 --            · pruefe_booking_verordnung_owner() (Owner-Riegel, siehe unten)
---   ★ verordnung_id — PODOLOGIE-Topf. Bindet den Termin an die podologische
---     Verordnung (seit 03.09.2026).
---     ⚠️ Hier gehoert NIE eine `prescriptions.id` hinein — Physio/Ergo/Logo
---        verknuepfen ueber `prescription_sessions.booking_id`, weil es dort
---        ein Einheiten-Hauptbuch gibt und die Frage „welche der 18 Einheiten
---        hat dieser Termin erfuellt?" an `bookings` gar nicht ausdrueckbar
---        waere. Begruendung ausfuehrlich in db/REGISTER.md.
---     ⚠️ SET NULL ist Pflicht: api/dsgvo.js loescht `verordnungen` VOR
---        `bookings`; mit RESTRICT braeche die DSGVO-Loeschkette.
+--   ★ verordnung_id — PODOLOGIE-Zweig. Bindet den Termin an die podologische
+--     Verordnung (seit 03.09.2026). Zeigt seit 04.09.2026 auf `prescriptions`
+--     (Zusammenlegung der Verordnungstöpfe) — vorher eine eigene Tabelle
+--     `verordnungen`, ids der migrierten Zeilen unveraendert.
+--     ⚠️ Trotzdem gehoert hier NIE die id einer Physio/Ergo/Logo-Zeile hinein,
+--        auch wenn dieselbe Tabelle jetzt beide traegt: Physio/Ergo/Logo
+--        verknuepfen weiterhin ueber `prescription_sessions.booking_id`, weil
+--        es dort ein Einheiten-Hauptbuch gibt und die Frage „welche der 18
+--        Einheiten hat dieser Termin erfuellt?" an `bookings` gar nicht
+--        ausdrueckbar waere. `pruefe_booking_verordnung_owner()` prueft nur
+--        den Mandanten, nicht den Fachbereich — Anwendungscode muss
+--        `therapie_bereich='podo'` selbst sicherstellen (siehe
+--        module/verordnung-topf.js, module/verordnung-uebersicht.js).
+--        Begruendung ausfuehrlich in db/REGISTER.md.
+--     ⚠️ SET NULL ist Pflicht: api/dsgvo.js loescht `prescriptions` in der
+--        Loeschkette; mit RESTRICT braeche sie.
 --     ⚠️ Owner-Riegel noetig, weil ein Fremdschluessel KEINE RLS prueft:
---        trg_booking_verordnung_owner vergleicht verordnungen.owner_id mit
---        bookings.owner_id. Ohne ihn liesse sich die Id einer fremden
+--        trg_booking_verordnung_owner (Funktion pruefe_booking_verordnung_owner,
+--        seit 04.09.2026 gegen `prescriptions.owner_id`) vergleicht mit
+--        bookings.owner_id. Ohne ihn liesse sich die id einer fremden
 --        Verordnung in einen eigenen Termin schreiben.
---     ⚠️ Sichtbarkeit ist asymmetrisch: `bookings` hat Team-Zugriff,
---        `verordnungen` nicht. Angestellte sehen die Spalte, aber nicht die
---        Verordnung dahinter (bekannte offene Produktfrage, db/README.md).
+--     ⚠️ Sichtbarkeits-/Schreibasymmetrie AUFGELÖST (04.09.2026, Nutzerentscheidung):
+--        vorher hatte `verordnungen` eine eigene, strengere RLS-Policy
+--        (nur Owner darf schreiben). Seit der Zusammenlegung gilt fuer
+--        podologische Zeilen dieselbe Policy wie fuer Physio/Ergo/Logo
+--        (`prescriptions_owner_all` — Owner UND zugeordnete Angestellte
+--        duerfen schreiben). Bewusst gewaehlt: die podologischen Angestellten
+--        sollen ihre Alltagsarbeit (Verordnung anlegen/bearbeiten) behalten.
 
 CREATE TABLE breaks (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -946,8 +994,10 @@ CREATE TABLE invoices (
 --   CHECK invoice_type IN (gkv, privat, selbstzahler)
 --   CHECK steuer_status IN (regel, kleinunternehmer)
 --   CHECK invoices_ein_verordnungsbezug: prescription_id IS NULL OR verordnung_id IS NULL
+--      (seit 04.09.2026 zeigen BEIDE Spalten auf prescriptions — die Tabelle
+--      heisst nur noch verschieden, der CHECK besteht unveraendert fort)
 --   FK patient_id -> leads(id) · lead_id -> leads(id) · prescription_id -> prescriptions(id)
---   FK verordnung_id -> verordnungen(id) ON DELETE SET NULL
+--   FK verordnung_id -> prescriptions(id) ON DELETE SET NULL
 --   PK (id) · UNIQUE (owner_id, invoice_number)
 --   ★ ZWEI Verordnungsbezüge, weil es zwei Verordnungstöpfe gibt (Falle 2):
 --      prescription_id → Physio/Ergo/Logo · verordnung_id → Podologie.
@@ -1078,7 +1128,8 @@ CREATE TABLE leads (
 --   ⚠️ `status` ist der ALTE CRM-Trichter und wird im Praxisablauf seit dem
 --      14.08.2026 weder gesetzt noch angezeigt. Nur die alten B2B/B2C-Panels
 --      lesen ihn noch (dashboard.html:988, :1079). Der Status, der zählt,
---      steht an der Verordnung (verordnungen.status).
+--      steht an der Verordnung (prescriptions.abrechnung_status, podologisch
+--      übersetzt über module/verordnung-topf.js).
 --   ⚠️ `phone` = Festnetz/Hauptnummer — der Buchungsabgleich hängt an
 --      phone_normalized. `handy` ist die Zweitnummer (seit 14.08.2026).
 --   ⚠️ `patientennummer` vergibt der Trigger vergebe_patientennummer() BEFORE
@@ -1089,7 +1140,7 @@ CREATE TABLE leads (
 --     Historisch als Akquise-Tabelle entstanden (title, google_url,
 --     reviews_count stammen daher), heute die reale Patientenakte.
 --     anamnese, prescriptions, invoices, messreihen, pat_fussbefund,
---     verordnungen, fahrten, ausfallrechnungen hängen alle hier dran.
+--     fahrten, ausfallrechnungen hängen alle hier dran.
 --   ★ PII-Verschlüsselung: *_enc bytea + pii_encrypted-Flag
 --     (api-backend/lib/phi-encrypt.js).
 
@@ -1331,7 +1382,8 @@ CREATE TABLE podologie_behandlungen (
   created_at timestamptz DEFAULT now()
   invoice_id uuid
 );
---   FK verordnung_id -> verordnungen(id) ON DELETE SET NULL · PK (id)
+--   FK verordnung_id -> prescriptions(id) ON DELETE SET NULL · PK (id)
+--      (Ziel seit 04.09.2026 prescriptions, ids der migrierten Zeilen unveraendert)
 --   FK invoice_id -> invoices(id) ON DELETE SET NULL
 --   ★ Podologie-Behandlungstopf (Gegenstück zu prescription_sessions).
 --   ★ invoice_id ist gesetzt, sobald die Sitzung auf einer Rechnung steht.
@@ -1463,21 +1515,67 @@ CREATE TABLE prescriptions (
   zuzahlung_kassiert_von uuid
   zuzahlung_kassiert_eur numeric(10,2)
   zuzahlung_zahlart text
+  patient_name text
+  wagner_grad smallint
+  versichertennummer text
+  behandlungsanlass text
+  absetzung_betrag numeric(10,2)
+  absetzung_grund text
+  absetzung_am date
+  storno_grund text
+  storno_am date
+  rezeptart text
+  nagel text
 );
 --   CHECK zuzahlung_zahlart IS NULL ODER IN (bar, ec, ueberweisung, sonstiges)
 --   CHECK status IN (parsed, confirmed, in_therapy, completed, billed, cancelled)
 --   CHECK rezept_typ IN (standard, blanko, lhb_bvb, kassen, privat)
---   CHECK abrechnung_status IN (bereit, in_abrechnung, gesendet, accepted, rejected, paid)
+--   CHECK abrechnung_status IN (bereit, in_abrechnung, gesendet, accepted, rejected, paid,
+--                               teilabsetzung, storniert, archiviert)
 --   CHECK bericht_status IN (offen, in_arbeit, erledigt)
 --   CHECK quelle IN (papier, ocr, evo) · signature_confidence IN (high, medium, low)
+--   CHECK wagner_grad IS NULL ODER BETWEEN 0 AND 5
+--   CHECK rezeptart IS NULL ODER IN (kassen, privat, selbstzahler)
+--   CHECK absetzung_betrag IS NULL ODER (> 0 AND abrechnung_status IN (teilabsetzung, rejected))
+--   CHECK abrechnung_status <> 'teilabsetzung' ODER absetzung_betrag IS NOT NULL
+--   CHECK nagel IS NULL ODER IN (U1..U5 links, U1..U5 rechts)  — zehn Werte
+--   ★ nagel (04.09.2026): behandelter Zehennagel einer Nagelspangen-Verordnung.
+--     Schreibweise aus § 3b Satz 5 der Aenderungsvereinbarung vom 16.06.2025
+--     ("U1 links" .. "U5 rechts"). Nur bei diagnosegruppe UI1/UI2 gefuellt.
+--     Er steht hier und nicht an `podologie_behandlungen`, weil eine Verordnung
+--     sich laut § 3b Satz 3-4 auf GENAU EINEN Zehennagel bezieht — und weil die
+--     Erstbefundungs-Serie (78110/78100) ueber mehrere Verordnungen laeuft und
+--     allein vom Nagel zusammengehalten wird. Kein NOT NULL: eine Verordnung
+--     entsteht zuerst aus dem OCR-Lauf, der Nagel kommt danach.
 --   FK patient_id -> leads(id) · arzt_id -> aerzte(id) · abrechnung_id -> abrechnung(id)
 --   FK kostentraeger_ik -> kostentraeger(ik) · PK (id)
---   ★ Physio/Ergo/Logopädie-Verordnungstopf. Podologie nutzt `verordnungen`.
+--   ★ SEIT 04.09.2026: EIN Verordnungstopf für ALLE Fachbereiche
+--     (Physio/Ergo/Logo UND Podologie, `therapie_bereich` unterscheidet).
+--     Die alte, separate `verordnungen`-Tabelle (Podologie-Topf) ist an diesem
+--     Tag aufgegangen: ihre 4 Zeilen wurden mit UNVERÄNDERTEN ids hierher
+--     kopiert, alle Fremdschlüssel (podologie_behandlungen, bookings, invoices,
+--     zuzahlung_guthaben, zuzahlung_korrekturen) zeigen seither hierher.
+--     `verordnungen` selbst wurde am 04.09.2026 GEDROPPT (Nutzerentscheidung,
+--     vorgezogen aus der ursprünglich geplanten 90-Tage-Frist) — nicht mehr in
+--     der DB, nicht mehr in api/dsgvo.js gelistet. Historischer Rest-Hinweis
+--     an der Stelle, wo die Tabelle früher stand: siehe unten im Dump.
+--     Grund der Wahl (statt umgekehrt: prescriptions → verordnungen migrieren):
+--     9 statt 47 Spalten, 7 statt 242 Zeilen, 72 statt 168 Codestellen. Details
+--     und Spaltenübersetzung: module/verordnung-topf.js.
+--     Neun Spalten kamen dabei aus `verordnungen` dazu (patient_name,
+--     wagner_grad, versichertennummer, behandlungsanlass, absetzung_*,
+--     storno_*, rezeptart). `rezeptart` bewusst NICHT mit `rezept_typ` gefaltet
+--     — unterschiedliche Achsen (Zahler vs. Formtyp), siehe module/
+--     verordnung-topf.js Kopf. `status` (oben) bleibt die Bearbeitungsachse;
+--     `abrechnung_status` ist das Podologie-Gegenstück zum alten
+--     `verordnungen.status` (Wertetabelle: aktiv=NULL, abrechenbar=bereit,
+--     abgerechnet=gesendet, abgesetzt=rejected, teilabsetzung/storniert/
+--     archiviert unverändert).
 --   ★ PHI-Verschlüsselung: icd10_enc, ocr_raw_enc, phi_encrypted.
 --   TRIGGER fn_prescriptions_set_befreit() setzt zuzahlung_befreit automatisch.
---   ⚠️ `verordnungsnummer` / `belegnummer`: gleiche Regel wie in `verordnungen`
---      (Trigger trg_prescriptions_verordnungsnummer, Zaehler ueber beide Toepfe,
---      Belegnummer bei der DTA-Erzeugung eingefroren). Siehe dort.
+--   ⚠️ `verordnungsnummer` / `belegnummer`: fortlaufend je Patient
+--      (Trigger trg_prescriptions_verordnungsnummer), Belegnummer bei der
+--      DTA-Erzeugung eingefroren.
 
 CREATE TABLE profiles (
   id uuid NOT NULL                      -- = auth.users.id
@@ -1792,77 +1890,19 @@ CREATE TABLE vehicles (
 --   CHECK kind IN (privat, gewerblich) · PK (id)
 --   RLS: private Fahrzeuge sieht nur, wer sie angelegt hat.
 
-CREATE TABLE verordnungen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid
-  patient_name text
-  ausstellungsdatum date NOT NULL
-  diagnosegruppe text
-  icd10 text[]
-  leitsymptomatik text
-  behandlungseinheiten integer
-  therapiefrequenz text
-  hausbesuch boolean DEFAULT false
-  therapiebericht boolean DEFAULT false
-  dringend boolean DEFAULT false
-  behandlungsstart date
-  status text DEFAULT 'aktiv'::text
-  notizen text
-  created_at timestamptz DEFAULT now()
-  rezeptart text NOT NULL DEFAULT 'kassen'::text
-  beginn_spaetestens date
-  heilmittel_items jsonb NOT NULL DEFAULT '[]'::jsonb
-  wagner_grad smallint
-  lead_id uuid
-  versichertennummer text
-  arzt_id uuid
-  kostentraeger_ik text
-  zuzahlung_befreit boolean DEFAULT false
-  pat_leitsymptomatik text
-  behandlungsanlass text
-  abrechnung_id uuid
-  absetzung_betrag numeric(10,2)
-  absetzung_grund text
-  absetzung_am date
-  storno_grund text
-  storno_am date
-  verordnungsnummer integer
-  belegnummer text
-);
---   CHECK status IN (aktiv, abrechenbar, abgerechnet, teilabsetzung, abgesetzt,
---                    storniert, archiviert)
---   CHECK absetzung_betrag IS NULL OR (> 0 AND status IN (teilabsetzung, abgesetzt))
---   CHECK status <> 'teilabsetzung' OR absetzung_betrag IS NOT NULL
---   CHECK wagner_grad BETWEEN 0 AND 5
---   CHECK rezeptart <> 'kassen' OR diagnosegruppe IS NOT NULL
---   FK diagnosegruppe -> diagnosegruppen(code) · arzt_id -> aerzte(id) · lead_id -> leads(id)
---      abrechnung_id -> abrechnung(id) ON DELETE SET NULL
---   PK (id)
---   ⚠️ Status ist ein Tor, kein Etikett: Uebergaenge laufen ausschliesslich ueber
---      PATCH /api/billing/verordnung/:id/abrechnungsstatus — 'abgerechnet' vergibt
---      nur /abrechnung/create-podologie. Direkte UPDATEs aus der Oberflaeche
---      umgehen die Regeln (Doppelabrechnung, Absetzung ohne Betrag).
---   ★ PODOLOGIE-Verordnungstopf. Physio/Ergo/Logo nutzen `prescriptions`.
---     Die beiden Töpfe bestehen bewusst nebeneinander.
---   ⚠️ icd10 ist hier text[] — in prescriptions dagegen zwei Einzelspalten
---      (icd10, icd10_2). Beim Umschreiben von Code leicht zu verwechseln.
---   ⚠️ `verordnungsnummer` vergibt der Trigger trg_verordnungen_verordnungsnummer
---      BEFORE INSERT/UPDATE OF lead_id — fortlaufend JE PATIENT, ab 1. Der
---      Zaehler laeuft ueber BEIDE Toepfe (prescriptions + verordnungen), weil
---      beide an derselben Akte haengen und in derselben DTA-Datei landen
---      koennen. NICHT im Client setzen. UNIQUE (owner_id, lead_id, verordnungsnummer)
---   ⚠️ `belegnummer` = <leads.patientennummer>-<verordnungsnummer>, z. B. "12-3".
---      Wird bei der DTA-Erzeugung EINMAL geschrieben und danach nie geaendert
---      (Anlage 1 TP5 V21 Kap. 7.3) — sonst findet eine spaete Kassenrueckmeldung
---      ihren Beleg nicht mehr. Leer = noch nie abgerechnet.
---   ⚠️ GoBD-Riegel seit 03.09.2026 (`verordnungen_gobd_festschreibung`):
---      Trigger trg_verordnungen_festschreibung sperrt, sobald belegnummer
---      gesetzt ist, per UPDATE genau die Spalten, die in die DTA-Datei
---      eingehen (ausstellungsdatum, diagnosegruppe, icd10, leitsymptomatik,
---      pat_leitsymptomatik, dringend, hausbesuch, therapiefrequenz, rezeptart,
---      zuzahlung_befreit, kostentraeger_ik, versichertennummer, lead_id,
---      arzt_id, belegnummer selbst). status/absetzung_*/storno_*/abrechnung_id
---      bleiben offen — das ist der Korrekturweg. Details: db/REGISTER.md.
+-- ★★★ `verordnungen` — GEDROPPT 04.09.2026, nicht wieder anlegen. ★★★
+-- War der Podologie-Verordnungstopf, bis er in `prescriptions`
+-- (therapie_bereich='podo') aufging (Kemal, 04.09.2026: "tek tablo olması
+-- şart"). Erst 3 Tage stillgelegt (ids unverändert übernommen, FKs
+-- umgehängt), dann auf Nutzerwunsch sofort gedroppt statt der ursprünglich
+-- vorgesehenen 90-Tage-Frist. Die 4 historischen Zeilen liegen NICHT im
+-- Repo (DSGVO) — lokale Sicherung ausserhalb der DB, ausserhalb des Repos.
+-- `api/dsgvo.js` wurde entsprechend bereinigt (Tabelle nicht mehr gelistet).
+-- Spaltenübersetzung + volle Begründung: `module/verordnung-topf.js`.
+-- Für JEDE künftige Podologie- (oder sonstige Verordnungs-)Frage gilt: die
+-- EINE Tabelle ist `prescriptions`. Kein zweiter Verordnungstopf wird
+-- wieder eröffnet — vor jeder neuen Tabelle mit "Verordnung" im Namen erst
+-- `db-ustasi` fragen und diesen Absatz zeigen.
 
 CREATE TABLE visibility_reports (
   sector text NOT NULL
@@ -1961,11 +2001,12 @@ CREATE TABLE zuzahlung_guthaben (
 --   CHECK betrag_eur > 0 · rest_eur >= 0 · rest_eur <= betrag_eur
 --   CHECK status IN (offen, teilweise_verrechnet, verrechnet, ausgezahlt, verfallen)
 --   CHECK NOT (quelle_prescription_id IS NOT NULL AND quelle_verordnung_id IS NOT NULL)
---        Ein Guthaben haengt an genau EINEM Topf: prescriptions ODER verordnungen.
+--        Seit 04.09.2026 zeigen BEIDE Spalten auf prescriptions (EIN Topf) —
+--        der CHECK besteht unveraendert fort, nur die Namen sind jetzt gleich-bedeutend.
 --   FK owner_id -> profiles(id) ON DELETE RESTRICT
 --   FK patient_id -> leads(id) ON DELETE CASCADE
 --   FK quelle_prescription_id -> prescriptions(id) ON DELETE SET NULL
---   FK quelle_verordnung_id -> verordnungen(id) ON DELETE SET NULL
+--   FK quelle_verordnung_id -> prescriptions(id) ON DELETE SET NULL
 --   FK created_by -> auth.users(id) ON DELETE SET NULL
 --   PK (id)
 --   TRIGGER trg_zuzahlung_guthaben_status leitet status aus rest_eur ab. Was der
@@ -1998,10 +2039,11 @@ CREATE TABLE zuzahlung_korrekturen (
 --   CHECK length(btrim(grund)) >= 3 · neu_betrag_eur >= 0
 --   CHECK neu_einheiten IS NULL OR neu_einheiten >= 0
 --   CHECK NOT (prescription_id IS NOT NULL AND verordnung_id IS NOT NULL)
+--        (seit 04.09.2026 zeigen beide Spalten auf prescriptions, CHECK bleibt)
 --   FK owner_id -> profiles(id) ON DELETE RESTRICT
 --   FK patient_id -> leads(id) ON DELETE SET NULL
 --   FK prescription_id -> prescriptions(id) ON DELETE SET NULL
---   FK verordnung_id -> verordnungen(id) ON DELETE SET NULL
+--   FK verordnung_id -> prescriptions(id) ON DELETE SET NULL
 --   FK guthaben_id -> zuzahlung_guthaben(id) ON DELETE SET NULL
 --   FK erfasst_von -> auth.users(id) ON DELETE SET NULL
 --   PK (id)

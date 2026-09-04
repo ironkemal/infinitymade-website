@@ -3139,8 +3139,9 @@
           </div>
         </div>
         <div class="form-group" id="bkDurationGroup" hidden>
-          <label class="form-label">Dauer wählen</label>
-          <div id="bkDurationOptions" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          <label class="form-label" for="bkDurationValue">Dauer (Min.)</label>
+          <input class="form-input" id="bkDurationValue" type="number" min="5" max="480" step="5" style="max-width:120px;">
+          <span id="bkDurationHinweis" class="form-hint" hidden></span>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -5834,7 +5835,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260903b"></script>
+  <script type="module" src="dashboard.js?v=20260903c"></script>
 </body>
 
 </html>

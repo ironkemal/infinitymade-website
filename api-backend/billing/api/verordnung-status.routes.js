@@ -1,7 +1,13 @@
-// Abrechnungsstatus einer Verordnung (Podologie-Topf `verordnungen`).
+// Abrechnungsstatus einer podologischen Verordnung.
 //
 // PATCH /api/billing/verordnung/:id/abrechnungsstatus
 // GET   /api/billing/verordnung/abrechnungsstatus/uebersicht
+//
+// Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`, `therapie_bereich =
+// 'podo'`); die Spalte heisst dort `abrechnung_status`. Diese Datei spricht
+// weiterhin die podologische Sprache (aktiv/abrechenbar/…) — uebersetzt wird
+// nur am Rand (statusAusAbrechnungStatus / abrechnungStatusAusStatus aus
+// ../utils/einreichbar.js).
 //
 // Warum eigene Datei: der Status ist kein Etikett, sondern ein Tor. Frueher
 // setzte die Oberflaeche `verordnungen.status` direkt per Supabase-Update —
@@ -21,6 +27,10 @@
 
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
+// Seit 04.09.2026 EIN Verordnungstopf: `prescriptions.abrechnung_status`
+// statt `verordnungen.status`. Diese Datei spricht weiter podologisch
+// (UEBERGAENGE unten bleibt unangetastet) — uebersetzt wird nur am Rand.
+import { statusAusAbrechnungStatus, abrechnungStatusAusStatus } from '../utils/einreichbar.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -97,14 +107,20 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
       });
     }
 
-    const { data: v, error: vErr } = await supabase
-      .from('verordnungen')
-      .select('id, owner_id, status, patient_name, abrechnung_id, rezeptart')
+    const { data: vRoh, error: vErr } = await supabase
+      .from('prescriptions')
+      .select('id, owner_id, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich')
       .eq('id', req.params.id)
       .maybeSingle();
     if (vErr) return res.status(500).json({ error: vErr.message });
-    if (!v) return res.status(404).json({ error: 'Verordnung nicht gefunden' });
-    if (v.owner_id !== tenantId) return res.status(403).json({ error: 'Kein Zugriff' });
+    if (!vRoh) return res.status(404).json({ error: 'Verordnung nicht gefunden' });
+    if (vRoh.owner_id !== tenantId) return res.status(403).json({ error: 'Kein Zugriff' });
+    // Dieser Statuswechsel ist podologisch — eine physiotherapeutische Zeile
+    // liefe hier durch UEBERGAENGE-Regeln, die für sie nie gedacht waren.
+    if (vRoh.therapie_bereich !== 'podo') {
+      return res.status(400).json({ error: 'Diese Verordnung ist keine podologische Verordnung.' });
+    }
+    const v = { ...vRoh, status: statusAusAbrechnungStatus(vRoh.abrechnung_status) };
 
     const jetzt = v.status || 'aktiv';
     if (jetzt === ziel) return res.json({ ok: true, status: ziel, unveraendert: true });
@@ -117,6 +133,9 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
       });
     }
 
+    // `status` in podologischer Sprache — geschrieben wird unten in
+    // `abrechnung_status` uebersetzt. Alle Feldnamen darunter (absetzung_*,
+    // storno_*, abrechnung_id) heissen in `prescriptions` genauso.
     const patch = { status: ziel };
 
     // ── bereit zur Abrechnung ────────────────────────────────────────────
@@ -190,8 +209,14 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
       patch.abrechnung_id = null;
     }
 
+    // `status` → `abrechnung_status` uebersetzen, den Rest unveraendert
+    // durchreichen (absetzung_*, storno_*, abrechnung_id — gleiche Namen).
+    const { status: statusZiel, ...restPatch } = patch;
+    const dbPatch = { ...restPatch, abrechnung_status: abrechnungStatusAusStatus(statusZiel) };
+
     const { error: upErr } = await supabase
-      .from('verordnungen').update(patch).eq('id', v.id).eq('owner_id', tenantId);
+      .from('prescriptions').update(dbPatch)
+      .eq('id', v.id).eq('owner_id', tenantId).eq('therapie_bereich', 'podo');
     if (upErr) return res.status(500).json({ error: upErr.message });
 
     return res.json({ ok: true, status: ziel, label: LABEL[ziel], vorher: jetzt });
@@ -208,13 +233,17 @@ router.get('/verordnung/abrechnungsstatus/uebersicht', async (req, res) => {
     if (!auth) return;
 
     const { data, error } = await supabase
-      .from('verordnungen')
-      .select('status')
-      .eq('owner_id', auth.tenantId);
+      .from('prescriptions')
+      .select('abrechnung_status')
+      .eq('owner_id', auth.tenantId)
+      .eq('therapie_bereich', 'podo');
     if (error) return res.status(500).json({ error: error.message });
 
     const zaehler = {};
-    for (const r of (data || [])) zaehler[r.status || 'aktiv'] = (zaehler[r.status || 'aktiv'] || 0) + 1;
+    for (const r of (data || [])) {
+      const s = statusAusAbrechnungStatus(r.abrechnung_status);
+      zaehler[s] = (zaehler[s] || 0) + 1;
+    }
     return res.json({ ok: true, zaehler, labels: LABEL });
   } catch (e) {
     console.error('[verordnung/uebersicht]', e);

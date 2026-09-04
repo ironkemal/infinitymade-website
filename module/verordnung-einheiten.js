@@ -15,7 +15,9 @@
  * Zahl im Moment des Anlegens festgeschrieben — wer sich vertan hatte, legte
  * eine zweite Verordnung an.
  *
- * Geltungsbereich: NUR der Podologie-Topf (`verordnungen`)
+ * Geltungsbereich: NUR der podologische Zweig (`therapie_bereich = 'podo'`
+ * in `prescriptions` — seit der Zusammenlegung der Verordnungstöpfe,
+ * 04.09.2026, dieselbe Tabelle wie unten; vorher eine eigene `verordnungen`)
  * ───────────────────────────────────────────────────────
  * Im Physio-Topf (`prescriptions.anzahl_einheiten`) gibt es bis heute überhaupt
  * keinen Schreibweg — `saveRezept` legt nur an. Dort hängen ausserdem die
@@ -44,7 +46,11 @@
  *
  * ⚠️ Offen und bewusst benannt: In der Datenbank hält diesen Riegel NICHTS.
  * GoBD-Trigger gibt es für `belegliste`, `invoices` und `zuzahlung_korrekturen`
- * (db/SCHEMA-RLS.sql), für `verordnungen` nicht. Der Schreibweg der
+ * (db/SCHEMA-RLS.sql); `anzahl_einheiten` steht auf KEINER Liste, die ein
+ * Festschreibungs-Trigger sperrt — weder vorher (`verordnungen.behandlungs-
+ * einheiten`) noch nachher (`prescriptions.anzahl_einheiten`, siehe auch
+ * `db/REGISTER.md`: die Spalte kommt in keiner Zeile der Backend-
+ * Abrechnungskette vor). Der Schreibweg der
  * Podologie-Abrechnung (`podologie-abrechnung.js`, UPDATE-Zweig des Formulars)
  * prüft ebenfalls nichts. Diese Datei ist damit heute die einzige Stelle, die
  * hinsieht — ein Riegel im Browser ist eine Hilfe für den Anwender, keine
@@ -124,12 +130,20 @@ export async function speichereEinheiten(supabase, { vordId, neu }) {
   // KEINEN Fehler — PostgREST meldet Erfolg mit null betroffenen Zeilen. Ohne
   // die Rückgabe stünde in der Oberfläche „gespeichert", während in der
   // Datenbank nichts passiert ist. Genau dieser Fall wird ab jetzt real:
-  // Angestellte dürfen `verordnungen` lesen, aber nicht schreiben.
+  // Angestellte dürfen die Verordnung lesen, aber nicht schreiben.
+  //
+  // Seit 04.09.2026 EIN Verordnungstopf: geschrieben wird `prescriptions`,
+  // Spalte `anzahl_einheiten` (vorher `verordnungen.behandlungseinheiten`).
+  // `.eq('therapie_bereich','podo')` ist Pflicht, nicht Kosmetik — sonst
+  // könnte über diesen Weg versehentlich eine physiotherapeutische Zeile
+  // getroffen werden, deren Einheitenzahl an einem eigenen Sitzungs-
+  // Hauptbuch hängt (module/sitzung-abgleich.js), das hier nicht mitgeht.
   const { data, error } = await supabase
-    .from('verordnungen')
-    .update({ behandlungseinheiten: neu })
+    .from('prescriptions')
+    .update({ anzahl_einheiten: neu })
     .eq('id', vordId)
-    .select('id, behandlungseinheiten');
+    .eq('therapie_bereich', 'podo')
+    .select('id, anzahl_einheiten');
 
   if (error) {
     console.error('[verordnung-einheiten]', error);

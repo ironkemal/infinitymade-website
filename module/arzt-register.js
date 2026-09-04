@@ -446,36 +446,33 @@ export function mountArztPanel() {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Alle Verordnungen eines Arztes aus BEIDEN Töpfen holen und auf
- * {patientId, jahr} normalisieren.
+ * Alle Verordnungen eines Arztes holen und auf {patientId, jahr} normalisieren.
+ *
+ * Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`) — Physio/Ergo/Logo UND
+ * Podologie stehen darin, beide mit `patient_id`. Vorher zwei parallele
+ * Abfragen (`prescriptions` + `verordnungen`); seit der Zusammenlegung wäre
+ * das eine Doppelzählung derselben Zeilen gewesen.
  *
  * `ausstellungsdatum` ist das fachlich richtige Datum (wann hat der Arzt
- * verordnet), nicht `created_at` (wann haben wir es eingetippt). Fehlt es —
- * bei `prescriptions` ist es nullable —, fällt die Zeile auf `created_at`
- * zurück, damit sie nicht aus der Statistik verschwindet.
+ * verordnet), nicht `created_at` (wann haben wir es eingetippt). Fehlt es,
+ * fällt die Zeile auf `created_at` zurück, damit sie nicht aus der Statistik
+ * verschwindet.
  */
 async function ladeZuweisungen(arztId) {
   const owner = ctx.getOwnerId();
-  const [p, v] = await Promise.all([
-    ctx.supabase.from('prescriptions')
-      .select('id,patient_id,ausstellungsdatum,created_at')
-      .eq('owner_id', owner).eq('arzt_id', arztId),
-    ctx.supabase.from('verordnungen')
-      .select('id,lead_id,ausstellungsdatum,created_at')
-      .eq('owner_id', owner).eq('arzt_id', arztId),
-  ]);
-  if (p.error) console.warn('[arzt-register] prescriptions:', p.error);
-  if (v.error) console.warn('[arzt-register] verordnungen:', v.error);
+  const { data, error } = await ctx.supabase.from('prescriptions')
+    .select('id,patient_id,ausstellungsdatum,created_at')
+    .eq('owner_id', owner).eq('arzt_id', arztId);
+  if (error) console.warn('[arzt-register] prescriptions:', error);
 
-  const norm = (rows, patKey) => (rows || []).map(r => {
+  return (data || []).map(r => {
     const datum = r.ausstellungsdatum || r.created_at || null;
     return {
-      patientId: r[patKey] || null,
+      patientId: r.patient_id || null,
       datum,
       jahr: datum ? String(datum).slice(0, 4) : '—',
     };
   });
-  return [...norm(p.data, 'patient_id'), ...norm(v.data, 'lead_id')];
 }
 
 /** Patientennamen zu den gefundenen IDs holen. */

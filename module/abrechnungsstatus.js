@@ -22,7 +22,9 @@
  * Ein Patient kann gleichzeitig eine abgesetzte Verordnung von letztem Monat
  * und eine laufende Behandlung haben. Deshalb:
  *
- *     Wahrheit  =  verordnungen.status  (je Verordnung, in der Datenbank)
+ *     Wahrheit  =  der Abrechnungsstatus je Verordnung, in der Datenbank
+ *                  (podologisch übersetzt aus prescriptions.abrechnung_status,
+ *                  siehe verordnung-topf.js)
  *     Anzeige   =  der dringlichste Status seiner Verordnungen (hier berechnet)
  *
  * „Dringlichst" heisst: was Arbeit macht, steht oben. Eine Absetzung ist Geld,
@@ -40,6 +42,10 @@
  */
 
 import { emit } from './signal.js?v=20260813';
+// Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). Diese Datei spricht
+// weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
+// uebersetzt wird nur an den beiden Lesestellen unten.
+import { TOPF, ausTopf } from './verordnung-topf.js?v=20260904';
 
 const API = 'https://n8n.infinitymade.de/api';
 
@@ -217,6 +223,81 @@ export function statusLabel(key) {
   return statusInfo(key).label;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Der Bereich — aus welchem Topf die Verordnung kommt
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Nicht zu verwechseln mit dem Status oben. Status sagt „wo steht diese
+   Verordnung auf dem Weg zum Geld", Bereich sagt „aus welchem Topf kommt
+   sie" — und davon hängt ab, welche Felder sie überhaupt hat, welcher
+   Katalog gilt und über welchen Weg sie abgerechnet wird:
+
+       Physio · Ergo · Logopädie  →  prescriptions (therapie_bereich ≠ 'podo')  →  „Heilmittel"
+       Podologie                  →  prescriptions (therapie_bereich = 'podo')  →  „Podologie"
+
+   (Seit der Zusammenlegung der Verordnungstöpfe, 04.09.2026 — vorher stand
+   hier eine eigene Tabelle `verordnungen`.)
+
+   Deshalb eine eigene Farbfamilie: ein violettes „Heilmittel" neben einem
+   violetten „Abgerechnet" wäre zweimal dieselbe Farbe für zwei Fragen.
+
+   Steht hier und nicht in einer eigenen Datei, weil `quelle` in diesem Modul
+   ohnehin schon der erste Parameter ist (`statusBadgeGross(quelle, status)`)
+   und die Aufrufer es bereits importieren. Vorher stand dieselbe Tabelle
+   wortgleich in `verordnung-liste.js` und `verordnung-uebersicht.js`; die
+   dritte Kopie für den Kopf der aufgeschlagenen Verordnung (Kemal,
+   03.09.2026) war der Anlass, sie an eine Stelle zu ziehen.
+*/
+const BEREICH = {
+  physio: {
+    label: 'Heilmittel', farbe: '#7c3aed', bg: 'rgba(124,58,237,0.12)',
+    hilfe: 'Physiotherapie · Ergotherapie · Logopädie',
+  },
+  podologie: {
+    label: 'Podologie', farbe: '#15803d', bg: 'rgba(21,128,61,0.12)',
+    hilfe: 'Podologie',
+  },
+};
+
+/**
+ * @param {'physio'|'podologie'} quelle
+ * @returns {{label:string,farbe:string,bg:string,hilfe:string}|null}
+ *          `null` bei unbekanntem Topf — dann bleibt die Stelle leer, statt
+ *          einen Bereich zu behaupten, den es nicht gibt.
+ */
+export function bereichInfo(quelle) {
+  return BEREICH[quelle] || null;
+}
+
+/** Nur die Farbe — für Ränder und Akzentstriche, die keinen Text tragen. */
+export function bereichFarbe(quelle) {
+  return BEREICH[quelle]?.farbe || 'var(--text-muted)';
+}
+
+/**
+ * Das Bereichsetikett als HTML.
+ *
+ * @param {'physio'|'podologie'} quelle
+ * @param {object} [opt]
+ * @param {boolean} [opt.gross=false]  `false` = die nackte Versalienzeile der
+ *        Tabellenspalte (so stand sie dort schon, das bleibt so). `true` =
+ *        gerandete Rosette für den Kopf einer aufgeschlagenen Verordnung, wo
+ *        sie neben Belegnummer und Status steht und mithalten muss.
+ */
+export function bereichBadge(quelle, { gross = false } = {}) {
+  const b = BEREICH[quelle];
+  if (!b) return '';
+  const gemeinsam = `font-weight:700;text-transform:uppercase;color:${b.farbe};`;
+  if (!gross) {
+    return `<span title="${escapeAttr(b.hilfe)}" style="font-size:11px;${gemeinsam}`
+         + `letter-spacing:.04em;">${escapeHtml(b.label)}</span>`;
+  }
+  return `<span title="${escapeAttr(b.hilfe)}" style="display:inline-flex;align-items:center;`
+       + `font-size:11px;${gemeinsam}letter-spacing:.06em;padding:4px 11px;border-radius:14px;`
+       + `background:${b.bg};border:1px solid ${b.farbe};white-space:nowrap;">`
+       + `${escapeHtml(b.label)}</span>`;
+}
+
 /** Farbiges Etikett. Ohne Verordnung bleibt die Zelle bewusst leer statt „unbekannt". */
 export function statusBadge(key, { kurz = false } = {}) {
   if (!key) {
@@ -271,10 +352,11 @@ export async function ladeStatusJePatient(supabase, ownerId) {
   if (!ownerId) return karte;
 
   const { data, error } = await supabase
-    .from('verordnungen')
-    .select('id, lead_id, status')
+    .from(TOPF)
+    .select('id, patient_id, abrechnung_status')
     .eq('owner_id', ownerId)
-    .not('lead_id', 'is', null);
+    .eq('therapie_bereich', 'podo')
+    .not('patient_id', 'is', null);
 
   if (error) {
     console.error('[abrechnungsstatus] laden fehlgeschlagen:', error.message);
@@ -282,7 +364,8 @@ export async function ladeStatusJePatient(supabase, ownerId) {
   }
 
   const gruppen = new Map();
-  for (const row of (data || [])) {
+  for (const roh of (data || [])) {
+    const row = ausTopf(roh);
     if (!gruppen.has(row.lead_id)) gruppen.set(row.lead_id, []);
     gruppen.get(row.lead_id).push(row);
   }
@@ -485,16 +568,17 @@ export function oeffneStatusDialog(verordnung, opts = {}) {
 export async function oeffneStatusDialogFuer(verordnungId, { supabase, onFertig } = {}) {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess?.session?.access_token;
-  const { data: v, error } = await supabase
-    .from('verordnungen')
-    .select('id, status, patient_name, absetzung_betrag, absetzung_grund')
+  const { data: vRoh, error } = await supabase
+    .from(TOPF)
+    .select('id, abrechnung_status, patient_name, absetzung_betrag, absetzung_grund')
     .eq('id', verordnungId)
+    .eq('therapie_bereich', 'podo')
     .maybeSingle();
-  if (error || !v) {
+  if (error || !vRoh) {
     alert('Verordnung konnte nicht geladen werden.');
     return;
   }
-  oeffneStatusDialog(v, { token, onFertig });
+  oeffneStatusDialog(ausTopf(vRoh), { token, onFertig });
 }
 
 function escapeHtml(s) {

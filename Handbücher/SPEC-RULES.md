@@ -227,11 +227,18 @@
   - ✅ **takvim yılı sınırı** — `module/eingangsbefundung-regel.js` → `darf78100()`,
     kapı `module/podologie-abrechnung.js` → `podErstbefundungGrossLage()`; aynı yıl
     ikinci bir 78100 kaydedilemiyor, mesaj 78110'a yönlendiriyor.
-  - ❌ **seri/nagel sınırı** — § 3b lit. a'nın „einmalig zu Beginn einer
-    Nagelspangenbehandlungsserie, je Nagel" kuralı **hâlâ uygulanmadı**: bir
-    `podologie_behandlungen` satırı hangi seriye ait olduğunu taşımıyor,
-    `lokalisation` serbest metin. Bilerek açık — rasgele bir eşleme yanlış sperre
-    üretirdi.
+  - ✅ **seri/nagel sınırı** — kapandı 04.09.2026. Nagel artık Verordnung'un
+    alanı (`prescriptions.nagel`, on değerli CHECK, § 3b Satz 5 yazımı
+    „U1 links" … „U5 rechts"), çünkü § 3b Satz 3-4 bir Zehennagel'i **kendi
+    Verordnungsfall'ı** sayıyor. Kural
+    `module/eingangsbefundung-regel.js` → `darfErstbefundungNagel()`, kapı
+    `module/podologie-abrechnung.js` → `podErstbefundungSerieLage()`. Seri
+    sınırı **78520** (Behandlungsabschluss): ondan sonra aynı nagel'de yeni
+    seri başlar. Sperre 78100 **ve** 78110 için geçerli ve Verordnung
+    sınırlarını aşıyor. Nagel bilinmiyorsa (OCR'den doğan Verordnung henüz
+    tamamlanmamış) **sperre kurulmuyor** — `grund: 'nagel_unbekannt'`; tahmin
+    eden bir sperre haklı kazanılmış leistungu keserdi.
+    ⚠️ Açık kalan: aynı zorunluluk Abrechnung'a freigabe adımında yok.
   Ayrıca `befundungFuerLeistung()` (2026-09-03) Nagel zweiginde **hiçbir şey önermez**,
   sadece hinweis döner — Serie ve hangi Nagel olduğu Termin maskesinde bilinmiyor.
 - **Kapsam:** Podologie, Diagnosegruppen UI1/UI2
@@ -307,10 +314,12 @@
       owner_id kapsamında (temkinli okuma) kalır.
 - [x] 🟠 ~~**78100 takvim yılı sınırı uygulanmamış**~~ — **kapandı 03.09.2026.**
       `darf78100()` + `podErstbefundungGrossLage()`; 9 test.
-- [ ] 🟠 **Erstbefundung seri/nagel sınırı yok** — § 3b lit. a: Erstbefundung Nagel-
-      **serisi** başına 1×, bir seri tek bir nagele aittir ve birden çok Verordnung
-      kapsayabilir. `podologie_behandlungen` bugün seri kimliği taşımıyor,
-      `lokalisation` serbest metin — önce şema kararı gerek (→ db-ustasi), sonra kural.
+- [x] 🟠 ~~**Erstbefundung seri/nagel sınırı yok**~~ — **kapandı 04.09.2026.**
+      `prescriptions.nagel` (10 değerli CHECK) + `darfErstbefundungNagel()` +
+      `podErstbefundungSerieLage()`; 13 test. Seri sonu 78520.
+- [ ] 🟡 **Nagel, Abrechnung freigabe'sinde zorunlu değil** — Verordnung formu zorunlu
+      kılıyor, ama OCR'den doğan UI1/UI2 Verordnung nagel'siz kalabilir; o zaman seri
+      sperresi sessizce devre dışı (`nagel_unbekannt`). Anlage 3 o2 „Pflichtangabe" diyor.
 - [ ] 28 gün başlama süresi — HeilM-RL § 15'ten teyit (şu an kaynak NOVENTI = ticari yayın)
 - [ ] `blankoRules.js:124-132` — `ok !== true` iken bonuslar yine hesaplanıyor (`total_bonuses_eur`
       dolu dönüyor). Sessiz yanlış fatura riski.

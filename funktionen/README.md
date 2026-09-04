@@ -44,8 +44,17 @@ Bu projede bilinçli bir katmanlama var ve script onu ayırt edemez:
 
 - ✅ **Doğru:** ortak taban + üstüne binen alan bloğu (podolojide ayak şeması), ya da tek
   uygulamanın parametreyle daraltılması (`attachDiagnoseSearch(..., { strict: true })`)
-- ✅ **Doğru:** iki veri havuzu — Physio/Logo/Ergo `prescriptions`, Podoloji `verordnungen`.
-  Kasıtlı, birleştirme kırar.
+- ⚠️ **ARTIK GEÇERSİZ (04.09.2026):** "iki veri havuzu kasıtlıdır, birleştirme kırar"
+  maddesi kalktı. Kemal'in kararıyla podoloji `verordnungen`'den `prescriptions`'a taşındı
+  (hedef: 9 kolon / 7 satır / 72 kod noktası — 47 / 242 / 168 yerine). Podolojinin kendi
+  kelime dağarcığı (`lead_id`, `behandlungseinheiten`, `therapiefrequenz`, `dringend`,
+  `icd10` dizisi, aktiv/abrechenbar/abgesetzt durum ekseni) sıfırdan yeniden yazılmadı;
+  arada **`module/verordnung-topf.js`** sınır modülü duruyor (`ausTopf`/`inTopf`,
+  `statusAusTopf`/`statusInTopf`, `fuehrtSitzungsbuch`). Yani `prescriptions`'a iki farklı
+  kelimeyle yazan yolları görürsen bu kopya değil, **çeviri katmanıdır.**
+  ⚠️ `api-backend/billing/utils/einreichbar.js` içindeki `statusAusAbrechnungStatus` /
+  `abrechnungStatusAusStatus` bu modülün **bilinçli aynasıdır** (`SPIEGEL` yorumlu):
+  Docker imajı `module/`'ü içermediği için paylaşılamıyor. Biri değişirse ikisi değişir.
 - 🔴 **Kopya:** aynı iş için ikinci kez sıfırdan yazılmış kod
 - 🔴 **Veri riski:** aynı tabloya farklı kurallarla yazan yollar (biri `onConflict` kullanıyor,
   diğeri kullanmıyor gibi)

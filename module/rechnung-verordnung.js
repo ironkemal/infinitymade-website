@@ -39,6 +39,7 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
+import { ausTopf } from './verordnung-topf.js?v=20260904';
 
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────
 let _liste = [];    // normalisierte Verordnungsliste aus verordnungenLaden
@@ -144,14 +145,19 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
   if (!ownerId || !leadId) return [];
 
   // ── Podologie-Weg ──────────────────────────────────────────────────────────
+  // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`, therapie_bereich =
+  // 'podo') — `ausTopf()` übersetzt zurück in den podologischen Wortschatz
+  // (behandlungseinheiten, lead_id), den der Rest dieser Funktion erwartet.
   if (sector === 'podologie') {
-    const { data: vords, error: vErr } = await sb
-      .from('verordnungen')
-      .select('id, ausstellungsdatum, diagnosegruppe, heilmittel_items, behandlungseinheiten, status, rezeptart, belegnummer, verordnungsnummer')
+    const { data: vordsRoh, error: vErr } = await sb
+      .from('prescriptions')
+      .select('id, ausstellungsdatum, diagnosegruppe, heilmittel_items, anzahl_einheiten, abrechnung_status, rezeptart, belegnummer, verordnungsnummer')
       .eq('owner_id', ownerId)
-      .eq('lead_id', leadId)
+      .eq('patient_id', leadId)
+      .eq('therapie_bereich', 'podo')
       .order('ausstellungsdatum', { ascending: false });
     if (vErr) { console.error('[verordnungenLaden:podo]', vErr); return []; }
+    const vords = (vordsRoh || []).map(ausTopf);
 
     const vordIds = (vords || []).map(v => v.id);
     let behandlungenMap = {};

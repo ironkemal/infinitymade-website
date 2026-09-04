@@ -476,8 +476,18 @@ Model: `profiles.role` → `owner` | `employee` · `profiles.owner_id` → çal�
 - **Owner seviyesindeki ayarlar `profiles`'a yazılır, `businesses`'a DEĞİL.** Tek-praxis
   owner'ların `businesses` kaydı yok — oraya konan ayar görünmez/kaydedilmez
 - Standort'lar arası veri paylaşımı: `data_sharing_settings` + `bizScope` helper
-- **İki ayrı veri havuzu var, birleştirme:** Physio/Logo/Ergo → `prescriptions` +
-  `prescription_sessions` · Podologie → `verordnungen` + `podologie_behandlungen`
+- **TEK Verordnung havuzu (04.09.2026'dan beri):** Physio/Ergo/Logo VE Podoloji
+  artık ikisi de `prescriptions`'ta (`therapie_bereich` ayırır). Physio
+  `prescription_sessions` üzerinden seans tutar, Podoloji `podologie_behandlungen`
+  + `bookings.verordnung_id` üzerinden — farklı modeller, aynı tablo. Podolojik
+  kelime dağarcığını (`lead_id`, `behandlungseinheiten`, status ekseni)
+  `prescriptions`'ın alan adlarına çeviren sınır modülü: `module/verordnung-topf.js`.
+  Eski `verordnungen` tablosu **silindi** (04.09.2026, kullanıcı kararıyla —
+  önce 3 gün donduruldu, sonra planlanan 90 günlük bekleme atlanarak drop
+  edildi; 4 satır id'leri korunarak zaten `prescriptions`'a taşınmıştı).
+  ⚠️ **Podoloji/Rezept için ikinci bir tablo bir daha açılmaz** — tek doğru
+  yer `prescriptions`, karar kalıcı (bkz. `db/REGISTER.md` → `verordnungen`
+  girdisi, gerekçesiyle).
 
 ### 🕶️ Kişi adı yazma — depo PUBLIC (Konsey 2026-08-27)
 

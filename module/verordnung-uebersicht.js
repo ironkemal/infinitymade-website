@@ -16,30 +16,35 @@
  * Behandlungseinheiten, getrennten Fristen und getrennter Abrechnung. Parallele
  * Verordnungen sind zulässig (Fragen-Antworten-Katalog Podologie Nr. 33).
  *
- * In der Abrechnung war das nie das Problem: `verordnungen` und
+ * In der Abrechnung war das nie das Problem: die podologische Verordnung und
  * `podologie_behandlungen` hängen ohnehin je Verordnung zusammen, jede Datei
  * geht getrennt zur Kasse. Gefehlt hat allein die ANZEIGE. Die Patientenakte
- * zeigte im Reiter „Rezepte" nur den Physio-Topf (`prescriptions`) — bei einem
- * Podologen also eine leere Seite, obwohl zwei Verordnungen liefen. Wer sehen
- * wollte, wie viele Einheiten der Nagelspange schon erbracht sind, musste in
- * die Podologie-Abrechnung wechseln und dort in einer Liste ALLER Patienten
+ * zeigte im Reiter „Rezepte" damals nur den Physio-Zweig — bei einem Podologen
+ * also eine leere Seite, obwohl zwei Verordnungen liefen. Wer sehen wollte,
+ * wie viele Einheiten der Nagelspange schon erbracht sind, musste in die
+ * Podologie-Abrechnung wechseln und dort in einer Liste ALLER Patienten
  * suchen. Daher der Behelf mit den zwei Akten.
  *
  * Diese Datei zeigt beide Verordnungen dort, wo der Anwender ohnehin steht:
  * in der Akte des Patienten, nebeneinander, jede mit ihrem eigenen Zähler
  * `erbracht / verordnet`.
  *
- * Beide Töpfe, nicht einer
- * ────────────────────────
- *   Fachbereich            | Verordnung     | Behandlung
- *   ─────────────────────  | ────────────── | ──────────────────────
- *   Physio · Ergo · Logo   | prescriptions  | prescription_sessions
- *   Podologie              | verordnungen   | podologie_behandlungen
+ * Zwei Zweige, EIN Topf (seit 04.09.2026)
+ * ────────────────────────────────────────
+ *   Fachbereich            | therapie_bereich | Behandlung
+ *   ─────────────────────  | ──────────────── | ──────────────────────
+ *   Physio · Ergo · Logo   | ≠ 'podo'         | prescription_sessions
+ *   Podologie              | = 'podo'         | podologie_behandlungen
+ *
+ * Beide Abfragen unten treffen dieselbe Tabelle (`prescriptions`) und werden
+ * durch `therapie_bereich` GEGENSEITIG AUSSCHLIESSEND gehalten — das ist
+ * Pflicht, nicht Kosmetik: ohne die beiden Filter erschiene ein und dieselbe
+ * podologische Zeile zweimal (einmal aus jeder Abfrage), oder eine physio-
+ * therapeutische Zeile fiele der podologischen Kartenansicht zu.
  *
  * Hier wird bewusst NICHT nach `profiles.sector` unterschieden, sondern immer
  * beides geladen. Eine interdisziplinäre Praxis führt denselben Patienten in
- * beiden Töpfen, und genau dann ist das Nebeneinander am nötigsten. Die Töpfe
- * bleiben getrennt (db/README.md §2) — zusammengelegt wird nur die Ansicht.
+ * beiden Zweigen, und genau dann ist das Nebeneinander am nötigsten.
  *
  * Warum nicht `verordnungenLaden` aus module/rechnung-verordnung.js
  * ────────────────────────────────────────────────────────────────
@@ -63,6 +68,14 @@
 'use strict';
 
 import { belegnummerRosette, belegnummerText } from './belegnummer.js?v=20260817';
+import { bereichFarbe, bereichBadge } from './abrechnungsstatus.js?v=20260903';
+// Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
+// eine Zeile davon in genau den podologischen Wortschatz, den `ausPodo()`
+// unten schon immer erwartet hat (lead_id, behandlungseinheiten,
+// therapiefrequenz, dringend, icd10 als Array, status als podologische
+// Achse) — dieselbe Grenzfunktion, die auch module/podologie-abrechnung.js
+// benutzt.
+import { ausTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260904';
 
 /** Physio-Sitzungen mit diesem Status gelten als erbracht. */
 const PHYSIO_ERBRACHT = ['done', 'completed'];
@@ -218,17 +231,24 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
             'anzahl_einheiten, frequenz, status, is_dringend, hausbesuch, ' +
             'belegnummer, verordnungsnummer, prescription_sessions(id, status), ' +
             'leads!patient_id(first_name, last_name, patientennummer)')
-    .eq('owner_id', ownerId);
-  let voQ = sb.from('verordnungen')
-    .select('id, lead_id, patient_name, ausstellungsdatum, diagnosegruppe, icd10, behandlungseinheiten, ' +
-            'therapiefrequenz, status, dringend, hausbesuch, rezeptart, behandlungsanlass, ' +
-            'heilmittel_items, belegnummer, verordnungsnummer, ' +
-            'leads!lead_id(first_name, last_name, patientennummer)')
-    .eq('owner_id', ownerId);
+    .eq('owner_id', ownerId)
+    // Pflichtfilter (siehe Kopf) — sonst erscheint eine podologische Zeile
+    // zusätzlich hier. `.or()` statt `.neq()`: Altbestand vor Einführung des
+    // Felds führt `therapie_bereich = NULL`, und `<> 'podo'` liesse NULL-
+    // Zeilen in SQL aus dem Ergebnis fallen.
+    .or('therapie_bereich.is.null,therapie_bereich.neq.podo');
+  let voQ = sb.from('prescriptions')
+    .select('id, patient_id, patient_name, ausstellungsdatum, diagnosegruppe, icd10, icd10_2, ' +
+            'anzahl_einheiten, frequenz, abrechnung_status, is_dringend, hausbesuch, rezeptart, ' +
+            'behandlungsanlass, heilmittel_items, belegnummer, verordnungsnummer, ' +
+            'leads!patient_id(first_name, last_name, patientennummer)')
+    .eq('owner_id', ownerId)
+    // Gegenstück zum obigen Filter — Pflicht, nicht Kosmetik (siehe Kopf).
+    .eq('therapie_bereich', 'podo');
 
   if (leadId) {
     rxQ = rxQ.eq('patient_id', leadId);
-    voQ = voQ.eq('lead_id', leadId);
+    voQ = voQ.eq('patient_id', leadId);
   } else {
     rxQ = rxQ.limit(limit);
     voQ = voQ.limit(limit);
@@ -240,10 +260,12 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
   // verschwindet, sieht aus wie ein Datenverlust.
   if (nurAktive) {
     rxQ = rxQ.not('status', 'in', `(${PHYSIO_ABGESCHLOSSEN.map(s => `"${s}"`).join(',')})`);
-    voQ = voQ.in('status', PODO_AKTIV);
+    // Gleiche Menge wie PODO_AKTIV (aktiv/abrechenbar/abgesetzt/teilabsetzung),
+    // nur auf die Spalte abrechnung_status übersetzt — siehe verordnung-topf.js.
+    voQ = voQ.or(PODO_ARBEITSLISTE_OR);
   }
 
-  const [rxs, vords, lead] = await Promise.all([
+  const [rxs, vordsRoh, lead] = await Promise.all([
     frag(rxQ.order('ausstellungsdatum', { ascending: false })),
     frag(voQ.order('ausstellungsdatum', { ascending: false })),
     leadId
@@ -253,6 +275,12 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
         })()
       : Promise.resolve(null),
   ]);
+
+  // Ab hier spricht der podologische Zweig wieder seinen gewohnten Wortschatz
+  // (lead_id, behandlungseinheiten, therapiefrequenz, dringend, icd10 als
+  // Array, status als podologische Achse) — übersetzt an der Grenze, damit
+  // `ausPodo()` unten unverändert bleibt.
+  const vords = vordsRoh.map(ausTopf);
 
   // Behandlungen erst jetzt, denn sie hängen an der Verordnung und nicht am
   // Patienten — `podologie_behandlungen` führt kein lead_id.
@@ -389,9 +417,6 @@ const PODO_DG_TEXT = {
    Zeichnen
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const QUELLE_FARBE = { physio: '#7c3aed', podologie: '#15803d' };
-const QUELLE_LABEL = { physio: 'Heilmittel', podologie: 'Podologie' };
-
 /**
  * Zeichnet die Karten nebeneinander. Ohne laufende Verordnung wird nichts
  * gezeichnet — ein leerer Kasten mit „keine Verordnung" nimmt in der Akte nur
@@ -428,7 +453,7 @@ export function rendereVerordnungsUebersicht(el, liste, deps = {}) {
 }
 
 function karteHtml(v) {
-  const farbe = QUELLE_FARBE[v.quelle] || 'var(--text-muted)';
+  const farbe = bereichFarbe(v.quelle);
   const offen = Math.max(0, (v.verordnet || 0) - (v.erbracht || 0));
   const pct = v.verordnet > 0 ? Math.min(100, Math.round((v.erbracht / v.verordnet) * 100)) : 0;
   // Voll heisst nicht fertig: erbracht > verordnet wäre ein Fehler und soll
@@ -448,7 +473,7 @@ function karteHtml(v) {
            border-left:3px solid ${farbe};background:var(--bg-card);color:var(--text-main);
            cursor:pointer;display:flex;flex-direction:column;gap:7px;">
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-      <span style="font-size:10px;font-weight:700;color:${farbe};text-transform:uppercase;letter-spacing:.05em;">${QUELLE_LABEL[v.quelle] || ''}</span>
+      ${bereichBadge(v.quelle)}
       ${v.nummer || ''}
       <span style="margin-left:auto;font-size:11px;color:var(--text-muted);">${DE(v.datum)}</span>
     </div>

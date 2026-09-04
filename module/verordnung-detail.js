@@ -28,20 +28,25 @@
  * `flex-wrap`: auf dem Telefon rutscht sie unter die Felder, ohne dass es dafür
  * einen eigenen Breakpoint braucht.
  *
- * Beide Töpfe
- * ───────────
- * Diese Datei bedient jetzt BEIDE Verordnungstöpfe:
+ * Beide Zweige
+ * ────────────
+ * Diese Datei bedient BEIDE Fachbereichs-Zweige:
  *
- *   Physio · Ergo · Logo   | prescriptions | prescription_sessions
- *   Podologie              | verordnungen  | podologie_behandlungen
+ *   Physio · Ergo · Logo   | prescriptions (therapie_bereich ≠ 'podo') | prescription_sessions
+ *   Podologie              | prescriptions (therapie_bereich = 'podo') | podologie_behandlungen
  *
  * Bis 31.08.2026 war nur der erste dabei; der Kopf dieser Datei sagte
  * ausdrücklich, Podologie werde „hier NICHT mitbedient". Das ist die Zeile, die
- * der Umbau umdreht — für einen Podologen war die Seite sonst leer. Die Töpfe
- * bleiben in der Datenbank getrennt (db/README.md §2), zusammengelegt ist nur
- * die Ansicht: jeder Topf hat seinen eigenen Lader und seine eigene Feldliste,
- * weil die Spalten sich unterscheiden (`icd10` ist hier eine Spalte, dort ein
- * `text[]`; `anzahl_einheiten` heisst dort `behandlungseinheiten`).
+ * der Umbau umdreht — für einen Podologen war die Seite sonst leer.
+ *
+ * Seit 04.09.2026 (Zusammenlegung der Verordnungstöpfe) stehen beide Zweige in
+ * DERSELBEN Tabelle — vorher zwei getrennte (`prescriptions` + `verordnungen`).
+ * Diese Datei behält trotzdem zwei Lader und zwei Feldlisten: `zeigeVerordnungDetail()`
+ * übersetzt eine podologische Zeile über `module/verordnung-topf.js` (`ausTopf()`)
+ * zurück in den podologischen Wortschatz, den `_felderPodo()` & Co. schon immer
+ * erwarteten (`icd10` als Array statt Spalte, `behandlungseinheiten` statt
+ * `anzahl_einheiten`) — die beiden Vokabulare bleiben verschieden, nur die
+ * Tabelle darunter ist jetzt eine.
  *
  * Lesen — mit genau EINER Ausnahme
  * ────────────────────────────────
@@ -62,12 +67,16 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { statusBadgeGross } from './abrechnungsstatus.js?v=20260902';
+import { statusBadgeGross, bereichBadge } from './abrechnungsstatus.js?v=20260903';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260902';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
 import { ladePodoTermine, terminZaehler, istVergeben, bindeTermin, loeseTermin } from './verordnung-termine.js?v=20260903';
 import { emit } from './signal.js?v=20260813';
+// Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
+// eine podologische Zeile in den Wortschatz, den `_felderPodo()` und die
+// restlichen Podologie-Funktionen dieser Datei schon immer erwartet haben.
+import { ausTopf } from './verordnung-topf.js?v=20260904';
 
 /** Alles, was die Muster-13-Maske schreibt — plus Patient, Arzt und Nummer. */
 const SELECT_PHYSIO = `
@@ -87,7 +96,7 @@ const SELECT_PHYSIO = `
  */
 const SELECT_PODO = `
   *,
-  leads!lead_id ( id, first_name, last_name, geburtsdatum,
+  leads!patient_id ( id, first_name, last_name, geburtsdatum,
                   versichertennummer, versichertenstatus, krankenkasse,
                   patientennummer ),
   aerzte!arzt_id ( arzt_name, lanr, bsnr, fachrichtung ),
@@ -140,12 +149,33 @@ function _feld(label, wert, esc, opt = {}) {
   </div>`;
 }
 
+/**
+ * Ein Abschnitt der linken Spalte (Verordnung, Diagnose, Heilmittel, Arzt …)
+ * als eigene Karte — derselbe Rahmen/Radius/Hintergrund wie `_spaltenKasten`
+ * rechts (Verschreibung, Termine).
+ *
+ * Kemal, 03.09.2026: „hala frontend olarak zayıf" — vorher stand hier nur
+ * eine Überschrift über frei fliessendem Text, ohne Kante zwischen den
+ * Abschnitten. Auf einer Verordnung mit vielen Feldern (Podologie: sieben
+ * Abschnitte) lief das optisch ineinander. Jetzt trägt jeder Abschnitt seine
+ * eigene Karte, wie rechts schon die Verschreibung ihre trägt — eine
+ * Formsprache für beide Spalten statt zwei.
+ */
 function _block(titel, felder, esc) {
   const inhalt = felder.filter(Boolean).join('');
   if (!inhalt) return '';
-  return `<div style="margin-top:14px;">
+  return `<div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--bg-card);margin-top:12px;">
     ${_ueberschrift(titel, esc)}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;">${inhalt}</div>
+  </div>`;
+}
+
+/** Freitext (Hinweise/Notizen) als dieselbe Karte wie `_block`, statt frei fliessend. */
+function _freitextBlock(titel, text, esc) {
+  if (!text) return '';
+  return `<div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--bg-card);margin-top:12px;">
+    ${_ueberschrift(titel, esc)}
+    <div style="color:var(--text-main);white-space:pre-wrap;">${esc(text)}</div>
   </div>`;
 }
 
@@ -465,10 +495,7 @@ function _felderPhysio(rx, esc) {
       _feld('Status', BERICHT_LABEL[rx.bericht_status] || rx.bericht_status, esc)
     ], esc)}
 
-    ${rx.hinweise ? `<div style="margin-top:14px;">
-      ${_ueberschrift('Hinweise', esc)}
-      <div style="color:var(--text-main);white-space:pre-wrap;">${esc(rx.hinweise)}</div>
-    </div>` : ''}
+    ${_freitextBlock('Hinweise', rx.hinweise, esc)}
 
     ${_block('Erfassung', [
       _feld('Quelle', rx.quelle, esc),
@@ -577,10 +604,7 @@ function _felderPodo(v, esc) {
       _feld('Grund', v.absetzung_grund, esc)
     ], esc) : ''}
 
-    ${v.notizen ? `<div style="margin-top:14px;">
-      ${_ueberschrift('Notizen', esc)}
-      <div style="color:var(--text-main);white-space:pre-wrap;">${esc(v.notizen)}</div>
-    </div>` : ''}
+    ${_freitextBlock('Notizen', v.notizen, esc)}
 
     ${_block('Erfassung', [
       _feld('Angelegt am', _datum(v.created_at), esc),
@@ -596,8 +620,9 @@ function _felderPodo(v, esc) {
 /**
  * Die vollständige Ansicht einer Verordnung als HTML.
  *
- * @param {object} rx   Zeile aus `prescriptions` oder `verordnungen`
- *                      inkl. der Verbunde aus SELECT_PHYSIO / SELECT_PODO.
+ * @param {object} rx   Zeile aus `prescriptions` — beim podologischen Zweig
+ *                      bereits durch `ausTopf()` übersetzt — inkl. der
+ *                      Verbunde aus SELECT_PHYSIO / SELECT_PODO.
  * @param {object} opt
  * @param {(s:string)=>string} opt.escapeHtml  Pflicht.
  * @param {'physio'|'podologie'} [opt.quelle='physio']
@@ -621,6 +646,7 @@ export function verordnungDetailHtml(rx, opt = {}) {
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span style="font-size:15px;font-weight:700;color:var(--text-main);">${esc(name)}</span>
       ${nummer ? `<span title="${esc(nummerHerkunft)}" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;font-weight:700;padding:2px 9px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);">${esc(nummer)}</span>` : ''}
+      ${bereichBadge(quelle, { gross: true })}
       ${statusBadgeGross(quelle, rx.status)}
     </div>
     ${_merkmale(rx, esc, quelle)}
@@ -771,11 +797,16 @@ export async function zeigeVerordnungDetail(ctx) {
   if (panel) panel.hidden = false;
   inhalt.innerHTML = '<span style="color:var(--text-muted);">Lade…</span>';
 
-  const { data: rx, error } = await supabase
-    .from(quelle === 'podologie' ? 'verordnungen' : 'prescriptions')
+  // Seit 04.09.2026 EIN Verordnungstopf: beide Zweige lesen `prescriptions`.
+  // `.eq('therapie_bereich','podo')` ist Pflicht beim Podologie-Zweig — sonst
+  // könnte eine physiotherapeutische id hier durchlaufen und mit den
+  // podologischen Feldnamen (`ausTopf()`) falsch angezeigt werden.
+  let q = supabase.from('prescriptions')
     .select(quelle === 'podologie' ? SELECT_PODO : SELECT_PHYSIO)
-    .eq('id', id)
-    .maybeSingle();
+    .eq('id', id);
+  if (quelle === 'podologie') q = q.eq('therapie_bereich', 'podo');
+  const { data: rxRoh, error } = await q.maybeSingle();
+  const rx = (quelle === 'podologie' && rxRoh) ? ausTopf(rxRoh) : rxRoh;
 
   if (error || !rx) {
     console.error('[zeigeVerordnungDetail]', error);

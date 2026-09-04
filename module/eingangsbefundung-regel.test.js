@@ -337,3 +337,146 @@ test('leere, kaputte oder fehlende Diagnosegruppen fallen auf die feste Liste zu
   });
   assert.equal(r.grund, 'nagelzweig');
 });
+
+// ── darfErstbefundungNagel: einmalig je Serie, je Nagel ─────────────────────
+// § 3b lit. a) Aenderungsvereinbarung 16.06.2025. Die Serie haengt am Nagel,
+// nicht an der Verordnung — jeder Fall hier ist einer, den die Kasse sonst
+// absetzt oder den der Podologe zu Unrecht nicht abrechnen kann.
+import { darfErstbefundungNagel, nagelLabel, NAGEL_WERTE } from './eingangsbefundung-regel.js';
+
+test('Nagel ohne Vorgeschichte — Erstbefundung erlaubt', () => {
+  const r = darfErstbefundungNagel([], 'U1 links', '2026-09-04');
+  assert.equal(r.erlaubt, true);
+  assert.equal(r.serieSeit, null);
+});
+
+test('ohne bekannten Nagel wird nicht gesperrt, aber der Grund steht dabei', () => {
+  const behs = [{ behandlungsdatum: '2026-02-01', hpnr_codes: ['78110'] }];
+  const r = darfErstbefundungNagel(behs, '', '2026-09-04');
+  assert.equal(r.erlaubt, true);
+  assert.equal(r.grund, 'nagel_unbekannt');
+  assert.equal(darfErstbefundungNagel(behs, null, '2026-09-04').erlaubt, true);
+});
+
+test('zweite Erstbefundung in derselben laufenden Serie wird gesperrt', () => {
+  const r = darfErstbefundungNagel(
+    [
+      { behandlungsdatum: '2026-02-01', hpnr_codes: ['78110', '78610'] },
+      { behandlungsdatum: '2026-03-01', hpnr_codes: ['78610'] },
+    ],
+    'U1 links', '2026-09-04',
+  );
+  assert.equal(r.erlaubt, false);
+  assert.equal(r.grund, 'serie_hat_erstbefundung');
+  assert.equal(r.schonAm, '2026-02-01');
+  assert.equal(r.schonCode, '78110');
+});
+
+test('die Sperre gilt ueber Verordnungen hinweg — Serie ist nicht die Verordnung', () => {
+  // Beide Zeilen haengen an verschiedenen Verordnungen; der Aufrufer reicht
+  // sie zusammen herein, weil sie denselben Nagel betreffen. Genau das ist
+  // der Satz „kann mehrere Verordnungen umfassen".
+  const r = darfErstbefundungNagel(
+    [{ behandlungsdatum: '2026-01-15', hpnr_codes: ['78100'] }],
+    'U2 rechts', '2026-08-20',
+  );
+  assert.equal(r.erlaubt, false);
+  assert.equal(r.schonCode, '78100');
+});
+
+test('klein sperrt gross und umgekehrt — die Serienregel kennt keinen Unterschied', () => {
+  const nurKlein = [{ behandlungsdatum: '2026-01-15', hpnr_codes: ['78110'] }];
+  const nurGross = [{ behandlungsdatum: '2026-01-15', hpnr_codes: ['78100'] }];
+  assert.equal(darfErstbefundungNagel(nurKlein, 'U1 links', '2026-05-01').erlaubt, false);
+  assert.equal(darfErstbefundungNagel(nurGross, 'U1 links', '2026-05-01').erlaubt, false);
+});
+
+test('nach dem Abschluss (78520) beginnt eine neue Serie — wieder erlaubt', () => {
+  const r = darfErstbefundungNagel(
+    [
+      { behandlungsdatum: '2026-01-15', hpnr_codes: ['78110'] },
+      { behandlungsdatum: '2026-05-20', hpnr_codes: ['78610'] },
+      { behandlungsdatum: '2026-06-10', hpnr_codes: ['78520'] },
+    ],
+    'U1 links', '2026-09-04',
+  );
+  assert.equal(r.erlaubt, true);
+  assert.equal(r.serieSeit, '2026-06-10', 'die neue Serie beginnt mit dem Abschluss der alten');
+});
+
+test('nach dem Abschluss laeuft die neue Serie ihrerseits — zweite Sperre greift', () => {
+  const r = darfErstbefundungNagel(
+    [
+      { behandlungsdatum: '2026-01-15', hpnr_codes: ['78110'] },
+      { behandlungsdatum: '2026-06-10', hpnr_codes: ['78520'] },
+      { behandlungsdatum: '2026-07-01', hpnr_codes: ['78110'] },
+    ],
+    'U1 links', '2026-09-04',
+  );
+  assert.equal(r.erlaubt, false);
+  assert.equal(r.schonAm, '2026-07-01', 'gemeldet wird die Erstbefundung der LAUFENDEN Serie');
+  assert.equal(r.serieSeit, '2026-06-10');
+});
+
+test('Nachtrag faellt in die alte Serie, nicht in die neue', () => {
+  // Der 05.06. liegt VOR dem Abschluss vom 10.06. — die Erstbefundung vom
+  // 15.01. gehoert zu derselben Serie und sperrt. Ohne obere Fenstergrenze
+  // waere dieser Nachtrag faelschlich durchgegangen.
+  const r = darfErstbefundungNagel(
+    [
+      { behandlungsdatum: '2026-01-15', hpnr_codes: ['78110'] },
+      { behandlungsdatum: '2026-06-10', hpnr_codes: ['78520'] },
+      { behandlungsdatum: '2026-07-01', hpnr_codes: ['78110'] },
+    ],
+    'U1 links', '2026-06-05',
+  );
+  assert.equal(r.erlaubt, false);
+  assert.equal(r.schonAm, '2026-01-15');
+});
+
+test('Abschluss am selben Tag beendet die Serie erst danach', () => {
+  // 78520 und eine neue Erstbefundung am gleichen Tag: der Abschluss zaehlt
+  // noch zur alten Serie, die Erstbefundung davor sperrt weiterhin.
+  const r = darfErstbefundungNagel(
+    [
+      { behandlungsdatum: '2026-01-15', hpnr_codes: ['78110'] },
+      { behandlungsdatum: '2026-06-10', hpnr_codes: ['78520'] },
+    ],
+    'U1 links', '2026-06-10',
+  );
+  assert.equal(r.erlaubt, false, 'am Abschlusstag selbst laeuft die alte Serie noch');
+});
+
+test('nur die Nagelspangenbehandlung ohne Erstbefundung sperrt nicht', () => {
+  const r = darfErstbefundungNagel(
+    [{ behandlungsdatum: '2026-01-15', hpnr_codes: ['78610', '78620'] }],
+    'U1 links', '2026-09-04',
+  );
+  assert.equal(r.erlaubt, true);
+});
+
+test('kaputte Eingaben kippen nicht um', () => {
+  assert.equal(darfErstbefundungNagel(null, 'U1 links', '2026-09-04').erlaubt, true);
+  assert.equal(darfErstbefundungNagel([null, {}], 'U1 links', '2026-09-04').erlaubt, true);
+  assert.equal(darfErstbefundungNagel([], 'U1 links', '').grund, 'kein_datum');
+  assert.equal(
+    darfErstbefundungNagel(
+      [{ behandlungsdatum: '2026-01-15' }], 'U1 links', '2026-09-04',
+    ).erlaubt, true, 'Zeile ohne hpnr_codes sperrt nicht');
+});
+
+test('nagelLabel macht aus dem Vertragskuerzel Klartext', () => {
+  assert.equal(nagelLabel('U1 links'), 'Großzehe links (U1)');
+  assert.equal(nagelLabel('U5 rechts'), 'Kleinzehe rechts (U5)');
+  assert.equal(nagelLabel('U3 links'), '3. Zehe links (U3)');
+  assert.equal(nagelLabel(''), '', 'leer bleibt leer');
+  assert.equal(nagelLabel('Zehe II rechts'), 'Zehe II rechts', 'Altbestand kommt roh zurueck');
+});
+
+test('NAGEL_WERTE deckt genau die zehn Vertragswerte ab', () => {
+  // Spiegel des CHECK prescriptions_nagel_check — laeuft der auseinander,
+  // scheitert das Speichern erst live mit einem 400er.
+  assert.equal(NAGEL_WERTE.length, 10);
+  for (const w of NAGEL_WERTE) assert.match(w, /^U[1-5] (links|rechts)$/);
+  assert.notEqual(nagelLabel(NAGEL_WERTE[0]), NAGEL_WERTE[0], 'jeder Wert ist lesbar');
+});

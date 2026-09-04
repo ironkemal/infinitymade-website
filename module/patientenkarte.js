@@ -31,7 +31,7 @@
 'use strict';
 
 import { geschlechtLabel } from './geschlecht.js?v=20260816';
-import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260902';
+import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260903';
 
 const DE = (iso) => {
   if (!iso) return '—';
@@ -144,18 +144,19 @@ export async function ladeVerlauf(sb, ownerId, leadId) {
   //     Verordnung. Deshalb erst die Verordnungen, dann deren Behandlungen.
   //   • `pat_fussbefund` heisst lead_id und datiert über `erstellt_am`.
   //   • `bookings` führt keinen Leistungsnamen, nur `service_id` → Join.
-  //   • `prescriptions` (Physio-Topf) heisst dagegen patient_id.
-  const [termine, verordnungen, rezepte, befunde] = await Promise.all([
+  //
+  // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`, patient_id):
+  // EINE Abfrage statt zwei getrennter (`verordnungen` + `prescriptions`).
+  // Zwei Abfragen auf dieselbe Tabelle hätten dieselbe podologische Zeile
+  // zweimal in den Verlauf gesetzt — einmal als „Verordnung", einmal als
+  // „Rezept". `therapie_bereich` trennt die beiden Zweige unten.
+  const [termine, alleRx, befunde] = await Promise.all([
     frag(sb.from('bookings')
       .select('id, start_time, status, services:service_id (title)')
       .eq('owner_id', ownerId).eq('lead_id', leadId)
       .order('start_time', { ascending: false }).limit(50)),
-    frag(sb.from('verordnungen')
-      .select('id, ausstellungsdatum, diagnosegruppe, status, rezeptart')
-      .eq('owner_id', ownerId).eq('lead_id', leadId)
-      .order('ausstellungsdatum', { ascending: false }).limit(50)),
     frag(sb.from('prescriptions')
-      .select('id, ausstellungsdatum, diagnosegruppe, status')
+      .select('id, ausstellungsdatum, diagnosegruppe, status, rezeptart, therapie_bereich')
       .eq('owner_id', ownerId).eq('patient_id', leadId)
       .order('ausstellungsdatum', { ascending: false }).limit(50)),
     // `ist_aktuell`: seit der Versionierung (30.08.2026) liegen Korrekturen als
@@ -167,6 +168,9 @@ export async function ladeVerlauf(sb, ownerId, leadId) {
       .eq('ist_aktuell', true)
       .order('erstellt_am', { ascending: false }).limit(50)),
   ]);
+
+  const verordnungen = alleRx.filter(r => r.therapie_bereich === 'podo');
+  const rezepte = alleRx.filter(r => r.therapie_bereich !== 'podo');
 
   const behandlungen = verordnungen.length
     ? await frag(sb.from('podologie_behandlungen')

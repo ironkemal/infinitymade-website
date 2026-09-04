@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-03 · 83 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-03), funktionen/INDEX.json (erzeugt 2026-09-03)
+**Erzeugt:** 2026-09-04 · 83 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-04), funktionen/INDEX.json (erzeugt 2026-09-04)
 
 ## Kayıt durumu
 
@@ -31,10 +31,11 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `trip_history` | 1 | fremd |
 | `trip_plans` | 1 | fremd |
 | `user_credits` | 2 | fremd |
+| `verordnungen` | 18 | **stillgelegt** — in `prescriptions` aufgegangen (siehe Abschnitt 4 oben). Die 4 Zeilen bleiben stehen (ids unverändert, jetzt zusätzlich in `prescriptions`), read-only. `db/dsgvo.js` listet die Tabelle weiter für Auskunft/Löschung. Kein Code liest oder schreibt hierher; wer eine neue Stelle findet, die es noch tut, hat einen Bug gefunden, keine Ausnahme. |
 
 ## DSGVO-Abdeckung (`api/dsgvo.js`)
 
-Auskunft (Art. 15): **55** · Löschung (Art. 17): **50** · anonymisiert statt gelöscht: **1**
+Auskunft (Art. 15): **54** · Löschung (Art. 17): **49** · anonymisiert statt gelöscht: **1**
 
 ⚠️ Personenbezug (FK auf `leads`/`profiles`/`auth.users`) aber **nicht** in der Auskunftsliste:
 
@@ -47,18 +48,18 @@ Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
 
 | Tabelle | Schreiber | Leser | Dateien | Module |
 |---|---|---|---|---|
-| `profiles` | 19 | 30 | 25 | abrechnung, anfragen, fahrtenbuch, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
-| `bookings` | 15 | 32 | 22 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
-| `prescriptions` | 11 | 24 | 15 | abrechnung, anamnese, belegliste, doctors, fussstatus, hours, kunden, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen |
+| `profiles` | 19 | 31 | 25 | abrechnung, anfragen, fahrtenbuch, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
+| `bookings` | 15 | 33 | 23 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
+| `prescriptions` | 12 | 28 | 21 | abrechnung, anamnese, belegliste, doctors, fussstatus, hours, kunden, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen |
 | `document_vorlagen` | 10 | 2 | 3 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen, vorlagen |
-| `services` | 8 | 16 | 11 | abrechnung, anfragen, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
+| `services` | 8 | 17 | 11 | abrechnung, anfragen, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `time_offs` | 6 | 8 | 3 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `businesses` | 5 | 6 | 8 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `prescription_sessions` | 5 | 10 | 9 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `employee_business_assignments` | 4 | 5 | 4 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `employee_services` | 4 | 2 | 6 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `invoices` | 4 | 4 | 2 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
-| `leads` | 4 | 36 | 10 | abrechnung, anamnese, anfragen, b2b, b2c, belegliste, doctors, fahrtenbuch, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen, vorlagen |
+| `leads` | 4 | 36 | 11 | abrechnung, anamnese, b2c, doctors, fussstatus, hours, kunden, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen |
 | `aerzte` | 3 | 5 | 4 | abrechnung, anamnese, doctors, fussstatus, hours, kunden, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen |
 | `breaks` | 3 | 2 | 2 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `calendar_integrations` | 3 | 2 | 4 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen |
@@ -80,7 +81,7 @@ Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
 22 Spalten · Status: aktiv
 Warum: Der Abrechnungslauf als Ganzes: eine Sammelrechnung an einen Kostenträger, mit DTA-Datei, Signaturzustand, Upload- und Zahlungsdatum. Ohne diesen Kopfsatz gäbe es keinen Bezugspunkt für Absetzungen.
 
-**Schreibt (1):** `downloadAbrechnungFile()` [update] — dashboard.js:20149
+**Schreibt (1):** `downloadAbrechnungFile()` [update] — dashboard.js:19983
 
 **Liest (4):** `fmt()`, `loadAbrechnung()`, `openDasGuideModal()`, `renderExportStep()`
 
@@ -107,7 +108,7 @@ Warum: Trennt das interne Admin-Panel (`admin.praxura.de`) von den Kundenrollen.
 17 Spalten · Status: aktiv
 Warum: Arztregister je Inhaber. Wird beim Erfassen einer Verordnung automatisch befüllt: LANR-Treffer reichert den vorhandenen Datensatz an, sonst wird neu angelegt. Grundlage der Auswertung „welcher Arzt überweist wie viel".
 
-**Schreibt (3):** `deleteAerzte()` [delete] — dashboard.js:16415 · `editAerzte()` [update] — dashboard.js:16424 · `resolveOrCreateArzt()` [insert/update] — api-backend/lib/arzt-registry.js:55
+**Schreibt (3):** `deleteAerzte()` [delete] — dashboard.js:16230 · `editAerzte()` [update] — dashboard.js:16239 · `resolveOrCreateArzt()` [insert/update] — api-backend/lib/arzt-registry.js:55
 
 **Liest (5):** `downloadDmrzForInvoice()`, `fillRzPatientFromLead()`, `loadAerzte()`, `loadPodologieBilling()`, `podFillEditForm()`
 
@@ -129,7 +130,7 @@ Warum: Protokoll jedes KI-Aufrufs (Rezept-OCR, Entwürfe): Modell, Kosten, Ergeb
 28 Spalten · Status: aktiv
 Warum: Erstaufnahme und Vorgeschichte. Eigene Tabelle, weil sie versioniert entsteht und nicht bei jedem Termin neu geschrieben wird.
 
-**Schreibt (1):** `saveAnamnese()` [insert/update] — dashboard.js:16015
+**Schreibt (1):** `saveAnamnese()` [insert/update] — dashboard.js:15830
 
 **Liest (5):** `fillAnamneseForm()`, `loadPatientDetailAnamnese()`, `openBookingActionModal()`, `printAnamnese()`, `printAnamneseInline()`
 
@@ -147,7 +148,7 @@ Warum: Fremdprojekt (Bewerbungen). Nie Teil von Praxura.
 12 Spalten · Status: aktiv
 Warum: Kommen/Gehen der Mitarbeiter (Arbeitszeiterfassung), getrennt von der Sollarbeitszeit in `working_hours`.
 
-**Schreibt (1):** `toRad()` [insert/update] — api-backend/server.js:3138
+**Schreibt (1):** `toRad()` [insert/update] — api-backend/server.js:3139
 
 **Liest (1):** `fetchHistory()`
 
@@ -165,7 +166,7 @@ Warum: Ausfallhonorar bei No-Show oder kurzfristiger Absage. Rechtlich **Schaden
 16 Spalten · Status: aktiv (Randmodul)
 Warum: B2B-Akquise: Ärzte und Partner anschreiben, um Zuweisungen zu bekommen. Aus der Zeit, als Praxura noch selbst Kunden für die Praxis gewinnen wollte.
 
-**Schreibt (2):** `fmt()` [delete/insert/update] — dashboard.js:11024 · `renderB2B()` [delete] — dashboard.js:11906
+**Schreibt (2):** `fmt()` [delete/insert/update] — dashboard.js:10839 · `renderB2B()` [delete] — dashboard.js:11721
 
 **Liest (1):** `loadB2B()`
 
@@ -189,9 +190,13 @@ Warum: GoBD-Belegjournal: jeder Geldvorgang lückenlos und unveränderlich.
 7 Spalten · Status: aktiv
 Warum: Ein Termin trägt in der Podologie fast immer mehr als eine Leistung — „Podologische Behandlung + Eingangsbefundung" ist der Normalfall, nicht die Ausnahme (Beta-1, 31.08.2026: „wenn man es nicht vollstopfen will, kann man auch einfach nur [ein] Pluszeichen drücken … und die Anzahl"). `bookings.service_id` konnte genau eine halten; der Kalenderblock war deshalb systematisch zu kurz und die zweite Leistung fiel aus der Abrechnung.
 
-**Schreibt (1):** `speichereLeistungen()` [delete/insert] — module/termin-leistungen.js:272
+**Schreibt (1):** `speichereLeistungen()` [delete/upsert] — module/termin-leistungen.js:370
 
-**Dateien:** `module/termin-leistungen.js`
+**Liest (2):** `gelernteDauer()`, `ladeLeistungen()`
+
+**Dateien:** `module/termin-dauer.js`, `module/termin-leistungen.js`
+
+**Module:** abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen
 
 ### `booking_requests`
 
@@ -202,14 +207,14 @@ Warum: Termin-**Anfrage** statt Sofortbuchung: der Patient bittet um einen Termi
 
 ### `bookings`
 
-33 Spalten · Status: aktiv
+34 Spalten · Status: aktiv
 Warum: Der Termin selbst. Alles andere im Kalender hängt daran.
 
-**Schreibt (15):** `absageTerminMitGrund()` [delete/update] — dashboard.js:8019 · `bindeTermin()` [update] — module/verordnung-termine.js:121 · `createBookingsFromRequestFactory()` [insert] — api-backend/booking/from-request.js:17 · `doMoveBooking()` [update] — dashboard.js:5497 · `handlePatientNichtErschienen()` [update] — dashboard.js:4503 · `handleSessionDrop()` [insert] — dashboard.js:3912 · `handleTerminStarten()` [update] — dashboard.js:4413 · `initBkGroupPatientAutocomplete()` [insert] — dashboard.js:5034 · `loadGroupParticipants()` [update] — dashboard.js:4918 · `loeseTermin()` [update] — module/verordnung-termine.js:132 · `markArrivedHandler()` [update] — dashboard.js:4275 · `openBookingActionModal()` [update] — dashboard.js:3231 · `saveFahrtEndHandler()` [update] — dashboard.js:4319 · `saveFahrtStartHandler()` [update] — dashboard.js:4192 · `uebernimmSlot()` [insert] — module/warteliste-nachruecker.js:195
+**Schreibt (15):** `absageTerminMitGrund()` [delete/update] — dashboard.js:7834 · `bindeTermin()` [update] — module/verordnung-termine.js:121 · `createBookingsFromRequestFactory()` [insert] — api-backend/booking/from-request.js:17 · `doMoveBooking()` [update] — dashboard.js:5398 · `handlePatientNichtErschienen()` [update] — dashboard.js:4515 · `handleSessionDrop()` [insert] — dashboard.js:3924 · `handleTerminStarten()` [update] — dashboard.js:4425 · `initBkGroupPatientAutocomplete()` [insert] — dashboard.js:4932 · `loadGroupParticipants()` [update] — dashboard.js:4816 · `loeseTermin()` [update] — module/verordnung-termine.js:132 · `markArrivedHandler()` [update] — dashboard.js:4287 · `openBookingActionModal()` [update] — dashboard.js:3243 · `saveFahrtEndHandler()` [update] — dashboard.js:4331 · `saveFahrtStartHandler()` [update] — dashboard.js:4204 · `uebernimmSlot()` [insert] — module/warteliste-nachruecker.js:195
 
-**Liest (32):** `calculateSessionInfo()`, `fmt()`, `frag()`, `frageNachrueckerAb()`, `getAvailableSlots()`, `horizonDays()`, `initCalendar()`, `initCalendar()`, `ladeKommendeTermineDesPatienten()`, `ladePatientenkontext()`, `ladePodoTermine()`, `ladeTerminVollstaendig()`, `ladeVerlauf()`, `loadActivityFeed()`, `loadEmpDaySchedule()`, `loadLeads()`, `loadPatientDetailTermine()`, `loadScheduleBookings()`, `loadUeberblickNoShows()`, `nurZiffern()` … +12
+**Liest (33):** `calculateSessionInfo()`, `fmt()`, `frag()`, `frageNachrueckerAb()`, `gelernteDauer()`, `getAvailableSlots()`, `horizonDays()`, `initCalendar()`, `initCalendar()`, `ladeKommendeTermineDesPatienten()`, `ladePatientenkontext()`, `ladePodoTermine()`, `ladeTerminVollstaendig()`, `ladeVerlauf()`, `loadActivityFeed()`, `loadEmpDaySchedule()`, `loadLeads()`, `loadPatientDetailTermine()`, `loadScheduleBookings()`, `loadUeberblickNoShows()` … +13
 
-**Dateien:** `api-backend/billing/api/ausfall.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/warteliste.routes.js`, `api-backend/booking/from-request.js`, `api-backend/server.js`, `api/admin/data.js`, `booking.js`, `dashboard.js`, `kalender.js`, `module/fussbefund.js`, `module/kalender-monat.js`, `module/kalender-woche.js`, `module/patientenkarte.js`, `module/podologie-abrechnung.js`, `module/rechnung-editor.js`, `module/rechnung-verordnung.js`, `module/signal.js`, `module/termin-aktionen.js`, `module/termin-laden.js`, `module/termin-patient-bezug.js`, `module/verordnung-termine.js`, `module/warteliste-nachruecker.js`
+**Dateien:** `api-backend/billing/api/ausfall.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/warteliste.routes.js`, `api-backend/booking/from-request.js`, `api-backend/server.js`, `api/admin/data.js`, `booking.js`, `dashboard.js`, `kalender.js`, `module/fussbefund.js`, `module/kalender-monat.js`, `module/kalender-woche.js`, `module/patientenkarte.js`, `module/podologie-abrechnung.js`, `module/rechnung-editor.js`, `module/rechnung-verordnung.js`, `module/signal.js`, `module/termin-aktionen.js`, `module/termin-dauer.js`, `module/termin-laden.js`, `module/termin-patient-bezug.js`, `module/verordnung-termine.js`, `module/warteliste-nachruecker.js`
 
 **Module:** abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen
 
@@ -218,7 +223,7 @@ Warum: Der Termin selbst. Alles andere im Kalender hängt daran.
 7 Spalten · Status: aktiv
 Warum: Pausen sind keine Arbeitszeit und keine Abwesenheit — sie wiederholen sich täglich und müssen Slots blockieren.
 
-**Schreibt (3):** `fmt()` [delete/insert] — dashboard.js:11024 · `loadEmpHours()` [delete/insert] — dashboard.js:11647 · `renderHoursGrid()` [delete/insert] — dashboard.js:10393
+**Schreibt (3):** `fmt()` [delete/insert] — dashboard.js:10839 · `loadEmpHours()` [delete/insert] — dashboard.js:11462 · `renderHoursGrid()` [delete/insert] — dashboard.js:10208
 
 **Liest (2):** `getAvailableSlots()`, `horizonDays()`
 
@@ -231,7 +236,7 @@ Warum: Pausen sind keine Arbeitszeit und keine Abwesenheit — sie wiederholen s
 26 Spalten · Status: aktiv
 Warum: Zweiter Standort und aufwärts. Ohne Standortbegriff ließen sich Öffnungszeiten, Team und Leistungen nicht trennen, sobald eine Praxis mehr als eine Adresse hat.
 
-**Schreibt (5):** `bindBusiness()` [insert/update] — onboarding.js:388 · `deleteBusiness()` [delete] — dashboard.js:17579 · `ensureBusinessCoords()` [update] — dashboard.js:22937 · `toggleStandortDay()` [update] — dashboard.js:10369 · `wireBusinessModal()` [insert/update] — dashboard.js:17496
+**Schreibt (5):** `bindBusiness()` [insert/update] — onboarding.js:388 · `deleteBusiness()` [delete] — dashboard.js:17401 · `ensureBusinessCoords()` [update] — dashboard.js:22771 · `toggleStandortDay()` [update] — dashboard.js:10184 · `wireBusinessModal()` [insert/update] — dashboard.js:17318
 
 **Liest (6):** `bootBusinessSwitcher()`, `fetchBusinesses()`, `getAvailableSlots()`, `init()`, `renderBookingCalendar()`, `toRad()`
 
@@ -244,7 +249,7 @@ Warum: Zweiter Standort und aufwärts. Ohne Standortbegriff ließen sich Öffnun
 9 Spalten · Status: aktiv
 Warum: Google-Kalender-Anbindung je Nutzer: Tokens, Kalender-ID, Synchronisationszustand.
 
-**Schreibt (3):** `fmt()` [delete] — dashboard.js:11024 · `loadIntegrations()` [delete] — kalender.js:679 · `loadSettings()` [delete] — dashboard.js:12460
+**Schreibt (3):** `fmt()` [delete] — dashboard.js:10839 · `loadIntegrations()` [delete] — kalender.js:746 · `loadSettings()` [delete] — dashboard.js:12275
 
 **Liest (2):** `getAvailableSlots()`, `openEmpDetail()`
 
@@ -271,7 +276,7 @@ Warum: Nachweis der Einwilligung des **Praxisinhabers** (AVV, AGB, Datenschutz, 
 9 Spalten · Status: aktiv
 Warum: Der Einzelfall, der vom Wochenraster abweicht — verkürzter Freitag, Sondertermin am Samstag.
 
-**Schreibt (1):** `saveSpecialDays()` [upsert] — dashboard.js:10591
+**Schreibt (1):** `saveSpecialDays()` [upsert] — dashboard.js:10406
 
 **Liest (5):** `getAvailableSlots()`, `horizonDays()`, `loadBookingSlots()`, `renderBookingCalendar()`, `renderHoursMiniCal()`
 
@@ -293,7 +298,7 @@ Warum: Zugriffsprotokoll nach DSGVO Art. 32 — wer hat wann welche Patientendat
 8 Spalten · Status: aktiv
 Warum: Ein Inhaber mit mehreren Standorten muss je Datenkategorie entscheiden: gemeinsam oder getrennt. Fehlende Zeile = alles getrennt (bewusst als sichere Vorgabe).
 
-**Schreibt (1):** `saveDataSharing()` [upsert] — dashboard.js:17342
+**Schreibt (1):** `saveDataSharing()` [upsert] — dashboard.js:17164
 
 **Liest (1):** `loadDataSharing()`
 
@@ -313,9 +318,9 @@ Warum: Diagnosegruppen der Heilmittel-Richtlinie samt ICD-Regeln — die Brücke
 
 **Schreibt (1):** `main()` [update] — api-backend/check_diagnosegruppen_icd.js:94
 
-**Liest (2):** `loadDgIcdRules()`, `podRegelnLaden()`
+**Liest (3):** `loadDgIcdRules()`, `podRegelnLaden()`, `regelsatzLaden()`
 
-**Dateien:** `api-backend/check_diagnosegruppen_icd.js`, `module/diagnosegruppen-regeln.js`, `module/verordnung-podo.js`
+**Dateien:** `api-backend/check_diagnosegruppen_icd.js`, `module/diagnosegruppen-regeln.js`, `module/verordnung-podo.js`, `module/verordnung-pruefen-knopf.js`
 
 **Module:** abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen
 
@@ -324,7 +329,7 @@ Warum: Diagnosegruppen der Heilmittel-Richtlinie samt ICD-Regeln — die Brücke
 9 Spalten · Status: aktiv
 Warum: Druckvorlagen je Inhaber (Rechnung, Mahnung, Bericht) als JSON. Sonst müsste jede Layoutänderung deployt werden.
 
-**Schreibt (10):** `_enterAnsichtEditMode()` [update] — dashboard.js:13109 · `commit()` [update] — dashboard.js:13341 · `deleteVorlage()` [delete] — dashboard.js:13309 · `duplicateVorlage()` [insert] — dashboard.js:13318 · `fmt()` [delete/insert/update] — dashboard.js:11024 · `openVorlagenAnsicht()` [update] — dashboard.js:13019 · `saveVorlage()` [insert/update] — dashboard.js:13279 · `seedDefaultVorlagen()` [insert] — dashboard.js:13377 · `seedMissingVorlagen()` [insert] — dashboard.js:13383 · `startVorlagenInlineRename()` [update] — dashboard.js:13334
+**Schreibt (10):** `_enterAnsichtEditMode()` [update] — dashboard.js:12924 · `commit()` [update] — dashboard.js:13156 · `deleteVorlage()` [delete] — dashboard.js:13124 · `duplicateVorlage()` [insert] — dashboard.js:13133 · `fmt()` [delete/insert/update] — dashboard.js:10839 · `openVorlagenAnsicht()` [update] — dashboard.js:12834 · `saveVorlage()` [insert/update] — dashboard.js:13094 · `seedDefaultVorlagen()` [insert] — dashboard.js:13192 · `seedMissingVorlagen()` [insert] — dashboard.js:13198 · `startVorlagenInlineRename()` [update] — dashboard.js:13149
 
 **Liest (2):** `loadVorlagenPanel()`, `openVorlagenEdit()`
 
@@ -342,7 +347,7 @@ Warum: Schlüsselverzeichnisse aus Anlage 3 TP5 (Kennzeichen, Gruppen, Codes) al
 11 Spalten · Status: aktiv
 Warum: Welche Mail ging wann an wen raus. Bei Terminbestätigungen ist „ist die Mail angekommen?" die häufigste Rückfrage.
 
-**Schreibt (2):** `fmt()` [insert] — dashboard.js:11024 · `loadPatientDetailMails()` [update] — dashboard.js:9057
+**Schreibt (2):** `fmt()` [insert] — dashboard.js:10839 · `loadPatientDetailMails()` [update] — dashboard.js:8872
 
 **Dateien:** `api/admin/data.js`, `dashboard.js`
 
@@ -353,7 +358,7 @@ Warum: Welche Mail ging wann an wen raus. Bei Terminbestätigungen ist „ist di
 5 Spalten · Status: aktiv
 Warum: Ein Angestellter kann an mehreren Standorten arbeiten. Die Zuordnung passt weder in `profiles` (1:n) noch in `businesses`.
 
-**Schreibt (4):** `fmt()` [delete/upsert] — dashboard.js:11024 · `renderEmpStandortList()` [delete/upsert] — dashboard.js:11202 · `renderOtherStandortEmps()` [upsert] — dashboard.js:11055 · `saveEmpPermissions()` [upsert] — dashboard.js:11303
+**Schreibt (4):** `fmt()` [delete/upsert] — dashboard.js:10839 · `renderEmpStandortList()` [delete/upsert] — dashboard.js:11017 · `renderOtherStandortEmps()` [upsert] — dashboard.js:10870 · `saveEmpPermissions()` [upsert] — dashboard.js:11118
 
 **Liest (5):** `bootBusinessSwitcher()`, `getAvailableSlots()`, `init()`, `loadEmpPermissions()`, `loadTeam()`
 
@@ -377,7 +382,7 @@ Warum: Rollen oberhalb von „Inhaber/Angestellter" — Rezeption, Therapeut, Le
 5 Spalten · Status: aktiv
 Warum: Ausnahme für eine einzelne Person, ohne dafür eine neue Gruppe zu erfinden („die eine Rezeptionskraft darf zusätzlich Rechnungen sehen").
 
-**Schreibt (2):** `fmt()` [delete/insert] — dashboard.js:11024 · `saveEmpPermissions()` [delete/insert] — dashboard.js:11303
+**Schreibt (2):** `fmt()` [delete/insert] — dashboard.js:10839 · `saveEmpPermissions()` [delete/insert] — dashboard.js:11118
 
 **Liest (1):** `renderEmpPermGrid()`
 
@@ -390,7 +395,7 @@ Warum: Ausnahme für eine einzelne Person, ohne dafür eine neue Gruppe zu erfin
 4 Spalten · Status: aktiv
 Warum: Nicht jeder Therapeut macht jede Leistung. Ohne diese Zuordnung bietet die Buchungsseite Termine bei Leuten an, die sie nicht durchführen dürfen.
 
-**Schreibt (4):** `fmt()` [delete/insert] — dashboard.js:11024 · `loadEmpServices()` [delete/insert] — dashboard.js:11739 · `normName()` [insert] — onboarding.js:599 · `syncServices()` [insert] — onboarding.js:618
+**Schreibt (4):** `fmt()` [delete/insert] — dashboard.js:10839 · `loadEmpServices()` [delete/insert] — dashboard.js:11554 · `normName()` [insert] — onboarding.js:599 · `syncServices()` [insert] — onboarding.js:618
 
 **Liest (2):** `loadServices()`, `openBookingFromRxPreset()`
 
@@ -403,7 +408,7 @@ Warum: Nicht jeder Therapeut macht jede Leistung. Ohne diese Zuordnung bietet di
 21 Spalten · Status: aktiv
 Warum: Fahrtenbuch für Hausbesuche, finanzamtstauglich (Zweck, Start-/Zielort, Kilometer).
 
-**Schreibt (3):** `saveFahrtEndHandler()` [upsert] — dashboard.js:4319 · `saveFahrtStartHandler()` [upsert] — dashboard.js:4192 · `toLocal()` [delete/update] — dashboard.js:20605
+**Schreibt (3):** `saveFahrtEndHandler()` [upsert] — dashboard.js:4331 · `saveFahrtStartHandler()` [upsert] — dashboard.js:4204 · `toLocal()` [delete/update] — dashboard.js:20439
 
 **Liest (2):** `loadActivityFeed()`, `loadFbFahrten()`
 
@@ -481,7 +486,7 @@ Warum: Welcher ICD-Bereich zu welchem Fachbereich gehört. Grundlage des `strict
 34 Spalten · Status: aktiv
 Warum: Die Rechnung an Privatzahler und Selbstzahler (GKV läuft über `abrechnung`).
 
-**Schreibt (4):** `dialog()` [update] — module/rechnung-zahlung.js:129 · `frageZahlungsstatus()` [update] — module/rechnung-zahlung.js:68 · `markiereRechnungBezahlt()` [update] — module/rechnung-zahlung.js:49 · `saveInvoice()` [insert/update] — dashboard.js:15444
+**Schreibt (4):** `dialog()` [update] — module/rechnung-zahlung.js:129 · `frageZahlungsstatus()` [update] — module/rechnung-zahlung.js:68 · `markiereRechnungBezahlt()` [update] — module/rechnung-zahlung.js:49 · `saveInvoice()` [insert/update] — dashboard.js:15259
 
 **Liest (4):** `downloadDmrzForInvoice()`, `loadActivityFeed()`, `loadPatientDetailRechnungen()`, `loadRechnungen()`
 
@@ -523,13 +528,13 @@ Warum: Die Kassenliste für das Auswahlfeld in der Oberfläche. 93 GKV-Kassen, g
 51 Spalten · Status: aktiv
 Warum: **Das ist die Patientenakte.** Der Name stammt aus der Akquise-Zeit (daher `title`, `google_url`, `reviews_count`) und ist geblieben, weil ein Umbenennen jede Abfrage im Projekt anfasst.
 
-**Schreibt (4):** `handleDirectAusfallrechnung()` [update] — dashboard.js:4553 · `initSchnellerfassung()` [insert] — dashboard.js:21604 · `maybeOfferAppointmentConfirmEmail()` [update] — dashboard.js:7673 · `saveRezept()` [update] — dashboard.js:16974
+**Schreibt (4):** `handleDirectAusfallrechnung()` [update] — dashboard.js:4565 · `initSchnellerfassung()` [insert] — dashboard.js:21438 · `maybeOfferAppointmentConfirmEmail()` [update] — dashboard.js:7488 · `saveRezept()` [update] — dashboard.js:16789
 
 **Liest (36):** `ausfallVereinbarungDatum()`, `downloadDmrzForInvoice()`, `fillRzPatientFromLead()`, `findeLeadIdZuTermin()`, `fmt()`, `handleSessionDrop()`, `handleTerminStarten()`, `initBkCustomerAutocomplete()`, `initBkGroupPatientAutocomplete()`, `initCalRightPanel()`, `initWlPatientAutocomplete()`, `ladeAktiveVerordnungen()`, `ladeKassen()`, `ladePatienten()`, `loadActivityFeed()`, `loadAnamnese()`, `loadB2C()`, `loadBkLeads()`, `loadInvPatients()`, `loadLeads()` … +16
 
-**Dateien:** `api-backend/billing/api/statistik.routes.js`, `api-backend/server.js`, `dashboard.js`, `module/arzt-register.js`, `module/fussbefund.js`, `module/krankenkasse-suche.js`, `module/patienten-einwilligung.js`, `module/rechnung-editor.js`, `module/termin-patient-bezug.js`, `module/verordnung-uebersicht.js`
+**Dateien:** `api-backend/billing/api/statistik.routes.js`, `api-backend/server.js`, `dashboard.js`, `module/arzt-register.js`, `module/ausfallrechnung.js`, `module/fussbefund.js`, `module/krankenkasse-suche.js`, `module/patienten-einwilligung.js`, `module/rechnung-editor.js`, `module/termin-patient-bezug.js`, `module/verordnung-uebersicht.js`
 
-**Module:** abrechnung, anamnese, anfragen, b2b, b2c, belegliste, doctors, fahrtenbuch, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen, vorlagen
+**Module:** abrechnung, anamnese, b2c, doctors, fussstatus, hours, kunden, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen
 
 ### `mahnungen`
 
@@ -543,7 +548,7 @@ Warum: Mahnstufen zu offenen Rechnungen, mit eigenem Nummernkreis.
 12 Spalten · Status: aktiv
 Warum: Messwerte im Verlauf (Blankoverordnung: der Therapeut muss den Behandlungserfolg belegen).
 
-**Schreibt (2):** `refreshMessreihen()` [delete] — dashboard.js:8782 · `saveMessung()` [insert] — dashboard.js:8906
+**Schreibt (2):** `refreshMessreihen()` [delete] — dashboard.js:8597 · `saveMessung()` [insert] — dashboard.js:8721
 
 **Dateien:** `dashboard.js`
 
@@ -630,9 +635,9 @@ Warum: Zwischen „Formular ausgefüllt" und „bezahlt" existiert der Account n
 ### `podologie_behandlungen`
 
 11 Spalten · Status: aktiv
-Warum: Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions` im anderen Topf.
+Warum: Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions`. `verordnung_id` zeigt seit 04.09.2026 auf `prescriptions` (Zusammenlegung der Verordnungstöpfe, ids unverändert) — vorher auf die eigene Tabelle `verordnungen`.
 
-**Schreibt (3):** `behandlungenVerknuepfen()` [update] — module/rechnung-bruecke.js:165 · `loadPodologieBilling()` [insert] — module/podologie-abrechnung.js:395 · `verknuepfungLoesen()` [update] — module/rechnung-bruecke.js:182
+**Schreibt (3):** `behandlungenVerknuepfen()` [update] — module/rechnung-bruecke.js:165 · `loadPodologieBilling()` [insert] — module/podologie-abrechnung.js:430 · `verknuepfungLoesen()` [update] — module/rechnung-bruecke.js:182
 
 **Liest (7):** `frag()`, `ladeAktiveVerordnungen()`, `ladeVerlauf()`, `offeneBehandlungen()`, `patientenBehandlungen()`, `podPatientBehandlungen()`, `verordnungenLaden()`
 
@@ -645,7 +650,7 @@ Warum: Die Behandlung zur podologischen Verordnung — das Gegenstück zu `presc
 13 Spalten · Status: aktiv
 Warum: Nachweise und Anhänge zu einer Verordnung — Befreiungsausweis, LHB-Genehmigung, korrigierte Verordnung, Therapiebericht. Als Spalten in `prescriptions` wären es beliebig viele.
 
-**Schreibt (1):** `uploadRxNachweise()` [insert] — dashboard.js:18567
+**Schreibt (1):** `uploadRxNachweise()` [insert] — dashboard.js:18390
 
 **Dateien:** `dashboard.js`
 
@@ -654,7 +659,7 @@ Warum: Nachweise und Anhänge zu einer Verordnung — Befreiungsausweis, LHB-Gen
 9 Spalten · Status: aktiv
 Warum: Die einzelne Behandlungseinheit auf der Verordnung. Ohne sie ließe sich nicht sagen, wie viele der verordneten Einheiten schon geleistet sind.
 
-**Schreibt (5):** `gleicheSitzungenAb()` [upsert] — module/sitzung-abgleich.js:86 · `handlePatientNichtErschienen()` [update] — dashboard.js:4503 · `handleSessionDrop()` [update] — dashboard.js:3912 · `linkBookingsToPrescriptionSessions()` [insert/update] — dashboard.js:7581 · `markPrescriptionSession()` [update] — dashboard.js:7548
+**Schreibt (5):** `gleicheSitzungenAb()` [upsert] — module/sitzung-abgleich.js:86 · `handlePatientNichtErschienen()` [update] — dashboard.js:4515 · `handleSessionDrop()` [update] — dashboard.js:3924 · `linkBookingsToPrescriptionSessions()` [insert/update] — dashboard.js:7396 · `markPrescriptionSession()` [update] — dashboard.js:7363
 
 **Liest (10):** `decorateBookingTitleWithSession()`, `ladePrivatSumme()`, `loadCalRpUnverga()`, `loadRxSessionsPanel()`, `openInvView()`, `pruefeFrequenz()`, `pruefeVerordnungsfortschritt()`, `terminAuswahlLaden()`, `waehleVerordnungFuerPanel()`, `zaehler()`
 
@@ -671,14 +676,14 @@ Warum: Prüfergebnis der Rezeptvalidierung samt Übersteuerung. Getrennt von `pr
 
 ### `prescriptions`
 
-71 Spalten · Status: aktiv
-Warum: Die Verordnung (Muster 13) für Physio/Ergo/Logopädie: Diagnose, Heilmittel, Frequenz, Genehmigung — die Grundlage jeder GKV-Abrechnung.
+82 Spalten · Status: aktiv
+Warum: Die Verordnung (Muster 13) für ALLE vier Fachbereiche — Physio, Ergo, Logopädie UND (seit 04.09.2026) Podologie. `therapie_bereich` unterscheidet; Podologie-Zeilen tragen zusätzlich neun aus `verordnungen` übernommene Spalten (`patient_name`, `wagner_grad`, `versichertennummer`, `behandlungsanlass`, `absetzung_*`, `storno_*`, `rezeptart`).
 
-**Schreibt (11):** `betragNullsetzen()` [update] — module/zuzahlung-befreiung.js:249 · `downloadDmrzForInvoice()` [update] — dashboard.js:15600 · `flipAbrechnungStatus()` [update] — dashboard.js:8636 · `kassiereZuzahlung()` [update] — dashboard.js:7343 · `pruefeVerordnungsfortschritt()` [update] — module/sitzungsfortschritt.js:82 · `renderAbrechnungHistory()` [update] — dashboard.js:19925 · `renderAbrechnungReady()` [update] — dashboard.js:19698 · `saveRezept()` [insert] — dashboard.js:16974 · `storniereZuzahlung()` [update] — dashboard.js:7418 · `triggerStorno()` [update] — dashboard.js:21029 · `zaehler()` [update] — module/sitzungsfortschritt.js:85
+**Schreibt (12):** `betragNullsetzen()` [update] — module/zuzahlung-befreiung.js:249 · `downloadDmrzForInvoice()` [update] — dashboard.js:15415 · `flipAbrechnungStatus()` [update] — dashboard.js:8451 · `kassiereZuzahlung()` [update] — dashboard.js:7158 · `pruefeVerordnungsfortschritt()` [update] — module/sitzungsfortschritt.js:82 · `renderAbrechnungHistory()` [update] — dashboard.js:19759 · `renderAbrechnungReady()` [update] — dashboard.js:19532 · `saveRezept()` [insert] — dashboard.js:16789 · `speichereEinheiten()` [update] — module/verordnung-einheiten.js:126 · `storniereZuzahlung()` [update] — dashboard.js:7233 · `triggerStorno()` [update] — dashboard.js:20863 · `zaehler()` [update] — module/sitzungsfortschritt.js:85
 
-**Liest (24):** `frag()`, `frageZahlungsstatus()`, `initBkCustomerAutocomplete()`, `korrekturAusPanel()`, `ladeAktiveVerordnungen()`, `ladeVerlauf()`, `ladeZuweisungen()`, `linkBookingsToPrescriptionSessions()`, `loadAbrechnung()`, `loadAnamneseRxContext()`, `loadBkVerordnungen()`, `loadCalRpRezeptInfo()`, `loadPatientDetailRezepte()`, `loadPatRxTable()`, `loadPhysioRezKpis()`, `loadRxSessionsPanel()`, `loadUeberblickDeadlines()`, `oeffneZuzahlungKorrektur()`, `openBookingActionModal()`, `openInvView()` … +4
+**Liest (28):** `aufEuro()`, `frag()`, `frageZahlungsstatus()`, `initBkCustomerAutocomplete()`, `korrekturAusPanel()`, `ladeAktiveVerordnungen()`, `ladeVerlauf()`, `ladeZuweisungen()`, `linkBookingsToPrescriptionSessions()`, `loadAbrechnung()`, `loadAnamneseRxContext()`, `loadBkVerordnungen()`, `loadCalRpRezeptInfo()`, `loadPatientDetailRezepte()`, `loadPatRxTable()`, `loadPhysioRezKpis()`, `loadRxSessionsPanel()`, `loadUeberblickDeadlines()`, `oeffneZuzahlungKorrektur()`, `openBookingActionModal()` … +8
 
-**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/mahnwesen.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/zuzahlung.routes.js`, `api-backend/server.js`, `dashboard.js`, `module/arzt-register.js`, `module/patientenkarte.js`, `module/rechnung-verordnung.js`, `module/rechnung-zahlung.js`, `module/sitzungsfortschritt.js`, `module/termin-aktionen.js`, `module/verordnung-uebersicht.js`, `module/zuzahlung-befreiung.js`, `module/zuzahlung-korrektur.js`
+**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/mahnwesen.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/verordnung-status.routes.js`, `api-backend/billing/api/zuzahlung.routes.js`, `api-backend/server.js`, `dashboard.js`, `module/arzt-register.js`, `module/patientenkarte.js`, `module/rechnung-verordnung.js`, `module/rechnung-zahlung.js`, `module/rezeptinfo-geld.js`, `module/sitzungsfortschritt.js`, `module/termin-aktionen.js`, `module/termin-leistungen.js`, `module/verordnung-detail.js`, `module/verordnung-einheiten.js`, `module/verordnung-uebersicht.js`, `module/verordnung-uebersicht.test.js`, `module/zuzahlung-befreiung.js`, `module/zuzahlung-korrektur.js`
 
 **Module:** abrechnung, anamnese, belegliste, doctors, fussstatus, hours, kunden, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen
 
@@ -687,9 +692,9 @@ Warum: Die Verordnung (Muster 13) für Physio/Ergo/Logopädie: Diagnose, Heilmit
 82 Spalten · Status: aktiv
 Warum: Der Dreh- und Angelpunkt der Mandantentrennung. Jeder Account — Inhaber wie Angestellter — hat genau eine Zeile; `role` und `owner_id` entscheiden, wer wessen Daten sieht. Weil Einzelstandort-Inhaber gar keinen `businesses`-Datensatz haben, liegen **Inhaber-Einstellungen hier**, nicht in `businesses`.
 
-**Schreibt (19):** `bindBilling()` [update] — onboarding.js:453 · `bindBusiness()` [update] — onboarding.js:388 · `bindHours()` [update] — onboarding.js:813 · `bindOwner()` [update] — onboarding.js:516 · `bindPlan()` [update] — onboarding.js:870 · `ensureBookingSlug()` [update] — dashboard.js:13735 · `ensureClinicLocation()` [update] — dashboard.js:5822 · `ensureCompanyCode()` [update] — dashboard.js:13718 · `fmt()` [update] — dashboard.js:11024 · `handleSave()` [update] — onboarding.js:457 · `init()` [update] — kalender.js:141 · `initAnfragenPanel()` [update] — dashboard.js:23449 · `loadProfile()` [insert] — onboarding.js:115 · `openEmpDetail()` [update] — dashboard.js:11356 · `openStripePortal()` [update] — dashboard.js:2311 · `renderLegendeSettings()` [update] — module/fussbefund.js:1633 · `saveAusfallSettings()` [update] — dashboard.js:17264 · `saveEmployee()` [insert] — dashboard.js:14427 · `saveStepProgress()` [update] — onboarding.js:281
+**Schreibt (19):** `bindBilling()` [update] — onboarding.js:453 · `bindBusiness()` [update] — onboarding.js:388 · `bindHours()` [update] — onboarding.js:813 · `bindOwner()` [update] — onboarding.js:516 · `bindPlan()` [update] — onboarding.js:870 · `ensureBookingSlug()` [update] — dashboard.js:13550 · `ensureClinicLocation()` [update] — dashboard.js:5707 · `ensureCompanyCode()` [update] — dashboard.js:13533 · `fmt()` [update] — dashboard.js:10839 · `handleSave()` [update] — onboarding.js:457 · `init()` [update] — kalender.js:149 · `initAnfragenPanel()` [update] — dashboard.js:23283 · `loadProfile()` [insert] — onboarding.js:115 · `openEmpDetail()` [update] — dashboard.js:11171 · `openStripePortal()` [update] — dashboard.js:2321 · `renderLegendeSettings()` [update] — module/fussbefund.js:1633 · `saveAusfallSettings()` [update] — dashboard.js:17086 · `saveEmployee()` [insert] — dashboard.js:14242 · `saveStepProgress()` [update] — onboarding.js:281
 
-**Liest (30):** `fetchBusinesses()`, `gehoertZurPraxis()`, `getAvailableSlots()`, `handleDirectAusfallrechnung()`, `ladeLegende()`, `ladePraxisAbrechnungsProfil()`, `loadAusfallConfig()`, `loadEmpUrlaubSection()`, `loadFahrtenbuchPanel()`, `loadFbFahrten()`, `loadFbReports()`, `loadHoursPanel()`, `loadPatientDetailAnamnese()`, `loadPraxisProfile()`, `loadTeam()`, `loadUeberblickVacations()`, `proceedToOwnerCheck()`, `r2()`, `renderOtherStandortEmps()`, `renderSidebar()` … +10
+**Liest (31):** `fetchBusinesses()`, `gehoertZurPraxis()`, `getAvailableSlots()`, `handleDirectAusfallrechnung()`, `ladeLegende()`, `ladePraxisAbrechnungsProfil()`, `loadAusfallConfig()`, `loadAusfallConfig()`, `loadEmpUrlaubSection()`, `loadFahrtenbuchPanel()`, `loadFbFahrten()`, `loadFbReports()`, `loadHoursPanel()`, `loadPatientDetailAnamnese()`, `loadPraxisProfile()`, `loadTeam()`, `loadUeberblickVacations()`, `proceedToOwnerCheck()`, `r2()`, `renderOtherStandortEmps()` … +11
 
 **Dateien:** `api-backend/ai/auth.js`, `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/ausfall.routes.js`, `api-backend/billing/api/mahnwesen.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/verordnung-status.routes.js`, `api-backend/billing/api/warteliste.routes.js`, `api-backend/billing/api/zuzahlung.routes.js`, `api-backend/fix_db.js`, `api-backend/server.js`, `api-backend/test_schema.js`, `api/admin/data.js`, `api/dsgvo.js`, `api/onboarding/check-email.js`, `api/stripe/create-checkout-session.js`, `api/stripe/portal-session.js`, `api/stripe/webhook.js`, `attendance.js`, `confirm.html`, `dashboard.js`, `kalender.js`, `module/anfrage-bearbeiten.js`, `module/beleg-druck.js`, `module/fussbefund.js`, `onboarding.js`
 
@@ -705,8 +710,6 @@ Warum: Erster Rezept-Fluss: Foto einer Verordnung → KI-Auszug (`raw_ai_data`, 
 14 Spalten · Status: aktiv (Randmodul)
 Warum: Ergebnisse der Apify-Suche (Google-Maps-Praxen) als Akquiseliste — die Zulieferung für `b2b_contacts`.
 
-**Schreibt (1):** `fmt()` [insert] — dashboard.js:11024
-
 **Liest (1):** `loadDoctors()`
 
 **Dateien:** `dashboard.js`
@@ -718,9 +721,9 @@ Warum: Ergebnisse der Apify-Suche (Google-Maps-Praxen) als Akquiseliste — die 
 18 Spalten · Status: aktiv
 Warum: Was die Praxis anbietet, mit Dauer und Preis. Grundlage für Slot-Berechnung und Abrechnung.
 
-**Schreibt (8):** `autoSeedGkvServices()` [insert] — dashboard.js:9669 · `ensureBlankoBonusServices()` [insert/update] — dashboard.js:7770 · `ensureBlockerServices()` [insert/update] — module/kalender-blocker.js:71 · `migratePodologieLegacyServices()` [update] — dashboard.js:9865 · `normName()` [delete/insert/update] — onboarding.js:599 · `renderServices()` [delete] — dashboard.js:10052 · `syncServices()` [delete/insert/update] — onboarding.js:618 · `wireBusinessModal()` [insert] — dashboard.js:17496
+**Schreibt (8):** `autoSeedGkvServices()` [insert] — dashboard.js:9484 · `ensureBlankoBonusServices()` [insert/update] — dashboard.js:7585 · `ensureBlockerServices()` [insert/update] — module/kalender-blocker.js:71 · `migratePodologieLegacyServices()` [update] — dashboard.js:9680 · `normName()` [delete/insert/update] — onboarding.js:599 · `renderServices()` [delete] — dashboard.js:9867 · `syncServices()` [delete/insert/update] — onboarding.js:618 · `wireBusinessModal()` [insert] — dashboard.js:17318
 
-**Liest (16):** `anfrageKorrekturenPruefen()`, `baseQuery()`, `createBookingsFromRequestFactory()`, `findMatchingServiceId()`, `fmt()`, `getAvailableSlots()`, `initCalendar()`, `loadEmpServices()`, `loadProfile()`, `loadServices()`, `loadServices()`, `populateRxcServiceSelect()`, `sondiere()`, `stammdatenLaden()`, `toRad()`, `updateBkDuration()`
+**Liest (17):** `anfrageKorrekturenPruefen()`, `ausfallPriceEur()`, `baseQuery()`, `createBookingsFromRequestFactory()`, `findMatchingServiceId()`, `fmt()`, `getAvailableSlots()`, `initCalendar()`, `loadEmpServices()`, `loadProfile()`, `loadServices()`, `loadServices()`, `populateRxcServiceSelect()`, `sondiere()`, `stammdatenLaden()`, `toRad()`, `updateBkDuration()`
 
 **Dateien:** `api-backend/booking/from-request.js`, `api-backend/check_db.js`, `api-backend/server.js`, `api/stripe/webhook.js`, `dashboard.js`, `kalender.js`, `module/anfrage-bearbeiten.js`, `module/kalender-blocker.js`, `module/kostentraeger-spalte.js`, `module/kostentraeger-spalte.test.js`, `onboarding.js`
 
@@ -736,7 +739,7 @@ Warum: Systemtabelle der PostGIS-Erweiterung (Koordinatensysteme). Kam mit `enab
 10 Spalten · Status: aktiv
 Warum: Das **Signaturzertifikat** für die §302-Einreichung (PKCS#7). Ohne gültiges Zertifikat lässt sich keine DTA-Datei signieren.
 
-**Schreibt (1):** `fmt()` [upsert] — dashboard.js:11024
+**Schreibt (1):** `fmt()` [upsert] — dashboard.js:10839
 
 **Liest (3):** `ikVorbelegen()`, `loadSettings()`, `renderOverview()`
 
@@ -749,7 +752,7 @@ Warum: Das **Signaturzertifikat** für die §302-Einreichung (PKCS#7). Ohne gül
 5 Spalten · Status: aktiv
 Warum: Fachliche Qualifikationen des Therapeuten (MT, MLD, KGG). Bestimmte Leistungen darf nur abrechnen, wer die Qualifikation nachweist.
 
-**Schreibt (2):** `fmt()` [delete/insert] — dashboard.js:11024 · `loadEmpCertificates()` [delete/insert] — dashboard.js:11825
+**Schreibt (2):** `fmt()` [delete/insert] — dashboard.js:10839 · `loadEmpCertificates()` [delete/insert] — dashboard.js:11640
 
 **Liest (2):** `loadAbrechnung()`, `loadEmpServices()`
 
@@ -762,7 +765,7 @@ Warum: Fachliche Qualifikationen des Therapeuten (MT, MLD, KGG). Bestimmte Leist
 12 Spalten · Status: aktiv
 Warum: Urlaub, Krankheit, Fortbildung. Anders als `custom_days` personenbezogen und mehrtägig.
 
-**Schreibt (6):** `deleteEmpTimeOff()` [delete] — dashboard.js:10960 · `deleteUrlaub()` [delete] — dashboard.js:11034 · `fmt()` [delete/insert] — dashboard.js:11024 · `loadTeam()` [insert] — dashboard.js:10694 · `openEmpDetail()` [insert] — dashboard.js:11356 · `saveUrlaub()` [insert] — dashboard.js:10976
+**Schreibt (6):** `deleteEmpTimeOff()` [delete] — dashboard.js:10775 · `deleteUrlaub()` [delete] — dashboard.js:10849 · `fmt()` [delete/insert] — dashboard.js:10839 · `loadTeam()` [insert] — dashboard.js:10509 · `openEmpDetail()` [insert] — dashboard.js:11171 · `saveUrlaub()` [insert] — dashboard.js:10791
 
 **Liest (8):** `getAvailableSlots()`, `horizonDays()`, `initCalendar()`, `loadEmpDaySchedule()`, `loadEmpUrlaubSection()`, `loadUeberblickVacations()`, `loadUrlaubListe()`, `renderDayView()`
 
@@ -801,7 +804,7 @@ Warum: Fremdprojekt (Guthabenmodell). Praxura rechnet über Stripe ab, nicht üb
 5 Spalten · Status: aktiv
 Warum: Pro Nutzer merkbare Oberflächen-Zustände (gewählter Standort, Kalenderansicht, Mitarbeiterfilter) gehören nicht in `profiles` — das ist die fachliche Stammdatentabelle.
 
-**Schreibt (2):** `saveUserPref()` [upsert] — dashboard.js:14653 · `switchBusiness()` [upsert] — dashboard.js:17658
+**Schreibt (2):** `saveUserPref()` [upsert] — dashboard.js:14468 · `switchBusiness()` [upsert] — dashboard.js:17480
 
 **Liest (2):** `bootBusinessSwitcher()`, `bootScheduleViewToggle()`
 
@@ -814,7 +817,7 @@ Warum: Pro Nutzer merkbare Oberflächen-Zustände (gewählter Standort, Kalender
 11 Spalten · Status: aktiv
 Warum: Fahrzeugstamm zum Fahrtenbuch; Kilometerstände und Kennzeichen gehören nicht an die einzelne Fahrt.
 
-**Schreibt (3):** `loadFbVehicles()` [delete] — dashboard.js:20704 · `saveQuickVehicleHandler()` [insert] — dashboard.js:4169 · `saveVehicleEdit()` [insert/update] — dashboard.js:20807
+**Schreibt (3):** `loadFbVehicles()` [delete] — dashboard.js:20538 · `saveQuickVehicleHandler()` [insert] — dashboard.js:4181 · `saveVehicleEdit()` [insert/update] — dashboard.js:20641
 
 **Liest (4):** `loadVehiclesForPicker()`, `q()`, `saveFahrtEndHandler()`, `saveFahrtStartHandler()`
 
@@ -824,23 +827,14 @@ Warum: Fahrzeugstamm zum Fahrtenbuch; Kilometerstände und Kennzeichen gehören 
 
 ### `verordnungen`
 
-35 Spalten · Status: aktiv
-Warum: Die podologische Verordnung. Eigener Topf, weil Podologie andere Pflichtfelder hat (Wagner-Armstrong-Grad, Fußstatus-Bezug) und die Abrechnung über HPNR 78xxx läuft.
-
-**Schreibt (2):** `loadPodologieBilling()` [insert/update] — module/podologie-abrechnung.js:395 · `speichereEinheiten()` [update] — module/verordnung-einheiten.js:120
-
-**Liest (12):** `aufEuro()`, `frag()`, `ladeAktiveVerordnungen()`, `ladeStatusJePatient()`, `ladeVerlauf()`, `ladeZuweisungen()`, `loadRxSessionsPanel()`, `oeffneStatusDialogFuer()`, `patientenBehandlungen()`, `podPatientBehandlungen()`, `verdrahteGeldzeile()`, `verordnungenLaden()`
-
-**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/verordnung-status.routes.js`, `dashboard.js`, `module/abrechnungsstatus.js`, `module/arzt-register.js`, `module/patientenkarte.js`, `module/podologie-abrechnung.js`, `module/rechnung-verordnung.js`, `module/rezeptinfo-geld.js`, `module/termin-leistungen.js`, `module/verordnung-einheiten.js`, `module/verordnung-uebersicht.js`
-
-**Module:** abrechnung, anamnese, doctors, fussstatus, hours, kunden, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen
+35 Spalten · Status: **stillgelegt** — in `prescriptions` aufgegangen (siehe Abschnitt 4 oben). Die 4 Zeilen bleiben stehen (ids unverändert, jetzt zusätzlich in `prescriptions`), read-only. `db/dsgvo.js` listet die Tabelle weiter für Auskunft/Löschung. Kein Code liest oder schreibt hierher; wer eine neue Stelle findet, die es noch tut, hat einen Bug gefunden, keine Ausnahme.
 
 ### `visibility_reports`
 
 8 Spalten · Status: aktiv
 Warum: Telemetrie zur Modulmatrix: welcher Kunde sieht tatsächlich welche Module. Ohne diese Rückmeldung wäre die Matrix eine Behauptung.
 
-**Schreibt (2):** `reportSidebarVisibility()` [upsert] — dashboard.js:935 · `saveVisToggle()` [delete] — admin.js:387
+**Schreibt (2):** `reportSidebarVisibility()` [upsert] — dashboard.js:945 · `saveVisToggle()` [delete] — admin.js:387
 
 **Liest (1):** `loadVisibility()`
 
@@ -853,7 +847,7 @@ Warum: Telemetrie zur Modulmatrix: welcher Kunde sieht tatsächlich welche Modul
 14 Spalten · Status: aktiv
 Warum: Wenn nichts frei ist, soll der Wunsch nicht verlorengehen. Wird beim Freiwerden eines Slots gegen die Wunschzeiten gematcht.
 
-**Schreibt (1):** `initWlModal()` [delete/insert/update] — dashboard.js:21926
+**Schreibt (1):** `initWlModal()` [delete/insert/update] — dashboard.js:21760
 
 **Liest (1):** `loadWarteliste()`
 
@@ -866,7 +860,7 @@ Warum: Wenn nichts frei ist, soll der Wunsch nicht verlorengehen. Wird beim Frei
 9 Spalten · Status: aktiv
 Warum: Regelarbeitszeit je Mitarbeiter und Standort — die Grundlage jeder Slot-Berechnung.
 
-**Schreibt (3):** `bindHours()` [delete/insert] — onboarding.js:813 · `fmt()` [upsert] — dashboard.js:11024 · `loadEmpHours()` [upsert] — dashboard.js:11647
+**Schreibt (3):** `bindHours()` [delete/insert] — onboarding.js:813 · `fmt()` [upsert] — dashboard.js:10839 · `loadEmpHours()` [upsert] — dashboard.js:11462
 
 **Liest (11):** `fetchOwnerHoursMap()`, `getAvailableSlots()`, `getEmployeeWorkingHours()`, `horizonDays()`, `initWorkingHours()`, `loadHours()`, `renderBookingCalendar()`, `renderGaps()`, `renderGapsForDate()`, `renderHoursGrid()`, `renderHoursMiniCal()`
 
@@ -890,7 +884,7 @@ Warum: Absetzungen und Fehlermeldungen der Kasse aus der ZAA-Rückmeldung, samt 
 11 Spalten · Status: aktiv
 Warum: Befreiungsausweise. Ob ein Patient zuzahlungsfrei ist, entscheidet über den abrechenbaren Betrag und darf nicht als Häkchen an der Verordnung hängen — es gilt zeitraumbezogen.
 
-**Schreibt (3):** `oeffneBefreiungsFormular()` [delete/upsert] — module/zuzahlung-befreiung.js:62 · `uploadRxNachweise()` [insert/update] — dashboard.js:18567 · `wireBefreiungCard()` [delete] — dashboard.js:8709
+**Schreibt (3):** `oeffneBefreiungsFormular()` [delete/upsert] — module/zuzahlung-befreiung.js:62 · `uploadRxNachweise()` [insert/update] — dashboard.js:18390 · `wireBefreiungCard()` [delete] — dashboard.js:8524
 
 **Liest (2):** `loadPatientDetailRezepte()`, `openBookingActionModal()`
 

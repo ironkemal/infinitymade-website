@@ -65,7 +65,7 @@ router.get('/statistik', async (req, res) => {
     // Date-only cutoff for `date` columns (ausstellungsdatum)
     const cutoffDate = cutoffIso.slice(0, 10);
 
-    // Elf Abfragen parallel. Die Zahlungseingänge laufen bewusst danach,
+    // Zehn Abfragen parallel. Die Zahlungseingänge laufen bewusst danach,
     // weil sie auf die Rezept-IDs aus Abfrage 5 eingegrenzt werden.
     const [
       belegResult,
@@ -78,7 +78,6 @@ router.get('/statistik', async (req, res) => {
       therapeutenResult,
       ausfallResult,
       aerztePrescriptionsResult,
-      aerzteVerordnungenResult,
     ] = await Promise.all([
       // 1. Kassenbuch im Zeitraum. `type` wird mitgelesen, weil die Grafik
       //    Forderungen (Zuzahlung + Ausfall) gegen Offenes stellt — ein
@@ -161,18 +160,16 @@ router.get('/statistik', async (req, res) => {
         .eq('owner_id', tenantId)
         .gte('created_at', cutoffIso),
 
-      // 11. Überweisende Ärzte — Pool 1: Physio/Ergo/Logo (prescriptions)
+      // 11. Überweisende Ärzte — seit 04.09.2026 EIN Fetch für beide Zweige:
+      //     Physio/Ergo/Logo UND Podologie stehen in `prescriptions`. Vorher
+      //     zwei getrennte Abfragen (Pool 1 `prescriptions`, Pool 2
+      //     `verordnungen`) — seit der Zusammenlegung der Verordnungstöpfe
+      //     wäre das eine Doppelzählung: dieselbe podologische Zeile hätte in
+      //     beiden Pools gestanden. `therapie_bereich` entscheidet unten in
+      //     der Auswertung, welches Feld die Heilmittel trägt.
       supabase
         .from('prescriptions')
-        .select('arzt_id, patient_id, heilmittel, diagnosegruppe, ausstellungsdatum, aerzte:arzt_id(id, arzt_name, lanr, fachrichtung, telefon, email)')
-        .eq('owner_id', tenantId)
-        .not('arzt_id', 'is', null)
-        .gte('ausstellungsdatum', cutoffDate),
-
-      // 12. Überweisende Ärzte — Pool 2: Podologie (verordnungen)
-      supabase
-        .from('verordnungen')
-        .select('arzt_id, lead_id, patient_name, heilmittel_items, diagnosegruppe, ausstellungsdatum, aerzte:arzt_id(id, arzt_name, lanr, fachrichtung, telefon, email)')
+        .select('arzt_id, patient_id, patient_name, heilmittel, heilmittel_items, diagnosegruppe, ausstellungsdatum, therapie_bereich, aerzte:arzt_id(id, arzt_name, lanr, fachrichtung, telefon, email)')
         .eq('owner_id', tenantId)
         .not('arzt_id', 'is', null)
         .gte('ausstellungsdatum', cutoffDate),
@@ -345,9 +342,10 @@ router.get('/statistik', async (req, res) => {
       .slice(0, 5);
 
     // ── 9. Überweisende Ärzte ─────────────────────────────────────────────────
-    // Beide Datenpools zusammenführen: prescriptions (Physio/Ergo/Logo) und
-    // verordnungen (Podologie). Die Tabellen bleiben getrennt — hier wird nur
-    // für die Auswertung addiert.
+    // Seit 04.09.2026 EIN Fetch (oben, Abfrage 11) für Physio/Ergo/Logo UND
+    // Podologie — beide stehen in `prescriptions`. `therapie_bereich`
+    // entscheidet unten, ob die Heilmittel aus dem Skalarfeld `heilmittel`
+    // oder aus der JSON-Liste `heilmittel_items` (Podologie) kommen.
     const arztMap = {};
 
     /** Zählt eine Verordnung auf das Konto ihres Arztes. */
@@ -379,26 +377,22 @@ router.get('/statistik', async (req, res) => {
     }
 
     for (const rx of (aerztePrescriptionsResult?.error ? [] : (aerztePrescriptionsResult?.data || []))) {
+      const istPodo = rx.therapie_bereich === 'podo';
+      // Podologie führt mehrere Heilmittel je Verordnung als JSON-Liste;
+      // Physio/Ergo/Logo ein einzelnes Textfeld.
+      const heilmittel = istPodo
+        ? (Array.isArray(rx.heilmittel_items) ? rx.heilmittel_items : [])
+            .map(i => i?.bezeichnung || i?.code).filter(Boolean)
+        : rx.heilmittel;
       erfasseVerordnung({
         arzt:           rx.aerzte,
         arztId:         rx.arzt_id,
-        patientKey:     rx.patient_id,
-        heilmittel:     rx.heilmittel,
+        // Podologie kennt Zeilen ohne verknüpfte Akte (Freitextname beim
+        // Anlegen) — der Namensschlüssel ist dort der einzige Patientenbezug.
+        patientKey:     rx.patient_id || (istPodo && rx.patient_name ? `name:${rx.patient_name}` : null),
+        heilmittel,
         diagnosegruppe: rx.diagnosegruppe,
         datum:          rx.ausstellungsdatum
-      });
-    }
-
-    for (const v of (aerzteVerordnungenResult?.error ? [] : (aerzteVerordnungenResult?.data || []))) {
-      // Podologie führt mehrere Heilmittel je Verordnung als JSON-Liste.
-      const items = Array.isArray(v.heilmittel_items) ? v.heilmittel_items : [];
-      erfasseVerordnung({
-        arzt:           v.aerzte,
-        arztId:         v.arzt_id,
-        patientKey:     v.lead_id || (v.patient_name ? `name:${v.patient_name}` : null),
-        heilmittel:     items.map(i => i?.bezeichnung || i?.code).filter(Boolean),
-        diagnosegruppe: v.diagnosegruppe,
-        datum:          v.ausstellungsdatum
       });
     }
 

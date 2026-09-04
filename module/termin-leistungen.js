@@ -31,7 +31,8 @@
  * umgestellt haette, haette fuenfzehn Aufrufer gleichzeitig anfassen muessen.
  */
 
-import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260903';
+import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260904';
+import { setzeDauer } from './termin-dauer.js?v=20260903b';
 
 /** Fallback-Dauer, wenn eine Leistung keine `duration_minutes` fuehrt. */
 export const STANDARD_DAUER_MIN = 30;
@@ -446,51 +447,35 @@ function zeigeHinweis(text, rueckfrage = null) {
 }
 
 /**
- * Dauer neu rechnen und in die Dauerauswahl schreiben.
+ * Dauer neu rechnen und ins Dauer-Feld schreiben.
  *
  * Bei einer einzigen Zeile bleibt `updateBkDuration()` aus dashboard.js
- * zustaendig — dort haengen die Preisstufen aus `price_config`. Erst ab zwei
- * Zeilen uebernimmt die Summe, in derselben Form, die der Speicherpfad ohnehin
- * liest (das angehakte Radio in `#bkDurationOptions`).
+ * zustaendig — dort haengt die gelernte Dauer bzw. die Preisstufen aus
+ * `price_config`. Erst ab zwei Zeilen uebernimmt die Summe, ueber
+ * `setzeDauer()` aus module/termin-dauer.js — demselben Weg, den der
+ * Speicherpfad ohnehin liest.
+ *
+ * Seit der Umstellung auf ein einzelnes Zahlenfeld (03.09.2026, Beta-Feedback
+ * „keine Checkboxen") gibt es kein innerHTML mehr zu ersetzen und damit auch
+ * keinen Beobachter-Bedarf mehr — die fruehere Endlosschleife (schreiben →
+ * MutationObserver → schreiben) entfiel mit ihrer Ursache.
  */
 function aktualisiereDauer() {
   const zeilen = leseLeistungen().filter(z => z.serviceId);
   if (zeilen.length < 2) return;
-
-  const optionen = document.getElementById('bkDurationOptions');
-  const gruppe = document.getElementById('bkDurationGroup');
-  if (!optionen) return;
-
   const minuten = gesamtDauer(zeilen, ctx?.getServices?.() || []);
-
-  // Nur schreiben, wenn sich wirklich etwas aendert. Der Beobachter unten
-  // haengt an genau diesem Knoten, und sein Rueckruf laeuft NACH der aktuellen
-  // Aufgabe — ein Merker, den man um die Schreibung herum setzt und sofort
-  // wieder loescht, ist zum Zeitpunkt des Rueckrufs laengst zurueckgesetzt.
-  // Genau so entstand hier eine Endlosschleife: schreiben → Beobachter →
-  // schreiben. Die browser-probe hat sie gefunden, bevor sie jemand geklickt
-  // hat. Idempotenz schlaegt Merker.
-  const schon = optionen.querySelector("input[type=radio]:checked");
-  if (schon && Number(schon.value) === minuten) {
-    window._selectedBkDuration = minuten;
-    if (gruppe) gruppe.hidden = false;
-    return;
-  }
-
-  optionen.innerHTML = `<label class="bk-dur-option">
-    <input type="radio" name="bkDuration" value="${minuten}" checked>
-    <span>${minuten} Min (kombiniert)</span>
-  </label>`;
-  if (gruppe) gruppe.hidden = false;
-  window._selectedBkDuration = minuten;
+  setzeDauer(minuten, 'kombiniert');
 }
 
 /** Historie des gewaehlten Patienten — Grundlage des Befundungsvorschlags. */
 async function patientenBehandlungen() {
   const leadId = document.getElementById('bkCustomerId')?.value || '';
   if (!ctx?.supabase || !leadId) return [];
-  const { data: vords } = await ctx.supabase.from('verordnungen')
-    .select('id').eq('owner_id', ctx.getOwnerId()).eq('lead_id', leadId);
+  // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`, therapie_bereich =
+  // 'podo') — vorher eine eigene Tabelle `verordnungen`.
+  const { data: vords } = await ctx.supabase.from('prescriptions')
+    .select('id').eq('owner_id', ctx.getOwnerId()).eq('patient_id', leadId)
+    .eq('therapie_bereich', 'podo');
   if (!vords?.length) return [];
   const { data: behs } = await ctx.supabase.from('podologie_behandlungen')
     .select('behandlungsdatum, hpnr_codes')
@@ -601,9 +586,11 @@ export function mountTerminLeistungen(deps) {
     }).observe(modal, { attributes: true, attributeFilter: ['hidden'] });
   }
 
-  // Nach dashboard.js laufen: dessen Zuhoerer am selben Feld ruft
-  // updateBkDuration() und schreibt `#bkDurationOptions` neu, teils verzoegert.
-  // Wer hier sofort rechnet, wird gleich darauf ueberschrieben.
+  // Kurze Verzoegerung, damit dashboard.js' eigener Zuhoerer am selben Feld
+  // (updateBkDuration()) zuerst die Einzel-Schaetzung fuer die neue Leistung
+  // ins Dauer-Feld schreibt, bevor hier ueber eine zweite Zeile entschieden
+  // wird. Falls die Reihenfolge doch einmal kippt, greift zusaetzlich
+  // `istKombinierterTermin()` in dashboard.js — die schreibt dann gar nicht erst.
   document.getElementById('bkService')?.addEventListener('change', () => {
     setTimeout(() => { schlageBefundungVor(); }, 60);
   });
@@ -611,13 +598,9 @@ export function mountTerminLeistungen(deps) {
     schlageBefundungVor();
   });
 
-  // Falls dashboard.js die Dauer spaeter noch einmal neu setzt (Preisstufen
-  // einer einzelnen Leistung), die Summe zurueckholen — sonst buchte die Maske
-  // zwei Leistungen und blockte die Zeit fuer eine.
-  const optionen = document.getElementById('bkDurationOptions');
-  if (optionen && typeof MutationObserver === 'function') {
-    new MutationObserver(() => {
-      if (leseLeistungen().filter(z => z.serviceId).length > 1) aktualisiereDauer();
-    }).observe(optionen, { childList: true });
-  }
+  // Der fruehere MutationObserver hier (Beobachter auf `#bkDurationOptions`,
+  // um eine zu spaete Einzel-Schaetzung aus dashboard.js zurueckzuholen)
+  // entfiel mit dem Umbau auf das Zahlenfeld: `updateBkDuration()` in
+  // dashboard.js prueft jetzt selbst vor jedem Schreiben, ob hier schon
+  // mehr als eine Leistungszeile steht, und laesst das Feld dann in Ruhe.
 }

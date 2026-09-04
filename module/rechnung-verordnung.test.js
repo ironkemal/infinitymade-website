@@ -9,6 +9,11 @@ import { verordnungenLaden } from './rechnung-verordnung.js';
 // NULL — wer sich darauf verlässt, stellt 0,00 € in Rechnung. Diese Tests nageln
 // die Reihenfolge fest: erst die Kodes, dann betrag_gkv, sonst ein Hinweis.
 
+// Seit 04.09.2026 EIN Verordnungstopf: die Fixtures unten stehen als
+// `prescriptions` (nicht mehr `verordnungen`) mit den dortigen Feldnamen
+// (`anzahl_einheiten` statt `behandlungseinheiten`) — `verordnungenLaden()`
+// übersetzt intern über `verordnung-topf.js` (`ausTopf`).
+
 // Auszug aus GKV_LEISTUNGSKATALOG.podologie (dashboard.js), Preise nach
 // applyGueltigePreise() zum Stichtag 2026.
 const KATALOG = [
@@ -36,9 +41,9 @@ const OPTS = { ownerId: 'o1', leadId: 'p1', sector: 'podologie', katalogPodo: KA
 
 test('jeder HPNR-Kode wird eine eigene Rechnungszeile mit Katalogpreis', async () => {
   const liste = await verordnungenLaden(fakeSb({
-    verordnungen: [{
+    prescriptions: [{
       id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF',
-      heilmittel_items: [{ code: '78010' }], behandlungseinheiten: 10,
+      heilmittel_items: [{ code: '78010' }], anzahl_einheiten: 10,
     }],
     podologie_behandlungen: [
       { id: 'b1', verordnung_id: 'v1', behandlungsdatum: '2026-08-05', hpnr_codes: ['78010', '78030'], betrag_gkv: null },
@@ -57,7 +62,7 @@ test('jeder HPNR-Kode wird eine eigene Rechnungszeile mit Katalogpreis', async (
 
 test('der Verordnungsbetrag ist die Summe ihrer Behandlungen', async () => {
   const liste = await verordnungenLaden(fakeSb({
-    verordnungen: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF', heilmittel_items: [], behandlungseinheiten: 6 }],
+    prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF', heilmittel_items: [], anzahl_einheiten: 6 }],
     podologie_behandlungen: [
       { id: 'b1', verordnung_id: 'v1', behandlungsdatum: '2026-08-05', hpnr_codes: ['78010', '78030'] },
       { id: 'b2', verordnung_id: 'v1', behandlungsdatum: '2026-08-12', hpnr_codes: ['78010', '78030'] },
@@ -72,7 +77,7 @@ test('der Verordnungsbetrag ist die Summe ihrer Behandlungen', async () => {
 // Ohne Kodes bleibt betrag_gkv der einzige Anhaltspunkt. Geschätzt wird nichts.
 test('ohne HPNR-Kodes zaehlt betrag_gkv', async () => {
   const liste = await verordnungenLaden(fakeSb({
-    verordnungen: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'NF', heilmittel_items: [], behandlungseinheiten: 3 }],
+    prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'NF', heilmittel_items: [], anzahl_einheiten: 3 }],
     podologie_behandlungen: [{ id: 'b1', verordnung_id: 'v1', behandlungsdatum: '2026-08-05', hpnr_codes: [], betrag_gkv: '42.50' }],
   }), OPTS);
 
@@ -82,7 +87,7 @@ test('ohne HPNR-Kodes zaehlt betrag_gkv', async () => {
 
 test('ohne Kodes und ohne Betrag wird 0 gemeldet statt still gerechnet', async () => {
   const liste = await verordnungenLaden(fakeSb({
-    verordnungen: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'NF', heilmittel_items: [], behandlungseinheiten: 3 }],
+    prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'NF', heilmittel_items: [], anzahl_einheiten: 3 }],
     podologie_behandlungen: [{ id: 'b1', verordnung_id: 'v1', behandlungsdatum: '2026-08-05', hpnr_codes: [], betrag_gkv: null }],
   }), OPTS);
 
@@ -94,7 +99,7 @@ test('ohne Kodes und ohne Betrag wird 0 gemeldet statt still gerechnet', async (
 // sonst sieht die Rechnung vollständig aus und ist es nicht.
 test('unbekannter Kode wird gemeldet, nicht mit 0 mitgerechnet', async () => {
   const liste = await verordnungenLaden(fakeSb({
-    verordnungen: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF', heilmittel_items: [], behandlungseinheiten: 4 }],
+    prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF', heilmittel_items: [], anzahl_einheiten: 4 }],
     podologie_behandlungen: [{ id: 'b1', verordnung_id: 'v1', behandlungsdatum: '2026-08-05', hpnr_codes: ['78010', '99999'] }],
   }), OPTS);
 
@@ -108,13 +113,13 @@ test('unbekannter Kode wird gemeldet, nicht mit 0 mitgerechnet', async () => {
 // solange sich aus heilmittel_items einer ableiten lässt.
 test('Verordnungstitel kommt aus heilmittel_items, sonst aus der Diagnosegruppe', async () => {
   const mit = await verordnungenLaden(fakeSb({
-    verordnungen: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF', heilmittel_items: [{ code: '78020' }], behandlungseinheiten: 4 }],
+    prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF', heilmittel_items: [{ code: '78020' }], anzahl_einheiten: 4 }],
     podologie_behandlungen: [],
   }), OPTS);
   assert.equal(mit[0].titel, 'Podologische Komplexbehandlung');
 
   const ohne = await verordnungenLaden(fakeSb({
-    verordnungen: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'NF', heilmittel_items: [], behandlungseinheiten: 4 }],
+    prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'NF', heilmittel_items: [], anzahl_einheiten: 4 }],
     podologie_behandlungen: [],
   }), OPTS);
   assert.equal(ohne[0].titel, 'NF');
@@ -124,7 +129,7 @@ test('Verordnungstitel kommt aus heilmittel_items, sonst aus der Diagnosegruppe'
 // gelistet (der Podologe soll sehen, dass es sie gibt), trägt aber 0 €.
 test('Verordnung ohne dokumentierte Behandlung bleibt bei 0', async () => {
   const liste = await verordnungenLaden(fakeSb({
-    verordnungen: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF', heilmittel_items: [], behandlungseinheiten: 10 }],
+    prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF', heilmittel_items: [], anzahl_einheiten: 10 }],
     podologie_behandlungen: [],
   }), OPTS);
 
