@@ -3,11 +3,11 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-04 · 83 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-04), funktionen/INDEX.json (erzeugt 2026-09-04)
+**Erzeugt:** 2026-09-04 · 82 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-04), funktionen/INDEX.json (erzeugt 2026-09-04)
 
 ## Kayıt durumu
 
-- Register kaydı olan: **83/83**
+- Register kaydı olan: **82/82**
 
 ## Kodda hiç çağrılmayan tablolar
 
@@ -31,7 +31,6 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `trip_history` | 1 | fremd |
 | `trip_plans` | 1 | fremd |
 | `user_credits` | 2 | fremd |
-| `verordnungen` | 18 | **stillgelegt** — in `prescriptions` aufgegangen (siehe Abschnitt 4 oben). Die 4 Zeilen bleiben stehen (ids unverändert, jetzt zusätzlich in `prescriptions`), read-only. `db/dsgvo.js` listet die Tabelle weiter für Auskunft/Löschung. Kein Code liest oder schreibt hierher; wer eine neue Stelle findet, die es noch tut, hat einen Bug gefunden, keine Ausnahme. |
 
 ## DSGVO-Abdeckung (`api/dsgvo.js`)
 
@@ -824,10 +823,6 @@ Warum: Fahrzeugstamm zum Fahrtenbuch; Kilometerstände und Kennzeichen gehören 
 **Dateien:** `dashboard.js`
 
 **Module:** abrechnung, fahrtenbuch, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen
-
-### `verordnungen`
-
-35 Spalten · Status: **stillgelegt** — in `prescriptions` aufgegangen (siehe Abschnitt 4 oben). Die 4 Zeilen bleiben stehen (ids unverändert, jetzt zusätzlich in `prescriptions`), read-only. `db/dsgvo.js` listet die Tabelle weiter für Auskunft/Löschung. Kein Code liest oder schreibt hierher; wer eine neue Stelle findet, die es noch tut, hat einen Bug gefunden, keine Ausnahme.
 
 ### `visibility_reports`
 

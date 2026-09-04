@@ -5,7 +5,7 @@
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-04)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 83,
+ "anzahl": 82,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -854,7 +854,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 5,
+   "sqlTreffer": 4,
    "codeStumm": false
   },
   {
@@ -4186,7 +4186,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 11,
+   "sqlTreffer": 10,
    "codeStumm": false
   },
   {
@@ -7077,7 +7077,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 30,
+   "sqlTreffer": 33,
    "codeStumm": false
   },
   {
@@ -7851,7 +7851,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 35,
+   "sqlTreffer": 34,
    "codeStumm": false
   },
   {
@@ -9213,34 +9213,6 @@
    "codeStumm": false
   },
   {
-   "name": "verordnungen",
-   "spalten": 35,
-   "fkRaus": [
-    "diagnosegruppen"
-   ],
-   "dsgvoAuskunft": false,
-   "dsgvoLoeschung": false,
-   "dsgvoAnonymisiert": false,
-   "erwaehnt": [
-    "dashboard.js",
-    "module/patientenkarte.js",
-    "module/verordnung-uebersicht.js",
-    "module/verordnung-uebersicht.test.js",
-    "nav-registry.js"
-   ],
-   "register": true,
-   "status": "**stillgelegt** — in `prescriptions` aufgegangen (siehe Abschnitt 4 oben). Die 4 Zeilen bleiben stehen (ids unverändert, jetzt zusätzlich in `prescriptions`), read-only. `db/dsgvo.js` listet die Tabelle weiter für Auskunft/Löschung. Kein Code liest oder schreibt hierher; wer eine neue Stelle findet, die es noch tut, hat einen Bug gefunden, keine Ausnahme.",
-   "warum": null,
-   "seit": "13.06.2026 · `create_verordnungen` (GoBD-Riegel nachgezogen: 03.09.2026 · `verordnungen_gobd_festschreibung`)",
-   "ungeklaert": false,
-   "leser": [],
-   "schreiber": [],
-   "dateien": [],
-   "module": [],
-   "sqlTreffer": 18,
-   "codeStumm": true
-  },
-  {
    "name": "visibility_reports",
    "spalten": 8,
    "fkRaus": [],
@@ -9962,11 +9934,6 @@
    "name": "user_credits",
    "sql": 2,
    "status": "fremd"
-  },
-  {
-   "name": "verordnungen",
-   "sql": 18,
-   "status": "**stillgelegt** — in `prescriptions` aufgegangen (siehe Abschnitt 4 oben). Die 4 Zeilen bleiben stehen (ids unverändert, jetzt zusätzlich in `prescriptions`), read-only. `db/dsgvo.js` listet die Tabelle weiter für Auskunft/Löschung. Kein Code liest oder schreibt hierher; wer eine neue Stelle findet, die es noch tut, hat einen Bug gefunden, keine Ausnahme."
   }
  ],
  "dsgvo": {

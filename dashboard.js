@@ -12757,8 +12757,8 @@ td{padding:2mm 3mm;border-bottom:1px solid #e6eaef}
 .hinweis{background:#fff8e6;border:1px solid #f4d56b;border-radius:3pt;padding:3mm;margin:4mm 0;font-size:8.5pt}
 footer{margin-top:8mm;padding-top:3mm;border-top:1px solid #ccc;font-size:7.5pt;color:#666;display:flex;gap:10mm;align-items:flex-end}
 footer div{flex:1}
-.logo-block{text-align:right;flex-shrink:0}
-.logo-block img{max-height:40px;max-width:120px;object-fit:contain}
+.praxis-head{display:flex;gap:4mm;align-items:flex-start}
+.praxis-head img{max-height:16mm;max-width:40mm;object-fit:contain;flex-shrink:0}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.doc{outline:1pt solid #ddd}}
 ${editMode ? `
 .vl-edit { outline:none; border-bottom:2px dashed rgba(177,137,27,0.7); padding:1px 3px; border-radius:2px; cursor:text; min-width:20px; display:inline-block; }
@@ -12772,11 +12772,12 @@ ${editMode ? `
 ${editMode ? `<div class="vl-hint">✏ Markierte Felder anklicken und Text direkt bearbeiten.</div>` : ''}
 <div class="doc">
 <header>
+  <div class="praxis-head">${logoUrl ? `<img src="${logoUrl}" alt="Logo" />` : ''}
   <div class="praxis">
     <strong>${escHTML(praxisName)}</strong><br>
     ${v.vorlage_type === 'rezeptvorderseite' ? `<div style="margin-top: 2px;">${E('praxis_zusatz', cj.praxis_zusatz, 'Fachbereich eingeben…')}</div>` : ''}
     Musterstraße 1<br>10115 Berlin<br>Tel.: 030 123 456<br>IK: 123456789
-  </div>
+  </div></div>
   <div style="text-align:right">
     <h1>${escHTML(title)}</h1>
     <div class="sub">${editMode ? E('betreff', betreff, 'Betreff eingeben…') : (betreff ? escHTML(betreff) : 'Musterdokument')}</div>
@@ -12810,7 +12811,6 @@ ${customTypeHtml}
 <footer>
   <div>${fusszeileHtml}</div>
   <div><strong>Bankverbindung</strong><br>IBAN: DE00 0000 0000 0000 0000 00</div>
-  ${logoUrl ? `<div class="logo-block"><img src="${logoUrl}" alt="Logo" /></div>` : ''}
 </footer>
 </div></body></html>`;
 }

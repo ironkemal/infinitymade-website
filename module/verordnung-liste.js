@@ -75,7 +75,12 @@ export async function verordnungenListeLaden(ctx) {
   const empty = document.getElementById('vordListEmpty');
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="${SPALTEN}" style="text-align:center;padding:20px;color:var(--text-muted)">Lädt…</td></tr>`;
+  // Erstes Laden: "Lädt…". Ein Neuladen (z.B. nach Zuordnen/Lösen eines
+  // Termins, das an dieser Tabelle inhaltlich nichts ändert) dimmt die
+  // bestehenden Zeilen statt sie zu leeren — sonst blitzt die ganze Tabelle
+  // bei jeder Kleinigkeit weiss auf. Kemal, 04.09.2026.
+  if (tbody.dataset.geladen === '1') tbody.style.opacity = '0.45';
+  else tbody.innerHTML = `<tr><td colspan="${SPALTEN}" style="text-align:center;padding:20px;color:var(--text-muted)">Lädt…</td></tr>`;
 
   const btn = document.getElementById('vordNeueBtn');
   if (btn && ctx.onNeu) btn.onclick = ctx.onNeu;
@@ -112,12 +117,16 @@ export async function verordnungenListeLaden(ctx) {
 
   if (!liste.length) {
     tbody.innerHTML = '';
+    tbody.style.opacity = '';
+    delete tbody.dataset.geladen;
     if (empty) empty.hidden = false;
     return;
   }
   if (empty) empty.hidden = true;
 
   tbody.innerHTML = liste.map(v => zeileHtml(v, escapeHtml)).join('');
+  tbody.style.opacity = '';
+  tbody.dataset.geladen = '1';
 
   tbody.querySelectorAll('.vord-row').forEach(row => {
     row.addEventListener('click', () => {
@@ -178,7 +187,12 @@ function auswahlAufheben(esc) {
   const titel = document.getElementById('vordDetailName');
   const inhalt = document.getElementById('vordDetailContent');
   if (titel) titel.textContent = 'Verordnung';
-  if (inhalt) inhalt.innerHTML = '<span style="color:var(--text-muted);">Wählen Sie oben eine Verordnung aus.</span>';
+  if (inhalt) {
+    inhalt.innerHTML = '<span style="color:var(--text-muted);">Wählen Sie oben eine Verordnung aus.</span>';
+    // Sonst dimmt zeigeVerordnungDetail() beim nächsten Öffnen diesen Hinweis-
+    // text, statt "Lade…" zu zeigen — er zählt nicht als „schon geladener Inhalt".
+    delete inhalt.dataset.geladen;
+  }
 }
 
 function markiere(auswahl) {

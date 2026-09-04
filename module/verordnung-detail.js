@@ -774,9 +774,14 @@ async function _terminBearbeiten(sb, bookingId) {
  * Ein Klick betrifft genau EINEN Termin — das ist der Punkt der Karte
  * (Beta-1: „kann ich halt nur eins nehmen statt beide"). Nach dem Schreiben
  * wird neu geladen, weil sich Zähler, Restmenge und Kandidatenliste zugleich
- * ändern.
+ * ändern — aber NICHT von hier aus direkt: `emit('bookings:changed', …)`
+ * reicht, `module/verordnung-liste.js` hört genau darauf und baut das Panel
+ * neu auf. Ein zusätzlicher direkter Aufruf hier hätte das Panel zweimal
+ * neu gezeichnet (einmal hier, einmal über das Signal) — sichtbar als
+ * doppeltes Aufblitzen. Gefunden 04.09.2026, als der Stift (unten) denselben
+ * Signalweg bekam und das Zuordnen/Lösen plötzlich doppelt blinkte.
  */
-function _verdrahteTermine(wurzel, { supabase, vord, ctx }) {
+function _verdrahteTermine(wurzel, { supabase, vord }) {
   const fehlerEl = wurzel.querySelector('[data-termin-fehler]');
 
   const lauf = async (knopf, arbeit) => {
@@ -795,7 +800,6 @@ function _verdrahteTermine(wurzel, { supabase, vord, ctx }) {
     }
     emit('verordnungen:changed', { id: vord.id });
     emit('bookings:changed', { verordnungId: vord.id });
-    await zeigeVerordnungDetail(ctx);
   };
 
   wurzel.querySelectorAll('[data-termin-binden]').forEach(b => {
@@ -842,7 +846,17 @@ export async function zeigeVerordnungDetail(ctx) {
   if (!inhalt || !id) return null;
 
   if (panel) panel.hidden = false;
-  inhalt.innerHTML = '<span style="color:var(--text-muted);">Lade…</span>';
+  // Erstes Öffnen: "Lade…", weil noch nichts dasteht. Ein Refresh derselben
+  // Ansicht (Zuordnen/Lösen, Stift-Dialog gespeichert) dimmt stattdessen den
+  // ALTEN Inhalt, statt ihn zu Weiss zu leeren — Kemal, 04.09.2026: „bir beyaz
+  // sayfa oluyor sonra geri geliyor". `inhalt.dataset.geladen` merkt sich,
+  // ob hier schon einmal echter Inhalt stand (CSS-Übergang: dashboard.html
+  // `#vordDetailContent`/`#patRxDetailContent`).
+  if (inhalt.dataset.geladen === '1') {
+    inhalt.style.opacity = '0.45';
+  } else {
+    inhalt.innerHTML = '<span style="color:var(--text-muted);">Lade…</span>';
+  }
 
   // Alles ab hier in EINEM try/catch: ohne ihn blieb ein Wurf oder ein nie
   // settelndes Promise irgendwo zwischen hier und dem finalen innerHTML() die
@@ -866,6 +880,8 @@ export async function zeigeVerordnungDetail(ctx) {
     if (error || !rx) {
       console.error('[zeigeVerordnungDetail]', error);
       inhalt.innerHTML = '<span style="color:var(--danger,#ef4444);">Verordnung konnte nicht geladen werden.</span>';
+      inhalt.style.opacity = '';
+      delete inhalt.dataset.geladen;
       if (titel) titel.textContent = '—';
       return null;
     }
@@ -914,6 +930,8 @@ export async function zeigeVerordnungDetail(ctx) {
     inhalt.innerHTML = verordnungDetailHtml(rx, {
       escapeHtml, quelle, summe, termine, leadId: p.id || ctx.leadId || '',
     });
+    inhalt.style.opacity = '';
+    inhalt.dataset.geladen = '1';
     if (quelle === 'podologie') {
       _verdrahteEinheiten(inhalt, { supabase, vord: rx, ctx });
       _verdrahteTermine(inhalt, { supabase, vord: rx, ctx });
@@ -927,6 +945,8 @@ export async function zeigeVerordnungDetail(ctx) {
     const esc = escapeHtml || (s => String(s));
     inhalt.innerHTML = '<span style="color:var(--danger,#ef4444);">Verordnung konnte nicht geladen werden — '
       + esc(e?.message || 'unbekannter Fehler') + '</span>';
+    inhalt.style.opacity = '';
+    delete inhalt.dataset.geladen;
     if (titel) titel.textContent = '—';
     return null;
   }
