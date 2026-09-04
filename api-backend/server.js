@@ -306,6 +306,11 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Wird nach dem Migrationslauf (weiter unten, vor app.listen) gesetzt. Bleibt null,
+// wenn alles glattging. Deklaration steht hier oben, weil die Middleware direkt
+// darunter registriert werden MUSS — siehe dort.
+let wartungsmodus = null;
+
 app.get('/health/ready', async (req, res) => {
   const start = Date.now();
 
@@ -338,6 +343,26 @@ app.get('/health/ready', async (req, res) => {
 
 // DSGVO Art. 32 access audit — auto-log every authenticated /api request.
 // Anonymous endpoints (booking flow) log explicitly from their handlers.
+// Wartungsmodus — MUSS vor allen Routen stehen.
+//
+// Erster Versuch stand am Dateiende, kurz vor app.listen(). Das war falsch: eine
+// Middleware am Ende greift nur bei Anfragen, die KEINE Route getroffen haben.
+// /api/booking/create waere also weitergelaufen — gegen ein halb migriertes Schema,
+// also genau in dem Zustand, den der Wartungsmodus verhindern soll.
+//
+// Hier oben faengt sie alles ab. /health und /health/ready sind darueber registriert
+// und bleiben erreichbar, damit die Box diagnostizierbar bleibt (K10: wir kommen
+// nicht rein, der Betreiber muss uns das Diagnose-Paket schicken).
+app.use((req, res, next) => {
+  if (!wartungsmodus) return next();
+  res.status(503).json({
+    status: 'wartung',
+    grund: 'schema_migration',
+    fehler: wartungsmodus,
+    hinweis: 'Die Datenbank konnte nicht aktualisiert werden. Bitte das Diagnose-Paket senden.'
+  });
+});
+
 app.use('/api', accessLogger(supabase));
 
 // Unified AI gateway (Phase 0). All Azure OpenAI traffic routes through here.
@@ -4185,8 +4210,6 @@ const PORT = process.env.PORT || 3000;
 // = Neustart alle 60 s, der Kunde sieht nie etwas). Stattdessen: Wartungsmodus —
 // der Prozess bleibt oben, beantwortet /health und die Fehlerseite, und liefert
 // sonst 503. So bleibt die Box diagnostizierbar.
-let wartungsmodus = null;
-
 {
   const ergebnis = await runMigrations({
     databaseUrl: process.env.DATABASE_URL,
@@ -4202,19 +4225,6 @@ let wartungsmodus = null;
     console.log(`[migrate] ${ergebnis.angewandt.length} Migration(en) angewandt.`);
   }
 }
-
-// Im Wartungsmodus wird nichts ausser Diagnose beantwortet. Steht bewusst NACH
-// allen Routen: greift nur, wenn tatsächlich ein Migrationsfehler vorliegt.
-app.use((req, res, next) => {
-  if (!wartungsmodus) return next();
-  if (req.path === '/health' || req.path === '/health/ready') return next();
-  res.status(503).json({
-    status: 'wartung',
-    grund: 'schema_migration',
-    fehler: wartungsmodus,
-    hinweis: 'Die Datenbank konnte nicht aktualisiert werden. Bitte das Diagnose-Paket senden.'
-  });
-});
 
 const server = app.listen(PORT, () => {
   console.log(`Calendar API running on port ${PORT}`);
