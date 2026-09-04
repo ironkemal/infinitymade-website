@@ -519,7 +519,12 @@ function _felderPhysio(rx, esc) {
  */
 function _feldEinheiten(v, esc, erbracht) {
   const riegel = einheitenAenderungErlaubt(v);
-  const wert = v.behandlungseinheiten ?? '';
+  // String(), nicht nur `?? ''`: `behandlungseinheiten` ist eine Zahl, und
+  // `escapeHtml()` (dashboard.js) ruft `str.replace()` ohne Umwandlung auf —
+  // eine Zahl liess das mit „str.replace is not a function" durchbrechen.
+  // Gefunden 04.09.2026, als genau dieser Wurf hinter dem stummen „Lade…"-
+  // Hängenbleiben steckte (siehe zeigeVerordnungDetail() oben).
+  const wert = v.behandlungseinheiten != null ? String(v.behandlungseinheiten) : '';
   const knopfStil = 'font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);'
     + 'background:var(--bg-card-solid,#1f2937);color:var(--text-main);cursor:pointer;';
 
