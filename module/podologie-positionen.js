@@ -67,10 +67,19 @@ export function ladePodoPositionen(supabase, datum) {
   if (_katalog.has(tag)) return _katalog.get(tag);
 
   const p = (async () => {
+    // Zeitgrenze für den fetch: ein Server, der die Verbindung offen hält, ohne
+    // je zu antworten, liesse dieses Promise sonst nie settlen — die
+    // Verordnungsansicht (module/verordnung-detail.js) hängt dann auf
+    // unbestimmte Zeit bei „Lade…", ohne dass ihr eigenes try/catch je greift
+    // (ein nicht settelndes Promise wirft nichts, es wartet nur). Gefunden
+    // 04.09.2026: Beta-1 konnte keine podologische Verordnung mehr öffnen.
+    const abbruch = new AbortController();
+    const uhr = setTimeout(() => abbruch.abort(), 8000);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${API}/billing/positions/podologie?date=${encodeURIComponent(tag)}`, {
         headers: { Authorization: `Bearer ${session?.access_token}` },
+        signal: abbruch.signal,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
@@ -87,12 +96,14 @@ export function ladePodoPositionen(supabase, datum) {
       }
       return map;
     } catch (e) {
-      console.warn('[podologie-positionen]', e.message);
+      console.warn('[podologie-positionen]', e.name === 'AbortError' ? 'Zeitüberschreitung (8s)' : e.message);
       // Leere Karte statt Ausnahme: die Verordnungsansicht soll auch ohne
       // Preise stehen. Die Summe meldet dann „Position unbekannt" — das ist
       // ehrlicher als eine Seite, die gar nicht erst erscheint.
       _katalog.delete(tag);   // beim nächsten Aufruf erneut versuchen
       return new Map();
+    } finally {
+      clearTimeout(uhr);
     }
   })();
 

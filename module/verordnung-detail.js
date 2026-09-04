@@ -797,70 +797,90 @@ export async function zeigeVerordnungDetail(ctx) {
   if (panel) panel.hidden = false;
   inhalt.innerHTML = '<span style="color:var(--text-muted);">Lade…</span>';
 
-  // Seit 04.09.2026 EIN Verordnungstopf: beide Zweige lesen `prescriptions`.
-  // `.eq('therapie_bereich','podo')` ist Pflicht beim Podologie-Zweig — sonst
-  // könnte eine physiotherapeutische id hier durchlaufen und mit den
-  // podologischen Feldnamen (`ausTopf()`) falsch angezeigt werden.
-  let q = supabase.from('prescriptions')
-    .select(quelle === 'podologie' ? SELECT_PODO : SELECT_PHYSIO)
-    .eq('id', id);
-  if (quelle === 'podologie') q = q.eq('therapie_bereich', 'podo');
-  const { data: rxRoh, error } = await q.maybeSingle();
-  const rx = (quelle === 'podologie' && rxRoh) ? ausTopf(rxRoh) : rxRoh;
+  // Alles ab hier in EINEM try/catch: ohne ihn blieb ein Wurf oder ein nie
+  // settelndes Promise irgendwo zwischen hier und dem finalen innerHTML() die
+  // Seite für immer bei „Lade…" stehen — ohne Fehlermeldung, ohne Konsolen-
+  // hinweis, der Anwender sah nur ein Rad, das nie aufhört. Gefunden 04.09.2026
+  // bei Beta-1: eine podologische Verordnung liess sich nicht mehr öffnen, und
+  // es gab keine Spur, WARUM — dieser Rahmen ist genau dafür da, dass es beim
+  // nächsten Mal eine gibt.
+  try {
+    // Seit 04.09.2026 EIN Verordnungstopf: beide Zweige lesen `prescriptions`.
+    // `.eq('therapie_bereich','podo')` ist Pflicht beim Podologie-Zweig — sonst
+    // könnte eine physiotherapeutische id hier durchlaufen und mit den
+    // podologischen Feldnamen (`ausTopf()`) falsch angezeigt werden.
+    let q = supabase.from('prescriptions')
+      .select(quelle === 'podologie' ? SELECT_PODO : SELECT_PHYSIO)
+      .eq('id', id);
+    if (quelle === 'podologie') q = q.eq('therapie_bereich', 'podo');
+    const { data: rxRoh, error } = await q.maybeSingle();
+    const rx = (quelle === 'podologie' && rxRoh) ? ausTopf(rxRoh) : rxRoh;
 
-  if (error || !rx) {
-    console.error('[zeigeVerordnungDetail]', error);
-    inhalt.innerHTML = '<span style="color:var(--danger,#ef4444);">Verordnung konnte nicht geladen werden.</span>';
+    if (error || !rx) {
+      console.error('[zeigeVerordnungDetail]', error);
+      inhalt.innerHTML = '<span style="color:var(--danger,#ef4444);">Verordnung konnte nicht geladen werden.</span>';
+      if (titel) titel.textContent = '—';
+      return null;
+    }
+
+    const p = rx.leads || {};
+    const name = [p.first_name, p.last_name].filter(Boolean).join(' ')
+      || (quelle === 'podologie' ? (rx.patient_name || '') : '')
+      || '—';
+    if (titel) titel.textContent = name;
+
+    // Summe und Zuzahlung — nur im Podologie-Topf, und zwar aus DEM Katalog, aus
+    // dem auch die Kassendatei ihre Beträge nimmt (module/podologie-positionen.js
+    // erklärt, warum nicht aus `GKV_LEISTUNGSKATALOG`).
+    //
+    // Für den Physio-Topf gibt es diesen Weg im Browser nicht: dort kommen die
+    // Preise heute aus `services.price` (Terminpreis), den GKV-Preis kennt nur
+    // das Backend beim Erzeugen der DTA. Eine Summe daraus wäre eine zweite,
+    // abweichende Zahl neben der Abrechnung — deshalb steht dort weiter die
+    // Sitzungsliste ohne Betrag.
+    let summe = null;
+    let termine = null;
+    if (quelle === 'podologie') {
+      const behs = Array.isArray(rx.podologie_behandlungen) ? rx.podologie_behandlungen : [];
+      try {
+        termine = await ladePodoTermine(supabase, {
+          ownerId: rx.owner_id, vordId: rx.id, leadId: rx.lead_id,
+        });
+      } catch (e) {
+        console.warn('[zeigeVerordnungDetail] Termine:', e.message);
+      }
+      try {
+        const finde = await podoPositionsFinder(supabase, behs);
+        summe = zuzahlungFuerPodoVerordnung(rx, behs, finde);
+        for (const b of behs) {
+          const codes = Array.isArray(b.hpnr_codes) ? b.hpnr_codes.filter(Boolean) : [];
+          if (!codes.length) continue;
+          b._betrag = codes.reduce((s, c) => s + (Number(finde(c, b.behandlungsdatum)?.preis) || 0), 0);
+        }
+      } catch (e) {
+        // Ohne Preise bleibt die Ansicht stehen — sie ist in erster Linie die
+        // Verordnung, nicht die Rechnung.
+        console.warn('[zeigeVerordnungDetail] Summe:', e.message);
+      }
+    }
+
+    inhalt.innerHTML = verordnungDetailHtml(rx, {
+      escapeHtml, quelle, summe, termine, leadId: p.id || ctx.leadId || '',
+    });
+    if (quelle === 'podologie') {
+      _verdrahteEinheiten(inhalt, { supabase, vord: rx, ctx });
+      _verdrahteTermine(inhalt, { supabase, vord: rx, ctx });
+    }
+    if (panel && typeof panel.scrollIntoView === 'function') {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    return rx;
+  } catch (e) {
+    console.error('[zeigeVerordnungDetail]', e);
+    const esc = escapeHtml || (s => String(s));
+    inhalt.innerHTML = '<span style="color:var(--danger,#ef4444);">Verordnung konnte nicht geladen werden — '
+      + esc(e?.message || 'unbekannter Fehler') + '</span>';
     if (titel) titel.textContent = '—';
     return null;
   }
-
-  const p = rx.leads || {};
-  const name = [p.first_name, p.last_name].filter(Boolean).join(' ')
-    || (quelle === 'podologie' ? (rx.patient_name || '') : '')
-    || '—';
-  if (titel) titel.textContent = name;
-
-  // Summe und Zuzahlung — nur im Podologie-Topf, und zwar aus DEM Katalog, aus
-  // dem auch die Kassendatei ihre Beträge nimmt (module/podologie-positionen.js
-  // erklärt, warum nicht aus `GKV_LEISTUNGSKATALOG`).
-  //
-  // Für den Physio-Topf gibt es diesen Weg im Browser nicht: dort kommen die
-  // Preise heute aus `services.price` (Terminpreis), den GKV-Preis kennt nur
-  // das Backend beim Erzeugen der DTA. Eine Summe daraus wäre eine zweite,
-  // abweichende Zahl neben der Abrechnung — deshalb steht dort weiter die
-  // Sitzungsliste ohne Betrag.
-  let summe = null;
-  let termine = null;
-  if (quelle === 'podologie') {
-    const behs = Array.isArray(rx.podologie_behandlungen) ? rx.podologie_behandlungen : [];
-    termine = await ladePodoTermine(supabase, {
-      ownerId: rx.owner_id, vordId: rx.id, leadId: rx.lead_id,
-    });
-    try {
-      const finde = await podoPositionsFinder(supabase, behs);
-      summe = zuzahlungFuerPodoVerordnung(rx, behs, finde);
-      for (const b of behs) {
-        const codes = Array.isArray(b.hpnr_codes) ? b.hpnr_codes.filter(Boolean) : [];
-        if (!codes.length) continue;
-        b._betrag = codes.reduce((s, c) => s + (Number(finde(c, b.behandlungsdatum)?.preis) || 0), 0);
-      }
-    } catch (e) {
-      // Ohne Preise bleibt die Ansicht stehen — sie ist in erster Linie die
-      // Verordnung, nicht die Rechnung.
-      console.warn('[zeigeVerordnungDetail] Summe:', e.message);
-    }
-  }
-
-  inhalt.innerHTML = verordnungDetailHtml(rx, {
-    escapeHtml, quelle, summe, termine, leadId: p.id || ctx.leadId || '',
-  });
-  if (quelle === 'podologie') {
-    _verdrahteEinheiten(inhalt, { supabase, vord: rx, ctx });
-    _verdrahteTermine(inhalt, { supabase, vord: rx, ctx });
-  }
-  if (panel && typeof panel.scrollIntoView === 'function') {
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-  return rx;
 }
