@@ -2957,7 +2957,7 @@ verdrahteHeuteButton(() => {
   dayViewDate = new Date();
   monthViewYear = dayViewDate.getFullYear();
   monthViewMonth = dayViewDate.getMonth();
-  renderCalendarView();
+  setCalendarView('day');
 });
 
 // Rechtsklick auf einem Termin: dieselben Handlungen wie im Seitenbereich, ohne Umweg.

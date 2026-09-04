@@ -3,8 +3,8 @@
  *
  * Tag-, Wochen- und Monatsansicht blaettern nur relativ (kalenderBlaettern()
  * in dashboard.js) — wer sich ein paar Wochen weit vor- oder zurueckgeklickt
- * hat, musste bisher denselben Weg zurueck. Der Knopf springt unabhaengig
- * von der offenen Ansicht sofort auf das aktuelle Datum.
+ * hat, musste bisher denselben Weg zurueck. Der Knopf steht neben Tag/Woche/
+ * Monat und springt von jeder Ansicht aus direkt in die Tagesansicht von heute.
  *
  * Haelt selbst keinen Zustand: dayViewDate/monthViewYear/monthViewMonth
  * leben als module-scope Variablen in dashboard.js, darum bekommt dieser
