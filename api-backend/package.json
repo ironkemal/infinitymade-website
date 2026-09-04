@@ -10,7 +10,10 @@
     "start:cluster": "pm2-runtime start server.js -i 2 --node-args=\"--import ./instrument.js\"",
     "test": "node --test",
     "katalog:sync": "node sync_heilmittel_katalog.js",
-    "katalog:check": "node sync_heilmittel_katalog.js --check"
+    "katalog:check": "node sync_heilmittel_katalog.js --check",
+    "preise:pruefen": "node preise_pruefen.mjs",
+    "preise:autoupdate": "node preise_autoupdate.mjs",
+    "preise:autoupdate:dry": "node preise_autoupdate.mjs --dry-run"
   },
   "dependencies": {
     "@sentry/node": "^8.55.2",
@@ -22,6 +25,7 @@
     "googleapis": "^134.0.0",
     "nodemailer": "^6.10.1",
     "pm2": "^5.4.3",
-    "ws": "^8.21.0"
+    "ws": "^8.21.0",
+    "yauzl": "^2.10.0"
   }
 }

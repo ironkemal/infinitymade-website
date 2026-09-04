@@ -1,0 +1,91 @@
+name: GKV Preise prüfen & automatisch aktualisieren
+
+# Ops-Karte #213 — "Preise der Heilmittelpositionen automatisch aktuell halten".
+#
+# Läuft täglich, unabhängig von jeder lokalen Maschine oder Claude-Session:
+#   1. Vergleicht billing/codes/{podologie,physio}_positions.js gegen die von
+#      GKV-Spitzenverband veröffentlichte Heilmittelpreisstammdatei (XML).
+#   2. Betrifft die Abweichung NUR einen reinen Preiswechsel bei exakt derselben
+#      Code-Menge (keine neuen/verschwundenen Positionen, keine widersprüchliche
+#      Preisangabe bei einem bereits bekannten Fenster) → das neue Preisfenster
+#      wird automatisch angehängt, die Tests laufen, bei Grün wird committet
+#      und gepusht. publish-calendar-api.yml übernimmt danach automatisch
+#      (eigene Tests → Image bauen → Watchtower deployt live).
+#   3. Alles andere (neue/verschwundene Codes, unerwartete Abweichung) wird NUR
+#      per Telegram gemeldet — keine automatische Änderung. Das kann nur ein
+#      Mensch anhand der Anlage-2-Vertragsprosa entscheiden (siehe Kopfkommentar
+#      in api-backend/preise_autoupdate.mjs).
+#
+# Kein KI-Schritt beteiligt — reines, deterministisches Node-Skript.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # täglich 06:00 UTC (Sommerzeit ~08:00, Winterzeit ~07:00 Berlin)
+  workflow_dispatch: {}    # manueller Test-Trigger im Actions-Tab
+
+permissions:
+  contents: write
+
+jobs:
+  preise-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Abhängigkeiten installieren
+        working-directory: ./api-backend
+        run: npm ci --no-audit --no-fund
+
+      - name: Preise prüfen und, wenn sicher möglich, automatisch aktualisieren
+        id: run
+        working-directory: ./api-backend
+        run: node preise_autoupdate.mjs | tee preise-out.txt
+
+      - name: Ergebnis auswerten
+        id: check
+        working-directory: ./api-backend
+        run: node preise_ci_extract.mjs preise-out.txt
+
+      - name: Tests laufen lassen (nur wenn eine Änderung ansteht)
+        if: steps.check.outputs.changed == 'true'
+        working-directory: ./api-backend
+        run: npm test
+
+      - name: Commit + Push (nur wenn Tests grün waren)
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "praxura-preise-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add api-backend/billing/codes/podologie_positions.js api-backend/billing/codes/physio_positions.js
+          git commit \
+            -m "chore(preise): automatische Preisrunde übernommen (GKV-Heilmittelpreisstammdatei)" \
+            -m "Ausgelöst von preise_autoupdate.mjs (Ops-Karte #213). Nur Preis + Zuzahlung geändert; gleiche Codes, gleiche Regeln (Dauer/Diagnosegruppen/Notiz 1:1 vom Vorgänger-Fenster übernommen). npm test lief grün vor diesem Commit." \
+            -m "Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+          # main könnte sich seit dem Checkout bewegt haben (Melih/Kemal pushen
+          # laufend direkt dorthin, siehe CLAUDE.md) — rebase statt hart zu pushen.
+          git pull --rebase origin main
+          git push
+
+      - name: Telegram — automatische Aktualisierung gemeldet
+        if: steps.check.outputs.changed == 'true'
+        working-directory: ./api-backend
+        run: |
+          MSG=$(printf '✅ GKV-Preise automatisch aktualisiert und live ausgerollt.\n\n%s' "$(cat preise-telegram-message.txt)")
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=$MSG"
+
+      - name: Telegram — manuelle Prüfung nötig
+        if: steps.check.outputs.needs_review == 'true'
+        working-directory: ./api-backend
+        run: |
+          MSG=$(printf '⚠️ GKV-Preise: manuelle Prüfung nötig (kein automatischer Commit).\n\n%s' "$(cat preise-telegram-message.txt)")
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=$MSG"

@@ -14,6 +14,12 @@
 //   PODOLOGIE_POSITIONS_2025  → ab 01.07.2025
 //   PODOLOGIE_POSITIONS_2026  → ab 01.07.2026 (geplant)
 
+// Bis zu welcher GKV-"Heilmittelpreisstammdatei"-Version (Dateiname-Suffix
+// `Stand_TT-MM-JJ`) diese Datei geprüft/befüllt ist. `preise_pruefen.mjs`
+// vergleicht dagegen und meldet, wenn die GKV-Seite eine neuere Stand-Version
+// listet als die hier eingetragene — dann ist es Zeit für die nächste Runde.
+export const PREISSTAND = '01-07-26';
+
 // ─── Preise ab 01.07.2025 ────────────────────────────────────────────────────
 
 export const PODOLOGIE_POSITIONS_2025 = Object.freeze([
@@ -89,6 +95,22 @@ export const PODOLOGIE_POSITIONS_2026 = Object.freeze([
   { hpnr: '79934', label: 'Hausbesuch in soz. Einrichtung, inkl. Wegegeld',     diagnosegruppen: ['DF','NF','QF','UI1','UI2'], preis: 16.66, zuzahlung: 1.67, dauer: null, gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31' },
 ]);
 
+// ─── Alle Preisfenster (chronologisch) ────────────────────────────────────────
+//
+// Struktur bewusst identisch zu PHYSIO_PREISFENSTER in physio_positions.js, damit
+// beide Bereiche von preise_pruefen.mjs / preise_autoupdate.mjs (Ops-Karte #213)
+// gleich behandelt werden können. Ein neues Fenster wird IMMER unmittelbar vor dem
+// AUTOUPDATE-ANKER unten eingefügt — das vorherige "offene" Fenster (gueltig_bis
+// '9999-12-31') wird dabei auf den Tag vor dem neuen gueltig_ab geschlossen, sonst
+// würde `.find()` in findPodologiePosition() für neuere Daten weiter den alten
+// (jetzt zwei Fenster gleichzeitig "offenen") Preis zurückgeben.
+export const PODOLOGIE_PREISFENSTER = Object.freeze([
+  Object.freeze({ gueltig_ab: '2025-07-01', gueltig_bis: '2026-06-30', positionen: PODOLOGIE_POSITIONS_2025 }),
+  Object.freeze({ gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31', positionen: PODOLOGIE_POSITIONS_2026 }),
+  // ── AUTOUPDATE-ANKER: neue Fenster werden von preise_autoupdate.mjs genau HIER,
+  //    vor dieser Zeile, eingefügt. Zeile/Kommentar nicht verschieben oder umbenennen.
+]);
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
@@ -97,7 +119,7 @@ export const PODOLOGIE_POSITIONS_2026 = Object.freeze([
  */
 export function findPodologiePosition(hpnr, dateStr) {
   const d = dateStr || new Date().toISOString().slice(0, 10);
-  const all = [...PODOLOGIE_POSITIONS_2025, ...PODOLOGIE_POSITIONS_2026];
+  const all = PODOLOGIE_PREISFENSTER.flatMap(f => f.positionen);
   return all.find(p => p.hpnr === hpnr && p.gueltig_ab <= d && p.gueltig_bis >= d) || null;
 }
 
@@ -106,7 +128,7 @@ export function findPodologiePosition(hpnr, dateStr) {
  */
 export function getPodologiePositionenFuerDiagnosegruppe(diagnosegruppe, dateStr) {
   const d = dateStr || new Date().toISOString().slice(0, 10);
-  const all = [...PODOLOGIE_POSITIONS_2025, ...PODOLOGIE_POSITIONS_2026];
+  const all = PODOLOGIE_PREISFENSTER.flatMap(f => f.positionen);
   return all.filter(p =>
     p.diagnosegruppen.includes(diagnosegruppe) &&
     p.gueltig_ab <= d &&

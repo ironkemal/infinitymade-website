@@ -13,11 +13,20 @@
 
 const PHYSIO_PREFIX = '2';  // Abrechnungscode 22 → first digit 2
 
-// Preisfenster. Physio-Preise ändern sich regelmässig zum 01.07. — bisher gab es
-// hier gar kein Datum, dadurch bekam eine Behandlung aus Dezember 2025 heute den
-// 2026er Preis (rückwirkende Abrechnung und Korrekturverfahren rechneten still
-// falsch). Struktur bewusst wie podologie_positions.js: ein neues Preisfenster
-// wird als weiterer Eintrag in PHYSIO_PREISFENSTER ergänzt, das alte bleibt stehen.
+// Bis zu welcher GKV-"Heilmittelpreisstammdatei"-Version (Dateiname-Suffix
+// `Stand_TT-MM-JJ`) diese Datei geprüft/befüllt ist. `preise_pruefen.mjs`
+// vergleicht dagegen und meldet, wenn die GKV-Seite eine neuere Stand-Version
+// listet als die hier eingetragene.
+export const PREISSTAND = '01-01-26';
+
+// Preisfenster. Physio-Preise ändern sich laut Anlage 2 §4 nicht zum 01.07.
+// (das ist der Podologie-Turnus) — der Vertrag trat am 01.01.2026 in Kraft und
+// kann frühestens zum 31.12.2026 gekündigt werden, eine neue Preisrunde ist also
+// frühestens zum 01.01.2027 möglich. Vorher gab es hier gar kein Datum, dadurch
+// bekam eine Behandlung aus Dezember 2025 heute den 2026er Preis (rückwirkende
+// Abrechnung und Korrekturverfahren rechneten still falsch). Struktur bewusst
+// wie podologie_positions.js: ein neues Preisfenster wird als weiterer Eintrag
+// in PHYSIO_PREISFENSTER ergänzt, das alte bleibt stehen.
 export const PHYSIO_POSITIONS_2026 = Object.freeze([
   // Massage (X01xx)
   { x:'X0102', label:'Unterwasserdruckstrahlmassage',      preis:33.75, zuzahlung:3.38, dauer:'15-20', kat:'Massage' },
@@ -112,6 +121,10 @@ export const PHYSIO_PREISFENSTER = Object.freeze([
     gueltig_bis: '9999-12-31',
     positionen:  PHYSIO_POSITIONS_2026,
   }),
+  // ── AUTOUPDATE-ANKER: neue Fenster werden von preise_autoupdate.mjs genau HIER,
+  //    vor dieser Zeile, eingefügt (Ops-Karte #213). Zeile/Kommentar nicht
+  //    verschieben oder umbenennen — siehe PODOLOGIE_PREISFENSTER für die
+  //    identische Struktur und dieselbe Begründung.
 ]);
 
 /** Aktuellstes Preisfenster — Rückwärtskompatibilität für bestehende Importeure. */

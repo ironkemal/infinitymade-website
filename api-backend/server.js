@@ -20,6 +20,7 @@ import zuzahlungRouter from './billing/api/zuzahlung.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
 import { defaultPositionForHeilmittel, resolvePositionsnummer, PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
+import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
 import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
 import { run as rezeptNormalizeRun } from './ai/tasks/rezept-normalize.js';
 import { validateRezept } from './ai/validators/validate.js';
@@ -190,18 +191,6 @@ function verifyOAuthState(rawState) {
 
 // Helpers
 const BUSINESS_TZ = 'Europe/Berlin'; // All working_hours and date inputs are interpreted in this timezone
-
-// Süreli fetch — dış API asılı kalırsa AbortController ile keser, böylece
-// event-loop slot'u süresiz tutulmaz (eşzamanlı yük altında kritik).
-async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...options, signal: controller.signal });
-  } finally {
-    clearTimeout(t);
-  }
-}
 
 
 function timeToMins(t) {

@@ -17,10 +17,7 @@
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
-import {
-  PODOLOGIE_POSITIONS_2025,
-  PODOLOGIE_POSITIONS_2026,
-} from './billing/codes/podologie_positions.js';
+import { PODOLOGIE_PREISFENSTER } from './billing/codes/podologie_positions.js';
 
 dotenv.config();
 
@@ -69,7 +66,7 @@ function physioRows() {
 }
 
 function podoRows() {
-  const all = [...PODOLOGIE_POSITIONS_2025, ...PODOLOGIE_POSITIONS_2026];
+  const all = PODOLOGIE_PREISFENSTER.flatMap(f => f.positionen);
   return all.map((p, i) => ({
     code:            p.hpnr,
     bereich:         'podologie',
