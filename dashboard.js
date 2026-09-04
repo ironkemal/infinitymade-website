@@ -52,6 +52,7 @@ import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinute
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
 import { renderWoche } from './module/kalender-woche.js?v=20260831';
 import { renderMonat } from './module/kalender-monat.js?v=20260831';
+import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260904';
 import { alsISODatum as toISODate } from './module/datum.js?v=20260831';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260830';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
@@ -110,7 +111,7 @@ const T = {
     status_active: '✓ Aktiv', status_inactive: '✗ Inaktiv',
     today_bookings: 'Heutige Termine', upcoming_empty: 'Heute keine Termine.', features_title: 'Paketinhalt',
     calendar_sub: 'Termine verwalten & buchen',
-    btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin', btn_copy_booking_link: 'Buchungslink',
+    btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin', btn_copy_booking_link: 'Buchungslink', btn_cal_today: 'Heute',
     kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
     lf_all: 'Alle', lf_abrechenbar: 'Bereit zur Abrechnung', lf_abgerechnet: 'Abgerechnet', lf_teilabsetzung: 'Teilabsetzung', lf_abgesetzt: 'Absetzung', lf_storniert: 'Storniert',
@@ -323,7 +324,7 @@ const T = {
     kpi_plan: 'Plan', kpi_status: 'Status', kpi_today_bookings: 'Today', kpi_today_sub: 'Appointments', kpi_support: 'Support',
     status_active: '✓ Active', status_inactive: '✗ Inactive',
     today_bookings: "Today's Appointments", upcoming_empty: 'No appointments today.', features_title: "Plan contents",
-    calendar_sub: 'Manage & book appointments', btn_add_leave: 'Add time off', btn_copy_booking_link: 'Booking link', btn_add_booking: '+ Appointment',
+    calendar_sub: 'Manage & book appointments', btn_add_leave: 'Add time off', btn_copy_booking_link: 'Booking link', btn_add_booking: '+ Appointment', btn_cal_today: 'Today',
     kunden_sub: 'Leads & customer info', leads_import: 'Import CSV', leads_add: '+ New lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Search',
     lf_all: 'All', lf_abrechenbar: 'Ready to bill', lf_abgerechnet: 'Billed', lf_teilabsetzung: 'Partial rejection', lf_abgesetzt: 'Rejected', lf_storniert: 'Cancelled',
@@ -516,7 +517,7 @@ const T = {
     kpi_plan: 'Paket', kpi_status: 'Durum', kpi_today_bookings: 'Bugün', kpi_today_sub: 'Randevu', kpi_support: 'Destek',
     status_active: '✓ Aktif', status_inactive: '✗ Pasif',
     today_bookings: 'Bugünkü randevularınız', upcoming_empty: 'Bugün randevu yok.', features_title: 'Paket içeriği',
-    calendar_sub: 'Randevu yönetimi', btn_add_leave: 'İzin ekle', btn_copy_booking_link: 'Randevu bağlantısı', btn_add_booking: '+ Randevu',
+    calendar_sub: 'Randevu yönetimi', btn_add_leave: 'İzin ekle', btn_copy_booking_link: 'Randevu bağlantısı', btn_add_booking: '+ Randevu', btn_cal_today: 'Bugün',
     kunden_sub: 'Lead & müşteri bilgileri', leads_import: 'CSV içe aktar', leads_add: '+ Yeni Lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Ara',
     lf_all: 'Tümü', lf_abrechenbar: 'Faturaya hazır', lf_abgerechnet: 'Fatura edildi', lf_teilabsetzung: 'Kısmi kesinti', lf_abgesetzt: 'Kesinti', lf_storniert: 'İptal edildi',
@@ -2952,6 +2953,12 @@ function kalenderBlaettern(richtung) {
 }
 document.getElementById('dayViewPrev').addEventListener('click', () => kalenderBlaettern(-1));
 document.getElementById('dayViewNext').addEventListener('click', () => kalenderBlaettern(1));
+verdrahteHeuteButton(() => {
+  dayViewDate = new Date();
+  monthViewYear = dayViewDate.getFullYear();
+  monthViewMonth = dayViewDate.getMonth();
+  renderCalendarView();
+});
 
 // Rechtsklick auf einem Termin: dieselben Handlungen wie im Seitenbereich, ohne Umweg.
 // Woche/Monat laden weniger Spalten: erst vollstaendig laden (module/termin-laden.js).
