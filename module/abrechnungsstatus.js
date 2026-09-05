@@ -52,16 +52,30 @@ const API = 'https://n8n.infinitymade.de/api';
 /**
  * Reihenfolge = Dringlichkeit. Kleiner Index gewinnt in der Patientenzeile.
  * Absetzung zuerst: das ist ausgefallenes Geld mit Frist.
+ *
+ * Farbregel (Kemal, 05.09.2026): jeder Zustand hat seinen EIGENEN Farbplatz.
+ * Beide Töpfe stehen seit dem 31.08.2026 in einer Liste untereinander — dort
+ * heisst zweimal dieselbe Farbe zweimal dieselbe Lage behaupten. Belegt sind
+ * Rot (In Behandlung), Orange (Teilabsetzung), Bernstein (Erfasst), Grün
+ * (Bereit), Petrol (Bestätigt), Blau + Cyan (Bereich, siehe unten), Violett
+ * (Abgerechnet), Fuchsia (Abgelehnt), Karmin (Absetzung), Grau (Storniert),
+ * Schiefer (Archiviert). Ein neuer Zustand nimmt einen freien Platz, nicht
+ * den zweiten Anstrich eines belegten.
+ *
+ * Warum ausgerechnet Rot für „In Behandlung", also den Normalfall: so
+ * gewünscht. Der Preis ist bekannt und keine Panne — Rot liest sich sonst als
+ * Störung, und die echten Geldprobleme (Absetzung, Abgelehnt) mussten dafür
+ * auf Karmin und Fuchsia ausweichen.
  */
 export const STATUS = [
   {
     key: 'abgesetzt', label: 'Absetzung', kurz: 'Absetzung',
-    farbe: '#b91c1c', bg: 'rgba(185,28,28,0.14)',
+    farbe: '#be185d', bg: 'rgba(190,24,93,0.14)',
     hilfe: 'Die Kasse hat den Beleg abgesetzt. Grund prüfen, korrigieren, erneut einreichen.',
   },
   {
     key: 'teilabsetzung', label: 'Teilabsetzung', kurz: 'Teilabsetzung',
-    farbe: '#c2410c', bg: 'rgba(194,65,12,0.14)',
+    farbe: '#ea580c', bg: 'rgba(234,88,12,0.14)',
     hilfe: 'Die Kasse hat gekürzt gezahlt. Der gekürzte Betrag steht in der Verordnung.',
   },
   {
@@ -71,7 +85,7 @@ export const STATUS = [
   },
   {
     key: 'aktiv', label: 'In Behandlung', kurz: 'In Behandlung',
-    farbe: '#2563eb', bg: 'rgba(37,99,235,0.14)',
+    farbe: '#dc2626', bg: 'rgba(220,38,38,0.14)',
     hilfe: 'Die Behandlungsserie läuft noch.',
   },
   {
@@ -86,7 +100,7 @@ export const STATUS = [
   },
   {
     key: 'archiviert', label: 'Archiviert', kurz: 'Archiviert',
-    farbe: '#6b7280', bg: 'rgba(107,114,128,0.10)',
+    farbe: '#475569', bg: 'rgba(71,85,105,0.12)',
     hilfe: 'Abgeschlossen und aus der Arbeitsliste genommen.',
   },
 ];
@@ -146,13 +160,13 @@ const PHYSIO_STATUS = [
   },
   {
     key: 'in_therapy', label: 'In Behandlung', kurz: 'In Behandlung',
-    farbe: '#2563eb', bg: 'rgba(37,99,235,0.14)',
+    farbe: '#dc2626', bg: 'rgba(220,38,38,0.14)',
     hilfe: 'Die Behandlungsserie läuft noch.',
   },
   {
     // Altbestand: dieselbe Bedeutung wie `in_therapy`, nur ältere Schreibweise.
     key: 'active', label: 'In Behandlung', kurz: 'In Behandlung',
-    farbe: '#2563eb', bg: 'rgba(37,99,235,0.14)',
+    farbe: '#dc2626', bg: 'rgba(220,38,38,0.14)',
     hilfe: 'Die Behandlungsserie läuft noch.',
   },
   {
@@ -169,7 +183,7 @@ const PHYSIO_STATUS = [
     // NICHT dasselbe wie eine Absetzung: hier hat die Praxis das erfasste
     // Rezept verworfen, die Kasse hat gar nichts gesehen.
     key: 'rejected', label: 'Abgelehnt', kurz: 'Abgelehnt',
-    farbe: '#b91c1c', bg: 'rgba(185,28,28,0.14)',
+    farbe: '#a21caf', bg: 'rgba(162,28,175,0.14)',
     hilfe: 'Beim Prüfen verworfen — nicht zu verwechseln mit einer Absetzung durch die Kasse.',
   },
   {
@@ -238,8 +252,11 @@ export function statusLabel(key) {
    (Seit der Zusammenlegung der Verordnungstöpfe, 04.09.2026 — vorher stand
    hier eine eigene Tabelle `verordnungen`.)
 
-   Deshalb eine eigene Farbfamilie: ein violettes „Heilmittel" neben einem
-   violetten „Abgerechnet" wäre zweimal dieselbe Farbe für zwei Fragen.
+   Deshalb eine eigene Farbfamilie — und zwar seit 05.09.2026 wirklich eine
+   eigene: vorher stand ein violettes „Heilmittel" neben einem violetten
+   „Abgerechnet" und ein grünes „Podologie" neben einem grünen „Bereit zur
+   Abrechnung" — also genau die doppelte Farbe, die dieser Absatz ausschloss.
+   Bereich liegt jetzt auf Blau und Cyan, zwei Plätzen, die kein Status belegt.
 
    Steht hier und nicht in einer eigenen Datei, weil `quelle` in diesem Modul
    ohnehin schon der erste Parameter ist (`statusBadgeGross(quelle, status)`)
@@ -250,11 +267,11 @@ export function statusLabel(key) {
 */
 const BEREICH = {
   physio: {
-    label: 'Heilmittel', farbe: '#7c3aed', bg: 'rgba(124,58,237,0.12)',
+    label: 'Heilmittel', farbe: '#2563eb', bg: 'rgba(37,99,235,0.12)',
     hilfe: 'Physiotherapie · Ergotherapie · Logopädie',
   },
   podologie: {
-    label: 'Podologie', farbe: '#15803d', bg: 'rgba(21,128,61,0.12)',
+    label: 'Podologie', farbe: '#0e7490', bg: 'rgba(14,116,144,0.12)',
     hilfe: 'Podologie',
   },
 };
