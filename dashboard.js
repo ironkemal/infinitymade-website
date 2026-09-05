@@ -20,6 +20,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260905a';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { montiereVerordnungPruefen } from './module/verordnung-pruefen-knopf.js?v=20260903';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
@@ -8040,7 +8041,10 @@ async function openPatientDetailModal(lead) {
   pdCurrentLeadId = lead.id;
   pdCurrentLeadName = displayName(lead) || '';
   document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
-  renderPatientenkarte(lead, { sb: supabase, ownerId: getOwnerId(), name: displayName, icons: ICON, onSprung: pdSpringeZu });
+  renderPatientenkarte(lead, {
+    sb: supabase, ownerId: getOwnerId(), name: displayName, icons: ICON, onSprung: pdSpringeZu,
+    praxis: terminzettelPraxis().praxis, logoUrl: currentProfile?.praxis_logo_url || '',
+  });
   document.querySelectorAll('.pd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'verlauf'));
   document.querySelectorAll('.pd-panel').forEach(p => p.classList.toggle('active', p.id === 'pdPanelVerlauf'));
   document.getElementById('pdNotesLoading').hidden = false;
@@ -16918,29 +16922,17 @@ async function saveRezept() {
       await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl });
     }
 
-    // 6. Fehlende Patientenstammdaten zurückschreiben (nur leere Felder, nie überschreiben)
+    // 6. Patientenstammdaten abgleichen: leere Felder übernehmen + bei
+    // Namensabweichung Übernahme bestätigen lassen (Ops #268) — siehe
+    // module/verordnung-patient-abgleich.js
     try {
-      const lead = rzPatientCache.find(l => l.id === patientId) || {};
-      const patch = {};
-      if (!lead.versichertennummer && val('rzPatVersNr')) patch.versichertennummer = val('rzPatVersNr');
-      if (!lead.krankenkasse && val('rzPatKasse')) patch.krankenkasse = val('rzPatKasse');
-      if (!lead.versichertenstatus && val('rzPatStatus')) patch.versichertenstatus = val('rzPatStatus');
-      if (!lead.street && val('rzPatStrasse')) patch.street = val('rzPatStrasse');
-      if (!lead.plz && !lead.city && val('rzPatOrt')) {
-        const mo = val('rzPatOrt').match(/^\s*(\d{4,5})\s+(.+)$/);
-        if (mo) { patch.plz = mo[1]; patch.city = mo[2].trim(); } else { patch.city = val('rzPatOrt'); }
-      }
-      if (!lead.geburtsdatum) {
-        const mg = val('rzPatGeb').match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
-        if (mg) {
-          const yy = mg[3].length === 2 ? (parseInt(mg[3]) > 30 ? '19'+mg[3] : '20'+mg[3]) : mg[3];
-          patch.geburtsdatum = `${yy}-${mg[2].padStart(2,'0')}-${mg[1].padStart(2,'0')}`;
-        }
-      }
-      if (Object.keys(patch).length) {
-        await supabase.from('leads').update(patch).eq('id', patientId).eq('owner_id', ownerId);
-        emit('leads:changed', { id: patientId });
-      }
+      await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+        ownerId, patientId, lead: rzPatientCache.find(l => l.id === patientId) || {},
+        vorname: val('rzPatVorname'), nachname: val('rzPatName'),
+        versichertennummer: val('rzPatVersNr'), krankenkasse: val('rzPatKasse'),
+        versichertenstatus: val('rzPatStatus'), strasse: val('rzPatStrasse'),
+        ort: val('rzPatOrt'), geburtsdatum: val('rzPatGeb')
+      });
     } catch (wbErr) { console.warn('[saveRezept] Patient-Rückschreiben übersprungen', wbErr); }
 
     closeModal('rezeptModal');
