@@ -53,6 +53,9 @@ await page.waitForTimeout(250);
 const nachNagel = await page.evaluate(() => window.__probe.leseLeistungen());
 p('der alte Vorschlag ist weggeraeumt', nachNagel.length === 1, `${nachNagel.length} Zeile`);
 p('stattdessen ein Hinweis auf 78110/78100', /78110/.test(await hinweis()), (await hinweis()).slice(0, 60) + '…');
+// Die Summe darf die weggeraeumte Befundung nicht weiterzaehlen: 45, nicht 70.
+// Vorher blieb hier der Kombi-Wert stehen und blockte 25 Minuten zuviel.
+p('und die Dauer faellt auf die einzelne Leistung', await dauer() === 45, `${await dauer()} Min (Nagelspange 45)`);
 
 console.log('\n══ GRUPPENTERMIN');
 await page.selectOption('#bkService', 's-beh-gr');
@@ -89,6 +92,37 @@ p('keine zweite identische Zeile', nachDoppel.length === 2, `${nachDoppel.length
 p('stattdessen zaehlt die Menge', nachDoppel[1]?.anzahl === 2, `Anzahl ${nachDoppel[1]?.anzahl}`);
 p('und der Block waechst mit', await dauer() === 90, `${await dauer()} Min (50 + 2x20)`);
 
+
+console.log('\n══ SELBSTZAHLER RAEUMT DEN GKV-VORSCHLAG WEG');
+// Der Ablauf aus der Praxis: Patient und Leistung stehen schon, dann faellt
+// auf, dass keine Verordnung vorliegt — erst DANN wird Selbstzahler gedrueckt.
+// Die Regel in eingangsbefundung-regel.js sagt „ohne Kasse keine Position",
+// also darf die vorgeschlagene Eingangsbefundung (78040) nicht stehenbleiben:
+// sie ist eine GKV-Position und wuerde an einem Selbstzahler-Termin
+// mitgespeichert.
+await page.evaluate(() => { document.getElementById('bookingModal').hidden = true; });
+await page.evaluate(() => { document.getElementById('bookingModal').hidden = false; });
+await page.waitForTimeout(100);
+await page.selectOption('#bkService', 's-beh-gr');
+await page.waitForTimeout(300);
+p('Ausgangslage: GKV-Vorschlag steht', (await page.evaluate(() => window.__probe.leseLeistungen()))[1]?.serviceId === 's-eing');
+
+// dashboard.html ersetzt den Knopf bei jedem prefill durch einen Klon. Wer
+// sich direkt an das Element haengt, verliert seinen Zuhoerer genau dort —
+// darum wird hier vor dem Klick geklont.
+await page.evaluate(() => {
+  const b = document.getElementById('bkSelbstzahlerBtn');
+  b.parentNode.replaceChild(b.cloneNode(true), b);
+});
+await page.evaluate(() => {
+  document.getElementById('bkIsSelbstzahler').value = '1';
+  document.getElementById('bkSelbstzahlerBtn').click();
+});
+await page.waitForTimeout(300);
+const nachSelbst = await page.evaluate(() => window.__probe.leseLeistungen());
+p('der GKV-Vorschlag ist weg', nachSelbst.length === 1, `${nachSelbst.length} Zeile(n)`);
+p('die gewaehlte Leistung bleibt', nachSelbst[0]?.serviceId === 's-beh-gr', String(nachSelbst[0]?.serviceId));
+p('und die Dauer schrumpft mit', await dauer() === 50, `${await dauer()} Min (nur 50)`);
 
 console.log(fehler.length ? `\n   ✗ Konsolenfehler:\n     ${fehler.join('\n     ')}` : '\n   keine Konsolenfehler');
 await browser.close();
