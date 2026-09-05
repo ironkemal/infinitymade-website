@@ -482,7 +482,14 @@ function aktualisiereDauer() {
   if (zeilen.length < 2) {
     if (zeilen.length === 1 && _kombiDauerGesetzt) {
       _kombiDauerGesetzt = false;
-      setzeDauer(gesamtDauer(zeilen, ctx?.getServices?.() || []), '');
+      // Ab hier ist wieder dashboard.js zustaendig: dort haengen die gelernte
+      // Dauer („aus N bisherigen Terminen") und die Preisstufen aus
+      // `price_config`. Die blosse Katalogdauer waere ein Rueckschritt — die
+      // Praxis, die fuer diese Leistung 55 statt 50 Minuten gelernt hat,
+      // bekaeme wieder 50. Nur wenn niemand zustaendig ist (Probe, Test),
+      // wird die Summe selbst geschrieben.
+      if (typeof ctx?.aufEinzelDauer === 'function') ctx.aufEinzelDauer(zeilen[0].serviceId);
+      else setzeDauer(gesamtDauer(zeilen, ctx?.getServices?.() || []), '');
     }
     return;
   }
@@ -532,7 +539,7 @@ async function schlageBefundungVor() {
 /**
  * Verdrahtung. Wird einmal aus dashboard.js gerufen.
  *
- * @param {object} deps  { supabase, getOwnerId, getServices }
+ * @param {object} deps  { supabase, getOwnerId, getServices, aufEinzelDauer }
  */
 export function mountTerminLeistungen(deps) {
   ctx = deps;

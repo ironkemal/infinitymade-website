@@ -56,6 +56,10 @@ p('stattdessen ein Hinweis auf 78110/78100', /78110/.test(await hinweis()), (awa
 // Die Summe darf die weggeraeumte Befundung nicht weiterzaehlen: 45, nicht 70.
 // Vorher blieb hier der Kombi-Wert stehen und blockte 25 Minuten zuviel.
 p('und die Dauer faellt auf die einzelne Leistung', await dauer() === 45, `${await dauer()} Min (Nagelspange 45)`);
+// Nicht selbst gerechnet, sondern zurueckgegeben: im Betrieb kennt nur
+// dashboard.js die gelernte Dauer und die price_config-Stufen.
+p('und zwar ueber den Rueckweg, nicht per Katalogsumme',
+  (await page.evaluate(() => window.__einzelDauerRufe)).includes('s-nsp'));
 
 console.log('\n══ GRUPPENTERMIN');
 await page.selectOption('#bkService', 's-beh-gr');
@@ -123,6 +127,8 @@ const nachSelbst = await page.evaluate(() => window.__probe.leseLeistungen());
 p('der GKV-Vorschlag ist weg', nachSelbst.length === 1, `${nachSelbst.length} Zeile(n)`);
 p('die gewaehlte Leistung bleibt', nachSelbst[0]?.serviceId === 's-beh-gr', String(nachSelbst[0]?.serviceId));
 p('und die Dauer schrumpft mit', await dauer() === 50, `${await dauer()} Min (nur 50)`);
+p('auch hier ueber den Rueckweg',
+  (await page.evaluate(() => window.__einzelDauerRufe)).includes('s-beh-gr'));
 
 console.log(fehler.length ? `\n   ✗ Konsolenfehler:\n     ${fehler.join('\n     ')}` : '\n   keine Konsolenfehler');
 await browser.close();

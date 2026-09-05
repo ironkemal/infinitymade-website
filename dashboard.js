@@ -42,7 +42,7 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902'
 import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260905a';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260905c';
-import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260905c';
+import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260905g';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260816a';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
@@ -60,7 +60,7 @@ import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blo
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
-import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260830';
+import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260905g';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
@@ -5550,7 +5550,7 @@ async function updateBkDuration(srvId, defaultValue = null) {
   setzeDauer(fallback, 'geschätzt');
 }
 
-mountTerminLeistungen({ supabase, getOwnerId, getServices: () => servicesCache });
+mountTerminLeistungen({ supabase, getOwnerId, getServices: () => servicesCache, aufEinzelDauer: updateBkDuration });
 mountTerminDauer();
 
 document.getElementById('bkService').addEventListener('change', (e) => {
