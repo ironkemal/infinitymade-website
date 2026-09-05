@@ -21,7 +21,7 @@ import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './mod
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
-import { montiereVerordnungPruefen } from './module/verordnung-pruefen-knopf.js?v=20260903';
+import { montiereVerordnungPruefen } from './module/verordnung-pruefen-knopf.js?v=20260905';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260905b';

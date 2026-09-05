@@ -233,16 +233,24 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
   // und Vorname getrennt), und die Belegnummer (<Patienten-Nr.>-<Verordnungs-
   // Nr.>) lässt sich ohne `patientennummer` nicht zusammensetzen — sie steht
   // bis zur ersten Abrechnung nicht in der Zeile.
-  // Die zweite Zeile je Select (therapie_bereich .. arzt_id) wird NUR für den
-  // Prüfmotor gebraucht (Ops-Kart #269, siehe unten `pruefungAnhaengen`) — die
+  // Die zweite Zeile je Select (therapie_bereich .. aerzte) wird NUR für den
+  // Prüfmotor gebraucht (Ops-Kart #269, siehe unten `pruefeZeile`) — die
   // Karten/Zeilen selbst lesen diese Felder nicht.
+  //
+  // ⚠️ `aerzte!arzt_id(lanr,bsnr)` MUSS mitkommen: `doctor_lanr`/`doctor_bsnr`
+  // auf `prescriptions` sind oft leer, obwohl der verknüpfte Arzt LANR/BSNR
+  // führt (derselbe Fallback wie in verordnung-detail.js und der §302-Abgabe,
+  // `api-backend/billing/api/abrechnung.routes.js`). Ohne den Join meldete der
+  // Motor hier „LANR fehlt", wo die Detailansicht — die den Join hat — nichts
+  // zu melden hatte: zwei Urteile über dieselbe Verordnung. Gefunden von
+  // `canli-test`, 05.09.2026.
   let rxQ = sb.from('prescriptions')
     .select('id, patient_id, ausstellungsdatum, gueltig_bis, diagnosegruppe, icd10, heilmittel, ' +
             'anzahl_einheiten, frequenz, status, is_dringend, hausbesuch, ' +
             'belegnummer, verordnungsnummer, prescription_sessions(id, status), ' +
             'therapie_bereich, icd10_2, leitsymptomatik, heilmittel_position, behandlungsbeginn, ' +
             'versichertennummer, krankenkasse_ik, doctor_lanr, doctor_bsnr, rezeptart, ' +
-            'leads!patient_id(first_name, last_name, patientennummer)')
+            'leads!patient_id(first_name, last_name, patientennummer), aerzte!arzt_id(lanr, bsnr)')
     .eq('owner_id', ownerId)
     // Pflichtfilter (siehe Kopf) — sonst erscheint eine podologische Zeile
     // zusätzlich hier. `.or()` statt `.neq()`: Altbestand vor Einführung des
@@ -255,7 +263,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
             'behandlungsanlass, heilmittel_items, belegnummer, verordnungsnummer, ' +
             'pat_leitsymptomatik, heilmittel_position, behandlungsbeginn, ' +
             'versichertennummer, krankenkasse_ik, doctor_lanr, doctor_bsnr, ' +
-            'leads!patient_id(first_name, last_name, patientennummer)')
+            'leads!patient_id(first_name, last_name, patientennummer), aerzte!arzt_id(lanr, bsnr)')
     .eq('owner_id', ownerId)
     // Gegenstück zum obigen Filter — Pflicht, nicht Kosmetik (siehe Kopf).
     .eq('therapie_bereich', 'podo');
