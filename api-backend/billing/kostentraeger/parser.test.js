@@ -8,6 +8,16 @@ import {
   toUpsertRows,
 } from './parser.js';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const HIER = dirname(fileURLToPath(import.meta.url));
+const ECHT_DIR = join(HIER, '..', '..', '..', 'wissensbank', 'gemeinsam', 'kostentraeger');
+const ECHT_DATEIEN = [
+  'AO05Q326_KE3.txt', 'BK05Q326_KE1.txt', 'IK05Q326_KE1.txt', 'BN050526_KE0.txt',
+  'LK05Q226_KE0.txt', 'EK05Q226_KE0.txt', 'EK05Q426_KE0.txt',
+];
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -81,6 +91,47 @@ test('toUpsertRows shape matches kostentraeger DB schema', () => {
   const tk = rows.find(r => r.name === 'Techniker Krankenkasse (TK)');
   assert.deepEqual(Object.keys(tk).sort(),
     ['active','das_ik','ik','name','payer_type','region','valid_from','valid_to'].sort());
+});
+
+test('Segmente auf eigener Zeile (wie in der echten Datei) werden genauso geparst wie eine Zeile', () => {
+  // Der Bug vom 05.09.2026: das Inline-Beispiel oben hat keine Zeilenumbrueche,
+  // die echte Kostentraegerdatei einen nach jedem Terminator. Ohne den Fix in
+  // parseKostentraegerDatei() landet der Umbruch im Tag des naechsten Segments
+  // ("\nIDK" statt "IDK"), keine einzige case-Klausel trifft, 0 Datensaetze.
+  const mitZeilenumbruch =
+    "UNA:+,? '\n" +
+    "IDK+107436001+01+AOK Rheinland/Hamburg'\n" +
+    "VDT+20260101+99991231'\n" +
+    "VKG+30+660500345+B'\n";
+  const records = parseKostentraegerDatei(mitZeilenumbruch);
+  assert.equal(records.length, 1, 'Zeilenumbrueche zwischen Segmenten duerfen keine Datensaetze verschlucken');
+  assert.equal(records[0].ik, '107436001');
+  assert.equal(records[0].datenannahmestellen[0].das_ik, '660500345');
+});
+
+// ── Gegen die echte Kostenträgerdatei (Ops-Kart #264, wissensbank Kart W-01) ──
+//
+// 1.329 Datensätze / 1.043 eindeutige IK ist die von wissensbank per Websuche
+// gegen die Herausgeberseite verifizierte Zielzahl (IDK-Segmente gezaehlt,
+// UNZ-Summen gegengeprueft). Weicht diese Zahl ab, ist entweder eine der 7
+// Dateien beim naechsten Quartalswechsel unvollstaendig ersetzt worden, oder
+// der Parser hat sich veraendert — beides soll hier auffallen, nicht erst
+// beim DB-Import.
+test('echte Kostenträgerdatei (7 Kassenart-Dateien): 1.329 Datensätze / 1.043 eindeutige IK', () => {
+  let gesamt = 0;
+  const iks = new Set();
+  for (const datei of ECHT_DATEIEN) {
+    const text = readFileSync(join(ECHT_DIR, datei), 'utf8');
+    const records = parseKostentraegerDatei(text);
+    for (const r of records) {
+      assert.match(r.ik, /^\d{9}$/, `${datei}: unplausible IK "${r.ik}"`);
+      assert.ok(r.name, `${datei}: Datensatz ohne Name (IK ${r.ik})`);
+      iks.add(r.ik);
+    }
+    gesamt += records.length;
+  }
+  assert.equal(gesamt, 1329);
+  assert.equal(iks.size, 1043);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

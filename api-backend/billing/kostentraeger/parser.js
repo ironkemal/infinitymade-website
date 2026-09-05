@@ -1,18 +1,22 @@
-// Kostenträgerdatei (KOTR) parser — MOCK implementation.
+// Kostenträgerdatei (KOTR) parser.
 //
-// Real Kostenträgerdateien are published by ITSG/GKV (Anhang 03 V10).
-// Production format: EDIFACT, segments IDK/VDT/FKT/KTO/VKG/NAM/ANS/UEM/DFU.
-// Filenames follow: AOK06Q1.KE0, EK06Q426.KE0, BKK06Q4.KE0, etc.
+// Reale Kostenträgerdateien werden von den Spitzenverbänden der Krankenkassen
+// veröffentlicht, für "Sonstige Leistungserbringer" (§302 SGB V — unser
+// Fachbereich) unter gkv-datenaustausch.de/leistungserbringer/sonstige_leistungserbringer/
+// kostentraegerdateien_sle/. Format: EDIFACT, Segmente IDK/VDT/FKT/VKG/NAM/ANS/UEM/DFU.
+// Dateiname-Muster: AA05QnJJ.KEv (AA=Kassenart, 05=Teilprojekt Sonstige
+// Leistungserbringer, Qn=Quartal, JJ=Jahr, KEv=Nachtragsversion).
 //
-// We don't have access to a live .kotr file yet (requires ITSG portal account
-// + Echt-Schluessel). This module ships a structurally-correct PARSER plus a
-// MOCK dataset for the most common Krankenkassen, so the rest of the billing
-// pipeline can be wired up.
+// Seit 05.09.2026 liegt uns die echte Datei vor (7 Kassenart-Dateien, siehe
+// `wissensbank/gemeinsam/kostentraeger/` + wissensbank/REGISTER.md Kart W-01) —
+// KEIN ITSG-Portal-Zugang nötig, offener Download. `KOSTENTRAEGER_MOCK` unten
+// ist bis zur vollständigen DB-Befüllung (Ops #264, db-ustasi) noch der
+// Stand von vor diesem Datum und muss gegen die echte Datei geprüft werden.
 //
-// When a real .kotr file arrives:
-//   1. Drop it into /handbücher or pass its text to parseKostentraegerDatei()
-//   2. Inserts/upserts into the `kostentraeger` table per Anhang 03 V10
-//   3. routeToDatenannahmestelle(krankenkasseIk) starts returning live data
+// Ein echter Import:
+//   1. Text einer der 7 Dateien an parseKostentraegerDatei() übergeben
+//   2. Ergebnis in die `kostentraeger`-Tabelle upserten (Schema siehe db/SCHEMA.sql)
+//   3. routeToDatenannahmestelle(krankenkasseIk) liefert dann echte Daten
 
 import { buildSegment } from '../dta/encoding.js';  // for round-trip helpers
 
@@ -134,7 +138,13 @@ function parseSegment(line, delim) {
 
 export function parseKostentraegerDatei(text) {
   const delim = parseUNAHeader(text);
-  const body = text.startsWith('UNA') ? text.slice(9) : text;
+  const rohkoerper = text.startsWith('UNA') ? text.slice(9) : text;
+  // Reale Dateien haben (anders als das Inline-Beispiel im Test) einen Zeilenumbruch
+  // nach jedem Terminator — reine Formatierung, kein EDIFACT-Inhalt. Ohne diesen
+  // Schritt landet er im Tag des nächsten Segments ("\nIDK" statt "IDK"), der
+  // switch unten trifft nie und alles wird still verworfen (05.09.2026, an der
+  // echten Kostenträgerdatei gefunden — mit dem Test-Inline-String unsichtbar).
+  const body = rohkoerper.replace(/\r\n|\r|\n/g, '');
   const segments = splitSegments(body, delim).map(s => parseSegment(s, delim));
 
   const records = [];
