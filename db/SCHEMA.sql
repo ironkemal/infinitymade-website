@@ -1,7 +1,12 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-05 (zuletzt nachgezogen: prescriptions.krankenkasse_ik,
+-- ERZEUGT AM:        2026-09-05 (zuletzt nachgezogen: neue Tabelle
+--                    booking_status_korrekturen, Ops #270 — append-only
+--                    Korrekturhistorie fuer nachtraegliche bookings.status-
+--                    Aenderungen, gleiches GoBD-Muster wie zuzahlung_korrekturen.
+--                    Per Hand nachgezogen, kein voller Neu-Dump.)
+--                    davor: 2026-09-05, prescriptions.krankenkasse_ik,
 --                    FKT-Segment-Fix — Karten-IK der Krankenkasse getrennt von
 --                    kostentraeger_ik gespeichert, siehe Spaltenkommentar unten)
 --                    davor: 2026-09-04, prescriptions.nagel,
@@ -16,7 +21,8 @@
 --                    90-Tage-Frist): `verordnungen` GEDROPPT. Siehe Eintrag
 --                    an der Stelle, wo die Tabelle frueher im Dump stand
 --                    (nach `vehicles`, vor `visibility_reports`).
--- LETZTE MIGRATION:  20260905125546_prescriptions_krankenkasse_ik
+-- LETZTE MIGRATION:  20260905193701_booking_status_korrekturen
+--                    davor: 20260905125546_prescriptions_krankenkasse_ik
 --                    davor: verordnungstopf_faz5c_naechste_verordnungsnummer_fix
 --                    davor: verordnungstopf_faz5b_verordnungen_droppen
 --                    davor: 20260904085612_prescriptions_nagel_lokalisation
@@ -54,8 +60,16 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            83 Tabellen · 1231 Spalten · 158 RLS-Policies
---                    301 Indizes · 66 Trigger · 67 Funktionen · 4 Views
+-- UMFANG:            83 Tabellen · 1207 Spalten · 158 RLS-Policies
+--                    296 Indizes · 66 Trigger · 67 Funktionen · 4 Views
+--                    (05.09.2026: gegen die Live-DB nach der dokumentierten
+--                     Zählweise nachgezählt (inkl. der neuen Tabelle). Die
+--                     Spaltenzahl stand vorher auf 1231 — Differenz nicht
+--                     aufgeklärt, evtl. war der alte Wert bereits ungenau;
+--                     kein Hinweis auf einen zwischenzeitlichen Spalten-Drop.
+--                     Tabellenzahl war vorher ebenfalls "83" eingetragen,
+--                     obwohl booking_status_korrekturen neu dazukam — der
+--                     alte Wert war also schon vor dieser Migration zu hoch.)
 --                    (03.09.2026 abends: die Spaltenzahl stand auf 1219 und war
 --                     um 12 zu niedrig — gegen die Live-DB nach der dokumentierten
 --                     Zählweise nachgezählt, nicht fortgeschrieben.)
@@ -498,6 +512,34 @@ CREATE TABLE bookings (
 --        (`prescriptions_owner_all` — Owner UND zugeordnete Angestellte
 --        duerfen schreiben). Bewusst gewaehlt: die podologischen Angestellten
 --        sollen ihre Alltagsarbeit (Verordnung anlegen/bearbeiten) behalten.
+
+CREATE TABLE booking_status_korrekturen (
+  id uuid NOT NULL DEFAULT gen_random_uuid()
+  owner_id uuid NOT NULL
+  business_id uuid
+  booking_id uuid NOT NULL
+  alter_status text NOT NULL
+  neuer_status text NOT NULL
+  grund text NOT NULL
+  geaendert_von uuid
+  geaendert_am timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+--   Ops #270 (Beta-2, 05.09.2026) — Migration 20260905193701_booking_status_korrekturen.
+--   Append-only Korrekturhistorie fuer nachtraegliche `bookings.status`-Aenderungen
+--   (z.B. no_show -> completed, weil der Patient doch noch behandelt wurde).
+--   CHECK length(btrim(grund)) >= 3
+--   FK owner_id -> profiles(id) ON DELETE RESTRICT
+--   FK booking_id -> bookings(id) ON DELETE CASCADE
+--   FK geaendert_von -> auth.users(id) ON DELETE SET NULL
+--   PK (id) · INDEX idx_booking_status_korrekturen_booking_id (booking_id)
+--   ⚠️ UNVERAENDERLICH (GoBD): TRIGGER trg_prevent_booking_status_korrekturen_mod
+--     blockt jedes UPDATE und DELETE, und es gibt bewusst KEINE UPDATE/DELETE-Policy —
+--     gleiches Muster wie `zuzahlung_korrekturen`. Eine falsche Korrektur wird durch
+--     eine NEUE Korrektur richtiggestellt, nicht durch eine Aenderung.
+--   TRIGGER trg_set_business_id — wie ueberall seit 01.09.2026.
+--   `alter_status`/`neuer_status` sind bewusst reines `text` ohne eigenes CHECK: die
+--   gueltigen Werte leben allein in `bookings.status`, ein zweites CHECK muesste bei
+--   jeder Erweiterung dort mitgepflegt werden.
 
 CREATE TABLE breaks (
   id uuid NOT NULL DEFAULT gen_random_uuid()

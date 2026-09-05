@@ -5035,6 +5035,12 @@
           </button>
           <div class="bk-action-hint" id="bkActionNoShowHint" hidden>Verfügbar ab 3 Min. nach Terminbeginn</div>
           <button class="btn-secondary" id="bkActionAusfallBtn" type="button" style="width:100%;justify-content:center;margin-top:8px;" hidden>💶 Ausfallrechnung erstellen</button>
+          <!-- Ops #270 (Beta-2, 05.09.2026): Rückweg für einen falsch/vorschnell
+               gesetzten No-Show — z.B. der Patient ist doch noch gekommen. Nur bei
+               status='no_show' sichtbar (Vorwärtsrichtung deckt der Knopf oben ab,
+               der jederzeit erneut No-Show setzen kann). Ein Klick, keine Nachfrage
+               — siehe module/booking-status-korrektur.js. -->
+          <button class="btn-secondary" id="bkActionKorrekturBtn" type="button" style="width:100%;justify-content:center;margin-top:8px;" hidden>↺ Doch behandelt — Status korrigieren</button>
         </div>
 
         <!-- Terminzettel A5: alle kommenden Termine dieses Patienten zum
@@ -5840,7 +5846,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260905g"></script>
+  <script type="module" src="dashboard.js?v=20260905h"></script>
 </body>
 
 </html>

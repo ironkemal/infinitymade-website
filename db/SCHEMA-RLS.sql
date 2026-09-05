@@ -1,7 +1,15 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-04 — Zusammenlegung der zwei Verordnungstöpfe,
+-- ERZEUGT AM:        2026-09-05 — neue Tabelle booking_status_korrekturen
+--                    (Ops #270): 2 Policies (select/insert scoping, gleiches
+--                    Muster wie zuzahlung_korrekturen), 1 Funktion
+--                    (prevent_booking_status_korrekturen_mod), 2 Trigger
+--                    (Modifikationssperre GoBD + business_id-Default),
+--                    1 Index. Die Migration davor (prescriptions.krankenkasse_ik,
+--                    20260905125546) aenderte nur eine Spalte, keine
+--                    Policy/Trigger/Funktion — deshalb hier ohne eigenen Eintrag.
+--                    davor: 2026-09-04 — Zusammenlegung der zwei Verordnungstöpfe,
 --                    Faz 1-5: `verordnungen` ist GEDROPPT (auf Nutzerwunsch
 --                    vorgezogen aus der 90-Tage-Frist). naechste_verordnungs-
 --                    nummer() zaehlt jetzt nur noch gegen `prescriptions`;
@@ -10,7 +18,9 @@
 --                    pruefe_booking_verordnung_owner() prueft gegen
 --                    prescriptions.owner_id (vorher verordnungen.owner_id).
 --                    Details: module/verordnung-topf.js, db/SCHEMA.sql
--- LETZTE MIGRATION:  verordnungstopf_faz5c_naechste_verordnungsnummer_fix
+-- LETZTE MIGRATION:  20260905193701_booking_status_korrekturen
+--                    davor: 20260905125546_prescriptions_krankenkasse_ik
+--                    davor: verordnungstopf_faz5c_naechste_verordnungsnummer_fix
 --                    davor: verordnungstopf_faz5b_verordnungen_droppen
 --                    davor: 20260903202143_verordnungstopf_faz3_fk_auf_prescriptions_umhaengen
 --                    davor: 20260903202025_verordnungstopf_faz2_vier_zeilen_kopieren
@@ -46,7 +56,15 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            158 RLS-Policies · 301 Indizes · 66 Trigger · 67 Funktionen
+-- UMFANG:            158 RLS-Policies · 296 Indizes · 66 Trigger · 67 Funktionen
+--                    (05.09.2026 gegen die Live-DB nachgezaehlt, inkl. der neuen
+--                     Tabelle booking_status_korrekturen. Policies/Trigger/
+--                     Funktionen kamen auf dieselben Zahlen wie vor dieser
+--                     Migration dokumentiert — die alten Werte waren also
+--                     bereits vor dem heutigen +2/+2/+1 zu niedrig/hoch verrechnet;
+--                     nicht weiter aufgeklärt. Die Indexzahl war zuletzt mit 301
+--                     dokumentiert, live jetzt 296 inkl. des neuen Index — Differenz
+--                     ebenfalls nicht aufgeklärt.)
 --                    (03.09.2026 gegen die Live-DB nachgezaehlt. Dabei fiel auf,
 --                     dass in Abschnitt 5 zwei Indizes vom 16.08.2026 FEHLTEN:
 --                     idx_invoices_verordnung_id und idx_pod_behandlungen_invoice_id.
@@ -102,7 +120,7 @@
 
 
 -- =====================================================================
--- 2. RLS-POLICIES (155)
+-- 2. RLS-POLICIES (158, siehe UMFANG im Kopf)
 -- =====================================================================
 
 -- abrechnung
@@ -169,6 +187,11 @@
 --     EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.owner_id = bookings.owner_id)
 --   ⚠️ Acht Policies auf einer Tabelle, teils überlappend. Vor Änderungen
 --      erst lesen — leicht, versehentlich Zugriff zu öffnen.
+
+-- booking_status_korrekturen
+--   Booking-Korrekturen select scoping [SELECT] owner + Team
+--   Booking-Korrekturen insert scoping [INSERT] owner + Team
+--   ⚠️ Bewusst KEINE UPDATE/DELETE-Policy — siehe Trigger unten (GoBD).
 
 -- breaks
 --   Users can manage own breaks [ALL] USING (user_id = auth.uid())
@@ -596,6 +619,9 @@ $function$;
 -- prevent_zuzahlung_korrekturen_mod() -> trigger
 --   GoBD, gleiche Absicht wie oben, fuer zuzahlung_korrekturen. Eigene Funktion,
 --   damit die Fehlermeldung den richtigen Weg nennt: neue Korrektur statt Aenderung.
+-- prevent_booking_status_korrekturen_mod() -> trigger  (seit 05.09.2026, Ops #270)
+--   GoBD, gleiche Absicht, fuer booking_status_korrekturen. Eigene Funktion aus
+--   demselben Grund wie oben — richtiger Tabellenname in der Fehlermeldung.
 -- verordnung_festschreibung() -> trigger  ⚠️ VERWAIST seit 04.09.2026
 --   GoBD, gleiche Absicht wie prevent_belegliste_mod()/invoice_festschreibung().
 --   Sass bis 04.09.2026 auf der TABELLE `verordnungen` — die podologischen
@@ -676,7 +702,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (64)
+-- 4. TRIGGER (66, siehe UMFANG im Kopf)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -684,7 +710,7 @@ $function$;
 --        feedbacks, invoices, leads, patient_notes, prescriptions, referral_drafts,
 --        scraper_data, services, terapeut_zertifikat, time_offs, ueberweisungen,
 --        vehicles, working_hours, zuzahlung_befreiung, zuzahlung_guthaben (01.09.2026),
---        zuzahlung_korrekturen (01.09.2026)
+--        zuzahlung_korrekturen (01.09.2026), booking_status_korrekturen (05.09.2026)
 --   bookings nutzt die eigene Variante set_bookings_business_id_default().
 --
 -- Fachlich relevante Trigger:
@@ -700,6 +726,8 @@ $function$;
 --                         trg_booking_hauptleistung      AFTER INSERT/UPDATE/DELETE
 --                         → spiegelt Zeile 0 nach bookings.service_id.
 --                           Deshalb service_id NIE von Hand schreiben.
+--   booking_status_korrekturen  trg_prevent_booking_status_korrekturen_mod  BEFORE UPDATE OR DELETE
+--                         → prevent_booking_status_korrekturen_mod(): GoBD-Sperre, siehe Funktionsabschnitt.
 --   leads                 trg_normalize_lead_phone       BEFORE INSERT/UPDATE
 --                         trg_leads_patientennummer      BEFORE INSERT (Nummernvergabe)
 --   prescriptions         trg_prescriptions_verordnungsnummer BEFORE INSERT/UPDATE OF patient_id
@@ -785,6 +813,7 @@ CREATE INDEX idx_bookings_user_start ON public.bookings USING btree (user_id, st
 -- Podologie-Bindung Termin ↔ Verordnung. Partiell, weil die grosse Mehrheit
 -- der Termine keine Verordnung traegt.
 CREATE INDEX idx_bookings_verordnung ON public.bookings USING btree (verordnung_id) WHERE (verordnung_id IS NOT NULL);
+CREATE INDEX idx_booking_status_korrekturen_booking_id ON public.booking_status_korrekturen USING btree (booking_id);
 CREATE INDEX idx_breaks_business ON public.breaks USING btree (business_id);
 CREATE INDEX idx_breaks_user ON public.breaks USING btree (user_id);
 CREATE INDEX idx_businesses_owner ON public.businesses USING btree (owner_id);

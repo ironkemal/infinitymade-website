@@ -21,6 +21,7 @@ import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './mod
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
+import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260905';
 import { montiereVerordnungPruefen } from './module/verordnung-pruefen-knopf.js?v=20260905';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
@@ -3497,6 +3498,9 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     ausfallBtn.hidden = !ausfallBizForBooking(booking);
   }
 
+  const korrekturBtn = document.getElementById('bkActionKorrekturBtn');
+  if (korrekturBtn) korrekturBtn.hidden = !(isOwn && booking.status === 'no_show');
+
   // Load prescription sessions panel (Unvergebene Heilmittel)
   // Die gewaehlte Verordnung steuert auch den Block "Aktive Verordnung" unten:
   // blaettert man oben weiter, wechseln unten die unvergebenen Einheiten mit.
@@ -4547,17 +4551,7 @@ async function handlePatientNichtErschienen() {
     triggerNoShowBot(bkActionBookingCache);
     showToast('Patient nicht erschienen — Bot wurde ausgelöst.');
 
-    const cal = window.calendar || calendar;
-    if (cal) {
-      await cal.reloadMonth();
-      cal.refresh();
-    }
-    if (activePanel === 'overview') {
-      await loadTodayBookings();
-    }
-    if (activePanel === 'calendar') {
-      await renderCalendarView();
-    }
+    await kalenderNeuLaden({ calendar: window.calendar || calendar, activePanel, loadTodayBookings, renderCalendarView });
 
     // Ausfallgebühr aktiv? — Rechnung anbieten
     await offerAusfallrechnung(bkActionBookingCache, 'no_show');
@@ -7729,6 +7723,12 @@ document.getElementById('bkWlMatchBtn')?.addEventListener('click', async () => {
 document.getElementById('bkActionStartBtn').addEventListener('click', handleTerminStarten);
 document.getElementById('bkActionNoShowBtn').addEventListener('click', handlePatientNichtErschienen);
 document.getElementById('bkActionAusfallBtn').addEventListener('click', handleDirectAusfallrechnung);
+document.getElementById('bkActionKorrekturBtn').addEventListener('click', async (e) => {
+  if (bkActionBookingCache && await korrigiereNoShow({ supabase, showToast }, bkActionBookingCache)) {
+    e.currentTarget.hidden = true;
+    await kalenderNeuLaden({ calendar: window.calendar || calendar, activePanel, loadTodayBookings, renderCalendarView });
+  }
+});
 
 // Zwei Einstiege, ein Weg: der Stift oben in der Terminkarte und „Bearbeiten"
 // unten oeffnen dieselbe Maske (Kemal, 31.08.2026).
