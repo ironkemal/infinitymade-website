@@ -270,7 +270,7 @@ const VIS_SECTORS = [
   { id: 'default',       label: 'Standard' },
 ];
 const VIS_GROUP_LABELS = {
-  uebersicht: 'Übersicht', termine: 'Termine', patienten: 'Patienten', rezepte: 'Rezepte',
+  uebersicht: 'Übersicht', termine: 'Termine', patienten: 'Patienten',
   abrechnung: 'Abrechnung', team: 'Team', einstellungen: 'Einstellungen',
 };
 let visActiveSector = 'physiotherapy';

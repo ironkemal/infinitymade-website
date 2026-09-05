@@ -68,7 +68,6 @@ export const NAV_REGISTRY = {
     { id: 'services',      key: 'nav_services',      label: 'Leistungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'hours',         key: 'nav_hours',         label: 'Verfügbarkeit',   roles: ['owner', 'employee'], group: 'team' },
     { id: 'team',          key: 'nav_team',          label: 'Team',            roles: ['owner', 'employee'], group: 'team' },
-    { id: 'doctors',       key: 'nav_doctors',       label: 'Ärzte',           roles: ['owner', 'employee'], group: 'rezepte' },
     { id: 'verordnungen',  key: 'nav_verordnungen',  label: 'Verordnungen',    roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'rechnungen',    key: 'nav_rechnungen',    label: 'Rechnungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'abrechnung',    key: 'nav_abrechnung',    label: '§302-Abrechnung', roles: ['owner'],             group: 'abrechnung' },
@@ -80,6 +79,9 @@ export const NAV_REGISTRY = {
     { id: 'beispielmodus', key: 'nav_beispielmodus', label: 'Demo-Modus',      roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'feedback',      key: 'nav_feedback',      label: 'Bewertungen',     roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'vorlagen',      key: 'nav_vorlagen',      label: 'Vorlagen',        roles: ['owner'],             group: 'einstellungen' },
+    // Beta-2, 05.09.2026 (Ops #274): Ärzte war unter "Rezepte" — dort sollte
+    // nur stehen, was man selbst konfiguriert, nicht die Ärzteverwaltung.
+    { id: 'doctors',       key: 'nav_doctors',       label: 'Ärzte',           roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'settings',      key: 'nav_settings',      label: 'Einstellungen',   roles: ['owner', 'employee'], group: 'einstellungen' }
   ],
   podologie: [
@@ -119,7 +121,6 @@ export const NAV_REGISTRY = {
     { id: 'services',      key: 'nav_services',      label: 'Leistungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'hours',         key: 'nav_hours',         label: 'Verfügbarkeit',   roles: ['owner', 'employee'], group: 'team' },
     { id: 'team',          key: 'nav_team',          label: 'Team',            roles: ['owner', 'employee'], group: 'team' },
-    { id: 'doctors',       key: 'nav_doctors',       label: 'Ärzte',           roles: ['owner', 'employee'], group: 'rezepte' },
     { id: 'verordnungen',  key: 'nav_verordnungen',  label: 'Verordnungen',    roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'rechnungen',    key: 'nav_rechnungen',    label: 'Rechnungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'abrechnung',    key: 'nav_abrechnung',    label: '§302-Abrechnung', roles: ['owner'],             group: 'abrechnung' },
@@ -130,6 +131,9 @@ export const NAV_REGISTRY = {
     { id: 'b2c',           key: 'nav_b2c',           label: 'Patientenpost',   roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'beispielmodus', key: 'nav_beispielmodus', label: 'Demo-Modus',      roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'vorlagen',      key: 'nav_vorlagen',      label: 'Vorlagen',        roles: ['owner'],             group: 'einstellungen' },
+    // Beta-2, 05.09.2026 (Ops #274): Ärzte war unter "Rezepte" — dort sollte
+    // nur stehen, was man selbst konfiguriert, nicht die Ärzteverwaltung.
+    { id: 'doctors',       key: 'nav_doctors',       label: 'Ärzte',           roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'settings',      key: 'nav_settings',      label: 'Einstellungen',   roles: ['owner', 'employee'], group: 'einstellungen' }
   ]
 };
