@@ -6,7 +6,7 @@ import {
   TOLERANZ_WERKTAGE, UNTERBRECHUNG_TAGE,
 } from './frequenz-pruefung.js';
 
-// Die Schwellen stammen aus Podoloji/20230524_Podologie_FAK_bf.txt Nr. 11
+// Die Schwellen stammen aus wissensbank/podologie/20230524_Podologie_FAK_bf.txt Nr. 11
 // (§ 16 Abs. 4 Satz 5 Heilmittel-Richtlinie). Sie hier festzunageln ist der
 // Sinn dieser Datei: wer sie ändert, ändert eine Abrechnungsregel.
 test('die Schwellen stehen, wo die Quelle sie hinschreibt', () => {

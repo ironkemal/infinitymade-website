@@ -20,15 +20,15 @@
  * [Q1] HeilM-RL i. d. F. vom 15.05.2025, iK 05.08.2025 — Heilmittelkatalog
  *      Teil II „Massnahmen der Podologischen Therapie", Diagnosegruppen
  *      DF (S. 73), NF (S. 74), QF (S. 75), UI 1 (S. 76), UI 2 (S. 77).
- *      Datei: `verordnung rezept/HeilM-RL_2025-05-15_iK-2025-08-05.txt`
+ *      Datei: `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt`
  * [Q2] Anlage 3 (notwendige Angaben auf der Heilmittelverordnung)
  *      i. d. F. vom 16.06.2025 zum Vertrag nach § 125 Abs. 1 SGB V Podologie,
  *      Abschnitt 3 e) „Dringlicher Behandlungsbedarf" und f)
  *      „Behandlungseinheiten". Datei:
- *      `Podoloji/Leistungen/20250617_Podologie_Anlage_3_Lesefassung.txt:390-435`
+ *      `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:390-435`
  * [Q3] Anlage 1a Leistungsbeschreibung i. d. F. vom 17.06.2024, Teil 2
  *      Nr. 4.2 „Podologische Befundung" (78030). Datei:
- *      `Podoloji/Leistungen/20240725_Anlage_1a_Leistungsbeschreibung_lesefassung_b.txt:475-492`
+ *      `wissensbank/podologie/20240725_Anlage_1a_Leistungsbeschreibung_lesefassung_b.txt:475-492`
  *
  * Was NICHT hier steht
  * ────────────────────

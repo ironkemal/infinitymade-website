@@ -14,7 +14,7 @@
  * Woher die Zahlen kommen
  * ───────────────────────
  * NICHT geschätzt. Quelle ist der Fragen-Antworten-Katalog Podologie
- * (`Podoloji/20230524_Podologie_FAK_bf.txt`, Stand 24.05.2023):
+ * (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt`, Stand 24.05.2023):
  *
  *   Nr. 11 — „Frequenzabweichungen bis 2 Werktage sind ohne Information des
  *   Arztes möglich. Über Frequenzabweichungen aus therapeutischen Gründen

@@ -130,7 +130,7 @@ function podDiagRoot(diagCode) {
 // (FAK Podologie Q25). 78020 „Podologische Behandlung (groß)" ist
 // ausschließlich bei verordneter Komplexbehandlung mit Therapiezeit über
 // 20 Minuten abrechenbar — sonst Retaxation (~15 € je Sitzung).
-// Siehe Handbücher/SPEC-RULES.md und Podoloji/podologie-hpnr-reference.js.
+// Siehe wissensbank/SPEC-RULES.md und Podoloji/podologie-hpnr-reference.js.
 const POD_HEILMITTEL_KATALOG = {
   a: {
     heilmittel:      'Hornhautabtragung',
@@ -177,7 +177,7 @@ const POD_HEILMITTEL_DGS  = ['DF', 'NF', 'QF'];  // UI1/UI2 haben keinen a/b/c-K
  * Wortlaut („bei einem zugelassenen Leistungserbringer") NICHT entscheidbar;
  * die klärende Änderungsvereinbarung vom 20.10.2023 liegt nicht im Archiv.
  * Praxisweit ist die vorsichtigere der beiden Lesarten — deshalb so, bis der
- * Beleg da ist (Handbücher/SPEC-RULES.md, Doğrulama kuyruğu).
+ * Beleg da ist (wissensbank/SPEC-RULES.md, Doğrulama kuyruğu).
  *
  * ⚠️ NICHT abgedeckt: Patienten, die schon VOR dem 01.11.2023 podologisch
  * behandelt wurden, erwerben den Anspruch nie. Diese Historie steht bei einer

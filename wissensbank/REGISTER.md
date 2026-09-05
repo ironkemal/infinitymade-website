@@ -1,7 +1,7 @@
 # Wissensbank — Dış Kaynaklı Resmî Verinin Sicili
 
 > **Bu dosya "o belge nereden geldi, hâlâ geçerli mi, neyi besliyor" sorusuna bakar.**
-> İçinde ne yazdığı sorusuna `Handbücher/INDEX.md` bakar. İkisi farklı sorulardır;
+> İçinde ne yazdığı sorusuna `wissensbank/INDEX.md` bakar. İkisi farklı sorulardır;
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
@@ -20,13 +20,39 @@
 | **Herkunft (indirme URL'i) kayıtlı** | **1 / 33** ← asıl boşluk, W-A01 |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
 
+## Arşiv düzeni (05.09.2026'dan beri)
+
+Belgeler **tek yerde**: `wissensbank/`. Bölme ölçütü tek soru — *kaç Fachbereich'ı
+ilgilendiriyor?* Kararsız kalınca `gemeinsam/`. Detay: `README.md`.
+
+```
+wissensbank/
+├── README.md · REGISTER.md · INDEX.md · SPEC-RULES.md     ← yönetim dosyaları
+├── gemeinsam/          302-tp5/ · kostentraeger/ · heilmittel-richtlinie/
+│                       positionsnummern/ · icd-10-gm/
+├── podologie/          Anlage 1a–3, FAK, filtrelenmiş HPNR
+├── physiotherapie/     Vertrag §125 Anlage 2, Blanko-Leitfaden
+├── ergotherapie/       Anlage 2 Vergütungsvereinbarung
+├── logopaedie/         sssst Anlage 2
+└── _archiv/            düşmüş · kapsam dışı · mükerrer
+```
+
+**05.09.2026 taşıması:** `Handbücher/` ve `verordnung rezept/` kaldırıldı, içerikleri
+buraya taşındı (`git mv`, geçmiş korundu). `Podoloji/` duruyor ama artık yalnız **kendi
+ürettiğimiz** işi taşıyor — prototip, ürün kararı, loop promptu, `podologie-hpnr-reference.js`.
+Taşımada 22 dosyadaki 155 atıf yönlendirildi; `fortschritte/`, `archive/`, `.plans/`,
+`ops/ingest/`, `compliance/legal-reviews/` **bilinçli olarak dokunulmadı** — o gün o
+yoldaydı, geçmiş düzeltilmez.
+
+---
+
 **Üç dosya, üç ayrı soru:**
 
 | Dosya | Soru | Bakımı |
 |---|---|---|
-| `Handbücher/INDEX.md` | Belgenin **içinde ne var**, hangi bölüm nerede | elle — okundukça zenginleşir |
+| `wissensbank/INDEX.md` | Belgenin **içinde ne var**, hangi bölüm nerede | elle — okundukça zenginleşir |
 | `wissensbank/REGISTER.md` | **Nereden geldi**, hangi sürüm, ne zaman düşer, **neyi besler** | elle — "bilgi bankası güncelle" |
-| `Handbücher/SPEC-RULES.md` | Belgeden **süzülmüş kural** (kaynak+sürüm+kod satırı) | elle — kural çıkarıldıkça |
+| `wissensbank/SPEC-RULES.md` | Belgeden **süzülmüş kural** (kaynak+sürüm+kod satırı) | elle — kural çıkarıldıkça |
 
 ---
 
@@ -46,7 +72,7 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 
 > ⚠️ **Erken geçiş dosya reddi demektir.** V22 ve V10 dosyaları repoda duruyor ve kod
 > dosyası (`anlage3_v22.js`) yazılmış olsa bile **01.02.2027'ye kadar V21 esastır.**
-> Bu, `Handbücher/INDEX.md`'nin de yazılı kuralıdır.
+> Bu, `wissensbank/INDEX.md`'nin de yazılı kuralıdır.
 
 ---
 
@@ -58,8 +84,8 @@ olması demektir — ki bu tamamen eski olmaktan tehlikelidir, çünkü kimse ş
 
 ### Z-01 · §302 teknik spesifikasyon (EDIFACT)
 ```
-Handbücher/Anlage_1_TP5_V21_20260115.pdf/.txt   (V21, ab 01.10.2025)
-  → Handbücher/SPEC-RULES.md                     (süzülmüş kurallar)
+wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.pdf/.txt   (V21, ab 01.10.2025)
+  → wissensbank/SPEC-RULES.md                     (süzülmüş kurallar)
   → api-backend/billing/dta/*                    (SLGA/SLLA/SLEZ/SLAU/SLEK üretimi)
   → api-backend/billing/codes/legs.js            (§5.5.3.3 EHE-Segment'e dayanır)
 ```
@@ -67,8 +93,8 @@ Durum: ✅ geçerli. `legs.js` belgeye satır düzeyinde atıf yapıyor — **is
 
 ### Z-02 · §302 Schlüsselverzeichnisse
 ```
-Podoloji/Anlage_3_TP5_V21_20250919.pdf/.txt      (V21, ab 01.10.2025)  ← BUGÜN GEÇERLİ
-Handbücher/Anlage_3_TP5_V22_20260218.pdf/.txt    (V22, ab 01.02.2027)  ← GELECEK
+wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.pdf/.txt      (V21, ab 01.10.2025)  ← BUGÜN GEÇERLİ
+wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218.pdf/.txt    (V22, ab 01.02.2027)  ← GELECEK
   → api-backend/billing/codes/anlage3_v22.js
 ```
 ⚠️ **Dikkat:** kod dosyasının adı `anlage3_v22` ve baş yorumu V22 PDF'ini kaynak
@@ -77,7 +103,7 @@ dürüst davranıyor; yine de dosya adı yanıltıcı. → açık madde W-A03.
 
 ### Z-03 · Physiotherapie fiyatları
 ```
-Handbücher/20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei.pdf/.txt
+wissensbank/physiotherapie/20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei.pdf/.txt
   → api-backend/billing/codes/physio_positions.js   (ab 01.01.2026, bundeseinheitlich)
   → sync_heilmittel_katalog.js                       → DB heilmittel_katalog
   ↔ preise_pruefen.mjs                               (GKV XML ile çapraz doğrulama)
@@ -88,20 +114,20 @@ Bu kural kod dosyasının başında yazılı — **belgeden koda taşınan yorum
 
 ### Z-04 · Podologie fiyatları
 ```
-Podoloji/Leistungen/20250617_Podologie_Anlage_2.pdf/.txt   (i.d.F. 01.07.2025)
+wissensbank/podologie/20250617_Podologie_Anlage_2.pdf/.txt   (i.d.F. 01.07.2025)
   → api-backend/billing/codes/podologie_positions.js       (PODOLOGIE_PREISFENSTER)
   → sync_heilmittel_katalog.js                             → DB heilmittel_katalog
   ↔ preise_pruefen.mjs
 ```
-⚠️ PDF layout güvenilmez: `Podoloji/Leistungen/*.txt` içinde bir fiyat kendi kodunun
+⚠️ PDF layout güvenilmez: `wissensbank/podologie/*.txt` içinde bir fiyat kendi kodunun
 **bir satır üstünde** duruyor. Bu, "sayı taşıyan tabloyu YZ/parser çevirmez" kuralının
 (ajan §0.2) doğduğu gerçek olay.
 
 ### Z-05 · Heilmittelpositionsnummernverzeichnis (GKV-SV)
 ```
-Podoloji/20251215_Heilmittelpositionsnummernverzeichnis_gueltig_ab_01.01.2026.xlsx
-  → Podoloji/Positionsnummernverzeichnis_2026_Full.csv       ⚠ üretim yolu belgesiz
-  → Podoloji/Podologie_Positionsnummern_2026_Filtered.csv    ⚠ üretim yolu belgesiz
+wissensbank/gemeinsam/positionsnummern/20251215_Heilmittelpositionsnummernverzeichnis_gueltig_ab_01.01.2026.xlsx
+  → wissensbank/gemeinsam/positionsnummern/Positionsnummernverzeichnis_2026_Full.csv       ⚠ üretim yolu belgesiz
+  → wissensbank/podologie/Podologie_Positionsnummern_2026_Filtered.csv    ⚠ üretim yolu belgesiz
   → Podoloji/podologie-hpnr-reference.js  (⛔ dosyanın kendisi "NICHT AUTORITATIV" diyor)
 ```
 → açık madde W-A04 (XLSX→CSV dönüşümü hangi araçla yapıldı, tekrarlanabilir mi).
@@ -120,7 +146,7 @@ Anlage 2 maßgeblich kalır.
 
 ### Z-07 · KBV Diagnoseliste (LHB / BVB / Blanko)
 ```
-verordnung rezept/heilmittel-diagnoseliste.pdf/.txt      (Stand 01.01.2026)
+wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.pdf/.txt      (Stand 01.01.2026)
   → api-backend/ai/validators/data/diagnoseliste-raw.txt  (16.05.2026)
   → api-backend/ai/validators/heilmittel-catalog.json     (_meta ile, 238 LHB/BVB kaydı)
 ```
@@ -129,7 +155,7 @@ sayımlar) — **türev dosyada olması gereken şeyin örneği.**
 
 ### Z-08 · ICD-10-GM 2026 ⚠️ **zincir kopuk**
 ```
-verordnung rezept/Zip ICD/Klassifikationsdateien/icd10gm2026syst_kodes.txt   (4,2 MB)
+wissensbank/gemeinsam/icd-10-gm/Klassifikationsdateien/icd10gm2026syst_kodes.txt   (4,2 MB)
   → ???                                       ← BESLEME SCRIPT'İ BULUNAMADI
   → DB icd10_titles  (yalnız search_diagnosen() RPC'sinden okunur)
 ```
@@ -138,14 +164,14 @@ Repoda hiçbir import/seed script'i yok. Tablo dolu ama nasıl dolduğu yazılı
 
 ### Z-09 · Kostenträgerdatei / IK
 ```
-Handbücher/Anhang_03_Anlage_1_TP5_V10_20260414.pdf/.txt   (V10, ab 01.02.2027) — FORMAT SPEC
-Podoloji/Krankenkassen IK nummern .md                      (VERİNİN KENDİSİ, 22.441 satır)
+wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414.pdf/.txt   (V10, ab 01.02.2027) — FORMAT SPEC
+wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md                      (VERİNİN KENDİSİ, 22.441 satır)
   → api-backend/billing/kostentraeger/parser.js + parser.test.js   (05.09.2026)
 ```
 ⏳ Parser V10 tarihinden önce yazıldı; bugün geçerli sürüm ile V10 arasındaki fark
 kontrol edilmeli.
 
-⚠️ **05.09.2026'da bulundu:** `Podoloji/Krankenkassen IK nummern .md` aslında bir markdown
+⚠️ **05.09.2026'da bulundu:** `wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md` aslında bir markdown
 dosyası **değil** — EDIFACT `KOTR:02:001:KV` formatında **gerçek Kostenträgerdatei**.
 Başlığı `UNB+UNOC:3+109910000+999999999+260701:1230` (gönderen IK 109910000, tarih
 01.07.2026). Sicil kurulana kadar hiçbir yerde kayıtlı değildi ve `parser.js` mock ile
@@ -165,7 +191,7 @@ dosyanın içinde. **Diğer türevlerin ulaşması gereken standart budur.**
 
 ## 3. Kaynak envanteri
 
-`Handbücher/INDEX.md`'deki 33 kayıt, sicil gözüyle. **Herkunft sütunu neredeyse tamamen
+`wissensbank/INDEX.md`'deki 33 kayıt, sicil gözüyle. **Herkunft sütunu neredeyse tamamen
 boş** — bu bir kayıt eksikliği, belgelerin şüpheli olduğu anlamına gelmez (hepsi resmî
 yayıncıdan indirildi), ama bir sürüm düştüğünde yenisinin nereden alınacağı her seferinde
 yeniden araştırılıyor demektir.
@@ -174,12 +200,12 @@ yeniden araştırılıyor demektir.
 
 | Dosya | Sürüm | Ab | Durum | Besler | Herkunft |
 |---|---|---|---|---|---|
-| `Handbücher/Anlage_1_TP5_V21_20260115` | V21 | 01.10.2025 | ✅ GEÇERLİ | Z-01 | ⬜ |
-| `Podoloji/Anlage_3_TP5_V21_20250919` | V21 | 01.10.2025 | ✅ GEÇERLİ | Z-02 | ⬜ |
-| `Handbücher/Anlage_3_TP5_V22_20260218` | V22 | 01.02.2027 | ⏳ GELECEK | Z-02 | ⬜ |
-| `Handbücher/Anhang_03_Anlage_1_TP5_V10_20260414` | V10 | 01.02.2027 | ⏳ GELECEK | Z-09 | ⬜ |
-| `Handbücher/Anhang_05_Anlage_1_TP5_20260401` | 1.0 | 01.04.2026 | 🚫 KAPSAM DIŞI (Rettungsdienst) | — | ⬜ |
-| `Handbücher/…Anhang_04b…xsd` + `SLP_BAS_1.2.0.xsd` | — | — | 📎 REFERANS (XML şema) | — | dosya adında ✅ |
+| `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115` | V21 | 01.10.2025 | ✅ GEÇERLİ | Z-01 | ⬜ |
+| `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919` | V21 | 01.10.2025 | ✅ GEÇERLİ | Z-02 | ⬜ |
+| `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218` | V22 | 01.02.2027 | ⏳ GELECEK | Z-02 | ⬜ |
+| `wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414` | V10 | 01.02.2027 | ⏳ GELECEK | Z-09 | ⬜ |
+| `wissensbank/_archiv/Anhang_05_Anlage_1_TP5_20260401` | 1.0 | 01.04.2026 | 🚫 KAPSAM DIŞI (Rettungsdienst) | — | ⬜ |
+| `wissensbank/gemeinsam/302-tp5/…Anhang_04b…xsd` + `SLP_BAS_1.2.0.xsd` | — | — | 📎 REFERANS (XML şema) | — | dosya adında ✅ |
 
 ### §302 — yan belgeler
 
@@ -199,30 +225,30 @@ yeniden araştırılıyor demektir.
 | Dosya | Sürüm / Stand | Durum | Besler |
 |---|---|---|---|
 | `20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei` | Lesefassung, ab 01.01.2026 | ✅ GEÇERLİ | Z-03 |
-| `Podoloji/Leistungen/20250617_Podologie_Anlage_2` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | Z-04 |
-| `Podoloji/Leistungen/20250617_Podologie_Anlage_1c_Leistungsbeschreibung` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | podoloji akışı |
-| `Podoloji/Leistungen/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı |
-| `Podoloji/Leistungen/20250617_Podologie_Aenderungsvereinbarung` | 16.06.2025 | ✅ GEÇERLİ | — |
-| `Podoloji/Leistungen/20240725_Anlage_1a` + `1b_Leistungsbeschreibung` | i.d.F. 17.06.2024 | ✅ GEÇERLİ | — |
-| `Podoloji/20230524_Podologie_FAK_bf` | Stand 24.05.2023 | ✅ GEÇERLİ | HPNR referansı |
+| `wissensbank/podologie/20250617_Podologie_Anlage_2` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | Z-04 |
+| `wissensbank/podologie/20250617_Podologie_Anlage_1c_Leistungsbeschreibung` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | podoloji akışı |
+| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı |
+| `wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung` | 16.06.2025 | ✅ GEÇERLİ | — |
+| `wissensbank/podologie/20240725_Anlage_1a` + `1b_Leistungsbeschreibung` | i.d.F. 17.06.2024 | ✅ GEÇERLİ | — |
+| `wissensbank/podologie/20230524_Podologie_FAK_bf` | Stand 24.05.2023 | ✅ GEÇERLİ | HPNR referansı |
 | `20260212_Vertrag_125_sssst_Anlage_2_Verguetungsvereinbarung` | i.d.F. 12.02.2026 | ✅ GEÇERLİ | Logo/Stimme — ⬜ koda girmedi |
 | `20240531_Ergo_Anlage_2_Vertrag_nach_125…` | Stand 01.06.2024 | ✅ GEÇERLİ | Ergo — ⬜ koda girmedi |
 | `20220421_Lesefassung_Anlage_3_Ernaehrungstherapie` | 25.04.2022 | 🚫 KAPSAM DIŞI (Ernährungstherapie) | — |
-| `Handbücher/GGT` | ab 01.01.2026 | ✅ GEÇERLİ | — |
-| `Handbücher/anlage2.txt` | — | 01.01.2026 | ⬜ hangi Fachbereich, netleştirilmeli |
+| `wissensbank/gemeinsam/302-tp5/GGT` | ab 01.01.2026 | ✅ GEÇERLİ | — |
+| `wissensbank/physiotherapie/anlage2.txt` | — | 01.01.2026 | ⬜ hangi Fachbereich, netleştirilmeli |
 | `Podoloji/…HPNR…_2026.xlsx` + 2 CSV | Stand 15.12.2025, ab 01.01.2026 | ✅ GEÇERLİ | Z-05 |
 
 ### Heilmittel-Richtlinie, Diagnoseliste, ICD
 
 | Dosya | Sürüm / Stand | Durum | Besler |
 |---|---|---|---|
-| `verordnung rezept/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı |
-| `verordnung rezept/heilmittel-diagnoseliste` | Stand 01.01.2026 | ✅ GEÇERLİ | **Z-07** |
-| `verordnung rezept/Zip ICD/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 ⚠ kopuk** |
-| `verordnung rezept/praxiswissen-heilmittel` | Ausgabe 2026 | 📎 REFERANS | — |
-| `verordnung rezept/NOVENTI-Leitfaden-Blankoverordnung-Physiotherapie` | Stand 03.2026 | 📎 REFERANS (ticari kaynak, otorite değil) | — |
-| `verordnung rezept/Zip ICD/Zusatzdateien/*.pdf` (11 adet) | 2026 | 🚫 KAPSAM DIŞI (Barthel, MMSE, FIM…) | — |
-| `Handbücher/_duplikate_2026-08-04/` (5 PDF) | — | 🗄 KARANTİNA | — |
+| `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı |
+| `wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste` | Stand 01.01.2026 | ✅ GEÇERLİ | **Z-07** |
+| `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 ⚠ kopuk** |
+| `wissensbank/gemeinsam/heilmittel-richtlinie/praxiswissen-heilmittel` | Ausgabe 2026 | 📎 REFERANS | — |
+| `wissensbank/physiotherapie/NOVENTI-Leitfaden-Blankoverordnung-Physiotherapie` | Stand 03.2026 | 📎 REFERANS (ticari kaynak, otorite değil) | — |
+| `wissensbank/_archiv/Zusatzdateien/*.pdf` (11 adet) | 2026 | 🚫 KAPSAM DIŞI (Barthel, MMSE, FIM…) | — |
+| `wissensbank/_archiv/_duplikate_2026-08-04/` (5 PDF) | — | 🗄 KARANTİNA | — |
 
 ---
 
@@ -276,27 +302,29 @@ otomasyon (yayıncı sayfası izleme) ayrı bir karar, `deger-mi` ile.
 `.vercelignore:73-75` şüpheyi yazılı olarak kaydediyor: *"fraglich, ob ICD-10-GM- und
 GKV-Lesefassungen ueberhaupt weiterverbreitet werden duerfen"*. Yayın yüzeyi kapalı
 (klasörler ignore'da ✅) ama **depo public** ve `.txt` karşılıkları git'te izleniyor.
-**Yapılacak:** `legal-de`'ye sorulur. `verordnung rezept/Zip ICD/downloadbedingungen-2025`
+**Yapılacak:** `legal-de`'ye sorulur. `wissensbank/gemeinsam/icd-10-gm/downloadbedingungen-2025`
 zaten arşivde — cevabın bir kısmı orada.
 
 ### W-A08 · Gerçek Kostenträgerdatei elimizde ama kayıtsız ve yanlış adlandırılmış — `offen`
-`Podoloji/Krankenkassen IK nummern .md` — 22.441 satır EDIFACT `KOTR`, gönderen IK
+`wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md` — 22.441 satır EDIFACT `KOTR`, gönderen IK
 109910000, dosya tarihi 01.07.2026. `.md` uzantısı yanlış (markdown değil), klasörü
 yanlış (podoloji'ye özel değil, tüm kasaları kapsıyor), adında boşluk var, sicilde yoktu.
 `api-backend/billing/kostentraeger/parser.js` bu dosya dururken mock ile çalışıyordu.
 **Bu, sicilin niye kurulduğunun canlı kanıtı:** veri indirilmiş, ödenmiş, elde — ama
 kayıtsız olduğu için yok sayılmış.
-**Yapılacak:** (a) parser bu dosyaya karşı koşturulup doğrulanır, (b) dosya doğru yere ve
-doğru uzantıya taşınır (öneri: `Handbücher/kostentraeger/` + `.kotr` ya da `.txt`),
-(c) Herkunft ve tazelik kontrolü kayda yazılır — Kostenträgerdatei **düzenli güncellenir**,
-yani takvimde yeri olmalı. `gkv-302` ile birlikte.
+**Yapılacak:** (a) ✅ dosya `wissensbank/gemeinsam/kostentraeger/` altına taşındı
+(05.09.2026), (b) `parser.js` bu gerçek dosyaya karşı koşturulup doğrulanır — hâlâ açık,
+(c) `.md` uzantısı düzeltilir (`.kotr` ya da `.txt`; adındaki fazladan boşluk da gider),
+(d) Herkunft ve tazelik kontrolü kayda yazılır — Kostenträgerdatei **düzenli güncellenir**,
+yani §1 takviminde yeri olmalı. `gkv-302` ile birlikte. → Ops kartı açıldı.
 ⚠️ Ayrıca: dosya 05.09.2026'da git'e girdi (o commit'e kadar takipsizdi). Depo **public** ve
 W-A07 (yeniden dağıtım) bunu da kapsar — `legal-de` sorusuna bu dosya da dahil edilir.
 
 ### ✅ Kapalı / doğrulanmış
 
-- **Yayın yüzeyi temiz.** `Handbücher/`, `Podoloji/`, `verordnung rezept/` üçü de
-  `.vercelignore:76-78`'de. 27.08.2026'da eklendi ve runtime kontrolü yapıldı.
+- **Yayın yüzeyi temiz.** Eski üç klasör 27.08.2026'da `.vercelignore`'a alınmıştı; taşımadan
+  sonra yerlerini `wissensbank/` tek satırı aldı (05.09.2026). `Podoloji/` de listede kalmaya
+  devam ediyor. Runtime kontrolü yapıldı: hiçbir belge tarayıcıya yüklenmiyor.
 - **PDF→TXT zinciri tam.** 47 PDF'in 31'inin `.txt`'si var; eksik 16'nın tamamı bilinçli:
   5'i `_duplikate_2026-08-04/` karantinası, 11'i `Zusatzdateien/` klinik ölçekleri
   (INDEX'te kapsam dışı yazılı). **Boşluk yok.**

@@ -49,12 +49,12 @@
 //         Heilmittelkatalog Teil II „Massnahmen der Podologischen Therapie",
 //         Diagnosegruppen DF (S. 73), NF (S. 74), QF (S. 75),
 //         UI 1 (S. 76), UI 2 (S. 77).
-//         Datei: `verordnung rezept/HeilM-RL_2025-05-15_iK-2025-08-05.txt`
+//         Datei: `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt`
 const Q1 = 'HeilM-RL 15.05.2025 (iK 05.08.2025), Heilmittelkatalog Teil II Podologie';
 
 // ─── [Q2] Anlage 3 zum Vertrag nach § 125 Abs. 1 SGB V Podologie,
 //         i. d. F. vom 16.06.2025, Abschnitt 3 f) „Behandlungseinheiten".
-//         Datei: `Podoloji/Leistungen/20250617_Podologie_Anlage_3_Lesefassung.txt:390-435`
+//         Datei: `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:390-435`
 const Q2 = 'Anlage 3 §125 SGB V Podologie 16.06.2025, Abschnitt 3 f)';
 
 /**
@@ -245,7 +245,7 @@ export function regelnFuerBereich(bereich, dbZeilen = []) {
  * ⚠ Geltende Fassung heute: HeilM-RL 15.05.2025, in Kraft seit 05.08.2025.
  *   Für §302/DTA gilt separat Anlage 1+3 TP5 **V21** bis 31.01.2027
  *   (V22/V10 ab 01.02.2027) — eine ANDERE Versionsachse, sie steht in
- *   `Handbücher/SPEC-RULES.md`, nicht hier.
+ *   `wissensbank/SPEC-RULES.md`, nicht hier.
  */
 export const REGELSTAND = [
   { regel: 'Behandlungsbeginn 14/28 Kalendertage', ort: 'module/heilmittel-fristen.js', quelle: 'HeilM-RL § 15' },

@@ -31,10 +31,10 @@
 //
 // QUELLEN je Fachbereich (§125 Abs. 1 SGB V, jeweils Anlage 2, Seite 1)
 // ---------------------------------------------------------------------
-//   Physio  Handbücher/20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei.txt:12
-//   Ergo    Handbücher/20240531_Ergo_Anlage_2_..._BF.txt:20
-//   SSSST   Handbücher/20260212_Vertrag_125_sssst_Anlage_2_...txt:14-16
-//   Podo    Podoloji/Leistungen/20250617_Podologie_Anlage_2.txt:49-52
+//   Physio  wissensbank/physiotherapie/20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei.txt:12
+//   Ergo    wissensbank/ergotherapie/20240531_Ergo_Anlage_2_..._BF.txt:20
+//   SSSST   wissensbank/logopaedie/20260212_Vertrag_125_sssst_Anlage_2_...txt:14-16
+//   Podo    wissensbank/podologie/20250617_Podologie_Anlage_2.txt:49-52
 //
 // Im Physio- und Ergo-Vertrag steht dazu ausdrücklich:
 // „Bitte im maschinellen Datenaustausch angeben!!!"

@@ -142,5 +142,5 @@ Vor der ersten echten Abrechnung sollte das jemand mit §302-Kenntnis bestätige
 
 Ob die aktuell hinterlegten Preise **inhaltlich** korrekt sind. Dafür müssten die
 Beträge gegen die Vertragsanlagen geprüft werden
-(`Handbücher/INDEX.md` → Anlage 2 Physiotherapie bzw. Podologie). Das ist eine eigene
+(`wissensbank/INDEX.md` → Anlage 2 Physiotherapie bzw. Podologie). Das ist eine eigene
 Aufgabe und in dieser Analyse bewusst nicht enthalten.

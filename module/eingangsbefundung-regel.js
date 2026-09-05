@@ -8,7 +8,7 @@
  * Test, genau wie `standort-zuschnitt.js`. Die Abfrage selbst (Supabase) bleibt
  * in `podologie-abrechnung.js`; hier steht nur die Entscheidung.
  *
- * Die Regel (gkv-302, 31.08.2026 — Beleg in `Handbücher/SPEC-RULES.md`):
+ * Die Regel (gkv-302, 31.08.2026 — Beleg in `wissensbank/SPEC-RULES.md`):
  * Anlage 1a Leistungsbeschreibung i.d.F. 17.06.2024 zum Vertrag nach § 125
  * Abs. 1 SGB V Podologie, Teil 1 Nr. 2 und Teil 2 Ziffer 4.1:
  *
@@ -97,7 +97,7 @@ export function darf78040(behandlungen, datum) {
 // bekommt eine Absetzung.
 //
 // Die drei Bezugsgroessen, die hier nicht vermischt werden duerfen
-// (Herleitung mit Fundstellen in `Handbücher/SPEC-RULES.md`):
+// (Herleitung mit Fundstellen in `wissensbank/SPEC-RULES.md`):
 //
 //   78040 Eingangsbefundung   — einmalig bei ERSTINANSPRUCHNAHME von Podologie
 //                               (ab 01.11.2023). Nicht je Verordnung, nicht je

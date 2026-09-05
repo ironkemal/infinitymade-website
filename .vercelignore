@@ -70,14 +70,17 @@ pakete/
 ai chatbot proje/
 # lib/ — 28.08.2026 nach archive/lib-orphan/ verschoben, Regel nicht mehr noetig
 
-# Fachdokumente (GKV/Heilmittel). Werden im Code nur als QUELLE zitiert,
-# nie zur Laufzeit geladen — geprueft 2026-08-27. Zusaetzlich fraglich, ob
-# ICD-10-GM- und GKV-Lesefassungen ueberhaupt weiterverbreitet werden duerfen.
-Handbücher/
-Podoloji/
-verordnung rezept/
-# Sicil dieser Dokumente (Herkunft, Version, Ablaufdatum, Ableitungskette).
+# Fachdokumente (GKV/Heilmittel) + ihr Sicil. Werden im Code nur als QUELLE
+# zitiert, nie zur Laufzeit geladen — geprueft 2026-08-27, erneut 2026-09-05.
+# Zusaetzlich fraglich, ob ICD-10-GM- und GKV-Lesefassungen ueberhaupt
+# weiterverbreitet werden duerfen (siehe wissensbank/REGISTER.md → W-A07).
+#
+# 05.09.2026: Handbücher/ und "verordnung rezept/" sind AUFGELOEST — ihr
+# Inhalt liegt jetzt unter wissensbank/ (gemeinsam · podologie · physiotherapie ·
+# ergotherapie · logopaedie · _archiv). Podoloji/ bleibt bestehen, enthaelt aber
+# nur noch EIGENE Arbeit (Prototypen, Produktentscheidungen, loop-Prompts).
 wissensbank/
+Podoloji/
 
 # Captured browser traffic (contained live auth tokens) & junk screenshots
 *.har

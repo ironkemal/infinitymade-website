@@ -20,7 +20,7 @@
  *       (2) Kann die Heilmittelbehandlung in den genannten Zeiträumen nach
  *           Absatz 1 nicht aufgenommen werden, verliert die Verordnung ihre
  *           Gültigkeit.
- *     Datei: `verordnung rezept/HeilM-RL_2025-05-15_iK-2025-08-05.txt:678-682`
+ *     Datei: `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:678-682`
  *
  * § 15 steht im allgemeinen Teil der Richtlinie („Grundsätze der
  * Heilmittelverordnung") und gilt deshalb für ALLE Fachbereiche — Physio,

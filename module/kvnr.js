@@ -17,7 +17,7 @@
  *
  *     Feldlänge in der §302-Datei: 10 AN
  *     (Anlage 1 TP5 V21, Segment NAD/Versichertennummer — siehe
- *      Handbücher/Anhang_05_Anlage_1_TP5_20260401.txt, Zeile 435)
+ *      wissensbank/_archiv/Anhang_05_Anlage_1_TP5_20260401.txt, Zeile 435)
  *
  * Prüfziffer: der Buchstabe wird durch seine zweistellige Position im Alphabet
  * ersetzt (A→01 … Z→26), das ergibt mit den acht Ziffern zehn Stellen. Diese

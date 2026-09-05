@@ -18,7 +18,7 @@
  *
  * Was dieses Skript stattdessen tut: es ist eine ZWEITE, unabhängige Quelle, die
  * unsere Zahlen bei jedem Lauf bestätigt oder widerspricht — kein PDF-Parser (die
- * Anlage-2-PDFs sind layout-unzuverlässig, siehe Podoloji/Leistungen/*.txt Zeile
+ * Anlage-2-PDFs sind layout-unzuverlässig, siehe wissensbank/podologie/*.txt Zeile
  * 320f., wo ein Preis eine Zeile über seinem Code steht), keine KI (Finanzdaten
  * sollen deterministisch bleiben, nicht "meistens richtig").
  *

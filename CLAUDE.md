@@ -134,13 +134,20 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 ├── ops/                           Ops-Dashboard kodu — ★ AYRI Vercel projesi,
 │                                  ★ AYRI Supabase projesi (farkaejociddtgqkusvm)
 │
-│   ── Belge arşivleri: kodda sadece KAYNAK olarak alıntılanır, runtime'da YÜKLENMEZ ──
-├── wissensbank/                   ★ Dış kaynaklı resmî verinin sicili — REGISTER.md:
-│                                  Herkunft · sürüm · geçerlilik tarihi · kaynak→kod→DB
-│                                  zinciri. Sahibi `wissensbank` ajanı
-├── Handbücher/                    GKV/§302 belge arşivi — INDEX.md protokolü zorunlu
-├── Podoloji/                      Podoloji alan belgeleri + HPNR referansı + FAK
-├── verordnung rezept/             HeilM-RL · ICD-10-GM katalog dosyaları · Blanko
+│   ── Belge arşivi: kodda sadece KAYNAK olarak alıntılanır, runtime'da YÜKLENMEZ ──
+├── wissensbank/                   ★ İNDİRİLEN RESMÎ BELGELERİN TEK ADRESİ (05.09.2026).
+│                                  Eski `Handbücher/` ve `verordnung rezept/` buraya
+│                                  taşındı ve kaldırıldı.
+│   ├── README.md                  Klasör kuralı — yeni belge nereye gider
+│   ├── REGISTER.md                ★ Herkunft · sürüm · geçerlilik · kaynak→kod→DB zinciri
+│   ├── INDEX.md                   Belgenin İÇİNDE ne var + okuma protokolü (33 kayıt)
+│   ├── SPEC-RULES.md              Süzülmüş §302 kuralları
+│   ├── gemeinsam/                 Birden fazla alanı ilgilendiren: 302-tp5 · kostentraeger
+│   │                              heilmittel-richtlinie · positionsnummern · icd-10-gm
+│   ├── podologie/ physiotherapie/ ergotherapie/ logopaedie/    alana özel
+│   └── _archiv/                   düşmüş · kapsam dışı · mükerrer
+├── Podoloji/                      ⚠️ Artık BELGE yok — yalnız kendi ürettiğimiz iş:
+│                                  prototip, ürün kararı, loop promptu, HPNR referansı
 ├── .claude/agents/ + skills/      ★ Ajanlar ve /konsey (aşağıya bak) — .gitignore'lu
 ├── praxissoftware-*.html          SEO landing sayfaları (4 Fachbereich + TI)
 ├── komponenten.html               Elle bakımlı bileşen envanteri (dark dev sayfası).
@@ -409,7 +416,7 @@ eşiğin dışındadır: her zaman gidilir, izin sorulmaz.**
 
 | Dosya | Soru | Bakımı |
 |---|---|---|
-| `Handbücher/INDEX.md` | Belgenin **içinde ne var**, hangi bölüm nerede | elle — okundukça |
+| `wissensbank/INDEX.md` | Belgenin **içinde ne var**, hangi bölüm nerede | elle — okundukça |
 | `wissensbank/REGISTER.md` | **Nereden geldi**, hangi sürüm, ne zaman düşer, **neyi besler** | `wissensbank` ajanı — "bilgi bankası güncelle" |
 
 - **Yeni belge indirildiğinde `wissensbank` ajanına gidilir** — giriş protokolü onda
@@ -423,13 +430,13 @@ eşiğin dışındadır: her zaman gidilir, izin sorulmaz.**
   iddiası her zaman orijinal + bölüm + sürüm üçlüsüne dayanır.
 
 Belgeye dokunan her iş şu sırayı izler:
-1. **Önce `Handbücher/INDEX.md`** — 33 belgenin kaydı, sürümü ve bölüm haritası orada
+1. **Önce `wissensbank/INDEX.md`** — 33 belgenin kaydı, sürümü ve bölüm haritası orada
 2. **Hedefli oku** — kayıttaki "Anahtar bölümler"den `Grep` ile ilgili kısmı bul, sadece onu oku.
    Belgenin tamamını okumak neredeyse her zaman hatadır (`Anlage_1_TP5_V21` tek başına ~130k token)
 3. **Sonra kaydet** — INDEX'te kaydı olmayan bir belge okunduysa kaydı INDEX'e eklenir
 4. Okuma her zaman `.txt` üzerinden; `.pdf` açılmaz (`pdftotext -enc UTF-8 -layout` ile üretilir)
 
-Süzülmüş kurallar: `Handbücher/SPEC-RULES.md` (kaynak + sürüm + kod satırı üçlüsü zorunlu).
+Süzülmüş kurallar: `wissensbank/SPEC-RULES.md` (kaynak + sürüm + kod satırı üçlüsü zorunlu).
 Geçerli sürüm: **Anlage 1 ve 3 TP5 = V21**. V22/V10 → 01.02.2027, erken geçiş dosya reddi demektir.
 
 ### 🚨 Vercel serverless limiti — 12/12 DOLU
@@ -704,8 +711,8 @@ güvenlik sorumlusu dinlenmeyen güvenlik sorumlusudur.
 - `wissensbank/REGISTER.md` — ★ indirilen resmî belgelerin sicili: nereden geldi, hangi sürüm,
   ne zaman düşer, hangi kod/tabloyu besler. **Geçerlilik takvimi burada** (V22 → 01.02.2027,
   Anhang 03 V10 → 01.02.2027, HPNR 2027 → 01.01.2027)
-- `Handbücher/INDEX.md` — 33 GKV/§302 belgesinin haritası + okuma protokolü
-- `Handbücher/SPEC-RULES.md` — süzülmüş §302 kuralları (kaynak + sürüm + kod satırı)
+- `wissensbank/INDEX.md` — 33 GKV/§302 belgesinin haritası + okuma protokolü
+- `wissensbank/SPEC-RULES.md` — süzülmüş §302 kuralları (kaynak + sürüm + kod satırı)
 - `konsey/KARARLAR.md` — konsey kararlarının dizini
 - `compliance/LEGAL_DECISIONS.md` — kapatılmış hukuki kararlar
 - `Podoloji/PRODUKT-ENTSCHEIDUNGEN.md` — podoloji ürün kararları

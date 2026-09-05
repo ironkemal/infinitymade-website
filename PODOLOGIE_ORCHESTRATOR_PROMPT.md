@@ -361,7 +361,7 @@ Podologie §302 veri iletimi Physiotherapie ile **aynı EDIFACT formatını** ku
 | Blanko-Verordnung (05) | Uygulanabilir | **Henüz geçerli değil** |
 
 Kaynak: Anlage 3 TP5 V21 (19.09.2025, anzuwenden ab 01.10.2025), §8.1.5.1 Abrechnungscode.  
-En güncel versiyon: `Handbücher/Anlage_3_TP5_V22_20260218.pdf` (V22, 18.02.2026).
+En güncel versiyon: `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218.pdf` (V22, 18.02.2026).
 
 Mevcut §302 billing kodu Podologie için devreye alınırken sadece Abrechnungscode `71` ve HPNR `78xxx` geçmesi yeterli — mesaj zarfı aynı.
 

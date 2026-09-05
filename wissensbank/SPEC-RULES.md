@@ -7,7 +7,7 @@
 > **kaynak + sürüm + kod satırı.** Bu üçlü olmadan kural yazılmaz — belge güncellendiğinde
 > neyin yeniden kontrol edileceği belli olmaz.
 >
-> Sahibi: `gkv-302` ajanı · Arşiv haritası: `Handbücher/INDEX.md`
+> Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
 > Son güncelleme: 2026-09-05
 
 ---
@@ -35,7 +35,7 @@
   Physiotherapie, … maximal 16 Wochen, bei Maßnahmen der Podologischen Therapie maximal
   40 Wochen, ab Verordnungsdatum gültig."* — Abs. 1 = *"Verordnungen aufgrund von Indikationen
   nach § 125a SGB V"*, yani **Blankoverordnung**. Genel Verordnung geçerliliği § 15'tedir.
-  (2026-08-05 doğrulandı — `verordnung rezept/HeilM-RL_2025-05-15_iK-2025-08-05.txt` s. 15–16)
+  (2026-08-05 doğrulandı — `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt` s. 15–16)
 - **Geçerlilik:** 05.08.2025 (Fassung 15.05.2025)
 - **Kodda:** `api-backend/ai/validators/blankoRules.js:15` → `const GUELTIG_WOCHEN = 16;`
 - **Kapsam:** Blankoverordnung
@@ -74,7 +74,7 @@
   **78010 + 78030** ile faturalanır — Therapiezeit 20 dakikayı aşsa bile. **78020**
   („Podologische Behandlung (groß)") **yalnızca** verordnete Podologische Komplexbehandlung
   **ve** >20 dk Therapiezeit birlikte varsa abrechenbar.
-- **Kaynak:** FAK Podologie Q25 (Stand 24.05.2023, `Podoloji/20230524_Podologie_FAK_bf.txt`
+- **Kaynak:** FAK Podologie Q25 (Stand 24.05.2023, `wissensbank/podologie/20230524_Podologie_FAK_bf.txt`
   Z.199-207) — *"Die Nagelbearbeitung oder Hornhautabtragung sind immer mit 78010 zzgl. 78030
   abzurechnen."*; Anlage 1a Leistungsbeschreibung i.d.F. 17.06.2024 Teil 1 Z.167-171 + Teil 2
   Ziff. 1/2/3
@@ -91,8 +91,8 @@
   Heilmittelpositionsnummernverzeichnis'te **vardır**, ancak §125-Podologie-Vertrag Anlage 2'de
   **fiyatları yoktur** → SLLA'ya konursa Absetzung/Nullretaxation. Ayırt edici işaret:
   Verzeichnis'te `Grundlage` ve `Eigentümer` sütunları **boş**.
-- **Kaynak:** `Podoloji/Podologie_Positionsnummern_2026_Filtered.csv` Z.2-19 (gültig ab
-  01.01.2026); `Podoloji/Leistungen/20250617_Podologie_Anlage_2.txt` i.d.F. 01.07.2025 —
+- **Kaynak:** `wissensbank/podologie/Podologie_Positionsnummern_2026_Filtered.csv` Z.2-19 (gültig ab
+  01.01.2026); `wissensbank/podologie/20250617_Podologie_Anlage_2.txt` i.d.F. 01.07.2025 —
   `7800x` için **0 eşleşme**
 - **Geçerlilik:** 01.01.2026 (pozisyonların kendisi `gültig ab 1900-01-01`, yani yeni değil)
 - **Kodda:** `Podoloji/podologie-hpnr-reference.js` → `HPNR_PODOLOGIE_NICHT_ABRECHENBAR`
@@ -121,7 +121,7 @@
 - **Kaynak:** Anlage 1a Leistungsbeschreibung i.d.F. **17.06.2024** (Vertrag § 125 Abs. 1 SGB V
   Podologie i.d.F. 30.11.2020), Teil 1 Nr. 2 — *"Die podologische Eingangsbefundung erfolgt vor
   der ersten Abgabe einer podologischen Leistung und **kann am gleichen Tag wie die podologische
-  Leistung durchgeführt werden**."* (`Podoloji/Leistungen/20240725_Anlage_1a_Leistungsbeschreibung_lesefassung_b.txt`
+  Leistung durchgeführt werden**."* (`wissensbank/podologie/20240725_Anlage_1a_Leistungsbeschreibung_lesefassung_b.txt`
   Z.80-84); Teil 2 Ziffer 4.1 „Besonderheiten" — *"**zusätzlich zur podologischen Behandlung**
   einmalig eine podologische Eingangsbefundung … **Die podologische Befundung nach Teil 2
   Ziffer 4.2 ist für diese Behandlung nicht abrechnungsfähig.**"* (Z.458-462). Dışlanan pozisyon
@@ -148,7 +148,7 @@
   (Z.80-82, 458-460); *"Die Eingangsbefundung ist: - **keine Behandlungseinheit im Sinne der
   Heilmittel-Richtlinie** - eine eigenständige Leistung und ist somit vom Versicherten zu
   bestätigen."* (Z.463-466). 78030'un Verordnung'a yazılmaması: GKV-SV FAK Podologie Stand
-  **24.05.2023** Nr. 5 (`Podoloji/20230524_Podologie_FAK_bf.txt` Z.38-41)
+  **24.05.2023** Nr. 5 (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt` Z.38-41)
 - **Negatif kanıt:** „je Verordnung" / „je Behandlungsserie" / „Kalenderjahr" ifadeleri 78040
   bağlamında Anlage 1a, Anlage 2 (i.d.F. 01.07.2025), Anlage 3, Änderungsvereinbarung 16.06.2025,
   GKV-SV FAK 24.05.2023, ZFD FAK Juli 2024 ve HeilM-RL'de **hiç geçmiyor**. HeilM-RL § 27b'deki
@@ -213,12 +213,12 @@
   tedavi çıkmazsa **tek başına** da abrechenbar'dır.
 - **Kaynak:** Anlage 1c Leistungsbeschreibung i.d.F. **01.07.2025**, Teil 1 Nr. 5 I.1 — *"Die
   Erbringung der „Erstbefundung groß" ist auf eine **einmalige Abgabe je Patient im
-  Kalenderjahr** beschränkt."* (`Podoloji/Leistungen/20250617_Podologie_Anlage_1c_Leistungsbeschreibung.txt`
+  Kalenderjahr** beschränkt."* (`wissensbank/podologie/20250617_Podologie_Anlage_1c_Leistungsbeschreibung.txt`
   Z.236-239); Änderungsvereinbarung vom **16.06.2025** Nr. 5, yeni **§ 3b lit. a)** — *"Die
   Leistung nach Anlage 1c Teil 2 Ziffer I.1 (Erstbefundung) kann **einmalig zu Beginn einer
   Nagelspangenbehandlungsserie** erfolgen. Eine Behandlungsserie bezieht sich stets auf einen
   zu behandelnden Nagel und **kann mehrere Verordnungen umfassen**."*
-  (`Podoloji/Leistungen/20250617_Podologie_Aenderungsvereinbarung.txt` Z.57-59); tek başına
+  (`wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung.txt` Z.57-59); tek başına
   abrechenbar: ZFD FAK Juli 2024 Bölüm 2
 - **Geçerlilik:** 01.07.2025; § 3b yalnız **01.10.2025'ten itibaren verordnet** edilmiş NSB'ler için
 - **Kodda:** katalog `api-backend/billing/codes/podologie_positions.js:83-84` ve
@@ -263,7 +263,7 @@
   LEGS'in ilk iki hanesidir (`7100501` / `7200501`) ve aynı değer §8.1.14
   Leistungserbringer-Sammelgruppenschlüssel'de **Leistungsbereich B (Heilmittel)** altında geçer.
   Diagnosegruppe **değildir**, Positionsnummer **değildir**.
-- **Kaynak:** `Podoloji/Anlage_3_TP5_V21_20250919.txt` §8.1.5.1 S.15 Z.559 (*„71 = Podologen"*)
+- **Kaynak:** `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt` §8.1.5.1 S.15 Z.559 (*„71 = Podologen"*)
   ve §8.1.14 S.30 Z.1137 (aynı değer, Sammelgruppe B)
 - **Geçerlilik:** 01.10.2025 (Anlage 3 V21)
 - **Kodda:** `api-backend/billing/codes/legs.js:88-92` (`podologe: '7100501'`) ·
@@ -275,7 +275,7 @@
   *Kostenträgerdatei'de KV-Kart IK'sının işaret ettiği* Kostenträger-IK yazılır; „IK der
   Krankenkasse von der KV-Karte bzw. der ärztlichen Verordnung" alanına kartın üstündeki IK
   yazılır. İkisi Ersatzkassen'de ve füzyon geçirmiş kasalarda **birbirinden farklıdır**.
-- **Kaynak:** `Handbücher/Anlage_1_TP5_V21_20260115.txt` §5.5.2 (SLGA-FKT, Z.1440-1446) ve
+- **Kaynak:** `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt` §5.5.2 (SLGA-FKT, Z.1440-1446) ve
   §5.5.3.1 (SLLA-FKT, Z.1885-1898) — *„Einzutragen ist das IK des Kostenträgers auf den das IK
   der KV-Karte in der Kostenträgerdatei verweist"*
 - **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
@@ -290,7 +290,7 @@
   VKG segmenti + Verknüpfungsart `01` üzerinden kurulur. **Ersatzkassen'de her Kostenträger için
   23 IK** tahsis edilir; füzyon geçirmiş diğer kasa türlerinde de aynı durum vardır. Yön tek
   taraflı benzersizdir: IK → Kostenträger tekil, Kostenträger → IK **çoğuldur**.
-- **Kaynak:** `Handbücher/Anhang_03_Anlage_1_TP5_V10_20260414.txt` §5.1 —
+- **Kaynak:** `wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414.txt` §5.1 —
   *„Bilden mehrere IK der Versichertenkarte auf einen Kostenträger ab … für jeden Kostenträger
   23 IK's bereitgestellt … Verknüpfungsart 01"*
   ⚠️ Bu belge **V10 = ab 01.02.2027**; V10 Änderungshistorie'sine göre §5.1 V09'da
@@ -308,7 +308,7 @@
   Rechnungsarten."* (3) Sammelrechnung opsiyoneldir ve yalnız farklı Krankenkassen-IK'ların
   gesamtrechnungları tek Kostenträger-IK altında toplanacaksa gerekir. (4) *„Das Mischen von
   Einzel- und Sammelrechnungen in einer Datei ist nicht zulässig."*
-- **Kaynak:** `Handbücher/Anlage_1_TP5_V21_20260115.txt` §5.3.1 (Z.566-573) ve §5.3.2 (Z.575-578)
+- **Kaynak:** `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt` §5.3.1 (Z.566-573) ve §5.3.2 (Z.575-578)
 - **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
 - **Kodda:** ⚠️ **kısmen.** `abrechnung.routes.js:515` ve `:2225` her Abrechnung'u **tek**
   Kostenträger-IK'ya kilitliyor → dosya birimi „1 Kostenträger = 1 dosya". Spesifikasyonun
@@ -321,7 +321,7 @@
   eksi „Gesamtbetrag Zuzahlung und/oder Eigenanteil und/oder Pauschale Korrekturbetrag".
   VKZ `03` (Zuzahlungsnachforderung) için Rechnungsbetrag = Zuzahlung toplamı, Bruttobetrag
   `0,00` verilir. Brutto her zaman Zuzahlung **dahil** BES toplamıdır.
-- **Kaynak:** `Handbücher/Anlage_1_TP5_V21_20260115.txt` §5.5.2, GES segmenti (Z.1660-1690)
+- **Kaynak:** `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt` §5.5.2, GES segmenti (Z.1660-1690)
 - **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
 - **Kodda:** `api-backend/billing/dta/segments.js:73-85` alanları taşıyor; hesaplama
   `abrechnung.routes.js:600-615` (brutto ve zuzahlung ayrı toplanıyor). VKZ 03 özel kuralı
@@ -335,7 +335,7 @@
   üzerinden gelir ve içeriği standart değildir. Korrekturverfahren belgesi Nr. 7 bunu açıkça
   söyler: kesilen Termin/Positionsnummer Absetzungsschreiben'de yoksa **VKZ 4 Korrekturrechnung
   üretilemez**, Leistungserbringer bilgiyi kasadan sormak zorundadır.
-- **Kaynak:** `Handbücher/Gemeinsame_Umsetzungsempfehlungen_zum_Korrekturverfahren_Heilmittel_20250213.txt`
+- **Kaynak:** `wissensbank/gemeinsam/302-tp5/Gemeinsame_Umsetzungsempfehlungen_zum_Korrekturverfahren_Heilmittel_20250213.txt`
   Frage 7 (Z.186-196) — *„Sofern die Termine bzw. die Positionen nicht aus dem
   Absetzungsschreiben hervorgehen, muss der Leistungserbringer … diese Informationen erfragen"*
 - **Geçerlilik:** 01.10.2025
@@ -366,8 +366,8 @@
   Feld 6 = Schlüsselnummer (kreuz'suz), Feld 9 = Klassentitel, Feld 13 = §295 kullanımı,
   Feld 14 = §301 kullanımı, Feld 20 = Geschlechtsbezug, Feld 22/23 = alt/üst yaş sınırı,
   Feld 24 = yaş hatası tipi (M = Muss-Fehler, K = Kann-Fehler).
-- **Kaynak:** `verordnung rezept/Zip ICD/icd10gm2026syst_metadaten_liesmich.txt`,
-  bölüm DATENSATZBESCHREIBUNG (tam 28 alanlık liste `Handbücher/INDEX.md` içinde kayıtlı)
+- **Kaynak:** `wissensbank/gemeinsam/icd-10-gm/icd10gm2026syst_metadaten_liesmich.txt`,
+  bölüm DATENSATZBESCHREIBUNG (tam 28 alanlık liste `wissensbank/INDEX.md` içinde kayıtlı)
 - **Geçerlilik:** ICD-10-GM Version 2026, Stand 12.09.2025
 - **Kodda:** doğrulanmadı — `katalog-suche.js` ve `sync_heilmittel_katalog.js` kontrol edilmeli
 - **Kapsam:** ICD arama ve doğrulama
@@ -377,7 +377,7 @@
 - **Kural:** Diagnosegruppe kodları 2–3 karakterli kısaltmalardır (ör. `ZN`, `EN1`, `EX`).
   Diagnoseliste iki bölümden oluşur: (1) LHB/BVB tabloları, (2) Blankoverordnung tabloları —
   sütun yapıları **farklıdır**.
-- **Kaynak:** `verordnung rezept/heilmittel-diagnoseliste.txt` (KBV, Stand 01.01.2026)
+- **Kaynak:** `wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.txt` (KBV, Stand 01.01.2026)
 - **Geçerlilik:** 01.01.2026
 - **Kodda:** `api-backend/ai/validators/diagnosegruppen.json`
 - **Kapsam:** LHB / BVB / Blankoverordnung tanı eşlemesi
