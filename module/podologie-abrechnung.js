@@ -822,17 +822,40 @@ async function loadPodologieBilling() {
             if (!byKk[v.kostentraeger_ik]) byKk[v.kostentraeger_ik] = [];
             byKk[v.kostentraeger_ik].push(v);
           }
+          // Name statt IK: _podKkCache ist dieselbe Liste, aus der podNewKk
+          // befüllt wird — also derselbe Wortschatz wie v.kostentraeger_ik.
+          const kkName = (ik) => _podKkCache.find(k => k.ik === ik)?.name || ik;
+          // Zuzahlung-Status: welche Farbe die Karte zusätzlich zum Netto-
+          // Ausfall erklärt (05.09.2026, Beta-2-Feedback — ohne diese Spalte
+          // bleibt unklar, warum eine Kasse weniger als der Brutto-Betrag zahlt).
+          const zuzahlungBadge = (v) => {
+            if (v.zuzahlung_befreit) return { text: 'befreit', color: '#16a34a' };
+            if (v.zuzahlung_kassiert_am) return { text: 'bezahlt', color: '#16a34a' };
+            if (v.zuzahlung_eur > 0) return { text: 'offen', color: '#f59e0b' };
+            return null;
+          };
           return `<div class="card" style="background:var(--bg-card);border:1px solid #16a34a;border-radius:10px;padding:18px;margin-top:12px;">
             <h4 style="margin:0 0 12px;color:#16a34a;font-size:15px;">§302 Abrechnung bereit</h4>
             <div style="display:flex;flex-direction:column;gap:10px;">
               ${Object.entries(byKk).map(([ik, vords]) => `
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-card-solid,#1f2937);border-radius:8px;border:1px solid var(--border);">
-                  <div>
-                    <div style="font-size:13px;font-weight:600;color:var(--text-main);">${ctx.escapeHtml(ik)}</div>
-                    <div style="font-size:12px;color:var(--text-muted);">${vords.length} Verordnung${vords.length>1?'en':''} · ${vords.map(v=>ctx.escapeHtml(v.patient_name||'—')).join(', ')}</div>
+                <div style="padding:10px 12px;background:var(--bg-card-solid,#1f2937);border-radius:8px;border:1px solid var(--border);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                      <div style="font-size:13px;font-weight:600;color:var(--text-main);">${ctx.escapeHtml(kkName(ik))}</div>
+                      <div style="font-size:12px;color:var(--text-muted);">${vords.length} Verordnung${vords.length>1?'en':''}</div>
+                    </div>
+                    <button class="pod-abr-btn btn-primary" data-kk-ik="${ctx.escapeHtml(ik)}" data-vord-ids="${ctx.escapeHtml(JSON.stringify(vords.map(v=>v.id)))}"
+                      style="font-size:13px;padding:6px 14px;white-space:nowrap;">§302 erstellen</button>
                   </div>
-                  <button class="pod-abr-btn btn-primary" data-kk-ik="${ctx.escapeHtml(ik)}" data-vord-ids="${ctx.escapeHtml(JSON.stringify(vords.map(v=>v.id)))}"
-                    style="font-size:13px;padding:6px 14px;white-space:nowrap;">§302 erstellen</button>
+                  <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">
+                    ${vords.map(v => {
+                      const badge = zuzahlungBadge(v);
+                      return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);">
+                        <span>${ctx.escapeHtml(v.patient_name || '—')}</span>
+                        ${badge ? `<span style="color:${badge.color};font-weight:600;">${badge.text}</span>` : ''}
+                      </div>`;
+                    }).join('')}
+                  </div>
                 </div>`).join('')}
             </div>
             <div id="podAbrError" style="color:#ef4444;font-size:13px;margin-top:8px;display:none;"></div>
