@@ -32,6 +32,7 @@
 
 import { geschlechtLabel } from './geschlecht.js?v=20260816';
 import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260905a';
+import { mountBehandlungsbestaetigung } from './behandlungsbestaetigung.js?v=20260905a';
 
 const DE = (iso) => {
   if (!iso) return '—';
@@ -272,6 +273,17 @@ export async function renderPatientenkarte(lead, deps = {}) {
   const uebersicht = zeigeVerordnungsUebersicht(document.getElementById('pdVeroUebersicht'), {
     sb: deps.sb, ownerId: deps.ownerId, leadId: lead.id, onSprung: deps.onSprung,
   });
+
+  // Behandlungsbestätigung (Ops-Kart #272): eigener Container über dem
+  // Verlauf, gleiche Begründung wie die Verordnungs-Übersicht oben — Akte ist
+  // ohnehin offen, dashboard.js darf nicht wachsen (Konsey 2026-08-13).
+  const bbEl = document.getElementById('pdBescheinigung');
+  if (bbEl) {
+    mountBehandlungsbestaetigung(bbEl, {
+      sb: deps.sb, ownerId: deps.ownerId, lead, name: deps.name,
+      praxis: deps.praxis, logoUrl: deps.logoUrl,
+    });
+  }
 
   const zeilen = await ladeVerlauf(deps.sb, deps.ownerId, lead.id);
   renderVerlauf(verlaufEl, zeilen, deps.onSprung);
