@@ -2417,6 +2417,66 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       return res.status(500).json({ error: 'Storage upload: ' + upDta.error.message });
     }
 
+    // ---- Begleitzettel (Anlage 4 §302 SGB V, Urbeleg-Postversand) ----
+    //
+    // Fehlte hier komplett (05.09.2026 entdeckt, beim FKT-Fix) — dieser Zweig
+    // lud nur die .dta hoch. Zusammen mit dem fehlenden storage_path unten
+    // bedeutete das: kein Download-, kein Signieren-, kein Begleitzettel-Knopf
+    // in der Abrechnungsliste (dashboard.js ~19788-19791 haengt an genau
+    // diesen beiden Spalten). Der Physio/Ergo/Logo-Zweig (oben, /abrechnung/
+    // create) macht das schon richtig — hier derselbe Aufbau, `brutto` kommt
+    // aber aus `prescriptions[i].sessions` statt aus resolvePreis(), weil die
+    // Summen fuer die Gesamtbetraege oben (totalBrutto/totalZu) ohnehin schon
+    // genau so berechnet wurden — zweimal rechnen haette auseinanderlaufen koennen.
+    const belege = vords.map((v, i) => {
+      const np = nameParts(v.leads);
+      const brutto = prescriptions[i].sessions
+        .reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0)
+        .toFixed(2);
+      return {
+        belegnummer:        prescriptions[i].patient.belegnummer,
+        patient_nachname:   np.nachname,
+        patient_vorname:    np.vorname,
+        verordnungsdatum:   v.ausstellungsdatum,
+        brutto,
+      };
+    });
+
+    const begleitHtml = renderBegleitzettel({
+      praxis: {
+        name:     profile.business_name || 'Praxis',
+        strasse:  [profile.street, profile.house_number].filter(Boolean).join(' '),
+        plz_ort:  [profile.zip, profile.city].filter(Boolean).join(' ').trim(),
+        telefon:  profile.phone || '',
+        ik:       cert.ik_nummer,
+      },
+      empfaenger: { name: dasName, ik: dasIk },
+      abrechnung: {
+        dateiname:          dta.filename,
+        rechnungsnummer:    sammelRechnungsnummer,
+        datum:              now,
+        abrechnungsmonat:   `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`,
+        prescription_count: prescriptions.length,
+        total_brutto:       totalBrutto,
+        total_zuzahlung:    totalZu,
+        total_netto:        +(totalBrutto - totalZu).toFixed(2),
+        krankenkasse_name:  dasName,
+        krankenkasse_ik:    kostentraegerIk,
+      },
+      belege,
+    });
+
+    const begleitPath = `${tenantId}/${datePath}/${ab.id}/begleitzettel.html`;
+    const upBeg = await supabase.storage.from('abrechnungen').upload(begleitPath, Buffer.from(begleitHtml, 'utf8'), {
+      contentType: 'text/html; charset=utf-8', upsert: true,
+    });
+    if (upBeg.error) console.warn('[abrechnung-podo] begleitzettel upload failed:', upBeg.error.message);
+
+    await supabase.from('abrechnung').update({
+      storage_path:       dtaPath,
+      begleitzettel_path: upBeg.error ? null : begleitPath,
+    }).eq('id', ab.id);
+
     // ---- mark verordnungen as abgerechnet ----
     // abrechnung_id ist die Ruecktrasse: ohne sie laesst sich eine spaetere
     // Kassenrueckmeldung (ZAA) nicht der Verordnung zuordnen und die Absetzung
