@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js';
+import { pruefeVerordnung, zaehleBefunde, SCHWERE, voAusGespeicherterVerordnung } from './verordnung-pruefung.js';
 import { regelnFuerBereich, dgWurzel, bereichSchluessel, POD_HOECHSTMENGE } from './verordnung-regeln.js';
 
 // Ausschnitt aus `diagnosegruppen` (bereich = podologie). `hoechstmenge` ist
@@ -309,4 +309,60 @@ test('ohne Regeldaten wird nichts erfunden', () => {
   const e = pruefeVerordnung({ bereich: 'logopaedie', diagnosegruppe: 'ST1', rezeptart: 'selbstzahler' }, leer, HEUTE);
   assert.ok(!e.geprueft.includes('Diagnosegruppe'));
   assert.ok(e.ungeprueft.some(l => /keine Diagnosegruppen hinterlegt/.test(l)));
+});
+
+// ── voAusGespeicherterVerordnung (Ops-Kart #269) ─────────────────────────────
+//
+// Diese Funktion ist die Brücke zwischen einer GESPEICHERTEN Zeile aus
+// `prescriptions` und dem Motor oben. Feldnamen hier gegen `db/SCHEMA.sql`
+// geprüft — insbesondere `krankenkasse_ik` (nicht `kostentraeger_ik`, seit
+// der Trennung 05.09.2026 zwei verschiedene Felder).
+
+test('physio-Zeile: Felder korrekt umbenannt, ICD aus zwei Spalten zusammengesetzt', () => {
+  const row = {
+    therapie_bereich: 'physio', icd10: 'M54.5', icd10_2: 'M99.0',
+    diagnosegruppe: 'WS2', heilmittel: 'Krankengymnastik', heilmittel_position: '',
+    anzahl_einheiten: 6, frequenz: '2x wöchentlich',
+    ausstellungsdatum: '2026-08-01', behandlungsbeginn: '',
+    is_dringend: true, versichertennummer: 'A123456789',
+    krankenkasse_ik: '101575519', kostentraeger_ik: '999999999',
+    doctor_lanr: '123456789', doctor_bsnr: '987654321', rezeptart: 'gkv',
+  };
+  const vo = voAusGespeicherterVerordnung(row);
+  assert.deepEqual(vo.icd, ['M54.5', 'M99.0']);
+  assert.equal(vo.bereich, 'physio');
+  assert.equal(vo.anzahl, 6);
+  assert.equal(vo.dringend, true);
+  // Krankenkasse-IK, NICHT Kostenträger-IK — die beiden wurden am 05.09.2026
+  // bewusst getrennt (fix(billing): Kostenträger/Krankenkasse-IK trennen).
+  assert.equal(vo.kasseIk, '101575519');
+  assert.equal(vo.arztLanr, '123456789');
+  assert.equal(vo.arztBsnr, '987654321');
+});
+
+test('podo-Zeile: icd10 kommt schon als Array (nach ausTopf), Position aus heilmittel_items', () => {
+  const row = {
+    therapie_bereich: 'podo', icd10: ['L60.0'],
+    diagnosegruppe: 'UI1', heilmittel: '', heilmittel_position: '',
+    heilmittel_items: [{ code: '78610', bezeichnung: 'Nagelspangenbehandlung' }],
+    anzahl_einheiten: 3, pat_leitsymptomatik: 'a',
+    ausstellungsdatum: '2026-08-01', is_dringend: false,
+    versichertennummer: '', krankenkasse_ik: '', rezeptart: 'kassen',
+  };
+  const vo = voAusGespeicherterVerordnung(row);
+  assert.deepEqual(vo.icd, ['L60.0']);
+  assert.equal(vo.heilmittelPosition, '78610');
+  assert.equal(vo.leitsymptomatik, 'a');
+});
+
+test('voAusGespeicherterVerordnung Ergebnis ist motorkompatibel: fehlende Kasse meldet PFLICHT_KASSEIK', () => {
+  const row = {
+    therapie_bereich: 'podo', icd10: ['E11.74'], diagnosegruppe: 'DF',
+    heilmittel_items: [{ code: '78010' }], anzahl_einheiten: 6,
+    pat_leitsymptomatik: 'a', ausstellungsdatum: '2026-09-01',
+    versichertennummer: '', krankenkasse_ik: '', rezeptart: 'gkv',
+  };
+  const e = pruefeVerordnung(voAusGespeicherterVerordnung(row), PODO, HEUTE);
+  assert.ok(codes(e).includes('PFLICHT_KASSEIK'));
+  assert.equal(e.ok, false);
 });

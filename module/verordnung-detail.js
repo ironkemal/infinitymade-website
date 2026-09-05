@@ -67,7 +67,15 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { statusBadgeGross, bereichBadge } from './abrechnungsstatus.js?v=20260905a';
+import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260905b';
+// Ops-Kart #269 (05.09.2026): dasselbe Urteil wie in den Listen/Karten
+// (module/verordnung-uebersicht.js), hier auf die eine geöffnete Zeile
+// angewandt — „gleiches Urteil, wo auch immer geklickt wird" (siehe
+// verordnung-pruefen-knopf.js). PHYSIO_ABGESCHLOSSEN/PODO_AKTIV von dort
+// übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
+import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260905';
+import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
+import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20260905b';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260902';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
@@ -188,8 +196,11 @@ function _ueberschrift(titel, esc) {
  * als Reihe kleiner Rosetten. Nur gesetzte Merkmale werden gezeigt — eine Liste
  * aus acht „nein" liest niemand.
  */
-function _merkmale(rx, esc, quelle) {
+function _merkmale(rx, esc, quelle, pruefung) {
   const an = [];
+  // Ops-Kart #269 — zuerst, damit der auffälligste Befund nicht zwischen
+  // Blanko/LHB-Chips untergeht.
+  if (pruefung?.bittePruefen) an.push(['Bitte prüfen', BITTE_PRUEFEN_FARBE]);
   const dringend = quelle === 'podologie' ? rx.dringend : rx.is_dringend;
   if (dringend) an.push(['Dringlicher Behandlungsbedarf', '#ef4444']);
   if (rx.hausbesuch) an.push(['Hausbesuch', '#38bdf8']);
@@ -666,7 +677,7 @@ export function verordnungDetailHtml(rx, opt = {}) {
       ${bereichBadge(quelle, { gross: true })}
       ${statusBadgeGross(quelle, rx.status)}
     </div>
-    ${_merkmale(rx, esc, quelle)}
+    ${_merkmale(rx, esc, quelle, opt.pruefung)}
 
     <!-- Untere Hälfte: links die Felder, rechts Verschreibung und Termine.
          flex-wrap statt Medienabfrage — auf schmalen Bildschirmen rutscht
@@ -886,6 +897,21 @@ export async function zeigeVerordnungDetail(ctx) {
       return null;
     }
 
+    // Ops-Kart #269 — nur für laufende Verordnungen, aus demselben Grund wie
+    // in verordnung-uebersicht.js: bei einer abgerechneten/stornierten wäre
+    // z. B. „Frist abgelaufen" eine Dauerwarnung über einen erledigten Vorgang.
+    const istAktiv = quelle === 'podologie'
+      ? PODO_AKTIV.includes(rx.status)
+      : !PHYSIO_ABGESCHLOSSEN.includes(rx.status);
+    let pruefung = null;
+    if (istAktiv) {
+      const regelsatz = await regelsatzLaden(supabase, quelle === 'podologie' ? 'podologie' : rx.therapie_bereich);
+      if (regelsatz) {
+        const ergebnis = pruefeVerordnung(voAusGespeicherterVerordnung(rx), regelsatz);
+        pruefung = { bittePruefen: !ergebnis.sauber, anzahl: zaehleBefunde(ergebnis) };
+      }
+    }
+
     const p = rx.leads || {};
     const name = [p.first_name, p.last_name].filter(Boolean).join(' ')
       || (quelle === 'podologie' ? (rx.patient_name || '') : '')
@@ -928,7 +954,7 @@ export async function zeigeVerordnungDetail(ctx) {
     }
 
     inhalt.innerHTML = verordnungDetailHtml(rx, {
-      escapeHtml, quelle, summe, termine, leadId: p.id || ctx.leadId || '',
+      escapeHtml, quelle, summe, termine, pruefung, leadId: p.id || ctx.leadId || '',
     });
     inhalt.style.opacity = '';
     inhalt.dataset.geladen = '1';

@@ -322,3 +322,58 @@ export function zaehleBefunde(ergebnis) {
   for (const b of ergebnis?.befunde || []) z[b.schwere] = (z[b.schwere] || 0) + 1;
   return z;
 }
+
+/**
+ * Erste Position aus `heilmittel_items` (jsonb: `[{code, bezeichnung, anzahl,
+ * massnahme}]`, siehe verordnung-detail.js) — der podologische Zweig führt die
+ * Position dort, nicht in der Spalte `heilmittel_position`.
+ */
+function erstePositionAusItems(items) {
+  if (!Array.isArray(items) || !items.length) return '';
+  const erste = items[0];
+  return (typeof erste === 'string' ? erste : erste?.code) || '';
+}
+
+/**
+ * Eine GESPEICHERTE Verordnung (Zeile aus `prescriptions`, für Podologie nach
+ * `ausTopf()`) in die Eingabeform von `pruefeVerordnung()` bringen.
+ *
+ * Herkunft: Ops-Kart #269 (05.09.2026). Bis dahin lief dieser Motor
+ * ausschliesslich auf der Eingabemaske (`verordnung-pruefen-knopf.js`,
+ * `lesenMuster13`/`lesenPodologie`) — für eine bereits gespeicherte Zeile gab
+ * es keinen Weg zum selben Urteil. Diese Funktion ist genau der fehlende Weg,
+ * damit Listen/Karten dasselbe Urteil zeigen können, ohne einen zweiten
+ * Prüfmotor zu schreiben.
+ *
+ * Feldnamen bewusst gegen `db/SCHEMA.sql` geprüft, nicht geraten — insbesondere
+ * `krankenkasse_ik` (NICHT `kostentraeger_ik`, seit der Trennung 05.09.2026 zwei
+ * verschiedene Felder) und `heilmittel_position` (eine Spalte, siehe CLAUDE.md-
+ * Warnung, kein Tabellenname).
+ *
+ * @param {object} row  Zeile aus `prescriptions` — physio roh, podo nach `ausTopf()`
+ * @returns {object}  `vo` für `pruefeVerordnung()`
+ */
+export function voAusGespeicherterVerordnung(row) {
+  const icd = Array.isArray(row?.icd10)
+    ? row.icd10.filter(Boolean)
+    : [row?.icd10, row?.icd10_2].filter(Boolean);
+
+  return {
+    bereich:            row?.therapie_bereich || '',
+    icd,
+    diagnosegruppe:     row?.diagnosegruppe || '',
+    leitsymptomatik:    row?.pat_leitsymptomatik || row?.leitsymptomatik || '',
+    heilmittel:         row?.heilmittel || '',
+    heilmittelPosition: row?.heilmittel_position || erstePositionAusItems(row?.heilmittel_items),
+    anzahl:             row?.anzahl_einheiten ?? row?.behandlungseinheiten,
+    frequenz:           row?.frequenz || row?.therapiefrequenz || '',
+    ausstellungsdatum:  row?.ausstellungsdatum || '',
+    behandlungsbeginn:  row?.behandlungsbeginn || row?.behandlungsstart || '',
+    dringend:           row?.is_dringend === true || row?.dringend === true,
+    versichertennummer: row?.versichertennummer || '',
+    kasseIk:            row?.krankenkasse_ik || '',
+    arztLanr:           row?.doctor_lanr || row?.aerzte?.lanr || '',
+    arztBsnr:           row?.doctor_bsnr || row?.aerzte?.bsnr || '',
+    rezeptart:          row?.rezeptart || '',
+  };
+}

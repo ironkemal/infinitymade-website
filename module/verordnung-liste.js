@@ -43,9 +43,9 @@
  * dieselbe Zusammenführung steht.
  */
 
-import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260905a';
-import { statusBadgeGross, bereichBadge } from './abrechnungsstatus.js?v=20260905a';
-import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260905a';
+import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260905b';
+import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260905b';
+import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260905b';
 import { on } from './signal.js?v=20260813';
 
 const SPALTEN = 7;
@@ -142,6 +142,9 @@ export async function verordnungenListeLaden(ctx) {
 function zeileHtml(v, esc) {
   const datum = v.datum ? new Date(v.datum).toLocaleDateString('de-DE') : '—';
   const gewaehlt = _auswahl && _auswahl.id === v.id && _auswahl.quelle === v.quelle;
+  // Ops-Kart #269: Verordnungen mit offenen „Bitte prüfen"-Befunden (siehe
+  // module/verordnung-uebersicht.js `pruefeZeile`) fallen als Zeile auf.
+  const bittePruefen = !!v.pruefung?.bittePruefen;
 
   // Ohne Belegnummer bleibt die Zelle leer statt „—": eine Verordnung ohne
   // Patientenakte hat wirklich keine Nummer (der Trigger vergibt sie erst mit
@@ -154,10 +157,15 @@ function zeileHtml(v, esc) {
     ? `${v.erbracht} / ${v.verordnet}`
     : '—';
 
+  const name = bittePruefen
+    ? `<span title="Diese Verordnung hat offene Prüfhinweise — öffnen und in der Maske Verordnung prüfen ansehen.">⚠ ${esc(v.nachname || '—')}</span>`
+    : esc(v.nachname || '—');
+
   return `<tr class="vord-row${gewaehlt ? ' vord-row-gewaehlt' : ''}"
       data-vord-id="${esc(v.id)}" data-quelle="${esc(v.quelle)}"
-      style="cursor:pointer;${gewaehlt ? 'background:var(--bg-card);' : ''}" title="Verordnung öffnen">
-    <td style="font-weight:600;color:var(--text-main);">${esc(v.nachname || '—')}</td>
+      style="cursor:pointer;${bittePruefen ? `border-left:3px solid ${BITTE_PRUEFEN_FARBE};` : ''}${gewaehlt ? 'background:var(--bg-card);' : ''}"
+      title="${bittePruefen ? 'Bitte prüfen — offene Prüfhinweise' : 'Verordnung öffnen'}">
+    <td style="font-weight:600;color:${bittePruefen ? BITTE_PRUEFEN_FARBE : 'var(--text-main)'};">${name}</td>
     <td style="color:var(--text-main);">${esc(v.vorname || '—')}</td>
     <td style="white-space:nowrap;">${datum}</td>
     <td style="white-space:nowrap;">${nummer}</td>

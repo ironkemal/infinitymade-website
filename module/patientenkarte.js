@@ -31,7 +31,7 @@
 'use strict';
 
 import { geschlechtLabel } from './geschlecht.js?v=20260816';
-import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260905a';
+import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260905b';
 import { mountBehandlungsbestaetigung } from './behandlungsbestaetigung.js?v=20260905a';
 
 const DE = (iso) => {

@@ -37,8 +37,9 @@
  * eine fehlerhafte Verordnung muss erfassbar bleiben.
  */
 
-import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20260903';
-import { regelnFuerBereich, bereichSchluessel, POD_KATALOG, dgWurzel } from './verordnung-regeln.js?v=20260903';
+import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20260905';
+import { POD_KATALOG, dgWurzel } from './verordnung-regeln.js?v=20260903';
+import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
 
 const $ = (id) => document.getElementById(id);
 const wert = (id) => ($(id)?.value ?? '').toString().trim();
@@ -47,35 +48,6 @@ const haken = (id) => !!$(id)?.checked;
 function schuetze(s) {
   return String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-// ─── Regeldaten ─────────────────────────────────────────────────────────────
-//
-// Ein Regelsatz je Fachbereich, einmal geladen und dann im Speicher. Die
-// Tabelle `diagnosegruppen` ist Stammdaten — sie ändert sich, wenn eine neue
-// Richtlinie kommt, nicht während einer Sitzung. Ein Fehlschlag wird NICHT
-// verschluckt: ohne Regeln gibt es kein Urteil, das sagen wir dann auch.
-
-const _cache = new Map();
-
-async function regelsatzLaden(supabase, bereich) {
-  const key = bereichSchluessel(bereich);
-  if (_cache.has(key)) return _cache.get(key);
-
-  const { data, error } = await supabase
-    .from('diagnosegruppen')
-    .select('code, label, hoechstmenge, untergruppen, icd_accept, icd_exclude, icd_accept_unsicher, icd_enforcement')
-    .eq('aktiv', true)
-    .eq('bereich', key)
-    .order('sort');
-
-  if (error) {
-    console.warn('[verordnung-pruefen] diagnosegruppen:', error.message);
-    return null;   // kein Regelsatz → der Aufrufer meldet das offen
-  }
-  const satz = regelnFuerBereich(key, data || []);
-  _cache.set(key, satz);
-  return satz;
 }
 
 // ─── Die beiden Masken lesen ────────────────────────────────────────────────

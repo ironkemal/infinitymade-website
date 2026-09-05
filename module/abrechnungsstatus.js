@@ -108,6 +108,17 @@ export const STATUS = [
 const BY_KEY = new Map(STATUS.map(s => [s.key, s]));
 const RANG = new Map(STATUS.map((s, i) => [s.key, i]));
 
+/**
+ * Warnfarbe für „Bitte prüfen"-Befunde (Ops-Kart #269, 05.09.2026). Das ist
+ * KEIN Statuswert und steht deshalb bewusst ausserhalb von `STATUS` — sie
+ * markiert Korrekturbedarf quer zu jedem Status (eine „In Behandlung" ODER
+ * eine „Bereit zur Abrechnung" kann beides gleichzeitig unvollständig sein).
+ * Wert = dieselbe Warnfarbe, die schon in `dashboard.css`
+ * (`.preflight-check-item.warning`) und der „ohne Akte"-Markierung in
+ * `verordnung-liste.js` steckt — eine Warnfarbe im Haus, nicht eine je Stelle.
+ */
+export const BITTE_PRUEFEN_FARBE = '#f59e0b';
+
 /** Muss zu UEBERGAENGE in verordnung-status.routes.js passen. Server entscheidet. */
 export const UEBERGAENGE = {
   aktiv:         ['abrechenbar', 'storniert', 'archiviert'],

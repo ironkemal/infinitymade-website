@@ -68,7 +68,7 @@
 'use strict';
 
 import { belegnummerRosette, belegnummerText } from './belegnummer.js?v=20260817';
-import { bereichFarbe, bereichBadge } from './abrechnungsstatus.js?v=20260905a';
+import { bereichFarbe, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260905b';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
 // eine Zeile davon in genau den podologischen Wortschatz, den `ausPodo()`
 // unten schon immer erwartet hat (lead_id, behandlungseinheiten,
@@ -76,6 +76,13 @@ import { bereichFarbe, bereichBadge } from './abrechnungsstatus.js?v=20260905a';
 // Achse) — dieselbe Grenzfunktion, die auch module/podologie-abrechnung.js
 // benutzt.
 import { ausTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260904';
+// Ops-Kart #269 (05.09.2026): Verordnungen mit offenen „Bitte prüfen"-Befunden
+// sollen in den Karten/Zeilen auffallen. Der Prüfmotor lief bis dahin nur auf
+// der Eingabemaske (`verordnung-pruefen-knopf.js`) — `voAusGespeicherterVerordnung`
+// ist der fehlende Weg, dieselbe Prüfung auch auf eine gespeicherte Zeile
+// anzuwenden, ohne einen zweiten Motor zu schreiben.
+import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260905';
+import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
 
 /** Physio-Sitzungen mit diesem Status gelten als erbracht. */
 const PHYSIO_ERBRACHT = ['done', 'completed'];
@@ -86,14 +93,14 @@ const PHYSIO_ERBRACHT = ['done', 'completed'];
  * darf nicht an der einen Stelle als aktiv und an der anderen als erledigt
  * gelten.
  */
-const PHYSIO_ABGESCHLOSSEN = ['completed', 'billed', 'cancelled'];
+export const PHYSIO_ABGESCHLOSSEN = ['completed', 'billed', 'cancelled'];
 
 /**
  * Podologie-Verordnungen, die noch Arbeit sind. Gleiche Liste wie in der
  * Podologie-Abrechnung (dashboard.js, `loadPodologieBilling`): `abgesetzt` und
  * `teilabsetzung` gehören dazu, weil ausgefallenes Geld sichtbar bleiben muss.
  */
-const PODO_AKTIV = ['aktiv', 'abrechenbar', 'abgesetzt', 'teilabsetzung'];
+export const PODO_AKTIV = ['aktiv', 'abrechenbar', 'abgesetzt', 'teilabsetzung'];
 
 const DE = (iso) => {
   if (!iso) return '—';
@@ -226,10 +233,15 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
   // und Vorname getrennt), und die Belegnummer (<Patienten-Nr.>-<Verordnungs-
   // Nr.>) lässt sich ohne `patientennummer` nicht zusammensetzen — sie steht
   // bis zur ersten Abrechnung nicht in der Zeile.
+  // Die zweite Zeile je Select (therapie_bereich .. arzt_id) wird NUR für den
+  // Prüfmotor gebraucht (Ops-Kart #269, siehe unten `pruefungAnhaengen`) — die
+  // Karten/Zeilen selbst lesen diese Felder nicht.
   let rxQ = sb.from('prescriptions')
     .select('id, patient_id, ausstellungsdatum, gueltig_bis, diagnosegruppe, icd10, heilmittel, ' +
             'anzahl_einheiten, frequenz, status, is_dringend, hausbesuch, ' +
             'belegnummer, verordnungsnummer, prescription_sessions(id, status), ' +
+            'therapie_bereich, icd10_2, leitsymptomatik, heilmittel_position, behandlungsbeginn, ' +
+            'versichertennummer, krankenkasse_ik, doctor_lanr, doctor_bsnr, rezeptart, ' +
             'leads!patient_id(first_name, last_name, patientennummer)')
     .eq('owner_id', ownerId)
     // Pflichtfilter (siehe Kopf) — sonst erscheint eine podologische Zeile
@@ -241,6 +253,8 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
     .select('id, patient_id, patient_name, ausstellungsdatum, diagnosegruppe, icd10, icd10_2, ' +
             'anzahl_einheiten, frequenz, abrechnung_status, is_dringend, hausbesuch, rezeptart, ' +
             'behandlungsanlass, heilmittel_items, belegnummer, verordnungsnummer, ' +
+            'pat_leitsymptomatik, heilmittel_position, behandlungsbeginn, ' +
+            'versichertennummer, krankenkasse_ik, doctor_lanr, doctor_bsnr, ' +
             'leads!patient_id(first_name, last_name, patientennummer)')
     .eq('owner_id', ownerId)
     // Gegenstück zum obigen Filter — Pflicht, nicht Kosmetik (siehe Kopf).
@@ -303,6 +317,30 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
 
   const patientennummer = lead?.patientennummer ?? null;
 
+  // ── Prüfung (Ops-Kart #269) ─────────────────────────────────────────────
+  // Nur AKTIVE Verordnungen werden geprüft. Bei abgerechneten/stornierten/
+  // archivierten wäre z. B. „Frist abgelaufen" eine Dauerwarnung über einen
+  // längst erledigten Vorgang — das kehrte den Sinn der Markierung
+  // (Korrekturbedarf JETZT) ins Gegenteil und würde die Liste stumpf machen.
+  const physioAktiv = rxs.filter(rx => !PHYSIO_ABGESCHLOSSEN.includes(rx.status));
+  const podoAktiv = vords.filter(v => PODO_AKTIV.includes(v.status));
+
+  const bereicheNoetig = new Set(physioAktiv.map(rx => rx.therapie_bereich || ''));
+  if (podoAktiv.length) bereicheNoetig.add('podologie');
+
+  const regelsaetze = new Map();
+  await Promise.all([...bereicheNoetig].map(async (b) => {
+    regelsaetze.set(b, await regelsatzLaden(sb, b));
+  }));
+
+  /** `null` = nicht geprüft (inaktiv oder ohne Regelsatz), sonst Kurzurteil. */
+  const pruefeZeile = (row, bereichRoh) => {
+    const regelsatz = regelsaetze.get(bereichRoh || '');
+    if (!regelsatz) return null;
+    const ergebnis = pruefeVerordnung(voAusGespeicherterVerordnung(row), regelsatz);
+    return { bittePruefen: !ergebnis.sauber, anzahl: zaehleBefunde(ergebnis) };
+  };
+
   const ausPhysio = rxs.map(rx => {
     const { erbracht, verordnet } = physioZaehler(rx);
     const p = rx.leads || {};
@@ -325,6 +363,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
       status: rx.status,
       dringend: !!rx.is_dringend,
       hausbesuch: !!rx.hausbesuch,
+      pruefung: PHYSIO_ABGESCHLOSSEN.includes(rx.status) ? null : pruefeZeile(rx, rx.therapie_bereich),
     };
   });
 
@@ -354,6 +393,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
       status: v.status,
       dringend: !!v.dringend,
       hausbesuch: !!v.hausbesuch,
+      pruefung: PODO_AKTIV.includes(v.status) ? pruefeZeile(v, 'podologie') : null,
     };
   });
 
@@ -453,7 +493,8 @@ export function rendereVerordnungsUebersicht(el, liste, deps = {}) {
 }
 
 function karteHtml(v) {
-  const farbe = bereichFarbe(v.quelle);
+  const bittePruefen = !!v.pruefung?.bittePruefen;
+  const farbe = bittePruefen ? BITTE_PRUEFEN_FARBE : bereichFarbe(v.quelle);
   const offen = Math.max(0, (v.verordnet || 0) - (v.erbracht || 0));
   const pct = v.verordnet > 0 ? Math.min(100, Math.round((v.erbracht / v.verordnet) * 100)) : 0;
   // Voll heisst nicht fertig: erbracht > verordnet wäre ein Fehler und soll
@@ -462,13 +503,14 @@ function karteHtml(v) {
   const balkenFarbe = zuviel ? '#ef4444' : farbe;
 
   const marker = [
+    bittePruefen ? `<span style="color:${BITTE_PRUEFEN_FARBE};font-weight:600;">Bitte prüfen</span>` : '',
     v.dringend ? '<span style="color:#ef4444;font-weight:600;">Dringend</span>' : '',
     v.hausbesuch ? '<span>Hausbesuch</span>' : '',
     v.frequenz ? `<span>${esc(v.frequenz)}</span>` : '',
   ].filter(Boolean).join(' · ');
 
   return `<button type="button" class="vu-karte" data-ziel="${esc(v.ziel)}" data-id="${esc(v.id)}"
-    title="Öffnen"
+    title="${bittePruefen ? 'Diese Verordnung hat offene Prüfhinweise — öffnen und in der Maske Verordnung prüfen ansehen.' : 'Öffnen'}"
     style="text-align:left;width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);
            border-left:3px solid ${farbe};background:var(--bg-card);color:var(--text-main);
            cursor:pointer;display:flex;flex-direction:column;gap:7px;">
