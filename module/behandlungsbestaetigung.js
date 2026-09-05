@@ -40,7 +40,7 @@ const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
 const DE = (iso) => {
   if (!iso) return '—';
   const d = iso instanceof Date ? iso : new Date(iso);
-  return isNaN(d) ? '—' : d.toLocaleDateString('de-DE');
+  return isNaN(d) ? '—' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 /**
@@ -48,24 +48,30 @@ const DE = (iso) => {
  * steuerliche Bescheinigung darf: wahrgenommen, in der Praxis, vergangen.
  * (Filter nach legal-de, 05.09.2026 — siehe Dateikopf.)
  *
- * @returns {Promise<Array<{start_time:string, title:string}>>}
+ * Obergrenze ist die kleinere von "Ende des Bis-Tages" und "jetzt" — sonst
+ * würde ein für heute Abend geplanter, noch nicht stattgefundener Termin
+ * mit hineinrutschen (Tagesgrenze allein reicht nicht, siehe canli-test
+ * 05.09.2026: "keine Zukunft" muss auf die Uhrzeit gehen, nicht nur den Tag).
+ *
+ * @returns {Promise<Array<{start_time:string}>>}
  */
 export async function ladeBescheinigungTermine(sb, ownerId, leadId, { von, bis } = {}) {
-  const heute = new Date().toISOString().slice(0, 10);
-  const bisEffektiv = bis && bis < heute ? bis : heute;
+  const jetzt = new Date();
+  const bisEndeTag = bis ? new Date(`${bis}T23:59:59`) : jetzt;
+  const obergrenze = bisEndeTag < jetzt ? bisEndeTag : jetzt;
 
   const { data, error } = await sb.from('bookings')
-    .select('start_time, services:service_id (title)')
+    .select('start_time')
     .eq('owner_id', ownerId).eq('lead_id', leadId)
     .eq('hausbesuch', false)
     .eq('no_show', false)
     .in('status', ['confirmed', 'completed'])
     .gte('start_time', von ? `${von}T00:00:00` : '1900-01-01T00:00:00')
-    .lte('start_time', `${bisEffektiv}T23:59:59`)
+    .lte('start_time', obergrenze.toISOString())
     .order('start_time', { ascending: true });
 
   if (error) throw error;
-  return (data || []).map(t => ({ start_time: t.start_time, title: t.services?.title || '' }));
+  return data || [];
 }
 
 /**
@@ -76,7 +82,7 @@ export async function ladeBescheinigungTermine(sb, ownerId, leadId, { von, bis }
  * @param {object} opts.praxis         { name, strasse, ort, telefon }
  * @param {string} opts.patientName
  * @param {string} [opts.geburtsdatum] ISO — Identitätsmerkmal fürs Finanzamt
- * @param {Array}  opts.termine        [{ start_time, title }]
+ * @param {Array}  opts.termine        [{ start_time }]
  * @param {string} opts.von            ISO-Datum, Beginn des Zeitraums
  * @param {string} opts.bis            ISO-Datum, Ende des Zeitraums
  * @param {string} [opts.logoUrl]
@@ -99,7 +105,7 @@ export function druckeBehandlungsbestaetigung({
   }).filter(Boolean).join('');
 
   const logoHtml = logoUrl ? `<img class="logo" src="${escapeHtml(logoUrl)}" alt="">` : '';
-  const heute = new Date().toLocaleDateString('de-DE');
+  const heute = DE(new Date());
 
   const html = `<!DOCTYPE html>
 <html lang="de"><head><meta charset="utf-8"><title>Behandlungsbestätigung</title>
