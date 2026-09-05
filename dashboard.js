@@ -41,7 +41,7 @@ import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260903';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
-import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld } from './module/termin-verordnung.js?v=20260816b';
+import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260905c';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260905c';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260816a';
@@ -5086,8 +5086,7 @@ async function openBookingModal(b) {
   if (_omRxId) _omRxId.value = '';
   const _omSessId = document.getElementById('bkSelectedSessionId');
   if (_omSessId) _omSessId.value = '';
-  const _omIsSelbst = document.getElementById('bkIsSelbstzahler');
-  if (_omIsSelbst) _omIsSelbst.value = '';
+  setzeRezeptartInMaske(b.rezeptart);
   const _omVeroSection = document.getElementById('bkVerordnungSection');
   if (_omVeroSection) _omVeroSection.hidden = true;
   const _omPickerBlock = document.getElementById('bkSessionPickerBlock');
@@ -5287,7 +5286,8 @@ async function initBkCustomerAutocomplete() {
           employee: document.getElementById('bkEmployee')?.value,
           service: document.getElementById('bkService')?.value,
           notes: document.getElementById('bkNotes')?.value,
-          hausbesuch: document.getElementById('bkHausbesuch')?.checked || false
+          hausbesuch: document.getElementById('bkHausbesuch')?.checked || false,
+          rezeptart: rezeptartAusMaske()
         };
         window._returnToBkModal = true;
         closeModal('bookingModal');
@@ -9342,7 +9342,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     window._returnToBkModal = false;
     const st = window._bkModalState || {};
     if (st.id) {
-      await openBookingModal({ id: st.id, start_time: st.start, end_time: st.end, customer_name: '', customer_phone: '', notes: st.notes || '', hausbesuch: st.hausbesuch });
+      await openBookingModal({ id: st.id, start_time: st.start, end_time: st.end, customer_name: '', customer_phone: '', notes: st.notes || '', hausbesuch: st.hausbesuch, rezeptart: st.rezeptart || null });
     } else {
       await prefillBookingModal(st.start);
     }

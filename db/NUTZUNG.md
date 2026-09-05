@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-04 · 82 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-04), funktionen/INDEX.json (erzeugt 2026-09-04)
+**Erzeugt:** 2026-09-05 · 82 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-04), funktionen/INDEX.json (erzeugt 2026-09-04)
 
 ## Kayıt durumu
 
@@ -48,7 +48,7 @@ Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
 | Tabelle | Schreiber | Leser | Dateien | Module |
 |---|---|---|---|---|
 | `profiles` | 19 | 31 | 25 | abrechnung, anfragen, fahrtenbuch, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
-| `bookings` | 15 | 33 | 23 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
+| `bookings` | 15 | 33 | 24 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `prescriptions` | 12 | 28 | 21 | abrechnung, anamnese, belegliste, doctors, fussstatus, hours, kunden, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen |
 | `document_vorlagen` | 10 | 2 | 3 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen, vorlagen |
 | `services` | 8 | 17 | 11 | abrechnung, anfragen, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
@@ -147,7 +147,7 @@ Warum: Fremdprojekt (Bewerbungen). Nie Teil von Praxura.
 12 Spalten · Status: aktiv
 Warum: Kommen/Gehen der Mitarbeiter (Arbeitszeiterfassung), getrennt von der Sollarbeitszeit in `working_hours`.
 
-**Schreibt (1):** `toRad()` [insert/update] — api-backend/server.js:3139
+**Schreibt (1):** `toRad()` [insert/update] — api-backend/server.js:3128
 
 **Liest (1):** `fetchHistory()`
 
@@ -213,7 +213,7 @@ Warum: Der Termin selbst. Alles andere im Kalender hängt daran.
 
 **Liest (33):** `calculateSessionInfo()`, `fmt()`, `frag()`, `frageNachrueckerAb()`, `gelernteDauer()`, `getAvailableSlots()`, `horizonDays()`, `initCalendar()`, `initCalendar()`, `ladeKommendeTermineDesPatienten()`, `ladePatientenkontext()`, `ladePodoTermine()`, `ladeTerminVollstaendig()`, `ladeVerlauf()`, `loadActivityFeed()`, `loadEmpDaySchedule()`, `loadLeads()`, `loadPatientDetailTermine()`, `loadScheduleBookings()`, `loadUeberblickNoShows()` … +13
 
-**Dateien:** `api-backend/billing/api/ausfall.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/warteliste.routes.js`, `api-backend/booking/from-request.js`, `api-backend/server.js`, `api/admin/data.js`, `booking.js`, `dashboard.js`, `kalender.js`, `module/fussbefund.js`, `module/kalender-monat.js`, `module/kalender-woche.js`, `module/patientenkarte.js`, `module/podologie-abrechnung.js`, `module/rechnung-editor.js`, `module/rechnung-verordnung.js`, `module/signal.js`, `module/termin-aktionen.js`, `module/termin-dauer.js`, `module/termin-laden.js`, `module/termin-patient-bezug.js`, `module/verordnung-termine.js`, `module/warteliste-nachruecker.js`
+**Dateien:** `api-backend/billing/api/ausfall.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/warteliste.routes.js`, `api-backend/booking/from-request.js`, `api-backend/server.js`, `api/admin/data.js`, `booking.js`, `dashboard.js`, `kalender.js`, `module/fussbefund.js`, `module/kalender-monat.js`, `module/kalender-woche.js`, `module/patientenkarte.js`, `module/podologie-abrechnung.js`, `module/rechnung-editor.js`, `module/rechnung-verordnung.js`, `module/signal.js`, `module/termin-aktionen.js`, `module/termin-dauer.js`, `module/termin-laden.js`, `module/termin-patient-bezug.js`, `module/verordnung-detail.js`, `module/verordnung-termine.js`, `module/warteliste-nachruecker.js`
 
 **Module:** abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen
 
@@ -452,7 +452,7 @@ Warum: Erster Podologie-Katalog (nur HPNR 78xxx), aus der Zeit vor der Vereinhei
 20 Spalten · Status: aktiv (Referenz)
 Warum: Der **aktive**, vereinheitlichte und zeitversionierte Heilmittelkatalog aller vier Fachbereiche. Löste die beiden Vorgänger ab, weil abgelöste Positionen sonst als unbegrenzt gültig erschienen.
 
-**Schreibt (1):** `main()` [delete/upsert] — api-backend/sync_heilmittel_katalog.js:109
+**Schreibt (1):** `main()` [delete/upsert] — api-backend/sync_heilmittel_katalog.js:106
 
 **Dateien:** `api-backend/sync_heilmittel_katalog.js`
 
@@ -636,7 +636,7 @@ Warum: Zwischen „Formular ausgefüllt" und „bezahlt" existiert der Account n
 11 Spalten · Status: aktiv
 Warum: Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions`. `verordnung_id` zeigt seit 04.09.2026 auf `prescriptions` (Zusammenlegung der Verordnungstöpfe, ids unverändert) — vorher auf die eigene Tabelle `verordnungen`.
 
-**Schreibt (3):** `behandlungenVerknuepfen()` [update] — module/rechnung-bruecke.js:165 · `loadPodologieBilling()` [insert] — module/podologie-abrechnung.js:430 · `verknuepfungLoesen()` [update] — module/rechnung-bruecke.js:182
+**Schreibt (3):** `behandlungenVerknuepfen()` [update] — module/rechnung-bruecke.js:165 · `loadPodologieBilling()` [insert] — module/podologie-abrechnung.js:436 · `verknuepfungLoesen()` [update] — module/rechnung-bruecke.js:182
 
 **Liest (7):** `frag()`, `ladeAktiveVerordnungen()`, `ladeVerlauf()`, `offeneBehandlungen()`, `patientenBehandlungen()`, `podPatientBehandlungen()`, `verordnungenLaden()`
 
