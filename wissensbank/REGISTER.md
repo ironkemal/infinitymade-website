@@ -138,11 +138,18 @@ Repoda hiçbir import/seed script'i yok. Tablo dolu ama nasıl dolduğu yazılı
 
 ### Z-09 · Kostenträgerdatei / IK
 ```
-Handbücher/Anhang_03_Anlage_1_TP5_V10_20260414.pdf/.txt   (V10, ab 01.02.2027)
+Handbücher/Anhang_03_Anlage_1_TP5_V10_20260414.pdf/.txt   (V10, ab 01.02.2027) — FORMAT SPEC
+Podoloji/Krankenkassen IK nummern .md                      (VERİNİN KENDİSİ, 22.441 satır)
   → api-backend/billing/kostentraeger/parser.js + parser.test.js   (05.09.2026)
 ```
-⏳ Parser V10 tarihinden önce yazıldı. Bugün geçerli olan sürüm ile V10 arasındaki farkın
-kontrol edilmesi gerekiyor. Ayrıca gerçek Kostenträgerdatei henüz yok (mock ile çalışıyor).
+⏳ Parser V10 tarihinden önce yazıldı; bugün geçerli sürüm ile V10 arasındaki fark
+kontrol edilmeli.
+
+⚠️ **05.09.2026'da bulundu:** `Podoloji/Krankenkassen IK nummern .md` aslında bir markdown
+dosyası **değil** — EDIFACT `KOTR:02:001:KV` formatında **gerçek Kostenträgerdatei**.
+Başlığı `UNB+UNOC:3+109910000+999999999+260701:1230` (gönderen IK 109910000, tarih
+01.07.2026). Sicil kurulana kadar hiçbir yerde kayıtlı değildi ve `parser.js` mock ile
+çalışıyordu — **veri elimizdeydi, kimse bilmiyordu.** → W-A08.
 
 ### Z-10 · PLZ → Bundesland ✅ **altın standart**
 ```
@@ -271,6 +278,20 @@ GKV-Lesefassungen ueberhaupt weiterverbreitet werden duerfen"*. Yayın yüzeyi k
 (klasörler ignore'da ✅) ama **depo public** ve `.txt` karşılıkları git'te izleniyor.
 **Yapılacak:** `legal-de`'ye sorulur. `verordnung rezept/Zip ICD/downloadbedingungen-2025`
 zaten arşivde — cevabın bir kısmı orada.
+
+### W-A08 · Gerçek Kostenträgerdatei elimizde ama kayıtsız ve yanlış adlandırılmış — `offen`
+`Podoloji/Krankenkassen IK nummern .md` — 22.441 satır EDIFACT `KOTR`, gönderen IK
+109910000, dosya tarihi 01.07.2026. `.md` uzantısı yanlış (markdown değil), klasörü
+yanlış (podoloji'ye özel değil, tüm kasaları kapsıyor), adında boşluk var, sicilde yoktu.
+`api-backend/billing/kostentraeger/parser.js` bu dosya dururken mock ile çalışıyordu.
+**Bu, sicilin niye kurulduğunun canlı kanıtı:** veri indirilmiş, ödenmiş, elde — ama
+kayıtsız olduğu için yok sayılmış.
+**Yapılacak:** (a) parser bu dosyaya karşı koşturulup doğrulanır, (b) dosya doğru yere ve
+doğru uzantıya taşınır (öneri: `Handbücher/kostentraeger/` + `.kotr` ya da `.txt`),
+(c) Herkunft ve tazelik kontrolü kayda yazılır — Kostenträgerdatei **düzenli güncellenir**,
+yani takvimde yeri olmalı. `gkv-302` ile birlikte.
+⚠️ Ayrıca: dosya 05.09.2026'da git'e girdi (o commit'e kadar takipsizdi). Depo **public** ve
+W-A07 (yeniden dağıtım) bunu da kapsar — `legal-de` sorusuna bu dosya da dahil edilir.
 
 ### ✅ Kapalı / doğrulanmış
 
