@@ -305,6 +305,13 @@ GKV-Lesefassungen ueberhaupt weiterverbreitet werden duerfen"*. Yayın yüzeyi k
 **Yapılacak:** `legal-de`'ye sorulur. `wissensbank/gemeinsam/icd-10-gm/downloadbedingungen-2025`
 zaten arşivde — cevabın bir kısmı orada.
 
+> **Kullanıcı kararı 05.09.2026 — Kostenträgerdatei için kapandı.** Kemal: *"public kalsın
+> sıkıntı yok, zaten public bilgiler bunlar."* `wissensbank/gemeinsam/kostentraeger/` git'te
+> izlenmeye devam eder (kasa IK numaraları — resmî, kamuya açık veri, hasta verisi yok).
+> **Madde bu kadarıyla kapandı, tamamıyla değil:** ICD-10-GM (BfArM'ın kendi
+> `downloadbedingungen-2025` metni var) ve GKV Lesefassung'ları hâlâ `offen` — onlar için
+> `legal-de` sorusu duruyor.
+
 ### W-A08 · Gerçek Kostenträgerdatei elimizde ama kayıtsız ve yanlış adlandırılmış — `offen`
 `wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md` — 22.441 satır EDIFACT `KOTR`, gönderen IK
 109910000, dosya tarihi 01.07.2026. `.md` uzantısı yanlış (markdown değil), klasörü
