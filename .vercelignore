@@ -76,6 +76,8 @@ ai chatbot proje/
 Handbücher/
 Podoloji/
 verordnung rezept/
+# Sicil dieser Dokumente (Herkunft, Version, Ablaufdatum, Ableitungskette).
+wissensbank/
 
 # Captured browser traffic (contained live auth tokens) & junk screenshots
 *.har

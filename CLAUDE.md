@@ -135,6 +135,9 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │                                  ★ AYRI Supabase projesi (farkaejociddtgqkusvm)
 │
 │   ── Belge arşivleri: kodda sadece KAYNAK olarak alıntılanır, runtime'da YÜKLENMEZ ──
+├── wissensbank/                   ★ Dış kaynaklı resmî verinin sicili — REGISTER.md:
+│                                  Herkunft · sürüm · geçerlilik tarihi · kaynak→kod→DB
+│                                  zinciri. Sahibi `wissensbank` ajanı
 ├── Handbücher/                    GKV/§302 belge arşivi — INDEX.md protokolü zorunlu
 ├── Podoloji/                      Podoloji alan belgeleri + HPNR referansı + FAK
 ├── verordnung rezept/             HeilM-RL · ICD-10-GM katalog dosyaları · Blanko
@@ -400,9 +403,26 @@ eşiğin dışındadır: her zaman gidilir, izin sorulmaz.**
 > elimizdeki fonksiyon ikinci kez sıfırdan yazılır. Maliyet asimetrisi tek yönlü.
 - Kopya adayları `funktionen/INDEX.md`'de; **karar kullanıcınındır**, sessizce birleştirilmez.
 
-### 📚 Belge arşivi protokolü (2026-08-04)
-`Handbücher/`, `Podoloji/`, `verordnung rezept/` altındaki GKV/§302/Heilmittel belgelerine
-dokunan her iş şu sırayı izler:
+### 📚 Belge arşivi protokolü (2026-08-04 · genişletildi 2026-09-05)
+
+**İki dosya, iki ayrı soru — karıştırma:**
+
+| Dosya | Soru | Bakımı |
+|---|---|---|
+| `Handbücher/INDEX.md` | Belgenin **içinde ne var**, hangi bölüm nerede | elle — okundukça |
+| `wissensbank/REGISTER.md` | **Nereden geldi**, hangi sürüm, ne zaman düşer, **neyi besler** | `wissensbank` ajanı — "bilgi bankası güncelle" |
+
+- **Yeni belge indirildiğinde `wissensbank` ajanına gidilir** — giriş protokolü onda
+  (kimlik çıkarma, format kararı, iki kayda birden yazma). "Bunu indirmiş miydik" sorusu
+  da ona sorulur; aynı dosya iki kez indirilmez.
+- **Sayı taşıyan tablo (fiyat, pozisyon numarası, IK, Schlüssel, ICD) YZ ile çevrilmez** —
+  ne `agy`, ne başka model. Deterministik araç + orijinale karşı örnekleme. Gerekçe
+  ölçülmüş: `api-backend/preise_pruefen.mjs` başlığı, ve Anlage 2 PDF'inde bir fiyatın
+  kendi kodunun bir satır üstünde durduğu gerçek olay.
+- **Türev asla otorite değildir.** md/csv/json okumayı ucuzlatır; fatura veya hukuk
+  iddiası her zaman orijinal + bölüm + sürüm üçlüsüne dayanır.
+
+Belgeye dokunan her iş şu sırayı izler:
 1. **Önce `Handbücher/INDEX.md`** — 33 belgenin kaydı, sürümü ve bölüm haritası orada
 2. **Hedefli oku** — kayıttaki "Anahtar bölümler"den `Grep` ile ilgili kısmı bul, sadece onu oku.
    Belgenin tamamını okumak neredeyse her zaman hatadır (`Anlage_1_TP5_V21` tek başına ~130k token)
@@ -630,6 +650,7 @@ ajana sor** — hepsi kendi alanının belgelerini zaten biliyor.
 | `legal-de` | DSGVO/BDSG, §203 StGB, MDR, EU AI Act, AGB/Impressum/UWG. Startup bütçesine kalibreli. **"Başımız derde girer mi?"** | ❌ |
 | `guvenlik` | ★ Güvenlik sorumlusu + kurumsal güvenlik hafızası. Sızıntı, mandant sınırı, açık yüzey. Sicili `guvenlik/REGISTER.md` tutar — neyin ÇÜRÜTÜLDÜĞÜNÜ de bilir. Konseyin daimi üyesi, dört konuda sert veto | ❌ |
 | `podoloji` | Podolog'un gerçek iş günü, Fußbefund/Wagner-Armstrong, HPNR 78xxx, tık-ekonomisi | ❌ |
+| `wissensbank` | ★ Dışarıdan indirilen resmî verinin kütüphanecisi. Her PDF/XML/XLSX nereden geldi, hangi sürüm, ne zaman düşer, **hangi kod satırını ve hangi tabloyu besler**. "Bu bilgi nerede", "bunu indirmiş miydik", "yeni sürüm var mı", "bu PDF'i neye çevirelim" sorularının cevabı. Sicili `wissensbank/REGISTER.md`. Konsey üyesi, vetosu yok | ❌ (sicil + türev üretimi hariç) |
 | `onprem` | ★ İki dağıtım bekçisi + on-prem geçişin kurumsal hafızası. Tek soru: "bu değişiklik müşterinin kutusunda ne yapar, merkezden oraya nasıl varır?" Sicili `onprem/REGISTER.md`. Dış çağrı · şema · env var · zamanlanmış iş · sabit adres · yetki kontrolü yazılmadan ÖNCE sor. Dört korkulukta sert veto (G1/G2/G3/G8) | ❌ (sicil + kapı hariç) |
 | `mobil-ui` | Küçük ekran: üst üste binme, yatay taşma, dokunma hedefi, breakpoint çakışması. Playwright ile **ölçer**, sonra sadece CSS'te düzeltir | ✅ (yalnız CSS) |
 | `muhalif` | Yapıcı muhalif — fikir nerede kırılır, gizli maliyet ne. Alternatifsiz itiraz yasak | ❌ |
@@ -680,6 +701,9 @@ güvenlik sorumlusu dinlenmeyen güvenlik sorumlusudur.
   belgeler 2026-08-06'da imzalandı (Datengeheimnis · Nutzungsrechte · §203 kapsanıyor).
 - `ONPREM_MIGRATION_PLAYBOOK.md` — ★ on-premise geçiş rehberi; "bu dosyayı uygula" tetikleyici.
   Arka plan: `ON_PREMISE_ANALYSE.md`
+- `wissensbank/REGISTER.md` — ★ indirilen resmî belgelerin sicili: nereden geldi, hangi sürüm,
+  ne zaman düşer, hangi kod/tabloyu besler. **Geçerlilik takvimi burada** (V22 → 01.02.2027,
+  Anhang 03 V10 → 01.02.2027, HPNR 2027 → 01.01.2027)
 - `Handbücher/INDEX.md` — 33 GKV/§302 belgesinin haritası + okuma protokolü
 - `Handbücher/SPEC-RULES.md` — süzülmüş §302 kuralları (kaynak + sürüm + kod satırı)
 - `konsey/KARARLAR.md` — konsey kararlarının dizini

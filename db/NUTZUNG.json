@@ -5,7 +5,7 @@
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-05)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 82,
+ "anzahl": 83,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -506,7 +506,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3247,
+     "start": 3248,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -828,7 +828,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 7237,
+     "start": 7231,
      "module": [],
      "uiPfad": []
     }
@@ -966,6 +966,43 @@
    "codeStumm": false
   },
   {
+   "name": "booking_status_korrekturen",
+   "spalten": 9,
+   "fkRaus": [
+    "profiles",
+    "bookings",
+    "auth.users"
+   ],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Beta-2 (05.09.2026, Ops #270): der Status eines vergangenen Termins (v.a. `no_show`) muss nachträglich korrigierbar sein — z.B. wenn der Patient doch noch behandelt wurde und nachträglich unterschreibt. Freie Korrektur ist erlaubt, aber niemals stillschweigend: diese Tabelle hält je Änderung fest, wer wann von welchem zu welchem Status gewechselt hat und warum. Gleicher Grund wie bei `zuzahlung_korrekturen` — eine Spalte an `bookings` hätte bei der zweiten Korrektur die erste Begründung überschrieben.",
+   "seit": "05.09.2026 · `20260905193701_booking_status_korrekturen`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [
+    {
+     "name": "korrigiereNoShow",
+     "file": "module/booking-status-korrektur.js",
+     "start": 67,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "module/booking-status-korrektur.js"
+   ],
+   "module": [],
+   "sqlTreffer": 7,
+   "codeStumm": false
+  },
+  {
    "name": "bookings",
    "spalten": 34,
    "fkRaus": [
@@ -979,6 +1016,7 @@
    "erwaehnt": [
     "api-backend/booking/from-request.test.js",
     "api/dsgvo.js",
+    "module/booking-status-korrektur.test.js",
     "module/termin-dauer.test.js",
     "module/warteliste-nachruecker.test.js",
     "onboarding.js"
@@ -1012,7 +1050,7 @@
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 3223,
+     "start": 3224,
      "module": [],
      "uiPfad": []
     },
@@ -1100,7 +1138,7 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2550,
+     "start": 2551,
      "module": [],
      "uiPfad": []
     },
@@ -1221,7 +1259,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1959,
+     "start": 1960,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1301,7 +1339,7 @@
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1718,
+     "start": 1719,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1388,7 +1426,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2704,
+     "start": 2705,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1408,14 +1446,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1562,
+     "start": 1563,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1642,
+     "start": 1643,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1595,7 +1633,7 @@
     {
      "name": "doMoveBooking",
      "file": "dashboard.js",
-     "start": 5402,
+     "start": 5396,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1618,7 +1656,7 @@
     {
      "name": "handlePatientNichtErschienen",
      "file": "dashboard.js",
-     "start": 4519,
+     "start": 4523,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1628,7 +1666,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3928,
+     "start": 3932,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1651,7 +1689,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4429,
+     "start": 4433,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1661,7 +1699,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4936,
+     "start": 4930,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1682,9 +1720,19 @@
      ]
     },
     {
+     "name": "korrigiereNoShow",
+     "file": "module/booking-status-korrektur.js",
+     "start": 67,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 4820,
+     "start": 4814,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1730,7 +1778,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 4291,
+     "start": 4295,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1740,7 +1788,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3247,
+     "start": 3248,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1763,7 +1811,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4335,
+     "start": 4339,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1773,7 +1821,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4208,
+     "start": 4212,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1815,6 +1863,7 @@
     "dashboard.js",
     "kalender.js",
     "module/behandlungsbestaetigung.js",
+    "module/booking-status-korrektur.js",
     "module/fussbefund.js",
     "module/kalender-monat.js",
     "module/kalender-woche.js",
@@ -3656,7 +3705,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1959,
+     "start": 1960,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3699,7 +3748,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4335,
+     "start": 4339,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3709,7 +3758,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4208,
+     "start": 4212,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4124,7 +4173,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1959,
+     "start": 1960,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4493,7 +4542,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3928,
+     "start": 3932,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4513,14 +4562,14 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4429,
+     "start": 4433,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 5146,
+     "start": 5140,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4540,7 +4589,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4936,
+     "start": 4930,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4560,7 +4609,7 @@
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 3720,
+     "start": 3724,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4650,7 +4699,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1959,
+     "start": 1960,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4712,7 +4761,7 @@
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 5156,
+     "start": 5150,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4860,7 +4909,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3247,
+     "start": 3248,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4880,7 +4929,7 @@
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 5059,
+     "start": 5053,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4967,7 +5016,7 @@
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 4027,
+     "start": 4031,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4987,14 +5036,14 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4335,
+     "start": 4339,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4208,
+     "start": 4212,
      "module": [],
      "uiPfad": []
     },
@@ -5030,7 +5079,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4569,
+     "start": 4563,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5050,7 +5099,7 @@
     {
      "name": "maybeOfferAppointmentConfirmEmail",
      "file": "dashboard.js",
-     "start": 7492,
+     "start": 7486,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5231,7 +5280,7 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 925,
+     "start": 926,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5649,7 +5698,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1959,
+     "start": 1960,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5731,7 +5780,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3247,
+     "start": 3248,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6123,7 +6172,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api/dsgvo.js",
+    "module/booking-status-korrektur.test.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -6134,7 +6184,7 @@
     {
      "name": "decorateBookingTitleWithSession",
      "file": "dashboard.js",
-     "start": 7387,
+     "start": 7381,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6174,7 +6224,7 @@
     {
      "name": "loadCalRpUnverga",
      "file": "dashboard.js",
-     "start": 3875,
+     "start": 3879,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6194,7 +6244,7 @@
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6267,
+     "start": 6261,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6307,7 +6357,7 @@
     {
      "name": "handlePatientNichtErschienen",
      "file": "dashboard.js",
-     "start": 4519,
+     "start": 4523,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6317,7 +6367,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3928,
+     "start": 3932,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6338,9 +6388,19 @@
      ]
     },
     {
+     "name": "korrigiereNoShow",
+     "file": "module/booking-status-korrektur.js",
+     "start": 67,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7400,
+     "start": 7394,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6351,7 +6411,7 @@
     {
      "name": "markPrescriptionSession",
      "file": "dashboard.js",
-     "start": 7367,
+     "start": 7361,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6363,6 +6423,7 @@
     "api-backend/billing/api/statistik.routes.js",
     "api-backend/server.js",
     "dashboard.js",
+    "module/booking-status-korrektur.js",
     "module/frequenz-pruefung.js",
     "module/rechnung-editor.js",
     "module/rezeptinfo-geld.js",
@@ -6479,7 +6540,7 @@
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 5146,
+     "start": 5140,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6569,7 +6630,7 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7400,
+     "start": 7394,
      "module": [],
      "uiPfad": []
     },
@@ -6617,7 +6678,7 @@
     {
      "name": "loadBkVerordnungen",
      "file": "dashboard.js",
-     "start": 5213,
+     "start": 5207,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6637,7 +6698,7 @@
     {
      "name": "loadCalRpRezeptInfo",
      "file": "dashboard.js",
-     "start": 3838,
+     "start": 3842,
      "module": [],
      "uiPfad": []
     },
@@ -6684,14 +6745,14 @@
     {
      "name": "loadPhysioRezKpis",
      "file": "dashboard.js",
-     "start": 2258,
+     "start": 2259,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6267,
+     "start": 6261,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6738,7 +6799,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3247,
+     "start": 3248,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6779,6 +6840,13 @@
      "name": "patientenBehandlungen",
      "file": "module/termin-leistungen.js",
      "start": 503,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "pruefeAbrechnungssperre",
+     "file": "module/booking-status-korrektur.js",
+     "start": 45,
      "module": [],
      "uiPfad": []
     },
@@ -6937,7 +7005,7 @@
     {
      "name": "kassiereZuzahlung",
      "file": "dashboard.js",
-     "start": 7162,
+     "start": 7156,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7049,7 +7117,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 7237,
+     "start": 7231,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7100,6 +7168,7 @@
     "api-backend/server.js",
     "dashboard.js",
     "module/arzt-register.js",
+    "module/booking-status-korrektur.js",
     "module/patientenkarte.js",
     "module/rechnung-verordnung.js",
     "module/rechnung-zahlung.js",
@@ -7130,7 +7199,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 33,
+   "sqlTreffer": 34,
    "codeStumm": false
   },
   {
@@ -7173,7 +7242,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4569,
+     "start": 4563,
      "module": [],
      "uiPfad": []
     },
@@ -7220,7 +7289,7 @@
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 846,
+     "start": 847,
      "module": [],
      "uiPfad": []
     },
@@ -7404,7 +7473,7 @@
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 4602,
+     "start": 4596,
      "module": [],
      "uiPfad": []
     },
@@ -7451,7 +7520,7 @@
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 993,
+     "start": 994,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7708,7 +7777,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 5711,
+     "start": 5705,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7841,7 +7910,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 2321,
+     "start": 2322,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8090,7 +8159,7 @@
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 3909,
+     "start": 3913,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8137,7 +8206,7 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2550,
+     "start": 2551,
      "module": [],
      "uiPfad": []
     },
@@ -8266,7 +8335,7 @@
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 5506,
+     "start": 5500,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8311,7 +8380,7 @@
     {
      "name": "ensureBlankoBonusServices",
      "file": "dashboard.js",
-     "start": 7589,
+     "start": 7583,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8520,7 +8589,7 @@
     {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 1381,
+     "start": 1382,
      "module": [],
      "uiPfad": []
     }
@@ -8819,7 +8888,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2704,
+     "start": 2705,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9209,7 +9278,7 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 4136,
+     "start": 4140,
      "module": [],
      "uiPfad": []
     },
@@ -9237,14 +9306,14 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4335,
+     "start": 4339,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4208,
+     "start": 4212,
      "module": [],
      "uiPfad": []
     }
@@ -9277,7 +9346,7 @@
     {
      "name": "saveQuickVehicleHandler",
      "file": "dashboard.js",
-     "start": 4185,
+     "start": 4189,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9341,7 +9410,7 @@
     {
      "name": "reportSidebarVisibility",
      "file": "dashboard.js",
-     "start": 945,
+     "start": 946,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9499,7 +9568,7 @@
     {
      "name": "getEmployeeWorkingHours",
      "file": "dashboard.js",
-     "start": 2470,
+     "start": 2471,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9560,14 +9629,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1562,
+     "start": 1563,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1642,
+     "start": 1643,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9807,7 +9876,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3247,
+     "start": 3248,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9960,7 +10029,7 @@
     "api-backend/billing/api/zuzahlung.routes.js"
    ],
    "module": [],
-   "sqlTreffer": 7,
+   "sqlTreffer": 8,
    "codeStumm": false
   }
  ],
@@ -10153,7 +10222,8 @@
   "verdaechtigeLuecke": [
    "accommodations",
    "admin_users",
-   "applications"
+   "applications",
+   "booking_status_korrekturen"
   ]
  }
 }

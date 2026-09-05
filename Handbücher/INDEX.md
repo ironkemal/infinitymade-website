@@ -5,6 +5,12 @@
 > ne zaman lazım olacağını listeler.
 >
 > Son güncelleme: 2026-08-04 · 33 belge kayıtlı
+>
+> ⚠️ **05.09.2026 — bu dosya artık tek başına değil.** Burası bir belgenin *içinde ne
+> olduğuna* bakar. Belgenin **nereden geldiği**, hangi sürüm olduğu, ne zaman düşeceği ve
+> **hangi kod satırını beslediği** artık `wissensbank/REGISTER.md`'de tutulur (sahibi:
+> `wissensbank` ajanı). Yeni bir belge geldiğinde **her ikisine de** kayıt açılır — biri
+> diğerinin yerine geçmez.
 
 ---
 

@@ -3,7 +3,7 @@
 > Üretim: 2026-09-05 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**1995 fonksiyon** · 203 dosya · 39 sidebar modülü
+**1998 fonksiyon** · 204 dosya · 39 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -16,32 +16,33 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `createBookingsFromRequestFactory()` — [api-backend/booking/from-request.js:17](api-backend/booking/from-request.js#L17-L114) · 98 satır · bookings:insert
 
 **Yol 2 — `openBookingActionModal()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
-- `openBookingActionModal()` — [dashboard.js:3247](dashboard.js#L3247-L3716) · 470 satır · bookings:update
+- `openBookingActionModal()` — [dashboard.js:3248](dashboard.js#L3248-L3720) · 473 satır · bookings:update
 
 **Yol 3 — `handleSessionDrop()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
-- `handleSessionDrop()` — [dashboard.js:3928](dashboard.js#L3928-L4024) · 97 satır · bookings:insert
+- `handleSessionDrop()` — [dashboard.js:3932](dashboard.js#L3932-L4028) · 97 satır · bookings:insert
 
 **Yol 4 — `saveFahrtStartHandler()`** · Ekran: _UI yolu çözülemedi_
-- `saveFahrtStartHandler()` — [dashboard.js:4208](dashboard.js#L4208-L4274) · 67 satır · bookings:update
+- `saveFahrtStartHandler()` — [dashboard.js:4212](dashboard.js#L4212-L4278) · 67 satır · bookings:update
 
 **Yol 5 — `markArrivedHandler()`** · Ekran: _UI yolu çözülemedi_
-- `markArrivedHandler()` — [dashboard.js:4291](dashboard.js#L4291-L4305) · 15 satır · bookings:update
+- `markArrivedHandler()` — [dashboard.js:4295](dashboard.js#L4295-L4309) · 15 satır · bookings:update
 
 **Yol 6 — `saveFahrtEndHandler()`** · Ekran: _UI yolu çözülemedi_
-- `saveFahrtEndHandler()` — [dashboard.js:4335](dashboard.js#L4335-L4427) · 93 satır · bookings:update
+- `saveFahrtEndHandler()` — [dashboard.js:4339](dashboard.js#L4339-L4431) · 93 satır · bookings:update
 
 **Yol 7 — `handleTerminStarten()`** · Ekran: _UI yolu çözülemedi_
-- `handleTerminStarten()` — [dashboard.js:4429](dashboard.js#L4429-L4497) · 69 satır · bookings:update
+- `handleTerminStarten()` — [dashboard.js:4433](dashboard.js#L4433-L4501) · 69 satır · bookings:update
 
-**Yol 8 — `handlePatientNichtErschienen()`** · Ekran: _UI yolu çözülemedi_
-- `handlePatientNichtErschienen()` — [dashboard.js:4519](dashboard.js#L4519-L4567) · 49 satır · bookings:update
+**Yol 8 — `korrigiereNoShow()`** · Ekran: _UI yolu çözülemedi_
+- `handlePatientNichtErschienen()` — [dashboard.js:4523](dashboard.js#L4523-L4561) · 39 satır · bookings:update
+- `korrigiereNoShow()` — [module/booking-status-korrektur.js:67](module/booking-status-korrektur.js#L67-L106) · 40 satır · bookings:update
 
 **Yol 9 — `initBkGroupPatientAutocomplete()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
-- `loadGroupParticipants()` — [dashboard.js:4820](dashboard.js#L4820-L4898) · 79 satır · bookings:update
-- `initBkGroupPatientAutocomplete()` — [dashboard.js:4936](dashboard.js#L4936-L5057) · 122 satır · bookings:insert
+- `loadGroupParticipants()` — [dashboard.js:4814](dashboard.js#L4814-L4892) · 79 satır · bookings:update
+- `initBkGroupPatientAutocomplete()` — [dashboard.js:4930](dashboard.js#L4930-L5051) · 122 satır · bookings:insert
 
 **Yol 10 — `doMoveBooking()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
-- `doMoveBooking()` — [dashboard.js:5402](dashboard.js#L5402-L5431) · 30 satır · bookings:update
+- `doMoveBooking()` — [dashboard.js:5396](dashboard.js#L5396-L5425) · 30 satır · bookings:update
 
 **Yol 11 — `absageTerminMitGrund()`** · Ekran: _UI yolu çözülemedi_
 - `absageTerminMitGrund()` — [dashboard.js:7838](dashboard.js#L7838-L7874) · 37 satır · bookings:update, bookings:delete
@@ -58,11 +59,11 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `prescriptions` — 10 bağımsız yazma yolu
 
 **Yol 1 — `kassiereZuzahlung()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
-- `kassiereZuzahlung()` — [dashboard.js:7162](dashboard.js#L7162-L7234) · 73 satır · prescriptions:update
+- `kassiereZuzahlung()` — [dashboard.js:7156](dashboard.js#L7156-L7228) · 73 satır · prescriptions:update
 - `flipAbrechnungStatus()` — [dashboard.js:8458](dashboard.js#L8458-L8494) · 37 satır · prescriptions:update
 
 **Yol 2 — `storniereZuzahlung()`** · Ekran: _UI yolu çözülemedi_
-- `storniereZuzahlung()` — [dashboard.js:7237](dashboard.js#L7237-L7305) · 69 satır · prescriptions:update
+- `storniereZuzahlung()` — [dashboard.js:7231](dashboard.js#L7231-L7299) · 69 satır · prescriptions:update
 
 **Yol 3 — `downloadDmrzForInvoice()`** · Ekran: _UI yolu çözülemedi_
 - `downloadDmrzForInvoice()` — [dashboard.js:15422](dashboard.js#L15422-L15497) · 76 satır · prescriptions:update
@@ -92,10 +93,10 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `profiles` — 7 bağımsız yazma yolu
 
 **Yol 1 — `openStripePortal()`** · Ekran: _UI yolu çözülemedi_
-- `openStripePortal()` — [dashboard.js:2321](dashboard.js#L2321-L2431) · 111 satır · profiles:update
+- `openStripePortal()` — [dashboard.js:2322](dashboard.js#L2322-L2432) · 111 satır · profiles:update
 
 **Yol 2 — `ensureClinicLocation()`** · Ekran: _UI yolu çözülemedi_
-- `ensureClinicLocation()` — [dashboard.js:5711](dashboard.js#L5711-L5737) · 27 satır · profiles:update
+- `ensureClinicLocation()` — [dashboard.js:5705](dashboard.js#L5705-L5731) · 27 satır · profiles:update
 
 **Yol 3 — `fmt()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
 - `fmt()` — [dashboard.js:10846](dashboard.js#L10846-L13847) · 3002 satır · profiles:update
@@ -127,7 +128,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `services` — 6 bağımsız yazma yolu
 
 **Yol 1 — `ensureBlankoBonusServices()`** · Ekran: _UI yolu çözülemedi_
-- `ensureBlankoBonusServices()` — [dashboard.js:7589](dashboard.js#L7589-L7628) · 40 satır · services:update, services:insert
+- `ensureBlankoBonusServices()` — [dashboard.js:7583](dashboard.js#L7583-L7622) · 40 satır · services:update, services:insert
 
 **Yol 2 — `normName()`** · Ekran: _UI yolu çözülemedi_
 - `autoSeedGkvServices()` — [dashboard.js:9491](dashboard.js#L9491-L9518) · 28 satır · services:insert
@@ -166,10 +167,10 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `leads` — 4 bağımsız yazma yolu
 
 **Yol 1 — `handleDirectAusfallrechnung()`** · Ekran: _UI yolu çözülemedi_
-- `handleDirectAusfallrechnung()` — [dashboard.js:4569](dashboard.js#L4569-L4715) · 147 satır · leads:update
+- `handleDirectAusfallrechnung()` — [dashboard.js:4563](dashboard.js#L4563-L4709) · 147 satır · leads:update
 
 **Yol 2 — `maybeOfferAppointmentConfirmEmail()`** · Ekran: _UI yolu çözülemedi_
-- `maybeOfferAppointmentConfirmEmail()` — [dashboard.js:7492](dashboard.js#L7492-L7579) · 88 satır · leads:update
+- `maybeOfferAppointmentConfirmEmail()` — [dashboard.js:7486](dashboard.js#L7486-L7573) · 88 satır · leads:update
 
 **Yol 3 — `initSchnellerfassung()`** · Ekran: _UI yolu çözülemedi_
 - `initSchnellerfassung()` — [dashboard.js:21433](dashboard.js#L21433-L21556) · 124 satır · leads:insert
@@ -180,16 +181,17 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `prescription_sessions` — 4 bağımsız yazma yolu
 
 **Yol 1 — `handleSessionDrop()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
-- `handleSessionDrop()` — [dashboard.js:3928](dashboard.js#L3928-L4024) · 97 satır · prescription_sessions:update
+- `handleSessionDrop()` — [dashboard.js:3932](dashboard.js#L3932-L4028) · 97 satır · prescription_sessions:update
 
-**Yol 2 — `handlePatientNichtErschienen()`** · Ekran: _UI yolu çözülemedi_
-- `handlePatientNichtErschienen()` — [dashboard.js:4519](dashboard.js#L4519-L4567) · 49 satır · prescription_sessions:update
+**Yol 2 — `korrigiereNoShow()`** · Ekran: _UI yolu çözülemedi_
+- `handlePatientNichtErschienen()` — [dashboard.js:4523](dashboard.js#L4523-L4561) · 39 satır · prescription_sessions:update
+- `korrigiereNoShow()` — [module/booking-status-korrektur.js:67](module/booking-status-korrektur.js#L67-L106) · 40 satır · prescription_sessions:update
 
 **Yol 3 — `markPrescriptionSession()`** · Ekran: _UI yolu çözülemedi_
-- `markPrescriptionSession()` — [dashboard.js:7367](dashboard.js#L7367-L7385) · 19 satır · prescription_sessions:update
+- `markPrescriptionSession()` — [dashboard.js:7361](dashboard.js#L7361-L7379) · 19 satır · prescription_sessions:update
 
 **Yol 4 — `linkBookingsToPrescriptionSessions()`** · Ekran: _UI yolu çözülemedi_
-- `linkBookingsToPrescriptionSessions()` — [dashboard.js:7400](dashboard.js#L7400-L7490) · 91 satır · prescription_sessions:update, prescription_sessions:insert
+- `linkBookingsToPrescriptionSessions()` — [dashboard.js:7394](dashboard.js#L7394-L7484) · 91 satır · prescription_sessions:update, prescription_sessions:insert
 - `gleicheSitzungenAb()` — [module/sitzung-abgleich.js:86](module/sitzung-abgleich.js#L86-L112) · 27 satır · prescription_sessions:upsert
 
 ### `aerzte` — 3 bağımsız yazma yolu
@@ -206,10 +208,10 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `fahrten` — 3 bağımsız yazma yolu
 
 **Yol 1 — `saveFahrtStartHandler()`** · Ekran: _UI yolu çözülemedi_
-- `saveFahrtStartHandler()` — [dashboard.js:4208](dashboard.js#L4208-L4274) · 67 satır · fahrten:upsert
+- `saveFahrtStartHandler()` — [dashboard.js:4212](dashboard.js#L4212-L4278) · 67 satır · fahrten:upsert
 
 **Yol 2 — `saveFahrtEndHandler()`** · Ekran: _UI yolu çözülemedi_
-- `saveFahrtEndHandler()` — [dashboard.js:4335](dashboard.js#L4335-L4427) · 93 satır · fahrten:upsert
+- `saveFahrtEndHandler()` — [dashboard.js:4339](dashboard.js#L4339-L4431) · 93 satır · fahrten:upsert
 
 **Yol 3 — `toLocal()`** · Ekran: ortak yardımcı — 11 modülden çağrılıyor
 - `toLocal()` — [dashboard.js:20434](dashboard.js#L20434-L20497) · 64 satır · fahrten:update, fahrten:delete
@@ -300,7 +302,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ### `vehicles` — 2 bağımsız yazma yolu
 
 **Yol 1 — `saveQuickVehicleHandler()`** · Ekran: _UI yolu çözülemedi_
-- `saveQuickVehicleHandler()` — [dashboard.js:4185](dashboard.js#L4185-L4206) · 22 satır · vehicles:insert
+- `saveQuickVehicleHandler()` — [dashboard.js:4189](dashboard.js#L4189-L4210) · 22 satır · vehicles:insert
 
 **Yol 2 — `loadFbVehicles()`** · Ekran: ortak yardımcı — 11 modülden çağrılıyor
 - `loadFbVehicles()` — [dashboard.js:20533](dashboard.js#L20533-L20594) · 62 satır · vehicles:delete
@@ -312,7 +314,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `saveVisToggle()` — [admin.js:387](admin.js#L387-L404) · 18 satır · visibility_reports:delete
 
 **Yol 2 — `reportSidebarVisibility()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
-- `reportSidebarVisibility()` — [dashboard.js:945](dashboard.js#L945-L969) · 25 satır · visibility_reports:upsert
+- `reportSidebarVisibility()` — [dashboard.js:946](dashboard.js#L946-L970) · 25 satır · visibility_reports:upsert
 
 ### `working_hours` — 2 bağımsız yazma yolu
 
@@ -335,13 +337,13 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 ## En çok yazılan tablolar
 
 - `profiles` — 19 ayrı fonksiyon yazıyor
-- `bookings` — 15 ayrı fonksiyon yazıyor
+- `bookings` — 16 ayrı fonksiyon yazıyor
 - `prescriptions` — 12 ayrı fonksiyon yazıyor
 - `document_vorlagen` — 10 ayrı fonksiyon yazıyor
 - `services` — 8 ayrı fonksiyon yazıyor
 - `ops_todos` — 8 ayrı fonksiyon yazıyor
+- `prescription_sessions` — 6 ayrı fonksiyon yazıyor
 - `time_offs` — 6 ayrı fonksiyon yazıyor
-- `prescription_sessions` — 5 ayrı fonksiyon yazıyor
 - `businesses` — 5 ayrı fonksiyon yazıyor
 - `leads` — 4 ayrı fonksiyon yazıyor
 - `employee_business_assignments` — 4 ayrı fonksiyon yazıyor
@@ -357,13 +359,13 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 ## Aynı ada sahip birden fazla tanım
 
-- `escapeHtml` — admin.js:61 · api-backend/billing/pdf/ausfallrechnung.template.js:11 · api-backend/billing/pdf/begleitzettel.template.js:8 · api-backend/billing/pdf/rechnung.template.js:6 · api-backend/billing/pdf/rezeptvorderseite.template.js:6 · api-backend/billing/pdf/rzg-quittung.template.js:6 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:9 · dashboard.js:861 · module/abrechnungsstatus.js:614 · module/ausfallrechnung.js:19 · module/behandlungsbestaetigung.js:36 · module/diagnosegruppen-regeln.js:30 · module/fussbefund.js:179 · module/kalender-raster.js:24 · module/kalender-woche.js:39 · module/leistung-farbwahl.js:25 · module/leistungen-liste.js:28 · module/rezeptinfo-geld.js:70 · module/termin-aktionen.js:37 · module/termin-druck.js:27 · module/termin-panel-patient.js:41 · module/warteliste-ansicht.js:26 · module/warteliste-nachruecker.js:46
-- `fmt` — dashboard.js:3855 · dashboard.js:8503 · dashboard.js:10479 · dashboard.js:10768 · dashboard.js:10846 · dashboard.js:14563 · dashboard.js:14970 · dashboard.js:22350 · dashboard.js:22436 · dashboard.js:22514 · dashboard.js:22546 · dashboard.js:22606 · module/kalender-raster.js:71 · module/rezeptinfo-geld.js:68
+- `escapeHtml` — admin.js:61 · api-backend/billing/pdf/ausfallrechnung.template.js:11 · api-backend/billing/pdf/begleitzettel.template.js:8 · api-backend/billing/pdf/rechnung.template.js:6 · api-backend/billing/pdf/rezeptvorderseite.template.js:6 · api-backend/billing/pdf/rzg-quittung.template.js:6 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:9 · dashboard.js:862 · module/abrechnungsstatus.js:614 · module/ausfallrechnung.js:19 · module/behandlungsbestaetigung.js:36 · module/diagnosegruppen-regeln.js:30 · module/fussbefund.js:179 · module/kalender-raster.js:24 · module/kalender-woche.js:39 · module/leistung-farbwahl.js:25 · module/leistungen-liste.js:28 · module/rezeptinfo-geld.js:70 · module/termin-aktionen.js:37 · module/termin-druck.js:27 · module/termin-panel-patient.js:41 · module/warteliste-ansicht.js:26 · module/warteliste-nachruecker.js:46
+- `fmt` — dashboard.js:3859 · dashboard.js:8503 · dashboard.js:10479 · dashboard.js:10768 · dashboard.js:10846 · dashboard.js:14563 · dashboard.js:14970 · dashboard.js:22350 · dashboard.js:22436 · dashboard.js:22514 · dashboard.js:22546 · dashboard.js:22606 · module/kalender-raster.js:71 · module/rezeptinfo-geld.js:68
 - `esc` — api-backend/billing/pdf/mahnung.template.js:4 · arzt-suche.js:34 · katalog-suche.js:86 · katalog-suche.js:98 · module/abrechnung-freigabe.js:112 · module/arzt-register.js:125 · module/krankenkasse-suche.js:160 · module/patienten-einwilligung.js:58 · module/patientenkarte.js:43 · module/verordnung-uebersicht.js:111 · module/zuzahlung-befreiung.js:261 · module/zuzahlung-korrektur.js:60 · ops/app.js:51
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:12 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · dashboard.js:19099 · dashboard.js:21018 · dashboard.js:21159 · dashboard.js:21237 · module/podologie-abrechnung.js:994
-- `fmtDate` — api-backend/billing/dta/encoding.js:47 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:13 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:1369 · ops/app.js:84
+- `fmtDate` — api-backend/billing/dta/encoding.js:47 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:13 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:1370 · ops/app.js:84
 - `render` — calendar-widget.js:127 · dashboard.js:13923 · dashboard.js:22166 · ops/board.js:206 · ops/decisions.js:14 · ops/files.js:52 · ops/finance.js:959 · ops/meetings.js:23 · ops/wissen.js:66 · patient-suche.js:110
-- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:255 · api-backend/server.js:1282 · dashboard.js:3188
+- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:255 · api-backend/server.js:1282 · dashboard.js:3189
 - `r2` — api-backend/billing/api/statistik.routes.js:186 · api-backend/billing/api/zuzahlung.routes.js:45 · api-backend/billing/dta/builder.js:43 · api-backend/billing/preise/resolver.js:24 · api-backend/billing/zuzahlung/calculator.js:14 · api-backend/billing/zuzahlung/korrektur.js:16 · module/zuzahlung-rechnen.js:42
 - `$` — attendance.js:10 · employee-signup.js:10 · module/kiosk.js:59 · module/verordnung-podo.js:105 · module/verordnung-pruefen-knopf.js:44 · module/zuzahlung-korrektur.js:206 · ops/app.js:48
 - `init` — attendance.js:297 · booking-request.js:1242 · booking.js:58 · cookie-consent.js:139 · dashboard.js:17538 · kalender.js:149 · onboarding.js:77
@@ -371,7 +373,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `schliessen` — cookie-consent.js:76 · module/abrechnung-freigabe.js:165 · module/abrechnungsstatus.js:542 · module/arzt-register.js:276 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:209
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:70 · api-backend/ai/tasks/b2c-draft.js:59 · api-backend/ai/tasks/rezept-normalize.js:113 · api-backend/ai/tasks/rezept-ocr.js:166 · api-backend/ai/tasks/rezept-validate.js:9
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/preise_autoupdate.mjs:169 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:106 · stripe-live-setup.js:80
-- `cleanup` — dashboard.js:6999 · dashboard.js:7028 · dashboard.js:7131 · dashboard.js:22939 · module/absagegrund-modal.js:81
+- `cleanup` — dashboard.js:6993 · dashboard.js:7022 · dashboard.js:7125 · dashboard.js:22939 · module/absagegrund-modal.js:81
 - `g` — dashboard.js:16304 · dashboard.js:16317 · dashboard.js:16641 · dashboard.js:16707 · module/termin-aktionen.js:359
 - `zeile` — module/rechnung-druck.js:31 · module/verordnung-detail.js:249 · module/verordnung-detail.js:376 · module/verordnung-detail.js:433 · module/verordnung-pruefen-knopf.js:135
 - `showMsg` — admin-login.js:15 · attendance.js:68 · employee-signup.js:130 · login.js:163
@@ -379,15 +381,15 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/preflight.js:144
 - `loadServices` — booking-request.js:419 · booking.js:193 · dashboard.js:9470 · kalender.js:634
 - `speichern` — cookie-consent.js:69 · module/arzt-register.js:292 · module/fussbefund.js:679 · module/verordnung-detail.js:733
-- `closeModal` — dashboard.js:1303 · dashboard.js:12459 · dashboard.js:12878 · ops/app.js:162
-- `onEsc` — dashboard.js:7138 · module/rechnung-leistung-picker.js:42 · module/zuzahlung-befreiung.js:155 · module/zuzahlung-korrektur.js:214
+- `closeModal` — dashboard.js:1304 · dashboard.js:12459 · dashboard.js:12878 · ops/app.js:162
+- `onEsc` — dashboard.js:7132 · module/rechnung-leistung-picker.js:42 · module/zuzahlung-befreiung.js:155 · module/zuzahlung-korrektur.js:214
 - `v` — dashboard.js:13383 · dashboard.js:13408 · dashboard.js:13428 · dashboard.js:17324
 - `load` — ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `isAdmin` — admin-login.js:18 · api/_lib/auth.js:90 · login.js:192
-- `showToast` — admin.js:22 · dashboard.js:1317 · module/kiosk.js:46
+- `showToast` — admin.js:22 · dashboard.js:1318 · module/kiosk.js:46
 - `q` — booking-request.js:84 · dashboard.js:20507 · script.js:751
 - `loadTeam` — booking-request.js:513 · dashboard.js:10516 · kalender.js:238
-- `initCalendar` — booking-request.js:562 · dashboard.js:2550 · kalender.js:288
+- `initCalendar` — booking-request.js:562 · dashboard.js:2551 · kalender.js:288
 - `zeichne` — module/abrechnungsstatus.js:554 · module/patienten-einwilligung.js:477 · module/rezeptinfo-geld.js:364
 - `DE` — module/behandlungsbestaetigung.js:40 · module/patientenkarte.js:37 · module/verordnung-uebersicht.js:105
 - `oeffne` — module/kalender-kontextmenue.js:119 · module/leistungen-liste.js:190 · module/verordnung-liste.js:179
