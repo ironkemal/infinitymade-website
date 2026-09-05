@@ -56,8 +56,8 @@ const API = 'https://n8n.infinitymade.de/api';
  * Farbregel (Kemal, 05.09.2026): jeder Zustand hat seinen EIGENEN Farbplatz.
  * Beide Töpfe stehen seit dem 31.08.2026 in einer Liste untereinander — dort
  * heisst zweimal dieselbe Farbe zweimal dieselbe Lage behaupten. Belegt sind
- * Rot (In Behandlung), Orange (Teilabsetzung), Bernstein (Erfasst), Grün
- * (Bereit), Petrol (Bestätigt), Blau + Cyan (Bereich, siehe unten), Violett
+ * Rot (In Behandlung), Orange (Teilabsetzung), Bernstein (Erfasst), Blau
+ * (Bereit), Petrol (Bestätigt), Grün + Cyan (Bereich, siehe unten), Violett
  * (Abgerechnet), Fuchsia (Abgelehnt), Karmin (Absetzung), Grau (Storniert),
  * Schiefer (Archiviert). Ein neuer Zustand nimmt einen freien Platz, nicht
  * den zweiten Anstrich eines belegten.
@@ -80,7 +80,7 @@ export const STATUS = [
   },
   {
     key: 'abrechenbar', label: 'Bereit zur Abrechnung', kurz: 'Bereit',
-    farbe: '#15803d', bg: 'rgba(21,128,61,0.14)',
+    farbe: '#2563eb', bg: 'rgba(37,99,235,0.14)',
     hilfe: 'Behandlungen sind dokumentiert. Die Verordnung wartet auf die nächste §302-Datei.',
   },
   {
@@ -171,7 +171,7 @@ const PHYSIO_STATUS = [
   },
   {
     key: 'completed', label: 'Bereit zur Abrechnung', kurz: 'Bereit',
-    farbe: '#15803d', bg: 'rgba(21,128,61,0.14)',
+    farbe: '#2563eb', bg: 'rgba(37,99,235,0.14)',
     hilfe: 'Alle Einheiten sind erbracht. Die Verordnung wartet auf die Abrechnung.',
   },
   {
@@ -256,7 +256,9 @@ export function statusLabel(key) {
    eigene: vorher stand ein violettes „Heilmittel" neben einem violetten
    „Abgerechnet" und ein grünes „Podologie" neben einem grünen „Bereit zur
    Abrechnung" — also genau die doppelte Farbe, die dieser Absatz ausschloss.
-   Bereich liegt jetzt auf Blau und Cyan, zwei Plätzen, die kein Status belegt.
+   Bereich liegt jetzt auf Grün und Cyan, zwei Plätzen, die kein Status belegt.
+   Grün ist frei geworden, als „Bereit zur Abrechnung" am 05.09.2026 auf Blau
+   wechselte — die beiden haben schlicht die Plätze getauscht.
 
    Steht hier und nicht in einer eigenen Datei, weil `quelle` in diesem Modul
    ohnehin schon der erste Parameter ist (`statusBadgeGross(quelle, status)`)
@@ -267,7 +269,7 @@ export function statusLabel(key) {
 */
 const BEREICH = {
   physio: {
-    label: 'Heilmittel', farbe: '#2563eb', bg: 'rgba(37,99,235,0.12)',
+    label: 'Heilmittel', farbe: '#15803d', bg: 'rgba(21,128,61,0.12)',
     hilfe: 'Physiotherapie · Ergotherapie · Logopädie',
   },
   podologie: {

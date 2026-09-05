@@ -67,7 +67,7 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { statusBadgeGross, bereichBadge } from './abrechnungsstatus.js?v=20260905';
+import { statusBadgeGross, bereichBadge } from './abrechnungsstatus.js?v=20260905a';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260902';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';

@@ -50,7 +50,7 @@
 import { parseIcdList, matchIcdToDg, soleIcdForDg } from '../icd-dg-match.js?v=20260810e';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20260817';
 import { attachPatientSearch } from '../patient-suche.js?v=20260817';
-import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260905';
+import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260905a';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260816';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { wireArztFeld } from './arzt-register.js?v=20260816';
