@@ -57,6 +57,8 @@ import { wireArztFeld } from './arzt-register.js?v=20260816';
 import { loadDgIcdRules, podDiagOptionsHtml } from './diagnosegruppen-regeln.js?v=20260827';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20260901';
+import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
+import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260902';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
 // dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
 import { darf78040, darf78100, darfErstbefundungNagel,
@@ -426,6 +428,20 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// Kostenträger-Zeile auf-/zuklappen — reines DOM-Toggle, kein Neuzeichnen:
+// die Detailtabelle steht schon im Markup, `hidden` blendet sie nur aus.
+document.addEventListener('click', (e) => {
+  if (!e.target.closest?.('#podBillingContent')) return;
+  const header = e.target.closest('.pod-kk-header');
+  if (!header) return;
+  const ik = header.dataset.kkToggle;
+  const detail = document.querySelector(`.pod-kk-detail[data-kk-detail="${CSS.escape(ik)}"]`);
+  if (!detail) return;
+  detail.hidden = !detail.hidden;
+  const chevron = header.querySelector('.pod-kk-chevron');
+  if (chevron) chevron.style.transform = detail.hidden ? '' : 'rotate(90deg)';
+});
+
 /** Zeile ohne Standortzuordnung — sie steht bewusst in jeder Filiale. */
 function podPraxisweitMarke(v) {
   return istPraxisweit(v)
@@ -490,6 +506,30 @@ async function loadPodologieBilling() {
   const zuschnitt = standortZuschnitt(vords || [], ctx.aktiverStandort?.());
   _podState.verordnungen = zuschnitt.zeilen;
   const zeigeHerkunft = zuschnitt.zeigeHerkunft;
+
+  // Preis-/Zuzahlungsdetail für die "§302 Abrechnung bereit"-Liste vorab
+  // rechnen — dieselbe Funktion, die schon in verordnung-detail.js läuft und
+  // gegen den Backend-Calculator getestet ist (zuzahlung-rechnen.test.js).
+  // Vorab statt inline im Render-IIFE, weil die Katalogauflösung asynchron
+  // ist (podoPositionsFinder lädt die Tagespreise) und der Render weiter
+  // unten synchron ein grosses Template zusammenbaut.
+  const _abrechenbarVords = _podState.verordnungen.filter(v =>
+    v.status === 'abrechenbar' && v.kostentraeger_ik && (v.rezeptart || 'kassen') === POD_GKV_REZEPTART);
+  const _podAbrDetails = new Map();
+  if (_abrechenbarVords.length) {
+    const { data: allBeh } = await ctx.supabase
+      .from('podologie_behandlungen')
+      .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
+      .in('verordnung_id', _abrechenbarVords.map(v => v.id));
+    const behByVordId = {};
+    for (const b of (allBeh || [])) {
+      (behByVordId[b.verordnung_id] ||= []).push(b);
+    }
+    const finde = await podoPositionsFinder(ctx.supabase, allBeh || []);
+    for (const v of _abrechenbarVords) {
+      _podAbrDetails.set(v.id, zuzahlungFuerPodoVerordnung(v, behByVordId[v.id] || [], finde));
+    }
+  }
 
   const today = new Date(); today.setHours(0,0,0,0);
 
@@ -813,8 +853,10 @@ async function loadPodologieBilling() {
         ${(() => {
           // Nur GKV-Verordnungen sind §302-fähig. Der Server lehnt alles andere
           // ohnehin ab (abrechnung.routes.js) — hier gar nicht erst anbieten.
-          const abrechenbar = _podState.verordnungen.filter(v =>
-            v.status === 'abrechenbar' && v.kostentraeger_ik && (v.rezeptart || 'kassen') === POD_GKV_REZEPTART);
+          // Berechnet und gefiltert wurde das schon oben (_abrechenbarVords,
+          // _podAbrDetails) — vor diesem synchronen Render, weil die Preis-
+          // katalogauflösung async ist.
+          const abrechenbar = _abrechenbarVords;
           if (!abrechenbar.length) return '';
           // Group by KK
           const byKk = {};
@@ -825,38 +867,69 @@ async function loadPodologieBilling() {
           // Name statt IK: _podKkCache ist dieselbe Liste, aus der podNewKk
           // befüllt wird — also derselbe Wortschatz wie v.kostentraeger_ik.
           const kkName = (ik) => _podKkCache.find(k => k.ik === ik)?.name || ik;
-          // Zuzahlung-Status: welche Farbe die Karte zusätzlich zum Netto-
-          // Ausfall erklärt (05.09.2026, Beta-2-Feedback — ohne diese Spalte
-          // bleibt unklar, warum eine Kasse weniger als der Brutto-Betrag zahlt).
+          // Zuzahlung-Status: welche Farbe die Karte zusätzlich zum Kassenanteil
+          // erklärt (05.09.2026, Beta-2-Feedback — ohne diese Spalte bleibt
+          // unklar, warum eine Kasse weniger als den Brutto-Betrag zahlt).
           const zuzahlungBadge = (v) => {
             if (v.zuzahlung_befreit) return { text: 'befreit', color: '#16a34a' };
             if (v.zuzahlung_kassiert_am) return { text: 'bezahlt', color: '#16a34a' };
             if (v.zuzahlung_eur > 0) return { text: 'offen', color: '#f59e0b' };
             return null;
           };
+          const fmtEur = (n) => (Number(n) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
           return `<div class="card" style="background:var(--bg-card);border:1px solid #16a34a;border-radius:10px;padding:18px;margin-top:12px;">
             <h4 style="margin:0 0 12px;color:#16a34a;font-size:15px;">§302 Abrechnung bereit</h4>
             <div style="display:flex;flex-direction:column;gap:10px;">
-              ${Object.entries(byKk).map(([ik, vords]) => `
-                <div style="padding:10px 12px;background:var(--bg-card-solid,#1f2937);border-radius:8px;border:1px solid var(--border);">
-                  <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                      <div style="font-size:13px;font-weight:600;color:var(--text-main);">${ctx.escapeHtml(kkName(ik))}</div>
-                      <div style="font-size:12px;color:var(--text-muted);">${vords.length} Verordnung${vords.length>1?'en':''}</div>
+              ${Object.entries(byKk).map(([ik, vords]) => {
+                const kassenanteil = vords.reduce((a, v) => a + (_podAbrDetails.get(v.id)?.gesamt || 0), 0);
+                return `
+                <div style="background:var(--bg-card-solid,#1f2937);border-radius:8px;border:1px solid var(--border);overflow:hidden;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;">
+                    <div class="pod-kk-header" data-kk-toggle="${ctx.escapeHtml(ik)}" style="cursor:pointer;flex:1;">
+                      <div style="font-size:13px;font-weight:600;color:var(--text-main);">
+                        <span class="pod-kk-chevron" style="display:inline-block;transition:transform .15s;margin-right:4px;">▸</span>
+                        ${ctx.escapeHtml(kkName(ik))}
+                      </div>
+                      <div style="font-size:12px;color:var(--text-muted);margin-left:14px;">${vords.length} Verordnung${vords.length>1?'en':''} · Kassenanteil ${fmtEur(kassenanteil)}</div>
                     </div>
                     <button class="pod-abr-btn btn-primary" data-kk-ik="${ctx.escapeHtml(ik)}" data-vord-ids="${ctx.escapeHtml(JSON.stringify(vords.map(v=>v.id)))}"
                       style="font-size:13px;padding:6px 14px;white-space:nowrap;">§302 erstellen</button>
                   </div>
-                  <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">
-                    ${vords.map(v => {
-                      const badge = zuzahlungBadge(v);
-                      return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);">
-                        <span>${ctx.escapeHtml(v.patient_name || '—')}</span>
-                        ${badge ? `<span style="color:${badge.color};font-weight:600;">${badge.text}</span>` : ''}
-                      </div>`;
-                    }).join('')}
+                  <div class="pod-kk-detail" data-kk-detail="${ctx.escapeHtml(ik)}" hidden style="border-top:1px solid var(--border);padding:10px 12px;overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                      <thead>
+                        <tr style="color:var(--text-muted);text-align:left;">
+                          <th style="padding:4px 6px;font-weight:600;">Rezeptnr.</th>
+                          <th style="padding:4px 6px;font-weight:600;">Patient</th>
+                          <th style="padding:4px 6px;font-weight:600;">Mittel</th>
+                          <th style="padding:4px 6px;font-weight:600;">Zuzahlung</th>
+                          <th style="padding:4px 6px;font-weight:600;text-align:right;">Kassenanteil</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${vords.map(v => {
+                          const d = _podAbrDetails.get(v.id);
+                          const badge = zuzahlungBadge(v);
+                          const mittel = (d?.zeilen || []).map(z => `${ctx.escapeHtml(z.label || z.code)}${z.anzahl>1?` ×${z.anzahl}`:''}`).join(', ') || '—';
+                          return `<tr style="border-top:1px solid var(--border);">
+                            <td style="padding:4px 6px;color:var(--text-muted);">${ctx.escapeHtml(v.verordnungsnummer != null ? String(v.verordnungsnummer) : v.id.slice(0,8))}</td>
+                            <td style="padding:4px 6px;color:var(--text-main);">${ctx.escapeHtml(v.patient_name || '—')}</td>
+                            <td style="padding:4px 6px;color:var(--text-muted);">${mittel}</td>
+                            <td style="padding:4px 6px;${badge ? `color:${badge.color};font-weight:600;` : 'color:var(--text-muted);'}">${badge ? badge.text : '—'}</td>
+                            <td style="padding:4px 6px;text-align:right;color:var(--text-main);">${fmtEur(d?.gesamt)}</td>
+                          </tr>`;
+                        }).join('')}
+                      </tbody>
+                      <tfoot>
+                        <tr style="border-top:2px solid var(--border);font-weight:600;">
+                          <td colspan="4" style="padding:6px;color:var(--text-main);">Summe</td>
+                          <td style="padding:6px;text-align:right;color:var(--text-main);">${fmtEur(kassenanteil)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
                   </div>
-                </div>`).join('')}
+                </div>`;
+              }).join('')}
             </div>
             <div id="podAbrError" style="color:#ef4444;font-size:13px;margin-top:8px;display:none;"></div>
           </div>`;

@@ -30,12 +30,18 @@ test('kein Zuhoerer haengt an #podBillingContent', () => {
     'sammelt sich bei jedem Neuzeichnen an. Auf Modulebene an `document` haengen.');
 });
 
-test('die Zuhoerer der Liste und der §302-Knoepfe stehen auf Modulebene', () => {
+test('die Zuhoerer der Liste, der §302-Knoepfe und des Kostentraeger-Auf/Zuklappens stehen auf Modulebene', () => {
   // Modulebene = Spaltenanfang. Alles, was eingerueckt ist, steht in einer
   // Funktion und laeuft damit mehr als einmal.
+  //
+  // Dritter Zuhoerer seit 05.09.2026 (Faz-1-Detailtabelle): das Auf-/Zuklappen
+  // pro Kostentraeger-Zeile ist ein reines DOM-Toggle (kein Refetch, kein
+  // Neuzeichnen) und faellt unter dieselbe Regel wie die anderen beiden —
+  // an `document` haengen, nicht an ein Element, das loadPodologieBilling()
+  // bei jedem Aufruf neu erzeugt.
   const aufModulebene = (quelle.match(/^document\.addEventListener\(/gm) || []).length;
-  assert.equal(aufModulebene, 2,
-    `Erwartet: Listen-Zuhoerer + §302-Zuhoerer, beide auf Modulebene. Gefunden: ${aufModulebene}.`);
+  assert.equal(aufModulebene, 3,
+    `Erwartet: Listen-Zuhoerer + §302-Zuhoerer + Auf/Zuklapp-Zuhoerer, alle auf Modulebene. Gefunden: ${aufModulebene}.`);
 });
 
 test('der §302-Handler prueft disabled — zweite Bremse, absichtlich', () => {
