@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-09-04",
+ "erzeugt": "2026-09-05",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-09-04)",
+  "schema": "db/SCHEMA.sql (Stand 2026-09-05)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-04)",
   "register": "db/REGISTER.md"
  },
@@ -307,7 +307,7 @@
     {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 430,
+     "start": 436,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -327,7 +327,7 @@
     {
      "name": "podFillEditForm",
      "file": "module/podologie-abrechnung.js",
-     "start": 1274,
+     "start": 1280,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -623,7 +623,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3139,
+     "start": 3128,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1066,14 +1066,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 515,
+     "start": 504,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1502,
+     "start": 1491,
      "module": [],
      "uiPfad": []
     },
@@ -1308,7 +1308,7 @@
     {
      "name": "podGeplanteHpnr",
      "file": "module/podologie-abrechnung.js",
-     "start": 250,
+     "start": 256,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1786,6 +1786,7 @@
     "module/termin-dauer.js",
     "module/termin-laden.js",
     "module/termin-patient-bezug.js",
+    "module/verordnung-detail.js",
     "module/verordnung-termine.js",
     "module/warteliste-nachruecker.js"
    ],
@@ -1823,14 +1824,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 515,
+     "start": 504,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1502,
+     "start": 1491,
      "module": [],
      "uiPfad": []
     }
@@ -1963,7 +1964,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 515,
+     "start": 504,
      "module": [],
      "uiPfad": []
     },
@@ -1997,7 +1998,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3139,
+     "start": 3128,
      "module": [],
      "uiPfad": []
     }
@@ -2126,7 +2127,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 515,
+     "start": 504,
      "module": [],
      "uiPfad": []
     },
@@ -2301,14 +2302,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 515,
+     "start": 504,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1502,
+     "start": 1491,
      "module": [],
      "uiPfad": []
     },
@@ -3052,7 +3053,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 515,
+     "start": 504,
      "module": [],
      "uiPfad": []
     },
@@ -3923,7 +3924,7 @@
     {
      "name": "main",
      "file": "api-backend/sync_heilmittel_katalog.js",
-     "start": 109,
+     "start": 106,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4329,7 +4330,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3139,
+     "start": 3128,
      "module": [],
      "uiPfad": []
     }
@@ -4905,7 +4906,7 @@
     {
      "name": "pruefeLeadId",
      "file": "api-backend/server.js",
-     "start": 1160,
+     "start": 1149,
      "module": [],
      "uiPfad": []
     },
@@ -5758,7 +5759,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3139,
+     "start": 3128,
      "module": [],
      "uiPfad": []
     }
@@ -5966,7 +5967,7 @@
     {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 430,
+     "start": 436,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6356,11 +6357,8 @@
   },
   {
    "name": "prescriptions",
-   "spalten": 82,
-   "fkRaus": [
-    "leads",
-    "kostentraeger"
-   ],
+   "spalten": 83,
+   "fkRaus": [],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
@@ -6806,7 +6804,7 @@
     {
      "name": "zeigeVerordnungDetail",
      "file": "module/verordnung-detail.js",
-     "start": 791,
+     "start": 796,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7106,14 +7104,14 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 3526,
+     "start": 3515,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 515,
+     "start": 504,
      "module": [],
      "uiPfad": []
     },
@@ -7573,7 +7571,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3139,
+     "start": 3128,
      "module": [],
      "uiPfad": []
     }
@@ -7959,7 +7957,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 3721,
+     "start": 3710,
      "module": [],
      "uiPfad": []
     },
@@ -8027,7 +8025,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 515,
+     "start": 504,
      "module": [],
      "uiPfad": []
     },
@@ -8156,7 +8154,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3139,
+     "start": 3128,
      "module": [],
      "uiPfad": []
     },
@@ -8615,14 +8613,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 515,
+     "start": 504,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1502,
+     "start": 1491,
      "module": [],
      "uiPfad": []
     },
@@ -9389,7 +9387,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 515,
+     "start": 504,
      "module": [],
      "uiPfad": []
     },
@@ -9416,7 +9414,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1502,
+     "start": 1491,
      "module": [],
      "uiPfad": []
     },
