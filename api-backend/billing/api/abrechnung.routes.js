@@ -2171,10 +2171,15 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       ? profile.owner_id : profile.id;
 
     // ---- input ----
-    const { kostentraegerIk, verordnungIds } = req.body || {};
+    const { kostentraegerIk, verordnungIds, sperrenIgnoriert, sperrenGrund } = req.body || {};
     if (!kostentraegerIk || !Array.isArray(verordnungIds) || !verordnungIds.length) {
       return res.status(400).json({ error: 'kostentraegerIk and verordnungIds required' });
     }
+    // "Trotzdem übernehmen" (Faz 1, Ops #265) — dieselbe Übersteuerungs-Form wie
+    // berichtIgnoriert im Physio/Ergo/Logo-Zweig (oben, /abrechnung/create):
+    // eine geteilte Begründung fürs ganze Bündel, nicht pro Verordnung, weil
+    // ein Klick hier ohnehin nur eine einzelne fehlerhafte Verordnung schickt.
+    const sperreUebersteuert = new Set(Array.isArray(sperrenIgnoriert) ? sperrenIgnoriert : []);
 
     // ---- cert / IK ----
     let { data: cert } = await supabase
@@ -2299,11 +2304,18 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // Arztunterschrift und Datumsangabe VOR der Einreichung erfolgt sein.
     // Deshalb ist dies die einzige Stelle, an der hart gesperrt wird.
     const sperren = [];
+    // "Trotzdem übernehmen" (Faz 1, Ops #265): pro übersteuerter Verordnung
+    // die konkret umgangene(n) Regel(n), fürs GoBD-Protokoll unten — gleiche
+    // Ablage wie die Therapiebericht-Übersteuerung im Physio/Ergo/Logo-Zweig.
+    const uebersteuerteSperren = [];
     for (const v of (vords || [])) {
       const dgRoot = String(v.diagnosegruppe || '')
         .replace(/\s+/g, '').toUpperCase().replace(/-[ABC]$/, '');
       if (dgRoot !== 'UI1' && dgRoot !== 'UI2') continue;
       const beleg = v.id.slice(0, 8);
+      const ueberst = sperreUebersteuert.has(v.id);
+      const zielListe = ueberst ? [] : sperren;
+      const uebersteuerteRegeln = [];
 
       // 1) UI1/UI2 lassen ausschließlich L60.0 zu.
       //    Fehlt der ICD ganz, wird NICHT gesperrt — auf Muster 13 ist der
@@ -2314,12 +2326,13 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       const kodes = [v.icd10, v.icd10_2].filter(Boolean).join(',')
         .split(/[,;]/).map(s => s.replace(/\s+/g, '').toUpperCase()).filter(Boolean);
       if (kodes.length > 0 && !kodes.includes('L60.0')) {
-        sperren.push(
+        zielListe.push(
           `Verordnung ${beleg} (${v.patient_name || '—'}): Diagnosegruppe ${dgRoot} lässt ` +
           `ausschließlich den ICD-10-Kode L60.0 zu (angegeben: ${kodes.join(', ')}). ` +
           `Eine Korrektur der Verordnung ist nur mit erneuter Arztunterschrift und ` +
           `Datumsangabe zulässig und muss vor der Einreichung zur Abrechnung erfolgt sein.`
         );
+        if (ueberst) uebersteuerteRegeln.push('ICD_L60_PFLICHT');
       }
 
       // 2) Befundpauschale ist bei Nagelspangenbehandlungen nicht abrechenbar.
@@ -2332,11 +2345,16 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       }
       const treffer = VERBOTEN.filter(c => hpnrs.has(c));
       if (treffer.length) {
-        sperren.push(
+        zielListe.push(
           `Verordnung ${beleg} (${v.patient_name || '—'}): Die Befundpauschale ` +
           `(${treffer.join(', ')}) ist bei Nagelspangenbehandlungen (Diagnosegruppen ` +
           `UI1 und UI2) nicht abrechenbar. Bitte die Position aus der Verordnung entfernen.`
         );
+        if (ueberst) uebersteuerteRegeln.push('BEFUNDPAUSCHALE_NAGELSPANGE');
+      }
+
+      if (ueberst && uebersteuerteRegeln.length) {
+        uebersteuerteSperren.push({ id: v.id, regeln: uebersteuerteRegeln });
       }
     }
     if (sperren.length) {
@@ -2404,6 +2422,31 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         prescription_count: prescriptions.length,
       }).select('id').single();
     if (abErr) return res.status(500).json({ error: 'abrechnung insert: ' + abErr.message });
+
+    // ---- Nachweis der bewussten Übersteuerung (GoBD) ----
+    // Gleiche Ablage wie die Therapiebericht-Übersteuerung im Physio/Ergo/
+    // Logo-Zweig (oben, /abrechnung/create) — ein Prüfpfad für alle
+    // Übersteuerungen, die tatsächlich zu einer Abrechnung geführt haben.
+    if (uebersteuerteSperren.length) {
+      const { error: protErr } = await supabase.from('prescription_validations').insert(
+        uebersteuerteSperren.map(uv => ({
+          prescription_id:  uv.id,
+          engine:           'abrechnung-podo-sperre',
+          input_snapshot:   { regeln: uv.regeln },
+          result:           { abrechnung_id: ab.id, kostentraeger_ik: kostentraegerIk },
+          ok:               false,
+          warnings_count:   0,
+          blockers_count:   uv.regeln.length,
+          proceeded_anyway: true,
+          overridden_rules: uv.regeln,
+          proceed_reason:   (typeof sperrenGrund === 'string' && sperrenGrund.trim())
+                              ? sperrenGrund.trim().slice(0, 500)
+                              : 'Ohne Angabe übersteuert',
+          validated_by:     u.user.id,
+        }))
+      );
+      if (protErr) console.error('[abrechnung-podo] Übersteuerungs-Protokoll fehlgeschlagen', protErr);
+    }
 
     // ---- upload DTA ----
     const datePath = `${year}/${String(now.getMonth()+1).padStart(2,'0')}`;
