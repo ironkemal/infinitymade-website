@@ -52,7 +52,7 @@ import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinute
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
 import { renderWoche } from './module/kalender-woche.js?v=20260831';
 import { renderMonat } from './module/kalender-monat.js?v=20260831';
-import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260904';
+import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate } from './module/datum.js?v=20260831';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260830';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
@@ -2957,7 +2957,7 @@ verdrahteHeuteButton(() => {
   dayViewDate = new Date();
   monthViewYear = dayViewDate.getFullYear();
   monthViewMonth = dayViewDate.getMonth();
-  setCalendarView('day');
+  renderCalendarView();
 });
 
 // Rechtsklick auf einem Termin: dieselben Handlungen wie im Seitenbereich, ohne Umweg.
