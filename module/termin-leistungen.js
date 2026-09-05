@@ -271,6 +271,8 @@ export function mitBefundungsvorschlag({
 let ctx = null;
 /** Zusatzzeilen; Zeile 0 lebt im DOM und wird bei Bedarf gelesen. */
 let _extra = [];
+/** Steht im Dauer-Feld gerade eine von hier gerechnete Kombi-Summe? */
+let _kombiDauerGesetzt = false;
 
 /** Alle Zeilen: Zeile 0 aus dem DOM, danach die Zusatzzeilen. */
 export function leseLeistungen() {
@@ -341,6 +343,7 @@ export async function ladeLeistungen(bookingId) {
 /** Beim Oeffnen der Maske: alles zurueck auf eine Zeile. */
 export function setzeLeistungenZurueck() {
   _extra = [];
+  _kombiDauerGesetzt = false;
   const menge = document.getElementById('bkMenge');
   if (menge) menge.value = '1';
   zeichneZeilen();
@@ -462,8 +465,37 @@ function zeigeHinweis(text, rueckfrage = null) {
  */
 function aktualisiereDauer() {
   const zeilen = leseLeistungen().filter(z => z.serviceId);
-  if (zeilen.length < 2) return;
+
+  // Von mehreren Zeilen auf eine gefallen — Vorschlag weggeraeumt, Leistung
+  // gewechselt, Selbstzahler gedrueckt. Im Feld steht dann noch die Summe
+  // MIT der verschwundenen Zeile, und niemand raeumt sie weg: dashboard.js'
+  // updateBkDuration() hatte im selben Durchgang schon abgelehnt, weil zu
+  // ihrem Zeitpunkt noch zwei Zeilen standen (`istKombinierterTermin()`),
+  // und die Bedingung unten schwieg ab da ebenfalls. Ergebnis war ein
+  // Termin, der 70 Minuten blockte, wo 50 drinstanden.
+  //
+  // Aufgeraeumt wird nur, was hier auch gesetzt wurde: `_kombiDauerGesetzt`
+  // haelt genau das fest. Ohne diese Bedingung wuerde die gelernte Dauer aus
+  // `price_config` beim ersten Zeichnen von der blossen Summe ueberschrieben.
+  // Bei null Zeilen wird geschwiegen — dort blendet updateBkDuration() die
+  // ganze Gruppe aus, und `setzeDauer()` holte sie zurueck.
+  if (zeilen.length < 2) {
+    if (zeilen.length === 1 && _kombiDauerGesetzt) {
+      _kombiDauerGesetzt = false;
+      // Ab hier ist wieder dashboard.js zustaendig: dort haengen die gelernte
+      // Dauer („aus N bisherigen Terminen") und die Preisstufen aus
+      // `price_config`. Die blosse Katalogdauer waere ein Rueckschritt — die
+      // Praxis, die fuer diese Leistung 55 statt 50 Minuten gelernt hat,
+      // bekaeme wieder 50. Nur wenn niemand zustaendig ist (Probe, Test),
+      // wird die Summe selbst geschrieben.
+      if (typeof ctx?.aufEinzelDauer === 'function') ctx.aufEinzelDauer(zeilen[0].serviceId);
+      else setzeDauer(gesamtDauer(zeilen, ctx?.getServices?.() || []), '');
+    }
+    return;
+  }
+
   const minuten = gesamtDauer(zeilen, ctx?.getServices?.() || []);
+  _kombiDauerGesetzt = true;
   setzeDauer(minuten, 'kombiniert');
 }
 
@@ -507,7 +539,7 @@ async function schlageBefundungVor() {
 /**
  * Verdrahtung. Wird einmal aus dashboard.js gerufen.
  *
- * @param {object} deps  { supabase, getOwnerId, getServices }
+ * @param {object} deps  { supabase, getOwnerId, getServices, aufEinzelDauer }
  */
 export function mountTerminLeistungen(deps) {
   ctx = deps;
@@ -596,6 +628,28 @@ export function mountTerminLeistungen(deps) {
   });
   document.getElementById('bkCustomerId')?.addEventListener('change', () => {
     schlageBefundungVor();
+  });
+
+  // Selbstzahler-Knopf, Verordnungskarte und „Abwaehlen" aendern die
+  // Grundlage des Vorschlags, ohne dass Leistung oder Patient wechseln —
+  // an keinem dieser drei haengt bisher ein Zuhoerer. Folge: wer Patient und
+  // Leistung waehlt und ERST DANN merkt, dass keine Verordnung vorliegt,
+  // behielt die vorgeschlagene Eingangsbefundung in der Maske. Das ist eine
+  // GKV-Position (78040) an einem Termin ohne Kasse; sie wurde beim Speichern
+  // zu einer echten Leistungszeile. `befundungFuerLeistung()` weist den Fall
+  // laengst ab (`nichts('selbstzahler')`) — sie wurde nur nie neu gefragt.
+  //
+  // Delegation am Modal statt am Knopf: dashboard.js ersetzt
+  // #bkSelbstzahlerBtn und #bkVeroDeselect bei jedem prefill durch einen
+  // cloneNode-Klon, und die Karten in #bkVeroCards entstehen erst beim Laden
+  // des Patienten. Ein direkt gehaengter Zuhoerer waere nach dem ersten
+  // prefill weg.
+  //
+  // Dieselben 60 ms wie oben: der Zuhoerer am Element setzt
+  // `bkIsSelbstzahler` bzw. `bkSelectedRxId`, und der Vorschlag liest sie.
+  document.getElementById('bookingModal')?.addEventListener('click', (e) => {
+    if (!e.target.closest('#bkSelbstzahlerBtn, #bkVeroDeselect, .bk-vero-card')) return;
+    setTimeout(() => { schlageBefundungVor(); }, 60);
   });
 
   // Der fruehere MutationObserver hier (Beobachter auf `#bkDurationOptions`,

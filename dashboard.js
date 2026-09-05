@@ -8,23 +8,23 @@ import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260817';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20260830';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20260905a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260826';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
 import { checkPrescriptionCompliance, istBerichtOffen, istHarterRiegel, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815c';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260905a';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260831a';
-import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260903';
+import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260905a';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260903';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260901';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260905a';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { montiereVerordnungPruefen } from './module/verordnung-pruefen-knopf.js?v=20260903';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260903';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260903';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260905a';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260905a';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
@@ -37,12 +37,12 @@ import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweis
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260816';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260903c';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260905a';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260903';
+import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260905a';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
-import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld } from './module/termin-verordnung.js?v=20260816b';
-import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260903b';
+import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260905c';
+import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260905g';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260816a';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
@@ -52,7 +52,7 @@ import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinute
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
 import { renderWoche } from './module/kalender-woche.js?v=20260831';
 import { renderMonat } from './module/kalender-monat.js?v=20260831';
-import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260904';
+import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate } from './module/datum.js?v=20260831';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260830';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
@@ -60,7 +60,7 @@ import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blo
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
-import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260830';
+import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260905g';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
@@ -2957,7 +2957,7 @@ verdrahteHeuteButton(() => {
   dayViewDate = new Date();
   monthViewYear = dayViewDate.getFullYear();
   monthViewMonth = dayViewDate.getMonth();
-  setCalendarView('day');
+  renderCalendarView();
 });
 
 // Rechtsklick auf einem Termin: dieselben Handlungen wie im Seitenbereich, ohne Umweg.
@@ -5084,8 +5084,7 @@ async function openBookingModal(b) {
   if (_omRxId) _omRxId.value = '';
   const _omSessId = document.getElementById('bkSelectedSessionId');
   if (_omSessId) _omSessId.value = '';
-  const _omIsSelbst = document.getElementById('bkIsSelbstzahler');
-  if (_omIsSelbst) _omIsSelbst.value = '';
+  setzeRezeptartInMaske(b.rezeptart);
   const _omVeroSection = document.getElementById('bkVerordnungSection');
   if (_omVeroSection) _omVeroSection.hidden = true;
   const _omPickerBlock = document.getElementById('bkSessionPickerBlock');
@@ -5285,7 +5284,8 @@ async function initBkCustomerAutocomplete() {
           employee: document.getElementById('bkEmployee')?.value,
           service: document.getElementById('bkService')?.value,
           notes: document.getElementById('bkNotes')?.value,
-          hausbesuch: document.getElementById('bkHausbesuch')?.checked || false
+          hausbesuch: document.getElementById('bkHausbesuch')?.checked || false,
+          rezeptart: rezeptartAusMaske()
         };
         window._returnToBkModal = true;
         closeModal('bookingModal');
@@ -5548,7 +5548,7 @@ async function updateBkDuration(srvId, defaultValue = null) {
   setzeDauer(fallback, 'geschätzt');
 }
 
-mountTerminLeistungen({ supabase, getOwnerId, getServices: () => servicesCache });
+mountTerminLeistungen({ supabase, getOwnerId, getServices: () => servicesCache, aufEinzelDauer: updateBkDuration });
 mountTerminDauer();
 
 document.getElementById('bkService').addEventListener('change', (e) => {
@@ -9340,7 +9340,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     window._returnToBkModal = false;
     const st = window._bkModalState || {};
     if (st.id) {
-      await openBookingModal({ id: st.id, start_time: st.start, end_time: st.end, customer_name: '', customer_phone: '', notes: st.notes || '', hausbesuch: st.hausbesuch });
+      await openBookingModal({ id: st.id, start_time: st.start, end_time: st.end, customer_name: '', customer_phone: '', notes: st.notes || '', hausbesuch: st.hausbesuch, rezeptart: st.rezeptart || null });
     } else {
       await prefillBookingModal(st.start);
     }

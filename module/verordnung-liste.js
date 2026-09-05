@@ -43,9 +43,9 @@
  * dieselbe Zusammenführung steht.
  */
 
-import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260903';
-import { statusBadgeGross, bereichBadge } from './abrechnungsstatus.js?v=20260903';
-import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260903';
+import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260905a';
+import { statusBadgeGross, bereichBadge } from './abrechnungsstatus.js?v=20260905a';
+import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260905a';
 import { on } from './signal.js?v=20260813';
 
 const SPALTEN = 7;

@@ -207,3 +207,42 @@ export function zeigeDienstleistungsfeld(sichtbar) {
   const hinweis = document.getElementById('bkServiceAusVerordnung');
   if (hinweis) hinweis.hidden = sichtbar;
 }
+
+// ── Rezeptart des Termins ────────────────────────────────────────────────
+
+/**
+ * `bookings.rezeptart` haelt fest, WIE ein Termin bezahlt wird:
+ * `'selbstzahler'`, `'kassen'` oder leer. Beim Bearbeiten eines bestehenden
+ * Termins wurde das Feld bisher bedingungslos geleert und beim Speichern als
+ * NULL zurueckgeschrieben — die Markierung ueberlebte also keine einzige
+ * Bearbeitung, auch wenn nur die Notiz geaendert wurde.
+ *
+ * Diese beiden Funktionen sind der Weg hin und zurueck. Sie stehen hier und
+ * nicht in `dashboard.js`, weil dort die Verordnungsauswahl ohnehin zu Hause
+ * ist und die Datei nicht wachsen darf (tools/check-dashboard-size.sh).
+ */
+
+/**
+ * Gespeicherte Rezeptart in die Maske uebernehmen.
+ *
+ * Nur `'selbstzahler'` setzt den Schalter. `'kassen'` haengt an der gewaehlten
+ * Verordnung, nicht an diesem Feld — die Karte waehlt `waehleVerordnung()`
+ * aus, und die setzt den Schalter selbst wieder zurueck.
+ *
+ * @param {?string} rezeptart  Wert aus `bookings.rezeptart` (darf fehlen).
+ */
+export function setzeRezeptartInMaske(rezeptart) {
+  setzeWert('bkIsSelbstzahler', rezeptart === 'selbstzahler' ? '1' : '');
+}
+
+/**
+ * Die Rezeptart, wie sie gerade in der Maske steht — fuer Zwischenschritte,
+ * die das Fenster schliessen und wieder oeffnen (Patient neu anlegen).
+ *
+ * @returns {?string} `'selbstzahler'` oder null.
+ */
+export function rezeptartAusMaske() {
+  const el = typeof document !== 'undefined'
+    ? document.getElementById('bkIsSelbstzahler') : null;
+  return el?.value === '1' ? 'selbstzahler' : null;
+}

@@ -68,7 +68,7 @@
 'use strict';
 
 import { belegnummerRosette, belegnummerText } from './belegnummer.js?v=20260817';
-import { bereichFarbe, bereichBadge } from './abrechnungsstatus.js?v=20260903';
+import { bereichFarbe, bereichBadge } from './abrechnungsstatus.js?v=20260905a';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
 // eine Zeile davon in genau den podologischen Wortschatz, den `ausPodo()`
 // unten schon immer erwartet hat (lead_id, behandlungseinheiten,

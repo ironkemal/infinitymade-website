@@ -33,6 +33,12 @@
     <input id="bk-id" type="hidden" value="">
     <input id="bkCustomerId" type="hidden" value="lead-1">
     <input id="bkIsSelbstzahler" type="hidden" value="">
+
+    <!-- Der Selbstzahler-Knopf steht in dashboard.html im selben #bookingModal.
+         Er wird dort bei jedem prefill per cloneNode ersetzt, darum darf sich
+         termin-leistungen.js nicht direkt an ihn haengen — die Probe klont ihn
+         unten einmal nach, damit genau das mitgeprueft wird. -->
+    <button type="button" id="bkSelbstzahlerBtn">Selbstzahler</button>
     <label><input type="checkbox" id="bkIsGroup"> Gruppentermin</label>
   </div>
 
@@ -63,7 +69,21 @@ const kette = () => {
 };
 const supabase = { from: () => kette() };
 
-mountTerminLeistungen({ supabase, getOwnerId: () => 'owner-1', getServices: () => DIENSTE });
+// `aufEinzelDauer` ist im Betrieb dashboard.js' updateBkDuration() — dort
+// haengen gelernte Dauer und price_config. Hier steht eine Attrappe, die nur
+// die Katalogdauer schreibt und mitzaehlt, ob sie ueberhaupt gerufen wurde:
+// genau das ist die Frage, wenn die Maske von zwei Zeilen auf eine faellt.
+window.__einzelDauerRufe = [];
+mountTerminLeistungen({
+  supabase,
+  getOwnerId: () => 'owner-1',
+  getServices: () => DIENSTE,
+  aufEinzelDauer: (srvId) => {
+    window.__einzelDauerRufe.push(srvId);
+    const d = DIENSTE.find(x => x.id === srvId);
+    document.getElementById('bkDurationValue').value = String(d?.duration_minutes || 30);
+  },
+});
 
 window.__probe = { leseLeistungen };
 document.getElementById('bookingModal').hidden = false;
