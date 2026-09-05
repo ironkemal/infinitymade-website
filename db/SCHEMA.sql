@@ -1,7 +1,13 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-05 (zuletzt nachgezogen: neue Tabelle
+-- ERZEUGT AM:        2026-09-06 (zuletzt nachgezogen: profiles.selbstzahler_stufen,
+--                    Ops #266 — benannte Selbstzahler-Preisstufen des Owners.
+--                    Im selben Zug korrigiert: der ⏳-Block bei `services` behauptete,
+--                    kostentraeger_typ sei noch nicht ausgefuehrt — die Spalte ist
+--                    seit dem 03.09.2026 live und in 172 von 181 Zeilen gepflegt.
+--                    Per Hand nachgezogen, kein voller Neu-Dump.)
+--                    davor: 2026-09-05, neue Tabelle
 --                    booking_status_korrekturen, Ops #270 — append-only
 --                    Korrekturhistorie fuer nachtraegliche bookings.status-
 --                    Aenderungen, gleiches GoBD-Muster wie zuzahlung_korrekturen.
@@ -21,7 +27,8 @@
 --                    90-Tage-Frist): `verordnungen` GEDROPPT. Siehe Eintrag
 --                    an der Stelle, wo die Tabelle frueher im Dump stand
 --                    (nach `vehicles`, vor `visibility_reports`).
--- LETZTE MIGRATION:  20260905193701_booking_status_korrekturen
+-- LETZTE MIGRATION:  profiles_selbstzahler_stufen (06.09.2026)
+--                    davor: 20260905193701_booking_status_korrekturen
 --                    davor: 20260905125546_prescriptions_krankenkasse_ik
 --                    davor: verordnungstopf_faz5c_naechste_verordnungsnummer_fix
 --                    davor: verordnungstopf_faz5b_verordnungen_droppen
@@ -1718,6 +1725,7 @@ CREATE TABLE profiles (
   ausfall_cutoff_hours integer NOT NULL DEFAULT 24
   ausfall_hinweis text
   fussbefund_legende jsonb NOT NULL DEFAULT '[]'::jsonb   -- Podologie-Legende
+  selbstzahler_stufen jsonb NOT NULL DEFAULT '[]'::jsonb
 );
 --   CHECK plan IN (starter, professional, klinik, mitarbeiter, enterprise)
 --   CHECK plan_status IN (pending, trial, active, past_due, canceled, expired)
@@ -1803,18 +1811,21 @@ CREATE TABLE services (
   group_capacity integer DEFAULT 5
   required_certificate text
   gkv_position_nr text
+  kostentraeger_typ text
 );
---   CHECK required_certificate IN (MT, MLD, KGG) · PK (id)
+--   CHECK required_certificate IN (MT, MLD, KGG) · CHECK kostentraeger_typ IN
+--     (gkv, privat, selbstzahler, bg) · PK (id)
 --   ★ Die Leistungstabelle. Bis 28.08.2026 gab es daneben `business_services`;
 --     jene Spiegeltabelle ist gedroppt, `services` ist seither die einzige.
 --   ⚠️ Policy "Public read services" erlaubt SELECT für alle (Booking-Seite).
 --   ⚠️ price ist text, nicht numeric. Struktur steckt in price_config jsonb.
---   ⏳ AUSSTEHEND: Spalte `kostentraeger_typ text` (CHECK: gkv/privat/
---     selbstzahler/bg, NULL erlaubt). Migration liegt fertig unter
---     supabase/migrations/20260902090000_services_kostentraeger_typ.sql,
---     war am 03.09.2026 noch nicht ausgefuehrt. Dieser Dump ist bis dahin
---     korrekt — die Spalte gibt es wirklich noch nicht. Nach dem Lauf:
---     „Schema aktualisieren" und diesen ganzen ⏳-Block loeschen.
+--   ✅ kostentraeger_typ ist seit dem 03.09.2026 live (06.09.2026 gegen die
+--     Datenbank nachgezaehlt: 172 von 181 Zeilen gepflegt). Hier stand bis
+--     dahin „⏳ AUSSTEHEND — die Spalte gibt es wirklich noch nicht"; das war
+--     falsch und haette jemanden dazu bringen koennen, einen zweiten Weg fuer
+--     dieselbe Unterscheidung aufzumachen. NULL bleibt erlaubt: gelesen wird
+--     ueber kostentraegerTyp() in module/leistungen-liste.js, das bei NULL auf
+--     die alte implizite Regel zurueckfaellt (gkv_position_nr gesetzt = GKV).
 
 CREATE TABLE spatial_ref_sys (
   srid integer NOT NULL

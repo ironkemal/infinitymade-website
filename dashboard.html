@@ -2583,6 +2583,25 @@
                 </div>
               </div>
 
+              <!-- Selbstzahler-Preisstufen — Owner-Einstellung (profiles.selbstzahler_stufen) -->
+              <div class="settings-section" id="settingsPreisstufenSection" hidden>
+                <div class="settings-section-title">Selbstzahler-Preisstufen</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Sie benennen Ihre Preisstufen selbst — etwa einen Bestandspatienten-Preis
+                    und einen Hausbesuch-Preis. Beim Anlegen einer Rechnung setzt ein Klick
+                    den Betrag, daneben steht, was dieser Patient zuletzt bezahlt hat.
+                    Eine spätere Änderung wirkt nur auf neue Rechnungen: gestellte Rechnungen
+                    behalten ihren Betrag.
+                  </p>
+                  <div id="setStufenList" style="margin-bottom:12px;"></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn" id="setStufenAddBtn" type="button">＋ Preisstufe</button>
+                    <button class="btn-primary" id="setStufenSaveBtn" type="button">Speichern</button>
+                  </div>
+                </div>
+              </div>
+
               <!-- Legende der Fußgrafik (Podologie) — Owner-Einstellung -->
               <div class="settings-section" id="settingsLegendeSection" hidden>
                 <div class="settings-section-title">Legende der Fußgrafik</div>

@@ -22,10 +22,14 @@
  * @param {Function} deps.escapeHtml
  * @param {Function} deps.formatEur
  * @param {Function} [deps.preisFuer]  optional: (service) => number — Preisauflösung des Aufrufers
+ * @param {Array}    [deps.stufen]    optional: benannte Selbstzahler-Preisstufen des Owners
+ *                                    ({id,name,betrag_eur}) — siehe module/selbstzahler-stufen.js
+ * @param {Function} [deps.letztePreiseLaden]  optional: () => Promise<[{title,betrag_eur,datum}]>
+ *                                    was diesem Patienten zuletzt berechnet wurde
  * @returns {Promise<{title:string, quantity:number, unit_price:number}|null>}  null = abgebrochen
  */
 export function waehleLeistung(ownerServices, deps) {
-  const { escapeHtml, formatEur, preisFuer } = deps;
+  const { escapeHtml, formatEur, preisFuer, stufen, letztePreiseLaden } = deps;
   const katalog = ownerServices || [];
 
   return new Promise((resolve) => {
@@ -169,6 +173,74 @@ export function waehleLeistung(ownerServices, deps) {
     const freiFelder = document.createElement('div');
     freiFelder.style.cssText = 'display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;';
     freiWrap.appendChild(freiFelder);
+    // ── Schnellpreise: benannte Stufen + was der Patient zuletzt zahlte ──────
+    // Warum hier und nicht bei den Katalogzeilen: ein Selbstzahler-Betrag ist
+    // eine Entscheidung, keine Ableitung. Der Katalogpreis darf nicht heimlich
+    // überschrieben werden — deshalb füllen die Knöpfe sichtbar das freie Feld,
+    // und der Nutzer sieht vor dem Übernehmen, was drinsteht.
+    const schnellWrap = document.createElement('div');
+    schnellWrap.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;align-items:center;';
+    schnellWrap.hidden = true;
+    freiWrap.insertBefore(schnellWrap, freiFelder);  // über den Feldern, die sie füllen
+
+    function schnellKnopf(text, betrag, name) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn-ghost';
+      b.style.cssText = 'font-size:12px;padding:4px 10px;border:1px solid var(--border);border-radius:999px;white-space:nowrap;';
+      b.textContent = text;
+      b.addEventListener('click', () => {
+        freiPreisInput.value = String(betrag);
+        // Den Namen nur vorschlagen, nie überschreiben: hat der Nutzer schon
+        // „Hornhautabtragung" getippt, wäre „SB2" darüber ein Rückschritt.
+        if (name && !freiNameInput.value.trim()) freiNameInput.value = name;
+        updateFreiBtn();
+        freiNameInput.focus();
+      });
+      return b;
+    }
+
+    function zeigeSchnellpreise(letzte) {
+      schnellWrap.innerHTML = '';
+      const stufenListe = Array.isArray(stufen) ? stufen : [];
+      const letzteListe = Array.isArray(letzte) ? letzte : [];
+      if (!stufenListe.length && !letzteListe.length) { schnellWrap.hidden = true; return; }
+
+      if (stufenListe.length) {
+        schnellWrap.appendChild(beschriftung('Preisstufe:'));
+        stufenListe.forEach(st => schnellWrap.appendChild(
+          schnellKnopf(`${st.name} · ${formatEur(st.betrag_eur)}`, st.betrag_eur, st.name)));
+      }
+      if (letzteListe.length) {
+        schnellWrap.appendChild(beschriftung('Zuletzt:'));
+        letzteListe.forEach(e => schnellKnopfMitTitel(e));
+      }
+      schnellWrap.hidden = false;
+    }
+
+    function schnellKnopfMitTitel(e) {
+      const datum = e.datum ? new Date(e.datum) : null;
+      const datumText = (datum && !isNaN(datum)) ? ` (${datum.toLocaleDateString('de-DE')})` : '';
+      schnellWrap.appendChild(
+        schnellKnopf(`${e.title} · ${formatEur(e.betrag_eur)}${datumText}`, e.betrag_eur, e.title));
+    }
+
+    function beschriftung(text) {
+      const s = document.createElement('span');
+      s.style.cssText = 'font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;';
+      s.textContent = text;
+      return s;
+    }
+
+    zeigeSchnellpreise([]);
+    if (typeof letztePreiseLaden === 'function') {
+      // Der Dialog wartet nicht darauf: die Stufen stehen sofort, die Historie
+      // kommt nach. Ein Ladebalken für drei Knöpfe wäre schlimmer als die Lücke.
+      Promise.resolve(letztePreiseLaden())
+        .then(letzte => { if (!resolved) zeigeSchnellpreise(letzte); })
+        .catch(err => console.warn('[leistung-picker] letzte Preise:', err));
+    }
+
 
     const freiNameInput = document.createElement('input');
     freiNameInput.type = 'text';

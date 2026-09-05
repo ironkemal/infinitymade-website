@@ -17,6 +17,8 @@ import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, no
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260905b';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260903';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
+import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
+import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260905a';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
@@ -997,7 +999,7 @@ async function renderSidebar() {
   const role = currentProfile.role || 'owner';
 
   if (role === 'employee' && !ownerProfile && currentProfile.owner_id) {
-    const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status').eq('id', currentProfile.owner_id).maybeSingle();
+    const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status,selbstzahler_stufen').eq('id', currentProfile.owner_id).maybeSingle();
     if (ownerErr) console.error('[renderSidebar ownerProfile]', ownerErr);
     if (owner) {
       ownerProfile = owner;
@@ -15953,7 +15955,7 @@ function bindInvEvents() {
     openInvEditor(id);
   });
   document.getElementById('invAddLineBtn').onclick = async () => {
-    const zeile = await waehleLeistung(ownerServices, { escapeHtml, formatEur, preisFuer: (s) => (invPatientInsuranceType === 'gkv' && s.gkv_position_nr && GKV_PRICES[s.gkv_position_nr]) || parseFloat(s.price) || 0 });
+    const zeile = await waehleLeistung(ownerServices, { escapeHtml, formatEur, stufen: stufenAusProfil(ownerProfile || currentProfile), letztePreiseLaden: () => ladeLetztePreise(supabase, invPatientId), preisFuer: (s) => (invPatientInsuranceType === 'gkv' && s.gkv_position_nr && GKV_PRICES[s.gkv_position_nr]) || parseFloat(s.price) || 0 });
     if (!zeile) return;
     invLines.push(zeile);
     renderInvLines(); calcInvTotals();
@@ -17033,95 +17035,6 @@ async function bootBusinessSwitcher() {
   renderDataSharingSection();
 }
 
-// ===== Settings > Ausfallgebühr (No-Show-Gebühr, Owner-Einstellung) =====
-// Gespeichert in profiles.ausfall_* (Owner-Level, nicht pro Standort), damit
-// auch Einzelpraxen ohne businesses-Zeile die Gebühr konfigurieren können.
-function renderAusfallSettings() {
-  const section = document.getElementById('settingsAusfallSection');
-  if (!section) return;
-
-  const show = currentProfile?.role === 'owner';
-  section.hidden = !show;
-  if (!show) return;
-
-  // Werte aus der Owner-Config lesen
-  const src = ausfallConfig || {};
-
-  const enabled = document.getElementById('setAusfallEnabled');
-  const fields  = document.getElementById('setAusfallFields');
-  const mode    = document.getElementById('setAusfallMode');
-  const amount  = document.getElementById('setAusfallAmount');
-  const label   = document.getElementById('setAusfallAmountLabel');
-  const cutoff  = document.getElementById('setAusfallCutoff');
-  const hinweis = document.getElementById('setAusfallHinweis');
-  if (!enabled || !fields) return;
-
-  enabled.checked = !!src.ausfall_enabled;
-  mode.value = src.ausfall_mode || 'fixed';
-  amount.value = (src.ausfall_mode === 'percent'
-    ? (src.ausfall_percent ?? '')
-    : (src.ausfall_amount_eur ?? ''));
-  cutoff.value = src.ausfall_cutoff_hours ?? 24;
-  hinweis.value = src.ausfall_hinweis || '';
-
-  const sync = () => {
-    fields.hidden = !enabled.checked;
-    label.textContent = mode.value === 'percent' ? 'Prozent (%)' : 'Betrag (€)';
-  };
-  sync();
-
-  if (!section.dataset.wired) {
-    section.dataset.wired = '1';
-    enabled.addEventListener('change', sync);
-    mode.addEventListener('change', sync);
-    document.getElementById('setAusfallSaveBtn')?.addEventListener('click', saveAusfallSettings);
-  }
-}
-
-async function saveAusfallSettings() {
-  const btn = document.getElementById('setAusfallSaveBtn');
-  const enabled = document.getElementById('setAusfallEnabled').checked;
-  const mode = document.getElementById('setAusfallMode').value === 'percent' ? 'percent' : 'fixed';
-  const val = parseFloat((document.getElementById('setAusfallAmount').value || '').replace(',', '.'));
-  const cutoff = parseInt(document.getElementById('setAusfallCutoff').value, 10) || 24;
-  const hinweis = (document.getElementById('setAusfallHinweis').value || '').trim() || null;
-
-  if (enabled && !(val > 0)) {
-    showToast('Bitte einen Betrag bzw. Prozentsatz angeben.', 'error');
-    return;
-  }
-
-  const patch = {
-    ausfall_enabled: enabled,
-    ausfall_mode: mode,
-    ausfall_amount_eur: (mode === 'fixed' && val > 0) ? val : null,
-    ausfall_percent: (mode === 'percent' && val > 0) ? val : null,
-    ausfall_cutoff_hours: cutoff,
-    ausfall_hinweis: hinweis,
-  };
-
-  if (btn) { btn.disabled = true; btn.textContent = '…'; }
-  try {
-    // Owner-Einstellung in profiles speichern
-    const { error } = await supabase
-      .from('profiles')
-      .update(patch)
-      .eq('id', currentSession.user.id);
-    if (error) throw error;
-
-    // Lokalen Cache aktualisieren, damit die No-Show-Prüfung sofort greift
-    ausfallConfig = { ...ausfallConfig, ...patch };
-    if (currentProfile) Object.assign(currentProfile, patch);
-
-    showToast('Ausfallgebühr gespeichert ✓');
-  } catch (e) {
-    console.error('[saveAusfallSettings]', e);
-    showToast('Fehler: ' + (e.message || 'Speichern fehlgeschlagen'), 'error');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Speichern'; }
-  }
-}
-
 // ===== Settings > Datenfreigabe zwischen Standorten =====
 const DATA_SHARING_CATS = [
   { key: 'patients',   label: 'Patienten & Akten',        desc: 'Patientenliste, Notizen, Anamnese, Rezepte, Überweisungen, Warteliste' },
@@ -17551,7 +17464,8 @@ async function init() {
     // Ausfallgebühr-Config (Owner-Level) laden + Einstellungsbereich rendern.
     // Unabhängig vom bizSwitcher, da Einzelpraxen keine businesses-Zeile haben.
     await loadAusfallConfig();
-    renderAusfallSettings();
+    renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast });
+    renderPreisstufenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
     console.log('[init] ausfallConfig ok');
     // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
     renderLegendeSettings(fussbefundCtx());
@@ -21866,7 +21780,7 @@ function initDruckeinstellungen() {
     // `currentProfile.language` wird nicht mehr angewendet — die Oberflaeche ist deutsch (28.08.2026).
 
     if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
-      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status').eq('id', currentProfile.owner_id).maybeSingle();
+      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status,selbstzahler_stufen').eq('id', currentProfile.owner_id).maybeSingle();
       if (ownerErr) console.error('[ownerProfile]', ownerErr);
       if (owner) {
         ownerProfile = owner;
