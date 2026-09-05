@@ -8,7 +8,7 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `Handbücher/INDEX.md`
-> Son güncelleme: 2026-08-31
+> Son güncelleme: 2026-09-05
 
 ---
 
@@ -256,7 +256,95 @@
 - **Kodda:** doğrulanmadı — `api-backend/billing/dta/` ve `billing/codes/` kontrol edilmeli
 - **Kapsam:** tüm Heilmittel Abrechnung
 
+
+### Abrechnungscode 71 = Podologen (72 = med. Fußpfleger)
+- **Kural:** Podoloji Verordnung/DTA ekranlarında görünen sabit **„71"** Anlage 3'ün
+  **Abrechnungscode**'udur: `71 = Podologen`, `72 = Med. Fußpfleger (gemäß § 10 Abs. 4 bis 6 PodG)`.
+  LEGS'in ilk iki hanesidir (`7100501` / `7200501`) ve aynı değer §8.1.14
+  Leistungserbringer-Sammelgruppenschlüssel'de **Leistungsbereich B (Heilmittel)** altında geçer.
+  Diagnosegruppe **değildir**, Positionsnummer **değildir**.
+- **Kaynak:** `Podoloji/Anlage_3_TP5_V21_20250919.txt` §8.1.5.1 S.15 Z.559 (*„71 = Podologen"*)
+  ve §8.1.14 S.30 Z.1137 (aynı değer, Sammelgruppe B)
+- **Geçerlilik:** 01.10.2025 (Anlage 3 V21)
+- **Kodda:** `api-backend/billing/codes/legs.js:88-92` (`podologe: '7100501'`) ·
+  `api-backend/billing/codes/anlage3_v22.js:85` · `module/typen/gkv.js:42`
+- **Kapsam:** Podologie (71) / med. Fußpfleger (72), tüm Verordnungsart'lar
+
+### FKT: „IK des Kostenträgers" ile „IK der Krankenkasse von der KV-Karte" AYRI alanlardır
+- **Kural:** SLGA-FKT ve SLLA-FKT iki ayrı IK taşır. „IK des Kostenträgers" alanına
+  *Kostenträgerdatei'de KV-Kart IK'sının işaret ettiği* Kostenträger-IK yazılır; „IK der
+  Krankenkasse von der KV-Karte bzw. der ärztlichen Verordnung" alanına kartın üstündeki IK
+  yazılır. İkisi Ersatzkassen'de ve füzyon geçirmiş kasalarda **birbirinden farklıdır**.
+- **Kaynak:** `Handbücher/Anlage_1_TP5_V21_20260115.txt` §5.5.2 (SLGA-FKT, Z.1440-1446) ve
+  §5.5.3.1 (SLLA-FKT, Z.1885-1898) — *„Einzutragen ist das IK des Kostenträgers auf den das IK
+  der KV-Karte in der Kostenträgerdatei verweist"*
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
+- **Kodda:** ❌ **uygulanmamış.** `api-backend/billing/api/abrechnung.routes.js:353` ve `:2123`
+  her iki alana aynı değeri (`rx.kostentraeger_ik`) veriyor; `billing/dta/builder.js:106,234`
+  `krankenkasseIk || kostentraegerIk` ile bunu maskeliyor. Şemada da tek alan var
+  (`prescriptions.kostentraeger_ik`, `db/SCHEMA.sql:1485`) — ikinci IK saklanacak yer yok.
+- **Kapsam:** tüm Leistungserbringergruppen, tüm Verordnungsart'lar
+
+### Kostenträgerdatei: birden çok KV-Kart-IK → tek Kostenträger (n:1)
+- **Kural:** Bir Kostenträger'e birden çok „IK der Versichertenkarte" bağlanabilir; bağ
+  VKG segmenti + Verknüpfungsart `01` üzerinden kurulur. **Ersatzkassen'de her Kostenträger için
+  23 IK** tahsis edilir; füzyon geçirmiş diğer kasa türlerinde de aynı durum vardır. Yön tek
+  taraflı benzersizdir: IK → Kostenträger tekil, Kostenträger → IK **çoğuldur**.
+- **Kaynak:** `Handbücher/Anhang_03_Anlage_1_TP5_V10_20260414.txt` §5.1 —
+  *„Bilden mehrere IK der Versichertenkarte auf einen Kostenträger ab … für jeden Kostenträger
+  23 IK's bereitgestellt … Verknüpfungsart 01"*
+  ⚠️ Bu belge **V10 = ab 01.02.2027**; V10 Änderungshistorie'sine göre §5.1 V09'da
+  değiştirilmedi (değişiklikler 5.2/7.2/8.2/8.3), yani kural bugün de geçerli — ama geçerli
+  sürüm (V09) arşivde YOK, indirilip INDEX'e kaydedilmeli.
+- **Geçerlilik:** yapı kuralı, sürümler arası değişmedi
+- **Kodda:** ❌ **uygulanmamış.** `krankenkassen.ik_number` tek bir metin alanı
+  (`db/SCHEMA.sql:1043`), `kostentraeger` ile FK bağı yok, VKG/Verknüpfungsart kavramı hiç yok.
+- **Kapsam:** tüm Leistungserbringergruppen
+
+### Dosya ve Gesamtaufstellung granülaritesi
+- **Kural:** (1) *„Je Datenannahmestelle mit Entschlüsselungsbefugnis ist je Kassenart eine
+  Nutzdatendatei zu erstellen."* (2) *„Die Gesamtaufstellung (Gesamtrechnung, Sammelrechnung)
+  muss pro Kostenträger und je Leistungsbereich erstellt werden. Dies gilt für alle
+  Rechnungsarten."* (3) Sammelrechnung opsiyoneldir ve yalnız farklı Krankenkassen-IK'ların
+  gesamtrechnungları tek Kostenträger-IK altında toplanacaksa gerekir. (4) *„Das Mischen von
+  Einzel- und Sammelrechnungen in einer Datei ist nicht zulässig."*
+- **Kaynak:** `Handbücher/Anlage_1_TP5_V21_20260115.txt` §5.3.1 (Z.566-573) ve §5.3.2 (Z.575-578)
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
+- **Kodda:** ⚠️ **kısmen.** `abrechnung.routes.js:515` ve `:2225` her Abrechnung'u **tek**
+  Kostenträger-IK'ya kilitliyor → dosya birimi „1 Kostenträger = 1 dosya". Spesifikasyonun
+  istediği birim **DAV × Kassenart**; yani aynı DAV'a giden birden çok Kostenträger tek dosyada
+  olmalıydı. Einzel/Sammel karışım yasağı kodda hiç yok (Sammelrechnung yolu da yok).
+- **Kapsam:** tüm DTA üretimi
+
+### GES: Gesamtrechnungsbetrag = Gesamtbruttobetrag − Zuzahlung
+- **Kural:** VKZ `01`, `02`, `04` için `GES.Gesamtrechnungsbetrag` = `GES.Gesamtbruttobetrag`
+  eksi „Gesamtbetrag Zuzahlung und/oder Eigenanteil und/oder Pauschale Korrekturbetrag".
+  VKZ `03` (Zuzahlungsnachforderung) için Rechnungsbetrag = Zuzahlung toplamı, Bruttobetrag
+  `0,00` verilir. Brutto her zaman Zuzahlung **dahil** BES toplamıdır.
+- **Kaynak:** `Handbücher/Anlage_1_TP5_V21_20260115.txt` §5.5.2, GES segmenti (Z.1660-1690)
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
+- **Kodda:** `api-backend/billing/dta/segments.js:73-85` alanları taşıyor; hesaplama
+  `abrechnung.routes.js:600-615` (brutto ve zuzahlung ayrı toplanıyor). VKZ 03 özel kuralı
+  (Brutto = 0,00) **doğrulanmadı**.
+- **Kapsam:** tüm Leistungserbringergruppen
+
+### „Absetzung" §302 teknik spesifikasyonunun kavramı DEĞİLDİR
+- **Kural:** Anlage 1 TP5 V21 metninde `Absetzung`, `Buchung`, `Kontonummer`, `Zahlungsavis`
+  kelimeleri **hiç geçmez** (0 eşleşme). Kasa geri bildirimi teknik tarafta Fehlerverfahren
+  (Prüfstufe 1–4) olarak düzenlenir; parasal kesinti ise Absetzungsschreiben ile kâğıt/portal
+  üzerinden gelir ve içeriği standart değildir. Korrekturverfahren belgesi Nr. 7 bunu açıkça
+  söyler: kesilen Termin/Positionsnummer Absetzungsschreiben'de yoksa **VKZ 4 Korrekturrechnung
+  üretilemez**, Leistungserbringer bilgiyi kasadan sormak zorundadır.
+- **Kaynak:** `Handbücher/Gemeinsame_Umsetzungsempfehlungen_zum_Korrekturverfahren_Heilmittel_20250213.txt`
+  Frage 7 (Z.186-196) — *„Sofern die Termine bzw. die Positionen nicht aus dem
+  Absetzungsschreiben hervorgehen, muss der Leistungserbringer … diese Informationen erfragen"*
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** `api-backend/billing/zaa/parser.js` yalnız `code / belegnummer / text` çıkarır;
+  `zaa_fehler` tablosunda (`db/SCHEMA.sql:1955-1967`) kasa tarafı **Vorgangs-/Absetzungsnummer**
+  alanı yok. Muhasebe hesap numarası (SKR03/04) §302 kapsamı dışıdır.
+
 ---
+
 
 # Sürüm yönetimi
 

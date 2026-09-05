@@ -166,3 +166,55 @@
   tek denemede görülür. Kabul testi: DF-b tanılı 74 yaş diyabetik, ilk randevu, 78030 + 78001
   sağ ayak; ikinci senaryo Nagelspange (Selbstzahler onamı) + Foto-Einwilligung.
 - **Tutanak:** `konsey/tutanak/2026-08-14-patienten-uebergabe-einwilligung.md`
+
+---
+
+### Abrechnung: Kostenträger-Gruppierung ja, aber "toplu" = çok paket tek tık, tek birleşik fatura değil
+- **Karar:** Podologie-Abrechnungsseite Kostenträger bazlı accordion olarak yeniden
+  tasarlanır. Çoklu kasa seçimi ARKA PLANDA ayrı §302 paketleri + ayrı Begleitzettel
+  üretir, tek birleşik fatura üretmez. Accordion başlığına 4. sütun: Zuzahlung-Status
+  (bezahlt/nicht bezahlt/befreit, renkli). Hatalı reçete satırlarında "trotzdem
+  übernehmen" (gerekçeli kabul) zorunlu.
+- **Neden:** Abrechnung podolog için aylık/toplu bir iştir, seans işi değil (Beta-2,
+  05.09.2026: *"Sieht abzurechnen, das ist Kopfschmerzen"*). Kasa kasa ayrılık §302'nin
+  kendi yapısıdır (Anlage 1 V21 §5.3.1: pro Kostenträger je Leistungsbereich); podologun
+  istediği tek fatura değil tek oturuşta bitirme. gkv-302 teyidi: gruplama birimi
+  spesifikasyona uygun, hatta bugünkünden daha yakın.
+- **Ön koşul (gkv-302, 05.09.2026):** Dosya birimi Kostenträger değil **DAV × Kassenart**
+  (§5.3.1) — çoklu seçim yalnız aynı Datenannahmestelle+Kassenart'taki kasalar arasında
+  serbest olabilir. Einzel- ve Sammelrechnung aynı dosyada YASAK (§5.3.2) — Sammelrechnung
+  yolu bugün kodda yok, önce o yazılmalı. Sıra: (1) Krankenkasse-IK/VKG şema düzeltmesi
+  → (2) Sammelrechnung yolu → (3) çoklu seçim UI. Ters sırada yapılırsa yanlış gruplanmış
+  dosya üretilir.
+- **Tarih:** 2026-09-05
+- **Etkilenen:** `module/podologie-abrechnung.js` (bugün tek seçim, satır ~336),
+  `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/dta/builder.js`
+- **Reddedilen alternatif:** Kasaları tek pakette birleştirmek — §302 yapısına aykırı.
+- **Tutanak:** Beta-2 görüşmesi 05.09.2026, `podoloji` + `gkv-302` ajan değerlendirmesi
+  (Ops-Dashboard kart notlarında tam metin).
+
+---
+
+### Selbstzahler-Preisstufen: 3 isimlendirilebilir kademe + hasta bazlı son fiyat, versiyonlama yok
+- **Karar:** Sınırsız preset değil, ayarlarda isimlendirilebilir 3 satır (ad + tutar) +
+  hasta kartında `standard_preisstufe`/son kullanılan tutar alanı. Kademe geçmişi/
+  versiyonlama yapılmaz.
+- **Neden:** Gerçek ihtiyaç 2-3 kademe (eski/yeni hasta, Hausbesuch farkı) — Beta-2 örneği
+  50€ eski / 68€ yeni. Preset listesi tek başına tık kazandırmaz; kazanç hastanın son
+  fiyatının hatırlanmasındadır. Asıl hata riski (aynı hastaya iki farklı fiyat çıkarmak)
+  orada — bu yüzden tutar **hastaya yazılan değere** bağlanır, kademe referansına değil
+  (fiyat kademesi zamla değişince eski hastanın tutarı geriye dönük değişmemeli).
+- **Tarih:** 2026-09-05
+- **Reddedilen alternatif:** SB1/SB2 gibi kod adı dayatmak — podolog kendi adını yazsın.
+
+---
+
+### Fazla faturalandırma riski taşıyan Zusatzleistung otomatik işaretlenmez
+- **Karar:** Befundpauschale ve benzeri ek/opsiyonel Heilmittel-Positionen otomatik
+  eklenmez — önerilir (vurgulu, işaretsiz), podolog kendi tıklar.
+- **Neden:** Beta-2, 05.09.2026: *"wäre meine Empfehlung nicht automatisch machen,
+  sondern sollen wir selber anklicken"* — gerekçe kasa denetimi riski, sorumluluk
+  podologda kalmalı. Tık ekonomisinin bilinçli olarak feda edildiği tek yer budur ve
+  öyle kalmalı — otomasyon azaltma yönünde istisna.
+- **Tarih:** 2026-09-05
+- **Etkilenen:** HPNR seçim bloğu, `module/podologie-abrechnung.js` (~satır 622)
