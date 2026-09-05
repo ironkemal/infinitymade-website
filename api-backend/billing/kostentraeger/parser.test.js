@@ -29,6 +29,15 @@ test('every mock entry has IK + name + das_ik', () => {
   }
 });
 
+test('keine zwei Kassen teilen sich dieselbe IK', () => {
+  const seen = new Map();
+  for (const k of KOSTENTRAEGER_MOCK) {
+    const vorher = seen.get(k.ik);
+    assert.ok(!vorher, `IK ${k.ik} doppelt vergeben: "${vorher}" und "${k.name}"`);
+    seen.set(k.ik, k.name);
+  }
+});
+
 test('routeToDatenannahmestelle TK → vdek', () => {
   const r = routeToDatenannahmestelle('101575519');
   assert.equal(r.ok, true);

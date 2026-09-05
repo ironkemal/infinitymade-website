@@ -1,7 +1,10 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-04 (zuletzt nachgezogen: prescriptions.nagel,
+-- ERZEUGT AM:        2026-09-05 (zuletzt nachgezogen: prescriptions.krankenkasse_ik,
+--                    FKT-Segment-Fix — Karten-IK der Krankenkasse getrennt von
+--                    kostentraeger_ik gespeichert, siehe Spaltenkommentar unten)
+--                    davor: 2026-09-04, prescriptions.nagel,
 --                    Ops-Aufgabe 245) — Zusammenlegung der zwei Verordnungstöpfe:
 --                    prescriptions (+11 Spalten aus `verordnungen`) wird der
 --                    EINE Topf für Physio/Ergo/Logo UND Podologie. Details,
@@ -13,7 +16,8 @@
 --                    90-Tage-Frist): `verordnungen` GEDROPPT. Siehe Eintrag
 --                    an der Stelle, wo die Tabelle frueher im Dump stand
 --                    (nach `vehicles`, vor `visibility_reports`).
--- LETZTE MIGRATION:  verordnungstopf_faz5c_naechste_verordnungsnummer_fix
+-- LETZTE MIGRATION:  20260905125546_prescriptions_krankenkasse_ik
+--                    davor: verordnungstopf_faz5c_naechste_verordnungsnummer_fix
 --                    davor: verordnungstopf_faz5b_verordnungen_droppen
 --                    davor: 20260904085612_prescriptions_nagel_lokalisation
 --                    davor: 20260903202143_verordnungstopf_faz3_fk_auf_prescriptions_umhaengen
@@ -1526,8 +1530,10 @@ CREATE TABLE prescriptions (
   storno_am date
   rezeptart text
   nagel text
+  krankenkasse_ik text
 );
 --   CHECK zuzahlung_zahlart IS NULL ODER IN (bar, ec, ueberweisung, sonstiges)
+--   CHECK krankenkasse_ik IS NULL ODER MATCHES ^[0-9]{9}$
 --   CHECK status IN (parsed, confirmed, in_therapy, completed, billed, cancelled)
 --   CHECK rezept_typ IN (standard, blanko, lhb_bvb, kassen, privat)
 --   CHECK abrechnung_status IN (bereit, in_abrechnung, gesendet, accepted, rejected, paid,
@@ -1547,6 +1553,16 @@ CREATE TABLE prescriptions (
 --     Erstbefundungs-Serie (78110/78100) ueber mehrere Verordnungen laeuft und
 --     allein vom Nagel zusammengehalten wird. Kein NOT NULL: eine Verordnung
 --     entsteht zuerst aus dem OCR-Lauf, der Nagel kommt danach.
+--   ★ krankenkasse_ik (05.09.2026): IK der Krankenkasse von der KV-Karte des
+--     Versicherten (§302 SGB V, Anlage 1 TP5 V21 § 5.5.3.1) — NICHT dasselbe
+--     wie `kostentraeger_ik`. Letztere kommt aus dem Namensabgleich mit der
+--     Kassenliste (FK auf `kostentraeger`), Erstere ist bis zur Integration
+--     einer echten Kostenträgerdatei (VKG-Segment) NICHT ermittelbar und bleibt
+--     überall NULL — der DTA-Bau fällt dann bewusst auf `kostentraeger_ik`
+--     zurück (`api-backend/billing/dta/builder.js:106,238,353`). Kein FK,
+--     bewusst keine Rückbefüllung: NULL bedeutet "Karten-IK nicht erfasst",
+--     das ist ein abfragbarer Zustand und würde beim Kopieren von
+--     `kostentraeger_ik` unsichtbar. Migration: prescriptions_krankenkasse_ik.
 --   FK patient_id -> leads(id) · arzt_id -> aerzte(id) · abrechnung_id -> abrechnung(id)
 --   FK kostentraeger_ik -> kostentraeger(ik) · PK (id)
 --   ★ SEIT 04.09.2026: EIN Verordnungstopf für ALLE Fachbereiche

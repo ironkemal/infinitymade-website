@@ -3142,20 +3142,18 @@ async function prefillBookingModal(startStr) {
     const newBtn = _selbstBtn.cloneNode(true);
     _selbstBtn.parentNode.replaceChild(newBtn, _selbstBtn);
     newBtn.addEventListener('click', () => {
-      document.querySelectorAll('.bk-vero-card').forEach(c => { c.style.borderColor='var(--border)'; c.style.background='transparent'; });
-      newBtn.style.borderColor = 'var(--accent,#b1891b)';
-      newBtn.style.color = 'var(--text-main)';
-      const rxEl = document.getElementById('bkSelectedRxId');
-      if (rxEl) rxEl.value = '';
-      const sessEl = document.getElementById('bkSelectedSessionId');
-      if (sessEl) sessEl.value = '';
       const isSelbstEl2 = document.getElementById('bkIsSelbstzahler');
-      if (isSelbstEl2) isSelbstEl2.value = '1';
+      const toggleAus = isSelbstEl2?.value === '1'; // erneuter Klick hebt Selbstzahler-Auswahl auf
+      document.querySelectorAll('.bk-vero-card').forEach(c => { c.style.borderColor='var(--border)'; c.style.background='transparent'; });
+      newBtn.style.borderColor = toggleAus ? 'var(--border)' : 'var(--accent,#b1891b)';
+      newBtn.style.color = toggleAus ? 'var(--text-muted)' : 'var(--text-main)';
+      if (isSelbstEl2) isSelbstEl2.value = toggleAus ? '' : '1';
+      const rxEl = document.getElementById('bkSelectedRxId'); if (rxEl) rxEl.value = '';
+      const sessEl = document.getElementById('bkSelectedSessionId'); if (sessEl) sessEl.value = '';
       window._pendingRxSession = null;
       window._bkGewaehlteRx = null;
       zeigeDienstleistungsfeld(true);
-      const pb = document.getElementById('bkSessionPickerBlock');
-      if (pb) pb.hidden = true;
+      const pb = document.getElementById('bkSessionPickerBlock'); if (pb) pb.hidden = true;
     });
   }
   const _veroDeselect = document.getElementById('bkVeroDeselect');
@@ -3164,15 +3162,15 @@ async function prefillBookingModal(startStr) {
     _veroDeselect.parentNode.replaceChild(newDeselect, _veroDeselect);
     newDeselect.addEventListener('click', () => {
       document.querySelectorAll('.bk-vero-card').forEach(c => { c.style.borderColor='var(--border)'; c.style.background='transparent'; });
-      const rxEl2 = document.getElementById('bkSelectedRxId');
-      if (rxEl2) rxEl2.value = '';
-      const sessEl2 = document.getElementById('bkSelectedSessionId');
-      if (sessEl2) sessEl2.value = '';
+      const rxEl2 = document.getElementById('bkSelectedRxId'); if (rxEl2) rxEl2.value = '';
+      const sessEl2 = document.getElementById('bkSelectedSessionId'); if (sessEl2) sessEl2.value = '';
+      const isSelbstEl3 = document.getElementById('bkIsSelbstzahler'); if (isSelbstEl3) isSelbstEl3.value = '';
+      const selbstBtn2 = document.getElementById('bkSelbstzahlerBtn');
+      if (selbstBtn2) { selbstBtn2.style.borderColor = 'var(--border)'; selbstBtn2.style.color = 'var(--text-muted)'; }
       window._pendingRxSession = null;
       window._bkGewaehlteRx = null;
       zeigeDienstleistungsfeld(true);
-      const pb2 = document.getElementById('bkSessionPickerBlock');
-      if (pb2) pb2.hidden = true;
+      const pb2 = document.getElementById('bkSessionPickerBlock'); if (pb2) pb2.hidden = true;
     });
   }
 }

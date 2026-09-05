@@ -103,6 +103,8 @@ function buildSLLAMessage({
       vkz,
       ikLeistungserbringer: absender.ik,
       ikKostentraeger:      verordnung.kostentraegerIk,
+      // Karten-IK fehlt (NULL), bis eine echte Kostenträgerdatei sie liefert —
+      // dann ist Kostenträger-IK die beste verfügbare Näherung, kein Bug (db-ustasi, 05.09.2026).
       ikKrankenkasse:       verordnung.krankenkasseIk || verordnung.kostentraegerIk,
       ikRechnungssteller:   rechnung.rechnungsstellerIk && rechnung.rechnungsstellerIk !== absender.ik
                               ? rechnung.rechnungsstellerIk : '',
@@ -231,6 +233,8 @@ function buildSLGAMessage({
       sammelrechnung:           '',
       ikLeistungserbringer:     absender.ik,
       ikKostentraeger:          kostentraegerIk,
+      // Karten-IK fehlt (NULL), bis eine echte Kostenträgerdatei sie liefert —
+      // dann ist Kostenträger-IK die beste verfügbare Näherung, kein Bug (db-ustasi, 05.09.2026).
       ikKrankenkasse:           krankenkasseIk || kostentraegerIk,
       ikAbsenderDatei:          absender.ik,
     }),
@@ -346,6 +350,8 @@ export function buildDtaFile({
 
   // Assume single Krankenkasse per file (Faz A2).
   const kostentraegerIk = prescriptions[0].verordnung.kostentraegerIk;
+  // Karten-IK fehlt (NULL), bis eine echte Kostenträgerdatei sie liefert —
+  // dann ist Kostenträger-IK die beste verfügbare Näherung, kein Bug (db-ustasi, 05.09.2026).
   const krankenkasseIk  = prescriptions[0].verordnung.krankenkasseIk || kostentraegerIk;
 
   let nachrRef = 0;

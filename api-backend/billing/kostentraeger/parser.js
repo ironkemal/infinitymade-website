@@ -27,13 +27,20 @@ export const KOSTENTRAEGER_MOCK = Object.freeze([
   { ik: '101000016', name: 'AOK Nordost',        payer_type: 'gkv', region: 'BE/BB/MV', das_ik: '660500345', das_kontakt: 'edi@aok.de' },
   { ik: '107436001', name: 'AOK Rheinland/Hamburg', payer_type: 'gkv', region: 'NW/HH',  das_ik: '660500345', das_kontakt: 'edi@aok.de' },
   { ik: '101000026', name: 'AOK PLUS (Sachsen/Thüringen)', payer_type: 'gkv', region: 'SN/TH', das_ik: '660500345', das_kontakt: 'edi@aok.de' },
-  { ik: '108310400', name: 'AOK Niedersachsen',  payer_type: 'gkv', region: 'NI',       das_ik: '660500345', das_kontakt: 'edi@aok.de' },
+  // War fälschlich als "AOK Niedersachsen" gelistet UND doppelt (siehe unten) an
+  // KKH vergeben — 108310400 gehört laut Websuche + dta/dump.js:8-Kommentar
+  // tatsächlich zu AOK Bayern (05.09.2026 korrigiert).
+  { ik: '108310400', name: 'AOK Bayern',         payer_type: 'gkv', region: 'BY',       das_ik: '660500345', das_kontakt: 'edi@aok.de' },
   { ik: '109519005', name: 'AOK Baden-Württemberg', payer_type: 'gkv', region: 'BW',    das_ik: '660500345', das_kontakt: 'edi@aok.de' },
   // Ersatzkassen → vdek (Verband der Ersatzkassen)
   { ik: '101575519', name: 'Techniker Krankenkasse (TK)', payer_type: 'gkv', region: 'DE', das_ik: '108036123', das_kontakt: 'edi@vdek.com' },
   { ik: '104940005', name: 'Barmer',             payer_type: 'gkv', region: 'DE', das_ik: '108036123', das_kontakt: 'edi@vdek.com' },
   { ik: '101570104', name: 'DAK-Gesundheit',     payer_type: 'gkv', region: 'DE', das_ik: '108036123', das_kontakt: 'edi@vdek.com' },
-  { ik: '108310400', name: 'KKH Kaufmännische Krankenkasse', payer_type: 'gkv', region: 'DE', das_ik: '108036123', das_kontakt: 'edi@vdek.com' },
+  // KKH Kaufmännische Krankenkasse fehlt bewusst: die alte Zeile teilte sich die
+  // IK 108310400 mit AOK Bayern (oben) — eine Websuche am 05.09.2026 lieferte
+  // keine verlässlich bestätigte KKH-IK (ein Treffer nannte 102171012, das ist
+  // aber die IK von hkk direkt darunter — widersprüchlich, also nicht übernommen).
+  // Vor Wiederaufnahme: IK gegen eine echte Kostenträgerdatei/ITSG-Quelle prüfen.
   { ik: '102171012', name: 'hkk Krankenkasse',   payer_type: 'gkv', region: 'DE', das_ik: '108036123', das_kontakt: 'edi@vdek.com' },
   // IKK → IKK Bundesverband DAS
   { ik: '107708612', name: 'IKK classic',        payer_type: 'gkv', region: 'DE', das_ik: '660500030', das_kontakt: 'edi@ikk-classic.de' },

@@ -350,7 +350,9 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
       therapiefrequenz:         frequenzToDigit(rx.frequenz),
       zuzahlungskennzeichen:    rx.zuzahlung_befreit ? '1' : '0',
       kostentraegerIk:          rx.kostentraeger_ik,
-      krankenkasseIk:           rx.kostentraeger_ik,
+      // Karten-IK ist bis zur echten Kostenträgerdatei meist NULL — builder.js
+      // faellt dann bewusst auf kostentraegerIk zurueck (db-ustasi, 05.09.2026).
+      krankenkasseIk:           rx.krankenkasse_ik,
       berichtAngefordert:       rx.bericht_angefordert,
       berichtStatus:            rx.bericht_status,
     },
@@ -474,7 +476,7 @@ router.post('/abrechnung/create', async (req, res) => {
     const { data: rxRows, error: rxErr } = await supabase
       .from('prescriptions')
       .select(`
-        id, owner_id, patient_id, arzt_id, kostentraeger_ik,
+        id, owner_id, patient_id, arzt_id, kostentraeger_ik, krankenkasse_ik,
         verordnungsnummer, belegnummer,
         ausstellungsdatum, behandlungsbeginn, icd10, diagnosegruppe,
         heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
@@ -708,13 +710,22 @@ router.post('/abrechnung/create', async (req, res) => {
         ik:      dasIk,
       },
       abrechnung: {
-        dateiname:             dta.filename,
-        sammelRechnungsnummer,
-        datum:                 now,
-        belegCount:            prescriptions.length,
-        brutto:                totalBrutto,
-        zuzahlung:             totalZu,
-        netto:                 +(totalBrutto - totalZu).toFixed(2),
+        // Schlüssel müssen exakt zu renderBegleitzettel()s JSDoc passen — sie
+        // wichen vorher ab (sammelRechnungsnummer/belegCount/brutto/…), das
+        // Template las andere Namen und liess Rechnungsnummer + alle drei
+        // Summen leer drucken (db-ustasi, 05.09.2026).
+        dateiname:          dta.filename,
+        rechnungsnummer:    sammelRechnungsnummer,
+        datum:              now,
+        abrechnungsmonat:   `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`,
+        prescription_count: prescriptions.length,
+        total_brutto:       totalBrutto,
+        total_zuzahlung:    totalZu,
+        total_netto:        +(totalBrutto - totalZu).toFixed(2),
+        krankenkasse_name:  kk.name,
+        // IK des Rechnungsadressaten (Kostenträger), nicht die Karten-IK des
+        // Versicherten — das ist ein anderes Feld (siehe prescriptions.krankenkasse_ik).
+        krankenkasse_ik:    kostentraegerIk,
       },
       belege,
     });
@@ -1932,7 +1943,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
     const { data: rxRows, error: rxErr } = await supabase
       .from('prescriptions')
       .select(`
-        id, owner_id, patient_id, arzt_id, kostentraeger_ik,
+        id, owner_id, patient_id, arzt_id, kostentraeger_ik, krankenkasse_ik,
         verordnungsnummer, belegnummer,
         ausstellungsdatum, behandlungsbeginn, icd10, diagnosegruppe,
         heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
@@ -1978,8 +1989,15 @@ router.post('/abrechnung/preflight', async (req, res) => {
       .eq('ik', kostentraegerIk)
       .maybeSingle();
 
-    let dasIk = kk?.das_ik || kostentraegerIk || '108310400';
-    let dasName = kk?.name || 'Krankenkasse';
+    // Kein Fallback auf eine erfundene IK: sonst prüft der Preflight gegen einen
+    // Fantasie-Empfänger und meldet "OK", während der echte Versand (oben,
+    // /abrechnung/create) bei unbekanntem Kostenträger korrekt mit 400 ablehnt —
+    // der Testlauf hätte dann eine falsche Sicherheit vorgetäuscht.
+    if (!kk) {
+      return res.status(400).json({ error: 'Krankenkasse unbekannt — Preflight kann nicht gegen einen echten Empfänger prüfen.' });
+    }
+    const dasIk = kk.das_ik || kostentraegerIk;
+    const dasName = kk.name || 'Krankenkasse';
 
     // ---- fetch tariffs for bundesland ----
     const bundesland = bundeslandDerPraxis(profile);
@@ -2120,7 +2138,9 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
       therapiefrequenz:      frequenzToDigit(vord.frequenz),
       zuzahlungskennzeichen: vord.zuzahlung_befreit ? '1' : '0',
       kostentraegerIk:       vord.kostentraeger_ik,
-      krankenkasseIk:        vord.kostentraeger_ik,
+      // Karten-IK ist bis zur echten Kostenträgerdatei meist NULL — builder.js
+      // faellt dann bewusst auf kostentraegerIk zurueck (db-ustasi, 05.09.2026).
+      krankenkasseIk:        vord.krankenkasse_ik,
       berichtAngefordert:    false,
       berichtStatus:         null,
     },
@@ -2170,8 +2190,13 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // ---- KK routing ----
     const { data: kk } = await supabase
       .from('kostentraeger').select('ik, name, das_ik').eq('ik', kostentraegerIk).maybeSingle();
-    const dasIk  = kk?.das_ik || kostentraegerIk;
-    const dasName = kk?.name  || 'Krankenkasse';
+    // Gleicher Riegel wie der Physio/Ergo/Logo-Zweig (oben, Zeile ~444): ohne
+    // bekannten Kostenträger fiel dasIk sonst still auf kostentraegerIk selbst
+    // zurück — eine Krankenkasse-IK ist aber nicht dieselbe wie die
+    // Datenannahmestelle-IK, an die die Datei tatsächlich geht.
+    if (!kk) return res.status(400).json({ error: 'Krankenkasse unbekannt.' });
+    const dasIk  = kk.das_ik || kostentraegerIk;
+    const dasName = kk.name;
 
     // ---- fetch prescriptions (podologischer Zweig) with patient + arzt join ----
     //
