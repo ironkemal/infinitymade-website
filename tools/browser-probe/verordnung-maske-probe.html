@@ -1,0 +1,116 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Probe: Muster-13-Maske umziehen und Befunde ans Feld setzen</title>
+<!--
+  Diese Probe fasst die ECHTE Muster-13-Maske an, nicht eine nachgebaute.
+
+  Sie holt `dashboard.html` per fetch, schneidet daraus `#rezeptModal` heraus
+  und hängt es hier ein. Damit prüft sie genau das, was sonst niemand prüft:
+  ob die Zuordnungstabelle in module/verordnung-feldmarker.js (Motor-Feldname →
+  Element-ID → Ankerblock) noch zum Markup passt. Ein umbenanntes Kästchen oder
+  eine entfernte `.m13-cell` fällt hier auf — sonst erst beim Anwender, als
+  Befund, der nirgendwo erscheint.
+
+  Kein Login, keine Datenbank: der Prüfmotor rechnet im Browser.
+-->
+<div id="buehne"></div>
+<div id="seiten-host" style="border:1px dashed #888;padding:8px;"></div>
+
+<script type="module">
+const ergebnis = [];
+const pruef = (name, ok, detail = '') => ergebnis.push({ name, ok: !!ok, detail: String(detail) });
+
+try {
+  // ── Die echte Maske aus dashboard.html holen ────────────────────────────
+  const html = await (await fetch('../../dashboard.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const modal = doc.getElementById('rezeptModal');
+  pruef('dashboard.html enthält #rezeptModal', !!modal);
+  document.getElementById('buehne').appendChild(document.importNode(modal, true));
+
+  const wrap = document.getElementById('rzMaskeWrap');
+  const heim = document.getElementById('rzMaskeHeim');
+  pruef('#rzMaskeWrap steckt in #rzMaskeHeim', wrap && wrap.parentElement === heim);
+  pruef('Speichern-Knopf zieht mit der Maske um',
+    !!wrap?.querySelector('#rzSaveBtn'), 'rzSaveBtn muss INNERHALB von #rzMaskeWrap stehen');
+
+  // ── Umzug in die Seite und zurück ───────────────────────────────────────
+  const maske = await import('../../module/verordnung-maske.js?v=20260906');
+  const host = document.getElementById('seiten-host');
+  host.appendChild(wrap);
+  pruef('Umzug in die Seite', maske.istEingebettet());
+  maske.maskeHeimschicken();
+  pruef('Rückweg ins Modal', !maske.istEingebettet() && wrap.parentElement === heim);
+
+  // ── Riegel ──────────────────────────────────────────────────────────────
+  pruef('eingereichte Verordnung ist gesperrt (Belegnummer)',
+    !!maske.schreibRiegel({ belegnummer: '7-3' }));
+  pruef('eingereichte Verordnung ist gesperrt (Status)',
+    !!maske.schreibRiegel({ abrechnung_status: 'gesendet' }));
+  pruef('laufende Verordnung ist offen',
+    maske.schreibRiegel({ abrechnung_status: null }) === null);
+
+  // ── Jeder Motor-Feldname findet sein Kästchen ───────────────────────────
+  const { markiereBefunde, loescheMarkierungen } = await import('../../module/verordnung-feldmarker.js?v=20260906');
+
+  const FELDER = ['versichertennummer', 'kasseIk', 'ausstellungsdatum', 'behandlungsbeginn',
+                  'arztLanr', 'arztBsnr', 'icd', 'diagnosegruppe', 'leitsymptomatik',
+                  'heilmittel', 'heilmittelPosition', 'anzahl', 'frequenz'];
+
+  for (const feld of FELDER) {
+    loescheMarkierungen(document);
+    const { gesetzt, ohneFeld } = markiereBefunde(
+      [{ schwere: 'blocker', text: `Testbefund ${feld}`, feld, quelle: 'Probe' }], document);
+    const markiert = document.querySelectorAll('.vo-mark-fehler').length;
+    const kasten = document.querySelectorAll('[data-vo-hinweis]').length;
+    pruef(`Feld „${feld}" wird gefunden und markiert`,
+      gesetzt === 1 && ohneFeld.length === 0 && markiert >= 1 && kasten === 1,
+      `gesetzt=${gesetzt} ohneFeld=${ohneFeld.length} markiert=${markiert} kasten=${kasten}`);
+  }
+
+  // ── Zwei Befunde auf denselben Block ergeben EINEN Kasten ────────────────
+  loescheMarkierungen(document);
+  markiereBefunde([
+    { schwere: 'blocker', text: 'Heilmittel fehlt', feld: 'heilmittel', quelle: 'Probe' },
+    { schwere: 'warnung', text: 'Position fehlt', feld: 'heilmittelPosition', quelle: 'Probe' },
+  ], document);
+  pruef('Heilmittel + Position teilen sich einen Hinweiskasten',
+    document.querySelectorAll('[data-vo-hinweis]').length === 1,
+    `${document.querySelectorAll('[data-vo-hinweis]').length} Kästen`);
+  pruef('der schwerere Befund gewinnt die Umrandung',
+    document.getElementById('rzHm').classList.contains('vo-mark-fehler'));
+
+  // ── Aufräumen lässt nichts stehen ───────────────────────────────────────
+  loescheMarkierungen(document);
+  pruef('Löschen räumt Markierungen weg',
+    document.querySelectorAll('.vo-mark-fehler, .vo-mark-warnung, [data-vo-hinweis]').length === 0);
+  pruef('und gibt den ursprünglichen Tooltip zurück',
+    !document.getElementById('rzHm').getAttribute('title'));
+
+  // ── Hinweise bekommen keine Markierung, gehen aber nicht verloren ───────
+  const nurHinweis = markiereBefunde(
+    [{ schwere: 'hinweis', text: 'Frist läuft', feld: 'ausstellungsdatum' }], document);
+  pruef('Hinweise werden nicht ans Feld gemalt',
+    nurHinweis.gesetzt === 0 && nurHinweis.ohneFeld.length === 1);
+
+  // ── Ein unbekanntes Feld verschwindet nicht still ───────────────────────
+  const unbekannt = markiereBefunde(
+    [{ schwere: 'blocker', text: 'x', feld: 'gibtEsNicht' }], document);
+  pruef('unbekanntes Feld landet in ohneFeld statt im Nichts',
+    unbekannt.gesetzt === 0 && unbekannt.ohneFeld.length === 1);
+
+  // ── Der Prüfmotor liefert nur Feldnamen, die es hier gibt ───────────────
+  const { pruefeVerordnung } = await import('../../module/verordnung-pruefung.js?v=20260906');
+  const leer = pruefeVerordnung({ rezeptart: 'gkv' }, { bereich: 'podologie', gruppen: {}, luecken: [] });
+  const unbekannteFelder = [...new Set(leer.befunde
+    .filter(b => b.schwere !== 'hinweis' && b.feld)
+    .map(b => b.feld))].filter(f => !FELDER.includes(f));
+  pruef('alle Pflichtbefunde zeigen auf ein Feld der Maske',
+    unbekannteFelder.length === 0, unbekannteFelder.join(', '));
+
+} catch (e) {
+  pruef('Probe läuft durch', false, e?.stack || e?.message || String(e));
+}
+
+window.__probe = ergebnis;
+</script>

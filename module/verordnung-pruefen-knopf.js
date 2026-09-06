@@ -37,7 +37,8 @@
  * eine fehlerhafte Verordnung muss erfassbar bleiben.
  */
 
-import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20260905';
+import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20260906';
+import { markiereBefunde, loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { POD_KATALOG, dgWurzel } from './verordnung-regeln.js?v=20260903';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
 
@@ -64,6 +65,10 @@ function lesenMuster13() {
     icd:                wert('rzIcd'),
     diagnosegruppe:     wert('rzDg'),
     leitsymptomatik:    ls,
+    // Kästchen d) trägt keinen Katalogbuchstaben, sondern Freitext. Ohne
+    // dieses Feld meldete der Motor „Keine Leitsymptomatik angekreuzt", obwohl
+    // die patientenindividuelle Leitsymptomatik ausgefüllt war.
+    leitsymptomatikFreitext: haken('rzLsD') ? wert('rzLsDText') : '',
     heilmittel:         wert('rzHm'),
     heilmittelPosition: wert('rzHmPosition'),
     anzahl:             wert('rzAnzahl'),
@@ -116,9 +121,17 @@ function lesenPodologie() {
   };
 }
 
+// `wurzel` ist der Bereich, in dem die Befunde an die Felder gesetzt werden
+// (module/verordnung-feldmarker.js), `formular` der Bereich, dessen Tippen das
+// Urteil veralten lässt. Beide bewusst als ID und nicht per `closest()`: die
+// Muster-13-Maske zieht zwischen Modal und Seite um (module/verordnung-maske.js),
+// und `closest('.card')` fände dabei einmal die Karte der Seite und einmal
+// nichts — zwei verschiedene Verhalten für dieselbe Maske.
 const MASKEN = {
-  muster13:  { anker: 'rzSaveBtn',      panel: 'rzPruefErgebnis',      knopf: 'rzPruefBtn',      lesen: lesenMuster13 },
-  podologie: { anker: 'podSaveVordBtn', panel: 'podNewPruefErgebnis',  knopf: 'podNewPruefBtn',  lesen: lesenPodologie },
+  muster13:  { anker: 'rzSaveBtn',      panel: 'rzPruefErgebnis',      knopf: 'rzPruefBtn',
+               lesen: lesenMuster13,  wurzel: 'rzMaskeWrap',      formular: 'rzMaskeWrap' },
+  podologie: { anker: 'podSaveVordBtn', panel: 'podNewPruefErgebnis',  knopf: 'podNewPruefBtn',
+               lesen: lesenPodologie, wurzel: null,               formular: null },
 };
 
 // ─── Darstellung ────────────────────────────────────────────────────────────
@@ -147,14 +160,21 @@ function urteil(ergebnis) {
   return { klasse: 'success', text: 'Die Angaben passen zusammen.' };
 }
 
-function darstellen(panel, ergebnis) {
+function darstellen(panel, ergebnis, wurzel) {
   if (!ergebnis) {
+    if (wurzel) loescheMarkierungen(wurzel);
     panel.innerHTML = `<div class="preflight-check-item warning"><div>
       Die Regeldaten konnten nicht geladen werden — ohne sie gibt es kein Urteil.
       Bitte später erneut prüfen.</div></div>`;
     panel.style.display = 'block';
     return;
   }
+
+  // Jeder Befund kennt sein Feld — er wird ANS FELD gesetzt, nicht nur in die
+  // Liste geschrieben (Kemal, 06.09.2026: „hatalı olan yerlerin yanına ünlem
+  // koysun"). Die Liste bleibt trotzdem: sie trägt die Quelle je Befund und
+  // die Abdeckungszeile, und sie zeigt auch die Befunde ohne eigenes Kästchen.
+  if (wurzel) markiereBefunde(ergebnis.befunde, wurzel);
 
   const kopf = urteil(ergebnis);
   const befunde = [...ergebnis.befunde].sort((a, b) => RANG[a.schwere] - RANG[b.schwere]);
@@ -173,9 +193,47 @@ function darstellen(panel, ergebnis) {
       <div><strong>${schuetze(kopf.text)}</strong></div>
     </div>${befunde.map(zeile).join('')}${abdeckung}`;
   panel.style.display = 'block';
+  // Merkzettel für die automatische Nachprüfung beim Weitertippen: erst wenn
+  // einmal ein Urteil dastand, zieht es beim Korrigieren mit.
+  panel.dataset.jeGeprueft = '1';
 }
 
 // ─── Einhängen ──────────────────────────────────────────────────────────────
+
+/** Der Zielbereich für die Feldmarkierungen — `null`, solange es ihn nicht gibt. */
+function wurzelVon(cfg) {
+  return cfg.wurzel ? $(cfg.wurzel) : null;
+}
+
+/**
+ * Eine Maske JETZT prüfen und das Ergebnis anzeigen — an den Feldern und in
+ * der Ergebnisliste.
+ *
+ * Öffentlich, weil die eingebettete Maske auf der Seite „Verordnungen" das
+ * Urteil beim Aufschlagen einer gespeicherten Verordnung braucht, ohne dass
+ * jemand auf den Knopf drückt: dort ist die Frage „was stimmt hier nicht"
+ * bereits gestellt — das Ausrufezeichen in der Liste hat sie gestellt.
+ *
+ * @param {object} supabase
+ * @param {'muster13'|'podologie'} maskeKey
+ * @returns {Promise<object|null>} das Prüfergebnis (oder `null` ohne Regeldaten)
+ */
+export async function pruefeMaske(supabase, maskeKey) {
+  const cfg = MASKEN[maskeKey];
+  const panel = cfg && $(cfg.panel);
+  if (!cfg || !panel) return null;
+  try {
+    const vo = cfg.lesen();
+    const satz = await regelsatzLaden(supabase, vo.bereich);
+    const ergebnis = satz ? pruefeVerordnung(vo, satz) : null;
+    darstellen(panel, ergebnis, wurzelVon(cfg));
+    return ergebnis;
+  } catch (e) {
+    console.warn('[verordnung-pruefen]', e);
+    darstellen(panel, null, wurzelVon(cfg));
+    return null;
+  }
+}
 
 /**
  * Knopf und Ergebnisfeld in eine Maske einhängen. Idempotent: ein zweiter
@@ -210,23 +268,33 @@ export function montiereVerordnungPruefen(supabase, maskeKey) {
     knopf.disabled = true;
     const vorher = knopf.textContent;
     knopf.textContent = 'Prüfe…';
-    try {
-      const vo = cfg.lesen();
-      const satz = await regelsatzLaden(supabase, vo.bereich);
-      darstellen(panel, satz ? pruefeVerordnung(vo, satz) : null);
-    } catch (e) {
-      console.warn('[verordnung-pruefen]', e);
-      darstellen(panel, null);
-    } finally {
-      knopf.disabled = false;
-      knopf.textContent = vorher;
-    }
+    try { await pruefeMaske(supabase, maskeKey); }
+    finally { knopf.disabled = false; knopf.textContent = vorher; }
   });
 
-  // Sobald jemand weitertippt, ist das angezeigte Urteil veraltet. Ein altes
-  // grünes Häkchen über einer inzwischen geänderten Verordnung wäre die
-  // gefährlichste Anzeige von allen — also verschwindet es.
-  const formular = anker.closest('form') || anker.closest('.card') || anker.parentElement;
-  formular?.addEventListener('input', () => { panel.style.display = 'none'; }, true);
-  formular?.addEventListener('change', () => { panel.style.display = 'none'; }, true);
+  // Weitertippen macht das angezeigte Urteil veraltet — ein altes grünes
+  // Häkchen (oder eine stehengebliebene rote Umrandung) über einer inzwischen
+  // geänderten Verordnung wäre die gefährlichste Anzeige von allen.
+  //
+  // Deshalb wird es nicht nur versteckt, sondern nach einer kurzen Pause NEU
+  // gefällt: die Prüfung rechnet im Browser, sie kostet nichts, und der Grund
+  // am Feld ist genau dann etwas wert, wenn er beim Korrigieren mitläuft und
+  // verschwindet, sobald es stimmt. Die Regeldaten kommen dabei aus dem Cache
+  // (module/verordnung-regelsatz-cache.js), es geht keine Abfrage raus.
+  const formular = (cfg.formular && $(cfg.formular))
+    || anker.closest('form') || anker.closest('.card') || anker.parentElement;
+  let timer = null;
+  const veraltet = () => {
+    panel.style.display = 'none';
+    const w = wurzelVon(cfg);
+    if (w) loescheMarkierungen(w);
+    clearTimeout(timer);
+    // Nur nachprüfen, wenn vorher schon einmal geprüft wurde — ungefragt
+    // aufpoppende Befunde beim Anlegen einer neuen Verordnung wären das
+    // Gegenteil des „Angebots, keine Pflicht" (siehe Kopf).
+    if (!panel.dataset.jeGeprueft) return;
+    timer = setTimeout(() => { pruefeMaske(supabase, maskeKey); }, 700);
+  };
+  formular?.addEventListener('input', veraltet, true);
+  formular?.addEventListener('change', veraltet, true);
 }

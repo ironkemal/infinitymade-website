@@ -34,23 +34,55 @@
 // ── Verordnungskarten ──────────────────────────────────────────────────────
 
 /**
- * Zeichnet die Liste der aktiven Verordnungen. Ohne Verordnung wird — je nach
- * `mitAnlegen` — ein Knopf zum Anlegen angeboten.
+ * Der „+" — der Weg zu einer neuen Verordnung.
+ *
+ * Er sieht in beiden Lagen anders aus, weil er zwei verschiedene Dinge sagt:
+ *
+ *   leer  — „hier fehlt etwas, fang hier an." Grosse Flaeche, Frage im Text,
+ *           der Knopf IST die Antwort.
+ *   voll  — „es geht auch noch eine mehr." Eine schmale Zeile unter den
+ *           Karten; sie darf die vorhandenen Verordnungen nicht ueberstrahlen.
+ *
+ * Vorher gab es ihn nur in der leeren Lage. Stand schon eine Verordnung da,
+ * fuehrte kein Weg mehr zu einer zweiten — und Folgeverordnungen sind in der
+ * Podologie der Normalfall, nicht die Ausnahme.
+ */
+function anlegenKnopf(onAnlegen, leer) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'bk-vero-anlegen';
+  btn.title = 'Neue Verordnung anlegen';
+  btn.style.cssText = leer
+    ? 'width:100%;padding:14px 12px;border-radius:10px;border:2px dashed var(--accent,#b1891b);'
+      + 'background:rgba(177,137,27,0.05);cursor:pointer;display:flex;flex-direction:column;'
+      + 'align-items:center;gap:6px;color:var(--accent,#b1891b);'
+    : 'width:100%;padding:7px 12px;border-radius:10px;border:1px dashed var(--border-strong,var(--border));'
+      + 'background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;'
+      + 'gap:6px;color:var(--text-muted);font-size:12px;font-weight:600;';
+  btn.innerHTML = leer
+    ? '<span style="font-size:26px;line-height:1;">＋</span>'
+      + '<span style="font-size:12px;font-weight:600;">Für diesen Patienten ist keine Verordnung hinterlegt</span>'
+      + '<span style="font-size:12px;font-weight:700;">Jetzt eine anlegen?</span>'
+    : '<span style="font-size:15px;line-height:1;">＋</span> Verordnung anlegen';
+  btn.addEventListener('click', onAnlegen);
+  return btn;
+}
+
+/**
+ * Zeichnet die Liste der aktiven Verordnungen. Der Knopf zum Anlegen steht —
+ * sofern `onAnlegen` gereicht wird — in BEIDEN Lagen: mit und ohne Verordnung.
  */
 export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, escapeHtml }) {
   if (!container) return;
   container.innerHTML = '';
 
   if (!rxs?.length) {
-    container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0 6px;">Keine aktive Verordnung vorhanden.</div>';
-    if (onAnlegen) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.style.cssText = 'width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:2px dashed var(--accent,#b1891b);background:rgba(177,137,27,0.05);cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--accent,#b1891b);font-size:13px;font-weight:600;';
-      btn.innerHTML = '<span style="font-size:18px;">＋</span> Neue Verordnung anlegen';
-      btn.addEventListener('click', onAnlegen);
-      container.appendChild(btn);
+    // Ohne Anlegen-Weg bleibt nur die Feststellung — sonst spricht der Knopf.
+    if (!onAnlegen) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0 6px;">Keine aktive Verordnung vorhanden.</div>';
+      return;
     }
+    container.appendChild(anlegenKnopf(onAnlegen, true));
     return;
   }
 
@@ -79,6 +111,8 @@ export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, 
     card.addEventListener('click', () => onSelect(rx, sessions));
     container.appendChild(card);
   });
+
+  if (onAnlegen) container.appendChild(anlegenKnopf(onAnlegen, false));
 }
 
 // ── Sitzungswahl ───────────────────────────────────────────────────────────

@@ -3433,7 +3433,14 @@
         <span class="modal-title">Heilmittelverordnung 13 (Muster 13)</span>
         <button class="modal-close" data-modal="rezeptModal">✕</button>
       </div>
-      <div class="modal-body">
+      <!-- `#rzMaskeHeim` ist der Heimatplatz der Maske, `#rzMaskeWrap` die
+           Maske selbst. Sie wird als GANZER Knoten umgehängt, wenn die Seite
+           „Verordnungen" sie in ihre untere Hälfte holt — ein zweites Exemplar
+           im Markup hätte doppelte IDs bedeutet und damit zwei Formulare, die
+           sich gegenseitig die Werte wegnehmen. Umzug und Rückweg:
+           module/verordnung-maske.js. -->
+      <div class="modal-body" id="rzMaskeHeim">
+       <div id="rzMaskeWrap">
         <input type="hidden" id="rzPatientId" />
         <input type="hidden" id="rzHmPosition" />
 
@@ -3639,16 +3646,55 @@
           </div>
         </div>
 
-      </div>
-      <div class="modal-footer">
-        <button class="btn-ghost" data-modal="rezeptModal">Abbrechen</button>
-        <button class="btn-primary" id="rzSaveBtn">Speichern</button>
+        <!-- Die Knopfreihe steht INNERHALB der Maske (nicht mehr im
+             `.modal-footer`), damit sie beim Umzug in die Seite mitkommt —
+             sonst stünde die eingebettete Maske ohne „Speichern" da. Der
+             Knopf „Verordnung prüfen" wird von
+             module/verordnung-pruefen-knopf.js hier eingehängt. -->
+        <div class="rz-aktionen" id="rzAktionen">
+          <button class="btn-ghost" id="rzAbbrechenBtn" data-modal="rezeptModal">Abbrechen</button>
+          <button class="btn-primary" id="rzSaveBtn">Speichern</button>
+        </div>
+       </div>
       </div>
     </div>
   </div>
 
   <style>
     /* ===== Muster 13 kağıt formu (rezeptModal) ===== */
+    /* Knopfreihe der Maske — sieht aus wie ein `.modal-footer`, gehört aber
+       zur Maske und zieht mit ihr um (siehe module/verordnung-maske.js). */
+    .rz-aktionen{
+      display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px;
+      padding:16px 0 0; margin-top:16px; border-top:1px solid var(--border);
+    }
+
+    /* ===== Prüfbefunde AM FELD (module/verordnung-feldmarker.js) =====
+       Feste Farben mit Absicht: sie sitzen ausschliesslich auf dem hellblauen
+       Bogen (`.m13-sheet` erzwingt `color-scheme: light`), nicht auf dem
+       Dashboard-Hintergrund. Ein Themenwechsel ändert das Papier nicht. */
+    .vo-mark-fehler{
+      outline:2px solid #dc2626; outline-offset:1px; border-radius:3px;
+      background:#fdeaea !important;
+    }
+    .vo-mark-warnung{
+      outline:2px dashed #d97706; outline-offset:1px; border-radius:3px;
+      background:#fff7e8 !important;
+    }
+    .vo-hinweis{
+      margin:5px 0 9px; padding:6px 9px; border-radius:6px;
+      border:1px solid #d9a441; background:#fff8e6;
+      font-family:"Segoe UI",Arial,sans-serif; font-size:12px; line-height:1.45;
+      color:#7c4a03; font-weight:500;
+    }
+    .vo-hinweis-fehler{ border-color:#dc2626; background:#fdeaea; color:#8a1414; }
+    .vo-hinweis-zeile{ display:flex; gap:6px; align-items:flex-start; }
+    .vo-hinweis-zeile.ist-fehler{ color:#8a1414; }
+    .vo-hinweis-zeile + .vo-hinweis-zeile{
+      margin-top:5px; padding-top:5px; border-top:1px dashed rgba(0,0,0,.18);
+    }
+    .vo-hinweis-zeichen{ flex-shrink:0; }
+    .vo-hinweis-quelle{ display:block; opacity:.75; font-size:11px; margin-top:2px; font-weight:400; }
     .m13-picker{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 16px; }
     .m13-picker-lbl{ font-weight:700; font-size:15px; color:var(--text-main); }
     .m13-picker select{ min-width:340px; flex:1; font-size:15px; }
@@ -3806,11 +3852,14 @@
             style="padding:14px;font-size:16px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Mit Kamera fotografieren</button>
           <button class="btn-ghost" id="rxScanFileBtn" type="button"
             style="padding:14px;font-size:16px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Bild hochladen</button>
+          <button class="btn-ghost" id="rxScanManuellBtn" type="button"
+            style="padding:14px;font-size:16px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Von Hand eintippen</button>
           <input type="file" id="rxScanFileInput" accept="image/*" hidden />
           <!-- Fallback: native Kamera-App (funktioniert auch ohne getUserMedia, z.B. on-prem über HTTP) -->
           <input type="file" id="rxScanCameraInput" accept="image/*" capture="environment" hidden />
           <p style="color:#666;font-size:13px;margin-top:8px;">
-            Halten Sie das Rezept gerade ins Bild. Die KI parst alle Felder in ca. 3–5 Sekunden.
+            Foto und Datei werden von der KI gelesen (ca. 3–5 Sekunden) und landen in derselben
+            Muster-13-Maske wie „Von Hand eintippen" — nur schon ausgefüllt.
           </p>
         </div>
         <div id="rxScanCamera" style="display:none;">
@@ -3833,265 +3882,12 @@
   </div>
 
   <!-- ===== MODAL: REZEPT CONFIRM (Onay Ekranı) ===== -->
-  <div class="modal-overlay" id="rezeptConfirmModal" hidden>
-    <div class="modal modal-lg" style="max-width:1100px;">
-      <div class="modal-header">
-        <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg> Rezept bestätigen</span>
-        <button class="modal-close" data-modal="rezeptConfirmModal">✕</button>
-      </div>
-      <div class="modal-body">
-        <div id="rxValidationBanner" style="margin-bottom:14px;"></div>
-        <div id="rxSignatureWarning" style="margin-bottom:14px;"></div>
-        <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:18px;align-items:start;">
-          <div>
-            <img id="rxConfirmImg" alt="Rezept" style="width:100%;border-radius:8px;border:1px solid #ddd;" />
-            <p style="font-size:12px;color:#888;margin-top:6px;" id="rxOcrConfidence"></p>
-          </div>
-          <div>
-            <!-- ================= DAS PAPIER (CONFIRM) ================= -->
-            <div class="m13">
-              <div class="m13-sheet">
+  <!-- Das Bestaetigungsfenster des Rezept-Scans stand hier (id rezeptConfirmModal,
+       Felder mit dem Praefix rxc). Es war eine ZWEITE Muster-13-Maske mit eigenem
+       Feldsatz und eigenem Speicherweg — und damit die Quelle zweier
+       Datenformen in einer Tabelle. Seit dem 06.09.2026 fuellt ein Scan die
+       eine Maske (#rzMaskeWrap) selbst; siehe module/rezept-in-maske.js. -->
 
-                <!-- ÜST -->
-                <div class="m13-top">
-                  <!-- SOL: Versicherten-Box -->
-                  <div class="m13-insbox">
-                    <div class="m13-side">
-                      <div>Zuzah&shy;lungs&shy;frei</div>
-                      <div>Gebühr&shy;pflichtig</div>
-                      <div>Unfall / Unfall&shy;folgen</div>
-                      <div>BVG</div>
-                    </div>
-                    <div class="m13-insinner">
-                      <div class="m13-insrow">
-                        <div class="m13-cell" style="flex:1;">
-                          <div class="m13-cap">Krankenkasse bzw. Kostenträger <span id="rxcKasseStatus" style="font-size:11px;color:#15803d;font-weight:400;"></span></div>
-                          <div style="display:flex;align-items:flex-start;">
-                            <input class="m13-v" id="rxcKasse" autocomplete="off" placeholder="Krankenkasse wählen…">
-                          </div>
-                        </div>
-                      </div>
-                      <div class="m13-insrow">
-                        <div class="m13-cell" style="flex:1;">
-                          <div class="m13-cap">Name, Vorname des Versicherten</div>
-                          <div style="display:flex;gap:10px;align-items:flex-end;">
-                            <input class="m13-v" id="rxcLastName" placeholder="Nachname" style="flex:1;min-width:0;">
-                            <div style="text-align:right;white-space:nowrap;">
-                              <span class="m13-cap">geb. am</span>
-                              <input class="m13-v m13-sm m13-center" id="rxcDob" type="date" style="width:120px;">
-                            </div>
-                          </div>
-                          <input class="m13-v" id="rxcFirstName" placeholder="Vorname">
-                          <div class="m13-cap" style="margin-top:5px;">Straße, Hausnr. <span id="rxcStreetReq" class="req" hidden style="color:#c00;">*</span></div>
-                          <input class="m13-v m13-sm" id="rxcStreet" placeholder="z.B. Hauptstraße 12">
-                          <div class="m13-cap" style="margin-top:3px;">PLZ, Ort <span id="rxcPlzReq" class="req" hidden style="color:#c00;">*</span><span id="rxcCityReq" class="req" hidden style="color:#c00;">*</span></div>
-                          <div style="display:flex;gap:6px;">
-                            <input class="m13-v m13-sm" id="rxcPlz" style="width:65px;" maxlength="5" placeholder="PLZ">
-                            <input class="m13-v m13-sm" id="rxcCity" style="flex:1;" placeholder="Ort">
-                          </div>
-                        </div>
-                      </div>
-                      <div class="m13-insrow">
-                        <div class="m13-cell" style="flex:1.3;">
-                          <div class="m13-cap">Kostenträgerkennung</div>
-                          <input class="m13-v m13-sm" id="rxcKasseIk" placeholder="">
-                        </div>
-                        <div class="m13-cell" style="flex:1.2;">
-                          <div class="m13-cap">Versicherten-Nr.</div>
-                          <input class="m13-v m13-sm" id="rxcVersNr" placeholder="">
-                        </div>
-                        <div class="m13-cell" style="flex:1;">
-                          <div class="m13-cap">Status</div>
-                          <input class="m13-v m13-sm" id="rxcStatus" placeholder="">
-                        </div>
-                      </div>
-                      <div class="m13-insrow">
-                        <div class="m13-cell" style="flex:1.3;">
-                          <div class="m13-cap">Betriebsstätten-Nr.</div>
-                          <input class="m13-v m13-sm" id="rxcBsnr" maxlength="9" placeholder="">
-                        </div>
-                        <div class="m13-cell" style="flex:1.2;">
-                          <div class="m13-cap">Arzt-Nr. (LANR)</div>
-                          <input class="m13-v m13-sm" id="rxcLanr" maxlength="9" placeholder="">
-                        </div>
-                        <div class="m13-cell" style="flex:1;">
-                          <div class="m13-cap">Datum</div>
-                          <input class="m13-v m13-sm" id="rxcAusstDate" type="date">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- SAĞ: Title + Therapiebereich + Arzt -->
-                  <div class="m13-headright">
-                    <div class="m13-titleline"><b>Heilmittel&shy;verordnung&nbsp;13</b><span class="m13-mnum">13</span></div>
-                    <div class="m13-therapies" id="rxcTherapieGroup">
-                      <label class="m13-th"><span class="m13-chk" data-rxc-th="physio"></span> Physiotherapie</label>
-                      <label class="m13-th"><span class="m13-chk" data-rxc-th="podo"></span> Podologische Therapie</label>
-                      <label class="m13-th"><span class="m13-chk" data-rxc-th="stimme"></span> Stimm-, Sprech-, Sprach- und Schlucktherapie</label>
-                      <label class="m13-th"><span class="m13-chk" data-rxc-th="ergo"></span> Ergotherapie</label>
-                      <label class="m13-th"><span class="m13-chk" data-rxc-th="ernaehrung"></span> Ernährungstherapie</label>
-                    </div>
-                    <input type="hidden" id="rxcTherapiebereich" />
-                    <div class="m13-arzt-lbl m13-cap" style="margin-top:14px;">Ausstellende Praxis / Arzt</div>
-                    <input class="m13-v m13-sm m13-uline" id="rxcArztName" autocomplete="off" placeholder="">
-                  </div>
-                </div>
-
-                <!-- DIAGNOSE -->
-                <div class="m13-sec">
-                  <div class="m13-lbl">Behandlungsrelevante Diagnose(n) <small>ICD-10-Code &amp; Freitext</small></div>
-                  <div class="m13-diagrow" style="display:flex;gap:6px;align-items:center;">
-                    <input class="m13-v m13-uline" id="rxcIcd" autocomplete="off" placeholder="1. ICD" style="width:90px;flex-shrink:0;">
-                    <input class="m13-v m13-uline" id="rxcIcd2" autocomplete="off" placeholder="2. ICD" style="width:90px;flex-shrink:0;">
-                    <input class="m13-v m13-uline" id="rxcDiagnoseText" placeholder="Diagnose-Freitext" style="flex:1;min-width:0;">
-                  </div>
-                  <div id="rxcIcdDgWarning" style="display:none;color:var(--warning);font-size:11px;margin-top:3px;"></div>
-                  <div class="m13-dgrow">
-                    <div class="m13-dgfield">
-                      <span class="m13-cap">Diagnose&shy;gruppe <span id="rxcDgStatus" style="font-size:11px;font-weight:400;"></span></span>
-                      <input class="m13-v m13-uline m13-center" id="rxcDg" autocomplete="off" placeholder="" style="width:84px;">
-                    </div>
-                    <div class="m13-dgfield"><span class="m13-cap">Leitsymptomatik<br>gemäß Heilmittelkatalog</span></div>
-                    <div class="m13-lsboxes" id="rxcLsGroup">
-                      <label class="m13-th"><input type="checkbox" id="rxcLsA" class="m13-cbx"><span class="m13-chk"></span> a</label>
-                      <label class="m13-th"><input type="checkbox" id="rxcLsB" class="m13-cbx"><span class="m13-chk"></span> b</label>
-                      <label class="m13-th"><input type="checkbox" id="rxcLsC" class="m13-cbx"><span class="m13-chk"></span> c</label>
-                    </div>
-                    <div class="m13-dgfield" style="text-align:right;"><span class="m13-cap">patientenindividuelle<br>Leitsymptomatik</span></div>
-                    <label class="m13-th"><input type="checkbox" id="rxcLsD" class="m13-cbx"><span class="m13-chk"></span></label>
-                  </div>
-                  <div style="margin-top:12px;">
-                    <div class="m13-cap">Leitsymptomatik (patientenindividuelle Leitsymptomatik als Freitext angeben)</div>
-                    <input class="m13-v m13-uline" id="rxcLsDText" placeholder="" style="display:none;">
-                  </div>
-                </div>
-
-                <!-- HEILMITTEL -->
-                <div class="m13-hmhead">
-                  <div class="m13-lbl">Heilmittel nach Maßgabe des Kataloges <span id="rxcHmStatus" style="font-size:11px;color:#15803d;font-weight:400;"></span></div>
-                  <div class="m13-beh">Behandlungs&shy;einheiten</div>
-                </div>
-                <div class="m13-hmtable">
-                  <div class="m13-hmline">
-                    <div>
-                      <div class="m13-cap">Heilmittel</div>
-                      <input class="m13-v" id="rxcHm" autocomplete="off" placeholder="KG, MT, MLD oder Position…">
-                      <input type="hidden" id="rxcHmPosition" />
-                    </div>
-                    <div><input class="m13-v m13-center" id="rxcAnzahl" type="number" min="1" placeholder=""></div>
-                  </div>
-                  <div class="m13-hmline">
-                    <div>
-                      <div class="m13-cap">Ergänzendes Heilmittel</div>
-                      <input class="m13-v" id="rxcHmErg" placeholder="z. B. Wärmetherapie, Ultraschall…">
-                    </div>
-                    <div><input class="m13-v m13-center" id="rxcAnzahlErg" type="number" min="1" placeholder=""></div>
-                  </div>
-                </div>
-
-                <!-- OPTIONEN -->
-                <div class="m13-opts">
-                  <div style="display:flex;flex-direction:column;gap:12px;">
-                    <div class="m13-optline">
-                      <label class="m13-th"><input type="checkbox" id="rxcBerichtAngefordert" class="m13-cbx"><span class="m13-chk"></span> Therapiebericht</label>
-                      <select class="form-select m13-inline-sel" id="rxcBerichtStatus" title="Bericht-Status">
-                        <option value="offen">offen</option>
-                        <option value="in_arbeit">in Arbeit</option>
-                        <option value="erledigt">erledigt</option>
-                      </select>
-                    </div>
-                    <label class="m13-th"><input type="checkbox" id="rxcDringend" class="m13-cbx"><span class="m13-chk"></span> Dringlicher Behandlungsbedarf innerhalb von 14 Tagen</label>
-                  </div>
-                  <div style="display:flex;flex-direction:column;gap:12px;">
-                    <div class="m13-optline">
-                      <label class="m13-th"><input type="checkbox" id="rxcHausbesuch" class="m13-cbx"><span class="m13-chk"></span> Hausbesuch</label>
-                    </div>
-                    <div class="m13-freq">
-                      <span class="m13-cap" style="white-space:nowrap;">Therapie&shy;frequenz <span id="rxcFreqStatus" style="font-size:11px;font-weight:400;"></span></span>
-                      <select class="form-select" id="rxcFreq" style="flex:1;"><option value="">Bitte wählen…</option></select>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- VERORDNUNGSART & ZUZAHLUNG -->
-                <div class="m13-vart">
-                  <div class="m13-cap" style="margin-bottom:8px;">Verordnungsart &amp; Zuzahlung</div>
-                  <div class="m13-vart-row">
-                    <label class="m13-th"><input type="checkbox" id="rxcBlanko" class="m13-cbx"><span class="m13-chk"></span> Blankoverordnung</label>
-                    <div class="m13-nachweis-group">
-                      <label class="m13-th"><input type="checkbox" id="rxcLhbBvb" class="m13-cbx"><span class="m13-chk"></span> LHB / BVB</label>
-                      <div id="rxcLhbBvbNachweisWrap" class="m13-nachweis-wrap" style="display:none;">
-                        <input type="file" id="rxcLhbBvbFile" accept="image/*,application/pdf" style="display:none;">
-                        <button type="button" class="m13-nachweis-btn" id="rxcLhbBvbBtn">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                          <span id="rxcLhbBvbBtnText" class="m13-nachweis-filename">Nachweis</span>
-                          <span id="rxcLhbBvbRemove" class="m13-nachweis-remove" title="Entfernen" style="display:none;">&times;</span>
-                        </button>
-                        <span id="rxcLhbBvbHint" class="m13-nachweis-hint">ohne Nachweis im Prüffall nicht belegbar</span>
-                      </div>
-                    </div>
-                    <div class="m13-nachweis-group">
-                      <label class="m13-th"><input type="checkbox" id="rxcZuzahlungBefreit" class="m13-cbx"><span class="m13-chk"></span> Zuzahlungsbefreit</label>
-                      <div id="rxcBefreitNachweisWrap" class="m13-nachweis-wrap" style="display:none;">
-                        <input type="file" id="rxcBefreitFile" accept="image/*,application/pdf" style="display:none;">
-                        <button type="button" class="m13-nachweis-btn" id="rxcBefreitBtn">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                          <span id="rxcBefreitBtnText" class="m13-nachweis-filename">Nachweis</span>
-                          <span id="rxcBefreitRemove" class="m13-nachweis-remove" title="Entfernen" style="display:none;">&times;</span>
-                        </button>
-                        <span id="rxcBefreitHint" class="m13-nachweis-hint">ohne Nachweis im Prüffall nicht belegbar</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- THERAPIEZIELE -->
-                <div style="margin-top:14px;">
-                  <div class="m13-cap">ggf. Therapieziele / weitere med. Befunde und Hinweise</div>
-                  <textarea class="m13-ta" id="rxcTherapieziele" rows="2" style="width:100%;box-sizing:border-box;" placeholder=""></textarea>
-                </div>
-
-                <!-- PATIENT ZUSATZFELDER (E-Mail / Telefon) -->
-                <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--border, #ccc);display:flex;gap:12px;">
-                  <div style="flex:1;">
-                    <span class="m13-cap">E-Mail (Patient) <small style="color:var(--text-muted, #888);">(optional)</small></span>
-                    <input class="m13-v m13-sm" id="rxcEmail" type="email" placeholder="patient@example.com">
-                  </div>
-                  <div style="flex:1;">
-                    <span class="m13-cap">Telefon <small style="color:var(--text-muted, #888);">(optional)</small></span>
-                    <input class="m13-v m13-sm" id="rxcPhone" type="tel" placeholder="+49…">
-                  </div>
-                </div>
-
-                <!-- PRAXURA-ZUORDNUNG: Heilmittel → eigene Dienstleistung -->
-                <!-- Nicht Teil des Muster 13 — steuert, welche Leistung im Kalender gebucht wird. -->
-                <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--border, #ccc);">
-                  <span class="m13-cap">Leistung im Kalender <span id="rxcSrvStatus" style="font-size:11px;font-weight:400;"></span></span>
-                  <select class="form-select m13-sm" id="rxcService" style="width:100%;box-sizing:border-box;margin-top:4px;">
-                    <option value="">— keine Zuordnung —</option>
-                  </select>
-                  <div id="rxcSrvHint" style="font-size:11px;color:#b45309;margin-top:5px;display:none;"></div>
-                </div>
-
-                <!-- DATALISTS FOR MODAL -->
-                
-                
-
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer" style="flex-wrap:wrap;gap:8px;">
-        <button class="btn-ghost" data-modal="rezeptConfirmModal">Abbrechen</button>
-        <button class="btn-ghost" id="rxDoctorEmailBtn" type="button" title="Phase 3 — bald verfügbar"
-          style="opacity:0.6;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg> Arzt anschreiben (bald)</button>
-        <button class="btn-ghost" id="rxInformPatientBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Patient informieren</button>
-        <button class="btn-primary" id="rxConfirmBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg> Bestätigen &amp; Termine planen</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ===== MODAL: ABWESENHEIT ===== -->
   <div class="modal-overlay" id="leaveModal" hidden>
@@ -5865,7 +5661,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260905h"></script>
+  <script type="module" src="dashboard.js?v=20260906a"></script>
 </body>
 
 </html>

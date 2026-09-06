@@ -38,6 +38,7 @@
 
 import { parseIcdList, dgsAcceptingIcd } from '../icd-dg-match.js?v=20260810e';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260814';
+import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20260906';
 
 // ─── [Q1] Heilmittelkatalog Podologische Therapie ────────────────────────────
 //
@@ -434,12 +435,151 @@ function ergaenzendesUmschalten() {
   }
 }
 
+// ─── [Q4] Podologische Zusatzangaben an der Verordnung ─────────────────────
+//
+// Drei Angaben gehoeren zur podologischen Verordnung, standen aber bis zum
+// 06.09.2026 nur im getrennten Formular der Abrechnungsseite. Es gab also zwei
+// Wege, eine Verordnung anzulegen, und nur einer von beiden kannte sie. Seit
+// die Muster-13-Maske der einzige Weg ist, stehen sie hier — und zwar NUR im
+// Podologie-Modus, damit die Maske fuer Physio/Ergo/Logo nicht mit Feldern
+// zuwaechst, die dort nichts bedeuten.
+//
+//   nagel              ABRECHNUNGSRELEVANT. § 3b lit. a der Aenderungs-
+//                      vereinbarung vom 16.06.2025: die Erstbefundung
+//                      (78100/78110) gibt es EINMAL je Nagelspangen-Serie, und
+//                      die Serie haengt allein am Nagel — ueber Verordnungen
+//                      hinweg. Ohne dieses Feld kann `darfErstbefundungNagel()`
+//                      (module/eingangsbefundung-regel.js) die Serie nicht
+//                      erkennen, und die Kasse setzt die zweite Erstbefundung
+//                      ab. Nur bei UI 1 / UI 2 sichtbar — nur dort gibt es
+//                      ueberhaupt eine Nagelspange.
+//   wagner_grad        Klinische Dokumentation (§ 630f BGB), kein
+//                      Abrechnungsfeld — deshalb unabhaengig von der
+//                      Diagnosegruppe sichtbar (Konsey 2026-08-10).
+//   behandlungsanlass  Freitext, vorbelegt mit dem Katalogtext.
+//
+// Werte und Beschriftungen des Nagels kommen aus
+// module/eingangsbefundung-regel.js — dieselbe Liste, die auch die Abrechnung
+// liest. Ein zweites Schema waere genau der Fehler, den diese Zusammenlegung
+// beseitigen soll.
+
+/** Der Durchlauf aus `mountVerordnungPodo` — fuer `podoMaskeNachziehen()`. */
+let _lauf = null;
+
+const POD_ANLASS_DEFAULT = 'Podologische Komplexbehandlung';
+
+/** Nur die Nagelspangen-Diagnosegruppen fuehren einen Nagel. */
+const POD_NAGEL_DGS = ['UI1', 'UI2'];
+
+const WAGNER_STUFEN = [
+  ['0', 'Grad 0 – Risikofuß (keine offene Läsion)'],
+  ['1', 'Grad 1 – Oberflächliche Ulzeration'],
+  ['2', 'Grad 2 – Tiefes Ulkus (Sehne/Knochen)'],
+  ['3', 'Grad 3 – Tiefeninfektion / Abszess'],
+  ['4', 'Grad 4 – Begrenzte Gangrän'],
+  ['5', 'Grad 5 – Ausgedehnte Gangrän'],
+];
+
+const FELD_STIL = 'width:100%;padding:7px 9px;border-radius:6px;border:1px solid var(--border);'
+  + 'background:var(--bg-card-solid);color:var(--text-main);font-size:13px;';
+const LABEL_STIL = 'font-size:12px;color:var(--text-muted);display:block;margin-bottom:3px;';
+
+/**
+ * Der Block mit den drei Feldern. Wird einmal erzeugt und lebt INNERHALB der
+ * Maske — sie zieht zwischen Modal und Seite um (module/verordnung-maske.js),
+ * und die Felder muessen mitreisen.
+ */
+function podoFelderEl() {
+  let el = $('rzPodoFelder');
+  if (el) return el;
+  const anker = $('rzAnzahl')?.closest('div')?.parentElement || $('rzHm')?.parentElement;
+  if (!anker) return null;
+  el = document.createElement('div');
+  el.id = 'rzPodoFelder';
+  el.style.cssText = 'margin-top:10px;padding:10px;border:1px dashed var(--border);'
+    + 'border-radius:8px;gap:8px;display:none;';
+  el.innerHTML = `
+    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Podologische Angaben</div>
+    <div id="rzPodoNagelWrap" style="display:none;">
+      <label style="${LABEL_STIL}" for="rzPodoNagel">Behandelter Zehennagel <span style="color:var(--danger,#ef4444);">*</span></label>
+      <select id="rzPodoNagel" style="${FELD_STIL}">
+        <option value="">— Nagel wählen —</option>
+        ${NAGEL_WERTE.map(w => `<option value="${w}">${nagelLabel(w)}</option>`).join('')}
+      </select>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Eine Verordnung = ein Nagel. Der Nagel hält die Behandlungsserie über mehrere Verordnungen zusammen.</div>
+    </div>
+    <div>
+      <label style="${LABEL_STIL}" for="rzPodoWagner">Wagner-Klassifikation</label>
+      <select id="rzPodoWagner" style="${FELD_STIL}">
+        <option value="">— nicht angegeben —</option>
+        ${WAGNER_STUFEN.map(([w, t]) => `<option value="${w}">${t}</option>`).join('')}
+      </select>
+    </div>
+    <div>
+      <label style="${LABEL_STIL}" for="rzPodoAnlass">Behandlungsanlass</label>
+      <input type="text" id="rzPodoAnlass" placeholder="${POD_ANLASS_DEFAULT}" style="${FELD_STIL}">
+    </div>`;
+  // Der Hinweisstreifen soll UNTER den Feldern stehen, nicht darueber.
+  const hinweis = $('rzPodoHinweis');
+  if (hinweis && hinweis.parentElement === anker) anker.insertBefore(el, hinweis);
+  else anker.appendChild(el);
+  return el;
+}
+
+/**
+ * Sichtbarkeit nachziehen und melden, wenn der Nagel bei einer Nagelspangen-
+ * Verordnung fehlt.
+ *
+ * @returns {{farbe?:string,text:string}|null}
+ */
+function podoFelderAktualisieren() {
+  const el = podoFelderEl();
+  if (!el) return null;
+
+  if (!istPodo()) { el.style.display = 'none'; return null; }
+  el.style.display = 'grid';
+
+  const brauchtNagel = POD_NAGEL_DGS.includes(dgRoot($('rzDg')?.value));
+  const wrap = $('rzPodoNagelWrap');
+  if (wrap) wrap.style.display = brauchtNagel ? 'block' : 'none';
+
+  // Ausserhalb der Nagelspange traegt die Verordnung keinen Nagel — ein
+  // stehengebliebener Wert waere schlicht falsch.
+  if (!brauchtNagel) { const n = $('rzPodoNagel'); if (n) n.value = ''; return null; }
+
+  if (!$('rzPodoNagel')?.value) {
+    return {
+      farbe: 'var(--danger,#ef4444)',
+      text: 'Bei UI 1 / UI 2 gehört der behandelte Zehennagel auf die Verordnung — '
+          + 'ohne ihn lässt sich die Erstbefundung (78100/78110) nicht je Serie begrenzen.',
+    };
+  }
+  return null;
+}
+
+/**
+ * Die drei Werte fuer die Nutzlast (module/verordnung-maske.js).
+ * Ausserhalb der Podologie ein leeres Objekt — die Spalten bleiben unberuehrt.
+ *
+ * @returns {{nagel?:?string, wagner_grad?:?number, behandlungsanlass?:?string}}
+ */
+export function podoVerordnungsfelder() {
+  if (!istPodo()) return {};
+  const brauchtNagel = POD_NAGEL_DGS.includes(dgRoot($('rzDg')?.value));
+  const wagnerRoh = $('rzPodoWagner')?.value ?? '';
+  return {
+    nagel: brauchtNagel ? ($('rzPodoNagel')?.value || null) : null,
+    wagner_grad: wagnerRoh === '' ? null : parseInt(wagnerRoh, 10),
+    behandlungsanlass: ($('rzPodoAnlass')?.value || '').trim() || POD_ANLASS_DEFAULT,
+  };
+}
+
 // ─── Zusammenlauf ──────────────────────────────────────────────────────────
 
 async function aktualisieren(supabase, ctx) {
   ergaenzendesUmschalten();
 
-  if (!istPodo()) { zeigeHinweise([]); return; }
+  if (!istPodo()) { podoFelderAktualisieren(); zeigeHinweise([]); return; }
 
   await ikVorbelegen(supabase, ctx);
   const dgLage = await dgAuswahlEingrenzen(supabase);
@@ -465,6 +605,8 @@ async function aktualisieren(supabase, ctx) {
   const root = dgRoot($('rzDg')?.value);
   if (POD_BEFUND_DGS.includes(root)) zeilen.push({ text: POD_BEFUND_HINWEIS });
 
+  zeilen.push(podoFelderAktualisieren());
+
   zeigeHinweise(zeilen);
 }
 
@@ -476,6 +618,9 @@ function _aufraeumen() {
   });
   $('rzDg')?.removeAttribute('data-pod-erlaubt');
   $('rzAnzahl')?.removeAttribute('max');
+  ['rzPodoNagel', 'rzPodoWagner', 'rzPodoAnlass'].forEach(id => { const e = $(id); if (e) e.value = ''; });
+  const felder = $('rzPodoFelder');
+  if (felder) felder.style.display = 'none';
   zeigeHinweise([]);
 }
 
@@ -491,6 +636,16 @@ export function mountVerordnungPodo(supabase, ctx = {}) {
   const modal = $('rezeptModal');
   if (!modal) return;
 
+  // ⚠ Die Zuhoerer haengen an der MASKE, nicht am Modal.
+  //
+  // Seit dem 06.09.2026 zieht `#rzMaskeWrap` in die untere Haelfte der Seite
+  // „Verordnungen" um (module/verordnung-maske.js). Zuhoerer am Modal sehen
+  // dort nichts mehr: die Ereignisse entstehen im umgezogenen Knoten, und der
+  // liegt dann ausserhalb. Genau so faellt eine Automatik lautlos aus — die
+  // Maske sieht vollstaendig aus, nur passiert nichts mehr. Am Knoten selbst
+  // angemeldet, reisen die Zuhoerer mit.
+  const maske = $('rzMaskeWrap') || modal;
+
   let letzterBereich = null;
 
   const lauf = () => {
@@ -503,15 +658,15 @@ export function mountVerordnungPodo(supabase, ctx = {}) {
   // Handeingaben lösen die Automatik-Markierung, damit wir nichts
   // überschreiben. `podSchreibt` klammert die eigenen Schreibvorgänge aus —
   // ohne diese Prüfung hob sich die Automatik beim ersten Treffer selbst auf.
-  modal.addEventListener('input', (e) => {
+  maske.addEventListener('input', (e) => {
     const el = e.target;
     if (el?.dataset?.podSchreibt === '1') return;
     if (el?.dataset?.auto === '1') delete el.dataset.auto;
   }, true);
 
   const AUSLOESER = ['rzLsA', 'rzLsB', 'rzLsC', 'rzLsD', 'rzDg', 'rzIcd',
-                     'rzAnzahl', 'rzAusstDate', 'rzDringend'];
-  ['change', 'input'].forEach(ev => modal.addEventListener(ev, (e) => {
+                     'rzAnzahl', 'rzAusstDate', 'rzDringend', 'rzPodoNagel'];
+  ['change', 'input'].forEach(ev => maske.addEventListener(ev, (e) => {
     if (AUSLOESER.includes(e.target?.id || '')) lauf();
   }, true));
 
@@ -524,11 +679,27 @@ export function mountVerordnungPodo(supabase, ctx = {}) {
 
   // Der Fachbereich wird per Klick auf die Ankreuzfelder gesetzt
   // (`setM13Therapy`), nicht über ein change-Ereignis.
-  modal.addEventListener('click', (e) => {
+  maske.addEventListener('click', (e) => {
     if (e.target?.closest?.('.m13-th')) setTimeout(lauf, 0);
   });
 
-  // Beim Öffnen der Maske einmal durchlaufen.
+  // Beim Öffnen des Modals einmal durchlaufen. Steht die Maske in der Seite,
+  // gibt es kein `hidden` das umspringt — dort ruft module/verordnung-maske.js
+  // `podoMaskeNachziehen()` (siehe unten).
   new MutationObserver(() => { if (!modal.hidden) setTimeout(lauf, 0); })
     .observe(modal, { attributes: true, attributeFilter: ['hidden'] });
+
+  _lauf = lauf;
+}
+
+/**
+ * Einen Durchlauf anstossen, ohne dass das Modal aufgeht.
+ *
+ * Wird von `maskeEinbetten()` gerufen, wenn die Maske in die Seite gezogen
+ * und mit einer gespeicherten Verordnung gefuellt wurde. Ohne diesen Anstoss
+ * blieben im eingebetteten Zustand die podologischen Felder unsichtbar — und
+ * damit liesse sich `nagel` beim Bearbeiten nicht setzen.
+ */
+export function podoMaskeNachziehen() {
+  if (_lauf) setTimeout(_lauf, 0);
 }

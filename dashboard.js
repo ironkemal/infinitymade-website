@@ -3,7 +3,9 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260817';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260903';
-import { attachPatientSearch } from './patient-suche.js?v=20260817';
+import { attachPatientSearch } from './patient-suche.js?v=20260906';
+import { verdrahteRezeptPatientenfeld } from './module/rezept-patientenfeld.js?v=20260906';
+import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
 import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
@@ -24,11 +26,16 @@ import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagn
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260905';
-import { montiereVerordnungPruefen } from './module/verordnung-pruefen-knopf.js?v=20260905';
+import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20260906';
+// Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht
+// in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
+// Verordnung aufgeschlagen wird (module/verordnung-maske.js).
+import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft }
+  from './module/verordnung-maske.js?v=20260906';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260905b';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260905b';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260906';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260906';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
@@ -46,6 +53,9 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902'
 import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260905a';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260905c';
+import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
+import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20260906';
+import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260905g';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260816a';
@@ -73,7 +83,7 @@ import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen,
-} from './module/termin-aktionen.js?v=20260817';
+} from './module/termin-aktionen.js?v=20260906';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
@@ -3681,7 +3691,10 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     if (rezWrap) rezWrap.hidden = true;
 
     if (veroSection && veroCards) {
-      rendereVeroKarten({ container: veroCards, rxs: aktiveRxs, escapeHtml, onSelect: selectVerordnung });
+      rendereVeroKarten({
+        container: veroCards, rxs: aktiveRxs, escapeHtml, onSelect: selectVerordnung,
+        onAnlegen: () => oeffneAnlegenWahl(leadId),
+      });
       veroSection.hidden = false;
     }
   }
@@ -3779,10 +3792,6 @@ function uebernimmVerordnungAlsVorlage(rx) {
   closeBkActionPanel();
   return uebernimmVerordnung(rx, {
     oeffneRezeptMaske: openRezeptModal,
-    lsApply,
-    setTherapiebereich: setM13Therapy,
-    setHausbesuch: setM13Hausbesuch,
-    setFrequenz: setFreqValue,
     toast: showToast,
   }).catch(e => { console.error('[verordnung-uebernehmen]', e); showToast('Übernehmen fehlgeschlagen.', 'error'); });
 }
@@ -5231,7 +5240,7 @@ async function initBkCustomerAutocomplete() {
       container: veroCards, rxs, escapeHtml, onSelect: selectVerordnung,
       onAnlegen: () => {
         closeModal('bookingModal');
-        if (typeof openRezeptModal === 'function') openRezeptModal(null, leadId);
+        oeffneAnlegenWahl(leadId);
       },
     });
     veroSection.hidden = false;
@@ -16317,7 +16326,8 @@ function lsCollect(prefix) {
 // Quelle, weil der zusammengefasste String oft leer blieb.
 function lsApply(prefix, value, patText, boxes) {
   const g = id => document.getElementById(id);
-  const v = (value || '').toString().toLowerCase();
+  // Präfix abschneiden: "df-c" ist Diagnosegruppe + Buchstabe c, nicht d und c.
+  const v = (value || '').toString().toLowerCase().trim().replace(/^[a-z]{2}\d?[\s\-–—:.]+/, '');
   let flags = [false,false,false,false];
   const boxesUsable = boxes && typeof boxes === 'object'
     && ['a','b','c','d'].some(l => typeof boxes[l] === 'boolean');
@@ -16356,14 +16366,11 @@ function lsWireToggle(prefix) {
 // abhängig, sie bekommen strict, wenn Physio/Ergo/Logopädie an der Reihe sind.
 const DIAGNOSE_FIELDS = {
   rzIcd:       { kind: 'icd',  dgField: 'rzDg',     dgKind: 'text', warnId: 'rzIcdDgWarning'  }, // Rezept anlegen
-  rxcIcd:      { kind: 'icd',  dgField: 'rxcDg',    dgKind: 'text', warnId: 'rxcIcdDgWarning' }, // Rezept-Scan bestätigen, 1. ICD
-  rxcIcd2:     { kind: 'icd',  dgField: 'rxcDg',    dgKind: 'text', warnId: 'rxcIcdDgWarning' }, // Rezept-Scan bestätigen, 2. ICD
   // Diagnosegruppe. `nurCodes` liest die Allowlist, die module/verordnung-podo.js
   // aus dem eingegebenen ICD-Kode ableitet (leer = keine Einengung).
   rzDg:        { kind: 'dg',   icdField: 'rzIcd',   codeOnly: true,
                  nurCodes: () => (document.getElementById('rzDg')?.getAttribute('data-pod-erlaubt') || '')
                    .split(',').filter(Boolean) },
-  rxcDg:       { kind: 'dg',   icdField: 'rxcIcd',  codeOnly: true },                            // Diagnosegruppe (Scan)
   podNewIcd10: { kind: 'icd',  dgField: 'podNewDiag', dgKind: 'select', warnId: 'podIcd10Warning',
                  multi: true, codeOnly: true, bereich: 'podologie', strict: true },
 };
@@ -16373,7 +16380,6 @@ const DIAGNOSE_FIELDS = {
 // vorher musste `aiMatchHeilmittel` den getippten Text erraten.
 const HEILMITTEL_FIELDS = {
   rzHm:  { posField: 'rzHmPosition' },
-  rxcHm: { posField: 'rxcHmPosition' },
 };
 
 document.addEventListener('focusin', (e) => {
@@ -16385,7 +16391,7 @@ document.addEventListener('focusin', (e) => {
     attachDiagnoseSearch(el, supabase, { bereich: _getDiagnoseBereich, ...dcfg });
     // ICD-Felder: bidirektionale DG-Verdrahtung beim ersten Fokus anstossen.
     // bereich zur Laufzeit auflösen: dcfg.bereich hat Vorrang (podNewIcd10),
-    // für rzIcd / rxcIcd / rxcIcd2 gilt der Mandanten-Fachbereich.
+    // für rzIcd gilt der Mandanten-Fachbereich.
     if (dcfg.kind === 'icd' && dcfg.dgField) {
       _wireDgIcdPair(el.id, dcfg.dgField, dcfg.dgKind || 'text', dcfg.warnId, dcfg.bereich ?? _getDiagnoseBereich());
     }
@@ -16518,7 +16524,7 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
     }
   }
 
-  // Manuell-Override-Erkennung auf dem DG-Feld (wie wireManualOverrideBadge).
+  // Manuell-Override-Erkennung auf dem DG-Feld.
   //
   // ⚠ Der Wert wird auch programmatisch gesetzt, und dabei werden input/change
   //   ausgelöst, damit abhängige Logik (Wagner-Feld, Heilmittelliste) mitläuft.
@@ -16587,18 +16593,16 @@ function wireM13Toggles() {
     });
   });
 
-  // Patientensuche — gemeinsames Modul (patient-suche.js), damit hier dieselbe
-  // Suche greift wie im Termin-Dialog: Name, Geburtsdatum und Telefonnummer.
-  // Vorher hing das an einem <datalist>, das nur den Namensanfang treffen konnte.
-  const search = document.getElementById('rzPatientSearch');
-  if (search) {
-    attachPatientSearch(search, {
-      loadLeads: () => rzPatientCache,
-      matches:   patientMatchesQuery,
-      labelOf:   rzPatientLabel,
-      onSelect:  lead => fillRzPatientFromLead(lead.id),
-    });
-  }
+  // LHB/BVB-Genehmigung anhaengen → module/verordnung-nachweis.js
+  verdrahteLhbNachweis();
+
+  // Patientenkopf inkl. „heute im Haus"-Vorschlag → module/rezept-patientenfeld.js
+  verdrahteRezeptPatientenfeld({
+    getLeads: () => rzPatientCache,
+    matches:  patientMatchesQuery,
+    labelOf:  rzPatientLabel,
+    onSelect: lead => fillRzPatientFromLead(lead.id),
+  });
 }
 
 function setM13Therapy(key) {
@@ -16616,28 +16620,6 @@ function setM13Hausbesuch(isJa) {
 
 // Sektör → Muster-13 Therapiebereich eşlemesi (manuel + OCR ortak)
 const M13_SECTOR_THERAPY = { physiotherapy:'physio', podologie:'podo', logopaedie:'stimme', ergotherapie:'ergo' };
-
-// OCR-Confirm-Modal: Therapiebereich-Kästchen (data-rxc-th) — tekli seçim
-function setRxcTherapy(key) {
-  const root = document.getElementById('rezeptConfirmModal');
-  if (!root) return;
-  root.querySelectorAll('.m13-chk[data-rxc-th]').forEach(o =>
-    o.classList.toggle('on', !!key && o.dataset.rxcTh === key));
-  const h = document.getElementById('rxcTherapiebereich'); if (h) h.value = key || '';
-}
-function wireRxcTherapy() {
-  const root = document.getElementById('rezeptConfirmModal');
-  if (!root || root.dataset.rxcThWired) return;
-  root.dataset.rxcThWired = '1';
-  root.querySelectorAll('.m13-chk[data-rxc-th]').forEach(box => {
-    box.addEventListener('click', () => {
-      const wasOn = box.classList.contains('on');
-      root.querySelectorAll('.m13-chk[data-rxc-th]').forEach(o => o.classList.remove('on'));
-      if (!wasOn) box.classList.add('on');
-      const h = document.getElementById('rxcTherapiebereich'); if (h) h.value = wasOn ? '' : (box.dataset.rxcTh || '');
-    });
-  });
-}
 
 async function fillRzPatientFromLead(leadId) {
   const g = id => document.getElementById(id);
@@ -16705,6 +16687,11 @@ function rzPatientLabel(l) {
 }
 
 async function openRezeptModal(phone, leadId) {
+  // ⚠️ ZUERST: die Maske kann gerade unten auf der Seite „Verordnungen"
+  // stehen. Ohne diesen Schritt öffnete sich hier ein LEERES Modal — und alle
+  // `g(...)`-Zuweisungen unten liefen ins Nichts. Der Weg ist der häufige:
+  // erst eine Verordnung aufschlagen, dann „+ Neue Verordnung" drücken.
+  maskeHeimschicken();
   // Reset all fields synchronously then open — async prefill happens after
   const g = id => document.getElementById(id);
   g('rzPatientId').value = leadId || '';
@@ -16757,11 +16744,12 @@ async function openRezeptModal(phone, leadId) {
     // bizScope ist Pflicht — sonst stehen im Rezept-Kopf Patienten aller
     // Standorte zur Auswahl, obwohl die Freigabe abgeschaltet sein kann.
     const { data, error } = await bizScope(supabase.from('leads')
-      .select('id,first_name,last_name,title,geburtsdatum,phone,metadata')
+      .select('id,first_name,last_name,title,geburtsdatum,phone,metadata,versichertennummer')
       .eq('owner_id', ownerId)
       .order('last_name', { ascending: true }), 'patients');
     if (error) throw error;
     rzPatientCache = data || [];
+    await heuteAktualisieren(supabase, ownerId);   // Ops #267: heutige Termine nach oben
     rzPatientCache.forEach(l => rzLabelToId.set(rzPatientLabel(l), l.id));
     if (hint) {
       if (!rzPatientCache.length) {
@@ -16798,7 +16786,13 @@ async function loadVerordnungen() {
 async function saveRezept() {
   const ownerId = getOwnerId();
   const patientId = document.getElementById('rzPatientId').value;
-  if (!patientId) { showToast('Kein Patient ausgewählt.', 'error'); return; }
+  if (!patientId && !istPatientNeu()) { showToast('Kein Patient ausgewählt.', 'error'); return; }
+
+  // Zweiter Riegel gegen das Ändern einer bereits eingereichten Verordnung —
+  // der Knopf ist dann schon gesperrt, aber ein gesperrter Knopf im Browser
+  // ist keine Zusicherung. Regeln: module/verordnung-maske.js.
+  const _nein = pruefeAenderungErlaubt();
+  if (_nein) { showToast(_nein, 'error'); return; }
 
   const btn = document.getElementById('rzSaveBtn');
   btn.disabled = true;
@@ -16869,45 +16863,20 @@ async function saveRezept() {
       overridden = true;
     }
 
-    // 4. Insert prescription
-    const rzLs = lsCollect('rz');
-    const { data: rx, error: rxErr } = await supabase.from('prescriptions').insert({
-      owner_id: ownerId,
-      patient_id: patientId,
-      arzt_id: arztId,
-      status: 'confirmed',
-      ausstellungsdatum: ausstDate,
-      icd10,
-      diagnosegruppe: document.getElementById('rzDg').value.trim() || null,
-      leitsymptomatik: rzLs.code,
-      pat_leitsymptomatik: rzLs.patText,
-      heilmittel: document.getElementById('rzHm').value.trim() || null,
-      heilmittel_position: document.getElementById('rzHmPosition').value.trim() || null,
-      anzahl_einheiten: anzahl,
-      frequenz: document.getElementById('rzFreq').value.trim() || null,
-      is_dringend: isDringend,
-      hausbesuch: document.getElementById('rzHausbesuch').checked,
-      is_blanko: document.getElementById('rzBlanko').checked,
-      is_lhb_bvb: document.getElementById('rzLhbBvb').checked,
-      zuzahlung_befreit: document.getElementById('rzZuzahlungBefreit').checked,
-      zuzahlung_eur: parseFloat(document.getElementById('rzZuzahlung').value) || null,
-      bericht_angefordert: document.getElementById('rzBerichtAngefordert').checked,
-      bericht_status: document.getElementById('rzBerichtStatus').value,
-      doctor_lanr: rzLanr,
-      doctor_bsnr: rzBsnr,
-      gueltig_bis: gueltigBis,
-      // Neue Muster-13-Felder
-      diagnose_freitext: val('rzDiagnoseText') || null,
-      ergaenzendes_heilmittel: val('rzHmErg') || null,
-      ergaenzend_einheiten: parseInt(val('rzAnzahlErg')) || null,
-      therapie_bereich: val('rzTherapieBereich') || null,
-      hinweise: val('rzHinweise') || null,
-      unterschrift_vorhanden: document.getElementById('rzUnterschrift').checked,
-      kostentraeger_ik: val('rzPatKasseIk') || null,
-      proceed_anyway: overridden
-    }).select('id').single();
-
-    if (rxErr) throw rxErr;
+    // 4. Anlegen ODER zurückschreiben. Bis zum 06.09.2026 konnte diese
+    // Funktion nur anlegen — eine gespeicherte Verordnung liess sich nirgends
+    // mehr korrigieren (Kemal: „hem değiştiremiyoruz hem neyin hatalı olduğunu
+    // göremiyoruz"). Nutzlast, Riegel und Schreibweg: module/verordnung-maske.js.
+    const rx = await schreibeVerordnung(supabase, {
+      ownerId, patientId, arztId, gueltigBis, icd10, anzahl, ausstDate,
+      isDringend, lanr: rzLanr, bsnr: rzBsnr, overridden,
+      leitsymptomatik: lsCollect('rz'),
+    });
+    const editId = rx.aktualisiert ? rx.id : null;
+    // Beim Anlegen kann der Server den Patienten erst erzeugt haben; ab hier
+    // gilt seine id, sonst zeigen Abgleich und Nachladen auf nichts.
+    const patId = rx.patientId || patientId;
+    if (rx.patientId && !patientId) { document.getElementById("rzPatientId").value = rx.patientId; emit("leads:changed"); }
 
     // 5. Sitzungszeilen anlegen — über dieselbe Stelle wie überall sonst.
     // Vorher stand hier ein eigenes .insert() mit derselben Regel; zwei
@@ -16922,11 +16891,20 @@ async function saveRezept() {
       await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl });
     }
 
+    // Die LHB-Genehmigung kann erst jetzt haengen — vorher gab es keine
+    // Verordnung, an der sie haengen koennte.
+    const nw = await ladeLhbNachweisHoch(supabase, {
+      ownerId, patientId: patId, prescriptionId: rx.id, userId: currentSession?.user?.id || null,
+    });
+    if (!nw.ok) showToast('Verordnung gespeichert — Genehmigung konnte nicht angehängt werden, bitte in der Patientenakte nachreichen.', 'error');
+
     // 6. Patientenstammdaten abgleichen: leere Felder übernehmen + bei
     // Namensabweichung Übernahme bestätigen lassen (Ops #268) — siehe
     // module/verordnung-patient-abgleich.js
+    // Frisch angelegt heisst: der Server hat genau diese Werte eingetragen —
+    // dann gibt es nichts abzugleichen und keine Rueckfrage zu stellen.
     try {
-      await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+      if (patientId) await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
         ownerId, patientId, lead: rzPatientCache.find(l => l.id === patientId) || {},
         vorname: val('rzPatVorname'), nachname: val('rzPatName'),
         versichertennummer: val('rzPatVersNr'), krankenkasse: val('rzPatKasse'),
@@ -16935,13 +16913,33 @@ async function saveRezept() {
       });
     } catch (wbErr) { console.warn('[saveRezept] Patient-Rückschreiben übersprungen', wbErr); }
 
-    closeModal('rezeptModal');
-    showToast('Verordnung gespeichert ✓', 'success');
-
-    if (typeof loadBkVerordnungen === 'function' && patientId) {
-      loadBkVerordnungen(patientId);
+    if (editId) {
+      // Kein `closeModal` und kein Neuaufbau der unteren Hälfte: die Maske
+      // steht dort und würde beim Neuzeichnen umziehen — sichtbar als
+      // Aufblitzen, und der Cursor wäre weg. Die Liste oben zieht über das
+      // Signal nach, die Markierungen an den Feldern über die Nachprüfung.
+      showToast('Verordnung aktualisiert ✓', 'success');
+      emit('verordnungen:changed', { id: editId });
+      pruefeMaske(supabase, 'muster13').catch(() => {});
+    } else {
+      // Ein gescanntes Rezept fuehrt weiter in die Terminplanung — so endete
+      // der Scan-Weg schon immer. Von Hand getippt bleibt es beim Schliessen.
+      const warScan = !!scanHerkunft();
+      closeModal('rezeptModal');
+      showToast('Verordnung gespeichert ✓', 'success');
+      if (warScan) {
+        const vorgabe = terminVorgabeAusMaske({ prescriptionId: rx.id, patientId: patId });
+        window._physioFlow = vorgabe;
+        sessionStorage.setItem('rxPreset', JSON.stringify(vorgabe));
+        if (typeof showPanel === 'function') showPanel('calendar');
+        setTimeout(() => openBookingFromRxPreset(vorgabe), 400);
+      }
     }
-    if (activePanel === 'verordnungen') loadVerordnungen();
+
+    if (typeof loadBkVerordnungen === 'function' && patId) {
+      loadBkVerordnungen(patId);
+    }
+    if (!editId && activePanel === 'verordnungen') loadVerordnungen();
   } catch (e) {
     console.error('[saveRezept]', e);
     showToast('Fehler: ' + (e.message || 'Unbekannt'), 'error');
@@ -17511,6 +17509,16 @@ async function init() {
     // Podologie-Feinschliff der Muster-13-Maske (greift nur bei Bereich "podo").
     mountVerordnungPodo(supabase, { getOwnerId, getProfile: () => currentProfile });
     montiereVerordnungPruefen(supabase, 'muster13');   // Knopf "Verordnung pruefen" (Ops-Karte 76)
+    // Was nur diese Datei kann, dem Maskenmodul EINMAL bekannt machen — statt
+    // es sich über `window` zu holen (module/verordnung-maske.js, Kopf).
+    setzeMaskeBruecke({
+      apiBasis: API,                 // KEINE zweite Adresskonstante (onprem O-44)
+      fuellePatient: fillRzPatientFromLead,
+      lsApply,
+      setTherapiebereich: setM13Therapy,
+      setHausbesuch: setM13Hausbesuch,
+      setFrequenz: setFreqValue,
+    });
     document.getElementById('anamRezeptBtn')?.addEventListener('click', () => {
       const sel = document.getElementById('anamPatientSelect');
       if (!sel || !sel.value) { showToast('Bitte zuerst einen Patienten auswählen.', 'error'); return; }
@@ -17518,7 +17526,6 @@ async function init() {
     });
     // Arzt-Felder → gemeinsamer Picker (arzt-suche.js): Name ODER LANR tippen,
     // Auswahl füllt Name + LANR + BSNR zusammen.
-    wireArztFeld({ name: 'rxcArztName', lanr: 'rxcLanr', bsnr: 'rxcBsnr' });
     wireArztFeld({ name: 'rzArztName',  lanr: 'rzLanr',  bsnr: 'rzBsnr'  });
     // Wire rzHm → rzHmPosition (reuse same physio positions cache)
     const rzHmInput = document.getElementById('rzHm');
@@ -17531,7 +17538,6 @@ async function init() {
       });
     }
     lsWireToggle('rz');
-    lsWireToggle('rxc');
     // Diagnose-Felder verdrahten sich beim Fokus selbst — siehe DIAGNOSE_FIELDS.
     await loadAerzte();
     const adminLink = document.getElementById('topbarAdminLink');
@@ -17580,7 +17586,7 @@ function frequenzOptionsHtml() {
 }
 
 function populateFrequenzSelects() {
-  ['rzFreq', 'rxcFreq'].forEach(id => {
+  ['rzFreq'].forEach(id => {
     const sel = document.getElementById(id);
     if (sel && sel.tagName === 'SELECT') sel.innerHTML = frequenzOptionsHtml();
   });
@@ -17853,60 +17859,14 @@ async function openBookingFromRxPreset(preset) {
 const REZEPT_API = 'https://n8n.infinitymade.de/api/rezept';
 let rxStream = null;
 let rxLastUpload = null;  // { storage_path, parsed, validation, ocr_confidence, dataUri }
-let rxPendingNachweise = { befreiungsausweis: null, lhb_genehmigung: null };
-
-function clearNachweisFile(art, fileInp, btnTextEl, removeEl, hintEl) {
-  if (art === 'befreiungsausweis') {
-    rxPendingNachweise.befreiungsausweis = null;
-  } else if (art === 'lhb_genehmigung') {
-    rxPendingNachweise.lhb_genehmigung = null;
-  }
-  if (fileInp) fileInp.value = '';
-  if (btnTextEl) {
-    btnTextEl.textContent = 'Nachweis';
-    btnTextEl.removeAttribute('title');
-  }
-  if (removeEl) removeEl.style.display = 'none';
-  if (hintEl) hintEl.style.display = 'inline';
-}
-
-function resetRxPendingNachweise() {
-  rxPendingNachweise = { befreiungsausweis: null, lhb_genehmigung: null };
-  clearNachweisFile('befreiungsausweis', document.getElementById('rxcBefreitFile'), document.getElementById('rxcBefreitBtnText'), document.getElementById('rxcBefreitRemove'), document.getElementById('rxcBefreitHint'));
-  clearNachweisFile('lhb_genehmigung', document.getElementById('rxcLhbBvbFile'), document.getElementById('rxcLhbBvbBtnText'), document.getElementById('rxcLhbBvbRemove'), document.getElementById('rxcLhbBvbHint'));
-  const wrapB = document.getElementById('rxcBefreitNachweisWrap');
-  if (wrapB) wrapB.style.display = 'none';
-  const wrapL = document.getElementById('rxcLhbBvbNachweisWrap');
-  if (wrapL) wrapL.style.display = 'none';
-}
-
-function handleNachweisFileSelect(art, fileInp, btnTextEl, removeEl, hintEl) {
-  const file = fileInp?.files?.[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) {
-    showToast('Datei zu groß (max 5 MB).', 'error');
-    fileInp.value = '';
-    return;
-  }
-  if (art === 'befreiungsausweis') {
-    rxPendingNachweise.befreiungsausweis = file;
-  } else if (art === 'lhb_genehmigung') {
-    rxPendingNachweise.lhb_genehmigung = file;
-  }
-  if (btnTextEl) {
-    btnTextEl.textContent = file.name;
-    btnTextEl.title = file.name;
-  }
-  if (removeEl) removeEl.style.display = 'inline';
-  if (hintEl) hintEl.style.display = 'none';
-}
 
 function initRezeptScanner() {
   const btn = document.getElementById('rezeptScanBtn');
   if (!btn) return;
   if (isPraxisSector(getSector())) btn.style.display = '';
 
-  btn.addEventListener('click', openRezeptScanModal);
+  btn.addEventListener('click', () => oeffneAnlegenWahl(null));
+  verdrahteAnlegenWahl(leadId => openRezeptModal(null, leadId));
 
   document.getElementById('rxScanWebcamBtn')?.addEventListener('click', startWebcamCapture);
   document.getElementById('rxScanFileBtn')?.addEventListener('click', () =>
@@ -17915,68 +17875,16 @@ function initRezeptScanner() {
   document.getElementById('rxScanCameraInput')?.addEventListener('change', onFileChosen);
   document.getElementById('rxScanShotBtn')?.addEventListener('click', captureWebcamShot);
   document.getElementById('rxScanCancelCamBtn')?.addEventListener('click', stopWebcam);
-  document.getElementById('rxConfirmBtn')?.addEventListener('click', submitConfirm);
-  document.getElementById('rxInformPatientBtn')?.addEventListener('click', () =>
-    showToast('Patient wird informiert (Demo) — Phase 3 verbindet das automatisch.', 'info'));
-  document.getElementById('rxDoctorEmailBtn')?.addEventListener('click', () =>
-    showToast('Arzt-E-Mail kommt in Phase 3.', 'info'));
 
-  // Nachweis-Uploads (Zuzahlungsbefreiung & LHB/BVB)
-  document.getElementById('rxcZuzahlungBefreit')?.addEventListener('change', e => {
-    const checked = e.target.checked;
-    const wrap = document.getElementById('rxcBefreitNachweisWrap');
-    if (wrap) wrap.style.display = checked ? 'inline-flex' : 'none';
-    if (!checked) {
-      clearNachweisFile('befreiungsausweis', document.getElementById('rxcBefreitFile'), document.getElementById('rxcBefreitBtnText'), document.getElementById('rxcBefreitRemove'), document.getElementById('rxcBefreitHint'));
-    }
-  });
-
-  document.getElementById('rxcLhbBvb')?.addEventListener('change', e => {
-    const checked = e.target.checked;
-    const wrap = document.getElementById('rxcLhbBvbNachweisWrap');
-    if (wrap) wrap.style.display = checked ? 'inline-flex' : 'none';
-    if (!checked) {
-      clearNachweisFile('lhb_genehmigung', document.getElementById('rxcLhbBvbFile'), document.getElementById('rxcLhbBvbBtnText'), document.getElementById('rxcLhbBvbRemove'), document.getElementById('rxcLhbBvbHint'));
-    }
-  });
-
-  document.getElementById('rxcBefreitBtn')?.addEventListener('click', () => {
-    document.getElementById('rxcBefreitFile')?.click();
-  });
-  document.getElementById('rxcLhbBvbBtn')?.addEventListener('click', () => {
-    document.getElementById('rxcLhbBvbFile')?.click();
-  });
-
-  document.getElementById('rxcBefreitFile')?.addEventListener('change', () => {
-    handleNachweisFileSelect('befreiungsausweis', document.getElementById('rxcBefreitFile'), document.getElementById('rxcBefreitBtnText'), document.getElementById('rxcBefreitRemove'), document.getElementById('rxcBefreitHint'));
-  });
-  document.getElementById('rxcLhbBvbFile')?.addEventListener('change', () => {
-    handleNachweisFileSelect('lhb_genehmigung', document.getElementById('rxcLhbBvbFile'), document.getElementById('rxcLhbBvbBtnText'), document.getElementById('rxcLhbBvbRemove'), document.getElementById('rxcLhbBvbHint'));
-  });
-
-  document.getElementById('rxcBefreitRemove')?.addEventListener('click', e => {
-    e.stopPropagation();
-    clearNachweisFile('befreiungsausweis', document.getElementById('rxcBefreitFile'), document.getElementById('rxcBefreitBtnText'), document.getElementById('rxcBefreitRemove'), document.getElementById('rxcBefreitHint'));
-  });
-  document.getElementById('rxcLhbBvbRemove')?.addEventListener('click', e => {
-    e.stopPropagation();
-    clearNachweisFile('lhb_genehmigung', document.getElementById('rxcLhbBvbFile'), document.getElementById('rxcLhbBvbBtnText'), document.getElementById('rxcLhbBvbRemove'), document.getElementById('rxcLhbBvbHint'));
-  });
+  // Der Nachweis-Upload des alten Bestaetigungsfensters stand hier. Er ist mit
+  // dem Fenster entfallen: die Zuzahlungsbefreiung hat seit dem 12.08.2026 ihr
+  // eigenes Formular (module/zuzahlung-befreiung.js), und die LHB-Genehmigung
+  // haengt jetzt an der Maske (module/verordnung-nachweis.js) — dort haben sie
+  // BEIDE Wege, nicht nur der Scan.
 
   document.querySelectorAll('[data-modal="rezeptScanModal"]').forEach(el => {
-    el.addEventListener('click', () => { stopWebcam(); closeRezeptScanModal(); });
+    el.addEventListener('click', () => { stopWebcam(); schliesseAnlegenWahl(); });
   });
-}
-
-function openRezeptScanModal() {
-  document.getElementById('rxScanError').style.display = 'none';
-  document.getElementById('rxScanChooser').style.display = '';
-  document.getElementById('rxScanCamera').style.display = 'none';
-  document.getElementById('rxScanProcessing').style.display = 'none';
-  document.getElementById('rezeptScanModal').hidden = false;
-}
-function closeRezeptScanModal() {
-  document.getElementById('rezeptScanModal').hidden = true;
 }
 
 function showRxScanError(msg) {
@@ -18077,8 +17985,11 @@ async function uploadRezeptImage(dataUri) {
     const json = await res.json();
     if (!json.success) throw new Error(json.error || 'Upload fehlgeschlagen');
     rxLastUpload = { ...json, dataUri };
-    closeRezeptScanModal();
-    openRezeptConfirmModal(rxLastUpload);
+    schliesseAnlegenWahl();
+    await uebernehmeRezeptInMaske(rxLastUpload, {
+      oeffneMaske: () => openRezeptModal(null, null),
+      patienten: () => rzPatientCache,
+    });
   } catch (e) {
     document.getElementById('rxScanProcessing').style.display = 'none';
     document.getElementById('rxScanChooser').style.display = '';
@@ -18087,475 +17998,11 @@ async function uploadRezeptImage(dataUri) {
   }
 }
 
-async function openRezeptConfirmModal(payload) {
-  resetRxPendingNachweise();
-  if (!aerzteCache || aerzteCache.length === 0) {
-    await loadAerzte();
-  }
-  const p = payload.parsed || {};
-  const pat = p.patient || {};
-  const arzt = p.arzt || {};
-  const rez = p.rezept || {};
-
-  document.getElementById('rxConfirmImg').src = payload.dataUri;
-  const confEl = document.getElementById('rxOcrConfidence');
-  confEl.textContent = payload.ocr_confidence != null
-    ? `OCR-Vertrauen: ${Math.round(payload.ocr_confidence * 100)}%${payload.dry_run ? ' (DRY-RUN)' : ''}`
-    : '';
-
-  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
-  const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
-
-  setVal('rxcFirstName', pat.first_name);
-  setVal('rxcLastName', pat.last_name);
-  setVal('rxcDob', pat.geburtsdatum);
-  setVal('rxcVersNr', pat.versichertennummer);
-  // Krankenkasse is set up by setupRezeptConfirmDropdowns below — skip plain setVal.
-  setVal('rxcEmail', pat.email);
-  setVal('rxcPhone', pat.phone);
-  // Fahrtenbuch: OCR adresse'i strukturlu alanlara parse et
-  const adresseParsed = parseAdresseString(pat.adresse);
-  setVal('rxcStreet', adresseParsed.street);
-  setVal('rxcPlz', adresseParsed.plz);
-  setVal('rxcCity', adresseParsed.city);
-  // Hausbesuch işaretliyse adres required göstergesi
-  const setReq = (checked) => {
-    document.getElementById('rxcStreetReq').hidden = !checked;
-    document.getElementById('rxcPlzReq').hidden = !checked;
-    document.getElementById('rxcCityReq').hidden = !checked;
-  };
-  setReq(!!rez.hausbesuch);
-  document.getElementById('rxcHausbesuch')?.addEventListener('change', e => setReq(e.target.checked), { once: false });
-  setVal('rxcArztName', arzt.name);
-  setVal('rxcAusstDate', arzt.ausstellungsdatum);
-  setVal('rxcLanr', arzt.lanr);
-  setVal('rxcBsnr', arzt.bsnr);
-  setVal('rxcIcd', rez.icd10);
-  setVal('rxcIcd2', rez.icd10_2);
-  setVal('rxcDg', rez.diagnosegruppe);
-  lsApply('rxc', rez.leitsymptomatik, rez.pat_leitsymptomatik || null, rez.leitsymptomatik_boxes);
-  // Heilmittel — handled by setupRezeptConfirmDropdowns
-  // (we still pass the raw OCR text below)
-  setVal('rxcAnzahl', rez.anzahl_einheiten);
-  // Frequenz/Diagnosegruppe stehen dank Backend-Zuordnung bereits als Katalogwert
-  // in rez; die Badge sagt, ob wortgleich übernommen oder interpretiert wurde.
-  const norm = payload.normalized || {};
-  setFreqValue('rxcFreq', rez.frequenz);
-  renderMatchBadge('rxcFreqStatus', norm.frequenz, rez.frequenz_raw || rez.frequenz);
-  renderMatchBadge('rxcDgStatus', norm.diagnosegruppe, rez.diagnosegruppe_raw || rez.diagnosegruppe);
-  // Nach manueller Korrektur ist die KI-Aussage hinfällig
-  wireManualOverrideBadge('rxcFreq', 'rxcFreqStatus');
-  wireManualOverrideBadge('rxcDg', 'rxcDgStatus');
-  setChk('rxcDringend', rez.is_dringend);
-  setChk('rxcHausbesuch', rez.hausbesuch);
-  setChk('rxcBlanko', rez.is_blanko);
-  setChk('rxcLhbBvb', rez.is_lhb_bvb);
-  setChk('rxcBerichtAngefordert', rez.bericht_angefordert);
-  setVal('rxcBerichtStatus', rez.bericht_status || 'offen');
-  // Neue Muster-13-Felder (OCR → Formular)
-  setVal('rxcStatus', pat.versichertenstatus);
-  setVal('rxcDiagnoseText', rez.diagnose_text);
-  setVal('rxcHmErg', rez.ergaenzendes_heilmittel);
-  setVal('rxcAnzahlErg', rez.anzahl_ergaenzend);
-  setVal('rxcTherapieziele', rez.therapieziele);
-  setChk('rxcZuzahlungBefreit', rez.zuzahlung_befreit);
-
-  const wrapBefreit = document.getElementById('rxcBefreitNachweisWrap');
-  if (wrapBefreit) wrapBefreit.style.display = rez.zuzahlung_befreit ? 'inline-flex' : 'none';
-
-  const wrapLhb = document.getElementById('rxcLhbBvbNachweisWrap');
-  if (wrapLhb) wrapLhb.style.display = rez.is_lhb_bvb ? 'inline-flex' : 'none';
-
-  // Therapiebereich: OCR-Wert oder nach Praxis-Sektor vorbelegen
-  wireRxcTherapy();
-  setRxcTherapy(rez.therapiebereich || M13_SECTOR_THERAPY[getSector()] || '');
-
-  renderValidationBanner(payload.validation);
-
-  renderSignatureStatus(rez.unterschrift_vorhanden, rez.signature_confidence);
-
-  // Sprint 8+: populate KK + Heilmittel datalists and run AI fuzzy match on OCR text.
-  // Bewusst nicht awaited (Modal soll sofort aufgehen) — deshalb Rejection
-  // explizit abfangen, sonst verschwindet sie unbemerkt.
-  setupRezeptConfirmDropdowns(pat.krankenkasse, rez.heilmittel, norm.heilmittel)
-    .catch(e => console.error('[rezept-confirm] Dropdown-Setup fehlgeschlagen', e));
-
-  document.getElementById('rezeptConfirmModal').hidden = false;
-}
-
-// Badge für ein Feld, dessen OCR-Freitext auf einen Katalogwert gemappt wurde.
-// exact = wortgleich übernommen (grün, kein Handlungsbedarf)
-// fuzzy = sinngemäß zugeordnet (orange ⚠ — der Nutzer muss gegenlesen)
-// none  = kein Katalogwert gefunden (orange ⚠ — manuell wählen)
-// n fehlt (Backend-Zuordnung ausgefallen) → keine Aussage, Badge leer lassen.
-function renderMatchBadge(elId, n, rawText, okText) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  el.title = '';
-  if (!n) { el.textContent = ''; return; }
-  const raw = (rawText || '').toString().trim();
-  if (n.match === 'exact' && n.value) {
-    el.style.color = '#15803d';
-    el.textContent = okText ? ` ✓ ${okText}` : ' ✓ übernommen';
-    el.title = raw ? `Auf dem Rezept: „${raw}“` : '';
-  } else if (n.value) {
-    el.style.color = '#b45309';
-    el.textContent = ` ⚠ zugeordnet – bitte prüfen`;
-    el.title = [
-      raw ? `Auf dem Rezept steht: „${raw}“` : null,
-      `Zugeordnet: „${n.label || n.value}“`,
-      n.note || null,
-    ].filter(Boolean).join('\n');
-  } else if (raw) {
-    el.style.color = '#b45309';
-    el.textContent = ' ⚠ nicht zugeordnet – bitte wählen';
-    el.title = `Auf dem Rezept steht: „${raw}“ — dazu gibt es keinen passenden Katalogwert.`;
-  } else {
-    el.style.color = '#b45309';
-    el.textContent = ' ⚠ nicht erkannt';
-  }
-}
-
-// Sobald der Nutzer das Feld selbst anfasst, ist die KI-Zuordnung Geschichte —
-// Badge auf "manuell" umstellen, statt eine veraltete Aussage stehen zu lassen.
-function wireManualOverrideBadge(inputId, badgeId) {
-  const input = document.getElementById(inputId);
-  const badge = document.getElementById(badgeId);
-  if (!input || !badge || input.dataset.badgeWired) return;
-  input.dataset.badgeWired = '1';
-  const onEdit = () => {
-    badge.title = '';
-    if (!input.value) { badge.style.color = '#b45309'; badge.textContent = ' ⚠ leer'; return; }
-    badge.style.color = '#15803d';
-    badge.textContent = ' ✓ manuell';
-  };
-  input.addEventListener('change', onEdit);
-  input.addEventListener('input', onEdit);
-}
-
-// Unterschrift-Status im Rezept-Confirm-Modal — 3 Zustände:
-// true = grüner Haken, false = große Warnung (nicht blockierend), null = unbekannt
-function renderSignatureStatus(vorhanden, confidence) {
-  const el = document.getElementById('rxSignatureWarning');
-  if (!el) return;
-  const confLabel = confidence === 'high' ? 'hohe Sicherheit'
-    : confidence === 'medium' ? 'mittlere Sicherheit'
-    : confidence === 'low' ? 'geringe Sicherheit' : null;
-  if (vorhanden === true) {
-    el.innerHTML = `<div style="background:#eaf8ee;border:1px solid #2a8c4a;border-radius:8px;padding:10px 14px;color:#1f6b38;display:flex;align-items:center;gap:8px;">
-      <span class="svg-icon" style="width:16px;height:16px;display:inline-flex;flex-shrink:0;color:#1f6b38;">${ICON.checkCircle}</span>
-      <span style="font-size:13px;"><strong>Arzt-Unterschrift erkannt</strong>${confLabel ? ` <span style="opacity:0.75;">(${confLabel})</span>` : ''}</span>
-    </div>`;
-  } else if (vorhanden === false) {
-    el.innerHTML = `<div style="background:rgba(239,68,68,0.12);border:2px solid #ef4444;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;">
-      <span class="svg-icon" style="width:26px;height:26px;display:inline-flex;flex-shrink:0;color:#ef4444;">${ICON.warning}</span>
-      <div>
-        <div style="font-weight:800;color:#f87171;font-size:16px;">Arzt-Unterschrift nicht erkannt</div>
-        <div style="color:#fca5a5;font-size:13px;margin-top:4px;line-height:1.5;">Ohne gültige Unterschrift ist die Verordnung <strong>nicht abrechenbar</strong> — eine nachträgliche Korrektur ist oft nicht möglich. Bitte prüfen Sie das Original.<br>Wenn die Unterschrift auf dem Original vorhanden ist (KI-Fehlerkennung), können Sie normal fortfahren.</div>
-      </div>
-    </div>`;
-  } else {
-    el.innerHTML = `<div style="background:#fff7e6;border:1px solid #f0a500;border-radius:8px;padding:10px 14px;color:#a06200;display:flex;align-items:center;gap:8px;">
-      <span class="svg-icon" style="width:16px;height:16px;display:inline-flex;flex-shrink:0;color:#a06200;">${ICON.warning}</span>
-      <span style="font-size:13px;"><strong>Unterschrift nicht prüfbar</strong> — Feld abgeschnitten oder Bildqualität zu gering. Bitte am Original kontrollieren: ohne Unterschrift ist die Verordnung nicht abrechenbar.</span>
-    </div>`;
-  }
-}
-
-function renderValidationBanner(v) {
-  const el = document.getElementById('rxValidationBanner');
-  if (!v) { el.innerHTML = ''; return; }
-  const warnings = v.warnings || [];
-  const blockers = v.blockers || [];
-  const hinweise = v.hinweise || [];
-
-  let html = '';
-  if (blockers.length) {
-    html += `<div style="background:#fee;border:1px solid #c00;border-radius:8px;padding:10px;margin-bottom:8px;">
-      <strong style="color:#c00;">🔴 Blocker (${blockers.length}):</strong>
-      <ul style="margin:6px 0 0 18px;color:#900;">${blockers.map(b => `<li>${b.message || b.msg || b.code || b}</li>`).join('')}</ul>
-    </div>`;
-  }
-  if (warnings.length) {
-    html += `<div style="background:#fff7e6;border:1px solid #f0a500;border-radius:8px;padding:10px;margin-bottom:8px;">
-      <strong style="color:#a06200;display:inline-flex;align-items:center;"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:#a06200;">${ICON.warning}</span>Warnungen (${warnings.length}):</strong>
-      <ul style="margin:6px 0 0 18px;color:#6b4500;">${warnings.map(w => `<li>${w.message || w.msg || w.code || w}</li>`).join('')}</ul>
-    </div>`;
-  }
-  if (hinweise.length) {
-    html += `<div style="background:#eef6ff;border:1px solid #2a73d3;border-radius:8px;padding:10px;margin-bottom:8px;">
-      <strong style="color:#1c4d8f;display:inline-flex;align-items:center;"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:#1c4d8f;">${ICON.info}</span>Hinweise:</strong>
-      <ul style="margin:6px 0 0 18px;color:#1c4d8f;">${hinweise.map(h => `<li>${h.message || h.msg || h.code || h}</li>`).join('')}</ul>
-    </div>`;
-  }
-  if (!html) {
-    html = `<div style="background:#eaf8ee;border:1px solid #2a8c4a;border-radius:8px;padding:10px;color:#1f6b38;display:inline-flex;align-items:center;gap:4px;width:100%;">
-      <span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;color:#1f6b38;">${ICON.checkCircle}</span>Verordnung ist regelkonform.
-    </div>`;
-  }
-  el.innerHTML = html;
-}
-
-async function uploadRxNachweise(prescriptionId, patientId) {
-  const ownerId = getOwnerId();
-  const { data: { session: s } } = await supabase.auth.getSession();
-  const userId = s?.user?.id || currentSession?.user?.id || null;
-
-  const toUpload = [
-    { art: 'befreiungsausweis', file: rxPendingNachweise.befreiungsausweis },
-    { art: 'lhb_genehmigung', file: rxPendingNachweise.lhb_genehmigung }
-  ];
-
-  for (const item of toUpload) {
-    if (!item.file) continue;
-    const file = item.file;
-    const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
-    const storagePath = `${ownerId}/${patientId}/rezept/${prescriptionId}/${item.art}_${Date.now()}.${ext}`;
-
-    const { error: storageErr } = await supabase.storage
-      .from('patient-documents')
-      .upload(storagePath, file, {
-        contentType: file.type || 'application/octet-stream',
-        upsert: true
-      });
-
-    if (storageErr) {
-      throw new Error(`Upload ${item.art}: ` + storageErr.message);
-    }
-
-    const docRow = {
-      owner_id: ownerId,
-      prescription_id: prescriptionId,
-      patient_id: patientId,
-      art: item.art,
-      storage_path: storagePath,
-      dateiname: file.name,
-      mime_type: file.type || 'application/octet-stream',
-      groesse_bytes: file.size,
-      uploaded_by: userId
-    };
-
-    const { error: docErr } = await supabase
-      .from('prescription_documents')
-      .insert(docRow);
-
-    if (docErr) {
-      console.warn(`[prescription_documents] Insert-Fehler (${item.art}):`, docErr);
-    }
-
-    if (item.art === 'befreiungsausweis') {
-      const ausstDateVal = document.getElementById('rxcAusstDate')?.value;
-      const gueltigesDatum = ausstDateVal && /^\d{4}-\d{2}-\d{2}$/.test(ausstDateVal);
-      const befreitAb = gueltigesDatum ? ausstDateVal : new Date().toISOString().slice(0, 10);
-      const jahr = parseInt(befreitAb.slice(0, 4), 10);
-
-      // Eine bereits erfasste Befreiung wird NICHT überschrieben, nur um einen
-      // Beleg anzuhängen. Vorher setzte dieser Zweig `befreit_ab` hart auf das
-      // Ausstellungsdatum des Rezepts: wer „befreit ab September" eingetragen
-      // hatte und danach ein Januar-Rezept mit Nachweis hochlud, hatte die
-      // Befreiung plötzlich ab Januar — acht Monate Zuzahlung verschwanden.
-      const { data: vorhanden } = await supabase
-        .from('zuzahlung_befreiung')
-        .select('id')
-        .eq('patient_id', patientId)
-        .eq('jahr', jahr)
-        .maybeSingle();
-
-      const { error: befErr } = vorhanden
-        ? await supabase.from('zuzahlung_befreiung')
-            .update({ beleg_url: storagePath })
-            .eq('id', vorhanden.id)
-        : await supabase.from('zuzahlung_befreiung')
-            .insert({
-              owner_id: ownerId,
-              patient_id: patientId,
-              jahr,
-              befreit_ab: befreitAb,
-              befreit_bis: `${jahr}-12-31`,
-              beleg_url: storagePath,
-            });
-
-      if (befErr) {
-        console.warn('[zuzahlung_befreiung] Schreibfehler:', befErr);
-      }
-    }
-  }
-
-  rxPendingNachweise = { befreiungsausweis: null, lhb_genehmigung: null };
-}
-
-async function submitConfirm() {
-  if (!rxLastUpload) return;
-  const btn = document.getElementById('rxConfirmBtn');
-  btn.disabled = true;
-  btn.innerHTML = `<span class="svg-icon" style="width:15px;height:15px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.clock}</span>Speichere…`;
-  try {
-    const { data: { session: s } } = await supabase.auth.getSession();
-    if (!s?.access_token) throw new Error('Nicht angemeldet');
-
-    const fn = document.getElementById('rxcFirstName').value.trim();
-    const ln = document.getElementById('rxcLastName').value.trim();
-    // Fahrtenbuch: Hausbesuch işaretliyse adres alanları zorunlu
-    const hausbesuchChecked = document.getElementById('rxcHausbesuch').checked;
-    const street = document.getElementById('rxcStreet').value.trim();
-    const plz = document.getElementById('rxcPlz').value.trim();
-    const city = document.getElementById('rxcCity').value.trim();
-    if (hausbesuchChecked) {
-      const missing = [];
-      if (!street) missing.push('Strasse');
-      if (!plz) missing.push('PLZ');
-      if (!city) missing.push('Stadt');
-      if (missing.length) {
-        showToast('Hausbesuch erfordert: ' + missing.join(', '), 'error');
-        btn.disabled = false;
-        btn.innerHTML = `<span class="svg-icon" style="width:15px;height:15px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.checkCircle}</span>Bestätigen & Termine planen`;
-        return;
-      }
-      if (!/^\d{5}$/.test(plz)) {
-        showToast('PLZ muss 5-stellig sein.', 'error');
-        btn.disabled = false;
-        btn.innerHTML = `<span class="svg-icon" style="width:15px;height:15px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.checkCircle}</span>Bestätigen & Termine planen`;
-        return;
-      }
-    }
-
-    let versichertennummer = document.getElementById('rxcVersNr').value.trim() || null;
-    if (versichertennummer) {
-      if (!/^[A-Z]\d{9}$/.test(versichertennummer)) {
-        const normalized = versichertennummer.toUpperCase().replace(/\s/g, '');
-        if (!/^[A-Z]\d{9}$/.test(normalized)) {
-          showToast('Versichertennummer-Format ungewöhnlich (erwartet: 1 Buchstabe + 9 Ziffern)', 'error');
-        }
-        versichertennummer = normalized || null;
-      }
-    }
-
-    const rxcLs = lsCollect('rxc');
-    const parsedEdited = {
-      patient: {
-        first_name: fn || null,
-        last_name: ln || null,
-        name: [fn, ln].filter(Boolean).join(' ') || null,
-        geburtsdatum: document.getElementById('rxcDob').value || null,
-        versichertennummer: versichertennummer,
-        krankenkasse: document.getElementById('rxcKasse').value.trim() || null,
-        kostentraeger_ik: document.getElementById('rxcKasseIk').value.trim() || null,
-        email: document.getElementById('rxcEmail').value.trim() || null,
-        phone: document.getElementById('rxcPhone').value.trim() || null,
-        geschlecht: normalisiereGeschlecht(rxLastUpload.parsed?.patient?.geschlecht),
-        adresse: rxLastUpload.parsed?.patient?.adresse || null,
-        // Strukturlu adres alanları (Fahrtenbuch)
-        street: street || null,
-        plz: plz || null,
-        city: city || null
-      },
-      arzt: {
-        name: document.getElementById('rxcArztName').value.trim() || null,
-        ausstellungsdatum: document.getElementById('rxcAusstDate').value || null,
-        lanr: document.getElementById('rxcLanr').value.trim() || null,
-        bsnr: document.getElementById('rxcBsnr').value.trim() || null
-      },
-      rezept: {
-        icd10: document.getElementById('rxcIcd').value.trim() || null,
-        icd10_2: document.getElementById('rxcIcd2')?.value.trim() || null,
-        diagnose_text: document.getElementById('rxcDiagnoseText').value.trim() || null,
-        diagnosegruppe: document.getElementById('rxcDg').value.trim() || null,
-        therapiebereich: document.getElementById('rxcTherapiebereich').value.trim() || null,
-        heilmittel: document.getElementById('rxcHm').value.trim() || null,
-        ergaenzendes_heilmittel: document.getElementById('rxcHmErg').value.trim() || null,
-        anzahl_ergaenzend: parseInt(document.getElementById('rxcAnzahlErg').value, 10) || null,
-        therapieziele: document.getElementById('rxcTherapieziele').value.trim() || null,
-        leitsymptomatik: rxcLs.code,
-        pat_leitsymptomatik: rxcLs.patText,
-        heilmittel_position: document.getElementById('rxcHmPosition').value.trim() || null,
-        heilmittel_feld_text: rxLastUpload.parsed?.rezept?.heilmittel_feld_text || null,
-        anzahl_einheiten: parseInt(document.getElementById('rxcAnzahl').value, 10) || null,
-        frequenz: document.getElementById('rxcFreq').value.trim() || null,
-        behandlungsbeginn: null,
-        is_dringend: document.getElementById('rxcDringend').checked,
-        hausbesuch: document.getElementById('rxcHausbesuch').checked,
-        is_blanko: document.getElementById('rxcBlanko').checked,
-        is_lhb_bvb: document.getElementById('rxcLhbBvb').checked,
-        zuzahlung_befreit: document.getElementById('rxcZuzahlungBefreit').checked,
-        bericht_angefordert: document.getElementById('rxcBerichtAngefordert').checked,
-        bericht_status: document.getElementById('rxcBerichtStatus').value,
-        // Unterschrift-Erkennung aus dem OCR durchreichen — sonst landet in
-        // prescriptions immer null und der Status geht verloren
-        unterschrift_vorhanden: rxLastUpload.parsed?.rezept?.unterschrift_vorhanden ?? null,
-        signature_confidence: rxLastUpload.parsed?.rezept?.signature_confidence || null
-      }
-    };
-
-    const blockers = rxLastUpload.validation?.blockers || [];
-    let proceedAnyway = false;
-    if (blockers.length > 0) {
-      const detail = (blockers.slice(0, 5).map(b => '• ' + (b.message || b.msg || b.code || b)).join('\n'));
-      proceedAnyway = await showConfirmModal({
-        title: `<span class="svg-icon" style="width:18px;height:18px;display:inline-flex;vertical-align:-4px;margin-right:6px;color:var(--danger);">${ICON.warning}</span>${blockers.length} Blocker erkannt`,
-        message: `${detail}\n\nMöchten Sie trotzdem fortfahren? Der Override wird protokolliert.`,
-        confirmText: 'Trotzdem fortfahren',
-        cancelText: 'Abbrechen',
-        variant: 'danger'
-      });
-      if (!proceedAnyway) {
-        btn.disabled = false;
-        btn.innerHTML = `<span class="svg-icon" style="width:15px;height:15px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.checkCircle}</span>Bestätigen & Termine planen`;
-        return;
-      }
-    }
-
-    const res = await fetch(`${REZEPT_API}/confirm`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.access_token },
-      body: JSON.stringify({
-        storage_path: rxLastUpload.storage_path,
-        parsed: parsedEdited,
-        proceed_anyway: proceedAnyway
-      })
-    });
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error || 'Fehler');
-
-    // Nachweise hochladen, wenn vorgemerkt (Upload-Fehler dürfen Verordnung nicht stoppen)
-    if (rxPendingNachweise.befreiungsausweis || rxPendingNachweise.lhb_genehmigung) {
-      try {
-        await uploadRxNachweise(json.prescription_id, json.patient_id);
-      } catch (uploadErr) {
-        console.warn('[rezept-confirm] Nachweis-Upload fehlgeschlagen:', uploadErr);
-        showToast('Verordnung gespeichert — Nachweis konnte nicht hochgeladen werden, bitte in der Patientenakte nachholen.', 'error');
-      }
-    }
-
-    document.getElementById('rezeptConfirmModal').hidden = true;
-    showToast('Rezept gespeichert ✓ Weiter zur Terminplanung.', 'success');
-
-    const preset = {
-      prescription_id: json.prescription_id,
-      patient_id: json.patient_id,
-      anzahl: parsedEdited.rezept.anzahl_einheiten,
-      frequenz: parsedEdited.rezept.frequenz,
-      heilmittel: parsedEdited.rezept.heilmittel,
-      heilmittel_position: parsedEdited.rezept.heilmittel_position,
-      // Im Bestätigungs-Modal zugeordnete Leistung — das Buchungsmodal rät nicht neu
-      service_id: document.getElementById('rxcService')?.value || null,
-      hausbesuch: parsedEdited.rezept.hausbesuch,
-      is_dringend: parsedEdited.rezept.is_dringend,
-      is_blanko: parsedEdited.rezept.is_blanko,
-      patient_name: [parsedEdited.patient.first_name, parsedEdited.patient.last_name].filter(Boolean).join(' ')
-    };
-    window._physioFlow = preset;
-    sessionStorage.setItem('rxPreset', JSON.stringify(preset));
-
-    if (typeof showPanel === 'function') showPanel('calendar');
-    setTimeout(() => openBookingFromRxPreset(preset), 400);
-  } catch (e) {
-    console.error('[rezept-confirm]', e);
-    showToast('Fehler: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = `<span class="svg-icon" style="width:15px;height:15px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.checkCircle}</span>Bestätigen & Termine planen`;
-  }
-}
+// Das Bestaetigungsfenster des Scans () stand bis zum
+// 06.09.2026 hier — eine zweite Maske mit eigenem Feldsatz (rxc*). Ein Scan
+// fuellt jetzt die Muster-13-Maske selbst (module/rezept-in-maske.js), also
+// gibt es das Fenster nicht mehr. Was daraus noch fehlt — Bild, KI-Rozetten,
+// Nachweis-Upload, Leistungswahl — wandert in die Maske, nicht zurueck.
 
 // ===== § 302 SGB V Kassenabrechnung =====
 
@@ -18598,17 +18045,6 @@ function _matchScore(needle, haystack) {
   ta.forEach(t => { if (tb.has(t)) common++; });
   const union = ta.size + tb.size - common;
   return union ? common / union : 0;
-}
-
-function aiMatchKK(text, kkList) {
-  if (!text) return null;
-  let best = null, bestScore = 0;
-  for (const k of kkList) {
-    const s = _matchScore(text, k.name);
-    if (s > bestScore) { bestScore = s; best = k; }
-  }
-  // Accept anything 0.6+ — covers "AOK Rheinland" → "AOK Rheinland/Hamburg" (0.85+)
-  return bestScore >= 0.6 ? { ...best, score: bestScore } : null;
 }
 
 function aiMatchHeilmittel(text, positions) {
@@ -18668,259 +18104,14 @@ function aiMatchHeilmittel(text, positions) {
 // alphabetischer Reihenfolge. Jetzt dasselbe Dropdown wie in der Patientenmaske:
 // die Kassen DIESER Praxis zuerst → module/krankenkasse-suche.js
 function populateKkDatalist() {
-  for (const id of ['rzPatKasse', 'rxcKasse']) {
+  for (const id of ['rzPatKasse']) {
     const el = document.getElementById(id);
     if (el) attachKrankenkasseSuche(el, { sb: supabase, ownerId: getOwnerId });
   }
 }
 
 
-async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText, hmNormalized) {
-  // Auswahl aus einem vorherigen Rezept darf nicht ins nächste durchschlagen
-  const srvSelReset = document.getElementById('rxcService');
-  if (srvSelReset) { srvSelReset.dataset.userPicked = ''; srvSelReset.value = ''; }
-
-  // Leistungs-Select ZUERST und unabhängig füllen. Es hängt inhaltlich nicht an
-  // Krankenkassen-/Heilmittel-Katalog; stand es weiter unten, riss jeder Fehler
-  // dort (z. B. abgelehnter loadKkList-Promise — der Aufrufer awaitet nicht, die
-  // Rejection blieb still) die Zuordnung stumm mit runter.
-  try {
-    await populateRxcServiceSelect();
-  } catch (e) {
-    console.error('[rxcService] Befüllen fehlgeschlagen', e);
-  }
-
-  try {
-    await setupRezeptKkHmDropdowns(ocrKkText, ocrHmText, hmNormalized);
-  } catch (e) {
-    console.error('[rezept-confirm] KK/Heilmittel-Setup fehlgeschlagen', e);
-  }
-
-  // Zuordnung erst danach — sie liest rxcHm / rxcHmPosition, die oben gesetzt werden
-  syncRxcServiceMatch();
-  const srvSel = document.getElementById('rxcService');
-  if (srvSel) {
-    // Manuelle Auswahl gewinnt und wird nicht mehr überschrieben
-    srvSel.onchange = () => { srvSel.dataset.userPicked = srvSel.value ? '1' : ''; renderRxcServiceStatus(null, true); };
-  }
-}
-
-async function setupRezeptKkHmDropdowns(ocrKkText, ocrHmText, hmNormalized) {
-  const [kkList, positions] = await Promise.all([loadKkList(), loadPhysioPositions()]);
-  populateKkDatalist(kkList);
-
-  const kkInput = document.getElementById('rxcKasse');
-  const kkIkInput = document.getElementById('rxcKasseIk');
-  const kkStatus = document.getElementById('rxcKasseStatus');
-
-  // Auto-match Krankenkasse from OCR
-  const kkMatch = aiMatchKK(ocrKkText, kkList);
-  if (kkMatch) {
-    kkInput.value = kkMatch.name;
-    kkIkInput.value = kkMatch.ik || '';
-    if (kkStatus) {
-      const ikText = kkMatch.ik ? ` · IK ${kkMatch.ik}` : ' · ohne IK';
-      // Nur wortgleiche Treffer gelten als sicher — alles darunter ist eine
-      // Näherung und muss vom Nutzer gegengelesen werden.
-      const sure = kkMatch.score >= 0.95;
-      kkStatus.style.color = sure ? '#15803d' : '#b45309';
-      kkStatus.textContent = sure
-        ? ` ✓ erkannt${ikText}`
-        : ` ⚠ zugeordnet – bitte prüfen${ikText}`;
-      kkStatus.title = sure ? '' : `Auf dem Rezept steht: „${ocrKkText}“\nZugeordnet: „${kkMatch.name}“`;
-    }
-  } else if (ocrKkText) {
-    kkInput.value = ocrKkText;
-    if (kkStatus) { kkStatus.textContent = ' ⚠ nicht erkannt — bitte auswählen'; kkStatus.style.color = '#b45309'; }
-  } else {
-    if (kkStatus) kkStatus.textContent = '';
-  }
-
-  // Re-resolve IK whenever user changes the input
-  kkInput.oninput = () => {
-    if (kkStatus) kkStatus.title = '';
-    const m = aiMatchKK(kkInput.value, kkList);
-    if (m && _norm(m.name) === _norm(kkInput.value)) {
-      kkIkInput.value = m.ik || '';
-      if (kkStatus) {
-        kkStatus.style.color = '#15803d';
-        kkStatus.textContent = m.ik ? ` ✓ IK ${m.ik}` : ' ✓ ohne IK';
-      }
-    } else {
-      kkIkInput.value = '';
-      if (kkStatus) {
-        kkStatus.style.color = '#b45309';
-        kkStatus.textContent = ' ⚠ keine IK zugeordnet';
-      }
-    }
-  };
-
-  // Heilmittel
-  const hmInput = document.getElementById('rxcHm');
-  const hmPosInput = document.getElementById('rxcHmPosition');
-  const hmStatus = document.getElementById('rxcHmStatus');
-
-  // Vorrang hat die Katalog-Zuordnung des Backends (kennt beliebige Arzt-
-  // Schreibweisen). Erst wenn die ausfällt, greift der lokale Fuzzy-Match.
-  const hmFromAi = hmNormalized && hmNormalized.value
-    && positions.find(p => p.x === hmNormalized.value);
-  if (hmFromAi) {
-    // Keep short-form text the OCR gave (KG) — user familiarity; store position separately.
-    hmInput.value = ocrHmText || hmFromAi.label;
-    hmPosInput.value = hmFromAi.x;
-    renderMatchBadge('rxcHmStatus',
-      { ...hmNormalized, label: `${hmFromAi.x} · ${hmFromAi.label}` },
-      ocrHmText,
-      hmFromAi.x);
-  } else if (hmNormalized && !hmNormalized.value && ocrHmText) {
-    hmInput.value = ocrHmText;
-    renderMatchBadge('rxcHmStatus', hmNormalized, ocrHmText);
-  } else {
-    const hmMatch = aiMatchHeilmittel(ocrHmText, positions);
-    if (hmMatch) {
-      hmInput.value = ocrHmText || hmMatch.label;
-      hmPosInput.value = hmMatch.x;
-      if (hmStatus) {
-        // Lokaler Match ohne Rückversicherung durch die KI → nie als „sicher" verkaufen
-        const sure = hmMatch.score >= 0.95;
-        hmStatus.style.color = sure ? '#15803d' : '#b45309';
-        hmStatus.textContent = sure
-          ? ` ✓ ${hmMatch.x}`
-          : ` ⚠ ${hmMatch.x} zugeordnet – bitte prüfen`;
-        hmStatus.title = `Auf dem Rezept steht: „${ocrHmText || ''}“\nZugeordnet: „${hmMatch.x} · ${hmMatch.label}“`;
-      }
-    } else if (ocrHmText) {
-      hmInput.value = ocrHmText;
-      if (hmStatus) { hmStatus.style.color = '#b45309'; hmStatus.textContent = ' ⚠ nicht erkannt — Position wählen'; }
-    }
-  }
-
-  hmInput.oninput = () => {
-    const m = aiMatchHeilmittel(hmInput.value, positions);
-    if (hmStatus) hmStatus.title = '';
-    if (m) {
-      hmPosInput.value = m.x;
-      if (hmStatus) { hmStatus.style.color = '#15803d'; hmStatus.textContent = ` ✓ ${m.x}`; }
-    } else {
-      hmPosInput.value = '';
-      if (hmStatus) { hmStatus.style.color = '#b45309'; hmStatus.textContent = ' ⚠ keine Position zugeordnet'; }
-    }
-    syncRxcServiceMatch();
-  };
-}
-
 // --- Rezept-Bestätigung: Heilmittel → eigene Dienstleistung ------------------
-
-async function populateRxcServiceSelect() {
-  const sel = document.getElementById('rxcService');
-  if (!sel) return;
-
-  // ownerServices wird sonst erst beim Öffnen des Kalender-/Dienstleistungs-Panels
-  // gefüllt. Wer direkt ein Rezept scannt, sah hier eine leere Liste.
-  // loadServices() seedet zusätzlich den GKV-Katalog → erst danach gibt es
-  // gkv_position_nr, worauf die Zuordnung überhaupt matcht.
-  try {
-    const sector = typeof getSector === 'function' ? getSector() : null;
-    const catalog = (sector && GKV_LEISTUNGSKATALOG[sector]) || [];
-    const hasGkv = servicesCache.some(s => s.gkv_position_nr);
-    if (!servicesCache.length || (catalog.length && !hasGkv)) await loadServices();
-  } catch (e) {
-    // loadServices() rendert auch die Dienstleistungs-Kacheln; wirft einer dieser
-    // Renderer (Panel nicht im DOM), sind die Daten trotzdem schon geladen.
-    console.warn('[rxcService] loadServices fehlgeschlagen, nutze Cache/Direktabfrage', e);
-  }
-  if (servicesCache.length) ownerServices = servicesCache;
-
-  // Letzter Ausweg: unabhängig von Panel-State direkt abfragen, damit die
-  // Zuordnung nie an einem ungeladenen Panel scheitert.
-  if (!(ownerServices || []).length) {
-    const oid = getOwnerId();
-    const baseQuery = () => supabase.from('services')
-      .select('*,employee_services(employee_id)')
-      .or(`owner_id.eq.${oid},user_id.eq.${oid}`);
-    try {
-      const { data, error } = await bizScope(baseQuery(), 'services');
-      if (error) throw error;
-      ownerServices = data || [];
-
-      // Vor der Multi-Business-Migration angelegte Leistungen haben business_id = NULL
-      // und fallen durch den bizScope-Filter. Ohne diesen Fallback wirkt der Katalog
-      // leer, obwohl Dienstleistungen existieren.
-      if (!ownerServices.length) {
-        const { data: unscoped, error: e2 } = await baseQuery();
-        if (e2) throw e2;
-        ownerServices = unscoped || [];
-        if (ownerServices.length) {
-          console.warn('[rxcService] Leistungen nur ohne business_id-Filter gefunden — business_id ist bei diesen Zeilen NULL');
-        }
-      }
-      if (ownerServices.length) servicesCache = ownerServices;
-    } catch (e) {
-      console.warn('[rxcService] Direktabfrage fehlgeschlagen', e);
-    }
-  }
-
-  const list = (ownerServices || [])
-    .filter(s => !s.is_internal)
-    .sort((a, b) => (a.title || '').localeCompare(b.title || '', 'de'));
-
-  if (!list.length) {
-    sel.innerHTML = '<option value="">— keine Dienstleistungen angelegt —</option>';
-    return;
-  }
-  sel.innerHTML = '<option value="">— keine Zuordnung —</option>' + list.map(s => {
-    const code = s.gkv_position_nr || s.code;
-    const dur = s.duration_minutes ? ` · ${s.duration_minutes} Min` : '';
-    return `<option value="${s.id}">${escapeHtml(s.title || 'Ohne Titel')}${code ? ' (' + escapeHtml(code) + ')' : ''}${dur}</option>`;
-  }).join('');
-}
-
-// Status-Zeile + Hinweis unter dem Select rendern.
-function renderRxcServiceStatus(match, manual) {
-  const status = document.getElementById('rxcSrvStatus');
-  const hint = document.getElementById('rxcSrvHint');
-  if (!status || !hint) return;
-  if (manual) {
-    const sel = document.getElementById('rxcService');
-    status.style.color = sel && sel.value ? '#15803d' : '#b45309';
-    status.textContent = sel && sel.value ? ' ✓ manuell gewählt' : ' ⚠ keine Leistung gewählt';
-    hint.style.display = 'none';
-    return;
-  }
-  if (match) {
-    status.style.color = '#15803d';
-    status.textContent = ` ✓ automatisch zugeordnet (${match.reason})`;
-    hint.style.display = 'none';
-  } else {
-    status.style.color = '#b45309';
-    hint.style.display = 'block';
-    const hm = (document.getElementById('rxcHm')?.value || '').trim();
-    const hasAny = (ownerServices || []).some(s => !s.is_internal);
-    if (!hasAny) {
-      status.textContent = ' ⚠ keine Dienstleistungen angelegt';
-      hint.textContent = 'Sie haben noch keine Dienstleistungen angelegt. '
-        + 'Bitte unter Kalender › Dienstleistungen mindestens eine Leistung anlegen — '
-        + 'ohne Zuordnung können keine Termine geplant werden.';
-    } else {
-      status.textContent = ' ⚠ keine passende Leistung gefunden';
-      hint.textContent = `Für „${hm || 'das Heilmittel'}“ gibt es keine passende Dienstleistung in Ihrem Katalog. `
-        + 'Bitte oben eine Leistung wählen — oder unter Kalender › Dienstleistungen eine neue anlegen. '
-        + 'Ohne Zuordnung können keine Termine geplant werden.';
-    }
-  }
-}
-
-// Heilmittel/Position → Leistung neu zuordnen. Respektiert manuelle Auswahl.
-function syncRxcServiceMatch() {
-  const sel = document.getElementById('rxcService');
-  if (!sel) return;
-  if (sel.dataset.userPicked === '1') { renderRxcServiceStatus(null, true); return; }
-  const hm = document.getElementById('rxcHm')?.value || '';
-  const pos = document.getElementById('rxcHmPosition')?.value || '';
-  const match = scoreServiceForHeilmittel(hm, pos);
-  sel.value = match ? match.service.id : '';
-  renderRxcServiceStatus(match, false);
-}
 
 // Lazy-load PHYSIO_POSITIONS from backend on first Abrechnung page open.
 async function loadPhysioPositions() {
@@ -20685,7 +19876,7 @@ window.deleteAerzte = deleteAerzte;
 window.renderVorlagenContentForm = renderVorlagenContentForm;
 window._abState = _abState;
 window.openRezeptModal = openRezeptModal;
-window.openRezeptConfirmModal = openRezeptConfirmModal; window.openBookingModal = openBookingModal;
+window.openBookingModal = openBookingModal;
 
 // ============================================================================
 // GoBD-Kassenbuch (Belegliste) UI Mechanics (Feature 4)

@@ -113,6 +113,55 @@ const ev2 = await page.evaluate(() => window.__ereignisse);
 p('„Diesen Termin geben" meldet den Eintrag', ev2.some(e => e.was === 'wl-uebernehmen' && e.id === 'w1'));
 p('„Zurueck auf die Warteliste" meldet den Eintrag', ev2.some(e => e.was === 'wl-zurueck' && e.id === 'w2'));
 
+// ── PATIENTENSUCHE: „heute im Haus" (Ops #267) ──────────────────────────────
+console.log('\n══ PATIENTENSUCHE — heutiger Termin nach oben');
+await page.focus('#psFeld');
+await page.waitForTimeout(150);
+const ps = await page.evaluate(() => {
+  const li = [...document.querySelectorAll('#psWrap .patient-search-list li')];
+  return {
+    reihenfolge: li.filter(e => e.dataset.id).map(e => e.textContent.replace(/Heute.*$/, '').trim()),
+    marke: li.find(e => e.querySelector('.ps-badge'))?.querySelector('.ps-badge').textContent,
+    markeBei: li.find(e => e.querySelector('.ps-badge'))?.dataset.id,
+    trennerText: document.querySelector('#psWrap .ps-sep')?.textContent,
+    trennerNach: li.findIndex(e => e.classList.contains('ps-sep')),
+  };
+});
+p('der heutige Patient steht ganz oben', ps.reihenfolge[0] === 'Bert Cem', ps.reihenfolge.join(' · '));
+p('die anderen bleiben in ihrer Reihenfolge', ps.reihenfolge.slice(1).join(' · ') === 'Anna Bauer · Cem Demir', ps.reihenfolge.slice(1).join(' · '));
+p('mit Uhrzeit beschriftet', ps.marke === 'Heute 14:30' && ps.markeBei === 'p2', `${ps.marke} @ ${ps.markeBei}`);
+p('Trennzeile genau nach dem Vorschlag', ps.trennerNach === 1 && ps.trennerText === 'Alle Patienten', `Index ${ps.trennerNach}: ${ps.trennerText}`);
+
+// Die Trennzeile darf die Pfeiltasten nicht verschlucken.
+await page.keyboard.press('ArrowDown');
+await page.keyboard.press('ArrowDown');
+await page.keyboard.press('Enter');
+await page.waitForTimeout(150);
+const ev3 = await page.evaluate(() => window.__ereignisse);
+p('Pfeiltasten ueberspringen die Trennzeile', ev3.some(e => e.was === 'ps-wahl' && e.id === 'p1'),
+  ev3.filter(e => e.was === 'ps-wahl').map(e => e.id).join(',') || '— keine Wahl');
+
+// ── Der „+" in beiden Lagen ──
+console.log('\n\u2550\u2550 VERORDNUNGSKARTEN \u2014 der \u201e+\u201c ist immer da');
+const vk = await page.evaluate(() => ({
+  leerKnopf:  document.querySelectorAll('#vkLeer .bk-vero-anlegen').length,
+  leerText:   document.querySelector('#vkLeer .bk-vero-anlegen')?.textContent.replace(/\s+/g, ' ').trim(),
+  vollKarten: document.querySelectorAll('#vkVoll .bk-vero-card').length,
+  vollKnopf:  document.querySelectorAll('#vkVoll .bk-vero-anlegen').length,
+  vollZuletzt: document.getElementById('vkVoll')?.lastElementChild?.className,
+}));
+p('ohne Verordnung: ein Anlegen-Knopf', vk.leerKnopf === 1, `${vk.leerKnopf} Knopf/Knoepfe`);
+p('und er fragt statt nur festzustellen', /Jetzt eine anlegen\?/.test(vk.leerText || ''), vk.leerText);
+p('mit Verordnung: die Karte steht', vk.vollKarten === 1, `${vk.vollKarten} Karte(n)`);
+p('mit Verordnung: der „+" steht trotzdem', vk.vollKnopf === 1, `${vk.vollKnopf} Knopf/Knoepfe`);
+p('und zwar UNTER den Karten', vk.vollZuletzt === 'bk-vero-anlegen', vk.vollZuletzt);
+
+await page.click('#vkVoll .bk-vero-anlegen');
+await page.waitForTimeout(80);
+const ev4 = await page.evaluate(() => window.__ereignisse);
+p('der Klick meldet sich', ev4.some(e => e.was === 'vk-anlegen' && e.lage === 'voll'),
+  ev4.filter(e => e.was === 'vk-anlegen').map(e => e.lage).join(',') || '— nichts');
+
 await browser.close();
 if (fehler.length) { console.log('\n   ⚠ Konsolenfehler:'); [...new Set(fehler)].forEach(f => console.log('     · ' + f.slice(0,200))); }
 else console.log('\n   keine Konsolenfehler');

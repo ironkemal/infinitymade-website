@@ -73,9 +73,9 @@ import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnun
 // angewandt — „gleiches Urteil, wo auch immer geklickt wird" (siehe
 // verordnung-pruefen-knopf.js). PHYSIO_ABGESCHLOSSEN/PODO_AKTIV von dort
 // übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
-import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260905';
+import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260906';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
-import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20260905b';
+import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20260906';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260902';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
@@ -85,6 +85,11 @@ import { emit } from './signal.js?v=20260813';
 // eine podologische Zeile in den Wortschatz, den `_felderPodo()` und die
 // restlichen Podologie-Funktionen dieser Datei schon immer erwartet haben.
 import { ausTopf } from './verordnung-topf.js?v=20260904';
+// Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
+// Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
+// gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
+import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20260906';
+import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20260906';
 
 /** Alles, was die Muster-13-Maske schreibt — plus Patient, Arzt und Nummer. */
 const SELECT_PHYSIO = `
@@ -641,6 +646,60 @@ function _felderPodo(v, esc) {
   `;
 }
 
+/**
+ * Was die Muster-13-Maske NICHT zeigt.
+ *
+ * Sobald die untere Hälfte die Maske selbst trägt, wären die Felder aus
+ * `_felderPhysio` / `_felderPodo` doppelt — bis auf die, die gar nicht auf dem
+ * Papier stehen: Belegnummer, Fristen, Abrechnungsstand, Absetzung. Genau die
+ * bleiben hier, und nur die. Ein zweites Mal dieselben Werte anzuzeigen wäre
+ * die Einladung, den einen Wert zu ändern und den anderen für aktuell zu
+ * halten.
+ */
+function _nichtAufDemPapier(rx, esc, quelle) {
+  const p = rx.leads || {};
+  const nummer = belegnummerText(rx, { patientennummer: p.patientennummer });
+
+  if (quelle === 'podologie') {
+    const behs = Array.isArray(rx.podologie_behandlungen) ? rx.podologie_behandlungen : [];
+    return `
+      ${_block('Nicht auf dem Formular', [
+        _feld('Belegnummer', nummer, esc, { mono: true }),
+        _feld('Behandlungsbeginn spätestens', _datum(rx.beginn_spaetestens), esc),
+        _feld('Behandlungsstart', _datum(rx.behandlungsstart), esc),
+        _feld('Rezeptart', rx.rezeptart, esc),
+        _feld('Behandlungsanlass', rx.behandlungsanlass, esc),
+        // Wagner ist klinische Dokumentation (§630f BGB), kein Abrechnungsfeld.
+        _feld('Wagner-Klassifikation', rx.wagner_grad == null ? '' : `Grad ${rx.wagner_grad}`, esc),
+        _feld('Dokumentierte Behandlungen', behs.length ? `${behs.length} erbracht` : '', esc),
+        _feld('Angelegt am', _datum(rx.created_at), esc),
+        // Nach `ausTopf()` heisst `status` hier die Abrechnungsachse.
+        _feld('Abrechnungsstatus', rx.status, esc),
+      ], esc)}
+      ${(rx.absetzung_betrag || rx.absetzung_grund) ? _block('Absetzung durch die Kasse', [
+        _feld('Betrag', _euro(rx.absetzung_betrag), esc),
+        _feld('Am', _datum(rx.absetzung_am), esc),
+        _feld('Grund', rx.absetzung_grund, esc),
+      ], esc) : ''}
+      ${_freitextBlock('Notizen', rx.notizen, esc)}`;
+  }
+
+  const sitzungen = Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [];
+  const erledigt = sitzungen.filter(s => s.status === 'done').length;
+  return `
+    ${_block('Nicht auf dem Formular', [
+      _feld('Belegnummer', nummer, esc, { mono: true }),
+      _feld('Gültig bis (Behandlungsbeginn)', _datum(rx.gueltig_bis), esc),
+      _feld('Behandlungsbeginn', _datum(rx.behandlungsbeginn), esc),
+      _feld('Rezept-Typ', rx.rezept_typ, esc),
+      _feld('Sitzungen', sitzungen.length ? `${erledigt} von ${sitzungen.length} erledigt` : '', esc),
+      _feld('Zuzahlung kassiert am', _datum(rx.zuzahlung_kassiert_am), esc),
+      _feld('Quelle', rx.quelle, esc),
+      _feld('Angelegt am', _datum(rx.created_at), esc),
+      _feld('Abrechnungsstatus', rx.abrechnung_status, esc),
+    ], esc)}`;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Zusammenbau
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -655,6 +714,11 @@ function _felderPodo(v, esc) {
  * @param {(s:string)=>string} opt.escapeHtml  Pflicht.
  * @param {'physio'|'podologie'} [opt.quelle='physio']
  * @param {string} [opt.leadId]  Ist er gesetzt, erscheint „Patient öffnen →".
+ * @param {boolean} [opt.bearbeitbar]  Statt der Textfelder ein leerer Bereich
+ *   `#vordMaskeHost`, in den `maskeEinbetten()` danach die Muster-13-Maske
+ *   hängt. Nur die Seite „Verordnungen" setzt das — die Patientenakte
+ *   (`openPatRxDetail`) zeigt weiter die Leseansicht, sonst zöge dieselbe,
+ *   einzige Maske zwischen zwei Bildschirmen hin und her.
  * @returns {string}
  */
 export function verordnungDetailHtml(rx, opt = {}) {
@@ -683,8 +747,10 @@ export function verordnungDetailHtml(rx, opt = {}) {
          flex-wrap statt Medienabfrage — auf schmalen Bildschirmen rutscht
          die rechte Spalte unter die Felder. -->
     <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;margin-top:6px;">
-      <div style="flex:1 1 380px;min-width:0;">
-        ${quelle === 'podologie' ? _felderPodo(rx, esc) : _felderPhysio(rx, esc)}
+      <div style="flex:1 1 ${opt.bearbeitbar ? '560' : '380'}px;min-width:0;">
+        ${opt.bearbeitbar
+          ? `<div id="vordMaskeHost"></div>${_nichtAufDemPapier(rx, esc, quelle)}`
+          : (quelle === 'podologie' ? _felderPodo(rx, esc) : _felderPhysio(rx, esc))}
       </div>
       <div style="flex:0 1 260px;min-width:230px;display:flex;flex-direction:column;gap:12px;margin-top:14px;">
         ${_verschreibung(rx, esc, quelle, opt.summe)}
@@ -856,6 +922,12 @@ export async function zeigeVerordnungDetail(ctx) {
   const id = ctx.verordnungId || ctx.rxId;
   if (!inhalt || !id) return null;
 
+  // ⚠️ ZUERST, vor jedem Schreiben an `inhalt.innerHTML`: steht die
+  // Muster-13-Maske gerade in diesem Bereich, würde `innerHTML` sie samt
+  // Verdrahtung LÖSCHEN — und es gibt nur dieses eine Exemplar. Sie geht
+  // deshalb erst nach Hause und wird unten neu eingehängt.
+  if (inhalt.querySelector('#rzMaskeWrap')) maskeHeimschicken();
+
   if (panel) panel.hidden = false;
   // Erstes Öffnen: "Lade…", weil noch nichts dasteht. Ein Refresh derselben
   // Ansicht (Zuordnen/Lösen, Stift-Dialog gespeichert) dimmt stattdessen den
@@ -953,11 +1025,33 @@ export async function zeigeVerordnungDetail(ctx) {
       }
     }
 
+    const bearbeitbar = ctx.bearbeitbar === true;
     inhalt.innerHTML = verordnungDetailHtml(rx, {
-      escapeHtml, quelle, summe, termine, pruefung, leadId: p.id || ctx.leadId || '',
+      escapeHtml, quelle, summe, termine, pruefung, bearbeitbar,
+      leadId: p.id || ctx.leadId || '',
     });
     inhalt.style.opacity = '';
     inhalt.dataset.geladen = '1';
+
+    // Die Maske einhängen und gleich prüfen. Das Prüfen ist hier NICHT
+    // ungefragt: die Zeile in der Liste hat das Ausrufezeichen gesetzt, das
+    // Aufschlagen ist die Frage danach. Ohne dieses eine Urteil müsste man
+    // erst „Verordnung prüfen" drücken, um zu erfahren, was die Liste schon
+    // behauptet hat — genau der Weg, der bis heute ins Leere lief.
+    if (bearbeitbar) {
+      // `rxRoh` und nicht `rx`: die Maske arbeitet mit den Spaltennamen der
+      // Tabelle, `ausTopf()` hätte ihr die podologischen Aliase untergeschoben.
+      const eingehaengt = await maskeEinbetten({
+        host: inhalt.querySelector('#vordMaskeHost'),
+        rx: { ...(rxRoh || rx), podologie_behandlungen: rx.podologie_behandlungen,
+              prescription_sessions: rx.prescription_sessions },
+      });
+      if (eingehaengt) {
+        try { await pruefeMaske(supabase, 'muster13'); }
+        catch (e) { console.warn('[zeigeVerordnungDetail] Prüfung:', e?.message); }
+      }
+    }
+
     if (quelle === 'podologie') {
       _verdrahteEinheiten(inhalt, { supabase, vord: rx, ctx });
       _verdrahteTermine(inhalt, { supabase, vord: rx, ctx });

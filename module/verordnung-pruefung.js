@@ -100,12 +100,22 @@ function leer(v) {
  * Angekreuzte Leitsymptomatik auf eine Buchstabenliste bringen. Erlaubt sind
  * `['a','c']`, `{a:true,c:true}` und `"ac"` — die drei Formen, in denen sie
  * in der App vorkommt (Maske, OCR-Antwort, gespeicherter Wert).
+ *
+ * Spiegel von `api-backend/billing/dta/leitsymptomatik.js`. Zwei Kopien, weil
+ * Browser und Server hier keinen gemeinsamen Modulpfad haben — wer die eine
+ * Regel ändert, ändert die andere mit.
  */
 function leitsymptomatikListe(roh) {
   if (Array.isArray(roh)) return roh.map(x => String(x).toLowerCase()).filter(x => 'abcd'.includes(x));
   if (roh && typeof roh === 'object') return ['a', 'b', 'c', 'd'].filter(l => roh[l] === true);
-  const s = String(roh || '').toLowerCase();
+  let s = String(roh || '').toLowerCase().trim();
   if (/^[01]{4}$/.test(s)) return ['a', 'b', 'c', 'd'].filter((_, i) => s[i] === '1');
+  // „df-c" ist Diagnosegruppe + Buchstabe, keine Leitsymptomatik „d" und „c".
+  // Ohne dieses Abschneiden meldete der Motor bei jeder DF-Verordnung eine
+  // patientenindividuelle Leitsymptomatik, die niemand angekreuzt hatte —
+  // und verlangte dann den Freitext dazu. In der Datenbank standen am
+  // 06.09.2026 drei solche Zeilen.
+  s = s.replace(/^[a-z]{2}\d?[\s\-–—:.]+/, '');
   return ['a', 'b', 'c', 'd'].filter(l => s.includes(l));
 }
 
@@ -113,7 +123,8 @@ function leitsymptomatikListe(roh) {
  * Eine Verordnung prüfen.
  *
  * @param {object} vo  Normalisierte Verordnung:
- *   {bereich, icd, diagnosegruppe, leitsymptomatik, heilmittel, heilmittelPosition,
+ *   {bereich, icd, diagnosegruppe, leitsymptomatik, leitsymptomatikFreitext,
+ *    heilmittel, heilmittelPosition,
  *    anzahl, frequenz, ausstellungsdatum, behandlungsbeginn, dringend,
  *    versichertennummer, kasseIk, arztLanr, arztBsnr, rezeptart}
  * @param {{bereich:string, profil:object|null, gruppen:object, luecken:string[]}} regelsatz
@@ -232,9 +243,19 @@ export function pruefeVerordnung(vo, regelsatz, opt = {}) {
     const fremd = gewaehlt.filter(l => !katalog[l]);
 
     if (!gewaehlt.length) {
-      melde(SCHWERE.warnung, 'LS_FEHLT',
-        'Keine Leitsymptomatik angekreuzt. Sie gehört zu den notwendigen Angaben.',
-        'leitsymptomatik', profil?.quelle);
+      // Kästchen d) — patientenindividuelle Leitsymptomatik als Freitext — ist
+      // eine vollwertige Angabe (Muster 13, Feld „patientenindividuelle
+      // Leitsymptomatik"). Sie gegen den Katalog abzugleichen geht nicht, sie
+      // als fehlend zu melden wäre aber falsch: die Verordnung IST ausgefüllt.
+      if (!leer(vo?.leitsymptomatikFreitext)) {
+        melde(SCHWERE.hinweis, 'LS_INDIVIDUELL',
+          'Patientenindividuelle Leitsymptomatik (Feld d) — ein Abgleich mit dem Heilmittelkatalog ist dafür nicht möglich.',
+          'leitsymptomatik', profil?.quelle);
+      } else {
+        melde(SCHWERE.warnung, 'LS_FEHLT',
+          'Keine Leitsymptomatik angekreuzt. Sie gehört zu den notwendigen Angaben.',
+          'leitsymptomatik', profil?.quelle);
+      }
     } else if (fremd.length && !katalog.c) {
       // UI 1 und UI 2 kennen nur a). b) oder c) dort ist kein Auslassen der
       // Automatik, sondern ein Fehler auf der Verordnung.
@@ -335,6 +356,23 @@ function erstePositionAusItems(items) {
 }
 
 /**
+ * Der Klartext des verordneten Heilmittels aus `heilmittel_items`.
+ *
+ * Die podologische Maske schreibt das verordnete Heilmittel AUSSCHLIESSLICH
+ * dorthin; die Spalte `heilmittel` bleibt dann leer. Ohne diesen Rückgriff
+ * meldete die Prüfung „Verordnetes Heilmittel fehlt" bei jeder Verordnung, die
+ * über die Podologie-Abrechnung angelegt wurde — ein Blocker über eine
+ * vollständig ausgefüllte Verordnung.
+ */
+function heilmittelAusItems(items) {
+  if (!Array.isArray(items) || !items.length) return '';
+  return items
+    .map(i => (typeof i === 'string' ? i : (i?.bezeichnung || i?.code || '')))
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/**
  * Eine GESPEICHERTE Verordnung (Zeile aus `prescriptions`, für Podologie nach
  * `ausTopf()`) in die Eingabeform von `pruefeVerordnung()` bringen.
  *
@@ -346,9 +384,10 @@ function erstePositionAusItems(items) {
  * Prüfmotor zu schreiben.
  *
  * Feldnamen bewusst gegen `db/SCHEMA.sql` geprüft, nicht geraten — insbesondere
- * `krankenkasse_ik` (NICHT `kostentraeger_ik`, seit der Trennung 05.09.2026 zwei
- * verschiedene Felder) und `heilmittel_position` (eine Spalte, siehe CLAUDE.md-
- * Warnung, kein Tabellenname).
+ * `heilmittel_position` (eine Spalte, siehe CLAUDE.md-Warnung, kein
+ * Tabellenname). `krankenkasse_ik` und `kostentraeger_ik` sind zwar zwei
+ * verschiedene Felder (Trennung 05.09.2026), für die PRÜFUNG zählt aber jede
+ * bekannte Kassen-IK — Begründung unten am Feld.
  *
  * @param {object} row  Zeile aus `prescriptions` — physio roh, podo nach `ausTopf()`
  * @returns {object}  `vo` für `pruefeVerordnung()`
@@ -362,16 +401,35 @@ export function voAusGespeicherterVerordnung(row) {
     bereich:            row?.therapie_bereich || '',
     icd,
     diagnosegruppe:     row?.diagnosegruppe || '',
-    leitsymptomatik:    row?.pat_leitsymptomatik || row?.leitsymptomatik || '',
-    heilmittel:         row?.heilmittel || '',
+    // Reihenfolge umgedreht (06.09.2026): `pat_leitsymptomatik` ist FREITEXT.
+    // Er lief vorher durch `leitsymptomatikListe()`, das darin nach den
+    // Buchstaben a/b/c/d sucht — „Hyperkeratose und pathologisches
+    // Nagelwachstum" ergab so a) und c), also erfundene Kreuze. Das
+    // angekreuzte Feld ist `leitsymptomatik` ('0010' / 'c' / 'DF-c'), der
+    // Freitext gehört in sein eigenes Feld.
+    leitsymptomatik:        row?.leitsymptomatik || '',
+    leitsymptomatikFreitext: row?.pat_leitsymptomatik || '',
+    heilmittel:         row?.heilmittel || heilmittelAusItems(row?.heilmittel_items),
     heilmittelPosition: row?.heilmittel_position || erstePositionAusItems(row?.heilmittel_items),
     anzahl:             row?.anzahl_einheiten ?? row?.behandlungseinheiten,
     frequenz:           row?.frequenz || row?.therapiefrequenz || '',
     ausstellungsdatum:  row?.ausstellungsdatum || '',
     behandlungsbeginn:  row?.behandlungsbeginn || row?.behandlungsstart || '',
     dringend:           row?.is_dringend === true || row?.dringend === true,
-    versichertennummer: row?.versichertennummer || '',
-    kasseIk:            row?.krankenkasse_ik || '',
+    // Beide Felder haben eine zweite, gleichwertige Fundstelle — und ohne sie
+    // meldete der Motor an JEDER gespeicherten Verordnung einen Blocker
+    // (Kemal, 06.09.2026: „hepsi hatalı gözüküyor"):
+    //   • `prescriptions.versichertennummer` füllt nur die podologische Maske.
+    //     Die Muster-13-Maske schreibt die Nummer an den Patienten
+    //     (`leads.versichertennummer`, siehe verordnungPatientenAbgleich) —
+    //     dort steht sie, dort wird sie gelesen.
+    //   • `prescriptions.krankenkasse_ik` ist die Karten-IK und laut
+    //     Spaltenkommentar in db/SCHEMA.sql „überall NULL", bis eine echte
+    //     Kostenträgerdatei angebunden ist. Derselbe Rückgriff auf
+    //     `kostentraeger_ik` wie im DTA-Bau
+    //     (api-backend/billing/dta/builder.js:106,238,353).
+    versichertennummer: row?.versichertennummer || row?.leads?.versichertennummer || '',
+    kasseIk:            row?.krankenkasse_ik || row?.kostentraeger_ik || '',
     arztLanr:           row?.doctor_lanr || row?.aerzte?.lanr || '',
     arztBsnr:           row?.doctor_bsnr || row?.aerzte?.bsnr || '',
     rezeptart:          row?.rezeptart || '',

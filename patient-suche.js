@@ -48,6 +48,9 @@ function escHtml(str) {
  * @param {HTMLElement} [cfg.listEl]      existing <ul>; created next to the input if omitted
  * @param {HTMLElement} [cfg.containerEl] click-outside boundary
  * @param {number}   [cfg.emptyLimit]     rows shown when the field is empty (0 = all)
+ * @param {Function} [cfg.rank]           (lead) => number — grösser steht oben (0 = normal)
+ * @param {Function} [cfg.badgeOf]        (lead) => string — kleiner Hinweis hinter dem Namen
+ * @param {string}   [cfg.separatorLabel] Trennzeile zwischen den hochgestuften und dem Rest
  * @param {string}   [cfg.newLabel]
  * @param {string}   [cfg.emptyText]
  * @returns {{refresh:Function, close:Function}}
@@ -66,6 +69,9 @@ export function attachPatientSearch(inputEl, cfg = {}) {
     onSelect  = () => {},
     onNew     = null,
     emptyLimit = 0,
+    rank       = null,
+    badgeOf    = null,
+    separatorLabel = '',
     newLabel   = '+ Neuer Kunde…',
     emptyText  = 'Keine Treffer',
   } = cfg;
@@ -110,6 +116,18 @@ export function attachPatientSearch(inputEl, cfg = {}) {
   function render(query) {
     const q = String(query || '').trim().toLowerCase();
     let filtered = q ? leads.filter(l => matches(l, q)) : leads;
+
+    // Vorschlag VOR dem Zuschnitt. Andersherum faellt genau der Patient, den
+    // wir nach oben holen wollten, bei emptyLimit=20 wieder hinten heraus.
+    // Array.sort ist stabil — gleicher Rang behaelt die Reihenfolge der
+    // Abfrage (also die alphabetische, die der Aufrufer geliefert hat).
+    let vorne = 0;
+    if (rank) {
+      const rangVon = l => Number(rank(l)) || 0;
+      filtered = filtered.slice().sort((a, b) => rangVon(b) - rangVon(a));
+      vorne = filtered.reduce((n, l) => n + (rangVon(l) > 0 ? 1 : 0), 0);
+    }
+
     // Only the *empty* field is capped — a real query must never hide matches.
     if (!q && emptyLimit > 0) filtered = filtered.slice(0, emptyLimit);
 
@@ -119,10 +137,15 @@ export function attachPatientSearch(inputEl, cfg = {}) {
       html += `<li class="empty-item">${escHtml(emptyText)}</li>`;
     } else {
       const rx = q ? new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi') : null;
-      html += filtered.map(l => {
+      html += filtered.map((l, i) => {
         const safe = escHtml(labelOf(l));
         const hl = rx ? safe.replace(rx, '<span class="match-hl">$1</span>') : safe;
-        return `<li data-id="${escHtml(l.id)}">${hl}</li>`;
+        const hinweis = badgeOf ? String(badgeOf(l) || '') : '';
+        const marke = hinweis ? `<span class="ps-badge">${escHtml(hinweis)}</span>` : '';
+        // Trennzeile genau einmal: dort, wo die hochgestuften aufhoeren.
+        const trenner = (separatorLabel && vorne > 0 && i === vorne)
+          ? `<li class="ps-sep">${escHtml(separatorLabel)}</li>` : '';
+        return `${trenner}<li data-id="${escHtml(l.id)}">${hl}${marke}</li>`;
       }).join('');
     }
 

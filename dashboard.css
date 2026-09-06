@@ -5231,6 +5231,32 @@ textarea {
   cursor: default;
 }
 
+/* „Heute im Haus" — hochgestufter Patient (module/termin-heute.js).
+   Der Name bleibt links buendig, der Hinweis haengt rechts an der Zeile:
+   die Liste bleibt so beim Ueberfliegen eine Namensspalte. */
+.patient-search-list li .ps-badge {
+  float: right;
+  margin-left: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.patient-search-list .ps-sep {
+  padding: 4px 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-faint);
+  cursor: default;
+  border-top: 1px solid var(--border);
+}
+
+.patient-search-list .ps-sep:hover {
+  background: transparent;
+}
+
 .patient-search-list .empty-item:hover {
   background: transparent;
 }

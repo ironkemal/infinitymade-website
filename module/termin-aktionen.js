@@ -34,6 +34,8 @@
 // Beide Werte gehören zusammen; wird einer geändert, muss der andere mit.
 export const BK_PANEL_OFFSET = '456px';
 
+import { fuelleMuster13 } from './verordnung-maske.js?v=20260906';
+
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 }[c]));
@@ -349,40 +351,19 @@ export function rendereVerordnungsNavigation({ liste = [], aktuelleRxId, aufWech
  * @param {object} deps  Zugriff auf die Maske aus dashboard.js
  */
 export async function uebernimmVerordnung(rx, deps) {
-  const { oeffneRezeptMaske, lsApply, setTherapiebereich, setHausbesuch, setFrequenz, toast } = deps;
+  const { oeffneRezeptMaske, toast } = deps;
   if (!rx) return;
 
   // Erst die Maske (sie setzt alle Felder zurück und lädt den Patienten),
   // danach die Vorlage darüberschreiben — die Reihenfolge ist entscheidend.
   await oeffneRezeptMaske(null, rx.patient_id || null);
 
-  const g = (id) => document.getElementById(id);
-  const setz = (id, wert) => { const el = g(id); if (el && wert != null && wert !== '') el.value = wert; };
-  const haken = (id, wert) => { const el = g(id); if (el) el.checked = !!wert; };
-
-  setz('rzArztName', rx.aerzte?.arzt_name || '');
-  setz('rzLanr', rx.doctor_lanr || '');
-  setz('rzBsnr', rx.doctor_bsnr || '');
-  setz('rzIcd', rx.icd10 || '');
-  setz('rzDiagnoseText', rx.diagnose_freitext || '');
-  setz('rzDg', rx.diagnosegruppe || '');
-  lsApply?.('rz', rx.leitsymptomatik || null, rx.pat_leitsymptomatik || null);
-  setz('rzHm', rx.heilmittel_feld_text || rx.heilmittel || '');
-  setz('rzHmPosition', rx.heilmittel_position || '');
-  setz('rzAnzahl', rx.vorrangig_einheiten || rx.anzahl_einheiten || '');
-  setz('rzHmErg', rx.ergaenzendes_heilmittel || '');
-  setz('rzAnzahlErg', rx.ergaenzend_einheiten || '');
-  setz('rzHinweise', rx.hinweise || '');
-  setFrequenz?.('rzFreq', rx.frequenz || '');
-  setTherapiebereich?.(rx.therapie_bereich || '');
-  setHausbesuch?.(!!rx.hausbesuch);
-  haken('rzDringend', rx.is_dringend);
-  haken('rzBlanko', rx.is_blanko);
-  haken('rzLhbBvb', rx.is_lhb_bvb);
-  haken('rzBerichtAngefordert', rx.bericht_angefordert);
-  // Zuzahlungsbefreiung ist eine Eigenschaft des Patienten im laufenden Jahr,
-  // nicht des Papiers — sie darf mit.
-  haken('rzZuzahlungBefreit', rx.zuzahlung_befreit);
+  // Die Feldabbildung selbst steht seit dem 06.09.2026 in
+  // module/verordnung-maske.js — dieselbe Abbildung braucht auch die
+  // eingebettete Maske auf der Seite „Verordnungen". `alsVorlage: true` heisst:
+  // Ausstellungsdatum, Unterschrift und Zuzahlungsbetrag gehören zum NEUEN
+  // Papier und kommen nicht mit.
+  fuelleMuster13(rx, { alsVorlage: true });
 
   const alt = rx.ausstellungsdatum
     ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE')

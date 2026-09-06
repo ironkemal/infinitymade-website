@@ -81,8 +81,9 @@ import { ausTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260904';
 // der Eingabemaske (`verordnung-pruefen-knopf.js`) — `voAusGespeicherterVerordnung`
 // ist der fehlende Weg, dieselbe Prüfung auch auf eine gespeicherte Zeile
 // anzuwenden, ohne einen zweiten Motor zu schreiben.
-import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260905';
+import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260906';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
+import { on } from './signal.js?v=20260813';
 
 /** Physio-Sitzungen mit diesem Status gelten als erbracht. */
 const PHYSIO_ERBRACHT = ['done', 'completed'];
@@ -237,6 +238,12 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
   // Prüfmotor gebraucht (Ops-Kart #269, siehe unten `pruefeZeile`) — die
   // Karten/Zeilen selbst lesen diese Felder nicht.
   //
+  // ⚠️ Dieselbe Regel gilt für `kostentraeger_ik` und
+  // `leads(versichertennummer)` (06.09.2026): `krankenkasse_ik` ist überall
+  // NULL und `prescriptions.versichertennummer` füllt nur die podologische
+  // Maske — ohne beide Rückfallfelder trug JEDE Zeile der Liste ein
+  // Ausrufezeichen. Begründung am Feld in verordnung-pruefung.js.
+  //
   // ⚠️ `aerzte!arzt_id(lanr,bsnr)` MUSS mitkommen: `doctor_lanr`/`doctor_bsnr`
   // auf `prescriptions` sind oft leer, obwohl der verknüpfte Arzt LANR/BSNR
   // führt (derselbe Fallback wie in verordnung-detail.js und der §302-Abgabe,
@@ -248,9 +255,10 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
     .select('id, patient_id, ausstellungsdatum, gueltig_bis, diagnosegruppe, icd10, heilmittel, ' +
             'anzahl_einheiten, frequenz, status, is_dringend, hausbesuch, ' +
             'belegnummer, verordnungsnummer, prescription_sessions(id, status), ' +
-            'therapie_bereich, icd10_2, leitsymptomatik, heilmittel_position, behandlungsbeginn, ' +
-            'versichertennummer, krankenkasse_ik, doctor_lanr, doctor_bsnr, rezeptart, ' +
-            'leads!patient_id(first_name, last_name, patientennummer), aerzte!arzt_id(lanr, bsnr)')
+            'therapie_bereich, icd10_2, leitsymptomatik, pat_leitsymptomatik, ' +
+            'heilmittel_position, heilmittel_items, behandlungsbeginn, ' +
+            'versichertennummer, krankenkasse_ik, kostentraeger_ik, doctor_lanr, doctor_bsnr, rezeptart, ' +
+            'leads!patient_id(first_name, last_name, patientennummer, versichertennummer), aerzte!arzt_id(lanr, bsnr)')
     .eq('owner_id', ownerId)
     // Pflichtfilter (siehe Kopf) — sonst erscheint eine podologische Zeile
     // zusätzlich hier. `.or()` statt `.neq()`: Altbestand vor Einführung des
@@ -261,9 +269,9 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
     .select('id, patient_id, patient_name, ausstellungsdatum, diagnosegruppe, icd10, icd10_2, ' +
             'anzahl_einheiten, frequenz, abrechnung_status, is_dringend, hausbesuch, rezeptart, ' +
             'behandlungsanlass, heilmittel_items, belegnummer, verordnungsnummer, ' +
-            'pat_leitsymptomatik, heilmittel_position, behandlungsbeginn, ' +
-            'versichertennummer, krankenkasse_ik, doctor_lanr, doctor_bsnr, ' +
-            'leads!patient_id(first_name, last_name, patientennummer), aerzte!arzt_id(lanr, bsnr)')
+            'leitsymptomatik, pat_leitsymptomatik, heilmittel, heilmittel_position, behandlungsbeginn, ' +
+            'versichertennummer, krankenkasse_ik, kostentraeger_ik, doctor_lanr, doctor_bsnr, ' +
+            'leads!patient_id(first_name, last_name, patientennummer, versichertennummer), aerzte!arzt_id(lanr, bsnr)')
     .eq('owner_id', ownerId)
     // Gegenstück zum obigen Filter — Pflicht, nicht Kosmetik (siehe Kopf).
     .eq('therapie_bereich', 'podo');
@@ -341,12 +349,27 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
     regelsaetze.set(b, await regelsatzLaden(sb, b));
   }));
 
-  /** `null` = nicht geprüft (inaktiv oder ohne Regelsatz), sonst Kurzurteil. */
+  /**
+   * `null` = nicht geprüft (inaktiv oder ohne Regelsatz), sonst Kurzurteil.
+   *
+   * `befunde` kommt seit dem 06.09.2026 mit: „sadece hata var deyip bırakması
+   * bir işe yaramıyor" (Kemal). Ein Ausrufezeichen ohne Grund ist keine
+   * Information — die Zeile trägt den Grund jetzt in ihrem Titel, die
+   * aufgeschlagene Verordnung setzt ihn an das betroffene Feld
+   * (module/verordnung-feldmarker.js). Nur Blocker und Warnungen; Hinweise
+   * lösen die Markierung ohnehin nicht aus.
+   */
   const pruefeZeile = (row, bereichRoh) => {
     const regelsatz = regelsaetze.get(bereichRoh || '');
     if (!regelsatz) return null;
     const ergebnis = pruefeVerordnung(voAusGespeicherterVerordnung(row), regelsatz);
-    return { bittePruefen: !ergebnis.sauber, anzahl: zaehleBefunde(ergebnis) };
+    return {
+      bittePruefen: !ergebnis.sauber,
+      anzahl: zaehleBefunde(ergebnis),
+      befunde: ergebnis.befunde
+        .filter(b => b.schwere !== 'hinweis')
+        .map(b => ({ schwere: b.schwere, text: b.text, feld: b.feld })),
+    };
   };
 
   const ausPhysio = rxs.map(rx => {
@@ -500,6 +523,22 @@ export function rendereVerordnungsUebersicht(el, liste, deps = {}) {
   });
 }
 
+/**
+ * Der Tooltip der markierten Karte nennt den Grund.
+ *
+ * Spiegel von `pruefTitel` in module/verordnung-liste.js — bewusst zwei Zeilen
+ * Code an zwei Stellen statt eines Moduls für vier Zeilen; wichtig ist, dass
+ * beide Ansichten dieselben Befunde zeigen, und die kommen aus derselben
+ * `pruefung` (siehe `pruefeZeile`).
+ */
+function pruefTitel(pruefung) {
+  const befunde = Array.isArray(pruefung?.befunde) ? pruefung.befunde : [];
+  if (!befunde.length) return 'Bitte prüfen — zum Öffnen klicken.';
+  const zeilen = befunde.slice(0, 4).map(b => `• ${b.text}`);
+  if (befunde.length > 4) zeilen.push(`• … und ${befunde.length - 4} weitere`);
+  return ['Bitte prüfen:', ...zeilen, '', 'Zum Öffnen und Korrigieren klicken.'].join('\n');
+}
+
 function karteHtml(v) {
   const bittePruefen = !!v.pruefung?.bittePruefen;
   const farbe = bittePruefen ? BITTE_PRUEFEN_FARBE : bereichFarbe(v.quelle);
@@ -518,7 +557,7 @@ function karteHtml(v) {
   ].filter(Boolean).join(' · ');
 
   return `<button type="button" class="vu-karte" data-ziel="${esc(v.ziel)}" data-id="${esc(v.id)}"
-    title="${bittePruefen ? 'Diese Verordnung hat offene Prüfhinweise — öffnen und in der Maske Verordnung prüfen ansehen.' : 'Öffnen'}"
+    title="${bittePruefen ? esc(pruefTitel(v.pruefung)) : 'Öffnen'}"
     style="text-align:left;width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);
            border-left:3px solid ${farbe};background:var(--bg-card);color:var(--text-main);
            cursor:pointer;display:flex;flex-direction:column;gap:7px;">
@@ -548,6 +587,36 @@ function karteHtml(v) {
 let _laufendeAbfrage = 0;
 
 /**
+ * Der zuletzt gezeigte Stand — damit der Zuhörer unten weiss, WAS er neu
+ * zeichnen soll. Es gibt genau einen Behälter in der Akte, deshalb reicht
+ * eine Variable.
+ */
+let _letzterAufruf = null;
+let _hoertZu = false;
+
+/**
+ * Ops #181: `abrechnungsstatus.js` meldet seit dem 15.08.2026
+ * `verordnungen:changed`, aber die Übersicht in der Patientenakte hörte nicht
+ * zu — wer den Status änderte oder eine Verordnung anlegte, sah in der offenen
+ * Akte weiter den alten Stand, bis er den Patienten neu aufschlug.
+ *
+ * Einmal registrieren, nicht bei jedem Aufschlagen: sonst sammeln sich
+ * Zuhörer an, und ein Patientenwechsel löste am Ende ein Dutzend Abfragen aus
+ * (dieselbe Falle wie bei `podBillingContent`, Ops #190).
+ */
+function zuhoererAnmelden() {
+  if (_hoertZu) return;
+  _hoertZu = true;
+  const nachziehen = () => {
+    const a = _letzterAufruf;
+    // Nur wenn der Behälter noch im Dokument hängt — sonst zeichnet die
+    // Akte eines längst geschlossenen Patienten im Hintergrund weiter.
+    if (a?.el?.isConnected) zeigeVerordnungsUebersicht(a.el, a.deps);
+  };
+  on('verordnungen:changed', nachziehen);
+}
+
+/**
  * Laden und zeichnen in einem Aufruf — das ist die Schnittstelle für die Akte.
  *
  * @param {HTMLElement} el
@@ -555,6 +624,8 @@ let _laufendeAbfrage = 0;
  */
 export async function zeigeVerordnungsUebersicht(el, deps = {}) {
   if (!el) return;
+  _letzterAufruf = { el, deps };
+  zuhoererAnmelden();
   // Zuerst leeren, dann laden. Ohne diese Zeile stehen beim Wechsel auf den
   // nächsten Patienten für die Dauer der Abfrage noch die Verordnungen des
   // vorigen da — mit Zähler, also glaubwürdig falsch. Ein kurzer leerer Platz

@@ -352,7 +352,55 @@ test('podo-Zeile: icd10 kommt schon als Array (nach ausTopf), Position aus heilm
   const vo = voAusGespeicherterVerordnung(row);
   assert.deepEqual(vo.icd, ['L60.0']);
   assert.equal(vo.heilmittelPosition, '78610');
-  assert.equal(vo.leitsymptomatik, 'a');
+  // Der Klartext des Heilmittels kommt aus denselben Items — die Spalte
+  // `heilmittel` bleibt bei der podologischen Maske leer.
+  assert.equal(vo.heilmittel, 'Nagelspangenbehandlung');
+  // `pat_leitsymptomatik` ist FREITEXT und landet in seinem eigenen Feld,
+  // nicht mehr im Kreuzchenfeld (06.09.2026).
+  assert.equal(vo.leitsymptomatik, '');
+  assert.equal(vo.leitsymptomatikFreitext, 'a');
+});
+
+// ── Die drei Fehlalarme vom 06.09.2026 ─────────────────────────────────────
+// Befund Kemal: „hepsi hatalı gözüküyor" — auf der Seite Verordnungen trug
+// JEDE Zeile ein Ausrufezeichen. Ursache war nicht die Verordnung, sondern
+// diese Übersetzung: sie las drei Felder an der falschen Stelle.
+
+test('Kassen-IK: leeres krankenkasse_ik fällt auf kostentraeger_ik zurück', () => {
+  // `prescriptions.krankenkasse_ik` ist laut Spaltenkommentar in db/SCHEMA.sql
+  // „überall NULL", solange keine echte Kostenträgerdatei angebunden ist —
+  // ohne diesen Rückgriff meldet der Motor an jeder Zeile PFLICHT_KASSEIK.
+  const vo = voAusGespeicherterVerordnung({
+    krankenkasse_ik: null, kostentraeger_ik: '108310400',
+  });
+  assert.equal(vo.kasseIk, '108310400');
+});
+
+test('Versichertennummer: steht sie am Patienten, gilt sie als erfasst', () => {
+  // Die Muster-13-Maske schreibt sie an `leads`, nicht an `prescriptions`.
+  const vo = voAusGespeicherterVerordnung({
+    versichertennummer: null, leads: { versichertennummer: 'A123456789' },
+  });
+  assert.equal(vo.versichertennummer, 'A123456789');
+});
+
+test('Freitext-Leitsymptomatik erfindet keine Kreuze mehr', () => {
+  // „Hyperkeratose und pathologisches Nagelwachstum" enthält die Buchstaben
+  // a, c und d — als Kreuzchenfeld gelesen ergab das erfundene Angaben.
+  const vo = voAusGespeicherterVerordnung({
+    leitsymptomatik: '0010',
+    pat_leitsymptomatik: 'Hyperkeratose und pathologisches Nagelwachstum',
+  });
+  assert.equal(vo.leitsymptomatik, '0010');
+  assert.equal(vo.leitsymptomatikFreitext, 'Hyperkeratose und pathologisches Nagelwachstum');
+});
+
+test('nur patientenindividuelle Leitsymptomatik: Hinweis statt Warnung', () => {
+  const e = pruefeVerordnung(
+    saubereVo({ leitsymptomatik: [], leitsymptomatikFreitext: 'Druckschmerz beim Abrollen' }),
+    PODO, HEUTE);
+  assert.ok(codes(e).includes('LS_INDIVIDUELL'));
+  assert.ok(!codes(e).includes('LS_FEHLT'));
 });
 
 test('voAusGespeicherterVerordnung Ergebnis ist motorkompatibel: fehlende Kasse meldet PFLICHT_KASSEIK', () => {

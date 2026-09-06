@@ -31,6 +31,15 @@
     <div id="wlMatchList"></div>
   </div>
 
+  <!-- Verordnungskarten im Seitenbereich: der „+" in beiden Lagen -->
+  <div id="vkLeer"></div>
+  <div id="vkVoll"></div>
+
+  <!-- Patientensuche mit „heute im Haus"-Vorschlag (Ops #267) -->
+  <div id="psWrap" style="position:relative;width:320px;">
+    <input id="psFeld" class="form-input" autocomplete="off">
+  </div>
+
 <script type="module">
 import { renderWoche } from '../../module/kalender-woche.js';
 import { renderMonat } from '../../module/kalender-monat.js';
@@ -40,6 +49,9 @@ import { terminFarben } from '../../module/kalender-farben.js';
 import { verdrahteKontextmenue } from '../../module/kalender-kontextmenue.js';
 import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from '../../module/warteliste-ansicht.js';
 import { zeigeNachrueckerModal } from '../../module/warteliste-nachruecker.js';
+import { attachPatientSearch } from '../../patient-suche.js';
+import { baueHeuteIndex, terminZuLead, uhrzeitBerlin } from '../../module/termin-heute.js';
+import { rendereVeroKarten } from '../../module/termin-verordnung.js';
 
 const TEAM = [{ id: 'e1', business_name: 'Anna' }, { id: 'e2', business_name: 'Bert' }];
 const EMP_COLORS = ['#22c55e', '#3b82f6'];
@@ -162,6 +174,48 @@ zeigeNachrueckerModal({
   ],
   slot: { start_time: '2026-09-10T08:00:00', end_time: '2026-09-10T08:20:00', user_id: 'e1', service_id: 's1' },
   uebernehmen: (eintrag) => ereignisse.push({ was: 'wl-uebernehmen', id: eintrag.id }),
+});
+
+// ── Patientensuche: hebt der „heute"-Vorschlag den richtigen nach oben? ──
+// Die Liste kommt alphabetisch (so liefert sie openRezeptModal); nur Cem hat
+// heute einen Termin und muss trotzdem vor Bauer stehen.
+const PATIENTEN = [
+  { id: 'p1', first_name: 'Anna', last_name: 'Bauer' },
+  { id: 'p2', first_name: 'Bert', last_name: 'Cem' },
+  { id: 'p3', first_name: 'Cem',  last_name: 'Demir' },
+];
+const heuteIndex = baueHeuteIndex(
+  [{ lead_id: 'p2', start_time: '2026-08-26T14:30:00+02:00', status: 'confirmed' }],
+  new Date('2026-08-26T10:00:00+02:00'));
+
+attachPatientSearch(document.getElementById('psFeld'), {
+  loadLeads: () => PATIENTEN,
+  matches:   (l, q) => `${l.first_name} ${l.last_name}`.toLowerCase().includes(q),
+  labelOf:   (l) => `${l.first_name} ${l.last_name}`,
+  onSelect:  (l) => ereignisse.push({ was: 'ps-wahl', id: l.id }),
+  rank:      (l) => (terminZuLead(heuteIndex, l) ? 1 : 0),
+  badgeOf:   (l) => { const t = terminZuLead(heuteIndex, l); return t ? `Heute ${uhrzeitBerlin(t)}` : ''; },
+  separatorLabel: 'Alle Patienten',
+});
+
+// ── Verordnungskarten: der „+" muss in BEIDEN Lagen da sein ──
+// Vor dem 06.09.2026 zeichnete der Renderer ihn nur im leeren Fall — stand
+// schon eine Verordnung da, fuehrte kein Weg mehr zu einer zweiten.
+const esc = (t) => String(t ?? '');
+rendereVeroKarten({
+  container: document.getElementById('vkLeer'),
+  rxs: [], escapeHtml: esc,
+  onSelect: () => {},
+  onAnlegen: () => ereignisse.push({ was: 'vk-anlegen', lage: 'leer' }),
+});
+rendereVeroKarten({
+  container: document.getElementById('vkVoll'),
+  rxs: [{ id: 'rx1', heilmittel: 'Podologische Komplexbehandlung', diagnosegruppe: 'DF',
+          icd10: 'E11.40', anzahl_einheiten: 6, ausstellungsdatum: '2026-08-01',
+          prescription_sessions: [] }],
+  escapeHtml: esc,
+  onSelect: () => {},
+  onAnlegen: () => ereignisse.push({ was: 'vk-anlegen', lage: 'voll' }),
 });
 
 window.__ereignisse = ereignisse;

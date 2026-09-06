@@ -43,9 +43,10 @@
  * dieselbe Zusammenführung steht.
  */
 
-import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260905b';
+import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260906';
 import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260905b';
-import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260905b';
+import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260906';
+import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20260906';
 import { on } from './signal.js?v=20260813';
 
 const SPALTEN = 7;
@@ -100,6 +101,12 @@ export async function verordnungenListeLaden(ctx) {
     // aufgeschlagene Verordnung nach dem Speichern weiter den alten Termin,
     // bis man sie manuell neu öffnete.
     on('bookings:changed', () => {
+      // Nicht, während jemand in der eingebetteten Maske tippt: das
+      // Neuzeichnen holt den Stand aus der Datenbank und würde die noch nicht
+      // gespeicherte Eingabe wegwerfen. Das Signal kommt auch aus der
+      // Realtime-Verbindung, also durch eine ANDERE Person am Kalender — dann
+      // hätte man seine Eingabe ohne eigenes Zutun verloren.
+      if (istVeraendert()) return;
       if (_auswahl && document.getElementById('vordDetailContent')?.isConnected) {
         oeffne({ supabase: ctx.supabase, escapeHtml: ctx.escapeHtml, quelle: _auswahl.quelle, id: _auswahl.id });
       }
@@ -157,14 +164,18 @@ function zeileHtml(v, esc) {
     ? `${v.erbracht} / ${v.verordnet}`
     : '—';
 
+  // Das Ausrufezeichen nennt seinen Grund. „Bitte prüfen" allein war die
+  // Beschwerde vom 06.09.2026: „sadece hata var deyip bırakması bir işe
+  // yaramıyor". Die ausführliche Fassung — mit Quelle und am richtigen Feld —
+  // steht in der aufgeschlagenen Verordnung darunter.
   const name = bittePruefen
-    ? `<span title="Diese Verordnung hat offene Prüfhinweise — öffnen und in der Maske Verordnung prüfen ansehen.">⚠ ${esc(v.nachname || '—')}</span>`
+    ? `<span title="${esc(pruefTitel(v.pruefung))}">⚠ ${esc(v.nachname || '—')}</span>`
     : esc(v.nachname || '—');
 
   return `<tr class="vord-row${gewaehlt ? ' vord-row-gewaehlt' : ''}"
       data-vord-id="${esc(v.id)}" data-quelle="${esc(v.quelle)}"
       style="cursor:pointer;${bittePruefen ? `border-left:3px solid ${BITTE_PRUEFEN_FARBE};` : ''}${gewaehlt ? 'background:var(--bg-card);' : ''}"
-      title="${bittePruefen ? 'Bitte prüfen — offene Prüfhinweise' : 'Verordnung öffnen'}">
+      title="${bittePruefen ? esc(pruefTitel(v.pruefung)) : 'Verordnung öffnen'}">
     <td style="font-weight:600;color:${bittePruefen ? BITTE_PRUEFEN_FARBE : 'var(--text-main)'};">${name}</td>
     <td style="color:var(--text-main);">${esc(v.vorname || '—')}</td>
     <td style="white-space:nowrap;">${datum}</td>
@@ -173,6 +184,20 @@ function zeileHtml(v, esc) {
     <td style="text-align:center;white-space:nowrap;color:var(--text-muted);">${zaehler}</td>
     <td>${statusBadgeGross(v.quelle, v.status)}</td>
   </tr>`;
+}
+
+/**
+ * Der Tooltip der markierten Zeile: WAS nicht stimmt, nicht nur DASS.
+ *
+ * Höchstens vier Punkte — ein Tooltip mit zehn Zeilen wird nicht gelesen, und
+ * die vollständige Liste steht ohnehin unten an den Feldern.
+ */
+function pruefTitel(pruefung) {
+  const befunde = Array.isArray(pruefung?.befunde) ? pruefung.befunde : [];
+  if (!befunde.length) return 'Bitte prüfen — zum Öffnen klicken.';
+  const zeilen = befunde.slice(0, 4).map(b => `• ${b.text}`);
+  if (befunde.length > 4) zeilen.push(`• … und ${befunde.length - 4} weitere`);
+  return ['Bitte prüfen:', ...zeilen, '', 'Zum Öffnen und Korrigieren klicken.'].join('\n');
 }
 
 /** Eine Verordnung in der unteren Hälfte aufschlagen. */
@@ -186,6 +211,10 @@ function oeffne({ supabase, escapeHtml, quelle, id }) {
     titel: document.getElementById('vordDetailName'),
     inhalt: document.getElementById('vordDetailContent'),
     escapeHtml,
+    // Nur hier: die untere Hälfte trägt die Muster-13-Maske selbst, gefüllt
+    // und änderbar (Kemal, 06.09.2026). In der Patientenakte bleibt es bei
+    // der Leseansicht — es gibt nur EIN Exemplar der Maske.
+    bearbeitbar: true,
   });
 }
 
@@ -194,6 +223,9 @@ function auswahlAufheben(esc) {
   markiere(null);
   const titel = document.getElementById('vordDetailName');
   const inhalt = document.getElementById('vordDetailContent');
+  // Die Maske steht in diesem Bereich — sie muss RAUS, bevor `innerHTML` ihn
+  // leert, sonst ist das einzige Exemplar weg (siehe verordnung-maske.js).
+  if (inhalt?.querySelector('#rzMaskeWrap')) maskeHeimschicken();
   if (titel) titel.textContent = 'Verordnung';
   if (inhalt) {
     inhalt.innerHTML = '<span style="color:var(--text-muted);">Wählen Sie oben eine Verordnung aus.</span>';

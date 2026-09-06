@@ -696,6 +696,30 @@
 
 ---
 
+## 7C. Yazma yolu — tarayıcıdan mı, Express'ten mi (tip G + C)
+
+> Bu bölüm 06.09.2026'da açıldı: „Verordnung kaydı tek yoldan yazılsın" kararı öncesi
+> dağıtım incelemesi. Soru ürün sorusu değil **yol** sorusu — aynı satır iki farklı
+> bileşenden yazılıyor ve ikisinin kutudaki davranışı aynı değil.
+
+### O-44 — `prescriptions` iki ayrı yoldan yazılıyor: tarayıcı→PostgREST ve tarayıcı→Express
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Reçete kaydı iki yoldan doğuyor: elle maske RLS altında doğrudan PostgREST'e yazıyor, OCR yolu Express'ten service-role ile yazıyor. Tek yola indirilmesi tartışılıyor (kullanıcı kararı 06.09.2026) |
+| **Nerede** | **A yolu:** `module/verordnung-maske.js:490` (insert) `:502` (update, `.eq('owner_id')` + `.select()` kanıtı). **B yolu:** `dashboard.js:18501` → `api-backend/server.js:2329` `/api/rezept/confirm` (insert + `prescription_validations` denetim satırı + `leads` oluşturma + `resolveOrCreateArzt`). Taban adresi: `dashboard.js:17857` `REZEPT_API` — `dashboard.js:95-97`'deki `API` sabitinin **ikinci kopyası**, ikisi de O-01 sayımında. Ayrıca 13 frontend dosyasında 14 alan-güncellemesi daha var (`sitzungsfortschritt.js:103/111/115`, `verordnung-einheiten.js:143`, `zuzahlung-befreiung.js:252`, `dashboard.js` 8 yer) — **oluşturma** yalnız yukarıdaki iki yerde |
+| **Tip** | G (+ C) |
+| **Kutuda ne olur** | **Yeni bileşen bağımlılığı doğmaz:** playbook §4.1 kutu stack'inde `api` (Express) zaten var, PoC 0.3'te self-host Supabase'e bağlı çalıştığı doğrulandı. Ama **arıza yüzeyi genişler**: bugün Express ölüyken elle reçete girişi ayakta kalır (tarayıcı → kutunun kendi PostgREST'i), B'de kalmaz. Ölçülen gerçek: `dashboard.js` içinde 31 `${API}` çağrısı var (randevu oluşturma dahil) — yani `api` konteyneri düştüğünde kutu zaten büyük ölçüde durmuş oluyor, elle reçete girişi tek başına ürünü ayakta tutmuyor. Kalan risk gerçek ama küçük ve **tek makinede**: `restart: unless-stopped` + gerçek `/health` (O-40) ile karşılanır. G8 açısından: buluta **yeni zincir yok**, iki kutu-içi yoldan biri kapanıyor — Faz 1'in „tek Express çekirdeği" hedefiyle aynı yöne bakıyor. Yeni env var yok, yeni dış çağrı yok, şema değişikliği yok (`nagel` · `wagner_grad` · `behandlungsanlass` kolonları `db/SCHEMA.sql:1690-1699`'da mevcut) |
+| **Çözüm** | Yön kararı kullanıcıda; **hangi yön seçilirse seçilsin üç şart dağıtım tarafından zorunlu:** (1) Yeni taban adresi sabiti **açılmaz** — çağrı mevcut `API` sabitinden geçer, `REZEPT_API` gibi ikinci bir kopya kapı tabanını 26'nın üstüne çıkarır ve O-01'in Faz 1.1 çözümü tek yerden yapılamaz hale gelir. (2) Backend'e **update** yolu eklenirse `owner_id = req.auth.tenantId` filtresi ve „kaç satır değişti" kanıtı zorunlu: service-role'de RLS'in sessiz sıfır-satır freni yok, yanlış tenant'ın id'si **başarıyla** yazar. SaaS'ta 20+ tenant var (G7), kutuda tek tenant — yani bu gerileme kutuda değil **merkezde** ısırır. (3) Kutu tarafı kabul ölçütü: `api` konteyneri durdurulduğunda maske „kaydedildi" demez, anlaşılır hata verir |
+| **Durum** | `offen` — yön kararı 06.09.2026 kullanıcıda; şart (1) Faz 1.1'e (O-01), şart (2) `guvenlik` siciline bağlanır |
+
+> ⚠️ **O-01'e ek:** sicil bugüne kadar yalnız `dashboard.js:95-97`'deki ternary'yi „doğru deseni
+> bilen" yer olarak anıyordu. `REZEPT_API` (`dashboard.js:17857`) aynı host'u **ikinci kez**
+> sabitliyor ve ternary'yi bile kullanmıyor — Faz 1.1 çözümü bu ikinci kopyayı da kapsamalı,
+> yoksa kutuda reçete yolu bizim VPS'imize gitmeye devam eder.
+
+---
+
 ## 8. Kapı tabanları — `tools/check-onprem.sh` için
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -730,7 +754,7 @@
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 10 | O-09 · O-11 · O-18 · O-20 · O-23 · O-32 · O-33 · **O-40** · **O-41** · **O-42** |
+| `offen` | 11 | O-09 · O-11 · O-18 · O-20 · O-23 · O-32 · O-33 · **O-40** · **O-41** · **O-42** · **O-44** |
 | `geplant` | 21 | O-01 · O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-15 · O-16 · O-19 · O-21 · O-25 · O-26 · O-27 · O-28 · **O-29** · O-30 · O-31 · O-39 · **O-43** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-38 |
 | `gelöst` | 1 | O-36 (vendor yerelleştirmesi) |
@@ -738,6 +762,8 @@
 > **04.09.2026 — üçüncü tur (sürüm/dağıtım standardı):** O-29 `offen` → `geplant` (gereksinim
 > `RELEASE-STANDARD.md` §4.5'te yazıldı). Dört yeni madde açıldı: O-40 · O-41 · O-42 · O-43.
 > Toplam **43** madde.
+
+> **06.09.2026 — yazma yolu incelemesi:** O-44 açıldı (§7C). Toplam **44** madde.
 
 > Sayılar madde listesiyle birlikte okunur; bir madde birden fazla faza değebilir.
 

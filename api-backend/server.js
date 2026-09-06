@@ -2334,7 +2334,12 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
       storage_path,
       parsed,                  // possibly user-edited
       proceed_anyway = false,  // user clicked "Proceed despite warnings"
-      proceed_reason = null    // required explanation when proceed_anyway is true
+      proceed_reason = null,   // required explanation when proceed_anyway is true
+      // Seit 06.09.2026 entscheidet die MASKE, wer der Patient ist — sie zeigt
+      // den Befund vor dem Speichern an ("Bestehender Patient gefunden" /
+      // "Neuer Patient"). Diese beiden Felder tragen diese Entscheidung her.
+      patient_id: gewaehlterPatient = null,
+      patient_neu: patientIstNeu = false
     } = req.body || {};
 
     if (!parsed) return res.status(400).json({ error: 'parsed required' });
@@ -2343,13 +2348,30 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     const arzt = parsed.arzt || {};
     const rezept = parsed.rezept || {};
 
-    // --- Auto-match-or-create patient ---
+    // --- Patient: erst die Wahl der Maske, dann erst raten ---
     let patientId = null;
     const dob = patient.geburtsdatum || null;
     const fn = (patient.first_name || '').trim();
     const ln = (patient.last_name || '').trim();
 
-    if (dob && (fn || ln)) {
+    // Eine mitgeschickte id wird NIE ungeprueft uebernommen. Der Schreibweg
+    // laeuft mit service-role, also ohne Zeilensicherheit — eine fremde id
+    // wuerde die Verordnung an einen Patienten eines anderen Mandanten haengen
+    // und PostgREST meldete dabei keinen Fehler. (guvenlik/REGISTER.md S-18;
+    // die Luecke bestand auch unter RLS, weil die Policy nur den `owner_id` der
+    // Zeile selbst prueft, nicht den des referenzierten Patienten.)
+    if (gewaehlterPatient) {
+      const { data: eigener } = await supabase
+        .from('leads').select('id')
+        .eq('id', gewaehlterPatient).eq('owner_id', tenantId).maybeSingle();
+      if (!eigener) return res.status(403).json({ error: 'Patient gehört nicht zu dieser Praxis' });
+      patientId = eigener.id;
+    }
+
+    // Sagt die Maske "neuer Patient", wird NICHT nachtraeglich doch noch
+    // gesucht: sonst widerspricht der Speicherweg dem, was der Anwender
+    // gerade auf dem Bildschirm gelesen hat.
+    if (!patientId && !patientIstNeu && dob && (fn || ln)) {
       const { data: matches } = await supabase
         .from('leads')
         .select('id')
