@@ -90,3 +90,63 @@ test('vorhandene Stammdaten werden nie überschrieben', async () => {
   });
   assert.equal(geschrieben.length, 0);
 });
+
+// ── Kassenwechsel (Ops #275) ───────────────────────────────────────────────
+
+test('andere Versichertennummer fragt nach und übernimmt Nummer samt Kasse', async () => {
+  const { supabase, showConfirmModal, geschrieben, confirmCalls } = doppel({ confirmResult: true });
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster', versichertennummer: 'A123456789', krankenkasse: 'AOK' },
+    versichertennummer: 'B987654321', krankenkasse: 'TK', versichertenstatus: '10000',
+  });
+  assert.equal(confirmCalls.length, 1);
+  assert.match(confirmCalls[0].title, /Versichertennummer/);
+  assert.deepEqual(geschrieben, [{
+    versichertennummer: 'B987654321', krankenkasse: 'TK', versichertenstatus: '10000',
+  }]);
+});
+
+test('Ablehnung lässt die alte Nummer stehen', async () => {
+  const { supabase, showConfirmModal, geschrieben, confirmCalls } = doppel({ confirmResult: false });
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster', versichertennummer: 'A123456789' },
+    versichertennummer: 'B987654321',
+  });
+  assert.equal(confirmCalls.length, 1);
+  assert.deepEqual(geschrieben, []);
+});
+
+test('gleiche Nummer in anderer Schreibweise ist kein Wechsel', async () => {
+  const { supabase, showConfirmModal, confirmCalls, geschrieben } = doppel();
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster', versichertennummer: 'a123456789' },
+    versichertennummer: ' A123 456 789 ',
+  });
+  assert.deepEqual(confirmCalls, []);
+  assert.deepEqual(geschrieben, []);
+});
+
+test('leere Akte ist eine Lücke, kein Wechsel — wird ohne Rückfrage gefüllt', async () => {
+  const { supabase, showConfirmModal, geschrieben, confirmCalls } = doppel();
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster' },
+    versichertennummer: 'B987654321',
+  });
+  assert.deepEqual(confirmCalls, []);
+  assert.deepEqual(geschrieben, [{ versichertennummer: 'B987654321' }]);
+});
+
+test('leeres Feld auf der Verordnung löst keine Rückfrage aus', async () => {
+  const { supabase, showConfirmModal, confirmCalls, geschrieben } = doppel();
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster', versichertennummer: 'A123456789' },
+    versichertennummer: '',
+  });
+  assert.deepEqual(confirmCalls, []);
+  assert.deepEqual(geschrieben, []);
+});

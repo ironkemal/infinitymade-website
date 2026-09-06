@@ -81,6 +81,40 @@ const LABEL = {
   archiviert:    'Archiviert',
 };
 
+/**
+ * Diagnosegruppen, bei denen der behandelte Zehennagel Pflichtangabe ist.
+ * Spiegel von `POD_NAGEL_DGS` in `module/verordnung-podo.js`.
+ */
+const NAGEL_PFLICHT_DGS = ['UI1', 'UI2'];
+
+/** „UI1-a" → „UI1", „DF-c" → „DF". Spiegel von `dgRoot()` in verordnung-podo.js. */
+function dgStamm(roh) {
+  const v = String(roh || '').trim().toUpperCase();
+  if (!v) return '';
+  return v.startsWith('DF') ? 'DF' : v.split('-')[0];
+}
+
+/**
+ * Was auf dem Weg zur Kasse nicht fehlen darf.
+ *
+ * Nagel: Der Podologie-Vertrag Anlage 3 o2) nennt die Lokalisation
+ * „Pflichtangabe"; § 3b Satz 5 verlangt sie einmalig auf der Rückseite jeder
+ * Verordnung. Ohne sie läuft ausserdem die Serien-Sperre der Erstbefundung
+ * still ins Leere — `darfErstbefundungNagel()` gibt dann `nagel_unbekannt`
+ * zurück und sperrt bewusst nicht, weil eine ratende Sperre eine zu Recht
+ * erbrachte Leistung kosten würde. Der Riegel gehört deshalb hierher, wo der
+ * Mensch ohnehin gerade hinschaut.
+ *
+ * @returns {string[]} leer = darf freigegeben werden
+ */
+function fehlendeVerordnungsangaben(v) {
+  const fehlt = [];
+  if (NAGEL_PFLICHT_DGS.includes(dgStamm(v.diagnosegruppe)) && !String(v.nagel || '').trim()) {
+    fehlt.push('Bei UI 1 / UI 2 fehlt der behandelte Zehennagel (§ 3b Satz 5, Anlage 3 o2)');
+  }
+  return fehlt;
+}
+
 // Nach der Einreichung ist Geld unterwegs. Wer hier storniert, hat eine
 // Mitteilungspflicht gegenueber der Kasse (schriftlich oder telefonisch),
 // wenn bereits zuviel gezahlt wurde. Die Oberflaeche muss das bestaetigen,
@@ -109,7 +143,7 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
 
     const { data: vRoh, error: vErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich')
+      .select('id, owner_id, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel')
       .eq('id', req.params.id)
       .maybeSingle();
     if (vErr) return res.status(500).json({ error: vErr.message });
@@ -131,6 +165,26 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
         error: `„${LABEL[jetzt] || jetzt}" kann nicht auf „${LABEL[ziel]}" gesetzt werden.`,
         erlaubt: erlaubt.map(s => ({ status: s, label: LABEL[s] })),
       });
+    }
+
+    // Pflichtangaben, die erst hier zählen dürfen.
+    //
+    // Warum nicht als CHECK in der Datenbank: das würde den Scan-Weg schon
+    // beim Anlegen abweisen — dieselbe Falle wie beim Unterschriftsfeld. Eine
+    // frisch eingescannte Verordnung darf unvollständig sein; sie darf nur
+    // nicht in dieser Verfassung zur Kasse gehen.
+    //
+    // Warum nicht in `module/verordnung-pruefung.js`: der Motor dort ist
+    // ausdrücklich beratend („speichert nicht, blockiert nicht"). Ein Riegel,
+    // der nur im Browser sitzt, ist kein Riegel.
+    if (ziel === 'abrechenbar') {
+      const fehlt = fehlendeVerordnungsangaben(v);
+      if (fehlt.length) {
+        return res.status(422).json({
+          error: `Diese Verordnung kann noch nicht freigegeben werden: ${fehlt.join(' · ')}`,
+          fehlend: fehlt,
+        });
+      }
     }
 
     // `status` in podologischer Sprache — geschrieben wird unten in

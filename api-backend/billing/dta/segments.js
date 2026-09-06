@@ -14,6 +14,7 @@
 //   - Empty Kann-fields in the middle MUST be passed as '' to keep their `+`.
 
 import { buildSegment, fmtAmount, fmtDate } from './encoding.js';
+import { LEITSYMPTOMATIK_MUSTER } from './leitsymptomatik.js';
 
 // ===========================================================================
 // SLGA segments — §5.5.2
@@ -246,6 +247,17 @@ export function buildSLLA_ZHE({
   heilmittelBereich = '',          // K
   therapiefrequenz,                // M, n1
 }) {
+  // Letzte Reissleine vor dem Datenstrom. Ein Buchstabe an dieser Stelle
+  // faellt in Pruefstufe 2 — dort weist die Annahmestelle nicht die einzelne
+  // Verordnung ab, sondern die GANZE Datei. Deshalb hier hart statt still:
+  // ein Fehlschlag beim Erzeugen kostet Sekunden, eine zurueckgewiesene
+  // Monatsabrechnung kostet einen Einreichungszyklus.
+  if (!LEITSYMPTOMATIK_MUSTER.test(String(leitsymptomatik ?? ''))) {
+    throw new Error(
+      `ZHE.Leitsymptomatik "${leitsymptomatik}" ungültig — erwartet vier Stellen 0/1 ` +
+      `(a-b-c-patientenindividuell) oder "9999". Anlage 1 TP5 V21, Kap. 5.5.3.3.`
+    );
+  }
   return [buildSegment('ZHE', [
     bsnr,
     lanr,

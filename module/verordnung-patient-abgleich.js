@@ -1,4 +1,5 @@
 import { emit } from './signal.js?v=20260813';
+import { versichertennummerAbweichung } from './verordnung-aus-ocr.js?v=20260906';
 
 /**
  * verordnung-patient-abgleich.js — Patientenstammdaten nach manueller
@@ -37,6 +38,32 @@ export async function verordnungPatientenAbgleich(ctx, felder) {
     if (mg) {
       const yy = mg[3].length === 2 ? (parseInt(mg[3]) > 30 ? '19' + mg[3] : '20' + mg[3]) : mg[3];
       patch.geburtsdatum = `${yy}-${mg[2].padStart(2, '0')}-${mg[1].padStart(2, '0')}`;
+    }
+  }
+
+  // 3. Kassenwechsel (Ops #275, Beta-2 05.09.2026): steht auf der Verordnung
+  //    eine ANDERE Versichertennummer als in der Akte, ist das fast immer ein
+  //    Kassenwechsel — der Arzt hat von der neuen Karte abgeschrieben.
+  //    Bis hierher fiel das durch: oben wird die Nummer nur eingetragen, wenn
+  //    die Akte gar keine hat. Wich sie ab, blieb die alte stehen, bis die
+  //    Kasse die Abrechnung zurückwies.
+  //    Wie beim Namen: fragen, nicht überschreiben. Es kann auch ein
+  //    Lesefehler oder ein Rezept sein, das lange in der Schublade lag.
+  const nummerBefund = versichertennummerAbweichung({ versichertennummer }, lead);
+  if (nummerBefund.geaendert) {
+    const uebernehmen = await showConfirmModal({
+      title: 'Andere Versichertennummer',
+      message: `Verordnung: "${nummerBefund.neu}"\nPatientenakte: "${nummerBefund.alt}"\n\n`
+        + 'Das deutet auf einen Kassenwechsel hin. Nummer im Patientenprofil aktualisieren?',
+      confirmText: 'Ja, Nummer übernehmen',
+      cancelText: 'Nein, nur diese Verordnung',
+    });
+    // Die Krankenkasse gehört zur Nummer — sie getrennt stehen zu lassen
+    // ergäbe eine Akte, die sich selbst widerspricht.
+    if (uebernehmen) {
+      patch.versichertennummer = nummerBefund.neu;
+      if (krankenkasse) patch.krankenkasse = krankenkasse;
+      if (versichertenstatus) patch.versichertenstatus = versichertenstatus;
     }
   }
 

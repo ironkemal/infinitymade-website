@@ -8,7 +8,7 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-05
+> Son güncelleme: 2026-09-06
 
 ---
 
@@ -346,6 +346,93 @@
 ---
 
 
+### ZHE Leitsymptomatik dört haneli bitmaskedir, harf değildir
+- **Kural:** SLLA-B `ZHE` segmentindeki **Leitsymptomatik** alanı `an4`'tür: dört hane,
+  her hane `0` veya `1`, sıra **a-b-c-patientenindividuell**. Kimse kutu işaretlememişse
+  `0000` gönderilir. Harf (`"a"`, `"ab"`) veya Diagnosegruppe önekli değer (`"DF-c"`)
+  bu alana **yazılamaz**.
+- **Kaynak:** Anlage 1 TP5 V21, Kap. 5.5.3.3, s. 71 — *"1. Stelle: Leitsymptomatik a …
+  4. Stelle: patientenindividuelle Leitsy., je Stelle: '0' = nein, '1' = ja … Wenn kein
+  Kreuz gesetzt ist, ist '0000' zu übermitteln."*
+- **Geçerlilik:** 01.10.2025 (V21, Stand 15.01.2026)
+- **Kodda:** `api-backend/billing/dta/leitsymptomatik.js` → `leitsymptomatikAlsBitmaske()`;
+  çağrıldığı yer `api-backend/billing/api/abrechnung.routes.js` (Physio + Podoloji mapper'ları);
+  son emniyet `api-backend/billing/dta/segments.js` içindeki `LEITSYMPTOMATIK_MUSTER` guard'ı.
+  Frontend aynası: `module/verordnung-pruefung.js` → `leitsymptomatikListe()`.
+- **Kapsam:** tüm Heilmittel Verordnung'ları
+- 📌 **06.09.2026 ölçümü:** canlı `prescriptions` tablosunda `"DF-c"` × 3 ve `"c"` × 1 duruyordu.
+  Kaynağı `abrechnung.routes.js`'teki `vord.leitsymptomatik || vord.diagnosegruppe` geri
+  dönüşüydü — Diagnosegruppe'yi Leitsymptomatik alanına yazıyordu. Geri dönüş kaldırıldı.
+- ⚠️ **Önek tuzağı:** `"DF-c"` içindeki `d` harfi, saf `[abcd]` filtresiyle 4. haneyi
+  (patientenindividuell) yanlışlıkla `1` yapar. Önek önce kesilmelidir.
+
+### Format hatası tek Verordnung'u değil, DOSYANIN TAMAMINI düşürür
+- **Kural:** Alan tipi/uzunluğu ihlali **Prüfstufe 2**'de, geçersiz Schlüssel değeri
+  **Prüfstufe 3**'te yakalanır. **İkisi de dosyanın tamamını reddettirir** — hatalı satır
+  ayıklanıp gerisi işlenmez. Bu yüzden tek bir eski kayıt bütün ayın abrechnung'unu geri
+  getirebilir.
+- **Kaynak:** Anlage 1 TP5 V21, Kap. 6.2, s. 161 — *"Wenn die Syntax verletzt ist, z.B. bei
+  zu großer Feldlänge oder alphanumerischen Inhalten in numerisch definierten
+  Datenelementen ist die gesamte Datei zurückzuweisen."* · Kap. 6.3, s. 162 —
+  *"Schlüsselausprägungen müssen korrekt sein im Hinblick auf das Schlüsselverzeichnis
+  (Anlage 3) … Bei Abweisung der Datei erfolgt die Benachrichtigung unter Angabe des Fehlers."*
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** `api-backend/billing/dta/preflight.js` (V:01010 format · V:01011 zorunlu freitext ·
+  V:01012 uzunluk) + `segments.js` guard'ı. Preflight **tavsiye değil kapıdır**: dosya
+  üretilmeden önce koşar.
+- **Kapsam:** tüm DTA gönderimi
+- 📌 Sonuç: sıkı `throw` burada doğru davranıştır. Üretim sırasında düşmek saniye kaybettirir,
+  reddedilen dosya bir gönderim döngüsü kaybettirir.
+
+### Patientenindividuelle Leitsymptomatik iki durumda zorunludur
+- **Kural:** `..70 AN` uzunluğundaki serbest metin alanı, **4. hane `1` ise** ya da
+  **Leitsymptomatik `0000` ise** zorunludur. `0000` + serbest metin geçerli bir kombinasyondur
+  (podolojide sözleşme bunu açıkça sayar), `0000` + boş metin değildir.
+- **Kaynak:** Anlage 1 TP5 V21, Kap. 5.5.3.3, s. 71 — *"zwingend anzugeben falls 4. Stelle bei
+  'Leitsymptomatik' = '1' oder falls im Feld 'Leitsymptomatik' der Wert '0000' übertragen
+  wird."* · Podologie Anlage 3 l) (Lesefassung 17.06.2025) — *"Alternativ kann eine
+  patientenindividuelle Leitsymptomatik … als Freitext angegeben werden."*
+- **Geçerlilik:** 01.10.2025 · Podologie 17.06.2025
+- **Kodda:** `api-backend/billing/dta/preflight.js` → `V:01011` (zorunluluk), `V:01012`
+  (70 hane sınırı), `V:01013` (uyarı: hiç kutu yok, sadece metin)
+- **Kapsam:** tüm Heilmittel Verordnung'ları
+- ⚠️ **Kart #143'ten sapma, bilinçli:** kart `0000`'ı her hâlükârda hata saymayı öneriyordu.
+  Uygulanmadı — podoloji sözleşmesi salt-serbest-metin hâlini açıkça meşru sayıyor, o kural
+  hukuken geçerli bir dosyayı reddederdi. Uyarıya indirildi.
+
+### Verordnungsart: 01/02/10/11 „nicht belegt" — yalnız 03/04/05
+- **Kural:** `ZHE` Verordnungsart alanı yalnız üç değer alır:
+  **03** = § 7 Abs. 1-5 HeilM-RL (Regelfall) · **04** = § 7 Abs. 6 (besonderer
+  Verordnungsbedarf / langfristiger Heilmittelbedarf) · **05** = § 13a (Blankoverordnung).
+  Blanko kaydı aynı anda LHB de olsa **05 kazanır**.
+- **Kaynak:** Anlage 3 TP5 V21 § 8.1.12, s. 29 — *"01 = nicht belegt · 02 = nicht belegt ·
+  … 10 = nicht belegt · 11 = nicht belegt"*
+- **Geçerlilik:** 01.10.2025 (V21, Stand 19.09.2025)
+- **Kodda:** `api-backend/billing/dta/zhe-kennzeichen.js` → `verordnungsartFuer()`;
+  Schlüssel tablosu `api-backend/billing/codes/anlage3_v22.js:46` (`VERORDNUNGSART_HEILMITTEL`)
+- **Kapsam:** tüm Heilmittel Verordnung'ları
+- 📌 **06.09.2026 öncesi durum, iki ayrı hata sınıfı:**
+  Physio yolu `is_blanko ? '04' : (is_lhb_bvb ? '02' : '01')` yazıyordu → Blanko sessizce
+  „langfristiger Heilmittelbedarf" diye gidiyordu (**gürültüsüz yanlış beyan**).
+  Podoloji yolu sabit `'01'` yazıyordu → Preflight V:01004 kesiyordu, yani **podoloji hiç
+  abrechnung yapamıyordu** (gürültülü ama dürüst).
+
+### Heilmittel-Bereich Schlüssel'i — podoloji 2, 5 değil
+- **Kural:** `ZHE` Heilmittel-Bereich alanı: **1** Physiotherapie · **2** Podologische
+  Therapie · **3** Stimm-/Sprech-/Sprach-/Schlucktherapie · **4** Ergotherapie ·
+  **5** Ernährungstherapie.
+- **Kaynak:** Anlage 1 TP5 V21, Kap. 5.5.3.3, s. 71
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** `api-backend/billing/dta/zhe-kennzeichen.js` → `heilmittelBereichFuer(sector)`;
+  `profiles.sector` sözcük dağarcığı `api-backend/billing/codes/legs.js` → `LEGS_BY_FACHBEREICH`
+- **Kapsam:** tüm Heilmittel Verordnung'ları
+- 📌 **06.09.2026 öncesi:** podoloji **`'5'`** gönderiyordu — o Ernährungstherapie'dir.
+  Ortak mapper ise `sector` parametresini zaten alıyor olmasına rağmen herkes için `'1'`
+  yazıyordu, yani Ergo ve Logo da „Physiotherapie" diye gidiyordu.
+
+---
+
+
 # Sürüm yönetimi
 
 ### V21 esas alınır, V22 01.02.2027'ye kadar uygulanmaz
@@ -405,9 +492,11 @@
 - [x] 🟠 ~~**Erstbefundung seri/nagel sınırı yok**~~ — **kapandı 04.09.2026.**
       `prescriptions.nagel` (10 değerli CHECK) + `darfErstbefundungNagel()` +
       `podErstbefundungSerieLage()`; 13 test. Seri sonu 78520.
-- [ ] 🟡 **Nagel, Abrechnung freigabe'sinde zorunlu değil** — Verordnung formu zorunlu
-      kılıyor, ama OCR'den doğan UI1/UI2 Verordnung nagel'siz kalabilir; o zaman seri
-      sperresi sessizce devre dışı (`nagel_unbekannt`). Anlage 3 o2 „Pflichtangabe" diyor.
+- [x] 🟡 ~~**Nagel, Abrechnung freigabe'sinde zorunlu değil**~~ — **kapandı 06.09.2026.**
+      Kapı `api-backend/billing/api/verordnung-status.routes.js` →
+      `fehlendePflichtangaben()`, `aktiv → abrechenbar` geçişinde. Backend'de, çünkü
+      tarayıcıdaki riegel riegel değildir; DB CHECK'i olarak değil, çünkü o taramayı
+      daha INSERT'te reddederdi (Unterschriftsfeld'deki aynı tuzak).
 - [ ] 28 gün başlama süresi — HeilM-RL § 15'ten teyit (şu an kaynak NOVENTI = ticari yayın)
 - [ ] `blankoRules.js:124-132` — `ok !== true` iken bonuslar yine hesaplanıyor (`total_bonuses_eur`
       dolu dönüyor). Sessiz yanlış fatura riski.

@@ -13,6 +13,8 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
+import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
+import { verordnungsartFuer, heilmittelBereichFuer } from '../dta/zhe-kennzeichen.js';
 // Preise/Zuzahlung kommen ab Aufgabe 2 ausschliesslich über preise/resolver.js.
 // Aus den Katalogen wird hier nur noch gebraucht, was nichts mit Geld zu tun hat.
 import { resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positions.js';
@@ -341,12 +343,15 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
       // ungültig (Anlage 1 TP5 V21). Gleiche Bereinigung wie im Podologie-Weg.
       // Wird heute nicht ausgelöst, die Stelle war aber bruchgefährdet.
       diagnosegruppe:           (rx.diagnosegruppe || '').replace(/-[abc]$/i, '') || '9999',
-      verordnungsart:           rx.is_blanko ? '04' : (rx.is_lhb_bvb ? '02' : '01'),
+      verordnungsart:           verordnungsartFuer(rx),
       hausbesuch:               !!rx.hausbesuch,
-      leitsymptomatik:          rx.leitsymptomatik || '',
+      leitsymptomatik:          leitsymptomatikAlsBitmaske(rx.leitsymptomatik, {
+                                  diagnosegruppe: rx.diagnosegruppe,
+                                  patientenText:  rx.pat_leitsymptomatik,
+                                }),
       patLeitsymptomatik:       rx.pat_leitsymptomatik || '',
       dringend:                 !!rx.is_dringend,
-      heilmittelBereich:        '1',
+      heilmittelBereich:        heilmittelBereichFuer(sector),
       therapiefrequenz:         frequenzToDigit(rx.frequenz),
       zuzahlungskennzeichen:    rx.zuzahlung_befreit ? '1' : '0',
       kostentraegerIk:          rx.kostentraeger_ik,
@@ -2129,12 +2134,19 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
       ausstellungsdatum:     vord.ausstellungsdatum,
       icd10,
       diagnosegruppe:        (vord.diagnosegruppe || '').replace(/-[abc]$/i, '') || '9999',
-      verordnungsart:        '01',
+      verordnungsart:        verordnungsartFuer(vord),
       hausbesuch:            !!vord.hausbesuch,
-      leitsymptomatik:       vord.leitsymptomatik || vord.diagnosegruppe || '',
+      // Der Rückfall `|| vord.diagnosegruppe` ist ersatzlos gestrichen: er
+      // schrieb „DF" ins Leitsymptomatik-Feld — am 06.09.2026 in drei Zeilen
+      // der Datenbank nachgewiesen („DF-c"). Vier Stellen aus 0/1 sind dort
+      // Pflicht, alles andere wirft die GANZE Datei zurück.
+      leitsymptomatik:       leitsymptomatikAlsBitmaske(vord.leitsymptomatik, {
+                               diagnosegruppe: vord.diagnosegruppe,
+                               patientenText:  vord.pat_leitsymptomatik,
+                             }),
       patLeitsymptomatik:    vord.pat_leitsymptomatik || '',
       dringend:              !!vord.is_dringend,
-      heilmittelBereich:     '5', // Podologie
+      heilmittelBereich:     heilmittelBereichFuer('podologie'),
       therapiefrequenz:      frequenzToDigit(vord.frequenz),
       zuzahlungskennzeichen: vord.zuzahlung_befreit ? '1' : '0',
       kostentraegerIk:       vord.kostentraeger_ik,

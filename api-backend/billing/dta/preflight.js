@@ -21,6 +21,7 @@ import {
   ABRECHNUNGSCODE,
 } from '../codes/anlage3_v22.js';
 import { istGueltigerLegs, GUELTIGE_LEGS } from '../codes/legs.js';
+import { LEITSYMPTOMATIK_MUSTER } from './leitsymptomatik.js';
 
 // ---------------------------------------------------------------------------
 // Atomic field validators
@@ -269,6 +270,42 @@ export function preflight(input) {
 
     if (!v.leitsymptomatik)
       E(errors, 'V:01006', `${at}.verordnung.leitsymptomatik`, 'Leitsymptomatik fehlt');
+
+    // Bis 06.09.2026 prüfte der Preflight nur, OB das Feld gefüllt ist.
+    // Deshalb fiel nie auf, dass darin „DF-c" und „c" standen — Werte, die
+    // die Annahmestelle in Prüfstufe 2 abweist und dabei nicht die Zeile,
+    // sondern die ganze Datei zurückgibt.
+    else if (!LEITSYMPTOMATIK_MUSTER.test(String(v.leitsymptomatik)))
+      E(errors, 'V:01010', `${at}.verordnung.leitsymptomatik`,
+        `Leitsymptomatik "${v.leitsymptomatik}" hat nicht das Format an4 ` +
+        `(vier Stellen 0/1 für a-b-c-patientenindividuell)`);
+
+    // Anlage 1 TP5 V21, S. 71: der Freitext ist „zwingend anzugeben falls
+    // 4. Stelle bei 'Leitsymptomatik' = '1' oder falls im Feld der Wert
+    // '0000' übertragen wird".
+    const lsWert = String(v.leitsymptomatik || '');
+    const brauchtText = lsWert === '0000' || (/^[01]{4}$/.test(lsWert) && lsWert[3] === '1');
+    if (brauchtText && !String(v.patLeitsymptomatik || '').trim())
+      E(errors, 'V:01011', `${at}.verordnung.patLeitsymptomatik`,
+        lsWert === '0000'
+          ? 'Keine Leitsymptomatik angekreuzt — dann ist die patientenindividuelle '
+            + 'Leitsymptomatik als Text Pflicht. Im Einvernehmen mit der verordnenden '
+            + 'Ärztin oder dem Arzt nachtragen (ohne neue Unterschrift zulässig).'
+          : 'Vierte Stelle der Leitsymptomatik ist gesetzt, aber der Freitext fehlt');
+
+    // Feld ist ..70 AN. Längeres schneidet der Datenstrom ab — und ein
+    // abgeschnittener Befund ist schlimmer als ein gemeldeter.
+    if (String(v.patLeitsymptomatik || '').length > 70)
+      E(errors, 'V:01012', `${at}.verordnung.patLeitsymptomatik`,
+        `Patientenindividuelle Leitsymptomatik ist ${String(v.patLeitsymptomatik).length} Zeichen lang (max. 70)`);
+
+    // „0000" mit Freitext ist zulässig (Podologie-Vertrag Anlage 3 l): „Alternativ
+    // kann eine patientenindividuelle Leitsymptomatik … als Freitext angegeben
+    // werden"). Trotzdem einen Hinweis wert — auf dem Papier fehlt dann jedes
+    // Kreuz, und das ist häufiger ein Übertragungsfehler als eine Absicht.
+    if (lsWert === '0000' && String(v.patLeitsymptomatik || '').trim())
+      W(warnings, 'V:01013', `${at}.verordnung.leitsymptomatik`,
+        'Kein Katalog-Kreuz gesetzt, nur Freitext — bitte gegen den Urbeleg prüfen');
 
     if (!v.therapiefrequenz)
       E(errors, 'V:01007', `${at}.verordnung.therapiefrequenz`, 'Therapiefrequenz fehlt');

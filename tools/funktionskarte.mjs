@@ -121,6 +121,42 @@ function stripNoise(line) {
     .replace(/\/\/.*$/, '');
 }
 
+/**
+ * Fonksiyonun hemen ustundeki yorum blogunu duz metne cevirir (JSDoc veya
+ * ardisik // satirlari). Kaynak kod bilincli aynalari zaten kendi diliyle
+ * belgeliyor - "Spiegel von X" / "Identisch mit X" (bkz. module/verordnung-pruefung.js,
+ * api-backend/lib/geschlecht.js, module/beleg-druck.js vb., hepsi bu script
+ * yazilmadan ONCE oradaydi). Bu fonksiyon o beyani SAYAR, yorumlamaz.
+ */
+function ustYorum(lines, defIdx) {
+  const toplanan = [];
+  let i = defIdx - 1;
+  while (i >= 0) {
+    const t = lines[i].trim();
+    if (t === "" && toplanan.length === 0) { i--; continue; }
+    if (t === "") break;
+    if (/^\/\*|\*\/\s*$|^\*|^\/\//.test(t)) { toplanan.unshift(lines[i]); i--; continue; }
+    break;
+  }
+  return toplanan
+    .map(l => l.replace(/^\s*\/\*\*?/, "").replace(/\*\/\s*$/, "").replace(/^\s*\*/, "").replace(/^\s*\/\//, "").trim())
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * "Spiegel von X" / "Identisch mit X" beyanini yakalar. Iki kopyanin BILINCLI
+ * ayna oldugunu (frontend/backend paylasilan modul yolu yok) kod zaten kendi
+ * yorumunda soyluyor - bu regex onu kopya-avi kumelerinden ayirmak icin sayar.
+ * Karar uretmez: metni oldugu gibi tasir, hangi isme isaret ettigini yorumlamaz.
+ */
+function spiegelYakala(yorumMetni) {
+  if (!yorumMetni) return null;
+  const m = yorumMetni.match(/(Spiegel von|Identisch mit)\b[^.]{0,160}/i);
+  return m ? m[0].trim() : null;
+}
+
 const functions = [];   // {name, file, start, end, kind, body}
 const byName = new Map(); // name -> [fn]
 
@@ -140,6 +176,7 @@ for (const f of files) {
         end: end + 1,
         lines: end - i + 1,
         body: lines.slice(i, end + 1).join('\n'),
+        spiegelHinweis: spiegelYakala(ustYorum(lines, i)),
       };
       functions.push(fn);
       if (!byName.has(name)) byName.set(name, []);
@@ -326,8 +363,26 @@ clusters.sort((a, b) => b.anzahl - a.anzahl || a.tabelle.localeCompare(b.tabelle
 // Aynı isim, birden fazla tanım
 const doppelteNamen = [...byName.entries()]
   .filter(([, arr]) => arr.length > 1)
-  .map(([name, arr]) => ({ name, orte: arr.map(f => `${f.file}:${f.start}`) }))
+  .map(([name, arr]) => ({
+    name,
+    orte: arr.map(f => `${f.file}:${f.start}`),
+    // Bazi konumlar bilincli ayna olabilir (bkz. asagidaki bilinciAynalar).
+    // Karisik kume (bazisi ayna, bazisi degil) burada gorunur kalir -
+    // script "3 tanimdan 2si ayna" demez, hangisinin ayna oldugunu sayar.
+    aynalar: arr.filter(f => f.spiegelHinweis).map(f => `${f.file}:${f.start} — ${f.spiegelHinweis}`),
+  }))
   .sort((a, b) => b.orte.length - a.orte.length);
+
+// Bilincli aynalar: kod kendi yorumunda "Spiegel von X" / "Identisch mit X"
+// diyor - frontend/backend paylasilan modul yolu olmadigi icin AYNI mantigin
+// iki dosyaya yazilmis hali. Kopya-avi kumelerinden (kopieKandidaten) AYRI
+// tutulur: onlar "neden iki tane var" sorusu, bunlar "zaten neden iki tane
+// olmasi gerektigi" belgelenmis satirlar. Isim FARKLI olabilir (dgStamm/dgRoot
+// gibi) - o yuzden doppelteNamen bunlarin hepsini yakalamaz, bu liste yakalar.
+const bilinciAynalar = functions
+  .filter(f => f.spiegelHinweis)
+  .map(f => ({ name: f.name, file: f.file, start: f.start, end: f.end, hinweis: f.spiegelHinweis }))
+  .sort((a, b) => a.name.localeCompare(b.name) || a.file.localeCompare(b.file));
 
 // ── Yazım ───────────────────────────────────────────────────────────────────
 if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
@@ -342,6 +397,7 @@ const index = {
     .sort((a, b) => a.file.localeCompare(b.file) || a.start - b.start),
   kopieKandidaten: clusters,
   doppelteNamen,
+  bilinciAynalar,
 };
 
 const jsonOut = JSON.stringify(index, null, 1) + '\n';
@@ -373,9 +429,22 @@ for (const c of clusters.slice(0, 30)) {
 md.push('## En çok yazılan tablolar', '');
 for (const [t, n] of topTables) md.push(`- \`${t}\` — ${n} ayrı fonksiyon yazıyor`);
 md.push('');
+if (bilinciAynalar.length) {
+  md.push('## Bilinçli aynalar — kod içinde beyan edilmiş (kopya DEĞiL)', '');
+  md.push('Frontend/backend paylaşılan modül yolu yok; bu yüzden aynı kural iki dosyaya');
+  md.push('yazılmış ve kod bunu kendi yorumunda söylemiş („Spiegel von“ / „Identisch mit“).');
+  md.push('Bunları birleştirme — birleştirilecek olsaydı zaten tek dosya olurdu.', '');
+  for (const a of bilinciAynalar) md.push(`- \`${a.name}()\` — [${a.file}:${a.start}](${a.file}#L${a.start}-L${a.end}) — ${a.hinweis}`);
+  md.push('');
+}
 if (doppelteNamen.length) {
   md.push('## Aynı ada sahip birden fazla tanım', '');
-  for (const d of doppelteNamen.slice(0, 40)) md.push(`- \`${d.name}\` — ${d.orte.join(' · ')}`);
+  md.push('Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farklı iş yapıyor olabilir.');
+  md.push('`aynalar` doluysa o konum bilinçli ayna; boşsa isim çakışması başka bir şeydir, incele.', '');
+  for (const d of doppelteNamen.slice(0, 40)) {
+    md.push(`- \`${d.name}\` — ${d.orte.join(' · ')}`);
+    if (d.aynalar.length) for (const a of d.aynalar) md.push(`  - ayna: ${a}`);
+  }
   md.push('');
 }
 const mdOut = md.join('\n');
@@ -423,4 +492,5 @@ writeFileSync(mdPfad, mdOut);
 console.log(`✓ ${index.funktionen} fonksiyon / ${index.dateien} dosya`);
 console.log(`✓ ${clusters.length} kopya adayı kümesi`);
 console.log(`✓ ${doppelteNamen.length} çift isim`);
+console.log(`✓ ${bilinciAynalar.length} bilinçli ayna (Spiegel von / Identisch mit)`);
 console.log(`→ funktionen/INDEX.json · funktionen/INDEX.md`);
