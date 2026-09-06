@@ -72,17 +72,38 @@ test('parses minimal IDK/VDT/VKG/NAM round-trip', () => {
     "UNA:+,? '" +
     "IDK+107436001+01+AOK Rheinland/Hamburg'" +
     "VDT+20260101+99991231'" +
-    "VKG+30+660500345+B'" +
+    "VKG+02+660500345+5++30'" +
     "IDK+101575519+01+Techniker Krankenkasse'" +
     "VDT+20260101'" +
-    "VKG+30+108036123+B'";
+    "VKG+02+108036123+5++30'";
   const records = parseKostentraegerDatei(sample);
   assert.equal(records.length, 2);
   assert.equal(records[0].ik, '107436001');
   assert.equal(records[0].name, 'AOK Rheinland/Hamburg');
   assert.equal(records[0].valid_from, '20260101');
-  assert.equal(records[0].datenannahmestellen[0].das_ik, '660500345');
+  assert.equal(records[0].datenannahmestellen[0].partner_ik, '660500345');
+  assert.equal(records[0].datenannahmestellen[0].art_datenlieferung, '30');
   assert.equal(records[1].ik, '101575519');
+});
+
+test('VKG-Feldreihenfolge stimmt mit einer echten Zeile aus der Kostenträgerdatei (Anhang 03 V10 §7.2)', () => {
+  // Aus AO05Q326_KE3.txt, IDK+100395611 (AOK Nordost Region Meckl.-Vorp.) —
+  // gegen `kostentraeger_annahmestellen` verifiziert (db-ustasi, 06.09.2026).
+  const sample =
+    "UNA:+,? '" +
+    "IDK+100395611+02+AOK Nordost Region Meckl.-Vorp'" +
+    "VDT+20171001'" +
+    "VKG+02+100295017+5++07++01++00'";
+  const records = parseKostentraegerDatei(sample);
+  const vkg = records[0].datenannahmestellen[0];
+  assert.equal(vkg.verknuepfungsart, '02');
+  assert.equal(vkg.partner_ik, '100295017');
+  assert.equal(vkg.leistungserbringergruppe, '5');
+  assert.equal(vkg.abrechnungsstelle_ik, null);
+  assert.equal(vkg.art_datenlieferung, '07');
+  assert.equal(vkg.uebermittlungsmedium, null);
+  assert.equal(vkg.bundesland, '01');
+  assert.equal(vkg.abrechnungscode, '00');
 });
 
 test('toUpsertRows shape matches kostentraeger DB schema', () => {
@@ -102,11 +123,11 @@ test('Segmente auf eigener Zeile (wie in der echten Datei) werden genauso gepars
     "UNA:+,? '\n" +
     "IDK+107436001+01+AOK Rheinland/Hamburg'\n" +
     "VDT+20260101+99991231'\n" +
-    "VKG+30+660500345+B'\n";
+    "VKG+02+660500345+5'\n";
   const records = parseKostentraegerDatei(mitZeilenumbruch);
   assert.equal(records.length, 1, 'Zeilenumbrueche zwischen Segmenten duerfen keine Datensaetze verschlucken');
   assert.equal(records[0].ik, '107436001');
-  assert.equal(records[0].datenannahmestellen[0].das_ik, '660500345');
+  assert.equal(records[0].datenannahmestellen[0].partner_ik, '660500345');
 });
 
 // ── Gegen die echte Kostenträgerdatei (Ops-Kart #264, wissensbank Kart W-01) ──

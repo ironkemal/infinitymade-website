@@ -1,7 +1,17 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-06 (zuletzt nachgezogen: profiles.selbstzahler_stufen,
+-- ERZEUGT AM:        2026-09-06 (zuletzt nachgezogen: kostentraeger_echtdaten_struktur,
+--                    Ops #264 — die ECHTE TP5-Kostentraegerdatei ist geladen.
+--                    `kostentraeger` +6 Spalten, neue Tabelle
+--                    `kostentraeger_annahmestellen`. Der Dump lief dieser
+--                    Migration einen halben Tag hinterher: er behauptete noch
+--                    "Mock-Daten, ITSG-Zugang steht aus", waehrend live schon
+--                    1043 echte Kassen-IKs standen. Genau die Sorte Fehler,
+--                    vor der der Kopf von db/README.md warnt — wer den Dump
+--                    liest, glaubt ihm.
+--                    Per Hand nachgezogen, kein voller Neu-Dump.)
+--                    davor: 2026-09-06, profiles.selbstzahler_stufen,
 --                    Ops #266 — benannte Selbstzahler-Preisstufen des Owners.
 --                    Im selben Zug korrigiert: der ⏳-Block bei `services` behauptete,
 --                    kostentraeger_typ sei noch nicht ausgefuehrt — die Spalte ist
@@ -27,7 +37,8 @@
 --                    90-Tage-Frist): `verordnungen` GEDROPPT. Siehe Eintrag
 --                    an der Stelle, wo die Tabelle frueher im Dump stand
 --                    (nach `vehicles`, vor `visibility_reports`).
--- LETZTE MIGRATION:  profiles_selbstzahler_stufen (06.09.2026)
+-- LETZTE MIGRATION:  20260905224013_kostentraeger_echtdaten_struktur (06.09.2026)
+--                    davor: 20260905223001_profiles_selbstzahler_stufen
 --                    davor: 20260905193701_booking_status_korrekturen
 --                    davor: 20260905125546_prescriptions_krankenkasse_ik
 --                    davor: verordnungstopf_faz5c_naechste_verordnungsnummer_fix
@@ -67,8 +78,16 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            83 Tabellen · 1207 Spalten · 158 RLS-Policies
---                    296 Indizes · 66 Trigger · 67 Funktionen · 4 Views
+-- UMFANG:            84 Tabellen · 1226 Spalten · 159 RLS-Policies
+--                    301 Indizes · 66 Trigger · 67 Funktionen · 4 Views
+--                    (06.09.2026: +1 Tabelle (kostentraeger_annahmestellen),
+--                     +1 Policy, +5 Indizes durch kostentraeger_echtdaten_struktur.
+--                     Indizes: 296 + 5 = 301, live nachgezaehlt — die am
+--                     05.09. als „nicht aufgeklärt“ notierte Differenz war
+--                     also der alte Wert 301, der schon stimmte.
+--                     Spalten live 1226; erwartet waren 1207 + 6 + 12 = 1225,
+--                     die Differenz von 1 stammt aus dem alten Wert, nicht
+--                     aus dieser Migration.)
 --                    (05.09.2026: gegen die Live-DB nach der dokumentierten
 --                     Zählweise nachgezählt (inkl. der neuen Tabelle). Die
 --                     Spaltenzahl stand vorher auf 1231 — Differenz nicht
@@ -1082,10 +1101,97 @@ CREATE TABLE kostentraeger (
   valid_from date
   valid_to date
   updated_at timestamptz DEFAULT now()
+  kurzname text
+  abrechnender_kt_ik text
+  ist_abrechnender_kt boolean DEFAULT false
+  quelle text
+  quelle_stand date
+  datensatz_status text DEFAULT 'echt'::text
 );
 --   CHECK payer_type IN (gkv, sonst, privat) · PK (ik)
---   ⚠️ Aktuell Mock-Daten. Echte IK-Nummern kommen erst mit der
---      Kostenträgerdatei (ITSG-Zugang steht aus).
+--   CHECK datensatz_status IN (echt, mock_unbestaetigt)
+--   ✅ Seit 06.09.2026 ECHTDATEN (Migration kostentraeger_echtdaten_struktur,
+--      Ops #264). Hier stand bis dahin „Aktuell Mock-Daten, ITSG-Zugang steht
+--      aus“ — das war ab dem 05.09.2026 falsch.
+--      Live gezählt am 06.09.2026: 1052 Zeilen = 1043 `echt` + 9
+--      `mock_unbestaetigt`. Die 1043 stammen aus 6 Dateien der TP5-Kosten-
+--      trägerdatei (wissensbank/gemeinsam/kostentraeger/*.txt, Parser
+--      api-backend/billing/kostentraeger/parser.js).
+--
+--   ⚠️ das_ik ist VERALTET — nicht mehr lesen.
+--      Eine einzige DAS-IK pro Kostenträger ist fachlich falsch: die
+--      Datenannahmestelle hängt von Abrechnungscode UND Bundesland ab.
+--      Richtige Quelle: `kostentraeger_annahmestellen`.
+--      Die Spalte ist nur noch in 16 Zeilen gefüllt, und das sind GENAU die
+--      16 IKs des alten `v14_kostentraeger_mock_seed`. Sie ist also kein
+--      „zu 98 % unfertiger Backfill“, sondern ein Rest, der stehenblieb.
+--      ⛔ api-backend/billing/api/abrechnung.routes.js:1999 und :2203 lesen
+--         sie noch (`kk.das_ik || kostentraegerIk`) — offener Punkt, siehe
+--         db/REGISTER.md → `kostentraeger`.
+--
+--   Aufbau der n:1-Beziehung (VKG-Verknüpfungsart 01):
+--      ist_abrechnender_kt = true  → diese IK rechnet selbst ab (302 Zeilen)
+--      abrechnender_kt_ik  = <IK>  → Mitglieds-/Karten-IK, abgerechnet wird
+--                                    bei dieser anderen IK (741 Zeilen)
+--      Die beiden Mengen sind disjunkt und decken alle 1043 echten Zeilen ab
+--      (live geprüft: „weder noch“ = 0). Beispiel: 100167999 DAK-Gesundheit
+--      (Karten-IK) → 105830016 DAK-Gesundheit (abrechnend).
+--
+--   quelle / quelle_stand / datensatz_status = Herkunftsnachweis je Zeile:
+--      Dateiname · Gültigkeitsstand der Datei · echt|mock_unbestaetigt.
+--      Damit ist beim nächsten Quartals-Update sichtbar, welche Zeilen aus
+--      welcher Lieferung stammen — und welche noch aus dem Mock übrig sind.
+
+CREATE TABLE kostentraeger_annahmestellen (
+  id bigint NOT NULL GENERATED ALWAYS AS IDENTITY
+  kostentraeger_ik text NOT NULL
+  verknuepfungsart text NOT NULL
+  partner_ik text NOT NULL
+  leistungserbringergruppe text NOT NULL DEFAULT ''::text
+  abrechnungscode text NOT NULL DEFAULT ''::text
+  art_datenlieferung text NOT NULL DEFAULT ''::text
+  uebermittlungsmedium text NOT NULL DEFAULT ''::text
+  bundesland text NOT NULL DEFAULT ''::text
+  quelle text
+  quelle_stand date
+  updated_at timestamptz DEFAULT now()
+);
+--   PK (id) · FK kostentraeger_ik -> kostentraeger(ik) ON DELETE CASCADE
+--   UNIQUE (kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode,
+--           art_datenlieferung, uebermittlungsmedium, bundesland)
+--   Seit 06.09.2026 · Migration kostentraeger_echtdaten_struktur (Ops #264)
+--
+--   Die VKG-Segmente der TP5-Kostenträgerdatei. Beantwortet die einzige Frage,
+--   die beim §302-Versand wirklich zählt: **wohin schicke ich diese Datei?**
+--   Der Schlüssel dazu ist vierteilig —
+--       (kostentraeger_ik, abrechnungscode, art_datenlieferung, bundesland)
+--   und genau deshalb reicht die alte Einzelspalte kostentraeger.das_ik nicht.
+--
+--   verknuepfungsart (Anhang 3 Anlage 1 TP5, Abschnitt 5):
+--      01 = Verweis auf den abrechnenden Kostenträger
+--      02 = Datenannahmestelle OHNE Entschlüsselungsbefugnis
+--      03 = Datenannahmestelle MIT Entschlüsselungsbefugnis
+--      09 = Papierannahmestelle
+--   abrechnungscode (Anhang 3 Anlage 1 TP5 §8.14) — für uns:
+--      71 = Podologen · 72 = Med. Fußpfleger · 20 = Gruppenschlüssel
+--      Heilmittelerbringer (21-29) · 00 = Sammelschlüssel · 99 = Sonderschlüssel
+--   art_datenlieferung: nur 07 und 30 gelten für die elektronische Abrechnung
+--      (Abschnitt 5.2). 21/24/26/28/29 gehören zu Papierannahmestellen.
+--
+--   ⚠️ UNVOLLSTÄNDIG GELADEN (live gezählt 06.09.2026): 2800 Zeilen zu 530
+--      Kostenträgern. Segmente kamen nur aus 4 der 6 Quelldateien, und aus
+--      EK05Q426 nur 11 statt der 726 im Rohtext:
+--          AO05Q326_KE3   502 Segmente   (Rohdatei:  764 VKG)
+--          BK05Q326_KE1  1565            (         3234)
+--          BN050526_KE0   722            (         6183)
+--          EK05Q426_KE0    11            (          726)  ← Ersatzkassen, fast leer
+--          IK05Q326_KE1     0            (          475)  ← gar nicht geladen
+--          LK05Q226_KE0     0            (           27)  ← gar nicht geladen
+--      Folge: 110 der 302 abrechnenden Kostenträger haben KEINE
+--      Datenannahmestelle — darunter TK (101575519), BARMER (104940005),
+--      DAK-Gesundheit (105830016), KKH, hkk, HEK. Für genau diese Kassen
+--      lässt sich der DTA-Empfänger heute nicht auflösen.
+--      Offener Rest von Ops #264, siehe db/REGISTER.md.
 
 CREATE TABLE krankenkassen (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -1095,7 +1201,19 @@ CREATE TABLE krankenkassen (
   created_at timestamptz DEFAULT now()
   ik_number text
 );
---   PK (id) — 93 GKV-Kassen geseedet. Quelle für das UI-Dropdown.
+--   PK (id) — 94 Zeilen (live 06.09.2026). Quelle für das UI-Dropdown.
+--   ⚠️ ik_number ist nur in 16 Zeilen gefüllt, und diese 16 sind dieselben
+--      erfundenen IKs wie im alten `v14_kostentraeger_mock_seed`.
+--      Gegen die echte Kostenträgerdatei geprüft (06.09.2026) sind davon
+--      mindestens VIER schlicht falsch — die IK gehört einer anderen Kasse:
+--          „AOK Baden-Württemberg“ 109519005 → real AOK Nordost Region Berlin
+--          „DAK-Gesundheit“        101570104 → real HEK - Hanseatische KK
+--          „hkk Krankenkasse“      102171012 → real KKH Kaufmännische KK
+--          „KKH Kaufmännische KK“  108310400 → real DAV AOK Bayern - kubus IT
+--      Das ist kein Schönheitsfehler: loadKkList() (dashboard.js:18644) füttert
+--      das Feld `podNewKk`, dessen Wert als prescriptions.kostentraeger_ik
+--      gespeichert und im DTA als „IK des Kostenträgers“ gesendet wird.
+--      Ein DAK-Rezept ginge damit an die HEK.
 --   ⚠️ Nicht dasselbe wie `kostentraeger` (das ist die §302-Seite).
 
 CREATE TABLE kiosk_pins (

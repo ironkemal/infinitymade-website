@@ -170,11 +170,29 @@ export function parseKostentraegerDatei(text) {
         if (current && !current.name) current.name = seg.fields[0];
         break;
       case 'VKG':
+        // Feldreihenfolge gegen Anhang 03 V10 §7.2 geprüft (Seite 18): Art der
+        // Verknüpfung, IK des Verknüpfungspartners, Leistungserbringergruppe,
+        // IK der Abrechnungsstelle, Art der Datenlieferung, Übermittlungsmedium,
+        // Bundesland, KV-Bezirk, Abrechnungscode, Tarifkennzeichen. Die alte
+        // 3-Feld-Version hier bildete auf falsche Positionen ab (fields[0] war
+        // nie "art_datenlieferung", sondern "verknuepfungsart") — nie an echten
+        // Daten geprüft, bis 05.09.2026 gab es keine. Gegen eine reale Zeile
+        // verifiziert (db-ustasi): VKG+02+100295017+5++07++01++00 →
+        // verknuepfungsart=02, partner_ik=100295017, leg=5, art_datenlieferung=07,
+        // bundesland=01, abrechnungscode=00 — stimmt mit `kostentraeger_annahmestellen`
+        // überein, das genau diese Zeile bereits so gespeichert hat.
         if (current) {
           current.datenannahmestellen.push({
-            art_datenlieferung: seg.fields[0],
-            das_ik:             seg.fields[1],
-            leistungsbereich:   seg.fields[2],
+            verknuepfungsart:          seg.fields[0],
+            partner_ik:                seg.fields[1],
+            leistungserbringergruppe:  seg.fields[2] || null,
+            abrechnungsstelle_ik:      seg.fields[3] || null,
+            art_datenlieferung:        seg.fields[4] || null,
+            uebermittlungsmedium:      seg.fields[5] || null,
+            bundesland:                seg.fields[6] || null,
+            kv_bezirk:                 seg.fields[7] || null,
+            abrechnungscode:           seg.fields[8] || null,
+            tarifkennzeichen:          seg.fields[9] || null,
           });
         }
         break;

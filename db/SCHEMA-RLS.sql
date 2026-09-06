@@ -1,7 +1,14 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-05 — neue Tabelle booking_status_korrekturen
+-- ERZEUGT AM:        2026-09-06 — kostentraeger_echtdaten_struktur (Ops #264):
+--                    neue Tabelle kostentraeger_annahmestellen mit 1 Policy
+--                    (SELECT für authenticated, gleiches Muster wie
+--                    kostentraeger_read_all) und 4 Indizes, dazu 1 Index auf
+--                    kostentraeger.abrechnender_kt_ik. Keine Funktion, kein
+--                    Trigger. Die Migration davor (profiles_selbstzahler_stufen,
+--                    20260905223001) änderte nur Spalten.
+--                    davor: 2026-09-05 — neue Tabelle booking_status_korrekturen
 --                    (Ops #270): 2 Policies (select/insert scoping, gleiches
 --                    Muster wie zuzahlung_korrekturen), 1 Funktion
 --                    (prevent_booking_status_korrekturen_mod), 2 Trigger
@@ -18,7 +25,9 @@
 --                    pruefe_booking_verordnung_owner() prueft gegen
 --                    prescriptions.owner_id (vorher verordnungen.owner_id).
 --                    Details: module/verordnung-topf.js, db/SCHEMA.sql
--- LETZTE MIGRATION:  20260905193701_booking_status_korrekturen
+-- LETZTE MIGRATION:  20260905224013_kostentraeger_echtdaten_struktur
+--                    davor: 20260905223001_profiles_selbstzahler_stufen
+--                    davor: 20260905193701_booking_status_korrekturen
 --                    davor: 20260905125546_prescriptions_krankenkasse_ik
 --                    davor: verordnungstopf_faz5c_naechste_verordnungsnummer_fix
 --                    davor: verordnungstopf_faz5b_verordnungen_droppen
@@ -56,7 +65,12 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            158 RLS-Policies · 296 Indizes · 66 Trigger · 67 Funktionen
+-- UMFANG:            159 RLS-Policies · 301 Indizes · 66 Trigger · 67 Funktionen
+--                    (06.09.2026 live nachgezählt: +1 Policy und +5 Indizes
+--                     durch kostentraeger_echtdaten_struktur. 296 + 5 = 301 —
+--                     die am 05.09. als „nicht aufgeklärt“ notierte Index-
+--                     Differenz löst sich damit auf: der ältere Wert 301 war
+--                     schon richtig, der Zwischenwert 296 zu niedrig.)
 --                    (05.09.2026 gegen die Live-DB nachgezaehlt, inkl. der neuen
 --                     Tabelle booking_status_korrekturen. Policies/Trigger/
 --                     Funktionen kamen auf dieselben Zahlen wie vor dieser
@@ -116,11 +130,13 @@
 --      diagnosegruppen · icd10_titles · icd_sector_ranges · heilmittel_katalog
 --      heilmittel_catalog · krankenkassen · kostentraeger · dta_schluessel
 --      heilmittel_position · heilmittel_tarif
+--      ⚠️ kostentraeger und kostentraeger_annahmestellen sind NICHT für anon
+--        offen, sondern nur für authenticated — siehe Abschnitt 2.
 --    anon darf INSERT: demo_bookings · pending_employee_registrations
 
 
 -- =====================================================================
--- 2. RLS-POLICIES (158, siehe UMFANG im Kopf)
+-- 2. RLS-POLICIES (159, siehe UMFANG im Kopf)
 -- =====================================================================
 
 -- abrechnung
@@ -276,6 +292,13 @@
 
 -- heilmittel_position / heilmittel_tarif / kostentraeger
 --   *_read_all [SELECT] USING (auth.role() = 'authenticated')
+
+-- kostentraeger_annahmestellen   (seit 06.09.2026)
+--   kostentraeger_annahmestellen_read_all [SELECT] USING (auth.role() = 'authenticated')
+--   Referenzdaten der TP5-Kostenträgerdatei, keine Patientendaten — deshalb
+--   ohne Mandantenfilter. Bewusst NICHT für anon: die Datei ist öffentlich
+--   beziehbar, aber die Buchungsseite braucht sie nicht, und jede zusätzliche
+--   anon-Tabelle vergrößert die Angriffsfläche ohne Gegenwert.
 
 -- invoices
 --   owner_and_employee_invoices [ALL] owner + Team
@@ -876,6 +899,14 @@ CREATE INDEX idx_invoices_prescription ON public.invoices USING btree (prescript
 CREATE INDEX idx_invoices_verordnung_id ON public.invoices USING btree (verordnung_id) WHERE (verordnung_id IS NOT NULL);
 CREATE INDEX idx_kostentraeger_active ON public.kostentraeger USING btree (active, payer_type) WHERE (active = true);
 CREATE INDEX idx_kostentraeger_das ON public.kostentraeger USING btree (das_ik) WHERE (das_ik IS NOT NULL);
+-- ⚠️ idx_kostentraeger_das indiziert eine VERALTETE Spalte (siehe db/SCHEMA.sql).
+--    Er deckt live noch 16 Zeilen ab. Nicht droppen, solange
+--    abrechnung.routes.js:1999/:2203 das_ik lesen.
+CREATE INDEX idx_kostentraeger_abrechnender ON public.kostentraeger USING btree (abrechnender_kt_ik);
+CREATE UNIQUE INDEX kostentraeger_annahmestellen_pkey ON public.kostentraeger_annahmestellen USING btree (id);
+CREATE UNIQUE INDEX kostentraeger_annahmestellen_uniq ON public.kostentraeger_annahmestellen USING btree (kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode, art_datenlieferung, uebermittlungsmedium, bundesland);
+CREATE INDEX idx_kt_annahme_routing ON public.kostentraeger_annahmestellen USING btree (kostentraeger_ik, abrechnungscode, art_datenlieferung);
+CREATE INDEX idx_kt_annahme_partner ON public.kostentraeger_annahmestellen USING btree (partner_ik);
 CREATE INDEX idx_leads_business ON public.leads USING btree (business_id);
 CREATE INDEX idx_leads_handy_normalized ON public.leads USING btree (owner_id, handy_normalized) WHERE (handy_normalized IS NOT NULL);
 CREATE UNIQUE INDEX leads_patientennummer_uniq ON public.leads USING btree (owner_id, patientennummer) WHERE (patientennummer IS NOT NULL);

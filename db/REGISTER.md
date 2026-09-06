@@ -10,7 +10,7 @@ steht in keinem Schema und lässt sich aus keinem Code herauslesen. Wenn es nich
 aufgeschrieben wird, ist es in sechs Monaten weg, und dann steht jemand vor einer
 Tabelle und fragt „brauchen wir die noch?" — ohne Antwort.
 
-**Stand:** 2026-09-03 · 82/82 Tabellen erfasst · Projekt `njvuclullotbksskpwgk`
+**Stand:** 2026-09-06 · 84/84 Tabellen erfasst · Projekt `njvuclullotbksskpwgk`
 (das Ops-Dashboard liegt in einem **anderen** Projekt, `farkaejociddtgqkusvm`, und ist
 hier **nicht** erfasst).
 
@@ -495,11 +495,24 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Wer:** Vorlagen-Modul im Dashboard; Backend rendert damit.
 
 ### `kostentraeger`
-- **Warum:** Die §302-Seite der Kassen: IK-Nummern, Annahmestellen, Datenannahme-Wege. Das ist etwas anderes als die Kassenliste in der Oberfläche.
-- **Seit:** 18.05.2026 · `v11_billing_a2_tables` (Seed: `v14_kostentraeger_mock_seed`)
-- **Status:** aktiv, aber **Mock-Daten**
-- **Wer:** Abrechnungsroute im Backend, Dashboard-Anzeige.
-- **Achtung:** Enthält bis heute Platzhalter, weil der ITSG-Zugang zur echten Kostenträgerdatei fehlt. Im Mock stecken doppelte IKs. **Nicht** mit `krankenkassen` verwechseln.
+- **Warum:** Die §302-Seite der Kassen. Seit dem 06.09.2026 trägt sie zwei Dinge, die vorher gefehlt haben: die **echten** IK-Nummern aus der TP5-Kostenträgerdatei — und die **n:1-Beziehung**, ohne die eine IK allein nichts wert ist. Eine Versichertenkarte nennt fast nie die Stelle, die am Ende abrechnet: die DAK-Karte trägt `100167999`, das Geld holt man aber bei `105830016`. Genau diese Auflösung steckt in `abrechnender_kt_ik` / `ist_abrechnender_kt` (VKG-Verknüpfungsart 01).
+- **Seit:** 18.05.2026 · `v11_billing_a2_tables` (Seed: `v14_kostentraeger_mock_seed`) · Echtdaten-Struktur: 06.09.2026 · `kostentraeger_echtdaten_struktur` (Ops #264)
+- **Status:** aktiv — **Echtdaten**, mit 9 Mock-Resten
+- **Wer:** `api-backend/billing/api/abrechnung.routes.js` (DTA-Bau, Empfängerauflösung), Dashboard-Anzeige, `prescriptions.kostentraeger_ik` per FK.
+- **Quelle:** `wissensbank/gemeinsam/kostentraeger/*.txt` (6 geladene Dateien der GKV-Kostenträgerdatei TP05, Stände 24.04.–14.08.2026) · Parser `api-backend/billing/kostentraeger/parser.js` · Sicheintrag `wissensbank/REGISTER.md` W-01. Struktur der Schlüssel: Anhang 3 Anlage 1 TP5, Abschnitt 5 und §8.14.
+- **Warum die drei Herkunftsspalten (`quelle`, `quelle_stand`, `datensatz_status`):** die Datei kommt **quartalsweise** und je Kassenart getrennt. Ohne Herkunft je Zeile wäre beim nächsten Update nicht mehr erkennbar, welche Zeile aus welcher Lieferung stammt und welche noch Mock ist. `datensatz_status` hat genau zwei Werte (`echt` / `mock_unbestaetigt`) — nicht mehr, weil ein dritter Wert sofort die Frage aufwirft, wer ihn setzt.
+- **Achtung — `das_ik` ist tot, wird aber noch gelesen:** die Spaltenidee „eine Datenannahmestelle pro Kostenträger“ ist fachlich falsch; die DAS hängt an **Abrechnungscode UND Bundesland**. Richtige Quelle ist `kostentraeger_annahmestellen`. Die Spalte ist nur noch in 16 Zeilen gefüllt — und das sind exakt die 16 IKs des alten Mock-Seeds, also **kein halbfertiger Backfill**, sondern ein Rest. ⛔ Offen: `abrechnung.routes.js:1999` und `:2203` rechnen weiterhin `const dasIk = kk.das_ik || kostentraegerIk`. Für alle 1043 echten Zeilen ist das NULL, also fällt der Empfänger stillschweigend auf den Kostenträger selbst zurück. Umbau auf `kostentraeger_annahmestellen` steht aus (`gkv-302` vorher fragen — das ist die „Geld kommt an / kommt nicht an“-Stelle).
+- **Achtung — die 9 Mock-Zeilen:** `datensatz_status = 'mock_unbestaetigt'` markiert IKs, die die echte Datei **nicht** kennt (u. a. `101000016 AOK Nordost`, `107708612 IKK classic`, `107300000 BKK Mobil Oil`). Sie stehen noch da, weil `prescriptions.kostentraeger_ik` per FK darauf zeigen kann. Vor dem Löschen prüfen, ob Rezepte daranhängen.
+- **Achtung:** **Nicht** mit `krankenkassen` verwechseln — jene ist die Oberfläche, diese die §302-Seite. Und: 1043 Zeilen sind **nicht** 1043 Kassen. Viele sind Filial-/Regional-IKs derselben Kasse (allein „AOK Die Gesundheitskasse für Niedersachsen“ rund 50 Stück), die alle auf `102114819` zeigen.
+
+### `kostentraeger_annahmestellen`
+- **Warum:** Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin geht diese Datei?** Der Empfänger ist nicht die Kasse, sondern ihre Datenannahmestelle — und die hängt am Viererschlüssel (Kostenträger, Abrechnungscode, Art der Datenlieferung, Bundesland). Eine einzelne Spalte an `kostentraeger` (`das_ik`) konnte das nie abbilden; deshalb eine eigene Tabelle statt weiterer Spalten. Sie ist damit auch die Antwort auf „hätte eine Spalte gereicht?“ — nein, es ist eine echte 1:n-Beziehung.
+- **Seit:** 06.09.2026 · `kostentraeger_echtdaten_struktur` (Ops #264)
+- **Status:** aktiv (Referenz) — **unvollständig geladen**, siehe unten
+- **Wer:** heute **niemand** — die Tabelle ist gefüllt, aber noch nicht angeschlossen. Vorgesehener erster Leser: der DTA-Bau in `api-backend/billing/api/abrechnung.routes.js` anstelle von `kk.das_ik`. ⚠️ Sie sieht deshalb wie ein Löschkandidat aus (`codeStumm`) und ist keiner — genau der Fall, vor dem die Vier-Quellen-Regel warnt.
+- **Quelle:** VKG-Segmente derselben Dateien wie `kostentraeger`. Schlüsselbedeutung: Anhang 3 Anlage 1 TP5, Abschnitt 5 (Verknüpfungsart) und §8.14 (Abrechnungscode). Für uns relevant: **71 Podologen**, **72 Med. Fußpfleger**, 20 Gruppenschlüssel Heilmittel, 00 Sammel-, 99 Sonderschlüssel. Gültig für elektronische Abrechnung sind nur `art_datenlieferung` **07** und **30**.
+- **Achtung — offener Rest von Ops #264:** live 2800 Segmente zu 530 Kostenträgern, aber nur aus 4 der 6 Quelldateien. `IK05Q326_KE1` (475 VKG im Rohtext) und `LK05Q226_KE0` (27) sind **gar nicht** geladen, `EK05Q426_KE0` nur mit 11 von 726. Folge: **110 der 302 abrechnenden Kostenträger haben keine Datenannahmestelle** — darunter TK, BARMER, DAK-Gesundheit, KKH, hkk, HEK. Solange das so ist, kann der Umbau von `das_ik` auf diese Tabelle die großen Ersatzkassen nicht bedienen. **Erst nachladen, dann umstellen** — in der umgekehrten Reihenfolge würde der DTA-Bau für die häufigsten Kassen ins Leere laufen.
+- **Achtung:** `EK05Q226_KE0.txt` liegt zwar im Wissensbank-Ordner, ist aber die **ältere** Ausgabe derselben Kassenart (Q2 gegenüber Q4) und wurde bewusst nicht geladen. Nicht als „siebte fehlende Datei“ zählen.
 
 ---
 
@@ -560,11 +573,21 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Achtung:** Für **alle vier** Fachbereiche gefüllt. `strict: true` ist heute nur in der Podologie eingeschaltet — datenseitig ist für die anderen nichts mehr zu tun, es fehlt allein der Schalter im Frontend.
 
 ### `krankenkassen`
-- **Warum:** Die Kassenliste für das Auswahlfeld in der Oberfläche. 93 GKV-Kassen, gesetzt am 02.06.2026.
+- **Warum:** Die Kassenliste für das Auswahlfeld in der Oberfläche. 94 Zeilen (live 06.09.2026), gesetzt am 02.06.2026.
 - **Seit:** **in keiner Migration** — direkt im SQL-Editor angelegt. Das ist der einzige Fall im Projekt, in dem sich das Entstehungsdatum aus der Datenbank nicht rekonstruieren lässt.
-- **Status:** aktiv (Referenz)
-- **Wer:** `module/krankenkasse-suche.js`, Dashboard, Buchungsanfrage, Backend `/krankenkassen`.
+- **Status:** aktiv (Referenz) — ⛔ `ik_number` **fehlerhaft**, siehe unten
+- **Wer:** `module/krankenkasse-suche.js`, `loadKkList()` in `dashboard.js:18644`, Buchungsanfrage, Backend `GET /krankenkassen`.
 - **Achtung:** **Nicht** `kostentraeger`. Diese hier ist die Oberfläche, jene die §302-Seite.
+- **⛔ Achtung — `ik_number` ist zu 4/16 nachweislich falsch (geprüft 06.09.2026):** die Spalte ist nur in 16 der 94 Zeilen gefüllt, und diese 16 stammen aus derselben erfundenen Quelle wie der alte `v14_kostentraeger_mock_seed`. Gegen die echte Kostenträgerdatei gehört die IK in vier Fällen einer **anderen Kasse**:
+
+  | `krankenkassen.name` | eingetragene `ik_number` | wem die IK wirklich gehört |
+  |---|---|---|
+  | AOK Baden-Württemberg | `109519005` | AOK Nordost Region Berlin |
+  | DAK-Gesundheit | `101570104` | HEK – Hanseatische Krankenkasse |
+  | hkk Krankenkasse | `102171012` | KKH Kaufmännische Krankenkasse |
+  | KKH Kaufmännische Krankenkasse | `108310400` | DAV AOK Bayern – kubus IT |
+
+  Das bleibt nicht in der Anzeige stecken: `loadKkList()` füllt das Auswahlfeld `podNewKk`, dessen Wert als `prescriptions.kostentraeger_ik` gespeichert und im DTA als „IK des Kostenträgers“ gesendet wird (`module/podologie-abrechnung.js:1237`). Ein DAK-Rezept ginge damit an die HEK. — **Reparatur nicht per Namensabgleich raten:** von den 94 Namen treffen nur 21 exakt auf einen Eintrag in `kostentraeger`, und 6 dieser 21 widersprechen der heute eingetragenen IK. Der belastbare Weg ist die Karten-IK (`prescriptions.krankenkasse_ik`) plus Auflösung über `kostentraeger.abrechnender_kt_ik`; `gkv-302` vorher fragen.
 
 ### `aerzte`
 - **Warum:** Arztregister je Inhaber. Wird beim Erfassen einer Verordnung automatisch befüllt: LANR-Treffer reichert den vorhandenen Datensatz an, sonst wird neu angelegt. Grundlage der Auswertung „welcher Arzt überweist wie viel".

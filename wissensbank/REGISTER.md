@@ -17,8 +17,10 @@
 | Arşivdeki PDF | 47 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (`Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27) |
 | Kaynak→kod zinciri kayıtlı | 10 |
-| **Herkunft (indirme URL'i) kayıtlı** | **1 / 33** ← asıl boşluk, W-A01 |
+| Tam kimlik kartı yazılmış kaynak | 1 (**W-01** Kostenträgerdatei) |
+| **Herkunft (indirme URL'i) kayıtlı** | **2 / 34** ← asıl boşluk, W-A01 |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
+| Çeyreklik ritmi olan kaynak | 1 (Kostenträgerdatei — W-01, §1 takviminde) |
 
 ## Arşiv düzeni (05.09.2026'dan beri)
 
@@ -63,6 +65,8 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 
 | Tarih | Ne olur | Etkilenen zincir | Durum |
 |---|---|---|---|
+| **01.10.2026** | Kostenträgerdatei **Q4/2026** yürürlüğe girer. Bugün elimizdeki `EK05Q426KE0` (vdek) o gün GEÇERLİ olur, `EK05Q226KE0` DÜŞER. Diğer Kassenart'lar Q4 yayımlarsa onlar da o gün geçerlidir | Z-09 → W-01 → `kostentraeger` tablosu | ⏳ kayıtlı |
+| **her çeyrek başı** (01.01 / 01.04 / 01.07 / 01.10) | Kostenträgerdatei güncellenir; yayın **en geç çeyrek başından 4 hafta önce** (Anhang 03 §2, satır 185-187). Yani kontrol günü: **03.03 · 03.06 · 03.09 · 03.12** | Z-09 | 🔁 tekrar eden, **elle** — W-01'deki kontrol yordamı |
 | **01.01.2027** | HPNR-Verzeichnis 2026 penceresi kapanır, 2027 sürümü gelir | Z-05 → `podologie_positions.js`, `physio_positions.js` | ⏳ hazırlık yok |
 | **01.02.2027** | **Anlage 3 TP5 V21 → V22** yürürlüğe girer | Z-02 → `anlage3_v22.js` (dosya hazır, açılmayı bekliyor) | ⏳ dosya var, geçiş planı yok |
 | **01.02.2027** | **Anhang 03 Anlage 1 TP5 V10** (Kostenträgerdatei) yürürlüğe girer | Z-09 → `billing/kostentraeger/parser.js` | ⏳ parser 05.09.2026'da yazıldı |
@@ -162,14 +166,27 @@ wissensbank/gemeinsam/icd-10-gm/Klassifikationsdateien/icd10gm2026syst_kodes.txt
 Repoda hiçbir import/seed script'i yok. Tablo dolu ama nasıl dolduğu yazılı değil. ICD-10-GM
 2027 çıktığında bu iş sıfırdan çözülecek. → açık madde **W-A02, en ciddi madde.**
 
-### Z-09 · Kostenträgerdatei / IK
+### Z-09 · Kostenträgerdatei / IK  → tam kart **W-01**
 ```
-wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414.pdf/.txt   (V10, ab 01.02.2027) — FORMAT SPEC
-wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md                      (VERİNİN KENDİSİ, 22.441 satır)
-  → api-backend/billing/kostentraeger/parser.js + parser.test.js   (05.09.2026)
+FORMAT SPEC:
+wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414.pdf/.txt   (V10, ab 01.02.2027)
+
+VERİ (dış kaynaklı, resmî):
+wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md
+  = 7 ayrı Kostenträgerdatei tek dosyaya yapıştırılmış · 22.441 satır · 682 KB
+  = 1.329 KOTR kaydı · 1.043 tekil IK · 12.133 VKG (Verknüpfung) satırı
+  → api-backend/billing/kostentraeger/parser.js  ⚠ HÂLÂ MOCK ile çalışıyor
+  → DB kostentraeger (ik, name, das_ik, payer_type, region, valid_from/to)  ⚠ mock dolu
+  ↔ DB krankenkassen.ik_number (93 kasadan 12'si dolu, kaynağı belirsiz) — Ops kartı #264
 ```
-⏳ Parser V10 tarihinden önce yazıldı; bugün geçerli sürüm ile V10 arasındaki fark
-kontrol edilmeli.
+⚠️ **Zincirin ilk halkası elimizde, ikinci halkası hâlâ uydurma.** `parser.js` başlığı
+*"We don't have access to a live .kotr file yet"* diyor — bu cümle 05.09.2026'dan beri
+yanlış. Veri geldi, parser haberdar değil.
+
+**Format uyumu doğrulandı (05.09.2026):** dosyaların mesaj kimliği `KOTR:02:001:KV`,
+Anhang 03 V10 satır 634'ün beklediği değerin aynısı. Yani V10 spec'i bu dosyaları okumak
+için yapı olarak kullanılabilir. ⚠ Ama V10 **01.02.2027'de** yürürlüğe giriyor; bugün
+geçerli olan (bir önceki) Anhang 03 sürümü arşivde **yok** → W-01 açık maddesi.
 
 ⚠️ **05.09.2026'da bulundu:** `wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md` aslında bir markdown
 dosyası **değil** — EDIFACT `KOTR:02:001:KV` formatında **gerçek Kostenträgerdatei**.
@@ -205,6 +222,7 @@ yeniden araştırılıyor demektir.
 | `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218` | V22 | 01.02.2027 | ⏳ GELECEK | Z-02 | ⬜ |
 | `wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414` | V10 | 01.02.2027 | ⏳ GELECEK | Z-09 | ⬜ |
 | `wissensbank/_archiv/Anhang_05_Anlage_1_TP5_20260401` | 1.0 | 01.04.2026 | 🚫 KAPSAM DIŞI (Rettungsdienst) | — | ⬜ |
+| `wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md` — **veri, spec değil** | 7 dosya, ayrı ayrı | 01.04–01.10.2026 | ✅ 6 GEÇERLİ + ⏳ 1 GELECEK | Z-09 | **✅ kart W-01** |
 | `wissensbank/gemeinsam/302-tp5/…Anhang_04b…xsd` + `SLP_BAS_1.2.0.xsd` | — | — | 📎 REFERANS (XML şema) | — | dosya adında ✅ |
 
 ### §302 — yan belgeler
@@ -249,6 +267,114 @@ yeniden araştırılıyor demektir.
 | `wissensbank/physiotherapie/NOVENTI-Leitfaden-Blankoverordnung-Physiotherapie` | Stand 03.2026 | 📎 REFERANS (ticari kaynak, otorite değil) | — |
 | `wissensbank/_archiv/Zusatzdateien/*.pdf` (11 adet) | 2026 | 🚫 KAPSAM DIŞI (Barthel, MMSE, FIM…) | — |
 | `wissensbank/_archiv/_duplikate_2026-08-04/` (5 PDF) | — | 🗄 KARANTİNA | — |
+
+---
+
+## 3b. Tam kimlik kartları
+
+### W-01 · Kostenträgerdatei Sonstige Leistungserbringer (TP05) — IK/DAS yönlendirme verisi
+
+- **Dosya:** `wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md`
+  (7 resmî dosya tek dosyada · 22.441 satır · 682.533 bayt · türev yok)
+- **Herkunft:** https://www.gkv-datenaustausch.de/leistungserbringer/sonstige_leistungserbringer/kostentraegerdateien_sle/kostentraegerdateien.jsp
+  (eski sürümler: `…/kostentraegerdateien_archiv.jsp`) — login/lisans yok, açık indirme
+  · **İndirme:** 05.09.2026 · **İndiren:** Kemal (tarayıcıdan dosya indirilemedi, içerik kopyala-yapıştır ile alındı)
+- **Yayıncı:** GKV-Spitzenverband / kasa birlikleri (AOK-BV · BKK · IKK · Knappschaft · SVLFG · vdek)
+- **Sürüm / Stand:** tek bir sürümü **yok** — 6 kasa birliğinin 7 ayrı dosyası, her birinin kendi tarihi (tablo aşağıda)
+- **Anzuwenden ab:** dosya başına ayrı · **Düşer:** her dosya kendi Kassenart'ının bir sonraki sürümüyle
+- **Durum:** 6 dosya ✅ **GEÇERLİ** · 1 dosya ⏳ **GELECEK** (vdek Q4/2026, ab 01.10.2026)
+- **Neyi besler:** Z-09 → `api-backend/billing/kostentraeger/parser.js` → DB `kostentraeger`
+  ↔ DB `krankenkassen.ik_number` (Ops kartı #264). **Bugün hiçbiri beslenmiyor — parser mock ile çalışıyor.**
+- **Tazelik kontrolü:** ⛔ otomatik yok. Elle: yukarıdaki sayfa açılır, oradaki satırların
+  "gültig ab" tarihleri aşağıdaki tabloyla karşılaştırılır. **Kontrol günleri: 03.03 · 03.06 ·
+  03.09 · 03.12** — Anhang 03 §2 (satır 185-187): *"Die Aktualisierung der Kostenträgerdatei
+  erfolgt jeweils zum 1. eines jeden Kalendervierteljahres. Die aktualisierte Fassung wird
+  spätestens 4 Wochen vor Beginn des jeweiligen Kalendervierteljahres bereitgestellt."*
+  Yani her çeyrek başından 4 hafta önce yeni dosya **olmalı**; o gün sayfada yoksa o Kassenart
+  değişiklik yayımlamamıştır ve eski dosya geçerli kalır — bu da kayda yazılır.
+- **Yeniden dağıtım:** serbest — kullanıcı kararı 05.09.2026 (W-A07 altında): *"public kalsın
+  sıkıntı yok, zaten public bilgiler bunlar."* Kasa IK'ları, adresleri ve DAS bağlantıları
+  resmî ve kamuya açık veridir; hasta verisi yok (yalnız kurumsal Ansprechpartner adları var).
+- **Yedek:** ✅ git izliyor (commit `d4982fb`, 05.09.2026). `.gitignore` yalnız `*.pdf` kapatıyor,
+  bu dosya metin. Yayın yüzeyi kapalı: `.vercelignore:82` → `wissensbank/`.
+
+#### İçindeki 7 dosya
+
+Dosya adı Anhang 03 §6'ya göre çözülür: **1-2** Kassenart · **3-4** Verfahren (`05` = Sonstige
+Leistungserbringer) · **5-6** geçerlilik (`Q1`-`Q4` çeyrek **veya** `01`-`12` ay) · **7-8** yıl ·
+uzantı **K**=Kostenträgerdatei · **E**=EDIFACT · **0-9**=Nachtrag.
+
+⚠️ **"gültig ab" sütunu dosya adından değil yayıncı sayfasından alındı** (ajan kuralı 6). AOK
+örneği niye önemli: adı `Q3` diyor ama gerçek tarih **27.07.2026** — Nachtrag 3 çeyrek ortasında
+çıkmış. Dosya adına bakıp "01.07.2026" demek yanlış olurdu.
+
+| # | Dosya | Kassenart | gültig ab (yayıncı) | Absender-IK | Dateidatum | Kayıt | VKG | Satır aralığı | Durum |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | `AO05Q326.KE3` | AO = AOK-Bundesverband | **27.07.2026** | 109910000 | 01.07.2026 12:30 | 187 | 764 | 1–2343 | ✅ |
+| 2 | `BK05Q326.KE1` | BK = Betriebskrankenkassen | 01.07.2026 | 104027544 | 31.07.2026 09:44 | 365 | 3.234 | 2345–8415 | ✅ |
+| 3 | `IK05Q326.KE1` | IK = Innungskrankenkassen | 01.07.2026 | 109900019 | 05.08.2026 09:00 | 207 | 475 | 8417–10540 | ✅ |
+| 4 | `BN050526.KE0` | BN = Knappschaft-Bahn-See | 01.05.2026 (**aylık**, çeyrek değil) | 109905003 | 24.04.2026 14:45 | 37 | 6.183 | 10542–17012 | ✅ |
+| 5 | `LK05Q226.KE0` | LK = Landwirtschaftliche KK (SVLFG) | 01.04.2026 | 109908701 | 26.08.2025 10:30 | 11 | 27 | 17014–17131 | ✅ |
+| 6 | `EK05Q226.KE0` | EK = Ersatzkassen (vdek) | 01.04.2026 | 109979990 | 20.04.2026 18:46 | 261 | 724 | 17133–19785 | ✅ **bugün geçerli** |
+| 7 | `EK05Q426.KE0` | EK = Ersatzkassen (vdek) | **01.10.2026** | 109979990 | 14.08.2026 18:00 | 261 | 726 | 19787–22442 | ⏳ **GELECEK** |
+
+**Toplam:** 1.329 KOTR kaydı · 1.043 tekil IK · 12.133 VKG · 1.916 ANS · 133 ASP · 104 DFU.
+
+⛔ **7. dosya bugün koda/DB'ye girmez.** vdek Q4 ile Q2 dosyasının IK kümesi **birebir aynı**
+(261 = 261) ama içerik farklı (724 ↔ 726 VKG satırı). Yani tek seferde ikisi de yüklenirse biri
+diğerinin üstüne sessizce yazar. 01.10.2026'dan önce Q4'ü yüklemek, o tarihe kadar **yanlış
+Datenannahmestelle'ye yönlendirme** demektir — §302'de bu, dosya reddi sınıfıdır.
+
+Ayrıca **263 IK birden fazla dosyada geçiyor**; 261'i bu vdek Q2/Q4 çiftinden, kalanı
+Kassenart'lar arası ortak Verband/DAS kayıtları (ör. BKK ∩ vdek = 16 IK). Yükleyicinin
+"son yazan kazanır" davranışı burada **yanlış** sonuç verir — birleştirme kuralı geçerlilik
+tarihine göre olmalı, dosya sırasına göre değil.
+
+#### Bütünlük doğrulaması (05.09.2026 — deterministik sayım, YZ kullanılmadı)
+
+| Kontrol | Sonuç |
+|---|---|
+| UNZ sayaçları toplamı (187+365+207+37+11+261+261) | **1.329** |
+| Sayılan UNH / UNT / IDK segmenti | **1.329 / 1.329 / 1.329** ✅ eşleşiyor → yapıştırma eksiksiz, kesilme yok |
+| Yayıncı sayfasındaki dosya sayısı | **7** ✅ hepsi elimizde; eksik Kassenart yok (`GK`/`SB` sayfada sunulmuyor) |
+| Yayıncı boyutları toplamı (68+181+67+214+3+74+74 KB) | **681 KB** ≈ elimizdeki 682,5 KB ✅ |
+| Mesaj kimliği | `KOTR:02:001:KV` — Anhang 03 V10 satır 634'ün beklediği değerin aynısı ✅ |
+| EDIFACT dışı / bozuk satır | **yok** (yalnız 6 boş ayraç satırı) ✅ |
+
+⚠️ **Bu bire-bir indirme değil, kopyalamadır.** Orijinal dosyalar segment akışı olarak gelir;
+elimizdeki kopyada her segment ayrı satırda ve 4. dosyanın (`BN050526`) `UNA` satırı kaybolmuş
+(6 UNA / 7 UNB). Sonuç: **checksum ile orijinale karşı doğrulama yapılamaz.** Bir Absetzung
+itirazında orijinaline başvurulacaksa dosyalar yayıncıdan yeniden indirilmelidir.
+
+#### Format kararı — ara md/csv/json **üretilmez**
+
+| Soru | Cevap |
+|---|---|
+| Kaynak tipi | Zaten **makine formatı** (EDIFACT). Ajan §4: makine formatı olduğu gibi bırakılır |
+| Kaç kez insan okuyacak | **Sıfır.** Sorulan soru "IK 101575519 hangi DAS'a gider" — bu bir **sorgu**, okuma değil |
+| Türev | **DB tablosu `kostentraeger`** (+ `krankenkassen.ik_number` eşlemesi). Arada dosya yok |
+| Neden CSV/JSON ara katman yok | Sayı taşıyan (IK) bir tabloda **ikinci bir otorite** yaratır. Kaynak çeyreklik güncellenir; ara dosya güncellenmezse **sessizce yalan söylemeye başlar** — ajan §4'ün "en pahalı türev" tanımı tam olarak budur. Doğrudan DB'ye yazmak zincirden bir halka **eksiltir** |
+| Neden md değil | `.md` uzantısı zaten yanlış — içerik markdown değil, ham EDIFACT |
+| Doğrulama (ajan §0.2 zorunlu) | Parser çıktısı **1.329 kayıt / 1.043 tekil IK** sayısını tutturmalı; ayrıca rastgele **5 kayıt** ham dosyadaki IDK/VKG satırlarına karşı elle karşılaştırılır. Tutmazsa hata parser'dadır, veride değil |
+| YZ kullanımı | ⛔ Bu dosyanın hiçbir satırı modele çevirtilmedi ve çevirtilmeyecek — IK numarası sayı taşır (ajan §0.2) |
+
+#### W-01 açık maddeleri
+
+1. **`parser.js` mock ile çalışıyor ve başlığı artık yalan söylüyor** — `parser.js:7-8`:
+   *"We don't have access to a live .kotr file yet (requires ITSG portal account + Echt-Schluessel)."*
+   Yanlış: dosya elimizde, ITSG hesabı gerekmedi, indirme açık. `parser.js:14` de *"Drop it into
+   /handbücher"* diyor — o klasör 05.09.2026'da kaldırıldı. → `builder`'a iş, sahipsiz kalmasın.
+2. **Mock ile gerçek veri karşılaştırılmadı.** `KOSTENTRAEGER_MOCK` 15 kasa, elle toplanmış,
+   `das_ik` değerleri web aramasından geliyor (`parser.js:39-43` bir IK çakışmasını zaten itiraf
+   ediyor, KKH bilerek çıkarılmış). Dosyada 1.043 tekil IK var. **Çelişen her satırda dosya
+   haklıdır, mock değil.**
+3. **Bugün geçerli Anhang 03 sürümü arşivde yok.** Elimizdeki V10 01.02.2027'de yürürlüğe giriyor.
+   Mesaj kimliği aynı olduğu için yapı riski düşük, ama Schlüsselverzeichnis (Art der
+   Datenlieferung, DFÜ-Protokoll) değişmiş olabilir. → arşiv sayfasından bir önceki sürüm
+   indirilir, `gkv-302` teyit eder.
+4. **Dosya tek parça ve adı yanlış** — bölme/adlandırma önerisi W-A08'de.
+5. **`krankenkassen.ik_number` (93 kasadan 12'si dolu) kaynağı belirsiz.** Gerçek dosya geldiğine
+   göre bu 12 değer artık doğrulanabilir; doğrulanamayan **silinir**, tahmin bırakılmaz. → Ops #264.
 
 ---
 
@@ -297,6 +423,9 @@ uygun). Karar kullanıcınındır — depoyu şişirmemek bilinçli bir tercihti
 ICD, HPNR için otomatik sinyal yok; §1'deki takvim elle bakılıyor.
 **Yapılacak:** önce en ucuz adım — takvimdeki üç 2027 tarihi Ops kartına yazılır. Tam
 otomasyon (yayıncı sayfası izleme) ayrı bir karar, `deger-mi` ile.
+05.09.2026 kısmi ilerleme: **Kostenträgerdatei** artık yazılı bir elle kontrol yordamına sahip
+(W-01 — sabit kontrol günleri 03.03 / 03.06 / 03.09 / 03.12 + yayıncı sayfası). Bu, kaynakların
+tazelik kontrolünde ikinci belgeli yordam; ama hâlâ **otomatik değil**, madde açık kalır.
 
 ### W-A07 · Yeniden dağıtım hakları netleştirilmedi — `offen`
 `.vercelignore:73-75` şüpheyi yazılı olarak kaydediyor: *"fraglich, ob ICD-10-GM- und
@@ -312,20 +441,49 @@ zaten arşivde — cevabın bir kısmı orada.
 > `downloadbedingungen-2025` metni var) ve GKV Lesefassung'ları hâlâ `offen` — onlar için
 > `legal-de` sorusu duruyor.
 
-### W-A08 · Gerçek Kostenträgerdatei elimizde ama kayıtsız ve yanlış adlandırılmış — `offen`
-`wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md` — 22.441 satır EDIFACT `KOTR`, gönderen IK
-109910000, dosya tarihi 01.07.2026. `.md` uzantısı yanlış (markdown değil), klasörü
-yanlış (podoloji'ye özel değil, tüm kasaları kapsıyor), adında boşluk var, sicilde yoktu.
-`api-backend/billing/kostentraeger/parser.js` bu dosya dururken mock ile çalışıyordu.
-**Bu, sicilin niye kurulduğunun canlı kanıtı:** veri indirilmiş, ödenmiş, elde — ama
+### W-A08 · Kostenträgerdatei kayıtsızdı — **kayıt açıldı, bölme/adlandırma açık**
+
+05.09.2026'da bulundu: `wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md`
+gerçek, resmî Kostenträgerdatei verisi — 7 dosya, 1.329 kayıt. `parser.js` bu dosya dururken
+mock ile çalışıyordu. **Sicilin niye kurulduğunun canlı kanıtı:** veri indirilmiş, elde, ama
 kayıtsız olduğu için yok sayılmış.
-**Yapılacak:** (a) ✅ dosya `wissensbank/gemeinsam/kostentraeger/` altına taşındı
-(05.09.2026), (b) `parser.js` bu gerçek dosyaya karşı koşturulup doğrulanır — hâlâ açık,
-(c) `.md` uzantısı düzeltilir (`.kotr` ya da `.txt`; adındaki fazladan boşluk da gider),
-(d) Herkunft ve tazelik kontrolü kayda yazılır — Kostenträgerdatei **düzenli güncellenir**,
-yani §1 takviminde yeri olmalı. `gkv-302` ile birlikte. → Ops kartı açıldı.
-⚠️ Ayrıca: dosya 05.09.2026'da git'e girdi (o commit'e kadar takipsizdi). Depo **public** ve
-W-A07 (yeniden dağıtım) bunu da kapsar — `legal-de` sorusuna bu dosya da dahil edilir.
+
+- ✅ (a) Dosya `Podoloji/` altından `wissensbank/gemeinsam/kostentraeger/`'e taşındı (05.09.2026).
+  Doğru klasör: bu veri **tek bir Fachbereich'a ait değil** — podoloji, physio, ergo ve logo
+  aynı kasa/DAS yönlendirmesini kullanır, ölçüt `README.md`'deki "kaç Fachbereich" sorusu.
+- ✅ (d) Herkunft, sürüm, geçerlilik ve tazelik yordamı yazıldı → **kart W-01**, takvim §1.
+- ⬜ (b) `parser.js` gerçek dosyaya karşı koşturulmadı. Kabul ölçütü W-01'de: 1.329 kayıt /
+  1.043 tekil IK + 5 rastgele kayıt elle karşılaştırması.
+- ⬜ (c) **Bölme + adlandırma — kullanıcı kararı bekliyor (öneri):**
+
+  **Neden bölünmeli:** tek dosya = tek sürüm demektir, ama içinde **7 ayrı sürüm** var ve
+  bunlardan biri (`EK05Q426`) bugün **GELECEK** statüsünde. Tek parça hâlde bu ayrım sicilde
+  yazılabilir ama dosya sisteminde ve git'te görünmez; yükleyici de ayıramaz. Ayrıca çeyreklik
+  güncelleme **dosya başına** gelir (AOK Nachtrag 3'te, SVLFG hâlâ Ağustos 2025'te) — tek blob
+  her güncellemede baştan yapıştırılmak zorunda kalır ve `git diff` hangi kasanın değiştiğini
+  söyleyemez.
+
+  **Öneri:** `wissensbank/gemeinsam/kostentraeger/` altında 7 ayrı dosya, yayıncının kendi
+  adıyla, `.txt` uzantısıyla (arşivin okunur-metin kuralı; `.md` yanlış çünkü markdown değil,
+  ham `.KEv` uzantısı Windows'ta ve git'te sorun çıkarır):
+
+  | Yeni ad | Kaynak satır aralığı |
+  |---|---|
+  | `AO05Q326_KE3.txt` | 1–2343 |
+  | `BK05Q326_KE1.txt` | 2345–8415 |
+  | `IK05Q326_KE1.txt` | 8417–10540 |
+  | `BN050526_KE0.txt` | 10542–17012 (⚠ `UNA` satırı eksik, eklenmez — orijinali öyle geldi) |
+  | `LK05Q226_KE0.txt` | 17014–17131 |
+  | `EK05Q226_KE0.txt` | 17133–19785 |
+  | `EK05Q426_KE0.txt` | 19787–22442 |
+
+  `_` ayracı bilinçli: yayıncının 8+3 adı **birebir geri kurulabilir** (`_` öncesi = dosya adı,
+  sonrası = uzantı), ad tek bir noktaya sahip olduğu için araçlar şaşırmaz. Bölme mekaniktir —
+  satır aralıkları yukarıda, kesme noktaları `UNB`/`UNZ` sınırları. **Ham dosya bölündükten
+  sonra silinir** (kopyası olmayan tek nüsha değil: 7 parça toplamı birebir aynı içerik).
+
+⚠️ Depo public: W-A07 altındaki kullanıcı kararıyla bu veri için yeniden dağıtım sorusu
+**kapandı** (kamuya açık kurum verisi, hasta verisi yok).
 
 ### ✅ Kapalı / doğrulanmış
 

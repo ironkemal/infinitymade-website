@@ -3,11 +3,11 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-05 · 83 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-06), funktionen/INDEX.json (erzeugt 2026-09-05)
+**Erzeugt:** 2026-09-06 · 84 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-06), funktionen/INDEX.json (erzeugt 2026-09-05)
 
 ## Kayıt durumu
 
-- Register kaydı olan: **83/83**
+- Register kaydı olan: **84/84**
 
 ## Kodda hiç çağrılmayan tablolar
 
@@ -25,6 +25,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `heilmittel_position` | 4 | veraltet |
 | `icd10_titles` | 7 | aktiv (Referenz) |
 | `icd_sector_ranges` | 3 | aktiv (Referenz) |
+| `kostentraeger_annahmestellen` | 7 | aktiv (Referenz) — **unvollständig geladen**, siehe unten |
 | `nummernkreise` | 1 | aktiv |
 | `referral_drafts` | 9 | verdächtig |
 | `spatial_ref_sys` | 1 | System |
@@ -49,7 +50,7 @@ Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
 |---|---|---|---|---|
 | `profiles` | 20 | 32 | 27 | abrechnung, anfragen, fahrtenbuch, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `bookings` | 16 | 37 | 27 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
-| `prescriptions` | 12 | 29 | 22 | abrechnung, anamnese, belegliste, doctors, fussstatus, hours, kunden, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen |
+| `prescriptions` | 12 | 29 | 23 | abrechnung, anamnese, belegliste, doctors, fussstatus, hours, kunden, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen |
 | `document_vorlagen` | 10 | 2 | 3 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen, vorlagen |
 | `services` | 8 | 17 | 11 | abrechnung, anfragen, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `prescription_sessions` | 6 | 10 | 10 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
@@ -511,8 +512,8 @@ Warum: Der Kiosk-Modus (Tablet im Wartezimmer) braucht eine Anmeldung, die kein 
 
 ### `kostentraeger`
 
-9 Spalten · Status: aktiv, aber **Mock-Daten**
-Warum: Die §302-Seite der Kassen: IK-Nummern, Annahmestellen, Datenannahme-Wege. Das ist etwas anderes als die Kassenliste in der Oberfläche.
+15 Spalten · Status: aktiv — **Echtdaten**, mit 9 Mock-Resten
+Warum: Die §302-Seite der Kassen. Seit dem 06.09.2026 trägt sie zwei Dinge, die vorher gefehlt haben: die **echten** IK-Nummern aus der TP5-Kostenträgerdatei — und die **n:1-Beziehung**, ohne die eine IK allein nichts wert ist. Eine Versichertenkarte nennt fast nie die Stelle, die am Ende abrechnet: die DAK-Karte trägt `100167999`, das Geld holt man aber bei `105830016`. Genau diese Auflösung steckt in `abrechnender_kt_ik` / `ist_abrechnender_kt` (VKG-Verknüpfungsart 01).
 
 **Liest (1):** `loadAbrechnung()`
 
@@ -520,10 +521,15 @@ Warum: Die §302-Seite der Kassen: IK-Nummern, Annahmestellen, Datenannahme-Wege
 
 **Module:** abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen
 
+### `kostentraeger_annahmestellen`
+
+12 Spalten · Status: aktiv (Referenz) — **unvollständig geladen**, siehe unten
+Warum: Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin geht diese Datei?** Der Empfänger ist nicht die Kasse, sondern ihre Datenannahmestelle — und die hängt am Viererschlüssel (Kostenträger, Abrechnungscode, Art der Datenlieferung, Bundesland). Eine einzelne Spalte an `kostentraeger` (`das_ik`) konnte das nie abbilden; deshalb eine eigene Tabelle statt weiterer Spalten. Sie ist damit auch die Antwort auf „hätte eine Spalte gereicht?“ — nein, es ist eine echte 1:n-Beziehung.
+
 ### `krankenkassen`
 
-6 Spalten · Status: aktiv (Referenz)
-Warum: Die Kassenliste für das Auswahlfeld in der Oberfläche. 93 GKV-Kassen, gesetzt am 02.06.2026.
+6 Spalten · Status: aktiv (Referenz) — ⛔ `ik_number` **fehlerhaft**, siehe unten
+Warum: Die Kassenliste für das Auswahlfeld in der Oberfläche. 94 Zeilen (live 06.09.2026), gesetzt am 02.06.2026.
 
 **Liest (3):** `ladeKassen()`, `loadKkList()`, `toRad()`
 
@@ -691,7 +697,7 @@ Warum: Die Verordnung (Muster 13) für ALLE vier Fachbereiche — Physio, Ergo, 
 
 **Liest (29):** `aufEuro()`, `frag()`, `frageZahlungsstatus()`, `initBkCustomerAutocomplete()`, `korrekturAusPanel()`, `ladeAktiveVerordnungen()`, `ladeVerlauf()`, `ladeZuweisungen()`, `linkBookingsToPrescriptionSessions()`, `loadAbrechnung()`, `loadAnamneseRxContext()`, `loadBkVerordnungen()`, `loadCalRpRezeptInfo()`, `loadPatientDetailRezepte()`, `loadPatRxTable()`, `loadPhysioRezKpis()`, `loadRxSessionsPanel()`, `loadUeberblickDeadlines()`, `oeffneZuzahlungKorrektur()`, `openBookingActionModal()` … +9
 
-**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/mahnwesen.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/verordnung-status.routes.js`, `api-backend/billing/api/zuzahlung.routes.js`, `api-backend/server.js`, `dashboard.js`, `module/arzt-register.js`, `module/booking-status-korrektur.js`, `module/patientenkarte.js`, `module/rechnung-verordnung.js`, `module/rechnung-zahlung.js`, `module/rezeptinfo-geld.js`, `module/sitzungsfortschritt.js`, `module/termin-aktionen.js`, `module/termin-leistungen.js`, `module/verordnung-detail.js`, `module/verordnung-einheiten.js`, `module/verordnung-uebersicht.js`, `module/verordnung-uebersicht.test.js`, `module/zuzahlung-befreiung.js`, `module/zuzahlung-korrektur.js`
+**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/mahnwesen.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/verordnung-status.routes.js`, `api-backend/billing/api/zuzahlung.routes.js`, `api-backend/server.js`, `dashboard.js`, `module/arzt-register.js`, `module/booking-status-korrektur.js`, `module/patientenkarte.js`, `module/rechnung-verordnung.js`, `module/rechnung-zahlung.js`, `module/rezeptinfo-geld.js`, `module/sitzungsfortschritt.js`, `module/termin-aktionen.js`, `module/termin-leistungen.js`, `module/verordnung-detail.js`, `module/verordnung-einheiten.js`, `module/verordnung-maske.js`, `module/verordnung-uebersicht.js`, `module/verordnung-uebersicht.test.js`, `module/zuzahlung-befreiung.js`, `module/zuzahlung-korrektur.js`
 
 **Module:** abrechnung, anamnese, belegliste, doctors, fussstatus, hours, kunden, podologie-billing, rechnungen, services, settings, team, ueberblick, verordnungen
 
@@ -700,7 +706,7 @@ Warum: Die Verordnung (Muster 13) für ALLE vier Fachbereiche — Physio, Ergo, 
 83 Spalten · Status: aktiv
 Warum: Der Dreh- und Angelpunkt der Mandantentrennung. Jeder Account — Inhaber wie Angestellter — hat genau eine Zeile; `role` und `owner_id` entscheiden, wer wessen Daten sieht. Weil Einzelstandort-Inhaber gar keinen `businesses`-Datensatz haben, liegen **Inhaber-Einstellungen hier**, nicht in `businesses`.
 
-**Schreibt (20):** `bindBilling()` [update] — onboarding.js:453 · `bindBusiness()` [update] — onboarding.js:388 · `bindHours()` [update] — onboarding.js:813 · `bindOwner()` [update] — onboarding.js:516 · `bindPlan()` [update] — onboarding.js:870 · `ensureBookingSlug()` [update] — dashboard.js:13561 · `ensureClinicLocation()` [update] — dashboard.js:5709 · `ensureCompanyCode()` [update] — dashboard.js:13544 · `fmt()` [update] — dashboard.js:10850 · `handleSave()` [update] — onboarding.js:457 · `init()` [update] — kalender.js:149 · `initAnfragenPanel()` [update] — dashboard.js:23190 · `loadProfile()` [insert] — onboarding.js:115 · `openEmpDetail()` [update] — dashboard.js:11182 · `openStripePortal()` [update] — dashboard.js:2326 · `renderLegendeSettings()` [update] — module/fussbefund.js:1633 · `saveAusfallSettings()` [update] — module/ausfall-einstellungen.js:76 · `saveEmployee()` [insert] — dashboard.js:14253 · `saveStepProgress()` [update] — onboarding.js:281 · `speichereStufen()` [update] — module/selbstzahler-stufen.js:255
+**Schreibt (20):** `bindBilling()` [update] — onboarding.js:453 · `bindBusiness()` [update] — onboarding.js:388 · `bindHours()` [update] — onboarding.js:813 · `bindOwner()` [update] — onboarding.js:516 · `bindPlan()` [update] — onboarding.js:870 · `ensureBookingSlug()` [update] — dashboard.js:13561 · `ensureClinicLocation()` [update] — dashboard.js:5709 · `ensureCompanyCode()` [update] — dashboard.js:13544 · `fmt()` [update] — dashboard.js:10850 · `handleSave()` [update] — onboarding.js:457 · `init()` [update] — kalender.js:149 · `initAnfragenPanel()` [update] — dashboard.js:23190 · `loadProfile()` [insert] — onboarding.js:115 · `openEmpDetail()` [update] — dashboard.js:11182 · `openStripePortal()` [update] — dashboard.js:2326 · `renderLegendeSettings()` [update] — module/fussbefund.js:1633 · `saveAusfallSettings()` [update] — module/ausfall-einstellungen.js:76 · `saveEmployee()` [insert] — dashboard.js:14253 · `saveStepProgress()` [update] — onboarding.js:281 · `speichereStufen()` [update] — module/selbstzahler-stufen.js:259
 
 **Liest (32):** `fetchBusinesses()`, `gehoertZurPraxis()`, `getAvailableSlots()`, `handleDirectAusfallrechnung()`, `ladeLegende()`, `ladePraxisAbrechnungsProfil()`, `loadAusfallConfig()`, `loadAusfallConfig()`, `loadEmpUrlaubSection()`, `loadFahrtenbuchPanel()`, `loadFbFahrten()`, `loadFbReports()`, `loadHoursPanel()`, `loadPatientDetailAnamnese()`, `loadPraxisProfile()`, `loadTeam()`, `loadUeberblickVacations()`, `proceedToOwnerCheck()`, `r2()`, `renderOtherStandortEmps()` … +12
 

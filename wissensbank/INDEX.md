@@ -176,6 +176,33 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - 3.5 Nachrichtentyp RETP
   - 4 Schlüsselverzeichnis
 
+## §302 TP5 — Kostenträgerdatei (VERİ, spec değil)
+
+### wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md
+- **Ne:** Kasa birliklerinin yayımladığı **gerçek Kostenträgerdatei verisi** — kurum kimlik
+  kodları (IK), adresler, Datenannahmestelle bağlantıları (VKG) ve DFÜ parametreleri.
+  Bir spec değil, spec'in (Anhang 03) tarif ettiği **veri dosyasının kendisi**.
+  Uzantısı `.md` ama içeriği markdown değil, ham EDIFACT (`KOTR:02:001:KV`).
+- **Kapsam:** 7 resmî dosya art arda yapıştırılmış · 22.441 satır · 1.329 KOTR kaydı ·
+  1.043 tekil IK. Segmentler: `IDK` (IK + kasa adı) · `VDT` (geçerlilik) · `FKT` · `VKG`
+  (hangi IK hangi DAS'a bağlı) · `NAM` · `ANS` (adres) · `ASP` (Ansprechpartner) · `UEM` · `DFU`.
+- **Sürüm:** dosya başına ayrı — tek bir sürümü yok
+- **Anzuwenden ab:** 01.04.2026 – 01.10.2026 arası, dosya başına
+- **Ne zaman lazım:** Bir Krankenkasse'nin IK numarası, hangi Datenannahmestelle'ye §302
+  dosyası gönderileceği veya kasa adresi gerektiğinde lazımdır.
+- **⚠️ Okuma kuralı:** Bu dosya **okunmaz, sorgulanır.** Tamamı ~200k token. Aranan tek bir
+  IK ise `Grep` ile `^IDK+<ik>` aranır; toplu iş gerekiyorsa parser üzerinden DB'ye alınır.
+- **Anahtar bölümler (satır aralığı = hangi kasa birliği):**
+  - 1–2343 · `AO05Q326.KE3` — AOK-Bundesverband (187 kayıt), gültig ab 27.07.2026
+  - 2345–8415 · `BK05Q326.KE1` — Betriebskrankenkassen (365 kayıt), ab 01.07.2026
+  - 8417–10540 · `IK05Q326.KE1` — Innungskrankenkassen (207 kayıt), ab 01.07.2026
+  - 10542–17012 · `BN050526.KE0` — Knappschaft-Bahn-See (37 kayıt), ab 01.05.2026
+  - 17014–17131 · `LK05Q226.KE0` — SVLFG / Landwirtschaftliche KK (11 kayıt), ab 01.04.2026
+  - 17133–19785 · `EK05Q226.KE0` — vdek / Ersatzkassen (261 kayıt), ab 01.04.2026 ✅ bugün geçerli
+  - 19787–22442 · `EK05Q426.KE0` — vdek / Ersatzkassen (261 kayıt), **ab 01.10.2026** ⏳ GELECEK
+- **Sicil kaydı:** `wissensbank/REGISTER.md` → **W-01** (Herkunft, tazelik yordamı, format kararı,
+  bütünlük doğrulaması). Format spec'i: `Anhang_03_Anlage_1_TP5_V10_20260414.txt`.
+
 ## §302 TP5 — Yan belgeler, düzeltme usulü, değişiklik geçmişi
 
 ### wissensbank/gemeinsam/302-tp5/Gemeinsame_Umsetzungsempfehlungen_zum_Korrekturverfahren_Heilmittel_20250213.txt

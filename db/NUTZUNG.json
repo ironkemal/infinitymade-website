@@ -1,11 +1,11 @@
 {
- "erzeugt": "2026-09-05",
+ "erzeugt": "2026-09-06",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-09-06)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-05)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 83,
+ "anzahl": 84,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -153,7 +153,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 10,
+   "sqlTreffer": 11,
    "codeStumm": false
   },
   {
@@ -4394,7 +4394,7 @@
   },
   {
    "name": "kostentraeger",
-   "spalten": 9,
+   "spalten": 15,
    "fkRaus": [],
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
@@ -4405,9 +4405,9 @@
     "api-backend/billing/kostentraeger/parser.test.js"
    ],
    "register": true,
-   "status": "aktiv, aber **Mock-Daten**",
-   "warum": "Die §302-Seite der Kassen: IK-Nummern, Annahmestellen, Datenannahme-Wege. Das ist etwas anderes als die Kassenliste in der Oberfläche.",
-   "seit": "18.05.2026 · `v11_billing_a2_tables` (Seed: `v14_kostentraeger_mock_seed`)",
+   "status": "aktiv — **Echtdaten**, mit 9 Mock-Resten",
+   "warum": "Die §302-Seite der Kassen. Seit dem 06.09.2026 trägt sie zwei Dinge, die vorher gefehlt haben: die **echten** IK-Nummern aus der TP5-Kostenträgerdatei — und die **n:1-Beziehung**, ohne die eine IK allein nichts wert ist. Eine Versichertenkarte nennt fast nie die Stelle, die am Ende abrechnet: die DAK-Karte trägt `100167999`, das Geld holt man aber bei `105830016`. Genau diese Auflösung steckt in `abrechnender_kt_ik` / `ist_abrechnender_kt` (VKG-Verknüpfungsart 01).",
+   "seit": "18.05.2026 · `v11_billing_a2_tables` (Seed: `v14_kostentraeger_mock_seed`) · Echtdaten-Struktur: 06.09.2026 · `kostentraeger_echtdaten_struktur` (Ops #264)",
    "ungeklaert": false,
    "leser": [
     {
@@ -4449,8 +4449,28 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 5,
+   "sqlTreffer": 8,
    "codeStumm": false
+  },
+  {
+   "name": "kostentraeger_annahmestellen",
+   "spalten": 12,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv (Referenz) — **unvollständig geladen**, siehe unten",
+   "warum": "Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin geht diese Datei?** Der Empfänger ist nicht die Kasse, sondern ihre Datenannahmestelle — und die hängt am Viererschlüssel (Kostenträger, Abrechnungscode, Art der Datenlieferung, Bundesland). Eine einzelne Spalte an `kostentraeger` (`das_ik`) konnte das nie abbilden; deshalb eine eigene Tabelle statt weiterer Spalten. Sie ist damit auch die Antwort auf „hätte eine Spalte gereicht?“ — nein, es ist eine echte 1:n-Beziehung.",
+   "seit": "06.09.2026 · `kostentraeger_echtdaten_struktur` (Ops #264)",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 7,
+   "codeStumm": true
   },
   {
    "name": "krankenkassen",
@@ -4461,8 +4481,8 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [],
    "register": true,
-   "status": "aktiv (Referenz)",
-   "warum": "Die Kassenliste für das Auswahlfeld in der Oberfläche. 93 GKV-Kassen, gesetzt am 02.06.2026.",
+   "status": "aktiv (Referenz) — ⛔ `ik_number` **fehlerhaft**, siehe unten",
+   "warum": "Die Kassenliste für das Auswahlfeld in der Oberfläche. 94 Zeilen (live 06.09.2026), gesetzt am 02.06.2026.",
    "seit": "**in keiner Migration** — direkt im SQL-Editor angelegt. Das ist der einzige Fall im Projekt, in dem sich das Entstehungsdatum aus der Datenbank nicht rekonstruieren lässt.",
    "ungeklaert": false,
    "leser": [
@@ -7280,6 +7300,7 @@
     "module/termin-leistungen.js",
     "module/verordnung-detail.js",
     "module/verordnung-einheiten.js",
+    "module/verordnung-maske.js",
     "module/verordnung-uebersicht.js",
     "module/verordnung-uebersicht.test.js",
     "module/zuzahlung-befreiung.js",
@@ -8069,7 +8090,7 @@
     {
      "name": "speichereStufen",
      "file": "module/selbstzahler-stufen.js",
-     "start": 255,
+     "start": 259,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10197,6 +10218,11 @@
    "name": "icd_sector_ranges",
    "sql": 3,
    "status": "aktiv (Referenz)"
+  },
+  {
+   "name": "kostentraeger_annahmestellen",
+   "sql": 7,
+   "status": "aktiv (Referenz) — **unvollständig geladen**, siehe unten"
   },
   {
    "name": "nummernkreise",
