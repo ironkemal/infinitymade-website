@@ -192,6 +192,27 @@
 - **Reddedilen alternatif:** Kasaları tek pakette birleştirmek — §302 yapısına aykırı.
 - **Tutanak:** Beta-2 görüşmesi 05.09.2026, `podoloji` + `gkv-302` ajan değerlendirmesi
   (Ops-Dashboard kart notlarında tam metin).
+- **Uygulandı: 2026-09-07 — sıranın (2). adımı, yarısı.** Ops #283.
+  - `api-backend/billing/dta/builder.js` — dosya içi iki seviyeli gruplama
+    (Kostenträger-IK → Karten-IK). Her Karten-IK artık kendi SLGA'sını ve kendi GES
+    toplamlarını alıyor. Önceden `prescriptions[0]`'ın IK'sı tüm dosyaya yazılıyor ve
+    GES tüm dosya üzerinden hesaplanıyordu — ikinci bir Karten-IK'da her kasa
+    diğerinin tutarını görüyordu. Dosya reddi değil, **sessiz yanlış tutar**.
+    Ayrıca DAV × Kassenart karışımı artık reddediliyor (§5.3.1).
+  - `api-backend/billing/dta/segments.js` — `buildSLGA_FKT` alan 2 ↔ alan 5 çapraz
+    doğrulaması (§5.5.2 s. 31-32).
+  - Sammelrechnung yolu **yazıldı ama kapalı** (`sammelrechnung` varsayılan `false`,
+    hiçbir üretim çağrısı `true` göndermiyor). Testi var.
+  - Testler: `api-backend/billing/dta/gesamtrechnung.test.js` (14 test) +
+    `__golden__/` — refactor **öncesi** çıktı ayrı commit'te donduruldu, bugünkü
+    tek-kasa senaryosu byte-exact aynı kaldı. `npm test` 180/180.
+- **⛔ Hâlâ açık — sıranın (1) ve (3). adımları, bilerek yapılmadı:**
+  `abrechnung.routes.js`'in `kk.das_ik` yerine `kostentraeger_annahmestellen`
+  okuması ve çoklu seçim UI'ı. Gerekçe: `db/REGISTER.md` →
+  `kostentraeger_annahmestellen`, tabloyu bağlamadan **önce** `gkv-302`'nin
+  Fallback-Kette (71/72 → 20 → 00) ve auflösemeyen 125 Kostenträger için çıkış
+  yolu kararını vermesi gerekiyor. Karar olmadan bağlamak = dosyanın yanlış
+  Empfänger'e gitmesi. Detay: bu oturumun raporu.
 
 ---
 
