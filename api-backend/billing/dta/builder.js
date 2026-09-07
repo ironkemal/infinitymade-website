@@ -1,20 +1,32 @@
 // § 302 DTA file builder — Anlage 1 V21 format, Heilmittel (Leistungsbereich B).
 //
-// Output structure (Gesamtrechnung, single Krankenkasse per file):
+// Dateieinheit ist DAV × Kassenart (Kap. 5.3.1) — nicht Kostenträger. Innerhalb
+// der Datei wird zweistufig gruppiert: je Kostenträger-IK, darin je Karten-IK.
+// Jede Karten-IK-Gruppe ist EINE Gesamtrechnung mit eigener SLGA und eigenen
+// GES-Summen. Die Summe der ganzen Datei steht in keinem GES-Segment.
+//
+// Output structure:
 //   UNA
 //   UNB ... B ...                              // Leistungsbereich B
-//     UNH SLGA:21:0:0
-//       FKT REC [UST] [SKO]* GES* NAM
+//     [UNH SLGA:21:0:0]                        // nur bei Sammelrechnung:
+//       FKT('J', IK-KK leer) REC GES* NAM      //   kein UST
+//     [UNT]
+//     UNH SLGA:21:0:0                          // je Karten-IK eine Gesamtrechnung
+//       FKT('', IK-KK gesetzt) REC [UST] [SKO]* GES* NAM
 //     UNT
 //     UNH SLLA:21:0:0
 //       FKT REC INV [URI] NAD [IMG] [EVO]
 //         (EHE [TXT] [MWS])+
 //       ZHE DIA+ [SKZ] (BES | GZF)
 //     UNT
-//     ... repeat SLLA per Abrechnungsfall ...
+//     ... SLLA je Abrechnungsfall dieser Gesamtrechnung ...
+//     ... naechste Gesamtrechnung ...
 //   UNZ
 //
-// Faz A2 simplifying assumption: one Krankenkasse per file (batch-per-KK).
+// Die frühere Annahme „eine Krankenkasse je Datei" (Faz A2) ist damit
+// aufgehoben. Sie war nicht bloss eine Vereinfachung: der Builder nahm
+// prescriptions[0] fuer die ganze Datei und rechnete die GES-Summen ueber
+// alle Rezepte — mit einer zweiten Karten-IK ergab das still falsche Summen.
 
 import { UNA_HEADER } from './encoding.js';
 import { calcSessionZuzahlung } from '../zuzahlung/calculator.js';
@@ -226,16 +238,19 @@ function buildSLGAMessage({
   rechnung, absender, empfaenger, kostentraegerIk, krankenkasseIk,
   vkz, perStatusTotals, gesamtTotals, nachrichtenreferenz,
   ust, skonto, rechnungssteller,
+  sammelrechnung = '',            // 'J' = Sammelrechnungs-SLGA, '' = Gesamtrechnungs-SLGA
 }) {
+  const istSammel = sammelrechnung === 'J';
   const lines = [
     ...buildSLGA_FKT({
       vkz,
-      sammelrechnung:           '',
+      sammelrechnung,
       ikLeistungserbringer:     absender.ik,
       ikKostentraeger:          kostentraegerIk,
       // Karten-IK fehlt (NULL), bis eine echte Kostenträgerdatei sie liefert —
       // dann ist Kostenträger-IK die beste verfügbare Näherung, kein Bug (db-ustasi, 05.09.2026).
-      ikKrankenkasse:           krankenkasseIk || kostentraegerIk,
+      // In der Sammelrechnungs-SLGA bleibt das Feld leer (Kap. 5.5.2 S. 32).
+      ikKrankenkasse:           istSammel ? '' : (krankenkasseIk || kostentraegerIk),
       ikAbsenderDatei:          absender.ik,
     }),
     ...buildSLGA_REC({
@@ -245,7 +260,8 @@ function buildSLGAMessage({
       rechnungsart:          rechnung.rechnungsart || '1',
     }),
   ];
-  if (ust) lines.push(...buildSLGA_UST(ust));
+  // UST gehoert NICHT in die Sammelrechnungs-SLGA (Kap. 5.5.2 S. 34).
+  if (ust && !istSammel) lines.push(...buildSLGA_UST(ust));
   if (Array.isArray(skonto)) for (const s of skonto) lines.push(...buildSLGA_SKO(s));
 
   // GES rows: '00' = total, then per-Versichertenstatus
@@ -284,6 +300,15 @@ export function buildDtaFile({
   ust,              // optional UST segment
   skonto,           // optional SKO segments array
   preflight = true, // run DMRZ-style preflight before building; set false to skip (dev only)
+  // --- Dateieinheit (Anlage 1 TP5 V21, Kap. 5.3.1) -------------------------
+  davIk,            // IK der Datenannahmestelle, für die diese Datei bestimmt ist
+  kassenart,        // 'AO'|'EK'|'BK'|'IK'|'BN'|'LK'|'GK'|'SB'
+  // Sammelrechnung (Rechnungsart 3). Der Weg ist gebaut, aber bewusst
+  // ABGESCHALTET: heute ruft ihn kein Produktivpfad auf. Er steht hier, damit
+  // die Struktur beim ersten echten Sammelrechnungs-Fall nicht neu erfunden
+  // werden muss. Einzel- und Sammelrechnung duerfen nicht in derselben Datei
+  // stehen (Kap. 5.3.2) — deshalb ein Schalter fuer die ganze Datei, nicht je Gruppe.
+  sammelrechnung = false,
 }) {
   if (preflight) {
     const pf = runPreflight({ absender, empfaenger, rechnung, prescriptions, vkz });
@@ -311,6 +336,37 @@ export function buildDtaFile({
     }
   });
 
+  // --- Dateieinheit pruefen (Kap. 5.3.1) -----------------------------------
+  //
+  // Eine DTA-Datei gehoert genau EINER Datenannahmestelle und EINER Kassenart.
+  // Kommt ein Gemisch herein, ist das kein Fall zum Zurechtbiegen: welche
+  // Zeile in welche Datei gehoert, kann der Builder nicht wissen — das weiss
+  // nur der Aufrufer, der die Kassen ausgewaehlt hat. Also abweisen statt
+  // still die erste nehmen. (Genau der Fehler, den der alte Code eine Ebene
+  // tiefer machte: prescriptions[0].kostentraegerIk fuer die ganze Datei.)
+  //
+  // Solange die Rezepte die beiden Felder nicht tragen — heute ist das so —
+  // ist die Pruefung wirkungslos und aendert nichts an der Ausgabe.
+  const davSet = new Set(), kassenartSet = new Set();
+  for (const p of prescriptions) {
+    if (p.verordnung.davIk)     davSet.add(p.verordnung.davIk);
+    if (p.verordnung.kassenart) kassenartSet.add(p.verordnung.kassenart);
+  }
+  if (davIk)     davSet.add(davIk);
+  if (kassenart) kassenartSet.add(kassenart);
+  if (davSet.size > 1) {
+    throw new Error(
+      `Datei enthält mehrere Datenannahmestellen (${[...davSet].join(', ')}). ` +
+      `Eine DTA-Datei gilt genau einer DAV × Kassenart — Anlage 1 TP5 V21, Kap. 5.3.1.`
+    );
+  }
+  if (kassenartSet.size > 1) {
+    throw new Error(
+      `Datei enthält mehrere Kassenarten (${[...kassenartSet].join(', ')}). ` +
+      `Eine DTA-Datei gilt genau einer DAV × Kassenart — Anlage 1 TP5 V21, Kap. 5.3.1.`
+    );
+  }
+
   const filename = buildDtaFilename({
     absenderIk:     absender.ik,
     laufendeNummer: rechnung.datennummer,
@@ -319,65 +375,161 @@ export function buildDtaFile({
   const testIndikator = kind === 'echt' ? '2' : kind === 'erprobung' ? '1' : '0';
   const erstellungsdatum = rechnung.datum || new Date();
 
-  // Aggregate per-Versichertenstatus
-  const perStatus = new Map();
-  let allBrutto = 0, allGesZ = 0, allProzZ = 0, allPauschZ = 0;
-  const fallTotals = prescriptions.map(p => {
-    const t = calcAbrechnungsfallTotals(p);
-    allBrutto += t.brutto;
-    allGesZ   += t.gesZuzahlung;
-    allProzZ  += t.prozZuzahlung;
-    allPauschZ+= t.pauschZuzahlung;
-    const vs = (p.patient.versichertenstatus || '1').slice(0, 1);
-    const cur = perStatus.get(vs) || { brutto: 0, gesZuzahlung: 0, netto: 0 };
-    cur.brutto += t.brutto;
-    cur.gesZuzahlung += t.gesZuzahlung;
-    cur.netto += t.netto;
-    perStatus.set(vs, cur);
-    return t;
-  });
-  const gesamt = {
-    brutto:       r2(allBrutto),
-    gesZuzahlung: r2(allGesZ),
-    netto:        r2(allBrutto - allGesZ),
-  };
-  const perStatusRows = [...perStatus.entries()].map(([status, t]) => ({
-    status,
-    brutto: r2(t.brutto),
-    gesZuzahlung: r2(t.gesZuzahlung),
-    netto: r2(t.netto),
-  }));
+  // Betraege je Abrechnungsfall — in der Reihenfolge der Eingabe. Diese
+  // Reihenfolge ist bindend: der Aufrufer haelt `prescriptions[i]` und seine
+  // DB-Zeilen ueber den Index zusammen (abrechnung.routes.js, Belegnummer
+  // einfrieren). Die Gruppierung unten arbeitet deshalb mit Indizes und
+  // sortiert das Eingabe-Array nicht um.
+  const fallTotals = prescriptions.map(calcAbrechnungsfallTotals);
 
-  // Assume single Krankenkasse per file (Faz A2).
-  const kostentraegerIk = prescriptions[0].verordnung.kostentraegerIk;
-  // Karten-IK fehlt (NULL), bis eine echte Kostenträgerdatei sie liefert —
-  // dann ist Kostenträger-IK die beste verfügbare Näherung, kein Bug (db-ustasi, 05.09.2026).
-  const krankenkasseIk  = prescriptions[0].verordnung.krankenkasseIk || kostentraegerIk;
+  // Karten-IK der Zeile. Fehlt sie (NULL), ist die Kostenträger-IK die beste
+  // verfügbare Näherung (db-ustasi, 05.09.2026) — dieselbe Ersatzregel wie im
+  // FKT-Segment, damit Gruppierung und Segmentinhalt nicht auseinanderlaufen.
+  const kartenIkVon = (p) => p.verordnung.krankenkasseIk || p.verordnung.kostentraegerIk;
+
+  // Summen ueber eine Indexmenge — nie ueber die ganze Datei.
+  //
+  // Der Kern des Fehlers, den dieser Umbau behebt: die GES-Zeilen wurden aus
+  // ALLEN Rezepten der Datei gebildet und in die eine SLGA geschrieben. Bei
+  // einer zweiten Karten-IK sieht dann jede Kasse die Summe der jeweils
+  // anderen mit. Das ist keine Dateiabweisung, sondern still falsche Zahlen —
+  // die teurere Sorte Fehler.
+  function summenFuer(indizes) {
+    const perStatus = new Map();
+    let brutto = 0, gesZ = 0;
+    for (const i of indizes) {
+      const t = fallTotals[i];
+      brutto += t.brutto;
+      gesZ   += t.gesZuzahlung;
+      const vs = (prescriptions[i].patient.versichertenstatus || '1').slice(0, 1);
+      const cur = perStatus.get(vs) || { brutto: 0, gesZuzahlung: 0, netto: 0 };
+      cur.brutto       += t.brutto;
+      cur.gesZuzahlung += t.gesZuzahlung;
+      cur.netto        += t.netto;
+      perStatus.set(vs, cur);
+    }
+    return {
+      gesamt: { brutto: r2(brutto), gesZuzahlung: r2(gesZ), netto: r2(brutto - gesZ) },
+      perStatus: [...perStatus.entries()].map(([status, t]) => ({
+        status,
+        brutto:       r2(t.brutto),
+        gesZuzahlung: r2(t.gesZuzahlung),
+        netto:        r2(t.netto),
+      })),
+    };
+  }
+
+  // Zwei Ebenen: Kostenträger-IK → Karten-IK → Rezeptindizes.
+  // Map haelt die Einfuegereihenfolge fest; bei genau einer Karten-IK — dem
+  // heutigen Normalfall — entsteht daraus exakt eine Gruppe mit den Rezepten
+  // in Eingabereihenfolge, also zeichengleich die bisherige Ausgabe.
+  const nachKostentraeger = new Map();
+  prescriptions.forEach((p, i) => {
+    const ktIk     = p.verordnung.kostentraegerIk;
+    const kartenIk = kartenIkVon(p);
+    if (!nachKostentraeger.has(ktIk)) nachKostentraeger.set(ktIk, new Map());
+    const nachKarte = nachKostentraeger.get(ktIk);
+    if (!nachKarte.has(kartenIk)) nachKarte.set(kartenIk, []);
+    nachKarte.get(kartenIk).push(i);
+  });
 
   let nachrRef = 0;
+  let einzelZaehler = 0;
   const allLines = [];
+  const gruppen = [];
 
-  // SLGA
-  nachrRef += 1;
-  const slga = buildSLGAMessage({
-    rechnung, absender, empfaenger, kostentraegerIk, krankenkasseIk,
-    vkz,
-    perStatusTotals: perStatusRows,
-    gesamtTotals:    gesamt,
-    nachrichtenreferenz: nachrRef,
-    ust, skonto, rechnungssteller,
-  });
-  allLines.push(...slga.lines);
+  for (const [ktIk, nachKarte] of nachKostentraeger) {
+    // Erst die Gesamtrechnungen dieses Kostenträgers rechnen, dann — falls
+    // Sammelrechnung — die Sammel-SLGA daraus aufaddieren. Aufaddiert werden
+    // die bereits gerundeten Gruppensummen, nicht die Rohwerte: sonst kann die
+    // Sammel-SLGA um einen Cent von der Summe ihrer Gesamtrechnungen abweichen.
+    const teile = [...nachKarte.entries()].map(([kartenIk, indizes]) => ({
+      kartenIk, indizes, ...summenFuer(indizes),
+    }));
 
-  // SLLA × n
-  for (const p of prescriptions) {
-    nachrRef += 1;
-    const slla = buildSLLAMessage({
-      prescription: p, rechnung, absender, empfaenger, vkz,
-      nachrichtenreferenz: nachrRef,
-    });
-    allLines.push(...slla.lines);
+    if (sammelrechnung) {
+      const sammelPerStatus = new Map();
+      let sBrutto = 0, sGesZ = 0, sNetto = 0;
+      for (const t of teile) {
+        sBrutto += t.gesamt.brutto;
+        sGesZ   += t.gesamt.gesZuzahlung;
+        sNetto  += t.gesamt.netto;
+        for (const row of t.perStatus) {
+          const cur = sammelPerStatus.get(row.status) || { brutto: 0, gesZuzahlung: 0, netto: 0 };
+          cur.brutto       += row.brutto;
+          cur.gesZuzahlung += row.gesZuzahlung;
+          cur.netto        += row.netto;
+          sammelPerStatus.set(row.status, cur);
+        }
+      }
+      nachrRef += 1;
+      allLines.push(...buildSLGAMessage({
+        rechnung, absender, empfaenger,
+        kostentraegerIk: ktIk,
+        krankenkasseIk:  '',            // Mussfeld-Verbot in der Sammel-SLGA
+        vkz,
+        perStatusTotals: [...sammelPerStatus.entries()].map(([status, t]) => ({
+          status, brutto: r2(t.brutto), gesZuzahlung: r2(t.gesZuzahlung), netto: r2(t.netto),
+        })),
+        gesamtTotals: { brutto: r2(sBrutto), gesZuzahlung: r2(sGesZ), netto: r2(sNetto) },
+        nachrichtenreferenz: nachrRef,
+        ust, skonto, rechnungssteller,
+        sammelrechnung: 'J',
+      }).lines);
+    }
+
+    for (const teil of teile) {
+      // Ohne Sammelrechnung bleibt die Einzelrechnungsnummer, was sie heute
+      // ist ('0'); mit Sammelrechnung zaehlt sie je Gesamtrechnung hoch und
+      // muss in SLGA und den zugehoerigen SLLA gleich lauten.
+      const einzelNr = sammelrechnung
+        ? String(++einzelZaehler)
+        : (rechnung.einzelRechnungsnummer || '0');
+      const rechnungFuerGruppe = { ...rechnung, einzelRechnungsnummer: einzelNr };
+
+      nachrRef += 1;
+      allLines.push(...buildSLGAMessage({
+        rechnung: rechnungFuerGruppe,
+        absender, empfaenger,
+        kostentraegerIk: ktIk,
+        krankenkasseIk:  teil.kartenIk,
+        vkz,
+        perStatusTotals: teil.perStatus,
+        gesamtTotals:    teil.gesamt,
+        nachrichtenreferenz: nachrRef,
+        ust, skonto, rechnungssteller,
+        sammelrechnung: '',
+      }).lines);
+
+      for (const i of teil.indizes) {
+        nachrRef += 1;
+        allLines.push(...buildSLLAMessage({
+          prescription: prescriptions[i],
+          rechnung: rechnungFuerGruppe,
+          absender, empfaenger, vkz,
+          nachrichtenreferenz: nachrRef,
+        }).lines);
+      }
+
+      gruppen.push({
+        kostentraegerIk:       ktIk,
+        kartenIk:              teil.kartenIk,
+        einzelRechnungsnummer: einzelNr,
+        prescriptionIndices:   [...teil.indizes],
+        prescriptionCount:     teil.indizes.length,
+        totals:                teil.gesamt,
+      });
+    }
   }
+
+  // Dateisumme — geht in KEIN GES-Segment, sondern nur in die
+  // `abrechnung`-Zeile und den Begleitzettel. Aus den gerundeten
+  // Gruppensummen gebildet, damit Datei- und Gruppenebene zusammenpassen.
+  const gesamt = {
+    brutto:       r2(gruppen.reduce((a, g) => a + g.totals.brutto, 0)),
+    gesZuzahlung: r2(gruppen.reduce((a, g) => a + g.totals.gesZuzahlung, 0)),
+    netto:        r2(gruppen.reduce((a, g) => a + g.totals.netto, 0)),
+  };
 
   // UNB / UNZ wrap
   const unb = buildUNB({
@@ -402,5 +554,12 @@ export function buildDtaFile({
     messageCount: nachrRef,
     byteLength,
     totals: { ...gesamt, prescriptions: prescriptions.length, fallTotals },
+    // Je Gesamtrechnung eine Zeile, in Erzeugungsreihenfolge. Der Aufrufer
+    // braucht das fuer den Begleitzettel: pro Gesamtrechnung einer, und darin
+    // die Karten-IK dieser Gruppe — nicht die des ersten Rezepts.
+    gruppen,
+    davIk:     davIk     || null,
+    kassenart: kassenart || null,
+    sammelrechnung: !!sammelrechnung,
   };
 }

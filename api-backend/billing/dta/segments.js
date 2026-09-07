@@ -30,6 +30,35 @@ export function buildSLGA_FKT({
   ikKrankenkasse = '',           // M for Gesamtrechnungs-SLGA, '' for Sammel
   ikAbsenderDatei,               // = UNB.Absender
 }) {
+  // Kreuzpruefung Feld 2 gegen Feld 5 (Anlage 1 TP5 V21, Kap. 5.5.2, S. 31-32).
+  //
+  // Die beiden Felder sind nicht unabhaengig: entweder ist dies eine
+  // Sammelrechnungs-SLGA (Feld 2 = 'J'), dann DARF Feld 5 nicht belegt sein —
+  // oder es ist eine Gesamtrechnungs-SLGA (Feld 2 leer), dann MUSS Feld 5 die
+  // Karten-IK tragen. Beides zugleich oder beides leer ergibt eine Datei, der
+  // die Annahmestelle nicht ansieht, welcher Kasse die Summen gehoeren.
+  //
+  // Hart statt still, aus demselben Grund wie bei ZHE.Leitsymptomatik weiter
+  // unten: das faellt in Pruefstufe 2, und dort wird die GANZE Datei
+  // abgewiesen, nicht die einzelne Rechnung.
+  if (sammelrechnung !== '' && sammelrechnung !== 'J') {
+    throw new Error(
+      `SLGA.FKT.Sammelrechnung "${sammelrechnung}" ungültig — erlaubt sind nur ` +
+      `"J" (Sammelrechnung) oder "" (Gesamtrechnung). Anlage 1 TP5 V21, Kap. 5.5.2 S. 31.`
+    );
+  }
+  if (sammelrechnung === 'J' && ikKrankenkasse !== '') {
+    throw new Error(
+      `SLGA.FKT: In der Sammelrechnungs-SLGA muss das Feld "IK der Krankenkasse" ` +
+      `LEER bleiben, übergeben wurde "${ikKrankenkasse}". Anlage 1 TP5 V21, Kap. 5.5.2 S. 32.`
+    );
+  }
+  if (sammelrechnung === '' && !ikKrankenkasse) {
+    throw new Error(
+      `SLGA.FKT: In der Gesamtrechnungs-SLGA ist das Feld "IK der Krankenkasse" ` +
+      `ein Mussfeld, es kam leer an. Anlage 1 TP5 V21, Kap. 5.5.2 S. 32.`
+    );
+  }
   return [buildSegment('FKT', [
     vkz,
     sammelrechnung,
