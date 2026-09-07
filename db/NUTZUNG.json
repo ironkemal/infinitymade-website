@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-09-06",
+ "erzeugt": "2026-09-07",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-09-06)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-06)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-07)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 84,
@@ -569,7 +569,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3236,
+     "start": 3418,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1058,7 +1058,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 590,
+     "start": 592,
      "module": [],
      "uiPfad": []
     },
@@ -1084,7 +1084,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1577,
+     "start": 1579,
      "module": [],
      "uiPfad": []
     },
@@ -1884,14 +1884,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 590,
+     "start": 592,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1577,
+     "start": 1579,
      "module": [],
      "uiPfad": []
     }
@@ -2020,7 +2020,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 590,
+     "start": 592,
      "module": [],
      "uiPfad": []
     },
@@ -2053,7 +2053,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3236,
+     "start": 3418,
      "module": [],
      "uiPfad": []
     }
@@ -2179,7 +2179,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 590,
+     "start": 592,
      "module": [],
      "uiPfad": []
     },
@@ -2350,14 +2350,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 590,
+     "start": 592,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1577,
+     "start": 1579,
      "module": [],
      "uiPfad": []
     },
@@ -3092,7 +3092,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 590,
+     "start": 592,
      "module": [],
      "uiPfad": []
     },
@@ -4238,6 +4238,7 @@
     "api-backend/billing/dta/preflight.js",
     "api-backend/billing/dta/preflight.test.js",
     "api-backend/billing/kostentraeger/parser.test.js",
+    "api-backend/lib/rezept-felder.test.js",
     "tools/kostentraeger-annahmestellen-laden.mjs"
    ],
    "register": true,
@@ -4246,6 +4247,13 @@
    "seit": "18.05.2026 · `v11_billing_a2_tables` (Seed: `v14_kostentraeger_mock_seed`) · Echtdaten-Struktur: 06.09.2026 · `kostentraeger_echtdaten_struktur` (Ops #264)",
    "ungeklaert": false,
    "leser": [
+    {
+     "name": "kostentraegerIkAufloesen",
+     "file": "api-backend/lib/rezept-felder.js",
+     "start": 55,
+     "module": [],
+     "uiPfad": []
+    },
     {
      "name": "loadAbrechnung",
      "file": "dashboard.js",
@@ -4269,7 +4277,7 @@
    "schreiber": [],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
-    "api-backend/server.js",
+    "api-backend/lib/rezept-felder.js",
     "dashboard.js"
    ],
    "module": [
@@ -4295,8 +4303,8 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [],
    "register": true,
-   "status": "aktiv (Referenz) — **unvollständig geladen**, siehe unten",
-   "warum": "Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin geht diese Datei?** Der Empfänger ist nicht die Kasse, sondern ihre Datenannahmestelle — und die hängt am Viererschlüssel (Kostenträger, Abrechnungscode, Art der Datenlieferung, Bundesland). Eine einzelne Spalte an `kostentraeger` (`das_ik`) konnte das nie abbilden; deshalb eine eigene Tabelle statt weiterer Spalten. Sie ist damit auch die Antwort auf „hätte eine Spalte gereicht?“ — nein, es ist eine echte 1:n-Beziehung.",
+   "status": "aktiv (Referenz) — **vollständig geladen**, aber mit einem Zeitfehler, siehe unten",
+   "warum": "Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin geht diese Datei?** Der Empfänger ist nicht die Kasse, sondern ihre Datenannahmestelle — und die hängt am Viererschlüssel (Kostenträger, Abrechnungscode, Art der Datenlieferung, Bundesland). Eine einzelne Spalte an `kostentraeger` (`das_ik`) konnte das nie abbilden; deshalb eine eigene Tabelle statt weiterer Spalten. Sie ist damit auch die Antwort auf „hätte eine Spalte gereicht?\" — nein, es ist eine echte 1:n-Beziehung.",
    "seit": "06.09.2026 · `kostentraeger_echtdaten_struktur` (Ops #264)",
    "ungeklaert": false,
    "leser": [],
@@ -4362,7 +4370,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3236,
+     "start": 3418,
      "module": [],
      "uiPfad": []
     }
@@ -4938,7 +4946,7 @@
     {
      "name": "pruefeLeadId",
      "file": "api-backend/server.js",
-     "start": 1235,
+     "start": 1237,
      "module": [],
      "uiPfad": []
     },
@@ -5764,7 +5772,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3236,
+     "start": 3418,
      "module": [],
      "uiPfad": []
     }
@@ -6946,16 +6954,6 @@
      ]
     },
     {
-     "name": "schreibeVerordnung",
-     "file": "module/verordnung-maske.js",
-     "start": 540,
-     "module": [],
-     "uiPfad": [],
-     "ops": [
-      "update"
-     ]
-    },
-    {
      "name": "speichereEinheiten",
      "file": "module/verordnung-einheiten.js",
      "start": 126,
@@ -7040,7 +7038,6 @@
     "module/termin-leistungen.js",
     "module/verordnung-detail.js",
     "module/verordnung-einheiten.js",
-    "module/verordnung-maske.js",
     "module/verordnung-uebersicht.js",
     "module/verordnung-uebersicht.test.js",
     "module/zuzahlung-befreiung.js",
@@ -7090,14 +7087,14 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 3623,
+     "start": 3805,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 590,
+     "start": 592,
      "module": [],
      "uiPfad": []
     },
@@ -7551,7 +7548,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3236,
+     "start": 3418,
      "module": [],
      "uiPfad": []
     }
@@ -7991,7 +7988,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 3818,
+     "start": 4000,
      "module": [],
      "uiPfad": []
     },
@@ -8050,7 +8047,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 590,
+     "start": 592,
      "module": [],
      "uiPfad": []
     },
@@ -8167,7 +8164,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3236,
+     "start": 3418,
      "module": [],
      "uiPfad": []
     },
@@ -8612,14 +8609,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 590,
+     "start": 592,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1577,
+     "start": 1579,
      "module": [],
      "uiPfad": []
     },
@@ -9364,7 +9361,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 590,
+     "start": 592,
      "module": [],
      "uiPfad": []
     },
@@ -9390,7 +9387,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1577,
+     "start": 1579,
      "module": [],
      "uiPfad": []
     },
@@ -9857,7 +9854,7 @@
   {
    "name": "kostentraeger_annahmestellen",
    "sql": 7,
-   "status": "aktiv (Referenz) — **unvollständig geladen**, siehe unten"
+   "status": "aktiv (Referenz) — **vollständig geladen**, aber mit einem Zeitfehler, siehe unten"
   },
   {
    "name": "nummernkreise",

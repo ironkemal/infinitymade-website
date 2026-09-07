@@ -27,9 +27,26 @@ const HIER = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HIER, '..');
 const ECHT_DIR = join(REPO, 'wissensbank', 'gemeinsam', 'kostentraeger');
 
-// Aktuelles Quartal je Kassenart-Datei — VDT-Segment / Herausgeberseite prüfen,
-// siehe wissensbank/REGISTER.md Kart W-01. EK05Q226 (alte Quartalsversion,
-// Ersatzkassen) bewusst ausgelassen — EK05Q426 ist ihr Nachfolger.
+// Gültig-ab je Kassenart-Datei — VDT-Segment / Herausgeberseite prüfen,
+// siehe wissensbank/REGISTER.md Kart W-01.
+//
+// ⛔ ZU LADEN IST DIE HEUTE GÜLTIGE AUSGABE, NICHT DIE NEUESTE.
+// Der Wert rechts ist ein "gültig ab"-Datum. Liegt es in der Zukunft, gehört
+// die Datei noch nicht in die DB — auch dann nicht, wenn sie die neuere ist.
+// Genau das ist am 06.09.2026 passiert: EK05Q426 (vdek, gültig ab 01.10.2026)
+// wurde geladen und EK05Q226 (gültig ab 01.04.2026, also die heute gültige)
+// weggelassen, begründet mit "Q4 ist der Nachfolger von Q2". Bei quartalsweise
+// datierten Stammdaten ist "das Neueste ist richtig" falsch: bis zum Stichtag
+// gilt die alte Ausgabe, und eine Datenannahmestelle aus der falschen Periode
+// heisst im §302 abgewiesene Datei. Nachgemessen wurde der Schaden dieses
+// Falls (Q2 vs. Q4 zeichenweise): Unterschied sind zwei Zeilen bei der TK
+// unter Abrechnungscode 30, unsere Codes 20/71/72 sind identisch — also heute
+// harmlos, aber der Denkfehler bleibt. Details: db/REGISTER.md ->
+// `kostentraeger_annahmestellen`, Abschnitt "ZEITFEHLER".
+//
+// Regel beim nächsten Quartalswechsel: erst am Stichtag umstellen, nicht
+// vorher. Das Script warnt unten von selbst, wenn ein Datum in der Zukunft
+// liegt oder zwei Dateien derselben Kassenart eingetragen sind.
 const ECHT_DATEIEN = {
   'AO05Q326_KE3.txt': '2026-07-27',
   'BK05Q326_KE1.txt': '2026-07-01',
@@ -40,6 +57,41 @@ const ECHT_DATEIEN = {
 };
 
 const ns = (v) => (v === null || v === undefined ? '' : v);
+
+// Zeitprüfung: warnt, bevor eine noch nicht gültige Ausgabe in die DB geht,
+// und wenn zwei Ausgaben derselben Kassenart gleichzeitig eingetragen sind
+// (die beiden Präfixzeichen des Dateinamens sind die Kassenart: AO/BK/IK/BN/LK/EK).
+function stichtageWarnen() {
+  const heute = new Date().toISOString().slice(0, 10);
+  let problem = false;
+
+  for (const [datei, stand] of Object.entries(ECHT_DATEIEN)) {
+    if (stand > heute) {
+      console.warn(`⛔ ${datei} ist erst ab ${stand} gültig (heute ${heute}).`);
+      console.warn('   Bis dahin gehört die vorherige Ausgabe derselben Kassenart in die DB.');
+      console.warn('   Siehe db/REGISTER.md -> kostentraeger_annahmestellen, Abschnitt ZEITFEHLER.');
+      problem = true;
+    }
+  }
+
+  const proKassenart = {};
+  for (const datei of Object.keys(ECHT_DATEIEN)) {
+    const art = datei.slice(0, 2);
+    (proKassenart[art] ||= []).push(datei);
+  }
+  for (const [art, dateien] of Object.entries(proKassenart)) {
+    if (dateien.length > 1) {
+      console.warn(`⚠️  Kassenart ${art}: ${dateien.length} Ausgaben gleichzeitig eingetragen (${dateien.join(', ')}).`);
+      console.warn('   Der UNIQUE-Schlüssel enthält partner_ik, die Stände kollidieren also nicht —');
+      console.warn('   sie stehen nebeneinander und die Routing-Abfrage bekommt zwei Antworten.');
+      console.warn('   Nur zulässig, wenn der Leser datumsbewusst filtert (quelle_stand <= current_date).');
+      problem = true;
+    }
+  }
+
+  if (!problem) console.log('Stichtagsprüfung: in Ordnung (alle Ausgaben heute gültig, eine je Kassenart).');
+  return problem;
+}
 
 function ladeZeilen() {
   const rows = [];
@@ -80,6 +132,11 @@ async function main() {
   const write = process.argv.includes('--write');
   const rows = ladeZeilen();
   console.log(`${rows.length} VKG-Zeilen aus ${Object.keys(ECHT_DATEIEN).length} Dateien geparst.`);
+  const zeitProblem = stichtageWarnen();
+  if (zeitProblem && write && !process.argv.includes('--trotzdem')) {
+    console.error('Abbruch: Stichtagsproblem (siehe oben). Bewusst trotzdem laden: --trotzdem');
+    process.exit(2);
+  }
 
   if (!write) {
     console.log('Nur-Anzeige-Modus. Zum Laden: --write');

@@ -178,30 +178,48 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 
 ## §302 TP5 — Kostenträgerdatei (VERİ, spec değil)
 
-### wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md
+### wissensbank/gemeinsam/kostentraeger/ — 7 dosya (Kostenträgerdatei)
 - **Ne:** Kasa birliklerinin yayımladığı **gerçek Kostenträgerdatei verisi** — kurum kimlik
   kodları (IK), adresler, Datenannahmestelle bağlantıları (VKG) ve DFÜ parametreleri.
   Bir spec değil, spec'in (Anhang 03) tarif ettiği **veri dosyasının kendisi**.
-  Uzantısı `.md` ama içeriği markdown değil, ham EDIFACT (`KOTR:02:001:KV`).
-- **Kapsam:** 7 resmî dosya art arda yapıştırılmış · 22.441 satır · 1.329 KOTR kaydı ·
-  1.043 tekil IK. Segmentler: `IDK` (IK + kasa adı) · `VDT` (geçerlilik) · `FKT` · `VKG`
-  (hangi IK hangi DAS'a bağlı) · `NAM` · `ANS` (adres) · `ASP` (Ansprechpartner) · `UEM` · `DFU`.
+  Uzantı `.txt` ama içerik düzyazı değil, ham EDIFACT (`KOTR:02:001:KV`).
+- **Kapsam:** 7 resmî dosya, **her biri ayrı dosya** · toplam 22.436 satır · 1.329 KOTR
+  kaydı · 1.043 tekil IK · 12.133 VKG. Segmentler: `IDK` (IK + kasa adı) · `VDT` (geçerlilik) ·
+  `FKT` · `VKG` (hangi IK hangi DAS'a bağlı) · `NAM` · `ANS` (adres) · `ASP` · `UEM` · `DFU`.
 - **Sürüm:** dosya başına ayrı — tek bir sürümü yok
 - **Anzuwenden ab:** 01.04.2026 – 01.10.2026 arası, dosya başına
 - **Ne zaman lazım:** Bir Krankenkasse'nin IK numarası, hangi Datenannahmestelle'ye §302
   dosyası gönderileceği veya kasa adresi gerektiğinde lazımdır.
-- **⚠️ Okuma kuralı:** Bu dosya **okunmaz, sorgulanır.** Tamamı ~200k token. Aranan tek bir
-  IK ise `Grep` ile `^IDK+<ik>` aranır; toplu iş gerekiyorsa parser üzerinden DB'ye alınır.
-- **Anahtar bölümler (satır aralığı = hangi kasa birliği):**
-  - 1–2343 · `AO05Q326.KE3` — AOK-Bundesverband (187 kayıt), gültig ab 27.07.2026
-  - 2345–8415 · `BK05Q326.KE1` — Betriebskrankenkassen (365 kayıt), ab 01.07.2026
-  - 8417–10540 · `IK05Q326.KE1` — Innungskrankenkassen (207 kayıt), ab 01.07.2026
-  - 10542–17012 · `BN050526.KE0` — Knappschaft-Bahn-See (37 kayıt), ab 01.05.2026
-  - 17014–17131 · `LK05Q226.KE0` — SVLFG / Landwirtschaftliche KK (11 kayıt), ab 01.04.2026
-  - 17133–19785 · `EK05Q226.KE0` — vdek / Ersatzkassen (261 kayıt), ab 01.04.2026 ✅ bugün geçerli
-  - 19787–22442 · `EK05Q426.KE0` — vdek / Ersatzkassen (261 kayıt), **ab 01.10.2026** ⏳ GELECEK
+- **⚠️ Okuma kuralı:** Bu dosyalar **okunmaz, sorgulanır.** Yedisi birden ~200k token.
+  Aranan tek bir IK ise `Grep` ile `^IDK+<ik>` aranır; toplu iş gerekiyorsa
+  `api-backend/billing/kostentraeger/parser.js` üzerinden DB'ye alınır
+  (`tools/kostentraeger-annahmestellen-laden.mjs`). **Cevap zaten DB'de olabilir:**
+  `kostentraeger` (1.052 satır) ve `kostentraeger_annahmestellen` (11.409 satır) dolu.
+- **Hangi dosyada ne var:**
+
+  | Dosya | Kasa birliği | Kayıt | VKG | gültig ab |
+  |---|---|---|---|---|
+  | `AO05Q326_KE3.txt` | AOK-Bundesverband | 187 | 764 | 27.07.2026 ✅ |
+  | `BK05Q326_KE1.txt` | Betriebskrankenkassen | 365 | 3.234 | 01.07.2026 ✅ |
+  | `IK05Q326_KE1.txt` | Innungskrankenkassen | 207 | 475 | 01.07.2026 ✅ |
+  | `BN050526_KE0.txt` | Knappschaft-Bahn-See | 37 | 6.183 | 01.05.2026 ✅ (aylık) |
+  | `LK05Q226_KE0.txt` | SVLFG / Landwirtschaftliche KK | 11 | 27 | 01.04.2026 ✅ |
+  | `EK05Q226_KE0.txt` | vdek / Ersatzkassen | 261 | 724 | 01.04.2026 ✅ bugün geçerli |
+  | `EK05Q426_KE0.txt` | vdek / Ersatzkassen | 261 | 726 | **01.10.2026** ⏳ GELECEK |
+
+- **⛔ `EK05Q426_KE0.txt` 01.10.2026'ya kadar koda/DB'ye girmemeliydi** — Q2 ile IK kümesi
+  aynı (261 = 261) ama içerik farklı; erken yükleme o tarihe kadar **yanlış
+  Datenannahmestelle'ye yönlendirme** demektir.
+  ⚠️ **Ama 06.09.2026'da tam da bu yapıldı:** `kostentraeger_annahmestellen`'de bugün
+  Q4 yüklü, bugün geçerli Q2 yüklü değil. Bugünkü zarar ölçüldü ve **yok** (fark iki
+  satır, ikisi de Abrechnungscode 30 altında; bizim 20/71/72 kodlarımız aynı), ama
+  madde açık. Gerekçe, ölçüm ve çıkış yolları: REGISTER W-01 açık madde 6.
+- **Geçmiş:** 06.09.2026'ya kadar yedisi tek dosyadaydı
+  (`Krankenkassen IK nummern .md`, 22.441 satır). Bölündü, ham dosya 07.09.2026'da silindi
+  (bölme byte-exact doğrulandı — kanıt REGISTER W-01). **Eski satır aralığı atıfları
+  geçersizdir**; artık dosya adıyla aranır.
 - **Sicil kaydı:** `wissensbank/REGISTER.md` → **W-01** (Herkunft, tazelik yordamı, format kararı,
-  bütünlük doğrulaması). Format spec'i: `Anhang_03_Anlage_1_TP5_V10_20260414.txt`.
+  bütünlük + bölme doğrulaması). Format spec'i: `Anhang_03_Anlage_1_TP5_V10_20260414.txt`.
 
 ## §302 TP5 — Yan belgeler, düzeltme usulü, değişiklik geçmişi
 

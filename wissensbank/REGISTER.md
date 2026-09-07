@@ -5,7 +5,7 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 05.09.2026
+> İlk kurulum: 05.09.2026 · Son güncelleme: 07.09.2026 (W-01 zinciri kapandı, W-A08 kapandı)
 
 ---
 
@@ -17,7 +17,7 @@
 | Arşivdeki PDF | 47 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (`Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27) |
 | Kaynak→kod zinciri kayıtlı | 10 |
-| Tam kimlik kartı yazılmış kaynak | 1 (**W-01** Kostenträgerdatei) |
+| Tam kimlik kartı yazılmış kaynak | 1 (**W-01** Kostenträgerdatei — zincir uçtan uca bağlı, 2 açık madde) |
 | **Herkunft (indirme URL'i) kayıtlı** | **2 / 34** ← asıl boşluk, W-A01 |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
 | Çeyreklik ritmi olan kaynak | 1 (Kostenträgerdatei — W-01, §1 takviminde) |
@@ -65,7 +65,7 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 
 | Tarih | Ne olur | Etkilenen zincir | Durum |
 |---|---|---|---|
-| **01.10.2026** | Kostenträgerdatei **Q4/2026** yürürlüğe girer. Bugün elimizdeki `EK05Q426KE0` (vdek) o gün GEÇERLİ olur, `EK05Q226KE0` DÜŞER. Diğer Kassenart'lar Q4 yayımlarsa onlar da o gün geçerlidir | Z-09 → W-01 → `kostentraeger` tablosu | ⏳ kayıtlı |
+| **01.10.2026** | Kostenträgerdatei **Q4/2026** yürürlüğe girer. `EK05Q426KE0` (vdek) o gün GEÇERLİ olur, `EK05Q226KE0` DÜŞER. Diğer Kassenart'lar Q4 yayımlarsa onlar da o gün geçerlidir. ⛔ **Ayrıca:** DB'de bugün zaten Q4 yüklü (sürüm zamanlama hatası, W-01 madde 6) — bu tarih o maddeyi de kapatır | Z-09 → W-01 → `kostentraeger_annahmestellen` | ⏳ kayıtlı, **madde 6 buna bağlı** |
 | **her çeyrek başı** (01.01 / 01.04 / 01.07 / 01.10) | Kostenträgerdatei güncellenir; yayın **en geç çeyrek başından 4 hafta önce** (Anhang 03 §2, satır 185-187). Yani kontrol günü: **03.03 · 03.06 · 03.09 · 03.12** | Z-09 | 🔁 tekrar eden, **elle** — W-01'deki kontrol yordamı |
 | **01.01.2027** | HPNR-Verzeichnis 2026 penceresi kapanır, 2027 sürümü gelir | Z-05 → `podologie_positions.js`, `physio_positions.js` | ⏳ hazırlık yok |
 | **01.02.2027** | **Anlage 3 TP5 V21 → V22** yürürlüğe girer | Z-02 → `anlage3_v22.js` (dosya hazır, açılmayı bekliyor) | ⏳ dosya var, geçiş planı yok |
@@ -171,28 +171,43 @@ Repoda hiçbir import/seed script'i yok. Tablo dolu ama nasıl dolduğu yazılı
 FORMAT SPEC:
 wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414.pdf/.txt   (V10, ab 01.02.2027)
 
-VERİ (dış kaynaklı, resmî):
-wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md
-  = 7 ayrı Kostenträgerdatei tek dosyaya yapıştırılmış · 22.441 satır · 682 KB
-  = 1.329 KOTR kaydı · 1.043 tekil IK · 12.133 VKG (Verknüpfung) satırı
-  → api-backend/billing/kostentraeger/parser.js  ⚠ HÂLÂ MOCK ile çalışıyor
-  → DB kostentraeger (ik, name, das_ik, payer_type, region, valid_from/to)  ⚠ mock dolu
-  ↔ DB krankenkassen.ik_number (93 kasadan 12'si dolu, kaynağı belirsiz) — Ops kartı #264
+VERİ (dış kaynaklı, resmî) — 7 ayrı dosya, her biri kendi sürümü:
+wissensbank/gemeinsam/kostentraeger/{AO05Q326_KE3, BK05Q326_KE1, IK05Q326_KE1,
+                                     BN050526_KE0, LK05Q226_KE0,
+                                     EK05Q226_KE0, EK05Q426_KE0}.txt
+  = 22.436 satır · 660.087 bayt · 1.329 KOTR kaydı · 1.043 tekil IK · 12.133 VKG satırı
+  → api-backend/billing/kostentraeger/parser.js       ✅ gerçek dosyalara karşı koşuyor
+  → api-backend/billing/kostentraeger/parser.test.js  ✅ 1.329 / 1.043 regresyon testi
+  → tools/kostentraeger-annahmestellen-laden.mjs      (tekrarlanabilir yükleyici, --write)
+  → DB kostentraeger                  1.052 satır (1.043 gerçek IK + 9 mock_unbestaetigt)
+  → DB kostentraeger_annahmestellen  11.409 satır (6 dosyanın VKG'si — EK Q2 hariç)
+  ↔ DB krankenkassen.ik_number (94 kasadan 76'sı dolu) — Ops kartı #264
 ```
-⚠️ **Zincirin ilk halkası elimizde, ikinci halkası hâlâ uydurma.** `parser.js` başlığı
-*"We don't have access to a live .kotr file yet"* diyor — bu cümle 05.09.2026'dan beri
-yanlış. Veri geldi, parser haberdar değil.
+✅ **Zincir 06.09.2026'da uçtan uca kapandı** (commit `cceb528`). Parser artık mock'a
+değil gerçek veriye dayanıyor; VKG alan sırası Anhang 03 V10 §7.2'ye göre düzeltildi —
+eski 3 alanlı hâli yanlış pozisyonlara eşliyordu (`fields[0]` "art_datenlieferung"
+sanılıyordu, gerçekte "verknüpfungsart"), hiç gerçek veriye karşı koşmadığı için
+fark edilmemişti. Bütünlük iddiası artık `parser.test.js` içinde **regresyon testi**:
+7 dosya okunur, 1.329 kayıt / 1.043 tekil IK sayılır — dosyalar değişirse test düşer.
+
+⛔ **AMA: DB'de bugün YANLIŞ SÜRÜM yüklü.** `kostentraeger_annahmestellen` 6 dosyanın
+VKG'sini taşır (12.133 − 724 = 11.409), ama Ersatzkassen tarafında yüklü olan
+**`EK05Q426_KE0`** — yani **01.10.2026'da yürürlüğe girecek olan**. Bugün geçerli olan
+`EK05Q226_KE0` yüklenmedi. Gerekçe olarak *"Q4, Q2'nin halefi"* yazılmıştı — bu,
+**"en yeni her zaman doğrudur"** düşünce hatasıdır ve çeyreklik tarihli Stammdaten'de
+yanlıştır. → W-01 açık madde 6.
 
 **Format uyumu doğrulandı (05.09.2026):** dosyaların mesaj kimliği `KOTR:02:001:KV`,
 Anhang 03 V10 satır 634'ün beklediği değerin aynısı. Yani V10 spec'i bu dosyaları okumak
 için yapı olarak kullanılabilir. ⚠ Ama V10 **01.02.2027'de** yürürlüğe giriyor; bugün
 geçerli olan (bir önceki) Anhang 03 sürümü arşivde **yok** → W-01 açık maddesi.
 
-⚠️ **05.09.2026'da bulundu:** `wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md` aslında bir markdown
-dosyası **değil** — EDIFACT `KOTR:02:001:KV` formatında **gerçek Kostenträgerdatei**.
-Başlığı `UNB+UNOC:3+109910000+999999999+260701:1230` (gönderen IK 109910000, tarih
-01.07.2026). Sicil kurulana kadar hiçbir yerde kayıtlı değildi ve `parser.js` mock ile
-çalışıyordu — **veri elimizdeydi, kimse bilmiyordu.** → W-A08.
+**Buluş notu (05.09.2026) — kapandı, tarihsel kayıt olarak duruyor:** o gün
+`kostentraeger/Krankenkassen IK nummern .md` diye tek parça duran dosyanın aslında markdown
+**olmadığı** anlaşıldı — EDIFACT `KOTR:02:001:KV` formatında **gerçek Kostenträgerdatei**'ydi.
+Sicil kurulana kadar hiçbir yerde kayıtlı değildi ve `parser.js` yanı başında mock ile
+çalışıyordu — **veri elimizdeydi, kimse bilmiyordu.** 06.09.2026'da 7 parçaya bölündü,
+07.09.2026'da ham dosya silindi. → W-A08 ✅ kapalı.
 
 ### Z-10 · PLZ → Bundesland ✅ **altın standart**
 ```
@@ -222,7 +237,7 @@ yeniden araştırılıyor demektir.
 | `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218` | V22 | 01.02.2027 | ⏳ GELECEK | Z-02 | ⬜ |
 | `wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414` | V10 | 01.02.2027 | ⏳ GELECEK | Z-09 | ⬜ |
 | `wissensbank/_archiv/Anhang_05_Anlage_1_TP5_20260401` | 1.0 | 01.04.2026 | 🚫 KAPSAM DIŞI (Rettungsdienst) | — | ⬜ |
-| `wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md` — **veri, spec değil** | 7 dosya, ayrı ayrı | 01.04–01.10.2026 | ✅ 6 GEÇERLİ + ⏳ 1 GELECEK | Z-09 | **✅ kart W-01** |
+| `wissensbank/gemeinsam/kostentraeger/*.txt` (7 dosya) — **veri, spec değil** | 7 dosya, ayrı ayrı | 01.04–01.10.2026 | ✅ 6 GEÇERLİ + ⏳ 1 GELECEK | Z-09 | **✅ kart W-01** |
 | `wissensbank/gemeinsam/302-tp5/…Anhang_04b…xsd` + `SLP_BAS_1.2.0.xsd` | — | — | 📎 REFERANS (XML şema) | — | dosya adında ✅ |
 
 ### §302 — yan belgeler
@@ -274,8 +289,11 @@ yeniden araştırılıyor demektir.
 
 ### W-01 · Kostenträgerdatei Sonstige Leistungserbringer (TP05) — IK/DAS yönlendirme verisi
 
-- **Dosya:** `wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md`
-  (7 resmî dosya tek dosyada · 22.441 satır · 682.533 bayt · türev yok)
+- **Dosya:** `wissensbank/gemeinsam/kostentraeger/` — **7 ayrı `.txt`**, yayıncının kendi
+  adlarıyla (`AO05Q326_KE3` · `BK05Q326_KE1` · `IK05Q326_KE1` · `BN050526_KE0` ·
+  `LK05Q226_KE0` · `EK05Q226_KE0` · `EK05Q426_KE0`) · 22.436 satır · 660.087 bayt · türev yok
+  • 06.09.2026'da bölündü; 07.09.2026'da ham tek parça `Krankenkassen IK nummern .md`
+  **silindi** (W-A08 (c) — bölünme byte-exact doğrulandı, aşağıya bak)
 - **Herkunft:** https://www.gkv-datenaustausch.de/leistungserbringer/sonstige_leistungserbringer/kostentraegerdateien_sle/kostentraegerdateien.jsp
   (eski sürümler: `…/kostentraegerdateien_archiv.jsp`) — login/lisans yok, açık indirme
   · **İndirme:** 05.09.2026 · **İndiren:** Kemal (tarayıcıdan dosya indirilemedi, içerik kopyala-yapıştır ile alındı)
@@ -283,8 +301,10 @@ yeniden araştırılıyor demektir.
 - **Sürüm / Stand:** tek bir sürümü **yok** — 6 kasa birliğinin 7 ayrı dosyası, her birinin kendi tarihi (tablo aşağıda)
 - **Anzuwenden ab:** dosya başına ayrı · **Düşer:** her dosya kendi Kassenart'ının bir sonraki sürümüyle
 - **Durum:** 6 dosya ✅ **GEÇERLİ** · 1 dosya ⏳ **GELECEK** (vdek Q4/2026, ab 01.10.2026)
-- **Neyi besler:** Z-09 → `api-backend/billing/kostentraeger/parser.js` → DB `kostentraeger`
-  ↔ DB `krankenkassen.ik_number` (Ops kartı #264). **Bugün hiçbiri beslenmiyor — parser mock ile çalışıyor.**
+- **Neyi besler:** Z-09 → `parser.js` (+ `parser.test.js`) → `tools/kostentraeger-annahmestellen-laden.mjs`
+  → DB `kostentraeger` (1.052 satır) + DB `kostentraeger_annahmestellen` (11.409 satır
+    — ⛔ Ersatzkassen tarafında **yanlış sürüm**, bkz. açık madde 6)
+  ↔ DB `krankenkassen.ik_number` 76/94 (Ops #264). **06.09.2026'dan beri zincirin tamamı gerçek veriyle besleniyor.**
 - **Tazelik kontrolü:** ⛔ otomatik yok. Elle: yukarıdaki sayfa açılır, oradaki satırların
   "gültig ab" tarihleri aşağıdaki tabloyla karşılaştırılır. **Kontrol günleri: 03.03 · 03.06 ·
   03.09 · 03.12** — Anhang 03 §2 (satır 185-187): *"Die Aktualisierung der Kostenträgerdatei
@@ -295,8 +315,10 @@ yeniden araştırılıyor demektir.
 - **Yeniden dağıtım:** serbest — kullanıcı kararı 05.09.2026 (W-A07 altında): *"public kalsın
   sıkıntı yok, zaten public bilgiler bunlar."* Kasa IK'ları, adresleri ve DAS bağlantıları
   resmî ve kamuya açık veridir; hasta verisi yok (yalnız kurumsal Ansprechpartner adları var).
-- **Yedek:** ✅ git izliyor (commit `d4982fb`, 05.09.2026). `.gitignore` yalnız `*.pdf` kapatıyor,
-  bu dosya metin. Yayın yüzeyi kapalı: `.vercelignore:82` → `wissensbank/`.
+- **Yedek:** ✅ git izliyor (ilk giriş `d4982fb` 05.09.2026, bölme `cceb528` 06.09.2026).
+  `.gitignore` yalnız `*.pdf` kapatıyor, bu dosyalar metin. Silinen ham `.md`'nin içeriği
+  git geçmişinde duruyor (`git show d4982fb:...`), ayrıca 7 parçanın toplamı birebir aynı.
+  Yayın yüzeyi kapalı: `.vercelignore:82` → `wissensbank/`.
 
 #### İçindeki 7 dosya
 
@@ -341,6 +363,27 @@ tarihine göre olmalı, dosya sırasına göre değil.
 | Mesaj kimliği | `KOTR:02:001:KV` — Anhang 03 V10 satır 634'ün beklediği değerin aynısı ✅ |
 | EDIFACT dışı / bozuk satır | **yok** (yalnız 6 boş ayraç satırı) ✅ |
 
+#### Bölme doğrulaması (07.09.2026 — byte-exact, YZ kullanılmadı)
+
+Ham tek parça dosya silinmeden önce 7 parça ona karşı doğrulandı. Kanıt YZ değil,
+ölçüm — satır sonu (CRLF) ve 6 boş ayraç satırı normalize edilerek:
+
+| Kontrol | Ham dosya | 7 parça birleştirilmiş | Sonuç |
+|---|---|---|---|
+| Satır | 22.436 | 22.436 | ✅ |
+| Bayt | 660.087 | 660.087 | ✅ |
+| MD5 | `661e2602a2bd6976ef6570f18292e8bb` | `661e2602a2bd6976ef6570f18292e8bb` | ✅ **birebir aynı** |
+| `diff` çıktısı | — | boş | ✅ |
+
+Parça başına segment sayıları da tek tek tutuyor (UNB/UNZ 1'er; UNH=UNT=IDK: 187 · 365 ·
+207 · 37 · 11 · 261 · 261 = **1.329**; VKG: 764 · 3.234 · 475 · 6.183 · 27 · 724 · 726 =
+**12.133**; UNA 7 dosyanın 6'sında — `BN050526`'da orijinalinde de yok).
+
+Ayrıca her parça **doğru adlandırılmış**: dosya adı, dosyanın kendi UNB segmentindeki
+Dateiname referansıyla ve Absender-IK/tarih ile birebir eşleşiyor (ör. `LK05Q226_KE0.txt`
+→ `UNB+UNOC:3+109908701+999999999+250826:1030+00001++LK05Q226KE0`). Yani içerik yalnız
+eksiksiz değil, **doğru dosyaya** düşmüş.
+
 ⚠️ **Bu bire-bir indirme değil, kopyalamadır.** Orijinal dosyalar segment akışı olarak gelir;
 elimizdeki kopyada her segment ayrı satırda ve 4. dosyanın (`BN050526`) `UNA` satırı kaybolmuş
 (6 UNA / 7 UNB). Sonuç: **checksum ile orijinale karşı doğrulama yapılamaz.** Bir Absetzung
@@ -360,21 +403,55 @@ itirazında orijinaline başvurulacaksa dosyalar yayıncıdan yeniden indirilmel
 
 #### W-01 açık maddeleri
 
-1. **`parser.js` mock ile çalışıyor ve başlığı artık yalan söylüyor** — `parser.js:7-8`:
-   *"We don't have access to a live .kotr file yet (requires ITSG portal account + Echt-Schluessel)."*
-   Yanlış: dosya elimizde, ITSG hesabı gerekmedi, indirme açık. `parser.js:14` de *"Drop it into
-   /handbücher"* diyor — o klasör 05.09.2026'da kaldırıldı. → `builder`'a iş, sahipsiz kalmasın.
-2. **Mock ile gerçek veri karşılaştırılmadı.** `KOSTENTRAEGER_MOCK` 15 kasa, elle toplanmış,
-   `das_ik` değerleri web aramasından geliyor (`parser.js:39-43` bir IK çakışmasını zaten itiraf
-   ediyor, KKH bilerek çıkarılmış). Dosyada 1.043 tekil IK var. **Çelişen her satırda dosya
-   haklıdır, mock değil.**
-3. **Bugün geçerli Anhang 03 sürümü arşivde yok.** Elimizdeki V10 01.02.2027'de yürürlüğe giriyor.
-   Mesaj kimliği aynı olduğu için yapı riski düşük, ama Schlüsselverzeichnis (Art der
-   Datenlieferung, DFÜ-Protokoll) değişmiş olabilir. → arşiv sayfasından bir önceki sürüm
-   indirilir, `gkv-302` teyit eder.
-4. **Dosya tek parça ve adı yanlış** — bölme/adlandırma önerisi W-A08'de.
-5. **`krankenkassen.ik_number` (93 kasadan 12'si dolu) kaynağı belirsiz.** Gerçek dosya geldiğine
-   göre bu 12 değer artık doğrulanabilir; doğrulanamayan **silinir**, tahmin bırakılmaz. → Ops #264.
+1. ✅ **KAPANDI 06.09.2026 (commit `cceb528`).** `parser.js` artık gerçek dosyalara karşı
+   koşuyor. Yalan söyleyen başlık düzeltildi (artık *"Seit 05.09.2026 liegt uns die echte
+   Datei vor … KEIN ITSG-Portal-Zugang nötig"*), ölü `/handbücher` yolu kaldırıldı. VKG alan
+   sırası Anhang 03 V10 §7.2'ye (s. 18) göre düzeltildi ve gerçek bir satıra karşı doğrulandı
+   (`parser.js:173-181`). Kabul ölçütü — **1.329 kayıt / 1.043 tekil IK** — artık tek seferlik
+   bir kontrol değil, `parser.test.js`'te **kalıcı regresyon testi** (07.09.2026'da yeniden
+   koşturuldu: 11/11 geçti).
+2. ✅ **KAPANDI 06.09.2026.** Mock gerçek veriye karşı tutuldu; DB `kostentraeger` bugün
+   **1.052 satır** — 1.043'ü dosyadan gelen gerçek IK, kalan 9 satır `mock_unbestaetigt`
+   olarak **işaretli** duruyor (silinmedi, ama artık otorite de değil).
+   ↳ **Kalan (küçük, `offen`):** `KOSTENTRAEGER_MOCK` sabiti kodda duruyor ve
+   `routeToDatenannahmestelle()` hâlâ onu okuyor. Zincirin gerçek halkası DB; kod bir gün
+   DB'ye geçmelidir. → Ops #264 altında, `builder`.
+3. **`offen` — bugün geçerli Anhang 03 sürümü arşivde yok.** Elimizdeki V10 01.02.2027'de
+   yürürlüğe giriyor. Mesaj kimliği aynı olduğu için yapı riski düşük (ve VKG alan sırası
+   artık gerçek veriyle doğrulandı, yani V10 bu dosyaları doğru tarif ediyor), ama
+   Schlüsselverzeichnis (Art der Datenlieferung, DFÜ-Protokoll) değişmiş olabilir. → arşiv
+   sayfasından bir önceki sürüm indirilir, `gkv-302` teyit eder. **Bu madde açık kalan tek
+   veri maddesidir.**
+4. ✅ **KAPANDI 07.09.2026.** Dosya 7 parçaya bölündü (06.09.2026) ve ham tek parça
+   `Krankenkassen IK nummern .md` silindi (07.09.2026). Kanıt: yukarıdaki bölme
+   doğrulaması tablosu — MD5 birebir aynı. Detay: W-A08 (c).
+5. ✅ **KAPANDI 06.09.2026 (Ops #264).** `krankenkassen.ik_number` artık **76/94** dolu
+   (önceden 12/93). 4 yanlış değer gerçek dosyaya karşı düzeltildi, 59 yeni değer isim
+   eşleşmesiyle dolduruldu; ayrıntı ve eşleştirme yöntemi `db/REGISTER.md`'de (`db-ustasi`
+   sahibi — sicil tarafı kapandı, veri kalitesi takibi orada sürüyor).
+   ↳ **Kalan (`offen`, db-ustasi'de):** 18 kasanın IK'ı hâlâ boş — dosyada isim eşleşmesi
+   bulunamayanlar. **Tahmin yazılmadı**, boş bırakıldı (doğru davranış).
+6. ⛔ **`offen` — SÜRÜM ZAMANLAMA HATASI: DB'ye gelecek sürüm yüklendi** (06.09.2026'da
+   oluştu, 07.09.2026'da `db-ustasi` ölçtü). `kostentraeger_annahmestellen` Ersatzkassen
+   satırlarını **`EK05Q426_KE0`**'dan alıyor — o dosya **01.10.2026'da** yürürlüğe giriyor.
+   Bugün geçerli olan `EK05Q226_KE0` yüklenmedi.
+   **Bu, bu kartın kendi yazılı kuralının ihlalidir** (yukarıda: *"⛔ 7. dosya bugün koda/DB'ye
+   girmez"*). Kural sicilde duruyordu ama yükleyiciye geçmemişti — **sicilin kendi başına
+   yetmediği**, kuralın koda kapı olarak konması gerektiği bir örnek.
+   · **Bugünkü zarar: yok, ölçüldü.** Q2 ile Q4 satır satır karşılaştırıldı (724 ↔ 726):
+   fark **tam iki satır**, ikisi de TK (`101575519`) ve ikisi de **Abrechnungscode 30**
+   altında. Bizim kodlarımız **20 / 71 / 72** için iki sürüm **karakter karakter aynı**.
+   Yani podoloji/Heilmittel yolu bugün doğru çalışıyor — **şansla**, tasarımla değil.
+   · **Neden yine de kapatılmıyor:** bir sonraki çeyrek teslimatı farkı pekala 71/72'ye
+   koyabilir; o zaman kimse yeniden ölçmez. Ayrıca tablo henüz hiçbir kod tarafından
+   okunmuyor (`codeStumm`) — yani düzeltmenin **şu an maliyeti en düşük.**
+   · **Çıkış (ikisinden biri, karar `gkv-302` + `builder`):** ya `EK05Q226_KE0` yüklenir ve
+   `EK05Q426_KE0` 01.10.2026'ya kadar çıkarılır; ya da ikisi birden tutulup sorgu tarih
+   duyarlı yapılır (`quelle_stand <= current_date` + bir `gueltig_bis` kolonu).
+   ⏳ **01.10.2026'da bu madde kendiliğinden çözülür** — o tarihten sonra yüklü olan sürüm
+   zaten doğru sürümdür; yalnız `EK05Q226`'nın uzak tutulması yeter. §1 takviminde kayıtlı.
+   Ayrıntılı ölçüm ve DB tarafı: `db/REGISTER.md` → `kostentraeger_annahmestellen`,
+   **ZEITFEHLER** bölümü (sahibi `db-ustasi`).
 
 ---
 
@@ -441,10 +518,10 @@ zaten arşivde — cevabın bir kısmı orada.
 > `downloadbedingungen-2025` metni var) ve GKV Lesefassung'ları hâlâ `offen` — onlar için
 > `legal-de` sorusu duruyor.
 
-### W-A08 · Kostenträgerdatei kayıtsızdı — **kayıt açıldı, bölme/adlandırma açık**
+### W-A08 · Kostenträgerdatei kayıtsızdı — ✅ **KAPANDI 07.09.2026**
 
-05.09.2026'da bulundu: `wissensbank/gemeinsam/kostentraeger/Krankenkassen IK nummern .md`
-gerçek, resmî Kostenträgerdatei verisi — 7 dosya, 1.329 kayıt. `parser.js` bu dosya dururken
+05.09.2026'da bulunmuştu: o zaman `kostentraeger/Krankenkassen IK nummern .md` adıyla tek
+parça duran dosya, gerçek resmî Kostenträgerdatei verisiydi — 7 dosya, 1.329 kayıt. `parser.js` bu dosya dururken
 mock ile çalışıyordu. **Sicilin niye kurulduğunun canlı kanıtı:** veri indirilmiş, elde, ama
 kayıtsız olduğu için yok sayılmış.
 
@@ -452,18 +529,25 @@ kayıtsız olduğu için yok sayılmış.
   Doğru klasör: bu veri **tek bir Fachbereich'a ait değil** — podoloji, physio, ergo ve logo
   aynı kasa/DAS yönlendirmesini kullanır, ölçüt `README.md`'deki "kaç Fachbereich" sorusu.
 - ✅ (d) Herkunft, sürüm, geçerlilik ve tazelik yordamı yazıldı → **kart W-01**, takvim §1.
-- ⬜ (b) `parser.js` gerçek dosyaya karşı koşturulmadı. Kabul ölçütü W-01'de: 1.329 kayıt /
-  1.043 tekil IK + 5 rastgele kayıt elle karşılaştırması.
-- ⬜ (c) **Bölme + adlandırma — kullanıcı kararı bekliyor (öneri):**
+- ✅ (b) `parser.js` gerçek dosyalara karşı koşturuldu (06.09.2026, commit `cceb528`).
+  Kabul ölçütü **1.329 kayıt / 1.043 tekil IK** tutturuldu ve tek seferlik kontrol olarak
+  bırakılmadı — `parser.test.js` içine regresyon testi olarak kondu (7 dosyayı okur, sayar).
+  Ayrıca VKG alan sırası gerçek bir satıra karşı doğrulandı ve bir **hata bulundu**: eski
+  3 alanlı eşleme yanlış pozisyonlara yazıyordu. Mock'la hiç fark edilemezdi — bu madde
+  neden açıldıysa tam olarak onun kanıtı.
+- ✅ (c) **Bölme + adlandırma yapıldı** — 7 parça, aşağıdaki tabloda önerilen adlarla,
+  06.09.2026. Ham tek parça **07.09.2026'da silindi**; önce byte-exact doğrulandı
+  (MD5 `661e2602…`, 22.436 satır / 660.087 bayt, `diff` boş — kanıt tablosu W-01'de).
+  Silinen dosyanın içeriği ayrıca git geçmişinde duruyor. Uygulanan öneri:
 
-  **Neden bölünmeli:** tek dosya = tek sürüm demektir, ama içinde **7 ayrı sürüm** var ve
+  **Neden bölündü:** tek dosya = tek sürüm demektir, ama içinde **7 ayrı sürüm** var ve
   bunlardan biri (`EK05Q426`) bugün **GELECEK** statüsünde. Tek parça hâlde bu ayrım sicilde
   yazılabilir ama dosya sisteminde ve git'te görünmez; yükleyici de ayıramaz. Ayrıca çeyreklik
   güncelleme **dosya başına** gelir (AOK Nachtrag 3'te, SVLFG hâlâ Ağustos 2025'te) — tek blob
   her güncellemede baştan yapıştırılmak zorunda kalır ve `git diff` hangi kasanın değiştiğini
   söyleyemez.
 
-  **Öneri:** `wissensbank/gemeinsam/kostentraeger/` altında 7 ayrı dosya, yayıncının kendi
+  **Uygulanan bölme:** `wissensbank/gemeinsam/kostentraeger/` altında 7 ayrı dosya, yayıncının kendi
   adıyla, `.txt` uzantısıyla (arşivin okunur-metin kuralı; `.md` yanlış çünkü markdown değil,
   ham `.KEv` uzantısı Windows'ta ve git'te sorun çıkarır):
 
@@ -479,13 +563,26 @@ kayıtsız olduğu için yok sayılmış.
 
   `_` ayracı bilinçli: yayıncının 8+3 adı **birebir geri kurulabilir** (`_` öncesi = dosya adı,
   sonrası = uzantı), ad tek bir noktaya sahip olduğu için araçlar şaşırmaz. Bölme mekaniktir —
-  satır aralıkları yukarıda, kesme noktaları `UNB`/`UNZ` sınırları. **Ham dosya bölündükten
-  sonra silinir** (kopyası olmayan tek nüsha değil: 7 parça toplamı birebir aynı içerik).
+  satır aralıkları yukarıda, kesme noktaları `UNB`/`UNZ` sınırları.
+
+  ✅ Hepsi uygulandı. **Kazanım ölçüldü:** `EK05Q426_KE0.txt` artık dosya sisteminde ve
+  git'te tek başına duruyor, yani "01.10.2026'ya kadar yükleme" kuralı sicilde yazılı
+  olmakla kalmıyor — `tools/kostentraeger-annahmestellen-laden.mjs` onu dosya adıyla
+  ayırabiliyor (`ECHT_DATEIEN` listesi). Tek blob hâlindeyken bu mümkün değildi.
 
 ⚠️ Depo public: W-A07 altındaki kullanıcı kararıyla bu veri için yeniden dağıtım sorusu
 **kapandı** (kamuya açık kurum verisi, hasta verisi yok).
 
 ### ✅ Kapalı / doğrulanmış
+
+- **W-01 zinciri (Z-09) artık gerçek veriyle çalışıyor** — 06.09.2026 (`cceb528`) + 07.09.2026.
+  Kaynak → parser → test → yükleyici → iki DB tablosu, hepsi dolu ve tekrarlanabilir.
+  Sicilin var oluş sebebinin en net kanıtı: veri 05.09.2026'da kayıtsız halde elimizdeydi,
+  `parser.js` yanında mock ile çalışıyordu ve VKG alan sırası **yanlıştı** — hiçbir mock bunu
+  gösteremezdi. Kayıt açıldı, hata iki gün içinde bulundu.
+  ⚠️ **"Kapandı" demiyoruz:** zincir bağlı ama iki maddesi açık — bugün geçerli Anhang 03
+  sürümü arşivde yok (madde 3) ve DB'ye **gelecek sürüm** yüklendi (madde 6). İkincisi
+  bu sicilin kendi kuralının ihlali: kural yazılıydı, ama yalnız sicilde duruyordu.
 
 - **Yayın yüzeyi temiz.** Eski üç klasör 27.08.2026'da `.vercelignore`'a alınmıştı; taşımadan
   sonra yerlerini `wissensbank/` tek satırı aldı (05.09.2026). `Podoloji/` de listede kalmaya
