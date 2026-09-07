@@ -19,7 +19,8 @@ import { verordnungsartFuer, heilmittelBereichFuer } from '../dta/zhe-kennzeiche
 // Aus den Katalogen wird hier nur noch gebraucht, was nichts mit Geld zu tun hat.
 import { resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positions.js';
 import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
-import { renderBegleitzettel } from '../pdf/begleitzettel.template.js';
+import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
+import { ladeAnnahmestelle, annahmestelleFehlt } from '../kostentraeger/annahmestelle.js';
 import { parseZaaFile } from '../zaa/parser.js';
 import { logAccess } from '../../_lib/access-log.js';
 import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js';
@@ -143,6 +144,55 @@ function legsFuerSector(sector) {
 // stillschweigend den falschen Katalogausschnitt und damit den falschen Preis.
 function abrechnungscodeFuer(sector) {
   return abrechnungscodeAusLegs(legsFuerSector(sector));
+}
+
+/**
+ * Begleitzettel zur fertigen DTA-Datei — EINER JE GESAMTRECHNUNG.
+ *
+ * Eine Datei kann mehrere Gesamtrechnungen enthalten (je Karten-IK eine, siehe
+ * dta/builder.js). Jede ist eine eigene Rechnung mit eigener Nummer und eigenen
+ * Summen; die Urbelege gehen getrennt in eigene Umschläge. Ein einziger Zettel
+ * über die ganze Datei würde jeder Kasse die Summen der anderen zeigen — und
+ * genau die Zuordnung unmöglich machen, für die der Zettel da ist.
+ *
+ * @param {Array} belege  Belegzeilen in derselben Reihenfolge wie
+ *                        `prescriptions` — die Gruppen zeigen per Index dorthin.
+ */
+async function baueBegleitzettel({
+  dta, belege, kk, kostentraegerIk, now, praxis, sammelRechnungsnummer,
+}) {
+  const gruppen = dta.gruppen || [];
+
+  // Name zur Karten-IK. Die Karten-IK ist NICHT der Kostenträger: sie steht auf
+  // der Versichertenkarte und kann eine Regional-/Filial-IK derselben Kasse sein.
+  const kartenIks = [...new Set(gruppen.map(g => g.kartenIk).filter(Boolean))];
+  const { data: kartenKassen } = kartenIks.length
+    ? await supabase.from('kostentraeger').select('ik, name').in('ik', kartenIks)
+    : { data: [] };
+  const nameVonIk = new Map((kartenKassen || []).map(k => [k.ik, k.name]));
+
+  const blaetter = gruppen.map(g => ({
+    praxis,
+    abrechnung: {
+      dateiname: dta.filename,
+      // Wie in SLGA.REC: Sammel- und Einzelnummer zusammen. Die
+      // Sammelrechnungsnummer allein bezeichnet die Datei, nicht diese Rechnung.
+      rechnungsnummer:    `${sammelRechnungsnummer}:${g.einzelRechnungsnummer}`,
+      datum:              now,
+      abrechnungsmonat:   `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`,
+      prescription_count: g.prescriptionCount,
+      total_brutto:       g.totals.brutto,
+      total_zuzahlung:    g.totals.gesZuzahlung,
+      total_netto:        g.totals.netto,
+      krankenkasse_name:  nameVonIk.get(g.kartenIk) || (g.kartenIk === kostentraegerIk ? kk?.name || '' : ''),
+      krankenkasse_ik:    g.kartenIk,
+      kostentraeger_name: kk?.name || '',
+      kostentraeger_ik:   g.kostentraegerIk || kostentraegerIk,
+    },
+    belege: g.prescriptionIndices.map(i => belege[i]).filter(Boolean),
+  }));
+
+  return renderBegleitzettelBundle({ blaetter, dateiname: dta.filename });
 }
 
 const BEREICH_TEXTE = {
@@ -445,21 +495,23 @@ router.post('/abrechnung/create', async (req, res) => {
     // ---- Krankenkasse + Datenannahmestelle ----
     const { data: kk, error: kkErr } = await supabase
       .from('kostentraeger')
-      .select('ik, name, das_ik')
+      .select('ik, name')
       .eq('ik', kostentraegerIk)
       .maybeSingle();
     if (kkErr || !kk) return res.status(400).json({ error: 'Krankenkasse unbekannt' });
 
-    let dasIk = kk.das_ik;
-    let dasName = '';
-    if (dasIk && dasIk !== kk.ik) {
-      const { data: das } = await supabase
-        .from('kostentraeger').select('name').eq('ik', dasIk).maybeSingle();
-      dasName = das?.name || '';
-    } else {
-      dasIk = kk.ik;
-      dasName = kk.name;
-    }
+    // Empfänger kommt aus `kostentraeger_annahmestellen`, nicht mehr aus
+    // `kostentraeger.das_ik`. Die alte Spalte ist für alle echten Zeilen NULL;
+    // der Empfänger fiel damit still auf die Kassen-IK selbst zurück — also auf
+    // eine Adresse, die keine Datenannahmestelle ist.
+    const das = await ladeAnnahmestelle(supabase, {
+      kostentraegerIk,
+      bereich:                tenantSector,
+      eigenerAbrechnungscode: abrechnungscodeFuer(tenantSector),
+    });
+    if (!das.ok) return annahmestelleFehlt(res, { ik: kostentraegerIk, name: kk.name });
+    const dasIk   = das.ik;
+    const dasName = das.name || kk.name;
 
     // ---- fetch therapist certificates ----
     const { data: certs } = await supabase
@@ -702,7 +754,8 @@ router.post('/abrechnung/create', async (req, res) => {
       };
     });
 
-    const begleitHtml = renderBegleitzettel({
+    const begleitHtml = await baueBegleitzettel({
+      dta, belege, kk, kostentraegerIk, now,
       praxis: {
         name:     profile.business_name || 'Praxis',
         strasse:  [profile.street, profile.house_number].filter(Boolean).join(' '),
@@ -710,29 +763,7 @@ router.post('/abrechnung/create', async (req, res) => {
         telefon:  profile.phone || '',
         ik:       cert.ik_nummer,
       },
-      empfaenger: {
-        name:    dasName || kk.name,
-        ik:      dasIk,
-      },
-      abrechnung: {
-        // Schlüssel müssen exakt zu renderBegleitzettel()s JSDoc passen — sie
-        // wichen vorher ab (sammelRechnungsnummer/belegCount/brutto/…), das
-        // Template las andere Namen und liess Rechnungsnummer + alle drei
-        // Summen leer drucken (db-ustasi, 05.09.2026).
-        dateiname:          dta.filename,
-        rechnungsnummer:    sammelRechnungsnummer,
-        datum:              now,
-        abrechnungsmonat:   `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`,
-        prescription_count: prescriptions.length,
-        total_brutto:       totalBrutto,
-        total_zuzahlung:    totalZu,
-        total_netto:        +(totalBrutto - totalZu).toFixed(2),
-        krankenkasse_name:  kk.name,
-        // IK des Rechnungsadressaten (Kostenträger), nicht die Karten-IK des
-        // Versicherten — das ist ein anderes Feld (siehe prescriptions.krankenkasse_ik).
-        krankenkasse_ik:    kostentraegerIk,
-      },
-      belege,
+      sammelRechnungsnummer,
     });
 
     const begleitPath = `${tenantId}/${datePath}/${ab.id}/begleitzettel.html`;
@@ -1990,7 +2021,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
 
     const { data: kk } = await supabase
       .from('kostentraeger')
-      .select('ik, name, das_ik')
+      .select('ik, name')
       .eq('ik', kostentraegerIk)
       .maybeSingle();
 
@@ -2001,8 +2032,16 @@ router.post('/abrechnung/preflight', async (req, res) => {
     if (!kk) {
       return res.status(400).json({ error: 'Krankenkasse unbekannt — Preflight kann nicht gegen einen echten Empfänger prüfen.' });
     }
-    const dasIk = kk.das_ik || kostentraegerIk;
-    const dasName = kk.name || 'Krankenkasse';
+    // Aus demselben Grund auch hier die echte Auflösung: ein Preflight, der
+    // gegen einen anderen Empfänger prüft als der spätere Versand, prüft nichts.
+    const das = await ladeAnnahmestelle(supabase, {
+      kostentraegerIk,
+      bereich:                tenantSector,
+      eigenerAbrechnungscode: abrechnungscodeFuer(tenantSector),
+    });
+    if (!das.ok) return annahmestelleFehlt(res, { ik: kostentraegerIk, name: kk.name });
+    const dasIk   = das.ik;
+    const dasName = das.name || kk.name || 'Krankenkasse';
 
     // ---- fetch tariffs for bundesland ----
     const bundesland = bundeslandDerPraxis(profile);
@@ -2206,14 +2245,24 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
 
     // ---- KK routing ----
     const { data: kk } = await supabase
-      .from('kostentraeger').select('ik, name, das_ik').eq('ik', kostentraegerIk).maybeSingle();
+      .from('kostentraeger').select('ik, name').eq('ik', kostentraegerIk).maybeSingle();
     // Gleicher Riegel wie der Physio/Ergo/Logo-Zweig (oben, Zeile ~444): ohne
     // bekannten Kostenträger fiel dasIk sonst still auf kostentraegerIk selbst
     // zurück — eine Krankenkasse-IK ist aber nicht dieselbe wie die
     // Datenannahmestelle-IK, an die die Datei tatsächlich geht.
     if (!kk) return res.status(400).json({ error: 'Krankenkasse unbekannt.' });
-    const dasIk  = kk.das_ik || kostentraegerIk;
-    const dasName = kk.name;
+
+    // Podologie hat eine EIGENE Fallback-Kette: 71/72 → 99 → 00. Der
+    // Gruppenschlüssel 20 wird übersprungen, er deckt die Podologie nicht ab
+    // (Anhang 03 § 8.14, Fussnote 4) — siehe kostentraeger/annahmestelle.js.
+    const das = await ladeAnnahmestelle(supabase, {
+      kostentraegerIk,
+      bereich:                'podologie',
+      eigenerAbrechnungscode: '71',
+    });
+    if (!das.ok) return annahmestelleFehlt(res, { ik: kostentraegerIk, name: kk.name });
+    const dasIk   = das.ik;
+    const dasName = das.name || kk.name;
 
     // ---- fetch prescriptions (podologischer Zweig) with patient + arzt join ----
     //
@@ -2497,7 +2546,8 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       };
     });
 
-    const begleitHtml = renderBegleitzettel({
+    const begleitHtml = await baueBegleitzettel({
+      dta, belege, kk, kostentraegerIk, now,
       praxis: {
         name:     profile.business_name || 'Praxis',
         strasse:  [profile.street, profile.house_number].filter(Boolean).join(' '),
@@ -2505,20 +2555,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         telefon:  profile.phone || '',
         ik:       cert.ik_nummer,
       },
-      empfaenger: { name: dasName, ik: dasIk },
-      abrechnung: {
-        dateiname:          dta.filename,
-        rechnungsnummer:    sammelRechnungsnummer,
-        datum:              now,
-        abrechnungsmonat:   `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`,
-        prescription_count: prescriptions.length,
-        total_brutto:       totalBrutto,
-        total_zuzahlung:    totalZu,
-        total_netto:        +(totalBrutto - totalZu).toFixed(2),
-        krankenkasse_name:  dasName,
-        krankenkasse_ik:    kostentraegerIk,
-      },
-      belege,
+      sammelRechnungsnummer,
     });
 
     const begleitPath = `${tenantId}/${datePath}/${ab.id}/begleitzettel.html`;

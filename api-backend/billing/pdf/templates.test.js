@@ -59,10 +59,13 @@ console.log('begleitzettel template');
 
 const bz = renderBegleitzettel({
   praxis:    { name: 'Praxis Müller', strasse: 'Königsallee 1', plz_ort: '40213 Düsseldorf', ik: '123456789' },
-  empfaenger:{ name: 'AOK Gemeinsame Datenannahmestelle', strasse: 'Kortrijker Str. 1', plz_ort: '53177 Bonn', ik: '660500345' },
+  // Kein `empfaenger` mehr: die Adresse der Datenannahmestelle gehoert nicht
+  // auf den Begleitzettel — die Urbelege gehen zur Papierannahmestelle.
   abrechnung:{
     dateiname: 'EHK5678900000023',
-    rechnungsnummer: 'R2026-W20-001',
+    rechnungsnummer: 'R2026-W20-001:0',
+    kostentraeger_name: 'AOK Rheinland/Hamburg',
+    kostentraeger_ik: '104212505',
     datum: '2026-05-18',
     prescription_count: 2,
     total_brutto: 270.50,
