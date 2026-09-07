@@ -49,11 +49,90 @@ export function trennePlzOrt(roh) {
 }
 
 /**
- * Der Rumpf fuer `POST /api/rezept/confirm`.
+ * Der gemeinsame Kern: `parsed` aus Nutzlast + Patientenkopf. ANLEGEN und
+ * ÄNDERN brauchen denselben Block — auch ÄNDERN, weil der Server daraus
+ * revalidiert und die Kostenträger-IK auflöst (`kostentraegerIkAufloesen()`,
+ * `api-backend/lib/rezept-felder.js`), obwohl er `leads` dabei nie anfasst.
  *
  * @param {object} a
  * @param {object} a.nutzlast    Ausgabe von `nutzlastAusMaske()` — flach, in
  *                               den Spaltennamen von `prescriptions`
+ * @param {Object<string,string>} a.patientFelder  die `rzPat*`-Werte der Maske
+ * @returns {object} `{ patient, arzt, rezept }`
+ */
+function geparstAusMaske({ nutzlast, patientFelder }) {
+  const n = nutzlast || {};
+  const f = patientFelder || {};
+  const { plz, city } = trennePlzOrt(f.rzPatOrt);
+
+  const vorname = text(f.rzPatVorname);
+  const nachname = text(f.rzPatName);
+
+  return {
+    patient: {
+      first_name: vorname,
+      last_name: nachname,
+      name: [vorname, nachname].filter(Boolean).join(' ') || null,
+      // ⚠ Im Kopf steht das Datum deutsch, die Akte fuehrt es ISO.
+      geburtsdatum: alsIsoDatum(f.rzPatGeb) || null,
+      versichertennummer: text(f.rzPatVersNr),
+      versichertenstatus: text(f.rzPatStatus),
+      krankenkasse: text(f.rzPatKasse),
+      kostentraeger_ik: text(f.rzPatKasseIk) || n.kostentraeger_ik || null,
+      street: text(f.rzPatStrasse),
+      plz,
+      city,
+    },
+    arzt: {
+      name: text(f.rzArztName),
+      ausstellungsdatum: n.ausstellungsdatum || null,
+      lanr: n.doctor_lanr || null,
+      bsnr: n.doctor_bsnr || null,
+    },
+    rezept: {
+      icd10: n.icd10 || null,
+      icd10_2: n.icd10_2 || null,
+      diagnose_text: n.diagnose_freitext || null,
+      diagnosegruppe: n.diagnosegruppe || null,
+      therapiebereich: n.therapie_bereich || null,
+      leitsymptomatik: n.leitsymptomatik ?? null,
+      pat_leitsymptomatik: n.pat_leitsymptomatik ?? null,
+      heilmittel: n.heilmittel || null,
+      heilmittel_feld_text: n.heilmittel_feld_text || null,
+      heilmittel_position: n.heilmittel_position || null,
+      anzahl_einheiten: n.anzahl_einheiten ?? null,
+      ergaenzendes_heilmittel: n.ergaenzendes_heilmittel || null,
+      anzahl_ergaenzend: n.ergaenzend_einheiten ?? null,
+      frequenz: n.frequenz || null,
+      behandlungsbeginn: n.behandlungsbeginn || null,
+      is_dringend: !!n.is_dringend,
+      hausbesuch: !!n.hausbesuch,
+      is_blanko: !!n.is_blanko,
+      is_lhb_bvb: !!n.is_lhb_bvb,
+      zuzahlung_befreit: !!n.zuzahlung_befreit,
+      zuzahlung_eur: n.zuzahlung_eur ?? null,
+      bericht_angefordert: !!n.bericht_angefordert,
+      bericht_status: n.bericht_status || 'offen',
+      unterschrift_vorhanden: n.unterschrift_vorhanden ?? null,
+      signature_confidence: n.signature_confidence || null,
+      // Gegenstueck zu `ocrAlsVerordnung`: dort werden die Therapieziele zu
+      // den Hinweisen, hier den Weg zurueck — der Server schreibt sie wieder
+      // nach `hinweise` (api-backend/server.js:2493). Eine eigene Spalte gibt
+      // es nicht, und zwei Regeln dafuer waeren der alte Fehler.
+      therapieziele: n.hinweise || null,
+      // Podologie: an der Verordnung, nicht an der Behandlung.
+      nagel: n.nagel ?? null,
+      wagner_grad: n.wagner_grad ?? null,
+      behandlungsanlass: n.behandlungsanlass ?? null,
+    },
+  };
+}
+
+/**
+ * Der Rumpf fuer `POST /api/rezept/confirm` (ANLEGEN).
+ *
+ * @param {object} a
+ * @param {object} a.nutzlast    Ausgabe von `nutzlastAusMaske()`
  * @param {Object<string,string>} a.patientFelder  die `rzPat*`-Werte der Maske
  * @param {boolean} [a.patientNeu]  die Maske hat „Neuer Patient" gemeldet
  * @param {?object} [a.scan]     `{ storage_path, ocr_confidence }` bei Scan
@@ -63,12 +142,6 @@ export function trennePlzOrt(roh) {
 export function verordnungFuerBackend({ nutzlast, patientFelder = {}, patientNeu = false,
                                         scan = null, overridden = false } = {}) {
   const n = nutzlast || {};
-  const f = patientFelder || {};
-  const { plz, city } = trennePlzOrt(f.rzPatOrt);
-
-  const vorname = text(f.rzPatVorname);
-  const nachname = text(f.rzPatName);
-
   return {
     storage_path: scan?.storage_path || null,
     // Hat die Maske einen Patienten, entscheidet sie — der Server prueft die
@@ -77,63 +150,34 @@ export function verordnungFuerBackend({ nutzlast, patientFelder = {}, patientNeu
     // Und sagt sie „neu", soll er auch nicht heimlich doch noch suchen.
     patient_neu: !!patientNeu,
     proceed_anyway: !!overridden,
-    parsed: {
-      patient: {
-        first_name: vorname,
-        last_name: nachname,
-        name: [vorname, nachname].filter(Boolean).join(' ') || null,
-        // ⚠ Im Kopf steht das Datum deutsch, die Akte fuehrt es ISO.
-        geburtsdatum: alsIsoDatum(f.rzPatGeb) || null,
-        versichertennummer: text(f.rzPatVersNr),
-        versichertenstatus: text(f.rzPatStatus),
-        krankenkasse: text(f.rzPatKasse),
-        kostentraeger_ik: text(f.rzPatKasseIk) || n.kostentraeger_ik || null,
-        street: text(f.rzPatStrasse),
-        plz,
-        city,
-      },
-      arzt: {
-        name: text(f.rzArztName),
-        ausstellungsdatum: n.ausstellungsdatum || null,
-        lanr: n.doctor_lanr || null,
-        bsnr: n.doctor_bsnr || null,
-      },
-      rezept: {
-        icd10: n.icd10 || null,
-        icd10_2: n.icd10_2 || null,
-        diagnose_text: n.diagnose_freitext || null,
-        diagnosegruppe: n.diagnosegruppe || null,
-        therapiebereich: n.therapie_bereich || null,
-        leitsymptomatik: n.leitsymptomatik ?? null,
-        pat_leitsymptomatik: n.pat_leitsymptomatik ?? null,
-        heilmittel: n.heilmittel || null,
-        heilmittel_feld_text: n.heilmittel_feld_text || null,
-        heilmittel_position: n.heilmittel_position || null,
-        anzahl_einheiten: n.anzahl_einheiten ?? null,
-        ergaenzendes_heilmittel: n.ergaenzendes_heilmittel || null,
-        anzahl_ergaenzend: n.ergaenzend_einheiten ?? null,
-        frequenz: n.frequenz || null,
-        behandlungsbeginn: n.behandlungsbeginn || null,
-        is_dringend: !!n.is_dringend,
-        hausbesuch: !!n.hausbesuch,
-        is_blanko: !!n.is_blanko,
-        is_lhb_bvb: !!n.is_lhb_bvb,
-        zuzahlung_befreit: !!n.zuzahlung_befreit,
-        zuzahlung_eur: n.zuzahlung_eur ?? null,
-        bericht_angefordert: !!n.bericht_angefordert,
-        bericht_status: n.bericht_status || 'offen',
-        unterschrift_vorhanden: n.unterschrift_vorhanden ?? null,
-        signature_confidence: n.signature_confidence || null,
-        // Gegenstueck zu `ocrAlsVerordnung`: dort werden die Therapieziele zu
-        // den Hinweisen, hier den Weg zurueck — der Server schreibt sie wieder
-        // nach `hinweise` (api-backend/server.js:2493). Eine eigene Spalte gibt
-        // es nicht, und zwei Regeln dafuer waeren der alte Fehler.
-        therapieziele: n.hinweise || null,
-        // Podologie: an der Verordnung, nicht an der Behandlung.
-        nagel: n.nagel ?? null,
-        wagner_grad: n.wagner_grad ?? null,
-        behandlungsanlass: n.behandlungsanlass ?? null,
-      },
-    },
+    parsed: geparstAusMaske({ nutzlast: n, patientFelder }),
+  };
+}
+
+/**
+ * Der Rumpf fuer `PATCH /api/rezept/:id` (ÄNDERN, Ops #289).
+ *
+ * Bewusst KEIN `patient_neu` und KEIN `storage_path`: eine bestehende
+ * Verordnung legt beim Ändern nie einen neuen Patienten an und haengt kein
+ * neues Foto an — dafuer gibt es auf diesem Weg keine Verarbeitung, und das
+ * Feld im Rumpf wuerde etwas versprechen, was der Server nicht einloest.
+ * `patient_id` bleibt drin, aber mit anderer Bedeutung als beim Anlegen: der
+ * Server prueft sie nur gegen den eigenen Mandanten (Requirement 3, siehe
+ * `api-backend/server.js`, PATCH-Route) und ordnet damit hoechstens die
+ * Verordnung um — `leads` aendert er nicht, das bleibt bei
+ * `verordnungPatientenAbgleich()` (Ops #268).
+ *
+ * @param {object} a
+ * @param {object} a.nutzlast    Ausgabe von `nutzlastAusMaske()`
+ * @param {Object<string,string>} a.patientFelder  die `rzPat*`-Werte der Maske
+ * @param {boolean} [a.overridden]  ueber Warnungen hinweg gespeichert
+ * @returns {object} Rumpf, wie ihn der Server erwartet
+ */
+export function verordnungFuerAendern({ nutzlast, patientFelder = {}, overridden = false } = {}) {
+  const n = nutzlast || {};
+  return {
+    patient_id: n.patient_id || null,
+    proceed_anyway: !!overridden,
+    parsed: geparstAusMaske({ nutzlast: n, patientFelder }),
   };
 }

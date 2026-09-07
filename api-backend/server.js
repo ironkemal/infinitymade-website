@@ -18,7 +18,9 @@ import billingStatistikRouter from './billing/api/statistik.routes.js';
 import verordnungStatusRouter from './billing/api/verordnung-status.routes.js';
 import zuzahlungRouter from './billing/api/zuzahlung.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
-import { defaultPositionForHeilmittel, resolvePositionsnummer, PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
+import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
+import { heilmittelPositionAufloesen, kostentraegerIkAufloesen } from './lib/rezept-felder.js';
+import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
 import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
@@ -2466,34 +2468,11 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
 
     const rezeptTyp = rezept.is_blanko ? 'blanko' : (rezept.is_lhb_bvb ? 'lhb_bvb' : 'standard');
 
-    // --- Resolve Krankenkasse → ik. Prefer frontend-supplied IK (datalist
-    // pick) over fuzzy name-based lookup so therapist intent wins. ---
-    let kostentraegerIk = patient.kostentraeger_ik || null;
-    if (!kostentraegerIk && patient.krankenkasse) {
-      const { data: kkMatch } = await supabase
-        .from('kostentraeger')
-        .select('ik')
-        .ilike('name', `%${patient.krankenkasse.trim()}%`)
-        .eq('active', true)
-        .limit(1)
-        .maybeSingle();
-      if (kkMatch?.ik) kostentraegerIk = kkMatch.ik;
-    }
-
-    // --- Resolve Heilmittel-Position. Frontend can send the canonical
-    // X-template (e.g. "X0501") via the datalist match; otherwise fall back
-    // to the short-code default map (KG → X0501 → 20501). ---
-    let heilmittelPosition = null;
-    if (rezept.heilmittel_position) {
-      try { heilmittelPosition = resolvePositionsnummer(rezept.heilmittel_position, '22'); }
-      catch (_e) { heilmittelPosition = rezept.heilmittel_position; }
-    } else {
-      const posTemplate = defaultPositionForHeilmittel(rezept.heilmittel);
-      if (posTemplate) {
-        try { heilmittelPosition = resolvePositionsnummer(posTemplate, '22'); }
-        catch (_e) { /* ignore */ }
-      }
-    }
+    // --- Kostenträger-IK und Heilmittel-Position: seit Ops #289 in
+    // ./lib/rezept-felder.js, weil `PATCH /api/rezept/:id` (ÄNDERN) dieselbe
+    // Auflösung braucht — siehe dortigen Dateikopf. ---
+    const kostentraegerIk = await kostentraegerIkAufloesen(supabase, patient);
+    const heilmittelPosition = heilmittelPositionAufloesen(rezept);
 
     // --- Insert prescription row ---
     const { data: rx, error: rxErr } = await supabase
@@ -2583,6 +2562,209 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     });
   } catch (err) {
     console.error('[rezept/confirm]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Ändern: die Muster-13-Maske schreibt eine bestehende Verordnung — seit
+// Ops #289 über den Server, genau wie ANLEGEN es seit dem 06.09.2026 schon
+// tut (`POST /api/rezept/confirm` oben). Bis dahin schrieb
+// `schreibeVerordnung()` (module/verordnung-maske.js, Update-Zweig) direkt
+// aus dem Browser nach Supabase, geschützt durch die Zeilensicherheit.
+//
+// Drei Auflagen von `guvenlik` (Sicil-Eintrag zur RLS→service-role-
+// Verschiebung — dieselben wie bei `/rezept/confirm`, hier zwingend, weil ein
+// UPDATE mit service-role eine fremde Zeile treffen KÖNNTE, ohne dass
+// PostgREST einen Fehler meldet):
+//   1. owner_id nur aus dem JWT (req.auth.tenantId), nie aus dem Rumpf.
+//   2. Betrifft die Änderung 0 Zeilen → 403/404, kein stilles "gespeichert".
+//   3. Eine mitgeschickte patient_id wird gegen owner_id geprüft.
+// Dazu `onprem` O-44: keine neue Adresskonstante — die Maske nimmt weiterhin
+// `apiBasis` aus `setzeMaskeBruecke()`.
+//
+// Was NICHT hier passiert: Patientenstammdaten ändern (`leads`). Das läuft
+// weiterhin über `verordnungPatientenAbgleich()` (Ops #268, eigener,
+// RLS-geschützter Weg) — diese Route rührt nur `prescriptions` an.
+// `patient_id` wird deshalb nur geprüft, wenn mitgeschickt (Verordnung einem
+// anderen Patienten zuordnen), nicht verändert, wenn sie fehlt.
+//
+// Ops #167 (GoBD-Unveränderlichkeit) bleibt eine eigene, offene Aufgabe: der
+// DB-Trigger für ALLE Schreibwege auf `prescriptions` fehlt weiterhin — die
+// Sperre unten ist kein Ersatz dafür, nur eine Vorstufe auf diesem einen Weg.
+// Bewusst NICHT hier miterledigt: ein DB-Trigger ist die einzige Sperre, die
+// auch künftige Schreibwege trifft, die diese Route nicht durchlaufen; eine
+// Anwendungs-Sperre in genau einer Route wäre die "Frontend-Riegel"-Falle aus
+// #167 nur eine Ebene tiefer. #167 bleibt offen und wird hier nicht geschlossen.
+app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
+  try {
+    const tenantId = req.auth.tenantId;
+    const id = req.params.id;
+    const {
+      parsed,
+      patient_id: gewaehlterPatient = null,
+      proceed_anyway = false,
+      proceed_reason = null
+    } = req.body || {};
+    if (!parsed) return res.status(400).json({ error: 'parsed required' });
+
+    const patient = parsed.patient || {};
+    const arzt = parsed.arzt || {};
+    const rezept = parsed.rezept || {};
+
+    // --- Requirement 2 zuerst: existiert die Zeile, gehört sie diesem Mandanten? ---
+    const { data: bestehend, error: findErr } = await supabase
+      .from('prescriptions')
+      .select('id, owner_id, abrechnung_status, belegnummer')
+      .eq('id', id)
+      .maybeSingle();
+    if (findErr) return res.status(500).json({ error: findErr.message });
+    if (!bestehend) return res.status(404).json({ error: 'Verordnung nicht gefunden' });
+    if (bestehend.owner_id !== tenantId) return res.status(403).json({ error: 'Kein Zugriff' });
+
+    // Vorstufe zu Ops #167 (siehe Dateikopf oben): eine bereits eingereichte
+    // oder abgeschlossene Verordnung darf sich nicht mehr leise von der
+    // gesendeten DTA-Datei entfernen — Korrekturverfahren und ZAA-Absetzung
+    // würden sonst auf einer Grundlage stehen, die es in der Datenbank nicht
+    // mehr gibt. Dieselben zwei Bedingungen wie im Frontend-Riegel
+    // (`schreibRiegel()`, module/verordnung-maske.js) — SPIEGEL, wie
+    // `einreichbar.js` es schon mit module/podologie-abrechnung.js hält: eine
+    // Belegnummer wird bei der DTA-Erzeugung einmal vergeben und nie wieder
+    // geändert (härteres Signal als der Status), 'abgerechnet'/'storniert'/
+    // 'archiviert' auf der podologischen Achse deckt die rohen Spaltenwerte
+    // in_abrechnung/gesendet/accepted/paid/storniert/archiviert ab (die
+    // Spalte speichert nie das Wort "abgerechnet" selbst).
+    const podoStatus = statusAusAbrechnungStatus(bestehend.abrechnung_status);
+    if (bestehend.belegnummer || ['abgerechnet', 'storniert', 'archiviert'].includes(podoStatus)) {
+      return res.status(409).json({
+        error: bestehend.belegnummer
+          ? `Diese Verordnung wurde bereits an die Kasse übermittelt (Beleg ${bestehend.belegnummer}) und kann nicht mehr geändert werden.`
+          : `Diese Verordnung steht auf „${podoStatus}" und kann nicht mehr geändert werden.`,
+      });
+    }
+
+    // --- Requirement 3: eine mitgeschickte Patienten-id nie ungeprüft übernehmen ---
+    let patientId = null;
+    if (gewaehlterPatient) {
+      const { data: eigener } = await supabase
+        .from('leads').select('id')
+        .eq('id', gewaehlterPatient).eq('owner_id', tenantId).maybeSingle();
+      if (!eigener) return res.status(403).json({ error: 'Patient gehört nicht zu dieser Praxis' });
+      patientId = eigener.id;
+    }
+
+    // --- Arzt ins Register übernehmen — derselbe Weg wie beim Anlegen ---
+    const arztResult = await resolveOrCreateArzt(supabase, tenantId, {
+      name:         arzt.name,
+      lanr:         arzt.lanr,
+      bsnr:         arzt.bsnr,
+      adresse:      arzt.adresse,
+      fachrichtung: arzt.fachrichtung,
+      praxis_name:  arzt.praxis_name
+    }, { quelle: 'ocr' });
+    const arztId = arztResult.id;
+
+    // --- Re-validate mit den (möglicherweise editierten) Feldern ---
+    const rezeptForValidator = {
+      icd10: rezept.icd10,
+      diagnosegruppe: rezept.diagnosegruppe,
+      heilmittel: rezept.heilmittel,
+      heilmittel_feld_text: rezept.heilmittel_feld_text,
+      anzahl_einheiten: rezept.anzahl_einheiten,
+      frequenz: rezept.frequenz,
+      ausstellungsdatum: arzt.ausstellungsdatum,
+      behandlungsbeginn: rezept.behandlungsbeginn,
+      is_dringend: !!rezept.is_dringend,
+      hausbesuch: !!rezept.hausbesuch,
+      is_blanko: !!rezept.is_blanko,
+      is_lhb_bvb: !!rezept.is_lhb_bvb,
+      patient_geburtsdatum: patient.geburtsdatum
+    };
+    const validation = validateRezept(rezeptForValidator);
+
+    const kostentraegerIk = await kostentraegerIkAufloesen(supabase, patient);
+    const heilmittelPosition = heilmittelPositionAufloesen(rezept);
+
+    const patch = {
+      ...(patientId ? { patient_id: patientId } : {}),
+      arzt_id: arztId,
+      icd10: rezept.icd10 || null,
+      icd10_2: rezept.icd10_2 || null,
+      diagnose_freitext: rezept.diagnose_text || null,
+      diagnosegruppe: rezept.diagnosegruppe || null,
+      leitsymptomatik: rezept.leitsymptomatik || null,
+      pat_leitsymptomatik: rezept.pat_leitsymptomatik || null,
+      hinweise: rezept.therapieziele || null,
+      heilmittel: rezept.heilmittel || null,
+      ergaenzendes_heilmittel: rezept.ergaenzendes_heilmittel || null,
+      ergaenzend_einheiten: rezept.anzahl_ergaenzend ?? null,
+      heilmittel_feld_text: rezept.heilmittel_feld_text || null,
+      heilmittel_position: heilmittelPosition,
+      anzahl_einheiten: rezept.anzahl_einheiten ?? null,
+      frequenz: rezept.frequenz || null,
+      ausstellungsdatum: arzt.ausstellungsdatum || null,
+      behandlungsbeginn: rezept.behandlungsbeginn || null,
+      is_dringend: !!rezept.is_dringend,
+      hausbesuch: !!rezept.hausbesuch,
+      is_blanko: !!rezept.is_blanko,
+      is_lhb_bvb: !!rezept.is_lhb_bvb,
+      zuzahlung_befreit: !!rezept.zuzahlung_befreit,
+      bericht_angefordert: !!rezept.bericht_angefordert,
+      bericht_status: rezept.bericht_status || 'offen',
+      unterschrift_vorhanden: rezept.unterschrift_vorhanden ?? null,
+      signature_confidence: rezept.signature_confidence || null,
+      doctor_lanr: arzt.lanr || null,
+      doctor_bsnr: arzt.bsnr || null,
+      kostentraeger_ik: kostentraegerIk,
+      gueltig_bis: validation.computed?.gueltig_bis || null,
+      computed: validation.computed || null,
+      warnings: validation.warnings || null,
+      blockers_overridden: proceed_anyway ? (validation.blockers || null) : null,
+      proceed_anyway: !!proceed_anyway,
+      total_bonuses_eur: validation.computed?.total_bonuses_eur ?? null,
+      // DSGVO Art. 32 — encrypted PHI shadow column (written when key is configured)
+      ...(encryptionAvailable() ? {
+        icd10_enc: encryptPHI(rezept.icd10 || null),
+        phi_encrypted: true
+      } : {})
+    };
+
+    // `.select('id')` ist der Fehlernachweis (Requirement 2): ein UPDATE ohne
+    // Treffer meldet sonst keinen Fehler, nur eine leere Zeilenliste.
+    const { data: upd, error: upErr } = await supabase
+      .from('prescriptions')
+      .update(patch)
+      .eq('id', id).eq('owner_id', tenantId)
+      .select('id');
+    if (upErr) return res.status(500).json({ error: upErr.message });
+    if (!upd || !upd.length) return res.status(404).json({ error: 'Verordnung nicht gefunden' });
+
+    // --- Validation snapshot (audit trail) — derselbe Weg wie beim Anlegen ---
+    const overriddenRules = proceed_anyway
+      ? (validation.blockers || []).map(b => b.code)
+      : [];
+    await supabase.from('prescription_validations').insert({
+      prescription_id: id,
+      engine: validation.engine || 'standard',
+      input_snapshot: rezeptForValidator,
+      result: validation,
+      ok: !!validation.ok,
+      warnings_count: (validation.warnings || []).length,
+      blockers_count: (validation.blockers || []).length,
+      proceeded_anyway: !!proceed_anyway,
+      overridden_rules: overriddenRules.length ? overriddenRules : null,
+      proceed_reason: proceed_anyway ? (proceed_reason || 'Kein Grund angegeben') : null,
+      validated_by: req.auth.userId
+    });
+
+    return res.json({
+      success: true,
+      prescription_id: id,
+      patient_id: patientId,
+      arzt_id: arztId,
+      validation
+    });
+  } catch (err) {
+    console.error('[rezept/update]', err);
     res.status(500).json({ error: err.message });
   }
 });

@@ -42,7 +42,7 @@
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260906';
-import { verordnungFuerBackend } from './verordnung-an-backend.js?v=20260906';
+import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260907';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 
 /**
@@ -537,6 +537,36 @@ export function nutzlastAusMaske(v) {
  * @throws bei Datenbankfehler oder wenn die Zeilensicherheit den Schreibzugriff
  *   verweigert.
  */
+/**
+ * Schickt den Rumpf zum Server — gemeinsame Stelle fuer ANLEGEN
+ * (`POST /rezept/confirm`) und AENDERN (`PATCH /rezept/:id`, Ops #289).
+ * Beide brauchen dieselbe Session-/Adress-Pruefung und denselben Fehlerpfad;
+ * eine zweite Kopie hiesse, dass eine kuenftige Korrektur (z.B. Timeout,
+ * anderer Fehlertext) nur in einer der beiden Routen ankommt.
+ *
+ * Ein Netzfehler MUSS durchschlagen. Faellt der Server aus, darf die Maske
+ * nicht „gespeichert" melden — sonst tippt die Praxis eine Verordnung ab,
+ * die nirgends steht. (onprem O-44, Auflage 3.)
+ */
+async function sendeAnServer(supabase, { methode, pfad, rumpf }) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error('Nicht angemeldet');
+  const basis = _bruecke?.apiBasis;
+  if (!basis) throw new Error('Keine API-Adresse angemeldet (setzeMaskeBruecke)');
+
+  const antwort = await fetch(`${basis}${pfad}`, {
+    method: methode,
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify(rumpf),
+  });
+  let json = null;
+  try { json = await antwort.json(); } catch { /* kein JSON — gleich unten */ }
+  if (!antwort.ok || !json?.success) {
+    throw new Error(json?.error || `Speichern fehlgeschlagen (${antwort.status})`);
+  }
+  return json;
+}
+
 export async function schreibeVerordnung(supabase, v) {
   const nutzlast = nutzlastAusMaske(v);
   // `proceed_anyway` merkt sich, dass jemand über Lücken hinweg gespeichert
@@ -551,50 +581,24 @@ export async function schreibeVerordnung(supabase, v) {
     // angelegt, das Foto an die Verordnung gehaengt und festgehalten, dass
     // jemand ueber Warnungen hinweg gespeichert hat. (Beschluss 06.09.2026;
     // onprem O-44, guvenlik S-18.)
-    //
-    // AENDERN bleibt vorerst der direkte Weg weiter unten: dafuer gibt es noch
-    // keinen Endpunkt, und die Zeilensicherheit schuetzt ihn heute. Der Umzug
-    // ist eine eigene Aufgabe mit eigenen Auflagen.
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) throw new Error('Nicht angemeldet');
-    const basis = _bruecke?.apiBasis;
-    if (!basis) throw new Error('Keine API-Adresse angemeldet (setzeMaskeBruecke)');
-
     const rumpf = verordnungFuerBackend({
       nutzlast, patientFelder: patientkopfAusMaske(),
       patientNeu: _patientNeu, scan: _scanHerkunft, overridden: !!v.overridden,
     });
-
-    // Ein Netzfehler MUSS hier durchschlagen. Faellt der Server aus, darf die
-    // Maske nicht „gespeichert" melden — sonst tippt die Praxis eine
-    // Verordnung ab, die nirgends steht. (onprem O-44, Auflage 3.)
-    const antwort = await fetch(`${basis}/rezept/confirm`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-      body: JSON.stringify(rumpf),
-    });
-    let json = null;
-    try { json = await antwort.json(); } catch { /* kein JSON — gleich unten */ }
-    if (!antwort.ok || !json?.success) {
-      throw new Error(json?.error || `Speichern fehlgeschlagen (${antwort.status})`);
-    }
+    const json = await sendeAnServer(supabase, { methode: 'POST', pfad: '/rezept/confirm', rumpf });
     return { id: json.prescription_id, aktualisiert: false, patientId: json.patient_id || null };
   }
 
-  // `.select()` ist der Fehlernachweis: ein UPDATE, das die Zeilensicherheit
-  // nicht passiert, meldet KEINEN Fehler — PostgREST gibt Erfolg mit null
-  // Zeilen zurück. Ohne die Rückgabe stünde „gespeichert" in der Oberfläche,
-  // während in der Datenbank nichts passiert ist. Derselbe Grund wie in
-  // module/verordnung-einheiten.js.
-  const { data, error } = await supabase.from('prescriptions')
-    .update(nutzlast).eq('id', editId).eq('owner_id', v.ownerId).select('id');
-  if (error) throw error;
-  if (!data || !data.length) {
-    throw new Error('Die Änderung wurde nicht gespeichert — vermutlich fehlt die Berechtigung.');
-  }
+  // AENDERN laeuft seit Ops #289 auch ueber den Server — derselbe Grund wie
+  // bei ANLEGEN, nur nachgezogen: bis dahin schrieb dieser Zweig direkt aus
+  // dem Browser nach Supabase, geschuetzt allein durch die Zeilensicherheit.
+  const rumpf = verordnungFuerAendern({
+    nutzlast, patientFelder: patientkopfAusMaske(), overridden: !!v.overridden,
+  });
+  const json = await sendeAnServer(supabase, { methode: 'PATCH', pfad: `/rezept/${editId}`, rumpf });
   _bearbeitung.anzahl = nutzlast.anzahl_einheiten;
   // Gespeichert heisst: die Maske und die Datenbank sagen wieder dasselbe —
   // ein Neuzeichnen von aussen darf jetzt wieder durch (siehe `istVeraendert`).
   _bearbeitung.veraendert = false;
-  return { id: editId, aktualisiert: true };
+  return { id: editId, aktualisiert: true, patientId: json.patient_id || null };
 }

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { verordnungFuerBackend, trennePlzOrt } from './verordnung-an-backend.js?v=20260906';
+import { verordnungFuerBackend, verordnungFuerAendern, trennePlzOrt } from './verordnung-an-backend.js?v=20260907';
 import { ocrAlsVerordnung, ocrAlsPatientkopf } from './verordnung-aus-ocr.js?v=20260906';
 
 /** So sieht `nutzlastAusMaske()` aus (gekuerzt, aber echt geformt). */
@@ -163,4 +163,38 @@ test('Rundreise: OCR → Maske → zurück zum Server verliert nichts Wesentlich
   assert.equal(zurueck.rezept.frequenz, gelesen.rezept.frequenz);
   assert.equal(zurueck.rezept.therapieziele, gelesen.rezept.therapieziele);
   assert.equal(zurueck.rezept.is_dringend, true);
+});
+
+// ── verordnungFuerAendern (Ops #289) ────────────────────────────────────────
+
+test('ÄNDERN trägt dieselben Rezeptdaten wie ANLEGEN', () => {
+  const anlegen = verordnungFuerBackend({ nutzlast: NUTZLAST, patientFelder: KOPF });
+  const aendern = verordnungFuerAendern({ nutzlast: NUTZLAST, patientFelder: KOPF });
+  assert.deepEqual(aendern.parsed, anlegen.parsed, 'derselbe Kern, geparstAusMaske() teilt sich beide Wege');
+});
+
+test('ÄNDERN hat kein „neuer Patient" — der Server darf keinen anlegen', () => {
+  const b = verordnungFuerAendern({ nutzlast: NUTZLAST, patientFelder: KOPF });
+  assert.equal('patient_neu' in b, false);
+});
+
+test('ÄNDERN hat keinen Beleg-Pfad — kein Re-Scan auf diesem Weg', () => {
+  const b = verordnungFuerAendern({ nutzlast: NUTZLAST, patientFelder: KOPF });
+  assert.equal('storage_path' in b, false);
+});
+
+test('ÄNDERN trägt die Patienten-id nur zur Prüfung, nicht zum Anlegen', () => {
+  const b = verordnungFuerAendern({ nutzlast: NUTZLAST, patientFelder: KOPF });
+  assert.equal(b.patient_id, 'lead-1');
+});
+
+test('ÄNDERN merkt sich „trotzdem gespeichert" genau wie ANLEGEN', () => {
+  const b = verordnungFuerAendern({ nutzlast: NUTZLAST, patientFelder: KOPF, overridden: true });
+  assert.equal(b.proceed_anyway, true);
+});
+
+test('ÄNDERN stürzt bei leerer Eingabe nicht ab', () => {
+  const b = verordnungFuerAendern();
+  assert.equal(b.patient_id, null);
+  assert.equal(b.parsed.rezept.bericht_status, 'offen');
 });

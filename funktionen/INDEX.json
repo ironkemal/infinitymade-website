@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-09-07",
- "dateien": 217,
- "funktionen": 2076,
+ "dateien": 218,
+ "funktionen": 2081,
  "module": [
   "abrechnung",
   "anamnese",
@@ -4160,6 +4160,7 @@
    "calls": [],
    "calledBy": [
     "findPosition",
+    "heilmittelPositionAufloesen",
     "mapPrescriptionToDtaShape",
     "seed"
    ],
@@ -4229,7 +4230,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
+   "calledBy": [
+    "heilmittelPositionAufloesen"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -9972,6 +9975,49 @@
    "uiPfad": []
   },
   {
+   "name": "heilmittelPositionAufloesen",
+   "kind": "function",
+   "file": "api-backend/lib/rezept-felder.js",
+   "start": 34,
+   "end": 43,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "defaultPositionForHeilmittel",
+    "resolvePositionsnummer"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "kostentraegerIkAufloesen",
+   "kind": "function",
+   "file": "api-backend/lib/rezept-felder.js",
+   "start": 55,
+   "end": 66,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [
+    "kostentraeger"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "vortag",
    "kind": "function",
    "file": "api-backend/preise_autoupdate.mjs",
@@ -10370,8 +10416,8 @@
    "name": "newOAuthClient",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 169,
-   "end": 175,
+   "start": 171,
+   "end": 177,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -10391,8 +10437,8 @@
    "name": "createOAuthState",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 179,
-   "end": 183,
+   "start": 181,
+   "end": 185,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -10412,8 +10458,8 @@
    "name": "verifyOAuthState",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 184,
-   "end": 193,
+   "start": 186,
+   "end": 195,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -10431,8 +10477,8 @@
    "name": "timeToMins",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 199,
-   "end": 202,
+   "start": 201,
+   "end": 204,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -10452,8 +10498,8 @@
    "name": "minsToTime",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 203,
-   "end": 207,
+   "start": 205,
+   "end": 209,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -10473,8 +10519,8 @@
    "name": "berlinOffsetMin",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 211,
-   "end": 219,
+   "start": 213,
+   "end": 221,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -10495,8 +10541,8 @@
    "name": "utcToBerlinMinutes",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 222,
-   "end": 229,
+   "start": 224,
+   "end": 231,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -10516,8 +10562,8 @@
    "name": "berlinDayOfWeek",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 232,
-   "end": 236,
+   "start": 234,
+   "end": 238,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -10542,8 +10588,8 @@
    "name": "berlinDayBoundsUTC",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 239,
-   "end": 245,
+   "start": 241,
+   "end": 247,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -10565,8 +10611,8 @@
    "name": "berlinLocalToUTC",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 248,
-   "end": 253,
+   "start": 250,
+   "end": 255,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -10589,8 +10635,8 @@
    "name": "addDays",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 255,
-   "end": 259,
+   "start": 257,
+   "end": 261,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -10614,8 +10660,8 @@
    "name": "generateRecurringDates",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 264,
-   "end": 274,
+   "start": 266,
+   "end": 276,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -10638,8 +10684,8 @@
    "name": "getAvailableSlots",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 590,
-   "end": 850,
+   "start": 592,
+   "end": 852,
    "lines": 261,
    "spiegelHinweis": null,
    "tables": [
@@ -10678,8 +10724,8 @@
    "name": "pruefeLeadId",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 1235,
-   "end": 1240,
+   "start": 1237,
+   "end": 1242,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [
@@ -10699,8 +10745,8 @@
    "name": "addDays",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 1282,
-   "end": 1286,
+   "start": 1284,
+   "end": 1288,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -10724,8 +10770,8 @@
    "name": "fbFmtDM",
    "kind": "arrow",
    "file": "api-backend/server.js",
-   "start": 1365,
-   "end": 1483,
+   "start": 1367,
+   "end": 1485,
    "lines": 119,
    "spiegelHinweis": null,
    "tables": [],
@@ -10751,8 +10797,8 @@
    "name": "parseSeriesFeedback",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 1367,
-   "end": 1483,
+   "start": 1369,
+   "end": 1485,
    "lines": 117,
    "spiegelHinweis": null,
    "tables": [],
@@ -10778,8 +10824,8 @@
    "name": "pad",
    "kind": "arrow",
    "file": "api-backend/server.js",
-   "start": 1382,
-   "end": 1397,
+   "start": 1384,
+   "end": 1399,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -10803,8 +10849,8 @@
    "name": "resolveDay",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 1383,
-   "end": 1397,
+   "start": 1385,
+   "end": 1399,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -10828,8 +10874,8 @@
    "name": "horizonDays",
    "kind": "arrow",
    "file": "api-backend/server.js",
-   "start": 1577,
-   "end": 1625,
+   "start": 1579,
+   "end": 1627,
    "lines": 49,
    "spiegelHinweis": null,
    "tables": [
@@ -10857,8 +10903,8 @@
    "name": "timeToMinsLocal",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 1625,
-   "end": 1625,
+   "start": 1627,
+   "end": 1627,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -10880,8 +10926,8 @@
    "name": "minsToTimeLocal",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 1626,
-   "end": 1626,
+   "start": 1628,
+   "end": 1628,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -10902,8 +10948,8 @@
    "name": "addDaysISO",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 1637,
-   "end": 1641,
+   "start": 1639,
+   "end": 1643,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -10921,8 +10967,8 @@
    "name": "feedbackWindow",
    "kind": "arrow",
    "file": "api-backend/server.js",
-   "start": 1686,
-   "end": 1763,
+   "start": 1688,
+   "end": 1765,
    "lines": 78,
    "spiegelHinweis": null,
    "tables": [],
@@ -10948,8 +10994,8 @@
    "name": "enumerateDay",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 1774,
-   "end": 1820,
+   "start": 1776,
+   "end": 1822,
    "lines": 47,
    "spiegelHinweis": null,
    "tables": [],
@@ -10973,8 +11019,8 @@
    "name": "pushSlot",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 1917,
-   "end": 1933,
+   "start": 1919,
+   "end": 1935,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -10994,8 +11040,8 @@
    "name": "stripDataUriPrefix",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 2148,
-   "end": 2152,
+   "start": 2150,
+   "end": 2154,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -11013,8 +11059,8 @@
    "name": "apply",
    "kind": "arrow",
    "file": "api-backend/server.js",
-   "start": 2273,
-   "end": 2279,
+   "start": 2275,
+   "end": 2281,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -11034,8 +11080,8 @@
    "name": "kioskScrypt",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 3004,
-   "end": 3012,
+   "start": 3186,
+   "end": 3194,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -11058,8 +11104,8 @@
    "name": "kioskHashPin",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 3014,
-   "end": 3018,
+   "start": 3196,
+   "end": 3200,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -11079,8 +11125,8 @@
    "name": "kioskVerifyPin",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 3020,
-   "end": 3032,
+   "start": 3202,
+   "end": 3214,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -11100,8 +11146,8 @@
    "name": "kioskAudit",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 3053,
-   "end": 3067,
+   "start": 3235,
+   "end": 3249,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -11121,8 +11167,8 @@
    "name": "haversineMeters",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 3234,
-   "end": 3243,
+   "start": 3416,
+   "end": 3425,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -11144,8 +11190,8 @@
    "name": "toRad",
    "kind": "arrow",
    "file": "api-backend/server.js",
-   "start": 3236,
-   "end": 3623,
+   "start": 3418,
+   "end": 3805,
    "lines": 388,
    "spiegelHinweis": null,
    "tables": [
@@ -11183,8 +11229,8 @@
    "name": "gehoertZurPraxis",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 3623,
-   "end": 3629,
+   "start": 3805,
+   "end": 3811,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [
@@ -11206,8 +11252,8 @@
    "name": "anfrageKorrekturenPruefen",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 3818,
-   "end": 3872,
+   "start": 4000,
+   "end": 4054,
    "lines": 55,
    "spiegelHinweis": null,
    "tables": [
@@ -11229,8 +11275,8 @@
    "name": "setzen",
    "kind": "arrow",
    "file": "api-backend/server.js",
-   "start": 3820,
-   "end": 3820,
+   "start": 4002,
+   "end": 4002,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -11263,8 +11309,8 @@
    "name": "alternativToken",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 4028,
-   "end": 4031,
+   "start": 4210,
+   "end": 4213,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -11284,8 +11330,8 @@
    "name": "createSMTPTransport",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 4209,
-   "end": 4216,
+   "start": 4391,
+   "end": 4398,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -11623,7 +11669,7 @@
     "runSignAbrechnung",
     "runZaaUpload",
     "savePositionOverride",
-    "schreibeVerordnung",
+    "sendeAnServer",
     "setzeStatus",
     "showPlanWall",
     "storniereZuzahlung",
@@ -58975,6 +59021,7 @@
     "adminFetch",
     "api",
     "chat",
+    "geparstAusMaske",
     "loadAusfallrechnungen",
     "loadMahnwesen",
     "loadStatistik",
@@ -58985,8 +59032,7 @@
     "setAfStatus",
     "stripeRequest",
     "trennePlzOrt",
-    "updateStatus",
-    "verordnungFuerBackend"
+    "updateStatus"
    ],
    "modules": [
     "abrechnung",
@@ -59031,19 +59077,19 @@
     "text"
    ],
    "calledBy": [
-    "verordnungFuerBackend"
+    "geparstAusMaske"
    ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
   },
   {
-   "name": "verordnungFuerBackend",
+   "name": "geparstAusMaske",
    "kind": "function",
    "file": "module/verordnung-an-backend.js",
    "start": 63,
-   "end": 139,
-   "lines": 77,
+   "end": 129,
+   "lines": 67,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -59054,6 +59100,53 @@
     "alsIsoDatum",
     "text",
     "trennePlzOrt"
+   ],
+   "calledBy": [
+    "verordnungFuerAendern",
+    "verordnungFuerBackend"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "verordnungFuerBackend",
+   "kind": "function",
+   "file": "module/verordnung-an-backend.js",
+   "start": 142,
+   "end": 155,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "geparstAusMaske"
+   ],
+   "calledBy": [
+    "schreibeVerordnung"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "verordnungFuerAendern",
+   "kind": "function",
+   "file": "module/verordnung-an-backend.js",
+   "start": 176,
+   "end": 183,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "geparstAusMaske"
    ],
    "calledBy": [
     "schreibeVerordnung"
@@ -59256,7 +59349,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "verordnungFuerBackend"
+    "geparstAusMaske"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -62224,29 +62317,48 @@
    ]
   },
   {
-   "name": "schreibeVerordnung",
+   "name": "sendeAnServer",
    "kind": "function",
    "file": "module/verordnung-maske.js",
-   "start": 540,
-   "end": 600,
-   "lines": 61,
+   "start": 551,
+   "end": 568,
+   "lines": 18,
    "spiegelHinweis": null,
-   "tables": [
-    "prescriptions"
-   ],
+   "tables": [],
    "rpcs": [],
-   "writes": [
-    "prescriptions:update"
-   ],
+   "writes": [],
    "endpoints": [
-    "${basis}/rezept/confirm"
+    "${basis}${pfad}"
    ],
    "storage": [],
    "calls": [
-    "json",
+    "json"
+   ],
+   "calledBy": [
+    "schreibeVerordnung"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "schreibeVerordnung",
+   "kind": "function",
+   "file": "module/verordnung-maske.js",
+   "start": 570,
+   "end": 604,
+   "lines": 35,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
     "nutzlastAusMaske",
     "patientkopfAusMaske",
-    "update",
+    "sendeAnServer",
+    "verordnungFuerAendern",
     "verordnungFuerBackend"
    ],
    "calledBy": [
@@ -74690,7 +74802,6 @@
     "saveStepProgress",
     "saveVehicleEdit",
     "saveVorlage",
-    "schreibeVerordnung",
     "speichereEinheiten",
     "speichereStufen",
     "startVorlagenInlineRename",
@@ -75309,7 +75420,7 @@
   },
   {
    "tabelle": "prescriptions",
-   "anzahl": 10,
+   "anzahl": 9,
    "pfade": [
     {
      "leitfunktion": "kassiereZuzahlung",
@@ -75541,23 +75652,6 @@
        "uiPfad": [
         "ortak yardımcı — 9 modülden çağrılıyor"
        ]
-      }
-     ]
-    },
-    {
-     "leitfunktion": "schreibeVerordnung",
-     "funktionen": [
-      {
-       "name": "schreibeVerordnung",
-       "file": "module/verordnung-maske.js",
-       "start": 540,
-       "end": 600,
-       "lines": 61,
-       "writes": [
-        "prescriptions:update"
-       ],
-       "modules": [],
-       "uiPfad": []
       }
      ]
     },
@@ -77589,8 +77683,8 @@
     "api-backend/ai/validators/lhbBvbRules.js:24",
     "api-backend/ai/validators/standardRules.js:42",
     "api-backend/billing/api/mahnwesen.routes.js:45",
-    "api-backend/server.js:255",
-    "api-backend/server.js:1282",
+    "api-backend/server.js:257",
+    "api-backend/server.js:1284",
     "dashboard.js:3201"
    ],
    "aynalar": []
@@ -78073,7 +78167,7 @@
   {
    "name": "berlinOffsetMin",
    "orte": [
-    "api-backend/server.js:211",
+    "api-backend/server.js:213",
     "api/demo-booking.js:98"
    ],
    "aynalar": []
@@ -78081,7 +78175,7 @@
   {
    "name": "setzen",
    "orte": [
-    "api-backend/server.js:3820",
+    "api-backend/server.js:4002",
     "module/rechnung-druck.js:110"
    ],
    "aynalar": []

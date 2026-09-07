@@ -3,7 +3,7 @@
 > Üretim: 2026-09-07 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**2076 fonksiyon** · 217 dosya · 39 sidebar modülü
+**2081 fonksiyon** · 218 dosya · 39 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -56,7 +56,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 **Yol 14 — `uebernimmSlot()`** · Ekran: ortak yardımcı — 9 modülden çağrılıyor
 - `uebernimmSlot()` — [module/warteliste-nachruecker.js:195](module/warteliste-nachruecker.js#L195-L231) · 37 satır · bookings:insert
 
-### `prescriptions` — 10 bağımsız yazma yolu
+### `prescriptions` — 9 bağımsız yazma yolu
 
 **Yol 1 — `kassiereZuzahlung()`** · Ekran: ortak yardımcı — 9 modülden çağrılıyor
 - `kassiereZuzahlung()` — [dashboard.js:7167](dashboard.js#L7167-L7239) · 73 satır · prescriptions:update
@@ -84,10 +84,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 **Yol 8 — `speichereEinheiten()`** · Ekran: ortak yardımcı — 9 modülden çağrılıyor
 - `speichereEinheiten()` — [module/verordnung-einheiten.js:126](module/verordnung-einheiten.js#L126-L160) · 35 satır · prescriptions:update
 
-**Yol 9 — `schreibeVerordnung()`** · Ekran: _UI yolu çözülemedi_
-- `schreibeVerordnung()` — [module/verordnung-maske.js:540](module/verordnung-maske.js#L540-L600) · 61 satır · prescriptions:update
-
-**Yol 10 — `betragNullsetzen()`** · Ekran: ortak yardımcı — 9 modülden çağrılıyor
+**Yol 9 — `betragNullsetzen()`** · Ekran: ortak yardımcı — 9 modülden çağrılıyor
 - `betragNullsetzen()` — [module/zuzahlung-befreiung.js:249](module/zuzahlung-befreiung.js#L249-L259) · 11 satır · prescriptions:update
 
 ### `profiles` — 8 bağımsız yazma yolu
@@ -332,7 +329,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 - `profiles` — 20 ayrı fonksiyon yazıyor
 - `bookings` — 16 ayrı fonksiyon yazıyor
-- `prescriptions` — 12 ayrı fonksiyon yazıyor
+- `prescriptions` — 11 ayrı fonksiyon yazıyor
 - `document_vorlagen` — 10 ayrı fonksiyon yazıyor
 - `services` — 8 ayrı fonksiyon yazıyor
 - `ops_todos` — 8 ayrı fonksiyon yazıyor
@@ -375,7 +372,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fmtDate` — api-backend/billing/dta/encoding.js:47 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:13 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:1382 · ops/app.js:84
 - `render` — calendar-widget.js:127 · dashboard.js:13934 · dashboard.js:21271 · ops/board.js:206 · ops/decisions.js:14 · ops/files.js:52 · ops/finance.js:959 · ops/meetings.js:23 · ops/wissen.js:66 · patient-suche.js:116
 - `g` — dashboard.js:16315 · dashboard.js:16328 · dashboard.js:16625 · dashboard.js:16696 · module/rezept-in-maske.js:39 · module/verordnung-anlegen.js:28 · module/verordnung-maske.js:324 · module/verordnung-nachweis.js:28
-- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:255 · api-backend/server.js:1282 · dashboard.js:3201
+- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:257 · api-backend/server.js:1284 · dashboard.js:3201
 - `r2` — api-backend/billing/api/statistik.routes.js:186 · api-backend/billing/api/zuzahlung.routes.js:45 · api-backend/billing/dta/builder.js:43 · api-backend/billing/preise/resolver.js:24 · api-backend/billing/zuzahlung/calculator.js:14 · api-backend/billing/zuzahlung/korrektur.js:16 · module/zuzahlung-rechnen.js:42
 - `$` — attendance.js:10 · employee-signup.js:10 · module/kiosk.js:59 · module/verordnung-podo.js:106 · module/verordnung-pruefen-knopf.js:45 · module/zuzahlung-korrektur.js:206 · ops/app.js:48
 - `init` — attendance.js:297 · booking-request.js:1242 · booking.js:58 · cookie-consent.js:139 · dashboard.js:17449 · kalender.js:149 · onboarding.js:77

@@ -35,7 +35,7 @@ try {
     !!wrap?.querySelector('#rzSaveBtn'), 'rzSaveBtn muss INNERHALB von #rzMaskeWrap stehen');
 
   // ── Umzug in die Seite und zurück ───────────────────────────────────────
-  const maske = await import('../../module/verordnung-maske.js?v=20260906');
+  const maske = await import('../../module/verordnung-maske.js?v=20260907');
   const host = document.getElementById('seiten-host');
   host.appendChild(wrap);
   pruef('Umzug in die Seite', maske.istEingebettet());
