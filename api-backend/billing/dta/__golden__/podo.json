@@ -1,0 +1,21 @@
+{
+  "filename": "EHK5678900000024",
+  "segmentCount": 19,
+  "messageCount": 2,
+  "byteLength": 589,
+  "totals": {
+    "brutto": 28.9,
+    "gesZuzahlung": 0,
+    "netto": 28.9,
+    "prescriptions": 1,
+    "fallTotals": [
+      {
+        "brutto": 28.9,
+        "prozZuzahlung": 0,
+        "pauschZuzahlung": 0,
+        "gesZuzahlung": 0,
+        "netto": 28.9
+      }
+    ]
+  }
+}
