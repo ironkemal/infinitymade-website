@@ -112,6 +112,15 @@ export function sucheKassen(kassen, query, limit = 300) {
 /**
  * Hängt die Kassenauswahl an ein Textfeld.
  *
+ * Ops-Kart #264 (Krankenkasse → IK): füllt automatisch ein Geschwisterfeld
+ * `<id des inputEl>Ik`, falls es existiert und noch leer ist — z. B.
+ * `rzPatKasse` → `rzPatKasseIk` in der Muster-13-Maske. Kein neuer Aufruf im
+ * Dashboard nötig (dashboard.js darf nicht wachsen, siehe CLAUDE.md); die
+ * Namenskonvention war in der Maske schon da, nur ungenutzt. Überschreibt
+ * NIE einen vorhandenen Wert — eine per OCR gelesene oder von Hand korrigierte
+ * IK bleibt stehen, das Feld bleibt frei editierbar (Ersatzkassen haben laut
+ * gkv-302 mehrere IK, `ik_number` ist die eine kanonische, kein Zwang).
+ *
  * @param {HTMLInputElement} inputEl
  * @param {object} cfg
  * @param {object} cfg.sb           Supabase-Client
@@ -121,6 +130,7 @@ export function sucheKassen(kassen, query, limit = 300) {
 export function attachKrankenkasseSuche(inputEl, cfg = {}) {
   if (!inputEl) return;
   const { sb, ownerId, onSelect = null } = cfg;
+  const ikEl = inputEl.id ? document.getElementById(inputEl.id + 'Ik') : null;
 
   // Das alte <datalist> würde sonst als zweites Menü danebenstehen.
   inputEl.removeAttribute('list');
@@ -153,7 +163,10 @@ export function attachKrankenkasseSuche(inputEl, cfg = {}) {
               </div>`;
     },
 
-    onSelect: k => { if (onSelect) onSelect(k); },
+    onSelect: k => {
+      if (ikEl && k.ik && !ikEl.value) ikEl.value = k.ik;
+      if (onSelect) onSelect(k);
+    },
   });
 }
 

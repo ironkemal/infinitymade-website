@@ -6,7 +6,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { sucheKassen } from './krankenkasse-suche.js';
+
+const quelle = readFileSync(new URL('./krankenkasse-suche.js', import.meta.url), 'utf8');
 
 const kassen = [
   { name: 'actimonda krankenkasse', kurz: null,     ik: '1',  anzahl: 0 },
@@ -60,4 +63,23 @@ test('Vorgabe zeigt den ganzen Kassenbestand — 94 Zeilen, nicht 30', () => {
   // im „B" ab. Der Anwender sah ein Fuenftel und hielt die Quelle fuer falsch.
   const bestand = Array.from({ length: 94 }, (_, i) => ({ name: `Kasse ${i}`, kurz: null, ik: null, anzahl: 0 }));
   assert.equal(sucheKassen(bestand, '').length, 94);
+});
+
+// ── Ops #264: Krankenkasse → IK automatisch, ohne dashboard.js zu vergrössern ──
+//
+// attachKrankenkasseSuche() ist DOM-getrieben (attachAutocomplete()) — kein
+// node:test-DOM hier, deshalb ein Bauart-Test wie bei podologie-abrechnung.js:
+// geprüft wird die Quelle, nicht das Verhalten im Browser (das übernimmt
+// tools/browser-probe/ bzw. der echte Klickdurchgang).
+
+test('IK-Geschwisterfeld wird per Namenskonvention gesucht (<id>Ik), kein neuer Dashboard-Aufruf nötig', () => {
+  assert.match(quelle, /getElementById\(\s*inputEl\.id\s*\+\s*['"]Ik['"]\s*\)/,
+    'dashboard.js darf nicht wachsen — die Verknüpfung muss hier im Modul über die ID-Konvention laufen.');
+});
+
+test('Autofill überschreibt nie einen vorhandenen Wert (OCR/Handkorrektur bleibt stehen)', () => {
+  const treffer = quelle.match(/onSelect:\s*k\s*=>\s*\{[\s\S]{0,200}?\}/);
+  assert.ok(treffer, 'onSelect-Handler nicht gefunden');
+  assert.match(treffer[0], /!ikEl\.value/,
+    'Ohne diese Bedingung würde jede Kassenauswahl eine bereits eingetragene IK stillschweigend ersetzen.');
 });
