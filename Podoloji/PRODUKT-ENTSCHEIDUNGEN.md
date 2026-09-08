@@ -192,6 +192,17 @@
 - **Reddedilen alternatif:** Kasaları tek pakette birleştirmek — §302 yapısına aykırı.
 - **Tutanak:** Beta-2 görüşmesi 05.09.2026, `podoloji` + `gkv-302` ajan değerlendirmesi
   (Ops-Dashboard kart notlarında tam metin).
+- **Uygulandı: 07.09.2026** (Ops #283). Üç commit: `b6bd17b` (golden-file regresyon
+  dondurması) → `c12d2fe` (Karten-IK başına ayrı Gesamtrechnung + GES, `builder.js` +
+  `segments.js`) → `b12c6fb` (Empfänger `kostentraeger_annahmestellen`'den, fallback
+  71/72→99→00 — 20 Podologie'yi kapsamıyor, Anhang 03 §8.14 dipnot 4 — + Begleitzettel
+  Gesamtrechnung başına, Karten-IK ile). Çoklu seçim UI `module/podologie-abrechnung.js`
+  + yeni `module/podologie-dateieinheit.js`'te (hangi kasa hangi dosyaya gidiyor, seçim
+  öncesi görünür). Sammelrechnung (J-flag) kodda hazır ama kapalı — hiçbir çağıran
+  tetiklemiyor, Rechnungsart 3'e geçilirse açılır. 302 kasadan 82'si elektronik yolla
+  çözülemiyor (gerçek reçete etkisi ölçüldü: sıfır, yalnız 4 mock-IK kaydı 412 alıyor) —
+  bu kasalar için `abrechnung.routes.js` sert 412 döner, sessiz yanlış alıcıya göndermez.
+  npm test 210/210.
 - **Uygulandı: 2026-09-07 — sıranın (2). adımı, yarısı.** Ops #283.
   - `api-backend/billing/dta/builder.js` — dosya içi iki seviyeli gruplama
     (Kostenträger-IK → Karten-IK). Her Karten-IK artık kendi SLGA'sını ve kendi GES

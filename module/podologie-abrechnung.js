@@ -68,14 +68,19 @@ import { darf78040, darf78100, darfErstbefundungNagel,
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, inTopf, statusInTopf }
   from './verordnung-topf.js?v=20260904';
+// Mehrfachauswahl (Ops #283): welche Kasse in welche Datei gehört. Eigene
+// Datei, weil es eine eigene Frage ist — und weil diese hier lang genug ist.
+import { initDateieinheit, ladeDateieinheiten, dateieinheitBadge, auswahlHinweis }
+  from './podologie-dateieinheit.js?v=20260907';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
 // Eine Stelle statt zwei literalen Vorkommen (onprem-Gate zählt die Host-
 // Zeichenkette, tools/check-onprem.sh) — reines Refactoring, keine neue
-// Bulk-Adresse. Dieselbe Konstante wird für "§302 erstellen" und "trotzdem
-// übernehmen" gebraucht, beide rufen denselben Endpunkt.
-const PODO_ABRECHNUNG_URL = 'https://n8n.infinitymade.de/api/billing/abrechnung/create-podologie';
+// Bulk-Adresse. Dieselbe Funktion wird für "§302 erstellen" und "trotzdem
+// übernehmen" gebraucht, beide rufen denselben Endpunkt. Über ctx.apiBase
+// statt fest verdrahtetem Host (onprem-Urteil O-01/O-44, 08.09.2026).
+const podoAbrechnungUrl = () => `${ctx.apiBase}/billing/abrechnung/create-podologie`;
 
 // ===== PODOLOGIE BILLING =====
 
@@ -407,7 +412,7 @@ document.addEventListener('click', async (e) => {
 
   try {
     const { data: { session } } = await ctx.supabase.auth.getSession();
-    const res = await fetch(PODO_ABRECHNUNG_URL, {
+    const res = await fetch(podoAbrechnungUrl(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -427,6 +432,132 @@ document.addEventListener('click', async (e) => {
     if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }
     btn.disabled = false; btn.textContent = '§302 erstellen';
   }
+});
+
+// ── Mehrfachauswahl mehrerer Kostenträger (Ops #283) ───────────────────────
+//
+// Der Podologe rechnet einmal im Monat ab und will in einem Durchgang fertig
+// werden, nicht Kasse für Kasse klicken (Beta-2, 05.09.2026). Zusammengefasst
+// wird trotzdem NICHT: je Kasse entsteht eine eigene Datei mit eigenem
+// Begleitzettel — so steht es in der Produktentscheidung vom 05.09.2026 und so
+// verlangt es §302. Die Leiste sagt darum vor dem Klick, wie viele Dateien und
+// wie viele Umschläge daraus werden. Eine Oberfläche, die „alles erledigt"
+// suggeriert, macht die Zuordnung der Urbelege unmöglich.
+
+/** Die IKs der aktuell angehakten Kassen. */
+function _podGewaehlteKassen() {
+  return [...document.querySelectorAll('#podBillingContent .pod-kk-check:checked')]
+    .map(cb => cb.dataset.kkIk);
+}
+
+function _podSammelAuswahlAktualisieren() {
+  const leiste = document.getElementById('podSammelLeiste');
+  if (!leiste) return;
+  const iks    = _podGewaehlteKassen();
+  const alle   = [...document.querySelectorAll('#podBillingContent .pod-kk-check')];
+  const hinweis = document.getElementById('podSammelHinweis');
+  const btn     = document.getElementById('podSammelBtn');
+  const alleCb  = document.getElementById('podKkAlle');
+
+  if (hinweis) hinweis.textContent = auswahlHinweis(iks);
+  if (btn) {
+    btn.disabled = iks.length === 0;
+    btn.style.opacity = iks.length ? '1' : '.5';
+    btn.textContent = iks.length > 1
+      ? `${iks.length} Abrechnungen erstellen`
+      : 'Ausgewählte erstellen';
+  }
+  if (alleCb) {
+    alleCb.checked = alle.length > 0 && iks.length === alle.length;
+    alleCb.indeterminate = iks.length > 0 && iks.length < alle.length;
+  }
+}
+
+document.addEventListener('change', (e) => {
+  if (!e.target.closest?.('#podBillingContent')) return;
+  if (e.target.id === 'podKkAlle') {
+    for (const cb of document.querySelectorAll('#podBillingContent .pod-kk-check')) {
+      cb.checked = e.target.checked;
+    }
+  } else if (!e.target.classList?.contains('pod-kk-check')) {
+    return;
+  }
+  _podSammelAuswahlAktualisieren();
+});
+
+// Sammelknopf. Die Anfragen laufen NACHEINANDER, nicht parallel: jede erzeugt
+// eine `abrechnung`-Zeile mit eigener laufender Datennummer, die aus dem Zaehler
+// der schon vorhandenen Zeilen abgeleitet wird (abrechnung.routes.js). Parallel
+// gestartet läsen mehrere Anfragen denselben Zaehler und vergäben dieselbe
+// Nummer — zwei Dateien mit gleichem Namen, und die Kasse ordnet nichts mehr zu.
+document.addEventListener('click', async (e) => {
+  if (!e.target.closest?.('#podBillingContent')) return;
+  const btn = e.target.closest('#podSammelBtn');
+  if (!btn || btn.disabled) return;
+
+  const kassen = [...document.querySelectorAll('#podBillingContent .pod-kk-check:checked')]
+    .map(cb => ({ ik: cb.dataset.kkIk, vordIds: JSON.parse(cb.dataset.vordIds || '[]') }))
+    .filter(k => k.ik && k.vordIds.length);
+  if (!kassen.length) return;
+
+  const protokoll = document.getElementById('podSammelProtokoll');
+  const kkName = (ik) => _podKkCache.find(k => k.ik === ik)?.name || ik;
+  const zeilen = [];
+  const schreibe = () => {
+    if (!protokoll) return;
+    protokoll.style.display = 'block';
+    protokoll.innerHTML = zeilen.join('');
+  };
+
+  btn.disabled = true;
+  btn.style.opacity = '.5';
+  btn.textContent = 'Wird erstellt…';
+  document.getElementById('podKkAlle')?.setAttribute('disabled', 'disabled');
+
+  let ok = 0, fehler = 0;
+  for (let i = 0; i < kassen.length; i++) {
+    const { ik, vordIds } = kassen[i];
+    zeilen.push(`<div data-lauf="${ctx.escapeHtml(ik)}" style="padding:2px 0;color:var(--text-muted);">
+      ⏳ ${ctx.escapeHtml(kkName(ik))} … (${i + 1}/${kassen.length})</div>`);
+    schreibe();
+    try {
+      const { data: { session } } = await ctx.supabase.auth.getSession();
+      const res = await fetch(podoAbrechnungUrl(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ kostentraegerIk: ik, verordnungIds: vordIds }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        fehler++;
+        zeilen[zeilen.length - 1] = `<div style="padding:2px 0;color:#ef4444;">
+          ✕ ${ctx.escapeHtml(kkName(ik))} — ${ctx.escapeHtml(json.error || 'Fehler')}</div>`;
+      } else {
+        ok++;
+        zeilen[zeilen.length - 1] = `<div style="padding:2px 0;color:#16a34a;">
+          ✓ ${ctx.escapeHtml(kkName(ik))} — ${ctx.escapeHtml(json.rechnungsnummer || '')}
+          · ${ctx.escapeHtml(String(json.sessionCount ?? ''))} Positionen</div>`;
+      }
+    } catch (err) {
+      fehler++;
+      zeilen[zeilen.length - 1] = `<div style="padding:2px 0;color:#ef4444;">
+        ✕ ${ctx.escapeHtml(kkName(ik))} — ${ctx.escapeHtml(err.message)}</div>`;
+    }
+    schreibe();
+  }
+
+  // Fehlgeschlagene Kassen bleiben in der Liste stehen (das Backend hat ihre
+  // Verordnungen nicht angefasst) und koennen einzeln nachgeholt werden.
+  zeilen.push(`<div style="padding:6px 0 0;border-top:1px solid var(--border);margin-top:6px;color:var(--text-main);">
+    <strong>${ok} von ${kassen.length} Abrechnungen erstellt${fehler ? `, ${fehler} fehlgeschlagen` : ''}.</strong>
+    ${ok ? ' Jede Datei hat einen eigenen Begleitzettel — bitte getrennt versenden.' : ''}</div>`);
+  schreibe();
+
+  if (ok) ctx.showToast(`${ok} §302-Abrechnung${ok > 1 ? 'en' : ''} erstellt ✓`);
+  loadPodologieBilling();
 });
 
 // Kostenträger-Zeile auf-/zuklappen — reines DOM-Toggle, kein Neuzeichnen:
@@ -467,7 +598,7 @@ document.addEventListener('click', async (e) => {
 
   try {
     const { data: { session } } = await ctx.supabase.auth.getSession();
-    const res = await fetch(PODO_ABRECHNUNG_URL, {
+    const res = await fetch(podoAbrechnungUrl(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -843,16 +974,36 @@ async function loadPodologieBilling() {
           const fmtEur = (n) => (Number(n) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
           return `<div class="card" style="background:var(--bg-card);border:1px solid #16a34a;border-radius:10px;padding:18px;margin-top:12px;">
             <h4 style="margin:0 0 12px;color:#16a34a;font-size:15px;">§302 Abrechnung bereit</h4>
+            ${Object.keys(byKk).length > 1 ? `
+            <div id="podSammelLeiste" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+                 padding:8px 12px;margin-bottom:10px;border:1px dashed var(--border);border-radius:8px;background:var(--bg-card);">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-main);cursor:pointer;">
+                <input type="checkbox" id="podKkAlle" style="width:16px;height:16px;cursor:pointer;">
+                Alle Kassen
+              </label>
+              <div id="podSammelHinweis" style="flex:1;min-width:200px;font-size:12px;color:var(--text-muted);">
+                Keine Kasse ausgewählt.
+              </div>
+              <button id="podSammelBtn" class="btn-primary" disabled
+                style="font-size:13px;padding:6px 14px;white-space:nowrap;opacity:.5;">Ausgewählte erstellen</button>
+            </div>
+            <div id="podSammelProtokoll" style="display:none;font-size:12px;margin-bottom:10px;
+                 border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--bg-card);"></div>` : ''}
             <div style="display:flex;flex-direction:column;gap:10px;">
               ${Object.entries(byKk).map(([ik, vords]) => {
                 const kassenanteil = vords.reduce((a, v) => a + (_podAbrDetails.get(v.id)?.gesamt || 0), 0);
                 return `
                 <div style="background:var(--bg-card-solid,#1f2937);border-radius:8px;border:1px solid var(--border);overflow:hidden;">
                   <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;">
+                    <input type="checkbox" class="pod-kk-check" data-kk-ik="${ctx.escapeHtml(ik)}"
+                      data-vord-ids="${ctx.escapeHtml(JSON.stringify(vords.map(v=>v.id)))}"
+                      aria-label="${ctx.escapeHtml(kkName(ik))} für die Sammelabrechnung auswählen"
+                      style="margin-right:10px;width:16px;height:16px;flex:0 0 auto;cursor:pointer;">
                     <div class="pod-kk-header" data-kk-toggle="${ctx.escapeHtml(ik)}" style="cursor:pointer;flex:1;">
                       <div style="font-size:13px;font-weight:600;color:var(--text-main);">
                         <span class="pod-kk-chevron" style="display:inline-block;transition:transform .15s;margin-right:4px;">▸</span>
                         ${ctx.escapeHtml(kkName(ik))}
+                        <span class="pod-dav-slot" data-kk-ik="${ctx.escapeHtml(ik)}">${dateieinheitBadge(ik, ctx.escapeHtml)}</span>
                       </div>
                       <div style="font-size:12px;color:var(--text-muted);margin-left:14px;">${vords.length} Verordnung${vords.length>1?'en':''} · Kassenanteil ${fmtEur(kassenanteil)}</div>
                     </div>
@@ -943,6 +1094,20 @@ async function loadPodologieBilling() {
 
   // ---- Event Listeners ----
 
+  // Dateieinheit je Kasse nachladen und die Abzeichen nachtragen. Bewusst
+  // NACH dem Zeichnen und ohne `await` davor: die Liste muss sofort da sein,
+  // die Zusatzinformation darf nachkommen. Faellt der Aufruf aus, bleibt die
+  // Seite bedienbar — der harte Riegel sitzt im Backend (412).
+  const _kkIks = [...new Set(_abrechenbarVords.map(v => v.kostentraeger_ik).filter(Boolean))];
+  if (_kkIks.length) {
+    ladeDateieinheiten(_kkIks).then(neu => {
+      if (!neu) return;
+      for (const slot of document.querySelectorAll('#podBillingContent .pod-dav-slot')) {
+        slot.innerHTML = dateieinheitBadge(slot.dataset.kkIk, ctx.escapeHtml);
+      }
+      _podSammelAuswahlAktualisieren();
+    });
+  }
 
   // Die Verdrahtung des Verordnungsformulars stand bis zum 06.09.2026 hier
   // (Rezeptart-Umschaltung, Heilmittelzeilen, ICD/Diagnosegruppen-Paar,
@@ -1120,6 +1285,7 @@ async function loadPodologieBilling() {
 /** Einstieg aus dem Router (`switchPanel('podologie-billing')`). */
 export async function mountPodologieAbrechnung(deps) {
   ctx = deps;
+  initDateieinheit(deps);
   return loadPodologieBilling();
 }
 

@@ -422,6 +422,66 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
 
 // ---------- route ----------
 
+// Zu welcher Datei gehört welche Kasse?
+//
+// Die Oberfläche darf mehrere Kostenträger auf einmal auswählen lassen, aber
+// eine DTA-Datei gilt genau einer Datenannahmestelle × Kassenart (Anlage 1 TP5
+// V21, Kap. 5.3.1). Damit die Praxis vor dem Klick sieht, wie viele Umschläge
+// daraus werden, liefert diese Route je Kasse die Dateieinheit — dieselbe
+// Auflösung, die der spätere Versand benutzt. Zwei verschiedene Antworten auf
+// dieselbe Frage wären der Anfang des nächsten stillen Fehlers.
+router.post('/abrechnung/annahmestellen', async (req, res) => {
+  try {
+    const hdr   = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const { data: profile } = await supabase
+      .from('profiles').select('id, role, owner_id, sector').eq('id', u.user.id).single();
+    if (!profile) return res.status(403).json({ error: 'Profile not found' });
+
+    const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : profile.id;
+    let sector = profile.sector;
+    if (profile.role === 'employee' && profile.owner_id) {
+      const { data: op } = await supabase.from('profiles').select('sector').eq('id', tenantId).maybeSingle();
+      sector = op?.sector || sector;
+    }
+    sector = sector || 'physiotherapy';
+
+    const iks = [...new Set((Array.isArray(req.body?.iks) ? req.body.iks : [])
+      .map(s => String(s || '').trim()).filter(Boolean))];
+    if (!iks.length) return res.status(400).json({ error: 'iks[] required' });
+    if (iks.length > 200) return res.status(400).json({ error: 'zu viele IKs' });
+
+    const eigenerAbrechnungscode = abrechnungscodeFuer(sector);
+    const bereich = sector === 'podologie' ? 'podologie' : sector;
+
+    const ergebnis = {};
+    for (const ik of iks) {
+      const das = await ladeAnnahmestelle(supabase, {
+        kostentraegerIk: ik, bereich, eigenerAbrechnungscode,
+      });
+      ergebnis[ik] = das.ok
+        ? {
+            aufloesbar: true,
+            davIk:     das.ik,
+            davName:   das.name || '',
+            kassenart: das.treffer.kassenart,
+            // Dateieinheit. Kassen mit gleichem Schlüssel dürfen in eine Datei.
+            dateieinheit: `${das.ik}|${das.treffer.kassenart || '?'}`,
+            ueberSammelschluessel: das.treffer.stufe > 0,
+          }
+        : { aufloesbar: false, grund: das.grund };
+    }
+    return res.json({ ok: true, annahmestellen: ergebnis });
+  } catch (e) {
+    console.error('[abrechnung/annahmestellen]', e);
+    return res.status(500).json({ error: e.message || 'Server error' });
+  }
+});
+
 router.post('/abrechnung/create', async (req, res) => {
   try {
     // ---- auth ----

@@ -39,9 +39,15 @@ test('die Zuhoerer der Liste, der §302-/Uebernehmen-Knoepfe und des Kostentraeg
   // Netzwerkaufruf mit eigener disabled-Bremse — dieselbe Regel wie die
   // anderen drei: an `document` haengen, nicht an ein Element, das
   // loadPodologieBilling() bei jedem Aufruf neu erzeugt.
+  //
+  // Fuenfter und sechster seit 07.09.2026 (Ops #283, Mehrfachauswahl):
+  // ein `change`-Zuhoerer fuer die Kassen-Haken und ein `click`-Zuhoerer fuer
+  // den Sammelknopf. Gerade der Sammelknopf ist der Fall, vor dem dieser Test
+  // schuetzt: er stoesst N Abrechnungen an, ein doppelt registrierter Zuhoerer
+  // wuerde also 2N Dateien erzeugen.
   const aufModulebene = (quelle.match(/^document\.addEventListener\(/gm) || []).length;
-  assert.equal(aufModulebene, 4,
-    `Erwartet: Listen-Zuhoerer + §302-Zuhoerer + Auf/Zuklapp-Zuhoerer + Uebernehmen-Zuhoerer, alle auf Modulebene. Gefunden: ${aufModulebene}.`);
+  assert.equal(aufModulebene, 6,
+    `Erwartet: Listen- + §302- + Auf/Zuklapp- + Uebernehmen- + Auswahl- + Sammel-Zuhoerer, alle auf Modulebene. Gefunden: ${aufModulebene}.`);
 });
 
 test('der "trotzdem uebernehmen"-Handler prueft disabled — gleiche zweite Bremse wie der §302-Knopf', () => {
@@ -52,4 +58,19 @@ test('der "trotzdem uebernehmen"-Handler prueft disabled — gleiche zweite Brem
 test('der §302-Handler prueft disabled — zweite Bremse, absichtlich', () => {
   assert.ok(/if\s*\(\s*!btn\s*\|\|\s*btn\.disabled\s*\)\s*return;/.test(quelle),
     'Zweite Bremse entfernt. Sie faengt einen Doppelklick ab, auch wenn die erste haelt.');
+});
+
+test('der Sammelknopf hat dieselbe disabled-Bremse', () => {
+  assert.ok(/podSammelBtn[\s\S]{0,200}?if\s*\(\s*!btn\s*\|\|\s*btn\.disabled\s*\)\s*return;/.test(quelle),
+    'Der Sammelknopf stoesst N Abrechnungen an — ohne die Bremse werden aus einem Doppelklick 2N Dateien.');
+});
+
+test('die Sammelabrechnung laeuft nacheinander, nicht parallel', () => {
+  // Jede Anfrage leitet ihre Datennummer aus der Zahl der schon vorhandenen
+  // abrechnung-Zeilen ab. Parallel gestartet lesen mehrere denselben Stand und
+  // vergeben denselben Dateinamen.
+  assert.ok(/for\s*\(\s*let\s+i\s*=\s*0;\s*i\s*<\s*kassen\.length[\s\S]{0,1500}?await\s+fetch\(/.test(quelle),
+    'Die Schleife muss jede Kasse abwarten (await im Rumpf), kein Promise.all.');
+  assert.ok(!/Promise\.all\([\s\S]{0,200}kassen/.test(quelle),
+    'Promise.all ueber die Kassen wuerde doppelte Datennummern erzeugen.');
 });

@@ -69,3 +69,25 @@ doğru çağrı grafiğiyle hesaplanır. Olay dinleyicisiyle bağlanan fonksiyon
 dışında kalıp "UI yolu çözülemedi" görünebilir; çok yerden çağrılan yardımcılar da
 `gemeinsam: true` ile işaretlenir. Kullanıcıya verilecek ekran tarifi bu alandan körü körüne
 kopyalanmaz, `canli-test` ile doğrulanır.
+
+### ⚠️ `calledBy: []` "ölü kod" demek DEĞİLDİR (08.09.2026'da ölçüldü)
+
+Express route gövdeleri `router.post('/x', async (req, res) => { … })` biçiminde **isimsiz**
+argüman fonksiyonlarıdır; üretici onları hiç kayda almaz. Dolayısıyla **yalnızca bir
+route'tan çağrılan backend fonksiyonu haritada `calledBy: []` görünür.**
+
+Ölçülen örnek: `api-backend/billing/api/abrechnung.routes.js` — dosyada 30'dan fazla route
+var, haritada 17 kayıt, hiçbiri route gövdesi değil. Bu yüzden `buildDtaFile` (gerçekte 2
+çağrı yeri), `ladeAnnahmestelle` (4) ve `annahmestelleFehlt` (3) çağrılmıyor görünür.
+
+**Backend fonksiyonu için "ölü kod / silinebilir" hükmü `calledBy`'a bakılarak verilmez** —
+ham grep ile doğrulanır. Frontend tarafında bu sorun yok, import zinciri çözülüyor.
+
+### `endpoints[]` yalnız `fetch()` içindeki düz metni görür
+
+Adres bir değişkende duruyorsa (`const URL = '…'; fetch(URL, …)`) alan **boş** kalır.
+Örnek: `module/podologie-dateieinheit.js` → `ladeDateieinheiten()` gerçekte
+`POST /billing/abrechnung/annahmestellen` çağırır, haritada `endpoints: []`.
+
+"Bu ekran hangi backend yolunu çağırıyor" sorusu bu alandan tek başına cevaplanmaz;
+`grep "n8n.infinitymade.de"` ile tamamlanır.

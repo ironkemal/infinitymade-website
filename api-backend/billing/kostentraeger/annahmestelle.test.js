@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {
   waehleAnnahmestelle,
   abrechnungscodeKette,
+  kassenartAusQuelle,
   ELEKTRONISCHE_DATENLIEFERUNG,
   VERKNUEPFUNGSART_KETTE,
 } from './annahmestelle.js';
@@ -199,4 +200,34 @@ test('abrechnungscodeKette: Physio/Ergo/Logo behalten die 20', () => {
 
 test('abrechnungscodeKette: ohne eigenen Code faellt die erste Stufe weg', () => {
   assert.deepEqual(abrechnungscodeKette('physiotherapy', null), [['20'], ['99'], ['00']]);
+});
+
+// --- Kassenart (zweite Haelfte der Dateieinheit) --------------------------
+
+test('kassenartAusQuelle liest die ersten zwei Zeichen des Dateinamens', () => {
+  const erwartet = {
+    'AO05Q326_KE3.txt': 'AO', 'EK05Q226_KE0.txt': 'EK', 'BK05Q326_KE1.txt': 'BK',
+    'IK05Q326_KE1.txt': 'IK', 'BN050526_KE0.txt': 'BN', 'LK05Q226_KE0.txt': 'LK',
+  };
+  for (const [quelle, kassenart] of Object.entries(erwartet)) {
+    assert.equal(kassenartAusQuelle(quelle), kassenart);
+  }
+});
+
+test('kassenartAusQuelle raet NICHT — Unbekanntes ergibt null', () => {
+  for (const q of [null, undefined, '', '  ', 'irgendwas.txt', 'XX05Q326.txt', '05Q326']) {
+    assert.equal(kassenartAusQuelle(q), null, `"${q}" darf keine Kassenart ergeben`);
+  }
+});
+
+test('die Auswahl liefert die Kassenart mit', () => {
+  const t = waehleAnnahmestelle(
+    [{ ...zeile('661430035', '71'), quelle: 'EK05Q226_KE0.txt' }], { ketten: podoKette });
+  assert.equal(t.kassenart, 'EK');
+});
+
+test('fehlende quelle macht die Auswahl nicht kaputt, nur die Kassenart null', () => {
+  const t = waehleAnnahmestelle([zeile('661430035', '71')], { ketten: podoKette });
+  assert.equal(t.partnerIk, '661430035');
+  assert.equal(t.kassenart, null);
 });

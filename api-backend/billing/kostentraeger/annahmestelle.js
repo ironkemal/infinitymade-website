@@ -16,6 +16,13 @@
 // ohne Datenbank testen — und genau diese Kette ist die Stelle, an der eine
 // Datei beim falschen Empfänger landet.
 
+/** Die Kassenart steckt in den ersten zwei Zeichen des Quelldateinamens
+ *  ('AO05Q326_KE3.txt' → 'AO'). null, wenn nicht ableitbar — nicht raten. */
+export function kassenartAusQuelle(quelle) {
+  const m = String(quelle ?? '').trim().match(/^(AO|EK|BK|IK|BN|LK|GK|SB)/i);
+  return m ? m[1].toUpperCase() : null;
+}
+
 /** Nur diese beiden Arten der Datenlieferung gelten für die elektronische
  *  Abrechnung (Anhang 3, Abschnitt 5.2). 21/24/26/28/29 sind Papier. */
 export const ELEKTRONISCHE_DATENLIEFERUNG = Object.freeze(['07', '30']);
@@ -98,6 +105,11 @@ export function waehleAnnahmestelle(zeilen, { ketten, bundeslandVkg = null } = {
         verknuepfungsart: art,
         abrechnungscode:  String(treffer[0].abrechnungscode || ''),
         bundesland:       String(treffer[0].bundesland ?? ''),
+        // Kassenart aus dem Namen der Quelldatei: 'EK05Q226_KE0.txt' → 'EK'.
+        // Zusammen mit der DAV-IK bildet sie die Dateieinheit (Kap. 5.3.1).
+        // Bewusst null statt geraten, wenn `quelle` leer ist — eine falsche
+        // Kassenart sortiert Rezepte in die falsche Datei.
+        kassenart:        kassenartAusQuelle(treffer[0].quelle),
         stufe,
         kandidaten:       eindeutig.length,
       };
@@ -118,7 +130,7 @@ export async function ladeAnnahmestelle(supabase, {
 }) {
   const { data: zeilen, error } = await supabase
     .from('kostentraeger_annahmestellen')
-    .select('partner_ik, verknuepfungsart, abrechnungscode, art_datenlieferung, bundesland')
+    .select('partner_ik, verknuepfungsart, abrechnungscode, art_datenlieferung, bundesland, quelle')
     .eq('kostentraeger_ik', kostentraegerIk);
   if (error) return { ok: false, grund: 'DB-Fehler: ' + error.message };
 

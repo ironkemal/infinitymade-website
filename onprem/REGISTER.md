@@ -37,17 +37,23 @@
 
 | Alan | İçerik |
 |---|---|
-| **Ne** | Backend'in adresi 12 frontend dosyasında sabit yazılı; kutuda müşterinin tarayıcısı bizim VPS'imize gider |
-| **Nerede** | **26 satır / 13 dosya** (kapı kapsamı: `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `index-old.html` `ai chatbot proje/` hariç).<br>`dashboard.js` 9 (`:86` `:6059` `:6566` `:6567` `:11900` `:11908` `:12046` `:12184` `:17951`) · `kalender.js` 5 (`:114` `:242` `:459` `:619` `:765`) · `employee-signup.js` 2 (`:116` `:261`) · `booking-request.js` 2 (`:4` yorum, `:11`) · `module/abrechnungsstatus.js:50` · `module/podologie-positionen.js:39` · `module/podologie-abrechnung.js:407` · `module/beleg-druck.js:11` (yorum) · `booking.js:5` · `attendance.js:4` · `index.html:2179` (chatbot DATA bloğu, pazarlama) · `api-backend/server.js:1806` (bkz. O-02) |
+| **Ne** | Backend'in adresi 11 frontend dosyasında sabit yazılı; kutuda müşterinin tarayıcısı bizim VPS'imize gider |
+| **Nerede** | **25 satır / 12 dosya** (kapı kapsamı: `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `index-old.html` `ai chatbot proje/` hariç).<br>`dashboard.js` 9 (`:86` `:6059` `:6566` `:6567` `:11900` `:11908` `:12046` `:12184` `:17951`) · `kalender.js` 5 (`:114` `:242` `:459` `:619` `:765`) · `employee-signup.js` 2 (`:116` `:261`) · `booking-request.js` 2 (`:4` yorum, `:11`) · `module/abrechnungsstatus.js:50` · `module/podologie-positionen.js:39` · `module/beleg-druck.js:11` (yorum) · `booking.js:5` · `attendance.js:4` · `index.html:2179` (chatbot DATA bloğu, pazarlama) · `api-backend/server.js:1806` (bkz. O-02) |
 | **Tip** | C |
 | **Kutuda ne olur** | Müşterinin kutusundaki dashboard açılır, ama her randevu/rezept/abrechnung çağrısı **bizim** VPS'imize gider. Bizim VPS'imiz kapalıysa müşterinin praxis'i durur. Daha kötüsü: kutudaki hasta verisi bizim sunucumuza akar → **G1 ihlali**, geçişin bütün amacı boşa çıkar. Müşteri kendi Supabase'inde oturum açtığı için JWT bizim backend'de doğrulanmaz — pratikte 401 duvarı |
 | **Çözüm** | Tek `API_BASE` kaynağı: `/api/config`'in verdiği değer (bugün Supabase URL'i için zaten yapılan şey — bkz. O-05). Kutuda `window.location.origin + '/api'`, SaaS'ta bugünkü host. Fork değil, tek config satırı. **Faz 1.1** kapsamına bağlandı; paketleme öncesi **Faz 2.0** ile kesişir |
-| **Durum** | `geplant` (Faz 1.1) — kapı tabanı: **26** |
+| **Durum** | `geplant` (Faz 1.1) — kapı tabanı: **25** |
 
 > ⚠️ `dashboard.js:83-86` doğru deseni **zaten biliyor**: `localhost` ise `http://localhost:3000/api`,
 > değilse sabit host. Yani "adres değişkendir" fikri kodda var, ama üçüncü ihtimal (müşterinin
-> kendi domain'i) yok. Diğer 12 dosya bu ternary'yi bile kullanmıyor, düz sabit yazıyor.
-> `module/` altındaki dördü playbook'tan **sonra** yazıldı — bu sicilin var oluş sebebi.
+> kendi domain'i) yok. Diğer 11 dosya bu ternary'yi bile kullanmıyor, düz sabit yazıyor.
+> `module/` altındaki üçü playbook'tan **sonra** yazıldı — bu sicilin var oluş sebebi.
+>
+> **08.09.2026 — Ops #283 yan ürünü:** `module/podologie-abrechnung.js` ve yeni
+> `module/podologie-dateieinheit.js`, sabiti `ctx.apiBase`'e çevirdi (host artık yalnız
+> `dashboard.js:98`'de tanımlı, ctx üzerinden geçiyor) — taban 26→25, `onprem` ajanı hükmü
+> (O-44 §7 şart 1'in aynısı: ikinci bir host sabiti açma). Faz 1.1 çözümünü genişletmedi,
+> yalnız var olan deseni izledi.
 
 ### O-02 — `N8N_AI_SERIES_URL` fallback'i koda gömülü n8n adresi
 

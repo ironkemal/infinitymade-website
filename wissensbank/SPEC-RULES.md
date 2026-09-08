@@ -8,7 +8,7 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-06
+> Son güncelleme: 2026-09-07
 
 ---
 
@@ -429,6 +429,61 @@
 - 📌 **06.09.2026 öncesi:** podoloji **`'5'`** gönderiyordu — o Ernährungstherapie'dir.
   Ortak mapper ise `sector` parametresini zaten alıyor olmasına rağmen herkes için `'1'`
   yazıyordu, yani Ergo ve Logo da „Physiotherapie" diye gidiyordu.
+
+### Abrechnungscode 20 Podologie'yi kapsamaz
+- **Kural:** Kostenträgerdatei-Routing'inde Gruppenschlüssel 20 yalnız Abrechnungscode 21-29'u
+  (Masseur/Physio/Logo/Ergo/Krankenhaus/Kurbetrieb) temsil eder. Podologie (71) ve Med.
+  Fußpflege (72) 20'nin altında DEĞİLDİR; onların fallback'i doğrudan 99 → 00'dır.
+- **Kaynak:** Anhang 03 zur Anlage 1 TP5, §8.14 + Fußnote 4 (Stand 14.04.2026)
+- **Geçerlilik:** yapı spec'i; Anlage 1 TP5 V21 Kap. 11 üzerinden atıflı
+- **Kodda:** `api-backend/billing/kostentraeger/annahmestelle.js` → `abrechnungscodeKette()`
+- **Kapsam:** Podologie · Kostenträgerdatei-Empfängerauflösung
+
+### UNB.Empfänger yalnız Verknüpfungsart 03'ten gelir, 02 yalnız rückfall
+- **Kural:** DTA dosyasının alıcısı ve şifreleme sertifikası, Kostenträgerdatei'de
+  Verknüpfungsart **03** (Datenannahmestelle MIT Entschlüsselungsbefugnis) ile işaretli IK'dır.
+  Verknüpfungsart 02 (Netzbetreiber, şifre çözme yetkisi yok) yalnız 03 hiç yoksa denenir.
+- **Kaynak:** Anhang 03 §8.3 · Anlage 1 TP5 V21 §5.4 UNB Feld 0010 · Kap. 8 Datenannahmestellen
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21)
+- **Kodda:** `api-backend/billing/kostentraeger/annahmestelle.js` → `VERKNUEPFUNGSART_KETTE`
+- **Kapsam:** tümü
+
+### Bundesland-Filtresi: boş dize = "tüm eyaletler", NULL değil
+- **Kural:** `kostentraeger_annahmestellen.bundesland` kolonu `NOT NULL DEFAULT ''` —
+  eyalet-bağımsız satırlar boş dize (`''`) taşır, bazıları `'99'`. Sorgu
+  `bundesland IN (praxisBundesland, '99', '')` olmalı; yalnız exact-match yapılırsa
+  ~220 çözülebilir Kostenträger ~12'ye düşer (ölçülmüş, `db-ustasi` 07.09.2026).
+- **Kaynak:** Anhang 03 §8.4 (`99 = Alle Bundesländer`) + canlı veri ölçümü
+- **Geçerlilik:** veri gözlemi, sürüme bağlı değil
+- **Kodda:** `api-backend/billing/kostentraeger/annahmestelle.js` → `waehleAnnahmestelle()`
+- **Kapsam:** tümü
+
+### Çözülemeyen Kostenträger: sert 412, sessiz fallback yok
+- **Kural:** Bir Kostenträger için elektronik Datenannahmestelle (Verknüpfungsart 02/03 +
+  art_datenlieferung 07/30) hiçbir Abrechnungscode kademesinde bulunamazsa, DTA üretimi
+  412 ile reddedilir. `kk.das_ik` veya `kostentraegerIk`'nin kendisine sessiz fallback YASAK —
+  o IK'nın şifreleme sertifikası olmadığından dosya zaten açılamaz, fallback erken/okunur
+  hatayı geç/okunmaz hataya çevirir.
+- **Kaynak:** mantıksal sonuç (yukarıdaki iki kural) + ölçüm: 07.09.2026 itibariyle 302
+  abrechnender Kostenträger'den 82'si çözülemiyor, ama gerçek reçete etkisi ölçüldü: sıfır
+  (`db-ustasi`, `prescriptions.kostentraeger_ik` taraması)
+- **Geçerlilik:** veri gözlemi, sürüme bağlı değil
+- **Kodda:** `api-backend/billing/api/abrechnung.routes.js` (`annahmestelleFehlt` → 412)
+- **Kapsam:** tümü
+
+### Begleitzettel: Gesamtrechnung başına bir adet, Karten-IK ile
+- **Kural:** Her Gesamtrechnung (= her Karten-IK grubu) için ayrı bir Begleitzettel üretilir.
+  „IK der Krankenkasse" alanı Karten-IK'dır (KV-Karte / ärztliche Verordnung), Kostenträger-IK
+  değil. „Rechnungsnummer" o Gesamtrechnung'un Einzel-Rechnungsnummer'idir. Adres bloğunda
+  Datenannahmestelle DEĞİL, Papierannahmestelle (Verknüpfungsart 09) hedeflenmeli — bugün
+  kodda bu blok tamamen kaldırıldı.
+- **Kaynak:** Anlage 4 V2.0 (ab 01.12.2006), Allgemeines Abs. 2 + Inhalte Abs. 1 ·
+  terim tanımı: Anlage 1 TP5 V21 Kap. 5.5.2 (SLGA.FKT) · Richtlinien-Text 20.11.2006 § 4 ·
+  Urbelege→Papierannahmestelle: Anhang 03 §5.3
+- **Geçerlilik:** 01.12.2006 — hâlâ yürürlükte
+- **Kodda:** `api-backend/billing/api/abrechnung.routes.js` (Begleitzettel-Bau, `dta.gruppen`
+  üzerinden) · şablon `api-backend/billing/pdf/begleitzettel.template.js`
+- **Kapsam:** tümü
 
 ---
 
