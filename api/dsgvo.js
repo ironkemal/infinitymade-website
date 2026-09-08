@@ -125,6 +125,13 @@ const USER_TABLES = [
   { table: 'ausfallrechnungen',            filter: 'owner_id'  },
   { table: 'mahnungen',                    filter: 'owner_id'  },
   { table: 'belegliste',                   filter: 'owner_id'  },
+  // 08.09.2026 nachgetragen: die Tabelle kam am 07.09. dazu und wurde beim
+  // Anlegen in dieser Liste vergessen — die Auskunft lieferte die
+  // Zahlungshistorie also nicht mit. Derselbe Fehler wie am 28.08.2026.
+  // Sie ist die Antwort auf „was habe ich wann auf welche Rechnung gezahlt",
+  // seit `invoices.payment_status` nur noch Cache ist; ohne sie ist die
+  // Auskunft zum Zahlungsverlauf unvollständig.
+  { table: 'rechnung_zahlungen',           filter: 'owner_id'  },
   { table: 'nummernkreise',                filter: 'owner_id'  },
   { table: 'attendance',                   filter: 'owner_id'  },
   { table: 'document_vorlagen',            filter: 'owner_id'  },
@@ -268,8 +275,20 @@ const DELETE_TABLES = [
   //                       Nachweiskette der Einwilligung selbst.
   //   `abrechnung`      — § 302 SGB V / § 304 SGB V Aufbewahrung.
   //   `invoices`        — wird oben anonymisiert statt gelöscht (Absicht).
+  //   `rechnung_zahlungen` — ⏳ NOCH NICHT ENTSCHIEDEN (08.09.2026). Die
+  //                       Tabelle kam am 07.09. dazu und fehlte hier wie in
+  //                       der Auskunftsliste; die Auskunft ist oben
+  //                       nachgetragen, der Löschweg bewusst noch nicht.
+  //                       `owner_id` steht auf RESTRICT — sie sperrt die
+  //                       Profillöschung damit genauso wie `belegliste`, und
+  //                       `invoice_id` (ebenfalls RESTRICT) sperrt zusätzlich
+  //                       das Löschen einer einzelnen Rechnung, sobald darauf
+  //                       gezahlt wurde. Ob löschen, anonymisieren (wie
+  //                       `invoices`) oder aufbewahren (wie `belegliste`),
+  //                       liegt bei legal-de. Bis dahin steht sie hier, damit
+  //                       sie nicht ein zweites Mal übersehen wird.
   // Art. 17 Abs. 3 lit. b lässt Aufbewahrungspflichten vorgehen, aber welche
-  // dieser vier gelöscht, anonymisiert oder behalten werden muss, entscheidet
+  // dieser fünf gelöscht, anonymisiert oder behalten werden muss, entscheidet
   // legal-de — nicht dieser Endpunkt und nicht nebenbei.
 ];
 

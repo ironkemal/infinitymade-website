@@ -1,7 +1,26 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-06 (zuletzt nachgezogen: kostentraeger_echtdaten_struktur,
+-- ERZEUGT AM:        2026-09-08 (zuletzt nachgezogen: ZWEI Skripte, die am
+--                    Migrationsregister VORBEI direkt im Supabase-SQL-Editor
+--                    gefahren wurden — deshalb stehen sie unten NICHT unter
+--                    "LETZTE MIGRATION", obwohl sie live sind:
+--                      · 07.09.2026 sql-melih/2026-09-07-rechnung-zahlungen.sql
+--                        → neue Tabelle `rechnung_zahlungen` (Zahlungs-Ledger
+--                        zu Privatrechnungen), profiles.buchungskonten,
+--                        invoices.storno_grund/storno_am, belegliste.invoice_id,
+--                        belegliste_type_check um 'rechnung' erweitert,
+--                        Funktion rechnung_zahlung_buchen().
+--                      · 08.09.2026 sql-codex/2026-09-08-192-termin-soft-delete.sql
+--                        → bookings.cancelled_at/cancelled_session_links und
+--                        drei codex_192_*-Trigger. Absage ist ab jetzt ein
+--                        Soft-Delete; Termine werden nicht mehr geloescht.
+--                    Per Hand nachgezogen, kein voller Neu-Dump.
+--                    ⚠️ supabase_migrations.schema_migrations endet weiterhin am
+--                       05.09.2026 — der SQL-Editor traegt dort nichts ein. Wer
+--                       nur das Register liest, haelt beide Aenderungen fuer
+--                       ausstehend. Sie sind es nicht, gegen die Live-DB geprueft.
+--                    davor: 2026-09-06, kostentraeger_echtdaten_struktur,
 --                    Ops #264 — die ECHTE TP5-Kostentraegerdatei ist geladen.
 --                    `kostentraeger` +6 Spalten, neue Tabelle
 --                    `kostentraeger_annahmestellen`. Der Dump lief dieser
@@ -78,8 +97,28 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            84 Tabellen · 1226 Spalten · 159 RLS-Policies
---                    301 Indizes · 66 Trigger · 67 Funktionen · 4 Views
+-- UMFANG:            85 Tabellen · 1244 Spalten · 161 RLS-Policies
+--                    307 Indizes · 71 Trigger · 73 Funktionen · 4 Views
+--                    (08.09.2026: live nach der dokumentierten Zaehlweise
+--                     nachgezaehlt. Alle sechs Deltas gehen restlos auf die
+--                     zwei SQL-Editor-Skripte auf — zum ersten Mal seit
+--                     Wochen bleibt kein unerklaerter Rest:
+--                       Tabellen  84 -> 85   +1  rechnung_zahlungen
+--                       Spalten 1226 ->1244  +18 12 rechnung_zahlungen
+--                                                + profiles.buchungskonten
+--                                                + invoices.storno_grund/_am
+--                                                + belegliste.invoice_id
+--                                                + bookings.cancelled_at/
+--                                                  cancelled_session_links
+--                       Policies 159 -> 161  +2  rechnung_zahlungen select/insert
+--                       Indizes  301 -> 307  +6  4 rechnung_zahlungen (inkl. pkey)
+--                                                + idx_belegliste_invoice
+--                                                + codex_192_prescription_sessions_booking_idx
+--                       Trigger   66 -> 71   +5  2 rechnung_zahlungen + 3 codex_192
+--                       Funktionen 67 -> 73  +6  3 rechnung_zahlungen + 3 codex_192
+--                     Dass die Rechnung diesmal ohne Rest aufgeht, ist selbst
+--                     der Befund: es gibt keine weitere unbemerkte Aenderung
+--                     an der Live-DB.)
 --                    (06.09.2026: +1 Tabelle (kostentraeger_annahmestellen),
 --                     +1 Policy, +5 Indizes durch kostentraeger_echtdaten_struktur.
 --                     Indizes: 296 + 5 = 301, live nachgezaehlt — die am
@@ -353,12 +392,23 @@ CREATE TABLE belegliste (
   created_by uuid
   storno_reason text
   zahlart text
+  invoice_id uuid
 );
---   CHECK type IN (zuzahlung, barverkauf, storno, ausfall)
+--   CHECK belegliste_type_check: type IN (zuzahlung, barverkauf, storno, ausfall, rechnung)
+--      ⚠️ 'rechnung' kam am 07.09.2026 dazu (Privatrechnung bar kassiert). Der
+--      type beschreibt den GESCHAEFTSVORFALL, nicht den Erfassungsweg:
+--      Rechnung MIT Rezeptbezug -> type='zuzahlung' und BEIDE Referenzen setzen;
+--      Rechnung OHNE Rezeptbezug -> type='rechnung'. Daran haengt das Mahnwesen.
 --   CHECK belegliste_zahlart_check: zahlart IS NULL OR zahlart IN
 --      (bar, ec, ueberweisung, sonstiges) — NULL = Altbeleg vor v32.
 --   FK owner_id -> profiles(id) ON DELETE RESTRICT
 --   FK patient_id -> leads(id) · prescription_id -> prescriptions(id) · abrechnung_id -> abrechnung(id)
+--   FK invoice_id -> invoices(id) ON DELETE RESTRICT
+--   invoice_id (07.09.2026): bei type IN ('rechnung','storno') die bar bezahlte
+--      Privatrechnung bzw. deren Gegenbuchung. Die Storno-Zeile braucht die
+--      Referenz ebenso, sonst ist der Kassenbuch-Saldo je Rechnung nicht
+--      rechenbar. Bewusst KEIN CHECK darauf. Bank/EC erzeugen keine
+--      Beleglisten-Zeile, Ausbuchungen nie (kein Geldfluss).
 --   PK (id) · UNIQUE (owner_id, beleg_nr)
 --   ⚠️ GoBD: TRIGGER prevent_belegliste_mod() blockt UPDATE und DELETE.
 --      Korrektur nur durch neuen Beleg mit type='storno'.
@@ -482,6 +532,8 @@ CREATE TABLE bookings (
   payment_method text
   verordnung_id uuid
   dauer_quelle text
+  cancelled_at timestamptz
+  cancelled_session_links jsonb NOT NULL DEFAULT '[]'::jsonb
 );
 --   CHECK status IN (confirmed, cancelled, completed, pending, no_show)
 --   CHECK dauer_quelle IS NULL OR IN (vorschlag, manuell, serie)
@@ -510,6 +562,40 @@ CREATE TABLE bookings (
 --        genau die Information, wegen der die Spalte existiert.
 --   TRIGGER: fn_check_booking_closed_day() · Telefon-Normalisierung · business_id-Default
 --            · pruefe_booking_verordnung_owner() (Owner-Riegel, siehe unten)
+--            · codex_192_booking_before_write / _after_cancel (Absage, siehe unten)
+--   ★ ABSAGE IST EIN SOFT-DELETE (#192, 08.09.2026) — Termine werden nicht mehr
+--     geloescht, sondern auf status='cancelled' gesetzt. Drei Trigger halten das
+--     zusammen; Details und Rechte in db/SCHEMA-RLS.sql, Skript in
+--     sql-codex/2026-09-08-192-termin-soft-delete.sql.
+--     Kein neues Statusmodell: status='cancelled' + cancellation_reason bleiben
+--     massgeblich, cancelled_at/cancelled_session_links sind reine Historie.
+--   ★ cancelled_at — Zeitpunkt der Absage AB #192. Bei vorher abgesagten
+--     Terminen NULL (bewusst kein erfundener historischer Zeitstempel).
+--     Wird ausschliesslich vom Trigger gesetzt; ein vom Client mitgeschickter
+--     Wert wird ueberschrieben.
+--   ★ cancelled_session_links — jsonb-Array der geplanten prescription_sessions,
+--     die bei der Absage wieder freigegeben wurden:
+--       [{session_id, prescription_id, session_number, heilmittel_index}, …]
+--     ⚠️ KEIN Sitzungszaehler und keine Quelle fuer Abrechnung. Nur das
+--        Gedaechtnis, welche Einheit vorher an diesem Termin hing — die
+--        Wahrheit steht weiterhin in prescription_sessions. Wird angehaengt
+--        (||), nie ueberschrieben.
+--   ⚠️ Was die Trigger BLOCKEN (alle ERRCODE 23514, also fachlicher Abbruch):
+--        · Reaktivieren einer Absage (cancelled -> irgendetwas anderes)
+--        · Absagen aus status completed/no_show heraus oder mit no_show=true
+--        · Absagen, solange eine Fahrt laeuft (fahrten.fahrt_ended_at IS NULL)
+--        · Absagen, wenn schon Sitzungen auf done/no_show stehen
+--        · Anlegen/Aktivieren eines Teilnehmers unter einem abgesagten oder
+--          fremden Gruppentermin
+--   ⚠️ Gruppentermin: die Absage des Elterntermins sagt per AFTER-Trigger alle
+--      Teilnehmer mit ab und reicht cancellation_reason durch. Die FK
+--      group_parent_id -> bookings(id) ON DELETE CASCADE existiert weiter, greift
+--      im Normalbetrieb aber nicht mehr — frueher verschwanden die Teilnehmer
+--      beim Loeschen des Elterntermins mitsamt Historie.
+--   ⚠️ prescription_sessions.booking_id wird bei der Absage auf NULL gesetzt
+--      (Einheit ist wieder buchbar) — genau das, was frueher ON DELETE SET NULL
+--      beim Loeschen tat. Die alte Zuordnung ueberlebt in
+--      cancelled_session_links.
 --   ★ verordnung_id — PODOLOGIE-Zweig. Bindet den Termin an die podologische
 --     Verordnung (seit 03.09.2026). Zeigt seit 04.09.2026 auf `prescriptions`
 --     (Zusammenlegung der Verordnungstöpfe) — vorher eine eigene Tabelle
@@ -1059,6 +1145,8 @@ CREATE TABLE invoices (
   leistung_von date
   leistung_bis date
   rechnung_nr bigint
+  storno_grund text
+  storno_am date
 );
 --   CHECK status IN (draft, sent, paid, cancelled)
 --   CHECK payment_status IN (pending, paid, partial)
@@ -1090,6 +1178,15 @@ CREATE TABLE invoices (
 --   ⚠️ rechnung_nr/invoice_number kommen vom TRIGGER set_invoice_nummer(), das
 --      Frontend zählt NICHT mehr selbst hoch. Einmal vergeben, nie geändert
 --      (§ 14 Abs. 4 Nr. 4 UStG).
+--   ★ payment_status ist seit 07.09.2026 nur noch CACHE. Der wirklich beglichene
+--      Betrag ist sum(rechnung_zahlungen.betrag_eur) zu dieser invoice_id — die
+--      Storno-Zeilen zaehlen negativ mit. Wer den Offenbetrag aus payment_status
+--      ableitet statt aus dem Ledger, rechnet Teilzahlungen falsch.
+--      Geschrieben wird ausschliesslich ueber rechnung_zahlung_buchen(); die
+--      Funktion setzt payment_status im selben Schritt mit.
+--   ★ storno_grund / storno_am (07.09.2026) — Gegenbuchung einer bereits
+--      festgeschriebenen Rechnung. Ersetzt KEINE Korrektur am Original: das
+--      bleibt unveraendert stehen (GoBD), der Storno ist ein eigener Vorgang.
 
 CREATE TABLE kostentraeger (
   ik text NOT NULL
@@ -1844,6 +1941,7 @@ CREATE TABLE profiles (
   ausfall_hinweis text
   fussbefund_legende jsonb NOT NULL DEFAULT '[]'::jsonb   -- Podologie-Legende
   selbstzahler_stufen jsonb NOT NULL DEFAULT '[]'::jsonb
+  buchungskonten jsonb NOT NULL DEFAULT '[]'::jsonb       -- Kontenrahmen, siehe unten
 );
 --   CHECK plan IN (starter, professional, klinik, mitarbeiter, enterprise)
 --   CHECK plan_status IN (pending, trial, active, past_due, canceled, expired)
@@ -1864,6 +1962,56 @@ CREATE TABLE profiles (
 --      (Add-on 2026-06-08 abgeschafft, §302 ist in Professional enthalten).
 --   ⚠️ whatsapp_* und system_prompt/faq/message_templates sind tot
 --      (WhatsApp-Strang 2026-05-20 eingestellt).
+--   ★ buchungskonten (07.09.2026) — owner-gepflegter Kontenrahmen:
+--      [{code, label, aktiv}]. Form und Normalisierung in module/buchungskonten.js.
+--      Leer = Modul-Standard (1000 Kasse, 1100 Postbank, 1200 Bank, 1210 Bank 2,
+--      8700 Erloesschmaelerung, 4900 Teilabsetzung).
+--      ⚠️ Gebuchte Zeilen referenzieren NICHT hierher — rechnung_zahlungen
+--         speichert gegenkonto_code UND gegenkonto_label als Snapshot
+--         (GoBD Rz. 107). Umbenennen eines Kontos aendert alte Buchungen nicht,
+--         und genau das ist gewollt.
+
+CREATE TABLE rechnung_zahlungen (
+  id uuid NOT NULL DEFAULT gen_random_uuid()
+  owner_id uuid NOT NULL
+  invoice_id uuid NOT NULL
+  art text NOT NULL
+  betrag_eur numeric(10,2) NOT NULL
+  zahlungsdatum date NOT NULL DEFAULT CURRENT_DATE
+  gegenkonto_code text NOT NULL
+  gegenkonto_label text NOT NULL
+  storniert_zeile_id uuid
+  bemerkung text
+  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+  created_by uuid
+);
+--   CHECK rechnung_zahlungen_art_check: art IN (zahlung, ausbuchung, storno)
+--   CHECK rechnung_zahlungen_storno_bezug: (art = 'storno') = (storniert_zeile_id IS NOT NULL)
+--   CHECK rechnung_zahlungen_vorzeichen: art='storno' -> betrag_eur < 0,
+--      sonst betrag_eur > 0. Null ist nie erlaubt.
+--   FK owner_id -> profiles(id) ON DELETE RESTRICT
+--   FK invoice_id -> invoices(id) ON DELETE RESTRICT
+--   FK storniert_zeile_id -> rechnung_zahlungen(id)   (Selbstbezug)
+--   FK created_by -> profiles(id) ON DELETE SET NULL
+--   PK (id) · UNIQUE (storniert_zeile_id) WHERE NOT NULL  → jede Zeile
+--      genau einmal stornierbar
+--   ★ Append-only Zahlungshistorie zu invoices (Privatrechnung), 07.09.2026.
+--     Der beglichene Betrag ist sum(betrag_eur), NICHT invoices.payment_status —
+--     der ist nur Cache.
+--   ⚠️ GoBD: TRIGGER prevent_rechnung_zahlungen_mod() blockt UPDATE und DELETE.
+--      Korrektur nur durch neue Zeile mit art='storno' und negativem Betrag.
+--   ⚠️ gegenkonto_code/_label sind SNAPSHOTS aus profiles.buchungskonten zum
+--      Buchungszeitpunkt (GoBD Rz. 107). Beim Anzeigen NICHT wieder aus dem
+--      Kontenrahmen nachschlagen — sonst aendert eine Umbenennung rueckwirkend
+--      alte Buchungen.
+--   ⚠️ Owner-Riegel noetig, weil ein FK KEINE RLS prueft:
+--      trg_pruefe_rechnung_zahlung_owner (SECURITY DEFINER) haelt owner_id der
+--      Zeile gegen invoices.owner_id.
+--   ★ Geschrieben wird ueber public.rechnung_zahlung_buchen(...) — eine
+--     Transaktion, die je nach Restbetrag zusaetzlich eine Ausbuchungszeile
+--     anlegt, bei Barzahlung die Beleglisten-Zeile (belegliste.invoice_id)
+--     erzeugt, ggf. prescriptions fortschreibt und invoices.payment_status
+--     nachzieht. Nicht von Hand INSERTen.
 
 CREATE TABLE referral_drafts (
   id uuid NOT NULL DEFAULT gen_random_uuid()
