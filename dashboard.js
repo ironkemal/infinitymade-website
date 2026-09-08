@@ -1,3 +1,6 @@
+import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260908';
+import { storniereTermin } from './module/termin-storno.js?v=20260908';
+import { zeigePatientTermine } from './module/patient-termine.js?v=20260908';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
@@ -10,7 +13,7 @@ import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260817';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20260905a';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20260908';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260826';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
 import { checkPrescriptionCompliance, istBerichtOffen, istHarterRiegel, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
@@ -34,8 +37,8 @@ import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeV
   from './module/verordnung-maske.js?v=20260907';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260906';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260906';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260908';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20260908';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260908';
@@ -44,7 +47,7 @@ import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260815c';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260908';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260817';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
@@ -53,7 +56,7 @@ import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=2026
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260905a';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260905a';
+import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260908';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260905c';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
@@ -1938,7 +1941,8 @@ on('verordnungen:changed', async () => {
   const { data: frisch } = await supabase.from('bookings')
     .select('*, services(title,color,code), prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
     .eq('id', bkActionBookingCache.id).maybeSingle();
-  if (frisch) openBookingActionModal(frisch).catch(() => {});
+  if (frisch?.status === 'cancelled') closeBkActionPanel();
+  else if (frisch) openBookingActionModal(frisch).catch(() => {});
 });
 
 function formatActivityTimestamp(iso) {
@@ -1997,7 +2001,7 @@ async function loadActivityFeed() {
         .limit(10), 'activities'),
       bizScope(supabase.from('bookings')
         .select('id, created_at, customer_name')
-        .eq('owner_id', ownerId)
+        .eq('owner_id', ownerId).neq('status', 'cancelled')
         .order('created_at', { ascending: false })
         .limit(10), 'activities'),
       bizScope(supabase.from('leads')
@@ -2977,7 +2981,7 @@ verdrahteHeuteButton(() => {
 
 // Rechtsklick auf einem Termin: dieselben Handlungen wie im Seitenbereich, ohne Umweg.
 // Woche/Monat laden weniger Spalten: erst vollstaendig laden (module/termin-laden.js).
-const mitTermin = (fn) => async (b) => fn(await ladeTerminVollstaendig(supabase, b));
+const mitTermin = (fn) => async (b) => { const t = await ladeTerminVollstaendig(supabase, b); if (t && t.status !== 'cancelled') return fn(t); };
 verdrahteKontextmenue({
   wahrgenommen: mitTermin((b) => { bkActionBookingCache = b; handleTerminStarten(); }),
   nichtErschienen: mitTermin((b) => { bkActionBookingCache = b; handlePatientNichtErschienen(); }),
@@ -3261,6 +3265,7 @@ function updateNoShowButton(startTime) {
 }
 
 async function openBookingActionModal(booking, opts = {}) {
+  if (!booking || booking.status === 'cancelled') { closeBkActionPanel(); return; }
   // Der Seitenbereich geht auch aus dem Tagesplan auf, nicht nur aus dem
   // Kalender — die Patientensuche im Kopf muss dann trotzdem verdrahtet sein.
   if (!window._calRpInited) { window._calRpInited = true; initCalRightPanel(); }
@@ -5065,6 +5070,7 @@ async function initBkGroupPatientAutocomplete() {
 }
 
 async function openBookingModal(b) {
+  if (b?.status === 'cancelled') { showToast('Dieser Termin ist abgesagt.', 'warning'); return; }
   if (!b) { await prefillBookingModal(null); return; }
   const ownerId = getOwnerId();
   document.getElementById('bk-id').value = b.id || '';
@@ -6316,7 +6322,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   if (abgleich.ergaenzt > 0) emit('verordnungen:changed');
 
   const { data: allSessions } = await supabase.from('prescription_sessions')
-    .select('id,session_number,heilmittel_index,status,booking_id,bookings(start_time)')
+    .select('id,session_number,heilmittel_index,status,booking_id,bookings(start_time,status)')
     .eq('prescription_id', linkedSession.prescription_id)
     .order('session_number');
 
@@ -6326,11 +6332,12 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   const getHmName = (idx) => heilmittelItems[idx]?.name || heilmittelItems[idx]?.kuerzel || rx.heilmittel || '—';
   const getHmKuerzel = (idx) => heilmittelItems[idx]?.kuerzel || (heilmittelItems[idx]?.name?.substring(0,3).toUpperCase()) || String(idx + 1);
 
-  const unvergebene = allSessions.filter(s => !s.booking_id);
-  const vergebene = allSessions.filter(s => s.booking_id);
+  const aktiveSessions = aktiveSitzungszeilen(allSessions);
+  const unvergebene = aktiveSessions.filter(s => !s.booking_id);
+  const vergebene = aktiveSessions.filter(s => s.booking_id);
 
   const badge = document.getElementById('bkRxSessionsBadge');
-  if (badge) badge.textContent = `${unvergebene.length} offen / ${allSessions.length} ges.`;
+  if (badge) badge.textContent = `${unvergebene.length} offen / ${aktiveSessions.length} ges.`;
 
   // Serienknopf: nur sinnvoll, wenn mindestens zwei Einheiten offen sind —
   // für eine einzelne zieht man schneller, als der KI-Ablauf dauert.
@@ -7850,15 +7857,13 @@ document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e
 
 // Absagen aus Seitenbereich UND Kontextmenue — ein Weg, nicht zwei.
 async function absageTerminMitGrund(b) {
-  if (!b) return;
-  const reason = await showAbsagegrundModal({ title: 'Termin absagen', confirmText: 'Termin löschen' });
+  if (!b || b.status === 'cancelled') return;
+  if (!['confirmed', 'pending'].includes(b.status) || b.no_show) { showToast('Nur geplante Termine können abgesagt werden.', 'warning'); return; }
+  const reason = await showAbsagegrundModal({ title: 'Termin absagen', confirmText: 'Termin absagen' });
   if (reason === null) return;
-  if (reason && reason.trim()) {
-    await supabase.from('bookings').update({ cancellation_reason: reason.trim() }).eq('id', b.id);
-  }
 
   // Kurzfristige Absage innerhalb der Absagefrist → Ausfallrechnung anbieten
-  // (vor dem Löschen — die Rechnung referenziert den Termin, FK ist ON DELETE SET NULL)
+  // Das bestehende Rechnungsangebot bleibt vor der Absage.
   const afBiz = ausfallBizForBooking(b);
   if (afBiz && b.start_time) {
     const hoursUntil = (new Date(b.start_time) - Date.now()) / 3600000;
@@ -7867,19 +7872,17 @@ async function absageTerminMitGrund(b) {
     }
   }
 
-  // Die Warteliste NOCH vor dem Löschen fragen: der Abgleich liest den Termin
-  // über seine ID, nach dem Löschen gäbe es weder Wochentag noch Uhrzeit zum
-  // Filtern. Gewartet wird erst danach, damit die Absage nicht an einer
-  // langsamen Leitung hängt.
+  // Nachrücker parallel laden; erst nach erfolgreicher Absage anbieten.
   const token = (await supabase.auth.getSession()).data.session?.access_token;
   const nachruecker = holeNachruecker({ apiBase: API, token, bookingId: b.id })
     .catch(err => { console.error('[warteliste-match]', err); return null; });
 
-  const { error } = await supabase.from('bookings').delete().eq('id', b.id);
-  if (error) { showToast('Fehler beim Löschen: ' + error.message, 'error'); return; }
+  try { await storniereTermin({ apiBase: API, token, bookingId: b.id, reason }); }
+  catch (error) { showToast('Absage fehlgeschlagen: ' + error.message, 'error'); return; }
   closeModal('bookingModal');
   closeBkActionPanel();
-  showToast('Termin gelöscht.', 'success');
+  showToast('Termin abgesagt.', 'success');
+  emit('verordnungen:changed');
   // Vorher: `renderDayView()` OHNE Datum -> Label "Invalid Date", danach
   // RangeError im toISOString(); der Kalender blieb nach dem Absagen leer.
   refreshBookingViews().catch(() => {});
@@ -7986,7 +7989,7 @@ async function loadLeads() {
   leadsMeta = {};
   if (phones.length) {
     let bkQ = supabase.from('bookings').select('id,customer_phone_normalized,start_time,status')
-      .eq('owner_id', ownerId).in('customer_phone_normalized', phones).order('start_time', { ascending: true });
+      .eq('owner_id', ownerId).in('customer_phone_normalized', phones).neq('status', 'cancelled').order('start_time', { ascending: true });
     bkQ = bizScope(bkQ, 'patients');
     const { data: bkData } = await bkQ;
     // wa_contacts tablosu 2026-05-22'de DROP edildi (WhatsApp shelved). wa metadata kalktı.
@@ -8992,45 +8995,9 @@ async function loadPatientDetailRechnungen(leadId) {
 
 async function loadPatientDetailTermine(leadId) {
   const lead = leadsCache.find(l => l.id === leadId);
-  const ownerId = getOwnerId();
-  const patientName = displayName(lead);
-  let query = supabase.from('bookings')
-    .select('id,start_time,end_time,status,customer_name,services(title,code)')
-    .eq('owner_id', ownerId)
-    .neq('status', 'cancelled')
-    .order('start_time', { ascending: false });
-  if (lead?.phone) {
-    query = query.eq('customer_phone', lead.phone);
-  } else if (patientName) {
-    query = query.eq('customer_name', patientName);
-  } else {
-    document.getElementById('pdTermLoading').hidden = true;
-    document.getElementById('pdTermContent').innerHTML = '<div class="pd-empty">Keine Termine vorhanden.</div>';
-    return;
-  }
-  const { data } = await query;
-  const content = document.getElementById('pdTermContent');
-  document.getElementById('pdTermLoading').hidden = true;
-  if (!data || data.length === 0) {
-    content.innerHTML = '<div class="pd-empty">Keine Termine vorhanden.</div>';
-    return;
-  }
-  content.innerHTML = data.map(b => {
-    const dateStr = b.start_time ? fmtDate(b.start_time) : '—';
-    const timeStr = b.start_time ? fmtTime(b.start_time) : '—';
-    const dur = b.end_time && b.start_time ? Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000) + ' min' : '';
-    const serviceTitle = b.services?.title || '—';
-    const svcCode4 = b.services?.code;
-    return `
-      <div class="pd-term-item">
-        <div class="pd-term-row">
-          <span class="pd-term-date">${dateStr} · ${timeStr}</span>
-          <span class="badge ${b.status === 'confirmed' ? 'badge-green' : (b.status === 'cancelled' || b.status === 'no_show') ? 'badge-red' : 'badge-gray'}">${b.status || '—'}</span>
-        </div>
-        <div class="pd-term-service">${escapeHtml(serviceTitle)} ${svcCode4 ? '<span style="font-size:11px;color:var(--text-muted);margin-left:6px;background:var(--bg-elevated);padding:1px 5px;border-radius:3px;">' + escapeHtml(svcCode4) + '</span>' : ''} ${dur ? '· ' + dur : ''}</div>
-      </div>
-    `;
-  }).join('');
+  await zeigePatientTermine({ sb: supabase, ownerId: getOwnerId(), lead,
+    patientName: displayName(lead), content: document.getElementById('pdTermContent'),
+    loading: document.getElementById('pdTermLoading'), fmtDate, fmtTime });
 }
 
 

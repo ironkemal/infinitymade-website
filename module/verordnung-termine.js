@@ -73,6 +73,7 @@ export async function ladePodoTermine(sb, { ownerId, vordId, leadId } = {}) {
     sb.from('bookings').select(spalten)
       .eq('owner_id', ownerId)
       .eq('verordnung_id', vordId)
+      .neq('status', 'cancelled')
       .order('start_time', { ascending: true }),
     leadId
       ? sb.from('bookings').select(spalten)
