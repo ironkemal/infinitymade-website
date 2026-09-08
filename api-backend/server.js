@@ -17,6 +17,7 @@ import billingAusfallRouter from './billing/api/ausfall.routes.js';
 import billingStatistikRouter from './billing/api/statistik.routes.js';
 import verordnungStatusRouter from './billing/api/verordnung-status.routes.js';
 import zuzahlungRouter from './billing/api/zuzahlung.routes.js';
+import rechnungZahlungRouter from './billing/api/rechnung-zahlung.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { heilmittelPositionAufloesen, kostentraegerIkAufloesen } from './lib/rezept-felder.js';
@@ -387,6 +388,9 @@ app.use('/api/billing', verordnungStatusRouter);
 
 // Zuzahlung nachtraeglich korrigieren + Guthaben verrechnen.
 app.use('/api/billing', zuzahlungRouter);
+
+// Zahlungseingaenge auf Privatrechnungen (Gegenkonto, Teilzahlung, Ausbuchung).
+app.use('/api/billing', rechnungZahlungRouter);
 
 // Warteliste (Bekleme Listesi) routes.
 app.use('/api/warteliste', wartelisteRouter);

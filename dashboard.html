@@ -2602,6 +2602,27 @@
                 </div>
               </div>
 
+              <!-- Buchungskonten (Gegenkonten) — Owner-Einstellung (profiles.buchungskonten) -->
+              <div class="settings-section" id="settingsKontenSection" hidden>
+                <div class="settings-section-title">Buchungskonten</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Beim Verbuchen eines Zahlungseingangs wählen Sie aus, wohin das Geld
+                    geflossen ist — Kasse, Bank, oder bei einem abgeschriebenen Restbetrag
+                    die Erlösschmälerung. Das sind die Angaben, die Ihr Steuerberater braucht.
+                    Solange Sie nichts ändern, gilt der Standardrahmen (SKR03).
+                    Ein Konto, auf das schon gebucht wurde, sollten Sie deaktivieren statt
+                    entfernen: bereits gebuchte Zahlungen behalten ohnehin ihre ursprüngliche
+                    Kontobezeichnung.
+                  </p>
+                  <div id="setKontenList" style="margin-bottom:12px;"></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn" id="setKontenAddBtn" type="button">＋ Konto</button>
+                    <button class="btn-primary" id="setKontenSaveBtn" type="button">Speichern</button>
+                  </div>
+                </div>
+              </div>
+
               <!-- Legende der Fußgrafik (Podologie) — Owner-Einstellung -->
               <div class="settings-section" id="settingsLegendeSection" hidden>
                 <div class="settings-section-title">Legende der Fußgrafik</div>

@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-06 · 84 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-06), funktionen/INDEX.json (erzeugt 2026-09-06)
+**Erzeugt:** 2026-09-07 · 84 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-06), funktionen/INDEX.json (erzeugt 2026-09-07)
 
 ## Kayıt durumu
 
@@ -50,7 +50,7 @@ Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
 |---|---|---|---|---|
 | `profiles` | 20 | 32 | 27 | abrechnung, anfragen, fahrtenbuch, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
 | `bookings` | 16 | 37 | 27 | abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen |
-| `prescriptions` | 12 | 29 | 23 | abrechnung, anamnese, belegliste, doctors, fussstatus, hours, kunden, rechnungen, services, settings, team, ueberblick, verordnungen |
+| `prescriptions` | 11 | 29 | 22 | abrechnung, anamnese, belegliste, doctors, fussstatus, hours, kunden, rechnungen, services, settings, team, ueberblick, verordnungen |
 | `document_vorlagen` | 10 | 2 | 3 | abrechnung, fussstatus, hours, kunden, rechnungen, services, team, ueberblick, verordnungen, vorlagen |
 | `services` | 8 | 15 | 11 | abrechnung, anfragen, fussstatus, hours, kunden, rechnungen, services, team, ueberblick, verordnungen |
 | `prescription_sessions` | 6 | 10 | 10 | abrechnung, fussstatus, hours, kunden, rechnungen, services, team, ueberblick, verordnungen |
@@ -148,7 +148,7 @@ Warum: Fremdprojekt (Bewerbungen). Nie Teil von Praxura.
 12 Spalten · Status: aktiv
 Warum: Kommen/Gehen der Mitarbeiter (Arbeitszeiterfassung), getrennt von der Sollarbeitszeit in `working_hours`.
 
-**Schreibt (1):** `toRad()` [insert/update] — api-backend/server.js:3236
+**Schreibt (1):** `toRad()` [insert/update] — api-backend/server.js:3418
 
 **Liest (1):** `fetchHistory()`
 
@@ -515,9 +515,9 @@ Warum: Der Kiosk-Modus (Tablet im Wartezimmer) braucht eine Anmeldung, die kein 
 15 Spalten · Status: aktiv — **Echtdaten**, mit 9 Mock-Resten
 Warum: Die §302-Seite der Kassen. Seit dem 06.09.2026 trägt sie zwei Dinge, die vorher gefehlt haben: die **echten** IK-Nummern aus der TP5-Kostenträgerdatei — und die **n:1-Beziehung**, ohne die eine IK allein nichts wert ist. Eine Versichertenkarte nennt fast nie die Stelle, die am Ende abrechnet: die DAK-Karte trägt `100167999`, das Geld holt man aber bei `105830016`. Genau diese Auflösung steckt in `abrechnender_kt_ik` / `ist_abrechnender_kt` (VKG-Verknüpfungsart 01).
 
-**Liest (1):** `loadAbrechnung()`
+**Liest (2):** `kostentraegerIkAufloesen()`, `loadAbrechnung()`
 
-**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/server.js`, `dashboard.js`
+**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/lib/rezept-felder.js`, `dashboard.js`
 
 **Module:** abrechnung, fussstatus, hours, kunden, rechnungen, services, team, ueberblick, verordnungen
 
@@ -693,11 +693,11 @@ Warum: Prüfergebnis der Rezeptvalidierung samt Übersteuerung. Getrennt von `pr
 83 Spalten · Status: aktiv
 Warum: Die Verordnung (Muster 13) für ALLE vier Fachbereiche — Physio, Ergo, Logopädie UND (seit 04.09.2026) Podologie. `therapie_bereich` unterscheidet; Podologie-Zeilen tragen zusätzlich neun aus `verordnungen` übernommene Spalten (`patient_name`, `wagner_grad`, `versichertennummer`, `behandlungsanlass`, `absetzung_*`, `storno_*`, `rezeptart`).
 
-**Schreibt (12):** `betragNullsetzen()` [update] — module/zuzahlung-befreiung.js:249 · `downloadDmrzForInvoice()` [update] — dashboard.js:15433 · `flipAbrechnungStatus()` [update] — dashboard.js:8469 · `kassiereZuzahlung()` [update] — dashboard.js:7167 · `pruefeVerordnungsfortschritt()` [update] — module/sitzungsfortschritt.js:82 · `renderAbrechnungHistory()` [update] — dashboard.js:18859 · `renderAbrechnungReady()` [update] — dashboard.js:18632 · `schreibeVerordnung()` [update] — module/verordnung-maske.js:540 · `speichereEinheiten()` [update] — module/verordnung-einheiten.js:126 · `storniereZuzahlung()` [update] — dashboard.js:7242 · `triggerStorno()` [update] — dashboard.js:19963 · `zaehler()` [update] — module/sitzungsfortschritt.js:85
+**Schreibt (11):** `betragNullsetzen()` [update] — module/zuzahlung-befreiung.js:249 · `downloadDmrzForInvoice()` [update] — dashboard.js:15433 · `flipAbrechnungStatus()` [update] — dashboard.js:8469 · `kassiereZuzahlung()` [update] — dashboard.js:7167 · `pruefeVerordnungsfortschritt()` [update] — module/sitzungsfortschritt.js:82 · `renderAbrechnungHistory()` [update] — dashboard.js:18859 · `renderAbrechnungReady()` [update] — dashboard.js:18632 · `speichereEinheiten()` [update] — module/verordnung-einheiten.js:126 · `storniereZuzahlung()` [update] — dashboard.js:7242 · `triggerStorno()` [update] — dashboard.js:19963 · `zaehler()` [update] — module/sitzungsfortschritt.js:85
 
 **Liest (29):** `aufEuro()`, `frag()`, `frageZahlungsstatus()`, `initBkCustomerAutocomplete()`, `korrekturAusPanel()`, `ladeAktiveVerordnungen()`, `ladeVerlauf()`, `ladeZuweisungen()`, `linkBookingsToPrescriptionSessions()`, `loadAbrechnung()`, `loadAnamneseRxContext()`, `loadBkVerordnungen()`, `loadCalRpRezeptInfo()`, `loadPatientDetailRezepte()`, `loadPatRxTable()`, `loadPhysioRezKpis()`, `loadRxSessionsPanel()`, `loadUeberblickDeadlines()`, `oeffneZuzahlungKorrektur()`, `openBookingActionModal()` … +9
 
-**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/mahnwesen.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/verordnung-status.routes.js`, `api-backend/billing/api/zuzahlung.routes.js`, `api-backend/server.js`, `dashboard.js`, `module/arzt-register.js`, `module/booking-status-korrektur.js`, `module/patientenkarte.js`, `module/rechnung-verordnung.js`, `module/rechnung-zahlung.js`, `module/rezeptinfo-geld.js`, `module/sitzungsfortschritt.js`, `module/termin-aktionen.js`, `module/termin-leistungen.js`, `module/verordnung-detail.js`, `module/verordnung-einheiten.js`, `module/verordnung-maske.js`, `module/verordnung-uebersicht.js`, `module/verordnung-uebersicht.test.js`, `module/zuzahlung-befreiung.js`, `module/zuzahlung-korrektur.js`
+**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/mahnwesen.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/verordnung-status.routes.js`, `api-backend/billing/api/zuzahlung.routes.js`, `api-backend/server.js`, `dashboard.js`, `module/arzt-register.js`, `module/booking-status-korrektur.js`, `module/patientenkarte.js`, `module/rechnung-verordnung.js`, `module/rechnung-zahlung.js`, `module/rezeptinfo-geld.js`, `module/sitzungsfortschritt.js`, `module/termin-aktionen.js`, `module/termin-leistungen.js`, `module/verordnung-detail.js`, `module/verordnung-einheiten.js`, `module/verordnung-uebersicht.js`, `module/verordnung-uebersicht.test.js`, `module/zuzahlung-befreiung.js`, `module/zuzahlung-korrektur.js`
 
 **Module:** abrechnung, anamnese, belegliste, doctors, fussstatus, hours, kunden, rechnungen, services, settings, team, ueberblick, verordnungen
 
