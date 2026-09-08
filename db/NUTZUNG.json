@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-09-07",
+ "erzeugt": "2026-09-08",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-09-06)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-07)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-08)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 84,
@@ -1371,7 +1371,7 @@
     {
      "name": "podGeplanteHpnr",
      "file": "module/podologie-abrechnung.js",
-     "start": 262,
+     "start": 267,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4248,9 +4248,23 @@
    "ungeklaert": false,
    "leser": [
     {
+     "name": "baueBegleitzettel",
+     "file": "api-backend/billing/api/abrechnung.routes.js",
+     "start": 161,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "kostentraegerIkAufloesen",
      "file": "api-backend/lib/rezept-felder.js",
      "start": 55,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "ladeAnnahmestelle",
+     "file": "api-backend/billing/kostentraeger/annahmestelle.js",
+     "start": 128,
      "module": [],
      "uiPfad": []
     },
@@ -4277,6 +4291,7 @@
    "schreiber": [],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/kostentraeger/annahmestelle.js",
     "api-backend/lib/rezept-felder.js",
     "dashboard.js"
    ],
@@ -4307,12 +4322,22 @@
    "warum": "Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin geht diese Datei?** Der Empfänger ist nicht die Kasse, sondern ihre Datenannahmestelle — und die hängt am Viererschlüssel (Kostenträger, Abrechnungscode, Art der Datenlieferung, Bundesland). Eine einzelne Spalte an `kostentraeger` (`das_ik`) konnte das nie abbilden; deshalb eine eigene Tabelle statt weiterer Spalten. Sie ist damit auch die Antwort auf „hätte eine Spalte gereicht?\" — nein, es ist eine echte 1:n-Beziehung.",
    "seit": "06.09.2026 · `kostentraeger_echtdaten_struktur` (Ops #264)",
    "ungeklaert": false,
-   "leser": [],
+   "leser": [
+    {
+     "name": "ladeAnnahmestelle",
+     "file": "api-backend/billing/kostentraeger/annahmestelle.js",
+     "start": 128,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
    "schreiber": [],
-   "dateien": [],
+   "dateien": [
+    "api-backend/billing/kostentraeger/annahmestelle.js"
+   ],
    "module": [],
    "sqlTreffer": 7,
-   "codeStumm": true
+   "codeStumm": false
   },
   {
    "name": "krankenkassen",
@@ -5937,7 +5962,7 @@
     {
      "name": "podPatientBehandlungen",
      "file": "module/podologie-abrechnung.js",
-     "start": 212,
+     "start": 217,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5976,7 +6001,7 @@
     {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 504,
+     "start": 635,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9850,11 +9875,6 @@
    "name": "icd_sector_ranges",
    "sql": 3,
    "status": "aktiv (Referenz)"
-  },
-  {
-   "name": "kostentraeger_annahmestellen",
-   "sql": 7,
-   "status": "aktiv (Referenz) — **vollständig geladen**, aber mit einem Zeitfehler, siehe unten"
   },
   {
    "name": "nummernkreise",

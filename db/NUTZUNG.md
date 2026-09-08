@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-07 · 84 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-06), funktionen/INDEX.json (erzeugt 2026-09-07)
+**Erzeugt:** 2026-09-08 · 84 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-06), funktionen/INDEX.json (erzeugt 2026-09-08)
 
 ## Kayıt durumu
 
@@ -25,7 +25,6 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `heilmittel_position` | 4 | veraltet |
 | `icd10_titles` | 7 | aktiv (Referenz) |
 | `icd_sector_ranges` | 3 | aktiv (Referenz) |
-| `kostentraeger_annahmestellen` | 7 | aktiv (Referenz) — **vollständig geladen**, aber mit einem Zeitfehler, siehe unten |
 | `nummernkreise` | 1 | aktiv |
 | `referral_drafts` | 9 | verdächtig |
 | `spatial_ref_sys` | 1 | System |
@@ -515,9 +514,9 @@ Warum: Der Kiosk-Modus (Tablet im Wartezimmer) braucht eine Anmeldung, die kein 
 15 Spalten · Status: aktiv — **Echtdaten**, mit 9 Mock-Resten
 Warum: Die §302-Seite der Kassen. Seit dem 06.09.2026 trägt sie zwei Dinge, die vorher gefehlt haben: die **echten** IK-Nummern aus der TP5-Kostenträgerdatei — und die **n:1-Beziehung**, ohne die eine IK allein nichts wert ist. Eine Versichertenkarte nennt fast nie die Stelle, die am Ende abrechnet: die DAK-Karte trägt `100167999`, das Geld holt man aber bei `105830016`. Genau diese Auflösung steckt in `abrechnender_kt_ik` / `ist_abrechnender_kt` (VKG-Verknüpfungsart 01).
 
-**Liest (2):** `kostentraegerIkAufloesen()`, `loadAbrechnung()`
+**Liest (4):** `baueBegleitzettel()`, `kostentraegerIkAufloesen()`, `ladeAnnahmestelle()`, `loadAbrechnung()`
 
-**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/lib/rezept-felder.js`, `dashboard.js`
+**Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/kostentraeger/annahmestelle.js`, `api-backend/lib/rezept-felder.js`, `dashboard.js`
 
 **Module:** abrechnung, fussstatus, hours, kunden, rechnungen, services, team, ueberblick, verordnungen
 
@@ -525,6 +524,10 @@ Warum: Die §302-Seite der Kassen. Seit dem 06.09.2026 trägt sie zwei Dinge, di
 
 12 Spalten · Status: aktiv (Referenz) — **vollständig geladen**, aber mit einem Zeitfehler, siehe unten
 Warum: Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin geht diese Datei?** Der Empfänger ist nicht die Kasse, sondern ihre Datenannahmestelle — und die hängt am Viererschlüssel (Kostenträger, Abrechnungscode, Art der Datenlieferung, Bundesland). Eine einzelne Spalte an `kostentraeger` (`das_ik`) konnte das nie abbilden; deshalb eine eigene Tabelle statt weiterer Spalten. Sie ist damit auch die Antwort auf „hätte eine Spalte gereicht?" — nein, es ist eine echte 1:n-Beziehung.
+
+**Liest (1):** `ladeAnnahmestelle()`
+
+**Dateien:** `api-backend/billing/kostentraeger/annahmestelle.js`
 
 ### `krankenkassen`
 
@@ -651,7 +654,7 @@ Warum: Zwischen „Formular ausgefüllt" und „bezahlt" existiert der Account n
 11 Spalten · Status: aktiv
 Warum: Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions`. `verordnung_id` zeigt seit 04.09.2026 auf `prescriptions` (Zusammenlegung der Verordnungstöpfe, ids unverändert) — vorher auf die eigene Tabelle `verordnungen`.
 
-**Schreibt (3):** `behandlungenVerknuepfen()` [update] — module/rechnung-bruecke.js:165 · `loadPodologieBilling()` [insert] — module/podologie-abrechnung.js:504 · `verknuepfungLoesen()` [update] — module/rechnung-bruecke.js:182
+**Schreibt (3):** `behandlungenVerknuepfen()` [update] — module/rechnung-bruecke.js:165 · `loadPodologieBilling()` [insert] — module/podologie-abrechnung.js:635 · `verknuepfungLoesen()` [update] — module/rechnung-bruecke.js:182
 
 **Liest (7):** `frag()`, `ladeAktiveVerordnungen()`, `ladeVerlauf()`, `offeneBehandlungen()`, `patientenBehandlungen()`, `podPatientBehandlungen()`, `verordnungenLaden()`
 
