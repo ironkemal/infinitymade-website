@@ -7979,7 +7979,7 @@ function patientMatchesQuery(lead, q) {   // Deklaration, nicht const: es wird w
 async function ensureLeistungskatalog() {
   if (katalogNachladen({ katalog: servicesCache,
         sektorHatGkvKatalog: (GKV_LEISTUNGSKATALOG[getSector()] || []).length > 0 })) {
-    await loadServices();
+    try { await loadServices(); } catch (e) { console.error('[ensureLeistungskatalog]', e); }
   }
   ownerServices = servicesCache;
   return ownerServices;
@@ -9468,8 +9468,9 @@ async function loadServices() {
     .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
   q = bizScope(q, 'services');
   const { data, error: ladeFehler } = await q;
+  if (ladeFehler) { console.error('[services]', ladeFehler); return; }
   servicesCache = data || [];
-  if (!ladeFehler) await ermittleKostentraegerSpalte(servicesCache, supabase);
+  await ermittleKostentraegerSpalte(servicesCache, supabase);
 
   // Önce eski uydurma podoloji kodlarını gerçek HPNR'lere taşı, sonra seed et —
   // ters sırada olsaydı hem eskisi hem yenisi listede durur, mükerrer görünürdü.
@@ -9478,9 +9479,7 @@ async function loadServices() {
   // Sektöre göre GKV kataloğu DB'de eksik hizmetleri oto-seed et
   await autoSeedGkvServices();
 
-  renderGkvCatalog();
-  renderServices();
-  renderSrvEmpCheckboxes();
+  renderGkvCatalog(); renderServices(); renderSrvEmpCheckboxes();
 }
 
 async function autoSeedGkvServices() {
