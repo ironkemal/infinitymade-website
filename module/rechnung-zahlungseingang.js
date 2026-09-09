@@ -23,22 +23,30 @@
  * `rechnung-zahlung.js` behoben hat — „bezahlt, trotzdem gemahnt":
  *
  *   1. `belegTypFuer()` — hängt die Rechnung an einem Rezept, wird die
- *      Kassenbuch-Zeile als `zuzahlung` gebucht, nicht als `rechnung`.
+ *      Beleg-Zeile als `zuzahlung` gebucht, nicht als `rechnung`.
  *      Mahnwesen (`mahnwesen.routes.js`) und Statistik filtern auf
  *      `type IN ('zuzahlung','storno')` und würden eine `rechnung`-Zeile
  *      übersehen. Der Typ beschreibt den Geschäftsvorfall, nicht den
  *      Erfassungsweg.
  *   2. `ausbuchungUeberKorrektur()` — eine Ausbuchung erzeugt keinen
- *      Kassenbuch-Beleg (kein Geldfluss). Bei einer rezeptgebundenen Rechnung
+ *      Beleg (kein Geldfluss). Bei einer rezeptgebundenen Rechnung
  *      bliebe der Saldo damit unter dem Soll und es würde weiter gemahnt.
  *      Deshalb läuft sie dort über den bestehenden Korrekturpfad
  *      (`zuzahlung_korrekturen`), nicht über dieses Ledger.
+ *
+ * ⚠️ Seit 08.09.2026 (Ops #271): `belegliste` ist ein Belegjournal, kein
+ * reines Bar-Kassenbuch — jede `art='zahlung'`-Buchung erzeugt jetzt einen
+ * Beleg, nicht mehr nur Bar (Konto `1000`). Das Gegenkonto-Feld zeigt deshalb
+ * nur noch Zahlungskonten (`istZahlungskategorie()`) — Erlösschmälerung/
+ * Teilabsetzung sind reine Ausbuchungskonten und bleiben dem zweiten
+ * Dropdown vorbehalten.
  */
 
 import {
-  aktiveKonten, kontoAnzeige,
-  AUSBUCHUNGSKONTO_STANDARD, KASSENKONTO,
-} from './buchungskonten.js?v=20260908';
+  aktiveKonten, kontoAnzeige, istZahlungskategorie,
+  AUSBUCHUNGSKONTO_STANDARD,
+} from './buchungskonten.js?v=20260909';
+import { frageZahlungsstatus } from './rechnung-zahlung.js?v=20260909';
 
 /** Beträge werden in Cent verglichen — `numeric(10,2)` kennt keine Rundungsreste. */
 const cent = (v) => Math.round((Number(v) || 0) * 100);
@@ -57,9 +65,14 @@ export function belegTypFuer(hatRezeptbezug) {
   return hatRezeptbezug ? 'zuzahlung' : 'rechnung';
 }
 
-/** Nur Bargeld gehört ins Kassenbuch (§ 146 AO). Bank/EC erzeugen keinen Beleg. */
-export function erzeugtKassenbuchBeleg(gegenkontoCode) {
-  return String(gegenkontoCode ?? '').replace(/\s+/g, '') === KASSENKONTO;
+/**
+ * Erzeugt diese Zahlung einen Beleg im Journal? Seit Ops #271 (08.09.2026)
+ * bei JEDER Zahlart — die Funktion bleibt als Begriffserklärung stehen, damit
+ * der Aufrufer nicht selbst raten muss, aber sie ist keine Fallunterscheidung
+ * mehr. Nur die Ausbuchung (kein Geldfluss) bleibt ohne Beleg, siehe Regel 2.
+ */
+export function erzeugtKassenbuchBeleg() {
+  return true;
 }
 
 /** Ausbuchung auf eine rezeptgebundene Forderung läuft über die Zuzahlungskorrektur. */
@@ -142,7 +155,7 @@ export function planeZahlung({
     restbetrag: euro(restC),
     buchungen,
     neuerStatus: (restC === 0 || ausbuchen) ? 'paid' : 'partial',
-    kassenbuchBeleg: erzeugtKassenbuchBeleg(gegenkontoCode),
+    kassenbuchBeleg: erzeugtKassenbuchBeleg(),
   };
 }
 
@@ -153,6 +166,43 @@ const esc = (s) => String(s ?? '')
   .replace(/"/g, '&quot;');
 
 const eur = (v) => (Number(v) || 0).toFixed(2).replace('.', ',') + ' €';
+
+/**
+ * Einstiegspunkt direkt nach dem Speichern einer Rechnung (Ops #271,
+ * 08.09.2026). Verzweigt EINMAL nach Rezeptbezug, damit `dashboard.js` diese
+ * Entscheidung nicht selbst treffen muss:
+ *   - Rezept (ggf. offene Zuzahlung) -> `frageZahlungsstatus()` — der
+ *     bestehende Kassieren-Ablauf bleibt zuständig, keine zweite Frage.
+ *   - kein Rezept (Privatrechnung/Selbstzahler) -> dieser Ledger-Dialog,
+ *     Gegenkonto Bar/Karte/Überweisung/PayPal.
+ * Ersetzt den alten Bezahlt/Nicht-bezahlt-Dialog aus `rechnung-zahlung.js`
+ * (dessen Fall 3 schrieb `payment_status='paid'` ohne Ledger-Zeile — genau
+ * das lehnt `rechnung_zahlung_buchen()` seither ab).
+ *
+ * @param {object} opts
+ * @param {string} opts.invoiceId
+ * @param {boolean} opts.hatRezeptbezug  invoices.prescription_id ODER verordnung_id gesetzt
+ * @param {string|null} [opts.prescriptionId]
+ * @param {string|null} [opts.patientId]
+ * @param {string} [opts.patientName]
+ * @param {object} opts.supabase
+ * @param {string} opts.apiBasis
+ * @param {object} opts.profile
+ * @param {Function} opts.showToast
+ * @param {Function} opts.kassiere  siehe frageZahlungsstatus()
+ * @param {Function} opts.token    async () => access_token
+ */
+export async function zahlungsartNachRechnungAbfragen({
+  invoiceId, hatRezeptbezug, prescriptionId = null, patientId = null, patientName = '',
+  supabase, apiBasis, profile, showToast, kassiere, token,
+}) {
+  if (hatRezeptbezug) {
+    return frageZahlungsstatus(invoiceId, {
+      supabase, prescriptionId, patientId, patientName, kassiere, toast: showToast,
+    });
+  }
+  return starteZahlungseingang({ invoiceId, apiBasis, profile, showToast, token });
+}
 
 /**
  * Einstiegspunkt: Zahlungsstand laden, dann den Dialog öffnen.
@@ -181,6 +231,10 @@ export async function starteZahlungseingang({ invoiceId, apiBasis, token, profil
   return oeffneZahlungseingang({
     rechnung: { ...stand.rechnung, id: invoiceId },
     bereitsGebucht: stand.bereits_gebucht || 0,
+    // Vom Server, bereits korrekt auf den Tenant aufgelöst (Angestellte haben
+    // keinen eigenen Kontenrahmen, ihrer wäre sonst leer/falsch — Ops #271,
+    // 08.09.2026, gefunden bei der Bestandsaufnahme zu #271).
+    konten: stand.konten,
     profile,
     apiBasis,
     token,
@@ -194,7 +248,10 @@ export async function starteZahlungseingang({ invoiceId, apiBasis, token, profil
  * @param {object} opts
  * @param {object} opts.rechnung        Zeile aus `invoices` (id, total_patient, invoice_number, …)
  * @param {number} opts.bereitsGebucht  Summe der bisherigen Zahlungen (vom Server)
- * @param {object} opts.profile         currentProfile — liefert den Kontenrahmen
+ * @param {Array}  [opts.konten]        Kontenrahmen vom Server (bevorzugt — schon auf den
+ *                                      richtigen Tenant aufgelöst). Ohne das: Fallback auf
+ *                                      `profile` (nur für Aufrufer ohne Server-Roundtrip).
+ * @param {object} [opts.profile]       currentProfile — Fallback-Kontenrahmen, siehe oben
  * @param {string} opts.apiBasis        z. B. `${API}`
  * @param {Function} opts.token         async () => access_token
  * @param {Function} opts.showToast
@@ -202,10 +259,15 @@ export async function starteZahlungseingang({ invoiceId, apiBasis, token, profil
  */
 export function oeffneZahlungseingang(opts) {
   const {
-    rechnung, bereitsGebucht = 0, profile, apiBasis, token, showToast,
+    rechnung, bereitsGebucht = 0, konten: kontenVomServer, profile, apiBasis, token, showToast,
   } = opts;
 
-  const konten = aktiveKonten(profile);
+  const konten = Array.isArray(kontenVomServer) ? kontenVomServer : aktiveKonten(profile);
+  // Gegenkonto (Zahlung) zeigt nur Zahlungskonten — Erlösschmälerung/
+  // Teilabsetzung gehören ins Ausbuchungs-Feld, nie hierher (Ops #271).
+  // Kein eigenes UI-Element für die geforderte Bar/Karte/Überweisung/PayPal-
+  // Abfrage nötig: bei Standardrahmen sind das genau diese vier Optionen.
+  const zahlungskonten = konten.filter(k => istZahlungskategorie(k.kategorie));
   // Der Server liefert `hat_rezeptbezug` bereits ausgewertet (er kennt beide
   // Spalten — prescription_id für Physio/Ergo/Logo, verordnung_id für
   // Podologie). Die Einzelspalten bleiben als Rückfall, falls der Dialog
@@ -229,7 +291,12 @@ export function oeffneZahlungseingang(opts) {
     const label = 'margin-bottom:4px;color:var(--text-muted);font-size:12px;';
     const zeile = 'display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:2px 0;';
 
-    const kontoOptionen = konten
+    // Gegenkonto: nur Zahlungskonten (Bar/Karte/Überweisung/PayPal, #271).
+    const zahlungskontoOptionen = zahlungskonten
+      .map(k => `<option value="${esc(k.code)}">${esc(kontoAnzeige(k))}</option>`).join('');
+    // Ausbuchen: weiterhin alle aktiven Konten — dort gehören Erlösschmälerung
+    // und Teilabsetzung hin.
+    const ausbuchungskontoOptionen = konten
       .map(k => `<option value="${esc(k.code)}">${esc(kontoAnzeige(k))}</option>`).join('');
 
     overlay.innerHTML = `
@@ -264,8 +331,8 @@ export function oeffneZahlungseingang(opts) {
           </label>
 
           <label style="display:block;">
-            <div style="${label}">Gegenkonto</div>
-            <select id="_zeKonto" style="${feld}">${kontoOptionen}</select>
+            <div style="${label}">Zahlungsart</div>
+            <select id="_zeKonto" style="${feld}">${zahlungskontoOptionen}</select>
           </label>
 
           <div id="_zeRestWrap" style="display:none;border:1px solid var(--border);border-radius:8px;
@@ -282,7 +349,7 @@ export function oeffneZahlungseingang(opts) {
             </label>
             <label id="_zeAusKontoWrap" style="display:none;margin-top:8px;">
               <div style="${label}">Ausbuchen auf</div>
-              <select id="_zeAusKonto" style="${feld}">${kontoOptionen}</select>
+              <select id="_zeAusKonto" style="${feld}">${ausbuchungskontoOptionen}</select>
             </label>
           </div>
 
@@ -343,7 +410,7 @@ export function oeffneZahlungseingang(opts) {
       ausKontoWrap.style.display = (hatRest && modus() === 'ausbuchen') ? '' : 'none';
 
       const hinweise = [];
-      if (plan.kassenbuchBeleg) hinweise.push('Es entsteht ein Kassenbuch-Beleg (Bargeld).');
+      if (plan.kassenbuchBeleg) hinweise.push('Es entsteht ein Beleg im Belegjournal.');
       hinweisEl.textContent = hinweise.join(' ');
       hinweisEl.style.display = hinweise.length ? '' : 'none';
     }

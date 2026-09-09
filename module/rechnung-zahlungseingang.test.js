@@ -29,12 +29,8 @@ test('belegTypFuer: rezeptlose Privatrechnung bucht als rechnung', () => {
   assert.equal(belegTypFuer(false), 'rechnung');
 });
 
-test('erzeugtKassenbuchBeleg: nur Bargeld (1000) landet im Kassenbuch', () => {
-  assert.equal(erzeugtKassenbuchBeleg('1000'), true);
-  assert.equal(erzeugtKassenbuchBeleg(' 1000 '), true);
-  assert.equal(erzeugtKassenbuchBeleg('1200'), false);
-  assert.equal(erzeugtKassenbuchBeleg('8700'), false);
-  assert.equal(erzeugtKassenbuchBeleg(null), false);
+test('erzeugtKassenbuchBeleg: seit Ops #271 jede Zahlart, belegliste ist ein Belegjournal', () => {
+  assert.equal(erzeugtKassenbuchBeleg(), true);
 });
 
 test('ausbuchungUeberKorrektur: nur bei Rezeptbezug, sonst reine Ledger-Zeile', () => {
@@ -124,9 +120,9 @@ test('planeZahlung: zweite Teilzahlung rechnet gegen das bereits Gebuchte', () =
   assert.equal(p.neuerStatus, 'paid');
 });
 
-test('planeZahlung: Barzahlung meldet den Kassenbuch-Beleg, Bank nicht', () => {
+test('planeZahlung: jede Zahlart meldet seit Ops #271 den Beleg im Journal', () => {
   assert.equal(planeZahlung({ ...basis, gegenkontoCode: '1000', eingegangen: 10 }).kassenbuchBeleg, true);
-  assert.equal(planeZahlung({ ...basis, eingegangen: 10 }).kassenbuchBeleg, false);
+  assert.equal(planeZahlung({ ...basis, eingegangen: 10 }).kassenbuchBeleg, true);
 });
 
 test('planeZahlung: Ausbuchen auf rezeptgebundener Rechnung wird abgelehnt und auf die Korrektur verwiesen', () => {

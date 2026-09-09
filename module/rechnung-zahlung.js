@@ -11,11 +11,11 @@
  * wussten:
  *
  *   1. Kassieren (Termin-Panel / Patientenakte) → `kassiereZuzahlung`.
- *      Fragt die Zahlart, bucht einen Kassenbuch-Beleg, setzt
+ *      Fragt die Zahlart, bucht einen Beleg, setzt
  *      `prescriptions.zuzahlung_kassiert_am`. Nur DAS sieht das Mahnwesen
  *      (api-backend/billing/zuzahlung/bezahlt.js).
  *
- *   2. Rechnung speichern → dieser Dialog. Schrieb ausschliesslich
+ *   2. Rechnung speichern → ein eigener Dialog hier. Schrieb ausschliesslich
  *      `invoices.payment_status`. Kein Beleg, kein Vermerk am Rezept.
  *
  * Wer also Weg 2 ging, hatte die Frage beantwortet — und wurde trotzdem
@@ -27,8 +27,17 @@
  * Hängt an der Rechnung ein Rezept mit offener Zuzahlung, wird hier gar nichts
  * mehr gefragt: der vorhandene Kassieren-Ablauf übernimmt (eine Frage, ein
  * Beleg, ein Vermerk), und die Rechnung übernimmt anschliessend nur noch das
- * Ergebnis. Der eigene Dialog bleibt für alles ohne Rezept — Privatrechnungen,
- * Selbstzahler — wo es keine Zuzahlung und kein Mahnwesen gibt.
+ * Ergebnis.
+ *
+ * ⚠️ Seit Ops #271 (08.09.2026): der eigene Dialog für „alles ohne Rezept"
+ * (Fall 3, Privatrechnungen/Selbstzahler) ist HIER entfernt. Der Aufrufer
+ * (`dashboard.js`) öffnet für diesen Fall direkt den Ledger-Dialog aus
+ * `module/rechnung-zahlungseingang.js` — mit Gegenkonto
+ * (Bar/Karte/Überweisung/PayPal) statt der alten Bezahlt/Nicht-bezahlt-Frage.
+ * Grund: der alte Weg schrieb `payment_status='paid'` OHNE Ledger-Zeile;
+ * `rechnung_zahlung_buchen()` lehnt eine so markierte Rechnung danach
+ * dauerhaft ab („hat aber keinen Zahlungsbeleg"). Diese Funktion bleibt für
+ * Fall 1/2 (Rezept) unverändert zuständig.
  *
  * Bewusst NICHT hier: eine zweite Definition von „bezahlt". Ob kassiert wurde,
  * wird am selben Feld abgelesen, das auch der Rest der Oberfläche liest
@@ -122,72 +131,10 @@ export async function frageZahlungsstatus(invoiceId, {
     return;
   }
 
-  // Fall 3: kein Rezept im Spiel (Privat / Selbstzahler) → eigener Dialog.
-  return dialog(invoiceId, { supabase, toast });
-}
-
-function dialog(invoiceId, { supabase, toast }) {
-  return new Promise(resolve => {
-    document.getElementById('_paymentStatusModal')?.remove();
-
-    const overlay = document.createElement('div');
-    overlay.id = '_paymentStatusModal';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-
-    overlay.innerHTML = `
-      <div style="background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-radius:12px;padding:24px;width:100%;max-width:400px;">
-        <h3 style="margin:0 0 6px;font-size:16px;font-weight:700;color:var(--text-main,#f9fafb);">Wurde bereits bezahlt?</h3>
-        <p style="margin:0 0 18px;font-size:13px;color:var(--text-muted,#9ca3af);">Bitte wählen Sie den Zahlungsstatus für diese Rechnung.</p>
-        <div id="_psMethodWrap" style="display:none;margin-bottom:16px;">
-          <p style="margin:0 0 8px;font-size:12px;font-weight:600;color:var(--text-muted,#9ca3af);">Zahlungsart:</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-main,#f9fafb);"><input type="radio" name="_psMethod" value="bar" checked style="accent-color:var(--accent,#b1891b);"> Bar</label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-main,#f9fafb);"><input type="radio" name="_psMethod" value="karte" style="accent-color:var(--accent,#b1891b);"> Karte</label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-main,#f9fafb);"><input type="radio" name="_psMethod" value="ueberweisung" style="accent-color:var(--accent,#b1891b);"> Überweisung</label>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <button id="_psYes" style="padding:10px;background:var(--accent,#b1891b);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Ja — sofort bezahlt</button>
-          <button id="_psLater" style="padding:10px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">Nein — Zahlung ausstehend</button>
-          <button id="_psIban" style="padding:10px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">Lastschrift (IBAN)</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const psYes = overlay.querySelector('#_psYes');
-    const methodWrap = overlay.querySelector('#_psMethodWrap');
-    let bestaetigt = false;
-
-    // Erster Klick öffnet die Zahlart, zweiter Klick bucht. Vorher wurde dafür
-    // ein zweiter Knopf ins DOM geschoben — dieselbe Frage, zwei Schaltflächen.
-    psYes.addEventListener('click', async () => {
-      if (!bestaetigt) {
-        bestaetigt = true;
-        methodWrap.style.display = 'block';
-        psYes.textContent = '✓ Zahlung speichern';
-        psYes.style.background = '#16a34a';
-        return;
-      }
-      const method = overlay.querySelector('input[name="_psMethod"]:checked')?.value || 'bar';
-      overlay.remove();
-      await markiereRechnungBezahlt(supabase, invoiceId, method);
-      toast('Zahlung gespeichert ✓');
-      resolve();
-    });
-
-    overlay.querySelector('#_psLater').addEventListener('click', async () => {
-      overlay.remove();
-      await supabase.from('invoices').update({ payment_status: 'pending' }).eq('id', invoiceId);
-      toast('Rechnung als ausstehend markiert.');
-      resolve();
-    });
-
-    overlay.querySelector('#_psIban').addEventListener('click', async () => {
-      overlay.remove();
-      await supabase.from('invoices').update({ payment_status: 'pending', payment_method: 'lastschrift' }).eq('id', invoiceId);
-      toast('Lastschrift vorgemerkt.');
-      resolve();
-    });
-  });
+  // Fall 3 (kein Rezept — Privat/Selbstzahler) ist hier absichtlich NICHT
+  // mehr behandelt: der Aufrufer (dashboard.js) erreicht diesen Zweig gar
+  // nicht mehr, er öffnet stattdessen direkt den Ledger-Dialog aus
+  // module/rechnung-zahlungseingang.js (Ops #271, 08.09.2026 — Begründung
+  // im Dateikopf). Defensiv belassen für den Fall, dass diese Funktion doch
+  // einmal ohne die Verzweigung im Aufrufer erreicht wird.
 }

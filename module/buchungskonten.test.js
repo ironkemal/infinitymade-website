@@ -6,8 +6,11 @@ import {
   aktiveKonten,
   findeKonto,
   kontoAnzeige,
+  istZahlungskategorie,
   STANDARD_KONTEN,
   KONTEN_MAX,
+  KONTO_KATEGORIEN,
+  ZAHLART_JE_KATEGORIE,
 } from './buchungskonten.js';
 
 test('normalisiereKonten: leere/kaputte Eingabe ergibt eine leere Liste', () => {
@@ -22,7 +25,7 @@ test('normalisiereKonten: Konto ohne Nummer oder ohne Bezeichnung fliegt raus', 
     { code: '', label: 'Ohne Nummer' },
     { code: '1200', label: '   ' },
   ]);
-  assert.deepEqual(raus, [{ code: '1000', label: 'Kasse', aktiv: true }]);
+  assert.deepEqual(raus, [{ code: '1000', label: 'Kasse', aktiv: true, kategorie: 'sonstiges' }]);
 });
 
 test('normalisiereKonten: doppelte Nummern werden verworfen, der erste gewinnt', () => {
@@ -36,7 +39,7 @@ test('normalisiereKonten: doppelte Nummern werden verworfen, der erste gewinnt',
 
 test('normalisiereKonten: Leerzeichen in der Nummer werden entfernt, nicht nur aussen', () => {
   const raus = normalisiereKonten([{ code: ' 12 00 ', label: '  Bank  ' }]);
-  assert.deepEqual(raus, [{ code: '1200', label: 'Bank', aktiv: true }]);
+  assert.deepEqual(raus, [{ code: '1200', label: 'Bank', aktiv: true, kategorie: 'sonstiges' }]);
 });
 
 test('normalisiereKonten: aktiv ist standardmaessig true, nur explizites false deaktiviert', () => {
@@ -46,6 +49,40 @@ test('normalisiereKonten: aktiv ist standardmaessig true, nur explizites false d
     { code: '3', label: 'Aktiv', aktiv: true },
   ]);
   assert.deepEqual(raus.map(k => k.aktiv), [true, false, true]);
+});
+
+test('normalisiereKonten: kategorie unbekannt/fehlend faellt auf sonstiges zurueck (Ops #271)', () => {
+  const raus = normalisiereKonten([
+    { code: '1', label: 'Ohne Angabe' },
+    { code: '2', label: 'Kaputter Wert', kategorie: 'bitcoin' },
+    { code: '3', label: 'Karte', kategorie: 'karte' },
+  ]);
+  assert.deepEqual(raus.map(k => k.kategorie), ['sonstiges', 'sonstiges', 'karte']);
+});
+
+test('istZahlungskategorie: trennt Zahlungskonten von reinen Ausbuchungskonten', () => {
+  assert.equal(istZahlungskategorie('bar'), true);
+  assert.equal(istZahlungskategorie('karte'), true);
+  assert.equal(istZahlungskategorie('ueberweisung'), true);
+  assert.equal(istZahlungskategorie('paypal'), true);
+  assert.equal(istZahlungskategorie('sonstiges'), false);
+  assert.equal(istZahlungskategorie(undefined), false);
+});
+
+test('ZAHLART_JE_KATEGORIE: karte mappt auf das historische ec, Rest 1:1', () => {
+  assert.equal(ZAHLART_JE_KATEGORIE.karte, 'ec');
+  assert.equal(ZAHLART_JE_KATEGORIE.bar, 'bar');
+  assert.equal(ZAHLART_JE_KATEGORIE.ueberweisung, 'ueberweisung');
+  assert.equal(ZAHLART_JE_KATEGORIE.paypal, 'paypal');
+  assert.equal(ZAHLART_JE_KATEGORIE.sonstiges, 'sonstiges');
+});
+
+test('STANDARD_KONTEN: Karte und PayPal sind Teil des Standardrahmens (Ops #271/#273)', () => {
+  const karte = STANDARD_KONTEN.find(k => k.code === '1220');
+  const paypal = STANDARD_KONTEN.find(k => k.code === '1250');
+  assert.equal(karte.kategorie, 'karte');
+  assert.equal(paypal.kategorie, 'paypal');
+  assert.ok(KONTO_KATEGORIEN.includes(karte.kategorie));
 });
 
 test('normalisiereKonten: mehr als KONTEN_MAX Konten werden abgeschnitten', () => {
@@ -62,7 +99,7 @@ test('kontenAusProfil: ohne gepflegte Konten gilt der Standardrahmen', () => {
 
 test('kontenAusProfil: gepflegte Konten verdraengen den Standardrahmen vollstaendig', () => {
   const eigene = kontenAusProfil({ buchungskonten: [{ code: '1600', label: 'Sparkasse' }] });
-  assert.deepEqual(eigene, [{ code: '1600', label: 'Sparkasse', aktiv: true }]);
+  assert.deepEqual(eigene, [{ code: '1600', label: 'Sparkasse', aktiv: true, kategorie: 'sonstiges' }]);
 });
 
 test('kontenAusProfil: der Standardrahmen wird kopiert, nicht durchgereicht', () => {

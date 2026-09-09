@@ -39,10 +39,9 @@ import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=2026081
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908';
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260908';
-import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20260908';
-import { renderKontenSettings } from './module/buchungskonten.js?v=20260908';
-import { starteZahlungseingang } from './module/rechnung-zahlungseingang.js?v=20260908';
+import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
+import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260909';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
@@ -15330,17 +15329,17 @@ async function saveInvoice() {
     invBehandlungIds = [];
   }
 
-  // Zahlungsstatus — hängt an der Rechnung ein Rezept mit offener Zuzahlung,
-  // übernimmt der Kassieren-Ablauf und es wird nicht zweimal gefragt.
-  // Begründung in module/rechnung-zahlung.js.
+  // Zahlungsart abfragen (Ops #271, 08.09.2026) — Verzweigung nach
+  // Rezeptbezug liegt in module/rechnung-zahlungseingang.js.
   if (inserted?.id) {
-    await frageZahlungsstatus(inserted.id, {
-      supabase,
+    await zahlungsartNachRechnungAbfragen({
+      invoiceId: inserted.id,
+      hatRezeptbezug: !!(invPrescriptionId || invVerordnungId),
       prescriptionId: invPrescriptionId || null,
-      patientId,
-      patientName,
+      patientId, patientName,
+      supabase, apiBasis: API, profile: currentProfile, showToast,
       kassiere: kassiereZuzahlung,
-      toast: showToast,
+      token: async () => (await supabase.auth.getSession()).data.session?.access_token,
     });
   }
 
@@ -19734,6 +19733,7 @@ async function loadBelegliste() {
   const from = document.getElementById('blFilterFrom')?.value || '';
   const to = document.getElementById('blFilterTo')?.value || '';
   const type = document.getElementById('blFilterType')?.value || 'all';
+  const zahlart = document.getElementById('blFilterZahlart')?.value || 'all';
 
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token || '';
@@ -19741,6 +19741,7 @@ async function loadBelegliste() {
   // Use the Express backend endpoint to fetch and filter Belege
   const url = new URL(`${API}/billing/belegliste`);
   if (type !== 'all') url.searchParams.append('type', type);
+  if (zahlart !== 'all') url.searchParams.append('zahlart', zahlart);
   if (from) url.searchParams.append('from', from);
   if (to) url.searchParams.append('to', to);
 
@@ -19867,6 +19868,7 @@ async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null
 // Wire filters & actions once DOM is ready / loaded
 function initBeleglisteUI() {
   document.getElementById('blFilterType')?.addEventListener('change', loadBelegliste);
+  document.getElementById('blFilterZahlart')?.addEventListener('change', loadBelegliste);
   document.getElementById('blFilterFrom')?.addEventListener('change', loadBelegliste);
   document.getElementById('blFilterTo')?.addEventListener('change', loadBelegliste);
 

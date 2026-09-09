@@ -45,15 +45,31 @@ const supabase = createClient(
 
 /** Standardrahmen — muss zu `module/buchungskonten.js` passen. */
 const STANDARD_KONTEN = [
-  { code: '1000', label: 'Kasse' },
-  { code: '1100', label: 'Postbank' },
-  { code: '1200', label: 'Bank' },
-  { code: '1210', label: 'Bank 2' },
-  { code: '8700', label: 'Erlösschmälerung' },
-  { code: '4900', label: 'Teilabsetzung' },
+  { code: '1000', label: 'Kasse',                       kategorie: 'bar' },
+  { code: '1100', label: 'Postbank',                    kategorie: 'ueberweisung' },
+  { code: '1200', label: 'Bank',                        kategorie: 'ueberweisung' },
+  { code: '1210', label: 'Bank 2',                       kategorie: 'ueberweisung' },
+  { code: '1220', label: 'Kartenzahlungen (EC/Kredit)', kategorie: 'karte' },
+  { code: '1250', label: 'PayPal',                      kategorie: 'paypal' },
+  { code: '8700', label: 'Erlösschmälerung',            kategorie: 'sonstiges' },
+  { code: '4900', label: 'Teilabsetzung',               kategorie: 'sonstiges' },
 ];
 
 const AUSBUCHUNGSKONTO_STANDARD = '8700';
+
+/**
+ * Kategorie -> `belegliste.zahlart`. Muss zu
+ * `module/buchungskonten.js::ZAHLART_JE_KATEGORIE` passen (Ops #271,
+ * 08.09.2026). Nur `karte` weicht vom eigenen Namen ab — der historische Wert
+ * dafür heißt `ec` (`api-backend/billing/belegliste/helper.js:9`).
+ */
+const ZAHLART_JE_KATEGORIE = {
+  bar: 'bar',
+  karte: 'ec',
+  ueberweisung: 'ueberweisung',
+  paypal: 'paypal',
+  sonstiges: 'sonstiges',
+};
 
 /**
  * SQLSTATE → HTTP. Die Funktion wirft mit Absicht sprechende Codes, damit hier
@@ -105,6 +121,9 @@ async function kontenFuer(auth) {
         code: String(k.code ?? '').replace(/\s+/g, ''),
         label: String(k.label ?? '').trim(),
         aktiv: k.aktiv !== false,
+        // Unbekannt/fehlend -> 'sonstiges', gleiche Regel wie
+        // module/buchungskonten.js::normalisiereKonten().
+        kategorie: Object.keys(ZAHLART_JE_KATEGORIE).includes(k.kategorie) ? k.kategorie : 'sonstiges',
       }))
       .filter(k => k.code && k.label)
     : [];
@@ -118,7 +137,7 @@ function snapshotFuer(konten, code) {
   // Deaktivierte Konten werden mitgefunden: sie dürfen nicht mehr angeboten,
   // aber eine laufende Korrektur darf nicht daran scheitern.
   const treffer = konten.find(k => k.code === gesucht);
-  return treffer ? { code: treffer.code, label: treffer.label } : null;
+  return treffer ? { code: treffer.code, label: treffer.label, kategorie: treffer.kategorie } : null;
 }
 
 /**
@@ -162,6 +181,9 @@ router.get('/rechnungen/:id/zahlungen', async (req, res) => {
       zahlungen: zeilen || [],
       bereits_gebucht: Math.round(gebucht * 100) / 100,
       offen: Math.round((gesamt - gebucht) * 100) / 100,
+      // kategorie geht mit: das Frontend trennt daran Zahlungskonten
+      // (bar/karte/ueberweisung/paypal) von reinen Ausbuchungskonten
+      // (sonstiges) im Gegenkonto-Dropdown (Ops #271, 08.09.2026).
       konten: (await kontenFuer(auth)).filter(k => k.aktiv),
     });
   } catch (e) {
@@ -219,6 +241,10 @@ router.post('/rechnungen/:id/zahlung', async (req, res) => {
       }
     }
 
+    // Zahlart folgt aus dem gewählten Konto, nicht umgekehrt (Ops #271,
+    // 08.09.2026) — die Funktion selbst rät nichts mehr aus dem Code.
+    const zahlart = ZAHLART_JE_KATEGORIE[gegenkonto.kategorie] || 'sonstiges';
+
     const { data, error } = await supabase.rpc('rechnung_zahlung_buchen', {
       p_invoice_id: req.params.id,
       p_owner_id: auth.tenantId,
@@ -231,6 +257,7 @@ router.post('/rechnungen/:id/zahlung', async (req, res) => {
       p_ausbuchungskonto_code: ausbuchungskonto?.code || null,
       p_ausbuchungskonto_label: ausbuchungskonto?.label || null,
       p_bemerkung: bemerkung || null,
+      p_zahlart: zahlart,
     });
 
     if (error) {

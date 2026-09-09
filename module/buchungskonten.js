@@ -37,12 +37,14 @@
  * ist die Liste editierbar.
  */
 export const STANDARD_KONTEN = Object.freeze([
-  { code: '1000', label: 'Kasse',             aktiv: true },
-  { code: '1100', label: 'Postbank',          aktiv: true },
-  { code: '1200', label: 'Bank',              aktiv: true },
-  { code: '1210', label: 'Bank 2',            aktiv: true },
-  { code: '8700', label: 'Erlösschmälerung',  aktiv: true },
-  { code: '4900', label: 'Teilabsetzung',     aktiv: true },
+  { code: '1000', label: 'Kasse',                        aktiv: true, kategorie: 'bar' },
+  { code: '1100', label: 'Postbank',                     aktiv: true, kategorie: 'ueberweisung' },
+  { code: '1200', label: 'Bank',                         aktiv: true, kategorie: 'ueberweisung' },
+  { code: '1210', label: 'Bank 2',                       aktiv: true, kategorie: 'ueberweisung' },
+  { code: '1220', label: 'Kartenzahlungen (EC/Kredit)',  aktiv: true, kategorie: 'karte' },
+  { code: '1250', label: 'PayPal',                       aktiv: true, kategorie: 'paypal' },
+  { code: '8700', label: 'Erlösschmälerung',             aktiv: true, kategorie: 'sonstiges' },
+  { code: '4900', label: 'Teilabsetzung',                aktiv: true, kategorie: 'sonstiges' },
 ]);
 
 /** Das Konto, auf das ein Restbetrag ausgebucht wird, wenn nichts anderes gewählt ist. */
@@ -56,6 +58,39 @@ export const KONTEN_MAX = 30;
 
 const CODE_MAX = 10;
 const LABEL_MAX = 40;
+
+/**
+ * Die Kategorie eines Kontos entscheidet, welche `zahlart` eine Buchung auf
+ * diesem Konto in `belegliste` bekommt (Ops #271, 08.09.2026). Der `code`
+ * bleibt der GoBD-Snapshot-Schlüssel (§ 146 Abs. 4 AO) — `kategorie` ist reine
+ * Klassifikation für die automatische Belegbuchung, kein Ersatz dafür.
+ */
+export const KONTO_KATEGORIEN = Object.freeze(['bar', 'karte', 'ueberweisung', 'paypal', 'sonstiges']);
+
+/**
+ * Kategorie → `belegliste.zahlart`. Einzige Stelle, die die Brücke zum
+ * bestehenden Zahlart-Vokabular kennt (`bar|ec|ueberweisung|sonstiges|paypal`,
+ * `api-backend/billing/belegliste/helper.js:9`). Nur `karte` weicht vom
+ * eigenen Namen ab — der historische Wert dafür heißt `ec`.
+ */
+export const ZAHLART_JE_KATEGORIE = Object.freeze({
+  bar: 'bar',
+  karte: 'ec',
+  ueberweisung: 'ueberweisung',
+  paypal: 'paypal',
+  sonstiges: 'sonstiges',
+});
+
+/**
+ * Zahlungskonten (Bar/Karte/Überweisung/PayPal) vs. reine Ausbuchungskonten
+ * (Erlösschmälerung, Teilabsetzung — nie ein Zahlungsziel). Trennt im
+ * Zahlungseingangs-Dialog das Gegenkonto-Feld vom Ausbuchungs-Feld
+ * (Ops #271): Ersteres zeigt nur Zahlungskonten, Letzteres alle aktiven.
+ */
+export function istZahlungskategorie(kategorie) {
+  return kategorie === 'bar' || kategorie === 'karte'
+    || kategorie === 'ueberweisung' || kategorie === 'paypal';
+}
 
 /**
  * Bringt die rohe jsonb-Spalte in eine Form, auf die sich die Oberfläche
@@ -83,7 +118,11 @@ export function normalisiereKonten(roh) {
     if (!code || !label) continue;
     if (gesehen.has(code)) continue;
     gesehen.add(code);
-    raus.push({ code, label, aktiv: e.aktiv !== false });
+    // Unbekannt oder fehlend -> 'sonstiges': ein per Hand in der DB gepflegtes
+    // Altkonto ohne Kategorie soll weiterhin buchbar sein, nur eben nicht als
+    // eigene Zahlungsart im Journal erscheinen (Ops #271, 08.09.2026).
+    const kategorie = KONTO_KATEGORIEN.includes(e.kategorie) ? e.kategorie : 'sonstiges';
+    raus.push({ code, label, aktiv: e.aktiv !== false, kategorie });
     if (raus.length >= KONTEN_MAX) break;
   }
   return raus;
@@ -200,6 +239,20 @@ function zeichneKontenListe(deps) {
     label.style.cssText = 'flex:1;';
     label.addEventListener('input', () => { kontenEntwurf[i].label = label.value; });
 
+    // Entscheidet, ob und als welche Zahlart eine Buchung auf diesem Konto
+    // automatisch einen Beleg im Journal erzeugt (Ops #271, 08.09.2026).
+    const kategorieLabel = {
+      bar: 'Bar', karte: 'Karte', ueberweisung: 'Überweisung',
+      paypal: 'PayPal', sonstiges: 'Sonstiges (kein Zahlungskonto)',
+    };
+    const kategorie = document.createElement('select');
+    kategorie.className = 'konto-kategorie';
+    kategorie.style.cssText = 'width:170px;';
+    kategorie.innerHTML = KONTO_KATEGORIEN
+      .map(k => `<option value="${k}">${kategorieLabel[k]}</option>`).join('');
+    kategorie.value = KONTO_KATEGORIEN.includes(konto.kategorie) ? konto.kategorie : 'sonstiges';
+    kategorie.addEventListener('change', () => { kontenEntwurf[i].kategorie = kategorie.value; });
+
     const aktivWrap = document.createElement('label');
     aktivWrap.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:13px;white-space:nowrap;';
     const aktiv = document.createElement('input');
@@ -222,7 +275,7 @@ function zeichneKontenListe(deps) {
       zeichneKontenListe(deps);
     });
 
-    zeile.append(code, label, aktivWrap, weg);
+    zeile.append(code, label, kategorie, aktivWrap, weg);
     wrap.appendChild(zeile);
   });
 }

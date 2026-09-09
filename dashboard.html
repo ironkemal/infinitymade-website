@@ -1598,6 +1598,20 @@
                 <option value="storno">Storno / Reversal</option>
               </select>
             </div>
+            <!-- Zahlart-Filter (Ops #271, 08.09.2026): belegliste ist ein Belegjournal,
+                 seit dem Umbau steht dort jede Zahlart. Das Bar-Kassenbuch
+                 (§ 146 AO Kassensturzfähigkeit) ist ab jetzt dieser Filter. -->
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:11px;color:var(--text-muted);">Zahlart</label>
+              <select class="form-select" id="blFilterZahlart" style="padding:4px 8px;width:auto;background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);border-radius:4px;">
+                <option value="all">Alle Zahlarten</option>
+                <option value="bar">Bar</option>
+                <option value="ec">Karte</option>
+                <option value="ueberweisung">Überweisung</option>
+                <option value="paypal">PayPal</option>
+                <option value="sonstiges">Sonstiges</option>
+              </select>
+            </div>
             <button class="btn-ghost" id="blExportCsvBtn" style="margin-top:14px;padding:6px 12px;font-size:13px;">CSV Export (Finanzamt)</button>
           </div>
 
