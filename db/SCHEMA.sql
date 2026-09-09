@@ -1,7 +1,32 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-08 (zuletzt nachgezogen: ZWEI Skripte, die am
+-- ERZEUGT AM:        2026-09-09 — 20260909170546_zahlungsart_automatik
+--                    (Ops #271, Katman 1/4 Geld/§302). Anlass war ein
+--                    Produktionsfehler: PostgREST meldete „Could not find the
+--                    function public.rechnung_zahlung_buchen(… p_zahlart …) in
+--                    the schema cache" und JEDE Rechnungserstellung mit
+--                    Zahlungsart-Dialog brach ab.
+--                    Ursache: der Ops-#271-Code war ueber main deployed
+--                    (Commits 64a05fa/352ac20) und rief die Funktion bereits mit
+--                    12 Parametern auf — die zugehoerige SQL
+--                    (sql-melih/2026-09-08-zahlungsart-automatik.sql) war aber
+--                    nie ausgefuehrt worden. Live lag noch die 11-Parameter-
+--                    Fassung ohne p_zahlart. Nachgeholt am 09.09.2026, diesmal
+--                    ueber apply_migration statt SQL-Editor — deshalb steht sie
+--                    unten unter "LETZTE MIGRATION".
+--                    Inhalt: 'paypal' in belegliste_zahlart_check und
+--                    prescriptions_zuzahlung_zahlart_check ergaenzt; die alte
+--                    11-Parameter-Funktion GEDROPPT (CREATE OR REPLACE haette
+--                    eine zweite Ueberladung erzeugt statt sie zu ersetzen) und
+--                    durch die 12-Parameter-Fassung ersetzt: p_zahlart ist
+--                    Pflicht, ein Beleg entsteht bei JEDER Zahlart statt nur bei
+--                    Bar, und zuzahlung_zahlart bekommt den echten Wert statt
+--                    des alten COALESCE(…,'ueberweisung')-Fallbacks.
+--                    KEINE neue Tabelle/Spalte/Policy/Index/Trigger — UMFANG
+--                    unveraendert.
+--                    Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-08 (ZWEI Skripte, die am
 --                    Migrationsregister VORBEI direkt im Supabase-SQL-Editor
 --                    gefahren wurden — deshalb stehen sie unten NICHT unter
 --                    "LETZTE MIGRATION", obwohl sie live sind:
@@ -16,10 +41,13 @@
 --                        drei codex_192_*-Trigger. Absage ist ab jetzt ein
 --                        Soft-Delete; Termine werden nicht mehr geloescht.
 --                    Per Hand nachgezogen, kein voller Neu-Dump.
---                    ⚠️ supabase_migrations.schema_migrations endet weiterhin am
---                       05.09.2026 — der SQL-Editor traegt dort nichts ein. Wer
---                       nur das Register liest, haelt beide Aenderungen fuer
---                       ausstehend. Sie sind es nicht, gegen die Live-DB geprueft.
+--                    ⚠️ Diese ZWEI stehen weiterhin in KEINER Migrationszeile —
+--                       der SQL-Editor traegt in schema_migrations nichts ein.
+--                       Wer nur das Register liest, haelt sie fuer ausstehend.
+--                       Sie sind es nicht, gegen die Live-DB geprueft.
+--                       (Bis 09.09. stand hier „das Register endet weiterhin am
+--                       05.09.2026" — das gilt seit zahlungsart_automatik nicht
+--                       mehr, das Register endet jetzt am 09.09.2026.)
 --                    davor: 2026-09-06, kostentraeger_echtdaten_struktur,
 --                    Ops #264 — die ECHTE TP5-Kostentraegerdatei ist geladen.
 --                    `kostentraeger` +6 Spalten, neue Tabelle
@@ -56,7 +84,8 @@
 --                    90-Tage-Frist): `verordnungen` GEDROPPT. Siehe Eintrag
 --                    an der Stelle, wo die Tabelle frueher im Dump stand
 --                    (nach `vehicles`, vor `visibility_reports`).
--- LETZTE MIGRATION:  20260905224013_kostentraeger_echtdaten_struktur (06.09.2026)
+-- LETZTE MIGRATION:  20260909170546_zahlungsart_automatik (09.09.2026)
+--                    davor: 20260905224013_kostentraeger_echtdaten_struktur (06.09.2026)
 --                    davor: 20260905223001_profiles_selbstzahler_stufen
 --                    davor: 20260905193701_booking_status_korrekturen
 --                    davor: 20260905125546_prescriptions_krankenkasse_ik
@@ -99,6 +128,12 @@
 --                     Migrationszeile, ist in der DB aber vorhanden)
 -- UMFANG:            85 Tabellen · 1244 Spalten · 161 RLS-Policies
 --                    307 Indizes · 71 Trigger · 73 Funktionen · 4 Views
+--                    (09.09.2026: UNVERAENDERT. zahlungsart_automatik ersetzte
+--                     nur eine Funktion — Drop der 11-Parameter-Fassung plus
+--                     Create der 12-Parameter-Fassung, netto 0 — und tauschte
+--                     zwei CHECK-Constraints. Live gegengezaehlt: Tabellen 85,
+--                     Policies 161, Indizes 307, Trigger 71, Views 4. Alle fuenf
+--                     unveraendert, deshalb bleiben die Zahlen oben stehen.)
 --                    (08.09.2026: live nach der dokumentierten Zaehlweise
 --                     nachgezaehlt. Alle sechs Deltas gehen restlos auf die
 --                     zwei SQL-Editor-Skripte auf — zum ersten Mal seit
@@ -400,7 +435,13 @@ CREATE TABLE belegliste (
 --      Rechnung MIT Rezeptbezug -> type='zuzahlung' und BEIDE Referenzen setzen;
 --      Rechnung OHNE Rezeptbezug -> type='rechnung'. Daran haengt das Mahnwesen.
 --   CHECK belegliste_zahlart_check: zahlart IS NULL OR zahlart IN
---      (bar, ec, ueberweisung, sonstiges) — NULL = Altbeleg vor v32.
+--      (bar, ec, ueberweisung, sonstiges, paypal) — NULL = Altbeleg vor v32.
+--      ⚠️ 'paypal' kam am 09.09.2026 dazu (Ops #271). Seit derselben Migration
+--      schreibt rechnung_zahlung_buchen() bei JEDER Zahlart eine Beleg-Zeile,
+--      nicht mehr nur bei Bar — `belegliste` ist ein Belegjournal, keine reine
+--      Bar-Kassenbuch-Tabelle. Das Bar-Kassenbuch (§ 146 AO Kassensturz-
+--      faehigkeit) wird daraus ueber den Filter zahlart='bar' hergestellt
+--      (dashboard.html #blFilterZahlart), nicht ueber die Tabelle selbst.
 --   FK owner_id -> profiles(id) ON DELETE RESTRICT
 --   FK patient_id -> leads(id) · prescription_id -> prescriptions(id) · abrechnung_id -> abrechnung(id)
 --   FK invoice_id -> invoices(id) ON DELETE RESTRICT
@@ -1796,7 +1837,10 @@ CREATE TABLE prescriptions (
   nagel text
   krankenkasse_ik text
 );
---   CHECK zuzahlung_zahlart IS NULL ODER IN (bar, ec, ueberweisung, sonstiges)
+--   CHECK zuzahlung_zahlart IS NULL ODER IN (bar, ec, ueberweisung, sonstiges, paypal)
+--      ('paypal' seit 09.09.2026, Ops #271 — sonst koennte eine per PayPal
+--       bezahlte rezeptgebundene Rechnung den Kassiervermerk nicht setzen:
+--       rechnung_zahlung_buchen() Schritt 7 schreibt p_zahlart hier hinein.)
 --   CHECK krankenkasse_ik IS NULL ODER MATCHES ^[0-9]{9}$
 --   CHECK status IN (parsed, confirmed, in_therapy, completed, billed, cancelled)
 --   CHECK rezept_typ IN (standard, blanko, lhb_bvb, kassen, privat)

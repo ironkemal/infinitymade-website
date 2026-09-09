@@ -1,7 +1,21 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-08 — zwei Skripte, die am Migrationsregister
+-- ERZEUGT AM:        2026-09-09 — 20260909170546_zahlungsart_automatik
+--                    (Ops #271). Behebt einen Produktionsfehler: der bereits
+--                    deployte Backend-Code rief rechnung_zahlung_buchen() mit
+--                    12 Parametern (p_zahlart) auf, live lag aber noch die
+--                    11-Parameter-Fassung — PostgREST antwortete „Could not
+--                    find the function … in the schema cache" und blockierte
+--                    jede Rechnungserstellung mit Zahlungsart-Dialog.
+--                    Fuer DIESE Datei relevant: KEINE neue Policy, KEIN neuer
+--                    Trigger, KEIN neuer Index, KEINE neue Funktion. Die alte
+--                    11-Parameter-Signatur wurde gedroppt und durch die
+--                    12-Parameter-Fassung ersetzt (netto 0 Funktionen). EXECUTE
+--                    bleibt PUBLIC/anon/authenticated entzogen — live
+--                    gegengeprueft: proacl = postgres=X/postgres,
+--                    service_role=X/postgres, also nur das Backend.
+--                    davor: 2026-09-08 — zwei Skripte, die am Migrationsregister
 --                    VORBEI direkt im Supabase-SQL-Editor gefahren wurden.
 --                    Sie tauchen unter "LETZTE MIGRATION" deshalb NICHT auf,
 --                    sind aber live (gegen die DB geprüft):
@@ -41,7 +55,8 @@
 --                    pruefe_booking_verordnung_owner() prueft gegen
 --                    prescriptions.owner_id (vorher verordnungen.owner_id).
 --                    Details: module/verordnung-topf.js, db/SCHEMA.sql
--- LETZTE MIGRATION:  20260905224013_kostentraeger_echtdaten_struktur
+-- LETZTE MIGRATION:  20260909170546_zahlungsart_automatik (09.09.2026)
+--                    davor: 20260905224013_kostentraeger_echtdaten_struktur
 --                    davor: 20260905223001_profiles_selbstzahler_stufen
 --                    davor: 20260905193701_booking_status_korrekturen
 --                    davor: 20260905125546_prescriptions_krankenkasse_ik
@@ -82,6 +97,11 @@
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
 -- UMFANG:            161 RLS-Policies · 307 Indizes · 71 Trigger · 73 Funktionen
+--                    (09.09.2026 unveraendert: zahlungsart_automatik tauschte
+--                     nur eine Funktionssignatur — Drop 11-Parameter, Create
+--                     12-Parameter, netto 0 — und zwei CHECK-Constraints.
+--                     Live gegengezaehlt: Policies 161, Indizes 307,
+--                     Trigger 71. Alle drei unveraendert.)
 --                    (08.09.2026 live nachgezählt. Alle vier Deltas gehen
 --                     restlos auf die zwei SQL-Editor-Skripte auf — anders als
 --                     bei den letzten Nachzählungen bleibt kein unerklärter Rest:
@@ -722,15 +742,33 @@ $function$;
 -- rechnung_zahlung_buchen(p_invoice_id, p_owner_id, p_created_by,
 --     p_betrag_eur, p_zahlungsdatum, p_gegenkonto_code, p_gegenkonto_label,
 --     p_restbetrag_modus, p_ausbuchungskonto_code, p_ausbuchungskonto_label,
---     p_bemerkung) -> jsonb                                (07.09.2026)
+--     p_bemerkung, p_zahlart) -> jsonb          (07.09.2026 · 12. Parameter
+--                                                p_zahlart seit 09.09.2026)
 --   DER Schreibweg fuer Zahlungen auf Privatrechnungen — eine Transaktion:
 --   Zahlungszeile anlegen · je nach p_restbetrag_modus zusaetzlich eine
---   Ausbuchungszeile · bei Barzahlung die Beleglisten-Zeile mit invoice_id ·
---   ggf. prescriptions fortschreiben · invoices.payment_status nachziehen.
+--   Ausbuchungszeile · die Beleglisten-Zeile mit invoice_id · ggf.
+--   prescriptions fortschreiben · invoices.payment_status nachziehen.
 --   ⚠️ SECURITY INVOKER, laeuft also unter der RLS des Aufrufers — Absicht.
 --      EXECUTE ist PUBLIC/anon/authenticated entzogen.
 --   ⚠️ Nicht von Hand in rechnung_zahlungen INSERTen: dann fehlen Belegliste,
 --      Statusfortschreibung und die Ausbuchungslogik.
+--   ⚠️ p_zahlart ('bar'|'ec'|'ueberweisung'|'paypal'|'sonstiges') ist PFLICHT,
+--      obwohl die Signatur DEFAULT NULL fuehrt: NULL oder ein unbekannter Wert
+--      wird im Rumpf mit check_violation abgelehnt. Absicht — der Default steht
+--      nur da, weil PostgREST benannte Parameter erwartet; ein fehlender Wert
+--      soll laut scheitern statt still auf 'sonstiges' zu fallen. Das Backend
+--      leitet ihn aus der Konto-Kategorie ab
+--      (api-backend/billing/api/rechnung-zahlung.routes.js).
+--   ⚠️ Seit 09.09.2026 entsteht die Beleglisten-Zeile bei JEDER Zahlart, nicht
+--      mehr nur bei Bar (Ops #271, Variante B). Eine Ausbuchung bleibt weiterhin
+--      OHNE Beleg — kein Geldfluss. Der `type` der Beleg-Zeile beschreibt den
+--      GESCHAEFTSVORFALL: mit Rezeptbezug 'zuzahlung', ohne 'rechnung'. Daran
+--      haengt das Mahnwesen (mahnwesen/statistik.routes.js filtern auf
+--      type IN ('zuzahlung','storno')).
+--   ⚠️ Diese Funktion existierte vom 07.09. bis 09.09.2026 nur mit 11
+--      Parametern, waehrend das deployte Backend schon 12 schickte — Ergebnis
+--      war ein PostgREST-„function not found" auf dem Geld-Pfad. Wer die
+--      Signatur aendert, deployt SQL und Backend zusammen.
 
 
 -- --- Einwilligung / Nachweis --------------------------------------------
