@@ -102,7 +102,17 @@ ALTER TABLE public.prescriptions
 --   mit (api-backend/billing/api/rechnung-zahlung.routes.js), daher ohne
 --   DEFAULT — ein fehlender Wert soll aussagekräftig fehlschlagen, nicht
 --   still auf einen falschen Default fallen.
+--
+--   ⚠️ CREATE OR REPLACE ersetzt NUR bei identischer Signatur. Ein
+--   zusätzlicher Parameter macht daraus eine zweite Überladung, nicht einen
+--   Ersatz — die alte 11-Parameter-Funktion bliebe sonst live liegen und
+--   würde bei jedem Aufruf OHNE p_zahlart (z. B. ein vergessener alter
+--   Client) still die alte Bar-only-Logik fahren, statt laut zu fehlschlagen.
+--   Deshalb zuerst die exakte alte Signatur droppen.
 -- ---------------------------------------------------------------------
+
+DROP FUNCTION IF EXISTS public.rechnung_zahlung_buchen(
+  uuid, uuid, uuid, numeric, date, text, text, text, text, text, text);
 
 CREATE OR REPLACE FUNCTION public.rechnung_zahlung_buchen(
   p_invoice_id             uuid,
@@ -352,9 +362,13 @@ REVOKE EXECUTE ON FUNCTION public.rechnung_zahlung_buchen(
 --      SELECT count(*) FROM public.belegliste WHERE zahlart = 'paypal';
 --      SELECT count(*) FROM public.prescriptions WHERE zuzahlung_zahlart = 'paypal';
 --
---   -- 1. Funktion auf den Stand vor dieser Migration zuruecksetzen —
---   --    kompletten CREATE OR REPLACE aus
---   --    sql-melih/2026-09-07-rechnung-zahlungen.sql:310-513 erneut fahren.
+--   -- 1. Funktion auf den Stand vor dieser Migration zuruecksetzen. Zuerst
+--   --    die 12-Parameter-Fassung (diese Migration) droppen, DANACH den
+--   --    kompletten CREATE OR REPLACE aus sql-melih/2026-09-07-…:310-513
+--   --    erneut fahren — sonst liegen beide Ueberladungen nebeneinander,
+--   --    gleicher Fehler wie oben in TEIL B, nur umgekehrt:
+--   DROP FUNCTION IF EXISTS public.rechnung_zahlung_buchen(
+--     uuid, uuid, uuid, numeric, date, text, text, text, text, text, text, text);
 --
 --   -- 2. CHECKs zurueckbauen (nur wenn die Zaehlungen oben beide 0 sind):
 --   ALTER TABLE public.belegliste DROP CONSTRAINT IF EXISTS belegliste_zahlart_check;

@@ -3,10 +3,11 @@
  */
 
 /**
- * Erlaubte Zahlarten. Muss zum CHECK-Constraint aus
- * database_v32_kassieren_zahlart.sql passen.
+ * Erlaubte Zahlarten. Muss zum CHECK-Constraint `belegliste_zahlart_check`
+ * passen (ursprünglich database_v32_kassieren_zahlart.sql, seit Ops #271 um
+ * 'paypal' erweitert — sql-melih/2026-09-08-zahlungsart-automatik.sql).
  */
-export const ZAHLARTEN = ['bar', 'ec', 'ueberweisung', 'sonstiges'];
+export const ZAHLARTEN = ['bar', 'ec', 'ueberweisung', 'sonstiges', 'paypal'];
 
 /**
  * Erlaubte Belegtypen. Muss zum CHECK-Constraint `belegliste_type_check`
@@ -29,6 +30,7 @@ export const ZAHLART_LABELS = {
   ec: 'EC-Karte',
   ueberweisung: 'Überweisung',
   sonstiges: 'Sonstiges',
+  paypal: 'PayPal',
 };
 
 /**
