@@ -8499,7 +8499,7 @@ async function flipAbrechnungStatus(rxId, newStatus, leadId) {
     showToast(newStatus === 'bereit' ? 'Als abrechnungsbereit markiert ✓' : 'Zurück auf offen ✓');
     await loadPatientDetailRezepte(leadId);
   } catch (e) {
-    console.error('[abrechnung-status]', e);
+    console.error('[flipAbrechnungStatus]', e);
     showToast('Fehler: ' + e.message, 'error');
   }
 }
