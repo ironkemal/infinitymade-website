@@ -39,9 +39,20 @@ const mit3 = await page.evaluate(() => {
     leerSichtbar: document.getElementById('invListEmpty').hidden,
   };
 });
-P('3 erfundene Rechnungen -> 3 Zeilen', mit3.zeilen === 3, String(mit3.zeilen));
-P('.inv-view-btn an jeder Zeile gebunden', mit3.ansehenKnoepfe === 3, String(mit3.ansehenKnoepfe));
+P('4 erfundene Rechnungen -> 4 Zeilen', mit3.zeilen === 4, String(mit3.zeilen));
+P('.inv-view-btn an jeder Zeile gebunden', mit3.ansehenKnoepfe === 4, String(mit3.ansehenKnoepfe));
 P('#invListEmpty bleibt versteckt', mit3.leerSichtbar === true);
+
+console.log('\n══ REZEPT-BLOCK: PODOLOGIE-RECHNUNG (nur verordnung_id gesetzt)');
+const podo = await page.evaluate(async () => {
+  await window.__probe.openInvView('r4');
+  return {
+    rxSichtbar: document.getElementById('invvRxBlock').hidden,
+    rxHtml: document.getElementById('invvRx').innerHTML,
+  };
+});
+P('Rezept-Block wird für verordnung_id-Rechnung eingeblendet', podo.rxSichtbar === false, `hidden=${podo.rxSichtbar}`);
+P('Heilmittel aus der aufgelösten Verordnung steht drin', /Podologische Komplexbehandlung/.test(podo.rxHtml), podo.rxHtml.slice(0, 80));
 
 const mit0 = await page.evaluate(() => {
   window.__setListe([]);

@@ -14857,10 +14857,10 @@ function formatEur(n) {
 async function loadRechnungen() {
   const ownerId = getOwnerId();
   const { data, error } = await bizScope(supabase.from('invoices')
-    .select('*, prescriptions ( rezept_typ, status, dmrz_exported_at, heilmittel )')
+    .select('*, rx1:prescriptions!invoices_prescription_id_fkey ( rezept_typ, status, dmrz_exported_at, heilmittel ), rx2:prescriptions!invoices_verordnung_id_fkey ( rezept_typ, status, dmrz_exported_at, heilmittel )')
     .eq('owner_id', ownerId).order('created_at', { ascending: false }), 'finance');
   if (error) { console.error('[invoices]', error); return; }
-  invListCache = data || [];
+  invListCache = (data || []).map(inv => ({ ...inv, prescriptions: inv.rx1 || inv.rx2 || null }));
   renderInvList();
 }
 
