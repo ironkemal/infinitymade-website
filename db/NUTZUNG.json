@@ -1,11 +1,11 @@
 {
- "erzeugt": "2026-09-07",
+ "erzeugt": "2026-09-09",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-09-06)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-07)",
+  "schema": "db/SCHEMA.sql (Stand 2026-09-08)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-08)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 84,
+ "anzahl": 85,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -333,7 +333,8 @@
    "dateien": [
     "api-backend/lib/arzt-registry.js",
     "api-backend/server.js",
-    "dashboard.js"
+    "dashboard.js",
+    "module/rechnung-dmrz.js"
    ],
    "module": [
     "abrechnung",
@@ -722,10 +723,11 @@
   },
   {
    "name": "belegliste",
-   "spalten": 13,
+   "spalten": 14,
    "fkRaus": [
     "profiles",
-    "leads"
+    "leads",
+    "invoices"
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
@@ -794,7 +796,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 4,
+   "sqlTreffer": 5,
    "codeStumm": false
   },
   {
@@ -886,6 +888,7 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/booking/cancel-request.test.js",
     "api/dsgvo.js",
     "onboarding.js"
    ],
@@ -897,6 +900,7 @@
    "leser": [],
    "schreiber": [],
    "dateien": [
+    "api-backend/booking/cancel-request.js",
     "api-backend/server.js"
    ],
    "module": [],
@@ -942,7 +946,7 @@
   },
   {
    "name": "bookings",
-   "spalten": 34,
+   "spalten": 36,
    "fkRaus": [
     "bookings",
     "leads",
@@ -952,6 +956,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/billing/statistik/therapeuten.test.js",
+    "api-backend/booking/cancel-request.test.js",
     "api-backend/booking/from-request.test.js",
     "api/dsgvo.js",
     "module/booking-status-korrektur.test.js",
@@ -1371,7 +1377,7 @@
     {
      "name": "podGeplanteHpnr",
      "file": "module/podologie-abrechnung.js",
-     "start": 262,
+     "start": 266,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1823,8 +1829,9 @@
    ],
    "dateien": [
     "api-backend/billing/api/ausfall.routes.js",
-    "api-backend/billing/api/statistik.routes.js",
     "api-backend/billing/api/warteliste.routes.js",
+    "api-backend/billing/statistik/therapeuten.js",
+    "api-backend/booking/cancel-request.js",
     "api-backend/booking/from-request.js",
     "api-backend/server.js",
     "api/admin/data.js",
@@ -1836,9 +1843,11 @@
     "module/fussbefund.js",
     "module/kalender-monat.js",
     "module/kalender-woche.js",
+    "module/patient-termine.js",
     "module/patientenkarte.js",
     "module/podologie-abrechnung.js",
     "module/rechnung-editor.js",
+    "module/rechnung-editor.test.js",
     "module/rechnung-verordnung.js",
     "module/signal.js",
     "module/termin-aktionen.js",
@@ -3719,7 +3728,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 8,
+   "sqlTreffer": 9,
    "codeStumm": false
   },
   {
@@ -4051,7 +4060,7 @@
   },
   {
    "name": "invoices",
-   "spalten": 34,
+   "spalten": 36,
    "fkRaus": [
     "leads",
     "prescriptions"
@@ -4185,7 +4194,9 @@
     }
    ],
    "dateien": [
+    "api-backend/billing/api/rechnung-zahlung.routes.js",
     "dashboard.js",
+    "module/rechnung-dmrz.js",
     "module/rechnung-zahlung.js",
     "module/selbstzahler-stufen.js"
    ],
@@ -4200,7 +4211,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 10,
+   "sqlTreffer": 13,
    "codeStumm": false
   },
   {
@@ -4248,9 +4259,23 @@
    "ungeklaert": false,
    "leser": [
     {
+     "name": "baueBegleitzettel",
+     "file": "api-backend/billing/api/abrechnung.routes.js",
+     "start": 161,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "kostentraegerIkAufloesen",
      "file": "api-backend/lib/rezept-felder.js",
      "start": 55,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "ladeAnnahmestelle",
+     "file": "api-backend/billing/kostentraeger/annahmestelle.js",
+     "start": 128,
      "module": [],
      "uiPfad": []
     },
@@ -4277,6 +4302,7 @@
    "schreiber": [],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/kostentraeger/annahmestelle.js",
     "api-backend/lib/rezept-felder.js",
     "dashboard.js"
    ],
@@ -4307,12 +4333,22 @@
    "warum": "Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin geht diese Datei?** Der Empfänger ist nicht die Kasse, sondern ihre Datenannahmestelle — und die hängt am Viererschlüssel (Kostenträger, Abrechnungscode, Art der Datenlieferung, Bundesland). Eine einzelne Spalte an `kostentraeger` (`das_ik`) konnte das nie abbilden; deshalb eine eigene Tabelle statt weiterer Spalten. Sie ist damit auch die Antwort auf „hätte eine Spalte gereicht?\" — nein, es ist eine echte 1:n-Beziehung.",
    "seit": "06.09.2026 · `kostentraeger_echtdaten_struktur` (Ops #264)",
    "ungeklaert": false,
-   "leser": [],
+   "leser": [
+    {
+     "name": "ladeAnnahmestelle",
+     "file": "api-backend/billing/kostentraeger/annahmestelle.js",
+     "start": 128,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
    "schreiber": [],
-   "dateien": [],
+   "dateien": [
+    "api-backend/billing/kostentraeger/annahmestelle.js"
+   ],
    "module": [],
-   "sqlTreffer": 7,
-   "codeStumm": true
+   "sqlTreffer": 5,
+   "codeStumm": false
   },
   {
    "name": "krankenkassen",
@@ -5061,7 +5097,9 @@
     "module/fussbefund.js",
     "module/krankenkasse-suche.js",
     "module/patienten-einwilligung.js",
+    "module/rechnung-dmrz.js",
     "module/rechnung-editor.js",
+    "module/rechnung-editor.test.js",
     "module/termin-patient-bezug.js",
     "module/verordnung-patient-abgleich.js",
     "module/verordnung-uebersicht.js"
@@ -5937,7 +5975,7 @@
     {
      "name": "podPatientBehandlungen",
      "file": "module/podologie-abrechnung.js",
-     "start": 212,
+     "start": 216,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5976,7 +6014,7 @@
     {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 504,
+     "start": 634,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6339,7 +6377,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 3,
+   "sqlTreffer": 7,
    "codeStumm": false
   },
   {
@@ -7030,6 +7068,7 @@
     "module/arzt-register.js",
     "module/booking-status-korrektur.js",
     "module/patientenkarte.js",
+    "module/rechnung-dmrz.js",
     "module/rechnung-verordnung.js",
     "module/rechnung-zahlung.js",
     "module/rezeptinfo-geld.js",
@@ -7058,19 +7097,21 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 34,
+   "sqlTreffer": 35,
    "codeStumm": false
   },
   {
    "name": "profiles",
-   "spalten": 83,
+   "spalten": 84,
    "fkRaus": [
     "auth.users"
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/billing/statistik/therapeuten.test.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Der Dreh- und Angelpunkt der Mandantentrennung. Jeder Account — Inhaber wie Angestellter — hat genau eine Zeile; `role` und `owner_id` entscheiden, wer wessen Daten sieht. Weil Einzelstandort-Inhaber gar keinen `businesses`-Datensatz haben, liegen **Inhaber-Einstellungen hier**, nicht in `businesses`.",
@@ -7821,10 +7862,12 @@
     "api-backend/billing/api/abrechnung.routes.js",
     "api-backend/billing/api/ausfall.routes.js",
     "api-backend/billing/api/mahnwesen.routes.js",
+    "api-backend/billing/api/rechnung-zahlung.routes.js",
     "api-backend/billing/api/statistik.routes.js",
     "api-backend/billing/api/verordnung-status.routes.js",
     "api-backend/billing/api/warteliste.routes.js",
     "api-backend/billing/api/zuzahlung.routes.js",
+    "api-backend/billing/statistik/therapeuten.js",
     "api-backend/fix_db.js",
     "api-backend/server.js",
     "api-backend/test_schema.js",
@@ -7841,6 +7884,7 @@
     "module/anfrage-bearbeiten.js",
     "module/ausfall-einstellungen.js",
     "module/beleg-druck.js",
+    "module/buchungskonten.js",
     "module/fussbefund.js",
     "module/selbstzahler-stufen.js",
     "onboarding.js"
@@ -7859,7 +7903,35 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 34,
+   "sqlTreffer": 36,
+   "codeStumm": false
+  },
+  {
+   "name": "rechnung_zahlungen",
+   "spalten": 12,
+   "fkRaus": [
+    "profiles",
+    "invoices",
+    "rechnung_zahlungen"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Eine Privatrechnung wird nicht immer in einem Zug bezahlt — Teilzahlung, Nachzahlung, Ausbuchung eines Restbetrags, Storno einer Fehlbuchung. Vorher trug `invoices.payment_status` allein die Antwort und konnte genau eine davon abbilden: bezahlt oder nicht. Wer zweimal kassierte, überschrieb die erste Buchung; nach einer Korrektur war nicht mehr feststellbar, was wann tatsächlich geflossen war. Diese Tabelle ist die Zahlungshistorie als Hauptbuch — jede Bewegung eine eigene Zeile. Gleiches Muster und gleicher Grund wie `zuzahlung_korrekturen` und `belegliste`.",
+   "seit": "07.09.2026 · `sql-melih/2026-09-07-rechnung-zahlungen.sql` — ⚠️ **direkt im SQL-Editor gefahren, steht in KEINER Migrationszeile** von `supabase_migrations.schema_migrations` (das endet am 05.09.2026). Live ist sie trotzdem, am 08.09.2026 gegen die DB geprüft.",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/billing/api/rechnung-zahlung.routes.js"
+   ],
+   "module": [],
+   "sqlTreffer": 13,
    "codeStumm": false
   },
   {
@@ -9803,7 +9875,7 @@
     "api-backend/billing/api/zuzahlung.routes.js"
    ],
    "module": [],
-   "sqlTreffer": 8,
+   "sqlTreffer": 9,
    "codeStumm": false
   }
  ],
@@ -9850,11 +9922,6 @@
    "name": "icd_sector_ranges",
    "sql": 3,
    "status": "aktiv (Referenz)"
-  },
-  {
-   "name": "kostentraeger_annahmestellen",
-   "sql": 7,
-   "status": "aktiv (Referenz) — **vollständig geladen**, aber mit einem Zeitfehler, siehe unten"
   },
   {
    "name": "nummernkreise",
@@ -9930,6 +9997,7 @@
    "prescription_validations",
    "prescriptions",
    "profiles",
+   "rechnung_zahlungen",
    "referral_drafts",
    "services",
    "terapeut_zertifikat",

@@ -3,10 +3,24 @@
  */
 
 /**
- * Erlaubte Zahlarten. Muss zum CHECK-Constraint aus
- * database_v32_kassieren_zahlart.sql passen.
+ * Erlaubte Zahlarten. Muss zum CHECK-Constraint `belegliste_zahlart_check`
+ * passen (ursprünglich database_v32_kassieren_zahlart.sql, seit Ops #271 um
+ * 'paypal' erweitert — sql-melih/2026-09-08-zahlungsart-automatik.sql).
  */
-export const ZAHLARTEN = ['bar', 'ec', 'ueberweisung', 'sonstiges'];
+export const ZAHLARTEN = ['bar', 'ec', 'ueberweisung', 'sonstiges', 'paypal'];
+
+/**
+ * Erlaubte Belegtypen. Muss zum CHECK-Constraint `belegliste_type_check`
+ * passen — die Liste steht an zwei Orten, das ist unvermeidbar, aber sie darf
+ * nicht auseinanderlaufen.
+ *
+ * `rechnung` = Zahlungseingang auf eine Privatrechnung OHNE Rezeptbezug.
+ * Hängt die Rechnung an einem Rezept, wird bewusst `zuzahlung` gebucht:
+ * Mahnwesen und Statistik filtern auf `type IN ('zuzahlung','storno')` und
+ * würden eine `rechnung`-Zeile übersehen. Der Typ beschreibt den
+ * Geschäftsvorfall, nicht den Erfassungsweg.
+ */
+export const BELEG_TYPEN = ['zuzahlung', 'barverkauf', 'storno', 'ausfall', 'rechnung'];
 
 /**
  * Deutsche Beschriftung für den CSV-Export / die Belegliste.
@@ -16,6 +30,7 @@ export const ZAHLART_LABELS = {
   ec: 'EC-Karte',
   ueberweisung: 'Überweisung',
   sonstiges: 'Sonstiges',
+  paypal: 'PayPal',
 };
 
 /**
@@ -26,14 +41,19 @@ export const ZAHLART_LABELS = {
  * - Zahlart ist optional (Altbelege vor v32 haben keine), muss aber, wenn
  *   angegeben, einer der bekannten Werte sein.
  *
- * @param {string} type - 'zuzahlung' | 'barverkauf' | 'storno'
+ * @param {string} type - 'zuzahlung' | 'barverkauf' | 'storno' | 'ausfall' | 'rechnung'
  * @param {number} amount - The currency amount in EUR
  * @param {string|null} [zahlart] - 'bar' | 'ec' | 'ueberweisung' | 'sonstiges'
  * @returns {{isValid: boolean, error?: string}} Validation result
  */
 export function validateBelegEntry(type, amount, zahlart) {
-  if (!type || !['zuzahlung', 'barverkauf', 'storno'].includes(type)) {
-    return { isValid: false, error: 'Ungültiger oder fehlender Typ. Typ muss zuzahlung, barverkauf oder storno sein.' };
+  // Muss zum CHECK-Constraint der Tabelle passen. Stand 08.09.2026 kennt die
+  // DB fünf Typen; dieser Validator kannte lange nur drei. Die Folge war eine
+  // stille Umgehung: `ausfall.routes.js:466` schreibt direkt in die Tabelle,
+  // weil der POST-Weg seinen eigenen Typ abgelehnt hätte. 'rechnung' kam am
+  // 08.09.2026 mit der Bar-Brücke für Privatrechnungen dazu.
+  if (!type || !BELEG_TYPEN.includes(type)) {
+    return { isValid: false, error: `Ungültiger oder fehlender Typ. Erlaubt: ${BELEG_TYPEN.join(', ')}.` };
   }
 
   const numAmount = Number(amount);

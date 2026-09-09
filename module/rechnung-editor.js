@@ -62,6 +62,7 @@ export async function terminAuswahlLaden(sb, { ownerId, leadId }) {
   let query = sb.from('bookings')
     .select('id,start_time,end_time,status,customer_name,service_id, services(title,price,duration_minutes,price_config)')
     .eq('owner_id', ownerId)
+    .neq('status', 'cancelled')
     .order('start_time', { ascending: false });
 
   if (linkedIds.length && orParts.length) {

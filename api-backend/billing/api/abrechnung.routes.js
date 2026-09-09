@@ -1729,7 +1729,7 @@ router.get('/belegliste', async (req, res) => {
       : profile.id;
 
     // ---- Query building ----
-    const { from, to, type } = req.query || {};
+    const { from, to, type, zahlart } = req.query || {};
     let query = supabase
       .from('belegliste')
       .select('id, owner_id, beleg_nr, type, zahlart, amount_eur, patient_id, prescription_id, abrechnung_id, reference_text, storno_reason, created_at, created_by')
@@ -1738,6 +1738,12 @@ router.get('/belegliste', async (req, res) => {
 
     if (type && type !== 'all') {
       query = query.eq('type', type);
+    }
+    // Zahlart-Filter (Ops #271, 08.09.2026): seit belegliste ein Belegjournal
+    // ist (jede Zahlart, nicht nur bar), ist das die praktische Umsetzung von
+    // "Bar-Kassenbuch = Filter auf zahlart='bar'" fuer die Kassensturzfaehigkeit.
+    if (zahlart && zahlart !== 'all') {
+      query = query.eq('zahlart', zahlart);
     }
     if (from) {
       query = query.gte('created_at', `${from}T00:00:00Z`);

@@ -26,6 +26,16 @@
 //       Auflösung erfordert eine Abwägung Art. 17 Abs. 3 lit. b gegen § 147 AO /
 //       § 14b UStG: darf der Trigger das Nullen reiner Personenfelder zulassen,
 //       wenn die buchhalterischen Beträge unangetastet bleiben? → legal-de.
+//       ⚠️ 08.09.2026, aus der Prüfung von `rechnung_zahlungen` mitgenommen —
+//       diese Frage ist weiter offen, aber zwei Hinweise dazu stehen fest:
+//       (a) Rolle: auf der Patientenseite sind wir Auftragsverarbeiter, dort
+//           gilt Art. 28 Abs. 3 lit. g DSGVO statt Art. 17 Abs. 3 lit. b — die
+//           steuerliche Pflicht trifft die Praxis, nicht uns.
+//       (b) Falle: `patient_name` in einer festgeschriebenen Rechnung zu nullen
+//           zerstört eine Pflichtangabe nach § 14 Abs. 4 Nr. 1 UStG. Die Lösung
+//           ist also NICHT, den Trigger zu lockern, sondern der Weg über
+//           GoBD Rz. 142 ff. (Archiv-PDF übergeben, dann im Livesystem löschen).
+//       Gilt für alle Tabellen im ⛔-Block unten, nicht nur für `invoices`.
 //
 //    2. Mitarbeiter. `profiles.owner_id` zeigt mit NO ACTION auf `profiles`;
 //       solange Angestellte am Inhaber hängen, lässt sich dessen Profil nicht
@@ -125,6 +135,13 @@ const USER_TABLES = [
   { table: 'ausfallrechnungen',            filter: 'owner_id'  },
   { table: 'mahnungen',                    filter: 'owner_id'  },
   { table: 'belegliste',                   filter: 'owner_id'  },
+  // 08.09.2026 nachgetragen: die Tabelle kam am 07.09. dazu und wurde beim
+  // Anlegen in dieser Liste vergessen — die Auskunft lieferte die
+  // Zahlungshistorie also nicht mit. Derselbe Fehler wie am 28.08.2026.
+  // Sie ist die Antwort auf „was habe ich wann auf welche Rechnung gezahlt",
+  // seit `invoices.payment_status` nur noch Cache ist; ohne sie ist die
+  // Auskunft zum Zahlungsverlauf unvollständig.
+  { table: 'rechnung_zahlungen',           filter: 'owner_id'  },
   { table: 'nummernkreise',                filter: 'owner_id'  },
   { table: 'attendance',                   filter: 'owner_id'  },
   { table: 'document_vorlagen',            filter: 'owner_id'  },
@@ -268,9 +285,40 @@ const DELETE_TABLES = [
   //                       Nachweiskette der Einwilligung selbst.
   //   `abrechnung`      — § 302 SGB V / § 304 SGB V Aufbewahrung.
   //   `invoices`        — wird oben anonymisiert statt gelöscht (Absicht).
-  // Art. 17 Abs. 3 lit. b lässt Aufbewahrungspflichten vorgehen, aber welche
-  // dieser vier gelöscht, anonymisiert oder behalten werden muss, entscheidet
-  // legal-de — nicht dieser Endpunkt und nicht nebenbei.
+  //   `rechnung_zahlungen` — Zahlungshistorie zu Privatrechnungen (07.09.2026).
+  //                       `owner_id` UND `invoice_id` stehen auf RESTRICT, beide
+  //                       bewusst als Sperre. Grundaufzeichnung i. S. d.
+  //                       § 147 Abs. 1 Nr. 1 AO (10 Jahre; Fristbeginn Abs. 4,
+  //                       Ablaufhemmung bei offener Festsetzungsfrist). Die
+  //                       8-Jahres-Verkürzung des BEG IV betrifft nur Buchungs-
+  //                       belege nach Abs. 1 Nr. 4, nicht diese Aufzeichnung.
+  //                       ⚠️ Aufbewahrungspflichtig ist die PRAXIS als Steuer-
+  //                       pflichtige, nicht wir — für uns gilt Art. 28 Abs. 3
+  //                       lit. g DSGVO, nicht Art. 17 Abs. 3 lit. b. Gelöscht
+  //                       wird deshalb erst, wenn die Daten nach GoBD Rz. 142 ff.
+  //                       an den Verantwortlichen ausgelagert sind.
+  //                       Anonymisieren ist hier das falsche Mittel: die Tabelle
+  //                       führt keine `patient_id`; der Patientenbezug entsteht
+  //                       allein über `invoices` und fällt mit dessen Anonymi-
+  //                       sierung weg. UPDATE und DELETE sind ohnehin per
+  //                       Trigger `prevent_rechnung_zahlungen_mod()` gesperrt
+  //                       (GoBD Unveränderbarkeit) — ein Eintrag in
+  //                       DELETE_TABLES oder ANONYMIZE_TABLES würde nur
+  //                       scheitern.
+  //                       Abgrenzung zu `zuzahlung_guthaben` trägt hier NICHT:
+  //                       eine Beleglisten-Zeile entsteht nur bei Barzahlung
+  //                       (`gegenkonto_code = '1000'`). Bei Bank/EC und bei
+  //                       jeder `ausbuchung` ist diese Tabelle der einzige
+  //                       Nachweis des Vorgangs.
+  //                       → legal-de 08.09.2026
+  // ⚠️ ROLLE, gilt für alle fünf: Art. 17 Abs. 3 lit. b ist auf der Patienten-
+  // seite NICHT unsere Norm — dort sind wir Auftragsverarbeiter, es gilt
+  // Art. 28 Abs. 3 lit. g DSGVO. Die steuerliche Aufbewahrungspflicht trifft
+  // die Praxis, nicht Praxura. Der Weg zur echten Löschung führt deshalb über
+  // ein Auslagerungspaket nach GoBD Rz. 142 ff. (an den Verantwortlichen
+  // übergeben, dann hier löschen) — noch nicht umgesetzt, gehört gemeinsam
+  // für `belegliste`, `invoices`, `abrechnung`, `patient_consents` und
+  // `rechnung_zahlungen` gelöst. Auslöser: erster echter Kontolöschungsantrag.
 ];
 
 async function handleDelete(req, res) {

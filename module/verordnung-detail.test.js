@@ -114,6 +114,17 @@ test('Physio: Termine sind in vergeben und unvergeben getrennt', () => {
   assert.match(html, /ohne Termin/);   // die Zeile ohne booking_id
 });
 
+test('Physio: ein abgesagter Termin erscheint nicht in der Liste vergebener Termine', () => {
+  const rx = { ...PHYSIO, prescription_sessions: [
+    { id: 'alt', session_number: 1, status: 'planned', booking_id: 'storno', bookings: { status: 'cancelled', start_time: '2026-09-09T10:00:00Z' } },
+    { id: 'frei', session_number: 2, status: 'planned', booking_id: null },
+  ] };
+  const html = verordnungDetailHtml(rx, { escapeHtml: esc, quelle: 'physio' });
+  assert.doesNotMatch(html, /09\.09\.2026/);
+  assert.match(html, />0<\/span>\s*<span[^>]*> vergeben/);
+  assert.match(html, />1<\/span>\s*<span[^>]*> unvergeben/);
+});
+
 test('Podologie: Verschreibung zeigt Summe und Zuzahlung, wenn sie gerechnet wurde', () => {
   const summe = { brutto: 38.63, prozent: 3.87, pauschale: 10, gesamt: 13.87, befreit: false, unbekannt: [] };
   const html = verordnungDetailHtml(PODO, { escapeHtml: esc, quelle: 'podologie', summe });

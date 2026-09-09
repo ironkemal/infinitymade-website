@@ -1,3 +1,6 @@
+import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260908';
+import { storniereTermin } from './module/termin-storno.js?v=20260908';
+import { zeigePatientTermine } from './module/patient-termine.js?v=20260908';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
@@ -10,7 +13,7 @@ import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260817';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20260905a';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20260908';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260826';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
 import { checkPrescriptionCompliance, istBerichtOffen, istHarterRiegel, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
@@ -34,14 +37,16 @@ import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeV
   from './module/verordnung-maske.js?v=20260907';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260906';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260906';
-import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260908';
+import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20260908';
+import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
+import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260909';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260815c';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260908';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260817';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
@@ -50,7 +55,7 @@ import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=2026
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260905a';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260905a';
+import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260908';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260905c';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
@@ -1935,7 +1940,8 @@ on('verordnungen:changed', async () => {
   const { data: frisch } = await supabase.from('bookings')
     .select('*, services(title,color,code), prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
     .eq('id', bkActionBookingCache.id).maybeSingle();
-  if (frisch) openBookingActionModal(frisch).catch(() => {});
+  if (frisch?.status === 'cancelled') closeBkActionPanel();
+  else if (frisch) openBookingActionModal(frisch).catch(() => {});
 });
 
 function formatActivityTimestamp(iso) {
@@ -1994,7 +2000,7 @@ async function loadActivityFeed() {
         .limit(10), 'activities'),
       bizScope(supabase.from('bookings')
         .select('id, created_at, customer_name')
-        .eq('owner_id', ownerId)
+        .eq('owner_id', ownerId).neq('status', 'cancelled')
         .order('created_at', { ascending: false })
         .limit(10), 'activities'),
       bizScope(supabase.from('leads')
@@ -2974,7 +2980,7 @@ verdrahteHeuteButton(() => {
 
 // Rechtsklick auf einem Termin: dieselben Handlungen wie im Seitenbereich, ohne Umweg.
 // Woche/Monat laden weniger Spalten: erst vollstaendig laden (module/termin-laden.js).
-const mitTermin = (fn) => async (b) => fn(await ladeTerminVollstaendig(supabase, b));
+const mitTermin = (fn) => async (b) => { const t = await ladeTerminVollstaendig(supabase, b); if (t && t.status !== 'cancelled') return fn(t); };
 verdrahteKontextmenue({
   wahrgenommen: mitTermin((b) => { bkActionBookingCache = b; handleTerminStarten(); }),
   nichtErschienen: mitTermin((b) => { bkActionBookingCache = b; handlePatientNichtErschienen(); }),
@@ -3258,6 +3264,7 @@ function updateNoShowButton(startTime) {
 }
 
 async function openBookingActionModal(booking, opts = {}) {
+  if (!booking || booking.status === 'cancelled') { closeBkActionPanel(); return; }
   // Der Seitenbereich geht auch aus dem Tagesplan auf, nicht nur aus dem
   // Kalender — die Patientensuche im Kopf muss dann trotzdem verdrahtet sein.
   if (!window._calRpInited) { window._calRpInited = true; initCalRightPanel(); }
@@ -5062,6 +5069,7 @@ async function initBkGroupPatientAutocomplete() {
 }
 
 async function openBookingModal(b) {
+  if (b?.status === 'cancelled') { showToast('Dieser Termin ist abgesagt.', 'warning'); return; }
   if (!b) { await prefillBookingModal(null); return; }
   const ownerId = getOwnerId();
   document.getElementById('bk-id').value = b.id || '';
@@ -6313,7 +6321,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   if (abgleich.ergaenzt > 0) emit('verordnungen:changed');
 
   const { data: allSessions } = await supabase.from('prescription_sessions')
-    .select('id,session_number,heilmittel_index,status,booking_id,bookings(start_time)')
+    .select('id,session_number,heilmittel_index,status,booking_id,bookings(start_time,status)')
     .eq('prescription_id', linkedSession.prescription_id)
     .order('session_number');
 
@@ -6323,11 +6331,12 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   const getHmName = (idx) => heilmittelItems[idx]?.name || heilmittelItems[idx]?.kuerzel || rx.heilmittel || '—';
   const getHmKuerzel = (idx) => heilmittelItems[idx]?.kuerzel || (heilmittelItems[idx]?.name?.substring(0,3).toUpperCase()) || String(idx + 1);
 
-  const unvergebene = allSessions.filter(s => !s.booking_id);
-  const vergebene = allSessions.filter(s => s.booking_id);
+  const aktiveSessions = aktiveSitzungszeilen(allSessions);
+  const unvergebene = aktiveSessions.filter(s => !s.booking_id);
+  const vergebene = aktiveSessions.filter(s => s.booking_id);
 
   const badge = document.getElementById('bkRxSessionsBadge');
-  if (badge) badge.textContent = `${unvergebene.length} offen / ${allSessions.length} ges.`;
+  if (badge) badge.textContent = `${unvergebene.length} offen / ${aktiveSessions.length} ges.`;
 
   // Serienknopf: nur sinnvoll, wenn mindestens zwei Einheiten offen sind —
   // für eine einzelne zieht man schneller, als der KI-Ablauf dauert.
@@ -7847,15 +7856,13 @@ document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e
 
 // Absagen aus Seitenbereich UND Kontextmenue — ein Weg, nicht zwei.
 async function absageTerminMitGrund(b) {
-  if (!b) return;
-  const reason = await showAbsagegrundModal({ title: 'Termin absagen', confirmText: 'Termin löschen' });
+  if (!b || b.status === 'cancelled') return;
+  if (!['confirmed', 'pending'].includes(b.status) || b.no_show) { showToast('Nur geplante Termine können abgesagt werden.', 'warning'); return; }
+  const reason = await showAbsagegrundModal({ title: 'Termin absagen', confirmText: 'Termin absagen' });
   if (reason === null) return;
-  if (reason && reason.trim()) {
-    await supabase.from('bookings').update({ cancellation_reason: reason.trim() }).eq('id', b.id);
-  }
 
   // Kurzfristige Absage innerhalb der Absagefrist → Ausfallrechnung anbieten
-  // (vor dem Löschen — die Rechnung referenziert den Termin, FK ist ON DELETE SET NULL)
+  // Das bestehende Rechnungsangebot bleibt vor der Absage.
   const afBiz = ausfallBizForBooking(b);
   if (afBiz && b.start_time) {
     const hoursUntil = (new Date(b.start_time) - Date.now()) / 3600000;
@@ -7864,19 +7871,17 @@ async function absageTerminMitGrund(b) {
     }
   }
 
-  // Die Warteliste NOCH vor dem Löschen fragen: der Abgleich liest den Termin
-  // über seine ID, nach dem Löschen gäbe es weder Wochentag noch Uhrzeit zum
-  // Filtern. Gewartet wird erst danach, damit die Absage nicht an einer
-  // langsamen Leitung hängt.
+  // Nachrücker parallel laden; erst nach erfolgreicher Absage anbieten.
   const token = (await supabase.auth.getSession()).data.session?.access_token;
   const nachruecker = holeNachruecker({ apiBase: API, token, bookingId: b.id })
     .catch(err => { console.error('[warteliste-match]', err); return null; });
 
-  const { error } = await supabase.from('bookings').delete().eq('id', b.id);
-  if (error) { showToast('Fehler beim Löschen: ' + error.message, 'error'); return; }
+  try { await storniereTermin({ apiBase: API, token, bookingId: b.id, reason }); }
+  catch (error) { showToast('Absage fehlgeschlagen: ' + error.message, 'error'); return; }
   closeModal('bookingModal');
   closeBkActionPanel();
-  showToast('Termin gelöscht.', 'success');
+  showToast('Termin abgesagt.', 'success');
+  emit('verordnungen:changed');
   // Vorher: `renderDayView()` OHNE Datum -> Label "Invalid Date", danach
   // RangeError im toISOString(); der Kalender blieb nach dem Absagen leer.
   refreshBookingViews().catch(() => {});
@@ -7983,7 +7988,7 @@ async function loadLeads() {
   leadsMeta = {};
   if (phones.length) {
     let bkQ = supabase.from('bookings').select('id,customer_phone_normalized,start_time,status')
-      .eq('owner_id', ownerId).in('customer_phone_normalized', phones).order('start_time', { ascending: true });
+      .eq('owner_id', ownerId).in('customer_phone_normalized', phones).neq('status', 'cancelled').order('start_time', { ascending: true });
     bkQ = bizScope(bkQ, 'patients');
     const { data: bkData } = await bkQ;
     // wa_contacts tablosu 2026-05-22'de DROP edildi (WhatsApp shelved). wa metadata kalktı.
@@ -8989,45 +8994,9 @@ async function loadPatientDetailRechnungen(leadId) {
 
 async function loadPatientDetailTermine(leadId) {
   const lead = leadsCache.find(l => l.id === leadId);
-  const ownerId = getOwnerId();
-  const patientName = displayName(lead);
-  let query = supabase.from('bookings')
-    .select('id,start_time,end_time,status,customer_name,services(title,code)')
-    .eq('owner_id', ownerId)
-    .neq('status', 'cancelled')
-    .order('start_time', { ascending: false });
-  if (lead?.phone) {
-    query = query.eq('customer_phone', lead.phone);
-  } else if (patientName) {
-    query = query.eq('customer_name', patientName);
-  } else {
-    document.getElementById('pdTermLoading').hidden = true;
-    document.getElementById('pdTermContent').innerHTML = '<div class="pd-empty">Keine Termine vorhanden.</div>';
-    return;
-  }
-  const { data } = await query;
-  const content = document.getElementById('pdTermContent');
-  document.getElementById('pdTermLoading').hidden = true;
-  if (!data || data.length === 0) {
-    content.innerHTML = '<div class="pd-empty">Keine Termine vorhanden.</div>';
-    return;
-  }
-  content.innerHTML = data.map(b => {
-    const dateStr = b.start_time ? fmtDate(b.start_time) : '—';
-    const timeStr = b.start_time ? fmtTime(b.start_time) : '—';
-    const dur = b.end_time && b.start_time ? Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000) + ' min' : '';
-    const serviceTitle = b.services?.title || '—';
-    const svcCode4 = b.services?.code;
-    return `
-      <div class="pd-term-item">
-        <div class="pd-term-row">
-          <span class="pd-term-date">${dateStr} · ${timeStr}</span>
-          <span class="badge ${b.status === 'confirmed' ? 'badge-green' : (b.status === 'cancelled' || b.status === 'no_show') ? 'badge-red' : 'badge-gray'}">${b.status || '—'}</span>
-        </div>
-        <div class="pd-term-service">${escapeHtml(serviceTitle)} ${svcCode4 ? '<span style="font-size:11px;color:var(--text-muted);margin-left:6px;background:var(--bg-elevated);padding:1px 5px;border-radius:3px;">' + escapeHtml(svcCode4) + '</span>' : ''} ${dur ? '· ' + dur : ''}</div>
-      </div>
-    `;
-  }).join('');
+  await zeigePatientTermine({ sb: supabase, ownerId: getOwnerId(), lead,
+    patientName: displayName(lead), content: document.getElementById('pdTermContent'),
+    loading: document.getElementById('pdTermLoading'), fmtDate, fmtTime });
 }
 
 
@@ -14916,11 +14885,23 @@ function renderInvList() {
       <td>${total}</td>
       <td><span class="badge ${statusCls[st] || 'badge-gray'}">${statusMap[st] || st}</span>${payBadge}</td>
       <td>${renderRezeptBadges(inv)}</td>
-      <td><button class="btn-ghost-sm inv-view-btn" data-id="${inv.id}">Ansehen</button></td>
+      <td><button class="btn-ghost-sm inv-view-btn" data-id="${inv.id}">Ansehen</button>${
+        (st !== 'cancelled' && st !== 'draft' && inv.payment_status !== 'paid')
+          ? `<button class="btn-ghost-sm inv-pay-btn" data-id="${inv.id}" title="Zahlungseingang verbuchen">Zahlung</button>`
+          : ''}</td>
     </tr>`;
   }).join('');
   tbody.querySelectorAll('.inv-view-btn').forEach(btn => {
     btn.onclick = () => openInvView(btn.dataset.id);
+  });
+  tbody.querySelectorAll('.inv-pay-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const gebucht = await starteZahlungseingang({
+        invoiceId: btn.dataset.id, apiBasis: API, profile: currentProfile, showToast,
+        token: async () => (await supabase.auth.getSession()).data.session?.access_token,
+      });
+      if (gebucht) await loadRechnungen();
+    };
   });
 }
 
@@ -15348,164 +15329,23 @@ async function saveInvoice() {
     invBehandlungIds = [];
   }
 
-  // Zahlungsstatus — hängt an der Rechnung ein Rezept mit offener Zuzahlung,
-  // übernimmt der Kassieren-Ablauf und es wird nicht zweimal gefragt.
-  // Begründung in module/rechnung-zahlung.js.
+  // Zahlungsart abfragen (Ops #271, 08.09.2026) — Verzweigung nach
+  // Rezeptbezug liegt in module/rechnung-zahlungseingang.js.
   if (inserted?.id) {
-    await frageZahlungsstatus(inserted.id, {
-      supabase,
+    await zahlungsartNachRechnungAbfragen({
+      invoiceId: inserted.id,
+      hatRezeptbezug: !!(invPrescriptionId || invVerordnungId),
       prescriptionId: invPrescriptionId || null,
-      patientId,
-      patientName,
+      patientId, patientName,
+      supabase, apiBasis: API, profile: currentProfile, showToast,
       kassiere: kassiereZuzahlung,
-      toast: showToast,
+      token: async () => (await supabase.auth.getSession()).data.session?.access_token,
     });
   }
 
   await loadRechnungen();
 }
 
-
-// ===== DMRZ XML export (Phase 3) =====
-
-function xmlEscape(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-}
-
-function buildDmrzXml({ invoice, patient, prescription, arzt, owner }) {
-  const tag = (name, val) => `    <${name}>${xmlEscape(val)}</${name}>`;
-  const now = new Date().toISOString();
-  const lines = (invoice.line_items || []).map((l, i) =>
-    `    <Leistung position="${i + 1}">
-      <Bezeichnung>${xmlEscape(l.title || '')}</Bezeichnung>
-      <Anzahl>${Number(l.quantity || 1)}</Anzahl>
-      <Einzelpreis>${(Number(l.unit_price) || 0).toFixed(2)}</Einzelpreis>
-      <Gesamt>${((Number(l.quantity) || 1) * (Number(l.unit_price) || 0)).toFixed(2)}</Gesamt>
-    </Leistung>`).join('\n');
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<DMRZExport xmlns="https://infinitymade.de/dmrz/v1" erzeugt="${now}" format="§302-vereinfacht-v1">
-  <Leistungserbringer>
-    <Name>${xmlEscape(owner?.business_name || '')}</Name>
-    <Stadt>${xmlEscape(owner?.city || '')}</Stadt>
-    <Telefon>${xmlEscape(owner?.phone || '')}</Telefon>
-    <IK>${xmlEscape(owner?.ik_number || '')}</IK>
-  </Leistungserbringer>
-  <Versicherter>
-${tag('Name', [patient?.first_name, patient?.last_name].filter(Boolean).join(' ') || patient?.title || '')}
-${tag('Geburtsdatum', patient?.dob || '')}
-${tag('Versichertennummer', patient?.versichertennummer || '')}
-${tag('Krankenkasse', patient?.krankenkasse || '')}
-  </Versicherter>
-  <Arzt>
-${tag('Name', arzt?.arzt_name || '')}
-${tag('LANR', arzt?.lanr || '')}
-${tag('BSNR', arzt?.bsnr || '')}
-  </Arzt>
-  <Verordnung typ="${xmlEscape(prescription?.rezept_typ || 'standard')}">
-${tag('Ausstellungsdatum', prescription?.ausstellungsdatum || '')}
-${tag('Behandlungsbeginn', prescription?.behandlungsbeginn || '')}
-${tag('ICD10', prescription?.icd10 || '')}
-${tag('Diagnosegruppe', prescription?.diagnosegruppe || '')}
-${tag('Heilmittel', prescription?.heilmittel || '')}
-${tag('AnzahlEinheiten', prescription?.anzahl_einheiten || '')}
-${tag('Frequenz', prescription?.frequenz || '')}
-${tag('Hausbesuch', prescription?.hausbesuch ? 'true' : 'false')}
-${tag('Dringend', prescription?.is_dringend ? 'true' : 'false')}
-  </Verordnung>
-  <Rechnung nummer="${xmlEscape(invoice.invoice_number || '')}">
-${tag('Zwischensumme', (Number(invoice.subtotal) || 0).toFixed(2))}
-${tag('EigenanteilProzent', invoice.eigenanteil_pct || 0)}
-${tag('EigenanteilEuro', (Number(invoice.eigenanteil_eur) || 0).toFixed(2))}
-${tag('Kassenzuzahlung', (Number(invoice.kassenzuzahlung) || 0).toFixed(2))}
-${tag('GesamtPatient', (Number(invoice.total_patient) || 0).toFixed(2))}
-    <Leistungen>
-${lines}
-    </Leistungen>
-${invoice.notes ? tag('Notizen', invoice.notes) : ''}
-  </Rechnung>
-</DMRZExport>
-`;
-}
-
-async function downloadDmrzForInvoice() {
-  const invId = window._currentInvoiceId;
-  if (!invId) { showToast('Bitte zuerst die Rechnung speichern.', 'error'); return; }
-
-  const okExport = await showConfirmModal({
-    title: 'DMRZ-Export (§302) erstellen?',
-    // ⚠️ Bu dosya §302 gönderimi DEĞİLDİR — kendi XML formatımız (dashboard.js:16481,
-    // xmlns "infinitymade.de/dmrz/v1"). §302'de tek geçerli taşıma EDIFACT SLGA/SLLA'dır
-    // (Anlage 1 V21 §5). Eski metin "verbindlich" diyordu; kullanıcı bunu gerçek gönderim
-    // sanıp asıl DTA'yı hiç göndermiyordu. Düğmenin akıbeti Ops kartında.
-    message: 'Es wird eine lokale Exportdatei erzeugt und die Rechnung als „abgerechnet" markiert.\n\nACHTUNG: Dies ist KEINE §302-Übermittlung an die Krankenkasse. Die eigentliche §302-Abrechnung erfolgt weiterhin über den Abrechnungs-Bereich.',
-    confirmText: 'Exportieren',
-    cancelText: 'Abbrechen',
-    variant: 'danger'
-  });
-  if (!okExport) return;
-
-  try {
-    const ownerId = getOwnerId();
-    const { data: invoice, error: e1 } = await supabase.from('invoices')
-      .select('*').eq('id', invId).eq('owner_id', ownerId).maybeSingle();
-    if (e1 || !invoice) throw new Error(e1?.message || 'Rechnung nicht gefunden');
-
-    const { data: patient } = await supabase.from('leads')
-      .select('id,first_name,last_name,title,dob,versichertennummer,krankenkasse,email,phone')
-      .eq('id', invoice.patient_id).maybeSingle();
-
-    let prescription = null;
-    if (invoice.prescription_id) {
-      const { data: p } = await supabase.from('prescriptions')
-        .select('*').eq('id', invoice.prescription_id).maybeSingle();
-      prescription = p || null;
-    }
-    if (!prescription) {
-      const { data: prescriptions } = await supabase.from('prescriptions')
-        .select('*').eq('patient_id', invoice.patient_id)
-        .order('created_at', { ascending: false }).limit(1);
-      prescription = prescriptions?.[0] || null;
-    }
-
-    let arzt = null;
-    if (prescription?.arzt_id) {
-      const { data: a } = await supabase.from('aerzte')
-        .select('arzt_name,lanr,bsnr').eq('id', prescription.arzt_id).maybeSingle();
-      arzt = a;
-    }
-
-    const xml = buildDmrzXml({
-      invoice, patient, prescription, arzt,
-      owner: {
-        business_name: currentProfile.business_name,
-        city: currentProfile.city,
-        phone: currentProfile.phone,
-        ik_number: currentProfile.ik_number || ''
-      }
-    });
-
-    const blob = new Blob([xml], { type: 'application/xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `DMRZ-${invoice.invoice_number || invId}.xml`;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-
-    if (prescription?.id) {
-      await supabase.from('prescriptions')
-        .update({ dmrz_exported_at: new Date().toISOString(), status: 'billed' })
-        .eq('id', prescription.id);
-    }
-    showToast('DMRZ XML heruntergeladen ✓');
-  } catch (e) {
-    console.error('[dmrz-export]', e);
-    showToast('Fehler: ' + e.message, 'error');
-  }
-}
 
 let anamnesePatientCache = [];
 let currentAnamneseId = null;
@@ -15952,10 +15792,11 @@ function bindInvEvents() {
       showToast('Bitte zuerst die Rechnung speichern.', 'error');
     }
   };
+  const dmrzExport = () => downloadDmrzForInvoice(dmrzCtx());
   const dmrzBtn = document.getElementById('invDmrzBtn');
-  if (dmrzBtn) dmrzBtn.onclick = downloadDmrzForInvoice;
+  if (dmrzBtn) dmrzBtn.onclick = dmrzExport;
   document.getElementById('invvPrintBtn')?.addEventListener('click', printArea);
-  document.getElementById('invvDmrzBtn')?.addEventListener('click', downloadDmrzForInvoice);
+  document.getElementById('invvDmrzBtn')?.addEventListener('click', dmrzExport);
   document.getElementById('invvBackBtn')?.addEventListener('click', closeInvView);
   document.getElementById('invvEditBtn')?.addEventListener('click', () => {
     const id = window._currentInvoiceId;
@@ -17464,6 +17305,7 @@ async function init() {
     await loadAusfallConfig();
     renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast });
     renderPreisstufenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
+    renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
     console.log('[init] ausfallConfig ok');
     // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
     renderLegendeSettings(fussbefundCtx());
@@ -19891,6 +19733,7 @@ async function loadBelegliste() {
   const from = document.getElementById('blFilterFrom')?.value || '';
   const to = document.getElementById('blFilterTo')?.value || '';
   const type = document.getElementById('blFilterType')?.value || 'all';
+  const zahlart = document.getElementById('blFilterZahlart')?.value || 'all';
 
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token || '';
@@ -19898,6 +19741,7 @@ async function loadBelegliste() {
   // Use the Express backend endpoint to fetch and filter Belege
   const url = new URL(`${API}/billing/belegliste`);
   if (type !== 'all') url.searchParams.append('type', type);
+  if (zahlart !== 'all') url.searchParams.append('zahlart', zahlart);
   if (from) url.searchParams.append('from', from);
   if (to) url.searchParams.append('to', to);
 
@@ -20024,6 +19868,7 @@ async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null
 // Wire filters & actions once DOM is ready / loaded
 function initBeleglisteUI() {
   document.getElementById('blFilterType')?.addEventListener('change', loadBelegliste);
+  document.getElementById('blFilterZahlart')?.addEventListener('change', loadBelegliste);
   document.getElementById('blFilterFrom')?.addEventListener('change', loadBelegliste);
   document.getElementById('blFilterTo')?.addEventListener('change', loadBelegliste);
 
@@ -21806,6 +21651,14 @@ function fussbefundCtx() {
  * übergeben hielte das Modul für immer das leere Array vom ersten Aufruf —
  * Patientensuche und Rechnungsbrücke lieferten still nichts.
  */
+function dmrzCtx() {
+  return {
+    supabase, getOwnerId, showToast, showConfirmModal,
+    invoiceId: () => window._currentInvoiceId,   // wechselt mit der offenen Rechnung
+    profile:   () => currentProfile,             // wechselt mit der Anmeldung
+  };
+}
+
 function podoCtx() {
   return {
     supabase, apiBase: API, aktiverStandort: () => (dataSharing.patients || !currentBusiness?.id) ? null : currentBusiness.id,

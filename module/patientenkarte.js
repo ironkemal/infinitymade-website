@@ -155,6 +155,7 @@ export async function ladeVerlauf(sb, ownerId, leadId) {
     frag(sb.from('bookings')
       .select('id, start_time, status, services:service_id (title)')
       .eq('owner_id', ownerId).eq('lead_id', leadId)
+      .neq('status', 'cancelled')
       .order('start_time', { ascending: false }).limit(50)),
     frag(sb.from('prescriptions')
       .select('id, ausstellungsdatum, diagnosegruppe, status, rezeptart, therapie_bereich')

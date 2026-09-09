@@ -79,7 +79,7 @@ import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=2
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260902';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
-import { ladePodoTermine, terminZaehler, istVergeben, bindeTermin, loeseTermin } from './verordnung-termine.js?v=20260903';
+import { ladePodoTermine, terminZaehler, istVergeben, bindeTermin, loeseTermin } from './verordnung-termine.js?v=20260908';
 import { emit } from './signal.js?v=20260813';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
 // eine podologische Zeile in den Wortschatz, den `_felderPodo()` und die
@@ -90,6 +90,7 @@ import { ausTopf } from './verordnung-topf.js?v=20260904';
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
 import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20260907';
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20260906';
+import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260908';
 
 /** Alles, was die Muster-13-Maske schreibt — plus Patient, Arzt und Nummer. */
 const SELECT_PHYSIO = `
@@ -427,7 +428,7 @@ function _terminePodo(rx, esc, termine) {
 function _termine(rx, esc, quelle, termine) {
   if (quelle === 'podologie') return _terminePodo(rx, esc, termine);
 
-  const sitzungen = (Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [])
+  const sitzungen = aktiveSitzungszeilen(Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [])
     .slice()
     .sort((a, b) => (a.session_number || 0) - (b.session_number || 0));
   if (!sitzungen.length) return _spaltenKasten('Termine', _LEER('Keine Sitzungszeilen angelegt.', esc), esc);
