@@ -17,12 +17,17 @@
 --                       Zeilen, ohne Hinweis.
 --
 --   abrechnung_zahlung  Geldeingang je Sammelabrechnung, tranchenweise.
---                       `abrechnung.paid_at` und `status='paid'` hat bis heute
---                       NIEMAND geschrieben — Zahlungsverfolgung existierte
---                       faktisch nicht. Zwei Spalten reichen nicht: die Kasse
---                       zahlt in Raten, eine Datei trägt seit 07.09.2026 mehrere
---                       Gesamtrechnungen, und ein UPDATE auf einen Summenwert
---                       löscht den vorherigen Stand (§ 146 Abs. 4 AO).
+--                       Kein Codepfad im Repo schreibt heute `abrechnung.paid_at`
+--                       oder setzt `status='paid'` — Zahlungsverfolgung war nie
+--                       verdrahtet. In den Daten selbst steht trotzdem schon
+--                       etwas (siehe Prüfung db-ustasi 09.09.2026 unten): 10 der
+--                       12 Zeilen tragen ein `paid_at`, 6 `status='paid'` — von
+--                       Hand oder per SQL gesetzt, nie über einen Zahlungslauf.
+--                       Diese Migration liefert erstmals den Codepfad. Zwei
+--                       Spalten reichen nicht: die Kasse zahlt in Raten, eine
+--                       Datei trägt seit 07.09.2026 mehrere Gesamtrechnungen,
+--                       und ein UPDATE auf einen Summenwert löscht den
+--                       vorherigen Stand (§ 146 Abs. 4 AO).
 --
 -- ── Abweichungen vom Entwurf im Plan (Anhang A), mit Begründung ────────────
 --
@@ -33,17 +38,28 @@
 --
 --  2. Der Rückstand (Abschnitt 6) ist eingebaut, nicht als eigene Migration
 --     nachgereicht. Grundlage: Entscheidung Kemal 08.09.2026 Nr. 3 — 12 Zeilen
---     in `abrechnung`, alle bereits eingereicht, zusammen 27 Verordnungen,
---     Zeitraum 05.01.2026–03.06.2026. Klein genug, um risikolos mitzulaufen.
+--     in `abrechnung`, alle bereits eingereicht. ⚠️ Korrektur nach Prüfung
+--     db-ustasi 09.09.2026: „27 Verordnungen" war `sum(abrechnung.
+--     prescription_count)` — ein Kopfzähler, keine echte Verknüpfung. Real
+--     verlinkt (`prescriptions.abrechnung_id is not null`) ist HEUTE nur EINE
+--     Verordnung. 11 der 12 Dateien haben zudem keinen `storage_path` — keine
+--     echte DTA-Datei, sondern von Hand angelegte Kopfzeilen. Der INSERT unten
+--     erzeugt also für 11 Dateien schlicht keine Zeile — technisch harmlos
+--     (kein Fehler, kein Datenverlust), aber praktisch beinah wirkungslos.
+--     Siehe Rückfrage an Kemal im Fortschritt vom 09.09.2026: rekonstruieren
+--     trotzdem, oder die 11 kopflosen Dateien so stehen lassen (Statusfeld
+--     bleibt ihre einzige Quelle)?
 --
 --  3. Policies laufen `TO authenticated`. Der Hausbrauch (belegliste,
 --     zuzahlung_korrekturen) lässt die Rolle offen; `kostentraeger_annahmestellen`
 --     (06.09.2026) schränkt bereits ein. Eine Zeile dieser Tabellen ist
 --     Patientendatum — `anon` hat hier nichts verloren.
 --
---  4. Die beiden Trigger-Funktionen tragen `security invoker` und
---     `set search_path = public`. Der Hausbrauch lässt beides weg; der
---     Supabase-Advisor meldet genau das als „function_search_path_mutable".
+--  4. Die beiden Trigger-Funktionen tragen `security invoker set search_path =
+--     public`. Praktisch kein Unterschied zum Hausbrauch — `security invoker`
+--     ist ohnehin der plpgsql-Standard, und `belegliste`/`zuzahlung_korrekturen`
+--     setzen `search_path` laut Live-Check (`pg_proc`, 09.09.2026) bereits
+--     genauso. Diese Migration schreibt es nur wieder explizit aus.
 --
 -- ── ⚠️ Bekannter Widerspruch, hier NICHT gelöst ────────────────────────────
 --
@@ -55,8 +71,15 @@
 --  die §302-Historie mitnehmen. Ab jetzt scheitert sie stattdessen mit einer
 --  Fremdschlüsselverletzung. Dasselbe gilt heute schon über
 --  `belegliste.owner_id -> profiles(id) ON DELETE RESTRICT`.
+--  Zusätzlich (Prüfung db-ustasi 09.09.2026): `abrechnung.business_id ->
+--  businesses(id) ON DELETE CASCADE`, und `businesses` steht in
+--  `api/dsgvo.js` DELETE_TABLES — der neue RESTRICT lässt künftig auch DIESEN
+--  Löschschritt mit einem Fremdschlüsselfehler scheitern, nicht nur den
+--  Auth-Nutzer-Schritt.
 --  Das ist Nebenbefund 4 im Plan (Abschnitt 7) und gehört `legal-de` + `guvenlik`
---  vorgelegt, nicht hier entschieden.
+--  vorgelegt, nicht hier entschieden. Der laute Fehler statt des stillen
+--  Datenverlusts ist die technisch richtige Übergangslösung, bis die
+--  eigentliche Korrektur (Anonymisierung statt Löschung in `dsgvo.js`) steht.
 
 begin;
 
@@ -148,7 +171,10 @@ create table public.abrechnung_zahlung (
   datum                  date not null,              -- Wertstellung laut Kontoauszug
   zahlungsavis           text,
   notiz                  text,
-  created_by             uuid references auth.users(id),
+  -- on delete set null, wie belegliste.created_by — sonst blockiert eine
+  -- gelöschte Nutzer-Zeile künftig auch das Löschen des Auth-Nutzers selbst
+  -- (Prüfung db-ustasi 09.09.2026).
+  created_by             uuid references auth.users(id) on delete set null,
   created_at             timestamptz not null default timezone('utc', now()),
 
   constraint abrechnung_zahlung_art_check
@@ -174,7 +200,14 @@ begin
     raise exception 'Eine eingereichte Abrechnungszeile kann nicht geloescht werden (GoBD, §302 SGB V). Korrektur: neue Einreichung (VKZ 04).';
   end if;
 
-  if new.abrechnung_id          is distinct from old.abrechnung_id
+  -- owner_id/business_id/created_at fehlten in der ersten Fassung — ohne sie
+  -- liesse sich eine eingereichte Zeile per UPDATE in einen anderen Mandanten
+  -- oder Standort verschieben, oder ihr Entstehungsdatum nachträglich ändern
+  -- (Prüfung db-ustasi 09.09.2026, Mandantengrenze).
+  if new.owner_id                is distinct from old.owner_id
+  or new.business_id             is distinct from old.business_id
+  or new.created_at              is distinct from old.created_at
+  or new.abrechnung_id           is distinct from old.abrechnung_id
   or new.prescription_id        is distinct from old.prescription_id
   or new.kostentraeger_ik       is distinct from old.kostentraeger_ik
   or new.karten_ik              is distinct from old.karten_ik
@@ -247,6 +280,14 @@ begin
     update public.abrechnung
        set status = 'paid', paid_at = new.datum::timestamptz
      where id = new.abrechnung_id and status <> 'paid';
+  -- Rücklastschrift/Korrektur kann den Stand wieder unter das Soll drücken —
+  -- append-only heisst nicht "einmal bezahlt bleibt bezahlt" (Prüfung
+  -- db-ustasi 09.09.2026). Nur zurückrollen, was diese Funktion selbst
+  -- gesetzt hat: ein manuell/anders herbeigeführtes 'rejected' bleibt unberührt.
+  elsif v_bez < (v_soll - v_abg) - 0.005 then
+    update public.abrechnung
+       set status = 'accepted', paid_at = null
+     where id = new.abrechnung_id and status = 'paid';
   end if;
   return new;
 end $$;
@@ -315,7 +356,8 @@ create policy "Abrechnungszahlung insert scoping" on public.abrechnung_zahlung
 --
 --    Vorher zur Kontrolle:
 --      select count(*) from abrechnung;                       -- erwartet 12
---      select count(*) from prescriptions where abrechnung_id is not null;  -- erwartet 27
+--      select count(*) from prescriptions where abrechnung_id is not null;  -- erwartet 1 (nicht 27, siehe Abweichung 2 oben)
+--      select count(*) from abrechnung where storage_path is not null;      -- erwartet 1 (die 11 anderen sind Kopfzeilen ohne echte DTA-Datei)
 -- ─────────────────────────────────────────────────────────────────────────
 insert into public.abrechnung_zeile (
   abrechnung_id, owner_id, business_id, prescription_id,
