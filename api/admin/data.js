@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     const emails = await adminFetch(`/email_logs?select=id&created_at=gte.${monthStart}`);
     // messages table DROPPED 2026-05-22 (WhatsApp shelved)
     const msgs   = { data: [] };
-    const newBookings = await adminFetch(`/bookings?select=id&created_at=gte.${monthStart}`);
+    const newBookings = await adminFetch(`/bookings?select=id&status=neq.cancelled&created_at=gte.${monthStart}`);
 
     // Chatbot widget usage — logged by n8n directly (not via calendar-api router).
     // owner_id is usually null until embedded widgets start passing it.
@@ -100,7 +100,7 @@ export default async function handler(req, res) {
     const emails  = await adminFetch(`/email_logs?select=owner_id&created_at=gte.${monthStart}`);
     // messages table DROPPED 2026-05-22 (WhatsApp shelved). Stub kept for backward compat.
     const msgs    = { data: [] };
-    const bk      = await adminFetch(`/bookings?select=owner_id&created_at=gte.${monthStart}`);
+    const bk      = await adminFetch(`/bookings?select=owner_id&status=neq.cancelled&created_at=gte.${monthStart}`);
     const cal     = await adminFetch('/calendar_integrations?select=user_id');
 
     const aiByOwner = new Map();
@@ -200,7 +200,7 @@ export default async function handler(req, res) {
   }
 
   if (type === 'bookings') {
-    const { data, status } = await adminFetch('/bookings?select=*,profiles!bookings_owner_id_fkey(business_name,email)&order=start_time.desc&limit=100');
+    const { data, status } = await adminFetch('/bookings?status=neq.cancelled&select=*,profiles!bookings_owner_id_fkey(business_name,email)&order=start_time.desc&limit=100');
     if (!data) return json(res, status || 500, { error: 'DB error' });
     return json(res, 200, { items: data });
   }

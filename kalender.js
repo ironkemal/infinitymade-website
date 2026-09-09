@@ -343,6 +343,7 @@ async function initCalendar() {
     events: async function(info, successCallback, failureCallback) {
       try {
         let query = supabase.from('bookings').select('*, services(title), profiles!bookings_user_id_fkey(business_name)')
+          .neq('status', 'cancelled')
           .gte('start_time', info.startStr)
           .lte('start_time', info.endStr);
           

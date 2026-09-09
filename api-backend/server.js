@@ -13,10 +13,12 @@ import aiRouter from './ai/router.js';
 import billingAbrechnungRouter from './billing/api/abrechnung.routes.js';
 import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
 import { createBookingsFromRequestFactory } from './booking/from-request.js';
+import { cancelRequestBookings } from './booking/cancel-request.js';
 import billingAusfallRouter from './billing/api/ausfall.routes.js';
 import billingStatistikRouter from './billing/api/statistik.routes.js';
 import verordnungStatusRouter from './billing/api/verordnung-status.routes.js';
 import zuzahlungRouter from './billing/api/zuzahlung.routes.js';
+import rechnungZahlungRouter from './billing/api/rechnung-zahlung.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { heilmittelPositionAufloesen, kostentraegerIkAufloesen } from './lib/rezept-felder.js';
@@ -387,6 +389,9 @@ app.use('/api/billing', verordnungStatusRouter);
 
 // Zuzahlung nachtraeglich korrigieren + Guthaben verrechnen.
 app.use('/api/billing', zuzahlungRouter);
+
+// Zahlungseingaenge auf Privatrechnungen (Gegenkonto, Teilzahlung, Ausbuchung).
+app.use('/api/billing', rechnungZahlungRouter);
 
 // Warteliste (Bekleme Listesi) routes.
 app.use('/api/warteliste', wartelisteRouter);
@@ -2135,6 +2140,7 @@ app.patch('/api/booking/:id', requireAuthAI, async (req, res) => {
 
     if (error) {
       if (error.code === '23P01') return res.status(409).json({ error: 'Zeitkonflikt — dieser Slot ist bereits belegt.' });
+      if (error.code === '23514') return res.status(409).json({ error: error.message });
       throw error;
     }
     if (!data) return res.status(404).json({ error: 'Buchung nicht gefunden oder keine Berechtigung.' });
@@ -2954,9 +2960,10 @@ app.post('/api/prescription/lookup-by-phone', requireAuthAI, async (req, res) =>
     let nextAppointment = null;
     const { data: nextSession } = await supabase
       .from('prescription_sessions')
-      .select('booking_id, session_number, bookings ( start_time, services ( title ) )')
+      .select('booking_id, session_number, bookings!inner ( start_time, services ( title ) )')
       .eq('prescription_id', rx.id)
       .eq('status', 'planned')
+      .neq('bookings.status', 'cancelled')
       .order('session_number', { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -4176,7 +4183,7 @@ app.post('/api/booking-request/cancel', bookingRequestLimiter, async (req, res) 
   if (!request_id || !token) return res.status(400).json({ error: 'request_id und token required' });
   try {
     const { data: bookReq } = await supabase.from('booking_requests')
-      .select('id, patient_id, status, booking_id, booking_ids').eq('id', request_id).maybeSingle();
+      .select('id, owner_id, patient_id, status, booking_id, booking_ids').eq('id', request_id).maybeSingle();
     if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
     if (['cancelled', 'declined'].includes(bookReq.status)) return res.status(409).json({ error: 'Anfrage bereits storniert' });
 
@@ -4184,16 +4191,7 @@ app.post('/api/booking-request/cancel', bookingRequestLimiter, async (req, res) 
       .update(`${request_id}:${bookReq.patient_id}`).digest('hex').substring(0, 32);
     if (token !== expectedToken) return res.status(403).json({ error: 'Ungültiger Token' });
 
-    await supabase.from('booking_requests').update({ status: 'cancelled' }).eq('id', request_id);
-    // Sonst blieben die bereits bestaetigten Termine als Geistertermine im Kalender.
-    // booking_ids enthaelt auch die Folgetermine einer Serie; booking_id ist der
-    // Rueckfall fuer Anfragen von vor dieser Aenderung.
-    const zuStornieren = Array.isArray(bookReq.booking_ids) && bookReq.booking_ids.length
-      ? bookReq.booking_ids
-      : (bookReq.booking_id ? [bookReq.booking_id] : []);
-    if (zuStornieren.length) {
-      await supabase.from('bookings').update({ status: 'cancelled' }).in('id', zuStornieren);
-    }
+    await cancelRequestBookings(supabase, bookReq);
     return res.json({ ok: true });
   } catch (e) {
     console.error('[booking-request/cancel]', e.message);

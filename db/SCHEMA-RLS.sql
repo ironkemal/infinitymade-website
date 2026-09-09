@@ -1,7 +1,37 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-06 — kostentraeger_echtdaten_struktur (Ops #264):
+-- ERZEUGT AM:        2026-09-09 — 20260909170546_zahlungsart_automatik
+--                    (Ops #271). Behebt einen Produktionsfehler: der bereits
+--                    deployte Backend-Code rief rechnung_zahlung_buchen() mit
+--                    12 Parametern (p_zahlart) auf, live lag aber noch die
+--                    11-Parameter-Fassung — PostgREST antwortete „Could not
+--                    find the function … in the schema cache" und blockierte
+--                    jede Rechnungserstellung mit Zahlungsart-Dialog.
+--                    Fuer DIESE Datei relevant: KEINE neue Policy, KEIN neuer
+--                    Trigger, KEIN neuer Index, KEINE neue Funktion. Die alte
+--                    11-Parameter-Signatur wurde gedroppt und durch die
+--                    12-Parameter-Fassung ersetzt (netto 0 Funktionen). EXECUTE
+--                    bleibt PUBLIC/anon/authenticated entzogen — live
+--                    gegengeprueft: proacl = postgres=X/postgres,
+--                    service_role=X/postgres, also nur das Backend.
+--                    davor: 2026-09-08 — zwei Skripte, die am Migrationsregister
+--                    VORBEI direkt im Supabase-SQL-Editor gefahren wurden.
+--                    Sie tauchen unter "LETZTE MIGRATION" deshalb NICHT auf,
+--                    sind aber live (gegen die DB geprüft):
+--                      · 07.09. sql-melih/2026-09-07-rechnung-zahlungen.sql —
+--                        neue Tabelle rechnung_zahlungen mit 2 Policies
+--                        (select/insert scoping, gleiches Muster wie
+--                        zuzahlung_korrekturen), 3 Funktionen
+--                        (prevent_rechnung_zahlungen_mod GoBD-Sperre,
+--                        pruefe_rechnung_zahlung_owner SECURITY DEFINER,
+--                        rechnung_zahlung_buchen als Buchungs-Transaktion),
+--                        2 Trigger und 4 Indizes; dazu idx_belegliste_invoice.
+--                      · 08.09. sql-codex/2026-09-08-192-termin-soft-delete.sql —
+--                        Terminabsage als Soft-Delete: 3 Funktionen und
+--                        3 Trigger (codex_192_*), 1 Index. Keine neue Policy,
+--                        keine RPC, keine SECURITY-DEFINER-Ausnahme.
+--                    davor: 2026-09-06 — kostentraeger_echtdaten_struktur (Ops #264):
 --                    neue Tabelle kostentraeger_annahmestellen mit 1 Policy
 --                    (SELECT für authenticated, gleiches Muster wie
 --                    kostentraeger_read_all) und 4 Indizes, dazu 1 Index auf
@@ -25,7 +55,8 @@
 --                    pruefe_booking_verordnung_owner() prueft gegen
 --                    prescriptions.owner_id (vorher verordnungen.owner_id).
 --                    Details: module/verordnung-topf.js, db/SCHEMA.sql
--- LETZTE MIGRATION:  20260905224013_kostentraeger_echtdaten_struktur
+-- LETZTE MIGRATION:  20260909170546_zahlungsart_automatik (09.09.2026)
+--                    davor: 20260905224013_kostentraeger_echtdaten_struktur
 --                    davor: 20260905223001_profiles_selbstzahler_stufen
 --                    davor: 20260905193701_booking_status_korrekturen
 --                    davor: 20260905125546_prescriptions_krankenkasse_ik
@@ -65,7 +96,24 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            159 RLS-Policies · 301 Indizes · 66 Trigger · 67 Funktionen
+-- UMFANG:            161 RLS-Policies · 307 Indizes · 71 Trigger · 73 Funktionen
+--                    (09.09.2026 unveraendert: zahlungsart_automatik tauschte
+--                     nur eine Funktionssignatur — Drop 11-Parameter, Create
+--                     12-Parameter, netto 0 — und zwei CHECK-Constraints.
+--                     Live gegengezaehlt: Policies 161, Indizes 307,
+--                     Trigger 71. Alle drei unveraendert.)
+--                    (08.09.2026 live nachgezählt. Alle vier Deltas gehen
+--                     restlos auf die zwei SQL-Editor-Skripte auf — anders als
+--                     bei den letzten Nachzählungen bleibt kein unerklärter Rest:
+--                       Policies  159 -> 161  +2  rechnung_zahlungen select/insert
+--                       Indizes   301 -> 307  +6  4 rechnung_zahlungen (inkl. pkey)
+--                                                 + idx_belegliste_invoice
+--                                                 + codex_192_prescription_sessions_booking_idx
+--                       Trigger    66 -> 71   +5  2 rechnung_zahlungen + 3 codex_192
+--                       Funktionen 67 -> 73   +6  3 rechnung_zahlungen + 3 codex_192
+--                     Beide Skripte liefen am Migrationsregister vorbei direkt
+--                     im SQL-Editor und stehen deshalb in KEINER Migrationszeile
+--                     oben — live sind sie trotzdem, gegen die DB geprüft.)
 --                    (06.09.2026 live nachgezählt: +1 Policy und +5 Indizes
 --                     durch kostentraeger_echtdaten_struktur. 296 + 5 = 301 —
 --                     die am 05.09. als „nicht aufgeklärt“ notierte Index-
@@ -136,7 +184,7 @@
 
 
 -- =====================================================================
--- 2. RLS-POLICIES (159, siehe UMFANG im Kopf)
+-- 2. RLS-POLICIES (161, siehe UMFANG im Kopf)
 -- =====================================================================
 
 -- abrechnung
@@ -377,6 +425,16 @@
 --     auth.uid() IS NULL AND booking_slug IS NOT NULL AND accepts_bookings = true
 --   Users can insert/update own profile — auth.uid() = id
 
+-- rechnung_zahlungen
+--   Rechnungszahlungen select scoping [SELECT]
+--     USING (owner_id = auth.uid() OR owner_id = (SELECT p.owner_id FROM profiles p WHERE p.id = auth.uid()))
+--   Rechnungszahlungen insert scoping [INSERT]
+--     CHECK (owner_id = auth.uid() OR owner_id = (SELECT p.owner_id FROM profiles p WHERE p.id = auth.uid()))
+--   ⚠️ KEINE UPDATE-/DELETE-Policy — das ist Absicht und die zweite Haelfte
+--      der GoBD-Sperre. Ohne Policy laesst RLS beides gar nicht erst zu;
+--      der Trigger prevent_rechnung_zahlungen_mod() faengt zusaetzlich die
+--      service_role ab, fuer die RLS nicht gilt.
+
 -- referral_drafts
 --   Users can view/insert/update/delete own referral drafts — owner_id = auth.uid()
 
@@ -470,7 +528,7 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (65 eigene = alles in `public`, was keiner Extension gehört;
+-- 3. FUNKTIONEN (73 eigene = alles in `public`, was keiner Extension gehört;
 --    PostGIS-Funktionen sind deshalb ausgelassen)
 -- =====================================================================
 
@@ -672,6 +730,45 @@ $function$;
 --   Deshalb braucht die Tabelle KEINEN eigenen updated_at-Trigger.
 --   Beide sind SECURITY INVOKER mit SET search_path = public (nachgezogen am
 --   01.09.2026, der Advisor function_search_path_mutable hatte angeschlagen).
+-- prevent_rechnung_zahlungen_mod() -> trigger              (07.09.2026)
+--   GoBD-Sperre auf rechnung_zahlungen: UPDATE und DELETE werfen. Korrektur
+--   nur durch neue Zeile mit art='storno' und negativem Betrag.
+--   Gleiches Muster wie prevent_belegliste_mod().
+-- pruefe_rechnung_zahlung_owner() -> trigger              [SECURITY DEFINER]
+--   Owner-Riegel beim INSERT: haelt rechnung_zahlungen.owner_id gegen
+--   invoices.owner_id. Noetig, weil ein Fremdschluessel KEINE RLS prueft —
+--   sonst liesse sich eine Zahlung auf eine fremde Rechnung buchen.
+--   EXECUTE ist PUBLIC/anon/authenticated entzogen; laeuft nur als Trigger.
+-- rechnung_zahlung_buchen(p_invoice_id, p_owner_id, p_created_by,
+--     p_betrag_eur, p_zahlungsdatum, p_gegenkonto_code, p_gegenkonto_label,
+--     p_restbetrag_modus, p_ausbuchungskonto_code, p_ausbuchungskonto_label,
+--     p_bemerkung, p_zahlart) -> jsonb          (07.09.2026 · 12. Parameter
+--                                                p_zahlart seit 09.09.2026)
+--   DER Schreibweg fuer Zahlungen auf Privatrechnungen — eine Transaktion:
+--   Zahlungszeile anlegen · je nach p_restbetrag_modus zusaetzlich eine
+--   Ausbuchungszeile · die Beleglisten-Zeile mit invoice_id · ggf.
+--   prescriptions fortschreiben · invoices.payment_status nachziehen.
+--   ⚠️ SECURITY INVOKER, laeuft also unter der RLS des Aufrufers — Absicht.
+--      EXECUTE ist PUBLIC/anon/authenticated entzogen.
+--   ⚠️ Nicht von Hand in rechnung_zahlungen INSERTen: dann fehlen Belegliste,
+--      Statusfortschreibung und die Ausbuchungslogik.
+--   ⚠️ p_zahlart ('bar'|'ec'|'ueberweisung'|'paypal'|'sonstiges') ist PFLICHT,
+--      obwohl die Signatur DEFAULT NULL fuehrt: NULL oder ein unbekannter Wert
+--      wird im Rumpf mit check_violation abgelehnt. Absicht — der Default steht
+--      nur da, weil PostgREST benannte Parameter erwartet; ein fehlender Wert
+--      soll laut scheitern statt still auf 'sonstiges' zu fallen. Das Backend
+--      leitet ihn aus der Konto-Kategorie ab
+--      (api-backend/billing/api/rechnung-zahlung.routes.js).
+--   ⚠️ Seit 09.09.2026 entsteht die Beleglisten-Zeile bei JEDER Zahlart, nicht
+--      mehr nur bei Bar (Ops #271, Variante B). Eine Ausbuchung bleibt weiterhin
+--      OHNE Beleg — kein Geldfluss. Der `type` der Beleg-Zeile beschreibt den
+--      GESCHAEFTSVORFALL: mit Rezeptbezug 'zuzahlung', ohne 'rechnung'. Daran
+--      haengt das Mahnwesen (mahnwesen/statistik.routes.js filtern auf
+--      type IN ('zuzahlung','storno')).
+--   ⚠️ Diese Funktion existierte vom 07.09. bis 09.09.2026 nur mit 11
+--      Parametern, waehrend das deployte Backend schon 12 schickte — Ergebnis
+--      war ein PostgREST-„function not found" auf dem Geld-Pfad. Wer die
+--      Signatur aendert, deployt SQL und Backend zusammen.
 
 
 -- --- Einwilligung / Nachweis --------------------------------------------
@@ -690,6 +787,35 @@ $function$;
 -- seed_default_groups_for_business() -> trigger  Legt Standard-Mitarbeitergruppen an.
 -- confirm_referral_and_create_series(p_draft_id, p_lead_id, p_confirmed_by)  [SEC DEF]
 --   -> TABLE(success boolean, message text, booking_series_id uuid)
+--
+-- ★ TERMINABSAGE ALS SOFT-DELETE (#192, 08.09.2026) — drei Funktionen, alle
+--   SECURITY INVOKER mit SET search_path = ''. Keine RPC, keine erweiterten
+--   Rechte; EXECUTE ist allen dreien PUBLIC entzogen. Skript:
+--   sql-codex/2026-09-08-192-termin-soft-delete.sql
+-- codex_192_booking_before_write() -> trigger
+--   Der Torwaechter. Wirft (ERRCODE 23514) bei: Reaktivieren einer Absage ·
+--   Absage aus completed/no_show oder mit no_show=true · Absage bei laufender
+--   Fahrt (fahrten.fahrt_ended_at IS NULL) · Absage mit bereits erledigten
+--   Sitzungen (status done/no_show) · Teilnehmer unter abgesagtem oder fremdem
+--   Gruppentermin. Setzt ausserdem cancelled_at und haengt den Snapshot der
+--   freigegebenen Sitzungen an cancelled_session_links an.
+--   ⚠️ Die beiden Historienspalten werden IMMER aus OLD uebernommen — ein vom
+--      Client mitgeschickter Wert wird verworfen. Sie sind nur ueber diesen
+--      Trigger schreibbar.
+--   ⚠️ Sperrt vor dem Snapshot: SELECT ... FOR UPDATE auf die Sitzungen und
+--      FOR SHARE auf den Gruppen-Elterntermin. Sonst verliert ein paralleles
+--      Abhaken eine erbrachte Einheit, bzw. rutscht ein neuer Teilnehmer in
+--      eine gerade abgesagte Gruppe.
+-- codex_192_booking_after_cancel() -> trigger
+--   Nach der Absage: setzt prescription_sessions.booking_id der geplanten
+--   Einheiten auf NULL (Einheit wieder buchbar — genau das, was frueher
+--   ON DELETE SET NULL beim Loeschen tat) und sagt alle Gruppenteilnehmer mit
+--   ab, cancellation_reason durchgereicht. Prueft dabei, dass die Teilnehmer
+--   demselben Mandanten gehoeren. Jeder Fehler rollt die ganze Gruppenabsage
+--   zurueck.
+-- codex_192_session_booking_guard() -> trigger
+--   Gegenrichtung: eine aktive prescription_sessions-Zeile darf nicht an einem
+--   abgesagten oder nicht existierenden Termin haengen.
 
 
 -- --- Geodaten -----------------------------------------------------------
@@ -725,7 +851,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (66, siehe UMFANG im Kopf)
+-- 4. TRIGGER (71, siehe UMFANG im Kopf)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -745,6 +871,17 @@ $function$;
 --                           Auch bei UPDATE OF owner_id, sonst liesse sich ein
 --                           Termin nachtraeglich umhaengen und die Verordnung
 --                           bliebe fremd.
+--                         codex_192_booking_before_write BEFORE INSERT OR UPDATE   (08.09.2026)
+--                         codex_192_booking_after_cancel AFTER UPDATE OF status
+--                                                        WHEN (NEW.status = 'cancelled')
+--                         → Terminabsage als Soft-Delete (#192). Der BEFORE-Trigger
+--                           blockt unzulaessige Absagen und schreibt cancelled_at +
+--                           cancelled_session_links; der AFTER-Trigger gibt die
+--                           geplanten Sitzungen frei und sagt Gruppenteilnehmer mit
+--                           ab. Bedingungen und Sperren: Funktionsabschnitt oben.
+--                           ⚠️ Termine werden ab hier NICHT mehr geloescht.
+--   prescription_sessions codex_192_session_booking_guard BEFORE INSERT OR UPDATE OF booking_id, status
+--                         → aktive Sitzung darf nicht an einem abgesagten Termin haengen.
 --   booking_leistungen    trg_booking_leistung_owner     BEFORE INSERT/UPDATE OF booking_id, owner_id
 --                         trg_booking_hauptleistung      AFTER INSERT/UPDATE/DELETE
 --                         → spiegelt Zeile 0 nach bookings.service_id.
@@ -790,6 +927,12 @@ $function$;
 --                           updated_at wird mitgesetzt.
 --   zuzahlung_korrekturen trg_prevent_zuzahlung_korrekturen_mod BEFORE UPDATE/DELETE (GoBD)
 --                         → prevent_zuzahlung_korrekturen_mod(): wirft immer.
+--   rechnung_zahlungen    trg_prevent_rechnung_zahlungen_mod BEFORE UPDATE/DELETE (GoBD)
+--                         → prevent_rechnung_zahlungen_mod(): wirft immer.
+--                           Korrektur nur per Storno-Zeile mit negativem Betrag.
+--                         trg_pruefe_rechnung_zahlung_owner BEFORE INSERT
+--                         → pruefe_rechnung_zahlung_owner(): owner_id der Zahlung
+--                           gegen invoices.owner_id. Ein FK prueft keine RLS.
 --   feedbacks             trg_feedback_telegram          AFTER INSERT
 --   referral_drafts       trigger_notify_new_referral_draft AFTER INSERT
 --
@@ -820,6 +963,9 @@ CREATE INDEX idx_ausfallrechnungen_booking ON public.ausfallrechnungen USING btr
 CREATE INDEX idx_ausfallrechnungen_owner ON public.ausfallrechnungen USING btree (owner_id, status);
 CREATE INDEX idx_b2b_contacts_business ON public.b2b_contacts USING btree (business_id);
 CREATE INDEX idx_b2b_contacts_owner ON public.b2b_contacts USING btree (owner_id);
+-- Kassenbuch-Saldo je Privatrechnung. Partiell, weil nur type IN
+-- ('rechnung','storno') eine invoice_id traegt.
+CREATE INDEX idx_belegliste_invoice ON public.belegliste USING btree (invoice_id) WHERE (invoice_id IS NOT NULL);
 CREATE INDEX idx_belegliste_owner_time ON public.belegliste USING btree (owner_id, created_at DESC);
 CREATE INDEX idx_bookings_business ON public.bookings USING btree (business_id);
 CREATE INDEX idx_bookings_group_parent_id ON public.bookings USING btree (group_parent_id);
@@ -903,8 +1049,12 @@ CREATE INDEX idx_kostentraeger_das ON public.kostentraeger USING btree (das_ik) 
 --    Er deckt live noch 16 Zeilen ab. Nicht droppen, solange
 --    abrechnung.routes.js:1999/:2203 das_ik lesen.
 CREATE INDEX idx_kostentraeger_abrechnender ON public.kostentraeger USING btree (abrechnender_kt_ik);
-CREATE UNIQUE INDEX kostentraeger_annahmestellen_pkey ON public.kostentraeger_annahmestellen USING btree (id);
-CREATE UNIQUE INDEX kostentraeger_annahmestellen_uniq ON public.kostentraeger_annahmestellen USING btree (kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode, art_datenlieferung, uebermittlungsmedium, bundesland);
+-- ⚠️ 08.09.2026 korrigiert: hier standen zusätzlich kostentraeger_annahmestellen_pkey
+--    und ..._uniq als CREATE-Zeilen. Beide werden von einem CONSTRAINT erzeugt und
+--    gehören nach der Überschrift dieses Abschnitts nicht hierher — am 06.09. beim
+--    Nachziehen von Hand mit eingetragen. Die Constraints selbst (PK auf id, UNIQUE
+--    über kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode,
+--    art_datenlieferung, uebermittlungsmedium, bundesland) stehen in db/SCHEMA.sql.
 CREATE INDEX idx_kt_annahme_routing ON public.kostentraeger_annahmestellen USING btree (kostentraeger_ik, abrechnungscode, art_datenlieferung);
 CREATE INDEX idx_kt_annahme_partner ON public.kostentraeger_annahmestellen USING btree (partner_ik);
 CREATE INDEX idx_leads_business ON public.leads USING btree (business_id);
@@ -953,6 +1103,10 @@ CREATE INDEX idx_prescription_sessions_prescription ON public.prescription_sessi
 -- die leeren Sitzungszeilen per UPDATE, statt je Termin eine neue anzuhängen.
 -- Partiell, weil leere Zeilen (booking_id IS NULL) Absicht sind — sie warten auf Termine.
 CREATE UNIQUE INDEX uniq_prescription_sessions_booking ON public.prescription_sessions USING btree (prescription_id, booking_id) WHERE (booking_id IS NOT NULL);
+-- Freigabe der geplanten Sitzungen bei der Terminabsage (#192, 08.09.2026).
+-- Der AFTER-Trigger sucht je Absage ueber booking_id; ohne den Index waere das
+-- ein Seq Scan pro abgesagtem Termin.
+CREATE INDEX codex_192_prescription_sessions_booking_idx ON public.prescription_sessions USING btree (booking_id) WHERE (booking_id IS NOT NULL);
 CREATE INDEX idx_prescription_validations_prescription ON public.prescription_validations USING btree (prescription_id, created_at DESC);
 CREATE INDEX idx_prescriptions_abrechnung ON public.prescriptions USING btree (abrechnung_id) WHERE (abrechnung_id IS NOT NULL);
 CREATE INDEX idx_prescriptions_arzt ON public.prescriptions USING btree (owner_id, arzt_id) WHERE (arzt_id IS NOT NULL);
@@ -975,6 +1129,11 @@ CREATE INDEX idx_profiles_sector ON public.profiles USING btree (sector);
 CREATE INDEX idx_profiles_stripe_customer ON public.profiles USING btree (stripe_customer_id);
 CREATE INDEX idx_profiles_stripe_subscription ON public.profiles USING btree (stripe_subscription_id);
 CREATE INDEX idx_profiles_whatsapp_phone_number_id ON public.profiles USING btree (whatsapp_phone_number_id) WHERE (whatsapp_phone_number_id IS NOT NULL);
+CREATE INDEX idx_rechnung_zahlungen_invoice ON public.rechnung_zahlungen USING btree (invoice_id);
+CREATE INDEX idx_rechnung_zahlungen_owner_datum ON public.rechnung_zahlungen USING btree (owner_id, zahlungsdatum);
+-- Jede Zahlungszeile ist genau einmal stornierbar — der UNIQUE-Index ist die
+-- Sperre, nicht nur eine Beschleunigung.
+CREATE UNIQUE INDEX idx_rechnung_zahlungen_storno_einmalig ON public.rechnung_zahlungen USING btree (storniert_zeile_id) WHERE (storniert_zeile_id IS NOT NULL);
 CREATE INDEX idx_referral_drafts_business ON public.referral_drafts USING btree (business_id);
 CREATE INDEX idx_referral_drafts_created_at ON public.referral_drafts USING btree (created_at DESC);
 CREATE INDEX idx_referral_drafts_lead_id ON public.referral_drafts USING btree (lead_id);

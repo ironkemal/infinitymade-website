@@ -1554,6 +1554,20 @@
                 <option value="storno">Storno / Reversal</option>
               </select>
             </div>
+            <!-- Zahlart-Filter (Ops #271, 08.09.2026): belegliste ist ein Belegjournal,
+                 seit dem Umbau steht dort jede Zahlart. Das Bar-Kassenbuch
+                 (§ 146 AO Kassensturzfähigkeit) ist ab jetzt dieser Filter. -->
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:11px;color:var(--text-muted);">Zahlart</label>
+              <select class="form-select" id="blFilterZahlart" style="padding:4px 8px;width:auto;background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);border-radius:4px;">
+                <option value="all">Alle Zahlarten</option>
+                <option value="bar">Bar</option>
+                <option value="ec">Karte</option>
+                <option value="ueberweisung">Überweisung</option>
+                <option value="paypal">PayPal</option>
+                <option value="sonstiges">Sonstiges</option>
+              </select>
+            </div>
             <button class="btn-ghost" id="blExportCsvBtn" style="margin-top:14px;padding:6px 12px;font-size:13px;">CSV Export (Finanzamt)</button>
           </div>
 
@@ -2554,6 +2568,27 @@
                   <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <button class="btn" id="setStufenAddBtn" type="button">＋ Preisstufe</button>
                     <button class="btn-primary" id="setStufenSaveBtn" type="button">Speichern</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Buchungskonten (Gegenkonten) — Owner-Einstellung (profiles.buchungskonten) -->
+              <div class="settings-section" id="settingsKontenSection" hidden>
+                <div class="settings-section-title">Buchungskonten</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Beim Verbuchen eines Zahlungseingangs wählen Sie aus, wohin das Geld
+                    geflossen ist — Kasse, Bank, oder bei einem abgeschriebenen Restbetrag
+                    die Erlösschmälerung. Das sind die Angaben, die Ihr Steuerberater braucht.
+                    Solange Sie nichts ändern, gilt der Standardrahmen (SKR03).
+                    Ein Konto, auf das schon gebucht wurde, sollten Sie deaktivieren statt
+                    entfernen: bereits gebuchte Zahlungen behalten ohnehin ihre ursprüngliche
+                    Kontobezeichnung.
+                  </p>
+                  <div id="setKontenList" style="margin-bottom:12px;"></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn" id="setKontenAddBtn" type="button">＋ Konto</button>
+                    <button class="btn-primary" id="setKontenSaveBtn" type="button">Speichern</button>
                   </div>
                 </div>
               </div>
@@ -5617,7 +5652,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260909"></script>
+  <script type="module" src="dashboard.js?v=20260909b"></script>
 </body>
 
 </html>

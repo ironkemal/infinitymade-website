@@ -1,11 +1,11 @@
 {
- "erzeugt": "2026-09-08",
+ "erzeugt": "2026-09-09",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-09-06)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-08)",
+  "schema": "db/SCHEMA.sql (Stand 2026-09-09)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-09)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 84,
+ "anzahl": 85,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -33,7 +33,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -50,9 +50,9 @@
      ]
     },
     {
-     "name": "loadAbrechnung",
+     "name": "ladeAbrechnungHistorie",
      "file": "dashboard.js",
-     "start": 18506,
+     "start": 17842,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -71,26 +71,7 @@
     {
      "name": "openDasGuideModal",
      "file": "dashboard.js",
-     "start": 13290,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "renderExportStep",
-     "file": "dashboard.js",
-     "start": 18436,
+     "start": 13274,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -111,7 +92,7 @@
     {
      "name": "downloadAbrechnungFile",
      "file": "dashboard.js",
-     "start": 19083,
+     "start": 18136,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -191,7 +172,7 @@
     {
      "name": "init",
      "file": "dashboard.js",
-     "start": 17449,
+     "start": 17072,
      "module": [],
      "uiPfad": []
     },
@@ -250,15 +231,15 @@
    "leser": [
     {
      "name": "downloadDmrzForInvoice",
-     "file": "dashboard.js",
-     "start": 15433,
+     "file": "module/rechnung-dmrz.js",
+     "start": 109,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 16624,
+     "start": 16247,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -277,7 +258,7 @@
     {
      "name": "loadAerzte",
      "file": "dashboard.js",
-     "start": 16189,
+     "start": 15812,
      "module": [
       "abrechnung",
       "anamnese",
@@ -301,7 +282,7 @@
     {
      "name": "deleteAerzte",
      "file": "dashboard.js",
-     "start": 16248,
+     "start": 15871,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -311,7 +292,7 @@
     {
      "name": "editAerzte",
      "file": "dashboard.js",
-     "start": 16257,
+     "start": 15880,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -333,7 +314,8 @@
    "dateien": [
     "api-backend/lib/arzt-registry.js",
     "api-backend/server.js",
-    "dashboard.js"
+    "dashboard.js",
+    "module/rechnung-dmrz.js"
    ],
    "module": [
     "abrechnung",
@@ -415,7 +397,7 @@
     {
      "name": "fillAnamneseForm",
      "file": "dashboard.js",
-     "start": 15664,
+     "start": 15286,
      "module": [
       "abrechnung",
       "anamnese",
@@ -435,7 +417,7 @@
     {
      "name": "loadPatientDetailAnamnese",
      "file": "dashboard.js",
-     "start": 8826,
+     "start": 8846,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -454,7 +436,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3260,
+     "start": 3274,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -473,14 +455,14 @@
     {
      "name": "printAnamnese",
      "file": "dashboard.js",
-     "start": 15776,
+     "start": 15398,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "printAnamneseInline",
      "file": "dashboard.js",
-     "start": 15724,
+     "start": 15346,
      "module": [],
      "uiPfad": []
     }
@@ -489,7 +471,7 @@
     {
      "name": "saveAnamnese",
      "file": "dashboard.js",
-     "start": 15848,
+     "start": 15470,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -569,7 +551,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3418,
+     "start": 3425,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -634,7 +616,7 @@
     {
      "name": "loadB2B",
      "file": "dashboard.js",
-     "start": 11732,
+     "start": 11716,
      "module": [
       "abrechnung",
       "b2b",
@@ -656,7 +638,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -680,7 +662,7 @@
     {
      "name": "renderB2B",
      "file": "dashboard.js",
-     "start": 11739,
+     "start": 11723,
      "module": [
       "abrechnung",
       "b2b",
@@ -722,10 +704,11 @@
   },
   {
    "name": "belegliste",
-   "spalten": 13,
+   "spalten": 14,
    "fkRaus": [
     "profiles",
-    "leads"
+    "leads",
+    "invoices"
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
@@ -743,7 +726,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8152,
+     "start": 8172,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -769,7 +752,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 7242,
+     "start": 7252,
      "module": [],
      "uiPfad": []
     }
@@ -794,7 +777,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 4,
+   "sqlTreffer": 5,
    "codeStumm": false
   },
   {
@@ -886,6 +869,7 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/booking/cancel-request.test.js",
     "api/dsgvo.js",
     "onboarding.js"
    ],
@@ -895,8 +879,20 @@
    "seit": "28.06.2026 · `booking_request_system`",
    "ungeklaert": false,
    "leser": [],
-   "schreiber": [],
+   "schreiber": [
+    {
+     "name": "cancelRequestBookings",
+     "file": "api-backend/booking/cancel-request.js",
+     "start": 3,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
    "dateien": [
+    "api-backend/booking/cancel-request.js",
     "api-backend/server.js"
    ],
    "module": [],
@@ -942,7 +938,7 @@
   },
   {
    "name": "bookings",
-   "spalten": 34,
+   "spalten": 36,
    "fkRaus": [
     "bookings",
     "leads",
@@ -952,6 +948,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/billing/statistik/therapeuten.test.js",
+    "api-backend/booking/cancel-request.test.js",
     "api-backend/booking/from-request.test.js",
     "api/dsgvo.js",
     "module/booking-status-korrektur.test.js",
@@ -968,7 +966,7 @@
     {
      "name": "_terminBearbeiten",
      "file": "module/verordnung-detail.js",
-     "start": 839,
+     "start": 840,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -987,14 +985,58 @@
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 3236,
+     "start": 3250,
      "module": [],
      "uiPfad": []
     },
     {
+     "name": "escapeHtml",
+     "file": "module/patient-termine.js",
+     "start": 1,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "belegliste",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "qvSaveBtn",
+      "rechnungen",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 34 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1032,7 +1074,7 @@
     {
      "name": "frageNachrueckerAb",
      "file": "kalender.js",
-     "start": 479,
+     "start": 480,
      "module": [],
      "uiPfad": []
     },
@@ -1058,7 +1100,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 592,
+     "start": 597,
      "module": [],
      "uiPfad": []
     },
@@ -1084,14 +1126,14 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1579,
+     "start": 1584,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2563,
+     "start": 2577,
      "module": [],
      "uiPfad": []
     },
@@ -1160,6 +1202,50 @@
      ]
     },
     {
+     "name": "ladePatientTermine",
+     "file": "module/patient-termine.js",
+     "start": 5,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "anfragen",
+      "belegliste",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "qvSaveBtn",
+      "rechnungen",
+      "services",
+      "settings",
+      "statistik",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen",
+      "vorlagen",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 34 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "ladePodoTermine",
      "file": "module/verordnung-termine.js",
      "start": 67,
@@ -1219,7 +1305,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1972,
+     "start": 1986,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1238,7 +1324,7 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 11420,
+     "start": 11404,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1257,26 +1343,7 @@
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 7976,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "loadPatientDetailTermine",
-     "file": "dashboard.js",
-     "start": 8990,
+     "start": 7996,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1295,7 +1362,7 @@
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1731,
+     "start": 1744,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1312,9 +1379,16 @@
      ]
     },
     {
+     "name": "loadTherapeutenStatistik",
+     "file": "api-backend/billing/statistik/therapeuten.js",
+     "start": 3,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "loadUeberblickNoShows",
      "file": "dashboard.js",
-     "start": 21634,
+     "start": 20607,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1410,7 +1484,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2717,
+     "start": 2731,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1429,14 +1503,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1575,
+     "start": 1588,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1655,
+     "start": 1668,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1474,7 +1548,7 @@
     {
      "name": "renderOverviewMonthly",
      "file": "dashboard.js",
-     "start": 14633,
+     "start": 14617,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1493,7 +1567,7 @@
     {
      "name": "renderOverviewWeekly",
      "file": "dashboard.js",
-     "start": 14538,
+     "start": 14522,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1564,20 +1638,9 @@
    ],
    "schreiber": [
     {
-     "name": "absageTerminMitGrund",
-     "file": "dashboard.js",
-     "start": 7849,
-     "module": [],
-     "uiPfad": [],
-     "ops": [
-      "delete",
-      "update"
-     ]
-    },
-    {
      "name": "bindeTermin",
      "file": "module/verordnung-termine.js",
-     "start": 121,
+     "start": 122,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1597,6 +1660,16 @@
      ]
     },
     {
+     "name": "cancelRequestBookings",
+     "file": "api-backend/booking/cancel-request.js",
+     "start": 3,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
      "name": "createBookingsFromRequestFactory",
      "file": "api-backend/booking/from-request.js",
      "start": 17,
@@ -1609,7 +1682,7 @@
     {
      "name": "doMoveBooking",
      "file": "dashboard.js",
-     "start": 5407,
+     "start": 5423,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1631,7 +1704,7 @@
     {
      "name": "handlePatientNichtErschienen",
      "file": "dashboard.js",
-     "start": 4534,
+     "start": 4549,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1641,7 +1714,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3943,
+     "start": 3958,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1663,7 +1736,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4444,
+     "start": 4459,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1673,7 +1746,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4941,
+     "start": 4956,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1705,7 +1778,7 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 4825,
+     "start": 4840,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1727,7 +1800,7 @@
     {
      "name": "loeseTermin",
      "file": "module/verordnung-termine.js",
-     "start": 132,
+     "start": 133,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1749,7 +1822,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 4306,
+     "start": 4321,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1759,7 +1832,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3260,
+     "start": 3274,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1781,7 +1854,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4350,
+     "start": 4365,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1791,7 +1864,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4223,
+     "start": 4238,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1823,8 +1896,9 @@
    ],
    "dateien": [
     "api-backend/billing/api/ausfall.routes.js",
-    "api-backend/billing/api/statistik.routes.js",
     "api-backend/billing/api/warteliste.routes.js",
+    "api-backend/billing/statistik/therapeuten.js",
+    "api-backend/booking/cancel-request.js",
     "api-backend/booking/from-request.js",
     "api-backend/server.js",
     "api/admin/data.js",
@@ -1836,9 +1910,11 @@
     "module/fussbefund.js",
     "module/kalender-monat.js",
     "module/kalender-woche.js",
+    "module/patient-termine.js",
     "module/patientenkarte.js",
     "module/podologie-abrechnung.js",
     "module/rechnung-editor.js",
+    "module/rechnung-editor.test.js",
     "module/rechnung-verordnung.js",
     "module/signal.js",
     "module/termin-aktionen.js",
@@ -1852,15 +1928,39 @@
    ],
    "module": [
     "abrechnung",
+    "anamnese",
+    "anfragen",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
+    "notizen",
     "podologie-billing",
+    "qvSaveBtn",
     "rechnungen",
     "services",
+    "settings",
+    "statistik",
     "team",
     "ueberblick",
-    "verordnungen"
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
    ],
    "sqlTreffer": 24,
    "codeStumm": false
@@ -1884,14 +1984,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 592,
+     "start": 597,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1579,
+     "start": 1584,
      "module": [],
      "uiPfad": []
     }
@@ -1900,7 +2000,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1923,7 +2023,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 11480,
+     "start": 11464,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -1946,7 +2046,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 10226,
+     "start": 10210,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2006,7 +2106,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 16960,
+     "start": 16583,
      "module": [],
      "uiPfad": []
     },
@@ -2020,7 +2120,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 592,
+     "start": 597,
      "module": [],
      "uiPfad": []
     },
@@ -2053,7 +2153,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3418,
+     "start": 3425,
      "module": [],
      "uiPfad": []
     }
@@ -2073,7 +2173,7 @@
     {
      "name": "deleteBusiness",
      "file": "dashboard.js",
-     "start": 17307,
+     "start": 16930,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2083,7 +2183,7 @@
     {
      "name": "ensureBusinessCoords",
      "file": "dashboard.js",
-     "start": 21871,
+     "start": 20864,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2105,7 +2205,7 @@
     {
      "name": "toggleStandortDay",
      "file": "dashboard.js",
-     "start": 10202,
+     "start": 10186,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2127,7 +2227,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 17224,
+     "start": 16847,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2179,14 +2279,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 592,
+     "start": 597,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11189,
+     "start": 11173,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2207,7 +2307,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2229,7 +2329,7 @@
     {
      "name": "loadIntegrations",
      "file": "kalender.js",
-     "start": 746,
+     "start": 747,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2239,7 +2339,7 @@
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 12293,
+     "start": 12277,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2350,14 +2450,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 592,
+     "start": 597,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1579,
+     "start": 1584,
      "module": [],
      "uiPfad": []
     },
@@ -2402,7 +2502,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 10319,
+     "start": 10303,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2423,7 +2523,7 @@
     {
      "name": "saveSpecialDays",
      "file": "dashboard.js",
-     "start": 10424,
+     "start": 10408,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2503,7 +2603,7 @@
     {
      "name": "loadDataSharing",
      "file": "dashboard.js",
-     "start": 17428,
+     "start": 17051,
      "module": [],
      "uiPfad": []
     }
@@ -2512,7 +2612,7 @@
     {
      "name": "saveDataSharing",
      "file": "dashboard.js",
-     "start": 17070,
+     "start": 16693,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2674,7 +2774,7 @@
     {
      "name": "loadVorlagenPanel",
      "file": "dashboard.js",
-     "start": 12583,
+     "start": 12567,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2694,7 +2794,7 @@
     {
      "name": "openVorlagenEdit",
      "file": "dashboard.js",
-     "start": 13024,
+     "start": 13008,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2716,7 +2816,7 @@
     {
      "name": "_enterAnsichtEditMode",
      "file": "dashboard.js",
-     "start": 12942,
+     "start": 12926,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2739,7 +2839,7 @@
     {
      "name": "commit",
      "file": "dashboard.js",
-     "start": 13174,
+     "start": 13158,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2762,7 +2862,7 @@
     {
      "name": "deleteVorlage",
      "file": "dashboard.js",
-     "start": 13142,
+     "start": 13126,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2785,7 +2885,7 @@
     {
      "name": "duplicateVorlage",
      "file": "dashboard.js",
-     "start": 13151,
+     "start": 13135,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2808,7 +2908,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2832,7 +2932,7 @@
     {
      "name": "openVorlagenAnsicht",
      "file": "dashboard.js",
-     "start": 12852,
+     "start": 12836,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2855,7 +2955,7 @@
     {
      "name": "saveVorlage",
      "file": "dashboard.js",
-     "start": 13112,
+     "start": 13096,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2878,7 +2978,7 @@
     {
      "name": "seedDefaultVorlagen",
      "file": "dashboard.js",
-     "start": 13210,
+     "start": 13194,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2900,7 +3000,7 @@
     {
      "name": "seedMissingVorlagen",
      "file": "dashboard.js",
-     "start": 13216,
+     "start": 13200,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -2923,7 +3023,7 @@
     {
      "name": "startVorlagenInlineRename",
      "file": "dashboard.js",
-     "start": 13167,
+     "start": 13151,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3004,7 +3104,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3026,7 +3126,7 @@
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 8890,
+     "start": 8910,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3085,14 +3185,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 16960,
+     "start": 16583,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 592,
+     "start": 597,
      "module": [],
      "uiPfad": []
     },
@@ -3106,7 +3206,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 10993,
+     "start": 10977,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3125,7 +3225,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10527,
+     "start": 10511,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3146,7 +3246,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3169,7 +3269,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 11035,
+     "start": 11019,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3192,7 +3292,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10888,
+     "start": 10872,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3214,7 +3314,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11136,
+     "start": 11120,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3273,7 +3373,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3292,7 +3392,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 10993,
+     "start": 10977,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3311,7 +3411,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 11035,
+     "start": 11019,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3330,7 +3430,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10888,
+     "start": 10872,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3383,7 +3483,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 11102,
+     "start": 11086,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3404,7 +3504,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3427,7 +3527,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11136,
+     "start": 11120,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3503,7 +3603,7 @@
     {
      "name": "openBookingFromRxPreset",
      "file": "dashboard.js",
-     "start": 17735,
+     "start": 17369,
      "module": [],
      "uiPfad": []
     }
@@ -3512,7 +3612,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3535,7 +3635,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11572,
+     "start": 11556,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3621,7 +3721,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1972,
+     "start": 1986,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3640,7 +3740,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 19454,
+     "start": 18432,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -3662,7 +3762,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4350,
+     "start": 4365,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3672,7 +3772,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4223,
+     "start": 4238,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3682,7 +3782,7 @@
     {
      "name": "toLocal",
      "file": "dashboard.js",
-     "start": 19539,
+     "start": 18517,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -3719,7 +3819,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 8,
+   "sqlTreffer": 9,
    "codeStumm": false
   },
   {
@@ -3743,7 +3843,7 @@
     {
      "name": "loadFeedbacks",
      "file": "dashboard.js",
-     "start": 14807,
+     "start": 14791,
      "module": [
       "abrechnung",
       "feedback",
@@ -3822,7 +3922,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3841,7 +3941,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 11102,
+     "start": 11086,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -3860,7 +3960,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11136,
+     "start": 11120,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4051,7 +4151,7 @@
   },
   {
    "name": "invoices",
-   "spalten": 34,
+   "spalten": 36,
    "fkRaus": [
     "leads",
     "prescriptions"
@@ -4071,8 +4171,8 @@
    "leser": [
     {
      "name": "downloadDmrzForInvoice",
-     "file": "dashboard.js",
-     "start": 15433,
+     "file": "module/rechnung-dmrz.js",
+     "start": 109,
      "module": [],
      "uiPfad": []
     },
@@ -4086,7 +4186,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1972,
+     "start": 1986,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4105,7 +4205,7 @@
     {
      "name": "loadPatientDetailRechnungen",
      "file": "dashboard.js",
-     "start": 8950,
+     "start": 8970,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4124,7 +4224,7 @@
     {
      "name": "loadRechnungen",
      "file": "dashboard.js",
-     "start": 14879,
+     "start": 14863,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4143,21 +4243,41 @@
    ],
    "schreiber": [
     {
-     "name": "dialog",
-     "file": "module/rechnung-zahlung.js",
-     "start": 129,
-     "module": [],
-     "uiPfad": [],
-     "ops": [
-      "update"
-     ]
-    },
-    {
      "name": "frageZahlungsstatus",
      "file": "module/rechnung-zahlung.js",
-     "start": 68,
-     "module": [],
-     "uiPfad": [],
+     "start": 77,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "notizen",
+      "podologie-billing",
+      "qvSaveBtn",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ],
      "ops": [
       "update"
      ]
@@ -4165,9 +4285,39 @@
     {
      "name": "markiereRechnungBezahlt",
      "file": "module/rechnung-zahlung.js",
-     "start": 49,
-     "module": [],
-     "uiPfad": [],
+     "start": 58,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "notizen",
+      "podologie-billing",
+      "qvSaveBtn",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ],
      "ops": [
       "update"
      ]
@@ -4175,7 +4325,7 @@
     {
      "name": "saveInvoice",
      "file": "dashboard.js",
-     "start": 15277,
+     "start": 15035,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4185,22 +4335,42 @@
     }
    ],
    "dateien": [
+    "api-backend/billing/api/rechnung-zahlung.routes.js",
     "dashboard.js",
+    "module/rechnung-dmrz.js",
     "module/rechnung-zahlung.js",
     "module/selbstzahler-stufen.js"
    ],
    "module": [
     "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
     "fussstatus",
     "hours",
     "kunden",
+    "notizen",
+    "podologie-billing",
+    "qvSaveBtn",
     "rechnungen",
     "services",
+    "settings",
     "team",
     "ueberblick",
+    "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 10,
+   "sqlTreffer": 13,
    "codeStumm": false
   },
   {
@@ -4262,16 +4432,9 @@
      "uiPfad": []
     },
     {
-     "name": "ladeAnnahmestelle",
-     "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-     "start": 128,
-     "module": [],
-     "uiPfad": []
-    },
-    {
-     "name": "loadAbrechnung",
+     "name": "ladeAbrechnungHistorie",
      "file": "dashboard.js",
-     "start": 18506,
+     "start": 17842,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4286,6 +4449,13 @@
      "uiPfad": [
       "ortak yardımcı — 9 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "ladeAnnahmestelle",
+     "file": "api-backend/billing/kostentraeger/annahmestelle.js",
+     "start": 128,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [],
@@ -4336,7 +4506,7 @@
     "api-backend/billing/kostentraeger/annahmestelle.js"
    ],
    "module": [],
-   "sqlTreffer": 7,
+   "sqlTreffer": 5,
    "codeStumm": false
   },
   {
@@ -4375,13 +4545,12 @@
     {
      "name": "loadKkList",
      "file": "dashboard.js",
-     "start": 18015,
+     "start": 17653,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
-      "podologie-billing",
       "rechnungen",
       "services",
       "team",
@@ -4389,13 +4558,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 9 modülden çağrılıyor"
      ]
     },
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3418,
+     "start": 3425,
      "module": [],
      "uiPfad": []
     }
@@ -4412,7 +4581,6 @@
     "fussstatus",
     "hours",
     "kunden",
-    "podologie-billing",
     "rechnungen",
     "services",
     "team",
@@ -4449,15 +4617,15 @@
     },
     {
      "name": "downloadDmrzForInvoice",
-     "file": "dashboard.js",
-     "start": 15433,
+     "file": "module/rechnung-dmrz.js",
+     "start": 109,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 16624,
+     "start": 16247,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4495,7 +4663,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4514,7 +4682,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3943,
+     "start": 3958,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4533,14 +4701,14 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4444,
+     "start": 4459,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 5151,
+     "start": 5167,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4559,7 +4727,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4941,
+     "start": 4956,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4578,7 +4746,7 @@
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 3739,
+     "start": 3754,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4597,7 +4765,7 @@
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 20830,
+     "start": 19803,
      "module": [],
      "uiPfad": []
     },
@@ -4664,7 +4832,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1972,
+     "start": 1986,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4683,7 +4851,7 @@
     {
      "name": "loadAnamnese",
      "file": "dashboard.js",
-     "start": 15514,
+     "start": 15136,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4703,7 +4871,7 @@
     {
      "name": "loadB2C",
      "file": "dashboard.js",
-     "start": 11822,
+     "start": 11806,
      "module": [
       "abrechnung",
       "b2c",
@@ -4723,7 +4891,7 @@
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 5161,
+     "start": 5177,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4742,7 +4910,7 @@
     {
      "name": "loadInvPatients",
      "file": "dashboard.js",
-     "start": 15125,
+     "start": 14891,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4761,7 +4929,7 @@
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 7976,
+     "start": 7996,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4780,7 +4948,7 @@
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 14001,
+     "start": 13985,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4800,7 +4968,7 @@
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 8890,
+     "start": 8910,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4819,7 +4987,7 @@
     {
      "name": "loadUeberblickBirthdays",
      "file": "dashboard.js",
-     "start": 21586,
+     "start": 20559,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4876,7 +5044,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3260,
+     "start": 3274,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4895,7 +5063,7 @@
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 5064,
+     "start": 5079,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4932,8 +5100,8 @@
     },
     {
      "name": "openInvView",
-     "file": "dashboard.js",
-     "start": 14927,
+     "file": "module/rechnung-ansicht.js",
+     "start": 118,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4952,7 +5120,7 @@
     {
      "name": "openRezeptModal",
      "file": "dashboard.js",
-     "start": 16689,
+     "start": 16312,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4971,14 +5139,14 @@
     {
      "name": "pruefeLeadId",
      "file": "api-backend/server.js",
-     "start": 1237,
+     "start": 1242,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 4042,
+     "start": 4057,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -4997,21 +5165,21 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4350,
+     "start": 4365,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4223,
+     "start": 4238,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 19026,
+     "start": 18079,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5039,7 +5207,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4574,
+     "start": 4589,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5049,7 +5217,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 20538,
+     "start": 19516,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5059,7 +5227,7 @@
     {
      "name": "maybeOfferAppointmentConfirmEmail",
      "file": "dashboard.js",
-     "start": 7497,
+     "start": 7507,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5086,7 +5254,10 @@
     "module/fussbefund.js",
     "module/krankenkasse-suche.js",
     "module/patienten-einwilligung.js",
+    "module/rechnung-ansicht.js",
+    "module/rechnung-dmrz.js",
     "module/rechnung-editor.js",
+    "module/rechnung-editor.test.js",
     "module/termin-patient-bezug.js",
     "module/verordnung-patient-abgleich.js",
     "module/verordnung-uebersicht.js"
@@ -5158,7 +5329,7 @@
     {
      "name": "refreshMessreihen",
      "file": "dashboard.js",
-     "start": 8615,
+     "start": 8635,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5180,7 +5351,7 @@
     {
      "name": "saveMessung",
      "file": "dashboard.js",
-     "start": 8739,
+     "start": 8759,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5236,7 +5407,7 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 938,
+     "start": 951,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5639,7 +5810,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1972,
+     "start": 1986,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5658,7 +5829,7 @@
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 14001,
+     "start": 13985,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5678,7 +5849,7 @@
     {
      "name": "loadPatientDetailNotes",
      "file": "dashboard.js",
-     "start": 8801,
+     "start": 8821,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5697,7 +5868,7 @@
     {
      "name": "loadPatientNotes",
      "file": "dashboard.js",
-     "start": 14065,
+     "start": 14049,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5717,7 +5888,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3260,
+     "start": 3274,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5797,7 +5968,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3418,
+     "start": 3425,
      "module": [],
      "uiPfad": []
     }
@@ -5880,6 +6051,25 @@
      "name": "frag",
      "file": "module/patientenkarte.js",
      "start": 141,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 9 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "ladeAbrechnungAuswahl",
+     "file": "module/abrechnung-auswahl.js",
+     "start": 239,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6001,7 +6191,7 @@
     {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 635,
+     "start": 388,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6035,6 +6225,7 @@
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
     "api-backend/billing/api/verordnung-status.routes.js",
+    "module/abrechnung-auswahl.js",
     "module/patientenkarte.js",
     "module/podologie-abrechnung.js",
     "module/rechnung-bruecke.js",
@@ -6114,7 +6305,7 @@
     {
      "name": "decorateBookingTitleWithSession",
      "file": "dashboard.js",
-     "start": 7392,
+     "start": 7402,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6152,7 +6343,7 @@
     {
      "name": "loadCalRpUnverga",
      "file": "dashboard.js",
-     "start": 3890,
+     "start": 3905,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6171,7 +6362,7 @@
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6272,
+     "start": 6281,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6189,8 +6380,8 @@
     },
     {
      "name": "openInvView",
-     "file": "dashboard.js",
-     "start": 14927,
+     "file": "module/rechnung-ansicht.js",
+     "start": 118,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6280,7 +6471,7 @@
     {
      "name": "handlePatientNichtErschienen",
      "file": "dashboard.js",
-     "start": 4534,
+     "start": 4549,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6290,7 +6481,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3943,
+     "start": 3958,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6322,7 +6513,7 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7405,
+     "start": 7415,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6333,7 +6524,7 @@
     {
      "name": "markPrescriptionSession",
      "file": "dashboard.js",
-     "start": 7372,
+     "start": 7382,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6347,6 +6538,7 @@
     "dashboard.js",
     "module/booking-status-korrektur.js",
     "module/frequenz-pruefung.js",
+    "module/rechnung-ansicht.js",
     "module/rechnung-editor.js",
     "module/rezeptinfo-geld.js",
     "module/sitzung-abgleich.js",
@@ -6364,7 +6556,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 3,
+   "sqlTreffer": 7,
    "codeStumm": false
   },
   {
@@ -6452,14 +6644,44 @@
     {
      "name": "frageZahlungsstatus",
      "file": "module/rechnung-zahlung.js",
-     "start": 68,
-     "module": [],
-     "uiPfad": []
+     "start": 77,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "notizen",
+      "podologie-billing",
+      "qvSaveBtn",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ]
     },
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 5151,
+     "start": 5167,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6481,6 +6703,25 @@
      "start": 304,
      "module": [],
      "uiPfad": []
+    },
+    {
+     "name": "ladeAbrechnungAuswahl",
+     "file": "module/abrechnung-auswahl.js",
+     "start": 239,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 9 modülden çağrılıyor"
+     ]
     },
     {
      "name": "ladeAktiveVerordnungen",
@@ -6545,33 +6786,14 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7405,
+     "start": 7415,
      "module": [],
      "uiPfad": []
     },
     {
-     "name": "loadAbrechnung",
-     "file": "dashboard.js",
-     "start": 18506,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "loadAnamneseRxContext",
      "file": "dashboard.js",
-     "start": 15609,
+     "start": 15231,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6591,7 +6813,7 @@
     {
      "name": "loadBkVerordnungen",
      "file": "dashboard.js",
-     "start": 5218,
+     "start": 5234,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6610,14 +6832,14 @@
     {
      "name": "loadCalRpRezeptInfo",
      "file": "dashboard.js",
-     "start": 3853,
+     "start": 3868,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8152,
+     "start": 8172,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6636,7 +6858,7 @@
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 21419,
+     "start": 20392,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6655,14 +6877,14 @@
     {
      "name": "loadPhysioRezKpis",
      "file": "dashboard.js",
-     "start": 2271,
+     "start": 2285,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6272,
+     "start": 6281,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6681,7 +6903,7 @@
     {
      "name": "loadUeberblickDeadlines",
      "file": "dashboard.js",
-     "start": 21521,
+     "start": 20494,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6707,7 +6929,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3260,
+     "start": 3274,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6725,8 +6947,8 @@
     },
     {
      "name": "openInvView",
-     "file": "dashboard.js",
-     "start": 14927,
+     "file": "module/rechnung-ansicht.js",
+     "start": 118,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6759,7 +6981,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 19026,
+     "start": 18079,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6778,7 +7000,7 @@
     {
      "name": "therapeutName",
      "file": "dashboard.js",
-     "start": 7775,
+     "start": 7785,
      "module": [],
      "uiPfad": []
     },
@@ -6830,7 +7052,7 @@
     {
      "name": "zeigeVerordnungDetail",
      "file": "module/verordnung-detail.js",
-     "start": 919,
+     "start": 920,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6872,8 +7094,8 @@
     },
     {
      "name": "downloadDmrzForInvoice",
-     "file": "dashboard.js",
-     "start": 15433,
+     "file": "module/rechnung-dmrz.js",
+     "start": 109,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6883,7 +7105,7 @@
     {
      "name": "flipAbrechnungStatus",
      "file": "dashboard.js",
-     "start": 8469,
+     "start": 8489,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6905,7 +7127,7 @@
     {
      "name": "kassiereZuzahlung",
      "file": "dashboard.js",
-     "start": 7167,
+     "start": 7177,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -6937,29 +7159,7 @@
     {
      "name": "renderAbrechnungHistory",
      "file": "dashboard.js",
-     "start": 18859,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ],
-     "ops": [
-      "update"
-     ]
-    },
-    {
-     "name": "renderAbrechnungReady",
-     "file": "dashboard.js",
-     "start": 18632,
+     "start": 17900,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7003,7 +7203,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 7242,
+     "start": 7252,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7013,7 +7213,7 @@
     {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 19963,
+     "start": 18941,
      "module": [
       "abrechnung",
       "belegliste",
@@ -7052,9 +7252,12 @@
     "api-backend/billing/api/zuzahlung.routes.js",
     "api-backend/server.js",
     "dashboard.js",
+    "module/abrechnung-auswahl.js",
     "module/arzt-register.js",
     "module/booking-status-korrektur.js",
     "module/patientenkarte.js",
+    "module/rechnung-ansicht.js",
+    "module/rechnung-dmrz.js",
     "module/rechnung-verordnung.js",
     "module/rechnung-zahlung.js",
     "module/rezeptinfo-geld.js",
@@ -7072,30 +7275,47 @@
     "abrechnung",
     "anamnese",
     "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
     "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
     "fussstatus",
     "hours",
     "kunden",
+    "notizen",
+    "podologie-billing",
+    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
     "team",
     "ueberblick",
+    "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 34,
+   "sqlTreffer": 35,
    "codeStumm": false
   },
   {
    "name": "profiles",
-   "spalten": 83,
+   "spalten": 84,
    "fkRaus": [
     "auth.users"
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/billing/statistik/therapeuten.test.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Der Dreh- und Angelpunkt der Mandantentrennung. Jeder Account — Inhaber wie Angestellter — hat genau eine Zeile; `role` und `owner_id` entscheiden, wer wessen Daten sieht. Weil Einzelstandort-Inhaber gar keinen `businesses`-Datensatz haben, liegen **Inhaber-Einstellungen hier**, nicht in `businesses`.",
@@ -7112,21 +7332,28 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 3805,
+     "start": 3812,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 592,
+     "start": 597,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4574,
+     "start": 4589,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "kontenFuer",
+     "file": "api-backend/billing/api/rechnung-zahlung.routes.js",
+     "start": 110,
      "module": [],
      "uiPfad": []
     },
@@ -7171,7 +7398,7 @@
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 859,
+     "start": 872,
      "module": [],
      "uiPfad": []
     },
@@ -7185,7 +7412,7 @@
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 10737,
+     "start": 10721,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7204,7 +7431,7 @@
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 19394,
+     "start": 18372,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -7224,7 +7451,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 19454,
+     "start": 18432,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -7244,7 +7471,7 @@
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 19776,
+     "start": 18754,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -7264,7 +7491,7 @@
     {
      "name": "loadHoursPanel",
      "file": "dashboard.js",
-     "start": 10117,
+     "start": 10101,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7283,7 +7510,7 @@
     {
      "name": "loadPatientDetailAnamnese",
      "file": "dashboard.js",
-     "start": 8826,
+     "start": 8846,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7309,7 +7536,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10527,
+     "start": 10511,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7326,9 +7553,16 @@
      ]
     },
     {
+     "name": "loadTherapeutenStatistik",
+     "file": "api-backend/billing/statistik/therapeuten.js",
+     "start": 3,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 21660,
+     "start": 20633,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7347,7 +7581,7 @@
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 4607,
+     "start": 4622,
      "module": [],
      "uiPfad": []
     },
@@ -7360,7 +7594,6 @@
       "fussstatus",
       "hours",
       "kunden",
-      "podologie-billing",
       "rechnungen",
       "services",
       "team",
@@ -7368,13 +7601,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 9 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "renderKontenSettings",
+     "file": "module/buchungskonten.js",
+     "start": 169,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10888,
+     "start": 10872,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7400,7 +7640,7 @@
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 1006,
+     "start": 1019,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7432,7 +7672,6 @@
       "fussstatus",
       "hours",
       "kunden",
-      "podologie-billing",
       "rechnungen",
       "services",
       "team",
@@ -7440,7 +7679,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 9 modülden çağrılıyor"
      ]
     },
     {
@@ -7452,7 +7691,6 @@
       "fussstatus",
       "hours",
       "kunden",
-      "podologie-billing",
       "rechnungen",
       "services",
       "team",
@@ -7460,19 +7698,18 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 9 modülden çağrılıyor"
      ]
     },
     {
      "name": "resolveAuth",
-     "file": "api-backend/billing/api/statistik.routes.js",
-     "start": 18,
+     "file": "api-backend/billing/api/rechnung-zahlung.routes.js",
+     "start": 84,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
-      "podologie-billing",
       "rechnungen",
       "services",
       "team",
@@ -7480,7 +7717,26 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 9 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "resolveAuth",
+     "file": "api-backend/billing/api/statistik.routes.js",
+     "start": 19,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 9 modülden çağrılıyor"
      ]
     },
     {
@@ -7492,7 +7748,6 @@
       "fussstatus",
       "hours",
       "kunden",
-      "podologie-billing",
       "rechnungen",
       "services",
       "team",
@@ -7500,7 +7755,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 9 modülden çağrılıyor"
      ]
     },
     {
@@ -7512,7 +7767,6 @@
       "fussstatus",
       "hours",
       "kunden",
-      "podologie-billing",
       "rechnungen",
       "services",
       "team",
@@ -7520,7 +7774,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 9 modülden çağrılıyor"
      ]
     },
     {
@@ -7532,7 +7786,6 @@
       "fussstatus",
       "hours",
       "kunden",
-      "podologie-billing",
       "rechnungen",
       "services",
       "team",
@@ -7540,7 +7793,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 9 modülden çağrılıyor"
      ]
     },
     {
@@ -7573,7 +7826,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3418,
+     "start": 3425,
      "module": [],
      "uiPfad": []
     }
@@ -7632,7 +7885,7 @@
     {
      "name": "ensureBookingSlug",
      "file": "dashboard.js",
-     "start": 13568,
+     "start": 13552,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7654,7 +7907,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 5716,
+     "start": 5725,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7664,7 +7917,7 @@
     {
      "name": "ensureCompanyCode",
      "file": "dashboard.js",
-     "start": 13551,
+     "start": 13535,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7686,7 +7939,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7728,7 +7981,7 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 22383,
+     "start": 21376,
      "module": [
       "abrechnung",
       "anfragen",
@@ -7761,7 +8014,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11189,
+     "start": 11173,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -7783,7 +8036,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 2334,
+     "start": 2348,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7813,7 +8066,7 @@
     {
      "name": "saveEmployee",
      "file": "dashboard.js",
-     "start": 14260,
+     "start": 14244,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7824,6 +8077,16 @@
      "name": "saveStepProgress",
      "file": "onboarding.js",
      "start": 281,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "speichereKonten",
+     "file": "module/buchungskonten.js",
+     "start": 283,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7846,10 +8109,12 @@
     "api-backend/billing/api/abrechnung.routes.js",
     "api-backend/billing/api/ausfall.routes.js",
     "api-backend/billing/api/mahnwesen.routes.js",
+    "api-backend/billing/api/rechnung-zahlung.routes.js",
     "api-backend/billing/api/statistik.routes.js",
     "api-backend/billing/api/verordnung-status.routes.js",
     "api-backend/billing/api/warteliste.routes.js",
     "api-backend/billing/api/zuzahlung.routes.js",
+    "api-backend/billing/statistik/therapeuten.js",
     "api-backend/fix_db.js",
     "api-backend/server.js",
     "api-backend/test_schema.js",
@@ -7866,6 +8131,7 @@
     "module/anfrage-bearbeiten.js",
     "module/ausfall-einstellungen.js",
     "module/beleg-druck.js",
+    "module/buchungskonten.js",
     "module/fussbefund.js",
     "module/selbstzahler-stufen.js",
     "onboarding.js"
@@ -7877,14 +8143,41 @@
     "fussstatus",
     "hours",
     "kunden",
-    "podologie-billing",
     "rechnungen",
     "services",
     "team",
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 34,
+   "sqlTreffer": 36,
+   "codeStumm": false
+  },
+  {
+   "name": "rechnung_zahlungen",
+   "spalten": 12,
+   "fkRaus": [
+    "profiles",
+    "invoices",
+    "rechnung_zahlungen"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Eine Privatrechnung wird nicht immer in einem Zug bezahlt — Teilzahlung, Nachzahlung, Ausbuchung eines Restbetrags, Storno einer Fehlbuchung. Vorher trug `invoices.payment_status` allein die Antwort und konnte genau eine davon abbilden: bezahlt oder nicht. Wer zweimal kassierte, überschrieb die erste Buchung; nach einer Korrektur war nicht mehr feststellbar, was wann tatsächlich geflossen war. Diese Tabelle ist die Zahlungshistorie als Hauptbuch — jede Bewegung eine eigene Zeile. Gleiches Muster und gleicher Grund wie `zuzahlung_korrekturen` und `belegliste`.",
+   "seit": "07.09.2026 · `sql-melih/2026-09-07-rechnung-zahlungen.sql` — ⚠️ **direkt im SQL-Editor gefahren, steht in KEINER Migrationszeile** von `supabase_migrations.schema_migrations`. Live ist sie trotzdem, am 08.09.2026 gegen die DB geprüft. (Bis 09.09. stand hier „das endet am 05.09.2026\" — überholt: das Register endet jetzt bei `20260909170546_zahlungsart_automatik`. Die Tabelle selbst steht dort weiterhin nicht.)",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/billing/api/rechnung-zahlung.routes.js"
+   ],
+   "module": [],
+   "sqlTreffer": 13,
    "codeStumm": false
   },
   {
@@ -7926,7 +8219,7 @@
     {
      "name": "loadDoctors",
      "file": "dashboard.js",
-     "start": 13631,
+     "start": 13615,
      "module": [
       "abrechnung",
       "doctors",
@@ -7948,7 +8241,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8013,7 +8306,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4000,
+     "start": 4007,
      "module": [],
      "uiPfad": []
     },
@@ -8034,7 +8327,7 @@
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 3924,
+     "start": 3939,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8053,7 +8346,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8072,21 +8365,21 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 592,
+     "start": 597,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2563,
+     "start": 2577,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11572,
+     "start": 11556,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8112,7 +8405,7 @@
     {
      "name": "loadServices",
      "file": "dashboard.js",
-     "start": 9481,
+     "start": 9465,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8131,7 +8424,7 @@
     {
      "name": "loadServices",
      "file": "kalender.js",
-     "start": 634,
+     "start": 635,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8189,14 +8482,14 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3418,
+     "start": 3425,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 5511,
+     "start": 5520,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8217,7 +8510,7 @@
     {
      "name": "autoSeedGkvServices",
      "file": "dashboard.js",
-     "start": 9502,
+     "start": 9486,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8239,7 +8532,7 @@
     {
      "name": "ensureBlankoBonusServices",
      "file": "dashboard.js",
-     "start": 7594,
+     "start": 7604,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8261,7 +8554,7 @@
     {
      "name": "migratePodologieLegacyServices",
      "file": "dashboard.js",
-     "start": 9698,
+     "start": 9682,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8295,7 +8588,7 @@
     {
      "name": "renderServices",
      "file": "dashboard.js",
-     "start": 9885,
+     "start": 9869,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8329,7 +8622,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 17224,
+     "start": 16847,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8423,7 +8716,7 @@
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 12293,
+     "start": 12277,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8443,7 +8736,7 @@
     {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 1394,
+     "start": 1407,
      "module": [],
      "uiPfad": []
     }
@@ -8452,7 +8745,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8509,9 +8802,9 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "loadAbrechnung",
-     "file": "dashboard.js",
-     "start": 18506,
+     "name": "ladeAbrechnungAuswahl",
+     "file": "module/abrechnung-auswahl.js",
+     "start": 239,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8530,7 +8823,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11572,
+     "start": 11556,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8551,7 +8844,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8574,7 +8867,7 @@
     {
      "name": "loadEmpCertificates",
      "file": "dashboard.js",
-     "start": 11658,
+     "start": 11642,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8597,7 +8890,8 @@
    ],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
-    "dashboard.js"
+    "dashboard.js",
+    "module/abrechnung-auswahl.js"
    ],
    "module": [
     "abrechnung",
@@ -8634,14 +8928,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 592,
+     "start": 597,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1579,
+     "start": 1584,
      "module": [],
      "uiPfad": []
     },
@@ -8655,7 +8949,7 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 11420,
+     "start": 11404,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8674,7 +8968,7 @@
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 10737,
+     "start": 10721,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8693,7 +8987,7 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 21660,
+     "start": 20633,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8712,7 +9006,7 @@
     {
      "name": "loadUrlaubListe",
      "file": "dashboard.js",
-     "start": 10838,
+     "start": 10822,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8731,7 +9025,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2717,
+     "start": 2731,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8752,7 +9046,7 @@
     {
      "name": "deleteEmpTimeOff",
      "file": "dashboard.js",
-     "start": 10793,
+     "start": 10777,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8774,7 +9068,7 @@
     {
      "name": "deleteUrlaub",
      "file": "dashboard.js",
-     "start": 10867,
+     "start": 10851,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8796,7 +9090,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8819,7 +9113,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10527,
+     "start": 10511,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8841,7 +9135,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11189,
+     "start": 11173,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -8863,7 +9157,7 @@
     {
      "name": "saveUrlaub",
      "file": "dashboard.js",
-     "start": 10809,
+     "start": 10793,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8951,7 +9245,7 @@
     {
      "name": "loadPatientDetailUeberweisung",
      "file": "dashboard.js",
-     "start": 8928,
+     "start": 8948,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9025,14 +9319,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 16960,
+     "start": 16583,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "bootScheduleViewToggle",
      "file": "dashboard.js",
-     "start": 14407,
+     "start": 14391,
      "module": [],
      "uiPfad": []
     }
@@ -9041,7 +9335,7 @@
     {
      "name": "saveUserPref",
      "file": "dashboard.js",
-     "start": 14486,
+     "start": 14470,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9063,7 +9357,7 @@
     {
      "name": "switchBusiness",
      "file": "dashboard.js",
-     "start": 17386,
+     "start": 17009,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9110,14 +9404,14 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 4151,
+     "start": 4166,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "q",
      "file": "dashboard.js",
-     "start": 19612,
+     "start": 18590,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -9137,14 +9431,14 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4350,
+     "start": 4365,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4223,
+     "start": 4238,
      "module": [],
      "uiPfad": []
     }
@@ -9153,7 +9447,7 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 19638,
+     "start": 18616,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -9176,7 +9470,7 @@
     {
      "name": "saveQuickVehicleHandler",
      "file": "dashboard.js",
-     "start": 4200,
+     "start": 4215,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9186,7 +9480,7 @@
     {
      "name": "saveVehicleEdit",
      "file": "dashboard.js",
-     "start": 19741,
+     "start": 18719,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9239,7 +9533,7 @@
     {
      "name": "reportSidebarVisibility",
      "file": "dashboard.js",
-     "start": 958,
+     "start": 971,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9308,7 +9602,7 @@
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 20703,
+     "start": 19681,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9330,7 +9624,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 20860,
+     "start": 19833,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9386,14 +9680,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 592,
+     "start": 597,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getEmployeeWorkingHours",
      "file": "dashboard.js",
-     "start": 2483,
+     "start": 2497,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9412,7 +9706,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1579,
+     "start": 1584,
      "module": [],
      "uiPfad": []
     },
@@ -9426,7 +9720,7 @@
     {
      "name": "loadHours",
      "file": "kalender.js",
-     "start": 711,
+     "start": 712,
      "module": [],
      "uiPfad": []
     },
@@ -9452,14 +9746,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1575,
+     "start": 1588,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1655,
+     "start": 1668,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9478,7 +9772,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 10226,
+     "start": 10210,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9497,7 +9791,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 10319,
+     "start": 10303,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9529,7 +9823,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10857,
+     "start": 10841,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9551,7 +9845,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 11480,
+     "start": 11464,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9614,7 +9908,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 19026,
+     "start": 18079,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9671,7 +9965,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8152,
+     "start": 8172,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9690,7 +9984,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3260,
+     "start": 3274,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9734,7 +10028,7 @@
     {
      "name": "wireBefreiungCard",
      "file": "dashboard.js",
-     "start": 8542,
+     "start": 8562,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -9828,7 +10122,7 @@
     "api-backend/billing/api/zuzahlung.routes.js"
    ],
    "module": [],
-   "sqlTreffer": 8,
+   "sqlTreffer": 9,
    "codeStumm": false
   }
  ],
@@ -9950,6 +10244,7 @@
    "prescription_validations",
    "prescriptions",
    "profiles",
+   "rechnung_zahlungen",
    "referral_drafts",
    "services",
    "terapeut_zertifikat",

@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- Nur zum Pruefen. Haengt module/rechnung-ansicht.js mit erfundenen Daten
+     und einem Supabase-Ersatz ein, damit der Liste/Editor/Ansicht-Umschalter
+     und die Rechnungsliste ohne Login pruefbar sind. -->
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../dashboard.css">
+  <title>Abrechnung-Probe</title>
+</head>
+<body>
+  <!-- Gerippe von #panel-rechnungen (dashboard.html:1170-1400) — nur die
+       Elemente, die rechnung-ansicht.js anfasst. -->
+  <button id="invNewBtn"></button>
+  <div id="invListWrap">
+    <table><tbody id="invListBody"></tbody></table>
+    <div id="invListEmpty" hidden>Keine Rechnungen.</div>
+  </div>
+  <div id="invEditor" hidden></div>
+  <div id="invView" hidden>
+    <img id="invvLogoImg" hidden>
+    <div id="invvBizName"></div>
+    <div id="invvBizMeta"></div>
+    <div id="invvFooterText"></div>
+    <div id="invvNumber"></div>
+    <div id="invvDate"></div>
+    <div id="invvStatus"></div>
+    <div id="invvLeistungszeitraumRow" hidden><span id="invvLeistungszeitraum"></span></div>
+    <div id="invvPatient"></div>
+    <div id="invvRxBlock" hidden><div id="invvRx"></div></div>
+    <div id="invvNotesWrap" hidden><div id="invvNotes"></div></div>
+    <div id="invvTaxExemptNote"></div>
+    <div id="invvFooterContact"></div>
+    <div id="invvFooterBank"></div>
+    <div id="invvFooterTax"></div>
+  </div>
+
+  <script type="module">
+    import { mountRechnungsansicht, rechnungsModus, zeigeRechnungsModus, renderInvList, openInvView, closeInvView }
+      from '../../module/rechnung-ansicht.js?v=20260909';
+
+    window.__probe = { rechnungsModus, zeigeRechnungsModus, renderInvList, openInvView, closeInvView };
+
+    const RECHNUNGEN = [
+      { id: 'r1', invoice_number: '2026-011', patient_name: 'Anna Bauer', status: 'draft',
+        total_patient: 42, issued_at: '2026-09-01', created_at: '2026-09-01' },
+      { id: 'r2', invoice_number: '2026-012', patient_name: 'Bert Cem', status: 'sent',
+        total_patient: 84, issued_at: '2026-09-02', created_at: '2026-09-02', payment_status: 'pending' },
+      { id: 'r3', invoice_number: '2026-013', patient_name: 'Cem Demir', status: 'paid',
+        total_patient: 30, issued_at: '2026-09-03', created_at: '2026-09-03', payment_status: 'paid',
+        prescriptions: { rezept_typ: 'blanko', dmrz_exported_at: '2026-09-04T10:00:00Z' } },
+    ];
+    let liste = RECHNUNGEN;
+
+    const stubSupabase = {
+      from: () => ({
+        select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }),
+      }),
+    };
+
+    mountRechnungsansicht({
+      supabase: stubSupabase,
+      liste: () => liste,
+      profile: () => ({ business_name: 'Testpraxis' }),
+      escapeHtml: (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])),
+      formatEur: (n) => Number(n).toFixed(2).replace('.', ',') + ' €',
+      showToast: (msg) => { window.__letzterToast = msg; },
+      starteZahlungseingang: async () => false,
+      fuelleBelegPositionen: () => {},
+      aggregateInvLines: (lines) => lines,
+      leistungszeitraum: () => ({ von: null, bis: null }),
+      neuLaden: async () => {},
+      merkeRechnung: () => {},
+    });
+
+    window.__setListe = (neu) => { liste = neu; };
+    document.title = 'fertig';
+  </script>
+</body>
+</html>

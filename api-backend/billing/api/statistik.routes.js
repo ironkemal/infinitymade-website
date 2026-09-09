@@ -5,6 +5,7 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
+import { loadTherapeutenStatistik } from '../statistik/therapeuten.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -75,7 +76,7 @@ router.get('/statistik', async (req, res) => {
       offeneRxResult,
       noShowResult,
       mahnungenResult,
-      therapeutenResult,
+      therapeuten,
       ausfallResult,
       aerztePrescriptionsResult,
     ] = await Promise.all([
@@ -139,19 +140,8 @@ router.get('/statistik', async (req, res) => {
         .eq('owner_id', tenantId)
         .gte('sent_at', cutoffIso),
 
-      // 8. Therapist session counts from bookings
-      //    start_time statt start_date: bookings hat kein start_date. Auch diese
-      //    Abfrage schlug fehl, die Therapeutenliste blieb immer leer.
-      supabase
-        .from('bookings')
-        .select('employee_id, profiles:employee_id(first_name, last_name)')
-        .eq('owner_id', tenantId)
-        .gte('start_time', cutoffIso)
-        // 'cancelled' mit zwei l — so steht es in bookings_status_check und in
-        // jeder anderen Abfrage. Mit 'canceled' traf die Bedingung nie, seit der
-        // start_time-Fix die Abfrage ueberhaupt durchlaesst zaehlten stornierte
-        // Termine als geleistete Sitzungen mit.
-        .neq('status', 'cancelled'),
+      // 8. Termine je Therapeut, ohne Blocker; Abfragefehler nicht verschlucken.
+      loadTherapeutenStatistik(supabase, tenantId, cutoffIso),
 
       // 9. Ausfallrechnungen im Zeitraum — offen vs. bezahlt
       supabase
@@ -326,20 +316,6 @@ router.get('/statistik', async (req, res) => {
     const mahnGesamt = mahnRows.length;
     const mahnBezahlt = mahnRows.filter(m => m.status === 'bezahlt').length;
     const mahnOffen = mahnRows.filter(m => !['bezahlt', 'abgeschrieben'].includes(m.status)).length;
-
-    // ── 8. Therapist efficiency ───────────────────────────────────────────────
-    const buchRows = therapeutenResult.error ? [] : (therapeutenResult.data || []);
-    const thMap = {};
-    for (const b of buchRows) {
-      const id = b.employee_id || '__unassigned__';
-      const p = b.profiles;
-      const name = p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() : 'Nicht zugeordnet';
-      if (!thMap[id]) thMap[id] = { name, count: 0 };
-      thMap[id].count++;
-    }
-    const therapeuten = Object.values(thMap)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
 
     // ── 9. Überweisende Ärzte ─────────────────────────────────────────────────
     // Seit 04.09.2026 EIN Fetch (oben, Abfrage 11) für Physio/Ergo/Logo UND
