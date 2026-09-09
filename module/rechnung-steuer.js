@@ -230,6 +230,47 @@ export function leistungszeitraum(lines) {
   return { von, bis, gleich: von === bis };
 }
 
+// ── GKV-Zuzahlung erkennen (Bug #263) ───────────────────────────────────────
+
+/** Zahlertypen, die eindeutig eine Kasse einschalten. */
+const KASSE_ZAHLERTYPEN = new Set(['gkv', 'kassen']);
+/** Zahlertypen, die eine ausdrückliche Privat-Entscheidung sind. */
+const PRIVAT_ZAHLERTYPEN = new Set(['privat', 'selbstzahler', 'bg']);
+
+/**
+ * Ist an dieser Rechnung eine Kasse beteiligt?
+ *
+ * Dann ist die Leistung per Verordnung medizinisch und der Patient zahlt nur
+ * seinen gesetzlichen Eigenanteil (§ 61 SGB V) — die Frage „medizinisch oder
+ * kosmetisch?" stellt sich nicht und darf nicht erscheinen (Bug #263, Beta-2,
+ * Meeting 05.09.2026).
+ *
+ * `zahlertyp` allein reicht nicht aus: `leads.insurance_type` ist bei 111 von
+ * 120 Patienten NULL (module/rezeptinfo-geld.js), und `invoices.invoice_type`
+ * ist bei ALLEN bestehenden Zeilen NULL (module/selbstzahler-stufen.js) — jede
+ * wiedergeöffnete Rechnung käme sonst als „unbekannt" durch und zeigte die
+ * Auswahl unabhängig vom Patienten. Deshalb zählt bei unbekanntem Zahlertyp
+ * ersatzweise der tatsächliche Kassenanteil im Formular — dieselbe Regel wie
+ * in module/rechnung-druck.js: „Der Kassenanteil entscheidet, nicht
+ * invoice_type."
+ *
+ * Eine ausdrückliche Privat-Entscheidung hat Vorrang vor stehengebliebenen
+ * Zuzahlungs-Vorgabewerten im Formular (gleiche Reihenfolge wie `zahlerTyp()`
+ * in module/rezeptinfo-geld.js: die Verordnung schlägt den Patientenstamm).
+ *
+ * @param {object} opts
+ * @param {string|null} [opts.zahlertyp]        'gkv'|'kassen'|'privat'|'selbstzahler'|'bg'|null
+ * @param {number}      [opts.kassenzuzahlung]  aktueller Formularwert (€)
+ * @param {number}      [opts.eigenanteilPct]   aktueller Formularwert (%)
+ * @returns {boolean}
+ */
+export function kasseBeteiligt({ zahlertyp, kassenzuzahlung, eigenanteilPct } = {}) {
+  const typ = String(zahlertyp || '').toLowerCase();
+  if (PRIVAT_ZAHLERTYPEN.has(typ)) return false;
+  if (KASSE_ZAHLERTYPEN.has(typ)) return true;
+  return (Number(kassenzuzahlung) || 0) > 0 || (Number(eigenanteilPct) || 0) > 0;
+}
+
 // ── Auswahl „medizinisch / kosmetisch" am Rechnungsformular ─────────────────
 
 /**
@@ -247,13 +288,21 @@ export function leistungszeitraum(lines) {
  * @param {Function} opts.getLines   () => aktuelle Zeilen
  * @param {Function} opts.onChange   (zeilen) => void — nach dem Setzen aufgerufen
  */
-export function mountLeistungsart({ profile, vorschlag, getLines, onChange }) {
+export function mountLeistungsart({ profile, vorschlag, zahlertyp, getLines, onChange }) {
   const wrap = document.getElementById('invLeistungsartWrap');
   const hint = document.getElementById('invLeistungsartHint');
   if (!wrap) return;
 
+  // Bug #263: bei GKV-Zuzahlung stellt sich die Frage nicht — Zeile bleibt
+  // aus, es wird nichts in die Rechnungszeilen geschrieben (kasseBeteiligt()).
+  const kasse = kasseBeteiligt({
+    zahlertyp,
+    kassenzuzahlung: parseFloat(document.getElementById('invKasse')?.value) || 0,
+    eigenanteilPct: parseFloat(document.getElementById('invEigenPct')?.value) || 0,
+  });
   const klein = istKleinunternehmer(profile);
-  wrap.hidden = klein;
+  wrap.hidden = klein || kasse;
+  if (kasse) return;
 
   const radios = wrap.querySelectorAll('input[name="invLeistungsart"]');
   const art = vorschlag || 'medizinisch';

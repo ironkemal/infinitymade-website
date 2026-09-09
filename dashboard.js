@@ -50,7 +50,7 @@ import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben 
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260908';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260817';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
-import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
+import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260908';
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260816';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
@@ -15158,17 +15158,15 @@ function updateInvForInsuranceType() {
   const zuzRow = document.getElementById('invZuzahlungRow');
   if (zuzRow) zuzRow.style.display = (isPrivat) ? 'none' : '';
 
-  // USt-Wahl nur ausserhalb der GKV: eine Kassenzuzahlung wirft die Frage nicht auf.
-  const artWrap = document.getElementById('invLeistungsartWrap');
-  if (artWrap) artWrap.hidden = isGkv;
-  if (!isGkv) {
-    mountLeistungsart({
-      profile: currentProfile,
-      vorschlag: leistungsartVorschlag({ verordnung: invVerordnungId ? { id: invVerordnungId } : null }),
-      getLines: () => invLines,
-      onChange: (zeilen) => { invLines = zeilen; },
-    });
-  }
+  // USt-Wahl nur ohne Kassenbeteiligung — Entscheidung + Bug-#263-Begründung
+  // in module/rechnung-steuer.js:mountLeistungsart()/kasseBeteiligt().
+  mountLeistungsart({
+    profile: currentProfile,
+    zahlertyp: invPatientInsuranceType,
+    vorschlag: leistungsartVorschlag({ verordnung: invVerordnungId ? { id: invVerordnungId } : null }),
+    getLines: () => invLines,
+    onChange: (zeilen) => { invLines = zeilen; },
+  });
 
   // Invoice type badge/label
   const typeBadge = document.getElementById('invTypeBadge');

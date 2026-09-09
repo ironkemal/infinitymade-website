@@ -9,7 +9,7 @@
 import {
   berechneSteuer, steuerhinweisText, istKleinunternehmer,
   leistungsartVorschlag, zeilenSteuerVon, leistungszeitraum,
-  TAX_EXEMPT_OPTIONS,
+  kasseBeteiligt, TAX_EXEMPT_OPTIONS,
 } from './rechnung-steuer.js';
 
 let fehler = 0;
@@ -95,6 +95,26 @@ console.log('\nleistungsartVorschlag — klinischer Anker entscheidet, nicht der
     zeilenSteuerVon('kosmetisch'), { ust_satz: 19, ust_grund: null });
   pruefe('medizinisch trägt die Befreiung',
     zeilenSteuerVon('medizinisch'), { ust_satz: 0, ust_grund: '4_14a' });
+}
+
+console.log('\nkasseBeteiligt — Bug #263: keine Kosmetisch/Medizinisch-Frage bei GKV-Zuzahlung');
+{
+  pruefe('zahlertyp gkv → Kasse beteiligt',
+    kasseBeteiligt({ zahlertyp: 'gkv', kassenzuzahlung: 0, eigenanteilPct: 0 }), true);
+  pruefe('zahlertyp kassen → Kasse beteiligt',
+    kasseBeteiligt({ zahlertyp: 'kassen' }), true);
+  pruefe('zahlertyp privat, aber Formular trägt noch Vorgabewerte → keine Kasse',
+    kasseBeteiligt({ zahlertyp: 'privat', kassenzuzahlung: 10, eigenanteilPct: 10 }), false);
+  pruefe('zahlertyp selbstzahler → keine Kasse',
+    kasseBeteiligt({ zahlertyp: 'selbstzahler', kassenzuzahlung: 10 }), false);
+  pruefe('unbekannter Zahlertyp (leads.insurance_type NULL), aber Kassenzuzahlung im Formular → Kasse beteiligt',
+    kasseBeteiligt({ zahlertyp: null, kassenzuzahlung: 10, eigenanteilPct: 0 }), true);
+  pruefe('unbekannter Zahlertyp, aber Eigenanteil im Formular → Kasse beteiligt',
+    kasseBeteiligt({ zahlertyp: null, kassenzuzahlung: 0, eigenanteilPct: 10 }), true);
+  pruefe('unbekannter Zahlertyp UND Formular auf null → keine Kasse erkennbar',
+    kasseBeteiligt({ zahlertyp: null, kassenzuzahlung: 0, eigenanteilPct: 0 }), false);
+  pruefe('invoice_type NULL beim Wiederöffnen, Rechnung trägt aber Kassenzuzahlung → Kasse beteiligt',
+    kasseBeteiligt({ zahlertyp: undefined, kassenzuzahlung: 8.5, eigenanteilPct: 0 }), true);
 }
 
 console.log('\nleistungszeitraum');
