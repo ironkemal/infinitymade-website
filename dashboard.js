@@ -50,7 +50,7 @@ import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben 
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260908';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260817';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
-import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260908';
+import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisFuerRechnung, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260909';
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260816';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
@@ -15299,7 +15299,7 @@ async function saveInvoice() {
     netto_gesamt: st.netto,
     steuer_gesamt: st.steuer,
     brutto_gesamt: st.brutto,
-    steuerhinweis_text: steuerhinweisText(currentProfile, st.tax_summary),
+    steuerhinweis_text: steuerhinweisFuerRechnung({ profile: currentProfile, taxSummary: st.tax_summary, zahlertyp: invPatientInsuranceType, kassenzuzahlung: kasse, eigenanteilPct: eigenPct }),
     steuernummer_snapshot: currentProfile.steuernummer || null,
     ust_id_snapshot: currentProfile.ust_id || null,
     leistung_von: zeitraum.von,

@@ -207,6 +207,27 @@ export function steuerhinweisText(profile, tax_summary) {
   return eigener || TAX_EXEMPT_OPTIONS['§4nr14a'];
 }
 
+/**
+ * Wie `steuerhinweisText`, aber leer bei Kassenbeteiligung.
+ *
+ * `saveInvoice()` rief `steuerhinweisText()` bisher unbedingt auf: Zeilen ohne
+ * explizites `ust_satz` (jede Kasse-Zuzahlungsrechnung seit Bug #263 — die
+ * Auswahl wird dort nicht mehr gemountet) fallen in `berechneSteuer()`
+ * automatisch in die steuerfreie Gruppe, und der Hinweis „Gemäß § 4 Nr. 14a
+ * UStG..." wurde gedruckt, obwohl die Auswahl nie sichtbar war — Verstoß
+ * gegen den eigenen Vorbehalt oben: „die Software nimmt die Befreiung nie von
+ * selbst an". Live bestätigt (09.09.2026, SELECT gegen `invoices`):
+ * INV-2026-0005/-0006/-0007 trugen den Hinweis auf einer Kasse-Zuzahlung.
+ *
+ * Inhaltlich war der Text nicht falsch (eine Kassenzuzahlung IST medizinisch),
+ * aber unbegründet gedruckt. Deshalb bleibt er hier leer statt geraten —
+ * dieselbe Zurückhaltung wie bei der Vorauswahl selbst.
+ */
+export function steuerhinweisFuerRechnung({ profile, taxSummary, zahlertyp, kassenzuzahlung, eigenanteilPct }) {
+  if (kasseBeteiligt({ zahlertyp, kassenzuzahlung, eigenanteilPct })) return '';
+  return steuerhinweisText(profile, taxSummary);
+}
+
 // ── Leistungszeitraum ───────────────────────────────────────────────────────
 
 /**

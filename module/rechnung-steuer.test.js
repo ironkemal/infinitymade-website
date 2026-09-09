@@ -7,7 +7,7 @@
  * Fälle unten sind genau die, an denen eine gemischte Rechnung schiefgeht.
  */
 import {
-  berechneSteuer, steuerhinweisText, istKleinunternehmer,
+  berechneSteuer, steuerhinweisText, steuerhinweisFuerRechnung, istKleinunternehmer,
   leistungsartVorschlag, zeilenSteuerVon, leistungszeitraum,
   kasseBeteiligt, TAX_EXEMPT_OPTIONS,
 } from './rechnung-steuer.js';
@@ -115,6 +115,21 @@ console.log('\nkasseBeteiligt — Bug #263: keine Kosmetisch/Medizinisch-Frage b
     kasseBeteiligt({ zahlertyp: null, kassenzuzahlung: 0, eigenanteilPct: 0 }), false);
   pruefe('invoice_type NULL beim Wiederöffnen, Rechnung trägt aber Kassenzuzahlung → Kasse beteiligt',
     kasseBeteiligt({ zahlertyp: undefined, kassenzuzahlung: 8.5, eigenanteilPct: 0 }), true);
+}
+
+console.log('\nsteuerhinweisFuerRechnung — kein Hinweis ohne sichtbare Auswahl (Nebenfund zu Bug #263)');
+{
+  const regel = { tax_exempt_note: TAX_EXEMPT_OPTIONS['§4nr14a'] };
+  const steuerfrei = [{ satz: 0, grund: '4_14a' }];
+  pruefe('GKV-Zuzahlung → kein Hinweis, obwohl die Zeilen steuerfrei gruppiert sind',
+    steuerhinweisFuerRechnung({ profile: regel, taxSummary: steuerfrei, zahlertyp: 'gkv', kassenzuzahlung: 10, eigenanteilPct: 10 }), '');
+  pruefe('Kassenzuzahlung ohne Zahlertyp-Label (invoice_type NULL beim Wiederöffnen) → kein Hinweis',
+    steuerhinweisFuerRechnung({ profile: regel, taxSummary: steuerfrei, zahlertyp: null, kassenzuzahlung: 8.5, eigenanteilPct: 0 }), '');
+  pruefe('Privat, medizinisch → Hinweis wie gewohnt',
+    steuerhinweisFuerRechnung({ profile: regel, taxSummary: steuerfrei, zahlertyp: 'privat', kassenzuzahlung: 0, eigenanteilPct: 0 }),
+    TAX_EXEMPT_OPTIONS['§4nr14a']);
+  pruefe('Selbstzahler, kosmetisch (19 %) → weiterhin kein Hinweis, weil keine steuerfreie Gruppe',
+    steuerhinweisFuerRechnung({ profile: regel, taxSummary: [{ satz: 19 }], zahlertyp: 'selbstzahler', kassenzuzahlung: 0, eigenanteilPct: 0 }), '');
 }
 
 console.log('\nleistungszeitraum');
