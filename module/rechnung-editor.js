@@ -202,3 +202,27 @@ export function aggregateInvLines(lines) {
   }
   return order.map(k => groups.get(k));
 }
+
+/**
+ * Der leere Editor-Zustand — an einer Stelle, damit ein vergessenes Feld
+ * auffällt statt im Stillen liegen zu bleiben.
+ *
+ * `invPatientInsuranceType` fehlte hier bis 09.09.2026: nach einer
+ * Privatrechnung blieb der Wert stehen, und `preisFuer()` im Leistungs-Picker
+ * sowie `updateInvForInsuranceType()` rechneten für die nächste Rechnung
+ * (z. B. einen GKV-Patienten) mit dem alten Versichertentyp weiter — bis der
+ * Patienten-`change`-Handler ihn überschrieb.
+ *
+ * @returns {{invLines:Array, invPatientId:null, invPrescriptionId:null,
+ *            invVerordnungId:null, invBehandlungIds:Array, invPatientInsuranceType:null}}
+ */
+export function leererEditorZustand() {
+  return {
+    invLines: [],
+    invPatientId: null,
+    invPrescriptionId: null,
+    invVerordnungId: null,
+    invBehandlungIds: [],
+    invPatientInsuranceType: null,
+  };
+}

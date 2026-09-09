@@ -41,14 +41,16 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908'
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260908';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20260908';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20260909';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260909';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260908';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand } from './module/rechnung-editor.js?v=20260909';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260817';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
+import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260816';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
@@ -5466,14 +5468,7 @@ async function populateSrvSelect(selectedId = null, employeeId = null) {
   const el = document.getElementById('bkService');
   if (!el) return;
 
-  // servicesCache'i kullan; GKV seed henüz yapılmadıysa loadServices() tetikle
-  const sector = getSector();
-  const catalog = GKV_LEISTUNGSKATALOG[sector] || [];
-  const hasGkv = servicesCache.some(s => s.gkv_position_nr);
-  if (!servicesCache.length || (catalog.length && !hasGkv)) {
-    await loadServices();
-  }
-  ownerServices = servicesCache;
+  await ensureLeistungskatalog();
 
   if (!employeeId) employeeId = document.getElementById('bkEmployee')?.value || null;
 
@@ -7970,6 +7965,20 @@ function patientMatchesQuery(lead, q) {   // Deklaration, nicht const: es wird w
 }
 
 // `leadsCache` wurde bisher NUR gefüllt, wenn jemand das Patienten-Panel öffnete.
+// Wer direkt auf „Rechnungen" klickt (oder über die Podologie-Brücke „Rechnung
+// erstellen" drückt), ohne vorher ein Buchungsmodal geöffnet zu haben, hatte
+// ownerServices == [] — der Leistungs-Picker zeigte „Kein Leistungskatalog
+// hinterlegt.", obwohl einer existiert (Ops-Meldung, 09.09.2026). Regel in
+// module/leistungskatalog.js — dieselbe, die zuvor nur in populateSrvSelect() stand.
+async function ensureLeistungskatalog() {
+  if (katalogNachladen({ katalog: servicesCache,
+        sektorHatGkvKatalog: (GKV_LEISTUNGSKATALOG[getSector()] || []).length > 0 })) {
+    await loadServices();
+  }
+  ownerServices = servicesCache;
+  return ownerServices;
+}
+
 // Wer direkt in die Podologie-Abrechnung ging, bekam eine leere Patientensuche
 // ("Keine Treffer"), tippte den Namen — und die Verordnung wurde ohne `lead_id`
 // gespeichert, also unabrechenbar. Der Anwender hat ausgewählt; es gab nur nichts.
@@ -14855,224 +14864,6 @@ async function loadRechnungen() {
   renderInvList();
 }
 
-function renderInvList() {
-  const tbody = document.getElementById('invListBody');
-  const empty = document.getElementById('invListEmpty');
-  const wrap = document.getElementById('invListWrap');
-  if (!tbody) return;
-  if (invListCache.length === 0) {
-    tbody.innerHTML = '';
-    empty.hidden = false;
-    return;
-  }
-  empty.hidden = true;
-  const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
-  const statusCls = { draft: 'badge-gray', sent: 'badge-blue', paid: 'badge-green', cancelled: 'badge-red' };
-  tbody.innerHTML = invListCache.map(inv => {
-    const date = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
-    const total = formatEur(inv.total_patient || 0);
-    const st = inv.status || 'draft';
-    const payBadge = inv.payment_status === 'paid'
-      ? `<span class="badge badge-green" title="${inv.payment_method || ''}" style="margin-left:4px;">✓ Bezahlt</span>`
-      : (inv.payment_status === 'pending' ? '<span class="badge badge-gray" style="margin-left:4px;">Offen</span>' : '');
-    const invTypeBadgeHtml = inv.invoice_type
-      ? `<span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:5px;${inv.invoice_type==='gkv' ? 'background:rgba(59,130,246,0.15);color:#60a5fa;' : 'background:rgba(177,137,27,0.15);color:#b1891b;'}">${inv.invoice_type==='gkv'?'GKV':'Privat'}</span>`
-      : '';
-    return `<tr>
-      <td><strong>${inv.invoice_number || '—'}</strong>${invTypeBadgeHtml}</td>
-      <td>${escapeHtml(inv.patient_name || '')}</td>
-      <td>${date}</td>
-      <td>${total}</td>
-      <td><span class="badge ${statusCls[st] || 'badge-gray'}">${statusMap[st] || st}</span>${payBadge}</td>
-      <td>${renderRezeptBadges(inv)}</td>
-      <td><button class="btn-ghost-sm inv-view-btn" data-id="${inv.id}">Ansehen</button>${
-        (st !== 'cancelled' && st !== 'draft' && inv.payment_status !== 'paid')
-          ? `<button class="btn-ghost-sm inv-pay-btn" data-id="${inv.id}" title="Zahlungseingang verbuchen">Zahlung</button>`
-          : ''}</td>
-    </tr>`;
-  }).join('');
-  tbody.querySelectorAll('.inv-view-btn').forEach(btn => {
-    btn.onclick = () => openInvView(btn.dataset.id);
-  });
-  tbody.querySelectorAll('.inv-pay-btn').forEach(btn => {
-    btn.onclick = async () => {
-      const gebucht = await starteZahlungseingang({
-        invoiceId: btn.dataset.id, apiBasis: API, profile: currentProfile, showToast,
-        token: async () => (await supabase.auth.getSession()).data.session?.access_token,
-      });
-      if (gebucht) await loadRechnungen();
-    };
-  });
-}
-
-async function openInvView(invoiceId) {
-  if (!invoiceId) return;
-  const inv = invListCache.find(i => i.id === invoiceId);
-  if (!inv) { showToast('Rechnung nicht gefunden.', 'error'); return; }
-
-  // Resolve patient, prescription (with arzt), and booking range
-  const [{ data: patient }, prescriptionRes, bookingsRes] = await Promise.all([
-    supabase.from('leads')
-      .select('first_name,last_name,title,geburtsdatum,street,plz,city,versichertennummer,krankenkasse,phone,email')
-      .eq('id', inv.patient_id).maybeSingle(),
-    inv.prescription_id
-      ? supabase.from('prescriptions')
-        .select('rezept_typ,status,heilmittel,icd10,diagnosegruppe,anzahl_einheiten,frequenz,ausstellungsdatum,gueltig_bis,dmrz_exported_at, aerzte ( arzt_name, lanr, bsnr )')
-        .eq('id', inv.prescription_id).maybeSingle()
-      : Promise.resolve({ data: null }),
-    inv.prescription_id
-      ? supabase.from('prescription_sessions')
-        .select('bookings ( start_time )').eq('prescription_id', inv.prescription_id)
-      : Promise.resolve({ data: null })
-  ]);
-  const rx = prescriptionRes.data;
-  const arzt = rx?.aerzte;
-
-  // Issuer (top-left)
-  // Praxis logo (Madde 8)
-  const invvLogo = document.getElementById('invvLogoImg');
-  if (invvLogo) {
-    const logoUrl = currentProfile.praxis_logo_url || '';
-    if (logoUrl) { invvLogo.src = logoUrl; invvLogo.hidden = false; }
-    else invvLogo.hidden = true;
-  }
-  document.getElementById('invvBizName').textContent = currentProfile.business_name || '—';
-  const bizMeta = [];
-  if (currentProfile.street) bizMeta.push(currentProfile.street);
-  const cityLine = [currentProfile.plz, currentProfile.city].filter(Boolean).join(' ');
-  if (cityLine) bizMeta.push(cityLine);
-  if (currentProfile.phone) bizMeta.push('Tel: ' + currentProfile.phone);
-  if (currentProfile.email) bizMeta.push(currentProfile.email);
-  if (currentProfile.ik_number) bizMeta.push('IK: ' + currentProfile.ik_number);
-  document.getElementById('invvBizMeta').textContent = bizMeta.join('\n');
-  const footerEl = document.getElementById('invvFooterText');
-  if (footerEl) footerEl.textContent = currentProfile.invoice_footer_text || '';
-
-  // Meta (top-right)
-  document.getElementById('invvNumber').textContent = inv.invoice_number || '—';
-  document.getElementById('invvDate').textContent = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
-  const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
-  document.getElementById('invvStatus').textContent = statusMap[inv.status] || inv.status || '—';
-
-  // Leistungszeitraum (§ 14 Abs. 4 Nr. 6 UStG). Zuerst das eingefrorene Feld
-  // der Rechnung, sonst die Zeilen, erst zuletzt die verknüpften Termine.
-  // Die alte Reihenfolge kannte nur die Termine — und weil die am Podologie-Topf
-  // gar nicht hängen, blieb die Zeile dort immer leer.
-  const zr = leistungszeitraum(inv.line_items || []);
-  const fmt = d => new Date(d).toLocaleDateString('de-DE');
-  let von = inv.leistung_von || zr.von, bis = inv.leistung_bis || zr.bis;
-  if (!von) {
-    const bd = (bookingsRes.data || []).map(r => r.bookings?.start_time).filter(Boolean).sort();
-    if (bd.length) { von = bd[0]; bis = bd[bd.length - 1]; }
-  }
-  document.getElementById('invvLeistungszeitraumRow').hidden = !von;
-  if (von) {
-    document.getElementById('invvLeistungszeitraum').textContent =
-      (!bis || fmt(von) === fmt(bis)) ? fmt(von) : `${fmt(von)} – ${fmt(bis)}`;
-  }
-
-  // Recipient (DIN 5008)
-  //
-  // Der Name kommt ausschliesslich aus der Patientenakte, nie aus dem
-  // Freitextfeld invoices.patient_name. Das Feld ist eine Kopie vom Zeitpunkt
-  // der Rechnungserstellung — nach einer Namenskorrektur (Heirat, Schreibfehler,
-  // Namensangleichung) stuende dort weiter der alte Name, und die Rechnung waere
-  // auf eine Person ausgestellt, die es so nicht gibt.
-  const patientLines = [];
-  const fullName = patient
-    ? ([patient.first_name, patient.last_name].filter(Boolean).join(' ') || patient.title || '')
-    : '';
-  if (fullName) {
-    patientLines.push(`<strong>${escapeHtml(fullName)}</strong>`);
-    if (patient.street) patientLines.push(escapeHtml(patient.street));
-    const pc = [patient.plz, patient.city].filter(Boolean).join(' ');
-    if (pc) patientLines.push(escapeHtml(pc));
-    if (patient.geburtsdatum) patientLines.push('Geboren: ' + new Date(patient.geburtsdatum).toLocaleDateString('de-DE'));
-    if (patient.krankenkasse) patientLines.push('Krankenkasse: ' + escapeHtml(patient.krankenkasse));
-    if (patient.versichertennummer) patientLines.push('Versichertennr.: ' + escapeHtml(patient.versichertennummer));
-  } else {
-    // Kein verknuepfter Patient → lieber sichtbar unvollstaendig als mit einem
-    // veralteten Namen gedruckt.
-    patientLines.push('<strong style="color:var(--danger);">Kein Patient verknüpft</strong>');
-    patientLines.push('<span style="color:var(--text-muted);">Bitte die Rechnung einem Patienten zuordnen — der Name wird immer aus der Patientenakte übernommen.</span>');
-  }
-  document.getElementById('invvPatient').innerHTML = patientLines.join('<br>');
-
-  if (rx) {
-    document.getElementById('invvRxBlock').hidden = false;
-    document.getElementById('invvRx').innerHTML = [
-      `<div>Heilmittel: <strong>${escapeHtml(rx.heilmittel || '—')}</strong></div>`,
-      rx.icd10 ? `<div>ICD-10: ${escapeHtml(rx.icd10)}${rx.diagnosegruppe ? ' · Diagnosegruppe ' + escapeHtml(rx.diagnosegruppe) : ''}</div>` : '',
-      rx.ausstellungsdatum ? `<div>Ausgestellt: ${new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE')}${rx.gueltig_bis ? ' · Gültig bis: ' + new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : ''}</div>` : '',
-      rx.frequenz ? `<div>Frequenz: ${escapeHtml(rx.frequenz)}</div>` : '',
-      arzt?.arzt_name
-        ? `<div>Verordnender Arzt: ${escapeHtml(arzt.arzt_name)}${arzt.lanr ? ' · LANR ' + escapeHtml(arzt.lanr) : ''}${arzt.bsnr ? ' · BSNR ' + escapeHtml(arzt.bsnr) : ''}</div>`
-        : ''
-    ].filter(Boolean).join('');
-  } else {
-    document.getElementById('invvRxBlock').hidden = true;
-  }
-
-  // Positionen + Summen: Kassenanteil bleibt vom Patientenbeleg fern.
-  // Regel und Begründung in module/rechnung-druck.js.
-  fuelleBelegPositionen(inv, { formatEur, escapeHtml, aggregateInvLines });
-
-  if (inv.notes) {
-    document.getElementById('invvNotesWrap').hidden = false;
-    document.getElementById('invvNotes').textContent = inv.notes;
-  } else {
-    document.getElementById('invvNotesWrap').hidden = true;
-  }
-
-  // Steuerhinweis (§ 14 Abs. 4 Nr. 8 UStG). Der mit der Rechnung eingefrorene
-  // Wortlaut hat Vorrang vor dem Profil: wer den Text in den Einstellungen
-  // ändert, darf damit keine Rechnung aus dem Vorjahr rückwirkend anders
-  // drucken (§ 146 Abs. 4 AO). Für Altrechnungen bleibt das Profil der Fallback.
-  const taxNoteEl = document.getElementById('invvTaxExemptNote');
-  const hinweis = inv.steuerhinweis_text ?? currentProfile.tax_exempt_note;
-  taxNoteEl.textContent = hinweis || '';
-  taxNoteEl.style.display = hinweis ? '' : 'none';
-
-  // Footer: contact / bank / tax IDs
-  const contact = [
-    currentProfile.business_name,
-    [currentProfile.street, [currentProfile.plz, currentProfile.city].filter(Boolean).join(' ')].filter(Boolean).join(', '),
-    currentProfile.phone ? 'Tel: ' + currentProfile.phone : '',
-    currentProfile.email
-  ].filter(Boolean).join('\n');
-  document.getElementById('invvFooterContact').textContent = contact || '—';
-
-  const bank = [
-    currentProfile.bank_name,
-    currentProfile.iban ? 'IBAN: ' + currentProfile.iban : '',
-    currentProfile.bic ? 'BIC: ' + currentProfile.bic : ''
-  ].filter(Boolean).join('\n');
-  document.getElementById('invvFooterBank').textContent = bank || '—';
-
-  // Ebenfalls Snapshot mit Profil-Fallback: die Steuernummer der Praxis kann
-  // sich ändern, die einmal gedruckte Rechnung nicht (§ 14 Abs. 4 Nr. 2 UStG).
-  const stNr  = inv.steuernummer_snapshot ?? currentProfile.steuernummer;
-  const ustId = inv.ust_id_snapshot ?? currentProfile.ust_id;
-  const tax = [
-    stNr ? 'Steuernr.: ' + stNr : '',
-    ustId ? 'USt-IdNr.: ' + ustId : '',
-    currentProfile.ik_number ? 'IK: ' + currentProfile.ik_number : ''
-  ].filter(Boolean).join('\n');
-  document.getElementById('invvFooterTax').textContent = tax || '—';
-
-  window._currentInvoiceId = inv.id;
-  document.getElementById('invListWrap').hidden = true;
-  document.getElementById('invEditor').hidden = true;
-  document.getElementById('invView').hidden = false;
-  document.getElementById('invNewBtn').hidden = true;
-}
-
-function closeInvView() {
-  document.getElementById('invView').hidden = true;
-  document.getElementById('invListWrap').hidden = false;
-  document.getElementById('invNewBtn').hidden = false;
-}
-
 function printArea() {
   const inv = document.getElementById('invoicePrintArea');
   const anam = document.getElementById('anamnesePrintArea');
@@ -15089,18 +14880,6 @@ function printArea() {
     if (inv) inv.style.display = prevInv;
     if (anam) anam.style.display = prevAnam;
   }, 100);
-}
-
-function renderRezeptBadges(inv) {
-  const rx = inv.prescriptions;
-  if (!rx) return '<span class="badge badge-gray" title="Kein verknüpftes Rezept">—</span>';
-  const typLabel = { standard: 'Std', blanko: 'Blanko', lhb_bvb: 'LHB' }[rx.rezept_typ] || rx.rezept_typ;
-  const typCls = { standard: 'badge-gray', blanko: 'badge-blue', lhb_bvb: 'badge-blue' }[rx.rezept_typ] || 'badge-gray';
-  const typBadge = `<span class="badge ${typCls}" title="${escapeHtml(rx.heilmittel || '')}">${typLabel}</span>`;
-  const dmrzBadge = rx.dmrz_exported_at
-    ? `<span class="badge badge-green" title="DMRZ exportiert am ${new Date(rx.dmrz_exported_at).toLocaleString('de-DE')}">DMRZ ✓</span>`
-    : `<span class="badge badge-gray" title="Noch nicht exportiert">DMRZ offen</span>`;
-  return `<div style="display:flex;gap:4px;flex-wrap:wrap;">${typBadge}${dmrzBadge}</div>`;
 }
 
 async function loadInvPatients() {
@@ -15202,11 +14981,7 @@ function calcInvTotals() {
 
 
 function resetInvEditor() {
-  invLines = [];
-  invPatientId = null;
-  invPrescriptionId = null;
-  invVerordnungId = null;
-  invBehandlungIds = [];
+  ({ invLines, invPatientId, invPrescriptionId, invVerordnungId, invBehandlungIds, invPatientInsuranceType } = leererEditorZustand());
   document.getElementById('invPatientSelect').value = '';
   document.getElementById('invLineBody').innerHTML = '';
   leereTerminAuswahl();
@@ -15221,10 +14996,8 @@ function resetInvEditor() {
 }
 
 async function openInvEditor(invoiceId) {
-  document.getElementById('invEditor').hidden = false;
-  document.getElementById('invListWrap').hidden = true;
-  document.getElementById('invNewBtn').hidden = true;
-  await loadInvPatients();
+  zeigeRechnungsModus('editor');
+  await Promise.all([loadInvPatients(), ensureLeistungskatalog()]);
   resetInvEditor();
   if (invoiceId) {
     const inv = invListCache.find(i => i.id === invoiceId);
@@ -15250,9 +15023,7 @@ async function openInvEditor(invoiceId) {
 }
 
 function closeInvEditor() {
-  document.getElementById('invEditor').hidden = true;
-  document.getElementById('invListWrap').hidden = false;
-  document.getElementById('invNewBtn').hidden = false;
+  zeigeRechnungsModus('liste');
 }
 
 async function saveInvoice() {
@@ -15344,6 +15115,11 @@ async function saveInvoice() {
   }
 
   await loadRechnungen();
+  // Editor schließt nach dem Speichern — vorher blieb er offen und wirkte,
+  // als wäre nichts passiert (Ops-Meldung, 09.09.2026). Erst NACH loadRechnungen(),
+  // damit openInvView() die Rechnung in invListCache findet.
+  if (inserted?.id) await openInvView(inserted.id);
+  else zeigeRechnungsModus('liste');
 }
 
 
@@ -15801,10 +15577,10 @@ function bindInvEvents() {
   document.getElementById('invvEditBtn')?.addEventListener('click', () => {
     const id = window._currentInvoiceId;
     if (!id) return;
-    document.getElementById('invView').hidden = true;
     openInvEditor(id);
   });
   document.getElementById('invAddLineBtn').onclick = async () => {
+    await ensureLeistungskatalog();
     const zeile = await waehleLeistung(ownerServices, { escapeHtml, formatEur, stufen: stufenAusProfil(ownerProfile || currentProfile), letztePreiseLaden: () => ladeLetztePreise(supabase, invPatientId), preisFuer: (s) => (invPatientInsuranceType === 'gkv' && s.gkv_position_nr && GKV_PRICES[s.gkv_position_nr]) || parseFloat(s.price) || 0 });
     if (!zeile) return;
     invLines.push(zeile);
@@ -17342,6 +17118,16 @@ async function init() {
 
     await handleGmailCallback();
     console.log('[init] gmail ok');
+    mountRechnungsansicht({
+      supabase, apiBasis: API,
+      token: async () => (await supabase.auth.getSession()).data.session?.access_token,
+      liste: () => invListCache,
+      profile: () => currentProfile,
+      escapeHtml, formatEur, showToast,
+      starteZahlungseingang, fuelleBelegPositionen, aggregateInvLines, leistungszeitraum,
+      neuLaden: () => loadRechnungen(),
+      merkeRechnung: (id) => { window._currentInvoiceId = id; },
+    });
     bindInvEvents();
     console.log('[init] invoices ok');
     bindAnamneseEvents();
@@ -21590,8 +21376,20 @@ window.openPatientDetail = async function(leadId) {
 // Import-Bindungen sind in ES-Modulen schreibgeschützt, aus dem Modul heraus
 // wäre das ein TypeError. Die Verordnung holt sie sich über getPodVerordnung().
 // ============================================================================
-/** Brücke Verordnung → Rechnung — Ablauf in module/rechnung-bruecke.js. */
-function rechnungAusVerordnung(vordId) {
+/**
+ * Brücke Verordnung → Rechnung — Ablauf in module/rechnung-bruecke.js.
+ *
+ * `ensureLeistungskatalog()` muss VOR dem Aufruf abgewartet werden:
+ * `starteRechnungAusVerordnung()` liest `services` synchron (für
+ * `zeilenAusBehandlungen`), noch bevor sie `openInvEditor(null)` awaited.
+ * Ohne das lief das mit ownerServices == [] (wenn man direkt aus der
+ * Podologie-Abrechnung kam, ohne je ein Buchungsmodal geöffnet zu haben) —
+ * jede Privatposition fiel auf „ohne Privatpreis" und der Nutzer bekam die
+ * Warnung für die ganze Rechnung, obwohl Privatpreise hinterlegt waren
+ * (Ops-Meldung, 09.09.2026).
+ */
+async function rechnungAusVerordnung(vordId) {
+  await ensureLeistungskatalog();
   return starteRechnungAusVerordnung({
     sb: supabase, ownerId: getOwnerId(),
     verordnung: getPodVerordnung(vordId),
