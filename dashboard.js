@@ -19751,14 +19751,15 @@ async function loadMahnwesen() {
 
     // Summary
     const totalOffen = rows.reduce((s, r) => s + Number(r.zuzahlung_eur), 0);
-    const fmtEur = n => Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+    // (lokale fmtEur-Kopie entfernt, deckte die globale ohne ||0-Absicherung)
     summary.innerHTML = `
       <div><span style="font-size:11px;color:var(--text-muted);">Offen gesamt</span><br><strong style="color:var(--danger);">${fmtEur(totalOffen)}</strong></div>
       <div><span style="font-size:11px;color:var(--text-muted);">Forderungen</span><br><strong>${rows.length}</strong></div>
     `;
 
     const LEVEL_LABELS = { 1: 'Erinnerung', 2: '1. Mahnung', 3: '2. Mahnung' };
-    const LEVEL_COLORS = { 1: '#1d4ed8', 2: '#d97706', 3: '#dc2626' };
+    const LEVEL_COLORS = { 1: 'var(--info)', 2: 'var(--warning-text)', 3: 'var(--danger)' }; // Theme-Var statt Hex, kippte nicht im Dark Mode
+    const MAHN_STATUS_CLS = { bezahlt: 'badge-green', abgeschrieben: 'badge-gray' }; // sonst offen -> badge-yellow
 
     rows.forEach(r => {
       const pname = `${escapeHtml(r.patient?.first_name || '')} ${escapeHtml(r.patient?.last_name || '')}`.trim();
@@ -19766,7 +19767,7 @@ async function loadMahnwesen() {
       // Nach der letzten Mahnung (Stufe 3) gibt es keine weitere — der Server
       // lehnt sie jetzt ab, also wird der Knopf gar nicht erst angeboten.
       const nextLevel = lm ? (lm.level >= 3 ? null : lm.level + 1) : 1;
-      const levelColor = lm ? LEVEL_COLORS[lm.level] : '#6b7280';
+      const levelColor = lm ? LEVEL_COLORS[lm.level] : 'var(--text-muted)';
       const levelLabel = lm ? LEVEL_LABELS[lm.level] : '—';
       // Ausfallhonorar ist eine Privatforderung, keine Zuzahlung — der
       // Unterschied muss in der Liste sichtbar sein.
@@ -19775,7 +19776,7 @@ async function loadMahnwesen() {
         ? `<span class="badge" style="background:var(--warning-dim);color:var(--warning-text);">Ausfall${r.rechnung_nr ? ' ' + escapeHtml(r.rechnung_nr) : ''}</span>`
         : '<span class="badge badge-gray">Zuzahlung</span>';
       const statusBadge = lm
-        ? `<span class="badge" style="background:${lm.status === 'bezahlt' ? '#dcfce7' : lm.status === 'abgeschrieben' ? '#f3f4f6' : '#fef3c7'};color:${lm.status === 'bezahlt' ? '#15803d' : lm.status === 'abgeschrieben' ? '#6b7280' : '#92400e'};">${escapeHtml(lm.status)}</span>`
+        ? `<span class="badge ${MAHN_STATUS_CLS[lm.status] || 'badge-yellow'}">${escapeHtml(lm.status)}</span>`
         : '<span class="badge badge-gray">neu</span>';
 
       const tr = document.createElement('tr');
@@ -19892,7 +19893,6 @@ async function loadAusfallrechnungen() {
     empty.hidden = rows.length > 0;
     if (!rows.length) return;
 
-    const fmtEur = n => Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
     const fmtD = d => d ? new Date(d).toLocaleDateString('de-DE') : '—';
     const STATUS_BADGE = {
       offen: '<span class="badge badge-gray">Offen</span>',
@@ -19970,7 +19970,6 @@ async function loadStatistik() {
   if (!token) return;
 
   const monate = document.getElementById('statMonateSelect')?.value || 6;
-  const fmtEur = n => Number(n || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
   const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
   try {
