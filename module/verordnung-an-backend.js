@@ -109,8 +109,8 @@ function geparstAusMaske({ nutzlast, patientFelder }) {
       hausbesuch: !!n.hausbesuch,
       is_blanko: !!n.is_blanko,
       is_lhb_bvb: !!n.is_lhb_bvb,
-      zuzahlung_befreit: !!n.zuzahlung_befreit,
-      zuzahlung_eur: n.zuzahlung_eur ?? null,
+      // Kein zuzahlung_befreit/zuzahlung_eur mehr hier (Ops #277, 09.09.2026)
+      // — `nutzlastAusMaske()` liefert beide Felder nicht mehr, siehe dort.
       bericht_angefordert: !!n.bericht_angefordert,
       bericht_status: n.bericht_status || 'offen',
       unterschrift_vorhanden: n.unterschrift_vorhanden ?? null,

@@ -109,7 +109,7 @@ export function verdrahteAktionsPatientensuche(deps) {
       // gebuchter Termin sich als „nächster Termin" des Patienten. Dieselbe
       // Statusliste wie beim Terminzettel (dashboard.js).
       const { data: naechster, error } = await supabase.from('bookings')
-        .select('*, services(title,color,code), prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+        .select('*, services(title,color,code), prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,belegnummer,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
         .eq('lead_id', lead.id)
         .gte('start_time', new Date(Date.now() - 3600000).toISOString())
         .in('status', ['confirmed', 'pending'])
@@ -195,10 +195,18 @@ export function setzePatientenKarte({ lead, booking, oeffneAkte }) {
 
 // Dieselben Felder, die der Termin-Join mitbringt — sonst fehlten der
 // Rezeptinfo nach dem Blättern Angaben, die vorher da waren.
+// `belegnummer` seit Ops #277 (09.09.2026) mit dabei: module/zuzahlung-
+// korrektur.js `korrekturKnopfHtml()` prüft sie clientseitig, um den
+// „✎ anpassen"-Knopf schon vor dem Klick als gesperrt zu beschriften. Ohne
+// die Spalte hier ist `rx.belegnummer` immer `undefined` — der Vorab-Check
+// hätte eine bereits eingereichte Verordnung (Belegnummer gesetzt, aber
+// `abrechnung_status` nach einer Absetzung längst wieder auf „bereit")
+// fälschlich als änderbar gezeigt. Der Server prüft beim Klick ohnehin noch
+// einmal frisch — dieser Fix macht nur die ANZEIGE ehrlich.
 const RX_FELDER = 'id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,'
   + 'anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,'
   + 'zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,'
-  + 'abrechnung_status,frequenz,gueltig_bis,hinweise,arzt_id,aerzte(arzt_name,fachrichtung),'
+  + 'abrechnung_status,belegnummer,frequenz,gueltig_bis,hinweise,arzt_id,aerzte(arzt_name,fachrichtung),'
   // Zusätzlich für „übernehmen": alles, was in einer Folgeverordnung wieder
   // gleich lautet und sonst abgetippt werden müsste.
   + 'leitsymptomatik,diagnose_freitext,icd10_2,ergaenzendes_heilmittel,ergaenzend_einheiten,'

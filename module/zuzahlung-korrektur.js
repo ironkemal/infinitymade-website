@@ -57,6 +57,28 @@ export const KORREKTUR_KNOPF =
   + ' style="margin-left:4px;background:none;border:0;color:inherit;opacity:0.75;cursor:pointer;'
   + 'font-size:12px;font-family:inherit;">✎ anpassen</button>';
 
+/**
+ * Derselbe Knopf, aber gegen `korrekturErlaubt()` geprüft, bevor er entsteht.
+ *
+ * Der Kommentar oben am Dateikopf behauptete das schon länger („hier wird der
+ * Knopf nur vorher ausgeblendet, damit niemand gegen eine Wand laeuft") — bis
+ * 09.09.2026 stimmte er nicht: beide Aufrufer hängten `KORREKTUR_KNOPF` blind
+ * an, geprüft wurde erst beim Klick, mit Toast (Ops #277).
+ *
+ * Gesperrt heisst hier NICHT weggeblendet, sondern beschriftet: ein
+ * `disabled`-Button zeigt in Chrome/Safari beim Hover kein `title`
+ * (Mouse-Events feuern auf `disabled`-Elementen nicht) — das Feld wirkte dann
+ * nur „kaputt", nicht „gesperrt aus diesem Grund". Deshalb ein aktives
+ * `<span>` mit sichtbarem `title`, kein toter Knopf.
+ */
+export function korrekturKnopfHtml(rx) {
+  const riegel = korrekturErlaubt(rx);
+  if (riegel.erlaubt) return KORREKTUR_KNOPF;
+  return ` <span title="${esc(riegel.grund)}"`
+    + ' style="margin-left:4px;color:var(--text-muted);opacity:0.75;cursor:help;'
+    + 'font-size:12px;font-family:inherit;">✎ gesperrt</span>';
+}
+
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',

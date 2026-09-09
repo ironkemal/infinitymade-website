@@ -43,6 +43,7 @@
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20260903';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260814';
 import { dgWurzel, bereichSchluessel } from './verordnung-regeln.js?v=20260903';
+import { heilmittelAusItems, erstePositionAusItems } from './heilmittel-items.js?v=20260909';
 
 /** Dringlichkeit der Meldung. `blocker` heisst: so geht die Verordnung nicht durch. */
 export const SCHWERE = { blocker: 'blocker', warnung: 'warnung', hinweis: 'hinweis' };
@@ -342,34 +343,6 @@ export function zaehleBefunde(ergebnis) {
   const z = { blocker: 0, warnung: 0, hinweis: 0 };
   for (const b of ergebnis?.befunde || []) z[b.schwere] = (z[b.schwere] || 0) + 1;
   return z;
-}
-
-/**
- * Erste Position aus `heilmittel_items` (jsonb: `[{code, bezeichnung, anzahl,
- * massnahme}]`, siehe verordnung-detail.js) — der podologische Zweig führt die
- * Position dort, nicht in der Spalte `heilmittel_position`.
- */
-function erstePositionAusItems(items) {
-  if (!Array.isArray(items) || !items.length) return '';
-  const erste = items[0];
-  return (typeof erste === 'string' ? erste : erste?.code) || '';
-}
-
-/**
- * Der Klartext des verordneten Heilmittels aus `heilmittel_items`.
- *
- * Die podologische Maske schreibt das verordnete Heilmittel AUSSCHLIESSLICH
- * dorthin; die Spalte `heilmittel` bleibt dann leer. Ohne diesen Rückgriff
- * meldete die Prüfung „Verordnetes Heilmittel fehlt" bei jeder Verordnung, die
- * über die Podologie-Abrechnung angelegt wurde — ein Blocker über eine
- * vollständig ausgefüllte Verordnung.
- */
-function heilmittelAusItems(items) {
-  if (!Array.isArray(items) || !items.length) return '';
-  return items
-    .map(i => (typeof i === 'string' ? i : (i?.bezeichnung || i?.code || '')))
-    .filter(Boolean)
-    .join(' · ');
 }
 
 /**

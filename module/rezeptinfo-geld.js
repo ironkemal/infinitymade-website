@@ -64,6 +64,7 @@
 
 import { berechneZuzahlung, wirksameEinheiten } from './zuzahlung-rechnen.js?v=20260831';
 import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20260905b';
+import { erstePositionAusItems } from './heilmittel-items.js?v=20260909';
 
 const fmt = (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n || 0);
 
@@ -112,7 +113,13 @@ export function zahlerTyp(lead, rx) {
  * @returns {{preis:number, zuzahlung:number|null, frei:boolean, quelle:string}|null}
  */
 export function findePosition(rx, { podoKarte = null, katalog = [] } = {}) {
-  const roh = String(rx?.heilmittel_position || '').trim();
+  // Der podologische Zweig führt seine 78xxx-Position nicht in dieser Spalte,
+  // sondern in `heilmittel_items` (jsonb) — dieselbe Ausweiche wie in
+  // verordnung-maske.js/verordnung-pruefung.js (module/heilmittel-items.js).
+  // Ohne sie fand `findePosition` bei jeder solchen Verordnung nichts, die
+  // Zuzahlung galt als „unbekannt" und der €-Knopf blieb grau (Ops #277).
+  const roh = String(rx?.heilmittel_position || '').trim()
+           || erstePositionAusItems(rx?.heilmittel_items);
   if (!roh) return null;
 
   const varianten = [roh];
@@ -356,6 +363,7 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
     sb, ownerId, sector, katalog = [], patientName = '',
     ladePodoPositionen, kassieren, belegOeffnen, rechnungAusVerordnung,
     rechnungsEditorFuerPatient, frage, panelSchliessen, nachKassieren,
+    aufStand,
   } = deps;
 
   let lead = null, position = null, privat = null;
@@ -370,6 +378,14 @@ export function verdrahteGeldzeile({ el, rx, booking, erbracht, deps }) {
                 : zahler === 'gkv'    ? { ...standGkv, zahler }
                 : { ...standGkv, zahler: 'unbekannt' };
     rendereGeldzeile(el, { rx, stand, lead, aufEuro });
+
+    // Der Zuzahlungsstreifen (module/zuzahlung-streifen.js) rechnet nicht
+    // selbst noch einmal — er bekommt genau den GKV-Stand, den diese Funktion
+    // schon kennt (inkl. `podoKarte`, sobald der zweite Durchgang geladen
+    // hat). Zwei Rechenwege für dieselbe Zahl waren der stille Fehler hinter
+    // Ops #277: ohne `podoKarte` galten 78220/78530 als „unbekannt" statt
+    // zuzahlungsfrei und wurden mit 10 % belastet.
+    aufStand?.(standGkv);
   };
 
   async function aufEuro(aktion, stand) {

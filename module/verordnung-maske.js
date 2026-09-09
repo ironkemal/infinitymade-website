@@ -44,6 +44,7 @@ import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260906';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260907';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
+import { heilmittelAusItems, erstePositionAusItems } from './heilmittel-items.js?v=20260909';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -283,27 +284,6 @@ function erbrachteEinheiten(rx) {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * Der Klartext des Heilmittels, wenn die Spalte leer ist.
- *
- * Die podologische Maske schreibt das verordnete Heilmittel nach
- * `heilmittel_items` (jsonb) und lässt `heilmittel` leer — dieselbe Fundstelle
- * wie in `voAusGespeicherterVerordnung()` (module/verordnung-pruefung.js).
- */
-function heilmittelAusItems(items) {
-  if (!Array.isArray(items) || !items.length) return '';
-  return items
-    .map(i => (typeof i === 'string' ? i : (i?.bezeichnung || i?.code || '')))
-    .filter(Boolean)
-    .join(' · ');
-}
-
-function erstePositionAusItems(items) {
-  if (!Array.isArray(items) || !items.length) return '';
-  const erste = items[0];
-  return (typeof erste === 'string' ? erste : erste?.code) || '';
-}
-
-/**
  * Eine Verordnungszeile in die Muster-13-Felder schreiben.
  *
  * Hierher gezogen aus `uebernimmVerordnung()` (module/termin-aktionen.js), das
@@ -332,6 +312,10 @@ export function fuelleMuster13(rx, opt = {}) {
     else el.value = wert == null ? '' : wert;
   };
   const haken = (id, wert) => { const el = g(id); if (el) el.checked = !!wert; };
+  // Für die beiden Zuzahlungsfelder, die seit Ops #277 (09.09.2026) nur noch
+  // Anzeige sind — kein Eingabefeld, das ins Leere schreibt.
+  const zeig = (id, text) => { const el = g(id); if (el) el.textContent = text; };
+  const eur = (v) => Number(v).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
 
   setz('rzArztName', rx.aerzte?.arzt_name || '');
   setz('rzLanr', rx.doctor_lanr || rx.aerzte?.lanr || '');
@@ -354,15 +338,22 @@ export function fuelleMuster13(rx, opt = {}) {
   haken('rzLhbBvb', rx.is_lhb_bvb);
   haken('rzBerichtAngefordert', rx.bericht_angefordert);
   // Zuzahlungsbefreiung ist eine Eigenschaft des Patienten im laufenden Jahr,
-  // nicht des Papiers — sie darf auch in eine Folgeverordnung mit.
-  haken('rzZuzahlungBefreit', rx.zuzahlung_befreit);
+  // nicht des Papiers — sie darf auch in eine Folgeverordnung mit. Nur noch
+  // Anzeige (Ops #277, 09.09.2026): die Wahrheit steht in
+  // `zuzahlung_befreiung` und wird über module/zuzahlung-befreiung.js
+  // gepflegt, nicht mehr über diese Maske.
+  zeig('rzZuzahlungBefreitAnzeige', rx.zuzahlung_befreit ? 'Ja' : 'Nein');
 
   if (alsVorlage) return;
 
   // Nur beim Bearbeiten: was zu DIESEM Papier gehört.
   setz('rzPatientId', rx.patient_id || '');
   setz('rzAusstDate', rx.ausstellungsdatum || '');
-  setz('rzZuzahlung', rx.zuzahlung_eur ?? '');
+  // Nur noch Anzeige, kein Eingabefeld mehr (Ops #277, 09.09.2026): Schreiben
+  // läuft ausschliesslich über module/zuzahlung-korrektur.js (protokolliert,
+  // GoBD) — diese Maske schrieb hier bisher unbemerkt ins Leere, die Spalte
+  // fehlte im Backend-Patch.
+  zeig('rzZuzahlungAnzeige', rx.zuzahlung_eur != null ? eur(rx.zuzahlung_eur) : 'wird beim Kassieren berechnet');
   setz('rzBerichtStatus', rx.bericht_status || 'offen');
   // Podologische Zusatzangaben — die Felder legt module/verordnung-podo.js
   // an, sobald der Bereich auf Podologie steht. Steht er nicht darauf,
@@ -502,8 +493,11 @@ export function nutzlastAusMaske(v) {
     hausbesuch: an('rzHausbesuch'),
     is_blanko: an('rzBlanko'),
     is_lhb_bvb: an('rzLhbBvb'),
-    zuzahlung_befreit: an('rzZuzahlungBefreit'),
-    zuzahlung_eur: parseFloat(el('rzZuzahlung')?.value) || null,
+    // Kein zuzahlung_befreit/zuzahlung_eur mehr hier (Ops #277, 09.09.2026) —
+    // beide Felder sind seit `fuelleMuster13()` weiter oben nur noch Anzeige,
+    // ohne Eingabe gibt es hier nichts mehr abzulesen. Schreiben läuft
+    // ausschliesslich über module/zuzahlung-korrektur.js (Betrag,
+    // protokolliert/GoBD) und module/zuzahlung-befreiung.js (Befreiung).
     bericht_angefordert: an('rzBerichtAngefordert'),
     bericht_status: el('rzBerichtStatus')?.value || 'offen',
     diagnose_freitext: txt('rzDiagnoseText') || null,

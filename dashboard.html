@@ -3622,11 +3622,22 @@
               <div class="m13-vart-row">
                 <label class="m13-th"><input type="checkbox" id="rzBlanko" class="m13-cbx"><span class="m13-chk"></span> Blankoverordnung</label>
                 <label class="m13-th"><input type="checkbox" id="rzLhbBvb" class="m13-cbx"><span class="m13-chk"></span> LHB / BVB</label>
-                <label class="m13-th"><input type="checkbox" id="rzZuzahlungBefreit" class="m13-cbx"><span class="m13-chk"></span> Zuzahlungsbefreit</label>
-                <div class="m13-freq">
-                  <span class="m13-cap" style="white-space:nowrap;">Zuzahlung&nbsp;(€)</span>
-                  <input class="m13-v m13-uline m13-center" id="rzZuzahlung" type="number" min="0" step="0.01" style="width:90px;" placeholder="0.00">
-                </div>
+                <!-- Nur noch Anzeige, kein Eingabefeld mehr (Ops #277, 09.09.2026):
+                     diese Maske schrieb hier bisher unbemerkt ins Leere.
+                     zuzahlung_eur fehlte im Backend-Patch (api-backend/server.js),
+                     zuzahlung_befreit wurde vom Trigger trg_prescriptions_set_befreit
+                     bei jedem Speichern sofort wieder überschrieben. Geschrieben wird
+                     die Zuzahlung jetzt ausschliesslich über module/zuzahlung-korrektur.js
+                     (protokolliert, GoBD), die Befreiung ausschliesslich über
+                     module/zuzahlung-befreiung.js (Nachweis-Zeitraum). -->
+                <span class="m13-th" style="gap:6px;">
+                  <span class="m13-cap" style="margin:0;">Zuzahlungsbefreit:</span>
+                  <span id="rzZuzahlungBefreitAnzeige" style="font-size:14px;color:#3a4a63;font-weight:600;">–</span>
+                </span>
+                <span class="m13-freq">
+                  <span class="m13-cap" style="white-space:nowrap;">Zuzahlung:</span>
+                  <span id="rzZuzahlungAnzeige" style="font-size:14px;color:#3a4a63;font-weight:600;">–</span>
+                </span>
               </div>
             </div>
 

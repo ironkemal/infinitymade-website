@@ -47,6 +47,23 @@ test('unbekannte Position wird nicht geraten', () => {
   assert.equal(findePosition({}, { katalog: KATALOG }), null);
 });
 
+// Podologische Verordnungen führen ihre Position oft nur in `heilmittel_items`
+// (jsonb), nicht in der Spalte `heilmittel_position` — ohne Rückgriff blieb
+// die Zuzahlungs-UI dann grau, obwohl die Position bekannt war (Ops #277).
+test('leere heilmittel_position weicht auf heilmittel_items aus', () => {
+  const karte = new Map([['78010', { preis: 25, zuzahlung: 2.5 }]]);
+  const p = findePosition(
+    { heilmittel_position: '', heilmittel_items: [{ code: '78010' }] },
+    { podoKarte: karte, katalog: KATALOG },
+  );
+  assert.equal(p?.preis, 25);
+});
+
+test('ohne heilmittel_position UND ohne heilmittel_items bleibt es null', () => {
+  assert.equal(findePosition({ heilmittel_position: '', heilmittel_items: [] }, { katalog: KATALOG }), null);
+  assert.equal(findePosition({ heilmittel_position: null, heilmittel_items: null }, { katalog: KATALOG }), null);
+});
+
 test('der Podologie-Katalog hat Vorrang und bringt die Zuzahlung mit', () => {
   const karte = new Map([['78010', { preis: 25, zuzahlung: 2.5 }]]);
   const p = findePosition({ heilmittel_position: '78010' }, { podoKarte: karte, katalog: KATALOG });

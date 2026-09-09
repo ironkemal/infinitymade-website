@@ -38,7 +38,7 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260906'
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260906';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
-import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
+import { korrekturAusPanel } from './module/zuzahlung-korrektur.js?v=20260909';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260815c';
@@ -48,7 +48,8 @@ import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweis
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260816';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260905a';
+import { verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260909';
+import { rendereZuzahlungStreifen } from './module/zuzahlung-streifen.js?v=20260909';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260905a';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
@@ -1748,7 +1749,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,dauer_quelle,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,dauer_quelle,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,belegnummer,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -1933,7 +1934,7 @@ on('verordnungen:changed', async () => {
   const panel = document.getElementById('bkActionModal');
   if (!panel || panel.hidden || !bkActionBookingCache?.id) return;
   const { data: frisch } = await supabase.from('bookings')
-    .select('*, services(title,color,code), prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+    .select('*, services(title,color,code), prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,belegnummer,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
     .eq('id', bkActionBookingCache.id).maybeSingle();
   if (frisch) openBookingActionModal(frisch).catch(() => {});
 });
@@ -3354,6 +3355,7 @@ async function openBookingActionModal(booking, opts = {}) {
     // Geldzeile statt Nummer/Arzt/Datum. Der ganze Ablauf — rechnen,
     // kassieren, Beleg, Privatrechnung, Rueckfrage beim unbekannten Zahler —
     // liegt in module/rezeptinfo-geld.js; hier steht nur, womit er arbeitet.
+    const rzgWarnEl = document.getElementById('bkRxZuzahlungWarn');
     const geldZeile = verdrahteGeldzeile({
       el: document.getElementById('bkRxGeldZeile'),
       rx, booking, erbracht: current,
@@ -3390,6 +3392,10 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
           if (frisch && ps?.prescriptions) Object.assign(ps.prescriptions, frisch);
           if (bkActionBookingCache) await openBookingActionModal(bkActionBookingCache, opts);
         },
+        // Zuzahlungsstreifen (module/zuzahlung-streifen.js) — GKV-Stand der
+        // Geldzeile statt Doppelrechnung, plus patientId/patientName wie vorher (Ops #277).
+        aufStand: (standGkv) => rendereZuzahlungStreifen(rzgWarnEl,
+          { rx, stand: standGkv, t, zahlartLabel, patientId: rx.patient_id || booking.lead_id || '', patientName: booking.customer_name || '' }),
       },
     });
     bkGeldNeuZeichnen = (lead) => geldZeile.patientGesetzt(lead);
@@ -3418,69 +3424,12 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
 
     rxCard.hidden = false;
 
-    // Zuzahlung: nach GKV-Logik EINMAL je Verordnung, nicht je Sitzung.
-    // Bewusst reduziert: offen = nur die Summe in Gelb + ein Knopf.
-    // Bezahlt = dieselbe Zeile in Grün, mit Zahlart und Link auf die Rechnung.
-    const rzgWarnEl = document.getElementById('bkRxZuzahlungWarn');
-    if (rzgWarnEl) {
-      // Quelle ist der GERECHNETE Betrag, nicht `rx.zuzahlung_eur`: die Spalte
-      // ist in der Datenbank durchgaengig NULL, und diese Zeile war damit fuer
-      // jede Verordnung unsichtbar — samt „Rueckgaengig" und „Korrektur". Wer
-      // kassiert, muss auch stornieren koennen; sonst haengt eine Fehlbuchung
-      // im Kassenbuch fest, das per Trigger unveraenderlich ist.
-      const gerechnet = ermittleGeldstand({
-        rx, erbracht: current, zahler: 'gkv',
-        position: findeRxPosition(rx, { katalog: GKV_LEISTUNGSKATALOG[getSector()] || [] }),
-      });
-      const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur)
-                   : (gerechnet.unbekannt ? null : gerechnet.gesamt);
-      const befreit = !!rx.zuzahlung_befreit;
-      const bezahlt = !!rx.zuzahlung_kassiert_am;
-
-      if (befreit || betrag != null) {
-        rzgWarnEl.hidden = false;
-        rzgWarnEl.dataset.rxId = rx.id;
-        rzgWarnEl.dataset.betrag = String(betrag ?? 0);
-        rzgWarnEl.dataset.patientId = rx.patient_id || booking.lead_id || '';
-        rzgWarnEl.dataset.patientName = booking.customer_name || '';
-
-        // Grün, sobald nichts mehr offen ist — bezahlt oder befreit.
-        const gruen = befreit || bezahlt;
-        rzgWarnEl.style.background = gruen ? 'var(--success-dim)' : 'var(--warning-dim)';
-        rzgWarnEl.style.borderColor = gruen ? 'var(--success)' : 'var(--warning)';
-        rzgWarnEl.style.color = gruen ? 'var(--success)' : 'var(--warning-text)';
-
-        // Das Euro-Zeichen druckt den Beleg sofort — für Kasse wie Privat
-        // derselbe Knopf (Beta-2, 12.08.2026: „bei privat genauso, dann brauche
-        // ich nicht extra in diese Vorlage reinzugehen").
-        const druckKnopf =
-          ` <button type="button" data-zuzahl="drucken" title="Beleg drucken"
-             style="margin-left:6px;background:none;border:0;color:inherit;cursor:pointer;font-size:13px;font-family:inherit;">€&nbsp;🖨</button>`;
-
-        if (befreit) {
-          rzgWarnEl.innerHTML = escapeHtml(t('kass_befreit')) + druckKnopf;
-        } else if (bezahlt) {
-          const am = new Date(rx.zuzahlung_kassiert_am)
-            .toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-          const art = rx.zuzahlung_zahlart ? ` · ${zahlartLabel(rx.zuzahlung_zahlart)}` : '';
-          // Der Betrag steht seit 03.09.2026 in der Geldzeile oben; hier stand
-          // er ein zweites Mal, zwei Zeilen darunter. Was diese Zeile trägt und
-          // die Geldzeile nicht, sind die Handlungen — die bleiben.
-          rzgWarnEl.innerHTML =
-            `${escapeHtml(t('kass_bezahlt'))} · ${escapeHtml(am)}${escapeHtml(art)}`
-            + ` <button type="button" data-zuzahl="rechnung" style="margin-left:6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_rechnung'))}</button>`
-            + ` <button type="button" data-zuzahl="undo" style="margin-left:4px;background:none;border:0;color:inherit;opacity:0.75;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_undo'))}</button>`
-            + druckKnopf + KORREKTUR_KNOPF;
-        } else {
-          rzgWarnEl.innerHTML =
-            `${escapeHtml(t('kass_offen'))}`
-            + ` <button type="button" data-zuzahl="pay" style="margin-left:6px;background:var(--warning-dim);border:1px solid var(--warning);color:inherit;border-radius:5px;padding:1px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">${escapeHtml(t('kass_btn'))}</button>`
-            + druckKnopf + KORREKTUR_KNOPF;
-        }
-      } else {
-        rzgWarnEl.hidden = true;
-      }
-    }
+    // Der Zuzahlungsstreifen (#bkRxZuzahlungWarn) zeichnet jetzt über den
+    // `aufStand`-Callback bei verdrahteGeldzeile() weiter oben — siehe
+    // module/zuzahlung-streifen.js. Er bekommt denselben GKV-Stand wie die
+    // Geldzeile (inkl. podoKarte) statt ihn ein zweites Mal selbst zu
+    // rechnen, und er verschwindet nicht mehr stumm, wenn keine Katalog-
+    // position gefunden wird (Ops #277).
 
     // „Letzte Behandlung": genau eine Einheit ist noch offen — also ist die
     // hier gerade offene die letzte. Vorher stand hier `current === total`, was
@@ -16710,9 +16659,11 @@ async function openRezeptModal(phone, leadId) {
   g('rzHausbesuch').checked = false;
   g('rzBlanko').checked = false;
   g('rzLhbBvb').checked = false;
-  g('rzZuzahlungBefreit').checked = false;
+  // Nur noch Anzeige, kein Eingabefeld mehr (Ops #277, 09.09.2026) —
+  // module/verordnung-maske.js füllt beide beim nächsten fuelleMuster13().
+  g('rzZuzahlungBefreitAnzeige').textContent = '–';
+  g('rzZuzahlungAnzeige').textContent = '–';
   g('rzBerichtAngefordert').checked = false;
-  g('rzZuzahlung').value = '';
   g('rzBerichtStatus').value = 'offen';
   // Neue Muster-13-Felder
   ['rzPatKasse','rzKkNum','rzPatName','rzPatVorname','rzPatGeb','rzPatStrasse','rzPatOrt',

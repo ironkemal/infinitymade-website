@@ -2506,7 +2506,11 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         hausbesuch: !!rezept.hausbesuch,
         is_blanko: !!rezept.is_blanko,
         is_lhb_bvb: !!rezept.is_lhb_bvb,
-        zuzahlung_befreit: !!rezept.zuzahlung_befreit,
+        // Kein `zuzahlung_befreit` mehr hier (Ops #277, 09.09.2026): die
+        // Spalte gehört dem Trigger `trg_prescriptions_set_befreit`
+        // (db/SCHEMA-RLS.sql), der sie bei JEDEM Insert aus
+        // `zuzahlung_befreiung` neu ableitet — ein hier mitgeschickter Wert
+        // wurde in derselben Anweisung sofort verworfen.
         bericht_angefordert: !!rezept.bericht_angefordert,
         bericht_status: rezept.bericht_status || 'offen',
         unterschrift_vorhanden: rezept.unterschrift_vorhanden ?? null,
@@ -2707,7 +2711,12 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       hausbesuch: !!rezept.hausbesuch,
       is_blanko: !!rezept.is_blanko,
       is_lhb_bvb: !!rezept.is_lhb_bvb,
-      zuzahlung_befreit: !!rezept.zuzahlung_befreit,
+      // Kein `zuzahlung_befreit` mehr hier (Ops #277, 09.09.2026) — dieselbe
+      // Begründung wie beim Insert oben in `/api/rezept/confirm`: der
+      // Trigger `trg_prescriptions_set_befreit` überschreibt den Wert bei
+      // JEDEM Update, das `ausstellungsdatum` mitschickt (immer der Fall
+      // hier, siehe oben), aus `zuzahlung_befreiung`. Ein hier mitgesendeter
+      // Wert wurde in derselben Anweisung sofort verworfen.
       bericht_angefordert: !!rezept.bericht_angefordert,
       bericht_status: rezept.bericht_status || 'offen',
       unterschrift_vorhanden: rezept.unterschrift_vorhanden ?? null,
