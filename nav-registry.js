@@ -97,7 +97,15 @@ export const NAV_REGISTRY = {
     { id: 'hours',             key: 'nav_hours',             label: 'Verfügbarkeit',        roles: ['owner', 'employee'], group: 'team' },
     { id: 'team',              key: 'nav_team',              label: 'Team',                 roles: ['owner', 'employee'], group: 'team' },
     { id: 'verordnungen',      key: 'nav_verordnungen',      label: 'Verordnungen',         roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'podologie-billing', key: 'nav_podologie_billing', label: 'Podologie-Abrechnung', roles: ['owner'],             group: 'abrechnung' },
+    // Seit 09.09.2026 heisst dieser Bildschirm „Behandlungen" und traegt nur
+    // noch Tagesbehandlung + Verordnungsliste. Der §302-Teil ist nach
+    // `abrechnung` umgezogen — EIN Abrechnungsbildschirm fuer alle vier
+    // Fachbereiche (ABRECHNUNG_BILDSCHIRM_PLAN.md, Abschnitt 0 Nr. 1).
+    { id: 'podologie-billing', key: 'nav_podologie_billing', label: 'Behandlungen',         roles: ['owner'],             group: 'abrechnung' },
+    // ⚠️ Mit diesem Eintrag gilt die Planschranke has302Access() (Professional+)
+    // ab jetzt auch fuer die Podologie — eine Regel, kein Sonderweg
+    // (Kemal, 08.09.2026; geprueft: kein Konto verliert eine genutzte Funktion).
+    { id: 'abrechnung',        key: 'nav_abrechnung',        label: '§302-Abrechnung',      roles: ['owner'],             group: 'abrechnung' },
     { id: 'rechnungen',        key: 'nav_rechnungen',        label: 'Rechnungen',           roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'fussstatus',        key: 'nav_fussstatus',        label: 'Fußbefund',            roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'belegliste',        key: 'nav_belegliste',        label: 'Kassenbuch',           roles: ['owner'],             group: 'abrechnung' },
