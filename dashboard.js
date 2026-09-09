@@ -5,7 +5,7 @@ import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260817';
-import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260903';
+import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260909';
 import { attachPatientSearch } from './patient-suche.js?v=20260906';
 import { verdrahteRezeptPatientenfeld } from './module/rezept-patientenfeld.js?v=20260906';
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
@@ -16,15 +16,21 @@ import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenka
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20260908';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260826';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
-import { checkPrescriptionCompliance, istBerichtOffen, istHarterRiegel, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
+import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
+// §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche
+// (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js —
+// die lokale Kopie hier ist mit dem alten Assistenten entfallen.
+import { fmtEur } from './module/geld.js?v=20260909';
+import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
+import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20260909';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260905a';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260831a';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260905b';
-import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260903';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260907';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260909';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
@@ -195,8 +201,8 @@ const T = {
     nav_statistik: 'Auswertungen',
     nav_warteliste: 'Warteliste',
     cal_emp_all: 'Alle',
-    nav_podologie_billing: 'Podologie-Abrechnung',
-    podologie_billing_sub: 'Muster-13-Verordnungen verwalten & Behandlungen dokumentieren',
+    nav_podologie_billing: 'Behandlungen',
+    podologie_billing_sub: 'Tagesbehandlung dokumentieren & Verordnungen im Blick behalten',
     nav_fussstatus: 'Fußbefund',
     fussstatus_sub: 'Digitale Fußanalyse-Karte — Befund pro Termin',
     pod_new_vord: 'Neue Verordnung',
@@ -407,8 +413,8 @@ const T = {
     nav_statistik: 'Analytics',
     nav_warteliste: 'Waiting List',
     cal_emp_all: 'All',
-    nav_podologie_billing: 'Podology Billing',
-    podologie_billing_sub: 'Manage Muster-13 prescriptions & document treatments',
+    nav_podologie_billing: 'Treatments',
+    podologie_billing_sub: 'Document daily treatments & keep prescriptions in view',
     nav_fussstatus: 'Foot Findings',
     fussstatus_sub: 'Digital foot analysis card — assessment per appointment',
     pod_new_vord: 'New Prescription', pod_active_vord: 'Active Prescriptions',
@@ -600,8 +606,8 @@ const T = {
     nav_statistik: 'Analizler',
     nav_warteliste: 'Bekleme Listesi',
     cal_emp_all: 'Tümü',
-    nav_podologie_billing: 'Podoloji Faturalama',
-    podologie_billing_sub: 'Muster-13 reçetelerini yönet ve tedavileri kaydet',
+    nav_podologie_billing: 'Tedaviler',
+    podologie_billing_sub: 'Günlük tedaviyi kaydet ve reçeteleri takip et',
     nav_fussstatus: 'Ayak Muayenesi',
     fussstatus_sub: 'Dijital ayak analiz kartı — Randevu başına bulgu',
     pod_new_vord: 'Yeni Reçete', pod_active_vord: 'Aktif Reçeteler',
@@ -8513,7 +8519,7 @@ async function flipAbrechnungStatus(rxId, newStatus, leadId) {
     showToast(newStatus === 'bereit' ? 'Als abrechnungsbereit markiert ✓' : 'Zurück auf offen ✓');
     await loadPatientDetailRezepte(leadId);
   } catch (e) {
-    console.error('[abrechnung-status]', e);
+    console.error('[flipAbrechnungStatus]', e);
     showToast('Fehler: ' + e.message, 'error');
   }
 }
@@ -17634,7 +17640,11 @@ async function uploadRezeptImage(dataUri) {
 
 // ===== § 302 SGB V Kassenabrechnung =====
 
-const _abState = { ready: [], kkMap: new Map(), busy: false, positions: [], positionsLoaded: false };
+// Rest des alten 4-Stufen-Assistenten: nur noch der Kassen-Katalog (kkMap) und
+// der lazy geladene Positionskatalog (positions). Beide werden ausserhalb dieses
+// Bildschirms mitbenutzt — kkMap von openDasGuideModal(), positions von der
+// Rezept-Maske (aiMatchHeilmittel) und von module/abrechnung-auswahl.js.
+const _abState = { kkMap: new Map(), positions: [], positionsLoaded: false };
 
 // ---------- Sprint 8+ : Krankenkasse + Heilmittel datalist + AI auto-match ----------
 
@@ -17814,9 +17824,9 @@ async function savePositionOverride(prescriptionId, newPosition, selectEl) {
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
 
-    // Update local state so re-render keeps the new value.
-    const rx = _abState.ready.find(r => r.id === prescriptionId);
-    if (rx) rx.heilmittel_position = json.heilmittel_position;
+    // Der neue Wert wird nicht mehr lokal nachgetragen: die Auswahlliste laedt
+    // nach dem Speichern ohnehin neu (module/abrechnung-auswahl.js), weil Preis,
+    // Zuzahlung und die Kassenanteil-Summe der ganzen Gruppe daran haengen.
     selectEl.dataset.prev = newPosition;
     showToast('Position aktualisiert: ' + (json.label || newPosition));
   } catch (e) {
@@ -17829,659 +17839,62 @@ async function savePositionOverride(prescriptionId, newPosition, selectEl) {
   }
 }
 
-function fmtEur(n) {
-  const v = Number(n) || 0;
-  return v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-}
-
-function setWizardStep(stepNum) {
-  _abState.activeStep = stepNum;
-  document.querySelectorAll('.wizard-panel').forEach((el, idx) => {
-    el.hidden = (idx + 1) !== stepNum;
-  });
-  document.querySelectorAll('.wiz-btn').forEach((btn, idx) => {
-    const active = (idx + 1) === stepNum;
-    btn.classList.toggle('active', active);
-    btn.style.color = active ? 'var(--primary)' : 'var(--text-muted)';
-  });
-}
-
-function runPreflightCheck() {
-  const activeIk = _abState.activeIk;
-  if (!activeIk) return;
-
-  const checks = document.querySelectorAll(`.ab-rx-check[data-ik="${activeIk}"]:checked`);
-  const selectedIds = [...checks].map(c => c.dataset.id);
-  
-  const resultsDiv = document.getElementById('abPreflightResults');
-  const nextWrap = document.getElementById('abStep1NextWrap');
-  if (!resultsDiv) return;
-  resultsDiv.innerHTML = '';
-  
-  if (!selectedIds.length) {
-    resultsDiv.innerHTML = `<div class="preflight-check-item error">
-      <span class="preflight-check-icon error" style="display:inline-flex;width:16px;height:16px;">${ICON.warning}</span>
-      <div>Bitte wählen Sie mindestens ein Rezept für den Preflight-Check aus.</div>
-    </div>`;
-    if (nextWrap) nextWrap.hidden = true;
-    document.getElementById('btn-wiz-step2').disabled = true;
-    return;
-  }
-
-  let hasErrors = false;
-  let validationHtml = '';
-
-  selectedIds.forEach(id => {
-    const rx = _abState.ready.find(r => r.id === id);
-    if (!rx) return;
-
-    const lead = rx.leads || {};
-    const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Unbekannter Patient';
-    const heilmittelText = rx.heilmittel || '';
-    
-    const rxErrors = [];
-    const rxWarnings = [];
-
-    if (!lead.first_name || !lead.last_name) {
-      rxErrors.push('Patienten-Name ist unvollständig.');
-    }
-    if (!lead.versichertennummer) {
-      rxErrors.push('Versichertennummer fehlt.');
-    }
-    if (!rx.icd10) {
-      rxErrors.push('ICD-10 Diagnosecode fehlt.');
-    }
-    if (!rx.anzahl_einheiten || rx.anzahl_einheiten <= 0) {
-      rxErrors.push('Anzahl der Einheiten ist ungültig.');
-    }
-    if (!rx.heilmittel_position) {
-      rxWarnings.push('Keine Heilmittelposition (X-Code) zugewiesen. Die Zuzahlung und Abrechnungspreise können nicht exakt ermittelt werden.');
-    }
-
-    const issues = checkPrescriptionCompliance(rx, _abState.therapistCertsMap);
-    if (issues.isReportMissing) {
-      // Hinweis, kein Fehler: das Kreuz auf der Verordnung bleibt oft schlicht
-      // stehen. Beim Abrechnen wird gefragt und die Entscheidung protokolliert.
-      rxWarnings.push(`Therapiebericht angefordert, aber ausstehend (${rx.bericht_status || 'offen'}). Abrechnen ist möglich — die Entscheidung wird protokolliert.`);
-    }
-    if (issues.missingCert) {
-      rxErrors.push(`Zertifikats-Fehler: Der Therapeut für die Sitzung am ${issues.missingCertDate} besitzt nicht das erforderliche Zertifikat '${issues.missingCertName}'.`);
-    }
-    if (issues.has14DayGap) {
-      rxErrors.push(`Yasal Kilit: Terapötik ara verme (Behandlungsunterbrechung) 14 takvim gününü aşmaktadır (${issues.gapDays} Tage, ${issues.gapDates}).`);
-    }
-
-    let statusClass = 'success';
-    let summaryText = '✓ Rezept fehlerfrei';
-    if (rxErrors.length > 0) {
-      statusClass = 'error';
-      summaryText = '⚠ Kritische Fehler';
-      hasErrors = true;
-    } else if (rxWarnings.length > 0) {
-      statusClass = 'warning';
-      summaryText = '⚠ Warnungen vorhanden';
-    }
-
-    validationHtml += `<div class="preflight-card">
-      <div class="preflight-group-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-weight:600;">${escapeHtml(pname)} — ${escapeHtml(heilmittelText || 'Heilmittel')}</span>
-        <span style="font-size:12px;font-weight:600;color:var(--text-muted);">${summaryText}</span>
-      </div>`;
-
-    if (rxErrors.length === 0 && rxWarnings.length === 0) {
-      validationHtml += `<div class="preflight-check-item success">
-        <span class="preflight-check-icon success" style="display:inline-flex;width:16px;height:16px;">${ICON.checkCircle}</span>
-        <div>Alle Pflichtfelder (Name, Versichertennummer, Einheiten, ICD-10, Heilmittel) sind korrekt ausgefüllt.</div>
-      </div>`;
-    }
-
-    rxErrors.forEach(err => {
-      validationHtml += `<div class="preflight-check-item error">
-        <span class="preflight-check-icon error" style="display:inline-flex;width:16px;height:16px;">${ICON.warning}</span>
-        <div><strong>Kritisch:</strong> ${escapeHtml(err)}</div>
-      </div>`;
-    });
-
-    rxWarnings.forEach(warn => {
-      validationHtml += `<div class="preflight-check-item warning">
-        <span class="preflight-check-icon warning" style="display:inline-flex;width:16px;height:16px;">${ICON.info}</span>
-        <div><strong>Hinweis:</strong> ${escapeHtml(warn)}</div>
-      </div>`;
-    });
-
-    validationHtml += `</div>`;
-  });
-
-  resultsDiv.innerHTML = validationHtml;
-
-  const summaryBox = document.createElement('div');
-  summaryBox.className = 'preflight-summary-box';
-  if (hasErrors) {
-    summaryBox.style.cssText = 'background:rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--text-main); display:flex; align-items:center; gap:12px; padding:16px; border-radius:var(--radius-md); margin-top:16px;';
-    summaryBox.innerHTML = `<span class="preflight-check-icon error" style="display:inline-flex;width:24px;height:24px;color:#ef4444;">${ICON.warning}</span>
-      <div>
-        <strong style="display:block;font-size:14px;margin-bottom:2px;">Validierung fehlgeschlagen</strong>
-        <span style="font-size:13px;color:var(--text-muted);">Einige Rezepte weisen kritische Fehler auf. Bitte korrigieren Sie diese in den Patientenakten, bevor Sie fortfahren.</span>
-      </div>`;
-    if (nextWrap) nextWrap.hidden = true;
-    document.getElementById('btn-wiz-step2').disabled = true;
-  } else {
-    summaryBox.style.cssText = 'background:rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); color: var(--text-main); display:flex; align-items:center; gap:12px; padding:16px; border-radius:var(--radius-md); margin-top:16px;';
-    summaryBox.innerHTML = `<span class="preflight-check-icon success" style="display:inline-flex;width:24px;height:24px;color:#22c55e;">${ICON.checkCircle}</span>
-      <div>
-        <strong style="display:block;font-size:14px;margin-bottom:2px;">Preflight-Check erfolgreich</strong>
-        <span style="font-size:13px;color:var(--text-muted);">Alle Rezepte sind strukturell valide. Sie können jetzt mit der Taxierung fortfahren.</span>
-      </div>`;
-    if (nextWrap) nextWrap.hidden = false;
-    document.getElementById('btn-wiz-step2').disabled = false;
-  }
-  resultsDiv.appendChild(summaryBox);
-}
-
-function renderTaxierungList() {
-  const activeIk = _abState.activeIk;
-  const container = document.getElementById('abTaxierungContainer');
-  if (!activeIk || !container) return;
-  
-  const kk = _abState.kkMap.get(activeIk);
-  const kkName = kk?.name || activeIk;
-  
-  const checks = document.querySelectorAll(`.ab-rx-check[data-ik="${activeIk}"]:checked`);
-  const selectedIds = [...checks].map(c => c.dataset.id);
-  const items = _abState.ready.filter(rx => selectedIds.includes(rx.id));
-  
-  if (!items.length) {
-    container.innerHTML = `<div class="table-empty">Keine Rezepte ausgewählt. Bitte gehen Sie zurück zu Schritt 1.</div>`;
-    return;
-  }
-  
-  container.innerHTML = `
-    <div style="margin-bottom:16px;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">
-      <div style="font-weight:600;font-size:15px;color:var(--text-main);">${escapeHtml(kkName)}</div>
-      <div style="font-size:12px;color:var(--text-muted);">${activeIk !== '__unknown__' ? 'IK ' + escapeHtml(activeIk) : ''} &middot; ${items.length} ${t('ab_rezept')} zur Abrechnung</div>
-    </div>
-    
-    <div class="table-wrap" style="margin:0;">
-      <table class="data-table" style="margin:0;">
-        <thead>
-          <tr>
-            <th>${t('ab_patient')}</th>
-            <th>${t('ab_rezept')}</th>
-            <th>${t('ab_einheiten')}</th>
-            <th>${t('ab_zuzahlung')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${items.map(rx => {
-            const lead = rx.leads || {};
-            const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—';
-            const heilmittelText = rx.heilmittel || '—';
-            const currentPos = rx.heilmittel_position || '';
-            const picker = _abState.positionsLoaded
-              ? `<select class="ab-pos-select-step2" data-id="${escapeHtml(rx.id)}" data-prev="${escapeHtml(currentPos)}" style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${buildPositionOptionsHtml(currentPos)}</select>`
-              : `<span style="font-size:12px;color:var(--text-muted);">${escapeHtml(currentPos || '—')}</span>`;
-            
-            const _posLookup = (() => {
-              if (!currentPos) return null;
-              const tpl = /^X\d{4}$/.test(currentPos) ? currentPos
-                : /^\d{5}$/.test(currentPos) ? 'X' + currentPos.slice(1)
-                  : null;
-              return tpl ? _abState.positions.find(p => p.x === tpl) : null;
-            })();
-            // Zentral über module/zuzahlung-rechnen.js — derselbe Weg wie Rechnung/DTA.
-            const zz = zuzahlungFuerRezept(rx, _posLookup);
-            const zu = rx.zuzahlung_befreit
-              ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
-              : (_posLookup ? fmtEur(zz.gesamt) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
-            // „3 / 6" bei Abbruch statt „6": der Betrag gehört zu den erbrachten Einheiten.
-            const einheitenZelle = zz.einheiten === zz.verordnet ? String(zz.verordnet)
-              : `<span title="erbracht / verordnet">${zz.einheiten} / ${zz.verordnet}</span>`;
-            return `<tr>
-              <td>${escapeHtml(pname)}</td>
-              <td>
-                <div style="font-weight:500;">${escapeHtml(heilmittelText)}</div>
-                ${picker}
-              </td>
-              <td>${einheitenZelle}</td>
-              <td>${zu}</td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-  
-  container.querySelectorAll('.ab-pos-select-step2').forEach(sel => {
-    sel.addEventListener('change', async (e) => {
-      const newVal = e.target.value;
-      if (!newVal) { e.target.value = e.target.dataset.prev || ''; return; }
-      await savePositionOverride(e.target.dataset.id, newVal, e.target);
-      renderTaxierungList();
-    });
-  });
-}
-
-async function renderExportStep() {
-  const abId = _abState.activeAbrechnungId;
-  const nextBtn = document.getElementById('btn-wiz-step3');
-  if (nextBtn) nextBtn.disabled = false;
-
-  if (!abId) {
-    document.getElementById('abExportActiveBox').innerHTML = `<p style="color:var(--text-muted);">Keine aktive Abrechnung im Export-Schritt vorhanden.</p>`;
-    return;
-  }
-
-  const { data: ab, error } = await supabase
-    .from('abrechnung')
-    .select('id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, status, storage_path, begleitzettel_path, signed_storage_path')
-    .eq('id', abId)
-    .single();
-
-  if (error || !ab) {
-    console.error('[export/load]', error);
-    return;
-  }
-
-  const kk = _abState.kkMap.get(ab.kostentraeger_ik);
-  const kkName = kk?.name || ab.kostentraeger_ik || 'Krankenkasse';
-
-  document.getElementById('abExportKkName').textContent = kkName;
-  document.getElementById('abExportDetails').innerHTML = `
-    <strong>Datei:</strong> <code style="font-size:12px;font-family:monospace;">${escapeHtml(ab.dateiname || ab.rechnungsnummer || ab.id.slice(0, 8))}</code> &middot; 
-    <strong>Rezepte:</strong> ${ab.prescription_count || 0} &middot; 
-    <strong>Gesamtsumme:</strong> ${fmtEur(ab.total_eur)} &middot;
-    <strong>Status:</strong> <span class="badge ${ab.signed_storage_path ? 'badge-green' : 'badge-gray'}">${ab.signed_storage_path ? '✍ signiert' : 'unsigniert'}</span>
-  `;
-
-  const dlDta = document.getElementById('abDownloadActiveDta');
-  const dlBeg = document.getElementById('abDownloadActiveBeg');
-  const signBtn = document.getElementById('abSignActiveDta');
-
-  const newDlDta = dlDta.cloneNode(true);
-  const newDlBeg = dlBeg.cloneNode(true);
-  const newSignBtn = signBtn.cloneNode(true);
-
-  dlDta.parentNode.replaceChild(newDlDta, dlDta);
-  dlBeg.parentNode.replaceChild(newDlBeg, dlBeg);
-  signBtn.parentNode.replaceChild(newSignBtn, signBtn);
-
-  if (ab.storage_path) {
-    newDlDta.disabled = false;
-    newDlDta.addEventListener('click', () => downloadAbrechnungFile(ab.storage_path, ab.id, 'dta'));
-  } else {
-    newDlDta.disabled = true;
-  }
-
-  if (ab.begleitzettel_path) {
-    newDlBeg.disabled = false;
-    newDlBeg.addEventListener('click', () => downloadAbrechnungFile(ab.begleitzettel_path, null, 'begleit'));
-  } else {
-    newDlBeg.disabled = true;
-  }
-
-  if (ab.signed_storage_path) {
-    newSignBtn.innerHTML = '✓ Digital Signiert';
-    newSignBtn.disabled = true;
-    newSignBtn.className = 'btn-ghost';
-  } else {
-    newSignBtn.innerHTML = '✍ Digital Signieren (.p7m)';
-    newSignBtn.disabled = false;
-    newSignBtn.className = 'btn-primary';
-    newSignBtn.addEventListener('click', () => openSignModal(ab.id, { filename: ab.dateiname }));
-  }
-}
-
-async function loadAbrechnung() {
+async function ladeAbrechnungHistorie() {
   const ownerId = getOwnerId();
   if (!ownerId) return;
 
-  const [readyRes, kkRes, histRes, certsRes] = await Promise.all([
-    supabase.from('prescriptions')
-      .select(`
-        id, patient_id, kostentraeger_ik, heilmittel, heilmittel_position, anzahl_einheiten, 
-        zuzahlung_eur, zuzahlung_befreit, ausstellungsdatum, icd10, is_blanko, is_lhb_bvb, 
-        bericht_angefordert, bericht_status,
-        leads:patient_id(first_name,last_name,krankenkasse,versichertennummer),
-        prescription_sessions (
-          id, session_number, status, done_at,
-          bookings:booking_id (
-            id, user_id, service_id,
-            services:service_id (id, required_certificate)
-          )
-        )
-      `)
-      .eq('owner_id', ownerId)
-      .eq('abrechnung_status', 'bereit')
-      // ⚠️ Podologie ausgeschlossen: seit der Zusammenlegung der zwei
-      // Verordnungstöpfe (04.09.2026) stehen podologische Zeilen in derselben
-      // Tabelle und können `abrechnung_status = 'bereit'` genauso tragen. Sie
-      // liefen bisher durch `mapPrescriptionToDtaShape()` — das ist der
-      // FALSCHE Mapper (physiotherapeutische HPNR/Positionsnummern statt
-      // podologischer 78xxx). Live schon eingetreten: eine podologische
-      // Verordnung stand mit `bereit` in der DB, bevor dieser Filter kam.
-      // `.or()` statt `.neq()`: die meisten physio-Zeilen führen
-      // `therapie_bereich = NULL` (Altbestand vor Einführung des Felds) —
-      // `<> 'podo'` liesse NULL-Zeilen in SQL aus dem Ergebnis fallen.
-      .or('therapie_bereich.is.null,therapie_bereich.neq.podo')
-      .order('ausstellungsdatum', { ascending: true }),
+  const [kkRes, histRes] = await Promise.all([
     supabase.from('kostentraeger').select('ik, name, das_ik, active'),
     supabase.from('abrechnung')
-      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, status, storage_path, begleitzettel_path, signed_storage_path, signed_at, created_at')
+      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, begleitzettel_path, signed_storage_path, signed_at, created_at')
       .eq('owner_id', ownerId)
       .order('created_at', { ascending: false })
       .limit(50),
-    supabase.from('therapist_certificates')
-      .select('profile_id, certificate')
-      .eq('owner_id', ownerId)
   ]);
-
-  if (readyRes.error) console.error('[abrechnung/ready]', readyRes.error);
-  if (kkRes.error) console.error('[abrechnung/kk]', kkRes.error);
+  if (kkRes.error)   console.error('[abrechnung/kk]', kkRes.error);
   if (histRes.error) console.error('[abrechnung/hist]', histRes.error);
-  if (certsRes.error) console.error('[abrechnung/certs]', certsRes.error);
 
+  // kkMap bleibt in _abState, weil openDasGuideModal() daraus den Kassennamen
+  // holt — und weil die Auswahlliste sie ueber ctx.kassenName() mitbenutzt,
+  // statt dieselben 93 Zeilen ein zweites Mal zu laden.
   _abState.kkMap = new Map((kkRes.data || []).map(r => [r.ik, r]));
-  _abState.ready = readyRes.data || [];
-
-  const therapistCertsMap = new Map();
-  if (certsRes.data) {
-    for (const c of certsRes.data) {
-      if (!therapistCertsMap.has(c.profile_id)) {
-        therapistCertsMap.set(c.profile_id, new Set());
-      }
-      therapistCertsMap.get(c.profile_id).add(c.certificate);
-    }
-  }
-  _abState.therapistCertsMap = therapistCertsMap;
-
-  loadPhysioPositions().then(() => {
-    if (_abState.ready.length) renderAbrechnungReady();
-  });
-
-  renderAbrechnungReady();
   renderAbrechnungHistory(histRes.data || []);
-
-  const icon1 = document.getElementById('wiz-icon-step1');
-  const icon2 = document.getElementById('wiz-icon-step2');
-  const icon3 = document.getElementById('wiz-icon-step3');
-  const icon4 = document.getElementById('wiz-icon-step4');
-  if (icon1 && !icon1.innerHTML) icon1.innerHTML = ICON.clipboard;
-  if (icon2 && !icon2.innerHTML) icon2.innerHTML = ICON.edit;
-  if (icon3 && !icon3.innerHTML) icon3.innerHTML = ICON.invoice;
-  if (icon4 && !icon4.innerHTML) icon4.innerHTML = ICON.clock;
-
-  if (!window.__abWizardBound) {
-    window.__abWizardBound = true;
-    document.querySelectorAll('.wiz-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (!btn.disabled) setWizardStep(parseInt(btn.dataset.step));
-      });
-    });
-
-    const runPreflight = document.getElementById('abRunPreflightBtn');
-    if (runPreflight) runPreflight.addEventListener('click', runPreflightCheck);
-
-    const toStep2 = document.getElementById('abToStep2Btn');
-    if (toStep2) {
-      toStep2.addEventListener('click', () => {
-        renderTaxierungList();
-        setWizardStep(2);
-      });
-    }
-
-    const backToStep1 = document.getElementById('abBackToStep1Btn');
-    if (backToStep1) backToStep1.addEventListener('click', () => setWizardStep(1));
-
-    const generateDta = document.getElementById('abGenerateDtaBtn');
-    if (generateDta) {
-      generateDta.addEventListener('click', () => {
-        createAbrechnung(_abState.activeIk);
-      });
-    }
-
-    const backToStep2 = document.getElementById('abBackToStep2Btn');
-    if (backToStep2) backToStep2.addEventListener('click', () => setWizardStep(2));
-
-    const toStep4 = document.getElementById('abToStep4Btn');
-    if (toStep4) toStep4.addEventListener('click', () => setWizardStep(4));
-  }
-
-  if (!_abState.ready.length) {
-    setWizardStep(4);
-  } else {
-    setWizardStep(_abState.activeStep || 1);
-  }
 }
 
-// checkPrescriptionCompliance() ist nach module/abrechnung-freigabe.js gezogen —
-// zusammen mit der Übersteuerung des Therapiebericht-Hinweises, die dieselbe
-// Frage beantwortet.
+// Der 4-Stufen-Assistent (Kontrolle · Taxierung · Export · Archiv) ist am
+// 09.09.2026 entfallen. An seine Stelle treten drei Ansichten — Einstieg, Neu,
+// Bisherige — und EINE Auswahlliste fuer alle vier Fachbereiche
+// (module/abrechnung-auswahl.js, ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1).
+// Mitgegangen sind setWizardStep(), runPreflightCheck(), renderTaxierungList(),
+// renderExportStep(), renderAbrechnungReady() und createAbrechnung(): ihre
+// Aufgaben stehen jetzt einmal statt zweimal (Podologie hatte dieselben in
+// module/podologie-abrechnung.js). Herunterladen und Signieren sitzen weiter in
+// der Historie unten — Phase 3 baut daraus die untere Haelfte.
+async function loadAbrechnung() {
+  if (!getOwnerId()) return;
 
-function renderAbrechnungReady() {
-  const container = document.getElementById('abReadyGroups');
-  const empty = document.getElementById('abReadyEmpty');
-  if (!container || !empty) return;
-  container.innerHTML = '';
-
-  if (!_abState.ready.length) {
-    empty.style.display = '';
-    const preflightCard = document.getElementById('preflightActionCard');
-    if (preflightCard) preflightCard.style.display = 'none';
-    return;
+  if (!window.__abAuswahlBereit) {
+    window.__abAuswahlBereit = true;
+    initAbrechnungAuswahl({
+      supabase, apiBase: API, getOwnerId, escapeHtml, showToast, checkPlanActive,
+      // Derselbe Standort-Zuschnitt wie in podoCtx(): die podologische
+      // Verordnung ist praxisweit, gefiltert wird nur auf Wunsch des Inhabers.
+      aktiverStandort: () => (dataSharing.patients || !currentBusiness?.id) ? null : currentBusiness.id,
+      kassenName: (ik) => _abState.kkMap.get(ik)?.name || null,
+      ladePositionen: loadPhysioPositions,
+      positionen: () => _abState.positions,
+      positionOptionsHtml: buildPositionOptionsHtml,
+      savePosition: savePositionOverride,
+      nachErstellung: ladeAbrechnungHistorie,
+    });
   }
-  empty.style.display = 'none';
+  wireAbrechnungAnsicht(document.getElementById('panel-abrechnung'));
 
-  const groups = new Map();
-  _abState.ready.forEach(rx => {
-    const ik = rx.kostentraeger_ik || '__unknown__';
-    if (!groups.has(ik)) groups.set(ik, []);
-    groups.get(ik).push(rx);
-  });
-
-  for (const [ik, items] of groups) {
-    const kk = _abState.kkMap.get(ik);
-    const kkName = kk?.name || (ik === '__unknown__' ? '⚠ Kostenträger fehlt' : ik);
-
-    const wrap = document.createElement('div');
-    wrap.className = 'ab-group';
-    wrap.style.cssText = 'border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;';
-
-    const totalCount = items.length;
-
-    let controlHtml = '';
-    if (ik === '__unknown__') {
-      const activeKks = Array.from(_abState.kkMap.values())
-        .filter(kk => kk.active)
-        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-      const optionsHtml = activeKks.map(kk => 
-        `<option value="${escapeHtml(kk.ik)}">${escapeHtml(kk.name || kk.ik)}</option>`
-      ).join('');
-
-      const rxIds = items.map(rx => rx.id).join(',');
-
-      controlHtml = `
-        <div style="display:flex;align-items:center;gap:8px;">
-          <select class="ab-assign-kk-select" style="font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-main);">
-            <option value="">Kostenträger wählen…</option>
-            ${optionsHtml}
-          </select>
-          <button class="btn-primary ab-assign-kk-btn" data-ids="${escapeHtml(rxIds)}" disabled style="padding:6px 12px;font-size:13px;">Zuweisen</button>
-        </div>
-      `;
-    } else {
-      controlHtml = `<button class="btn-primary ab-select-group-btn" data-ik="${escapeHtml(ik)}">Validieren &amp; DTA vorbereiten</button>`;
-    }
-
-    wrap.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-card);">
-        <div>
-          <div style="font-weight:600;font-size:15px;">${escapeHtml(kkName)}</div>
-          <div style="font-size:12px;color:var(--text-muted);">${ik !== '__unknown__' ? 'IK ' + escapeHtml(ik) : ''} · ${totalCount} ${t('ab_rezept')}</div>
-        </div>
-        ${controlHtml}
-      </div>
-      <div class="table-wrap" style="margin:0;">
-        <table class="data-table" style="margin:0;">
-          <thead>
-            <tr>
-              <th style="width:38px;"><input type="checkbox" class="ab-group-select-all" data-ik="${escapeHtml(ik)}" checked /></th>
-              <th>${t('ab_patient')}</th>
-              <th>${t('ab_rezept')}</th>
-              <th>${t('ab_einheiten')}</th>
-              <th>${t('ab_zuzahlung')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${items.map(rx => {
-              const lead = rx.leads || {};
-              const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—';
-              const heilmittelText = rx.heilmittel || '—';
-              const currentPos = rx.heilmittel_position || '';
-              const picker = _abState.positionsLoaded
-                ? `<select class="ab-pos-select" data-id="${escapeHtml(rx.id)}" data-prev="${escapeHtml(currentPos)}" style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${buildPositionOptionsHtml(currentPos)}</select>`
-                : `<span style="font-size:12px;color:var(--text-muted);">${escapeHtml(currentPos || '—')}</span>`;
-              
-              const _posLookup = (() => {
-                if (!currentPos) return null;
-                const tpl = /^X\d{4}$/.test(currentPos) ? currentPos
-                  : /^\d{5}$/.test(currentPos) ? 'X' + currentPos.slice(1)
-                    : null;
-                return tpl ? _abState.positions.find(p => p.x === tpl) : null;
-              })();
-              // Wie oben: eine Rechnung, ein Modul. `zuzahlung_frei` heisst im
-              // Katalog wirklich „0 €" und nicht „unbekannt" — die Unterscheidung
-              // steckt jetzt in zuzahlung-rechnen.js statt zweimal hier.
-              const zz = zuzahlungFuerRezept(rx, _posLookup);
-              const zu = rx.zuzahlung_befreit
-                ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
-                : (_posLookup ? fmtEur(zz.gesamt) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
-              
-              const issues = checkPrescriptionCompliance(rx, _abState.therapistCertsMap);
-              // Der fehlende Bericht sperrt die Zeile nicht mehr. Er wird beim
-              // Abrechnen abgefragt und protokolliert (siehe createAbrechnung).
-              const isBlocked = istHarterRiegel(issues);
-              const checkboxHtml = isBlocked
-                ? `<input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" disabled style="opacity:0.5;" />`
-                : `<input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" checked />`;
-
-              let badgesHtml = '';
-              if (issues.isReportMissing) {
-                badgesHtml += `<div style="margin-top:4px; display:inline-flex; align-items:center; gap:4px; background:#fee2e2; color:#b91c1c; font-size:11px; padding:3px 8px; border-radius:4px; font-weight:500;" title="Therapiebericht ausstehend!">
-                    <span class="svg-icon" style="width:12px;height:12px;display:inline-flex;color:#b91c1c;">${ICON.warning}</span>
-                    Bericht fehlt (${escapeHtml(rx.bericht_status)})
-                   </div>`;
-              }
-              if (issues.missingCert) {
-                badgesHtml += `<div style="margin-top:4px; margin-left:4px; display:inline-flex; align-items:center; gap:4px; background:#fee2e2; color:#b91c1c; font-size:11px; padding:3px 8px; border-radius:4px; font-weight:500;" title="Therapeut besitzt kein Zertifikat '${escapeHtml(issues.missingCertName)}' für die Sitzung am ${escapeHtml(issues.missingCertDate)}!">
-                    <span class="svg-icon" style="width:12px;height:12px;display:inline-flex;color:#b91c1c;">${ICON.warning}</span>
-                    Qualifikation fehlt (${escapeHtml(issues.missingCertName)})
-                   </div>`;
-              }
-              if (issues.has14DayGap) {
-                badgesHtml += `<div style="margin-top:4px; margin-left:4px; display:inline-flex; align-items:center; gap:4px; background:#fee2e2; color:#b91c1c; font-size:11px; padding:3px 8px; border-radius:4px; font-weight:500;" title="Unterbrechung von ${escapeHtml(issues.gapDays)} Tagen (${escapeHtml(issues.gapDates)}) überschreitet 14 Tage!">
-                    <span class="svg-icon" style="width:12px;height:12px;display:inline-flex;color:#b91c1c;">${ICON.warning}</span>
-                    Pause > 14 Tage (${escapeHtml(issues.gapDays)} Tg.)
-                   </div>`;
-              }
-
-              return `<tr>
-                <td>${checkboxHtml}</td>
-                <td>
-                  <div>${escapeHtml(pname)}</div>
-                  ${badgesHtml}
-                </td>
-                <td>
-                  <div style="font-weight:500;">${escapeHtml(heilmittelText)}</div>
-                  ${picker}
-                </td>
-                <td>${rx.anzahl_einheiten || 0}</td>
-                <td>${zu}</td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-    container.appendChild(wrap);
-  }
-
-  container.querySelectorAll('.ab-group-select-all').forEach(cb => {
-    cb.addEventListener('change', (e) => {
-      const ik = e.target.dataset.ik;
-      container.querySelectorAll(`.ab-rx-check[data-ik="${ik}"]`).forEach(c => {
-        if (!c.disabled) c.checked = e.target.checked;
-      });
-      if (_abState.activeIk === ik) runPreflightCheck();
-    });
-  });
-
-  container.querySelectorAll('.ab-rx-check').forEach(cb => {
-    cb.addEventListener('change', (e) => {
-      const ik = e.target.dataset.ik;
-      if (_abState.activeIk === ik) runPreflightCheck();
-    });
-  });
-
-  container.querySelectorAll('.ab-select-group-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const ik = btn.dataset.ik;
-      _abState.activeIk = ik;
-      const preflightCard = document.getElementById('preflightActionCard');
-      if (preflightCard) {
-        preflightCard.style.display = '';
-        preflightCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-      runPreflightCheck();
-    });
-  });
-
-  container.querySelectorAll('.ab-group').forEach(groupWrap => {
-    const select = groupWrap.querySelector('.ab-assign-kk-select');
-    const button = groupWrap.querySelector('.ab-assign-kk-btn');
-    if (select && button) {
-      select.addEventListener('change', () => {
-        button.disabled = !select.value;
-      });
-      button.addEventListener('click', async () => {
-        const selectedIk = select.value;
-        if (!selectedIk) return;
-        const rxIds = button.dataset.ids.split(',');
-        const ownerId = getOwnerId();
-        if (!ownerId) {
-          showToast('Fehler: Keine gültige Owner-ID gefunden', 'error');
-          return;
-        }
-        
-        button.disabled = true;
-        button.textContent = '⏳ Zuweisen…';
-        try {
-          const { error } = await supabase
-            .from('prescriptions')
-            .update({ kostentraeger_ik: selectedIk })
-            .eq('owner_id', ownerId)
-            .in('id', rxIds);
-            
-          if (error) throw error;
-          
-          showToast('Kostenträger zugewiesen ✓');
-          await loadAbrechnung();
-        } catch (err) {
-          showToast(err.message || 'Fehler beim Zuweisen des Kostenträgers', 'error');
-          button.disabled = false;
-          button.textContent = 'Zuweisen';
-        }
-      });
-    }
-  });
-
-  container.querySelectorAll('.ab-pos-select').forEach(sel => {
-    sel.addEventListener('change', (e) => {
-      const newVal = e.target.value;
-      if (!newVal) { e.target.value = e.target.dataset.prev || ''; return; }
-      savePositionOverride(e.target.dataset.id, newVal, e.target);
-    });
-  });
+  // Historie ZUERST: sie fuellt _abState.kkMap, aus der die Auswahlliste ihre
+  // Kassennamen zieht.
+  await ladeAbrechnungHistorie();
+  await ladeAbrechnungAuswahl();
+  zeigeAbrechnungAnsicht(aktuelleAbrechnungAnsicht());
 }
 
 function renderAbrechnungHistory(rows) {
@@ -18489,6 +17902,18 @@ function renderAbrechnungHistory(rows) {
   const empty = document.getElementById('abHistoryEmpty');
   if (!body || !empty) return;
   body.innerHTML = '';
+
+  // Zweite Zahl auf dem Einstieg. „Offen" ist hier bewusst „abgeschickt, noch
+  // keine Antwort" — die Zahlungsverfolgung kommt erst mit Phase 4.
+  const info = document.getElementById('abEinstiegAltInfo');
+  if (info) {
+    const offen = rows.filter(a => a.status === 'gesendet').length;
+    const rot   = rows.filter(a => a.status === 'rejected').length;
+    info.textContent = rows.length
+      ? `${rows.length} Datei${rows.length > 1 ? 'en' : ''} · ${offen} offen${rot ? ` · ${rot} abgesetzt` : ''}`
+      : 'Noch keine Abrechnungen erstellt';
+  }
+
   if (!rows.length) { empty.style.display = ''; return; }
   empty.style.display = 'none';
 
@@ -18718,10 +18143,7 @@ async function downloadAbrechnungFile(path, abrechnungId, kind) {
         .update({ status: 'heruntergeladen' })
         .eq('id', abrechnungId)
         .eq('status', 'erstellt')
-        .then(() => {
-          if (_abState.activeAbrechnungId === abrechnungId) renderExportStep();
-          loadAbrechnung();
-        });
+        .then(() => { loadAbrechnung(); });
     }
   } catch (e) {
     console.error('[abrechnung/download]', e);
@@ -18869,14 +18291,10 @@ async function runSignAbrechnung() {
     showToast('Signiert ✓ Lade Sie die .p7m-Datei jetzt im DAS-Portal hoch.');
     closeModal('signModal');
     
-    _abState.activeAbrechnungId = abrechnungId;
-    await renderExportStep();
     await loadAbrechnung();
-    
-    const step4Btn = document.getElementById('btn-wiz-step4');
-    if (step4Btn) step4Btn.disabled = false;
-    setWizardStep(4);
-    
+    // Signiert wird aus der Historie heraus — dorthin zurueck, nicht in eine
+    // Assistentenstufe, die es nicht mehr gibt.
+    zeigeAbrechnungAnsicht('bisherige');
     openDasGuideModal(abrechnungId, 2);
   } catch (e) {
     console.error('[abrechnung/sign]', e);
@@ -18884,74 +18302,6 @@ async function runSignAbrechnung() {
     stat.textContent = '';
     btn.disabled = false;
     btn.textContent = 'Signieren';
-  }
-}
-
-async function createAbrechnung(kostentraegerIk) {
-  if (_abState.busy) return;
-  if (kostentraegerIk === '__unknown__') return;
-  if (!checkPlanActive()) return;
-
-  const checks = document.querySelectorAll(`.ab-rx-check[data-ik="${kostentraegerIk}"]:checked`);
-  const prescriptionIds = [...checks].map(c => c.dataset.id);
-  if (!prescriptionIds.length) {
-    showToast('Bitte mindestens ein Rezept auswählen.', 'error');
-    return;
-  }
-
-  // Fehlender Therapiebericht hält die Abrechnung nicht auf, verlangt aber eine
-  // bewusste Entscheidung. Der Server verlangt dieselbe Liste noch einmal und
-  // schreibt sie als Nachweis fort (GoBD) — hier wird sie nur eingeholt.
-  const offeneBerichte = _abState.ready
-    .filter(rx => prescriptionIds.includes(rx.id) && istBerichtOffen(rx))
-    .map(rx => ({
-      id: rx.id,
-      name: [rx.leads?.first_name, rx.leads?.last_name].filter(Boolean).join(' ') || rx.id.slice(0, 8),
-      status: rx.bericht_status,
-    }));
-  const freigabe = await frageBerichtFreigabe(offeneBerichte);
-  if (!freigabe) return;   // abgebrochen
-
-  const btn = document.getElementById('abGenerateDtaBtn');
-  if (btn) { btn.disabled = true; btn.textContent = t('ab_creating'); }
-  _abState.busy = true;
-
-  try {
-    const { data: { session: s } } = await supabase.auth.getSession();
-    if (!s?.access_token) throw new Error('Nicht angemeldet');
-
-    const res = await fetch(`${API}/billing/abrechnung/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + s.access_token
-      },
-      body: JSON.stringify({
-        ownerId: getOwnerId(),
-        kostentraegerIk,
-        prescriptionIds,
-        berichtIgnoriert: freigabe.ids,
-        berichtGrund: freigabe.grund
-      })
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
-
-    showToast(t('ab_created'));
-    _abState.activeAbrechnungId = json.abrechnungId;
-    await renderExportStep();
-    
-    const step3Btn = document.getElementById('btn-wiz-step3');
-    if (step3Btn) step3Btn.disabled = false;
-    
-    setWizardStep(3);
-    await loadAbrechnung();
-  } catch (e) {
-    console.error('[abrechnung/create]', e);
-    showToast('Fehler: ' + e.message, 'error');
-  } finally {
-    _abState.busy = false;
-    if (btn) { btn.disabled = false; btn.textContent = 'Rechnung finalisieren & DTA erstellen ›'; }
   }
 }
 
@@ -19493,8 +18843,6 @@ Object.assign(window.__fb, {
 console.log('[fahrtenbuch] window.__fb ready', Object.keys(window.__fb));
 
 window.switchPanel = switchPanel;
-window.setWizardStep = setWizardStep;
-window.renderTaxierungList = renderTaxierungList;
 window.openVorlagenEdit = openVorlagenEdit;
 window.deleteVorlage = deleteVorlage;
 window.deleteEmpTimeOff = deleteEmpTimeOff;

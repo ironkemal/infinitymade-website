@@ -10,7 +10,7 @@ steht in keinem Schema und lässt sich aus keinem Code herauslesen. Wenn es nich
 aufgeschrieben wird, ist es in sechs Monaten weg, und dann steht jemand vor einer
 Tabelle und fragt „brauchen wir die noch?" — ohne Antwort.
 
-**Stand:** 2026-09-07 · 84/84 Tabellen erfasst · Projekt `njvuclullotbksskpwgk`
+**Stand:** 2026-09-09 · 87/87 Tabellen erfasst · Projekt `njvuclullotbksskpwgk`
 (das Ops-Dashboard liegt in einem **anderen** Projekt, `farkaejociddtgqkusvm`, und ist
 hier **nicht** erfasst).
 
@@ -420,6 +420,67 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Status:** aktiv
 - **Wer:** `api-backend/billing/api/abrechnung.routes.js`, Statistik, Dashboard-Abrechnungsansicht.
 - **Achtung:** Steht **bewusst nicht** in der DSGVO-Löschliste — § 302/§ 304 SGB V Aufbewahrung geht vor.
+  - ⚠️ `status='paid'` und `paid_at` schreibt seit 09.09.2026 **ausschliesslich** der Trigger `fn_abrechnung_zahlung_status()` auf `abrechnung_zahlung`. Vorher hat die beiden Spalten niemand geschrieben. Nicht von Hand setzen — sonst weicht der Kopfsatz vom Zahlungs-Ledger ab.
+
+### `abrechnung_zeile`
+- **Warum:** Was in EINER Datei tatsächlich an die Kasse ging — eingefroren. Vorher wurde die
+  Zeilenliste aus `prescriptions.abrechnung_id` abgeleitet; sobald ein abgesetztes Rezept korrigiert
+  und neu eingereicht wurde, wanderte die id mit und die Zeile verschwand aus der alten Datei.
+  Der Anwender sah in „10 eingereicht" neun Zeilen, ohne Hinweis. Dieselbe Lücke machte eine
+  Kassenprüfung („zeigen Sie die 4. Sitzung zu Beleg X") und eine Korrekturrechnung nach VKZ 04
+  („nicht zuvor vergütete Positionen", Anlage 1 TP5 V21 §7.4.3) unmöglich — der einzige interne
+  Zeilennachweis war die lebende Verordnung. Trägt zusätzlich die Gesamtrechnungs-Gruppe
+  (`karten_ik` + `einzel_rechnungsnummer`), die seit 07.09.2026 im DTA entsteht und bisher nur im
+  Begleitzettel-HTML im Storage stand, also nicht abfragbar war.
+- **Seit:** 09.09.2026 · `abrechnung_zeile_und_zahlung`
+- **Status:** aktiv
+- **Wer:** geschrieben von `/abrechnung/create` und `/abrechnung/create-podologie` (letzter Schritt,
+  nach allen Rollback-Punkten) sowie `/abrechnung/:id/upload-zaa` (nur Rückmeldeachse). Gelesen vom
+  §302-Bildschirm.
+- **Achtung:** ⚠️ Festgeschrieben. `trg_abrechnung_zeile_festschreibung` blockt DELETE ganz und
+  jede Änderung an Identität und Betrag; offen bleiben `status`, `absetzung_*` und das **Nullen**
+  (nicht Ändern) von `patient_name`/`versichertennummer`. Diese Ausnahme ist Absicht: bei `invoices`
+  blockiert die Festschreibung die Anonymisierung und hält damit die ganze DSGVO-Löschkette an
+  (siehe Kopf von `api/dsgvo.js`) — dieser Fehler wird hier nicht wiederholt.
+  `prescription_id` ist `ON DELETE SET NULL`, sonst scheitert die Löschkette bei `prescriptions`.
+  ⚠️ Es gibt **keine UPDATE-Policy**. Status, Absetzung und Anonymisierung schreibt nur das Backend
+  bzw. `api/dsgvo.js` mit `service_role` — im Frontend ist die Tabelle nur lesbar.
+  ⚠️ NICHT `abrechnung_position` nennen/verwechseln: „Position" heisst in diesem Code die
+  Positionsnummer (HPNR) — `heilmittel_position`, `gkv_position_nr`, `GET /positions`.
+  ⚠️ `prescriptions.abrechnung_id` bleibt bestehen und bedeutet weiter „in welcher Datei liegt die
+  Zeile GERADE" (Arbeitsachse). Diese Tabelle ist die Geschichtsachse. Nicht zusammenlegen.
+  ⚠️ `herkunft='rekonstruiert'` markiert die Zeilen, die der Migrationslauf am 09.09.2026 aus den
+  bestehenden Dateien nachgezogen hat. Sie sind **nicht** der Einreichungsstand, sondern der heutige
+  Zustand der lebenden Verordnung — nur bei ihnen lässt der CHECK eine Absetzung > `netto_eur` zu.
+  Für eine Kassenprüfung taugen sie als Beleg nicht; echte Zeilen tragen `herkunft='einreichung'`.
+- **Quelle:** `funktionen/GKV-SORULAR-2026-08-12.md` (Befund) · Anlage 1 TP5 V21 §5.5.2, §7.4.3 ·
+  Plan: `ABRECHNUNG_BILDSCHIRM_PLAN.md`
+
+### `abrechnung_zahlung`
+- **Warum:** Geldeingang je Sammelabrechnung, tranchenweise. Bis dahin gab es `abrechnung.paid_at`
+  und `status='paid'` — beide hat nie jemand geschrieben, Zahlungsverfolgung existierte faktisch
+  nicht. Zwei Spalten hätten nicht gereicht: die Kasse zahlt in Raten, eine Datei kann seit
+  07.09.2026 mehrere Gesamtrechnungen (je Karten-IK eine) enthalten, und ein UPDATE auf einen
+  Summenwert löscht den vorherigen Stand — genau das, was § 146 Abs. 4 AO verbietet.
+- **Seit:** 09.09.2026 · `abrechnung_zeile_und_zahlung`
+- **Status:** aktiv
+- **Wer:** §302-Bildschirm über `POST /abrechnung/:id/zahlung`.
+- **Achtung:** ⚠️ Unveränderlich, dritte Tabelle dieser Familie nach `belegliste` und
+  `zuzahlung_korrekturen`. Korrektur = neue Zeile mit `art='korrektur'` und negativem Betrag.
+  ⚠️ **Kein Beleg in `belegliste`.** Kassengeld ist eine Bankbewegung, kein Kassenbuchvorgang;
+  `belegliste.type` ist patientenseitig, und `statistik.routes.js:188-205` summiert die Belegliste
+  ungefiltert in die Umsatzreihe, während der GKV-Umsatz dort bereits aus `abrechnung.total_eur`
+  kommt — ein Beleg hier zählt den Umsatz doppelt.
+  ⚠️ `status='paid'` setzt NUR `fn_abrechnung_zahlung_status()`, wenn die Forderung
+  (Soll − Absetzung) gedeckt ist; `paid_at` ist das `datum` der schliessenden Zahlung, nicht `now()`.
+  Toleranz 0,005 € stammt aus `istZuzahlungBezahlt()` — „bezahlt" hat in diesem Projekt eine Definition.
+  ⚠️ Eine Absetzung ist keine Zahlung: sie steht auf der Zeile (`abrechnung_zeile.absetzung_eur`),
+  wird vom Anwender aus dem Absetzungsschreiben eingetragen und NIE aus der ZAA-Datei geraten —
+  die kennt laut Anlage 1 TP5 V21 keine Beträge.
+  ⚠️ `created_by` ist `ON DELETE SET NULL`: das Löschen eines Mitarbeiterkontos darf keine
+  GoBD-Zeile mitnehmen. Kein `trg_set_business_id` — `business_id` kommt vom Aufrufer, weil eine
+  Datei zu genau einem Standort gehört und ein Default die falsche Zuordnung still festschreiben würde.
+- **Quelle:** Plan: `ABRECHNUNG_BILDSCHIRM_PLAN.md` · § 146 Abs. 4 AO · Anlage 1 TP5 V21 Kap. 6.4
 
 ### `belegliste`
 - **Warum:** GoBD-Belegjournal: jeder Geldvorgang lückenlos und unveränderlich.

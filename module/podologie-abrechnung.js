@@ -1,5 +1,18 @@
 /**
- * podologie-abrechnung.js — Verordnungen und Tagesbehandlungen der Podologie.
+ * podologie-abrechnung.js — „Behandlungen": Tagesbehandlung und Verordnungsliste
+ * der Podologie.
+ *
+ * ⚠ Der Dateiname stimmt seit dem 09.09.2026 nicht mehr ganz. Der §302-Teil ist
+ * ausgezogen: Auswahlliste, Sammellauf, Dateieinheit-Abzeichen, „trotzdem
+ * übernehmen" und der Abrechnungszeitraum stehen jetzt in
+ * `module/abrechnung-auswahl.js`, gemeinsam mit Physio/Ergo/Logo — EIN
+ * §302-Bildschirm für alle vier Fachbereiche (`ABRECHNUNG_BILDSCHIRM_PLAN.md`,
+ * Abschnitt 0 Nr. 1 und Phase 1). Umbenannt wurde die Datei NICHT: ein
+ * Dateiname ist billiger falsch als eine Umbenennung, die jeden Import, jeden
+ * Cache-Buster und jede Fundstelle in `funktionen/INDEX.json` mitzieht.
+ * Was hier bleibt: eine Behandlung auf eine bestehende Verordnung buchen, mit
+ * allen Vertragssperren (78040 · 78100 · Erstbefundung je Nagel), und die
+ * Verordnungsliste dieser Praxis.
  *
  * Herkunft
  * ────────
@@ -55,8 +68,6 @@ import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules } from './diagnosegruppen-regeln.js?v=20260827';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20260901';
-import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
-import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260902';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
 // dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
 import { darf78040, darf78100, darfErstbefundungNagel,
@@ -68,19 +79,8 @@ import { darf78040, darf78100, darfErstbefundungNagel,
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, inTopf, statusInTopf }
   from './verordnung-topf.js?v=20260904';
-// Mehrfachauswahl (Ops #283): welche Kasse in welche Datei gehört. Eigene
-// Datei, weil es eine eigene Frage ist — und weil diese hier lang genug ist.
-import { initDateieinheit, ladeDateieinheiten, dateieinheitBadge, auswahlHinweis }
-  from './podologie-dateieinheit.js?v=20260907';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
-
-// Eine Stelle statt zwei literalen Vorkommen (onprem-Gate zählt die Host-
-// Zeichenkette, tools/check-onprem.sh) — reines Refactoring, keine neue
-// Bulk-Adresse. Dieselbe Funktion wird für "§302 erstellen" und "trotzdem
-// übernehmen" gebraucht, beide rufen denselben Endpunkt. Über ctx.apiBase
-// statt fest verdrahtetem Host (onprem-Urteil O-01/O-44, 08.09.2026).
-const podoAbrechnungUrl = () => `${ctx.apiBase}/billing/abrechnung/create-podologie`;
 
 // ===== PODOLOGIE BILLING =====
 
@@ -344,13 +344,7 @@ function podVordMassnahme(vord) {
   return ausItem || '';
 }
 
-// abrZeitraumVon/Bis (Faz 1, Ops #265): Filter für "§302 Abrechnung bereit",
-// damit ein spät erfasstes Rezept nicht unbemerkt in den falschen Monatslauf
-// rutscht (gkv-302: die Begleitzettel-Rechnungsnummer muss zu den Papier-
-// Urbelegen desselben Laufs passen). Leer = kein Filter, alles wird gezeigt —
-// bisheriges Verhalten bleibt Standard.
-let _podState = { selectedVordId: null, verordnungen: [], abrZeitraumVon: '', abrZeitraumBis: '' };
-let _podKkCache = [];
+let _podState = { selectedVordId: null, verordnungen: [] };
 
 // Nur 'kassen' ist eine GKV-Verordnung. Für alles andere gibt es weder eine
 // Diagnosegruppe nach HeilM-RL noch einen Kostenträger — die Abrechnungsfelder
@@ -384,247 +378,6 @@ document.addEventListener('click', (e) => {
   loadPodologieBilling();
 });
 
-// §302-Knopf — ebenfalls EINMAL, aus demselben Grund und noch einem zweiten.
-//
-// Der Zuhoerer hing bis 28.08.2026 am Ende von loadPodologieBilling() an
-// `#podBillingContent`. Dieses Element steht aber statisch in dashboard.html:1637;
-// loadPodologieBilling() tauscht nur sein innerHTML aus, nie das Element selbst.
-// Jedes Neuzeichnen (Zeile waehlen, Bearbeiten oeffnen, speichern — alle rufen
-// loadPodologieBilling()) hat also einen weiteren Zuhoerer angehaengt. Nach dem
-// N-ten Zeichnen loeste ein Klick auf „§302 erstellen" N Anfragen aus.
-//
-// Das war nicht nur Netzlast: create-podologie erzeugt pro Aufruf eine eigene
-// `abrechnung`-Zeile samt DTA-Datei. Mehrfache Abrechnungsfaelle fuer dieselbe
-// Verordnung waeren die Folge gewesen. Die zweite Haelfte der Absicherung sitzt
-// im Backend (abrechnung.routes.js: bereits abgerechnete Verordnungen → 409).
-document.addEventListener('click', async (e) => {
-  if (!e.target.closest?.('#podBillingContent')) return;
-  const btn = e.target.closest('.pod-abr-btn');
-  if (!btn || btn.disabled) return;
-  const kkIk     = btn.dataset.kkIk;
-  const vordIds  = JSON.parse(btn.dataset.vordIds || '[]');
-  const errEl    = document.getElementById('podAbrError');
-  if (!kkIk || !vordIds.length) return;
-
-  btn.disabled = true;
-  btn.textContent = 'Wird erstellt…';
-  if (errEl) errEl.style.display = 'none';
-
-  try {
-    const { data: { session } } = await ctx.supabase.auth.getSession();
-    const res = await fetch(podoAbrechnungUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.access_token}`,
-      },
-      body: JSON.stringify({ kostentraegerIk: kkIk, verordnungIds: vordIds }),
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      if (errEl) { errEl.textContent = json.error || 'Fehler beim Erstellen.'; errEl.style.display = 'block'; }
-      btn.disabled = false; btn.textContent = '§302 erstellen';
-      return;
-    }
-    ctx.showToast(`§302 DTA erstellt: ${json.rechnungsnummer} · ${json.sessionCount} Positionen ✓`);
-    loadPodologieBilling();
-  } catch (err) {
-    if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }
-    btn.disabled = false; btn.textContent = '§302 erstellen';
-  }
-});
-
-// ── Mehrfachauswahl mehrerer Kostenträger (Ops #283) ───────────────────────
-//
-// Der Podologe rechnet einmal im Monat ab und will in einem Durchgang fertig
-// werden, nicht Kasse für Kasse klicken (Beta-2, 05.09.2026). Zusammengefasst
-// wird trotzdem NICHT: je Kasse entsteht eine eigene Datei mit eigenem
-// Begleitzettel — so steht es in der Produktentscheidung vom 05.09.2026 und so
-// verlangt es §302. Die Leiste sagt darum vor dem Klick, wie viele Dateien und
-// wie viele Umschläge daraus werden. Eine Oberfläche, die „alles erledigt"
-// suggeriert, macht die Zuordnung der Urbelege unmöglich.
-
-/** Die IKs der aktuell angehakten Kassen. */
-function _podGewaehlteKassen() {
-  return [...document.querySelectorAll('#podBillingContent .pod-kk-check:checked')]
-    .map(cb => cb.dataset.kkIk);
-}
-
-function _podSammelAuswahlAktualisieren() {
-  const leiste = document.getElementById('podSammelLeiste');
-  if (!leiste) return;
-  const iks    = _podGewaehlteKassen();
-  const alle   = [...document.querySelectorAll('#podBillingContent .pod-kk-check')];
-  const hinweis = document.getElementById('podSammelHinweis');
-  const btn     = document.getElementById('podSammelBtn');
-  const alleCb  = document.getElementById('podKkAlle');
-
-  if (hinweis) hinweis.textContent = auswahlHinweis(iks);
-  if (btn) {
-    btn.disabled = iks.length === 0;
-    btn.style.opacity = iks.length ? '1' : '.5';
-    btn.textContent = iks.length > 1
-      ? `${iks.length} Abrechnungen erstellen`
-      : 'Ausgewählte erstellen';
-  }
-  if (alleCb) {
-    alleCb.checked = alle.length > 0 && iks.length === alle.length;
-    alleCb.indeterminate = iks.length > 0 && iks.length < alle.length;
-  }
-}
-
-document.addEventListener('change', (e) => {
-  if (!e.target.closest?.('#podBillingContent')) return;
-  if (e.target.id === 'podKkAlle') {
-    for (const cb of document.querySelectorAll('#podBillingContent .pod-kk-check')) {
-      cb.checked = e.target.checked;
-    }
-  } else if (!e.target.classList?.contains('pod-kk-check')) {
-    return;
-  }
-  _podSammelAuswahlAktualisieren();
-});
-
-// Sammelknopf. Die Anfragen laufen NACHEINANDER, nicht parallel: jede erzeugt
-// eine `abrechnung`-Zeile mit eigener laufender Datennummer, die aus dem Zaehler
-// der schon vorhandenen Zeilen abgeleitet wird (abrechnung.routes.js). Parallel
-// gestartet läsen mehrere Anfragen denselben Zaehler und vergäben dieselbe
-// Nummer — zwei Dateien mit gleichem Namen, und die Kasse ordnet nichts mehr zu.
-document.addEventListener('click', async (e) => {
-  if (!e.target.closest?.('#podBillingContent')) return;
-  const btn = e.target.closest('#podSammelBtn');
-  if (!btn || btn.disabled) return;
-
-  const kassen = [...document.querySelectorAll('#podBillingContent .pod-kk-check:checked')]
-    .map(cb => ({ ik: cb.dataset.kkIk, vordIds: JSON.parse(cb.dataset.vordIds || '[]') }))
-    .filter(k => k.ik && k.vordIds.length);
-  if (!kassen.length) return;
-
-  const protokoll = document.getElementById('podSammelProtokoll');
-  const kkName = (ik) => _podKkCache.find(k => k.ik === ik)?.name || ik;
-  const zeilen = [];
-  const schreibe = () => {
-    if (!protokoll) return;
-    protokoll.style.display = 'block';
-    protokoll.innerHTML = zeilen.join('');
-  };
-
-  btn.disabled = true;
-  btn.style.opacity = '.5';
-  btn.textContent = 'Wird erstellt…';
-  document.getElementById('podKkAlle')?.setAttribute('disabled', 'disabled');
-
-  let ok = 0, fehler = 0;
-  for (let i = 0; i < kassen.length; i++) {
-    const { ik, vordIds } = kassen[i];
-    zeilen.push(`<div data-lauf="${ctx.escapeHtml(ik)}" style="padding:2px 0;color:var(--text-muted);">
-      ⏳ ${ctx.escapeHtml(kkName(ik))} … (${i + 1}/${kassen.length})</div>`);
-    schreibe();
-    try {
-      const { data: { session } } = await ctx.supabase.auth.getSession();
-      const res = await fetch(podoAbrechnungUrl(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ kostentraegerIk: ik, verordnungIds: vordIds }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        fehler++;
-        zeilen[zeilen.length - 1] = `<div style="padding:2px 0;color:#ef4444;">
-          ✕ ${ctx.escapeHtml(kkName(ik))} — ${ctx.escapeHtml(json.error || 'Fehler')}</div>`;
-      } else {
-        ok++;
-        zeilen[zeilen.length - 1] = `<div style="padding:2px 0;color:#16a34a;">
-          ✓ ${ctx.escapeHtml(kkName(ik))} — ${ctx.escapeHtml(json.rechnungsnummer || '')}
-          · ${ctx.escapeHtml(String(json.sessionCount ?? ''))} Positionen</div>`;
-      }
-    } catch (err) {
-      fehler++;
-      zeilen[zeilen.length - 1] = `<div style="padding:2px 0;color:#ef4444;">
-        ✕ ${ctx.escapeHtml(kkName(ik))} — ${ctx.escapeHtml(err.message)}</div>`;
-    }
-    schreibe();
-  }
-
-  // Fehlgeschlagene Kassen bleiben in der Liste stehen (das Backend hat ihre
-  // Verordnungen nicht angefasst) und koennen einzeln nachgeholt werden.
-  zeilen.push(`<div style="padding:6px 0 0;border-top:1px solid var(--border);margin-top:6px;color:var(--text-main);">
-    <strong>${ok} von ${kassen.length} Abrechnungen erstellt${fehler ? `, ${fehler} fehlgeschlagen` : ''}.</strong>
-    ${ok ? ' Jede Datei hat einen eigenen Begleitzettel — bitte getrennt versenden.' : ''}</div>`);
-  schreibe();
-
-  if (ok) ctx.showToast(`${ok} §302-Abrechnung${ok > 1 ? 'en' : ''} erstellt ✓`);
-  loadPodologieBilling();
-});
-
-// Kostenträger-Zeile auf-/zuklappen — reines DOM-Toggle, kein Neuzeichnen:
-// die Detailtabelle steht schon im Markup, `hidden` blendet sie nur aus.
-document.addEventListener('click', (e) => {
-  if (!e.target.closest?.('#podBillingContent')) return;
-  const header = e.target.closest('.pod-kk-header');
-  if (!header) return;
-  const ik = header.dataset.kkToggle;
-  const detail = document.querySelector(`.pod-kk-detail[data-kk-detail="${CSS.escape(ik)}"]`);
-  if (!detail) return;
-  detail.hidden = !detail.hidden;
-  const chevron = header.querySelector('.pod-kk-chevron');
-  if (chevron) chevron.style.transform = detail.hidden ? '' : 'rotate(90deg)';
-});
-
-// "Trotzdem übernehmen" (Faz 1, Ops #265) — eine einzelne fehlerhafte
-// Verordnung isoliert einreichen, mit Pflicht-Begründung. Gleiche
-// Absicherung wie beim §302-Knopf: Modulebene, disabled vor dem ersten
-// await, damit ein Doppelklick nicht zweimal einreicht.
-document.addEventListener('click', async (e) => {
-  if (!e.target.closest?.('#podBillingContent')) return;
-  const btn = e.target.closest('.pod-fehler-uebernehmen-btn');
-  if (!btn || btn.disabled) return;
-  const vordId = btn.dataset.vordId;
-  const kkIk   = btn.dataset.kkIk;
-  const row    = btn.closest('.pod-fehler-row');
-  const grund  = row?.querySelector('.pod-fehler-grund')?.value.trim() || '';
-  const errEl  = document.getElementById('podFehlerError');
-  if (errEl) errEl.style.display = 'none';
-  if (!grund) {
-    if (errEl) { errEl.textContent = 'Bitte eine Begründung eingeben — sie wird im GoBD-Protokoll gespeichert.'; errEl.style.display = 'block'; }
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Wird übernommen…';
-
-  try {
-    const { data: { session } } = await ctx.supabase.auth.getSession();
-    const res = await fetch(podoAbrechnungUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.access_token}`,
-      },
-      body: JSON.stringify({
-        kostentraegerIk: kkIk,
-        verordnungIds: [vordId],
-        sperrenIgnoriert: [vordId],
-        sperrenGrund: grund,
-      }),
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      if (errEl) { errEl.textContent = json.error || 'Fehler beim Übernehmen.'; errEl.style.display = 'block'; }
-      btn.disabled = false; btn.textContent = 'Trotzdem übernehmen';
-      return;
-    }
-    ctx.showToast(`§302 DTA erstellt (übersteuert): ${json.rechnungsnummer} ✓`);
-    loadPodologieBilling();
-  } catch (err) {
-    if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }
-    btn.disabled = false; btn.textContent = 'Trotzdem übernehmen';
-  }
-});
-
 /** Zeile ohne Standortzuordnung — sie steht bewusst in jeder Filiale. */
 function podPraxisweitMarke(v) {
   return istPraxisweit(v)
@@ -640,12 +393,6 @@ async function loadPodologieBilling() {
   // ICD-Prüfregeln der Diagnosegruppen — die Behandlung prüft damit, ob der
   // ICD-Kode der Verordnung zur gebuchten Leistung passt (_icdMatchesDgRule)
   await loadDgIcdRules(ctx.supabase);
-
-  // Load kostentraeger for billing KK selection (IK numbers required)
-  if (_podKkCache.length === 0) {
-    const all = await ctx.loadKkList();
-    _podKkCache = all.filter(k => k.ik);
-  }
 
   const ownerId = ctx.getOwnerId();
   // Seit 04.09.2026 EIN Topf: die Arbeitsliste liest `prescriptions`. Damit
@@ -690,69 +437,6 @@ async function loadPodologieBilling() {
   const zuschnitt = standortZuschnitt(vords || [], ctx.aktiverStandort?.());
   _podState.verordnungen = zuschnitt.zeilen;
   const zeigeHerkunft = zuschnitt.zeigeHerkunft;
-
-  // Preis-/Zuzahlungsdetail für die "§302 Abrechnung bereit"-Liste vorab
-  // rechnen — dieselbe Funktion, die schon in verordnung-detail.js läuft und
-  // gegen den Backend-Calculator getestet ist (zuzahlung-rechnen.test.js).
-  // Vorab statt inline im Render-IIFE, weil die Katalogauflösung asynchron
-  // ist (podoPositionsFinder lädt die Tagespreise) und der Render weiter
-  // unten synchron ein grosses Template zusammenbaut.
-  const _abrechenbarOhneZeitraum = _podState.verordnungen.filter(v =>
-    v.status === 'abrechenbar' && v.kostentraeger_ik && (v.rezeptart || 'kassen') === POD_GKV_REZEPTART);
-  const _abrechenbarAlleVords = _abrechenbarOhneZeitraum.filter(v => {
-    if (_podState.abrZeitraumVon && (!v.ausstellungsdatum || v.ausstellungsdatum < _podState.abrZeitraumVon)) return false;
-    if (_podState.abrZeitraumBis && (!v.ausstellungsdatum || v.ausstellungsdatum > _podState.abrZeitraumBis)) return false;
-    return true;
-  });
-  const _podAbrDetails = new Map();
-  const _podAbrBehByVordId = {};
-  if (_abrechenbarAlleVords.length) {
-    const { data: allBeh } = await ctx.supabase
-      .from('podologie_behandlungen')
-      .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
-      .in('verordnung_id', _abrechenbarAlleVords.map(v => v.id));
-    for (const b of (allBeh || [])) {
-      (_podAbrBehByVordId[b.verordnung_id] ||= []).push(b);
-    }
-    const finde = await podoPositionsFinder(ctx.supabase, allBeh || []);
-    for (const v of _abrechenbarAlleVords) {
-      _podAbrDetails.set(v.id, zuzahlungFuerPodoVerordnung(v, _podAbrBehByVordId[v.id] || [], finde));
-    }
-  }
-
-  // Dieselben zwei harten Sperren wie im Backend (abrechnung.routes.js,
-  // create-podologie) — hier nur als Vorschau, damit eine einzelne fehlerhafte
-  // Verordnung nicht mehr das ganze Kassen-Bündel beim Klick auf "§302
-  // erstellen" mit 422 zu Fall bringt. Bewusst dieselben zwei Regeln, exakt
-  // gespiegelt (Faz 1, Ops #265) — eine Abweichung hier waere eine Vorschau,
-  // der man nicht trauen kann.
-  function podSperrenFuer(v) {
-    const dgRoot = String(v.diagnosegruppe || '').replace(/\s+/g, '').toUpperCase().replace(/-[ABC]$/, '');
-    if (dgRoot !== 'UI1' && dgRoot !== 'UI2') return [];
-    const gruende = [];
-    const kodes = (Array.isArray(v.icd10) ? v.icd10 : []).join(',')
-      .split(/[,;]/).map(s => s.replace(/\s+/g, '').toUpperCase()).filter(Boolean);
-    if (kodes.length > 0 && !kodes.includes('L60.0')) {
-      gruende.push(`Diagnosegruppe ${dgRoot} lässt ausschließlich ICD-10 L60.0 zu (angegeben: ${kodes.join(', ')}).`);
-    }
-    const VERBOTEN = ['78030', '68030', '88030'];
-    const hpnrs = new Set();
-    for (const b of (_podAbrBehByVordId[v.id] || [])) {
-      for (const c of (b.hpnr_codes || [])) hpnrs.add(String(c).trim());
-    }
-    const treffer = VERBOTEN.filter(c => hpnrs.has(c));
-    if (treffer.length) {
-      gruende.push(`Befundpauschale (${treffer.join(', ')}) ist bei Nagelspangenbehandlungen (UI1/UI2) nicht abrechenbar.`);
-    }
-    return gruende;
-  }
-  const _abrechenbarVords = [];
-  const _fehlerhaftVords = [];
-  for (const v of _abrechenbarAlleVords) {
-    const gruende = podSperrenFuer(v);
-    if (gruende.length) _fehlerhaftVords.push({ v, gruende });
-    else _abrechenbarVords.push(v);
-  }
 
   const today = new Date(); today.setHours(0,0,0,0);
 
@@ -923,166 +607,14 @@ async function loadPodologieBilling() {
              Angelegt und bearbeitet wird jetzt ausschliesslich in der
              Muster-13-Maske (#rzMaskeWrap, module/verordnung-maske.js);
              die drei podologischen Felder stehen dort in
-             module/verordnung-podo.js. Diese Seite rechnet ab, sie erfasst
-             nicht mehr. -->
+             module/verordnung-podo.js. Diese Seite dokumentiert die
+             Behandlung; abgerechnet wird seit 09.09.2026 im §302-Bildschirm
+             (module/abrechnung-auswahl.js). -->
 
         <div class="card" style="background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
           <h4 style="margin:0 0 12px;color:var(--text-main);font-size:15px;">${ctx.t('pod_active_vord')}</h4>
           <div id="podVordList">${vordListHtml}</div>
         </div>
-
-        ${!_abrechenbarOhneZeitraum.length ? '' : `<div class="card" style="background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:14px 18px;margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <span style="font-size:12px;color:var(--text-muted);">Abrechnungszeitraum</span>
-          <input type="date" id="podAbrZeitraumVon" value="${ctx.escapeHtml(_podState.abrZeitraumVon || '')}"
-            style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;">
-          <span style="font-size:12px;color:var(--text-muted);">bis</span>
-          <input type="date" id="podAbrZeitraumBis" value="${ctx.escapeHtml(_podState.abrZeitraumBis || '')}"
-            style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;">
-          ${(_podState.abrZeitraumVon || _podState.abrZeitraumBis) ? `<button type="button" id="podAbrZeitraumReset" class="btn-ghost" style="font-size:12px;padding:4px 10px;">Zurücksetzen</button>` : ''}
-          <span style="font-size:12px;color:var(--text-muted);margin-left:auto;">${_abrechenbarAlleVords.length} von ${_abrechenbarOhneZeitraum.length} Verordnung${_abrechenbarOhneZeitraum.length>1?'en':''} im Zeitraum</span>
-        </div>`}
-
-        ${(() => {
-          // Nur GKV-Verordnungen sind §302-fähig. Der Server lehnt alles andere
-          // ohnehin ab (abrechnung.routes.js) — hier gar nicht erst anbieten.
-          // Berechnet und gefiltert wurde das schon oben (_abrechenbarVords,
-          // _podAbrDetails) — vor diesem synchronen Render, weil die Preis-
-          // katalogauflösung async ist. Zeitraum-Filter (gkv-302, Ops #265):
-          // ein spät erfasstes Rezept soll nicht unbemerkt in den falschen
-          // Monatslauf rutschen — die Begleitzettel-Rechnungsnummer muss zu
-          // den Papier-Urbelegen desselben Laufs passen.
-          const abrechenbar = _abrechenbarVords;
-          if (!abrechenbar.length) return '';
-          // Group by KK
-          const byKk = {};
-          for (const v of abrechenbar) {
-            if (!byKk[v.kostentraeger_ik]) byKk[v.kostentraeger_ik] = [];
-            byKk[v.kostentraeger_ik].push(v);
-          }
-          // Name statt IK: _podKkCache ist dieselbe Liste, aus der die Maske
-          // befüllt wird — also derselbe Wortschatz wie v.kostentraeger_ik.
-          const kkName = (ik) => _podKkCache.find(k => k.ik === ik)?.name || ik;
-          // Zuzahlung-Status: welche Farbe die Karte zusätzlich zum Kassenanteil
-          // erklärt (05.09.2026, Beta-2-Feedback — ohne diese Spalte bleibt
-          // unklar, warum eine Kasse weniger als den Brutto-Betrag zahlt).
-          const zuzahlungBadge = (v) => {
-            if (v.zuzahlung_befreit) return { text: 'befreit', color: '#16a34a' };
-            if (v.zuzahlung_kassiert_am) return { text: 'bezahlt', color: '#16a34a' };
-            if (v.zuzahlung_eur > 0) return { text: 'offen', color: '#f59e0b' };
-            return null;
-          };
-          const fmtEur = (n) => (Number(n) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-          return `<div class="card" style="background:var(--bg-card);border:1px solid #16a34a;border-radius:10px;padding:18px;margin-top:12px;">
-            <h4 style="margin:0 0 12px;color:#16a34a;font-size:15px;">§302 Abrechnung bereit</h4>
-            ${Object.keys(byKk).length > 1 ? `
-            <div id="podSammelLeiste" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
-                 padding:8px 12px;margin-bottom:10px;border:1px dashed var(--border);border-radius:8px;background:var(--bg-card);">
-              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-main);cursor:pointer;">
-                <input type="checkbox" id="podKkAlle" style="width:16px;height:16px;cursor:pointer;">
-                Alle Kassen
-              </label>
-              <div id="podSammelHinweis" style="flex:1;min-width:200px;font-size:12px;color:var(--text-muted);">
-                Keine Kasse ausgewählt.
-              </div>
-              <button id="podSammelBtn" class="btn-primary" disabled
-                style="font-size:13px;padding:6px 14px;white-space:nowrap;opacity:.5;">Ausgewählte erstellen</button>
-            </div>
-            <div id="podSammelProtokoll" style="display:none;font-size:12px;margin-bottom:10px;
-                 border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--bg-card);"></div>` : ''}
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              ${Object.entries(byKk).map(([ik, vords]) => {
-                const kassenanteil = vords.reduce((a, v) => a + (_podAbrDetails.get(v.id)?.gesamt || 0), 0);
-                return `
-                <div style="background:var(--bg-card-solid,#1f2937);border-radius:8px;border:1px solid var(--border);overflow:hidden;">
-                  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;">
-                    <input type="checkbox" class="pod-kk-check" data-kk-ik="${ctx.escapeHtml(ik)}"
-                      data-vord-ids="${ctx.escapeHtml(JSON.stringify(vords.map(v=>v.id)))}"
-                      aria-label="${ctx.escapeHtml(kkName(ik))} für die Sammelabrechnung auswählen"
-                      style="margin-right:10px;width:16px;height:16px;flex:0 0 auto;cursor:pointer;">
-                    <div class="pod-kk-header" data-kk-toggle="${ctx.escapeHtml(ik)}" style="cursor:pointer;flex:1;">
-                      <div style="font-size:13px;font-weight:600;color:var(--text-main);">
-                        <span class="pod-kk-chevron" style="display:inline-block;transition:transform .15s;margin-right:4px;">▸</span>
-                        ${ctx.escapeHtml(kkName(ik))}
-                        <span class="pod-dav-slot" data-kk-ik="${ctx.escapeHtml(ik)}">${dateieinheitBadge(ik, ctx.escapeHtml)}</span>
-                      </div>
-                      <div style="font-size:12px;color:var(--text-muted);margin-left:14px;">${vords.length} Verordnung${vords.length>1?'en':''} · Kassenanteil ${fmtEur(kassenanteil)}</div>
-                    </div>
-                    <button class="pod-abr-btn btn-primary" data-kk-ik="${ctx.escapeHtml(ik)}" data-vord-ids="${ctx.escapeHtml(JSON.stringify(vords.map(v=>v.id)))}"
-                      style="font-size:13px;padding:6px 14px;white-space:nowrap;">§302 erstellen</button>
-                  </div>
-                  <div class="pod-kk-detail" data-kk-detail="${ctx.escapeHtml(ik)}" hidden style="border-top:1px solid var(--border);padding:10px 12px;overflow-x:auto;">
-                    <table style="width:100%;border-collapse:collapse;font-size:12px;">
-                      <thead>
-                        <tr style="color:var(--text-muted);text-align:left;">
-                          <th style="padding:4px 6px;font-weight:600;">Rezeptnr.</th>
-                          <th style="padding:4px 6px;font-weight:600;">Patient</th>
-                          <th style="padding:4px 6px;font-weight:600;">Mittel</th>
-                          <th style="padding:4px 6px;font-weight:600;">Zuzahlung</th>
-                          <th style="padding:4px 6px;font-weight:600;text-align:right;">Kassenanteil</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        ${vords.map(v => {
-                          const d = _podAbrDetails.get(v.id);
-                          const badge = zuzahlungBadge(v);
-                          const mittel = (d?.zeilen || []).map(z => `${ctx.escapeHtml(z.label || z.code)}${z.anzahl>1?` ×${z.anzahl}`:''}`).join(', ') || '—';
-                          return `<tr style="border-top:1px solid var(--border);">
-                            <td style="padding:4px 6px;color:var(--text-muted);">${ctx.escapeHtml(v.verordnungsnummer != null ? String(v.verordnungsnummer) : v.id.slice(0,8))}</td>
-                            <td style="padding:4px 6px;color:var(--text-main);">${ctx.escapeHtml(v.patient_name || '—')}</td>
-                            <td style="padding:4px 6px;color:var(--text-muted);">${mittel}</td>
-                            <td style="padding:4px 6px;${badge ? `color:${badge.color};font-weight:600;` : 'color:var(--text-muted);'}">${badge ? badge.text : '—'}</td>
-                            <td style="padding:4px 6px;text-align:right;color:var(--text-main);">${fmtEur(d?.gesamt)}</td>
-                          </tr>`;
-                        }).join('')}
-                      </tbody>
-                      <tfoot>
-                        <tr style="border-top:2px solid var(--border);font-weight:600;">
-                          <td colspan="4" style="padding:6px;color:var(--text-main);">Summe</td>
-                          <td style="padding:6px;text-align:right;color:var(--text-main);">${fmtEur(kassenanteil)}</td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </div>`;
-              }).join('')}
-            </div>
-            <div id="podAbrError" style="color:#ef4444;font-size:13px;margin-top:8px;display:none;"></div>
-          </div>`;
-        })()}
-
-        ${(() => {
-          // Fehlerhafte Rezepte (Faz 1, Ops #265): Verordnungen, die den GKV-
-          // Sperren im Backend heute widersprechen würden. Getrennt von der
-          // Liste oben, statt sie einfach auszulassen — sonst bemerkt niemand,
-          // dass eine Verordnung fehlt, bis die Kasse ablehnt. Jede Zeile hat
-          // eine eigene "trotzdem übernehmen"-Übersteuerung (mit Begründung,
-          // GoBD-protokolliert im Backend), statt das ganze Kassen-Bündel zu
-          // blockieren.
-          if (!_fehlerhaftVords.length) return '';
-          return `<div class="card" style="background:var(--bg-card);border:1px solid #ef4444;border-radius:10px;padding:18px;margin-top:12px;">
-            <h4 style="margin:0 0 12px;color:#ef4444;font-size:15px;">Fehlerhafte Rezepte</h4>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              ${_fehlerhaftVords.map(({ v, gruende }) => `
-                <div class="pod-fehler-row" data-vord-id="${ctx.escapeHtml(v.id)}" data-kk-ik="${ctx.escapeHtml(v.kostentraeger_ik)}"
-                  style="padding:10px 12px;background:var(--bg-card-solid,#1f2937);border-radius:8px;border:1px solid var(--border);">
-                  <div style="font-size:13px;font-weight:600;color:var(--text-main);">
-                    ${ctx.escapeHtml(v.patient_name || '—')}
-                    <span style="font-weight:400;color:var(--text-muted);">· Rezeptnr. ${ctx.escapeHtml(v.verordnungsnummer != null ? String(v.verordnungsnummer) : v.id.slice(0,8))}</span>
-                  </div>
-                  <ul style="margin:6px 0 8px;padding-left:18px;font-size:12px;color:var(--text-muted);">
-                    ${gruende.map(g => `<li>${ctx.escapeHtml(g)}</li>`).join('')}
-                  </ul>
-                  <div style="display:flex;gap:8px;align-items:center;">
-                    <input type="text" class="pod-fehler-grund" placeholder="Begründung für die Übersteuerung (Pflicht, GoBD-Protokoll)"
-                      style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-main);font-size:12px;">
-                    <button class="pod-fehler-uebernehmen-btn btn-ghost" data-vord-id="${ctx.escapeHtml(v.id)}" data-kk-ik="${ctx.escapeHtml(v.kostentraeger_ik)}"
-                      style="font-size:12px;padding:6px 12px;white-space:nowrap;border:1px solid #ef4444;color:#ef4444;">Trotzdem übernehmen</button>
-                  </div>
-                </div>`).join('')}
-            </div>
-            <div id="podFehlerError" style="color:#ef4444;font-size:13px;margin-top:8px;display:none;"></div>
-          </div>`;
-        })()}
       </div>
 
       <!-- Rechts: Tagesbehandlung -->
@@ -1093,21 +625,6 @@ async function loadPodologieBilling() {
     </div>`;
 
   // ---- Event Listeners ----
-
-  // Dateieinheit je Kasse nachladen und die Abzeichen nachtragen. Bewusst
-  // NACH dem Zeichnen und ohne `await` davor: die Liste muss sofort da sein,
-  // die Zusatzinformation darf nachkommen. Faellt der Aufruf aus, bleibt die
-  // Seite bedienbar — der harte Riegel sitzt im Backend (412).
-  const _kkIks = [...new Set(_abrechenbarVords.map(v => v.kostentraeger_ik).filter(Boolean))];
-  if (_kkIks.length) {
-    ladeDateieinheiten(_kkIks).then(neu => {
-      if (!neu) return;
-      for (const slot of document.querySelectorAll('#podBillingContent .pod-dav-slot')) {
-        slot.innerHTML = dateieinheitBadge(slot.dataset.kkIk, ctx.escapeHtml);
-      }
-      _podSammelAuswahlAktualisieren();
-    });
-  }
 
   // Die Verdrahtung des Verordnungsformulars stand bis zum 06.09.2026 hier
   // (Rezeptart-Umschaltung, Heilmittelzeilen, ICD/Diagnosegruppen-Paar,
@@ -1285,7 +802,6 @@ async function loadPodologieBilling() {
 /** Einstieg aus dem Router (`switchPanel('podologie-billing')`). */
 export async function mountPodologieAbrechnung(deps) {
   ctx = deps;
-  initDateieinheit(deps);
   return loadPodologieBilling();
 }
 
