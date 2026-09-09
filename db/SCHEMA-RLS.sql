@@ -1,7 +1,24 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-09 — 20260909170546_zahlungsart_automatik
+-- ERZEUGT AM:        2026-09-09 — 20260909185713_abrechnung_zeile_und_zahlung
+--                    (Ops #283 / §302-Bildschirm). Zwei neue Tabellen,
+--                    `abrechnung_zeile` und `abrechnung_zahlung`; die Struktur
+--                    steht in db/SCHEMA.sql, das Warum in db/REGISTER.md.
+--                    Fuer DIESE Datei: +4 Policies (je select/insert scoping,
+--                    dasselbe Muster wie zuzahlung_korrekturen und
+--                    rechnung_zahlungen), +3 Funktionen
+--                    (fn_abrechnung_zeile_festschreibung,
+--                    prevent_abrechnung_zahlung_mod,
+--                    fn_abrechnung_zahlung_status), +3 Trigger, +8 Indizes
+--                    (6 eigene + 2 aus PK/UNIQUE).
+--                    ⚠️ Beide Tabellen haben BEWUSST keine UPDATE- und keine
+--                    DELETE-Policy — GoBD, gleiche Bauweise wie belegliste,
+--                    zuzahlung_korrekturen und rechnung_zahlungen. Die drei
+--                    neuen Funktionen sind SECURITY INVOKER mit
+--                    SET search_path = public; sie tauchen deshalb in keinem
+--                    Advisor-Befund auf.
+--                    davor: 2026-09-09 — 20260909170546_zahlungsart_automatik
 --                    (Ops #271). Behebt einen Produktionsfehler: der bereits
 --                    deployte Backend-Code rief rechnung_zahlung_buchen() mit
 --                    12 Parametern (p_zahlart) auf, live lag aber noch die
@@ -55,7 +72,8 @@
 --                    pruefe_booking_verordnung_owner() prueft gegen
 --                    prescriptions.owner_id (vorher verordnungen.owner_id).
 --                    Details: module/verordnung-topf.js, db/SCHEMA.sql
--- LETZTE MIGRATION:  20260909170546_zahlungsart_automatik (09.09.2026)
+-- LETZTE MIGRATION:  20260909185713_abrechnung_zeile_und_zahlung (09.09.2026)
+--                    davor: 20260909170546_zahlungsart_automatik (09.09.2026)
 --                    davor: 20260905224013_kostentraeger_echtdaten_struktur
 --                    davor: 20260905223001_profiles_selbstzahler_stufen
 --                    davor: 20260905193701_booking_status_korrekturen
@@ -96,7 +114,17 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            161 RLS-Policies · 307 Indizes · 71 Trigger · 73 Funktionen
+-- UMFANG:            165 RLS-Policies · 315 Indizes · 74 Trigger · 76 Funktionen
+--                    (09.09.2026, abrechnung_zeile_und_zahlung: live gezaehlt.
+--                     Alle vier Deltas gehen restlos auf die eine Migration auf:
+--                       Policies  161 -> 165  +4  je select/insert scoping auf
+--                                                 abrechnung_zeile und
+--                                                 abrechnung_zahlung
+--                       Indizes   307 -> 315  +8  6 eigene + 2 pkey
+--                       Trigger    71 -> 74   +3  1 zeile + 2 zahlung
+--                       Funktionen 73 -> 76   +3  fn_abrechnung_zeile_festschreibung
+--                                                 prevent_abrechnung_zahlung_mod
+--                                                 fn_abrechnung_zahlung_status)
 --                    (09.09.2026 unveraendert: zahlungsart_automatik tauschte
 --                     nur eine Funktionssignatur — Drop 11-Parameter, Create
 --                     12-Parameter, netto 0 — und zwei CHECK-Constraints.
@@ -184,12 +212,31 @@
 
 
 -- =====================================================================
--- 2. RLS-POLICIES (161, siehe UMFANG im Kopf)
+-- 2. RLS-POLICIES (165, siehe UMFANG im Kopf)
 -- =====================================================================
 
 -- abrechnung
 --   abrechnung_owner_all [ALL]
 --     USING (auth.uid() = owner_id OR auth.uid() IN (SELECT id FROM profiles WHERE owner_id = abrechnung.owner_id))
+
+-- abrechnung_zeile                                            (09.09.2026)
+--   Abrechnungszeile select scoping [SELECT]
+--     USING (auth.uid() = owner_id OR auth.uid() IN (SELECT id FROM profiles WHERE owner_id = abrechnung_zeile.owner_id))
+--   Abrechnungszeile insert scoping [INSERT]
+--     CHECK (auth.uid() = owner_id OR auth.uid() IN (SELECT id FROM profiles WHERE owner_id = abrechnung_zeile.owner_id))
+--   ⚠️ KEINE UPDATE-/DELETE-Policy — Absicht, GoBD. status, absetzung_* und die
+--      DSGVO-Anonymisierung schreibt nur das Backend mit service_role; alles
+--      andere blockt zusaetzlich fn_abrechnung_zeile_festschreibung(), die auch
+--      die service_role trifft (fuer die RLS nicht gilt).
+
+-- abrechnung_zahlung                                          (09.09.2026)
+--   Abrechnungszahlung select scoping [SELECT]
+--     USING (auth.uid() = owner_id OR auth.uid() IN (SELECT id FROM profiles WHERE owner_id = abrechnung_zahlung.owner_id))
+--   Abrechnungszahlung insert scoping [INSERT]
+--     CHECK (auth.uid() = owner_id OR auth.uid() IN (SELECT id FROM profiles WHERE owner_id = abrechnung_zahlung.owner_id))
+--   ⚠️ KEINE UPDATE-/DELETE-Policy, und der Trigger wirft ausnahmslos: die
+--      Tabelle ist unveraenderlich. Korrektur = neue Zeile, art='korrektur',
+--      negativer Betrag.
 
 -- accommodations
 --   Users manage own accommodations [ALL] USING (auth.uid() = user_id)
@@ -528,7 +575,7 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (73 eigene = alles in `public`, was keiner Extension gehört;
+-- 3. FUNKTIONEN (76 eigene = alles in `public`, was keiner Extension gehört;
 --    PostGIS-Funktionen sind deshalb ausgelassen)
 -- =====================================================================
 
@@ -771,6 +818,41 @@ $function$;
 --      Signatur aendert, deployt SQL und Backend zusammen.
 
 
+-- fn_abrechnung_zeile_festschreibung() -> trigger            (09.09.2026)
+--   GoBD-/§-302-Festschreibung auf abrechnung_zeile. DELETE wirft immer.
+--   Beim UPDATE wirft sie, sobald sich Identitaet oder Betrag aendert:
+--   owner_id, business_id, created_at, abrechnung_id, prescription_id,
+--   kostentraeger_ik, karten_ik, einzel_rechnungsnummer, belegnummer,
+--   verordnungsdatum, heilmittel_position, anzahl_einheiten, leistungen,
+--   brutto_eur, zuzahlung_eur, netto_eur, herkunft.
+--   OFFEN bleiben: status, absetzung_eur/_grund/_am, therapie_bereich —
+--   und das NULLEN (nicht Aendern) von patient_name/versichertennummer.
+--   Setzt updated_at selbst.
+--   ⚠️ Die Anonymisierungs-Ausnahme ist der Kern: bei `invoices` fehlt sie,
+--      dort blockiert invoice_festschreibung() die DSGVO-Loeschkette komplett
+--      (siehe Kopf von api/dsgvo.js). Dieser Fehler ist hier nicht wiederholt.
+--   ⚠️ Die drei ersten Spalten (owner_id, business_id, created_at) stehen mit
+--      Absicht in der Sperrliste — ohne sie liesse sich eine festgeschriebene
+--      Zeile in einen fremden Mandanten umhaengen.
+--   SECURITY INVOKER, SET search_path = public.
+-- prevent_abrechnung_zahlung_mod() -> trigger                (09.09.2026)
+--   GoBD-Sperre auf abrechnung_zahlung: UPDATE und DELETE werfen ausnahmslos.
+--   Korrektur nur durch neue Zeile mit art='korrektur' und negativem Betrag.
+--   Gleiches Muster wie prevent_belegliste_mod() und
+--   prevent_rechnung_zahlungen_mod().
+-- fn_abrechnung_zahlung_status() -> trigger                  (09.09.2026)
+--   AFTER INSERT auf abrechnung_zahlung: rechnet Soll (Summe
+--   abrechnung_zeile.netto_eur, ersatzweise abrechnung.total_eur −
+--   zuzahlung_total) minus Absetzungen gegen die Summe aller Zahlungen und
+--   setzt abrechnung.status auf 'paid' bzw. zurueck auf 'accepted'.
+--   ⚠️ paid_at ist das `datum` der schliessenden Zahlung, NICHT now().
+--   ⚠️ Toleranz 0,005 € — dieselbe Definition von „bezahlt" wie in
+--      istZuzahlungBezahlt() im Frontend. Nicht eigenmaechtig aendern.
+--   Dies ist der einzige Schreiber von abrechnung.status='paid'/paid_at;
+--   vor dem 09.09.2026 hat die beiden Spalten NIEMAND geschrieben.
+--   SECURITY INVOKER, SET search_path = public.
+
+
 -- --- Einwilligung / Nachweis --------------------------------------------
 -- fn_patient_consents_immutable() -> trigger              [SECURITY DEFINER]
 --   Hält den Einwilligungsnachweis unveränderlich (Art. 7 Abs. 1 DSGVO):
@@ -851,7 +933,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (71, siehe UMFANG im Kopf)
+-- 4. TRIGGER (74, siehe UMFANG im Kopf)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -933,6 +1015,24 @@ $function$;
 --                         trg_pruefe_rechnung_zahlung_owner BEFORE INSERT
 --                         → pruefe_rechnung_zahlung_owner(): owner_id der Zahlung
 --                           gegen invoices.owner_id. Ein FK prueft keine RLS.
+--   abrechnung_zeile      trg_abrechnung_zeile_festschreibung BEFORE UPDATE/DELETE (GoBD, 09.09.2026)
+--                         → fn_abrechnung_zeile_festschreibung(): DELETE wirft
+--                           immer; beim UPDATE bleiben nur status, absetzung_*
+--                           und das NULLEN von patient_name/versichertennummer
+--                           offen. Setzt updated_at selbst — kein eigener
+--                           Zeitstempel-Trigger noetig.
+--   abrechnung_zahlung    trg_prevent_abrechnung_zahlung_mod BEFORE UPDATE/DELETE (GoBD, 09.09.2026)
+--                         → prevent_abrechnung_zahlung_mod(): wirft immer.
+--                           Korrektur nur per neuer Zeile art='korrektur' mit
+--                           negativem Betrag.
+--                         trg_abrechnung_zahlung_status  AFTER INSERT
+--                         → fn_abrechnung_zahlung_status(): schreibt
+--                           abrechnung.status='paid'/'accepted' und paid_at.
+--                           ⚠️ Der EINZIGE Schreiber dieser beiden Spalten.
+--                           ⚠️ KEIN trg_set_business_id — business_id kommt
+--                             vom Aufrufer, weil eine Datei zu genau einem
+--                             Standort gehoert und ein Default hier die falsche
+--                             Zuordnung still festschreiben wuerde.
 --   feedbacks             trg_feedback_telegram          AFTER INSERT
 --   referral_drafts       trigger_notify_new_referral_draft AFTER INSERT
 --
@@ -947,6 +1047,18 @@ $function$;
 CREATE INDEX idx_abrechnung_business ON public.abrechnung USING btree (business_id);
 CREATE INDEX idx_abrechnung_kostentraeger ON public.abrechnung USING btree (kostentraeger_ik, created_at DESC);
 CREATE INDEX idx_abrechnung_owner_status ON public.abrechnung USING btree (owner_id, status, created_at DESC);
+-- abrechnung_zeile / abrechnung_zahlung (09.09.2026). Die drei Zeilen-Indizes
+-- bedienen die drei Fragen des §302-Bildschirms: "was steckt in dieser Datei"
+-- (datei), "wo liegt dieser Beleg" (beleg), "in welchen Dateien lag dieses
+-- Rezept" (rx). Der UNIQUE verhindert, dass dieselbe Verordnung zweimal in
+-- derselben Datei landet; partiell, weil rekonstruierte Zeilen ohne
+-- prescription_id auskommen muessen.
+CREATE UNIQUE INDEX abrechnung_zeile_uniq ON public.abrechnung_zeile USING btree (abrechnung_id, prescription_id) WHERE (prescription_id IS NOT NULL);
+CREATE INDEX idx_abrechnung_zeile_datei ON public.abrechnung_zeile USING btree (abrechnung_id, einzel_rechnungsnummer, sort_order);
+CREATE INDEX idx_abrechnung_zeile_beleg ON public.abrechnung_zeile USING btree (owner_id, belegnummer);
+CREATE INDEX idx_abrechnung_zeile_rx ON public.abrechnung_zeile USING btree (prescription_id) WHERE (prescription_id IS NOT NULL);
+CREATE INDEX idx_abrechnung_zahlung_datei ON public.abrechnung_zahlung USING btree (abrechnung_id, datum);
+CREATE INDEX idx_abrechnung_zahlung_owner ON public.abrechnung_zahlung USING btree (owner_id, datum DESC);
 CREATE INDEX idx_aerzte_business ON public.aerzte USING btree (business_id);
 CREATE INDEX idx_aerzte_lanr ON public.aerzte USING btree (owner_id, lanr) WHERE (lanr IS NOT NULL);
 CREATE INDEX idx_aerzte_owner ON public.aerzte USING btree (owner_id);

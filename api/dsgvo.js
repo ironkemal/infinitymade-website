@@ -92,6 +92,15 @@ const USER_TABLES = [
     select: '*,prescriptions!inner(owner_id)' },
   { table: 'invoices',                     filter: 'owner_id'  },
   { table: 'abrechnung',                   filter: 'owner_id'  },
+  // 09.09.2026 zusammen mit der Migration `abrechnung_zeile_und_zahlung`
+  // eingetragen — nicht wie am 28.08. und 08.09. hinterher. `abrechnung`
+  // allein ist nur der Kopfsatz einer Datei; die Zeile ist die Antwort auf
+  // „welche meiner Behandlungen wurde wann an welche Kasse abgerechnet" und
+  // trägt patient_name/versichertennummer. Die Zahlung ist die Antwort auf
+  // „was wurde darauf wann gezahlt". Ohne beide ist die Art.-15-Auskunft zur
+  // GKV-Seite unvollständig.
+  { table: 'abrechnung_zeile',             filter: 'owner_id'  },
+  { table: 'abrechnung_zahlung',           filter: 'owner_id'  },
   { table: 'zuzahlung_befreiung',          filter: 'owner_id'  },
   { table: 'zuzahlung_korrekturen',        filter: 'owner_id'  },
   { table: 'zuzahlung_guthaben',           filter: 'owner_id'  },
@@ -219,6 +228,17 @@ async function handleExport(req, res) {
 
 const ANONYMIZE_TABLES = [
   { table: 'invoices', filter: 'owner_id', nullify: ['patient_name', 'patient_id', 'notes'] },
+  // 09.09.2026. Die Zeile selbst muss nach § 302/§ 304 SGB V stehenbleiben
+  // (siehe ⛔-Block unten), der Personenbezug nicht. Der Trigger
+  // `fn_abrechnung_zeile_festschreibung()` ist genau dafür gebaut: er blockt
+  // jede Änderung an Identität und Betrag, lässt aber diese beiden Felder auf
+  // NULL setzen — und NUR auf NULL, ein anderer Wert wird abgewiesen.
+  // Das ist bewusst die Gegenprobe zu `invoices`: dort fehlt die Ausnahme, der
+  // PATCH oben scheitert mit 23514 und hält die ganze Löschkette an (Kopf
+  // dieser Datei, ⛔ Punkt 1). Hier nicht.
+  // `prescription_id` bleibt stehen — sie steht auf ON DELETE SET NULL und
+  // fällt weg, sobald die Verordnung gelöscht wird.
+  { table: 'abrechnung_zeile', filter: 'owner_id', nullify: ['patient_name', 'versichertennummer'] },
 ];
 
 // Reihenfolge ist hier keine Kosmetik: Kinder vor Eltern, sonst blockiert ein
@@ -284,6 +304,21 @@ const DELETE_TABLES = [
   //                       nicht einmal die Patientenakte löschen. Das ist die
   //                       Nachweiskette der Einwilligung selbst.
   //   `abrechnung`      — § 302 SGB V / § 304 SGB V Aufbewahrung.
+  //   `abrechnung_zeile`— dieselbe Kategorie, dieselbe Norm: sie IST der
+  //                       Nachweis, was in einer Einreichung stand. `owner_id`
+  //                       und `abrechnung_id` stehen auf RESTRICT, der Trigger
+  //                       blockt DELETE ohnehin ausnahmslos. Statt gelöscht
+  //                       wird sie oben anonymisiert (patient_name,
+  //                       versichertennummer) — der einzige Unterschied zu
+  //                       `abrechnung`, die keine Personenfelder führt.
+  //   `abrechnung_zahlung` — Geldeingang zur Sammelabrechnung. Kein Personen-
+  //                       feld, also nichts zu anonymisieren; der Patienten-
+  //                       bezug entsteht nur über `abrechnung_zeile` und fällt
+  //                       mit deren Anonymisierung weg. UPDATE und DELETE sind
+  //                       per `prevent_abrechnung_zahlung_mod()` gesperrt
+  //                       (§ 146 Abs. 4 AO) — ein Eintrag in DELETE_TABLES oder
+  //                       ANONYMIZE_TABLES würde nur scheitern. Gleiche Lage
+  //                       wie `rechnung_zahlungen`, nur auf der GKV-Seite.
   //   `invoices`        — wird oben anonymisiert statt gelöscht (Absicht).
   //   `rechnung_zahlungen` — Zahlungshistorie zu Privatrechnungen (07.09.2026).
   //                       `owner_id` UND `invoice_id` stehen auf RESTRICT, beide
@@ -311,14 +346,15 @@ const DELETE_TABLES = [
   //                       jeder `ausbuchung` ist diese Tabelle der einzige
   //                       Nachweis des Vorgangs.
   //                       → legal-de 08.09.2026
-  // ⚠️ ROLLE, gilt für alle fünf: Art. 17 Abs. 3 lit. b ist auf der Patienten-
+  // ⚠️ ROLLE, gilt für alle sieben: Art. 17 Abs. 3 lit. b ist auf der Patienten-
   // seite NICHT unsere Norm — dort sind wir Auftragsverarbeiter, es gilt
   // Art. 28 Abs. 3 lit. g DSGVO. Die steuerliche Aufbewahrungspflicht trifft
   // die Praxis, nicht Praxura. Der Weg zur echten Löschung führt deshalb über
   // ein Auslagerungspaket nach GoBD Rz. 142 ff. (an den Verantwortlichen
   // übergeben, dann hier löschen) — noch nicht umgesetzt, gehört gemeinsam
-  // für `belegliste`, `invoices`, `abrechnung`, `patient_consents` und
-  // `rechnung_zahlungen` gelöst. Auslöser: erster echter Kontolöschungsantrag.
+  // für `belegliste`, `invoices`, `abrechnung`, `abrechnung_zeile`,
+  // `abrechnung_zahlung`, `patient_consents` und `rechnung_zahlungen` gelöst.
+  // Auslöser: erster echter Kontolöschungsantrag.
 ];
 
 async function handleDelete(req, res) {

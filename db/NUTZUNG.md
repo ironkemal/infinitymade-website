@@ -3,11 +3,11 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-09 · 85 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-09), funktionen/INDEX.json (erzeugt 2026-09-09)
+**Erzeugt:** 2026-09-09 · 87 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-09), funktionen/INDEX.json (erzeugt 2026-09-09)
 
 ## Kayıt durumu
 
-- Register kaydı olan: **85/85**
+- Register kaydı olan: **87/87**
 
 ## Kodda hiç çağrılmayan tablolar
 
@@ -17,12 +17,14 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 
 | Tabelle | SQL-Treffer | Register-Status |
 |---|---|---|
+| `abrechnung_zahlung` | 11 | aktiv |
+| `abrechnung_zeile` | 13 | aktiv |
 | `accommodations` | 2 | fremd |
 | `applications` | 2 | fremd |
 | `dta_schluessel` | 4 | Referenz, im Code ungenutzt |
 | `fußstatus` | 2 | veraltet |
 | `heilmittel_catalog` | 2 | veraltet |
-| `heilmittel_position` | 4 | veraltet |
+| `heilmittel_position` | 5 | veraltet |
 | `icd10_titles` | 7 | aktiv (Referenz) |
 | `icd_sector_ranges` | 3 | aktiv (Referenz) |
 | `nummernkreise` | 1 | aktiv |
@@ -34,7 +36,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 
 ## DSGVO-Abdeckung (`api/dsgvo.js`)
 
-Auskunft (Art. 15): **55** · Löschung (Art. 17): **49** · anonymisiert statt gelöscht: **1**
+Auskunft (Art. 15): **57** · Löschung (Art. 17): **49** · anonymisiert statt gelöscht: **2**
 
 ⚠️ Personenbezug (FK auf `leads`/`profiles`/`auth.users`) aber **nicht** in der Auskunftsliste:
 
@@ -87,6 +89,16 @@ Warum: Der Abrechnungslauf als Ganzes: eine Sammelrechnung an einen Kostenträge
 **Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/statistik.routes.js`, `dashboard.js`
 
 **Module:** abrechnung, fussstatus, hours, kunden, rechnungen, services, team, ueberblick, verordnungen
+
+### `abrechnung_zahlung`
+
+12 Spalten · Status: aktiv
+Warum: Geldeingang je Sammelabrechnung, tranchenweise. Bis dahin gab es `abrechnung.paid_at`
+
+### `abrechnung_zeile`
+
+27 Spalten · Status: aktiv
+Warum: Was in EINER Datei tatsächlich an die Kasse ging — eingefroren. Vorher wurde die
 
 ### `accommodations`
 

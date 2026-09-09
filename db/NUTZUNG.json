@@ -5,7 +5,7 @@
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-09)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 85,
+ "anzahl": 87,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -128,8 +128,62 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 11,
+   "sqlTreffer": 15,
    "codeStumm": false
+  },
+  {
+   "name": "abrechnung_zahlung",
+   "spalten": 12,
+   "fkRaus": [
+    "abrechnung",
+    "profiles",
+    "businesses",
+    "auth.users"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Geldeingang je Sammelabrechnung, tranchenweise. Bis dahin gab es `abrechnung.paid_at`",
+   "seit": "09.09.2026 · `abrechnung_zeile_und_zahlung`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 11,
+   "codeStumm": true
+  },
+  {
+   "name": "abrechnung_zeile",
+   "spalten": 27,
+   "fkRaus": [
+    "abrechnung",
+    "profiles",
+    "businesses",
+    "prescriptions"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": true,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Was in EINER Datei tatsächlich an die Kasse ging — eingefroren. Vorher wurde die",
+   "seit": "09.09.2026 · `abrechnung_zeile_und_zahlung`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 13,
+   "codeStumm": true
   },
   {
    "name": "accommodations",
@@ -777,7 +831,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 5,
+   "sqlTreffer": 6,
    "codeStumm": false
   },
   {
@@ -4066,7 +4120,7 @@
    "schreiber": [],
    "dateien": [],
    "module": [],
-   "sqlTreffer": 4,
+   "sqlTreffer": 5,
    "codeStumm": true
   },
   {
@@ -4370,7 +4424,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 13,
+   "sqlTreffer": 14,
    "codeStumm": false
   },
   {
@@ -8149,7 +8203,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 36,
+   "sqlTreffer": 40,
    "codeStumm": false
   },
   {
@@ -8177,7 +8231,7 @@
     "api-backend/billing/api/rechnung-zahlung.routes.js"
    ],
    "module": [],
-   "sqlTreffer": 13,
+   "sqlTreffer": 15,
    "codeStumm": false
   },
   {
@@ -10122,7 +10176,7 @@
     "api-backend/billing/api/zuzahlung.routes.js"
    ],
    "module": [],
-   "sqlTreffer": 9,
+   "sqlTreffer": 11,
    "codeStumm": false
   }
  ],
@@ -10130,6 +10184,16 @@
  "ungeklaert": [],
  "registerVerwaist": [],
  "codeStumm": [
+  {
+   "name": "abrechnung_zahlung",
+   "sql": 11,
+   "status": "aktiv"
+  },
+  {
+   "name": "abrechnung_zeile",
+   "sql": 13,
+   "status": "aktiv"
+  },
   {
    "name": "accommodations",
    "sql": 2,
@@ -10157,7 +10221,7 @@
   },
   {
    "name": "heilmittel_position",
-   "sql": 4,
+   "sql": 5,
    "status": "veraltet"
   },
   {
@@ -10204,6 +10268,8 @@
  "dsgvo": {
   "auskunft": [
    "abrechnung",
+   "abrechnung_zahlung",
+   "abrechnung_zeile",
    "aerzte",
    "ai_audit_log",
    "anamnese",
@@ -10311,6 +10377,7 @@
    "zuzahlung_guthaben"
   ],
   "anonymisiert": [
+   "abrechnung_zeile",
    "invoices"
   ],
   "verdaechtigeLuecke": [

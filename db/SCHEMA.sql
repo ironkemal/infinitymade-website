@@ -1,7 +1,26 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-09 — 20260909170546_zahlungsart_automatik
+-- ERZEUGT AM:        2026-09-09 — 20260909185713_abrechnung_zeile_und_zahlung
+--                    (Ops #283 / §302-Bildschirm, Katman 2/4 Geld/§302).
+--                    ZWEI NEUE TABELLEN: `abrechnung_zeile` (was in EINER
+--                    Datei tatsaechlich an die Kasse ging — eingefroren) und
+--                    `abrechnung_zahlung` (Geldeingang je Sammelabrechnung,
+--                    tranchenweise). Beide stehen unten alphabetisch direkt
+--                    nach `abrechnung`. Warum sie noetig waren: `db/REGISTER.md`.
+--                    Mitgeliefert: 4 Policies, 3 Funktionen, 3 Trigger,
+--                    8 Indizes (davon 2 aus PK/UNIQUE) — alles in
+--                    `db/SCHEMA-RLS.sql`.
+--                    Eine Zeile ist bereits drin: der Rekonstruktionslauf der
+--                    Migration hat die bestehenden Abrechnungsdateien aus
+--                    `prescriptions.abrechnung_id` nachgezogen und mit
+--                    `herkunft = 'rekonstruiert'` markiert. Diese Zeilen sind
+--                    NICHT der Einreichungsstand, sondern der heutige Zustand
+--                    der lebenden Verordnung — deshalb nimmt der CHECK
+--                    `abrechnung_zeile_absetzung_betrag` bei ihnen eine
+--                    Absetzung > netto_eur hin.
+--                    Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-09, 20260909170546_zahlungsart_automatik
 --                    (Ops #271, Katman 1/4 Geld/§302). Anlass war ein
 --                    Produktionsfehler: PostgREST meldete „Could not find the
 --                    function public.rechnung_zahlung_buchen(… p_zahlart …) in
@@ -84,7 +103,8 @@
 --                    90-Tage-Frist): `verordnungen` GEDROPPT. Siehe Eintrag
 --                    an der Stelle, wo die Tabelle frueher im Dump stand
 --                    (nach `vehicles`, vor `visibility_reports`).
--- LETZTE MIGRATION:  20260909170546_zahlungsart_automatik (09.09.2026)
+-- LETZTE MIGRATION:  20260909185713_abrechnung_zeile_und_zahlung (09.09.2026)
+--                    davor: 20260909170546_zahlungsart_automatik (09.09.2026)
 --                    davor: 20260905224013_kostentraeger_echtdaten_struktur (06.09.2026)
 --                    davor: 20260905223001_profiles_selbstzahler_stufen
 --                    davor: 20260905193701_booking_status_korrekturen
@@ -126,9 +146,19 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            85 Tabellen · 1244 Spalten · 161 RLS-Policies
---                    307 Indizes · 71 Trigger · 73 Funktionen · 4 Views
---                    (09.09.2026: UNVERAENDERT. zahlungsart_automatik ersetzte
+-- UMFANG:            87 Tabellen · 1283 Spalten · 165 RLS-Policies
+--                    315 Indizes · 74 Trigger · 76 Funktionen · 4 Views
+--                    (09.09.2026, abrechnung_zeile_und_zahlung: live gezaehlt.
+--                     Alle sechs Deltas gehen restlos auf die eine Migration
+--                     auf: +2 Tabellen, +39 Spalten (27 + 12), +4 Policies,
+--                     +8 Indizes, +3 Trigger, +3 Funktionen. Views unveraendert.
+--                     ⚠️ Zaehlweise der Spalten, damit die naechste Pruefung
+--                     nicht wieder stutzt: gezaehlt werden die Spalten von
+--                     TABELLEN UND VIEWS (ohne abgefallene). 1283 = 1250 auf
+--                     87 Tabellen + 33 auf 4 Views. Wer nur Tabellen zaehlt,
+--                     bekommt 1250 und haelt den Kopf faelschlich fuer falsch.
+--                     Die alten 1244 gingen nach derselben Regel auf: 1211 + 33.)
+--                    (09.09.2026, zahlungsart_automatik: UNVERAENDERT. zahlungsart_automatik ersetzte
 --                     nur eine Funktion — Drop der 11-Parameter-Fassung plus
 --                     Create der 12-Parameter-Fassung, netto 0 — und tauschte
 --                     zwei CHECK-Constraints. Live gegengezaehlt: Tabellen 85,
@@ -233,6 +263,109 @@ CREATE TABLE abrechnung (
 --   FK kostentraeger_ik -> kostentraeger(ik)
 --   FK owner_id -> auth.users(id) ON DELETE CASCADE
 --   PK (id)
+
+-- 09.09.2026 — die Geschichtsachse zu `abrechnung`. Was in EINER Datei
+-- tatsaechlich an die Kasse ging, eingefroren. Vorher wurde die Zeilenliste aus
+-- `prescriptions.abrechnung_id` abgeleitet; sobald ein abgesetztes Rezept
+-- korrigiert und neu eingereicht wurde, wanderte die id mit und die Zeile
+-- verschwand aus der alten Datei. Warum das noetig war: db/REGISTER.md.
+CREATE TABLE abrechnung_zeile (
+  id uuid NOT NULL DEFAULT gen_random_uuid()
+  abrechnung_id uuid NOT NULL
+  owner_id uuid NOT NULL
+  business_id uuid
+  prescription_id uuid
+  kostentraeger_ik text NOT NULL
+  karten_ik text
+  einzel_rechnungsnummer text NOT NULL
+  sort_order smallint NOT NULL DEFAULT 0
+  belegnummer text
+  patient_name text
+  versichertennummer text
+  verordnungsdatum date
+  therapie_bereich text
+  heilmittel_position text
+  anzahl_einheiten integer
+  leistungen jsonb NOT NULL DEFAULT '[]'::jsonb
+  brutto_eur numeric(10,2) NOT NULL DEFAULT 0
+  zuzahlung_eur numeric(10,2) NOT NULL DEFAULT 0
+  netto_eur numeric(10,2) NOT NULL DEFAULT 0
+  status text NOT NULL DEFAULT 'eingereicht'::text
+  absetzung_eur numeric(10,2) NOT NULL DEFAULT 0
+  absetzung_grund text
+  absetzung_am date
+  herkunft text NOT NULL DEFAULT 'einreichung'::text
+  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+  updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+--   CHECK status IN (eingereicht, akzeptiert, abgesetzt, teilabgesetzt, nachgereicht)
+--   CHECK herkunft IN (einreichung, rekonstruiert)
+--   CHECK absetzung_eur >= 0 AND (herkunft = 'rekonstruiert' OR absetzung_eur <= netto_eur)
+--   CHECK absetzung_eur = 0 OR btrim(COALESCE(absetzung_grund,'')) <> ''
+--   FK abrechnung_id   -> abrechnung(id)    ON DELETE RESTRICT
+--   FK owner_id        -> profiles(id)      ON DELETE RESTRICT
+--   FK business_id     -> businesses(id)    ON DELETE SET NULL
+--   FK prescription_id -> prescriptions(id) ON DELETE SET NULL
+--   PK (id)
+--   UNIQUE (abrechnung_id, prescription_id) WHERE prescription_id IS NOT NULL
+--   ⚠️ FESTGESCHRIEBEN (GoBD, § 302 SGB V). trg_abrechnung_zeile_festschreibung
+--     blockt DELETE ganz und jede Aenderung an Identitaet und Betrag. Offen
+--     bleiben nur: status, absetzung_* und das NULLEN (nicht Aendern) von
+--     patient_name/versichertennummer — das ist die DSGVO-Ausnahme, siehe
+--     ANONYMIZE_TABLES in api/dsgvo.js. Bei `invoices` fehlt genau diese
+--     Ausnahme und haelt dort die ganze Loeschkette an.
+--   ⚠️ Es gibt KEINE UPDATE-Policy. Status, Absetzung und Anonymisierung
+--     schreibt nur das Backend/der DSGVO-Endpunkt mit service_role.
+--   ⚠️ prescription_id ist ON DELETE SET NULL — mit RESTRICT wuerde die
+--     DSGVO-Loeschkette bei `prescriptions` haengenbleiben.
+--   ⚠️ herkunft = 'rekonstruiert' heisst: NICHT der Einreichungsstand, sondern
+--     der heutige Zustand der lebenden Verordnung, beim Anlegen der Tabelle
+--     einmalig nachgezogen. Nur diese Zeilen duerfen absetzung_eur > netto_eur
+--     tragen.
+--   ⚠️ NICHT `abrechnung_position` nennen: „Position" heisst in diesem Code die
+--     Positionsnummer (HPNR) — heilmittel_position, gkv_position_nr.
+--   Kein Eintrag in DELETE_TABLES (api/dsgvo.js) — § 302/§ 304 SGB V, gleiche
+--   Kategorie wie `abrechnung`.
+
+-- 09.09.2026 — Geldeingang je Sammelabrechnung, tranchenweise. Bis dahin gab es
+-- nur `abrechnung.paid_at` und status='paid'; beide hat nie jemand geschrieben.
+CREATE TABLE abrechnung_zahlung (
+  id uuid NOT NULL DEFAULT gen_random_uuid()
+  abrechnung_id uuid NOT NULL
+  owner_id uuid NOT NULL
+  business_id uuid
+  einzel_rechnungsnummer text
+  art text NOT NULL DEFAULT 'zahlung'::text
+  betrag_eur numeric(10,2) NOT NULL
+  datum date NOT NULL
+  zahlungsavis text
+  notiz text
+  created_by uuid
+  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+--   CHECK art IN (zahlung, ruecklastschrift, abschreibung, korrektur)
+--   CHECK betrag_eur <> 0
+--   CHECK art = 'zahlung' OR length(btrim(COALESCE(notiz,''))) >= 3
+--   FK abrechnung_id -> abrechnung(id)  ON DELETE RESTRICT
+--   FK owner_id      -> profiles(id)    ON DELETE RESTRICT
+--   FK business_id   -> businesses(id)  ON DELETE SET NULL
+--   FK created_by    -> auth.users(id)  ON DELETE SET NULL
+--   PK (id)
+--   ⚠️ UNVERAENDERLICH. trg_prevent_abrechnung_zahlung_mod weist JEDES UPDATE
+--     und DELETE ab (§ 146 Abs. 4 AO). Korrektur = neue Zeile mit
+--     art = 'korrektur' und NEGATIVEM betrag_eur. Dritte Tabelle dieser Familie
+--     nach `belegliste` und `zuzahlung_korrekturen`.
+--   ⚠️ created_by ist ON DELETE SET NULL — mit CASCADE wuerde das Loeschen eines
+--     Mitarbeiterkontos eine GoBD-Zeile mitnehmen, was der Trigger ohnehin
+--     verbietet; die Loeschung wuerde also schlicht scheitern.
+--   ⚠️ KEIN Beleg in `belegliste`: Kassengeld ist eine Bankbewegung, kein
+--     Kassenbuchvorgang, und statistik.routes.js summiert die Belegliste
+--     ungefiltert in die Umsatzreihe — ein Beleg hier zaehlt doppelt.
+--   ⚠️ Eine Absetzung ist KEINE Zahlung. Sie steht auf abrechnung_zeile
+--     (absetzung_eur) und kommt aus dem Absetzungsschreiben, nie aus der
+--     ZAA-Datei — die kennt laut Anlage 1 TP5 V21 keine Betraege.
+--   Setzt ueber trg_abrechnung_zahlung_status den Kopfsatz `abrechnung.status`
+--   auf 'paid'/'accepted' und schreibt paid_at. Kein Eintrag in DELETE_TABLES.
 
 CREATE TABLE accommodations (
   id uuid NOT NULL DEFAULT gen_random_uuid()
