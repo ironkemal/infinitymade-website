@@ -103,7 +103,20 @@ export const DATEI_STATUS = [
   {
     key: 'rejected', label: 'Abgesetzt', kurz: 'Abgesetzt',
     farbe: '#be185d', bg: 'rgba(190,24,93,0.14)',
-    hilfe: 'Die Kasse hat alle Belege dieser Datei abgesetzt. Grund prüfen, korrigieren, mit VKZ 04 erneut einreichen.',
+    hilfe: 'Prüfstufe 4, Kasse: alle Belege dieser Datei wurden inhaltlich abgesetzt. Antwort: Korrekturrechnung mit VKZ 04 und URI-Segment, eigene Datei.',
+  },
+  {
+    // Das ZWEITE Rot (gkv-302, Veto V2). Andere Prüfstufe, anderer Weg zurück,
+    // deshalb andere Farbe und anderer Text: hier gilt NICHTS als eingereicht,
+    // die Datei wird korrigiert und mit VKZ 01 erneut geschickt — eine URI wäre
+    // sogar falsch, weil die Ursprungsrechnung die Prüfstufen 1-3 nie bestanden
+    // hat (Anlage 1 TP5 V21 §7.2). Wer die beiden Rot verwechselt, holt Geld
+    // nicht zurück oder fordert es doppelt.
+    // Der Datenbankwert dazu entsteht mit Phase 5; bis dahin wird dieser
+    // Schlüssel nie geliefert und die Rosette bleibt ungenutzt.
+    key: 'abgewiesen', label: 'Datei abgewiesen', kurz: 'Abgewiesen',
+    farbe: '#dc2626', bg: 'rgba(220,38,38,0.14)',
+    hilfe: 'Prüfstufe 1–3, Annahmestelle: die Datei war formal fehlerhaft (Syntax, Lesbarkeit, Schlüssel). Nichts gilt als eingereicht — korrigieren und als NEUE Erstrechnung mit VKZ 01 schicken, ohne URI.',
   },
   {
     key: 'accepted', label: 'Angenommen', kurz: 'Angenommen',

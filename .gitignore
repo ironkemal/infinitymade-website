@@ -43,3 +43,4 @@ Praxura weekly meeting/
 # Python-Bytecode
 __pycache__/
 *.pyc
+.tmp.driveupload/

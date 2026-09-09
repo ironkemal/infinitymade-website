@@ -23,6 +23,8 @@ import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freig
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20260909';
+import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260909';
+import { initAbrechnungDetail, downloadAbrechnungFile } from './module/abrechnung-detail.js?v=20260909';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260905a';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260831a';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260905b';
@@ -129,7 +131,6 @@ const T = {
   de: {
     logout: 'Abmelden',
     nav_overview: 'Dashboard', nav_ueberblick: 'Überblick', nav_calendar: 'Terminkalender', nav_kunden: 'Patienten',
-    wiz_step_1: '1. Kontrolle', wiz_step_2: '2. Taxierung', wiz_step_3: '3. Export', wiz_step_4: '4. Archiv',
     nav_services: 'Leistungen', nav_hours: 'Verfügbarkeit',
     nav_team: 'Team', nav_b2b: 'Zuweiser', nav_b2c: 'Patientenpost', nav_rechnungen: 'Rechnungen', nav_feedback: 'Bewertungen', nav_vorlagen: 'Vorlagen', nav_settings: 'Einstellungen',
     overview_sub: 'Ihr heutiger Überblick',
@@ -183,18 +184,6 @@ const T = {
     lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
     lbl_select_patient: 'Patient wählen', lbl_notes_empty: 'Keine Notizen vorhanden.',
     nav_abrechnung: '§302-Abrechnung', abrechnung_sub: 'Sammelrechnung § 302 SGB V an Krankenkassen vorbereiten',
-    ab_ready: 'Abrechnungsbereit', ab_history: 'Abrechnungs-Historie',
-    ab_kk: 'Krankenkasse', ab_patient: 'Patient', ab_rezept: 'Rezept', ab_einheiten: 'Einheiten',
-    ab_brutto: 'Brutto', ab_zuzahlung: 'Zuzahlung', ab_select_all: 'Alle wählen',
-    ab_create: 'Abrechnung erstellen', ab_no_ready: 'Keine abrechnungsbereiten Rezepte.',
-    ab_no_history: 'Noch keine Abrechnungen erstellt.',
-    ab_filename: 'Dateiname', ab_count: 'Rezepte', ab_total: 'Summe', ab_status: 'Status', ab_actions: '',
-    ab_download_dta: '📥 DTA', ab_download_begleit: '📄 Begleitzettel',
-    ab_creating: 'Erstelle Abrechnung…', ab_created: 'Abrechnung erstellt.',
-    ab_status_erstellt: 'Erstellt', ab_status_heruntergeladen: 'Heruntergeladen',
-    ab_status_gesendet: 'Versendet', ab_status_accepted: 'Akzeptiert',
-    ab_status_rejected: 'Abgelehnt', ab_status_paid: 'Bezahlt',
-    ab_zuzahlung_befreit: 'befreit', ab_hint_select: 'Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.',
     nav_belegliste: 'Kassenbuch',
     nav_mahnwesen: 'Mahnwesen',
     nav_verordnungen: 'Verordnungen',
@@ -343,7 +332,6 @@ const T = {
   en: {
     logout: 'Sign out',
     nav_overview: 'Dashboard', nav_ueberblick: 'Overview Hub', nav_calendar: 'Calendar', nav_kunden: 'Patients',
-    wiz_step_1: '1. Control', wiz_step_2: '2. Pricing', wiz_step_3: '3. Export', wiz_step_4: '4. Archive',
     nav_services: 'Services', nav_hours: 'Availability',
     nav_team: 'Team', nav_b2b: 'Referrers', nav_b2c: 'Email Marketing', nav_rechnungen: 'Invoices', nav_feedback: 'Reviews', nav_vorlagen: 'Templates', nav_settings: 'Settings',
     overview_sub: 'Your daily overview',
@@ -395,18 +383,6 @@ const T = {
     lbl_ai_summary: 'AI Report', lbl_send_patient: 'Send to patient',
     lbl_select_patient: 'Select patient', lbl_notes_empty: 'No notes available.',
     nav_abrechnung: '§302 Billing', abrechnung_sub: 'Prepare § 302 SGB V batch billing to health insurers',
-    ab_ready: 'Ready to bill', ab_history: 'Billing history',
-    ab_kk: 'Insurer', ab_patient: 'Patient', ab_rezept: 'Rx', ab_einheiten: 'Units',
-    ab_brutto: 'Gross', ab_zuzahlung: 'Co-pay', ab_select_all: 'Select all',
-    ab_create: 'Create billing', ab_no_ready: 'No prescriptions ready for billing.',
-    ab_no_history: 'No billings yet.',
-    ab_filename: 'Filename', ab_count: 'Rx count', ab_total: 'Total', ab_status: 'Status', ab_actions: '',
-    ab_download_dta: '📥 DTA', ab_download_begleit: '📄 Cover sheet',
-    ab_creating: 'Creating billing…', ab_created: 'Billing created.',
-    ab_status_erstellt: 'Created', ab_status_heruntergeladen: 'Downloaded',
-    ab_status_gesendet: 'Sent', ab_status_accepted: 'Accepted',
-    ab_status_rejected: 'Rejected', ab_status_paid: 'Paid',
-    ab_zuzahlung_befreit: 'exempt', ab_hint_select: 'Select all prescriptions for one insurer to bundle into a single batch invoice.',
     nav_belegliste: 'Cash Ledger',
     nav_mahnwesen: 'Dunning',
     nav_verordnungen: 'Prescriptions',
@@ -536,7 +512,6 @@ const T = {
   tr: {
     logout: 'Çıkış',
     nav_overview: 'Dashboard', nav_ueberblick: 'Genel Bakış', nav_calendar: 'Takvim', nav_kunden: 'Hastalar',
-    wiz_step_1: '1. Kontrol', wiz_step_2: '2. Fiyatlandırma', wiz_step_3: '3. Dışa Aktarım', wiz_step_4: '4. Arşiv',
     nav_services: 'Hizmetler', nav_hours: 'Müsaitlik',
     nav_team: 'Ekip', nav_b2b: 'Yönlendirenler', nav_b2c: 'E-posta', nav_rechnungen: 'Faturalar', nav_feedback: 'Değerlendirmeler', nav_vorlagen: 'Şablonlar', nav_settings: 'Ayarlar',
     overview_sub: 'Günlük genel bakışınız',
@@ -588,18 +563,6 @@ const T = {
     lbl_ai_summary: 'AI Raporu', lbl_send_patient: 'Hastaya gönder',
     lbl_select_patient: 'Hasta seç', lbl_notes_empty: 'Not bulunmuyor.',
     nav_abrechnung: '§302 Faturalama', abrechnung_sub: '§ 302 SGB V Krankenkasse toplu faturası hazırlama',
-    ab_ready: 'Faturalandırmaya hazır', ab_history: 'Fatura geçmişi',
-    ab_kk: 'Sigorta', ab_patient: 'Hasta', ab_rezept: 'Reçete', ab_einheiten: 'Birim',
-    ab_brutto: 'Brüt', ab_zuzahlung: 'Katkı', ab_select_all: 'Tümünü seç',
-    ab_create: 'Fatura oluştur', ab_no_ready: 'Faturalandırmaya hazır reçete yok.',
-    ab_no_history: 'Henüz fatura oluşturulmadı.',
-    ab_filename: 'Dosya adı', ab_count: 'Reçete sayısı', ab_total: 'Toplam', ab_status: 'Durum', ab_actions: '',
-    ab_download_dta: '📥 DTA', ab_download_begleit: '📄 Refakat belgesi',
-    ab_creating: 'Fatura oluşturuluyor…', ab_created: 'Fatura oluşturuldu.',
-    ab_status_erstellt: 'Oluşturuldu', ab_status_heruntergeladen: 'İndirildi',
-    ab_status_gesendet: 'Gönderildi', ab_status_accepted: 'Kabul',
-    ab_status_rejected: 'Red', ab_status_paid: 'Ödendi',
-    ab_zuzahlung_befreit: 'muaf', ab_hint_select: 'Tek bir Krankenkasse için tüm reçeteleri seçerek tek bir toplu faturada birleştirin.',
     nav_belegliste: 'Kasa Defteri',
     nav_mahnwesen: 'Tahsilat',
     nav_verordnungen: 'Reçeteler',
@@ -17839,26 +17802,13 @@ async function savePositionOverride(prescriptionId, newPosition, selectEl) {
   }
 }
 
-async function ladeAbrechnungHistorie() {
-  const ownerId = getOwnerId();
-  if (!ownerId) return;
-
-  const [kkRes, histRes] = await Promise.all([
-    supabase.from('kostentraeger').select('ik, name, das_ik, active'),
-    supabase.from('abrechnung')
-      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, begleitzettel_path, signed_storage_path, signed_at, created_at')
-      .eq('owner_id', ownerId)
-      .order('created_at', { ascending: false })
-      .limit(50),
-  ]);
-  if (kkRes.error)   console.error('[abrechnung/kk]', kkRes.error);
-  if (histRes.error) console.error('[abrechnung/hist]', histRes.error);
-
-  // kkMap bleibt in _abState, weil openDasGuideModal() daraus den Kassennamen
-  // holt — und weil die Auswahlliste sie ueber ctx.kassenName() mitbenutzt,
-  // statt dieselben 93 Zeilen ein zweites Mal zu laden.
-  _abState.kkMap = new Map((kkRes.data || []).map(r => [r.ik, r]));
-  renderAbrechnungHistory(histRes.data || []);
+/** Kassennamen fuer beide Haelften des §302-Bildschirms. `_abState.kkMap` ist
+ *  auch der Vorrat von openDasGuideModal(); deshalb bleibt sie hier und wird
+ *  nicht in jedes Modul erneut geladen (93 Zeilen, einmal). */
+async function ladeKostentraegerNamen() {
+  const { data, error } = await supabase.from('kostentraeger').select('ik, name, das_ik, active');
+  if (error) console.error('[abrechnung/kk]', error);
+  _abState.kkMap = new Map((data || []).map(r => [r.ik, r]));
 }
 
 // Der 4-Stufen-Assistent (Kontrolle · Taxierung · Export · Archiv) ist am
@@ -17866,136 +17816,51 @@ async function ladeAbrechnungHistorie() {
 // Bisherige — und EINE Auswahlliste fuer alle vier Fachbereiche
 // (module/abrechnung-auswahl.js, ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1).
 // Mitgegangen sind setWizardStep(), runPreflightCheck(), renderTaxierungList(),
-// renderExportStep(), renderAbrechnungReady() und createAbrechnung(): ihre
-// Aufgaben stehen jetzt einmal statt zweimal (Podologie hatte dieselben in
-// module/podologie-abrechnung.js). Herunterladen und Signieren sitzen weiter in
-// der Historie unten — Phase 3 baut daraus die untere Haelfte.
+// renderExportStep(), renderAbrechnungReady() und createAbrechnung().
+// Mit Phase 3 kamen renderAbrechnungHistory() und downloadAbrechnungFile()
+// dazu: die Historie ist jetzt eine obere und eine untere Haelfte
+// (module/abrechnung-verlauf.js + module/abrechnung-detail.js), gekoppelt ueber
+// module/signal.js — dasselbe Muster wie panel-verordnungen.
 async function loadAbrechnung() {
   if (!getOwnerId()) return;
 
   if (!window.__abAuswahlBereit) {
     window.__abAuswahlBereit = true;
+    const gemeinsam = {
+      supabase, apiBase: API, getOwnerId, escapeHtml, showToast,
+      kassenName: (ik) => _abState.kkMap.get(ik)?.name || null,
+    };
     initAbrechnungAuswahl({
-      supabase, apiBase: API, getOwnerId, escapeHtml, showToast, checkPlanActive,
+      ...gemeinsam, checkPlanActive,
       // Derselbe Standort-Zuschnitt wie in podoCtx(): die podologische
       // Verordnung ist praxisweit, gefiltert wird nur auf Wunsch des Inhabers.
       aktiverStandort: () => (dataSharing.patients || !currentBusiness?.id) ? null : currentBusiness.id,
-      kassenName: (ik) => _abState.kkMap.get(ik)?.name || null,
       ladePositionen: loadPhysioPositions,
       positionen: () => _abState.positions,
       positionOptionsHtml: buildPositionOptionsHtml,
       savePosition: savePositionOverride,
-      nachErstellung: ladeAbrechnungHistorie,
+      nachErstellung: ladeAbrechnungVerlauf,
+    });
+    initAbrechnungVerlauf(gemeinsam);
+    initAbrechnungDetail({
+      ...gemeinsam,
+      nachDownload: ladeAbrechnungVerlauf,
+      // Die vier Dialoge bleiben in dashboard.html und damit hier; das Modul
+      // ruft sie nur auf, statt ein zweites Modal-Geruest zu bauen.
+      aktionen: {
+        signieren:    (id, name) => openSignModal(id, { filename: name }),
+        zaaHochladen: (id, name) => openZaaModal(id, name),
+        zaaFehler:    (id) => showZaaErrors(id),
+        anleitung:    (id) => openDasGuideModal(id),
+      },
     });
   }
   wireAbrechnungAnsicht(document.getElementById('panel-abrechnung'));
 
-  // Historie ZUERST: sie fuellt _abState.kkMap, aus der die Auswahlliste ihre
-  // Kassennamen zieht.
-  await ladeAbrechnungHistorie();
-  await ladeAbrechnungAuswahl();
+  // Kassennamen ZUERST: beide Haelften ziehen ihre Beschriftung daraus.
+  await ladeKostentraegerNamen();
+  await Promise.all([ladeAbrechnungVerlauf(), ladeAbrechnungAuswahl()]);
   zeigeAbrechnungAnsicht(aktuelleAbrechnungAnsicht());
-}
-
-function renderAbrechnungHistory(rows) {
-  const body = document.getElementById('abHistoryBody');
-  const empty = document.getElementById('abHistoryEmpty');
-  if (!body || !empty) return;
-  body.innerHTML = '';
-
-  // Zweite Zahl auf dem Einstieg. „Offen" ist hier bewusst „abgeschickt, noch
-  // keine Antwort" — die Zahlungsverfolgung kommt erst mit Phase 4.
-  const info = document.getElementById('abEinstiegAltInfo');
-  if (info) {
-    const offen = rows.filter(a => a.status === 'gesendet').length;
-    const rot   = rows.filter(a => a.status === 'rejected').length;
-    info.textContent = rows.length
-      ? `${rows.length} Datei${rows.length > 1 ? 'en' : ''} · ${offen} offen${rot ? ` · ${rot} abgesetzt` : ''}`
-      : 'Noch keine Abrechnungen erstellt';
-  }
-
-  if (!rows.length) { empty.style.display = ''; return; }
-  empty.style.display = 'none';
-
-  rows.forEach(a => {
-    const kk = _abState.kkMap.get(a.kostentraeger_ik);
-    const statusLabel = t('ab_status_' + a.status) || a.status;
-    const signedBadge = a.signed_storage_path
-      ? `<span class="badge badge-green" title="${a.signed_at ? new Date(a.signed_at).toLocaleString('de-DE') : ''}">✍ signiert</span>`
-      : `<span class="badge badge-gray">unsigniert</span>`;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><span style="font-family:monospace;font-size:12px;">${escapeHtml(a.dateiname || a.rechnungsnummer || a.id.slice(0, 8))}</span> ${signedBadge}</td>
-      <td>${escapeHtml(kk?.name || a.kostentraeger_ik || '—')}</td>
-      <td>${a.prescription_count || 0}</td>
-      <td>${fmtEur(a.total_eur)}</td>
-      <td>${escapeHtml(statusLabel)}</td>
-      <td style="white-space:nowrap;">
-        ${a.signed_storage_path
-        ? `<button class="btn-ghost btn-sm ab-dl-signed" data-path="${escapeHtml(a.signed_storage_path)}" data-id="${escapeHtml(a.id)}">📥 P7M</button>`
-        : (a.storage_path ? `<button class="btn-primary btn-sm ab-sign" data-id="${escapeHtml(a.id)}" data-name="${escapeHtml(a.dateiname || '')}">✍ Signieren</button>` : '')
-      }
-        ${a.storage_path ? `<button class="btn-ghost btn-sm ab-dl-dta" data-path="${escapeHtml(a.storage_path)}" data-id="${escapeHtml(a.id)}">${t('ab_download_dta')}</button>` : ''}
-        ${a.begleitzettel_path ? `<button class="btn-ghost btn-sm ab-dl-beg" data-path="${escapeHtml(a.begleitzettel_path)}">${t('ab_download_begleit')}</button>` : ''}
-        <button class="btn-ghost btn-sm ab-zaa" data-id="${escapeHtml(a.id)}" data-name="${escapeHtml(a.dateiname || '')}" title="ZAA-Antwortdatei hochladen">📨 ZAA</button>
-        <button class="btn-ghost btn-sm ab-guide" data-id="${escapeHtml(a.id)}" title="Schritt-für-Schritt-Anleitung" style="display:inline-flex;align-items:center;gap:4px;"><span class="svg-icon" style="width:12px;height:12px;display:inline-flex;">${ICON.clipboard}</span>Anleitung</button>
-        ${a.status === 'rejected' || a.status === 'accepted'
-        ? `<button class="btn-ghost btn-sm ab-show-errors" data-id="${escapeHtml(a.id)}">🔍 Fehler</button>`
-        : ''}
-        ${a.status === 'rejected'
-        ? `<button class="btn-ghost btn-sm ab-revert-rejected" data-id="${escapeHtml(a.id)}">🔄 Korrigieren & erneut vorbereiten</button>`
-        : ''}
-      </td>
-    `;
-    body.appendChild(tr);
-  });
-
-  body.querySelectorAll('.ab-dl-dta').forEach(btn => {
-    btn.addEventListener('click', () => downloadAbrechnungFile(btn.dataset.path, btn.dataset.id, 'dta'));
-  });
-  body.querySelectorAll('.ab-dl-signed').forEach(btn => {
-    btn.addEventListener('click', () => downloadAbrechnungFile(btn.dataset.path, btn.dataset.id, 'dta'));
-  });
-  body.querySelectorAll('.ab-dl-beg').forEach(btn => {
-    btn.addEventListener('click', () => downloadAbrechnungFile(btn.dataset.path, null, 'begleit'));
-  });
-  body.querySelectorAll('.ab-sign').forEach(btn => {
-    btn.addEventListener('click', () => openSignModal(btn.dataset.id, { filename: btn.dataset.name }));
-  });
-  body.querySelectorAll('.ab-zaa').forEach(btn => {
-    btn.addEventListener('click', () => openZaaModal(btn.dataset.id, btn.dataset.name));
-  });
-  body.querySelectorAll('.ab-show-errors').forEach(btn => {
-    btn.addEventListener('click', () => showZaaErrors(btn.dataset.id));
-  });
-  body.querySelectorAll('.ab-guide').forEach(btn => {
-    btn.addEventListener('click', () => openDasGuideModal(btn.dataset.id));
-  });
-  body.querySelectorAll('.ab-revert-rejected').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const abId = btn.dataset.id;
-      const okRevert = await showConfirmModal({ title: 'Abrechnung zurücksetzen', message: "Die Rezepte dieser Abrechnung werden zur Korrektur freigegeben und erscheinen wieder unter 'Bereit'. Fortfahren?", confirmText: 'Fortfahren', cancelText: 'Abbrechen' });
-      if (!okRevert) return;
-      try {
-        const ownerId = getOwnerId();
-        if (!ownerId) {
-          showToast('Fehler: Keine gültige Owner-ID gefunden', 'error');
-          return;
-        }
-        const { error } = await supabase.from('prescriptions')
-          .update({ abrechnung_status: 'bereit', abrechnung_id: null })
-          .eq('owner_id', ownerId)
-          .eq('abrechnung_id', abId);
-          
-        if (error) throw error;
-        
-        showToast('Rezepte zur Korrektur freigegeben ✓');
-        await loadAbrechnung();
-      } catch (err) {
-        showToast(err.message || 'Fehler beim Freigeben der Rezepte', 'error');
-      }
-    });
-  });
 }
 
 function openZaaModal(abrechnungId, filename) {
@@ -18131,24 +17996,6 @@ async function showZaaErrors(abrechnungId) {
     closeModal('zaaModal');
     document.getElementById('zaaRunBtn').onclick = runZaaUpload;
   };
-}
-
-async function downloadAbrechnungFile(path, abrechnungId, kind) {
-  try {
-    const { data, error } = await supabase.storage.from('abrechnungen').createSignedUrl(path, 300);
-    if (error) throw error;
-    window.open(data.signedUrl, '_blank');
-    if (abrechnungId && kind === 'dta') {
-      supabase.from('abrechnung')
-        .update({ status: 'heruntergeladen' })
-        .eq('id', abrechnungId)
-        .eq('status', 'erstellt')
-        .then(() => { loadAbrechnung(); });
-    }
-  } catch (e) {
-    console.error('[abrechnung/download]', e);
-    showToast('Download fehlgeschlagen: ' + e.message, 'error');
-  }
 }
 
 let _forgeMod = null;
