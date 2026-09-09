@@ -86,7 +86,7 @@ export function renderInvList() {
       ? `<span class="badge badge-green" title="${inv.payment_method || ''}" style="margin-left:4px;">✓ Bezahlt</span>`
       : (inv.payment_status === 'pending' ? '<span class="badge badge-gray" style="margin-left:4px;">Offen</span>' : '');
     const invTypeBadgeHtml = inv.invoice_type
-      ? `<span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:5px;${inv.invoice_type==='gkv' ? 'background:rgba(59,130,246,0.15);color:#60a5fa;' : 'background:rgba(177,137,27,0.15);color:#b1891b;'}">${inv.invoice_type==='gkv'?'GKV':'Privat'}</span>`
+      ? `<span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:5px;${inv.invoice_type==='gkv' ? 'background:rgba(59,130,246,0.15);color:var(--info);' : 'background:rgba(177,137,27,0.15);color:var(--bronze);'}">${inv.invoice_type==='gkv'?'GKV':'Privat'}</span>`
       : '';
     return `<tr>
       <td><strong>${inv.invoice_number || '—'}</strong>${invTypeBadgeHtml}</td>

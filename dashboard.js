@@ -17066,6 +17066,17 @@ async function loadDataSharing() {
 async function init() {
   try {
     console.log('[init] start');
+    mountRechnungsansicht({ // vor renderSidebar() — sonst trifft ein früher Klick d===null
+      supabase, apiBasis: API,
+      token: async () => (await supabase.auth.getSession()).data.session?.access_token,
+      liste: () => invListCache,
+      profile: () => currentProfile,
+      escapeHtml, formatEur, showToast,
+      starteZahlungseingang, fuelleBelegPositionen, aggregateInvLines, leistungszeitraum,
+      neuLaden: () => loadRechnungen(),
+      merkeRechnung: (id) => { window._currentInvoiceId = id; },
+    });
+    bindInvEvents();
     await ensureCompanyCode();
     console.log('[init] companyCode ok');
     await ensureBookingSlug();
@@ -17118,17 +17129,6 @@ async function init() {
 
     await handleGmailCallback();
     console.log('[init] gmail ok');
-    mountRechnungsansicht({
-      supabase, apiBasis: API,
-      token: async () => (await supabase.auth.getSession()).data.session?.access_token,
-      liste: () => invListCache,
-      profile: () => currentProfile,
-      escapeHtml, formatEur, showToast,
-      starteZahlungseingang, fuelleBelegPositionen, aggregateInvLines, leistungszeitraum,
-      neuLaden: () => loadRechnungen(),
-      merkeRechnung: (id) => { window._currentInvoiceId = id; },
-    });
-    bindInvEvents();
     console.log('[init] invoices ok');
     bindAnamneseEvents();
     console.log('[init] anamnese ok');
@@ -20429,12 +20429,7 @@ async function populateWlServices() {
   const sel = document.getElementById('wlService');
   if (!sel) return;
 
-  const sector = getSector();
-  const catalog = GKV_LEISTUNGSKATALOG[sector] || [];
-  const hasGkv = servicesCache.some(s => s.gkv_position_nr);
-  if (!servicesCache.length || (catalog.length && !hasGkv)) {
-    await loadServices();
-  }
+  await ensureLeistungskatalog(); // war eine eigene Kopie des Wächters, jetzt dieselbe wie in Rechnungen
 
   const gkvSrvs     = servicesCache.filter(s => s.gkv_position_nr);
   const privateSrvs = servicesCache.filter(s => !s.gkv_position_nr);
