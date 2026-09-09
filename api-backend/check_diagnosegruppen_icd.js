@@ -17,8 +17,8 @@
  *
  * Bei --check ist Exit-Code 1 = DB weicht von der JSON-Datei ab.
  *
- * Voraussetzung: Migration database_v33_diagnosegruppen_icd_rules.sql ist
- * eingespielt (Spalten icd_accept / icd_exclude / icd_auto_select /
+ * Voraussetzung: Migration archive/kod/database_v36_diagnosegruppen_icd_rules.sql
+ * ist eingespielt (Spalten icd_accept / icd_exclude / icd_auto_select /
  * icd_accept_unsicher / icd_enforcement).
  */
 
@@ -110,7 +110,7 @@ async function main() {
   if (error) {
     console.error('✗ Lesen fehlgeschlagen:', error.message);
     if (/column .* does not exist/i.test(error.message)) {
-      console.error('  → Migration database_v33_diagnosegruppen_icd_rules.sql ist noch nicht eingespielt.');
+      console.error('  → Migration archive/kod/database_v36_diagnosegruppen_icd_rules.sql ist noch nicht eingespielt.');
     }
     process.exit(1);
   }
