@@ -19467,7 +19467,6 @@ async function loadMahnwesen() {
 
     // Summary
     const totalOffen = rows.reduce((s, r) => s + Number(r.zuzahlung_eur), 0);
-    const fmtEur = n => Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
     summary.innerHTML = `
       <div><span style="font-size:11px;color:var(--text-muted);">Offen gesamt</span><br><strong style="color:var(--danger);">${fmtEur(totalOffen)}</strong></div>
       <div><span style="font-size:11px;color:var(--text-muted);">Forderungen</span><br><strong>${rows.length}</strong></div>
@@ -19608,7 +19607,6 @@ async function loadAusfallrechnungen() {
     empty.hidden = rows.length > 0;
     if (!rows.length) return;
 
-    const fmtEur = n => Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
     const fmtD = d => d ? new Date(d).toLocaleDateString('de-DE') : '—';
     const STATUS_BADGE = {
       offen: '<span class="badge badge-gray">Offen</span>',
@@ -19686,7 +19684,6 @@ async function loadStatistik() {
   if (!token) return;
 
   const monate = document.getElementById('statMonateSelect')?.value || 6;
-  const fmtEur = n => Number(n || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
   const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
   try {
