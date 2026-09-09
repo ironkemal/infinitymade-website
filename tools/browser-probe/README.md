@@ -29,6 +29,7 @@ Ein Login oder `.env.local` wird **nicht** gebraucht — die Proben laden nur
 | `leistungen-probe` | Ist der „+"-Knopf der Terminmaske verdrahtet, erscheint der Vorschlagszeile, landet die Dauer da, wo der Speicherpfad sie liest? |
 | `verordnung-maske-probe` | Die Muster-13-Maske (einziger Weg, eine Verordnung anzulegen) — Foto/Datei/Handeingabe. |
 | `abrechnung-probe` | Rechnungen: schaltet der Liste/Editor/Ansicht-Umschalter in jedem Modus genau eine Fläche frei (Regressionstest für Ops-Meldung 09.09.2026), rendert die Liste korrekt mit/ohne Einträge? |
+| `kassenbuch-probe` | Barverkauf-Modal: bleibt der Save-Knopf ohne gewählte Zahlart gesperrt (kein Default!), trägt der POST die richtige Zahlart, schließt das Modal und lädt die Liste neu (Redesign, Ops-Meldung 10.09.2026)? |
 
 ## Grenzen
 

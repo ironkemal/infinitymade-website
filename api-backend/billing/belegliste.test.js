@@ -55,8 +55,8 @@ test('validateBelegEntry: rejects non-numeric amount', () => {
   assert.equal(res.isValid, false);
 });
 
-test('validateBelegEntry: akzeptiert alle vier Zahlarten', () => {
-  for (const z of ['bar', 'ec', 'ueberweisung', 'sonstiges']) {
+test('validateBelegEntry: akzeptiert alle fünf Zahlarten', () => {
+  for (const z of ['bar', 'ec', 'ueberweisung', 'sonstiges', 'paypal']) {
     assert.equal(validateBelegEntry('zuzahlung', 13.50, z).isValid, true, `Zahlart ${z} sollte gültig sein`);
   }
 });
