@@ -8,7 +8,7 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-07
+> Son güncelleme: 2026-09-10 (Anhang 1 + Anhang 2 zur Anlage 1 TP5 → 8 yeni kural)
 
 ---
 
@@ -484,6 +484,113 @@
 - **Kodda:** `api-backend/billing/api/abrechnung.routes.js` (Begleitzettel-Bau, `dta.gruppen`
   üzerinden) · şablon `api-backend/billing/pdf/begleitzettel.template.js`
 - **Kapsam:** tümü
+
+---
+
+
+# Datenübermittlung · Test- / Erprobungsverfahren · Verschlüsselung
+
+> Kaynağı: **Anhang 1 zur Anlage 1 TP5** (Kap. 4 Datenübermittlung, Stand 31.08.2017,
+> anzuwenden ab 01.09.2017) ve **Anhang 2 zur Anlage 1 TP5** (Kap. 9 Prüfverfahren,
+> Stand 10.11.2003). İkisi de 10.09.2026'da arşive girdi → sicil `wissensbank/REGISTER.md`
+> W-02 / W-03. Bloklar `gkv-302`'nin 10.09.2026 canlı-gönderim hazırlık denetiminden çıktı;
+> kod satırı atıfları `wissensbank` tarafından aynı gün ölçüldü (üçü kaymıştı, düzeltildi).
+
+### Logischer Dateiname — 11 hane, UNB Anwendungsreferenz ve Auftragsdatei'de aynı
+- **Kural:** `SL` + Absender-IK'nın 3.–8. haneleri + `S` (Selbstabrechner) veya `A`
+  (Abrechnungsstelle) + 2 haneli Abrechnungsmonat. Toplam 11 hane, UNB Feld 0026'ya ve
+  Auftragsdatei'nin „Dateiname" alanına birebir aynı yazılır, tüm aktarım ortamları için aynıdır.
+- **Kaynak:** Anhang 1 zur Anlage 1 TP5, Kapitel 4, § 4.2 (Stand 31.08.2017)
+- **Geçerlilik:** 01.09.2017 — hâlâ geçerli
+- **Kodda:** ⛔ uygulanmamış — `api-backend/billing/dta/filename.js` → `buildDtaFilename()`,
+  dönüş satırı ``return `E${anwendung}${ikSuffix}${seq}` `` **16 haneli `EHK…`/`EHM…`** üretiyor.
+- ⚠️ **Çelişki, çözülmeden koda dokunulmamalı:** `filename.js` baş yorumu kendi kaynağı olarak
+  „GKV-DA Anlage 17 (Nutzdatendateien)" gösteriyor — yani §302 Anhang 1 §4.2'ye değil **başka bir
+  spesifikasyona** dayanıyor. Anlage 17 arşivde **yok**. Hangisinin geçerli olduğuna `gkv-302`
+  karar verir; „16 haneyi 11 haneye çevir" işi o karardan önce yapılmaz.
+- **Kapsam:** tüm Leistungserbringergruppen, tüm Verordnungsarten
+
+### Physikalischer Dateiname — 8 hane, Test/Echt ayrımı BURADA
+- **Kural:** `E` (Echtdaten) veya `T` (Testdaten) + `SOL` (Sonstige Leistungserbringer) +
+  `0` (Versionsangabe) + 3 haneli laufende Nummer (Transfernummer). Auftragsdatei'de belirtilir.
+- **Kaynak:** Anhang 1 zur Anlage 1 TP5, Kapitel 4, § 4.3 (Stand 31.08.2017)
+- **Geçerlilik:** 01.09.2017 — hâlâ geçerli
+- **Kodda:** ⛔ uygulanmamış — Auftragsdatei üreten kod yok (aşağıdaki kurala bak)
+- **Kapsam:** tüm gruplar
+
+### Testdatei ödeme tetiklemez
+- **Kural:** UNB Feld 0035 = `0` (Test) veya `1` (Erprobung) olan dosyaların işlenmesi
+  hiçbir ödeme tetiklemez.
+- **Kaynak:** Anhang 2 zur Anlage 1 TP5, Kapitel 9, § 5 — *„Die Verarbeitung der unter den
+  zuvorgenannten Kriterien gemeldeten Testdaten löst keine Zahlungen aus."*
+- **Geçerlilik:** 10.11.2003 — hâlâ geçerli
+- **Kodda:** `api-backend/billing/api/abrechnung.routes.js` — üç çağrının üçü de `kind: 'test'`
+  (satır **700 · 2810 · 3242**; ilkinin yanında *„Faz A2 starts in test mode; flip to 'echt'
+  once DAS portal acks"* yorumu duruyor) → `api-backend/billing/dta/builder.js:375`
+  `testIndikator = kind === 'echt' ? '2' : kind === 'erprobung' ? '1' : '0'`
+- **Kapsam:** tüm gruplar
+- ⚠️ Bu kural „yanlışlıkla Echt gönderme" riskine değil, **„Test gönderip para bekleme"**
+  hatasına karşı duruyor — bugün kod zaten yalnız Test üretiyor.
+
+### Echt'e geçiş kasadan Zulassung gerektirir
+- **Kural:** Erprobungsphase ancak Leistungserbringer kasa tarafından „zum Echtverfahren
+  zugelassen" edildiğinde biter. Öncesinde Prüfstufe 1–3'ü hatasız geçmiş Testdateien ve
+  Datenannahmestelle'ye Kommunikationspartner olarak kayıt şarttır.
+- **Kaynak:** Anlage 1 TP5 V21 § 2 Abs. 2 · Anhang 2 zur Anlage 1 TP5 Kap. 9, § 3.1, § 4, § 6
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21) / 10.11.2003 (Anhang 2)
+- **Kodda:** ⛔ uygulanmamış — `kind` kodda sabit, sürecin hangi aşamada olduğunu tutan DB
+  alanı yok. „Test → Erprobung → Echt" geçişi bugün bir kod düzenlemesi gerektiriyor.
+- **Kapsam:** tüm gruplar
+
+### Nutzdatendatei + Auftragsdatei çift gider
+- **Kural:** Prüfstufe 1'de dosyaların **çift hâlinde** (Auftragsdatei + zugehörige Nutzdatei)
+  geldiği kontrol edilir. Nutzdaten şifreli, Auftragsdatei şifresizdir.
+- **Kaynak:** Anhang 2 zur Anlage 1 TP5 Kap. 9, § 3.1 — *„Prüfung ob die Dateien paarweise,
+  d.h. Auftragsdatei und zugehörige Nutzdatei übermittelt"* · Auftragsdatei yapısı için
+  Anhang 1 zur Anlage 1 TP5 § 4.3 → Anlage A (GGT) · GGT § 2.3 (Fassung 01.01.2026)
+- **Geçerlilik:** hâlâ geçerli
+- **Kodda:** ⛔ uygulanmamış — projede `Auftragsdatei` üreten hiçbir kod yok
+  (`grep -rn "Auftragsdatei" --include=*.js --include=*.mjs` → sıfır sonuç, 10.09.2026'da ölçüldü)
+- **Kapsam:** tüm gruplar; DFÜ'de zorunlu, portal yüklemesinde bilateral
+- ⚠️ **Auftragsdatei'nin tam alan yapısı arşivde YOK** — GGT Anlage 2 indirilmeli
+  (`wissensbank/REGISTER.md` → W-A09).
+
+### Önce imzala, sonra alıcının açık anahtarıyla şifrele
+- **Kural:** Nutzdaten önce **göndericinin özel anahtarıyla imzalanır**, ardından **ALICININ
+  açık anahtarıyla şifrelenir**. Sertifikalar SECON (GGT Anlage 16) kapsamındadır; nitelikli
+  elektronik imza (qeS) DTA için gerekli **DEĞİLDİR** — qeS yalnız Imageverfahren'de
+  (Anhang 04c) istenir.
+- **Kaynak:** GGT § 5.1 · § 2.3 (Fassung 01.01.2026) · Anhang 04c § 4 (qeS kapsamı)
+- **Geçerlilik:** 01.01.2026
+- **Kodda:** ⚠️ **yarı uygulanmış** — `dashboard.js:18085` (`forge.pkcs7.createSignedData()`)
+  CMS SignedData üretiyor, **EnvelopedData yok**; `api-backend/billing/api/abrechnung.routes.js`
+  yalnız SignedData OID'ini doğruluyor (satır **977** yorum `contentType OID 1.2.840.113549.1.7.2`
+  + satır **983** ret mesajı „Ungültige PKCS#7-Struktur — Datei ist kein gültiges CMS SignedData").
+  Yani bugün üretilen dosya **imzalı ama şifresiz**.
+- **Kapsam:** tüm gruplar
+
+### Teilnehmer-Zertifikat azami geçerlilik 1 yıl
+- **Kural:** SECON teilnehmer sertifikalarının azami geçerlilik süresi üç yıldan **bir yıla**
+  indirildi.
+- **Kaynak:** Änderungshistorie (GGT Anlagen), Anlage 16 – Security Schnittstelle (SECON)
+- **Geçerlilik:** ⚠️ **belirtilmemiş** — belgedeki „gültig ab" sütunu metin dönüşümünde
+  okunamadı, PDF'ten teyit edilmeli (tahmin yazılmadı)
+- **Kodda:** `cert_valid_to` **yazılıyor** (`abrechnung.routes.js:1011`) ve iki yerde **SELECT
+  ediliyor** (`:534`, `:2598` — ikisi de `.select('ik_nummer, cert_subject, cert_valid_to')`),
+  ama hiçbir yerde bugünün tarihiyle **karşılaştırılmıyor**: süresi dolmuş sertifikayla gönderim
+  engellenmiyor. Ayrıca `blog/heilmittel-selbst-abrechnen-vs-abrechnungszentrum.html:251` hâlâ
+  „einmalig für drei Jahre" diyor → pazarlama metni yanlış bilgi veriyor.
+- **Kapsam:** tüm gruplar
+
+### Bir Nutzdatendatei birden çok SLGA ve SLLA taşıyabilir
+- **Kural:** „Sie beinhaltet die Nachrichten SLGA und SLLA, die mehrfach wiederholbar sind."
+  N adet SLLA mesajı spesifikasyona uygundur.
+- **Kaynak:** Anlage 1 TP5 V21 § 5.4 (Dateiaufbau, Servicesegmente tablosu, UNB satırı)
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** ✅ uygun — `api-backend/billing/dta/builder.js:5-22` baş yorumundaki dosya yapısı
+  şeması („… SLLA je Abrechnungsfall dieser Gesamtrechnung … naechste Gesamtrechnung")
+- **Kapsam:** tüm gruplar
+- ✅ Bu kural **26.08.2026 tarihli „bir dosyada 1 SLGA + 1 SLLA olmalı" bulgusunu çürütür.**
 
 ---
 

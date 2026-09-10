@@ -42,7 +42,7 @@ import {
   buildSLLA_ZHE, buildSLLA_DIA, buildSLLA_SKZ,
   buildSLLA_BES, buildSLLA_GZF,
 } from './segments.js';
-import { buildDtaFilename } from './filename.js';
+import { buildLogischerDateiname, buildPhysikalischerDateiname } from './filename.js';
 import {
   validateVerarbeitungskennzeichen,
   validateVerordnungsart,
@@ -367,13 +367,33 @@ export function buildDtaFile({
     );
   }
 
-  const filename = buildDtaFilename({
-    absenderIk:     absender.ik,
-    laufendeNummer: rechnung.datennummer,
-    kind: kind === 'echt' ? 'echt' : 'test',
-  });
   const testIndikator = kind === 'echt' ? '2' : kind === 'erprobung' ? '1' : '0';
   const erstellungsdatum = rechnung.datum || new Date();
+
+  // Zwei getrennte Namen (gkv-302 Audit 10.09.2026, Anhang 1 zur Anlage 1 TP5
+  // Kap. 4) — vorher trug ein einziger 16-stelliger String beide Rollen und
+  // erfuellte keine davon spezifikationsgemaess:
+  //   logischerDateiname     → UNB-Anwendungsreferenz (unten) + kuenftige Auftragsdatei
+  //   physikalischerDateiname → Storage-Dateiname, `abrechnung.dateiname`, Download
+  const logischerDateiname = buildLogischerDateiname({
+    absenderIk:       absender.ik,
+    rolle:            'S', // Selbstabrechner — Praxura ist kein Abrechnungsdienstleister
+    abrechnungsmonat: (erstellungsdatum instanceof Date ? erstellungsdatum : new Date(erstellungsdatum)).getMonth() + 1,
+  });
+  // Transfernummer ist auf 1..999 begrenzt (§4.3) — `rechnung.datennummer`
+  // (Jahreszaehler, siehe abrechnung.routes.js) waechst darueber hinaus.
+  // Modulo ist eine bewusste Uebergangsloesung: die Spezifikation schweigt
+  // zum Ueberlauf, und solange keine Auftragsdatei/DFUE existiert, ist dieser
+  // Name nur ein Storage-/Anzeige-Label, keine an den Empfaenger gemeldete
+  // fortlaufende Nummer. Vor einer echten Direktuebermittlung braucht das
+  // einen eigenen, dauerhaften Zaehler je Empfaenger (selbe Baustelle wie
+  // Bulgu 7 — Datenaustauschreferenz).
+  const transfernummer = ((Math.max(1, Number(rechnung.datennummer) || 1) - 1) % 999) + 1;
+  const physikalischerDateiname = buildPhysikalischerDateiname({
+    kind:           kind === 'echt' ? 'echt' : 'test',
+    transfernummer,
+  });
+  const filename = physikalischerDateiname;
 
   // Betraege je Abrechnungsfall — in der Reihenfolge der Eingabe. Diese
   // Reihenfolge ist bindend: der Aufrufer haelt `prescriptions[i]` und seine
@@ -538,7 +558,7 @@ export function buildDtaFile({
     erstellungsdatum,
     datennummer:         rechnung.datennummer,
     leistungsbereich:    'B',
-    anwendungsreferenz:  rechnung.anwendungsreferenz || filename,
+    anwendungsreferenz:  rechnung.anwendungsreferenz || logischerDateiname,
     testIndikator,
   });
   const unz = buildUNZ({ messageCount: nachrRef, datennummer: rechnung.datennummer });
@@ -549,6 +569,10 @@ export function buildDtaFile({
 
   return {
     filename,
+    // Fuer eine kuenftige Auftragsdatei (Anhang 2 zur Anlage 1 TP5, Kap. 9,
+    // §3.1 — Nutzdatendatei geht nie allein) — der logische Name muss dort
+    // im Feld "Dateiname" identisch zur UNB-Anwendungsreferenz stehen.
+    logischerDateiname,
     content,
     segmentCount,
     messageCount: nachrRef,

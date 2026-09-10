@@ -1,0 +1,223 @@
+                                                         Anhang 1
+                                                             zur
+
+                                                         Anlage 1
+
+                                          Kapitel 4 "Datenübermittlung"
+
+                                                           zu den
+Richtlinien der Spitzenverbände der Krankenkassen nach § 302 Abs. 2 SGB V über Form
+
+ und Inhalt des Abrechnungsverfahrens mit "Sonstigen Leistungserbringern" sowie mit
+                         Hebammen und Entbindungspflegern (§ 301a SGB V)
+
+Stand des Anhangs 1:  31.08.2017
+Anzuwenden ab:        01.09.2017
+Anhang 1 zur Technische Anlage 1                                      Stand: 31.08.2017
+                                                                      Seite 2 von 8
+zu den Richtlinien über Form und Inhalt des Abrechnungsver-
+fahrens nach § 302 SGB V
+
+Änderungshistorie
+
+Status      Datum                Redaktion  Abschnitt  Erläuterung
+Abgestimmt  31.08.2017           GKV-SV     4.1        Aktualisierung der Dokumentnamen und Verweise
+Abgestimmt  12.09.2012           GKV-SV     gesamtes   Layout vereinheitlicht, mehrere kleine redaktionelle An-
+                                            Dokument   passungen durchgeführt
+Abgestimmt  12.09.2012           GKV-SV     4.1        Dokumentverweise aktualisiert
+Abgestimmt  12.09.2012           GKV-SV     4.3        Aufbau physikalischer Dateiname eingefügt
+
+Anhang 1 zur Technischen Anlage             anzuwenden ab 01.09.2017  GKV-Spitzenverband
+Anhang 1 zur Technische Anlage 1                             Stand: 31.08.2017
+                                                             Seite 3 von 8
+zu den Richtlinien über Form und Inhalt des Abrechnungsver-
+fahrens nach § 302 SGB V
+
+Inhaltsverzeichnis
+
+4. DATENÜBERMITTLUNG.............................................................................................4
+
+  4.1 Allgemeines..................................................................................................................................................... 4
+  4.2 Logischer Dateiname .................................................................................................................................... 6
+  4.3 Physikalischer Dateiname ........................................................................................................................... 7
+  4.4 Datenfernübertragung ................................................................................................................................. 7
+  4.5 Dokumentation .............................................................................................................................................. 7
+  4.6 Datenträger ..................................................................................................................................................... 8
+
+          4.6.1 Transportsicherung ............................................................................................................................................ 8
+          4.6.2 Dokumentation .................................................................................................................................................... 8
+
+Anhang 1 zur Technischen Anlage  anzuwenden ab 01.09.2017    GKV-Spitzenverband
+Anhang 1 zur Technische Anlage 1                             Stand: 31.08.2017
+                                                             Seite 4 von 8
+zu den Richtlinien über Form und Inhalt des Abrechnungsver-
+fahrens nach § 302 SGB V
+
+4. Datenübermittlung
+
+4.1 Allgemeines
+
+(1) Dieser Anhang basiert auf den Arbeitsergebnissen des Gremiums der Spitzenorga-
+         nisationen der Sozialversicherung zu technischen Fragestellungen des Datenaus-
+         tauschs im Gesundheits- und Sozialwesen. Die für die Übermittlung von Daten zu
+         verwendenden Medien sowie das entwickelte Verschlüsselungsverfahren werden in
+         separaten Anlagen beschrieben:
+
+    • Anlage A: Gemeinsame Grundsätze Technik für die elektronische Datenübermitt-
+         lung gemäß § 95 SGB IV (GGT)
+
+    • Anlage B: Security-Schnittstelle (SECON) (GGT Anlage 16)
+
+    • Anlage C: File Transfer, Access and Management (FTAM) (GGT Anlage 10)
+         Hinweis: Bitte beachten Sie das Ende der Nutzungsdauer von FTAM over ISDN zum
+         31.12.2017 und das zum 01.01.2018 ersetzend in Kraft tretende Dokument
+         File Transfer, Access and Management (FTAM) over IP
+
+    • Anlage D: Message Handling System (X.400) (GGT Anlage 11)
+         Hinweis: Bitte beachten Sie das Ende der Nutzungsdauer von X.400 zum
+         31.12.2017.
+
+    • Anlage E: Electronic Mail (E-Mail) (GGT Anlage 7)
+
+    • Anlage F: Hypertext Transfer Protocol (http / https).(GGT Anlage 8) (Zur Übermitt-
+         lung auf Grundlage dieser Anlage bedarf es der bilateralen Vereinbarung zwischen
+         Leistungserbringer und Datenannahmestelle.)
+
+         Alle Anlagen zu diesem Anhang sind auf www.gkv-datenaustausch.de in der je-
+         weils aktuellen Version veröffentlicht.
+
+(2) Grundsätzlich ist die Datenfernübertragung (DFÜ) als Austauschart zu verwenden.
+
+Anhang 1 zur Technischen Anlage  anzuwenden ab 01.09.2017    GKV-Spitzenverband
+Anhang 1 zur Technische Anlage 1                             Stand: 31.08.2017
+                                                             Seite 5 von 8
+zu den Richtlinien über Form und Inhalt des Abrechnungsver-
+fahrens nach § 302 SGB V
+
+(3) Soweit eine Datenfernübertragung aus technisch/wirtschaftlichen Gründen nicht
+         realisiert werden kann, können Datenträger verwendet werden, zugelassene Da-
+         tenträger werden in Anlage A zu diesem Anhang beschrieben.
+
+(4) Die Kosten für die Datenübermittlung trägt der Absender.
+
+Anhang 1 zur Technischen Anlage  anzuwenden ab 01.09.2017    GKV-Spitzenverband
+Anhang 1 zur Technische Anlage 1                                   Stand: 31.08.2017
+                                                                   Seite 6 von 8
+zu den Richtlinien über Form und Inhalt des Abrechnungsver-
+fahrens nach § 302 SGB V
+
+4.2 Logischer Dateiname
+
+Der logische Dateiname ist im UNB-Segment (Feld Anwendungsreferenz) und in der Auf-
+tragsdatei (Feld Dateiname) anzugeben und ist für alle Übertragungsmedien identisch.
+
+Stellen                          Bezeichnung               Inhalt
+ 1 - 2
+ 3 - 8   Absenderklassifikation               = „SL"
+                                              für Sonstige Leistungserbringer
+9 - 11
+                                 Dateiname    = Stellen 3 bis 8 des Absender-
+                                              IK´s
+
+                                              (Stellen 3 bis 4 = Regionalschlüs-
+                                              sel)
+                                              (Stellen 5-bis 8 = Seriennummer)
+
+         Dateiidentifizierer                  Stelle 9 = „S“ (Selbstabrechner)
+
+                                                         = „A“ (Abrechnungsstelle)
+
+                                              Stellen 10 und 11 =
+                                              Nummer des Abrechnungsmonats
+                                              (z.B. 02 für Februar)
+
+Anhang 1 zur Technischen Anlage  anzuwenden ab 01.09.2017          GKV-Spitzenverband
+Anhang 1 zur Technische Anlage 1                                       Stand: 31.08.2017
+                                                                       Seite 7 von 8
+zu den Richtlinien über Form und Inhalt des Abrechnungsver-
+fahrens nach § 302 SGB V
+
+4.3 Physikalischer Dateiname
+
+Der physikalische Dateiname wird in der Auftragsdatei angegeben. Der Aufbau der Auf-
+tragsdatei ist in der Anlage A zu diesem Anhang beschrieben.
+
+Der physikalische Dateiname ist wie folgt aufgebaut:
+
+1. Stelle:       "E" - Echtdaten
+                 "T" - Testdaten
+2. - 4. Stelle:  "SOL" - Sonstige Leistungserbringer
+5. Stelle:       "0" - Null, Versionsangabe
+6.- 8. Stelle:   Laufende Nummer (Transfernummer)
+
+4.4 Datenfernübertragung
+
+Die zugelassenen Datenfernübertragungsmöglichkeiten sind in der Anlage A und den An-
+lagen C, D und E zu diesem Anhang beschrieben
+
+4.5 Dokumentation
+
+(1) Über den Datenaustausch ist eine Dokumentation zu führen. Die Dokumentation
+         ist mindestens 2 Jahre aufzubewahren.
+
+(2) Die Dokumentation muss die folgenden Mindestinhalte umfassen:
+
+•                Inhalt der Datenlieferung (Physikalischer Dateiname)
+
+•                Erstellungsdatum der Datei
+
+•                Lfd. Nummer der Datenübermittlung
+
+•                Eindeutige Bezeichnung der Kommunikationspartner
+
+•                Beginn und Ende der Datenübermittlung
+
+•                Dateigröße
+
+•                Verarbeitungshinweise
+
+•                Senden/Empfangen
+
+•                Verarbeitungskennzeichen (fehlerfrei/fehlerhaft)
+
+•                wenn fehlerhaft: Fehlerstatus aus Übertragungsprogramm
+
+Anhang 1 zur Technischen Anlage    anzuwenden ab 01.09.2017              GKV-Spitzenverband
+Anhang 1 zur Technische Anlage 1                             Stand: 31.08.2017
+                                                             Seite 8 von 8
+zu den Richtlinien über Form und Inhalt des Abrechnungsver-
+fahrens nach § 302 SGB V
+
+4.6 Datenträger
+
+Zugelassene Datenträgermedien sind in der Anlage A zu diesem Anhang beschrieben.
+
+4.6.1 Transportsicherung
+
+Die Datenträger sind mit Etiketten zu versehen, aus denen Name, Adresse, Institutions-
+kennzeichen, Datenträgerkennzeichen (z.B. Band-/Diskettennummer) des Absenders,
+Zeichencode und der vom Absender vergebene physikalische Dateiname hervorgehen.
+Unmittelbar nach Erstellung des Datenträgers ist der Schreibschutz zu aktivieren.
+
+4.6.2 Dokumentation
+
+(1) Für den Datenträgeraustausch mittels Datenträger werden Transportbegleitzettel in
+         Anlehnung an die DIN 31632 verwendet.
+
+(2) Der Transportbegleitzettel hat folgende Mindestinhalte zu umfassen:
+
+         • Überschrift: = Datenträgerbegleitzettel
+         • Datenaustauschverfahren: = § 302 SGB V / SLE
+         • Verwendeter Code nach Abschnitt 4.1.1
+         • Absender (Name, Adresse und IK)
+         • Empfänger (Name, Adresse und IK)
+         • Inhalt der Datenlieferung: = Abrechnungsdaten
+         • Physikalische Dateinamen der auf dem Datenträger übermittelten Dateien
+         • Art des Datenträgers
+         • eindeutige Nummer des Datenträgers
+         • Erstellungsdatum
+         • Datum / Unterschrift
+         • Name und Telefonnummer des Bearbeiters/der Bearbeiterin
+
+Anhang 1 zur Technischen Anlage  anzuwenden ab 01.09.2017    GKV-Spitzenverband
+

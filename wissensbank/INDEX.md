@@ -3,7 +3,9 @@
 > **Bu dosya arşivin tek giriş kapısıdır.** `wissensbank/` altındaki tüm GKV/§302/Heilmittel
 > belgelerinin ne olduğunu, hangi sürümde olduğunu ve ne zaman lazım olacağını listeler.
 >
-> Son güncelleme: 2026-08-04 · 33 belge kayıtlı
+> Son güncelleme: 2026-09-10 · **35 belge kayıtlı**
+> (10.09.2026: Anhang 1 Kap. 4 „Datenübermittlung" + Anhang 2 Kap. 9 „Prüfverfahren" eklendi
+>  — `gkv-302` canlı-gönderim hazırlık denetiminde arşivde eksik oldukları anlaşıldı)
 >
 > ⚠️ **05.09.2026 — bu dosya artık tek başına değil.** Burası bir belgenin *içinde ne
 > olduğuna* bakar. Belgenin **nereden geldiği**, hangi sürüm olduğu, ne zaman düşeceği ve
@@ -66,6 +68,8 @@ Bilinmeyen bir alana **"belirtilmemiş" yaz, tahmin etme.**
 | **Anlage 3 TP5** — Schlüsselverzeichnisse | **V21** | 01.10.2025 | ✅ **GEÇERLİ** |
 | Anlage 3 TP5 | V22 | **01.02.2027** | ⏳ Gelecek — henüz uygulama |
 | Anhang 03 Anlage 1 TP5 — Kostenträgerdatei | V10 | **01.02.2027** | ⏳ Gelecek |
+| Anhang 01 Anlage 1 TP5 — Kap. 4 Datenübermittlung | — (Stand 31.08.2017) | 01.09.2017 | ✅ **GEÇERLİ** — halefi yok |
+| Anhang 02 Anlage 1 TP5 — Kap. 9 Prüfverfahren | — (Stand 10.11.2003) | belirtilmemiş | ✅ **GEÇERLİ** — halefi yok |
 | Anhang 05 Anlage 1 TP5 — Digitales Rettungsprotokoll | 1.0 | 01.04.2026 | ✅ Geçerli — **ama bizi ilgilendirmiyor** (Rettungsdienst, Heilmittel değil) |
 | **HeilM-RL** | 15.05.2025 değişikliği | 05.08.2025 | ✅ **GEÇERLİ** |
 | Korrekturverfahren Umsetzungsempfehlungen | — | 01.10.2025 | ✅ Geçerli |
@@ -162,6 +166,37 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - 5. VERKNÜPFUNGSREGELN
   - 7. DATEISTRUKTUR
   - 8. SCHLÜSSELVERZEICHNIS
+
+### wissensbank/gemeinsam/302-tp5/Anhang_01_Anlage_1_TP5_Kapitel_4_Datenuebermittlung_20170831.txt
+- **Ne:** § 302 Abs. 2 SGB V uyarınca „Sonstigen Leistungserbringern" ile Hebammen ve Entbindungspflegern (§ 301a SGB V) faturalandırma usulüne ilişkin rehberlerin Technische Anlage 1, **Kapitel 4 „Datenübermittlung"** düzenlemesini içeren Anhang 1 belgesidir. 8 sayfa.
+- **Kapsam:** Allgemeines (aktarım ortamları ve şifreleme için Anlage A–F: GGT, SECON/GGT Anlage 16, FTAM, X.400, E-Mail, http/https; DFÜ esastır, masraf göndericiye aittir), **logischer Dateiname** (11 hane, UNB Anwendungsreferenz + Auftragsdatei), **physikalischer Dateiname** (8 hane, `E`/`T` Test-Echt ayrımı), Datenfernübertragung, **Dokumentation** (asgari 2 yıl saklama + 9 zorunlu içerik), Datenträger (Transportsicherung, DIN 31632 Begleitzettel).
+- **Sürüm:** belirtilmemiş (kapak yalnız `Stand des Anhangs 1: 31.08.2017` diyor, sürüm numarası yok)
+- **Anzuwenden ab:** 01.09.2017
+- **Ne zaman lazım:** DTA dosyasının **adının** nasıl kurulacağı, Auftragsdatei'nin niye gerektiği ve veri aktarımı hakkında hangi kaydın ne kadar tutulacağı sorulduğunda lazımdır.
+- **Anahtar bölümler:**
+  - 4.1 Allgemeines (Anlage A–F, hangi aktarım yolu neye dayanıyor)
+  - **4.2 Logischer Dateiname** (`SL` + IK 3–8 + `S`/`A` + ay)
+  - **4.3 Physikalischer Dateiname** (`E`/`T` + `SOL` + `0` + Transfernummer)
+  - 4.5 Dokumentation (2 yıl, 9 asgari içerik)
+  - 4.6 Datenträger (Transportsicherung, Begleitzettel içeriği)
+- ⚠️ **Eski ama düşmemiş.** 2017 tarihli olması geçersiz olduğu anlamına gelmez — kapakta `Anzuwenden ab: 01.09.2017`, sonraki bir sürüm yayımlanmamış. Ancak Kap. 4.1'deki FTAM-over-ISDN (31.12.2017) ve X.400 (31.12.2017) sonu notları **geçmişte kaldı**; bugün DFÜ yolu için GGT'nin güncel Fassung'una (01.01.2026) bakılır.
+
+### wissensbank/gemeinsam/302-tp5/Anhang_02_Anlage_1_TP5_Kapitel_9_Pruefverfahren_20031110.txt
+- **Ne:** Aynı rehberlerin Technische Anlage 1, **Kapitel 9 „Prüfverfahren"** düzenlemesini içeren Anhang 2 belgesidir. 5 sayfa.
+- **Kapsam:** Testverfahren'in amacı ve tarafları (kendi yazılımını geliştiren Leistungserbringer, Softwarehersteller, Abrechnungszentren), denetlenen ölçütler (zugelassene Medien, Lieferumfang, Dateiaufbau, Schlüsselverwendung, Plausibilitäten), **Prüfstufen 1–4**, Prüfverfahren sonucu, Datenannahmestelle'lerde SLGA/SLLA testi ve dosyaların nasıl işaretleneceği, **Erprobungsverfahren** ve Echtverfahren'e geçiş.
+- **Sürüm:** belirtilmemiş (kapakta `Stand der Technischen Anlage: 10.11.2003` · `Stand des Anhang 2: 10.11.2003`)
+- **Anzuwenden ab:** belirtilmemiş — kapakta „anzuwenden ab" satırı yok, yalnız Stand var
+- **Ne zaman lazım:** „Canlı göndermeye ne zaman ve nasıl geçeriz", „Testdatei ödeme tetikler mi", „kasa dosyayı hangi aşamalarda reddeder" sorularında lazımdır.
+- **Anahtar bölümler:**
+  - **3.1 Prüfstufe 1** — fiziksel okunabilirlik, dosyaların **çift** gelmesi (Auftragsdatei + Nutzdatei), Kommunikationspartner kaydı
+  - 3.2 Prüfstufe 2 — segment sırası, Feldart/Feldtyp/Feldlänge
+  - 3.3 Prüfstufe 3 — Schlüsselausprägung (Anlage 3) + alanlar arası kombinasyon kontrolü
+  - 3.3 Prüfstufe 4 — kasanın Fachverfahren'inde vertrags-/versicherungs-/leistungsrechtlich denetim (bu belgenin konusu değil)
+  - 4. Ergebnis — Prüfstufe **1–3 hatasız** geçilirse test başarılı sayılır
+  - **5.** Testkennzeichnung: UNB Testindikator `0` + physikalischer Dateiname `TSOL` → *„löst keine Zahlungen aus"*
+  - **6. Erprobungsverfahren** — UNB Testindikator `1`; faz ancak kasa „zum Echtverfahren zugelassen" dediğinde biter
+- ⚠️ Belgenin kendi numaralandırmasında **iki kez „3.3"** var (Prüfstufe 3 ve Prüfstufe 4) — orijinaldeki dizgi hatası, dönüşüm hatası değil. Atıf verirken „§ 3.3 Prüfstufe 4" diye yazmak gerekir.
+- ⚠️ 2003 tarihli ve o günden beri güncellenmemiş; §5 metni „Wechsel auf die Version 04 der Nachrichtentypen SLGA/SLLA" bağlamında yazılmış, bugün SLGA/SLLA **21**. Prüfstufe mantığı ve Test/Erprobung işaretlemesi geçerli, sürüm numarası örneği değil.
 
 ### wissensbank/_archiv/Anhang_05_Anlage_1_TP5_20260401.txt
 - **Ne:** § 302 Abs. 2 SGB V uyarınca „Sonstigen Leistungserbringern“ ile Hebammen ve Entbindungspflegern (§ 301a SGB V) faturalandırma usulünün form ve içeriğine ilişkin rehberlerin Technische Anlage 1 düzenlemesine ek Schnittstellenbeschreibung Digitales Rettungsprotokoll belgesidir.

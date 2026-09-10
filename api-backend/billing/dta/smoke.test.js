@@ -4,7 +4,7 @@
 import { buildDtaFile } from './builder.js';
 import { preflight } from './preflight.js';
 import { escapeEdifact, fmtAmount, fmtDate, UNA_HEADER, buildSegment } from './encoding.js';
-import { buildDtaFilename } from './filename.js';
+import { buildLogischerDateiname, buildPhysikalischerDateiname } from './filename.js';
 import { buildUNB, buildUNH, buildUNT, buildUNZ } from './envelope.js';
 import { legsFuer, abrechnungscodeAusLegs, tarifkennzeichenAusLegs } from '../codes/legs.js';
 import assert from 'node:assert/strict';
@@ -34,10 +34,10 @@ test('UNB carries UNOC:3 + B + testindikator', () => {
     erstellungsdatum: '2026-05-18T08:30:00Z',
     datennummer: 7,
     leistungsbereich: 'B',
-    anwendungsreferenz: 'EHK5678900000007',
+    anwendungsreferenz: 'SL345678S05',
     testIndikator: '2',
   });
-  assert.ok(unb.startsWith('UNB+UNOC:3+123456789+987654321+20260518:0830+00007+B+EHK5678900000007+2'), unb);
+  assert.ok(unb.startsWith('UNB+UNOC:3+123456789+987654321+20260518:0830+00007+B+SL345678S05+2'), unb);
 });
 test('UNH SLLA:21:0:0', () => {
   assert.equal(buildUNH({ nachrichtenreferenz: 2, nachrichtenart: 'SLLA' }),
@@ -51,10 +51,16 @@ test('UNZ', () => {
 });
 
 console.log('filename');
-test('echt EHK', () => assert.equal(
-  buildDtaFilename({ absenderIk: '123456789', laufendeNummer: 23 }), 'EHK5678900000023'));
-test('test EHM', () => assert.equal(
-  buildDtaFilename({ absenderIk: '123456789', laufendeNummer: 1, kind: 'test' }), 'EHM5678900000001'));
+test('logischer Dateiname: SL + IK[3..8] + Rolle + Monat', () => assert.equal(
+  buildLogischerDateiname({ absenderIk: '123456789', abrechnungsmonat: 5 }), 'SL345678S05'));
+test('logischer Dateiname: Abrechnungsstelle', () => assert.equal(
+  buildLogischerDateiname({ absenderIk: '123456789', rolle: 'A', abrechnungsmonat: 12 }), 'SL345678A12'));
+test('physikalischer Dateiname: echt', () => assert.equal(
+  buildPhysikalischerDateiname({ kind: 'echt', transfernummer: 23 }), 'ESOL0023'));
+test('physikalischer Dateiname: test', () => assert.equal(
+  buildPhysikalischerDateiname({ kind: 'test', transfernummer: 1 }), 'TSOL0001'));
+test('physikalischer Dateiname: Erprobung zaehlt als Testdaten ("T")', () => assert.equal(
+  buildPhysikalischerDateiname({ kind: 'erprobung', transfernummer: 1 }), 'TSOL0001'));
 
 console.log('builder — V21 Heilmittel');
 const result = buildDtaFile({

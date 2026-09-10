@@ -359,29 +359,19 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
     };
   });
 
+  // Bis 10.09.2026 fiel eine Verordnung OHNE erbrachte ("done") Sitzung hier
+  // nicht durch, sondern bekam eine erfundene Sitzung untergeschoben: die
+  // VERORDNETE Menge (`anzahl_einheiten`), datiert auf das Ausstellungsdatum
+  // der Verordnung. Das ist die Rechnung für eine nicht erbrachte Leistung —
+  // die Datei wäre technisch angenommen worden, das Geld wäre gekommen, und
+  // erst eine spätere Prüfung hätte den Widerspruch gefunden (§ 263 StGB-
+  // Risiko, gkv-302 Audit 10.09.2026). Gespiegelt vom podologischen Mapper
+  // (mapVerordnungToDtaShape, oben), der für denselben Fall schon immer 422
+  // wirft.
   if (sessions.length === 0) {
-    const dateStr = rx.ausstellungsdatum || new Date().toISOString().slice(0, 10);
-    
-    // Preis + Zuzahlung zentral — siehe Kommentar im Sitzungs-Zweig oben.
-    const { preis_eur: einzelbetrag, zuzahlung_eur: zuzahlungProPos } = resolvePreis({
-      bereich: sector === 'podologie' ? 'podologie' : 'physiotherapie',
-      code: stored,
-      datum: dateStr,
-      abrechnungscode,
-      tariffs,
-      positionsnummer: resolvedPos,
-    });
-
-    sessions.push({
-      positionsnummer: resolvedPos,
-      datumLeistung: dateStr,
-      anzahl:        rx.anzahl_einheiten || 1,
-      einzelbetrag:  einzelbetrag,
-      zuzahlungProPos: rx.zuzahlung_befreit ? 0 : zuzahlungProPos,
-      therapistId: null,
-      requiredCert: null,
-      hasCert: true,
-    });
+    const e = new Error(`Verordnung ${rx.id.slice(0, 8)}${rx.patient_name ? ` (${rx.patient_name})` : ''}: ` +
+      'keine erbrachten Sitzungen dokumentiert. Es kann nur abgerechnet werden, was tatsächlich stattgefunden hat.');
+    e.status = 422; e.code = 'KEINE_ERBRACHTEN_SITZUNGEN'; throw e;
   }
 
   return {
@@ -2421,20 +2411,37 @@ router.post('/abrechnung/preflight', async (req, res) => {
       .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
       .eq('bundesland', bundesland);
 
-    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], tenantSector));
+    // Zeilenweise statt `.map()`: ein einzelnes Rezept mit einem harten Mapper-
+    // Fehler (z.B. `KEINE_ERBRACHTEN_SITZUNGEN`, gkv-302 Audit 10.09.2026) darf
+    // die Vorschau für die ÜBRIGEN Rezepte nicht mitreissen — der Preflight ist
+    // eine Liste, kein Alles-oder-nichts-Torwächter. Vorher hätte ein einziger
+    // Werfer die ganze Anfrage in den generischen catch unten geschickt und den
+    // spezifischen 422-Status verschluckt.
+    const prescriptions = [];
+    const mapFehler = [];
+    for (const r of rxRows) {
+      try {
+        prescriptions.push(mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], tenantSector));
+      } catch (e) {
+        if (!e.status) throw e;
+        mapFehler.push({ prescriptionId: r.id, severity: 'stop', code: e.code || 'MAPPING', text: e.message });
+      }
+    }
     const { preflight: runPreflight } = await import('../dta/preflight.js');
 
-    const results = runPreflight({
-      absender: { ik: myIk, name: profile.business_name || 'Praxis' },
-      empfaenger: { ik: dasIk, name: dasName },
-      rechnung: { sammelRechnungsnummer: 'TEST', datennummer: 1, datum: new Date() },
-      prescriptions
-    });
+    const results = prescriptions.length
+      ? runPreflight({
+          absender: { ik: myIk, name: profile.business_name || 'Praxis' },
+          empfaenger: { ik: dasIk, name: dasName },
+          rechnung: { sammelRechnungsnummer: 'TEST', datennummer: 1, datum: new Date() },
+          prescriptions
+        })
+      : null;
 
-    return res.json({ ok: true, results });
+    return res.json({ ok: true, results, mapFehler });
   } catch (e) {
     console.error('[abrechnung/preflight]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    return res.status(e.status || 500).json({ error: e.message || 'Server error' });
   }
 });
 
@@ -2608,8 +2615,13 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       .select('ik_nummer, cert_subject, cert_valid_to')
       .eq('owner_id', tenantId).maybeSingle();
     if (!cert?.ik_nummer) {
+      // Feldname-Tippfehler bis 10.09.2026 (wissensbank-Fund): `.select('ik_number')`
+      // (Legacy-DMRZ-Feld auf `profiles`), aber danach `tp?.ik_nummer` geprüft —
+      // ein Feld, das `tp` nie trägt. Der Fallback griff deshalb NIE, jede
+      // Podologie-Praxis ohne `terapeut_zertifikat`-Eintrag bekam "Kein
+      // IK-Nummer hinterlegt", obwohl `profiles.ik_number` gesetzt war.
       const { data: tp } = await supabase.from('profiles').select('ik_number').eq('id', tenantId).maybeSingle();
-      if (tp?.ik_nummer) cert = { ik_nummer: tp.ik_nummer };
+      if (tp?.ik_number) cert = { ik_nummer: tp.ik_number };
     }
     if (!cert?.ik_nummer) return res.status(400).json({ error: 'Kein IK-Nummer hinterlegt.' });
 

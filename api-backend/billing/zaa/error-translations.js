@@ -9,7 +9,7 @@ export const ZAA_ERRORS = Object.freeze({
   '00': { text: 'Annahme bestätigt',              loesung: 'Kein Handlungsbedarf.' },
 
   // ---- Strukturelle / formale Fehler (0x) ----
-  '01': { text: 'Dateiname falsch aufgebaut',     loesung: 'Filename muss EHK/EHM-Schema folgen — DTA neu erzeugen.' },
+  '01': { text: 'Dateiname falsch aufgebaut',     loesung: 'Logischer Dateiname (UNB-Anwendungsreferenz) muss SL+IK[3..8]+S/A+Monat sein, physikalischer E/T+SOL0+Transfernummer (Anhang 1 zur Anlage 1 TP5, Kap. 4) — DTA neu erzeugen.' },
   '02': { text: 'IK Absender ungültig',           loesung: 'IK in den Einstellungen prüfen (9-stellig, ITSG-vergeben).' },
   '03': { text: 'IK Empfänger ungültig',          loesung: 'Kostenträger-Stammdaten veraltet — Aktualisierung anfordern.' },
   '04': { text: 'Datennummer doppelt',            loesung: 'Sammelrechnungsnummer schon einmal eingereicht — neue Nummer erzeugen.' },

@@ -1,0 +1,169 @@
+                                                          Anhang 2
+                                                               zur
+
+                                                  Technischen Anlage
+                                                Kapitel 9 Prüfverfahren
+
+                                                             zu den
+  Richtlinien der Spitzenverbände der Krankenkassen nach § 302 Abs. 2 SGB V über Form und
+Inhalt des Abrechnungsverfahrens mit „Sonstigen Leistungserbringern“ sowie mit Hebammen und
+
+                                        Entbindungspflegern (§ 301a SGB V)
+
+Stand der Technischen Anlage:  10.11.2003
+Stand des Anhang 2:            10.11.2003
+         Richtlinien     Anhang 2          Abschnitt Seite:     Stand:
+             über      zur Anlage 1                          10.11.2003
+                                           9  2
+  Form und Inhalt des  Prüfverfahren
+Abrechnungsverfahrens
+
+   nach § 302 SGB V
+
+                       Inhaltsverzeichnis
+
+1. EINFÜHRUNG .................................................................................................................................................................. 3
+2. AUFGABEN DES PRÜFVERFAHRENS............................................................................................................................... 3
+3. PRÜFSTUFEN .................................................................................................................................................................. 4
+3.1 PRÜFSTUFE 1 ............................................................................................................................................................... 4
+3.2 PRÜFSTUFE 2 ............................................................................................................................................................... 4
+3.3 PRÜFSTUFE 3 ............................................................................................................................................................... 4
+3.3 PRÜFSTUFE 4 ............................................................................................................................................................... 4
+4. ERGEBNIS DES PRÜFVERFAHRENS ................................................................................................................................ 4
+5. PRÜFVERFAHREN BEI DEN DATENANNAHMESTELLEN DER KRANKENKASSEN BEI WECHSEL AUF DIE VERSION 04 DER
+NACHRICHTENTYPEN SLGA/SLLA.................................................................................................................................... 5
+6. ERPROBUNGSVERFAHREN ............................................................................................................................................. 5
+
+ANHANG2_TAV5.DOC       Seite 2 von 5
+         Richtlinien     Anhang 2     Abschnitt Seite:     Stand:
+             über      zur Anlage 1                     10.11.2003
+                                      9  3
+  Form und Inhalt des  Prüfverfahren
+Abrechnungsverfahrens
+
+   nach § 302 SGB V
+
+1. Einführung
+
+Die Spitzenverbände der Krankenkassen bieten den Leistungserbringer, die ihre Abrechnungssoftware
+selbst entwickelt haben, Softwareherstellern, deren Software von den Leistungserbringern zur Abrechnung
+eingesetzt wird oder Abrechnungszentren die Möglichkeit an, ihre Dateien vor Beginn des
+Erprobungsverfahrens bzw. bei Versionswechseln zu testen. Dies kann bei jeder Datenannahmestelle nach
+entsprechender Abstimmung erfolgen.
+
+2. Aufgaben des Prüfverfahrens
+
+Das Prüfverfahren dient zur Überprüfung, ob die in der Technischen Anlage sowie in der Anlage 3
+„Schlüsselverzeichnisse“ beschriebenen Voraussetzungen zur Teilnahme am Datenaustausch erfüllt worden
+sind.
+
+Insbesondere werden die Kriterien
+
+          - Verwendung zugelassener Medien
+          - Lieferumfang
+          - Dateiaufbau
+          - Schlüsselverwendung in den Datenelementen
+          - eingehaltene Plausibilitäten
+
+geprüft.
+
+ANHANG2_TAV5.DOC       Seite 3 von 5
+         Richtlinien     Anhang 2             Abschnitt Seite:     Stand:
+             über      zur Anlage 1                             10.11.2003
+                                              9  4
+  Form und Inhalt des  Prüfverfahren
+Abrechnungsverfahrens
+
+   nach § 302 SGB V
+
+3. Prüfstufen
+
+Die per DFÜ oder auf Datenträgern übermittelten Daten werden einer mehrstufigen Prüfung unterzogen.
+
+Das Prüfverfahren orientiert sich an den Prüfstufen, welche in der Anlage 1 der Richtlinien beschrieben sind.
+Dies sind:
+
+Stufe 1  Prüfung von Datei und Dateistruktur
+Stufe 2
+Stufe 3  Prüfung der Nachrichtentypen
+Stufe 4
+         Formale Prüfung der Feldinhalte
+
+         Prüfung in den Fachverfahren der
+         einzelnen Krankenkassen
+
+3.1 Prüfstufe 1
+
+Die eingehenden Datenträger werden auf ihre physikalische Lesbarkeit geprüft. Anschließend erfolgt eine
+Prüfung ob die Dateien paarweise, d.h. Auftragsdatei und zugehörige Nutzdatei übermittelt und die
+vorgeschriebene Syntax für Kopf- und Endesegmente eingehalten wurde. Abschließend erfolgt die Prüfung,
+ob der Leistungserbringer bzw. die Abrechnungsstelle als Kommunikationspartner für den Datenaustausch
+bereits angemeldet wurde.
+
+3.2 Prüfstufe 2
+
+Für die in den Dateien übermittelten Nutzdaten erfolgt hier eine Prüfung, ob die Reihenfolge der Segmente
+innerhalb der Nachrichtentypen korrekt ist. Innerhalb der Segmente erfolgt eine Prüfung auf Feldebene in
+Bezug auf Feldart (Muß- oder Kannfeld), Feldtyp (alphanumerisch oder numerisch) und Feldlänge (Anzahl
+der Stellen des Feldes).
+
+3.3 Prüfstufe 3
+
+Die einzelnen Felder eines Segmentes werden auf plausiblen Inhalt geprüft. Die Schlüsselausprägungen
+müssen korrekt sein im Hinblick auf das jeweilige Schlüsselverzeichnis (Anlage 3 der Richtlinien) bzw. auf
+die Informationsstrukturdaten. Weiterhin findet eine Kombinationsprüfung über mehrere Felder statt.
+
+3.3 Prüfstufe 4
+
+Die vertrags-, versicherungs- und leistungsrechtliche Prüfung erfolgt in den jeweiligen Fachverfahren der
+Krankenkassen und ist nicht Gegenstand dieses Konzeptes.
+
+4. Ergebnis des Prüfverfahrens
+
+Das Prüfverfahren gilt als erfolgreich durchgeführt, wenn die Testdateien die Prüfstufen 1 - 3 fehlerlos
+durchlaufen haben.
+Das Ergebnis der durchgeführten Prüfungen, d.h. ob und welche Fehler in der getesteten Datei festgestellt
+wurden, wird dem Testpartner übermittelt.
+
+ANHANG2_TAV5.DOC       Seite 4 von 5
+         Richtlinien     Anhang 2     Abschnitt Seite:     Stand:
+             über      zur Anlage 1                     10.11.2003
+                                      9  5
+  Form und Inhalt des  Prüfverfahren
+Abrechnungsverfahrens
+
+   nach § 302 SGB V
+
+5. Prüfverfahren bei den Datenannahmestellen der Krankenkassender
+Nachrichtentypen SLGA/SLLA
+
+Die Softwarehersteller und Abrechnungszentren haben Gelegenheit, von den Datenannahmestellen der
+Krankenkassen die Daten prüfen zu lassen. Es werden die Prüfstufen 1 bis 3 geprüft.
+
+Die Daten sind wie folgt als Testdateien zu kennzeichnen:
+• Testindikator im Segment UNB = 0
+• Physikalischer Dateiname und die Angaben in der Auftragsdatei sind entsprechend der Technischen
+
+      Anlage als Testdateien anzugeben (z. B. TSOL)
+
+Wichtige Hinweise:
+
+Die Verarbeitung der unter den zuvorgenannten Kriterien gemeldeten Testdaten löst keine Zahlungen aus.
+
+Weitere Details dieses Prüfverfahrens (z. B. Beginn des Tests, die Angabe von IKs) sind mit den jeweiligen
+Datenannahmestellen zu vereinbaren.
+
+6. Erprobungsverfahren
+
+Leistungserbringer können jederzeit mit dem Erprobungsverfahren beginnen, welches nach erfolgreicher
+Durchführung in das Echtverfahren übergeht. Die Erprobungsphase ist beendet, wenn der
+Leistungserbringer von der Krankenkasse zum Echtverfahren zugelassen wurde.
+
+Die Daten sind wie folgt als Erprobungsdateien zu kennzeichen:
+• Testindikator im Segment UNB = 1
+• Physikalischer Dateiname und die Angaben in der Auftragsdatei sind entsprechend der Technischen
+
+      Anlage als Testdateien anzugeben (z. B. TSOL)
+
+ANHANG2_TAV5.DOC       Seite 5 von 5
+

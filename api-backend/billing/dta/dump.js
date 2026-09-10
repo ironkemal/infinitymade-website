@@ -23,7 +23,7 @@ const result = buildDtaFile({
     datennummer: 1,
     rechnungsart: '1',
   },
-  kind: 'test',  // → EHM filename, testindikator='0'
+  kind: 'test',  // → TSOL0nnn physikalischer Dateiname, testindikator='0'
   vkz: '01',
   prescriptions: [{
     patient: {

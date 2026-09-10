@@ -5,8 +5,9 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 10.09.2026 (kök temizliği sonrası atıf tazeleme)
-> Önceki: 07.09.2026 (W-01 zinciri kapandı, W-A08 kapandı)
+> İlk kurulum: 05.09.2026 · Son güncelleme: 10.09.2026 (W-02 + W-03 girdi — Anhang 1 Kap. 4
+> ve Anhang 2 Kap. 9; `gkv-302` canlı-gönderim hazırlık denetiminin çıktısı)
+> Önceki: 10.09.2026 (kök temizliği sonrası atıf tazeleme) · 07.09.2026 (W-01 zinciri, W-A08)
 
 ---
 
@@ -14,12 +15,12 @@
 
 | | Sayı |
 |---|---|
-| Kayıtlı kaynak belge (INDEX'te) | 33 |
-| Arşivdeki PDF | 47 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
+| Kayıtlı kaynak belge (INDEX'te) | 35 |
+| Arşivdeki PDF | 49 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
 | Kaynak→kod zinciri kayıtlı | 10 |
-| Tam kimlik kartı yazılmış kaynak | 1 (**W-01** Kostenträgerdatei — zincir uçtan uca bağlı, 2 açık madde) |
-| **Herkunft (indirme URL'i) kayıtlı** | **2 / 34** ← asıl boşluk, W-A01 |
+| Tam kimlik kartı yazılmış kaynak | 3 (**W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9) |
+| **Herkunft (indirme URL'i) kayıtlı** | **4 / 36** ← asıl boşluk, W-A01 |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
 | Çeyreklik ritmi olan kaynak | 1 (Kostenträgerdatei — W-01, §1 takviminde) |
 
@@ -69,6 +70,7 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 | **01.10.2026** | Kostenträgerdatei **Q4/2026** yürürlüğe girer. `EK05Q426KE0` (vdek) o gün GEÇERLİ olur, `EK05Q226KE0` DÜŞER. Diğer Kassenart'lar Q4 yayımlarsa onlar da o gün geçerlidir. ⛔ **Ayrıca:** DB'de bugün zaten Q4 yüklü (sürüm zamanlama hatası, W-01 madde 6) — bu tarih o maddeyi de kapatır | Z-09 → W-01 → `kostentraeger_annahmestellen` | ⏳ kayıtlı, **madde 6 buna bağlı** |
 | **her çeyrek başı** (01.01 / 01.04 / 01.07 / 01.10) | Kostenträgerdatei güncellenir; yayın **en geç çeyrek başından 4 hafta önce** (Anhang 03 §2, satır 185-187). Yani kontrol günü: **03.03 · 03.06 · 03.09 · 03.12** | Z-09 | 🔁 tekrar eden, **elle** — W-01'deki kontrol yordamı |
 | **01.01.2027** | HPNR-Verzeichnis 2026 penceresi kapanır, 2027 sürümü gelir | Z-05 → `podologie_positions.js`, `physio_positions.js` | ⏳ hazırlık yok |
+| **01.02.2027 öncesi** | Geçiş paketinin tam kapsamı **bilinmiyor**: Anlage 1 TP5 **V22** (21.05.2026) arşivde yok, `Anzuwenden ab` tarihi bizde yazılı değil. Aynı tarihteyse Anlage 3 V22 + Anhang 03 V10 ile **tek pakettir** | Z-01 · Z-02 · Z-09 | ⏳ **W-A09**, indirilmedi |
 | **01.02.2027** | **Anlage 3 TP5 V21 → V22** yürürlüğe girer | Z-02 → `anlage3_v22.js` (dosya hazır, açılmayı bekliyor) | ⏳ dosya var, geçiş planı yok |
 | **01.02.2027** | **Anhang 03 Anlage 1 TP5 V10** (Kostenträgerdatei) yürürlüğe girer | Z-09 → `billing/kostentraeger/parser.js` | ⏳ parser 05.09.2026'da yazıldı |
 | açık uçlu | Anlage 1 TP5 V21 geçerli (01.10.2025'ten) | Z-01 → `billing/dta/*`, `legs.js` | ✅ geçerli |
@@ -95,6 +97,20 @@ wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.pdf/.txt   (V21, ab 01.1
   → api-backend/billing/codes/legs.js            (§5.5.3.3 EHE-Segment'e dayanır)
 ```
 Durum: ✅ geçerli. `legs.js` belgeye satır düzeyinde atıf yapıyor — **istenen desen bu.**
+
+**Z-01 iki ek dala sahip (10.09.2026'dan beri)** — Anlage 1'in kendisi değil, ona bağlı Anhang'lar:
+```
+wissensbank/gemeinsam/302-tp5/Anhang_01_…_Kapitel_4_Datenuebermittlung_20170831   (ab 01.09.2017)  → W-02
+wissensbank/gemeinsam/302-tp5/Anhang_02_…_Kapitel_9_Pruefverfahren_20031110       (Stand 10.11.2003) → W-03
+  → wissensbank/SPEC-RULES.md § „Datenübermittlung · Test- / Erprobungsverfahren · Verschlüsselung"  (8 kural)
+  → api-backend/billing/dta/filename.js      ⛔ ÇELİŞKİ: 16 haneli, Anhang 1 §4.2 11 hane diyor
+  → api-backend/billing/dta/builder.js:375   ✅ testIndikator eşlemesi doğru
+  → api-backend/billing/api/abrechnung.routes.js  (kind:'test' ×3 · SignedData OID · cert_valid_to)
+  → Auftragsdatei üreten kod                 ⛔ YOK — zincirin eksik halkası
+```
+⚠️ Bu iki dal bugün ağırlıkla **„uygulanmamış"** raporluyor. Bu bir hata değil bir **durum
+tespiti**: canlı gönderim henüz yapılmıyor, kod yalnız Testdatei üretiyor. Ama zincir artık
+yazılı — canlıya geçiş kararı verildiğinde neyin eksik olduğu yeniden araştırılmayacak.
 
 ### Z-02 · §302 Schlüsselverzeichnisse
 ```
@@ -237,6 +253,8 @@ yeniden araştırılıyor demektir.
 | `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919` | V21 | 01.10.2025 | ✅ GEÇERLİ | Z-02 | ⬜ |
 | `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218` | V22 | 01.02.2027 | ⏳ GELECEK | Z-02 | ⬜ |
 | `wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414` | V10 | 01.02.2027 | ⏳ GELECEK | Z-09 | ⬜ |
+| `wissensbank/gemeinsam/302-tp5/Anhang_01_…_Kapitel_4_Datenuebermittlung_20170831` | — (Stand 31.08.2017) | 01.09.2017 | ✅ GEÇERLİ | Z-01 dalı | **✅ kart W-02** |
+| `wissensbank/gemeinsam/302-tp5/Anhang_02_…_Kapitel_9_Pruefverfahren_20031110` | — (Stand 10.11.2003) | belirtilmemiş | ✅ GEÇERLİ | Z-01 dalı | **✅ kart W-03** |
 | `wissensbank/_archiv/Anhang_05_Anlage_1_TP5_20260401` | 1.0 | 01.04.2026 | 🚫 KAPSAM DIŞI (Rettungsdienst) | — | ⬜ |
 | `wissensbank/gemeinsam/kostentraeger/*.txt` (7 dosya) — **veri, spec değil** | 7 dosya, ayrı ayrı | 01.04–01.10.2026 | ✅ 6 GEÇERLİ + ⏳ 1 GELECEK | Z-09 | **✅ kart W-01** |
 | `wissensbank/gemeinsam/302-tp5/…Anhang_04b…xsd` + `SLP_BAS_1.2.0.xsd` | — | — | 📎 REFERANS (XML şema) | — | dosya adında ✅ |
@@ -457,15 +475,108 @@ itirazında orijinaline başvurulacaksa dosyalar yayıncıdan yeniden indirilmel
 
 ---
 
+### W-02 · Anhang 1 zur Anlage 1 TP5 — Kapitel 4 „Datenübermittlung"
+
+- **Dosya:** `wissensbank/gemeinsam/302-tp5/Anhang_01_Anlage_1_TP5_Kapitel_4_Datenuebermittlung_20170831.pdf`
+  + `.txt` (8 sayfa · PDF 82.240 bayt · txt 11.014 bayt · 223 satır) · başka türev yok
+- **Herkunft:** https://www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhang_1_Anlage_1_TP5_20170831.pdf
+  · **İndirme:** 10.09.2026 · **İndiren:** `gkv-302` (canlı-gönderim hazırlık denetimi)
+- **Yayıncı:** GKV-Spitzenverband (her sayfa altbilgisi: „Anhang 1 zur Technischen Anlage ·
+  anzuwenden ab 01.09.2017 · GKV-Spitzenverband")
+- **Sürüm / Stand:** sürüm numarası **yok** — kapak yalnız `Stand des Anhangs 1: 31.08.2017`
+  diyor. Änderungshistorie üç giriş taşıyor: 31.08.2017 (§4.1 Dokumentnamen), 12.09.2012 ×3
+  (layout, §4.1 Verweise, §4.3 physikalischer Dateiname eklendi).
+- **Anzuwenden ab:** **01.09.2017** (kapaktan, „Anzuwenden ab:" satırı) · **Düşer:** açık uçlu —
+  halefi yayımlanmamış
+- **Durum:** ✅ **GEÇERLİ**
+- **Neyi besler:** Z-01 dalı → `wissensbank/SPEC-RULES.md` § „Datenübermittlung · Test- /
+  Erprobungsverfahren · Verschlüsselung" (§4.2 → *Logischer Dateiname*, §4.3 → *Physikalischer
+  Dateiname*, §3.1'le birlikte *Nutzdatendatei + Auftragsdatei çift gider*)
+  → `api-backend/billing/dta/filename.js` ⛔ **çelişki, aşağıya bak**
+  → Auftragsdatei üreten kod: **yok**
+- **Tazelik kontrolü:** ⛔ otomatik yok. Elle:
+  https://www.gkv-datenaustausch.de/leistungserbringer/sonstige_leistungserbringer/sonstige_leistungserbringer.jsp
+  → „Technische Anlagen (aktuell)" listesinde `Anhang_1_Anlage_1_TP5_*.pdf` satırının tarihi
+  `20170831`'den farklıysa yeni sürüm çıkmıştır. Anlage 1 TP5 **V22** ile birlikte kontrol
+  edilir (aynı sayfa, aynı bakış) — W-A09.
+- **Yeniden dağıtım:** **serbest** — GKV-SV'nin kamuya açık teknik anlage'si, login/lisans yok,
+  hasta verisi yok, ücretsiz indirilebiliyor. W-A07'nin şüphesi ICD-10-GM ve GKV
+  **Lesefassung**'larıyla ilgili; §302 teknik anlagenler o kapsamda değil. Yine de yayın yüzeyi
+  kapalı: `.vercelignore` → `wissensbank/` satırı (bugün :79).
+- **Yedek:** `.txt` ✅ git izliyor · `.pdf` ⛔ izlenmiyor (`.gitignore` ilk satırı `*.pdf`) →
+  W-A05 kapsamında, orijinal PDF yalnız bu makinede.
+- **Format kararı:** `.txt` + INDEX bölüm haritası, **md üretilmedi.**
+  Gerekçe: 8 sayfalık düzyazı spec; iki kritik yeri (§4.2 / §4.3) tablo, ama **sayı taşımıyorlar**
+  — hane *tanımı* taşıyorlar, fiyat/kod değil. `grep` ile 1–2k token'da bulunuyor; md'ye çevirmek
+  „§ 4.2" atfını kaydırır, kazanç sıfır (ajan §4, uzun düzyazı spec satırı). Sayı taşımadığı için
+  §0.2 yasağı bu belgede devreye girmiyor, yine de dönüşüm `pdftotext -enc UTF-8 -layout` ile
+  deterministik yapıldı ve kapak + §4.2 + §4.3 orijinale karşı elle örneklendi.
+
+⛔ **Bu kartın taşıdığı asıl bulgu — çözülmeden koda dokunulmaz.**
+`api-backend/billing/dta/filename.js` **16 haneli** `EHK…`/`EHM…` üretiyor
+(`E` + `HK`/`HM` + IK'nın son 5 hanesi + 8 haneli laufende Nummer). Anhang 1 §4.2 ise
+**11 haneli** `SL` + IK 3.–8. + `S`/`A` + ay istiyor. İki ad birbirine benzemiyor bile.
+**Ama `filename.js` baş yorumu kendi kaynağı olarak „GKV-DA Anlage 17 (Nutzdatendateien)"
+gösteriyor** — yani §302 Anhang 1'e değil, başka bir spesifikasyona dayanıyor. **Anlage 17
+arşivde yok** (→ W-A09). Yani bugün elimizde iki farklı ad kuralı ve birinin belgesi eksik.
+Hangisinin geçerli olduğu `gkv-302`'nin kararıdır; sicil yalnız çelişkiyi kaydeder.
+Kart yazılırken kod okundu ve ölçüldü (10.09.2026), tahmin edilmedi.
+
+### W-03 · Anhang 2 zur Anlage 1 TP5 — Kapitel 9 „Prüfverfahren"
+
+- **Dosya:** `wissensbank/gemeinsam/302-tp5/Anhang_02_Anlage_1_TP5_Kapitel_9_Pruefverfahren_20031110.pdf`
+  + `.txt` (5 sayfa · PDF 18.598 bayt · txt 8.362 bayt · 169 satır) · başka türev yok
+- **Herkunft:** https://www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/ANHANG2_TAV5.pdf
+  · **İndirme:** 10.09.2026 · **İndiren:** `gkv-302` (canlı-gönderim hazırlık denetimi)
+- **Yayıncı:** Spitzenverbände der Krankenkassen (belgenin kendi ifadesi; 2003 tarihli, GKV-SV
+  kurulmadan önce). Belgenin iç dosya adı: `ANHANG2_TAV5.DOC`.
+- **Sürüm / Stand:** sürüm numarası **yok** — kapakta iki satır:
+  `Stand der Technischen Anlage: 10.11.2003` · `Stand des Anhang 2: 10.11.2003`
+- **Anzuwenden ab:** **belirtilmemiş** — kapakta „Anzuwenden ab" satırı **yok** (W-02'de var,
+  burada yok; tahmin yazılmadı) · **Düşer:** açık uçlu — halefi yayımlanmamış
+- **Durum:** ✅ **GEÇERLİ** — 23 yıllık olması düşmüş olduğu anlamına gelmez; yayıncı sayfasında
+  „Technische Anlagen (**aktuell**)" başlığı altında duruyor ve Anlage 1 V21 § 2 Abs. 2 hâlâ
+  Erprobungsverfahren'e atıf yapıyor.
+- **Neyi besler:** Z-01 dalı → `wissensbank/SPEC-RULES.md` § „Datenübermittlung · Test- /
+  Erprobungsverfahren · Verschlüsselung" (§5 → *Testdatei ödeme tetiklemez*, §3.1/§4/§6 →
+  *Echt'e geçiş kasadan Zulassung gerektirir*, §3.1 → *Nutzdatendatei + Auftragsdatei çift gider*)
+  → `api-backend/billing/api/abrechnung.routes.js:700 · :2810 · :3242` (`kind:'test'`)
+  → `api-backend/billing/dta/builder.js:375` (`testIndikator` `'2'`/`'1'`/`'0'`) ✅ eşleme doğru
+  → Erprobung/Echt sürecinin **durumunu tutan DB alanı: yok** ⛔
+- **Tazelik kontrolü:** ⛔ otomatik yok. Elle: W-02 ile **aynı sayfa ve aynı bakışta** —
+  „Technische Anlagen (aktuell)" listesinde `ANHANG2_TAV5.pdf` satırı. Dosya adı sürüm/tarih
+  taşımadığı için sayfadaki „Stand" sütununa bakılır; PDF adı değişmeden içerik değişebilir,
+  bu yüzden şüphede kapak sayfası yeniden okunur (`Stand des Anhang 2:` satırı ≠ 10.11.2003).
+- **Yeniden dağıtım:** **serbest** — gerekçe W-02 ile aynı (kamuya açık §302 teknik anlage,
+  login yok, hasta verisi yok). Yayın yüzeyi kapalı: `.vercelignore` → `wissensbank/` satırı.
+- **Yedek:** `.txt` ✅ git izliyor · `.pdf` ⛔ izlenmiyor (`.gitignore` `*.pdf`) → W-A05.
+- **Format kararı:** `.txt` + INDEX bölüm haritası, **md üretilmedi.**
+  Gerekçe: 5 sayfa, tamamı düzyazı, tek tablo bile yok; sayı taşımıyor. Ajan §4'ün „tek seferlik
+  okunacak" satırına en yakın belge — ama tek seferlik değil: canlıya geçiş kararında ve her
+  Absetzung tartışmasında yeniden bakılacak, o yüzden bölüm haritası INDEX'e yazıldı.
+  Dönüşüm `pdftotext -enc UTF-8 -layout`; kapak ve §5/§6 orijinale karşı elle örneklendi.
+
+⚠️ **Belgenin iki tuzağı, atıf verirken bilinmeli:**
+1. Numaralandırmada **iki kez „3.3"** var (Prüfstufe 3 ve Prüfstufe 4). Orijinaldeki dizgi
+   hatası, metin dönüşümü hatası değil — PDF'te de öyle. Atıf „§ 3.3 Prüfstufe 4" biçiminde
+   verilmeli, yoksa okuyan yanlış bölüme bakar.
+2. §5 başlığı „bei Wechsel auf die **Version 04** der Nachrichtentypen SLGA/SLLA" diyor; bugün
+   SLGA/SLLA **Version 21**. Bölümün Prüfstufe ve Test-işaretleme hükümleri geçerli, içindeki
+   sürüm numarası **tarihsel bir örnektir**, uygulanacak değer değil.
+
+---
+
 ## 4. Açık maddeler
 
 Her madde ya bir sahibe, ya bir tarihe, ya `unkritisch` gerekçesine bağlanır. Üçü de
 yoksa `offen` kalır ve her raporda tekrar görünür.
 
-### W-A01 · Herkunft (indirme URL'i) 33 kaydın 32'sinde yok — `offen`
+### W-A01 · Herkunft (indirme URL'i) 35 kaydın 31'inde yok — `offen`
 Belgelerin nereden indirildiği hiçbir yerde yazılı değil. Bir sürüm düştüğünde yenisinin
 nereden alınacağı her seferinde yeniden araştırılıyor. Tek istisna Z-06 (fiyat XML'i,
 URL script başlığında).
+10.09.2026'da 2 kayıt daha kapandı (W-02, W-03 — tam indirme URL'i kartlarında).
+Kalan: 31.
 **Yapılacak:** her kayda Herkunft eklenir. Bilinen yayıncı kökleri:
 `gkv-datenaustausch.de` (§302 teknik anlagenler) · `gkv-heilmittel.de` (fiyat) ·
 `gkv-spitzenverband.de` (§125 Verträge, HPNR) · `bfarm.de` (ICD-10-GM) · `kbv.de`
@@ -491,8 +602,9 @@ yazılı değil (Z-05). 2027 sürümü geldiğinde tekrarlanabilir değil.
 alanları.
 
 ### W-A05 · Resmî belge arşivi yedeksiz — `offen`
-`.gitignore:1` → `*.pdf`. 47 PDF (~44 MB) yalnızca bu makinede. `.txt` karşılıkları git'te
-(68 dosya izleniyor), yani metin kayıp değil — ama **imzalı/orijinal PDF** kayıp olur.
+`.gitignore` ilk satırı → `*.pdf`. **49** PDF (~44 MB) yalnızca bu makinede
+(10.09.2026'da 2 yeni PDF eklendi: Anhang 1 Kap. 4, Anhang 2 Kap. 9 — ikisi de izlenmiyor). `.txt` karşılıkları git'te
+(70 dosya izleniyor), yani metin kayıp değil — ama **imzalı/orijinal PDF** kayıp olur.
 Absetzung itirazında orijinaline başvurulan belge budur.
 **Yapılacak:** `I:\My Drive\Ops Praxura gitnogo\` altına bir kopya (kod değil belge, kural
 uygun). Karar kullanıcınındır — depoyu şişirmemek bilinçli bir tercihti.
@@ -575,6 +687,21 @@ kayıtsız olduğu için yok sayılmış.
 ⚠️ Depo public: W-A07 altındaki kullanıcı kararıyla bu veri için yeniden dağıtım sorusu
 **kapandı** (kamuya açık kurum verisi, hasta verisi yok).
 
+### W-A09 · Üç belge arşivde eksik, üçü de canlı gönderimin önünde — `offen` ⚠️
+10.09.2026'da `gkv-302`'nin canlı-gönderim hazırlık denetiminde ortaya çıktı. **Sıradaki iş
+listesi, bugün indirilmedi** (kullanıcı kararı: acil değil).
+
+| Eksik belge | Niye lazım | Nereden |
+|---|---|---|
+| **Anlage 1 TP5 V22** (21.05.2026) | Bugün geçerli olan V21; V22'nin `Anzuwenden ab` tarihi **bizde yazılı değil** ve §1 takviminde yeri yok. Anlage 3 V22 ve Anhang 03 V10 01.02.2027'de giriyor — Anlage 1 V22 de aynı tarihteyse geçiş **tek pakettir**, ayrı ayrı planlanamaz | `gkv-datenaustausch.de` → Sonstige Leistungserbringer → Technische Anlagen (aktuell) |
+| **GGT Anlage 2** (Auftragsdatei) | Auftragsdatei'nin **tam alan yapısı**. Anhang 1 §4.3 „Aufbau … ist in der Anlage A beschrieben" diyor, yani yapı bizde **hiç yok**. Prüfstufe 1 dosyaları çift bekliyor (W-03 → §3.1); Auftragsdatei olmadan DFÜ yolu kapalı | `gkv-datenaustausch.de` → Gemeinsame Grundsätze Technik (GGT), Anlagen listesi |
+| **GKV-DA Anlage 17** (Nutzdatendateien) | `filename.js`'in **iddia ettiği kaynak**. Elimizde olmadığı için 16 haneli ad kuralının doğru mu yanlış mı olduğu bugün **kanıtlanamıyor** — W-02'deki çelişki bu belge gelmeden kapanmaz | aynı sayfa, GGT Anlagen |
+
+**Sahibi:** `wissensbank` (indirme + kayıt) → `gkv-302` (yorum + karar).
+**Tarih bağı:** ilk ikisi **01.02.2027 geçiş paketinden önce** kapanmalı; üçüncüsü canlı
+gönderim denemesinden önce. **Ölçüt:** üçü de indirildiğinde W-02'deki dosya adı çelişkisi
+ya çözülür ya da „Anlage 17 geçerli" diye gerekçeli kapanır.
+
 ### ✅ Kapalı / doğrulanmış
 
 - **W-01 zinciri (Z-09) artık gerçek veriyle çalışıyor** — 06.09.2026 (`cceb528`) + 07.09.2026.
@@ -594,6 +721,18 @@ kayıtsız olduğu için yok sayılmış.
   (INDEX'te kapsam dışı yazılı). **Boşluk yok.**
 - **Fiyat verisi çift kaynaklı.** Anlage 2 (maßgeblich) + GKV XML (bağımsız doğrulama).
   PDF-parser ve YZ bilinçli olarak reddedildi — Ops kartı #213, 04.09.2026.
+
+- **Sicil ilk kez „belge indirildi → aynı gün üç dosyaya birden kaydedildi" turunu tamamladı
+  — 10.09.2026.** `gkv-302` iki belgeyi indirdi ve yola koydu; kimlik (sürüm, `Anzuwenden ab`)
+  **kapak sayfalarından** okundu (dosya adına güvenilmedi — Anhang 2'de „anzuwenden ab" satırı
+  **hiç yok**, „belirtilmemiş" yazıldı), INDEX'e bölüm haritası, REGISTER'a iki tam kimlik
+  kartı, SPEC-RULES'a 8 kural girdi. **Delege çıktısı olduğu gibi kabul edilmedi:** 8 kuralın
+  kod satırı atıfları tek tek ölçüldü, **üçü kaymıştı** (`kind:'test'` 710/2820/3252 → gerçekte
+  **700/2810/3242**; SignedData OID :989 → **:983**; `cert_valid_to` :1021 → **:1011**) ve
+  düzeltilerek yazıldı. Bir iddia da **fazla keskindi**: „`cert_valid_to` hiçbir yerde
+  okunmuyor" — gerçekte iki yerde `SELECT` ediliyor (`:534`, `:2598`), ama hiçbir yerde
+  **tarihle karşılaştırılmıyor**; kural o hâliyle yazıldı. Ajan §3'ün „en az bir iddiasını
+  orijinale karşı örnekle" kuralının niye var olduğunun ölçülmüş örneği.
 
 - **Kök temizliği sonrası atıflar tazelendi — 10.09.2026.** 09.09.2026'da beş klasör
   arşive taşındı ve `.vercelignore`'dan 11 ölü kural silindi; silinme listeyi yukarı

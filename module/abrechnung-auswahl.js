@@ -377,11 +377,16 @@ export async function ladeAbrechnungAuswahl() {
       brutto: pos ? zz.brutto : 0,
       zuzahlung: pos ? zz.gesamt : 0,
       befreit: !!rx.zuzahlung_befreit,
-      // `!rx.heilmittel_position` und fehlender Patientenbezug sind wie die
-      // podologischen Strukturblocker NICHT übersteuerbar — der Server wirft
-      // in beiden Fällen unbedingt (mapPrescriptionToDtaShape, abrechnung.routes.js).
-      blockiert: istHarterRiegel(issues) || !rx.heilmittel_position || !rx.patient_id || !lead.last_name,
-      hinweise: _physioHinweise(issues, rx, lead),
+      // `!rx.heilmittel_position`, fehlender Patientenbezug und keine
+      // erbrachte Sitzung sind wie die podologischen Strukturblocker NICHT
+      // übersteuerbar — der Server wirft in allen drei Fällen unbedingt
+      // (mapPrescriptionToDtaShape, abrechnung.routes.js). Der dritte Fall
+      // warf bis 10.09.2026 gar nicht, sondern erfand eine Sitzung auf Basis
+      // der VERORDNETEN Menge (gkv-302 Audit) — die Prüfung hier ist also
+      // KEIN Spiegel eines länger bestehenden Server-Verhaltens, sondern
+      // zieht mit dessen Korrektur gleich.
+      blockiert: istHarterRiegel(issues) || !rx.heilmittel_position || !rx.patient_id || !lead.last_name || zz.erbracht === 0,
+      hinweise: _physioHinweise(issues, rx, lead, zz),
     };
     zeile.soll = kassenanteil(zeile.brutto, zeile.zuzahlung);
     zeilen.push(zeile);
@@ -469,14 +474,15 @@ function _findePhysioPosition(code, positionen) {
   return tpl ? (positionen || []).find(p => p.x === tpl) || null : null;
 }
 
-function _physioHinweise(issues, rx, lead = {}) {
+function _physioHinweise(issues, rx, lead = {}, zz = null) {
   const out = [];
   if (issues.isReportMissing) out.push({ art: 'warn', text: `Therapiebericht ausstehend (${rx.bericht_status || 'offen'}) — Abrechnen ist möglich, die Entscheidung wird protokolliert.` });
   if (issues.missingCert)     out.push({ art: 'stop', text: `Qualifikation fehlt: '${issues.missingCertName}' für die Sitzung am ${issues.missingCertDate}.` });
   if (issues.has14DayGap)     out.push({ art: 'stop', text: `Behandlungsunterbrechung über 14 Tage (${issues.gapDays} Tage, ${issues.gapDates}).` });
-  // Server lehnt beide unbedingt ab (mapPrescriptionToDtaShape) — deshalb 'stop', nicht 'warn'.
+  // Server lehnt alle drei unbedingt ab (mapPrescriptionToDtaShape) — deshalb 'stop', nicht 'warn'.
   if (!rx.heilmittel_position) out.push({ art: 'stop', text: 'Keine Heilmittelposition (X-Code) zugewiesen — der Server lehnt diese Verordnung beim Erstellen ab.' });
   if (!rx.patient_id || !lead.last_name) out.push({ art: 'stop', text: 'Kein Patient aus der Kartei verknüpft — der Name für die Abrechnung wird immer aus der Patientenakte übernommen. Bitte die Verordnung einem Patienten zuordnen.' });
+  if (zz && zz.erbracht === 0) out.push({ art: 'stop', text: 'Keine Sitzung als „erbracht" dokumentiert — der Server lehnt eine Abrechnung ohne tatsächlich stattgefundene Behandlung ab. Bitte zuerst eine Sitzung als durchgeführt markieren.' });
   return out;
 }
 
