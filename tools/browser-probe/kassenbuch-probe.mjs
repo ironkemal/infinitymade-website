@@ -14,7 +14,7 @@ const P = (t, ok, z) => { p(t, ok, z); if (!ok) alleOk = false; };
 console.log('\n══ BARVERKAUF-MODAL (Redesign, Ops-Meldung 10.09.2026)');
 
 await page.click('#blAddManualBtn');
-const chips = await page.evaluate(() => document.querySelectorAll('#blManualZahlartGrid .bl-zahlart-chip').length);
+const chips = await page.evaluate(() => document.querySelectorAll('#blManualZahlartGrid .zahlart-chip').length);
 P('5 Zahlart-Chips gerendert (bar/ec/ueberweisung/paypal/sonstiges)', chips === 5, String(chips));
 
 const nachOeffnen = await page.evaluate(() => document.getElementById('blManualSaveBtn').disabled);
@@ -25,7 +25,7 @@ await page.fill('#blManualRef', '1x Gutschein Massage');
 const ohneZahlart = await page.evaluate(() => document.getElementById('blManualSaveBtn').disabled);
 P('Betrag + Referenz allein reichen NICHT — Zahlart ist Pflicht, kein Default', ohneZahlart === true);
 
-await page.click('#blManualZahlartGrid .bl-zahlart-chip[data-zahlart="paypal"]');
+await page.click('#blManualZahlartGrid .zahlart-chip[data-zahlart="paypal"]');
 const mitZahlart = await page.evaluate(() => document.getElementById('blManualSaveBtn').disabled);
 P('nach Zahlart-Wahl: Save-Knopf frei', mitZahlart === false);
 

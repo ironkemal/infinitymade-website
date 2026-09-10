@@ -7110,12 +7110,6 @@ function openKassierenDialog({ betragEur, patientName }) {
     box.setAttribute('aria-labelledby', '_kassTitle');
     box.style.cssText = 'background:var(--bg-card-solid);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:400px;';
 
-    const zahlartBtns = ZAHLARTEN.map(z => `
-      <button type="button" class="_kassZahlart" data-zahlart="${z.key}"
-        style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-main);cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;text-align:left;">
-        <span aria-hidden="true">${z.icon}</span><span>${escapeHtml(t(z.i18n))}</span>
-      </button>`).join('');
-
     box.innerHTML = `
       <h3 id="_kassTitle" style="margin:0 0 2px;font-size:16px;font-weight:700;color:var(--text-main);">${escapeHtml(t('kass_title'))}</h3>
       <p style="margin:0 0 14px;font-size:13px;color:var(--text-muted);">${escapeHtml(patientName || '')}</p>
@@ -7125,7 +7119,7 @@ function openKassierenDialog({ betragEur, patientName }) {
         ${escapeHtml(t('kass_print'))}
       </label>
       <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">${escapeHtml(t('kass_zahlart'))}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${zahlartBtns}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${zahlartChipsHtml({ escapeHtml, t })}</div>
       <div style="display:flex;justify-content:flex-end;margin-top:18px;">
         <button type="button" id="_kassCancel" style="padding:8px 16px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:13px;font-family:inherit;">${escapeHtml(t('kass_cancel'))}</button>
       </div>
@@ -7144,24 +7138,22 @@ function openKassierenDialog({ betragEur, patientName }) {
     };
     function onEsc(e) { if (e.key === 'Escape') cleanup(null); }
 
-    box.querySelectorAll('._kassZahlart').forEach(btn => {
+    box.querySelectorAll('.zahlart-chip').forEach(btn => {
       btn.addEventListener('click', () => {
         // Sofort alle Knöpfe sperren — ein zweiter Klick darf keinen zweiten
-        // Beleg auslösen.
-        box.querySelectorAll('._kassZahlart').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+        // Beleg auslösen. .zahlart-chip:disabled übernimmt die Optik (dashboard.css).
+        box.querySelectorAll('.zahlart-chip').forEach(b => { b.disabled = true; });
         cleanup({
           zahlart: btn.dataset.zahlart,
           drucken: !!document.getElementById('_kassPrint')?.checked,
         });
       });
-      btn.addEventListener('mouseenter', () => { if (!btn.disabled) btn.style.borderColor = 'var(--primary)'; });
-      btn.addEventListener('mouseleave', () => { btn.style.borderColor = 'var(--border)'; });
     });
 
     document.getElementById('_kassCancel').addEventListener('click', () => cleanup(null));
     overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(null); });
     document.addEventListener('keydown', onEsc);
-    box.querySelector('._kassZahlart')?.focus();
+    box.querySelector('.zahlart-chip')?.focus();
   });
 }
 

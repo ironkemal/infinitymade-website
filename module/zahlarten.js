@@ -35,3 +35,19 @@ export function zahlartLabel(key, t) {
   const z = ZAHLARTEN.find(x => x.key === key);
   return z ? t(z.i18n) : (key || '—');
 }
+
+/**
+ * Markup für die Zahlart-Chip-Auswahl — bis 10.09.2026 in dashboard.js
+ * (openKassierenDialog) und module/kassenbuch-beleg.js je eine eigene, leicht
+ * abweichende Kopie (Padding, Gap, Klassenname). Jetzt eine Quelle; die
+ * Auswahl-Optik kommt aus der CSS-Klasse `.zahlart-chip.active`
+ * (dashboard.css), nicht mehr aus inline gesetzten Style-Werten.
+ *
+ * @param {{escapeHtml: (s:string) => string, t: (key:string) => string}} deps
+ */
+export function zahlartChipsHtml({ escapeHtml, t }) {
+  return ZAHLARTEN.map(z => `
+    <button type="button" class="zahlart-chip" data-zahlart="${z.key}">
+      <span aria-hidden="true">${z.icon}</span><span>${escapeHtml(t(z.i18n))}</span>
+    </button>`).join('');
+}

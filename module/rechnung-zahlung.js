@@ -45,15 +45,25 @@
  * übergebenen `kassiere`-Ablauf. Diese Datei bucht nichts selbst.
  */
 
-// prescriptions.zuzahlung_zahlart (bar|ec|ueberweisung|sonstiges) →
+// prescriptions.zuzahlung_zahlart (bar|ec|ueberweisung|paypal|sonstiges) →
 // invoices.payment_method (bar|karte|lastschrift|ueberweisung|sonstiges).
-// Zwei Tabellen, zwei alte CHECK-Constraints — „ec" und „karte" meinen dasselbe.
+// Zwei Tabellen, zwei alte CHECK-Constraints — „ec" und „karte" meinen dasselbe;
+// invoices.payment_method hat keinen eigenen Platz für „paypal" (Ops #271,
+// 08.09.2026 nur in prescriptions/belegliste ergänzt), fällt deshalb auf
+// „sonstiges" — sonst stand hier `undefined`, und die Rechnung verlor ihren
+// Zahlungsweg lautlos (payment_method || null -> null).
 const ZAHLART_ZU_PAYMENT_METHOD = {
   bar: 'bar',
   ec: 'karte',
   ueberweisung: 'ueberweisung',
+  paypal: 'sonstiges',
   sonstiges: 'sonstiges',
 };
+
+/** Exportiert für den Regressionstest — der stille Fall (unbekannte Zahlart -> null) ist der Fehler, der hier passiert war. */
+export function paymentMethodFuerZahlart(zahlart) {
+  return ZAHLART_ZU_PAYMENT_METHOD[zahlart] || null;
+}
 
 async function markiereRechnungBezahlt(supabase, invoiceId, method) {
   await supabase.from('invoices').update({

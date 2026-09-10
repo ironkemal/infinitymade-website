@@ -17,18 +17,21 @@
  *     Zahlart macht das Kassenbuch falsch, und Belege lassen sich
  *     nachträglich nicht korrigieren).
  *
+ * Die Chip-Auswahl selbst (Markup + `.active`-Optik) kommt aus
+ * module/zahlarten.js — dort auch von openKassierenDialog() benutzt, statt
+ * einer zweiten, leicht abweichenden Kopie.
+ *
  * Erste Verwendung: Kassenbuch-Panel (`#panel-belegliste`), Knopf
  * "+ Barverkauf eintragen".
  */
 
-import { ZAHLARTEN, zahlartLabel } from './zahlarten.js?v=20260910';
+import { zahlartChipsHtml, zahlartLabel } from './zahlarten.js?v=20260910';
 
 let d = null;
 let gewaehlteZahlart = null;
 
 export function mountKassenbuchBeleg(deps) {
   d = deps;
-  renderZahlartGrid();
   document.getElementById('blManualAmount')?.addEventListener('input', pruefeVollstaendig);
   document.getElementById('blManualRef')?.addEventListener('input', pruefeVollstaendig);
   document.getElementById('blAddManualBtn')?.addEventListener('click', oeffneModal);
@@ -38,19 +41,11 @@ export function mountKassenbuchBeleg(deps) {
 function renderZahlartGrid() {
   const grid = document.getElementById('blManualZahlartGrid');
   if (!grid) return;
-  grid.innerHTML = ZAHLARTEN.map(z => `
-    <button type="button" class="bl-zahlart-chip" data-zahlart="${z.key}"
-      style="display:flex;align-items:center;gap:6px;padding:9px 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-main);cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;text-align:left;">
-      <span aria-hidden="true">${z.icon}</span><span>${d.escapeHtml(d.t(z.i18n))}</span>
-    </button>`).join('');
-  grid.querySelectorAll('.bl-zahlart-chip').forEach(btn => {
+  grid.innerHTML = zahlartChipsHtml({ escapeHtml: d.escapeHtml, t: d.t });
+  grid.querySelectorAll('.zahlart-chip').forEach(btn => {
     btn.addEventListener('click', () => {
       gewaehlteZahlart = btn.dataset.zahlart;
-      grid.querySelectorAll('.bl-zahlart-chip').forEach(b => {
-        const aktiv = b === btn;
-        b.style.borderColor = aktiv ? 'var(--primary)' : 'var(--border)';
-        b.style.background = aktiv ? 'var(--primary-dim)' : 'var(--bg-input)';
-      });
+      grid.querySelectorAll('.zahlart-chip').forEach(b => b.classList.toggle('active', b === btn));
       pruefeVollstaendig();
     });
   });
@@ -64,11 +59,16 @@ export function belegVollstaendig({ amount, ref, zahlart }) {
   return amount > 0 && !!(ref && ref.trim()) && !!zahlart;
 }
 
+/** Liest die drei Felder einmal, statt dass jede Funktion sie sich selbst holt. */
+function formular() {
+  const amount = Number(document.getElementById('blManualAmount')?.value);
+  const ref = (document.getElementById('blManualRef')?.value || '').trim();
+  return { amount, ref, zahlart: gewaehlteZahlart, fertig: belegVollstaendig({ amount, ref, zahlart: gewaehlteZahlart }) };
+}
+
 /** Save-Knopf nur an, wenn alle drei Felder da sind — Validierung sichtbar statt erst nach dem Klick als Toast. */
 function pruefeVollstaendig() {
-  const amount = Number(document.getElementById('blManualAmount')?.value);
-  const ref = document.getElementById('blManualRef')?.value || '';
-  const fertig = belegVollstaendig({ amount, ref, zahlart: gewaehlteZahlart });
+  const { fertig } = formular();
   const saveBtn = document.getElementById('blManualSaveBtn');
   if (saveBtn) saveBtn.disabled = !fertig;
   const fehlerEl = document.getElementById('blManualError');
@@ -77,8 +77,10 @@ function pruefeVollstaendig() {
 }
 
 function oeffneModal() {
-  document.getElementById('blManualAmount').value = '';
-  document.getElementById('blManualRef').value = '';
+  const amountEl = document.getElementById('blManualAmount');
+  const refEl = document.getElementById('blManualRef');
+  if (amountEl) amountEl.value = '';
+  if (refEl) refEl.value = '';
   gewaehlteZahlart = null;
   renderZahlartGrid();
   pruefeVollstaendig();
@@ -87,9 +89,8 @@ function oeffneModal() {
 }
 
 async function speichern() {
-  if (!pruefeVollstaendig()) return;
-  const amount = Number(document.getElementById('blManualAmount').value);
-  const ref = document.getElementById('blManualRef').value.trim();
+  const eingabe = formular();
+  if (!eingabe.fertig) { pruefeVollstaendig(); return; }
   const saveBtn = document.getElementById('blManualSaveBtn');
   saveBtn.disabled = true;
   const fehlerEl = document.getElementById('blManualError');
@@ -98,19 +99,19 @@ async function speichern() {
     const res = await fetch(`${d.apiBasis}/billing/belegliste`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${await d.token()}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'barverkauf', amount_eur: amount, reference_text: ref, zahlart: gewaehlteZahlart }),
+      body: JSON.stringify({ type: 'barverkauf', amount_eur: eingabe.amount, reference_text: eingabe.ref, zahlart: eingabe.zahlart }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || 'Serverfehler');
     }
     d.closeModal('manualBelegModal');
-    d.showToast(`Beleg erfolgreich gebucht ✓ · ${zahlartLabel(gewaehlteZahlart, d.t)}`);
+    d.showToast(`Beleg erfolgreich gebucht ✓ · ${zahlartLabel(eingabe.zahlart, d.t)}`);
     d.neuLaden();
   } catch (err) {
     if (fehlerEl) { fehlerEl.textContent = 'Buchung gescheitert: ' + err.message; fehlerEl.hidden = false; }
     else d.showToast('Buchung gescheitert: ' + err.message, 'error');
   } finally {
-    saveBtn.disabled = !pruefeVollstaendig();
+    saveBtn.disabled = !formular().fertig;
   }
 }

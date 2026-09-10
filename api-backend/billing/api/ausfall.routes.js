@@ -438,8 +438,12 @@ router.patch('/ausfall/:id/status', async (req, res) => {
     if (!['bezahlt', 'storniert', 'abgeschrieben'].includes(status)) {
       return res.status(400).json({ error: "status must be 'bezahlt', 'storniert' or 'abgeschrieben'" });
     }
-    if (status === 'bezahlt' && zahlart != null && !ZAHLARTEN.includes(zahlart)) {
-      return res.status(400).json({ error: `Ungültige Zahlart. Erlaubt: ${ZAHLARTEN.join(', ')}.` });
+    // Pflicht, nicht nur geprüft wenn vorhanden — sonst kann ein alter Client
+    // (Bundle vor diesem Deploy) oder ein direkter API-Aufruf ohne zahlart
+    // weiterhin eine belegliste-Zeile mit zahlart=NULL erzeugen, genau die
+    // Lücke, die dieser Dialog schliessen sollte (§146 AO).
+    if (status === 'bezahlt' && !ZAHLARTEN.includes(zahlart)) {
+      return res.status(400).json({ error: `Zahlart erforderlich. Erlaubt: ${ZAHLARTEN.join(', ')}.` });
     }
 
     const { data: existing, error: fetchErr } = await supabase
