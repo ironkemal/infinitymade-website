@@ -5,7 +5,8 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 07.09.2026 (W-01 zinciri kapandı, W-A08 kapandı)
+> İlk kurulum: 05.09.2026 · Son güncelleme: 10.09.2026 (kök temizliği sonrası atıf tazeleme)
+> Önceki: 07.09.2026 (W-01 zinciri kapandı, W-A08 kapandı)
 
 ---
 
@@ -593,6 +594,22 @@ kayıtsız olduğu için yok sayılmış.
   (INDEX'te kapsam dışı yazılı). **Boşluk yok.**
 - **Fiyat verisi çift kaynaklı.** Anlage 2 (maßgeblich) + GKV XML (bağımsız doğrulama).
   PDF-parser ve YZ bilinçli olarak reddedildi — Ops kartı #213, 04.09.2026.
+
+- **Kök temizliği sonrası atıflar tazelendi — 10.09.2026.** 09.09.2026'da beş klasör
+  arşive taşındı ve `.vercelignore`'dan 11 ölü kural silindi; silinme listeyi yukarı
+  kaydırdığı için bu sicildeki iki satır-numarası atfı yalan söylemeye başlamıştı.
+  Düzeltilenler: `.vercelignore:82 → :79` (W-01 yayın yüzeyi satırı) ve
+  `.vercelignore:73-75 → :72-73` (W-A07 ICD/Lesefassung şüphesi). Ayrıca ajan
+  tanımındaki (`.claude/agents/wissensbank.md`, kural 5) aynı atıf çekildi ve
+  `archive/README.md`'deki ölü `Handbücher/INDEX.md` işareti `wissensbank/INDEX.md`
+  yapıldı. `wissensbank/README.md` ve W-A05'teki `.gitignore:1` → `*.pdf` atıfları
+  **kontrol edildi, doğru** — `.gitignore`'un ilk satırı değişmedi.
+  ⚠️ **Ders:** bir dosyaya satır numarasıyla atıf vermek ucuz ama **bakım borcu yaratır.**
+  O dosya bu depoda her temizlikte kısalıyor. Yeni atıflarda satır numarasının yanına
+  aranacak metin de yazılır (örn. „`.vercelignore` → `wissensbank/` satırı"), ki numara
+  kaydığında atıf yine bulunabilsin.
+  **Wissensbank'a dokunmayan taşımalar:** `wissensbank/` altındaki hiçbir belge
+  taşınmadı, hiçbir türev zinciri kırılmadı — temizlik kök dizini hedefledi.
 
 ---
 
