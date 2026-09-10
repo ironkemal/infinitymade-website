@@ -52,13 +52,37 @@ export const TOPF = 'prescriptions';
  * Auswahl für die podologische Arbeitsliste.
  * `leads(patientennummer)` für die Belegnummer neben dem Namen (`belegnummer`
  * ist bis zur ersten Abrechnung leer), `leads(business_id)` für den Standort.
+ *
+ * `first_name, last_name` (05.09.2026 ergänzt) für den Anzeigenamen —
+ * `prescriptions.patient_name` ist nur ein Freitext-Schnappschuss vom Anlegen
+ * und bleibt bei vielen über die Kartei angelegten Zeilen leer. Ohne diese
+ * beiden Spalten hatte `patientAnzeigename()` unten nichts zum Nachschlagen
+ * und fiel für genau diese Zeilen still auf „—" zurück (Behandlungen-Liste,
+ * Mahnwesen).
  */
-// `last_name` + `versichertennummer` seit 10.09.2026 dabei: der §302-Preflight
-// in `module/abrechnung-auswahl.js` muss dieselben zwei Pflichtfelder prüfen
-// können, die das Backend (`create-podologie`) sonst erst beim Erstellen mit
-// 422 ablehnt (`!np.nachname`, fehlende Versichertennummer) — vorher standen
-// sie nicht im Select und die Lücke war von der Auswahlliste aus unsichtbar.
-export const PODO_SELECT = '*, leads!patient_id(patientennummer, business_id, last_name, versichertennummer, geburtsdatum, versichertenstatus)';
+// `versichertennummer, geburtsdatum, versichertenstatus` seit 10.09.2026
+// dabei: der §302-Preflight in `module/abrechnung-auswahl.js` muss dieselben
+// Pflichtfelder prüfen können, die das Backend (`create-podologie`) sonst
+// erst beim Erstellen mit 422 ablehnt (`!np.nachname`, fehlende
+// Versichertennummer) — vorher standen sie nicht im Select und die Lücke war
+// von der Auswahlliste aus unsichtbar.
+export const PODO_SELECT = '*, leads!patient_id(first_name, last_name, patientennummer, business_id, versichertennummer, geburtsdatum, versichertenstatus)';
+
+/**
+ * Der Anzeigename einer podologischen Zeile: Kartei (`leads`-Verbund) zuerst,
+ * das Freitextfeld `patient_name` nur als Notbehelf für Altzeilen ohne
+ * `lead_id` (siehe Kopf dieser Datei). `null`, wenn beides fehlt — die
+ * aufrufende Stelle entscheidet selbst, ob dafür „—" oder ein anderer
+ * Platzhalter steht.
+ *
+ * @param {object} v  Zeile im podologischen Wortschatz (ausTopf-Ergebnis, trägt `.leads`)
+ * @returns {string|null}
+ */
+export function patientAnzeigename(v) {
+  const p = v?.leads || {};
+  const voll = [p.first_name, p.last_name].filter(Boolean).join(' ').trim();
+  return voll || v?.patient_name || null;
+}
 
 // ── Statusachse ─────────────────────────────────────────────────────────────
 

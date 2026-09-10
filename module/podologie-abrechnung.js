@@ -62,7 +62,7 @@
 
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20260810e';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20260817';
-import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260905b';
+import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260910b';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260816';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules } from './diagnosegruppen-regeln.js?v=20260827';
@@ -77,8 +77,8 @@ import { darf78040, darf78100, darfErstbefundungNagel,
   from './eingangsbefundung-regel.js?v=20260904';
 // Seit 04.09.2026 gibt es EINEN Verordnungstopf (`prescriptions`). Diese Datei
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
-import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, inTopf, statusInTopf }
-  from './verordnung-topf.js?v=20260904';
+import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
+  from './verordnung-topf.js?v=20260910';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -482,7 +482,7 @@ async function loadPodologieBilling() {
           margin-bottom:8px;transition:border-color .15s;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
-              <span style="font-weight:600;color:var(--text-main);">${ctx.escapeHtml(v.patient_name || '—')}</span>${belegnummerRosette(v, { patientennummer: v.leads?.patientennummer, escapeHtml: ctx.escapeHtml, titel: 'Patientennummer-Verordnungsnummer — dieselbe Nummer steht auf Rechnung und Abrechnungsdatei' })}
+              <span style="font-weight:600;color:var(--text-main);">${ctx.escapeHtml(patientAnzeigename(v) || '—')}</span>${belegnummerRosette(v, { patientennummer: v.leads?.patientennummer, escapeHtml: ctx.escapeHtml, titel: 'Patientennummer-Verordnungsnummer — dieselbe Nummer steht auf Rechnung und Abrechnungsdatei' })}
               <span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${ctx.escapeHtml(
                 _isGkv
                   ? (v.diagnosegruppe || '—')
@@ -542,7 +542,7 @@ async function loadPodologieBilling() {
 
   const behandlungFormHtml = selectedVord ? `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
-      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(selectedVord.patient_name || '—')}</h4>
+      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')}</h4>
       <div style="display:grid;gap:12px;">
         <div>
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_behandlungsdatum')}</label>
@@ -685,7 +685,7 @@ async function loadPodologieBilling() {
     if (checks.includes(POD_EINGANGSBEFUNDUNG)) {
       const lage = await podEingangsbefundungLage(vord, datum);
       if (!lage.erlaubt) {
-        const name = vord?.patient_name || 'diesen Patienten';
+        const name = patientAnzeigename(vord) || 'diesen Patienten';
         errEl.textContent = lage.grund === 'schon_abgerechnet'
           ? `Eingangsbefundung (78040) wurde für ${name} bereits am `
             + `${new Date(lage.schonAm).toLocaleDateString('de-DE')} abgerechnet — sie ist einmalig `
@@ -706,7 +706,7 @@ async function loadPodologieBilling() {
     if (checks.includes(POD_ERSTBEFUNDUNG_GROSS)) {
       const lage = await podErstbefundungGrossLage(vord, datum);
       if (!lage.erlaubt) {
-        const name = vord?.patient_name || 'diesen Patienten';
+        const name = patientAnzeigename(vord) || 'diesen Patienten';
         errEl.textContent = `Erstbefundung gross (78100) wurde für ${name} am `
           + `${new Date(lage.schonAm).toLocaleDateString('de-DE')} bereits abgerechnet — sie ist `
           + `auf eine Abgabe je Patient im Kalenderjahr beschränkt `

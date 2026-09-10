@@ -45,7 +45,7 @@ import { emit } from './signal.js?v=20260813';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). Diese Datei spricht
 // weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
 // uebersetzt wird nur an den beiden Lesestellen unten.
-import { TOPF, ausTopf } from './verordnung-topf.js?v=20260904';
+import { TOPF, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260910';
 
 const API = 'https://n8n.infinitymade.de/api';
 
@@ -238,9 +238,14 @@ export function verordnungStatusInfo(quelle, status) {
 export function statusBadgeGross(quelle, status) {
   const s = verordnungStatusInfo(quelle, status);
   if (!s) return '';
+  // white-space bewusst NICHT nowrap: "Bereit zur Abrechnung" ist der längste
+  // Text hier. Mit nowrap zwingt der Badge die Tabellenspalte auf seine volle
+  // Breite und die ganze Tabelle läuft über den Kartenrand hinaus (in
+  // verordnung-liste.js sichtbar abgeschnitten). Mit normalem Umbruch kann die
+  // Spalte schmal bleiben und der Text bricht bei Platzmangel auf zwei Zeilen.
   return `<span title="${escapeAttr(s.hilfe)}" style="display:inline-flex;align-items:center;`
        + `font-size:13px;font-weight:700;padding:5px 14px;border-radius:14px;`
-       + `background:${s.bg};color:${s.farbe};border:1px solid ${s.farbe};white-space:nowrap;">`
+       + `background:${s.bg};color:${s.farbe};border:1px solid ${s.farbe};white-space:normal;line-height:1.3;">`
        + `${escapeHtml(s.label)}</span>`;
 }
 
@@ -499,7 +504,7 @@ export function oeffneStatusDialog(verordnung, opts = {}) {
                 border-radius:12px;padding:20px;max-width:440px;width:100%;font-size:14px;">
       <h3 style="margin:0 0 4px;font-size:16px;">Abrechnungsstatus ändern</h3>
       <p style="margin:0 0 14px;color:var(--text-muted,#9ca3af);font-size:13px;">
-        ${escapeHtml(verordnung.patient_name || 'Verordnung')} · aktuell: ${escapeHtml(statusLabel(aktuell))}
+        ${escapeHtml(patientAnzeigename(verordnung) || 'Verordnung')} · aktuell: ${escapeHtml(statusLabel(aktuell))}
       </p>
       ${ziele.length ? `
       <label style="display:block;margin-bottom:6px;font-weight:600;">Neuer Status</label>
@@ -600,7 +605,7 @@ export async function oeffneStatusDialogFuer(verordnungId, { supabase, onFertig 
   const token = sess?.session?.access_token;
   const { data: vRoh, error } = await supabase
     .from(TOPF)
-    .select('id, abrechnung_status, patient_name, absetzung_betrag, absetzung_grund')
+    .select('id, abrechnung_status, patient_name, absetzung_betrag, absetzung_grund, leads!patient_id(first_name, last_name)')
     .eq('id', verordnungId)
     .eq('therapie_bereich', 'podo')
     .maybeSingle();
