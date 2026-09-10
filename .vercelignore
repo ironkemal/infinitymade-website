@@ -96,11 +96,12 @@ verify_2_onboarding.png
 # QA-/Audit-Beweisbilder — reproduzierbar, ~205 MB, kein Web-Asset
 ui-audit/
 mobile-audit/
-funktionen-shots/
 
-# Medien-Rohmaterial aus der Videoproduktion
-demo rezept/
-voice demo/
+# Ham PNG-Quelle der Funktionen-Walkthrough — 09.09.2026 von funktionen-shots/raw/
+# nach assets/img/fn/_raw/ verschoben. assets/img/fn/ selbst bleibt LIVE
+# (index.html:1485 laedt die .webp-Ableitungen), nur die Rohdateien sind kein Web-Asset.
+assets/img/fn/_raw/
 
-# Markenquelldateien — die ausgelieferten Logos/Favicons liegen im Wurzelverzeichnis
-Logo/
+# Medien-Rohmaterial aus der Videoproduktion + Markenquelldateien — 09.09.2026
+# nach archive/medya/ verschoben (demo rezept/, voice demo/, Logo/, demo slayt/),
+# oben durch archive/ bereits ausgeschlossen
