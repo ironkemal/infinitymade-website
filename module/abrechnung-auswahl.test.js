@@ -17,7 +17,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { kassenanteil, podoSperren, gruppenKey, baueGruppen, auswahlStand, imZeitraum }
+import { kassenanteil, podoSperren, gruppenKey, baueGruppen, auswahlStand, imZeitraum,
+         keineDokumentierteBehandlung, podoStrukturBlocker }
   from './abrechnung-auswahl.js';
 
 const quelle = readFileSync(new URL('./abrechnung-auswahl.js', import.meta.url), 'utf8');
@@ -52,6 +53,31 @@ test('podoSperren: Befundpauschale ist bei Nagelspange nicht abrechenbar', () =>
   assert.match(g[0], /78030/);
   // Beide Sperren zugleich
   assert.equal(podoSperren({ diagnosegruppe: 'UI1', icd10: ['M20.1'] }, ['88030']).length, 2);
+});
+
+test('keineDokumentierteBehandlung: leer oder fehlend heisst blockiert', () => {
+  assert.equal(keineDokumentierteBehandlung([]), true);
+  assert.equal(keineDokumentierteBehandlung(undefined), true);
+  assert.equal(keineDokumentierteBehandlung(['78030']), false);
+});
+
+test('podoStrukturBlocker: fehlender Patient, Arzt, Versichertennummer und Behandlung — alle vier gleichzeitig', () => {
+  const v = { patient_id: null, arzt_id: null, versichertennummer: null, leads: {} };
+  const gruende = podoStrukturBlocker(v, []);
+  assert.equal(gruende.length, 4);
+});
+
+test('podoStrukturBlocker: vollstaendige Verordnung mit Behandlung ist sauber', () => {
+  const v = {
+    patient_id: 'p1', arzt_id: 'a1', versichertennummer: 'A123456789',
+    leads: { last_name: 'Mustermann' },
+  };
+  assert.deepEqual(podoStrukturBlocker(v, ['78030']), []);
+});
+
+test('podoStrukturBlocker: Versichertennummer darf auch von der Kartei kommen', () => {
+  const v = { patient_id: 'p1', arzt_id: 'a1', versichertennummer: null, leads: { last_name: 'X', versichertennummer: 'A1' } };
+  assert.deepEqual(podoStrukturBlocker(v, ['78030']), []);
 });
 
 test('baueGruppen trennt dieselbe Kasse nach Fachbereich', () => {

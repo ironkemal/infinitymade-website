@@ -302,12 +302,23 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
   }
 
   const np = nameParts(lead);
+  // Gleiche Sperre wie im podologischen Mapper (mapVerordnungToDtaShape, oben):
+  // der Name kommt ausschliesslich aus der Patientenakte, nie aus einem
+  // Freitextfeld. Bis 10.09.2026 fehlte diese Prüfung hier — ein Rezept ohne
+  // verknüpften Patienten hätte eine DTA-Zeile mit leerem Nachnamen erzeugt,
+  // statt abgelehnt zu werden (still, nicht mit 422).
+  if (!np.nachname) {
+    const e = new Error(`Verordnung ${rx.id.slice(0, 8)}: kein Patient aus der Kartei verknüpft. Bitte die ` +
+      'Verordnung einem Patienten zuordnen — der Name für die Abrechnung wird immer aus der Patientenakte übernommen.');
+    e.status = 422; throw e;
+  }
   const abrechnungscode = abrechnungscodeFuer(sector);
 
   // Resolve Positionsnummer (template like 'X0501' or stored numeric).
   const stored = rx.heilmittel_position;
   if (!stored) {
-    throw new Error(`prescription ${rx.id}: heilmittel_position fehlt`);
+    const e = new Error(`prescription ${rx.id.slice(0, 8)}: heilmittel_position fehlt`);
+    e.status = 422; throw e;
   }
   const resolvedPos = resolvePositionsnummer(stored, abrechnungscode);
 
@@ -898,7 +909,11 @@ router.post('/abrechnung/create', async (req, res) => {
     });
   } catch (e) {
     console.error('[abrechnung/create]', e);
-    return res.status(500).json({ error: e.message || 'Server error' });
+    // Wie /abrechnung/create-podologie (Zeile ~3017): `mapPrescriptionToDtaShape()`
+    // wirft mit `e.status` (422 z.B. bei fehlendem Patientenbezug oder fehlender
+    // Heilmittelposition) — bis 10.09.2026 stand hier hart `500`, das hat den
+    // Status verschluckt und jeden fachlichen Fehler wie einen Serverfehler aussehen lassen.
+    return res.status(e.status || 500).json({ error: e.message || 'Server error' });
   }
 });
 

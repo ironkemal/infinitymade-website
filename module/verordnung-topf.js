@@ -53,7 +53,12 @@ export const TOPF = 'prescriptions';
  * `leads(patientennummer)` für die Belegnummer neben dem Namen (`belegnummer`
  * ist bis zur ersten Abrechnung leer), `leads(business_id)` für den Standort.
  */
-export const PODO_SELECT = '*, leads!patient_id(patientennummer, business_id)';
+// `last_name` + `versichertennummer` seit 10.09.2026 dabei: der §302-Preflight
+// in `module/abrechnung-auswahl.js` muss dieselben zwei Pflichtfelder prüfen
+// können, die das Backend (`create-podologie`) sonst erst beim Erstellen mit
+// 422 ablehnt (`!np.nachname`, fehlende Versichertennummer) — vorher standen
+// sie nicht im Select und die Lücke war von der Auswahlliste aus unsichtbar.
+export const PODO_SELECT = '*, leads!patient_id(patientennummer, business_id, last_name, versichertennummer, geburtsdatum, versichertenstatus)';
 
 // ── Statusachse ─────────────────────────────────────────────────────────────
 

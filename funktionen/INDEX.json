@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-09-10",
  "dateien": 238,
- "funktionen": 2211,
+ "funktionen": 2215,
  "module": [
   "abrechnung",
   "anamnese",
@@ -3009,8 +3009,8 @@
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
    "start": 296,
-   "end": 422,
-   "lines": 127,
+   "end": 433,
+   "lines": 138,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -3039,8 +3039,8 @@
    "name": "brutto",
    "kind": "arrow",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 796,
-   "end": 815,
+   "start": 807,
+   "end": 826,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -3062,8 +3062,8 @@
    "name": "mandantUndAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1243,
-   "end": 1263,
+   "start": 1258,
+   "end": 1278,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [
@@ -3086,8 +3086,8 @@
    "name": "geldstand",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1274,
-   "end": 1295,
+   "start": 1289,
+   "end": 1310,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -3108,8 +3108,8 @@
    "name": "r2",
    "kind": "arrow",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1275,
-   "end": 1294,
+   "start": 1290,
+   "end": 1309,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -3162,8 +3162,8 @@
    "name": "mapVerordnungToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2450,
-   "end": 2559,
+   "start": 2465,
+   "end": 2574,
    "lines": 110,
    "spiegelHinweis": null,
    "tables": [],
@@ -7347,6 +7347,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -7408,6 +7409,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -13090,6 +13092,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -13151,6 +13154,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -37911,6 +37915,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -37972,6 +37977,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -38053,6 +38059,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -38114,6 +38121,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -39192,11 +39200,81 @@
    ]
   },
   {
+   "name": "keineDokumentierteBehandlung",
+   "kind": "function",
+   "file": "module/abrechnung-auswahl.js",
+   "start": 119,
+   "end": 121,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "podoStrukturBlocker"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "podoStrukturBlocker",
+   "kind": "function",
+   "file": "module/abrechnung-auswahl.js",
+   "start": 135,
+   "end": 153,
+   "lines": 19,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "keineDokumentierteBehandlung"
+   ],
+   "calledBy": [
+    "ladeAbrechnungAuswahl"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "gruppenKey",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 110,
-   "end": 110,
+   "start": 156,
+   "end": 156,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -39229,8 +39307,8 @@
    "name": "baueGruppen",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 122,
-   "end": 143,
+   "start": 168,
+   "end": 189,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -39268,8 +39346,8 @@
    "name": "auswahlStand",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 155,
-   "end": 177,
+   "start": 201,
+   "end": 223,
    "lines": 23,
    "spiegelHinweis": null,
    "tables": [],
@@ -39283,7 +39361,8 @@
    ],
    "calledBy": [
     "_leisteAktualisieren",
-    "_wireEinmal"
+    "_wireEinmal",
+    "ladeAbrechnungAuswahl"
    ],
    "modules": [
     "abrechnung",
@@ -39306,8 +39385,8 @@
    "name": "imZeitraum",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 206,
-   "end": 212,
+   "start": 267,
+   "end": 273,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -39340,8 +39419,8 @@
    "name": "initAbrechnungAuswahl",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 219,
-   "end": 223,
+   "start": 280,
+   "end": 284,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -39377,8 +39456,8 @@
    "name": "_auswahlZustand",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 226,
-   "end": 226,
+   "start": 287,
+   "end": 287,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -39396,9 +39475,9 @@
    "name": "ladeAbrechnungAuswahl",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 239,
-   "end": 386,
-   "lines": 148,
+   "start": 300,
+   "end": 464,
+   "lines": 165,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions",
@@ -39413,6 +39492,7 @@
     "_findePhysioPosition",
     "_ladeDateieinheitenNach",
     "_physioHinweise",
+    "auswahlStand",
     "baueGruppen",
     "checkPrescriptionCompliance",
     "imZeitraum",
@@ -39420,6 +39500,7 @@
     "kassenanteil",
     "podoPositionsFinder",
     "podoSperren",
+    "podoStrukturBlocker",
     "set",
     "standortZuschnitt",
     "zeichne",
@@ -39453,8 +39534,8 @@
    "name": "_findePhysioPosition",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 388,
-   "end": 392,
+   "start": 466,
+   "end": 470,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -39487,9 +39568,9 @@
    "name": "_physioHinweise",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 394,
-   "end": 401,
-   "lines": 8,
+   "start": 472,
+   "end": 481,
+   "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -39521,8 +39602,8 @@
    "name": "_ladeDateieinheitenNach",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 406,
-   "end": 416,
+   "start": 486,
+   "end": 496,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -39559,8 +39640,8 @@
    "name": "esc",
    "kind": "arrow",
    "file": "module/abrechnung-auswahl.js",
-   "start": 420,
-   "end": 422,
+   "start": 500,
+   "end": 502,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -39600,6 +39681,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -39661,6 +39743,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -39703,9 +39786,9 @@
    "name": "zeichne",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 424,
-   "end": 463,
-   "lines": 40,
+   "start": 504,
+   "end": 547,
+   "lines": 44,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -39720,6 +39803,7 @@
     "zeitraumHtml"
    ],
    "calledBy": [
+    "_erstelleGruppen",
     "_wireEinmal",
     "ladeAbrechnungAuswahl",
     "oeffneStatusDialog",
@@ -39748,8 +39832,8 @@
    "name": "zeitraumHtml",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 467,
-   "end": 483,
+   "start": 551,
+   "end": 567,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -39784,8 +39868,8 @@
    "name": "gruppeHtml",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 485,
-   "end": 518,
+   "start": 569,
+   "end": 602,
    "lines": 34,
    "spiegelHinweis": null,
    "tables": [],
@@ -39825,8 +39909,8 @@
    "name": "kostentraegerFehltHtml",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 520,
-   "end": 528,
+   "start": 604,
+   "end": 612,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -39861,9 +39945,9 @@
    "name": "detailTabelleHtml",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 530,
-   "end": 581,
-   "lines": 52,
+   "start": 614,
+   "end": 673,
+   "lines": 60,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -39873,7 +39957,8 @@
    "calls": [
     "esc",
     "fmtEur",
-    "hinweiseHtml"
+    "hinweiseHtml",
+    "zeileDetailHtml"
    ],
    "calledBy": [
     "gruppeHtml"
@@ -39896,11 +39981,86 @@
    ]
   },
   {
+   "name": "zeileDetailHtml",
+   "kind": "function",
+   "file": "module/abrechnung-auswahl.js",
+   "start": 683,
+   "end": 714,
+   "lines": 32,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "esc",
+    "feld"
+   ],
+   "calledBy": [
+    "detailTabelleHtml"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "feld",
+   "kind": "arrow",
+   "file": "module/abrechnung-auswahl.js",
+   "start": 688,
+   "end": 694,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "esc"
+   ],
+   "calledBy": [
+    "autofillStammdaten",
+    "rendereGeldzeile",
+    "zeileDetailHtml"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "hinweiseHtml",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 583,
-   "end": 587,
+   "start": 716,
+   "end": 720,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -39935,9 +40095,9 @@
    "name": "fehlerhaftHtml",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 589,
-   "end": 618,
-   "lines": 30,
+   "start": 722,
+   "end": 755,
+   "lines": 34,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -39972,8 +40132,8 @@
    "name": "_einstiegAktualisieren",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 621,
-   "end": 629,
+   "start": 758,
+   "end": 766,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -40009,8 +40169,8 @@
    "name": "_leisteAktualisieren",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 631,
-   "end": 662,
+   "start": 768,
+   "end": 799,
    "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
@@ -40049,9 +40209,9 @@
    "name": "_wireEinmal",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 677,
-   "end": 778,
-   "lines": 102,
+   "start": 814,
+   "end": 932,
+   "lines": 119,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -40091,8 +40251,8 @@
    "name": "_fehlerZeigen",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 782,
-   "end": 787,
+   "start": 936,
+   "end": 941,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -40126,9 +40286,9 @@
    "name": "_erstelleGruppen",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 798,
-   "end": 859,
-   "lines": 62,
+   "start": 952,
+   "end": 1026,
+   "lines": 75,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -40143,7 +40303,8 @@
     "frageBerichtFreigabe",
     "istBerichtOffen",
     "ladeAbrechnungAuswahl",
-    "schreibe"
+    "schreibe",
+    "zeichne"
    ],
    "calledBy": [
     "_wireEinmal"
@@ -40169,9 +40330,9 @@
    "name": "schreibe",
    "kind": "arrow",
    "file": "module/abrechnung-auswahl.js",
-   "start": 829,
-   "end": 829,
-   "lines": 1,
+   "start": 987,
+   "end": 990,
+   "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -40205,8 +40366,8 @@
    "name": "_sendeGruppe",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 861,
-   "end": 892,
+   "start": 1028,
+   "end": 1059,
    "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
@@ -40242,8 +40403,8 @@
    "name": "_uebersteuere",
    "kind": "function",
    "file": "module/abrechnung-auswahl.js",
-   "start": 895,
-   "end": 927,
+   "start": 1062,
+   "end": 1094,
    "lines": 33,
    "spiegelHinweis": null,
    "tables": [],
@@ -40484,6 +40645,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -40545,6 +40707,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -41533,6 +41696,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -41594,6 +41758,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -43250,6 +43415,7 @@
     "statusInfo"
    ],
    "calledBy": [
+    "_erstelleGruppen",
     "_wireEinmal",
     "ladeAbrechnungAuswahl",
     "oeffneStatusDialog",
@@ -44159,6 +44325,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -44220,6 +44387,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -48335,7 +48503,8 @@
    ],
    "calledBy": [
     "autofillStammdaten",
-    "rendereGeldzeile"
+    "rendereGeldzeile",
+    "zeileDetailHtml"
    ],
    "modules": [
     "abrechnung",
@@ -53067,6 +53236,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -53128,6 +53298,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -54705,6 +54876,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -54766,6 +54938,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -55558,6 +55731,7 @@
     "widerrufen"
    ],
    "calledBy": [
+    "_erstelleGruppen",
     "_wireEinmal",
     "ladeAbrechnungAuswahl",
     "oeffneStatusDialog",
@@ -55745,6 +55919,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -55806,6 +55981,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -59855,6 +60031,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -59916,6 +60093,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -61051,7 +61229,8 @@
    ],
    "calledBy": [
     "autofillStammdaten",
-    "rendereGeldzeile"
+    "rendereGeldzeile",
+    "zeileDetailHtml"
    ],
    "modules": [
     "abrechnung",
@@ -61135,6 +61314,7 @@
     "zahlerTyp"
    ],
    "calledBy": [
+    "_erstelleGruppen",
     "_wireEinmal",
     "ladeAbrechnungAuswahl",
     "oeffneStatusDialog",
@@ -67086,6 +67266,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -67147,6 +67328,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -70848,8 +71030,8 @@
    "name": "statusAusTopf",
    "kind": "function",
    "file": "module/verordnung-topf.js",
-   "start": 94,
-   "end": 97,
+   "start": 99,
+   "end": 102,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -70882,8 +71064,8 @@
    "name": "statusInTopf",
    "kind": "function",
    "file": "module/verordnung-topf.js",
-   "start": 100,
-   "end": 103,
+   "start": 105,
+   "end": 108,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -70918,8 +71100,8 @@
    "name": "ausTopf",
    "kind": "function",
    "file": "module/verordnung-topf.js",
-   "start": 131,
-   "end": 159,
+   "start": 136,
+   "end": 164,
    "lines": 29,
    "spiegelHinweis": null,
    "tables": [],
@@ -70958,8 +71140,8 @@
    "name": "inTopf",
    "kind": "function",
    "file": "module/verordnung-topf.js",
-   "start": 172,
-   "end": 222,
+   "start": 177,
+   "end": 227,
    "lines": 51,
    "spiegelHinweis": null,
    "tables": [],
@@ -70980,8 +71162,8 @@
    "name": "nimm",
    "kind": "arrow",
    "file": "module/verordnung-topf.js",
-   "start": 176,
-   "end": 179,
+   "start": 181,
+   "end": 184,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -71001,8 +71183,8 @@
    "name": "fuehrtSitzungsbuch",
    "kind": "function",
    "file": "module/verordnung-topf.js",
-   "start": 242,
-   "end": 244,
+   "start": 247,
+   "end": 249,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -71098,6 +71280,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -71159,6 +71342,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -72795,6 +72979,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -72856,6 +73041,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -72976,6 +73162,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -73037,6 +73224,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -74654,6 +74842,7 @@
     "digits",
     "eur",
     "fehlerhaftHtml",
+    "feld",
     "fmtDate",
     "fmtDateTime",
     "fn",
@@ -74715,6 +74904,7 @@
     "zeigeAbrechnungDetail",
     "zeigeVerordnungDetail",
     "zeile",
+    "zeileDetailHtml",
     "zeileHtml",
     "zeitraumHtml"
    ],
@@ -83789,7 +83979,7 @@
     "arzt-suche.js:34",
     "katalog-suche.js:86",
     "katalog-suche.js:98",
-    "module/abrechnung-auswahl.js:420",
+    "module/abrechnung-auswahl.js:500",
     "module/abrechnung-detail.js:116",
     "module/abrechnung-freigabe.js:112",
     "module/arzt-register.js:125",
@@ -83828,7 +84018,7 @@
   {
    "name": "r2",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:1275",
+    "api-backend/billing/api/abrechnung.routes.js:1290",
     "api-backend/billing/api/statistik.routes.js:176",
     "api-backend/billing/api/zuzahlung.routes.js:45",
     "api-backend/billing/dta/builder.js:55",
@@ -84093,7 +84283,7 @@
   {
    "name": "zeichne",
    "orte": [
-    "module/abrechnung-auswahl.js:424",
+    "module/abrechnung-auswahl.js:504",
     "module/abrechnungsstatus.js:554",
     "module/patienten-einwilligung.js:477",
     "module/rezeptinfo-geld.js:364"
@@ -84153,6 +84343,15 @@
     "booking-request.js:562",
     "dashboard.js:2542",
     "kalender.js:288"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "feld",
+   "orte": [
+    "module/abrechnung-auswahl.js:688",
+    "module/fussbefund.js:282",
+    "module/rezeptinfo-geld.js:299"
    ],
    "aynalar": []
   },
@@ -84624,7 +84823,7 @@
   {
    "name": "gruppeHtml",
    "orte": [
-    "module/abrechnung-auswahl.js:485",
+    "module/abrechnung-auswahl.js:569",
     "module/abrechnung-detail.js:240"
    ],
    "aynalar": []
@@ -84632,7 +84831,7 @@
   {
    "name": "_einstiegAktualisieren",
    "orte": [
-    "module/abrechnung-auswahl.js:621",
+    "module/abrechnung-auswahl.js:758",
     "module/abrechnung-verlauf.js:265"
    ],
    "aynalar": []
@@ -84640,7 +84839,7 @@
   {
    "name": "schreibe",
    "orte": [
-    "module/abrechnung-auswahl.js:829",
+    "module/abrechnung-auswahl.js:987",
     "module/verordnung-podo.js:171"
    ],
    "aynalar": []
@@ -84698,14 +84897,6 @@
    "orte": [
     "module/fussbefund-archiv.js:202",
     "module/verordnung-pruefung.js:93"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "feld",
-   "orte": [
-    "module/fussbefund.js:282",
-    "module/rezeptinfo-geld.js:299"
    ],
    "aynalar": []
   },

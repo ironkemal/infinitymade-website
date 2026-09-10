@@ -106,6 +106,52 @@ export function podoSperren(vord, hpnrs = []) {
   return gruende;
 }
 
+/**
+ * Keine dokumentierte Behandlung (keine HPNR) an dieser Verordnung.
+ * Anders als `podoSperren()` NICHT übersteuerbar: `mapVerordnungToDtaShape()`
+ * (Backend) wirft `sessions.length === 0` unbedingt — es gibt dort keine
+ * `sperrenIgnoriert`-Ausnahme dafür, weil es nichts zu übersteuern gibt: eine
+ * Verordnung ohne eine einzige erbrachte Leistung hat schlicht nichts, was
+ * abgerechnet werden könnte. Ein „Trotzdem übernehmen"-Knopf dafür würde nur
+ * denselben 422 ein zweites Mal erzeugen.
+ * @param {Array<string>} hpnrs alle dokumentierten HPNR dieser Verordnung
+ */
+export function keineDokumentierteBehandlung(hpnrs) {
+  return !(hpnrs && hpnrs.length);
+}
+
+/**
+ * Strukturelle Blocker der Podologie, gespiegelt aus `create-podologie`
+ * (`api-backend/billing/api/abrechnung.routes.js`): fehlender Patientenbezug
+ * (`!np.nachname` — Name kommt IMMER aus der Patientenakte, nie aus dem
+ * Freitextfeld `patient_name`), fehlender Arzt, fehlende Versichertennummer,
+ * keine dokumentierte Behandlung. Anders als `podoSperren()` gibt es dafür
+ * KEINEN Übersteuerungsweg im Backend — `sperrenIgnoriert` kennt nur die
+ * beiden UI1/UI2-Regeln, diese Prüfungen laufen vorher und ungefragt.
+ * @param {object} v      Zeile im podologischen Wortschatz (verordnung-topf.js)
+ * @param {Array<string>} hpnrs alle dokumentierten HPNR dieser Verordnung
+ * @returns {Array<string>} Klartextgründe, leer = strukturell in Ordnung
+ */
+export function podoStrukturBlocker(v, hpnrs = []) {
+  const gruende = [];
+  if (!v?.patient_id || !v?.leads?.last_name) {
+    gruende.push('Kein Patient aus der Kartei verknüpft — der Name für die Abrechnung wird immer aus der ' +
+      'Patientenakte übernommen, nie aus dem Freitextfeld. Bitte die Verordnung einem Patienten zuordnen.');
+  }
+  if (!v?.arzt_id) {
+    gruende.push('Kein Arzt hinterlegt — bitte die Verordnung ergänzen.');
+  }
+  if (!v?.versichertennummer && !v?.leads?.versichertennummer) {
+    gruende.push('Versichertennummer fehlt.');
+  }
+  if (keineDokumentierteBehandlung(hpnrs)) {
+    gruende.push('Keine dokumentierte Behandlung erfasst — ohne mindestens eine Leistung (HPNR) lehnt der ' +
+      'Server die gesamte Datei ab („keine Behandlungen vorhanden"). Bitte zuerst unter „Behandlungen" eine ' +
+      'Leistung für diesen Patienten erfassen.');
+  }
+  return gruende;
+}
+
 /** Eindeutiger Schlüssel einer Gruppe. `bereich` gehört dazu — siehe Kopf. */
 export function gruppenKey(bereich, ik) { return `${bereich}|${ik}`; }
 
@@ -184,6 +230,15 @@ const _st = {
   gruppen: [],          // Ergebnis von baueGruppen()
   gewaehlt: new Set(),  // Gruppenschlüssel (Podologie) bzw. Zeilen-Ids (Physio)
   offen: new Set(),     // aufgeklappte Gruppenschlüssel
+  // Aufgeklappte EINZELNE Verordnungen (Zeilen-Id) — der Feldercheck vor dem
+  // Erstellen (Ops-Wunsch 10.09.2026: "hastanın üzerine basınca abrechnung ile
+  // alakalı bilgileri çıkmalı"). Zeigt, was schon geladen ist (`_st.rxRoh`) —
+  // kein zusätzlicher Request, keine zweite Feldliste, die von
+  // `module/verordnung-detail.js` abweichen könnte: dort steht inzwischen die
+  // volle editierbare Muster-13-Maske (Singleton-DOM-Knoten, „es gibt nur
+  // dieses eine Exemplar") — für eine Inline-Vorschau in einer Auswahlliste
+  // ungeeignet, deshalb eine eigene, bewusst schlanke Nur-Lese-Kachel hier.
+  offenZeile: new Set(),
   fehlerhaft: [],       // [{ bereich, zeile, gruende }]
   rxRoh: new Map(),     // id → rohe prescriptions-Zeile (für Freigabe + Position)
   busy: false,
@@ -198,6 +253,12 @@ const _st = {
   zeitraumVon: '',
   zeitraumBis: '',
   ausgefiltert: 0,      // wie viele Zeilen der Zeitraum gerade wegnimmt
+  // Protokoll der letzten „Erstellen"-Aktion. Bleibt über einen Reload hinweg
+  // stehen (siehe zeichne()) — ohne das verschwand eine Fehlermeldung, sobald
+  // ladeAbrechnungAuswahl() nach dem Lauf automatisch neu zeichnete: das
+  // #abSammelProtokoll-Element wurde mit dem ganzen Container-innerHTML
+  // ersetzt, bevor jemand die Meldung lesen konnte (10.09.2026 live gemeldet).
+  protokollHtml: '',
 };
 
 /** Liegt `datum` im gewählten Zeitraum? Ohne Datum: nur dann drin, wenn gar
@@ -249,7 +310,8 @@ export async function ladeAbrechnungAuswahl() {
         id, patient_id, kostentraeger_ik, heilmittel, heilmittel_position, anzahl_einheiten,
         zuzahlung_eur, zuzahlung_befreit, ausstellungsdatum, icd10, is_blanko, is_lhb_bvb,
         bericht_angefordert, bericht_status, belegnummer,
-        leads:patient_id(first_name,last_name,krankenkasse,versichertennummer,patientennummer),
+        diagnosegruppe, frequenz, leitsymptomatik, arzt_id, doctor_lanr, doctor_bsnr,
+        leads:patient_id(first_name,last_name,geburtsdatum,versichertenstatus,krankenkasse,versichertennummer,patientennummer),
         prescription_sessions (
           id, session_number, status, done_at,
           bookings:booking_id ( id, user_id, service_id, services:service_id (id, required_certificate) )
@@ -315,8 +377,11 @@ export async function ladeAbrechnungAuswahl() {
       brutto: pos ? zz.brutto : 0,
       zuzahlung: pos ? zz.gesamt : 0,
       befreit: !!rx.zuzahlung_befreit,
-      blockiert: istHarterRiegel(issues),
-      hinweise: _physioHinweise(issues, rx),
+      // `!rx.heilmittel_position` und fehlender Patientenbezug sind wie die
+      // podologischen Strukturblocker NICHT übersteuerbar — der Server wirft
+      // in beiden Fällen unbedingt (mapPrescriptionToDtaShape, abrechnung.routes.js).
+      blockiert: istHarterRiegel(issues) || !rx.heilmittel_position || !rx.patient_id || !lead.last_name,
+      hinweise: _physioHinweise(issues, rx, lead),
     };
     zeile.soll = kassenanteil(zeile.brutto, zeile.zuzahlung);
     zeilen.push(zeile);
@@ -343,6 +408,7 @@ export async function ladeAbrechnungAuswahl() {
       const behs = behJeVord[v.id] || [];
       const d = zuzahlungFuerPodoVerordnung(v, behs, finde);
       const hpnrs = behs.flatMap(b => (b.hpnr_codes || []).map(c => String(c).trim()));
+      _st.rxRoh.set(v.id, v);
       const zeile = {
         bereich: 'podo',
         id: v.id,
@@ -359,11 +425,14 @@ export async function ladeAbrechnungAuswahl() {
         befreit: !!v.zuzahlung_befreit,
         blockiert: false,
         hinweise: [],
+        hpnrs,
       };
       zeile.soll = kassenanteil(zeile.brutto, zeile.zuzahlung);
 
       const gruende = podoSperren(v, hpnrs);
-      if (gruende.length) fehlerhaft.push({ bereich: 'podo', zeile, gruende });
+      const strukturGruende = podoStrukturBlocker(v, hpnrs);
+      gruende.push(...strukturGruende);
+      if (gruende.length) fehlerhaft.push({ bereich: 'podo', zeile, gruende, uebersteuerbar: !strukturGruende.length });
       else zeilen.push(zeile);
     }
   }
@@ -375,9 +444,18 @@ export async function ladeAbrechnungAuswahl() {
 
   // Vorauswahl: alles, was nicht hart gesperrt ist. Der Podologe will in einem
   // Durchgang fertig werden; der Physiotherapeut hakt einzeln ab.
+  // ⚠️ `g.ik === '__unknown__'` gilt für BEIDE Granularitäten: bis 10.09.2026
+  // fehlte die Ausnahme im 'rezept'-Zweig (Physio/Ergo/Logo) — Zeilen ohne
+  // Kostenträger-IK landeten trotzdem in `_st.gewaehlt`. Der Sammel-Knopf
+  // ("Ausgewählte erstellen") zählt eine Gruppe als gewählt, sobald irgendeine
+  // ihrer Zeilen-Ids im Set steht (auswahlStand()), und hätte dann versucht,
+  // eine Abrechnung mit `kostentraegerIk: '__unknown__'` an den Server zu
+  // schicken — derselbe Fehlerkanal war für die einzelne Gruppe zwar per
+  // `disabled`-Knopf gesperrt, aber nicht für den Sammel-Weg.
   _st.gewaehlt = new Set();
   for (const g of _st.gruppen) {
-    if (g.granularitaet === 'kasse') { if (g.ik !== '__unknown__') _st.gewaehlt.add(g.key); }
+    if (g.ik === '__unknown__') continue;
+    if (g.granularitaet === 'kasse') { _st.gewaehlt.add(g.key); }
     else for (const z of g.zeilen) if (!z.blockiert) _st.gewaehlt.add(z.id);
   }
 
@@ -391,12 +469,14 @@ function _findePhysioPosition(code, positionen) {
   return tpl ? (positionen || []).find(p => p.x === tpl) || null : null;
 }
 
-function _physioHinweise(issues, rx) {
+function _physioHinweise(issues, rx, lead = {}) {
   const out = [];
   if (issues.isReportMissing) out.push({ art: 'warn', text: `Therapiebericht ausstehend (${rx.bericht_status || 'offen'}) — Abrechnen ist möglich, die Entscheidung wird protokolliert.` });
   if (issues.missingCert)     out.push({ art: 'stop', text: `Qualifikation fehlt: '${issues.missingCertName}' für die Sitzung am ${issues.missingCertDate}.` });
   if (issues.has14DayGap)     out.push({ art: 'stop', text: `Behandlungsunterbrechung über 14 Tage (${issues.gapDays} Tage, ${issues.gapDates}).` });
-  if (!rx.heilmittel_position) out.push({ art: 'warn', text: 'Keine Heilmittelposition (X-Code) zugewiesen — Preis und Zuzahlung sind nicht exakt ermittelbar.' });
+  // Server lehnt beide unbedingt ab (mapPrescriptionToDtaShape) — deshalb 'stop', nicht 'warn'.
+  if (!rx.heilmittel_position) out.push({ art: 'stop', text: 'Keine Heilmittelposition (X-Code) zugewiesen — der Server lehnt diese Verordnung beim Erstellen ab.' });
+  if (!rx.patient_id || !lead.last_name) out.push({ art: 'stop', text: 'Kein Patient aus der Kartei verknüpft — der Name für die Abrechnung wird immer aus der Patientenakte übernommen. Bitte die Verordnung einem Patienten zuordnen.' });
   return out;
 }
 
@@ -447,8 +527,12 @@ function zeichne() {
       <div id="abSammelHinweis" style="flex:1;min-width:220px;font-size:12px;color:var(--text-muted);">Keine Kasse ausgewählt.</div>
       <button id="abSammelBtn" class="btn-primary" disabled style="font-size:13px;padding:6px 14px;white-space:nowrap;opacity:.5;">Ausgewählte erstellen</button>
     </div>
-    <div id="abSammelProtokoll" style="display:none;font-size:12px;margin-bottom:12px;
-         border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--bg-card);"></div>
+    <div id="abSammelProtokoll" style="display:${_st.protokollHtml ? 'block' : 'none'};font-size:12px;margin-bottom:12px;
+         border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--bg-card);">
+      ${_st.protokollHtml ? `<div style="display:flex;justify-content:flex-end;margin:-2px -2px 4px 0;">
+        <button type="button" id="abProtokollSchliessen" class="btn-ghost" style="font-size:11px;padding:1px 7px;line-height:1.4;">✕</button>
+      </div>${_st.protokollHtml}` : ''}
+    </div>
 
     <div style="display:flex;flex-direction:column;gap:10px;">
       ${_st.gruppen.map(g => gruppeHtml(g, mehrereBereiche)).join('')}
@@ -558,15 +642,23 @@ function detailTabelleHtml(g) {
           ? `<select class="ab-pos-select" data-id="${esc(z.id)}" data-prev="${esc(z.positionCode)}"
                style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${ctx.positionOptionsHtml(z.positionCode)}</select>`
           : '';
+        const spalten = jeRezept ? 7 : 6;
         return `<tr style="border-top:1px solid var(--border);${z.blockiert ? 'opacity:.55;' : ''}">
           ${jeRezept ? `<td style="padding:4px 6px;"><input type="checkbox" class="ab-zeile-check" data-key="${esc(g.key)}" data-id="${esc(z.id)}"
               ${an ? 'checked' : ''} ${z.blockiert ? 'disabled title="Harter Riegel — siehe Hinweis"' : ''}></td>` : ''}
           <td style="padding:4px 6px;color:var(--text-muted);">${esc(z.nummer)}</td>
-          <td style="padding:4px 6px;color:var(--text-main);">${esc(z.patient)}${hinweiseHtml(z)}</td>
+          <td style="padding:4px 6px;color:var(--text-main);">
+            <span class="ab-zeile-oeffnen" data-id="${esc(z.id)}" title="Alle abrechnungsrelevanten Felder ansehen"
+              style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;">${esc(z.patient)}</span>${hinweiseHtml(z)}</td>
           <td style="padding:4px 6px;color:var(--text-muted);">${esc(z.mittel)}${picker}</td>
           <td style="padding:4px 6px;color:var(--text-muted);">${einheiten}</td>
           <td style="padding:4px 6px;text-align:right;color:var(--text-muted);">${zuText}</td>
           <td style="padding:4px 6px;text-align:right;color:var(--text-main);">${esc(fmtEur(z.soll))}</td>
+        </tr>
+        <tr class="ab-zeile-detail-row" data-id="${esc(z.id)}" ${_st.offenZeile.has(z.id) ? '' : 'hidden'}>
+          <td colspan="${spalten}" style="padding:8px 10px;background:var(--bg-card);border-top:1px dashed var(--border);">
+            ${zeileDetailHtml(z)}
+          </td>
         </tr>`;
       }).join('')}
     </tbody>
@@ -578,6 +670,47 @@ function detailTabelleHtml(g) {
       </tr>
     </tfoot>
   </table>`;
+}
+
+/**
+ * Der Feldercheck einer einzelnen Verordnung — alles, was `create` /
+ * `create-podologie` tatsächlich in die DTA-Datei schreibt (Kostenträger-IK,
+ * Versichertennummer, Diagnosegruppe, ICD-10, Leitsymptomatik, Frequenz,
+ * Positionsnummer/HPNR, LANR/BSNR), aus bereits geladenen Daten (`_st.rxRoh`)
+ * — kein zweiter Request. Ops-Wunsch 10.09.2026: ein letzter Blick auf die
+ * abrechnungsrelevanten Felder, bevor „Erstellen" gedrückt wird.
+ */
+function zeileDetailHtml(z) {
+  const roh = _st.rxRoh.get(z.id);
+  if (!roh) return `<div style="font-size:12px;color:var(--text-muted);">Keine weiteren Daten geladen.</div>`;
+  const lead = roh.leads || {};
+  const istPodo = z.bereich === 'podo';
+  const feld = (label, wert) => {
+    const leer = wert === null || wert === undefined || wert === '';
+    return `<div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:1px;">${esc(label)}</div>
+      <div style="font-size:12px;color:${leer ? 'var(--text-muted)' : 'var(--text-main)'};">${esc(leer ? '—' : String(wert))}</div>
+    </div>`;
+  };
+  const icd10 = istPodo ? (Array.isArray(roh.icd10) ? roh.icd10 : []).join(', ')
+                        : [roh.icd10, roh.icd10_2].filter(Boolean).join(', ');
+  const frequenz = istPodo ? roh.therapiefrequenz : roh.frequenz;
+  const felder = [
+    feld('Kostenträger-IK', roh.kostentraeger_ik),
+    feld('Versichertennummer', roh.versichertennummer || lead.versichertennummer),
+    feld('Versichertenstatus', lead.versichertenstatus),
+    feld('Geburtsdatum', lead.geburtsdatum),
+    feld('Ausstellungsdatum', roh.ausstellungsdatum),
+    feld('Diagnosegruppe', roh.diagnosegruppe),
+    feld('ICD-10', icd10),
+    feld('Leitsymptomatik', roh.leitsymptomatik || roh.pat_leitsymptomatik),
+    feld('Frequenz', frequenz),
+    istPodo ? feld('HPNR (dokumentiert)', (z.hpnrs || []).join(', ')) : feld('Heilmittelposition', roh.heilmittel_position),
+    feld('LANR', roh.doctor_lanr),
+    feld('BSNR', roh.doctor_bsnr),
+    feld('Zuzahlung befreit', roh.zuzahlung_befreit ? 'ja' : 'nein'),
+  ];
+  return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px 14px;">${felder.join('')}</div>`;
 }
 
 function hinweiseHtml(z) {
@@ -596,7 +729,7 @@ function fehlerhaftHtml() {
       (GoBD-protokolliert).
     </p>
     <div style="display:flex;flex-direction:column;gap:10px;">
-      ${_st.fehlerhaft.map(({ zeile, gruende }) => `
+      ${_st.fehlerhaft.map(({ zeile, gruende, uebersteuerbar = true }) => `
         <div class="ab-fehler-row" data-id="${esc(zeile.id)}" data-ik="${esc(zeile.ik)}"
           style="padding:10px 12px;background:var(--bg-card-solid,#1f2937);border-radius:8px;border:1px solid var(--border);">
           <div style="font-size:13px;font-weight:600;color:var(--text-main);">
@@ -606,12 +739,16 @@ function fehlerhaftHtml() {
           <ul style="margin:6px 0 8px;padding-left:18px;font-size:12px;color:var(--text-muted);">
             ${gruende.map(gr => `<li>${esc(gr)}</li>`).join('')}
           </ul>
+          ${uebersteuerbar ? `
           <div style="display:flex;gap:8px;align-items:center;">
             <input type="text" class="ab-fehler-grund" placeholder="Begründung für die Übersteuerung (Pflicht, GoBD-Protokoll)"
               style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-main);font-size:12px;">
             <button class="ab-fehler-btn btn-ghost" data-id="${esc(zeile.id)}" data-ik="${esc(zeile.ik)}"
               style="font-size:12px;padding:6px 12px;white-space:nowrap;border:1px solid #ef4444;color:#ef4444;">Trotzdem übernehmen</button>
-          </div>
+          </div>` : `
+          <div style="font-size:12px;color:var(--text-muted);">
+            Nicht übersteuerbar — der Server lehnt eine Verordnung ohne dokumentierte Behandlung immer ab.
+          </div>`}
         </div>`).join('')}
     </div>
   </div>`;
@@ -693,6 +830,16 @@ function _wireEinmal() {
       return;
     }
 
+    const zOeffnen = e.target.closest('.ab-zeile-oeffnen');
+    if (zOeffnen) {
+      const id = zOeffnen.dataset.id;
+      const row = document.querySelector(`#abAuswahlContent .ab-zeile-detail-row[data-id="${CSS.escape(id)}"]`);
+      if (!row) return;
+      row.hidden = !row.hidden;
+      if (row.hidden) _st.offenZeile.delete(id); else _st.offenZeile.add(id);
+      return;
+    }
+
     const einzeln = e.target.closest('.ab-erstellen-btn');
     if (einzeln && !einzeln.disabled) { _erstelleGruppen([einzeln.dataset.key], einzeln); return; }
 
@@ -709,6 +856,13 @@ function _wireEinmal() {
 
     const fehler = e.target.closest('.ab-fehler-btn');
     if (fehler && !fehler.disabled) { _uebersteuere(fehler); return; }
+
+    if (e.target.closest('#abProtokollSchliessen')) {
+      _st.protokollHtml = '';
+      const p = document.getElementById('abSammelProtokoll');
+      if (p) { p.style.display = 'none'; p.innerHTML = ''; }
+      return;
+    }
 
     if (e.target.closest('#abZeitraumReset')) {
       _st.zeitraumVon = ''; _st.zeitraumBis = '';
@@ -826,7 +980,14 @@ async function _erstelleGruppen(keys, knopf) {
 
   const protokoll = document.getElementById('abSammelProtokoll');
   const zeilen = [];
-  const schreibe = () => { if (protokoll) { protokoll.style.display = 'block'; protokoll.innerHTML = zeilen.join(''); } };
+  // `_st.protokollHtml` wird mitgeschrieben, damit die Meldung ein
+  // automatisches Neuzeichnen (ladeAbrechnungAuswahl() unten) übersteht —
+  // sonst ersetzt zeichne() das ganze #abAuswahlContent-innerHTML und die
+  // Fehlermeldung ist weg, bevor jemand sie lesen konnte.
+  const schreibe = () => {
+    _st.protokollHtml = zeilen.join('');
+    if (protokoll) { protokoll.style.display = 'block'; protokoll.innerHTML = _st.protokollHtml; }
+  };
 
   let ok = 0, fehler = 0;
   for (let i = 0; i < gruppen.length; i++) {
@@ -854,8 +1015,14 @@ async function _erstelleGruppen(keys, knopf) {
   if (knopf) { knopf.disabled = false; knopf.style.opacity = '1'; if (altText) knopf.textContent = altText; }
   _st.busy = false;
 
-  await ctx.nachErstellung?.();
-  await ladeAbrechnungAuswahl();
+  // Ohne einen einzigen Erfolg hat sich am Datenbestand nichts geändert — ein
+  // Reload wäre nur eine Gelegenheit, das gerade geschriebene Protokoll zu
+  // überschreiben, bevor es gelesen wurde. Bei mindestens einem Erfolg bleibt
+  // die Meldung dank `_st.protokollHtml` (siehe schreibe() oben) trotzdem stehen.
+  if (ok > 0) {
+    await ctx.nachErstellung?.();
+    await ladeAbrechnungAuswahl();
+  }
 }
 
 async function _sendeGruppe(g, freigabe) {
