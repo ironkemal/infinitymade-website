@@ -3475,7 +3475,7 @@ router.patch('/abrechnung/zeile/:id/absetzung', async (req, res) => {
 
     const { data: zeile, error: zErr } = await supabase
       .from('abrechnung_zeile')
-      .select('id, owner_id, status, netto_eur, herkunft, belegnummer')
+      .select('id, owner_id, status, netto_eur, herkunft, belegnummer, absetzung_grund')
       .eq('id', req.params.id).eq('owner_id', tenantId).maybeSingle();
     if (zErr) return res.status(500).json({ error: zErr.message });
     if (!zeile) return res.status(404).json({ error: 'Zeile nicht gefunden oder gehört nicht zu Ihnen.' });
@@ -3492,9 +3492,20 @@ router.patch('/abrechnung/zeile/:id/absetzung', async (req, res) => {
       });
     }
 
+    // Anhängen statt überschreiben: `absetzung_grund` trägt oft schon den
+    // maschinellen ZAA-Fehlertext (upload-zaa oben) — der ist die einzige
+    // Spur, was die Kasse WÖRTLICH gemeldet hat. Eine spätere Korrektur/
+    // Beschwerde braucht genau den Wortlaut, nicht nur die von Hand
+    // eingetragene menschliche Zusammenfassung. Die menschliche Zeile steht
+    // ZUERST — die Zeilenansicht zeigt nur die erste Zeile (split('\n')[0]),
+    // und genau die soll auf den ersten Blick lesbar sein.
+    const grundGesamt = zeile.absetzung_grund && zeile.absetzung_grund.trim()
+      ? `${grund}\n— ZAA-Meldung: ${zeile.absetzung_grund}`
+      : grund;
+
     const { error: upErr } = await supabase.from('abrechnung_zeile').update({
       absetzung_eur: betrag,
-      absetzung_grund: grund,
+      absetzung_grund: grundGesamt,
       absetzung_am: new Date().toISOString().slice(0, 10),
     }).eq('id', zeile.id);
     if (upErr) return res.status(500).json({ error: upErr.message });
