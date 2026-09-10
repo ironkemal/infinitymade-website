@@ -1,7 +1,24 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-09 — 20260909185713_abrechnung_zeile_und_zahlung
+-- ERZEUGT AM:        2026-09-10 — praxura_migrations_buch_anlegen
+--                    (On-Premise: die Schemakette wurde in Betrieb genommen.)
+--                    EINE NEUE TABELLE: `praxura_migrations` — das Buch der
+--                    Schemakette, eine Zeile je angewandter Migrationsdatei.
+--                    Sie steht unten alphabetisch zwischen
+--                    `podologie_behandlungen` und `prescription_documents`.
+--                    Erzeugt wird sie NICHT von einer Migrationsdatei, sondern
+--                    vom Runner selbst (api-backend/db/migrate.js,
+--                    CREATE TABLE IF NOT EXISTS) — sie ist die Voraussetzung
+--                    der Kette, nicht deren Inhalt.
+--                    RLS an, KEINE Policy, anon/authenticated ohne Rechte:
+--                    der Schemastand ist keine oeffentliche Information.
+--                    In der Produktion steht `0000` als *angewandt*;
+--                    ausgefuehrt wurde die Baseline hier nie — das SaaS ist
+--                    bereits auf diesem Stand. Warum das alles: db/REGISTER.md
+--                    und onprem/SCHEMA-VERTEILUNG.md.
+--                    Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-09 — 20260909185713_abrechnung_zeile_und_zahlung
 --                    (Ops #283 / §302-Bildschirm). Zwei neue Tabellen,
 --                    `abrechnung_zeile` und `abrechnung_zahlung`; die Struktur
 --                    steht in db/SCHEMA.sql, das Warum in db/REGISTER.md.
@@ -114,7 +131,12 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            165 RLS-Policies · 315 Indizes · 74 Trigger · 76 Funktionen
+-- UMFANG:            165 RLS-Policies · 316 Indizes · 74 Trigger · 76 Funktionen
+--                    (10.09.2026 live gezaehlt. Einziges Delta: Indizes
+--                     315 -> 316, der pkey von praxura_migrations. Policies,
+--                     Trigger und Funktionen unveraendert — die Tabelle hat
+--                     bewusst keine Policy und keinen Trigger.)
+--                    davor: 165 · 315 · 74 · 76
 --                    (09.09.2026, abrechnung_zeile_und_zahlung: live gezaehlt.
 --                     Alle vier Deltas gehen restlos auf die eine Migration auf:
 --                       Policies  161 -> 165  +4  je select/insert scoping auf
@@ -454,6 +476,16 @@
 --   Employees can view team podologie_behandlungen [SELECT]
 --     EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.owner_id = podologie_behandlungen.owner_id)
 --   ⚠️ Team darf seit 03.09.2026 LESEN, Schreiben bleibt beim Inhaber (kein behandelnder-Mitarbeiter-Feld, kein UI dafuer).
+
+-- praxura_migrations                                          (10.09.2026)
+--   KEINE Policy — Absicht. RLS ist an, es existiert keine einzige Policy und
+--   anon/authenticated wurden alle Rechte entzogen (REVOKE ALL). Ergebnis:
+--   nur service_role bzw. die direkte DB-Verbindung des Runners kommen heran.
+--   ⚠️ Warum so streng: die Tabelle verraet den Schemastand der Installation.
+--      Ohne den Entzug waere sie ueber PostgREST lesbar, sobald die
+--      Default-Grants der public-Schema greifen. Dieselbe Bauart wie
+--      pending_signups (RLS an, 0 Policies).
+--   Geschrieben ausschliesslich von api-backend/db/migrate.js beim Start.
 
 -- prescription_documents
 --   prescription_documents_owner_all [ALL] owner + Team

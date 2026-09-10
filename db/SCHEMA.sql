@@ -1,7 +1,24 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-09 — 20260909185713_abrechnung_zeile_und_zahlung
+-- ERZEUGT AM:        2026-09-10 — praxura_migrations_buch_anlegen
+--                    (On-Premise: die Schemakette wurde in Betrieb genommen.)
+--                    EINE NEUE TABELLE: `praxura_migrations` — das Buch der
+--                    Schemakette, eine Zeile je angewandter Migrationsdatei.
+--                    Sie steht unten alphabetisch zwischen
+--                    `podologie_behandlungen` und `prescription_documents`.
+--                    Erzeugt wird sie NICHT von einer Migrationsdatei, sondern
+--                    vom Runner selbst (api-backend/db/migrate.js,
+--                    CREATE TABLE IF NOT EXISTS) — sie ist die Voraussetzung
+--                    der Kette, nicht deren Inhalt.
+--                    RLS an, KEINE Policy, anon/authenticated ohne Rechte:
+--                    der Schemastand ist keine oeffentliche Information.
+--                    In der Produktion steht `0000` als *angewandt*;
+--                    ausgefuehrt wurde die Baseline hier nie — das SaaS ist
+--                    bereits auf diesem Stand. Warum das alles: db/REGISTER.md
+--                    und onprem/SCHEMA-VERTEILUNG.md.
+--                    Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-09 — 20260909185713_abrechnung_zeile_und_zahlung
 --                    (Ops #283 / §302-Bildschirm, Katman 2/4 Geld/§302).
 --                    ZWEI NEUE TABELLEN: `abrechnung_zeile` (was in EINER
 --                    Datei tatsaechlich an die Kasse ging — eingefroren) und
@@ -1831,6 +1848,30 @@ CREATE TABLE podologie_behandlungen (
 --   ★ invoice_id ist gesetzt, sobald die Sitzung auf einer Rechnung steht.
 --     Ohne dieses Feld war „ist diese Behandlung schon abgerechnet?" nicht
 --     beantwortbar und dieselbe Sitzung konnte zweimal berechnet werden.
+
+CREATE TABLE praxura_migrations (
+  version text NOT NULL
+  name text NOT NULL
+  checksum text NOT NULL
+  applied_at timestamptz NOT NULL DEFAULT now()
+  duration_ms integer
+  app_version text
+);
+--   PK (version)
+--   ★ Das Buch der Schemakette: eine Zeile je angewandter Migrationsdatei.
+--     Geschrieben AUSSCHLIESSLICH von api-backend/db/migrate.js beim Start von
+--     server.js, vor app.listen(). Kein Frontend, kein PostgREST.
+--   ★ Wird NICHT von einer Migrationsdatei erzeugt, sondern vom Runner selbst
+--     (CREATE TABLE IF NOT EXISTS). Sie ist die Voraussetzung der Kette, nicht
+--     deren Inhalt — deshalb steht sie nicht in db/migrations/.
+--   ⚠️ NICHT supabase_migrations.schema_migrations. Das gehoert Supabase und
+--      fuehrt eine andere Liste; beide existieren nebeneinander, kein Abgleich.
+--   ⚠️ RLS an, KEINE Policy, anon/authenticated ohne Rechte — der Schemastand
+--      ist keine oeffentliche Information (sonst ueber PostgREST lesbar, sobald
+--      die Default-Grants greifen).
+--   ⚠️ In der Produktion steht 0000 als *angewandt*, ausgefuehrt wurde die
+--      Baseline hier nie: das SaaS ist bereits auf diesem Stand. Die Datei
+--      laeuft nur in neuen Kundenboxen.
 
 CREATE TABLE prescription_documents (
   id bigint NOT NULL

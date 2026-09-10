@@ -746,6 +746,31 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Status:** aktiv
 - **Wer:** Feedback-Modul im Dashboard, `api/admin/feedbacks.js`.
 
+### `praxura_migrations`
+
+- **Warum:** Das Buch der Schemakette — eine Zeile je angewandter Migrationsdatei. Bis
+  zum 10.09.2026 gab es keine Antwort auf „auf welchem Schemastand ist diese Datenbank?",
+  und genau das braucht die On-Premise-Verteilung: der Code faehrt per Image in die
+  Kundenbox, das Schema muss denselben Weg nehmen (wir haben laut K10 keinen Zugang zu
+  diesen Boxen). Ohne Buch wuerde der Runner bei jedem Start alles erneut anwenden wollen.
+- **Seit:** 10.09.2026 · `praxura_migrations_buch_anlegen`
+- **Status:** aktiv
+- **Wer:** ausschliesslich `api-backend/db/migrate.js`, beim Start von `server.js` vor
+  `app.listen()`. Kein Frontend, kein PostgREST, keine Anwendungslogik.
+- **Achtung:**
+  - ⚠️ **Nicht** `supabase_migrations.schema_migrations` — das gehoert Supabase und fuehrt
+    eine andere Liste (dort stehen die ueber MCP angewandten Migrationen). Beide existieren
+    nebeneinander und werden nicht abgeglichen.
+  - Die Tabelle wird **nicht** von einer Migrationsdatei erzeugt, sondern vom Runner selbst
+    (`CREATE TABLE IF NOT EXISTS`). Sie darf deshalb nicht in die Kette wandern — sie ist
+    deren Voraussetzung, nicht deren Inhalt.
+  - **RLS an, keine Policy, `anon`/`authenticated` ohne Rechte.** Der Schemastand ist keine
+    oeffentliche Information; ohne den Entzug waere die Tabelle ueber PostgREST lesbar,
+    sobald die Default-Grants greifen.
+  - In der Produktion steht `0000` als *angewandt*, **ausgefuehrt wurde die Baseline dort
+    nie** — das SaaS ist bereits auf diesem Stand. Die Datei laeuft nur in neuen Boxen.
+  - Kein Personenbezug → keine Aenderung an `api/dsgvo.js` noetig.
+
 ---
 
 ## 10. Altlasten, Fremdkörper, Löschkandidaten
