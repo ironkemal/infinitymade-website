@@ -3366,4 +3366,84 @@ router.post('/abrechnung/korrektur', async (req, res) => {
   }
 });
 
+// ============================================================================
+// VKZ-01-Ausnahme — Nr. 21 (Urbelege fehlten) / Nr. 22 (Datei abgewiesen)
+// ============================================================================
+//
+// Plan Abschnitt 6, Phase 5, Punkt 5: die beiden VKZ-01-Ausnahmen brauchen
+// einen eigenen, BENANNTEN Weg — nicht denselben Knopf wie /abrechnung/korrektur.
+// Hier gilt nichts als eingereicht (Prüfstufe 1-3 nie bestanden), eine URI
+// wäre deshalb falsch (§7.2 setzt eine bestandene Ursprungsrechnung voraus).
+// Der richtige Weg ist eine ganz normale neue Erstrechnung (VKZ 01) — die
+// Verordnung muss dafür nur wieder als „bereit" auswählbar sein.
+//
+// Nur für Physio/Ergo/Logo: die Podologie hat diesen Weg bereits über
+// PATCH /verordnung/:id/abrechnungsstatus (ziel: 'aktiv', jetzt: 'abgesetzt'),
+// gebaut in eigener Vokabular (aktiv/abrechenbar/…). Diese Route verdoppelt
+// ihn nicht, sondern verweist Podologie-Zeilen dorthin.
+router.post('/abrechnung/zeile/:id/vkz01-ausnahme', async (req, res) => {
+  try {
+    // ---- auth ----
+    const hdr = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const { data: profile } = await supabase
+      .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
+    if (!profile) return res.status(403).json({ error: 'Profile not found' });
+    const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : profile.id;
+
+    const { grund } = req.body || {};
+    if (typeof grund !== 'string' || grund.trim().length < 3) {
+      return res.status(422).json({
+        error: 'Begründung erforderlich (z. B. „Urbelege fehlten" oder „Datei war nicht TA-konform").',
+      });
+    }
+
+    const { data: zeile, error: zErr } = await supabase
+      .from('abrechnung_zeile')
+      .select('id, owner_id, prescription_id, therapie_bereich, status, belegnummer')
+      .eq('id', req.params.id).eq('owner_id', tenantId).maybeSingle();
+    if (zErr) return res.status(500).json({ error: zErr.message });
+    if (!zeile) return res.status(404).json({ error: 'Zeile nicht gefunden oder gehört nicht zu Ihnen.' });
+
+    if (zeile.status !== 'abgesetzt' && zeile.status !== 'teilabgesetzt') {
+      return res.status(422).json({
+        error: `Nur eine ABGESETZTE Zeile kann so zurückgesetzt werden. Status ist „${zeile.status}".`,
+      });
+    }
+    if (zeile.therapie_bereich === 'podo') {
+      return res.status(400).json({
+        error: 'Für Podologie bitte den Statusdialog an der Verordnung verwenden (nicht diese Route).',
+      });
+    }
+    if (!zeile.prescription_id) {
+      return res.status(422).json({ error: 'Die Verordnung zu diesem Beleg existiert nicht mehr.' });
+    }
+
+    // Dieselbe Zuweisung wie im entfernten stillen Retry (upload-zaa) — nur
+    // jetzt eine bewusste, protokollierte Handlung statt eines Automatismus.
+    const { error: upErr } = await supabase.from('prescriptions').update({
+      abrechnung_status: 'bereit',
+      status: 'confirmed',
+    }).eq('id', zeile.prescription_id).eq('owner_id', tenantId);
+    if (upErr) return res.status(500).json({ error: upErr.message });
+
+    logAccess(supabase, {
+      userId: u.user.id, ownerId: tenantId, ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      method: 'POST', path: req.path, resource: 'abrechnung_zeile', resourceId: zeile.id,
+      action: 'vkz01-ausnahme', statusCode: 200,
+      metadata: { belegnummer: zeile.belegnummer, grund: grund.trim().slice(0, 500) },
+    });
+
+    return res.json({ ok: true, prescriptionId: zeile.prescription_id });
+  } catch (e) {
+    console.error('[abrechnung/zeile/vkz01-ausnahme]', e);
+    return res.status(e.status || 500).json({ error: e.message });
+  }
+});
+
 export default router;

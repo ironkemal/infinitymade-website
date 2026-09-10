@@ -84,7 +84,7 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │   └── config.js · contact.js · demo-booking.js · dsgvo.js · apify/search.js
 │
 ├── api-backend/                   ★ VPS Express backend (Docker container)
-│   ├── server.js                  43 doğrudan route + 32 alt-router = 75 (aşağıya bak)
+│   ├── server.js                  43 doğrudan route + 34 alt-router = 77 (aşağıya bak)
 │   ├── instrument.js              Sentry init
 │   ├── ai/                        router.js · azureClient.js · pii-mask.js · audit.js
 │   │   ├── validators/            Rezept doğrulama (blankoRules, validate)
@@ -222,7 +222,7 @@ bir daha "bu klasör neydi" diye açılmasın.
 
 ## 🔌 Backend API (`api-backend/server.js`)
 
-**Base:** `https://n8n.infinitymade.de/api` · **75 route** — `server.js`'te 43 doğrudan,
+**Base:** `https://n8n.infinitymade.de/api` · **77 route** — `server.js`'te 43 doğrudan,
 `billing/api/*` + `ai/router.js` alt-router'larında 32. Aile aile:
 
 | Aile | Route'lar | Auth |

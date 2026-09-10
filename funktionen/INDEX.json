@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-09-10",
  "dateien": 238,
- "funktionen": 2206,
+ "funktionen": 2209,
  "module": [
   "abrechnung",
   "anamnese",
@@ -7397,6 +7397,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -12050,6 +12051,7 @@
     "_erstelleKorrektur",
     "_sendeGruppe",
     "_uebersteuere",
+    "_vkz01Ausnahme",
     "aiRetryRequest",
     "annahmestelleFehlt",
     "apiFetch",
@@ -13135,6 +13137,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -37950,6 +37953,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -38090,6 +38094,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -39635,6 +39640,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -40517,6 +40523,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -40645,6 +40652,7 @@
    ],
    "calledBy": [
     "_erstelleKorrektur",
+    "_vkz01Ausnahme",
     "initAbrechnungDetail"
    ],
    "modules": [
@@ -40896,8 +40904,8 @@
    "kind": "function",
    "file": "module/abrechnung-detail.js",
    "start": 306,
-   "end": 351,
-   "lines": 46,
+   "end": 350,
+   "lines": 45,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -40907,10 +40915,49 @@
    "calls": [
     "esc",
     "fmtEur",
-    "korrigierbareZeilen"
+    "korrigierbareZeilen",
+    "vkz01AusnahmeHtml"
    ],
    "calledBy": [
+    "aktionenHtml",
     "zeigeAbrechnungDetail"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "vkz01AusnahmeHtml",
+   "kind": "function",
+   "file": "module/abrechnung-detail.js",
+   "start": 362,
+   "end": 389,
+   "lines": 28,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "esc"
+   ],
+   "calledBy": [
+    "aktionenHtml",
+    "korrekturHtml"
    ],
    "modules": [
     "abrechnung",
@@ -40933,8 +40980,8 @@
    "name": "leerHtml",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 353,
-   "end": 358,
+   "start": 391,
+   "end": 396,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -40967,16 +41014,19 @@
    "name": "aktionenHtml",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 360,
-   "end": 378,
-   "lines": 19,
+   "start": 398,
+   "end": 417,
+   "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "korrekturHtml",
+    "vkz01AusnahmeHtml"
+   ],
    "calledBy": [
     "zeigeAbrechnungDetail"
    ],
@@ -41001,9 +41051,9 @@
    "name": "_verdrahteAktionen",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 380,
-   "end": 397,
-   "lines": 18,
+   "start": 419,
+   "end": 437,
+   "lines": 19,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -41012,6 +41062,7 @@
    "storage": [],
    "calls": [
     "_erstelleKorrektur",
+    "_vkz01Ausnahme",
     "downloadAbrechnungFile"
    ],
    "calledBy": [
@@ -41038,8 +41089,8 @@
    "name": "_erstelleKorrektur",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 404,
-   "end": 440,
+   "start": 444,
+   "end": 480,
    "lines": 37,
    "spiegelHinweis": null,
    "tables": [],
@@ -41078,8 +41129,8 @@
    "name": "zeigeFehler",
    "kind": "arrow",
    "file": "module/abrechnung-detail.js",
-   "start": 407,
-   "end": 407,
+   "start": 447,
+   "end": 447,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -41090,6 +41141,85 @@
    "calls": [],
    "calledBy": [
     "_erstelleKorrektur",
+    "_vkz01Ausnahme",
+    "oeffneBefreiungsFormular",
+    "oeffneZuzahlungKorrektur",
+    "vorschau"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "_vkz01Ausnahme",
+   "kind": "function",
+   "file": "module/abrechnung-detail.js",
+   "start": 486,
+   "end": 519,
+   "lines": 34,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [
+    "${ctx.apiBase}/billing/abrechnung/zeile/${zeilenId}/vkz01-ausnahme"
+   ],
+   "storage": [],
+   "calls": [
+    "json",
+    "zeigeAbrechnungDetail",
+    "zeigeFehler"
+   ],
+   "calledBy": [
+    "_verdrahteAktionen"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "zeigeFehler",
+   "kind": "arrow",
+   "file": "module/abrechnung-detail.js",
+   "start": 489,
+   "end": 489,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "_erstelleKorrektur",
+    "_vkz01Ausnahme",
     "oeffneBefreiungsFormular",
     "oeffneZuzahlungKorrektur",
     "vorschau"
@@ -41115,8 +41245,8 @@
    "name": "downloadAbrechnungFile",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 454,
-   "end": 471,
+   "start": 533,
+   "end": 550,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [
@@ -41354,6 +41484,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -41853,8 +41984,8 @@
    "name": "dringlichkeit",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 61,
-   "end": 66,
+   "start": 62,
+   "end": 67,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -41887,8 +42018,8 @@
    "name": "txt",
    "kind": "arrow",
    "file": "module/abrechnung-verlauf.js",
-   "start": 68,
-   "end": 80,
+   "start": 69,
+   "end": 81,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -41926,8 +42057,8 @@
    "name": "num",
    "kind": "arrow",
    "file": "module/abrechnung-verlauf.js",
-   "start": 69,
-   "end": 80,
+   "start": 70,
+   "end": 81,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -41965,8 +42096,8 @@
    "name": "sortiereVerlauf",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 84,
-   "end": 112,
+   "start": 85,
+   "end": 113,
    "lines": 29,
    "spiegelHinweis": null,
    "tables": [],
@@ -42004,8 +42135,8 @@
    "name": "reichereAn",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 124,
-   "end": 155,
+   "start": 125,
+   "end": 156,
    "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
@@ -42044,8 +42175,8 @@
    "name": "r2",
    "kind": "arrow",
    "file": "module/abrechnung-verlauf.js",
-   "start": 125,
-   "end": 132,
+   "start": 126,
+   "end": 133,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -42100,8 +42231,8 @@
    "name": "initAbrechnungVerlauf",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 170,
-   "end": 170,
+   "start": 171,
+   "end": 171,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -42134,8 +42265,8 @@
    "name": "_verlaufZustand",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 173,
-   "end": 173,
+   "start": 174,
+   "end": 174,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -42153,8 +42284,8 @@
    "name": "gewaehlteAbrechnung",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 176,
-   "end": 176,
+   "start": 177,
+   "end": 177,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -42172,8 +42303,8 @@
    "name": "ladeAbrechnungVerlauf",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 178,
-   "end": 222,
+   "start": 179,
+   "end": 223,
    "lines": 45,
    "spiegelHinweis": null,
    "tables": [
@@ -42215,8 +42346,8 @@
    "name": "zeichneVerlauf",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 224,
-   "end": 255,
+   "start": 225,
+   "end": 256,
    "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
@@ -42258,8 +42389,8 @@
    "name": "istUeberfaellig",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 258,
-   "end": 262,
+   "start": 259,
+   "end": 263,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -42292,8 +42423,8 @@
    "name": "_einstiegAktualisieren",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 264,
-   "end": 273,
+   "start": 265,
+   "end": 274,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -42329,8 +42460,8 @@
    "name": "_verdrahteEinmal",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 282,
-   "end": 305,
+   "start": 283,
+   "end": 306,
    "lines": 24,
    "spiegelHinweis": null,
    "tables": [],
@@ -42367,8 +42498,8 @@
    "name": "_zeichnePfeile",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 307,
-   "end": 313,
+   "start": 308,
+   "end": 314,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -42401,8 +42532,8 @@
    "name": "waehle",
    "kind": "function",
    "file": "module/abrechnung-verlauf.js",
-   "start": 320,
-   "end": 324,
+   "start": 321,
+   "end": 325,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -43978,6 +44109,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -52882,6 +53014,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -54518,6 +54651,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -55556,6 +55690,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -59664,6 +59799,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -66893,6 +67029,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -70903,6 +71040,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -72356,6 +72494,7 @@
    "calls": [],
    "calledBy": [
     "_erstelleKorrektur",
+    "_vkz01Ausnahme",
     "oeffneBefreiungsFormular",
     "oeffneZuzahlungKorrektur",
     "vorschau"
@@ -72597,6 +72736,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -72776,6 +72916,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -72920,6 +73061,7 @@
    "calls": [],
    "calledBy": [
     "_erstelleKorrektur",
+    "_vkz01Ausnahme",
     "oeffneBefreiungsFormular",
     "oeffneZuzahlungKorrektur",
     "vorschau"
@@ -74451,6 +74593,7 @@
     "todoForm",
     "toggleMenu",
     "verordnungDetailHtml",
+    "vkz01AusnahmeHtml",
     "vorschlag",
     "withTimeout",
     "zeichne",
@@ -83579,7 +83722,7 @@
     "api-backend/billing/utils/abrechnung-zeilen.js:36",
     "api-backend/billing/zuzahlung/calculator.js:14",
     "api-backend/billing/zuzahlung/korrektur.js:16",
-    "module/abrechnung-verlauf.js:125",
+    "module/abrechnung-verlauf.js:126",
     "module/zuzahlung-rechnen.js:42"
    ],
    "aynalar": []
@@ -83844,6 +83987,16 @@
    "aynalar": []
   },
   {
+   "name": "zeigeFehler",
+   "orte": [
+    "module/abrechnung-detail.js:447",
+    "module/abrechnung-detail.js:489",
+    "module/zuzahlung-befreiung.js:149",
+    "module/zuzahlung-korrektur.js:208"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "load",
    "orte": [
     "ops/board.js:111",
@@ -83895,15 +84048,6 @@
     "module/abrechnung-detail.js:266",
     "module/fussbefund.js:1586",
     "module/verordnung-liste.js:149"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "zeigeFehler",
-   "orte": [
-    "module/abrechnung-detail.js:407",
-    "module/zuzahlung-befreiung.js:149",
-    "module/zuzahlung-korrektur.js:208"
    ],
    "aynalar": []
   },
@@ -84063,7 +84207,7 @@
    "name": "num",
    "orte": [
     "api-backend/billing/dta/builder.js:54",
-    "module/abrechnung-verlauf.js:69"
+    "module/abrechnung-verlauf.js:70"
    ],
    "aynalar": []
   },
@@ -84375,7 +84519,7 @@
    "name": "_einstiegAktualisieren",
    "orte": [
     "module/abrechnung-auswahl.js:621",
-    "module/abrechnung-verlauf.js:264"
+    "module/abrechnung-verlauf.js:265"
    ],
    "aynalar": []
   },
@@ -84390,7 +84534,7 @@
   {
    "name": "txt",
    "orte": [
-    "module/abrechnung-verlauf.js:68",
+    "module/abrechnung-verlauf.js:69",
     "module/verordnung-maske.js:483"
    ],
    "aynalar": []

@@ -26,8 +26,9 @@
  * in der nächsten ERSTrechnung (VKZ 01) gelandet wären — für die Kasse
  * derselbe Beleg zum zweiten Mal, also Doppelabrechnung (gkv-302, Veto V1:
  * Anlage 1 TP5 V21 Kap. 7.4.3, Korrekturverfahren Nr. 3). Der richtige Weg
- * (VKZ 04 + URI) kommt mit Phase 5; bis dahin bietet der Bildschirm den
- * falschen Weg lieber gar nicht an. Genau deshalb steht Phase 5 vor Phase 4.
+ * (VKZ 04 + URI, seit Phase 5) steht stattdessen in `abrechnung-detail.js` —
+ * `korrekturHtml()` für den Regelfall, `vkz01AusnahmeHtml()` für die zwei
+ * Ausnahmen Nr. 21/22.
  */
 
 import { fmtEur } from './geld.js?v=20260909';

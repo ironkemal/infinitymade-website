@@ -344,9 +344,47 @@ function korrekturHtml(zeilen) {
     <p style="margin:10px 0 0;font-size:11px;color:var(--text-muted);">
       <strong>Nicht hier</strong>, sondern als neue Erstrechnung (VKZ 01): wenn die ganze Rechnung wegen
       <em>fehlender Urbelege</em> abgesetzt wurde (Nr. 21) oder die <em>Datei abgewiesen</em> wurde, weil sie nicht
-      TA-konform war (Nr. 22). In beiden Fällen gilt nichts als eingereicht und eine URI wäre falsch — die Verordnung
-      wird über den Statusdialog bewusst wieder auf „bereit" gesetzt.
+      TA-konform war (Nr. 22) — siehe der eigene, getrennte Abschnitt darunter.
     </p>
+  </div>${vkz01AusnahmeHtml(zeilen)}`;
+}
+
+/**
+ * Der zweite, ausdrücklich GETRENNTE Weg (Plan Phase 5, Punkt 5): die beiden
+ * VKZ-01-Ausnahmen (Nr. 21 Urbelege fehlten, Nr. 22 Datei abgewiesen). Hier
+ * gilt nichts als eingereicht — eine URI wäre falsch, der richtige Weg ist
+ * eine ganz normale neue Erstrechnung. Eigene Farbe (orange statt magenta),
+ * eigener Knopf je Zeile, damit niemand die beiden Wege verwechselt.
+ *
+ * Nur Physio/Ergo/Logo: Podologie hat diesen Weg schon über den Statusdialog
+ * an der Verordnung (PATCH /verordnung/:id/abrechnungsstatus, ziel „aktiv").
+ */
+function vkz01AusnahmeHtml(zeilen) {
+  const kandidaten = (zeilen || []).filter(z =>
+    (z.status === 'abgesetzt' || z.status === 'teilabgesetzt') && z.therapie_bereich !== 'podo' && z.prescription_id);
+  if (!kandidaten.length) return '';
+
+  return `
+  <div style="border:1px solid #ea580c;border-radius:8px;padding:14px;margin-top:14px;background:var(--bg-card);">
+    <h4 style="margin:0 0 6px;font-size:14px;color:#ea580c;">Urbelege fehlten / Datei abgewiesen — als VKZ 01 neu vorbereiten</h4>
+    <p style="margin:0 0 10px;font-size:12px;color:var(--text-muted);">
+      Nur für die zwei Ausnahmen Nr. 21 und Nr. 22 (Korrekturverfahren): die ganze Datei galt nie als eingereicht,
+      eine Korrekturrechnung mit URI wäre hier falsch. Setzt die Verordnung zurück auf „bereit" für eine ganz normale
+      neue Erstrechnung.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${kandidaten.map(z => `
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" data-vkz01-zeile="${esc(z.id)}">
+          <span style="font-size:12px;color:var(--text-main);min-width:160px;">
+            <code>${esc(z.belegnummer)}</code> · ${esc(z.patient_name || '—')}
+          </span>
+          <input type="text" class="vkz01-grund" placeholder="Grund (z. B. Urbelege fehlten)"
+            style="flex:1;min-width:180px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;">
+          <button class="btn-ghost btn-sm" data-ab-akt="vkz01-ausnahme" data-id="${esc(z.id)}"
+            style="color:#ea580c;border-color:#ea580c;">Als VKZ 01 vorbereiten</button>
+        </div>`).join('')}
+    </div>
+    <div id="abVkz01Fehler" style="color:#ef4444;font-size:12px;margin-top:8px;display:none;"></div>
   </div>`;
 }
 
@@ -369,9 +407,10 @@ function aktionenHtml(ab) {
   }
   k.push(`<button class="btn-ghost btn-sm" data-ab-akt="anleitung">Anleitung</button>`);
 
-  // ⚠️ „Korrigieren & erneut vorbereiten" fehlt hier absichtlich — siehe
-  // Kopfkommentar von abrechnung-verlauf.js. Der richtige Weg (VKZ 04 + URI)
-  // kommt mit Phase 5.
+  // ⚠️ „Korrigieren & erneut vorbereiten" fehlt hier absichtlich — der alte,
+  // stille Ein-Klick-Retry ist entfernt (Veto V1). Der richtige Weg steht
+  // stattdessen im Korrektur-Panel: korrekturHtml()/vkz01AusnahmeHtml() oben,
+  // sichtbar am Kopf des Inhalts, nicht in dieser Aktionsleiste.
   return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
     ${k.join('')}
   </div>`;
@@ -391,6 +430,7 @@ function _verdrahteAktionen(ab) {
         case 'fehler':     return ctx.aktionen?.zaaFehler?.(ab.id);
         case 'anleitung':  return ctx.aktionen?.anleitung?.(ab.id);
         case 'korrektur':  return _erstelleKorrektur(btn, ab);
+        case 'vkz01-ausnahme': return _vkz01Ausnahme(btn, ab);
       }
     });
   }
@@ -434,6 +474,45 @@ async function _erstelleKorrektur(btn, ab) {
   } catch (e) {
     console.error('[abrechnung/korrektur]', e);
     zeigeFehler(e.message || 'Korrekturrechnung fehlgeschlagen.');
+    btn.disabled = false;
+    btn.textContent = altText;
+  }
+}
+
+/**
+ * Eine einzelne Zeile zurück auf „bereit" (Nr. 21/22) — je Zeile ein eigener
+ * Knopf, kein Sammellauf wie bei der Korrekturrechnung.
+ */
+async function _vkz01Ausnahme(btn, ab) {
+  if (btn.disabled) return;
+  const fehlerEl = document.getElementById('abVkz01Fehler');
+  const zeigeFehler = (t) => { if (fehlerEl) { fehlerEl.textContent = t; fehlerEl.style.display = t ? 'block' : 'none'; } };
+  zeigeFehler('');
+
+  const zeilenId = btn.dataset.id;
+  const zeile = document.querySelector(`[data-vkz01-zeile="${CSS.escape(zeilenId)}"]`);
+  const grund = zeile?.querySelector('.vkz01-grund')?.value.trim() || '';
+  if (grund.length < 3) { zeigeFehler('Bitte eine Begründung eintragen (mind. 3 Zeichen).'); return; }
+
+  const altText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Wird gesetzt…';
+  try {
+    const { data: { session } } = await ctx.supabase.auth.getSession();
+    if (!session?.access_token) throw new Error('Nicht angemeldet');
+    const res = await fetch(`${ctx.apiBase}/billing/abrechnung/zeile/${zeilenId}/vkz01-ausnahme`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ grund }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+
+    ctx.showToast?.('Verordnung ist wieder „bereit" — für eine neue Erstrechnung (VKZ 01).');
+    await zeigeAbrechnungDetail(ab.id);
+  } catch (e) {
+    console.error('[abrechnung/zeile/vkz01-ausnahme]', e);
+    zeigeFehler(e.message || 'Zurücksetzen fehlgeschlagen.');
     btn.disabled = false;
     btn.textContent = altText;
   }
