@@ -157,11 +157,21 @@ export async function zeigeAbrechnungDetail(abrechnungId) {
 
   inhalt.innerHTML = kopfHtml(ab, zeilen, geld) + geldHtml(geld, ab)
     + (gruppen.length ? gruppen.map(g => gruppeHtml(g, gruppen.length > 1)).join('') : leerHtml(ab))
+    + korrekturHtml(zeilen)
     + aktionenHtml(ab);
   inhalt.style.opacity = '';
   inhalt.dataset.geladen = '1';
 
   _verdrahteAktionen(ab);
+}
+
+/** Wieviele Belege dieser Datei sind korrigierbar? */
+export function korrigierbareZeilen(zeilen) {
+  return (zeilen || []).filter(z =>
+    (z.status === 'abgesetzt' || z.status === 'teilabgesetzt')
+    // Ohne diese vier gibt es kein URI-Segment (Anlage 1 TP5 V21 Kap. 7.3).
+    // Bei rekonstruierten Altzeilen fehlen sie systematisch.
+    && z.prescription_id && z.belegnummer && z.einzel_rechnungsnummer);
 }
 
 function kopfHtml(ab, zeilen, geld) {
@@ -282,6 +292,64 @@ function zeileHtml(z) {
   </tr>`;
 }
 
+/**
+ * Der eigene, getrennte Lauf für abgesetzte Belege.
+ *
+ * ⛔ V3 (Anlage 1 TP5 V21 Kap. 7.3): „Innerhalb einer Datei dürfen nicht
+ * verschiedene Verarbeitungskennzeichen genutzt werden. Je
+ * Verarbeitungskennzeichen ist eine eigene Datei zu übermitteln."
+ * Deshalb steht dieser Knopf hier — in der Ansicht „Bisherige", an der
+ * abgesetzten Datei — und nicht in der Auswahlliste unter „Neu". Eine
+ * Oberfläche, die beides in einem Lauf anbietet, erzeugt eine Datei, die die
+ * Annahmestelle als Ganzes zurückweist.
+ */
+function korrekturHtml(zeilen) {
+  const kandidaten = korrigierbareZeilen(zeilen);
+  const abgesetztOhneUri = (zeilen || []).filter(z =>
+    (z.status === 'abgesetzt' || z.status === 'teilabgesetzt') && !kandidaten.includes(z));
+  if (!kandidaten.length && !abgesetztOhneUri.length) return '';
+
+  return `
+  <div style="border:1px solid #be185d;border-radius:8px;padding:14px;margin-top:14px;background:var(--bg-card);">
+    <h4 style="margin:0 0 6px;font-size:14px;color:#be185d;">Abgesetzte Belege — Korrekturrechnung (VKZ 04)</h4>
+    <p style="margin:0 0 10px;font-size:12px;color:var(--text-muted);">
+      Ein abgesetzter Beleg geht mit <strong>VKZ 04 und URI-Segment</strong> in einer <strong>eigenen Datei</strong>
+      zurück, nie still in die nächste Erstrechnung — sonst ist es für die Kasse derselbe Beleg zum zweiten Mal
+      (Anlage 1 TP5 V21 Kap. 7.4.3, Korrekturverfahren Nr. 3). Korrigieren Sie zuerst die Verordnung, dann hier
+      auswählen und erstellen.
+    </p>
+    ${kandidaten.length ? `
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+        ${kandidaten.map(z => `
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text-main);cursor:pointer;">
+            <input type="checkbox" class="ab-kor-check" data-id="${esc(z.id)}" checked style="margin-top:2px;">
+            <span><code>${esc(z.belegnummer)}</code> · ${esc(z.patient_name || '—')} · ${esc(fmtEur(z.netto_eur))}
+              ${z.absetzung_grund ? `<span style="color:var(--text-muted);"> — ${esc(z.absetzung_grund.split('\n')[0])}</span>` : ''}
+            </span>
+          </label>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="abKorGrund" placeholder="Was wurde korrigiert? (wird protokolliert)"
+          style="flex:1;min-width:220px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;">
+        <button class="btn-primary btn-sm" data-ab-akt="korrektur">Korrekturrechnung erstellen (VKZ 04)</button>
+      </div>
+      <div id="abKorFehler" style="color:#ef4444;font-size:12px;margin-top:8px;display:none;"></div>
+    ` : ''}
+    ${abgesetztOhneUri.length ? `
+      <div style="margin-top:${kandidaten.length ? '12px' : '0'};padding:8px 10px;border:1px dashed var(--border);border-radius:6px;font-size:12px;color:var(--text-muted);">
+        ${abgesetztOhneUri.length} abgesetzte${abgesetztOhneUri.length > 1 ? '' : 'r'} Beleg${abgesetztOhneUri.length > 1 ? 'e' : ''}
+        ohne vollständige Ursprungsangaben — für sie lässt sich kein URI-Segment bauen. Das betrifft Dateien von vor
+        dem 09.09.2026; diese Korrektur läuft über das Kassenportal oder auf Papier.
+      </div>` : ''}
+    <p style="margin:10px 0 0;font-size:11px;color:var(--text-muted);">
+      <strong>Nicht hier</strong>, sondern als neue Erstrechnung (VKZ 01): wenn die ganze Rechnung wegen
+      <em>fehlender Urbelege</em> abgesetzt wurde (Nr. 21) oder die <em>Datei abgewiesen</em> wurde, weil sie nicht
+      TA-konform war (Nr. 22). In beiden Fällen gilt nichts als eingereicht und eine URI wäre falsch — die Verordnung
+      wird über den Statusdialog bewusst wieder auf „bereit" gesetzt.
+    </p>
+  </div>`;
+}
+
 function leerHtml(ab) {
   return `<div style="padding:14px;border:1px dashed var(--border);border-radius:8px;color:var(--text-muted);font-size:13px;">
     Für diese Datei sind keine Zeilen gespeichert. Das betrifft Dateien, die vor dem 09.09.2026 entstanden sind —
@@ -322,8 +390,52 @@ function _verdrahteAktionen(ab) {
         case 'zaa':        return ctx.aktionen?.zaaHochladen?.(ab.id, ab.dateiname);
         case 'fehler':     return ctx.aktionen?.zaaFehler?.(ab.id);
         case 'anleitung':  return ctx.aktionen?.anleitung?.(ab.id);
+        case 'korrektur':  return _erstelleKorrektur(btn, ab);
       }
     });
+  }
+}
+
+/**
+ * Eine eigene Datei mit VKZ 04 für die angehakten abgesetzten Belege.
+ * Der Knopf wird VOR dem ersten `await` gesperrt — ein Doppelklick erzeugte
+ * sonst zwei Korrekturdateien mit derselben laufenden Datennummer.
+ */
+async function _erstelleKorrektur(btn, ab) {
+  if (btn.disabled) return;
+  const fehlerEl = document.getElementById('abKorFehler');
+  const zeigeFehler = (t) => { if (fehlerEl) { fehlerEl.textContent = t; fehlerEl.style.display = t ? 'block' : 'none'; } };
+  zeigeFehler('');
+
+  const zeilenIds = [...document.querySelectorAll('#abDetailContent .ab-kor-check:checked')]
+    .map(cb => cb.dataset.id);
+  if (!zeilenIds.length) { zeigeFehler('Bitte mindestens einen Beleg auswählen.'); return; }
+
+  const grund = document.getElementById('abKorGrund')?.value.trim() || '';
+  const altText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Wird erstellt…';
+  try {
+    const { data: { session } } = await ctx.supabase.auth.getSession();
+    if (!session?.access_token) throw new Error('Nicht angemeldet');
+    const res = await fetch(`${ctx.apiBase}/billing/abrechnung/korrektur`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ zeilenIds, grund }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+
+    ctx.showToast?.(`Korrekturrechnung erstellt: ${json.sammelRechnungsnummer} · VKZ 04 ✓`);
+    // Die neue Datei steht jetzt oben in der Liste; die alte zeigt ihre Zeilen
+    // als „nachgereicht". Beide Hälften neu laden.
+    await ctx.nachDownload?.();
+    await zeigeAbrechnungDetail(ab.id);
+  } catch (e) {
+    console.error('[abrechnung/korrektur]', e);
+    zeigeFehler(e.message || 'Korrekturrechnung fehlgeschlagen.');
+    btn.disabled = false;
+    btn.textContent = altText;
   }
 }
 
