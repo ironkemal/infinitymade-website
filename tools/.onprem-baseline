@@ -33,4 +33,4 @@ cdn_host=0
 # Upstream 11 fremd konteyner sunuyor; 5'i bilinçli olarak dışarıda
 # (studio · meta · imgproxy · supavisor · functions — gerekçeler compose başlığında).
 # Artış: önce onprem/NOTICE.md'ye lisans satırı (O-42).
-onprem_image=0
+onprem_image=7

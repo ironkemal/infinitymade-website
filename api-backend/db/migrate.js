@@ -129,6 +129,25 @@ CREATE TABLE IF NOT EXISTS praxura_migrations (
   duration_ms integer,
   app_version text
 );
+
+-- Das Buch geht niemanden ausser dem Server etwas an.
+--
+-- Ohne diese drei Zeilen liegt es in einer Kundenbox offen: PostgREST macht
+-- jede Tabelle im public-Schema erreichbar, und ohne RLS beantwortet sie auch
+-- anonyme Anfragen. Dann steht die gesamte Schemageschichte im Netz —
+-- Dateinamen, Zeitpunkte, laufende Anwendungsversion. Das ist keine
+-- Katastrophe, aber es ist eine Landkarte fuer jemanden, der eine sucht.
+--
+-- In der Produktion war RLS am 10.09.2026 von Hand gesetzt worden; beim ersten
+-- Lauf gegen eine frische Box fiel auf, dass der Runner es NICHT tut — die Box
+-- waere also anders herausgekommen als die Cloud. Genau solche stillen
+-- Abweichungen soll die Kette verhindern, deshalb steht es jetzt hier.
+--
+-- Keine Policy: RLS an und keine Policy bedeutet "niemand kommt durch".
+-- Der Server selbst verbindet sich direkt (DATABASE_URL, Rolle supabase_admin)
+-- und geht an PostgREST vorbei — ihn stoert das nicht.
+ALTER TABLE praxura_migrations ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON praxura_migrations FROM anon, authenticated;
 `;
 
 /**

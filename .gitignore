@@ -50,3 +50,10 @@ __pycache__/
 # altındaki .gitignore İSTİSNA — o upstream vendor kopyasının kendi dosyası, dokunulmadı.
 onprem/volumes/db/data/
 onprem/volumes/storage/
+
+# On-Prem Kundenbox: die erzeugte .env traegt Geheimnisse (G2) und bleibt
+# draussen. Die VORLAGE dagegen muss ins Repository — sonst kann niemand eine
+# Box einrichten. Die breite Regel `.env*` weiter oben faengt sie sonst mit
+# (genau so passiert, 11.09.2026), deshalb hier die Ausnahme.
+onprem/.env
+!onprem/.env.template

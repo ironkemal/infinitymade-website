@@ -96,6 +96,11 @@ supabase_co=$(zaehle "[a-z0-9]+\.supabase\.co" '*.js' '*.html' '*.mjs' ':(exclud
 cdn_host=$(zaehle "https?://(fonts\.googleapis\.com|esm\.sh|unpkg\.com|cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com)" \
   '*.js' '*.html' '*.mjs')
 
+# 8) Kutu paketindeki bileşen sayısı. Güncelleme yolu olmayan her image bir
+#    borçtur (O-45). Artış, onprem/NOTICE.md'de karşılık gelen lisans satırı
+#    olmadan kabul edilmez (O-42). Kendi api image'ımız da sayılır.
+onprem_image=$(git grep --cached -c -E "^[[:space:]]+image:" -- onprem/docker-compose.yml 2>/dev/null | awk -F: '{s+=$NF} END{print s+0}')
+
 # --- Yıkıcı DDL kapısı (sayaç değil, doğrudan kontrol) --------------------
 #
 # :beta ve :stable AYNI ANDA canlı. Eski image yeni şemayla çalışabilmek zorunda.
@@ -204,6 +209,8 @@ kontrol supabase_co "$supabase_co" "Sabit Supabase proje adresi. Kutunun kendi S
                                    "Çıkış: SUPABASE_URL env var'ından oku."
 kontrol cdn_host    "$cdn_host"    "Yeni CDN bağımlılığı. Yerelleştirme kararı geri alınamaz." \
                                    "Çıkış: dosyayı vendor/ altına indir, oradan servis et."
+kontrol onprem_image "$onprem_image" "Kutuya yeni bir konteyner girdi. Güncelleme yolu olmayan her bileşen borçtur (O-45)." \
+                                   "Çıkış: gerçekten gerekli mi? Gerekliyse onprem/NOTICE.md'ye lisans satırı ekle (O-42)."
 
 # --- Sonuç ----------------------------------------------------------------
 if [ -n "$ihlal" ]; then

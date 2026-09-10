@@ -856,7 +856,31 @@
 | **Tip** | G + F |
 | **Kutuda ne olur** | Bizim `api` image'ımız her gece güncellenir, altındaki 11 servis **kurulduğu sürümde donar**. Sonuç üç yerden ısırır: (1) GoTrue/Storage'ta çıkan bir CVE'yi kapatmanın yolu yok — CRA'nın 24s/72s/14g bildirim yükümlülüğü (D10) tam da bunu istiyor; (2) Postgres majör yükseltmesi (PG15→17 gibi) `pg_upgrade` gerektirir, kutu başına elle adım demektir ve **K10 gereği kutuya giremeyiz**; (3) yeni migration'larımız upstream'in yeni bir sürümünü varsayarsa eski kutuda patlar. 20 kutuda bu "bir hafta sürer"; 200 kutuda **hiç bitmez** |
 | **Çözüm** | Üç parça, hiçbiri yazılmadı: (a) compose'un **sürümlenmesi** — image tag'leri `.env`'den okunsun, compose aptal kalsın (§6.4 kuralının somut hâli); (b) kutuda `praxura-updater` benzeri küçük bir adım: yeni compose/`.env` şablonu image ile gelsin, kutu kendi compose'unu **kendi** güncellesin (bugünkü "compose'a yazdığımız hiçbir şey ulaşmaz" duvarını yıkar); (c) `releases.json`'da upstream sürüm eşlemesi + durak (O-43). Faz önerisi: **Faz 2.1b** (compose sürümleme) + **Faz 4.3c** (compose dağıtımı) |
-| **Durum** | `offen` — hiçbir fazda yazılı değil |
+| **Durum** | 🟡 **kısmen çözüldü (11.09.2026)** — (a) yapıldı, (b) ve (c) açık |
+
+> **11.09.2026 — (a) tamam: yığın artık tek bir sürümlenmiş nesne.**
+> `onprem/docker-compose.yml` yazıldı ve **hiçbir `image:` satırı etiket taşımıyor** —
+> hepsi `.env`'deki `VERSION_*` değişkenlerinden geliyor, yanlarında sabitlenmiş digest
+> yorumu duruyor. Çözümün (a) maddesi harfiyen bu. Artık bir yükseltme, compose dosyasını
+> değiştirmek yerine `.env`'de birer satır değiştirmek demek — (b)'nin (kutunun kendi
+> compose'unu güncellemesi) önünü açan şey de budur.
+>
+> Aynı adımda **fremd konteyner sayısı 11 → 6'ya indi.** Bu bir RAM tasarrufu değil,
+> doğrudan bu maddenin gövdesi: güncellenemeyen her bileşen bir borç. Çıkarılanlar ve
+> gerekçeleri (hepsi çalışan yığına karşı ölçüldü, tahmin edilmedi):
+> `studio` (müşteri DB'ye girmemeli, K10 gereği biz de giremiyoruz) ·
+> `meta` (yalnız studio kullanıyor) ·
+> `imgproxy` (uygulama tek bir `transform` çağrısı yapmıyor — yalnız `getPublicUrl` ve
+> `createSignedUrl`) · `supavisor` (dışarıdan bağlanan yok, hiçbir servis ona bağlı değil) ·
+> `functions` (Deno; O-11 kararı zaten "kutuya Deno konmayacak" diyordu).
+> Lisans listesi `onprem/NOTICE.md`'de açıldı (O-42'nin tabanı).
+>
+> **Ölçüm:** boşta 7 konteyner **≈1,65 GB** — ve buna artık bizim `api`'miz de dahil
+> (203 MB). Upstream'in 11 konteyneri `api` olmadan 2,0 GB idi. Kalanın %61'i tek başına
+> Kong (886 MB) → O-48.
+>
+> **Kalan:** (b) kutunun compose'u kendi güncellemesi ve (c) `releases.json` eşlemesi.
+> İkisi de yazılmadı.
 
 ### O-46 — Merkezde filo görünürlüğü yok; "hangi kutu hangi sürümde" panosu tasarlanmadı
 
@@ -868,6 +892,44 @@
 | **Kutuda ne olur** | Kutuda bir şey olmaz — **merkezde** olur. Bugünkü tasarımla 200 kutuda şunları bilemeyiz: kaç kutu yeni `:stable`'ı gerçekten aldı · hangi kutuda migration yarım kaldı · hangi kutuda gecelerdir yedek alınamıyor · hangi kutunun diski %92'yi geçti. Hepsi kutunun **kendi panelinde** yazılı (O-40'ın `/status`'u), ama kimse bakmıyor — müşteri arayana kadar. Bir sürümü geri çekme kararı (§4.6a) "kaç kutu etkilendi" cevabı olmadan verilemez |
 | **Çözüm** | ⚠️ **Bu bir korkuluk sorusu, ajanın kararı değil** (§11.1 zaten kullanıcıya çıkarılmıştı). G1 ihlal edilmeden toplanabilecek azami küme, hasta verisi ile hiç kesişmez ve hepsi **sayı/enum**'dur: `lisans_id` · `surum` · `sema_no` · `durum` (enum: `ok` / `bakim_modu` / `migration_hatasi` / `yedek_yok` / `disk_kritik`) · `son_yedek_yasi_saat` (sayı) · `upstream_surum`. Serbest metin yok, host adı yok, sayaç yok, hasta tablosuna hiç dokunulmaz. §11.1'in kilitlediği şart bunu **bugünden mümkün kılıyor**: lisans yükü sürümlenecek (`lisans_sema: 1`) ve doğrulayıcı tanımadığı alanı yok sayacak — yani alan sonradan eklenebilir, kutuları önce yükseltmek gerekmez. Panelin kendisi merkez tarafı: `api/admin/data.js`'in on-prem satırları (O-18) |
 | **Durum** | `offen` — karar kullanıcıda (§11.1 (b)), teknik ön koşul (sürümlü lisans yükü) Faz 3.2 kabul ölçütü olarak zaten yazılı |
+
+### 7E. Kutu paketi yazılırken çıkanlar (11.09.2026)
+
+> Bu üç madde `onprem/docker-compose.yml` yazılıp **boş bir veritabanına karşı
+> gerçekten çalıştırılırken** çıktı. Üçü de belge okuyarak bulunamazdı.
+
+### O-47 — Kutunun backend'i Google anahtarları olmadan hiç açılmıyordu ✅ **çözüldü**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `server.js` başında `GOOGLE_CLIENT_ID/SECRET/REDIRECT_URL` yoksa `process.exit(1)` vardı. ⚠️ **Bilinmiyor değildi:** Temmuz PoC'sinde `dummy GOOGLE_*` konarak geçiştirilmiş ve playbook §10'a *"Google env'leri boot'ta zorunlu, Faz 2.8 opsiyonelleştirecek"* diye yazılmıştı. İki ay bekledi; gerçek kutuda ilk denemede patladı |
+| **Nerede** | `api-backend/server.js:159` (eski hâl) |
+| **Tip** | E (env var) |
+| **Kutuda ne olur** | **Olmuştu.** Kutu ilk kez ayağa kaldırıldığında `praxura-api` sonsuz PM2 yeniden başlatma döngüsüne girdi. Takvim, reçete, abrechnung — hepsi durdu, **bir yan özellik yüzünden**. Bulutta bu doğruydu (anahtar hep set, yokluğu bozuk deployment demek); kutuda tam tersi: praxis Google kullanmıyordur. Üstelik `restart: unless-stopped` bunu sonsuza kadar tekrarlar, `/health` sahte yeşil verirse (O-40) kimse fark etmez |
+| **Çözüm** | Yapıldı: `GOOGLE_KONFIGURIERT` bayrağı + açılışta uyarı satırı; `newOAuthClient()` yapılandırılmamışsa anlaşılır bir hata atıyor; `/calendar/google-auth` ve `/gmail/connect` 503 + açık mesaj dönüyor. Diğer iki çağrı yeri zaten `integ.access_token` kontrolünün arkasında — kutuda kimse bağlanamayacağı için o dallar hiç çalışmıyor. Kural K4'ün aynısı: **zutat yoksa uygulama açılır, yalnız o özellik susar** |
+| **Durum** | ✅ **gelöst (11.09.2026)** — `server.js`'teki tek diğer `process.exit` (`SUPABASE_URL`/`SERVICE_ROLE_KEY`) meşru: onlarsız uygulama gerçekten çalışamaz. Tarandı, başka sert çıkış yok |
+
+### O-48 — Kong kutunun en büyük parçası; yerine Caddy koymak bir güvenlik kontrolünü de kaldırır
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kırpılmış yığında Kong tek başına **886 MB** — kalan belleğin %61'i — ve güncellenemeyen 6 fremd bileşenden biri |
+| **Nerede** | `onprem/docker-compose.yml` → `kong` · yönlendirme `onprem/volumes/api/kong.yml` (14 rota) |
+| **Tip** | G |
+| **Kutuda ne olur** | Kong yalnız yönlendirmiyor: `key-auth` + `acl` ile **apikey doğruluyor**, `request-transformer` ile Authorization başlığını kuruyor. Ölçüldü: apikey'siz istek **401** alıyor. Caddy'ye geçilirse yönlendirme ve CORS taşınabilir, ama key-auth/acl taşınamaz — PostgREST apikey'siz de cevaplamaya başlar. RLS hâlâ korur (asıl savunma odur, anon anahtarı zaten gizli değil), fakat bu **var olan bir güvenlik kontrolünün kaldırılmasıdır** |
+| **Çözüm** | Karar bu maddede verilmez. `guvenlik`'in dört sert veto konusundan biri tam olarak budur → **konsey konusu.** Kazanç somut (≈886 MB + bir bileşen daha az), bedel de somut. Not: Caddy zaten Faz 2.1b'de TLS ve statik dosya için gelecek — o adımda soru kendiliğinden masaya gelir |
+| **Durum** | `offen` — Faz 2.1b'de konseye |
+
+### O-49 — `pg_net` kutuda kurulu kalıyor: G1 yapısal değil, disiplinle korunuyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Upstream'in `webhooks.sql`'i `pg_net`'i ve `supabase_functions.http_request()`'i kuruyor; yetki `anon, authenticated, service_role`'e veriliyor |
+| **Nerede** | `onprem/volumes/db/webhooks.sql:1` (`CREATE EXTENSION pg_net`), `:113` (`CREATE USER supabase_functions_admin`) |
+| **Tip** | A |
+| **Kutuda ne olur** | Bugün hiçbir şey: `net.http_post` **sıfır** fonksiyonumuzda geçiyor (ölçüldü), Telegram trigger'ı baseline'da düşüyor. Ama yetenek **kurulu duruyor** — yani G1 ("kutu dışarı telefon etmez") bir yapı değil, bir alışkanlık. Yarın biri iyi niyetle bir webhook trigger'ı yazarsa kutuda sessizce çalışır |
+| **Çözüm** | Dosyayı **çıkarmak denendi ve yığını kırdı** (11.09.2026): `webhooks.sql:113` `supabase_functions_admin` rolünü yaratıyor, bir sonraki init dosyası `99-roles.sql:7` o rolün şifresini set ediyor. Rol yoksa psql orada duruyor, geri kalan `ALTER USER` satırları hiç koşmuyor ve **`supabase_storage_admin` şifresiz kalıyor** → Storage hiç açılmıyor. Hata iki dosya öteden, bambaşka bir yüzle geliyor. Doğru çözüm: rolü yaratıp `pg_net`'i atlayan **kendi** init dosyamız + boş veritabanına karşı yeni bir tur test. Küçük ama kendi başına bir iş |
+| **Durum** | `offen` — Faz 2.1b |
 
 ---
 
@@ -897,7 +959,7 @@
 | `latest` etiketi yayın hattında | **1** | `.github/workflows/publish-calendar-api.yml:64` — hedef **0** (Faz 4.3b, `X.Y.Z` + kanal etiketleri). Artış = red |
 | Yıkıcı DDL kanıtı | — | Yeni migration dosyasında `DROP COLUMN` / `DROP TABLE` / `RENAME COLUMN` / `SET NOT NULL` / `DROP CONSTRAINT` varsa dosya başında `-- ZWEISTUFIG: <no> · <gerekçe>` satırı **zorunlu** (`SCHEMA-VERTEILUNG.md` §6.2, `RELEASE-STANDARD.md` §4.7) |
 | Migration'lı PATCH | — | Sürüm PATCH ise `db/migrations/` altında yeni dosya olamaz (`RELEASE-STANDARD.md` §2.2). Release listesi adım 1 |
-| On-prem compose `image:` satırı | *(dosya henüz yok)* | `onprem/docker-compose.yml` yazıldığında taban belirlenir; artış, `onprem/NOTICE.md`'de karşılık gelen lisans satırı eklenene kadar **red** (O-42) |
+| On-prem compose `image:` satırı | **7** | `onprem/docker-compose.yml` (11.09.2026): db · auth · rest · realtime · storage · kong + kendi `api`'miz. Upstream'in 11 fremd konteynerinden 5'i bilinçli dışarıda. Artış, `onprem/NOTICE.md`'ye lisans satırı eklenene kadar **red** (O-42). Sayaç `onprem_image`, kapıda test edildi (8'e çıkarıldığında reddetti) |
 
 ---
 
@@ -905,7 +967,7 @@
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 13 | O-09 · O-11 · O-18 · O-20 · O-23 · O-32 · O-33 · O-40 · O-41 · O-42 · O-44 · **O-45** · **O-46** |
+| `offen` | 14 | O-09 · O-11 · O-18 · O-20 · O-23 · O-32 · O-33 · O-40 · O-41 · O-42 · O-44 · O-46 · **O-48** · **O-49** |
 | `geplant` | 21 | O-01 · O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-15 · O-16 · O-19 · O-21 · O-25 · O-26 · O-27 · O-28 · **O-29** · O-30 · O-31 · O-39 · **O-43** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-38 |
 | `gelöst` | 1 | O-36 (vendor yerelleştirmesi) |

@@ -1,0 +1,8 @@
+# Der Build-Kontext wird an den Docker-Daemon uebertragen, bevor irgendein
+# COPY laeuft. Ohne diese Datei wandern ~200 MB node_modules jedes Mal mit,
+# obwohl das Dockerfile sie nie kopiert (es installiert im Image neu).
+node_modules
+npm-debug.log
+.env
+.env.*
+*.test.js

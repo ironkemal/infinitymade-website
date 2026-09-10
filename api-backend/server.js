@@ -156,9 +156,23 @@ if (!supabaseUrl || !supabaseKey) {
   console.error('FATAL: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set');
   process.exit(1);
 }
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URL) {
-  console.error('FATAL: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL must be set');
-  process.exit(1);
+// Google (Kalender-Sync + Gmail-Versand) ist OPTIONAL.
+//
+// Bis 11.09.2026 stand hier ein process.exit(1). In der Cloud war das richtig:
+// dort sind die Schluessel immer gesetzt, und ein Fehlen bedeutet ein kaputtes
+// Deployment. In einer Kundenbox bedeutet es etwas ganz anderes — die Praxis
+// benutzt Google einfach nicht. Der harte Abbruch liess dort den gesamten
+// Server in einer PM2-Neustartschleife haengen: kein Kalender, keine Rezepte,
+// keine Abrechnung, wegen einer Zusatzfunktion. Beim ersten Lauf des
+// On-Prem-Stacks genau so passiert.
+//
+// Gleiche Regel wie beim KI-Schluessel (Playbook K4): fehlt die Zutat, startet
+// die Anwendung vollstaendig und nur DIESE Funktion bleibt still.
+const GOOGLE_KONFIGURIERT = Boolean(
+  process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REDIRECT_URL
+);
+if (!GOOGLE_KONFIGURIERT) {
+  console.warn('[google] GOOGLE_CLIENT_ID/SECRET/REDIRECT_URL nicht gesetzt — Kalender-Sync und Gmail-Versand sind deaktiviert. Alles Uebrige laeuft normal.');
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
@@ -171,6 +185,13 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 // Google OAuth — factory: returns a NEW client per request to avoid token leak across concurrent users.
 // The previous module-level singleton was a P0 race-condition: setCredentials() mutated shared state.
 function newOAuthClient() {
+  if (!GOOGLE_KONFIGURIERT) {
+    // Wirft absichtlich: alle Aufrufer stehen entweder in einem try/catch oder
+    // hinter einer vorgelagerten Pruefung (siehe /calendar/google-auth und
+    // /gmail/connect). Still ein unbrauchbares Objekt zurueckzugeben waere
+    // schlimmer — der Fehler traete dann irgendwo bei Google auf.
+    throw new Error('Google ist auf diesem Server nicht eingerichtet');
+  }
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
@@ -400,6 +421,9 @@ app.use('/api/warteliste', wartelisteRouter);
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
   const userId = req.auth.userId;  // pin to authenticated user
 
+  if (!GOOGLE_KONFIGURIERT) {
+    return res.status(503).json({ error: 'Google ist auf diesem Server nicht eingerichtet.' });
+  }
   const url = newOAuthClient().generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent',
@@ -416,6 +440,9 @@ app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
 app.get('/api/gmail/connect', requireAuthAI, (req, res) => {
   const userId = req.auth.userId;  // pin to authenticated user
 
+  if (!GOOGLE_KONFIGURIERT) {
+    return res.status(503).json({ error: 'Google ist auf diesem Server nicht eingerichtet.' });
+  }
   const url = newOAuthClient().generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent select_account',
