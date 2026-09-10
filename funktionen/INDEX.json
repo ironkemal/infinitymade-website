@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-09-09",
+ "erzeugt": "2026-09-10",
  "dateien": 236,
- "funktionen": 2191,
+ "funktionen": 2195,
  "module": [
   "abrechnung",
   "anamnese",
@@ -3050,8 +3050,8 @@
    "name": "mandantUndAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1259,
-   "end": 1279,
+   "start": 1243,
+   "end": 1263,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [
@@ -3074,8 +3074,8 @@
    "name": "geldstand",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1290,
-   "end": 1311,
+   "start": 1274,
+   "end": 1295,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -3096,8 +3096,8 @@
    "name": "r2",
    "kind": "arrow",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1291,
-   "end": 1310,
+   "start": 1275,
+   "end": 1294,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -3149,8 +3149,8 @@
    "name": "mapVerordnungToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2453,
-   "end": 2562,
+   "start": 2437,
+   "end": 2546,
    "lines": 110,
    "spiegelHinweis": null,
    "tables": [],
@@ -6660,6 +6660,7 @@
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
+    "korrekturHtml",
     "loadAusfallrechnungen",
     "loadBelegliste",
     "loadMahnwesen",
@@ -7036,6 +7037,7 @@
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
+    "korrekturHtml",
     "loadAusfallrechnungen",
     "loadBelegliste",
     "loadMahnwesen",
@@ -7312,6 +7314,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -7414,6 +7417,7 @@
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
+    "korrekturHtml",
     "loadAusfallrechnungen",
     "loadBelegliste",
     "loadMahnwesen",
@@ -7751,6 +7755,7 @@
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
+    "korrekturHtml",
     "loadAusfallrechnungen",
     "loadBelegliste",
     "loadMahnwesen",
@@ -8368,6 +8373,7 @@
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
+    "korrekturHtml",
     "loadAusfallrechnungen",
     "loadBelegliste",
     "loadMahnwesen",
@@ -8705,6 +8711,7 @@
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
+    "korrekturHtml",
     "loadAusfallrechnungen",
     "loadBelegliste",
     "loadMahnwesen",
@@ -11978,6 +11985,7 @@
    "calls": [],
    "calledBy": [
     "_doStripePortalRedirect",
+    "_erstelleKorrektur",
     "_sendeGruppe",
     "_uebersteuere",
     "aiRetryRequest",
@@ -13026,6 +13034,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -37408,6 +37417,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -37546,6 +37556,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -39062,6 +39073,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -39923,6 +39935,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -40061,8 +40074,8 @@
    "kind": "function",
    "file": "module/abrechnung-detail.js",
    "start": 117,
-   "end": 165,
-   "lines": 49,
+   "end": 166,
+   "lines": 50,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -40080,11 +40093,46 @@
     "gruppeHtml",
     "json",
     "kopfHtml",
+    "korrekturHtml",
     "ladeDateieinheiten",
     "leerHtml"
    ],
    "calledBy": [
+    "_erstelleKorrektur",
     "initAbrechnungDetail"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 9 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "korrigierbareZeilen",
+   "kind": "function",
+   "file": "module/abrechnung-detail.js",
+   "start": 169,
+   "end": 175,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "korrekturHtml"
    ],
    "modules": [
     "abrechnung",
@@ -40106,8 +40154,8 @@
    "name": "kopfHtml",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 167,
-   "end": 196,
+   "start": 177,
+   "end": 206,
    "lines": 30,
    "spiegelHinweis": null,
    "tables": [],
@@ -40146,8 +40194,8 @@
    "name": "dat",
    "kind": "arrow",
    "file": "module/abrechnung-detail.js",
-   "start": 169,
-   "end": 184,
+   "start": 179,
+   "end": 194,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -40184,8 +40232,8 @@
    "name": "geldHtml",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 198,
-   "end": 218,
+   "start": 208,
+   "end": 228,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [],
@@ -40220,8 +40268,8 @@
    "name": "gruppeHtml",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 220,
-   "end": 254,
+   "start": 230,
+   "end": 264,
    "lines": 35,
    "spiegelHinweis": null,
    "tables": [],
@@ -40257,8 +40305,8 @@
    "name": "zeileHtml",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 256,
-   "end": 283,
+   "start": 266,
+   "end": 293,
    "lines": 28,
    "spiegelHinweis": null,
    "tables": [],
@@ -40291,11 +40339,48 @@
    ]
   },
   {
+   "name": "korrekturHtml",
+   "kind": "function",
+   "file": "module/abrechnung-detail.js",
+   "start": 306,
+   "end": 351,
+   "lines": 46,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "esc",
+    "fmtEur",
+    "korrigierbareZeilen"
+   ],
+   "calledBy": [
+    "zeigeAbrechnungDetail"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 9 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "leerHtml",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 285,
-   "end": 290,
+   "start": 353,
+   "end": 358,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -40327,8 +40412,8 @@
    "name": "aktionenHtml",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 292,
-   "end": 310,
+   "start": 360,
+   "end": 378,
    "lines": 19,
    "spiegelHinweis": null,
    "tables": [],
@@ -40360,9 +40445,9 @@
    "name": "_verdrahteAktionen",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 312,
-   "end": 328,
-   "lines": 17,
+   "start": 380,
+   "end": 397,
+   "lines": 18,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -40370,6 +40455,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "_erstelleKorrektur",
     "downloadAbrechnungFile"
    ],
    "calledBy": [
@@ -40392,11 +40478,86 @@
    ]
   },
   {
+   "name": "_erstelleKorrektur",
+   "kind": "function",
+   "file": "module/abrechnung-detail.js",
+   "start": 404,
+   "end": 440,
+   "lines": 37,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [
+    "${ctx.apiBase}/billing/abrechnung/korrektur"
+   ],
+   "storage": [],
+   "calls": [
+    "json",
+    "zeigeAbrechnungDetail",
+    "zeigeFehler"
+   ],
+   "calledBy": [
+    "_verdrahteAktionen"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 9 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "zeigeFehler",
+   "kind": "arrow",
+   "file": "module/abrechnung-detail.js",
+   "start": 407,
+   "end": 407,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "_erstelleKorrektur",
+    "oeffneBefreiungsFormular",
+    "oeffneZuzahlungKorrektur",
+    "vorschau"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 9 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "downloadAbrechnungFile",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 342,
-   "end": 359,
+   "start": 454,
+   "end": 471,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [
@@ -40592,6 +40753,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -43164,6 +43326,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -48911,6 +49074,7 @@
     "fehlerhaftHtml",
     "geldHtml",
     "gruppeHtml",
+    "korrekturHtml",
     "loadAusfallrechnungen",
     "loadBelegliste",
     "loadMahnwesen",
@@ -51697,6 +51861,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -53307,6 +53472,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -54321,6 +54487,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -58291,6 +58458,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -65398,6 +65566,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -69320,6 +69489,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -70705,6 +70875,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "_erstelleKorrektur",
     "oeffneBefreiungsFormular",
     "oeffneZuzahlungKorrektur",
     "vorschau"
@@ -70904,6 +71075,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -71080,6 +71252,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -71259,6 +71432,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "_erstelleKorrektur",
     "oeffneBefreiungsFormular",
     "oeffneZuzahlungKorrektur",
     "vorschau"
@@ -72736,6 +72910,7 @@
     "karteHtml",
     "kopfHtml",
     "kopieOeffnen",
+    "korrekturHtml",
     "kostentraegerFehltHtml",
     "kurzOf",
     "langOf",
@@ -81733,7 +81908,7 @@
   {
    "name": "r2",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:1291",
+    "api-backend/billing/api/abrechnung.routes.js:1275",
     "api-backend/billing/api/statistik.routes.js:176",
     "api-backend/billing/api/zuzahlung.routes.js:45",
     "api-backend/billing/dta/builder.js:55",
@@ -82053,9 +82228,18 @@
   {
    "name": "zeileHtml",
    "orte": [
-    "module/abrechnung-detail.js:256",
+    "module/abrechnung-detail.js:266",
     "module/fussbefund.js:1586",
     "module/verordnung-liste.js:149"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "zeigeFehler",
+   "orte": [
+    "module/abrechnung-detail.js:407",
+    "module/zuzahlung-befreiung.js:149",
+    "module/zuzahlung-korrektur.js:208"
    ],
    "aynalar": []
   },
@@ -82511,7 +82695,7 @@
    "name": "gruppeHtml",
    "orte": [
     "module/abrechnung-auswahl.js:485",
-    "module/abrechnung-detail.js:220"
+    "module/abrechnung-detail.js:230"
    ],
    "aynalar": []
   },
@@ -82690,14 +82874,6 @@
    "orte": [
     "module/verordnung-maske.js:334",
     "module/verordnung-pruefen-knopf.js:47"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "zeigeFehler",
-   "orte": [
-    "module/zuzahlung-befreiung.js:149",
-    "module/zuzahlung-korrektur.js:208"
    ],
    "aynalar": []
   },
