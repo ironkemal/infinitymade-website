@@ -15,7 +15,7 @@
 |---|---|
 | Kayıtlı kaynak belge (INDEX'te) | 33 |
 | Arşivdeki PDF | 47 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
-| Arşiv boyutu | ~44 MB (`Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27) |
+| Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
 | Kaynak→kod zinciri kayıtlı | 10 |
 | Tam kimlik kartı yazılmış kaynak | 1 (**W-01** Kostenträgerdatei — zincir uçtan uca bağlı, 2 açık madde) |
 | **Herkunft (indirme URL'i) kayıtlı** | **2 / 34** ← asıl boşluk, W-A01 |
@@ -318,7 +318,8 @@ yeniden araştırılıyor demektir.
 - **Yedek:** ✅ git izliyor (ilk giriş `d4982fb` 05.09.2026, bölme `cceb528` 06.09.2026).
   `.gitignore` yalnız `*.pdf` kapatıyor, bu dosyalar metin. Silinen ham `.md`'nin içeriği
   git geçmişinde duruyor (`git show d4982fb:...`), ayrıca 7 parçanın toplamı birebir aynı.
-  Yayın yüzeyi kapalı: `.vercelignore:82` → `wissensbank/`.
+  Yayın yüzeyi kapalı: `.vercelignore:79` → `wissensbank/` (satır no 09.09.2026 kök
+  temizliğinden sonra tazelendi — o gün 11 ölü kural silinince liste yukarı kaydı).
 
 #### İçindeki 7 dosya
 
@@ -505,7 +506,7 @@ otomasyon (yayıncı sayfası izleme) ayrı bir karar, `deger-mi` ile.
 tazelik kontrolünde ikinci belgeli yordam; ama hâlâ **otomatik değil**, madde açık kalır.
 
 ### W-A07 · Yeniden dağıtım hakları netleştirilmedi — `offen`
-`.vercelignore:73-75` şüpheyi yazılı olarak kaydediyor: *"fraglich, ob ICD-10-GM- und
+`.vercelignore:72-73` şüpheyi yazılı olarak kaydediyor: *"fraglich, ob ICD-10-GM- und
 GKV-Lesefassungen ueberhaupt weiterverbreitet werden duerfen"*. Yayın yüzeyi kapalı
 (klasörler ignore'da ✅) ama **depo public** ve `.txt` karşılıkları git'te izleniyor.
 **Yapılacak:** `legal-de`'ye sorulur. `wissensbank/gemeinsam/icd-10-gm/downloadbedingungen-2025`
