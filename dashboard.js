@@ -22,15 +22,15 @@ import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freig
 // die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
-import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20260909';
+import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20260910';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260905a';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260831a';
-import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260905b';
+import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260910b';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260909';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260910';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
@@ -86,7 +86,7 @@ import { alsISODatum as toISODate } from './module/datum.js?v=20260831';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260830';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blocker.js?v=20260830';
-import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp } from './module/leistungen-liste.js?v=20260903';
+import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
 import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260905g';
@@ -105,7 +105,7 @@ import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 // Einheiten-Hauptbuch (Begründung: module/verordnung-termine.js). Jeder Aufruf
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
-import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260904';
+import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260910';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260814';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20260816';
 
@@ -9856,7 +9856,7 @@ function renderServices() {
   if (!grid) return;
   renderLeistungenListe({
     container: grid,
-    leistungen: servicesCache,
+    leistungen: servicesCache.filter(s => kostentraegerTyp(s) !== 'gkv'),
     teamMembers,
     formatEur,
     onNeu: () => {
@@ -19063,7 +19063,7 @@ async function loadMahnwesen() {
     const MAHN_STATUS_CLS = { bezahlt: 'badge-green', abgeschrieben: 'badge-gray' }; // sonst offen -> badge-yellow
 
     rows.forEach(r => {
-      const pname = `${escapeHtml(r.patient?.first_name || '')} ${escapeHtml(r.patient?.last_name || '')}`.trim();
+      const pname = `${escapeHtml(r.patient?.first_name || '')} ${escapeHtml(r.patient?.last_name || '')}`.trim() || '—';
       const lm = r.latest_mahnung;
       // Nach der letzten Mahnung (Stufe 3) gibt es keine weitere — der Server
       // lehnt sie jetzt ab, also wird der Knopf gar nicht erst angeboten.
@@ -19329,11 +19329,10 @@ async function loadStatistik() {
       if (rateEl) rateEl.textContent = `${d.no_show.rate ?? 0} % Ausfallquote`;
     }
 
-    // Mahnungen
     if (d.mahnungen) {
-      setEl('statMahnBezahlt', d.mahnungen.bezahlt ?? '—');
-      const offEl = document.getElementById('statMahnOffen');
-      if (offEl) offEl.textContent = `${d.mahnungen.offen ?? 0} offen`;
+      const offen = d.mahnungen.offen ?? 0, bezahlt = d.mahnungen.bezahlt ?? 0, hero = document.getElementById('statMahnBezahlt'), offEl = document.getElementById('statMahnOffen');
+      if (hero) { hero.textContent = offen; hero.style.color = offen > 0 ? '#dc2626' : '#15803d'; }
+      if (offEl) { offEl.textContent = offen > 0 ? `${bezahlt} bezahlt` : 'alle beglichen'; offEl.style.color = offen > 0 ? 'var(--text-muted)' : '#15803d'; }
     }
 
     // Therapeuten
@@ -19416,6 +19415,7 @@ async function loadStatistik() {
     const maxVal = Math.max(...d.monatlich.map(m => (m.bezahlt ?? m.umsatz ?? 0) + (m.offen ?? 0)), 1);
     const MO = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
+    const CHART_H = 160, LABEL_RESERVE = 24, BAR_H = CHART_H - LABEL_RESERVE; // Pixel statt %: flex-end verhindert Stretch, height:X% griff ins Leere.
     d.monatlich.forEach(m => {
       const bezahlt = Number(m.bezahlt ?? m.umsatz ?? 0);
       const offen = Number(m.offen ?? 0);
@@ -19427,8 +19427,8 @@ async function loadStatistik() {
       col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;min-width:28px;';
 
       const stack = document.createElement('div');
-      const stackPct = Math.max((gesamt / maxVal) * 100, gesamt > 0 ? 4 : 0);
-      stack.style.cssText = `width:100%;height:${stackPct}%;min-height:${gesamt > 0 ? 4 : 0}px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:4px 4px 0 0;overflow:hidden;transition:height 0.3s;`;
+      const barPx = Math.max(Math.round((gesamt / maxVal) * BAR_H), gesamt > 0 ? 4 : 0);
+      stack.style.cssText = `width:100%;height:${barPx}px;min-height:${gesamt > 0 ? 4 : 0}px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:4px 4px 0 0;overflow:hidden;transition:height 0.3s;`;
       stack.title = `${label} — ${t('stat_bezahlt')}: ${fmtEur(bezahlt)} · ${t('stat_offen')}: ${fmtEur(offen)}`;
 
       if (offen > 0) {

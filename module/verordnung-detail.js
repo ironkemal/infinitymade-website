@@ -67,7 +67,7 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260905b';
+import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260910b';
 // Ops-Kart #269 (05.09.2026): dasselbe Urteil wie in den Listen/Karten
 // (module/verordnung-uebersicht.js), hier auf die eine geöffnete Zeile
 // angewandt — „gleiches Urteil, wo auch immer geklickt wird" (siehe
@@ -84,7 +84,7 @@ import { emit } from './signal.js?v=20260813';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
 // eine podologische Zeile in den Wortschatz, den `_felderPodo()` und die
 // restlichen Podologie-Funktionen dieser Datei schon immer erwartet haben.
-import { ausTopf } from './verordnung-topf.js?v=20260904';
+import { ausTopf } from './verordnung-topf.js?v=20260910';
 // Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
 // Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.

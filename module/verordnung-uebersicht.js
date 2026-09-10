@@ -68,14 +68,14 @@
 'use strict';
 
 import { belegnummerRosette, belegnummerText } from './belegnummer.js?v=20260817';
-import { bereichFarbe, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260905b';
+import { bereichFarbe, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260910b';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
 // eine Zeile davon in genau den podologischen Wortschatz, den `ausPodo()`
 // unten schon immer erwartet hat (lead_id, behandlungseinheiten,
 // therapiefrequenz, dringend, icd10 als Array, status als podologische
 // Achse) — dieselbe Grenzfunktion, die auch module/podologie-abrechnung.js
 // benutzt.
-import { ausTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260904';
+import { ausTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260910';
 // Ops-Kart #269 (05.09.2026): Verordnungen mit offenen „Bitte prüfen"-Befunden
 // sollen in den Karten/Zeilen auffallen. Der Prüfmotor lief bis dahin nur auf
 // der Eingabemaske (`verordnung-pruefen-knopf.js`) — `voAusGespeicherterVerordnung`

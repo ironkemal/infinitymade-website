@@ -64,7 +64,7 @@ import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
 import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260902';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';
-import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf } from './verordnung-topf.js?v=20260904';
+import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260910';
 import { initDateieinheit, ladeDateieinheiten, dateieinheitBadge,
          auswahlHinweis } from './podologie-dateieinheit.js?v=20260907';
 
@@ -348,7 +348,7 @@ export async function ladeAbrechnungAuswahl() {
         id: v.id,
         ik: v.kostentraeger_ik,
         nummer: v.verordnungsnummer != null ? String(v.verordnungsnummer) : v.id.slice(0, 8),
-        patient: v.patient_name || '—',
+        patient: patientAnzeigename(v) || '—',
         mittel: (d.zeilen || []).map(z => `${z.label || z.code}${z.anzahl > 1 ? ` ×${z.anzahl}` : ''}`).join(', ') || '—',
         positionCode: '',
         positionBekannt: !(d.unbekannt || []).length,

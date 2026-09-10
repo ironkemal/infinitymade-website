@@ -39,7 +39,7 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { ausTopf } from './verordnung-topf.js?v=20260904';
+import { ausTopf } from './verordnung-topf.js?v=20260910';
 
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────
 let _liste = [];    // normalisierte Verordnungsliste aus verordnungenLaden
