@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 
 BASE = "http://127.0.0.1:8899/demo-dashboard.html"
 TAG = sys.argv[1] if len(sys.argv) > 1 else "before"
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mobile-audit", TAG)
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "archive", "denetim", "mobile-audit", TAG)
 os.makedirs(OUT, exist_ok=True)
 
 PANELS = [

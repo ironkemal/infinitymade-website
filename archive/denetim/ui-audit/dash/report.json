@@ -1,0 +1,795 @@
+{
+ "panels": [
+  {
+   "vp": "desktop",
+   "panel": "overview",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "calendar",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "patients",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "notes",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "fahrtenbuch",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "services",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "hours",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "employees",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "doctors",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "anamnese",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "invoices",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "billing302",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "cashbook",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "dunning",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "waitinglist",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "statistics",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "b2b",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "b2c",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "panel": "einstellungen",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "overview",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "calendar",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "patients",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "notes",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "fahrtenbuch",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "services",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "hours",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "employees",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "doctors",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "anamnese",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "invoices",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "billing302",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "cashbook",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "dunning",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "waitinglist",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "statistics",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "b2b",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "b2c",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "panel": "einstellungen",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "overview",
+   "hov": 222,
+   "bodyhov": 0,
+   "FLAG": true
+  },
+  {
+   "vp": "phone",
+   "panel": "calendar",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "patients",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "notes",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "fahrtenbuch",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "services",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "hours",
+   "hov": 12,
+   "bodyhov": 0,
+   "FLAG": true
+  },
+  {
+   "vp": "phone",
+   "panel": "employees",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "doctors",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "anamnese",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "invoices",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "billing302",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "cashbook",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "dunning",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "waitinglist",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "statistics",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "b2b",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "b2c",
+   "hov": 0,
+   "bodyhov": 0,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "panel": "einstellungen",
+   "hov": 164,
+   "bodyhov": 0,
+   "FLAG": true
+  }
+ ],
+ "modals": [
+  {
+   "vp": "desktop",
+   "modal": "modal-new-business",
+   "hov": 0,
+   "cardTop": 243,
+   "cardH": 414,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-edit-business",
+   "hov": 0,
+   "cardTop": 243,
+   "cardH": 414,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-new-appt",
+   "hov": 0,
+   "cardTop": 196,
+   "cardH": 508,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-new-patient",
+   "hov": 0,
+   "cardTop": 199,
+   "cardH": 502,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-patient-details",
+   "hov": 0,
+   "cardTop": 253,
+   "cardH": 394,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-appt-details",
+   "hov": 0,
+   "cardTop": 246,
+   "cardH": 409,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-new-trip",
+   "hov": 0,
+   "cardTop": 236,
+   "cardH": 428,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-invoice-pdf",
+   "hov": 0,
+   "cardTop": 161,
+   "cardH": 577,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-302-wizard",
+   "hov": 0,
+   "cardTop": 268,
+   "cardH": 364,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-rezept-scan",
+   "hov": 0,
+   "cardTop": 136,
+   "cardH": 627,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-anamnese-wizard",
+   "hov": 0,
+   "cardTop": 234,
+   "cardH": 432,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-dunning-confirm",
+   "hov": 0,
+   "cardTop": 265,
+   "cardH": 371,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "desktop",
+   "modal": "modal-email-send",
+   "hov": 0,
+   "cardTop": 213,
+   "cardH": 474,
+   "ih": 900,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-new-business",
+   "hov": 0,
+   "cardTop": 390,
+   "cardH": 414,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-edit-business",
+   "hov": 0,
+   "cardTop": 390,
+   "cardH": 414,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-new-appt",
+   "hov": 0,
+   "cardTop": 343,
+   "cardH": 508,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-new-patient",
+   "hov": 0,
+   "cardTop": 346,
+   "cardH": 502,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-patient-details",
+   "hov": 0,
+   "cardTop": 400,
+   "cardH": 394,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-appt-details",
+   "hov": 0,
+   "cardTop": 393,
+   "cardH": 409,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-new-trip",
+   "hov": 0,
+   "cardTop": 383,
+   "cardH": 428,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-invoice-pdf",
+   "hov": 0,
+   "cardTop": 308,
+   "cardH": 577,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-302-wizard",
+   "hov": 0,
+   "cardTop": 415,
+   "cardH": 364,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-rezept-scan",
+   "hov": 0,
+   "cardTop": 283,
+   "cardH": 627,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-anamnese-wizard",
+   "hov": 0,
+   "cardTop": 381,
+   "cardH": 432,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-dunning-confirm",
+   "hov": 0,
+   "cardTop": 412,
+   "cardH": 371,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "tablet",
+   "modal": "modal-email-send",
+   "hov": 0,
+   "cardTop": 360,
+   "cardH": 474,
+   "ih": 1194,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-new-business",
+   "hov": 0,
+   "cardTop": 215,
+   "cardH": 414,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-edit-business",
+   "hov": 0,
+   "cardTop": 215,
+   "cardH": 414,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-new-appt",
+   "hov": 0,
+   "cardTop": 168,
+   "cardH": 508,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-new-patient",
+   "hov": 0,
+   "cardTop": 170,
+   "cardH": 505,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-patient-details",
+   "hov": 0,
+   "cardTop": 225,
+   "cardH": 394,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-appt-details",
+   "hov": 0,
+   "cardTop": 218,
+   "cardH": 409,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-new-trip",
+   "hov": 0,
+   "cardTop": 194,
+   "cardH": 456,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-invoice-pdf",
+   "hov": 0,
+   "cardTop": 65,
+   "cardH": 714,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-302-wizard",
+   "hov": 0,
+   "cardTop": 221,
+   "cardH": 402,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-rezept-scan",
+   "hov": 0,
+   "cardTop": 72,
+   "cardH": 700,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-anamnese-wizard",
+   "hov": 0,
+   "cardTop": 206,
+   "cardH": 432,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-dunning-confirm",
+   "hov": 0,
+   "cardTop": 237,
+   "cardH": 371,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  },
+  {
+   "vp": "phone",
+   "modal": "modal-email-send",
+   "hov": 0,
+   "cardTop": 185,
+   "cardH": 474,
+   "ih": 844,
+   "clippedTop": false,
+   "FLAG": false
+  }
+ ]
+}
