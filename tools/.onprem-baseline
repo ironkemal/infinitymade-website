@@ -27,3 +27,10 @@ supabase_co=1
 
 # CDN host'ları. 0 ve 0 kalmalı (Konsey 2026-08-13 S3, yerelleştirme geri alınamaz).
 cdn_host=0
+
+# Kutu paketindeki image satırı (onprem/docker-compose.yml).
+# 7 = db · auth · rest · realtime · storage · kong + kendi api'miz.
+# Upstream 11 fremd konteyner sunuyor; 5'i bilinçli olarak dışarıda
+# (studio · meta · imgproxy · supavisor · functions — gerekçeler compose başlığında).
+# Artış: önce onprem/NOTICE.md'ye lisans satırı (O-42).
+onprem_image=0

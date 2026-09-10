@@ -1,0 +1,411 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  Praxura On-Premise — Kundenbox
+# ═══════════════════════════════════════════════════════════════════════════
+#
+#  Diese Datei beschreibt den GESAMTEN Stack, der beim Kunden laeuft.
+#  Sie ist der Nachfolger von `onprem/supabase-docker/docker-compose.yml`
+#  (Upstream-Vendorkopie) — dort wird NICHT mehr gepflegt.
+#
+#  Erzeugt: 11.09.2026 · Playbook Phase 2.1a
+#  Abgeleitet von: supabase/docker (Vendorkopie unter onprem/supabase-docker/)
+#
+# ───────────────────────────────────────────────────────────────────────────
+#  REGEL 1 — Diese Datei ist DUMM. Versionen stehen in `.env`.
+# ───────────────────────────────────────────────────────────────────────────
+#  Kein `image:` traegt hier ein Tag. Alle Tags kommen aus `.env`
+#  (VERSION_*). Grund: die elf Fremdcontainer haben heute keinen
+#  Aktualisierungsweg (Register O-45) — Watchtower erneuert nur unser eigenes
+#  Image, niemals die Compose-Datei. Wenn die Version in `.env` steht, kann ein
+#  Update spaeter eine einzelne Zeile in `.env` ersetzen, statt diese Datei
+#  auszutauschen. Das ist O-45 Loesungsteil (a), woertlich.
+#
+#  Beim Anheben einer Version: Digest im Kommentar mit anheben und
+#  `onprem/NOTICE.md` pruefen (Lizenztor O-42).
+#
+# ───────────────────────────────────────────────────────────────────────────
+#  REGEL 2 — Was NICHT in der Box laeuft, und warum
+# ───────────────────────────────────────────────────────────────────────────
+#  Upstream liefert elf Container. Vier davon sind hier bewusst weggelassen.
+#  Nicht um RAM zu sparen — sondern weil jeder Fremdcontainer ein Bauteil ist,
+#  das wir heute nicht aktualisieren koennen (O-45). Jeder Wegfall ist gegen
+#  den laufenden Stack geprueft, nicht geraten:
+#
+#  studio     Die Supabase-Admin-Oberflaeche. Der Kunde darf nicht an der
+#             Datenbank schrauben, und wir kommen laut K10 ohnehin nicht in die
+#             Box. Faellt weg — samt DASHBOARD_PASSWORD als Angriffsflaeche.
+#             (Upstream haengt `kong` per depends_on an studio. Hier geloest.)
+#
+#  meta       postgres-meta wird AUSSCHLIESSLICH von studio benutzt
+#             (STUDIO_PG_META_URL). Ohne studio ohne Zweck.
+#
+#  imgproxy   Bildtransformation im Storage. Geprueft: die Anwendung ruft nur
+#             `getPublicUrl()` und `createSignedUrl()` auf (dashboard.js:8543,
+#             :11212, :12466) — keine einzige `transform`-Option. Deshalb
+#             ENABLE_IMAGE_TRANSFORMATION="false" unten und der Container weg.
+#
+#  supavisor  Connection-Pooler fuer Verbindungen VON AUSSEN (Port 5432/6543).
+#             In der Box verbindet sich niemand von aussen; kein einziger
+#             Dienst haengt per depends_on daran. Postgres selbst reicht.
+#
+#  functions  Deno-Edge-Runtime. Die einzigen drei Funktionen sind ORS-Proxys
+#             fuer das Fahrtenbuch. Entscheidung steht bereits (Register O-11,
+#             Phase 1.5): keine Deno-Laufzeit in der Box, die drei Proxys
+#             ziehen nach `api-backend` um. Bis dahin bleibt die Strecken-
+#             berechnung in der Box unbenutzt — bekannt und dokumentiert.
+#
+#  Ergebnis: 11 Fremdcontainer → 6. Dazu unser `api`.
+#
+# ───────────────────────────────────────────────────────────────────────────
+#  REGEL 3 — Nichts liegt auf dem LAN offen ausser dem Reverse Proxy
+# ───────────────────────────────────────────────────────────────────────────
+#  `kong` veroeffentlicht auf 127.0.0.1, nicht auf 0.0.0.0. Erreichbar aus dem
+#  Praxisnetz wird der Stack erst ueber Caddy (Phase 2.1b: TLS + Auslieferung
+#  der statischen Oberflaeche). Bis dahin ist die Box nur lokal erreichbar —
+#  das ist Absicht, kein fehlendes Stueck.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: praxura
+
+services:
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # db — PostgreSQL. Das Herz. Alles andere ist ersetzbar, das hier nicht.
+  # ─────────────────────────────────────────────────────────────────────────
+  db:
+    container_name: praxura-db
+    # sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00
+    image: supabase/postgres:${VERSION_POSTGRES}
+    restart: unless-stopped
+    volumes:
+      # Init-Skripte von upstream — laufen NUR beim allerersten Start.
+      # Herkunft und Aktualitaet: onprem/volumes/README.md
+      - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
+      # webhooks.sql bringt `pg_net` mit — die Faehigkeit der Datenbank, selbst
+      # ins Internet zu telefonieren. Wir benutzen sie nirgends (`net.http_post`
+      # → 0 Funktionen, gemessen), und ohne sie waere Leitplanke G1 baulich
+      # gesichert statt nur eingehalten.
+      #
+      # Trotzdem bleibt die Datei drin. Ein Versuch, sie wegzulassen, hat den
+      # ganzen Stack zerlegt (11.09.2026): sie legt in Zeile 113 die Rolle
+      # `supabase_functions_admin` an, und die naechste Datei — `99-roles.sql`,
+      # von upstream — setzt in Zeile 7 deren Passwort. Fehlt die Rolle, bricht
+      # psql dort ab, die restlichen ALTER-USER-Zeilen laufen nie, und
+      # `supabase_storage_admin` bleibt ohne Passwort: Storage kommt gar nicht
+      # mehr hoch. Ein Fehler zwei Dateien weiter, mit ganz anderem Gesicht.
+      #
+      # Sauber loesen laesst sich das nur mit einem EIGENEN Ersatz, der die
+      # Rolle anlegt und pg_net weglaesst. Das ist eine eigene, testbare
+      # Aufgabe — als Register-Eintrag festgehalten, nicht nebenbei erledigt.
+      - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
+      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+      - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
+      # ACHTUNG: Bind-Mount, kein benanntes Volume. `docker compose down -v`
+      # loescht die Kundendaten NICHT — was in der Produktion richtig ist, im
+      # Test aber taeuscht (10.09.2026 einmal genau darauf hereingefallen).
+      - ./volumes/db/data:/var/lib/postgresql/data:Z
+      - db-config:/etc/postgresql-custom
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: ${POSTGRES_PORT}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      POSTGRES_DB: ${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: ${JWT_EXPIRY}
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      # verhindert, dass die Realtime-Abfragen das Log fluten
+      - -c
+      - log_min_messages=fatal
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # auth — GoTrue. Anmeldung, Passwort-Reset, Einladung von Mitarbeitern.
+  # ─────────────────────────────────────────────────────────────────────────
+  auth:
+    container_name: praxura-auth
+    # sha256:385184459f57569c54c25209f51f3b2be99ddd7c4ce9e3555b5d3eea8447b7cf
+    image: supabase/gotrue:${VERSION_GOTRUE}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL}
+
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+
+      GOTRUE_SITE_URL: ${SITE_URL}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS}
+      # In der Box legt der Inhaber Mitarbeiter an — niemand registriert sich
+      # selbst. Steht auf "true", sobald der Onboarding-Assistent (Phase 2.2)
+      # den ersten Inhaber angelegt hat.
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP}
+
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: ${JWT_EXPIRY}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_ISSUER: ${API_EXTERNAL_URL}/auth/v1
+
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP}
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
+      GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM}
+
+      # SMTP ist der des KUNDEN (K1: die Box telefoniert nicht zu uns).
+      # Fehlt er, kommen keine Einladungs- und Reset-Mails an — der
+      # Einrichtungsassistent muss das pruefen.
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT}
+      GOTRUE_SMTP_USER: ${SMTP_USER}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS}
+      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+      GOTRUE_MAILER_URLPATHS_INVITE: ${MAILER_URLPATHS_INVITE}
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${MAILER_URLPATHS_CONFIRMATION}
+      GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY}
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE}
+
+      # Telefon-Anmeldung gibt es im Produkt nicht (Twilio wurde 05/2026
+      # eingestellt). Hart aus, nicht ueber .env steuerbar.
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+      GOTRUE_SMS_AUTOCONFIRM: "false"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # rest — PostgREST. Der Browser spricht fuer Lesen/Schreiben direkt hierher;
+  #        die Absicherung ist RLS, nicht dieser Dienst.
+  # ─────────────────────────────────────────────────────────────────────────
+  rest:
+    container_name: praxura-rest
+    # sha256:54000f24847d01a2c2302e0041cf0618b875c57fb48507d743cfa9aaa50bf43c
+    image: postgrest/postgrest:${VERSION_POSTGREST}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
+      PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
+      PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_ADMIN_SERVER_PORT: 3001
+      PGRST_ADMIN_SERVER_HOST: localhost
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
+    command: ["postgrest"]
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # realtime — Live-Aktualisierung des Kalenders. Wird wirklich benutzt:
+  #            Publication `supabase_realtime` auf `bookings`, Abnehmer
+  #            refreshBookingViews(). Ohne diesen Container sieht ein zweiter
+  #            Mitarbeiter neue Termine erst nach dem Neuladen.
+  # ─────────────────────────────────────────────────────────────────────────
+  realtime:
+    # Der Name sieht falsch aus, ist aber richtig: Realtime leitet seine
+    # Tenant-ID aus dem Hostnamen ab.
+    container_name: realtime-dev.supabase-realtime
+    # sha256:aa1c92c0cf326007563641730ec9da9c60478caa6853887775365fa2c097a471
+    image: supabase/realtime:${VERSION_REALTIME}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'curl -sSfL --head -o /dev/null -H "Authorization: Bearer ${ANON_KEY}" http://localhost:4000/api/tenants/realtime-dev/health'
+      timeout: 5s
+      interval: 30s
+      retries: 3
+      start_period: 10s
+    environment:
+      PORT: 4000
+      DB_HOST: ${POSTGRES_HOST}
+      DB_PORT: ${POSTGRES_PORT}
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      DB_AFTER_CONNECT_QUERY: 'SET search_path TO _realtime'
+      DB_ENC_KEY: ${REALTIME_DB_ENC_KEY}
+      API_JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      METRICS_JWT_SECRET: ${JWT_SECRET}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      APP_NAME: realtime
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
+      DISABLE_HEALTHCHECK_LOGGING: "true"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # storage — Dateien: patient-documents (Rezeptbilder, Befunde) und avatars.
+  #           Liegt als Datei auf der Platte des Kunden, nicht in S3.
+  # ─────────────────────────────────────────────────────────────────────────
+  storage:
+    container_name: praxura-storage
+    # sha256:c8eb9858eafec891a97c27125470aaad54703c3f4eb4d55ca7f1bf6c6411febf
+    image: supabase/storage-api:${VERSION_STORAGE}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+      # imgproxy: bewusst entfernt, siehe Kopf dieser Datei
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://storage:5000/status"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      POSTGREST_URL: http://rest:3000
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      STORAGE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
+      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      GLOBAL_S3_BUCKET: ${GLOBAL_S3_BUCKET}
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: ${STORAGE_TENANT_ID}
+      REGION: ${REGION}
+      # Aus, weil imgproxy nicht mitlaeuft. Wer das je auf "true" stellt, muss
+      # imgproxy wieder aufnehmen — sonst laufen Transformationsanfragen ins
+      # Leere statt einen Fehler zu liefern.
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+      S3_PROTOCOL_ACCESS_KEY_ID: ${S3_PROTOCOL_ACCESS_KEY_ID}
+      S3_PROTOCOL_ACCESS_KEY_SECRET: ${S3_PROTOCOL_ACCESS_KEY_SECRET}
+    volumes:
+      - ./volumes/storage:/var/lib/storage:z
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # kong — API-Gateway. Buendelt auth/rest/realtime/storage hinter EINER
+  #        Adresse und prueft den apikey (key-auth + acl).
+  #
+  #        ⚠️ Groesster Brocken des Stacks (~950 MB im Leerlauf gemessen).
+  #        Ein Ersatz durch Caddy waere moeglich, wuerde aber key-auth und acl
+  #        mit entfernen — also eine bestehende Sicherheitskontrolle. Das ist
+  #        eine eigene Entscheidung mit `guvenlik` am Tisch, kein Nebeneffekt
+  #        dieser Datei. Als Register-Eintrag festgehalten.
+  # ─────────────────────────────────────────────────────────────────────────
+  kong:
+    container_name: praxura-kong
+    # sha256:6addf50e6bd8d578314cb9ce4f2d2d1e3781d2edecef59f707e00c6e05d384f5
+    image: kong/kong:${VERSION_KONG}
+    restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - api-gw
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # Upstream haengt hier `studio: service_healthy` — entfaellt mit studio.
+    depends_on:
+      auth:
+        condition: service_healthy
+      rest:
+        condition: service_healthy
+    ports:
+      # NUR Loopback. Ins Praxisnetz kommt der Stack ueber Caddy (Phase 2.1b).
+      - "127.0.0.1:${KONG_HTTP_PORT}:8000/tcp"
+    volumes:
+      - ./volumes/api/kong.yml:/home/kong/temp.yml:ro,z
+      - ./volumes/api/kong-entrypoint.sh:/home/kong/kong-entrypoint.sh:ro,z
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_DNS_NOT_FOUND_TTL: 1
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,request-termination,post-function
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      KONG_PROXY_ACCESS_LOG: /dev/stdout combined
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    entrypoint: ["/bin/sh", "/home/kong/kong-entrypoint.sh"]
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # api — UNSER Express-Backend. Das einzige Image, das wir selbst bauen und
+  #       das einzige, das Watchtower erneuern darf.
+  #
+  #       Beim Start faehrt der Migrations-Runner die Schemakette hoch
+  #       (api-backend/db/migrate.js). Deshalb `depends_on: db healthy`.
+  # ─────────────────────────────────────────────────────────────────────────
+  api:
+    container_name: praxura-api
+    image: ${PRAXURA_API_IMAGE}
+    restart: unless-stopped
+    # In der Box immer "always": Watchtower ersetzt das Image, der
+    # Neustart soll das neue holen. Nur beim lokalen Test steht hier
+    # "never", weil das Image dann von Hand gebaut ist.
+    pull_policy: ${PRAXURA_PULL_POLICY:-always}
+    depends_on:
+      db:
+        condition: service_healthy
+      kong:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Innerhalb des Netzes; nicht die oeffentliche Adresse.
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+
+      # ★ BINDEND: supabase_admin, nicht postgres.
+      # Von den 24 `ALTER DEFAULT PRIVILEGES`-Zeilen der Baseline sagen 12
+      # `FOR ROLE supabase_admin`, und `postgres` darf fremde Vorgaberechte
+      # nicht aendern ("permission denied to change default privileges").
+      # Mit `postgres` bricht die Erstinstallation ab. Gemessen 10.09.2026,
+      # beantwortet SCHEMA-VERTEILUNG.md §2 V-6.
+      DATABASE_URL: postgresql://supabase_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+
+      # Der Kunde bringt seinen eigenen Schluessel mit (K4 BYO-Key). Fehlt er,
+      # muss die Anwendung starten und nur die KI-Funktion still bleiben.
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_ENDPOINT: ${AI_ENDPOINT:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+
+      TZ: ${TZ:-Europe/Berlin}
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+networks:
+  default:
+    name: praxura
+
+volumes:
+  db-config:
