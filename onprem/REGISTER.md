@@ -673,13 +673,62 @@
 >   **reddediliyor**. Beş senaryo denendi (temiz ağaç ✓ · drift ✗ · migration'lı ✓ ·
 >   `SKIP_MIGRATION_GATE=1` ✓). §5.4'ün eksik ikiziydi; altı migration tam oradan geçmişti.
 >
-> **Açık kalan tek şey — kanıt:** baseline'ın gerçekten **yüklendiği** henüz denenmedi.
-> Bugüne kadarki doğrulama yapısal: nesne sayıları canlıyla birebir (75 tablo · 150
-> policy · 68 fonksiyon · 70 trigger · 292 index · 2 view · 5 kova · 9 storage policy),
-> sözdizimi temiz, runner okuyor (sürüm `0000`, sha `48350e21…`), 16 test yeşil. Gerçek
-> yükleme testi boş bir Supabase yığını ister → **Docker gerekiyor**; makinede kurulu
-> değil (10.09'da kurulum denendi, yönetici izni alınamadığı için `exit status 2` ile
-> düştü). Docker gelince ilk iş budur.
+> **✅ KANIT GELDİ — yükleme testi geçti (10.09.2026 akşamı).**
+>
+> Docker kuruldu, `onprem/supabase-docker` yığını **boş bir veritabanıyla** ayağa
+> kaldırıldı (11/11 healthy, `supabase/postgres:17.6.1.136`) ve baseline gerçekten
+> yüklendi. ⚠️ Temmuz PoC'sinin veri klasörü (`volumes/db/data`, 123 MB) diske bağlı
+> olduğu için `docker compose down -v` onu silmiyor — temiz oda testi ancak o klasör
+> elle silinince mümkün oldu. Bu, kurulum script'i yazılırken bilinmesi gereken bir
+> ayrıntı.
+>
+> **Sonuç:** yükleme `ON_ERROR_STOP=1` ile **çıkış 0**. Self-check'in 11 sayacının
+> **11'i** canlıyla birebir tuttu (76 tablo · 150 policy · 67 fonksiyon · 70 trigger ·
+> 292 index · 2 view · 1 RLS-kapalı · 1 auth trigger · 5 kova · 9 storage policy ·
+> 1 publication). İşlevsel: signup → trigger → **profil oluştu** (auth 1 / profiles 1),
+> `no_overlapping_bookings` EXCLUDE kısıtı ayakta (btree_gist çalışıyor),
+> ve veritabanından **dışarı çıkan çağrı kalmadı** (`net.http_post` → 0 fonksiyon, G1).
+>
+> **Test dört gerçek hata yakaladı** — dördü de baseline'ı olduğu gibi göndersek her
+> kutuyu kırardı:
+>
+> 1. **`CREATE SCHEMA public;`** — `pg_dump` bunu koşulsuz yazıyor, temiz bir Supabase'de
+>    `public` zaten var → yükleme 121. satırda duruyordu. Temmuz PoC'si bunu
+>    `DROP SCHEMA public CASCADE` ile aşmış ve **tam o yüzden postgis'i kaybetmişti**
+>    (playbook §10'daki not). Doğru çözüm yıkmak değil: `IF NOT EXISTS`.
+> 2. **`add_credits()`** çıkarılan `user_credits` tablosuna **yazıyor** — üstelik şema
+>    öneki olmadan, o yüzden `public.user_credits` aramasına takılmamıştı. Düşen fonksiyon
+>    sayısı 8 → 9. Ders: çıkarılan tabloları ararken **öneksiz** de taranmalı.
+> 3. **`search_path`** — dökümün gövdesi arama yolunu kasten boşaltıyor; sona eklediğimiz
+>    storage policy'leri ise `profiles`'a öneksiz atıf veriyor →
+>    `relation "profiles" does not exist`. Ek bölümlerden önce arama yolu geri açılıyor.
+> 4. **Storage policy'leri idempotent değildi** — `storage` şeması `public`'ten ayrı yaşıyor,
+>    yani `public`'i sıfırlayıp baseline'ı tekrar çalıştıran biri policy'leri yerinde bulur
+>    ve `policy "avatars_public_read" already exists` ile durur. Her `CREATE POLICY`nin
+>    önüne `DROP POLICY IF EXISTS` kondu (kovalar `ON CONFLICT DO NOTHING` ile zaten
+>    idempotentti). Bu hata ancak **ikinci** turda göründü — tek turluk bir test onu
+>    yakalayamazdı.
+>
+> **Testin kendisi de düzeltildi.** İlk turda yalnız `public` sıfırlanıyordu ve `psql`
+> ifadeleri tek tek işliyordu — yani runner'ın davranışını taklit etmiyordu (runner her
+> dosyayı **tek transaction** içinde çalıştırır). Geçerli tur: veri klasörü silinip yığın
+> yeniden kuruldu (gerçekten 0 tablo / 0 storage policy / 0 kova) ve baseline
+> `--single-transaction` ile yüklendi. ⚠️ Ayrıca `DELETE FROM storage.buckets` upstream'in
+> `protect_delete` trigger'ına takılıyor ("Use the Storage API instead") — storage durumunu
+> SQL ile sıfırlamaya çalışmak yerine veritabanını komple yenilemek gerekiyor; kurulum ve
+> geri-yükleme script'leri yazılırken bilinmeli.
+>
+> **★ Yeni bağlayıcı bulgu — kutunun `DATABASE_URL`'i `supabase_admin` olmalı.**
+> `postgres` yetmiyor: dökümün sonundaki 24 `ALTER DEFAULT PRIVILEGES` satırının 12'si
+> `FOR ROLE supabase_admin` diyor ve `postgres` başka bir rolün varsayılan yetkilerini
+> değiştiremiyor (`ERROR: permission denied to change default privileges`). Bu,
+> `SCHEMA-VERTEILUNG.md` §2 V-6'daki *"doğrulanmalı"* notunun cevabıdır: satırlar
+> sorunsuz geçmiyor, **rol önemli**. Faz 2.1'de `.env.template` yazılırken bu dikkate alınır.
+>
+> Baseline testten sonra üç kez değiştiği için defterdeki parmak izi de tazelendi
+> (migration `praxura_migrations_baseline_pruefsumme_korrigiert`). *"Uygulanmış migration
+> değiştirilmez"* kuralı burada **ihlal edilmedi**: `0000` bugüne kadar hiçbir yerde
+> çalışmamıştı — yükleme testi tam da bunun içindi.
 
 ---
 

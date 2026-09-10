@@ -41,6 +41,25 @@
 --   postgis                    ERTELENDİ. Çıkarılması ayrı ve iki adımlı bir iş;
 --                              baseline'ı bekletmemek için sonraya bırakıldı.
 --
+-- ✅ YÜKLEME TESTİ GEÇTİ (10.09.2026) — boş bir Supabase yığınına (11 konteyner,
+--    supabase/postgres:17.6.1.136) gerçekten yüklendi: çıkış 0, 11 self-check sayacının
+--    11'i canlıyla birebir, signup → trigger → profil oluştu (auth 1 / profiles 1),
+--    `no_overlapping_bookings` EXCLUDE kısıtı ayakta (btree_gist çalışıyor),
+--    veritabanından dışarı çıkan çağrı kalmadı (`net.http_post` → 0 fonksiyon).
+--    Test **dört** hatayı yakaladı; dördü de aşağıda yerinde açıklanmış durumda.
+--    Testin kendisi de düzeltildi: ilk turda yalnız `public` sıfırlanıyordu ve psql
+--    satır satır işliyordu. Geçerli tur **tamamen boş bir veritabanına** (veri klasörü
+--    silinip yığın yeniden kuruldu) ve **tek işlem içinde** (`--single-transaction`,
+--    runner'ın davranışı) yapıldı.
+--
+-- ⚠️ HANGİ ROLLE ÇALIŞTIRILIR — kutunun `DATABASE_URL`'i için bağlayıcı:
+--    Dosya **`supabase_admin`** ile koşmalı. `postgres` yetmiyor: dökümün sonundaki
+--    24 `ALTER DEFAULT PRIVILEGES` satırının 12'si `FOR ROLE supabase_admin` diyor ve
+--    `postgres` başka bir rolün varsayılan yetkilerini değiştiremez:
+--      ERROR: permission denied to change default privileges
+--    Yükleme testinde ölçüldü (10.09.2026). Bu, SCHEMA-VERTEILUNG.md §2 V-6'daki
+--    "doğrulanmalı" notunun cevabıdır: satırlar sorunsuz geçMİYOR, rol önemli.
+--
 -- KURULUM SIRASI (onprem/SCHEMA-VERTEILUNG.md §3.1) — bu dosya 3. adımdır:
 --   1) Postgres + upstream init (roller: anon / authenticated / service_role)
 --   2) GoTrue / Storage / Realtime kendi şemalarını migrate eder  <- auth.users burada doğar
@@ -50,7 +69,7 @@
 -- KURULUM SONRASI BEKLENEN SAYILAR (self-check, §3.3 — 10.09.2026 canlıdan ölçüldü):
 --   public tablo ................  76   (75 bizim + spatial_ref_sys, postgis ile gelir)
 --   RLS policy (public) ......... 150
---   fonksiyon (extension dışı) ..  68   (dökümde 76, aşağıda 8 düşüyor)
+--   fonksiyon (extension dışı) ..  67   (dökümde 76, aşağıda 9 düşüyor)
 --   trigger (public) ............  70   (dökümde 71, aşağıda 1 düşüyor)
 --   index (public) .............. 292
 --   view (bizim) ................   2   (geography_columns/geometry_columns postgis'in)
@@ -118,7 +137,11 @@ SET row_security = off;
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA public;
+-- pg_dump bunu kosulsuz yazar, ama temiz bir Supabase kutusunda `public` semasi
+-- ZATEN vardir (upstream init yaratir) -> yukleme ilk adimda dururdu. Temmuz PoC'si
+-- bunu `DROP SCHEMA public CASCADE` ile asmisti ve tam o yuzden postgis'i kaybetti
+-- (playbook 10). Dogru cozum yikmak degil, kosullu yaratmak:
+CREATE SCHEMA IF NOT EXISTS public;
 
 
 --
@@ -12397,7 +12420,20 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 --
 
 -- ============================================================================
--- BÖLÜM 3 — MERKEZE AİT KALINTILARI DÜŞÜR
+-- ----------------------------------------------------------------------------
+-- Arama yolunu geri aç
+-- ----------------------------------------------------------------------------
+-- pg_dump gövdesi başlarken `search_path`'i BOŞALTIR (set_config('search_path','')).
+-- Bu, döküm için doğru: her şey tam nitelikli yazılır. Ama aşağıdaki storage
+-- policy'leri canlıdan geldikleri şekliyle `profiles`'a öneksiz atıf veriyor
+-- (BÖLÜM 5). Arama yolu boşken o atıflar çözülmez:
+--   ERROR: relation "profiles" does not exist
+-- Yükleme testinde tam olarak bu yaşandı (10.09.2026).
+
+SELECT pg_catalog.set_config('search_path', 'public, extensions', false);
+
+
+-- BÖLÜM 3 — MERKEZE AİT KALINTILARI DÜŞÜR (9 fonksiyon + 1 trigger)
 -- ============================================================================
 -- Bu fonksiyonlar pg_dump çıktısında var çünkü `public` şemasında yaşıyorlar,
 -- ama müşteri kutusunda işleri yok. Üçü ayrıca ya dışarı çıkıyor ya da
@@ -12409,11 +12445,15 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 --                              (O-21, Faz 1.6).
 --   admin_top_tenants_by_rows  çıkarılan email_logs tablosuna bakıyor
 --   pending_signup_*           çıkarılan pending_signups tablosuna bakıyor
+--   add_credits                çıkarılan user_credits tablosuna YAZIYOR — üstelik şema
+--                              öneki olmadan, o yüzden `public.user_credits` aramasına
+--                              takılmıyordu. Yükleme testinde çıktı.
 --                              (gövdeler `check_function_bodies=false` sayesinde
 --                               yüklenirdi, ama çalışma anında patlardı)
 
 DROP TRIGGER IF EXISTS trg_feedback_telegram ON public.feedbacks;
 
+DROP FUNCTION IF EXISTS public.add_credits(uuid, integer);
 DROP FUNCTION IF EXISTS public.notify_feedback_telegram();
 DROP FUNCTION IF EXISTS public.admin_db_total_size();
 DROP FUNCTION IF EXISTS public.admin_db_size_breakdown();
@@ -12447,6 +12487,11 @@ CREATE TRIGGER on_auth_user_created
 -- ama aynı zincir SaaS'ta da çalışıyor (G7).
 -- Aşağıdaki satırlar canlıdan üretildi, elle yazılmadı.
 --
+-- Her policy'nin önünde `DROP POLICY IF EXISTS` var: `storage` şeması `public`'ten
+-- ayrı yaşıyor, yani `public`'i sıfırlayıp baseline'ı tekrar çalıştıran biri bu
+-- policy'leri yerinde bulur ve "already exists" ile duvara toslar. Yükleme
+-- testinde yaşandı (10.09.2026). Kovalar zaten `ON CONFLICT DO NOTHING`.
+--
 -- Not: `referrals` kovasının policy'si yok — private + policy'siz demek yalnızca
 -- service_role erişebilir. Bilinçli, öyle kalıyor.
 
@@ -12456,32 +12501,41 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('prescriptions', 'prescriptions', 'f', 10485760, '{image/jpeg,image/png,image/webp,application/pdf}'::text[]) ON CONFLICT (id) DO NOTHING;
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES ('referrals', 'referrals', 'f', NULL, NULL) ON CONFLICT (id) DO NOTHING;
 
+DROP POLICY IF EXISTS abrechnungen_owner_read ON storage.objects;
 CREATE POLICY abrechnungen_owner_read ON storage.objects AS PERMISSIVE FOR SELECT TO public USING (((bucket_id = 'abrechnungen'::text) AND (((auth.uid())::text = (storage.foldername(name))[1]) OR (((storage.foldername(name))[1])::uuid IN ( SELECT profiles.owner_id
    FROM profiles
   WHERE ((profiles.id = auth.uid()) AND (profiles.owner_id IS NOT NULL)))))));
+DROP POLICY IF EXISTS avatars_own_delete ON storage.objects;
 CREATE POLICY avatars_own_delete ON storage.objects AS PERMISSIVE FOR DELETE TO authenticated USING (((bucket_id = 'avatars'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR ((storage.foldername(name))[1] IN ( SELECT (p.id)::text AS id
    FROM profiles p
   WHERE (p.owner_id = auth.uid()))))));
+DROP POLICY IF EXISTS avatars_own_insert ON storage.objects;
 CREATE POLICY avatars_own_insert ON storage.objects AS PERMISSIVE FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'avatars'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR ((storage.foldername(name))[1] IN ( SELECT (p.id)::text AS id
    FROM profiles p
   WHERE (p.owner_id = auth.uid()))))));
+DROP POLICY IF EXISTS avatars_own_update ON storage.objects;
 CREATE POLICY avatars_own_update ON storage.objects AS PERMISSIVE FOR UPDATE TO authenticated USING (((bucket_id = 'avatars'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR ((storage.foldername(name))[1] IN ( SELECT (p.id)::text AS id
    FROM profiles p
   WHERE (p.owner_id = auth.uid())))))) WITH CHECK (((bucket_id = 'avatars'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR ((storage.foldername(name))[1] IN ( SELECT (p.id)::text AS id
    FROM profiles p
   WHERE (p.owner_id = auth.uid()))))));
+DROP POLICY IF EXISTS avatars_public_read ON storage.objects;
 CREATE POLICY avatars_public_read ON storage.objects AS PERMISSIVE FOR SELECT TO anon, authenticated USING ((bucket_id = 'avatars'::text));
+DROP POLICY IF EXISTS patient_documents_owner_all ON storage.objects;
 CREATE POLICY patient_documents_owner_all ON storage.objects AS PERMISSIVE FOR ALL TO public USING (((bucket_id = 'patient-documents'::text) AND (((auth.uid())::text = (storage.foldername(name))[1]) OR (((storage.foldername(name))[1])::uuid IN ( SELECT profiles.owner_id
    FROM profiles
   WHERE ((profiles.id = auth.uid()) AND (profiles.owner_id IS NOT NULL))))))) WITH CHECK (((bucket_id = 'patient-documents'::text) AND (((auth.uid())::text = (storage.foldername(name))[1]) OR (((storage.foldername(name))[1])::uuid IN ( SELECT profiles.owner_id
    FROM profiles
   WHERE ((profiles.id = auth.uid()) AND (profiles.owner_id IS NOT NULL)))))));
+DROP POLICY IF EXISTS prescriptions_storage_owner_delete ON storage.objects;
 CREATE POLICY prescriptions_storage_owner_delete ON storage.objects AS PERMISSIVE FOR DELETE TO public USING (((bucket_id = 'prescriptions'::text) AND (((auth.uid())::text = (storage.foldername(name))[1]) OR (auth.uid() IN ( SELECT p.id
    FROM profiles p
   WHERE ((p.owner_id)::text = (storage.foldername(objects.name))[1]))))));
+DROP POLICY IF EXISTS prescriptions_storage_owner_insert ON storage.objects;
 CREATE POLICY prescriptions_storage_owner_insert ON storage.objects AS PERMISSIVE FOR INSERT TO public WITH CHECK (((bucket_id = 'prescriptions'::text) AND (((auth.uid())::text = (storage.foldername(name))[1]) OR (auth.uid() IN ( SELECT p.id
    FROM profiles p
   WHERE ((p.owner_id)::text = (storage.foldername(objects.name))[1]))))));
+DROP POLICY IF EXISTS prescriptions_storage_owner_select ON storage.objects;
 CREATE POLICY prescriptions_storage_owner_select ON storage.objects AS PERMISSIVE FOR SELECT TO public USING (((bucket_id = 'prescriptions'::text) AND (((auth.uid())::text = (storage.foldername(name))[1]) OR (auth.uid() IN ( SELECT p.id
    FROM profiles p
   WHERE ((p.owner_id)::text = (storage.foldername(objects.name))[1]))))));
