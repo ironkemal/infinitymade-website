@@ -22,10 +22,10 @@
  * Stelle nur ein kleines Ausrufezeichen (`.vo-mark-icon`); der Text kommt
  * per Klick als `position:fixed`-Layer (`.vo-popover`) obendrauf, verschiebt
  * nichts und schliesst über das × oder erneutes Klicken auf dasselbe Icon.
- * Die Seite, auf der das Popover aufgeht, richtet sich danach, wo das Icon
- * im Viewport sitzt (linke Hälfte → Popover rechts, rechte Hälfte → links,
- * unteres Fünftel → oberhalb), damit es nie über dem Feld liegt, das man
- * gerade korrigiert.
+ * Die Seite, auf der das Popover aufgeht, richtet sich nach dem Platz um den
+ * ANKER (die ganze Zelle/Zeile, nicht nur das Icon an ihrer Ecke): die Seite
+ * mit mehr Raum gewinnt, oben nur, wenn unten nicht reicht — damit es nie
+ * über dem Feld liegt, das man gerade korrigiert (siehe `positioniertPopover`).
  *
  * Warum eine Tabelle und keine Namenskonvention
  * ─────────────────────────────────────────────
@@ -208,7 +208,7 @@ function erzeugeIcon(anker, liste) {
   icon.addEventListener('click', (ev) => {
     ev.preventDefault();
     ev.stopPropagation();
-    togglePopover(icon, liste);
+    togglePopover(icon, anker, liste);
   });
 
   if (getComputedStyle(anker).position === 'static') {
@@ -220,7 +220,7 @@ function erzeugeIcon(anker, liste) {
 }
 
 /** Popover für ein Icon auf-/zuklappen. Ein zweiter Klick auf dasselbe Icon schliesst es wieder. */
-function togglePopover(icon, liste) {
+function togglePopover(icon, anker, liste) {
   const bestehend = offenePopovers.get(icon);
   if (bestehend) { bestehend.schliessen(); return; }
 
@@ -234,7 +234,7 @@ function togglePopover(icon, liste) {
     }).join('');
 
   document.body.appendChild(pop);
-  const neuPositionieren = () => positioniertPopover(pop, icon);
+  const neuPositionieren = () => positioniertPopover(pop, anker);
   neuPositionieren();
 
   const schliessen = () => {
@@ -259,24 +259,35 @@ function togglePopover(icon, liste) {
 }
 
 /**
- * Seite wählen, auf der das Popover aufgeht: immer WEG vom Icon, nie darüber
- * — sonst verdeckt es genau das Feld, das gerade korrigiert werden soll, und
+ * Seite wählen, auf der das Popover aufgeht: immer ausserhalb des ANKERS
+ * (der ganzen Zelle/Zeile, nicht nur des kleinen Icons an ihrer Ecke) —
+ * sonst verdeckt es genau das Feld, das gerade korrigiert werden soll, und
  * das Weiterarbeiten bei offenem Popover (der ganze Sinn der Sache) wäre hin.
+ *
+ * 10.09.2026-Nachschlag (Kemal): mit dem Icon selbst statt des Ankers als
+ * Bezugspunkt lag die Grenze GENAU an der Feldkante — ein schmales Feld
+ * (z.B. das Datum in seiner Dreier-Zeile) hatte das Popover dann direkt
+ * über sich. Massgeblich ist jetzt der ganze Anker, und die Seite fällt auf
+ * die, mit mehr Platz — nicht stur auf die linke/rechte Bildschirmhälfte.
  */
-function positioniertPopover(pop, icon) {
-  const r = icon.getBoundingClientRect();
+function positioniertPopover(pop, anker) {
+  const ar = anker.getBoundingClientRect();
   const vw = document.documentElement.clientWidth;
   const vh = document.documentElement.clientHeight;
   const rand = 8;
   const pw = pop.offsetWidth;
   const ph = pop.offsetHeight;
 
-  const oeffnetRechts = r.left < vw / 2;
-  let left = oeffnetRechts ? r.right + rand : r.left - rand - pw;
+  const platzLinks = ar.left;
+  const platzRechts = vw - ar.right;
+  const oeffnetRechts = platzRechts >= platzLinks;
+  let left = oeffnetRechts ? ar.right + rand : ar.left - rand - pw;
   left = Math.max(rand, Math.min(left, vw - pw - rand));
 
-  const oeffnetOben = r.top > vh * 0.6;
-  let top = oeffnetOben ? r.top - ph - rand : r.bottom + rand;
+  const platzOben = ar.top;
+  const platzUnten = vh - ar.bottom;
+  const oeffnetOben = platzUnten < ph + rand && platzOben > platzUnten;
+  let top = oeffnetOben ? ar.top - ph - rand : ar.bottom + rand;
   top = Math.max(rand, Math.min(top, vh - ph - rand));
 
   pop.style.left = `${left}px`;
