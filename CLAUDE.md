@@ -167,9 +167,8 @@ bir daha "bu klasör neydi" diye açılmasın.
 
 | Klasör / dosya | Ne | Durum |
 |---|---|---|
-| `ui-audit/` (235) · `mobile-audit/` (56) | Responsive/mobil denetim kanıt görselleri. `ui_audit_shots.py` · `capture_mobile*.py` üretir | REFERANS — yeniden üretilebilir. `mobile-audit/` ayrıca `mobil-ui` ajanının **protokol gereği** before/after klasörü |
-| `funktionen-shots/raw/` (31) | `assets/img/fn/`'in ham PNG kaynağı (1:1 eşleşir). ⚠️ PNG→WebP adımı hiçbir script'te belgeli değil | REFERANS |
-| `competitor-research/` (118) | Optica ekran arşivi — `archive/competitor-research-optica/` metinlerinin görsel eki | REFERANS — **TAŞIMA**, 40+ link kırılır |
+| ~~`ui-audit/` · `mobile-audit/`~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/denetim/`'a taşındı. Üretici script'ler (`ui_audit_shots.py`, `capture_mobile*.py`) ve `mobil-ui` ajanının protokol dosyası aynı commit'te yeni path'e güncellendi | Path değişti — `archive/denetim/ui-audit/` · `archive/denetim/mobile-audit/` |
+| ~~`competitor-research/`~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/recherche/`'a taşındı. `archive/competitor-research-optica/` içindeki 36 kırık atıf (zaten farklı makine kullanıcı adına yazılıydı) yeni path'e çekildi, `tools/tabellenkarte.mjs` SKIP_DIRS'ten temizlendi | Path değişti — `archive/recherche/competitor-research/` |
 | `onprem/` | (a) `supabase-docker/` = **upstream vendor kopyası**, bizim kodumuz değil (b) `schema/` = 2026-07-06 pg_dump (c) `poc-frontend-server.mjs` = Faz 0 | REFERANS — playbook Faz 2 girdisi. ⚠️ **Şema gerçeği `db/` altındadır**; `onprem/schema` Temmuz'da dondu (70 tablo) |
 | ~~kök `database_v*.sql` (39)~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/kod/`'a taşındı. Numaralar çakışıyordu (v28/v29/v31 ikişer kez, v13/v14 yok), DB'de 195 migration kayıtlı, çalışma zamanında hiçbiri okunmuyordu (db-ustasi + fonksiyon-ustasi doğruladı). Gerçek şema: `db/SCHEMA.sql` | Path değişti — atıf veriyorsan `archive/kod/` önekiyle |
 | ~~`supabase/migrations/`~~ | ✅ Zaten 04.09.2026'da `archive/supabase-migrations-vor-baseline/`'a taşınmış (14 dosya). ⛔ `supabase/functions/` (Fahrtenbuch Edge Functions, `dashboard.js:5745` vd.) CANLI, karıştırma | — |
