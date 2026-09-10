@@ -43,3 +43,10 @@ Praxura weekly meeting/
 # Python-Bytecode
 __pycache__/
 *.pyc
+.tmp.driveupload/
+
+# --- Konsolide edildi 09.09.2026: eskiden api-backend/.gitignore ve onprem/.gitignore
+# ayrı dosyalardı, buraya taşındı (tek yerden görünsün diye). onprem/supabase-docker/
+# altındaki .gitignore İSTİSNA — o upstream vendor kopyasının kendi dosyası, dokunulmadı.
+onprem/volumes/db/data/
+onprem/volumes/storage/

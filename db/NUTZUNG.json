@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-09-09",
+ "erzeugt": "2026-09-10",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-09-09)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-09)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-10)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 87,
@@ -33,12 +33,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -46,18 +47,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
-     "name": "ladeAbrechnungHistorie",
-     "file": "dashboard.js",
-     "start": 17842,
+     "name": "ladeAbrechnungVerlauf",
+     "file": "module/abrechnung-verlauf.js",
+     "start": 178,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -65,18 +67,26 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "mandantUndAbrechnung",
+     "file": "api-backend/billing/api/abrechnung.routes.js",
+     "start": 1243,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "openDasGuideModal",
      "file": "dashboard.js",
-     "start": 13274,
+     "start": 13220,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -84,20 +94,21 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
    "schreiber": [
     {
      "name": "downloadAbrechnungFile",
-     "file": "dashboard.js",
-     "start": 18136,
+     "file": "module/abrechnung-detail.js",
+     "start": 454,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -105,7 +116,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -115,13 +126,16 @@
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
     "api-backend/billing/api/statistik.routes.js",
-    "dashboard.js"
+    "dashboard.js",
+    "module/abrechnung-detail.js",
+    "module/abrechnung-verlauf.js"
    ],
    "module": [
     "abrechnung",
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -151,12 +165,47 @@
    "warum": "Geldeingang je Sammelabrechnung, tranchenweise. Bis dahin gab es `abrechnung.paid_at`",
    "seit": "09.09.2026 · `abrechnung_zeile_und_zahlung`",
    "ungeklaert": false,
-   "leser": [],
+   "leser": [
+    {
+     "name": "ladeAbrechnungVerlauf",
+     "file": "module/abrechnung-verlauf.js",
+     "start": 178,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    }
+   ],
    "schreiber": [],
-   "dateien": [],
-   "module": [],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "module/abrechnung-verlauf.js"
+   ],
+   "module": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
    "sqlTreffer": 11,
-   "codeStumm": true
+   "codeStumm": false
   },
   {
    "name": "abrechnung_zeile",
@@ -178,12 +227,47 @@
    "warum": "Was in EINER Datei tatsächlich an die Kasse ging — eingefroren. Vorher wurde die",
    "seit": "09.09.2026 · `abrechnung_zeile_und_zahlung`",
    "ungeklaert": false,
-   "leser": [],
+   "leser": [
+    {
+     "name": "ladeAbrechnungVerlauf",
+     "file": "module/abrechnung-verlauf.js",
+     "start": 178,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    }
+   ],
    "schreiber": [],
-   "dateien": [],
-   "module": [],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "module/abrechnung-verlauf.js"
+   ],
+   "module": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
    "sqlTreffer": 13,
-   "codeStumm": true
+   "codeStumm": false
   },
   {
    "name": "accommodations",
@@ -226,7 +310,7 @@
     {
      "name": "init",
      "file": "dashboard.js",
-     "start": 17072,
+     "start": 17018,
      "module": [],
      "uiPfad": []
     },
@@ -293,12 +377,13 @@
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 16247,
+     "start": 16193,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -306,13 +391,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAerzte",
      "file": "dashboard.js",
-     "start": 15812,
+     "start": 15758,
      "module": [
       "abrechnung",
       "anamnese",
@@ -320,6 +405,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "settings",
@@ -328,7 +414,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 12 modülden çağrılıyor"
+      "ortak yardımcı — 13 modülden çağrılıyor"
      ]
     }
    ],
@@ -336,7 +422,7 @@
     {
      "name": "deleteAerzte",
      "file": "dashboard.js",
-     "start": 15871,
+     "start": 15817,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -346,7 +432,7 @@
     {
      "name": "editAerzte",
      "file": "dashboard.js",
-     "start": 15880,
+     "start": 15826,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -378,6 +464,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "settings",
@@ -451,13 +538,34 @@
     {
      "name": "fillAnamneseForm",
      "file": "dashboard.js",
-     "start": 15286,
+     "start": 15232,
      "module": [
       "abrechnung",
       "anamnese",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "loadPatientDetailAnamnese",
+     "file": "dashboard.js",
+     "start": 8793,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -469,33 +577,15 @@
      ]
     },
     {
-     "name": "loadPatientDetailAnamnese",
-     "file": "dashboard.js",
-     "start": 8846,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3274,
+     "start": 3239,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -503,20 +593,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "printAnamnese",
      "file": "dashboard.js",
-     "start": 15398,
+     "start": 15344,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "printAnamneseInline",
      "file": "dashboard.js",
-     "start": 15346,
+     "start": 15292,
      "module": [],
      "uiPfad": []
     }
@@ -525,7 +615,7 @@
     {
      "name": "saveAnamnese",
      "file": "dashboard.js",
-     "start": 15470,
+     "start": 15416,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -544,6 +634,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -670,13 +761,36 @@
     {
      "name": "loadB2B",
      "file": "dashboard.js",
-     "start": 11716,
+     "start": 11662,
      "module": [
       "abrechnung",
       "b2b",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10787,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -685,27 +799,6 @@
      ],
      "uiPfad": [
       "ortak yardımcı — 10 modülden çağrılıyor"
-     ]
-    }
-   ],
-   "schreiber": [
-    {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 10841,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -716,13 +809,14 @@
     {
      "name": "renderB2B",
      "file": "dashboard.js",
-     "start": 11723,
+     "start": 11669,
      "module": [
       "abrechnung",
       "b2b",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -730,7 +824,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -747,6 +841,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -780,12 +875,13 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8172,
+     "start": 8119,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -793,7 +889,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -806,7 +902,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 7252,
+     "start": 7199,
      "module": [],
      "uiPfad": []
     }
@@ -825,6 +921,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -864,6 +961,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -871,7 +969,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -904,6 +1002,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -1026,6 +1125,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1033,13 +1133,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 3250,
+     "start": 3215,
      "module": [],
      "uiPfad": []
     },
@@ -1090,12 +1190,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1103,7 +1204,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1115,6 +1216,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1122,7 +1224,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1141,6 +1243,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1148,7 +1251,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1167,6 +1270,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1174,7 +1278,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1187,7 +1291,7 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2577,
+     "start": 2542,
      "module": [],
      "uiPfad": []
     },
@@ -1207,6 +1311,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1214,7 +1319,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1226,6 +1331,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1233,7 +1339,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1245,6 +1351,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1252,7 +1359,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1308,6 +1415,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1315,7 +1423,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1327,6 +1435,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1334,7 +1443,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1346,6 +1455,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1353,18 +1463,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1986,
+     "start": 1951,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1372,18 +1483,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 11404,
+     "start": 11350,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1391,18 +1503,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 7996,
+     "start": 7943,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1410,18 +1523,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1744,
+     "start": 1709,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1429,7 +1543,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1442,70 +1556,13 @@
     {
      "name": "loadUeberblickNoShows",
      "file": "dashboard.js",
-     "start": 20607,
+     "start": 20418,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "nurZiffern",
-     "file": "module/termin-heute.js",
-     "start": 37,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "nurZiffern",
-     "file": "module/termin-patient-bezug.js",
-     "start": 52,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "podGeplanteHpnr",
-     "file": "module/podologie-abrechnung.js",
-     "start": 267,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "podologie-billing",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1517,6 +1574,67 @@
      ]
     },
     {
+     "name": "nurZiffern",
+     "file": "module/termin-heute.js",
+     "start": 37,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "nurZiffern",
+     "file": "module/termin-patient-bezug.js",
+     "start": 52,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "podGeplanteHpnr",
+     "file": "module/podologie-abrechnung.js",
+     "start": 267,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "renderBookingCalendar",
      "file": "booking.js",
      "start": 324,
@@ -1525,6 +1643,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1532,18 +1651,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2731,
+     "start": 2696,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1551,25 +1671,26 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1588,
+     "start": 1553,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1668,
+     "start": 1633,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1577,7 +1698,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1589,6 +1710,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1596,18 +1718,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverviewMonthly",
      "file": "dashboard.js",
-     "start": 14617,
+     "start": 14563,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1615,18 +1738,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverviewWeekly",
      "file": "dashboard.js",
-     "start": 14522,
+     "start": 14468,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1634,7 +1758,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1646,6 +1770,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1653,7 +1778,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1672,6 +1797,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1679,7 +1805,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1700,6 +1826,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1707,7 +1834,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1736,12 +1863,13 @@
     {
      "name": "doMoveBooking",
      "file": "dashboard.js",
-     "start": 5423,
+     "start": 5388,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1749,7 +1877,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1758,7 +1886,7 @@
     {
      "name": "handlePatientNichtErschienen",
      "file": "dashboard.js",
-     "start": 4549,
+     "start": 4514,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1768,12 +1896,13 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3958,
+     "start": 3923,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1781,7 +1910,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -1790,7 +1919,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4459,
+     "start": 4424,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1800,12 +1929,13 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4956,
+     "start": 4921,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1813,7 +1943,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -1832,12 +1962,13 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 4840,
+     "start": 4805,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1845,7 +1976,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1860,6 +1991,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1867,7 +1999,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1876,7 +2008,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 4321,
+     "start": 4286,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1886,12 +2018,13 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3274,
+     "start": 3239,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1899,7 +2032,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1908,7 +2041,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4365,
+     "start": 4330,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1918,7 +2051,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4238,
+     "start": 4203,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1934,6 +2067,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -1941,7 +2075,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -2054,12 +2188,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2067,7 +2202,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -2077,12 +2212,13 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 11464,
+     "start": 11410,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2090,7 +2226,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -2100,12 +2236,13 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 10210,
+     "start": 10156,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2113,7 +2250,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -2130,6 +2267,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -2160,7 +2298,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 16583,
+     "start": 16529,
      "module": [],
      "uiPfad": []
     },
@@ -2194,6 +2332,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2201,7 +2340,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -2227,7 +2366,7 @@
     {
      "name": "deleteBusiness",
      "file": "dashboard.js",
-     "start": 16930,
+     "start": 16876,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2237,12 +2376,13 @@
     {
      "name": "ensureBusinessCoords",
      "file": "dashboard.js",
-     "start": 20864,
+     "start": 20675,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2250,7 +2390,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -2259,12 +2399,13 @@
     {
      "name": "toggleStandortDay",
      "file": "dashboard.js",
-     "start": 10186,
+     "start": 10132,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2272,7 +2413,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -2281,7 +2422,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 16847,
+     "start": 16793,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2305,6 +2446,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -2340,12 +2482,13 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11173,
+     "start": 11119,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2353,7 +2496,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -2361,12 +2504,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2374,7 +2518,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -2393,12 +2537,13 @@
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 12277,
+     "start": 12223,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "settings",
@@ -2407,7 +2552,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -2425,6 +2570,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "settings",
@@ -2524,6 +2670,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2531,7 +2678,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -2543,6 +2690,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2550,18 +2698,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 10303,
+     "start": 10249,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2569,7 +2718,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -2577,7 +2726,7 @@
     {
      "name": "saveSpecialDays",
      "file": "dashboard.js",
-     "start": 10408,
+     "start": 10354,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2595,6 +2744,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -2657,7 +2807,7 @@
     {
      "name": "loadDataSharing",
      "file": "dashboard.js",
-     "start": 17051,
+     "start": 16997,
      "module": [],
      "uiPfad": []
     }
@@ -2666,7 +2816,7 @@
     {
      "name": "saveDataSharing",
      "file": "dashboard.js",
-     "start": 16693,
+     "start": 16639,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2726,6 +2876,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "podologie-billing",
       "rechnungen",
       "services",
@@ -2734,7 +2885,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
@@ -2746,6 +2897,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2753,7 +2905,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -2765,6 +2917,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2772,7 +2925,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -2799,6 +2952,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "podologie-billing",
     "rechnungen",
     "services",
@@ -2828,12 +2982,13 @@
     {
      "name": "loadVorlagenPanel",
      "file": "dashboard.js",
-     "start": 12567,
+     "start": 12513,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2842,18 +2997,19 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "openVorlagenEdit",
      "file": "dashboard.js",
-     "start": 13008,
+     "start": 12954,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2862,7 +3018,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     }
    ],
@@ -2870,12 +3026,13 @@
     {
      "name": "_enterAnsichtEditMode",
      "file": "dashboard.js",
-     "start": 12926,
+     "start": 12872,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2884,7 +3041,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -2893,12 +3050,13 @@
     {
      "name": "commit",
      "file": "dashboard.js",
-     "start": 13158,
+     "start": 13104,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2907,7 +3065,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -2916,12 +3074,13 @@
     {
      "name": "deleteVorlage",
      "file": "dashboard.js",
-     "start": 13126,
+     "start": 13072,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2930,7 +3089,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -2939,12 +3098,13 @@
     {
      "name": "duplicateVorlage",
      "file": "dashboard.js",
-     "start": 13135,
+     "start": 13081,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2953,7 +3113,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -2962,12 +3122,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -2975,7 +3136,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -2986,12 +3147,13 @@
     {
      "name": "openVorlagenAnsicht",
      "file": "dashboard.js",
-     "start": 12836,
+     "start": 12782,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3000,7 +3162,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -3009,12 +3171,13 @@
     {
      "name": "saveVorlage",
      "file": "dashboard.js",
-     "start": 13096,
+     "start": 13042,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3022,7 +3185,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert",
@@ -3032,12 +3195,13 @@
     {
      "name": "seedDefaultVorlagen",
      "file": "dashboard.js",
-     "start": 13194,
+     "start": 13140,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3045,7 +3209,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -3054,12 +3218,13 @@
     {
      "name": "seedMissingVorlagen",
      "file": "dashboard.js",
-     "start": 13200,
+     "start": 13146,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3068,7 +3233,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -3077,12 +3242,13 @@
     {
      "name": "startVorlagenInlineRename",
      "file": "dashboard.js",
-     "start": 13151,
+     "start": 13097,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3091,7 +3257,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -3108,6 +3274,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -3158,12 +3325,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3171,7 +3339,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -3180,12 +3348,13 @@
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 8910,
+     "start": 8857,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3193,7 +3362,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -3209,6 +3378,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -3239,7 +3409,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 16583,
+     "start": 16529,
      "module": [],
      "uiPfad": []
     },
@@ -3260,12 +3430,13 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 10977,
+     "start": 10923,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3273,18 +3444,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10511,
+     "start": 10457,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3292,7 +3464,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -3300,12 +3472,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3313,7 +3486,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -3323,12 +3496,13 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 11019,
+     "start": 10965,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3336,7 +3510,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -3346,12 +3520,13 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10872,
+     "start": 10818,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3359,7 +3534,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -3368,12 +3543,13 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11120,
+     "start": 11066,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3381,7 +3557,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -3399,6 +3575,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -3427,12 +3604,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3440,18 +3618,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 10977,
+     "start": 10923,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3459,18 +3638,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 11019,
+     "start": 10965,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3478,18 +3658,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10872,
+     "start": 10818,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3497,7 +3678,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -3511,6 +3692,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -3537,12 +3719,13 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 11086,
+     "start": 11032,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3550,7 +3733,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -3558,12 +3741,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3571,7 +3755,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -3581,12 +3765,13 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11120,
+     "start": 11066,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3594,7 +3779,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -3610,6 +3795,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -3644,6 +3830,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3651,13 +3838,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingFromRxPreset",
      "file": "dashboard.js",
-     "start": 17369,
+     "start": 17315,
      "module": [],
      "uiPfad": []
     }
@@ -3666,12 +3853,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3679,7 +3867,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -3689,12 +3877,13 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11556,
+     "start": 11502,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3702,7 +3891,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -3743,6 +3932,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -3775,32 +3965,13 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1986,
+     "start": 1951,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "loadFbFahrten",
-     "file": "dashboard.js",
-     "start": 18432,
-     "module": [
-      "abrechnung",
-      "fahrtenbuch",
-      "fussstatus",
-      "hours",
-      "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3810,13 +3981,34 @@
      "uiPfad": [
       "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "loadFbFahrten",
+     "file": "dashboard.js",
+     "start": 18262,
+     "module": [
+      "abrechnung",
+      "fahrtenbuch",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
     }
    ],
    "schreiber": [
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4365,
+     "start": 4330,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3826,7 +4018,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4238,
+     "start": 4203,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3836,13 +4028,14 @@
     {
      "name": "toLocal",
      "file": "dashboard.js",
-     "start": 18517,
+     "start": 18347,
      "module": [
       "abrechnung",
       "fahrtenbuch",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3850,7 +4043,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -3867,6 +4060,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -3897,13 +4091,14 @@
     {
      "name": "loadFeedbacks",
      "file": "dashboard.js",
-     "start": 14791,
+     "start": 14737,
      "module": [
       "abrechnung",
       "feedback",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3911,7 +4106,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     }
    ],
@@ -3926,6 +4121,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -3976,12 +4172,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -3989,18 +4186,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 11086,
+     "start": 11032,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4008,18 +4206,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11120,
+     "start": 11066,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4027,7 +4226,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -4040,6 +4239,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -4240,12 +4440,13 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1986,
+     "start": 1951,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4253,18 +4454,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailRechnungen",
      "file": "dashboard.js",
-     "start": 8970,
+     "start": 8917,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4272,18 +4474,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadRechnungen",
      "file": "dashboard.js",
-     "start": 14863,
+     "start": 14809,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4291,7 +4494,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -4299,7 +4502,7 @@
     {
      "name": "frageZahlungsstatus",
      "file": "module/rechnung-zahlung.js",
-     "start": 77,
+     "start": 87,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4318,6 +4521,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "notizen",
       "podologie-billing",
       "qvSaveBtn",
@@ -4330,7 +4534,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 27 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -4339,7 +4543,7 @@
     {
      "name": "markiereRechnungBezahlt",
      "file": "module/rechnung-zahlung.js",
-     "start": 58,
+     "start": 68,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4358,6 +4562,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "notizen",
       "podologie-billing",
       "qvSaveBtn",
@@ -4370,7 +4575,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 27 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -4379,7 +4584,7 @@
     {
      "name": "saveInvoice",
      "file": "dashboard.js",
-     "start": 15035,
+     "start": 14981,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4413,6 +4618,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "notizen",
     "podologie-billing",
     "qvSaveBtn",
@@ -4474,7 +4680,7 @@
     {
      "name": "baueBegleitzettel",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 161,
+     "start": 162,
      "module": [],
      "uiPfad": []
     },
@@ -4486,14 +4692,22 @@
      "uiPfad": []
     },
     {
-     "name": "ladeAbrechnungHistorie",
+     "name": "ladeAnnahmestelle",
+     "file": "api-backend/billing/kostentraeger/annahmestelle.js",
+     "start": 128,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "ladeKostentraegerNamen",
      "file": "dashboard.js",
-     "start": 17842,
+     "start": 17791,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4501,15 +4715,8 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
-    },
-    {
-     "name": "ladeAnnahmestelle",
-     "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-     "start": 128,
-     "module": [],
-     "uiPfad": []
     }
    ],
    "schreiber": [],
@@ -4524,6 +4731,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -4586,6 +4794,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4593,18 +4802,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadKkList",
      "file": "dashboard.js",
-     "start": 17653,
+     "start": 17599,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4612,7 +4822,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -4635,6 +4845,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -4679,12 +4890,13 @@
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 16247,
+     "start": 16193,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4692,7 +4904,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -4704,6 +4916,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4711,18 +4924,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4730,18 +4944,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3958,
+     "start": 3923,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4749,25 +4964,26 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4459,
+     "start": 4424,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 5167,
+     "start": 5132,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4775,18 +4991,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4956,
+     "start": 4921,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4794,18 +5011,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 3754,
+     "start": 3719,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4813,13 +5031,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 19803,
+     "start": 19614,
      "module": [],
      "uiPfad": []
     },
@@ -4832,6 +5050,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4839,7 +5058,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -4851,6 +5070,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4858,7 +5078,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -4872,6 +5092,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "settings",
@@ -4880,18 +5101,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 12 modülden çağrılıyor"
+      "ortak yardımcı — 13 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1986,
+     "start": 1951,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4899,19 +5121,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAnamnese",
      "file": "dashboard.js",
-     "start": 15136,
+     "start": 15082,
      "module": [
       "abrechnung",
       "anamnese",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4919,19 +5142,40 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadB2C",
      "file": "dashboard.js",
-     "start": 11806,
+     "start": 11752,
      "module": [
       "abrechnung",
       "b2c",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "loadBkLeads",
+     "file": "dashboard.js",
+     "start": 5142,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4943,33 +5187,15 @@
      ]
     },
     {
-     "name": "loadBkLeads",
-     "file": "dashboard.js",
-     "start": 5177,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "loadInvPatients",
      "file": "dashboard.js",
-     "start": 14891,
+     "start": 14837,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4977,18 +5203,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 7996,
+     "start": 7943,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -4996,18 +5223,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 13985,
+     "start": 13931,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "notizen",
       "rechnungen",
       "services",
@@ -5016,18 +5244,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 8910,
+     "start": 8857,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5035,18 +5264,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUeberblickBirthdays",
      "file": "dashboard.js",
-     "start": 20559,
+     "start": 20370,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5054,7 +5284,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5066,6 +5296,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5073,7 +5304,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5085,6 +5316,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5092,18 +5324,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3274,
+     "start": 3239,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5111,18 +5344,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 5079,
+     "start": 5044,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5130,7 +5364,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5142,6 +5376,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5149,7 +5384,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5161,6 +5396,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5168,18 +5404,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openRezeptModal",
      "file": "dashboard.js",
-     "start": 16312,
+     "start": 16258,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5187,7 +5424,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5200,12 +5437,13 @@
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 4057,
+     "start": 4022,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5213,32 +5451,33 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4365,
+     "start": 4330,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4238,
+     "start": 4203,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 18079,
+     "start": 17927,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5246,7 +5485,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5261,7 +5500,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4589,
+     "start": 4554,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5271,7 +5510,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 19516,
+     "start": 19327,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5281,7 +5520,7 @@
     {
      "name": "maybeOfferAppointmentConfirmEmail",
      "file": "dashboard.js",
-     "start": 7507,
+     "start": 7454,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5324,6 +5563,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "notizen",
     "rechnungen",
     "services",
@@ -5383,12 +5623,13 @@
     {
      "name": "refreshMessreihen",
      "file": "dashboard.js",
-     "start": 8635,
+     "start": 8582,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5396,7 +5637,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -5405,12 +5646,13 @@
     {
      "name": "saveMessung",
      "file": "dashboard.js",
-     "start": 8759,
+     "start": 8706,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5418,7 +5660,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5433,6 +5675,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -5461,12 +5704,13 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 951,
+     "start": 916,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5474,7 +5718,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -5509,6 +5753,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -5571,6 +5816,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5578,7 +5824,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5590,6 +5836,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5597,7 +5844,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5609,6 +5856,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5616,7 +5864,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5628,6 +5876,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5635,7 +5884,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5647,6 +5896,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5654,7 +5904,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -5668,6 +5918,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5675,7 +5926,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -5690,6 +5941,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5697,7 +5949,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5714,6 +5966,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -5752,6 +6005,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5759,7 +6013,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5771,6 +6025,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5778,7 +6033,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -5792,6 +6047,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5799,7 +6055,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5814,6 +6070,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5821,7 +6078,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5836,6 +6093,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -5864,12 +6122,13 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1986,
+     "start": 1951,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5877,18 +6136,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 13985,
+     "start": 13931,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "notizen",
       "rechnungen",
       "services",
@@ -5897,38 +6157,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailNotes",
      "file": "dashboard.js",
-     "start": 8821,
+     "start": 8768,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "loadPatientNotes",
-     "file": "dashboard.js",
-     "start": 14049,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "notizen",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5940,14 +6181,16 @@
      ]
     },
     {
-     "name": "openBookingActionModal",
+     "name": "loadPatientNotes",
      "file": "dashboard.js",
-     "start": 3274,
+     "start": 13995,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
+      "notizen",
       "rechnungen",
       "services",
       "team",
@@ -5955,7 +6198,27 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "openBookingActionModal",
+     "file": "dashboard.js",
+     "start": 3239,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5967,6 +6230,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -5974,7 +6238,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -5988,6 +6252,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "notizen",
     "rechnungen",
     "services",
@@ -6110,6 +6375,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6117,7 +6383,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6129,6 +6395,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6136,7 +6403,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6148,6 +6415,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6155,7 +6423,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6167,6 +6435,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6174,7 +6443,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6186,6 +6455,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6193,7 +6463,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6212,6 +6482,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "podologie-billing",
       "rechnungen",
       "services",
@@ -6220,7 +6491,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
@@ -6251,6 +6522,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "podologie-billing",
       "rechnungen",
       "services",
@@ -6259,7 +6531,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -6292,6 +6564,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "podologie-billing",
     "rechnungen",
     "services",
@@ -6359,12 +6632,13 @@
     {
      "name": "decorateBookingTitleWithSession",
      "file": "dashboard.js",
-     "start": 7402,
+     "start": 7349,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6372,7 +6646,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6384,6 +6658,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6391,18 +6666,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadCalRpUnverga",
      "file": "dashboard.js",
-     "start": 3905,
+     "start": 3870,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6410,18 +6686,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6281,
+     "start": 6246,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6429,7 +6706,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6441,6 +6718,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6448,7 +6726,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6481,6 +6759,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6488,7 +6767,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6509,6 +6788,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6516,7 +6796,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -6525,7 +6805,7 @@
     {
      "name": "handlePatientNichtErschienen",
      "file": "dashboard.js",
-     "start": 4549,
+     "start": 4514,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6535,12 +6815,13 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3958,
+     "start": 3923,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6548,7 +6829,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -6567,7 +6848,7 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7415,
+     "start": 7362,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6578,7 +6859,7 @@
     {
      "name": "markPrescriptionSession",
      "file": "dashboard.js",
-     "start": 7382,
+     "start": 7329,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6604,6 +6885,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -6667,6 +6949,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6674,7 +6957,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6686,6 +6969,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6693,13 +6977,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "frageZahlungsstatus",
      "file": "module/rechnung-zahlung.js",
-     "start": 77,
+     "start": 87,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6718,6 +7002,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "notizen",
       "podologie-billing",
       "qvSaveBtn",
@@ -6730,18 +7015,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 27 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     },
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 5167,
+     "start": 5132,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6749,7 +7035,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6768,6 +7054,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6775,7 +7062,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6787,6 +7074,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6794,7 +7082,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6806,6 +7094,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6813,7 +7102,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6827,6 +7116,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "settings",
@@ -6835,26 +7125,47 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 12 modülden çağrılıyor"
+      "ortak yardımcı — 13 modülden çağrılıyor"
      ]
     },
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7415,
+     "start": 7362,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadAnamneseRxContext",
      "file": "dashboard.js",
-     "start": 15231,
+     "start": 15177,
      "module": [
       "abrechnung",
       "anamnese",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "loadBkVerordnungen",
+     "file": "dashboard.js",
+     "start": 5199,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6866,40 +7177,22 @@
      ]
     },
     {
-     "name": "loadBkVerordnungen",
-     "file": "dashboard.js",
-     "start": 5234,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "loadCalRpRezeptInfo",
      "file": "dashboard.js",
-     "start": 3868,
+     "start": 3833,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8172,
+     "start": 8119,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6907,18 +7200,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 20392,
+     "start": 20203,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6926,25 +7220,26 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPhysioRezKpis",
      "file": "dashboard.js",
-     "start": 2285,
+     "start": 2250,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6281,
+     "start": 6246,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6952,18 +7247,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUeberblickDeadlines",
      "file": "dashboard.js",
-     "start": 20494,
+     "start": 20305,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6971,7 +7267,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -6984,12 +7280,13 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3274,
+     "start": 3239,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -6997,7 +7294,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7009,6 +7306,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7016,7 +7314,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7036,12 +7334,13 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 18079,
+     "start": 17927,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7049,13 +7348,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "therapeutName",
      "file": "dashboard.js",
-     "start": 7785,
+     "start": 7732,
      "module": [],
      "uiPfad": []
     },
@@ -7068,6 +7367,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7075,7 +7375,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7094,6 +7394,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7101,7 +7402,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7113,6 +7414,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7120,7 +7422,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -7134,6 +7436,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7141,7 +7444,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7160,12 +7463,13 @@
     {
      "name": "flipAbrechnungStatus",
      "file": "dashboard.js",
-     "start": 8489,
+     "start": 8436,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7173,7 +7477,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7182,12 +7486,13 @@
     {
      "name": "kassiereZuzahlung",
      "file": "dashboard.js",
-     "start": 7177,
+     "start": 7124,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7195,7 +7500,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7212,28 +7517,6 @@
      ]
     },
     {
-     "name": "renderAbrechnungHistory",
-     "file": "dashboard.js",
-     "start": 17900,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ],
-     "ops": [
-      "update"
-     ]
-    },
-    {
      "name": "speichereEinheiten",
      "file": "module/verordnung-einheiten.js",
      "start": 126,
@@ -7242,6 +7525,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7249,7 +7533,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7258,7 +7542,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 7252,
+     "start": 7199,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7268,13 +7552,14 @@
     {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 18941,
+     "start": 18771,
      "module": [
       "abrechnung",
       "belegliste",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7282,7 +7567,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7345,6 +7630,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "notizen",
     "podologie-billing",
     "qvSaveBtn",
@@ -7401,7 +7687,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4589,
+     "start": 4554,
      "module": [],
      "uiPfad": []
     },
@@ -7421,6 +7707,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7428,7 +7715,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7440,6 +7727,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7447,13 +7735,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 872,
+     "start": 837,
      "module": [],
      "uiPfad": []
     },
@@ -7467,12 +7755,13 @@
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 10721,
+     "start": 10667,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7480,19 +7769,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 18372,
+     "start": 18202,
      "module": [
       "abrechnung",
       "fahrtenbuch",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7500,19 +7790,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 18432,
+     "start": 18262,
      "module": [
       "abrechnung",
       "fahrtenbuch",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7520,19 +7811,40 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 18754,
+     "start": 18584,
      "module": [
       "abrechnung",
       "fahrtenbuch",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "loadHoursPanel",
+     "file": "dashboard.js",
+     "start": 10047,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7544,33 +7856,15 @@
      ]
     },
     {
-     "name": "loadHoursPanel",
-     "file": "dashboard.js",
-     "start": 10101,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "loadPatientDetailAnamnese",
      "file": "dashboard.js",
-     "start": 8846,
+     "start": 8793,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7578,25 +7872,26 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPraxisProfile",
      "file": "api-backend/billing/api/ausfall.routes.js",
-     "start": 48,
+     "start": 49,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10511,
+     "start": 10457,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7604,7 +7899,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7617,12 +7912,13 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 20633,
+     "start": 20444,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7630,13 +7926,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "mandantUndAbrechnung",
+     "file": "api-backend/billing/api/abrechnung.routes.js",
+     "start": 1243,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 4622,
+     "start": 4587,
      "module": [],
      "uiPfad": []
     },
@@ -7649,6 +7952,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7656,7 +7960,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7669,12 +7973,13 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10872,
+     "start": 10818,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7682,7 +7987,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7695,12 +8000,13 @@
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 1019,
+     "start": 984,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7708,7 +8014,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7721,12 +8027,13 @@
     {
      "name": "resolveAuth",
      "file": "api-backend/billing/api/ausfall.routes.js",
-     "start": 26,
+     "start": 27,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7734,7 +8041,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7746,6 +8053,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7753,7 +8061,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7765,6 +8073,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7772,7 +8081,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7784,6 +8093,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7791,7 +8101,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7803,6 +8113,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7810,7 +8121,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7822,6 +8133,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7829,7 +8141,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7841,6 +8153,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7848,7 +8161,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -7868,6 +8181,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7875,7 +8189,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
@@ -7940,12 +8254,13 @@
     {
      "name": "ensureBookingSlug",
      "file": "dashboard.js",
-     "start": 13552,
+     "start": 13498,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7953,7 +8268,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7962,7 +8277,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 5725,
+     "start": 5690,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7972,12 +8287,13 @@
     {
      "name": "ensureCompanyCode",
      "file": "dashboard.js",
-     "start": 13535,
+     "start": 13481,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -7985,7 +8301,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7994,12 +8310,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8007,7 +8324,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -8036,13 +8353,14 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 21376,
+     "start": 21187,
      "module": [
       "abrechnung",
       "anfragen",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8050,7 +8368,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -8069,12 +8387,13 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11173,
+     "start": 11119,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8082,7 +8401,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -8091,7 +8410,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 2348,
+     "start": 2313,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8121,7 +8440,7 @@
     {
      "name": "saveEmployee",
      "file": "dashboard.js",
-     "start": 14244,
+     "start": 14190,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8198,6 +8517,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -8274,13 +8594,36 @@
     {
      "name": "loadDoctors",
      "file": "dashboard.js",
-     "start": 13615,
+     "start": 13561,
      "module": [
       "abrechnung",
       "doctors",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10787,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8289,27 +8632,6 @@
      ],
      "uiPfad": [
       "ortak yardımcı — 10 modülden çağrılıyor"
-     ]
-    }
-   ],
-   "schreiber": [
-    {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 10841,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -8325,6 +8647,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -8382,12 +8705,13 @@
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 3939,
+     "start": 3904,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8395,18 +8719,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8414,7 +8739,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -8427,19 +8752,20 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2577,
+     "start": 2542,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11556,
+     "start": 11502,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8447,7 +8773,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -8460,12 +8786,13 @@
     {
      "name": "loadServices",
      "file": "dashboard.js",
-     "start": 9465,
+     "start": 9412,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8473,7 +8800,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -8485,6 +8812,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8492,7 +8820,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -8504,6 +8832,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8511,7 +8840,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -8524,6 +8853,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8531,7 +8861,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
@@ -8544,12 +8874,13 @@
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 5520,
+     "start": 5485,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8557,7 +8888,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -8565,12 +8896,13 @@
     {
      "name": "autoSeedGkvServices",
      "file": "dashboard.js",
-     "start": 9486,
+     "start": 9432,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8578,7 +8910,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -8587,7 +8919,7 @@
     {
      "name": "ensureBlankoBonusServices",
      "file": "dashboard.js",
-     "start": 7604,
+     "start": 7551,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8609,12 +8941,13 @@
     {
      "name": "migratePodologieLegacyServices",
      "file": "dashboard.js",
-     "start": 9682,
+     "start": 9628,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8622,7 +8955,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -8643,12 +8976,13 @@
     {
      "name": "renderServices",
      "file": "dashboard.js",
-     "start": 9869,
+     "start": 9815,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8656,7 +8990,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -8677,7 +9011,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 16847,
+     "start": 16793,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -8704,6 +9038,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -8758,28 +9093,9 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
-      "team",
-      "ueberblick",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "loadSettings",
-     "file": "dashboard.js",
-     "start": 12277,
-     "module": [
-      "abrechnung",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "rechnungen",
-      "services",
-      "settings",
       "team",
       "ueberblick",
       "verordnungen"
@@ -8789,9 +9105,30 @@
      ]
     },
     {
+     "name": "loadSettings",
+     "file": "dashboard.js",
+     "start": 12223,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 1407,
+     "start": 1372,
      "module": [],
      "uiPfad": []
     }
@@ -8800,12 +9137,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8813,7 +9151,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -8830,6 +9168,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "settings",
@@ -8865,6 +9204,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8872,18 +9212,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11556,
+     "start": 11502,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8891,7 +9232,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -8899,12 +9240,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8912,7 +9254,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -8922,12 +9264,13 @@
     {
      "name": "loadEmpCertificates",
      "file": "dashboard.js",
-     "start": 11642,
+     "start": 11588,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -8935,7 +9278,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -8953,6 +9296,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -9004,12 +9348,13 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 11404,
+     "start": 11350,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9017,18 +9362,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 10721,
+     "start": 10667,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9036,18 +9382,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 20633,
+     "start": 20444,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9055,18 +9402,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUrlaubListe",
      "file": "dashboard.js",
-     "start": 10822,
+     "start": 10768,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9074,18 +9422,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2731,
+     "start": 2696,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9093,7 +9442,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -9101,12 +9450,13 @@
     {
      "name": "deleteEmpTimeOff",
      "file": "dashboard.js",
-     "start": 10777,
+     "start": 10723,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9114,7 +9464,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -9123,12 +9473,13 @@
     {
      "name": "deleteUrlaub",
      "file": "dashboard.js",
-     "start": 10851,
+     "start": 10797,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9136,7 +9487,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -9145,12 +9496,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9158,7 +9510,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -9168,12 +9520,13 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10511,
+     "start": 10457,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9181,7 +9534,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -9190,12 +9543,13 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11173,
+     "start": 11119,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9203,7 +9557,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -9212,7 +9566,7 @@
     {
      "name": "saveUrlaub",
      "file": "dashboard.js",
-     "start": 10793,
+     "start": 10739,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9230,6 +9584,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -9300,12 +9655,13 @@
     {
      "name": "loadPatientDetailUeberweisung",
      "file": "dashboard.js",
-     "start": 8948,
+     "start": 8895,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9313,7 +9669,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -9326,6 +9682,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -9374,14 +9731,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 16583,
+     "start": 16529,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "bootScheduleViewToggle",
      "file": "dashboard.js",
-     "start": 14391,
+     "start": 14337,
      "module": [],
      "uiPfad": []
     }
@@ -9390,12 +9747,13 @@
     {
      "name": "saveUserPref",
      "file": "dashboard.js",
-     "start": 14470,
+     "start": 14416,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9403,7 +9761,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -9412,7 +9770,7 @@
     {
      "name": "switchBusiness",
      "file": "dashboard.js",
-     "start": 17009,
+     "start": 16955,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9430,6 +9788,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -9459,20 +9818,21 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 4166,
+     "start": 4131,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "q",
      "file": "dashboard.js",
-     "start": 18590,
+     "start": 18420,
      "module": [
       "abrechnung",
       "fahrtenbuch",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9480,20 +9840,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4365,
+     "start": 4330,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4238,
+     "start": 4203,
      "module": [],
      "uiPfad": []
     }
@@ -9502,13 +9862,14 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 18616,
+     "start": 18446,
      "module": [
       "abrechnung",
       "fahrtenbuch",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9516,7 +9877,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -9525,7 +9886,7 @@
     {
      "name": "saveQuickVehicleHandler",
      "file": "dashboard.js",
-     "start": 4215,
+     "start": 4180,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9535,7 +9896,7 @@
     {
      "name": "saveVehicleEdit",
      "file": "dashboard.js",
-     "start": 18719,
+     "start": 18549,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9553,6 +9914,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -9588,12 +9950,13 @@
     {
      "name": "reportSidebarVisibility",
      "file": "dashboard.js",
-     "start": 971,
+     "start": 936,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9601,7 +9964,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -9627,6 +9990,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -9657,12 +10021,13 @@
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 19681,
+     "start": 19492,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9671,7 +10036,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 10 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     }
    ],
@@ -9679,7 +10044,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 19833,
+     "start": 19644,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9699,6 +10064,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -9742,12 +10108,13 @@
     {
      "name": "getEmployeeWorkingHours",
      "file": "dashboard.js",
-     "start": 2497,
+     "start": 2462,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9755,7 +10122,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -9788,6 +10155,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9795,25 +10163,26 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1588,
+     "start": 1553,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1668,
+     "start": 1633,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9821,18 +10190,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 10210,
+     "start": 10156,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9840,18 +10210,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 10303,
+     "start": 10249,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9859,7 +10230,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -9878,12 +10249,13 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10841,
+     "start": 10787,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9891,7 +10263,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -9900,12 +10272,13 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 11464,
+     "start": 11410,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9913,7 +10286,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -9935,6 +10308,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -9963,12 +10337,13 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 18079,
+     "start": 17927,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -9976,7 +10351,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -9990,6 +10365,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -10020,12 +10396,13 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8172,
+     "start": 8119,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -10033,18 +10410,19 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3274,
+     "start": 3239,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -10052,7 +10430,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -10066,6 +10444,7 @@
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -10073,7 +10452,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -10083,12 +10462,13 @@
     {
      "name": "wireBefreiungCard",
      "file": "dashboard.js",
-     "start": 8562,
+     "start": 8509,
      "module": [
       "abrechnung",
       "fussstatus",
       "hours",
       "kunden",
+      "mahnwesen",
       "rechnungen",
       "services",
       "team",
@@ -10096,7 +10476,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 9 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -10112,6 +10492,7 @@
     "fussstatus",
     "hours",
     "kunden",
+    "mahnwesen",
     "rechnungen",
     "services",
     "team",
@@ -10185,16 +10566,6 @@
  "ungeklaert": [],
  "registerVerwaist": [],
  "codeStumm": [
-  {
-   "name": "abrechnung_zahlung",
-   "sql": 11,
-   "status": "aktiv"
-  },
-  {
-   "name": "abrechnung_zeile",
-   "sql": 13,
-   "status": "aktiv"
-  },
   {
    "name": "accommodations",
    "sql": 2,

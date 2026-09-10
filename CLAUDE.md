@@ -84,7 +84,7 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │   └── config.js · contact.js · demo-booking.js · dsgvo.js · apify/search.js
 │
 ├── api-backend/                   ★ VPS Express backend (Docker container)
-│   ├── server.js                  43 doğrudan route + 32 alt-router = 75 (aşağıya bak)
+│   ├── server.js                  doğrudan route + `billing/api/*`/`ai/router.js` alt-router'ları (aşağıya bak)
 │   ├── instrument.js              Sentry init
 │   ├── ai/                        router.js · azureClient.js · pii-mask.js · audit.js
 │   │   ├── validators/            Rezept doğrulama (blankoRules, validate)
@@ -153,7 +153,10 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 ├── komponenten.html               Elle bakımlı bileşen envanteri (dark dev sayfası).
 │                                  ⚠️ Elle yazıldığı için DRIFT EDER — iddialarını koda
 │                                  karşı doğrula, kaynak funktionen/INDEX.json
-└── archive/                       39 eskimiş rapor — güncel bilgi için BAKMA
+└── archive/                       Eskimiş rapor/kod/medya — güncel bilgi için BAKMA.
+                                   09.09.2026'dan beri alt klasörlü: kod/ · medya/ ·
+                                   rapor/ · denetim-öncesi klasörler (bkz. aşağıdaki
+                                   sınıflandırma tablosu)
 ```
 
 ### 🗺️ Haritasız değil, sınıflandırılmış: geri kalan klasörler (2026-08-27)
@@ -164,20 +167,20 @@ bir daha "bu klasör neydi" diye açılmasın.
 
 | Klasör / dosya | Ne | Durum |
 |---|---|---|
-| `ui-audit/` (235) · `mobile-audit/` (56) | Responsive/mobil denetim kanıt görselleri. `ui_audit_shots.py` · `capture_mobile*.py` üretir | REFERANS — yeniden üretilebilir. `mobile-audit/` ayrıca `mobil-ui` ajanının **protokol gereği** before/after klasörü |
-| `funktionen-shots/raw/` (31) | `assets/img/fn/`'in ham PNG kaynağı (1:1 eşleşir). ⚠️ PNG→WebP adımı hiçbir script'te belgeli değil | REFERANS |
-| `competitor-research/` (118) | Optica ekran arşivi — `archive/competitor-research-optica/` metinlerinin görsel eki | REFERANS — **TAŞIMA**, 40+ link kırılır |
+| ~~`ui-audit/` · `mobile-audit/`~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/denetim/`'a taşındı. Üretici script'ler (`ui_audit_shots.py`, `capture_mobile*.py`) ve `mobil-ui` ajanının protokol dosyası aynı commit'te yeni path'e güncellendi | Path değişti — `archive/denetim/ui-audit/` · `archive/denetim/mobile-audit/` |
+| ~~`competitor-research/`~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/recherche/`'a taşındı. `archive/competitor-research-optica/` içindeki 36 kırık atıf (zaten farklı makine kullanıcı adına yazılıydı) yeni path'e çekildi, `tools/tabellenkarte.mjs` SKIP_DIRS'ten temizlendi | Path değişti — `archive/recherche/competitor-research/` |
 | `onprem/` | (a) `supabase-docker/` = **upstream vendor kopyası**, bizim kodumuz değil (b) `schema/` = 2026-07-06 pg_dump (c) `poc-frontend-server.mjs` = Faz 0 | REFERANS — playbook Faz 2 girdisi. ⚠️ **Şema gerçeği `db/` altındadır**; `onprem/schema` Temmuz'da dondu (70 tablo) |
-| kök `database_v*.sql` (39) | Tarihsel migration arşivi | ⚠️ **OTORİTE DEĞİL** — numaralar çakışıyor (v28/v29/v31 ikişer kez, v13/v14 yok), DB'de 195 migration kayıtlı. Gerçek: `db/SCHEMA.sql` |
-| `supabase/migrations/` (10) | Repo'daki migration dosyaları | Kaynak DEĞİL (DB'de 195). Bkz. üstteki satır |
-| `sql-melih/` | Melih'e SQL teslim kanalı — `SUPABASE-JETZT-AUSFUEHREN.sql` **uygulandı** (kolonlar `db/SCHEMA.sql`'de) | ARŞİVLİK, iş kapandı |
-| `assets/` · `fonts/` · `images/` | ★ **CANLI.** `assets/img/fn/` = Funktionen-walkthrough (`index.html:1485`), `img/foot/` = podoloji ayak haritası; `fonts/` = self-hosted Inter/Outfit (Google-Fonts-CDN sorununun **cevabı**, CDN'e dönme); `images/` sadece `kemal-demir-v4.png` | CANLI |
-| `Logo/` · `web foto/` · `app ss/` · `demo rezept/` · `voice demo/` · `pakete/` · `demo slayt/` · `cache/` | Marka kaynakları + medya/demo kalıntısı. `cache/projects.json` bir aracın yerel cache'i, kazara girmiş | ARŞİVLİK — sıfır kod referansı |
+| ~~kök `database_v*.sql` (39)~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/kod/`'a taşındı. Numaralar çakışıyordu (v28/v29/v31 ikişer kez, v13/v14 yok), DB'de 195 migration kayıtlı, çalışma zamanında hiçbiri okunmuyordu (db-ustasi + fonksiyon-ustasi doğruladı). Gerçek şema: `db/SCHEMA.sql` | Path değişti — atıf veriyorsan `archive/kod/` önekiyle |
+| ~~`supabase/migrations/`~~ | ✅ Zaten 04.09.2026'da `archive/supabase-migrations-vor-baseline/`'a taşınmış (14 dosya). ⛔ `supabase/functions/` (Fahrtenbuch Edge Functions, `dashboard.js:5745` vd.) CANLI, karıştırma | — |
+| `sql-melih/` | ⛔ **CANLI KANAL — ARŞİVLİK DEĞİL.** Melih SQL bırakıyor (son: 07-08.09.2026), `db/REGISTER.md` `rechnung_zahlungen` tablosunun kaynağı olarak doğrudan gösteriyor. 09.09.2026'da SQL üç gün burada beklerken backend deploy edilmiş, fatura akışı bloke olmuştu (`db/REGISTER.md:517`) — **açık iş kuyruğu, arşive gitmez.** Yalnız `SUPABASE-JETZT-AUSFUEHREN.sql` (kök kopyası zaten silindi, buradaki kalıyor) ve bayat `OFFEN.md` kapanmış | Melih ile koordine etmeden dokunma |
+| `assets/` · `fonts/` · `images/` | ★ **CANLI.** `assets/img/fn/` = Funktionen-walkthrough (`index.html:1485`), `assets/img/fn/_raw/` = ham PNG kaynağı (eski `funktionen-shots/raw/`), `img/foot/` = podoloji ayak haritası; `fonts/` = self-hosted Inter/Outfit; `images/` sadece `kemal-demir-v4.png` | CANLI |
+| ~~`Logo/` · `web foto/` · `app ss/` · `demo rezept/` · `voice demo/` · `demo slayt/`~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `archive/medya/`'a taşındı (wissensbank ile doğrulandı, sıfır kod referansı — `Logo/` istisna: `dashboard-vorschau.html`'in iki ikon path'i güncellendi, ama sayfa zaten `.vercelignore`'daki `Logo/` kuralı yüzünden prod'da 404 alıyordu, taşıma bunu değiştirmedi) | — |
+| ~~`pakete/` · `cache/`~~ | ✅ **SİLİNDİ 09.09.2026** (arşive değil) — `pakete/pakete.css` ve `cache/projects.json` tam metin aramada sıfır referans, ikisi de kazara girmiş | — |
 | `.planning/` · `.plans/` | İki **farklı** sistem: `.planning/` = GSD `pause-work` handoff'u (2026-05-19, sprint-6 kapandı) · `.plans/` = 4 eski plan | ARŞİVLİK — açık iş **Ops-Dashboard'a** yazılır |
 | ~~kök `lib/`~~ | ✅ **ÇÖZÜLDÜ 28.08.2026** — `archive/lib-orphan/`'a taşındı. Hiçbir yerden import edilmiyordu (`admin.js` dahil kontrol edildi). Gerekçe ve içinden ne kurtarılabileceği: `archive/README.md` | **`api-backend/lib/` ile KARIŞTIRMA** — o canlı ve dokunulmadı |
-| `ai chatbot proje/` | Terk edilmiş "Chatbot Widget Builder" (92 KB tek dosya). Belgeleri `archive/ai-chatbot-proje/`'ye taşındı, **kodu kökte kaldı** | ARŞİVLİK — taşıma yarım |
-| kök `*.py` (25) | `qa_crawl_*.py` = prod QA (`app.praxura.de`, çalışır) · `capture_funktionen/flows.py` = `funktionen-shots` üretimi (korumalı, bkz. isim kuralı) · `qa_visual_verify*` / `qa_demo_prep` = **KIRIK** (ölü `app.infinitymade.de` hedefi) · `scratch_*` / `ui_*` / `test_runner` = atık · `write_icd.py` = **0 bayt** | Karışık — bu ayrım geçerli |
-| kök `*.md` raporları | **GÜNCEL:** `ONPREM_MIGRATION_PLAYBOOK` · `TYPECHECK` · `REBRANDING_GUARDRAILS` · `ARBEITSZEITEN_PRO_STANDORT` (uygulanmamış açık plan) · `LEGAL_ONPREM_REQUIREMENTS` · `UMAMI_SETUP` (⚠️ 29.08.2026 düzeltildi — burada "hiç kurulmadı" yazıyordu, **yanlıştı**: Umami kurulu ve çalışıyor. `cookie-consent.js` → `injectUmami()`, `analytics.infinitymade.de` HTTP 200, 19 blog sayfasının 18'inde (tek istisna ölü `component-lab.html`) + 10 pazarlama sayfasında, `datenschutz.html:121'de ilan edilmiş. ⚠️ `datenschutz.html:146` "onay gerekmez" diyor ama kod yalnız onaydan sonra yüklüyor — Mayıs metni, Haziran kararı; hukuk metni geride kalmış). **ARŞİVLİK:** `SEO_AKTIONSPLAN` · `KONTRAST_AUDIT` · `DUPLICATION_AUDIT` · `ITSG_EMAIL_DRAFT` · `PODOLOGIE_ORCHESTRATOR_PROMPT` · `STRIPE_SETUP` (yalnız env var **adları** geçerli) | — |
+| ~~`ai chatbot proje/`~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — kod (`index.html`) `archive/ai-chatbot-proje/`'ye taşındı, artık belgeleriyle aynı yerde. Taşıma tamamlandı | — |
+| kök `*.py` (17, önce 26'ydı) | `qa_credentials.py` = 10 script'in ortak import'u · `qa_crawl_*.py` = prod QA (`app.praxura.de`, çalışır) · `capture_flows.py`/`capture_funktionen.py` = `assets/img/fn/_raw/` üretimi (korumalı, bkz. isim kuralı) · `capture_mobile*.py` = `mobil-ui` ajanının protokol altyapısı · `ui_audit_shots.py` = `ui-audit/` üretici. ⚠️ `qa_demo_prep.py` **KIRIK DEĞİL** (09.09.2026 düzeltildi — hedefi `app.praxura.de`, sadece rapor metninde kozmetik bir `infinitymade` geçiyor). `qa_visual_verify*` gerçekten kırık (`app.infinitymade.de` hedefli). 9 gerçek atık (`dash_test`, `fix_encoding`, `scratch_live_demo`, `scratch_screenshot`, `ui_diag`, `ui_montage`, `verify_changes`, `verify_funktionen`, `write_icd`) 09.09.2026'da `archive/kod/`'a taşındı | Karışık — bu ayrım geçerli |
+| ~~kök `*.md` raporları (arşivlik kısım)~~ | ✅ **ÇÖZÜLDÜ 09.09.2026** — `SEO_AKTIONSPLAN` · `KONTRAST_AUDIT` · `DUPLICATION_AUDIT` · `ITSG_EMAIL_DRAFT` · `STRIPE_SETUP` → `archive/rapor/`. **GÜNCEL** olanlar kökte kaldı: `ONPREM_MIGRATION_PLAYBOOK` · `TYPECHECK` · `REBRANDING_GUARDRAILS` · `ARBEITSZEITEN_PRO_STANDORT` (uygulanmamış açık plan) · `LEGAL_ONPREM_REQUIREMENTS` · `UMAMI_SETUP` (⚠️ 29.08.2026 düzeltildi — burada "hiç kurulmadı" yazıyordu, **yanlıştı**: Umami kurulu ve çalışıyor. `cookie-consent.js` → `injectUmami()`, `analytics.infinitymade.de` HTTP 200, 19 blog sayfasının 18'inde (tek istisna ölü `component-lab.html`) + 10 pazarlama sayfasında, `datenschutz.html:121'de ilan edilmiş. ⚠️ `datenschutz.html:146` "onay gerekmez" diyor ama kod yalnız onaydan sonra yüklüyor — Mayıs metni, Haziran kararı; hukuk metni geride kalmış). ⛔ **`PODOLOGIE_ORCHESTRATOR_PROMPT.md` kökte kalıyor, taşınmaz** — satır 333'te canlı bir hesap şifresi var, `guvenlik/REGISTER.md:506` (A-08) bu dosyaya dokunulmamasını kayda geçmiş, taşınırsa o satır atfı kırılır | — |
 
 > **Yayın yüzeyi kuralı (2026-08-27):** `.vercelignore` artık **klasör bazlı** tutulur,
 > yalnızca dosya uzantısı bazlı değil. 2026-06-03 denetimi uzantıları kapatmıştı; sonradan
@@ -219,8 +222,11 @@ bir daha "bu klasör neydi" diye açılmasın.
 
 ## 🔌 Backend API (`api-backend/server.js`)
 
-**Base:** `https://n8n.infinitymade.de/api` · **75 route** — `server.js`'te 43 doğrudan,
-`billing/api/*` + `ai/router.js` alt-router'larında 32. Aile aile:
+**Base:** `https://n8n.infinitymade.de/api` — `server.js`'te doğrudan tanımlı route'lar,
+`billing/api/*` + `ai/router.js` alt-router'larında geri kalanı. ⚠️ Tam sayı burada
+yazılmıyor — üç farklı rakam (75/77/88) dolaşmıştı, kaynak her zaman `server.js`'in
+kendisi (`grep -rn "router\.\(get\|post\|patch\|put\|delete\)" server.js billing/api/
+ai/router.js | wc -l`). Aile aile:
 
 | Aile | Route'lar | Auth |
 |---|---|---|
@@ -257,11 +263,13 @@ rate limit (`express-rate-limit`, public route'larda).
   ⚠️ Ama env **yanlış** bir değere set edilmişse fallback devreye girmez — Vercel'de
   `NEXT_PUBLIC_URL` varsa `https://app.praxura.de` olmalı.
 
-`STRIPE_SETUP.md` — env var **adları** geçerli, ama dosya Test Mode döneminde yazıldı.
+`archive/rapor/STRIPE_SETUP.md` — env var **adları** geçerli, ama dosya Test Mode
+döneminde yazıldı (09.09.2026'da köşeden `archive/rapor/`'a taşındı).
 LIVE ürün/fiyat scripti: **`stripe-live-setup.cjs`** — `.cjs` uzantısı şart.
-⚠️ Yanındaki `stripe-live-setup.js` **çalışmaz**: `package.json`'da `"type": "module"` var,
-dosya ise `require()` kullanıyor → `ReferenceError: require is not defined in ES module scope`.
-İki dosya tek kelime farkla aynı (hata mesajı DE/TR). Silme kararı kullanıcının.
+⚠️ Yanındaki `stripe-live-setup.js` **çalışmıyordu**: `package.json`'da `"type": "module"`
+var, dosya ise `require()` kullanıyordu → `ReferenceError: require is not defined in ES
+module scope`. İki dosya tek kelime farkla aynıydı (hata mesajı DE/TR). ✅ 09.09.2026'da
+`archive/kod/stripe-live-setup.js`'e taşındı (silme değil arşivleme — geri alınabilir).
 
 ### Profile alanları
 ```
@@ -327,8 +335,10 @@ Orada 6 tuzak yazılı (en önemlisi: hasta tablosu `patients` değil **`leads`*
   satırı güncellenir. Tetikleyici cümle: **"şema güncelle"**.
 - **Eski döküm hiç dökümden kötüdür** — okuyan ona inanır. Bu yüzden tazeleme
   ertelenmez, "sonra yaparım" denmez.
-- `supabase/migrations/` **kaynak değildir**: repoda 10 dosya var, DB'de 195 migration
-  kayıtlı. Şema gerçeği `db/` altındadır.
+- `supabase/migrations/` **kaynak değildir** ve zaten 04.09.2026'da
+  `archive/supabase-migrations-vor-baseline/`'a taşındı (14 dosya); DB'de 195 migration
+  kayıtlı. Şema gerçeği `db/` altındadır. ⛔ `supabase/functions/` (Fahrtenbuch Edge
+  Functions) CANLI, o klasör yerinde duruyor, karıştırma.
 - Döküm **sadece yapı** içerir, tek satır veri yok — depo public.
 - Melih'in (ve DB'yi göremeyen her aracın) tek bağlamı bu dosyalar.
   Onun ürettiği SQL bize gelir, MCP ile burada uygulanır, sonra döküm tazelenir.
@@ -703,6 +713,11 @@ güvenlik sorumlusu dinlenmeyen güvenlik sorumlusudur.
   ⛔ **Kod ve `.git` buraya KONMAZ** — depo 1,1 GB, `.git` 352 MB; senkron istemcisi `.git`'i
   bozar ve iki kişi aynı anda çalışınca çakışan-kopya üretir. Kod GitHub'dan paylaşılır.
   ⛔ Sırlar (`.env`, SSH özel anahtarı, API key) buraya da girmez → parola kasası.
+  ⚠️ **09.09.2026'da bu tam olarak yaşandı:** depo kökünde git'e commit edilmiş bir
+  `.tmp.driveupload/` klasörü bulundu (origin/main'de de vardı) — birinin Google Drive
+  masaüstü istemcisi depo klasörünü senkronluyormuş. İçerik hassas değildi (bir HTML
+  sayfasının senkron kopyası), git'ten çıkarıldı ve `.gitignore`'a eklendi, ama asıl
+  düzeltme Drive senkron kapsamından bu depo klasörünün çıkarılmasıdır — kimde ise.
 - `INFRASTRUCTURE.md` — SSH/VPS erişimi, deploy pipeline, sık operasyonlar.
   Depoda (gitignore'lu) **ve** paylaşılan klasörün `infra/` altında. Ön koşul olan koruyucu
   belgeler 2026-08-06'da imzalandı (Datengeheimnis · Nutzungsrechte · §203 kapsanıyor).
@@ -716,13 +731,21 @@ güvenlik sorumlusu dinlenmeyen güvenlik sorumlusudur.
 - `konsey/KARARLAR.md` — konsey kararlarının dizini
 - `compliance/LEGAL_DECISIONS.md` — kapatılmış hukuki kararlar
 - `Podoloji/PRODUKT-ENTSCHEIDUNGEN.md` — podoloji ürün kararları
-- `STRIPE_SETUP.md` — env var adları (⚠️ Test Mode döneminde yazıldı)
+- `archive/rapor/STRIPE_SETUP.md` — env var adları (⚠️ Test Mode döneminde yazıldı)
 
-### 🗄️ Arşiv (2026-08-05)
+### 🗄️ Arşiv (2026-08-05 · genişletildi 09.09.2026)
 39 eskimiş rapor/plan `archive/` altına taşındı — **silinmedi.** Neden eskidikleri ve içlerinden
 neyin kurtarıldığı `archive/README.md`'de. Oradaki audit bulguları **iddiadır**, aksiyon almadan
 önce koda/DB'ye karşı doğrula (2026-08-05'te iki güvenlik iddiası doğrulandı ve çürüdü).
 
+09.09.2026'da büyük bir kök temizliği yapıldı (fonksiyon-ustasi + db-ustasi + wissensbank ile
+doğrulanarak): `archive/` altına alt klasörler açıldı — `kod/` (ölü .py/.js/.cjs + 39
+database_v*.sql + terk edilmiş "ai chatbot proje/"), `medya/` (Logo/, web foto/, app ss/,
+demo rezept/, voice demo/, demo slayt/), `rapor/` (5 arşivlik kök .md raporu). Detay ve
+gerekçe: yukarıdaki "Haritasız değil, sınıflandırılmış" tablosu. `pakete/` ve `cache/`
+sıfır referans oldukları için arşive değil, doğrudan silindi. Ayrıca kök `.tmp.driveupload/`
+(Google Drive senkron artığı, yasak senaryo — bkz. Deployment) git'ten çıkarıldı.
+
 ---
 
-*Son güncelleme: 2026-08-30 | Status: Beta, ilk müşteriler test ediyor 🟡*
+*Son güncelleme: 09.09.2026 | Status: Beta, ilk müşteriler test ediyor 🟡*

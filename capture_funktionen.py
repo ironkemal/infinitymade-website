@@ -5,7 +5,7 @@ import time
 from playwright.sync_api import sync_playwright
 
 BASE = "http://127.0.0.1:8899/demo-dashboard.html"
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "funktionen-shots", "raw")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "img", "fn", "_raw")
 os.makedirs(OUT, exist_ok=True)
 
 # panel id (without 'panel-') -> output slug

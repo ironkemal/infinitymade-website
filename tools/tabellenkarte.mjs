@@ -85,8 +85,10 @@ for (const fn of karte.eintraege || []) {
 // `ops/` BİLEREK dışarıda: Ops-Dashboard AYRI bir Supabase projesidir
 // (farkaejociddtgqkusvm). `ops_*` tabloları bu şemada yoktur; taransaydı iki
 // projenin tablo listesi tek kovada karışırdı.
+// competitor-research/, ui-audit/, mobile-audit/ 09.09.2026'da archive/ altına
+// taşındı — 'archive' zaten kapsıyor, ayrı girdi gerekmiyor
 const SKIP_DIRS = new Set(['node_modules', '.git', 'archive', 'dist', 'build', '.vercel', '.next',
-  'funktionen', 'coverage', '.claude', 'onprem', 'competitor-research', 'ui-audit', 'mobile-audit',
+  'funktionen', 'coverage', '.claude', 'onprem',
   'db', 'supabase', 'sql-melih', 'ops']);
 function walk(dir, acc = []) {
   let entries; try { entries = readdirSync(dir); } catch { return acc; }

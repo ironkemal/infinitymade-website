@@ -3,7 +3,7 @@
 ## Files
 
 - `anlage3_v22.js` — Schlüsselverzeichnis (codes for VKZ, Verordnungsart, Zuzahlung, Abrechnungscode B, Tarifbereich, etc.) extracted from `handbücher/Anlage_3_TP5_V22_20260218.pdf`.
-- `../../database_v12_billing_codes.sql` — DB seed for `dta_schluessel` table.
+- `../../archive/kod/database_v12_billing_codes.sql` — DB seed for `dta_schluessel` table.
 
 ## ⚠️ Missing: Heilmittel-Positionsnummern
 

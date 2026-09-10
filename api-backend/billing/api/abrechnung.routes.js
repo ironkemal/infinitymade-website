@@ -34,6 +34,7 @@ import {
   istEinreichbar, einreichbarFilterAbrechnungStatus,
   statusAusAbrechnungStatus, abrechnungStatusAusStatus,
 } from '../utils/einreichbar.js';
+import { zeilenAusDta } from '../utils/abrechnung-zeilen.js';
 import {
   legsFuer, LEGS_BY_FACHBEREICH,
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
@@ -741,7 +742,7 @@ router.post('/abrechnung/create', async (req, res) => {
     const { data: ab, error: abErr } = await supabase
       .from('abrechnung')
       .insert(abrechnungInsert)
-      .select('id')
+      .select('id, business_id')
       .single();
     if (abErr) return res.status(500).json({ error: 'abrechnung insert failed: ' + abErr.message });
 
@@ -857,6 +858,25 @@ router.post('/abrechnung/create', async (req, res) => {
       if (bnErr) console.warn('[abrechnung] belegnummer persist failed:', rxRows[i].id, bnErr.message);
     }
 
+    // ---- Zeilen einfrieren (abrechnung_zeile) ----
+    // LETZTER Schritt, nach allen Ruecknahmepunkten. Was hier steht, gilt zehn
+    // Jahre lang als „das ist rausgegangen"; ein Fehlschlag darf die schon
+    // hochgeladene und verlinkte Datei deshalb NICHT mehr zuruecknehmen —
+    // eine Datei ohne Zeilenliste ist unangenehm, eine zurueckgezogene Datei
+    // nach erfolgreicher Einreichung waere ein Einnahmeverlust.
+    // `business_id` kommt vom Kopfsatz, nicht aus dem Profil: `profiles` hat
+    // gar keine solche Spalte, und die Zeile gehoert zur selben Filiale wie
+    // ihre Datei. Heute ist der Wert NULL, weil auch der Kopfsatz keinen setzt.
+    const zeilen = zeilenAusDta({
+      abrechnungId: ab.id, ownerId: tenantId, businessId: ab.business_id || null,
+      kostentraegerIk, dta, prescriptions, quellen: rxRows,
+    });
+    let zeilenGespeichert = zeilen.length;
+    if (zeilen.length) {
+      const { error: zErr } = await supabase.from('abrechnung_zeile').insert(zeilen);
+      if (zErr) { zeilenGespeichert = 0; console.error('[abrechnung/create] abrechnung_zeile insert fehlgeschlagen', zErr); }
+    }
+
     logAccess(supabase, {
       userId: req.userId || null, ownerId: tenantId, ip: req.ip,
       userAgent: req.headers['user-agent'],
@@ -874,6 +894,7 @@ router.post('/abrechnung/create', async (req, res) => {
       totalBrutto, totalZu,
       storagePath: dtaPath,
       begleitzettelPath: upBeg.error ? null : begleitPath,
+      zeilenGespeichert,
     });
   } catch (e) {
     console.error('[abrechnung/create]', e);
@@ -1034,19 +1055,18 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
     // Fehler auf dem Bildschirm, nur fehlendes Geld.
     //
     // Seit 04.09.2026 EIN Verordnungstopf: eine Sammelabrechnung kann Physio-
-    // UND Podologie-Zeilen tragen, aber beide stehen jetzt in `prescriptions` —
-    // ein Fetch statt vorher zwei, `therapie_bereich` entscheidet unten, welcher
-    // Zweig eine Zeile durchlaeuft.
+    // UND Podologie-Zeilen tragen, aber beide stehen jetzt in `prescriptions`.
+    // Seit 09.09.2026 laufen sie hier auch durch DENSELBEN Zweig — der
+    // `therapie_bereich` wird beim Verarbeiten der Rueckmeldung nicht mehr
+    // gebraucht, weil beide gleich behandelt werden (siehe unten).
     const { data: rxRows } = await supabase
       .from('prescriptions')
-      .select('id, belegnummer, therapie_bereich')
+      .select('id, belegnummer')
       .eq('abrechnung_id', req.params.id);
     const belegToRxId = new Map();
-    const podoIds = new Set();
     for (const r of (rxRows || [])) {
       if (r.belegnummer) belegToRxId.set(r.belegnummer, r.id);
       belegToRxId.set(r.id.slice(0, 10), r.id);
-      if (r.therapie_bereich === 'podo') podoIds.add(r.id);
     }
 
     const parsed = parseZaaFile(buf);
@@ -1076,38 +1096,29 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
       zaa_uploaded_at: new Date().toISOString(),
     }).eq('id', req.params.id);
 
-    // Die zwei Zweige reagieren unterschiedlich auf eine Absetzung — das war
-    // schon vor der Zusammenlegung so und bleibt so, nur die Zieltabelle ist
-    // jetzt eine:
+    // ⛔ EINE Regel für beide Zweige: 'abgesetzt' mit Grund und Datum an der
+    // Verordnung. Kein stiller Rücksprung.
     //
-    //   Physio/Ergo/Logo: zurueck auf 'bereit' — stiller Retry, die Praxis
-    //   korrigiert und rechnet erneut ab, ohne eigenen Absetzungs-Datensatz.
-    //
-    //   Podologie: bewusst NICHT stillschweigend zurueck — 'abgesetzt' mit
-    //   Grund und Datum auf der Zeile selbst, weil dort ein manueller
-    //   Korrekturweg existiert (PATCH /verordnung/:id/abrechnungsstatus) und
-    //   die Praxis den Grund sehen soll, bevor sie erneut einreicht.
+    // Bis zum 09.09.2026 ging das abgesetzte PHYSIO-Rezept hier still zurück
+    // auf `bereit` und landete damit in der nächsten ERSTrechnung (VKZ 01) —
+    // für die Kasse derselbe Beleg zum zweiten Mal, also Doppelabrechnung.
+    // Anlage 1 TP5 V21 Kap. 7.4.3, Korrekturverfahren Nr. 3 (13.02.2025):
+    // „In diesen Fällen muss die Korrektur gegen die Rechnungskürzung immer
+    //  zwingend mit dem VKZ 4 eingereicht werden."
+    // Die Podologie machte es schon immer richtig; jetzt beide gleich. Der
+    // Weg zurück ist eine BEWUSSTE Handlung: POST /abrechnung/korrektur
+    // (VKZ 04 + URI), oder — für die zwei VKZ-01-Ausnahmen Nr. 21/22 — der
+    // Statusdialog an der Verordnung.
     //
     // Warum 'abgesetzt' und nicht 'teilabsetzung': die ZAA-Datei nennt Fehler
     // je Beleg, keine Betraege und keine Positionen. Ob die Kasse gekuerzt oder
     // ganz abgesetzt hat, steht erst im Zahlungsavis. Ein automatisch geratenes
     // 'teilabsetzung' waere eine erfundene Zahl in der Buchhaltung.
-    const rejectedRxIds = [...new Set(inserts.map(e => e.prescription_id).filter(Boolean))];
-    const rejectedPhysio = rejectedRxIds.filter(id => !podoIds.has(id));
-    if (rejectedPhysio.length) {
-      // status: 'confirmed' — die Bearbeitungsachse, nicht 'aktiv' (das gibt
-      // es in dieser Spalte nicht; CHECK liesse den Schreibversuch scheitern).
-      await supabase.from('prescriptions').update({
-        abrechnung_status: 'bereit',
-        status: 'confirmed',
-      }).in('id', rejectedPhysio);
-    }
-
     const vordGrund = new Map();
     for (const e of parsed.errors) {
       if (!e.belegnummer) continue;
       const vId = belegToRxId.get(e.belegnummer);
-      if (!vId || !podoIds.has(vId)) continue;
+      if (!vId) continue;
       const txt = [e.code, e.uebersetzung || e.text].filter(Boolean).join(' — ');
       vordGrund.set(vId, [...(vordGrund.get(vId) || []), txt]);
     }
@@ -1120,6 +1131,47 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
       }).eq('id', vId).eq('owner_id', tenantId);
     }
 
+    // ── Rueckmeldeachse der eingefrorenen Zeilen (abrechnung_zeile) ─────────
+    //
+    // ⚠️ Nur `status` und `absetzung_grund`/`absetzung_am`. KEIN Betrag: die
+    // ZAA-Datei traegt keine. In Anlage 1 TP5 V21 kommen `Zahlungsavis`,
+    // `Absetzung` und `Buchung` kein einziges Mal vor — Pruefstufe 4 ist
+    // kassenspezifisch, es gibt keinen Standard. Der Absetzungsbetrag wird von
+    // Hand aus dem Absetzungsschreiben erfasst (Phase 4).
+    //
+    // ⚠️ Die uebrigen Zeilen werden NUR dann `akzeptiert`, wenn die Datei ganz
+    // sauber zurueckkam. Kommt sie mit Fehlern, ist heute nicht unterscheidbar,
+    // ob die DATEI abgewiesen wurde (Pruefstufe 1-3, dann wurde kein einziger
+    // Beleg inhaltlich geprueft) oder einzelne BELEGE abgesetzt (Pruefstufe 4).
+    // Die Rosette dafuer steht (`abgewiesen` in module/abrechnung-status.js),
+    // der Datenbankwert fehlt noch — bis dahin bleiben sie auf `eingereicht`;
+    // raten waere hier eine erfundene Zusage in der Buchhaltung.
+    //
+    // Dieselbe Gruendekarte wie oben: seit die beiden Zweige gleich behandelt
+    // werden, gibt es nur noch EINE.
+    let zeilenAktualisiert = 0;
+    for (const [rId, gruende] of vordGrund) {
+      const { error: zuErr, count } = await supabase.from('abrechnung_zeile')
+        .update({
+          status:           'abgesetzt',
+          absetzung_grund:  gruende.join('\n').slice(0, 2000),
+          absetzung_am:     heute,
+        }, { count: 'exact' })
+        .eq('abrechnung_id', req.params.id)
+        .eq('prescription_id', rId);
+      if (zuErr) console.error('[abrechnung/upload-zaa] Zeile abgesetzt fehlgeschlagen', rId, zuErr);
+      else zeilenAktualisiert += count || 0;
+    }
+
+    if (!inserts.length) {
+      const { error: okErr, count } = await supabase.from('abrechnung_zeile')
+        .update({ status: 'akzeptiert' }, { count: 'exact' })
+        .eq('abrechnung_id', req.params.id)
+        .eq('status', 'eingereicht');
+      if (okErr) console.error('[abrechnung/upload-zaa] Zeilen akzeptiert fehlgeschlagen', okErr);
+      else zeilenAktualisiert += count || 0;
+    }
+
     return res.json({
       ok: true,
       format: parsed.format,
@@ -1127,6 +1179,7 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
       status: newStatus,
       errors: parsed.errors,
       verordnungenAbgesetzt: vordGrund.size,
+      zeilenAktualisiert,
       filename: filename || null,
     });
   } catch (e) {
@@ -1168,6 +1221,229 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
     return res.json({ ok: true });
   } catch (e) {
     console.error('[abrechnung/mark-sent]', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// ---------- §302-Bildschirm: Zeilen und Geldeingang ----------
+//
+// Die untere Hälfte des Archivs (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 2.4).
+// Sie läuft über das VPS-Backend, nicht über Vercel: dort sind 12/12
+// Funktionen belegt, und G8 verbietet ohnehin eine dreizehnte.
+
+/**
+ * Auth + Mandant + Eigentumsprüfung an EINER Stelle, für die drei Routen
+ * darunter. Die älteren Routen dieser Datei haben denselben Block je zwölfmal
+ * abgeschrieben; das wird hier nicht fortgesetzt, aber auch nicht rückwirkend
+ * angefasst — ein Umbau von zwölf funktionierenden Auth-Blöcken ist ein
+ * eigener Schritt mit eigenem Risiko.
+ * @returns {Promise<{tenantId:string, userId:string, abrechnung:object}|null>}
+ *          `null` heisst: die Antwort ist schon geschrieben.
+ */
+async function mandantUndAbrechnung(req, res) {
+  const hdr = req.headers.authorization || '';
+  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+  if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
+  const { data: u, error: uErr } = await supabase.auth.getUser(token);
+  if (uErr || !u?.user) { res.status(401).json({ error: 'Invalid token' }); return null; }
+
+  const { data: profile } = await supabase
+    .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
+  const tenantId = profile?.role === 'employee' && profile?.owner_id ? profile.owner_id : u.user.id;
+
+  const { data: ab } = await supabase
+    .from('abrechnung')
+    .select('id, owner_id, business_id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, begleitzettel_path, signed_storage_path, signed_at, zaa_uploaded_at, paid_at, created_at')
+    .eq('id', req.params.id)
+    .maybeSingle();
+  if (!ab) { res.status(404).json({ error: 'Abrechnung nicht gefunden' }); return null; }
+  if (ab.owner_id !== tenantId) { res.status(403).json({ error: 'Nicht berechtigt' }); return null; }
+
+  return { tenantId, userId: u.user.id, abrechnung: ab };
+}
+
+/**
+ * Die vier Zahlen, die der Bildschirm immer zeigt (Plan Abschnitt 3):
+ * `Eingereicht · Abgesetzt · Bezahlt · Offen`.
+ *
+ * ⚠️ Absetzungen werden vom SOLL nicht abgezogen, sondern daneben gestellt.
+ * Sonst verschwindet genau das Geld aus dem Bildschirm, das mit einer
+ * Korrekturrechnung (VKZ 04) zurückzuholen wäre.
+ * `offen` ist die verbleibende Forderung: Soll − Absetzung − Bezahlt.
+ */
+function geldstand(abrechnung, zeilen, zahlungen) {
+  const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+  const hatZeilen = (zeilen || []).some(z => Number(z.netto_eur) > 0);
+
+  // Ohne Zeilenbeträge (rekonstruierte Altdatei) gilt der Kopfsatz — dieselbe
+  // Rückfallregel wie in fn_abrechnung_zahlung_status().
+  const eingereicht = hatZeilen
+    ? r2((zeilen || []).reduce((a, z) => a + Number(z.netto_eur || 0), 0))
+    : r2(Number(abrechnung.total_eur || 0) - Number(abrechnung.zuzahlung_total || 0));
+  const abgesetzt = r2((zeilen || []).reduce((a, z) => a + Number(z.absetzung_eur || 0), 0));
+  const bezahlt   = r2((zahlungen || []).reduce((a, z) => a + Number(z.betrag_eur || 0), 0));
+
+  return {
+    eingereicht, abgesetzt, bezahlt,
+    offen: r2(eingereicht - abgesetzt - bezahlt),
+    // 4 Wochen ab Eingang der vollständigen Unterlagen (Richtlinien-Text
+    // 20.11.2006 § 7 Abs. 2), sofern der Vertrag nichts anderes sagt.
+    faelligAm: abrechnung.zaa_uploaded_at
+      ? new Date(new Date(abrechnung.zaa_uploaded_at).getTime() + 28 * 864e5).toISOString().slice(0, 10)
+      : null,
+  };
+}
+
+// Die eingefrorenen Zeilen einer Datei, gruppiert nach Gesamtrechnung.
+router.get('/abrechnung/:id/zeilen', async (req, res) => {
+  try {
+    const ctx = await mandantUndAbrechnung(req, res);
+    if (!ctx) return;
+
+    const [zeilenRes, zahlungRes] = await Promise.all([
+      supabase.from('abrechnung_zeile')
+        .select('*')
+        .eq('abrechnung_id', ctx.abrechnung.id)
+        .order('einzel_rechnungsnummer', { ascending: true })
+        .order('sort_order', { ascending: true }),
+      supabase.from('abrechnung_zahlung')
+        .select('betrag_eur')
+        .eq('abrechnung_id', ctx.abrechnung.id),
+    ]);
+    if (zeilenRes.error) return res.status(500).json({ error: zeilenRes.error.message });
+
+    const zeilen = zeilenRes.data || [];
+    // Je Karten-IK eine Gesamtrechnung — die Einheit, die die Kasse bezahlt
+    // und für die ein eigener Begleitzettel gedruckt wird (Anlage 4 V2.0).
+    const gruppen = [];
+    const nachNr = new Map();
+    for (const z of zeilen) {
+      const key = z.einzel_rechnungsnummer || '0';
+      if (!nachNr.has(key)) {
+        const g = { einzel_rechnungsnummer: key, karten_ik: z.karten_ik,
+                    kostentraeger_ik: z.kostentraeger_ik, zeilen: [],
+                    brutto_eur: 0, zuzahlung_eur: 0, netto_eur: 0, absetzung_eur: 0 };
+        nachNr.set(key, g);
+        gruppen.push(g);
+      }
+      const g = nachNr.get(key);
+      g.zeilen.push(z);
+      for (const f of ['brutto_eur', 'zuzahlung_eur', 'netto_eur', 'absetzung_eur']) {
+        g[f] = Math.round((g[f] + Number(z[f] || 0)) * 100) / 100;
+      }
+    }
+
+    return res.json({
+      ok: true,
+      abrechnung: ctx.abrechnung,
+      gruppen,
+      zeilen,
+      geld: geldstand(ctx.abrechnung, zeilen, zahlungRes.data || []),
+    });
+  } catch (e) {
+    console.error('[abrechnung/zeilen]', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Geldeingänge einer Datei + der Vierzeiler darüber.
+router.get('/abrechnung/:id/zahlung', async (req, res) => {
+  try {
+    const ctx = await mandantUndAbrechnung(req, res);
+    if (!ctx) return;
+
+    const [zahlungRes, zeilenRes] = await Promise.all([
+      supabase.from('abrechnung_zahlung')
+        .select('*')
+        .eq('abrechnung_id', ctx.abrechnung.id)
+        .order('datum', { ascending: true })
+        .order('created_at', { ascending: true }),
+      supabase.from('abrechnung_zeile')
+        .select('netto_eur, absetzung_eur')
+        .eq('abrechnung_id', ctx.abrechnung.id),
+    ]);
+    if (zahlungRes.error) return res.status(500).json({ error: zahlungRes.error.message });
+
+    return res.json({
+      ok: true,
+      abrechnung: ctx.abrechnung,
+      zahlungen: zahlungRes.data || [],
+      geld: geldstand(ctx.abrechnung, zeilenRes.data || [], zahlungRes.data || []),
+    });
+  } catch (e) {
+    console.error('[abrechnung/zahlung:get]', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Einen Geldeingang erfassen. Append-only: es gibt kein PATCH und kein DELETE,
+// der Trigger prevent_abrechnung_zahlung_mod() weist beides ohnehin ab
+// (§ 146 Abs. 4 AO). Eine falsche Buchung wird durch eine zweite Zeile mit
+// art='korrektur' und negativem Betrag richtiggestellt.
+router.post('/abrechnung/:id/zahlung', async (req, res) => {
+  try {
+    const ctx = await mandantUndAbrechnung(req, res);
+    if (!ctx) return;
+
+    const { betragEur, datum, art = 'zahlung', einzelRechnungsnummer = null,
+            zahlungsavis = null, notiz = null } = req.body || {};
+
+    const betrag = Math.round((Number(betragEur) || 0) * 100) / 100;
+    if (!betrag) return res.status(400).json({ error: 'Betrag fehlt oder ist 0.' });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(datum || ''))) {
+      // Wertstellung laut Kontoauszug, nicht `now()` — sonst steht der Eingang
+      // im falschen Monat und paid_at wird zu einem Erfassungsdatum.
+      return res.status(400).json({ error: 'Datum (Wertstellung) im Format JJJJ-MM-TT erforderlich.' });
+    }
+    if (!['zahlung', 'ruecklastschrift', 'abschreibung', 'korrektur'].includes(art)) {
+      return res.status(400).json({ error: 'Unbekannte Art: ' + art });
+    }
+    // Dieselbe Regel wie der CHECK in der Datenbank — hier nur, damit die
+    // Meldung erklärt statt eine Constraint-Verletzung durchzureichen.
+    if (art !== 'zahlung' && String(notiz || '').trim().length < 3) {
+      return res.status(400).json({ error: 'Für „' + art + '" ist eine Begründung Pflicht (mind. 3 Zeichen).' });
+    }
+
+    const { data: neu, error } = await supabase.from('abrechnung_zahlung').insert({
+      abrechnung_id:          ctx.abrechnung.id,
+      owner_id:               ctx.tenantId,
+      business_id:            ctx.abrechnung.business_id || null,
+      einzel_rechnungsnummer: einzelRechnungsnummer || null,
+      art,
+      betrag_eur:             betrag,
+      datum,
+      zahlungsavis:           zahlungsavis || null,
+      notiz:                  notiz || null,
+      created_by:             ctx.userId,
+    }).select('*').single();
+    if (error) return res.status(500).json({ error: error.message });
+
+    // Der Trigger kann `abrechnung.status`/`paid_at` gerade geändert haben —
+    // frisch nachlesen, statt den Stand von vor dem INSERT zurückzugeben.
+    const [kopfRes, zahlungRes, zeilenRes] = await Promise.all([
+      supabase.from('abrechnung').select('status, paid_at').eq('id', ctx.abrechnung.id).maybeSingle(),
+      supabase.from('abrechnung_zahlung').select('betrag_eur').eq('abrechnung_id', ctx.abrechnung.id),
+      supabase.from('abrechnung_zeile').select('netto_eur, absetzung_eur').eq('abrechnung_id', ctx.abrechnung.id),
+    ]);
+    const kopf = { ...ctx.abrechnung, ...(kopfRes.data || {}) };
+
+    logAccess(supabase, {
+      userId: ctx.userId, ownerId: ctx.tenantId, ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      method: 'POST', path: req.path, resource: 'abrechnung_zahlung', resourceId: neu.id,
+      action: 'create', statusCode: 200,
+      metadata: { abrechnung_id: ctx.abrechnung.id, art, betrag_eur: betrag, datum },
+    });
+
+    return res.json({
+      ok: true,
+      zahlung: neu,
+      status: kopf.status,
+      paidAt: kopf.paid_at,
+      geld: geldstand(kopf, zeilenRes.data || [], zahlungRes.data || []),
+    });
+  } catch (e) {
+    console.error('[abrechnung/zahlung:post]', e);
     return res.status(500).json({ error: e.message });
   }
 });
@@ -2560,7 +2836,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         dta_file_size:      dta.byteLength,
         dta_segment_count:  dta.segmentCount,
         prescription_count: prescriptions.length,
-      }).select('id').single();
+      }).select('id, business_id').single();
     if (abErr) return res.status(500).json({ error: 'abrechnung insert: ' + abErr.message });
 
     // ---- Nachweis der bewussten Übersteuerung (GoBD) ----
@@ -2700,6 +2976,20 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       if (bnErr) console.warn('[abrechnung-podo] belegnummer persist failed:', vords[i].id, bnErr.message);
     }
 
+    // ---- Zeilen einfrieren (abrechnung_zeile) ----
+    // Letzter Schritt, nach allen Ruecknahmepunkten — gleiche Begruendung wie
+    // in /abrechnung/create. `vords` ist die Quelle in derselben Reihenfolge
+    // wie `prescriptions`, beide entstehen aus demselben map().
+    const zeilen = zeilenAusDta({
+      abrechnungId: ab.id, ownerId: tenantId, businessId: ab.business_id || null,
+      kostentraegerIk, dta, prescriptions, quellen: vords || [],
+    });
+    let zeilenGespeichert = zeilen.length;
+    if (zeilen.length) {
+      const { error: zErr } = await supabase.from('abrechnung_zeile').insert(zeilen);
+      if (zErr) { zeilenGespeichert = 0; console.error('[abrechnung-podo] abrechnung_zeile insert fehlgeschlagen', zErr); }
+    }
+
     return res.json({
       ok: true,
       abrechnungId: ab.id,
@@ -2709,9 +2999,528 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       totalZuzahlung: totalZu,
       verordnungCount: verordnungIds.length,
       sessionCount: prescriptions.reduce((a, p) => a + p.sessions.length, 0),
+      zeilenGespeichert,
     });
   } catch (e) {
     console.error('[abrechnung/create-podologie]', e);
+    return res.status(e.status || 500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
+// Korrekturrechnung — VKZ 04 mit URI-Segment
+// ============================================================================
+//
+// Der einzige zulässige Weg, einen ABGESETZTEN Beleg erneut einzureichen.
+//
+//   Anlage 1 TP5 V21 Kap. 7.4.3 · Korrekturverfahren Nr. 3 (13.02.2025):
+//   „In diesen Fällen muss die Korrektur gegen die Rechnungskürzung immer
+//    zwingend mit dem VKZ 4 eingereicht werden."
+//
+// Bis zum 09.09.2026 machte `upload-zaa` das Gegenteil: das abgesetzte
+// Physio-Rezept ging still auf `bereit` zurück und landete in der nächsten
+// ERSTrechnung (VKZ 01) — für die Kasse derselbe Beleg zum zweiten Mal, also
+// Doppelabrechnung. Entweder Absetzung (kein Geld) oder Zahlung mit späterer
+// Rückforderung. Dieser stille Rücksprung ist mit derselben Änderung entfernt.
+//
+// Zwei Ausnahmen, in denen VKZ 01 richtig BLEIBT und die deshalb NICHT hier
+// laufen (gkv-302, Korrekturverfahren Nr. 21 und Nr. 22):
+//   · die ganze Rechnung wurde wegen fehlender Urbelege abgesetzt
+//   · der Datensatz war nicht TA-konform und wurde abgewiesen (Prüfstufe 1-3)
+// Beide bedeuten: es gilt nichts als eingereicht, eine URI wäre sogar falsch
+// (§7.2 setzt voraus, dass die Ursprungsrechnung die Prüfstufen 1-3 bestanden
+// hat). Für sie gibt es den normalen Weg über die Auswahlliste — die Zeile
+// wird dort über den Statusdialog bewusst zurück auf „bereit" gesetzt.
+//
+// ⛔ V3: eine Datei trägt genau EIN Verarbeitungskennzeichen (Kap. 7.3), eine
+// Rechnungsart (§5.3 (5)) und eine TA-Version (§5.3 (6)). Deshalb ist das eine
+// eigene Route mit einer eigenen Datei — Neu- und Korrekturrechnungen dürfen
+// nie in denselben Lauf.
+//
+// ⚠️ Woher die fünf URI-Felder kommen (Anlage 1 TP5 V21 Kap. 7.3 / §5.5.3.1):
+//   origIkLeistungserbringer  → das heutige IK der Praxis
+//   origSammelRechnungsnummer → abrechnung.rechnungsnummer      (gespeichert)
+//   origEinzelRechnungsnummer → abrechnung_zeile.einzel_rechnungsnummer (seit Phase 2)
+//   origRechnungsdatum        → abrechnung.created_at — die Datei wurde mit
+//                               `datum: now` gebaut, das IST das Rechnungsdatum
+//   origBelegnummer           → abrechnung_zeile.belegnummer   (seit Phase 2)
+// Der Plan ging von drei fehlenden Feldern aus; das war der Stand VOR
+// `abrechnung_zeile`. Vier der fünf stehen jetzt fest. Das fünfte, das
+// Absender-IK, wird abgeleitet statt gelesen: ändert eine Praxis ihr IK,
+// trägt eine spätere Korrektur das NEUE. Das ist ein seltener, meldepflichtiger
+// Vorgang — eine eigene Spalte dafür ist Härtung, kein Blocker.
+router.post('/abrechnung/korrektur', async (req, res) => {
+  try {
+    // ---- auth ----
+    const hdr = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, sector')
+      .eq('id', u.user.id).single();
+    if (!profile) return res.status(403).json({ error: 'Profile not found' });
+    const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : profile.id;
+
+    let praxisProfil = profile;
+    if (profile.role === 'employee' && profile.owner_id) {
+      const { data: op } = await supabase.from('profiles')
+        .select('business_name, phone, city, zip, street, house_number, ik_number, sector')
+        .eq('id', tenantId).maybeSingle();
+      if (op) praxisProfil = { ...profile, ...op };
+    }
+    const tenantSector = praxisProfil.sector || 'physiotherapy';
+
+    // ---- input ----
+    const { zeilenIds, grund } = req.body || {};
+    if (!Array.isArray(zeilenIds) || !zeilenIds.length) {
+      return res.status(400).json({ error: 'zeilenIds required' });
+    }
+
+    // ---- die abgesetzten Zeilen samt ihrer Ursprungsdatei ----
+    const { data: zeilen, error: zErr } = await supabase
+      .from('abrechnung_zeile')
+      .select('*, abrechnung:abrechnung_id (id, rechnungsnummer, created_at, kostentraeger_ik)')
+      .eq('owner_id', tenantId)
+      .in('id', zeilenIds);
+    if (zErr) return res.status(500).json({ error: zErr.message });
+    if ((zeilen || []).length !== zeilenIds.length) {
+      return res.status(404).json({ error: 'Nicht alle Zeilen gefunden oder sie gehören nicht zu Ihnen.' });
+    }
+
+    // ---- Regeln, die diese Datei überhaupt erst zulässig machen ----
+    for (const z of zeilen) {
+      if (z.status !== 'abgesetzt' && z.status !== 'teilabgesetzt') {
+        return res.status(422).json({
+          error: `Beleg ${z.belegnummer || z.id.slice(0, 8)}: nur ein ABGESETZTER Beleg geht mit VKZ 04. Status ist „${z.status}".`,
+        });
+      }
+      if (!z.prescription_id) {
+        return res.status(422).json({
+          error: `Beleg ${z.belegnummer || z.id.slice(0, 8)}: die Verordnung dazu existiert nicht mehr — eine Korrektur ist ohne sie nicht erzeugbar.`,
+        });
+      }
+      // Ohne diese vier gibt es kein URI-Segment, und ohne URI ist die
+      // Korrekturrechnung nicht zuordenbar (Kap. 7.3).
+      if (!z.belegnummer || !z.abrechnung?.rechnungsnummer || !z.abrechnung?.created_at || !z.einzel_rechnungsnummer) {
+        return res.status(422).json({
+          error: `Beleg ${z.belegnummer || z.id.slice(0, 8)}: die Ursprungsangaben für das URI-Segment sind unvollständig. `
+               + `Für vor dem 09.09.2026 eingereichte Dateien ist das erwartbar (herkunft „${z.herkunft}") — `
+               + `diese Korrektur muss auf Papier bzw. über das Kassenportal laufen.`,
+        });
+      }
+    }
+    const kostentraegerIk = zeilen[0].kostentraeger_ik;
+    if (zeilen.some(z => z.kostentraeger_ik !== kostentraegerIk)) {
+      // Eine DTA-Datei gilt genau einer Datenannahmestelle × Kassenart
+      // (Kap. 5.3.1) — mehrere Kassen heissen mehrere Läufe.
+      return res.status(400).json({ error: 'Eine Korrekturrechnung kann nur Belege EINER Krankenkasse enthalten.' });
+    }
+    const istPodo = zeilen[0].therapie_bereich === 'podo';
+    if (zeilen.some(z => (z.therapie_bereich === 'podo') !== istPodo)) {
+      // Physio und Podologie lösen über verschiedene Abrechnungscode-Ketten zu
+      // verschiedenen Annahmestellen auf und rechnen mit verschiedenen
+      // Preiskatalogen. Getrennte Dateien, getrennte Läufe.
+      return res.status(400).json({ error: 'Eine Korrekturrechnung kann nicht Podologie und Physio/Ergo/Logo mischen.' });
+    }
+    const bereich = istPodo ? 'podologie' : tenantSector;
+
+    // ---- IK der Praxis ----
+    let { data: cert } = await supabase
+      .from('terapeut_zertifikat').select('ik_nummer').eq('owner_id', tenantId).maybeSingle();
+    if (!cert?.ik_nummer && praxisProfil.ik_number) cert = { ik_nummer: praxisProfil.ik_number };
+    if (!cert?.ik_nummer) return res.status(400).json({ error: 'Kein IK-Nummer hinterlegt.' });
+
+    // ---- Empfänger ----
+    const { data: kk } = await supabase
+      .from('kostentraeger').select('ik, name').eq('ik', kostentraegerIk).maybeSingle();
+    if (!kk) return res.status(400).json({ error: 'Krankenkasse unbekannt.' });
+    const das = await ladeAnnahmestelle(supabase, {
+      kostentraegerIk, bereich,
+      eigenerAbrechnungscode: istPodo ? '71' : abrechnungscodeFuer(tenantSector),
+    });
+    if (!das.ok) return annahmestelleFehlt(res, { ik: kostentraegerIk, name: kk.name });
+
+    // ---- die HEUTIGE Verordnung laden ----
+    //
+    // Bewusst der lebende Stand, nicht der eingefrorene: die Praxis hat den
+    // Fehler korrigiert, und genau das soll die Kasse jetzt sehen. Der
+    // eingefrorene Stand steckt im URI-Segment und bleibt daneben stehen.
+    const rxIds = zeilen.map(z => z.prescription_id);
+    const { data: rxRows, error: rxErr } = await supabase
+      .from('prescriptions')
+      .select(`
+        *,
+        leads:patient_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer),
+        aerzte:arzt_id   (id, arzt_name, lanr, bsnr),
+        prescription_sessions (
+          id, session_number, status, done_at,
+          bookings:booking_id ( id, user_id, service_id, services:service_id (id, required_certificate) )
+        )
+      `)
+      .eq('owner_id', tenantId)
+      .in('id', rxIds);
+    if (rxErr) return res.status(500).json({ error: rxErr.message });
+    if ((rxRows || []).length !== rxIds.length) {
+      return res.status(404).json({ error: 'Nicht alle Verordnungen zu den gewählten Belegen gefunden.' });
+    }
+    const rxById = new Map(rxRows.map(r => [r.id, r]));
+
+    let behByVord = {};
+    if (istPodo) {
+      const { data: behs } = await supabase
+        .from('podologie_behandlungen')
+        .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
+        .eq('owner_id', tenantId).in('verordnung_id', rxIds);
+      for (const b of behs || []) (behByVord[b.verordnung_id] ||= []).push(b);
+    }
+
+    let tariffs = [];
+    let therapistCerts = new Map();
+    if (!istPodo) {
+      const bundesland = bundeslandDerPraxis(praxisProfil);
+      if (!bundesland) return bundeslandFehler(res, praxisProfil);
+      const { data: t } = await supabase
+        .from('heilmittel_tarif')
+        .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
+        .eq('bundesland', bundesland);
+      tariffs = t || [];
+      const { data: certs } = await supabase
+        .from('therapist_certificates').select('profile_id, certificate').eq('owner_id', tenantId);
+      for (const c of certs || []) {
+        if (!therapistCerts.has(c.profile_id)) therapistCerts.set(c.profile_id, new Set());
+        therapistCerts.get(c.profile_id).add(c.certificate);
+      }
+    }
+
+    // ---- abbilden, jede Zeile mit ihrem URI-Ursprung ----
+    const quellen = [];
+    const prescriptions = zeilen.map(z => {
+      const rx = rxById.get(z.prescription_id);
+      quellen.push(rx);
+      const p = istPodo
+        ? mapVerordnungToDtaShape(rx, rx.leads, rx.aerzte, behByVord[rx.id] || [])
+        : mapPrescriptionToDtaShape(rx, rx.leads, rx.aerzte, therapistCerts, tariffs, tenantSector);
+      // Die Belegnummer ist eingefroren und MUSS die alte bleiben: die Kasse
+      // ordnet die Korrektur nur darüber zu (Kap. 7.3).
+      p.patient.belegnummer = z.belegnummer;
+      p.urspruenglich = {
+        ikLeistungserbringer:  cert.ik_nummer,
+        sammelRechnungsnummer: z.abrechnung.rechnungsnummer,
+        einzelRechnungsnummer: z.einzel_rechnungsnummer,
+        rechnungsdatum:        z.abrechnung.created_at,
+        belegnummer:           z.belegnummer,
+      };
+      return p;
+    });
+
+    // ---- Nummerierung, wie in beiden create-Wegen ----
+    const now = new Date();
+    const { year, week } = isoWeek(now);
+    const { count: jahresCount } = await supabase
+      .from('abrechnung').select('id', { count: 'exact', head: true })
+      .eq('owner_id', tenantId).gte('created_at', `${year}-01-01`);
+    const datennummer = (jahresCount || 0) + 1;
+    const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
+
+    // ---- Datei bauen ----
+    let dta;
+    try {
+      dta = buildDtaFile({
+        absender:   { ik: cert.ik_nummer, name: praxisProfil.business_name || 'Praxis' },
+        empfaenger: { ik: das.ik, name: das.name || kk.name },
+        rechnung: { sammelRechnungsnummer, einzelRechnungsnummer: '0', datum: now, datennummer, rechnungsart: '1' },
+        prescriptions,
+        kind: 'test',
+        vkz: '04',
+        rechnungssteller: { name: praxisProfil.business_name || 'Praxis', telefon: praxisProfil.phone || '' },
+      });
+    } catch (e) {
+      if (e.preflight) return res.status(422).json({ error: 'Korrekturrechnung enthält Fehler, die vom DMRZ abgelehnt würden.', preflight: e.preflight });
+      throw e;
+    }
+
+    // ---- Summen (dieselbe Schleife wie in beiden create-Wegen) ----
+    let totalBrutto = 0, totalZu = 0;
+    for (const p of prescriptions) {
+      const brutto = p.sessions.reduce((a, s) => a + (Number(s.einzelbetrag) || 0) * (Number(s.anzahl) || 1), 0);
+      totalBrutto += brutto;
+      if (p.verordnung.zuzahlungskennzeichen === '0') {
+        const proz = p.sessions.reduce((a, s) => a + (Number(s.zuzahlungProPos) || 0) * (Number(s.anzahl) || 1), 0);
+        totalZu += Math.min(brutto, proz + 10);
+      }
+    }
+    totalBrutto = +totalBrutto.toFixed(2);
+    totalZu     = +totalZu.toFixed(2);
+
+    const { data: ab, error: abErr } = await supabase.from('abrechnung').insert({
+      owner_id:           tenantId,
+      kostentraeger_ik:   kostentraegerIk,
+      dateiname:          dta.filename,
+      rechnungsnummer:    sammelRechnungsnummer,
+      total_eur:          totalBrutto,
+      zuzahlung_total:    totalZu,
+      status:             'erstellt',
+      dta_file_size:      dta.byteLength,
+      dta_segment_count:  dta.segmentCount,
+      prescription_count: prescriptions.length,
+    }).select('id, business_id').single();
+    if (abErr) return res.status(500).json({ error: 'abrechnung insert: ' + abErr.message });
+
+    // ---- hochladen ----
+    const datePath = `${year}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const dtaPath  = `${tenantId}/${datePath}/${ab.id}/${dta.filename}.dta`;
+    const upDta = await supabase.storage.from('abrechnungen')
+      .upload(dtaPath, Buffer.from(dta.content, 'latin1'), { contentType: 'application/octet-stream', upsert: true });
+    if (upDta.error) {
+      await supabase.from('abrechnung').delete().eq('id', ab.id);
+      return res.status(500).json({ error: 'Storage upload: ' + upDta.error.message });
+    }
+
+    const belege = prescriptions.map((p, i) => ({
+      belegnummer:      p.patient.belegnummer,
+      patient_nachname: p.patient.nachname,
+      patient_vorname:  p.patient.vorname,
+      verordnungsdatum: p.verordnung.ausstellungsdatum,
+      brutto: p.sessions.reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0).toFixed(2),
+      _i: i,
+    }));
+    const begleitHtml = await baueBegleitzettel({
+      dta, belege, kk, kostentraegerIk, now,
+      praxis: {
+        name:    praxisProfil.business_name || 'Praxis',
+        strasse: [praxisProfil.street, praxisProfil.house_number].filter(Boolean).join(' '),
+        plz_ort: [praxisProfil.zip, praxisProfil.city].filter(Boolean).join(' ').trim(),
+        telefon: praxisProfil.phone || '',
+        ik:      cert.ik_nummer,
+      },
+      sammelRechnungsnummer,
+    });
+    const begleitPath = `${tenantId}/${datePath}/${ab.id}/begleitzettel.html`;
+    const upBeg = await supabase.storage.from('abrechnungen')
+      .upload(begleitPath, Buffer.from(begleitHtml, 'utf8'), { contentType: 'text/html; charset=utf-8', upsert: true });
+    if (upBeg.error) console.warn('[abrechnung/korrektur] begleitzettel upload failed:', upBeg.error.message);
+
+    await supabase.from('abrechnung').update({
+      storage_path: dtaPath, begleitzettel_path: upBeg.error ? null : begleitPath,
+    }).eq('id', ab.id);
+
+    // ---- Arbeitsachse umhängen ----
+    // `prescriptions.abrechnung_id` heisst „in welcher Datei liegt die Zeile
+    // GERADE" — das ist ab jetzt die Korrekturdatei. Die alte Zeile bleibt in
+    // `abrechnung_zeile` stehen (Geschichtsachse) und wird nur als
+    // „nachgereicht" markiert; gelöscht wird nichts (GoBD).
+    const { error: rxUpdErr } = await supabase.from('prescriptions').update({
+      abrechnung_id:     ab.id,
+      abrechnung_status: istPodo ? abrechnungStatusAusStatus('abgerechnet') : 'in_abrechnung',
+    }).in('id', rxIds).eq('owner_id', tenantId);
+    if (rxUpdErr) console.error('[abrechnung/korrektur] Verordnungen umhaengen fehlgeschlagen', rxUpdErr);
+
+    const { error: altErr } = await supabase.from('abrechnung_zeile')
+      .update({ status: 'nachgereicht' })
+      .in('id', zeilenIds);
+    if (altErr) console.error('[abrechnung/korrektur] alte Zeilen markieren fehlgeschlagen', altErr);
+
+    // ---- neue Zeilen einfrieren ----
+    const neueZeilen = zeilenAusDta({
+      abrechnungId: ab.id, ownerId: tenantId, businessId: ab.business_id || null,
+      kostentraegerIk, dta, prescriptions, quellen,
+    });
+    let zeilenGespeichert = neueZeilen.length;
+    if (neueZeilen.length) {
+      const { error: nzErr } = await supabase.from('abrechnung_zeile').insert(neueZeilen);
+      if (nzErr) { zeilenGespeichert = 0; console.error('[abrechnung/korrektur] abrechnung_zeile insert fehlgeschlagen', nzErr); }
+    }
+
+    logAccess(supabase, {
+      userId: u.user.id, ownerId: tenantId, ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      method: 'POST', path: req.path, resource: 'abrechnung', resourceId: ab.id,
+      action: 'korrektur', statusCode: 200,
+      metadata: {
+        kostentraegerIk, vkz: '04', belege: prescriptions.length,
+        dateiname: dta.filename,
+        ursprung: zeilen.map(z => `${z.abrechnung.rechnungsnummer}:${z.einzel_rechnungsnummer}/${z.belegnummer}`),
+        grund: typeof grund === 'string' ? grund.trim().slice(0, 500) : null,
+      },
+    });
+
+    return res.json({
+      ok: true,
+      abrechnungId: ab.id,
+      dateiname: dta.filename,
+      sammelRechnungsnummer,
+      vkz: '04',
+      prescriptionCount: prescriptions.length,
+      totalBrutto, totalZu,
+      storagePath: dtaPath,
+      begleitzettelPath: upBeg.error ? null : begleitPath,
+      zeilenGespeichert,
+    });
+  } catch (e) {
+    console.error('[abrechnung/korrektur]', e);
+    return res.status(e.status || 500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
+// VKZ-01-Ausnahme — Nr. 21 (Urbelege fehlten) / Nr. 22 (Datei abgewiesen)
+// ============================================================================
+//
+// Plan Abschnitt 6, Phase 5, Punkt 5: die beiden VKZ-01-Ausnahmen brauchen
+// einen eigenen, BENANNTEN Weg — nicht denselben Knopf wie /abrechnung/korrektur.
+// Hier gilt nichts als eingereicht (Prüfstufe 1-3 nie bestanden), eine URI
+// wäre deshalb falsch (§7.2 setzt eine bestandene Ursprungsrechnung voraus).
+// Der richtige Weg ist eine ganz normale neue Erstrechnung (VKZ 01) — die
+// Verordnung muss dafür nur wieder als „bereit" auswählbar sein.
+//
+// Nur für Physio/Ergo/Logo: die Podologie hat diesen Weg bereits über
+// PATCH /verordnung/:id/abrechnungsstatus (ziel: 'aktiv', jetzt: 'abgesetzt'),
+// gebaut in eigener Vokabular (aktiv/abrechenbar/…). Diese Route verdoppelt
+// ihn nicht, sondern verweist Podologie-Zeilen dorthin.
+router.post('/abrechnung/zeile/:id/vkz01-ausnahme', async (req, res) => {
+  try {
+    // ---- auth ----
+    const hdr = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const { data: profile } = await supabase
+      .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
+    if (!profile) return res.status(403).json({ error: 'Profile not found' });
+    const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : profile.id;
+
+    const { grund } = req.body || {};
+    if (typeof grund !== 'string' || grund.trim().length < 3) {
+      return res.status(422).json({
+        error: 'Begründung erforderlich (z. B. „Urbelege fehlten" oder „Datei war nicht TA-konform").',
+      });
+    }
+
+    const { data: zeile, error: zErr } = await supabase
+      .from('abrechnung_zeile')
+      .select('id, owner_id, prescription_id, therapie_bereich, status, belegnummer')
+      .eq('id', req.params.id).eq('owner_id', tenantId).maybeSingle();
+    if (zErr) return res.status(500).json({ error: zErr.message });
+    if (!zeile) return res.status(404).json({ error: 'Zeile nicht gefunden oder gehört nicht zu Ihnen.' });
+
+    if (zeile.status !== 'abgesetzt' && zeile.status !== 'teilabgesetzt') {
+      return res.status(422).json({
+        error: `Nur eine ABGESETZTE Zeile kann so zurückgesetzt werden. Status ist „${zeile.status}".`,
+      });
+    }
+    if (zeile.therapie_bereich === 'podo') {
+      return res.status(400).json({
+        error: 'Für Podologie bitte den Statusdialog an der Verordnung verwenden (nicht diese Route).',
+      });
+    }
+    if (!zeile.prescription_id) {
+      return res.status(422).json({ error: 'Die Verordnung zu diesem Beleg existiert nicht mehr.' });
+    }
+
+    // Dieselbe Zuweisung wie im entfernten stillen Retry (upload-zaa) — nur
+    // jetzt eine bewusste, protokollierte Handlung statt eines Automatismus.
+    const { error: upErr } = await supabase.from('prescriptions').update({
+      abrechnung_status: 'bereit',
+      status: 'confirmed',
+    }).eq('id', zeile.prescription_id).eq('owner_id', tenantId);
+    if (upErr) return res.status(500).json({ error: upErr.message });
+
+    logAccess(supabase, {
+      userId: u.user.id, ownerId: tenantId, ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      method: 'POST', path: req.path, resource: 'abrechnung_zeile', resourceId: zeile.id,
+      action: 'vkz01-ausnahme', statusCode: 200,
+      metadata: { belegnummer: zeile.belegnummer, grund: grund.trim().slice(0, 500) },
+    });
+
+    return res.json({ ok: true, prescriptionId: zeile.prescription_id });
+  } catch (e) {
+    console.error('[abrechnung/zeile/vkz01-ausnahme]', e);
+    return res.status(e.status || 500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
+// Absetzungsbetrag von Hand — Plan Abschnitt 6, Phase 4
+// ============================================================================
+//
+// Die ZAA-Datei trägt keine Beträge (siehe upload-zaa oben) — nur ein
+// AbsetzungsSCHREIBEN auf Papier oder im Kassenportal nennt die genaue Summe.
+// Diese Route trägt sie nach, mit Pflichtbegründung. Der GoBD-Trigger
+// `fn_abrechnung_zeile_festschreibung()` lässt genau diese drei Felder offen
+// (`status`, `absetzung_*`), alles andere an der Zeile bleibt eingefroren.
+router.patch('/abrechnung/zeile/:id/absetzung', async (req, res) => {
+  try {
+    const hdr = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const { data: profile } = await supabase
+      .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
+    if (!profile) return res.status(403).json({ error: 'Profile not found' });
+    const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : profile.id;
+
+    const betrag = Math.round((Number(req.body?.betragEur) || 0) * 100) / 100;
+    const grund = String(req.body?.grund || '').trim();
+    if (!betrag || betrag <= 0) return res.status(400).json({ error: 'Betrag fehlt oder ist 0.' });
+    if (grund.length < 3) return res.status(422).json({ error: 'Begründung erforderlich (mind. 3 Zeichen) — aus dem Absetzungsschreiben.' });
+
+    const { data: zeile, error: zErr } = await supabase
+      .from('abrechnung_zeile')
+      .select('id, owner_id, status, netto_eur, herkunft, belegnummer, absetzung_grund')
+      .eq('id', req.params.id).eq('owner_id', tenantId).maybeSingle();
+    if (zErr) return res.status(500).json({ error: zErr.message });
+    if (!zeile) return res.status(404).json({ error: 'Zeile nicht gefunden oder gehört nicht zu Ihnen.' });
+    if (zeile.status !== 'abgesetzt' && zeile.status !== 'teilabgesetzt') {
+      return res.status(422).json({
+        error: `Nur eine ABGESETZTE Zeile bekommt einen Absetzungsbetrag. Status ist „${zeile.status}".`,
+      });
+    }
+    // Derselbe Riegel wie der CHECK in der Datenbank (abrechnung_zeile_absetzung_betrag) —
+    // hier nur, damit die Meldung den Grund nennt statt eine 500er-Constraint-Verletzung.
+    if (zeile.herkunft !== 'rekonstruiert' && betrag > Number(zeile.netto_eur)) {
+      return res.status(422).json({
+        error: `Absetzungsbetrag (${betrag} €) kann nicht größer sein als der Kassenanteil der Zeile (${zeile.netto_eur} €).`,
+      });
+    }
+
+    // Anhängen statt überschreiben: `absetzung_grund` trägt oft schon den
+    // maschinellen ZAA-Fehlertext (upload-zaa oben) — der ist die einzige
+    // Spur, was die Kasse WÖRTLICH gemeldet hat. Eine spätere Korrektur/
+    // Beschwerde braucht genau den Wortlaut, nicht nur die von Hand
+    // eingetragene menschliche Zusammenfassung. Die menschliche Zeile steht
+    // ZUERST — die Zeilenansicht zeigt nur die erste Zeile (split('\n')[0]),
+    // und genau die soll auf den ersten Blick lesbar sein.
+    const grundGesamt = zeile.absetzung_grund && zeile.absetzung_grund.trim()
+      ? `${grund}\n— ZAA-Meldung: ${zeile.absetzung_grund}`
+      : grund;
+
+    const { error: upErr } = await supabase.from('abrechnung_zeile').update({
+      absetzung_eur: betrag,
+      absetzung_grund: grundGesamt,
+      absetzung_am: new Date().toISOString().slice(0, 10),
+    }).eq('id', zeile.id);
+    if (upErr) return res.status(500).json({ error: upErr.message });
+
+    logAccess(supabase, {
+      userId: u.user.id, ownerId: tenantId, ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      method: 'PATCH', path: req.path, resource: 'abrechnung_zeile', resourceId: zeile.id,
+      action: 'absetzung-erfassen', statusCode: 200,
+      metadata: { belegnummer: zeile.belegnummer, betrag_eur: betrag, grund: grund.slice(0, 500) },
+    });
+
+    return res.json({ ok: true, absetzungEur: betrag });
+  } catch (e) {
+    console.error('[abrechnung/zeile/absetzung]', e);
     return res.status(e.status || 500).json({ error: e.message });
   }
 });

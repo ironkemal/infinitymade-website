@@ -1,13 +1,27 @@
-# Arşiv — eskimiş rapor ve plan dosyaları
+# Arşiv — eskimiş belgeler ve kökten çekilen ağırlık
 
-**Taşınma tarihi:** 2026-08-05 · **39 dosya** · Silinmedi, taşındı (git geçmişi korunuyor).
+**İlk taşınma:** 2026-08-05 · 39 dosya · Silinmedi, taşındı (git geçmişi korunuyor).
+**Bugün:** 573 dosya · ~271 MB · beş yeni alt klasör (09.09.2026 kök temizliği).
 
 Bu klasördeki dosyalar **tarihsel kayıttır.** Güncel bilgi için buraya bakma — kök dizindeki
-canlı dosyalara, `.claude/agents/` altındaki ajan tanımlarına veya `Handbücher/INDEX.md`'ye bak.
+canlı dosyalara, `.claude/agents/` altındaki ajan tanımlarına veya `wissensbank/INDEX.md`'ye bak.
 
 ---
 
-## Neden arşivlendi
+## İki tür arşiv — hangisine baktığını bil
+
+Aynı klasörde iki farklı şey duruyor ve ikisine aynı şekilde davranmak hata olur.
+
+| | **Tür 1 — içeriği geçersiz** | **Tür 2 — içeriği geçerli, kökte yeri yoktu** |
+|---|---|---|
+| Ne | Ürün altından kaydığı için artık yanlış olan belge/kod | Doğru ama ağır: yeniden üretilebilir kanıt görseli, ham medya |
+| Okuyan ne alır | **Yanlış bilgi** — okuyup inanırsa zarar eder | Doğru bilgi, ama **bir tarihe ait** |
+| Nerede | kök `*.md` (28) · `rapor/` · `kod/` · `lib-orphan/` · `supabase-migrations-vor-baseline/` · `ai-chatbot-proje/` · `marketing-notebooklm/` | `denetim/` · `recherche/` · `medya/` · `competitor-research-optica/` |
+| Kullanma kuralı | Buradan alınan **her iddia** aksiyondan önce koda/DB'ye karşı doğrulanır | İçerik doğrudur; sorulacak tek şey "hangi tarihte çekildi, o günden beri ne değişti" |
+
+---
+
+## Neden arşivlendi (Tür 1, 2026-08-05 dalgası)
 
 Bu dosyalar "eski" oldukları için değil, **ürün altlarından kaydığı** için geçersiz. 2026-08-05
 denetiminde 42 dosyanın neredeyse tamamının şu **altı ürün kararından** birine takıldığı görüldü:
@@ -37,6 +51,7 @@ Arşivlemeden önce koddan/git'ten çıkarılamayacak bilgiler ilgili yerlere ta
 | `SECURITY_AUDIT_2026-06-03.md` | Bulgularının çoğu çürütüldü (bkz. aşağıdaki uyarı) | hafıza |
 | `infinitymade*.md` | Fiyat setleri — **hepsi geçersiz.** Geçerli set: 29/49/99 €/ay | `CLAUDE.md` |
 | `Fahrtenbuch.md` | ORS entegrasyonu, 10 dk buffer formülü, durum makinesi | (özellik canlı — koda bak) |
+| `rapor/STRIPE_SETUP.md` | Env var **adları** — hâlâ geçerli, ama dosya Test Mode döneminde yazıldı | `CLAUDE.md` → Stripe bölümü |
 
 ---
 
@@ -55,21 +70,105 @@ Buradan bir "açık iş" alıp aksiyona geçmeden **önce koda/DB'ye karşı do�
 
 ```
 archive/
-├── *.md                          kök dizinden taşınan 28 dosya
-├── competitor-research-optica/   Optica rakip analizi derinlemesine notları (4)
-├── marketing-notebooklm/         NotebookLM pazarlama materyalleri (5)
-├── ai-chatbot-proje/             terk edilmiş chatbot projesi (2)
-└── lib-orphan/                   kök `lib/`'in içeriği (3) — 28.08.2026
-
-> ⚠️ Bu taşıma **yarım kaldı**: yalnız belgeler (`CLAUDE.md` + `kur.md`) arşive geldi.
-> Kodun kendisi hâlâ kökte: `ai chatbot proje/index.html` (92 KB). 27.08.2026'da
-> `.vercelignore`'a alındı, artık praxura.de'den erişilemiyor — ama taşıma hâlâ açık.
+├── *.md (28)                        kök dizinden taşınan raporlar — 05.08.2026
+├── competitor-research-optica/ (4)  Optica rakip analizi, metin notları
+├── marketing-notebooklm/ (5)        NotebookLM pazarlama materyalleri
+├── ai-chatbot-proje/ (3)            terk edilmiş chatbot projesi — belge + kod
+├── lib-orphan/ (3)                  kök `lib/`'in içeriği — 28.08.2026
+├── supabase-migrations-vor-baseline/ (14)   eski `supabase/migrations/` — 04.09.2026
+│
+│   ── 09.09.2026 kök temizliği ──
+├── kod/ (52)                        ölü SQL + ölü script
+├── medya/ (49, 81 MB)               marka + video ham materyali
+├── rapor/ (5)                       eskimiş kök raporları
+├── denetim/ (291, 159 MB)           UI/mobil denetim kanıt görselleri
+└── recherche/ (118, 30 MB)          rakip ekran arşivi
 ```
+
+> ℹ️ `funktionen-shots/raw/` **buraya gelmedi** — `assets/img/fn/_raw/` altına taşındı,
+> çünkü arşivlik değil: `assets/img/fn/`'deki canlı `.webp`'lerin ham kaynağı
+> (`index.html:1485` onları yüklüyor). Arşivde arama.
+
+---
+
+## 09.09.2026 kök temizliği — beş yeni alt klasör
+
+Kök dizinde 15 yıl önce bırakılmış gibi duran ne varsa tek günde sınıflandırıldı.
+Ölçüt her seferinde aynıydı: **çalışma zamanında bu dosyayı okuyan var mı?** Yoksa
+kökte durması için sebep yok. Her taşımada atıflar da yönlendirildi.
+
+### `kod/` — ölü SQL ve ölü script (52 dosya · commit `4f282f7`)
+
+- **Ne:** 39 kök `database_v*.sql` + 9 ölü `.py` + `script.js` · `chatbot.js` ·
+  `_fix_encoding2.cjs` · `stripe-live-setup.js`.
+- **Niye:** SQL numaraları çakışıyordu (v28/v29/v31 ikişer kez, v13/v14 hiç yok), canlı
+  veritabanında **195 migration** kayıtlı ve çalışma zamanında bu dosyaların **hiçbiri**
+  okunmuyordu. `db-ustasi` + `fonksiyon-ustasi` ikisi birden doğruladı.
+- **Gerçek şema nerede:** `db/SCHEMA.sql` + `db/SCHEMA-RLS.sql`. Bir kolonun ne zaman
+  eklendiği sorusu `db/REGISTER.md` ve `fortschritte/` üzerinden cevaplanır.
+- ⚠️ **`stripe-live-setup.cjs` kökte KALDI** — canlı ürün/fiyat script'i odur. Buradaki
+  `.js` ikizi `package.json`'daki `"type": "module"` yüzünden zaten hiç çalışmıyordu
+  (`require is not defined`). İkisi tek kelime farkla aynıydı; karışıklık bu yüzden bitti.
+
+### `medya/` — marka ve video ham materyali (49 dosya · 81 MB · commit `29d9395`)
+
+- **Ne:** `Logo/` · `web foto/` · `app ss/` · `demo rezept/` · `voice demo/` · `demo slayt/`.
+- **Niye:** hiçbiri web asset'i değil, hiçbiri runtime'da yüklenmiyor. Tam metin aramada
+  **sıfır kod referansı** çıktı (`wissensbank` ile karşılıklı doğrulandı).
+- **Tek istisna:** `dashboard-vorschau.html` iki ikon path'i `Logo/`'ya bakıyordu, taşımada
+  güncellendi — ama o sayfa `.vercelignore`'daki eski `Logo/` kuralı yüzünden prod'da zaten
+  404 alıyordu; taşıma bunu değiştirmedi.
+- **Canlı görseller karıştırılmasın:** `assets/img/` · `fonts/` · `images/` dokunulmadı.
+
+### `rapor/` — eskimiş kök raporları (5 dosya · commit `29d9395`)
+
+- **Ne:** `SEO_AKTIONSPLAN.md` · `KONTRAST_AUDIT.md` · `DUPLICATION_AUDIT.md` ·
+  `ITSG_EMAIL_DRAFT.md` · `STRIPE_SETUP.md`.
+- **Niye:** hepsi bir kerelik durum raporu; ya uygulandı ya konu değişti. Kökte kalanlar
+  **açık plan** oldukları için kaldı (`ONPREM_MIGRATION_PLAYBOOK` · `TYPECHECK` ·
+  `REBRANDING_GUARDRAILS` · `ARBEITSZEITEN_PRO_STANDORT` · `LEGAL_ONPREM_REQUIREMENTS` ·
+  `UMAMI_SETUP`).
+- ⚠️ `STRIPE_SETUP.md` tamamen ölü değil: **env var adları hâlâ geçerli.** Geçersiz olan,
+  dosyanın Test Mode döneminde yazılmış olması.
+- ⚠️ Buna atıf veren yerler kök yolunu kullanıyor olabilir — `archive/rapor/` önekiyle ara.
+
+### `denetim/` — UI ve mobil denetim kanıtları (291 dosya · 159 MB · commit `56e8d95`)
+
+- **Ne:** `ui-audit/` (235) + `mobile-audit/` (56) — responsive/mobil denetimin
+  before/after ekran görüntüleri.
+- **Niye:** ~159 MB, web asset'i değil, **yeniden üretilebilir**. Üreticileri taşımayla
+  birlikte yeni yola çekildi: `ui_audit_shots.py` · `capture_mobile.py` · `capture_mobile2.py`.
+- ⚠️ **`mobile-audit/` sadece kanıt değil, canlı bir iş akışının parçası:** `mobil-ui`
+  ajanı protokol gereği buraya before/after çekiyor. `.claude/agents/mobil-ui.md` yeni
+  yola güncellendi — yani klasör arşivde ama **ölü değil**.
+- **Silinmedi çünkü:** bir düzeltmenin gerçekten işe yaradığının kanıtı before/after çiftidir;
+  yeniden üretmek "before"u geri getirmez.
+
+### `recherche/` — rakip ekran arşivi (118 dosya · 30 MB · commit `3a3a0ce`)
+
+- **Ne:** eski kök `competitor-research/` — ağırlıklı olarak Optica ekran görüntüleri.
+- **Niye:** `archive/competitor-research-optica/` altındaki metin notlarının **görsel eki**;
+  ikisi ayrı yerlerde durduğu sürece not okunurken ekran bulunamıyordu.
+- ⚠️ **Taşınması riskli sanılıyordu** ("TAŞIMA, 40+ link kırılır" diye işaretliydi).
+  Gerçekte o 36 atıf **mutlak `file://C:\Users\Test\…` yolu** — başka bir makinenin
+  kullanıcı adıyla yazılmışlar, bu makinede zaten hiç açılmıyorlardı. Yine de tutarlılık
+  için hepsi yeni yola çekildi; **çalışır hâle gelmediler**, kullanıcı adı sorunu ayrı.
+- **Yan etki:** `tools/tabellenkarte.mjs` içindeki `SKIP_DIRS` listesi de temizlendi.
+
+---
+
+## `ai-chatbot-proje/` — terk edilmiş chatbot (3 dosya, taşıma 09.09.2026'da tamamlandı)
+
+`CLAUDE.md` · `kur.md` · `index.html`. Belge kısmı 2026-08-05'te gelmişti, **kod kısmı
+kökte kalmıştı** (`ai chatbot proje/index.html`, 92 KB) — 09.09.2026'da o da buraya
+taşındı, taşıma artık **kapalı**.
 
 **Not:** `ai-chatbot-proje/CLAUDE.md` içinde 2026-08-05'e kadar açık bir Fal AI anahtarı vardı.
 Değer çalışma ağacından kaldırıldı ama **git geçmişinde duruyor** — anahtarın iptali
-`TODO_MANUEL.md` §0.1'de takip ediliyor.
+`guvenlik/REGISTER.md` → **S-08** altında takip ediliyor (eski takip yeri `TODO_MANUEL.md`
+artık yok). Aynı madde altında git geçmişindeki n8n API anahtarı da duruyor.
 
+---
 
 ## `lib-orphan/` — kök `lib/` klasörü (28.08.2026)
 

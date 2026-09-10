@@ -31,7 +31,6 @@ fortschritte/
 db/
 funktionen/
 archive/
-demo slayt/
 
 # Database schema & scripts (full DB blueprint — do not publish)
 *.sql
@@ -64,10 +63,8 @@ module/globals.d.ts
 # Tote Sicherungskopien und Altbestand aus der Studio-Zeit
 *.bak
 index-old.html
-script.js
-chatbot.js
-pakete/
-ai chatbot proje/
+# script.js, chatbot.js, pakete/, ai chatbot proje/ — 09.09.2026 nach archive/
+# verschoben (archive/ oben schon ausgeschlossen), Regeln nicht mehr noetig
 # lib/ — 28.08.2026 nach archive/lib-orphan/ verschoben, Regel nicht mehr noetig
 
 # Fachdokumente (GKV/Heilmittel) + ihr Sicil. Werden im Code nur als QUELLE
@@ -84,9 +81,8 @@ Podoloji/
 
 # Captured browser traffic (contained live auth tokens) & junk screenshots
 *.har
-cache/
-app ss/
-web foto/
+# cache/, app ss/, web foto/ — 09.09.2026: cache/ geloescht (0 Referenzen),
+# app ss/ + web foto/ nach archive/medya/ verschoben (oben ausgeschlossen)
 dashboard_debug.png
 dashboard_logged_in.png
 gobd_kassenbuch_screenshot.png
@@ -100,11 +96,12 @@ verify_2_onboarding.png
 # QA-/Audit-Beweisbilder — reproduzierbar, ~205 MB, kein Web-Asset
 ui-audit/
 mobile-audit/
-funktionen-shots/
 
-# Medien-Rohmaterial aus der Videoproduktion
-demo rezept/
-voice demo/
+# Ham PNG-Quelle der Funktionen-Walkthrough — 09.09.2026 von funktionen-shots/raw/
+# nach assets/img/fn/_raw/ verschoben. assets/img/fn/ selbst bleibt LIVE
+# (index.html:1485 laedt die .webp-Ableitungen), nur die Rohdateien sind kein Web-Asset.
+assets/img/fn/_raw/
 
-# Markenquelldateien — die ausgelieferten Logos/Favicons liegen im Wurzelverzeichnis
-Logo/
+# Medien-Rohmaterial aus der Videoproduktion + Markenquelldateien — 09.09.2026
+# nach archive/medya/ verschoben (demo rezept/, voice demo/, Logo/, demo slayt/),
+# oben durch archive/ bereits ausgeschlossen

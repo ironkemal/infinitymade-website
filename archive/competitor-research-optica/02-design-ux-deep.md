@@ -48,12 +48,12 @@ Optica Viva relies on a traditional corporate-insurance color scheme designed fo
 
 | Page Element | Optica Layout Implementation | Screenshots |
 | :--- | :--- | :--- |
-| **Login Portal** | Pre-filled forms with a large centered card, corporate branding, and simple security keys. Minimalist, flat layout. | [designB-00-login.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-00-login.png) |
-| **Dashboard** | Two-column widget grid. Left column: tasks and shortcuts. Right column: notification journals. Flat layout. | [designB-01-dashboard.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-01-dashboard.png) |
-| **Navigation Sidebar** | A multi-level accordion menu (`224px` wide). Sub-menus expand on click, pushing down sibling items. Active states use text color shifts to `#203D80` with a transparent background. | [designB-01-dashboard.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-01-dashboard.png) |
-| **Calendar Grid** | FullCalendar v5 implementation utilizing bootstrap theme classes (`.fc-theme-bootstrap`). Multi-column layout supporting 1-day, 3-day, weekly, monthly, and therapist-specific lanes. | [designB-02-kalender.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-02-kalender.png) |
-| **Statistical Views** | Dense multi-pane layout featuring key-value summary boxes at the top and detailed tables underneath. Lacks rich modern visual charting (relies heavily on static text grids). | [designB-11-statistik.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-11-statistik.png) |
-| **System Settings** | Heavy tabbed interface grouped by core practice criteria (Fachrichtungen, Finanzen, Druck). High density forms. | [designB-13-einstellungen.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-13-einstellungen.png) |
+| **Login Portal** | Pre-filled forms with a large centered card, corporate branding, and simple security keys. Minimalist, flat layout. | [designB-00-login.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-00-login.png) |
+| **Dashboard** | Two-column widget grid. Left column: tasks and shortcuts. Right column: notification journals. Flat layout. | [designB-01-dashboard.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-01-dashboard.png) |
+| **Navigation Sidebar** | A multi-level accordion menu (`224px` wide). Sub-menus expand on click, pushing down sibling items. Active states use text color shifts to `#203D80` with a transparent background. | [designB-01-dashboard.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-01-dashboard.png) |
+| **Calendar Grid** | FullCalendar v5 implementation utilizing bootstrap theme classes (`.fc-theme-bootstrap`). Multi-column layout supporting 1-day, 3-day, weekly, monthly, and therapist-specific lanes. | [designB-02-kalender.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-02-kalender.png) |
+| **Statistical Views** | Dense multi-pane layout featuring key-value summary boxes at the top and detailed tables underneath. Lacks rich modern visual charting (relies heavily on static text grids). | [designB-11-statistik.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-11-statistik.png) |
+| **System Settings** | Heavy tabbed interface grouped by core practice criteria (Fachrichtungen, Finanzen, Druck). High density forms. | [designB-13-einstellungen.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-13-einstellungen.png) |
 
 ---
 
@@ -61,18 +61,18 @@ Optica Viva relies on a traditional corporate-insurance color scheme designed fo
 *Examining high-stakes clinical inputs: booking, patient records, and prescription entry.*
 
 ### A. Calendar Appointment Booking Modal
-*   **Path/Ref:** [designB-03-kalender-booking.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-03-kalender-booking.png)
+*   **Path/Ref:** [designB-03-kalender-booking.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-03-kalender-booking.png)
 *   **UX Layout:** A multi-pane overlay split horizontally. Left column houses time inputs, patient selections, and prescription linkages. Right column contains service add-ons ("Leistung hinzufügen"), billing rules, and multi-therapist assignments.
 *   **Usability Review:** Highly cluttered. The visual weight is heavily skewed toward text boxes with tiny labels. There is virtually no negative space, which can lead to click errors. However, the absolute density ensures that the practitioner can book multi-lane appointments with complex rules without navigating through multiple pages.
 
 ### B. Patient Entry / Creation Form
-*   **Path/Ref:** [designB-06-patient-form.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-06-patient-form.png)
+*   **Path/Ref:** [designB-06-patient-form.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-06-patient-form.png)
 *   **UX Layout:** Organized into segmented card blocks: "Stammdaten" (Core data), "Kommunikation" (Phone/Email), and "Krankenkasse" (Insurance provider link).
 *   **UX Wins:** Standardized grid layout that aligns fields to standard key/value pairs. The input elements are aligned in vertical columns to allow rapid `Tab` index usage.
 *   **UX Fails:** Visual noise is high. Validation is post-submit (red toast or red outlines after click) instead of modern inline validation. Select fields utilize older styling patterns that feel disconnected.
 
 ### C. Prescription Entry (Rezept-Editor)
-*   **Path/Ref:** [designB-08-rezept-entry.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-08-rezept-entry.png)
+*   **Path/Ref:** [designB-08-rezept-entry.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-08-rezept-entry.png)
 *   **UX Layout:** A strict replica of the physical paper prescription sheet (Heilmittelverordnung Form 13).
 *   **UX Wins:** Imitating the physical paper layout is brilliant for cognitive mapping. A therapist looking at a physical paper prescription can transfer data left-to-right, top-to-bottom instantly.
 *   **UX Fails:** Input density is extreme. The screen is filled with dozen of checkboxes, ICD-10 search pickers, and tiny number inputs. On lower resolutions, it requires severe horizontal and vertical scrolling.
@@ -82,7 +82,7 @@ Optica Viva relies on a traditional corporate-insurance color scheme designed fo
 ## 4. Data Tables & High-Density Grids
 *Analyzing table actions, data pagination, and inline manipulation.*
 
-*   **Paths/Refs:** [designB-04-patient-list.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-04-patient-list.png), [designB-07-rezept-list.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-07-rezept-list.png)
+*   **Paths/Refs:** [designB-04-patient-list.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-04-patient-list.png), [designB-07-rezept-list.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-07-rezept-list.png)
 *   **Sorting & Filtering:** Column headers feature explicit sort arrows (up/down caret). Instant text filters sit directly under the column header row, enabling local table filtering without complex modal menus.
 *   **Bulk Actions:** Checkbox-based selection in the first column allows bulk actions (e.g., "Abrechnen", "Löschen", "Markieren"). This triggers a sticky action bar at the bottom of the table.
 *   **Pagination:** Bottom-aligned pagination bar displaying "1 - 25 von 98". Very standard, non-dynamic.
@@ -93,7 +93,7 @@ Optica Viva relies on a traditional corporate-insurance color scheme designed fo
 ## 5. HMR-Prüfung (Prescription Validation System)
 *A critical comparison of error handling.*
 
-*   **Path/Ref:** [designB-09-hmr-pruefung.png](file:///C:/Users/Test/Desktop/claude/website/competitor-research/optica/screens/designB-09-hmr-pruefung.png)
+*   **Path/Ref:** [designB-09-hmr-pruefung.png](file:///C:/Users/Test/Desktop/claude/website/archive/recherche/optica/screens/designB-09-hmr-pruefung.png)
 *   **UX Mechanics:** Displays a checklist of active prescriptions with invalid formatting, missing fields, or incorrect therapist qualifications.
 *   **Visual Highlights:** Uses high-contrast validation colors. Errors are marked with sharp red tags, while approved criteria have green checks. It lists *exactly* what criteria failed (e.g., "Leitsymptomatik fehlt", "Frequenzüberschreitung").
 *   **Interaction Strategy:** Clicking an error item directly links the user back to the edit page with the cursor focused on the violating field. This is an exceptional UX flow that saves hours of administrative hunting.

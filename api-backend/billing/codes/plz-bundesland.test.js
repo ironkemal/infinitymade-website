@@ -150,11 +150,16 @@ test('BAUART: jede Bundesland-Ermittlung wird sofort abgesichert', () => {
     .map((z, i) => ({ z, i }))
     .filter(({ z }) => z.includes('= bundeslandDerPraxis('));
 
-  // Zwei, nicht drei: create-podologie hat das Bundesland zwar berechnet, aber
-  // an eine Funktion gegeben, die es nie las. Podologie kennt keinen regionalen
-  // Tarif-Override, dort gibt es nichts zu ermitteln.
-  assert.equal(stellen.length, 2,
-    `Erwartet 2 Aufrufstellen (create, preflight), gefunden ${stellen.length}.`);
+  // Drei seit 09.09.2026: create, preflight und korrektur (VKZ 04). Die
+  // Korrekturrechnung baut denselben Physio-Fall neu auf und braucht deshalb
+  // dieselben Tarife — nur im Physio-Zweig.
+  //
+  // In create-podologie steht bewusst KEINE: dort wurde das Bundesland zwar
+  // einmal berechnet, aber an eine Funktion gegeben, die es nie las. Podologie
+  // kennt keinen regionalen Tarif-Override, dort gibt es nichts zu ermitteln —
+  // und genau deshalb ruft auch der podologische Zweig von /korrektur nicht auf.
+  assert.equal(stellen.length, 3,
+    `Erwartet 3 Aufrufstellen (create, preflight, korrektur), gefunden ${stellen.length}.`);
 
   for (const { i } of stellen) {
     const naechste = zeilen[i + 1] || '';

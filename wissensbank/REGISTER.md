@@ -5,7 +5,8 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 07.09.2026 (W-01 zinciri kapandı, W-A08 kapandı)
+> İlk kurulum: 05.09.2026 · Son güncelleme: 10.09.2026 (kök temizliği sonrası atıf tazeleme)
+> Önceki: 07.09.2026 (W-01 zinciri kapandı, W-A08 kapandı)
 
 ---
 
@@ -15,7 +16,7 @@
 |---|---|
 | Kayıtlı kaynak belge (INDEX'te) | 33 |
 | Arşivdeki PDF | 47 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
-| Arşiv boyutu | ~44 MB (`Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27) |
+| Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
 | Kaynak→kod zinciri kayıtlı | 10 |
 | Tam kimlik kartı yazılmış kaynak | 1 (**W-01** Kostenträgerdatei — zincir uçtan uca bağlı, 2 açık madde) |
 | **Herkunft (indirme URL'i) kayıtlı** | **2 / 34** ← asıl boşluk, W-A01 |
@@ -318,7 +319,8 @@ yeniden araştırılıyor demektir.
 - **Yedek:** ✅ git izliyor (ilk giriş `d4982fb` 05.09.2026, bölme `cceb528` 06.09.2026).
   `.gitignore` yalnız `*.pdf` kapatıyor, bu dosyalar metin. Silinen ham `.md`'nin içeriği
   git geçmişinde duruyor (`git show d4982fb:...`), ayrıca 7 parçanın toplamı birebir aynı.
-  Yayın yüzeyi kapalı: `.vercelignore:82` → `wissensbank/`.
+  Yayın yüzeyi kapalı: `.vercelignore:79` → `wissensbank/` (satır no 09.09.2026 kök
+  temizliğinden sonra tazelendi — o gün 11 ölü kural silinince liste yukarı kaydı).
 
 #### İçindeki 7 dosya
 
@@ -505,7 +507,7 @@ otomasyon (yayıncı sayfası izleme) ayrı bir karar, `deger-mi` ile.
 tazelik kontrolünde ikinci belgeli yordam; ama hâlâ **otomatik değil**, madde açık kalır.
 
 ### W-A07 · Yeniden dağıtım hakları netleştirilmedi — `offen`
-`.vercelignore:73-75` şüpheyi yazılı olarak kaydediyor: *"fraglich, ob ICD-10-GM- und
+`.vercelignore:72-73` şüpheyi yazılı olarak kaydediyor: *"fraglich, ob ICD-10-GM- und
 GKV-Lesefassungen ueberhaupt weiterverbreitet werden duerfen"*. Yayın yüzeyi kapalı
 (klasörler ignore'da ✅) ama **depo public** ve `.txt` karşılıkları git'te izleniyor.
 **Yapılacak:** `legal-de`'ye sorulur. `wissensbank/gemeinsam/icd-10-gm/downloadbedingungen-2025`
@@ -592,6 +594,22 @@ kayıtsız olduğu için yok sayılmış.
   (INDEX'te kapsam dışı yazılı). **Boşluk yok.**
 - **Fiyat verisi çift kaynaklı.** Anlage 2 (maßgeblich) + GKV XML (bağımsız doğrulama).
   PDF-parser ve YZ bilinçli olarak reddedildi — Ops kartı #213, 04.09.2026.
+
+- **Kök temizliği sonrası atıflar tazelendi — 10.09.2026.** 09.09.2026'da beş klasör
+  arşive taşındı ve `.vercelignore`'dan 11 ölü kural silindi; silinme listeyi yukarı
+  kaydırdığı için bu sicildeki iki satır-numarası atfı yalan söylemeye başlamıştı.
+  Düzeltilenler: `.vercelignore:82 → :79` (W-01 yayın yüzeyi satırı) ve
+  `.vercelignore:73-75 → :72-73` (W-A07 ICD/Lesefassung şüphesi). Ayrıca ajan
+  tanımındaki (`.claude/agents/wissensbank.md`, kural 5) aynı atıf çekildi ve
+  `archive/README.md`'deki ölü `Handbücher/INDEX.md` işareti `wissensbank/INDEX.md`
+  yapıldı. `wissensbank/README.md` ve W-A05'teki `.gitignore:1` → `*.pdf` atıfları
+  **kontrol edildi, doğru** — `.gitignore`'un ilk satırı değişmedi.
+  ⚠️ **Ders:** bir dosyaya satır numarasıyla atıf vermek ucuz ama **bakım borcu yaratır.**
+  O dosya bu depoda her temizlikte kısalıyor. Yeni atıflarda satır numarasının yanına
+  aranacak metin de yazılır (örn. „`.vercelignore` → `wissensbank/` satırı"), ki numara
+  kaydığında atıf yine bulunabilsin.
+  **Wissensbank'a dokunmayan taşımalar:** `wissensbank/` altındaki hiçbir belge
+  taşınmadı, hiçbir türev zinciri kırılmadı — temizlik kök dizini hedefledi.
 
 ---
 

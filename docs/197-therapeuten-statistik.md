@@ -33,7 +33,7 @@ supabase.from('profiles')
   .or(`id.eq.${tenantId},owner_id.eq.${tenantId}`)
 ```
 
-Es wird kein neuer Profil-Fremdschlüssel vorausgesetzt: der ursprüngliche `bookings.user_id`-Fremdschlüssel zeigt auf `auth.users` (`database_setup.sql:65`, `onprem/schema/live_schema_2026-07-06.sql:5553`). Die separate Namensabfrage begrenzt Profile auf Inhaber und dessen Mitarbeiter (`api-backend/billing/statistik/therapeuten.js:33`). Der Endpoint verwendet bereits den Service-Role-Client (`api-backend/billing/api/statistik.routes.js:11`); keine RLS-Änderung vorgenommen.
+Es wird kein neuer Profil-Fremdschlüssel vorausgesetzt: der ursprüngliche `bookings.user_id`-Fremdschlüssel zeigt auf `auth.users` (`archive/kod/database_setup.sql:65`, `onprem/schema/live_schema_2026-07-06.sql:5553`). Die separate Namensabfrage begrenzt Profile auf Inhaber und dessen Mitarbeiter (`api-backend/billing/statistik/therapeuten.js:33`). Der Endpoint verwendet bereits den Service-Role-Client (`api-backend/billing/api/statistik.routes.js:11`); keine RLS-Änderung vorgenommen.
 
 Die Services-Verknüpfung bleibt ein Left Join, damit Termine ohne Leistung nicht verschwinden: `service_id` ist nullable (`db/SCHEMA.sql:453`). Die Join-Semantik ist in der [Supabase-Dokumentation](https://supabase.com/docs/guides/database/joins-and-nesting#join-types-and-join-modifiers) beschrieben.
 

@@ -1500,27 +1500,48 @@
             </div>
           </div>
 
-          <!-- ANSICHT: Bisherige — Phase 3 ersetzt diese Tabelle durch
-               module/abrechnung-verlauf.js + abrechnung-detail.js (obere/untere Haelfte). -->
+          <!-- ANSICHT: Bisherige — obere/untere Haelfte, Muster panel-verordnungen.
+               Oben module/abrechnung-verlauf.js, unten module/abrechnung-detail.js,
+               gekoppelt ueber module/signal.js ('abrechnung:gewaehlt'). -->
           <div data-ab-ansicht="bisherige" hidden>
             <button class="btn-ghost" data-ab-goto="einstieg" style="margin-bottom:12px;font-size:13px;">‹ Zurück</button>
+
+            <!-- Obere Haelfte: die Dateiliste. Vorgabe „offen zuerst, dann Datum
+                 absteigend"; ein Klick auf eine Spalte schaltet auf reine
+                 Spaltensortierung, ein dritter Klick zurueck zur Vorgabe. -->
             <div class="card">
-              <h3 style="font-size:16px;font-weight:600;margin-bottom:14px;" data-i18n="ab_history">Abrechnungs-Historie</h3>
+              <h3 style="font-size:16px;font-weight:600;margin-bottom:4px;">Bisherige Abrechnungen</h3>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+                Offen zuerst. Spaltenüberschrift anklicken, um nach dieser Spalte zu sortieren.
+              </p>
               <div class="table-wrap">
                 <table class="data-table">
-                  <thead>
+                  <thead id="abVerlaufKopf">
                     <tr>
-                      <th data-i18n="ab_filename">Dateiname</th>
-                      <th data-i18n="ab_kk">Krankenkasse</th>
-                      <th data-i18n="ab_count">Rezepte</th>
-                      <th data-i18n="ab_total">Summe</th>
-                      <th data-i18n="ab_status">Status</th>
-                      <th></th>
+                      <th data-sort="datei"  style="cursor:pointer;white-space:nowrap;">Datei <span class="sort-icon"></span></th>
+                      <th data-sort="kasse"  style="cursor:pointer;">Krankenkasse <span class="sort-icon"></span></th>
+                      <th data-sort="datum"  style="cursor:pointer;white-space:nowrap;">Erstellt <span class="sort-icon"></span></th>
+                      <th data-sort="belege" style="cursor:pointer;text-align:center;">Belege <span class="sort-icon"></span></th>
+                      <th data-sort="soll"   style="cursor:pointer;text-align:right;">Kassenanteil <span class="sort-icon"></span></th>
+                      <th data-sort="offen"  style="cursor:pointer;text-align:right;">Offen <span class="sort-icon"></span></th>
+                      <th data-sort="status" style="cursor:pointer;">Status <span class="sort-icon"></span></th>
                     </tr>
                   </thead>
-                  <tbody id="abHistoryBody"></tbody>
+                  <tbody id="abVerlaufTbody" style="transition:opacity .15s ease;"></tbody>
                 </table>
-                <div id="abHistoryEmpty" class="table-empty" data-i18n="ab_no_history">Noch keine Abrechnungen erstellt.</div>
+              </div>
+              <div id="abVerlaufEmpty" class="table-empty" hidden>Noch keine Abrechnungen erstellt.</div>
+            </div>
+
+            <!-- Untere Haelfte: die gewaehlte Datei. Steht dauerhaft da (nicht
+                 `hidden`), damit die Seite beim Auswaehlen nicht springt. -->
+            <div class="card" id="abDetailPanel" style="margin-top:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+                <h3 id="abDetailTitel" style="margin:0;font-size:16px;font-weight:700;color:var(--text-main);">Abrechnung</h3>
+                <button id="abDetailClose" class="btn-ghost btn-sm">✕ Auswahl aufheben</button>
+              </div>
+              <div id="abDetailContent" style="font-size:13px;color:var(--text-muted);transition:opacity .15s ease;">
+                Wählen Sie oben eine Abrechnung aus.
               </div>
             </div>
           </div>

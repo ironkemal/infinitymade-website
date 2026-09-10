@@ -32,7 +32,7 @@ Auch andere vorhandene Status-Update-Wege nutzen die Trigger: Teilnehmer entfern
 | Korrekturhistorie | `ON DELETE CASCADE`, `db/SCHEMA.sql:558` | bleibt erhalten; deren bestehende Löschsperre wird nicht angetastet (`db/SCHEMA.sql:561`) |
 | Befund | Terminbezug `ON DELETE SET NULL`, `db/SCHEMA.sql:1406` | Terminbezug bleibt erhalten |
 | Ausfallrechnung | Terminbezug `ON DELETE SET NULL`, `db/SCHEMA.sql:317` | Terminbezug bleibt erhalten; keine Rechnungs-/Zahlungsänderung |
-| Physio-/Ergo-/Logo-Sitzung | Terminbezug `ON DELETE SET NULL`, `database_v10_prescriptions.sql:85` | nur `planned` wird wieder ohne Termin; Sitzungszeile, Nummer und Status bleiben erhalten; alte Zuordnung im Snapshot, SQL `:63`, `:79` |
+| Physio-/Ergo-/Logo-Sitzung | Terminbezug `ON DELETE SET NULL`, `archive/kod/database_v10_prescriptions.sql:85` | nur `planned` wird wieder ohne Termin; Sitzungszeile, Nummer und Status bleiben erhalten; alte Zuordnung im Snapshot, SQL `:63`, `:79` |
 | Podologie-Verordnung | direkter Bezug am Termin, `db/SCHEMA.sql:483` | Bezug bleibt historisch stehen; Termin wird nicht als vergeben gezählt (`module/verordnung-termine.js:76`, `:108`) |
 
 ## Angepasste Lesestellen

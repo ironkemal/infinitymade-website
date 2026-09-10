@@ -11,7 +11,7 @@
 ## Executive Summary
 This report provides a granular, factual, and workflow-centric analysis of **Optica Viva**, focusing on features, scheduling models, EHR components, prescription lifecycle management, master data, and analytics. The goal is to compare Optica Viva's capabilities with our product, **InfinityMade**, and rank feature gaps based on their importance for thriving German physical therapy practices.
 
-All screenshots cited below are saved as absolute paths in: `C:\Users\Test\Desktop\claude\website\competitor-research\optica\screens\`
+All screenshots cited below are saved as absolute paths in: `C:\Users\Test\Desktop\claude\website\archive\recherche\optica\screens\`
 
 ---
 
