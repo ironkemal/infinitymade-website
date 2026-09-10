@@ -21,7 +21,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260830" />
+  <link rel="stylesheet" href="dashboard.css?v=20260910" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -1572,6 +1572,8 @@
                 <option value="all">Alle Belege</option>
                 <option value="zuzahlung">Zuzahlung</option>
                 <option value="barverkauf">Barverkauf</option>
+                <option value="ausfall">Ausfallhonorar</option>
+                <option value="rechnung">Rechnung</option>
                 <option value="storno">Storno / Reversal</option>
               </select>
             </div>
@@ -5325,31 +5327,44 @@
   <div id="toastContainer"></div>
 
   <!-- ===== MODAL: BARVERKAUF EINTRAGEN ===== -->
+  <!-- Redesign 10.09.2026: das alte "Typ"-Dropdown hatte genau eine Option
+       (immer 'barverkauf', dashboard.js schrieb sie sowieso fest) und es gab
+       keine Zahlart — jeder Barverkauf landete mit zahlart=NULL, unsichtbar
+       fürs Bar-Kassenbuch (§146 AO). Beides behoben: Typ ist jetzt ein
+       Etikett, Zahlart eine Pflichtwahl ohne Vorauswahl (wie beim
+       Zuzahlung-Kassieren — eine per Gewohnheit durchgeklickte Zahlart macht
+       das Kassenbuch falsch, und Belege lassen sich nachträglich nicht
+       korrigieren). Logik in module/kassenbuch-beleg.js. -->
   <div class="modal-overlay" id="manualBelegModal" hidden>
-    <div class="modal" style="max-width:440px;background:var(--bg-card);color:var(--text-main);">
+    <div class="modal" style="max-width:440px;background:var(--bg-card-solid);color:var(--text-main);">
       <div class="modal-header" style="border-bottom:1px solid var(--border);">
-        <span class="modal-title" style="font-weight:600;">Manuellen Beleg erstellen</span>
+        <span class="modal-title" style="font-weight:600;">Barverkauf eintragen</span>
         <button class="modal-close" data-modal="manualBelegModal">✕</button>
       </div>
-      <div class="modal-body" style="padding:20px 0;">
+      <div class="modal-body" style="padding:18px 0;">
+        <p style="margin:0 0 16px;font-size:12px;color:var(--text-muted);">Für Verkäufe ohne Rechnung — Massage, Gutschein, Produktverkauf.</p>
         <div class="form-group">
-          <label class="form-label" style="color:var(--text-muted);">Typ</label>
-          <select class="form-input" id="blManualType" style="background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);">
-            <option value="barverkauf">Barverkauf (Massage, Gutschein, etc.)</option>
-          </select>
+          <label class="form-label" style="color:var(--text-muted);font-size:12px;">Betrag</label>
+          <div style="position:relative;">
+            <input class="form-input" id="blManualAmount" type="number" step="0.01" min="0.01" inputmode="decimal" placeholder="0,00" autofocus
+              style="background:var(--bg-input);color:var(--text-main);border:1px solid var(--border);font-size:20px;font-weight:700;padding:10px 36px 10px 12px;" />
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-weight:700;">€</span>
+          </div>
         </div>
         <div class="form-group">
-          <label class="form-label" style="color:var(--text-muted);">Betrag (EUR)</label>
-          <input class="form-input" id="blManualAmount" type="number" step="0.01" placeholder="25.00" style="background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);" />
+          <label class="form-label" style="color:var(--text-muted);font-size:12px;">Referenztext</label>
+          <input class="form-input" id="blManualRef" type="text" placeholder="z. B. 1x Gutschein Massage" maxlength="200"
+            style="background:var(--bg-input);color:var(--text-main);border:1px solid var(--border);" />
         </div>
-        <div class="form-group">
-          <label class="form-label" style="color:var(--text-muted);">Referenztext</label>
-          <input class="form-input" id="blManualRef" type="text" placeholder="z. B. 1x Gutschein Massage" style="background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);" />
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="color:var(--text-muted);font-size:12px;">Zahlart</label>
+          <div id="blManualZahlartGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
         </div>
+        <div id="blManualError" hidden style="margin-top:12px;font-size:12px;color:var(--danger);"></div>
       </div>
       <div class="modal-footer" style="border-top:1px solid var(--border);padding-top:12px;">
         <button class="btn-ghost" data-modal="manualBelegModal">Abbrechen</button>
-        <button class="btn-primary" id="blManualSaveBtn">Beleg erzeugen</button>
+        <button class="btn-primary" id="blManualSaveBtn" disabled>Beleg erzeugen</button>
       </div>
     </div>
   </div>
@@ -5673,7 +5688,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260909b"></script>
+  <script type="module" src="dashboard.js?v=20260910b"></script>
 </body>
 
 </html>

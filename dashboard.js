@@ -59,6 +59,8 @@ import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvL
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260817';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
+import { ZAHLARTEN, zahlartLabel as zahlartLabelBase } from './module/zahlarten.js?v=20260910';
+import { mountKassenbuchBeleg } from './module/kassenbuch-beleg.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260816';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
@@ -284,7 +286,7 @@ const T = {
     move_error: 'Termin konnte nicht verschoben werden',
     move_done: 'Termin verschoben',
     kass_title: 'Zuzahlung kassieren', kass_zahlart: 'Womit wird bezahlt?',
-    kass_bar: 'Bar', kass_ec: 'EC-Karte', kass_ueberweisung: 'Überweisung', kass_sonstiges: 'Sonstiges',
+    kass_bar: 'Bar', kass_ec: 'EC-Karte', kass_ueberweisung: 'Überweisung', kass_sonstiges: 'Sonstiges', kass_paypal: 'PayPal',
     kass_print: 'Quittung drucken', kass_cancel: 'Abbrechen',
     kass_befreit: 'Zuzahlung befreit', kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung bezahlt', kass_btn: 'Kassieren',
     kass_beleg: 'Beleg', kass_rechnung: 'Rechnung öffnen', stat_bezahlt: 'Bezahlt', stat_offen: 'Offen', kass_undo: 'stornieren',
@@ -464,7 +466,7 @@ const T = {
     move_error: 'Could not move the appointment',
     move_done: 'Appointment moved',
     kass_title: 'Collect co-payment', kass_zahlart: 'How is it being paid?',
-    kass_bar: 'Cash', kass_ec: 'Debit card', kass_ueberweisung: 'Bank transfer', kass_sonstiges: 'Other',
+    kass_bar: 'Cash', kass_ec: 'Debit card', kass_ueberweisung: 'Bank transfer', kass_sonstiges: 'Other', kass_paypal: 'PayPal',
     kass_print: 'Print receipt', kass_cancel: 'Cancel',
     kass_befreit: 'Exempt from co-payment', kass_offen: 'Co-payment open', kass_bezahlt: 'Co-payment paid', kass_btn: 'Collect',
     kass_beleg: 'Receipt', kass_rechnung: 'Open invoice', stat_bezahlt: 'Paid', stat_offen: 'Outstanding', kass_undo: 'reverse',
@@ -644,7 +646,7 @@ const T = {
     move_error: 'Randevu taşınamadı',
     move_done: 'Randevu taşındı',
     kass_title: 'Katkı payını tahsil et', kass_zahlart: 'Ödeme nasıl yapılıyor?',
-    kass_bar: 'Nakit', kass_ec: 'Banka kartı', kass_ueberweisung: 'Havale', kass_sonstiges: 'Diğer',
+    kass_bar: 'Nakit', kass_ec: 'Banka kartı', kass_ueberweisung: 'Havale', kass_sonstiges: 'Diğer', kass_paypal: 'PayPal',
     kass_print: 'Makbuz yazdır', kass_cancel: 'İptal',
     kass_befreit: 'Katkı payından muaf', kass_offen: 'Katkı payı açık', kass_bezahlt: 'Katkı payı ödendi', kass_btn: 'Tahsil et',
     kass_beleg: 'Fiş', kass_rechnung: 'Faturayı aç', stat_bezahlt: 'Ödenen', stat_offen: 'Açık', kass_undo: 'iptal et',
@@ -7032,17 +7034,7 @@ function showInputModal({ title = 'Eingabe', message = '', placeholder = '', def
 //     §302-Abrechnung akzeptiert" und hat mit der Patientenzahlung nichts zu tun.
 // Beides ist hier zusammengeführt; der §302-Status wird nicht mehr angefasst.
 
-const ZAHLARTEN = [
-  { key: 'bar',          icon: '💶', i18n: 'kass_bar' },
-  { key: 'ec',           icon: '💳', i18n: 'kass_ec' },
-  { key: 'ueberweisung', icon: '🏦', i18n: 'kass_ueberweisung' },
-  { key: 'sonstiges',    icon: '⋯',  i18n: 'kass_sonstiges' },
-];
-
-function zahlartLabel(key) {
-  const z = ZAHLARTEN.find(x => x.key === key);
-  return z ? t(z.i18n) : (key || '—');
-}
+const zahlartLabel = (key) => zahlartLabelBase(key, t);
 
 // Die Abhängigkeiten, die `module/beleg-druck.js` braucht. Als Funktion, weil
 // `ownerId` erst nach dem Login feststeht und sich beim Wechsel ändern kann.
@@ -7081,12 +7073,6 @@ function openKassierenDialog({ betragEur, patientName }) {
     box.setAttribute('aria-labelledby', '_kassTitle');
     box.style.cssText = 'background:var(--bg-card-solid);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:400px;';
 
-    const zahlartBtns = ZAHLARTEN.map(z => `
-      <button type="button" class="_kassZahlart" data-zahlart="${z.key}"
-        style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-main);cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;text-align:left;">
-        <span aria-hidden="true">${z.icon}</span><span>${escapeHtml(t(z.i18n))}</span>
-      </button>`).join('');
-
     box.innerHTML = `
       <h3 id="_kassTitle" style="margin:0 0 2px;font-size:16px;font-weight:700;color:var(--text-main);">${escapeHtml(t('kass_title'))}</h3>
       <p style="margin:0 0 14px;font-size:13px;color:var(--text-muted);">${escapeHtml(patientName || '')}</p>
@@ -7096,7 +7082,7 @@ function openKassierenDialog({ betragEur, patientName }) {
         ${escapeHtml(t('kass_print'))}
       </label>
       <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">${escapeHtml(t('kass_zahlart'))}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${zahlartBtns}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${zahlartChipsHtml({ escapeHtml, t })}</div>
       <div style="display:flex;justify-content:flex-end;margin-top:18px;">
         <button type="button" id="_kassCancel" style="padding:8px 16px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:13px;font-family:inherit;">${escapeHtml(t('kass_cancel'))}</button>
       </div>
@@ -7115,24 +7101,22 @@ function openKassierenDialog({ betragEur, patientName }) {
     };
     function onEsc(e) { if (e.key === 'Escape') cleanup(null); }
 
-    box.querySelectorAll('._kassZahlart').forEach(btn => {
+    box.querySelectorAll('.zahlart-chip').forEach(btn => {
       btn.addEventListener('click', () => {
         // Sofort alle Knöpfe sperren — ein zweiter Klick darf keinen zweiten
-        // Beleg auslösen.
-        box.querySelectorAll('._kassZahlart').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+        // Beleg auslösen. .zahlart-chip:disabled übernimmt die Optik (dashboard.css).
+        box.querySelectorAll('.zahlart-chip').forEach(b => { b.disabled = true; });
         cleanup({
           zahlart: btn.dataset.zahlart,
           drucken: !!document.getElementById('_kassPrint')?.checked,
         });
       });
-      btn.addEventListener('mouseenter', () => { if (!btn.disabled) btn.style.borderColor = 'var(--primary)'; });
-      btn.addEventListener('mouseleave', () => { btn.style.borderColor = 'var(--border)'; });
     });
 
     document.getElementById('_kassCancel').addEventListener('click', () => cleanup(null));
     overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(null); });
     document.addEventListener('keydown', onEsc);
-    box.querySelector('._kassZahlart')?.focus();
+    box.querySelector('.zahlart-chip')?.focus();
   });
 }
 
@@ -7942,7 +7926,7 @@ function patientMatchesQuery(lead, q) {   // Deklaration, nicht const: es wird w
 async function ensureLeistungskatalog() {
   if (katalogNachladen({ katalog: servicesCache,
         sektorHatGkvKatalog: (GKV_LEISTUNGSKATALOG[getSector()] || []).length > 0 })) {
-    await loadServices();
+    try { await loadServices(); } catch (e) { console.error('[ensureLeistungskatalog]', e); }
   }
   ownerServices = servicesCache;
   return ownerServices;
@@ -9431,8 +9415,9 @@ async function loadServices() {
     .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
   q = bizScope(q, 'services');
   const { data, error: ladeFehler } = await q;
+  if (ladeFehler) { console.error('[services]', ladeFehler); return; }
   servicesCache = data || [];
-  if (!ladeFehler) await ermittleKostentraegerSpalte(servicesCache, supabase);
+  await ermittleKostentraegerSpalte(servicesCache, supabase);
 
   // Önce eski uydurma podoloji kodlarını gerçek HPNR'lere taşı, sonra seed et —
   // ters sırada olsaydı hem eskisi hem yenisi listede durur, mükerrer görünürdü.
@@ -9441,9 +9426,7 @@ async function loadServices() {
   // Sektöre göre GKV kataloğu DB'de eksik hizmetleri oto-seed et
   await autoSeedGkvServices();
 
-  renderGkvCatalog();
-  renderServices();
-  renderSrvEmpCheckboxes();
+  renderGkvCatalog(); renderServices(); renderSrvEmpCheckboxes();
 }
 
 async function autoSeedGkvServices() {
@@ -14826,10 +14809,10 @@ function formatEur(n) {
 async function loadRechnungen() {
   const ownerId = getOwnerId();
   const { data, error } = await bizScope(supabase.from('invoices')
-    .select('*, prescriptions ( rezept_typ, status, dmrz_exported_at, heilmittel )')
+    .select('*, rx1:prescriptions!invoices_prescription_id_fkey ( rezept_typ, status, dmrz_exported_at, heilmittel ), rx2:prescriptions!invoices_verordnung_id_fkey ( rezept_typ, status, dmrz_exported_at, heilmittel )')
     .eq('owner_id', ownerId).order('created_at', { ascending: false }), 'finance');
   if (error) { console.error('[invoices]', error); return; }
-  invListCache = data || [];
+  invListCache = (data || []).map(inv => ({ ...inv, prescriptions: inv.rx1 || inv.rx2 || null }));
   renderInvList();
 }
 
@@ -18857,6 +18840,7 @@ function initBeleglisteUI() {
     const from = document.getElementById('blFilterFrom')?.value || '';
     const to = document.getElementById('blFilterTo')?.value || '';
     const type = document.getElementById('blFilterType')?.value || 'all';
+    const zahlart = document.getElementById('blFilterZahlart')?.value || 'all';
 
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token || '';
@@ -18865,52 +18849,21 @@ function initBeleglisteUI() {
     const url = new URL(`${API}/billing/belegliste/export`);
     url.searchParams.append('token', token);
     if (type !== 'all') url.searchParams.append('type', type);
+    // Ohne das exportierte man mehr, als auf dem Schirm stand (§146 AO) —
+    // derselbe Filter, den loadBelegliste() schon an /belegliste schickt.
+    if (zahlart !== 'all') url.searchParams.append('zahlart', zahlart);
     if (from) url.searchParams.append('from', from);
     if (to) url.searchParams.append('to', to);
 
     window.open(url.toString(), '_blank');
   });
 
-  document.getElementById('blAddManualBtn')?.addEventListener('click', () => {
-    document.getElementById('blManualAmount').value = '';
-    document.getElementById('blManualRef').value = '';
-    openModal('manualBelegModal');
-  });
-
-  document.getElementById('blManualSaveBtn')?.addEventListener('click', async () => {
-    const amount = Number(document.getElementById('blManualAmount').value);
-    const ref = document.getElementById('blManualRef').value.trim();
-    if (!amount || amount <= 0) return showToast('Betrag muss > 0 sein', 'error');
-    if (!ref) return showToast('Referenztext erforderlich', 'error');
-
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token || '';
-
-    try {
-      const res = await fetch(`${API}/billing/belegliste`, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: 'barverkauf',
-          amount_eur: amount,
-          reference_text: ref
-        })
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Serverfehler');
-      }
-
-      closeModal('manualBelegModal');
-      showToast('Beleg erfolgreich gebucht ✓');
-      loadBelegliste();
-    } catch (err) {
-      showToast('Buchung gescheitert: ' + err.message, 'error');
-    }
+  mountKassenbuchBeleg({
+    apiBasis: API,
+    token: async () => (await supabase.auth.getSession()).data.session?.access_token,
+    escapeHtml, showToast, t,
+    openModal, closeModal,
+    neuLaden: () => loadBelegliste(),
   });
 }
 
@@ -19114,26 +19067,24 @@ async function loadAusfallrechnungen() {
         </td>
       </tr>`).join('');
 
+    const druckeAusfall = async (id) => {
+      const res2 = await fetch(`${API}/billing/ausfall/${id}/print`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res2.ok) throw new Error(await res2.text());
+      const html = await res2.text();
+      const w = window.open('', '_blank');
+      if (w) { w.document.write(html); w.document.close(); w.onload = () => w.print(); }
+      else showToast('Popup-Blocker aktiv — bitte Popups erlauben.', 'error');
+    };
+
     tbody.querySelectorAll('.af-print').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        try {
-          const res2 = await fetch(`${API}/billing/ausfall/${btn.dataset.af}/print`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (!res2.ok) throw new Error(await res2.text());
-          const html = await res2.text();
-          const w = window.open('', '_blank');
-          if (w) { w.document.write(html); w.document.close(); w.onload = () => w.print(); }
-          else showToast('Popup-Blocker aktiv — bitte Popups erlauben.', 'error');
-        } catch (e) { showToast('Fehler: ' + e.message, 'error'); }
-      });
+      btn.addEventListener('click', () => druckeAusfall(btn.dataset.af).catch(e => showToast('Fehler: ' + e.message, 'error')));
     });
 
-    const setAfStatus = async (id, status) => {
+    const setAfStatus = async (id, status, zahlart) => {
       const res3 = await fetch(`${API}/billing/ausfall/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status })
+        body: JSON.stringify(zahlart ? { status, zahlart } : { status })
       });
       if (!res3.ok) {
         let msg = await res3.text();
@@ -19145,7 +19096,20 @@ async function loadAusfallrechnungen() {
     };
 
     tbody.querySelectorAll('.af-paid').forEach(btn => {
-      btn.addEventListener('click', () => setAfStatus(btn.dataset.af, 'bezahlt').catch(e => showToast(e.message, 'error')));
+      btn.addEventListener('click', async () => {
+        // Ohne diesen Dialog schrieb der PATCH-Aufruf zahlart nie mit — die
+        // belegliste-Zeile war seit jeher NULL, unsichtbar fürs Bar-Kassenbuch
+        // (§146 AO). openKassierenDialog() ist derselbe Ablauf wie beim
+        // Zuzahlung-Kassieren, bewusst ohne Vorauswahl.
+        const id = btn.dataset.af;
+        const row = rows.find(r => r.id === id);
+        const gewahlt = await openKassierenDialog({ betragEur: row?.amount_eur, patientName: row?.patient_name });
+        if (!gewahlt) return;
+        try {
+          await setAfStatus(id, 'bezahlt', gewahlt.zahlart);
+          if (gewahlt.drucken) await druckeAusfall(id);
+        } catch (e) { showToast(e.message, 'error'); }
+      });
     });
     tbody.querySelectorAll('.af-storno').forEach(btn => {
       btn.addEventListener('click', async () => {

@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- Nur zum Pruefen. Haengt module/kassenbuch-beleg.js mit einem Fetch-Stub
+     ein, damit das Barverkauf-Modal (Zahlart-Pflicht, kein Default) ohne
+     Login pruefbar ist. -->
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../dashboard.css">
+  <title>Kassenbuch-Probe</title>
+</head>
+<body>
+  <button id="blAddManualBtn">+ Barverkauf eintragen</button>
+  <div class="modal-overlay" id="manualBelegModal" hidden>
+    <div class="modal">
+      <div class="modal-body">
+        <input id="blManualAmount" type="number" step="0.01" min="0.01">
+        <input id="blManualRef" type="text">
+        <div id="blManualZahlartGrid"></div>
+        <div id="blManualError" hidden></div>
+      </div>
+      <div class="modal-footer">
+        <button id="blManualSaveBtn" disabled>Beleg erzeugen</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { mountKassenbuchBeleg } from '../../module/kassenbuch-beleg.js?v=20260910';
+
+    window.__posted = null;
+    const origFetch = window.fetch.bind(window);
+    window.fetch = async (url, opts) => {
+      if (String(url).includes('/billing/belegliste')) {
+        window.__posted = JSON.parse(opts.body);
+        return new Response(JSON.stringify({ id: 'mock-1' }), { status: 201 });
+      }
+      return origFetch(url, opts);
+    };
+
+    window.__toasts = [];
+    window.__opened = false;
+    window.__closed = false;
+
+    mountKassenbuchBeleg({
+      apiBasis: 'https://mock',
+      token: async () => 'mock-token',
+      escapeHtml: (s) => String(s ?? ''),
+      showToast: (msg) => { window.__toasts.push(msg); },
+      t: (key) => ({ kass_bar: 'Bar', kass_ec: 'EC-Karte', kass_ueberweisung: 'Überweisung', kass_paypal: 'PayPal', kass_sonstiges: 'Sonstiges' }[key] || key),
+      openModal: () => { document.getElementById('manualBelegModal').hidden = false; window.__opened = true; },
+      closeModal: () => { document.getElementById('manualBelegModal').hidden = true; window.__closed = true; },
+      neuLaden: () => { window.__neuGeladen = true; },
+    });
+
+    document.title = 'fertig';
+  </script>
+</body>
+</html>

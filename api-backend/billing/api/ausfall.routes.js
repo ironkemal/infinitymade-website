@@ -13,6 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 import { renderAusfallrechnung } from '../pdf/ausfallrechnung.template.js';
 import { pruefeAusfallFrist, uebersteuerungsNotiz } from '../ausfall/frist.js';
 import { standortFuerName, standortFuerZuordnung } from '../ausfall/standort.js';
+import { ZAHLARTEN } from '../belegliste/helper.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -433,9 +434,16 @@ router.patch('/ausfall/:id/status', async (req, res) => {
     if (!auth) return;
     const { user, tenantId } = auth;
 
-    const { status } = req.body || {};
+    const { status, zahlart } = req.body || {};
     if (!['bezahlt', 'storniert', 'abgeschrieben'].includes(status)) {
       return res.status(400).json({ error: "status must be 'bezahlt', 'storniert' or 'abgeschrieben'" });
+    }
+    // Pflicht, nicht nur geprüft wenn vorhanden — sonst kann ein alter Client
+    // (Bundle vor diesem Deploy) oder ein direkter API-Aufruf ohne zahlart
+    // weiterhin eine belegliste-Zeile mit zahlart=NULL erzeugen, genau die
+    // Lücke, die dieser Dialog schliessen sollte (§146 AO).
+    if (status === 'bezahlt' && !ZAHLARTEN.includes(zahlart)) {
+      return res.status(400).json({ error: `Zahlart erforderlich. Erlaubt: ${ZAHLARTEN.join(', ')}.` });
     }
 
     const { data: existing, error: fetchErr } = await supabase
@@ -470,6 +478,7 @@ router.patch('/ausfall/:id/status', async (req, res) => {
         patient_id: existing.patient_id,
         reference_text: `Ausfallhonorar erhalten (AF-${String(existing.rechnung_nr).padStart(4, '0')})${patientName ? ': ' + patientName : ''}`,
         created_by: user.id,
+        zahlart: zahlart || null,
       });
       if (blErr) console.error('[ausfall/status] belegliste insert failed:', blErr.message);
     }

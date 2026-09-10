@@ -1467,6 +1467,35 @@ textarea {
   flex-shrink: 0;
 }
 
+/* Zahlart-Wahl (Kassieren-Dialog + Barverkauf-Modal, module/zahlarten.js) */
+.zahlart-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-main);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color .15s ease, background .15s ease;
+}
+.zahlart-chip:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+.zahlart-chip.active {
+  border-color: var(--primary);
+  background: var(--primary-dim);
+}
+.zahlart-chip:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
 .cal-emp-list {
   display: flex;
   flex-direction: column;

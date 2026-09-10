@@ -123,16 +123,25 @@ export async function openInvView(invoiceId) {
   const currentProfile = d.profile();
   const escapeHtml = d.escapeHtml;
 
+  // rezeptId: prescription_id (Physio/Ergo/Logo) ODER verordnung_id (Podologie)
+  // — CHECK invoices_ein_verordnungsbezug erlaubt nur eines von beiden, beide
+  // zeigen auf dieselbe prescriptions-Zeile. Ohne den Fallback blieb der
+  // Rezept-Block bei Podologie-Rechnungen leer.
+  const rezeptId = inv.prescription_id || inv.verordnung_id;
   // Resolve patient, prescription (with arzt), and booking range
   const [{ data: patient }, prescriptionRes, bookingsRes] = await Promise.all([
     d.supabase.from('leads')
       .select('first_name,last_name,title,geburtsdatum,street,plz,city,versichertennummer,krankenkasse,phone,email')
       .eq('id', inv.patient_id).maybeSingle(),
-    inv.prescription_id
+    rezeptId
       ? d.supabase.from('prescriptions')
         .select('rezept_typ,status,heilmittel,icd10,diagnosegruppe,anzahl_einheiten,frequenz,ausstellungsdatum,gueltig_bis,dmrz_exported_at, aerzte ( arzt_name, lanr, bsnr )')
-        .eq('id', inv.prescription_id).maybeSingle()
+        .eq('id', rezeptId).maybeSingle()
       : Promise.resolve({ data: null }),
+    // Buchungstermine für den Leistungszeitraum-Fallback gibt es nur für den
+    // Physio-Weg (prescription_sessions) — Podologie führt Termine über
+    // bookings.verordnung_id / podologie_behandlungen, eine andere Abfrage,
+    // hier bewusst nicht mitgezogen.
     inv.prescription_id
       ? d.supabase.from('prescription_sessions')
         .select('bookings ( start_time )').eq('prescription_id', inv.prescription_id)

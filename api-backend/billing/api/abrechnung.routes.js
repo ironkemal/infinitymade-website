@@ -2056,6 +2056,9 @@ router.get('/belegliste', async (req, res) => {
         if (type && type !== 'all') {
           rows = rows.filter(r => r.type === type);
         }
+        if (zahlart && zahlart !== 'all') {
+          rows = rows.filter(r => r.zahlart === zahlart);
+        }
         if (from) {
           rows = rows.filter(r => r.created_at >= `${from}T00:00:00Z`);
         }
@@ -2177,7 +2180,7 @@ router.get('/belegliste/export', async (req, res) => {
       : profile.id;
 
     // ---- Query building ----
-    const { from, to, type } = req.query || {};
+    const { from, to, type, zahlart } = req.query || {};
     let query = supabase
       .from('belegliste')
       .select('beleg_nr, created_at, type, zahlart, amount_eur, reference_text')
@@ -2186,6 +2189,13 @@ router.get('/belegliste/export', async (req, res) => {
 
     if (type && type !== 'all') {
       query = query.eq('type', type);
+    }
+    // Ohne diesen Filter zeigte der Export mehr als der Bildschirm: wer auf
+    // "Bar" filtert und exportiert, muss auch nur Bar-Belege bekommen —
+    // sonst weicht das Finanzamt-CSV von dem ab, was gerade auf dem Schirm
+    // stand (§146 AO Kassensturzfähigkeit).
+    if (zahlart && zahlart !== 'all') {
+      query = query.eq('zahlart', zahlart);
     }
     if (from) {
       query = query.gte('created_at', `${from}T00:00:00Z`);
@@ -2221,6 +2231,9 @@ router.get('/belegliste/export', async (req, res) => {
         // Apply filters in-memory
         if (type && type !== 'all') {
           rows = rows.filter(r => r.type === type);
+        }
+        if (zahlart && zahlart !== 'all') {
+          rows = rows.filter(r => r.zahlart === zahlart);
         }
         if (from) {
           rows = rows.filter(r => r.created_at >= `${from}T00:00:00Z`);
