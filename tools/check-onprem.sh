@@ -118,6 +118,29 @@ for f in $(git diff --cached --name-only --diff-filter=AM -- 'api-backend/db/mig
       $f"
 done
 
+# --- Şema drift kapısı (sayac değil, doğrudan kontrol) ---------------------
+#
+# Neden: 04.09.2026'da migration zinciri kuruldu (api-backend/db/migrate.js,
+# server.js açılışında koşar). Buna rağmen sonraki altı günde db/SCHEMA.sql
+# YEDİ commit'te değişti ve zincire TEK dosya yazılmadı — her şema
+# değişikliği canlıya elle gitti. Bedeli ölçüldü: commit a9cbb13'ün başlığı
+# "rechnung_zahlung_buchen fehlte in Produktion" — RPC canlıda yoktu, fatura
+# akışı bloke oldu. Tek ortamda yarım gün; 50 kutuda 50 destek çağrısı, ve
+# kutuya giremeyiz (K10).
+#
+# SCHEMA-VERTEILUNG.md §5.4 bu kapıyı istiyordu; yıkıcı-DDL yarısı yazıldı,
+# bu yarısı yazılmadı. Drift tam bu delikten geçti.
+#
+# Kural: döküm (db/SCHEMA.sql / SCHEMA-RLS.sql) değiştiyse aynı commit'te
+# çalıştırılabilir zincire de bir dosya girmelidir.
+sema_dokum=$(git diff --cached --name-only --diff-filter=AM -- 'db/SCHEMA.sql' 'db/SCHEMA-RLS.sql' 2>/dev/null)
+yeni_migration=$(git diff --cached --name-only --diff-filter=A -- 'api-backend/db/migrations/*.sql' 2>/dev/null)
+
+drift_ihlal=""
+if [ -n "$sema_dokum" ] && [ -z "$yeni_migration" ] && [ "$SKIP_MIGRATION_GATE" != "1" ]; then
+  drift_ihlal=$(echo "$sema_dokum" | sed 's/^/      /')
+fi
+
 # --- Karşılaştır ----------------------------------------------------------
 ihlal=""
 sikis=""
@@ -129,6 +152,19 @@ if [ -n "$ddl_ihlal" ]; then
       Çıkış: iki adıma böl (önce ekle, bir sürüm sonra sil) — README Kural 4.
       Zaten iki adımın ikinci yarısıysa dosyanın başına şu satırı koy:
         -- zweistufig: <hangi sürümde eklendi / niye artık güvenli>
+"
+fi
+
+if [ -n "$drift_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ şema drift — döküm değişti, çalıştırılabilir zincire dosya girmedi:
+$drift_ihlal
+      Döküm (db/SCHEMA.sql) BELGEDİR, çalıştırılamaz. Kutuya giden gerçek SQL
+      api-backend/db/migrations/NNNN_ad.sql dosyalarıdır. Zincire yazılmayan
+      değişiklik müşteri kutusuna ULAŞMAZ ve sessiz şema farkı üretir.
+      Çıkış: aynı commit'te sırası gelen numarayla migration dosyasını yaz.
+      Baseline (0000) henüz yoksa önce o üretilir — onprem/SCHEMA-VERTEILUNG.md §2.
+      Yalnızca biçimsel döküm tazelemesiyse: SKIP_MIGRATION_GATE=1 git commit ...
 "
 fi
 

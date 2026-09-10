@@ -578,7 +578,7 @@
 | **Tip** | D |
 | **Kutuda ne olur** | Kod dağıtımı çözülmüş (K11 + Watchtower), **şema dağıtımı çözülmemiş**. Yeni kolon isteyen her özellik SaaS'ta çalışır, kutuda 42703 (`column does not exist`) verir. `:beta` ve `:stable` aynı anda canlı olduğu için geriye dönük uyum da gerekiyor. PoC bunun nasıl ısırdığını gösterdi: `handle_new_user` trigger'ı `auth` şemasında olduğu için public dump'a girmedi ve kurulumda ayrıca yaratılması gerekti — tek trigger, 20 kutuda, gece yarısı |
 | **Çözüm** | ★ **`onprem/SCHEMA-VERTEILUNG.md`** (2026-09-04) — gereksinim, seçenekler ve tavsiye orada. Özet: kendi Node runner'ımız (`api-backend/db/migrate.js`), düz SQL dosyaları image'ın içinde, api açılışında advisory-lock altında, dosya başına tek transaction, ileri-yönlü, hata olunca durup kurulum moduna geçen. 195-vs-14 için karar önerisi: **baseline** (zincir bugünden başlar, geçmiş tarih olur). Public dump'ın dışında kalan **dokuz kalem** orada envanterlendi (extension'lar · `auth` şeması ön koşulu · `on_auth_user_created` · 5 storage bucket + policy'leri · realtime publication · roller/grant'lar · Vault içeriği · sequence `setval` · `search_path`). Faz önerisi: **yeni Faz 1.7** |
-| **Durum** | 🟡 **kısmen `gelöst` (04.09.2026)** — runner çalışıyor, baseline üretilmedi |
+| **Durum** | ✅ **`gelöst` (10.09.2026)** — runner çalışıyor, **baseline üretildi ve deftere işlendi**; drift kapısı kapandı. Kalan iş zincirin günlük disiplinle işletilmesi — açık madde değil |
 
 > **04.09.2026 — yapılan (ana bağlam):**
 >
@@ -614,6 +614,72 @@
 > 155 policy + 63 fonksiyonun SQL'ini sohbetten geçirmek hem bağlamı taşırır hem
 > hataya açıktır. Operatör adımı: psql/pg_dump olan bir makineden. Sonra `praxura_migrations`'a
 > `0000` satırı elle düşülür (canlıda baseline **çalıştırılmaz**, yalnız deftere yazılır).
+
+> **10.09.2026 — ölçüm (zincir boş kaldı):** runner 04.09'da yazıldı; o günden bu yana
+> `api-backend/db/migrations/` altında **hâlâ tek migration dosyası yok** (yalnız
+> `README.md`). Buna karşılık aynı altı günde `db/SCHEMA.sql` / `SCHEMA-RLS.sql`
+> **7 commit'te** değişti (`4e8098c` `0d8ef9b` `489c144` `cceb528` `883fdfd` `a9cbb13`
+> `9522b01`) — yeni tablolar (`abrechnung_zeile`, `abrechnung_zahlung`), yeni RPC
+> (`rechnung_zahlung_buchen`), kolon değişiklikleri. Hepsi canlıya **elle** (MCP) gitti.
+>
+> Yani zincir kurulduktan sonra **günde ~1 şema değişikliği kadar geriye düşüyor.**
+> `a9cbb13`'ün başlığı bunun bedelini zaten yazıyor: *"rechnung_zahlung_buchen fehlte in
+> Produktion"* — RPC canlıda yoktu, fatura akışı bloke oldu. Tek ortamda bu bir kişinin
+> yarım günü; 50 kutuda **50 destek çağrısı** ve K10 gereği hiçbirine giremeyiz.
+>
+> Bu, baseline'ın (Faz 1.7) neden takvimin başına alınması gerektiğinin ölçülmüş
+> gerekçesidir: baseline üretilmeden yeni değişiklikler zincire yazılamıyor, zincire
+> yazılmayan her değişiklik de baseline'ı bir gün daha eskitiyor.
+
+
+> **10.09.2026 — KAPANDI: baseline üretildi.**
+>
+> - **`api-backend/db/migrations/0000_baseline.sql`** — 12.517 satır / 403 KB.
+>   `pg_dump --schema-only --no-owner --schema=public` (pg_dump 17.6, canlı 17.6)
+>   + §2'nin dört eksik bölümü **canlıya sorularak** eklendi (elle yazılmadı):
+>   4 extension · `on_auth_user_created` · 5 storage kovası + 9 policy · realtime
+>   publication. Ayrıca `auth.users` / `storage` yoksa anlaşılır mesajla duran bir
+>   ön-kontrol, ve kapanışta `NOTIFY pgrst`.
+> - **11 tablo bilinçli olarak dışarıda:** 5 yabancı/boş (`accommodations`,
+>   `applications`, `trip_plans`, `trip_history`, `user_credits`) · 3 merkez
+>   (`pending_signups`, `demo_bookings`, `visibility_reports`) · 3'lü B2B kümesi
+>   (`scraper_data` → `b2b_contacts` → `email_logs`). Son üçü **birlikte** çıktı çünkü
+>   `email_logs`'un `b2b_contacts`'a FK'si var — biri kalıp diğeri gitseydi şema kırılırdı.
+> - **8 merkez fonksiyonu baseline'ın sonunda düşüyor**, `trg_feedback_telegram` ile
+>   birlikte: `notify_feedback_telegram` (kutudan dışarı çıkan tek DB objesiydi —
+>   O-21/G1), 3 `admin_*` ölçüm fonksiyonu, `delete_expired_accounts`, 3 `pending_signup_*`.
+> - **İki şey bilerek ERTELENDİ:** (1) `profiles`'taki 10 Stripe kolonu — bugün 21 yerde
+>   `plan_status` okunuyor (O-31); lisans sistemi o okumaları tek `entitlements`
+>   yardımcısına toplamadan kolonları düşürmek kutuyu kırar → **Faz 3.3 ile aynı adımda**.
+>   (2) `postgis` çıkarılması — iki adımlı ayrı iş, baseline'ı bekletmemek için sonraya.
+>   Ayrıca `is_admin()` + `admin_users` **kaldı**: 5 policy `is_admin()`'e bağlı.
+> - **İki tuzak yakalandı ve temizlendi:** pg_dump 17.6 çıktısının başında ve sonunda
+>   ters bölü ile başlayan iki **psql meta-komutu** duruyor (restrict / unrestrict) —
+>   runner `psql` değil node-postgres kullandığı için bunlar kalsaydı **hiçbir kutu
+>   açılmazdı**. Temmuz dökümünde de varlar; PoC `psql` ile yüklendiği için fark
+>   edilmemiş. İkincisi: Windows'ta yazılan dosyanın başındaki **BOM**, ilk komutu bozardı.
+> - **Defter canlıda açıldı:** `public.praxura_migrations` (migration
+>   `praxura_migrations_buch_anlegen`), tek satır `0000` = *uygulanmış*. Baseline canlıda
+>   **çalıştırılmadı** — SaaS zaten o şemada. Tablo **RLS açık / policy'siz** ve
+>   `anon`+`authenticated` yetkileri geri alındı: şema sürümü PostgREST üzerinden dışarı
+>   sızmasın (doğrulandı: 0 yetki, 0 policy, RLS = true).
+> - **`db/migrations-geplant/` boşaltıldı** → `archive/db-migrations-geplant-vor-baseline/`.
+>   Üç dosyanın içeriği de baseline'ın **içinde** (tek tek doğrulandı: `lead_id`,
+>   `therapie_bereich`, `nagel`, `nagelspange_erlaubt`, `abrechnung_zeile`,
+>   `abrechnung_zahlung`, `rechnung_zahlung_buchen`). Zincire `0001-0003` olarak
+>   **eklenmediler** — eklenselerdi temiz kutuda ikinci kez uygulanmaya çalışılırlardı.
+> - **Drift kapısının yazılmamış yarısı yazıldı** (`tools/check-onprem.sh`):
+>   `db/SCHEMA.sql` / `SCHEMA-RLS.sql` staged ama zincire dosya girmediyse commit
+>   **reddediliyor**. Beş senaryo denendi (temiz ağaç ✓ · drift ✗ · migration'lı ✓ ·
+>   `SKIP_MIGRATION_GATE=1` ✓). §5.4'ün eksik ikiziydi; altı migration tam oradan geçmişti.
+>
+> **Açık kalan tek şey — kanıt:** baseline'ın gerçekten **yüklendiği** henüz denenmedi.
+> Bugüne kadarki doğrulama yapısal: nesne sayıları canlıyla birebir (75 tablo · 150
+> policy · 68 fonksiyon · 70 trigger · 292 index · 2 view · 5 kova · 9 storage policy),
+> sözdizimi temiz, runner okuyor (sürüm `0000`, sha `48350e21…`), 16 test yeşil. Gerçek
+> yükleme testi boş bir Supabase yığını ister → **Docker gerekiyor**; makinede kurulu
+> değil (10.09'da kurulum denendi, yönetici izni alınamadığı için `exit status 2` ile
+> düştü). Docker gelince ilk iş budur.
 
 ---
 
@@ -726,6 +792,36 @@
 
 ---
 
+## 7D. Filo ölçeği — 50-200 kutu (tip G + F)
+
+> Bu bölüm 10.09.2026'da açıldı. Sebep: hem playbook hem `RELEASE-STANDARD.md`
+> **~20 kutu** varsayımıyla yazıldı (§0 tablosu, §6.3, §11.1 hepsi "20 kutu" diyor).
+> Aşağıdaki iki madde 20'de görünmeyen, 50-200'de kaçınılmaz olan boşluklardır.
+
+### O-45 — Supabase upstream stack'inin (11 image) yükseltme yolu yok
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kutudaki Postgres/GoTrue/PostgREST/Realtime/Storage/Kong imajlarını yükseltmenin hiçbir yolu tarif edilmedi |
+| **Nerede** | `onprem/supabase-docker/docker-compose.yml` — **11 `image:` satırı** (upstream vendor kopyası). `RELEASE-STANDARD.md:581`: *"Supabase servisleri → Watchtower kapsamı dışı"*. Aynı belge §6.4: **compose kutuda yaşar, Watchtower ona dokunmaz**; §2.2: compose değişmek zorunda kalırsa bu **MAJOR** sürümdür |
+| **Tip** | G + F |
+| **Kutuda ne olur** | Bizim `api` image'ımız her gece güncellenir, altındaki 11 servis **kurulduğu sürümde donar**. Sonuç üç yerden ısırır: (1) GoTrue/Storage'ta çıkan bir CVE'yi kapatmanın yolu yok — CRA'nın 24s/72s/14g bildirim yükümlülüğü (D10) tam da bunu istiyor; (2) Postgres majör yükseltmesi (PG15→17 gibi) `pg_upgrade` gerektirir, kutu başına elle adım demektir ve **K10 gereği kutuya giremeyiz**; (3) yeni migration'larımız upstream'in yeni bir sürümünü varsayarsa eski kutuda patlar. 20 kutuda bu "bir hafta sürer"; 200 kutuda **hiç bitmez** |
+| **Çözüm** | Üç parça, hiçbiri yazılmadı: (a) compose'un **sürümlenmesi** — image tag'leri `.env`'den okunsun, compose aptal kalsın (§6.4 kuralının somut hâli); (b) kutuda `praxura-updater` benzeri küçük bir adım: yeni compose/`.env` şablonu image ile gelsin, kutu kendi compose'unu **kendi** güncellesin (bugünkü "compose'a yazdığımız hiçbir şey ulaşmaz" duvarını yıkar); (c) `releases.json`'da upstream sürüm eşlemesi + durak (O-43). Faz önerisi: **Faz 2.1b** (compose sürümleme) + **Faz 4.3c** (compose dağıtımı) |
+| **Durum** | `offen` — hiçbir fazda yazılı değil |
+
+### O-46 — Merkezde filo görünürlüğü yok; "hangi kutu hangi sürümde" panosu tasarlanmadı
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | 50-200 kutunun sürüm, şema no, yedek, disk ve lisans durumunu tek ekranda gösteren bir merkez panosu hiçbir belgede geçmiyor |
+| **Nerede** | `grep -rin "flotte\|filo\|heartbeat\|fleet" onprem/*.md ONPREM_MIGRATION_PLAYBOOK.md LEGAL_ONPREM_REQUIREMENTS.md` → **sıfır sonuç**. En yakın kayıt `RELEASE-STANDARD.md` §7.4: merkez yalnız "kim · plan · lisans durumu · son yenileme · **son bildirilen sürüm**" bilir. Kararı §11.1 verdi (04.09.2026): sağlık verisi **taşınmıyor**, G1'in lafzı korunuyor; kör nokta bilinçli kabul edildi ve *"ücretli kutu ~10'u geçtiğinde yeniden sorulur"* denildi |
+| **Tip** | G |
+| **Kutuda ne olur** | Kutuda bir şey olmaz — **merkezde** olur. Bugünkü tasarımla 200 kutuda şunları bilemeyiz: kaç kutu yeni `:stable`'ı gerçekten aldı · hangi kutuda migration yarım kaldı · hangi kutuda gecelerdir yedek alınamıyor · hangi kutunun diski %92'yi geçti. Hepsi kutunun **kendi panelinde** yazılı (O-40'ın `/status`'u), ama kimse bakmıyor — müşteri arayana kadar. Bir sürümü geri çekme kararı (§4.6a) "kaç kutu etkilendi" cevabı olmadan verilemez |
+| **Çözüm** | ⚠️ **Bu bir korkuluk sorusu, ajanın kararı değil** (§11.1 zaten kullanıcıya çıkarılmıştı). G1 ihlal edilmeden toplanabilecek azami küme, hasta verisi ile hiç kesişmez ve hepsi **sayı/enum**'dur: `lisans_id` · `surum` · `sema_no` · `durum` (enum: `ok` / `bakim_modu` / `migration_hatasi` / `yedek_yok` / `disk_kritik`) · `son_yedek_yasi_saat` (sayı) · `upstream_surum`. Serbest metin yok, host adı yok, sayaç yok, hasta tablosuna hiç dokunulmaz. §11.1'in kilitlediği şart bunu **bugünden mümkün kılıyor**: lisans yükü sürümlenecek (`lisans_sema: 1`) ve doğrulayıcı tanımadığı alanı yok sayacak — yani alan sonradan eklenebilir, kutuları önce yükseltmek gerekmez. Panelin kendisi merkez tarafı: `api/admin/data.js`'in on-prem satırları (O-18) |
+| **Durum** | `offen` — karar kullanıcıda (§11.1 (b)), teknik ön koşul (sürümlü lisans yükü) Faz 3.2 kabul ölçütü olarak zaten yazılı |
+
+---
+
 ## 8. Kapı tabanları — `tools/check-onprem.sh` için
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -760,7 +856,7 @@
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 11 | O-09 · O-11 · O-18 · O-20 · O-23 · O-32 · O-33 · **O-40** · **O-41** · **O-42** · **O-44** |
+| `offen` | 13 | O-09 · O-11 · O-18 · O-20 · O-23 · O-32 · O-33 · O-40 · O-41 · O-42 · O-44 · **O-45** · **O-46** |
 | `geplant` | 21 | O-01 · O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-15 · O-16 · O-19 · O-21 · O-25 · O-26 · O-27 · O-28 · **O-29** · O-30 · O-31 · O-39 · **O-43** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-38 |
 | `gelöst` | 1 | O-36 (vendor yerelleştirmesi) |
@@ -770,6 +866,12 @@
 > Toplam **43** madde.
 
 > **06.09.2026 — yazma yolu incelemesi:** O-44 açıldı (§7C). Toplam **44** madde.
+
+> **10.09.2026 — filo ölçeği turu (50-200 kutu sorusu):** O-45 (Supabase upstream
+> yükseltme yolu) ve O-46 (merkezde filo görünürlüğü) açıldı (§7D). O-39'a zincirin
+> boş kaldığı ölçüm düşüldü — 6 günde 7 şema değişikliği, sıfır migration dosyası.
+> Kapı ölçümü aynı gün tekrarlandı: **yedi sayacın yedisi de tabanında**, sapma yok.
+> Toplam **46** madde.
 
 > Sayılar madde listesiyle birlikte okunur; bir madde birden fazla faza değebilir.
 
@@ -791,6 +893,8 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 12. **O-43 sürüm/kanal manifesti** — `releases.json`, durak kavramı ve sürüm notu hiçbir fazda yok. Yeni görev: **Faz 2.9**.
 13. **Kurulum ön-kontrolü ve kabul ölçütü** — Faz 2.1 `install.sh` diyor ama "kurulum ne zaman başarılı sayılır" tanımı yok. Yeni görev: **Faz 2.1a**, ölçüt `RELEASE-STANDARD.md` §5.4 (14 kontrol).
 14. **Tanılama paketi içeriği** — Faz 2.5 butonu istiyor, içeriği tarif etmiyor. Yeni görev: **Faz 2.5a**, liste `RELEASE-STANDARD.md` §7.3.
+15. **Supabase upstream stack'inin yükseltilmesi (O-45)** — 11 image, hiçbir fazda yok; compose kutuda yaşıyor ve Watchtower ona dokunmuyor. Yeni görevler: **Faz 2.1b** (compose sürümleme) + **Faz 4.3c** (compose dağıtımı).
+16. **Merkezde filo panosu (O-46)** — hangi kutu hangi sürümde/şemada, son yedek, disk. Playbook'ta ve `RELEASE-STANDARD.md`'de yok; §11.1 kararının bilinçli kör noktası. Faz 3.1 adayı, kullanıcı kararına bağlı.
 
 ### Playbook'ta çürütülenler
 

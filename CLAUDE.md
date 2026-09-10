@@ -252,9 +252,15 @@ rate limit (`express-rate-limit`, public route'larda).
 
 ## 💳 Stripe (LIVE — 2026-06-11'den beri gerçek ödeme alınıyor)
 
-- **Plans (2026-08-05 canlı `index.html`'den doğrulandı — TEK GEÇERLİ SET):**
-  Starter **29 €**/ay (25 € yıllık) · Professional **49 €**/ay (42 €) · Klinik **99 €**/ay (84 €) · Enterprise bireysel.
-  ⚠️ Eski pazarlama/plan dosyalarında dolaşan 39/59 ve 89/149/219 setleri **geçersizdir.**
+- **Plans — ⚠️ FİYATLAR GEÇİCİ, YENİDEN BELİRLENECEK (kullanıcı kararı, 10.09.2026).**
+  Bugün Stripe'ta ve `index.html`'de duran set: Starter **29 €**/ay (25 € yıllık) ·
+  Professional **49 €**/ay (42 €) · Klinik **99 €**/ay (84 €) · Enterprise bireysel.
+  **Bu set kesin değildir** — ürün "hazır" sayıldığında oturup yeniden konuşulacak.
+  Bilinen tek yön: **en düşük paket 29 olmayacak, ~59'dan başlayacak.**
+  Yani fiyat üzerine hesap yapan hiçbir analiz (birim ekonomi, on-prem destek maliyeti,
+  başabaş noktası) bugünkü rakamlara dayandırılmaz; "fiyat henüz belirlenmedi" denir.
+  ⚠️ Eski pazarlama/plan dosyalarında dolaşan 39/59 ve 89/149/219 setleri de geçersizdir —
+  onlar başka bir dönemin artığı, yukarıdaki karar onlara dönüş anlamına gelmez.
 - **Trial:** 14 gün · **Customer Portal:** aktif · **Checkout domain:** `pay.praxura.de`
 - **Enterprise price ID hâlâ YOK** — `pricing.js`/`stripe-live-setup.cjs`'te geçmiyor (Ops-Dashboard → **Launch**)
 - **Webhook:** `https://app.praxura.de/api/stripe/webhook` — ✅ 2026-08-05'te panelden
@@ -328,6 +334,27 @@ DROP'lu. Pazarlama metinlerinde kullanma, `business_lookup_for_twilio` RPC'sine 
 
 **SQL yazmadan / tablo-kolon varsayımı yapmadan önce `db/README.md` okunur.**
 Orada 6 tuzak yazılı (en önemlisi: hasta tablosu `patients` değil **`leads`**).
+
+#### ⛓️ Şema değişikliği artık ÖNCE DOSYA, SONRA CANLI (10.09.2026)
+
+**`mcp__supabase__apply_migration` tek başına yeterli değildir.** Çalıştırılabilir zincir
+`api-backend/db/migrations/` altındadır ve müşteri kutusuna giden **tek** yol odur; canlıya
+elle uygulanan bir değişiklik kutuya asla ulaşmaz.
+
+Sıra bağlayıcıdır:
+
+1. `api-backend/db/migrations/NNNN_ad_alt_cizgili.sql` dosyasını yaz (sıradaki numara)
+2. Aynı commit'te `db/SCHEMA.sql` + `SCHEMA-RLS.sql` dökümünü tazele
+3. Canlıya uygula (MCP)
+
+- **Kapı var:** döküm staged ama zincire yeni dosya girmediyse `tools/check-onprem.sh`
+  commit'i reddeder. Yalnız biçimsel döküm tazelemesi için: `SKIP_MIGRATION_GATE=1`.
+- **Temel:** `0000_baseline.sql` (10.09.2026, canlıdan üretildi). Canlıda **çalıştırılmaz** —
+  defter `praxura_migrations`'a "uygulanmış" diye kayıtlıdır; dosya yalnız yeni kutularda koşar.
+- **Uygulanmış dosya değiştirilmez** — runner SHA-256 tutar, değişirse kutu açılmaz.
+  Düzeltme her zaman **yeni dosyayla**.
+- Kolon silme/yeniden adlandırma **tek adımda yapılmaz** (`:beta` ve `:stable` aynı anda
+  canlı). Kurallar: `api-backend/db/migrations/README.md` · tasarım: `onprem/SCHEMA-VERTEILUNG.md`
 
 - **Her şema değişikliğinden sonra döküm aynı commit'te tazelenir.**
   `mcp__supabase__apply_migration` çalıştırdıysan, iş bitmedi — `db/SCHEMA.sql` ve
