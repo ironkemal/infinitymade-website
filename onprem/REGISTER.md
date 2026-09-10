@@ -38,7 +38,7 @@
 | Alan | İçerik |
 |---|---|
 | **Ne** | Backend'in adresi 11 frontend dosyasında sabit yazılı; kutuda müşterinin tarayıcısı bizim VPS'imize gider |
-| **Nerede** | **25 satır / 12 dosya** (kapı kapsamı: `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `index-old.html` `ai chatbot proje/` hariç).<br>`dashboard.js` 9 (`:86` `:6059` `:6566` `:6567` `:11900` `:11908` `:12046` `:12184` `:17951`) · `kalender.js` 5 (`:114` `:242` `:459` `:619` `:765`) · `employee-signup.js` 2 (`:116` `:261`) · `booking-request.js` 2 (`:4` yorum, `:11`) · `module/abrechnungsstatus.js:50` · `module/podologie-positionen.js:39` · `module/beleg-druck.js:11` (yorum) · `booking.js:5` · `attendance.js:4` · `index.html:2179` (chatbot DATA bloğu, pazarlama) · `api-backend/server.js:1806` (bkz. O-02) |
+| **Nerede** | **25 satır / 12 dosya** (kapı kapsamı: `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `index-old.html` `ai chatbot proje/` hariç).<br>`dashboard.js` 9 (`:117` `:6035` `:6543` `:6544` `:11841` `:11849` `:11987` `:12125` `:17439`) · `kalender.js` 5 (`:114` `:242` `:460` `:620` `:766`) · `employee-signup.js` 2 (`:116` `:261`) · `booking-request.js` 2 (`:4` yorum, `:11`) · `module/abrechnungsstatus.js:50` · `module/podologie-positionen.js:39` · `module/beleg-druck.js:11` (yorum) · `booking.js:5` · `attendance.js:4` · `index.html:2179` (chatbot DATA bloğu, pazarlama) · `api-backend/server.js:1926` (bkz. O-02).<br>⚠️ Satır numaraları **11.09.2026'da yeniden ölçüldü** — kod kaydı, toplam **25**'te sabit kaldı (kapı yeşil) |
 | **Tip** | C |
 | **Kutuda ne olur** | Müşterinin kutusundaki dashboard açılır, ama her randevu/rezept/abrechnung çağrısı **bizim** VPS'imize gider. Bizim VPS'imiz kapalıysa müşterinin praxis'i durur. Daha kötüsü: kutudaki hasta verisi bizim sunucumuza akar → **G1 ihlali**, geçişin bütün amacı boşa çıkar. Müşteri kendi Supabase'inde oturum açtığı için JWT bizim backend'de doğrulanmaz — pratikte 401 duvarı |
 | **Çözüm** | Tek `API_BASE` kaynağı: `/api/config`'in verdiği değer (bugün Supabase URL'i için zaten yapılan şey — bkz. O-05). Kutuda `window.location.origin + '/api'`, SaaS'ta bugünkü host. Fork değil, tek config satırı. **Faz 1.1** kapsamına bağlandı; paketleme öncesi **Faz 2.0** ile kesişir |
@@ -54,17 +54,31 @@
 > `dashboard.js:98`'de tanımlı, ctx üzerinden geçiyor) — taban 26→25, `onprem` ajanı hükmü
 > (O-44 §7 şart 1'in aynısı: ikinci bir host sabiti açma). Faz 1.1 çözümünü genişletmedi,
 > yalnız var olan deseni izledi.
+>
+> **11.09.2026 — paket yazıldı; bu madde artık Faz 2.1b'nin önünde duruyor.**
+> `onprem/docker-compose.yml`'de kutunun **arayüzünü servis eden bir bileşen yok**
+> (Kong yalnız `127.0.0.1`'de yayınlıyor, Caddy Faz 2.1b'de gelecek). Yani sabit adres
+> bugün kutuda ısırmıyor — kimseye tarayıcıdan açılmıyor. Isıracağı an, Caddy statik
+> dosyaları servis ettiği andır: o sürümde müşterinin tarayıcısı **bizim** VPS'imize
+> gider. Sıralama sonucu: O-01 ve O-15 çözümü **2.1b'den önce** inmeli, sonra değil.
 
 ### O-02 — `N8N_AI_SERIES_URL` fallback'i koda gömülü n8n adresi
 
 | Alan | İçerik |
 |---|---|
 | **Ne** | AI seri-planlayıcı env var yoksa sabit n8n webhook'una düşüyor |
-| **Nerede** | `api-backend/server.js:1806` — `process.env.N8N_AI_SERIES_URL` yoksa `https://n8n.infinitymade.de/webhook/ai-series-scheduler` |
+| **Nerede** | `api-backend/server.js:1926` (04.09'da `:1806`'ydı) — `process.env.N8N_AI_SERIES_URL` yoksa `https://n8n.infinitymade.de/webhook/ai-series-scheduler` |
 | **Tip** | C + A (fallback runtime dış çağrı) |
 | **Kutuda ne olur** | Müşteri env'inde `N8N_AI_SERIES_URL` olmayacak → fallback devreye girer → kutu bizim n8n'imize POST atar. Playbook D9'a göre bu çağrı **hasta adını taşıyor** (`aiPayload.customer.name`) → G1 ihlali. Deterministik fallback kodda var ama bu satır ona düşmeden önce ağa çıkıyor |
 | **Çözüm** | **Faz 1.2** — `ai/tasks/series-schedule.js` olarak llmClient üzerinden doğrudan; n8n aradan çıkar, hasta adı prompt'a girmez. Kabul kriteri zaten yazılı: `grep N8N_` → sıfır |
-| **Durum** | `geplant` (Faz 1.2) |
+| **Durum** | `geplant` (Faz 1.2) — ⚠️ ilk ücretli kutudan **önce** inmeli, bkz. not |
+
+> **11.09.2026 — kutu paketi bu maddeyi teorik olmaktan çıkardı.**
+> `onprem/.env.template` `N8N_AI_SERIES_URL`'i **bilinçli olarak taşımıyor** — paketin
+> tamamında tek bir `N8N_` yok (ölçüldü). Ama kod deseni `process.env.… || '<sabit n8n
+> adresi>'`, yani değişkenin yokluğu fallback'i **kapatmıyor, açıyor**. Seri planlayıcı
+> kutuda ilk çağrıldığında hasta adı bizim n8n'imize POST edilir → **G1**. Bu yüzden
+> Faz 1.2 artık bir tercih değil **takvim kısıtı**: ilk ücretli kutudan önce inmeli.
 
 ### O-03 — `app.praxura.de` uygulama kodunda sabit (pazarlama sayfaları hariç)
 
@@ -144,7 +158,7 @@
 | Alan | İçerik |
 |---|---|
 | **Ne** | İşletme arama/lead toplama Apify aktörüne çıkıyor |
-| **Nerede** | `api-backend/server.js:465` (`api.apify.com/v2/acts/compass~crawler-google-places/…?token=`) · Vercel tarafı `api/apify/search.js` · frontend B2B ekranı `dashboard.js:11900` (`B2B_AGENT_URL`) |
+| **Nerede** | `api-backend/server.js:465` (`api.apify.com/v2/acts/compass~crawler-google-places/…?token=`) · Vercel tarafı `api/apify/search.js` · frontend B2B ekranı `dashboard.js:11841` (`B2B_AGENT_URL`) |
 | **Tip** | A + E + G |
 | **Kutuda ne olur** | Müşteri kutusundan bizim Apify token'ımızla dışarı çıkılır → G2/K5 ihlali, faturası bize gelir. Ama asıl soru bu değil: bu özellik **hasta işi değil**, bizim B2B pazarlama/lead aracımız. Müşterinin praxis'inde işi yok |
 | **Çözüm** | Merkez tarafı (tip G) — on-prem pakette **bulunmaz**; hem route hem `nav-registry` görünürlüğü on-prem build'de kapalı. Faz 1.1'in "merkezde kalacaklar" listesine yazılmalı. ⚠️ Playbook bu özelliği hiç anmıyor |
@@ -190,6 +204,13 @@
 >
 > **Kalan:** Faz 1.5 (Express `routes/fahrtenbuch.js`) ve §9-A8 anahtar sahipliği kararı
 > (öneri: müşterinin kendi ücretsiz ORS anahtarı). İkisi de hâlâ açık.
+>
+> **11.09.2026 — karar artık belgede değil pakette.** `onprem/docker-compose.yml`
+> Deno konteynerini (`functions`) **içermiyor**. Yani kutuda Fahrtenbuch mesafe hesabı
+> yapısal olarak ölü: `supabase.functions.invoke()` karşılık bulmaz. Faz 1.5 inene kadar
+> Hausbesuch km'si kutuda boş kalır — bilinen ve kabul edilmiş durum, compose başlığında
+> da yazılı. ⚠️ Kabul edilmiş olması unutulmuş olmasına dönüşmesin: Fahrtenbuch satışta
+> anlatılan bir özellik, kutuda çalışmadan teslim edilirse §434 BGB tartışması açar.
 
 ### O-12 — Nominatim/OSM geocoding tarayıcıdan doğrudan
 
@@ -207,10 +228,10 @@
 | Alan | İçerik |
 |---|---|
 | **Ne** | Randevu oluşturulunca n8n'e fire-and-forget bildirim |
-| **Nerede** | `api-backend/server.js:1053` (`process.env.N8N_WEBHOOK_URL`) — env yoksa sessizce atlanıyor |
+| **Nerede** | `api-backend/server.js:1173` (`process.env.N8N_WEBHOOK_URL`; 04.09'da `:1053`) — env yoksa sessizce atlanıyor. Kutu paketinde bu env **yok**, yani kutuda hiç çalışmıyor (doğrulandı) |
 | **Tip** | A |
 | **Kutuda ne olur** | Env boş kalacağı için **hiçbir şey**; kod bunu zaten sessizce atlıyor, kutuda kırılmaz. Yine de G3/G8 disiplini gereği kodda `N8N_` referansı kalmamalı — playbook D9'a göre bu webhook WhatsApp döneminden kalma ve muhtemelen işlevsiz |
-| **Çözüm** | **Faz 1.2** — kaldır ya da iç event'e çevir. Kabul kriteri: `grep N8N_` → sıfır (bugün 3 satır: `:1053` `:1806` `:1809`) |
+| **Çözüm** | **Faz 1.2** — kaldır ya da iç event'e çevir. Kabul kriteri: `grep N8N_` → sıfır (bugün 3 satır: `:1173` `:1926` `:1929`) |
 | **Durum** | `geplant` (Faz 1.2) |
 
 ### O-14 — SMTP çıkışı (nodemailer)
@@ -222,7 +243,7 @@
 | **Tip** | A |
 | **Kutuda ne olur** | Sorunsuz — host/port/kullanıcı tamamen env-var, kod sağlayıcı-agnostik. Her çağrı noktası `if (process.env.SMTP_HOST)` ile korumalı, yani SMTP kurulmadan da uygulama çalışır. Hedef müşterinin kendi mail sunucusu, bizden geçmiyor |
 | **Çözüm** | `unkritisch` — Faz 2.2 sihirbazı SMTP profillerini dolduracak, Faz 2.7 aynı ayarı GoTrue'ya besleyecek. Kodda değişiklik gerekmiyor. ⛔ Resend/Postmark'a geçilmez (proje kuralı) |
-| **Durum** | `unkritisch` (desen doğru; sihirbaz işi Faz 2.2/2.7) |
+| **Durum** | `unkritisch` (desen doğru; sihirbaz işi Faz 2.2/2.7) — ⚠️ **11.09.2026 düzeltmesi:** kutu paketinde `SMTP_*` yalnız GoTrue'ya geçiyor, **`api` konteynerine geçmiyor**; yani kutuda davet/şifre maili gider, randevu ve Mahnung maili sessizce gitmez → **O-50** (11.09.2026 akşamı düzeltildi, `SMTP_*` artık `api`'ye de geçiyor). ⚠️ Ama SMTP geçmesi mailin **teslim edileceği** anlamına gelmiyor: gönderen adresi koda gömülü, kutudan çıkan mail SPF/DMARC'a takılıp spam'e düşüyor → **O-51** |
 
 ---
 
@@ -258,7 +279,7 @@
 | **Tip** | G |
 | **Kutuda ne olur** | Vercel yok → `/api/config` 404 → `supabase-config.js` boş URL döndürür → `createClient('','')` → uygulamanın **tamamı** açılmaz. Kırılma en temel yerde ve sessiz: konsola tek satır error düşer, ekran boş kalır |
 | **Çözüm** | **Faz 1.1** — Express'te aynı yolda route; PoC 0.4'te muadili zaten yazıldı (`onprem/poc-frontend-server.mjs`), o dosya şablon. SaaS'ta Vercel fonksiyonu kalabilir (aynı sözleşme, iki dağıtım — fork değil). O-01'in çözümüyle aynı yüzey: `apiBase` de buradan dönmeli |
-| **Durum** | `geplant` (Faz 1.1) |
+| **Durum** | `geplant` (Faz 1.1) — ⚠️ 11.09.2026: kutu paketinde ne `/api/config`'i verecek bileşen var ne de statik arayüzü servis edecek olan. İkisi de Caddy adımının (Faz 2.1b) ön koşulu; bu madde 2.1b'yi **bloklar** |
 
 ### O-16 — `/api/dsgvo` hasta verisine dokunan tek Vercel fonksiyonu
 
@@ -313,7 +334,7 @@
 | **Tip** | G |
 | **Kutuda ne olur** | Doğrudan bir etkisi yok, ama **G8'in en kolay ihlal noktası** burası: yeni bir HTTP endpoint gerektiğinde en kısa yol `api/` altına dosya açmaktır. Bugün onu Vercel'in plan limiti engelliyor — yani bizi koruyan şey disiplin değil, tesadüf. Limit büyütülürse koruma kaybolur |
 | **Çözüm** | Kapı: `tools/check-onprem.sh` `api/` dosya sayısını sayar, **artış = red** (taban 12). Yeni endpoint `api-backend/server.js`'e yazılır — G8 zaten bunu söylüyor |
-| **Durum** | `offen` → kapı 04.09.2026'da yazıldı (`tools/check-onprem.sh` + `tools/.onprem-baseline`, `vercel_fn=12`). **Commit numarası girilince `gelöst`** — bkz. §8 |
+| **Durum** | ✅ **`gelöst` (04.09.2026, `ce8d7d0`)** — kapı `tools/check-onprem.sh` + `tools/.onprem-baseline` (`vercel_fn=12`), `.githooks/pre-commit`'e bağlı. 11.09.2026'da `onprem_image` sekizinci sayaç olarak eklendi (`b2fdbb8`) ve kapı yeşil çalıştırılarak doğrulandı: sekiz sayacın sekizi tabanında |
 
 ---
 
@@ -377,6 +398,15 @@
 | **Kutuda ne olur** | Bugün: her main push'u ~60 saniyede canlıya çıkar (Watchtower). Bu SaaS'ta bilinçli. Kutularda aynı düzen kalırsa **ücretli müşteri her denememizi yer** — K11 tam bunu engellemek için var. Ücretli müşterinin kutusu, henüz test edilmemiş bir image'ı gece yarısı çeker |
 | **Çözüm** | **Faz 4.3** — `:beta` (her main push) + `:stable` (yalnız release tag'i); Watchtower kanal tag'ini izler. Testlerin publish'ten önce koşması iyi bir taban, korunur. Ayrıca şema dağıtımıyla bağlanır: `:stable` image'ı yalnız kendi migration'larını bilmeli (O-39). ★ Kanalın tam tasarımı — değişmez `X.Y.Z` etiketi, 72 saatlik soak, `:stable`'ın elle taşınması, `latest`'in kullanımdan kalkması, kutuda saatlik Watchtower — `onprem/RELEASE-STANDARD.md` §2.3 + §6.4'te. Etiketin kendisi risk kontrolüdür; aralık değil |
 | **Durum** | `geplant` (Faz 4.3 / 4.3b) — bkz. O-41 (smoke-test ve soak eksikliği) |
+
+> **11.09.2026 — paket, var olmayan bir etikete işaret ediyor.**
+> `onprem/.env.template` `PRAXURA_API_IMAGE=…/calendar-api:stable` diyor; yayın hattı ise
+> bugün yalnız `latest` + kısa sha basıyor (`publish-calendar-api.yml:65-66`). **`:stable`
+> diye bir etiket yok.** İkinci eksik: şablonda özel registry kimliği için satır yok —
+> per-müşteri pull-credential playbook Faz 3.4'ün işi ve `.env.template` ona yer ayırmıyor.
+> Sonuç, paketin bugünkü dürüst tarifi: **çalışan bir test yığını, kurulabilir bir ürün
+> değil.** Müşteri sunucusunda `docker compose up` bugün image'ı çekemez. Faz 4.3b (kanal
+> etiketleri) ve Faz 3.4 (registry kimliği) inmeden ilk kurulum yapılamaz.
 
 ### O-26 — Yedekleme zamanlayıcısı repoda yok, VPS'te elle kurulmuş
 
@@ -447,7 +477,7 @@
 | **Tip** | E |
 | **Kutuda ne olur** | Anahtar **her kutuda ayrı** olmak zorunda (ortak anahtar = bir kutudan sızan anahtar hepsini açar). Ama ayrı olmasının bedeli şu: anahtar `.env`'de, veri `pg_dump`'ta. Müşteri yedeği geri yüklerken anahtarı kaybetmişse **şifreli alanlar kalıcı olarak okunamaz** — hasta dokümantasyonunun bir parçası yok olur. Bu, yedekleme tasarımının (Faz 2.3) en kolay kaçırılan noktası: yedek "başarılı" görünür, geri yükleme yarım açılır |
 | **Çözüm** | ★ **`onprem/RELEASE-STANDARD.md` §4.5** — dört kural, ikisi kurulumun ikisi geri yüklemenin işi: (1) `install.sh` her kutu için rastgele üretir, ortak anahtar yasak (**Faz 2.1**); (2) sihirbaz anahtarı bir kez gösterir, "sakladım" onayı alınmadan ilerlemez, bizde kopyası yok ve olmayacak — metin bunu da söyler (**Faz 2.2**); (3) her gecelik yedeğin künyesine anahtarın **parmak izi** (HMAC, anahtarın kendisi değil) yazılır, panelde uyum rozeti durur, uyumsuzluk **o gece** kırmızıya döner (**Faz 2.4**); (4) `restore.sh` künyedeki parmak izini karşılaştırır ve uyuşmazlıkta **veriye dokunmadan** durur, zorla devam yalnız açık onayla (**Faz 2.3**) |
-| **Durum** | `geplant` (Faz 2.1 + 2.2 + 2.3 + 2.4) — gereksinim `RELEASE-STANDARD.md` §4.4-§4.5'te yazıldı. Playbook D6 Vault'u ele alıyordu, `DATA_ENCRYPTION_KEY` hiçbir fazda geçmiyordu; artık geçiyor. `gelöst` olması için dördü de uygulanıp commit numarasının buraya yazılması gerekir |
+| **Durum** | `geplant` (Faz 2.1 + 2.2 + 2.3 + 2.4) — gereksinim `RELEASE-STANDARD.md` §4.4-§4.5'te yazıldı. Playbook D6 Vault'u ele alıyordu, `DATA_ENCRYPTION_KEY` hiçbir fazda geçmiyordu; artık geçiyor. `gelöst` olması için dördü de uygulanıp commit numarasının buraya yazılması gerekir. ⚠️ **11.09.2026:** anahtar kutu paketine **hiç girmedi** — ne `.env.template`'te ne compose'da; dört kuraldan önce anahtarın pakette bir yeri olmalı → **O-50** |
 
 ### O-30 — `.env.template` yok; kurulumda hangi değişkenin gerektiği yazılı değil
 
@@ -458,7 +488,7 @@
 | **Tip** | E |
 | **Kutuda ne olur** | `install.sh` neyi soracağını bilmez; eksik bir değişken boot'ta `process.exit(1)`'e ya da sessiz özellik kaybına yol açar (PoC 0.3'te tam bu yaşandı: `GOOGLE_*` boot'ta zorunlu çıktı, dummy değer konularak geçildi). Müşteri kurulumunda "dummy değer koy" seçeneği yok |
 | **Çözüm** | **Faz 2.1** — `onprem/.env.template`: her değişken için ad + zorunlu mu + kim doldurur (sihirbaz / install script / hiç) + boş bırakılırsa hangi özelliğin kapanacağı. Bu dosya aynı zamanda O-27'nin denetim listesi olur |
-| **Durum** | `geplant` (Faz 2.1) |
+| **Durum** | 🟡 **kısmen `gelöst` (11.09.2026, `b2fdbb8`)** — `onprem/.env.template` yazıldı: sürümler (`VERSION_*`), boş bırakılmış sırlar, adresler, SMTP, KI. Bizim hiçbir anahtarımızın adı geçmiyor (`AZURE`/`APIFY`/`STRIPE`/`GOOGLE`/`SENTRY`/`N8N` taraması → **0**, G2 tabanı temiz). **Kalan:** üç değişken şablonda yok (**O-50**) ve "boş bırakılırsa hangi özellik kapanır" cümlesi yalnız KI ve SMTP satırlarında yazılı — O-27'nin denetim listesi olabilmesi için her satırda olmalı |
 
 ---
 
@@ -567,7 +597,7 @@
 | **Tip** | B + D |
 | **Kutuda ne olur** | Seed olarak gelir, kutu dış kaynağa çıkmaz. Playbook Faz 5.1 bunları export kapsamının **dışında** tutuyor — doğru: tenant verisi değil. RLS tarafı da hazır (D8 düzeltmesi dump'la geldi: salt-okunur policy, anon yazamıyor) |
 | **Çözüm** | `unkritisch` — Faz 2.1 seed adımı. ⚠️ Bağlı soru: bu tablolar **güncellendiğinde** kutuya nasıl gidecek? Cevap O-34 deseni (image ile) olmalı, ama `icd10_titles` 13.041 satır — JS dosyasına commit'lenemez, migration/seed dosyası olarak gitmeli. Bu, şema dağıtım zincirinin (O-39) bir parçası |
-| **Durum** | `unkritisch` (paketleme Faz 2.1; güncelleme yolu O-39'a bağlı) |
+| **Durum** | `geplant` (Faz 2.1 seed adımı) — ⚠️ **11.09.2026'da `unkritisch`'ten çıkarıldı.** Ölçüldü: kutu doğru ama **boş** kalkıyor (`krankenkassen` → `[]`). Baseline **yapıyı** taşıyor, **veriyi** taşımıyor; `SCHEMA-VERTEILUNG.md` §3.1'in 4. adımı (seed) yazılmadı. Kasa listesi boşken ne randevu kaydı ne §302 hazırlığı yapılabilir — bu bir "bize sorun değil" maddesi olamaz. Güncelleme yolu hâlâ O-39'a bağlı |
 
 ### O-39 — Şema dağıtım zinciri — çözüm belgesi yazıldı
 
@@ -763,6 +793,12 @@
 >
 > **Kalan:** §6.5'teki 10 alanlı derin `/status` (schema · storage · disk · backup ·
 > data_key · license · zeit) hâlâ yazılmadı → **Faz 2.4b** açık kalıyor.
+>
+> **11.09.2026 — paket tarafı:** `onprem/docker-compose.yml`'de altı fremd servisin
+> **altısında da** healthcheck var ve `depends_on … condition: service_healthy` zinciri
+> kuruldu (`api` → `db` + `kong`). Bizim `api` compose'da healthcheck taşımıyor; geçerli
+> olan `Dockerfile`'daki `HEALTHCHECK` (canlılık). Derin `/status` hâlâ yok — ve O-50'nin
+> `data_key` alanı tam da orada görünecek.
 
 ### O-41 — CI image'ı hiç çalıştırmadan yayınlıyor; Watchtower 60 saniyede canlıya alıyor
 
@@ -802,7 +838,23 @@
 | **Tip** | G |
 | **Kutuda ne olur** | Ücretli müşteriye dağıtım hakkı olmayan bir bileşen pakete girerse bu, kutuda değil **mahkemede** patlar. n8n'i paketleme planı yazılırken yakaladık; bir sonrakini yakalayacak bir şey yok. Ayrıca CRA 11 Aralık 2027'de SBOM'u zaten zorunlu kılıyor (`LEGAL_ONPREM_REQUIREMENTS.md` §6/E7-E8) |
 | **Çözüm** | **Faz 6.1b** — iki ayrı envanter: npm tarafı SBOM ile üretilir (CycloneDX), compose image'ları **elle** `onprem/NOTICE.md`'de tutulur (`npm sbom` Kong/GoTrue/Studio'yu görmez — asıl risk orada). İzinli lisans listesi (MIT/Apache-2.0/BSD/ISC/PostgreSQL/MPL-2.0/0BSD/CC0), yasak liste (GPL/AGPL/SSPL/BUSL/Elastic/Commons Clause/"Sustainable Use"). Kapı: compose'daki `image:` satır sayısı taban olur, artış = red (kayıtsız tabloda commit reddeden `check-tabellen-register.sh` ile aynı mantık). Ayrıntı: `RELEASE-STANDARD.md` §8 |
-| **Durum** | `offen` — playbook Faz 6.1a SBOM'u anıyor ama **sürekli kontrol** mekanizması yok |
+| **Durum** | 🟡 **kısmen `gelöst` (11.09.2026, `b2fdbb8`)** — taban kondu, kapı yarım |
+
+> **11.09.2026 — yapılan ve yapılmayan.**
+> `onprem/NOTICE.md` açıldı: 7 image için sürüm · lisans · kaynak, ayrıca **bilinçli
+> olarak içermediklerimiz** tablosu (başında n8n, G3 gerekçesiyle). Kapıya `onprem_image`
+> sayacı eklendi; sekizinci konteynerle denendi ve gerçekten reddetti.
+>
+> ⚠️ **Kırpılması gereken iddia:** kapı `image:` **satırını sayar**, `NOTICE.md`'de
+> karşılık gelen bir satır olup olmadığına **bakmaz**. "Lisans satırı olmayan sekizinci
+> konteyner reddedilir" cümlesi bugün doğru değil — reddedilen, lisans satırı olsun ya da
+> olmasın, sekizinci konteynerdir. NOTICE eşleşmesi hâlâ bir **insan kuralı**; kapı
+> yalnızca insanı durdurup baktırıyor. Bu kadarı da değerli, ama fazlası iddia edilmemeli.
+>
+> **Kalan:** npm tarafı SBOM (CycloneDX) · izinli/yasak lisans listesinin mekanikleşmesi ·
+> tablonun **image içeriğine** karşı doğrulanması. Bugünkü tablo proje deposunun lisansına
+> göre dolduruldu, image'ın içindeki onlarca pakete göre değil — `NOTICE.md` bunu kendisi
+> yazıyor ve doğru yazıyor (Faz 6.1a).
 
 ### O-43 — Sürüm/kanal manifesti yok; uzun süre kapalı kalmış kutunun davranışı tanımsız
 
@@ -814,6 +866,12 @@
 | **Kutuda ne olur** | Bugün sonuç yok (tek kanal, tek sürüm). Ücretli kutu çıktığında: lisansı pasifken güncelleme çekemeyen bir kutu (Faz 3.4) altı ay sonra açıldığında 6 MINOR birden atlar. Bunun güvenli olup olmadığını söyleyen **hiçbir kayıt yok** — Sentry ve GitLab bu sorunu "hard stop" / "required upgrade stop" listeleriyle çözüyor, bizde liste yok |
 | **Çözüm** | **Faz 2.9** (yeni) — `onprem/releases.json`: sürüm başına `durak` (atlanamaz mı), `otomatik_adim`, `elle_adim[]`, `not_url`. Runner atlamayı **reddeder** (`SCHEMA-VERTEILUNG.md` §6.3'ün "bilmediğim kayıt var" refleksiyle aynı). ★ Asıl çözüm mekanik değil kural: **migration yalnız SQL'e dayanır, aradaki sürümün uygulama koduna bağımlı olamaz** — bu kural durak sınıfını tümden ortadan kaldırır, manifest yalnız istisna için durur. Ayrıntı: `RELEASE-STANDARD.md` §3.3-§3.4 |
 | **Durum** | `geplant` (Faz 2.9) — çözüm belgesi `onprem/RELEASE-STANDARD.md` |
+
+> **11.09.2026 — manifestin ham maddesi geldi.** `onprem/.env.template` §1'deki
+> `VERSION_*` bloğu, ilk kez yazılı bir sürüm sözleşmesi taşıyor: *"bu kombinasyon
+> 10./11.09.2026'da birlikte test edildi, satırları tek tek yükseltmeyin."* Bu, `releases.json`
+> değil ama onun besleyeceği veri. Hâlâ yok olanlar: sürüm numarası kavramı, durak
+> (atlanamaz sürüm), sürüm notu bağlantısı. Faz 2.9 açık.
 
 ---
 
@@ -855,7 +913,7 @@
 | **Nerede** | `onprem/supabase-docker/docker-compose.yml` — **11 `image:` satırı** (upstream vendor kopyası). `RELEASE-STANDARD.md:581`: *"Supabase servisleri → Watchtower kapsamı dışı"*. Aynı belge §6.4: **compose kutuda yaşar, Watchtower ona dokunmaz**; §2.2: compose değişmek zorunda kalırsa bu **MAJOR** sürümdür |
 | **Tip** | G + F |
 | **Kutuda ne olur** | Bizim `api` image'ımız her gece güncellenir, altındaki 11 servis **kurulduğu sürümde donar**. Sonuç üç yerden ısırır: (1) GoTrue/Storage'ta çıkan bir CVE'yi kapatmanın yolu yok — CRA'nın 24s/72s/14g bildirim yükümlülüğü (D10) tam da bunu istiyor; (2) Postgres majör yükseltmesi (PG15→17 gibi) `pg_upgrade` gerektirir, kutu başına elle adım demektir ve **K10 gereği kutuya giremeyiz**; (3) yeni migration'larımız upstream'in yeni bir sürümünü varsayarsa eski kutuda patlar. 20 kutuda bu "bir hafta sürer"; 200 kutuda **hiç bitmez** |
-| **Çözüm** | Üç parça, hiçbiri yazılmadı: (a) compose'un **sürümlenmesi** — image tag'leri `.env`'den okunsun, compose aptal kalsın (§6.4 kuralının somut hâli); (b) kutuda `praxura-updater` benzeri küçük bir adım: yeni compose/`.env` şablonu image ile gelsin, kutu kendi compose'unu **kendi** güncellesin (bugünkü "compose'a yazdığımız hiçbir şey ulaşmaz" duvarını yıkar); (c) `releases.json`'da upstream sürüm eşlemesi + durak (O-43). Faz önerisi: **Faz 2.1b** (compose sürümleme) + **Faz 4.3c** (compose dağıtımı) |
+| **Çözüm** | Üç parça, hiçbiri yazılmadı: (a) compose'un **sürümlenmesi** — image tag'leri `.env`'den okunsun, compose aptal kalsın (§6.4 kuralının somut hâli); (b) kutuda `praxura-updater` benzeri küçük bir adım: yeni compose/`.env` şablonu image ile gelsin, kutu kendi compose'unu **kendi** güncellesin (bugünkü "compose'a yazdığımız hiçbir şey ulaşmaz" duvarını yıkar); (c) `releases.json`'da upstream sürüm eşlemesi + durak (O-43). Faz dağılımı (playbook 11.09.2026'da güncellendi): (a) **Faz 2.1a içinde yapıldı** · (b) **Faz 2.1b** (compose'un kutuya dağıtımı, playbook §Faz 2.1b) · (c) **Faz 2.9** (`releases.json`, O-43) |
 | **Durum** | 🟡 **kısmen çözüldü (11.09.2026)** — (a) yapıldı, (b) ve (c) açık |
 
 > **11.09.2026 — (a) tamam: yığın artık tek bir sürümlenmiş nesne.**
@@ -881,6 +939,13 @@
 >
 > **Kalan:** (b) kutunun compose'u kendi güncellemesi ve (c) `releases.json` eşlemesi.
 > İkisi de yazılmadı.
+>
+> ⚠️ **Sicil düzeltmesi (11.09.2026, `onprem` ajanı):** compose başlığında iki sayı
+> yanlış duruyor ve belgeyi okuyanı yanıltır. (1) *"Upstream liefert elf Container.
+> **Vier** davon sind hier bewusst weggelassen"* — sayılan **beş**tir (studio · meta ·
+> imgproxy · supavisor · functions). (2) Kong satırı *"~950 MB"* diyor; ölçüm ve bu
+> sicil **886 MB** diyor. Sicilin geçerli sayıları: **5 çıkarıldı · 11 → 6 fremd
+> konteyner · Kong 886 MB.** İkisi de `builder`'ın düzeltmesi (compose yorumu, tek satır).
 
 ### O-46 — Merkezde filo görünürlüğü yok; "hangi kutu hangi sürümde" panosu tasarlanmadı
 
@@ -893,10 +958,12 @@
 | **Çözüm** | ⚠️ **Bu bir korkuluk sorusu, ajanın kararı değil** (§11.1 zaten kullanıcıya çıkarılmıştı). G1 ihlal edilmeden toplanabilecek azami küme, hasta verisi ile hiç kesişmez ve hepsi **sayı/enum**'dur: `lisans_id` · `surum` · `sema_no` · `durum` (enum: `ok` / `bakim_modu` / `migration_hatasi` / `yedek_yok` / `disk_kritik`) · `son_yedek_yasi_saat` (sayı) · `upstream_surum`. Serbest metin yok, host adı yok, sayaç yok, hasta tablosuna hiç dokunulmaz. §11.1'in kilitlediği şart bunu **bugünden mümkün kılıyor**: lisans yükü sürümlenecek (`lisans_sema: 1`) ve doğrulayıcı tanımadığı alanı yok sayacak — yani alan sonradan eklenebilir, kutuları önce yükseltmek gerekmez. Panelin kendisi merkez tarafı: `api/admin/data.js`'in on-prem satırları (O-18) |
 | **Durum** | `offen` — karar kullanıcıda (§11.1 (b)), teknik ön koşul (sürümlü lisans yükü) Faz 3.2 kabul ölçütü olarak zaten yazılı |
 
-### 7E. Kutu paketi yazılırken çıkanlar (11.09.2026)
+## 7E. Kutu paketi yazılırken çıkanlar (11.09.2026)
 
-> Bu üç madde `onprem/docker-compose.yml` yazılıp **boş bir veritabanına karşı
-> gerçekten çalıştırılırken** çıktı. Üçü de belge okuyarak bulunamazdı.
+> Bu dört madde `onprem/docker-compose.yml` yazılıp **boş bir veritabanına karşı
+> gerçekten çalıştırılırken** çıktı; dördü de belge okuyarak bulunamazdı. Üçü
+> (O-47 · O-48 · O-49) koşunun kendisinden, biri (**O-50**) koşudan sonra paketin
+> sicile karşı denetlenmesinden geldi.
 
 ### O-47 — Kutunun backend'i Google anahtarları olmadan hiç açılmıyordu ✅ **çözüldü**
 
@@ -907,7 +974,7 @@
 | **Tip** | E (env var) |
 | **Kutuda ne olur** | **Olmuştu.** Kutu ilk kez ayağa kaldırıldığında `praxura-api` sonsuz PM2 yeniden başlatma döngüsüne girdi. Takvim, reçete, abrechnung — hepsi durdu, **bir yan özellik yüzünden**. Bulutta bu doğruydu (anahtar hep set, yokluğu bozuk deployment demek); kutuda tam tersi: praxis Google kullanmıyordur. Üstelik `restart: unless-stopped` bunu sonsuza kadar tekrarlar, `/health` sahte yeşil verirse (O-40) kimse fark etmez |
 | **Çözüm** | Yapıldı: `GOOGLE_KONFIGURIERT` bayrağı + açılışta uyarı satırı; `newOAuthClient()` yapılandırılmamışsa anlaşılır bir hata atıyor; `/calendar/google-auth` ve `/gmail/connect` 503 + açık mesaj dönüyor. Diğer iki çağrı yeri zaten `integ.access_token` kontrolünün arkasında — kutuda kimse bağlanamayacağı için o dallar hiç çalışmıyor. Kural K4'ün aynısı: **zutat yoksa uygulama açılır, yalnız o özellik susar** |
-| **Durum** | ✅ **gelöst (11.09.2026)** — `server.js`'teki tek diğer `process.exit` (`SUPABASE_URL`/`SERVICE_ROLE_KEY`) meşru: onlarsız uygulama gerçekten çalışamaz. Tarandı, başka sert çıkış yok |
+| **Durum** | ✅ **gelöst (11.09.2026, `b2fdbb8`)** — ⚠️ küçük düzeltme: `server.js`'te **iki** `process.exit` daha var, ikisi de meşru. `:157` (`SUPABASE_URL`/`SERVICE_ROLE_KEY` yoksa uygulama gerçekten çalışamaz) ve `:4481` (`uncaughtException` sonrası 1 sn'lik temiz çıkış — bozuk state ile devam etmemek için). Sicil "tek diğer" diyordu, düzeltildi. Bunların dışında sert çıkış yok (tarandı) |
 
 ### O-48 — Kong kutunun en büyük parçası; yerine Caddy koymak bir güvenlik kontrolünü de kaldırır
 
@@ -925,11 +992,55 @@
 | Alan | İçerik |
 |---|---|
 | **Ne** | Upstream'in `webhooks.sql`'i `pg_net`'i ve `supabase_functions.http_request()`'i kuruyor; yetki `anon, authenticated, service_role`'e veriliyor |
-| **Nerede** | `onprem/volumes/db/webhooks.sql:1` (`CREATE EXTENSION pg_net`), `:113` (`CREATE USER supabase_functions_admin`) |
+| **Nerede** | `onprem/volumes/db/webhooks.sql:3` (`CREATE EXTENSION IF NOT EXISTS pg_net SCHEMA extensions`) · yetkiler `:6-9` (`anon, authenticated, service_role`) · `:113` (`CREATE USER supabase_functions_admin`) · şifreyi set eden satır `onprem/volumes/db/roles.sql:7` |
 | **Tip** | A |
 | **Kutuda ne olur** | Bugün hiçbir şey: `net.http_post` **sıfır** fonksiyonumuzda geçiyor (ölçüldü), Telegram trigger'ı baseline'da düşüyor. Ama yetenek **kurulu duruyor** — yani G1 ("kutu dışarı telefon etmez") bir yapı değil, bir alışkanlık. Yarın biri iyi niyetle bir webhook trigger'ı yazarsa kutuda sessizce çalışır |
 | **Çözüm** | Dosyayı **çıkarmak denendi ve yığını kırdı** (11.09.2026): `webhooks.sql:113` `supabase_functions_admin` rolünü yaratıyor, bir sonraki init dosyası `99-roles.sql:7` o rolün şifresini set ediyor. Rol yoksa psql orada duruyor, geri kalan `ALTER USER` satırları hiç koşmuyor ve **`supabase_storage_admin` şifresiz kalıyor** → Storage hiç açılmıyor. Hata iki dosya öteden, bambaşka bir yüzle geliyor. Doğru çözüm: rolü yaratıp `pg_net`'i atlayan **kendi** init dosyamız + boş veritabanına karşı yeni bir tur test. Küçük ama kendi başına bir iş |
 | **Durum** | `offen` — Faz 2.1b |
+
+### O-50 — Kutudaki `api` konteynerinin env yüzeyi eksik: üç değişken paketten düştü
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Compose'un `api` servisine yalnız sekiz değişken geçiyor. `DATA_ENCRYPTION_KEY` ve `SMTP_*` **hiç yok**; `PUBLIC_BASE_URL` (O-03'ün çözümü) için de yer ayrılmamış. Üçünün de yokluğu **sessiz** |
+| **Nerede** | `onprem/docker-compose.yml` → `api:` `environment:` (`NODE_ENV` · `PORT` · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `DATABASE_URL` · `AI_PROVIDER`/`AI_ENDPOINT`/`AI_API_KEY` · `TZ`). `onprem/.env.template`'te de yoklar. Kod tarafı: `api-backend/lib/phi-encrypt.js:32` `encryptionAvailable()`, kullanım `api-backend/server.js:2560` ve `:2758`; SMTP kapıları `server.js:3957` `:3973` `:4139` `:4189` `:4284` (+ `:4332` 503). `PUBLIC_BASE_URL` bugün kodda **hiç yok** (`grep` → 0), O-03'ün önerisi |
+| **Tip** | E |
+| **Kutuda ne olur** | Üç ayrı **sessiz** kayıp — hiçbiri hata vermiyor, üçü de kutuyu canlıdan farklı kılıyor. (1) **PHI şifrelemesi kapalı:** `encryptionAvailable()` false döner, `icd10_enc` ve `ocr_raw_enc` alanları **hiç yazılmaz**; reçete verisi kutuda yalnız düz kolonlarda durur. Uygulama çalışır, log sessizdir. Anahtar sonradan eklense bile o ana kadarki satırlar şifresiz kalır. SaaS'ta anahtar dolu, yani bu **kutuya özgü bir gerileme** (G7'nin tersi: iki dağıtım aynı kodda ama farklı korumada). (2) **Express mailleri susar:** her gönderim `if (process.env.SMTP_HOST)` arkasında; randevu onayı, Termin-Anfrage cevabı ve Mahnung maili gitmez, log'a bile düşmez. Üstelik GoTrue'nun kendi SMTP'si **dolu** olduğu için davet ve şifre-sıfırlama mailleri gider → müşteri "mail çalışıyor" sanır, hasta maili gelmez. Bu, teşhisi en zor arıza sınıfı. (3) `PUBLIC_BASE_URL` yokluğu bugün bir şey kırmıyor (değişken kodda da yok), ama O-03'ün çözümü şablonda yer bulamazsa Faz 1.1 uygulanırken ikinci bir tur açılır |
+| **Çözüm** | **Faz 2.1** — `.env.template` ve compose'a üç ekleme: (a) `DATA_ENCRYPTION_KEY`, `install.sh` tarafından üretilir ve O-29'un dört kuralına bağlanır (bir kez gösterilir, yedeğe parmak izi düşer, geri yükleme onu karşılaştırır); (b) `SMTP_*` aynı değerlerle `api` servisine de geçirilir — GoTrue ile ortak, ikinci bir profil değil; (c) `PUBLIC_BASE_URL` yer tutucusu. ⚠️ **Şart:** şifreleme anahtarının yokluğu sessiz kalmamalı — açılışta uyarı satırı (O-47'de Google için yazılan desenin aynısı) + derin `/status`'ta `data_key` alanı (O-40, `RELEASE-STANDARD.md` §6.5). "Zutat yoksa uygulama açılır ama susmaz" |
+| **Durum** | 🟡 **kısmen `gelöst` (11.09.2026)** — üç değişken de compose'a ve `.env.template`'e girdi; kalan iki iş aşağıda |
+
+> **11.09.2026 — yapılan (ana bağlam, sicil bulgusunun ardından).**
+> `api` servisine `DATA_ENCRYPTION_KEY` ve `SMTP_HOST/PORT/USER/PASS` eklendi,
+> `.env.template`'e karşılıkları ve gerekçeleri yazıldı ("anahtar yedeğe girer; kaybolursa
+> tam bir `pg_dump` bile o alanları geri getirmez"). Lokal yığında doğrulandı:
+> `DATA_ENCRYPTION_KEY gesetzt: true · Laenge: 64`, 7/7 konteyner sağlıklı.
+>
+> **Niye hâlâ `gelöst` değil — iki somut kalan:**
+> 1. **Anahtar hâlâ üretilmiyor.** Şablondaki satır boş (`DATA_ENCRYPTION_KEY=`) ve
+>    compose onu varsayılansız geçiriyor. Boş `.env` ile kurulan bir kutuda değişken
+>    boş dizge olur, `encryptionAvailable()` yine `false` döner — yani **sessiz kapalı
+>    hâl aynen duruyor**, yalnız artık doldurulabilir bir yeri var. `install.sh` (Faz 2.1c)
+>    üretmeden ve yedek künyesine parmak izi düşmeden (O-29'un 3. ve 4. kuralı) kapanmaz.
+> 2. **Yokluk hâlâ susuyor.** `api-backend/server.js`'te `DATA_ENCRYPTION_KEY` için tek
+>    satır uyarı yok (`grep` → yalnız iki kullanım noktası, açılışta hiçbir şey).
+>    O-47'de Google için yazılan desenin aynısı burada da gerekli: açılışta uyarı +
+>    derin `/status`'ta `data_key` alanı (Faz 2.4b).
+>
+> ⚠️ Üçüncü değişken (`PUBLIC_BASE_URL`) hâlâ kodda yok — O-03'ün Faz 1.1 çözümüyle
+> birlikte gelecek; şablonda yer açılması o adımın işi.
+
+---
+
+### O-51 — Gönderen adresi koda gömülü: kutunun maili müşterinin sunucusundan çıkıp bizim adımıza konuşuyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `SMTP_FROM` diye bir değişken yok; gönderen adresi altı yerde sabit yazılı (`"<praxis adı> via Praxura" <noreply@praxura.de>`) |
+| **Nerede** | `api-backend/server.js:3962` `:3983` `:4155` `:4193` `:4297` `:4344` — altısı da aynı sabit alan adını taşıyor. `grep -rn "SMTP_FROM"` → ürün kodunda **sıfır**. Kutu tarafındaki tek kayıt: `onprem/docker-compose.yml`'de bu maddeyi anan yorum |
+| **Tip** | C (sabit adres — ama etkisi tip A'ya benziyor: mail teslim edilmiyor) |
+| **Kutuda ne olur** | Mail **müşterinin** SMTP sunucusundan çıkar, zarfın üstünde **bizim** alan adımız yazar. Sonuç varsayım değil, ölçüldü (11.09.2026, herkese açık DNS sorgusu): `praxura.de` → `v=spf1 include:secureserver.net -all` ve `_dmarc.praxura.de` → `v=DMARC1; p=quarantine; adkim=r; aspf=r`. Üç adım zinciri: (1) **SPF sert red** (`-all`) — yalnız bizim sağlayıcımızın sunucuları `praxura.de` adına gönderebilir, müşterinin sunucusu o listede değil → fail; (2) **DKIM ile kurtarma yolu yok** — kutu bizim özel anahtarımızla imzalayamaz, o anahtar kutuya **giremez** (G2); (3) iki hizalama da düştüğü için **DMARC politikası devreye girer**. Politika `p=quarantine` (reject değil): mail kaybolmaz, **spam klasörüne düşer**. DMARC uygulayan her alıcıda — Gmail, Outlook, GMX, Web.de — yani Almanya'daki hasta posta kutularının fiilen tamamında. Arıza tamamen sessizdir: `nodemailer` başarı döner, log temizdir; hasta randevu onayını görmez, praxis "yazılım mail göndermiyor" der ve sebep hiçbir kayıtta yoktur. Bu, O-50'nin SMTP yarısı çözülse **bile** ayakta kalan ikinci bir kırılmadır — iki madde tek düzeltmeyle kapanmaz.<br>İkinci açı, teknik değil ticari: `„… via Praxura"` ibaresi bizim markamızı müşterinin postasına gömüyor. Beyaz etiket/kurumsal kimlik istenirse (on-prem alıcı kitlesi tam da bunu ister) burası ayrı bir karardır — ama **asıl mesele o değil**, asıl mesele mailin görülmemesi |
+| **Çözüm** | Gönderen adresi `.env`'den okunur ve kutuda **müşterinin kendi alanı** olur — varsayılanı `SMTP_ADMIN_EMAIL`, yani zaten sorulan ve kutunun SPF'iyle hizalanan adres. Altı çağrı yeri **tek yardımcıdan** beslenir; görünen ad ikinci bir değişkene (`MAIL_FROM_NAME`, on-prem varsayılanı praxis adı) bağlanır. ⚠️ **SaaS'ta davranış hiç değişmez:** oradaki varsayılan bugünkü sabit değer kalır, gönderim zaten kendi sağlayıcımızdan çıkıyor ve SPF tutuyor. Yani düzeltme G7'nin tam örneği — tek kod, iki dağıtım, fork yok. **Faz 2.1** (değişken + yardımcı) · **Faz 2.2** (sihirbazın "test maili gönder" adımı). Kabul ölçütü gönderimin 250 dönmesi **değil**, mailin **alıcı kutusunda ve spam'de değil** görülmesidir — gönderim başarısı ile teslim başarısı ayrı ölçülür. Kapı önerisi §8'de: sabit gönderen adresi sayacı, taban 6, hedef 0 |
+| **Durum** | `offen` — Faz 2.1 / 2.2 |
 
 ---
 
@@ -942,6 +1053,9 @@
 > Kural: **taban artamaz, azalabilir.** Sayı düşerse taban otomatik sıkışır, kazanım geri
 > alınamaz — `check-dashboard-size.sh` ile aynı mantık.
 >
+> ✅ **11.09.2026: sekizinci sayaç eklendi** (`onprem_image=7`) ve kapı yeşil çalıştırıldı —
+> sekiz sayacın sekizi tabanında, sapma yok (`onprem` ajanı doğrulaması).
+>
 > ✅ **04.09.2026: kapı kuruldu** — `tools/check-onprem.sh` + `tools/.onprem-baseline`.
 > Aşağıdaki tablo **kapının ölçtüğü** değerlerle hizalandı; iki sayı düzeltildi (aşağıda
 > işaretli). Ölçüm yöntemi: `git grep --cached`, eşleşen **satır** sayısı. O-20 bu kapının
@@ -953,13 +1067,14 @@
 | `app.praxura.de` (uygulama yüzeyi) | **19** | `dashboard.js` `dashboard.html` `employee-signup.js` `admin-login.js` `api-backend/server.js` — pazarlama/blog hariç (O-04) |
 | `api/` fonksiyon sayısı | **12** | `find api -name "*.js" -not -path "api/_lib/*"` — artış = red (limit + G8) |
 | Üçüncü-parti `<script src="http…">` | **11** | Yalnız Sentry loader. ⚠️ Sicilin O-06'da "12 satır / 11 dosya" yazıyordu; kapı 04.09.2026'da index üzerinden **11 satır** ölçtü — geçerli sayı kapınınkidir (`tools/.onprem-baseline` → `ext_script=11`). Yeni host = red |
-| `N8N_` env referansı | **3** | `server.js:1053` `:1806` `:1809` — artış = red, hedef sıfır (Faz 1.2) |
+| `N8N_` env referansı | **3** | `server.js:1173` `:1926` `:1929` (satırlar 11.09.2026'da yeniden ölçüldü) — artış = red, hedef sıfır (Faz 1.2) |
 | `.supabase.co` sabit referansı (ürün kodu) | **1** | ⚠️ Sicil bunu **0** sanıyordu; kapı ölçümünde 1 çıktı: `api-backend/test_schema.js:5` (test dosyası, env fallback'li — O-05'te zaten istisna olarak yazılıydı, sayaçta unutulmuştu). `ops/` ve `vercel.json` hariç. Artış = red |
 | `fonts.googleapis.com` / `esm.sh` / `unpkg` / `jsdelivr` / `cdnjs` | **0** | Uygulama kodu; `ai chatbot proje/` hariç. Sıfırdan artış = red (Konsey 2026-08-13 S3) |
 | `latest` etiketi yayın hattında | **1** | `.github/workflows/publish-calendar-api.yml:64` — hedef **0** (Faz 4.3b, `X.Y.Z` + kanal etiketleri). Artış = red |
 | Yıkıcı DDL kanıtı | — | Yeni migration dosyasında `DROP COLUMN` / `DROP TABLE` / `RENAME COLUMN` / `SET NOT NULL` / `DROP CONSTRAINT` varsa dosya başında `-- ZWEISTUFIG: <no> · <gerekçe>` satırı **zorunlu** (`SCHEMA-VERTEILUNG.md` §6.2, `RELEASE-STANDARD.md` §4.7) |
 | Migration'lı PATCH | — | Sürüm PATCH ise `db/migrations/` altında yeni dosya olamaz (`RELEASE-STANDARD.md` §2.2). Release listesi adım 1 |
-| On-prem compose `image:` satırı | **7** | `onprem/docker-compose.yml` (11.09.2026): db · auth · rest · realtime · storage · kong + kendi `api`'miz. Upstream'in 11 fremd konteynerinden 5'i bilinçli dışarıda. Artış, `onprem/NOTICE.md`'ye lisans satırı eklenene kadar **red** (O-42). Sayaç `onprem_image`, kapıda test edildi (8'e çıkarıldığında reddetti) |
+| Koda gömülü gönderen adresi (`noreply@` + sabit alan adı) | **6** — ⚠️ *öneri, kapıda henüz yok* | `api-backend/server.js` (`:3962` `:3983` `:4155` `:4193` `:4297` `:4344`). Ölçüm: `git grep --cached -c "noreply@praxura\.de" -- api-backend/`. Artış = red; hedef **0** (tek yardımcı + `MAIL_FROM`, O-51). Kapı mantığını `builder` yazar, taban budur |
+| On-prem compose `image:` satırı | **7** | `onprem/docker-compose.yml` (11.09.2026): db · auth · rest · realtime · storage · kong + kendi `api`'miz. Upstream'in 11 fremd konteynerinden 5'i bilinçli dışarıda. Artış, `onprem/NOTICE.md`'ye lisans satırı eklenene kadar **red** (O-42). Sayaç `onprem_image`, kapıda test edildi (8'e çıkarıldığında reddetti). ⚠️ İki not: sayaç `git grep --cached` ile ölçer — kurulumda bir tur `--cached`siz ölçülüp taban kendiliğinden **0'a sıkışmıştı**, düzeltildi; ve kapı yalnız **sayıyı** tutar, `NOTICE.md`'de karşılık gelen satırın varlığını **denetlemez** (O-42) |
 
 ---
 
@@ -967,10 +1082,16 @@
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 14 | O-09 · O-11 · O-18 · O-20 · O-23 · O-32 · O-33 · O-40 · O-41 · O-42 · O-44 · O-46 · **O-48** · **O-49** |
-| `geplant` | 21 | O-01 · O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-15 · O-16 · O-19 · O-21 · O-25 · O-26 · O-27 · O-28 · **O-29** · O-30 · O-31 · O-39 · **O-43** |
-| `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-38 |
-| `gelöst` | 1 | O-36 (vendor yerelleştirmesi) |
+| `offen` | 10 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-48 · O-49 · **O-51** |
+| `geplant` | 20 | O-01 · O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-15 · O-16 · O-19 · O-21 · O-25 · O-26 · O-27 · O-28 · O-29 · O-31 · **O-38** · O-43 |
+| 🟡 `kısmen gelöst` | 7 | O-11 (kaynak kurtarıldı, Faz 1.5 açık) · **O-30** (şablon var, `PUBLIC_BASE_URL` eksik) · O-40 (`/health` ayrıldı, derin `/status` yok) · O-41 (smoke-test var, soak/kanal yok) · **O-42** (NOTICE + sayaç var, SBOM yok) · O-45 (compose sürümlendi, dağıtımı yok) · **O-50** (değişkenler eklendi, anahtar üretimi ve uyarı yok) |
+| `unkritisch` | 10 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 |
+| `gelöst` | 4 | O-20 (kapı) · O-36 (vendor yerelleştirmesi) · O-39 (şema dağıtım zinciri) · **O-47** (Google env'i opsiyonel) |
+
+> **Toplam 51 madde.** 🟡 satırı 11.09.2026'da açıldı: altı madde aylardır `offen`
+> görünüyordu ama yarısı yapılmıştı — "yapılan ile kalan" tek hücrede karışınca sicil
+> abartılı bir borç tablosu gösteriyordu. Bir madde ancak **kalanı da bittiğinde**
+> `gelöst` olur; 🟡 o güne kadar dürüst ara durumdur.
 
 > **04.09.2026 — üçüncü tur (sürüm/dağıtım standardı):** O-29 `offen` → `geplant` (gereksinim
 > `RELEASE-STANDARD.md` §4.5'te yazıldı). Dört yeni madde açıldı: O-40 · O-41 · O-42 · O-43.
@@ -983,6 +1104,30 @@
 > boş kaldığı ölçüm düşüldü — 6 günde 7 şema değişikliği, sıfır migration dosyası.
 > Kapı ölçümü aynı gün tekrarlandı: **yedi sayacın yedisi de tabanında**, sapma yok.
 > Toplam **46** madde.
+
+> **11.09.2026 — kutu paketi turu (Faz 2.1a):** paket yazıldı ve boş bir veritabanına
+> karşı gerçekten çalıştırıldı. Sicil tarafında sonuç: **O-47** açıldı ve aynı gün
+> kapandı · **O-48**, **O-49** açıldı · **O-50** bu doğrulamada bulundu (kutunun `api`
+> konteyneri PHI şifreleme anahtarını ve SMTP'yi hiç almıyor) · **O-20** kapandı
+> (kapının commit'i girildi) · **O-30**, **O-42**, **O-45** 🟡'ye geçti · **O-38**
+> `unkritisch`'ten `geplant`'a alındı (kutu boş kalkıyor, kasa listesi yok) · O-01,
+> O-02, O-09, O-13'ün satır numaraları koda karşı yenilendi.
+>
+> **Aynı gün, ikinci tur (O-50 kovalanırken):** eksik değişkenler eklendi → O-50 🟡'ye
+> geçti; ve kovalama sırasında **O-51** çıktı — gönderen adresi altı yerde koda gömülü,
+> `SMTP_FROM` diye bir değişken hiç yok. Bu, O-50'nin **arkasındaki** madde: SMTP
+> geçirilse bile mail alıcıda düşer (SPF `-all` + DMARC `p=quarantine`, ölçüldü).
+> Toplam **51** madde.
+>
+> ⚠️ **Turun asıl dersi:** üç hatanın üçü de belge okunarak değil, yığın gerçekten
+> ayağa kaldırılarak bulundu. O-50 de öyle: compose'a bakmadan "env'ler zaten geçer"
+> denirdi. Paketleme fazlarında kural bu olsun — **çalıştırılmamış paket, yazılmamış
+> pakettir.**
+>
+> ⚠️ **İkinci ders, O-51'den:** bir eksiği kapatmak arkasındakini görünür kılar.
+> "SMTP'yi geçirdik, mail çalışır" cümlesi bir adım eksikti; teslim edilmeyen mail de
+> gönderilmeyen maildir. Kutu tarafında **gönderim başarısı ile teslim başarısı ayrı
+> ölçülür** — sihirbazın test maili adımı (Faz 2.2) bunu alıcı kutusundan doğrulamalı.
 
 > Sayılar madde listesiyle birlikte okunur; bir madde birden fazla faza değebilir.
 
@@ -1002,9 +1147,9 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 10. **O-41 image smoke-test ve soak** — Faz 4.3 kanal sistemini istiyor, ama image'ın ayağa kalktığını doğrulayan adım ve `:stable` öncesi bekleme süresi hiçbir fazda yok. Yeni görevler: **Faz 4.3a / 4.3b**.
 11. **O-42 lisans/SBOM sürekli kapısı** — Faz 6.1a SBOM'u anıyor, kapıyı anmıyor. Yeni görev: **Faz 6.1b**.
 12. **O-43 sürüm/kanal manifesti** — `releases.json`, durak kavramı ve sürüm notu hiçbir fazda yok. Yeni görev: **Faz 2.9**.
-13. **Kurulum ön-kontrolü ve kabul ölçütü** — Faz 2.1 `install.sh` diyor ama "kurulum ne zaman başarılı sayılır" tanımı yok. Yeni görev: **Faz 2.1a**, ölçüt `RELEASE-STANDARD.md` §5.4 (14 kontrol).
+13. **Kurulum ön-kontrolü ve kabul ölçütü** — `install.sh` var ama "kurulum ne zaman başarılı sayılır" tanımı yok; ölçüt `RELEASE-STANDARD.md` §5.4 (14 kontrol). ⚠️ **11.09.2026 numara düzeltmesi:** bu görev burada "Faz 2.1a" diye önerilmişti, playbook ise 11.09'da **2.1a**'yı kutu compose paketine verdi (yapıldı) ve `install.sh`'i **2.1c** yaptı. Kabul ölçütü artık **Faz 2.1c**'nin parçasıdır — iki ayrı işin aynı numarayı taşıması bu sicilde bir kez oldu, tekrarlanmasın.
 14. **Tanılama paketi içeriği** — Faz 2.5 butonu istiyor, içeriği tarif etmiyor. Yeni görev: **Faz 2.5a**, liste `RELEASE-STANDARD.md` §7.3.
-15. **Supabase upstream stack'inin yükseltilmesi (O-45)** — 11 image, hiçbir fazda yok; compose kutuda yaşıyor ve Watchtower ona dokunmuyor. Yeni görevler: **Faz 2.1b** (compose sürümleme) + **Faz 4.3c** (compose dağıtımı).
+15. ~~**Supabase upstream stack'inin yükseltilmesi (O-45)** — hiçbir fazda yok.~~ **11.09.2026: playbook'a girdi.** (a) compose sürümleme **2.1a'da yapıldı** (etiketler `.env`'de); (b) compose'un kutuya dağıtımı playbook **Faz 2.1b**'de yazılı, açık; (c) upstream sürüm eşlemesi + durak → **Faz 2.9** (O-43). Ayrıca yığın 11 fremd konteynerden **6**'ya indi: yükseltilecek yüzey %45 küçüldü.
 16. **Merkezde filo panosu (O-46)** — hangi kutu hangi sürümde/şemada, son yedek, disk. Playbook'ta ve `RELEASE-STANDARD.md`'de yok; §11.1 kararının bilinçli kör noktası. Faz 3.1 adayı, kullanıcı kararına bağlı.
 
 ### Playbook'ta çürütülenler

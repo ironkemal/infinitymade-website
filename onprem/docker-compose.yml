@@ -25,7 +25,7 @@
 # ───────────────────────────────────────────────────────────────────────────
 #  REGEL 2 — Was NICHT in der Box laeuft, und warum
 # ───────────────────────────────────────────────────────────────────────────
-#  Upstream liefert elf Container. Vier davon sind hier bewusst weggelassen.
+#  Upstream liefert elf Container. Fuenf davon sind hier bewusst weggelassen.
 #  Nicht um RAM zu sparen — sondern weil jeder Fremdcontainer ein Bauteil ist,
 #  das wir heute nicht aktualisieren koennen (O-45). Jeder Wegfall ist gegen
 #  den laufenden Stack geprueft, nicht geraten:
@@ -313,7 +313,8 @@ services:
   # kong — API-Gateway. Buendelt auth/rest/realtime/storage hinter EINER
   #        Adresse und prueft den apikey (key-auth + acl).
   #
-  #        ⚠️ Groesster Brocken des Stacks (~950 MB im Leerlauf gemessen).
+  #        ⚠️ Groesster Brocken des Stacks: 886 MB im Leerlauf gemessen,
+#        also 61 % des restlichen Verbrauchs.
   #        Ein Ersatz durch Caddy waere moeglich, wuerde aber key-auth und acl
   #        mit entfernen — also eine bestehende Sicherheitskontrolle. Das ist
   #        eine eigene Entscheidung mit `guvenlik` am Tisch, kein Nebeneffekt
@@ -392,6 +393,32 @@ services:
       # Mit `postgres` bricht die Erstinstallation ab. Gemessen 10.09.2026,
       # beantwortet SCHEMA-VERTEILUNG.md §2 V-6.
       DATABASE_URL: postgresql://supabase_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+
+      # ★ Verschluesselung der Patientendaten. FEHLT SIE, VERSCHLUESSELT DIE BOX
+      # NICHT — und zwar lautlos: `encryptionAvailable()` gibt dann einfach
+      # `false` zurueck, `icd10_enc` und `ocr_raw_enc` werden nicht geschrieben,
+      # kein Fehler, kein Log. Die Kundenbox stuende damit SCHWAECHER da als die
+      # Cloud, bei denselben Daten. Genau das darf nicht passieren (G7).
+      # 64 Hex-Zeichen. Beim Einrichten erzeugt — und danach mitgesichert:
+      # geht der Schluessel verloren, sind die verschluesselten Felder weg.
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY}
+
+      # Derselbe Mailserver, den auch GoTrue benutzt. Zwei getrennte Absender:
+      # GoTrue verschickt Einladung und Passwort-Reset, Express verschickt
+      # Terminbestaetigung, Termin-Anfrage und Mahnung. Fehlt SMTP hier, laufen
+      # die Express-Mails in ein stilles `if (SMTP_HOST)` — die Anmeldemails
+      # kommen weiterhin an, also sieht es fuer den Kunden aus, als funktioniere
+      # der Mailversand. Beides gehoert gesetzt oder beides nicht.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      # Kein SMTP_FROM: die Absenderadresse steht an sechs Stellen fest im Code
+      # (`noreply@praxura.de`, server.js:3962 u. a.). In einer Kundenbox geht die
+      # Mail damit ueber DEREN Mailserver hinaus und behauptet, von uns zu
+      # kommen — SPF/DMARC weisen das bei den meisten Anbietern ab. Als
+      # Register-Eintrag festgehalten; hier ist nichts zu konfigurieren, weil es
+      # nichts zu konfigurieren GIBT.
 
       # Der Kunde bringt seinen eigenen Schluessel mit (K4 BYO-Key). Fehlt er,
       # muss die Anwendung starten und nur die KI-Funktion still bleiben.

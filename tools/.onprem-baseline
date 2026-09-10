@@ -32,5 +32,13 @@ cdn_host=0
 # 7 = db · auth · rest · realtime · storage · kong + kendi api'miz.
 # Upstream 11 fremd konteyner sunuyor; 5'i bilinçli olarak dışarıda
 # (studio · meta · imgproxy · supavisor · functions — gerekçeler compose başlığında).
-# Artış: önce onprem/NOTICE.md'ye lisans satırı (O-42).
+# Artış reddedilir. Kapı NOTICE.md'ye BAKMAZ — lisans satırını eklemek
+# insanın işi (O-42), makinenin değil. Taban bilinçli olarak yükseltilirse
+# gerekçesi sicile yazılır.
 onprem_image=7
+
+# Koda gömülü gönderen mail adresi (api-backend/). Hedef 0.
+# 6 = server.js:3962 :3983 :4155 :4193 :4297 :4344
+# Ölçüm 11.09.2026: praxura.de SPF `-all` + DMARC `p=quarantine` → kutudan
+# çıkan bu mailler alıcıda spam'e düşer, gönderimde hata görünmez (O-51).
+absender_fest=6

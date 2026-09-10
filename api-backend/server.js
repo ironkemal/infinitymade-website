@@ -175,6 +175,25 @@ if (!GOOGLE_KONFIGURIERT) {
   console.warn('[google] GOOGLE_CLIENT_ID/SECRET/REDIRECT_URL nicht gesetzt — Kalender-Sync und Gmail-Versand sind deaktiviert. Alles Uebrige laeuft normal.');
 }
 
+// Verschluesselung der Patientenfelder — sagt Bescheid, wenn sie AUS ist.
+//
+// Anders als bei Google ist das Fehlen hier kein Komfortverlust, sondern ein
+// Schutzverlust: `encryptionAvailable()` gibt still `false` zurueck, `icd10_enc`
+// und `ocr_raw_enc` werden schlicht nicht geschrieben, und niemand erfaehrt es.
+// Eine Kundenbox stuende damit bei denselben Daten schwaecher da als die Cloud.
+//
+// Kein `process.exit`: eine Praxis, die morgens nicht arbeiten kann, ist
+// schlimmer als eine, die ein Feld unverschluesselt ablegt — aber lautlos darf
+// es nicht passieren. Die Zeile ist die Bruecke bis Phase 2.1c (install.sh
+// erzeugt den Schluessel) und 2.4b (`/status` zeigt ihn an).
+if (!process.env.DATA_ENCRYPTION_KEY) {
+  console.warn('[phi] DATA_ENCRYPTION_KEY nicht gesetzt — Patientenfelder (icd10_enc, ocr_raw_enc) werden NICHT verschluesselt gespeichert.');
+} else if (!/^[0-9a-fA-F]{64}$/.test(process.env.DATA_ENCRYPTION_KEY)) {
+  // Ein falsch langer Schluessel wirft erst beim ersten Schreibversuch, also
+  // mitten im Arbeitstag. Besser jetzt und deutlich.
+  console.warn('[phi] DATA_ENCRYPTION_KEY hat nicht 64 Hex-Zeichen — Verschluesselung wird beim ersten Schreibversuch fehlschlagen.');
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false },
   realtime: {

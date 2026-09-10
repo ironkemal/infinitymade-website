@@ -101,6 +101,12 @@ cdn_host=$(zaehle "https?://(fonts\.googleapis\.com|esm\.sh|unpkg\.com|cdn\.jsde
 #    olmadan kabul edilmez (O-42). Kendi api image'ımız da sayılır.
 onprem_image=$(git grep --cached -c -E "^[[:space:]]+image:" -- onprem/docker-compose.yml 2>/dev/null | awk -F: '{s+=$NF} END{print s+0}')
 
+# 9) Koda gömülü gönderen mail adresi. Kutuda mail MÜŞTERİNİN sunucusundan
+#    çıkıyor ama bizim adımıza konuşuyor. Ölçüldü (11.09.2026): praxura.de'nin
+#    SPF'i `-all` (sert red), DMARC'ı `p=quarantine` → o mailler DMARC uygulayan
+#    her alıcıda spam'e düşer. Gönderimde hata görünmez. Hedef 0 (O-51).
+absender_fest=$(git grep --cached -c "noreply@praxura\.de" -- api-backend/ 2>/dev/null | awk -F: '{s+=$NF} END{print s+0}')
+
 # --- Yıkıcı DDL kapısı (sayaç değil, doğrudan kontrol) --------------------
 #
 # :beta ve :stable AYNI ANDA canlı. Eski image yeni şemayla çalışabilmek zorunda.
@@ -211,6 +217,8 @@ kontrol cdn_host    "$cdn_host"    "Yeni CDN bağımlılığı. Yerelleştirme k
                                    "Çıkış: dosyayı vendor/ altına indir, oradan servis et."
 kontrol onprem_image "$onprem_image" "Kutuya yeni bir konteyner girdi. Güncelleme yolu olmayan her bileşen borçtur (O-45)." \
                                    "Çıkış: gerçekten gerekli mi? Gerekliyse onprem/NOTICE.md'ye lisans satırı ekle (O-42)."
+kontrol absender_fest "$absender_fest" "Koda gömülü yeni gönderen adresi. Kutuda o mail müşterinin sunucusundan çıkar ve DMARC yüzünden spam'e düşer (O-51)." \
+                                   "Çıkış: adresi .env'den oku (SMTP_ADMIN_EMAIL), altı çağrıyı tek yardımcıya bağla."
 
 # --- Sonuç ----------------------------------------------------------------
 if [ -n "$ihlal" ]; then
