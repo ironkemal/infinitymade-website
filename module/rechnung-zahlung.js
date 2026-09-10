@@ -106,7 +106,7 @@ export async function frageZahlungsstatus(invoiceId, {
 
   // Fall 1: schon kassiert. Die Frage wäre die zweite zur selben Zahlung.
   if (rx?.zuzahlung_kassiert_am) {
-    await markiereRechnungBezahlt(supabase, invoiceId, ZAHLART_ZU_PAYMENT_METHOD[rx.zuzahlung_zahlart]);
+    await markiereRechnungBezahlt(supabase, invoiceId, paymentMethodFuerZahlart(rx.zuzahlung_zahlart));
     toast('Zuzahlung war bereits kassiert — Rechnung als bezahlt übernommen ✓');
     return;
   }
@@ -131,7 +131,7 @@ export async function frageZahlungsstatus(invoiceId, {
         .select('zuzahlung_zahlart')
         .eq('id', rx.id)
         .maybeSingle();
-      await markiereRechnungBezahlt(supabase, invoiceId, ZAHLART_ZU_PAYMENT_METHOD[nach?.zuzahlung_zahlart]);
+      await markiereRechnungBezahlt(supabase, invoiceId, paymentMethodFuerZahlart(nach?.zuzahlung_zahlart));
     } else {
       // Abgebrochen oder fehlgeschlagen: die Rechnung bleibt offen. Kein
       // stiller „bezahlt"-Vermerk ohne Beleg — genau daraus entstand das
