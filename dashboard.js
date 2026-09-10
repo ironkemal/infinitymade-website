@@ -17810,7 +17810,7 @@ async function loadAbrechnung() {
   if (!window.__abAuswahlBereit) {
     window.__abAuswahlBereit = true;
     const gemeinsam = {
-      supabase, apiBase: API, getOwnerId, escapeHtml, showToast,
+      supabase, apiBase: API, getOwnerId, escapeHtml, showToast, showHtmlModal,
       kassenName: (ik) => _abState.kkMap.get(ik)?.name || null,
     };
     initAbrechnungAuswahl({

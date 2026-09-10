@@ -3,7 +3,7 @@
 > Üretim: 2026-09-10 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**2209 fonksiyon** · 238 dosya · 39 sidebar modülü
+**2211 fonksiyon** · 238 dosya · 39 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -372,7 +372,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 `aynalar` doluysa o konum bilinçli ayna; boşsa isim çakışması başka bir şeydir, incele.
 
 - `escapeHtml` — admin.js:61 · api-backend/billing/pdf/ausfallrechnung.template.js:11 · api-backend/billing/pdf/begleitzettel.template.js:23 · api-backend/billing/pdf/rechnung.template.js:6 · api-backend/billing/pdf/rezeptvorderseite.template.js:6 · api-backend/billing/pdf/rzg-quittung.template.js:6 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:9 · dashboard.js:852 · module/abrechnung-status.js:170 · module/abrechnungsstatus.js:614 · module/ausfallrechnung.js:19 · module/behandlungsbestaetigung.js:36 · module/diagnosegruppen-regeln.js:30 · module/fussbefund.js:179 · module/kalender-raster.js:24 · module/kalender-woche.js:39 · module/leistung-farbwahl.js:25 · module/leistungen-liste.js:28 · module/patient-termine.js:1 · module/rezeptinfo-geld.js:70 · module/termin-aktionen.js:39 · module/termin-druck.js:27 · module/termin-panel-patient.js:41 · module/warteliste-ansicht.js:26 · module/warteliste-nachruecker.js:46
-- `esc` — api-backend/billing/pdf/mahnung.template.js:4 · arzt-suche.js:34 · katalog-suche.js:86 · katalog-suche.js:98 · module/abrechnung-auswahl.js:420 · module/abrechnung-detail.js:107 · module/abrechnung-freigabe.js:112 · module/arzt-register.js:125 · module/krankenkasse-suche.js:173 · module/patienten-einwilligung.js:58 · module/patientenkarte.js:43 · module/rechnung-zahlungseingang.js:164 · module/verordnung-feldmarker.js:70 · module/verordnung-uebersicht.js:112 · module/zuzahlung-befreiung.js:261 · module/zuzahlung-korrektur.js:60 · ops/app.js:51
+- `esc` — api-backend/billing/pdf/mahnung.template.js:4 · arzt-suche.js:34 · katalog-suche.js:86 · katalog-suche.js:98 · module/abrechnung-auswahl.js:420 · module/abrechnung-detail.js:116 · module/abrechnung-freigabe.js:112 · module/arzt-register.js:125 · module/krankenkasse-suche.js:173 · module/patienten-einwilligung.js:58 · module/patientenkarte.js:43 · module/rechnung-zahlungseingang.js:164 · module/verordnung-feldmarker.js:70 · module/verordnung-uebersicht.js:112 · module/zuzahlung-befreiung.js:261 · module/zuzahlung-korrektur.js:60 · ops/app.js:51
 - `fmt` — dashboard.js:3850 · dashboard.js:8481 · dashboard.js:10420 · dashboard.js:10709 · dashboard.js:10787 · dashboard.js:14504 · dashboard.js:20239 · dashboard.js:20325 · dashboard.js:20403 · dashboard.js:20435 · dashboard.js:20495 · module/kalender-raster.js:71 · module/rechnung-ansicht.js:184 · module/rezeptinfo-geld.js:68
 - `r2` — api-backend/billing/api/abrechnung.routes.js:1275 · api-backend/billing/api/statistik.routes.js:176 · api-backend/billing/api/zuzahlung.routes.js:45 · api-backend/billing/dta/builder.js:55 · api-backend/billing/preise/resolver.js:24 · api-backend/billing/utils/abrechnung-zeilen.js:36 · api-backend/billing/zuzahlung/calculator.js:14 · api-backend/billing/zuzahlung/korrektur.js:16 · module/abrechnung-verlauf.js:126 · module/zuzahlung-rechnen.js:42
 - `fmtDate` — api-backend/billing/dta/encoding.js:47 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:28 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:1360 · ops/app.js:84
@@ -397,13 +397,13 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `onEsc` — dashboard.js:7102 · module/rechnung-leistung-picker.js:46 · module/zuzahlung-befreiung.js:155 · module/zuzahlung-korrektur.js:214
 - `v` — dashboard.js:13324 · dashboard.js:13349 · dashboard.js:13369 · dashboard.js:16804
 - `zeichne` — module/abrechnung-auswahl.js:424 · module/abrechnungsstatus.js:554 · module/patienten-einwilligung.js:477 · module/rezeptinfo-geld.js:364
-- `zeigeFehler` — module/abrechnung-detail.js:447 · module/abrechnung-detail.js:489 · module/zuzahlung-befreiung.js:149 · module/zuzahlung-korrektur.js:208
+- `zeigeFehler` — module/abrechnung-detail.js:464 · module/abrechnung-detail.js:506 · module/zuzahlung-befreiung.js:149 · module/zuzahlung-korrektur.js:208
 - `load` — ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `isAdmin` — admin-login.js:18 · api/_lib/auth.js:90 · login.js:192
 - `showToast` — admin.js:22 · dashboard.js:1308 · module/kiosk.js:46
 - `loadTeam` — booking-request.js:513 · dashboard.js:10457 · kalender.js:238
 - `initCalendar` — booking-request.js:562 · dashboard.js:2542 · kalender.js:288
-- `zeileHtml` — module/abrechnung-detail.js:266 · module/fussbefund.js:1586 · module/verordnung-liste.js:149
+- `zeileHtml` — module/abrechnung-detail.js:276 · module/fussbefund.js:1586 · module/verordnung-liste.js:149
 - `el` — module/arzt-register.js:251 · module/fussbefund.js:207 · module/verordnung-maske.js:482
 - `DE` — module/behandlungsbestaetigung.js:40 · module/patientenkarte.js:37 · module/verordnung-uebersicht.js:106
 - `oeffne` — module/kalender-kontextmenue.js:119 · module/leistungen-liste.js:190 · module/verordnung-liste.js:204

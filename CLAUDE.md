@@ -84,7 +84,7 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │   └── config.js · contact.js · demo-booking.js · dsgvo.js · apify/search.js
 │
 ├── api-backend/                   ★ VPS Express backend (Docker container)
-│   ├── server.js                  43 doğrudan route + 34 alt-router = 77 (aşağıya bak)
+│   ├── server.js                  doğrudan route + `billing/api/*`/`ai/router.js` alt-router'ları (aşağıya bak)
 │   ├── instrument.js              Sentry init
 │   ├── ai/                        router.js · azureClient.js · pii-mask.js · audit.js
 │   │   ├── validators/            Rezept doğrulama (blankoRules, validate)
@@ -222,8 +222,11 @@ bir daha "bu klasör neydi" diye açılmasın.
 
 ## 🔌 Backend API (`api-backend/server.js`)
 
-**Base:** `https://n8n.infinitymade.de/api` · **77 route** — `server.js`'te 43 doğrudan,
-`billing/api/*` + `ai/router.js` alt-router'larında 32. Aile aile:
+**Base:** `https://n8n.infinitymade.de/api` — `server.js`'te doğrudan tanımlı route'lar,
+`billing/api/*` + `ai/router.js` alt-router'larında geri kalanı. ⚠️ Tam sayı burada
+yazılmıyor — üç farklı rakam (75/77/88) dolaşmıştı, kaynak her zaman `server.js`'in
+kendisi (`grep -rn "router\.\(get\|post\|patch\|put\|delete\)" server.js billing/api/
+ai/router.js | wc -l`). Aile aile:
 
 | Aile | Route'lar | Auth |
 |---|---|---|

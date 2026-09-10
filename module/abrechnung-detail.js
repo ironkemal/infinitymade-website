@@ -32,6 +32,15 @@
  * `downloadAbrechnungFile()` ist mitgezogen, nicht neu geschrieben — damit
  * bekommt die Podologie ihren Datei-Download zum ersten Mal. Sie lief bis
  * heute über einen eigenen Bildschirm, auf dem es keinen gab.
+ *
+ * Phase 4 (10.09.2026): Zahlung/Absetzung erfassen
+ * ─────────────────────────────────────────────────
+ * Zwei neue, bewusst getrennte Eingaben — beide über `ctx.showHtmlModal`
+ * (aus `dashboard.js`, kein neues Modal-Gerüst, Plan Abschnitt 6 Phase 4):
+ * `_erfasseZahlung()` bucht einen Geldeingang gegen die ganze Datei oder eine
+ * einzelne Gesamtrechnung (append-only, `abrechnung_zahlung`); `_erfasseAbsetzung()`
+ * trägt den Absetzungsbetrag aus dem Papier-Absetzungsschreiben nach — die
+ * ZAA-Datei selbst trägt nie einen Betrag, nur den Fehlergrund.
  */
 
 import { fmtEur } from './geld.js?v=20260909';
@@ -162,7 +171,7 @@ export async function zeigeAbrechnungDetail(abrechnungId) {
   inhalt.style.opacity = '';
   inhalt.dataset.geladen = '1';
 
-  _verdrahteAktionen(ab);
+  _verdrahteAktionen(ab, gruppen);
 }
 
 /** Wieviele Belege dieser Datei sind korrigierbar? */
@@ -216,14 +225,15 @@ function geldHtml(geld, ab) {
   ];
   const rekonstruiert = Number(ab.total_eur) > 0 && !(Number(geld.eingereicht) > 0);
   return `
-  <div style="display:flex;gap:20px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;
+  <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding:10px 14px;margin-bottom:14px;
        border:1px solid var(--border);border-radius:8px;background:var(--bg-card);">
     ${zahlen.map(([k, v, c]) => `<div>
       <div style="font-size:11px;color:var(--text-muted);">${esc(k)}</div>
       <div style="font-size:15px;font-weight:600;color:${c};">${esc(fmtEur(v))}</div>
     </div>`).join('')}
-    ${rekonstruiert ? `<div style="font-size:11px;color:#b45309;align-self:center;max-width:280px;">
+    ${rekonstruiert ? `<div style="font-size:11px;color:#b45309;max-width:280px;">
       Beträge aus dem Kopfsatz — für diese Altdatei gibt es keine eingefrorenen Zeilenbeträge.</div>` : ''}
+    <button class="btn-ghost btn-sm" data-ab-akt="zahlung-erfassen" style="margin-left:auto;">💶 Zahlung erfassen</button>
   </div>`;
 }
 
@@ -288,6 +298,11 @@ function zeileHtml(z) {
       <span style="color:${st.farbe};font-weight:600;">${esc(st.text)}</span>
       ${Number(z.absetzung_eur) > 0 ? `<span style="color:#be185d;"> −${esc(fmtEur(z.absetzung_eur))}</span>` : ''}
       ${z.absetzung_grund ? `<div style="font-size:11px;color:var(--text-muted);white-space:normal;max-width:280px;">${esc(z.absetzung_grund.split('\n')[0])}</div>` : ''}
+      ${(z.status === 'abgesetzt' || z.status === 'teilabgesetzt') && !(Number(z.absetzung_eur) > 0)
+        ? `<button class="btn-ghost btn-sm" data-ab-akt="absetzung-erfassen" data-id="${esc(z.id)}"
+             style="font-size:10px;padding:1px 6px;margin-top:3px;color:#be185d;border-color:#be185d;">
+             Betrag erfassen</button>`
+        : ''}
     </td>
   </tr>`;
 }
@@ -416,7 +431,7 @@ function aktionenHtml(ab) {
   </div>`;
 }
 
-function _verdrahteAktionen(ab) {
+function _verdrahteAktionen(ab, gruppen = []) {
   const inhalt = document.getElementById('abDetailContent');
   if (!inhalt) return;
   for (const btn of inhalt.querySelectorAll('[data-ab-akt]')) {
@@ -430,7 +445,9 @@ function _verdrahteAktionen(ab) {
         case 'fehler':     return ctx.aktionen?.zaaFehler?.(ab.id);
         case 'anleitung':  return ctx.aktionen?.anleitung?.(ab.id);
         case 'korrektur':  return _erstelleKorrektur(btn, ab);
-        case 'vkz01-ausnahme': return _vkz01Ausnahme(btn, ab);
+        case 'vkz01-ausnahme':    return _vkz01Ausnahme(btn, ab);
+        case 'zahlung-erfassen':  return _erfasseZahlung(ab, gruppen);
+        case 'absetzung-erfassen': return _erfasseAbsetzung(btn, ab);
       }
     });
   }
@@ -516,6 +533,113 @@ async function _vkz01Ausnahme(btn, ab) {
     btn.disabled = false;
     btn.textContent = altText;
   }
+}
+
+/**
+ * „Zahlung erfassen" (Plan Phase 4, Punkt 1) — Betrag + Datum (Wertstellung)
+ * + optional Gesamtrechnung + Notiz, über das bestehende `showHtmlModal`
+ * (kein neues Modal-Gerüst). POST /abrechnung/:id/zahlung ist append-only —
+ * eine zweite Zahlung überschreibt die erste nicht, sie addiert sich dazu
+ * (Trigger `fn_abrechnung_zahlung_status()` summiert serverseitig).
+ */
+function _erfasseZahlung(ab, gruppen) {
+  const heute = new Date().toISOString().slice(0, 10);
+  const rechnungsOptionen = gruppen.length > 1
+    ? `<option value="">Ganze Datei</option>` + gruppen.map(g =>
+        `<option value="${esc(g.einzel_rechnungsnummer)}">Gesamtrechnung ${esc(g.einzel_rechnungsnummer)}${g.karten_ik ? ' · ' + esc(g.karten_ik) : ''}</option>`).join('')
+    : '';
+
+  ctx.showHtmlModal({
+    title: 'Zahlung erfassen',
+    confirmText: 'Erfassen',
+    html: `
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <label style="font-size:12px;color:var(--text-muted);">Betrag (€)
+          <input type="number" id="abZahlBetrag" step="0.01" min="0.01" class="form-input" style="width:100%;margin-top:4px;">
+        </label>
+        <label style="font-size:12px;color:var(--text-muted);">Datum (Wertstellung laut Kontoauszug)
+          <input type="date" id="abZahlDatum" class="form-input" value="${heute}" style="width:100%;margin-top:4px;">
+        </label>
+        ${rechnungsOptionen ? `<label style="font-size:12px;color:var(--text-muted);">Gesamtrechnung (optional)
+          <select id="abZahlRechnung" class="form-input" style="width:100%;margin-top:4px;">${rechnungsOptionen}</select>
+        </label>` : ''}
+        <label style="font-size:12px;color:var(--text-muted);">Notiz (optional)
+          <input type="text" id="abZahlNotiz" class="form-input" maxlength="500" style="width:100%;margin-top:4px;">
+        </label>
+      </div>`,
+    afterRender: () => document.getElementById('abZahlBetrag')?.focus(),
+    onConfirm: async () => {
+      const betragEur = Number(document.getElementById('abZahlBetrag')?.value);
+      const datum = document.getElementById('abZahlDatum')?.value || '';
+      const einzelRechnungsnummer = document.getElementById('abZahlRechnung')?.value || null;
+      const notiz = document.getElementById('abZahlNotiz')?.value.trim() || null;
+      if (!betragEur || betragEur <= 0) { ctx.showToast('Betrag fehlt oder ist 0.', 'error'); return false; }
+      if (!datum) { ctx.showToast('Datum fehlt.', 'error'); return false; }
+      try {
+        const { data: { session } } = await ctx.supabase.auth.getSession();
+        if (!session?.access_token) throw new Error('Nicht angemeldet');
+        const res = await fetch(`${ctx.apiBase}/billing/abrechnung/${ab.id}/zahlung`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ betragEur, datum, einzelRechnungsnummer, notiz }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+        ctx.showToast(`Zahlung erfasst${json.status === 'paid' ? ' — Datei ist jetzt vollständig bezahlt ✓' : ''}.`);
+        await zeigeAbrechnungDetail(ab.id);
+      } catch (e) {
+        console.error('[abrechnung/zahlung]', e);
+        ctx.showToast(e.message || 'Zahlung konnte nicht erfasst werden.', 'error');
+        return false;
+      }
+    },
+  });
+}
+
+/**
+ * Absetzungsbetrag von Hand — aus dem Absetzungsschreiben, Pflichtbegründung
+ * (Plan Phase 4, Punkt 2). Ein eigenes Modal statt Inline-Feldern in der
+ * Zeile: der Betrag ist eine bewusste, einmalige Eingabe, keine Live-Tabelle.
+ */
+function _erfasseAbsetzung(btn, ab) {
+  const zeilenId = btn.dataset.id;
+  ctx.showHtmlModal({
+    title: 'Absetzungsbetrag erfassen',
+    confirmText: 'Erfassen',
+    html: `
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <label style="font-size:12px;color:var(--text-muted);">Absetzungsbetrag (€) — aus dem Absetzungsschreiben
+          <input type="number" id="abAbsBetrag" step="0.01" min="0.01" class="form-input" style="width:100%;margin-top:4px;">
+        </label>
+        <label style="font-size:12px;color:var(--text-muted);">Begründung (Pflicht)
+          <input type="text" id="abAbsGrund" class="form-input" maxlength="500" style="width:100%;margin-top:4px;">
+        </label>
+      </div>`,
+    afterRender: () => document.getElementById('abAbsBetrag')?.focus(),
+    onConfirm: async () => {
+      const betragEur = Number(document.getElementById('abAbsBetrag')?.value);
+      const grund = document.getElementById('abAbsGrund')?.value.trim() || '';
+      if (!betragEur || betragEur <= 0) { ctx.showToast('Betrag fehlt oder ist 0.', 'error'); return false; }
+      if (grund.length < 3) { ctx.showToast('Begründung erforderlich (mind. 3 Zeichen).', 'error'); return false; }
+      try {
+        const { data: { session } } = await ctx.supabase.auth.getSession();
+        if (!session?.access_token) throw new Error('Nicht angemeldet');
+        const res = await fetch(`${ctx.apiBase}/billing/abrechnung/zeile/${zeilenId}/absetzung`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ betragEur, grund }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+        ctx.showToast('Absetzungsbetrag erfasst.');
+        await zeigeAbrechnungDetail(ab.id);
+      } catch (e) {
+        console.error('[abrechnung/zeile/absetzung]', e);
+        ctx.showToast(e.message || 'Absetzungsbetrag konnte nicht erfasst werden.', 'error');
+        return false;
+      }
+    },
+  });
 }
 
 /**

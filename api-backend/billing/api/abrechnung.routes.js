@@ -3446,4 +3446,72 @@ router.post('/abrechnung/zeile/:id/vkz01-ausnahme', async (req, res) => {
   }
 });
 
+// ============================================================================
+// Absetzungsbetrag von Hand — Plan Abschnitt 6, Phase 4
+// ============================================================================
+//
+// Die ZAA-Datei trägt keine Beträge (siehe upload-zaa oben) — nur ein
+// AbsetzungsSCHREIBEN auf Papier oder im Kassenportal nennt die genaue Summe.
+// Diese Route trägt sie nach, mit Pflichtbegründung. Der GoBD-Trigger
+// `fn_abrechnung_zeile_festschreibung()` lässt genau diese drei Felder offen
+// (`status`, `absetzung_*`), alles andere an der Zeile bleibt eingefroren.
+router.patch('/abrechnung/zeile/:id/absetzung', async (req, res) => {
+  try {
+    const hdr = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const { data: profile } = await supabase
+      .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
+    if (!profile) return res.status(403).json({ error: 'Profile not found' });
+    const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : profile.id;
+
+    const betrag = Math.round((Number(req.body?.betragEur) || 0) * 100) / 100;
+    const grund = String(req.body?.grund || '').trim();
+    if (!betrag || betrag <= 0) return res.status(400).json({ error: 'Betrag fehlt oder ist 0.' });
+    if (grund.length < 3) return res.status(422).json({ error: 'Begründung erforderlich (mind. 3 Zeichen) — aus dem Absetzungsschreiben.' });
+
+    const { data: zeile, error: zErr } = await supabase
+      .from('abrechnung_zeile')
+      .select('id, owner_id, status, netto_eur, herkunft, belegnummer')
+      .eq('id', req.params.id).eq('owner_id', tenantId).maybeSingle();
+    if (zErr) return res.status(500).json({ error: zErr.message });
+    if (!zeile) return res.status(404).json({ error: 'Zeile nicht gefunden oder gehört nicht zu Ihnen.' });
+    if (zeile.status !== 'abgesetzt' && zeile.status !== 'teilabgesetzt') {
+      return res.status(422).json({
+        error: `Nur eine ABGESETZTE Zeile bekommt einen Absetzungsbetrag. Status ist „${zeile.status}".`,
+      });
+    }
+    // Derselbe Riegel wie der CHECK in der Datenbank (abrechnung_zeile_absetzung_betrag) —
+    // hier nur, damit die Meldung den Grund nennt statt eine 500er-Constraint-Verletzung.
+    if (zeile.herkunft !== 'rekonstruiert' && betrag > Number(zeile.netto_eur)) {
+      return res.status(422).json({
+        error: `Absetzungsbetrag (${betrag} €) kann nicht größer sein als der Kassenanteil der Zeile (${zeile.netto_eur} €).`,
+      });
+    }
+
+    const { error: upErr } = await supabase.from('abrechnung_zeile').update({
+      absetzung_eur: betrag,
+      absetzung_grund: grund,
+      absetzung_am: new Date().toISOString().slice(0, 10),
+    }).eq('id', zeile.id);
+    if (upErr) return res.status(500).json({ error: upErr.message });
+
+    logAccess(supabase, {
+      userId: u.user.id, ownerId: tenantId, ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      method: 'PATCH', path: req.path, resource: 'abrechnung_zeile', resourceId: zeile.id,
+      action: 'absetzung-erfassen', statusCode: 200,
+      metadata: { belegnummer: zeile.belegnummer, betrag_eur: betrag, grund: grund.slice(0, 500) },
+    });
+
+    return res.json({ ok: true, absetzungEur: betrag });
+  } catch (e) {
+    console.error('[abrechnung/zeile/absetzung]', e);
+    return res.status(e.status || 500).json({ error: e.message });
+  }
+});
+
 export default router;
