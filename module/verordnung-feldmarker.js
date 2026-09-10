@@ -17,6 +17,16 @@
  * entscheidet nichts und kennt keine Regel; es bekommt fertige Befunde und
  * setzt sie an die Maske.
  *
+ * 10.09.2026 (Kemal): der Hinweiskasten stand fest im Formularfluss — er
+ * schob bei jedem Treffer die Zeilen darunter nach unten. Jetzt sitzt an der
+ * Stelle nur ein kleines Ausrufezeichen (`.vo-mark-icon`); der Text kommt
+ * per Klick als `position:fixed`-Layer (`.vo-popover`) obendrauf, verschiebt
+ * nichts und schliesst über das × oder erneutes Klicken auf dasselbe Icon.
+ * Die Seite, auf der das Popover aufgeht, richtet sich danach, wo das Icon
+ * im Viewport sitzt (linke Hälfte → Popover rechts, rechte Hälfte → links,
+ * unteres Fünftel → oberhalb), damit es nie über dem Feld liegt, das man
+ * gerade korrigiert.
+ *
  * Warum eine Tabelle und keine Namenskonvention
  * ─────────────────────────────────────────────
  * Die Feldnamen des Motors („kasseIk") und die IDs der Maske („rzPatKasseIk")
@@ -70,6 +80,17 @@ const RANG = Object.freeze({ blocker: 0, warnung: 1, hinweis: 2 });
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// Offene Popover leben in document.body, ausserhalb jeder `wurzel` — ihre
+// eigene Buchhaltung, damit `loescheMarkierungen()` sie unabhängig vom
+// übergebenen Bereich immer mitschliesst (ein stehengebliebenes Popover über
+// einem inzwischen neu geprüften Feld wäre eine falsche Auskunft).
+const offenePopovers = new Map(); // icon → { schliessen }
+
+function schliesseAllePopovers() {
+  for (const { schliessen } of offenePopovers.values()) schliessen();
+  offenePopovers.clear();
+}
+
 /**
  * Alle Markierungen und Hinweise aus einem Bereich entfernen.
  *
@@ -80,6 +101,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c =>
  * @param {HTMLElement|Document} [wurzel=document]
  */
 export function loescheMarkierungen(wurzel = document) {
+  schliesseAllePopovers();
   wurzel.querySelectorAll('.vo-mark-fehler, .vo-mark-warnung').forEach(el => {
     el.classList.remove('vo-mark-fehler', 'vo-mark-warnung');
     if (el.dataset.voTitelAlt !== undefined) {
@@ -87,6 +109,14 @@ export function loescheMarkierungen(wurzel = document) {
       else el.removeAttribute('title');
       delete el.dataset.voTitelAlt;
     }
+  });
+  // Icons setzen ihren Anker (die Zeile/Zelle) auf `position:relative`, damit
+  // sie an dessen Ecke haften, ohne den Fluss zu verschieben — hier wird das
+  // zurückgenommen, sonst bliebe eine unsichtbare, aber dauerhafte Änderung.
+  wurzel.querySelectorAll('[data-vo-positioniert]').forEach(el => {
+    el.style.position = el.dataset.voPositionAlt || '';
+    delete el.dataset.voPositionAlt;
+    delete el.dataset.voPositioniert;
   });
   wurzel.querySelectorAll('[data-vo-hinweis]').forEach(el => el.remove());
 }
@@ -130,7 +160,7 @@ export function markiereBefunde(befunde, wurzel = document) {
 
   for (const [anker, liste] of proAnker) {
     liste.sort((a, b) => RANG[a.schwere] - RANG[b.schwere]);
-    anker.insertAdjacentElement('afterend', hinweisKasten(liste));
+    erzeugeIcon(anker, liste);
   }
 
   return { gesetzt, ohneFeld };
@@ -157,16 +187,98 @@ function setzeTitel(el, befund) {
   el.title = alt ? `${alt}\n${neu}` : neu;
 }
 
-function hinweisKasten(liste) {
-  const kasten = document.createElement('div');
-  kasten.setAttribute('data-vo-hinweis', '1');
-  kasten.className = liste.some(b => b.schwere === 'blocker') ? 'vo-hinweis vo-hinweis-fehler' : 'vo-hinweis';
-  kasten.innerHTML = liste.map(b => {
-    const quelle = b.quelle
-      ? `<span class="vo-hinweis-quelle">${esc(b.quelle)}</span>` : '';
-    return `<div class="vo-hinweis-zeile${b.schwere === 'blocker' ? ' ist-fehler' : ''}">`
-      + `<span class="vo-hinweis-zeichen">⚠</span>`
-      + `<span><b>${VORSATZ[b.schwere]}:</b> ${esc(b.text)}${quelle}</span></div>`;
-  }).join('');
-  return kasten;
+/**
+ * Ein Ausrufezeichen an die Ecke des Ankers setzen. Der Anker braucht dafür
+ * einen Positionierungskontext — hat er keinen eigenen (die meisten Zeilen
+ * des Bogens sind Grid-/Flexblöcke ohne `position`), wird er auf `relative`
+ * gesetzt und das in `data-vo-positioniert` vermerkt, damit
+ * `loescheMarkierungen()` es zurücknehmen kann.
+ */
+function erzeugeIcon(anker, liste) {
+  const schwer = liste.some(b => b.schwere === 'blocker') ? 'blocker' : 'warnung';
+  // CSS kennt `.vo-mark-icon-fehler`/`-warnung` (dieselbe Namensgebung wie
+  // `KLASSE` oben) — nicht `-blocker`, das Feld-Schweregrad-Wort.
+  const icon = document.createElement('button');
+  icon.type = 'button';
+  icon.className = `vo-mark-icon vo-mark-icon-${schwer === 'blocker' ? 'fehler' : 'warnung'}`;
+  icon.setAttribute('data-vo-hinweis', '1');
+  icon.setAttribute('aria-label',
+    `${VORSATZ[schwer]} — ${liste.length} Punkt${liste.length > 1 ? 'e' : ''} zu diesem Feld`);
+  icon.textContent = '!';
+  icon.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    togglePopover(icon, liste);
+  });
+
+  if (getComputedStyle(anker).position === 'static') {
+    anker.dataset.voPositionAlt = anker.style.position || '';
+    anker.dataset.voPositioniert = '1';
+    anker.style.position = 'relative';
+  }
+  anker.appendChild(icon);
+}
+
+/** Popover für ein Icon auf-/zuklappen. Ein zweiter Klick auf dasselbe Icon schliesst es wieder. */
+function togglePopover(icon, liste) {
+  const bestehend = offenePopovers.get(icon);
+  if (bestehend) { bestehend.schliessen(); return; }
+
+  const pop = document.createElement('div');
+  pop.className = liste.some(b => b.schwere === 'blocker') ? 'vo-popover vo-popover-fehler' : 'vo-popover';
+  pop.innerHTML = `<button type="button" class="vo-popover-schliessen" aria-label="Schliessen">×</button>`
+    + liste.map(b => {
+      const quelle = b.quelle ? `<span class="vo-hinweis-quelle">${esc(b.quelle)}</span>` : '';
+      return `<div class="vo-popover-zeile${b.schwere === 'blocker' ? ' ist-fehler' : ''}">`
+        + `<b>${VORSATZ[b.schwere]}:</b> ${esc(b.text)}${quelle}</div>`;
+    }).join('');
+
+  document.body.appendChild(pop);
+  const neuPositionieren = () => positioniertPopover(pop, icon);
+  neuPositionieren();
+
+  const schliessen = () => {
+    pop.remove();
+    window.removeEventListener('scroll', neuPositionieren, true);
+    window.removeEventListener('resize', neuPositionieren);
+    icon.classList.remove('ist-offen');
+    offenePopovers.delete(icon);
+  };
+  pop.querySelector('.vo-popover-schliessen').addEventListener('click', (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    schliessen();
+  });
+  // Scrollt der Bogen (Modal-Body) weiter, muss das fixe Popover mitziehen —
+  // sonst hängt es irgendwann neben einem ganz anderen Feld.
+  window.addEventListener('scroll', neuPositionieren, true);
+  window.addEventListener('resize', neuPositionieren);
+
+  icon.classList.add('ist-offen');
+  offenePopovers.set(icon, { schliessen });
+}
+
+/**
+ * Seite wählen, auf der das Popover aufgeht: immer WEG vom Icon, nie darüber
+ * — sonst verdeckt es genau das Feld, das gerade korrigiert werden soll, und
+ * das Weiterarbeiten bei offenem Popover (der ganze Sinn der Sache) wäre hin.
+ */
+function positioniertPopover(pop, icon) {
+  const r = icon.getBoundingClientRect();
+  const vw = document.documentElement.clientWidth;
+  const vh = document.documentElement.clientHeight;
+  const rand = 8;
+  const pw = pop.offsetWidth;
+  const ph = pop.offsetHeight;
+
+  const oeffnetRechts = r.left < vw / 2;
+  let left = oeffnetRechts ? r.right + rand : r.left - rand - pw;
+  left = Math.max(rand, Math.min(left, vw - pw - rand));
+
+  const oeffnetOben = r.top > vh * 0.6;
+  let top = oeffnetOben ? r.top - ph - rand : r.bottom + rand;
+  top = Math.max(rand, Math.min(top, vh - ph - rand));
+
+  pop.style.left = `${left}px`;
+  pop.style.top = `${top}px`;
 }
