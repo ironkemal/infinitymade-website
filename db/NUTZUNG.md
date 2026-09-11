@@ -25,7 +25,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `heilmittel_position` | 5 | veraltet |
 | `icd10_titles` | 7 | aktiv (Referenz) |
 | `icd_sector_ranges` | 3 | aktiv (Referenz) |
-| `nummernkreise` | 1 | aktiv |
+| `nummernkreise` | 3 | aktiv |
 | `praxura_migrations` | 3 | aktiv |
 | `referral_drafts` | 9 | verdächtig |
 | `spatial_ref_sys` | 1 | System |
@@ -612,7 +612,7 @@ Warum: Nicht jede Praxis braucht jedes Sidebar-Modul. Hier liegt der **zentrale*
 ### `nummernkreise`
 
 4 Spalten · Status: aktiv
-Warum: Lückenlose, race-freie Nummernvergabe je Inhaber und Jahr (`rechnung_nr`, `beleg_nr`, `mahnung_nr`). Vorher zählte das Frontend mit `MAX+1` hoch — bei zwei gleichzeitigen Nutzern gibt das dieselbe Nummer zweimal.
+Warum: Lückenlose, race-freie Nummernvergabe je Inhaber und Kreis. Vorher zählte man mit `MAX+1` hoch — bei zwei gleichzeitigen Nutzern gibt das dieselbe Nummer zweimal. Seit 11.09.2026 laufen **alle vier** Kreise hierüber: `rechnung` (→ `invoices.rechnung_nr`, jahresweise), `beleg` (→ `belegliste.beleg_nr`), `mahnung` (→ `mahnungen.mahnung_nr`), `ausfallrechnung` (→ `ausfallrechnungen.rechnung_nr`).
 
 ### `pat_fussbefund`
 

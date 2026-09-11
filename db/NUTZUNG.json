@@ -8761,14 +8761,14 @@
    ],
    "register": true,
    "status": "aktiv",
-   "warum": "Lückenlose, race-freie Nummernvergabe je Inhaber und Jahr (`rechnung_nr`, `beleg_nr`, `mahnung_nr`). Vorher zählte das Frontend mit `MAX+1` hoch — bei zwei gleichzeitigen Nutzern gibt das dieselbe Nummer zweimal.",
+   "warum": "Lückenlose, race-freie Nummernvergabe je Inhaber und Kreis. Vorher zählte man mit `MAX+1` hoch — bei zwei gleichzeitigen Nutzern gibt das dieselbe Nummer zweimal. Seit 11.09.2026 laufen **alle vier** Kreise hierüber: `rechnung` (→ `invoices.rechnung_nr`, jahresweise), `beleg` (→ `belegliste.beleg_nr`), `mahnung` (→ `mahnungen.mahnung_nr`), `ausfallrechnung` (→ `ausfallrechnungen.rechnung_nr`).",
    "seit": "16.08.2026 · `invoices_ust_nummernkreis_gobd`",
    "ungeklaert": false,
    "leser": [],
    "schreiber": [],
    "dateien": [],
    "module": [],
-   "sqlTreffer": 1,
+   "sqlTreffer": 3,
    "codeStumm": true
   },
   {
@@ -16280,7 +16280,7 @@
   },
   {
    "name": "nummernkreise",
-   "sql": 1,
+   "sql": 3,
    "status": "aktiv"
   },
   {

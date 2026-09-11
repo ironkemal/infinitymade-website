@@ -782,8 +782,10 @@ $function$;
 --   authenticated), ohne auth.uid()-Prüfung — Mandant kommt aus p_owner. Fremder
 --   Aufruf hätte die lückenlose Nummerierung (§ 146 Abs. 4 AO) einer fremden Praxis
 --   von außen aufgerissen. Migration 0002_nummernkreis_rpc_revoke: REVOKE EXECUTE
---   … FROM PUBLIC, anon, authenticated. Einziger Aufrufer ist der Trigger
---   set_invoice_nummer() (selbst SECURITY DEFINER, läuft als Funktionsbesitzer) —
+--   … FROM PUBLIC, anon, authenticated. Aufgerufen wird sie nur aus Triggern,
+--   die selbst SECURITY DEFINER sind und als Funktionsbesitzer laufen: zur Zeit
+--   von 0002 nur set_invoice_nummer(), seit 0003 zusaetzlich set_next_beleg_nr(),
+--   set_next_mahnung_nr() und set_next_ausfallrechnung_nr() —
 --   anon/authenticated brauchten das Recht auf keinem Weg.
 -- set_invoice_nummer() -> trigger                          [SECURITY DEFINER]
 --   Vergibt invoices.rechnung_nr + invoice_number ('INV-<Jahr>-<4-stellig>')
