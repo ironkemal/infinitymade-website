@@ -109,9 +109,15 @@ async function init() {
   const isEmployee = profile.role === 'employee' && profile.owner_id;
   state.ownerId = isEmployee ? profile.owner_id : profile.id;
   state.employeeId = isEmployee ? profile.id : null;
-  state.companyName = profile.business_name;
-  document.getElementById('bizAvatar').textContent = profile.business_name.charAt(0).toUpperCase();
-  document.getElementById('bizName').textContent = profile.business_name;
+  // business_name kann leer sein (Owner hat es nie ausgefuellt) -- ohne Fallback
+  // stirbt hier die ganze Seite (TypeError auf null.charAt), gefunden 11.09.2026
+  // beim canli-test nach O-01, aber vorbestehend (seit mind. 2026-05-11).
+  const displayName = profile.business_name
+    || [profile.owner_first_name, profile.owner_last_name].filter(Boolean).join(' ')
+    || 'Praxis';
+  state.companyName = displayName;
+  document.getElementById('bizAvatar').textContent = displayName.charAt(0).toUpperCase();
+  document.getElementById('bizName').textContent = displayName;
 
   const ownerName = profile.owner_first_name && profile.owner_last_name
     ? profile.owner_first_name + ' ' + profile.owner_last_name
