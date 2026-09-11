@@ -486,6 +486,17 @@ log "[15/15] Fertig"
 log ""
 log "  Box erreichbar unter:  ${SITE_URL}"
 [ -n "$LAN_IP" ] && log "  Eine Server-Adresse:    ${LAN_IP} (PRÜFEN, ob das die echte Praxisnetz-IP ist, nicht z. B. eine Docker-interne)"
+# O-59: Caddy antwortet NUR auf den Host-Namen in SITE_URL — die IP allein
+# oeffnet nichts. Ohne diese Zeile draengt sich der Eindruck auf, die Adresse
+# stehe schon "fertig" da; sie ist erst nach diesem Schritt auf jedem
+# Praxisrechner verwendbar (onprem-Review 12.09.2026).
+if [ -n "$LAN_IP" ]; then
+  log ""
+  log "  Auf JEDEM Praxisrechner eintragen, sonst wird ${SITE_URL} nicht gefunden:"
+  log "    — hosts-Datei (Windows: C:\\Windows\\System32\\drivers\\etc\\hosts, Mac/Linux: /etc/hosts):"
+  log "        ${LAN_IP}  ${HOST_PART}"
+  log "    — ODER: als A-Eintrag im Praxis-Router/DNS, dann entfällt das pro Rechner"
+fi
 if [ "$CADDY_TLS_ARG_VALUE" = "internal" ]; then
   log "  Zertifikat der Box:     'docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .'"
   log "                          — pro Praxisrechner einmalig als vertrauenswürdig importieren."

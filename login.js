@@ -1,5 +1,5 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, IST_KUTU } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -186,6 +186,17 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
 });
 
 applyLang();
+
+// O-58 (a), 12.09.2026: in der Box gibt es weder /vorregistrierung.html noch
+// /impressum.html · /datenschutz.html · /agb.html (nicht gepackt, Faz 2.0)
+// noch eine sinnvolle Rückkehr zur SaaS-Marketingseite. Entfernen statt
+// verstecken — showView() togglet .register-block sonst zwischen Login/Reset
+// wieder sichtbar.
+if (IST_KUTU) {
+  registerBlock.remove();
+  document.getElementById('backHome')?.remove();
+  document.getElementById('saasFooter')?.remove();
+}
 
 const ADMIN_URL = 'https://admin.praxura.de/';
 

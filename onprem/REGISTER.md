@@ -107,12 +107,13 @@ test yığını**, kurulabilir ürün değil.
    ✅ **Ön koşul kapandı (11.09.2026 gece):** O-01 + O-15'in 2.1b'yi bloke eden kısmı
    bitti — arayüz artık `API_BASE`'i `/api/config`'ten alıyor, kutuda `"/api"` ölçüldü.
    Turun kapsamı ve iki yeni maddesi (**O-52** CSP · **O-55** zygotebody) → **§7F**.
-   ✅ **Caddy indi (11.09 akşamı).** 2.1b'nin **kalanı**: O-57 (paket dosya listesi —
-   dört satır, `builder`'ın bir sonraki turu) · O-49 · O-48 (konsey) · O-45 (b) ·
-   O-58 (a). Sonra 2.1c'ye geçilir.
+   ✅ **Caddy indi (11.09 akşamı).** ✅ **O-57, O-58 (a), O-59 kapandı (12.09.2026).**
+   2.1b'nin **kalanı**: O-49 · O-48 (konsey) · O-45 (b).
+   Sonra 2.1c'ye geçilir (2.1c'nin kendisi zaten yazıldı, bkz. madde 2 — kalan yalnız
+   2.1b'nin üç maddesi).
 2. **Faz 2.1c** — `install.sh`. **Tasarım hazır: §7G** (15 adım, Faz 2.2 sınırı, hata
-   modeli). Kapsadığı maddeler: O-53 (zorunlu değişken kapısı) · O-59 (adres ön-kontrolü
-   + kurulum sonu çıktısı) · O-52 (b) (`SUPABASE_PUBLIC_WSS` türetimi) · O-50'nin kalanı
+   modeli). Kapsadığı maddeler: O-53 (zorunlu değişken kapısı) · ✅ O-59 (adres ön-kontrolü
+   + kurulum sonu çıktısı, 12.09.2026 tamam) · O-52 (b) (`SUPABASE_PUBLIC_WSS` türetimi) · O-50'nin kalanı
    (`DATA_ENCRYPTION_KEY` üretimi) · **O-60** (JWT türetimi) · **O-61** (`.env` izni) · **O-62** (ilk owner / kayıt penceresi).
 3. **Seed adımı** (O-38) — referans tabloları; `SCHEMA-VERTEILUNG.md` §3.1 adım 4.
 4. **Faz 1.2** (O-02) — takvim kısıtı hâline geldi: kutuda `N8N_AI_SERIES_URL` boş
@@ -142,12 +143,14 @@ test yığını**, kurulabilir ürün değil.
 - **O-33** (plan farkının teknik karşılığı) ve **O-46** (filo panosu) → **kullanıcı
   kararı**; ikisi de lisans formatı donmadan cevaplanmalı
 - **O-38** → Faz 2.1 seed adımı; güncelleme yolu O-39'un zincirinden geçer
-- **O-57** → kimseyi beklemiyor, **dört satırlık iş**; bitene kadar kutunun giriş
-  ekranı stilsiz. Sıradaki `builder` turunda kapanmalı
+- **O-57** → ✅ **gelöst (12.09.2026)** — Dockerfile yarısı `e899d7a`'da, `publish-frontend.yml`
+  tetikleyicisi + duman testinin `src`/`href` kontrolü bu turda
 - **O-56** → Faz 2.2 sihirbazıyla aynı sprint: sihirbaz owner'ı yaratacak, O-56 de
   ikinci kullanıcıyı yaratabilir hâle getirecek. Biri olmadan diğeri yarım
-- **O-59** → Faz 2.1c `install.sh` ön-kontrolü; kurulum çıktısı hem LAN adresini hem
-  kök CA'yı söylemeli
+- **O-59** → ✅ **gelöst (12.09.2026)** — ön kontrol + LAN IP + kök CA çıktısı `33d5fd2`'de,
+  `hosts`/DNS talimat satırı bu turda
+- **O-58 (a)** → ✅ **gelöst (12.09.2026)** — `/api/config`'e `istKutu` alanı
+  (kaynağı `SUPABASE_PUBLIC_URL`, `SETUP_TOKEN` **değil**), gerçek kutuya karşı doğrulandı
 - **O-58 (b)** → `legal-de`; metin kararı verilmeden şablon sayfa yazılmaz
 - **O-62** → ✅ tasarımı kapandı (§7H); kalanı Faz 2.2 dilim 1'in kodu
 - **O-66** (SMTP) → ✅ **karar verildi 11.09.2026: seçenek (a)** — `install.sh` sorar,
@@ -1441,7 +1444,7 @@ Buna karşılık `cookie-consent.js/css` **hiçbir** kutu sayfasından çağrıl
 | **Tip** | G |
 | **Kutuda ne olur** | `login.html` — kutunun **ilk** ekranı — stil dosyası olmadan açılır. Duman testi bunu görmedi çünkü `/login.html` 200 dönüyor; eksik olan sayfa değil, sayfanın `<link>`'inin işaret ettiği dosya. `manifest.json` 404: `attendance.html` tabletten ana ekrana eklenemez (o sayfanın kullanım biçimi tam olarak budur). Fazlalıklar zararsız ama yanlış sinyal: kutuda Umami enjektörü **dosya olarak** duruyor, yalnız kimse çağırmadığı için çalışmıyor — bu bir savunma değil, tesadüf |
 | **Çözüm** | Aynı commit, dört satır: `COPY assets/system.css ./assets/` + `COPY manifest.json ./` ekle; `cookie-consent.js cookie-consent.css` ve `login.css` satırlarını çıkar. Sonra duman testine **ikinci bir kontrol**: `/login.html` içindeki her yerel `src`/`href` için 200 iste — 200 dönen bir HTML, çalışan bir sayfa demek değil. `publish-frontend.yml`'a bu adım girsin (Faz 2.1b'nin kalanı) |
-| **Durum** | `offen` — Faz 2.1b, `builder`'ın bir sonraki turu |
+| **Durum** | ✅ **gelöst (12.09.2026)**. Dockerfile-yarısı zaten `e899d7a`'da inmişti (yukarıdaki not). Kalan iki parça bu turda kapandı: (1) `.github/workflows/publish-frontend.yml`'ın `paths:` listesi `onprem/frontend.Dockerfile`'ın COPY listesiyle **birebir** hizalandı — `login.css`/`cookie-consent.js`/`cookie-consent.css` çıkarıldı, `setup.html`/`setup.js`/`assets/system.css`/`manifest.json` eklendi, başına "COPY listesiyle deckungsgleich tutulur" uyarısı kondu. (2) Duman testine **ikinci adım** eklendi: `/login.html`'in ham HTML'inden **yalnızca `<link>`/`<script>`** etiketlerindeki (bilinçli olarak `<a href>` hariç — O-58 (a)'nın kutuda JS ile gizlediği SaaS linkleri curl'e hâlâ görünür, bu bir build hatası değil) yerel `src`/`href` değerleri çıkarılır, her biri ayrı ayrı 200 için sınanır. Yerel Docker build'de doğrulandı: `/login.html`'in yüklediği 7/7 asset 200 döndü (`assets/system.css` dahil — `manifest.json`'ı `login.html` zaten hiç yüklemiyor, onu `dashboard.html`/`attendance.html` yükler, aynı testle o sayfalar için de tekrarlanabilir) |
 
 ### O-58 — Kutuda Impressum/Datenschutz/AGB yok, ama hasta onay kutusunun yanındaki link onu gösteriyor
 
@@ -1452,7 +1455,7 @@ Buna karşılık `cookie-consent.js/css` **hiçbir** kutu sayfasından çağrıl
 | **Tip** | G (+ hukuki) |
 | **Kutuda ne olur** | İki ayrı şey, karıştırılmasın. (1) **Kozmetik:** `login.html`'in alt bilgisi ve "Vorregistrieren" düğmesi kutuda 404'e gider — kutuda ön kayıt diye bir şey zaten yok, düğme oraya ait değil. (2) **Kozmetik değil:** `booking.html` ve `booking-request.html` **hastanın** gördüğü sayfalar ve rıza kutusunun metni var olmayan bir Datenschutzerklärung'a atıf yapıyor. ⛔ **Ve bizim metnimizi kopyalamak yanlış çözümdür:** kutuda sorumlu (Verantwortlicher) **praxis**'tir, InfinityMade değil; bizim `datenschutz.html`'imizi paketlemek hastaya yanlış sorumlu ve yanlış işleme bilgisi gösterir — düzeltilmesi eksikliğinden daha pahalı bir hata |
 | **Çözüm** | İki parça. **(a)** Kutu sürümünde SaaS'a özgü linkler görünmez (login alt bilgisi + "Vorregistrieren"); ölçüt `nav-registry` benzeri bir kutu bayrağı, ikinci bir dosya değil (G7). **(b)** Hasta sayfalarındaki iki link, kurulumda praxis'in kendi metniyle doldurulan bir **şablon sayfaya** gider (Faz 2.2 sihirbazının adımı: praxis adı/adres/DSB alanları). ⚠️ Metnin içeriği `legal-de`'nin işi — bu madde soruyu **açar**, cevaplamaz |
-| **Durum** | `offen` — (a) Faz 2.1b/2.2 · (b) Faz 2.2 + `legal-de` |
+| **Durum** | ✅ **(a) gelöst (12.09.2026)** · (b) hâlâ `offen` — Faz 2.2 + `legal-de`. Tasarım onprem-review'ın çizdiği hatla birebir uygulandı: `GET /api/config` yanıtına **`istKutu: !!process.env.SUPABASE_PUBLIC_URL`** eklendi (`server.js:410`, `SETUP_TOKEN`'a **değil** — jeton kurulumda tüketildiği için o bir kerelik sinyal olurdu), Vercel'in `api/config.js`'i aynı alanı **sabit `false`** döner. `supabase-config.js`'e `export const IST_KUTU` eklendi, ikinci `fetch` açılmadı — zaten çekilen `_cfg`'den okur. `login.js` `IST_KUTU` true ise beş elemanı `style.display` yerine **DOM'dan tamamen kaldırıyor** (`.remove()`): `.register-block` (regText+regBtn'i birlikte kapsıyor), `#backHome` (`backLink` → `https://praxura.de`), `#saasFooter` (Impressum/Datenschutz/AGB). Kaldırma tercih edildi çünkü `showView()` `.register-block.style.display`'i login/reset arası geçişte zaten değiştiriyor — `hidden`/`display:none` orada geri açılırdı, `.remove()` bu çakışmayı yapı olarak imkânsız kılıyor. Gerçek kutuya karşı doğrulandı (Playwright, headless): `/api/config` → `istKutu:true`, `login.html` DOM'unda üç öğe de **yok**, başka konsol hatası yok (tek uyarı — Sentry CDN'in CSP'ye takılması — Faz 2.6'nın bilinen, ayrı açığı) |
 
 ### O-59 — Caddy yalnız `SITE_URL` Host'una cevap veriyor: kutuya IP ile ulaşılamaz
 
@@ -1463,7 +1466,7 @@ Buna karşılık `cookie-consent.js/css` **hiçbir** kutu sayfasından çağrıl
 | **Tip** | C (+ G) |
 | **Kutuda ne olur** | Praxis ağındaki iş istasyonları kutuyu tipik olarak **IP ile** arar (`https://192.168.1.50`). O istek Host eşleşmediği için arayüzü hiç görmez; ekranda boş sayfa/404 çıkar, `docker ps` ise sekiz konteyneri yeşil gösterir — kurulumun en kötü arıza cinsi budur: her şey sağlıklı görünürken hiçbir şey açılmaz. `praxis.local` çalışsın diye her iş istasyonunda ya DNS kaydı ya `hosts` satırı gerekir; ayrıca `tls internal` sertifikası müşterinin tarayıcısında uyarı verir, çünkü Caddy'nin kök CA'sı o makinelere kurulmamıştır. ⚠️ İkinci tuzak: `SITE_URL` bir **port** içerirse (`https://praxis.local:8443`) Caddy o portu dinler, compose ise `443:443` yayınlar — kimse bir yere bağlanamaz |
 | **Çözüm** | **Faz 2.1c `install.sh`'ın kurulum ön-kontrolü** (`RELEASE-STANDARD.md` §5.4 listesine iki madde): (1) `SITE_URL`'in şemasını/portunu doğrula, port varsa kurulumu **durdur ve söyle**; (2) kurulum sonunda kutunun **kendi** LAN IP'sini ve host adını ekrana yazıp "bu adresi iş istasyonlarının `hosts` dosyasına girin ya da yönlendirici DNS'ine yazın" adımını kurulum çıktısına koy. Kök CA'nın dağıtımı (`caddy_data` altındaki `root.crt`) aynı çıktının parçası olmalı — yoksa müşteri her sabah sertifika uyarısı tıklar ve bir süre sonra HTTPS'i güvenlik sinyali olarak okumayı bırakır. Gerçek alan adı + Let's Encrypt kuran müşteride bu maddenin tamamı düşer |
-| **Durum** | `offen` — Faz 2.1c (kurulum ön-kontrolü + kurulum sonu çıktısı) |
+| **Durum** | ✅ **gelöst (12.09.2026)**. Adres ön-kontrolü ve LAN IP/kök CA çıktısı zaten `33d5fd2`'de inmişti (yukarıdaki not). Eksik kalan tek satır bu turda eklendi: `install.sh` adım 15'te, LAN IP bulunduysa, `<LAN_IP>  <HOST_PART>` satırının her iş istasyonunun `hosts` dosyasına (Windows/Mac/Linux yolu ayrı ayrı yazılı) **veya** praxis-router'ında bir A-kaydı olarak girilmesi gerektiği açıkça yazdırılıyor (`install.sh:488-495`). `:435`'teki „der Hinweis kommt erst im letzten Schritt" yorumu artık doğru bir atıf. **Bilinçli çözülmeyen (değişmedi):** Caddy'nin IP ile de cevap vermesi — `tls internal` sertifikası `SITE_URL` host adına kesiliyor, IP için SAN'ı yok; blok açılsaydı 404 yerine sertifika hatası alınırdı. Kabul edilen yol **isim çözümüdür**, IP erişimi değil |
 
 ---
 

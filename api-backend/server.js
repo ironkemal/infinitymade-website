@@ -406,7 +406,12 @@ app.get('/api/config', (req, res) => {
   res.json({
     supabaseUrl: process.env.SUPABASE_PUBLIC_URL || '',
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
-    apiBase: process.env.PUBLIC_API_BASE || '/api'
+    apiBase: process.env.PUBLIC_API_BASE || '/api',
+    // Nicht an SETUP_TOKEN gekoppelt: der Token wird beim Einrichten
+    // verbraucht/geloescht, SUPABASE_PUBLIC_URL bleibt die ganze Lebenszeit
+    // der Box gesetzt — ohne sie startet die Box gar nicht (O-58 a,
+    // onprem-Review 12.09.2026).
+    istKutu: !!process.env.SUPABASE_PUBLIC_URL
   });
 });
 

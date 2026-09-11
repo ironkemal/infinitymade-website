@@ -9,5 +9,7 @@ export default function handler(req, res) {
   const apiBase = process.env.PUBLIC_API_BASE || 'https://n8n.infinitymade.de/api';
 
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
-  res.json({ supabaseUrl, supabaseAnonKey, apiBase });
+  // SaaS ist nie eine Box — fest false, damit beide Deployments dieselbe
+  // Vertragsform zurückgeben (O-58 a, onprem-Review 12.09.2026).
+  res.json({ supabaseUrl, supabaseAnonKey, apiBase, istKutu: false });
 }

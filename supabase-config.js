@@ -16,3 +16,9 @@ export const SUPABASE_ANON_KEY = _cfg.supabaseAnonKey || '';
 // (relativ, siehe api-backend/server.js). Fällt /api/config ganz aus, bleibt
 // das heutige SaaS-Verhalten unverändert.
 export const API_BASE = _cfg.apiBase || 'https://n8n.infinitymade.de/api';
+
+// Kutu-Bayrağı (O-58 a, 12.09.2026): SaaS'ta hep false (api/config.js sabit
+// döner), kutuda `SUPABASE_PUBLIC_URL` doluysa true. Yalnız SaaS-only
+// linkleri (Impressum/Datenschutz/AGB/Vorregistrieren/praxura.de) kutuda
+// gizlemek için — güvenlik sınırı DEĞİL, RLS/apikey burada devrede değil.
+export const IST_KUTU = _cfg.istKutu === true;

@@ -4,8 +4,11 @@ on:
   push:
     branches: [main]
     paths:
+      # ⚠️ Diese Liste muss deckungsgleich mit der COPY-Liste in
+      # onprem/frontend.Dockerfile sein — sonst baut ein geänderter Screen
+      # kein neues Image (O-57, onprem-Review 12.09.2026). Bei jeder Änderung
+      # der COPY-Liste dort: hier in derselben Reihenfolge nachziehen.
       - 'login.html'
-      - 'login.css'
       - 'login.js'
       - 'dashboard.html'
       - 'dashboard.css'
@@ -17,6 +20,8 @@ on:
       - 'confirm.html'
       - 'attendance.html'
       - 'attendance.js'
+      - 'setup.html'
+      - 'setup.js'
       - 'booking.html'
       - 'booking.js'
       - 'booking-request.html'
@@ -28,10 +33,10 @@ on:
       - 'calendar-widget.js'
       - 'arzt-suche.js'
       - 'icd-dg-match.js'
-      - 'cookie-consent.js'
-      - 'cookie-consent.css'
       - 'sentry-init.js'
       - 'supabase-config.js'
+      - 'assets/system.css'
+      - 'manifest.json'
       - 'module/**'
       - 'vendor/**'
       - 'fonts/**'
@@ -108,11 +113,12 @@ jobs:
             -e HSTS_MAX_AGE=0 \
             praxura-frontend:smoke
 
+          ok=""
           for i in $(seq 1 30); do
             if curl -fsSk --resolve smoke.local:8443:127.0.0.1 https://smoke.local:8443/login.html > /tmp/login.html 2>/dev/null; then
               echo "✓ /login.html antwortet nach ${i}s ($(wc -c < /tmp/login.html) Bytes)"
-              docker rm -f smoke > /dev/null
-              exit 0
+              ok=1
+              break
             fi
             if [ "$(docker inspect -f '{{.State.Running}}' smoke)" != "true" ]; then
               echo "✗ Container läuft nicht mehr — Startfehler:"
@@ -121,10 +127,44 @@ jobs:
             fi
             sleep 1
           done
+          if [ -z "$ok" ]; then
+            echo "✗ /login.html hat 30 s lang nicht geantwortet. Logs:"
+            docker logs smoke
+            exit 1
+          fi
 
-          echo "✗ /login.html hat 30 s lang nicht geantwortet. Logs:"
-          docker logs smoke
-          exit 1
+      # 200 fuer /login.html heisst nur: die SEITE existiert — nicht, dass
+      # ihre <link>/<script>-Ziele es auch tun (O-57, 12.09.2026: fehlendes
+      # assets/system.css blieb genau deshalb unbemerkt). Jede lokale
+      # <link>/<script>-Referenz wird deshalb einzeln abgerufen.
+      #
+      # Bewusst NUR <link>/<script> (unbedingt geladen), NICHT <a href> —
+      # login.html verlinkt auch auf SaaS-only-Seiten (Impressum/Datenschutz/
+      # AGB/Vorregistrieren), die in der Box zur Laufzeit per JS ausgeblendet
+      # werden (O-58 a, istKutu-Flag), aber im rohen HTML weiter im href
+      # stehen (curl fuehrt kein JS aus). Ein <a> auf eine nicht gepackte
+      # Seite ist damit kein Baufehler dieses Images.
+      - name: Smoke test — jede lokale Asset-Referenz in /login.html laedt
+        run: |
+          set -e
+          fail=0
+          paths="$(grep -oE '<(link|script)[^>]*(src|href)="[^"]+"' /tmp/login.html \
+            | grep -oE '(src|href)="[^"]+"$' \
+            | sed -E 's/^(src|href)="//;s/"$//' \
+            | grep -vE '^(https?:|//)' \
+            | sort -u)"
+          for path in $paths; do
+            case "$path" in /*) ;; *) path="/$path" ;; esac
+            code="$(curl -sk -o /dev/null -w '%{http_code}' --resolve smoke.local:8443:127.0.0.1 "https://smoke.local:8443${path}")"
+            if [ "$code" = "200" ]; then
+              echo "✓ ${path} -> 200"
+            else
+              echo "✗ ${path} -> ${code}"
+              fail=1
+            fi
+          done
+          docker rm -f smoke > /dev/null
+          [ "$fail" = "0" ] || { echo "✗ Mindestens eine lokale Asset-Referenz in /login.html laedt nicht — COPY-Liste in onprem/frontend.Dockerfile pruefen."; exit 1; }
 
       - name: Build and push
         uses: docker/build-push-action@v5
