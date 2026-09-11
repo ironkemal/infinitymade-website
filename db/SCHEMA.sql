@@ -1,7 +1,15 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-10 — praxura_migrations_buch_anlegen
+-- ERZEUGT AM:        2026-09-11 — 0004_ausfallrechnungen_rechnung_nr_unique
+--                    (db-ustasi-Fund beim Abnahmetest von 0003: ausfallrechnungen
+--                    hatte nie UNIQUE (owner_id, rechnung_nr) — anders als
+--                    belegliste/mahnungen. Vor 0003 hätte der MAX+1-Wettlauf zwei
+--                    gleiche Rechnungsnummern still durchgelassen (§14 UStG).
+--                    0003 hat den Wettlauf schon beseitigt, 0004 schließt die
+--                    zweite, unabhängige Verteidigungslinie per Index. Details
+--                    bei `ausfallrechnungen` unten.
+--                    davor: 2026-09-10 — praxura_migrations_buch_anlegen
 --                    (On-Premise: die Schemakette wurde in Betrieb genommen.)
 --                    EINE NEUE TABELLE: `praxura_migrations` — das Buch der
 --                    Schemakette, eine Zeile je angewandter Migrationsdatei.
@@ -540,7 +548,8 @@ CREATE TABLE ausfallrechnungen (
 --   CHECK status IN (offen, bezahlt, storniert, abgeschrieben)
 --   FK booking_id -> bookings(id) ON DELETE SET NULL
 --   FK patient_id -> leads(id) ON DELETE SET NULL
---   PK (id) · rechnung_nr via TRIGGER set_next_ausfallrechnung_nr()
+--   PK (id) · UNIQUE (owner_id, rechnung_nr) [0004, 11.09.2026]
+--   rechnung_nr via TRIGGER set_next_ausfallrechnung_nr() -> naechste_nummer(owner, 'ausfallrechnung', 0) [0003]
 
 CREATE TABLE b2b_contacts (
   id uuid NOT NULL DEFAULT gen_random_uuid()
