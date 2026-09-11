@@ -141,6 +141,27 @@
       font-size: 0.88rem;
       cursor: pointer;
     }
+    .lang-switch {
+      display: inline-flex;
+      gap: 0.25rem;
+      padding: 0.25rem;
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      margin-bottom: 1.4rem;
+    }
+    .lang-switch button {
+      border: none;
+      background: transparent;
+      padding: 0.35rem 0.85rem;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-mute);
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .lang-switch button.active { background: var(--ink); color: var(--bg); }
     @media (max-width: 640px) {
       body { padding: 1.5rem 1rem; }
       .setup-card { padding: 2.2rem 1.6rem; }
@@ -153,15 +174,21 @@
   <main class="setup-wrap">
     <span class="brand">Prax<em>ura</em></span>
 
+    <div class="lang-switch">
+      <button data-lang="de" class="active">DE</button>
+      <button data-lang="en">EN</button>
+      <button data-lang="tr">TR</button>
+    </div>
+
     <div class="setup-card">
 
       <!-- Schritt 1: Jeton -->
       <section id="stepToken">
-        <p class="step-indicator">Schritt 1 von 4</p>
-        <h1>Einrichtung starten</h1>
-        <p class="sub">Das Einrichtungsjeton stand am Ende von <code>install.sh</code> im Terminal.</p>
+        <p class="step-indicator" id="tokenStepLabel">Schritt 1 von 4</p>
+        <h1 id="tokenTitle">Einrichtung starten</h1>
+        <p class="sub" id="tokenSub">Das Einrichtungsjeton stand am Ende von <code>install.sh</code> im Terminal.</p>
         <form id="tokenForm">
-          <label for="token">Einrichtungs-Jeton</label>
+          <label for="token" id="tokenLabel">Einrichtungs-Jeton</label>
           <input type="text" id="token" required autocomplete="off" spellcheck="false" />
           <button type="submit" class="btn-primary" id="tokenSubmitBtn">Weiter</button>
           <div id="tokenMsg" class="msg"></div>
@@ -170,16 +197,16 @@
 
       <!-- Schritt 2: Owner-Konto -->
       <section id="stepOwner" hidden>
-        <p class="step-indicator">Schritt 2 von 4</p>
-        <h1>Praxis und Konto</h1>
-        <p class="sub">Diese Angaben legen das erste Inhaber-Konto an.</p>
+        <p class="step-indicator" id="ownerStepLabel">Schritt 2 von 4</p>
+        <h1 id="ownerTitle">Praxis und Konto</h1>
+        <p class="sub" id="ownerSub">Diese Angaben legen das erste Inhaber-Konto an.</p>
         <form id="ownerForm">
-          <label for="businessName">Praxisname</label>
+          <label for="businessName" id="lblBusinessName">Praxisname</label>
           <input type="text" id="businessName" required autocomplete="organization" />
 
-          <label for="sector">Fachbereich</label>
+          <label for="sector" id="lblSector">Fachbereich</label>
           <select id="sector" required>
-            <option value="" disabled selected>Bitte wählen</option>
+            <option value="" disabled selected id="optSectorChoose">Bitte wählen</option>
             <option value="podologie">Podologie</option>
             <option value="physiotherapy">Physiotherapie</option>
             <option value="ergotherapie">Ergotherapie</option>
@@ -188,19 +215,19 @@
 
           <div class="row-2">
             <div>
-              <label for="ownerFirstName">Vorname (Inhaber)</label>
+              <label for="ownerFirstName" id="lblFirstName">Vorname (Inhaber)</label>
               <input type="text" id="ownerFirstName" autocomplete="given-name" />
             </div>
             <div>
-              <label for="ownerLastName">Nachname (Inhaber)</label>
+              <label for="ownerLastName" id="lblLastName">Nachname (Inhaber)</label>
               <input type="text" id="ownerLastName" autocomplete="family-name" />
             </div>
           </div>
 
-          <label for="email">E-Mail (Anmeldung)</label>
+          <label for="email" id="lblEmail">E-Mail (Anmeldung)</label>
           <input type="email" id="email" required autocomplete="email" />
 
-          <label for="password">Passwort</label>
+          <label for="password" id="lblPassword">Passwort</label>
           <input type="password" id="password" required autocomplete="new-password" minlength="8" />
 
           <button type="submit" class="btn-primary" id="ownerSubmitBtn">Konto anlegen</button>
@@ -210,24 +237,24 @@
 
       <!-- Schritt 3: SMTP testen -->
       <section id="stepSmtp" hidden>
-        <p class="step-indicator">Schritt 3 von 4</p>
-        <h1>Mailversand prüfen</h1>
+        <p class="step-indicator" id="smtpStepLabel">Schritt 3 von 4</p>
+        <h1 id="smtpTitle">Mailversand prüfen</h1>
         <p class="sub" id="smtpIntro">Wir prüfen jetzt, ob die Box wirklich Mails verschicken kann.</p>
 
         <div id="smtpChecking" class="msg info show">Wird geprüft …</div>
 
         <div id="smtpSkipped" hidden>
-          <div class="msg warn show">Kein SMTP eingerichtet — es werden keine Einladungs-, Passwort-Reset- oder Terminmails verschickt.</div>
+          <div class="msg warn show" id="smtpSkippedMsg">Kein SMTP eingerichtet — es werden keine Einladungs-, Passwort-Reset- oder Terminmails verschickt.</div>
           <label class="check-row">
             <input type="checkbox" id="smtpAckCheckbox" />
-            <span>Ich bin mir bewusst, dass keine Mails verschickt werden, und möchte trotzdem fortfahren.</span>
+            <span id="smtpAckLabel">Ich bin mir bewusst, dass keine Mails verschickt werden, und möchte trotzdem fortfahren.</span>
           </label>
           <button type="button" class="btn-primary" id="smtpSkipContinueBtn" disabled>Weiter</button>
         </div>
 
         <div id="smtpSent" hidden>
           <div class="msg warn show" id="smtpSentMsg"></div>
-          <p class="sub" style="margin-top:0.8rem;margin-bottom:0.4rem;font-size:0.85rem;">Ist die Testmail angekommen (auch im Spam-Ordner prüfen)?</p>
+          <p class="sub" id="smtpArrivedQuestion" style="margin-top:0.8rem;margin-bottom:0.4rem;font-size:0.85rem;">Ist die Testmail angekommen (auch im Spam-Ordner prüfen)?</p>
           <div class="btn-row">
             <button type="button" class="btn-secondary" id="smtpNotArrivedBtn">Nicht angekommen</button>
             <button type="button" class="btn-primary" id="smtpArrivedBtn" style="margin-top:0;">Angekommen</button>
@@ -241,24 +268,24 @@
         </div>
 
         <div id="smtpConfirmed" hidden>
-          <div class="msg success show">Mailversand funktioniert.</div>
+          <div class="msg success show" id="smtpConfirmedMsg">Mailversand funktioniert.</div>
           <button type="button" class="btn-primary" id="smtpConfirmedContinueBtn">Weiter</button>
         </div>
       </section>
 
       <!-- Schritt 4: Fertig -->
       <section id="stepDone" hidden>
-        <p class="step-indicator">Schritt 4 von 4</p>
-        <h1>Fertig</h1>
+        <p class="step-indicator" id="doneStepLabel">Schritt 4 von 4</p>
+        <h1 id="doneTitle">Fertig</h1>
         <p class="sub" id="doneText">Das Inhaber-Konto ist angelegt. Sie können sich jetzt anmelden.</p>
-        <a href="/login.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Zur Anmeldung</a>
+        <a href="/login.html" class="btn-primary" id="doneLoginBtn" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Zur Anmeldung</a>
       </section>
 
       <!-- Bereits eingerichtet -->
       <section id="stepClosed" hidden>
-        <h1>Bereits eingerichtet</h1>
-        <p class="sub">Diese Box hat bereits ein Inhaber-Konto. Die Ersteinrichtung läuft nur einmal.</p>
-        <a href="/login.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Zur Anmeldung</a>
+        <h1 id="closedTitle">Bereits eingerichtet</h1>
+        <p class="sub" id="closedSub">Diese Box hat bereits ein Inhaber-Konto. Die Ersteinrichtung läuft nur einmal.</p>
+        <a href="/login.html" class="btn-primary" id="closedLoginBtn" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Zur Anmeldung</a>
       </section>
 
     </div>

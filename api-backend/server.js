@@ -422,14 +422,63 @@ app.get('/api/config', (req, res) => {
 // Hier oben faengt sie alles ab. /health und /health/ready sind darueber registriert
 // und bleiben erreichbar, damit die Box diagnostizierbar bleibt (K10: wir kommen
 // nicht rein, der Betreiber muss uns das Diagnose-Paket schicken).
-app.use((req, res, next) => {
-  if (!wartungsmodus) return next();
-  res.status(503).json({
-    status: 'wartung',
-    grund: 'schema_migration',
-    fehler: wartungsmodus,
-    hinweis: 'Die Datenbank konnte nicht aktualisiert werden. Bitte das Diagnose-Paket senden.'
-  });
+//
+// Zweiter Sperrgrund seit Faz 2.2 dilim 2: "kurulum modu" (§5.6 — EIN
+// Mechanismus, kein zweiter Zustand). Betrifft NUR die anonyme Patienten-
+// Oberflaeche (Buchung) — Login/Dashboard bleiben offen, sonst waere §5.4/3
+// ("echter Login nach der Einrichtung") gar nicht pruefbar. Caddy liefert die
+// statischen Seiten (booking.html) unabhaengig davon aus; der erste fetch()
+// darin trifft auf diese Sperre und zeigt einen Satz statt eines rohen
+// Netzwerkfehlers (onprem-Konsultation, §7H "Dilim 2", 11.09.2026).
+const OEFFENTLICHE_PATIENTEN_PFADE = new Set([
+  '/api/booking/get-slots',
+  '/api/booking/create',
+  '/api/booking-request/create',
+  '/api/booking-request/cancel',
+  '/api/booking-request/accept-offer',
+  '/api/patients/lookup',
+  '/api/services/public',
+  '/api/team/public',
+  '/api/verify-code',
+]);
+
+// Auf SaaS ist SETUP_TOKEN nie gesetzt (CLAUDE.md ⛔ SET ETME) — dann sofort
+// false, KEINE Datenbankabfrage pro Anfrage. In der Box: 30s-Cache, weil
+// sonst jede Buchungsseite eine zusaetzliche Query vor jeder echten Anfrage
+// braeuchte. Fehler beim Lesen => wert bleibt `false` ("nicht in Einrichtung",
+// also OFFEN) — bewusst fail-open: eine bereits fertig eingerichtete Box darf
+// durch einen voruebergehenden DB-Hicks nicht ihre Buchungsseite verlieren.
+let einrichtungCache = { wert: false, bis: 0 };
+async function kutuInEinrichtung() {
+  if (!process.env.SETUP_TOKEN) return false;
+  const jetzt = Date.now();
+  if (jetzt < einrichtungCache.bis) return einrichtungCache.wert;
+  let wert = false;
+  try {
+    const { data, error } = await supabase.from('praxura_setup').select('abgeschlossen_am').eq('id', 1).maybeSingle();
+    if (!error && data) wert = data.abgeschlossen_am === null;
+  } catch { /* fail open — siehe Kommentar oben */ }
+  einrichtungCache = { wert, bis: jetzt + 30_000 };
+  return wert;
+}
+
+app.use(async (req, res, next) => {
+  if (wartungsmodus) {
+    return res.status(503).json({
+      status: 'wartung',
+      grund: 'schema_migration',
+      fehler: wartungsmodus,
+      hinweis: 'Die Datenbank konnte nicht aktualisiert werden. Bitte das Diagnose-Paket senden.'
+    });
+  }
+  if (OEFFENTLICHE_PATIENTEN_PFADE.has(req.path) && await kutuInEinrichtung()) {
+    return res.status(503).json({
+      status: 'wartung',
+      grund: 'einrichtung',
+      hinweis: 'Diese Praxis richtet ihr System gerade ein. Bitte versuchen Sie es später erneut.'
+    });
+  }
+  next();
 });
 
 app.use('/api', accessLogger(supabase));

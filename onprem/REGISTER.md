@@ -1900,7 +1900,9 @@ hesapla giriş yapılabiliyor**, aynı jeton ikinci kez **410** alıyor.
 
 **Dilim 2:** kurulum modu bayrağının uygulamaya bağlanması (§5.6 — public booking
 sayfaları sihirbaz bitene kadar kapalı; kurulum modu = bakım modu, tek mekanizma) ·
-§5.4'ün 1/5/8'i · üç dil.
+§5.4'ün 1/5/8'i · üç dil. → **kilitli tasarımı aşağıda: „Dilim 2 — kurulum modunun
+kilitli tasarımı" (6. tur)**. Orada kapsam daraltıldı: `einrichtung` sebebi yalnız anonim
+hasta yüzeyini kapatır, owner girişi açık kalır; kapanış ucu (`abschluss`) aynı turda iner.
 
 **Dilim 3 ve sonrası:** SMTP testi + teşhis (O-66 kararı (a), O-51 ile aynı turda) ·
 yedek hedefi (2.3'e bağlı, **ayrı karar**) ·
@@ -1953,6 +1955,112 @@ Migration `0005` `api` konteyneri ilk açılışında **kendiliğinden** koştu 
 **Test edilmeyen tek şey:** `company_code`'un gerçek bir tarayıcı oturumunda ilk
 dashboard açılışında dolduğu — bu yalnız kod okumasıyla doğrulandı (O-67). §5.4'ün
 1/5/8'i ve üç dil desteği dilim 2'ye bırakıldı, kilitli sözleşme (yukarıda) korunuyor.
+
+### Dilim 2 — kurulum modunun kilitli tasarımı (11.09.2026, 6. tur)
+
+> Uygulama öncesi soruldu ve iyi soruldu: „kurulum modu = bakım modu" sözü, `abgeschlossen_am`'ı
+> yazan adım **aynı turda** inmezse dilim 1'de yaratılan owner'ı kendi kutusunun dışında
+> bırakır. Doğru tespit. Aşağıdaki altı hüküm o kilidi açar ve §5.6'nın „tek mekanizma"
+> şartını **bozmadan** kapsamı daraltır.
+
+**1. „Tek mekanizma" = tek middleware, tek 503 gövdesi, iki `grund`. Kapsam sebebe göre değişir.**
+Fork değil, çünkü ikinci bir durum makinesi yok: `server.js:425`'teki middleware yerinde
+kalır, tek fark `if (!wartungsmodus) return next()` yerine bir `sperrgrund(req)` çağırması.
+
+| `grund` | Kapsam | Gerekçe |
+|---|---|---|
+| `schema_migration` | **Her şey** (bugünkü davranış, değişmez) | Yarım migrate edilmiş şemada hiçbir yazma güvenli değil |
+| `einrichtung` | **Yalnız anonim hasta yüzeyi** (aşağıdaki liste) | §5.6'nın yazdığı şart bu: *„yarım kurulmuş bir praxis'in randevu sayfası internette açık durmamalı"*. Owner'ın girişini kesmek şartın kendisinde yok — ve keserse sihirbazın kendi kabul ölçütü (§5.4/3: „gerçek giriş, JWT döndü") ölçülemez hâle gelir |
+
+**2. Kapatılan uçlar — açık liste, „auth'suz olan her şey" değil.** Türetilmiş kural
+sessizce yanlış tarafa kayar; liste okunur ve test edilir:
+`POST /api/booking/get-slots` · `POST /api/booking/create` · `POST /api/booking-request/create` ·
+`POST /api/booking-request/cancel` · `POST /api/booking-request/accept-offer` ·
+`GET /api/patients/lookup` · `GET /api/services/public` · `GET /api/team/public` ·
+`POST /api/verify-code`.
+**Açık kalır:** `/api/config` (zaten middleware'in üstünde), `/health*`, `/api/setup/*`,
+`/api/krankenkassen` (sabit liste, praxis hakkında bilgi taşımaz) ve `requireAuthAI`'li
+her uç — yani owner dashboard'u tam çalışır.
+
+**3. Kapanışı _insan_ yapar, kontrol sonuçları değil.** `abgeschlossen_am`'ı sihirbazın
+son ekranındaki „Einrichtung abschließen" tıklaması yazar; §5.4 kontrolleri **gösterilir**,
+kapıyı onlar açmaz. Gerekçe: 9 numaralı kontrolün („SMTP") geçerli sonuçlarından biri zaten
+*„bilinçli atlandı"* — mekanik AND kuralı, tek kırmızı kontrolde kutuyu **kalıcı olarak**
+kurulum modunda bırakır ve K10 gereği bizim içeri girip açma yolumuz yok. Kırmızı kontrol
+varken buton uyarır ve ikinci bir onay ister; yine de kapatılabilir. Tek sert ön koşul:
+`praxura_setup.owner_user_id` dolu olmalı (owner'sız kutu kapanmaz).
+
+**4. Uç: `POST /api/setup/abschluss`.** Bu, „sonraki dilimler yeni uç açmaz" kilidinin
+istisnası **değil** — adım 8 („Kapanış") yukarıdaki tabloda zaten kilitliydi, yalnız taşıyıcısı
+adlandırılmamıştı. Jetonla korunur (`test-smtp` gibi, `nochOffen()` **değil**: jeton owner
+adımında tüketilmiş olur ama `SETUP_TOKEN` env'de durduğu için doğrulaması hâlâ geçerli).
+Tek koşullu `UPDATE … WHERE abgeschlossen_am IS NULL`.
+
+**5. `status` iki alan döner (alan eklendi, uç eklenmedi):**
+`{ verfuegbar: <verbraucht_am IS NULL>, abgeschlossen: <abgeschlossen_am IS NOT NULL> }`.
+Buna ihtiyaç var, çünkü bugün `status` yalnız `verfuegbar`'a bakıyor ve owner yaratıldıktan
+sonra `false` dönüyor — sihirbaz tarayıcı kapanınca kendi kapanış ekranına **geri dönemezdi**.
+Yeni davranış: `abgeschlossen:false` ise `setup.html` jetonu tekrar sorup **kapanış
+ekranından** devam eder; `abgeschlossen:true` ise 410 + giriş ekranı. Sürüm, host adı,
+e-posta, hata metni hâlâ **dönmez**.
+
+**6. Bayrağın okunması: 30 saniyelik önbellek, hata hâlinde AÇIK.**
+`SETUP_TOKEN` boşsa (SaaS) sabit `false` — sıfır DB sorgusu, G7 bedelsiz. Kutuda
+`praxura_setup` 30 sn TTL ile okunur, `abschluss` ucu önbelleği anında düşürür (konteynerde
+birden çok işçi varsa en geç 30 sn'de yakınsar). ⚠️ DB hatasında `nochOffen()`'in „fail
+closed" davranışı buraya **taşınmaz**: kurulu bir kutuda geçici bir DB hıçkırığı randevu
+sayfasını kapatırdı. Son bilinen değer korunur, hiç bilinmiyorsa **açık** sayılır.
+
+**Kapsam kararı — bu tur ne iner:** 1-6 **birlikte** iner (kapı ve kapanış bölünemez; ayrı
+turlara bölünürse aradaki commit kutuyu kilitler). §5.4'ün 1/5/8'i ve üç dil **ayrılabilir**,
+ikisi de bayrağı etkilemez; aynı turda bitmezse dilim 2b olarak devam eder.
+
+**Üç dil:** teyit — sözlük `setup.js`'in **kendi içinde**, `dashboard.js` biçiminde
+(`{de:{…}, en:{…}, tr:{…}}`), import yok (gerekçe: „Pakete giren dosyalar", yukarıda).
+Varsayılan `de`, sihirbazın üstünde dil seçici. Seçim `localStorage`'a **`infinity_lang`**
+anahtarıyla yazılır — `dashboard.js:1225`/`:13340` aynı anahtarı okuyor, yani kurulumda
+seçilen dil dashboard'a taşınır; ikinci bir anahtar açmak kullanıcıya dili iki kez seçtirirdi.
+
+### Dilim 2 — uygulandı, gerçek kutuya karşı uçtan uca test edildi (12.09.2026)
+
+1-6 birlikte indi (kapı+kapanış ayrılmadı), üç dil de aynı turda bitti — dilim 2b açılmadı.
+
+**Kod tarafında beklenenden bir adım fazlası gerekti.** §7H'nin "verfuegbar/abgeschlossen"
+kararı uygulanırken, dilim 1'in `/verify` ve `/owner` uçlarının `nochOffen()`'i (yalnız
+`verbraucht_am`'a bakan tek bayrak) hâlâ kullandığı görüldü — bu, devam ettirme senaryosunda
+(owner yaratıldı, tarayıcı kapandı) aynı jetonla geri dönmeyi **410 ile bizzat engelliyordu**,
+tam da bu dilimin çözmesi gereken şey. `nochOffen()` ikiye ayrıldı: `ownerAngelegt()`
+(yalnız bilgi — sihirbaz Schritt 2'yi mi Schritt 3'ü mü göstereceğine karar verir) ve
+`istAbgeschlossen()` (tek gerçek kapı — 410 yalnız bundan gelir). `/verify` artık
+`{ok:true, ownerAngelegt}` döner, `/owner` owner zaten varsa 409 verir (410 değil — bu
+durum kalıcı değil, yanlış adım).
+
+**Yerel kutuda ölçüldü (8 konteyner, `api`+`caddy` yeniden build):**
+
+| Senaryo | Sonuç |
+|---|---|
+| Kurulum bitmeden `POST /booking/get-slots`, `GET /services/public` | **503** `{grund:"einrichtung"}` |
+| Aynı anda `/api/config`, `/health` | **200** — kilitli değil |
+| `verify` (taze kutu) | `{ok:true, ownerAngelegt:false}` |
+| `owner` → owner yaratıldı, jeton **tüketildi** ama **kapanış çağrılmadı** | booking hâlâ **503** |
+| Aynı jetonla **tekrar** `verify` (devam ettirme) | `{ok:true, ownerAngelegt:true}` — 410 **almadı** |
+| `abschluss` çağrıldı | `status` → `{abgeschlossen:true}`; booking **hâlâ 503** (30 sn önbellek) |
+| 30 sn sonra `services/public` | **400** (`owner_id required`) — gerçek route'a ulaştı, kilit kalktı |
+| `abschluss` ikinci kez (idempotenz) | `{ok:true, bereitsAbgeschlossen:true}`, hata değil |
+| Kurulum boyunca `login.html` | her zaman **200** |
+| Yaratılan owner, kurulum bittikten sonra gerçek şifreyle giriş | **200**, `access_token` döndü |
+
+**Test edilmeyen:** çok işçili (`pm2 -i 2`) bir `api` konteynerinde önbelleğin iki işçi
+arasında gerçekten 30 sn içinde yakınsadığı — yerel kutu tek işçiyle koşuyor. Gerçek
+kurulumda `pm2-runtime -i 2` ile ölçülmeli (madde 6'nın kendi öngörüsü, "en geç 30 sn'de
+yakınsar" — teoride doğru, pratikte hâlâ görülmedi).
+
+**Statik sayfalar (`booking.html`) kapatılmaz — uçları kapanır.** Caddy dosyaları `/api`'den
+bağımsız servis ediyor (`onprem/Caddyfile`), ve ikinci bir kapatma noktası (Caddy kuralı)
+„tek mekanizma"yı bozardı. Sayfa açılır, ilk `fetch` 503 + `grund:'einrichtung'` alır ve
+**anlaşılır tek cümle** gösterir („Diese Praxis richtet ihr System gerade ein.") — ham JSON
+ya da „failed to fetch" değil. Kabul ölçütü: kurulum modundayken `booking.html` açıldığında
+ekranda bu cümle var.
 
 ### O-66 — Sihirbazın SMTP ekranı yapısal olarak çalışamaz: GoTrue ayarını env'den okur
 

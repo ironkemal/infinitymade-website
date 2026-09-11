@@ -1,9 +1,10 @@
-// Faz 2.2 — Einrichtungsassistent, dilim 1 + SMTP-Testmail (O-66).
+// Faz 2.2 — Einrichtungsassistent, dilim 1 + 2 + SMTP-Testmail (O-66).
 //
-// GET  /api/setup/status     — darf man den Assistenten ueberhaupt oeffnen?
+// GET  /api/setup/status     — darf man den Assistenten ueberhaupt oeffnen/fortsetzen?
 // POST /api/setup/verify     — Jeton pruefen, OHNE ihn zu verbrauchen
 // POST /api/setup/owner      — der EINE Schreibvorgang: legt den ersten Owner an
 // POST /api/setup/test-smtp  — sendet EINE Testmail an den soeben angelegten Owner
+// POST /api/setup/abschluss  — markiert die Einrichtung als fertig (kurulum modu endet)
 //
 // Dieser Router wird in server.js NUR registriert, wenn SETUP_TOKEN gesetzt
 // ist — auf SaaS ist die Variable nie gesetzt (CLAUDE.md, ⛔ SET ETME), die
@@ -19,8 +20,8 @@
 // und `api` beide lesen. Dieser Router prueft nur, ob sie funktioniert — er
 // kann `.env` nicht aendern (Container liest Umgebung nur beim Start).
 //
-// Was dieser Router sonst NICHT tut (dilim 2+): Praxis-/Backup-Einstellungen,
-// den Assistenten als "abgeschlossen" markieren (praxura_setup.abgeschlossen_am).
+// Was dieser Router sonst NICHT tut (spätere dilim): Praxis-/Backup-
+// Einstellungen einrichten (nur testen/abschliessen ist hier drin).
 
 import express from 'express';
 import crypto from 'crypto';
@@ -52,32 +53,62 @@ function tokenGueltig(eingabe) {
   return crypto.timingSafeEqual(a, b);
 }
 
-async function nochOffen() {
+// Zwei getrennte Fragen, zwei getrennte Helfer — das war in dilim 1 EINE
+// Frage (nochOffen) und brach die Wiederaufnahme: schliesst der Browser das
+// Fenster nach der Owner-Anlage (Schritt 2), bevor der Abschluss (Schritt 4)
+// gedrückt wurde, kann derselbe Jeton nicht mehr zurück ins Verfahren — die
+// alte /verify wertete "Owner existiert schon" als "für immer zu" (410),
+// dabei ist NUR abgeschlossen_am der endgültige Zustand (onprem-Konsultation
+// §7H "Dilim 2", 11.09.2026).
+async function ownerAngelegt() {
   const { data, error } = await supabase
     .from('praxura_setup')
     .select('verbraucht_am')
     .eq('id', 1)
     .maybeSingle();
-  if (error || !data) return false; // Zeile fehlt/DB-Fehler: sicherheitshalber "geschlossen"
-  return data.verbraucht_am === null;
+  if (error || !data) return false;
+  return data.verbraucht_am !== null;
+}
+async function istAbgeschlossen() {
+  const { data, error } = await supabase
+    .from('praxura_setup')
+    .select('abgeschlossen_am')
+    .eq('id', 1)
+    .maybeSingle();
+  if (error || !data) return false; // DB-Fehler: sicherheitshalber NICHT "für immer zu"
+  return data.abgeschlossen_am !== null;
 }
 
 router.get('/status', async (req, res) => {
-  res.json({ verfuegbar: await nochOffen() });
+  const { data } = await supabase
+    .from('praxura_setup')
+    .select('verbraucht_am, abgeschlossen_am')
+    .eq('id', 1)
+    .maybeSingle();
+  res.json({
+    verfuegbar: !data || data.verbraucht_am === null,
+    abgeschlossen: !!(data && data.abgeschlossen_am !== null),
+  });
 });
 
+// ownerAngelegt im Erfolgsfall mitgeben: das Frontend entscheidet damit, ob
+// es das Owner-Formular zeigt (Schritt 2) oder direkt zu SMTP-Test/Abschluss
+// springt (Wiederaufnahme nach geschlossenem Browser).
 router.post('/verify', async (req, res) => {
   const { token } = req.body || {};
-  if (!(await nochOffen())) return res.status(410).json({ error: 'Bereits eingerichtet' });
+  if (await istAbgeschlossen()) return res.status(410).json({ error: 'Bereits eingerichtet' });
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
-  res.json({ ok: true });
+  res.json({ ok: true, ownerAngelegt: await ownerAngelegt() });
 });
 
 router.post('/owner', async (req, res) => {
   const { token, email, password, business_name, owner_first_name, owner_last_name, sector } = req.body || {};
 
-  if (!(await nochOffen())) return res.status(410).json({ error: 'Bereits eingerichtet' });
+  if (await istAbgeschlossen()) return res.status(410).json({ error: 'Bereits eingerichtet' });
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
+  // Owner existiert schon (Wiederaufnahme-Fall) — kein zweites Konto anlegen,
+  // das Frontend haette hier gar nicht erst hinschicken sollen.
+  if (await ownerAngelegt()) return res.status(409).json({ error: 'Owner-Konto existiert bereits.' });
 
   if (typeof email !== 'string' || !email.includes('@')) {
     return res.status(400).json({ error: 'Ungültige E-Mail-Adresse' });
@@ -153,9 +184,10 @@ let letzterTestmailVersand = 0;
 
 router.post('/test-smtp', async (req, res) => {
   const { token } = req.body || {};
-  // Bewusst OHNE nochOffen(): nach der Owner-Anlage ist der Jeton verbraucht
-  // (410) — genau dann will man die Mail noch testen koennen. Das Jeton
-  // selbst bleibt die Pruefung, nicht der Setup-Fortschritt.
+  // Bewusst NUR tokenGueltig(), kein istAbgeschlossen()-Check: genau nach der
+  // Owner-Anlage (Schritt 2), noch VOR dem Abschluss (Schritt 4), will man
+  // die Mail testen koennen. Das Jeton bleibt die Pruefung, nicht der
+  // Setup-Fortschritt.
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
 
   if (!process.env.SMTP_HOST) {
@@ -211,6 +243,38 @@ router.post('/test-smtp', async (req, res) => {
     }[err.code] || err.message || 'Unbekannter Fehler beim Mailversand.';
     return res.status(502).json({ error: diagnose, code: err.code || null, gesendetAn: ownerProfil.email });
   }
+});
+
+// Schritt 4 — bewusster Klick, kein automatischer Übergang: §5.4s Kontrollen
+// (1/5/8) werden angezeigt, aber KEINE davon sperrt den Abschluss — ein
+// mechanisches UND-über-alle-Kontrollen würde die Box bei einer einzigen
+// roten Ampel für immer in "kurulum modu" einfrieren, denn NICHTS anderes
+// setzt abgeschlossen_am (onprem-Konsultation, §7H "Dilim 2", 11.09.2026).
+// Jetongeschützt wie /test-smtp, nicht über istAbgeschlossen(): der Jeton ist
+// zu diesem Zeitpunkt bereits verbraucht (Schritt 2), das ist erwartet.
+router.post('/abschluss', async (req, res) => {
+  const { token } = req.body || {};
+  if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
+
+  const { data: setupZeile } = await supabase
+    .from('praxura_setup')
+    .select('owner_user_id')
+    .eq('id', 1)
+    .maybeSingle();
+  if (!setupZeile?.owner_user_id) {
+    return res.status(409).json({ error: 'Noch kein Owner-Konto — zuerst Schritt 2 abschließen.' });
+  }
+
+  const { data: zeile, error } = await supabase
+    .from('praxura_setup')
+    .update({ abgeschlossen_am: new Date().toISOString() })
+    .eq('id', 1)
+    .is('abgeschlossen_am', null)
+    .select('id');
+  if (error) return res.status(500).json({ error: 'Abschluss konnte nicht gespeichert werden.' });
+  // Leeres Ergebnis heisst "war schon abgeschlossen" — kein Fehler, derselbe
+  // Endzustand, also 200 statt 409 (Idempotenz: doppeltes Klicken ist harmlos).
+  res.json({ ok: true, bereitsAbgeschlossen: !zeile || zeile.length === 0 });
 });
 
 export default router;
