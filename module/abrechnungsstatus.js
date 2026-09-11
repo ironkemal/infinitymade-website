@@ -46,8 +46,11 @@ import { emit } from './signal.js?v=20260813';
 // weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
 // uebersetzt wird nur an den beiden Lesestellen unten.
 import { TOPF, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260910';
+// O-01, 11.09.2026: import statt eigenem Literal — top-level await in
+// supabase-config.js haelt diese Datei an, bis /api/config zurueck ist.
+import { API_BASE } from '../supabase-config.js';
 
-const API = 'https://n8n.infinitymade.de/api';
+const API = API_BASE;
 
 /**
  * Reihenfolge = Dringlichkeit. Kleiner Index gewinnt in der Patientenzeile.

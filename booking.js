@@ -1,8 +1,8 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const API = 'https://n8n.infinitymade.de/api';
+const API = API_BASE; // O-01, 11.09.2026
 
 const params = new URLSearchParams(location.search);
 const identifier = (params.get('u') || params.get('c') || '').trim();

@@ -1,7 +1,6 @@
 import { createClient } from './vendor/supabase-js.js?v=20260814';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '/supabase-config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from '/supabase-config.js'; // O-01, 11.09.2026
 
-const API_BASE = 'https://n8n.infinitymade.de/api';
 const BERLIN_TZ = 'Europe/Berlin';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

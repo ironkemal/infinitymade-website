@@ -6,6 +6,8 @@ export default function handler(req, res) {
     return res.status(500).json({ error: 'Supabase config not set in environment' });
   }
 
+  const apiBase = process.env.PUBLIC_API_BASE || 'https://n8n.infinitymade.de/api';
+
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
-  res.json({ supabaseUrl, supabaseAnonKey });
+  res.json({ supabaseUrl, supabaseAnonKey, apiBase });
 }

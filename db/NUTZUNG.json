@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-09-11",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-09-10)",
+  "schema": "db/SCHEMA.sql (Stand 2026-09-11)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-10)",
   "register": "db/REGISTER.md"
  },

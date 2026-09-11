@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-11 · 88 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-10), funktionen/INDEX.json (erzeugt 2026-09-10)
+**Erzeugt:** 2026-09-11 · 88 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-11), funktionen/INDEX.json (erzeugt 2026-09-10)
 
 ## Kayıt durumu
 

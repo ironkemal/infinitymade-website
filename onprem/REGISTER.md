@@ -127,7 +127,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | C |
 | **Kutuda ne olur** | Müşterinin kutusundaki dashboard açılır, ama her randevu/rezept/abrechnung çağrısı **bizim** VPS'imize gider. Bizim VPS'imiz kapalıysa müşterinin praxis'i durur. Daha kötüsü: kutudaki hasta verisi bizim sunucumuza akar → **G1 ihlali**, geçişin bütün amacı boşa çıkar. Müşteri kendi Supabase'inde oturum açtığı için JWT bizim backend'de doğrulanmaz — pratikte 401 duvarı |
 | **Çözüm** | Tek `API_BASE` kaynağı: `/api/config`'in verdiği değer (bugün Supabase URL'i için zaten yapılan şey — bkz. O-05). Kutuda `window.location.origin + '/api'`, SaaS'ta bugünkü host. Fork değil, tek config satırı. **Faz 1.1** kapsamına bağlandı; paketleme öncesi **Faz 2.0** ile kesişir |
-| **Durum** | `geplant` (Faz 1.1) — kapı tabanı: **25** |
+| **Durum** | 🟡 **kısmen — Frontend-Teil gelöst (11.09.2026), Faz 2.1b noch offen** — kapı tabanı: **25 → 7** |
 
 > ⚠️ `dashboard.js:83-86` doğru deseni **zaten biliyor**: `localhost` ise `http://localhost:3000/api`,
 > değilse sabit host. Yani "adres değişkendir" fikri kodda var, ama üçüncü ihtimal (müşterinin
@@ -140,12 +140,53 @@ kapı unutmaz ama düşünmez.
 > (O-44 §7 şart 1'in aynısı: ikinci bir host sabiti açma). Faz 1.1 çözümünü genişletmedi,
 > yalnız var olan deseni izledi.
 >
-> **11.09.2026 — paket yazıldı; bu madde artık Faz 2.1b'nin önünde duruyor.**
+> **11.09.2026 (öğleden önce) — paket yazıldı; bu madde artık Faz 2.1b'nin önünde duruyor.**
 > `onprem/docker-compose.yml`'de kutunun **arayüzünü servis eden bir bileşen yok**
 > (Kong yalnız `127.0.0.1`'de yayınlıyor, Caddy Faz 2.1b'de gelecek). Yani sabit adres
 > bugün kutuda ısırmıyor — kimseye tarayıcıdan açılmıyor. Isıracağı an, Caddy statik
 > dosyaları servis ettiği andır: o sürümde müşterinin tarayıcısı **bizim** VPS'imize
 > gider. Sıralama sonucu: O-01 ve O-15 çözümü **2.1b'den önce** inmeli, sonra değil.
+>
+> **11.09.2026 (akşam) — onprem-review + uygulama.** Tasarım onprem ajanına
+> soruldu, cevap: `supabase-config.js`'in top-level `await fetch('/api/config')`'ü
+> **her importer'ı** o dönene kadar bekletir (ESM garantisi) — 25 satırın 21'i
+> bu sayede zaten güvenliydi, sadece 3 dosya (`module/abrechnungsstatus.js`,
+> `module/podologie-positionen.js`, `booking-request.js`) `supabase-config.js`'i
+> hiç import etmiyordu, onlara import eklendi. `req.get('host')`'tan `apiBase`
+> türetmek **vetolandı** (Caddy arkasında `req.protocol` trust-proxy'siz `http`
+> döner → mixed-content; reflected Host header ayrı risk) — yerine kutuda sabit
+> `apiBase: '/api'` (göreli), SaaS'ta mutlak. `ctx.apiBase` deseni **korundu**,
+> ikinci bir global (`window.__PRAXURA_API_BASE__`) açılmadı — `dashboard.js`'teki
+> tek `API` değişkeni hem `ctx.apiBase`'i hem 8 doğrudan çağrıyı besliyor.
+>
+> **Uygulanan:** `supabase-config.js` → `export const API_BASE` (fallback: bugünkü
+> sabit host, `/api/config` hiç dönmezse davranış değişmez). Dört sunucu
+> uygulamasına `apiBase` alanı eklendi: `api/config.js` (Vercel, `PUBLIC_API_BASE`
+> env → varsayılan mutlak host) · `api-backend/server.js` yeni `GET /api/config`
+> (env `SUPABASE_PUBLIC_URL`/`SUPABASE_ANON_KEY`/`PUBLIC_API_BASE`, varsayılan
+> `/api` — Wartungsmodus middleware'inin **üstünde**, `/health` gibi) ·
+> `dev_server.cjs` (varsayılan `http://localhost:3000/api`, eski ternary'nin
+> aynısı) · `onprem/poc-frontend-server.mjs` (`LOCAL_API_BASE`, kutuda henüz
+> Kong→api yolu yok, bilinen sınır). `docker-compose.yml`'e `api` servisine
+> `SUPABASE_PUBLIC_URL`/`SUPABASE_ANON_KEY` eklendi — önceden yalnız internal
+> `SUPABASE_URL: http://kong:8000` vardı, browser'a döndürülecek DEĞER hiç
+> yoktu.
+>
+> **Doğrulandı:** `npm run probe` (7 süit, 87/87 modül tarayıcıda yükleniyor,
+> konsol hatası yok) · `node --test module/*.test.js` (818/818 — `ctx.apiBase`
+> imzasına dokunulmadı) · `api-backend` `npm test` (231/231) · yerel kutuda
+> `docker exec praxura-api wget -qO- localhost:3000/api/config` → `apiBase:"/api"`
+> doğru. Kapı tabanı `n8n_host` **25 → 7** kendiliğinden sıkıştı; kalan 7 bu işin
+> parçası değil (O-02 `server.js:1945` · O-09 `dashboard.js` B2B webhook ·
+> O-04 `index.html` pazarlama chatbot · `module/beleg-druck.js` tarihi yorum ·
+> `api/config.js`+`supabase-config.js`'teki **yeni, bilinçli** tek kaynak
+> fallback'leri).
+>
+> **Kalan (Faz 1.1'in geri kalanı, bu turda YAPILMADI):** O-03 (`app.praxura.de`
+> sabit, 19 satır) · O-09 (Apify/B2B özelliğini on-prem build'de kapatma) · O-10
+> (Stripe route kapatma) · O-16 (`/api/dsgvo`'nun 417 satırlık Express taşıması,
+> GoBD kilitleriyle). Faz 2.1b'yi bloke eden **yalnızca** O-01+O-15'in
+> frontend/config kısmıydı, o kapandı — geri kalanı ayrı turlarda.
 
 ### O-02 — `N8N_AI_SERIES_URL` fallback'i koda gömülü n8n adresi
 
@@ -364,7 +405,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | G |
 | **Kutuda ne olur** | Vercel yok → `/api/config` 404 → `supabase-config.js` boş URL döndürür → `createClient('','')` → uygulamanın **tamamı** açılmaz. Kırılma en temel yerde ve sessiz: konsola tek satır error düşer, ekran boş kalır |
 | **Çözüm** | **Faz 1.1** — Express'te aynı yolda route; PoC 0.4'te muadili zaten yazıldı (`onprem/poc-frontend-server.mjs`), o dosya şablon. SaaS'ta Vercel fonksiyonu kalabilir (aynı sözleşme, iki dağıtım — fork değil). O-01'in çözümüyle aynı yüzey: `apiBase` de buradan dönmeli |
-| **Durum** | `geplant` (Faz 1.1) — ⚠️ 11.09.2026: kutu paketinde ne `/api/config`'i verecek bileşen var ne de statik arayüzü servis edecek olan. İkisi de Caddy adımının (Faz 2.1b) ön koşulu; bu madde 2.1b'yi **bloklar** |
+| **Durum** | ✅ **gelöst (11.09.2026 akşam)** — `api-backend/server.js`'e `GET /api/config` eklendi (aynı sözleşme, `apiBase` de dahil — bkz. O-01'in akşam notu). Kutu paketinde **statik arayüzü servis edecek bileşen hâlâ yok** (Caddy, Faz 2.1b) — o kısım bu maddenin değil 2.1b'nin işi, O-15'in kendi işi (config route) bitti |
 
 ### O-16 — `/api/dsgvo` hasta verisine dokunan tek Vercel fonksiyonu
 

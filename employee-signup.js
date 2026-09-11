@@ -1,5 +1,5 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
@@ -113,7 +113,7 @@ if (urlCode) {
 (async () => {
   if (!urlCode) { renderWorkingHours(); return; }
   try {
-    const res = await fetch('https://n8n.infinitymade.de/api/verify-code', {
+    const res = await fetch(API_BASE + '/verify-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: urlCode.toUpperCase() })
@@ -258,7 +258,7 @@ $('signupForm').addEventListener('submit', async (e) => {
     // 1. Verify company code (reuse early-resolved ownerId if available)
     let ownerId = resolvedOwnerId;
     if (!ownerId) {
-      const res = await fetch('https://n8n.infinitymade.de/api/verify-code', {
+      const res = await fetch(API_BASE + '/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: companyCode })

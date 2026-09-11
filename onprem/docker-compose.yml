@@ -386,6 +386,12 @@ services:
       SUPABASE_URL: http://kong:8000
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
 
+      # Fuer GET /api/config (O-01/O-15, 11.09.2026) — das, was der BROWSER
+      # braucht, bewusst getrennt von den beiden Zeilen oben. ANON_KEY ist
+      # oeffentlich (steht ohnehin im Browser jedes Arbeitsplatzes).
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+
       # ★ BINDEND: supabase_admin, nicht postgres.
       # Von den 24 `ALTER DEFAULT PRIVILEGES`-Zeilen der Baseline sagen 12
       # `FOR ROLE supabase_admin`, und `postgres` darf fremde Vorgaberechte

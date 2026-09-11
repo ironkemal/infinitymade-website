@@ -385,6 +385,30 @@ app.get('/health/ready', async (req, res) => {
   }
 });
 
+// Öffentliche Config — derselbe Vertrag wie api/config.js (Vercel, SaaS). Muss
+// über der Wartungsmodus-Middleware stehen: ohne sie kann das Frontend nicht
+// einmal den Supabase-Client aufbauen, also auch keine Wartungsmeldung zeigen.
+// Trägt kein Geheimnis (anon-Key, Schutz kommt von RLS).
+//
+// Nur in der Box gefüllt: SUPABASE_PUBLIC_URL/SUPABASE_ANON_KEY sind bewusst
+// ANDERE Variablen als das interne SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY
+// weiter oben — jenes zeigt in der Box auf http://kong:8000 (nur im
+// Docker-Netz erreichbar, siehe docker-compose.yml). Im SaaS ruft der Browser
+// diese Route nie auf (dort bedient Vercels api/config.js dieselbe Rolle),
+// leere Werte sind dort also harmlos.
+//
+// apiBase ist in der Box bewusst relativ ('/api') statt aus dem Host-Header
+// abgeleitet — hinter Caddy wäre req.protocol ohne trust-proxy-Setup 'http',
+// ein reflektierter Host-Header zudem eine unnötige Angriffsfläche
+// (onprem-Review, O-01, 11.09.2026).
+app.get('/api/config', (req, res) => {
+  res.json({
+    supabaseUrl: process.env.SUPABASE_PUBLIC_URL || '',
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
+    apiBase: process.env.PUBLIC_API_BASE || '/api'
+  });
+});
+
 // DSGVO Art. 32 access audit — auto-log every authenticated /api request.
 // Anonymous endpoints (booking flow) log explicitly from their handlers.
 // Wartungsmodus — MUSS vor allen Routen stehen.

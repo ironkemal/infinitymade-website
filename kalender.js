@@ -1,5 +1,5 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from './supabase-config.js';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung } from './module/ausfallrechnung.js?v=20260904';
@@ -111,7 +111,7 @@ function authFetch(url, options = {}) {
 }
 
 async function patchBooking(bookingId, updates) {
-  const res = await authFetch(`https://n8n.infinitymade.de/api/booking/${bookingId}`, {
+  const res = await authFetch(`${API_BASIS}/booking/${bookingId}`, {
     method: 'PATCH',
     body: JSON.stringify(updates)
   });
@@ -239,7 +239,7 @@ async function loadTeam() {
   const ownerId = profile.role === 'owner' ? session.user.id : profile.owner_id;
   
   try {
-    const res = await fetch(`https://n8n.infinitymade.de/api/team?owner_id=${ownerId}`);
+    const res = await fetch(`${API_BASIS}/team?owner_id=${ownerId}`);
     if (res.ok) {
       teamMembers = await res.json();
     } else {
@@ -457,7 +457,7 @@ function closeBookingPanel() {
   activePanelBookingId = null;
 }
 
-const API_BASIS = 'https://n8n.infinitymade.de/api';
+const API_BASIS = API_BASE; // O-01, 11.09.2026 — einzige Quelle statt sabit adres
 
 /**
  * Nach einer Stornierung auf dieser Seite denselben Wartelisten-Vorschlag
@@ -617,7 +617,7 @@ document.getElementById('manual-form').addEventListener('submit', async (e) => {
   const ownerId = profile.role === 'owner' ? session.user.id : profile.owner_id;
 
   try {
-    const res = await authFetch('https://n8n.infinitymade.de/api/booking/manual-create', {
+    const res = await authFetch(`${API_BASIS}/booking/manual-create`, {
       method: 'POST',
       body: JSON.stringify({ ownerId, employeeId: empId, start_time, end_time, customerName: custName, customerPhone: custPhone })
     });
@@ -763,7 +763,7 @@ async function loadIntegrations() {
     status.textContent = T[lang].status_disconnected;
     btn.textContent = T[lang].btn_connect;
     btn.onclick = () => {
-      window.location.href = `https://n8n.infinitymade.de/api/calendar/google-auth?userId=${session.user.id}`;
+      window.location.href = `${API_BASIS}/calendar/google-auth?userId=${session.user.id}`;
     };
   }
 }

@@ -10,6 +10,11 @@ const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..');
 const PORT = process.env.PORT || 8080;
 const SUPABASE_URL = process.env.LOCAL_SUPABASE_URL || 'http://localhost:8000';
 const ANON_KEY = process.env.LOCAL_ANON_KEY || '';
+// api-backend hat in der Box heute keinen Host-Port (Kong routet noch nicht zu
+// ihm, siehe onprem/REGISTER.md O-15) — Faz 2.1b (Caddy) loest das. Bis dahin
+// setzt man LOCAL_API_BASE nur, wenn man den api-Container manuell mit einem
+// Port-Mapping testet (O-01, 11.09.2026).
+const API_BASE = process.env.LOCAL_API_BASE || 'http://localhost:3000/api';
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 
@@ -17,7 +22,7 @@ createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   if (url.pathname === '/api/config') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ supabaseUrl: SUPABASE_URL, supabaseAnonKey: ANON_KEY }));
+    return res.end(JSON.stringify({ supabaseUrl: SUPABASE_URL, supabaseAnonKey: ANON_KEY, apiBase: API_BASE }));
   }
   let p = url.pathname === '/' ? '/index.html' : url.pathname;
   const file = normalize(join(ROOT, p));

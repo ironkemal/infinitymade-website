@@ -36,7 +36,11 @@
  * einen, selten zwei Zeiträume.
  */
 
-const API = 'https://n8n.infinitymade.de/api';
+// O-01, 11.09.2026: import statt eigenem Literal — top-level await in
+// supabase-config.js haelt diese Datei an, bis /api/config zurueck ist.
+import { API_BASE } from '../supabase-config.js';
+
+const API = API_BASE;
 
 /** date (YYYY-MM-DD) → Promise<Map<code, position>>. Lebt bis zum Neuladen der Seite. */
 const _katalog = new Map();

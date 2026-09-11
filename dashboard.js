@@ -2,7 +2,7 @@ import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260908';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
 import { zeigePatientTermine } from './module/patient-termine.js?v=20260908';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260817';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260909';
@@ -112,9 +112,8 @@ import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20260816';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000/api'
-  : 'https://n8n.infinitymade.de/api';
+// Einzige Quelle seit O-01 (11.09.2026, kommt aus /api/config via supabase-config.js).
+const API = API_BASE;
 
 // Global business switcher state
 let currentBusiness = null;
@@ -6032,7 +6031,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       duration: durMin,
       hausbesuch: document.getElementById('bkHausbesuch').checked || false
     };
-    const res = await fetch('https://n8n.infinitymade.de/api/booking/batch-create', {
+    const res = await fetch(API + '/booking/batch-create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -6540,8 +6539,8 @@ function terminzettelPraxis() {
 // ============================================================
 // AI Series Scheduler — KI-Vorschlag flow
 // ============================================================
-const AI_SUGGEST_URL = 'https://n8n.infinitymade.de/api/booking/ai-suggest-series';
-const AI_BATCH_URL = 'https://n8n.infinitymade.de/api/booking/batch-create-explicit';
+const AI_SUGGEST_URL = API + '/booking/ai-suggest-series';
+const AI_BATCH_URL = API + '/booking/batch-create-explicit';
 window._aiCtx = null; // holds last context for retry
 
 function showAiLoading(label = 'KI sucht passende Termine…') {
@@ -11846,7 +11845,7 @@ let mailPreviewLeadId = null;
 async function startGmailOAuth() {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token || '';
-  window.location.href = 'https://n8n.infinitymade.de/api/gmail/connect?token=' + encodeURIComponent(token);
+  window.location.href = API + '/gmail/connect?token=' + encodeURIComponent(token);
 }
 
 function setGmailUI(email, dotEl, labelEl, connectBtnEl) {
@@ -11984,7 +11983,7 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
   btn.disabled = true; btn.textContent = '⏳';
   const gmailToken = (await supabase.auth.getSession()).data.session?.access_token;
   try {
-    const res = await fetch('https://n8n.infinitymade.de/api/gmail/send', {
+    const res = await fetch(API + '/gmail/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + gmailToken },
       body: JSON.stringify({
@@ -12122,7 +12121,7 @@ document.getElementById('aiInput').addEventListener('keydown', e => {
 // Unified AI gateway endpoint (Phase 0). B2C draft now flows through Azure
 // Frankfurt via api-backend/ai/router.js. B2B path still uses legacy n8n
 // webhook and will be migrated in Phase 5.
-const AI_GATEWAY_BASE = 'https://n8n.infinitymade.de/api/ai';
+const AI_GATEWAY_BASE = API + '/ai';
 
 async function runMailDraftViaGateway(intent, contactsCache, containerId, mapContactFn) {
   aiAddMsg(intent, 'user', containerId);
@@ -17436,7 +17435,7 @@ async function openBookingFromRxPreset(preset) {
 // Webcam/file capture → /api/rezept/upload (Azure OCR + validators)
 // → confirmation modal → /api/rezept/confirm → redirect to Termine.
 
-const REZEPT_API = 'https://n8n.infinitymade.de/api/rezept';
+const REZEPT_API = API + '/rezept';
 let rxStream = null;
 let rxLastUpload = null;  // { storage_path, parsed, validation, ocr_confidence, dataUri }
 

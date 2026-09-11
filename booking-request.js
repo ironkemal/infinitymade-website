@@ -1,14 +1,18 @@
 /**
  * booking-request.js — Patient appointment request wizard
  * Vanilla ES module, no framework dependencies
- * VPS API base: https://n8n.infinitymade.de/api
  */
 
 'use strict';
 
-// ─── Constants ──────────────────────────────────────────────────────────────
+// Import statt eigenem Literal (O-01, 11.09.2026): supabase-config.js nutzt
+// top-level await, das haelt JEDEN Importeur an, bis /api/config zurueck ist —
+// dieselbe Garantie, die auch die anderen Frontend-Dateien nutzen. Vorher hatte
+// diese Datei GAR KEINEN Import und ein eigenes Literal; in der Kundenbox waere
+// das die Cloud-VPS statt der eigenen Box gewesen (G1).
+import { API_BASE } from './supabase-config.js';
 
-const API_BASE = 'https://n8n.infinitymade.de/api';
+// ─── Constants ──────────────────────────────────────────────────────────────
 
 /** How far ahead (days) patients can book */
 const MAX_DAYS_AHEAD = 60;

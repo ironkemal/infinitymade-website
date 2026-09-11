@@ -7,7 +7,7 @@
 # Yükseltmek bilinçli bir karardır — gerekçesi sicile yazılır.
 
 # Backend adresi koda gömülü — 13 dosya. Hedef: config'ten okunması, taban 0'a inmesi.
-n8n_host=25
+n8n_host=7
 
 # app.praxura.de, yalnız uygulama yüzeyi (pazarlama sayfaları hariç — Faz 2.0).
 app_host=19

@@ -67,6 +67,9 @@ const konfig = (name) => process.env[name] || envDatei[name];
 
 const supabaseUrl = konfig('NEXT_PUBLIC_SUPABASE_URL') || konfig('SUPABASE_URL');
 const supabaseAnonKey = konfig('NEXT_PUBLIC_SUPABASE_ANON_KEY') || konfig('SUPABASE_ANON_KEY');
+// Gleicher Default wie die alte dashboard.js-Ternary (localhost -> :3000/api),
+// damit getApiBase() lokal dasselbe Ziel trifft wie vorher (O-01, 11.09.2026).
+const apiBase = konfig('PUBLIC_API_BASE') || 'http://localhost:3000/api';
 
 http.createServer((req, res) => {
   let url = req.url.split('?')[0];
@@ -87,7 +90,7 @@ http.createServer((req, res) => {
       return;
     }
     res.writeHead(200);
-    res.end(JSON.stringify({ supabaseUrl, supabaseAnonKey }));
+    res.end(JSON.stringify({ supabaseUrl, supabaseAnonKey, apiBase }));
     return;
   }
 
