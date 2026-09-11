@@ -61,10 +61,15 @@ COPY dashboard.html dashboard.css dashboard.js ./
 COPY kalender.html kalender.js ./
 COPY employee-signup.html employee-signup.js ./
 # GoTrue leitet nach E-Mail-Bestätigung hierher (employee-signup.js:
-# emailRedirectTo). ⚠️ Der Pfad selbst ist heute auf app.praxura.de fest
-# verdrahtet — eigener Befund, nicht Teil dieser Box-Paketierung (O-56).
+# emailRedirectTo — seit O-56 window.location.origin, kein fester SaaS-Pfad mehr).
 COPY confirm.html ./
 COPY attendance.html attendance.js ./
+
+# ── Einrichtungsassistent (Faz 2.2, NUR in der Box) ─────────────────────────
+# Anders als die App-Seiten oben: setup.html hat auf SaaS keine Funktion (dort
+# gibt es keinen SETUP_TOKEN-Ablauf, Owner kommen über Stripe/onboarding.html)
+# und steht deshalb in .vercelignore — sie existiert NUR in diesem Image.
+COPY setup.html setup.js ./
 
 # ── Öffentliche Patienten-Seiten (kein Login, Slug-basiert) ─────────────────
 COPY booking.html booking.js ./

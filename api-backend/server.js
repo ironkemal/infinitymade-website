@@ -20,6 +20,7 @@ import verordnungStatusRouter from './billing/api/verordnung-status.routes.js';
 import zuzahlungRouter from './billing/api/zuzahlung.routes.js';
 import rechnungZahlungRouter from './billing/api/rechnung-zahlung.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
+import setupRouter from './setup/router.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { heilmittelPositionAufloesen, kostentraegerIkAufloesen } from './lib/rezept-felder.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
@@ -432,6 +433,13 @@ app.use((req, res, next) => {
 });
 
 app.use('/api', accessLogger(supabase));
+
+// Einrichtungsassistent (Faz 2.2) — NUR registriert, wenn SETUP_TOKEN gesetzt
+// ist. Auf SaaS ist diese Variable nie gesetzt (CLAUDE.md ⛔ SET ETME), die
+// Routen existieren dort dann schlicht nicht — das eigentliche Tor (O-62).
+if (process.env.SETUP_TOKEN) {
+  app.use('/api/setup', setupRouter);
+}
 
 // Unified AI gateway (Phase 0). All Azure OpenAI traffic routes through here.
 app.use('/api/ai', aiRouter);

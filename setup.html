@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="googlebot" content="noindex, nofollow" />
+  <title>Einrichtung — Praxura</title>
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="theme-color" content="#F8F3E8" />
+
+  <!--
+    Kein Sentry-Loader hier — diese Seite existiert NUR in der Kundenbox
+    (Faz 2.0-Paketliste, onprem/frontend.Dockerfile), und Telemetrie an uns
+    ist in der Box standardmässig aus (G4, O-52 (c)). Ein CDN-Script hier
+    würde die enge Box-CSP (onprem/Caddyfile) ohnehin sofort blockieren.
+  -->
+
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <link rel="stylesheet" href="assets/system.css?v=20260608" />
+
+  <style>
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+    .setup-wrap { width: 100%; max-width: 480px; }
+    .brand {
+      display: block;
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 2.5rem;
+    }
+    .brand em { font-style: italic; color: var(--bronze); }
+    .setup-card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 3rem 2.6rem;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.7) inset,
+        0 24px 48px -20px rgba(26, 22, 17, 0.18),
+        0 6px 14px -4px rgba(26, 22, 17, 0.05);
+    }
+    .setup-card h1 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 1.8rem;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+      margin-bottom: 0.6rem;
+    }
+    .sub { font-size: 0.95rem; color: var(--ink-mute); line-height: 1.5; margin-bottom: 2rem; }
+    .step-indicator {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      margin-bottom: 0.5rem;
+    }
+    form label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin: 1.1rem 0 0.5rem;
+    }
+    form label:first-of-type { margin-top: 0; }
+    form input, form select {
+      width: 100%;
+      padding: 0.9rem 1.1rem;
+      border: 1px solid rgba(26, 22, 17, 0.18);
+      border-radius: 12px;
+      font-family: var(--sans);
+      font-size: 0.98rem;
+      color: var(--ink);
+      background: var(--bg-warm);
+      transition: border-color 200ms ease, background 200ms ease, box-shadow 200ms ease;
+    }
+    form input:focus, form select:focus {
+      outline: none;
+      border-color: var(--bronze);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(107, 85, 56, 0.12);
+    }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+    .btn-primary {
+      width: 100%;
+      padding: 0.95rem 1.4rem;
+      margin-top: 1.6rem;
+      background: var(--ink);
+      color: var(--bg);
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 240ms var(--ease-spring), background 200ms ease;
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .msg { display: none; }
+    .msg.show {
+      display: block;
+      margin-top: 1rem;
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+    }
+    .msg.error { background: rgba(156, 58, 58, 0.08); color: var(--rose); border: 1px solid rgba(156, 58, 58, 0.2); }
+    .msg.success { background: rgba(78, 92, 69, 0.08); color: var(--sage); border: 1px solid rgba(78, 92, 69, 0.2); }
+    .msg.info { background: var(--bg-warm); color: var(--ink-soft); border: 1px solid var(--line); }
+    [hidden] { display: none !important; }
+    @media (max-width: 640px) {
+      body { padding: 1.5rem 1rem; }
+      .setup-card { padding: 2.2rem 1.6rem; }
+      .row-2 { grid-template-columns: 1fr; }
+      form input, form select, .btn-primary { min-height: 44px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="setup-wrap">
+    <span class="brand">Prax<em>ura</em></span>
+
+    <div class="setup-card">
+
+      <!-- Schritt 1: Jeton -->
+      <section id="stepToken">
+        <p class="step-indicator">Schritt 1 von 3</p>
+        <h1>Einrichtung starten</h1>
+        <p class="sub">Das Einrichtungsjeton stand am Ende von <code>install.sh</code> im Terminal.</p>
+        <form id="tokenForm">
+          <label for="token">Einrichtungs-Jeton</label>
+          <input type="text" id="token" required autocomplete="off" spellcheck="false" />
+          <button type="submit" class="btn-primary" id="tokenSubmitBtn">Weiter</button>
+          <div id="tokenMsg" class="msg"></div>
+        </form>
+      </section>
+
+      <!-- Schritt 2: Owner-Konto -->
+      <section id="stepOwner" hidden>
+        <p class="step-indicator">Schritt 2 von 3</p>
+        <h1>Praxis und Konto</h1>
+        <p class="sub">Diese Angaben legen das erste Inhaber-Konto an.</p>
+        <form id="ownerForm">
+          <label for="businessName">Praxisname</label>
+          <input type="text" id="businessName" required autocomplete="organization" />
+
+          <label for="sector">Fachbereich</label>
+          <select id="sector" required>
+            <option value="" disabled selected>Bitte wählen</option>
+            <option value="podologie">Podologie</option>
+            <option value="physiotherapy">Physiotherapie</option>
+            <option value="ergotherapie">Ergotherapie</option>
+            <option value="logopaedie">Logopädie</option>
+          </select>
+
+          <div class="row-2">
+            <div>
+              <label for="ownerFirstName">Vorname (Inhaber)</label>
+              <input type="text" id="ownerFirstName" autocomplete="given-name" />
+            </div>
+            <div>
+              <label for="ownerLastName">Nachname (Inhaber)</label>
+              <input type="text" id="ownerLastName" autocomplete="family-name" />
+            </div>
+          </div>
+
+          <label for="email">E-Mail (Anmeldung)</label>
+          <input type="email" id="email" required autocomplete="email" />
+
+          <label for="password">Passwort</label>
+          <input type="password" id="password" required autocomplete="new-password" minlength="8" />
+
+          <button type="submit" class="btn-primary" id="ownerSubmitBtn">Konto anlegen</button>
+          <div id="ownerMsg" class="msg"></div>
+        </form>
+      </section>
+
+      <!-- Schritt 3: Fertig -->
+      <section id="stepDone" hidden>
+        <p class="step-indicator">Schritt 3 von 3</p>
+        <h1>Fertig</h1>
+        <p class="sub" id="doneText">Das Inhaber-Konto ist angelegt. Sie können sich jetzt anmelden.</p>
+        <a href="/login.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Zur Anmeldung</a>
+      </section>
+
+      <!-- Bereits eingerichtet -->
+      <section id="stepClosed" hidden>
+        <h1>Bereits eingerichtet</h1>
+        <p class="sub">Diese Box hat bereits ein Inhaber-Konto. Die Ersteinrichtung läuft nur einmal.</p>
+        <a href="/login.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Zur Anmeldung</a>
+      </section>
+
+    </div>
+  </main>
+
+  <script type="module" src="setup.js?v=20260911"></script>
+</body>
+</html>

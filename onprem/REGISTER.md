@@ -1921,6 +1921,36 @@ etmek ise kutuya 24k satırı sihirbaz için yüklemek olurdu. Bilinçli sapma, 
 **O-66** (SMTP sihirbazdan ayarlanamaz — GoTrue env okuyor) · **O-67** (trigger'ın
 doldurmadığı profil alanları: `plan_status='pending'`, `company_code`/`business_name` boş).
 
+### Dilim 1 — uygulandı ve gerçek kutuya karşı uçtan uca test edildi (11.09.2026 gecesi)
+
+`api-backend/setup/router.js` (üç uç, yukarıdaki sözleşmeyle birebir) · `setup.html`/
+`setup.js` (`login.html` kalıbı, kendi CSS'i yok) · `api-backend/Dockerfile`'a
+`COPY setup ./setup` (⚠️ ilk yazımda unutulmuştu — `booking/` 11.08.2026'nın aynısı
+olurdu, `docker build` öncesi kendi taramamda yakalandı) · `onprem/frontend.Dockerfile`'a
+iki satır · `.vercelignore`'a `setup.html`/`setup.js` (bu sayfa SaaS'ta işlevsiz — Stripe
+akışı orada — ve `.vercelignore`'suz Vercel'in her HTML'i kökten servis ettiği bilindiği
+için (CLAUDE.md „Yayın yüzeyi kuralı") eklenmeden bırakmak kendi başına bir bulgu olurdu).
+
+**Yerel kutuda (8 konteyner, `api`+`caddy` yeniden build) uçtan uca ölçüldü:**
+
+| Adım | Sonuç |
+|---|---|
+| `GET /api/setup/status` (owner yok) | `{"verfuegbar":true}` |
+| `POST /api/setup/verify` yanlış jeton | 401 |
+| `POST /api/setup/verify` doğru jeton | 200, tüketmedi |
+| `POST /api/setup/owner` tam form | 200, `profiles` satırı: `role:owner, plan_status:pending, business_name/owner_first_name/owner_last_name/sector` doğru yazılı, `company_code:null` (beklenen, bkz. O-67) |
+| `GET /api/setup/status` (owner yaratıldıktan sonra) | `{"verfuegbar":false}` |
+| Aynı jeton ikinci `verify`/`owner` denemesi | ikisi de **410** |
+| Yaratılan owner ile `POST /auth/v1/token?grant_type=password` | **200**, gerçek `access_token` döndü — `email_confirm:true` sayesinde SMTP'siz kutuda bile giriş çalışıyor |
+
+Migration `0005` `api` konteyneri ilk açılışında **kendiliğinden** koştu (`[migrate] ✓
+0005_praxura_setup.sql`) — db-ustasi'nın canlıda yaptığı yarış-durumu ölçümünün
+(1. UPDATE 1 satır, 2. UPDATE 0 satır) yerel kutudaki karşılığı budur.
+
+**Test edilmeyen tek şey:** `company_code`'un gerçek bir tarayıcı oturumunda ilk
+dashboard açılışında dolduğu — bu yalnız kod okumasıyla doğrulandı (O-67). §5.4'ün
+1/5/8'i ve üç dil desteği dilim 2'ye bırakıldı, kilitli sözleşme (yukarıda) korunuyor.
+
 ### O-66 — Sihirbazın SMTP ekranı yapısal olarak çalışamaz: GoTrue ayarını env'den okur
 
 | Alan | İçerik |
@@ -1941,7 +1971,7 @@ doldurmadığı profil alanları: `plan_status='pending'`, `company_code`/`busin
 | **Tip** | H (+ G) |
 | **Kutuda ne olur** | Üç ayrı sonuç: (1) `plan_status='pending'` — `checkPlanActive()` bunu **bloklamıyor** (yalnız `canceled`/`expired`), yani kutu çalışır; ama `isEnterprise()` `['trial','active','past_due']` beklediği için plan bazlı yerler **sessizce kapalı** kalır ve sonradan „sektöre göre eksik" şikayeti olarak geri döner. (2) `company_code` boş → kutuda **çalışan kaydı yapılamaz** (6 haneli kod o alandan gelir); O-56 ile birlikte kutunun ikinci kullanıcısı yapısal olarak imkânsız olur. (3) `business_name` boş → booking sayfası ve mail başlıkları isimsiz. Hiçbiri hata vermez, hepsi „eksik özellik" gibi görünür |
 | **Çözüm** | Sihirbazın adım 6'sı bu alanları **açıkça** yazar: `business_name` (sorulan) · `role='owner'` (varsayılan, teyit edilir) · `company_code` (üretilir, benzersizliği kontrol edilir) · `onboarding_step='done'` · `plan`/`plan_status` çalışır bir köprü değere. ⚠️ Sonuncusu Faz 3.3'ün (entitlements) borcunu öne almaz, **erteler**: kutuda plan gerçeği lisanstan gelecek, bugünkü değer o gelene kadar tutan bir köprüdür ve `entitlements` helper'ı indiğinde bu satır **silinecek** — koda bunu söyleyen yorum yazılır, yoksa iki yıl sonra „bu neden burada" diye durur |
-| **Durum** | `offen` — Faz 2.2 dilim 1 kapsamında yazılacak, ama `plan_status`'un **hangi** değer olacağı O-31/O-33'ün cevabını bekliyor (plan farkının kutudaki karşılığı hâlâ tanımsız, kullanıcı kararı). Dilim 1 bunsuz da bitirilebilir — giriş çalışır. O-33 cevaplanana kadar yazılacak değer `trial` gibi görünür bir köprü olmalı, **`active` değil**: `active` „ödeme alındı" demektir ve lisans tarafı inmeden o cümle yalan olur |
+| **Durum** | ✅ `gelöst` (11.09.2026, dilim 1 uygulandı ve gerçek kutuya karşı test edildi) — **ama önerilen çözümden daha küçük bir düzeltmeyle.** Uygulama öncesi kod okunduğunda üçünden ikisinin zaten **sorun olmadığı** ortaya çıktı: `role` sütun varsayılanı zaten `'owner'` (trigger'a ek yazma gerekmiyor), `plan_status` sütun varsayılanı zaten `'pending'` — tam da bu maddenin önerdiği „`active` değil" köprü değer, ek kod gerekmeden. `company_code` da sihirbazda **üretilmiyor**: `dashboard.js:13480` `ensureCompanyCode()` zaten `role==='owner' && !company_code` durumunda koşulsuz çalışıyor (init() akışında), yani owner ilk kez dashboard'u açtığında birkaç saniye içinde kendi kendine dolduruyor — SaaS'ta owner'lar için de yol bu, ikinci bir üretim mantığı yazmak iki kaynağı aynı formata bağlı tutmak olurdu. **Sihirbazın gerçekten yazdığı tek şey**: `business_name`, `owner_first_name`, `owner_last_name`, `sector` — trigger'ın gerçekten boş bıraktığı, hiçbir yerde varsayılanı olmayan alanlar. `onboarding_step` dilim 1'de dokunulmadı (`'account'` kalıyor, hiçbir yerde okunmuyor — grep sıfır sonuç). ⚠️ Doğrulanmamış tek nokta: `company_code`'un gerçekten ilk dashboard açılışında dolduğu bir tarayıcı oturumuyla **görülmedi** — yalnız kod okumasıyla (`ensureCompanyCode()` koşulsuz, `init()` içinde) ve curl ile doğrulandı (owner satırı `company_code:null` çıktı, beklenen — henüz dashboard açılmadı). İlk gerçek kurulumda bu adım da görülmeli |
 
 ---
 

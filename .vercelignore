@@ -63,6 +63,14 @@ module/globals.d.ts
 # Tote Sicherungskopien und Altbestand aus der Studio-Zeit
 *.bak
 index-old.html
+
+# Einrichtungsassistent (Faz 2.2) — existiert nur in der On-Prem-Kundenbox
+# (onprem/frontend.Dockerfile). Auf SaaS gibt es keinen SETUP_TOKEN-Ablauf
+# (Owner kommen über Stripe/onboarding.html), die Seite waere hier toter Code
+# ohne funktionierendes Backend dahinter — kein Sicherheitsloch, aber unnoetig
+# auf der oeffentlichen Flaeche sichtbar (Register-Regel "Yayin yuezeyi", CLAUDE.md).
+setup.html
+setup.js
 # script.js, chatbot.js, pakete/, ai chatbot proje/ — 09.09.2026 nach archive/
 # verschoben (archive/ oben schon ausgeschlossen), Regeln nicht mehr noetig
 # lib/ — 28.08.2026 nach archive/lib-orphan/ verschoben, Regel nicht mehr noetig
