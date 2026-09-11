@@ -107,6 +107,12 @@ onprem_image=$(git grep --cached -c -E "^[[:space:]]+image:" -- onprem/docker-co
 #    her alıcıda spam'e düşer. Gönderimde hata görünmez. Hedef 0 (O-51).
 absender_fest=$(git grep --cached -c "noreply@praxura\.de" -- api-backend/ 2>/dev/null | awk -F: '{s+=$NF} END{print s+0}')
 
+# 10) vercel.json CSP'sindeki host sayısı ("https://…" token'ı). Kapı bu
+#    dosyaya bugüne kadar hiç bakmadı (*.json kapsam dışıydı) — O-52. Satır
+#    sayısı değil TOKEN sayısı: CSP tek satırda durduğu için `zaehle`'nin
+#    satır bazlı sayımı burada işe yaramaz, host eklense bile satır 1 kalır.
+csp_host=$(git grep --cached -oE "https?://[a-zA-Z0-9.*-]+" -- vercel.json 2>/dev/null | wc -l | tr -d ' ')
+
 # --- Yıkıcı DDL kapısı (sayaç değil, doğrudan kontrol) --------------------
 #
 # :beta ve :stable AYNI ANDA canlı. Eski image yeni şemayla çalışabilmek zorunda.
@@ -219,6 +225,8 @@ kontrol onprem_image "$onprem_image" "Kutuya yeni bir konteyner girdi. Güncelle
                                    "Çıkış: gerçekten gerekli mi? Gerekliyse onprem/NOTICE.md'ye lisans satırı ekle (O-42)."
 kontrol absender_fest "$absender_fest" "Koda gömülü yeni gönderen adresi. Kutuda o mail müşterinin sunucusundan çıkar ve DMARC yüzünden spam'e düşer (O-51)." \
                                    "Çıkış: adresi .env'den oku (SMTP_ADMIN_EMAIL), altı çağrıyı tek yardımcıya bağla."
+kontrol csp_host    "$csp_host"    "vercel.json'ın CSP'sine yeni bir bulut adresi eklendi. Kutuya kopyalanırsa (O-52) tarayıcı onu ENGELLEMEZ." \
+                                   "Çıkış: gerçekten SaaS'a mı özel? Öyleyse kabul; onprem/Caddyfile'a asla kopyalama."
 
 # --- Sonuç ----------------------------------------------------------------
 if [ -n "$ihlal" ]; then

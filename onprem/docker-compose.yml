@@ -59,9 +59,8 @@
 #  REGEL 3 — Nichts liegt auf dem LAN offen ausser dem Reverse Proxy
 # ───────────────────────────────────────────────────────────────────────────
 #  `kong` veroeffentlicht auf 127.0.0.1, nicht auf 0.0.0.0. Erreichbar aus dem
-#  Praxisnetz wird der Stack erst ueber Caddy (Phase 2.1b: TLS + Auslieferung
-#  der statischen Oberflaeche). Bis dahin ist die Box nur lokal erreichbar —
-#  das ist Absicht, kein fehlendes Stueck.
+#  Praxisnetz ist der Stack ueber `caddy` (Phase 2.1b, unten): TLS + Ausliefe-
+#  rung der statischen Oberflaeche + Reverse Proxy zu `api` und `kong`.
 #
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -311,14 +310,16 @@ services:
 
   # ─────────────────────────────────────────────────────────────────────────
   # kong — API-Gateway. Buendelt auth/rest/realtime/storage hinter EINER
-  #        Adresse und prueft den apikey (key-auth + acl).
+  #        Adresse und prueft den apikey (key-auth + acl). Bleibt INTERN —
+  #        seit Caddy (Phase 2.1b) haengt nichts mehr am veroeffentlichten
+  #        Port, Caddy spricht Kong ueber den Docker-internen Hostnamen an.
   #
   #        ⚠️ Groesster Brocken des Stacks: 886 MB im Leerlauf gemessen,
 #        also 61 % des restlichen Verbrauchs.
-  #        Ein Ersatz durch Caddy waere moeglich, wuerde aber key-auth und acl
-  #        mit entfernen — also eine bestehende Sicherheitskontrolle. Das ist
-  #        eine eigene Entscheidung mit `guvenlik` am Tisch, kein Nebeneffekt
-  #        dieser Datei. Als Register-Eintrag festgehalten.
+  #        Ein ERSATZ durch Caddy (nicht nur ein Vorbau) waere moeglich,
+  #        wuerde aber key-auth und acl mit entfernen — also eine bestehende
+  #        Sicherheitskontrolle. Das ist eine eigene Entscheidung mit
+  #        `guvenlik` am Tisch (O-48, Konsey), kein Nebeneffekt dieser Datei.
   # ─────────────────────────────────────────────────────────────────────────
   kong:
     container_name: praxura-kong
@@ -436,9 +437,51 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # caddy — Reverse Proxy + TLS + statische Oberflaeche. Das EINZIGE, was aus
+  #         dem Praxisnetz erreichbar ist (siehe REGEL 3 oben). Buendelt
+  #         Oberflaeche + Proxy in einem Image (onprem/frontend.Dockerfile),
+  #         damit Dateiliste und Caddyfile nie getrennt versioniert werden.
+  # ─────────────────────────────────────────────────────────────────────────
+  caddy:
+    container_name: praxura-caddy
+    image: ${PRAXURA_FRONTEND_IMAGE}
+    restart: unless-stopped
+    pull_policy: ${PRAXURA_PULL_POLICY:-always}
+    depends_on:
+      api:
+        condition: service_healthy
+      kong:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    healthcheck:
+      # Caddys Admin-API (nur intern) statt eines HTTPS-Aufrufs — so haengt
+      # der Healthcheck nicht am ACME-/Zertifikatsstatus.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:2019/config/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    environment:
+      SITE_URL: ${SITE_URL}
+      CADDY_TLS_ARG: ${CADDY_TLS_ARG:-internal}
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
+      SUPABASE_PUBLIC_WSS: ${SUPABASE_PUBLIC_WSS:-}
+      HSTS_MAX_AGE: ${HSTS_MAX_AGE:-0}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
 networks:
   default:
     name: praxura
 
 volumes:
   db-config:
+  caddy_data:
+  caddy_config:

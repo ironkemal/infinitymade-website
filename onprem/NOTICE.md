@@ -21,7 +21,9 @@ eine Stückliste (SBOM) für jedes ausgelieferte Produkt.
 | `supabase/realtime` | v2.102.3 | Apache-2.0 | https://github.com/supabase/realtime |
 | `supabase/storage-api` | v1.60.4 | Apache-2.0 | https://github.com/supabase/storage |
 | `kong/kong` | 3.9.1 | Apache-2.0 | https://github.com/Kong/kong |
+| `caddy` | 2.9-alpine | Apache-2.0 | https://github.com/caddyserver/caddy |
 | `praxura/api` (unser Backend) | `:stable` | proprietär, nicht weitergebbar | dieses Repository |
+| `praxura/frontend` (Oberfläche + Caddy) | `:stable` | proprietär (Oberfläche) + Apache-2.0 (Caddy-Anteil) | dieses Repository + Caddy-Projekt |
 
 > ⚠️ Die Lizenzspalte ist nach dem jeweiligen Projekt-Repository ausgefüllt,
 > **nicht gegen den Inhalt des Images geprüft.** Ein Image enthält Dutzende

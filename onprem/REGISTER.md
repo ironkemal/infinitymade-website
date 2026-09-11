@@ -26,7 +26,28 @@
 `anon`/`authenticated`/`PUBLIC` yetkisi **zincirdeki bir migration ile** alındı
 (`0001_gmail_token_rpc_revoke.sql`, commit `16c6f1b`). Bu aynı zamanda zincirin
 **baseline dışı ilk gerçek sınavıydı ve geçti** — kanıt O-39'un altında. Faz 2.1b'nin
-ön koşulları **değişmedi** (O-01 + O-15 hâlâ açık).
+ön koşulları o turda değişmemişti; **aynı gece kapandı** — aşağıya bak.
+
+**11.09.2026 (gece) — Faz 2.1b BAŞLADI, ön koşul hükmü verildi.** O-01 + O-15'in
+2.1b'yi bloke eden kısmı kapandı (`API_BASE` artık `/api/config`'ten; kapı tabanı
+`n8n_host` **25 → 7**). **Başka bloke eden madde yok.** Turun kapsamı, sessiz
+boşluğu (kutuda statik arayüzü taşıyan image **yok** — `api-backend/Dockerfile`'ın
+`COPY` listesinde tek `.html` geçmiyor) ve CSP tasarımı yeni **§7F** bölümünde;
+orada iki yeni madde de var: **O-52** (CSP, `geplant`) ve **O-55** (zygotebody
+iframe'i, `offen`).
+
+**11.09.2026 (akşam) — Faz 2.1b'nin gövdesi indi, gegenlesen yapıldı.** Kutunun artık
+**arayüzü var**: `onprem/Caddyfile` + `onprem/frontend.Dockerfile` (arayüz ve proxy tek
+image, `api` ile aynı commit'ten) + compose'da `caddy` servisi. Ölçüldü: 8/8 healthy,
+`/login.html` 200 + dar CSP, apikey'siz `/rest/v1/` 401, `/realtime/v1/websocket` **101**,
+pakette olmayan `/admin.html` 404. **O-52** ve **O-55** 🟡 kısmen kapandı (kalanları
+maddelerinde). Gegenlesen **dört yeni madde** çıkardı: **O-56** (kutuda çalışan kaydı
+yarım kalıyor — `emailRedirectTo` sabit) · **O-57** (`assets/system.css` pakette yok,
+login stilsiz açılıyor) · **O-58** (hasta rıza kutusunun Datenschutz linki 404 —
+ve bizim metnimiz kopyalanamaz) · **O-59** (Caddy yalnız `SITE_URL` Host'una cevap
+veriyor, kutuya IP ile ulaşılamıyor). Toplam **59** madde.
+⚠️ Dördünün ortak dersi: **200 dönen bir sayfa, çalışan bir sayfa değildir** — duman
+testi HTML'i çekti, HTML'in istediği dosyaları çekmedi.
 
 **Nerede duruyoruz (11.09.2026):** kutunun compose paketi **var ve çalıştığı ölçüldü**
 (`onprem/docker-compose.yml` + `.env.template` + `NOTICE.md` + `volumes/`; commit'ler
@@ -39,8 +60,9 @@ profil çalışıyor · apikey'siz PostgREST **401** (Kong'un key-auth'ı gerçe
 `praxura_migrations` PostgREST'ten okunamıyor (42501) · kaldırılan rotalar 404 ·
 veritabanından dışarı çıkan çağrı yok (`net.http_post` → 0 fonksiyon).
 
-**Kanıtlanmayan — abartılmasın:** kutuda **arayüz yok** (Caddy yazılmadı, Kong yalnız
-`127.0.0.1`) · **kurulum yok** (`install.sh` yazılmadı, sırlar elle) · **seed yok**
+**Kanıtlanmayan — abartılmasın:** ~~kutuda arayüz yok~~ → 11.09 akşamı **inşa edildi ve
+ölçüldü** (yukarı bak); ama arayüz **tam değil** (O-57: üç sayfa stilsiz) ve kutuya
+**yalnız `SITE_URL` host adıyla** ulaşılıyor (O-59) · **kurulum yok** (`install.sh` yazılmadı, sırlar elle) · **seed yok**
 (kutu doğru ama boş kalkıyor, `krankenkassen` → `[]`, O-38) · **yedek yok** (O-26) ·
 lisans/yetki tarafına hiç dokunulmadı (O-31/O-33). Yani bugünkü paket **çalışan bir
 test yığını**, kurulabilir ürün değil.
@@ -50,9 +72,12 @@ test yığını**, kurulabilir ürün değil.
 1. **Faz 2.1b** — Caddy (TLS + statik arayüzün servisi) · `pg_net`'siz kendi init
    dosyamız (O-49) · Kong ↔ Caddy kararı **konseye** (O-48, `guvenlik` masada) ·
    compose'un kutuya dağıtımı (O-45 (b)).
-   ⚠️ **Ön koşul:** O-01 + O-15. Caddy arayüzü servis ettiği an, sabit `n8n…/api`
-   adresi yüzünden müşterinin tarayıcısı **bizim** VPS'imize gider. Yani 2.1b'ye
-   Faz 1.1'in `API_BASE`/`/api/config` işi **önce** girmeli.
+   ✅ **Ön koşul kapandı (11.09.2026 gece):** O-01 + O-15'in 2.1b'yi bloke eden kısmı
+   bitti — arayüz artık `API_BASE`'i `/api/config`'ten alıyor, kutuda `"/api"` ölçüldü.
+   Turun kapsamı ve iki yeni maddesi (**O-52** CSP · **O-55** zygotebody) → **§7F**.
+   ✅ **Caddy indi (11.09 akşamı).** 2.1b'nin **kalanı**: O-57 (paket dosya listesi —
+   dört satır, `builder`'ın bir sonraki turu) · O-49 · O-48 (konsey) · O-45 (b) ·
+   O-58 (a). Sonra 2.1c'ye geçilir.
 2. **Faz 2.1c** — `install.sh`: donanım ön-kontrolü, `.env` üretimi (sırlar sunucuda
    üretilir, G2), `DATA_ENCRYPTION_KEY` üretimi (O-50'nin kalan tek şartı).
 3. **Seed adımı** (O-38) — referans tabloları; `SCHEMA-VERTEILUNG.md` §3.1 adım 4.
@@ -73,7 +98,7 @@ test yığını**, kurulabilir ürün değil.
 
 **Kim kimi bekliyor:**
 
-- **O-01 + O-15** → Faz 2.1b'yi **bloke ediyor** (yukarı bak)
+- **O-01 + O-15** → ✅ 2.1b'yi artık **bloke etmiyor** (11.09 gece; §7F)
 - **O-50** → yalnız `install.sh`'ı bekliyor (Faz 2.1c); anahtarın ömrü **O-29**'da
 - **O-51** → Faz 2.2 sihirbazının "test maili gönder" adımı; kabul ölçütü gönderim
   değil **teslim** (SPF `-all` + DMARC `p=quarantine` ölçüldü)
@@ -82,6 +107,13 @@ test yığını**, kurulabilir ürün değil.
 - **O-33** (plan farkının teknik karşılığı) ve **O-46** (filo panosu) → **kullanıcı
   kararı**; ikisi de lisans formatı donmadan cevaplanmalı
 - **O-38** → Faz 2.1 seed adımı; güncelleme yolu O-39'un zincirinden geçer
+- **O-57** → kimseyi beklemiyor, **dört satırlık iş**; bitene kadar kutunun giriş
+  ekranı stilsiz. Sıradaki `builder` turunda kapanmalı
+- **O-56** → Faz 2.2 sihirbazıyla aynı sprint: sihirbaz owner'ı yaratacak, O-56 de
+  ikinci kullanıcıyı yaratabilir hâle getirecek. Biri olmadan diğeri yarım
+- **O-59** → Faz 2.1c `install.sh` ön-kontrolü; kurulum çıktısı hem LAN adresini hem
+  kök CA'yı söylemeli
+- **O-58 (b)** → `legal-de`; metin kararı verilmeden şablon sayfa yazılmaz
 
 **Sicili nasıl okursun:** durum değerleri §9'da sayılı. 🟡 **kısmen** demek "yarısı
 yapıldı, kalanı maddede yazılı" demek — `gelöst` yalnız kalanı da bittiğinde konur.
@@ -387,7 +419,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | A |
 | **Kutuda ne olur** | Giden veri **işletme adresi** — hasta verisi değil, praxis'in zaten Impressum'da açık olan adresi. İnternetsiz kurulumda `catch` var: koordinat boş kalır, uygulama çalışmaya devam eder. İki not: (1) Nominatim kullanım politikası ticari toplu kullanımı kısıtlar, kutu başına tekil çağrı bu sınırın çok altında; (2) tarayıcıdan gittiği için müşterinin IP'si OSM'e görünür |
 | **Çözüm** | `unkritisch` — playbook D4 aynı hükmü vermişti, koda karşı doğrulandı. ⚠️ Şart: bu çağrı **hasta adresine** genişletilirse madde `offen`'e döner ve O-11 ile aynı sepete girer |
-| **Durum** | `unkritisch` (D4 hükmü doğrulandı) |
+| **Durum** | `unkritisch` (D4 hükmü doğrulandı). ⚠️ **11.09.2026 güncellemesi:** yukarıdaki "müşterinin IP'si OSM'e görünür" notu **kutuda artık geçerli değil** — Faz 2.1b'nin CSP'si (`connect-src 'self' …`) bu çağrıyı tarayıcıda engelliyor, istek hiç çıkmıyor. Bedeli: `clinic_lat/lng` kutuda hiç dolmuyor, `catch` sessizce dönüyor, Hausbesuch mesafesi O-11'in üstüne ikinci kez kayboluyor. Madde `unkritisch` kalıyor ama gerekçesi "zararsız veri gidiyor"dan "hiç gitmiyor, özellik susuyor"a döndü. Satır atıfları da kaymış: güncel yer `dashboard.js:20683` (blok `:20674`) |
 
 ### O-13 — `N8N_WEBHOOK_URL` booking bildirimi
 
@@ -1227,6 +1259,174 @@ kapı unutmaz ama düşünmez.
 
 ---
 
+## 7F. Faz 2.1b — Caddy/TLS turu (başlangıç: 11.09.2026)
+
+> **Ön koşul hükmü (bu turun girişi).** O-01'in ve O-15'in Faz 2.1b'yi bloke eden
+> kısmı **kapandı**: frontend artık `API_BASE`'i `/api/config`'ten alıyor, dört sunucu
+> uygulaması (Vercel · Express · `dev_server.cjs` · PoC) aynı sözleşmeyi veriyor,
+> kutuda ölçülen değer `apiBase:"/api"`. Kapı tabanı `n8n_host` **25 → 7** sıkıştı;
+> kalan 7'nin hiçbiri "kutu bizim VPS'imize gider" sınıfında değil (döküm:
+> `tools/.onprem-baseline`). Yani Caddy arayüzü servis ettiğinde müşterinin tarayıcısı
+> **kendi kutusuna** konuşur. **Başka bloke eden madde yok.**
+>
+> Bu turda dokunulması gereken açık maddeler (hepsi 2.1b'nin gövdesi, önündeki engel
+> değil): **O-49** (kendi init dosyamız) · **O-48** (Kong ↔ Caddy, **konsey**) ·
+> **O-45 (b)** (compose'un kutuya dağıtımı) · **O-52** (CSP, aşağıda) · **O-55**
+> (aşağıda, yeni) · ayrıca **O-25** (`:stable` etiketi hâlâ yok — Caddy ayağa kalksa
+> bile paket bugün `PRAXURA_API_IMAGE`'ı çekemez; 2.1b'yi bloke etmez ama ilk gerçek
+> kurulumu bloke eder).
+>
+> ⚠️ **Bu turun en büyük sessiz boşluğu:** kutuda **statik arayüzü taşıyan bir image
+> yok.** `api-backend/Dockerfile`'ın `COPY` listesi yalnız backend'i alıyor
+> (`server.js · _lib · ai · billing · booking · lib · db`), tek bir `.html`/`.js`
+> yok; `.github/workflows/publish-calendar-api.yml` yalnız `./api-backend` context'ini
+> basıyor. Yani "Caddy statik dosyaları servis eder" cümlesinin bugün **servis
+> edeceği dosya yok**. 2.1b iki iş demek: (1) Caddy, (2) paketlenmiş arayüz
+> (Faz 2.0'ın dosya listesi — pazarlama sayfaları hariç) için ikinci bir image ya da
+> `api` image'ına eklenen bir `public/` katmanı. Hangisi olursa olsun **sürümü
+> `api` ile birlikte yürümeli**, yoksa arayüz ile backend ayrı sürümlere düşer.
+>
+> ✅ **11.09.2026 akşamı kapandı.** Arayüz + Caddy **tek image** oldu
+> (`onprem/frontend.Dockerfile`, `caddy:2.9-alpine` tabanı, `COPY` listesi elle
+> yazılmış bir allowlist) ve `api` ile aynı commit'ten basılıyor
+> (`.github/workflows/publish-frontend.yml`). Dosya listesi ile Caddyfile böylece
+> asla ayrı sürümlere düşemez. Diğer seçenek — `api` image'ına `public/` katmanı —
+> backend'in sürümünü her CSS değişikliğinde döndürürdü; bu tercih doğru.
+
+---
+
+### Turun sonucu — Faz 2.1b, 11.09.2026 akşamı (`onprem` gegenlesen)
+
+**İnşa edilen:** `onprem/Caddyfile` · `onprem/frontend.Dockerfile` · compose'a `caddy`
+servisi · `.env.template`'e 5 değişken · `publish-frontend.yml` · `NOTICE.md`'ye iki
+satır · kapıya `csp_host` sayacı ve `onprem_image` 7→8.
+**Yerel kutuda ölçüldü:** 8 konteynerin 8'i healthy · `/login.html` 200 + doğru CSP ·
+`/` → 302 · `/api/config` doğru JSON · apikey'siz `/rest/v1/` **401** (Kong yerinde) ·
+`/realtime/v1/websocket` → **101** (tam ws zinciri ayakta) · `/admin.html` → **404**
+(paket sınırı gerçekten çalışıyor).
+
+**Dosya listesi kararı — dört dışlamanın dördü de DOĞRULANDI:**
+
+| Dışarıda bırakılan | Hüküm | Doğrulama |
+|---|---|---|
+| `admin.html` · `admin-login.*` | ✅ doğru | Cross-tenant iç araç; O-18 zaten "panel merkezde kalır" diyor. Kutuda zaten görünmezdi: linki açan koşul `admin_users` tablosunda satır bulmak (`dashboard.js:17122-17132`, `login.js:190-196`) ve o tablo kutuda **boş** — link ölü, tehlikeli değil |
+| `onboarding.*` · `onboarding-success.html` · `email-template-confirm-signup.html` | ✅ doğru | SaaS signup + Stripe-Checkout, kutuda anlamsız. ⚠️ **Bedeli yazılsın:** kutuda bugün owner hesabı yaratacak **hiçbir ekran yok**. Faz 2.2 sihirbazının görev tanımında bu ilk sırada durmalı, yoksa kurulum "doğru ama içine girilemez" kalır |
+| `oauth.html` | ✅ doğru | Sayılarak doğrulandı: tüm depoda tek geçişi kendi `<link rel="canonical">` satırı (`oauth.html:9`). Sıfır referans |
+| `styles.css` | ✅ doğru | Tek okuyucusu `index-old.html:60` (ölü sayfa) |
+
+**Ama liste hem eksik hem fazla — ölçüldü, ayrıntı O-57'de.** Kısaca:
+`assets/system.css` üç kutu sayfasında yükleniyor (`login` · `employee-signup` ·
+`confirm`) ve **pakette yok**; `manifest.json` iki sayfada aranıyor, pakette yok.
+Buna karşılık `cookie-consent.js/css` **hiçbir** kutu sayfasından çağrılmıyor
+(ve içinde Umami enjeksiyonu var, O-05), `login.css` de çağrılmıyor.
+
+**Caddyfile ve CSP incelemesi — dört not:**
+
+1. **Path eşleştirmesi doğru.** `/auth/* /rest/* /realtime/* /storage/* /sso/*
+   /.well-known/*` supabase-js'in ürettiği bütün yolları karşılıyor
+   (`/auth/v1/…` · `/rest/v1/…` · `/realtime/v1/websocket` · `/storage/v1/object/…`),
+   Kong'un kendi `strip_path`'i bozulmuyor. 101 ölçümü zincirin tamamını kanıtlıyor.
+2. **`/functions/*` yok — ve olmamalı.** Deno konteyneri kutuya bilinçli olarak
+   girmiyor (O-11). Bugünkü davranış: `supabase.functions.invoke()` statik handler'a
+   düşer, 404 HTML alır, `FunctionsHttpError` olur. Sonuç doğru, ama Caddyfile'a
+   **tek satır yorum** girsin ("burası bilerek boş — O-11"): yoksa bu dosyaya ilk
+   bakan kişi "eksik route" sanıp olmayan bir konteynere proxy yazar.
+3. **CSP'nin ilk gerçek kurbanı Nominatim.** `dashboard.js:20683`
+   `nominatim.openstreetmap.org`'a **tarayıcıdan** çıkıyor; yeni `connect-src` onu
+   engelliyor. Bu iyi haber (kutu artık OSM'e müşteri IP'si sızdırmıyor — O-12'nin
+   kalan tek kaygısı böylece kapandı) ama bedava değil: `clinic_lat/lng` hiç dolmaz,
+   `catch` sessizce `return` eder, Hausbesuch mesafesi O-11'in üstüne ikinci kez
+   kaybolur. O-12 `unkritisch` kalıyor, **gerekçesi değişti** (maddeye eklendi).
+4. **Ucuz iki ekleme:** `form-action 'self'` (dış host'a form POST'unu keser, tek
+   token) — `base-uri`/`object-src`/`frame-ancestors` zaten yerinde. `manifest-src`
+   yazmaya gerek yok, `default-src 'self'`'e düşüyor — **ama ancak `manifest.json`
+   pakete girerse.** Sentry loader'ı beş kutu sayfasının HTML'inde duruyor (O-06) ve
+   CSP onu engelliyor; `sentry-init.js:9-13` `window.Sentry` yoksa sessizce çıktığı
+   için kırılma yok. Yani **G4 bu turda CSP ile sağlandı, HTML'den silinerek değil** —
+   O-06 açık kalır, ikinci savunma hattı tek hat değildir.
+
+### O-52 — `vercel.json` CSP'si kutuya kopyalanamaz (ve kopyalanırsa iki türlü ısırır)
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Tek CSP metni `vercel.json`'da sabit; içinde bizim bulut adreslerimiz var, kutunun kendi adresi yok |
+| **Nerede** | `vercel.json:19` — `connect-src` içinde bulut Supabase proje adresi (+`wss://`), `n8n.infinitymade.de`, `analytics.infinitymade.de`, `api.stripe.com`, `*.ingest.*.sentry.io`, `accounts.google.com`; `script-src` içinde iki Sentry CDN'i + Stripe + Google + Wistia; `frame-src` içinde Stripe/Google/Wistia/**zygotebody.com** (bkz. O-55). Kapı bu satırı **hiç görmedi**: `tools/check-onprem.sh:71-96` yalnız `*.js` `*.html` `*.mjs` tarıyor, `*.json` kapsamda değil |
+| **Tip** | C |
+| **Kutuda ne olur** | İki ayrı kırılma. (1) **Kopyalanırsa:** kutu, müşterinin tarayıcısına bizim buluta konuşma izni verir — bugün ölü, ama CSP G1'in ikinci savunma hattıdır; bir gün biri sabit adresi geri koyarsa tarayıcı onu **engellemez**. (2) **`'self'` yetmezse:** `SUPABASE_PUBLIC_URL` sayfa origin'inden farklıysa (farklı port, farklı host adı) login **CSP hatasıyla** ölür; ekranda ağ arızası gibi görünür, teşhisi zordur. Ayrıca Realtime `wss://` şemasını ister — `'self'`'in ws/wss'i kapsaması CSP3'te yazılı ama tarayıcı geçmişi eşit değil, buna güvenmek ölçülmemiş bir varsayımdır |
+| **Çözüm** | **Faz 2.1b.** Dört adım, sırayla: **(a) Kutu tek-origin tasarlanır** — Caddy aynı host adı altında hem statik arayüzü hem `/api` → `api` hem `/auth,/rest,/realtime,/storage` → Kong'u verir. O zaman kutunun CSP'si fiilen `default-src 'self'` olur ve bu madde **yapısal olarak** kapanır, yönetilmesi gereken bir liste olmaktan çıkar. **(b) Kaçış yolu env'den, sabit değil** — ayrı origin isteyen kurulum için Caddyfile `connect-src 'self' {$SUPABASE_PUBLIC_URL} {$SUPABASE_PUBLIC_WSS}` yazsın; Caddy dizgi dönüştüremez, `SUPABASE_PUBLIC_WSS` **`install.sh` tarafından** `SUPABASE_PUBLIC_URL`'den türetilip `.env`'e yazılır (Faz 2.1c'ye tek satır). Boşsa `'self'` kalır — boş değişken CSP'yi bozmamalı. **(c) Kutunun listesinden çıkacaklar:** Sentry CDN + ingest (G4, telemetri varsayılan kapalı — açılırsa header **yeniden üretilmeli**, bu da sabit yazmamak için ikinci sebep) · `n8n…` · `analytics…` · `accounts.google.com` (O-08, kutuda kapalı) · Wistia (pazarlama, pakete girmiyor) · `api.stripe.com` (O-19, kutuda dış **link**, `fetch` değil). **(d) Kapıya `*.json` sayacı** — `csp_host`; SaaS'taki bu satır meşru, o yüzden hedef sıfır değil, taban bugünkü sayı ve **artmamalı**. ⛔ Yapılmayacak: `'unsafe-inline'`'ı bu turda temizlemeye kalkmak — inline `onclick` deseni uygulamanın her yerinde, ayrı ve büyük bir iş |
+| **Durum** | 🟡 **kısmen gelöst** (11.09.2026, Faz 2.1b). **Biten:** (a) tek-origin tasarımı `onprem/Caddyfile`'da kilitlendi ve ölçüldü · (b) `connect-src 'self' {$SUPABASE_PUBLIC_URL} {$SUPABASE_PUBLIC_WSS}`, `.env.template`'te boş varsayılanla · (c) bulut adreslerinin hiçbiri kutunun CSP'sinde yok (Sentry · n8n · analytics · Google · Wistia · Stripe) · (d) kapıya `csp_host=53` sayacı girdi. **Kalan tek şey:** `SUPABASE_PUBLIC_WSS`'i `SUPABASE_PUBLIC_URL`'den türetip `.env`'e yazan satır — **Faz 2.1c `install.sh`**. Bugün müşteri ayrı origin isterse o değişkeni elle doldurmak zorunda ve doldurmazsa Realtime CSP hatasıyla ölür |
+
+> **Niye tek-origin bir tercih değil tasarım kararı:** `.env.template` bugün
+> `SUPABASE_PUBLIC_URL`, `API_EXTERNAL_URL` ve `SITE_URL`'i **aynı değere**
+> (`https://praxis.local`) koyuyor. Yani tasarım zaten tek-origin'e bakıyor, ama hiçbir
+> yerde yazılı değil. Yazılmazsa ilk "port ile ayıralım" refleksinde CSP, çerez
+> `SameSite` davranışı ve GoTrue redirect'leri birlikte kayar — üçü de ayrı ayrı
+> teşhis edilir, hepsi aynı sebebe çıkar. 2.1b bunu bir satırla kilitlemeli.
+>
+> **HSTS ayrı bir tuzak:** `vercel.json:18`'deki `Strict-Transport-Security`
+> (`max-age=63072000; includeSubDomains`) kutuya körlemesine kopyalanmamalı.
+> Gerçek alan adı + Let's Encrypt varsa doğru; `praxis.local` ya da kendi imzalı
+> sertifikayla kurulan bir kutuda tarayıcı o host'u **iki yıl** boyunca yalnız
+> HTTPS'e kilitler ve geri alma yolu müşterinin tarayıcısındadır, bizde değil.
+> Header, TLS modu gerçekten public-CA olduğunda konur.
+
+### O-55 — `zygotebody.com` iframe'i: kutudan çıkan, hiçbir yerde kayıtlı olmayan üçüncü-parti gömü
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Dashboard'daki 3D-Anatomie ekranı `www.zygotebody.com`'u iframe olarak gömüyor |
+| **Nerede** | `dashboard.js:13895` (`frame.src`) · fallback kartı `:13883-13891` · zaman aşımı `:13901` · CSP izni `vercel.json:19` `frame-src` |
+| **Tip** | A (+ C) |
+| **Kutuda ne olur** | Müşterinin tarayıcısı ABD'li bir üçüncü tarafa çıkar. **Hasta verisi gitmiyor** — yalnız IP ve referrer, `sandbox` niteliği de dar tutulmuş; G1 ihlali değil. İnternetsiz kutuda 6 saniyelik boşluktan sonra fallback kartı çıkıyor — yani kırılma değil, yavaşlık. ⚠️ **Ölçülmemiş nokta:** CSP **engellerse** tarayıcı iframe'e yine `load` olayı verebilir; o durumda `loaded = true` olur ve fallback **hiç çıkmaz**, ekran boş kalır. Varsayılmasın, denensin |
+| **Çözüm** | Kutunun CSP'sinde `frame-src` **varsayılan olarak `'none'`/`'self'`** — özellik bilinçli olarak susar; O-52 (c)'nin parçası. Aynı commit'te `loadBeispielmodus()`'a CSP-engelli durumda da fallback'i gösteren koşul. Kalıcı çözüm bu turun işi değil: ya özellik kutuda gizlenir (`nav-registry` görünürlüğü), ya da yerel muadiliyle değiştirilir (SVG vücut haritası zaten var — `loadBeispielmodus_SVG()`, görsel kalitesi beğenilmemişti). ⚠️ DSGVO açısı `legal-de`'nin işi: tıbbi bir uygulamanın içinden onaysız yüklenen ABD gömüsü, kutuda da bulutta da aynı soruyu doğurur — bu madde onu **açar**, cevaplamaz |
+| **Durum** | 🟡 **kısmen gelöst** (11.09.2026). **Biten:** kutunun CSP'sinde `frame-src 'none'` — iframe kutudan **çıkamaz**, ölçüldü. **Kalan ikisi:** (1) CSP engellediğinde `loadBeispielmodus()`'un fallback kartını gösterip göstermediği **hâlâ ölçülmedi** — engelli iframe `load` olayı verirse `loaded=true` olur ve ekran boş kalır; bu artık teorik değil, kutuda her seferinde olacak yol. (2) Özelliğin kutuda gizlenmesi ya da SVG muadiliyle değişmesi — ayrı karar. DSGVO açısı `legal-de`'de |
+
+### O-56 — `emailRedirectTo` koda gömülü: kutudaki çalışan kaydı yapısal olarak yarım kalıyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Çalışan kaydında e-posta onay linkinin döneceği adres `https://app.praxura.de/confirm.html` olarak koda gömülü |
+| **Nerede** | `employee-signup.js:288` (`signUp`) · `employee-signup.js:297` (`resend`) · aynı sınıftan üçüncüsü `api-backend/server.js:3155` (`redirectTo: 'https://app.praxura.de/login.html?verified=1'`). Üçü de `app.praxura.de` sayacının (`tools/.onprem-baseline`) içinde |
+| **Tip** | C |
+| **Kutuda ne olur** | Sanıldığından ağır. `confirm.html` **kozmetik bir "onaylandı" sayfası değil** — çalışanın profilini orada kuruyor: `pending_employee_registrations`'tan kaydı okur (`:147`), `profiles`'ı günceller (`:156`), `working_hours` satırlarını yazar (`:175`), `employee_business_assignments`'ı bağlar (`:193`), sonra pending satırını siler (`:204`). Kutuda GoTrue bu `redirect_to`'yu **allowlist'te bulamaz** (`ADDITIONAL_REDIRECT_URLS` boş) ve sessizce `SITE_URL`'e düşer → çalışan kutunun köküne varır, Caddy onu `/login.html`'e yollar, **`confirm.html` hiç koşmaz.** Sonuç: auth kullanıcısı var, profili yok — rolsüz/owner_id'siz bir hesap, `pending_…` satırı da tabloda asılı kalır. Teşhisi zor, çünkü hiçbir yerde hata görünmez. ⛔ Ve **yanlış çözüm hazır bekliyor:** biri `ADDITIONAL_REDIRECT_URLS`'e `app.praxura.de` yazarak "düzeltirse" müşterinin kutusundaki onay token'ı **bizim** SaaS alan adımıza teslim edilir. Bu yol kapalıdır |
+| **Çözüm** | **Faz 1.1'in kalanı, Faz 2.2 ile aynı sprintte.** Üç yerde de sabit adres yerine `window.location.origin` (frontend) ve `SITE_URL`/`PUBLIC_BASE_URL` env'i (backend, O-30 ile aynı değişken). SaaS'ta davranış birebir aynı kalır — origin zaten `app.praxura.de` (G7). Kabul ölçütü: kutuda çalışan kaydı uçtan uca koşsun, `profiles.role='employee'` dolsun; kapı sayacı `app_host` **19 → 16** düşsün |
+| **Durum** | `offen` — Faz 1.1 / 2.2. **İlk ücretli kutudan önce inmeli**: kutuda ikinci kullanıcıyı yaratmanın başka yolu yok |
+
+### O-57 — Paket dosya listesi hem eksik hem fazla: üç kutu sayfası stilsiz açılıyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `onprem/frontend.Dockerfile`'ın `COPY` listesi, kutu sayfalarının gerçekten istediği iki dosyayı almıyor; buna karşılık hiç çağrılmayan iki dosyayı alıyor |
+| **Nerede** | **Eksik:** `assets/system.css` → `login.html:20` · `employee-signup.html:17` · `confirm.html:13` (16 KB, üçünün de tek stil dosyası) · `manifest.json` → `dashboard.html:17` · `attendance.html:12` (ikonları zaten pakette). **Fazla:** `cookie-consent.js`/`.css` (sekiz kutu sayfasının **hiçbiri** referans vermiyor; içinde `analytics.infinitymade.de` enjeksiyonu var — O-05) · `login.css` (kutu sayfalarından sıfır referans; sahibi `admin-login`, o da pakette değil). Ölçüm: sekiz sayfanın bütün yerel `src`/`href` değerleri çıkarılıp dosya sistemine karşı sınandı |
+| **Tip** | G |
+| **Kutuda ne olur** | `login.html` — kutunun **ilk** ekranı — stil dosyası olmadan açılır. Duman testi bunu görmedi çünkü `/login.html` 200 dönüyor; eksik olan sayfa değil, sayfanın `<link>`'inin işaret ettiği dosya. `manifest.json` 404: `attendance.html` tabletten ana ekrana eklenemez (o sayfanın kullanım biçimi tam olarak budur). Fazlalıklar zararsız ama yanlış sinyal: kutuda Umami enjektörü **dosya olarak** duruyor, yalnız kimse çağırmadığı için çalışmıyor — bu bir savunma değil, tesadüf |
+| **Çözüm** | Aynı commit, dört satır: `COPY assets/system.css ./assets/` + `COPY manifest.json ./` ekle; `cookie-consent.js cookie-consent.css` ve `login.css` satırlarını çıkar. Sonra duman testine **ikinci bir kontrol**: `/login.html` içindeki her yerel `src`/`href` için 200 iste — 200 dönen bir HTML, çalışan bir sayfa demek değil. `publish-frontend.yml`'a bu adım girsin (Faz 2.1b'nin kalanı) |
+| **Durum** | `offen` — Faz 2.1b, `builder`'ın bir sonraki turu |
+
+### O-58 — Kutuda Impressum/Datenschutz/AGB yok, ama hasta onay kutusunun yanındaki link onu gösteriyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Paketlenen sayfalar `/impressum.html`, `/datenschutz.html`, `/agb.html` ve `/vorregistrierung.html`'e link veriyor; dördü de pakette yok |
+| **Nerede** | `booking-request.html:630` (**onay kutusunun metninin içinde**: „…Datenschutzerklärung zu") · `:659-660` · `booking.html:753` `:775-776` · `login.html:448-450` · `login.html:429` (`/vorregistrierung.html`, "Vorregistrieren" düğmesi) · ayrıca `cookie-consent.js:41` `DS_LINK` |
+| **Tip** | G (+ hukuki) |
+| **Kutuda ne olur** | İki ayrı şey, karıştırılmasın. (1) **Kozmetik:** `login.html`'in alt bilgisi ve "Vorregistrieren" düğmesi kutuda 404'e gider — kutuda ön kayıt diye bir şey zaten yok, düğme oraya ait değil. (2) **Kozmetik değil:** `booking.html` ve `booking-request.html` **hastanın** gördüğü sayfalar ve rıza kutusunun metni var olmayan bir Datenschutzerklärung'a atıf yapıyor. ⛔ **Ve bizim metnimizi kopyalamak yanlış çözümdür:** kutuda sorumlu (Verantwortlicher) **praxis**'tir, InfinityMade değil; bizim `datenschutz.html`'imizi paketlemek hastaya yanlış sorumlu ve yanlış işleme bilgisi gösterir — düzeltilmesi eksikliğinden daha pahalı bir hata |
+| **Çözüm** | İki parça. **(a)** Kutu sürümünde SaaS'a özgü linkler görünmez (login alt bilgisi + "Vorregistrieren"); ölçüt `nav-registry` benzeri bir kutu bayrağı, ikinci bir dosya değil (G7). **(b)** Hasta sayfalarındaki iki link, kurulumda praxis'in kendi metniyle doldurulan bir **şablon sayfaya** gider (Faz 2.2 sihirbazının adımı: praxis adı/adres/DSB alanları). ⚠️ Metnin içeriği `legal-de`'nin işi — bu madde soruyu **açar**, cevaplamaz |
+| **Durum** | `offen` — (a) Faz 2.1b/2.2 · (b) Faz 2.2 + `legal-de` |
+
+### O-59 — Caddy yalnız `SITE_URL` Host'una cevap veriyor: kutuya IP ile ulaşılamaz
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `onprem/Caddyfile` site bloğunun adresi `{$SITE_URL}`; Caddy Host bazlı eşleştirir, başka Host ile gelen istek bu bloğa **hiç girmez** |
+| **Nerede** | `onprem/Caddyfile:27` (`{$SITE_URL} {`) · varsayılan `onprem/.env.template:110` (`SITE_URL=https://praxis.local`) |
+| **Tip** | C (+ G) |
+| **Kutuda ne olur** | Praxis ağındaki iş istasyonları kutuyu tipik olarak **IP ile** arar (`https://192.168.1.50`). O istek Host eşleşmediği için arayüzü hiç görmez; ekranda boş sayfa/404 çıkar, `docker ps` ise sekiz konteyneri yeşil gösterir — kurulumun en kötü arıza cinsi budur: her şey sağlıklı görünürken hiçbir şey açılmaz. `praxis.local` çalışsın diye her iş istasyonunda ya DNS kaydı ya `hosts` satırı gerekir; ayrıca `tls internal` sertifikası müşterinin tarayıcısında uyarı verir, çünkü Caddy'nin kök CA'sı o makinelere kurulmamıştır. ⚠️ İkinci tuzak: `SITE_URL` bir **port** içerirse (`https://praxis.local:8443`) Caddy o portu dinler, compose ise `443:443` yayınlar — kimse bir yere bağlanamaz |
+| **Çözüm** | **Faz 2.1c `install.sh`'ın kurulum ön-kontrolü** (`RELEASE-STANDARD.md` §5.4 listesine iki madde): (1) `SITE_URL`'in şemasını/portunu doğrula, port varsa kurulumu **durdur ve söyle**; (2) kurulum sonunda kutunun **kendi** LAN IP'sini ve host adını ekrana yazıp "bu adresi iş istasyonlarının `hosts` dosyasına girin ya da yönlendirici DNS'ine yazın" adımını kurulum çıktısına koy. Kök CA'nın dağıtımı (`caddy_data` altındaki `root.crt`) aynı çıktının parçası olmalı — yoksa müşteri her sabah sertifika uyarısı tıklar ve bir süre sonra HTTPS'i güvenlik sinyali olarak okumayı bırakır. Gerçek alan adı + Let's Encrypt kuran müşteride bu maddenin tamamı düşer |
+| **Durum** | `offen` — Faz 2.1c (kurulum ön-kontrolü + kurulum sonu çıktısı) |
+
+---
+
 ## 8. Kapı tabanları — `tools/check-onprem.sh` için
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -1235,6 +1435,15 @@ kapı unutmaz ama düşünmez.
 >
 > Kural: **taban artamaz, azalabilir.** Sayı düşerse taban otomatik sıkışır, kazanım geri
 > alınamaz — `check-dashboard-size.sh` ile aynı mantık.
+>
+> ✅ **11.09.2026 akşamı: dokuzuncu sayaç eklendi** (`csp_host=53` — `vercel.json`
+> CSP'sindeki `https://…` **token** sayısı, satır değil; CSP tek satırda durduğu için
+> satır bazlı sayım bu dosyada kör kalırdı) ve `onprem_image` tabanı **7 → 8**
+> yükseltildi: kutuya `caddy` konteyneri girdi (Faz 2.1b), `onprem/NOTICE.md`'ye
+> Apache-2.0 satırı **aynı commit'te** yazıldı. Tabanı yükseltmenin kuralı yerine
+> getirildi: gerekçe sicilde (§7F, turun sonucu). ⚠️ Kapı `NOTICE.md`'ye hâlâ
+> **bakmıyor** (O-42) — lisans satırını eklemek insanın işi, sayaç yalnız "yeni
+> konteyner girdi" diye bağırır.
 >
 > ✅ **11.09.2026: sekizinci sayaç eklendi** (`onprem_image=7`) ve kapı yeşil çalıştırıldı —
 > sekiz sayacın sekizi tabanında, sapma yok (`onprem` ajanı doğrulaması).
@@ -1257,7 +1466,8 @@ kapı unutmaz ama düşünmez.
 | Yıkıcı DDL kanıtı | — | Yeni migration dosyasında `DROP COLUMN` / `DROP TABLE` / `RENAME COLUMN` / `SET NOT NULL` / `DROP CONSTRAINT` varsa dosya başında `-- ZWEISTUFIG: <no> · <gerekçe>` satırı **zorunlu** (`SCHEMA-VERTEILUNG.md` §6.2, `RELEASE-STANDARD.md` §4.7) |
 | Migration'lı PATCH | — | Sürüm PATCH ise `db/migrations/` altında yeni dosya olamaz (`RELEASE-STANDARD.md` §2.2). Release listesi adım 1 |
 | Koda gömülü gönderen adresi (`noreply@` + sabit alan adı) | **6** | `api-backend/server.js` (`:3981` `:4002` `:4174` `:4212` `:4316` `:4363`). Ölçüm: `git grep --cached -c "noreply@praxura\.de" -- api-backend/`. Artış = red; hedef **0** (tek yardımcı + `.env`'den gönderen, O-51). ✅ Kapıda **kurulu ve sınandı** (11.09.2026): yedinci sabit adres eklendiğinde `absender_fest : 6 -> 7` diyerek reddetti |
-| On-prem compose `image:` satırı | **7** | `onprem/docker-compose.yml` (11.09.2026): db · auth · rest · realtime · storage · kong + kendi `api`'miz. Upstream'in 11 fremd konteynerinden 5'i bilinçli dışarıda. Artış, `onprem/NOTICE.md`'ye lisans satırı eklenene kadar **red** (O-42). Sayaç `onprem_image`, kapıda test edildi (8'e çıkarıldığında reddetti). ⚠️ İki not: sayaç `git grep --cached` ile ölçer — kurulumda bir tur `--cached`siz ölçülüp taban kendiliğinden **0'a sıkışmıştı**, düzeltildi; ve kapı yalnız **sayıyı** tutar, `NOTICE.md`'de karşılık gelen satırın varlığını **denetlemez** (O-42) |
+| On-prem compose `image:` satırı | **8** (11.09 akşamı 7'den) | `onprem/docker-compose.yml` (11.09.2026): db · auth · rest · realtime · storage · kong + kendi `api`'miz. Upstream'in 11 fremd konteynerinden 5'i bilinçli dışarıda. Artış, `onprem/NOTICE.md`'ye lisans satırı eklenene kadar **red** (O-42). Sayaç `onprem_image`, kapıda test edildi (8'e çıkarıldığında reddetti). ⚠️ İki not: sayaç `git grep --cached` ile ölçer — kurulumda bir tur `--cached`siz ölçülüp taban kendiliğinden **0'a sıkışmıştı**, düzeltildi; ve kapı yalnız **sayıyı** tutar, `NOTICE.md`'de karşılık gelen satırın varlığını **denetlemez** (O-42). **11.09 akşamı 8'e çıkarıldı:** `caddy` (Faz 2.1b, arayüz + TLS + reverse proxy). Yükseltme gerekçesi §7F'de |
+| `vercel.json` CSP'sindeki bulut adresi | **53** | `git grep --cached -oE "https?://[a-zA-Z0-9.*-]+" -- vercel.json` — **token** sayar, satır değil. Hedef sıfır **değil**: SaaS'ın kendi bulut adresleri o satırda meşru; amaç sessiz büyümeyi yakalamak. Artış = red, çıkış yolu: "gerçekten SaaS'a mı özel?" — öyleyse kabul, ama `onprem/Caddyfile`'a asla kopyalanmaz (O-52) |
 
 ---
 
@@ -1270,6 +1480,20 @@ kapı unutmaz ama düşünmez.
 | 🟡 `kısmen gelöst` | 7 | O-11 (kaynak kurtarıldı, Faz 1.5 açık) · **O-30** (şablon var, `PUBLIC_BASE_URL` eksik) · O-40 (`/health` ayrıldı, derin `/status` yok) · O-41 (smoke-test var, soak/kanal yok) · **O-42** (NOTICE + sayaç var, SBOM yok) · O-45 (compose sürümlendi, dağıtımı yok) · **O-50** (değişkenler eklendi, anahtar üretimi ve uyarı yok) |
 | `unkritisch` | 10 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 |
 | `gelöst` | 4 | O-20 (kapı) · O-36 (vendor yerelleştirmesi) · O-39 (şema dağıtım zinciri) · **O-47** (Google env'i opsiyonel) |
+
+> ⚠️ **Yukarıdaki tablo 04.09.2026 fotoğrafıdır ve sonraki turlarda açılan maddeleri
+> saymaz.** Yeniden saymak yerine fark burada tutulur — sayı uydurmaktansa farkı yazmak
+> dürüsttür.
+>
+> **11.09.2026 akşamı farkı (Faz 2.1b):**
+> - `offen`'e eklenenler: **O-56** · **O-57** · **O-58** · **O-59** (dördü de bu turun
+>   gegenlesen'inden çıktı)
+> - 🟡 `kısmen gelöst`'e geçenler: **O-52** (`geplant` idi — (a)-(d) bitti, kalan tek
+>   şey `install.sh`'ın `SUPABASE_PUBLIC_WSS` türetmesi) · **O-55** (`offen` idi —
+>   `frame-src 'none'` kondu, fallback ölçümü ve özellik kararı duruyor)
+> - Gerekçesi değişen: **O-12** (`unkritisch` kalıyor; artık "veri gidiyor ama zararsız"
+>   değil, "CSP engelliyor, hiç gitmiyor — özellik susuyor")
+> - Toplam madde: **59**
 
 > **Toplam 51 madde.** 🟡 satırı 11.09.2026'da açıldı: altı madde aylardır `offen`
 > görünüyordu ama yarısı yapılmıştı — "yapılan ile kalan" tek hücrede karışınca sicil

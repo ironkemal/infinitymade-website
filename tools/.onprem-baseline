@@ -37,13 +37,20 @@ supabase_co=1
 cdn_host=0
 
 # Kutu paketindeki image satırı (onprem/docker-compose.yml).
-# 7 = db · auth · rest · realtime · storage · kong + kendi api'miz.
+# 8 = db · auth · rest · realtime · storage · kong · api · caddy (11.09.2026,
+# Faz 2.1b — caddy eklendi, onprem/NOTICE.md'ye satırı aynı commit'te girdi).
 # Upstream 11 fremd konteyner sunuyor; 5'i bilinçli olarak dışarıda
 # (studio · meta · imgproxy · supavisor · functions — gerekçeler compose başlığında).
 # Artış reddedilir. Kapı NOTICE.md'ye BAKMAZ — lisans satırını eklemek
 # insanın işi (O-42), makinenin değil. Taban bilinçli olarak yükseltilirse
 # gerekçesi sicile yazılır.
-onprem_image=7
+onprem_image=8
+
+# vercel.json CSP'sindeki "https://…" token sayısı (O-52, 11.09.2026 ölçüldü).
+# Kapı bu dosyaya ilk kez bakıyor; hedef sıfır DEĞİL — SaaS'ın kendi bulut
+# adresleri orada meşru. Amaç sessiz büyümeyi yakalamak, listeyi boşaltmak
+# değil. onprem/Caddyfile bu listeyi KOPYALAMAZ, kendi dar CSP'sini tutar.
+csp_host=53
 
 # Koda gömülü gönderen mail adresi (api-backend/). Hedef 0.
 # 6 = server.js:3962 :3983 :4155 :4193 :4297 :4344

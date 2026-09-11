@@ -1,0 +1,76 @@
+# ════════════════════════════════════════════════════════════════════════════
+#  Praxura On-Premise — Caddy (Reverse Proxy + TLS + statische Oberfläche)
+# ════════════════════════════════════════════════════════════════════════════
+#
+#  Erzeugt: 11.09.2026 · Playbook Phase 2.1b · Register O-52 / O-55
+#
+#  EIN Caddyfile für jede Box — der Unterschied steckt in `.env`, nicht in
+#  einer zweiten Datei (G7: SaaS und On-Prem aus einem Codebase, kein Fork).
+#
+#  Tut drei Dinge, in dieser Reihenfolge:
+#   1. Reicht /api/* an unser Express-Backend weiter.
+#   2. Reicht /auth, /rest, /realtime, /storage, /sso, /.well-known an Kong
+#      weiter — Kong bleibt intern (docker-compose.yml: "Ins Praxisnetz kommt
+#      der Stack erst ueber Caddy"), die Pfade kommen unveraendert an, Kong
+#      macht sein eigenes strip_path (onprem/volumes/api/kong.yml).
+#   3. Liefert sonst die statische Oberfläche aus (Faz-2.0-Dateiliste, siehe
+#      onprem/frontend.Dockerfile — Marketing-Seiten sind NICHT im Image).
+#
+#  CSP ist bewusst eng (O-52): die Box ist per .env.template §3 EIN Origin
+#  (SUPABASE_PUBLIC_URL = API_EXTERNAL_URL = SITE_URL), also deckt 'self'
+#  praktisch alles ab, was die Anwendung wirklich braucht. Kein Sentry-CDN,
+#  kein n8n, keine Analytics, kein Google, kein Wistia, kein Stripe-fetch —
+#  keins davon läuft in der Box (G4 · O-08 · O-19). frame-src ist 'none':
+#  die Box zeigt dort den SVG-Fallback statt des zygotebody.com-iFrames
+#  (O-55, Feature-Entscheidung separat offen).
+#
+{$SITE_URL} {
+
+	# "internal" = Caddys eigene selbstsignierte CA (LAN-only, Normalfall der
+	# ersten Box). Eine E-Mail-Adresse hier = echtes Let's-Encrypt-Zertifikat —
+	# dann muss SITE_URL eine von aussen erreichbare, echte Domain sein.
+	tls {$CADDY_TLS_ARG}
+
+	encode gzip
+
+	header {
+		X-Frame-Options "SAMEORIGIN"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# Nur bei echtem Zertifikat sinnvoll (HSTS_MAX_AGE=0 bei "internal"/
+		# selbstsigniert lassen — sonst sperrt der Browser den Host fest auf
+		# HTTPS, und der Rückweg liegt beim Kunden, nicht bei uns. O-52).
+		Strict-Transport-Security "max-age={$HSTS_MAX_AGE}; includeSubDomains"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' {$SUPABASE_PUBLIC_URL} {$SUPABASE_PUBLIC_WSS}; frame-src 'none'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self';"
+		-Server
+	}
+
+	# ── Backend (Express) ───────────────────────────────────────────────────
+	handle /api/* {
+		reverse_proxy api:3000
+	}
+	handle /health {
+		reverse_proxy api:3000
+	}
+
+	# ── Supabase-Dienste über Kong ──────────────────────────────────────────
+	# Bewusst OHNE /functions/*: keine Deno-Laufzeit in der Box (O-11), Kong
+	# selbst kennt die Route ohnehin nicht mehr (kong.yml, "kong-trim.py").
+	@supabase path /auth/* /rest/* /realtime/* /storage/* /sso/* /.well-known/*
+	handle @supabase {
+		reverse_proxy kong:8000
+	}
+
+	# ── Wurzel → Login (spiegelt vercel.json-Redirect für app.praxura.de) ───
+	@root path /
+	handle @root {
+		redir * /login.html 302
+	}
+
+	# ── Statische Oberfläche ─────────────────────────────────────────────────
+	handle {
+		root * /srv/www
+		file_server
+	}
+}
