@@ -22,15 +22,11 @@
 > "neredeyiz, sıradaki ne, nereye basmam" sorusuna cevap bulması. Ayrıntı her
 > zaman ilgili O-maddesindedir; burada yalnız numara verilir.
 
-**11.09.2026 (akşam ek):** `guvenlik`'in S-19 şartı kapandı — `get_gmail_token` /
-`set_gmail_token` / `clear_gmail_token` artık `PUBLIC`/`anon`/`authenticated`'a
-`EXECUTE` vermiyor (`api-backend/db/migrations/0001_gmail_token_rpc_revoke.sql`).
-Canlıda MCP ile VE yerel kutuda (`docker compose up -d --force-recreate api`,
-`[migrate] ✓ 0001_gmail_token_rpc_revoke.sql`) uygulandı ve ikisinde de
-`has_function_privilege` ile doğrulandı (`anon=false`, `authenticated=false`,
-`service_role=true`). guvenlik'in "kutu müşteriye çıkmadan önce kapanmalı" şartı
-karşılandı — ayrıntı `guvenlik/REGISTER.md` §4 (gitignored) ve
-`fortschritte/2026-09-11.md`.
+**11.09.2026 (akşam ek):** `guvenlik`'in S-19 şartı kapandı — Gmail-Token RPC'lerinden
+`anon`/`authenticated`/`PUBLIC` yetkisi **zincirdeki bir migration ile** alındı
+(`0001_gmail_token_rpc_revoke.sql`, commit `16c6f1b`). Bu aynı zamanda zincirin
+**baseline dışı ilk gerçek sınavıydı ve geçti** — kanıt O-39'un altında. Faz 2.1b'nin
+ön koşulları **değişmedi** (O-01 + O-15 hâlâ açık).
 
 **Nerede duruyoruz (11.09.2026):** kutunun compose paketi **var ve çalıştığı ölçüldü**
 (`onprem/docker-compose.yml` + `.env.template` + `NOTICE.md` + `volumes/`; commit'ler
@@ -698,6 +694,20 @@ kapı unutmaz ama düşünmez.
 | **Kutuda ne olur** | Kod dağıtımı çözülmüş (K11 + Watchtower), **şema dağıtımı çözülmemiş**. Yeni kolon isteyen her özellik SaaS'ta çalışır, kutuda 42703 (`column does not exist`) verir. `:beta` ve `:stable` aynı anda canlı olduğu için geriye dönük uyum da gerekiyor. PoC bunun nasıl ısırdığını gösterdi: `handle_new_user` trigger'ı `auth` şemasında olduğu için public dump'a girmedi ve kurulumda ayrıca yaratılması gerekti — tek trigger, 20 kutuda, gece yarısı |
 | **Çözüm** | ★ **`onprem/SCHEMA-VERTEILUNG.md`** (2026-09-04) — gereksinim, seçenekler ve tavsiye orada. Özet: kendi Node runner'ımız (`api-backend/db/migrate.js`), düz SQL dosyaları image'ın içinde, api açılışında advisory-lock altında, dosya başına tek transaction, ileri-yönlü, hata olunca durup kurulum moduna geçen. 195-vs-14 için karar önerisi: **baseline** (zincir bugünden başlar, geçmiş tarih olur). Public dump'ın dışında kalan **dokuz kalem** orada envanterlendi (extension'lar · `auth` şeması ön koşulu · `on_auth_user_created` · 5 storage bucket + policy'leri · realtime publication · roller/grant'lar · Vault içeriği · sequence `setval` · `search_path`). Faz önerisi: **yeni Faz 1.7** |
 | **Durum** | ✅ **`gelöst` (10.09.2026)** — runner çalışıyor, **baseline üretildi ve deftere işlendi**; drift kapısı kapandı. Kalan iş zincirin günlük disiplinle işletilmesi — açık madde değil |
+
+> **11.09.2026 — zincir baseline dışında da çalıştı (ilk gerçek migration).**
+> `0001_gmail_token_rpc_revoke.sql` (guvenlik S-01/S-02/S-19: Gmail-Token RPC'lerinden
+> `PUBLIC`/`anon`/`authenticated` EXECUTE geri alındı) **hem** canlıya MCP ile **hem** yerel
+> test kutusuna gitti. Kutuda elle hiçbir şey yapılmadı: image yeniden build edildi,
+> `docker compose up -d --force-recreate api` sonrası runner kendiliğinden koştu
+> (`[migrate] ✓ 0001_gmail_token_rpc_revoke.sql`, 160 ms) ve `has_function_privilege`
+> her iki tarafta da aynı sonucu verdi (`anon=false`, `authenticated=false`,
+> `service_role=true`). Yani 10.09'da "runner çalışıyor" denen şey artık **ölçülmüş**:
+> SaaS'ta elle uygulanan bir düzeltmenin kutuya varma yolu var ve tek yön o yol.
+> Ayrıca doğru sıra da denendi: dosya önce zincire yazıldı, sonra canlıya uygulandı
+> (CLAUDE.md "önce dosya, sonra canlı"). ⚠️ Bu kutulara **yalnız yeni image ile** varır;
+> bugünkü yayın hattı hâlâ `:stable` basmıyor (O-25) — yani "düzeltme müşteride" demek
+> için O-25 de kapanmalı. Yeni kurulan kutuda sorun yok, baseline+0001 sırayla koşar.
 
 > **04.09.2026 — yapılan (ana bağlam):**
 >
