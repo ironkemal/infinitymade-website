@@ -9,5 +9,6 @@ sh "$repo_root/tools/check-namen.sh" || exit 1
 sh "$repo_root/tools/check-tabellen-register.sh" || exit 1
 sh "$repo_root/tools/check-onprem.sh" || exit 1
 sh "$repo_root/tools/check-onprem-volumes.sh" || exit 1
+sh "$repo_root/tools/check-security-definer-grants.sh" || exit 1
 
 exit 0
