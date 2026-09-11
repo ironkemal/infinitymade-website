@@ -1,7 +1,20 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-10 — praxura_migrations_buch_anlegen
+-- ERZEUGT AM:        2026-09-11 — 0001_gmail_token_rpc_revoke
+--                    (Sicherheitsfund S-01/S-02/S-19: get_gmail_token/
+--                    set_gmail_token/clear_gmail_token trugen seit CREATE
+--                    FUNCTION das Postgres-Default-EXECUTE fuer PUBLIC, also
+--                    auch anon und authenticated — SECURITY DEFINER, kein
+--                    auth.uid()-Check im Rumpf, ueber /rest/v1/rpc/ erreichbar.
+--                    Aufrufer im Code ist ausschliesslich api-backend/server.js
+--                    per service_role-Client. REVOKE EXECUTE ... FROM PUBLIC,
+--                    anon, authenticated fuer alle drei — service_role behaelt
+--                    das Recht. In Cloud (MCP) UND in der lokalen Testbox
+--                    angewandt und geprueft: has_function_privilege('anon',…)=false,
+--                    ('authenticated',…)=false, ('service_role',…)=true.
+--                    Siehe unten "Gmail-Token (Vault)".
+--                    davor: 2026-09-10 — praxura_migrations_buch_anlegen
 --                    (On-Premise: die Schemakette wurde in Betrieb genommen.)
 --                    EINE NEUE TABELLE: `praxura_migrations` — das Buch der
 --                    Schemakette, eine Zeile je angewandter Migrationsdatei.
@@ -699,6 +712,13 @@ $function$;
 -- get_gmail_token(p_user_id uuid) -> text                 [SECURITY DEFINER]
 -- set_gmail_token(p_user_id uuid, p_token text) -> void   [SECURITY DEFINER]
 -- clear_gmail_token(p_user_id uuid) -> void               [SECURITY DEFINER]
+--   ⚠️ Wie pruefe_booking_verordnung_owner() unten: CREATE FUNCTION vergibt
+--   EXECUTE per Default an PUBLIC. Bis 2026-09-11 nie entzogen (S-01/S-02) —
+--   anon/authenticated konnten alle drei ueber /rest/v1/rpc/ aufrufen, ohne
+--   auth.uid()-Check im Rumpf. Migration 0001_gmail_token_rpc_revoke behebt
+--   es fuer Cloud UND jede Kundenbox (baseline hatte nur GRANT ... TO
+--   service_role, kein REVOKE ... FROM PUBLIC — S-19). Wer eine dieser drei
+--   per DROP+CREATE ersetzt, MUSS den REVOKE mitnehmen.
 
 
 -- --- Abrechnung / Zuzahlung ---------------------------------------------
@@ -774,7 +794,7 @@ $function$;
 --      der Advisor meldete die Funktion prompt als ueber /rest/v1/rpc/
 --      aufrufbaren SECURITY DEFINER. Wer sie per DROP+CREATE ersetzt, MUSS den
 --      REVOKE mitnehmen — er kommt sonst still nicht wieder. (Dieselbe Klasse
---      wie der offene get_gmail_token-Befund.)
+--      wie der get_gmail_token-Befund, seit 2026-09-11 behoben — siehe oben.)
 -- prevent_belegliste_mod() -> trigger   GoBD: blockt UPDATE/DELETE auf belegliste.
 -- prevent_zuzahlung_korrekturen_mod() -> trigger
 --   GoBD, gleiche Absicht wie oben, fuer zuzahlung_korrekturen. Eigene Funktion,

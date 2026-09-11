@@ -22,6 +22,16 @@
 > "neredeyiz, sıradaki ne, nereye basmam" sorusuna cevap bulması. Ayrıntı her
 > zaman ilgili O-maddesindedir; burada yalnız numara verilir.
 
+**11.09.2026 (akşam ek):** `guvenlik`'in S-19 şartı kapandı — `get_gmail_token` /
+`set_gmail_token` / `clear_gmail_token` artık `PUBLIC`/`anon`/`authenticated`'a
+`EXECUTE` vermiyor (`api-backend/db/migrations/0001_gmail_token_rpc_revoke.sql`).
+Canlıda MCP ile VE yerel kutuda (`docker compose up -d --force-recreate api`,
+`[migrate] ✓ 0001_gmail_token_rpc_revoke.sql`) uygulandı ve ikisinde de
+`has_function_privilege` ile doğrulandı (`anon=false`, `authenticated=false`,
+`service_role=true`). guvenlik'in "kutu müşteriye çıkmadan önce kapanmalı" şartı
+karşılandı — ayrıntı `guvenlik/REGISTER.md` §4 (gitignored) ve
+`fortschritte/2026-09-11.md`.
+
 **Nerede duruyoruz (11.09.2026):** kutunun compose paketi **var ve çalıştığı ölçüldü**
 (`onprem/docker-compose.yml` + `.env.template` + `NOTICE.md` + `volumes/`; commit'ler
 `b2fdbb8` ve `c602f50`). Yığın 11 fremd konteynerden **6**'ya indi, boşta ≈1,65 GB
