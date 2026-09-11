@@ -158,6 +158,25 @@ if [ -n "$sema_dokum" ] && [ -z "$yeni_migration" ] && [ "$SKIP_MIGRATION_GATE" 
   drift_ihlal=$(echo "$sema_dokum" | sed 's/^/      /')
 fi
 
+# --- pg_net kapısı (sayaç değil, doğrudan kontrol) --------------------------
+#
+# O-49 (12.09.2026): pg_net kutuda hiç kurulmuyor artık — ama bunu sağlayan
+# şey tek bir compose mount satırı + tek bir dosya. Hiçbir sayaç bunu
+# tutmuyordu (O-71). Compose'u elden geçiren biri (ör. upstream sürüm
+# yükseltmesinde mount listesini yeniden üretirken) o satırı fark etmeden
+# düşürebilir — pg_net sessizce geri gelir, hata yok, log yok, kutu yine
+# dışarı telefon edebilir hâle döner (G1 yeniden alışkanlığa iner).
+#
+# Sayaç değil çünkü yön ters: `kontrol()` ARTIŞI kırmızı sayar, burada
+# İSTENEN şey hep-var-olmasıdır — azalma (satırın/dosyanın kaybolması) kırmızı.
+pgnet_ihlal=""
+if ! git show ":onprem/docker-compose.yml" 2>/dev/null | grep -q "no-pg-net"; then
+  pgnet_ihlal="onprem/docker-compose.yml içinde 'no-pg-net' mount satırı yok (init-scripts/98a-no-pg-net.sql)"
+fi
+if ! git cat-file -e ":onprem/volumes/db/no-pg-net.sql" 2>/dev/null; then
+  pgnet_ihlal="${pgnet_ihlal:+$pgnet_ihlal; }onprem/volumes/db/no-pg-net.sql commit'ten düştü"
+fi
+
 # --- Karşılaştır ----------------------------------------------------------
 ihlal=""
 sikis=""
@@ -182,6 +201,16 @@ $drift_ihlal
       Çıkış: aynı commit'te sırası gelen numarayla migration dosyasını yaz.
       Baseline (0000) henüz yoksa önce o üretilir — onprem/SCHEMA-VERTEILUNG.md §2.
       Yalnızca biçimsel döküm tazelemesiyse: SKIP_MIGRATION_GATE=1 git commit ...
+"
+fi
+
+if [ -n "$pgnet_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ pg_net koruması eksik: $pgnet_ihlal
+      G1 ('kutu dışarı telefon etmez') bunun üzerine yapısal hâle geldi (O-49).
+      Satır/dosya kaybolursa pg_net sessizce geri kurulur — hata yok, log yok.
+      Çıkış: onprem/docker-compose.yml içindeki 98a-no-pg-net.sql mount'unu
+      ve onprem/volumes/db/no-pg-net.sql dosyasını geri getir (onprem/REGISTER.md O-49/O-71).
 "
 fi
 

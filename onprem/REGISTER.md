@@ -175,9 +175,14 @@ test yığını**, kurulabilir ürün değil.
 - **O-58 (a)** → ✅ **gelöst (12.09.2026)** — `/api/config`'e `istKutu` alanı
   (kaynağı `SUPABASE_PUBLIC_URL`, `SETUP_TOKEN` **değil**), gerçek kutuya karşı doğrulandı
 - **O-58 (b)** → `legal-de`; metin kararı verilmeden şablon sayfa yazılmaz
-- **O-49** → ✅ **gelöst (12.09.2026)** — `webhooks.sql`'den yalnız `CREATE EXTENSION
-  pg_net` satırı çıkarıldı, dosyanın geri kalanı dokunulmadı (11.09'daki başarısız
-  deneme dosyanın **tamamını** silmişti); taze veritabanına karşı doğrulandı
+- **O-49** → ✅ **gelöst (12.09.2026)** — `webhooks.sql`'e **hiç dokunulmadı** (vendor
+  kopyasıyla byte byte aynı, `check-onprem-volumes.sh` öyle istiyor); pg_net'i kaldıran iş
+  kendi dosyamızda: `onprem/volumes/db/no-pg-net.sql`, compose'da `98a-no-pg-net.sql`.
+  ⚠️ Bu satır 12.09'da bir kez **yanlış** yazılmıştı ("satır çıkarıldı") — o, geri alınan
+  ilk denemenin tarifiydi; tam hikâye O-49'un kendi Durum satırında. Koruması: **O-71**
+- **O-71** → ✅ **gelöst (12.09.2026)** — `tools/check-onprem.sh`'a doğrudan kontrol
+  eklendi (sayaç değil, DDL/drift kapılarıyla aynı desen); mount satırı veya
+  `no-pg-net.sql` kaybolursa commit reddedilir, test edildi
 - **O-62** → ✅ tasarımı kapandı (§7H); kalanı Faz 2.2 dilim 1'in kodu
 - **O-66** (SMTP) → ✅ **karar verildi 11.09.2026: seçenek (a)** — `install.sh` sorar,
   sihirbaz yalnız test eder ve teşhis gösterir. Uygulama açık, sınırları maddede.
@@ -2155,7 +2160,18 @@ ekranda bu cümle var.
 | **Tip** | C |
 | **Kutuda ne olur** | Küçük ama iki yönlü: (1) praxis ağı internete kapalıysa logoya tıklamak ölü sayfa açar; (2) açıksa, çalışan kendi praksisinin giriş ekranından **bizim satış sitemize** düşer — kutu ürününde beklenmeyen bir yön. Veri riski yok (G1 dışı), sır yok. Bu yüzden düşük öncelikli; yine de O-58 (a) ile **aynı ailede** ve onunla birlikte kapanmalıydı |
 | **Çözüm** | Kutuda anchor nötrleştirilir: `IST_KUTU` ise `href` kaldırılır (logo metin olarak kalır). `.remove()` **değil** — marka başlığı sayfanın düzeninin parçası. `employee-signup.js`'in de `IST_KUTU`'yu import etmesi gerekir (bugün etmiyor, ölçüldü) |
-| **Durum** | ✅ **gelöst (12.09.2026), önerilenden farklı bir yolla.** `IST_KUTU`-dallanması yerine ikisinde de `href="https://praxura.de"` → `href="/"` yapıldı — sekiz kutu sayfasının üçü (`confirm.html`, `dashboard.html`, `onboarding-success.html`) marka linkini zaten böyle yazıyordu, aynı desen izlendi. Kazanç: hiçbir JS'e gerek yok (`employee-signup.js` `IST_KUTU`'yu import etmek **zorunda değil**), iki dağıtımda da doğru davranış tek satırla: SaaS'ta `/` pazarlama ana sayfasına gider (mevcut niyet), kutuda Caddy `/`'i zaten `/login.html`'e 302'liyor (`onprem/Caddyfile:66-68`) — logoya tıklamak aynı sayfada kalır, ölü link değil |
+| **Durum** | ✅ **gelöst (12.09.2026), önerilenden farklı bir yolla.** `IST_KUTU`-dallanması yerine ikisinde de `href="https://praxura.de"` → `href="/"` yapıldı — sekiz kutu sayfasının üçü (`confirm.html`, `dashboard.html`, `onboarding-success.html`) marka linkini zaten böyle yazıyordu, aynı desen izlendi. Kazanç: hiçbir JS'e gerek yok (`employee-signup.js` `IST_KUTU`'yu import etmek **zorunda değil**), iki dağıtımda da ölü link yok. ⚠️ **Gerekçe satırı 12.09'da yanlış yazılmıştı** ("SaaS'ta `/` pazarlama ana sayfasına gider") — doğrusu: her iki sayfa da **`app.praxura.de`** altında servis edilir (`vercel.json:331-332` `praxura.de/employee-signup.html`'i oraya 302'ler) ve `vercel.json:318` o hostta `/`'i **`/login.html`**'e yönlendirir. Yani SaaS'ta da logo artık pazarlama sitesine değil giriş ekranına gider. Bu **bilinçli kabul**: `confirm.html`/`dashboard.html`/`onboarding-success.html` zaten öyle davranıyordu, davranış artık sekiz sayfada tek tip. Kutuda Caddy aynı şeyi yapıyor (`onprem/Caddyfile:66-68`) — yani `/` iki dağıtımda da giriş ekranı demek, dallanma gerekmiyor |
+
+### O-71 — `pg_net`'siz kutu yapısal sayılıyor ama hiçbir kapı onu tutmuyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | O-49 "G1 artık disiplin değil yapı" diyerek kapandı. Yapının tamamı **tek bir compose satırı** (`98a` mount'u) ve **tek bir dosya** (`no-pg-net.sql`). İkisi de hiçbir kapı tarafından denetlenmiyor |
+| **Nerede** | `onprem/docker-compose.yml:104` (mount) · `onprem/volumes/db/no-pg-net.sql` (tek satır `DROP EXTENSION`). Ölçüm: `grep -n 'pg_net' tools/check-onprem.sh` → **0 sonuç**; `tools/check-onprem-volumes.sh` yalnız **vendor ile aynı olması gereken 6 dosyayı** karşılaştırır (`dateien=` listesi), bizim kendi dosyalarımızı hiç görmez — yani `no-pg-net.sql` silinse iki kapı da yeşil kalır |
+| **Tip** | A (runtime dış çağrı yeteneği) |
+| **Kutuda ne olur** | Bugün hiçbir şey. Ama compose'u düzenleyen biri (ör. upstream sürüm yükseltmesinde mount listesini vendor'dan yeniden üretirken) o satırı düşürürse `pg_net` **sessizce geri gelir** ve kutu yine dışarı telefon edebilir hâle gelir. Arıza yok, log yok, kapı yok — yalnızca G1 tekrar alışkanlığa döner. Sınıf olarak O-49'un kendisiyle aynı; fark, bu sefer bir kez çözülmüş olması, yani geri gidiş **gerileme** olur |
+| **Çözüm** | `tools/check-onprem.sh`'a bir sayaç: `onprem/docker-compose.yml` içinde `no-pg-net` geçen satır sayısı (taban **1**) — **azalma = red**. İkinci satır isteğe bağlı ama ucuz: `onprem/volumes/db/no-pg-net.sql` dosyasının varlığı. Mevcut sayaç deseninin (`absender_fest`, `onprem_image`) aynısı, yeni mekanizma gerekmiyor. `builder` uygular |
+| **Durum** | ✅ **gelöst (12.09.2026)** — **sayaç değil, doğrudan kontrol** olarak yazıldı: mevcut `kontrol()` fonksiyonu yalnız ARTIŞI kırmızı sayar (`simdi > taban`), burada tersi gerekiyordu (kaybolma kırmızı) — o yüzden yıkıcı-DDL/şema-drift kapılarıyla aynı desende yeni bir "pg_net kapısı" bloğu eklendi (`tools/check-onprem.sh`, şema drift kapısının hemen altı): `git show ":onprem/docker-compose.yml"` içinde `no-pg-net` dizgisi yoksa VEYA `git cat-file -e ":onprem/volumes/db/no-pg-net.sql"` dosyayı indexte bulamazsa commit reddedilir. İkisi de **staged içerik** üzerinden (`:path` sözdizimi, dosya yolunun index'teki hâli) — script'in geri kalanıyla aynı ilke. Testte doğrulandı: mount satırı elle silinip `git add` edildiğinde kapı doğru mesajla reddetti; geri eklenince yeşile döndü |
 
 ---
 
@@ -2259,6 +2275,19 @@ ekranda bu cümle var.
 >   değişimi yarım kalıyor) · **O-69** (çalışan davet ekranı `app.praxura.de` gösteriyor,
 >   O-56'nın kardeşi) · **O-70** (marka linki iki kutu sayfasında SaaS'a çıkıyor)
 > - Toplam madde: **70**
+>
+> **Aynı gün, kapanış:** üçü de aynı gün `gelöst`e geçti (`343dacf`) — O-68
+> (`if (!IST_KUTU)`), O-69 (`location.origin`), O-70 (`href="/"`). **O-49** de aynı gün
+> kapandı (`97ad565`), iki denemede. Bu kapanışı okurken **O-71** açıldı: O-49'un
+> "yapısal" güvencesini tutan hiçbir kapı yok. Toplam madde: **71**.
+>
+> ⚠️ **Bu turun kendi dersi — sicil de hata yapar:** kapanış yazılırken iki satır yanlış
+> yazıldı ve ikisi de 12.09.2026'da düzeltildi: (1) özet listede O-49, **geri alınan ilk
+> denemeyle** tarif edilmişti — o tarifi izleyen biri kapıyı tekrar körleştirirdi;
+> (2) O-70'in gerekçesi "SaaS'ta `/` pazarlama sayfasına gider" diyordu, oysa
+> `vercel.json:318` `app.praxura.de`'de `/`'i `/login.html`'e yönlendiriyor. Doğru karar,
+> yanlış gerekçe. **Kural:** bir maddenin Durum satırı, *uygulanan* çözümü tarif eder;
+> denenip geri alınan yol ayrı ve açıkça "geri alındı" diye yazılır.
 >
 > ⚠️ **Turun dersi:** üçünün de kaynağı aynı — *bir öğeyi kaldıran/değiştiren düzeltme,
 > o öğeye başka nereden dokunulduğunu saymadan kapanmaz.* O-58 (a) üç öğeyi DOM'dan
