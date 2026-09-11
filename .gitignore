@@ -57,3 +57,7 @@ onprem/volumes/storage/
 # (genau so passiert, 11.09.2026), deshalb hier die Ausnahme.
 onprem/.env
 !onprem/.env.template
+
+# install.sh schreibt seinen Ablauf hierhin (ohne Geheimnisse, siehe Skript-
+# Kopf) — trotzdem eine lokale Kundenbox-Datei, kein Repository-Inhalt.
+onprem/install.log

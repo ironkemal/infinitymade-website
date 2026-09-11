@@ -433,6 +433,12 @@ services:
       AI_ENDPOINT: ${AI_ENDPOINT:-}
       AI_API_KEY: ${AI_API_KEY:-}
 
+      # Einmal-Jeton fuer den Einrichtungsassistenten (Faz 2.2, O-62). Von
+      # install.sh VOR "docker compose up" erzeugt und geschrieben — ein
+      # Container liest seine Umgebung nur beim Start, ein Wert, der erst
+      # danach entsteht, kaeme hier nie an (Gegenlesen 11.09.2026).
+      SETUP_TOKEN: ${SETUP_TOKEN:-}
+
       TZ: ${TZ:-Europe/Berlin}
     labels:
       - com.centurylinklabs.watchtower.enable=true

@@ -49,6 +49,24 @@ veriyor, kutuya IP ile ulaşılamıyor). Toplam **59** madde.
 ⚠️ Dördünün ortak dersi: **200 dönen bir sayfa, çalışan bir sayfa değildir** — duman
 testi HTML'i çekti, HTML'in istediği dosyaları çekmedi.
 
+**11.09.2026 (gece) — Faz 2.1c ön-hazırlığı (`install.sh` yazılmadan önce).** Betiğin
+adım sırası, Faz 2.2 ile sınırı ve hata modeli kilitlendi → **§7G**. İki yeni madde:
+**O-60** (`ANON_KEY`/`SERVICE_ROLE_KEY` `JWT_SECRET`'ten HS256 ile **türetilir**, zar
+atılmaz; ve `exp`'i `JWT_EXPIRY`'den alan bir betik kutuyu **bir saat sonra** öldürür) ·
+**O-61** (`.env` kutunun en değerli dosyası: izin, yedekten dışlanma ve
+`DATA_ENCRYPTION_KEY`'in tek-seferlik gösterimi kurulumun görünür adımı olmalı).
+Bu turda **kod yazılmadı** — ön kontrol, gereksinim ve iki tuzak kaydedildi.
+Toplam **62** madde.
+
+**11.09.2026 (gece, 2. ve 3. tur) — `install.sh` yazıldı, iki kez okundu.** İkinci tur
+üç engel çıkardı (**O-63** sağlık sayımı · **O-64** `REALTIME_DB_ENC_KEY` uzunluğu ·
+**O-65** betiğin `curl`'ü kutunun kendi adresini çözemiyor) + `SETUP_TOKEN` sıra hatası
+(O-62). Üçüncü turda **altısı da düzeltildi**; `builder` kendi taramasında **üç ek hata**
+buldu — en ciddisi `grep … | cut` + `pipefail`: anahtar `.env`'de hiç yoksa betik
+**mesajsız** ölüyordu, tam da mesaj üretsin diye yazılmış kapının içinde. Yeni madde
+açılmadı. Kalan tek boşluk: **O-60**'ın negatif testi Kong'da durup PostgREST'e hiç
+varmıyor (§7G, üçüncü tur). Toplam **65** madde.
+
 **Nerede duruyoruz (11.09.2026):** kutunun compose paketi **var ve çalıştığı ölçüldü**
 (`onprem/docker-compose.yml` + `.env.template` + `NOTICE.md` + `volumes/`; commit'ler
 `b2fdbb8` ve `c602f50`). Yığın 11 fremd konteynerden **6**'ya indi, boşta ≈1,65 GB
@@ -62,7 +80,9 @@ veritabanından dışarı çıkan çağrı yok (`net.http_post` → 0 fonksiyon)
 
 **Kanıtlanmayan — abartılmasın:** ~~kutuda arayüz yok~~ → 11.09 akşamı **inşa edildi ve
 ölçüldü** (yukarı bak); ama arayüz **tam değil** (O-57: üç sayfa stilsiz) ve kutuya
-**yalnız `SITE_URL` host adıyla** ulaşılıyor (O-59) · **kurulum yok** (`install.sh` yazılmadı, sırlar elle) · **seed yok**
+**yalnız `SITE_URL` host adıyla** ulaşılıyor (O-59) · **kurulum betiği var ama kutuda
+hiç koşmadı** (`install.sh`, 15 adım, iki tur gegenlesen; Ubuntu'da uçtan uca
+**çalıştırılmadı** — §7G üçüncü tur) · **seed yok**
 (kutu doğru ama boş kalkıyor, `krankenkassen` → `[]`, O-38) · **yedek yok** (O-26) ·
 lisans/yetki tarafına hiç dokunulmadı (O-31/O-33). Yani bugünkü paket **çalışan bir
 test yığını**, kurulabilir ürün değil.
@@ -78,8 +98,10 @@ test yığını**, kurulabilir ürün değil.
    ✅ **Caddy indi (11.09 akşamı).** 2.1b'nin **kalanı**: O-57 (paket dosya listesi —
    dört satır, `builder`'ın bir sonraki turu) · O-49 · O-48 (konsey) · O-45 (b) ·
    O-58 (a). Sonra 2.1c'ye geçilir.
-2. **Faz 2.1c** — `install.sh`: donanım ön-kontrolü, `.env` üretimi (sırlar sunucuda
-   üretilir, G2), `DATA_ENCRYPTION_KEY` üretimi (O-50'nin kalan tek şartı).
+2. **Faz 2.1c** — `install.sh`. **Tasarım hazır: §7G** (15 adım, Faz 2.2 sınırı, hata
+   modeli). Kapsadığı maddeler: O-53 (zorunlu değişken kapısı) · O-59 (adres ön-kontrolü
+   + kurulum sonu çıktısı) · O-52 (b) (`SUPABASE_PUBLIC_WSS` türetimi) · O-50'nin kalanı
+   (`DATA_ENCRYPTION_KEY` üretimi) · **O-60** (JWT türetimi) · **O-61** (`.env` izni) · **O-62** (ilk owner / kayıt penceresi).
 3. **Seed adımı** (O-38) — referans tabloları; `SCHEMA-VERTEILUNG.md` §3.1 adım 4.
 4. **Faz 1.2** (O-02) — takvim kısıtı hâline geldi: kutuda `N8N_AI_SERIES_URL` boş
    kalınca kod **sabit n8n adresine düşüyor** ve hasta adı bize gelir (G1). İlk
@@ -1427,6 +1449,316 @@ Buna karşılık `cookie-consent.js/css` **hiçbir** kutu sayfasından çağrıl
 
 ---
 
+## 7G — Faz 2.1c ön-hazırlık (`install.sh`), 11.09.2026
+
+> Bu bölüm **kod değil, gereksinim**: `install.sh` yazılmadan önce neyin hangi sırayla
+> olması gerektiği ve hangi iki tuzağın bugünden görünür olduğu. Uygulama `builder`'ın.
+
+### `install.sh` adım sırası (kilitli tasarım)
+
+Ayrım şudur: **`install.sh` kutuyu ayağa kaldırır, sihirbaz (Faz 2.2) praxis'i kurar.**
+Betik hiçbir iş verisine dokunmaz — ne owner hesabı açar, ne praxis adı sorar, ne SMTP
+ister. Sınır tek cümleyle: *tarayıcıda sihirbazın ilk ekranı açıldığı an `install.sh`'ın
+işi bitmiştir.*
+
+| # | Adım | Not |
+|---|---|---|
+| 0 | **Kök kontrolü + idempotanlık** | `.env` varsa sırlar **üzerine yazılmaz** (`RELEASE-STANDARD.md` §5.5/1). Sıfırdan kurulum yalnız `--neu` + yazılı onayla |
+| 1 | **Donanım ön-kontrolü** | 2 vCPU · 4 GB RAM · 40 GB boş disk (playbook 2.1c). Swap yoksa **uyar** — bugünkü VPS'te swap yok ve OOM riski ölçülmüş bir şey. Sunucu AB dışındaysa uyar, durdurma |
+| 2 | **Yazılım ön-kontrolü** | `docker` + `docker compose` v2 · `openssl` · `curl`. Yoksa Docker'ı resmî kurulum betiğiyle kur, kalanını **kurma, söyle** |
+| 3 | **Port ön-kontrolü** | 80 ve 443 boş mu (Caddy). Doluysa **dur ve hangi süreç tuttuğunu yaz** |
+| 4 | **Adres ön-kontrolü (O-59)** | `SITE_URL` sorulur. Şema `https://` olmalı, **port içeremez** → içeriyorsa dur. `API_EXTERNAL_URL` ve `SUPABASE_PUBLIC_URL` varsayılan olarak `SITE_URL`'e eşitlenir |
+| 5 | **`.env` üretimi** | Şablondan kopya; `chmod 600`, sahibi root (O-61) |
+| 6 | **Sır üretimi (G2)** | `POSTGRES_PASSWORD` · `JWT_SECRET` · `SECRET_KEY_BASE` · `REALTIME_DB_ENC_KEY` · `S3_PROTOCOL_ACCESS_KEY_*` · `DATA_ENCRYPTION_KEY` — hepsi **müşterinin sunucusunda**, `openssl rand`. Hiçbiri bizde üretilmez, hiçbiri image'da durmaz |
+| 7 | **`ANON_KEY` / `SERVICE_ROLE_KEY` türetimi** | `JWT_SECRET` ile HS256 imzalanır — **zar atılmaz** (O-60) |
+| 8 | **`SUPABASE_PUBLIC_WSS` türetimi (O-52 b)** | `SUPABASE_PUBLIC_URL` origin'i `SITE_URL` ile aynıysa **boş bırakılır** (`'self'` kapsar). Farklıysa `https→wss` çevirisiyle doldurulur. Elle doldurtma yok |
+| 9 | **Zorunlu değişken kapısı (O-53)** | `.env` yazıldıktan sonra, `up`'tan önce: `SUPABASE_PUBLIC_URL` · `SUPABASE_ANON_KEY` · `SERVICE_ROLE_KEY` · `JWT_SECRET` · `POSTGRES_PASSWORD` · `DATA_ENCRYPTION_KEY` boşsa **kurulum başlamaz**. Boş `.env` ile açılan kutu beyaz ekran verir ve hata mesajı üretmez — O-15'in kapattığı kırılma biçimi budur |
+| 10 | **TLS modu** | `CADDY_TLS_ARG`: gerçek alan adı + dışarıdan erişilebilir mi → `internal` mı, ACME e-postası mı. `internal` seçildiyse `HSTS_MAX_AGE=0` zorlanır |
+| 11 | **`docker compose pull` + `up -d`** | Registry kimliği Faz 3.4'e bağlı; bugün `:stable` etiketi **yok** (`.env.template` §1 uyarısı) — betik etiketi bulamazsa bunu açıkça söylemeli, "image çekilemedi" demekle yetinmemeli |
+| 12 | **Sağlık kontrolü** | Konteynerlerin `healthy` olmasını bekle; `api` konteynerinin migration zinciri **kendi** koşar (`SCHEMA-VERTEILUNG.md`), betik SQL çalıştırmaz |
+| 13 | **Anahtar kanıtı** | `apikey: $ANON_KEY` ile `/rest/v1/` → **200**; anahtarsız → **401**. İmza bozuksa burada çıkar, üç hafta sonra değil (O-60) |
+| 14 | **Kurulum çıktısı** | LAN IP + host adı + `hosts`/DNS talimatı + kök CA'nın yolu (O-59) · `DATA_ENCRYPTION_KEY` **bir kez** ekrana basılır, "kasaya, yedekten AYRI" uyarısıyla (O-61) · son satır: sihirbazın URL'i |
+
+`RELEASE-STANDARD.md` §5.4'teki **14 kontrol** bu betiğin değil, **sihirbazın** kabul
+ölçütüdür — betik 12-13 ile yetinir, çünkü oradaki 3/4/5/9/11 (gerçek giriş, RLS negatif
+testi, SMTP, yedek) henüz var olmayan bir owner hesabına ve müşterinin kendi ayarlarına
+bağlıdır. İki liste karıştırılırsa `install.sh` asla "bitti" diyemez.
+
+**Hata modeli (K10 — kutuya SSH ile giremeyiz):** her kontrol tek satırlık bir sonuç
+basar (`[ok]` / `[fehler]`), başarısızlıkta **ne bulunduğu · ne beklendiği · ne yapılması
+gerektiği** üçlüsünü yazar ve **durur**. Yarım kurulum devam ettirilmez. Betik bütün
+çıktıyı `install.log`'a da yazar; o dosya K10'un tanılama paketinin (Faz 2.5) ilk parçası.
+⛔ `install.log`'a hiçbir sır basılmaz — üretilen değerler değil, yalnız "üretildi" satırı.
+
+### Turun sonucu — betik yazıldı ve okundu (11.09.2026 gecesi, ikinci tur)
+
+`onprem/install.sh` yukarıdaki 15 adımı **sırasıyla ve eksiksiz** içeriyor; adım
+atlanmamış, sıra değişmemiş, Faz 2.2 sınırı (owner hesabı / praxis adı / SMTP yok)
+korunmuş. Aşağıdakiler **uygulama hataları**, tasarım itirazı değil. Betik bir Ubuntu
+kutusunda **hiç çalıştırılmadı** (`builder` bunu kendisi söyledi); bu bölüm, gözle okuma +
+iki bulgunun yerel `bash` ile tekrarlanmasıyla o boşluğun ne kadarının kapandığını gösterir.
+
+**Kutuda kuruluma engel — üçü de ilk gerçek çalıştırmada çıkar:**
+
+| # | Bulgu | Nerede | Kayıt |
+|---|---|---|---|
+| 1 | Sağlık kapısı sıfır eşleşmede aritmetiği bozuyor **ve** ölen konteyneri hiç saymıyor | `install.sh:278-291` | **O-63** |
+| 2 | `REALTIME_DB_ENC_KEY` 32 karakter üretiliyor; çalışan yığında 16 | `install.sh:194` | **O-64** |
+| 3 | Adım 13'ün `curl`'ü kutunun **kendi** `SITE_URL`'ini çözemez → `000` → yanlış teşhisle durur | `install.sh:295-299` | **O-65** |
+
+**Adım 13'ün kanıt gücü sanıldığından zayıf** (O-60'a işlendi): yalnız `apikey` başlığıyla
+yapılan istekte imzayı doğrulayan **kimse yok.** Kong dizgiyi aynı `.env`'den üretilmiş
+`kong.yml`'e karşı karşılaştırır — kendi kendini doğrular; `request-transformer`
+`Authorization`'ı **`Bearer` öneki olmadan** yazar (`volumes/api/kong-entrypoint.sh`,
+legacy dal: `… or headers.apikey`); PostgREST önekssiz başlığı yok sayıp
+`PGRST_DB_ANON_ROLE` = `anon` rolüne düşer ve **200 döner**. Bozuk imza da yeşil geçer.
+Adım 13 bugün "Kong ayakta" testidir, "türetme doğru" testi değil.
+
+**Sıra hatası — `SETUP_TOKEN` adım 14'te üretiliyor** (`install.sh:307`), yani `docker
+compose up`'tan **sonra**. Konteyner env'ini açılışta okur; jeton `api` konteynerine asla
+ulaşmaz. Üstelik `docker-compose.yml`'ın `api` bloğunda `SETUP_TOKEN` satırı **hiç yok**.
+Bugün jeton, ekranda ve `.env`'de duran ama hiçbir yerin sormadığı bir dizgi (O-62).
+
+**Küçük ve ucuz olanlar — aynı turda düzeltilir, ayrı madde açılmadı:**
+
+- `install.sh:100` — test `-ge 3` GB, mesaj "mindestens 4 GB". Gevşeklik bilinçli olabilir
+  (bugünkü VPS 3,7 GB), ama **mesaj yalan söylüyor**: destek konuşmasına "4 dedi, 3'le
+  geçti" diye döner. Ya MB cinsinden karşılaştır (`-ge 3600`) ya mesajı gerçeğe eşitle.
+- `install.sh:134` — `ss` yoksa port kontrolü **sessizce atlanıyor**. Atlanan kontrol,
+  yapılmış sanılan kontroldür; `ss` yoksa `warn` bassın.
+- `install.sh:241` — `grep … | head -1 | cut …` + `pipefail`: anahtar `.env`'de **hiç yoksa**
+  komut ikamesi 1 döner ve `set -e` betiği **mesajsız** öldürür. Net mesaj üretmek için var
+  olan kapı, sessizce ölen tek yer olur. Çözüm: `… || true`.
+- `install.sh:273` — `docker compose up -d`, `fail()` ile sarılmamış tek adım. Hata hâlinde
+  müşteri Docker'ın kendi çıktısını görür, GEFUNDEN/ERWARTET/WAS TUN üçlüsünü görmez (K10).
+- `install.sh:309` — `hostname -I | awk '{print $1}'` **docker0'ı (172.17.0.1)** de listeler
+  ve sıra garanti değil. O-59 tam olarak bu satırın çıktısını müşterinin `hosts` dosyasına
+  yazdırıyor; yanlış IP yazdırmak hiç yazdırmamaktan kötüdür. Varsayılan rotanın
+  arayüzünden türet: `ip route show default` → `ip -4 addr show <dev>`.
+- `install.sh:316` — kök CA'nın **konteyner içi** yolu basılıyor, müşterinin
+  çalıştırabileceği komut yok. O-59'un istediği satır:
+  `docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./praxura-root.crt`.
+- `onprem/install.log` `.gitignore`'da **değil** (`onprem/.env` var, `.gitignore:58`).
+  Log'da sır yok ama host adı, LAN IP ve `docker compose ps` çıktısı var; depo public.
+- `--neu` yıkımı **adım 0'da**, bütün ön kontrollerden **önce** yapılıyor
+  (`install.sh:85-87`). Port 80 dolu diye adım 3'te duran bir kurulumda müşteri
+  veritabanını çoktan kaybetmiştir. Yıkım, ön kontroller geçtikten sonra (adım 5'in hemen
+  öncesinde) olmalı. Onay metninin kendisi (yazılı `LÖSCHEN`) doğru ve yeterince
+  korkutucu — tek sorun **ne zaman** sorulduğu.
+
+**Doğrulanan kararlar — bunlar tekrar tartışılmaz:**
+
+- **base64 → hex doğru, gerekçesi yerinde.** `POSTGRES_PASSWORD` üç ayrı bağlantı URI'sinin
+  içinde geçiyor (`docker-compose.yml`: `PGRST_DB_URI` · storage `DATABASE_URL` · api
+  `DATABASE_URL`); base64'ün `+` ve `/` karakterleri orada **zar atışına bağlı** kırılma
+  üretirdi — yılda bir kurulumda bozulan, tekrar çalıştırınca düzelen cinsten, yani teşhisi
+  en pahalı sınıf. Hex'in alfabesi (`0-9a-f`) bunu yapısal olarak kapatır.
+  ⚠️ `.env.template` §2'deki `openssl rand -base64 48` **örneği** artık betikle çelişiyor,
+  düzeltilsin.
+- **`--neu` bütün `.env`'i şablondan yeniden kuruyor**, dolayısıyla `JWT_SECRET` ile iki
+  türetilmiş anahtar birlikte yenileniyor — O-60'ın "birini üretip diğerini bırakma"
+  uyarısı karşılanmış.
+- **O-62 sınırı doğru çizilmiş:** betik hesap açmıyor. İlk owner'ı GoTrue'nun admin ucundan
+  yaratmak **Faz 2.2'nin işi, kesin.** Betiğin borcu yalnız jetonu kutuya **teslim etmek**.
+  ⚠️ 2.2'ye not: jetonu tüketmek `.env`'i düzenlemekle olmaz — konteyner env'ini açılışta
+  okur, değişiklik yeniden yaratmadan görünmez. Tüketim **veritabanında** işaretlenir.
+
+### Turun sonucu — düzeltmeler okundu (11.09.2026 gecesi, üçüncü tur)
+
+İkinci turun altı bulgusu + `builder`'ın kendi bulduğu üç hata `install.sh`'ta düzeltildi.
+Kod **staged, commit edilmedi**; aşağıdaki `gelöst`ler commit numarası girildiğinde
+kesinleşir. Betik hâlâ **hiçbir Ubuntu kutusunda uçtan uca koşmadı** — bu bölüm gözle
+okuma + koda karşı doğrulamadır, çalıştırma kanıtı değildir.
+
+**Doğrulandı (koda karşı, tek tek):**
+
+| Bulgu | Düzeltme | Kontrol |
+|---|---|---|
+| `SETUP_TOKEN` sırası | adım 6'ya alındı (`install.sh:240`), adım 14 yalnız gösteriyor | `docker-compose.yml:440` `SETUP_TOKEN: ${SETUP_TOKEN:-}` — **doğru ve tek** yerde: `api` bloğu. Caddy'ye **girmemeli** (statik sunucu + proxy; jetonu okuyacak kod orada yok, sır yüzeyi büyür) |
+| base64 → hex | `.env.template` §2 artık hex öneriyor, base64 örneği yok | ✅ |
+| O-65 DNS | `curl -sk --resolve "${HOST_PART}:443:127.0.0.1"` (`install.sh:372-381`) | ✅ Caddy 443'ü `0.0.0.0`'a yayınlıyor (`docker-compose.yml:464`), Host/SNI `SITE_URL` kalıyor — O-59 ile çelişmiyor |
+| O-63 sağlık | `docker compose config --services` + servis başına `ps -q` → `docker inspect` (`install.sh:333-363`) | ✅ `cid` boşsa "eksik" sayılıyor; `grep -c` kalıbı tamamen gitti; 8 servis beklentisi compose ile birebir |
+| O-64 uzunluk | `openssl rand -hex 8` = 16 karakter | ✅ AES-128, upstream `supabaserealtime` ile aynı uzunluk |
+| `up -d` hata modeli | `if ! docker compose up -d …; then fail …` | ✅ **Sanılandan önemli:** `caddy` → `api: service_healthy` bağı yüzünden migration zinciri çökerse `up -d` "dependency failed to start" ile döner; K10 mesajını üreten tek yer burasıdır |
+| adres: path reddi | `*/*` dalı (`install.sh:182`) | ✅ tek `/` sonek önce kırpılıyor, `https://praxis.local/` kabul |
+| `env_get()` | awk tabanlı, `END{if(!f) print ""}` | ✅ gerçek kırılmaydı: `set -euo pipefail` altında eşleşmeyen `grep` betiği **çıktısız** öldürüyordu. Bulan `builder`'dır, ikinci tur gözden kaçırmıştı |
+
+**Kalan tek gerçek boşluk — adım 13'ün negatif testi Kong'u geçemiyor.**
+Zincir baştan izlendi (`onprem/volumes/api/kong.yml` → `rest-v1` · `onprem/volumes/api/kong-entrypoint.sh`):
+
+1. Kong'un `key-auth`'u **yalnız `apikey` başlığına** bakar (varsayılan `key_names`);
+   `Authorization` onun umurunda değil.
+2. `request-transformer` `Authorization`'ı `LUA_AUTH_EXPR` ile **değiştirir**. Bizim
+   kutumuzda legacy dal koşar (`SUPABASE_PUBLISHABLE_KEY`/`SECRET_KEY` set edilmiyor):
+   `(headers.authorization ~= nil and headers.authorization:sub(1,10) ~= 'Bearer sb_'
+   and headers.authorization) or headers.apikey`.
+
+İki sonuç:
+
+- ✅ **Pozitif test artık gerçek.** `Authorization: Bearer $ANON_KEY` gönderildiği için
+  ifade onu **olduğu gibi** PostgREST'e geçirir; PostgREST imzayı `PGRST_JWT_SECRET` ile
+  doğrular. Yanlış `JWT_SECRET`'ten türetilmiş anahtar burada **401** alır. İkinci turun
+  "önek yok → anon'a düşer → 200" kırılması, `Authorization`'ın eklenmesiyle kapandı.
+- ❌ **Negatif test hedefine varmıyor.** Betik **iki başlığı birden** bozuyor
+  (`install.sh:381`); bozuk `apikey` Kong'un dizge karşılaştırmasına takılır, **401 Kong'dan
+  döner**, istek PostgREST'e hiç ulaşmaz. Test böylece "Kong dizge karşılaştırıyor" der,
+  "imza doğrulanıyor" demez — zaten anahtarsız üçüncü çağrı aynı şeyi söylüyor.
+  Körlüğü ölçen kurgu: **`apikey` DOĞRU, yalnız `Authorization` bozuk.** O zaman Kong
+  geçirir, transformer bozuk başlığı iletir, PostgREST 401 vermek **zorundadır**; 200
+  gelirse `Authorization` yolda düşüyor demektir — O-60'ın önlemek için açıldığı hâl.
+  Düzeltme tek satır: `-H "apikey: ${ANON_KEY}" -H "Authorization: Bearer ${ANON_KEY}x"`.
+
+**Aynı turda kapanacak küçükler (yeni madde açılmadı, sahibi Faz 2.1c):**
+
+- **Betik boru hattından çalıştırılamaz.** Dört `read -r -p` stdin'den okur; birisi
+  `curl … | sudo bash` derse promptlar betiğin kendi satırlarını yutar ve K10 hata modeli
+  komple devre dışı kalır. `[ -t 0 ] || fail "Terminal yok" …` — üç satır, kurulum
+  belgesi ne yazarsa yazsın.
+- **`SERVICE_ROLE_KEY` hiç ölçülmüyor.** Adım 13 yalnız anon'u kanıtlıyor; service-role
+  anahtarı bozuk türetilmişse bunu ilk fark eden Faz 2.2 sihirbazı olur. Aynı `curl`,
+  service anahtarıyla → 200 beklenir. Bir satır.
+- **`up -d` hatasında son loglar basılmıyor.** `docker compose logs --tail=40 api` fail
+  metninin içine — kutuya giremediğimiz için (K10) müşteri neyi kopyalayacağını bilmeli.
+- `hostname -I` hâlâ docker0'ı ilk sırada verebilir; betik artık "PRÜFEN" uyarısı basıyor
+  (dürüst ama zayıf). Ucuz doğrusu: `ip route get 1.1.1.1 | awk '{print $7; exit}'`.
+- `set_env`'in `mktemp`'i hâlâ `/tmp`'de (`-p "$SCRIPT_DIR"` olmalı) — sızıntı yok (0600),
+  ama bütün sırların geçtiği geçici dosya kurulum dizininde dursun.
+
+**Kapanan eski pürüzler (ikinci turdan):** `ss` yoksa artık `warn` · `--neu` yıkımı
+ön kontrollerden **sonra** · kök CA için müşterinin çalıştırabileceği `docker compose cp`
+satırı · `onprem/install.log` `.gitignore`'da (`.gitignore:63`) · RAM eşiğinin gerekçesi
+mesajın içinde yazılı.
+
+### Dördüncü tur — negatif test düzeltildi VE gerçek kutuya karşı ÇALIŞTIRILARAK doğrulandı (11.09.2026 gecesi, geç)
+
+Üçüncü turun tek kalan boşluğu (`apikey` DOĞRU, yalnız `Authorization` bozuk) düzeltildi
+ve **Docker tekrar açıldığında gerçek Kong/PostgREST zincirine karşı curl ile ölçüldü**
+(betiğin tamamı değil — adım 13'ün üç isteği izole edilip yerel kutunun mevcut
+`ANON_KEY`'ine karşı elle çalıştırıldı):
+
+| İstek | Sonuç | Beklenen |
+|---|---|---|
+| doğru `apikey` + doğru `Authorization: Bearer` | **200** | 200 ✅ |
+| doğru `apikey` + bozuk `Authorization: Bearer …x` | **401** | 401 ✅ — negatif test artık gerçekten PostgREST'e varıyor |
+| `apikey` yok | **401** | 401 ✅ |
+
+Aynı turda beş küçük madde de kapatıldı: `[ -t 0 ] \|\| fail …` (boru hattı koruması) ·
+`SERVICE_ROLE_KEY` için ayrı 200 kanıtı · `up -d` hata mesajına `docker compose logs
+--tail=40 api` · LAN IP artık önce `ip route get 1.1.1.1`, `hostname -I` yalnız yedek ·
+`set_env`'in `mktemp`'i `-p "$SCRIPT_DIR"`.
+
+**Hâlâ eksik olan tek şey:** `install.sh`'ın **tamamı** (adım 0'dan 14'e) hiçbir gerçek
+Ubuntu 24.04 makinesinde uçtan uca koşturulmadı — donanım/yazılım ön kontrolleri, `--neu`
+akışı ve tam kurulum döngüsü hâlâ yalnız kod okumasıyla doğrulandı. İlk gerçek kutu
+kurulumunda bu betiğin **ilk** gerçek koşusu olacak; sonucu buraya yazılmalı.
+
+### O-60 — `ANON_KEY`/`SERVICE_ROLE_KEY` rastgele üretilemez; ve `exp`'i yanlış alan bir betik kutuyu saatler sonra öldürür
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | İkisi de `JWT_SECRET` ile HS256 imzalı JWT'dir. Rastgele dizge koymak sessizce çalışmaz; ve `exp` alanının kaynağı `JWT_EXPIRY` **değildir** |
+| **Nerede** | `onprem/docker-compose.yml:121` `:166` `:217` `:256` (aynı `JWT_SECRET` dört servise gider) · `:289` `:359` `:394` (`ANON_KEY`) · `onprem/volumes/api/kong.yml:28-34` (Kong bu iki dizgiyi **apikey metni** olarak da tanır) · `onprem/.env.template:70-73` ("ABGELEITET") · `onprem/.env.template` §4 (`JWT_EXPIRY=3600`) |
+| **Tip** | E (+ G) |
+| **Kutuda ne olur** | İki ayrı kırılma. (1) **Uydurulmuş anahtar:** Kong'un `key-auth`'u dizgiyi tanır ve isteği geçirir, PostgREST imzayı doğrulayamaz → her istek 401. Kong tarafı çalıştığı için hata "yetki" gibi değil "ağ/CORS" gibi okunur. (2) **`exp`'i `JWT_EXPIRY`'den alan betik:** `JWT_EXPIRY=3600` GoTrue'nun **kullanıcı oturumu** ömrüdür, anon anahtarının değil. Anon anahtarına konursa kurulum yeşil biter, kutu **bir saat sonra** komple 401'e düşer. Kurulumla arıza arasında bir saat varsa sebep-sonuç bağı kopar; K10 gereği kutuya girip bakamayız |
+| **Çözüm** | **Faz 2.1c, adım 7 + 13.** Araç: **saf `openssl` + bash** — ayrıca Node gerekmez ve gerekmemeli, çünkü betik host'ta, konteynerler ayağa kalkmadan önce çalışır (Node'u host'a kurmak G2'ye değmeyen yeni bir bağımlılık; `docker run … node` ise henüz çekilmemiş bir image'a bağımlı olurdu). HS256 = `printf '%s' "$header.$payload" \| openssl dgst -sha256 -hmac "$JWT_SECRET" -binary \| base64url`; base64url = `base64 -w0 \| tr '+/' '-_' \| tr -d '='`. Payload **kilitli**: `{"role":"anon","iss":"supabase","iat":<now>,"exp":<now + 10 yıl>}`, service-role için `"role":"service_role"`. `exp` = **10 yıl**, upstream'in kendi anahtar üreticisiyle aynı; `JWT_EXPIRY` bu hesaba **girmez**. `aud` konmaz (`PGRST_JWT_AUD` set edilmiyor; konursa doğrulama sıkışır ve kırılır). Adım 13 bunu **ölçer**: anahtarla 200, anahtarsız 401 — "türetme doğru mu" sorusunun tek dürüst cevabı budur. ⚠️ `--neu` ile `JWT_SECRET` yeniden üretilirse bu iki anahtar da yeniden türetilmeli; birini üretip diğerini bırakmak aynı 401'i verir |
+| **Durum** | ✅ `gelöst` (11.09.2026 gecesi, 4. tur) — türetme yapıldı (`exp` = now+10 yıl, `aud` yok, `JWT_EXPIRY` hesaba girmiyor; imza Node'un `crypto.createHmac` çıktısıyla karşılaştırıldı). Kanıt adımı (13) artık üç istek atıyor (doğru → 200, `Authorization` yalnız bozuk → 401, anahtarsız → 401) ve bu üçü **gerçek Kong/PostgREST'e karşı curl ile ölçüldü** (§7G dördüncü tur tablosu) — sonuç beklendiği gibi. ⚠️ Betiğin **tamamı** (adım 0-14 baştan sona) hâlâ hiçbir Ubuntu kutusunda koşmadı; bu madde yalnız adım 13'ün doğruluğunu kapatır |
+
+> ⚠️ **Adım 13 düzeltmesi (11.09.2026 gecesi):** `curl -H "apikey: $ANON_KEY" …/rest/v1/`
+> **imzayı ölçmez.** Zincir baştan sona izlendiğinde: Kong `key-auth` dizgiyi `kong.yml`'e
+> karşı karşılaştırır, o dosya da aynı `.env`'den üretilmiştir (kendi kendini doğrulama);
+> `request-transformer` `Authorization`'ı **`Bearer` öneki olmadan** yazar
+> (`volumes/api/kong-entrypoint.sh`, `LUA_AUTH_EXPR` legacy dalı: `… or headers.apikey`);
+> PostgREST önekssiz `Authorization`'ı yok sayar ve `anon` rolüne düşerek **200** döner.
+> Yani yanlış `JWT_SECRET`'ten türetilmiş bir anahtar da bu testten geçer — O-60'ın önlemek
+> için açıldığı hatanın ta kendisi. **Testin doğrusu üç istektir:**
+> (1) `-H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY"` → **200** ·
+> (2) aynı istek, imzası bozulmuş anahtarla (`${ANON_KEY}x`) → **401** — 401 gelmiyorsa
+> *testin kendisi kördür*, o durumda kurulum "doğrulanamadı" deyip durmalı ·
+> (3) anahtarsız → **401** (Kong). Üçü birlikte ölçülmedikçe adım 13 yeşil yanar ve kutu
+> haftalar sonra kırılır.
+
+> ✅ **Yol doğrulandı (11.09.2026):** yukarıdaki openssl zinciri çalıştırıldı, ürettiği
+> imza Node'un `crypto.createHmac('sha256').digest('base64url')` çıktısıyla **birebir**.
+> Yani Node bağımlılığı gerçekten gereksiz. ⚠️ Tek şart: `base64 -w0` GNU coreutils'tir
+> (Ubuntu 24.04 tamam; BusyBox/macOS'ta yoktur) — hedef işletim sistemi playbook'ta zaten
+> Ubuntu 24.04, ama betik bunu adım 2'de kontrol etsin, sessizce bozuk anahtar üretmesin.
+
+
+### O-61 — `.env` müşterinin sunucusundaki en değerli dosya; kurulum onu sıradan bir dosya gibi bırakıyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Üretilen `.env` PHI şifreleme anahtarını, service-role anahtarını ve DB parolasını bir arada taşır; bugün ne izni, ne yedekle ilişkisi, ne de "bu dosya kaybolursa ne olur" cevabı yazılı |
+| **Nerede** | `onprem/.env.template` §2 (sekiz sır + `DATA_ENCRYPTION_KEY`) · `onprem/docker-compose.yml` (veritabanı bind-mount'u `./volumes/db/data` — `.env` ile **aynı dizin ağacında**) |
+| **Tip** | E |
+| **Kutuda ne olur** | Üç ayrı sonuç. (1) `.env` varsayılan izinle (644) kalırsa sunucudaki her yerel hesap service-role anahtarını okur — kutuda RLS'i baypas eden tek dizge odur. (2) `.env` kurulum dizininde durduğu için müşterinin "praxura klasörünü yedekle" refleksi **anahtarı veritabanıyla aynı arşive** koyar; o arşivi eline geçiren için `DATA_ENCRYPTION_KEY`'in varlığı hiçbir şey ifade etmez (`guvenlik` S-22 bunu şifrelemenin değersizleşmesi diye yazmıştı). (3) `.env` kaybolur ve anahtarın ikinci bir kopyası yoksa `icd10_enc`/`ocr_raw_enc` alanları **tam bir `pg_dump` ile bile** geri gelmez — ve K10 gereği bizde kopya yok, olması da yasak (G2) |
+| **Çözüm** | **Faz 2.1c, adım 5 + 14.** (a) `.env` `chmod 600`, sahibi root. (b) Kurulum çıktısı `DATA_ENCRYPTION_KEY`'i **bir kez** ekrana basar ve "kasaya ya da ayrı bir taşıyıcıya al, yedek klasörüne koyma" der — sonra bir daha hiçbir yerde basmaz, `install.log`'a da girmez. (c) Faz 2.3'ün yedek betiği `.env`'i arşive **almaz** (dışlama listesi) ve panelde `RELEASE-STANDARD.md` §4.4'teki `data_key_fingerprint` üzerinden "bu yedeğin anahtarı elinizde mi" kontrolünü gösterir. ⚠️ Anahtar rotasyonu bugün **mümkün değil** (şifre metni anahtar kimliği taşımıyor — `.env.template` §2) — yani (b) bir kolaylık değil, tek kurtarma yolu |
+| **Durum** | 🟡 `kısmen gelöst` — (a) **yapıldı**: `install.sh:164-165` `chmod 600` + `chown root:root`; `set_env` `mktemp` üzerinden yazdığı için izin `mv` sonrası da 600 kalıyor. (b) **yapıldı**: `reveal_once()` bilinçli olarak `tee`'siz (`install.sh:43`), `DATA_ENCRYPTION_KEY` ve `SETUP_TOKEN` `install.log`'a girmiyor, "kasaya, yedekten AYRI" uyarısı basılıyor. (c) **açık** — Faz 2.3 (`.env`'in yedekten dışlanması + `data_key_fingerprint`) |
+
+> İki pürüz aynı turda kapanır: `onprem/install.log` `.gitignore`'da değil (içinde sır yok,
+> ama host adı/LAN IP/`docker compose ps` çıktısı var, depo public); ve `set_env`'in
+> `mktemp`'i `/tmp`'de — dosya 0600 açıldığı için sızıntı yok, yine de bütün sırların
+> geçtiği geçici dosyanın kurulum dizininde durması daha dürüst.
+
+### O-62 — İlk owner nasıl yaratılacak: `DISABLE_SIGNUP` şablonda "kurulumda kısa süre false" diyor, bu LAN'a açık bir pencere demek
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kutuda kayıt kapalıdır (`DISABLE_SIGNUP=true`), ama sihirbazın ilk owner hesabını yaratması gerekir. Şablonun bugünkü çözümü "kurulum sırasında kısa süre `false`" |
+| **Nerede** | `onprem/.env.template` §4 (`DISABLE_SIGNUP` yorumu) · `onprem/docker-compose.yml` (`GOTRUE_DISABLE_SIGNUP`) · playbook 2.2 |
+| **Tip** | G (+ H) |
+| **Kutuda ne olur** | `false` süresince kutunun `/auth/v1/signup` ucu praxis ağındaki **herkese** açıktır; önünde kimlik yok. Pencere "kısa" diye tarif ediliyor ama gerçekte kurulumun ne kadar sürdüğüne bağlı — yarıda bırakılan bir kurulumda süresiz açık kalır. Ayrıca değeri geri `true` yapmak `.env`'i düzenleyip konteyneri yeniden yaratmak demektir; sihirbazın içinden yapılamaz, yani adım ya elle kalır ya unutulur. Unutulduğunda hiçbir alarm çalmaz: kutu çalışır görünür, yalnızca kapısı açıktır |
+| **Çözüm** | `DISABLE_SIGNUP=true` **hiç gevşetilmez.** Sihirbaz ilk owner'ı GoTrue'nun **admin** ucundan yaratır (`POST /auth/v1/admin/users`, service-role anahtarıyla, kutunun içinden) — `DISABLE_SIGNUP` bu yolu engellemez ve `handle_new_user` trigger'ı yine koşar (`RELEASE-STANDARD.md` §5.4 kontrol 4 bunu zaten ölçüyor). Böylece kutuda hiçbir an açık kayıt penceresi olmaz. Sihirbazın kendi kapısı ayrı korunur: `install.sh` tek kullanımlık bir **kurulum jetonu** üretip son satırda ekrana basar (O-61'in yanında), sihirbaz o jeton olmadan açılmaz — aksi hâlde "ilk açan owner olur" modeli kalır ve praxis ağındaki ilk kişi praksisin sahibi olur. ⚠️ Bu karar uygulanırken `.env.template` §4'teki yorum **düzeltilmeli**, yoksa iki farklı talimat yan yana durur |
+| **Durum** | 🟡 `kısmen gelöst` (11.09.2026, 3. tur — **staged**) — `DISABLE_SIGNUP` **hiç gevşetilmiyor**. Jeton artık adım **6**'da, `docker compose up`'tan **önce** üretiliyor (`install.sh:240`) ve `docker-compose.yml:440` üzerinden `api` konteynerine **ulaşıyor**; adım 14 yalnız gösteriyor, `install.log`'a girmiyor. ⚠️ **Jetonu bugün hiçbir kod okumuyor** — `SETUP_TOKEN` için depoda tüketici sıfır (yalnız compose + install.sh). Kurulum müşteriye henüz hiçbir kapıyı açmayan bir dizge veriyor; kapıyı **Faz 2.2** takacak. Hesabı yaratmak kesin olarak Faz 2.2'nin işi |
+
+> ✅ **Kapandı (11.09.2026, üçüncü tur):** (1) ve (2) düzeltildi — jeton adım 6'da
+> üretiliyor ve compose'un `api` bloğunda duruyor. (3) hâlâ Faz 2.2'nin borcu. Altındaki
+> metin, neyin niye kırık olduğunun kaydı olarak duruyor:
+>
+> ⚠️ **~~Jeton bugün hiçbir yere varmıyor~~ (11.09.2026 gecesi):** (1) `SETUP_TOKEN` adım
+> **14**'te, yani `docker compose up`'tan **sonra** üretiliyor — konteyner env'ini açılışta
+> okuduğu için `api` onu asla görmez; adım **6**'ya (diğer sırların yanına) alınmalı, adım
+> 14 yalnız **göstermeli**. (2) `onprem/docker-compose.yml`'ın `api` bloğunda `SETUP_TOKEN`
+> satırı **hiç yok**; eklenmedikçe jeton `.env`'de duran ölü bir dizgidir.
+> (3) Faz 2.2'ye not: jetonu **tüketmek** `.env`'i düzenlemekle olmaz (konteyner env'i
+> açılışta okur, değişiklik yeniden yaratmadan görünmez) — tüketim veritabanında
+> işaretlenir.
+
+### O-63 — Kurulumun sağlık kapısı: ya üç dakika boyunca yanlış soruyu sorar, ya ölen konteyneri hiç görmez
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `install.sh` adım 12, konteynerlerin sağlığını `docker compose ps --format '{{.Health}}'` çıktısını **grep -c** ile sayarak ölçüyor. İki ayrı kırık: (a) `grep -c` sıfır eşleşmede hem `0` basar hem **1 döner**, `\|\| echo 0` yüzünden değişken `"0\n0"` olur ve `$(( ))` sözdizimi hatası verir; (b) `docker compose ps` **varsayılan olarak yalnız çalışan** konteynerleri listeler |
+| **Nerede** | `onprem/install.sh:278-291` (adım 12) · sağlıksız kalabilecek konteyner: `onprem/docker-compose.yml:370` (`api` — **healthcheck'i yok**, buna karşılık migration zincirini o koşturuyor) |
+| **Tip** | G |
+| **Kutuda ne olur** | (a) yerel `bash` ile **tekrarlandı**: `x="$(… \| grep -c '^$' \|\| echo 0)"` → `x = "0\n0"` → `arithmetic syntax error`. Bugün tesadüfen kurtarıyoruz, çünkü `api`'nin healthcheck'i olmadığı için boş satır sayısı 1'dir; `api` bir şema hatasıyla çıkarsa sayı 0'a düşer, koşul **hiç** doğru olamaz ve kurulum 3 dakika döndükten sonra durur. (b) asıl tehlike ters yönde: `ps` ölen konteyneri listelemediği için `gesamt` küçülür — aritmetik düzeltilir düzeltilmez `7/7 gesund` çıkar ve **kurulum "her şey sağlıklı" der, oysa bizim `api` konteynerimiz ölmüştür.** O-40'ın "sahte yeşil"i, bu kez kurulum betiğinde. Migration zinciri `api` içinde koştuğu için bu, şema hiç kurulmamış bir kutunun "kurulum başarılı" mesajıyla teslim edilmesi demektir |
+| **Çözüm** | **Faz 2.1c, adım 12'nin yeniden yazımı.** (1) `docker compose ps -aq` ile **bütün** konteynerleri al, her biri için `docker inspect -f '{{.State.Status}}'` ve `{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}` sor — bu yol Compose sürümünden ve `--format` şablon desteğinden bağımsızdır (`ps --format` şablonu bazı v2 sürümlerinde yalnız `table`/`json` kabul eder; betik bunu bugün varsayıyor ve test edilmemiş). (2) Kabul ölçütü: hiçbir konteyner `exited`/`restarting` **değil** ve healthcheck'i olanların hepsi `healthy`. (3) `praxura-api` **adıyla** ayrıca sorulur — sekizde biri değil, adı geçen bir koşul. (4) Ek ucuz kanıt: `GET ${SITE_URL}/health` → 200 (Caddy `/health`'i `api:3000`'e veriyor); `/health` her koşulda `ok` dese de (O-40) **süreç ayakta mı** sorusunu dürüstçe cevaplar. (5) `grep -c` sayımından tamamen vazgeç — sayılan şey 0 olabiliyorsa `grep -c` + `\|\| echo` kalıbı yanlış kalıptır |
+| **Durum** | `gelöst` (11.09.2026, 3. tur — **staged**, commit no. girilecek) — adım 12 yeniden yazıldı (`install.sh:333-363`): `docker compose config --services` beklenen listeyi verir, her servis için `ps -q` + `docker inspect` ile `State.Status` ve `State.Health.Status` **tek tek** sorulur, konteyner hiç yoksa "eksik" sayılır. `grep -c` kalıbı tamamen kaldırıldı, sıfır eşleşme aritmetiği artık mümkün değil. ⚠️ Çözümün (3) ve (4) şıkları uygulanmadı: `praxura-api` **adıyla** ayrı koşul yok (servis listesinden zaten geliyor) ve `${SITE_URL}/health` eklenmedi (adım 13 aynı `--resolve` ile dışarıdan ölçüyor). Kutuda koşturulmadı |
+
+### O-64 — `REALTIME_DB_ENC_KEY` 16 karakter olmalı; betik 32 üretiyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Adım 6 `openssl rand -hex 16` çağırıyor — bu **32 karakterlik** bir dizge üretir. Realtime'ın beklediği anahtar upstream'de 16 karakter (`supabaserealtime`), AES-128 |
+| **Nerede** | `onprem/install.sh:194` · `onprem/docker-compose.yml:255` (`DB_ENC_KEY: ${REALTIME_DB_ENC_KEY}`) · upstream varsayılanı `onprem/supabase-docker/docker-compose.yml:315` (`:-supabaserealtime`, 16 karakter) · **çalıştığı ölçülen değer:** yerel test `.env`'inde uzunluk **16** (10./11.09.2026'da yığın bu değerle ayağa kalktı) |
+| **Tip** | E |
+| **Kutuda ne olur** | Realtime tenant kaydını bu anahtarla şifreliyor; anahtar uzunluğu AES-128'in beklediği 16 bayt değilse şifreleme çağrısı hata verir. Sonuç kurulumun en sinsi biçimi: diğer yedi konteyner sağlıklı, yalnız Realtime kırılır — ve Realtime'ın kırılması "randevu ekranı kendini yenilemiyor" diye görünür, "kurulum bozuk" diye değil. ⚠️ Bu değer **`--neu` olmadan düzeltilemez**: yanlış anahtarla şifrelenmiş tenant satırı veritabanında kalır |
+| **Çözüm** | `openssl rand -hex 8` (= 16 karakter) — tek karakter değişikliği. Sonra **gerçekten çalıştırıp** `docker logs praxura-realtime`'a bakmak; bu maddeyi kapatacak olan okuma değil o log. Genel kural: ölçüsü olan alanları rastgele uzunlukta doldurma — `.env.template` §2'ye her sırrın **beklenen uzunluğu** yazılsın (`DATA_ENCRYPTION_KEY` için zaten yazılı, diğer altısı için değil) |
+| **Durum** | `gelöst` (11.09.2026, 3. tur — **staged**) — `openssl rand -hex 8` (`install.sh:232`), 16 karakter, gerekçesi satırın üstünde yazılı. ⚠️ Maddenin kendi kabul ölçütü (`docker logs praxura-realtime`) **yerine gelmedi**: Docker kapalıydı, betik kutuda koşmadı. Realtime'ın gerçek logu görülene kadar bu `gelöst` okuma kanıtına dayanıyor |
+
+### O-65 — Kurulum betiği kutunun kendi adresini çözemez; kendi doğrulama adımında takılır
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Adım 13 `curl "${SITE_URL}/rest/v1/"` çağırıyor. `SITE_URL` tipik olarak `https://praxis.local` — bu ad **hiçbir yerde** tanımlı değildir, kutunun kendisinde de (`hosts` satırını daha yeni yazdırıyoruz, adım 14'te) |
+| **Nerede** | `onprem/install.sh:295-296` (adım 13) · varsayılan `onprem/.env.template:110` · kök neden O-59'un aynısı (Caddy Host bazlı eşleştirir, ad çözülmeden istek doğru bloğa girmez) |
+| **Tip** | C (+ G) |
+| **Kutuda ne olur** | `curl` "could not resolve host" ile döner, betik `000` yakalar ve **"Abgeleiteter Schlüssel wird nicht akzeptiert"** diyerek durur. Yani kurulum, tamamen sağlıklı bir kutuda, yanlış bir teşhisle çöker — ve müşteriye `--neu` ile tekrar denemesini söyler, bu da veritabanını sildirir. Çıkmaz: adım 13'ü geçemeyen kurulum adım 14'e, yani `hosts` talimatının basıldığı yere hiç varamaz |
+| **Çözüm** | İstek isme değil, **kutunun kendisine** gitsin, ama Host/SNI doğru kalsın: `curl -sk --resolve "<host>:443:127.0.0.1" "${SITE_URL}/rest/v1/"`. Host adı adım 4'te zaten ayrıştırılmış (`HOST_PART`). Aynı düzeltme `${SITE_URL}/health` kontrolü için de geçerli (O-63). ⚠️ Bunu "`SITE_URL` yerine `localhost` kullanalım" diye çözmek **yanlıştır**: Caddy site bloğu `{$SITE_URL}` Host'una bakar, `localhost` isteği bloğa hiç girmez (O-59) |
+| **Durum** | `gelöst` (11.09.2026, 3. tur — **staged**) — `curl -sk --resolve "${HOST_PART}:443:127.0.0.1"` (`install.sh:372-381`). Host/SNI `SITE_URL` kalıyor, istek loopback'e gidiyor; `localhost` tuzağına düşülmedi (O-59). Caddy 443'ü `0.0.0.0`'a yayınladığı için loopback yolu geçerli (`docker-compose.yml:464`) |
+
+---
+
 ## 8. Kapı tabanları — `tools/check-onprem.sh` için
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -1494,6 +1826,28 @@ Buna karşılık `cookie-consent.js/css` **hiçbir** kutu sayfasından çağrıl
 > - Gerekçesi değişen: **O-12** (`unkritisch` kalıyor; artık "veri gidiyor ama zararsız"
 >   değil, "CSP engelliyor, hiç gitmiyor — özellik susuyor")
 > - Toplam madde: **59**
+>
+> **11.09.2026 gecesi farkı (Faz 2.1c ön-hazırlık):**
+> - `offen`'e eklenenler: **O-60** (JWT türetimi + `exp` tuzağı) · **O-61** (`.env` izni,
+>   yedekten dışlanması, anahtarın tek kopyası)
+> - Faza bağlananlar (durum değişmedi, sahibi netleşti): **O-53** → §7G adım 9 ·
+>   **O-59** → adım 4 + 14 · **O-52 (b)** → adım 8 · **O-50**'nin kalanı → adım 6
+> - Toplam madde: **62**
+>
+> **11.09.2026 gecesi, ikinci tur farkı (`install.sh` yazıldı ve okundu):**
+> - `offen`'e eklenenler: **O-63** (kurulumun sağlık kapısı: aritmetik kırık + ölen
+>   konteyneri saymayan sayım) · **O-64** (`REALTIME_DB_ENC_KEY` 32 karakter üretiliyor,
+>   çalışan yığında 16) · **O-65** (betik kutunun kendi `SITE_URL`'ini çözemiyor, kendi
+>   doğrulama adımında yanlış teşhisle duruyor)
+> - 🟡 `kısmen gelöst`'e geçenler: **O-60** (türetme yapıldı, kanıt adımı imzayı ölçmüyor) ·
+>   **O-61** ((a)+(b) yapıldı, (c) Faz 2.3'te) · **O-62** (`DISABLE_SIGNUP` hiç
+>   gevşetilmiyor; jeton üretiliyor ama `api` konteynerine geçmiyor)
+> - Toplam madde: **65**
+>
+> ⚠️ **Turun dersi — 11.09 sabahının dersinin tekrarı:** üç engelleyici bulgunun üçü de
+> *çalıştırılmamış* koddan çıktı ve üçü de ilk gerçek kurulumda çıkardı. "Çalıştırılmamış
+> paket, yazılmamış pakettir" kuralı **betikler için de** geçerli; `bash -n` sözdizimini
+> ölçer, davranışı değil.
 
 > **Toplam 51 madde.** 🟡 satırı 11.09.2026'da açıldı: altı madde aylardır `offen`
 > görünüyordu ama yarısı yapılmıştı — "yapılan ile kalan" tek hücrede karışınca sicil
