@@ -5,7 +5,7 @@
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-10)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 88,
+ "anzahl": 89,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -10074,7 +10074,29 @@
    "schreiber": [],
    "dateien": [],
    "module": [],
-   "sqlTreffer": 3,
+   "sqlTreffer": 5,
+   "codeStumm": true
+  },
+  {
+   "name": "praxura_setup",
+   "spalten": 7,
+   "fkRaus": [
+    "auth.users"
+   ],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv in der Box — **im SaaS bewusst inert** (siehe Achtung)",
+   "warum": "Der Einrichtungsassistent der Kundenbox (On-Premise Faz 2.2) braucht eine",
+   "seit": "11.09.2026 · `0005_praxura_setup` (Kette) / `praxura_setup_tabelle` (MCP,",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 4,
    "codeStumm": true
   },
   {
@@ -16285,8 +16307,13 @@
   },
   {
    "name": "praxura_migrations",
-   "sql": 3,
+   "sql": 5,
    "status": "aktiv"
+  },
+  {
+   "name": "praxura_setup",
+   "sql": 4,
+   "status": "aktiv in der Box — **im SaaS bewusst inert** (siehe Achtung)"
   },
   {
    "name": "referral_drafts",
@@ -16433,7 +16460,8 @@
    "accommodations",
    "admin_users",
    "applications",
-   "booking_status_korrekturen"
+   "booking_status_korrekturen",
+   "praxura_setup"
   ]
  }
 }

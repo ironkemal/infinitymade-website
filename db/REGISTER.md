@@ -10,7 +10,7 @@ steht in keinem Schema und lässt sich aus keinem Code herauslesen. Wenn es nich
 aufgeschrieben wird, ist es in sechs Monaten weg, und dann steht jemand vor einer
 Tabelle und fragt „brauchen wir die noch?" — ohne Antwort.
 
-**Stand:** 2026-09-09 · 87/87 Tabellen erfasst · Projekt `njvuclullotbksskpwgk`
+**Stand:** 2026-09-11 · 89/89 Tabellen erfasst · Projekt `njvuclullotbksskpwgk`
 (das Ops-Dashboard liegt in einem **anderen** Projekt, `farkaejociddtgqkusvm`, und ist
 hier **nicht** erfasst).
 
@@ -810,6 +810,71 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
   - In der Produktion steht `0000` als *angewandt*, **ausgefuehrt wurde die Baseline dort
     nie** — das SaaS ist bereits auf diesem Stand. Die Datei laeuft nur in neuen Boxen.
   - Kein Personenbezug → keine Aenderung an `api/dsgvo.js` noetig.
+
+### `praxura_setup`
+
+- **Warum:** Der Einrichtungsassistent der Kundenbox (On-Premise Faz 2.2) braucht eine
+  dauerhafte Antwort auf genau eine Frage: **ist der von `install.sh` erzeugte
+  `SETUP_TOKEN` schon gegen den ersten Owner eingetauscht worden?** Ohne dieses Zeichen
+  koennte der Token beliebig oft eingeloest werden — jeder im LAN, der den Zettel des
+  Installateurs sieht, legt sich sonst ein zweites Inhaber-Konto an. Die naheliegende
+  Ablage (`.env`) scheidet aus: der Container liest seine Umgebung **nur beim Start**,
+  der Assistent laeuft im Container und darf Geheimnisse ohnehin weder erzeugen noch
+  aendern (das ist die Aufgabe von `install.sh`, Korkuluk G2).
+- **Seit:** 11.09.2026 · `0005_praxura_setup` (Kette) / `praxura_setup_tabelle` (MCP,
+  Produktion)
+- **Status:** aktiv in der Box — **im SaaS bewusst inert** (siehe Achtung)
+- **Wer:** ausschliesslich `api-backend/routes/setup.js` mit `service_role`, und nur
+  wenn `SETUP_TOKEN` gesetzt ist. Kein Frontend, kein PostgREST, keine Anwendungslogik.
+  Die Assistentenseite (`setup.html`) laeuft mit `anon` und sieht die Tabelle nie —
+  das Anlegen des Kontos geht durch das Backend, damit der `service_role`-Schluessel
+  nicht im Browser landet.
+- **Achtung:**
+  - ★ **Das Tor ist die Umgebungsvariable, nicht diese Tabelle.** Ist `SETUP_TOKEN`
+    leer, werden die `/setup`-Routen gar nicht erst registriert. **Nicht** „hat schon
+    jemand einen Owner?“ zaehlen — wer das Verhalten der Produktion an einen
+    Datenbestand haengt, baut die Tuer, die irgendwann im falschen Moment aufgeht.
+  - ★ **Im SaaS existiert die Tabelle und bleibt fuer immer eine leere Zeile.** Das ist
+    Absicht: eine inerte Zeile kostet nichts, ein Schemaunterschied zwischen Box und
+    Produktion kostet den naechsten Fehlersuchtag (`onprem/SCHEMA-VERTEILUNG.md` §5.2,
+    „Fork yok“). Wer sie hier sieht und „Loeschkandidat“ denkt: nein — sie ist in
+    jeder Kundenbox tragend.
+  - ⛔ **`SETUP_TOKEN` wird auf dem SaaS-VPS nie gesetzt.** Derselbe Code laeuft dort;
+    gesetzt hiesse: jeder, der den Token kennt, kann sich bei `app.praxura.de` ein
+    Inhaber-Konto anlegen. Diese Kontrolle ist **nicht mechanisch pruefbar** (entfernte
+    Umgebung) — Eigentuemer ist eine Ops-Karte (Guvenlik).
+  - **Klartext-Token niemals in der DB**, nur sein SHA-256, und erst beim Verbrauch.
+    Geprueft wird gegen die Umgebungsvariable, zeitkonstant (`timingSafeEqual`).
+    Der Hash dient dem Nachweis „dieser Token war es“, nicht der Pruefung.
+  - **Einmaligkeit kommt aus der WHERE-Bedingung**, nicht aus einem Trigger:
+    `UPDATE praxura_setup SET verbraucht_am = now(), token_sha256 = $1, owner_user_id = $2
+    WHERE id = 1 AND verbraucht_am IS NULL RETURNING id`. Keine Zeile zurueck = war schon
+    verbraucht. Kein `SELECT`-dann-`UPDATE`, kein `INSERT … ON CONFLICT` — die eine
+    Zeile legt die Migration an. Am 11.09.2026 in der Produktion gegen eine
+    zurueckgerollte Probe gemessen: erster Versuch 1 Zeile, zweiter 0.
+  - **`owner_user_id = NULL` heisst NICHT „unverbraucht“.** Der FK ist
+    `ON DELETE SET NULL` (wie `ai_audit_log.user_id`); wird das Inhaberkonto spaeter
+    geloescht, bleibt `verbraucht_am` stehen — und nur das zaehlt. Der CHECK verlangt
+    deshalb beim Verbrauch `token_sha256`, nicht den Owner.
+  - **`verbraucht_am` ≠ `abgeschlossen_am`.** Ersteres faellt beim Anlegen des Kontos
+    (Schritt 5), letzteres am Ende des Assistenten (Schritt 8). Der Zwischenzustand
+    „verbraucht, aber nicht abgeschlossen“ ist der Wiederaufnahmefall: das Konto gibt es
+    schon, der Assistent darf vom angemeldeten Owner fortgesetzt werden — er darf nicht
+    erneut nach dem Token fragen.
+  - **RLS an, KEINE Policy, `anon`/`authenticated` ohne Rechte** — dieselbe Bauart wie
+    `praxura_migrations` darueber, aus demselben Grund: die Zeile verraet, welche
+    Installation ihre Einrichtung noch offen hat. Der `REVOKE` ist noetig, weil
+    `pg_default_acl` in `public` jeder neuen Tabelle automatisch `ALL` an
+    `anon`/`authenticated` gibt; RLS allein haette nur leere Ergebnisse geliefert,
+    erst der Entzug macht daraus `42501`. Live nachgesehen 11.09.2026:
+    `relacl = postgres + service_role`, sonst nichts.
+  - **`schritte jsonb` ist kein Sammelbecken.** Nur Zustand der Assistentenschritte
+    (erledigt/uebersprungen, Ergebnis der billigen Pruefungen). Keine Geheimnisse,
+    keine Zugangsdaten, keine Patientendaten — die Zeile wird im Supportfall gelesen.
+    Wenn hier ein zweites Thema hineinwandern will, ist das eine neue Spalte oder eine
+    neue Tabelle, keine neue Schluesselgruppe.
+  - Kein Personenbezug (eine UUID des eigenen Inhaberkontos, kein Patientendatum)
+    → keine Aenderung an `api/dsgvo.js` noetig.
 
 ---
 

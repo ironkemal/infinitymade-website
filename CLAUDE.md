@@ -327,6 +327,11 @@ DROP'lu. Pazarlama metinlerinde kullanma, `business_lookup_for_twilio` RPC'sine 
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URL`
 - `N8N_WEBHOOK_URL`, `SENTRY_DSN`, `SENTRY_ENVIRONMENT`
+- `SETUP_TOKEN` — ⛔ **SET ETME.** On-prem kutunun `install.sh`'ının ürettiği tek
+  kullanımlık kurulum jetonu (Faz 2.1c/2.2, O-62). Aynı kod SaaS VPS'inde de
+  çalışıyor; burada set edilirse `api-backend/routes/setup.js`'in owner-yaratma
+  ucu **canlıda** açılır. Kapı bunu göremez (uzak env, repo'da iz bırakmaz) —
+  tek koruma bu satırın hiç yazılmamış olması. onprem/REGISTER.md O-66/O-67
 
 > ⚠️ **Doğru anahtar adı `SUPABASE_SERVICE_ROLE_KEY`.** `SUPABASE_SERVICE_KEY` yazmak
 > prod'da crash-loop yaratmıştı — Watchtower bozuk image'ı 60 saniyede canlıya alır.

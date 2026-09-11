@@ -3,11 +3,11 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-11 · 88 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-11), funktionen/INDEX.json (erzeugt 2026-09-10)
+**Erzeugt:** 2026-09-11 · 89 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-11), funktionen/INDEX.json (erzeugt 2026-09-10)
 
 ## Kayıt durumu
 
-- Register kaydı olan: **88/88**
+- Register kaydı olan: **89/89**
 
 ## Kodda hiç çağrılmayan tablolar
 
@@ -26,7 +26,8 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `icd10_titles` | 7 | aktiv (Referenz) |
 | `icd_sector_ranges` | 3 | aktiv (Referenz) |
 | `nummernkreise` | 3 | aktiv |
-| `praxura_migrations` | 3 | aktiv |
+| `praxura_migrations` | 5 | aktiv |
+| `praxura_setup` | 4 | aktiv in der Box — **im SaaS bewusst inert** (siehe Achtung) |
 | `referral_drafts` | 9 | verdächtig |
 | `spatial_ref_sys` | 1 | System |
 | `trip_history` | 1 | fremd |
@@ -39,7 +40,7 @@ Auskunft (Art. 15): **57** · Löschung (Art. 17): **49** · anonymisiert statt 
 
 ⚠️ Personenbezug (FK auf `leads`/`profiles`/`auth.users`) aber **nicht** in der Auskunftsliste:
 
-`accommodations`, `admin_users`, `applications`, `booking_status_korrekturen`
+`accommodations`, `admin_users`, `applications`, `booking_status_korrekturen`, `praxura_setup`
 
 Prüfen, nicht blind nachtragen: manche davon sind Konfigurations- oder
 Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
@@ -691,6 +692,11 @@ Warum: Die Behandlung zur podologischen Verordnung — das Gegenstück zu `presc
 
 6 Spalten · Status: aktiv
 Warum: Das Buch der Schemakette — eine Zeile je angewandter Migrationsdatei. Bis
+
+### `praxura_setup`
+
+7 Spalten · Status: aktiv in der Box — **im SaaS bewusst inert** (siehe Achtung)
+Warum: Der Einrichtungsassistent der Kundenbox (On-Premise Faz 2.2) braucht eine
 
 ### `prescription_documents`
 

@@ -67,6 +67,18 @@ buldu — en ciddisi `grep … | cut` + `pipefail`: anahtar `.env`'de hiç yoksa
 açılmadı. Kalan tek boşluk: **O-60**'ın negatif testi Kong'da durup PostgREST'e hiç
 varmıyor (§7G, üçüncü tur). Toplam **65** madde.
 
+**11.09.2026 (gece, 5. tur) — Faz 2.2 ön-hazırlığı (kurulum sihirbazı).** `install.sh`'ın
+ürettiği `SETUP_TOKEN`'ın depoda tüketicisi yoktu; sihirbazın adım sırası, uç sözleşmesi,
+paket sınırı ve dilimlemesi kilitlendi → **§7H**. Hükümler: jeton **veritabanında**
+tüketilir (yeni tek satırlık tablo, `db-ustasi`'ya sorulur) · owner hesabını
+**`api-backend`** yaratır, tarayıcı değil (service-role sızmaz, G2) · SaaS'ta aynı kod
+koşar ama `SETUP_TOKEN` boş olduğu için uçlar hiç açılmaz (G7) · ⛔ `SETUP_TOKEN` SaaS
+VPS'inde **asla** set edilmez (Ops kartı, Güvenlik). İki yeni madde: **O-66** (SMTP
+sihirbazdan ayarlanamaz — GoTrue env'i açılışta okur; playbook 2.2 ile 2.7 bugünkü
+mimaride aynı anda doğru olamaz, karar kullanıcının) · **O-67** (`handle_new_user` yalnız
+`(id, email)` yazıyor → kutunun ilk owner'ı `plan_status='pending'`, `company_code` boş
+doğuyor; ikincisi kutuda çalışan kaydını imkânsız kılar). Toplam **67** madde.
+
 **Nerede duruyoruz (11.09.2026):** kutunun compose paketi **var ve çalıştığı ölçüldü**
 (`onprem/docker-compose.yml` + `.env.template` + `NOTICE.md` + `volumes/`; commit'ler
 `b2fdbb8` ve `c602f50`). Yığın 11 fremd konteynerden **6**'ya indi, boşta ≈1,65 GB
@@ -136,6 +148,10 @@ test yığını**, kurulabilir ürün değil.
 - **O-59** → Faz 2.1c `install.sh` ön-kontrolü; kurulum çıktısı hem LAN adresini hem
   kök CA'yı söylemeli
 - **O-58 (b)** → `legal-de`; metin kararı verilmeden şablon sayfa yazılmaz
+- **O-62** → ✅ tasarımı kapandı (§7H); kalanı Faz 2.2 dilim 1'in kodu
+- **O-66** (SMTP) → **kullanıcı kararı**; üç seçenek §7H'de, ajanın tavsiyesi (a).
+  Karar gelmeden sihirbaza SMTP ekranı yazılmaz
+- **O-67** (`plan_status` köprü değeri) → **O-33**'ü bekliyor; dilim 1 bunsuz bitirilebilir
 
 **Sicili nasıl okursun:** durum değerleri §9'da sayılı. 🟡 **kısmen** demek "yarısı
 yapıldı, kalanı maddede yazılı" demek — `gelöst` yalnız kalanı da bittiğinde konur.
@@ -1723,6 +1739,9 @@ kurulumunda bu betiğin **ilk** gerçek koşusu olacak; sonucu buraya yazılmal�
 > (3) Faz 2.2'ye not: jetonu **tüketmek** `.env`'i düzenlemekle olmaz (konteyner env'i
 > açılışta okur, değişiklik yeniden yaratmadan görünmez) — tüketim veritabanında
 > işaretlenir.
+>
+> ✅ **(3)'ün cevabı yazıldı (11.09.2026, 5. tur): §7H** — tüketim `praxura_setup`
+> tablosunda koşullu tek `UPDATE` ile işaretlenir, jetonun düz metni DB'ye girmez.
 
 ### O-63 — Kurulumun sağlık kapısı: ya üç dakika boyunca yanlış soruyu sorar, ya ölen konteyneri hiç görmez
 
@@ -1756,6 +1775,173 @@ kurulumunda bu betiğin **ilk** gerçek koşusu olacak; sonucu buraya yazılmal�
 | **Kutuda ne olur** | `curl` "could not resolve host" ile döner, betik `000` yakalar ve **"Abgeleiteter Schlüssel wird nicht akzeptiert"** diyerek durur. Yani kurulum, tamamen sağlıklı bir kutuda, yanlış bir teşhisle çöker — ve müşteriye `--neu` ile tekrar denemesini söyler, bu da veritabanını sildirir. Çıkmaz: adım 13'ü geçemeyen kurulum adım 14'e, yani `hosts` talimatının basıldığı yere hiç varamaz |
 | **Çözüm** | İstek isme değil, **kutunun kendisine** gitsin, ama Host/SNI doğru kalsın: `curl -sk --resolve "<host>:443:127.0.0.1" "${SITE_URL}/rest/v1/"`. Host adı adım 4'te zaten ayrıştırılmış (`HOST_PART`). Aynı düzeltme `${SITE_URL}/health` kontrolü için de geçerli (O-63). ⚠️ Bunu "`SITE_URL` yerine `localhost` kullanalım" diye çözmek **yanlıştır**: Caddy site bloğu `{$SITE_URL}` Host'una bakar, `localhost` isteği bloğa hiç girmez (O-59) |
 | **Durum** | `gelöst` (11.09.2026, 3. tur — **staged**) — `curl -sk --resolve "${HOST_PART}:443:127.0.0.1"` (`install.sh:372-381`). Host/SNI `SITE_URL` kalıyor, istek loopback'e gidiyor; `localhost` tuzağına düşülmedi (O-59). Caddy 443'ü `0.0.0.0`'a yayınladığı için loopback yolu geçerli (`docker-compose.yml:464`) |
+
+---
+
+## 7H — Faz 2.2 ön-hazırlık (kurulum sihirbazı), 11.09.2026
+
+> §7G gibi: **kod değil, gereksinim.** Sihirbaz yazılmadan önce neyin hangi sırayla
+> olacağı, sınırın nerede olduğu ve hangi iki tuzağın bugünden görünür olduğu. Uygulama
+> `builder`'ın. Bu bölüm yazıldığında `install.sh` bitmişti (§7G, dört tur) ama ürettiği
+> jetonun depoda **tüketicisi yoktu** (O-62).
+
+### Playbook'ta 2.2 için ne yazıyor — tam metin
+
+`ONPREM_MIGRATION_PLAYBOOK.md:216`, **tek satır**, checklist yok:
+
+> „2.2 **İlk-açılış sihirbazı** (lokal web sayfası; mevcut `onboarding.html`'den türet):
+> yönetici hesabı → işletme bilgileri → SMTP (hazır profiller … + „Test maili gönder"
+> butonu) → yedek hedefi → IONOS AI anahtarı (test butonu …; „sonra kur" çıkışı).
+> Sihirbaz tamamlanana kadar uygulama kurulum modunda kalır."
+
+Buna bağlı iki kabul ölçütü (`:226` ve `:229`): temiz Ubuntu'da `install.sh` → sihirbaz →
+**hiçbir elle adım olmadan** çalışan ürün · sihirbaz **üç dilde** (DE/EN/TR).
+İki bağlayıcı ek `RELEASE-STANDARD.md`'de: §5.4 (14 kontrol — sihirbazın kabul ölçütü,
+`install.sh`'ın değil) ve §5.6 (kurulum modu = bakım modu, **tek** mekanizma, fork yok).
+
+⚠️ Playbook'un „`onboarding.html`'den türet" cümlesi **artık geçerli değil**:
+`onboarding.html` Faz 2.0'da pakete girmemeye karar verildi (Stripe checkout'lu SaaS
+kaydı — `onprem/frontend.Dockerfile:28-31`). Örnek alınacak sayfa `login.html`'dir:
+aynı `assets/system.css`, aynı `supabase-config.js` önyüklemesi, dashboard kabuğu yok.
+
+### Kilitli sınır — sihirbaz ne yapar, ne yapmaz
+
+- **Yapar:** jetonu doğrular · ilk owner hesabını **kutunun içinden** yaratır ·
+  `profiles` satırının trigger'ın doldurmadığı alanlarını yazar · ucuz kontrolleri
+  koşturup sonucu gösterir · kurulum modunu kapatır.
+- **Yapmaz:** sır üretmez (o `install.sh`'ın işi, G2) · `.env`'e yazmaz · konteyner
+  yeniden yaratmaz · **docker soketine dokunmaz** (bir konteynere docker soketi vermek
+  kutuda root vermektir; `guvenlik` masası olmadan açılmaz).
+- **Service-role tarayıcıya inmez.** Sihirbaz sayfası `anon` anahtarıyla açılır; hesabı
+  yaratan çağrı `api-backend`'in içinden gider (aşağıda).
+
+### Adım sırası (kilitli tasarım)
+
+| # | Adım | Nerede koşar | Not |
+|---|---|---|---|
+| 0 | **Durum sorusu** | tarayıcı → `GET {apiBase}/setup/status` | Jetonsuz çağrılabilir, **tek alan** döner: `{ erforderlich: true\|false }`. Sürüm, host adı, e-posta, hata metni **dönmez** — kurulmamış kutu hakkında bilgi sızdıran uç, LAN'daki ilk kişiye harita verir |
+| 1 | **Yönlendirme** | `login.js` | `erforderlich:true` ise `setup.html`'e yollar. SaaS'ta aynı kod koşar, aynı uç `false` döner (`SETUP_TOKEN` boş) — **tek kod yolu, iki dağıtım** (G7). Caddy kökü `/login.html`'de kalır, ikinci redirect kuralı yazılmaz |
+| 2 | **Jeton ekranı** | tarayıcı → `POST {apiBase}/setup/verify` | `install.sh`'ın son satırındaki jeton yapıştırılır. Karşılaştırma **sabit zamanlı** (`crypto.timingSafeEqual`), istek **rate-limit**'li (`express-rate-limit` zaten bağımlılık), jeton hiçbir log'a/Sentry'ye girmez. Doğrulama **tüketim değildir** — tüketim adım 5'te |
+| 3 | **Owner ekranı** | tarayıcı → `POST {apiBase}/setup/owner` | E-posta · şifre · praxis adı · Fachbereich. Tek istek, tek yazma turu |
+| 4 | **Hesabın yaratılması** | `api-backend`, service-role ile | `POST {SUPABASE_URL}/auth/v1/admin/users` + `email_confirm: true`. `DISABLE_SIGNUP=true` **hiç gevşetilmez** (O-62). `email_confirm` sayesinde **dilim 1'de hiç mail gerekmez** — SMTP kurulmamış kutuda bile owner giriş yapabilir. O-56 ile kesişme: o madde ikinci kullanıcıyı, bu madde birincisini çözer |
+| 5 | **Jetonun tüketilmesi** | `api-backend` → DB | Koşullu tek `UPDATE … WHERE verbraucht_am IS NULL`. Yarış güvenli, tek kullanımlık. **`.env` düzenlenmez** — konteyner env'ini açılışta okur (§7G, 2. tur) |
+| 6 | **Profil tamamlama** | `api-backend` → DB | `handle_new_user` yalnız `(id, email)` yazıyor (`0000_baseline.sql:1073`). `role` varsayılanı `owner` (doğru), ama `plan_status` varsayılanı `pending`, `company_code` ve `business_name` **boş** kalıyor → **O-67** |
+| 7 | **Ucuz kontroller** | `api-backend` | §5.4'ün 2 · 3 · 4'ü (aşağıdaki tablo). Kırmızıysa sihirbaz „hazır" **demez**, kutu kurulum modunda kalır (§5.6) |
+| 8 | **Kapanış** | DB + tarayıcı | `abgeschlossen_am` yazılır; `status` bundan sonra `false` döner, ikinci kez açılan `setup.html` **410** alır ve giriş ekranına yollanır |
+
+### Jeton nereye işlenir — var olan mekanizma yok, yeni tablo gerekiyor
+
+Arandı: kutu düzeyinde durum tutan bir tablo **yok** (`settings`/`system`/`instance` adlı
+tablo sıfır). En yakın akraba `praxura_migrations`: defter tablosu, RLS açık + policy yok
++ anon yetkisi geri alınmış, PostgREST'ten **42501**. Sihirbazın işareti aynı sınıftandır
+ve aynı muameleyi görür.
+
+**Hüküm: yeni tek satırlık tablo.** `db-ustasi`'ya **sorulur** (yeni tablo →
+`db/REGISTER.md` kaydı + `check-tabellen-register.sh` kapısı); ad ve kolonlar onun
+hükmüdür. Taslak: `praxura_setup` · `id smallint PK CHECK (id=1)` · `token_sha256 text` ·
+`verbraucht_am timestamptz` · `owner_user_id uuid` · `abgeschlossen_am timestamptz` ·
+`schritte jsonb`. Zincire `api-backend/db/migrations/0005_*.sql` olarak girer (tip D —
+başka yolu yok: „önce dosya, sonra canlı").
+
+Üç kural:
+
+1. **Jetonun düz metni DB'ye yazılmaz** — yalnız SHA-256'sı, ve yalnız tüketildiğinde.
+2. **SaaS'ta tablo da vardır ama hiç devreye girmez** (G7). Kapı **veriye değil env'e**
+   bakar: `SETUP_TOKEN` boşsa uçlar hiç kayıtlanmaz, `status` `false` döner. „Owner var mı"
+   diye satır saymak **yasak** — SaaS'ın davranışını veri sayısına bağlamak, üretimde
+   yanlış anda açılan bir kapıdır.
+3. ⛔ **`SETUP_TOKEN` SaaS VPS'inde ASLA set edilmez.** Aynı kod orada da koşuyor; set
+   edilirse `app.praxura.de`'nin backend'inde jetonu bilen herkese owner-yaratma ucu
+   açılır. Sahibi: **Ops kartı (Güvenlik)** — „`/opt/calendar-api/.env.calendar`'da
+   `SETUP_TOKEN` yok, doğrulandı" satırı. Kapı bunu mekanik göremez (uzak env).
+
+### `api-backend` route'u — tarayıcı değil
+
+`api-backend/routes/setup.js` (yeni alt-router), `server.js`'e `app.use('/api/setup', …)`.
+Gerekçe zinciri: service-role anahtarı **zaten** o konteynerde
+(`SUPABASE_SERVICE_ROLE_KEY`), kutuda Caddy `/api/*`'i `api:3000`'e veriyor
+(`onprem/Caddyfile:50`), ve G8 yeni Vercel fonksiyonunu zaten yasaklıyor (12/12 dolu).
+Tarayıcıdan GoTrue'nun admin ucunu çağırmak service-role'ü sayfa kaynağına koymak
+demektir — **G2 ihlali, tartışma yok.**
+
+Konum: **`wartungsmodus` middleware'inin ALTINA** (`server.js:424`). Yarım migrate edilmiş
+şemada hesap yaratılmaz; sihirbaz sayfası 503'ü okuyup „veritabanı güncellenemedi" der.
+`/setup/status`'un bakım modunda 503 dönmesi **bilinçlidir** — `login.js` bunu „kurulum
+gerekmiyor" diye okumamalı, ayrı dal.
+
+### §5.4'ün 14 kontrolü — hangisi bu fazda
+
+| # | Kontrol | Faz 2.2'de mi |
+|---|---|---|
+| 2 | Migration defteri = image'ın en yüksek dosyası | ✅ **dilim 1** — tek sorgu, defteri runner zaten yazıyor |
+| 3 | Gerçek giriş, JWT döndü | ✅ **dilim 1** — sihirbazın ürettiği hesapla |
+| 4 | `handle_new_user` → `profiles` satırı | ✅ **dilim 1** — owner yaratıldıktan sonra satır okunur (PoC'nin ısırdığı yer) |
+| 1 | 10 şema sayacı | 🟡 **dilim 2** — sayaçlar `SCHEMA-VERTEILUNG.md` §3.3'te tanımlı, `migrate.js` bugün export **etmiyor** |
+| 5 | RLS negatif testi | 🟡 **dilim 2** — ikinci test kullanıcısı gerekir, sonra silinir |
+| 8 | `DATA_ENCRYPTION_KEY` yaz-oku turu | 🟡 **dilim 2** — `encryptionAvailable()` + bir tur, ucuz |
+| 7 | Storage bucket + signed URL | ⬜ Faz 2.4 (self-check) |
+| 6 | Realtime olayı | ⬜ Faz 2.4 |
+| 9 | SMTP test maili | ⛔ **bu fazda değil** — O-66, önce karar |
+| 10 | TLS gerçek sertifika | ⬜ 2.1b / `install.sh` tarafı |
+| 11 | İlk yedek alındı | ⬜ Faz 2.3 |
+| 12 | Zamanlanmış işler kayıtlı | ⬜ Faz 2.4a |
+| 13 | Dış çağrı yok (ölçülmüş) | ⬜ Faz 2.4/2.5 — ölçüm aracı yok |
+| 14 | Sürüm künyesi panelde | ⬜ Faz 2.4 |
+
+### Dilimleme — tek oturumda biten ilk dilim var
+
+**Dilim 1 (tek oturum):** `status` + `verify` + `owner` uçları · `praxura_setup` tablosu
+(migration) · `setup.html`/`setup.js` (jeton → owner → sonuç, üç ekran) · `login.js`
+yönlendirmesi · §5.4'ün 2/3/4'ü.
+**Bitti sayılır:** temiz kutuda `install.sh`'ın bastığı jetonla owner yaratılıyor, **o
+hesapla giriş yapılabiliyor**, aynı jeton ikinci kez **410** alıyor.
+
+**Dilim 2:** kurulum modu bayrağının uygulamaya bağlanması (§5.6 — public booking
+sayfaları sihirbaz bitene kadar kapalı; kurulum modu = bakım modu, tek mekanizma) ·
+§5.4'ün 1/5/8'i · üç dil.
+
+**Dilim 3 ve sonrası (ayrı kararlar):** SMTP (O-66) · yedek hedefi (2.3'e bağlı) ·
+IONOS AI anahtarı (Faz 1.3 `llmClient` inmeden anlamsız) · Sentry opt-in (2.6).
+
+Sınırın kaymaması için **bugün kilitlenen şey uçların sözleşmesidir**: `status` tek alan
+döner · `verify` tüketmez · `owner` tek yazma turudur · kapanış `abgeschlossen_am`'dır.
+Sonraki dilimler bu uçlara **alan ekler, yeni uç açmaz.**
+
+### Pakete giren dosyalar
+
+`onprem/frontend.Dockerfile`'a **iki satır**: `COPY setup.html setup.js ./`. Kendi CSS'i
+**yok** — `assets/system.css` zaten pakette (O-57). Sayfa `supabase-config.js` ve
+`sentry-init.js` dışında modül import etmez; `dashboard.js`'e (24k satır) **dokunmaz**,
+bu yüzden i18n sözlüğü sayfanın kendi içinde ama **aynı biçimde** (de/en/tr anahtar
+sözlüğü) yazılır — kabul ölçütü üç dil (playbook `:229`), dashboard'ın sözlüğünü import
+etmek ise kutuya 24k satırı sihirbaz için yüklemek olurdu. Bilinçli sapma, sahibi dilim 2.
+
+### Bu turda açılan maddeler
+
+**O-66** (SMTP sihirbazdan ayarlanamaz — GoTrue env okuyor) · **O-67** (trigger'ın
+doldurmadığı profil alanları: `plan_status='pending'`, `company_code`/`business_name` boş).
+
+### O-66 — Sihirbazın SMTP ekranı yapısal olarak çalışamaz: GoTrue ayarını env'den okur
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Playbook 2.2 SMTP'yi sihirbaza koyuyor, 2.7 ise „sihirbazdaki SMTP GoTrue'yu da beslesin, tek ayar iki işi görsün" diyor. Bu ikisi bugünkü mimaride **aynı anda doğru olamaz** |
+| **Nerede** | `ONPREM_MIGRATION_PLAYBOOK.md:216` (2.2) + `:222` (2.7) · `onprem/docker-compose.yml` `auth` bloğu (`GOTRUE_SMTP_*`) · `onprem/.env.template` SMTP bölümü · tüketici taraf: `api-backend` nodemailer |
+| **Tip** | E (+ G) |
+| **Kutuda ne olur** | GoTrue `GOTRUE_SMTP_*`'ı **açılışta** env'den okur. Tarayıcıdaki sihirbaz konteyner env'ini değiştiremez; değiştirmenin tek yolu `.env` + `docker compose up -d auth`, yani ya müşterinin terminale dönmesi ya da konteynere **docker soketi** verilmesi (kutuda root — açılmaz). Sonuç: SMTP'yi DB'ye yazan bir sihirbaz randevu/Mahnung mailini düzeltir ama **şifre sıfırlama ve davet mailini düzeltmez**; müşteri „test maili gitti" ekranını görür, sonra şifresini unutan çalışan mail alamaz. Arıza sessiz ve gecikmeli — en pahalı sınıf. ⚠️ Üstüne **O-51** biner: gönderen adresi bizim alan adımız olduğu sürece test maili „gitti" dese de **spam'e düşer** (SPF `-all` + DMARC `p=quarantine` ölçüldü) |
+| **Çözüm** | Üç seçenek, karar **kullanıcının** — ajan tek başına vermez: **(a)** SMTP `install.sh`'ta sorulur → tek gerçek env'de, GoTrue ve `api` aynı değeri okur; sihirbaz yalnız **test eder ve teşhis gösterir** (`RELEASE-STANDARD.md` §5.4/9'un „ya başarılı ya bilinçli atlandı"ı bununla uyumlu). **Ajanın tavsiyesi (a)** — en az hareketli parça, docker soketi yok, 2.7 lafzen karşılanır. **(b)** SMTP DB'ye yazılır, **bütün** mail `api`'ye taşınır, GoTrue'nun mail işi kapatılır — daha iyi UX ama auth mail akışını yeniden yazmak demek, bu fazın işi değil. **(c)** Sihirbaz `.env` satırlarını **gösterir**, müşteri yapıştırıp `docker compose up -d auth` der — K10 açısından dürüst ama „hiçbir elle adım olmadan" kabul ölçütünü (playbook `:226`) deler. Hangisi seçilirse gönderen alan adı da aynı turda müşterinin kendi alan adına geçmeli (O-51) |
+| **Durum** | `offen` — Faz 2.2 dilim 3'ün ön koşulu. Karar verilmeden sihirbaza SMTP ekranı **yazılmaz**; yazılırsa iki farklı SMTP gerçeği doğar |
+
+### O-67 — `handle_new_user` yalnız iki alan yazıyor: kutunun ilk owner'ı yarım profille doğuyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Trigger `profiles`'a yalnız `(id, email)` yazar. SaaS'ta kalan alanları onboarding akışı + Stripe webhook dolduruyor; kutuda o akış **pakete girmiyor** (`frontend.Dockerfile:28`), yani dolduran kimse yok |
+| **Nerede** | `api-backend/db/migrations/0000_baseline.sql:1073` (trigger gövdesi) · `db/SCHEMA.sql:2087` (`profiles` varsayılanları: `plan 'starter'` · `plan_status NOT NULL 'pending'` · `role 'owner'` · `company_code` boş · `business_name` boş · `onboarding_step 'account'`) · okuyan yerler: `dashboard.js:1390`, `:1433`, `:4499` (`checkPlanActive`), `:16524` (`isEnterprise`) |
+| **Tip** | H (+ G) |
+| **Kutuda ne olur** | Üç ayrı sonuç: (1) `plan_status='pending'` — `checkPlanActive()` bunu **bloklamıyor** (yalnız `canceled`/`expired`), yani kutu çalışır; ama `isEnterprise()` `['trial','active','past_due']` beklediği için plan bazlı yerler **sessizce kapalı** kalır ve sonradan „sektöre göre eksik" şikayeti olarak geri döner. (2) `company_code` boş → kutuda **çalışan kaydı yapılamaz** (6 haneli kod o alandan gelir); O-56 ile birlikte kutunun ikinci kullanıcısı yapısal olarak imkânsız olur. (3) `business_name` boş → booking sayfası ve mail başlıkları isimsiz. Hiçbiri hata vermez, hepsi „eksik özellik" gibi görünür |
+| **Çözüm** | Sihirbazın adım 6'sı bu alanları **açıkça** yazar: `business_name` (sorulan) · `role='owner'` (varsayılan, teyit edilir) · `company_code` (üretilir, benzersizliği kontrol edilir) · `onboarding_step='done'` · `plan`/`plan_status` çalışır bir köprü değere. ⚠️ Sonuncusu Faz 3.3'ün (entitlements) borcunu öne almaz, **erteler**: kutuda plan gerçeği lisanstan gelecek, bugünkü değer o gelene kadar tutan bir köprüdür ve `entitlements` helper'ı indiğinde bu satır **silinecek** — koda bunu söyleyen yorum yazılır, yoksa iki yıl sonra „bu neden burada" diye durur |
+| **Durum** | `offen` — Faz 2.2 dilim 1 kapsamında yazılacak, ama `plan_status`'un **hangi** değer olacağı O-31/O-33'ün cevabını bekliyor (plan farkının kutudaki karşılığı hâlâ tanımsız, kullanıcı kararı). Dilim 1 bunsuz da bitirilebilir — giriş çalışır. O-33 cevaplanana kadar yazılacak değer `trial` gibi görünür bir köprü olmalı, **`active` değil**: `active` „ödeme alındı" demektir ve lisans tarafı inmeden o cümle yalan olur |
 
 ---
 

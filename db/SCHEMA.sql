@@ -1,7 +1,26 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-11 — 0004_ausfallrechnungen_rechnung_nr_unique
+-- ERZEUGT AM:        2026-09-11 — 0005_praxura_setup
+--                    (On-Premise Faz 2.2, Einrichtungsassistent.)
+--                    EINE NEUE TABELLE: `praxura_setup` — genau EINE Zeile je
+--                    Installation, die eine einzige Frage beantwortet: ist der
+--                    von install.sh erzeugte SETUP_TOKEN schon gegen den ersten
+--                    Owner eingetauscht worden? Sie steht unten direkt nach
+--                    `praxura_migrations`, ihrer naechsten Verwandten: kein
+--                    Produktdatensatz, sondern ein Buch ueber den Zustand der
+--                    Box — und bekommt deshalb dieselbe Behandlung (RLS an,
+--                    KEINE Policy, anon/authenticated ohne Rechte).
+--                    ⚠️ Im SaaS ist die Tabelle vorhanden, wird aber NIE
+--                    benutzt: das Tor ist die Umgebungsvariable SETUP_TOKEN
+--                    (hier nie gesetzt), nicht diese Tabelle. Sie steht
+--                    trotzdem hier, weil ein Schema-Unterschied zwischen Box
+--                    und Produktion teurer ist als eine inerte Zeile
+--                    (onprem/SCHEMA-VERTEILUNG.md §5.2, „Fork yok“).
+--                    Mitgeliefert: 1 Index (pkey), 0 Policies, 0 Trigger.
+--                    Warum sie noetig war: db/REGISTER.md.
+--                    Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-11 — 0004_ausfallrechnungen_rechnung_nr_unique
 --                    (db-ustasi-Fund beim Abnahmetest von 0003: ausfallrechnungen
 --                    hatte nie UNIQUE (owner_id, rechnung_nr) — anders als
 --                    belegliste/mahnungen. Vor 0003 hätte der MAX+1-Wettlauf zwei
@@ -171,8 +190,21 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            87 Tabellen · 1283 Spalten · 165 RLS-Policies
---                    315 Indizes · 74 Trigger · 76 Funktionen · 4 Views
+-- UMFANG:            89 Tabellen · 1296 Spalten · 165 RLS-Policies
+--                    318 Indizes · 74 Trigger · 76 Funktionen · 4 Views
+--                    (11.09.2026 live gezaehlt. Die Deltas gegen die 09.09.-Zeile
+--                     darunter gehen restlos auf drei Schritte auf:
+--                       Tabellen  87 -> 89  praxura_migrations (10.09., vom Runner
+--                                           selbst angelegt) + praxura_setup (0005)
+--                       Spalten 1283 -> 1296  +6 (praxura_migrations) +7 (praxura_setup)
+--                                           = 1263 auf 89 Tabellen + 33 auf 4 Views
+--                       Indizes  315 -> 318  +1 pkey praxura_migrations
+--                                           +1 UNIQUE aus 0004 +1 pkey praxura_setup
+--                     Policies, Trigger, Funktionen und Views unveraendert — beide
+--                     neuen Tabellen haben bewusst KEINE Policy und KEINEN Trigger.
+--                     ⚠️ Die 10.09.-Aktualisierung hatte die Tabellen-/Spaltenzahl
+--                     nicht nachgezogen, nur die Indexzahl in SCHEMA-RLS.sql —
+--                     deshalb springt die Zeile hier um zwei Tabellen.)
 --                    (09.09.2026, abrechnung_zeile_und_zahlung: live gezaehlt.
 --                     Alle sechs Deltas gehen restlos auf die eine Migration
 --                     auf: +2 Tabellen, +39 Spalten (27 + 12), +4 Policies,
@@ -1881,6 +1913,42 @@ CREATE TABLE praxura_migrations (
 --   ⚠️ In der Produktion steht 0000 als *angewandt*, ausgefuehrt wurde die
 --      Baseline hier nie: das SaaS ist bereits auf diesem Stand. Die Datei
 --      laeuft nur in neuen Kundenboxen.
+
+CREATE TABLE praxura_setup (
+  id smallint NOT NULL DEFAULT 1
+  angelegt_am timestamptz NOT NULL DEFAULT now()
+  token_sha256 text
+  verbraucht_am timestamptz
+  owner_user_id uuid
+  abgeschlossen_am timestamptz
+  schritte jsonb NOT NULL DEFAULT '{}'::jsonb
+);
+--   PK (id) — CHECK (id = 1): genau EINE Zeile, je Installation.
+--   FK owner_user_id -> auth.users(id) ON DELETE SET NULL
+--   CHECK praxura_setup_verbrauch_vollstaendig:
+--     entweder alles leer, oder verbraucht_am UND token_sha256 gesetzt.
+--   CHECK praxura_setup_abschluss_nach_verbrauch:
+--     abgeschlossen_am nur, wenn verbraucht_am steht (Schritt 8 nach Schritt 5).
+--   ★ Das Zeichen des Einrichtungsassistenten (On-Premise Faz 2.2): ist der von
+--     install.sh erzeugte SETUP_TOKEN schon gegen den ersten Owner eingetauscht?
+--     Die .env kann der Assistent nicht aendern — der Container liest seine
+--     Umgebung nur beim Start —, also braucht es ein dauerhaftes Zeichen in der DB.
+--   ★ Verbrauch = EIN bedingtes UPDATE:
+--       UPDATE praxura_setup SET verbraucht_am = now(), token_sha256 = $1,
+--              owner_user_id = $2
+--        WHERE id = 1 AND verbraucht_am IS NULL RETURNING id;
+--     Keine Zeile zurueck = war schon verbraucht. Kein SELECT-dann-UPDATE.
+--   ⚠️ Der Klartext-Token steht NIE hier, nur sein SHA-256 — und erst beim
+--      Verbrauch. Geprueft wird gegen die Umgebungsvariable (zeitkonstant).
+--   ⚠️ Das Tor ist SETUP_TOKEN, NICHT diese Tabelle. Ist die Variable leer (SaaS),
+--      werden die /setup-Routen gar nicht registriert. „Gibt es schon einen Owner?“
+--      wird NICHT gezaehlt — Produktionsverhalten an einen Datenbestand zu haengen
+--      ist die Tuer, die irgendwann im falschen Moment aufgeht.
+--   ⚠️ RLS an, KEINE Policy, anon/authenticated ohne Rechte — wie
+--      praxura_migrations. owner_user_id = NULL heisst NICHT „unverbraucht“
+--      (Konto kann geloescht sein); das sagt allein verbraucht_am.
+--   ⚠️ schritte: nur Zustand der Assistenten-Schritte. Keine Geheimnisse, keine
+--      Zugangsdaten, keine Patientendaten — die Zeile wird im Support gelesen.
 
 CREATE TABLE prescription_documents (
   id bigint NOT NULL

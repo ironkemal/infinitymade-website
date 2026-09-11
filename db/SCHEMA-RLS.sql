@@ -1,7 +1,22 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-11 — 0003_nummernkreis_beleg_mahnung_ausfallrechnung
+-- ERZEUGT AM:        2026-09-11 — 0005_praxura_setup
+--                    (On-Premise Faz 2.2, Einrichtungsassistent.)
+--                    EINE NEUE TABELLE: `praxura_setup` — das Zeichen, ob der
+--                    SETUP_TOKEN schon gegen den ersten Owner eingetauscht wurde.
+--                    Fuer diese Datei ist nur eins wichtig: sie bekommt KEINE
+--                    Policy und KEINEN Trigger, sondern dieselbe Behandlung wie
+--                    praxura_migrations — RLS an, 0 Policies,
+--                    REVOKE ALL FROM anon, authenticated. Live geprueft
+--                    (11.09.2026): relacl = postgres + service_role, sonst nichts.
+--                    Einziges Delta: +1 Index (pkey). Details unten bei
+--                    `praxura_setup` und in db/REGISTER.md.
+--                    davor: 2026-09-11 — 0004_ausfallrechnungen_rechnung_nr_unique
+--                    (UNIQUE (owner_id, rechnung_nr) — zweite, vom Trigger
+--                    unabhaengige Verteidigungslinie fuer die §14-UStG-Nummer.
+--                    +1 Index, sonst nichts.)
+--                    davor: 2026-09-11 — 0003_nummernkreis_beleg_mahnung_ausfallrechnung
 --                    (db-ustasi-Fund, offen seit 16.08.2026: nummernkreise sollte
 --                    rechnung_nr/beleg_nr/mahnung_nr beliefern, eingelöst war nur
 --                    rechnung_nr. set_next_beleg_nr/set_next_mahnung_nr liefen
@@ -168,7 +183,10 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            165 RLS-Policies · 316 Indizes · 74 Trigger · 76 Funktionen
+-- UMFANG:            165 RLS-Policies · 318 Indizes · 74 Trigger · 76 Funktionen
+--                    (11.09.2026 live gezaehlt. Delta 316 -> 318: +1 UNIQUE-Index
+--                     aus 0004, +1 pkey aus 0005. Policies/Trigger/Funktionen
+--                     unveraendert — praxura_setup hat bewusst beides nicht.)
 --                    (10.09.2026 live gezaehlt. Einziges Delta: Indizes
 --                     315 -> 316, der pkey von praxura_migrations. Policies,
 --                     Trigger und Funktionen unveraendert — die Tabelle hat
@@ -523,6 +541,20 @@
 --      Default-Grants der public-Schema greifen. Dieselbe Bauart wie
 --      pending_signups (RLS an, 0 Policies).
 --   Geschrieben ausschliesslich von api-backend/db/migrate.js beim Start.
+
+-- praxura_setup                                               (11.09.2026)
+--   KEINE Policy — Absicht, dieselbe Bauart wie praxura_migrations darueber:
+--   RLS ist an, es existiert keine einzige Policy, anon/authenticated wurden
+--   alle Rechte entzogen (REVOKE ALL). Live geprueft: relacl = postgres +
+--   service_role, sonst nichts — ueber PostgREST also 42501, nicht „leer“.
+--   ⚠️ Warum so streng: die Zeile sagt, ob eine Installation ihren
+--      Einrichtungsassistenten noch offen hat. Wer das von aussen lesen kann,
+--      weiss, welche Box sich noch uebernehmen laesst.
+--   ⚠️ KEIN Trigger — auch kein GoBD-artiger Schreibschutz. Einmaligkeit
+--      kommt aus der WHERE-Bedingung des Verbrauchs
+--      (UPDATE … WHERE verbraucht_am IS NULL), nicht aus einer Regel.
+--   Geschrieben ausschliesslich von api-backend/routes/setup.js (service_role),
+--   und nur wenn die Umgebungsvariable SETUP_TOKEN gesetzt ist — im SaaS nie.
 
 -- prescription_documents
 --   prescription_documents_owner_all [ALL] owner + Team
