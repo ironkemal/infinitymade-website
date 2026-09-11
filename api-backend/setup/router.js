@@ -1,8 +1,9 @@
-// Faz 2.2 — Einrichtungsassistent, dilim 1: Ersteinrichtung des Owner-Kontos.
+// Faz 2.2 — Einrichtungsassistent, dilim 1 + SMTP-Testmail (O-66).
 //
-// GET  /api/setup/status   — darf man den Assistenten ueberhaupt oeffnen?
-// POST /api/setup/verify   — Jeton pruefen, OHNE ihn zu verbrauchen
-// POST /api/setup/owner    — der EINE Schreibvorgang: legt den ersten Owner an
+// GET  /api/setup/status     — darf man den Assistenten ueberhaupt oeffnen?
+// POST /api/setup/verify     — Jeton pruefen, OHNE ihn zu verbrauchen
+// POST /api/setup/owner      — der EINE Schreibvorgang: legt den ersten Owner an
+// POST /api/setup/test-smtp  — sendet EINE Testmail an den soeben angelegten Owner
 //
 // Dieser Router wird in server.js NUR registriert, wenn SETUP_TOKEN gesetzt
 // ist — auf SaaS ist die Variable nie gesetzt (CLAUDE.md, ⛔ SET ETME), die
@@ -13,14 +14,18 @@
 // Schluessel im Client (G2-Verstoss, keine Ausnahme). Sie laeuft hier, im
 // Container, mit dem Schluessel, den server.js ohnehin schon haelt.
 //
-// Was dieser Router NICHT tut (dilim 2+): SMTP einrichten (O-66, wartet auf
-// eine Produktentscheidung), Praxis-/Backup-Einstellungen, den Assistenten
-// als "abgeschlossen" markieren (praxura_setup.abgeschlossen_am). Sobald der
-// Owner sich einloggen kann, ist die Aufgabe DIESES Slices erledigt.
+// SMTP selbst wird NICHT hier eingerichtet (O-66, Entscheidung 11.09.2026):
+// `install.sh` fragt danach und schreibt EINE Wahrheit in `.env`, die GoTrue
+// und `api` beide lesen. Dieser Router prueft nur, ob sie funktioniert — er
+// kann `.env` nicht aendern (Container liest Umgebung nur beim Start).
+//
+// Was dieser Router sonst NICHT tut (dilim 2+): Praxis-/Backup-Einstellungen,
+// den Assistenten als "abgeschlossen" markieren (praxura_setup.abgeschlossen_am).
 
 import express from 'express';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import { createSMTPTransport, getMailFrom } from '../lib/mail.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -139,6 +144,73 @@ router.post('/owner', async (req, res) => {
   }
 
   res.json({ ok: true, email });
+});
+
+// Rate-Limit fuer die Testmail: kein express-rate-limit-Overhead fuer einen
+// einzelnen, seltenen, ohnehin schon jetongeschuetzten Endpunkt — ein simpler
+// Zeitstempel reicht, verhindert nur ein versehentliches Doppelklick-Spamming.
+let letzterTestmailVersand = 0;
+
+router.post('/test-smtp', async (req, res) => {
+  const { token } = req.body || {};
+  // Bewusst OHNE nochOffen(): nach der Owner-Anlage ist der Jeton verbraucht
+  // (410) — genau dann will man die Mail noch testen koennen. Das Jeton
+  // selbst bleibt die Pruefung, nicht der Setup-Fortschritt.
+  if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
+
+  if (!process.env.SMTP_HOST) {
+    return res.json({ eingerichtet: false });
+  }
+
+  const jetzt = Date.now();
+  if (jetzt - letzterTestmailVersand < 10_000) {
+    return res.status(429).json({ error: 'Bitte kurz warten, bevor Sie es erneut versuchen.' });
+  }
+
+  // Empfaenger kommt NIE aus der Anfrage — sonst waere dieser Endpunkt ein
+  // Mail-Versand-Hebel fuer jeden, der das Jeton kennt (O-66, Gegenlesen
+  // 11.09.2026). Ziel ist immer der Owner, den DIESE Box gerade angelegt hat.
+  const { data: setupZeile } = await supabase
+    .from('praxura_setup')
+    .select('owner_user_id')
+    .eq('id', 1)
+    .maybeSingle();
+  if (!setupZeile?.owner_user_id) {
+    return res.status(409).json({ error: 'Noch kein Owner-Konto — zuerst Schritt 2 abschließen.' });
+  }
+  const { data: ownerProfil } = await supabase
+    .from('profiles')
+    .select('email, business_name')
+    .eq('id', setupZeile.owner_user_id)
+    .maybeSingle();
+  if (!ownerProfil?.email) {
+    return res.status(500).json({ error: 'Owner-E-Mail-Adresse nicht gefunden.' });
+  }
+
+  letzterTestmailVersand = jetzt;
+  const transport = createSMTPTransport();
+  try {
+    await transport.verify();
+    await transport.sendMail({
+      from: getMailFrom(ownerProfil.business_name),
+      to: ownerProfil.email,
+      subject: 'Praxura — Testmail der Einrichtung',
+      html: '<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px"><h2>SMTP funktioniert</h2><p>Diese Mail kam über den in der Einrichtung angegebenen Mailserver an.</p></div>',
+    });
+    return res.json({ eingerichtet: true, gesendetAn: ownerProfil.email });
+  } catch (err) {
+    // Nodemailer-Fehlercodes in verstaendliche Diagnose uebersetzen — der
+    // Kunde soll nicht "ECONNREFUSED" lesen muessen (RELEASE-STANDARD §5.4/9).
+    const diagnose = {
+      EAUTH: 'Benutzername oder Passwort wird vom Mailserver abgelehnt.',
+      ECONNECTION: 'Server oder Port nicht erreichbar — Firewall oder falscher Port?',
+      ESOCKET: 'Verbindung zum Mailserver ist abgebrochen — Firewall oder falscher Port?',
+      ETIMEDOUT: 'Mailserver antwortet nicht (Zeitüberschreitung).',
+      EENVELOPE: 'Absender- oder Empfängeradresse wurde vom Mailserver abgelehnt.',
+      EDNS: 'Mailserver-Adresse ist unbekannt — Hostname in der Einrichtung prüfen.',
+    }[err.code] || err.message || 'Unbekannter Fehler beim Mailversand.';
+    return res.status(502).json({ error: diagnose, code: err.code || null, gesendetAn: ownerProfil.email });
+  }
 });
 
 export default router;

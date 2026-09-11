@@ -134,8 +134,9 @@ test yığını**, kurulabilir ürün değil.
 
 - **O-01 + O-15** → ✅ 2.1b'yi artık **bloke etmiyor** (11.09 gece; §7F)
 - **O-50** → yalnız `install.sh`'ı bekliyor (Faz 2.1c); anahtarın ömrü **O-29**'da
-- **O-51** → Faz 2.2 sihirbazının "test maili gönder" adımı; kabul ölçütü gönderim
-  değil **teslim** (SPF `-all` + DMARC `p=quarantine` ölçüldü)
+- **O-51** → **O-66 ile aynı tur** (karar 11.09.2026): altı sabit adres tek yardımcıya
+  bağlanır, değerini `SMTP_FROM`'dan alır, `install.sh` o değeri yazar. Kabul ölçütü
+  gönderim değil **teslim** (SPF `-all` + DMARC `p=quarantine` ölçüldü)
 - **O-48** (Kong ↔ Caddy) → **konsey**, ajan tek başına karar vermez: `key-auth`/`acl`
   var olan bir güvenlik kontrolüdür
 - **O-33** (plan farkının teknik karşılığı) ve **O-46** (filo panosu) → **kullanıcı
@@ -149,8 +150,9 @@ test yığını**, kurulabilir ürün değil.
   kök CA'yı söylemeli
 - **O-58 (b)** → `legal-de`; metin kararı verilmeden şablon sayfa yazılmaz
 - **O-62** → ✅ tasarımı kapandı (§7H); kalanı Faz 2.2 dilim 1'in kodu
-- **O-66** (SMTP) → **kullanıcı kararı**; üç seçenek §7H'de, ajanın tavsiyesi (a).
-  Karar gelmeden sihirbaza SMTP ekranı yazılmaz
+- **O-66** (SMTP) → ✅ **karar verildi 11.09.2026: seçenek (a)** — `install.sh` sorar,
+  sihirbaz yalnız test eder ve teşhis gösterir. Uygulama açık, sınırları maddede.
+  **O-51 ile tek tur**; ayrı yapılırsa test maili „gitti“ der ve spam'e düşer
 - **O-67** (`plan_status` köprü değeri) → **O-33**'ü bekliyor; dilim 1 bunsuz bitirilebilir
 
 **Sicili nasıl okursun:** durum değerleri §9'da sayılı. 🟡 **kısmen** demek "yarısı
@@ -1293,7 +1295,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | C (sabit adres — ama etkisi tip A'ya benziyor: mail teslim edilmiyor) |
 | **Kutuda ne olur** | Mail **müşterinin** SMTP sunucusundan çıkar, zarfın üstünde **bizim** alan adımız yazar. Sonuç varsayım değil, ölçüldü (11.09.2026, herkese açık DNS sorgusu): `praxura.de` → `v=spf1 include:secureserver.net -all` ve `_dmarc.praxura.de` → `v=DMARC1; p=quarantine; adkim=r; aspf=r`. Üç adım zinciri: (1) **SPF sert red** (`-all`) — yalnız bizim sağlayıcımızın sunucuları `praxura.de` adına gönderebilir, müşterinin sunucusu o listede değil → fail; (2) **DKIM ile kurtarma yolu yok** — kutu bizim özel anahtarımızla imzalayamaz, o anahtar kutuya **giremez** (G2); (3) iki hizalama da düştüğü için **DMARC politikası devreye girer**. Politika `p=quarantine` (reject değil): mail kaybolmaz, **spam klasörüne düşer**. DMARC uygulayan her alıcıda — Gmail, Outlook, GMX, Web.de — yani Almanya'daki hasta posta kutularının fiilen tamamında. Arıza tamamen sessizdir: `nodemailer` başarı döner, log temizdir; hasta randevu onayını görmez, praxis "yazılım mail göndermiyor" der ve sebep hiçbir kayıtta yoktur. Bu, O-50'nin SMTP yarısı çözülse **bile** ayakta kalan ikinci bir kırılmadır — iki madde tek düzeltmeyle kapanmaz.<br>İkinci açı, teknik değil ticari: `„… via Praxura"` ibaresi bizim markamızı müşterinin postasına gömüyor. Beyaz etiket/kurumsal kimlik istenirse (on-prem alıcı kitlesi tam da bunu ister) burası ayrı bir karardır — ama **asıl mesele o değil**, asıl mesele mailin görülmemesi |
 | **Çözüm** | Gönderen adresi `.env`'den okunur ve kutuda **müşterinin kendi alanı** olur — varsayılanı `SMTP_ADMIN_EMAIL`, yani zaten sorulan ve kutunun SPF'iyle hizalanan adres. Altı çağrı yeri **tek yardımcıdan** beslenir; görünen ad ikinci bir değişkene (`MAIL_FROM_NAME`, on-prem varsayılanı praxis adı) bağlanır. ⚠️ **SaaS'ta davranış hiç değişmez:** oradaki varsayılan bugünkü sabit değer kalır, gönderim zaten kendi sağlayıcımızdan çıkıyor ve SPF tutuyor. Yani düzeltme G7'nin tam örneği — tek kod, iki dağıtım, fork yok. **Faz 2.1** (değişken + yardımcı) · **Faz 2.2** (sihirbazın "test maili gönder" adımı). Kabul ölçütü gönderimin 250 dönmesi **değil**, mailin **alıcı kutusunda ve spam'de değil** görülmesidir — gönderim başarısı ile teslim başarısı ayrı ölçülür. Kapı **kuruldu** (11.09.2026, `c602f50`): `absender_fest=6`, artış = red. Yedinci sabit adresle denendi, reddetti (`onprem` ajanı doğrulaması). Hedef **0** |
-| **Durum** | `offen` — Faz 2.1 / 2.2 |
+| **Durum** | 🟡 `kısmen gelöst` (11.09.2026, O-66 turu) — kod tarafı bitti: altı yer `api-backend/lib/mail.js` → `getMailFrom()`'dan geçiyor, `install.sh` adım 11'de `SMTP_FROM`/`SMTP_ADMIN_EMAIL`'i aynı anda soruyor. SaaS davranışı unit testle doğrulandı (`getMailFrom()` env'siz çağrıldığında eski sabit değeri birebir üretiyor). **Kalan:** kabul ölçütü "alıcı kutusunda ve spam'de değil görülmesi" — bu ancak gerçek bir SMTP sunucusuyla ilk kurulumda ölçülebilir, bugüne kadar yalnız kod + sahte SMTP host'a karşı test edildi (bkz. §7H üçüncü tur). Kapı `absender_fest` 6 → **2** düştü (1 bilinçli fallback + 1 açıklayıcı yorum) |
 
 ---
 
@@ -1881,7 +1883,7 @@ gerekmiyor" diye okumamalı, ayrı dal.
 | 8 | `DATA_ENCRYPTION_KEY` yaz-oku turu | 🟡 **dilim 2** — `encryptionAvailable()` + bir tur, ucuz |
 | 7 | Storage bucket + signed URL | ⬜ Faz 2.4 (self-check) |
 | 6 | Realtime olayı | ⬜ Faz 2.4 |
-| 9 | SMTP test maili | ⛔ **bu fazda değil** — O-66, önce karar |
+| 9 | SMTP test maili | 🟡 **dilim 3** — O-66 kararı (a) verildi; üç durum: gönderildi + insan teyidi → yeşil · bilinçli atlandı (onay kutusu) → yeşil/„übersprungen“ · hata → kırmızı |
 | 10 | TLS gerçek sertifika | ⬜ 2.1b / `install.sh` tarafı |
 | 11 | İlk yedek alındı | ⬜ Faz 2.3 |
 | 12 | Zamanlanmış işler kayıtlı | ⬜ Faz 2.4a |
@@ -1900,7 +1902,8 @@ hesapla giriş yapılabiliyor**, aynı jeton ikinci kez **410** alıyor.
 sayfaları sihirbaz bitene kadar kapalı; kurulum modu = bakım modu, tek mekanizma) ·
 §5.4'ün 1/5/8'i · üç dil.
 
-**Dilim 3 ve sonrası (ayrı kararlar):** SMTP (O-66) · yedek hedefi (2.3'e bağlı) ·
+**Dilim 3 ve sonrası:** SMTP testi + teşhis (O-66 kararı (a), O-51 ile aynı turda) ·
+yedek hedefi (2.3'e bağlı, **ayrı karar**) ·
 IONOS AI anahtarı (Faz 1.3 `llmClient` inmeden anlamsız) · Sentry opt-in (2.6).
 
 Sınırın kaymaması için **bugün kilitlenen şey uçların sözleşmesidir**: `status` tek alan
@@ -1960,7 +1963,7 @@ dashboard açılışında dolduğu — bu yalnız kod okumasıyla doğrulandı (
 | **Tip** | E (+ G) |
 | **Kutuda ne olur** | GoTrue `GOTRUE_SMTP_*`'ı **açılışta** env'den okur. Tarayıcıdaki sihirbaz konteyner env'ini değiştiremez; değiştirmenin tek yolu `.env` + `docker compose up -d auth`, yani ya müşterinin terminale dönmesi ya da konteynere **docker soketi** verilmesi (kutuda root — açılmaz). Sonuç: SMTP'yi DB'ye yazan bir sihirbaz randevu/Mahnung mailini düzeltir ama **şifre sıfırlama ve davet mailini düzeltmez**; müşteri „test maili gitti" ekranını görür, sonra şifresini unutan çalışan mail alamaz. Arıza sessiz ve gecikmeli — en pahalı sınıf. ⚠️ Üstüne **O-51** biner: gönderen adresi bizim alan adımız olduğu sürece test maili „gitti" dese de **spam'e düşer** (SPF `-all` + DMARC `p=quarantine` ölçüldü) |
 | **Çözüm** | Üç seçenek, karar **kullanıcının** — ajan tek başına vermez: **(a)** SMTP `install.sh`'ta sorulur → tek gerçek env'de, GoTrue ve `api` aynı değeri okur; sihirbaz yalnız **test eder ve teşhis gösterir** (`RELEASE-STANDARD.md` §5.4/9'un „ya başarılı ya bilinçli atlandı"ı bununla uyumlu). **Ajanın tavsiyesi (a)** — en az hareketli parça, docker soketi yok, 2.7 lafzen karşılanır. **(b)** SMTP DB'ye yazılır, **bütün** mail `api`'ye taşınır, GoTrue'nun mail işi kapatılır — daha iyi UX ama auth mail akışını yeniden yazmak demek, bu fazın işi değil. **(c)** Sihirbaz `.env` satırlarını **gösterir**, müşteri yapıştırıp `docker compose up -d auth` der — K10 açısından dürüst ama „hiçbir elle adım olmadan" kabul ölçütünü (playbook `:226`) deler. Hangisi seçilirse gönderen alan adı da aynı turda müşterinin kendi alan adına geçmeli (O-51) |
-| **Durum** | `offen` — Faz 2.2 dilim 3'ün ön koşulu. Karar verilmeden sihirbaza SMTP ekranı **yazılmaz**; yazılırsa iki farklı SMTP gerçeği doğar |
+| **Durum** | ✅ **uygulandı** (11.09.2026 gecesi) — seçenek **(a)**: `install.sh` adım 11 (yeni, `docker compose up`'tan ÖNCE) SMTP'yi sorar, atlarsa `.env.template`'in izin verdiği geçerli yol kalır ama sonucu söyleyen bir `warn` ile. `api-backend/lib/mail.js` (`getMailFrom()`) altı sabit adresi tek yerde topladı, `server.js` artık hepsinde bunu çağırıyor — SaaS davranışı `node --check` + izole birim testiyle doğrulandı (env boşken eski sabit çıktı birebir). `api-backend/setup/router.js`'e dördüncü uç: `POST /setup/test-smtp` — jetonla korunur (`nochOffen()` DEĞİL, owner sonrası da çalışsın diye), alıcıyı **istekten almaz** (`praxura_setup.owner_user_id` → `profiles.email`), `SMTP_HOST` boşsa `{eingerichtet:false}` döner (hata değil), aksi hâlde `transport.verify()` + gerçek gönderim, nodemailer hata kodları Almancaya çevrilir. `setup.html`/`setup.js`'e üçüncü adım eklendi (dört adım oldu): atlandıysa onay kutusu zorunlu, gönderildiyse "geldi mi/gelmedi mi" sorusu, gelmediyse O-51 teşhisi.<br>**Yerel kutuda ölçüldü** (gerçek SMTP sunucusu YOK, üç durum ayrı ayrı tetiklendi): `SMTP_HOST` boş → `{"eingerichtet":false}` 200 · `SMTP_HOST` çözülemeyen bir ad (`supabase-mail`, eski PoC artığı) → `502 {"error":"Mailserver-Adresse ist unbekannt…","code":"EDNS","gesendetAn":"owner2@…"}` — hem hata çevirisi hem alıcı bilgisi doğru · 10 saniye içinde ikinci istek → `429`. `getMailFrom()` beş senaryoda izole test edildi (SaaS fallback, kutu override, `MAIL_FROM_NAME`, ve bir header-injection denemesi — `\r\n` temizleniyor). Kapı: `absender_fest` 6 → **2** (1 bilinçli fallback + 1 yorum satırı), taban sıkıştı.<br>**Test edilmeyen tek şey:** gerçek bir SMTP sunucusuyla uçtan uca "gönderildi VE gelen kutusunda" doğrulaması — elde gerçek kimlik bilgisi yoktu. İlk gerçek kurulumda bu adım da ölçülmeli, kabul ölçütü hâlâ "250 değil teslim" |
 
 ### O-67 — `handle_new_user` yalnız iki alan yazıyor: kutunun ilk owner'ı yarım profille doğuyor
 

@@ -5,17 +5,22 @@
 #
 #  Erzeugt: 11.09.2026 · Design gesperrt in onprem/REGISTER.md §7G (Konsultation
 #  mit dem onprem-Agenten, 15-Schritt-Tabelle, zwei Gegenlesen-Runden — O-63/
-#  O-64/O-65). NICHT ohne erneute Konsultation umbauen — jede Zeile hier hat
-#  einen Grund, der dort steht.
+#  O-64/O-65) und §7H/O-66 (SMTP-Schritt, Entscheidung Kemal 11.09.2026: SMTP
+#  wird HIER gefragt, nicht im Assistenten — GoTrue liest seine Umgebung nur
+#  beim Start, ein Browser-Formular käme dort nie an). NICHT ohne erneute
+#  Konsultation umbauen — jede Zeile hier hat einen Grund, der dort steht.
 #
 #  Was dieses Skript TUT: Hardware/Software prüfen, .env erzeugen, Geheimnisse
 #  AUF DIESEM SERVER würfeln (G2 — keins davon kommt von uns oder geht an uns),
 #  ANON_KEY/SERVICE_ROLE_KEY aus JWT_SECRET ableiten (O-60 — NICHT würfeln),
-#  die Box hochfahren, mit dem abgeleiteten Schlüssel wirklich testen.
+#  optional SMTP abfragen (O-66), die Box hochfahren, mit dem abgeleiteten
+#  Schlüssel wirklich testen.
 #
-#  Was dieses Skript NICHT TUT: kein Owner-Konto, kein Praxisname, kein SMTP,
-#  kein Backup-Ziel. Sobald im Browser der erste Bildschirm des Assistenten
-#  (Phase 2.2) erscheint, ist die Aufgabe dieses Skripts erledigt.
+#  Was dieses Skript NICHT TUT: kein Owner-Konto, kein Praxisname, kein
+#  Backup-Ziel, keine SMTP-*Testmail* (die schickt der Assistent — er hat
+#  einen Empfänger, dieses Skript noch keinen). Sobald im Browser der erste
+#  Bildschirm des Assistenten (Phase 2.2) erscheint, ist die Aufgabe dieses
+#  Skripts erledigt.
 #
 #  Fehlermodell (K10 — wir kommen nicht in die Box): jeder Schritt meldet
 #  [ok]/[fehler]; ein Fehler nennt GEFUNDEN · ERWARTET · WAS TUN und STOPPT.
@@ -74,7 +79,7 @@ env_get() {
 log "Praxura On-Premise — Einrichtung $(date '+%Y-%m-%d %H:%M:%S')"
 log ""
 
-# Das Skript fragt vier Mal interaktiv (Adresse, TLS-Modus, ggf. --neu-
+# Das Skript fragt mehrfach interaktiv (Adresse, TLS-Modus, SMTP, ggf. --neu-
 # Bestätigung, ggf. Docker-Installation). Aus einer Pipe heraus gestartet
 # (z. B. "curl … | sudo bash") liest `read` dann vom Installationsskript
 # selbst statt von einer Person — das Fehlermodell (K10: klare Meldung statt
@@ -91,7 +96,7 @@ for arg in "$@"; do
 done
 
 # ── Schritt 0 — Wurzel + Idempotenz ─────────────────────────────────────────
-log "[0/14] Wurzel- und Wiederholungsprüfung"
+log "[0/15] Wurzel- und Wiederholungsprüfung"
 if [ "$(id -u)" -ne 0 ]; then
   fail "Kein Root" "Benutzer $(id -un)" "root (Docker-Setup, Port 80/443, Dateirechte brauchen es)" \
     "Mit 'sudo bash install.sh' erneut starten."
@@ -115,7 +120,7 @@ fi
 ok "root, Neuanlage möglich"
 
 # ── Schritt 1 — Hardware ─────────────────────────────────────────────────────
-log "[1/14] Hardware-Vorprüfung"
+log "[1/15] Hardware-Vorprüfung"
 CPU_COUNT="$(nproc 2>/dev/null || echo 0)"
 MEM_KB="$(awk '/MemTotal/{print $2}' /proc/meminfo 2>/dev/null || echo 0)"
 MEM_GB=$(( MEM_KB / 1024 / 1024 ))
@@ -137,7 +142,7 @@ else
 fi
 
 # ── Schritt 2 — Software ─────────────────────────────────────────────────────
-log "[2/14] Software-Vorprüfung"
+log "[2/15] Software-Vorprüfung"
 command -v curl >/dev/null 2>&1 || fail "curl fehlt" "nicht installiert" "curl" "apt install curl"
 command -v openssl >/dev/null 2>&1 || fail "openssl fehlt" "nicht installiert" "openssl" "apt install openssl"
 
@@ -160,7 +165,7 @@ docker compose version >/dev/null 2>&1 || fail "Docker-Compose-Plugin fehlt" "ni
 ok "docker + docker compose vorhanden"
 
 # ── Schritt 3 — Ports ─────────────────────────────────────────────────────────
-log "[3/14] Port-Vorprüfung (80, 443)"
+log "[3/15] Port-Vorprüfung (80, 443)"
 if command -v ss >/dev/null 2>&1; then
   for port in 80 443; do
     if ss -ltn 2>/dev/null | awk '{print $4}' | grep -q ":${port}\$"; then
@@ -175,7 +180,7 @@ else
 fi
 
 # ── Schritt 4 — Adresse (O-59) ────────────────────────────────────────────────
-log "[4/14] Adresse der Box"
+log "[4/15] Adresse der Box"
 log "  Unter welcher Adresse ruft der Praxisrechner die Box im Browser auf?"
 log "  Beispiel: https://praxis.local  (ohne Port — Caddy hört auf 443)"
 read -r -p "  SITE_URL: " SITE_URL_INPUT
@@ -205,7 +210,7 @@ if [ "$NEU_BESTAETIGT" -eq 1 ]; then
 fi
 
 # ── Schritt 5 — .env aus Vorlage ─────────────────────────────────────────────
-log "[5/14] .env aus Vorlage erzeugen"
+log "[5/15] .env aus Vorlage erzeugen"
 [ -f "$ENV_TEMPLATE" ] || fail "Vorlage fehlt" "$ENV_TEMPLATE nicht gefunden" "onprem/.env.template im Repository" "Repository vollständig auschecken."
 cp "$ENV_TEMPLATE" "$ENV_FILE"
 chmod 600 "$ENV_FILE"
@@ -213,15 +218,25 @@ chown root:root "$ENV_FILE" 2>/dev/null || true
 ok ".env angelegt, chmod 600 (O-61)"
 
 # set_env KEY VALUE — ersetzt "KEY=" Zeile in .env, ohne den Wert zu loggen.
+#
+# ACHTUNG: der Wert geht über ENVIRON, NICHT über ein zweites "-v v=...".
+# awks "-v"-Zuweisung interpretiert Backslash-Escapes im ÜBERGEBENEN Wert
+# (z. B. wird "\b" zu einem Backspace-Byte) — bei den gewürfelten Hex-Werten
+# fiel das nie auf, aber SMTP_PASS ist beliebiger Text von Menschenhand, und
+# ein Passwort mit Backslash würde so lautlos verstümmelt. ENVIRON liest die
+# Shell-Variable roh, ohne dass awk sie nochmal interpretiert (geprüft: ein
+# "\b" im Wert kommt unverändert in .env an).
 set_env() {
-  local key="$1" value="$2"
+  local key="$1"
+  export SET_ENV_VALUE="$2"
   if grep -q "^${key}=" "$ENV_FILE"; then
     local tmp; tmp="$(mktemp -p "$SCRIPT_DIR")"
-    awk -v k="$key" -v v="$value" 'BEGIN{FS=OFS="="} $1==k{$0=k"="v} {print}' "$ENV_FILE" > "$tmp"
+    awk -v k="$key" 'BEGIN{FS=OFS="="} $1==k{$0=k"="ENVIRON["SET_ENV_VALUE"]} {print}' "$ENV_FILE" > "$tmp"
     mv "$tmp" "$ENV_FILE"
   else
-    printf '%s=%s\n' "$key" "$value" >> "$ENV_FILE"
+    printf '%s=%s\n' "$key" "$SET_ENV_VALUE" >> "$ENV_FILE"
   fi
+  unset SET_ENV_VALUE
 }
 
 set_env SITE_URL "$SITE_URL"
@@ -229,7 +244,7 @@ set_env API_EXTERNAL_URL "$SITE_URL"
 set_env SUPABASE_PUBLIC_URL "$SITE_URL"
 
 # ── Schritt 6 — Geheimnisse würfeln (G2, ausschliesslich auf diesem Server) ──
-log "[6/14] Geheimnisse erzeugen (auf diesem Server, G2)"
+log "[6/15] Geheimnisse erzeugen (auf diesem Server, G2)"
 # Alle Werte als HEX, nicht Base64: POSTGRES_PASSWORD landet in mehreren
 # postgres://user:PASSWORT@host-Verbindungs-URIs (docker-compose.yml) — ein
 # zufälliges '/' oder '+' aus Base64 wäre dort ein URL-Sonderzeichen und
@@ -244,10 +259,10 @@ REALTIME_DB_ENC_KEY="$(openssl rand -hex 8)"
 S3_KEY_ID="$(openssl rand -hex 16)"
 S3_KEY_SECRET="$(openssl rand -hex 32)"
 DATA_ENCRYPTION_KEY="$(openssl rand -hex 32)"
-# Einrichtungs-Jeton für den Assistenten (O-62) — HIER erzeugt, nicht erst in
-# Schritt 14: der `api`-Container liest seine Umgebung beim Start, ein Wert,
-# der erst NACH "docker compose up" entsteht, kommt nie an (Gegenlesen
-# 11.09.2026 — ursprünglich stand das in Schritt 14 und war damit wirkungslos).
+# Einrichtungs-Jeton für den Assistenten (O-62) — HIER erzeugt, nicht erst im
+# Ausgabe-Schritt: der `api`-Container liest seine Umgebung beim Start, ein
+# Wert, der erst NACH "docker compose up" entsteht, kommt nie an (Gegenlesen
+# 11.09.2026 — ursprünglich stand das im letzten Schritt und war wirkungslos).
 SETUP_TOKEN="$(openssl rand -hex 24)"
 
 set_env POSTGRES_PASSWORD "$POSTGRES_PASSWORD"
@@ -261,7 +276,7 @@ set_env SETUP_TOKEN "$SETUP_TOKEN"
 ok "acht Geheimnisse erzeugt (Werte NICHT geloggt)"
 
 # ── Schritt 7 — ANON_KEY / SERVICE_ROLE_KEY aus JWT_SECRET ableiten (O-60) ───
-log "[7/14] ANON_KEY / SERVICE_ROLE_KEY aus JWT_SECRET ableiten"
+log "[7/15] ANON_KEY / SERVICE_ROLE_KEY aus JWT_SECRET ableiten"
 # HS256, per Hand — kein Node auf dem Host nötig (Herleitung gegen Node
 # gegengeprüft, onprem/REGISTER.md O-60). exp = 10 Jahre, NICHT JWT_EXPIRY
 # (das ist die Sitzungsdauer eingeloggter Nutzer, nicht der API-Schlüssel).
@@ -284,14 +299,14 @@ set_env SERVICE_ROLE_KEY "$SERVICE_ROLE_KEY"
 ok "ANON_KEY / SERVICE_ROLE_KEY abgeleitet (nicht gewürfelt)"
 
 # ── Schritt 8 — SUPABASE_PUBLIC_WSS (O-52 b) ─────────────────────────────────
-log "[8/14] SUPABASE_PUBLIC_WSS"
+log "[8/15] SUPABASE_PUBLIC_WSS"
 # Ein Origin (Normalfall, siehe .env.template §3): 'self' im CSP deckt das
 # eigene wss:// schon ab — Feld bleibt leer, kein Rätselraten nötig.
 set_env SUPABASE_PUBLIC_WSS ""
 ok "leer gelassen (SUPABASE_PUBLIC_URL = SITE_URL, ein Origin)"
 
 # ── Schritt 9 — Pflichtfeld-Tor (O-53) ───────────────────────────────────────
-log "[9/14] Pflichtfelder prüfen, bevor irgendetwas startet"
+log "[9/15] Pflichtfelder prüfen, bevor irgendetwas startet"
 for key in SUPABASE_PUBLIC_URL ANON_KEY SERVICE_ROLE_KEY JWT_SECRET POSTGRES_PASSWORD DATA_ENCRYPTION_KEY SETUP_TOKEN; do
   wert="$(env_get "$key")"
   [ -n "$wert" ] || fail "Pflichtfeld leer: ${key}" "leer" "erzeugter Wert" "Skript erneut mit --neu starten — dies deutet auf einen Fehler in Schritt 6/7 hin."
@@ -299,7 +314,7 @@ done
 ok "alle Pflichtfelder gefüllt"
 
 # ── Schritt 10 — TLS-Modus ───────────────────────────────────────────────────
-log "[10/14] TLS-Modus"
+log "[10/15] TLS-Modus"
 log "  Ist ${SITE_URL} von ausserhalb dieses Netzes über eine echte Domain"
 log "  erreichbar (öffentliches DNS), UND soll Let's Encrypt ein echtes"
 log "  Zertifikat ausstellen?"
@@ -317,11 +332,50 @@ else
   set_env HSTS_MAX_AGE "0"
   ok "TLS: Caddys eigene Zertifizierungsstelle (selbstsigniert, LAN-only)"
   log "  ⚠️  Jeder Praxisrechner muss Caddys Root-Zertifikat einmalig als vertrauenswürdig"
-  log "      einstufen (Schritt 14 zeigt, wo es liegt), sonst zeigt der Browser eine Warnung."
+  log "      einstufen (letzter Schritt zeigt, wo es liegt), sonst zeigt der Browser eine Warnung."
 fi
 
-# ── Schritt 11 — pull + up ───────────────────────────────────────────────────
-log "[11/14] Container-Images holen und starten"
+# ── Schritt 11 — SMTP (O-66) ─────────────────────────────────────────────────
+log "[11/15] SMTP (Einladungen, Passwort-Reset, Termin-Mails)"
+log "  Ohne SMTP startet die Box trotzdem — aber niemand bekommt eine Mail:"
+log "  keine Mitarbeiter-Einladung, kein Passwort-Reset, keine Terminbestätigung."
+log "  Der Assistent (Schritt 2.2) kann eine Testmail schicken, aber SMTP nicht"
+log "  EINRICHTEN — GoTrue liest seine Mail-Konfiguration nur beim Start."
+read -r -p "  SMTP jetzt einrichten? [J/n] " smtp_antwort
+if [ "$smtp_antwort" = "n" ] || [ "$smtp_antwort" = "N" ]; then
+  set_env SMTP_HOST ""
+  warn "SMTP übersprungen — kann später mit 'bash install.sh --neu' oder von Hand in .env + 'docker compose up -d auth api' nachgeholt werden (BEIDE Container, sonst liest nur einer die neue Adresse)."
+else
+  read -r -p "  SMTP-Host (z. B. smtp.strato.de): " smtp_host
+  [ -n "$smtp_host" ] || fail "Kein SMTP-Host" "leer" "ein Hostname" "Erneut ausführen und Host eintragen, oder [n] für 'ohne SMTP'."
+  read -r -p "  SMTP-Port [587]: " smtp_port
+  smtp_port="${smtp_port:-587}"
+  read -r -p "  SMTP-Benutzername: " smtp_user
+  read -r -s -p "  SMTP-Passwort: " smtp_pass
+  echo
+  read -r -p "  Absenderadresse (z. B. praxis@ihre-domain.de): " smtp_from
+  [ -n "$smtp_from" ] || fail "Keine Absenderadresse" "leer" "eine E-Mail-Adresse auf Ihrer eigenen Domain" "Erneut ausführen — ohne eigene Domain weist SPF/DMARC die Mails beim Empfänger ab (Register O-51)."
+
+  # Erreichbarkeitstest — NICHT fail(): ein falscher Port/Firewall-Regel ist
+  # kein Grund, die ganze Einrichtung abzubrechen, nur ein fruehes Warnsignal.
+  if command -v timeout >/dev/null 2>&1 && ! timeout 5 bash -c ">/dev/tcp/${smtp_host}/${smtp_port}" 2>/dev/null; then
+    warn "SMTP-Server unter ${smtp_host}:${smtp_port} antwortet nicht — Firewall oder falscher Port? Wird trotzdem gespeichert, der Assistent kann später erneut testen."
+  fi
+
+  set_env SMTP_HOST "$smtp_host"
+  set_env SMTP_PORT "$smtp_port"
+  set_env SMTP_USER "$smtp_user"
+  set_env SMTP_PASS "$smtp_pass"
+  # Zwei Ziele, EINE Eingabe: GoTrue braucht SMTP_ADMIN_EMAIL, die eigene
+  # Absenderlogik (api-backend/lib/mail.js, O-51) SMTP_FROM — beide sollen
+  # dieselbe Adresse sein, sonst wirkt die Herkunft der Mails uneinheitlich.
+  set_env SMTP_ADMIN_EMAIL "$smtp_from"
+  set_env SMTP_FROM "$smtp_from"
+  ok "SMTP gespeichert (${smtp_host}:${smtp_port}) — Testmail folgt im Assistenten"
+fi
+
+# ── Schritt 12 — pull + up ───────────────────────────────────────────────────
+log "[12/15] Container-Images holen und starten"
 if ! docker compose pull 2>&1 | tee -a "$LOG_FILE"; then
   fail "Images konnten nicht geholt werden" "docker compose pull ist fehlgeschlagen" \
     "PRAXURA_API_IMAGE / PRAXURA_FRONTEND_IMAGE als ':stable' erreichbar" \
@@ -336,7 +390,7 @@ fi
 ok "Container gestartet"
 
 # ── Schritt 12 — Gesundheitsprüfung ──────────────────────────────────────────
-log "[12/14] Warten, bis alle Dienste gesund sind (bis zu 3 Minuten)"
+log "[13/15] Warten, bis alle Dienste gesund sind (bis zu 3 Minuten)"
 # Ueber `docker inspect` pro Dienst statt `docker compose ps --format …`:
 # die Tabellen-/Template-Unterstuetzung von "ps --format" unterscheidet sich
 # zwischen Compose-Versionen, und ein Dienst, der gar keinen Container mehr
@@ -375,10 +429,10 @@ for i in $(seq 1 90); do
   sleep 2
 done
 
-# ── Schritt 13 — Schlüsselbeweis (O-60) ──────────────────────────────────────
-log "[13/14] Abgeleiteten Schlüssel wirklich testen"
+# ── Schritt 14 — Schlüsselbeweis (O-60) ──────────────────────────────────────
+log "[14/15] Abgeleiteten Schlüssel wirklich testen"
 # --resolve: SITE_URL loest sich auf DIESEM Server selbst noch nirgends auf
-# (der hosts-/DNS-Hinweis kommt erst in Schritt 14) — ohne diesen Zwang
+# (der hosts-/DNS-Hinweis kommt erst im letzten Schritt) — ohne diesen Zwang
 # scheitert der Test an einer Namensaufloesung, nicht am Schluessel, und
 # fuehrt bei --neu in einen Datenverlust-Zirkel (O-65, Gegenlesen 11.09.2026).
 # "localhost" waere FALSCH: Caddy matcht auf den Host-Namen (O-59).
@@ -419,7 +473,7 @@ if [ "$mit_service_key" != "200" ]; then
 fi
 ok "SERVICE_ROLE_KEY akzeptiert (200)"
 
-# ── Schritt 14 — Ausgabe ──────────────────────────────────────────────────────
+# ── Schritt 15 — Ausgabe ──────────────────────────────────────────────────────
 # Die Route zu einer beliebigen oeffentlichen Adresse zeigt zuverlaessiger
 # auf die echte Praxisnetz-Schnittstelle als "hostname -I" — letzteres kann
 # auch eine interne Docker-Bridge-Adresse (typ. 172.17.0.1) an erster Stelle
@@ -428,7 +482,7 @@ ok "SERVICE_ROLE_KEY akzeptiert (200)"
 LAN_IP="$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}')"
 [ -n "$LAN_IP" ] || LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 
-log "[14/14] Fertig"
+log "[15/15] Fertig"
 log ""
 log "  Box erreichbar unter:  ${SITE_URL}"
 [ -n "$LAN_IP" ] && log "  Eine Server-Adresse:    ${LAN_IP} (PRÜFEN, ob das die echte Praxisnetz-IP ist, nicht z. B. eine Docker-interne)"

@@ -38,7 +38,7 @@ import crypto from 'crypto';
 import { encryptPHI, encryptionAvailable } from './lib/phi-encrypt.js';
 import { resolveOrCreateArzt } from './lib/arzt-registry.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
-import nodemailer from 'nodemailer';
+import { createSMTPTransport, getMailFrom } from './lib/mail.js';
 
 dotenv.config();
 
@@ -4010,7 +4010,7 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
             .update(`${request.id}:${resolvedPatientId}`).digest('hex').substring(0, 32);
           const t = createSMTPTransport();
           t.sendMail({
-            from: `"${ownerProfile.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+            from: getMailFrom(ownerProfile.business_name),
             replyTo: ownerProfile.email || undefined,
             to: pat.email,
             subject: `Ihr Termin wurde bestätigt – ${ownerProfile.business_name || 'Praxura'}`,
@@ -4031,7 +4031,7 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
       }
       const t = createSMTPTransport();
       t.sendMail({
-        from: '"Praxura" <noreply@praxura.de>',
+        from: getMailFrom(),
         to: ownerProfile.email,
         subject: `Neue Terminanfrage von ${pName}`,
         html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2>Neue Terminanfrage</h2><p><strong>Patient:</strong> ${pName}</p><p><strong>Kassentyp:</strong> ${payment_type.toUpperCase()}</p>${preferred_date ? `<p><strong>Wunschtermin:</strong> ${new Date(preferred_date).toLocaleDateString('de-DE')}${preferred_time ? ' um ' + preferred_time + ' Uhr' : ''}</p>` : ''}${notizen ? `<p><strong>Notiz:</strong> ${notizen}</p>` : ''}<p><a href="https://app.praxura.de/dashboard.html#anfragen" style="background:#b1891b;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:12px">Zur Praxura → Termin-Anfragen</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
@@ -4203,7 +4203,7 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
         .update(`${request_id}:${bookReq.patient_id}`).digest('hex').substring(0, 32);
       const t = createSMTPTransport();
       t.sendMail({
-        from: `"${ownerP?.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+        from: getMailFrom(ownerP?.business_name),
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: `Ihr Termin wurde bestätigt – ${ownerP?.business_name || 'Praxura'}`,
@@ -4241,7 +4241,7 @@ app.post('/api/booking-request/decline', requireAuthAI, bookingRequestApprovalLi
       const { data: ownerP } = await supabase.from('profiles').select('business_name, email').eq('id', owner_id).maybeSingle();
       const t = createSMTPTransport();
       t.sendMail({
-        from: `"${ownerP?.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+        from: getMailFrom(ownerP?.business_name),
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: 'Terminanfrage – Leider nicht möglich',
@@ -4345,7 +4345,7 @@ app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimi
       }).join('');
       const t = createSMTPTransport();
       t.sendMail({
-        from: `"${ownerP?.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+        from: getMailFrom(ownerP?.business_name),
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: `Terminvorschlag – ${ownerP?.business_name || 'Praxura'}`,
@@ -4392,7 +4392,7 @@ app.post('/api/booking-request/message', requireAuthAI, bookingRequestApprovalLi
 
     const t = createSMTPTransport();
     await t.sendMail({
-      from: `"${ownerP?.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+      from: getMailFrom(ownerP?.business_name),
       replyTo: ownerP?.email || undefined,
       to: bookReq.patients.email,
       subject: `Nachricht von ${ownerP?.business_name || 'Ihrer Praxis'}`,
@@ -4460,18 +4460,6 @@ app.post('/api/booking-request/accept-offer', bookingRequestLimiter, async (req,
     return res.status(500).json({ error: 'Annahme fehlgeschlagen' });
   }
 });
-
-// ============================================================================
-// BOOKING REQUEST — SMTP helper
-// ============================================================================
-function createSMTPTransport() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: Number(process.env.SMTP_PORT) === 465,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  });
-}
 
 const PORT = process.env.PORT || 3000;
 // ============================================================================

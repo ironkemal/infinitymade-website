@@ -52,8 +52,11 @@ onprem_image=8
 # değil. onprem/Caddyfile bu listeyi KOPYALAMAZ, kendi dar CSP'sini tutar.
 csp_host=53
 
-# Koda gömülü gönderen mail adresi (api-backend/). Hedef 0.
-# 6 = server.js:3962 :3983 :4155 :4193 :4297 :4344
-# Ölçüm 11.09.2026: praxura.de SPF `-all` + DMARC `p=quarantine` → kutudan
-# çıkan bu mailler alıcıda spam'e düşer, gönderimde hata görünmez (O-51).
-absender_fest=6
+# Koda gömülü gönderen mail adresi (api-backend/). Hedef 1 (bilinçli fallback).
+# 11.09.2026 gecesi O-51/O-66 kapatıldı: altı yer artık api-backend/lib/mail.js
+# → getMailFrom()'dan geçiyor, kutuda install.sh'ın sorduğu SMTP_FROM kullanılır.
+# 2 = getMailFrom()'un kendi fallback satırı (`'noreply@praxura.de'`, SaaS'ta
+# SMTP_FROM hiç set edilmediği için davranış SaaS'ta AYNI kalıyor) + dosyanın
+# başındaki açıklayıcı yorum satırı (eski durumu anlatıyor, kod değil).
+# Artış reddedilir — yeni bir sabit adres eklenirse getMailFrom() atlanmış demektir.
+absender_fest=2

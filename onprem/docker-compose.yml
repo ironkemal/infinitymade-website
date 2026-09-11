@@ -420,12 +420,14 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
-      # Kein SMTP_FROM: die Absenderadresse steht an sechs Stellen fest im Code
-      # (`noreply@praxura.de`, server.js:3962 u. a.). In einer Kundenbox geht die
-      # Mail damit ueber DEREN Mailserver hinaus und behauptet, von uns zu
-      # kommen — SPF/DMARC weisen das bei den meisten Anbietern ab. Als
-      # Register-Eintrag festgehalten; hier ist nichts zu konfigurieren, weil es
-      # nichts zu konfigurieren GIBT.
+      # Seit O-66 (11.09.2026) GESETZT statt fest im Code: install.sh fragt
+      # SMTP_FROM zusammen mit den uebrigen SMTP-Werten ab und schreibt es
+      # nach `.env` — api-backend/lib/mail.js liest es, mit dem alten SaaS-
+      # Fallback (`noreply@praxura.de`) nur falls die Variable fehlt. Auf
+      # SaaS bleibt sie immer leer (VPS-.env.calendar kennt sie nicht), das
+      # Verhalten dort ist also byte-gleich zu vorher.
+      SMTP_FROM: ${SMTP_FROM:-}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-}
 
       # Der Kunde bringt seinen eigenen Schluessel mit (K4 BYO-Key). Fehlt er,
       # muss die Anwendung starten und nur die KI-Funktion still bleiben.

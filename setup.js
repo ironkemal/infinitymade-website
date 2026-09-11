@@ -1,13 +1,17 @@
-// Einrichtungsassistent, Schritt 1-3 (Faz 2.2, dilim 1). Läuft nur einmal
-// pro Box — das Backend prüft das atomar (praxura_setup, db/migrations/0005).
+// Einrichtungsassistent, Schritt 1-4 (Faz 2.2). Läuft nur einmal pro Box —
+// das Backend prüft das atomar (praxura_setup, db/migrations/0005).
 //
-// Kein Supabase-Client hier: alle drei Schritte laufen über /api/setup/*,
-// das Backend hält den service_role-Schlüssel (der gehört nie in den
-// Browser, G2). Diese Seite ruft nur fetch() gegen dieselbe Origin auf.
+// Kein Supabase-Client hier: alle Schritte laufen über /api/setup/*, das
+// Backend hält den service_role-Schlüssel (der gehört nie in den Browser,
+// G2). Diese Seite ruft nur fetch() gegen dieselbe Origin auf.
+//
+// SMTP selbst wird HIER NICHT eingerichtet (O-66) — das hat install.sh schon
+// erledigt oder bewusst ausgelassen. Schritt 3 TESTET nur, ob es funktioniert.
 import { API_BASE } from './supabase-config.js';
 
 const stepToken = document.getElementById('stepToken');
 const stepOwner = document.getElementById('stepOwner');
+const stepSmtp = document.getElementById('stepSmtp');
 const stepDone = document.getElementById('stepDone');
 const stepClosed = document.getElementById('stepClosed');
 
@@ -27,7 +31,7 @@ async function init() {
     const res = await fetch(API_BASE + '/setup/status');
     const data = await res.json();
     if (!data.verfuegbar) {
-      verstecken(stepToken, stepOwner, stepDone);
+      verstecken(stepToken, stepOwner, stepSmtp, stepDone);
       stepClosed.hidden = false;
     }
   } catch {
@@ -51,7 +55,7 @@ document.getElementById('tokenForm').addEventListener('submit', async (e) => {
       body: JSON.stringify({ token }),
     });
     if (res.status === 410) {
-      verstecken(stepToken, stepOwner, stepDone);
+      verstecken(stepToken, stepOwner, stepSmtp, stepDone);
       stepClosed.hidden = false;
       return;
     }
@@ -94,7 +98,7 @@ document.getElementById('ownerForm').addEventListener('submit', async (e) => {
     const data = await res.json().catch(() => ({}));
 
     if (res.status === 410) {
-      verstecken(stepToken, stepOwner, stepDone);
+      verstecken(stepToken, stepOwner, stepSmtp, stepDone);
       stepClosed.hidden = false;
       return;
     }
@@ -104,10 +108,73 @@ document.getElementById('ownerForm').addEventListener('submit', async (e) => {
     }
 
     verstecken(stepOwner);
-    stepDone.hidden = false;
+    stepSmtp.hidden = false;
+    testeSmtp();
   } catch {
     zeigeMsg(msg, 'Verbindung fehlgeschlagen. Bitte erneut versuchen.', 'error');
   } finally {
     btn.disabled = false;
   }
 });
+
+// ── Schritt 3: SMTP testen ───────────────────────────────────────────────
+const smtpChecking = document.getElementById('smtpChecking');
+const smtpSkipped = document.getElementById('smtpSkipped');
+const smtpSent = document.getElementById('smtpSent');
+const smtpError = document.getElementById('smtpError');
+const smtpConfirmed = document.getElementById('smtpConfirmed');
+
+function smtpZeige(el) {
+  [smtpChecking, smtpSkipped, smtpSent, smtpError, smtpConfirmed].forEach((s) => { s.hidden = (s !== el); });
+}
+
+function weiterZuFertig() {
+  verstecken(stepSmtp);
+  stepDone.hidden = false;
+}
+
+async function testeSmtp() {
+  smtpZeige(smtpChecking);
+  try {
+    const res = await fetch(API_BASE + '/setup/test-smtp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: gueltigerToken }),
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok && data.eingerichtet === false) {
+      smtpZeige(smtpSkipped);
+      return;
+    }
+    if (res.ok && data.eingerichtet === true) {
+      document.getElementById('smtpSentMsg').textContent =
+        `Testmail an ${data.gesendetAn} gesendet — bitte Posteingang und Spam-Ordner prüfen.`;
+      smtpZeige(smtpSent);
+      return;
+    }
+    // Fehler (502 vom Testmail-Versuch, oder ein anderer Statuscode)
+    document.getElementById('smtpErrorMsg').textContent =
+      data.error || 'Testmail konnte nicht gesendet werden.';
+    smtpZeige(smtpError);
+  } catch {
+    document.getElementById('smtpErrorMsg').textContent = 'Verbindung fehlgeschlagen.';
+    smtpZeige(smtpError);
+  }
+}
+
+document.getElementById('smtpAckCheckbox').addEventListener('change', (e) => {
+  document.getElementById('smtpSkipContinueBtn').disabled = !e.target.checked;
+});
+document.getElementById('smtpSkipContinueBtn').addEventListener('click', weiterZuFertig);
+document.getElementById('smtpArrivedBtn').addEventListener('click', () => {
+  smtpZeige(smtpConfirmed);
+});
+document.getElementById('smtpConfirmedContinueBtn').addEventListener('click', weiterZuFertig);
+document.getElementById('smtpNotArrivedBtn').addEventListener('click', () => {
+  document.getElementById('smtpErrorMsg').textContent =
+    'Die Mail wurde vom Server angenommen, kam aber nicht an. Häufigste Ursache: die Absenderadresse gehört nicht zur eigenen Domain des Mailservers (SPF/DMARC) — Absenderadresse in der .env prüfen (SMTP_FROM).';
+  smtpZeige(smtpError);
+});
+document.getElementById('smtpRetryBtn').addEventListener('click', testeSmtp);
+document.getElementById('smtpErrorContinueBtn').addEventListener('click', weiterZuFertig);

@@ -116,8 +116,31 @@
     }
     .msg.error { background: rgba(156, 58, 58, 0.08); color: var(--rose); border: 1px solid rgba(156, 58, 58, 0.2); }
     .msg.success { background: rgba(78, 92, 69, 0.08); color: var(--sage); border: 1px solid rgba(78, 92, 69, 0.2); }
+    .msg.warn { background: rgba(177, 137, 27, 0.1); color: #8a6a1a; border: 1px solid rgba(177, 137, 27, 0.3); }
     .msg.info { background: var(--bg-warm); color: var(--ink-soft); border: 1px solid var(--line); }
     [hidden] { display: none !important; }
+    .check-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      margin-top: 1.2rem;
+      font-size: 0.85rem;
+      color: var(--ink-mute);
+      line-height: 1.4;
+    }
+    .check-row input { width: auto; margin-top: 0.2rem; }
+    .btn-row { display: flex; gap: 0.7rem; margin-top: 0.8rem; }
+    .btn-secondary {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      border-radius: 999px;
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
     @media (max-width: 640px) {
       body { padding: 1.5rem 1rem; }
       .setup-card { padding: 2.2rem 1.6rem; }
@@ -134,7 +157,7 @@
 
       <!-- Schritt 1: Jeton -->
       <section id="stepToken">
-        <p class="step-indicator">Schritt 1 von 3</p>
+        <p class="step-indicator">Schritt 1 von 4</p>
         <h1>Einrichtung starten</h1>
         <p class="sub">Das Einrichtungsjeton stand am Ende von <code>install.sh</code> im Terminal.</p>
         <form id="tokenForm">
@@ -147,7 +170,7 @@
 
       <!-- Schritt 2: Owner-Konto -->
       <section id="stepOwner" hidden>
-        <p class="step-indicator">Schritt 2 von 3</p>
+        <p class="step-indicator">Schritt 2 von 4</p>
         <h1>Praxis und Konto</h1>
         <p class="sub">Diese Angaben legen das erste Inhaber-Konto an.</p>
         <form id="ownerForm">
@@ -185,9 +208,47 @@
         </form>
       </section>
 
-      <!-- Schritt 3: Fertig -->
+      <!-- Schritt 3: SMTP testen -->
+      <section id="stepSmtp" hidden>
+        <p class="step-indicator">Schritt 3 von 4</p>
+        <h1>Mailversand prüfen</h1>
+        <p class="sub" id="smtpIntro">Wir prüfen jetzt, ob die Box wirklich Mails verschicken kann.</p>
+
+        <div id="smtpChecking" class="msg info show">Wird geprüft …</div>
+
+        <div id="smtpSkipped" hidden>
+          <div class="msg warn show">Kein SMTP eingerichtet — es werden keine Einladungs-, Passwort-Reset- oder Terminmails verschickt.</div>
+          <label class="check-row">
+            <input type="checkbox" id="smtpAckCheckbox" />
+            <span>Ich bin mir bewusst, dass keine Mails verschickt werden, und möchte trotzdem fortfahren.</span>
+          </label>
+          <button type="button" class="btn-primary" id="smtpSkipContinueBtn" disabled>Weiter</button>
+        </div>
+
+        <div id="smtpSent" hidden>
+          <div class="msg warn show" id="smtpSentMsg"></div>
+          <p class="sub" style="margin-top:0.8rem;margin-bottom:0.4rem;font-size:0.85rem;">Ist die Testmail angekommen (auch im Spam-Ordner prüfen)?</p>
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" id="smtpNotArrivedBtn">Nicht angekommen</button>
+            <button type="button" class="btn-primary" id="smtpArrivedBtn" style="margin-top:0;">Angekommen</button>
+          </div>
+        </div>
+
+        <div id="smtpError" hidden>
+          <div class="msg error show" id="smtpErrorMsg"></div>
+          <button type="button" class="btn-primary" id="smtpRetryBtn">Erneut versuchen</button>
+          <button type="button" class="btn-secondary" id="smtpErrorContinueBtn" style="width:100%;margin-top:0.7rem;">Trotzdem fortfahren</button>
+        </div>
+
+        <div id="smtpConfirmed" hidden>
+          <div class="msg success show">Mailversand funktioniert.</div>
+          <button type="button" class="btn-primary" id="smtpConfirmedContinueBtn">Weiter</button>
+        </div>
+      </section>
+
+      <!-- Schritt 4: Fertig -->
       <section id="stepDone" hidden>
-        <p class="step-indicator">Schritt 3 von 3</p>
+        <p class="step-indicator">Schritt 4 von 4</p>
         <h1>Fertig</h1>
         <p class="sub" id="doneText">Das Inhaber-Konto ist angelegt. Sie können sich jetzt anmelden.</p>
         <a href="/login.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Zur Anmeldung</a>
