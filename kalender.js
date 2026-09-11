@@ -5,6 +5,11 @@ import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung } from './module/ausfallrechnung.js?v=20260904';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Frueher hier eine eigene Ternary; jetzt import (O-01). Absichtlich HIER statt
+// bei der alten Stelle (:460) — patchBooking()/loadTeam() lasen sie vorher
+// bereits, safe nur, weil init() sie erst nach dieser Zeile aufruft. Kein
+// Grund, diese Reihenfolge-Abhaengigkeit zu behalten (onprem-Review, 11.09.2026).
+const API_BASIS = API_BASE;
 let session = null;
 let profile = null;
 let teamMembers = [];
@@ -456,8 +461,6 @@ function closeBookingPanel() {
   document.getElementById('booking-panel-overlay').classList.remove('show');
   activePanelBookingId = null;
 }
-
-const API_BASIS = API_BASE; // O-01, 11.09.2026 — einzige Quelle statt sabit adres
 
 /**
  * Nach einer Stornierung auf dieser Seite denselben Wartelisten-Vorschlag

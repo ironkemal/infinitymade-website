@@ -317,6 +317,11 @@ DROP'lu. Pazarlama metinlerinde kullanma, `business_lookup_for_twilio` RPC'sine 
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS`
 - `NEXT_PUBLIC_URL` — ⚠️ praxura.de olmalı, doğrulanmadı (Ops-Dashboard → **Launch**)
+- `PUBLIC_API_BASE` — ⛔ **SET ETME.** `api/config.js`'in `apiBase` alanı (O-01,
+  11.09.2026) bu env yoksa doğru varsayılana (`https://n8n.infinitymade.de/api`)
+  zaten düşüyor. Yanlış/eksik bir değer burada **bütün SaaS trafiğini** yanlış
+  backend'e gönderir, `NEXT_PUBLIC_URL` ile aynı risk sınıfı ama fallback'i yok
+  (env set edilmişse olduğu gibi kullanılır) — onprem/REGISTER.md O-54
 
 **VPS (`/opt/calendar-api/.env.calendar`):**
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`

@@ -6,7 +6,15 @@
 # Ölçüm: 2026-09-04, index üzerinden (git grep --cached), eşleşen SATIR sayısı.
 # Yükseltmek bilinçli bir karardır — gerekçesi sicile yazılır.
 
-# Backend adresi koda gömülü — 13 dosya. Hedef: config'ten okunması, taban 0'a inmesi.
+# Backend adresi koda gömülü. 11.09.2026 akşamı 25→7 indi (O-01, /api/config'e
+# taşındı). 0 artık hedef DEĞİL: 7'nin dökümü —
+#   2 bilinçli fallback kodu: api/config.js:9 · supabase-config.js:18
+#     (host BURADA sabit yazılı olmak ZORUNDA — kutuya hiç gömülmez, yalnız
+#     /api/config hiç dönmezse SaaS'ın eski davranışını taklit eder)
+#   2 yorum satırı: supabase-config.js:13 (açıklama) · module/beleg-druck.js:11 (tarihi)
+#   3 ayrı özellik, bu maddenin kapsamı DIŞINDA: server.js (O-02) ·
+#     dashboard.js B2B webhook (O-09) · index.html pazarlama chatbot (O-04)
+# Artış = red.
 n8n_host=7
 
 # app.praxura.de, yalnız uygulama yüzeyi (pazarlama sayfaları hariç — Faz 2.0).

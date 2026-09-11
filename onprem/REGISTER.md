@@ -123,7 +123,7 @@ kapı unutmaz ama düşünmez.
 | Alan | İçerik |
 |---|---|
 | **Ne** | Backend'in adresi 11 frontend dosyasında sabit yazılı; kutuda müşterinin tarayıcısı bizim VPS'imize gider |
-| **Nerede** | **25 satır / 12 dosya** (kapı kapsamı: `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `index-old.html` `ai chatbot proje/` hariç).<br>`dashboard.js` 9 (`:117` `:6035` `:6543` `:6544` `:11841` `:11849` `:11987` `:12125` `:17439`) · `kalender.js` 5 (`:114` `:242` `:460` `:620` `:766`) · `employee-signup.js` 2 (`:116` `:261`) · `booking-request.js` 2 (`:4` yorum, `:11`) · `module/abrechnungsstatus.js:50` · `module/podologie-positionen.js:39` · `module/beleg-druck.js:11` (yorum) · `booking.js:5` · `attendance.js:4` · `index.html:2179` (chatbot DATA bloğu, pazarlama) · `api-backend/server.js:1945` (bkz. O-02).<br>⚠️ Satır numaraları **11.09.2026'da yeniden ölçüldü** — kod kaydı, toplam **25**'te sabit kaldı (kapı yeşil) |
+| **Nerede** | **25 satır / 12 dosya** (kapı kapsamı: `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `index-old.html` `ai chatbot proje/` hariç).<br>`dashboard.js` 9 (`:117` `:6035` `:6543` `:6544` `:11841` `:11849` `:11987` `:12125` `:17439`) · `kalender.js` 5 (`:114` `:242` `:460` `:620` `:766`) · `employee-signup.js` 2 (`:116` `:261`) · `booking-request.js` 2 (`:4` yorum, `:11`) · `module/abrechnungsstatus.js:50` · `module/podologie-positionen.js:39` · `module/beleg-druck.js:11` (yorum) · `booking.js:5` · `attendance.js:4` · `index.html:2179` (chatbot DATA bloğu, pazarlama) · `api-backend/server.js:1969` (bkz. O-02).<br>⚠️ Ölçüm **11.09.2026 öğleden önce** — bu tablo artık tarihi: aynı akşam 20 satır düzeltildi, kalan 7'nin dökümü akşam notunda. Satır numaraları o yüzden burada güncellenmiyor |
 | **Tip** | C |
 | **Kutuda ne olur** | Müşterinin kutusundaki dashboard açılır, ama her randevu/rezept/abrechnung çağrısı **bizim** VPS'imize gider. Bizim VPS'imiz kapalıysa müşterinin praxis'i durur. Daha kötüsü: kutudaki hasta verisi bizim sunucumuza akar → **G1 ihlali**, geçişin bütün amacı boşa çıkar. Müşteri kendi Supabase'inde oturum açtığı için JWT bizim backend'de doğrulanmaz — pratikte 401 duvarı |
 | **Çözüm** | Tek `API_BASE` kaynağı: `/api/config`'in verdiği değer (bugün Supabase URL'i için zaten yapılan şey — bkz. O-05). Kutuda `window.location.origin + '/api'`, SaaS'ta bugünkü host. Fork değil, tek config satırı. **Faz 1.1** kapsamına bağlandı; paketleme öncesi **Faz 2.0** ile kesişir |
@@ -177,7 +177,7 @@ kapı unutmaz ama düşünmez.
 > imzasına dokunulmadı) · `api-backend` `npm test` (231/231) · yerel kutuda
 > `docker exec praxura-api wget -qO- localhost:3000/api/config` → `apiBase:"/api"`
 > doğru. Kapı tabanı `n8n_host` **25 → 7** kendiliğinden sıkıştı; kalan 7 bu işin
-> parçası değil (O-02 `server.js:1945` · O-09 `dashboard.js` B2B webhook ·
+> parçası değil (O-02 `server.js:1969` · O-09 `dashboard.js` B2B webhook ·
 > O-04 `index.html` pazarlama chatbot · `module/beleg-druck.js` tarihi yorum ·
 > `api/config.js`+`supabase-config.js`'teki **yeni, bilinçli** tek kaynak
 > fallback'leri).
@@ -187,13 +187,53 @@ kapı unutmaz ama düşünmez.
 > (Stripe route kapatma) · O-16 (`/api/dsgvo`'nun 417 satırlık Express taşıması,
 > GoBD kilitleriyle). Faz 2.1b'yi bloke eden **yalnızca** O-01+O-15'in
 > frontend/config kısmıydı, o kapandı — geri kalanı ayrı turlarda.
+>
+> **11.09.2026 (gece) — dördüncü gegenlesen turu, iki küçük düzeltme + üç yeni madde.**
+> `kalender.js`'de `API_BASIS = API_BASE` ataması `:460`'ta kalmıştı ama `:114`/`:242`
+> (`patchBooking`/`loadTeam`) onu **kendisinden önceki** satırlarda kullanıyordu —
+> bugün güvenli (`init()` hepsini `:771`'den sonra çağırıyor) ama gereksiz bir sıralama
+> kırılganlığıydı, önceden hiç yoktu. Atama dosyanın başına, import'un yanına taşındı.
+>
+> **Sessizce değişen bir davranış, düzeltilmedi, sadece kayda geçiyor:** eskiden
+> `dashboard.js`'i `dev_server.cjs`/Vercel olmadan düz bir dosya sunucusuyla açan
+> geliştirici `localhost:3000/api`'ye (ECONNREFUSED, bariz kırık) konuşuyordu. Artık
+> `/api/config` 404 dönünce `supabase-config.js`'in fallback'i devreye girer ve
+> `API_BASE` **gerçek prod backend'ine** düşer — Supabase client'ı boş URL/key ile
+> kurulacağı için authFetch'ler muhtemelen 401 alır, ama teorik risk (canlıya test
+> randevusu) sıfır değil. `node dev_server.cjs` (localhost:8081) ile açan etkilenmez.
+>
+> **Yeni maddeler (guvenlik/onprem ortak taraması, `*.json` kapı kapsamı dışında):**
+>
+> - **O-52** — `vercel.json:19` CSP `connect-src`'de `n8n.infinitymade.de` +
+>   Supabase cloud proje adresi sabit. Kapı `*.js`/`*.html`/`*.mjs` tarıyor,
+>   `*.json` yok — bu sabit adres hiçbir zaman görülmedi. Caddy bu header'ı
+>   olduğu gibi kopyalarsa kutu müşterinin tarayıcısına bizim buluta konuşma
+>   izni verir (ölü ama yanlış); `SUPABASE_PUBLIC_URL` sayfa origin'inden
+>   farklıysa (`praxis.local` vs `praxis.local:8443`) `'self'` kapsamaz ve
+>   login **CSP hatasıyla** ölür — ağ sorunu gibi görünür, teşhisi zor. Tip C.
+>   **Çözüm:** Faz 2.1b'nin ön koşulu — Caddyfile'ın CSP'si `SUPABASE_PUBLIC_URL`'den
+>   üretilsin, sabit yazılmasın; kapıya `*.json`/CSP sayacı eklenmeli. **Durum:** `offen`.
+> - **O-53** — `docker-compose.yml`'de `api` servisine eklenen
+>   `SUPABASE_PUBLIC_URL`/`SUPABASE_ANON_KEY` env'leri `:-` default'suz ve hiçbir
+>   yerde doğrulanmıyor. Boş kalırlarsa `/api/config` boş `supabaseUrl` döner,
+>   `createClient('','')` sessizce kurulur, ekran boş kalır — O-15'in kapattığı
+>   kırılma biçimi arka kapıdan geri geliyor. Tip G. **Çözüm:** Faz 2.1c —
+>   `install.sh` preflight bu ikisi boşsa kurulumu başlatmasın. **Durum:** `geplant` (Faz 2.1c).
+> - **O-54** — `PUBLIC_API_BASE` yeni bir SaaS tek-nokta-arızası: Vercel'de yanlış
+>   set edilirse **bütün** SaaS trafiği yanlış backend'e gider, `NEXT_PUBLIC_URL`
+>   ile aynı sınıf risk, fallback devreye girmez (env zaten set edilmiş sayılır).
+>   Tip C/E. **Çözüm:** Vercel'de bu env **hiç set edilmemeli** — kod zaten doğru
+>   varsayılanı biliyor. CLAUDE.md env listesine + Ops **Launch** kartına
+>   "PUBLIC_API_BASE: dokunma, set edilmemiş kalsın" notu düşülecek. **Durum:** `unkritisch`
+>   (şimdilik dokunulmadığı için), ama not edilmezse birinin "eksik env" sanıp
+>   doldurma riski var.
 
 ### O-02 — `N8N_AI_SERIES_URL` fallback'i koda gömülü n8n adresi
 
 | Alan | İçerik |
 |---|---|
 | **Ne** | AI seri-planlayıcı env var yoksa sabit n8n webhook'una düşüyor |
-| **Nerede** | `api-backend/server.js:1945` (04.09'da `:1806`'ydı) — `process.env.N8N_AI_SERIES_URL` yoksa `https://n8n.infinitymade.de/webhook/ai-series-scheduler` |
+| **Nerede** | `api-backend/server.js:1969` (04.09'da `:1806`'ydı) — `process.env.N8N_AI_SERIES_URL` yoksa `https://n8n.infinitymade.de/webhook/ai-series-scheduler` |
 | **Tip** | C + A (fallback runtime dış çağrı) |
 | **Kutuda ne olur** | Müşteri env'inde `N8N_AI_SERIES_URL` olmayacak → fallback devreye girer → kutu bizim n8n'imize POST atar. Playbook D9'a göre bu çağrı **hasta adını taşıyor** (`aiPayload.customer.name`) → G1 ihlali. Deterministik fallback kodda var ama bu satır ona düşmeden önce ağa çıkıyor |
 | **Çözüm** | **Faz 1.2** — `ai/tasks/series-schedule.js` olarak llmClient üzerinden doğrudan; n8n aradan çıkar, hasta adı prompt'a girmez. Kabul kriteri zaten yazılı: `grep N8N_` → sıfır |
@@ -357,7 +397,7 @@ kapı unutmaz ama düşünmez.
 | **Nerede** | `api-backend/server.js:1192` (`process.env.N8N_WEBHOOK_URL`; 04.09'da `:1053`) — env yoksa sessizce atlanıyor. Kutu paketinde bu env **yok**, yani kutuda hiç çalışmıyor (doğrulandı) |
 | **Tip** | A |
 | **Kutuda ne olur** | Env boş kalacağı için **hiçbir şey**; kod bunu zaten sessizce atlıyor, kutuda kırılmaz. Yine de G3/G8 disiplini gereği kodda `N8N_` referansı kalmamalı — playbook D9'a göre bu webhook WhatsApp döneminden kalma ve muhtemelen işlevsiz |
-| **Çözüm** | **Faz 1.2** — kaldır ya da iç event'e çevir. Kabul kriteri: `grep N8N_` → sıfır (bugün 3 satır: `:1192` `:1945` `:1948`) |
+| **Çözüm** | **Faz 1.2** — kaldır ya da iç event'e çevir. Kabul kriteri: `grep N8N_` → sıfır (11.09.2026 akşamı yeniden ölçüldü, hâlâ 3 satır: `:1216` `:1969` `:1972`) |
 | **Durum** | `geplant` (Faz 1.2) |
 
 ### O-14 — SMTP çıkışı (nodemailer)
@@ -1210,7 +1250,7 @@ kapı unutmaz ama düşünmez.
 | `app.praxura.de` (uygulama yüzeyi) | **19** | `dashboard.js` `dashboard.html` `employee-signup.js` `admin-login.js` `api-backend/server.js` — pazarlama/blog hariç (O-04) |
 | `api/` fonksiyon sayısı | **12** | `find api -name "*.js" -not -path "api/_lib/*"` — artış = red (limit + G8) |
 | Üçüncü-parti `<script src="http…">` | **11** | Yalnız Sentry loader. ⚠️ Sicilin O-06'da "12 satır / 11 dosya" yazıyordu; kapı 04.09.2026'da index üzerinden **11 satır** ölçtü — geçerli sayı kapınınkidir (`tools/.onprem-baseline` → `ext_script=11`). Yeni host = red |
-| `N8N_` env referansı | **3** | `server.js:1192` `:1945` `:1948` (satırlar 11.09.2026 akşamı, `c602f50` sonrası ölçüldü) — artış = red, hedef sıfır (Faz 1.2) |
+| `N8N_` env referansı | **3** | `server.js:1216` `:1969` `:1972` (satırlar 11.09.2026 akşamı, `86aae7b` sonrası yeniden ölçüldü) — artış = red, hedef sıfır (Faz 1.2) |
 | `.supabase.co` sabit referansı (ürün kodu) | **1** | ⚠️ Sicil bunu **0** sanıyordu; kapı ölçümünde 1 çıktı: `api-backend/test_schema.js:5` (test dosyası, env fallback'li — O-05'te zaten istisna olarak yazılıydı, sayaçta unutulmuştu). `ops/` ve `vercel.json` hariç. Artış = red |
 | `fonts.googleapis.com` / `esm.sh` / `unpkg` / `jsdelivr` / `cdnjs` | **0** | Uygulama kodu; `ai chatbot proje/` hariç. Sıfırdan artış = red (Konsey 2026-08-13 S3) |
 | `latest` etiketi yayın hattında | **1** | `.github/workflows/publish-calendar-api.yml:64` — hedef **0** (Faz 4.3b, `X.Y.Z` + kanal etiketleri). Artış = red |
