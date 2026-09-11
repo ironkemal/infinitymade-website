@@ -1,7 +1,19 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-11 — 0002_nummernkreis_rpc_revoke
+-- ERZEUGT AM:        2026-09-11 — 0003_nummernkreis_beleg_mahnung_ausfallrechnung
+--                    (db-ustasi-Fund, offen seit 16.08.2026: nummernkreise sollte
+--                    rechnung_nr/beleg_nr/mahnung_nr beliefern, eingelöst war nur
+--                    rechnung_nr. set_next_beleg_nr/set_next_mahnung_nr liefen
+--                    weiter mit MAX+1 — derselbe Wettlauf, den nummernkreise
+--                    abschaffen sollte. set_next_ausfallrechnung_nr (§14-UStG-
+--                    Rechnungsnummer) hatte denselben Fund, war nicht auf der
+--                    urspruenglichen Liste. Alle drei jetzt SECURITY DEFINER +
+--                    naechste_nummer(owner, kreis, 0) — p_jahr=0 haelt das
+--                    bisherige fortlaufende (nicht jahresweise) Verhalten 1:1.
+--                    Bestand per idempotentem GREATEST-Upsert nachgezogen.
+--                    Details unten bei den drei Funktionen.
+--                    davor: 2026-09-11 — 0002_nummernkreis_rpc_revoke
 --                    (Sicherheitsfund S-24, guvenlik-Agent bei S-04-Klassentraversal:
 --                    naechste_nummer/naechste_verordnungsnummer dasselbe Muster wie
 --                    S-01 — EXECUTE fuer PUBLIC/anon/authenticated seit CREATE
@@ -748,9 +760,20 @@ $function$;
 -- fn_prescriptions_set_befreit()        -> trigger  (setzt prescriptions.zuzahlung_befreit)
 -- fn_befreiung_backfill_prescriptions() -> trigger  (Nachtrag bei Befreiungsänderung)
 -- set_next_beleg_nr() · set_next_mahnung_nr() · set_next_ausfallrechnung_nr()
---   Lückenlose Nummernkreise je Inhaber. Zählen per MAX+1 im Trigger — bei
---   zwei gleichzeitigen Inserts kann dieselbe Nummer fallen, der UNIQUE-Index
---   fängt es dann als Fehler. Für Rechnungen wurde das ersetzt:
+--   [SECURITY DEFINER seit 0003, 11.09.2026] Lückenlose Nummernkreise je Inhaber.
+--   Bis 0003 per MAX+1 im Trigger gezählt — bei zwei gleichzeitigen Inserts konnte
+--   dieselbe Nummer fallen, der UNIQUE-Index fing es dann als Fehler ab (kein GoBD-
+--   Verstoß, aber ein unnötiger Fehler für den Nutzer). Seit 0003 rufen alle drei
+--   `naechste_nummer(owner, '<beleg|mahnung|ausfallrechnung>', 0)` — `p_jahr=0` ist
+--   Absicht: diese drei liefen nie jahresweise, sondern fortlaufend je Inhaber,
+--   anders als `rechnung_nr` (jahr = Ausstellungsjahr). `SECURITY DEFINER` ist
+--   Pflicht, seit `naechste_nummer` selbst kein EXECUTE mehr für anon/authenticated
+--   hat (0002, S-24) — sonst "permission denied" beim ersten Trigger-Aufruf unter
+--   einer Nicht-service_role-Rolle. Bestand bei Umstellung per idempotentem
+--   `INSERT … ON CONFLICT DO UPDATE SET last_nr = GREATEST(…)` nachgezogen.
+--   Bewusste Verhaltensänderung: ein Rollback verbraucht jetzt eine Nummer (Lücke
+--   möglich) — GoBD verbietet das nicht, verlangt nur Erklärbarkeit; `rechnung_nr`
+--   verhält sich seit 16.08.2026 bereits so. Für Rechnungen war das der erste Schritt:
 -- naechste_nummer(p_owner, p_kreis, p_jahr) -> bigint      [SECURITY DEFINER]
 --   Zählt über die Tabelle `nummernkreise` per
 --   INSERT .. ON CONFLICT DO UPDATE .. RETURNING — die Zeile ist damit gesperrt,
