@@ -28,6 +28,14 @@ Zugriff stattgefunden hat, greift Art. 33 DSGVO") wurde nicht sofort eingeholt �
 das ist der Verfahrensfehler dieses Falls (siehe Lessons Learned), nicht der Fund
 selbst. Nachgeholt am 11.09.2026, technische Behebung am selben Tag.
 
+**Wichtigste Tatsache für diesen Fall (Kemal, 12.09.2026 ausdrücklich bestätigt):**
+Praxura hat zu keinem Zeitpunkt bis heute einen realen zahlenden/produktiven Kunden
+gehabt. Alle 5 betroffenen `vault`-Einträge sind interne Test-/Entwicklungskonten.
+Es gibt keinen realen Betroffenen — die DSGVO-Prüfung unten wird trotzdem in voller
+Tiefe dokumentiert, weil dieselbe Funktionsklasse (`SECURITY DEFINER` ohne
+`auth.uid()`-Check) beim ersten realen Kunden erneut auftreten kann und dann sofort
+relevant wird.
+
 ## Betroffene Systeme
 - [x] Supabase (Datenbank / Auth)
 - [ ] Hetzner VPS (calendar-api, n8n)
@@ -37,10 +45,17 @@ selbst. Nachgeholt am 11.09.2026, technische Behebung am selben Tag.
 - [ ] Sentry
 
 ## Betroffene Personen
-- **Anzahl:** max. 5 (Anzahl Einträge in `vault.secrets` mit Namensmuster
-  `gmail_token:*`, Stand 11.09.2026 — nicht verifiziert, ob alle 5 aktive Kunden
-  sind oder Testkonten darunter sind).
-- **Gruppen:** [ ] Patienten  [x] Praxisinhaber  [ ] Mitarbeiter
+- **Anzahl:** 0 reale Personen. `vault.secrets` enthält 5 Einträge mit
+  Namensmuster `gmail_token:*`, Stand 11.09.2026 — **Kemal am 12.09.2026
+  ausdrücklich bestätigt: kein einziger davon gehört zu einem echten Kunden.**
+  `profiles.plan_status='active'` zeigt zwar 4 Zeilen (DB-Check 11.09.2026),
+  das sind interne/Test-Accounts (manuell gesetzter Plan-Status zu Testzwecken —
+  kein Zahlungs-/Nutzungsbeleg eines echten Praxisbetriebs). Praxura ist zum
+  Zeitpunkt dieses Funds noch **vor
+  dem ersten realen Kunden**; die gesamte Datenbasis ist Test-/Entwicklungsdaten,
+  die ohnehin in Kürze geleert werden (Kemal, mündlich).
+- **Gruppen:** [ ] Patienten  [ ] Praxisinhaber (real)  [ ] Mitarbeiter — **keine
+  reale Personengruppe betroffen, nur interne Testkonten**
 
 ## Datenkategorien
 - [ ] Kontaktdaten (Name, E-Mail, Telefon)
@@ -49,14 +64,21 @@ selbst. Nachgeholt am 11.09.2026, technische Behebung am selben Tag.
 - [x] Credentials / Tokens (Google-OAuth-Refresh-Token, Scope `gmail.send`)
 
 ## Risikobewertung
-- **Wahrscheinlichkeit Schaden:** [x] gering  (Begründung: Refresh-Token allein ist
-  für einen confidential OAuth-Client ohne `GOOGLE_CLIENT_SECRET` nicht einlösbar;
-  dieses Secret war zu keinem Zeitpunkt im Repository — der Leak vom 05.08.2026 betraf
-  Fal-AI-Key, n8n-Key und ein Testpasswort, nicht Google. Scope ist ausschließlich
-  `gmail.send`, kein Postfachzugriff möglich, selbst mit gültigem Access-Token.
-  ⚠️ **Offene technische Verifikation:** ob Google bei diesem Client-Typ den Secret-Check
-  beim Refresh-Grant tatsächlich erzwingt, wurde noch nicht mit einem echten Aufruf
-  bestätigt — siehe Maßnahmen.)
+- **Wahrscheinlichkeit Schaden:** [x] keine — **kein Betroffener existiert.** Praxura
+  hatte zum Zeitpunkt des Funds (und hat bis heute) keinen einzigen realen Kunden;
+  alle 5 `vault`-Einträge sind Test-/Entwicklungskonten (von Kemal am 12.09.2026
+  bestätigt). Ohne realen Data Subject ist die DSGVO-Frage bereits auf dieser
+  Stufe erledigt — die folgende Begründung (technische Nicht-Verwertbarkeit) wird
+  nur nachrichtlich mitgeführt, weil sie **zusätzlich** greifen würde, sobald der
+  erste echte Kunde da ist und dieselbe Funktionsklasse erneut offen wäre:
+  Refresh-Token allein ist für einen confidential OAuth-Client ohne
+  `GOOGLE_CLIENT_SECRET` nicht einlösbar; dieses Secret war zu keinem Zeitpunkt im
+  Repository — der Leak vom 05.08.2026 betraf Fal-AI-Key, n8n-Key und ein
+  Testpasswort, nicht Google. Scope ist ausschließlich `gmail.send`, kein
+  Postfachzugriff möglich, selbst mit gültigem Access-Token.
+  ⚠️ **Offene technische Verifikation** (jetzt ohne Zeitdruck, da kein Kunde
+  betroffen): ob Google bei diesem Client-Typ den Secret-Check beim Refresh-Grant
+  tatsächlich erzwingt, wurde noch nicht mit einem echten Aufruf bestätigt.)
 - **Meldepflicht Art. 33:** [x] Nein — Begründung: keine nachweisbare „Verletzung" i. S. d.
   Art. 4 Nr. 12 DSGVO (Zugänglichkeit ohne belegten Zugriff, Darlegungslast Art. 5 Abs. 2;
   EDSA-Leitlinien 9/2022 v2.0 vom 28.03.2023 verlangen für die Kenntnis „hinreichenden
@@ -70,26 +92,26 @@ selbst. Nachgeholt am 11.09.2026, technische Behebung am selben Tag.
   … FROM PUBLIC, anon, authenticated` für alle drei Funktionen, 11.09.2026, Cloud + Box.
 - [x] `db/SCHEMA-RLS.sql` nachgezogen, `guvenlik/REGISTER.md` S-01/S-02/S-19 →
   Behoben (gitignored, lokale Akte).
-- [ ] **Offen:** technische Bestätigung, dass ein Refresh-Grant ohne `GOOGLE_CLIENT_SECRET`
-  mit `401 invalid_client` scheitert (einmaliger Testaufruf gegen `oauth2.googleapis.com/token`
-  mit einem der 5 betroffenen Tokens — sensibel, daher bewusst nicht automatisiert
-  ausgeführt, liegt bei Kemal).
+- [ ] **Offen, ohne Zeitdruck:** technische Bestätigung, dass ein Refresh-Grant ohne
+  `GOOGLE_CLIENT_SECRET` mit `401 invalid_client` scheitert — reines technisches
+  Interesse für die nächste Instanz dieser Funktionsklasse, keine Kunden-Relevanz
+  mehr (alle 5 Tokens sind Testkonten).
 - [x] Supabase Edge-Logs (11.09.2026, letzte 24h, einziges verfügbares Fenster)
   auf `gmail_token` durchsucht — **keine Treffer.** Schwacher Beleg: die
   Log-Retention deckt das eigentliche Vorfallsfenster (11.06.–29.08.2026) nicht
   ab, sagt also nichts über einen historischen Zugriff aus. Bestätigt nur, dass
   seit Behebung (11.09.2026) kein Aufruf mehr ankommt.
-- [ ] **Offen:** vorsorglicher Widerruf der 5 betroffenen Refresh-Tokens über
-  `oauth2.googleapis.com/revoke` (ein einfaches Trennen/Neuverbinden widerruft laut
-  `legal-de`-Recherche das alte Token **nicht** automatisch) + `clear_gmail_token` +
-  Kundeninformation ohne „Datenpanne"-Wortlaut (Entwurf liegt vor).
-- [ ] **Offen:** `compliance/LEGAL_DECISIONS.md`-Eintrag.
+- [x] **Entfällt:** Token-Widerruf + Kundeninformation — es gibt keinen Kunden zu
+  informieren. Alle 5 Testkonten werden ohnehin in Kürze mit der gesamten
+  Test-/Entwicklungsdatenbasis geleert (Kemal, 12.09.2026). Der vorbereitete
+  Kundenbrief bleibt für den Tag relevant, an dem diese Funktionsklasse erneut
+  betroffen ist UND ein realer Kunde existiert — nicht für heute.
+- [x] `compliance/LEGAL_DECISIONS.md`-Eintrag geschrieben (11.09.2026).
 
 ## Meldungen
 - **Behörde:** [ ] LDI NRW — nicht ausgelöst
-- **Auftraggeber (Praxen):** [ ] Informiert, Datum: _____ (vorsorgliche Information
-  im Rahmen des Token-Widerrufs geplant, noch nicht versendet)
-- **Betroffene Personen:** [ ] Informiert — nicht ausgelöst (keine Patienten betroffen)
+- **Auftraggeber (Praxen):** [ ] entfällt — kein realer Kunde vorhanden
+- **Betroffene Personen:** [ ] entfällt — kein realer Betroffener vorhanden
 
 ## Lessons Learned
 **Ursache:** `CREATE FUNCTION` vergibt in Postgres per Default `EXECUTE` an `PUBLIC`.
