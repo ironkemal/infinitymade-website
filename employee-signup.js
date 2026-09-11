@@ -285,7 +285,10 @@ $('signupForm').addEventListener('submit', async (e) => {
       password,
       options: {
         data: { full_name: name },
-        emailRedirectTo: 'https://app.praxura.de/confirm.html',
+        // window.location.origin statt fest verdrahtet: auf SaaS identisch zu
+        // vorher (die Seite laeuft ohnehin unter unserer eigenen Domain), in
+        // der Kundenbox die eigene Adresse der Box (O-56, 11.09.2026).
+        emailRedirectTo: window.location.origin + '/confirm.html',
       }
     });
     if (authErr) throw authErr;
@@ -294,7 +297,7 @@ $('signupForm').addEventListener('submit', async (e) => {
     await supabase.auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: 'https://app.praxura.de/confirm.html' },
+      options: { emailRedirectTo: window.location.origin + '/confirm.html' },
     }).catch(() => {});
 
     // 4. Show confirmation message — profile setup happens in confirm.html after click
