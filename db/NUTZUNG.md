@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-10 · 88 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-10), funktionen/INDEX.json (erzeugt 2026-09-10)
+**Erzeugt:** 2026-09-11 · 88 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-10), funktionen/INDEX.json (erzeugt 2026-09-10)
 
 ## Kayıt durumu
 
@@ -599,7 +599,7 @@ Warum: Messwerte im Verlauf (Blankoverordnung: der Therapeut muss den Behandlung
 ### `module_visibility`
 
 6 Spalten · Status: aktiv
-Warum: Nicht jede Praxis braucht jedes Sidebar-Modul. Der Schalter je Inhaber und Modul liegt hier; die Modulliste selbst steht im Code (`nav-registry.js`).
+Warum: Nicht jede Praxis braucht jedes Sidebar-Modul. Hier liegt der **zentrale** Schalter je **Fachbereich × Rolle × Modul** (`sector`, `role`, `module_id`, `enabled`); die Modulliste selbst steht im Code (`nav-registry.js`).
 
 **Schreibt (2):** `loadVisibility()` [upsert] — admin.js:288 · `saveVisToggle()` [upsert] — admin.js:387
 

@@ -14,6 +14,85 @@
 
 **İlk tarama:** 2026-09-04 · **Kaynak:** `ONPREM_MIGRATION_PLAYBOOK.md` (K1-K14, G1-G8, Faz 0-6)
 
+---
+
+## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 11.09.2026)
+
+> Bu blok sicilin **kısa yolu**. Amacı, yeni bir oturumun 1000 satır okumadan
+> "neredeyiz, sıradaki ne, nereye basmam" sorusuna cevap bulması. Ayrıntı her
+> zaman ilgili O-maddesindedir; burada yalnız numara verilir.
+
+**Nerede duruyoruz (11.09.2026):** kutunun compose paketi **var ve çalıştığı ölçüldü**
+(`onprem/docker-compose.yml` + `.env.template` + `NOTICE.md` + `volumes/`; commit'ler
+`b2fdbb8` ve `c602f50`). Yığın 11 fremd konteynerden **6**'ya indi, boşta ≈1,65 GB
+(bizim `api` dahil). Migration zinciri kutuda **kendi kendine** koştu
+(`✓ 0000_baseline.sql`), 11 self-check sayacının 11'i canlıyla birebir.
+
+**Bugün kanıtlanan:** şema kutuya kendi kendine gidiyor (O-39) · signup → trigger →
+profil çalışıyor · apikey'siz PostgREST **401** (Kong'un key-auth'ı gerçek) ·
+`praxura_migrations` PostgREST'ten okunamıyor (42501) · kaldırılan rotalar 404 ·
+veritabanından dışarı çıkan çağrı yok (`net.http_post` → 0 fonksiyon).
+
+**Kanıtlanmayan — abartılmasın:** kutuda **arayüz yok** (Caddy yazılmadı, Kong yalnız
+`127.0.0.1`) · **kurulum yok** (`install.sh` yazılmadı, sırlar elle) · **seed yok**
+(kutu doğru ama boş kalkıyor, `krankenkassen` → `[]`, O-38) · **yedek yok** (O-26) ·
+lisans/yetki tarafına hiç dokunulmadı (O-31/O-33). Yani bugünkü paket **çalışan bir
+test yığını**, kurulabilir ürün değil.
+
+**Sıradaki iş — sırayla:**
+
+1. **Faz 2.1b** — Caddy (TLS + statik arayüzün servisi) · `pg_net`'siz kendi init
+   dosyamız (O-49) · Kong ↔ Caddy kararı **konseye** (O-48, `guvenlik` masada) ·
+   compose'un kutuya dağıtımı (O-45 (b)).
+   ⚠️ **Ön koşul:** O-01 + O-15. Caddy arayüzü servis ettiği an, sabit `n8n…/api`
+   adresi yüzünden müşterinin tarayıcısı **bizim** VPS'imize gider. Yani 2.1b'ye
+   Faz 1.1'in `API_BASE`/`/api/config` işi **önce** girmeli.
+2. **Faz 2.1c** — `install.sh`: donanım ön-kontrolü, `.env` üretimi (sırlar sunucuda
+   üretilir, G2), `DATA_ENCRYPTION_KEY` üretimi (O-50'nin kalan tek şartı).
+3. **Seed adımı** (O-38) — referans tabloları; `SCHEMA-VERTEILUNG.md` §3.1 adım 4.
+4. **Faz 1.2** (O-02) — takvim kısıtı hâline geldi: kutuda `N8N_AI_SERIES_URL` boş
+   kalınca kod **sabit n8n adresine düşüyor** ve hasta adı bize gelir (G1). İlk
+   ücretli kutudan önce inmeli.
+
+**Basılmaması gereken tuzaklar** (hepsi bir kez yaşandı, hepsinin bedeli ölçüldü):
+
+| Tuzak | Ne olur | Nerede yazılı |
+|---|---|---|
+| `:stable` etiketi **yok** | Yayın hattı yalnız `latest` + sha basıyor; `.env.template` `:stable` diyor → müşteri sunucusunda image çekilemez | O-25 |
+| `docker compose down -v` veri klasörünü **silmez** | Bind-mount; "temiz oda" testi sanılan şey eski veriyle koşar | O-39 notu, compose başlığı |
+| `DATABASE_URL` **`supabase_admin`** olmalı | `postgres` ile baseline'ın 12 `ALTER DEFAULT PRIVILEGES` satırı reddedilir, ilk kurulum yarım kalır | compose `api` yorumu, `SCHEMA-VERTEILUNG.md` §2 V-6 |
+| `webhooks.sql` **çıkarılamaz** | Rolü o yaratıyor, bir sonraki init dosyası şifresini set ediyor; çıkarılırsa **Storage hiç açılmaz** ve hata bambaşka bir yüzle gelir | O-49 |
+| Uygulanmış migration dosyası **değiştirilemez** | Runner SHA-256 tutar; değişirse kutu açılmaz | `api-backend/db/migrations/README.md` |
+| Kolon silme/yeniden adlandırma **tek adımda** | `:beta` ve `:stable` aynı anda canlı; eski image kolonu bulamaz | kapının yıkıcı-DDL kontrolü |
+
+**Kim kimi bekliyor:**
+
+- **O-01 + O-15** → Faz 2.1b'yi **bloke ediyor** (yukarı bak)
+- **O-50** → yalnız `install.sh`'ı bekliyor (Faz 2.1c); anahtarın ömrü **O-29**'da
+- **O-51** → Faz 2.2 sihirbazının "test maili gönder" adımı; kabul ölçütü gönderim
+  değil **teslim** (SPF `-all` + DMARC `p=quarantine` ölçüldü)
+- **O-48** (Kong ↔ Caddy) → **konsey**, ajan tek başına karar vermez: `key-auth`/`acl`
+  var olan bir güvenlik kontrolüdür
+- **O-33** (plan farkının teknik karşılığı) ve **O-46** (filo panosu) → **kullanıcı
+  kararı**; ikisi de lisans formatı donmadan cevaplanmalı
+- **O-38** → Faz 2.1 seed adımı; güncelleme yolu O-39'un zincirinden geçer
+
+**Sicili nasıl okursun:** durum değerleri §9'da sayılı. 🟡 **kısmen** demek "yarısı
+yapıldı, kalanı maddede yazılı" demek — `gelöst` yalnız kalanı da bittiğinde konur.
+`unkritisch` ve `widerlegt` maddeler **silinmez**; onlar "bunu niye sorun saymadık"
+sorusunun cevabıdır ve en çok tekrar okunan bölüm §7'dir.
+
+**Satır numaraları kayar:** `api-backend/server.js` her commit'te büyüyor; bu sicildeki
+atıflar 11.09.2026 akşamı (`c602f50`) ölçüldü. Uyuşmazsa sembol adıyla ara
+(`GOOGLE_KONFIGURIERT`, `encryptionAvailable`, `noreply@`, `N8N_`) — sayılar kapıda
+tutulduğu için toplamlar kaymaz, yalnız satırlar kayar.
+
+**Yeni kod yazılmadan önce:** §2 taksonomisi (A-H) + §3'ün dört sorusu. Mekanik
+ihlalleri `tools/check-onprem.sh` zaten yakalar (9 sayaç, taban `tools/.onprem-baseline`);
+kapı unutmaz ama düşünmez.
+
+---
+
 ## Taksonomi kısaltmaları
 
 | Tip | Anlamı |
@@ -38,7 +117,7 @@
 | Alan | İçerik |
 |---|---|
 | **Ne** | Backend'in adresi 11 frontend dosyasında sabit yazılı; kutuda müşterinin tarayıcısı bizim VPS'imize gider |
-| **Nerede** | **25 satır / 12 dosya** (kapı kapsamı: `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `index-old.html` `ai chatbot proje/` hariç).<br>`dashboard.js` 9 (`:117` `:6035` `:6543` `:6544` `:11841` `:11849` `:11987` `:12125` `:17439`) · `kalender.js` 5 (`:114` `:242` `:460` `:620` `:766`) · `employee-signup.js` 2 (`:116` `:261`) · `booking-request.js` 2 (`:4` yorum, `:11`) · `module/abrechnungsstatus.js:50` · `module/podologie-positionen.js:39` · `module/beleg-druck.js:11` (yorum) · `booking.js:5` · `attendance.js:4` · `index.html:2179` (chatbot DATA bloğu, pazarlama) · `api-backend/server.js:1926` (bkz. O-02).<br>⚠️ Satır numaraları **11.09.2026'da yeniden ölçüldü** — kod kaydı, toplam **25**'te sabit kaldı (kapı yeşil) |
+| **Nerede** | **25 satır / 12 dosya** (kapı kapsamı: `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `index-old.html` `ai chatbot proje/` hariç).<br>`dashboard.js` 9 (`:117` `:6035` `:6543` `:6544` `:11841` `:11849` `:11987` `:12125` `:17439`) · `kalender.js` 5 (`:114` `:242` `:460` `:620` `:766`) · `employee-signup.js` 2 (`:116` `:261`) · `booking-request.js` 2 (`:4` yorum, `:11`) · `module/abrechnungsstatus.js:50` · `module/podologie-positionen.js:39` · `module/beleg-druck.js:11` (yorum) · `booking.js:5` · `attendance.js:4` · `index.html:2179` (chatbot DATA bloğu, pazarlama) · `api-backend/server.js:1945` (bkz. O-02).<br>⚠️ Satır numaraları **11.09.2026'da yeniden ölçüldü** — kod kaydı, toplam **25**'te sabit kaldı (kapı yeşil) |
 | **Tip** | C |
 | **Kutuda ne olur** | Müşterinin kutusundaki dashboard açılır, ama her randevu/rezept/abrechnung çağrısı **bizim** VPS'imize gider. Bizim VPS'imiz kapalıysa müşterinin praxis'i durur. Daha kötüsü: kutudaki hasta verisi bizim sunucumuza akar → **G1 ihlali**, geçişin bütün amacı boşa çıkar. Müşteri kendi Supabase'inde oturum açtığı için JWT bizim backend'de doğrulanmaz — pratikte 401 duvarı |
 | **Çözüm** | Tek `API_BASE` kaynağı: `/api/config`'in verdiği değer (bugün Supabase URL'i için zaten yapılan şey — bkz. O-05). Kutuda `window.location.origin + '/api'`, SaaS'ta bugünkü host. Fork değil, tek config satırı. **Faz 1.1** kapsamına bağlandı; paketleme öncesi **Faz 2.0** ile kesişir |
@@ -67,7 +146,7 @@
 | Alan | İçerik |
 |---|---|
 | **Ne** | AI seri-planlayıcı env var yoksa sabit n8n webhook'una düşüyor |
-| **Nerede** | `api-backend/server.js:1926` (04.09'da `:1806`'ydı) — `process.env.N8N_AI_SERIES_URL` yoksa `https://n8n.infinitymade.de/webhook/ai-series-scheduler` |
+| **Nerede** | `api-backend/server.js:1945` (04.09'da `:1806`'ydı) — `process.env.N8N_AI_SERIES_URL` yoksa `https://n8n.infinitymade.de/webhook/ai-series-scheduler` |
 | **Tip** | C + A (fallback runtime dış çağrı) |
 | **Kutuda ne olur** | Müşteri env'inde `N8N_AI_SERIES_URL` olmayacak → fallback devreye girer → kutu bizim n8n'imize POST atar. Playbook D9'a göre bu çağrı **hasta adını taşıyor** (`aiPayload.customer.name`) → G1 ihlali. Deterministik fallback kodda var ama bu satır ona düşmeden önce ağa çıkıyor |
 | **Çözüm** | **Faz 1.2** — `ai/tasks/series-schedule.js` olarak llmClient üzerinden doğrudan; n8n aradan çıkar, hasta adı prompt'a girmez. Kabul kriteri zaten yazılı: `grep N8N_` → sıfır |
@@ -228,10 +307,10 @@
 | Alan | İçerik |
 |---|---|
 | **Ne** | Randevu oluşturulunca n8n'e fire-and-forget bildirim |
-| **Nerede** | `api-backend/server.js:1173` (`process.env.N8N_WEBHOOK_URL`; 04.09'da `:1053`) — env yoksa sessizce atlanıyor. Kutu paketinde bu env **yok**, yani kutuda hiç çalışmıyor (doğrulandı) |
+| **Nerede** | `api-backend/server.js:1192` (`process.env.N8N_WEBHOOK_URL`; 04.09'da `:1053`) — env yoksa sessizce atlanıyor. Kutu paketinde bu env **yok**, yani kutuda hiç çalışmıyor (doğrulandı) |
 | **Tip** | A |
 | **Kutuda ne olur** | Env boş kalacağı için **hiçbir şey**; kod bunu zaten sessizce atlıyor, kutuda kırılmaz. Yine de G3/G8 disiplini gereği kodda `N8N_` referansı kalmamalı — playbook D9'a göre bu webhook WhatsApp döneminden kalma ve muhtemelen işlevsiz |
-| **Çözüm** | **Faz 1.2** — kaldır ya da iç event'e çevir. Kabul kriteri: `grep N8N_` → sıfır (bugün 3 satır: `:1173` `:1926` `:1929`) |
+| **Çözüm** | **Faz 1.2** — kaldır ya da iç event'e çevir. Kabul kriteri: `grep N8N_` → sıfır (bugün 3 satır: `:1192` `:1945` `:1948`) |
 | **Durum** | `geplant` (Faz 1.2) |
 
 ### O-14 — SMTP çıkışı (nodemailer)
@@ -974,7 +1053,7 @@
 | **Tip** | E (env var) |
 | **Kutuda ne olur** | **Olmuştu.** Kutu ilk kez ayağa kaldırıldığında `praxura-api` sonsuz PM2 yeniden başlatma döngüsüne girdi. Takvim, reçete, abrechnung — hepsi durdu, **bir yan özellik yüzünden**. Bulutta bu doğruydu (anahtar hep set, yokluğu bozuk deployment demek); kutuda tam tersi: praxis Google kullanmıyordur. Üstelik `restart: unless-stopped` bunu sonsuza kadar tekrarlar, `/health` sahte yeşil verirse (O-40) kimse fark etmez |
 | **Çözüm** | Yapıldı: `GOOGLE_KONFIGURIERT` bayrağı + açılışta uyarı satırı; `newOAuthClient()` yapılandırılmamışsa anlaşılır bir hata atıyor; `/calendar/google-auth` ve `/gmail/connect` 503 + açık mesaj dönüyor. Diğer iki çağrı yeri zaten `integ.access_token` kontrolünün arkasında — kutuda kimse bağlanamayacağı için o dallar hiç çalışmıyor. Kural K4'ün aynısı: **zutat yoksa uygulama açılır, yalnız o özellik susar** |
-| **Durum** | ✅ **gelöst (11.09.2026, `b2fdbb8`)** — ⚠️ küçük düzeltme: `server.js`'te **iki** `process.exit` daha var, ikisi de meşru. `:157` (`SUPABASE_URL`/`SERVICE_ROLE_KEY` yoksa uygulama gerçekten çalışamaz) ve `:4481` (`uncaughtException` sonrası 1 sn'lik temiz çıkış — bozuk state ile devam etmemek için). Sicil "tek diğer" diyordu, düzeltildi. Bunların dışında sert çıkış yok (tarandı) |
+| **Durum** | ✅ **gelöst (11.09.2026, `b2fdbb8`)** — ⚠️ küçük düzeltme: `server.js`'te **iki** `process.exit` daha var, ikisi de meşru. `:157` (`SUPABASE_URL`/`SERVICE_ROLE_KEY` yoksa uygulama gerçekten çalışamaz) ve `:4500` (`uncaughtException` sonrası 1 sn'lik temiz çıkış — bozuk state ile devam etmemek için). Sicil "tek diğer" diyordu, düzeltildi. Bunların dışında sert çıkış yok (tarandı) |
 
 ### O-48 — Kong kutunun en büyük parçası; yerine Caddy koymak bir güvenlik kontrolünü de kaldırır
 
@@ -1003,11 +1082,11 @@
 | Alan | İçerik |
 |---|---|
 | **Ne** | Compose'un `api` servisine yalnız sekiz değişken geçiyor. `DATA_ENCRYPTION_KEY` ve `SMTP_*` **hiç yok**; `PUBLIC_BASE_URL` (O-03'ün çözümü) için de yer ayrılmamış. Üçünün de yokluğu **sessiz** |
-| **Nerede** | `onprem/docker-compose.yml` → `api:` `environment:` (`NODE_ENV` · `PORT` · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `DATABASE_URL` · `AI_PROVIDER`/`AI_ENDPOINT`/`AI_API_KEY` · `TZ`). `onprem/.env.template`'te de yoklar. Kod tarafı: `api-backend/lib/phi-encrypt.js:32` `encryptionAvailable()`, kullanım `api-backend/server.js:2560` ve `:2758`; SMTP kapıları `server.js:3957` `:3973` `:4139` `:4189` `:4284` (+ `:4332` 503). `PUBLIC_BASE_URL` bugün kodda **hiç yok** (`grep` → 0), O-03'ün önerisi |
+| **Nerede** | `onprem/docker-compose.yml` → `api:` `environment:` (`NODE_ENV` · `PORT` · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `DATABASE_URL` · `AI_PROVIDER`/`AI_ENDPOINT`/`AI_API_KEY` · `TZ`). `onprem/.env.template`'te de yoklar. Kod tarafı: `api-backend/lib/phi-encrypt.js:32` `encryptionAvailable()`, kullanım `api-backend/server.js:2579` ve `:2777`; SMTP kapıları `server.js:3976` `:3992` `:4158` `:4208` `:4303` (+ `:4351` 503). `PUBLIC_BASE_URL` bugün kodda **hiç yok** (`grep` → 0), O-03'ün önerisi |
 | **Tip** | E |
 | **Kutuda ne olur** | Üç ayrı **sessiz** kayıp — hiçbiri hata vermiyor, üçü de kutuyu canlıdan farklı kılıyor. (1) **PHI şifrelemesi kapalı:** `encryptionAvailable()` false döner, `icd10_enc` ve `ocr_raw_enc` alanları **hiç yazılmaz**; reçete verisi kutuda yalnız düz kolonlarda durur. Uygulama çalışır, log sessizdir. Anahtar sonradan eklense bile o ana kadarki satırlar şifresiz kalır. SaaS'ta anahtar dolu, yani bu **kutuya özgü bir gerileme** (G7'nin tersi: iki dağıtım aynı kodda ama farklı korumada). (2) **Express mailleri susar:** her gönderim `if (process.env.SMTP_HOST)` arkasında; randevu onayı, Termin-Anfrage cevabı ve Mahnung maili gitmez, log'a bile düşmez. Üstelik GoTrue'nun kendi SMTP'si **dolu** olduğu için davet ve şifre-sıfırlama mailleri gider → müşteri "mail çalışıyor" sanır, hasta maili gelmez. Bu, teşhisi en zor arıza sınıfı. (3) `PUBLIC_BASE_URL` yokluğu bugün bir şey kırmıyor (değişken kodda da yok), ama O-03'ün çözümü şablonda yer bulamazsa Faz 1.1 uygulanırken ikinci bir tur açılır |
 | **Çözüm** | **Faz 2.1** — `.env.template` ve compose'a üç ekleme: (a) `DATA_ENCRYPTION_KEY`, `install.sh` tarafından üretilir ve O-29'un dört kuralına bağlanır (bir kez gösterilir, yedeğe parmak izi düşer, geri yükleme onu karşılaştırır); (b) `SMTP_*` aynı değerlerle `api` servisine de geçirilir — GoTrue ile ortak, ikinci bir profil değil; (c) `PUBLIC_BASE_URL` yer tutucusu. ⚠️ **Şart:** şifreleme anahtarının yokluğu sessiz kalmamalı — açılışta uyarı satırı (O-47'de Google için yazılan desenin aynısı) + derin `/status`'ta `data_key` alanı (O-40, `RELEASE-STANDARD.md` §6.5). "Zutat yoksa uygulama açılır ama susmaz" |
-| **Durum** | 🟡 **kısmen `gelöst` (11.09.2026)** — üç değişken de compose'a ve `.env.template`'e girdi; kalan iki iş aşağıda |
+| **Durum** | 🟡 **kısmen `gelöst` (11.09.2026, `c602f50`)** — değişkenler girdi, sessizlik de kapandı; **kalan tek şart: anahtarın kurulumda üretilmesi** (Faz 2.1c) |
 
 > **11.09.2026 — yapılan (ana bağlam, sicil bulgusunun ardından).**
 > `api` servisine `DATA_ENCRYPTION_KEY` ve `SMTP_HOST/PORT/USER/PASS` eklendi,
@@ -1015,16 +1094,19 @@
 > tam bir `pg_dump` bile o alanları geri getirmez"). Lokal yığında doğrulandı:
 > `DATA_ENCRYPTION_KEY gesetzt: true · Laenge: 64`, 7/7 konteyner sağlıklı.
 >
-> **Niye hâlâ `gelöst` değil — iki somut kalan:**
-> 1. **Anahtar hâlâ üretilmiyor.** Şablondaki satır boş (`DATA_ENCRYPTION_KEY=`) ve
->    compose onu varsayılansız geçiriyor. Boş `.env` ile kurulan bir kutuda değişken
->    boş dizge olur, `encryptionAvailable()` yine `false` döner — yani **sessiz kapalı
->    hâl aynen duruyor**, yalnız artık doldurulabilir bir yeri var. `install.sh` (Faz 2.1c)
->    üretmeden ve yedek künyesine parmak izi düşmeden (O-29'un 3. ve 4. kuralı) kapanmaz.
-> 2. **Yokluk hâlâ susuyor.** `api-backend/server.js`'te `DATA_ENCRYPTION_KEY` için tek
->    satır uyarı yok (`grep` → yalnız iki kullanım noktası, açılışta hiçbir şey).
->    O-47'de Google için yazılan desenin aynısı burada da gerekli: açılışta uyarı +
->    derin `/status`'ta `data_key` alanı (Faz 2.4b).
+> **11.09.2026 akşamı — sessizlik de kapandı.** `api-backend/server.js:189-195`:
+> anahtar yoksa açılışta `[phi] … werden NICHT verschluesselt gespeichert` uyarısı,
+> **64 hex değilse** ikinci bir uyarı (yanlış uzunluk yoksa ilk yazma denemesinde,
+> yani iş günü ortasında patlıyordu). `process.exit` **bilinçli olarak konmadı** ve
+> gerekçesi koda yazıldı: sabah çalışamayan praxis, şifresiz kaydedilmiş bir alandan
+> kötüdür. Doğru karar — O-47'nin dersinin aynısı, ters yönde uygulanmış hâli.
+>
+> **Kalan tek şart:** şablondaki satır hâlâ boş (`DATA_ENCRYPTION_KEY=`) ve compose onu
+> varsayılansız geçiriyor; boş `.env` ile kurulan kutuda değişken boş dizge olur ve
+> şifreleme kapalı kalır — artık **sessizce değil**, log'da bağırarak. Kapanması için
+> `install.sh`'ın (Faz 2.1c) anahtarı üretmesi gerekir. Anahtarın ömrü (bir kez göster ·
+> yedek künyesine parmak izi · geri yüklemede karşılaştır) **O-29'un işi**, bu maddenin
+> değil — iki madde aynı anahtarı iki farklı sorudan tutuyor, karıştırma.
 >
 > ⚠️ Üçüncü değişken (`PUBLIC_BASE_URL`) hâlâ kodda yok — O-03'ün Faz 1.1 çözümüyle
 > birlikte gelecek; şablonda yer açılması o adımın işi.
@@ -1036,10 +1118,10 @@
 | Alan | İçerik |
 |---|---|
 | **Ne** | `SMTP_FROM` diye bir değişken yok; gönderen adresi altı yerde sabit yazılı (`"<praxis adı> via Praxura" <noreply@praxura.de>`) |
-| **Nerede** | `api-backend/server.js:3962` `:3983` `:4155` `:4193` `:4297` `:4344` — altısı da aynı sabit alan adını taşıyor. `grep -rn "SMTP_FROM"` → ürün kodunda **sıfır**. Kutu tarafındaki tek kayıt: `onprem/docker-compose.yml`'de bu maddeyi anan yorum |
+| **Nerede** | `api-backend/server.js:3981` `:4002` `:4174` `:4212` `:4316` `:4363` — altısı da aynı sabit alan adını taşıyor. `grep -rn "SMTP_FROM"` → ürün kodunda **sıfır**. Kutu tarafındaki tek kayıt: `onprem/docker-compose.yml`'de bu maddeyi anan yorum |
 | **Tip** | C (sabit adres — ama etkisi tip A'ya benziyor: mail teslim edilmiyor) |
 | **Kutuda ne olur** | Mail **müşterinin** SMTP sunucusundan çıkar, zarfın üstünde **bizim** alan adımız yazar. Sonuç varsayım değil, ölçüldü (11.09.2026, herkese açık DNS sorgusu): `praxura.de` → `v=spf1 include:secureserver.net -all` ve `_dmarc.praxura.de` → `v=DMARC1; p=quarantine; adkim=r; aspf=r`. Üç adım zinciri: (1) **SPF sert red** (`-all`) — yalnız bizim sağlayıcımızın sunucuları `praxura.de` adına gönderebilir, müşterinin sunucusu o listede değil → fail; (2) **DKIM ile kurtarma yolu yok** — kutu bizim özel anahtarımızla imzalayamaz, o anahtar kutuya **giremez** (G2); (3) iki hizalama da düştüğü için **DMARC politikası devreye girer**. Politika `p=quarantine` (reject değil): mail kaybolmaz, **spam klasörüne düşer**. DMARC uygulayan her alıcıda — Gmail, Outlook, GMX, Web.de — yani Almanya'daki hasta posta kutularının fiilen tamamında. Arıza tamamen sessizdir: `nodemailer` başarı döner, log temizdir; hasta randevu onayını görmez, praxis "yazılım mail göndermiyor" der ve sebep hiçbir kayıtta yoktur. Bu, O-50'nin SMTP yarısı çözülse **bile** ayakta kalan ikinci bir kırılmadır — iki madde tek düzeltmeyle kapanmaz.<br>İkinci açı, teknik değil ticari: `„… via Praxura"` ibaresi bizim markamızı müşterinin postasına gömüyor. Beyaz etiket/kurumsal kimlik istenirse (on-prem alıcı kitlesi tam da bunu ister) burası ayrı bir karardır — ama **asıl mesele o değil**, asıl mesele mailin görülmemesi |
-| **Çözüm** | Gönderen adresi `.env`'den okunur ve kutuda **müşterinin kendi alanı** olur — varsayılanı `SMTP_ADMIN_EMAIL`, yani zaten sorulan ve kutunun SPF'iyle hizalanan adres. Altı çağrı yeri **tek yardımcıdan** beslenir; görünen ad ikinci bir değişkene (`MAIL_FROM_NAME`, on-prem varsayılanı praxis adı) bağlanır. ⚠️ **SaaS'ta davranış hiç değişmez:** oradaki varsayılan bugünkü sabit değer kalır, gönderim zaten kendi sağlayıcımızdan çıkıyor ve SPF tutuyor. Yani düzeltme G7'nin tam örneği — tek kod, iki dağıtım, fork yok. **Faz 2.1** (değişken + yardımcı) · **Faz 2.2** (sihirbazın "test maili gönder" adımı). Kabul ölçütü gönderimin 250 dönmesi **değil**, mailin **alıcı kutusunda ve spam'de değil** görülmesidir — gönderim başarısı ile teslim başarısı ayrı ölçülür. Kapı önerisi §8'de: sabit gönderen adresi sayacı, taban 6, hedef 0 |
+| **Çözüm** | Gönderen adresi `.env`'den okunur ve kutuda **müşterinin kendi alanı** olur — varsayılanı `SMTP_ADMIN_EMAIL`, yani zaten sorulan ve kutunun SPF'iyle hizalanan adres. Altı çağrı yeri **tek yardımcıdan** beslenir; görünen ad ikinci bir değişkene (`MAIL_FROM_NAME`, on-prem varsayılanı praxis adı) bağlanır. ⚠️ **SaaS'ta davranış hiç değişmez:** oradaki varsayılan bugünkü sabit değer kalır, gönderim zaten kendi sağlayıcımızdan çıkıyor ve SPF tutuyor. Yani düzeltme G7'nin tam örneği — tek kod, iki dağıtım, fork yok. **Faz 2.1** (değişken + yardımcı) · **Faz 2.2** (sihirbazın "test maili gönder" adımı). Kabul ölçütü gönderimin 250 dönmesi **değil**, mailin **alıcı kutusunda ve spam'de değil** görülmesidir — gönderim başarısı ile teslim başarısı ayrı ölçülür. Kapı **kuruldu** (11.09.2026, `c602f50`): `absender_fest=6`, artış = red. Yedinci sabit adresle denendi, reddetti (`onprem` ajanı doğrulaması). Hedef **0** |
 | **Durum** | `offen` — Faz 2.1 / 2.2 |
 
 ---
@@ -1067,13 +1149,13 @@
 | `app.praxura.de` (uygulama yüzeyi) | **19** | `dashboard.js` `dashboard.html` `employee-signup.js` `admin-login.js` `api-backend/server.js` — pazarlama/blog hariç (O-04) |
 | `api/` fonksiyon sayısı | **12** | `find api -name "*.js" -not -path "api/_lib/*"` — artış = red (limit + G8) |
 | Üçüncü-parti `<script src="http…">` | **11** | Yalnız Sentry loader. ⚠️ Sicilin O-06'da "12 satır / 11 dosya" yazıyordu; kapı 04.09.2026'da index üzerinden **11 satır** ölçtü — geçerli sayı kapınınkidir (`tools/.onprem-baseline` → `ext_script=11`). Yeni host = red |
-| `N8N_` env referansı | **3** | `server.js:1173` `:1926` `:1929` (satırlar 11.09.2026'da yeniden ölçüldü) — artış = red, hedef sıfır (Faz 1.2) |
+| `N8N_` env referansı | **3** | `server.js:1192` `:1945` `:1948` (satırlar 11.09.2026 akşamı, `c602f50` sonrası ölçüldü) — artış = red, hedef sıfır (Faz 1.2) |
 | `.supabase.co` sabit referansı (ürün kodu) | **1** | ⚠️ Sicil bunu **0** sanıyordu; kapı ölçümünde 1 çıktı: `api-backend/test_schema.js:5` (test dosyası, env fallback'li — O-05'te zaten istisna olarak yazılıydı, sayaçta unutulmuştu). `ops/` ve `vercel.json` hariç. Artış = red |
 | `fonts.googleapis.com` / `esm.sh` / `unpkg` / `jsdelivr` / `cdnjs` | **0** | Uygulama kodu; `ai chatbot proje/` hariç. Sıfırdan artış = red (Konsey 2026-08-13 S3) |
 | `latest` etiketi yayın hattında | **1** | `.github/workflows/publish-calendar-api.yml:64` — hedef **0** (Faz 4.3b, `X.Y.Z` + kanal etiketleri). Artış = red |
 | Yıkıcı DDL kanıtı | — | Yeni migration dosyasında `DROP COLUMN` / `DROP TABLE` / `RENAME COLUMN` / `SET NOT NULL` / `DROP CONSTRAINT` varsa dosya başında `-- ZWEISTUFIG: <no> · <gerekçe>` satırı **zorunlu** (`SCHEMA-VERTEILUNG.md` §6.2, `RELEASE-STANDARD.md` §4.7) |
 | Migration'lı PATCH | — | Sürüm PATCH ise `db/migrations/` altında yeni dosya olamaz (`RELEASE-STANDARD.md` §2.2). Release listesi adım 1 |
-| Koda gömülü gönderen adresi (`noreply@` + sabit alan adı) | **6** — ⚠️ *öneri, kapıda henüz yok* | `api-backend/server.js` (`:3962` `:3983` `:4155` `:4193` `:4297` `:4344`). Ölçüm: `git grep --cached -c "noreply@praxura\.de" -- api-backend/`. Artış = red; hedef **0** (tek yardımcı + `MAIL_FROM`, O-51). Kapı mantığını `builder` yazar, taban budur |
+| Koda gömülü gönderen adresi (`noreply@` + sabit alan adı) | **6** | `api-backend/server.js` (`:3981` `:4002` `:4174` `:4212` `:4316` `:4363`). Ölçüm: `git grep --cached -c "noreply@praxura\.de" -- api-backend/`. Artış = red; hedef **0** (tek yardımcı + `.env`'den gönderen, O-51). ✅ Kapıda **kurulu ve sınandı** (11.09.2026): yedinci sabit adres eklendiğinde `absender_fest : 6 -> 7` diyerek reddetti |
 | On-prem compose `image:` satırı | **7** | `onprem/docker-compose.yml` (11.09.2026): db · auth · rest · realtime · storage · kong + kendi `api`'miz. Upstream'in 11 fremd konteynerinden 5'i bilinçli dışarıda. Artış, `onprem/NOTICE.md`'ye lisans satırı eklenene kadar **red** (O-42). Sayaç `onprem_image`, kapıda test edildi (8'e çıkarıldığında reddetti). ⚠️ İki not: sayaç `git grep --cached` ile ölçer — kurulumda bir tur `--cached`siz ölçülüp taban kendiliğinden **0'a sıkışmıştı**, düzeltildi; ve kapı yalnız **sayıyı** tutar, `NOTICE.md`'de karşılık gelen satırın varlığını **denetlemez** (O-42) |
 
 ---

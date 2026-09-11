@@ -121,7 +121,9 @@ export function planErstellen(dateien, buch) {
 }
 
 const BUCH_DDL = `
-CREATE TABLE IF NOT EXISTS praxura_migrations (
+-- Schema ausdruecklich genannt: der Runner soll nicht davon abhaengen, was im
+-- search_path der Verbindung steht (Hinweis db-ustasi, 11.09.2026).
+CREATE TABLE IF NOT EXISTS public.praxura_migrations (
   version     text PRIMARY KEY,
   name        text NOT NULL,
   checksum    text NOT NULL,
@@ -132,7 +134,7 @@ CREATE TABLE IF NOT EXISTS praxura_migrations (
 
 -- Das Buch geht niemanden ausser dem Server etwas an.
 --
--- Ohne diese drei Zeilen liegt es in einer Kundenbox offen: PostgREST macht
+-- Ohne diese zwei Zeilen liegt es in einer Kundenbox offen: PostgREST macht
 -- jede Tabelle im public-Schema erreichbar, und ohne RLS beantwortet sie auch
 -- anonyme Anfragen. Dann steht die gesamte Schemageschichte im Netz —
 -- Dateinamen, Zeitpunkte, laufende Anwendungsversion. Das ist keine
@@ -146,8 +148,8 @@ CREATE TABLE IF NOT EXISTS praxura_migrations (
 -- Keine Policy: RLS an und keine Policy bedeutet "niemand kommt durch".
 -- Der Server selbst verbindet sich direkt (DATABASE_URL, Rolle supabase_admin)
 -- und geht an PostgREST vorbei — ihn stoert das nicht.
-ALTER TABLE praxura_migrations ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON praxura_migrations FROM anon, authenticated;
+ALTER TABLE public.praxura_migrations ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.praxura_migrations FROM anon, authenticated;
 `;
 
 /**
@@ -200,7 +202,7 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
     gesperrt = true;
 
     await client.query(BUCH_DDL);
-    const { rows: buch } = await client.query('SELECT version, name, checksum FROM praxura_migrations');
+    const { rows: buch } = await client.query('SELECT version, name, checksum FROM public.praxura_migrations');
 
     const plan = planErstellen(dateien, buch);
 
@@ -249,7 +251,7 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
         await client.query(datei.sql);
         const dauer = Date.now() - start;
         await client.query(
-          `INSERT INTO praxura_migrations (version, name, checksum, duration_ms, app_version)
+          `INSERT INTO public.praxura_migrations (version, name, checksum, duration_ms, app_version)
            VALUES ($1, $2, $3, $4, $5)`,
           [datei.version, datei.name, datei.checksum, dauer, appVersion || null]
         );

@@ -1,5 +1,5 @@
 {
- "erzeugt": "2026-09-10",
+ "erzeugt": "2026-09-11",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-09-10)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-10)",
@@ -8645,7 +8645,7 @@
    ],
    "register": true,
    "status": "aktiv",
-   "warum": "Nicht jede Praxis braucht jedes Sidebar-Modul. Der Schalter je Inhaber und Modul liegt hier; die Modulliste selbst steht im Code (`nav-registry.js`).",
+   "warum": "Nicht jede Praxis braucht jedes Sidebar-Modul. Hier liegt der **zentrale** Schalter je **Fachbereich × Rolle × Modul** (`sector`, `role`, `module_id`, `enabled`); die Modulliste selbst steht im Code (`nav-registry.js`).",
    "seit": "14.07.2026 · `module_visibility_matrix`",
    "ungeklaert": false,
    "leser": [
@@ -10068,7 +10068,7 @@
    "register": true,
    "status": "aktiv",
    "warum": "Das Buch der Schemakette — eine Zeile je angewandter Migrationsdatei. Bis",
-   "seit": "10.09.2026 · `praxura_migrations_buch_anlegen`",
+   "seit": "10.09.2026 · `praxura_migrations_buch_anlegen` (RLS + Rechteentzug durch den Runner: 11.09.2026 · `b2fdbb8`)",
    "ungeklaert": false,
    "leser": [],
    "schreiber": [],

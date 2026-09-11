@@ -116,10 +116,14 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Wer:** `saveUserPref()`, `switchBusiness()`; Backend liest den Standort mit.
 
 ### `module_visibility`
-- **Warum:** Nicht jede Praxis braucht jedes Sidebar-Modul. Der Schalter je Inhaber und Modul liegt hier; die Modulliste selbst steht im Code (`nav-registry.js`).
+- **Warum:** Nicht jede Praxis braucht jedes Sidebar-Modul. Hier liegt der **zentrale** Schalter je **Fachbereich × Rolle × Modul** (`sector`, `role`, `module_id`, `enabled`); die Modulliste selbst steht im Code (`nav-registry.js`).
 - **Seit:** 14.07.2026 · `module_visibility_matrix`
 - **Status:** aktiv
-- **Wer:** `loadVisibility()`, `saveVisToggle()`; das Admin-Panel schaltet zentral.
+- **Wer:** `loadVisibilityMatrix()` in `dashboard.js` liest; das Admin-Panel (`admin.js`) schreibt und fuellt fehlende Zeilen per Upsert nach.
+- **Achtung:**
+  - ⚠️ **Korrektur 11.09.2026:** hier stand „Schalter je Inhaber" — falsch. Die Tabelle hat **keine** Inhaber-Spalte; sie ist eine globale Matrix fuer alle Praxen. Das macht sie zu **Referenzdaten**, nicht Tenant-Daten.
+  - **Fail-open:** fehlt eine Zeile, gilt der `roles`-Default aus `nav-registry.js`. Eine leere Tabelle bricht also nichts — zeigt aber Module, die zentral bewusst **ausgeschaltet** sind (live 11.09.2026: 23 von 168 Zeilen `enabled = false`, je Fachbereich 7).
+  - **On-Prem:** die Box hat kein Admin-Panel, der Kunde kann diese Matrix nicht selbst befuellen. Ohne Seed weicht die Sidebar der Box still von der Cloud ab → gehoert in `db/seed/` (O-38).
 
 ### `visibility_reports`
 - **Warum:** Telemetrie zur Modulmatrix: welcher Kunde sieht tatsächlich welche Module. Ohne diese Rückmeldung wäre die Matrix eine Behauptung.
@@ -599,7 +603,8 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Warum:** Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin geht diese Datei?** Der Empfänger ist nicht die Kasse, sondern ihre Datenannahmestelle — und die hängt am Viererschlüssel (Kostenträger, Abrechnungscode, Art der Datenlieferung, Bundesland). Eine einzelne Spalte an `kostentraeger` (`das_ik`) konnte das nie abbilden; deshalb eine eigene Tabelle statt weiterer Spalten. Sie ist damit auch die Antwort auf „hätte eine Spalte gereicht?" — nein, es ist eine echte 1:n-Beziehung.
 - **Seit:** 06.09.2026 · `kostentraeger_echtdaten_struktur` (Ops #264)
 - **Status:** aktiv (Referenz) — **vollständig geladen**, aber mit einem Zeitfehler, siehe unten
-- **Wer:** heute **niemand** — die Tabelle ist gefüllt, aber noch nicht angeschlossen. Vorgesehener erster Leser: der DTA-Bau in `api-backend/billing/api/abrechnung.routes.js` anstelle von `kk.das_ik`. ⚠️ Sie sieht deshalb wie ein Löschkandidat aus (`codeStumm`) und ist keiner — genau der Fall, vor dem die Vier-Quellen-Regel warnt.
+- **Wer:** der DTA-Bau — `ladeAnnahmestelle()` in `api-backend/billing/kostentraeger/annahmestelle.js`, aufgerufen aus `api-backend/billing/api/abrechnung.routes.js` (Empfängerauflösung beim Dateibau, dazu `POST /abrechnung/annahmestellen` für die Mehrfachauswahl, seit 08.09.2026 · `7652e12`, Ops #283). Ersetzt dort `kk.das_ik`; findet sich keine Stelle, bricht der Bau mit `annahmestelleFehlt()` ab statt an eine falsche Adresse zu schicken. Befüllt von `tools/kostentraeger-annahmestellen-laden.mjs`.
+  - ⚠️ **Korrektur 11.09.2026:** hier stand bis heute „heute **niemand** — noch nicht angeschlossen". Seit 08.09.2026 falsch. Die Warnung von damals bleibt lehrreich: vor dem Anschluss sah die Tabelle wie ein Löschkandidat aus (`codeStumm`) und war keiner.
 - **Quelle:** VKG-Segmente derselben Dateien wie `kostentraeger`, geladen von `tools/kostentraeger-annahmestellen-laden.mjs`. Schlüsselbedeutung: Anhang 3 Anlage 1 TP5, Abschnitt 5 (Verknüpfungsart) und §8.14 (Abrechnungscode). Für uns relevant: **71 Podologen**, **72 Med. Fußpfleger**, 20 Gruppenschlüssel Heilmittel, 00 Sammel-, 99 Sonderschlüssel. Gültig für elektronische Abrechnung sind nur `art_datenlieferung` **07** und **30**.
 - **Ladestand (07.09.2026 live nachgezählt, nicht fortgeschrieben):** **11.409 Zeilen aus 6 von 6 geladenen Dateien** — `AO05Q326_KE3` 764 · `BK05Q326_KE1` 3.234 · `IK05Q326_KE1` 475 · `BN050526_KE0` 6.183 · `LK05Q226_KE0` 27 · `EK05Q426_KE0` 726. Die Summe stimmt Datei für Datei mit den VKG-Zahlen in `wissensbank/REGISTER.md` Kart W-01 überein. Verknüpfungsarten: 969× 01 (Verweis), 211× 02, 2.465× 03 (Datenannahmestelle), 7.764× 09 (Papier). Damit ist der am 06.09. notierte „offene Rest" (4 von 6 Dateien, 2.800 Segmente) **erledigt** — der alte Text stand hier bis zum 07.09.2026 und war falsch.
 - **Achtung — die Zahl ist 82, nicht 125; die 125 war ein Messfehler (07.09.2026 nachgemessen):** von den 302 abrechnenden Kostenträgern haben **82** überhaupt kein VKG-Segment (überwiegend AOK-NORDWEST-Regional-IKs und die Verbands-IKs der `gkv informatik`) — und **genau diese 82 sind auch die einzigen, die sich nicht auflösen lassen.** Die frühere Rechnung („177 auflösbar, 125 nicht") zählte den **Sonderschlüssel 99** nicht mit, obwohl Anhang 3 Anlage 1 TP5 §8.14 ihn genau dafür vorsieht: *„gilt für alle in der Kostenträgerdatei nicht aufgeführten Gruppen- und Einzelschlüssel"*. Mit 99 in der Kette gilt: **87** über 71/72 · **87** über 20 · **90** über 00 · **46** über 99 · zusammen **220 auflösbar, 82 nicht**. Die früher als „43 haben Segmente, aber keines mit 71/72/20/00" notierten Kassen lösen sich **restlos** über 99 auf. Anders gesagt: **jeder abrechnende Kostenträger mit mindestens einem VKG-Segment ist auflösbar** (220 = 220), die Restmenge ist deckungsgleich mit „hat gar kein Segment". Fallback-Kette also 71/72 → 20 → 00 → **99**, und ein definierter Ausweg nur noch für 82.
@@ -753,7 +758,8 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
   und genau das braucht die On-Premise-Verteilung: der Code faehrt per Image in die
   Kundenbox, das Schema muss denselben Weg nehmen (wir haben laut K10 keinen Zugang zu
   diesen Boxen). Ohne Buch wuerde der Runner bei jedem Start alles erneut anwenden wollen.
-- **Seit:** 10.09.2026 · `praxura_migrations_buch_anlegen`
+- **Seit:** 10.09.2026 · `praxura_migrations_buch_anlegen` (RLS + Rechteentzug durch den Runner: 11.09.2026 · `b2fdbb8`)
+- **Erster echter Lauf:** 11.09.2026 in einer leeren Box (`supabase/postgres:17.6.1.136`) — `0000_baseline.sql` in 16.119 ms angewandt, zweiter Start meldete „Schema ist aktuell", die Pruefsumme hielt.
 - **Status:** aktiv
 - **Wer:** ausschliesslich `api-backend/db/migrate.js`, beim Start von `server.js` vor
   `app.listen()`. Kein Frontend, kein PostgREST, keine Anwendungslogik.
@@ -767,6 +773,34 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
   - **RLS an, keine Policy, `anon`/`authenticated` ohne Rechte.** Der Schemastand ist keine
     oeffentliche Information; ohne den Entzug waere die Tabelle ueber PostgREST lesbar,
     sobald die Default-Grants greifen.
+  - ★ **Wer diesen Schutz setzt (11.09.2026):** seit Commit `b2fdbb8` **der Runner selbst** —
+    `BUCH_DDL` in `api-backend/db/migrate.js` endet mit `ENABLE ROW LEVEL SECURITY` +
+    `REVOKE ALL … FROM anon, authenticated`. Die Zeilen laufen bei **jedem** Start (vor der
+    Planpruefung), sind idempotent und ziehen damit auch bereits existierende Boxen nach.
+    In der **Produktion** wurde dasselbe am 10.09.2026 **von Hand** gesetzt, weil der Runner es
+    damals nicht tat — aufgefallen beim ersten echten Box-Lauf (11.09.2026): die Box waere
+    ohne RLS herausgekommen. Wer das hier liest und denkt „das war Handarbeit, das kann weg":
+    nein, es ist jetzt Teil der Kette.
+  - **Warum der REVOKE ueberhaupt noetig ist:** `pg_default_acl` fuer `public` gibt jeder neuen
+    Tabelle von `postgres` **und** von `supabase_admin` automatisch `ALL` an `anon`,
+    `authenticated`, `service_role` (live nachgesehen 11.09.2026). RLS allein haette `anon`
+    nur leere Ergebnisse geliefert; erst der Entzug macht daraus `42501` — so im Box-Lauf gemessen.
+    Die Baseline enthaelt **kein** `GRANT … ON ALL TABLES`; sie kann den Entzug also beim
+    Erstlauf nicht wieder aufheben (`ALTER DEFAULT PRIVILEGES` wirkt nur auf kuenftige Tabellen).
+  - **`service_role` behaelt Rechte — bewusst.** Live-ACL am 11.09.2026:
+    `postgres=arwdDxtm` · `service_role=arwdDxtm`, sonst nichts. Die Box landet nach dem REVOKE
+    beim selben Ergebnis (ueber die Default-Grants). `service_role` hat `BYPASSRLS`; wer ihren
+    Schluessel hat, hat ohnehin die ganze Datenbank — die Schemageschichte fuegt dem nichts hinzu.
+    Soll sie trotzdem weg, dann **in Produktion und Runner im selben Schritt**, sonst laufen beide
+    auseinander. Kein Code liest die Tabelle ueber `service_role`.
+  - **Bekannte, harmlose Abweichung Produktion ↔ Box:** Eigentuemer. Produktion `postgres`
+    (von Hand per MCP angelegt), Box `supabase_admin` (Runner verbindet sich so, siehe unten).
+    Spalten, RLS, Policies (0) und die anon/authenticated-Sperre sind gleich. Da sich weder
+    PostgREST noch die App als Eigentuemer anmelden, aendert das am Verhalten nichts.
+  - **Runner-Rolle ist `supabase_admin`, nicht `postgres`** (`onprem/docker-compose.yml`,
+    `DATABASE_URL`). Grund: 12 der 24 `ALTER DEFAULT PRIVILEGES` der Baseline lauten
+    `FOR ROLE supabase_admin`; mit `postgres` bricht die Erstinstallation ab
+    (`permission denied to change default privileges`, gemessen 10.09.2026).
   - In der Produktion steht `0000` als *angewandt*, **ausgefuehrt wurde die Baseline dort
     nie** — das SaaS ist bereits auf diesem Stand. Die Datei laeuft nur in neuen Boxen.
   - Kein Personenbezug → keine Aenderung an `api/dsgvo.js` noetig.
