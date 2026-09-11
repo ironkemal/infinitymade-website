@@ -125,9 +125,14 @@ function applyLang() {
   document.getElementById('lbl_pass').textContent = t.lbl_pass;
   document.getElementById('submitBtn').textContent = t.submit;
   document.getElementById('forgotLink').textContent = t.forgot;
-  document.getElementById('backLink').textContent = t.back;
-  document.getElementById('regText').textContent = t.reg_text;
-  document.getElementById('regBtn').textContent = t.reg_btn;
+  // In der Box entfernt (IST_KUTU, siehe unten) — ungeschützter Zugriff hier
+  // würfe sonst bei jedem weiteren applyLang()-Aufruf (Sprachumschalter) einen
+  // TypeError und bräche alles danach ab (O-68, onprem-Review 12.09.2026).
+  if (!IST_KUTU) {
+    document.getElementById('backLink').textContent = t.back;
+    document.getElementById('regText').textContent = t.reg_text;
+    document.getElementById('regBtn').textContent = t.reg_btn;
+  }
   // confirm banner
   document.getElementById('confirmBannerText').textContent = t.confirm_banner;
   document.getElementById('resendBtn').textContent = t.resend_btn;

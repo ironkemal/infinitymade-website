@@ -108,6 +108,7 @@ test yığını**, kurulabilir ürün değil.
    bitti — arayüz artık `API_BASE`'i `/api/config`'ten alıyor, kutuda `"/api"` ölçüldü.
    Turun kapsamı ve iki yeni maddesi (**O-52** CSP · **O-55** zygotebody) → **§7F**.
    ✅ **Caddy indi (11.09 akşamı).** ✅ **O-57, O-58 (a), O-59 kapandı (12.09.2026).**
+   ✅ **O-68, O-69, O-70 de aynı gün kapandı** (O-58 (a)'nın uygulamasından çıkan üç artık, §7I).
    2.1b'nin **kalanı**: O-49 · O-48 (konsey) · O-45 (b).
    Sonra 2.1c'ye geçilir (2.1c'nin kendisi zaten yazıldı, bkz. madde 2 — kalan yalnız
    2.1b'nin üç maddesi).
@@ -147,6 +148,12 @@ test yığını**, kurulabilir ürün değil.
   tetikleyicisi + duman testinin `src`/`href` kontrolü bu turda
 - **O-56** → Faz 2.2 sihirbazıyla aynı sprint: sihirbaz owner'ı yaratacak, O-56 de
   ikinci kullanıcıyı yaratabilir hâle getirecek. Biri olmadan diğeri yarım
+- **O-69** → ✅ **gelöst (12.09.2026)** — `dashboard.js`'teki `loginUrl` artık `location.origin`,
+  aynı O-56'nın çözdüğü kaynak; ekrandaki metin de artık bunu yansıtıyor
+- **O-68** → ✅ **gelöst (12.09.2026)** — `applyLang()`'in kaldırılan üç öğeye yazan
+  satırları `if (!IST_KUTU)`'ya alındı, dil değişimi Playwright ile ölçüldü
+- **O-70** → ✅ **gelöst (12.09.2026)** — marka linki `href="/"` (üç kutu sayfasının
+  zaten kullandığı desen), `IST_KUTU` dallanmasına gerek kalmadı
 - **O-59** → ✅ **gelöst (12.09.2026)** — ön kontrol + LAN IP + kök CA çıktısı `33d5fd2`'de,
   `hosts`/DNS talimat satırı bu turda
 - **O-58 (a)** → ✅ **gelöst (12.09.2026)** — `/api/config`'e `istKutu` alanı
@@ -2089,6 +2096,50 @@ ekranda bu cümle var.
 
 ---
 
+## 7I — O-58 (a) uygulandıktan sonra okunanlar (12.09.2026)
+
+> Bu üç madde, O-58 (a)'nın **uygulamasını** okurken çıktı. İkisi doğrudan o
+> uygulamanın yan etkisi, biri aynı aileden kaçmış eski bir bağ. Turun dersi
+> §7E'nin tekrarı ama başka bir yüzle: **bir öğeyi DOM'dan kaldırmak, ona
+> referans veren kodu kaldırmaz.** `.remove()` doğru seçimdi (gerekçesi O-58'in
+> Durum satırında); eksik olan, o öğelere *başka nereden* dokunulduğunun
+> sayılmasıydı.
+
+### O-68 — `.remove()` sonrası `applyLang()` ikinci çağrıda çöküyor: kutuda dil değiştirince şifre ekranları Almanca kalıyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | O-58 (a) `#backHome`, `.register-block` ve `#saasFooter`'ı kutuda DOM'dan çıkarıyor; `applyLang()` ise o öğelerin **içindeki** üç id'ye korumasız `getElementById(...).textContent` ile yazıyor |
+| **Nerede** | `login.js:128` (`backLink` → `#backHome` içinde, `login.html:433`) · `:129` (`regText`) · `:130` (`regBtn`) — ikisi de `.register-block` içinde (`login.html:427-430`). Kaldırma: `login.js:195-199`. Tetikleyen: `login.js:184` (dil düğmesi → `applyLang()`). İlk çağrı (`:188`) kaldırmadan **önce** koştuğu için sayfa açılışında görünmüyor |
+| **Tip** | G (kutu/merkez ayrımının yan etkisi) |
+| **Kutuda ne olur** | Kutuda kullanıcı EN ya da TR'ye basar basmaz `applyLang()` satır 128'de `TypeError: Cannot set properties of null` atar ve **o satırdan sonrasının tamamı çalışmaz**: `confirmBannerText` · `resendBtn` · reset paneli (`resetSub`, `lbl_reset_email`, `resetSubmitBtn`, `resetBackLink`) · yeni-şifre paneli (`newPwTitle`, `newPwSub`, `lbl_new_pw`, `lbl_new_pw2`, `newPwSubmitBtn`) · ve dil düğmesinin `active` sınıfı. Yani başlık ve giriş alanları çevrilir, **şifre sıfırlama ve yeni-şifre ekranları Almanca kalır**, basılan dil düğmesi seçili görünmez; kullanıcı "dil değişmedi" diye tekrar basar. Hata sessiz, konsolu açan yok. SaaS'ta hiç olmaz (orada öğeler duruyor) — yani **yalnız kutuda ve yalnız ikinci çağrıda** |
+| **Çözüm** | O üç satır SaaS'a özgü; `IST_KUTU` `login.js:2`'de zaten import edilmiş, üçü `if (!IST_KUTU) { … }` bloğuna alınır. Alternatif (daha temiz, daha çok satır): `const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; }` yardımcısı ve fonksiyonun tamamının ona geçirilmesi. ⚠️ Opsiyonel zincir bu işi **çözmez** — `a?.b = c` geçerli sözdizimi değildir. Kabul ölçütü kod okuması değil ölçüm: kutuda `login.html` açılıp TR'ye basıldığında `#newPwTitle` metninin Türkçeye dönmesi |
+| **Durum** | ✅ **gelöst (12.09.2026)** — üç satır `if (!IST_KUTU) { … }` bloğuna alındı (`login.js:124-128`, yardımcı fonksiyon açılmadı, üç satır zaten tek blok). Playwright ile ölçüldü: kutuda EN'e basınca `resendBtn` "Resend confirmation email"e, TR'ye basınca `title` "Giriş Yap"a dönüyor, dil düğmesinin `active` sınıfı doğru öğede, konsolda `TypeError` yok — kabul ölçütü tam bunu istiyordu |
+
+### O-69 — Çalışan davet ekranı kutuda `app.praxura.de/login.html` adresini gösteriyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Owner bir çalışan yarattığında sonuç ekranında gösterilen giriş adresi HTML'e **sabit metin** olarak yazılmış; hiçbir JS onu ezmiyor |
+| **Nerede** | `dashboard.html:4589` — `<span class="emp-result-val" id="ae-res-link">app.praxura.de/login.html</span>`. Ölçüm: `ae-res-link` dizgisi bütün depoda **tek** yerde geçiyor (`grep -rn --include=*.js --include=*.html` → 1 sonuç, o da bu satır), yani gösterilen değer hiçbir koşulda değişmiyor |
+| **Tip** | C (sabit adres) |
+| **Kutuda ne olur** | Kutudaki owner çalışanını yaratır, ekran ona "çalışan şu adresten girsin" der ve **bizim SaaS'ımızı** gösterir. Çalışan oraya gider, hesabı orada yok, giriş reddedilir. Ekranda hata yok, kodda hata yok; owner'ın gördüğü tek şey "yeni çalışan giriş yapamıyor". Teşhis pahalı, çünkü suçlanan yer (kayıt/şifre akışı) doğru çalışıyor. ⚠️ Bu madde **O-56'nın kardeşi ve aynı ekranda oturuyor**: O-56 e-postadaki linki `window.location.origin`'e çevirdi, ekrandaki metin geride kaldı — bir düzeltmenin kendi ailesini taramadan kapanmasının bedeli |
+| **Çözüm** | Değer çalışma zamanında yazılır: `location.origin + '/login.html'` — O-56'nın kutuda doğru çalıştığı **ölçülmüş** aynı kaynak. Yeni env var gerekmez, kutu/SaaS dallanması gerekmez; her iki dağıtımda da doğru sonucu verir (G7). Kabul ölçütü: kutuda davet ekranının kutunun kendi adresini göstermesi |
+| **Durum** | ✅ **gelöst (12.09.2026)** — `dashboard.js`'te `loginUrl` artık `` `${location.origin}/login.html` `` (`teamAddBtn`'in iki satır altındaki aynı deseni izliyor), `#ae-res-link`'e `textContent` olarak yazılıyor (önceden hiç yazılmıyordu). `dashboard.html:4589`'daki statik metin de `—` yer tutucusuna çevrildi (JS zaten anında dolduruyor, ama JS'siz açılmayan bir yer tutucu bırakmamak için). ⚠️ `dashboard.js` büyüme kapısına takılmamak için üç satır tek satırda birleştirildi (`tools/.dashboard-baseline` 21249 sabit kaldı) |
+
+### O-70 — Marka bağlantısı iki kutu sayfasında `https://praxura.de`'ye çıkıyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Sayfa başındaki „Praxura" logosu bizim pazarlama sitemize giden sabit bir dış link; O-58 (a) alt bilgiyi ve kayıt bloğunu kaldırdı, bu ikisini görmedi |
+| **Nerede** | `login.html:339` · `employee-signup.html:424` — ikisi de `<a href="https://praxura.de" class="brand">`. Paketlenen sekiz sayfanın kalanında bu bağ yok (tarandı) |
+| **Tip** | C |
+| **Kutuda ne olur** | Küçük ama iki yönlü: (1) praxis ağı internete kapalıysa logoya tıklamak ölü sayfa açar; (2) açıksa, çalışan kendi praksisinin giriş ekranından **bizim satış sitemize** düşer — kutu ürününde beklenmeyen bir yön. Veri riski yok (G1 dışı), sır yok. Bu yüzden düşük öncelikli; yine de O-58 (a) ile **aynı ailede** ve onunla birlikte kapanmalıydı |
+| **Çözüm** | Kutuda anchor nötrleştirilir: `IST_KUTU` ise `href` kaldırılır (logo metin olarak kalır). `.remove()` **değil** — marka başlığı sayfanın düzeninin parçası. `employee-signup.js`'in de `IST_KUTU`'yu import etmesi gerekir (bugün etmiyor, ölçüldü) |
+| **Durum** | ✅ **gelöst (12.09.2026), önerilenden farklı bir yolla.** `IST_KUTU`-dallanması yerine ikisinde de `href="https://praxura.de"` → `href="/"` yapıldı — sekiz kutu sayfasının üçü (`confirm.html`, `dashboard.html`, `onboarding-success.html`) marka linkini zaten böyle yazıyordu, aynı desen izlendi. Kazanç: hiçbir JS'e gerek yok (`employee-signup.js` `IST_KUTU`'yu import etmek **zorunda değil**), iki dağıtımda da doğru davranış tek satırla: SaaS'ta `/` pazarlama ana sayfasına gider (mevcut niyet), kutuda Caddy `/`'i zaten `/login.html`'e 302'liyor (`onprem/Caddyfile:66-68`) — logoya tıklamak aynı sayfada kalır, ölü link değil |
+
+---
+
 ## 8. Kapı tabanları — `tools/check-onprem.sh` için
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -2178,6 +2229,24 @@ ekranda bu cümle var.
 > *çalıştırılmamış* koddan çıktı ve üçü de ilk gerçek kurulumda çıkardı. "Çalıştırılmamış
 > paket, yazılmamış pakettir" kuralı **betikler için de** geçerli; `bash -n` sözdizimini
 > ölçer, davranışı değil.
+
+> **12.09.2026 farkı (Faz 2.1b kapanış turu + O-58 (a) uygulaması):**
+> - ✅ `gelöst`e geçenler: **O-57** (paket dosya listesi + CI tetikleyicisi + duman
+>   testinin asset kontrolü) · **O-58 (a)** (`istKutu` bayrağı, `IST_KUTU`, üç SaaS
+>   öğesi kutuda DOM'dan kaldırılıyor) · **O-59** (hosts/DNS satırı kurulum çıktısında).
+>   **O-58 (b)** `offen` kalmaya devam ediyor — hasta sayfalarındaki Impressum/
+>   Datenschutz hâlâ 404, çözümü Faz 2.2 + `legal-de`
+> - `offen`e eklenenler: **O-68** (`applyLang()` kaldırılan öğeye yazıyor, kutuda dil
+>   değişimi yarım kalıyor) · **O-69** (çalışan davet ekranı `app.praxura.de` gösteriyor,
+>   O-56'nın kardeşi) · **O-70** (marka linki iki kutu sayfasında SaaS'a çıkıyor)
+> - Toplam madde: **70**
+>
+> ⚠️ **Turun dersi:** üçünün de kaynağı aynı — *bir öğeyi kaldıran/değiştiren düzeltme,
+> o öğeye başka nereden dokunulduğunu saymadan kapanmaz.* O-58 (a) üç öğeyi DOM'dan
+> çıkardı ama `applyLang()`'in aynı öğelere yazdığını (O-68) saymadı; O-56 e-postadaki
+> adresi düzeltti ama aynı ekrandaki metni (O-69) ve marka linkini (O-70) saymadı.
+> Bundan sonra bu sınıfta kabul ölçütü tek satır: **kaldırdığın/değiştirdiğin her id ve
+> dizgi için depoda `grep`, ve sonuç sicile sayıyla yazılır.**
 
 > **Toplam 51 madde.** 🟡 satırı 11.09.2026'da açıldı: altı madde aylardır `offen`
 > görünüyordu ama yarısı yapılmıştı — "yapılan ile kalan" tek hücrede karışınca sicil

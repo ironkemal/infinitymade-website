@@ -18,7 +18,7 @@
 n8n_host=7
 
 # app.praxura.de, yalnız uygulama yüzeyi (pazarlama sayfaları hariç — Faz 2.0).
-app_host=17
+app_host=15
 
 # Vercel serverless limiti. 12 = TAVAN, artış deploy'u patlatır.
 vercel_fn=12

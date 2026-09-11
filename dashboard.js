@@ -14259,7 +14259,7 @@ function showAddEmployeeResult(email, password) {
   document.getElementById('ae-res-email').textContent = email;
   document.getElementById('ae-res-password').textContent = password;
 
-  const loginUrl = 'https://app.praxura.de/login.html';
+  const loginUrl = `${location.origin}/login.html`; document.getElementById('ae-res-link').textContent = loginUrl; // O-69: statt fester SaaS-Adresse
   const shareText = encodeURIComponent(
     'Hallo! Dein Praxura Zugang:' +
     '\nE-Mail: ' + email +
