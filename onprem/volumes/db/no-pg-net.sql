@@ -1,0 +1,25 @@
+-- Praxura O-49 (12.09.2026): pg_net (den Web-Anfragen aus der Datenbank
+-- ermöglicht) wird auf der Box entfernt. G1 verlangt, dass die Box nicht
+-- "nach draussen telefoniert" — mit pg_net installiert wäre das eine
+-- Disziplinfrage (niemand ruft es heute auf), ohne pg_net ist es unmöglich.
+--
+-- Eigene Datei statt Änderung an webhooks.sql (Vendor-Kopie, siehe
+-- onprem/supabase-docker/volumes/db/webhooks.sql): tools/check-onprem-volumes.sh
+-- vergleicht diese Kopien byte-genau gegen Upstream, um echten Versions-Drift
+-- zu erkennen. Ein direkter Eingriff dort hätte das für immer unmöglich
+-- gemacht. Diese Datei bleibt unser eigenes, klar erkennbares Zutun.
+--
+-- Reihenfolge (siehe docker-entrypoint-initdb.d/migrate.sh: erst init-scripts/
+-- alphabetisch, dann migrations/ alphabetisch): als init-scripts/98a-…
+-- gemountet, läuft direkt NACH 98-webhooks.sql (das pg_net erst installiert)
+-- und VOR 99-jwt.sql/99-roles.sql. Upstreams eigene migrations/-Dateien
+-- (20220713082019_pg_cron-pg_net-temp-perms-fix.sql,
+-- 20250220051611_pg_net_perms_fix.sql) prüfen selbst, ob pg_net installiert
+-- ist (pg_available_extensions.installed_version / pg_extension) und tun
+-- danach nichts — sie sind bereits auf "pg_net fehlt" ausgelegt.
+--
+-- ⚠️ webhooks.sql NICHT komplett entfernen (schon versucht, Stack kaputt,
+-- onprem/REGISTER.md O-49): es erzeugt die Rolle supabase_functions_admin,
+-- deren Passwort 99-roles.sql direkt danach setzt. CASCADE hier räumt nur
+-- die pg_net-Objekte weg, die Rolle bleibt unberührt.
+DROP EXTENSION IF EXISTS pg_net CASCADE;

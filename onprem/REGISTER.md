@@ -79,6 +79,22 @@ mimaride aynı anda doğru olamaz, karar kullanıcının) · **O-67** (`handle_n
 `(id, email)` yazıyor → kutunun ilk owner'ı `plan_status='pending'`, `company_code` boş
 doğuyor; ikincisi kutuda çalışan kaydını imkânsız kılar). Toplam **67** madde.
 
+**12.09.2026 — Faz 2.2 dilim 2 sonrası temizlik turu.** Dilim 2 (kurulum modu kilidi +
+devam ettirme + 3 dil) `b05bd1c`'te kapandıktan sonra, register'da "kapandı sanılan ama
+aslında `offen` kalmış" üç maddeyi (**O-57**, **O-59** — Dockerfile/install.sh yarıları
+zaten önceki commit'lerde inmişti ama sicil geriden geliyordu) ve bir yeni tasarımı
+(**O-58 (a)** — kutu bayrağı) kapattım; onprem-review'un bulduğu üç yan etkiyi de
+(**O-68** `applyLang()` çöküyor · **O-69** davet ekranı SaaS adresi gösteriyor · **O-70**
+marka linki SaaS'a çıkıyor) aynı turda. **O-49** (`pg_net` kaldırma) iki denemeye
+mal oldu: ilk deneme `webhooks.sql`'i doğrudan düzenledi (tek satır, çalıştı) ama
+`check-onprem-volumes.sh` kapısına takıldı — o kapı bu dosyayı vendor kopyasıyla
+byte byte karşılaştırıyor, elle dokunmak kapıyı kalıcı körleştirirdi. Geri alındı:
+`webhooks.sql` vendor'dan aynen geri kopyalandı, pg_net'i kaldıran iş kendi ayrı
+dosyamıza (`no-pg-net.sql`, `98a` sırasıyla) taşındı. Hepsi gerçek local kutuya
+karşı ölçüldü (`docker compose down -v` + veri dizini silinmiş **tamamen taze**
+bir kurulumla, iki kez), üç kapı da (`onprem`/`namen`/`onprem-volumes`) yeşil.
+Toplam **70** madde, bugün **7'si** `offen`/`geplant`'tan `gelöst`'e geçti.
+
 **Nerede duruyoruz (11.09.2026):** kutunun compose paketi **var ve çalıştığı ölçüldü**
 (`onprem/docker-compose.yml` + `.env.template` + `NOTICE.md` + `volumes/`; commit'ler
 `b2fdbb8` ve `c602f50`). Yığın 11 fremd konteynerden **6**'ya indi, boşta ≈1,65 GB
@@ -101,17 +117,17 @@ test yığını**, kurulabilir ürün değil.
 
 **Sıradaki iş — sırayla:**
 
-1. **Faz 2.1b** — Caddy (TLS + statik arayüzün servisi) · `pg_net`'siz kendi init
-   dosyamız (O-49) · Kong ↔ Caddy kararı **konseye** (O-48, `guvenlik` masada) ·
-   compose'un kutuya dağıtımı (O-45 (b)).
+1. **Faz 2.1b** — Caddy (TLS + statik arayüzün servisi) · Kong ↔ Caddy kararı
+   **konseye** (O-48, `guvenlik` masada) · compose'un kutuya dağıtımı (O-45 (b)).
    ✅ **Ön koşul kapandı (11.09.2026 gece):** O-01 + O-15'in 2.1b'yi bloke eden kısmı
    bitti — arayüz artık `API_BASE`'i `/api/config`'ten alıyor, kutuda `"/api"` ölçüldü.
    Turun kapsamı ve iki yeni maddesi (**O-52** CSP · **O-55** zygotebody) → **§7F**.
-   ✅ **Caddy indi (11.09 akşamı).** ✅ **O-57, O-58 (a), O-59 kapandı (12.09.2026).**
+   ✅ **Caddy indi (11.09 akşamı).** ✅ **O-57, O-58 (a), O-59, O-49 kapandı (12.09.2026).**
    ✅ **O-68, O-69, O-70 de aynı gün kapandı** (O-58 (a)'nın uygulamasından çıkan üç artık, §7I).
-   2.1b'nin **kalanı**: O-49 · O-48 (konsey) · O-45 (b).
+   2.1b'nin **kalanı**: O-48 (konsey) · O-45 (b) — ikisi de kullanıcı/konsey kararı
+   bekliyor, tek başına ajan/`builder` kapatamaz.
    Sonra 2.1c'ye geçilir (2.1c'nin kendisi zaten yazıldı, bkz. madde 2 — kalan yalnız
-   2.1b'nin üç maddesi).
+   2.1b'nin iki maddesi).
 2. **Faz 2.1c** — `install.sh`. **Tasarım hazır: §7G** (15 adım, Faz 2.2 sınırı, hata
    modeli). Kapsadığı maddeler: O-53 (zorunlu değişken kapısı) · ✅ O-59 (adres ön-kontrolü
    + kurulum sonu çıktısı, 12.09.2026 tamam) · O-52 (b) (`SUPABASE_PUBLIC_WSS` türetimi) · O-50'nin kalanı
@@ -159,6 +175,9 @@ test yığını**, kurulabilir ürün değil.
 - **O-58 (a)** → ✅ **gelöst (12.09.2026)** — `/api/config`'e `istKutu` alanı
   (kaynağı `SUPABASE_PUBLIC_URL`, `SETUP_TOKEN` **değil**), gerçek kutuya karşı doğrulandı
 - **O-58 (b)** → `legal-de`; metin kararı verilmeden şablon sayfa yazılmaz
+- **O-49** → ✅ **gelöst (12.09.2026)** — `webhooks.sql`'den yalnız `CREATE EXTENSION
+  pg_net` satırı çıkarıldı, dosyanın geri kalanı dokunulmadı (11.09'daki başarısız
+  deneme dosyanın **tamamını** silmişti); taze veritabanına karşı doğrulandı
 - **O-62** → ✅ tasarımı kapandı (§7H); kalanı Faz 2.2 dilim 1'in kodu
 - **O-66** (SMTP) → ✅ **karar verildi 11.09.2026: seçenek (a)** — `install.sh` sorar,
   sihirbaz yalnız test eder ve teşhis gösterir. Uygulama açık, sınırları maddede.
@@ -1258,7 +1277,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | A |
 | **Kutuda ne olur** | Bugün hiçbir şey: `net.http_post` **sıfır** fonksiyonumuzda geçiyor (ölçüldü), Telegram trigger'ı baseline'da düşüyor. Ama yetenek **kurulu duruyor** — yani G1 ("kutu dışarı telefon etmez") bir yapı değil, bir alışkanlık. Yarın biri iyi niyetle bir webhook trigger'ı yazarsa kutuda sessizce çalışır |
 | **Çözüm** | Dosyayı **çıkarmak denendi ve yığını kırdı** (11.09.2026): `webhooks.sql:113` `supabase_functions_admin` rolünü yaratıyor, bir sonraki init dosyası `99-roles.sql:7` o rolün şifresini set ediyor. Rol yoksa psql orada duruyor, geri kalan `ALTER USER` satırları hiç koşmuyor ve **`supabase_storage_admin` şifresiz kalıyor** → Storage hiç açılmıyor. Hata iki dosya öteden, bambaşka bir yüzle geliyor. Doğru çözüm: rolü yaratıp `pg_net`'i atlayan **kendi** init dosyamız + boş veritabanına karşı yeni bir tur test. Küçük ama kendi başına bir iş |
-| **Durum** | `offen` — Faz 2.1b |
+| **Durum** | ✅ **gelöst (12.09.2026)**, iki denemeden sonra — ilki `tools/check-onprem-volumes.sh`'a takıldı, ikinci doğruydu. **İlk deneme (geri alındı):** `webhooks.sql:3`'teki `CREATE EXTENSION` satırını doğrudan yorumla değiştirdim. Fonksiyonel olarak çalıştı (aşağıdaki ölçümler o hâlde de tuttu), ama commit sırasında kapı reddetti: `check-onprem-volumes.sh` bu dosyayı `onprem/supabase-docker/volumes/db/webhooks.sql` (upstream vendor kopyası) ile **byte byte** karşılaştırıyor — tam da gelecekte upstream sürüm kayması olursa fark edilsin diye. Dosyayı elle değiştirmek bu kapıyı **kalıcı olarak körleştirirdi**: bir daha asla eşleşmeyecek, gerçek bir upstream farkı da sessizce aynı "abweichend" satırına karışırdı. **Doğru çözüm (uygulanan):** `webhooks.sql` vendor kopyasından **aynen geri kopyalandı** (kapı yine yeşil); pg_net'i kaldıran iş **kendi ayrı dosyamıza** taşındı — `onprem/volumes/db/no-pg-net.sql` (`DROP EXTENSION IF EXISTS pg_net CASCADE;`), compose'da `init-scripts/98a-no-pg-net.sql` olarak `98-webhooks.sql`'den hemen sonra, `99-roles.sql`'den önce mount edilir (`docker-entrypoint-initdb.d/migrate.sh`'ın kendi sırası: önce `init-scripts/*` alfabetik, sonra `migrations/*`). Upstream'in kendi `pg_net`'e bağlı migration'ları (`20220713082019_pg_cron-pg_net-temp-perms-fix.sql`, `20250220051611_pg_net_perms_fix.sql`) zaten `pg_available_extensions`/`pg_extension` ile "kurulu mu" diye soruyor ve kurulu değilse hiçbir şey yapmıyor — yani upstream'in kendisi de pg_net'siz çalışmayı zaten destekliyor, ölçüldü. Boş veritabanına karşı **iki kez** sıfırdan doğrulandı (`docker compose down -v` + `volumes/db/data` silindi): DB log'unda `98-webhooks.sql` sonra `98a-no-pg-net.sql` sırayla koştu, 8/8 healthy, `pg_extension`'da `pg_net` **0 satır**, iki admin rolü de mevcut, gerçek `POST /auth/v1/signup` → 200 + `profiles` satırı (`role=owner`, `plan_status=pending`) trigger'la oluştu, apikey'siz `/rest/v1/` **401**. `check-onprem.sh` + `check-namen.sh` + `check-onprem-volumes.sh` üçü de yeşil. G1 artık **disiplin değil yapı**: kutu `net.http_get`/`http_post`'u hiç **çağıramaz**, çünkü fonksiyonlar hiç kurulu değil |
 
 ### O-50 — Kutudaki `api` konteynerinin env yüzeyi eksik: üç değişken paketten düştü
 
