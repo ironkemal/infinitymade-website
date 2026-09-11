@@ -1,7 +1,19 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-11 — 0001_gmail_token_rpc_revoke
+-- ERZEUGT AM:        2026-09-11 — 0002_nummernkreis_rpc_revoke
+--                    (Sicherheitsfund S-24, guvenlik-Agent bei S-04-Klassentraversal:
+--                    naechste_nummer/naechste_verordnungsnummer dasselbe Muster wie
+--                    S-01 — EXECUTE fuer PUBLIC/anon/authenticated seit CREATE
+--                    FUNCTION, kein auth.uid()-Check, Mandant kommt aus p_owner.
+--                    naechste_nummer ist SCHREIBEND (GoBD-Nummernkreis, § 146 Abs. 4
+--                    AO). REVOKE EXECUTE ... FROM PUBLIC, anon, authenticated fuer
+--                    beide — service_role behaelt das Recht, einziger echter Aufrufer
+--                    sind die SECURITY-DEFINER-Trigger set_invoice_nummer() /
+--                    vergebe_verordnungsnummer_rx() (laufen als Funktionsbesitzer).
+--                    In Cloud (MCP) UND lokaler Testbox angewandt + geprueft.
+--                    Details unten bei den jeweiligen Funktionen.
+--                    davor: 2026-09-11 — 0001_gmail_token_rpc_revoke
 --                    (Sicherheitsfund S-01/S-02/S-19: get_gmail_token/
 --                    set_gmail_token/clear_gmail_token trugen seit CREATE
 --                    FUNCTION das Postgres-Default-EXECUTE fuer PUBLIC, also
@@ -743,6 +755,13 @@ $function$;
 --   Zählt über die Tabelle `nummernkreise` per
 --   INSERT .. ON CONFLICT DO UPDATE .. RETURNING — die Zeile ist damit gesperrt,
 --   zwei gleichzeitige Aufrufe bekommen verschiedene Nummern.
+--   ⚠️ S-24 (11.09.2026): trug seit CREATE FUNCTION EXECUTE für PUBLIC (anon +
+--   authenticated), ohne auth.uid()-Prüfung — Mandant kommt aus p_owner. Fremder
+--   Aufruf hätte die lückenlose Nummerierung (§ 146 Abs. 4 AO) einer fremden Praxis
+--   von außen aufgerissen. Migration 0002_nummernkreis_rpc_revoke: REVOKE EXECUTE
+--   … FROM PUBLIC, anon, authenticated. Einziger Aufrufer ist der Trigger
+--   set_invoice_nummer() (selbst SECURITY DEFINER, läuft als Funktionsbesitzer) —
+--   anon/authenticated brauchten das Recht auf keinem Weg.
 -- set_invoice_nummer() -> trigger                          [SECURITY DEFINER]
 --   Vergibt invoices.rechnung_nr + invoice_number ('INV-<Jahr>-<4-stellig>')
 --   beim INSERT und schreibt sie beim UPDATE unveränderlich fort
@@ -761,6 +780,9 @@ $function$;
 --   seit dem einen SELECT, weil `verordnungen` gedroppt ist). Derselbe Patient
 --   darf nicht zweimal die 3 bekommen, sonst steht dieselbe Belegnummer zweimal
 --   in derselben DTA-Datei (preflight P:01007). Sperre wie oben, je (owner_id, lead_id).
+--   ⚠️ Gleicher Fund wie oben bei naechste_nummer, niedriger (nur Lesezugriff):
+--   EXECUTE für PUBLIC/anon/authenticated bis 11.09.2026 offen, verrät die laufende
+--   Verordnungsnummer eines fremden Patienten. Mit derselben Migration 0002 behoben.
 -- vergebe_verordnungsnummer_rx() -> trigger                [SECURITY DEFINER]
 --   Ruft sie auf. Wechselt die Verordnung den Patienten, wird die Nummer
 --   verworfen und neu vergeben; die eingereichte `belegnummer` bleibt stehen.
