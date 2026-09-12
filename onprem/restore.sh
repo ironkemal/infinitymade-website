@@ -148,13 +148,45 @@ fi
 docker compose exec -T db rm -f "$KONTROL_HEDEF" >/dev/null 2>&1 || true
 ok "Arşiv bütünlüğü doğrulandı (boyut + pg_restore -l)"
 
+# ── 1b) Yer kontrolü — O-88 (onprem denetimi): backup.sh'ta var, burada yoktu ─
+# Tepe kullanım kabaca: yeni boş DB'nin dump kadar büyümesi + eski (yeniden
+# adlandırılmış) DB hâlâ diskte + storage'ın YENİ kopyası + eski storage hâlâ
+# diskte (.alt-<zaman>) + dump'ın kendisi zaten diskte duruyor. Kesin bir
+# formül yok (Postgres'in kendi büyümesi dump boyutundan farklı olabilir) —
+# backup.sh'taki gibi bir PAY hesabı, kesin bir garanti değil.
+STORAGE_ARSIV_BYTE=0
+[ -f "$YEDEK_DIR/storage.tar.gz" ] && STORAGE_ARSIV_BYTE="$(wc -c < "$YEDEK_DIR/storage.tar.gz" | tr -d '[:space:]')"
+BOS_ALAN_KB="$(df -k "$SCRIPT_DIR" 2>/dev/null | tail -n 1 | awk '{print $4}')"
+if [ -n "$BOS_ALAN_KB" ]; then
+  GEREKEN_KB=$(( ((GERCEK_BYTES + STORAGE_ARSIV_BYTE) * 2 / 1024) + 102400 ))
+  if [ "$BOS_ALAN_KB" -lt "$GEREKEN_KB" ]; then
+    fehler "Geri yükleme için yeterli disk yeri olmayabilir" "${BOS_ALAN_KB} KB boş" "en az ~${GEREKEN_KB} KB (kaba tahmin — eski+yeni DB, eski+yeni storage)" \
+      "Disk temizle (özellikle eski restore'lardan kalan 'volumes/storage.alt-*' dizinlerini ve db'nin kendi 'postgres_onceki_*' veritabanlarını, memnun kaldıysan), sonra tekrar dene. Bu kesin bir sınır değil — devam etmek istiyorsan ve riski biliyorsan dosyaları elle temizleyip yeniden çalıştır."
+    exit 1
+  fi
+else
+  warn "Disk yeri ölçülemedi — yer kontrolü atlandı."
+fi
+
 # ── 2) Künye — KUTUYU BOZMADAN ÖNCE, konteynerlerin KENDİ ortamından ───────
 # Aynı fonksiyonlar backup.sh'takiyle BİREBİR aynı olmalı — farklı bir yöntem
 # (ör. host'ta openssl) sır argv'ye düşürür (onprem uyarısı, bu tur). Bu adım
 # `api`/`db` henüz DURDURULMADAN çalışır — restore'un asıl yıkıcı kısmı olan
 # pg_restore'dan önce, mevcut çalışan kutunun kendi sırlarıyla karşılaştırır.
+#
+# ⚠️ O-85 (onprem'in restore.sh sonrası denetimi, 12.09.2026): `docker compose
+# exec` `api` AYAKTA DEĞİLSE boş döner — restore TAM DA `api`'nin çökük/kapalı
+# olduğu günlerde çalıştırılır, yani bu en olası senaryodur. Eskiden boş dönüş
+# aşağıdaki `elif`'i yanlış çıkarıp `else`'e ("uyuşuyor") düşürüyordu — YAPILAMAYAN
+# bir kontrol, YAPILMIŞ ve BAŞARILI gibi rapor ediliyordu. Bu yüzden: (a) DEK
+# için `docker compose run --rm --no-deps` — servis AYAKTA OLMASA BİLE image'dan
+# tek seferlik bir konteyner açar, `exec`'in aksine `api`'nin çalışıyor olmasını
+# gerektirmez (b) üç kontrol de artık İKİ farklı "atlandı" hâlini birbirinden
+# ayırıyor: künyede parmak izi YOK (backup.sh o an hesaplayamamıştı) vs.
+# güncel taraf hesaplanamadı (konteyner şu an erişilemez) — ikisi de "atlandı"
+# ama SEBEBİ farklı, ikisi de asla "uyuşuyor" YAZMAZ.
 parmak_izi_dek() {
-  docker compose exec -T api node -e '
+  docker compose run --rm --no-deps -T api node -e '
     const crypto = require("crypto");
     const k = process.env.DATA_ENCRYPTION_KEY || "";
     if (!k) { process.exit(1); }
@@ -181,7 +213,13 @@ GUNCEL_PGPW_FP="$(parmak_izi_db_taraf POSTGRES_PASSWORD pgpw || true)"
 
 if [ -z "$M_DEK_FP" ] || [ "$M_DEK_FP" = "null" ]; then
   warn "Yedeğin künyesinde DATA_ENCRYPTION_KEY parmak izi YOK (backup.sh o an api'ye erişemedi) — bu kontrol ATLANDI, en kritik kontrol bu. Devam ediyorsan hasta verisinin şifresinin çözülüp çözülmeyeceğini bilmiyorsun."
-elif [ -n "$GUNCEL_DEK_FP" ] && [ "$GUNCEL_DEK_FP" != "$M_DEK_FP" ]; then
+elif [ -z "$GUNCEL_DEK_FP" ]; then
+  fehler "DATA_ENCRYPTION_KEY doğrulanamadı — kutunun güncel değeri HESAPLANAMADI" \
+    "boş sonuç (api image çalıştırılamadı ya da DATA_ENCRYPTION_KEY .env'de yok)" \
+    "hesaplanabilir bir parmak izi" \
+    "Bu bir 'uyuşuyor' değil — kontrol YAPILAMADI. .env'de DATA_ENCRYPTION_KEY var mı ve 'docker compose run --rm --no-deps api node -e \"console.log(1)\"' çalışıyor mu kontrol et, sonra tekrar dene. Bu kontrolü atlayıp devam etmenin yolu YOK (force dahil) — DEK doğrulanmadan restore, şifreli hasta verisinin sessizce çöpe gitmesi riskini taşır."
+  exit 1
+elif [ "$GUNCEL_DEK_FP" != "$M_DEK_FP" ]; then
   fehler "DATA_ENCRYPTION_KEY yedekle uyuşmuyor" "kutunun güncel .env'i: ${GUNCEL_DEK_FP} · yedeğin künyesi: ${M_DEK_FP}" \
     "aynı parmak izi" \
     "Bu yedek FARKLI bir DATA_ENCRYPTION_KEY ile alınmış (ör. disk değişti, install.sh --neu yeni bir anahtar üretti). ÇÖZÜM force'lamak DEĞİL: .env'deki DATA_ENCRYPTION_KEY'i bu yedeğin alındığı ANDAKİ değerle değiştir (eski .env'in bir kopyası duruyorsa oradan), sonra restore.sh'ı tekrar çalıştır. Bu adımı atlarsan şifreli hasta verisi bu kutuda BİR DAHA ASLA çözülmez — force bayrağı bunun için YOKTUR."
@@ -192,7 +230,9 @@ fi
 
 if [ -z "$M_JWT_FP" ] || [ "$M_JWT_FP" = "null" ]; then
   warn "Yedeğin künyesinde JWT_SECRET parmak izi yok — kontrol atlandı."
-elif [ -n "$GUNCEL_JWT_FP" ] && [ "$GUNCEL_JWT_FP" != "$M_JWT_FP" ]; then
+elif [ -z "$GUNCEL_JWT_FP" ]; then
+  warn "JWT_SECRET doğrulanamadı — kutunun güncel değeri hesaplanamadı (db konteyneri şu an erişilemez olabilir). Kontrol ATLANDI, 'uyuşuyor' DEĞİL. Devam edersen bu yedeğin doğru kurulumdan geldiğini varsaymış olursun."
+elif [ "$GUNCEL_JWT_FP" != "$M_JWT_FP" ]; then
   if [ "$FORCE" -eq 1 ]; then
     warn "JWT_SECRET yedekle uyuşmuyor (güncel: ${GUNCEL_JWT_FP} · yedek: ${M_JWT_FP}) — --force ile DEVAM EDİLİYOR. Bu yedek başka bir kurulumdan geliyor olabilir. Bilinen yan etki: _realtime.tenants'taki tenant sırrı ESKİ JWT ile şifreliydi, bu kutunun GÜNCEL JWT_SECRET'ıyla artık çözülemeyebilir — Realtime (canlı güncellemeler) sessizce bozulabilir. Restore sonrası booking/randevu ekranlarını gerçek tarayıcıda test et."
   else
@@ -206,7 +246,9 @@ fi
 
 if [ -z "$M_PGPW_FP" ] || [ "$M_PGPW_FP" = "null" ]; then
   warn "Yedeğin künyesinde POSTGRES_PASSWORD parmak izi yok — kontrol atlandı."
-elif [ -n "$GUNCEL_PGPW_FP" ] && [ "$GUNCEL_PGPW_FP" != "$M_PGPW_FP" ]; then
+elif [ -z "$GUNCEL_PGPW_FP" ]; then
+  warn "POSTGRES_PASSWORD doğrulanamadı — kutunun güncel değeri hesaplanamadı. Kontrol ATLANDI, 'uyuşuyor' DEĞİL — zararı az (madde 8'de kendiliğinden onarılıyor) ama bilerek devam ediyorsun."
+elif [ "$GUNCEL_PGPW_FP" != "$M_PGPW_FP" ]; then
   warn "POSTGRES_PASSWORD yedekle uyuşmuyor (güncel: ${GUNCEL_PGPW_FP} · yedek: ${M_PGPW_FP}) — bu DUR sebebi değil, restore sonrası roller/parolalar güncel .env ile yeniden uygulanacak (madde 8)."
 else
   ok "POSTGRES_PASSWORD parmak izi uyuşuyor"
@@ -216,19 +258,29 @@ fi
 # update.sh'ın (Schritt 5) kullandığı AYNI teknik: `docker create` — hiç
 # BAŞLATMADAN — sonra `docker cp` ile migrations dizinini çek. Konteyner
 # hiç ayağa kalkmaz, DB'ye hiç dokunulmaz.
+#
+# ⚠️ O-86 (onprem'in denetimi, 12.09.2026): image lokalde yoksa `docker pull`
+# deneniyordu, o da başarısızsa TÜM restore durduruluyordu — ama bu yalnızca
+# DANIŞMA amaçlı bir kontrol (yedek image'dan yeni mi diye bakıyor), restore'un
+# KENDİSİ için ön koşul DEĞİL. İnternetsiz/temiz bir sunucuda geçerli bir yedek
+# ve çalışan Postgres varken restore.sh'ın hiç başlamaması yanlış — bu yüzden
+# artık yalnız BU kontrol atlanıyor (loud warn), restore'un geri kalanı devam
+# ediyor. Sert DUR yalnız "image lokalde VAR ve yedek ondan yeni" dalında kalıyor.
 API_IMAGE="$(env_wert PRAXURA_API_IMAGE)"
+SEMA_KONTROLU_ATLANDI=0
 if [ -z "$API_IMAGE" ]; then
-  fehler "PRAXURA_API_IMAGE .env'de yok" "boş" "geçerli bir image referansı" ".env dosyasını kontrol et."
-  exit 1
-fi
-if ! docker image inspect "$API_IMAGE" >/dev/null 2>&1; then
+  warn "PRAXURA_API_IMAGE .env'de yok — şema-sürümü kapısı ATLANIYOR, restore devam ediyor."
+  SEMA_KONTROLU_ATLANDI=1
+elif ! docker image inspect "$API_IMAGE" >/dev/null 2>&1; then
   log "Image lokalde yok, çekiliyor: $API_IMAGE"
   if ! docker pull "$API_IMAGE" >>"$LOG_FILE" 2>&1; then
-    fehler "Image çekilemedi" "$API_IMAGE (internet yok ya da GHCR erişilemiyor olabilir)" "lokalde mevcut bir image" \
-      "İnternet bağlantısını kontrol et, ya da kutunun zaten çalıştırdığı image ile devam etmek için 'docker compose images api' ile mevcut etiketi öğren ve .env'deki PRAXURA_API_IMAGE'ı ona eşitle."
-    exit 1
+    warn "Image çekilemedi ($API_IMAGE — internet yok ya da GHCR erişilemiyor olabilir). Şema-sürümü kapısı ATLANIYOR (bu yalnız danışma amaçlıydı) — restore devam ediyor. Yedeğin şemasının kurulu image'dan YENİ olma ihtimaline karşı ekstra dikkatli ol."
+    SEMA_KONTROLU_ATLANDI=1
   fi
 fi
+
+IMAJ_BILDIGI_MAX=""
+if [ "$SEMA_KONTROLU_ATLANDI" -eq 0 ]; then
 SEMA_GECICI="$(mktemp -d)"
 trap 'rm -rf "$SEMA_GECICI"; docker rm -f praxura-restore-sema-tmp >/dev/null 2>&1 || true' EXIT
 docker create --name praxura-restore-sema-tmp "$API_IMAGE" >/dev/null
@@ -249,6 +301,7 @@ if [ -n "$IMAJ_BILDIGI_MAX" ] && [ -n "$M_SCHEMA" ] && [ "$M_SCHEMA" != "none" ]
 fi
 rm -rf "$SEMA_GECICI"
 trap - EXIT
+fi
 
 # ── 4) Onay — GERİ ALINAMAZ ─────────────────────────────────────────────────
 echo "" >&2
@@ -321,7 +374,11 @@ if ! docker compose exec -T db psql -U supabase_admin -d template1 -c \
   exit 1
 fi
 RESTORE_HEDEF="/tmp/praxura-restore.dump"
-docker compose cp "$YEDEK_DIR/db.dump" "db:$RESTORE_HEDEF" >>"$LOG_FILE" 2>&1
+if ! docker compose cp "$YEDEK_DIR/db.dump" "db:$RESTORE_HEDEF" >>"$LOG_FILE" 2>&1; then
+  fehler "Dump db konteynerine kopyalanamadı" "hata (bkz. $LOG_FILE)" "başarılı bir docker compose cp" \
+    "'${DB_NAME}' zaten '${ESKI_DB_ADI}' olarak yeniden adlandırıldı ve yeni boş '${DB_NAME}' yaratıldı — ama içine hiçbir şey YAZILMADI. Disk/konteyner durumunu kontrol et (df -h, docker compose ps db), sonra: docker compose exec -T db psql -U supabase_admin -d template1 -c 'DROP DATABASE IF EXISTS \"${DB_NAME}\"; ALTER DATABASE \"${ESKI_DB_ADI}\" RENAME TO \"${DB_NAME}\";' ile eski hâle dön, sorunu çözüp tekrar dene."
+  exit 1
+fi
 if ! docker compose exec -T -e PGOPTIONS='-c lock_timeout=30s' db \
      pg_restore --single-transaction -U supabase_admin -d "$DB_NAME" "$RESTORE_HEDEF" >>"$LOG_FILE" 2>&1; then
   docker compose exec -T db rm -f "$RESTORE_HEDEF" >/dev/null 2>&1 || true
@@ -336,17 +393,45 @@ log "İstatistikler tazeleniyor (ANALYZE)..."
 docker compose exec -T db psql -U supabase_admin -d "$DB_NAME" -c "ANALYZE;" >>"$LOG_FILE" 2>&1 || \
   warn "ANALYZE başarısız oldu — restore geçerli, yalnız ilk günlerde sorgular biraz yavaş olabilir."
 
-# Roller ve JWT ayarları GÜNCEL .env ile yeniden uygulanıyor — ücretsiz garanti
-# (idempotent, backup içindeki eski değerlerin üzerine hiçbir zarar vermeden
-# yazar). POSTGRES_PASSWORD uyuşmazlığını burada kendiliğinden onarır.
+# Roller ve JWT ayarları GÜNCEL .env ile yeniden uygulanıyor — bu ADİ bir
+# temizlik değil, O-87 (onprem denetimi): `pg_dump -Fc` (`--create` YOK)
+# DB-seviyesi ayarları (`ALTER DATABASE ... SET "app.settings.jwt_secret"`,
+# `pg_db_role_setting` sistem kataloğunda durur) dump'a HİÇ GİRMEZ. RENAME
+# yoluna geçtiğimiz için (madde 6) restore'un doğruluğu artık TAMAMEN bu
+# adıma bağlı — `--clean` yolunda DB-seviyesi ayar zaten yerinde kalıyordu,
+# burada aktif olarak yeniden kurulması ŞART. Başarısızlık PostgREST/Auth'un
+# JWT doğrulamasını (dolayısıyla TÜM girişleri) kırabilir — bu yüzden aşağıda
+# hem uygulama hem DOĞRULAMA var, sessiz `|| warn` değil.
 log "Roller ve JWT ayarları güncel .env ile yeniden uygulanıyor..."
 # `-U supabase_admin` — `postgres` başka rollerin parolasını değiştiremez
 # (CREATEROLE/superuser gerekiyor, aynı gerekçe yukarıdaki pg_restore ile).
-docker compose exec -T db psql -U supabase_admin -d "$DB_NAME" -f /docker-entrypoint-initdb.d/init-scripts/99-roles.sql >>"$LOG_FILE" 2>&1 || \
-  warn "99-roles.sql yeniden uygulanamadı — 'PGPW uyuşmuyor' uyarısı aldıysan roller yedekteki eski parolada kalmış olabilir, elle kontrol et."
-docker compose exec -T db psql -U supabase_admin -d "$DB_NAME" -f /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql >>"$LOG_FILE" 2>&1 || \
-  warn "99-jwt.sql yeniden uygulanamadı."
-ok "Roller/JWT senkron"
+ROLLER_JWT_SORUNLU=0
+if ! docker compose exec -T db psql -U supabase_admin -d "$DB_NAME" -f /docker-entrypoint-initdb.d/init-scripts/99-roles.sql >>"$LOG_FILE" 2>&1; then
+  warn "99-roles.sql yeniden uygulanamadı — roller yedekteki eski parolada kalmış olabilir, PostgREST/Auth giriş yapamayabilir. Elle: docker compose exec -T db psql -U supabase_admin -d \"$DB_NAME\" -f /docker-entrypoint-initdb.d/init-scripts/99-roles.sql"
+  ROLLER_JWT_SORUNLU=1
+fi
+if ! docker compose exec -T db psql -U supabase_admin -d "$DB_NAME" -f /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql >>"$LOG_FILE" 2>&1; then
+  warn "99-jwt.sql yeniden uygulanamadı — DB dump'ta JWT ayarı HİÇ yoktu (pg_dump --create almaz), yani bu adım atlanınca ESKİ/yanlış bir JWT kalabilir. PostgREST/Auth tüm istekleri reddedebilir. Elle: docker compose exec -T db psql -U supabase_admin -d \"$DB_NAME\" -f /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql"
+  ROLLER_JWT_SORUNLU=1
+fi
+# Doğrulama — sessizce "başarılı" saymıyoruz, gerçekten ayarlandığını okuyoruz.
+# ⚠️ O-87(c) (onprem denetimi): burada boş dönmesi yalnız uyarı değil SERT DUR —
+# veritabanı ZATEN geri yüklendi (güvende), ama servisleri şimdi açarsak
+# PostgREST/Auth JWT'siz/yanlış JWT'yle ayağa kalkar ve gerçek kullanıcılara
+# kırık kimlik doğrulama sunar. Servisler hâlâ durdurulmuş durumda — burada
+# durmak "kutu kapalı ama veri güvende" hâlini korur, "kutu açık ama bozuk"
+# hâlinden iyidir.
+JWT_KONTROL="$(docker compose exec -T db psql -U supabase_admin -d "$DB_NAME" -tAc "SELECT current_setting('app.settings.jwt_secret', true);" 2>>"$LOG_FILE" | tr -d '[:space:]')"
+if [ -z "$JWT_KONTROL" ]; then
+  fehler "app.settings.jwt_secret restore sonrası HÂLÂ boş" "boş/okunamıyor" "99-jwt.sql'in uyguladığı, boş olmayan bir değer" \
+    "Veritabanı ZATEN geri yüklendi (güvende, '${ESKI_DB_ADI}' de hâlâ duruyor) — yalnız JWT ayarı eksik. Servisler BİLEREK açılmadı: böyle açarsak PostgREST/Auth kırık kimlik doğrulamayla ayağa kalkardı. Elle uygula: docker compose exec -T db psql -U supabase_admin -d \"$DB_NAME\" -f /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql — sonra tekrar doğrula, başarılıysa 'docker compose up -d api auth rest realtime storage' ile elle aç."
+  exit 1
+fi
+if [ "$ROLLER_JWT_SORUNLU" -eq 0 ]; then
+  ok "Roller/JWT senkron (doğrulandı)"
+else
+  warn "99-roles.sql'de bir sorun vardı (yukarıya bak, JWT doğrulandı) — restore.sh devam ediyor, ama restore sonrası GERÇEK bir tarayıcıdan giriş/booking testi yapmadan 'bitti' sayma."
+fi
 
 # ── 7) Storage geri yükleme — atomik, eski hâl kaybolmuyor ──────────────────
 if [ -f "$YEDEK_DIR/storage.tar.gz" ]; then
@@ -361,12 +446,26 @@ if [ -f "$YEDEK_DIR/storage.tar.gz" ]; then
     fehler "Storage arşivi açılamadı" "tar hata verdi (bkz. $LOG_FILE)" "geçerli bir tar.gz" \
       "Veritabanı ZATEN geri yüklendi — yalnız storage (dosyalar) eski hâlinde kaldı. Arşivi kontrol et, elle tekrar dene: tar -xzpf \"$YEDEK_DIR/storage.tar.gz\" -C \"$SCRIPT_DIR/volumes\""
   else
+    ESKI_TASINDI=0
     if [ -d "$STORAGE_DIR" ]; then
       mv "$STORAGE_DIR" "$ESKI_YEDEK"
+      ESKI_TASINDI=1
     fi
-    mv "$TMP_STORAGE/storage" "$STORAGE_DIR"
-    rm -rf "$TMP_STORAGE"
-    ok "Storage geri yüklendi (eski hâl korunuyor: $(basename "$ESKI_YEDEK"))"
+    # O-89 (onprem denetimi): bu `mv` başarısız olursa ve eski dizin bir satır
+    # önce taşınmışsa, kutu STORAGE'SIZ kalır (ne eski ne yeni yerinde). Bu
+    # yüzden başarısızlıkta eskiyi HEMEN geri koyuyoruz — yarım bir hâl asla
+    # kalıcı olmasın.
+    if ! mv "$TMP_STORAGE/storage" "$STORAGE_DIR" 2>>"$LOG_FILE"; then
+      if [ "$ESKI_TASINDI" -eq 1 ]; then
+        mv "$ESKI_YEDEK" "$STORAGE_DIR" 2>>"$LOG_FILE" || true
+      fi
+      rm -rf "$TMP_STORAGE"
+      fehler "Yeni storage yerine taşınamadı" "mv hatası (bkz. $LOG_FILE)" "başarılı bir mv" \
+        "Eski storage GERİ KONULMAYA ÇALIŞILDI (\"$STORAGE_DIR\" hâlâ eski hâliyle olmalı — 'ls \"$STORAGE_DIR\"' ile doğrula). Veritabanı ZATEN geri yüklendi. Disk/izin sorununu çöz, sonra storage'ı elle aç: tar -xzpf \"$YEDEK_DIR/storage.tar.gz\" -C \"$SCRIPT_DIR/volumes\" (önce mevcut '$STORAGE_DIR'i kendin taşı)."
+    else
+      rm -rf "$TMP_STORAGE"
+      ok "Storage geri yüklendi (eski hâl korunuyor: $(basename "$ESKI_YEDEK"))"
+    fi
   fi
 else
   warn "Yedekte storage.tar.gz yok — storage (reçete görüntüleri vb.) DEĞİŞTİRİLMEDİ, mevcut hâliyle kalıyor."

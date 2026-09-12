@@ -221,6 +221,12 @@ ile bayraklar ve yeni limit (1200m) doğrulandı, `/api/services/public` ve n8n'
 O-26'nın kendi kapanış notunda. "Yedek var" ile "yedekten gerçekten dönebiliyoruz"
 arasındaki fark artık kapalı.
 
+✅ **O-85 + O-86 + O-89 kapandı (12.09.2026, aynı gece)** — yapılamayan parmak-izi
+kontrolü artık "uyuşuyor" demiyor (gerçek kutuda `api` durdurulmuşken ve DEK
+tamamen boşken test edildi), şema kapısı internetsiz kutuda restore'u artık
+komple engellemiyor, onaydan sonraki iki korumasız adım artık kılavuzlu. O-87/
+O-88 yalnız kısmen (acil kısımları kapandı, genel çözümleri açık) — detay §7L.
+
 1. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8 kontrolleri (10 şema sayaçı, RLS negatif testi,
    `DATA_ENCRYPTION_KEY` yaz-oku turu). Sahipsiz kalmış borç; kurulumun "başarılı
    sayılır" tanımı bunlar olmadan eksik.
@@ -233,7 +239,7 @@ arasındaki fark artık kapalı.
    ⚠️ Kutunun CSP'si bunu engellemez — çağrı tarayıcıdan değil **backend'den** çıkıyor.
 4. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
    bir gerçek SMTP kurulumuyla SPF/DMARC doğrulaması. İlk beta kutusunda yapılabilir.
-5. **O-29 madde (2)** — kurulum sihirbazı `DATA_ENCRYPTION_KEY`'i gösteriyor ama
+6. **O-29 madde (2)** — kurulum sihirbazı `DATA_ENCRYPTION_KEY`'i gösteriyor ama
    "sakladım" onayı istemeden ilerliyor. Küçük, ucuz — bir sonraki `install.sh`
    dokunuşunda birlikte yapılabilir.
 
@@ -3116,6 +3122,99 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
+## 7L — `restore.sh` bildirim-sonrası denetimi (12.09.2026 gecesi)
+
+> **Niye bu bölüm var:** `restore.sh` yazıldı, gerçek kutuda üç senaryo uçtan uca
+> koştu ve O-26 kapandı — hepsi doğru. Aşağıdaki beş madde o kapanışı **geri
+> almıyor**: geri yükleme yolu artık VAR ve çalışıyor. Bunlar o yolun, mutlu
+> senaryonun dışındaki dallarında bulunan boşluklar. Ortak desenleri tek cümleyle:
+> **test edilen üç senaryonun üçünde de kutu sağlıklıydı.** Oysa `restore.sh` tam
+> olarak kutunun sağlıklı OLMADIĞI gün çalıştırılır — `api` ayakta değildir,
+> internet yoktur, disk doludur. Beşinin de tetiklendiği an aynı andır.
+>
+> ✅ **Aynı gece kapatıldı (12.09.2026):** O-85/O-86/O-89 tam, O-87/O-88 kısmen
+> (acil/kritik kısımları — JWT doğrulama sert DUR, disk-yeri kapısı — kapandı;
+> genel/yapısal çözümleri henüz değil). O-85'in `api` durdurulmuşken ve
+> `DATA_ENCRYPTION_KEY` tamamen boşken davranışı gerçek kutuda ayrıca test
+> edildi. Detay her maddenin kendi "Durum" satırında.
+>
+> ⚠️ **Karar notu (onprem, bu tur): `--clean` yerine RENAME'e geçiş DOĞRU karardır
+> ve geri alınmamalıdır.** Gerekçe: boş hedefe restore'un davranışı upstream
+> Postgres sürümünden, Realtime'ın günlük partisyon düzeninden ve sahiplikten
+> **bağımsızdır**; `--clean`'inki değildir — `messages_2026_09_15` bugün patladı,
+> yarın başka bir upstream nesnesi patlardı ve bunu önceden ölçmenin yolu yoktu.
+> Üstelik RENAME "yarıda kalırsa eski veri kaybolmaz" garantisini `--clean`'in
+> asla veremeyeceği bir yerden veriyor. Bu geçişin bedeli iki yeni maddedir
+> (O-87 DB-seviyesi ayarların kaybı · O-88 iki kat disk) — ikisi de ölçülebilir
+> ve kapatılabilir. `--clean`'in bedeli ise ölçülemezdi.
+
+### O-85 — `restore.sh`'ın üç parmak-izi kontrolü, **hesaplanamadığında** "uyuşuyor" diyor ✅ **gelöst**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | DEK/JWT/PGPW karşılaştırmalarının üçü de `elif [ -n "$GUNCEL_..." ] && [ "$GUNCEL" != "$M" ]` kalıbında. Güncel parmak izi **boş** dönerse (yani kontrol hiç yapılamadıysa) koşul yanlış olur ve akış `else` dalına, yani `ok "... parmak izi uyuşuyor"` satırına düşer. Yapılamayan kontrol, geçmiş kontrol gibi raporlanıyor |
+| **Nerede** | `onprem/restore.sh:184` · `:195` · `:209` (dallar) — kaynak fonksiyonlar `:156-176`. `parmak_izi_dek()` ayakta bir `api` ister, `parmak_izi_db_taraf()` ayakta bir `db` ister |
+| **Tip** | E (sır) + F (dayanıklılık) |
+| **Kutuda ne olur** | Geri yükleme, `api`'nin ayakta olmadığı bir günde çalıştırılır — crash-loop, bozuk disk, yeni sunucuya taşıma. O anda `exec` başarısız olur, parmak izi boş kalır ve ekranda **"DATA_ENCRYPTION_KEY parmak izi uyuşuyor"** yazar. Admin en kritik kontrolün geçtiğini sanıp `WIEDERHERSTELLEN` yazar. DEK gerçekten farklıysa hasta verisi geri gelir ama **hiçbir zaman çözülemez** — O-29 (4)'ün sattığı garanti tam da en çok ihtiyaç duyulduğu anda yok. Kontrolün kendisi doğru yazılmış; yalnız "cevap alamadım" hâli "cevap iyi" ile aynı dala düşüyor |
+| **Çözüm** | Üç dalın da **üçüncü** bir hâli olmalı: künyede parmak izi VAR ama güncel hesaplanamadı → DEK'te sert `fehler` + `exit` (force yok, O-29'un çizgisi korunur), JWT/PGPW'de açık `warn "hesaplanamadı — kontrol ATLANDI"`. Ayrıca DEK, `api` durmuşken de ölçülebilir: `docker compose run --rm --no-deps -T api node -e '...'` — compose ortamından okur (sır yine argv'ye düşmez), durdurulmuş servis için de çalışır |
+| **Yan öneri (aynı sınıf, ayrı madde değil, HÂLÂ AÇIK)** | Restore'un **tam** olduğu bugün hiçbir yerde ölçülmüyor; yalnız `praxura_migrations` satır sayısı basılıyor, veri sayılmıyor. Ucuz kapatma: `backup.sh` künyeye üç-beş sayaç yazsın (ör. `leads`, `prescriptions`, `bookings`), `restore.sh` sonunda aynı sayıları okuyup karşılaştırsın. Sessiz kısmi restore'u yakalayabilecek tek mekanizma bu — bu madde kapanmadı, ayrı küçük bir iş olarak bekliyor |
+| **Durum** | ✅ **gelöst (12.09.2026, gerçek kutuda doğrulandı)** — üç kontrol de artık üçüncü hâli ayırt ediyor (künyede FP yok / güncel hesaplanamadı / uyuşmuyor, üçü de farklı davranıyor, hiçbiri "uyuşuyor" yazmıyor). DEK, `docker compose run --rm --no-deps` ile `api` DURMUŞKEN de doğru hesaplanıyor — gerçek kutuda `api` durdurulup test edildi, doğru şekilde eşleşti. `DATA_ENCRYPTION_KEY` tamamen boşaltılıp test edildiğinde "doğrulanamadı" ile sert durdu, onay istemine hiç ulaşmadan, hiçbir servise dokunmadan. Yukarıdaki "yan öneri" (satır-sayısı sağlaması) hâlâ açık, ayrı küçük iş |
+
+---
+
+### O-86 — Şema kapısı, internetsiz kutuda geri yüklemeyi **tamamen** engelliyor ✅ **gelöst**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `restore.sh` şema-sürümü kapısı için `.env`'deki `PRAXURA_API_IMAGE`'ı istiyor; image lokalde yoksa `docker pull` deniyor, o da başarısızsa `fehler` + `exit 1`. Yani **danışma amaçlı** bir kontrol, geri yüklemenin ön koşulu hâline gelmiş |
+| **Nerede** | `onprem/restore.sh:219-231` |
+| **Tip** | A (dış çağrı) + F |
+| **Kutuda ne olur** | Felaket senaryosunun tarifi zaten budur: yeni/temiz sunucu, image'lar yok, ya da internet/GHCR erişimi yok. O anda kutuda geçerli bir yedek, çalışan bir Postgres ve `restore.sh` var — ama betik **hiç başlamıyor**, çünkü ölçmek istediği şey "yedek image'dan yeni mi" idi. Geri yüklemenin kendisi o image'a muhtaç değil. Kutu bizim sunucumuz olmadan ayakta kalmalı (K10) — bu satır tam tersini yapıyor |
+| **Çözüm** | Image yoksa **ve** çekilemiyorsa: `warn "şema-sürümü kontrolü yapılamadı — image yok, internet yok"` + kapıyı ATLA, devam et. İkinci kaynak denenebilir: çoğu felakette `praxura-api` konteyneri hâlâ tanımlıdır, `docker inspect praxura-api --format '{{.Image}}'` kullanılabilir bir image verir. Sert `DUR` yalnız **image VAR ve yedek gerçekten ondan yeni** dalında kalsın |
+| **Durum** | ✅ **gelöst (12.09.2026)** — image yoksa/çekilemezse artık yalnız şema-sürümü kontrolü `warn` ile atlanıp restore'un geri kalanı devam ediyor; sert DUR yalnız "image lokalde VAR ve yedek ondan yeni" dalında kaldı. `docker inspect praxura-api` üzerinden ikinci kaynak denemesi (onprem'in önerdiği ek iyileştirme) uygulanmadı — mevcut düzeltme ana riski (restore'un hiç başlamaması) zaten kapatıyor, ikinci kaynak ayrı küçük bir iyileştirme olarak bekleyebilir |
+
+---
+
+### O-87 — RENAME yaklaşımının yeni bağımlılığı: boş veritabanı, eskisinin **DB-seviyesi ayarlarını** miras almıyor 🟡 **kısmen gelöst**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `pg_dump -Fc` (`--create` yok) veritabanı seviyesindeki ayarları **taşımaz**: `ALTER DATABASE postgres SET "app.settings.jwt_secret"` `pg_db_role_setting` kataloğunda durur, dump'ın içinde değildir. `--clean` yolunda bu ayarlar yerinde kalıyordu; RENAME + boş `CREATE DATABASE` yolunda **kayboluyorlar**. Bugün onları kurtaran tek şey restore sonrası `99-jwt.sql`/`99-roles.sql`'in yeniden uygulanması — yani geri yüklemenin doğruluğu artık iki compose **mount yoluna** bağlı ve bu bağ hiçbir yerde yazılı değildi |
+| **Nerede** | `onprem/restore.sh:309-322` (RENAME + CREATE) · `:345-348` (yeniden uygulama, ikisi de `\|\| warn` ile geçiliyor) · `onprem/volumes/db/jwt.sql:4-5` · mount'lar: `onprem/docker-compose.yml:105-106` |
+| **Tip** | D |
+| **Kutuda ne olur** | Üç ayrı sessiz sapma: (1) mount yolu bir gün değişirse `psql -f` başarısız olur, betik `warn` ile geçer ve sonunda **"Bitti — sonuç: ok"** der; kutu `app.settings.jwt_secret` olmayan bir veritabanıyla açılır. (2) `jwt.sql`'in hedefi **literal `postgres`** — `POSTGRES_DB` bir gün başka bir değere alınırsa ayar yanlış veritabanına gider (bugün `.env.template:136` = `postgres`, yani bugün zararsız; kırılma sessiz olacağı için yazılıyor). (3) Yeni veritabanı kodlama/collation'ı `template1`'den, sahipliği `supabase_admin`'den alır — eskisininkiyle aynı olduğu **ölçülmedi**. Collation farkı sıralamayı ve metin indekslerini sessizce değiştirir |
+| **Çözüm** | (a) `CREATE DATABASE`'i eski veritabanının `pg_database` satırından üret — `TEMPLATE template0` + eskisinin `encoding`/`datcollate`/`datctype`/`datdba`'sı. (b) `pg_db_role_setting`'i eski veritabanından okuyup `ALTER DATABASE … SET` olarak yeniden oyna: `jwt.sql`'e olan örtük bağ tamamen kalkar, çözüm genel olur. (c) Asgari ve beş dakikalık hâli: yeniden uygulamadan sonra **doğrula** — `SELECT current_setting('app.settings.jwt_secret', true)` boş dönerse `warn` değil `fehler` |
+| **Yan bulgu** | Rol asimetrisi: `backup.sh:166` dump'ı `-U postgres` ile alıyor, `restore.sh` `-U supabase_admin` ile yüklüyor. Bugün çalışıyor (gerçek kutuda kanıtlandı), ama yedeğin **kapsamını** belirleyen rol ile geri yüklemeyi yapan rol farklı kaldığı sürece "yedekte her şey var mı" sorusunun cevabı role bağlı kalır. İkisini de `supabase_admin`'e çekmek tek satır, ama yeni bir yedek turu gerektirir |
+| **Durum** | 🟡 **kısmen gelöst (12.09.2026) — (c) yapıldı, (a)/(b) hâlâ açık.** `app.settings.jwt_secret` restore sonrası boş dönerse artık `warn` değil **sert `fehler` + `exit 1`** — veritabanı zaten güvende geri yüklenmiş durumda kalıyor, servisler BİLEREK açılmıyor (kırık kimlik doğrulamayla ayağa kalkmasınlar diye). Gerçek kutuda mutlu yolda doğrulandı (JWT kontrolü geçti, servisler normal açıldı). (a) `CREATE DATABASE`'i eskisinin `pg_database` satırından üretme ve (b) `pg_db_role_setting`'i genel olarak taşıma **yapılmadı** — düzeltme hâlâ yalnız `jwt.sql`/`roles.sql`'in kapsadığı iki ayara özel, genel bir DB-seviyesi ayar kaybına karşı korumasız |
+
+---
+
+### O-88 — `restore.sh`'ta disk yeri kapısı yok; RENAME + `.alt-` deseni yeri iki katına çıkarıyor, eski kopyaları kimse toplamıyor 🟡 **kısmen gelöst**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `backup.sh` yer kontrolü yapıyor (`:123-132`, `2×(db+storage)+pay`), `restore.sh` **hiç** yapmıyor — oysa geri yükleme diskin daha dar olduğu anda çalışır ve seçilen tasarım bilinçli olarak yeri iki katına çıkarır |
+| **Nerede** | `onprem/restore.sh` (`df` hiç geçmiyor — ölçüldü, 0 eşleşme) · yer tüketen adımlar: `:309` (RENAME — eski DB diskte kalır) · `:324` (`docker compose cp` — dump'ın üçüncü kopyası, konteynerin yazılabilir katmanında) · `:355-367` (`.alt-` + geçici çıkarma dizini) |
+| **Tip** | F |
+| **Kutuda ne olur** | Tepe kullanım ≈ 2× veritabanı + 2× storage + bir dump kopyası. Disk ortada dolarsa `pg_restore` patlar — tesellisi `--single-transaction` ve eski veritabanının duruyor olması, yani kutu kurtarılabilir ama gece uzar. Daha sinsisi: her geri yükleme bir `postgres_onceki_*` veritabanı ve bir `storage.alt-*` dizini bırakıyor; silen yok, sayan yok, uyaran yok. Üçüncü denemede kutu sessizce dolar ve bu kez **Postgres'in kendisi** durur |
+| **Çözüm** | (a) `backup.sh`'takinin aynısı bir `df -k` kapısı, gereken = mevcut DB boyutu + storage arşivi + pay; onay isteminden **önce**. (b) `docker compose cp` yerine `docker compose exec -T db pg_restore … < db.dump` — özel biçimli arşiv stdin'den okunabilir (`backup.sh` zaten ters yönde aynısını yapıyor), üçüncü kopya tamamen ortadan kalkar; gerçek kutuda bir kez sınanmalı, kâğıt üzerinde kabul edilmemeli. (c) Betiğin başında mevcut `*_onceki_*` veritabanlarını ve `storage.alt-*` dizinlerini boyutlarıyla listeleyip uyar — **silme yok**, karar admin'in |
+| **Durum** | 🟡 **kısmen gelöst (12.09.2026) — (a) yapıldı, (b)/(c) hâlâ açık.** `df -k` kapısı eklendi (`backup.sh`'takiyle aynı desen, arşiv bütünlük kontrolünden hemen sonra, onay isteminden önce), gerçek kutuda çalıştığı doğrulandı. (b) `docker compose cp` yerine stdin pipe ile üçüncü dump kopyasını ortadan kaldırma **yapılmadı** (onprem'in kendi notu: gerçek kutuda sınanmadan girmemeli, bu turun kapsamına alınmadı). (c) eski `*_onceki_*`/`storage.alt-*` artıklarını listeleyip uyarma **yapılmadı** — script bunları hâlâ sessizce biriktiriyor, temizlik tamamen admin'in inisiyatifinde ve hatırlamasına bağlı |
+
+---
+
+### O-89 — Onaydan sonraki iki korumasız adım: yarıda kalırsa kutu kılavuzsuz kalıyor ✅ **gelöst**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Onay verildikten sonra betiğin her yıkıcı adımının bir `fehler()` dalı var — **ikisi hariç** |
+| **Nerede** | `onprem/restore.sh:324` (`docker compose cp`, `\|\|` yok, `set -e` altında) · `:359-368` (storage takasındaki iki `mv`) |
+| **Tip** | F |
+| **Kutuda ne olur** | (1) `:324` başarısız olursa (konteyner `/tmp`'i dolu, `db` yeniden başlamış) `set -e` betiği o satırda keser. O an: veritabanı yeniden adlandırılmış, yeni `postgres` **boş**, beş servis **durdurulmuş**, ekranda tek satır kılavuz **yok**. `:329`'daki örnek alınası kurtarma metni yalnız `pg_restore` dalında duruyor. (2) Storage takasında arşiv beklenen `storage/` kökünü taşımıyorsa ikinci `mv` başarısız olur — ama canlı dizin bir satır önce `.alt-` adına taşınmıştır: kutu storage dizinsiz kalır ve betik yine kılavuzsuz çıkar |
+| **Çözüm** | (a) Onay adımından sonrası için tek bir `trap … EXIT`: beklenmedik çıkışta "eski veritabanı `X` adıyla duruyor · geri almak için şu komut · servisleri açmak için şu komut" satırlarını bassın (metin zaten `:329`'da yazılı, yalnız tek dala hapsolmuş). (b) Takastan **önce** `[ -d "$TMP_STORAGE/storage" ]` kontrolü — yoksa canlı dizine hiç dokunma; taşımadan sonraki ikinci `mv` başarısız olursa eskisini geri al |
+| **Durum** | ✅ **gelöst (12.09.2026)** — genel bir `trap` yerine (onprem'in önerdiği (a) değil) her iki nokta **ayrı ayrı** korumaya alındı, aynı sonucu veriyor: `docker compose cp` artık kontrol ediliyor, başarısızsa "eski DB hâlâ '${ESKI_DB_ADI}' adıyla duruyor, geri dönme komutu şu" mesajıyla `exit 1`. Storage takasında ikinci `mv` başarısız olursa script eskiyi OTOMATİK geri koymayı dener (`mv "$ESKI_YEDEK" "$STORAGE_DIR"`), böylece kutu storage'sız kalmıyor. İkisi de kod incelemesiyle doğrulandı (gerçek kutuda bu iki başarısızlık senaryosu ayrıca tetiklenmedi — disk/izin hatası simüle etmek bu turun kapsamına alınmadı) |
+
+---
+
 ## 8. Kapı — sayaçlar ve tabanlar
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -3169,22 +3268,36 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 84 madde** (O-01 … O-84). ⚠️ O-53 ve O-54'ün kendi `###` girdisi yok;
-O-01'in not bloğunda yaşıyorlar — kaybolmaya açıklar, ileride kendi girdilerine
-terfi etmeliler.
+**Toplam 89 madde** (O-01 … O-89) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
+bildirim-sonrası denetiminden çıktı, §7L; aynı gece üçü (O-85/O-86/O-89) tam, ikisi
+(O-87/O-88) kısmen kapatıldı — detay kendi maddelerinde. ⚠️ O-53 ve O-54'ün kendi
+`###` girdisi yok; O-01'in not bloğunda yaşıyorlar — kaybolmaya açıklar, ileride
+kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
 | `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · O-82 |
 | `geplant` | 14 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 |
-| 🟡 `kısmen gelöst` | 11 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · **O-29** |
-| `gelöst` | 36 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · O-83 · **O-84** |
+| 🟡 `kısmen gelöst` | 13 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-29 · **O-87** · **O-88** |
+| `gelöst` | 39 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · O-83 · O-84 · **O-85** · **O-86** · **O-89** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda
 > doğrulandı (kendi maddesindeki kapanış notuna bak). Kalan tek gerçek boşluk:
 > SSH/rsync hedef sürücüsü (yalnız dizin/mount destekleniyor), kendi O-numarasını
 > bekliyor — henüz açılmadı.
+>
+> ✅ **O-26 `gelöst` kalıyor ve yolun dayanıklılığı da aynı gece büyük ölçüde
+> kapandı (O-85…O-89, §7L).** Beş maddeden en kritiği **O-85** (yapılamayan
+> parmak-izi kontrolünün "uyuşuyor" yazması) **gelöst** — üç kontrol de artık
+> künyede-parmak-izi-yok / güncel-hesaplanamadı / uyuşmuyor hâllerini ayırt
+> ediyor, hiçbiri "uyuşuyor" yazmıyor, gerçek kutuda hem `api` durdurulmuşken
+> hem DEK tamamen boşken test edildi. **O-86** (internetsiz kutuda restore'un
+> hiç başlamaması) ve **O-89** (yarıda kalırsa kılavuzsuz kalma) de **gelöst**.
+> Kalan iki madde (**O-87** DB-seviyesi ayarların genel taşınması · **O-88**
+> ikinci/üçüncü kopyanın kaldırılması + eski artıkların uyarılması) yalnız
+> **kısmen** — acil kısımları (JWT doğrulama sert DUR, disk-yeri kapısı)
+> kapandı, genel çözümleri henüz değil.
 >
 > ⚠️ **O-77 `gelöst` yazıyor ama dar kapsamlı** (yalnız migration-öncesi tek bir DB
 > dump'ı) — geniş yedekleme O-26'da (artık tam kapalı) çözüldü. O-77'nin kendi
