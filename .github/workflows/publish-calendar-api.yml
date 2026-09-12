@@ -239,19 +239,21 @@ jobs:
       #
       # ⚠️ O-25/R0 (12.09.2026): die alte Version dieser Prüfung verlangte, dass
       # manifest.json die Zeichenkette "manifest.json" selbst enthält — die Datei
-      # listet aber bewusst nur die ANDEREN 13 Bundle-Dateien, nicht sich selbst
+      # listet aber bewusst nur die ANDEREN Bundle-Dateien, nicht sich selbst
       # (tools/onprem-manifest.mjs). Damit schlug dieser Schritt seit `6347071`
       # bei JEDEM Lauf fehl und kein calendar-api-Image wurde seither published.
       # Jetzt zwei getrennte, in beide Richtungen geprüfte Fragen:
-      #   (a) Ist jede der 14 Bundle-Dateien wirklich im Image? (fängt O-57-Klasse)
-      #   (b) Listet manifest.json genau die 13 ANDEREN Dateien — nicht mehr,
+      #   (a) Ist jede Bundle-Datei wirklich im Image? (fängt O-57-Klasse)
+      #   (b) Listet manifest.json genau die ANDEREN Dateien — nicht mehr,
       #       nicht weniger? (die Rückrichtung — im Manifest gelistet, aber im
       #       Bundle fehlend — lief bisher NIE mit und lässt update.sh nachts
       #       auf einer Kundenbox scheitern)
+      # ⚠️ O-26 (13.09.2026): backup.sh dazugekommen — 15 Dateien, 14 ANDERE.
       - name: Smoke test — onprem-Bundle ist im Image
         run: |
           set -e
-          BUNDLE_DATEIEN="docker-compose.yml .env.template install.sh update.sh lib-health.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql"
+          BUNDLE_DATEIEN="docker-compose.yml .env.template install.sh update.sh lib-health.sh backup.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql"
+          bundle_anzahl=$(echo $BUNDLE_DATEIEN | wc -w)
 
           docker create --name bundle-check calendar-api:smoke >/dev/null
           rm -rf /tmp/bundle && mkdir -p /tmp/bundle
@@ -265,7 +267,7 @@ jobs:
               exit 1
             fi
           done
-          echo "✓ 14/14 Bundle-Dateien im Image vorhanden"
+          echo "✓ ${bundle_anzahl}/${bundle_anzahl} Bundle-Dateien im Image vorhanden"
 
           # (b) manifest.json listet genau die 13 ANDEREN Dateien — beide Richtungen.
           for datei in $BUNDLE_DATEIEN; do

@@ -40,6 +40,7 @@ const BUNDLE_DATEILER = [
   'install.sh',
   'update.sh',
   'lib-health.sh',
+  'backup.sh',
   'volumes/api/kong.yml',
   'volumes/api/kong-entrypoint.sh',
   'volumes/db/_supabase.sql',

@@ -32,7 +32,7 @@ COPY db ./db
 # nichts an den obigen COPY-Zeilen ändert sich. Einzeln aufgeführt wie oben:
 # KEIN Verzeichnis-COPY von volumes/ (onprem/volumes/db/data wäre sonst die
 # LIVE-Postgres-Datenverzeichnis — s. onprem/REGISTER.md §7J J2).
-COPY --from=onprem docker-compose.yml .env.template install.sh update.sh lib-health.sh manifest.json ./onprem-bundle/
+COPY --from=onprem docker-compose.yml .env.template install.sh update.sh lib-health.sh backup.sh manifest.json ./onprem-bundle/
 COPY --from=onprem volumes/api/kong.yml volumes/api/kong-entrypoint.sh ./onprem-bundle/volumes/api/
 COPY --from=onprem volumes/db/_supabase.sql volumes/db/jwt.sql volumes/db/no-pg-net.sql volumes/db/realtime.sql volumes/db/roles.sql volumes/db/webhooks.sql ./onprem-bundle/volumes/db/
 

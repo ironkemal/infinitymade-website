@@ -88,3 +88,18 @@ bakım moduna geçer, `/health` ve hata bilgisini servis eder, gerisine 503 dön
 
 `DATABASE_URL` **yoksa runner sessizce atlar.** Bugünkü SaaS bu durumda; davranış
 değişmeden çalışmaya devam ediyor.
+
+## İkinci, kaba bir okuyucu var — `onprem/update.sh` (O-26)
+
+Bu klasörün asıl yorumlayıcısı `../migrate.js`'tir (checksum'lı, dosya adı + defter
+karşılaştırmalı, yukarıdaki kuralları uygular). Ama on-prem kutusunda `update.sh`
+migration-öncesi yedek almak için BAĞIMSIZ, KASITLI OLARAK KABA bir ikinci okuma
+yapar: yalnız dosya adlarının `NNNN` önekini `praxura_migrations.version`'la
+karşılaştırır — checksum yok, `migrate.js`'in `planErstellen()`'i tekrar yazılmadı
+(onprem, O-26 tasarım turu: bir bash kopyası er ya da geç sapardı, ve sapmanın kötü
+yönü yedeksiz bir migration olurdu). Sonuç: **her belirsizlikte** (ayrıştırma hatası,
+db'ye erişilemiyor, dizin boş) "bekleyen migration var" sayılır — tek izinli hata yönü
+gereksiz bir yedek, asla eksik bir yedek değil.
+
+Bu README'yi güncellemeden dosya adı biçimini (`NNNN_ad.sql`) değiştirme — iki
+okuyucu birden sessizce sapar.

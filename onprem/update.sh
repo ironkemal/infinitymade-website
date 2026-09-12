@@ -10,14 +10,15 @@
 #  Was dieses Skript TUT: das eigene `praxura/api`-Image ziehen, das darin
 #  mitgelieferte Bundle (Compose + Volumes + Skripte) auspacken, gegen den
 #  Stand auf der Box vergleichen, unsere Dateien byte-genau ersetzen (ausser
-#  bei Fremdänderung — dann STOP), VOR jedem Neustart einen pg_dump der
-#  Datenbank nach backups/ legen (O-77 — schlägt der Dump fehl, STOPPT das
-#  Update hier, ohne die Box anzufassen), `.env` anhand einzelner Schlüssel
-#  zusammenführen (NIE komplett ersetzen), die Box neu starten, ihre
-#  Gesundheit prüfen. Schlägt etwas fehl, werden nur DATEIEN zurückgerollt —
-#  NIE die Image-Version (J6: das ist Aufgabe des Backup-Runners, nicht dieses
-#  Skripts) und NIE die Datenbank (der pg_dump ist ein Sicherheitsnetz für den
-#  Menschen, kein automatisches Restore — O-26 bleibt offen für Letzteres).
+#  bei Fremdänderung — dann STOP), wenn eine Migration bevorsteht `backup.sh`
+#  aufrufen (O-26, geteilte Routine mit dem nächtlichen Backup-Timer —
+#  schlägt sie fehl, STOPPT das Update hier, ohne die Box anzufassen), `.env`
+#  anhand einzelner Schlüssel zusammenführen (NIE komplett ersetzen), die Box
+#  neu starten, ihre Gesundheit prüfen. Schlägt etwas fehl, werden nur
+#  DATEIEN zurückgerollt — NIE die Image-Version (J6: das ist Aufgabe des
+#  Backup-Runners, nicht dieses Skripts) und NIE die Datenbank (`backup.sh`
+#  ist ein Sicherheitsnetz für den Menschen, kein automatisches Restore —
+#  `restore.sh` bleibt offen, O-26).
 #
 #  Was dieses Skript NICHT TUT: Watchtower ersetzen (das gibt es hier nicht,
 #  J8 — zwei Aktualisierer wären ein Wettlauf), Datenbank-Migrationen selbst
@@ -133,6 +134,11 @@ docker cp praxura-bundle-tmp:/app/onprem-bundle "$BUNDLE_TMP/bundle" >/dev/null 
     "Dieses Image wurde ohne Bundle gebaut — 'praxura/api'-Dockerfile prüfen."
   exit 1
 }
+# O-26: Migration-Dateiliste des NEUEN Image — aus DEMSELBEN Konteyner
+# kopiert (onprem, O-26 tasarım turu: zweiten `docker create` nicht öffnen).
+# Nur Dateinamen zählen hier — checksum-Vergleich ist migrate.js's Job, nicht
+# eine bash-Kopie davon (aşağıdaki Schritt 8'e bak).
+docker cp praxura-bundle-tmp:/app/db/migrations "$BUNDLE_TMP/migrations" >/dev/null 2>&1 || true
 docker rm -f praxura-bundle-tmp >/dev/null 2>&1 || true
 
 MANIFEST="$BUNDLE_TMP/bundle/manifest.json"
@@ -431,104 +437,59 @@ if [ -n "$eksik_mount" ]; then
 fi
 ok "İki kapı da geçti (compose geçerli, bind-mount kaynakları yerinde)"
 
-# ── Schritt 8 — Migration-öncesi yedek (O-77, RELEASE-STANDARD.md §4.3) ─────
-# "Migration çalışmadan önce kutu vor-<sürüm> yedeği alır; yedek alınamıyorsa
-# migration ÇALIŞMAZ." Migration'lar `api` konteyneri başlarken (server.js
-# app.listen()'den ÖNCE, satır ~4536) koşuyor — yani güvenli durak burasıdır:
-# konteyneri yeniden başlatan `up -d`'den (aşağıda) hemen önce, en son burada.
+# ── Schritt 8 — Migration-öncesi yedek (O-26, backup.sh çağrısı) ───────────
+# "Migration çalışmadan önce kutu yedeği alır; yedek alınamıyorsa migration
+# ÇALIŞMAZ." Migration'lar `api` konteyneri başlarken (server.js app.listen()'
+# den ÖNCE, satır ~4536) koşuyor — yani güvenli durak burasıdır: konteyneri
+# yeniden başlatan `up -d`'den (aşağıda) hemen önce, en son burada.
 #
-# ⚠️ Kapsam bilinçli dar: bu yalnız migration'dan hemen önceki TEK bir DB
-# dump'ı. O-26'nın istediği geniş yedekleme (storage volume arşivi — reçete
-# görüntüleri/DTA/hasta belgeleri pg_dump'a hiç girmez, kutu dışı hedef,
-# 14 gün + 12 ay rotasyon, panelde "son yedek", gerçekten test edilmiş
-# restore.sh) hâlâ AÇIK — bu adım onun yerine geçmez, yalnız en acil riski
-# (yedeksiz gece migration'ı, 6347071 ile teorikten gerçeğe döndü) kapatır.
-log "[8/11] Migration'dan önce veritabanı yedeği alınıyor"
-BACKUP_DIR="$SCRIPT_DIR/backups"
-mkdir -p "$BACKUP_DIR"
-chmod 700 "$BACKUP_DIR" 2>/dev/null || true
-DB_NAME="$(env_wert POSTGRES_DB)"
-[ -n "$DB_NAME" ] || DB_NAME=postgres
+# O-77'nin ilk sürümü burada gömülü bir pg_dump bloğuydu (yalnız DB, künyesiz,
+# koşulsuz). onprem'in O-26 tasarım turu bunu YENİDEN YAZDIRDI — §4.3
+# "Faz 2.3'ün gecelik yedeğiyle aynı kod, farklı tetikleyici" kuralına uyarak:
+# gerçek iş artık `backup.sh`'ta (storage + DB + künye + rotasyon), burada
+# yalnız İKİ şey var: (a) bekleyen migration var mı diye BASİT bir kontrol —
+# §4.3'ün "bekleyen yoksa yedek de yok" kuralı — (b) varsa/belirsizse
+# backup.sh'ı çağırmak, PRAXURA_LOCK_HELD=1 ile (bu betik zaten Schritt 0'da
+# kilidi tutuyor, backup.sh'ın kendi kilidi almaya çalışması kilitlenirdi).
+#
+# ⚠️ Kasıtlı olarak APTAL bir kontrol (onprem: migrate.js'in planErstellen()'i
+# bash'te tekrar yazma — sapma yönü kötü olursa yedeksiz migration çıkar).
+# Yalnız DOSYA ADI kümesi ↔ `praxura_migrations` karşılaştırılıyor, checksum
+# yok. HER belirsizlikte (db'ye bağlanılamadı, dizin boş geldi, ayrıştırma
+# hatası) sonuç "bekleyen VAR" sayılır — tek izinli hata yönü gereksiz yedek,
+# asla yedeksiz migration değil. İkinci, kaba bir okuyucu olduğu not edildi:
+# api-backend/db/migrations/README.md.
+log "[8/11] Bekleyen migration kontrol ediliyor (yedek gerekiyor mu?)"
+BEKLEYEN_VAR=1
+MIGRATIONS_DIZIN="$BUNDLE_TMP/migrations"
+if [ -d "$MIGRATIONS_DIZIN" ]; then
+  BUNDLE_DOSYALAR="$(find "$MIGRATIONS_DIZIN" -maxdepth 1 -name '*.sql' -printf '%f\n' 2>/dev/null | sed -E 's/^([0-9]{4}).*/\1/' | sort -u)"
+  UYGULANAN_VERSIYONLAR="$(docker compose exec -T db psql -U postgres -d "$(env_wert POSTGRES_DB)" -tAc "SELECT version FROM praxura_migrations;" 2>>"$LOG_FILE" | tr -d '\r' | sort -u)"
+  if [ -n "$BUNDLE_DOSYALAR" ] && [ -n "$UYGULANAN_VERSIYONLAR" ]; then
+    EKSIK="$(comm -23 <(printf '%s\n' "$BUNDLE_DOSYALAR") <(printf '%s\n' "$UYGULANAN_VERSIYONLAR") 2>/dev/null)"
+    if [ -z "$EKSIK" ]; then
+      BEKLEYEN_VAR=0
+    fi
+  fi
+fi
 
-# onprem-Gegenlesen (12.09.2026, O-77'nin ilk sürümü commit edildikten SONRA):
-# RELEASE-STANDARD.md §4.3 madde 4.1 yedekten ÖNCE yer kontrolü istiyor.
-# `pg_dump` doğrudan Postgres'in kendi diskine yazıyor — %90 dolu bir diskte
-# yedek denemek diski doldurur, Postgres yazamaz hale gelir, praxis durur.
-# Bu, yedeksiz migration'dan DAHA KÖTÜ bir sonuçtur (§6.6'nın tarif ettiği ölüm
-# biçiminin ta kendisi). Yalnız DB boyutuna göre ölçüyor (storage arşivi henüz
-# yok, O-26'nın işi) — bu yüzden "2×" kuralı burada "2× DB boyutu + pay".
-DB_BOYUTU_BYTE="$(docker compose exec -T db psql -U postgres -d "$DB_NAME" -tAc 'SELECT pg_database_size(current_database());' 2>>"$LOG_FILE" | tr -d '[:space:]')"
-BOS_ALAN_KB="$(df -k "$BACKUP_DIR" 2>/dev/null | tail -n 1 | awk '{print $4}')"
-if [ -n "$DB_BOYUTU_BYTE" ] && [ -n "$BOS_ALAN_KB" ] && [ "$DB_BOYUTU_BYTE" -gt 0 ] 2>/dev/null; then
-  GEREKEN_KB=$(( (DB_BOYUTU_BYTE * 2 / 1024) + 102400 ))
-  if [ "$BOS_ALAN_KB" -lt "$GEREKEN_KB" ]; then
-    fehler "Yedek için yeterli disk yeri yok — güncelleme durduruldu" \
-      "${BOS_ALAN_KB} KB boş" "en az ${GEREKEN_KB} KB (2× DB boyutu + pay)" \
-      "RELEASE-STANDARD.md §6.6: dolu diskte yedek denemek Postgres'i de durdurabilir. Disk temizle (eski yedekler, 'docker system prune'), sonra yeniden dene. Bu geceki güncelleme atlandı, image'a dokunulmadı."
+if [ "$BEKLEYEN_VAR" -eq 0 ]; then
+  ok "Bekleyen migration yok — bu gece yedek atlandı (RELEASE-STANDARD.md §4.3)."
+else
+  log "  Bekleyen migration var (ya da belirsiz) — yedek alınıyor."
+  if ! PRAXURA_LOCK_HELD=1 bash "$SCRIPT_DIR/backup.sh" --sebep vor-migration; then
+    # ⚠️ backup.sh kendi geri_yukle()'sine sahip değil (update.sh'ın dahili
+    # fonksiyonu) — Schritt 7 bu noktada zaten dosya yazdı ve .env'i
+    # birleştirdi, betiğin kendi sözü ("yalnız dosyalar geri alınır") burada
+    # da geçerli olmalı (O-77 Gegenlesen'in aynı dersi).
+    geri_yukle
+    fehler "Migration-öncesi yedek alınamadı — güncelleme durduruldu, dosyalar geri alındı" \
+      "backup.sh başarısız (bkz. backup.log)" "başarılı bir yedek" \
+      "backup.log'a bak (aynı dizinde). Bu geceki güncelleme atlandı, image'a dokunulmadı."
     durumu_yaz "yedek_basarisiz"
     exit 1
   fi
-else
-  warn "Disk yeri / DB boyutu ölçülemedi (db henüz erişilemiyor olabilir) — yer kontrolü atlandı, asıl pg_dump denemesi zaten aşağıda başarısız olacak."
 fi
-
-YEDEK_DOSYA="$BACKUP_DIR/vor-${BUNDLE_SURUM:-unbekannt}-$(date -u +%Y%m%dT%H%M%SZ).dump"
-
-# `db` servisinin PGPASSWORD'u zaten kendi konteyner ortamında (compose'un
-# `environment:` bloğu) tanımlı — pg_dump onu otomatik okur, buraya sır
-# taşımaya gerek yok.
-if ! docker compose exec -T db pg_dump -U postgres -d "$DB_NAME" -Fc > "$YEDEK_DOSYA" 2>>"$LOG_FILE"; then
-  rm -f "$YEDEK_DOSYA"
-  # ⚠️ Schritt 7 bu noktada zaten dosya yazdı ve .env'i birleştirdi — betiğin
-  # kendi sözü ("Schlägt etwas fehl, werden nur DATEIEN zurückgerollt") burada
-  # da geçerli olmalı, yoksa "image'a dokunulmadı" doğru ama ".env/compose'a
-  # da dokunulmadı" YANLIŞ olurdu (gerçek kutuda test edilirken bulundu:
-  # başarısız bir yedekten sonra PRAXURA_API_IMAGE .env'de sessizce
-  # yükseltilmiş kalıyordu). geri_yukle() diğer tüm başarısızlık yollarıyla
-  # aynı garantiyi verir.
-  geri_yukle
-  fehler "Migration-öncesi yedek alınamadı — güncelleme durduruldu, dosyalar geri alındı" "pg_dump başarısız (bkz. $LOG_FILE)" \
-    "başarılı bir pg_dump çıktısı" \
-    "RELEASE-STANDARD.md §4.3: yedek alınamıyorsa migration çalışmaz. 'db' konteynerinin çalıştığından, .env'deki POSTGRES_DB/POSTGRES_PASSWORD'ün doğru olduğundan ve diskte yer olduğundan emin ol, sonra 'bash update.sh --jetzt' ile yeniden dene. Bu geceki güncelleme atlandı, image'a dokunulmadı."
-  durumu_yaz "yedek_basarisiz"
-  exit 1
-fi
-
-if [ ! -s "$YEDEK_DOSYA" ]; then
-  rm -f "$YEDEK_DOSYA"
-  geri_yukle
-  fehler "Yedek dosyası boş çıktı — güncelleme durduruldu, dosyalar geri alındı" "0 byte" "dolu bir pg_dump çıktısı" \
-    "pg_dump sessizce boş döndü — 'db' konteynerinin sağlığını kontrol et."
-  durumu_yaz "yedek_basarisiz"
-  exit 1
-fi
-
-# onprem-Gegenlesen: "boş değil" tek başına yeterli değil — yarım/kesilmiş bir
-# dump da bu testten geçer. `pg_restore -l` arşivin gerçekten okunabilir
-# olduğunu kanıtlıyor. Custom-format arşivler seek gerektirdiği için stdin'den
-# çalışmıyor (gerçek kutuda denendi: "could not open input file '-'") — dosya
-# önce konteynerin İÇİNE kopyalanıp orada listeleniyor.
-KONTROL_HEDEF="/tmp/praxura-yedek-kontrol.dump"
-if ! docker compose cp "$YEDEK_DOSYA" "db:$KONTROL_HEDEF" >>"$LOG_FILE" 2>&1 \
-   || ! docker compose exec -T db pg_restore -l "$KONTROL_HEDEF" >/dev/null 2>>"$LOG_FILE"; then
-  docker compose exec -T db rm -f "$KONTROL_HEDEF" >/dev/null 2>&1 || true
-  rm -f "$YEDEK_DOSYA"
-  geri_yukle
-  fehler "Yedek dosyası bozuk çıktı (pg_restore -l başarısız) — güncelleme durduruldu, dosyalar geri alındı" \
-    "pg_restore -l hata verdi (bkz. $LOG_FILE)" "geçerli, listelenebilir bir pg_dump arşivi" \
-    "Disk/ağ sorunu dump'ı yarım bırakmış olabilir. 'bash update.sh --jetzt' ile yeniden dene. Bu geceki güncelleme atlandı, image'a dokunulmadı."
-  durumu_yaz "yedek_basarisiz"
-  exit 1
-fi
-docker compose exec -T db rm -f "$KONTROL_HEDEF" >/dev/null 2>&1 || true
-
-chmod 600 "$YEDEK_DOSYA"
-ok "Yedek alındı: $(basename "$YEDEK_DOSYA") ($(du -h "$YEDEK_DOSYA" 2>/dev/null | cut -f1))"
-warn "Bu yedek YALNIZ veritabanını içerir, .env'i DEĞİL (O-61 (c), bilinçli tasarım). DATA_ENCRYPTION_KEY yalnız .env'de duruyor (O-29) — o olmadan şifreli hasta verisi bu yedekten geri gelmez. .env'i ayrı ve güvenli bir yerde sakla."
-
-# Rotasyon: yalnız son 5 migration-öncesi yedek. Tam O-26 rotasyonu (14 gün +
-# 12 ay, kutu dışı hedef) bunun yerini almaz — bu yalnız bir güvenlik ağı.
-ls -1t "$BACKUP_DIR"/vor-*.dump 2>/dev/null | tail -n +6 | xargs -r rm -f
 
 # ── Schritt 9 — pull + up ───────────────────────────────────────────────────
 # ⚠️ `up -d` burada `set -e`'ye bırakılmaz (`|| true` ile yumuşatılır): image
