@@ -639,6 +639,17 @@ reveal_once "  Ordner (O-61). Geht dieser Wert verloren, sind die verschlüsselt
 reveal_once "  Patientenfelder auch mit einem vollständigen Backup unlesbar."
 reveal_once "  ════════════════════════════════════════════════════════════════"
 reveal_once ""
+# O-29 (2): bis hierher wurde der Schlüssel nur GEZEIGT, nie eine Bestätigung
+# VERLANGT — ein Enter-Reflex ohne Lesen/Sichern war möglich. Kein Abbruch bei
+# Falscheingabe (anders als "LÖSCHEN" oben, Zeile 122): die Installation ist
+# an diesem Punkt bereits vollständig fertig, es gibt nichts abzubrechen —
+# nur eine Schleife, bis die Bestätigung wirklich kommt.
+while true; do
+  read -r -p "  Zum Fortfahren genau tippen, sobald der Schlüssel gesichert ist: GESICHERT " dek_bestaetigt
+  [ "$dek_bestaetigt" = "GESICHERT" ] && break
+  log "  Nicht akzeptiert ('$dek_bestaetigt') — bitte exakt GESICHERT eintippen, erst NACHDEM der Schlüssel oben in einen Tresor/zweiten Datenträger kopiert wurde."
+done
+reveal_once ""
 reveal_once "  Einrichtungs-Jeton für den Assistenten (einmalig, NICHT in install.log):"
 reveal_once ""
 reveal_once "    ${SETUP_TOKEN}"

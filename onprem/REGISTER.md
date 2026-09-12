@@ -247,13 +247,20 @@ Scheduler`) MCP ile okunup birebir Express'e taşındı (`api-backend/ai/tasks/
 series-scheduler.js`). İkinci, risksiz n8n satırı (booking bildirimi) henüz
 taşınmadı — ayrıntı kendi maddesinde.
 
-1. **O-29 madde (2)** — kurulum sihirbazı `DATA_ENCRYPTION_KEY`'i gösteriyor ama
-   "sakladım" onayı istemeden ilerliyor. Küçük, ucuz — bir sonraki `install.sh`
-   dokunuşunda birlikte yapılabilir.
-2. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
-   bir gerçek SMTP kurulumuyla SPF/DMARC doğrulaması. Kullanıcı kararıyla (12.09.2026)
-   sona bırakıldı — belki hiç yapılmaz ya da yaklaşım değişir, ilk beta kutusunda karar
-   verilecek.
+✅ **O-29 madde (2) kapandı (12.09.2026 gecesi)** — `install.sh`'ın son adımına (DEK
+gösteriminin hemen ardı) `GESICHERT` yazmadan geçilemeyen bir onay döngüsü eklendi,
+izole test edildi. O-29 artık dört kuraldan dördü tamam, tam kapalı.
+
+⏸️ **O-51 (SMTP teslim ölçümü) kullanıcı kararıyla sona bırakıldı (12.09.2026)** —
+belki hiç yapılmaz ya da yaklaşım değişir, ilk beta kutusunda karar verilecek.
+⏸️ **n8n'e dokunan işler şimdilik ertelendi (12.09.2026)** — OCR/Rezept-Scan AI
+sağlayıcı kararı netleşmeden bu alana yakın hiçbir şey yapılmayacak (bkz. memory
+`project_ocr_scan_ai_saglayici.md`).
+
+Bağımsız açık maddeler (henüz sıralanmadı, kullanıcı seçecek): **O-09** (Apify/B2B
+lead — bizim token'ımız kutuda), **O-79** (`heilmittel_katalog` besleme kapısız),
+**O-82** (`update.sh`'ın `dur` dalları merkeze bildirmiyor), **O-44** (`prescriptions`
+iki ayrı yazma yolu), **O-33** (on-prem'de "çalışan sayısı/limit" tanımsız).
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -1074,7 +1081,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | E |
 | **Kutuda ne olur** | Anahtar **her kutuda ayrı** olmak zorunda (ortak anahtar = bir kutudan sızan anahtar hepsini açar). Ama ayrı olmasının bedeli şu: anahtar `.env`'de, veri `pg_dump`'ta. Müşteri yedeği geri yüklerken anahtarı kaybetmişse **şifreli alanlar kalıcı olarak okunamaz** — hasta dokümantasyonunun bir parçası yok olur. Bu, yedekleme tasarımının (Faz 2.3) en kolay kaçırılan noktası: yedek "başarılı" görünür, geri yükleme yarım açılır |
 | **Çözüm** | ★ **`onprem/RELEASE-STANDARD.md` §4.5** — dört kural, ikisi kurulumun ikisi geri yüklemenin işi: (1) `install.sh` her kutu için rastgele üretir, ortak anahtar yasak (**Faz 2.1**); (2) sihirbaz anahtarı bir kez gösterir, "sakladım" onayı alınmadan ilerlemez, bizde kopyası yok ve olmayacak — metin bunu da söyler (**Faz 2.2**); (3) her gecelik yedeğin künyesine anahtarın **parmak izi** (HMAC, anahtarın kendisi değil) yazılır, panelde uyum rozeti durur, uyumsuzluk **o gece** kırmızıya döner (**Faz 2.4**); (4) `restore.sh` künyedeki parmak izini karşılaştırır ve uyuşmazlıkta **veriye dokunmadan** durur, zorla devam yalnız açık onayla (**Faz 2.3**) |
-| **Durum** | 🟡 **kısmen gelöst (12.09.2026 itibarıyla, dört kuraldan üçü tamam)** — (1) ✅ `install.sh:267` her kutu için `openssl rand -hex 32` ile ayrı üretiyor. (2) ⚠️ **hâlâ eksik** — `install.sh:632-640` anahtarı bir kez gösteriyor ve güçlü bir uyarı yazıyor, ama ilerlemeden önce "sakladım" tipi bir ONAY İSTEMİYOR (kullanıcı okumadan/kaydetmeden Enter'a basıp geçebilir) — bu tek başına yeni bir madde açmaya değecek kadar küçük, burada not düşülüyor. (3) ✅ `backup.sh` künyeye `data_key_fingerprint` yazıyor (O-26). (4) ✅ `restore.sh` künyedeki parmak izini karşılaştırıyor, uyuşmazlıkta veriye HİÇ dokunmadan (servisler bile durdurulmadan) sert duruyor, force bayrağı bu kontrolü ATLAMIYOR (O-26 kapanışı, bu tur — kasıtlı olarak §4.5'in "açık onayla zorla devam" seçeneğinden bile daha katı: force yok, tek çözüm doğru DEK'i geri koymak). Kalan tek gerçek boşluk (2) — küçük, kendi başına madde açmaya gerek yok, burada takip edilsin. ⚠️ **11.09.2026:** anahtar kutu paketine **hiç girmedi** — ne `.env.template`'te ne compose'da; dört kuraldan önce anahtarın pakette bir yeri olmalı → **O-50** |
+| **Durum** | ✅ **gelöst (12.09.2026, dört kuraldan dördü tamam)** — (1) ✅ `install.sh:267` her kutu için `openssl rand -hex 32` ile ayrı üretiyor. (2) ✅ **12.09.2026 kapandı** — `install.sh`'ın son adımına (`[17/17]`, DEK gösterimi hemen sonrası) bir `read -r -p` döngüsü eklendi: operatör tam olarak `GESICHERT` yazmadan script ilerlemiyor (yanlış girişte döngü tekrar sorar, script'i İPTAL ETMEZ — kurulum o noktada zaten tamamlanmış durumda, iptal edilecek bir şey yok, sadece onay bekleniyor). İzole test edildi (yanlış girişler + doğru giriş, boş girdi, küçük harf — hepsi doğru reddedildi/kabul edildi). (3) ✅ `backup.sh` künyeye `data_key_fingerprint` yazıyor (O-26). (4) ✅ `restore.sh` künyedeki parmak izini karşılaştırıyor, uyuşmazlıkta veriye HİÇ dokunmadan (servisler bile durdurulmadan) sert duruyor, force bayrağı bu kontrolü ATLAMIYOR (O-26 kapanışı — kasıtlı olarak §4.5'in "açık onayla zorla devam" seçeneğinden bile daha katı: force yok, tek çözüm doğru DEK'i geri koymak). ⚠️ **11.09.2026:** anahtar kutu paketine **hiç girmedi** — ne `.env.template`'te ne compose'da; bu ayrı madde olarak **O-50**'de takip ediliyor |
 
 ### O-30 — `.env.template` yok; kurulumda hangi değişkenin gerektiği yazılı değil
 
@@ -3422,8 +3429,8 @@ kendi girdilerine terfi etmeliler.
 |---|---|---|
 | `offen` | 11 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-79 · O-80 · O-82 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
-| 🟡 `kısmen gelöst` | 14 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-29 · O-87 · O-88 · **O-02** |
-| `gelöst` | 43 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 |
+| 🟡 `kısmen gelöst` | 13 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-87 · O-88 · O-02 |
+| `gelöst` | 44 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda
