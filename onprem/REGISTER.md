@@ -117,7 +117,9 @@ takılıp otomatik güncellemeyi kalıcı durdurabiliyordu; bu da **gelöst**, g
 kutuda hem hata hem düzeltme doğrulandı). onprem'in bildirim-sonrası denetimi
 O-77(3)'ün kendi numarası olmadığını fark etti (sicil kuralı 5) — **O-82**
 olarak ayrıldı (`update.sh`'ın hiçbir `dur` dalının kutu dışına bildirimi yok;
-O-77(3) ve O-81'in ortak deseni). Toplam **82** madde.
+O-77(3) ve O-81'in ortak deseni). O-26'nın 13.09.2026 kapanışı sırasında
+**O-83** de çıktı (`api` konteynerinde `mem_limit` yok — O-48 yalnız Kong'a
+vermişti). Toplam **83** madde.
 
 ⚠️ **Turun dersi:** "açık kalem" diye commit mesajına ya da bir maddenin içine
 yazılan iş, **O-numarası almadığı sürece yok sayılır** — §9'da görünmez, sıradaki
@@ -879,9 +881,14 @@ kapı unutmaz ama düşünmez.
 > - Gerçek bir `install.sh --neu` koşusu **17/17 adımı tamamladı** — yeni Schritt 12 (BACKUP_ZIEL sorusu, var olmayan yol için doğru uyarı) ve Schritt 16'nın yeni `praxura-backup.timer`'ı (`[ok] praxura-backup.timer aktiv`) dahil.
 > - `backup.sh --sebep manuel`, off-box hedefe (`/root/backup-target-fresh`) karşı: storage arşivlendi, DB yedeklendi + doğrulandı, künye doğru yazıldı (`ziel_ausserhalb: true`, üç parmak izi de dolu, `schema_version: "0014"`).
 > - **Migration-gate mantığı temiz bir kutuda iki yönde de doğrulandı:** (a) bekleyen migration yokken → `[ok] Bekleyen migration yok — bu gece yedek atlandı`, hiç `backup.sh` çağrılmadı (birden fazla kez tekrarlandı). (b) `0014`'ü elle sildikten sonra (bekleyen migration simülasyonu) → `(bundle: 14 dosya · uygulanan: 13 satır · eksik: 0014)` → `backup.sh --sebep vor-migration` doğru çağrıldı, `vor-migration-*` dizini off-box hedefte oluştu.
-> - ⚠️ **Bir yan yol notu:** bu tur sırasında, SAATLERCE test edilmiş ESKİ bir kutuda aynı senaryo TUTARSIZ sonuç verdi (bazen 0014 update.sh'tan bağımsız olarak saniyeler içinde yeniden beliriyordu — izole edildi, update.sh hiç çalışmadan da oluyordu). Temiz bir `--neu` kurulumla bu tutarsızlık **tamamen kayboldu** — mantığın kendisi değil, saatlerce süren yoğun test turlarının o TEK kutuda biriktirdiği bir anomali olduğu sonucuna varıldı. Kayıt altına alınıyor ki bir dahaki sefere "acaba mantık mı yanlış" diye üçüncü kez araştırılmasın.
+> - ⚠️ **Bir test tuzağı, kök sebebiyle birlikte çözüldü (onprem, bildirim-sonrası denetim):** bu tur sırasında, SAATLERCE test edilmiş ESKİ bir kutuda aynı senaryo TUTARSIZ sonuç verdi (bazen 0014 update.sh'tan bağımsız olarak saniyeler içinde yeniden beliriyordu). Kök sebep bulundu: `api-backend/server.js` her süreç açılışında `runMigrations()`'ı çalıştırıyor, `api-backend/Dockerfile` ise `pm2-runtime -i 2` ile **konteyner başına değil, süreç başına** iki işçi koşturuyor. **Herhangi bir** işçinin yeniden başlaması (OOM-kill, çökme, `docker restart`, Watchtower) runner'ı tekrar tetikler ve eksik bir migration'ı sessizce yeniden uygular. Eski kutu saatlerce yük altındaydı ve `api` konteynerinde `mem_limit` yok, VPS'te swap yok (OOM riski zaten ölçülüydü, bkz. §… disk/bellek notları) — temiz, boştaki kutuda yeniden başlayan bir şey olmadığı için anomali hiç görünmedi. **"Bir satırı elle `DELETE` edip bekleyen migration simüle etme" testi, ancak arada HİÇBİR süreç yeniden başlamazsa geçerlidir** — bir dahaki sefere bu not okunmadan "mantık mı yanlış" diye üçüncü kez araştırılmasın.
+> - ✅ **Bu denetim ayrıca gerçek bir bug buldu ve kapattı** (aynı gün, commit `88ec23c`): `backup.sh`'ın künyesi `schema_version`'ı dump'tan SONRA okuyordu — yukarıdaki pencerede bir işçi migration uygularsa künye, dump'ın içindekinden bir sürüm **ileri** bir sayı iddia ederdi. Artık dump'tan ÖNCE ve SONRA okunup karşılaştırılıyor; farklıysa yedek "güvenilmez" sayılıp iptal ediliyor.
 >
 > ⚠️ **Kapsam bilinçli dar — TAM kapatmıyor:** `restore.sh` yok (§4.5 madde 4, O-29'un tam kapanışı buna bağlı — bugün künyede parmak izleri var ama onları OKUYAN/karşılaştıran bir araç yok). SSH/rsync hedef sürücüsü yok (kendi O-numarası bekliyor). O-82 (bildirim kanalı) hâlâ ayrı, açık. Panelde "son yedek: X" göstergesi yok (Faz 2.4).
+>
+> **`restore.sh` için iki tasarım şartı, onprem'in O-26 bildirim-sonrası denetiminden (13.09.2026):**
+> 1. **`praxura_migrations` defteri ve veri, restore'da ATOMİK gelmeli** — biri diğerinden ileri/geri kalırsa (dolu bir veritabanı + eski bir defter, ya da tam tersi), konteyner açılışında `runMigrations()` kimseye sormadan migration uygulamaya (ya da atlamaya) başlar. `backup.sh` zaten `db.dump`'ın İÇİNDE `praxura_migrations` tablosunu taşıyor (tam dump, ayrı tutulmuyor) — `restore.sh` bunu KORUMALI, defteri ayrı bir adımda geri yüklememeli.
+> 2. **Künye karşılaştırması konteyner BAŞLAMADAN ÖNCE yapılmalı, sonra değil.** Yeni bir dump (ör. şema 0014) eski bir image'a (ör. yalnız 0011'i bilen) yüklenirse, runner "bekleyen yok" der ve mutlu açılır — kod gelecekten bir şemaya karşı çalışır, sessizce. `restore.sh` geri yüklemeden önce künyedeki `schema_version`'ı hedef image'ın bildiği migration'larla karşılaştırıp uyuşmazlıkta durmalı.
 >
 > Commit'ler: `903a7a2` (backup.sh + wiring) · `ee84568`→`9a340c6` (migration-check teşhis + temizlik).
 
@@ -2978,6 +2985,19 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
+### O-83 — `api` konteynerinde `mem_limit` yok; VPS'te swap da yok — OOM kill migration'ın ortasında yakalayabilir
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | O-48 (Kong konsey kararı) yalnız Kong'a `mem_limit` verdi (886 MB ölçüm tartışmasının konusu oydu). `api` konteyneri (`pm2-runtime -i 2`, iki işçi) hâlâ sınırsız — sınırsız bir konteyner bellek basıncında kernel'in OOM-killer'ı tarafından **beklenmedik bir anda** öldürülebilir, tam bir migration'ın ya da `backup.sh`'ın `pg_dump`'ının ortasında olabilir |
+| **Nerede** | `onprem/docker-compose.yml` — `api` servisi bloğu, `mem_limit` satırı yok. Karşılaştır: `kong` servisi (O-48'den beri var) |
+| **Tip** | F (dayanıklılık) |
+| **Kutuda ne olur** | O-26 bildirim-sonrası denetiminin bulduğu şey tam bu: bir PM2 işçisi (OOM-kill dahil) yeniden başlarsa `runMigrations()` sessizce tekrar tetiklenir. `backup.sh`'ın yeni önce/sonra `schema_version` kontrolü (bu turda eklendi) bu durumu **yakalar ve yedeği iptal eder** — ama asıl kararlılık sorunu (neden bir işçi hiç yeniden başlıyor) çözülmüş olmaz, yalnız sonucu artık sessizce yanlış bir künyeye dönüşmüyor |
+| **Çözüm** | `api` servisine de `mem_limit` (VPS'in 2 vCPU/3.7 GB profiline göre ölçülmüş bir değer — O-48'in Kong için yaptığı gibi gerçek ölçümle, tahminle değil) + `docker compose logs api --since` ile OOM-kill izlerinin (`OOMKilled: true` `docker inspect`'te) kontrolü. Swap yokluğu (`INFRASTRUCTURE.md`/sicil zaten not etmişti) ayrı, daha büyük bir VPS kararı — bu madde yalnız konteyner sınırını kapsıyor |
+| **Durum** | `offen`. Kaynağı: O-26 bildirim-sonrası denetimi (onprem, 13.09.2026) — künye tutarlılık bug'ını (O-26'nın kendi maddesi, `88ec23c`) ararken bulundu |
+
+---
+
 ## 8. Kapı — sayaçlar ve tabanlar
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -3031,13 +3051,13 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 82 madde** (O-01 … O-82). ⚠️ O-53 ve O-54'ün kendi `###` girdisi yok;
+**Toplam 83 madde** (O-01 … O-83). ⚠️ O-53 ve O-54'ün kendi `###` girdisi yok;
 O-01'in not bloğunda yaşıyorlar — kaybolmaya açıklar, ileride kendi girdilerine
 terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · **O-82** |
+| `offen` | 13 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · O-82 · **O-83** |
 | `geplant` | 15 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-29 · O-31 · O-43 |
 | 🟡 `kısmen gelöst` | 10 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 |
 | `gelöst` | 34 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · **O-77** · **O-81** |
