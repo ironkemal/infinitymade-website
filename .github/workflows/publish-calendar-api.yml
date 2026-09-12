@@ -248,11 +248,12 @@ jobs:
       #       nicht weniger? (die Rückrichtung — im Manifest gelistet, aber im
       #       Bundle fehlend — lief bisher NIE mit und lässt update.sh nachts
       #       auf einer Kundenbox scheitern)
-      # ⚠️ O-26 (13.09.2026): backup.sh dazugekommen — 15 Dateien, 14 ANDERE.
+      # ⚠️ O-26 (13.09.2026): backup.sh dazugekommen. restore.sh (12.09.2026,
+      # O-26 Abschluss) ebenfalls — Zähler bleibt dynamisch, keine Hardcode-Zahl.
       - name: Smoke test — onprem-Bundle ist im Image
         run: |
           set -e
-          BUNDLE_DATEIEN="docker-compose.yml .env.template install.sh update.sh lib-health.sh backup.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql"
+          BUNDLE_DATEIEN="docker-compose.yml .env.template install.sh update.sh lib-health.sh backup.sh restore.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql"
           bundle_anzahl=$(echo $BUNDLE_DATEIEN | wc -w)
 
           docker create --name bundle-check calendar-api:smoke >/dev/null

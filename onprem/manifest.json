@@ -3,10 +3,11 @@
   "dateien": [
     { "yol": "docker-compose.yml", "sha256": "57e25f313e4e7fa7f75f6ca91b34d77b8f8db04665d6922a2a2c5966a92474d0" },
     { "yol": ".env.template", "sha256": "64d5e11e5b18f8ef2486db3671a11a8a3d0894b9c63403608c3d3e0e41dad4ed" },
-    { "yol": "install.sh", "sha256": "98f25cecf9d50e1e242682d49c8aae57d376cbdca6d0865382f740277e04b762" },
+    { "yol": "install.sh", "sha256": "88f2d9f095df5da6234fcb8dc7534a0525be1402673ba435e3ecd0bae4a73eda" },
     { "yol": "update.sh", "sha256": "6a7f4ef395d98125ae43409a3c969b918adf763ca7f08640bae4acf7cb06a6db" },
     { "yol": "lib-health.sh", "sha256": "ac3df970f980f9810db85e9b8daf78f1b63d7cc287c73b83a5ae77eeeb37b819" },
     { "yol": "backup.sh", "sha256": "e304114618762329aea85fc463deb6ce5b40247d247e91b22bd2c04e938017ac" },
+    { "yol": "restore.sh", "sha256": "31e4f42a790dcdf1e46cc55d7428dab1a884307a0431dc1863583399c2a89d00" },
     { "yol": "volumes/api/kong.yml", "sha256": "ffa5733a1ef043f4d62cc6b957d8591343886293645cfe16a200d7a1e89a73e8" },
     { "yol": "volumes/api/kong-entrypoint.sh", "sha256": "399394576635f7477dfee32e870f509567fc496f0dc86a5a6611f58d1099031f" },
     { "yol": "volumes/db/_supabase.sql", "sha256": "9dce462adc04137d6afabcf28efa60a6c355270a4b32d7af58891ac4eb964c5f" },

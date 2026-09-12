@@ -562,6 +562,10 @@ EOF
   # PRAXURA_LOCK_HELD boşsa alır) — hangisi önce başlarsa diğeri o gece
   # atlanır, ikisi aynı anda pg_dump/`up -d` yapıp yarım bir yedek üretmesin.
   chmod +x "$SCRIPT_DIR/backup.sh"
+  # restore.sh (O-26 kapanışı, 12.09.2026): zamanlanmış bir iş DEĞİL — yalnız
+  # elle çağrılan bir felaket kurtarma aracı, systemd birimi yok. Yalnızca
+  # çalıştırılabilir bit'i tutarlılık için ayarlanıyor.
+  chmod +x "$SCRIPT_DIR/restore.sh" 2>/dev/null || true
   cat > /etc/systemd/system/praxura-backup.service <<EOF
 [Unit]
 Description=Praxura On-Premise — gecelik yedek (O-26)

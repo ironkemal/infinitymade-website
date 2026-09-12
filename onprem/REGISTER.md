@@ -187,13 +187,17 @@ db'de 3× başarılı yedek, durdurulmuş db'de 1× başarısızlık+tam geri al
 byte-özdeş doğrulandı), 1× tam başarı yolu (`sonuc=ok`). Kanıt ve commit'ler: kendi
 maddesinde (O-77).
 
-✅ **O-26'nın dar kapsamı kapandı (13.09.2026, gerçek kutuda `--neu` kurulumla
-uçtan uca doğrulandı) — `onprem/backup.sh` artık storage+DB+künye+rotasyon+kota
-alıyor, dizin hedefine (kutu dışı dahil) yazıyor, `update.sh` ve yeni
-`praxura-backup.timer` onu paylaşıyor.** Kalan gerçek boşluk: `restore.sh` hiç
-yazılmadı — "yedek aldık ama geri yüklenebildiğini hiç denemedik" hâlâ bugüne
-kadarki en gerçekçi risk, ve SSH/rsync hedef sürücüsü henüz yok. Kanıt ve
-commit'ler: kendi maddesinde (O-26).
+✅ **O-26 artık TAM kapalı (12.09.2026, `restore.sh` yazıldı ve gerçek kutuda
+uçtan uca doğrulandı)** — `onprem/backup.sh` storage+DB+künye+rotasyon+kota
+alıyor, `onprem/restore.sh` geri yüklüyor: üç parmak izi konteynerler
+durdurulmadan ÖNCE karşılaştırılıyor (DEK uyuşmazlığı sert DUR, force yok),
+şema-sürümü kapısı `update.sh`'ın tekniğiyle aynı, veritabanı SİLİNMEDEN
+yeniden adlandırılıp boş bir kopyaya restore ediliyor (yarıda kalırsa eski
+veri kaybolmuyor). Gerçek kutuda: nokta-kurtarma senaryosu uçtan uca çalıştı
+(bozulma satırı silinip orijinal geri geldi), iptal yolu güvenli, DEK
+uyuşmazlığı hiçbir servise dokunmadan sert durdu. Kalan gerçek boşluk:
+SSH/rsync hedef sürücüsü (yalnız dizin/mount var), kendi O-numarasını
+bekliyor. Kanıt ve commit'ler: kendi maddesinde (O-26).
 
 ✅ **O-83 kapandı (12.09.2026, O-26 bildirim-sonrası denetiminden çıktı, aynı
 gün kapatıldı) — `api` konteynerine üç katman: `--max-old-space-size=256`
@@ -213,23 +217,25 @@ de gerçek ölçümün (~295 MB/işçi) altında kalıyordu. İkisi de düzeltil
 ile bayraklar ve yeni limit (1200m) doğrulandı, `/api/services/public` ve n8n'in kendi
 `/api/v1/workflows`'u sağlam. Repo ve VPS artık senkron. Kendi maddesinde tam detay.
 
-1. **`restore.sh` — hiç yazılmayan, hiç test edilmeyen geri yükleme.** ★ Şimdi
-   sıradaki 1. `backup.sh` künyeye üç parmak izi yazıyor ama onları OKUYAN/
-   karşılaştıran taraf yok — O-29'un §4.5 madde 4'ü (DEK uyuşmazlığında veriye
-   dokunmadan durma) hâlâ kağıt üzerinde. "Yedek var" ile "yedekten gerçekten
-   dönebiliyoruz" arasındaki fark kapanmadan bu risk gerçek kalır.
-2. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8 kontrolleri (10 şema sayaçı, RLS negatif testi,
+✅ **`restore.sh` yazıldı ve doğrulandı (12.09.2026)** — eski 1. madde buydu, artık
+O-26'nın kendi kapanış notunda. "Yedek var" ile "yedekten gerçekten dönebiliyoruz"
+arasındaki fark artık kapalı.
+
+1. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8 kontrolleri (10 şema sayaçı, RLS negatif testi,
    `DATA_ENCRYPTION_KEY` yaz-oku turu). Sahipsiz kalmış borç; kurulumun "başarılı
    sayılır" tanımı bunlar olmadan eksik.
-3. **O-78 — ICD-10-GM atıf satırı.** Küçük iş (bir `NOTICE-QUELLEN.txt` + Dashboard'da
+2. **O-78 — ICD-10-GM atıf satırı.** Küçük iş (bir `NOTICE-QUELLEN.txt` + Dashboard'da
    tek satır), ama **hukuki yükümlülük**: 16.905 satırlık resmî veri paketin içinde
    atıfsız duruyor. İlk teslimattan **önce** inmeli — sonra inerse ihlal gerçekleşmiş
    olur.
-4. **Faz 1.2** (O-02) — kutuda `N8N_AI_SERIES_URL` boş kalınca kod **sabit n8n adresine
+3. **Faz 1.2** (O-02) — kutuda `N8N_AI_SERIES_URL` boş kalınca kod **sabit n8n adresine
    düşüyor** ve hasta adı bize gelir (G1). İlk **ücretli** kutudan önce inmeli.
    ⚠️ Kutunun CSP'si bunu engellemez — çağrı tarayıcıdan değil **backend'den** çıkıyor.
-5. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
+4. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
    bir gerçek SMTP kurulumuyla SPF/DMARC doğrulaması. İlk beta kutusunda yapılabilir.
+5. **O-29 madde (2)** — kurulum sihirbazı `DATA_ENCRYPTION_KEY`'i gösteriyor ama
+   "sakladım" onayı istemeden ilerliyor. Küçük, ucuz — bir sonraki `install.sh`
+   dokunuşunda birlikte yapılabilir.
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -887,7 +893,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | F |
 | **Kutuda ne olur** | Kutu **yedeksiz** kurulur. Müşteri sunucusunda veri kaybı = hasta dokümantasyonu kaybı = bizim değil müşterinin sorumluluğu, ama ürün "yedek yok" diye teslim edilirse satışta ve hukukta savunulamaz. Ayrıca playbook D3'ün uyarısı geçerli: `pg_dump` **storage dosyalarını yedeklemez** — reçete görüntüleri, DTA dosyaları, hasta belgeleri 5 bucket'ta duruyor |
 | **Çözüm** | **Faz 2.3** — gecelik `pg_dump` + storage volume arşivi tek yedek seti; hedef Hetzner Storage Box/lokal dizin; 14 gün + 12 ay rotasyon; panelde "son yedek: X" ve başarısızlıkta uyarı; `restore.sh` + gerçekten test edilmiş geri yükleme |
-| **Durum** | ✅ **gelöst (13.09.2026, dar kapsam — bkz. not) — gerçek kutuda, temiz bir `--neu` kurulumla uçtan uca doğrulandı** |
+| **Durum** | ✅ **gelöst (12.09.2026) — `restore.sh` yazıldı, gerçek kutuda uçtan uca doğrulandı. Madde artık TAM kapalı, bkz. aşağıdaki 12.09.2026 kapanış notu** |
 
 > **Ne yapıldı:** `onprem/backup.sh` — paylaşılan rutin ("aynı kod, farklı tetikleyici", onprem'in madde 2'si). Adımlar: storage arşivi (`tar`, DB'den ÖNCE — madde 3) → `pg_dump -Fc` → `pg_restore -l` bütünlük testi (O-77'den taşındı) → `backup.meta.json` künyesi (`schema_version`, `app_version`, `image_digest`, `dump_bytes`/`storage_bytes`, `ziel_ausserhalb`, **üç** parmak izi — DEK + JWT_SECRET + POSTGRES_PASSWORD, madde 4 — hiçbiri host'un argv'sine düşmez: DEK `api` konteynerinde node'un `crypto` modülüyle, JWT/PGPW `db` konteynerinde `pgcrypto`'nun `hmac()`'iyle, `psql -f` üzerinden çünkü `-c`/`-tAc`'de `:'var'` ilintileme ÇALIŞMIYOR — gerçek kutuda bulundu) → atomik yazım (`.tmp-*/` → tek `mv`) → ad uzayı ayrılmış rotasyon (`vor-migration-*`: son 3 · `nightly-*`/`manuel-*`: 14 gün + her takvim ayının en eski gecelik yedeği 12 ay — madde 6) → `BACKUP_MAX_GB` kotası (§6.6).
 >
@@ -902,13 +908,84 @@ kapı unutmaz ama düşünmez.
 > - ⚠️ **Bir test tuzağı, kök sebebiyle birlikte çözüldü (onprem, bildirim-sonrası denetim):** bu tur sırasında, SAATLERCE test edilmiş ESKİ bir kutuda aynı senaryo TUTARSIZ sonuç verdi (bazen 0014 update.sh'tan bağımsız olarak saniyeler içinde yeniden beliriyordu). Kök sebep bulundu: `api-backend/server.js` her süreç açılışında `runMigrations()`'ı çalıştırıyor, `api-backend/Dockerfile` ise `pm2-runtime -i 2` ile **konteyner başına değil, süreç başına** iki işçi koşturuyor. **Herhangi bir** işçinin yeniden başlaması (OOM-kill, çökme, `docker restart`, Watchtower) runner'ı tekrar tetikler ve eksik bir migration'ı sessizce yeniden uygular. Eski kutu saatlerce yük altındaydı ve `api` konteynerinde `mem_limit` yok, VPS'te swap yok (OOM riski zaten ölçülüydü, bkz. §… disk/bellek notları) — temiz, boştaki kutuda yeniden başlayan bir şey olmadığı için anomali hiç görünmedi. **"Bir satırı elle `DELETE` edip bekleyen migration simüle etme" testi, ancak arada HİÇBİR süreç yeniden başlamazsa geçerlidir** — bir dahaki sefere bu not okunmadan "mantık mı yanlış" diye üçüncü kez araştırılmasın.
 > - ✅ **Bu denetim ayrıca gerçek bir bug buldu ve kapattı** (aynı gün, commit `88ec23c`): `backup.sh`'ın künyesi `schema_version`'ı dump'tan SONRA okuyordu — yukarıdaki pencerede bir işçi migration uygularsa künye, dump'ın içindekinden bir sürüm **ileri** bir sayı iddia ederdi. Artık dump'tan ÖNCE ve SONRA okunup karşılaştırılıyor; farklıysa yedek "güvenilmez" sayılıp iptal ediliyor.
 >
-> ⚠️ **Kapsam bilinçli dar — TAM kapatmıyor:** `restore.sh` yok (§4.5 madde 4, O-29'un tam kapanışı buna bağlı — bugün künyede parmak izleri var ama onları OKUYAN/karşılaştıran bir araç yok). SSH/rsync hedef sürücüsü yok (kendi O-numarası bekliyor). O-82 (bildirim kanalı) hâlâ ayrı, açık. Panelde "son yedek: X" göstergesi yok (Faz 2.4).
+> ⚠️ **12.09.2026'ya kadar kapsam bilinçli dar idi** — `restore.sh` yoktu (§4.5 madde 4, O-29'un tam kapanışı buna bağlıydı). SSH/rsync hedef sürücüsü hâlâ yok (kendi O-numarası bekliyor). O-82 (bildirim kanalı) hâlâ ayrı, açık. Panelde "son yedek: X" göstergesi yok (Faz 2.4).
 >
 > **`restore.sh` için iki tasarım şartı, onprem'in O-26 bildirim-sonrası denetiminden (13.09.2026):**
 > 1. **`praxura_migrations` defteri ve veri, restore'da ATOMİK gelmeli** — biri diğerinden ileri/geri kalırsa (dolu bir veritabanı + eski bir defter, ya da tam tersi), konteyner açılışında `runMigrations()` kimseye sormadan migration uygulamaya (ya da atlamaya) başlar. `backup.sh` zaten `db.dump`'ın İÇİNDE `praxura_migrations` tablosunu taşıyor (tam dump, ayrı tutulmuyor) — `restore.sh` bunu KORUMALI, defteri ayrı bir adımda geri yüklememeli.
 > 2. **Künye karşılaştırması konteyner BAŞLAMADAN ÖNCE yapılmalı, sonra değil.** Yeni bir dump (ör. şema 0014) eski bir image'a (ör. yalnız 0011'i bilen) yüklenirse, runner "bekleyen yok" der ve mutlu açılır — kod gelecekten bir şemaya karşı çalışır, sessizce. `restore.sh` geri yüklemeden önce künyedeki `schema_version`'ı hedef image'ın bildiği migration'larla karşılaştırıp uyuşmazlıkta durmalı.
 >
 > Commit'ler: `903a7a2` (backup.sh + wiring) · `ee84568`→`9a340c6` (migration-check teşhis + temizlik).
+>
+> ---
+>
+> ### ✅ Kapanış (12.09.2026) — `restore.sh` yazıldı ve gerçek kutuda doğrulandı
+>
+> **Tasarım onprem'le önceden onaylandı** (üçüncü konsültasyon): künye kontrolü
+> (üç parmak izi) `api`/`db` HENÜZ durdurulmadan, konteynerlerin kendi ortamından
+> — DEK uyuşmazlığı **sert DUR** (force yok, çözüm eski DEK'i `.env`'e geri
+> koymak) · JWT_SECRET uyuşmazlığı **DUR + `--force`** (Realtime tenant sırrı
+> kırılma riski uyarısı) · POSTGRES_PASSWORD uyuşmazlığı yalnız **uyarı**
+> (restore sonrası `99-roles.sql` yeniden uygulanınca kendiliğinden düzeliyor).
+> Şema-sürümü kapısı `update.sh`'ın **aynı** `docker create` (başlatmadan) +
+> migration dosya listesi tekniğini kullanıyor. Onay kelimesi `WIEDERHERSTELLEN`.
+> `--von` asla uzak/URL kabul etmiyor (G1).
+>
+> **Gerçek kutuda test edilirken plan İKİ kez, iki gerçek Postgres bulgusuyla değişti:**
+> 1. **`postgres` bu kutuda gerçek superuser DEĞİL, `supabase_admin`.** İlk
+>    `pg_restore -U postgres --clean` denemesi "must be owner of event trigger
+>    pgrst_drop_watch" ile durdu. Aynı ayrım zaten `api-backend/docker-compose.yml`'in
+>    `DATABASE_URL` yorumunda var ("postgres darf fremde Vorgaberechte nicht
+>    aendern") — ama `restore.sh` ilk yazımda bunu tekrar keşfetmek zorunda
+>    kaldı. `-U supabase_admin`'e geçildi (pg_restore, roller/JWT yeniden
+>    uygulama, pg_terminate_backend — hepsi).
+> 2. **Supabase Realtime'ın günlük partisyonladığı `realtime.messages_*`
+>    tabloları `pg_restore --clean` ile uyumsuz** — miras kısıt (`_pkey`)
+>    partisyon çocuğunda tek başına DROP edilemiyor (bilinen bir pg_dump/
+>    `--clean` sınırı). Çözüm cerrahi temizlik yerine: mevcut veritabanını
+>    **SİLMEDEN yeniden adlandır** (`postgres` → `postgres_onceki_<zaman>`),
+>    **boş** bir `postgres` yarat, dump'ı oraya restore et. İki kazanç: (a) hiç
+>    `--clean` sürprizi kalmıyor (b) restore YARIDA KALIRSA eski veritabanı
+>    kaybolmuyor, adı değişmiş hâlde duruyor — `storage.tar.gz`'nin `.alt-<zaman>`
+>    deseniyle aynı mantık, kullanıcı elle `ALTER DATABASE ... RENAME TO` ile
+>    geri dönebiliyor. Eski veritabanı restore sonrası da SİLİNMİYOR — admin'e
+>    "memnun olunca elle temizle" komutu logda bırakılıyor.
+>
+> **Doğrulama (WSL2 Ubuntu-24.04, gerçek Docker, gerçek kutu):**
+> - **Gerçek nokta-kurtarma senaryosu uçtan uca çalıştı:** test tablosuna bir
+>   satır yazıldı → `backup.sh --sebep manuel` ile yedeklendi → yedek SONRASI
+>   satır silinip yerine başka bir satır eklendi ("bozulma" simülasyonu) →
+>   `restore.sh --von <yedek>` → `WIEDERHERSTELLEN` onayıyla çalıştı → tablo
+>   TAM olarak yedek anındaki hâline döndü (bozulma satırı yok, orijinal satır
+>   geri geldi) — genuine point-in-time restore kanıtlandı, sadece "dosya var"
+>   değil.
+> - **İptal yolu güvenli:** yanlış onay kelimesi (`nope`) → `iptal edildi,
+>   hiçbir şey değiştirilmedi`, hiçbir servis durdurulmadı, hiçbir veri
+>   değişmedi.
+> - **DEK uyuşmazlığı — asıl kritik test:** `.env`'e bilerek FARKLI bir
+>   `DATA_ENCRYPTION_KEY` konup `api` yeniden yaratıldıktan sonra `restore.sh`
+>   çalıştırıldı — **onay istemine hiç ulaşmadan**, künye kontrolünde sert
+>   durdu, hiçbir servis dokunulmadı (`docker compose ps` — hepsi hâlâ ayakta,
+>   önceki durumdan değişmemiş). Force bayrağı bu kontrolü atlamıyor (kasıtlı).
+> - Restore sonrası: `api` sağlıklı, `praxura_migrations` satır sayısı doğru,
+>   roller/JWT `99-roles.sql`/`99-jwt.sql` ile yeniden senkronlandı, storage
+>   eski hâli `.alt-<zaman>` olarak korunarak değiştirildi.
+> - Geçersiz/bulunamayan yedek adı → temiz `exit 1`, açıklayıcı mesaj, hiçbir
+>   yan etki.
+>
+> **Bilinçli bırakılan boşluk:** JWT_SECRET uyuşmazlığında `--force` yolunun
+> fiilen kullanılması bu turda test edilmedi (DEK yolu — daha kritik olan —
+> test edildi). Şema-sürümü kapısının "yedek image'dan yeni" DUR dalı da bu
+> turda tetiklenmedi (mantığı `update.sh`'ın zaten kanıtlanmış tekniğinin
+> birebir aynısı, ayrıca doğrulanmadı).
+>
+> **Bundle/paket:** `restore.sh`, `backup.sh`'ın izlediği yoldan bundle'a
+> eklendi — `tools/onprem-manifest.mjs`, `api-backend/Dockerfile` COPY listesi,
+> `.github/workflows/publish-calendar-api.yml` smoke test listesi (sayaç
+> dinamik kaldı, O-25/R0 dersi tekrarlanmadı), `install.sh`'a `chmod +x`
+> satırı (systemd birimi YOK — elle çağrılan bir araç, zamanlanmış değil).
+>
+> Commit(ler): bu turda, `onprem/restore.sh` (yeni dosya) + yukarıdaki bundle
+> dosyaları.
 
 > **onprem'in O-26'ya başlamadan önce onaylanmasını istediği 6 tasarım noktası (12.09.2026, O-77 bildirim turunda):**
 > 1. **Hetzner Storage Box'ı koda yazma.** §4.3 onu varsayılan diye adlandırıyor ama bu bizim rahatımıza yazılmış bir varsayım. Kutu-agnostik iki sürücü yeter: **(a) bir dizin yolu** (lokal disk veya müşterinin NAS'ının SMB/NFS mount'u — kod farkı sıfır) ve **(b) rsync/SFTP over SSH** (host+anahtar müşteriden). Storage Box ikisinin de bir örneği olur. Kimlik bilgisi her zaman **müşterinin** (K4/K5), bizim altyapımız hiçbir zaman geçerli hedef değil — **G1 sert veto**, bir "Praxura bulutuna yedek" seçeneği asla gündeme gelmemeli.
@@ -976,7 +1053,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | E |
 | **Kutuda ne olur** | Anahtar **her kutuda ayrı** olmak zorunda (ortak anahtar = bir kutudan sızan anahtar hepsini açar). Ama ayrı olmasının bedeli şu: anahtar `.env`'de, veri `pg_dump`'ta. Müşteri yedeği geri yüklerken anahtarı kaybetmişse **şifreli alanlar kalıcı olarak okunamaz** — hasta dokümantasyonunun bir parçası yok olur. Bu, yedekleme tasarımının (Faz 2.3) en kolay kaçırılan noktası: yedek "başarılı" görünür, geri yükleme yarım açılır |
 | **Çözüm** | ★ **`onprem/RELEASE-STANDARD.md` §4.5** — dört kural, ikisi kurulumun ikisi geri yüklemenin işi: (1) `install.sh` her kutu için rastgele üretir, ortak anahtar yasak (**Faz 2.1**); (2) sihirbaz anahtarı bir kez gösterir, "sakladım" onayı alınmadan ilerlemez, bizde kopyası yok ve olmayacak — metin bunu da söyler (**Faz 2.2**); (3) her gecelik yedeğin künyesine anahtarın **parmak izi** (HMAC, anahtarın kendisi değil) yazılır, panelde uyum rozeti durur, uyumsuzluk **o gece** kırmızıya döner (**Faz 2.4**); (4) `restore.sh` künyedeki parmak izini karşılaştırır ve uyuşmazlıkta **veriye dokunmadan** durur, zorla devam yalnız açık onayla (**Faz 2.3**) |
-| **Durum** | `geplant` (Faz 2.1 + 2.2 + 2.3 + 2.4) — gereksinim `RELEASE-STANDARD.md` §4.4-§4.5'te yazıldı. Playbook D6 Vault'u ele alıyordu, `DATA_ENCRYPTION_KEY` hiçbir fazda geçmiyordu; artık geçiyor. `gelöst` olması için dördü de uygulanıp commit numarasının buraya yazılması gerekir. ⚠️ **11.09.2026:** anahtar kutu paketine **hiç girmedi** — ne `.env.template`'te ne compose'da; dört kuraldan önce anahtarın pakette bir yeri olmalı → **O-50** |
+| **Durum** | 🟡 **kısmen gelöst (12.09.2026 itibarıyla, dört kuraldan üçü tamam)** — (1) ✅ `install.sh:267` her kutu için `openssl rand -hex 32` ile ayrı üretiyor. (2) ⚠️ **hâlâ eksik** — `install.sh:632-640` anahtarı bir kez gösteriyor ve güçlü bir uyarı yazıyor, ama ilerlemeden önce "sakladım" tipi bir ONAY İSTEMİYOR (kullanıcı okumadan/kaydetmeden Enter'a basıp geçebilir) — bu tek başına yeni bir madde açmaya değecek kadar küçük, burada not düşülüyor. (3) ✅ `backup.sh` künyeye `data_key_fingerprint` yazıyor (O-26). (4) ✅ `restore.sh` künyedeki parmak izini karşılaştırıyor, uyuşmazlıkta veriye HİÇ dokunmadan (servisler bile durdurulmadan) sert duruyor, force bayrağı bu kontrolü ATLAMIYOR (O-26 kapanışı, bu tur — kasıtlı olarak §4.5'in "açık onayla zorla devam" seçeneğinden bile daha katı: force yok, tek çözüm doğru DEK'i geri koymak). Kalan tek gerçek boşluk (2) — küçük, kendi başına madde açmaya gerek yok, burada takip edilsin. ⚠️ **11.09.2026:** anahtar kutu paketine **hiç girmedi** — ne `.env.template`'te ne compose'da; dört kuraldan önce anahtarın pakette bir yeri olmalı → **O-50** |
 
 ### O-30 — `.env.template` yok; kurulumda hangi değişkenin gerektiği yazılı değil
 
@@ -3099,16 +3176,19 @@ terfi etmeliler.
 | Durum | Adet | Maddeler |
 |---|---|---|
 | `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · O-82 |
-| `geplant` | 15 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-29 · O-31 · O-43 |
-| 🟡 `kısmen gelöst` | 10 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 |
+| `geplant` | 14 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 |
+| 🟡 `kısmen gelöst` | 11 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · **O-29** |
 | `gelöst` | 36 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · O-83 · **O-84** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
-> ⚠️ **O-26 `gelöst` yazıyor ama dar kapsamlı** (yalnız dizin sürücüsü, `restore.sh` yok) — kendi maddesine bak.
-
+> ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda
+> doğrulandı (kendi maddesindeki kapanış notuna bak). Kalan tek gerçek boşluk:
+> SSH/rsync hedef sürücüsü (yalnız dizin/mount destekleniyor), kendi O-numarasını
+> bekliyor — henüz açılmadı.
+>
 > ⚠️ **O-77 `gelöst` yazıyor ama dar kapsamlı** (yalnız migration-öncesi tek bir DB
-> dump'ı) — geniş yedekleme hâlâ **O-26** (`geplant`) altında açık: storage volume
-> arşivi, kutu dışı hedef, rotasyon, `restore.sh`. O-77'nin kendi maddesine bak.
+> dump'ı) — geniş yedekleme O-26'da (artık tam kapalı) çözüldü. O-77'nin kendi
+> maddesine bak.
 
 > **Nasıl okunur — 31 `gelöst` yanıltıcıdır.** Bunların büyük bölümü (O-56 … O-76
 > aralığı) **paketleme** işiydi: 11-12.09'da açıldılar ve aynı hafta kapandılar, yani
