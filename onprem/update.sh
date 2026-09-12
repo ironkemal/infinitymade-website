@@ -471,6 +471,9 @@ if [ -d "$MIGRATIONS_DIZIN" ]; then
       BEKLEYEN_VAR=0
     fi
   fi
+  log "DEBUG dizin=$MIGRATIONS_DIZIN bundle=[$(printf '%s' "$BUNDLE_DOSYALAR" | tr '\n' ',')] uygulanan=[$(printf '%s' "$UYGULANAN_VERSIYONLAR" | tr '\n' ',')] eksik=[$(printf '%s' "$EKSIK" | tr '\n' ',')]"
+else
+  log "DEBUG dizin yok: $MIGRATIONS_DIZIN"
 fi
 
 if [ "$BEKLEYEN_VAR" -eq 0 ]; then
