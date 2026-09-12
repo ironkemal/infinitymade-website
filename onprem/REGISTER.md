@@ -241,14 +241,19 @@ Diagnosegruppen · Podologie-Katalog). Dashboard satırı `dashboard.html`'e sta
 indi (`fonksiyon-ustasi`'nın önerisiyle — yeni modül/fonksiyon yok, `dashboard.js` büyümedi).
 Ayrıntı: kendi maddesi.
 
-1. **Faz 1.2** (O-02) — kutuda `N8N_AI_SERIES_URL` boş kalınca kod **sabit n8n adresine
-   düşüyor** ve hasta adı bize gelir (G1). İlk **ücretli** kutudan önce inmeli.
-   ⚠️ Kutunun CSP'si bunu engellemez — çağrı tarayıcıdan değil **backend'den** çıkıyor.
-2. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
-   bir gerçek SMTP kurulumuyla SPF/DMARC doğrulaması. İlk beta kutusunda yapılabilir.
-3. **O-29 madde (2)** — kurulum sihirbazı `DATA_ENCRYPTION_KEY`'i gösteriyor ama
+✅ **Faz 1.2 / O-02 kısmen kapandı (12.09.2026 gecesi)** — G1 riski taşıyan satır
+(`N8N_AI_SERIES_URL` fallback'i) tamamen kaldırıldı, n8n workflow'u (`AI Series
+Scheduler`) MCP ile okunup birebir Express'e taşındı (`api-backend/ai/tasks/
+series-scheduler.js`). İkinci, risksiz n8n satırı (booking bildirimi) henüz
+taşınmadı — ayrıntı kendi maddesinde.
+
+1. **O-29 madde (2)** — kurulum sihirbazı `DATA_ENCRYPTION_KEY`'i gösteriyor ama
    "sakladım" onayı istemeden ilerliyor. Küçük, ucuz — bir sonraki `install.sh`
    dokunuşunda birlikte yapılabilir.
+2. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
+   bir gerçek SMTP kurulumuyla SPF/DMARC doğrulaması. Kullanıcı kararıyla (12.09.2026)
+   sona bırakıldı — belki hiç yapılmaz ya da yaklaşım değişir, ilk beta kutusunda karar
+   verilecek.
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -474,16 +479,17 @@ kapı unutmaz ama düşünmez.
 >   (şimdilik dokunulmadığı için), ama not edilmezse birinin "eksik env" sanıp
 >   doldurma riski var.
 
-### O-02 — `N8N_AI_SERIES_URL` fallback'i koda gömülü n8n adresi
+### O-02 — `N8N_AI_SERIES_URL` fallback'i koda gömülü n8n adresi 🟡 **kısmen gelöst (12.09.2026)**
 
 | Alan | İçerik |
 |---|---|
 | **Ne** | AI seri-planlayıcı env var yoksa sabit n8n webhook'una düşüyor |
-| **Nerede** | `api-backend/server.js:1969` (04.09'da `:1806`'ydı) — `process.env.N8N_AI_SERIES_URL` yoksa `https://n8n.infinitymade.de/webhook/ai-series-scheduler` |
+| **Nerede** | ✅ **Düzeltildi** — eski `api-backend/server.js:2032` (`process.env.N8N_AI_SERIES_URL || 'https://n8n.infinitymade.de/webhook/ai-series-scheduler'`) tamamen kaldırıldı |
 | **Tip** | C + A (fallback runtime dış çağrı) |
-| **Kutuda ne olur** | Müşteri env'inde `N8N_AI_SERIES_URL` olmayacak → fallback devreye girer → kutu bizim n8n'imize POST atar. Playbook D9'a göre bu çağrı **hasta adını taşıyor** (`aiPayload.customer.name`) → G1 ihlali. Deterministik fallback kodda var ama bu satır ona düşmeden önce ağa çıkıyor |
-| **Çözüm** | **Faz 1.2** — `ai/tasks/series-schedule.js` olarak llmClient üzerinden doğrudan; n8n aradan çıkar, hasta adı prompt'a girmez. Kabul kriteri zaten yazılı: `grep N8N_` → sıfır |
-| **Durum** | `geplant` (Faz 1.2) — ⚠️ ilk ücretli kutudan **önce** inmeli, bkz. not |
+| **Kutuda ne olur** | Artık hiçbir şey — dış çağrı yok, sabit adres yok |
+| **✅ Yapılan (12.09.2026)** | n8n workflow'unun kendisi (`Q7u38AtRd4JIdolD` "AI Series Scheduler", MCP ile okundu: Webhook → Build Prompt → Azure OpenAI → Parse Response) birebir Express'e taşındı: `api-backend/ai/tasks/series-scheduler.js` — aynı prompt metni (satır satır aynı, davranış değişmesin diye), aynı model (`gpt-4.1-mini`, `azureClient.js`'in zaten kullandığı varsayılan deployment — `rezept-ocr.js` da aynısını kullanıyor, aynı Azure kaynağı). `server.js` artık `seriesSchedulerRun()` çağırıyor, hata/dry-run'da (Azure yapılandırılmamışsa) `{selected:[], report:''}` dönüyor ve mevcut deterministik seçim aynen devreye giriyor — n8n çökmesiyle davranışsal fark yok, sadece dış bağımlılık gitti. Dry-run modda test edildi (yerel, Azure kimlik bilgisi yokken `{selected:[],report:''}` döndü, doğru). |
+| **Kalan** | İkinci n8n satırı (`server.js:1279`, `N8N_WEBHOOK_URL`, booking bildirimi) **taşınmadı** — bu satır zaten PII taşımıyor (yorum: "customerName/Email/Phone omitted") ve sabit fallback'i yok (env yoksa sessizce atlanıyor), yani **G1 riski yok**. Hangi n8n workflow'unu tetiklediği doğrulanmadı (33 workflow arasında adı koddan belli değil) — Faz 1.2'nin kendi kabul kriteri ("`grep N8N_` → sıfır") tam olarak bu yüzden henüz karşılanmıyor. Risk düşük, acil değil |
+| **Durum** | 🟡 `kısmen gelöst` — G1 riski taşıyan satır kapandı, ikinci (risksiz) satır açık kaldı |
 
 > **11.09.2026 — kutu paketi bu maddeyi teorik olmaktan çıkardı.**
 > `onprem/.env.template` `N8N_AI_SERIES_URL`'i **bilinçli olarak taşımıyor** — paketin
@@ -491,6 +497,8 @@ kapı unutmaz ama düşünmez.
 > adresi>'`, yani değişkenin yokluğu fallback'i **kapatmıyor, açıyor**. Seri planlayıcı
 > kutuda ilk çağrıldığında hasta adı bizim n8n'imize POST edilir → **G1**. Bu yüzden
 > Faz 1.2 artık bir tercih değil **takvim kısıtı**: ilk ücretli kutudan önce inmeli.
+>
+> **12.09.2026 — kapandı.** Yukarıya bak.
 
 ### O-03 — `app.praxura.de` uygulama kodunda sabit (pazarlama sayfaları hariç)
 
@@ -3413,8 +3421,8 @@ kendi girdilerine terfi etmeliler.
 | Durum | Adet | Maddeler |
 |---|---|---|
 | `offen` | 11 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-79 · O-80 · O-82 |
-| `geplant` | 16 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · **O-91** · **O-94** |
-| 🟡 `kısmen gelöst` | 13 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-29 · O-87 · O-88 |
+| `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
+| 🟡 `kısmen gelöst` | 14 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-29 · O-87 · O-88 · **O-02** |
 | `gelöst` | 43 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 

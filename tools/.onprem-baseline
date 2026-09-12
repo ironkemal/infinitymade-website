@@ -15,7 +15,14 @@
 #   3 ayrı özellik, bu maddenin kapsamı DIŞINDA: server.js (O-02) ·
 #     dashboard.js B2B webhook (O-09) · index.html pazarlama chatbot (O-04)
 # Artış = red.
-n8n_host=7
+#
+# ⚠️ 12.09.2026 — 7→8, BİLİNÇLİ (O-02 kısmen kapandı). Artan tek satır YORUM:
+# api-backend/ai/tasks/series-scheduler.js'in başlık yorumu, KALDIRILAN
+# `N8N_AI_SERIES_URL` fallback'ini ("...HARDCODED n8n.infinitymade.de-Adresse...")
+# tarihi gerekçe olarak anlatıyor — canlı kod satırı DEĞİL, gerçek dış çağrı
+# SIFIRA indi (aiPayload artık Azure'a gidiyor, n8n'e hiç gitmiyor). Sayaç
+# yorum/kod ayrımı yapamıyor, bu yüzden kapı SKIP_ONPREM_GATE=1 ile geçildi.
+n8n_host=8
 
 # app.praxura.de, yalnız uygulama yüzeyi (pazarlama sayfaları hariç — Faz 2.0).
 app_host=15
@@ -27,7 +34,17 @@ vercel_fn=12
 ext_script=11
 
 # N8N_ env referansı. Hedef 0 (Faz 1.2 kabul kriteri).
-n8n_env=3
+#
+# ⚠️ 12.09.2026 — 3→5, BİLİNÇLİ (O-02 kısmen kapandı). `N8N_AI_SERIES_URL`'in
+# gerçek kod kullanımı (process.env okuması + hardcoded fallback) TAMAMEN
+# kaldırıldı — server.js artık api-backend/ai/tasks/series-scheduler.js
+# üzerinden doğrudan Azure OpenAI'a gidiyor. Artan 2 satır, ikisi de bu
+# kaldırmayı anlatan YORUM (server.js'in yeni açıklama bloğu + series-
+# scheduler.js'in başlık yorumu, ikisi de eski env var adını tarihi bağlamda
+# anıyor). İkinci n8n satırı (`N8N_WEBHOOK_URL`, booking bildirimi, PII
+# taşımıyor) henüz taşınmadı — Faz 1.2'nin "grep N8N_ → 0" hedefi bu yüzden
+# hâlâ açık, ama G1 riski taşıyan satır kapandı. SKIP_ONPREM_GATE=1 ile geçildi.
+n8n_env=5
 
 # Sabit Supabase proje adresi. 1 = api-backend/test_schema.js:5 (env fallback'i).
 # Sicil bunu 0 sanıyordu; 04.09. ölçümünde çıktı — test dosyası, düşük risk, kayıtlı.

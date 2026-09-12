@@ -28,6 +28,7 @@ import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
 import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
 import { run as rezeptNormalizeRun } from './ai/tasks/rezept-normalize.js';
+import { run as seriesSchedulerRun } from './ai/tasks/series-scheduler.js';
 import { validateRezept } from './ai/validators/validate.js';
 import { logCall as aiLogCall, hashRequest as aiHashRequest } from './ai/audit.js';
 import { logAccess, accessLogger } from './_lib/access-log.js';
@@ -2029,21 +2030,20 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       sector
     };
 
-    const N8N_AI_URL = process.env.N8N_AI_SERIES_URL || 'https://n8n.infinitymade.de/webhook/ai-series-scheduler';
+    // Direkter Azure-Aufruf statt n8n (O-02, onprem/REGISTER.md): der alte Weg
+    // fiel bei leerer N8N_AI_SERIES_URL auf eine HARDCODED n8n.infinitymade.de-
+    // Adresse zurueck und schickte den Patientennamen dorthin — in einer On-
+    // Prem-Box ohne n8n waeren das reale Patientendaten Richtung Zentrale
+    // gewesen (G1). Reiner Transportwechsel, Prompt/Verhalten unveraendert
+    // (api-backend/ai/tasks/series-scheduler.js, 1:1 aus dem n8n-Workflow
+    // "AI Series Scheduler" uebernommen). Bei jedem Fehler bleibt aiResult
+    // leer und die deterministische Auswahl unten uebernimmt — wie zuvor bei
+    // einem n8n-Ausfall.
     let aiResult = { selected: [], report: '' };
     try {
-      const aiRes = await fetchWithTimeout(N8N_AI_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(aiPayload)
-      }, 30000);
-      if (aiRes.ok) {
-        aiResult = await aiRes.json();
-      } else {
-        console.error('[ai-suggest-series] n8n returned', aiRes.status);
-      }
+      aiResult = await seriesSchedulerRun(aiPayload);
     } catch (err) {
-      console.error('[ai-suggest-series] n8n error', err.message);
+      console.error('[ai-suggest-series] Azure error', err.message);
     }
 
     // 7) Validate + dedupe AI response, fall back to deterministic pick per target date.
