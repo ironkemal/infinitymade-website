@@ -440,7 +440,15 @@ YEDEK_DOSYA="$BACKUP_DIR/vor-${BUNDLE_SURUM:-unbekannt}-$(date -u +%Y%m%dT%H%M%S
 # taşımaya gerek yok.
 if ! docker compose exec -T db pg_dump -U postgres -d "$DB_NAME" -Fc > "$YEDEK_DOSYA" 2>>"$LOG_FILE"; then
   rm -f "$YEDEK_DOSYA"
-  fehler "Migration-öncesi yedek alınamadı — güncelleme durduruldu" "pg_dump başarısız (bkz. $LOG_FILE)" \
+  # ⚠️ Schritt 7 bu noktada zaten dosya yazdı ve .env'i birleştirdi — betiğin
+  # kendi sözü ("Schlägt etwas fehl, werden nur DATEIEN zurückgerollt") burada
+  # da geçerli olmalı, yoksa "image'a dokunulmadı" doğru ama ".env/compose'a
+  # da dokunulmadı" YANLIŞ olurdu (gerçek kutuda test edilirken bulundu:
+  # başarısız bir yedekten sonra PRAXURA_API_IMAGE .env'de sessizce
+  # yükseltilmiş kalıyordu). geri_yukle() diğer tüm başarısızlık yollarıyla
+  # aynı garantiyi verir.
+  geri_yukle
+  fehler "Migration-öncesi yedek alınamadı — güncelleme durduruldu, dosyalar geri alındı" "pg_dump başarısız (bkz. $LOG_FILE)" \
     "başarılı bir pg_dump çıktısı" \
     "RELEASE-STANDARD.md §4.3: yedek alınamıyorsa migration çalışmaz. 'db' konteynerinin çalıştığından, .env'deki POSTGRES_DB/POSTGRES_PASSWORD'ün doğru olduğundan ve diskte yer olduğundan emin ol, sonra 'bash update.sh --jetzt' ile yeniden dene. Bu geceki güncelleme atlandı, image'a dokunulmadı."
   durumu_yaz "yedek_basarisiz"
@@ -449,7 +457,8 @@ fi
 
 if [ ! -s "$YEDEK_DOSYA" ]; then
   rm -f "$YEDEK_DOSYA"
-  fehler "Yedek dosyası boş çıktı — güncelleme durduruldu" "0 byte" "dolu bir pg_dump çıktısı" \
+  geri_yukle
+  fehler "Yedek dosyası boş çıktı — güncelleme durduruldu, dosyalar geri alındı" "0 byte" "dolu bir pg_dump çıktısı" \
     "pg_dump sessizce boş döndü — 'db' konteynerinin sağlığını kontrol et."
   durumu_yaz "yedek_basarisiz"
   exit 1
@@ -475,7 +484,7 @@ ilk_up_basarili=1
 docker compose up -d --remove-orphans >>"$LOG_FILE" 2>&1 || ilk_up_basarili=0
 [ "$ilk_up_basarili" -eq 1 ] || warn "'docker compose up -d' başarısız oldu — sağlık kontrolüne girmeden geri alma denenecek"
 
-# ── Schritt 9 — Sağlık ───────────────────────────────────────────────────────
+# ── Schritt 10 — Sağlık ──────────────────────────────────────────────────────
 log "[10/11] Sağlık kontrolü (lib-health.sh)"
 if [ "$ilk_up_basarili" -eq 1 ] && warte_auf_gesundheit 180; then
   sonuc="ok"
@@ -493,7 +502,7 @@ else
   fi
 fi
 
-# ── Schritt 10 — Durum dosyası ───────────────────────────────────────────────
+# ── Schritt 11 — Durum dosyası ───────────────────────────────────────────────
 # DATEIEN_SHA_FILE (sapma tabanı) ve TABAN_ENV (.env birleştirme tabanı)
 # YALNIZ burada, gerçek bir "ok" sonrasında güncellenir — "geri_alindi" ve
 # "bakim_modu" ikisini de OLDUĞU GİBİ bırakır (dosyalar zaten eskiye döndü,
