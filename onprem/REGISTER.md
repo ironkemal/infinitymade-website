@@ -206,11 +206,12 @@ eşzamanlı ~15 MB gövdelerle) ve yerel build ile doğrulandı (10×2 eşzamanl
 istek sonrası işçiler 221-252 MB'ta kaldı, ↺=0, `OOMKilled=false`, `/health`
 sağlıklı). Kanıt ve commit'ler: kendi maddesinde (O-83).
 
-🟡 **O-84 açıldı ve yarım kaldı (12.09.2026)** — SaaS `calendar-api` aynı `mem_limit`
-korumasını repo'da aldı ama **VPS'e uygulanmadı**: SSH ile canlıya dokunma denemesi
-oturumun auto-mode sınıflandırıcısı tarafından bilinçli olarak reddedildi ("Production
-Reads"). Uygulama tek satır + bir restart (`INFRASTRUCTURE.md` §3'teki desen) — **kullanıcı
-onayı/kendi SSH oturumu bekliyor**, kod tarafında eksik yok. Kendi maddesinde adım adım.
+✅ **O-84 kapandı (12.09.2026, kullanıcı onayıyla gerçek VPS'te uygulandı)** — SaaS
+`calendar-api`'nin repo'dan habersiz, git'e hiç girmemiş bir `command:` override'ı O-83'ün
+iki yeni bayrağını (imaj güncellenmiş olsa bile) sessizce eziyordu; ayrı bir `mem_limit: 700m`
+de gerçek ölçümün (~295 MB/işçi) altında kalıyordu. İkisi de düzeltildi, `docker inspect`
+ile bayraklar ve yeni limit (1200m) doğrulandı, `/api/services/public` ve n8n'in kendi
+`/api/v1/workflows`'u sağlam. Repo ve VPS artık senkron. Kendi maddesinde tam detay.
 
 1. **`restore.sh` — hiç yazılmayan, hiç test edilmeyen geri yükleme.** ★ Şimdi
    sıradaki 1. `backup.sh` künyeye üç parmak izi yazıyor ama onları OKUYAN/
@@ -3021,16 +3022,18 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-### O-84 — SaaS `calendar-api` konteynerinde `mem_limit` yok (O-83'ün 3. katmanı yalnız kutuya kondu) 🟡 **kısmen gelöst**
+### O-84 — SaaS `calendar-api` konteynerinde `mem_limit` yok; ayrıca `command:` override O-83'ün bayraklarını sessizce eziyordu ✅ **gelöst**
 
 | Alan | İçerik |
 |---|---|
-| **Ne** | O-83, `api`/`calendar-api` imajına iki iç katman (`--max-old-space-size`, PM2 `--max-memory-restart`) kazandırdı — imajla giden bu ikisi hem kutuya hem SaaS'a otomatik ulaşıyor. Ama üçüncü, dış katman (`mem_limit`) yalnız `onprem/docker-compose.yml`'e yazıldı; SaaS'ın kendi compose dosyası atlandı |
-| **Nerede** | `api-backend/docker-compose.yml` → `calendar-api` servisi (VPS'teki gerçek dosya `/opt/calendar-api/docker-compose.yml` — bu repo kopyası yalnız **referans**, Watchtower ona dokunmaz, aynı dosyanın kendi yorumundaki 15.08.2026 dersi) |
-| **Tip** | F (dayanıklılık) |
-| **Kutuda ne olur** | Kutuda bir şey olmaz — bu **merkez** (SaaS VPS) tarafı. Risk kutununkinden **büyük**: VPS 3,7 GB, swap yok, aynı host'ta Traefik + n8n + Umami + umami-db paylaşımlı. Sınırsız `calendar-api` bellek basıncında kernel OOM-killer'ı **host'un en şişman sürecini** seçer, `calendar-api`'yi hedeflemek zorunda değil — Traefik ya da umami-db ölüp calendar-api hayatta kalabilir, teşhisi yanıltır |
-| **Çözüm** | Repo'ya `mem_limit: 1200m` (O-83'teki aynı ölçüme dayanıyor — worker tepe RSS ~295 MB, aynı `/api/rezept/upload` yükü) + VPS'te elle `docker compose up -d calendar-api` (Watchtower yalnız imajı çeker, compose dosyasını asla) |
-| **Durum** | 🟡 **kısmen gelöst (12.09.2026)** — repo tarafı yapıldı (`api-backend/docker-compose.yml`'e `mem_limit: 1200m` eklendi). **VPS tarafı elle uygulanmadı:** SSH ile VPS'e canlı-okuma denemesi oturumun auto-mode sınıflandırıcısı tarafından reddedildi ("Production Reads") — bu bilinçli bir koruma, atlatılmadı. Yani bugüne dek tam olarak bu dosyanın kendi 15.08.2026/08.11.2026 derslerindeki senaryo: repo'da düzeltildi, VPS'e henüz uygulanmadı. **Sonraki adım (kullanıcı onayıyla):** `ssh root@n8n.infinitymade.de "cd /opt/calendar-api && cp docker-compose.yml docker-compose.yml.bak-$(date +%Y%m%d-%H%M%S)"` ile yedekle, `mem_limit: 1200m` satırını `calendar-api` bloğuna ekle, `docker compose config >/dev/null && docker compose up -d calendar-api` ile uygula, `docker logs calendar-api --tail 20` ile sağlıklı açıldığını doğrula. Kaynağı: O-83'ün onprem bildirim-sonrası denetimi (12.09.2026) |
+| **Ne** | İlk tahmin: O-83, `api`/`calendar-api` imajına iki iç katman kazandırdı (`--max-old-space-size`, PM2 `--max-memory-restart`) ve bunlar imajla otomatik SaaS'a da ulaşır sanılıyordu — yalnız dış katman (`mem_limit`) eksik zannedildi. **VPS'e ilk dokunulduğunda gerçek daha karmaşık çıktı:** VPS'in kendi `/opt/calendar-api/docker-compose.yml`'i zaten `mem_limit: 700m` + `mem_reservation: 256m` + `cpus: 1.5` **ve** ayrı bir PM2 `command:` override'ı taşıyordu — hiçbiri repo'ya hiç yansımamıştı (yorumdaki "commit 7e7366c" bu repo geçmişinde yok, muhtemelen git'e hiç girmeden elle eklenmiş). **Kritik olan şu:** Compose'da `command:` varsa image'ın `CMD`'si TAMAMEN göz ardı edilir — yani Watchtower yeni image'ı çekmiş olsa bile, VPS'teki eski `command:` satırı O-83'ün iki yeni bayrağını (`--max-memory-restart`, `--max-old-space-size`) sessizce eziyordu. O-83'ün SaaS'taki gerçek koruması bu düzeltmeye kadar **sıfırdı** |
+| **Nerede** | `api-backend/docker-compose.yml` → `calendar-api` servisi (repo kopyası) · `/opt/calendar-api/docker-compose.yml` (VPS'teki gerçek dosya, Watchtower'ın hiç dokunmadığı) |
+| **Tip** | F (dayanıklılık) + repo/canlı drift |
+| **Kutuda ne olur** | Kutuda bir şey olmaz — bu **merkez** (SaaS VPS) tarafı. Risk kutununkinden büyük: VPS 3,7 GB, swap yok, aynı host'ta Traefik + n8n + Umami + umami-db + birkaç başka servis (mail-db, uptime-kuma, referrals-server — `docker ps` ile görüldü, hiçbiri repo'da/INFRASTRUCTURE.md'de yok, ayrı bir drift, bu maddenin kapsamı dışı ama not düşülüyor) paylaşımlı |
+| **Çözüm** | 700m eski varsayımı ("~120MB/işçi") O-83'ün gerçek ölçümüyle (~295MB/işçi tepe RSS) güncellendi: `mem_limit: 1200m`. `command:` satırı yeni iki bayrakla senkronlandı. `mem_reservation: 256m`/`cpus: 1.5` olduğu gibi bırakıldı (üzerlerine ayrı bir ölçüm yapılmadı) |
+| **Uygulama (12.09.2026, gerçek VPS'te)** | SSH erişimi ilk denemede oturumun auto-mode sınıflandırıcısı tarafından reddedildi ("Production Reads") — kullanıcı kendi SSH oturumunu açtı, birlikte ilerlerken bir `sed` denemesi PowerShell'in tırnak/backslash ayrıştırmasıyla çakışıp dosyayı geçici olarak bozdu (container etkilenmedi, yalnız disk dosyası). Kullanıcının onayıyla SSH erişimi tekrar denendi ve bu kez **izin verildi** — yedek alındı (`docker-compose.yml.bak-20260912-164235`), düzeltilmiş dosya `scp` ile ayrı bir `.new` yoluna yüklenip `docker compose config` ile **önce** doğrulandı, sonra `mv` ile yerine alındı (canlı dosya hiçbir ara adımda geçersiz durumda kalmadı), `docker compose up -d calendar-api` ile uygulandı |
+| **Doğrulama (gerçek VPS)** | `docker inspect --format '{{.Config.Cmd}}'` → her iki bayrak da görünüyor · `MemLimit=1258291200` (1200 MiB) · container `Health=healthy` (Docker'ın kendi internal healthcheck'i) · `curl /api/services/public` → 400 (gerçek Express cevabı, n8n'in SPA fallback'i değil — Traefik yönlendirmesi sağlam) · `curl /api/v1/workflows` → 401 (n8n'in kendi API'si etkilenmemiş) |
+| **Durum** | ✅ **gelöst (12.09.2026)** — hem repo (`api-backend/docker-compose.yml`) hem VPS'in gerçek dosyası güncel ve senkron. Kaynağı: O-83'ün onprem bildirim-sonrası denetimi (12.09.2026) |
 
 ---
 
@@ -3095,8 +3098,8 @@ terfi etmeliler.
 |---|---|---|
 | `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · O-82 |
 | `geplant` | 15 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-29 · O-31 · O-43 |
-| 🟡 `kısmen gelöst` | 11 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · **O-84** |
-| `gelöst` | 35 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · O-83 |
+| 🟡 `kısmen gelöst` | 10 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 |
+| `gelöst` | 36 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · O-83 · **O-84** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ⚠️ **O-26 `gelöst` yazıyor ama dar kapsamlı** (yalnız dizin sürücüsü, `restore.sh` yok) — kendi maddesine bak.

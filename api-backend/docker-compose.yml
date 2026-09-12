@@ -60,18 +60,29 @@ services:
     # (sıra bozulursa Watchtower sessizce güncellemeyi bırakır — RELEASE-STANDARD.md §6.4).
     # Host'ta uygulandı ve doğrulandı: 12.09.2026, docker inspect ile image=beta, healthy.
     image: ghcr.io/ironkemal/infinitymade-website/calendar-api:beta
+    # O-84 (12.09.2026): VPS hatte HIER bereits eine `command:`-Override (PM2
+    # Cluster-Aufruf, unabhaengig vom Image-CMD als Garantie gedacht), die nie
+    # in dieses Repo zurueckgeflossen war — reiner Drift, git kannte sie nicht
+    # (der Kommentar dort verwies auf "commit 7e7366c", der in dieser Historie
+    # gar nicht existiert). Kritisch: diese Override ERSETZT das Image-CMD
+    # komplett, also griffen O-83s zwei neue Flags (--max-memory-restart,
+    # --max-old-space-size) auf dem SaaS-VPS bislang GAR NICHT, obwohl
+    # Watchtower das neue Image laengst gezogen hatte. Jetzt synchron mit
+    # api-backend/Dockerfile CMD, auf dem VPS live nachvollzogen und verifiziert
+    # (docker inspect --format '{{.Config.Cmd}}' zeigt beide Flags).
+    command: ["./node_modules/.bin/pm2-runtime", "start", "server.js", "-i", "2", "--max-memory-restart", "500M", "--node-args", "--max-old-space-size=256 --import ./instrument.js"]
     container_name: calendar-api
     restart: unless-stopped
     pull_policy: always
-    # O-84 (12.09.2026): Bild bringt seit O-83 zwei innere Schichten mit
-    # (--max-old-space-size + PM2 --max-memory-restart, api-backend/Dockerfile
-    # CMD) — diese dritte, aeussere fehlte hier. Wert wie in
-    # onprem/docker-compose.yml (dieselbe Messung: Worker-Spitzen-RSS ~295 MB
-    # unter gleichzeitiger ~15MB-Rezept-Last). Hier dringlicher als in der Box:
-    # dieser VPS hat 3,7 GB, KEIN Swap, und teilt den Host mit Traefik/n8n/
-    # Umami/Umami-DB — der Kernel-OOM-Killer waehlt bei Druck den dicksten
-    # Prozess des HOSTS, nicht zwingend calendar-api selbst.
+    # O-83/O-84 (12.09.2026): 700m -> 1200m. VPS hatte bereits mem_limit +
+    # mem_reservation + cpus (ebenfalls nie ins Repo zurueckgeflossen) mit der
+    # Annahme "~120MB/Worker" — O-83s echte Messung (WSL-Testbox, gleichzeitige
+    # ~15MB-Rezept-Last) zeigte Worker-Spitzen-RSS ~295MB. 2x295+Overhead lag
+    # zu nah an 700m. mem_reservation/cpus unveraendert uebernommen (keine
+    # eigene Messung dazu, nicht angetastet).
     mem_limit: 1200m
+    mem_reservation: 256m
+    cpus: 1.5
     env_file:
       - ./.env.calendar
     labels:
