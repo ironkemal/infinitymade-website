@@ -319,18 +319,28 @@ services:
   #        seit Caddy (Phase 2.1b) haengt nichts mehr am veroeffentlichten
   #        Port, Caddy spricht Kong ueber den Docker-internen Hostnamen an.
   #
-  #        ⚠️ Groesster Brocken des Stacks: 886 MB im Leerlauf gemessen,
-#        also 61 % des restlichen Verbrauchs.
-  #        Ein ERSATZ durch Caddy (nicht nur ein Vorbau) waere moeglich,
-  #        wuerde aber key-auth und acl mit entfernen — also eine bestehende
-  #        Sicherheitskontrolle. Das ist eine eigene Entscheidung mit
-  #        `guvenlik` am Tisch (O-48, Konsey), kein Nebeneffekt dieser Datei.
+  #        ✅ Konsey-Entscheidung 12.09.2026 (O-48, konsey/tutanak/2026-09-12-o48-kong.md):
+  #        Kong BLEIBT. Die "886 MB" waren auf einem 16-Kern-Rechner gemessen —
+  #        `worker_processes: auto` spawnt einen NGINX-Worker pro sichtbarem
+  #        Kern, jeder mit eigenem proxy_buffers-Pool. Auf der Zielbox
+  #        (2 vCPU) waeren das 2 Worker, nicht 16. Explizit gemessen (dieselbe
+  #        Box, 2 Worker statt auto): **~180 MB**, nicht 886 MB. Deshalb hier
+  #        FEST auf 2 gesetzt statt `auto` — sonst haengt der Wert leise vom
+  #        Kern-Zaehl-Ergebnis der jeweiligen Maschine ab (Dev-Laptop vs. Box).
+  #        Ein Ersatz durch Caddy waere ausserdem teurer als gedacht: Kong
+  #        traegt nicht nur key-auth, sondern auch drei weitere Deny-Regeln
+  #        (request-termination auf /realtime/v1/api/tenants,
+  #        /realtime/v1/api/openapi, /pg/) und die apikey→Authorization-
+  #        Uebersetzung — alle vier haetten in Caddy neu gebaut werden muessen.
   # ─────────────────────────────────────────────────────────────────────────
   kong:
     container_name: praxura-kong
     # sha256:6addf50e6bd8d578314cb9ce4f2d2d1e3781d2edecef59f707e00c6e05d384f5
     image: kong/kong:${VERSION_KONG}
     restart: unless-stopped
+    # Ziel-VPS ist 2 vCPU (playbook 2.1c) — kein Swap, s. RELEASE-STANDARD.md.
+    # 400m = gemessene ~180 MB (2 Worker) + Haelfte Puffer, nicht mehr geraten.
+    mem_limit: 400m
     networks:
       default:
         aliases:
@@ -358,6 +368,11 @@ services:
       KONG_DNS_ORDER: LAST,A,CNAME
       KONG_DNS_NOT_FOUND_TTL: 1
       KONG_PLUGINS: request-transformer,cors,key-auth,acl,request-termination,post-function
+      # `auto` spawnt einen Worker PRO SICHTBAREM KERN — auf einem 16-Kern-
+      # Dev-Rechner 16 Worker (~890 MB), auf der 2-vCPU-Zielbox 2 (~180 MB,
+      # gemessen 12.09.2026, O-48). Fest auf 2 statt `auto`: der Wert soll
+      # von der Zielhardware kommen, nicht leise von der jeweiligen Maschine.
+      KONG_NGINX_WORKER_PROCESSES: "2"
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
       KONG_PROXY_ACCESS_LOG: /dev/stdout combined

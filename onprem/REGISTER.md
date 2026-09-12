@@ -117,17 +117,17 @@ test yığını**, kurulabilir ürün değil.
 
 **Sıradaki iş — sırayla:**
 
-1. **Faz 2.1b** — Caddy (TLS + statik arayüzün servisi) · Kong ↔ Caddy kararı
-   **konseye** (O-48, `guvenlik` masada) · compose'un kutuya dağıtımı (O-45 (b)).
+1. **Faz 2.1b** — Caddy (TLS + statik arayüzün servisi) · compose'un kutuya dağıtımı (O-45 (b)).
    ✅ **Ön koşul kapandı (11.09.2026 gece):** O-01 + O-15'in 2.1b'yi bloke eden kısmı
    bitti — arayüz artık `API_BASE`'i `/api/config`'ten alıyor, kutuda `"/api"` ölçüldü.
    Turun kapsamı ve iki yeni maddesi (**O-52** CSP · **O-55** zygotebody) → **§7F**.
    ✅ **Caddy indi (11.09 akşamı).** ✅ **O-57, O-58 (a), O-59, O-49 kapandı (12.09.2026).**
    ✅ **O-68, O-69, O-70 de aynı gün kapandı** (O-58 (a)'nın uygulamasından çıkan üç artık, §7I).
-   2.1b'nin **kalanı**: O-48 (konsey) · O-45 (b) — ikisi de kullanıcı/konsey kararı
-   bekliyor, tek başına ajan/`builder` kapatamaz.
+   ✅ **O-48 konseyde karara bağlandı (12.09.2026): Kong kalıyor**, 886 MB rakamı
+   yanlış ölçülmüştü (`konsey/tutanak/2026-09-12-o48-kong.md`).
+   2.1b'nin **kalanı**: yalnız O-45 (b) — kullanıcı kararı bekliyor.
    Sonra 2.1c'ye geçilir (2.1c'nin kendisi zaten yazıldı, bkz. madde 2 — kalan yalnız
-   2.1b'nin iki maddesi).
+   2.1b'nin tek maddesi).
 2. **Faz 2.1c** — `install.sh`. **Tasarım hazır: §7G** (15 adım, Faz 2.2 sınırı, hata
    modeli). Kapsadığı maddeler: O-53 (zorunlu değişken kapısı) · ✅ O-59 (adres ön-kontrolü
    + kurulum sonu çıktısı, 12.09.2026 tamam) · O-52 (b) (`SUPABASE_PUBLIC_WSS` türetimi) · O-50'nin kalanı
@@ -155,8 +155,8 @@ test yığını**, kurulabilir ürün değil.
 - **O-51** → **O-66 ile aynı tur** (karar 11.09.2026): altı sabit adres tek yardımcıya
   bağlanır, değerini `SMTP_FROM`'dan alır, `install.sh` o değeri yazar. Kabul ölçütü
   gönderim değil **teslim** (SPF `-all` + DMARC `p=quarantine` ölçüldü)
-- **O-48** (Kong ↔ Caddy) → **konsey**, ajan tek başına karar vermez: `key-auth`/`acl`
-  var olan bir güvenlik kontrolüdür
+- **O-48** (Kong ↔ Caddy) → ✅ **gelöst (12.09.2026, konsey)** — Kong kalıyor, 886 MB
+  yanlış ölçülmüştü (gerçek RSS ~139 MB, `worker_processes=2` sabitlendi)
 - **O-33** (plan farkının teknik karşılığı) ve **O-46** (filo panosu) → **kullanıcı
   kararı**; ikisi de lisans formatı donmadan cevaplanmalı
 - **O-38** → Faz 2.1 seed adımı; güncelleme yolu O-39'un zincirinden geçer
@@ -1266,12 +1266,12 @@ kapı unutmaz ama düşünmez.
 
 | Alan | İçerik |
 |---|---|
-| **Ne** | Kırpılmış yığında Kong tek başına **886 MB** — kalan belleğin %61'i — ve güncellenemeyen 6 fremd bileşenden biri |
+| **Ne** | Kırpılmış yığında Kong tek başına **886 MB** ölçülmüştü — kalan belleğin %61'i — ve güncellenemeyen 6 fremd bileşenden biri |
 | **Nerede** | `onprem/docker-compose.yml` → `kong` · yönlendirme `onprem/volumes/api/kong.yml` (14 rota) |
 | **Tip** | G |
-| **Kutuda ne olur** | Kong yalnız yönlendirmiyor: `key-auth` + `acl` ile **apikey doğruluyor**, `request-transformer` ile Authorization başlığını kuruyor. Ölçüldü: apikey'siz istek **401** alıyor. Caddy'ye geçilirse yönlendirme ve CORS taşınabilir, ama key-auth/acl taşınamaz — PostgREST apikey'siz de cevaplamaya başlar. RLS hâlâ korur (asıl savunma odur, anon anahtarı zaten gizli değil), fakat bu **var olan bir güvenlik kontrolünün kaldırılmasıdır** |
-| **Çözüm** | Karar bu maddede verilmez. `guvenlik`'in dört sert veto konusundan biri tam olarak budur → **konsey konusu.** Kazanç somut (≈886 MB + bir bileşen daha az), bedel de somut. Not: Caddy zaten Faz 2.1b'de TLS ve statik dosya için gelecek — o adımda soru kendiliğinden masaya gelir |
-| **Durum** | `offen` — Faz 2.1b'de konseye |
+| **Kutuda ne olur** | Kong yalnız yönlendirmiyor: `key-auth` + `acl` ile **apikey doğruluyor**, `request-transformer` ile Authorization başlığını kuruyor. Ölçüldü: apikey'siz istek **401** alıyor. Ayrıca `request-termination` ile üç ayrı deny kuralı taşıyor (`/realtime/v1/api/tenants` → 403, `/realtime/v1/api/openapi` → 403, `/pg/` → yalnız `admin` grubu — konsey turunda `muhalif`/`guvenlik` buldu). Caddy'ye geçilirse yönlendirme ve CORS taşınabilir, ama bu **dördü** taşınamaz — PostgREST/realtime/pg-meta apikey'siz de cevaplamaya başlar. RLS hâlâ korur (asıl savunma odur, anon anahtarı zaten gizli değil), fakat bu **var olan güvenlik kontrollerinin kaldırılmasıdır** |
+| **Çözüm** | ✅ **886 MB rakamı yanlış ölçülmüştü — konsey 12.09.2026'da düzeltti.** `KONG_NGINX_WORKER_PROCESSES: auto`, ölçen makinenin (16 çekirdek) her koruna bir NGINX worker açıyordu; hedef 2 vCPU kutuda `auto` zaten 2'ye düşerdi. Sabit `worker_processes=2` ile ölçülen gerçek RSS: **~139–180 MB**. Kong **kalıyor**, Caddy'ye geçiş (B) reddedildi: dört deny kuralının + apikey→Authorization çevirisinin Caddy'de (stock, key-auth eklentisi yok) yeniden kurulması Supabase'in güvenlik modelini fork'lamak demekti — zaten gerçek olmayan bir RAM sorunundan çok daha pahalı |
+| **Durum** | ✅ **gelöst (12.09.2026)** — `onprem/docker-compose.yml`'e `KONG_NGINX_WORKER_PROCESSES: "2"` (auto yerine sabit) + `mem_limit: 400m` (önceden yoktu) eklendi. Gerçek kutuya karşı doğrulandı: RSS ~139 MB (400 MB limitinin altında, bolca pay), apikey'siz **401**, apikey'li **200**, `/realtime/v1/api/tenants` **403**, gerçek `signup` **200**. Tam karar: `konsey/tutanak/2026-09-12-o48-kong.md` |
 
 ### O-49 — `pg_net` kutuda kurulu kalıyor: G1 yapısal değil, disiplinle korunuyor
 
