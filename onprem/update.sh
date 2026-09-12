@@ -471,9 +471,9 @@ if [ -d "$MIGRATIONS_DIZIN" ]; then
       BEKLEYEN_VAR=0
     fi
   fi
-  log "DEBUG dizin=$MIGRATIONS_DIZIN bundle=[$(printf '%s' "$BUNDLE_DOSYALAR" | tr '\n' ',')] uygulanan=[$(printf '%s' "$UYGULANAN_VERSIYONLAR" | tr '\n' ',')] eksik=[$(printf '%s' "$EKSIK" | tr '\n' ',')]"
-else
-  log "DEBUG dizin yok: $MIGRATIONS_DIZIN"
+  # Kalıcı, kısa bir iz satırı — panel yok (O-82), update.log tek görünürlük
+  # kanalı. "Neden yedek alındı/atlandı" sorusuna 6 ay sonra da cevap versin.
+  log "  (bundle: $(printf '%s' "$BUNDLE_DOSYALAR" | wc -l) dosya · uygulanan: $(printf '%s' "$UYGULANAN_VERSIYONLAR" | wc -l) satır · eksik: ${EKSIK:-yok})"
 fi
 
 if [ "$BEKLEYEN_VAR" -eq 0 ]; then
