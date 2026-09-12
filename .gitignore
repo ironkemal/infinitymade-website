@@ -66,3 +66,7 @@ onprem/install.log
 # Zustandsdatei, eigenes Logfile. Lokale Kundenbox-Daten, kein Repository-Inhalt.
 onprem/.praxura-stand/
 onprem/update.log
+
+# update.sh (O-77): migration-öncesi pg_dump yedekleri — hasta verisi (E),
+# kutu içi, depoya asla girmez.
+onprem/backups/

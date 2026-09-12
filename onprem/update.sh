@@ -10,11 +10,14 @@
 #  Was dieses Skript TUT: das eigene `praxura/api`-Image ziehen, das darin
 #  mitgelieferte Bundle (Compose + Volumes + Skripte) auspacken, gegen den
 #  Stand auf der Box vergleichen, unsere Dateien byte-genau ersetzen (ausser
-#  bei Fremdänderung — dann STOP), `.env` anhand einzelner Schlüssel
+#  bei Fremdänderung — dann STOP), VOR jedem Neustart einen pg_dump der
+#  Datenbank nach backups/ legen (O-77 — schlägt der Dump fehl, STOPPT das
+#  Update hier, ohne die Box anzufassen), `.env` anhand einzelner Schlüssel
 #  zusammenführen (NIE komplett ersetzen), die Box neu starten, ihre
 #  Gesundheit prüfen. Schlägt etwas fehl, werden nur DATEIEN zurückgerollt —
 #  NIE die Image-Version (J6: das ist Aufgabe des Backup-Runners, nicht dieses
-#  Skripts).
+#  Skripts) und NIE die Datenbank (der pg_dump ist ein Sicherheitsnetz für den
+#  Menschen, kein automatisches Restore — O-26 bleibt offen für Letzteres).
 #
 #  Was dieses Skript NICHT TUT: Watchtower ersetzen (das gibt es hier nicht,
 #  J8 — zwei Aktualisierer wären ein Wettlauf), Datenbank-Migrationen selbst
@@ -92,7 +95,7 @@ if [ -n "$platz_frei_pct" ] && [ "$platz_frei_pct" -lt 8 ]; then
   exit 1
 fi
 
-log "[1/10] update.sh gestartet ($([ "${1:-}" = "--jetzt" ] && echo "manuell" || echo "Timer"))"
+log "[1/11] update.sh gestartet ($([ "${1:-}" = "--jetzt" ] && echo "manuell" || echo "Timer"))"
 
 # shellcheck source=./lib-health.sh
 source "$SCRIPT_DIR/lib-health.sh"
@@ -113,7 +116,7 @@ if [ -z "$API_IMAGE" ]; then
 fi
 
 # ── Schritt 1 — nur das eigene Image ziehen ─────────────────────────────────
-log "[2/10] Image ziehen: $API_IMAGE"
+log "[2/11] Image ziehen: $API_IMAGE"
 if ! docker pull "$API_IMAGE" >>"$LOG_FILE" 2>&1; then
   log "  Pull fehlgeschlagen — nichts wurde verändert. Nächster Versuch: nächste Nacht."
   exit 0
@@ -214,7 +217,7 @@ EOF
 
 # ── Schritt 3 — Durak-Tor ────────────────────────────────────────────────────
 if [ "$BUNDLE_DURAK" = "true" ]; then
-  log "[3/10] durak=true — dieses Update erfordert einen manuellen Schritt. Nichts wird angefasst."
+  log "[3/11] durak=true — dieses Update erfordert einen manuellen Schritt. Nichts wird angefasst."
   grep -A20 '"elle_adim"' "$MANIFEST" | tee -a "$LOG_FILE" >&2 || true
   durumu_yaz "durak"
   exit 0
@@ -270,9 +273,9 @@ if [ "$ilk_kosu" -eq 1 ]; then
 fi
 
 if [ -z "$degisen_dosyalar" ]; then
-  log "[4-7/10] Bundle dosyaları zaten güncel — yalnız image'ı yeniden başlatılıyor."
+  log "[4-7/11] Bundle dosyaları zaten güncel — yalnız image'ı yeniden başlatılıyor."
 else
-  log "[4-7/10] Değişen dosyalar:$degisen_dosyalar"
+  log "[4-7/11] Değişen dosyalar:$degisen_dosyalar"
 fi
 
 # ── Schritt 6 — Anlık görüntü (ÖNCE .env birleştirmesinden!) ────────────────
@@ -412,20 +415,68 @@ if [ -n "$eksik_mount" ]; then
 fi
 ok "İki kapı da geçti (compose geçerli, bind-mount kaynakları yerinde)"
 
-# ── Schritt 8 — pull + up ───────────────────────────────────────────────────
+# ── Schritt 8 — Migration-öncesi yedek (O-77, RELEASE-STANDARD.md §4.3) ─────
+# "Migration çalışmadan önce kutu vor-<sürüm> yedeği alır; yedek alınamıyorsa
+# migration ÇALIŞMAZ." Migration'lar `api` konteyneri başlarken (server.js
+# app.listen()'den ÖNCE, satır ~4536) koşuyor — yani güvenli durak burasıdır:
+# konteyneri yeniden başlatan `up -d`'den (aşağıda) hemen önce, en son burada.
+#
+# ⚠️ Kapsam bilinçli dar: bu yalnız migration'dan hemen önceki TEK bir DB
+# dump'ı. O-26'nın istediği geniş yedekleme (storage volume arşivi — reçete
+# görüntüleri/DTA/hasta belgeleri pg_dump'a hiç girmez, kutu dışı hedef,
+# 14 gün + 12 ay rotasyon, panelde "son yedek", gerçekten test edilmiş
+# restore.sh) hâlâ AÇIK — bu adım onun yerine geçmez, yalnız en acil riski
+# (yedeksiz gece migration'ı, 6347071 ile teorikten gerçeğe döndü) kapatır.
+log "[8/11] Migration'dan önce veritabanı yedeği alınıyor"
+BACKUP_DIR="$SCRIPT_DIR/backups"
+mkdir -p "$BACKUP_DIR"
+chmod 700 "$BACKUP_DIR" 2>/dev/null || true
+DB_NAME="$(env_wert POSTGRES_DB)"
+[ -n "$DB_NAME" ] || DB_NAME=postgres
+YEDEK_DOSYA="$BACKUP_DIR/vor-${BUNDLE_SURUM:-unbekannt}-$(date -u +%Y%m%dT%H%M%SZ).dump"
+
+# `db` servisinin PGPASSWORD'u zaten kendi konteyner ortamında (compose'un
+# `environment:` bloğu) tanımlı — pg_dump onu otomatik okur, buraya sır
+# taşımaya gerek yok.
+if ! docker compose exec -T db pg_dump -U postgres -d "$DB_NAME" -Fc > "$YEDEK_DOSYA" 2>>"$LOG_FILE"; then
+  rm -f "$YEDEK_DOSYA"
+  fehler "Migration-öncesi yedek alınamadı — güncelleme durduruldu" "pg_dump başarısız (bkz. $LOG_FILE)" \
+    "başarılı bir pg_dump çıktısı" \
+    "RELEASE-STANDARD.md §4.3: yedek alınamıyorsa migration çalışmaz. 'db' konteynerinin çalıştığından, .env'deki POSTGRES_DB/POSTGRES_PASSWORD'ün doğru olduğundan ve diskte yer olduğundan emin ol, sonra 'bash update.sh --jetzt' ile yeniden dene. Bu geceki güncelleme atlandı, image'a dokunulmadı."
+  durumu_yaz "yedek_basarisiz"
+  exit 1
+fi
+
+if [ ! -s "$YEDEK_DOSYA" ]; then
+  rm -f "$YEDEK_DOSYA"
+  fehler "Yedek dosyası boş çıktı — güncelleme durduruldu" "0 byte" "dolu bir pg_dump çıktısı" \
+    "pg_dump sessizce boş döndü — 'db' konteynerinin sağlığını kontrol et."
+  durumu_yaz "yedek_basarisiz"
+  exit 1
+fi
+
+chmod 600 "$YEDEK_DOSYA"
+ok "Yedek alındı: $(basename "$YEDEK_DOSYA") ($(du -h "$YEDEK_DOSYA" 2>/dev/null | cut -f1))"
+warn "Bu yedek YALNIZ veritabanını içerir, .env'i DEĞİL (O-61 (c), bilinçli tasarım). DATA_ENCRYPTION_KEY yalnız .env'de duruyor (O-29) — o olmadan şifreli hasta verisi bu yedekten geri gelmez. .env'i ayrı ve güvenli bir yerde sakla."
+
+# Rotasyon: yalnız son 5 migration-öncesi yedek. Tam O-26 rotasyonu (14 gün +
+# 12 ay, kutu dışı hedef) bunun yerini almaz — bu yalnız bir güvenlik ağı.
+ls -1t "$BACKUP_DIR"/vor-*.dump 2>/dev/null | tail -n +6 | xargs -r rm -f
+
+# ── Schritt 9 — pull + up ───────────────────────────────────────────────────
 # ⚠️ `up -d` burada `set -e`'ye bırakılmaz (`|| true` ile yumuşatılır): image
 # geçersizse (ör. bozuk bir :stable etiketi) komut doğrudan başarısız olur ve
 # script hiç rollback denemeden çıkardı — Schritt 9'un "başarısızsa geri al"
 # mantığı hiç çalışmazdı (onprem-Gegenlesen 12.09.2026). Başarısızlık burada
 # da aynı geri-alma+yeniden-dene yoluna düşer, aşağıdaki `if` üzerinden.
-log "[8/10] docker compose pull && up -d --remove-orphans"
+log "[9/11] docker compose pull && up -d --remove-orphans"
 docker compose pull >>"$LOG_FILE" 2>&1 || true
 ilk_up_basarili=1
 docker compose up -d --remove-orphans >>"$LOG_FILE" 2>&1 || ilk_up_basarili=0
 [ "$ilk_up_basarili" -eq 1 ] || warn "'docker compose up -d' başarısız oldu — sağlık kontrolüne girmeden geri alma denenecek"
 
 # ── Schritt 9 — Sağlık ───────────────────────────────────────────────────────
-log "[9/10] Sağlık kontrolü (lib-health.sh)"
+log "[10/11] Sağlık kontrolü (lib-health.sh)"
 if [ "$ilk_up_basarili" -eq 1 ] && warte_auf_gesundheit 180; then
   sonuc="ok"
 else
@@ -473,5 +524,5 @@ else
   durumu_yaz "$sonuc"
 fi
 
-log "[10/10] Bitti — sonuç: $sonuc"
+log "[11/11] Bitti — sonuç: $sonuc"
 [ "$sonuc" = "ok" ] || [ "$sonuc" = "geri_alindi" ]
