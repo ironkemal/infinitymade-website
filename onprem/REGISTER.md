@@ -233,16 +233,20 @@ gerçek kutuda hem yeşil hem kırmızı yollar ölçüldü (DEK bozulunca kırm
 tablo eklenince kırmızı, temizlik sonrası yeşil). Ayrıntı: §7H "Dilim 2b". Faz 2.2 artık
 tamamen kapalı.
 
-1. **O-78 — ICD-10-GM atıf satırı.** Küçük iş (bir `NOTICE-QUELLEN.txt` + Dashboard'da
-   tek satır), ama **hukuki yükümlülük**: 16.905 satırlık resmî veri paketin içinde
-   atıfsız duruyor. İlk teslimattan **önce** inmeli — sonra inerse ihlal gerçekleşmiş
-   olur.
-2. **Faz 1.2** (O-02) — kutuda `N8N_AI_SERIES_URL` boş kalınca kod **sabit n8n adresine
+✅ **O-78 — ICD-10-GM atıf satırı tamamlandı (12.09.2026 gecesi).** `onprem/NOTICE-QUELLEN.txt`
+yazıldı — yol boyunca `legal-de` bir hata yakaladı (bu maddenin ilk yazımı "Heilmittel-
+Preisstammdatei" diyordu, gerçek kaynak Anlage 2 §125 SGB V imiş) ve kapsamı ikiden beşe
+çıkardı (ICD-10-GM · Kostenträgerdatei · Physiotherapie-Vergütung · Heilmittel-Richtlinie/
+Diagnosegruppen · Podologie-Katalog). Dashboard satırı `dashboard.html`'e statik blok olarak
+indi (`fonksiyon-ustasi`'nın önerisiyle — yeni modül/fonksiyon yok, `dashboard.js` büyümedi).
+Ayrıntı: kendi maddesi.
+
+1. **Faz 1.2** (O-02) — kutuda `N8N_AI_SERIES_URL` boş kalınca kod **sabit n8n adresine
    düşüyor** ve hasta adı bize gelir (G1). İlk **ücretli** kutudan önce inmeli.
    ⚠️ Kutunun CSP'si bunu engellemez — çağrı tarayıcıdan değil **backend'den** çıkıyor.
-3. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
+2. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
    bir gerçek SMTP kurulumuyla SPF/DMARC doğrulaması. İlk beta kutusunda yapılabilir.
-4. **O-29 madde (2)** — kurulum sihirbazı `DATA_ENCRYPTION_KEY`'i gösteriyor ama
+3. **O-29 madde (2)** — kurulum sihirbazı `DATA_ENCRYPTION_KEY`'i gösteriyor ama
    "sakladım" onayı istemeden ilerliyor. Küçük, ucuz — bir sonraki `install.sh`
    dokunuşunda birlikte yapılabilir.
 
@@ -3146,16 +3150,17 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-### O-78 — ICD-10-GM pakete girdi ama § 63 UrhG'nin istediği atıf satırı hiçbir yerde yok
+### O-78 — ICD-10-GM pakete girdi ama § 63 UrhG'nin istediği atıf satırı hiçbir yerde yok ✅ **gelöst (12.09.2026)**
 
 | Alan | İçerik |
 |---|---|
-| **Ne** | `0013_seed_icd10_titles.sql` 16.905 satır ICD-10-GM başlığını image'a koyuyor. `legal-de` dağıtım hakkını doğruladı (BfArM Downloadbedingungen, § 5 Abs. 2 UrhG "anderes amtliches Werk" — ticari yeniden dağıtım dahil), **iki şartla**: § 62 Änderungsverbot (uyuldu, başlıklar aynen) ve **§ 63 Quellenangabe**. İkincisi bugün yalnız migration dosyasının başlık yorumunda — müşterinin **hiçbir zaman görmediği** bir yerde |
-| **Nerede** | `api-backend/db/migrations/0013_seed_icd10_titles.sql` (başlık yorumu). Eksik olan: `onprem/NOTICE-QUELLEN.txt` (`grep -rn NOTICE-QUELLEN` → yalnız bu sicil ve `wissensbank/REGISTER.md:636`; **dosya yok**) + Dashboard'da tek satırlık atıf |
+| **Ne** | `0013_seed_icd10_titles.sql` 16.905 satır ICD-10-GM başlığını image'a koyuyor. `legal-de` dağıtım hakkını doğruladı (BfArM Downloadbedingungen, § 5 Abs. 2 UrhG "anderes amtliches Werk" — ticari yeniden dağıtım dahil), **iki şartla**: § 62 Änderungsverbot (uyuldu, başlıklar aynen) ve **§ 63 Quellenangabe**. İkincisi bugün yalnız migration dosyasının başlık yorumunda — müşterinin **hiçbir zaman görmediği** bir yerde |
+| **Nerede** | `api-backend/db/migrations/0013_seed_icd10_titles.sql` (başlık yorumu) + ✅ `onprem/NOTICE-QUELLEN.txt` (yeni, 12.09.2026). Eksik kalan: Dashboard'da tek satırlık atıf |
 | **Tip** | G (paket içeriği) |
-| **Kutuda ne olur** | Bugün hiçbir şey — ihlal **teslimatla** doğar. İlk ücretli kutu çıktığı anda resmî bir eser kaynağı belirtilmeden ticari olarak dağıtılmış olur. Bedeli düşük (Unterlassung + düzeltme), ama çözümü **iki dosya**; teslimattan sonra düzeltmek "ihlal oldu, sonra kapattık" demek |
-| **Çözüm** | (1) `onprem/NOTICE-QUELLEN.txt` — `NOTICE.md`'nin (yazılım lisansları) **veri** kardeşi: ICD-10-GM (BfArM, sürüm + § 63 atıf metni), GKV Kostenträgerdatei, Heilmittel-Preisstammdatei. (2) Dashboard'da tek satır (Einstellungen → Über). Metin `wissensbank/REGISTER.md` W-A07'de hazır. ⚠️ Ayrıca **O-42'nin kapsamı genişledi**: lisans yüzeyi artık yalnız konteyner image'ları değil **dağıttığımız veri**; `onprem_image` sayacı bunu görmez |
-| **Durum** | `offen` — sahibi **Faz 2.1** (paket içeriği), ilk teslimattan **önce**. Kaynağı: O-38 turunun kendi açık kalem listesi (1) |
+| **Kutuda ne olur** | Bugün hiçbir şey — ihlal **teslimatla** doğar, ve henüz canlı müşteri yok (memory: `project_no_live_customer_yet`). Dashboard satırı olmadan ilk teslimatta doğardı |
+| **✅ Yapılan (12.09.2026)** | `onprem/NOTICE-QUELLEN.txt` yazıldı — `NOTICE.md`'nin (yazılım lisansları) **veri** kardeşi. `legal-de`'ye danışıldı, iki düzeltme çıktı: **(a)** bu maddenin ilk yazımı "Heilmittel-Preisstammdatei" diyordu — **YANLIŞ**. `heilmittel_tarif`'in gerçek kaynağı zinciri sürüldü (`seed_tarifs.js` → `billing/codes/physio_positions.js` başlığı): **Anlage 2 zum Vertrag § 125 SGB V Physiotherapie** (Stand 01.12.2025). Heilmittelpreisstammdatei (wissensbank Z-06) yalnız **çapraz doğrulama** — kendi Haftungsausschluss'u "nicht zu Abrechnungszwecken" diyor; kaynak olarak gösterilseydi hem yanlış Herkunft hem "bu amaçla kullanılamaz" diyen bir kaynağı kaynak gösterme hatası olurdu. **(b)** iki kaynak yerine paketin gerçekte gömdüğü **beş** kaynağın hepsi eklendi (O-38'in 8 seed tablosunun kapsadığı): ICD-10-GM (BfArM) · Kostenträgerdatei (GKV-Spitzenverband) · Physiotherapie-Vergütung (Anlage 2 §125) · Heilmittel-Richtlinie/Diagnosegruppen (G-BA) · Podologie-Katalog (Anlage 2 Podologie + HeilM-RL). `krankenkassen` bilinçli dışarıda — verisi "doğrulanmamış" kaynaktan, resmî bir eser/veritabanı değil. Kostenträgerdatei + Anlage 2 §125'in ticari ürüne gömme hakkı hiç analiz edilmemişti — `legal-de` şimdi yaptı: Werkschutz yok (Kostenträgerdatei, salt Tatsachen) + bestimmungsgemäße-Nutzung savunması; Anlage 2 §125 ICD-10-GM'yle aynı § 5 Abs. 2 UrhG sınıfında. §§ 87a ff. sui-generis Datenbankherstellerrecht sorusu EuGH'de açık (BGH evet, OLG Köln hayır) — bilinçli risk kabulü olarak `compliance/LEGAL_DECISIONS.md`'ye işlendi (12.09.2026 satırı + Risikoakzeptanz tablosu) |
+| **✅ Dashboard satırı de eklendi** | `fonksiyon-ustasi`'ya soruldu: settings ekranının alt-sekmesi yok, tek düz sayfa (`dashboard.html:2487`, `loadSettings()`). Öneri: yeni modül/fonksiyon YOK, `dashboard.html`'e statik blok yeter (durağan metin, veri çekmiyor) — "Integrationen & Datenschutz" grubuna, DSGVO bölümünün hemen ardına (`dashboard.html:2887-2907` civarı), yeni `#settingsQuellenSection` kartı. `dashboard.js` BÜYÜMEZ kapısı yalnız `.js`'i sayıyor (`tools/check-dashboard-size.sh`), `.html`'e dokunmak ihlal değil. i18n YOK — güncel desen (06-09.09.2026'da eklenen tüm settings kartları) sabit Almanca, ayrıca özel adlar (BfArM/G-BA/GKV-Spitzenverband) çevrilirse atıf zayıflardı. ⚠️ Ayrıca **O-42'nin kapsamı genişledi**: lisans yüzeyi artık yalnız konteyner image'ları değil **dağıttığımız veri**; `onprem_image` sayacı bunu görmez (ayrı madde, bu turda açılmadı) |
+| **Durum** | ✅ `gelöst` (12.09.2026) — `onprem/NOTICE-QUELLEN.txt` + `dashboard.html` satırı ikisi de indi. Kaynağı: O-38 turunun kendi açık kalem listesi (1) |
 
 ---
 
@@ -3407,10 +3412,10 @@ kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · O-82 |
+| `offen` | 11 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-79 · O-80 · O-82 |
 | `geplant` | 16 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · **O-91** · **O-94** |
 | 🟡 `kısmen gelöst` | 13 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-29 · O-87 · O-88 |
-| `gelöst` | 42 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · **O-90** · **O-92** · **O-93** |
+| `gelöst` | 43 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda

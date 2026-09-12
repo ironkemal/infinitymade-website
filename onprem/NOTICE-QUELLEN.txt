@@ -1,0 +1,146 @@
+Praxura — Quellenangaben für mitgelieferte Referenzdaten
+=========================================================
+
+Stand: 12.09.2026 · Basis: api-backend/db/migrations/0006…0013
+
+Diese Datei ist das Daten-Gegenstück zu onprem/NOTICE.md (Software-Lizenzen).
+Grund: mit dem On-Premise-Modell liefern wir nicht nur Software aus, sondern
+auch amtliche/vertragliche Referenzdaten (ICD-Kodes, Kostenträger-Verzeichnis,
+Vergütungssätze, Diagnosegruppen) als Teil des Produkts. § 63 UrhG (Gebot der
+Quellenangabe) gilt zwingend nur für Abschnitt 1 (BfArM-Bedingung); die
+Abschnitte 2-5 werden aus Sorgfalt und Transparenz ebenfalls angegeben, nicht
+weil eine Norm es zwingend verlangt.
+
+Wachsen die Referenzdaten (neue Migration 000N_seed_*.sql), wächst diese Datei
+mit — Regel wie bei NOTICE.md: kommt eine neue amtliche/vertragliche
+Datenquelle hinzu, kommt hier ein Abschnitt mit.
+
+-------------------------------------------------------------------
+1) ICD-10-GM 2026, Systematisches Verzeichnis, Band 1
+-------------------------------------------------------------------
+Herausgeber:  Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM)
+              im Auftrag des Bundesministeriums für Gesundheit (BMG)
+Rechtsgrundlage: "anderes amtliches Werk" i. S. des § 5 Abs. 2 UrhG
+              (BfArM-Downloadbedingungen, Stand 01.08.2025, § 1 Nr. 3/4)
+Enthalten in: api-backend/db/migrations/0013_seed_icd10_titles.sql
+              (16.905 Zeilen, Kapitel-/Gruppen-/Endkodes; Band 2 Alphabetisches
+              Verzeichnis — eigenes Nutzungsrecht bei Zi — ist NICHT enthalten)
+
+Pflicht-Quellenangabe (§ 63 UrhG, BfArM-Downloadbedingungen Anhang, wörtlich):
+
+  Die vorliegende Ausgabe beruht
+
+  (1) auf der vollständigen amtlichen Fassung der Internationalen
+  statistischen Klassifikation der Krankheiten und verwandter
+  Gesundheitsprobleme, 10. Revision, und
+
+  (2) auf der australischen ICD-10-AM, First Edition.
+
+  Die englischsprachige Originalausgabe zu (1) wurde 1992 von der
+  Weltgesundheitsorganisation (WHO) veröffentlicht als International
+  Statistical Classification of Diseases and Related Health Problems, Tenth
+  Revision, Geneva, WHO, Vol. 1, 1992; die englischsprachige Originalausgabe
+  zu (2) wurde 1998 vom australischen National Centre for Classification in
+  Health veröffentlicht als Volume 1 of The International Statistical
+  Classification of Diseases and Related Health Problems, 10th Revision,
+  Australian Modification (ICD-10-AM), First Edition.
+  © zu (1): Weltgesundheitsorganisation (WHO) 1992
+  © zu (2): Commonwealth of Australia 1998
+
+  Der Generaldirektor der Weltgesundheitsorganisation (WHO) hat die
+  Übersetzungsrechte für eine deutschsprachige Ausgabe an das Bundesinstitut
+  für Arzneimittel und Medizinprodukte (BfArM) vergeben, das für die
+  Übersetzung allein verantwortlich ist.
+
+  Das Commonwealth of Australia hat die Übersetzungsrechte für eine
+  deutschsprachige Ausgabe an das Bundesinstitut für Arzneimittel und
+  Medizinprodukte (BfArM) vergeben, das für die Übersetzung allein
+  verantwortlich ist.
+
+  Herausgegeben vom Bundesinstitut für Arzneimittel und Medizinprodukte
+  (BfArM) im Auftrag des Bundesministeriums für Gesundheit (BMG)
+
+  Die Erstellung erfolgt unter Verwendung der maschinenlesbaren Fassung des
+  Bundesinstituts für Arzneimittel und Medizinprodukte (BfArM).
+
+(Der Abschnitt "Weitere Texte und Angaben bei Druckwerken" der BfArM-Anlage
+— ISBN, Verlag, Satz, Druck, DNB-Meldung — betrifft ausschließlich gedruckte
+Werke und entfällt hier, da Praxura ein Softwareprodukt ist, kein Druckwerk.)
+
+-------------------------------------------------------------------
+2) Kostenträgerdatei Sonstige Leistungserbringer (Verfahren nach § 302 SGB V)
+-------------------------------------------------------------------
+Herausgeber: GKV-Spitzenverband, Berlin (© GKV-Spitzenverband)
+Bezug:       https://www.gkv-datenaustausch.de/leistungserbringer/
+             sonstige_leistungserbringer/kostentraegerdateien_sle/
+             kostentraegerdateien.jsp
+Abruf:       05.09.2026
+Dateistände: AO05Q326_KE3 · BK05Q326_KE1 · IK05Q326_KE1 · BN050526_KE0 ·
+             LK05Q226_KE0 · EK05Q226_KE0 · EK05Q426_KE0
+Format:      Anhang 03 zur Anlage 1 TP5 (EDIFACT, Nachrichtentyp KOTR)
+Enthalten in: api-backend/db/migrations/0006_seed_kostentraeger.sql,
+              0007_seed_kostentraeger_annahmestellen.sql (1.329 Datensätze,
+              1.043 eindeutige IK-Nummern)
+
+Die Kostenträgerdatei wird vom GKV-Spitzenverband zur bestimmungsgemäßen
+Verwendung im Datenaustauschverfahren nach § 302 SGB V bereitgestellt. Die in
+dieser Software enthaltenen Daten sind eine maschinell aufbereitete Ableitung
+dieser Dateien und NICHT die amtliche Datei selbst. Maßgeblich ist stets die
+jeweils aktuelle, vom Herausgeber unter der o. g. Adresse veröffentlichte
+Fassung.
+
+-------------------------------------------------------------------
+3) Vergütungen Physiotherapie (Positionsnummern und Preise)
+-------------------------------------------------------------------
+Quelle:   Anlage 2 (Vergütungsvereinbarung) zum Vertrag über die Versorgung
+          mit Leistungen der Physiotherapie nach § 125 Absatz 1 SGB V,
+          Lesefassung gültig ab 01.01.2026
+Parteien: GKV-Spitzenverband und die maßgeblichen Spitzenorganisationen der
+          Leistungserbringer
+Enthalten in: api-backend/db/migrations/0008_seed_heilmittel_tarif.sql
+              (928 Zeilen: 58 Positionsnummern × 16 Bundesländer,
+              bundeseinheitliche Preise)
+
+Die hinterlegten Beträge sind eine Übernahme aus der genannten Anlage 2.
+Maßgeblich für die Abrechnung ist ausschließlich die jeweils geltende
+vertragliche Fassung, nicht der in dieser Software gespeicherte Datenbestand.
+
+-------------------------------------------------------------------
+4) Heilmittel-Richtlinie / Diagnosegruppen (G-BA)
+-------------------------------------------------------------------
+Quelle:   Richtlinie über die Verordnung von Heilmitteln in der
+          vertragsärztlichen Versorgung (Heilmittel-Richtlinie/HeilM-RL) des
+          Gemeinsamen Bundesausschusses (G-BA), Beschluss vom 15.05.2025,
+          in Kraft seit 05.08.2025, veröffentlicht im Bundesanzeiger
+Enthalten in: api-backend/db/migrations/0010_seed_icd_sector_ranges.sql,
+              0011_seed_diagnosegruppen.sql (Diagnosegruppen, ICD-Zuordnung
+              und -Regeln je Fachbereich)
+
+Die Heilmittel-Richtlinie ist eine untergesetzliche Rechtsnorm (§ 92 SGB V).
+Die hinterlegten Diagnosegruppen und ICD-Zuordnungsregeln sind eine
+softwareseitige Umsetzung der Richtlinie, keine amtliche Abschrift.
+Maßgeblich ist stets die jeweils aktuelle, vom G-BA veröffentlichte Fassung.
+
+-------------------------------------------------------------------
+5) Heilmittel-Katalog Podologie
+-------------------------------------------------------------------
+Quelle:   Anlage 2 zum Vertrag über die Versorgung mit podologischen
+          Leistungen nach § 125 Absatz 1 SGB V, Fassung vom 17.06.2025,
+          sowie die Heilmittel-Richtlinie (siehe Abschnitt 4)
+Enthalten in: api-backend/db/migrations/0012_seed_heilmittel_katalog.sql
+              (Positionsnummern, Höchstmengen und Zuordnungsregeln Podologie)
+
+Der Katalog wird aus api-backend/billing/codes/*.js erzeugt
+(sync_heilmittel_katalog.js) und stellt eine softwareseitige Aufbereitung der
+genannten vertraglichen Fassungen dar, keine amtliche Abschrift. Maßgeblich
+ist stets die jeweils aktuelle, von den Vertragsparteien veröffentlichte
+Fassung.
+
+-------------------------------------------------------------------
+Regel für neue Quellen
+-------------------------------------------------------------------
+Fügt eine neue Migration (api-backend/db/migrations/000N_seed_*.sql) eine
+amtliche oder vertragliche Referenzdatenquelle hinzu, kommt im selben Commit
+ein neuer Abschnitt hier hinzu — vor dem ersten zahlenden Kunden, nicht danach
+(onprem/REGISTER.md O-78, Begründung: Verstoß entsteht mit der Auslieferung,
+nicht mit dem Fehlen der Angabe an sich).
