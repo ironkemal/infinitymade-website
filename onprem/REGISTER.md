@@ -110,7 +110,11 @@ kalemlerinden** çıktı, yani zaten biliniyorlardı ama **sahipsizdiler**:
 kutuda bugün canlı, `RELEASE-STANDARD.md` §4.3'ün açık ihlali) · **O-78**
 (ICD-10-GM'in § 63 UrhG Quellenangabe'si pakette yok) · **O-79**
 (`heilmittel_katalog`'un besleme zinciri kapısız, SEED-11) · **O-80**
-(`dta_schluessel` seed dışında). Toplam **80** madde.
+(`dta_schluessel` seed dışında). O-77 dar kapsamıyla aynı akşam **gelöst** oldu
+(gerçek kutuda doğrulandı) ve onu kapatırken **beşinci** bir madde daha çıktı —
+**O-81** (`update.sh` kendi kendini güncelledikten sonra kendi sapma-kontrolüne
+takılıp otomatik güncellemeyi kalıcı durdurabiliyordu; bu da **gelöst**, gerçek
+kutuda hem hata hem düzeltme doğrulandı). Toplam **81** madde.
 
 ⚠️ **Turun dersi:** "açık kalem" diye commit mesajına ya da bir maddenin içine
 yazılan iş, **O-numarası almadığı sürece yok sayılır** — §9'da görünmez, sıradaki
@@ -857,6 +861,14 @@ kapı unutmaz ama düşünmez.
 | **Kutuda ne olur** | Kutu **yedeksiz** kurulur. Müşteri sunucusunda veri kaybı = hasta dokümantasyonu kaybı = bizim değil müşterinin sorumluluğu, ama ürün "yedek yok" diye teslim edilirse satışta ve hukukta savunulamaz. Ayrıca playbook D3'ün uyarısı geçerli: `pg_dump` **storage dosyalarını yedeklemez** — reçete görüntüleri, DTA dosyaları, hasta belgeleri 5 bucket'ta duruyor |
 | **Çözüm** | **Faz 2.3** — gecelik `pg_dump` + storage volume arşivi tek yedek seti; hedef Hetzner Storage Box/lokal dizin; 14 gün + 12 ay rotasyon; panelde "son yedek: X" ve başarısızlıkta uyarı; `restore.sh` + gerçekten test edilmiş geri yükleme |
 | **Durum** | `geplant` (Faz 2.3 + 2.3a) — ★ ek gereksinim `onprem/RELEASE-STANDARD.md` §4.3: **migration çalışmadan önce** kutu `vor-<sürüm>` yedeği alır; yedek alınamıyorsa migration **çalışmaz**. Göç-öncesi yedeklerin son 3'ü rotasyondan muaf. Yedek hedefi varsayılan olarak **kutunun dışı** (aynı diskteki yedek disk arızasında veriyle birlikte ölür, §6.6). ⚠️ **12.09.2026:** O-77'nin dar-kapsamlı stopgap'ı (`update.sh`'ta gömülü, koşulsuz, yalnız DB, künyesiz) §4.3-4.7'ye uymuyor — O-26 bunu **genişletme değil, `onprem/backup.sh` gibi paylaşılan bir rutinle DEĞİŞTİRME** işi olarak ele almalı ("aynı kod, farklı tetikleyici"). Detay: O-77'nin kendi maddesindeki itiraf notu |
+
+> **onprem'in O-26'ya başlamadan önce onaylanmasını istediği 6 tasarım noktası (12.09.2026, O-77 bildirim turunda):**
+> 1. **Hetzner Storage Box'ı koda yazma.** §4.3 onu varsayılan diye adlandırıyor ama bu bizim rahatımıza yazılmış bir varsayım. Kutu-agnostik iki sürücü yeter: **(a) bir dizin yolu** (lokal disk veya müşterinin NAS'ının SMB/NFS mount'u — kod farkı sıfır) ve **(b) rsync/SFTP over SSH** (host+anahtar müşteriden). Storage Box ikisinin de bir örneği olur. Kimlik bilgisi her zaman **müşterinin** (K4/K5), bizim altyapımız hiçbir zaman geçerli hedef değil — **G1 sert veto**, bir "Praxura bulutuna yedek" seçeneği asla gündeme gelmemeli.
+> 2. **Paylaşılan rutin, ikinci uygulama değil.** §4.3 "aynı kod, farklı tetikleyici" diyor. `onprem/backup.sh` çıkacak ve `update.sh`'ın bugünkü Schritt 8'i **yeniden yazılıp** onu çağıracak — bugünkü blok genişletilmeyecek, yerini bırakacak.
+> 3. **DB'den ÖNCE storage arşivi.** Sıra ters olursa DB satırı henüz var olmayan bir dosyayı gösterebilir (bozuk reçete görüntüsü referansı); doğru sırada en fazla sahipsiz dosya kalır (zararsız).
+> 4. **Künye `data_key_fingerprint`'ten ibaret olmasın.** `pg_dump` rol/cluster nesnelerini almaz; geri yükleme `.env`'deki `POSTGRES_PASSWORD`/`JWT_SECRET` ile uyuşmazsa "restore başarılı ama hiçbir şey açılmıyor" hâli çıkar (`volumes/db/jwt.sql` `app.settings.jwt_secret`'i DB seviyesinde set ediyor, dump eski değeri taşıyabilir). `restore.sh` geri yükledikten sonra `roles.sql`+`jwt.sql`'i güncel `.env` değerleriyle yeniden uygulamalı; künye **üç** parmak izi taşımalı (DEK + JWT_SECRET + POSTGRES_PASSWORD), yalnız DEK değil.
+> 5. **`_supabase` veritabanı kapsam dışı** (analytics/realtime) — bilinçli, ama künyede/dokümantasyonda yazılsın; yoksa geri yüklemede "eksik" sanılır.
+> 6. **Rotasyon çakışması.** Gecelik yedekler ve göç-öncesi yedekler aynı dizine düşerse basit "son N'i tut" kuralı §4.3'ün "göç-öncesi son 3'e asla dokunma" kuralını ezebilir. Ad uzayı ayrılsın (`vor-migration-*` / `nightly-*`), rotasyon iki havuzu ayrı saysın.
 
 ---
 
@@ -2864,6 +2876,13 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > 5. **Mimari sapma en önemlisi:** §4.3 açıkça "Faz 2.3'ün gecelik yedeğiyle **aynı kod**, farklı tetikleyici" diyor — yani nightly (O-26) ve migration-öncesi (O-77) yedek AYNI paylaşılan rutini çağırmalı. Benim kodum `update.sh` içine gömülü, tek-kullanımlık bir blok; O-26 düzgün yazıldığında bu blok **genişletilmeyecek, YENİDEN YAZILACAK/yerini paylaşılan bir script'e (`onprem/backup.sh` gibi) bırakacak.**
 >
 > **Neden yine de commit edildi, geri alınmadı:** zamanlayıcı bugün gerçekten canlı ve yedeksiz migration riski gerçekti — hiç yedek almayan koddan, dar ama çalışan bir yedek alan koda geçmek net bir iyileşme. Ama "O-77 gelöst" etiketi yanıltıcı okunmasın diye buraya açıkça yazıyorum: **gerçek hedef §4.3-4.7'nin tamamı, ve O-26 bunu "ekleme" değil "değiştirme" işi olarak ele almalı.** Bir sonraki oturum bu notu okumadan O-26'ya başlamasın.
+>
+> **onprem'in bildirim üzerine yaptığı bağımsız denetim (aynı gün) — üç pürüz, ikisi kapatıldı:**
+> 1. ✅ **Disk yeri ön-kontrolü eklendi** (`40ffa3b`) — §4.3 madde 4.1: yedekten önce yer kontrolü yoktu, dolu diskte `pg_dump` denemesi Postgres'i de durdurabilirdi (§6.6, yedeksiz migration'dan DAHA KÖTÜ bir sonuç). `pg_database_size` + `df` karşılaştırması, yetersizse migration'a hiç geçmeden dur.
+> 2. ✅ **`pg_restore -l` bütünlük testi eklendi** (`40ffa3b`) — "boş değil" testi yarım/kesilmiş bir dump'ı yakalamıyordu. Dosya konteynerin içine kopyalanıp orada listeleniyor (custom-format arşivler stdin'den `-l` çalışmıyor — gerçek kutuda denendi, doğrulandı).
+> 3. ⚠️ **`yedek_basarisiz` bugün kimseye görünmüyor — açık kaldı.** `praxura-stand.json`'ı okuyacak panel Faz 2.4'te, yani henüz yok. Sonuç: `db` sağlıksızsa kutu **her gece sessizce güncellenmeyi bırakır** ve kimse fark etmez (O-73'ün başka bir kapıdan geri dönüşü — tıpkı O-81 gibi). Sert-dur doğru karar ama sert-dur + görünmez kanal birleşince yeni bir sessiz arıza türü doğuyor. onprem bunu "kalanların en ciddisi" diye işaretledi. Gerçek çözüm bir bildirim kanalı ister (panel/e-posta/telemetri) — Faz 2.4'ü beklemeden ucuz bir ara adım yoksa bu **O-26 ile birlikte** ele alınmalı.
+>
+> onprem G1/G2/G3/G8 denetimi: **dördü de geçti** (`docker compose exec -T db pg_dump ...` — dump kutu içinde kalıyor, sır komut satırında yok, dış zincir yok). İleriye dönük not: O-26'da "Praxura bulutuna yedek" seçeneği gündeme gelirse o **G1 sert vetodur**, tartışılmaz.
 
 ---
 
@@ -2903,6 +2922,23 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Kutuda ne olur** | Bugün **hiçbir şey** — tablo hiçbir kod yolundan okunmuyor (O-38 turunda doğrulandı). Risk ileride: bu tabloyu okuyan bir özellik yazıldığı anda kutuda **boş** çıkar ve sebebi hiçbir yerde yazılı olmaz |
 | **Çözüm** | Sıra: (1) `gkv-302` `source_version`'ı V21'e düzeltir (canlıda + zincirde), (2) seed migration'ı yazılır. ⚠️ **Bu tabloyu okuyan ilk kod satırı yazılmadan önce** yapılmalı |
 | **Durum** | `offen` (düşük öncelik, ama bilinçli olarak **`unkritisch` değil**: "bugün okuyan yok" geçici bir gerçek, kalıcı bir gerekçe değil). Kaynağı: O-38 turunun açık kalem listesi (3). Kardeşi — `krankenkassen.ik_number`'ın düzeltilmesi — bu sicile **ait değil**: o bir veri kalitesi işi (`gkv-302` + Ops kartı), ve seed bilinçli olarak NULL bıraktığı için **yanlış veri kutuya gitmiyor** |
+
+---
+
+### O-81 — `update.sh` kendi kendini güncelledikten SONRA aynı gece kendi sapma-kontrolüne takılıyordu — otomatik güncellemeyi KALICI olarak durdurabilirdi
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `update.sh`'ın "Kendi kendini güncelleme" bloğu (§7J/J5 sonu) dosyayı KOŞULSUZ yazıp re-exec ediyor — bu doğru ve bilinçli. Ama hemen ardından çalışan genel sapma-kontrolü (Schritt 4/5, J3) `update.sh`'ı da **aynı** "bizim dosyalar" listesine dahil ediyordu. Bu döngü `mevcut_sha`'yı (disk'te, self-update SONRASI — yani her zaman YENİ) `taban_sha`'yla (bir önceki BAŞARILI koşudan kalma — yani her zaman ESKİ) karşılaştırıyor; `update.sh`'ın içeriği iki başarılı koşu arasında değiştiği HER durumda ikisi farklı çıkıyor ve "müşteri elle değiştirmiş" sanılıyordu — oysa kimse dokunmamıştı, tam tersine biz KENDİMİZ az önce güncellemiştik |
+| **Nerede** | `onprem/update.sh` — Schritt 4/5 döngüsü (`.env.template` için zaten var olan istisnaya benzer bir istisna `update.sh` için YOKTU) |
+| **Tip** | F (fonksiyonel — otomatik güncelleme mekanizmasının kendisi) |
+| **Kutuda ne olur** | `update.sh`'ın kendi içeriği iki gece arasında değişen HER sürümde (ki bu hafta içinde üç kez oldu) o gece `sonuc=konflikt` çıkar, güncelleme **tümden durur**, kutu eski sürümde kilitli kalır. En kötüsü: sonraki gece de aynı şey — çünkü hiçbir "ok" koşusu olmadan taban hiç güncellenmiyor. **Kutuyu asla güncellemeyen** bir sonsuz döngü (O-73'ün "kutu hiç güncellenmez" sorununun farklı bir kapıdan geri dönüşü), tamamen sessiz — panelde görünmüyor (O-77'nin 3. maddesiyle aynı görünürlük boşluğu) |
+| **Çözüm** | `update.sh`'ı, `.env.template` gibi, genel sapma-kontrolü ve sha-kaydı döngülerinin **her ikisinden de** hariç tut — kendi içeriği zaten yukarıdaki özel mekanizmayla korunuyor/güncelleniyor, ikinci bir (ve çelişen) kontrole ihtiyacı yok. Bilinçli sonuç: `update.sh` artık **geri alınmaz** (`geri_yukle()` dokunmaz) — bu istenen davranış, çünkü bu gecenin arızası `update.sh`'ın kendisindeyse yarınki deneme yine YENİ (düzeltilmiş) koddan koşmalı, eskiye dönmemeli |
+| **Durum** | ✅ **gelöst (12.09.2026, aynı tur — O-77'nin disk/pg_restore eklerini gerçek kutuda test ederken bulundu) — gerçek kutuda hem hata hem düzeltme doğrulandı** — commit `58aa6cb` |
+
+> **Doğrulama (WSL2 Ubuntu-24.04, gerçek Docker, gerçek GHCR image'ları, tek sürekli oturum):**
+> - **Hata, gerçek kutuda tetiklendi:** `e8160dc`→`40ffa3b` geçişinde (update.sh içeriği gerçekten değişti) `sonuc=konflikt`, `catisma_dosyalari: update.sh` — güncelleme tümden durdu.
+> - **Düzeltme sonrası aynı sınıf geçiş (`40ffa3b`→`58aa6cb`, update.sh yine değişti) temiz çalıştı:** self-update tetiklendi ("update.sh kendisi değişti — yazılıp yeniden başlatılıyor"), ardından **hiçbir sapma uyarısı yok**, doğrudan `[4-7/11] Değişen dosyalar: install.sh` → backup (O-77'nin yeni disk-kontrolü + `pg_restore -l` bütünlük testi ikisi de sessizce geçti, 1.7 MB yedek) → `pull && up -d` → sağlık → **`sonuç: ok`, 8/8 healthy**. Tek koşuda üç ayrı düzeltmenin (O-81 + O-77'nin iki eki) birlikte doğru çalıştığının kanıtı.
 
 ---
 
@@ -2959,7 +2995,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 80 madde** (O-01 … O-80). ⚠️ O-53 ve O-54'ün kendi `###` girdisi yok;
+**Toplam 81 madde** (O-01 … O-81). ⚠️ O-53 ve O-54'ün kendi `###` girdisi yok;
 O-01'in not bloğunda yaşıyorlar — kaybolmaya açıklar, ileride kendi girdilerine
 terfi etmeliler.
 
@@ -2968,7 +3004,7 @@ terfi etmeliler.
 | `offen` | 11 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · **O-78** · **O-79** · **O-80** |
 | `geplant` | 16 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-26 · O-27 · O-28 · O-29 · O-31 · O-43 |
 | 🟡 `kısmen gelöst` | 10 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 |
-| `gelöst` | 32 | O-15 · O-20 · O-25 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · **O-77** |
+| `gelöst` | 33 | O-15 · O-20 · O-25 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · **O-77** · **O-81** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ⚠️ **O-77 `gelöst` yazıyor ama dar kapsamlı** (yalnız migration-öncesi tek bir DB
