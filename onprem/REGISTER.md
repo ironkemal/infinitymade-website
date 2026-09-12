@@ -277,9 +277,14 @@ katalog fiyatının önüne geçiriyordu — 01.01.2027'de sessiz eksik ödemeye
 zaman bombasıydı. **Aynı gün kapatıldı**: override koddan tamamen kaldırıldı, kendi
 maddesine bak).
 
-Bağımsız açık maddeler (henüz sıralanmadı, kullanıcı seçecek): **O-82** (`update.sh`'ın
-`dur` dalları merkeze bildirmiyor), **O-44** (`prescriptions` iki ayrı yazma yolu),
-**O-33** (on-prem'de "çalışan sayısı/limit" tanımsız).
+🟡 **O-82 — bildirim kanalı yazıldı (13.09.2026)** — `update.sh`'ın "ok" dışındaki her
+sonucu artık kutunun kendi SMTP'siyle owner'a mail atıyor (durum değişince hemen, aynı
+durum sürerse 7 günde bir, `ok`'a dönüşte Entwarnung). Kod + izole mantık testi (8/8)
+tamam, **gerçek kutuda henüz denenmedi** ve `SMTP_HOST` boş kutularda kanal yok — bu
+yüzden kısmen. Detay kendi maddesinde.
+
+Bağımsız açık maddeler (henüz sıralanmadı, kullanıcı seçecek): **O-44** (`prescriptions`
+iki ayrı yazma yolu), **O-33** (on-prem'de "çalışan sayısı/limit" tanımsız).
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -3274,7 +3279,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-### O-82 — `update.sh`'ın hiçbir `dur` dalının kutu dışına bildirimi yok — sicil kuralı 5'in kendisi bunu istiyor
+### O-82 — `update.sh`'ın hiçbir `dur` dalının kutu dışına bildirimi yok — sicil kuralı 5'in kendisi bunu istiyor 🟡 **kısmen gelöst (13.09.2026)**
 
 | Alan | İçerik |
 |---|---|
@@ -3282,8 +3287,9 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Nerede** | `onprem/update.sh` — `durumu_yaz()`'ın yazdığı her `sonuc` (`durak`/`konflikt`/`geri_alindi`/`bakim_modu`/`yedek_basarisiz`) yalnız `update.log` + `praxura-stand.json`'a düşüyor, ikisini de bugün kimse okumuyor |
 | **Tip** | F (görünürlük — panel yokluğunda tek gerçek kanal) |
 | **Kutuda ne olur** | Faz 2.4'e kadar yazılacak her yeni "dur" dalı aynı sessiz-arıza sınıfına katılır — üçüncüsü, dördüncüsü de aynı şekilde görünmez kalır. İki örnek zaten bir desen: bu numara olmadan bir sonraki "dur" dalı yazan kişi aynı boşluğu üçüncü kez keşfeder (sicilin kendi "sahipsiz madde" dersi, bugün başka üç maddede zaten yaşandı — §7K) |
-| **Çözüm** | onprem'in önerisi: Faz 2.4'ü (tam panel) beklemeden, **ucuz bir ara kanal** — `update.sh` `durumu_yaz()`'ın "ok" dışındaki her sonucunda, kutunun **kendi kurulu SMTP'si** (O-51/O-66 zinciri, zaten var) üzerinden owner'a tek satırlık bir e-posta atsın. Yeni dış zincir yok, yeni env var yok — G1/G8 temiz (onprem'in kendi değerlendirmesi). Tasarım kararı (e-posta metni, ne sıklıkla tekrar gönderilir — her gece mi yoksa yalnız durum DEĞİŞTİĞİNDE mi, owner adresi `.env`'den mi `profiles`'tan mı) henüz verilmedi |
-| **Durum** | `offen` — Faz 2.4'ten bağımsız, ucuz bir iyileştirme olarak açık. Kaynağı: O-77(3) + O-81'in ortak deseni (onprem'in bildirim-sonrası ikinci notu, 12.09.2026) |
+| **Çözüm** | onprem'in önerisiyle **ucuz ara kanal** uygulandı: `durumu_yaz()`'ın her çağrısında `bildirim_degerlendir()` çalışıyor. `update.sh` zaten `docker compose exec -T db psql ...` deseniyle konteyner içine giriyordu (migration kontrolü, satır ~467); aynı desen `api` konteynerine uygulandı: yeni `api-backend/setup/update-alarm-mail.mjs`, `docker compose exec -T api node setup/update-alarm-mail.mjs <sonuc> <email> <isim>` ile çağrılıyor, `lib/mail.js`'in `createSMTPTransport()`/`getMailFrom()`'unu ve O-66'nın `praxura_setup.owner_user_id → profiles.email` zincirini (setup/router.js'in `/test-smtp`'iyle BİREBİR aynı desen) kullanıyor. Yeni env var yok, yeni dış servis yok, yeni network endpoint yok (HTTP değil, `docker exec`/`docker run`) — G1/G2/G8 temiz. Üç açık tasarım kararı onprem'le netleşti: (1) **sıklık** — durum değiştiğinde hemen, aynı durum sürerse 7 günde bir hatırlatma, `ok`'a dönüşte Entwarnung; başarısız gönderim denemesi zamanlayıcıyı ilerletmiyor (bir sonraki koşuda hemen tekrar dener) — 8 senaryoluk izole bash testiyle doğrulandı, bu süreçte bir gerçek mantık hatası da yakalandı ve düzeltildi (durum değişiminde eski zaman damgası sıfırlanmıyordu, yanlışlıkla susturuyordu). (2) **owner adresi** — `.env` değil `profiles` (kutu tek kiracılı, DB her zaman güncel); psql ile okunup `$STAND_DIR/owner-bilgi.json`'a önbelleklenir — mail script'i DB'ye hiç bağlanmaz, hep önbelleği kullanır (`bakim_modu`'da DB de düşmüş olabilir). ⚠️ **Onprem-Gegenlesen bulgusu (13.09.2026):** ilk sürümde önbellek yalnız `sonuc=ok` sonrasında dolduruluyordu — kutunun İLK gecelik koşusu başarısız olursa (`konflikt`/`yedek_basarisiz`) önbellek hiç yaratılmamış olurdu, alarm hiç kuramaz, kutu takılı kaldıkça bir daha `ok` da gelmez → kısır döngü, tam O-82'nin önlemeye çalıştığı sınıf. Düzeltildi: `owner_bilgisini_guncelle` artık Schritt 3'ten (ilk `durumu_yaz` çağrısı) hemen ÖNCE de çağrılıyor, DB henüz dokunulmamışken. (3) **metin** — sabit şablon + sonuç + sürüm + zaman, log kuyruğu/dosya içeriği yok (G1 hijyeni). `exec` başarısız olursa (api container sağlıksız, tam da `bakim_modu`'da beklenen durum) `docker compose run --rm --no-deps --pull never api ...` ile imajdan tek seferlik konteyner denenir — `--pull never` şart: `run` varsayılan olarak önce dışarı çıkmayı dener, internetsiz kutu (bakim_modu'nun en olası eşlikçisi) bu yüzden burada da takılırdı |
+| **Bilinen iki sınır (düzeltme değil, bilinçli kayıt)** | (a) `timeout 30` tetiklenirse `--rm` temizliği istemci tarafında kalır — geride çıkmış (exited) tek-seferlik bir konteyner birikebilir, `docker compose up`'ın `--remove-orphans`'ı bunu temizlemez (`api` tanımlı bir servis). Zararsız ama altı ay sonra "bu konteynerler ne" diye sorulur. (b) Başarısız bir Entwarnung (sonuc=ok mail atamazsa) tekrar denenmiyor — bir sonraki koşuda `eski_sonuc=="ok"` olduğu için sessiz kalınır. Hata yönü güvenli (owner gereksiz yere endişelenmez, yanlış huzur da duymaz) — bilinçli kabul edildi |
+| **Durum** | 🟡 **kısmen gelöst (13.09.2026)** — kod yazıldı, `bash -n` + izole mantık testi (8/8 senaryo) + `update-alarm-mail.mjs`'in üç davranışı (SMTP yok→sessiz çık, kötü SMTP→hata yakala exit 1, eksik argüman→sessiz çık) gerçek çalıştırmayla doğrulandı, `onprem/manifest.json` yeniden üretildi (bu arada `install.sh`/`restore.sh`'ın da hash'lerinin bayat olduğu ortaya çıktı — içerik değişmemiş, önceki manifest hiç güncellenmemiş, bu regen düzeltti). **Gerçek kutuda henüz test edilmedi** (gerçek SMTP + gerçek `bakim_modu` senaryosu gerektirir — WSL test kutusunda bir sonraki turda yapılmalı). **Kapsam sınırı, sicile bilerek yazılıyor:** `SMTP_HOST` boş bırakılan kutularda (install.sh SMTP adımını atlamaya izin veriyor, O-66) bu kanal da yok — o kutularda O-82 hâlâ tam anlamıyla açık, tek gerçek kapanışı Faz 2.4'ün paneli |
 
 ---
 
@@ -3483,9 +3489,9 @@ kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 10 | O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-80 · O-82 · O-95 |
+| `offen` | 9 | O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-80 · O-95 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
-| 🟡 `kısmen gelöst` | 14 | O-01 · O-02 · O-09 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-87 · O-88 |
+| 🟡 `kısmen gelöst` | 15 | O-01 · O-02 · O-09 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
 | `gelöst` | 46 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-96 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 

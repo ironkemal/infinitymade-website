@@ -44,6 +44,17 @@ STAND_DIR="$SCRIPT_DIR/.praxura-stand"
 STAND_FILE="$STAND_DIR/praxura-stand.json"
 LOCK_FILE="$SCRIPT_DIR/.praxura-update.lock"
 
+# O-82 — Bildirim-Zustand (WER zuletzt benachrichtigt wurde) getrennt von
+# STAND_FILE (WAS gerade der Zustand ist). Gleicher Grund wie DATEIEN_SHA_FILE
+# weiter unten: zwei Aufgaben in einer Datei laufen bei einem Konflikt
+# auseinander. NOTIFY_FILE wird NUR von durumu_yaz()/bildirim_degerlendir()
+# geschrieben. OWNER_MAIL_CACHE wird NUR bei sonuc=ok aktualisiert (psql,
+# also DB erreichbar) — der Mailversand selbst hängt dann NICHT mehr an einer
+# erreichbaren DB (bakim_modu heisst gerade: DB evtl. auch nicht erreichbar).
+NOTIFY_FILE="$STAND_DIR/son-bildirim.json"
+OWNER_MAIL_CACHE="$STAND_DIR/owner-bilgi.json"
+BILDIRIM_ARALIK_SANIYE=$((7*86400))
+
 # ── Ausgabe-Helfer — gleiche Disziplin wie install.sh: Geheimnisse NIE loggen ─
 log()  { printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S') $*" | tee -a "$LOG_FILE" >&2; }
 ok()   { log "  [ok] $*"; }
@@ -219,7 +230,122 @@ durumu_yaz() {
 }
 EOF
   mv "$STAND_FILE.tmp" "$STAND_FILE"
+  # O-82: Faz 2.4'ün paneli gelene kadar update.log tek görünürlük kanalıydı —
+  # kimse okumazsa "dur" dalları sessizce sürer. `|| true`: bildirim hiçbir
+  # zaman güncelleme sonucunu etkilemesin, en kötü ihtimalle mail gitmez.
+  bildirim_degerlendir "$sonuc" || true
 }
+
+# O-82 — Bildirim önbelleği ve gönderim mantığı (onprem-Review, 13.09.2026) ──
+#
+# owner_bilgisini_guncelle(): SADECE sonuc=ok sonrasında çağrılır (aşağıda,
+# Schritt 11), yani DB o an kanıtlanmış şekilde erişilebilir durumdaydı. E-posta
+# + işletme adını psql ile okuyup önbelleğe yazar. Mail script'i (setup/
+# update-alarm-mail.mjs) kendisi DB'ye HİÇ bağlanmaz — bakim_modu tam olarak
+# "DB de dahil konteynerler sağlıksız" demek, o an yeni bir sorgu da başarısız
+# olurdu. Önbellek olmadan "DB çökmüş kutu" = "alarmsız kutu" olurdu.
+owner_bilgisini_guncelle() {
+  local satir eposta isim
+  satir="$(docker compose exec -T db psql -U postgres -d "$(env_wert POSTGRES_DB)" -tAc \
+    "SELECT p.email || '|' || COALESCE(p.business_name,'') FROM praxura_setup s JOIN profiles p ON p.id = s.owner_user_id WHERE s.id = 1;" \
+    2>>"$LOG_FILE" | tr -d '\r' || true)"
+  [ -n "$satir" ] || return 0
+  eposta="${satir%%|*}"
+  isim="${satir#*|}"
+  [ -n "$eposta" ] || return 0
+  cat > "$OWNER_MAIL_CACHE.tmp" <<EOF
+{ "email": "$(printf '%s' "$eposta" | sed 's/"/\\"/g')", "business_name": "$(printf '%s' "$isim" | sed 's/"/\\"/g')" }
+EOF
+  mv "$OWNER_MAIL_CACHE.tmp" "$OWNER_MAIL_CACHE"
+}
+
+# $1 = "son_sonuc" | "son_basarili_gonderim_epoch"
+bildirim_alani_oku() {
+  [ -f "$NOTIFY_FILE" ] || { echo ''; return 0; }
+  case "$1" in
+    son_sonuc)
+      grep -oE '"son_sonuc"[[:space:]]*:[[:space:]]*"[^"]*"' "$NOTIFY_FILE" 2>/dev/null \
+        | sed -E 's/.*"([^"]*)"$/\1/' || echo '' ;;
+    son_basarili_gonderim_epoch)
+      grep -oE '"son_basarili_gonderim_epoch"[[:space:]]*:[[:space:]]*[0-9]+' "$NOTIFY_FILE" 2>/dev/null \
+        | grep -oE '[0-9]+$' || echo '' ;;
+  esac
+}
+
+bildirim_kaydet() {
+  cat > "$NOTIFY_FILE.tmp" <<EOF
+{
+  "son_sonuc": "$1",
+  "son_basarili_gonderim_epoch": ${2:-0}
+}
+EOF
+  mv "$NOTIFY_FILE.tmp" "$NOTIFY_FILE"
+}
+
+# Önce çalışan konteynerin içinden dener (hızlı yol). `bakim_modu`'da `api`
+# sağlıksız/durmuş olabilir — o zaman `run --rm` ile imajdan tek seferlik bir
+# konteyner başlatır (servis sağlıklı olmasa bile image kendisi çalışır).
+mail_gonder_container() {
+  local sonuc="$1" eposta isim
+  [ -f "$OWNER_MAIL_CACHE" ] || { warn "  bildirim: owner e-postası önbellekte yok (henüz hiç 'ok' koşusu olmamış olabilir), mail atlanıyor"; return 1; }
+  eposta="$(grep -oE '"email"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || echo '')"
+  isim="$(grep -oE '"business_name"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || echo '')"
+  [ -n "$eposta" ] || { warn "  bildirim: önbellek bozuk/boş, mail atlanıyor"; return 1; }
+  if timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1; then
+    return 0
+  fi
+  warn "  bildirim: 'exec' başarısız oldu (api container sağlıksız olabilir) — 'run --rm' ile tek seferlik deneniyor"
+  # --pull never: compose'un `pull_policy: always`'ı olmasa bile 'run' varsayılan
+  # olarak önce dışarı çıkmayı dener — internetsiz kutu (bakim_modu'nun en
+  # olası eşlikçisi) bu yüzden burada da takılırdı (onprem-Gegenlesen 13.09.2026).
+  # İmaj zaten yerel: konteyner ondan koşuyordu.
+  timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1
+}
+
+# Ne zaman gönderilir: (a) durum bir öncekinden FARKLIysa, (b) hâlâ aynı
+# "dur" dalındaysa ve son BAŞARILI gönderimden bu yana 7 gün geçtiyse (owner
+# tatildeyse tek mailin unutulmaması için — O-81'in dersi), (c) "ok"'a
+# dönüldüyse VE önceki durum "ok" değildiyse (Entwarnung). Başarısız gönderim
+# denemesi epoch'u İLERLETMEZ — bir sonraki koşuda hemen tekrar dener.
+bildirim_degerlendir() {
+  local yeni="$1" eski_sonuc eski_epoch simdi gonder=0 yeni_epoch
+
+  eski_sonuc="$(bildirim_alani_oku son_sonuc)"
+  eski_epoch="$(bildirim_alani_oku son_basarili_gonderim_epoch)"
+  [ -n "$eski_epoch" ] || eski_epoch=0
+  simdi="$(date -u +%s)"
+
+  if [ "$yeni" = "ok" ]; then
+    if [ -n "$eski_sonuc" ] && [ "$eski_sonuc" != "ok" ]; then gonder=1; fi
+  else
+    if [ "$eski_sonuc" != "$yeni" ]; then
+      gonder=1
+      eski_epoch=0  # yeni duruma geçildi — önceki (farklı) durumun zaman damgası bu duruma ait değil
+    elif [ "$eski_epoch" -eq 0 ] || [ $(( simdi - eski_epoch )) -ge "$BILDIRIM_ARALIK_SANIYE" ]; then
+      gonder=1
+    fi
+  fi
+
+  yeni_epoch="$eski_epoch"
+  if [ "$gonder" -eq 1 ]; then
+    if mail_gonder_container "$yeni"; then
+      ok "  Bildirim maili gönderildi (sonuc=$yeni)"
+      yeni_epoch="$simdi"
+    else
+      warn "  Bildirim maili gönderilemedi — güncelleme sonucu bundan ETKİLENMEDİ, bir sonraki koşuda tekrar denenecek"
+    fi
+  fi
+  bildirim_kaydet "$yeni" "$yeni_epoch"
+}
+
+# O-82 (onprem-Gegenlesen, 13.09.2026): önbelleği burada da tazele, yalnız
+# Schritt 11'de DEĞİL. Önbellek yalnız sonuc=ok'ta doldurulsaydı, kutunun İLK
+# gecelik koşusu başarısız olursa (konflikt/yedek_basarisiz) owner-bilgi.json
+# hiç yaratılmamış olurdu — alarm hiç kuramaz, kutu takılı kaldığı sürece
+# hiçbir "ok" da gelmez, kısır döngü (tam O-82'nin önlemeye çalıştığı sınıf).
+# Burada db henüz hiç dokunulmamış durumda, normalde erişilebilir; erişilemezse
+# fonksiyon zaten `return 0` yapıp eski önbelleği korur, kayıp yok.
+owner_bilgisini_guncelle || true
 
 # ── Schritt 3 — Durak-Tor ────────────────────────────────────────────────────
 if [ "$BUNDLE_DURAK" = "true" ]; then
@@ -548,6 +674,10 @@ if [ "$sonuc" = "ok" ]; then
   } > "$DATEIEN_SHA_FILE.tmp"
   mv "$DATEIEN_SHA_FILE.tmp" "$DATEIEN_SHA_FILE"
   cp "$BIZIM_ENV" "$TABAN_ENV"
+  # O-82: owner e-postası önbelleği yalnız burada tazelenir — DB'nin
+  # erişilebilir olduğu kanıtlanmış tek an. `|| true`: önbellek tazeleme
+  # başarısız olsa bile "ok" sonucu bundan etkilenmemeli.
+  owner_bilgisini_guncelle || true
 fi
 
 if [ -n "$catisan_anahtarlar" ]; then
