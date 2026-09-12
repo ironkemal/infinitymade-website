@@ -185,15 +185,19 @@ db'de 3× başarılı yedek, durdurulmuş db'de 1× başarısızlık+tam geri al
 byte-özdeş doğrulandı), 1× tam başarı yolu (`sonuc=ok`). Kanıt ve commit'ler: kendi
 maddesinde (O-77).
 
-1. **O-26 — kapsamlı yedekleme (storage + kutu dışı hedef + rotasyon + restore.sh).**
-   ★ **Şimdi sıradaki 1.** O-77 yalnız "migration'dan hemen önce tek bir DB dump'ı"
-   sorununu kapattı — asıl risk hâlâ açık: reçete görüntüleri/DTA/hasta belgeleri
-   (5 storage bucket) hiçbir yedeğe girmiyor, yedek kutunun kendi diskinde duruyor
-   (disk arızasında veriyle birlikte ölür, §6.6), rotasyon yok, **hiç test edilmiş bir
-   `restore.sh` yok** — "yedek aldık ama geri yüklenebildiğini hiç denemedik" bugüne
-   kadarki en gerçekçi risk. O-61 (c) (`.env` dışlaması — O-77 ile zaten sağlandı) ve
-   O-29 (c) (DEK uyarısı — O-77 ile zaten eklendi) bu maddenin **kapsamına artık dahil
-   değil**, kapandılar.
+✅ **O-26'nın dar kapsamı kapandı (13.09.2026, gerçek kutuda `--neu` kurulumla
+uçtan uca doğrulandı) — `onprem/backup.sh` artık storage+DB+künye+rotasyon+kota
+alıyor, dizin hedefine (kutu dışı dahil) yazıyor, `update.sh` ve yeni
+`praxura-backup.timer` onu paylaşıyor.** Kalan gerçek boşluk: `restore.sh` hiç
+yazılmadı — "yedek aldık ama geri yüklenebildiğini hiç denemedik" hâlâ bugüne
+kadarki en gerçekçi risk, ve SSH/rsync hedef sürücüsü henüz yok. Kanıt ve
+commit'ler: kendi maddesinde (O-26).
+
+1. **`restore.sh` — hiç yazılmayan, hiç test edilmeyen geri yükleme.** ★ Şimdi
+   sıradaki 1. `backup.sh` künyeye üç parmak izi yazıyor ama onları OKUYAN/
+   karşılaştıran taraf yok — O-29'un §4.5 madde 4'ü (DEK uyuşmazlığında veriye
+   dokunmadan durma) hâlâ kağıt üzerinde. "Yedek var" ile "yedekten gerçekten
+   dönebiliyoruz" arasındaki fark kapanmadan bu risk gerçek kalır.
 2. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8 kontrolleri (10 şema sayaçı, RLS negatif testi,
    `DATA_ENCRYPTION_KEY` yaz-oku turu). Sahipsiz kalmış borç; kurulumun "başarılı
    sayılır" tanımı bunlar olmadan eksik.
@@ -863,7 +867,23 @@ kapı unutmaz ama düşünmez.
 | **Tip** | F |
 | **Kutuda ne olur** | Kutu **yedeksiz** kurulur. Müşteri sunucusunda veri kaybı = hasta dokümantasyonu kaybı = bizim değil müşterinin sorumluluğu, ama ürün "yedek yok" diye teslim edilirse satışta ve hukukta savunulamaz. Ayrıca playbook D3'ün uyarısı geçerli: `pg_dump` **storage dosyalarını yedeklemez** — reçete görüntüleri, DTA dosyaları, hasta belgeleri 5 bucket'ta duruyor |
 | **Çözüm** | **Faz 2.3** — gecelik `pg_dump` + storage volume arşivi tek yedek seti; hedef Hetzner Storage Box/lokal dizin; 14 gün + 12 ay rotasyon; panelde "son yedek: X" ve başarısızlıkta uyarı; `restore.sh` + gerçekten test edilmiş geri yükleme |
-| **Durum** | `geplant` (Faz 2.3 + 2.3a) — ★ ek gereksinim `onprem/RELEASE-STANDARD.md` §4.3: **migration çalışmadan önce** kutu `vor-<sürüm>` yedeği alır; yedek alınamıyorsa migration **çalışmaz**. Göç-öncesi yedeklerin son 3'ü rotasyondan muaf. Yedek hedefi varsayılan olarak **kutunun dışı** (aynı diskteki yedek disk arızasında veriyle birlikte ölür, §6.6). ⚠️ **12.09.2026:** O-77'nin dar-kapsamlı stopgap'ı (`update.sh`'ta gömülü, koşulsuz, yalnız DB, künyesiz) §4.3-4.7'ye uymuyor — O-26 bunu **genişletme değil, `onprem/backup.sh` gibi paylaşılan bir rutinle DEĞİŞTİRME** işi olarak ele almalı ("aynı kod, farklı tetikleyici"). Detay: O-77'nin kendi maddesindeki itiraf notu. İlgili ama **ayrı** madde: **O-82** (hiçbir `dur` dalının kutu dışına bildirimi yok) — O-26 panel/e-posta göstergesini yazarken O-82'yi de kapatabilir, ama O-82 kendi başına O-26'yı beklemek zorunda değil |
+| **Durum** | ✅ **gelöst (13.09.2026, dar kapsam — bkz. not) — gerçek kutuda, temiz bir `--neu` kurulumla uçtan uca doğrulandı** |
+
+> **Ne yapıldı:** `onprem/backup.sh` — paylaşılan rutin ("aynı kod, farklı tetikleyici", onprem'in madde 2'si). Adımlar: storage arşivi (`tar`, DB'den ÖNCE — madde 3) → `pg_dump -Fc` → `pg_restore -l` bütünlük testi (O-77'den taşındı) → `backup.meta.json` künyesi (`schema_version`, `app_version`, `image_digest`, `dump_bytes`/`storage_bytes`, `ziel_ausserhalb`, **üç** parmak izi — DEK + JWT_SECRET + POSTGRES_PASSWORD, madde 4 — hiçbiri host'un argv'sine düşmez: DEK `api` konteynerinde node'un `crypto` modülüyle, JWT/PGPW `db` konteynerinde `pgcrypto`'nun `hmac()`'iyle, `psql -f` üzerinden çünkü `-c`/`-tAc`'de `:'var'` ilintileme ÇALIŞMIYOR — gerçek kutuda bulundu) → atomik yazım (`.tmp-*/` → tek `mv`) → ad uzayı ayrılmış rotasyon (`vor-migration-*`: son 3 · `nightly-*`/`manuel-*`: 14 gün + her takvim ayının en eski gecelik yedeği 12 ay — madde 6) → `BACKUP_MAX_GB` kotası (§6.6).
+>
+> **Hedef (madde 1):** bu turda YALNIZ dizin sürücüsü — `BACKUP_ZIEL` (lokal ya da önceden mount edilmiş NAS/SMB/NFS). onprem'in kendi hükmü: "mount edilmiş NAS gerçekten kutu dışıdır — SSH yalnız konforu artırır." SSH/rsync sürücüsü **ayrı bir madde, kendi O-numarasıyla açılacak** (henüz açılmadı).
+>
+> **`update.sh` entegrasyonu:** O-77'nin gömülü pg_dump bloğu SİLİNDİ. Schritt 8 artık: (a) bundle'daki migration dosya adları ↔ `praxura_migrations` karşılaştırması (checksum yok, kasıtlı kaba — `migrate.js`'in ikinci bir kopyası değil, her belirsizlikte "bekleyen var" sayılır, bkz. `api-backend/db/migrations/README.md`), (b) bekleyen VARSA `PRAXURA_LOCK_HELD=1 bash backup.sh --sebep vor-migration` (update.sh zaten kilidi tutuyor), (c) yoksa doğrudan `up -d`'ye geç. `install.sh`: yeni Schritt 12 (BACKUP_ZIEL sorusu) + Schritt 16 `praxura-backup.timer`'ı da kuruyor (01:00, `update.timer`'ın 02:00+2h penceresinden ÖNCE, dar jitter, aynı `.praxura-update.lock`'u paylaşıyor — madde 6'nın zamanlayıcı çakışması notuyla aynı gerekçe).
+>
+> **Doğrulama (WSL2 Ubuntu-24.04, gerçek Docker, gerçek GHCR image'ları):**
+> - Gerçek bir `install.sh --neu` koşusu **17/17 adımı tamamladı** — yeni Schritt 12 (BACKUP_ZIEL sorusu, var olmayan yol için doğru uyarı) ve Schritt 16'nın yeni `praxura-backup.timer`'ı (`[ok] praxura-backup.timer aktiv`) dahil.
+> - `backup.sh --sebep manuel`, off-box hedefe (`/root/backup-target-fresh`) karşı: storage arşivlendi, DB yedeklendi + doğrulandı, künye doğru yazıldı (`ziel_ausserhalb: true`, üç parmak izi de dolu, `schema_version: "0014"`).
+> - **Migration-gate mantığı temiz bir kutuda iki yönde de doğrulandı:** (a) bekleyen migration yokken → `[ok] Bekleyen migration yok — bu gece yedek atlandı`, hiç `backup.sh` çağrılmadı (birden fazla kez tekrarlandı). (b) `0014`'ü elle sildikten sonra (bekleyen migration simülasyonu) → `(bundle: 14 dosya · uygulanan: 13 satır · eksik: 0014)` → `backup.sh --sebep vor-migration` doğru çağrıldı, `vor-migration-*` dizini off-box hedefte oluştu.
+> - ⚠️ **Bir yan yol notu:** bu tur sırasında, SAATLERCE test edilmiş ESKİ bir kutuda aynı senaryo TUTARSIZ sonuç verdi (bazen 0014 update.sh'tan bağımsız olarak saniyeler içinde yeniden beliriyordu — izole edildi, update.sh hiç çalışmadan da oluyordu). Temiz bir `--neu` kurulumla bu tutarsızlık **tamamen kayboldu** — mantığın kendisi değil, saatlerce süren yoğun test turlarının o TEK kutuda biriktirdiği bir anomali olduğu sonucuna varıldı. Kayıt altına alınıyor ki bir dahaki sefere "acaba mantık mı yanlış" diye üçüncü kez araştırılmasın.
+>
+> ⚠️ **Kapsam bilinçli dar — TAM kapatmıyor:** `restore.sh` yok (§4.5 madde 4, O-29'un tam kapanışı buna bağlı — bugün künyede parmak izleri var ama onları OKUYAN/karşılaştıran bir araç yok). SSH/rsync hedef sürücüsü yok (kendi O-numarası bekliyor). O-82 (bildirim kanalı) hâlâ ayrı, açık. Panelde "son yedek: X" göstergesi yok (Faz 2.4).
+>
+> Commit'ler: `903a7a2` (backup.sh + wiring) · `ee84568`→`9a340c6` (migration-check teşhis + temizlik).
 
 > **onprem'in O-26'ya başlamadan önce onaylanmasını istediği 6 tasarım noktası (12.09.2026, O-77 bildirim turunda):**
 > 1. **Hetzner Storage Box'ı koda yazma.** §4.3 onu varsayılan diye adlandırıyor ama bu bizim rahatımıza yazılmış bir varsayım. Kutu-agnostik iki sürücü yeter: **(a) bir dizin yolu** (lokal disk veya müşterinin NAS'ının SMB/NFS mount'u — kod farkı sıfır) ve **(b) rsync/SFTP over SSH** (host+anahtar müşteriden). Storage Box ikisinin de bir örneği olur. Kimlik bilgisi her zaman **müşterinin** (K4/K5), bizim altyapımız hiçbir zaman geçerli hedef değil — **G1 sert veto**, bir "Praxura bulutuna yedek" seçeneği asla gündeme gelmemeli.
@@ -3018,10 +3038,12 @@ terfi etmeliler.
 | Durum | Adet | Maddeler |
 |---|---|---|
 | `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · **O-82** |
-| `geplant` | 16 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-26 · O-27 · O-28 · O-29 · O-31 · O-43 |
+| `geplant` | 15 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-29 · O-31 · O-43 |
 | 🟡 `kısmen gelöst` | 10 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 |
-| `gelöst` | 33 | O-15 · O-20 · O-25 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · **O-77** · **O-81** |
+| `gelöst` | 34 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · **O-77** · **O-81** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
+
+> ⚠️ **O-26 `gelöst` yazıyor ama dar kapsamlı** (yalnız dizin sürücüsü, `restore.sh` yok) — kendi maddesine bak.
 
 > ⚠️ **O-77 `gelöst` yazıyor ama dar kapsamlı** (yalnız migration-öncesi tek bir DB
 > dump'ı) — geniş yedekleme hâlâ **O-26** (`geplant`) altında açık: storage volume
