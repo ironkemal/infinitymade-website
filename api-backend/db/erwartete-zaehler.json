@@ -1,0 +1,17 @@
+{
+  "_kommentar": "RELEASE-STANDARD.md §5.4/1 (10 Zaehler) — onprem/SCHEMA-VERTEILUNG.md §3.3. Werte NICHT aus db/SCHEMA.sql (das ist die SaaS-Live-Zaehlung, 89 Tabellen — 11 davon bewusst NICHT im Paket, onprem/REGISTER.md ~Zeile 1351). Diese Datei ist die Erwartung fuer eine FRISCHE On-Prem-Box nach allen Migrationen bis bis_version. Gemessen 12.09.2026 auf dem lokalen WSL-Testkasten (wsl -d Ubuntu-24.04, praxura-box) nach vollstaendigem install.sh-Lauf, praxura_migrations bestaetigt bis 0014. Bei jeder 'schema güncelle'-Aktualisierung MUSS diese Datei mit-aktualisiert werden — sonst schlaegt der Selbstcheck auf jeder neuen Box faelschlich rot.",
+  "bis_version": "0014",
+  "gemessen_am": "2026-09-12",
+  "zaehler": {
+    "public_tablo": 78,
+    "rls_policy": 150,
+    "fonksiyon": 67,
+    "trigger": 70,
+    "index": 295,
+    "rls_kapali_tablo": 1,
+    "auth_trigger": 1,
+    "storage_bucket": 5,
+    "publication_uye_tablo": 1,
+    "extension": 8
+  }
+}

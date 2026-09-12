@@ -21,6 +21,7 @@
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { erwarteteZaehlerLesen, zaehlerPruefen } from './schema-zaehler.js';
 
 // Fester Schlüssel für pg_advisory_lock. Beliebig, aber unveränderlich: ändert man
 // ihn, laufen alte und neue Instanz gleichzeitig los. "praxura-migrations" als bigint.
@@ -156,7 +157,9 @@ REVOKE ALL ON public.praxura_migrations FROM anon, authenticated;
  * Wendet ausstehende Migrationen an.
  *
  * Wirft NICHT. Gibt immer ein Ergebnis zurück:
- *   { status: 'ok' | 'uebersprungen' | 'fehler', angewandt: [...], fehler?: {...} }
+ *   { status: 'ok' | 'uebersprungen' | 'fehler', angewandt: [...], fehler?: {...}, zaehler?: {...} }
+ * `zaehler` (nur bei status 'ok'): Ergebnis des §5.4/1-Selbstchecks (schema-zaehler.js),
+ * oder null, wenn erwartete-zaehler.json fehlt/kaputt ist.
  * Der Aufrufer (server.js) entscheidet, was er damit macht — hier wird kein
  * Prozess beendet (Regel 4).
  *
@@ -191,6 +194,23 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
 
   const angewandt = [];
   let gesperrt = false;
+
+  // Nur der Router (PostgREST/service_role) kann pg_catalog, auth.*, storage.buckets
+  // und pg_publication_tables NICHT sehen — diese Verbindung schon. Deshalb laeuft
+  // der Zaehler-Selbstcheck (§5.4/1) hier, auf der offenen Verbindung, nicht im
+  // setup-Router (onprem-Konsultation, Faz 2.2 dilim 2b, 12.09.2026).
+  async function zaehlerLaufen(client, dateien) {
+    try {
+      const erwartet = erwarteteZaehlerLesen(join(verzeichnis, '..'));
+      const aktuelleVersion = dateien.reduce((max, d) => (d.version > max ? d.version : max), '0000');
+      return await zaehlerPruefen(client, erwartet, aktuelleVersion);
+    } catch (err) {
+      // erwartete-zaehler.json fehlt oder ist kaputt: der Selbstcheck faellt aus,
+      // die Migration selbst NICHT — das ist eine Zusatzpruefung, kein Torwaechter.
+      log(`[migrate] Zaehler-Selbstcheck uebersprungen: ${err.message}`);
+      return null;
+    }
+  }
 
   try {
     await client.connect();
@@ -239,7 +259,8 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
 
     if (plan.offen.length === 0) {
       log('[migrate] Schema ist aktuell — nichts zu tun.');
-      return { status: 'ok', angewandt: [] };
+      const zaehler = await zaehlerLaufen(client, dateien);
+      return { status: 'ok', angewandt: [], zaehler };
     }
 
     log(`[migrate] ${plan.offen.length} Migration(en) offen.`);
@@ -279,7 +300,8 @@ export async function runMigrations({ databaseUrl, verzeichnis, appVersion, log 
       }
     }
 
-    return { status: 'ok', angewandt };
+    const zaehler = await zaehlerLaufen(client, dateien);
+    return { status: 'ok', angewandt, zaehler };
   } catch (err) {
     return {
       status: 'fehler',

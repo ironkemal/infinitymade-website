@@ -32,6 +32,7 @@ import { validateRezept } from './ai/validators/validate.js';
 import { logCall as aiLogCall, hashRequest as aiHashRequest } from './ai/audit.js';
 import { logAccess, accessLogger } from './_lib/access-log.js';
 import { runMigrations } from './db/migrate.js';
+import { schemaZaehlerSetzen } from './setup/selbstpruefung.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, join as pfadJoin } from 'node:path';
 import crypto from 'crypto';
@@ -4545,6 +4546,16 @@ const PORT = process.env.PORT || 3000;
     Sentry.captureMessage(`Migration fehlgeschlagen: ${ergebnis.fehler.art}`, 'fatal');
   } else if (ergebnis.angewandt.length > 0) {
     console.log(`[migrate] ${ergebnis.angewandt.length} Migration(en) angewandt.`);
+  }
+
+  // §5.4/1 — Schema-Zaehler-Selbstcheck (Faz 2.2 dilim 2b). Nur bei status 'ok'
+  // vorhanden (siehe migrate.js). Wird vom setup-Router ueber selbstpruefung.js
+  // gelesen, nicht direkt importiert (Zirkelimport-Vermeidung).
+  if (ergebnis.zaehler) {
+    schemaZaehlerSetzen(ergebnis.zaehler);
+    if (ergebnis.zaehler.status !== 'ok') {
+      console.warn(`[migrate] Zaehler-Selbstcheck: ${ergebnis.zaehler.status}`, JSON.stringify(ergebnis.zaehler.abweichungen));
+    }
   }
 }
 

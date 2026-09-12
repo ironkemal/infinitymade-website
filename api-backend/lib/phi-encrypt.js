@@ -12,7 +12,7 @@
 //   const plain = decryptPHI(enc);            // → 'M54.5'
 //   // Pass enc directly to .insert({ icd10_enc: enc })
 
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:crypto';
 
 const IV_LEN  = 12;   // GCM nonce length (recommended)
 const TAG_LEN = 16;   // GCM auth-tag length
@@ -31,6 +31,38 @@ function getKey() {
 
 export function encryptionAvailable() {
   return !!process.env.DATA_ENCRYPTION_KEY;
+}
+
+/**
+ * SHA-256 des Schluessels, erste 8 Hex-Zeichen. NIE der Schluessel selbst oder
+ * dessen Praefix — nur sein Fingerabdruck (RELEASE-STANDARD.md §5.4/8: "Fingerabdruck
+ * im Panel"). Zeigt einem Kunden, der von einem Backup mit falschem Schluessel
+ * zurueckspielt, dass es NICHT derselbe Schluessel ist, ohne ihn preiszugeben.
+ * @returns {string|null} null, wenn kein Schluessel gesetzt ist
+ */
+export function keyFingerprint() {
+  if (!process.env.DATA_ENCRYPTION_KEY) return null;
+  return createHash('sha256').update(process.env.DATA_ENCRYPTION_KEY).digest('hex').slice(0, 8);
+}
+
+/**
+ * Echter Hin-und-zurueck-Test: verschluesselt eine Zufallszeichenkette und
+ * entschluesselt sie wieder. encryptionAvailable() prueft nur, ob die Variable
+ * GESETZT ist — nicht, ob sie gueltig ist (64 Hex-Zeichen, echte AES-Operation).
+ * Eine kaputte Variable (falsche Laenge, kein Hex) faellt hier auf, nicht erst
+ * beim ersten echten PHI-Schreibvorgang (RELEASE-STANDARD.md §5.4/8).
+ * @returns {{ok: boolean, fehler?: string}}
+ */
+export function rundlaufTest() {
+  if (!encryptionAvailable()) return { ok: false, fehler: 'DATA_ENCRYPTION_KEY nicht gesetzt' };
+  try {
+    const probe = randomBytes(16).toString('hex');
+    const zurueck = decryptPHI(encryptPHI(probe));
+    if (zurueck !== probe) return { ok: false, fehler: 'Rundlauf lieferte nicht denselben Wert zurueck' };
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, fehler: err.message };
+  }
 }
 
 /**

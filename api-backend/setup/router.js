@@ -1,7 +1,10 @@
 // Faz 2.2 — Einrichtungsassistent, dilim 1 + 2 + SMTP-Testmail (O-66).
 //
 // GET  /api/setup/status     — darf man den Assistenten ueberhaupt oeffnen/fortsetzen?
-// POST /api/setup/verify     — Jeton pruefen, OHNE ihn zu verbrauchen
+// POST /api/setup/verify     — Jeton pruefen, OHNE ihn zu verbrauchen.
+//                              { pruefungen:true } (nur vom letzten Bildschirm, NACH
+//                              der Owner-Anlage) laesst zusaetzlich §5.4/1/5/8 laufen
+//                              (Faz 2.2 dilim 2b) — kein neuer Endpunkt, ein Feld mehr.
 // POST /api/setup/owner      — der EINE Schreibvorgang: legt den ersten Owner an
 // POST /api/setup/test-smtp  — sendet EINE Testmail an den soeben angelegten Owner
 // POST /api/setup/abschluss  — markiert die Einrichtung als fertig (kurulum modu endet)
@@ -27,6 +30,8 @@ import express from 'express';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { createSMTPTransport, getMailFrom } from '../lib/mail.js';
+import { schemaZaehlerLesen } from './selbstpruefung.js';
+import { rlsNegativTest, verschluesselungsTest } from './pruefungen.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -91,14 +96,75 @@ router.get('/status', async (req, res) => {
   });
 });
 
+// §5.4/1/5/8 — die drei "billigen Kontrollen" (Faz 2.2 dilim 2b). Uebersetzt
+// jedes Ergebnis auf dasselbe Vokabular (gruen/kirmizi/gri), damit setup.js nur
+// EINE Anzeige-Logik braucht. "gri" heisst immer "nicht gemessen/gemessen aber
+// die Erwartung ist veraltet" — NIE ein Blocker (Dilim-2-Sperre: Kontrollen
+// zeigen, sperren aber den Abschluss nicht).
+function schemaZaehlerUebersetzen(z) {
+  if (!z) return { status: 'gri', neden: 'Selbstcheck ist beim Start nicht gelaufen (keine DATABASE_URL?).' };
+  if (z.status === 'ok') return { status: 'gruen' };
+  if (z.status === 'veraltet') {
+    return { status: 'gri', neden: `Erwartete Werte sind fuer bis_version ${z.bis_version} hinterlegt, Box ist bei ${z.aktuelleVersion} — Erwartung aktualisieren ("şema güncelle").` };
+  }
+  return { status: 'kirmizi', neden: `Abweichung: ${z.abweichungen.map((a) => `${a.name} soll=${a.soll} ist=${a.ist}`).join(', ')}` };
+}
+function einfachUebersetzen(r) {
+  // fingerprint (nur verschluesselungsTest()) bleibt erhalten — §5.4/8 verlangt
+  // ihn im Panel, nicht nur ein gruenes Haekchen.
+  const { status, neden, ...rest } = r;
+  if (status === 'ok') return { status: 'gruen', ...rest };
+  if (status === 'atlandi') return { status: 'gri', neden, ...rest };
+  return { status: 'kirmizi', neden, ...rest };
+}
+
+async function billigePruefungenLaufen(ownerUserId) {
+  const schema = schemaZaehlerUebersetzen(schemaZaehlerLesen());
+  const rls = einfachUebersetzen(
+    await rlsNegativTest({
+      adminClient: supabase,
+      supabaseUrl: process.env.SUPABASE_URL,
+      anonKey: process.env.SUPABASE_ANON_KEY,
+      ownerUserId,
+    })
+  );
+  const sifreleme = einfachUebersetzen(verschluesselungsTest());
+
+  const ergebnis = { schema, rls, sifreleme, gemessen_am: new Date().toISOString() };
+
+  // Persistieren: schritte ist jsonb, ein UPDATE mergt nur dieses eine Feld ein —
+  // andere, spaeter hinzukommende Schluessel in schritte bleiben unberuehrt.
+  await supabase
+    .from('praxura_setup')
+    .update({ schritte: { billige_pruefungen: ergebnis } })
+    .eq('id', 1);
+
+  return ergebnis;
+}
+
 // ownerAngelegt im Erfolgsfall mitgeben: das Frontend entscheidet damit, ob
 // es das Owner-Formular zeigt (Schritt 2) oder direkt zu SMTP-Test/Abschluss
 // springt (Wiederaufnahme nach geschlossenem Browser).
+//
+// pruefungen:true (nur vom letzten Bildschirm gesendet, NACH der Owner-Anlage):
+// laesst zusaetzlich §5.4/1/5/8 laufen — bewusst hier und nicht bei jedem
+// /status-Aufruf, sonst koennte jeder Unauthentifizierte durch Wiederholung
+// Testkonten in auth.users erzeugen (onprem-Konsultation, 12.09.2026).
 router.post('/verify', async (req, res) => {
-  const { token } = req.body || {};
+  const { token, pruefungen } = req.body || {};
   if (await istAbgeschlossen()) return res.status(410).json({ error: 'Bereits eingerichtet' });
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
-  res.json({ ok: true, ownerAngelegt: await ownerAngelegt() });
+
+  const ownerAngelegtErgebnis = await ownerAngelegt();
+  if (!pruefungen) return res.json({ ok: true, ownerAngelegt: ownerAngelegtErgebnis });
+
+  const { data: setupZeile } = await supabase
+    .from('praxura_setup')
+    .select('owner_user_id')
+    .eq('id', 1)
+    .maybeSingle();
+  const billigePruefungen = await billigePruefungenLaufen(setupZeile?.owner_user_id || null);
+  res.json({ ok: true, ownerAngelegt: ownerAngelegtErgebnis, billigePruefungen });
 });
 
 router.post('/owner', async (req, res) => {

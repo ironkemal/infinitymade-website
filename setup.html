@@ -129,6 +129,25 @@
       line-height: 1.4;
     }
     .check-row input { width: auto; margin-top: 0.2rem; }
+    .check-list li {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--ink-mute);
+      padding: 0.35rem 0;
+      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+    .check-list li:last-child { border-bottom: none; }
+    .check-dot {
+      width: 0.6rem; height: 0.6rem; border-radius: 50%;
+      background: var(--line); flex: none; align-self: center;
+    }
+    .check-dot.gruen { background: var(--sage); }
+    .check-dot.kirmizi { background: var(--rose); }
+    .check-dot.gri { background: #b8ac8f; }
+    .check-detail { font-size: 0.78rem; color: var(--ink-mute); flex-basis: 100%; }
     .btn-row { display: flex; gap: 0.7rem; margin-top: 0.8rem; }
     .btn-secondary {
       flex: 1;
@@ -273,12 +292,35 @@
         </div>
       </section>
 
-      <!-- Schritt 4: Fertig -->
+      <!-- Schritt 4: Prüfungen + Abschluss -->
       <section id="stepDone" hidden>
         <p class="step-indicator" id="doneStepLabel">Schritt 4 von 4</p>
-        <h1 id="doneTitle">Fertig</h1>
-        <p class="sub" id="doneText">Das Inhaber-Konto ist angelegt. Sie können sich jetzt anmelden.</p>
-        <a href="/login.html" class="btn-primary" id="doneLoginBtn" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Zur Anmeldung</a>
+
+        <div id="pruefChecking" class="msg info show">Kontrollen laufen …</div>
+
+        <div id="pruefChecklist" hidden>
+          <h1 id="pruefTitle">Einrichtung abschließen</h1>
+          <p class="sub" id="pruefIntro">Ein paar kurze Kontrollen, bevor die Box fertig ist.</p>
+          <ul class="check-list" id="pruefList" style="list-style:none;padding:0;margin:0 0 1rem;">
+            <li id="pruefRowSchema"><span class="check-dot"></span> <span id="pruefLabelSchema">Datenbank-Struktur</span> <span class="check-detail"></span></li>
+            <li id="pruefRowRls"><span class="check-dot"></span> <span id="pruefLabelRls">Mandantentrennung (RLS)</span> <span class="check-detail"></span></li>
+            <li id="pruefRowDek"><span class="check-dot"></span> <span id="pruefLabelDek">Verschlüsselung</span> <span class="check-detail"></span></li>
+          </ul>
+          <div id="pruefAckBox" hidden>
+            <div class="msg warn show" id="pruefAckMsg">Mindestens eine Kontrolle ist rot.</div>
+            <label class="check-row">
+              <input type="checkbox" id="pruefAckCheckbox" />
+              <span id="pruefAckLabel">Ich möchte trotzdem abschließen.</span>
+            </label>
+          </div>
+          <button type="button" class="btn-primary" id="pruefAbschlussBtn">Einrichtung abschließen</button>
+        </div>
+
+        <div id="doneFinal" hidden>
+          <h1 id="doneTitle">Fertig</h1>
+          <p class="sub" id="doneText">Das Inhaber-Konto ist angelegt. Sie können sich jetzt anmelden.</p>
+          <a href="/login.html" class="btn-primary" id="doneLoginBtn" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Zur Anmeldung</a>
+        </div>
       </section>
 
       <!-- Bereits eingerichtet -->

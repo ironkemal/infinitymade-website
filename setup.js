@@ -47,7 +47,15 @@ const T = {
     smtpFehlgeschlagen: 'Testmail konnte nicht gesendet werden.',
     smtpNichtAngekommenText: 'Die Mail wurde vom Server angenommen, kam aber nicht an. Häufigste Ursache: die Absenderadresse gehört nicht zur eigenen Domain des Mailservers (SPF/DMARC) — Absenderadresse in der .env prüfen (SMTP_FROM).',
 
-    doneStepLabel: 'Schritt 4 von 4', doneTitle: 'Fertig',
+    doneStepLabel: 'Schritt 4 von 4',
+    pruefChecking: 'Kontrollen laufen …',
+    pruefTitle: 'Einrichtung abschließen', pruefIntro: 'Ein paar kurze Kontrollen, bevor die Box fertig ist.',
+    pruefLabelSchema: 'Datenbank-Struktur', pruefLabelRls: 'Mandantentrennung (RLS)', pruefLabelDek: 'Verschlüsselung',
+    pruefAckMsg: 'Mindestens eine Kontrolle ist rot — das Verzeichnis unten zeigt, welche.',
+    pruefAckLabel: 'Ich möchte trotzdem abschließen.',
+    pruefAbschlussBtn: 'Einrichtung abschließen',
+
+    doneTitle: 'Fertig',
     doneText: 'Das Inhaber-Konto ist angelegt. Sie können sich jetzt anmelden.',
     doneLoginBtn: 'Zur Anmeldung',
 
@@ -83,7 +91,15 @@ const T = {
     smtpFehlgeschlagen: 'Test mail could not be sent.',
     smtpNichtAngekommenText: "The server accepted the mail, but it never arrived. Most common cause: the sender address does not belong to the mail server's own domain (SPF/DMARC) — check the sender address in .env (SMTP_FROM).",
 
-    doneStepLabel: 'Step 4 of 4', doneTitle: 'Done',
+    doneStepLabel: 'Step 4 of 4',
+    pruefChecking: 'Running checks …',
+    pruefTitle: 'Finish setup', pruefIntro: 'A few quick checks before the box is done.',
+    pruefLabelSchema: 'Database structure', pruefLabelRls: 'Tenant isolation (RLS)', pruefLabelDek: 'Encryption',
+    pruefAckMsg: 'At least one check is red — the list below shows which.',
+    pruefAckLabel: 'I want to finish anyway.',
+    pruefAbschlussBtn: 'Finish setup',
+
+    doneTitle: 'Done',
     doneText: 'The owner account has been created. You can sign in now.',
     doneLoginBtn: 'Go to sign in',
 
@@ -119,7 +135,15 @@ const T = {
     smtpFehlgeschlagen: 'Test maili gönderilemedi.',
     smtpNichtAngekommenText: 'Mail sunucu tarafından kabul edildi ama ulaşmadı. En yaygın sebep: gönderen adresi mail sunucusunun kendi alan adına ait değil (SPF/DMARC) — .env içindeki gönderen adresini kontrol edin (SMTP_FROM).',
 
-    doneStepLabel: '4 / 4. adım', doneTitle: 'Tamamlandı',
+    doneStepLabel: '4 / 4. adım',
+    pruefChecking: 'Kontroller yapılıyor …',
+    pruefTitle: 'Kurulumu tamamla', pruefIntro: 'Kutu bitmeden önce birkaç kısa kontrol.',
+    pruefLabelSchema: 'Veritabanı yapısı', pruefLabelRls: 'Kiracı ayrımı (RLS)', pruefLabelDek: 'Şifreleme',
+    pruefAckMsg: 'En az bir kontrol kırmızı — aşağıdaki liste hangisi olduğunu gösterir.',
+    pruefAckLabel: 'Yine de tamamlamak istiyorum.',
+    pruefAbschlussBtn: 'Kurulumu tamamla',
+
+    doneTitle: 'Tamamlandı',
     doneText: 'Sahip hesabı oluşturuldu. Şimdi giriş yapabilirsiniz.',
     doneLoginBtn: 'Girişe git',
 
@@ -155,7 +179,13 @@ function applyLang() {
   setText('smtpRetryBtn', t.smtpRetry); setText('smtpErrorContinueBtn', t.smtpErrorContinue);
   setText('smtpConfirmedMsg', t.smtpConfirmedMsg); setText('smtpConfirmedContinueBtn', t.weiter);
 
-  setText('doneStepLabel', t.doneStepLabel); setText('doneTitle', t.doneTitle);
+  setText('doneStepLabel', t.doneStepLabel);
+  setText('pruefChecking', t.pruefChecking);
+  setText('pruefTitle', t.pruefTitle); setText('pruefIntro', t.pruefIntro);
+  setText('pruefLabelSchema', t.pruefLabelSchema); setText('pruefLabelRls', t.pruefLabelRls); setText('pruefLabelDek', t.pruefLabelDek);
+  setText('pruefAckMsg', t.pruefAckMsg); setText('pruefAckLabel', t.pruefAckLabel);
+  setText('pruefAbschlussBtn', t.pruefAbschlussBtn);
+  setText('doneTitle', t.doneTitle);
   setText('doneText', t.doneText); setText('doneLoginBtn', t.doneLoginBtn);
 
   setText('closedTitle', t.closedTitle); setText('closedSub', t.closedSub);
@@ -305,22 +335,91 @@ function smtpZeige(el) {
   [smtpChecking, smtpSkipped, smtpSent, smtpError, smtpConfirmed].forEach((s) => { s.hidden = (s !== el); });
 }
 
-// Schritt 4 ist kein automatischer Übergang: POST /abschluss markiert die
-// Box als fertig eingerichtet (hebt "kurulum modu" auf, server.js). Schlägt
-// das fehl, zeigen wir "Fertig" trotzdem — der Owner ist angelegt und kann
-// sich anmelden, ein zweiter Versuch (z. B. erneuter Aufruf dieser Seite mit
-// demselben Jeton) kann den Abschluss nachholen.
-async function weiterZuFertig() {
+// Schritt 4 — zwei Teile, beide NICHT automatisch:
+//  a) §5.4/1/5/8 laufen lassen und anzeigen (billigePruefungenLaufen, Faz 2.2
+//     dilim 2b) — der Klick auf "Einrichtung abschließen" ist der bewusste
+//     Menschen-Moment, der abgeschlossen_am setzt (Dilim-2-Sperre: Kontrollen
+//     zeigen, sperren aber nie mechanisch).
+//  b) POST /abschluss markiert die Box als fertig eingerichtet (hebt
+//     "kurulum modu" auf, server.js).
+// Kann /verify(pruefungen:true) nicht erreicht werden (Netzwerkfehler), wird
+// wie vor dilim 2b verfahren: direkt abschließen, der eigentliche Fehler kommt
+// dann beim eigentlichen /abschluss-Aufruf, kein doppeltes Risiko.
+const pruefChecking = document.getElementById('pruefChecking');
+const pruefChecklist = document.getElementById('pruefChecklist');
+const doneFinal = document.getElementById('doneFinal');
+const pruefAckBox = document.getElementById('pruefAckBox');
+const pruefAbschlussBtn = document.getElementById('pruefAbschlussBtn');
+const pruefAckCheckbox = document.getElementById('pruefAckCheckbox');
+
+function pruefZeileZeichnen(rowId, ergebnis) {
+  const row = document.getElementById(rowId);
+  const dot = row.querySelector('.check-dot');
+  const detail = row.querySelector('.check-detail');
+  dot.className = 'check-dot ' + (ergebnis?.status || 'gri');
+  // fingerprint (nur Verschlüsselung, §5.4/8) neben dem Grund zeigen — nie den
+  // Schlüssel selbst, nur seinen SHA-256-Fingerabdruck (server-seitig gekürzt).
+  detail.textContent = [ergebnis?.neden, ergebnis?.fingerprint ? `Fingerprint: ${ergebnis.fingerprint}` : null]
+    .filter(Boolean).join(' — ');
+}
+
+async function zuPruefungenUndAbschluss() {
+  verstecken(stepSmtp);
+  stepDone.hidden = false;
+  pruefChecklist.hidden = true;
+  doneFinal.hidden = true;
+  pruefChecking.hidden = false;
+
+  let billigePruefungen = null;
+  try {
+    const res = await fetch(API_BASE + '/setup/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: gueltigerToken, pruefungen: true }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) billigePruefungen = data.billigePruefungen || null;
+  } catch { /* siehe Kommentar oben */ }
+
+  if (!billigePruefungen) {
+    // Nicht messbar (Netzwerk/Backend-Fehler) — nicht blockieren, direkt abschließen.
+    await abschliessen();
+    return;
+  }
+
+  pruefZeileZeichnen('pruefRowSchema', billigePruefungen.schema);
+  pruefZeileZeichnen('pruefRowRls', billigePruefungen.rls);
+  pruefZeileZeichnen('pruefRowDek', billigePruefungen.sifreleme);
+
+  const rotVorhanden = [billigePruefungen.schema, billigePruefungen.rls, billigePruefungen.sifreleme]
+    .some((e) => e?.status === 'kirmizi');
+
+  pruefAckBox.hidden = !rotVorhanden;
+  pruefAckCheckbox.checked = false;
+  pruefAbschlussBtn.disabled = rotVorhanden;
+
+  pruefChecking.hidden = true;
+  pruefChecklist.hidden = false;
+}
+
+async function abschliessen() {
   try {
     await fetch(API_BASE + '/setup/abschluss', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: gueltigerToken }),
     });
-  } catch { /* siehe Kommentar oben — "Fertig" wird trotzdem gezeigt */ }
+  } catch { /* "Fertig" wird trotzdem gezeigt, siehe Kommentar oben */ }
   verstecken(stepSmtp);
+  pruefChecklist.hidden = true;
+  doneFinal.hidden = false;
   stepDone.hidden = false;
 }
+
+pruefAckCheckbox.addEventListener('change', (e) => {
+  pruefAbschlussBtn.disabled = !e.target.checked;
+});
+pruefAbschlussBtn.addEventListener('click', abschliessen);
 
 async function testeSmtp() {
   smtpZeige(smtpChecking);
@@ -352,14 +451,14 @@ async function testeSmtp() {
 document.getElementById('smtpAckCheckbox').addEventListener('change', (e) => {
   document.getElementById('smtpSkipContinueBtn').disabled = !e.target.checked;
 });
-document.getElementById('smtpSkipContinueBtn').addEventListener('click', weiterZuFertig);
+document.getElementById('smtpSkipContinueBtn').addEventListener('click', zuPruefungenUndAbschluss);
 document.getElementById('smtpArrivedBtn').addEventListener('click', () => {
   smtpZeige(smtpConfirmed);
 });
-document.getElementById('smtpConfirmedContinueBtn').addEventListener('click', weiterZuFertig);
+document.getElementById('smtpConfirmedContinueBtn').addEventListener('click', zuPruefungenUndAbschluss);
 document.getElementById('smtpNotArrivedBtn').addEventListener('click', () => {
   document.getElementById('smtpErrorMsg').textContent = T[lang].smtpNichtAngekommenText;
   smtpZeige(smtpError);
 });
 document.getElementById('smtpRetryBtn').addEventListener('click', testeSmtp);
-document.getElementById('smtpErrorContinueBtn').addEventListener('click', weiterZuFertig);
+document.getElementById('smtpErrorContinueBtn').addEventListener('click', zuPruefungenUndAbschluss);

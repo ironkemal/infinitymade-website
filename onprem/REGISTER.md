@@ -164,10 +164,10 @@ O-62 hepsi kodda zaten inmişti, yalnız sicil geride kalmıştı (12.09.2026 si
 onprem-review). Kalan gerçek boşluklar: O-51 (mailin gerçek bir SMTP ile teslim edildiğinin
 ölçülmesi) ve O-61 (c) (`.env`'in yedekten dışlanması, Faz 2.3'ün işi) — ikisi de yalnız
 gerçek bir kurulumla/Faz 2.3 ile kapanabilir, `install.sh`'ın kendisinde eksik değil.
-✅ **Faz 2.2 dilim 1+2 de kapalı** (kurulum sihirbazı, ilk owner, SMTP test ucu, 3 dil,
-kurulum modu kilidi). Açık kalan: §5.4'ün 1/5/8 kontrolleri (10 şema sayacı, RLS negatif
-testi, `DATA_ENCRYPTION_KEY` yaz-oku turu) — dilim 2'de bitmedi ve **dilim 2b hiç
-açılmadı**, şu an sahipsiz bir borç (onprem-review'un kendi bulduğu boşluk).
+✅ **Faz 2.2 tamamı kapalı (12.09.2026 gecesi, dilim 2b dahil)** — kurulum sihirbazı, ilk
+owner, SMTP test ucu, 3 dil, kurulum modu kilidi, VE §5.4'ün 1/5/8 kontrolleri (10 şema
+sayacı, RLS negatif testi, `DATA_ENCRYPTION_KEY` yaz-oku turu) — gerçek kutuda hem yeşil
+hem kırmızı yollar ölçüldü. Ayrıntı: §7H'nin "Dilim 2b" alt-bölümü.
 ✅ **O-25 (kanal/etiket sistemi) tam kapsamıyla uygulandı VE SaaS host geçişi (R9) dahil
 tamamlandı (12.09.2026)** — R0-R12, onprem-review ile tasarım kilitlendi, host doğrulandı.
 Ayrıntı: O-25'in kendi maddesi + **O-74** + **O-75**.
@@ -227,19 +227,22 @@ tamamen boşken test edildi), şema kapısı internetsiz kutuda restore'u artık
 komple engellemiyor, onaydan sonraki iki korumasız adım artık kılavuzlu. O-87/
 O-88 yalnız kısmen (acil kısımları kapandı, genel çözümleri açık) — detay §7L.
 
-1. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8 kontrolleri (10 şema sayaçı, RLS negatif testi,
-   `DATA_ENCRYPTION_KEY` yaz-oku turu). Sahipsiz kalmış borç; kurulumun "başarılı
-   sayılır" tanımı bunlar olmadan eksik.
-2. **O-78 — ICD-10-GM atıf satırı.** Küçük iş (bir `NOTICE-QUELLEN.txt` + Dashboard'da
+✅ **Faz 2.2 dilim 2b tamamlandı (12.09.2026 gecesi)** — §5.4'ün 1/5/8 kontrolleri
+(10 şema sayacı, RLS negatif testi, `DATA_ENCRYPTION_KEY` yaz-oku turu) kodlandı VE
+gerçek kutuda hem yeşil hem kırmızı yollar ölçüldü (DEK bozulunca kırmızı, şemaya elle
+tablo eklenince kırmızı, temizlik sonrası yeşil). Ayrıntı: §7H "Dilim 2b". Faz 2.2 artık
+tamamen kapalı.
+
+1. **O-78 — ICD-10-GM atıf satırı.** Küçük iş (bir `NOTICE-QUELLEN.txt` + Dashboard'da
    tek satır), ama **hukuki yükümlülük**: 16.905 satırlık resmî veri paketin içinde
    atıfsız duruyor. İlk teslimattan **önce** inmeli — sonra inerse ihlal gerçekleşmiş
    olur.
-3. **Faz 1.2** (O-02) — kutuda `N8N_AI_SERIES_URL` boş kalınca kod **sabit n8n adresine
+2. **Faz 1.2** (O-02) — kutuda `N8N_AI_SERIES_URL` boş kalınca kod **sabit n8n adresine
    düşüyor** ve hasta adı bize gelir (G1). İlk **ücretli** kutudan önce inmeli.
    ⚠️ Kutunun CSP'si bunu engellemez — çağrı tarayıcıdan değil **backend'den** çıkıyor.
-4. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
+3. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
    bir gerçek SMTP kurulumuyla SPF/DMARC doğrulaması. İlk beta kutusunda yapılabilir.
-6. **O-29 madde (2)** — kurulum sihirbazı `DATA_ENCRYPTION_KEY`'i gösteriyor ama
+4. **O-29 madde (2)** — kurulum sihirbazı `DATA_ENCRYPTION_KEY`'i gösteriyor ama
    "sakladım" onayı istemeden ilerliyor. Küçük, ucuz — bir sonraki `install.sh`
    dokunuşunda birlikte yapılabilir.
 
@@ -2304,9 +2307,9 @@ gerekmiyor" diye okumamalı, ayrı dal.
 | 2 | Migration defteri = image'ın en yüksek dosyası | ✅ **dilim 1** — tek sorgu, defteri runner zaten yazıyor |
 | 3 | Gerçek giriş, JWT döndü | ✅ **dilim 1** — sihirbazın ürettiği hesapla |
 | 4 | `handle_new_user` → `profiles` satırı | ✅ **dilim 1** — owner yaratıldıktan sonra satır okunur (PoC'nin ısırdığı yer) |
-| 1 | 10 şema sayacı | 🟡 **dilim 2** — sayaçlar `SCHEMA-VERTEILUNG.md` §3.3'te tanımlı, `migrate.js` bugün export **etmiyor** |
-| 5 | RLS negatif testi | 🟡 **dilim 2** — ikinci test kullanıcısı gerekir, sonra silinir |
-| 8 | `DATA_ENCRYPTION_KEY` yaz-oku turu | 🟡 **dilim 2** — `encryptionAvailable()` + bir tur, ucuz |
+| 1 | 10 şema sayacı | ✅ **dilim 2b, 12.09.2026** — `db/schema-zaehler.js` + `db/erwartete-zaehler.json`, `migrate.js` içinde ölçülüyor |
+| 5 | RLS negatif testi | ✅ **dilim 2b, 12.09.2026** — `setup/pruefungen.js`, gerçek JWT ile, iki-yarımlı test |
+| 8 | `DATA_ENCRYPTION_KEY` yaz-oku turu | ✅ **dilim 2b, 12.09.2026** — `phi-encrypt.js`'e `rundlaufTest()`/`keyFingerprint()` eklendi |
 | 7 | Storage bucket + signed URL | ⬜ Faz 2.4 (self-check) |
 | 6 | Realtime olayı | ⬜ Faz 2.4 |
 | 9 | SMTP test maili | 🟡 **dilim 3** — O-66 kararı (a) verildi; üç durum: gönderildi + insan teyidi → yeşil · bilinçli atlandı (onay kutusu) → yeşil/„übersprungen“ · hata → kırmızı |
@@ -2487,6 +2490,71 @@ bağımsız servis ediyor (`onprem/Caddyfile`), ve ikinci bir kapatma noktası (
 **anlaşılır tek cümle** gösterir („Diese Praxis richtet ihr System gerade ein.") — ham JSON
 ya da „failed to fetch" değil. Kabul ölçütü: kurulum modundayken `booking.html` açıldığında
 ekranda bu cümle var.
+
+### Dilim 2b — uygulandı, gerçek kutuya karşı uçtan uca test edildi (12.09.2026 gecesi)
+
+§5.4'ün son üç kontrolü (1: 10 sayaç · 5: RLS negatif testi · 8: DEK rundlaufu) kapandı.
+Onprem-konsültasyonuyla tasarlandı (aşağıdaki dört karar onun): sayaçlar `migrate.js`'te,
+açık `pg`-bağlantısında, kilit bırakılmadan HEMEN önce bir kez ölçülür — router'ın elindeki
+`service_role` istemcisi `pg_catalog`/`auth`/`storage.buckets`/`pg_publication_tables`'ı
+göremez, migrate.js zaten görüyor. RLS + DEK kontrolleri ise `/verify`'a `{pruefungen:true}`
+bayrağıyla bağlandı — **yeni uç açılmadı** (dilim 2'nin kilidi: "sonraki dilimler alan
+ekler"), ve bilinçli olarak `/status`'a değil (jetonsuz uç + oradan dönen sonuç ikisi de
+"kutunun krokisi" sınıfına girerdi, aynı gerekçe `0005`'in "şema geçmişi ağda durmasın"
+ilkesiyle).
+
+**Yeni dosyalar:** `api-backend/db/schema-zaehler.js` (10 katalog sorgusu + karşılaştırma) ·
+`api-backend/db/erwartete-zaehler.json` (beklenen değerler + `bis_version`) ·
+`api-backend/setup/selbstpruefung.js` (server.js↔router.js arası küçük tutucu, zirkelimport
+önler) · `api-backend/setup/pruefungen.js` (`rlsNegativTest`, `verschluesselungsTest`) ·
+`api-backend/lib/phi-encrypt.js`'e `keyFingerprint()` + `rundlaufTest()` eklendi
+(`encryptionAvailable()` sadece "değişken var mı" diyordu, 63 haneli bozuk bir anahtarı bile
+yeşil geçerdi — gerçek `encrypt→decrypt` turu şart).
+
+**⚠️ Bulgu: "beklenen değerler" SaaS'tan DEĞİL, taze bir on-prem kutusundan alınmalı.**
+`db/SCHEMA.sql` başlığı 89 tablo diyor (SaaS canlı sayımı) — ama on-prem paketi bilinçli
+olarak 11 tabloyu dışarıda bırakıyor (5 yabancı/boş + 3 merkez + 3'lü B2B zinciri, bu
+sicilde zaten satır ~1351'de kayıtlı, YENİ bir bulgu değil, sadece bu turda ilk kez pratik
+sonuç doğurdu). Taze kutuda (`wsl` test kutusu, `install.sh` sonrası, `praxura_migrations`
+0014'e kadar doğrulandı) gerçek sayım: **78 tablo · 150 policy · 67 fonksiyon · 70 trigger ·
+295 index · 1 RLS-kapalı · 1 auth-trigger · 5 bucket · 1 publication-üyesi · 8 extension**.
+SaaS sayısını (89 vb.) kullanmış olsaydım her yeni kurulum ilk açılışta kırmızı yanardı —
+bozuk olan kutunun kendisi değil, yanlış beklentiydi. `erwartete-zaehler.json` bu yüzden
+`bis_version` alanı taşıyor: kutunun defteri bu sürümden ileriyse sonuç kırmızı değil
+**gri** ("erwartung veraltet") — ileride yeni migration eklenip beklenti tazelenmeden bir
+kutu güncellenirse müşteri "kurulumum bozuk" diye aramaz.
+
+**Onuncu sayaç (extension) onprem-konsültasyonunun önerisiyle geri eklendi** —
+`SCHEMA-VERTEILUNG.md` §3.3 ve `RELEASE-STANDARD.md` §5.4/1 "10 sayaç" diyordu ama tabloda
+9 satır vardı (12.09'da `icd10_titles` satır sayımı bilinçli çıkarılmıştı, ama metin
+düzeltilmemişti). PoC'nin gerçek yarası tam buydu (`DROP SCHEMA public CASCADE` postgis'i
+de götürmüştü) — ucuz kontrol, iki belgeyi de tekrar doğru hale getirir.
+
+**RLS negatif testi iki-yarımlı** (onprem'in ısrarı): yalnız "sonuç boş" yeterli değil —
+taze kutuda `leads` zaten boş, kırık bir sorgu da `[]` dönerdi. Test hem (a) kendi
+`profiles` satırının GÖRÜNÜR olduğunu hem (b) owner'ın satırının GÖRÜNMEZ olduğunu ölçüyor;
+gerçek anon-key + gerçek JWT ile (service_role RLS'i atlar, hiçbir şey ölçmezdi). Test
+hesabı sabit `@…invalid` alan adında, rastgele şifreli, HER ZAMAN silinir — silme
+başarısız olursa (kendi başına) kırmızı, "elle silin" notuyla.
+
+**Gerçek kutuda dört senaryo da ölçüldü:**
+
+| Senaryo | Sonuç |
+|---|---|
+| Baştan sona sihirbaz (owner yaratıldı, sonra pruefungen:true) | `schema/rls/sifreleme` üçü de **gruen**, `praxura_setup.schritte.billige_pruefungen`'e yazıldı, RLS test hesabı silindi (auth.users'ta iz yok) |
+| `DATA_ENCRYPTION_KEY` bozuk (8 haneli, geçersiz hex) ama SET | `sifreleme: kirmizi`, "must be 64 hex chars" — `encryptionAvailable()` bunu yeşil geçerdi, `rundlaufTest()` yakaladı |
+| Şemaya elle bir tablo eklendi (RLS'siz) | `schema: kirmizi`, hem `public_tablo` hem `rls_kapali_tablo` sapması tek satırda raporlandı; `migrate.js` başlangıç logunda da `warn` düştü |
+| Temizlik sonrası tekrar `abschluss` | `abgeschlossen:true`, `verfuegbar:false` — sihirbaz normal bitirdi |
+
+**Kapanış butonu tasarımı (Dilim-2 kilidine sadık):** üç kontrolden biri kırmızıysa
+`setup.js` "Ich möchte trotzdem abschließen" onay kutusunu gösterir, buton onaysız devre
+dışı — ama **hiçbir kontrol `abschluss`'u mekanik olarak bloklamıyor** (K10: içeri girip
+açma yolumuz yok). "gri" (ölçülemedi/beklenti bayat) hiçbir zaman engel değil.
+
+**Açık bırakılan:** RLS'in gerçekten kırık olduğu (bir policy'nin silindiği) senaryo canlı
+test edilmedi — üretim RLS'ini test amacıyla kapatmak riski kazancından büyüktü, mantık
+kod incelemesiyle doğrulandı (aynı iki-yarımlı desen restore.sh'ın parmak-izi mantığıyla
+aynı). "Veraltet" (gri, `bis_version` aşımı) yolu da canlı tetiklenmedi, yalnız kod okuması.
 
 ### O-66 — Sihirbazın SMTP ekranı yapısal olarak çalışamaz: GoTrue ayarını env'den okur
 
