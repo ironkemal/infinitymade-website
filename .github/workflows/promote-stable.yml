@@ -1,0 +1,109 @@
+name: ":stable'a taşı (O-25/R8)"
+
+# Elle tetiklenir — otomatik değil. RELEASE-STANDARD.md §6.3 Katman 2/§9:
+# ":stable yalnız staging + en az bir sponsor kutu 72 saat sorunsuz çalıştıktan
+# sonra taşınır." "Sorunsuz çalıştı mı" makineleşemez (bir insan karar verir);
+# 72 SAAT geçtiği ve X.Y.Z'nin gerçekten var olduğu ise burada mekanik olarak
+# zorlanır. Girdi soak_kanit, "gerçekten bakıldı mı" sorusunu görünür tutar —
+# eksikse iş reddedilir, sessizce atlanmaz.
+on:
+  workflow_dispatch:
+    inputs:
+      surum:
+        description: "Taşınacak sürüm (X.Y.Z, örn. 1.5.0) — zaten publish-*.yml ile yayınlanmış olmalı"
+        required: true
+      soak_kanit:
+        description: "72 saatlik soak kanıtı: hangi sponsor kutu, ne zamandan beri, ne gözlemlendi (log/panel özeti)"
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 72 saatlik kapı, tag'in işaret ettiği commit'in tarihini okur —
+          # tam tag geçmişi gerekir.
+          fetch-depth: 0
+
+      - name: Girdi doğrulama
+        run: |
+          set -e
+          SURUM="${{ github.event.inputs.surum }}"
+          if ! printf '%s' "$SURUM" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "✗ surum X.Y.Z biçiminde değil: $SURUM"
+            exit 1
+          fi
+          if [ -z "${{ github.event.inputs.soak_kanit }}" ]; then
+            echo "✗ soak_kanit boş olamaz — RELEASE-STANDARD.md §9: kanıt olmadan taşıma yok"
+            exit 1
+          fi
+          echo "✓ girdiler geçerli"
+
+      # R8: 72 saatlik saat kapısı. Tag'in kendi oluşturulma anı ayrıca
+      # tutulmuyor (lightweight tag) — işaret ettiği commit'in tarihi kullanılır,
+      # bu commit yayın anıyla (publish-*.yml'in "Git tag" adımı) aynı akıştan
+      # geldiği için pratikte aynı zaman damgasıdır.
+      - name: 72 saatlik soak kapısı
+        run: |
+          set -e
+          TAG="v${{ github.event.inputs.surum }}"
+          if ! git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "✗ ${TAG} diye bir git tag yok — bu sürüm hiç yayınlanmamış (publish-*.yml çalışmadı mı?)"
+            exit 1
+          fi
+          TAG_ZAMAN="$(git log -1 --format=%ct "refs/tags/${TAG}")"
+          SIMDI="$(date +%s)"
+          FARK_SAAT=$(( (SIMDI - TAG_ZAMAN) / 3600 ))
+          echo "${TAG} yayınlandığından beri: ${FARK_SAAT} saat"
+          if [ "$FARK_SAAT" -lt 72 ]; then
+            echo "✗ ${TAG} yalnız ${FARK_SAAT} saatlik — 72 saatlik soak dolmadı (RELEASE-STANDARD.md §6.3 Katman 2)"
+            exit 1
+          fi
+          echo "✓ 72 saatlik saat kapısı geçti"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # R8: RETAG — yeniden build YASAK. Yeni bir build farklı bir digest
+      # üretir; soak edilen artefakt ile yayınlanan artefakt o zaman ayrışır
+      # ve 72 saatlik bekleme hiçbir şey kanıtlamamış olur.
+      #
+      # R5: iki image (api + frontend) AYNI koşuda taşınır — yalnız birinin
+      # :stable'ı taşınırsa kutu test edilmemiş bir çift çeker (§2.1 Supabase
+      # dersi: "birlikte test edilmiş yığın anlık görüntüsü").
+      - name: ":stable → ${{ github.event.inputs.surum }} (retag, iki image)"
+        run: |
+          set -e
+          SURUM="${{ github.event.inputs.surum }}"
+          for IMAGE in calendar-api frontend; do
+            KAYNAK="${{ env.REGISTRY }}/${{ github.repository }}/${IMAGE}:${SURUM}"
+            HEDEF="${{ env.REGISTRY }}/${{ github.repository }}/${IMAGE}:stable"
+            echo "→ ${HEDEF} = ${KAYNAK} (retag, build yok)"
+            docker buildx imagetools create --tag "$HEDEF" "$KAYNAK"
+          done
+          echo "✓ iki image de :stable'a taşındı"
+
+      - name: Kayıt
+        run: |
+          {
+            echo "## \`:stable\` → ${{ github.event.inputs.surum }}"
+            echo ""
+            echo "**Tetikleyen:** ${{ github.actor }}"
+            echo ""
+            echo "**Soak kanıtı:**"
+            echo ""
+            echo "${{ github.event.inputs.soak_kanit }}"
+          } >> "$GITHUB_STEP_SUMMARY"

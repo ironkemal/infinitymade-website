@@ -6,9 +6,16 @@
 // kutuda "müşteri elle değiştirmiş" sanıp güncellemeyi durdurur.
 //
 // Kullanım:
-//   node tools/onprem-manifest.mjs                → surum'un PATCH'ini artırır
-//   node tools/onprem-manifest.mjs 0.2.0           → surum'u açıkça bu değere sabitler (MINOR/MAJOR için)
+//   node tools/onprem-manifest.mjs                → kök VERSION dosyasını okur, surum'u onunla eşitler
 //   node tools/onprem-manifest.mjs --durak         → bu sürümü "durak" işaretler (elle_adim'i de elle doldur)
+//
+// ⚠️ O-25/R7 (12.09.2026): `surum` artık kendi sayacını TUTMAZ. Kaynak tek:
+// kök `VERSION` dosyası (ürünün sürümü, api+frontend image'ları + bu bundle
+// hepsi aynı numarayı taşır — G7, tek codebase). Önceden burada bir
+// `naechstesPatch()` vardı ve kendi PATCH'ini artırıyordu — bu, sürüm
+// kavramının koddan bağımsız ikinci bir kopyasıydı ve iki sayaç er ya da geç
+// birbirinden kayardı. `tools/check-onprem.sh` artık `manifest.json`'ın
+// `surum`'unun kök `VERSION`'la birebir aynı olmasını commit kapısında zorluyor.
 //
 // durak/elle_adim/not_url ÖNCEKİ manifest.json'dan korunur (elle girilen bir
 // duraklama notu, ilgisiz bir sonraki koşuda kaybolmasın) — sıfırlamak için
@@ -19,8 +26,10 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ONPREM_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'onprem');
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ONPREM_DIR = join(REPO_ROOT, 'onprem');
 const MANIFEST_PATH = join(ONPREM_DIR, 'manifest.json');
+const VERSION_PATH = join(REPO_ROOT, 'VERSION');
 
 // J2'nin sabit listesi — dizin değil dosya, tek tek. Yeni bir "bizim" dosya
 // eklenince buraya da eklenir; tools/check-onprem.sh (O-72) bunu compose'un
@@ -45,18 +54,11 @@ function sha256(pfad) {
   return createHash('sha256').update(readFileSync(pfad)).digest('hex');
 }
 
-function naechstesPatch(surum) {
-  const teile = surum.split('.').map(Number);
-  teile[2] = (teile[2] || 0) + 1;
-  return teile.join('.');
-}
-
 const args = process.argv.slice(2);
 const durakSifirla = args.includes('--durak-sifirla');
 const durakSet = args.includes('--durak');
-const explizitSurum = args.find((a) => /^\d+\.\d+\.\d+$/.test(a));
 
-let vorher = { surum: '0.0.0', durak: false, elle_adim: [], not_url: '' };
+let vorher = { durak: false, elle_adim: [], not_url: '' };
 if (existsSync(MANIFEST_PATH)) {
   try {
     vorher = { ...vorher, ...JSON.parse(readFileSync(MANIFEST_PATH, 'utf8')) };
@@ -65,7 +67,15 @@ if (existsSync(MANIFEST_PATH)) {
   }
 }
 
-const surum = explizitSurum || naechstesPatch(vorher.surum);
+if (!existsSync(VERSION_PATH)) {
+  console.error(`✗ Kök VERSION dosyası yok (${VERSION_PATH}) — önce onu yaz.`);
+  process.exit(1);
+}
+const surum = readFileSync(VERSION_PATH, 'utf8').trim();
+if (!/^\d+\.\d+\.\d+$/.test(surum)) {
+  console.error(`✗ VERSION içeriği X.Y.Z değil: "${surum}"`);
+  process.exit(1);
+}
 
 const dateien = BUNDLE_DATEILER.map((rel) => {
   const abs = join(ONPREM_DIR, rel);

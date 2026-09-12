@@ -115,33 +115,48 @@ hiç koşmadı** (`install.sh`, 15 adım, iki tur gegenlesen; Ubuntu'da uçtan u
 lisans/yetki tarafına hiç dokunulmadı (O-31/O-33). Yani bugünkü paket **çalışan bir
 test yığını**, kurulabilir ürün değil.
 
-**Sıradaki iş — sırayla:**
+**Sıradaki iş — sırayla (12.09.2026 gece güncellemesi — önceki liste bayattı, bkz. altındaki not):**
 
-1. **Faz 2.1b** — Caddy (TLS + statik arayüzün servisi) · compose'un kutuya dağıtımı (O-45 (b)).
-   ✅ **Ön koşul kapandı (11.09.2026 gece):** O-01 + O-15'in 2.1b'yi bloke eden kısmı
-   bitti — arayüz artık `API_BASE`'i `/api/config`'ten alıyor, kutuda `"/api"` ölçüldü.
-   Turun kapsamı ve iki yeni maddesi (**O-52** CSP · **O-55** zygotebody) → **§7F**.
-   ✅ **Caddy indi (11.09 akşamı).** ✅ **O-57, O-58 (a), O-59, O-49 kapandı (12.09.2026).**
-   ✅ **O-68, O-69, O-70 de aynı gün kapandı** (O-58 (a)'nın uygulamasından çıkan üç artık, §7I).
-   ✅ **O-48 konseyde karara bağlandı (12.09.2026): Kong kalıyor**, 886 MB rakamı
-   yanlış ölçülmüştü (`konsey/tutanak/2026-09-12-o48-kong.md`).
-   ✅ **O-45 (b) uygulandı ve gerçek kutuya karşı test edildi (12.09.2026) — §7J.**
-   Tasarım: host'ta `update.sh` + systemd zamanlayıcı; paket `api` image'ında
-   (`/app/onprem-bundle/`); `.env` anahtar bazlı üç-yollu birleştirme; kutuda
-   Watchtower **yok**. Dört gerçek dosya/kod hatası test sırasında bulunup düzeltildi
-   (biri Faz 2.1b'den beri var olan, ilgisiz bir Caddy healthcheck hatası). **O-72**
-   ve **O-73** de aynı turda kapandı. Açık tek kullanıcı kararı: **J10** (`install.sh`
-   de paketten mi gelsin — §7G'ye dokunur, şimdilik "hayır" — bkz. J10'un altındaki not).
-   **Faz 2.1b artık tamamen kapalı.** 2.1c'ye geçilir (2.1c'nin kendisi zaten yazıldı,
-   bkz. madde 2).
-2. **Faz 2.1c** — `install.sh`. **Tasarım hazır: §7G** (15 adım, Faz 2.2 sınırı, hata
-   modeli). Kapsadığı maddeler: O-53 (zorunlu değişken kapısı) · ✅ O-59 (adres ön-kontrolü
-   + kurulum sonu çıktısı, 12.09.2026 tamam) · O-52 (b) (`SUPABASE_PUBLIC_WSS` türetimi) · O-50'nin kalanı
-   (`DATA_ENCRYPTION_KEY` üretimi) · **O-60** (JWT türetimi) · **O-61** (`.env` izni) · **O-62** (ilk owner / kayıt penceresi).
-3. **Seed adımı** (O-38) — referans tabloları; `SCHEMA-VERTEILUNG.md` §3.1 adım 4.
-4. **Faz 1.2** (O-02) — takvim kısıtı hâline geldi: kutuda `N8N_AI_SERIES_URL` boş
-   kalınca kod **sabit n8n adresine düşüyor** ve hasta adı bize gelir (G1). İlk
-   ücretli kutudan önce inmeli.
+✅ **Faz 2.1b tamamen kapalı** (O-45 (b) dahil tüm maddeleri — bkz. yukarıdaki 12.09.2026
+girdileri). ✅ **Faz 2.1c (`install.sh`) de fiilen kapalı** — O-50/O-52 (b)/O-53/O-60/
+O-62 hepsi kodda zaten inmişti, yalnız sicil geride kalmıştı (12.09.2026 sicil düzeltmesi,
+onprem-review). Kalan gerçek boşluklar: O-51 (mailin gerçek bir SMTP ile teslim edildiğinin
+ölçülmesi) ve O-61 (c) (`.env`'in yedekten dışlanması, Faz 2.3'ün işi) — ikisi de yalnız
+gerçek bir kurulumla/Faz 2.3 ile kapanabilir, `install.sh`'ın kendisinde eksik değil.
+✅ **Faz 2.2 dilim 1+2 de kapalı** (kurulum sihirbazı, ilk owner, SMTP test ucu, 3 dil,
+kurulum modu kilidi). Açık kalan: §5.4'ün 1/5/8 kontrolleri (10 şema sayacı, RLS negatif
+testi, `DATA_ENCRYPTION_KEY` yaz-oku turu) — dilim 2'de bitmedi ve **dilim 2b hiç
+açılmadı**, şu an sahipsiz bir borç (onprem-review'un kendi bulduğu boşluk).
+✅ **O-25 (kanal/etiket sistemi) tam kapsamıyla uygulandı (12.09.2026)** — R0-R12,
+onprem-review ile tasarım kilitlendi. Ayrıntı: O-25'in kendi maddesi + **O-74** + **O-75**.
+
+1. **O-25'in son adımı — SaaS host'unun `:latest`'ten `:beta`'ya geçişi (R9).** CI
+   değişiklikleri push'landıktan ve gerçekten `:beta`/`X.Y.Z` bastığı doğrulandıktan
+   SONRA yapılabilir — henüz basılmış bir `:beta` yokken host'u ona çevirmek `docker
+   compose pull`'u kırardı. Sıra: push → CI'ın yeşil çıkıp etiketleri bastığını doğrula
+   → host'u çevir → `docker inspect` ile doğrula → ancak o zaman CI'dan `latest` düşer.
+2. **Faz 2.1c'nin gerçek ilk ucu — `install.sh`'ın hiçbir Ubuntu makinesinde uçtan uca
+   koşmamış olması.** Kod okuması ve parça parça test yeterli değil (sicilin kendi
+   dersi, defalarca yaşandı). O-25 kapandığı için artık gerçek bir `:beta`/`X.Y.Z`
+   imajı çekilebilir — bu, ilk gerçek denemeyi daha önce mümkün olmadığı kadar
+   yakınlaştırıyor.
+3. **O-38 — seed adımı.** Kutu doğru ama boş kalkıyor (`krankenkassen` → `[]`).
+   Sihirbaz bitiyor, owner giriyor, randevu kaydedemiyor. `SCHEMA-VERTEILUNG.md` §3.1
+   adım 4 yazılmadı.
+4. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8'i (yukarıya bak), sahipsiz kalmış borç.
+5. **Faz 2.3 — yedekleme.** O-61 (c), O-26, O-29 (c)'yi birlikte kapatır; ayrıca
+   `update.sh`'ın migration'ları yedeksiz koşturuyor olması (RELEASE-STANDARD.md §4.3)
+   bunu 2.4'ten önceye koyuyor — veri kaybı riski taşıyan tek açık madde.
+6. **Faz 1.2** (O-02) — takvim kısıtı: kutuda `N8N_AI_SERIES_URL` boş kalınca kod
+   **sabit n8n adresine düşüyor** ve hasta adı bize gelir (G1). İlk ücretli kutudan
+   önce inmeli.
+
+> ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
+> Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
+> yalnız O-numaralarının Durum satırları güncellenmemişti. Bir onprem-review turu
+> (12.09.2026) sicili koda karşı sayıp beş maddeyi (O-50/O-52 (b)/O-53/O-62 + bu blok)
+> düzeltti. Ders, O-58/O-68 turunun dersinin aynısı: **bir şeyi kapatan iş, onu
+> kapatan her yeri saymadan bitmez** — bu kez "her yer" kod değil sicilin kendisiydi.
 
 **Basılmaması gereken tuzaklar** (hepsi bir kez yaşandı, hepsinin bedeli ölçüldü):
 
@@ -682,7 +697,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | F + B |
 | **Kutuda ne olur** | Bugün: her main push'u ~60 saniyede canlıya çıkar (Watchtower). Bu SaaS'ta bilinçli. Kutularda aynı düzen kalırsa **ücretli müşteri her denememizi yer** — K11 tam bunu engellemek için var. Ücretli müşterinin kutusu, henüz test edilmemiş bir image'ı gece yarısı çeker |
 | **Çözüm** | **Faz 4.3** — `:beta` (her main push) + `:stable` (yalnız release tag'i); Watchtower kanal tag'ini izler. Testlerin publish'ten önce koşması iyi bir taban, korunur. Ayrıca şema dağıtımıyla bağlanır: `:stable` image'ı yalnız kendi migration'larını bilmeli (O-39). ★ Kanalın tam tasarımı — değişmez `X.Y.Z` etiketi, 72 saatlik soak, `:stable`'ın elle taşınması, `latest`'in kullanımdan kalkması, kutuda saatlik Watchtower — `onprem/RELEASE-STANDARD.md` §2.3 + §6.4'te. Etiketin kendisi risk kontrolüdür; aralık değil |
-| **Durum** | `geplant` (Faz 4.3 / 4.3b) — bkz. O-41 (smoke-test ve soak eksikliği) |
+| **Durum** | ✅ **gelöst (12.09.2026, tam kapsam — CI tarafı) — R9 (SaaS host geçişi) ayrı adım, bkz. altındaki not** — bkz. O-41 (smoke-test artık var) |
 
 > **11.09.2026 — paket, var olmayan bir etikete işaret ediyor.**
 > `onprem/.env.template` `PRAXURA_API_IMAGE=…/calendar-api:stable` diyor; yayın hattı ise
@@ -692,6 +707,75 @@ kapı unutmaz ama düşünmez.
 > Sonuç, paketin bugünkü dürüst tarifi: **çalışan bir test yığını, kurulabilir bir ürün
 > değil.** Müşteri sunucusunda `docker compose up` bugün image'ı çekemez. Faz 4.3b (kanal
 > etiketleri) ve Faz 3.4 (registry kimliği) inmeden ilk kurulum yapılamaz.
+
+> **12.09.2026 — tam kapsam uygulandı, onprem ajanıyla tasarım kilitlendi (R0-R12).**
+> Tutanak: `onprem-review`'un kendi cevabı (bu maddenin altına özetlendi, ayrı dosya
+> açılmadı — konsey değil, ikili tasarım kilidi).
+>
+> **R0 (blokaj, önce bulundu, ayrı commit — `f0bd0af`):** `publish-calendar-api.yml`'in
+> bundle-smoke-test'i kendi kendini reddediyordu (`manifest.json` kendi adını listeleyemez,
+> kontrol bunu arıyordu) — `6347071`'den beri hiçbir `calendar-api` image'ı yayınlanmamış
+> olabilir. Ayrıntı: **O-74**.
+>
+> **R1/R2/R7 — sürüm kaynağı:** kök `VERSION` dosyası (tek satır, `X.Y.Z`) tek kaynak.
+> `api-backend/package.json`'daki `1.0.0` **dokunulmadı** — o npm'in kendi alanı, ürün
+> sürümü değil. `tools/onprem-manifest.mjs` artık kendi `naechstesPatch()` sayacını
+> tutmuyor, `surum`'u doğrudan kök `VERSION`'dan okuyor (VERSION yoksa/biçimsizse hata
+> verir). Böylece iki paralel sürüm kavramı riski (bundle'ın kendi sayacı vs. ürünün
+> sürümü) yapısal olarak kapandı.
+>
+> **R3/R4/R5/R6/R6b — iki workflow (`publish-calendar-api.yml`, `publish-frontend.yml`):**
+> her ikisi de artık "Sürüm bilgisi" adımıyla açılıyor — `VERSION`'ın içeriğine karşılık
+> gelen `v$VERSION` git tag'i **henüz yoksa** bu bir "yayın koşusu" (X.Y.Z de basılır),
+> **varsa** yalnız `:beta` + kısa sha (durum ölçülüyor, diff değil — R3: yeniden koşturma/
+> `workflow_dispatch`/force-push diff'i yanıltır, durumu yanıltmaz). Yayın koşusunda iki
+> mekanik kapı: **R6** (PATCH sürümü `api-backend/db/migrations/` içinde yeni dosya
+> taşıyamaz — RELEASE-STANDARD.md §2.2'nin makineleşen tek parçası) ve **R6b** (MAJOR
+> sürüm `onprem/manifest.json`'da `durak:true` + dolu `elle_adim[]` taşımak zorunda).
+> İkisi de her iki workflow'da aynı (frontend-only bir değişiklik bile aynı `X.Y.Z`'yi
+> paylaştığı için aynı kapıdan geçmeli — R5). Etiketler: `latest` (kalıyor, aşağıya bak) ·
+> `sha-<kısa>` · `beta` (her koşuda, hareketli) · `X.Y.Z` (yalnız yayın koşusunda,
+> değişmez). `org.opencontainers.image.version` etiketi `VERSION`'dan yazılıyor. Yayın
+> koşusunda git tag'i **CI kendisi** basıyor (R4) — idempotent: iki workflow paralel aynı
+> tag'i basmaya çalışır, hangisi önce biterse; ikincisi "already exists" görüp sessizce
+> geçiyor (ilk yazımda bu kontrol `git push | tee` üzerinden pipefail olmadan yanlış
+> yazılmıştı — kendi kendini her zaman "başarılı" sanırdı; command-substitution'a
+> çevrilerek düzeltildi, elle test edildi).
+>
+> **R8 — yeni dosya `.github/workflows/promote-stable.yml`:** yalnız `workflow_dispatch`,
+> elle tetiklenir. İki girdi: `surum` (X.Y.Z) ve `soak_kanit` (serbest metin — boşsa iş
+> reddedilir, "kanıt yok" sessizce geçilemez). 72 saatlik kapı mekanik: `v$surum` tag'inin
+> işaret ettiği commit'in tarihiyle şimdiki zaman arasındaki fark ölçülür, 72'den azsa
+> reddedilir. **Yeniden build YOK** — `docker buildx imagetools create` ile salt retag;
+> yeni build farklı digest üretir ve soak edilen artefaktla yayınlanan artefaktı ayırırdı.
+> İki image (api+frontend) **aynı koşuda** taşınır.
+>
+> **R9 — SaaS host geçişi (`:latest` → `:beta`) — ayrı adımda, canlı host değişikliği,
+> kullanıcı onayı bekliyor.** Bu maddenin tamamlanması için host'un `/opt/calendar-api/
+> docker-compose.yml`'i `:beta`'ya çevrilip `docker inspect` ile doğrulanması, ANCAK O
+> ZAMAN CI'dan `latest`'in düşürülmesi gerekiyor — sıra bozulursa Watchtower sessizce
+> güncellemeyi bırakır. Bu adım CI değişiklikleri gerçekten `:beta` basana kadar
+> yapılamaz (henüz basılmış bir `:beta` yok) — push+doğrulama sırası aşağıda ayrıca not
+> edilecek.
+>
+> **R12 — üç yeni kapı, `tools/check-onprem.sh`:** (1) `VERSION` staged ve `v<değer>`
+> zaten bir git tag'iyse → red (sürüm yeniden kullanımı). (2) `VERSION` staged, MAJOR
+> artmış, `onprem/manifest.json` `durak:true`+dolu `elle_adim[]` taşımıyorsa → red.
+> (3) `onprem/manifest.json` staged ve `surum` ≠ `VERSION` içeriği → red. Üçü de ayrı bir
+> scratch clone'da (`git clone` + sahte tag'ler) hem pozitif hem negatif senaryolarla elle
+> doğrulandı; ilk denemede test kurulumunda bir hata (eski `onprem-manifest.mjs`'in scratch
+> clone'a kopyalanmamış olması) yanlış bir "geçti" sonucu üretmişti — düzeltilip tekrar
+> koşturuldu.
+>
+> **R10/R11 — bu maddenin kapsamı DIŞINDA, dokunulmadı:** `onprem/releases.json`
+> (durak/`gerekli_adimlar` geçmiş listesi) ayrı kalır, O-43/Faz 2.9'un işi. R11 yeni bir
+> bulgu olarak **O-75** açıldı (aşağıya bak) — J5'in durak-kapısı bugün yalnız hedef
+> manifesti görüyor, aradaki durakları hiç göremiyor; `X.Y.Z` var olduğu için artık ifade
+> edilebilir ama uygulaması 2.9.
+>
+> ⚠️ **Henüz gerçek bir yayın koşusu bu kod üzerinden geçmedi** (push edilmeden önce
+> yazılıyor) — CI'ın gerçekten yeşil çıkıp `:beta`/`0.1.0` etiketlerini bastığı, `gh`
+> olmadığı için `git ls-remote --tags` ve GHCR üzerinden push sonrası doğrulanacak.
 
 ### O-26 — Yedekleme zamanlayıcısı repoda yok, VPS'te elle kurulmuş
 
@@ -1108,7 +1192,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | F + G |
 | **Kutuda ne olur** | Boot'ta ölen bir image testleri geçer, basılır, 60 saniyede canlıya çıkar ve container sonsuz crash-loop'a girer. **Bu SaaS'ta bir kez oldu** (`SUPABASE_SERVICE_KEY` yazım hatası, `CLAUDE.md`). On-prem'de aynı olay **20 praxis'in aynı sabah çalışmaması** demektir ve K10 gereği hiçbirine giremeyiz. Ayrıca compose kutuda yaşar, Watchtower ona dokunmaz — düzeltmeyi compose'a yazmak işe yaramaz (2026-08-15 dersi, `docker-compose.yml` yorumunda yazılı) |
 | **Çözüm** | Dört katman, `RELEASE-STANDARD.md` §6.3: (1) **Faz 4.3a** CI'da gerçek CMD ile `docker run` + `/health` 200 (tek başına en yüksek getirili adım; bu olay tam burada yakalanırdı); (2) **Faz 4.3b** `X.Y.Z` değişmez etiket + 72 saat soak + `:stable`'ın elle taşınması; (3) kutuda crash-loop yerine **bakım modu** (O-28 ile aynı istek); (4) kutu Watchtower'ı saatlik, `latest` kullanılmaz |
-| **Durum** | 🟡 **kısmen `gelöst` (04.09.2026)** — katman (1) yazıldı, (2)(3)(4) açık |
+| **Durum** | ✅ **gelöst (12.09.2026)** — (1) 04.09.2026'da yazıldı (aşağıya bak) · (2) O-25'in R1-R8'i ile 12.09.2026'da tamamlandı (`X.Y.Z` + 72 saatlik soak kapısı + `promote-stable.yml`) · (3) bakım modu `update.sh`'ın rollback yoluyla dolaylı sağlanıyor (O-45 (b)); ayrı bir "bakım sayfası" hâlâ yok, ama kutu artık asla crash-loop'a düşmeden eski sürüme dönüyor · (4) kutu `update.sh` + systemd timer ile **gecede bir** güncelleniyor (Watchtower değil, §6.4 12.09.2026 revizyonu — J8), "saatlik Watchtower" fikri kutu için terk edildi, bilinçli olarak daha güvenli bir aralık (gece, tek sefer) seçildi |
 
 > **04.09.2026 — yapılan (ana bağlam):**
 > `publish-calendar-api.yml`'ye **smoke-test adımı** eklendi, `build-and-push`'tan
@@ -2559,6 +2643,19 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Kutuda ne olur** | `set -e` altında adım kırmızı çıkıyor, `Build and push` adımı hiç çalışmıyor — yani **hiçbir** `calendar-api` image'ı `6347071`'den bu yana yayınlanmamış olabilir (Actions ekranından doğrulanmadı, kod okumasıyla kesin). En tehlikeli kısmı: hata mesajı doğru göründüğü için ("13/13 dosyayı listeliyor" beklenirken kırmızı çıkması) fark edilmesi CI günlüğüne bakmayı gerektiriyordu, kimse bakmadıysa haftalarca sürebilirdi |
 | **Çözüm** | Kontrol ikiye bölündü. (a) **Bundle'da var mı** — `docker cp` ile `/app/onprem-bundle` **tamamı** çekilir (tek dosya değil), 14 dosyanın 14'ü de diskte var mı diye bakılır (bu, Dockerfile COPY listesinin eksikliğini yakalayan O-57 sınıfı kontrol). (b) **Manifest doğru mu** — `manifest.json` **hariç** kalan 13 dosyanın hepsi `dateien[]`'de var mı (`grep`), **ve tersi**: `dateien[]`'de kaç kayıt var, beklenen sayıyla (13) eşleşiyor mu (`grep -oE '"yol"...' \| wc -l`). Ters yön daha önce hiç kontrol edilmiyordu — manifest'te yazıp bundle'da olmayan ya da fazladan/hayalet bir kayıt olsa hiç yakalanmazdı, ve tam da bu sınıf hata `update.sh`'ı kutuda sessizce yanlış bir dosya kümesiyle çalıştırırdı |
 | **Durum** | ✅ **gelöst (12.09.2026, O-25 turu, onprem-review'un R0 bulgusu)** — yerelde gerçek bir image build edilip (`docker build --build-context onprem=./onprem`) yeni kontrol mantığı bizzat çalıştırıldı: pozitif yol geçti (14/14 + 13/13); üç negatif senaryo da doğru yakalandı — (1) bundle'dan bir dosya silindiğinde (a) doğru reddetti, (2) manifest'e hayalet bir `"yol"` eklendiğinde sayaç 13→14 farkını yakaladı, (3) manifest'ten gerçek bir kaydı sildiğimde (orijinal hatanın ayna senaryosu) `grep` doğru reddetti. Windows/Git Bash'te `docker cp` dizin kopyalamada sessizce boş sonuç verdi (bilinen ortam kısıtı, gerçek Ubuntu CI'da geçerli değil) — doğrulama PowerShell'e geçilerek tamamlandı |
+
+---
+
+### O-75 — Durak kapısı yalnız hedef sürümü görüyor, aradaki duraklar hiç kontrol edilmiyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | §7J J5 adım 3'ün durak-kapısı (`update.sh`) yalnız **hedef** `manifest.json`'ın `durak` alanına bakıyor. `1.2.0`'daki bir kutu `1.9.0`'a atlarken, aradaki `1.5.0`'da ilan edilmiş bir durak **hiç görülmez** — o bilgi kutunun okuduğu hiçbir dosyada yok, çünkü kutu yalnız hedef image'ın bundle'ını çeker, aradaki sürümlerin manifestlerini görmez |
+| **Nerede** | `onprem/update.sh` (durak kontrolü) · `onprem/RELEASE-STANDARD.md` §3.4 Kural 4 ("runner atlamayı reddeder") — bu kural bugün fiilen **uygulanamıyor**, çünkü uygulaması gereken bilgi (aralıktaki duraklar) hiçbir yerde toplanmıyor |
+| **Tip** | E |
+| **Kutuda ne olur** | Bugün zararsız — §3.4 Kural 3 zaten durak listesinin **boş kalmasını** istiyor (mimarinin kendisi migration'ları sürüm-bağımsız tutuyor, §3.3). Ama bir gün gerçekten bir durak ilan etmek zorunda kalınırsa (istisnai, kabul edilen bir tasarım kırılması), bugünkü mekanizma o duraği **atlar** — kutu sessizce geçer, tam da kuralın önlemeye çalıştığı şey |
+| **Çözüm** | O-43/Faz 2.9'un işi: `onprem/releases.json` (geçmiş sürümlerin durak listesi, image'la değil **ayrı bir kanaldan** — ya da bundle'a şimdiye kadarki tüm sürümlerin özet durak bilgisini taşıyan küçük bir ek dosya olarak eklenir). `X.Y.Z`'nin artık var olması (O-25) bu gereksinimi ilk kez **ifade edilebilir** kılıyor — önceden "hangi aralık" sorusunun bile bir cevabı yoktu |
+| **Durum** | `offen` (O-43/Faz 2.9'a bağlı, R11 — onprem-review, 12.09.2026). Uygulanana kadar **hiçbir sürüm `durak:true` ilan edilemez** — zaten §3.4 Kural 3'ün istediği şey, burada yalnız mekanik bir hatırlatmaya döndü |
 
 ---
 

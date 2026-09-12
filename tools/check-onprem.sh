@@ -199,6 +199,52 @@ if [ -n "$compose_icerik_o72" ]; then
   done
 fi
 
+# --- O-25/R12 kapıları: sürüm numarası tekilliği + MAJOR/durak + manifest.surum eşitliği ---
+#
+# X.Y.Z (kök VERSION) tek kaynak (R1/R7): api+frontend image'ları ve
+# onprem/manifest.json'ın kendi "surum" alanı hepsi ondan türer. Üç şekilde
+# bozulabilir — üçü de burada, CI'a (publish-*.yml) varmadan yakalanır.
+version_ihlal=""
+major_ihlal=""
+surum_ihlal=""
+
+version_staged="$(git show ":VERSION" 2>/dev/null || true)"
+if [ -n "$version_staged" ]; then
+  yeni_surum="$(printf '%s' "$version_staged" | tr -d '[:space:]')"
+
+  # (1) Aynı sürüm numarası ikinci kez basılamaz — X.Y.Z değişmez etiket (§2.3).
+  if git rev-parse -q --verify "refs/tags/v$yeni_surum" >/dev/null 2>&1; then
+    version_ihlal="v$yeni_surum zaten bir git tag'i olarak var — sürüm numarası yeniden kullanılamaz"
+  fi
+
+  # (2) MAJOR arttıysa manifest.json durak:true + dolu elle_adim[] taşımalı (R6b).
+  onceki_surum="$(git tag -l 'v*.*.*' 2>/dev/null | sed 's/^v//' | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
+  if [ -n "$onceki_surum" ]; then
+    yeni_major="${yeni_surum%%.*}"
+    onceki_major="${onceki_surum%%.*}"
+    if [ "$yeni_major" != "$onceki_major" ]; then
+      manifest_icerik_major="$(git show ":onprem/manifest.json" 2>/dev/null || true)"
+      durak_true="$(printf '%s' "$manifest_icerik_major" | grep -oE '"durak"[[:space:]]*:[[:space:]]*true' || true)"
+      elle_adim_bos="$(printf '%s' "$manifest_icerik_major" | grep -oE '"elle_adim"[[:space:]]*:[[:space:]]*\[\]' || true)"
+      if [ -z "$durak_true" ] || [ -n "$elle_adim_bos" ]; then
+        major_ihlal="${onceki_surum} → ${yeni_surum} (durak:true + dolu elle_adim[] yok)"
+      fi
+    fi
+  fi
+fi
+
+# (3) manifest.json'ın "surum"u kök VERSION ile birebir aynı olmalı — iki paralel
+# sürüm kavramı yasak (R7: onprem-manifest.mjs kendi sayacını tutmaz).
+manifest_icerik_surum="$(git show ":onprem/manifest.json" 2>/dev/null || true)"
+if [ -n "$manifest_icerik_surum" ]; then
+  manifest_surum="$(printf '%s' "$manifest_icerik_surum" | grep -oE '"surum"[[:space:]]*:[[:space:]]*"[^"]+"' | sed -E 's/.*"([^"]+)"$/\1/')"
+  version_icerik="$(printf '%s' "$version_staged" | tr -d '[:space:]')"
+  [ -n "$version_icerik" ] || version_icerik="$(cat VERSION 2>/dev/null | tr -d '[:space:]')"
+  if [ -n "$version_icerik" ] && [ "$manifest_surum" != "$version_icerik" ]; then
+    surum_ihlal="manifest.json surum=\"$manifest_surum\" ama VERSION=\"$version_icerik\""
+  fi
+fi
+
 # --- Karşılaştır ----------------------------------------------------------
 ihlal=""
 sikis=""
@@ -243,6 +289,34 @@ if [ -n "$o72_ihlal" ]; then
       (onprem/REGISTER.md O-45 (b) / §7J). Compose'a mount eklenip manifest
       güncellenmezse, dosya hiçbir kutuya asla ulaşmaz — Docker o yolda
       sessizce boş bir DİZİN yaratır (O-49'un webhooks.sql dersinin aynısı).
+      Çıkış: 'node tools/onprem-manifest.mjs' çalıştırıp aynı commit'e ekle.
+"
+fi
+
+if [ -n "$version_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ sürüm numarası yeniden kullanılıyor: $version_ihlal
+      X.Y.Z değişmez bir etikettir (RELEASE-STANDARD.md §2.3) — üstüne yazmak
+      soak edilmiş bir artefaktı sessizce başka bir digest'e çevirir.
+      Çıkış: VERSION'ı henüz basılmamış bir sonraki sürüme yükselt.
+"
+fi
+
+if [ -n "$major_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ MAJOR sürüm durak+elle_adim taşımıyor: $major_ihlal
+      §2.2: MAJOR = 'kutu bunu kendi başına atlayamaz' — durak:true + dolu
+      elle_adim[] bu tanımın makine karşılığı (R6b).
+      Çıkış: onprem/manifest.json'a --durak ile durak:true ve elle_adim[] yaz,
+      ya da bu sürüm gerçekten MAJOR değilse VERSION'ı düzelt.
+"
+fi
+
+if [ -n "$surum_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ manifest.json ile VERSION uyuşmuyor: $surum_ihlal
+      onprem/manifest.json'ın 'surum' alanı artık kendi sayacını tutmaz (R7) —
+      tek kaynak kök VERSION'dur.
       Çıkış: 'node tools/onprem-manifest.mjs' çalıştırıp aynı commit'e ekle.
 "
 fi

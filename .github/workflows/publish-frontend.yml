@@ -48,6 +48,9 @@ on:
       - 'onprem/Caddyfile'
       - 'onprem/frontend.Dockerfile'
       - '.github/workflows/publish-frontend.yml'
+      # O-25/R5 (12.09.2026): api- ve frontend-Image tek bir Produktversion
+      # paylaşır (VERSION, Repo-Root). Bkz. publish-calendar-api.yml aynı satır.
+      - 'VERSION'
   workflow_dispatch:
 
 env:
@@ -58,12 +61,80 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      # R4: yayın koşusunda git tag push'lanıyor — contents: write şart.
+      contents: write
       packages: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # O-25/R3-R6: Release-Erkennung ve PATCH/MAJOR kapıları tam tag
+          # geçmişi ister.
+          fetch-depth: 0
+
+      # ── Sürüm bilgisi — publish-calendar-api.yml'deki adımın birebir aynısı.
+      # İkisi paralel tetiklenir (R5), ikisi de aynı VERSION'ı okur.
+      - name: Sürüm bilgisi
+        id: version
+        run: |
+          set -e
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "→ v$VERSION zaten basılmış — bu bir yayın koşusu değil, yalnız :beta + sha"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "→ v$VERSION henüz yok — bu bir YAYIN koşusu, X.Y.Z de basılacak"
+          fi
+
+          ONCEKI="$(git tag -l 'v*.*.*' | sed 's/^v//' | sort -t. -k1,1n -k2,2n -k3,3n | tail -1 || true)"
+          echo "onceki=$ONCEKI" >> "$GITHUB_OUTPUT"
+          echo "→ önceki yayın: ${ONCEKI:-<yok — ilk yayın>}"
+
+      # R6, api-backend/db/migrations'a bakar — frontend-only bir yayında bile
+      # bu kontrol koşar, çünkü PATCH kuralı IMAGE'a değil SÜRÜME ait: iki
+      # workflow paralel aynı tag'i basmaya çalışıyor (R5), ikisi de aynı
+      # kapıdan geçmeli, yoksa hangisinin önce bittiği kapıyı belirler.
+      - name: R6 — PATCH sürümü migration içeremez
+        if: steps.version.outputs.release == 'true' && steps.version.outputs.onceki != ''
+        run: |
+          set -e
+          VERSION="${{ steps.version.outputs.version }}"
+          ONCEKI="${{ steps.version.outputs.onceki }}"
+          IFS=. read -r vMAJ vMIN vPAT <<< "$VERSION"
+          IFS=. read -r oMAJ oMIN oPAT <<< "$ONCEKI"
+          if [ "$vMAJ" = "$oMAJ" ] && [ "$vMIN" = "$oMIN" ] && [ "$vPAT" != "$oPAT" ]; then
+            YENI="$(git diff --name-only "v$ONCEKI" HEAD -- api-backend/db/migrations/ | grep -c '\.sql$' || true)"
+            if [ "${YENI:-0}" -gt 0 ]; then
+              echo "✗ PATCH sürümü (${ONCEKI} → ${VERSION}) ${YENI} yeni migration dosyası içeriyor."
+              echo "  RELEASE-STANDARD.md §2.2: PATCH migration içeremez — bu MINOR olmalı (VERSION'ı düzelt)."
+              exit 1
+            fi
+          fi
+          echo "✓ PATCH kapısı geçti"
+
+      - name: R6b — MAJOR sürümü durak+elle_adim taşımalı
+        if: steps.version.outputs.release == 'true' && steps.version.outputs.onceki != ''
+        run: |
+          set -e
+          VERSION="${{ steps.version.outputs.version }}"
+          ONCEKI="${{ steps.version.outputs.onceki }}"
+          vMAJ="${VERSION%%.*}"
+          oMAJ="${ONCEKI%%.*}"
+          if [ "$vMAJ" != "$oMAJ" ]; then
+            DURAK_TRUE="$(grep -oE '"durak"[[:space:]]*:[[:space:]]*true' onprem/manifest.json || true)"
+            ELLE_ADIM_BOS="$(grep -oE '"elle_adim"[[:space:]]*:[[:space:]]*\[\]' onprem/manifest.json || true)"
+            if [ -z "$DURAK_TRUE" ] || [ -n "$ELLE_ADIM_BOS" ]; then
+              echo "✗ MAJOR sürüm (${ONCEKI} → ${VERSION}) ama onprem/manifest.json"
+              echo "  durak:true VE dolu bir elle_adim[] taşımıyor. §2.2: MAJOR = "
+              echo "  'kutu bunu kendi başına atlayamaz' — durak onun makine karşılığı."
+              exit 1
+            fi
+          fi
+          echo "✓ MAJOR kapısı geçti"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -72,6 +143,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # ⚠️ O-25/R9: `:latest` bilinçli KALIYOR (bkz. publish-calendar-api.yml'deki
+      # aynı not — SaaS host geçişi tamamlanana kadar düşmez).
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -80,6 +153,10 @@ jobs:
           tags: |
             type=raw,value=latest
             type=sha,prefix=,format=short
+            type=raw,value=beta
+            type=raw,value=${{ steps.version.outputs.version }},enable=${{ steps.version.outputs.release == 'true' }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -176,3 +253,22 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # R4/R5: idempotent — api workflow'u aynı tag'i paralel basmaya çalışabilir.
+      - name: Git tag (yalnız yayın koşusunda)
+        if: steps.version.outputs.release == 'true'
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="v${{ steps.version.outputs.version }}"
+          git tag "$TAG" 2>/dev/null || true
+          if OUT="$(git push origin "$TAG" 2>&1)"; then
+            echo "✓ ${TAG} basıldı"
+          elif echo "$OUT" | grep -qi "already exists"; then
+            echo "→ ${TAG} zaten var (eşleşen api workflow'u önce bastı) — sorun değil"
+          else
+            echo "✗ tag push başarısız:"
+            echo "$OUT"
+            exit 1
+          fi
