@@ -266,10 +266,18 @@ kutu hâlâ müşterinin Zuweiser CRM verisini yetkisiz şekilde n8n'e POST'luyo
 ucuz bir ara-çözüm biliniyor (kendi maddesine bak) ama n8n kararına kadar
 uygulanmayacak.
 
-Bağımsız açık maddeler (henüz sıralanmadı, kullanıcı seçecek): **O-79**
-(`heilmittel_katalog` besleme kapısız), **O-82** (`update.sh`'ın `dur` dalları
-merkeze bildirmiyor), **O-44** (`prescriptions` iki ayrı yazma yolu), **O-33**
-(on-prem'de "çalışan sayısı/limit" tanımsız).
+✅ **O-79 — seed-besleme kapısı yazıldı (13.09.2026)** — `tools/check-onprem.sh`'a
+insan-commit yolu için bir kapı eklendi (`billing/codes/*_positions.js` migrationsuz
+staged edilirse red), gerçek testle doğrulandı. Kazı sırasında iki yeni madde çıktı:
+**O-95** (`preise-check.yml`'in otomatik CI commit'i bu kapıyı görmüyor — düşük etkili,
+ertelenebilir) ve **O-96** (⚠️ daha ciddi: `heilmittel_tarif`, elle beslenen ve süresiz
+bir tablo, resolver'da §302 tutarını katalog fiyatının ÖNÜNE geçiriyor — SaaS'ı da
+ilgilendiriyor, `gkv-302` doğrulaması bekliyor, kendi maddesine bak).
+
+Bağımsız açık maddeler (henüz sıralanmadı, kullanıcı seçecek): **O-82** (`update.sh`'ın
+`dur` dalları merkeze bildirmiyor), **O-44** (`prescriptions` iki ayrı yazma yolu),
+**O-33** (on-prem'de "çalışan sayısı/limit" tanımsız), **O-96** (yukarıya bak — `gkv-302`
+doğrulaması istiyor, on-prem işi değil ama bu kazıdan çıktığı için burada anılıyor).
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -2656,6 +2664,28 @@ kimse görmez (şema sayacı her açılışta koşuyor, bu ikisi koşmuyor). Ç�
 (self-check + sürüm künyesi paneli) işi — orada randevu-düzeyi bir RLS negatif testi
 de eklenebilir (taze kutuda `bookings` boş, orada ölçmek daha az müdahaleci).
 
+### O-95 — `preise-check.yml`'in otomatik commit'i seed-besleme kapısını (O-79) hiç görmüyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `.github/workflows/preise-check.yml` (Ops-Karte #213) günlük cron'la `billing/codes/{podologie,physio}_positions.js`'i otomatik günceleyip commit+push ediyor — çıplak bir CI checkout'ta, `.githooks` hiç konfigüre edilmeden. O-79'un pre-commit kapısı (`tools/check-onprem.sh`) bu commit'i hiç görmüyor |
+| **Nerede** | `.github/workflows/preise-check.yml` ("Commit + Push" adımı) · `api-backend/preise_autoupdate.mjs` |
+| **Tip** | B + D |
+| **Kutuda ne olur** | `onprem-review` (13.09.2026) doğruladı: `heilmittel_katalog` §302 tutarını üretmiyor — `resolvePreis()` (`api-backend/billing/preise/resolver.js:72-87`) bu tabloyu hiç okumuyor, fiyat kod içinden geliyor. Tablonun kutudaki tek işi seçici listesi + rozet fiyatı (`katalog-suche.js:464`, `module/podologie-abrechnung.js:92`). Yani sapma **düşük etkili**: rozette eski fiyat görünür, fatura yine doğru çıkar |
+| **Çözüm** | CI adımına O-79'un kapı mantığını koşulsuz bağlamak YANLIŞ — otomasyon zaten yalnız pozisyon dosyalarını değiştiriyor, migration hiç üretmiyor, günlük kırılır. Doğru yol: `sync_heilmittel_katalog.js`'e `--sql` çıktı modu eklemek (satır üreticileri zaten var — `physioRows()`/`podologieRows()`), CI'nın kendisi de aynı üreteci çağırıp yeni seed migration'ı kendi commit'ine eklesin. DB gerekmez, kaynak kod dosyalarının kendisi yeterli |
+| **Durum** | `offen` — düşük etkili, ertelenebilir. `onprem-review` bulgusu, 13.09.2026 |
+
+### O-96 — `heilmittel_tarif` (elle beslenen, süresiz) §302 tutarını katalog fiyatının ÖNÜNE geçiriyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | O-79/O-95 araştırılırken bulundu: `resolvePreis()` fiyatı ÖNCE `heilmittel_tarif`'te arıyor (`resolver.js:81-86`, `quelle='heilmittel_tarif'`), varsa katalog/pozisyon fiyatının yerine onu kullanıyor. Bu tablo `0008_seed_heilmittel_tarif.sql` (959 satır, 16 Bundesland × physio pozisyonu) ile açılmış, beslemesi `api-backend/seed_tarifs.js` — aynı `PHYSIO_POSITIONS`'tan ama **elle**, `DELETE`+yeniden-insert ile, `gueltig_bis = NULL` (süresiz) |
+| **Nerede** | `api-backend/billing/preise/resolver.js:72-87` · `api-backend/seed_tarifs.js` · `api-backend/db/migrations/0008_seed_heilmittel_tarif.sql` · gerçek okuma: `abrechnung.routes.js:678` `:2409` `:3217` |
+| **Tip** | D + G |
+| **Kutuda ne olur** | Kutuya özgü değil — **bugün SaaS'ta da** geçerli: CI (`preise-check.yml`) `positions.js`'e yeni bir fiyat penceresi eklediğinde, kod yeni fiyatı bilir ama `heilmittel_tarif` (elle, süresiz) eskiyi taşımaya devam eder ve **kazanır**. Ops-Karte #213'ün "otomatik fiyat canlıya çıkar" vaadi physio DTA yolunda kısmen boşa dönüyor olabilir — yanlış tutarlı §302 dosyası, Absetzung riski. Etkisi ölçülmedi (gerçekten bugün bir fark var mı, hangi pozisyonlarda) |
+| **Çözüm** | Önce doğrulama: `gkv-302`'ye "bugün `heilmittel_tarif`'teki tutarlar `positions.js`'in güncel fiyatlarıyla uyuşuyor mu" sorulmalı. Uyuşmuyorsa iki yol: (a) `heilmittel_tarif`'i tamamen kaldırıp resolver'ı yalnız katalog/pozisyon fiyatına düşürmek (Bundesland ayrımı gerçekten gerekliyse kayıp), (b) `seed_tarifs.js`'i de O-95'in `--sql` üreticisine bağlamak (CI hem positions.js hem heilmittel_tarif'i güncellesin) |
+| **Durum** | `offen` — SaaS'ı da ilgilendiriyor, on-prem'e özgü değil. Doğrulama `gkv-302`'yi bekliyor. `onprem-review` bulgusu, 13.09.2026 |
+
 ### O-66 — Sihirbazın SMTP ekranı yapısal olarak çalışamaz: GoTrue ayarını env'den okur
 
 | Alan | İçerik |
@@ -3199,16 +3229,16 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-### O-79 — `heilmittel_katalog`'un besleme zinciri kapısız: kod değişir, kutudaki veri değişmez
+### O-79 — `heilmittel_katalog`'un besleme zinciri kapısız: kod değişir, kutudaki veri değişmez ✅ **gelöst (13.09.2026)**
 
 | Alan | İçerik |
 |---|---|
-| **Ne** | `heilmittel_katalog` (94 satır) `search_heilmittel()`'in **tek** kaynağı ve `billing/codes/*.js`'ten `sync_heilmittel_katalog.js` ile besleniyor — ama o betik SaaS'ta **elle** koşuyor. Kod değişip betik koştuğunda `0012_seed_heilmittel_katalog.sql` **otomatik güncellenmez**, ve uygulanmış migration dosyası **değiştirilemez** (runner SHA-256 tutar). Kutuya varmanın tek yolu **yeni** bir seed migration'ı — ama bunu hatırlatan hiçbir şey yok |
-| **Nerede** | `api-backend/billing/codes/*.js` → `sync_heilmittel_katalog.js` → `api-backend/db/migrations/0012_seed_heilmittel_katalog.sql`. Kapı: `tools/check-onprem.sh`'ta **yok** |
+| **Ne** | `heilmittel_katalog` (94 satır) `search_heilmittel()`'in **tek** kaynağı ve `billing/codes/*.js`'ten `sync_heilmittel_katalog.js` ile besleniyor — ama o betik SaaS'ta **elle** koşuyor. Kod değişip betik koştuğunda `0012_seed_heilmittel_katalog.sql` **otomatik güncellenmez**, ve uygulanmış migration dosyası **değiştirilemez** (runner SHA-256 tutar). Kutuya varmanın tek yolu **yeni** bir seed migration'ı — ama bunu hatırlatan hiçbir şey yoktu |
+| **Nerede** | `api-backend/billing/codes/*.js` → `sync_heilmittel_katalog.js` → `api-backend/db/migrations/0012_seed_heilmittel_katalog.sql`. Kapı: `tools/check-onprem.sh` (yeni "Seed-besleme kapısı") |
 | **Tip** | B + D |
-| **Kutuda ne olur** | Sessiz sapma: SaaS'ta düzeltilen bir Heilmittel kodu/fiyatı kutuda eski kalır. Hata yok, log yok — podolog yanlış pozisyon numarasıyla § 302 dosyası üretir ve **kasa reddeder**. Teşhis merkezde aranır çünkü "kod güncel" sanılır |
-| **Çözüm** | `tools/check-onprem.sh`'a `check-tabellen-register.sh` deseninde bir kapı: `billing/codes/*_positions.js` staged ise ve aynı commit'te `api-backend/db/migrations/` altına yeni bir seed dosyası girmediyse commit reddedilir (kaçış: `SKIP_SEED_GATE=1`, fiyat değiştirmeyen kozmetik düzeltmeler için). Aynı kural `preise-check.yml`'in ürettiği commit'lere de uygulanır (tip B, O-34) |
-| **Durum** | `offen` — Faz 2.1 (seed disiplini). Kaynağı: O-38 turunun SEED-11 bulgusu |
+| **Kutuda ne olur** | Sessiz sapma: SaaS'ta düzeltilen bir Heilmittel kodu/fiyatı kutuda eski kalır. `onprem-review` (13.09.2026) ölçtü: bu tablo **resolvePreis()'te hiç okunmuyor** (`resolver.js:72-87`), yalnız seçici/rozet metni besliyor — etkisi düşük (fatura yine doğru çıkar, sadece rozet eski görünür). Asıl yüksek-etkili fiyat otoritesi ayrı bir tabloda çıktı, bkz. **O-96** |
+| **Çözüm** | `tools/check-onprem.sh`'a insan-commit yolu için bir kapı eklendi: `billing/codes/*_positions.js` staged ise ve aynı commit'te `api-backend/db/migrations/` altına yeni bir seed dosyası girmediyse commit reddedilir (kaçış: `SKIP_SEED_GATE=1`). `preise-check.yml`'in otomatik CI commit'i bu kapıyı görmüyor — bu ayrı bir madde: **O-95** (düşük etkili olduğu için ayrı, ertelenebilir) |
+| **Durum** | ✅ **gelöst (13.09.2026)** — kapı yazıldı ve gerçek testle doğrulandı: pozisyon dosyası migrationsuz staged edilince reddediyor, migrationlıyken geçiyor, `SKIP_SEED_GATE=1` ile geçiyor. `onprem` ajanı koda karşı doğruladı (heilmittel_katalog'un para yoluna girmediğini teyit etti). CI-yolu boşluğu (O-95) ve kazı sırasında bulunan asıl fiyat-otorite sorunu (O-96) ayrı maddeler olarak açıldı |
 
 ---
 
@@ -3437,20 +3467,23 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 94 madde** (O-01 … O-94) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
+**Toplam 96 madde** (O-01 … O-96) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
 bildirim-sonrası denetiminden çıktı, §7L; aynı gece üçü (O-85/O-86/O-89) tam, ikisi
 (O-87/O-88) kısmen kapatıldı — detay kendi maddelerinde. Beş yenisi daha (O-90…O-94)
 aynı akşam Faz 2.2 dilim 2b'nin kendi post-hoc denetiminden çıktı — üçü (O-90/O-92/
-O-93) aynı turda kapatıldı, ikisi (O-91/O-94) Faz 2.4'e bırakıldı. ⚠️ O-53 ve O-54'ün
+O-93) aynı turda kapatıldı, ikisi (O-91/O-94) Faz 2.4'e bırakıldı. İki yenisi daha
+(O-95/O-96) 13.09.2026'da O-79'un kazısından çıktı — O-79 kapandı, ikisi `offen` kaldı
+(bkz. kendi maddeleri; O-96 SaaS'ı da ilgilendiren, `gkv-302` doğrulaması bekleyen bir
+fiyat-otorite bulgusu). ⚠️ O-53 ve O-54'ün
 kendi `###` girdisi yok; O-01'in not bloğunda yaşıyorlar — kaybolmaya açıklar, ileride
 kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 10 | O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-79 · O-80 · O-82 |
+| `offen` | 11 | O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-80 · O-82 · O-95 · O-96 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
 | 🟡 `kısmen gelöst` | 14 | O-01 · O-02 · O-09 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-87 · O-88 |
-| `gelöst` | 44 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 |
+| `gelöst` | 45 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda

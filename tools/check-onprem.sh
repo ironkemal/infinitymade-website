@@ -182,6 +182,27 @@ if [ -n "$yeni_migration_dosyalari" ] && [ "$SKIP_ZAEHLER_GATE" != "1" ]; then
   fi
 fi
 
+# --- Seed-besleme kapısı (O-79, 13.09.2026) --------------------------------
+#
+# Neden: heilmittel_katalog (search_heilmittel()'in TEK kaynağı) billing/codes/
+# *_positions.js'ten sync_heilmittel_katalog.js ile besleniyor — ama o betik
+# SaaS'ta ELLE koşuyor. Kod (fiyat/pozisyon) değişip betik koştuğunda
+# 0012_seed_heilmittel_katalog.sql OTOMATİK güncellenmez, ve uygulanmış
+# migration dosyası değiştirilemez (runner SHA-256 tutar) — kutuya varmanın
+# tek yolu YENİ bir seed migration'ı, ama bunu hatırlatan hiçbir şey yoktu.
+# Sessiz sapma: SaaS'ta düzeltilen bir Heilmittel kodu/fiyatı kutuda eski
+# kalır, hata yok, log yok — podolog yanlış pozisyon numarasıyla §302 dosyası
+# üretir ve kasa reddeder.
+#
+# Kural: billing/codes/*_positions.js staged (A veya M) ise, aynı commit'te
+# api-backend/db/migrations/ altına YENİ bir seed dosyası da girmelidir.
+# `$yeni_migration` yukarıdaki şema-drift kapısında zaten hesaplandı, aynen kullanılır.
+seed_ihlal=""
+positions_degisti=$(git diff --cached --name-only --diff-filter=AM -- 'api-backend/billing/codes/*_positions.js' 2>/dev/null)
+if [ -n "$positions_degisti" ] && [ -z "$yeni_migration" ] && [ "$SKIP_SEED_GATE" != "1" ]; then
+  seed_ihlal=$(echo "$positions_degisti" | sed 's/^/      /')
+fi
+
 # --- pg_net kapısı (sayaç değil, doğrudan kontrol) --------------------------
 #
 # O-49 (12.09.2026): pg_net kutuda hiç kurulmuyor artık — ama bunu sağlayan
@@ -331,6 +352,24 @@ if [ -n "$zaehler_ihlal" ]; then
       Çıkış: erwartete-zaehler.json'ı taze bir on-prem kutusunda ölçüp
       bis_version'ı bu migration'a eşitle (SaaS değil — onprem/REGISTER.md O-90/O-91).
       Yalnızca biçimsel bir düzeltmeyse: SKIP_ZAEHLER_GATE=1 git commit ...
+"
+fi
+
+if [ -n "$seed_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ seed-besleme kapısı — pozisyon/fiyat kodu değişti, yeni seed migration'ı yok:
+$seed_ihlal
+      İKİ ayrı seed bu koddan besleniyor, ikisi de elle koşuyor:
+      (1) heilmittel_katalog (0012, search_heilmittel()'in kaynağı — kutuda
+          yalnız seçici/rozet metni, resolvePreis() bunu OKUMAZ, düşük etki)
+      (2) heilmittel_tarif (0008, seed_tarifs.js — resolvePreis() bunu
+          VARSA katalog fiyatının ÖNÜNE geçirir, gueltig_bis NULL; asıl
+          §302 tutarı burada, yüksek etki — O-96)
+      Kutuya varmanın tek yolu YENİ bir seed migration'ı (uygulanmış dosya
+      değiştirilemez, runner SHA-256 tutar).
+      Çıkış: sync_heilmittel_katalog.js VE seed_tarifs.js'i koş, çıktılarını
+      yeni bir NNNN_seed_heilmittel_katalog_update.sql'e yaz, aynı commit'e ekle.
+      Kozmetik/testte-değişen bir düzeltmeyse: SKIP_SEED_GATE=1 git commit ...
 "
 fi
 
