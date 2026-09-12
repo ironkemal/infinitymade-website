@@ -110,10 +110,11 @@ export const PHYSIO_POSITIONS_2026 = Object.freeze([
 /**
  * Alle bekannten Preisfenster, aufsteigend nach gueltig_ab.
  *
- * ⚠️ gueltig_ab '2026-01-01' ist keine neue Annahme: sie stand schon im Dateikopf
- * und seed_tarifs.js schreibt sie seit jeher so in heilmittel_tarif. Sie ist nie
- * gegen Anlage 2 Physiotherapie geprüft worden. Preise für Zeiträume davor liegen
- * uns nicht vor — sie werden hier bewusst NICHT erfunden.
+ * gueltig_ab '2026-01-01' ist keine Annahme mehr, sondern geprüft (13.09.2026,
+ * O-96-Review): Anlage 2 zum Vertrag § 125 Abs. 1 SGB V Physiotherapie, Teil A,
+ * sagt wörtlich „Für Behandlungen, die ab dem 01.01.2026 durchgeführt werden,
+ * sind folgende Preise abzurechnen." Preise für Zeiträume davor liegen uns
+ * nicht vor — sie werden hier bewusst NICHT erfunden.
  */
 export const PHYSIO_PREISFENSTER = Object.freeze([
   Object.freeze({

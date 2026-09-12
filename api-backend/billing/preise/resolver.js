@@ -74,7 +74,11 @@ export function resolvePreis({
   const quelle = katalogPosition ? 'katalog' : 'unbekannt';
 
   // 2. Zuzahlung — immer über den Katalog. Zuzahlungsfreie Positionen
-  //    bleiben frei; der veröffentlichte exakte Betrag gilt, nie die 10-%-Regel.
+  //    bleiben frei; der veröffentlichte exakte Betrag gilt, solange die
+  //    Position gefunden wurde. Nur wenn sie es NICHT wurde (gefunden:false),
+  //    greift in resolvePositionZuzahlung() das gesetzliche Netz: 10 % des
+  //    Preises (§ 61 SGB V) — kein Übersteuerungsfall mehr, sondern der einzig
+  //    verbliebene "kein Katalogeintrag"-Fall (billing/zuzahlung/calculator.js).
   const basis = resolvePositionZuzahlung(katalogPosition, preis_eur);
   const zuzahlung_eur = basis.zuzahlungUnit;
 
