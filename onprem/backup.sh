@@ -148,7 +148,20 @@ else
   warn "onprem/volumes/storage dizini yok — storage arşivi atlandı (henüz hiç dosya yüklenmemiş olabilir)."
 fi
 
+sema_versiyonu_oku() {
+  docker compose exec -T db psql -U postgres -d "$DB_NAME" -tAc "SELECT COALESCE(MAX(version), 'none') FROM praxura_migrations;" 2>>"$LOG_FILE" | tr -d '[:space:]' || true
+}
+
 # ── 2) Veritabanı dump'ı ────────────────────────────────────────────────────
+# ⚠️ onprem-Gegenlesen (13.09.2026, O-26 bildirim turu): `server.js`'in her
+# PM2 işçisi açılışta `runMigrations()` çalıştırıyor (Dockerfile: `pm2-runtime
+# -i 2`) — bir işçi HERHANGİ bir sebeple (OOM-kill, çökme, Watchtower)
+# yeniden başlarsa migration'lar sessizce tekrar uygulanabilir, TAM `pg_dump`
+# ile çakışan bir anda. Künye o zaman dump'ın İÇİNDEKİNDEN bir sürüm ileri
+# `schema_version` iddia ederdi — `restore.sh` yanlış sayıya güvenirdi. Bu
+# yüzden dump'tan ÖNCE ve SONRA okuyup karşılaştırıyoruz; farklıysa DB o
+# birkaç saniyede değişti demektir, yedek güvenilmez sayılıp iptal edilir.
+SEMA_ONCE="$(sema_versiyonu_oku)"
 log "Veritabanı yedekleniyor..."
 if ! docker compose exec -T db pg_dump -U postgres -d "$DB_NAME" -Fc > "$TMP_DIR/db.dump" 2>>"$LOG_FILE"; then
   fehler "pg_dump başarısız" "pg_dump hata verdi (bkz. $LOG_FILE)" "başarılı bir pg_dump çıktısı" \
@@ -170,6 +183,14 @@ if ! docker compose cp "$TMP_DIR/db.dump" "db:$KONTROL_HEDEF" >>"$LOG_FILE" 2>&1
   exit 1
 fi
 docker compose exec -T db rm -f "$KONTROL_HEDEF" >/dev/null 2>&1 || true
+
+SCHEMA_VERSION="$(sema_versiyonu_oku)"
+if [ -n "$SEMA_ONCE" ] && [ -n "$SCHEMA_VERSION" ] && [ "$SEMA_ONCE" != "$SCHEMA_VERSION" ]; then
+  fehler "Şema sürümü dump sırasında değişti — yedek iptal edildi" \
+    "önce: ${SEMA_ONCE} · sonra: ${SCHEMA_VERSION}" "pg_dump boyunca sabit bir sürüm" \
+    "Bir PM2 işçisi (Dockerfile: pm2-runtime -i 2) tam bu yedek anında migration uyguladı — künye yanlış sürüm iddia ederdi. Yeniden dene; sık tekrarlanıyorsa 'api' konteynerinin neden yeniden başladığını incele (OOM? mem_limit yok — O-48 yalnız Kong'a verildi)."
+  exit 1
+fi
 ok "Veritabanı yedeklendi ve doğrulandı ($(du -h "$TMP_DIR/db.dump" 2>/dev/null | cut -f1))"
 
 # ── 4) Künye — backup.meta.json (§4.4) ──────────────────────────────────────
@@ -221,7 +242,8 @@ PGPW_FP="$(parmak_izi_db_taraf POSTGRES_PASSWORD pgpw || true)"
 [ -n "$JWT_FP" ] || { JWT_FP=null; warn "JWT_SECRET parmak izi alınamadı — künyede null."; }
 [ -n "$PGPW_FP" ] || { PGPW_FP=null; warn "POSTGRES_PASSWORD parmak izi alınamadı — künyede null."; }
 
-SCHEMA_VERSION="$(docker compose exec -T db psql -U postgres -d "$DB_NAME" -tAc "SELECT COALESCE(MAX(version), 'none') FROM praxura_migrations;" 2>>"$LOG_FILE" | tr -d '[:space:]' || true)"
+# SCHEMA_VERSION zaten yukarıda (dump sonrası, önce/sonra tutarlılık
+# kontrolünün parçası olarak) okundu — burada tekrar sorgulanmıyor.
 [ -n "$SCHEMA_VERSION" ] || SCHEMA_VERSION=null
 APP_VERSION="$(env_wert PRAXURA_API_IMAGE)"
 [ -n "$APP_VERSION" ] || APP_VERSION=null
