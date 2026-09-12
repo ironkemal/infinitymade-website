@@ -134,10 +134,14 @@ kurulmuyor** ve bunu bir **kapı** tutuyor (O-49/O-71) · veritabanından dışa
 çağrı yok · kurulu kutu kendi compose'unu kendi güncelliyor ve başarısız güncellemede
 **dosya bazında geri dönüyor** (O-45 (b), gerçek kutuda ölçüldü).
 
-**Kanıtlanmayan — abartılmasın:** **yedek yok** (O-26) ve gece güncelleme zamanlayıcısı
-artık **canlı** — bugün kurulan bir kutu saat 02:00'de yeni image çekip migration'ları
-**yedeksiz** koşturur (**O-77**, bu turun en ciddi maddesi) · kutunun Impressum/
-Datenschutz sayfaları henüz yok (O-58 (b), `legal-de` bekliyor) · ICD-10-GM atıf satırı
+**Kanıtlanmayan — abartılmasın:** **O-26'nın istediği kapsamlı yedekleme yok** (storage
+volume arşivi, kutu dışı hedef, 14 gün + 12 ay rotasyon, `restore.sh`) — ✅ **O-77'nin dar
+kapsamı kapandı (12.09.2026 akşamı, gerçek kutuda doğrulandı):** `update.sh` artık her
+migration'dan önce `pg_dump` alıyor, başarısızsa image'a/konteynerlere dokunmadan durup
+dosyaları (Gegenlesen'de bulunan bir eksikle birlikte, `.env` dahil) geri alıyor. Kutunun
+kendi diskinde son 5 dump — kapsamlı bir strateji değil, yalnız bir güvenlik ağı. ·
+kutunun Impressum/Datenschutz sayfaları henüz yok (O-58 (b), `legal-de` bekliyor) ·
+ICD-10-GM atıf satırı
 pakette yok (O-78, § 63 UrhG) · mailin gerçek bir SMTP ile **teslim** edildiği hiç
 ölçülmedi (O-51) · lisans/yetki tarafına hiç dokunulmadı (O-31/O-33) ·
 `N8N_AI_SERIES_URL` hâlâ 3 yerde (O-02, G1). Yani bugünkü paket **kurulabilir bir beta
@@ -167,14 +171,22 @@ zaman Supabase'in kendi 3 saniyelik `anon` zaman aşımına çarpıyordu — ger
 kurulum ASLA bitmezdi). O-63/O-64/O-65 de bu koşuda gerçek kanıtla kapandı (önceden
 "okuma kanıtı"ydılar). Kalıcı test ortamı: `wsl -d Ubuntu-24.04` yerelde kuruldu, kalıcı.
 
-1. **Faz 2.3 — yedekleme (O-77 + O-26 + O-61 (c) + O-29 (c)).** ★ **Öncelik bu tura
-   kadar 3'süydü, artık 1.** Sebep değişti: `praxura-update.timer` artık **kurulu
-   kutuda canlı** (12.09, `6347071`). Kutu her gece 02:00'de yeni image çekiyor,
-   `server.js` açılışta migration'ları `app.listen()`'den **önce** koşturuyor ve
-   `update.sh`/`install.sh`'ta `pg_dump`/`backup` kelimesi **hiç geçmiyor** (ölçüldü:
-   0 eşleşme) — oysa `RELEASE-STANDARD.md` §4.3 "yedek alınamıyorsa migration
-   çalışmaz" diyor. Sicildeki **tek veri kaybı riski** ve artık teorik değil: gece,
-   insansız, otomatik. Detay: **O-77**.
+✅ **O-77'nin dar kapsamı kapandı (12.09.2026 akşamı, aynı tur içinde) — `update.sh` artık
+migration-öncesi `pg_dump` almadan `up -d`'ye hiç geçmiyor**, başarısızsa dosyalar/`.env`
+geri alınıyor (Gegenlesen: ilk sürüm bunu unutmuştu, düzeltildi). Gerçek kutuda: sağlıklı
+db'de 3× başarılı yedek, durdurulmuş db'de 1× başarısızlık+tam geri alma (`.env` sha256
+byte-özdeş doğrulandı), 1× tam başarı yolu (`sonuc=ok`). Kanıt ve commit'ler: kendi
+maddesinde (O-77).
+
+1. **O-26 — kapsamlı yedekleme (storage + kutu dışı hedef + rotasyon + restore.sh).**
+   ★ **Şimdi sıradaki 1.** O-77 yalnız "migration'dan hemen önce tek bir DB dump'ı"
+   sorununu kapattı — asıl risk hâlâ açık: reçete görüntüleri/DTA/hasta belgeleri
+   (5 storage bucket) hiçbir yedeğe girmiyor, yedek kutunun kendi diskinde duruyor
+   (disk arızasında veriyle birlikte ölür, §6.6), rotasyon yok, **hiç test edilmiş bir
+   `restore.sh` yok** — "yedek aldık ama geri yüklenebildiğini hiç denemedik" bugüne
+   kadarki en gerçekçi risk. O-61 (c) (`.env` dışlaması — O-77 ile zaten sağlandı) ve
+   O-29 (c) (DEK uyarısı — O-77 ile zaten eklendi) bu maddenin **kapsamına artık dahil
+   değil**, kapandılar.
 2. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8 kontrolleri (10 şema sayaçı, RLS negatif testi,
    `DATA_ENCRYPTION_KEY` yaz-oku turu). Sahipsiz kalmış borç; kurulumun "başarılı
    sayılır" tanımı bunlar olmadan eksik.
@@ -2830,7 +2842,19 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Tip** | F + D |
 | **Kutuda ne olur** | Bozuk ya da yarım uygulanan bir migration gecenin bir yarısında, kimse bakmadan koşar. `migrate.js` hata alırsa kutu **bakım moduna** geçiyor (iyi) — ama veri o noktada zaten değişmiş olabilir ve **geri dönülecek bir kopya yok**. O-45 (b)'nin geri alma yolu **dosya** geri alır, **veri** geri almaz (J6, bilinçli tasarım). Hasta verisi kaybolursa § 630f BGB (dokumentasyon yükümlülüğü) ve DSGVO Art. 32 (bütünlük) tarafında da sorun çıkar |
 | **Çözüm** | **Faz 2.3** — `update.sh`'a migration-öncesi `pg_dump` adımı + başarısızsa **dur** (image'ı çekme, konteyneri yenileme). O-26 (yedekleme zamanlayıcısı), O-61 (c) (`.env`'in yedekten dışlanması) ve O-29 (c) (`DATA_ENCRYPTION_KEY` olmadan yedeğin işe yaramadığı uyarısı) aynı turun parçası. ⚠️ Ara çözüm olarak zamanlayıcıyı varsayılan kapalı yapmak düşünülebilir ama tercih değil — o zaman kutu hiç güncellenmez (O-73'e geri dönüş) |
-| **Durum** | `offen` — **Faz 2.3'ün 1. maddesi.** 12.09.2026'ya kadar bu risk teorikti (kutunun hiç güncelleme yolu yoktu, O-73); `6347071` ile **gerçek** oldu. O-73'ü kapatan tur bu yan etkiyi hesaba katmadı — ders §7J'nin dersinin aynısı: bir yolu **açan** değişiklik, o yolun taşıdığı riskleri de açar |
+| **Durum** | ✅ **gelöst (12.09.2026, dar kapsam — bkz. not) — gerçek kutuya karşı doğrulandı** |
+
+> **Ne yapıldı:** `update.sh`'a yeni bir zorunlu adım (Schritt 8/11, `docker compose up -d`'den hemen önce): `db` konteynerinden `pg_dump -Fc`, `backups/vor-<sürüm>-<zaman>.dump` olarak, 600 izinle, son 5'i tutan rotasyonla. Dump başarısız ya da boşsa `fehler()` + `exit 1` — **ve** (Gegenlesen'de bulunan bir eksik: ilk sürüm burada `geri_yukle()` çağırmıyordu, yani Schritt 7'nin zaten yazdığı/birleştirdiği dosyalar ve `.env` geri alınmıyordu — betiğin kendi "yalnız dosyalar geri alınır" sözü ihlal ediliyordu; düzeltildi, commit `e8160dc`). O-61 (c) tasarım gereği sağlanıyor (pg_dump yalnız DB'yi kapsar, `.env`'e hiç dokunmaz); O-29 (c) başarılı yedek sonrası log satırına eklendi.
+>
+> **Doğrulama (WSL2 Ubuntu-24.04, gerçek Docker, gerçek GHCR `:beta` image'ı, tek sürekli oturum):**
+> - Sağlıklı kutuda: pg_dump başarılı, 1.7 MB dump, `[ok]`/`[warn]` logları doğru — **3 kez** tekrarlandı.
+> - `db` durdurulmuşken: pg_dump başarısız, `fehler()` tetiklendi, image'a/konteynerlere hiç dokunulmadı, `sonuc=yedek_basarisiz`.
+> - **Gegenlesen fix'i özel olarak doğrulandı:** yedek başarısız olmadan önce `.env`'in sha256'sı alındı, `db` durduruldu, `update.sh --jetzt` çalıştırıldı (`yedek_basarisiz`), sonra `.env`'in sha256'sı tekrar alındı — **byte-özdeş**, `geri_yukle()` doğru çalışıyor.
+> - Tam başarı yolu bir kez uçtan uca koşturuldu: yedek alındı → `pull && up -d` → sağlık kontrolü → `sonuc=ok`, 8/8 konteyner sağlıklı.
+>
+> ⚠️ **Kapsam bilinçli dar — bu O-77'yi TAM kapatmıyor, yalnız en acil parçasını:** yalnız migration-öncesi TEK bir DB dump'ı. **O-26 hâlâ `geplant`**: storage volume arşivi (reçete görüntüleri/DTA/hasta belgeleri `pg_dump`'a hiç girmez), kutu dışı hedef, 14 gün + 12 ay rotasyon, panelde "son yedek", gerçekten test edilmiş `restore.sh` — bunların hiçbiri bu turda yapılmadı. "Son 5 dump, kutu içi" yalnız bir güvenlik ağıdır, kapsamlı bir yedekleme stratejisi değil.
+>
+> Commit'ler: `0c7c1bc` (backup adımı) · `e8160dc` (Gegenlesen — geri alma eksiği).
 
 ---
 
@@ -2932,11 +2956,15 @@ terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · **O-77** · **O-78** · **O-79** · **O-80** |
+| `offen` | 11 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · **O-78** · **O-79** · **O-80** |
 | `geplant` | 16 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-26 · O-27 · O-28 · O-29 · O-31 · O-43 |
 | 🟡 `kısmen gelöst` | 10 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 |
-| `gelöst` | 31 | O-15 · O-20 · O-25 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 |
+| `gelöst` | 32 | O-15 · O-20 · O-25 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · **O-77** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
+
+> ⚠️ **O-77 `gelöst` yazıyor ama dar kapsamlı** (yalnız migration-öncesi tek bir DB
+> dump'ı) — geniş yedekleme hâlâ **O-26** (`geplant`) altında açık: storage volume
+> arşivi, kutu dışı hedef, rotasyon, `restore.sh`. O-77'nin kendi maddesine bak.
 
 > **Nasıl okunur — 31 `gelöst` yanıltıcıdır.** Bunların büyük bölümü (O-56 … O-76
 > aralığı) **paketleme** işiydi: 11-12.09'da açıldılar ve aynı hafta kapandılar, yani
