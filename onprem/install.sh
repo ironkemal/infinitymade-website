@@ -410,8 +410,25 @@ log "[14/16] Abgeleiteten Schlüssel wirklich testen"
 # "localhost" waere FALSCH: Caddy matcht auf den Host-Namen (O-59).
 RESOLVE_ARG="--resolve"
 RESOLVE_VAL="${HOST_PART}:443:127.0.0.1"
-ohne_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' "${SITE_URL}/rest/v1/" || echo 000)"
-mit_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${ANON_KEY}" -H "apikey: ${ANON_KEY}" "${SITE_URL}/rest/v1/" || echo 000)"
+# ⚠️ O-76 (12.09.2026, erster echter End-zu-Ende-Lauf, Ubuntu 24.04 + echtes
+# systemd + echtes GHCR-Image): DIESER Test lief zuvor gegen den nackten
+# Wurzelpfad "/rest/v1/" — PostgREST baut dafuer sein volles OpenAPI-Dokument
+# ueber JEDE Relation/RPC (bei unserer Groesse: 92 Relationen, 108 Beziehungen,
+# 292 RPCs). Das ist KEIN Cache-Problem (Schema-Cache laedt in <1ms) sondern
+# eine echte, jedes Mal >3s dauernde Katalog-Abfrage — und kollidiert
+# deterministisch mit Supabase's eigenem, fest einprogrammiertem
+# "statement_timeout=3s" fuer die Rolle `anon` (gemessen: 5/5 Versuche exakt
+# ~3.0s, HTTP 500 "canceling statement due to statement timeout"; derselbe
+# Server antwortete auf "/rest/v1/profiles?limit=1" in ~15ms mit HTTP 200).
+# Ergebnis: Schritt 14 schlug auf JEDER echten Installation IMMER fehl —
+# nicht testumgebungsspezifisch, sondern eine echte, schemagroessenbedingte
+# Blockade. Ziel ist jetzt eine gezielte, immer vorhandene Tabelle statt des
+# vollen Wurzelpfads — `profiles` ist Teil von 0000_baseline.sql und existiert
+# auf jeder Installation, RLS filtert für `anon` auf eine leere Liste ([]),
+# aber der HTTP-Status beweist weiterhin exakt das, was O-60 wissen will.
+TESTPFAD="${SITE_URL}/rest/v1/profiles?limit=1"
+ohne_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' "$TESTPFAD" || echo 000)"
+mit_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${ANON_KEY}" -H "apikey: ${ANON_KEY}" "$TESTPFAD" || echo 000)"
 # Verfälschter Schlüssel — NUR im Authorization-Header, apikey bleibt echt:
 # Kongs key-auth prüft ausschliesslich den apikey-Header als Zeichenkette
 # gegen sein eigenes kong.yml (aus demselben .env erzeugt) und würde einen
@@ -421,7 +438,7 @@ mit_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}'
 # erreicht die Anfrage wirklich PostgREST, wo O-60s eigentliche Sorge liegt
 # (3. Gegenlesen-Runde, 11.09.2026 — 2. Runde hatte beide Header verfälscht
 # und damit am Kong-Layer gemessen, nicht am PostgREST-Layer).
-mit_kaputtem_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${ANON_KEY}x" -H "apikey: ${ANON_KEY}" "${SITE_URL}/rest/v1/" || echo 000)"
+mit_kaputtem_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${ANON_KEY}x" -H "apikey: ${ANON_KEY}" "$TESTPFAD" || echo 000)"
 
 if [ "$mit_key" != "200" ]; then
   fail "Abgeleiteter Schlüssel wird nicht akzeptiert" "HTTP ${mit_key} mit apikey" "HTTP 200" \
@@ -438,7 +455,7 @@ ok "ANON_KEY akzeptiert (200), verfälschter Schlüssel abgelehnt, kein Schlüss
 
 # SERVICE_ROLE_KEY separat pruefen — eine falsch abgeleitete Signatur waere
 # sonst erst im Assistenten (Phase 2.2, service_role-Aufrufe) aufgefallen.
-mit_service_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" -H "apikey: ${SERVICE_ROLE_KEY}" "${SITE_URL}/rest/v1/" || echo 000)"
+mit_service_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" -H "apikey: ${SERVICE_ROLE_KEY}" "$TESTPFAD" || echo 000)"
 if [ "$mit_service_key" != "200" ]; then
   fail "SERVICE_ROLE_KEY wird nicht akzeptiert" "HTTP ${mit_service_key}" "HTTP 200" \
     "Wie beim ANON_KEY — 'bash install.sh --neu' erneut versuchen."

@@ -127,27 +127,26 @@ gerçek bir kurulumla/Faz 2.3 ile kapanabilir, `install.sh`'ın kendisinde eksik
 kurulum modu kilidi). Açık kalan: §5.4'ün 1/5/8 kontrolleri (10 şema sayacı, RLS negatif
 testi, `DATA_ENCRYPTION_KEY` yaz-oku turu) — dilim 2'de bitmedi ve **dilim 2b hiç
 açılmadı**, şu an sahipsiz bir borç (onprem-review'un kendi bulduğu boşluk).
-✅ **O-25 (kanal/etiket sistemi) tam kapsamıyla uygulandı (12.09.2026)** — R0-R12,
-onprem-review ile tasarım kilitlendi. Ayrıntı: O-25'in kendi maddesi + **O-74** + **O-75**.
+✅ **O-25 (kanal/etiket sistemi) tam kapsamıyla uygulandı VE SaaS host geçişi (R9) dahil
+tamamlandı (12.09.2026)** — R0-R12, onprem-review ile tasarım kilitlendi, host doğrulandı.
+Ayrıntı: O-25'in kendi maddesi + **O-74** + **O-75**.
+✅ **`install.sh`'ın ilk gerçek uçtan uca koşusu yapıldı ve geçti (12.09.2026)** — gerçek
+Ubuntu 24.04 (WSL2'ye kurulan ayrı bir dağıtım, kendi systemd'si + Docker Engine'iyle),
+GHCR'den çekilen gerçek `:beta` image'ları. 16 adımın 16'sı da tamamlandı; yol boyunca
+**gerçek, tekrarlanabilir bir kurulum-engelleyici hata bulundu ve düzeltildi: O-76**
+(Schritt 14'ün anahtar-kanıt testi PostgREST'in kök yoluna sorup büyük şemamızda her
+zaman Supabase'in kendi 3 saniyelik `anon` zaman aşımına çarpıyordu — gerçek bir kutuda
+kurulum ASLA bitmezdi). O-63/O-64/O-65 de bu koşuda gerçek kanıtla kapandı (önceden
+"okuma kanıtı"ydılar). Kalıcı test ortamı: `wsl -d Ubuntu-24.04` yerelde kuruldu, kalıcı.
 
-1. **O-25'in son adımı — SaaS host'unun `:latest`'ten `:beta`'ya geçişi (R9).** CI
-   değişiklikleri push'landıktan ve gerçekten `:beta`/`X.Y.Z` bastığı doğrulandıktan
-   SONRA yapılabilir — henüz basılmış bir `:beta` yokken host'u ona çevirmek `docker
-   compose pull`'u kırardı. Sıra: push → CI'ın yeşil çıkıp etiketleri bastığını doğrula
-   → host'u çevir → `docker inspect` ile doğrula → ancak o zaman CI'dan `latest` düşer.
-2. **Faz 2.1c'nin gerçek ilk ucu — `install.sh`'ın hiçbir Ubuntu makinesinde uçtan uca
-   koşmamış olması.** Kod okuması ve parça parça test yeterli değil (sicilin kendi
-   dersi, defalarca yaşandı). O-25 kapandığı için artık gerçek bir `:beta`/`X.Y.Z`
-   imajı çekilebilir — bu, ilk gerçek denemeyi daha önce mümkün olmadığı kadar
-   yakınlaştırıyor.
-3. **O-38 — seed adımı.** Kutu doğru ama boş kalkıyor (`krankenkassen` → `[]`).
+1. **O-38 — seed adımı.** Kutu doğru ama boş kalkıyor (`krankenkassen` → `[]`).
    Sihirbaz bitiyor, owner giriyor, randevu kaydedemiyor. `SCHEMA-VERTEILUNG.md` §3.1
    adım 4 yazılmadı.
-4. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8'i (yukarıya bak), sahipsiz kalmış borç.
-5. **Faz 2.3 — yedekleme.** O-61 (c), O-26, O-29 (c)'yi birlikte kapatır; ayrıca
+2. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8'i (yukarıya bak), sahipsiz kalmış borç.
+3. **Faz 2.3 — yedekleme.** O-61 (c), O-26, O-29 (c)'yi birlikte kapatır; ayrıca
    `update.sh`'ın migration'ları yedeksiz koşturuyor olması (RELEASE-STANDARD.md §4.3)
    bunu 2.4'ten önceye koyuyor — veri kaybı riski taşıyan tek açık madde.
-6. **Faz 1.2** (O-02) — takvim kısıtı: kutuda `N8N_AI_SERIES_URL` boş kalınca kod
+4. **Faz 1.2** (O-02) — takvim kısıtı: kutuda `N8N_AI_SERIES_URL` boş kalınca kod
    **sabit n8n adresine düşüyor** ve hasta adı bize gelir (G1). İlk ücretli kutudan
    önce inmeli.
 
@@ -1893,7 +1892,7 @@ kurulumunda bu betiğin **ilk** gerçek koşusu olacak; sonucu buraya yazılmal�
 | **Tip** | G |
 | **Kutuda ne olur** | (a) yerel `bash` ile **tekrarlandı**: `x="$(… \| grep -c '^$' \|\| echo 0)"` → `x = "0\n0"` → `arithmetic syntax error`. Bugün tesadüfen kurtarıyoruz, çünkü `api`'nin healthcheck'i olmadığı için boş satır sayısı 1'dir; `api` bir şema hatasıyla çıkarsa sayı 0'a düşer, koşul **hiç** doğru olamaz ve kurulum 3 dakika döndükten sonra durur. (b) asıl tehlike ters yönde: `ps` ölen konteyneri listelemediği için `gesamt` küçülür — aritmetik düzeltilir düzeltilmez `7/7 gesund` çıkar ve **kurulum "her şey sağlıklı" der, oysa bizim `api` konteynerimiz ölmüştür.** O-40'ın "sahte yeşil"i, bu kez kurulum betiğinde. Migration zinciri `api` içinde koştuğu için bu, şema hiç kurulmamış bir kutunun "kurulum başarılı" mesajıyla teslim edilmesi demektir |
 | **Çözüm** | **Faz 2.1c, adım 12'nin yeniden yazımı.** (1) `docker compose ps -aq` ile **bütün** konteynerleri al, her biri için `docker inspect -f '{{.State.Status}}'` ve `{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}` sor — bu yol Compose sürümünden ve `--format` şablon desteğinden bağımsızdır (`ps --format` şablonu bazı v2 sürümlerinde yalnız `table`/`json` kabul eder; betik bunu bugün varsayıyor ve test edilmemiş). (2) Kabul ölçütü: hiçbir konteyner `exited`/`restarting` **değil** ve healthcheck'i olanların hepsi `healthy`. (3) `praxura-api` **adıyla** ayrıca sorulur — sekizde biri değil, adı geçen bir koşul. (4) Ek ucuz kanıt: `GET ${SITE_URL}/health` → 200 (Caddy `/health`'i `api:3000`'e veriyor); `/health` her koşulda `ok` dese de (O-40) **süreç ayakta mı** sorusunu dürüstçe cevaplar. (5) `grep -c` sayımından tamamen vazgeç — sayılan şey 0 olabiliyorsa `grep -c` + `\|\| echo` kalıbı yanlış kalıptır |
-| **Durum** | `gelöst` (11.09.2026, 3. tur — **staged**, commit no. girilecek) — adım 12 yeniden yazıldı (`install.sh:333-363`): `docker compose config --services` beklenen listeyi verir, her servis için `ps -q` + `docker inspect` ile `State.Status` ve `State.Health.Status` **tek tek** sorulur, konteyner hiç yoksa "eksik" sayılır. `grep -c` kalıbı tamamen kaldırıldı, sıfır eşleşme aritmetiği artık mümkün değil. ⚠️ Çözümün (3) ve (4) şıkları uygulanmadı: `praxura-api` **adıyla** ayrı koşul yok (servis listesinden zaten geliyor) ve `${SITE_URL}/health` eklenmedi (adım 13 aynı `--resolve` ile dışarıdan ölçüyor). Kutuda koşturulmadı |
+| **Durum** | ✅ **gelöst (12.09.2026, gerçek Ubuntu 24.04 kutusunda doğrulandı — O-76'nın testi)** — adım 12/13 (`lib-health.sh`) gerçek bir koşuda 8/8 konteyneri doğru saydı ve doğru "gesund" raporladı, aritmetik hatası hiç çıkmadı. ⚠️ Çözümün (3) ve (4) şıkları hâlâ uygulanmadı: `praxura-api` **adıyla** ayrı koşul yok (servis listesinden zaten geliyor) ve `${SITE_URL}/health` eklenmedi (adım 13/14 aynı `--resolve` ile dışarıdan ölçüyor) — bu ikisi eksik ama zarar vermiyor |
 
 ### O-64 — `REALTIME_DB_ENC_KEY` 16 karakter olmalı; betik 32 üretiyor
 
@@ -1904,7 +1903,7 @@ kurulumunda bu betiğin **ilk** gerçek koşusu olacak; sonucu buraya yazılmal�
 | **Tip** | E |
 | **Kutuda ne olur** | Realtime tenant kaydını bu anahtarla şifreliyor; anahtar uzunluğu AES-128'in beklediği 16 bayt değilse şifreleme çağrısı hata verir. Sonuç kurulumun en sinsi biçimi: diğer yedi konteyner sağlıklı, yalnız Realtime kırılır — ve Realtime'ın kırılması "randevu ekranı kendini yenilemiyor" diye görünür, "kurulum bozuk" diye değil. ⚠️ Bu değer **`--neu` olmadan düzeltilemez**: yanlış anahtarla şifrelenmiş tenant satırı veritabanında kalır |
 | **Çözüm** | `openssl rand -hex 8` (= 16 karakter) — tek karakter değişikliği. Sonra **gerçekten çalıştırıp** `docker logs praxura-realtime`'a bakmak; bu maddeyi kapatacak olan okuma değil o log. Genel kural: ölçüsü olan alanları rastgele uzunlukta doldurma — `.env.template` §2'ye her sırrın **beklenen uzunluğu** yazılsın (`DATA_ENCRYPTION_KEY` için zaten yazılı, diğer altısı için değil) |
-| **Durum** | `gelöst` (11.09.2026, 3. tur — **staged**) — `openssl rand -hex 8` (`install.sh:232`), 16 karakter, gerekçesi satırın üstünde yazılı. ⚠️ Maddenin kendi kabul ölçütü (`docker logs praxura-realtime`) **yerine gelmedi**: Docker kapalıydı, betik kutuda koşmadı. Realtime'ın gerçek logu görülene kadar bu `gelöst` okuma kanıtına dayanıyor |
+| **Durum** | ✅ **gelöst (12.09.2026, gerçek Ubuntu 24.04 kutusunda doğrulandı)** — `openssl rand -hex 8` (`install.sh:232`), 16 karakter. Maddenin kendi kabul ölçütü artık yerine geldi: `realtime-dev.supabase-realtime` konteyneri gerçek koşuda `healthy` oldu ve `REALTIME_DB_ENC_KEY` uzunluk hatasıyla çökmedi (8/8 konteyner sağlıklı, O-76'nın testi) |
 
 ### O-65 — Kurulum betiği kutunun kendi adresini çözemez; kendi doğrulama adımında takılır
 
@@ -1915,7 +1914,7 @@ kurulumunda bu betiğin **ilk** gerçek koşusu olacak; sonucu buraya yazılmal�
 | **Tip** | C (+ G) |
 | **Kutuda ne olur** | `curl` "could not resolve host" ile döner, betik `000` yakalar ve **"Abgeleiteter Schlüssel wird nicht akzeptiert"** diyerek durur. Yani kurulum, tamamen sağlıklı bir kutuda, yanlış bir teşhisle çöker — ve müşteriye `--neu` ile tekrar denemesini söyler, bu da veritabanını sildirir. Çıkmaz: adım 13'ü geçemeyen kurulum adım 14'e, yani `hosts` talimatının basıldığı yere hiç varamaz |
 | **Çözüm** | İstek isme değil, **kutunun kendisine** gitsin, ama Host/SNI doğru kalsın: `curl -sk --resolve "<host>:443:127.0.0.1" "${SITE_URL}/rest/v1/"`. Host adı adım 4'te zaten ayrıştırılmış (`HOST_PART`). Aynı düzeltme `${SITE_URL}/health` kontrolü için de geçerli (O-63). ⚠️ Bunu "`SITE_URL` yerine `localhost` kullanalım" diye çözmek **yanlıştır**: Caddy site bloğu `{$SITE_URL}` Host'una bakar, `localhost` isteği bloğa hiç girmez (O-59) |
-| **Durum** | `gelöst` (11.09.2026, 3. tur — **staged**) — `curl -sk --resolve "${HOST_PART}:443:127.0.0.1"` (`install.sh:372-381`). Host/SNI `SITE_URL` kalıyor, istek loopback'e gidiyor; `localhost` tuzağına düşülmedi (O-59). Caddy 443'ü `0.0.0.0`'a yayınladığı için loopback yolu geçerli (`docker-compose.yml:464`) |
+| **Durum** | ✅ **gelöst (12.09.2026, gerçek Ubuntu 24.04 kutusunda doğrulandı)** — `curl -sk --resolve "${HOST_PART}:443:127.0.0.1"`. Host/SNI `SITE_URL` kalıyor, istek loopback'e gidiyor; `localhost` tuzağına düşülmedi (O-59). Gerçek koşuda dört `curl` çağrısının hepsi doğru şekilde çözüldü (yalnız hedef yol O-76'da değişti, `--resolve` mekanizması aynen çalıştı) |
 
 ---
 
@@ -2667,7 +2666,18 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-## 8. Kapı tabanları — `tools/check-onprem.sh` için
+### O-76 — `install.sh`'ın kendi anahtar-kanıt testi (Schritt 14) PostgREST'in kök yoluna sorup her zaman 500 alıyordu
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Schritt 14, ANON_KEY/SERVICE_ROLE_KEY'in kabul edildiğini kanıtlamak için `${SITE_URL}/rest/v1/` (kök, kaynak belirtilmemiş) yoluna sorguluyordu. PostgREST bu yolda **tüm şemayı** (bizim boyutumuzda: 92 relation, 108 ilişki, 292 RPC) tarayan bir OpenAPI-belge-üretim sorgusu çalıştırıyor — bu, Supabase'in `anon` rolüne **fabrika ayarı olarak gömdüğü** `statement_timeout=3s`'i her seferinde aşıyor |
+| **Nerede** | `onprem/install.sh` Schritt 14 (dört `curl` çağrısı — `ohne_key`/`mit_key`/`mit_kaputtem_key`/`mit_service_key`, hepsi aynı kök yolu kullanıyordu) |
+| **Tip** | G |
+| **Kutuda ne olur** | **`install.sh` gerçek bir kutuda ASLA 16. adıma ulaşamaz** — Schritt 14'te her zaman "Abgeleiteter Schlüssel wird nicht akzeptiert / HTTP 500" hatasıyla durur, hâlbuki anahtar türetmesi (O-60) tamamen doğrudur. Kurulum, doğru çalışan bir kutuyu "anahtar reddedildi" sanıp bloke ediyordu — bu sınıfta en tehlikeli hata türü, çünkü mesaj (`fail()`'in önerdiği "JWT_SECRET değişti mi") teşhisi **yanlış yöne** gönderiyor: gerçek sebep anahtarla hiç ilgili değil, test hedefinin seçimiyle ilgili |
+| **Çözüm** | Test hedefi kök yol yerine gerçek, her kurulumda var olan, hafif bir tabloya (`profiles?limit=1`) çevrildi. `anon` RLS nedeniyle boş liste (`[]`) döndürse de HTTP durum kodu (200/401) O-60'ın kanıtlamak istediği şeyi (Kong'un apikey kontrolü + PostgREST'in imza doğrulaması) aynen kanıtlıyor, ama sorgu tek bir tabloyu hedeflediği için OpenAPI-belge-üretimini hiç tetiklemiyor |
+| **Durum** | ✅ **gelöst (12.09.2026) — gerçek bir Ubuntu 24.04 + gerçek systemd + gerçek Docker + GHCR'den çekilen gerçek `:beta` image'larıyla kurulan bir kutuda bulundu ve doğrulandı.** İlk tam uçtan uca koşu (WSL2 üzerinde `Ubuntu-24.04` dağıtımı kurularak, `expect` ile gerçek TTY etkileşimi sürülerek) adım 0-13'ü sorunsuz geçti, adım 14'te 500 aldı. Aynı sürekli oturumda beş kez tekrarlanan kök-yol sorgusu **her seferinde tam 3.0 saniyede** aynı `57014`/"statement timeout" hatasını verdi (`pg_roles.rolconfig` ile doğrulandı: `anon` → `statement_timeout=3s`, `authenticator` → `8s`); aynı anda `profiles?limit=1` **~15ms'de HTTP 200** döndü. Düzeltme sonrası **temiz bir `--neu` koşusu 16 adımın 16'sını da tamamladı** — `praxura-update.timer` gerçek systemd'de etkinleşti (`systemctl status` ile doğrulandı), `/login.html` 200, `/api/config` → `istKutu:true`, `/api/setup/status` → `{"verfuegbar":true}`. Bu, §7G'nin baştan beri açık bıraktığı "betiğin tamamı hiçbir Ubuntu kutusunda uçtan uca koşmadı" boşluğunu kapatan ilk gerçek koşudur |
+
+> **Test altyapısı notu:** Bu turda WSL2'ye gerçek bir `Ubuntu-24.04` dağıtımı kuruldu (Docker Desktop'ın kendi iç dağıtımından ayrı, kendi systemd'si + kendi Docker Engine'i ile) — kalıcı, yeniden kullanılabilir bir yerel test ortamı olarak bırakıldı. Ayrıca bu turda öğrenilen bir ortam tuzağı: ayrı `wsl -d ... -- ...` çağrıları arasında dağıtım boşta kalırsa (varsayılan systemd/WSL boşta kapanması) tüm docker compose yığını sessizce yeniden başlıyor — teşhis ve testler bundan sonra TEK bir sürekli oturumda yapılmalı, ayrı komutlara bölünmemeli.
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
 > (kardeşleri: `check-dashboard-size.sh`, `check-namen.sh`, `check-tabellen-register.sh`).
