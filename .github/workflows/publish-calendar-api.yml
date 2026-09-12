@@ -150,19 +150,52 @@ jobs:
       # docker-compose.yml/no-pg-net.sql je auf eine Kundenbox gelangen
       # (update.sh zieht es aus genau diesem Image). Fehlt es, aktualisiert
       # sich keine Box mehr, ohne dass irgendwo ein Fehler auftaucht.
+      #
+      # ⚠️ O-25/R0 (12.09.2026): die alte Version dieser Prüfung verlangte, dass
+      # manifest.json die Zeichenkette "manifest.json" selbst enthält — die Datei
+      # listet aber bewusst nur die ANDEREN 13 Bundle-Dateien, nicht sich selbst
+      # (tools/onprem-manifest.mjs). Damit schlug dieser Schritt seit `6347071`
+      # bei JEDEM Lauf fehl und kein calendar-api-Image wurde seither published.
+      # Jetzt zwei getrennte, in beide Richtungen geprüfte Fragen:
+      #   (a) Ist jede der 14 Bundle-Dateien wirklich im Image? (fängt O-57-Klasse)
+      #   (b) Listet manifest.json genau die 13 ANDEREN Dateien — nicht mehr,
+      #       nicht weniger? (die Rückrichtung — im Manifest gelistet, aber im
+      #       Bundle fehlend — lief bisher NIE mit und lässt update.sh nachts
+      #       auf einer Kundenbox scheitern)
       - name: Smoke test — onprem-Bundle ist im Image
         run: |
           set -e
+          BUNDLE_DATEIEN="docker-compose.yml .env.template install.sh update.sh lib-health.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql"
+
           docker create --name bundle-check calendar-api:smoke >/dev/null
-          docker cp bundle-check:/app/onprem-bundle/manifest.json /tmp/manifest.json
+          rm -rf /tmp/bundle && mkdir -p /tmp/bundle
+          docker cp bundle-check:/app/onprem-bundle/. /tmp/bundle/
           docker rm -f bundle-check >/dev/null
-          for datei in docker-compose.yml .env.template install.sh update.sh lib-health.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql; do
-            if ! grep -q "\"$datei\"" /tmp/manifest.json; then
-              echo "✗ manifest.json'da eksik: $datei"
+
+          # (a) jede Datei wirklich im Image?
+          for datei in $BUNDLE_DATEIEN; do
+            if [ ! -f "/tmp/bundle/$datei" ]; then
+              echo "✗ im Bundle fehlend: $datei"
               exit 1
             fi
           done
-          echo "✓ manifest.json 13/13 dosyayı listeliyor"
+          echo "✓ 14/14 Bundle-Dateien im Image vorhanden"
+
+          # (b) manifest.json listet genau die 13 ANDEREN Dateien — beide Richtungen.
+          for datei in $BUNDLE_DATEIEN; do
+            [ "$datei" = "manifest.json" ] && continue
+            if ! grep -q "\"$datei\"" /tmp/bundle/manifest.json; then
+              echo "✗ manifest.json listet nicht: $datei"
+              exit 1
+            fi
+          done
+          erwartet=$(( $(echo $BUNDLE_DATEIEN | wc -w) - 1 ))
+          gelistet=$(grep -oE '"yol"[[:space:]]*:[[:space:]]*"[^"]+"' /tmp/bundle/manifest.json | wc -l)
+          if [ "$gelistet" -ne "$erwartet" ]; then
+            echo "✗ manifest.json listet ${gelistet} Datei(en), erwartet ${erwartet} — überzählige/verwaiste Einträge"
+            exit 1
+          fi
+          echo "✓ manifest.json listet genau ${erwartet}/${erwartet} Dateien, keine überzähligen"
 
       - name: Build and push
         uses: docker/build-push-action@v5
