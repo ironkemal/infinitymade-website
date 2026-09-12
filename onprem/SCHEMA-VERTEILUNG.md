@@ -40,7 +40,7 @@
 | `db/SCHEMA.sql` (2.081 satır) | Tablo/kolon/constraint **belgesi** | ❌ hayır (§1.2) | ✅ 2026-09-04 |
 | `db/SCHEMA-RLS.sql` (961 satır) | Policy/fonksiyon/trigger/index **belgesi** | ❌ hayır (§1.2) | ✅ 2026-09-04 |
 | `onprem/schema/live_schema_2026-07-06.sql` (9.193 satır) | Gerçek `pg_dump --schema=public --schema-only` | ✅ evet | ❌ **2 ay bayat** (71 tablo) |
-| `onprem/schema/reference_data_2026-07-06.sql` (14.359 satır) | Referans verisi (`icd10_titles` 13.041 · `heilmittel_tarif` 928 · `krankenkassen` 94 · `dta_schluessel` 94) | ✅ evet | ⚠️ tazelenmeli (O-38) |
+| `onprem/schema/reference_data_2026-07-06.sql` (14.359 satır) | Eski `pg_dump` denemesi, **`COPY FROM stdin` formatında** — `migrate.js`'in `client.query()` yolundan geçmez, kullanılamaz (O-38, 12.09.2026 bulgusu) | ✅ evet ama biçim yanlış | ❌ terk edildi — gerçek seed `api-backend/db/migrations/0006`-`0013`'te, düz `INSERT` |
 | `supabase/migrations/` (14 dosya) | Elle yazılmış migration dosyaları | ✅ evet, tek tek | ❌ zincir değil (§1.3) |
 | `onprem/supabase-docker/volumes/db/*.sql` | Upstream Supabase init (roller, JWT, realtime, webhooks) | ✅ evet | vendor kopyası |
 
@@ -299,7 +299,7 @@ Sıra tartışmaya açık değil — her adımın bir öncekine somut bağımlı
 | 5 | **`auth.users` trigger'ı** — `on_auth_user_created` | **V-3.** `public.handle_new_user()` 4. adımda geldi, trigger burada bağlanır | baseline'ın sonu |
 | 6 | **Storage bucket'ları + `storage.objects` policy'leri** — 5 bucket | **V-4** | baseline'ın sonu |
 | 7 | **Realtime publication** — `ALTER PUBLICATION supabase_realtime ADD TABLE public.bookings` | **V-5** | baseline'ın sonu |
-| 8 | **Referans verisi (seed)** — `icd10_titles` (13.041) · `heilmittel_tarif` (928) · `krankenkassen` (94) · `dta_schluessel` (94) · `heilmittel_katalog` · `diagnosegruppen` · `icd_sector_ranges` · `kostentraeger` · `heilmittel_position` | O-38. Tenant verisi **değil**, image'la gelir; kutu dış kaynağa çıkmaz (O-34 deseni) | `db/seed/*.sql` |
+| 8 | **Referans verisi (seed)** — `kostentraeger` (echt filtresiyle) · `kostentraeger_annahmestellen` · `heilmittel_tarif` · `krankenkassen` (ik_number NULL) · `icd_sector_ranges` · `diagnosegruppen` · `heilmittel_katalog` · `icd10_titles` | O-38. Tenant verisi **değil**, image'la gelir; kutu dış kaynağa çıkmaz (O-34 deseni). ⚠️ `heilmittel_catalog` (C ile, eskimiş) ve `heilmittel_position` **bilinçli olarak dışarıda** — veraltet, yanlış fiyat. `dta_schluessel` ertelendi (source_version yanlış) | `api-backend/db/migrations/000N_seed_*.sql` — **`db/seed/*.sql` DEĞİL** (12.09.2026 düzeltmesi: Docker build context `./api-backend`, kök `db/` image'a giremez) |
 | 9 | `NOTIFY pgrst, 'reload schema'` | PostgREST şema cache'i; PoC 0.1'de gerekliydi | runner'ın son adımı |
 | 10 | Sonraki migration'lar (varsa) sırayla | §4 | `db/migrations/00NN_*.sql` |
 | 11 | **Self-check** → sonuç panelde | §3.3 | runner |
@@ -348,7 +348,6 @@ beklenen değerle karşılaştırır (beklenen değerler baseline üretilirken d
 | `auth` şemasında bizim trigger | 1 (`on_auth_user_created`) |
 | storage bucket | 5 |
 | publication üyesi tablo | 1 (`bookings`) |
-| `icd10_titles` satır | 13.041 |
 
 Bir sayı tutmazsa: kurulum **başarısız** sayılır, kutu kurulum modunda kalır, panelde hangi
 sayının tutmadığı yazar. "Uygulama açılsın, eksik kalanı sonra bakarız" **yok** — eksik
@@ -356,6 +355,13 @@ policy sessizce mandant sınırı deler.
 
 > Bu tablo O-39'un kabul kriteridir. Sayılar `db/SCHEMA.sql` başlığından gelir ve **her
 > baseline yenilemesinde** birlikte güncellenir.
+>
+> ⚠️ **12.09.2026 — `icd10_titles` satır sayısı buradan ÇIKARILDI (SEED-8, O-38).**
+> Veri sayımı YAPI sayımı değildir — bu tablo şema nesnelerini sayar, veri satırı
+> saymaz. `icd10_titles`'ın kendi satır-sayısı iddiası artık kendi seed dosyasının
+> içinde (`api-backend/db/migrations/0013_seed_icd10_titles.sql`, `DO $$ ... END $$`
+> bloğu, `>= 16905` — eşitlik değil, çünkü SaaS'ta veya delta almış bir kutuda sayı
+> daha yüksek olabilir). Tek kontrol, tek yer.
 
 ---
 
@@ -744,7 +750,7 @@ panelde göster" davranışı yok; onu yine biz sarmak zorundayız. Sardıktan s
 | 2 | `praxura_migrations` tablosu (§4.5) — baseline'ın parçası. Canlıya `0000` satırını elle düş | §5.2 |
 | 3 | `api-backend/db/migrate.js` — runner (§4.2-§4.6) + self-check sayaçları (§3.3) | §4 |
 | 4 | `server.js`: `await runMigrations()` → başarılıysa `listen`, değilse kurulum modu + `/health` + hata sayfası. **`process.exit(1)` yok** (O-28) | §4.4 |
-| 5 | `api-backend/Dockerfile`: `db/migrations/` + `db/seed/` `COPY` listesine (O-35 disiplini — `COPY . .` yok) | §4.1 |
+| 5 | ~~`api-backend/Dockerfile`: `db/migrations/` + `db/seed/` `COPY` listesine~~ — **gerek yoktu**, `Dockerfile` zaten `COPY db ./db` ile tüm `migrations/` klasörünü alıyor; seed dosyaları da aynı klasöre gitti (12.09.2026, O-38) | §4.1 |
 | 6 | `supabase/migrations/` → `archive/`, `archive/README.md`'ye gerekçe | §5.2 |
 | 7 | `tools/check-onprem.sh`: iki yeni sayaç (§5.4) + yıkıcı-DDL kapısı (§6.2) | §5.4, §6.2 |
 | 8 | `db/README.md` ve `CLAUDE.md`'nin "şema güncelle" bölümüne yeni protokol (§5.3) | §5.3 |

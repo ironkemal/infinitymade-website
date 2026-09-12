@@ -618,19 +618,27 @@ otomasyon (yayıncı sayfası izleme) ayrı bir karar, `deger-mi` ile.
 (W-01 — sabit kontrol günleri 03.03 / 03.06 / 03.09 / 03.12 + yayıncı sayfası). Bu, kaynakların
 tazelik kontrolünde ikinci belgeli yordam; ama hâlâ **otomatik değil**, madde açık kalır.
 
-### W-A07 · Yeniden dağıtım hakları netleştirilmedi — `offen`
+### W-A07 · Yeniden dağıtım hakları — Kostenträgerdatei ✅ + ICD-10-GM ✅, GKV Lesefassung `offen`
 `.vercelignore:72-73` şüpheyi yazılı olarak kaydediyor: *"fraglich, ob ICD-10-GM- und
 GKV-Lesefassungen ueberhaupt weiterverbreitet werden duerfen"*. Yayın yüzeyi kapalı
 (klasörler ignore'da ✅) ama **depo public** ve `.txt` karşılıkları git'te izleniyor.
-**Yapılacak:** `legal-de`'ye sorulur. `wissensbank/gemeinsam/icd-10-gm/downloadbedingungen-2025`
-zaten arşivde — cevabın bir kısmı orada.
 
 > **Kullanıcı kararı 05.09.2026 — Kostenträgerdatei için kapandı.** Kemal: *"public kalsın
 > sıkıntı yok, zaten public bilgiler bunlar."* `wissensbank/gemeinsam/kostentraeger/` git'te
 > izlenmeye devam eder (kasa IK numaraları — resmî, kamuya açık veri, hasta verisi yok).
-> **Madde bu kadarıyla kapandı, tamamıyla değil:** ICD-10-GM (BfArM'ın kendi
-> `downloadbedingungen-2025` metni var) ve GKV Lesefassung'ları hâlâ `offen` — onlar için
-> `legal-de` sorusu duruyor.
+
+> ✅ **ICD-10-GM için de kapandı (12.09.2026, `legal-de`).** Soru bu kez daha ağırdı: repoda
+> public kalması değil, **ticari on-prem ürününün Docker image'ına gömülüp müşteriye
+> dağıtılması** (O-38, `api-backend/db/migrations/0013_seed_icd10_titles.sql`).
+> `downloadbedingungen-2025.txt:67-71` bunu açıkça "anderes amtliches Werk" (§ 5 Abs. 2 UrhG)
+> diye tanımlıyor — telif koruması yok, ticari dağıtım dahil yeniden dağıtım öngörülmüş,
+> lisans ücreti yok. İki şart: Änderungsverbot (§ 62 — kod başlıkları aynen) ve
+> Quellenangabe (§ 63 — atıf metni, bkz. migration başlığı; ayrı bir `NOTICE-QUELLEN.txt`
+> + Dashboard satırı **hâlâ eklenmedi**, açık kalem `onprem/REGISTER.md` O-38'de).
+> Band 2 (Alphabetisches Verzeichnis) **kapsam dışı** — Zi'nin ayrı hakları var, hiç
+> dokunulmadı ve dağıtılmıyor. `compliance/LEGAL_DECISIONS.md`'ye tek satır düştü.
+>
+> **Hâlâ `offen`:** GKV Lesefassung'ları — ayrı yayıncı, ayrı soru, henüz sorulmadı.
 
 ### W-A08 · Kostenträgerdatei kayıtsızdı — ✅ **KAPANDI 07.09.2026**
 

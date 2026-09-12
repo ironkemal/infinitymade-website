@@ -973,7 +973,89 @@ kapı unutmaz ama düşünmez.
 | **Tip** | B + D |
 | **Kutuda ne olur** | Seed olarak gelir, kutu dış kaynağa çıkmaz. Playbook Faz 5.1 bunları export kapsamının **dışında** tutuyor — doğru: tenant verisi değil. RLS tarafı da hazır (D8 düzeltmesi dump'la geldi: salt-okunur policy, anon yazamıyor) |
 | **Çözüm** | `unkritisch` — Faz 2.1 seed adımı. ⚠️ Bağlı soru: bu tablolar **güncellendiğinde** kutuya nasıl gidecek? Cevap O-34 deseni (image ile) olmalı, ama `icd10_titles` 13.041 satır — JS dosyasına commit'lenemez, migration/seed dosyası olarak gitmeli. Bu, şema dağıtım zincirinin (O-39) bir parçası |
-| **Durum** | `geplant` (Faz 2.1 seed adımı) — ⚠️ **11.09.2026'da `unkritisch`'ten çıkarıldı.** Ölçüldü: kutu doğru ama **boş** kalkıyor (`krankenkassen` → `[]`). Baseline **yapıyı** taşıyor, **veriyi** taşımıyor; `SCHEMA-VERTEILUNG.md` §3.1'in 4. adımı (seed) yazılmadı. Kasa listesi boşken ne randevu kaydı ne §302 hazırlığı yapılabilir — bu bir "bize sorun değil" maddesi olamaz. Güncelleme yolu hâlâ O-39'a bağlı |
+| **Durum** | ✅ **gelöst (12.09.2026)** — 8 seed migration'ı yazıldı ve gerçek Postgres'e karşı test edildi (`api-backend/db/migrations/0006`-`0013`). Ayrıntı aşağıda |
+
+> **12.09.2026 — uygulandı. Tasarım onprem + db-ustasi ile kilitlendi (SEED-1…SEED-11),
+> ICD-10-GM'in dağıtım hakkı legal-de ile doğrulandı.**
+>
+> **Orijinal 9-tablo listesi yanlıştı — ölçülerek düzeltildi:**
+> - **Eksikti, eklendi:** `kostentraeger_annahmestellen` (11.409 satır — DTA'nın kime
+>   gideceğini belirliyor, yoksa §302 dosya üretimi hiç çalışmaz) · `heilmittel_katalog`
+>   (94 satır — `search_heilmittel()`'in tek kaynağı, olmadan **hiçbir** Heilmittel
+>   seçilemez; listede yanlışlıkla eskimiş `heilmittel_catalog` (C ile) yazıyordu)
+> - **Listedeydi, bilinçli olarak ÇIKARILDI:** `heilmittel_catalog` (C ile, eskimiş,
+>   `db/REGISTER.md`: "Status: veraltet, Wer: niemand", abgelöste fiyatları sınırsız
+>   geçerli gösteriyor) · `heilmittel_position` (aynı sınıf, okuyan yok)
+> - **Ertelendi (bu turda YAZILMADI):** `dta_schluessel` — içeriği doğru ama
+>   `source_version` alanı yanlış ("Anlage 3 V22", geçerli sürüm V21) ve tablo hiçbir
+>   kod yolundan okunmuyor; yanlış sürüm etiketini checksum-kilitli bir dosyaya
+>   gömmek yerine düzeltilmesi bekleniyor
+> - **`kostentraeger` artık mock DEĞİL** (CLAUDE.md'deki satır 06.09.2026'dan beri
+>   bayattı, düzeltildi) — 1052 satırın 1043'ü gerçek (GKV Kostenträgerdatei,
+>   `parser.js`), 9'u mock kalıntı; seed yalnız `datensatz_status='echt'` filtresiyle
+>
+> **Mekanizma (SEED-1):** ayrı bir seed-runner YOK. Seed dosyaları normal migration'dır
+> (`api-backend/db/migrations/0006`-`0013`), aynı `migrate.js` zincirinden geçer —
+> `migrate.js`'e tek satır kod eklenmedi. `onprem/SCHEMA-VERTEILUNG.md`'nin önerdiği
+> `db/seed/*.sql` yolu **yanlıştı** (Docker build context `./api-backend`, kök `db/`
+> image'a giremez) — belge düzeltildi.
+>
+> **Idempotent upsert (SEED-2/3), checksum kilidi değil:** her dosya
+> `INSERT ... ON CONFLICT (<doğal_anahtar>) DO UPDATE`. Gerekçe G7: bu veri SaaS'ta
+> **zaten var**, düz `INSERT` orada PK çakışmasıyla patlardı. `DELETE` hiçbir yerde
+> yok — `kostentraeger`'ın `ON DELETE CASCADE` zinciri + `prescriptions` FK'si bir
+> satırın silinmesini başka tabloları da götüren/patlatan bir işleme çevirirdi.
+>
+> **Format (SEED-5):** düz çok-satırlı `INSERT`, `COPY FROM stdin` DEĞİL —
+> `node-postgres` COPY protokolünü desteklemiyor, `migrate.js` zaten `client.query()`
+> ile tek seferde gönderiyor. Escaping **elle yazılmadı**: her dosya Postgres'in kendi
+> `format('%L', ...)` fonksiyonuyla üretildi (bkz. `tools/seed-generieren.mjs`) —
+> `diagnosegruppen`'in jsonb+regex içeren sütunları elle escape edilseydi sessizce
+> bozulabilirdi.
+>
+> **Doğrulama — gerçek, atılabilir bir Postgres container'ında (12.09.2026):**
+> sekiz tablonun **hepsi** ayrı ayrı gerçek şemalarıyla (PK/FK/sequence/identity
+> eşleşecek şekilde) kuruldu, seed dosyaları uygulandı, satır sayıları canlıyla
+> **birebir** karşılaştırıldı (`kostentraeger` 1043 · `kostentraeger_annahmestellen`
+> 11409 · `heilmittel_tarif` 928 · `krankenkassen` 94 · `icd_sector_ranges` 45 ·
+> `diagnosegruppen` 57 · `heilmittel_katalog` 94 · `icd10_titles` 16905, 14370'i
+> terminal). Hepsi **ikinci kez** uygulanıp satır sayısının değişmediği (idempotent)
+> doğrulandı. `diagnosegruppen`'in regex'leri **fonksiyonel olarak** test edildi:
+> `DF` kodunun ilk deseni gerçekten `'E10.74' ~ desen` → `true`. En büyük dosya
+> (`0013`, ~1,8 MB) `migrate.js`'in **gerçek** çağrı yoluyla (`pg.Client.query()`,
+> tek çağrıda BEGIN+INSERT'ler+DO-blok+COMMIT) 346 ms'de sorunsuz uygulandı —
+> `migrate.js`'in kendisi hiç değiştirilmedi, yalnız gerçekten çalıştığı doğrulandı.
+>
+> **`krankenkassen.ik_number` bilinçli olarak NULL (SEED-10):** canlıdaki 16/94 dolu
+> değerin hepsi aynı doğrulanmamış kaynaktan, en az 4'ü kanıtlanmış yanlış
+> (`db/REGISTER.md`, 06.09.2026 — ör. DAK-Gesundheit satırında HEK'in IK'sı
+> duruyordu). Düzeltme ayrı bir migration + `gkv-302` kararı ister, bu maddenin
+> kapsamı dışında — ama yanlış veriyi 20 kutuya dağıtmaktansa boş dağıtmak
+> tek savunulabilir yoldu.
+>
+> **ICD-10-GM'in hukuki durumu (`legal-de`, 12.09.2026): dağıtılabilir.** BfArM'ın
+> Downloadbedingungen'i (Stand 01.08.2025) bunu açıkça "anderes amtliches Werk"
+> (§ 5 Abs. 2 UrhG) diye tanımlıyor — telif koruması yok, ticari dağıtım dahil
+> yeniden dağıtım öngörülmüş. İki şart: Änderungsverbot (§ 62 — kod başlıkları
+> aynen, uyuldu) ve Quellenangabe (§ 63 — atıf metni migration başlığında + bir
+> `NOTICE-QUELLEN.txt` + Dashboard'da tek satır gerekiyor, **henüz eklenmedi, açık
+> kalem**). Band 2 (Alphabetisches Verzeichnis) kapsam DIŞI, hiç dokunulmadı.
+> Tüm satırlar (terminal + terminal-olmayan/grup başlıkları) dahil edildi —
+> `search_diagnosen()` `terminal`'e göre filtrelemiyor, yalnız sıralama ipucu
+> olarak kullanıyor.
+>
+> **Yeni bulgu, ayrı madde adayı (SEED-11):** `heilmittel_katalog`'un besleme
+> zinciri kopuk — `billing/codes/*.js` değişip `sync_heilmittel_katalog.js` SaaS'ta
+> elle koşturulduğunda, bu seed dosyası **otomatik güncellenmez**. `tools/
+> check-onprem.sh`'a bir kapı eklenmesi gerekiyor (kod değişirse aynı commit'te
+> yeni seed migration'ı da gelsin) — bu turda **yapılmadı**, açık kalem.
+>
+> **Açık kalemler:** (1) NOTICE-QUELLEN.txt + Dashboard atıf satırı · (2) SEED-11'in
+> kapı kuralı · (3) `dta_schluessel`'in `source_version` düzeltmesi, sonra seed'i ·
+> (4) `krankenkassen.ik_number` düzeltmesi (`gkv-302`) · (5) `onprem/.env.template`
+> ve `Dockerfile`'ın bu 8 yeni migration dosyasını image'a almak için değişiklik
+> GEREKTİRMEDİĞİ doğrulandı — `api-backend/Dockerfile` zaten `COPY db ./db` ile
+> tüm `migrations/` klasörünü alıyor.
 
 ### O-39 — Şema dağıtım zinciri — çözüm belgesi yazıldı
 

@@ -1,0 +1,115 @@
+-- O-38 (onprem/REGISTER.md) — Referenzdaten für die Box: krankenkassen
+-- (dropdown/anon lookup — kutunun bugün BOŞ kalktığı, bu maddeyi açan ölçüm).
+--
+-- ⚠️ ik_number BİLİNÇLİ OLARAK HER SATIRDA NULL. Canlıdaki 94 satırın 16'sında
+-- doluydu, hepsi aynı doğrulanmamış kaynaktan ve en az 4'ü kanıtlanmış yanlış
+-- (db/REGISTER.md, 06.09.2026 ölçümü — ör. DAK-Gesundheit satırında HEK'in IK'sı
+-- duruyordu). Yanlış bir kasa eşlemesi bir reçetenin DTA'sını başka kasaya
+-- gönderir; bunu 20 kutuya çoğaltmaktansa NULL bırakmak tek savunulabilir yol.
+-- Düzeltme ayrı bir migration + gkv-302 kararı ister, bu maddenin kapsamı dışında.
+--
+-- `id` (uuid) dump'tan aynen geliyor — hiçbir FK bu tabloya işaret etmiyor
+-- (ölçüldü), ON CONFLICT (id) SaaS'a karşı da güvenli.
+
+INSERT INTO public.krankenkassen (id, name, abbreviation, type, created_at, ik_number) VALUES
+  ('48ced9b8-f91c-4f03-af27-f5d9a9ee9755','Andere','Andere','gesetzlich','2026-05-11 19:06:26.299451+00',NULL),
+  ('9dae08de-f8e9-4b75-8feb-a9d8dd580eca','AOK Baden-Württemberg','AOK BW','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('c84a7cb3-81f6-44e1-8a97-0f73639af33b','AOK Bayern','AOK Bayern','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('03f3bd5a-9d40-4e52-a4bb-5c6ccb6666f1','AOK Bremen/Bremerhaven','AOK HB','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('d76855d1-0510-4b65-b62a-3507926fc583','AOK Hessen','AOK Hessen','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('fc2ab98c-f1e0-465c-b5af-8bbfd5a27989','AOK Niedersachsen','AOK NI','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('6b839faf-e036-403b-968d-ad3c2113b0c1','AOK Nordost','AOK Nordost','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('75bcb756-c73a-49ca-ab7f-a57879392050','AOK NordWest','AOK NordWest','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('dd2a153b-e4c2-4bb8-b5e0-14ab51084848','AOK PLUS','AOK PLUS','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('af63356c-c1a1-43c4-a640-249dc787b3e0','AOK Rheinland-Pfalz/Saarland','AOK RLP/SL','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('8153221c-8ac2-4232-a858-ca05aab11ed7','AOK Rheinland/Hamburg','AOK R/H','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('f0728b05-d91f-43a4-92b1-4b3db1cd6e77','AOK Sachsen-Anhalt','AOK SA','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('486232f1-627b-4f87-9a1b-1046717817ec','Audi BKK','Audi BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('c10392ca-104f-4f92-ac6e-907a40a82395','BAHN-BKK','BAHN-BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('13ccf59b-8b08-4f72-916c-d8f06b0e2467','BARMER','Barmer','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('bc23391b-684e-4fc5-91be-664ee3b900f3','BERGISCHE KRANKENKASSE','BERGISCHE','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('fd4f9b3c-a0a4-450e-8371-ff283493475b','Bertelsmann BKK','Bertelsmann','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('59b43dc4-07f8-4809-ae86-7deb408c5a71','BIG direkt gesund','BIG','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('da4f83e6-11d6-4780-a17f-94d2f5d479ff','BKK Akzo Nobel Bayern','Akzo Nobel','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('9094d9c4-6721-4ca3-a428-d30588104482','BKK B. Braun Aesculap','B. Braun','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('21019875-9f34-436b-a9bb-7f1e00b9da1a','BKK Deutsche Bank AG','Deutsche Bank','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('34180ad1-5561-41b0-aac6-2ac4f10c274e','BKK Diakonie','BKK Diakonie','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('f14afc31-bc52-411a-bffc-31ee50185719','BKK DürkoppAdler','DürkoppAdler','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('87842858-9fa1-45ce-94b0-ce9e06584fa9','BKK EUREGIO','EUREGIO','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('a7874680-cabe-49c1-a17b-d8ec86c541c6','BKK evm','BKK evm','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('ed97353b-eefb-4f46-8bdc-7e67e4b61638','BKK EWE','BKK EWE','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('7b24e325-6607-4410-aa82-bc753fa872c2','BKK exklusiv','exklusiv','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('e8f59dbc-5304-473e-9c7b-6a91a4c99ae2','BKK Faber-Castell & Partner','Faber-Castell','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('e528a879-fde7-4856-8094-94d15bd1dcfb','BKK firmus','firmus','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('4da6ede3-1734-4cff-a884-2f1162eed345','BKK Freudenberg','Freudenberg','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('4f7b2e62-b221-4a72-90d0-ad6674ea5653','BKK GILDEMEISTER SEIDENSTICKER','GILDEMEISTER','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('809e3d71-e9b9-4464-9732-8e8f2487764d','BKK Groz-Beckert','Groz-Beckert','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('c01f43d1-e01a-42be-b68b-9ad9e4c949e2','BKK HERKULES','HERKULES','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('273bdeb9-050f-4468-a072-611bb13822b7','BKK KARL MAYER','KARL MAYER','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('e935a09f-745f-429f-8e70-d8fd08655660','BKK Linde','BKK Linde','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('d179f371-2189-4c15-9a78-9ade6ae5684b','BKK MAHLE','MAHLE','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('cdf36b31-31ee-4e4b-b2ca-55c94e120d4e','BKK Merck','Merck','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('cc028d78-17f6-4e49-8bc8-769876d266e1','BKK Miele','Miele','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('8a03a3c3-7cd9-4b2b-9f5d-66e4252cc16b','BKK MTU','MTU','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('5f81a691-fb2d-40b8-aa76-cd029d980acd','BKK PFAFF','PFAFF','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('b55584fa-648e-4315-b947-3858ab67b909','BKK Pfalz','BKK Pfalz','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('cb4a4e90-2529-4f25-be55-670e1127092b','BKK ProVita','ProVita','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('adeec5b1-5672-423c-af49-bbd7bb1c755c','BKK Public','Public','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('0b1b7c9d-80be-4cb7-b7b5-119e04a226d4','BKK PwC','PwC','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('083bfbf8-d5ab-4300-9bb5-d84c414edff2','BKK Rieker.Ricosta.Weisser','Rieker','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('7dcf2170-56e4-469f-8c6d-5bceac537cf7','BKK Salzgitter','Salzgitter','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('3f84b184-3840-49f0-a904-f59bd7190237','BKK SBH','SBH','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('b8a0297f-b7fc-42e8-b146-6a5176f69e97','BKK Scheufelen','Scheufelen','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('63e931f9-cb8e-446a-859d-3f943759123f','BKK Technoform','Technoform','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('75a412b1-ae1d-472f-be6b-4587bb228998','BKK VDN','VDN','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('22a888fe-9a3a-4aad-934d-3898f348ca39','BKK VerbundPlus','VerbundPlus','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('0626203b-b3db-44ec-b8c2-5eb195a5f722','BKK Werra-Meissner','Werra-Meissner','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('0229ce2f-1b0b-4332-a413-b866f62d2aa7','BKK WIRTSCHAFT & FINANZEN','W&F','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('c1dfcd9d-2ab7-4a37-b85a-3de62be13237','BKK Würth','Würth','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('93523fee-658c-481e-aff8-ec87c314e74e','BKK24','BKK24','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('61fc1eec-5ed9-4569-983e-54a846205d0c','BMW BKK','BMW BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('a8646ffd-4cdd-4fe2-8b74-7fb7d3b277f4','Bosch BKK','Bosch BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('b475c210-e28e-430e-b9cf-82d3920f4b93','Continentale BKK','Continentale','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('d174d5f2-fa94-4cf4-bc23-aab3a3c60651','DAK-Gesundheit','DAK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('0f8322fc-3a09-4927-8187-a8b5c068e960','Debeka BKK','Debeka BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('95c80a27-a348-4375-b1b9-dc99365ccaf9','energie-BKK','energie-BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('e41f7b5b-61a3-4bfb-8518-5929e056d494','Ernst & Young BKK','E&Y BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('21a8269f-fbd4-488e-865b-4ddeeccfd687','Heimat Krankenkasse','Heimat','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('4dd43bda-e8a1-467a-a7cd-521e89edf316','HEK - Hanseatische Krankenkasse','HEK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('4508ce3d-4668-4540-b9ab-046d38e18aa4','hkk Krankenkasse','hkk','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('1f4d3f67-cc24-41b2-bf4c-d9e552438e5c','IKK - Die Innovationskasse','IKK IK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('c2a4f47f-dd52-425d-836d-0ac7ac1513b7','IKK Brandenburg und Berlin','IKK BB','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('bbfd8d19-f7e2-49de-95eb-17ac0d77d61c','IKK classic','IKK classic','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('327c983a-6f5f-4a94-9788-d3a867b8bd1e','IKK gesund plus','IKK gp','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('3f57bca7-b287-4c74-9776-28492083fbb6','IKK Südwest','IKK SW','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('9cbf8f2f-b043-43a8-86b1-d032beba0681','KKH Kaufmännische Krankenkasse','KKH','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('8d8ec874-57b8-4e1c-b541-24744ac1edf0','KNAPPSCHAFT','Knappschaft','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('3e576594-efec-4edd-853f-b575ca95a459','Koenig & Bauer BKK','Koenig&Bauer','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('528329d8-85c0-41fd-bd00-0c796b3dcd7f','Krones BKK','Krones','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('897278ab-a1d5-454c-99bf-5c9230ae4a99','Landwirtschaftliche Krankenkasse','LKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('389e9de8-e352-400f-8aa0-de4703a6c649','Mercedes-Benz BKK','Mercedes-Benz','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('76a4fa50-2d7e-40d4-8a8c-954866e772b1','mhplus Krankenkasse','mhplus','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('3964309f-6439-466c-8148-084a963e3195','mkk - meine krankenkasse','mkk','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('17d750da-5de5-4ee6-89a9-d1256714a25f','Mobil Krankenkasse','Mobil','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('121cab1f-61d8-48ae-a136-c1846de86461','novitas bkk','novitas','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('eb3e74bf-04b5-479b-8e39-d99868b7fcbe','Privatversicherung','Privat','privat','2026-05-11 19:06:26.299451+00',NULL),
+  ('f3bacb8d-20c9-445d-8740-d162efe75478','Pronova BKK','Pronova','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('624dc61f-9326-48e2-adc5-1dd3f001a949','R+V Betriebskrankenkasse','R+V','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('449c5f42-4d30-4706-b9df-ba0228beb3bb','Salus BKK','Salus','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('9e4f584d-a60e-4630-bd38-950f1465cf5d','SBK','SBK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('1e31c0bc-7aab-4bd2-9257-628aec6d6d3d','SECURVITA Krankenkasse','SECURVITA','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('95fa44f3-6bfd-4ce8-96c9-cd993bb41a33','SKD BKK','SKD BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('8d5ac9c0-c72e-4743-9373-dd1dc5220203','Südzucker-BKK','Südzucker','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('c457e457-c773-469c-aa6b-8076aeddaa0d','Techniker Krankenkasse','TK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('37956cbf-b61d-42c7-8de1-73d41a36b252','TUI BKK','TUI BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('a93d0a76-850f-4edf-98fe-1abcecda2a08','VIACTIV Krankenkasse','VIACTIV','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('c399aa11-f1fb-4f4a-b283-d2569036104f','vivida bkk','vivida','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('2a1a0270-644d-4662-bb91-e0a45d8d4d26','WMF BKK','WMF BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL),
+  ('c3ea3ce6-e9b7-48e2-a7cb-0071d74ea0a3','ZF BKK','ZF BKK','gesetzlich','2026-06-01 22:56:18.279837+00',NULL)
+ON CONFLICT (id) DO UPDATE SET
+  name=EXCLUDED.name, abbreviation=EXCLUDED.abbreviation, type=EXCLUDED.type, created_at=EXCLUDED.created_at;
+
+DO $$ DECLARE n int; BEGIN
+  SELECT count(*) INTO n FROM public.krankenkassen;
+  IF n < 94 THEN RAISE EXCEPTION 'seed krankenkassen: % Zeilen, erwartet >= 94', n; END IF;
+END $$;
