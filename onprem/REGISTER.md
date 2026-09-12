@@ -697,7 +697,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | F + B |
 | **Kutuda ne olur** | Bugün: her main push'u ~60 saniyede canlıya çıkar (Watchtower). Bu SaaS'ta bilinçli. Kutularda aynı düzen kalırsa **ücretli müşteri her denememizi yer** — K11 tam bunu engellemek için var. Ücretli müşterinin kutusu, henüz test edilmemiş bir image'ı gece yarısı çeker |
 | **Çözüm** | **Faz 4.3** — `:beta` (her main push) + `:stable` (yalnız release tag'i); Watchtower kanal tag'ini izler. Testlerin publish'ten önce koşması iyi bir taban, korunur. Ayrıca şema dağıtımıyla bağlanır: `:stable` image'ı yalnız kendi migration'larını bilmeli (O-39). ★ Kanalın tam tasarımı — değişmez `X.Y.Z` etiketi, 72 saatlik soak, `:stable`'ın elle taşınması, `latest`'in kullanımdan kalkması, kutuda saatlik Watchtower — `onprem/RELEASE-STANDARD.md` §2.3 + §6.4'te. Etiketin kendisi risk kontrolüdür; aralık değil |
-| **Durum** | ✅ **gelöst (12.09.2026, tam kapsam — CI tarafı) — R9 (SaaS host geçişi) ayrı adım, bkz. altındaki not** — bkz. O-41 (smoke-test artık var) |
+| **Durum** | ✅ **gelöst (12.09.2026, tam kapsam — R0-R12 hepsi dahil, R9'un SaaS host geçişi de tamamlandı)** — bkz. O-41 (smoke-test artık var), O-74, O-75 |
 
 > **11.09.2026 — paket, var olmayan bir etikete işaret ediyor.**
 > `onprem/.env.template` `PRAXURA_API_IMAGE=…/calendar-api:stable` diyor; yayın hattı ise
@@ -750,13 +750,21 @@ kapı unutmaz ama düşünmez.
 > yeni build farklı digest üretir ve soak edilen artefaktla yayınlanan artefaktı ayırırdı.
 > İki image (api+frontend) **aynı koşuda** taşınır.
 >
-> **R9 — SaaS host geçişi (`:latest` → `:beta`) — ayrı adımda, canlı host değişikliği,
-> kullanıcı onayı bekliyor.** Bu maddenin tamamlanması için host'un `/opt/calendar-api/
-> docker-compose.yml`'i `:beta`'ya çevrilip `docker inspect` ile doğrulanması, ANCAK O
-> ZAMAN CI'dan `latest`'in düşürülmesi gerekiyor — sıra bozulursa Watchtower sessizce
-> güncellemeyi bırakır. Bu adım CI değişiklikleri gerçekten `:beta` basana kadar
-> yapılamaz (henüz basılmış bir `:beta` yok) — push+doğrulama sırası aşağıda ayrıca not
-> edilecek.
+> **R9 — SaaS host geçişi — ✅ tamamlandı (12.09.2026, kullanıcı onayıyla).** Push sonrası
+> CI'ın gerçekten `v0.1.0` git tag'ini bastığı doğrulandı (`git fetch --tags` → `v0.1.0`
+> var) ve `docker pull` ile hem `calendar-api` hem `frontend` image'larının `:0.1.0` ve
+> `:beta` etiketlerinin **aynı digest**'i gösterdiği ölçüldü. Ardından: (1) host'ta
+> `/opt/calendar-api/docker-compose.yml` yedeklendi (`docker-compose.yml.bak-20260912-112144`),
+> (2) tek `:latest` satırı `:beta`'ya çevrildi (dosyada başka `:latest` yoktu — kontrol
+> edildi), (3) `docker compose config -q` + `pull` + `up -d --force-recreate calendar-api`,
+> (4) `docker inspect` → `Config.Image = …calendar-api:beta`, container `healthy`, gerçek
+> domainden `https://n8n.infinitymade.de/health` → **200**. Repo'daki
+> `api-backend/docker-compose.yml` de aynı satırla güncellendi (drift'i önlemek için —
+> 2026-08-15'in dersi). Ancak bundan sonra iki workflow'dan `latest` düşürüldü. Gözlenen
+> bir uyumsuzluk: host'taki gerçek dosyanın servis sırası repo kopyasından farklıydı
+> (image satırı repo'da 56, host'ta 3) — bu, dosyanın daha önce elle düzenlendiğinin
+> kanıtı, davranışı etkilemedi ama repo'nun "host'un aynası" olmadığını bir kez daha
+> doğruladı.
 >
 > **R12 — üç yeni kapı, `tools/check-onprem.sh`:** (1) `VERSION` staged ve `v<değer>`
 > zaten bir git tag'iyse → red (sürüm yeniden kullanımı). (2) `VERSION` staged, MAJOR

@@ -148,17 +148,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ⚠️ O-25/R9 (12.09.2026): `:latest` bilinçli olarak KALIYOR. SaaS VPS'i
-      # bugün onu izliyor (Watchtower) — kanal geçişi §6.4'teki sıraya göre
-      # olur: önce host `:beta`'ya çevrilir ve doğrulanır, ANCAK O ZAMAN bu
-      # satır düşer. Sırayı bozmak Watchtower'ı sessizce güncellemeyi bırakır.
+      # ✅ O-25/R9 (12.09.2026): `:latest` DÜŞTÜ. SaaS VPS'i host'ta `:beta`'ya
+      # çevrildi ve doğrulandı (`docker inspect` → image=beta, healthy,
+      # `/health` 200 gerçek domainden) — sıra §6.4'ün istediği gibi tamamlandı,
+      # şimdi CI'dan kaldırmak Watchtower'ı köreltmiyor.
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
             type=sha,prefix=,format=short
             type=raw,value=beta
             type=raw,value=${{ steps.version.outputs.version }},enable=${{ steps.version.outputs.release == 'true' }}

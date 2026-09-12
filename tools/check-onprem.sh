@@ -213,7 +213,12 @@ if [ -n "$version_staged" ]; then
   yeni_surum="$(printf '%s' "$version_staged" | tr -d '[:space:]')"
 
   # (1) Aynı sürüm numarası ikinci kez basılamaz — X.Y.Z değişmez etiket (§2.3).
-  if git rev-parse -q --verify "refs/tags/v$yeni_surum" >/dev/null 2>&1; then
+  # Yalnız VERSION BU COMMIT'TE gerçekten değişiyorsa kontrol edilir — aksi hâlde
+  # zaten yayınlanmış (ve doğal olarak kendi tag'iyle eşleşen) bir VERSION,
+  # ondan sonraki HER commit'te bu kapıyı tetikler (ilk yazımda tam olarak
+  # olan buydu — VERSION'a hiç dokunmayan bir commit bile reddediliyordu).
+  head_version_icerik="$(git show "HEAD:VERSION" 2>/dev/null | tr -d '[:space:]' || true)"
+  if [ "$yeni_surum" != "$head_version_icerik" ] && git rev-parse -q --verify "refs/tags/v$yeni_surum" >/dev/null 2>&1; then
     version_ihlal="v$yeni_surum zaten bir git tag'i olarak var — sürüm numarası yeniden kullanılamaz"
   fi
 

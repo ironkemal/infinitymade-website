@@ -53,7 +53,13 @@ services:
       - web
 
   calendar-api:
-    image: ghcr.io/ironkemal/infinitymade-website/calendar-api:latest
+    # O-25/R9 (12.09.2026): latest -> beta. publish-calendar-api.yml artık
+    # kanal etiketleri basıyor (onprem/REGISTER.md O-25) — latest hâlâ CI'dan
+    # düşmedi ama SaaS host'u kasıtlı olarak beta'ya geçirildi; Watchtower artık
+    # bunu izliyor. `latest` yalnız host DA geçtikten sonra CI'dan kaldırılır
+    # (sıra bozulursa Watchtower sessizce güncellemeyi bırakır — RELEASE-STANDARD.md §6.4).
+    # Host'ta uygulandı ve doğrulandı: 12.09.2026, docker inspect ile image=beta, healthy.
+    image: ghcr.io/ironkemal/infinitymade-website/calendar-api:beta
     container_name: calendar-api
     restart: unless-stopped
     pull_policy: always

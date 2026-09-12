@@ -143,15 +143,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ⚠️ O-25/R9: `:latest` bilinçli KALIYOR (bkz. publish-calendar-api.yml'deki
-      # aynı not — SaaS host geçişi tamamlanana kadar düşmez).
+      # ✅ O-25/R9 (12.09.2026): `:latest` DÜŞTÜ — bu image'ı hiçbir canlı host
+      # `:latest` etiketiyle çekmiyordu (yalnız on-prem kutunun `PRAXURA_FRONTEND_IMAGE`'ı
+      # zaten `:stable` diyordu), yani host geçişi ön koşulu burada yoktu.
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
             type=sha,prefix=,format=short
             type=raw,value=beta
             type=raw,value=${{ steps.version.outputs.version }},enable=${{ steps.version.outputs.release == 'true' }}
