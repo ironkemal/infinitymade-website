@@ -433,6 +433,29 @@ mkdir -p "$BACKUP_DIR"
 chmod 700 "$BACKUP_DIR" 2>/dev/null || true
 DB_NAME="$(env_wert POSTGRES_DB)"
 [ -n "$DB_NAME" ] || DB_NAME=postgres
+
+# onprem-Gegenlesen (12.09.2026, O-77'nin ilk sürümü commit edildikten SONRA):
+# RELEASE-STANDARD.md §4.3 madde 4.1 yedekten ÖNCE yer kontrolü istiyor.
+# `pg_dump` doğrudan Postgres'in kendi diskine yazıyor — %90 dolu bir diskte
+# yedek denemek diski doldurur, Postgres yazamaz hale gelir, praxis durur.
+# Bu, yedeksiz migration'dan DAHA KÖTÜ bir sonuçtur (§6.6'nın tarif ettiği ölüm
+# biçiminin ta kendisi). Yalnız DB boyutuna göre ölçüyor (storage arşivi henüz
+# yok, O-26'nın işi) — bu yüzden "2×" kuralı burada "2× DB boyutu + pay".
+DB_BOYUTU_BYTE="$(docker compose exec -T db psql -U postgres -d "$DB_NAME" -tAc 'SELECT pg_database_size(current_database());' 2>>"$LOG_FILE" | tr -d '[:space:]')"
+BOS_ALAN_KB="$(df -k "$BACKUP_DIR" 2>/dev/null | tail -n 1 | awk '{print $4}')"
+if [ -n "$DB_BOYUTU_BYTE" ] && [ -n "$BOS_ALAN_KB" ] && [ "$DB_BOYUTU_BYTE" -gt 0 ] 2>/dev/null; then
+  GEREKEN_KB=$(( (DB_BOYUTU_BYTE * 2 / 1024) + 102400 ))
+  if [ "$BOS_ALAN_KB" -lt "$GEREKEN_KB" ]; then
+    fehler "Yedek için yeterli disk yeri yok — güncelleme durduruldu" \
+      "${BOS_ALAN_KB} KB boş" "en az ${GEREKEN_KB} KB (2× DB boyutu + pay)" \
+      "RELEASE-STANDARD.md §6.6: dolu diskte yedek denemek Postgres'i de durdurabilir. Disk temizle (eski yedekler, 'docker system prune'), sonra yeniden dene. Bu geceki güncelleme atlandı, image'a dokunulmadı."
+    durumu_yaz "yedek_basarisiz"
+    exit 1
+  fi
+else
+  warn "Disk yeri / DB boyutu ölçülemedi (db henüz erişilemiyor olabilir) — yer kontrolü atlandı, asıl pg_dump denemesi zaten aşağıda başarısız olacak."
+fi
+
 YEDEK_DOSYA="$BACKUP_DIR/vor-${BUNDLE_SURUM:-unbekannt}-$(date -u +%Y%m%dT%H%M%SZ).dump"
 
 # `db` servisinin PGPASSWORD'u zaten kendi konteyner ortamında (compose'un
@@ -463,6 +486,25 @@ if [ ! -s "$YEDEK_DOSYA" ]; then
   durumu_yaz "yedek_basarisiz"
   exit 1
 fi
+
+# onprem-Gegenlesen: "boş değil" tek başına yeterli değil — yarım/kesilmiş bir
+# dump da bu testten geçer. `pg_restore -l` arşivin gerçekten okunabilir
+# olduğunu kanıtlıyor. Custom-format arşivler seek gerektirdiği için stdin'den
+# çalışmıyor (gerçek kutuda denendi: "could not open input file '-'") — dosya
+# önce konteynerin İÇİNE kopyalanıp orada listeleniyor.
+KONTROL_HEDEF="/tmp/praxura-yedek-kontrol.dump"
+if ! docker compose cp "$YEDEK_DOSYA" "db:$KONTROL_HEDEF" >>"$LOG_FILE" 2>&1 \
+   || ! docker compose exec -T db pg_restore -l "$KONTROL_HEDEF" >/dev/null 2>>"$LOG_FILE"; then
+  docker compose exec -T db rm -f "$KONTROL_HEDEF" >/dev/null 2>&1 || true
+  rm -f "$YEDEK_DOSYA"
+  geri_yukle
+  fehler "Yedek dosyası bozuk çıktı (pg_restore -l başarısız) — güncelleme durduruldu, dosyalar geri alındı" \
+    "pg_restore -l hata verdi (bkz. $LOG_FILE)" "geçerli, listelenebilir bir pg_dump arşivi" \
+    "Disk/ağ sorunu dump'ı yarım bırakmış olabilir. 'bash update.sh --jetzt' ile yeniden dene. Bu geceki güncelleme atlandı, image'a dokunulmadı."
+  durumu_yaz "yedek_basarisiz"
+  exit 1
+fi
+docker compose exec -T db rm -f "$KONTROL_HEDEF" >/dev/null 2>&1 || true
 
 chmod 600 "$YEDEK_DOSYA"
 ok "Yedek alındı: $(basename "$YEDEK_DOSYA") ($(du -h "$YEDEK_DOSYA" 2>/dev/null | cut -f1))"
