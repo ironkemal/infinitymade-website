@@ -72,10 +72,17 @@ const TABLES = {
     orderBy: 'bereich, gte, lt',
   },
   diagnosegruppen: {
+    // O-38 Gegenlesen (db-ustasi, 12.09.2026): `icd_enforcement` burada eksikti,
+    // 0011_seed_diagnosegruppen.sql'in ürettiği 57 satırın hepsi kutuda kolonun
+    // DEFAULT'una ('warn') düştü — UI1/UI2 (podologie) canlıda 'hard_before_dta'.
+    // Düzeltme: 0014_fix_diagnosegruppen_icd_enforcement.sql. Buraya eklendi ki
+    // bir sonraki `node tools/seed-generieren.mjs diagnosegruppen` aynı hatayı
+    // tekrar üretmesin.
     columns: ['code', 'label', 'untergruppen', 'icd10_codes', 'icd10_pflicht',
       'befundung_erlaubt', 'nagelspange_erlaubt', 'lokalisation_pflicht', 'bereich',
       'indikation', 'leitsymptomatik', 'hoechstmenge', 'icd_ranges', 'sort', 'aktiv',
-      'icd_accept', 'icd_exclude', 'icd_auto_select', 'icd_accept_unsicher'],
+      'icd_accept', 'icd_exclude', 'icd_auto_select', 'icd_accept_unsicher',
+      'icd_enforcement'],
     conflictKeys: ['code'],
     orderBy: 'code',
   },

@@ -10,7 +10,7 @@ steht in keinem Schema und lässt sich aus keinem Code herauslesen. Wenn es nich
 aufgeschrieben wird, ist es in sechs Monaten weg, und dann steht jemand vor einer
 Tabelle und fragt „brauchen wir die noch?" — ohne Antwort.
 
-**Stand:** 2026-09-11 · 89/89 Tabellen erfasst · Projekt `njvuclullotbksskpwgk`
+**Stand:** 2026-09-12 · 89/89 Tabellen erfasst · Projekt `njvuclullotbksskpwgk`
 (das Ops-Dashboard liegt in einem **anderen** Projekt, `farkaejociddtgqkusvm`, und ist
 hier **nicht** erfasst).
 
@@ -594,6 +594,56 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Status:** aktiv
 - **Wer:** Vorlagen-Modul im Dashboard; Backend rendert damit.
 
+### Erstbefüllung der Referenztabellen in der Box (O-38, 12.09.2026)
+
+> Gilt für die acht Tabellen darunter bzw. verstreut: `kostentraeger`,
+> `kostentraeger_annahmestellen`, `heilmittel_tarif`, `krankenkassen`,
+> `icd_sector_ranges`, `diagnosegruppen`, `heilmittel_katalog`, `icd10_titles`.
+
+**Die Frage, die sonst in sechs Monaten niemand beantworten kann:** in einer On-Prem-Box
+stehen in diesen Tabellen Daten, die **kein Anwender je eingegeben hat** und die in keinem
+`.from()`-Aufruf auftauchen. Sie kommen aus den Migrationen
+`api-backend/db/migrations/0006_seed_*.sql` bis `0013_seed_*.sql` (Commit `62aedd2`).
+Erzeugt wurden sie mit `tools/seed-generieren.mjs` als Dump der **Live**-Datenbank —
+das Skript ist ein Kopierwerkzeug, **keine** neue Autoritätsquelle. Die fachliche Herkunft
+jeder Tabelle steht unverändert in ihrem eigenen Eintrag (Kostenträgerdatei, ICD-10-GM,
+Heilmittel-Richtlinie …).
+
+- **Warum als normale Migration und nicht als eigener Seed-Runner:** `migrate.js` blieb
+  unangetastet. Weil dieselbe Datei auch gegen SaaS läuft, wo die Daten **schon** liegen,
+  ist durchgängig `ON CONFLICT … DO UPDATE` benutzt, nie ein nacktes `INSERT` und
+  **nirgends `DELETE`** — ein gelöschter `kostentraeger` risse über
+  `ON DELETE CASCADE` Tarife und Annahmestellen mit.
+- **Reihenfolge ist Pflicht:** `0006` (Eltern) vor `0007`/`0008` (Kinder mit FK auf
+  `kostentraeger.ik`). Geprüft 12.09.2026: kein Kind zeigt auf eine der 9 Mock-Zeilen,
+  die der Seed per `datensatz_status='echt'` ausspart — eine frische Box läuft also nicht
+  in eine FK-Verletzung.
+- **Jede Datei prüft sich selbst:** am Ende steht ein `DO $ … RAISE EXCEPTION`-Block, der
+  die erwartete Zeilenzahl kontrolliert. Die Box startet lieber gar nicht, als halb befüllt.
+- **`heilmittel_tarif`** führt `id` explizit mit und zieht danach `setval()` nach —
+  ohne das kollidierte der erste selbst angelegte Tarif mit einer Seed-`id`.
+- **`krankenkassen.ik_number` steht in jeder Zeile absichtlich auf `NULL`** (Begründung
+  im Eintrag `krankenkassen`: 4 von 16 Werten nachweislich der falschen Kasse zugeordnet).
+  Die Spalte fehlt zusätzlich in der `DO UPDATE SET`-Liste — dadurch überschreibt ein
+  erneuter Lauf **gegen SaaS** die dortigen Altwerte nicht. Beabsichtigt oder nicht: es ist
+  die sichere Richtung, und so soll es bleiben.
+- **`dta_schluessel` ist bewusst NICHT geseedet:** alle 94 Zeilen tragen
+  `source_version = 'Anlage 3 V22'`, gültig ist bis 01.02.2027 **V21**. Da
+  `source_version` Teil des Unique-Keys ist, würde der Seed ein falsches Versionsetikett
+  in eine prüfsummen-verriegelte Datei einfrieren. Kein Codepfad liest die Tabelle
+  (geprüft 12.09.2026), es fehlt der Box also nichts.
+- **Nicht mitkopierte Nebenspalten** (bewusst, ohne Verhaltensfolge): `heilmittel_tarif.created_at`,
+  `kostentraeger_annahmestellen.quelle_stand`/`updated_at`. In der Box tragen sie den
+  Installationszeitpunkt bzw. `NULL` statt der Lieferstände (`quelle_stand` live
+  2025-08-26 … 2026-10-01). Für die Abrechnung ohne Belang, für die Frage „aus welcher
+  Quartalslieferung stammt diese Zeile" schon — beim nächsten Kostenträger-Update mitdenken.
+  Die **einzige** Auslassung mit echter Verhaltensfolge war `diagnosegruppen.icd_enforcement` —
+  behoben in `0014`, siehe dort.
+- **Achtung:** `ON CONFLICT DO UPDATE` löst auf `kostentraeger` den Trigger
+  `kostentraeger_updated_at` aus; das mitgelieferte `updated_at` wird dabei durch
+  `now()` ersetzt. Harmlos, aber es heißt: der Seed kann den Originalstempel nicht
+  zurückschreiben.
+
 ### `kostentraeger`
 - **Warum:** Die §302-Seite der Kassen. Seit dem 06.09.2026 trägt sie zwei Dinge, die vorher gefehlt haben: die **echten** IK-Nummern aus der TP5-Kostenträgerdatei — und die **n:1-Beziehung**, ohne die eine IK allein nichts wert ist. Eine Versichertenkarte nennt fast nie die Stelle, die am Ende abrechnet: die DAK-Karte trägt `100167999`, das Geld holt man aber bei `105830016`. Genau diese Auflösung steckt in `abrechnender_kt_ik` / `ist_abrechnender_kt` (VKG-Verknüpfungsart 01).
 - **Seit:** 18.05.2026 · `v11_billing_a2_tables` (Seed: `v14_kostentraeger_mock_seed`) · Echtdaten-Struktur: 06.09.2026 · `kostentraeger_echtdaten_struktur` (Ops #264)
@@ -665,6 +715,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Seit:** 13.06.2026 · `create_diagnosegruppen` (ICD-Regeln: `v33`, Präfix-Bereinigung: `v36`)
 - **Status:** aktiv (Referenz)
 - **Wer:** über die RPC `search_diagnosen()`; `module/diagnosegruppen-regeln.js`, `module/verordnung-podo.js`.
+- **✅ `icd_enforcement` fehlte im Box-Seed — behoben (12.09.2026, `0014`):** `api-backend/db/migrations/0011_seed_diagnosegruppen.sql` schrieb nur 19 von 20 Spalten, `icd_enforcement` (`NOT NULL DEFAULT 'warn'`) fehlte. Live stehen 55 Zeilen auf `warn`, aber **`UI1`**/**`UI2`** (Unguis incarnatus, Podologie) auf `hard_before_dta` — `dgSperrenFuerIcd()` (`module/icd-dg-match.js:207`, ebenso `dashboard.js:16083`) sperrt den DTA-Bau **ausschließlich** bei `hard_before_dta`. In einer frischen Box wäre ein Unguis-incarnatus-Rezept mit falschem ICD nur gewarnt statt gesperrt worden — im zuerst ausgelieferten Fachbereich. `0006`–`0013` sind per Prüfsumme verriegelt, daher gezielte Korrektur in `0014_fix_diagnosegruppen_icd_enforcement.sql` (setzt nur `UI1`/`UI2`, gegen Wegwerf-Container validiert, idempotent). `tools/seed-generieren.mjs`'s Spaltenliste ebenfalls korrigiert, damit ein erneuter Dump den Fehler nicht wiederholt.
 
 ### `icd10_titles`
 - **Warum:** ICD-10-GM 2026, 16.905 Kodes. Der Anwender soll suchen können, ohne den Code zu kennen.

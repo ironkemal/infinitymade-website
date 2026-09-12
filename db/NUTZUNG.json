@@ -1,5 +1,5 @@
 {
- "erzeugt": "2026-09-11",
+ "erzeugt": "2026-09-12",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-09-11)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-10)",
@@ -4199,7 +4199,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "tools/seed-generieren.mjs"
+   ],
    "register": true,
    "status": "aktiv (Referenz)",
    "warum": "Diagnosegruppen der Heilmittel-Richtlinie samt ICD-Regeln — die Brücke zwischen Diagnose und zulässigem Heilmittel.",
@@ -10094,10 +10096,13 @@
    "ungeklaert": false,
    "leser": [],
    "schreiber": [],
-   "dateien": [],
+   "dateien": [
+    "api-backend/server.js",
+    "api-backend/setup/router.js"
+   ],
    "module": [],
    "sqlTreffer": 4,
-   "codeStumm": true
+   "codeStumm": false
   },
   {
    "name": "prescription_documents",
@@ -13073,6 +13078,7 @@
     "api-backend/billing/statistik/therapeuten.js",
     "api-backend/fix_db.js",
     "api-backend/server.js",
+    "api-backend/setup/router.js",
     "api-backend/test_schema.js",
     "api/admin/data.js",
     "api/dsgvo.js",
@@ -16309,11 +16315,6 @@
    "name": "praxura_migrations",
    "sql": 5,
    "status": "aktiv"
-  },
-  {
-   "name": "praxura_setup",
-   "sql": 4,
-   "status": "aktiv in der Box — **im SaaS bewusst inert** (siehe Achtung)"
   },
   {
    "name": "referral_drafts",
