@@ -63,6 +63,15 @@ services:
     container_name: calendar-api
     restart: unless-stopped
     pull_policy: always
+    # O-84 (12.09.2026): Bild bringt seit O-83 zwei innere Schichten mit
+    # (--max-old-space-size + PM2 --max-memory-restart, api-backend/Dockerfile
+    # CMD) — diese dritte, aeussere fehlte hier. Wert wie in
+    # onprem/docker-compose.yml (dieselbe Messung: Worker-Spitzen-RSS ~295 MB
+    # unter gleichzeitiger ~15MB-Rezept-Last). Hier dringlicher als in der Box:
+    # dieser VPS hat 3,7 GB, KEIN Swap, und teilt den Host mit Traefik/n8n/
+    # Umami/Umami-DB — der Kernel-OOM-Killer waehlt bei Druck den dicksten
+    # Prozess des HOSTS, nicht zwingend calendar-api selbst.
+    mem_limit: 1200m
     env_file:
       - ./.env.calendar
     labels:

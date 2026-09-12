@@ -195,7 +195,7 @@ yazılmadı — "yedek aldık ama geri yüklenebildiğini hiç denemedik" hâlâ
 kadarki en gerçekçi risk, ve SSH/rsync hedef sürücüsü henüz yok. Kanıt ve
 commit'ler: kendi maddesinde (O-26).
 
-✅ **O-83 kapandı (13.09.2026, O-26 bildirim-sonrası denetiminden çıktı, aynı
+✅ **O-83 kapandı (12.09.2026, O-26 bildirim-sonrası denetiminden çıktı, aynı
 gün kapatıldı) — `api` konteynerine üç katman: `--max-old-space-size=256`
 (V8 heap, işçi başına) · PM2 `--max-memory-restart 500M` (RSS, işçi başına,
 aşılırsa yalnız o işçi temiz yeniden başlar) · `mem_limit: 1200m` (konteyner,
@@ -205,6 +205,12 @@ zamanlar). Gerçek kutuda ölçüldü (işçi tepe RSS ~295 MB, `/api/rezept/upl
 eşzamanlı ~15 MB gövdelerle) ve yerel build ile doğrulandı (10×2 eşzamanlı ağır
 istek sonrası işçiler 221-252 MB'ta kaldı, ↺=0, `OOMKilled=false`, `/health`
 sağlıklı). Kanıt ve commit'ler: kendi maddesinde (O-83).
+
+🟡 **O-84 açıldı ve yarım kaldı (12.09.2026)** — SaaS `calendar-api` aynı `mem_limit`
+korumasını repo'da aldı ama **VPS'e uygulanmadı**: SSH ile canlıya dokunma denemesi
+oturumun auto-mode sınıflandırıcısı tarafından bilinçli olarak reddedildi ("Production
+Reads"). Uygulama tek satır + bir restart (`INFRASTRUCTURE.md` §3'teki desen) — **kullanıcı
+onayı/kendi SSH oturumu bekliyor**, kod tarafında eksik yok. Kendi maddesinde adım adım.
 
 1. **`restore.sh` — hiç yazılmayan, hiç test edilmeyen geri yükleme.** ★ Şimdi
    sıradaki 1. `backup.sh` künyeye üç parmak izi yazıyor ama onları OKUYAN/
@@ -3009,8 +3015,22 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Uygulanan üç katman** | `api-backend/Dockerfile` CMD: `pm2-runtime start server.js -i 2 --max-memory-restart 500M --node-args "--max-old-space-size=256 --import ./instrument.js"` · `onprem/docker-compose.yml` → `api`: `mem_limit: 1200m`. 500M (işçi RSS) ölçülen 295 MB tepenin ~1,7 katı — günlük işte tetiklenmemeli ama gerçek bir sızıntıyı yakalar. 1200m (konteyner) iki işçinin aynı anda 500M'a yaklaşması + pm2 daemon + page cache payını kapsar. Hedef donanım `install.sh`/`RELEASE-STANDARD.md`'nin ilan ettiği **2 vCPU/4 GB** müşteri kutusu — bizim 3,7 GB'lık VPS'imiz değil |
 | **Doğrulama (gerçek kutu)** | Değişiklik `api-backend/Dockerfile`'ı da etkilediği için (aynı imaj SaaS VPS'inde de koşuyor) push'tan önce yerel build ile test edildi: WSL'de `docker build` (onprem-bundle build-context olmadan, sadece runtime davranışı için — buildx bu kutuda yok), imaj `docker compose up -d --force-recreate api`'ye geçici olarak bağlandı. `ps aux` içeride üç bayrağın da gerçekten `pm2-runtime`'a ulaştığını doğruladı. `docker inspect` → `MemLimit=1258291200` (1200 MiB, doğru). 10 dalga × 2 eşzamanlı ~15 MB istek (ölçümdekinden daha ağır) sonunda: işçi RSS'leri 221-252 MB (500M eşiğinin altında, ↺=0 — yanlış-pozitif restart yok), konteyner tepesi 588 MB (1200m limitinin yarısı, bol pay), `OOMKilled=false`, `RestartCount=0`, ardından `/health` normal cevap verdi. Guardrail'lerin normal (hatta ağır) trafiği bozmadığı, gerçek pay bıraktığı doğrulandı |
 | **Bilinçli sınır** | PM2'nin `--max-memory-restart`'ının fiilen tetiklendiği (500M'ı gerçekten aşan bir işçi) bu turda üretilmedi — 20 isteklik ağır test bile 252 MB'da kaldı, yani eşiğin gerçek trafikte bol payı var. PM2'nin kendi bayrağının çalıştığını ayrıca kanıtlamak (üçüncü parti, köklü bir özellik) kapsam dışı bırakıldı. Ayrıca bu ölçüm WSL'de (swap'li) yapıldı — footprint/eşik kararı için geçerli (onprem onayladı), ama "gerçekten ölür mü" testi swap'siz gerçek donanım gerektirir, yapılmadı |
+| **Onprem bildirim-sonrası denetimi (12.09.2026) — iki ek bulgu** | (1) **Eşik "işçi başına aynı anda 1 ağır istek" varsayımına bağlı, sicilde yazılı değildi.** Ölçüm 2 eşzamanlı istek / 2 işçiydi. Gerçekte bir işçiye aynı anda 2 ağır gövde düşerse RSS kabaca ikiye katlanıp ~500M'a, yani tam eşiğe gelir — PM2 o işçiyi yeniden başlatır, aynı işçideki diğer meşru isteği de düşürür (yanlış-pozitif). Kapatması ucuz (aynı kutuda 6-8 eşzamanlı bir tur, tepe 350 MB'ı aşarsa eşik 500M→700M), ilk **ücretli** kutudan önce, `restore.sh`'tan sonra yapılacak. (2) **Katman sırası saf-JS büyümede tersine dönüyor.** Dockerfile yorumu "2. katman 1.'nin göremediğini yakalar" diyor — doğru, ama eksik olan tersi: 1. katman **yumuşak değil**. Saf JS heap sızıntısında heap 256'ya dayanır → `FATAL ERROR: Reached heap limit` → SIGABRT; o an RSS tipik olarak 350-400 MB, yani 500M eşiğinin altında — PM2'nin temiz restart'ı **hiç devreye girmez**, worker sert biçimde ölür (yine de kernel SIGKILL'inden iyi, `pg_advisory_lock`+SHA arkada korur). Destek tanısı için: `docker logs`'ta `Reached heap limit` satırı, `pm2 list` ↺ sütunu — `OOMKilled=false` ve konteyner restart'ı YOK göreceksin, bu normal, OOM sanma |
 | **Yan bağ** | Bu maddenin çözümü O-26'nın tetikleyicisini artırır (her PM2 yeniden başlatması `runMigrations()`'ı tekrar koşturur) — güvenlik `migrate.js:197-201`'deki `pg_advisory_lock` + SHA kontrolünden geliyor, yarış korunuyor (onprem doğruladı) |
-| **Durum** | ✅ **gelöst (13.09.2026)** — `api-backend/Dockerfile`, `onprem/docker-compose.yml`, `onprem/manifest.json` (yeniden üretildi). Kaynağı: O-26 bildirim-sonrası denetimi (onprem, 13.09.2026) — künye tutarlılık bug'ını (`88ec23c`) ararken bulundu |
+| **Durum** | ✅ **gelöst (12.09.2026)** — `api-backend/Dockerfile`, `onprem/docker-compose.yml`, `onprem/manifest.json` (yeniden üretildi). SaaS tarafının aynı korumayı almadığı bulgusu ayrı bir madde oldu → **O-84**. Kaynağı: O-26 bildirim-sonrası denetimi (onprem, 13.09.2026) — künye tutarlılık bug'ını (`88ec23c`) ararken bulundu |
+
+---
+
+### O-84 — SaaS `calendar-api` konteynerinde `mem_limit` yok (O-83'ün 3. katmanı yalnız kutuya kondu) 🟡 **kısmen gelöst**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | O-83, `api`/`calendar-api` imajına iki iç katman (`--max-old-space-size`, PM2 `--max-memory-restart`) kazandırdı — imajla giden bu ikisi hem kutuya hem SaaS'a otomatik ulaşıyor. Ama üçüncü, dış katman (`mem_limit`) yalnız `onprem/docker-compose.yml`'e yazıldı; SaaS'ın kendi compose dosyası atlandı |
+| **Nerede** | `api-backend/docker-compose.yml` → `calendar-api` servisi (VPS'teki gerçek dosya `/opt/calendar-api/docker-compose.yml` — bu repo kopyası yalnız **referans**, Watchtower ona dokunmaz, aynı dosyanın kendi yorumundaki 15.08.2026 dersi) |
+| **Tip** | F (dayanıklılık) |
+| **Kutuda ne olur** | Kutuda bir şey olmaz — bu **merkez** (SaaS VPS) tarafı. Risk kutununkinden **büyük**: VPS 3,7 GB, swap yok, aynı host'ta Traefik + n8n + Umami + umami-db paylaşımlı. Sınırsız `calendar-api` bellek basıncında kernel OOM-killer'ı **host'un en şişman sürecini** seçer, `calendar-api`'yi hedeflemek zorunda değil — Traefik ya da umami-db ölüp calendar-api hayatta kalabilir, teşhisi yanıltır |
+| **Çözüm** | Repo'ya `mem_limit: 1200m` (O-83'teki aynı ölçüme dayanıyor — worker tepe RSS ~295 MB, aynı `/api/rezept/upload` yükü) + VPS'te elle `docker compose up -d calendar-api` (Watchtower yalnız imajı çeker, compose dosyasını asla) |
+| **Durum** | 🟡 **kısmen gelöst (12.09.2026)** — repo tarafı yapıldı (`api-backend/docker-compose.yml`'e `mem_limit: 1200m` eklendi). **VPS tarafı elle uygulanmadı:** SSH ile VPS'e canlı-okuma denemesi oturumun auto-mode sınıflandırıcısı tarafından reddedildi ("Production Reads") — bu bilinçli bir koruma, atlatılmadı. Yani bugüne dek tam olarak bu dosyanın kendi 15.08.2026/08.11.2026 derslerindeki senaryo: repo'da düzeltildi, VPS'e henüz uygulanmadı. **Sonraki adım (kullanıcı onayıyla):** `ssh root@n8n.infinitymade.de "cd /opt/calendar-api && cp docker-compose.yml docker-compose.yml.bak-$(date +%Y%m%d-%H%M%S)"` ile yedekle, `mem_limit: 1200m` satırını `calendar-api` bloğuna ekle, `docker compose config >/dev/null && docker compose up -d calendar-api` ile uygula, `docker logs calendar-api --tail 20` ile sağlıklı açıldığını doğrula. Kaynağı: O-83'ün onprem bildirim-sonrası denetimi (12.09.2026) |
 
 ---
 
@@ -3067,7 +3087,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 83 madde** (O-01 … O-83). ⚠️ O-53 ve O-54'ün kendi `###` girdisi yok;
+**Toplam 84 madde** (O-01 … O-84). ⚠️ O-53 ve O-54'ün kendi `###` girdisi yok;
 O-01'in not bloğunda yaşıyorlar — kaybolmaya açıklar, ileride kendi girdilerine
 terfi etmeliler.
 
@@ -3075,8 +3095,8 @@ terfi etmeliler.
 |---|---|---|
 | `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · O-82 |
 | `geplant` | 15 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-29 · O-31 · O-43 |
-| 🟡 `kısmen gelöst` | 10 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 |
-| `gelöst` | 35 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · **O-83** |
+| 🟡 `kısmen gelöst` | 11 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · **O-84** |
+| `gelöst` | 35 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · O-83 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ⚠️ **O-26 `gelöst` yazıyor ama dar kapsamlı** (yalnız dizin sürücüsü, `restore.sh` yok) — kendi maddesine bak.

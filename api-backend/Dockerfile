@@ -63,7 +63,7 @@ USER app
 # real container). --node-args forwards --import to each forked cluster worker
 # so Sentry instruments every worker, not just the PM2 master.
 #
-# O-83 (13.09.2026): drei Schichten gegen unbegrenztes Wachstum, in dieser
+# O-83 (12.09.2026): drei Schichten gegen unbegrenztes Wachstum, in dieser
 # Reihenfolge feuernd (onprem-Konsultation) — Node sieht die Docker-cgroup-
 # Grenze NICHT von selbst (kein "mem_limit"-Bewusstsein), ohne die inneren
 # zwei Schichten garantiert `mem_limit` allein nur ein zufällig getimtes
