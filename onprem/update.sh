@@ -56,6 +56,16 @@ fehler() {
   log ""
 }
 
+# lib-health.sh's Vertrag verlangt eine fail(), die NICHT zurückkehrt (siehe
+# ihr Dateikopf) — für den einen Fall, den sie selbst auslöst (leere
+# Dienstliste), gibt es ohnehin nichts zum Zurückrollen. Sonst würde
+# lib-health.sh unter `set -e` mit "fail: command not found" abstürzen,
+# ohne Log, ohne Rollback (onprem-Gegenlesen, 12.09.2026).
+fail() {
+  fehler "$1" "$2" "$3" "$4"
+  exit 1
+}
+
 # 5 MB-Rotation, gleiche Disziplin wie install.log (§7G Kopf).
 if [ -f "$LOG_FILE" ] && [ "$(wc -c < "$LOG_FILE")" -gt 5242880 ]; then
   mv "$LOG_FILE" "$LOG_FILE.alt"
@@ -166,28 +176,56 @@ if [ -z "${PRAXURA_UPDATE_REEXEC:-}" ] && [ -f "$BUNDLE_TMP/bundle/update.sh" ];
   fi
 fi
 
+# ── Durum-dosyası yardımcıları ───────────────────────────────────────────────
+# İki AYRI dosya, bilinçli olarak: DATEIEN_SHA_FILE sapma-tespitinin tabanıdır
+# ve YALNIZ gerçek bir başarıda (sonuc=ok) yeniden yazılır. STAND_FILE ise
+# panel/insan için bir durum anlık görüntüsüdür ve her koşuda yazılır — ama
+# "dateien" alanını STAND_FILE'ın KENDİSİNDEN değil DATEIEN_SHA_FILE'dan
+# okuyarak gömer. Ayrım bilinçli: durak/konflikt/geri_alindi çıkışlarında
+# dosyalar ya hiç değişmedi ya da eskiye döndü — o yüzden sapma tabanı da
+# DEĞİŞMEMELİ. Tek dosya kullanıp her çıkışta küçük bir "dateien" yazsaydık
+# (ilk sürümde tam olarak bu oldu), taban bir konfliktte silinir, bir sonraki
+# koşu sapma kontrolünü atlar ve müşterinin elle düzenlediği dosyayı sessizce
+# ezerdi (onprem-Gegenlesen 12.09.2026 — J3'ün asıl amacını bozan bir hata).
+DATEIEN_SHA_FILE="$STAND_DIR/dateien-sha.json"
+
+dateien_sha_icerik() {
+  [ -f "$DATEIEN_SHA_FILE" ] && cat "$DATEIEN_SHA_FILE" || echo '{}'
+}
+onceki_sha() {
+  # $1 = yol. DATEIEN_SHA_FILE'dan okur (praxura-stand.json'dan DEĞİL).
+  [ -f "$DATEIEN_SHA_FILE" ] || return 1
+  grep -oE "\"$1\"[[:space:]]*:[[:space:]]*\"[0-9a-f]{64}\"" "$DATEIEN_SHA_FILE" 2>/dev/null | sed -E 's/^.*"([0-9a-f]{64})"$/\1/' || return 1
+}
+# $1=sonuc  $2=opsiyonel ekstra alanlar, "\"anahtar\": \"deger\"," biçiminde, sonunda virgülle
+durumu_yaz() {
+  local sonuc="$1" ekstra="${2:-}"
+  cat > "$STAND_FILE.tmp" <<EOF
+{
+  "surum": "${BUNDLE_SURUM:-}",
+  "sonuc": "$sonuc",
+  "zaman": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  ${ekstra}
+  "dateien": $(dateien_sha_icerik)
+}
+EOF
+  mv "$STAND_FILE.tmp" "$STAND_FILE"
+}
+
 # ── Schritt 3 — Durak-Tor ────────────────────────────────────────────────────
 if [ "$BUNDLE_DURAK" = "true" ]; then
   log "[3/10] durak=true — dieses Update erfordert einen manuellen Schritt. Nichts wird angefasst."
   grep -A20 '"elle_adim"' "$MANIFEST" | tee -a "$LOG_FILE" >&2 || true
-  cat > "$STAND_FILE.tmp" <<EOF
-{"surum":"$BUNDLE_SURUM","sonuc":"durak","zaman":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
-EOF
-  mv "$STAND_FILE.tmp" "$STAND_FILE"
+  durumu_yaz "durak"
   exit 0
 fi
 
 # ── Schritt 4/5 — Diskteki hâlle karşılaştır + sapma kontrolü (J3) ──────────
-# "Bizim" dosyalar: .env HARİÇ hepsi. Önceki koşunun praxura-stand.json'ı bir
-# taban (bizim yazdığımız sha256) tutuyorsa, disk o tabandan sapmışsa müşteri
-# elle değiştirmiştir → dokunma, .neu bırak, güncellemeyi tümden durdur.
+# "Bizim" dosyalar: .env HARİÇ hepsi. DATEIEN_SHA_FILE bir taban (bizim
+# yazdığımız sha256) tutuyorsa, disk o tabandan sapmışsa müşteri elle
+# değiştirmiştir → dokunma, .neu bırak, güncellemeyi tümden durdur.
 ilk_kosu=1
-onceki_sha() {
-  # $1 = yol. praxura-stand.json'daki "dateien" nesnesinden okur.
-  [ -f "$STAND_FILE" ] || return 1
-  grep -oE "\"$1\"[[:space:]]*:[[:space:]]*\"[0-9a-f]{64}\"" "$STAND_FILE" 2>/dev/null | sed -E 's/^.*"([0-9a-f]{64})"$/\1/' || return 1
-}
-[ -f "$STAND_FILE" ] && ilk_kosu=0
+[ -f "$DATEIEN_SHA_FILE" ] && ilk_kosu=0
 
 sapma_bulundu=""
 degisen_dosyalar=""
@@ -223,15 +261,12 @@ if [ -n "$sapma_bulundu" ]; then
     hedef="$SCRIPT_DIR/$yol"
     [ -f "$hedef" ] && cp "$hedef" "$hedef.neu.bekliyor" 2>/dev/null || true
   done
-  cat > "$STAND_FILE.tmp" <<EOF
-{"surum":"${BUNDLE_SURUM:-}","sonuc":"konflikt","zaman":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","catisma_dosyalari":"$sapma_bulundu"}
-EOF
-  mv "$STAND_FILE.tmp" "$STAND_FILE"
+  durumu_yaz "konflikt" "\"catisma_dosyalari\": \"$sapma_bulundu\","
   exit 1
 fi
 
 if [ "$ilk_kosu" -eq 1 ]; then
-  log "  İlk çalıştırma — önceki bir durum dosyası yok, sapma kontrolü bu turda atlandı."
+  log "  İlk çalıştırma — önceki bir sapma tabanı yok, sapma kontrolü bu turda atlandı."
 fi
 
 if [ -z "$degisen_dosyalar" ]; then
@@ -239,6 +274,47 @@ if [ -z "$degisen_dosyalar" ]; then
 else
   log "[4-7/10] Değişen dosyalar:$degisen_dosyalar"
 fi
+
+# ── Schritt 6 — Anlık görüntü (ÖNCE .env birleştirmesinden!) ────────────────
+# ⚠️ Sıra kritik: anlık görüntü .env'in birleştirme ÖNCESİ hâlini yakalamalı.
+# İlk sürümde bu tersti (önce birleştir, sonra anlık görüntü al) — bir geri
+# alma o zaman zaten YÜKSELTİLMİŞ .env'i "eski" diye geri yazıyordu, `up -d`
+# aynı bozuk VERSION_*'ı tekrar çekiyordu ve ikinci sağlık kontrolü de düşüyordu
+# (onprem-Gegenlesen 12.09.2026 — J5'in kendi sırası hatalıydı, betik tasarıma
+# sadıktı, tasarım yanlıştı; düzeltme burada, sırayla).
+SNAPSHOT_DIR="$STAND_DIR/$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$SNAPSHOT_DIR"
+for yol in $degisen_dosyalar; do
+  hedef="$SCRIPT_DIR/$yol"
+  if [ -f "$hedef" ]; then
+    mkdir -p "$SNAPSHOT_DIR/$(dirname "$yol")"
+    cp "$hedef" "$SNAPSHOT_DIR/$yol"
+  fi
+done
+cp "$ENV_FILE" "$SNAPSHOT_DIR/.env" 2>/dev/null || true
+# Rotasyon: yalnız son 3 anlık görüntü.
+ls -1dt "$STAND_DIR"/2*/ 2>/dev/null | tail -n +4 | xargs -r rm -rf
+
+# Snapshot'tan (dizin yapısını KORUYARAK) geri yükler — düz `basename` glob'u
+# DEĞİL: ilk sürüm `for f in "$SNAPSHOT_DIR"/*` + `[ -f "$f" ]` kullanıyordu,
+# bu alt dizinleri (volumes/api/kong.yml, volumes/db/*.sql) sessizce ATLIYORDU
+# — bir geri alma compose'u eskiye döndürüp init SQL'lerini YENİ bırakırdı,
+# tam olarak J3'ün yasakladığı "yarım uygulanmış paket" hâli (onprem-Gegenlesen
+# 12.09.2026). Bu turda hiç değişmemiş (henüz oluşmamış) bir dosya varsa siler
+# — o dosya update'ten ÖNCE yoktu, "geri" hâli budur.
+geri_yukle() {
+  cp "$SNAPSHOT_DIR/.env" "$ENV_FILE" 2>/dev/null || true
+  for yol in $degisen_dosyalar; do
+    kaynak="$SNAPSHOT_DIR/$yol"
+    hedef="$SCRIPT_DIR/$yol"
+    if [ -f "$kaynak" ]; then
+      mkdir -p "$SCRIPT_DIR/$(dirname "$yol")"
+      cp "$kaynak" "$hedef"
+    else
+      rm -f "$hedef"
+    fi
+  done
+}
 
 # ── .env birleştirme (J4) — anahtar bazında, metin merge DEĞİL ─────────────
 TABAN_ENV="$STAND_DIR/env.taban.template"
@@ -250,7 +326,12 @@ anahtarlari_oku() {
   grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$1" 2>/dev/null | cut -d= -f1
 }
 deger_oku() {
-  # $1 = dosya, $2 = anahtar
+  # $1 = dosya, $2 = anahtar. Anahtar yoksa boru hattı `grep` (1) döner ve
+  # çağıran `|| echo '__yok__'` ile yakalar — bu ANCAK dosyanın başındaki
+  # `set -euo pipefail` sayesinde doğru çalışır (onprem-Gegenlesen 12.09.2026):
+  # pipefail olmadan boru hattının SON komutu (`cut`, hep 0) sonucu belirler,
+  # eksik anahtar sessizce boş dizgi döner ve J4'ün "yeni anahtar" dalı hiç
+  # tetiklenmezdi.
   grep -E "^$2=" "$1" 2>/dev/null | head -1 | cut -d= -f2-
 }
 
@@ -285,21 +366,13 @@ else
   log "  İlk çalıştırma — .env için taban şablonu henüz yok, bu turda .env birleştirmesi atlandı."
 fi
 
-# ── Schritt 6 — Anlık görüntü (son 3 tutulur) ───────────────────────────────
-SNAPSHOT_DIR="$STAND_DIR/$(date -u +%Y%m%dT%H%M%SZ)"
-mkdir -p "$SNAPSHOT_DIR"
-for yol in $degisen_dosyalar; do
-  hedef="$SCRIPT_DIR/$yol"
-  if [ -f "$hedef" ]; then
-    mkdir -p "$SNAPSHOT_DIR/$(dirname "$yol")"
-    cp "$hedef" "$SNAPSHOT_DIR/$yol"
-  fi
-done
-cp "$ENV_FILE" "$SNAPSHOT_DIR/.env" 2>/dev/null || true
-# Rotasyon: yalnız son 3 anlık görüntü.
-ls -1dt "$STAND_DIR"/2*/ 2>/dev/null | tail -n +4 | xargs -r rm -rf
-
 # ── Schritt 7 — Yeni dosyaları yaz ──────────────────────────────────────────
+# ⚠️ TABAN_ENV (bir sonraki koşunun .env karşılaştırma tabanı) burada
+# YAZILMIYOR — yalnız gerçek bir başarıda (aşağıda, sonuc=ok). İlk sürümde
+# burada yazılıyordu: bir geri alma sonrası taban "bunu uyguladık" derdi,
+# oysa uygulanmamıştı; ertesi gece bizim==taban eşleşir, yükseltme bir daha
+# HİÇ denenmezdi — kutu sessizce eski sürümde kalırdı (onprem-Gegenlesen
+# 12.09.2026).
 for yol in $degisen_dosyalar; do
   kaynak="$BUNDLE_TMP/bundle/$yol"
   hedef="$SCRIPT_DIR/$yol"
@@ -308,20 +381,13 @@ for yol in $degisen_dosyalar; do
     cp "$kaynak" "$hedef"
   fi
 done
-cp "$BIZIM_ENV" "$TABAN_ENV" # bir sonraki koşunun tabanı
 
 # ── İki kapı (Schritt 7b) — konteynerlere dokunmadan, bedava ───────────────
 if ! docker compose config -q 2>>"$LOG_FILE"; then
   fehler "Yeni compose dosyası geçersiz" "'docker compose config -q' başarısız" "geçerli bir YAML" \
     "Değişiklikler geri alınıyor, kutu eski hâliyle çalışmaya devam ediyor."
-  cp "$SNAPSHOT_DIR/.env" "$ENV_FILE" 2>/dev/null || true
-  for f in "$SNAPSHOT_DIR"/*; do
-    [ -f "$f" ] && [ "$(basename "$f")" != ".env" ] && cp "$f" "$SCRIPT_DIR/$(basename "$f")"
-  done
-  cat > "$STAND_FILE.tmp" <<EOF
-{"surum":"${BUNDLE_SURUM:-}","sonuc":"geri_alindi","zaman":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","sebep":"compose_config_gecersiz"}
-EOF
-  mv "$STAND_FILE.tmp" "$STAND_FILE"
+  geri_yukle
+  durumu_yaz "geri_alindi" "\"sebep\": \"compose_config_gecersiz\","
   exit 1
 fi
 
@@ -340,33 +406,31 @@ done
 if [ -n "$eksik_mount" ]; then
   fehler "Bind-mount kaynağı diskte dosya olarak yok (O-72)" "$eksik_mount" "her kaynak bir dosya olarak var" \
     "Docker aksi halde sessizce boş bir DİZİN yaratırdı — O-49'un webhooks.sql dersinin aynısı. Değişiklikler geri alınıyor."
-  cp "$SNAPSHOT_DIR/.env" "$ENV_FILE" 2>/dev/null || true
-  for f in "$SNAPSHOT_DIR"/*; do
-    [ -f "$f" ] && [ "$(basename "$f")" != ".env" ] && cp "$f" "$SCRIPT_DIR/$(basename "$f")"
-  done
-  cat > "$STAND_FILE.tmp" <<EOF
-{"surum":"${BUNDLE_SURUM:-}","sonuc":"geri_alindi","zaman":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","sebep":"eksik_mount_kaynagi"}
-EOF
-  mv "$STAND_FILE.tmp" "$STAND_FILE"
+  geri_yukle
+  durumu_yaz "geri_alindi" "\"sebep\": \"eksik_mount_kaynagi\","
   exit 1
 fi
 ok "İki kapı da geçti (compose geçerli, bind-mount kaynakları yerinde)"
 
 # ── Schritt 8 — pull + up ───────────────────────────────────────────────────
+# ⚠️ `up -d` burada `set -e`'ye bırakılmaz (`|| true` ile yumuşatılır): image
+# geçersizse (ör. bozuk bir :stable etiketi) komut doğrudan başarısız olur ve
+# script hiç rollback denemeden çıkardı — Schritt 9'un "başarısızsa geri al"
+# mantığı hiç çalışmazdı (onprem-Gegenlesen 12.09.2026). Başarısızlık burada
+# da aynı geri-alma+yeniden-dene yoluna düşer, aşağıdaki `if` üzerinden.
 log "[8/10] docker compose pull && up -d --remove-orphans"
 docker compose pull >>"$LOG_FILE" 2>&1 || true
-docker compose up -d --remove-orphans >>"$LOG_FILE" 2>&1
+ilk_up_basarili=1
+docker compose up -d --remove-orphans >>"$LOG_FILE" 2>&1 || ilk_up_basarili=0
+[ "$ilk_up_basarili" -eq 1 ] || warn "'docker compose up -d' başarısız oldu — sağlık kontrolüne girmeden geri alma denenecek"
 
 # ── Schritt 9 — Sağlık ───────────────────────────────────────────────────────
 log "[9/10] Sağlık kontrolü (lib-health.sh)"
-if warte_auf_gesundheit 180; then
+if [ "$ilk_up_basarili" -eq 1 ] && warte_auf_gesundheit 180; then
   sonuc="ok"
 else
   warn "Sağlıklı olmadı — dosyalar geri alınıyor ve yeniden deneniyor"
-  cp "$SNAPSHOT_DIR/.env" "$ENV_FILE" 2>/dev/null || true
-  for f in "$SNAPSHOT_DIR"/*; do
-    [ -f "$f" ] && [ "$(basename "$f")" != ".env" ] && cp "$f" "$SCRIPT_DIR/$(basename "$f")"
-  done
+  geri_yukle
   docker compose up -d --remove-orphans >>"$LOG_FILE" 2>&1 || true
   if warte_auf_gesundheit 120; then
     sonuc="geri_alindi"
@@ -379,30 +443,35 @@ else
 fi
 
 # ── Schritt 10 — Durum dosyası ───────────────────────────────────────────────
-{
-  printf '{\n'
-  printf '  "surum": "%s",\n' "${BUNDLE_SURUM:-}"
-  printf '  "sonuc": "%s",\n' "$sonuc"
-  printf '  "zaman": "%s",\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  if [ -n "$catisan_anahtarlar" ]; then
-    printf '  "env_catismalari": "%s",\n' "$catisan_anahtarlar"
-  fi
-  printf '  "dateien": {'
-  ilk=1
-  while IFS=$'\t' read -r yol _; do
-    [ -z "$yol" ] && continue
-    [ "$yol" = ".env.template" ] && continue
-    hedef="$SCRIPT_DIR/$yol"
-    [ -f "$hedef" ] || continue
-    sha="$(sha256sum "$hedef" | awk '{print $1}')"
-    [ "$ilk" -eq 1 ] || printf ','
-    ilk=0
-    printf '\n    "%s": "%s"' "$yol" "$sha"
-  done < <(grep -oE '"yol"[[:space:]]*:[[:space:]]*"[^"]+"' "$MANIFEST" | sed -E 's/.*"([^"]+)"$/\1/' | while read -r y; do printf '%s\t\n' "$y"; done)
-  printf '\n  }\n'
-  printf '}\n'
-} > "$STAND_FILE.tmp"
-mv "$STAND_FILE.tmp" "$STAND_FILE"
+# DATEIEN_SHA_FILE (sapma tabanı) ve TABAN_ENV (.env birleştirme tabanı)
+# YALNIZ burada, gerçek bir "ok" sonrasında güncellenir — "geri_alindi" ve
+# "bakim_modu" ikisini de OLDUĞU GİBİ bırakır (dosyalar zaten eskiye döndü,
+# taban da eski kalmalı).
+if [ "$sonuc" = "ok" ]; then
+  {
+    printf '{'
+    ilk=1
+    while IFS=$'\t' read -r yol _; do
+      [ -z "$yol" ] && continue
+      [ "$yol" = ".env.template" ] && continue
+      hedef="$SCRIPT_DIR/$yol"
+      [ -f "$hedef" ] || continue
+      sha="$(sha256sum "$hedef" | awk '{print $1}')"
+      [ "$ilk" -eq 1 ] || printf ','
+      ilk=0
+      printf '\n  "%s": "%s"' "$yol" "$sha"
+    done < <(grep -oE '"yol"[[:space:]]*:[[:space:]]*"[^"]+"' "$MANIFEST" | sed -E 's/.*"([^"]+)"$/\1/' | while read -r y; do printf '%s\t\n' "$y"; done)
+    printf '\n}\n'
+  } > "$DATEIEN_SHA_FILE.tmp"
+  mv "$DATEIEN_SHA_FILE.tmp" "$DATEIEN_SHA_FILE"
+  cp "$BIZIM_ENV" "$TABAN_ENV"
+fi
+
+if [ -n "$catisan_anahtarlar" ]; then
+  durumu_yaz "$sonuc" "\"env_catismalari\": \"$catisan_anahtarlar\","
+else
+  durumu_yaz "$sonuc"
+fi
 
 log "[10/10] Bitti — sonuç: $sonuc"
 [ "$sonuc" = "ok" ] || [ "$sonuc" = "geri_alindi" ]

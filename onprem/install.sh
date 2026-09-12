@@ -458,6 +458,28 @@ chmod +x "$SCRIPT_DIR/update.sh" "$SCRIPT_DIR/lib-health.sh"
 mkdir -p "$SCRIPT_DIR/.praxura-stand"
 cp "$ENV_TEMPLATE" "$SCRIPT_DIR/.praxura-stand/env.taban.template"
 
+# Sapma-Tabanı (§7J J3) SOFORT aus dem committeten manifest.json säen — sonst
+# hätte der erste update.sh-Lauf gar keine Basis ("ilk_kosu") und würde eine
+# Kundenänderung, die zwischen Installation und erstem Update passiert, beim
+# ersten Update stillschweigend überschreiben (onprem-Gegenlesen 12.09.2026).
+# manifest.json liegt bereits fertig neben install.sh (derselbe onprem/-Baum,
+# keine Bundle-Extraktion nötig — J10).
+if [ -f "$SCRIPT_DIR/manifest.json" ]; then
+  {
+    printf '{'
+    ilk=1
+    while IFS=$'\t' read -r yol sha; do
+      [ -z "$yol" ] && continue
+      [ "$yol" = ".env.template" ] && continue
+      [ "$ilk" -eq 1 ] || printf ','
+      ilk=0
+      printf '\n  "%s": "%s"' "$yol" "$sha"
+    done < <(grep -oE '"yol"[[:space:]]*:[[:space:]]*"[^"]+"[[:space:]]*,[[:space:]]*"sha256"[[:space:]]*:[[:space:]]*"[0-9a-f]{64}"' "$SCRIPT_DIR/manifest.json" \
+      | sed -E 's/"yol"[[:space:]]*:[[:space:]]*"([^"]+)".*"sha256"[[:space:]]*:[[:space:]]*"([0-9a-f]{64})"/\1\t\2/')
+    printf '\n}\n'
+  } > "$SCRIPT_DIR/.praxura-stand/dateien-sha.json"
+fi
+
 if command -v systemctl >/dev/null 2>&1; then
   cat > /etc/systemd/system/praxura-update.service <<EOF
 [Unit]

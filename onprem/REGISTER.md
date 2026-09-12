@@ -2453,6 +2453,71 @@ O-72/O-73 buna göre güncellendi. Gerçek koşu için hâlâ dışarıda olan i
 kadar `update.sh` bir kutuda **koşabilir** (test edildi) ama bir customer'ın gerçekten
 `docker pull`'layabileceği bir `:stable` etiketi henüz yok.
 
+### Gegenlesen — uygulama okundu, beş eksik bulundu ve kapatıldı (12.09.2026)
+
+> Yukarıdaki testler ileri gitme yolunu (başarı, `.env` birleştirme, sapma tespiti,
+> kendi-kendini-güncelleme) doğruladı ama **geri alma yolunu gerçek bir başarısızlıkla
+> hiç tetiklemedi** — üç senaryonun hiçbiri gerçekten `sonuc:"geri_alindi"` yaşamadı.
+> onprem ajanına ikinci bir okuma turu yaptırıldı, beş gerçek eksik bulundu; hepsi
+> düzeltildi ve bu kez **gerçek bir geri almayla** (Kong'a bilinçli bozuk bir eklenti
+> adı yazılıp `docker compose up -d`'nin doğrudan başarısız olması sağlanarak) yeniden
+> test edildi.
+
+1. **Geri alma yalnız kök dosyaları geri yüklüyordu, alt dizinleri değil.** İlk sürüm
+   `for f in "$SNAPSHOT_DIR"/*` + `[ -f "$f" ]` kullanıyordu — anlık görüntü alt dizin
+   yapısını koruyordu (`volumes/api/kong.yml` → `$SNAPSHOT_DIR/volumes/api/kong.yml`),
+   döngü `[ -f ]` testinde dizini eleyip **atlıyordu**. Sağlık kapısı düşerse compose
+   eskiye dönerdi ama Kong'un `kong.yml`'i **yeni (bozuk) hâlinde kalırdı** — J3'ün
+   "yarım uygulanmış paket hiç uygulanmamıştan kötüdür" cümlesinin tam yasakladığı hâl.
+   Düzeltme: `geri_yukle()` artık `degisen_dosyalar` listesi üzerinden yürüyor (glob
+   değil), her yol için snapshot'ta varsa geri kopyalıyor, yoksa (dosya bu turda yeni
+   eklenmişse) siliyor.
+2. **`.env` anlık görüntüsü birleştirmeden SONRA alınıyordu.** J5'in kendi sırası
+   (adım 5 = birleştir, adım 6 = anlık görüntü) bunu yapısal olarak imkânsız
+   kılıyordu — bir geri alma zaten YÜKSELTİLMİŞ `.env`'i "eski" diye geri yazardı,
+   `up -d` aynı bozuk `VERSION_*`'ı tekrar çeker, ikinci sağlık kontrolü de düşerdi.
+   Kusur betikte değil **tasarımdaydı**; düzeltme J5'in sırasını tersine çevirdi:
+   anlık görüntü artık `.env` birleştirmesinden ÖNCE alınıyor.
+3. **Yeni `.env` tabanı (`env.taban.template`) kapılardan önce yazılıyordu.** Geri
+   alma sonrası taban "bunu uyguladık" derdi, oysa uygulanmamıştı — ertesi gece
+   `bizim == taban` eşleşir, yükseltme bir daha **hiç** denenmezdi, kutu sessizce
+   eski sürümde kalırdı. Düzeltme: `env.taban.template` (ve aşağıdaki 5. maddeyle
+   birlikte `dateien-sha.json`) YALNIZ gerçek bir `sonuc:"ok"`'ta güncelleniyor.
+4. **`durak`/`konflikt` çıkışları sapma tabanını siliyordu.** Durum dosyası her
+   çıkışta küçük, `dateien` alanı olmayan bir JSON'la yeniden yazılıyordu — bir
+   sonraki koşu tabanı boş bulur, sapma kontrolünü **atlar**, müşterinin elle
+   düzenlediği dosyayı sessizce ezerdi. En ciddi bulgu buydu: bir çakışma, bir
+   sonraki koşuda J3'ün asıl korumasını kapatıyordu. Düzeltme, yapısal: sapma
+   tabanı artık `praxura-stand.json`'ın İÇİNDE değil **ayrı bir dosyada**
+   (`.praxura-stand/dateien-sha.json`) tutuluyor ve YALNIZ `sonuc:"ok"`'ta
+   yeniden yazılıyor; `praxura-stand.json` (panel/insan için durum anlık görüntüsü)
+   her koşuda yazılır ama `dateien` alanını bu ayrı dosyadan **okuyarak** gömer —
+   asla kendi başına üretmez.
+5. **`lib-health.sh` `fail()` çağırıyordu, `update.sh` yalnız `fehler()` tanımlıyordu.**
+   İsim uyuşmazlığı: `docker compose config --services` boş dönerse
+   `fail: command not found` + `set -e` ile, hiçbir log/rollback olmadan çöküş.
+   Düzeltme: `update.sh`'a `fail()` eklendi (`fehler()`'i çağırıp `exit 1` eder —
+   bu özel durumda geri alınacak bir şey yok zaten, sert çıkış doğru).
+
+**Ayrıca (aynı turda, robustluk):** `docker compose up -d` artık `set -e`'ye
+bırakılmıyor — bozuk bir image/etiket komutu doğrudan başarısız kılarsa (yalnız
+sağlık kontrolü zaman aşımına uğraması değil), script artık çökmeden aynı
+geri-alma+yeniden-dene yoluna düşüyor. **install.sh Schritt 15** artık
+`dateien-sha.json`'ı kurulum anında committen `manifest.json`'dan **sağıyor** —
+yoksa ilk `update.sh` koşusu hiçbir taban bulamaz (`ilk_kosu=1`), sapma kontrolü o
+turda atlanır ve kurulumla ilk güncelleme arasında müşterinin elle yaptığı bir
+değişiklik fark edilmeden ezilebilirdi.
+
+**Doğrulama:** Kong'un `kong.yml`'ine bilinçli bozuk bir eklenti adı + aynı anda
+`docker-compose.yml`/`.env.template` değişikliği içeren bir "vbad" image üretilip
+gerçek kutuya uygulandı: `docker compose up -d` **doğrudan başarısız oldu**
+(çökme yerine doğru şekilde yakalandı), geri alma çalıştı — `docker-compose.yml`
+**ve** `volumes/api/kong.yml` (alt dizin!) ikisi de doğru geri yüklendi, `.env`'in
+`VERSION_KONG`'u yükseltme-ÖNCESİ değerine döndü, `dateien-sha.json`/
+`env.taban.template` hiç oluşmadı (ilk koşu olduğu için), kutu 8/8 healthy'e geri
+döndü, `sonuc:"geri_alindi"`. Ayrı bir turda gerçek bir başarı da yeniden
+doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıldı.
+
 ### O-72 — Compose'da bind-mount kaynağı yoksa Docker **dizin** yaratır; hata bambaşka yerden gelir
 
 | Alan | İçerik |
