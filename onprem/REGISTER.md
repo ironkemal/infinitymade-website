@@ -16,7 +16,7 @@
 
 ---
 
-## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 11.09.2026)
+## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 12.09.2026 akşamı)
 
 > Bu blok sicilin **kısa yolu**. Amacı, yeni bir oturumun 1000 satır okumadan
 > "neredeyiz, sıradaki ne, nereye basmam" sorusuna cevap bulması. Ayrıntı her
@@ -95,27 +95,55 @@ karşı ölçüldü (`docker compose down -v` + veri dizini silinmiş **tamamen 
 bir kurulumla, iki kez), üç kapı da (`onprem`/`namen`/`onprem-volumes`) yeşil.
 Toplam **70** madde, bugün **7'si** `offen`/`geplant`'tan `gelöst`'e geçti.
 
-**Nerede duruyoruz (11.09.2026):** kutunun compose paketi **var ve çalıştığı ölçüldü**
-(`onprem/docker-compose.yml` + `.env.template` + `NOTICE.md` + `volumes/`; commit'ler
-`b2fdbb8` ve `c602f50`). Yığın 11 fremd konteynerden **6**'ya indi, boşta ≈1,65 GB
-(bizim `api` dahil). Migration zinciri kutuda **kendi kendine** koştu
-(`✓ 0000_baseline.sql`), 11 self-check sayacının 11'i canlıyla birebir.
+**12.09.2026 (akşam) — doğrulama turu, sicilin kendisi sayıldı.** Gün içinde
+**14 commit** indi; sicilin gövdesi (O-maddeleri) hepsini doğru taşıyordu, ama
+**üst blok ve §9 tablosu geriden geliyordu** — üçüncü kez aynı hata. Bu turda
+sayılarak düzeltildiler. Günün kapanışları: **O-25** (kanal/etiket, R0-R12 +
+SaaS host geçişi) · **O-38** (8 referans tablosu seed edildi, `0006`-`0013`) ·
+**O-41** · **O-45 (b)** · **O-48** (konsey: Kong kalıyor) · **O-49** · **O-50** ·
+**O-52** · **O-53** · **O-57** · **O-58 (a)** · **O-59** · **O-62** · **O-63** ·
+**O-64** · **O-65** · **O-68**-**O-74** · **O-76**.
 
-**Bugün kanıtlanan:** şema kutuya kendi kendine gidiyor (O-39) · signup → trigger →
-profil çalışıyor · apikey'siz PostgREST **401** (Kong'un key-auth'ı gerçek) ·
-`praxura_migrations` PostgREST'ten okunamıyor (42501) · kaldırılan rotalar 404 ·
-veritabanından dışarı çıkan çağrı yok (`net.http_post` → 0 fonksiyon).
+**Dört yeni madde açıldı** (§7K) — hepsi bu turun işlerinin **kendi yazılı açık
+kalemlerinden** çıktı, yani zaten biliniyorlardı ama **sahipsizdiler**:
+**O-77** (gece otomatik güncelleme migration'ları **yedeksiz** koşturuyor — kurulu
+kutuda bugün canlı, `RELEASE-STANDARD.md` §4.3'ün açık ihlali) · **O-78**
+(ICD-10-GM'in § 63 UrhG Quellenangabe'si pakette yok) · **O-79**
+(`heilmittel_katalog`'un besleme zinciri kapısız, SEED-11) · **O-80**
+(`dta_schluessel` seed dışında). Toplam **80** madde.
 
-**Kanıtlanmayan — abartılmasın:** ~~kutuda arayüz yok~~ → 11.09 akşamı **inşa edildi ve
-ölçüldü** (yukarı bak); ama arayüz **tam değil** (O-57: üç sayfa stilsiz) ve kutuya
-**yalnız `SITE_URL` host adıyla** ulaşılıyor (O-59) · **kurulum betiği var ama kutuda
-hiç koşmadı** (`install.sh`, 15 adım, iki tur gegenlesen; Ubuntu'da uçtan uca
-**çalıştırılmadı** — §7G üçüncü tur) · **seed yok**
-(kutu doğru ama boş kalkıyor, `krankenkassen` → `[]`, O-38) · **yedek yok** (O-26) ·
-lisans/yetki tarafına hiç dokunulmadı (O-31/O-33). Yani bugünkü paket **çalışan bir
-test yığını**, kurulabilir ürün değil.
+⚠️ **Turun dersi:** "açık kalem" diye commit mesajına ya da bir maddenin içine
+yazılan iş, **O-numarası almadığı sürece yok sayılır** — §9'da görünmez, sıradaki
+iş listesine giremez, altı ay sonra yeniden keşfedilir. Sicil kural 5 (her bulgunun
+bir sahibi olur) tam olarak bunun için yazılmıştı.
 
-**Sıradaki iş — sırayla (12.09.2026 gece güncellemesi — önceki liste bayattı, bkz. altındaki not):**
+**Nerede duruyoruz (12.09.2026 akşamı):** kutu **kurulabilir**. `install.sh` ilk kez
+gerçek bir Ubuntu 24.04'te (WSL2, kendi systemd'si + kendi Docker Engine'i, GHCR'den
+çekilen gerçek `:beta` image'ları) uçtan uca koştu ve **16/16 adım geçti**. Kutunun
+artık şunları var: paketi (`onprem/docker-compose.yml` + `.env.template` + `NOTICE.md`) ·
+arayüzü (`Caddyfile` + `frontend.Dockerfile`, tek origin, dar CSP) · kurulum betikleri
+(`install.sh`, 16 adım) · kurulum sihirbazı (Faz 2.2 dilim 1+2 — ilk owner + 3 dil) ·
+kendi şema zinciri (`0000`-`0013`, artık **veriyle birlikte**) · kendi güncelleme yolu
+(`update.sh` + `praxura-update.timer`) · sürüm/kanal sistemi (`VERSION` + `:beta`/`:stable`
++ `promote-stable.yml`, 72 s soak).
+
+**Bugüne kadar kanıtlanan:** şema kutuya kendi kendine gidiyor (O-39) · referans verisi
+de gidiyor (O-38 — sekiz tablo gerçek Postgres'e karşı, satır satır, iki kez) · signup
+→ trigger → profil çalışıyor · apikey'siz PostgREST **401** · `pg_net` kutuda **hiç
+kurulmuyor** ve bunu bir **kapı** tutuyor (O-49/O-71) · veritabanından dışarı çıkan
+çağrı yok · kurulu kutu kendi compose'unu kendi güncelliyor ve başarısız güncellemede
+**dosya bazında geri dönüyor** (O-45 (b), gerçek kutuda ölçüldü).
+
+**Kanıtlanmayan — abartılmasın:** **yedek yok** (O-26) ve gece güncelleme zamanlayıcısı
+artık **canlı** — bugün kurulan bir kutu saat 02:00'de yeni image çekip migration'ları
+**yedeksiz** koşturur (**O-77**, bu turun en ciddi maddesi) · kutunun Impressum/
+Datenschutz sayfaları henüz yok (O-58 (b), `legal-de` bekliyor) · ICD-10-GM atıf satırı
+pakette yok (O-78, § 63 UrhG) · mailin gerçek bir SMTP ile **teslim** edildiği hiç
+ölçülmedi (O-51) · lisans/yetki tarafına hiç dokunulmadı (O-31/O-33) ·
+`N8N_AI_SERIES_URL` hâlâ 3 yerde (O-02, G1). Yani bugünkü paket **kurulabilir bir beta
+kutusu**, teslim edilebilir ürün değil.
+
+**Sıradaki iş — sırayla (12.09.2026 akşamı, doğrulama turunda yeniden sıralandı — 1. madde değişti, bkz. altındaki not):**
 
 ✅ **Faz 2.1b tamamen kapalı** (O-45 (b) dahil tüm maddeleri — bkz. yukarıdaki 12.09.2026
 girdileri). ✅ **Faz 2.1c (`install.sh`) de fiilen kapalı** — O-50/O-52 (b)/O-53/O-60/
@@ -139,16 +167,26 @@ zaman Supabase'in kendi 3 saniyelik `anon` zaman aşımına çarpıyordu — ger
 kurulum ASLA bitmezdi). O-63/O-64/O-65 de bu koşuda gerçek kanıtla kapandı (önceden
 "okuma kanıtı"ydılar). Kalıcı test ortamı: `wsl -d Ubuntu-24.04` yerelde kuruldu, kalıcı.
 
-1. **O-38 — seed adımı.** Kutu doğru ama boş kalkıyor (`krankenkassen` → `[]`).
-   Sihirbaz bitiyor, owner giriyor, randevu kaydedemiyor. `SCHEMA-VERTEILUNG.md` §3.1
-   adım 4 yazılmadı.
-2. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8'i (yukarıya bak), sahipsiz kalmış borç.
-3. **Faz 2.3 — yedekleme.** O-61 (c), O-26, O-29 (c)'yi birlikte kapatır; ayrıca
-   `update.sh`'ın migration'ları yedeksiz koşturuyor olması (RELEASE-STANDARD.md §4.3)
-   bunu 2.4'ten önceye koyuyor — veri kaybı riski taşıyan tek açık madde.
-4. **Faz 1.2** (O-02) — takvim kısıtı: kutuda `N8N_AI_SERIES_URL` boş kalınca kod
-   **sabit n8n adresine düşüyor** ve hasta adı bize gelir (G1). İlk ücretli kutudan
-   önce inmeli.
+1. **Faz 2.3 — yedekleme (O-77 + O-26 + O-61 (c) + O-29 (c)).** ★ **Öncelik bu tura
+   kadar 3'süydü, artık 1.** Sebep değişti: `praxura-update.timer` artık **kurulu
+   kutuda canlı** (12.09, `6347071`). Kutu her gece 02:00'de yeni image çekiyor,
+   `server.js` açılışta migration'ları `app.listen()`'den **önce** koşturuyor ve
+   `update.sh`/`install.sh`'ta `pg_dump`/`backup` kelimesi **hiç geçmiyor** (ölçüldü:
+   0 eşleşme) — oysa `RELEASE-STANDARD.md` §4.3 "yedek alınamıyorsa migration
+   çalışmaz" diyor. Sicildeki **tek veri kaybı riski** ve artık teorik değil: gece,
+   insansız, otomatik. Detay: **O-77**.
+2. **Faz 2.2 dilim 2b** — §5.4'ün 1/5/8 kontrolleri (10 şema sayaçı, RLS negatif testi,
+   `DATA_ENCRYPTION_KEY` yaz-oku turu). Sahipsiz kalmış borç; kurulumun "başarılı
+   sayılır" tanımı bunlar olmadan eksik.
+3. **O-78 — ICD-10-GM atıf satırı.** Küçük iş (bir `NOTICE-QUELLEN.txt` + Dashboard'da
+   tek satır), ama **hukuki yükümlülük**: 16.905 satırlık resmî veri paketin içinde
+   atıfsız duruyor. İlk teslimattan **önce** inmeli — sonra inerse ihlal gerçekleşmiş
+   olur.
+4. **Faz 1.2** (O-02) — kutuda `N8N_AI_SERIES_URL` boş kalınca kod **sabit n8n adresine
+   düşüyor** ve hasta adı bize gelir (G1). İlk **ücretli** kutudan önce inmeli.
+   ⚠️ Kutunun CSP'si bunu engellemez — çağrı tarayıcıdan değil **backend'den** çıkıyor.
+5. **O-51 — mailin gerçekten teslim edildiğinin ölçümü.** Kod tarafı bitti; kalanı tek
+   bir gerçek SMTP kurulumuyla SPF/DMARC doğrulaması. İlk beta kutusunda yapılabilir.
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -319,6 +357,19 @@ kapı unutmaz ama düşünmez.
 > (`patchBooking`/`loadTeam`) onu **kendisinden önceki** satırlarda kullanıyordu —
 > bugün güvenli (`init()` hepsini `:771`'den sonra çağırıyor) ama gereksiz bir sıralama
 > kırılganlığıydı, önceden hiç yoktu. Atama dosyanın başına, import'un yanına taşındı.
+>
+> **12.09.2026 — fallback kutuya da giriyor: G1 açısından niye sorun değil.**
+> (Bir kez yazılıyor ki üçüncü kez araştırılmasın.) `supabase-config.js` kutunun
+> frontend image'ına **giriyor** (`onprem/frontend.Dockerfile:83`), yani `API_BASE`'in
+> `'https://n8n.infinitymade.de/api'` fallback'i müşterinin sunucusundaki dosyada
+> **var**. İlk bakışta G1 ihlali gibi durur: `/api/config` bir an cevap vermezse
+> tarayıcı hasta verisini bizim VPS'imize gönderir. **Göndermez** — kutunun Caddy'si
+> `connect-src 'self' {$SUPABASE_PUBLIC_URL} {$SUPABASE_PUBLIC_WSS}` diyor
+> (`onprem/Caddyfile:45`); tarayıcı o isteği **hiç yapmaz**, CSP ile düşer.
+> ⚠️ Ama koruma **yapısal değil, tek katmanlı**: CSP satırı gevşetilirse fallback
+> sessizce canlanır — `no-pg-net.sql`↔O-71 ikilisinin aynısı, orada kapı kondu,
+> burada henüz yok. Kalıcı çözüm Faz 2.0/2.6'da: fallback kutu build'inde boş
+> string'e düşsün — o zaman CSP **ikinci** katman olur, tek katman değil.
 >
 > **Sessizce değişen bir davranış, düzeltilmedi, sadece kayda geçiyor:** eskiden
 > `dashboard.js`'i `dev_server.cjs`/Vercel olmadan düz bir dosya sunucusuyla açan
@@ -2761,6 +2812,69 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 > **Test altyapısı notu:** Bu turda WSL2'ye gerçek bir `Ubuntu-24.04` dağıtımı kuruldu (Docker Desktop'ın kendi iç dağıtımından ayrı, kendi systemd'si + kendi Docker Engine'i ile) — kalıcı, yeniden kullanılabilir bir yerel test ortamı olarak bırakıldı. Ayrıca bu turda öğrenilen bir ortam tuzağı: ayrı `wsl -d ... -- ...` çağrıları arasında dağıtım boşta kalırsa (varsayılan systemd/WSL boşta kapanması) tüm docker compose yığını sessizce yeniden başlıyor — teşhis ve testler bundan sonra TEK bir sürekli oturumda yapılmalı, ayrı komutlara bölünmemeli.
 
+## 7K — Sahipsiz kalmış açık kalemler madde oluyor (12.09.2026 akşamı)
+
+> **Niye bu bölüm var:** aşağıdaki dört işin dördü de 12.09.2026'nın commit
+> mesajlarında ya da bir maddenin içinde "açık kalem" diye zaten yazılıydı. Hiçbiri
+> gizli değildi — ama hiçbirinin **numarası** yoktu, dolayısıyla §9'da görünmüyor,
+> "sıradaki iş" listesine giremiyor ve bir sonraki oturum için **yokturlar**.
+> Sicil kural 5: her bulgunun bir sahibi olur — ya faz numarası, ya Ops kartı, ya
+> `unkritisch` gerekçesi. Üçü de yoksa madde açılır.
+
+### O-77 — Gece otomatik güncelleme migration'ları yedeksiz koşturuyor; kurulu kutuda **bugün canlı**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `install.sh` Schritt 15 `praxura-update.service`/`.timer`'ı kuruyor (gece 02:00 + 2 saate kadar rastgele gecikme). Zamanlayıcı `update.sh`'ı çağırıyor, o yeni image'ı çekip konteyneri yeniliyor, `api` açılırken `server.js:4536` `runMigrations()`'ı `app.listen()`'den **önce** koşturuyor. Zincirin hiçbir yerinde yedek alınmıyor |
+| **Nerede** | `onprem/update.sh` + `onprem/install.sh` — ölçüm: `grep -n "backup\|yedek\|Sicherung\|pg_dump\|dump" onprem/update.sh onprem/install.sh` → **0 eşleşme**. Karşı gereksinim: `onprem/RELEASE-STANDARD.md` §4.3 — "migration çalışmadan önce kutu `vor-<sürüm>` yedeği alır; yedek alınamıyorsa migration **çalışmaz**" |
+| **Tip** | F + D |
+| **Kutuda ne olur** | Bozuk ya da yarım uygulanan bir migration gecenin bir yarısında, kimse bakmadan koşar. `migrate.js` hata alırsa kutu **bakım moduna** geçiyor (iyi) — ama veri o noktada zaten değişmiş olabilir ve **geri dönülecek bir kopya yok**. O-45 (b)'nin geri alma yolu **dosya** geri alır, **veri** geri almaz (J6, bilinçli tasarım). Hasta verisi kaybolursa § 630f BGB (dokumentasyon yükümlülüğü) ve DSGVO Art. 32 (bütünlük) tarafında da sorun çıkar |
+| **Çözüm** | **Faz 2.3** — `update.sh`'a migration-öncesi `pg_dump` adımı + başarısızsa **dur** (image'ı çekme, konteyneri yenileme). O-26 (yedekleme zamanlayıcısı), O-61 (c) (`.env`'in yedekten dışlanması) ve O-29 (c) (`DATA_ENCRYPTION_KEY` olmadan yedeğin işe yaramadığı uyarısı) aynı turun parçası. ⚠️ Ara çözüm olarak zamanlayıcıyı varsayılan kapalı yapmak düşünülebilir ama tercih değil — o zaman kutu hiç güncellenmez (O-73'e geri dönüş) |
+| **Durum** | `offen` — **Faz 2.3'ün 1. maddesi.** 12.09.2026'ya kadar bu risk teorikti (kutunun hiç güncelleme yolu yoktu, O-73); `6347071` ile **gerçek** oldu. O-73'ü kapatan tur bu yan etkiyi hesaba katmadı — ders §7J'nin dersinin aynısı: bir yolu **açan** değişiklik, o yolun taşıdığı riskleri de açar |
+
+---
+
+### O-78 — ICD-10-GM pakete girdi ama § 63 UrhG'nin istediği atıf satırı hiçbir yerde yok
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `0013_seed_icd10_titles.sql` 16.905 satır ICD-10-GM başlığını image'a koyuyor. `legal-de` dağıtım hakkını doğruladı (BfArM Downloadbedingungen, § 5 Abs. 2 UrhG "anderes amtliches Werk" — ticari yeniden dağıtım dahil), **iki şartla**: § 62 Änderungsverbot (uyuldu, başlıklar aynen) ve **§ 63 Quellenangabe**. İkincisi bugün yalnız migration dosyasının başlık yorumunda — müşterinin **hiçbir zaman görmediği** bir yerde |
+| **Nerede** | `api-backend/db/migrations/0013_seed_icd10_titles.sql` (başlık yorumu). Eksik olan: `onprem/NOTICE-QUELLEN.txt` (`grep -rn NOTICE-QUELLEN` → yalnız bu sicil ve `wissensbank/REGISTER.md:636`; **dosya yok**) + Dashboard'da tek satırlık atıf |
+| **Tip** | G (paket içeriği) |
+| **Kutuda ne olur** | Bugün hiçbir şey — ihlal **teslimatla** doğar. İlk ücretli kutu çıktığı anda resmî bir eser kaynağı belirtilmeden ticari olarak dağıtılmış olur. Bedeli düşük (Unterlassung + düzeltme), ama çözümü **iki dosya**; teslimattan sonra düzeltmek "ihlal oldu, sonra kapattık" demek |
+| **Çözüm** | (1) `onprem/NOTICE-QUELLEN.txt` — `NOTICE.md`'nin (yazılım lisansları) **veri** kardeşi: ICD-10-GM (BfArM, sürüm + § 63 atıf metni), GKV Kostenträgerdatei, Heilmittel-Preisstammdatei. (2) Dashboard'da tek satır (Einstellungen → Über). Metin `wissensbank/REGISTER.md` W-A07'de hazır. ⚠️ Ayrıca **O-42'nin kapsamı genişledi**: lisans yüzeyi artık yalnız konteyner image'ları değil **dağıttığımız veri**; `onprem_image` sayacı bunu görmez |
+| **Durum** | `offen` — sahibi **Faz 2.1** (paket içeriği), ilk teslimattan **önce**. Kaynağı: O-38 turunun kendi açık kalem listesi (1) |
+
+---
+
+### O-79 — `heilmittel_katalog`'un besleme zinciri kapısız: kod değişir, kutudaki veri değişmez
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `heilmittel_katalog` (94 satır) `search_heilmittel()`'in **tek** kaynağı ve `billing/codes/*.js`'ten `sync_heilmittel_katalog.js` ile besleniyor — ama o betik SaaS'ta **elle** koşuyor. Kod değişip betik koştuğunda `0012_seed_heilmittel_katalog.sql` **otomatik güncellenmez**, ve uygulanmış migration dosyası **değiştirilemez** (runner SHA-256 tutar). Kutuya varmanın tek yolu **yeni** bir seed migration'ı — ama bunu hatırlatan hiçbir şey yok |
+| **Nerede** | `api-backend/billing/codes/*.js` → `sync_heilmittel_katalog.js` → `api-backend/db/migrations/0012_seed_heilmittel_katalog.sql`. Kapı: `tools/check-onprem.sh`'ta **yok** |
+| **Tip** | B + D |
+| **Kutuda ne olur** | Sessiz sapma: SaaS'ta düzeltilen bir Heilmittel kodu/fiyatı kutuda eski kalır. Hata yok, log yok — podolog yanlış pozisyon numarasıyla § 302 dosyası üretir ve **kasa reddeder**. Teşhis merkezde aranır çünkü "kod güncel" sanılır |
+| **Çözüm** | `tools/check-onprem.sh`'a `check-tabellen-register.sh` deseninde bir kapı: `billing/codes/*_positions.js` staged ise ve aynı commit'te `api-backend/db/migrations/` altına yeni bir seed dosyası girmediyse commit reddedilir (kaçış: `SKIP_SEED_GATE=1`, fiyat değiştirmeyen kozmetik düzeltmeler için). Aynı kural `preise-check.yml`'in ürettiği commit'lere de uygulanır (tip B, O-34) |
+| **Durum** | `offen` — Faz 2.1 (seed disiplini). Kaynağı: O-38 turunun SEED-11 bulgusu |
+
+---
+
+### O-80 — `dta_schluessel` seed dışında kaldı: bilinçli, ama süresiz
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | O-38'in sekiz tablosuna `dta_schluessel` (94 satır) **girmedi**: içeriği doğru ama `source_version` alanı yanlış ("Anlage 3 V22"; geçerli sürüm **V21**). Yanlış sürüm etiketini checksum-kilitli bir dosyaya gömmek yerine önce düzeltilmesi kararı verildi — doğru karar, ama kimseye bağlanmadı |
+| **Nerede** | `db/SCHEMA.sql` → `dta_schluessel`; `api-backend/db/migrations/` altında karşılığı **yok** |
+| **Tip** | D |
+| **Kutuda ne olur** | Bugün **hiçbir şey** — tablo hiçbir kod yolundan okunmuyor (O-38 turunda doğrulandı). Risk ileride: bu tabloyu okuyan bir özellik yazıldığı anda kutuda **boş** çıkar ve sebebi hiçbir yerde yazılı olmaz |
+| **Çözüm** | Sıra: (1) `gkv-302` `source_version`'ı V21'e düzeltir (canlıda + zincirde), (2) seed migration'ı yazılır. ⚠️ **Bu tabloyu okuyan ilk kod satırı yazılmadan önce** yapılmalı |
+| **Durum** | `offen` (düşük öncelik, ama bilinçli olarak **`unkritisch` değil**: "bugün okuyan yok" geçici bir gerçek, kalıcı bir gerekçe değil). Kaynağı: O-38 turunun açık kalem listesi (3). Kardeşi — `krankenkassen.ik_number`'ın düzeltilmesi — bu sicile **ait değil**: o bir veri kalitesi işi (`gkv-302` + Ops kartı), ve seed bilinçli olarak NULL bıraktığı için **yanlış veri kutuya gitmiyor** |
+
+---
+
+## 8. Kapı — sayaçlar ve tabanlar
+
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
 > (kardeşleri: `check-dashboard-size.sh`, `check-namen.sh`, `check-tabellen-register.sh`).
 > Taban dosyası: `tools/.onprem-baseline`. Kaçış: `SKIP_ONPREM_GATE=1`.
@@ -2787,23 +2901,54 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 | Sayaç | Taban (2026-09-04) | Kapsam |
 |---|---|---|
-| `n8n.infinitymade.de` | **26** | `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `node_modules/` `index-old.html` `ai chatbot proje/` hariç |
-| `app.praxura.de` (uygulama yüzeyi) | **19** | `dashboard.js` `dashboard.html` `employee-signup.js` `admin-login.js` `api-backend/server.js` — pazarlama/blog hariç (O-04) |
+| `n8n.infinitymade.de` | ~~26~~ → **7** | `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `node_modules/` `index-old.html` `ai chatbot proje/` hariç |
+| `app.praxura.de` (uygulama yüzeyi) | ~~19~~ → **15** | `dashboard.js` `dashboard.html` `employee-signup.js` `admin-login.js` `api-backend/server.js` — pazarlama/blog hariç (O-04) |
 | `api/` fonksiyon sayısı | **12** | `find api -name "*.js" -not -path "api/_lib/*"` — artış = red (limit + G8) |
 | Üçüncü-parti `<script src="http…">` | **11** | Yalnız Sentry loader. ⚠️ Sicilin O-06'da "12 satır / 11 dosya" yazıyordu; kapı 04.09.2026'da index üzerinden **11 satır** ölçtü — geçerli sayı kapınınkidir (`tools/.onprem-baseline` → `ext_script=11`). Yeni host = red |
 | `N8N_` env referansı | **3** | `server.js:1216` `:1969` `:1972` (satırlar 11.09.2026 akşamı, `86aae7b` sonrası yeniden ölçüldü) — artış = red, hedef sıfır (Faz 1.2) |
 | `.supabase.co` sabit referansı (ürün kodu) | **1** | ⚠️ Sicil bunu **0** sanıyordu; kapı ölçümünde 1 çıktı: `api-backend/test_schema.js:5` (test dosyası, env fallback'li — O-05'te zaten istisna olarak yazılıydı, sayaçta unutulmuştu). `ops/` ve `vercel.json` hariç. Artış = red |
 | `fonts.googleapis.com` / `esm.sh` / `unpkg` / `jsdelivr` / `cdnjs` | **0** | Uygulama kodu; `ai chatbot proje/` hariç. Sıfırdan artış = red (Konsey 2026-08-13 S3) |
-| `latest` etiketi yayın hattında | **1** | `.github/workflows/publish-calendar-api.yml:64` — hedef **0** (Faz 4.3b, `X.Y.Z` + kanal etiketleri). Artış = red |
+| `latest` etiketi yayın hattında | ~~1~~ → **0** | ✅ **12.09.2026'da hedefe ulaştı** (O-25/R9, `f69accc`): `:latest` her iki publish workflow'undan da düştü, SaaS host'u `:beta`'ya geçti. Bu bir **sayaç değil**, O-25'in kabul ölçütüydü; yerini `VERSION`/`manifest.json` eşitlik kapısı aldı (R12) |
 | Yıkıcı DDL kanıtı | — | Yeni migration dosyasında `DROP COLUMN` / `DROP TABLE` / `RENAME COLUMN` / `SET NOT NULL` / `DROP CONSTRAINT` varsa dosya başında `-- ZWEISTUFIG: <no> · <gerekçe>` satırı **zorunlu** (`SCHEMA-VERTEILUNG.md` §6.2, `RELEASE-STANDARD.md` §4.7) |
 | Migration'lı PATCH | — | Sürüm PATCH ise `db/migrations/` altında yeni dosya olamaz (`RELEASE-STANDARD.md` §2.2). Release listesi adım 1 |
-| Koda gömülü gönderen adresi (`noreply@` + sabit alan adı) | **6** | `api-backend/server.js` (`:3981` `:4002` `:4174` `:4212` `:4316` `:4363`). Ölçüm: `git grep --cached -c "noreply@praxura\.de" -- api-backend/`. Artış = red; hedef **0** (tek yardımcı + `.env`'den gönderen, O-51). ✅ Kapıda **kurulu ve sınandı** (11.09.2026): yedinci sabit adres eklendiğinde `absender_fest : 6 -> 7` diyerek reddetti |
+| Koda gömülü gönderen adresi (`noreply@` + sabit alan adı) | ~~6~~ → **2** | `api-backend/server.js` (`:3981` `:4002` `:4174` `:4212` `:4316` `:4363`). Ölçüm: `git grep --cached -c "noreply@praxura\.de" -- api-backend/`. Artış = red; hedef **0** (tek yardımcı + `.env`'den gönderen, O-51). ✅ Kapıda **kurulu ve sınandı** (11.09.2026): yedinci sabit adres eklendiğinde `absender_fest : 6 -> 7` diyerek reddetti |
 | On-prem compose `image:` satırı | **8** (11.09 akşamı 7'den) | `onprem/docker-compose.yml` (11.09.2026): db · auth · rest · realtime · storage · kong + kendi `api`'miz. Upstream'in 11 fremd konteynerinden 5'i bilinçli dışarıda. Artış, `onprem/NOTICE.md`'ye lisans satırı eklenene kadar **red** (O-42). Sayaç `onprem_image`, kapıda test edildi (8'e çıkarıldığında reddetti). ⚠️ İki not: sayaç `git grep --cached` ile ölçer — kurulumda bir tur `--cached`siz ölçülüp taban kendiliğinden **0'a sıkışmıştı**, düzeltildi; ve kapı yalnız **sayıyı** tutar, `NOTICE.md`'de karşılık gelen satırın varlığını **denetlemez** (O-42). **11.09 akşamı 8'e çıkarıldı:** `caddy` (Faz 2.1b, arayüz + TLS + reverse proxy). Yükseltme gerekçesi §7F'de |
 | `vercel.json` CSP'sindeki bulut adresi | **53** | `git grep --cached -oE "https?://[a-zA-Z0-9.*-]+" -- vercel.json` — **token** sayar, satır değil. Hedef sıfır **değil**: SaaS'ın kendi bulut adresleri o satırda meşru; amaç sessiz büyümeyi yakalamak. Artış = red, çıkış yolu: "gerçekten SaaS'a mı özel?" — öyleyse kabul, ama `onprem/Caddyfile`'a asla kopyalanmaz (O-52) |
 
 ---
 
-## 9. Durum özeti (2026-09-04, ilk tarama)
+## 9. Durum özeti (son sayım: 12.09.2026 akşamı)
+
+> ⚠️ **Bu tablo 12.09.2026 akşamı madde madde yeniden sayıldı.** Önceki hâli
+> 04.09.2026 fotoğrafıydı ve altına "fark" notları yığılıyordu — dokuz tur sonra o
+> yöntem çöktü: tablo O-48/O-49'u hâlâ `offen`, O-25/O-38'i hâlâ `geplant`
+> gösteriyordu, oysa dördü de kapanmıştı. **Kural değişti:** bundan sonra tablonun
+> kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
+> (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
+
+**Toplam 80 madde** (O-01 … O-80). ⚠️ O-53 ve O-54'ün kendi `###` girdisi yok;
+O-01'in not bloğunda yaşıyorlar — kaybolmaya açıklar, ileride kendi girdilerine
+terfi etmeliler.
+
+| Durum | Adet | Maddeler |
+|---|---|---|
+| `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · **O-77** · **O-78** · **O-79** · **O-80** |
+| `geplant` | 16 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-26 · O-27 · O-28 · O-29 · O-31 · O-43 |
+| 🟡 `kısmen gelöst` | 10 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 |
+| `gelöst` | 31 | O-15 · O-20 · O-25 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 |
+| `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
+
+> **Nasıl okunur — 31 `gelöst` yanıltıcıdır.** Bunların büyük bölümü (O-56 … O-76
+> aralığı) **paketleme** işiydi: 11-12.09'da açıldılar ve aynı hafta kapandılar, yani
+> hiçbir zaman uzun süreli borç olmadılar. Asıl borç `geplant` 16 + `offen` 12'de:
+> orada **Faz 1.x** (merkezden kopma — O-02/O-03/O-09/O-10/O-16/O-21) ve **Faz 3.x**
+> (lisans/yetki — O-31/O-32/O-33/O-46) hâlâ **hiç dokunulmamış** duruyor.
+> Özetle: kutu artık **kuruluyor**, ama hâlâ **SaaS'ın varsayımlarıyla** çalışıyor.
+
+<details>
+<summary><b>Tarihsel kayıt — 04.09.2026 ilk taraması ve sonraki fark notları (silinmez)</b></summary>
+
+**İlk tarama tablosu (2026-09-04):**
 
 | Durum | Adet | Maddeler |
 |---|---|---|
@@ -2922,6 +3067,8 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > ölçülür** — sihirbazın test maili adımı (Faz 2.2) bunu alıcı kutusundan doğrulamalı.
 
 > Sayılar madde listesiyle birlikte okunur; bir madde birden fazla faza değebilir.
+
+</details>
 
 ### Playbook'un eksikleri (bu taramada çıkanlar)
 
