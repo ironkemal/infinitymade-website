@@ -195,6 +195,17 @@ yazılmadı — "yedek aldık ama geri yüklenebildiğini hiç denemedik" hâlâ
 kadarki en gerçekçi risk, ve SSH/rsync hedef sürücüsü henüz yok. Kanıt ve
 commit'ler: kendi maddesinde (O-26).
 
+✅ **O-83 kapandı (13.09.2026, O-26 bildirim-sonrası denetiminden çıktı, aynı
+gün kapatıldı) — `api` konteynerine üç katman: `--max-old-space-size=256`
+(V8 heap, işçi başına) · PM2 `--max-memory-restart 500M` (RSS, işçi başına,
+aşılırsa yalnız o işçi temiz yeniden başlar) · `mem_limit: 1200m` (konteyner,
+son çare).** Onprem'in uyardığı gibi tek başına `mem_limit` koymak yanlış
+katmandı (Node cgroup sınırını görmez, SIGKILL'i önlemez sadece rastgele
+zamanlar). Gerçek kutuda ölçüldü (işçi tepe RSS ~295 MB, `/api/rezept/upload`'a
+eşzamanlı ~15 MB gövdelerle) ve yerel build ile doğrulandı (10×2 eşzamanlı ağır
+istek sonrası işçiler 221-252 MB'ta kaldı, ↺=0, `OOMKilled=false`, `/health`
+sağlıklı). Kanıt ve commit'ler: kendi maddesinde (O-83).
+
 1. **`restore.sh` — hiç yazılmayan, hiç test edilmeyen geri yükleme.** ★ Şimdi
    sıradaki 1. `backup.sh` künyeye üç parmak izi yazıyor ama onları OKUYAN/
    karşılaştıran taraf yok — O-29'un §4.5 madde 4'ü (DEK uyuşmazlığında veriye
@@ -2985,16 +2996,21 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-### O-83 — `api` konteynerinde `mem_limit` yok; VPS'te swap da yok — OOM kill migration'ın ortasında yakalayabilir
+### O-83 — `api` konteynerinde `mem_limit` yok; VPS'te swap da yok — OOM kill migration'ın ortasında yakalayabilir ✅ **gelöst**
 
 | Alan | İçerik |
 |---|---|
 | **Ne** | O-48 (Kong konsey kararı) yalnız Kong'a `mem_limit` verdi (886 MB ölçüm tartışmasının konusu oydu). `api` konteyneri (`pm2-runtime -i 2`, iki işçi) hâlâ sınırsız — sınırsız bir konteyner bellek basıncında kernel'in OOM-killer'ı tarafından **beklenmedik bir anda** öldürülebilir, tam bir migration'ın ya da `backup.sh`'ın `pg_dump`'ının ortasında olabilir |
-| **Nerede** | `onprem/docker-compose.yml` — `api` servisi bloğu, `mem_limit` satırı yok. Karşılaştır: `kong` servisi (O-48'den beri var) |
+| **Nerede** | `onprem/docker-compose.yml` → `api` servisi · `api-backend/Dockerfile` → CMD |
 | **Tip** | F (dayanıklılık) |
-| **Kutuda ne olur** | O-26 bildirim-sonrası denetiminin bulduğu şey tam bu: bir PM2 işçisi (OOM-kill dahil) yeniden başlarsa `runMigrations()` sessizce tekrar tetiklenir. `backup.sh`'ın yeni önce/sonra `schema_version` kontrolü (bu turda eklendi) bu durumu **yakalar ve yedeği iptal eder** — ama asıl kararlılık sorunu (neden bir işçi hiç yeniden başlıyor) çözülmüş olmaz, yalnız sonucu artık sessizce yanlış bir künyeye dönüşmüyor |
-| **Çözüm** | `api` servisine de `mem_limit` (VPS'in 2 vCPU/3.7 GB profiline göre ölçülmüş bir değer — O-48'in Kong için yaptığı gibi gerçek ölçümle, tahminle değil) + `docker compose logs api --since` ile OOM-kill izlerinin (`OOMKilled: true` `docker inspect`'te) kontrolü. Swap yokluğu (`INFRASTRUCTURE.md`/sicil zaten not etmişti) ayrı, daha büyük bir VPS kararı — bu madde yalnız konteyner sınırını kapsıyor |
-| **Durum** | `offen`. Kaynağı: O-26 bildirim-sonrası denetimi (onprem, 13.09.2026) — künye tutarlılık bug'ını (O-26'nın kendi maddesi, `88ec23c`) ararken bulundu |
+| **Kutuda ne olur** | O-26 bildirim-sonrası denetiminin bulduğu şey tam bu: bir PM2 işçisi (OOM-kill dahil) yeniden başlarsa `runMigrations()` sessizce tekrar tetiklenir. `backup.sh`'ın önce/sonra `schema_version` kontrolü (O-26 turunda eklendi) bu durumu yakalar ve yedeği iptal eder — ama asıl kararlılık sorunu (neden bir işçi hiç yeniden başlıyor) o başlı başına çözülmüş olmuyordu |
+| **Onprem-danışma (13.09.2026) — plan değişti** | İlk plan tek `mem_limit` koymaktı; onprem sert şekilde düzeltti: **Node kendi başına Docker'ın cgroup sınırını görmez** — `mem_limit` tek başına koyulursa V8 varsayılan heap'i host RAM'ine göre büyür, kernel'in SIGKILL'i **rastgele bir anda** vurur, önlenmiş olmaz. Doğru sıra üç katman: (1) `--max-old-space-size` — V8 heap, işçi başına (2) PM2 `--max-memory-restart` — RSS, işçi başına, aşılırsa PM2 SADECE o işçiyi temiz yeniden başlatır (3) `mem_limit` — son çare, günlük işte hiç tetiklenmemeli. Ayrıca: `docker inspect`'in `OOMKilled` alanı bu arıza sınıfında **kör** — OOM-killer konteyneri değil cgroup içindeki en şişman süreci (bir PM2 işçisini) seçer, PM2 sessizce yeniden doğurur, container hiç yeniden başlamaz, `OOMKilled` hep `false` kalır. Kanıt aranacaksa `pm2 list`'in ↺ sütunu veya kernel `dmesg`/`journalctl -k` — konteynerin kendi durumu değil |
+| **Ölçüm (gerçek kutu, tahmin değil)** | WSL-Testbox (Ubuntu 24.04, gerçek Docker Engine), tek sürekli oturumda (ayrı komutlar arası WSL'in VM'i boşta kapatıp bir sonraki çağrıda soğuk açtığını — ve bunun konteynerleri `restart: unless-stopped` ile sıfırdan başlatıp yanlış "her ölçümde restart oluyor" izlenimi verdiğini — bu turda keşfettik, script tek `wsl` çağrısına toplanarak düzeltildi). İlk deneme yanlış path'e (`/rezept/upload`, `/api` öneki eksik) POST attı — `server.js:83-86`'daki 256 KB ön-kapı `/api/rezept/` dışındaki her yolu Content-Length'e bakarak erkenden 413'lüyor, gerçek gövde hiç parse edilmedi. Doğru path (`/api/rezept/upload`, `requireAuthAI` arkasında ama body-parse ondan ÖNCE global `express.json` ile oluyor, o yüzden 401 alınsa da gövde tam işleniyor) + gerçek üst sınır (~15 MB, `server.js:89`) ile: boşta konteyner ~200-296 MB (cgroup `memory.current`/`.peak`), 2 işçiye eşzamanlı 15 MB istek dalgalarıyla işçi başına RSS **~295 MB**'a çıktı, konteyner tepesi **544 MB** |
+| **Uygulanan üç katman** | `api-backend/Dockerfile` CMD: `pm2-runtime start server.js -i 2 --max-memory-restart 500M --node-args "--max-old-space-size=256 --import ./instrument.js"` · `onprem/docker-compose.yml` → `api`: `mem_limit: 1200m`. 500M (işçi RSS) ölçülen 295 MB tepenin ~1,7 katı — günlük işte tetiklenmemeli ama gerçek bir sızıntıyı yakalar. 1200m (konteyner) iki işçinin aynı anda 500M'a yaklaşması + pm2 daemon + page cache payını kapsar. Hedef donanım `install.sh`/`RELEASE-STANDARD.md`'nin ilan ettiği **2 vCPU/4 GB** müşteri kutusu — bizim 3,7 GB'lık VPS'imiz değil |
+| **Doğrulama (gerçek kutu)** | Değişiklik `api-backend/Dockerfile`'ı da etkilediği için (aynı imaj SaaS VPS'inde de koşuyor) push'tan önce yerel build ile test edildi: WSL'de `docker build` (onprem-bundle build-context olmadan, sadece runtime davranışı için — buildx bu kutuda yok), imaj `docker compose up -d --force-recreate api`'ye geçici olarak bağlandı. `ps aux` içeride üç bayrağın da gerçekten `pm2-runtime`'a ulaştığını doğruladı. `docker inspect` → `MemLimit=1258291200` (1200 MiB, doğru). 10 dalga × 2 eşzamanlı ~15 MB istek (ölçümdekinden daha ağır) sonunda: işçi RSS'leri 221-252 MB (500M eşiğinin altında, ↺=0 — yanlış-pozitif restart yok), konteyner tepesi 588 MB (1200m limitinin yarısı, bol pay), `OOMKilled=false`, `RestartCount=0`, ardından `/health` normal cevap verdi. Guardrail'lerin normal (hatta ağır) trafiği bozmadığı, gerçek pay bıraktığı doğrulandı |
+| **Bilinçli sınır** | PM2'nin `--max-memory-restart`'ının fiilen tetiklendiği (500M'ı gerçekten aşan bir işçi) bu turda üretilmedi — 20 isteklik ağır test bile 252 MB'da kaldı, yani eşiğin gerçek trafikte bol payı var. PM2'nin kendi bayrağının çalıştığını ayrıca kanıtlamak (üçüncü parti, köklü bir özellik) kapsam dışı bırakıldı. Ayrıca bu ölçüm WSL'de (swap'li) yapıldı — footprint/eşik kararı için geçerli (onprem onayladı), ama "gerçekten ölür mü" testi swap'siz gerçek donanım gerektirir, yapılmadı |
+| **Yan bağ** | Bu maddenin çözümü O-26'nın tetikleyicisini artırır (her PM2 yeniden başlatması `runMigrations()`'ı tekrar koşturur) — güvenlik `migrate.js:197-201`'deki `pg_advisory_lock` + SHA kontrolünden geliyor, yarış korunuyor (onprem doğruladı) |
+| **Durum** | ✅ **gelöst (13.09.2026)** — `api-backend/Dockerfile`, `onprem/docker-compose.yml`, `onprem/manifest.json` (yeniden üretildi). Kaynağı: O-26 bildirim-sonrası denetimi (onprem, 13.09.2026) — künye tutarlılık bug'ını (`88ec23c`) ararken bulundu |
 
 ---
 
@@ -3057,10 +3073,10 @@ terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 13 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · O-82 · **O-83** |
+| `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · O-82 |
 | `geplant` | 15 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-29 · O-31 · O-43 |
 | 🟡 `kısmen gelöst` | 10 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 |
-| `gelöst` | 34 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · **O-77** · **O-81** |
+| `gelöst` | 35 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · **O-83** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ⚠️ **O-26 `gelöst` yazıyor ama dar kapsamlı** (yalnız dizin sürücüsü, `restore.sh` yok) — kendi maddesine bak.

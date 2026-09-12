@@ -395,6 +395,12 @@ services:
     # Neustart soll das neue holen. Nur beim lokalen Test steht hier
     # "never", weil das Image dann von Hand gebaut ist.
     pull_policy: ${PRAXURA_PULL_POLICY:-always}
+    # O-83 (13.09.2026): letzte Schicht, siehe api-backend/Dockerfile CMD-
+    # Kommentar fuer die zwei inneren Schichten (Node/PM2) und die Messung
+    # dahinter. Zielhardware laut install.sh/RELEASE-STANDARD.md: 2 vCPU/4 GB,
+    # KEIN Swap — ein unbegrenzter Container kann bei Speicherdruck jeden
+    # anderen Prozess auf der Box treffen, nicht nur sich selbst.
+    mem_limit: 1200m
     depends_on:
       db:
         condition: service_healthy
