@@ -673,6 +673,10 @@ app.post('/api/gmail/send', requireAuthAI, async (req, res) => {
 });
 
 app.post('/api/apify/search', requireAuthAI, async (req, res) => {
+  // O-09 (onprem/REGISTER.md): eigene B2B-Lead-Akquise, nicht die Praxis des
+  // Kunden — auf der Box nie erreichbar (gleiches Signal wie /api/config
+  // istKutu). Frontend entfernt den Button ohnehin (module/lead-suche.js).
+  if (process.env.SUPABASE_PUBLIC_URL) return res.status(404).json({ error: 'Not found' });
   req.body.userId = req.auth.userId; // pin to authenticated user — no body spoofing
   const { query, limit, userId } = req.body;
   if (!query || !userId) return res.status(400).json({ error: 'Missing params' });

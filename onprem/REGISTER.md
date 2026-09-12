@@ -251,16 +251,25 @@ taşınmadı — ayrıntı kendi maddesinde.
 gösteriminin hemen ardı) `GESICHERT` yazmadan geçilemeyen bir onay döngüsü eklendi,
 izole test edildi. O-29 artık dört kuraldan dördü tamam, tam kapalı.
 
+✅ **O-09 (a) — Apify/Google-Maps kutudan kapatıldı (12.09.2026 gecesi)** —
+`module/lead-suche.js` + mevcut `IST_KUTU` sinyaliyle hem UI (b2b arama barı +
+Ärzte "In der Nähe finden" sekmesi) hem `server.js:675` route'u kutuda kapatıldı.
+Manuel Zuweiser-Arzt kaydı (Register sekmesi) etkilenmedi. **O-09 (b)**
+(`B2B_AGENT_URL`, n8n) ayrı madde olarak açık kaldı — aşağıya bak.
+
 ⏸️ **O-51 (SMTP teslim ölçümü) kullanıcı kararıyla sona bırakıldı (12.09.2026)** —
 belki hiç yapılmaz ya da yaklaşım değişir, ilk beta kutusunda karar verilecek.
 ⏸️ **n8n'e dokunan işler şimdilik ertelendi (12.09.2026)** — OCR/Rezept-Scan AI
 sağlayıcı kararı netleşmeden bu alana yakın hiçbir şey yapılmayacak (bkz. memory
-`project_ocr_scan_ai_saglayici.md`).
+`project_ocr_scan_ai_saglayici.md`). Bu kapsamda **O-09 (b)** de bekliyor —
+kutu hâlâ müşterinin Zuweiser CRM verisini yetkisiz şekilde n8n'e POST'luyor,
+ucuz bir ara-çözüm biliniyor (kendi maddesine bak) ama n8n kararına kadar
+uygulanmayacak.
 
-Bağımsız açık maddeler (henüz sıralanmadı, kullanıcı seçecek): **O-09** (Apify/B2B
-lead — bizim token'ımız kutuda), **O-79** (`heilmittel_katalog` besleme kapısız),
-**O-82** (`update.sh`'ın `dur` dalları merkeze bildirmiyor), **O-44** (`prescriptions`
-iki ayrı yazma yolu), **O-33** (on-prem'de "çalışan sayısı/limit" tanımsız).
+Bağımsız açık maddeler (henüz sıralanmadı, kullanıcı seçecek): **O-79**
+(`heilmittel_katalog` besleme kapısız), **O-82** (`update.sh`'ın `dur` dalları
+merkeze bildirmiyor), **O-44** (`prescriptions` iki ayrı yazma yolu), **O-33**
+(on-prem'de "çalışan sayısı/limit" tanımsız).
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -580,16 +589,27 @@ kapı unutmaz ama düşünmez.
 | **Çözüm** | **Faz 2.8** — on-prem build'de feature flag ile kapalı; §9-A3'te "v1'de YOK" kararı zaten yazılı. Talep gelirse seçenekler: müşterinin kendi OAuth app'i · CalDAV/ICS-feed · cihaz akışı. E-posta zaten SMTP'ye dönmüştü, Gmail yolu ikincil. Aynı görevde `GOOGLE_*` boot-zorunluluğu da kaldırılmalı |
 | **Durum** | `geplant` (Faz 2.8) · alt-soru `offen` (§9-A3, kullanıcı kararı bekliyor) |
 
-### O-09 — Apify (Google Places crawler) — bizim token'ımız, B2B lead araması
+### O-09 (a) — Apify (Google Places crawler) — bizim token'ımız, B2B/Ärzte lead araması
 
 | Alan | İçerik |
 |---|---|
-| **Ne** | İşletme arama/lead toplama Apify aktörüne çıkıyor |
-| **Nerede** | `api-backend/server.js:465` (`api.apify.com/v2/acts/compass~crawler-google-places/…?token=`) · Vercel tarafı `api/apify/search.js` · frontend B2B ekranı `dashboard.js:11841` (`B2B_AGENT_URL`) |
+| **Ne** | İşletme arama/lead toplama Apify aktörüne çıkıyor — İKİ ayrı UI girişi: "Zuweiser" (b2b) sekmesindeki Google-Maps arama barı VE "Ärzte" sekmesinin "In der Nähe finden" alt-sekmesi (ikisi de aynı `/api/apify/search`'e gidiyor) |
+| **Nerede** | `api-backend/server.js:675` (`api.apify.com/v2/acts/compass~crawler-google-places/…?token=`) · Vercel tarafı `api/apify/search.js` (SaaS'ta kalıyor, dokunulmadı) · frontend: `module/lead-suche.js` (12.09.2026 öncesi `dashboard.js:9349`+`13613`'teydi) |
 | **Tip** | A + E + G |
 | **Kutuda ne olur** | Müşteri kutusundan bizim Apify token'ımızla dışarı çıkılır → G2/K5 ihlali, faturası bize gelir. Ama asıl soru bu değil: bu özellik **hasta işi değil**, bizim B2B pazarlama/lead aracımız. Müşterinin praxis'inde işi yok |
-| **Çözüm** | Merkez tarafı (tip G) — on-prem pakette **bulunmaz**; hem route hem `nav-registry` görünürlüğü on-prem build'de kapalı. Faz 1.1'in "merkezde kalacaklar" listesine yazılmalı. ⚠️ Playbook bu özelliği hiç anmıyor |
-| **Durum** | `offen` — Faz 1.1 listesine eklenmeli (playbook'ta karşılığı yok) |
+| **Çözüm** | Nav-registry'ye ikinci bir görünürlük sistemi eklenmedi (konsey/onprem/fonksiyon-ustasi üçü de: özel durum için ikinci liste = altı ay sonra "hangi liste doğru" sorunu). Bunun yerine mevcut `IST_KUTU`/`istKutu` sinyali (zaten vardı: `supabase-config.js:24` frontend, `server.js:416` backend, `login.js:200`'de aynı `.remove()` deseni) kullanıldı: `module/lead-suche.js` içinde `IST_KUTU` ise dört düğüm (`.apify-bar` b2b'de · `#panel-doctors .tabs` · `#arztTabSuche`) DOM'dan sökülüyor, listener'lar hiç bağlanmıyor. "Ärzte → Register" alt-sekmesi (manuel Zuweiser-Arzt kaydı, `module/arzt-register.js`, Apify'dan bağımsız) kutuda tam işlevsel kalıyor. Backend: `server.js:675` aynı `SUPABASE_PUBLIC_URL` sinyaliyle (`istKutu`'nun kaynağı) 404 dönüyor |
+| **Durum** | ✅ **gelöst (12.09.2026)** — `node --check` ile syntax doğrulandı, `dashboard.js` 21249→21014 satıra indi (baseline'ı büyütmedi, aksine sıkıştırdı). Gerçek tarayıcıda IST_KUTU=true görünüm testi henüz YAPILMADI (sıradaki onprem-review turunda doğrulanmalı) |
+
+### O-09 (b) — B2B_AGENT_URL (n8n mail-agent) — Zuweiser panelinin AI-mail özelliği
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | "Zuweiser" panelinin Gmail-bağlantılı AI mail-taslağı özelliği, n8n workflow'una POST atıyor |
+| **Nerede** | `dashboard.js:11784` (`B2B_AGENT_URL = 'https://n8n.infinitymade.de/webhook/b2b-mail-agent'`) · kullanım `dashboard.js:12004` · UI: b2b panelindeki `.ai-chat-card` (Gmail connect + config modal) |
+| **Tip** | A + G (n8n) |
+| **Kutuda ne olur** | Kutu hâlâ POST atıyor — `dashboard.js:12004`'teki istek Authorization başlığı olmadan müşterinin gerçek Zuweiser CRM verisini (≤30 kişi + praxis kimliği) bizim n8n webhook'umuza gönderiyor. On-prem'in vaat ettiği "hasta/praxis verisi bize hiç akmaz" garantisinin **tersi** — G1 sınıfı bir risk, Apify'dan (token/maliyet sorunu) daha ciddi (veri sorunu) |
+| **Çözüm** | Kullanıcı talimatıyla (12.09.2026) bu turda **ertelendi** — n8n'e dokunan hiçbir iş bu oturumda yapılmıyor. Ucuz bir ara-adım biliniyor ve uygulanmadı: aynı `IST_KUTU` deseniyle `dashboard.html`'deki `.ai-chat-card` girişini de kutudan kaldırmak (SaaS'a dokunmadan, n8n workflow'una dokunmadan, sadece kutunun UI'ının POST atma yolunu kapatarak) — bu yapılırsa O-09(b) tek adımda kapanır |
+| **Durum** | `offen` — n8n kararı netleşene kadar bilinçli olarak beklemede (bkz. §"Sıradaki iş"). Register'daki ilk O-09 maddesi bunu Apify ile aynı kalemde saymıştı, bu yanlıştı — ikisi bağımsız özellikler, ayrı satırlarda takip edilmeli |
 
 ### O-10 — Stripe API çağrısı backend'de (checkout session okuma)
 
@@ -693,7 +713,7 @@ kapı unutmaz ama düşünmez.
 | 9 | `api/demo-booking.js` | `demo-booking.html:1064` `:1348` `:1384` | **MERKEZ** | Bizim satış demomuz, müşterinin işi değil |
 | 10 | `api/admin/data.js` | `admin.js:69` `:95` `:158` `:209` | **MERKEZ** | Bizim admin panelimiz — ama içeriği kutuyla kesişiyor, O-18 |
 | 11 | `api/admin/feedbacks.js` | `admin.js:239` `:259` | **MERKEZ** | Aynı, O-18 |
-| 12 | `api/apify/search.js` | `dashboard.js:9429` `:13712` | **MERKEZ** | B2B lead aracı, hasta işi değil — O-09 |
+| 12 | `api/apify/search.js` | `module/lead-suche.js` (SaaS'ta; kutuda IST_KUTU ile kaldırılıyor) | **MERKEZ** | B2B lead aracı, hasta işi değil — O-09 (a) ✅ |
 
 **Özet:** 2 kutuya · 10 merkezde · 2 tanesi (admin/*) kutu verisine baktığı için ayrıca bölünmeli.
 
@@ -3427,9 +3447,9 @@ kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 11 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-79 · O-80 · O-82 |
+| `offen` | 10 | O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-79 · O-80 · O-82 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
-| 🟡 `kısmen gelöst` | 13 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-87 · O-88 · O-02 |
+| 🟡 `kısmen gelöst` | 14 | O-01 · O-02 · O-09 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-87 · O-88 |
 | `gelöst` | 44 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
@@ -3453,6 +3473,18 @@ kendi girdilerine terfi etmeliler.
 > ⚠️ **O-77 `gelöst` yazıyor ama dar kapsamlı** (yalnız migration-öncesi tek bir DB
 > dump'ı) — geniş yedekleme O-26'da (artık tam kapalı) çözüldü. O-77'nin kendi
 > maddesine bak.
+>
+> 🟡 **O-09 ikiye bölündü (12.09.2026), toplam sayı değişmedi.** İlk kaydı Apify
+> (bizim token'ımız, B2B lead-gen) ile `B2B_AGENT_URL` (n8n mail-agent) tek
+> maddede toplamıştı — ikisi bağımsız özellikler. **(a) Apify/Google-Maps ✅
+> gelöst**: `module/lead-suche.js` + `IST_KUTU` ile hem UI hem `server.js:675`
+> route'u kutuda kapatıldı, "Ärzte → Register" (manuel Zuweiser kaydı) etkilenmedi.
+> **(b) B2B_AGENT_URL offen kaldı** — kullanıcı talimatıyla n8n'e dokunulmadı, ama
+> kazı sırasında ciddi bir bulgu çıktı: kutu hâlâ müşterinin Zuweiser CRM verisini
+> yetkisiz şekilde bizim n8n webhook'umuza POST'luyor (`dashboard.js:12004`) — bu
+> on-prem'in "praxis verisi bize akmaz" sözünün tam tersi. Ucuz bir ara-adım
+> (aynı `IST_KUTU` deseniyle `.ai-chat-card`'ı kutudan kaldırmak, n8n workflow'una
+> dokunmadan) biliniyor ama bilinçli olarak uygulanmadı — n8n kararı bekliyor.
 
 > **Nasıl okunur — 31 `gelöst` yanıltıcıdır.** Bunların büyük bölümü (O-56 … O-76
 > aralığı) **paketleme** işiydi: 11-12.09'da açıldılar ve aynı hafta kapandılar, yani
@@ -3460,6 +3492,11 @@ kendi girdilerine terfi etmeliler.
 > orada **Faz 1.x** (merkezden kopma — O-02/O-03/O-09/O-10/O-16/O-21) ve **Faz 3.x**
 > (lisans/yetki — O-31/O-32/O-33/O-46) hâlâ **hiç dokunulmamış** duruyor.
 > Özetle: kutu artık **kuruluyor**, ama hâlâ **SaaS'ın varsayımlarıyla** çalışıyor.
+>
+> ⚠️ Bu paragraf artık eski sayılara dayanıyor (yazıldığı an 31/16/12'ydi, bugün
+> 44/15/10) — düzeltilmeden bırakıldı çünkü kapsamı bu turun dışında, ama O-09
+> özelinde yanıltıcı: **(a) Apify artık dokunuldu ve kapandı**, yalnız **(b)
+> (n8n) hâlâ hiç dokunulmadı** — yukarıdaki O-09 notuna bak.
 
 <details>
 <summary><b>Tarihsel kayıt — 04.09.2026 ilk taraması ve sonraki fark notları (silinmez)</b></summary>
