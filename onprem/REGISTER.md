@@ -856,7 +856,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | F |
 | **Kutuda ne olur** | Kutu **yedeksiz** kurulur. Müşteri sunucusunda veri kaybı = hasta dokümantasyonu kaybı = bizim değil müşterinin sorumluluğu, ama ürün "yedek yok" diye teslim edilirse satışta ve hukukta savunulamaz. Ayrıca playbook D3'ün uyarısı geçerli: `pg_dump` **storage dosyalarını yedeklemez** — reçete görüntüleri, DTA dosyaları, hasta belgeleri 5 bucket'ta duruyor |
 | **Çözüm** | **Faz 2.3** — gecelik `pg_dump` + storage volume arşivi tek yedek seti; hedef Hetzner Storage Box/lokal dizin; 14 gün + 12 ay rotasyon; panelde "son yedek: X" ve başarısızlıkta uyarı; `restore.sh` + gerçekten test edilmiş geri yükleme |
-| **Durum** | `geplant` (Faz 2.3 + 2.3a) — ★ ek gereksinim `onprem/RELEASE-STANDARD.md` §4.3: **migration çalışmadan önce** kutu `vor-<sürüm>` yedeği alır; yedek alınamıyorsa migration **çalışmaz**. Göç-öncesi yedeklerin son 3'ü rotasyondan muaf. Yedek hedefi varsayılan olarak **kutunun dışı** (aynı diskteki yedek disk arızasında veriyle birlikte ölür, §6.6) |
+| **Durum** | `geplant` (Faz 2.3 + 2.3a) — ★ ek gereksinim `onprem/RELEASE-STANDARD.md` §4.3: **migration çalışmadan önce** kutu `vor-<sürüm>` yedeği alır; yedek alınamıyorsa migration **çalışmaz**. Göç-öncesi yedeklerin son 3'ü rotasyondan muaf. Yedek hedefi varsayılan olarak **kutunun dışı** (aynı diskteki yedek disk arızasında veriyle birlikte ölür, §6.6). ⚠️ **12.09.2026:** O-77'nin dar-kapsamlı stopgap'ı (`update.sh`'ta gömülü, koşulsuz, yalnız DB, künyesiz) §4.3-4.7'ye uymuyor — O-26 bunu **genişletme değil, `onprem/backup.sh` gibi paylaşılan bir rutinle DEĞİŞTİRME** işi olarak ele almalı ("aynı kod, farklı tetikleyici"). Detay: O-77'nin kendi maddesindeki itiraf notu |
 
 ---
 
@@ -2855,6 +2855,15 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > ⚠️ **Kapsam bilinçli dar — bu O-77'yi TAM kapatmıyor, yalnız en acil parçasını:** yalnız migration-öncesi TEK bir DB dump'ı. **O-26 hâlâ `geplant`**: storage volume arşivi (reçete görüntüleri/DTA/hasta belgeleri `pg_dump`'a hiç girmez), kutu dışı hedef, 14 gün + 12 ay rotasyon, panelde "son yedek", gerçekten test edilmiş `restore.sh` — bunların hiçbiri bu turda yapılmadı. "Son 5 dump, kutu içi" yalnız bir güvenlik ağıdır, kapsamlı bir yedekleme stratejisi değil.
 >
 > Commit'ler: `0c7c1bc` (backup adımı) · `e8160dc` (Gegenlesen — geri alma eksiği).
+>
+> ⚠️ **Sonradan fark edilen, itiraf edilmesi gereken bir eksiklik:** bu O-77 turu `onprem/RELEASE-STANDARD.md` §4.3-4.7'yi **koda yazmadan önce OKUMADAN** yapıldı — orada Faz 2.3 için zaten çok daha ayrıntılı bir tasarım kilitliydi ve şimdi yazdığım kod ondan **birkaç yönde sapıyor**:
+> 1. **Tetikleyici yanlış.** §4.3: yedek yalnız *"bekleyen migration varsa"* alınmalı — "Bekleyen migration yoksa → doğrudan `listen`... hiç yedek alınmaz, gecikme yok." Benim kodum HER `up -d`'den önce yedek alıyor (bekleyen migration olsun olmasın). Güvenli yönde bir hata (fazla yedek, eksik değil) ama spesifikasyona uymuyor ve gereksiz gecikme/disk yazımı yaratıyor.
+> 2. **`backup.meta.json` künyesi yok.** §4.4 beş alan istiyor (`schema_version`, `app_version`+`image_digest`, `taken_at`/`dump_bytes`/`storage_bytes`, `data_key_fingerprint`, `sebep`) — benim kodum yalnız çıplak bir `.dump` dosyası bırakıyor.
+> 3. **`data_key_fingerprint` yok.** §4.5 O-29'un TAM kapanışını buna bağlıyor (künyede DEK'in HMAC'i, panelde uyumluluk rozeti, `restore.sh`'ın karşılaştırması). Benim kodum yalnız bir log satırında **uyarıyor**, doğrulanabilir bir künye alanı üretmiyor — yani **O-29 hâlâ kapanmadı**, yalnız insan-okur bir hatırlatma eklendi.
+> 4. **Storage arşivi yok.** §4.3 migration-öncesi yedek setinin `pg_dump` + storage arşivini **birlikte** içermesini istiyor; benim kodum yalnız DB.
+> 5. **Mimari sapma en önemlisi:** §4.3 açıkça "Faz 2.3'ün gecelik yedeğiyle **aynı kod**, farklı tetikleyici" diyor — yani nightly (O-26) ve migration-öncesi (O-77) yedek AYNI paylaşılan rutini çağırmalı. Benim kodum `update.sh` içine gömülü, tek-kullanımlık bir blok; O-26 düzgün yazıldığında bu blok **genişletilmeyecek, YENİDEN YAZILACAK/yerini paylaşılan bir script'e (`onprem/backup.sh` gibi) bırakacak.**
+>
+> **Neden yine de commit edildi, geri alınmadı:** zamanlayıcı bugün gerçekten canlı ve yedeksiz migration riski gerçekti — hiç yedek almayan koddan, dar ama çalışan bir yedek alan koda geçmek net bir iyileşme. Ama "O-77 gelöst" etiketi yanıltıcı okunmasın diye buraya açıkça yazıyorum: **gerçek hedef §4.3-4.7'nin tamamı, ve O-26 bunu "ekleme" değil "değiştirme" işi olarak ele almalı.** Bir sonraki oturum bu notu okumadan O-26'ya başlamasın.
 
 ---
 
