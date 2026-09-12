@@ -462,8 +462,6 @@ services:
       SETUP_TOKEN: ${SETUP_TOKEN:-}
 
       TZ: ${TZ:-Europe/Berlin}
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
 
   # ─────────────────────────────────────────────────────────────────────────
   # caddy — Reverse Proxy + TLS + statische Oberflaeche. Das EINZIGE, was aus
@@ -488,7 +486,18 @@ services:
     healthcheck:
       # Caddys Admin-API (nur intern) statt eines HTTPS-Aufrufs — so haengt
       # der Healthcheck nicht am ACME-/Zertifikatsstatus.
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:2019/config/"]
+      #
+      # ⚠️ 127.0.0.1, NICHT "localhost" (O-45 (b)-Test, 12.09.2026 gefunden):
+      # Caddys Admin-API bindet nur an 127.0.0.1:2019 (IPv4). Im Container
+      # loest "localhost" laut /etc/hosts ZUERST auf ::1 (IPv6) auf — wget
+      # versucht nur diese eine Adresse, bekommt "connection refused" und faellt
+      # NICHT auf 127.0.0.1 zurueck. Ergebnis: der Healthcheck schlaegt IMMER
+      # fehl (FailingStreak in der Praxis unbegrenzt steigend), obwohl Caddy
+      # nachweislich laeuft und Anfragen bedient — reines Auflösungsproblem,
+      # kein echter Fehler. Blieb bisher unbemerkt, weil kein anderer Dienst
+      # per depends_on auf Caddys Gesundheit wartet; update.sh's Gesundheits-
+      # pruefung (lib-health.sh) ist die erste, die wirklich darauf wartet.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:2019/config/"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -502,8 +511,6 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
 
 networks:
   default:

@@ -177,6 +177,28 @@ if ! git cat-file -e ":onprem/volumes/db/no-pg-net.sql" 2>/dev/null; then
   pgnet_ihlal="${pgnet_ihlal:+$pgnet_ihlal; }onprem/volumes/db/no-pg-net.sql commit'ten düştü"
 fi
 
+# --- O-72 kapısı: her bind-mount kaynağı manifest.json'da sayılı mı --------
+#
+# O-45 (b) / §7J: update.sh, onprem/docker-compose.yml'in bind-mount
+# kaynaklarını YALNIZ manifest.json'un dateien[] listesinden yazıyor. Compose'a
+# bir mount satırı eklenip manifest'e karşılığı eklenmezse, güncelleyici o
+# dosyayı hiçbir zaman kutuya taşımaz — kutu Docker'ın kendisinin o yolda
+# sessizce yarattığı BOŞ BİR DİZİN'le kalır (O-49'un webhooks.sql dersinin
+# aynısı, iki dosya öteden gelen bir hata).
+o72_ihlal=""
+compose_icerik_o72="$(git show ":onprem/docker-compose.yml" 2>/dev/null || true)"
+manifest_icerik="$(git show ":onprem/manifest.json" 2>/dev/null || true)"
+if [ -n "$compose_icerik_o72" ]; then
+  # Yalnız bir uzantısı olan kaynaklar (.sql/.yml/.sh) — uzantısız iki mount
+  # (volumes/db/data, volumes/storage) CANLI VERİ dizinleridir, manifest'e
+  # asla girmez (J2: "Dizin kopyalama yasak").
+  for kaynak in $(printf '%s' "$compose_icerik_o72" | grep -oE '\./volumes/[^: "'"'"']+\.[A-Za-z0-9]+' | sed 's#^\./##' | sort -u); do
+    if [ -z "$manifest_icerik" ] || ! printf '%s' "$manifest_icerik" | grep -q "\"$kaynak\""; then
+      o72_ihlal="${o72_ihlal:+$o72_ihlal; }$kaynak"
+    fi
+  done
+fi
+
 # --- Karşılaştır ----------------------------------------------------------
 ihlal=""
 sikis=""
@@ -211,6 +233,17 @@ if [ -n "$pgnet_ihlal" ]; then
       Satır/dosya kaybolursa pg_net sessizce geri kurulur — hata yok, log yok.
       Çıkış: onprem/docker-compose.yml içindeki 98a-no-pg-net.sql mount'unu
       ve onprem/volumes/db/no-pg-net.sql dosyasını geri getir (onprem/REGISTER.md O-49/O-71).
+"
+fi
+
+if [ -n "$o72_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ manifest.json'da eksik bind-mount kaynağı: $o72_ihlal
+      update.sh kutuyu YALNIZ manifest.json'un dateien[] listesinden günceller
+      (onprem/REGISTER.md O-45 (b) / §7J). Compose'a mount eklenip manifest
+      güncellenmezse, dosya hiçbir kutuya asla ulaşmaz — Docker o yolda
+      sessizce boş bir DİZİN yaratır (O-49'un webhooks.sql dersinin aynısı).
+      Çıkış: 'node tools/onprem-manifest.mjs' çalıştırıp aynı commit'e ekle.
 "
 fi
 

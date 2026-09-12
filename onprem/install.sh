@@ -4,17 +4,20 @@
 # ════════════════════════════════════════════════════════════════════════════
 #
 #  Erzeugt: 11.09.2026 · Design gesperrt in onprem/REGISTER.md §7G (Konsultation
-#  mit dem onprem-Agenten, 15-Schritt-Tabelle, zwei Gegenlesen-Runden — O-63/
+#  mit dem onprem-Agenten, 16-Schritt-Tabelle, zwei Gegenlesen-Runden — O-63/
 #  O-64/O-65) und §7H/O-66 (SMTP-Schritt, Entscheidung Kemal 11.09.2026: SMTP
 #  wird HIER gefragt, nicht im Assistenten — GoTrue liest seine Umgebung nur
 #  beim Start, ein Browser-Formular käme dort nie an). NICHT ohne erneute
 #  Konsultation umbauen — jede Zeile hier hat einen Grund, der dort steht.
+#  12.09.2026: Schritt 15 (§7J, O-45 b) richtet die nächtliche Selbst-
+#  Aktualisierung ein — install.sh checkt weiterhin den onprem/-Baum aus
+#  (§7J J10: NICHT aus dem Bundle, das ist eine offene, spätere Entscheidung).
 #
 #  Was dieses Skript TUT: Hardware/Software prüfen, .env erzeugen, Geheimnisse
 #  AUF DIESEM SERVER würfeln (G2 — keins davon kommt von uns oder geht an uns),
 #  ANON_KEY/SERVICE_ROLE_KEY aus JWT_SECRET ableiten (O-60 — NICHT würfeln),
 #  optional SMTP abfragen (O-66), die Box hochfahren, mit dem abgeleiteten
-#  Schlüssel wirklich testen.
+#  Schlüssel wirklich testen, die nächtliche Selbst-Aktualisierung einrichten.
 #
 #  Was dieses Skript NICHT TUT: kein Owner-Konto, kein Praxisname, kein
 #  Backup-Ziel, keine SMTP-*Testmail* (die schickt der Assistent — er hat
@@ -96,7 +99,7 @@ for arg in "$@"; do
 done
 
 # ── Schritt 0 — Wurzel + Idempotenz ─────────────────────────────────────────
-log "[0/15] Wurzel- und Wiederholungsprüfung"
+log "[0/16] Wurzel- und Wiederholungsprüfung"
 if [ "$(id -u)" -ne 0 ]; then
   fail "Kein Root" "Benutzer $(id -un)" "root (Docker-Setup, Port 80/443, Dateirechte brauchen es)" \
     "Mit 'sudo bash install.sh' erneut starten."
@@ -120,7 +123,7 @@ fi
 ok "root, Neuanlage möglich"
 
 # ── Schritt 1 — Hardware ─────────────────────────────────────────────────────
-log "[1/15] Hardware-Vorprüfung"
+log "[1/16] Hardware-Vorprüfung"
 CPU_COUNT="$(nproc 2>/dev/null || echo 0)"
 MEM_KB="$(awk '/MemTotal/{print $2}' /proc/meminfo 2>/dev/null || echo 0)"
 MEM_GB=$(( MEM_KB / 1024 / 1024 ))
@@ -142,7 +145,7 @@ else
 fi
 
 # ── Schritt 2 — Software ─────────────────────────────────────────────────────
-log "[2/15] Software-Vorprüfung"
+log "[2/16] Software-Vorprüfung"
 command -v curl >/dev/null 2>&1 || fail "curl fehlt" "nicht installiert" "curl" "apt install curl"
 command -v openssl >/dev/null 2>&1 || fail "openssl fehlt" "nicht installiert" "openssl" "apt install openssl"
 
@@ -165,7 +168,7 @@ docker compose version >/dev/null 2>&1 || fail "Docker-Compose-Plugin fehlt" "ni
 ok "docker + docker compose vorhanden"
 
 # ── Schritt 3 — Ports ─────────────────────────────────────────────────────────
-log "[3/15] Port-Vorprüfung (80, 443)"
+log "[3/16] Port-Vorprüfung (80, 443)"
 if command -v ss >/dev/null 2>&1; then
   for port in 80 443; do
     if ss -ltn 2>/dev/null | awk '{print $4}' | grep -q ":${port}\$"; then
@@ -180,7 +183,7 @@ else
 fi
 
 # ── Schritt 4 — Adresse (O-59) ────────────────────────────────────────────────
-log "[4/15] Adresse der Box"
+log "[4/16] Adresse der Box"
 log "  Unter welcher Adresse ruft der Praxisrechner die Box im Browser auf?"
 log "  Beispiel: https://praxis.local  (ohne Port — Caddy hört auf 443)"
 read -r -p "  SITE_URL: " SITE_URL_INPUT
@@ -210,7 +213,7 @@ if [ "$NEU_BESTAETIGT" -eq 1 ]; then
 fi
 
 # ── Schritt 5 — .env aus Vorlage ─────────────────────────────────────────────
-log "[5/15] .env aus Vorlage erzeugen"
+log "[5/16] .env aus Vorlage erzeugen"
 [ -f "$ENV_TEMPLATE" ] || fail "Vorlage fehlt" "$ENV_TEMPLATE nicht gefunden" "onprem/.env.template im Repository" "Repository vollständig auschecken."
 cp "$ENV_TEMPLATE" "$ENV_FILE"
 chmod 600 "$ENV_FILE"
@@ -244,7 +247,7 @@ set_env API_EXTERNAL_URL "$SITE_URL"
 set_env SUPABASE_PUBLIC_URL "$SITE_URL"
 
 # ── Schritt 6 — Geheimnisse würfeln (G2, ausschliesslich auf diesem Server) ──
-log "[6/15] Geheimnisse erzeugen (auf diesem Server, G2)"
+log "[6/16] Geheimnisse erzeugen (auf diesem Server, G2)"
 # Alle Werte als HEX, nicht Base64: POSTGRES_PASSWORD landet in mehreren
 # postgres://user:PASSWORT@host-Verbindungs-URIs (docker-compose.yml) — ein
 # zufälliges '/' oder '+' aus Base64 wäre dort ein URL-Sonderzeichen und
@@ -276,7 +279,7 @@ set_env SETUP_TOKEN "$SETUP_TOKEN"
 ok "acht Geheimnisse erzeugt (Werte NICHT geloggt)"
 
 # ── Schritt 7 — ANON_KEY / SERVICE_ROLE_KEY aus JWT_SECRET ableiten (O-60) ───
-log "[7/15] ANON_KEY / SERVICE_ROLE_KEY aus JWT_SECRET ableiten"
+log "[7/16] ANON_KEY / SERVICE_ROLE_KEY aus JWT_SECRET ableiten"
 # HS256, per Hand — kein Node auf dem Host nötig (Herleitung gegen Node
 # gegengeprüft, onprem/REGISTER.md O-60). exp = 10 Jahre, NICHT JWT_EXPIRY
 # (das ist die Sitzungsdauer eingeloggter Nutzer, nicht der API-Schlüssel).
@@ -299,14 +302,14 @@ set_env SERVICE_ROLE_KEY "$SERVICE_ROLE_KEY"
 ok "ANON_KEY / SERVICE_ROLE_KEY abgeleitet (nicht gewürfelt)"
 
 # ── Schritt 8 — SUPABASE_PUBLIC_WSS (O-52 b) ─────────────────────────────────
-log "[8/15] SUPABASE_PUBLIC_WSS"
+log "[8/16] SUPABASE_PUBLIC_WSS"
 # Ein Origin (Normalfall, siehe .env.template §3): 'self' im CSP deckt das
 # eigene wss:// schon ab — Feld bleibt leer, kein Rätselraten nötig.
 set_env SUPABASE_PUBLIC_WSS ""
 ok "leer gelassen (SUPABASE_PUBLIC_URL = SITE_URL, ein Origin)"
 
 # ── Schritt 9 — Pflichtfeld-Tor (O-53) ───────────────────────────────────────
-log "[9/15] Pflichtfelder prüfen, bevor irgendetwas startet"
+log "[9/16] Pflichtfelder prüfen, bevor irgendetwas startet"
 for key in SUPABASE_PUBLIC_URL ANON_KEY SERVICE_ROLE_KEY JWT_SECRET POSTGRES_PASSWORD DATA_ENCRYPTION_KEY SETUP_TOKEN; do
   wert="$(env_get "$key")"
   [ -n "$wert" ] || fail "Pflichtfeld leer: ${key}" "leer" "erzeugter Wert" "Skript erneut mit --neu starten — dies deutet auf einen Fehler in Schritt 6/7 hin."
@@ -314,7 +317,7 @@ done
 ok "alle Pflichtfelder gefüllt"
 
 # ── Schritt 10 — TLS-Modus ───────────────────────────────────────────────────
-log "[10/15] TLS-Modus"
+log "[10/16] TLS-Modus"
 log "  Ist ${SITE_URL} von ausserhalb dieses Netzes über eine echte Domain"
 log "  erreichbar (öffentliches DNS), UND soll Let's Encrypt ein echtes"
 log "  Zertifikat ausstellen?"
@@ -336,7 +339,7 @@ else
 fi
 
 # ── Schritt 11 — SMTP (O-66) ─────────────────────────────────────────────────
-log "[11/15] SMTP (Einladungen, Passwort-Reset, Termin-Mails)"
+log "[11/16] SMTP (Einladungen, Passwort-Reset, Termin-Mails)"
 log "  Ohne SMTP startet die Box trotzdem — aber niemand bekommt eine Mail:"
 log "  keine Mitarbeiter-Einladung, kein Passwort-Reset, keine Terminbestätigung."
 log "  Der Assistent (Schritt 2.2) kann eine Testmail schicken, aber SMTP nicht"
@@ -375,7 +378,7 @@ else
 fi
 
 # ── Schritt 12 — pull + up ───────────────────────────────────────────────────
-log "[12/15] Container-Images holen und starten"
+log "[12/16] Container-Images holen und starten"
 if ! docker compose pull 2>&1 | tee -a "$LOG_FILE"; then
   fail "Images konnten nicht geholt werden" "docker compose pull ist fehlgeschlagen" \
     "PRAXURA_API_IMAGE / PRAXURA_FRONTEND_IMAGE als ':stable' erreichbar" \
@@ -390,47 +393,16 @@ fi
 ok "Container gestartet"
 
 # ── Schritt 12 — Gesundheitsprüfung ──────────────────────────────────────────
-log "[13/15] Warten, bis alle Dienste gesund sind (bis zu 3 Minuten)"
-# Ueber `docker inspect` pro Dienst statt `docker compose ps --format …`:
-# die Tabellen-/Template-Unterstuetzung von "ps --format" unterscheidet sich
-# zwischen Compose-Versionen, und ein Dienst, der gar keinen Container mehr
-# hat (abgestuerzt, nie gestartet), taucht in "ps" ohne "--all" oft schlicht
-# nicht auf — der Zwischenstand wirkt dann faelschlich vollstaendig
-# (onprem-Gegenlesen 11.09.2026, O-63).
-mapfile -t DIENSTE < <(docker compose config --services 2>/dev/null)
-ERWARTETE_DIENSTE="${#DIENSTE[@]}"
-[ "$ERWARTETE_DIENSTE" -gt 0 ] || fail "Compose-Konfiguration liefert keine Dienste" "0 Dienste" "8 Dienste (db, auth, rest, realtime, storage, kong, api, caddy)" \
-  "'docker compose config' von Hand prüfen — die Compose-Datei ist vermutlich beschädigt."
-
-for i in $(seq 1 90); do
-  gesund=0
-  alle_da=1
-  for dienst in "${DIENSTE[@]}"; do
-    cid="$(docker compose ps -q "$dienst" 2>/dev/null || true)"
-    if [ -z "$cid" ]; then
-      alle_da=0
-      continue
-    fi
-    laufstatus="$(docker inspect --format '{{.State.Status}}' "$cid" 2>/dev/null || echo 'unknown')"
-    [ "$laufstatus" = "running" ] || { alle_da=0; continue; }
-    healthstatus="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}kein-healthcheck{{end}}' "$cid" 2>/dev/null || echo 'unknown')"
-    if [ "$healthstatus" = "healthy" ] || [ "$healthstatus" = "kein-healthcheck" ]; then
-      gesund=$((gesund + 1))
-    fi
-  done
-  if [ "$alle_da" -eq 1 ] && [ "$gesund" -eq "$ERWARTETE_DIENSTE" ]; then
-    ok "Alle ${ERWARTETE_DIENSTE} Container da und gesund"
-    break
-  fi
-  if [ "$i" -eq 90 ]; then
-    fail "Nicht alle Container wurden gesund" "${gesund}/${ERWARTETE_DIENSTE} gesund, vollständig da: ${alle_da}" "${ERWARTETE_DIENSTE} Container, alle 'running' + 'healthy'" \
-      "'docker compose ps --all' und 'docker compose logs' auf dem Server prüfen — wir kommen nicht in die Box (K10)."
-  fi
-  sleep 2
-done
+log "[13/16] Warten, bis alle Dienste gesund sind (bis zu 3 Minuten)"
+# Geteilte Prüfung mit update.sh (O-45 (b), §7J J5 Schritt 9) — EIN Ort,
+# damit die beiden nie auseinanderdriften (O-63 ist genau das einmal passiert).
+# shellcheck source=./lib-health.sh
+source "$SCRIPT_DIR/lib-health.sh"
+warte_auf_gesundheit 180 || fail "Nicht alle Container wurden gesund" "nicht alle Container 'running'+'healthy' nach 3 Minuten" "8 Container, alle 'running' + 'healthy'" \
+  "'docker compose ps --all' und 'docker compose logs' auf dem Server prüfen — wir kommen nicht in die Box (K10)."
 
 # ── Schritt 14 — Schlüsselbeweis (O-60) ──────────────────────────────────────
-log "[14/15] Abgeleiteten Schlüssel wirklich testen"
+log "[14/16] Abgeleiteten Schlüssel wirklich testen"
 # --resolve: SITE_URL loest sich auf DIESEM Server selbst noch nirgends auf
 # (der hosts-/DNS-Hinweis kommt erst im letzten Schritt) — ohne diesen Zwang
 # scheitert der Test an einer Namensaufloesung, nicht am Schluessel, und
@@ -473,7 +445,57 @@ if [ "$mit_service_key" != "200" ]; then
 fi
 ok "SERVICE_ROLE_KEY akzeptiert (200)"
 
-# ── Schritt 15 — Ausgabe ──────────────────────────────────────────────────────
+# ── Schritt 15 — Selbst-Update einrichten (O-45 (b), §7J) ───────────────────
+# update.sh + lib-health.sh liegen bereits in diesem Verzeichnis (Teil des
+# ausgecheckten onprem/-Baums, wie install.sh selbst — J10 in §7J: das Bundle
+# ersetzt diesen Weg NICHT, das ist eine offene, spätere Entscheidung).
+log "[15/16] Automatische Aktualisierung einrichten (nächtlich)"
+chmod +x "$SCRIPT_DIR/update.sh" "$SCRIPT_DIR/lib-health.sh"
+
+# Taban für update.sh's erste .env-Zusammenführung (§7J J4): ohne diese Kopie
+# hätte der allererste Lauf nichts, wogegen er "was haben WIR geändert"
+# vergleichen könnte.
+mkdir -p "$SCRIPT_DIR/.praxura-stand"
+cp "$ENV_TEMPLATE" "$SCRIPT_DIR/.praxura-stand/env.taban.template"
+
+if command -v systemctl >/dev/null 2>&1; then
+  cat > /etc/systemd/system/praxura-update.service <<EOF
+[Unit]
+Description=Praxura On-Premise — Compose/.env/Image aktualisieren (O-45 b)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=${SCRIPT_DIR}
+ExecStart=/usr/bin/env bash ${SCRIPT_DIR}/update.sh
+EOF
+
+  cat > /etc/systemd/system/praxura-update.timer <<EOF
+[Unit]
+Description=Praxura On-Premise — nächtliches Update (Timer)
+
+[Timer]
+# Nachtfenster bewusst: ein schlechtes Release soll nicht während der
+# Praxis-Öffnungszeiten landen. Der eigentliche Schutz gegen schlechte
+# Releases ist das 72h-Soak vor :stable (RELEASE-STANDARD.md §6.3), nicht
+# dieser Zeitpunkt.
+OnCalendar=*-*-* 02:00:00
+RandomizedDelaySec=7200
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+  systemctl daemon-reload
+  systemctl enable --now praxura-update.timer >/dev/null 2>&1
+  ok "praxura-update.timer aktiv (nächtlich 02:00 + bis zu 2h Zufallsverzögerung)"
+else
+  warn "systemctl nicht gefunden — automatische Aktualisierung NICHT eingerichtet. 'bash update.sh --jetzt' manuell/per Cron einrichten."
+fi
+
+# ── Schritt 16 — Ausgabe ──────────────────────────────────────────────────────
 # Die Route zu einer beliebigen oeffentlichen Adresse zeigt zuverlaessiger
 # auf die echte Praxisnetz-Schnittstelle als "hostname -I" — letzteres kann
 # auch eine interne Docker-Bridge-Adresse (typ. 172.17.0.1) an erster Stelle
@@ -482,7 +504,7 @@ ok "SERVICE_ROLE_KEY akzeptiert (200)"
 LAN_IP="$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}')"
 [ -n "$LAN_IP" ] || LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 
-log "[15/15] Fertig"
+log "[16/16] Fertig"
 log ""
 log "  Box erreichbar unter:  ${SITE_URL}"
 [ -n "$LAN_IP" ] && log "  Eine Server-Adresse:    ${LAN_IP} (PRÜFEN, ob das die echte Praxisnetz-IP ist, nicht z. B. eine Docker-interne)"

@@ -25,6 +25,17 @@ COPY setup ./setup
 # aber das Schema der Kundenbox bleibt stehen — und zwar lautlos.
 COPY db ./db
 
+# onprem-bundle: die on-prem Kundenbox aktualisiert ihr eigenes compose/env
+# NUR über das, was in DIESEM Image mitkommt (O-45 (b), onprem/REGISTER.md §7J).
+# Zusätzlicher Build-Kontext "onprem" (siehe .github/workflows/publish-calendar-api.yml
+# build-contexts: onprem=../onprem) — der primäre Kontext bleibt ./api-backend,
+# nichts an den obigen COPY-Zeilen ändert sich. Einzeln aufgeführt wie oben:
+# KEIN Verzeichnis-COPY von volumes/ (onprem/volumes/db/data wäre sonst die
+# LIVE-Postgres-Datenverzeichnis — s. onprem/REGISTER.md §7J J2).
+COPY --from=onprem docker-compose.yml .env.template install.sh update.sh lib-health.sh manifest.json ./onprem-bundle/
+COPY --from=onprem volumes/api/kong.yml volumes/api/kong-entrypoint.sh ./onprem-bundle/volumes/api/
+COPY --from=onprem volumes/db/_supabase.sql volumes/db/jwt.sql volumes/db/no-pg-net.sql volumes/db/realtime.sql volumes/db/roles.sql volumes/db/webhooks.sql ./onprem-bundle/volumes/db/
+
 ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000

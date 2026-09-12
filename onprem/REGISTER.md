@@ -125,9 +125,15 @@ test yığını**, kurulabilir ürün değil.
    ✅ **O-68, O-69, O-70 de aynı gün kapandı** (O-58 (a)'nın uygulamasından çıkan üç artık, §7I).
    ✅ **O-48 konseyde karara bağlandı (12.09.2026): Kong kalıyor**, 886 MB rakamı
    yanlış ölçülmüştü (`konsey/tutanak/2026-09-12-o48-kong.md`).
-   2.1b'nin **kalanı**: yalnız O-45 (b) — kullanıcı kararı bekliyor.
-   Sonra 2.1c'ye geçilir (2.1c'nin kendisi zaten yazıldı, bkz. madde 2 — kalan yalnız
-   2.1b'nin tek maddesi).
+   ✅ **O-45 (b) uygulandı ve gerçek kutuya karşı test edildi (12.09.2026) — §7J.**
+   Tasarım: host'ta `update.sh` + systemd zamanlayıcı; paket `api` image'ında
+   (`/app/onprem-bundle/`); `.env` anahtar bazlı üç-yollu birleştirme; kutuda
+   Watchtower **yok**. Dört gerçek dosya/kod hatası test sırasında bulunup düzeltildi
+   (biri Faz 2.1b'den beri var olan, ilgisiz bir Caddy healthcheck hatası). **O-72**
+   ve **O-73** de aynı turda kapandı. Açık tek kullanıcı kararı: **J10** (`install.sh`
+   de paketten mi gelsin — §7G'ye dokunur, şimdilik "hayır" — bkz. J10'un altındaki not).
+   **Faz 2.1b artık tamamen kapalı.** 2.1c'ye geçilir (2.1c'nin kendisi zaten yazıldı,
+   bkz. madde 2).
 2. **Faz 2.1c** — `install.sh`. **Tasarım hazır: §7G** (15 adım, Faz 2.2 sınırı, hata
    modeli). Kapsadığı maddeler: O-53 (zorunlu değişken kapısı) · ✅ O-59 (adres ön-kontrolü
    + kurulum sonu çıktısı, 12.09.2026 tamam) · O-52 (b) (`SUPABASE_PUBLIC_WSS` türetimi) · O-50'nin kalanı
@@ -1200,7 +1206,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | G + F |
 | **Kutuda ne olur** | Bizim `api` image'ımız her gece güncellenir, altındaki 11 servis **kurulduğu sürümde donar**. Sonuç üç yerden ısırır: (1) GoTrue/Storage'ta çıkan bir CVE'yi kapatmanın yolu yok — CRA'nın 24s/72s/14g bildirim yükümlülüğü (D10) tam da bunu istiyor; (2) Postgres majör yükseltmesi (PG15→17 gibi) `pg_upgrade` gerektirir, kutu başına elle adım demektir ve **K10 gereği kutuya giremeyiz**; (3) yeni migration'larımız upstream'in yeni bir sürümünü varsayarsa eski kutuda patlar. 20 kutuda bu "bir hafta sürer"; 200 kutuda **hiç bitmez** |
 | **Çözüm** | Üç parça, hiçbiri yazılmadı: (a) compose'un **sürümlenmesi** — image tag'leri `.env`'den okunsun, compose aptal kalsın (§6.4 kuralının somut hâli); (b) kutuda `praxura-updater` benzeri küçük bir adım: yeni compose/`.env` şablonu image ile gelsin, kutu kendi compose'unu **kendi** güncellesin (bugünkü "compose'a yazdığımız hiçbir şey ulaşmaz" duvarını yıkar); (c) `releases.json`'da upstream sürüm eşlemesi + durak (O-43). Faz dağılımı (playbook 11.09.2026'da güncellendi): (a) **Faz 2.1a içinde yapıldı** · (b) **Faz 2.1b** (compose'un kutuya dağıtımı, playbook §Faz 2.1b) · (c) **Faz 2.9** (`releases.json`, O-43) |
-| **Durum** | 🟡 **kısmen çözüldü (11.09.2026)** — (a) yapıldı, (b) ve (c) açık |
+| **Durum** | 🟡 **kısmen çözüldü** — (a) yapıldı (11.09.2026); ✅ **(b) uygulandı ve gerçek kutuya karşı test edildi (12.09.2026) → §7J**; (c) açık (Faz 2.9) |
 
 > **11.09.2026 — (a) tamam: yığın artık tek bir sürümlenmiş nesne.**
 > `onprem/docker-compose.yml` yazıldı ve **hiçbir `image:` satırı etiket taşımıyor** —
@@ -2172,6 +2178,302 @@ ekranda bu cümle var.
 | **Kutuda ne olur** | Bugün hiçbir şey. Ama compose'u düzenleyen biri (ör. upstream sürüm yükseltmesinde mount listesini vendor'dan yeniden üretirken) o satırı düşürürse `pg_net` **sessizce geri gelir** ve kutu yine dışarı telefon edebilir hâle gelir. Arıza yok, log yok, kapı yok — yalnızca G1 tekrar alışkanlığa döner. Sınıf olarak O-49'un kendisiyle aynı; fark, bu sefer bir kez çözülmüş olması, yani geri gidiş **gerileme** olur |
 | **Çözüm** | `tools/check-onprem.sh`'a bir sayaç: `onprem/docker-compose.yml` içinde `no-pg-net` geçen satır sayısı (taban **1**) — **azalma = red**. İkinci satır isteğe bağlı ama ucuz: `onprem/volumes/db/no-pg-net.sql` dosyasının varlığı. Mevcut sayaç deseninin (`absender_fest`, `onprem_image`) aynısı, yeni mekanizma gerekmiyor. `builder` uygular |
 | **Durum** | ✅ **gelöst (12.09.2026)** — **sayaç değil, doğrudan kontrol** olarak yazıldı: mevcut `kontrol()` fonksiyonu yalnız ARTIŞI kırmızı sayar (`simdi > taban`), burada tersi gerekiyordu (kaybolma kırmızı) — o yüzden yıkıcı-DDL/şema-drift kapılarıyla aynı desende yeni bir "pg_net kapısı" bloğu eklendi (`tools/check-onprem.sh`, şema drift kapısının hemen altı): `git show ":onprem/docker-compose.yml"` içinde `no-pg-net` dizgisi yoksa VEYA `git cat-file -e ":onprem/volumes/db/no-pg-net.sql"` dosyayı indexte bulamazsa commit reddedilir. İkisi de **staged içerik** üzerinden (`:path` sözdizimi, dosya yolunun index'teki hâli) — script'in geri kalanıyla aynı ilke. Testte doğrulandı: mount satırı elle silinip `git add` edildiğinde kapı doğru mesajla reddetti; geri eklenince yeşile döndü |
+
+---
+
+## 7J — Faz 2.1b son maddesi: kutu kendi compose'unu nasıl günceller (O-45 (b)), 12.09.2026
+
+> §7G gibi: **kod değil, gereksinim.** Uygulama `builder`'ın. Aşağıdaki on madde
+> kilitlidir; biri değişecekse önce burası değişir, sonra betik.
+>
+> Sorunun bugünkü hâli tek cümle: `onprem/docker-compose.yml`'e yazdığımız hiçbir şey
+> kurulmuş bir kutuya ulaşmıyor (`RELEASE-STANDARD.md` §6.4). Bugün O-49'da eklediğimiz
+> `98a-no-pg-net.sql` mount'u bunun canlı örneği — repoda var, kutuda olmazdı.
+
+### J1 — Kanal: host'ta bir betik + systemd zamanlayıcı. Konteyner **değil**
+
+| Seçenek | Niye reddedildi |
+|---|---|
+| `api` konteyneri host'taki compose'u bind-mount üzerinden yazsın | (1) Dosyayı yazmak **uygulamaz** — compose'u okuyan host'taki Docker daemon'ıdır, birinin `docker compose up -d` çalıştırması gerekir; (2) `api` konteyneri `USER app` ile koşuyor, root'a ait `.env`/compose'u yazamaz; (3) uygulamaya docker soketi vermek, **internete bakan** konteyneri host root'una çevirir (bir RCE = kutunun tamamı) |
+| Compose'da `praxura-updater` diye bir servis | Kendi tanımını yeniden yazan servis, `docker compose up -d`'yi çalıştırdığı anda **kendini** öldürür (komut yarıda kalır). Kaçış yolu var (kardeş bir tek-atımlık konteyner doğurmak) ama yine docker soketi gerektirir ve yukarıdaki (3) aynen geçerli |
+| ✅ **Host'ta `update.sh` + `praxura-update.timer`** | Root olarak host'ta koşar: dosyayı yazabilir, `docker compose up -d` çalıştırabilir, **kendini yeniden başlatabilir** (konteyner değil, süreç). Hiçbir konteynere soket vermez. `install.sh` zaten root olarak host'ta koşuyor — kurulumu oradan yapılır |
+
+⛔ Yan sonuç, bilinçli: **kutuda Watchtower olmayacak.** Bkz. J8.
+
+### J2 — Paket (`bundle`): image'ın içinde gelen host dosyaları
+
+`api` image'ında `/app/onprem-bundle/` altında taşınır (aynı commit'ten, `praxura/api`'ye
+sabitlenir — `frontend` image'ına konmaz, iki kaynak olmaz). İçindekiler **manifest'te
+tek tek sayılır**, dizin kopyalanmaz:
+
+```
+/app/onprem-bundle/manifest.json
+                   docker-compose.yml
+                   .env.template
+                   install.sh · update.sh · lib-health.sh
+                   volumes/api/kong.yml · kong-entrypoint.sh
+                   volumes/db/*.sql
+```
+
+`manifest.json` alanları: `surum` (`X.Y.Z`) · `dateien[]` (yol + sha256) ·
+`durak` (bool) · `elle_adim[]` (DE metin) · `not_url`.
+
+- **Dizin kopyalama yasak, sebebi somut:** `onprem/volumes/db/data` **canlı Postgres veri
+  dizinidir**, kurulum ağacının içinde durur. Naif bir `cp -r`/`rsync` veritabanını
+  yedeğe kopyalar, diski doldurur (§6.6) ve sırları çoğaltır. Güncelleyici yalnız
+  `dateien[]`'de yazan yolları okur ve yazar; başka hiçbir dosyaya dokunmaz.
+- Çıkarma yöntemi: `docker create` + `docker cp` + `docker rm`. Konteyner **çalıştırılmaz**,
+  image'da shell/entrypoint aranmaz.
+- ⛔ Pakette **hiçbir sır yoktur** (G2). `.env.template` boş değerlerle gelir; gerçek
+  `.env` müşterinin sunucusunda, `install.sh`'ın ürettiği hâliyle kalır.
+- Paket **yeni bir dış çağrı açmaz** (G8): tek giden bağlantı zaten var olan registry
+  pull'u. Taksonomide bu **tip B'nin host tarafındaki kardeşi** — veri merkezde
+  derlenir, image'la iner, kutu kimseye telefon etmez.
+
+### J3 — Dosya sahipliği: üç sınıf, üç ayrı kural
+
+| Sınıf | Dosyalar | Kural |
+|---|---|---|
+| **Bizim** | `docker-compose.yml` · `volumes/**` · `update.sh` · `install.sh` · `lib-health.sh` | Byte byte değiştirilir. Müşteri bunları düzenlemez |
+| **Müşterinin** | `.env` | **Asla komple değiştirilmez.** Yalnız anahtar bazında birleştirilir (J4) |
+| **Kimsenin** | `.env` dışındaki her şey, `volumes/db/data`, yedekler, loglar | Güncelleyici bunlara **hiç bakmaz** |
+
+**"Bizim" dosyalar için sapma kontrolü:** durum dosyası her dosyanın *bizim yazdığımız*
+sha256'sını tutar. Diskteki dosya o özetten farklıysa biri elle düzenlemiştir →
+**üzerine yazılmaz**, yeni sürüm yanına `<dosya>.neu` olarak bırakılır, güncelleme
+**tümden durur** ve panelde dosya adıyla gösterilir. Yarım uygulanmış paket, hiç
+uygulanmamış paketten kötüdür.
+
+> Bu kural, §6.4'ün *"compose'da davranış tutulmaz"* cümlesini **denetlenebilir** hâle
+> getirir: müşterinin değiştirmek isteyebileceği her şey `.env`'de olmak zorundadır,
+> yoksa ilk özelleştirmede kutu güncelleme alamaz hâle gelir.
+
+### J4 — `.env` birleştirme: üç-yollu, ama **anahtar bazında** (metin merge değil)
+
+Üç girdi: `taban` = en son uyguladığımız `.env.template` kopyası (durum dizininde
+saklanır) · `bizim` = paketteki yeni `.env.template` · `onun` = kutudaki `.env`.
+
+| Durum | Karar |
+|---|---|
+| Anahtar yalnız `bizim`'de (yeni) | `.env` sonuna eklenir, üstüne `# neu in X.Y.Z` yorumu |
+| `bizim == taban` (biz değiştirmedik) | **Dokunulmaz.** Sırlar, `SITE_URL`, TLS modu, SMTP buraya düşer |
+| `bizim != taban` **ve** `onun == taban` | Bizimki yazılır. `VERSION_*` / `PRAXURA_*_IMAGE` yükseltmesi buradan yürür — O-45 (a)'nın karşılığı |
+| `bizim != taban` **ve** `onun != taban` (müşteri kendi sabitlemiş) | **Onunki kalır**, çakışma kaydedilir, panelde uyarı — ama güncelleme **devam eder** |
+| Anahtar `taban`+`onun`'da var, `bizim`'de yok | Dokunulmaz. Kullanılmayan env anahtarı zararsızdır; **silme yok** |
+
+Asimetri bilinçli: **bizim dosyamızda çakışma durdurur, `.env`'de durdurmaz.** `.env`
+tanım gereği müşterinindir; orada bir satır yüzünden kutuyu sonsuza kadar eski sürümde
+bırakmak, çözdüğümüzden büyük bir sorun olurdu.
+
+Yazma biçimi: satır yerinde değiştirilir (dosya baştan üretilmez — müşterinin kendi
+yorumları ve satır sırası korunur), geçici dosyaya yazılıp `mv` ile yerine konur,
+`chmod 600` + root sahipliği korunur. ⛔ Hiçbir değer log'a yazılmaz (§7G hata modeli).
+
+### J5 — Bir koşunun adım sırası (kilitli)
+
+| # | Adım | Not |
+|---|---|---|
+| 0 | `flock` + ön kontrol | Aynı anda ikinci koşu yok. Disk %92'nin üstündeyse hiç başlama (§6.6) |
+| 1 | `docker compose pull api` | Yalnız kendi image'ımız. Başarısızsa **hiçbir şey değişmedi**, sessizce bir sonraki geceye |
+| 2 | Paketi çıkar (`docker create`/`cp`), `manifest.json`'ı oku | Ağa ikinci bir çıkış yok |
+| 3 | **Durak kapısı** | `durak: true` ya da `elle_adim[]` doluysa: hiçbir dosyaya dokunma, panelde metni göster, dur (`RELEASE-STANDARD.md` §3.4 Kural 4) |
+| 4 | Diskteki hâlle karşılaştır | Fark yoksa → adım 8'e atla (image yenilenmiş olabilir) |
+| 5 | Sapma kontrolü (J3) + `.env` birleştirme (J4) | Sapma varsa dur, `.neu` bırak |
+| 6 | **Anlık görüntü** | `dateien[]` + `.env` → `.praxura-stand/<zaman>/`. Son **3** tutulur |
+| 7 | Yeni dosyaları yaz → **iki kapı** | (a) `docker compose config -q` geçmeli; (b) compose'daki **her bind-mount kaynağı diskte dosya olarak var mı** (O-72). İkisi de konteynerlere dokunmadan, bedava |
+| 8 | `docker compose pull` + `up -d --remove-orphans` | `.env`'i host'taki Docker okur; yeni `VERSION_*` burada devreye girer |
+| 9 | **Sağlık kapısı** | `lib-health.sh` — `install.sh` adım 12'nin O-63'te sertleştirilmiş hâli, **ortak dosya** (iki betik aynı kodu kullanır, sürüklenme olmaz) + Caddy üzerinden `/api/health` 200. Süre sınırı 5 dk |
+| 10 | Durum dosyasını yaz | `praxura-stand.json`: sürüm, her dosyanın sha256'sı, sonuç (`ok`/`konflikt`/`durak`/`geri_alindi`), zaman, çakışan `.env` anahtarları. `api`'ye `:ro` mount edilir → panel (Faz 2.4 `/status`) bunu gösterir |
+
+`update.log`: `install.log` ile aynı disiplin — sır yok, 5 MB'ta budanır.
+
+**Kendi kendini güncelleme:** `update.sh` de pakettedir. Koşan sürüm önce paketi
+senkronlar; kendi dosyası değiştiyse **bir kez** yeni hâlini `exec` eder (döngü koruması:
+ortam değişkeni bayrağı). Konteyner olmadığı için bu sorun olmaktan çıkar — J1'in asıl
+kazancı budur.
+
+### J6 — Hata ve geri dönüş: **dosya** geri alınır, **sürüm** alınmaz
+
+- Adım 7'nin kapıları başarısız → hiçbir konteyner yeniden yaratılmadı, dosyalar anlık
+  görüntüden geri yüklenir. Kutu koşu hiç olmamış gibi çalışmaya devam eder.
+- Adım 9 başarısız → dosyalar geri yüklenir, `up -d` tekrar koşar, sağlık **yeniden**
+  ölçülür; o da olmazsa kutu bakım moduna düşer ve panelde sebep + son iyi sürüm yazar.
+- ⛔ **Güncelleyici image sürümünü geri almaz.** `:stable` hareketli bir etikettir;
+  migration koştuysa eski kod + yeni şema = §4.6'nın ikinci satırı, yani yedek işidir.
+  Geri alma bizim merkezden yaptığımız iş olarak kalır (§4.6a) — bu betik onu taklit
+  etmez. Tek istisna `VERSION_*` satırlarıdır ve onlar da dosya geri alımıyla birlikte
+  geri döner; Postgres majör yükseltmesi gibi **geri dönülemez** olanlar zaten adım
+  3'ün durak kapısına takılır.
+- §4.3'ün göç-öncesi yedeği bu betiğin işi **değildir** — migration runner'ın
+  sözleşmesidir (`SCHEMA-VERTEILUNG.md`). İki yerde yapılırsa iki kez alınır.
+
+### J7 — Sıra sorunu yok: **image N, paket N-1 ile çalışmak zorundadır**
+
+Güncelleyici geceleyin tek sırayla koşar, ama yine de bir koşu yarıda kalabilir (elektrik,
+disk, çakışma). Kural, expand/contract'ın (§4.7) host tarafındaki karşılığıdır:
+
+> **Bir sürümün image'ı, bir önceki sürümün compose/`.env`'i ile de açılmak zorundadır.**
+> Yeni bir env var eklenirse kodda varsayılanı olur; yeni bir mount eklenirse kod onsuz
+> da çalışır. Zorunlu hâle gelmesi en erken **bir sonraki** MINOR'dadır.
+
+Bu kural sayesinde "önce image mi geldi, önce paket mi" sorusu ortadan kalkar ve §6.4'ün
+*"compose değişirse MAJOR"* cümlesi gevşer: **compose değişikliği artık MINOR'dur**;
+MAJOR yalnız J5 adım 3'ün durak listesi için kalır.
+
+### J8 — Kutuda Watchtower yok
+
+Watchtower konteyneri compose'a **hiç girmedi** (bugün yalnız iki `watchtower.enable`
+etiketi var, onları izleyen kimse yok — O-73). Girmeyecek de:
+
+- İki güncelleyici = yarış. `up -d` sırasında Watchtower aynı konteyneri yeniden
+  yaratabilir; hangi yapılandırmanın kazandığı belirsizdir.
+- Watchtower konteyneri **compose'u okumaz** — çalışan konteynerin mevcut yapılandırmasını
+  kopyalayıp image'ı değiştirir. Yani yeni compose satırlarını zaten hiçbir zaman
+  uygulayamaz. O-45 (b)'nin var oluş sebebi tam olarak budur.
+- Docker soketi tutan bir konteyner eksilir → saldırı yüzeyi küçülür.
+
+SaaS VPS'i **değişmez** (orada Watchtower kalır, `api-backend/docker-compose.yml`). G7
+ihlali değil: tek codebase, tek image; farklı olan yalnız host'un çalıştırma biçimi.
+K11 Watchtower'ı isim olarak şart koşmaz — kanal (`:beta`/`:stable`) korunuyor.
+`RELEASE-STANDARD.md` §6.4 tablosu buna göre güncellenecek.
+
+**Zamanlama:** `praxura-update.timer`, `OnCalendar=*-*-* 02:00` + `RandomizedDelaySec=7200`
++ `Persistent=true`. Gece penceresi bilinçli — §6.3'ün "saatlik" önerisi bir praxis için
+yanlıştır: kötü bir sürümün **iş saatinde** inmesi, düzeltmenin bir gün gecikmesinden
+pahalıdır; kötü sürüme karşı asıl koruma zaten 72 saatlik soak'tur (§6.3 katman 2).
+`Persistent=true`: hafta sonu kapalı kalan kutu açılışta telafi eder.
+Elle: `bash update.sh --jetzt`. (İleride lisans yanıtına `sofort_aktualisieren` bayrağı
+konabilir — Faz 3, **bugün kilitlenmiyor**; G1 açısından temiz, çünkü yük yalnız lisans-ID
++ sürüm + imza taşır.)
+
+### J9 — Faz konumu: **Faz 2.1b'de kalır, `releases.json`'u beklemez**
+
+- Mekanizmanın sürüm listesine ihtiyacı yok: hangi sürüme çıkacağını `.env`'deki kanal
+  etiketi (`:stable`) söyler, ne uygulanacağını **image'ın kendi içindeki** `manifest.json`
+  söyler. `releases.json` (Faz 2.9 / O-43) **geçmişin** listesidir; durak kararı için
+  gereken tek alan (`durak`) paketin kendi manifestinde taşınır. Bağımlılık tek yönlü ve
+  gevşek: 2.9 geldiğinde manifest o dosyadan üretilir, betik değişmez.
+- ⛔ **Asıl gerekçe zamanlama:** bu betik, **ilk kutu kurulmadan önce** inmek zorunda.
+  Bugün kurulu kutu sayısı sıfır. Sonraya bırakılırsa, güncelleyicinin kendisini kutulara
+  taşıyacak bir mekanizma olmaz — K10 gereği içeri giremediğimiz makinelerde elle adım
+  demektir. Yani bu madde 2.1b'nin **son** maddesi olmakla kalmıyor, 2.1c/2.2'nin de
+  önünde duruyor.
+- Sonraki fazlara bağı: Faz 2.4 (`/status`) durum dosyasını okur · Faz 2.3 (yedek)
+  §4.3'ü runner tarafında sağlar · Faz 3.4 (registry kimliği) ve 4.3b (`:stable`
+  etiketi) **olmadan gerçek koşu yapılamaz** — geliştirme ve test yerel image ile
+  yapılır, bu bir eksiklik değil, sıralamadır.
+
+### J10 — ★ Kullanıcı kararı: `install.sh` de paketten mi gelsin?
+
+Bugün `install.sh` deponun `onprem/` ağacının müşteri sunucusuna indirilmiş olmasını
+varsayıyor (`.env.template` bulunamazsa *"Repository vollständig auschecken"* diyor).
+Paket mekanizması kurulduğunda daha temiz bir düzen mümkün:
+
+> Müşteri **tek bir dosya** indirir (`install.sh`). Betik Docker'ı doğruladıktan sonra
+> paketi image'dan çıkarır (J2) ve compose/`volumes/`/`.env.template`'i oradan yazar.
+
+Kazancı somut: kurulum ağacı ile image **hiçbir zaman** sürüm kaymasına düşemez (bugün
+Temmuz'da indirilmiş bir tarball ile Eylül image'ı yan yana gelebilir), ve `update.sh`
+ilk saniyeden itibaren kurulu olur. Bedeli: §7G'nin adım sırası değişir (paket çıkarma
+adım 2 ile 5 arasına girer) ve kurulum artık registry erişimine **daha erken** bağlanır.
+
+§7G kilitli bir tasarım olduğu için **bunu ajan tek başına açmaz** — karar kullanıcıda.
+Kararın kendisi J1-J9'u değiştirmez; yalnız ilk kurulumun nereden beslendiğini değiştirir.
+
+**Kullanıcı kararı (12.09.2026):** Şimdilik dokunulmadı — `install.sh` bugünkü gibi
+`onprem/` ağacından çalışmaya devam ediyor, yalnız `update.sh`/`lib-health.sh`'ı kurma
+adımı eklendi. J10 açık kalıyor, ayrı bir karar.
+
+### J1-J9 uygulandı ve gerçek kutuya karşı test edildi (12.09.2026)
+
+**Yazılanlar:** `onprem/lib-health.sh` (install.sh'ın sağlık döngüsünden çıkarıldı,
+iki betik de `source` eder — J5 adım 9) · `onprem/update.sh` (~350 satır, J1-J9'un tam
+uygulaması) · `onprem/manifest.json` + üretici `tools/onprem-manifest.mjs` (elle
+düzenlenmez, sha256'lar diskten hesaplanır) · `api-backend/Dockerfile`'a bundle COPY'leri
+(ek build-context `onprem=./onprem`, `docker/build-push-action`'ın `build-contexts`
+girdisiyle — `.github/workflows/publish-calendar-api.yml` güncellendi, O-57'nin dersiyle
+aynı: bundle dosyaları da o workflow'un `paths:` tetikleyicisine eklendi) · `install.sh`
+Schritt 15 (chmod + `.praxura-stand/env.taban.template` + systemd birimleri yazma +
+`enable --now`) · `tools/check-onprem.sh`'a O-72 doğrudan kontrolü · iki Watchtower
+etiketi kaldırıldı · `RELEASE-STANDARD.md` §6.4 baştan yazıldı.
+
+**Test yöntemi:** gerçek Docker kutusuna karşı, dört sürüm üretilip zincirleme
+uygulanarak (yerel registry `localhost:5000`, gerçek `docker pull`/`push` — image'ın
+İÇİNDEN bundle'ın çıkıp çıkmadığı sahte değil gerçekten sınandı):
+
+| Senaryo | Sonuç |
+|---|---|
+| V1 kutu kaldırılıyor, 8/8 healthy | ✅ |
+| V1→V2: `docker-compose.yml` değişti, `.env` dokunulmadı | ✅ diff doğru tespit edildi, iki kapı geçti, `up -d`, sağlık, `sonuc:"ok"` |
+| V2→V3: yalnız `.env.template`'te `VERSION_KONG` yükseltildi + müşterinin `SITE_URL`'i özelleştirilmiş | ✅ `VERSION_KONG` yükseltildi, `SITE_URL` **dokunulmadan** kaldı (J4 satır 2 ve 3 birlikte) |
+| V3→V4: `docker-compose.yml`'e müşteri elle bir satır eklemiş, V4 de aynı dosyayı değiştiriyor | ✅ sapma tespit edildi, `.neu.bekliyor` bırakıldı, güncelleme durdu, kutu **dokunulmadan** sağlıklı kaldı, `sonuc:"konflikt"` |
+| `update.sh`'ın kendisi değişince | ✅ tek re-exec, döngü yok |
+
+**Test sırasında bulunan ve düzeltilen dört gerçek hata** (hiçbiri kod okuyarak
+bulunamazdı):
+
+1. **`env_wert()`'in awk alan-temizleme hilesi baştaki boşluğu silmiyordu** —
+   `$1=""` sonrası `print`, OFS ile `" degeri"` üretiyor (`sub(/^=/,"")` bunu
+   yakalayamıyor çünkü artık baştaki karakter `=` değil boşluk). Sonuç: `docker pull`
+   `" praxura/api:stable"` gibi geçersiz bir referansla çağrılıyordu, sessizce
+   "pull başarısız" diye çıkıyordu. Düzeltme: install.sh'ın zaten kanıtlanmış
+   `env_get()` deseni (`sub(/^[^=]*=/,"")`, $0 üzerinde doğrudan) — iki dosyada
+   artık aynı desen.
+2. **update.sh kendi kendini yazıp çöktü.** İlk sürümde kendi-kendini-güncelleme
+   kontrolü Schritt 7'nin (dosya yazma) SONRASINDA duruyordu — ama `update.sh`
+   `degisen_dosyalar` listesindeyse Schritt 7 onu zaten yazmış oluyordu, yani o an
+   çalışan bash süreci kendi betiğinin baytlarını ayaklarının altından değiştiriyordu
+   (`kendi_sha: unbound variable` diye çöktü, betiğin geri kalanı bozuk okundu).
+   Düzeltme: kendi-kendini-güncelleme kontrolü artık HER ŞEYDEN ÖNCE (manifest
+   okunur okunmaz) — update.sh farklıysa yazılır ve HEMEN `exec` edilir, geri kalan
+   her şey (diff, `.env` birleştirme, diğer dosyalar) tamamen YENİ süreçte baştan
+   çalışır.
+3. **O-72'nin kapısı (hem `check-onprem.sh`'ta hem `update.sh`'ta) canlı veri
+   dizinlerini "eksik dosya" sanıyordu** — `volumes/db/data` ve `volumes/storage`
+   uzantısız bind-mount'lar, gerçek dosyalar değil dizinler (J2: "dizin kopyalama
+   yasak"). İlk yazımda ikisi de `./volumes/...` deseniyle HER kaynağı yakalıyordu;
+   düzeltme yalnız bir uzantısı olan (`.sql`/`.yml`/`.sh`) kaynakları sayıyor.
+4. **Caddy'nin healthcheck'i kutuda ASLA sağlıklı olamıyordu — O-45 (b)'den bağımsız,
+   Faz 2.1b'den (11.09.2026) beri var olan bir hata.** `docker-compose.yml`'in
+   `caddy` healthcheck'i `wget http://localhost:2019/config/` çağırıyordu. Container
+   içinde `/etc/hosts` "localhost"u ÖNCE `::1`'e (IPv6) çözüyor, Caddy'nin admin
+   API'si ise yalnız `127.0.0.1:2019`'a (IPv4) bağlanıyor — wget `::1`'e bağlanmayı
+   dener, "connection refused" alır ve IPv4'e **düşmez**. Sonuç: `FailingStreak`
+   sınırsız artar, Caddy hep "unhealthy" görünür — ama gerçekte çalışıyordur, isteklere
+   cevap veriyordur. Bu bugüne kadar fark edilmedi çünkü compose grafiğinde hiçbir
+   servis Caddy'nin sağlığını `depends_on: condition: service_healthy` ile beklemiyor;
+   `update.sh`'ın `lib-health.sh` kontrolü bunu gerçekten bekleyen **ilk** mekanizma.
+   Düzeltme: healthcheck'te `localhost` → `127.0.0.1`. Gerçek kutuda doğrulandı: V1
+   (düzeltmesiz) temiz açılışta gerçekten "unhealthy" kaldı, V2 (düzeltmeli) 8/8
+   healthy'e geçti.
+
+**Sonuç:** J1-J9 artık `offen` değil — sicilin yukarısındaki O-45 satırı ve aşağıdaki
+O-72/O-73 buna göre güncellendi. Gerçek koşu için hâlâ dışarıda olan iki ön koşul
+(§ J9'da yazılı): `:stable` etiketi (Faz 4.3b) ve registry kimliği (Faz 3.4) — o güne
+kadar `update.sh` bir kutuda **koşabilir** (test edildi) ama bir customer'ın gerçekten
+`docker pull`'layabileceği bir `:stable` etiketi henüz yok.
+
+### O-72 — Compose'da bind-mount kaynağı yoksa Docker **dizin** yaratır; hata bambaşka yerden gelir
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `docker-compose.yml`'deki `./volumes/...` kaynağı host'ta yoksa Docker onu sessizce **boş bir dizin** olarak yaratıp mount eder — dosya beklenen yere dizin olarak girer |
+| **Nerede** | `onprem/docker-compose.yml` — 9 bind-mount (`:82`, `:103-107`, `:111`, `:314`, `:363-364`). Bugünkü canlı örnek: O-49'un eklediği `:104` `./volumes/db/no-pg-net.sql` |
+| **Tip** | D + G |
+| **Kutuda ne olur** | Yeni bir mount satırı taşıyan compose, dosyası henüz yazılmamış bir kutuya varırsa Postgres init `98a-no-pg-net.sql` adında bir **dizin** görür. Hata Postgres'ten, iki dosya öteden ve bambaşka bir yüzle gelir — O-49'un `webhooks.sql` dersinin aynısı. Kurulumun ilk gecesinde, kimsenin bakmadığı saatte |
+| **Çözüm** | İki yerde: (1) güncelleyicinin **adım 7 (b) kapısı** — `up -d`'den önce her bind-mount kaynağının diskte **dosya** olarak var olduğu doğrulanır, yoksa geri al ve dur; (2) `tools/check-onprem.sh`'a yeni sayaç: compose'daki her `./volumes/...` kaynağı `manifest.json`'ın `dateien[]` listesinde olmalı — eşleşmezse commit reddedilir. Mekanik, kapının işi (§7) |
+| **Durum** | ✅ **gelöst (12.09.2026)** — ikisi de yazıldı ve gerçek kutuya karşı test edildi. ⚠️ İlk yazımda ikisi de **aynı** hatayı yaptı: kaynak listesini uzantısız-dizin ayrımı yapmadan aldılar, `volumes/db/data` ve `volumes/storage` (canlı veri dizinleri) "eksik dosya" sayılıp geri alma tetiklendi — düzeltme: yalnız bir uzantısı olan (`.sql`/`.yml`/`.sh`) kaynaklar sayılır. `tools/check-onprem.sh`'da bu O-72 sayacı olarak, `update.sh`'da adım 7(b) olarak duruyor; ikisi de manuel test edilip doğru dosyayı/dizini ayırt ettiği doğrulandı |
+
+### O-73 — Kurulmuş kutunun **hiçbir** güncelleme yolu yok: Watchtower etiketleri var, izleyen yok
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `onprem/docker-compose.yml`'de iki konteynerde `com.centurylinklabs.watchtower.enable=true` etiketi var, ama compose'da **watchtower servisi yok** ve host'ta zamanlanmış hiçbir iş yok |
+| **Nerede** | `onprem/docker-compose.yml:466` (`api`) · `:506` (`caddy`) — etiketler. `grep -c watchtower onprem/docker-compose.yml` → 2, ikisi de etiket |
+| **Tip** | F |
+| **Kutuda ne olur** | Bugün kurulan bir kutu **hiç güncellenmez**: ne compose (O-45 (b)), ne image, ne şema (şema image ile gelir, image gelmezse o da gelmez). Güvenlik yaması dahil hiçbir şey varmaz. Etiketlerin varlığı bunu daha da tehlikeli yapar — belgeye bakan "Watchtower var" sanır. Kurulu kutu sayısı bugün sıfır olduğu için henüz bir müşteriyi etkilemiyor; **ilk kurulumdan sonra etkileyecek** |
+| **Çözüm** | §7J — host'ta `update.sh` + systemd timer. Watchtower kutuya **girmez** (J8); etiketler compose'dan çıkarılır ki yanlış izlenim kalmasın. SaaS VPS'i bu maddenin dışında |
+| **Durum** | ✅ **gelöst (12.09.2026)** — iki etiket `docker-compose.yml`'den çıkarıldı, `update.sh` + `praxura-update.service`/`.timer` `install.sh`'ın yeni Schritt 15'inde kuruluyor (gece 02:00 + 2 saate kadar rastgele gecikme). SaaS VPS'i (`api-backend/docker-compose.yml`) dokunulmadı, Watchtower orada duruyor |
 
 ---
 

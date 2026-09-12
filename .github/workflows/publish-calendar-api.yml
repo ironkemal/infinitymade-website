@@ -5,6 +5,19 @@ on:
     branches: [main]
     paths:
       - 'api-backend/**'
+      # onprem-bundle (O-45 (b), Dockerfile COPY --from=onprem): dieselbe
+      # Lehre wie O-57 beim Frontend-Image — eine geänderte Datei, die hier
+      # NICHT aufgeführt ist, baut kein neues Image, die Box bleibt auf dem
+      # alten Bundle-Stand stehen (onprem/REGISTER.md §7J).
+      - 'onprem/docker-compose.yml'
+      - 'onprem/.env.template'
+      - 'onprem/install.sh'
+      - 'onprem/update.sh'
+      - 'onprem/lib-health.sh'
+      - 'onprem/manifest.json'
+      - 'onprem/volumes/api/kong.yml'
+      - 'onprem/volumes/api/kong-entrypoint.sh'
+      - 'onprem/volumes/db/*.sql'
       - '.github/workflows/publish-calendar-api.yml'
   workflow_dispatch:
 
@@ -93,6 +106,8 @@ jobs:
         with:
           context: ./api-backend
           file: ./api-backend/Dockerfile
+          build-contexts: |
+            onprem=./onprem
           push: false
           load: true
           tags: calendar-api:smoke
@@ -131,11 +146,31 @@ jobs:
           docker logs smoke
           exit 1
 
+      # O-45 (b): das onprem-Bundle ist die EINZIGE Art, wie Dateien wie
+      # docker-compose.yml/no-pg-net.sql je auf eine Kundenbox gelangen
+      # (update.sh zieht es aus genau diesem Image). Fehlt es, aktualisiert
+      # sich keine Box mehr, ohne dass irgendwo ein Fehler auftaucht.
+      - name: Smoke test — onprem-Bundle ist im Image
+        run: |
+          set -e
+          docker create --name bundle-check calendar-api:smoke >/dev/null
+          docker cp bundle-check:/app/onprem-bundle/manifest.json /tmp/manifest.json
+          docker rm -f bundle-check >/dev/null
+          for datei in docker-compose.yml .env.template install.sh update.sh lib-health.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql; do
+            if ! grep -q "\"$datei\"" /tmp/manifest.json; then
+              echo "✗ manifest.json'da eksik: $datei"
+              exit 1
+            fi
+          done
+          echo "✓ manifest.json 13/13 dosyayı listeliyor"
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ./api-backend
           file: ./api-backend/Dockerfile
+          build-contexts: |
+            onprem=./onprem
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

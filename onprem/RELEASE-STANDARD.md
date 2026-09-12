@@ -566,26 +566,44 @@ başlar ama yalnız iki şey servis eder: bakım sayfası (sebep + sürüm + şe
 `/health` (derin, §6.5). Fark kritik: crash-loop'ta müşteride **hiçbir bilgi yok**, bakım
 modunda müşterinin ekranında bizim okuyabileceğimiz bir cümle var.
 
-**Katman 4 — bir gecede bir sürüm.** Watchtower `:stable` kutularında **saatlik** çalışır
-(60 sn değil). Risk kontrolü aralıkta değil **etikette**; ama saatlik aralık, kötü bir
-sürümü geri çektiğimizde (§4.6a) düzeltmenin de bir saat içinde yayılmasını sağlar.
+**Katman 4 — bir gecede bir sürüm.** SaaS'ta Watchtower `:stable` etiketini **saatlik**
+izler (60 sn değil). Risk kontrolü aralıkta değil **etikette**; ama saatlik aralık, kötü
+bir sürümü geri çektiğimizde (§4.6a) düzeltmenin de bir saat içinde yayılmasını sağlar.
+Kutuda bu katmanı Watchtower değil `update.sh` üstlenir (§6.4) — aralık gece **bir kez**
+(`praxura-update.timer`), saatlik değil: bir praxis için kötü bir sürümün iş saatinde
+inmesi, düzeltmenin bir gün gecikmesinden pahalıdır.
 
-### 6.4 Watchtower ayarları — kutu için
+### 6.4 Güncelleme mekanizması — kutu Watchtower KULLANMAZ (O-45 (b), §7J, 12.09.2026)
 
-| Ayar | SaaS bugün | On-prem kutu | Gerekçe |
-|---|---|---|---|
-| İzlenen etiket | `latest` | `:stable` (sponsor: `:beta`) | K11 |
-| `--interval` | 60 | 3600 | §6.3 katman 4 |
-| `--cleanup` | var | var | disk (§6.6) |
-| `--label-enable` | var | var | yalnız api container'ı güncellenir |
-| Supabase servisleri | — | **Watchtower kapsamı dışı** | Upstream'i biz sürüm sürüm seçeriz; Supabase'in kendi uyarısı: servis tag'lerini tek tek değiştirmek **uyumluluk garantisi vermez** |
+⚠️ **Bu bölüm 12.09.2026'da köklü şekilde değişti.** Önceki hâli kutuda da Watchtower
+öngörüyordu; onprem-review'un bulgusu (O-45 (b)) şunu gösterdi: **Watchtower compose'u
+hiç okumaz** — yalnız çalışan konteynerin mevcut yapılandırmasını kopyalayıp image'ı
+değiştirir. Yani compose'a yazdığımız hiçbir yeni satır (yeni mount, yeni env var, yeni
+servis) Watchtower'la kutuya **asla ulaşmaz** — 2026-08-15 SaaS dersinin on-prem'deki
+karşılığı, Watchtower varken bile çözülmemiş kalırdı.
 
-⚠️ **Compose dosyası kutuda yaşar ve Watchtower ona dokunmaz.** 2026-08-15 dersinin
-on-prem'deki karşılığı ağır: compose'a yazdığımız bir düzeltme **hiçbir müşteriye
-ulaşmaz.** Sonuç kural: **compose'da davranış tutulmaz.** Port, label, healthcheck gibi
-kaçınılmaz olanlar dışında her ayar image'ın içinde ya da `.env`'de olmalı; compose
-mümkün olduğunca aptal ve değişmez kalmalı. Compose'un kendisi değişmek zorunda kalırsa
-bu bir **MAJOR** sürümdür (§2.2 "kurulum kırıcı") ve `releases.json`'da ilan edilir.
+| Ayar | SaaS bugün | On-prem kutu |
+|---|---|---|
+| Mekanizma | Watchtower (konteyner, docker soketi tutar) | `update.sh` (host'ta, root, systemd timer) |
+| İzlenen etiket | `latest` | `:stable` (sponsor: `:beta`) — K11 |
+| Aralık | 60 sn | Gecede bir (`OnCalendar=*-*-* 02:00`, `RandomizedDelaySec=7200`) |
+| `--cleanup` | var | `docker compose pull` zaten eskiyi bırakır, ayrı adım yok |
+| Compose/`.env`'i günceller mi | Hayır (kapsamı sadece image) | **Evet** — bu O-45 (b)'nin var oluş sebebi |
+| Supabase servisleri | — | Image etiketleri `.env`'den (`VERSION_*`), `update.sh` onları da taşır |
+
+**Neden host'ta bir betik, konteyner değil:** internete bakan bir konteynere docker
+soketi vermek (Watchtower'ın veya bir "praxura-updater" konteynerinin ihtiyaç duyacağı
+şey) tek bir RCE'yi kutunun tamamına çevirir; host'ta root olarak koşan `update.sh` hiçbir
+konteynere soket vermeden dosya yazabilir ve `docker compose up -d` çalıştırabilir.
+Tam tasarım ve on adımlık kilitli mekanizma: `onprem/REGISTER.md` §7J.
+
+✅ **Artık compose'da davranış tutulabilir.** Eski kural ("compose'da davranış
+tutulmaz, her ayar image'ın içinde ya da `.env`'de olmalı") `update.sh` ile birlikte
+**gevşedi**: compose/`volumes/**` artık her gece kutuya ulaşan, versiyonlanan bir
+paketin parçası. §7J'nin J7 kuralı yerine geçti: **bir sürümün image'ı, bir önceki
+sürümün compose/`.env`'i ile de açılmak zorundadır** (expand/contract'ın host tarafı).
+Bunun sonucu: **compose değişikliği artık MINOR'dur**, MAJOR yalnız `manifest.json`'ın
+`durak: true` işaretlediği (elle adım gerektiren) sürümler için kalır.
 
 ### 6.5 Healthcheck — neyi kapsamalı
 

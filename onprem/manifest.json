@@ -1,0 +1,21 @@
+{
+  "surum": "0.1.0",
+  "dateien": [
+    { "yol": "docker-compose.yml", "sha256": "c9df7bd597a5963cf915b5ca6154c3a0730ac9b38e4da7a7afa6f2c06ccecddd" },
+    { "yol": ".env.template", "sha256": "57a77d4c907308a0c02f716357d7f05c798e29744f3b45aa14fc696f2c01656e" },
+    { "yol": "install.sh", "sha256": "fb36329eed53e689c21702da46af03d212b083c4bccd57e50175f802f830ff93" },
+    { "yol": "update.sh", "sha256": "9fbb8d81b6cffea38c944b6189436fd42025f4114d878a98935391e9c8e952a3" },
+    { "yol": "lib-health.sh", "sha256": "ac3df970f980f9810db85e9b8daf78f1b63d7cc287c73b83a5ae77eeeb37b819" },
+    { "yol": "volumes/api/kong.yml", "sha256": "ffa5733a1ef043f4d62cc6b957d8591343886293645cfe16a200d7a1e89a73e8" },
+    { "yol": "volumes/api/kong-entrypoint.sh", "sha256": "399394576635f7477dfee32e870f509567fc496f0dc86a5a6611f58d1099031f" },
+    { "yol": "volumes/db/_supabase.sql", "sha256": "9dce462adc04137d6afabcf28efa60a6c355270a4b32d7af58891ac4eb964c5f" },
+    { "yol": "volumes/db/jwt.sql", "sha256": "1cc94a4f16f6e2932b383cd68e211a96bcae298437ca4120d8a5106396c58465" },
+    { "yol": "volumes/db/no-pg-net.sql", "sha256": "c2ced14252d8aab3011549fb83612c7c366f440cb5ed2d7516cd6c4f9952a4eb" },
+    { "yol": "volumes/db/realtime.sql", "sha256": "7e9e442e7fc4dae05544c07b67bede37a00d84644304dfce4d937134cb4c8f88" },
+    { "yol": "volumes/db/roles.sql", "sha256": "3ad717b225daa38aa982da26750f35641eb404e1eb5e69a763c22236ab96c1b2" },
+    { "yol": "volumes/db/webhooks.sql", "sha256": "b584aaaa0c393f27218f81e01e76e1d07d42f947083249adcd6097ad471cde62" }
+  ],
+  "durak": false,
+  "elle_adim": [],
+  "not_url": ""
+}

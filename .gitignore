@@ -61,3 +61,8 @@ onprem/.env
 # install.sh schreibt seinen Ablauf hierhin (ohne Geheimnisse, siehe Skript-
 # Kopf) — trotzdem eine lokale Kundenbox-Datei, kein Repository-Inhalt.
 onprem/install.log
+
+# update.sh (O-45 (b), §7J): Laufzeitzustand der Box — Anlage-Snapshots,
+# Zustandsdatei, eigenes Logfile. Lokale Kundenbox-Daten, kein Repository-Inhalt.
+onprem/.praxura-stand/
+onprem/update.log
