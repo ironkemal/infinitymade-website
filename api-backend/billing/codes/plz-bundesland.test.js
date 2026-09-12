@@ -144,29 +144,17 @@ test('BAUART: routes raet nicht mehr aus PLZ-Praefixen', () => {
     "Der stille Vorgabewert 'NW' ist entfernt — er machte jede unbekannte PLZ zu NRW.");
 });
 
-test('BAUART: jede Bundesland-Ermittlung wird sofort abgesichert', () => {
+test('BAUART: keine Bundesland-Ermittlung mehr in abrechnung.routes.js (O-96)', () => {
+  // Bis 13.09.2026 gab es drei Aufrufstellen (create, preflight, korrektur) —
+  // jede ermittelte das Bundesland für eine heilmittel_tarif-Preisabfrage.
+  // Der Override ist entfernt (gkv-302-Review: Anlage 2 §125 Physio kennt
+  // keine Bundesland-Dimension, onprem/REGISTER.md O-96), die Ermittlung fiel
+  // mit ihrem einzigen Zweck. Dieser Test bewacht jetzt: keine Aufrufstelle
+  // kommt zurück, ohne dass jemand bewusst wieder eine Preisabfrage baut.
   const zeilen = routesQuelle.split('\n');
-  const stellen = zeilen
-    .map((z, i) => ({ z, i }))
-    .filter(({ z }) => z.includes('= bundeslandDerPraxis('));
-
-  // Drei seit 09.09.2026: create, preflight und korrektur (VKZ 04). Die
-  // Korrekturrechnung baut denselben Physio-Fall neu auf und braucht deshalb
-  // dieselben Tarife — nur im Physio-Zweig.
-  //
-  // In create-podologie steht bewusst KEINE: dort wurde das Bundesland zwar
-  // einmal berechnet, aber an eine Funktion gegeben, die es nie las. Podologie
-  // kennt keinen regionalen Tarif-Override, dort gibt es nichts zu ermitteln —
-  // und genau deshalb ruft auch der podologische Zweig von /korrektur nicht auf.
-  assert.equal(stellen.length, 3,
-    `Erwartet 3 Aufrufstellen (create, preflight, korrektur), gefunden ${stellen.length}.`);
-
-  for (const { i } of stellen) {
-    const naechste = zeilen[i + 1] || '';
-    assert.match(naechste, /if\s*\(!bundesland\)\s*return\s+bundeslandFehler\(/,
-      `Zeile ${i + 2}: nach der Ermittlung muss der 422-Riegel stehen. ` +
-      'Ohne ihn geht null in die Tarifabfrage und der Fall wird ohne Preis abgerechnet.');
-  }
+  const stellen = zeilen.filter(z => z.includes('bundeslandDerPraxis(') && !z.trim().startsWith('//'));
+  assert.equal(stellen.length, 0,
+    `Erwartet 0 Aufrufstellen, gefunden ${stellen.length} — bundeslandDerPraxis() existiert nicht mehr in abrechnung.routes.js.`);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

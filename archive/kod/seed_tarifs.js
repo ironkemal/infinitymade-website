@@ -1,6 +1,16 @@
+// ARCHIVIERT 13.09.2026 (O-96, gkv-302-Review) — nicht mehr lauffähig von hier
+// aus (Importpfad zeigte auf api-backend/billing/…, Datei lag dort). Befüllte
+// `heilmittel_tarif`: 16 Bundesländer, alle mit demselben Physio-Preis (keine
+// echte Regionalisierung — Anlage 2 §125 Physio kennt keine Bundesland-
+// Dimension). resolver.js liess diesen Override den Katalogpreis übersteuern,
+// unbefristet (`gueltig_bis: null`) und ohne erneuten Lauf seit 26.05.2026 —
+// das nächste reale Preisfenster (frühestens 01.01.2027) hätte eine stille
+// Unterzahlung erzeugt. Override entfernt, Tabelle wird in einer eigenen
+// Migration (getrennt von der Code-Änderung) gedroppt. Details:
+// onprem/REGISTER.md O-96 · api-backend/billing/preise/resolver.js (Kopf).
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import { PHYSIO_POSITIONS, resolvePositionsnummer } from './billing/codes/physio_positions.js';
+import { PHYSIO_POSITIONS, resolvePositionsnummer } from '../../api-backend/billing/codes/physio_positions.js';
 
 dotenv.config();
 

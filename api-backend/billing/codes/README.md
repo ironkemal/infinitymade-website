@@ -27,5 +27,8 @@ Anlage 3 V22 §8.5 references Anlage 8 of "Gemeinsames Rundschreiben DEÜV" (ext
 ## Sprint 3-4 TODO
 
 1. Fetch Heilmittel-Positionsnummernverzeichnis from gkv-datenaustausch.de (CSV/XML)
-2. Seed into `heilmittel_tarif` table together with Preisvereinbarungen per Bundesland × KK
+2. ~~Seed into `heilmittel_tarif` table together with Preisvereinbarungen per Bundesland × KK~~ —
+   **überholt (13.09.2026, O-96):** Anlage 2 §125 Physio hat keine Bundesland-Dimension,
+   `heilmittel_tarif` wurde entfernt (gkv-302-Review, `billing/preise/resolver.js` Kopf).
+   Preise kommen ausschließlich aus den Codedateien (`physio_positions.js`/`podologie_positions.js`).
 3. Optional: Länderkennzeichen seed when Auslandsversicherte use-case becomes relevant

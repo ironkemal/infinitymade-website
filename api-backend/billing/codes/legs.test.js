@@ -155,21 +155,18 @@ test('BAUART: routes leitet nichts mehr aus dem Bundesland ins Tarifkennzeichen'
     'buildTarifkennzeichen ist entfernt — sie erzeugte den ungueltigen LEGS "7108000".');
 });
 
-test('BAUART: das Bundesland speist NUR die Preisabfrage', () => {
-  // Die Zuordnung darf leben — Verguetungen sind regional, der LEGS ist es nicht.
-  // (04.09.2026 umbenannt: getBundeslandFromPlz → bundeslandDerPraxis, Karte 178.)
-  // Jede Verwendung muss aber in einer heilmittel_tarif-Abfrage landen.
+test('BAUART: keine Preisabfrage mehr über Bundesland/heilmittel_tarif (O-96)', () => {
+  // Bis 13.09.2026 speiste das Bundesland eine heilmittel_tarif-Preisabfrage
+  // (getBundeslandFromPlz → bundeslandDerPraxis, Karte 178, 04.09.2026). Die
+  // Prämisse "Verguetungen sind regional" stimmte für Physio nicht (Anlage 2
+  // §125 Physio kennt keine Bundesland-Dimension, gkv-302-Review) — Override
+  // entfernt (resolver.js Kopf, onprem/REGISTER.md O-96). Dieser Test bewacht
+  // jetzt das Gegenteil: kein Aufruf, keine Abfrage, dürfen nicht zurückkommen.
   const zeilen = routesQuelle.split('\n');
-  const treffer = zeilen
-    .map((z, i) => ({ z, i }))
-    .filter(({ z }) => z.includes('bundeslandDerPraxis(') && !z.includes('function bundeslandDerPraxis'));
-
-  assert.ok(treffer.length > 0, 'Erwartet Aufrufe fuer die Preisabfrage');
-  for (const { z, i } of treffer) {
-    assert.match(z, /const\s+bundesland\s*=/,
-      `Zeile ${i + 1}: Ergebnis muss in "bundesland" fuer die Tarifabfrage laufen, ` +
-      'nicht in den LEGS.');
-  }
+  const rufe = zeilen.filter(z => z.includes('bundeslandDerPraxis(') && !z.trim().startsWith('//'));
+  assert.equal(rufe.length, 0, 'bundeslandDerPraxis() darf nicht mehr aufgerufen werden — kein Preis-Override mehr.');
+  assert.equal(/from\(['"]heilmittel_tarif['"]\)/.test(routesQuelle), false,
+    'heilmittel_tarif darf hier nicht mehr abgefragt werden — der Katalog ist die einzige Preisquelle.');
 });
 
 test('BAUART: buildTarifkennzeichen ist nirgends mehr exportiert', () => {

@@ -7,8 +7,26 @@
 // auseinanderlaufen: der Patient bekam eine Rechnung über einen anderen Betrag,
 // als die Kasse gemeldet bekam. Ab jetzt ruft jeder Weg `resolvePreis()`.
 //
-// Entscheidung Melih, 10.08.2026: Der Katalog gewinnt. `heilmittel_tarif` bleibt
-// bestehen, wird aber nur noch als optionaler Preis-Override für Physio gelesen.
+// Entscheidung Melih, 10.08.2026: Der Katalog gewinnt.
+//
+// 13.09.2026 (gkv-302-Review, O-96): `heilmittel_tarif` als Preis-Override
+// ENTFERNT. Der Code widersprach der eigenen Entscheidung oben — ein DB-Tarif
+// übersteuerte den Katalogpreis, sobald einer vorlag, und lag praktisch immer
+// vor (16 Bundesländer × alle Positionen geseedet). Grund für die Entfernung,
+// nicht nur Aufräumen: Anlage 2 zum Vertrag § 125 Abs. 1 SGB V Physiotherapie
+// kennt KEINE Bundesland-Dimension — bundesweit ein einziger "Preis in Euro"
+// (Lesefassung gültig ab 01.01.2026, Teil A; der Begriff "Bundesland" kommt im
+// gesamten Dokument nicht vor). Die Tabelle trug seit ihrer Erzeugung
+// (26.05.2026, `seed_tarifs.js`) für alle 16 Länder denselben Wert — keine
+// echte Regionalisierung, nur eine zweite Kopie desselben Preises.
+// `gueltig_bis` stand dabei unbefristet (NULL) und die Seed-Datei lief nie
+// wieder — das nächste reale Preisfenster (frühestens 01.01.2027, Anlage 2
+// Teil B (7)/(9)) hätte die DB-Zeile NICHT verdrängt: die §302-Datei hätte
+// weiter den 2026er-Preis getragen, still, ohne Fehler. Die automatische
+// GKV-Preisprüfung (Ops-Karte #213, preise_autoupdate.mjs) hatte Physio
+// deshalb schon vorsorglich auf `autoWrite:false` stehen — mit dieser
+// Entfernung kann sie wieder scharf geschaltet werden.
+//
 // Die Zuzahlung kommt IMMER aus dem Katalog bzw. aus der 10-%-Regel — nie aus
 // dem Ja/Nein-Feld `zuzahlung_pflicht`, das die exakten veröffentlichten Beträge
 // verlor (Podologie 78010 = 3,52 €, nicht "irgendwie 10 %").
@@ -24,23 +42,6 @@ import { resolvePositionZuzahlung } from '../zuzahlung/calculator.js';
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
 /**
- * Sucht im optionalen `heilmittel_tarif`-Abzug den für dieses Datum gültigen Satz.
- * Bewusst identisch zur bisherigen Logik in abrechnung.routes.js, damit der Umbau
- * am DB-Zweig nichts verändert.
- */
-export function findTarifForDate(tariffs, positionsnummer, dateStr) {
-  if (!Array.isArray(tariffs) || tariffs.length === 0) return null;
-  const target = new Date(dateStr);
-  if (Number.isNaN(target.getTime())) return null;
-  return tariffs.find(t => {
-    if (t.position_nr !== positionsnummer) return false;
-    const ab = new Date(t.gueltig_ab);
-    const bis = t.gueltig_bis ? new Date(t.gueltig_bis) : null;
-    return target >= ab && (!bis || target <= bis);
-  }) || null;
-}
-
-/**
  * Löst Preis und Zuzahlung einer Position für ein Leistungsdatum auf.
  *
  * @param {object}  opts
@@ -49,8 +50,6 @@ export function findTarifForDate(tariffs, positionsnummer, dateStr) {
  * @param {string}  [opts.datum]          Leistungsdatum ISO. Ohne Angabe: heute bzw.
  *                                        aktuellstes Preisfenster.
  * @param {string}  [opts.abrechnungscode='22']
- * @param {Array}   [opts.tariffs]        Zeilen aus heilmittel_tarif (nur Physio)
- * @param {string}  [opts.positionsnummer] aufgelöste Nr. für den Tarif-Abgleich
  *
  * @returns {{
  *   preis_eur: number, zuzahlung_eur: number, position_frei: boolean,
@@ -63,41 +62,21 @@ export function resolvePreis({
   code,
   datum = null,
   abrechnungscode = '22',
-  tariffs = null,
-  positionsnummer = null,
 } = {}) {
   const istPodologie = String(bereich || '').toLowerCase() === 'podologie';
 
-  // 1. Katalogposition — sie entscheidet immer über die Zuzahlung.
+  // 1. Katalogposition — sie entscheidet immer über Preis UND Zuzahlung.
   const katalogPosition = istPodologie
     ? findPodologiePosition(code, datum || undefined)
     : findPosition(code, abrechnungscode, datum);
 
-  // 2. Preis. Für Physio darf ein DB-Tarif den Katalogpreis übersteuern
-  //    (regionale Vereinbarung). Podologie kennt keinen Tarif-Override.
-  let preis_eur = r2(katalogPosition?.preis ?? 0);
-  let quelle = katalogPosition ? 'katalog' : 'unbekannt';
+  const preis_eur = r2(katalogPosition?.preis ?? 0);
+  const quelle = katalogPosition ? 'katalog' : 'unbekannt';
 
-  if (!istPodologie && tariffs && datum) {
-    const tarif = findTarifForDate(tariffs, positionsnummer || code, datum);
-    if (tarif) {
-      preis_eur = r2(tarif.preis_eur);
-      quelle = 'heilmittel_tarif';
-    }
-  }
-
-  // 3. Zuzahlung — immer über den Katalog.
-  //    Zuzahlungsfreie Positionen bleiben frei, egal woher der Preis kam.
-  //    Kam der Preis aus dem Katalog, gilt der dort veröffentlichte exakte Betrag.
-  //    Hat ein DB-Tarif den Preis übersteuert, wäre dieser Betrag nicht mehr
-  //    passend — dann greift die gesetzliche Regel: 10 % des tatsächlichen Preises
-  //    (§ 61 SGB V). Die 10 € je Verordnung kommen nicht hier, sondern in
-  //    calcAbrechnungsfallZuzahlung() obendrauf.
+  // 2. Zuzahlung — immer über den Katalog. Zuzahlungsfreie Positionen
+  //    bleiben frei; der veröffentlichte exakte Betrag gilt, nie die 10-%-Regel.
   const basis = resolvePositionZuzahlung(katalogPosition, preis_eur);
-  let zuzahlung_eur = basis.zuzahlungUnit;
-  if (!basis.positionFrei && quelle === 'heilmittel_tarif') {
-    zuzahlung_eur = r2(preis_eur * 0.10);
-  }
+  const zuzahlung_eur = basis.zuzahlungUnit;
 
   return {
     preis_eur,

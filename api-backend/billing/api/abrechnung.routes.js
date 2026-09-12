@@ -39,7 +39,6 @@ import {
   legsFuer, LEGS_BY_FACHBEREICH,
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
 } from '../codes/legs.js';
-import { bundeslandFuerPlz, bundeslandFehlerText } from '../codes/plz-bundesland.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -67,32 +66,11 @@ function nameParts(lead) {
   return { vorname: lead?.first_name || '', nachname: lead?.last_name || '' };
 }
 
-// Bundesland der Praxis — für die Preisabfrage `heilmittel_tarif.bundesland`.
-//
-// Bis 04.09.2026 stand hier eine Tabelle aus PLZ-Präfixen mit neun doppelten
-// Schlüsseln; JavaScript behielt still den letzten, und ein `|| 'NW'` am Ende
-// machte aus jeder unbekannten PLZ Nordrhein-Westfalen. Beides schlug in Geld
-// um, ohne eine Zeile Fehlermeldung. Jetzt: vollständige Tabelle, kein
-// Vorgabewert — siehe ../codes/plz-bundesland.js.
-//
-// Gibt die PLZ keine eindeutige Antwort her, liefert diese Funktion null und
-// der Aufrufer bricht mit 422 ab, statt mit einem geratenen Preis zu senden.
-function bundeslandDerPraxis(profile) {
-  return bundeslandFuerPlz(profile?.zip || profile?.plz);
-}
-
-// 422-Antwort, wenn das Bundesland nicht feststeht. Ein falscher Preis fällt
-// erst bei der Kasse auf (Absetzung); ein Abbruch fällt sofort auf.
-function bundeslandFehler(res, profile) {
-  return res.status(422).json({
-    error: bundeslandFehlerText(profile?.zip || profile?.plz),
-    code: 'BUNDESLAND_UNBEKANNT',
-    plz: profile?.zip || profile?.plz || null,
-  });
-}
-
-// findPriceForDate() ist nach billing/preise/resolver.js gewandert (findTarifForDate)
-// und wird von dort aus für alle Wege gleich benutzt.
+// bundeslandDerPraxis()/bundeslandFehler() — bis 13.09.2026 für die
+// Preisabfrage `heilmittel_tarif.bundesland` gebraucht, mit dem Override
+// entfernt (O-96, gkv-302-Review: billing/preise/resolver.js trägt die
+// Begründung). `plz-bundesland.js` selbst bleibt (siehe dortige Notiz),
+// nur diese beiden lokalen Wrapper fielen mit ihrem einzigen Aufrufer.
 
 // Map a DB prescription row → buildDtaFile prescription shape.
 // DTA ZHE-Feld 17 Therapiefrequenz ist n1 (einstellig, Behandlungen pro Woche).
@@ -291,9 +269,9 @@ function buildBelegnummer(row, patientennummer) {
 
 // `bundesland` war hier einmal Parameter — es speiste das Tarifkennzeichen.
 // Das war falsch (LEGS kommt aus dem Vertrag, nicht aus der PLZ) und ist
-// entfernt. Für die Preisermittlung wird das Bundesland weiterhin gebraucht,
-// aber dort, wo die Tarife geladen werden, nicht hier.
-function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tariffs = [], sector = 'physiotherapy') {
+// entfernt. `tariffs` (heilmittel_tarif-Override) ebenso entfernt (13.09.2026,
+// O-96) — resolvePreis() liest nur noch den Katalog, siehe dessen Kopfkommentar.
+function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sector = 'physiotherapy') {
   if (!rx.kostentraeger_ik) {
     const err = new Error('Privat-Patienten können nicht über §302 DTA abgerechnet werden.');
     err.status = 422;
@@ -343,8 +321,6 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
       code: stored,
       datum: dateStr,
       abrechnungscode,
-      tariffs,
-      positionsnummer: resolvedPos,
     });
 
     return {
@@ -672,16 +648,8 @@ router.post('/abrechnung/create', async (req, res) => {
     const datennummer = (weekCount || 0) + 1;  // integer; filename + envelope helpers pad internally
     const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
 
-    // ---- fetch tariffs for bundesland ----
-    const bundesland = bundeslandDerPraxis(profile);
-    if (!bundesland) return bundeslandFehler(res, profile);
-    const { data: tariffs } = await supabase
-      .from('heilmittel_tarif')
-      .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
-      .eq('bundesland', bundesland);
-
     // ---- map prescriptions ----
-    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], tenantSector));
+    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tenantSector));
 
     // ---- build DTA (preflight runs first; rejects file if DMRZ would reject) ----
     let dta;
@@ -2403,14 +2371,6 @@ router.post('/abrechnung/preflight', async (req, res) => {
     const dasIk   = das.ik;
     const dasName = das.name || kk.name || 'Krankenkasse';
 
-    // ---- fetch tariffs for bundesland ----
-    const bundesland = bundeslandDerPraxis(profile);
-    if (!bundesland) return bundeslandFehler(res, profile);
-    const { data: tariffs } = await supabase
-      .from('heilmittel_tarif')
-      .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
-      .eq('bundesland', bundesland);
-
     // Zeilenweise statt `.map()`: ein einzelnes Rezept mit einem harten Mapper-
     // Fehler (z.B. `KEINE_ERBRACHTEN_SITZUNGEN`, gkv-302 Audit 10.09.2026) darf
     // die Vorschau für die ÜBRIGEN Rezepte nicht mitreissen — der Preflight ist
@@ -2421,7 +2381,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
     const mapFehler = [];
     for (const r of rxRows) {
       try {
-        prescriptions.push(mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], tenantSector));
+        prescriptions.push(mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tenantSector));
       } catch (e) {
         if (!e.status) throw e;
         mapFehler.push({ prescriptionId: r.id, severity: 'stop', code: e.code || 'MAPPING', text: e.message });
@@ -3205,16 +3165,8 @@ router.post('/abrechnung/korrektur', async (req, res) => {
       for (const b of behs || []) (behByVord[b.verordnung_id] ||= []).push(b);
     }
 
-    let tariffs = [];
     let therapistCerts = new Map();
     if (!istPodo) {
-      const bundesland = bundeslandDerPraxis(praxisProfil);
-      if (!bundesland) return bundeslandFehler(res, praxisProfil);
-      const { data: t } = await supabase
-        .from('heilmittel_tarif')
-        .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
-        .eq('bundesland', bundesland);
-      tariffs = t || [];
       const { data: certs } = await supabase
         .from('therapist_certificates').select('profile_id, certificate').eq('owner_id', tenantId);
       for (const c of certs || []) {
@@ -3230,7 +3182,7 @@ router.post('/abrechnung/korrektur', async (req, res) => {
       quellen.push(rx);
       const p = istPodo
         ? mapVerordnungToDtaShape(rx, rx.leads, rx.aerzte, behByVord[rx.id] || [])
-        : mapPrescriptionToDtaShape(rx, rx.leads, rx.aerzte, therapistCerts, tariffs, tenantSector);
+        : mapPrescriptionToDtaShape(rx, rx.leads, rx.aerzte, therapistCerts, tenantSector);
       // Die Belegnummer ist eingefroren und MUSS die alte bleiben: die Kasse
       // ordnet die Korrektur nur darüber zu (Kap. 7.3).
       p.patient.belegnummer = z.belegnummer;

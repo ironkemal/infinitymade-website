@@ -8,7 +8,7 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-10 (Anhang 1 + Anhang 2 zur Anlage 1 TP5 → 8 yeni kural)
+> Son güncelleme: 2026-09-13 (Physio-Vergütung bundeseinheitlich, O-96 kazısından — 1 yeni kural)
 
 ---
 
@@ -457,6 +457,25 @@
 - **Geçerlilik:** veri gözlemi, sürüme bağlı değil
 - **Kodda:** `api-backend/billing/kostentraeger/annahmestelle.js` → `waehleAnnahmestelle()`
 - **Kapsam:** tümü
+
+### Physio-Vergütung bundeseinheitlich — fiyatta Bundesland ekseni yok
+- **Kural:** § 125 Abs. 1 SGB V Physiotherapie fiyatları federal düzeyde tektir;
+  Bundesland veya Kostenträger başına fiyat farkı yoktur. Ayırt edici tek eksen
+  Leistungserbringergruppe'dir, pozisyon numarasının ilk hanesiyle çözülür
+  (21→1, 22→2, 27→6, 28→8). Yukarıdaki "Bundesland-Filtresi" kuralıyla
+  KARIŞTIRILMASIN — o Kostenträger/Annahmestelle seçimi içindir (orada Bundesland
+  gerçekten bir eksendir), bu kural FİYAT için geçerlidir.
+- **Kaynak:** Anlage 2 zum Vertrag nach § 125 Abs. 1 SGB V für Physiotherapie,
+  Teil A (Lesefassung gültig ab 01.01.2026) — tek "Preis in Euro" sütunu;
+  belgede "Bundesland"/"regional"/"Landesverband" hiç geçmiyor (grep, 0 eşleşme)
+- **Geçerlilik:** 01.01.2026 — Teil B (7): en erken 31.12.2026 kündbar, (9):
+  kündigung sonrası eski fiyatlar yeni Anlage yürürlüğe girene dek devam eder
+  → bir sonraki fiyat penceresi en erken 01.01.2027
+- **Kodda:** `billing/codes/physio_positions.js` (PHYSIO_PREISFENSTER) — kaynak.
+  `billing/preise/resolver.js` eskiden `heilmittel_tarif`'ten bölgesel bir
+  override okuyordu (16 eyalet, hepsi aynı fiyat — gerçek regionalizasyon
+  yoktu); 13.09.2026'da kaldırıldı (O-96, onprem/REGISTER.md)
+- **Kapsam:** Physio, tüm Verordnungsart'lar (standart / Blanko / LHB / BVB)
 
 ### Çözülemeyen Kostenträger: sert 412, sessiz fallback yok
 - **Kural:** Bir Kostenträger için elektronik Datenannahmestelle (Verknüpfungsart 02/03 +

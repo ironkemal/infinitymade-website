@@ -1,6 +1,9 @@
 // Tests für die zentrale Preisauflösung.
 //   node api-backend/billing/preise/resolver.test.js
-import { resolvePreis, findTarifForDate } from './resolver.js';
+//
+// 13.09.2026 (O-96): Tarif-Override-Tests entfernt — `heilmittel_tarif` wird
+// nicht mehr gelesen, resolver.js Kopfkommentar trägt die Begründung.
+import { resolvePreis } from './resolver.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
@@ -37,13 +40,6 @@ test('Podologie 78530 Therapiebericht ist zuzahlungsfrei', () => {
   assert.equal(r.zuzahlung_eur, 0);
 });
 
-test('Podologie: Tarif-Override wird ignoriert (kein Tarif für Podologie)', () => {
-  const tariffs = [{ position_nr: '78010', preis_eur: 99, gueltig_ab: '2020-01-01', gueltig_bis: null }];
-  const r = resolvePreis({ bereich: 'podologie', code: '78010', datum: '2026-08-10', tariffs, positionsnummer: '78010' });
-  assert.equal(r.preis_eur, 36.10);
-  assert.equal(r.quelle, 'katalog');
-});
-
 // ------------------------------------------------------------------- Physio
 test('Physio X0501 aus dem Katalog → 29,63 € / 2,96 €', () => {
   const r = resolvePreis({ bereich: 'physiotherapie', code: 'X0501', datum: '2026-08-10' });
@@ -65,35 +61,10 @@ test('Physio X0708 KG-ZNS Kinder ist zuzahlungsfrei', () => {
   assert.equal(r.zuzahlung_eur, 0);
 });
 
-test('Physio: DB-Tarif übersteuert den Preis, Zuzahlung wird 10 % davon', () => {
+test('Physio: ein übergebenes tariffs-Argument wird ignoriert (O-96)', () => {
   const tariffs = [{ position_nr: '20501', preis_eur: 40.00, gueltig_ab: '2026-01-01', gueltig_bis: null }];
-  const r = resolvePreis({
-    bereich: 'physiotherapie', code: 'X0501', datum: '2026-08-10',
-    tariffs, positionsnummer: '20501',
-  });
-  assert.equal(r.preis_eur, 40.00);
-  assert.equal(r.zuzahlung_eur, 4.00);
-  assert.equal(r.quelle, 'heilmittel_tarif');
-});
-
-test('Physio: DB-Tarif macht eine zuzahlungsfreie Position NICHT zuzahlungspflichtig', () => {
-  const tariffs = [{ position_nr: '20708', preis_eur: 60.00, gueltig_ab: '2026-01-01', gueltig_bis: null }];
-  const r = resolvePreis({
-    bereich: 'physiotherapie', code: 'X0708', datum: '2026-08-10',
-    tariffs, positionsnummer: '20708',
-  });
-  assert.equal(r.preis_eur, 60.00);
-  assert.equal(r.position_frei, true);
-  assert.equal(r.zuzahlung_eur, 0, 'zuzahlungsfrei bleibt zuzahlungsfrei');
-});
-
-test('Physio: Tarif ausserhalb seines Datumsfensters greift nicht', () => {
-  const tariffs = [{ position_nr: '20501', preis_eur: 40.00, gueltig_ab: '2027-01-01', gueltig_bis: null }];
-  const r = resolvePreis({
-    bereich: 'physiotherapie', code: 'X0501', datum: '2026-08-10',
-    tariffs, positionsnummer: '20501',
-  });
-  assert.equal(r.preis_eur, 29.63);
+  const r = resolvePreis({ bereich: 'physiotherapie', code: 'X0501', datum: '2026-08-10', tariffs });
+  assert.equal(r.preis_eur, 29.63, 'Katalog bleibt Quelle, egal was aufgerufen wird');
   assert.equal(r.quelle, 'katalog');
 });
 
@@ -129,17 +100,6 @@ test('Druckweg und §302-Weg liefern denselben Betrag (Kern der Aufgabe)', () =>
   const dta   = resolvePreis({ ...args, abrechnungscode: '71' });
   assert.equal(druck.preis_eur, dta.preis_eur);
   assert.equal(druck.zuzahlung_eur, dta.zuzahlung_eur);
-});
-
-// ------------------------------------------------------- findTarifForDate
-test('findTarifForDate: leere/fehlende Liste → null', () => {
-  assert.equal(findTarifForDate(null, '20501', '2026-08-10'), null);
-  assert.equal(findTarifForDate([], '20501', '2026-08-10'), null);
-});
-
-test('findTarifForDate: offenes Ende (gueltig_bis null) trifft', () => {
-  const tariffs = [{ position_nr: '20501', preis_eur: 40, gueltig_ab: '2026-01-01', gueltig_bis: null }];
-  assert.ok(findTarifForDate(tariffs, '20501', '2030-01-01'));
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

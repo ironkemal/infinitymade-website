@@ -33,14 +33,14 @@ function tempKopie() {
 const aktuellesFenster = PODOLOGIE_PREISFENSTER.find(f => f.gueltig_bis === '9999-12-31');
 const alleCodes = aktuellesFenster.positionen.map(p => p.hpnr);
 
-// heilmittel_tarif kann bei Physio den Katalogpreis übersteuern (resolver.js:81,
-// 928 unbefristete Zeilen laut DB-Check am 04.09.2026) — ein automatisch
-// geschriebenes Physio-Preisfenster hätte dort keine reale Wirkung. Solange das
-// nicht geklärt ist, MUSS Physio manuell bleiben; dieser Test verhindert, dass
-// jemand versehentlich autoWrite:true zurückflippt, ohne die DB-Frage zu klären.
-test('Physio bleibt manuell (heilmittel_tarif-Override), Podologie bleibt automatisierbar', () => {
-  assert.equal(BEREICHE.physiotherapie.autoWrite, false,
-    'Physio-autoWrite darf erst auf true, wenn heilmittel_tarif keinen Preis mehr übersteuern kann');
+// Bis 13.09.2026 musste Physio hier manuell bleiben: heilmittel_tarif konnte
+// den Katalogpreis übersteuern (928 unbefristete Zeilen, DB-Check 04.09.2026),
+// ein automatisch geschriebenes Preisfenster hätte dort keine reale Wirkung
+// gehabt. Der Override ist entfernt (O-96, gkv-302-Review — resolver.js Kopf
+// trägt die Begründung: Anlage 2 §125 Physio kennt keine Bundesland-
+// Dimension). Katalog ist jetzt für beide Bereiche die einzige Preisquelle.
+test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', () => {
+  assert.equal(BEREICHE.physiotherapie.autoWrite, true);
   assert.equal(BEREICHE.podologie.autoWrite, true);
 });
 

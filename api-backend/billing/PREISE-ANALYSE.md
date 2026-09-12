@@ -4,7 +4,23 @@
 versioniert pflegen" (`Podoloji/loop-tasks-kassieren.md`).
 
 Melih hat am 10.08.2026 entschieden: **erst analysieren, nicht umbauen.** Dieses Dokument
-ist die Analyse. Es ändert nichts am Code.
+ist die Analyse. Es ändert nichts am Code — Stand damals, unten unverändert stehen gelassen.
+
+> ✅ **13.09.2026 — Punkt 4 ("Wenn umgebaut wird") entschieden: abgeschafft, nicht
+> ernsthaft genutzt.** `heilmittel_tarif` trug keine echte Bundesland-Differenzierung
+> (16 Länder, überall derselbe Preis) und Anlage 2 §125 Physio kennt diese Dimension
+> gar nicht — `gkv-302` hat das bestätigt. Der Override in `resolvePreis()` widersprach
+> zudem der eigenen "Katalog gewinnt"-Entscheidung von Melih (siehe unten, Zeile war nie
+> konsequent umgesetzt) und wäre am 01.01.2027 (nächstes reales Preisfenster) zu einer
+> stillen Unterzahlung geworden — Details: `onprem/REGISTER.md` O-96. Punkt 1 (Physio
+> versionieren) und Punkt 2 (eine Preisauflösung für alle Pfade) waren mit der
+> `resolver.js`-Einführung am 10.08.2026 selbst schon erledigt.
+>
+> Erledigt in dieser Runde: Override aus `resolver.js` entfernt, drei
+> `heilmittel_tarif`-Leseposten in `abrechnung.routes.js` entfernt, `seed_tarifs.js`
+> archiviert (`archive/kod/`), `preise_autoupdate.mjs`s `autoWrite` für Physio auf
+> `true` gestellt. Die Tabelle selbst (DROP) ist bewusst ein **separater** Schritt —
+> Migration `0008` ist SHA-gesperrt, Drop kommt als eigene neue Migration.
 
 ---
 

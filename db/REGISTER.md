@@ -698,10 +698,15 @@ Heilmittel-Richtlinie …).
 - **Achtung:** ⚠️ Falsche Fährte: `heilmittel_position` ist auch eine **Spalte** in `prescriptions` und taucht deshalb in `abrechnung.routes.js` auf. Das ist die Spalte, nicht die Tabelle. Ein reines `grep` hält sie für aktiv.
 
 ### `heilmittel_tarif`
-- **Warum:** Preise je Kostenträger und Stichtag — die Tarifseite zum Katalog. 928 Zeilen.
-- **Seit:** spätestens 18.05.2026 · `v11_billing_a2_tables`
-- **Status:** aktiv (Referenz)
-- **Wer:** `api-backend/seed_tarifs.js` befüllt, `billing/api/abrechnung.routes.js` liest.
+- **Warum:** Preise je Bundesland × Kostenträger × Stichtag — die Tarifseite zum Katalog, aus der A2-Phase. 928 Zeilen. Die Annahme dahinter (Physio-Preise unterscheiden sich regional und je Kasse) hat sich als falsch erwiesen.
+- **Seit:** 18.05.2026 · `v11_billing_a2_tables` · Box-Seed: `api-backend/db/migrations/0008_seed_heilmittel_tarif.sql`
+- **Status:** **veraltet** (13.09.2026, O-96 — siehe `onprem/REGISTER.md`)
+- **Wer:** **niemand.** Kein `.from()`, kein Trigger, keine View, keine RPC, kein DSGVO-Schritt. Einziger verbliebener Schreiber ist der Box-Seed `0008` — er füllt eine Tabelle, die niemand mehr liest.
+- **Warum veraltet:** `resolvePreis()` (`api-backend/billing/preise/resolver.js`) liess einen Tarif-Eintrag den Katalogpreis (`billing/codes/physio_positions.js`) **überschreiben** und brach damit die eigene Kopfzeilen-Entscheidung „Katalog gewinnt" (Melih, 10.08.2026). `gkv-302` hat bestätigt: Anlage 2 zum Vertrag nach §125 SGB V (Physio) ist **bundeseinheitlich** — eine Bundesland-Achse existiert fachlich nicht. Der Befüller `seed_tarifs.js` schrieb folgerichtig allen 16 Ländern **denselben** Preis; er lief zuletzt am 26.05.2026 und nie wieder (`gueltig_bis` durchgehend NULL). Heute weicht keine der 928 Zeilen vom Katalog ab (0 € Differenz) — der Schaden wäre erst beim nächsten echten Physio-Preisfenster (frühestens 01.01.2027) entstanden: eingefrorene Altpreise hätten still zu **niedrig** abgerechnet.
+- **Was am 13.09.2026 entfernt wurde:** Override-Logik in `resolver.js` · drei Leseposten + `bundeslandDerPraxis()`/`bundeslandFehler()`-Gate in `billing/api/abrechnung.routes.js` (die einzigen Konsumenten) · `seed_tarifs.js` → `archive/kod/`. `preise_autoupdate.mjs` steht für Physio jetzt auf `autoWrite: true`, weil ohne Override sicher. `billing/codes/plz-bundesland.js` bleibt bewusst liegen (kein Aufrufer mehr, aber für eine spätere Kostenträger-/DAS-Auswahl plausibel — Notiz steht in der Datei).
+- **Achtung — nicht neu verdrahten:** Der Tabellenname klingt nach „hier stehen die gültigen Preise". Er tut es nicht. **Preisquelle für Physio ist `billing/codes/physio_positions.js`, für Podologie `heilmittel_katalog`.** Wer diese Tabelle wieder an den Resolver hängt, baut denselben Fehler erneut ein.
+- **Löschung:** Löschkandidat, aber **nicht dringend** — keine Patientendaten, kein Trigger, keine eingehende FK, nur eine reine Lese-Policy (`heilmittel_tarif_read_all`), ausgehende FK auf `kostentraeger`. `0008` ist prüfsummen-verriegelt und kann nicht entschärft werden; ein DROP kostet deshalb immer eine neue Migration — heute wie in drei Monaten, gleicher Preis. Empfehlung: gebündelt mit den übrigen toten Referenztabellen (`heilmittel_catalog`, `heilmittel_position`, `dta_schluessel`) in **einem** Aufräumzug, gemeinsam mit `onprem` und nach ausdrücklicher Freigabe.
+- **Quelle:** `api-backend/billing/PREISE-ANALYSE.md` (Abschnitt 3) · `onprem/REGISTER.md` O-96
 
 ### `dta_schluessel`
 - **Warum:** Schlüsselverzeichnisse aus Anlage 3 TP5 (Kennzeichen, Gruppen, Codes) als Datenbestand.

@@ -61,18 +61,15 @@ export const BEREICHE = {
     datei: join(__dirname, 'billing/codes/physio_positions.js'),
     codeFeld: 'x',
     importName: 'PHYSIO_PREISFENSTER',
-    // NICHT automatisch schreiben (04.09.2026, fonksiyon-ustasi): resolver.js
-    // lässt bei Physio einen `heilmittel_tarif`-Eintrag den Katalogpreis
-    // übersteuern (`!istPodologie && tariffs && datum`, resolver.js:81).
-    // 928 Zeilen in `heilmittel_tarif` sind heute unbefristet (gueltig_bis IS
-    // NULL, ab 2026-01-01) — ein automatisch geschriebenes neues Preisfenster
-    // hätte auf den Wegen, die `tariffs` mitgeben, KEINE reale Wirkung auf die
-    // Abrechnung. Ein "✅ automatisch aktualisiert" wäre dort eine falsche
-    // Zusicherung. Podologie kennt diesen Override nicht (siehe Kommentar in
-    // resolver.js) und bleibt automatisierbar. Sobald die `heilmittel_tarif`-
-    // Frage geklärt ist (Zeilen befristen oder Override abschaffen — offene
-    // Entscheidung aus resolver.js selbst), kann autoWrite hier auf true.
-    autoWrite: false,
+    // Bis 13.09.2026 hier `autoWrite: false` (04.09.2026, fonksiyon-ustasi):
+    // resolver.js liess bei Physio einen `heilmittel_tarif`-Eintrag den
+    // Katalogpreis übersteuern, und die 928 Zeilen dort waren unbefristet —
+    // ein automatisch geschriebenes neues Preisfenster hätte auf diesem Weg
+    // KEINE reale Wirkung auf die Abrechnung gehabt. Der Override ist jetzt
+    // entfernt (O-96, gkv-302-Review — Begründung in resolver.js Kopf: Anlage 2
+    // §125 Physio kennt keine Bundesland-Dimension). Katalog ist die einzige
+    // Preisquelle, genau wie bei Podologie — autoWrite kann jetzt scharf sein.
+    autoWrite: true,
   },
 };
 

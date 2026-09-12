@@ -15,9 +15,16 @@
 //
 // WOFÜR — und wofür NICHT
 // -----------------------
-// Abnehmer ist ausschliesslich die Preisabfrage `heilmittel_tarif.bundesland`.
-// Vergütungen werden je Bundesland verhandelt, dort ist die Geografie die
-// richtige Achse.
+// ⚠️ 13.09.2026 (O-96, gkv-302-Review): Der einzige Abnehmer war die
+// Preisabfrage `heilmittel_tarif.bundesland` — die ist entfernt. Grund:
+// „Vergütungen werden je Bundesland verhandelt" (Zeile 19, alt) stimmte für
+// Physio nicht. Anlage 2 zum Vertrag § 125 Abs. 1 SGB V Physiotherapie ist
+// bundeseinheitlich, ein einziger „Preis in Euro", das Wort „Bundesland"
+// kommt im Dokument nicht vor. Details: billing/preise/resolver.js Kopf.
+//
+// Diese Datei bleibt trotzdem — bewusst nicht gelöscht — für eine mögliche
+// künftige Kostenträger/DAS-Auswahl, bei der die Geografie tatsächlich zählt
+// (welche Landes-AOK/-IKK ist zuständig). Bis dahin: kein Aufrufer.
 //
 // NICHT für das Tarifkennzeichen der DTA-Datei. Das kommt aus dem Vertrag,
 // nicht aus dem Ort — siehe billing/codes/legs.js. Wer diese Funktion für
