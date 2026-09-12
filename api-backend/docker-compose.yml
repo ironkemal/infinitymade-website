@@ -103,7 +103,14 @@ services:
       # ändert, muss sie in /opt/calendar-api/docker-compose.yml nachziehen und
       # `docker compose up -d calendar-api` laufen lassen.
       # Auf dem VPS angewandt: 2026-08-15. Details: INFRASTRUCTURE.md §4.
-      - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`) && !PathPrefix(`/api/v1`)"
+      # ⚠️ Hartcodiert, NICHT ${DOMAIN} (12.09.2026, tools/check-vps-drift.sh
+      # fand dies als echten Unterschied zur VPS-Datei): /opt/calendar-api/ ist
+      # ein vom n8n-Stack GETRENNTES Verzeichnis mit eigener .env.calendar, die
+      # kein DOMAIN kennt — und Compose liest Variablen nur aus einer .env im
+      # selben Ordner (env_file: fuellt nur die Container-Umgebung, nicht
+      # Compose selbst). ${DOMAIN} würde hier zu leerem String auflösen und
+      # Host(``) — die Route hätte nie gegriffen.
+      - "traefik.http.routers.api.rule=Host(`n8n.infinitymade.de`) && PathPrefix(`/api`) && !PathPrefix(`/api/v1`)"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls=true"
       - "traefik.http.routers.api.tls.certresolver=le"
