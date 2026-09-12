@@ -238,6 +238,22 @@ while IFS=$'\t' read -r yol yeni_sha; do
   if [ "$yol" = ".env.template" ]; then
     continue # ayrı ele alınır (J4)
   fi
+  if [ "$yol" = "update.sh" ]; then
+    # ⚠️ onprem-Gegenlesen (12.09.2026, O-77 turunun disk/pg_restore eklerini
+    # test ederken bulundu): update.sh KENDİSİ zaten yukarıdaki "Kendi kendini
+    # güncelleme" bloğunda KOŞULSUZ yazılıp re-exec edildi — bu satıra
+    # geldiğimizde disk her zaman bundle'ın update.sh'ıyla birebir aynıdır.
+    # Onu burada da genel sapma-kontrolüne sokmak SAHTE pozitif üretiyordu:
+    # `mevcut_sha` (kendi kendini güncellemeden SONRAKİ, yeni değer) her
+    # zaman `taban_sha`'dan (bir önceki BAŞARILI koşudan kalma, eski değer)
+    # farklı çıkıyor — update.sh'ın kendi içeriği iki sürüm arasında
+    # değiştiği HER gece (ki bu hafta üç kez oldu) "müşteri elle değiştirmiş"
+    # sanılıp güncelleme tümden durduruluyordu, oysa kimse dokunmamıştı.
+    # Gerçek kutuda doğrulandı: e8160dc → 40ffa3b geçişinde bu tam olarak
+    # tetiklendi. Çözüm: update.sh'ı — tıpkı .env.template gibi — bu genel
+    # döngünün dışında tut; onu koruyan/güncelleyen mekanizma zaten yukarıda.
+    continue
+  fi
   if [ -f "$hedef" ]; then
     mevcut_sha="$(sha256sum "$hedef" | awk '{print $1}')"
   else
@@ -556,6 +572,7 @@ if [ "$sonuc" = "ok" ]; then
     while IFS=$'\t' read -r yol _; do
       [ -z "$yol" ] && continue
       [ "$yol" = ".env.template" ] && continue
+      [ "$yol" = "update.sh" ] && continue # yukarıdaki Schritt 4/5 notuyla aynı gerekçe
       hedef="$SCRIPT_DIR/$yol"
       [ -f "$hedef" ] || continue
       sha="$(sha256sum "$hedef" | awk '{print $1}')"
