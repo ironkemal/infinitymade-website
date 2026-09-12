@@ -158,6 +158,30 @@ if [ -n "$sema_dokum" ] && [ -z "$yeni_migration" ] && [ "$SKIP_MIGRATION_GATE" 
   drift_ihlal=$(echo "$sema_dokum" | sed 's/^/      /')
 fi
 
+# --- Şema-sayaç bakım kapısı (Faz 2.2 dilim 2b, 12.09.2026, O-90) ----------
+#
+# Neden: RELEASE-STANDARD.md §5.4/1 (10 sayaç) `api-backend/db/erwartete-
+# zaehler.json`'daki değerlere karşı ölçülüyor. Yeni bir migration tablo/policy/
+# index sayısını değiştirdiğinde bu dosya TAZELENMEZSE sonuç kırmızı DEĞİL griye
+# düşer ("erwartung veraltet") — yani kontrol sessizce söner, hiç uyarmaz. Aynen
+# şema-drift kapısının (yukarıda) yakaladığı sınıf: kural yazılıydı, kimse
+# yorumu okumadan yeni migration eklemişti.
+#
+# Kural: yeni bir migration dosyası eklendiyse, erwartete-zaehler.json'ın
+# bis_version'ı o dosyanın sürüm numarasına EŞİT olmalı (migration'lar
+# ardışık ve numaraları asla küçülmez — en yüksek STAGED migration = bis_version).
+zaehler_ihlal=""
+yeni_migration_dosyalari=$(git diff --cached --name-only --diff-filter=A -- 'api-backend/db/migrations/*.sql' 2>/dev/null)
+if [ -n "$yeni_migration_dosyalari" ] && [ "$SKIP_ZAEHLER_GATE" != "1" ]; then
+  en_yuksek_migration=$(git ls-files --cached -- 'api-backend/db/migrations/*.sql' \
+    | sed -n 's#.*/\([0-9][0-9][0-9][0-9]\)_.*#\1#p' | sort | tail -1)
+  bis_version_json=$(git show ":api-backend/db/erwartete-zaehler.json" 2>/dev/null \
+    | sed -n 's/.*"bis_version"[[:space:]]*:[[:space:]]*"\([0-9]*\)".*/\1/p')
+  if [ -n "$en_yuksek_migration" ] && [ "$bis_version_json" != "$en_yuksek_migration" ]; then
+    zaehler_ihlal="erwartete-zaehler.json.bis_version=\"$bis_version_json\" ama en yüksek migration=\"$en_yuksek_migration\""
+  fi
+fi
+
 # --- pg_net kapısı (sayaç değil, doğrudan kontrol) --------------------------
 #
 # O-49 (12.09.2026): pg_net kutuda hiç kurulmuyor artık — ama bunu sağlayan
@@ -295,6 +319,18 @@ if [ -n "$o72_ihlal" ]; then
       güncellenmezse, dosya hiçbir kutuya asla ulaşmaz — Docker o yolda
       sessizce boş bir DİZİN yaratır (O-49'un webhooks.sql dersinin aynısı).
       Çıkış: 'node tools/onprem-manifest.mjs' çalıştırıp aynı commit'e ekle.
+"
+fi
+
+if [ -n "$zaehler_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ şema-sayaç beklentisi bayat: $zaehler_ihlal
+      Yeni migration §5.4/1'in beklenen tablo/policy/index sayılarını
+      değiştirmiş olabilir — tazelenmezse kontrol kırmızı değil GRİYE düşer,
+      yani sessizce sönmüş olur.
+      Çıkış: erwartete-zaehler.json'ı taze bir on-prem kutusunda ölçüp
+      bis_version'ı bu migration'a eşitle (SaaS değil — onprem/REGISTER.md O-90/O-91).
+      Yalnızca biçimsel bir düzeltmeyse: SKIP_ZAEHLER_GATE=1 git commit ...
 "
 fi
 

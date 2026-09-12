@@ -2556,6 +2556,67 @@ test edilmedi — üretim RLS'ini test amacıyla kapatmak riski kazancından bü
 kod incelemesiyle doğrulandı (aynı iki-yarımlı desen restore.sh'ın parmak-izi mantığıyla
 aynı). "Veraltet" (gri, `bis_version` aşımı) yolu da canlı tetiklenmedi, yalnız kod okuması.
 
+**Bu bölümün post-hoc denetimi (aynı gece, onprem-audit) beş yeni madde çıkardı:**
+O-90 (bakım kapısı yok) · O-91 (SaaS drift riski) · O-92 (`schritte` replace-not-merge) ·
+O-93 (iki ölçüm boşluğu) · O-94 (kontroller kurulumdan sonra hiç koşmuyor). Üçü (O-90/
+O-92/O-93) aynı turda kapatıldı, ikisi (O-91/O-94) Faz 2.4'e bırakıldı — hepsi aşağıda.
+
+### O-90 — `erwartete-zaehler.json` tazelenmezse §5.4/1 sessizce griye düşer ✅ **gelöst**
+
+Onprem-audit'in en ciddi bulgusu (dilim 2b'nin post-hoc incelemesi, 12.09.2026 gecesi):
+yeni bir migration tablo/policy/index sayısını değiştirdiğinde bu dosya tazelenmezse
+sonuç **kırmızı değil gri** olur ("erwartung veraltet") — yani kontrol sessizce söner,
+tam da playbook'un ilk dersinin (kural yazılıydı, kimse yorumu okumadan yeni kod
+eklemişti) aynısı. Çözüm mekanik: `tools/check-onprem.sh`'a yeni bir kapı — yeni bir
+migration dosyası eklendiyse, `erwartete-zaehler.json`'ın `bis_version`'ı o dosyanın
+sürüm numarasına eşit olmak ZORUNDA, aksi hâlde commit reddedilir
+(`SKIP_ZAEHLER_GATE=1` bilinçli istisna). Sayıları kapı doğrulayamaz (yalnız gerçek
+bir kutuda ölçülür), ama tazelemeyi unutmayı imkânsız hâle getirir.
+
+### O-91 — Sayaç beklentisi tek dağıtıma göre yazıldı; SaaS `DATABASE_URL` set ederse kalıcı alarm 🟡 **geplant (Faz 2.4)**
+
+`erwartete-zaehler.json` on-prem'in 78 tablosuna göre yazıldı, SaaS'ın 89'una göre
+DEĞİL (bilinçli — bkz. yukarıdaki "Dilim 2b" bölümü). Bugün zararsız çünkü SaaS'ta
+`DATABASE_URL` set edilmemiş (`server.js:4530` yorumu), runner sayaçları hiç
+çalıştırmıyor. Ama zincirin asıl amacı SaaS'ın da aynı runner'ı koşması (G7) — o gün
+her restart'ta `console.warn` + kalıcı `abweichung` yanar, birkaç hafta sonra kimse
+bakmaz olur (alarm yorgunluğu). Çözüm: dağıtım tipine göre iki beklenti bloğu (ya da
+bir `PRAXURA_DEPLOYMENT` işaretiyle SaaS'ta sabit `gri`) — fork yok, tek dosyada iki
+blok. Faz 2.4'ün (self-check + panel) doğal parçası, şimdi acil değil.
+
+### O-92 — `praxura_setup.schritte` merge değil replace ediliyordu ✅ **gelöst**
+
+`/verify`'ın `pruefungen:true` dalı `schritte`'yi doğrudan `{billige_pruefungen:...}`
+ile eziyordu — yorum "sadece bu alanı mergeliyor" diyordu ama PostgREST'te jsonb
+merge yok, bir `UPDATE` sütunun tamamını değiştirir. Bugün zararsız (tek yazar), ama
+dilim 3 SMTP sonucunu aynı sütuna yazınca sessizce silinirdi. Düzeltme: read-modify-
+write (`select schritte` → JS'te yay → `update`) — `api-backend/setup/router.js`.
+Gerçek kutuda doğrulandı: `schritte`'ye elle konan alakasız bir anahtar (`
+future_dilim3_test`), `billige_pruefungen` yeniden yazıldıktan sonra da yerinde kaldı.
+
+### O-93 — Dilim 2b'nin iki ölçüm boşluğu ✅ **gelöst**
+
+(a) RLS negatif testi `owner_user_id` NULL ise ikinci yarıyı (owner'ın satırı
+GÖRÜNMEZ) hiç ölçmeden sessizce yeşil dönüyordu (`!ownerUserId || ...` kısa devresi)
+— iki-yarımlı tasarımın var oluş sebebi tam bu deliği kapatmaktı. Artık `owner_user_id`
+yoksa sonuç `atlandi` (gri), asla sessiz yeşil değil.
+(b) `rls_kapali_tablo` sayı olarak tutuluyordu; bir migration X tablosunun RLS'ini
+açıp Y'ninkini kapatsa sayaç yine aynı sayıyı verir ve **yeşil kalırdı** — tam
+yakalaması gereken şeyi kaçırırdı. `rls_kapali_tablolar` (isim listesi, küme farkı)
+oldu. Gerçek kutuda doğrulandı: `spatial_ref_sys`'i RLS'e aldım, `warteliste`'nin
+RLS'ini kapattım (sayı sabit 1 kaldı) — sayaç doğru şekilde `kirmizi` yandı
+(`soll:["spatial_ref_sys"] ist:["warteliste"]`).
+
+### O-94 — §5.4/5 ve /8 yalnız kurulumda bir kez koşuyor; sonrasında hiçbir panel yok 🟡 **geplant (Faz 2.4)**
+
+DEK parmak izi (`keyFingerprint()`) ve RLS negatif testi bugün yalnız sihirbaz
+ekranında görünüyor — kurulum bitince bir daha hiç çalışmıyor/gösterilmiyor. O-29'un
+asıl senaryosu (müşteri yanlış anahtarla yedekten döner) tam olarak kurulumdan SONRA
+olur; sihirbaz o an çalışmıyor. Aynı şekilde bir yükseltme bir RLS policy'sini bozarsa
+kimse görmez (şema sayacı her açılışta koşuyor, bu ikisi koşmuyor). Çözüm Faz 2.4'ün
+(self-check + sürüm künyesi paneli) işi — orada randevu-düzeyi bir RLS negatif testi
+de eklenebilir (taze kutuda `bookings` boş, orada ölçmek daha az müdahaleci).
+
 ### O-66 — Sihirbazın SMTP ekranı yapısal olarak çalışamaz: GoTrue ayarını env'den okur
 
 | Alan | İçerik |
@@ -3336,18 +3397,20 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 89 madde** (O-01 … O-89) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
+**Toplam 94 madde** (O-01 … O-94) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
 bildirim-sonrası denetiminden çıktı, §7L; aynı gece üçü (O-85/O-86/O-89) tam, ikisi
-(O-87/O-88) kısmen kapatıldı — detay kendi maddelerinde. ⚠️ O-53 ve O-54'ün kendi
-`###` girdisi yok; O-01'in not bloğunda yaşıyorlar — kaybolmaya açıklar, ileride
+(O-87/O-88) kısmen kapatıldı — detay kendi maddelerinde. Beş yenisi daha (O-90…O-94)
+aynı akşam Faz 2.2 dilim 2b'nin kendi post-hoc denetiminden çıktı — üçü (O-90/O-92/
+O-93) aynı turda kapatıldı, ikisi (O-91/O-94) Faz 2.4'e bırakıldı. ⚠️ O-53 ve O-54'ün
+kendi `###` girdisi yok; O-01'in not bloğunda yaşıyorlar — kaybolmaya açıklar, ileride
 kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
 | `offen` | 12 | O-09 · O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-78 · O-79 · O-80 · O-82 |
-| `geplant` | 14 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 |
-| 🟡 `kısmen gelöst` | 13 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-29 · **O-87** · **O-88** |
-| `gelöst` | 39 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · O-83 · O-84 · **O-85** · **O-86** · **O-89** |
+| `geplant` | 16 | O-02 · O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · **O-91** · **O-94** |
+| 🟡 `kısmen gelöst` | 13 | O-01 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-29 · O-87 · O-88 |
+| `gelöst` | 42 | O-15 · O-20 · O-25 · O-26 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · **O-90** · **O-92** · **O-93** |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda

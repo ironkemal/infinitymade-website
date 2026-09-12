@@ -46,6 +46,12 @@ export function verschluesselungsTest() {
  */
 export async function rlsNegativTest({ adminClient, supabaseUrl, anonKey, ownerUserId }) {
   if (!anonKey) return { status: 'atlandi', neden: 'SUPABASE_ANON_KEY nicht gesetzt' };
+  // Ohne ownerUserId ist die zweite Haelfte (Owner-Zeile UNSICHTBAR) gar nicht
+  // pruefbar — das war genau der Grund fuer den Zwei-Haelften-Entwurf. Frueher
+  // fiel `!ownerUserId` hier trivial auf "unsichtbar=true" zurueck und das
+  // Ergebnis wurde still gruen, obwohl nur die Haelfte gemessen war
+  // (onprem-Audit, 12.09.2026).
+  if (!ownerUserId) return { status: 'atlandi', neden: 'owner_user_id fehlt — Negativ-Haelfte (Owner-Zeile unsichtbar) kann nicht geprueft werden' };
 
   const testEmail = `praxura-rls-selbstcheck-${Date.now()}@setup.invalid`;
   const testPassword = crypto.randomBytes(24).toString('hex');
@@ -81,7 +87,7 @@ export async function rlsNegativTest({ adminClient, supabaseUrl, anonKey, ownerU
         } else {
           const sichtbareIds = (rows || []).map((r) => r.id);
           const eigeneSichtbar = sichtbareIds.includes(testUserId);
-          const ownerUnsichtbar = !ownerUserId || !sichtbareIds.includes(ownerUserId);
+          const ownerUnsichtbar = !sichtbareIds.includes(ownerUserId);
           ergebnis = (eigeneSichtbar && ownerUnsichtbar)
             ? { status: 'ok' }
             : { status: 'kirmizi', neden: `RLS-Erwartung verletzt: eigene Zeile sichtbar=${eigeneSichtbar}, Owner-Zeile unsichtbar=${ownerUnsichtbar}` };

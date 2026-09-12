@@ -25,9 +25,6 @@ const SORGULAR = {
             JOIN pg_namespace n ON n.oid = c.relnamespace
             WHERE n.nspname = 'public' AND NOT t.tgisinternal`,
   index: `SELECT count(*)::int AS n FROM pg_indexes WHERE schemaname='public'`,
-  rls_kapali_tablo: `SELECT count(*)::int AS n FROM pg_tables t
-                     JOIN pg_class c ON c.relname = t.tablename AND c.relnamespace = t.schemaname::regnamespace
-                     WHERE t.schemaname='public' AND NOT c.relrowsecurity`,
   auth_trigger: `SELECT count(*)::int AS n FROM pg_trigger t
                  JOIN pg_class c ON c.oid = t.tgrelid
                  JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -36,6 +33,14 @@ const SORGULAR = {
   publication_uye_tablo: `SELECT count(*)::int AS n FROM pg_publication_tables`,
   extension: `SELECT count(*)::int AS n FROM pg_extension`,
 };
+
+// Isim listesi olarak, sayı olarak DEĞİL (onprem-Audit, 12.09.2026): bu tek
+// sayaç bir güvenlik kontrolü. Sayı olarak tutulsaydı, bir migration X
+// tablosunun RLS'ini kapatıp Y'ninkini açsaydı sayaç yine "1" derdi ve yeşil
+// kalırdı — tam yakalaması gereken şeyi kaçırırdı. Küme farkı bunu yakalar.
+const RLS_KAPALI_TABLO_SQL = `SELECT t.tablename AS n FROM pg_tables t
+  JOIN pg_class c ON c.relname = t.tablename AND c.relnamespace = t.schemaname::regnamespace
+  WHERE t.schemaname='public' AND NOT c.relrowsecurity ORDER BY t.tablename`;
 
 /**
  * Liest erwartete-zaehler.json. Rein, kein DB-Zugriff — testbar ohne Postgres.
@@ -62,6 +67,9 @@ export async function zaehlerPruefen(client, erwartet, aktuelleVersion) {
     const { rows } = await client.query(sql);
     gemessen[name] = rows[0].n;
   }
+  const { rows: rlsKapaliRows } = await client.query(RLS_KAPALI_TABLO_SQL);
+  const rlsKapaliTablolar = rlsKapaliRows.map((r) => r.n);
+  gemessen.rls_kapali_tablolar = rlsKapaliTablolar;
 
   const erwartungVeraltet = !!aktuelleVersion && aktuelleVersion > erwartet.bis_version;
 
@@ -70,6 +78,13 @@ export async function zaehlerPruefen(client, erwartet, aktuelleVersion) {
     const soll = erwartet.zaehler[name];
     const ist = gemessen[name];
     if (soll !== ist) abweichungen.push({ name, soll, ist });
+  }
+
+  const erwarteteRlsKapali = erwartet.zaehler.rls_kapali_tablolar || [];
+  const rlsKapaliFarki = rlsKapaliTablolar.length !== erwarteteRlsKapali.length
+    || rlsKapaliTablolar.some((t) => !erwarteteRlsKapali.includes(t));
+  if (rlsKapaliFarki) {
+    abweichungen.push({ name: 'rls_kapali_tablolar', soll: erwarteteRlsKapali, ist: rlsKapaliTablolar });
   }
 
   return {

@@ -8,7 +8,7 @@
     "fonksiyon": 67,
     "trigger": 70,
     "index": 295,
-    "rls_kapali_tablo": 1,
+    "rls_kapali_tablolar": ["spatial_ref_sys"],
     "auth_trigger": 1,
     "storage_bucket": 5,
     "publication_uye_tablo": 1,

@@ -107,7 +107,8 @@ function schemaZaehlerUebersetzen(z) {
   if (z.status === 'veraltet') {
     return { status: 'gri', neden: `Erwartete Werte sind fuer bis_version ${z.bis_version} hinterlegt, Box ist bei ${z.aktuelleVersion} — Erwartung aktualisieren ("şema güncelle").` };
   }
-  return { status: 'kirmizi', neden: `Abweichung: ${z.abweichungen.map((a) => `${a.name} soll=${a.soll} ist=${a.ist}`).join(', ')}` };
+  const fmt = (v) => (Array.isArray(v) ? JSON.stringify(v) : v);
+  return { status: 'kirmizi', neden: `Abweichung: ${z.abweichungen.map((a) => `${a.name} soll=${fmt(a.soll)} ist=${fmt(a.ist)}`).join(', ')}` };
 }
 function einfachUebersetzen(r) {
   // fingerprint (nur verschluesselungsTest()) bleibt erhalten — §5.4/8 verlangt
@@ -132,11 +133,15 @@ async function billigePruefungenLaufen(ownerUserId) {
 
   const ergebnis = { schema, rls, sifreleme, gemessen_am: new Date().toISOString() };
 
-  // Persistieren: schritte ist jsonb, ein UPDATE mergt nur dieses eine Feld ein —
-  // andere, spaeter hinzukommende Schluessel in schritte bleiben unberuehrt.
+  // Read-modify-write: `schritte` ist EIN jsonb-Feld, PostgREST kennt kein
+  // jsonb-Merge im UPDATE selbst — ein blindes .update({schritte:{...}}) wuerde
+  // JEDEN anderen Schluessel darin ueberschreiben (spaeter z. B. Dilim 3s
+  // SMTP-Ergebnis). Race ist hier kein Problem: nur der Mensch am Schritt-4-
+  // Bildschirm loest diesen Aufruf aus, nie parallel.
+  const { data: bisherige } = await supabase.from('praxura_setup').select('schritte').eq('id', 1).maybeSingle();
   await supabase
     .from('praxura_setup')
-    .update({ schritte: { billige_pruefungen: ergebnis } })
+    .update({ schritte: { ...(bisherige?.schritte || {}), billige_pruefungen: ergebnis } })
     .eq('id', 1);
 
   return ergebnis;

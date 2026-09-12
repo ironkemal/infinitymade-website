@@ -37,7 +37,7 @@
 | **Kaç sürüm geriden yükseltme** | Sınır yok — **atlanamayan durak (Pflichtstation) yoksa.** Duraklar `releases.json`'da ilan edilir ve runner atlamayı reddeder. Hedef: durak listesi **boş kalsın** (§3.3 kuralı bunu mümkün kılıyor) |
 | **Yedek** | Migration çalışmadan **önce** kutu kendisi yedek alır (`vor-<sürüm>`); yedek alınamıyorsa migration **çalışmaz** |
 | **Geri alma** | PATCH: eski digest'e geri sabitle, biter. MINOR: şema ileri gitti → geri dönüş yalnız göç-öncesi yedekten. Bu sınır dürüstçe yazılır, gizlenmez |
-| **Kurulum başarılı sayılır** | §5.4'teki **14 kontrolün 14'ü** yeşilse. Biri kırmızıysa kurulum "bitti" demez, kurulum modunda kalır |
+| **Kurulum başarılı sayılır** | §5.4'teki **14 kontrolün 14'ü** yeşilse. Biri kırmızıysa kurulum "bitti" demez, kurulum modunda kalır. **İstisna (Faz 2.2 dilim 2b, 12.09.2026):** kırmızı kontrol varken sihirbazın kendi "yine de tamamla" onay kutusuyla **insan bilerek** bitirebilir — mekanik AND kuralı tek kırmızıda kutuyu kalıcı kilitlerdi ve K10 gereği bizim içeri girip açma yolumuz yok. Onay `praxura_setup.schritte`'ye yazılır, sebep kaybolmaz |
 | **En büyük tekil risk** | Bozuk image'ın Watchtower ile 20 kutuya aynı anda gitmesi. Bu bir kez yaşandı (SaaS, `SUPABASE_SERVICE_KEY` yazım hatası → crash-loop, 60 sn'de canlı). Önlem üç katmanlı: CI'da **gerçek CMD ile smoke-test** · 72 saat soak · kutuda **crash-loop yerine bakım modu** (§6.3) |
 | **Bugün karara bağlanması gereken** | Lisans yenileme çağrısının sağlık durumu taşıyıp taşımayacağı (G1'in lafzını genişletir) — §11.1 |
 
