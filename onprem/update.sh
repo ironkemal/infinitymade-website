@@ -238,9 +238,11 @@ EOF
 
 # O-82 — Bildirim önbelleği ve gönderim mantığı (onprem-Review, 13.09.2026) ──
 #
-# owner_bilgisini_guncelle(): SADECE sonuc=ok sonrasında çağrılır (aşağıda,
-# Schritt 11), yani DB o an kanıtlanmış şekilde erişilebilir durumdaydı. E-posta
-# + işletme adını psql ile okuyup önbelleğe yazar. Mail script'i (setup/
+# owner_bilgisini_guncelle(): İKİ yerden çağrılır — her koşunun BAŞINDA
+# (Schritt 3'ten önce, önbelleği taze tutmak için — ilk koşu başarısız olursa
+# bile alarm kurulabilsin diye, bkz. o çağrının yanındaki not) ve Schritt 11'de
+# sonuc=ok sonrasında (DB o an kanıtlanmış şekilde erişilebilir). E-posta +
+# işletme adını psql ile okuyup önbelleğe yazar. Mail script'i (setup/
 # update-alarm-mail.mjs) kendisi DB'ye HİÇ bağlanmaz — bakim_modu tam olarak
 # "DB de dahil konteynerler sağlıksız" demek, o an yeni bir sorgu da başarısız
 # olurdu. Önbellek olmadan "DB çökmüş kutu" = "alarmsız kutu" olurdu.
