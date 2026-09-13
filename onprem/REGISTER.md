@@ -290,8 +290,13 @@ tamamlandı) — register bunu hiç işlememişti, yeni iş yapılmadı, yalnız
 (taban adresi tekilliği, owner_id+satır-kanıtı, ağ hatası sessiz geçmiyor) kodda
 gerçekten karşılandığı doğrulanıp sicil `gelöst`e çekildi.
 
-Bağımsız açık maddeler (henüz sıralanmadı, kullanıcı seçecek): **O-33** (on-prem'de
-"çalışan sayısı/limit" tanımsız).
+🟡 **O-33 — karar verildi (13.09.2026)**: plan farkı yalnız modül bazlı olacak, çalışan
+sayısı hiç sayılmayacak (b seçeneği kapandı). Uygulaması (lisans dosyası formatı) Faz
+3.3'ün kapsamı, o faz açılmadan gündeme dönmez.
+
+Bağımsız açık madde kalmadı — bu turun kolayca çözülebilir listesi tükendi. Geriye
+kalanlar (O-18/O-23/O-32/O-46/O-75/O-80/O-95) ya büyük fazlara bağlı ya da başka
+bir kararı bekliyor; kendi maddelerine bakılmalı.
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -1171,7 +1176,7 @@ kapı unutmaz ama düşünmez.
 | **Çözüm** | Faz 3.3 helper'ı `module_visibility`'yi **ezen** bir üst katman olur: lisans kapalıysa tablo ne derse desin modül görünmez. Tersi değil (lisans açık + müşteri kapatmış = kapalı kalır, bu müşterinin tercihi) |
 | **Durum** | `offen` — Faz 3.3 kapsamında ama playbook `module_visibility` ile lisansın ilişkisini yazmamış |
 
-### O-33 — On-prem'de "çalışan sayısı / limit" kavramı tanımsız
+### O-33 — On-prem'de "çalışan sayısı / limit" kavramı tanımsız 🟡 **karar verildi (13.09.2026), uygulama Faz 3.3'te**
 
 | Alan | İçerik |
 |---|---|
@@ -1179,8 +1184,8 @@ kapı unutmaz ama düşünmez.
 | **Nerede** | Aranan: `planLimit`, `PLAN_LIMIT`, `requirePlan`, `hasFeature` → **sıfır sonuç**. Fiyat bilgisi yalnız `api/_lib/pricing.js` (merkez, raporlama için) |
 | **Tip** | H |
 | **Kutuda ne olur** | Bugün SaaS'ta da limit uygulanmıyor, yani bu bir regresyon değil. Ama on-prem'de sonuç ağırlaşır: müşteri Starter lisansıyla kutuyu kurar, 20 çalışan ekler, kimse görmez — merkezde telemetri yok (G4), denetim yok (K10). Lisans dosyası plan adını taşıyacak ama plan adının **hiçbir teknik karşılığı** yok |
-| **Çözüm** | Karar gerekiyor: (a) plan farkı yalnız **modül** bazlı kalsın (lisans modül listesi taşır, kullanıcı sayısı serbest) — en basiti ve K13'ün "toplam fiyat" diliyle uyumlu; (b) kullanıcı sayısı lisansa yazılıp helper'da kontrol edilsin. Öneri: **(a)**. Ne olursa olsun Faz 3.3'ten önce cevaplanmalı, yoksa lisans formatı yanlış donar |
-| **Durum** | `offen` — kullanıcı kararı gerekiyor; playbook'ta karşılığı yok |
+| **Çözüm** | ✅ **Karar (kullanıcı, 13.09.2026): (a) — plan farkı yalnız modül bazlı.** Lisans dosyası hangi modüllerin (§302 faturalandırma, Fahrtenbuch vb.) açık olduğunu taşır; çalışan/kullanıcı sayısı serbesttir, hiç sayılmaz, kutuda bir sayaç/kapı YAZILMAZ. Register'ın kendi önerisiyle aynı yön — en basit, K13'ün "toplam fiyat" mantığıyla uyumlu |
+| **Durum** | 🟡 **Karar verildi, uygulama henüz yok** — bugün ne SaaS'ta ne kutuda bir sayaç/kapı mekanizması var, kararla birlikte artık AÇILMAYACAĞI da netleşti (b seçeneği kapandı, tekrar gündeme gelmez). Gerçek kod işi (lisans dosyası formatı + modül listesi okuma) Faz 3.3'ün kapsamı — o faz açılmadan bu maddeye dönülmez |
 
 ---
 
@@ -3495,9 +3500,9 @@ kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 8 | O-18 · O-23 · O-32 · O-33 · O-46 · O-75 · O-80 · O-95 |
+| `offen` | 7 | O-18 · O-23 · O-32 · O-46 · O-75 · O-80 · O-95 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
-| 🟡 `kısmen gelöst` | 15 | O-01 · O-02 · O-09 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
+| 🟡 `kısmen gelöst` | 16 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
 | `gelöst` | 47 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-96 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
