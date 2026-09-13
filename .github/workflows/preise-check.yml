@@ -7,16 +7,30 @@ name: GKV Preise prüfen & automatisch aktualisieren
 #      GKV-Spitzenverband veröffentlichte Heilmittelpreisstammdatei (XML).
 #   2. Betrifft die Abweichung NUR einen reinen Preiswechsel bei exakt derselben
 #      Code-Menge (keine neuen/verschwundenen Positionen, keine widersprüchliche
-#      Preisangabe bei einem bereits bekannten Fenster) → das neue Preisfenster
+#      Preisangabe bei einem bereits bekannten Fenster, kein Sprung >15% bei
+#      einem bekannten Code, kein kaputtes Datumsformat) → das neue Preisfenster
 #      wird automatisch angehängt, die Tests laufen, bei Grün wird committet
 #      und gepusht. publish-calendar-api.yml übernimmt danach automatisch
 #      (eigene Tests → Image bauen → Watchtower deployt live).
-#   3. Alles andere (neue/verschwundene Codes, unerwartete Abweichung) wird NUR
-#      per Telegram gemeldet — keine automatische Änderung. Das kann nur ein
-#      Mensch anhand der Anlage-2-Vertragsprosa entscheiden (siehe Kopfkommentar
-#      in api-backend/preise_autoupdate.mjs).
+#   3. Alles andere (neue/verschwundene Codes, unerwartete Abweichung, zu
+#      großer Preissprung) wird NUR per Telegram gemeldet — keine automatische
+#      Änderung. Das kann nur ein Mensch anhand der Anlage-2-Vertragsprosa
+#      entscheiden (siehe Kopfkommentar in api-backend/preise_autoupdate.mjs).
 #
 # Kein KI-Schritt beteiligt — reines, deterministisches Node-Skript.
+#
+# Zwei Jobs, bewusst getrennt (guvenlik-Review, O-99, 13.09.2026):
+#   - `preise-check` hat NUR Lesezugriff (contents: read), installiert die
+#     vollen npm-Abhängigkeiten (für `npm test`) und lädt geänderte Dateien
+#     als Artefakt hoch. Ein manipuliertes Postinstall-Skript in irgendeiner
+#     Abhängigkeit hat hier keinen Schreibzugriff auf das Repo.
+#   - `commit-und-push` hat Schreibzugriff (contents: write), läuft aber OHNE
+#     `npm ci` — die einzigen zwei Skripte, die hier laufen
+#     (sync_heilmittel_katalog.js --sql, ein `node -e`) importieren nur die
+#     eigenen Codedateien, keine Abhängigkeit. Holt vor dem Commit den
+#     aktuellsten `main`-Stand UND berechnet die Migrationsnummer danach neu
+#     (O-98) — verhindert, dass ein menschlicher Commit und dieser Bot
+#     dieselbe Nummer vergeben.
 
 on:
   schedule:
@@ -24,14 +38,25 @@ on:
   workflow_dispatch: {}    # manueller Test-Trigger im Actions-Tab
 
 permissions:
-  contents: write
+  contents: read   # workflow-Default — jeder Job listet unten trotzdem seine
+                    # eigenen Scopes explizit, sobald EIN `permissions`-Block
+                    # irgendwo im Workflow steht, wird "kein gelisteter Scope"
+                    # zu "none", nicht zum sonst üblichen Default
 
 jobs:
   preise-check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write   # actions/upload-artifact braucht das explizit
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+      needs_review: ${{ steps.check.outputs.needs_review }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Node einrichten
         uses: actions/setup-node@v4
@@ -40,7 +65,11 @@ jobs:
 
       - name: Abhängigkeiten installieren
         working-directory: ./api-backend
-        run: npm ci --no-audit --no-fund
+        # --ignore-scripts: dieser Job hat kein Schreibzugriff (contents: read),
+        # aber ein manipuliertes Lifecycle-Skript könnte trotzdem versuchen,
+        # Secrets aus der Umgebung zu exfiltrieren. Unsere eigenen 12 Pakete
+        # brauchen kein install-Skript (geprüft 13.09.2026).
+        run: npm ci --no-audit --no-fund --ignore-scripts
 
       - name: Preise prüfen und, wenn sicher möglich, automatisch aktualisieren
         id: run
@@ -57,64 +86,30 @@ jobs:
         working-directory: ./api-backend
         run: npm test
 
-      - name: Seed-Migration für die Box mitschreiben (O-95, O-79-Kapı)
+      - name: Geänderte Codedateien als Artefakt hochladen
+        if: steps.check.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: preise-aenderung
+          path: |
+            api-backend/billing/codes/podologie_positions.js
+            api-backend/billing/codes/physio_positions.js
+            api-backend/preise-telegram-message.txt
+          retention-days: 3
+
+      - name: Telegram-Nachricht als Artefakt hochladen (nur Review nötig)
+        if: steps.check.outputs.needs_review == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: preise-review-nachricht
+          path: api-backend/preise-telegram-message.txt
+          retention-days: 3
+
+      - name: Telegram — automatische Aktualisierung angekündigt
         if: steps.check.outputs.changed == 'true'
         working-directory: ./api-backend
         run: |
-          # O-79's Seed-Kapı (tools/check-onprem.sh, lokaler Git-Hook) verlangt bei
-          # jeder *_positions.js-Änderung eine neue Seed-Migration im selben Commit
-          # — aber dieser Workflow läuft in einem nackten CI-Checkout ohne Hooks
-          # (O-95). sync_heilmittel_katalog.js --sql (kein DB-Zugriff, nur die
-          # geraden geänderten Codedateien) erzeugt hier denselben Inhalt, den ein
-          # Mensch von Hand erzeugen würde.
-          NEXT=$(ls db/migrations/*.sql | sed -E 's#.*/([0-9]{4})_.*#\1#' | sort -n | tail -1)
-          NEXT=$(printf '%04d' $((10#$NEXT + 1)))
-          FILE="db/migrations/${NEXT}_seed_heilmittel_katalog_preisrunde_$(date -u +%Y%m%d).sql"
-          {
-            echo "-- O-95 (onprem/REGISTER.md) — automatisch von preise-check.yml erzeugt,"
-            echo "-- selber Commit wie die Preisrunde in den Codedateien (Ops-Karte #213)."
-            echo "-- Erzeugt von: node sync_heilmittel_katalog.js --sql. Kein zweiter"
-            echo "-- Erzeugungsweg — nur ein zweiter Ausgang derselben Zeilen-Bauer, die"
-            echo "-- auch db/migrations/0012_seed_heilmittel_katalog.sql geschrieben hat."
-            echo ""
-            node sync_heilmittel_katalog.js --sql
-            echo "DO \$\$ DECLARE n int; BEGIN"
-            echo "  SELECT count(*) INTO n FROM public.heilmittel_katalog;"
-            echo "  IF n < 94 THEN RAISE EXCEPTION 'seed heilmittel_katalog: % Zeilen, erwartet >= 94', n; END IF;"
-            echo "END \$\$;"
-          } > "$FILE"
-          # bis_version mitziehen: reine Daten-UPSERT in eine bestehende Tabelle,
-          # nie ein neues Tabelle/Policy/Funktion/Trigger/Index — daher ohne neue
-          # physische Zählung sicher hochziehbar (O-95-Review, 13.09.2026).
-          node -e "
-            const fs = require('fs');
-            const p = 'db/erwartete-zaehler.json';
-            const j = JSON.parse(fs.readFileSync(p, 'utf8'));
-            j.bis_version = '$NEXT';
-            fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
-          "
-
-      - name: Commit + Push (nur wenn Tests grün waren)
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          git config user.name "praxura-preise-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add api-backend/billing/codes/podologie_positions.js api-backend/billing/codes/physio_positions.js
-          git add api-backend/db/migrations/*.sql api-backend/db/erwartete-zaehler.json
-          git commit \
-            -m "chore(preise): automatische Preisrunde übernommen (GKV-Heilmittelpreisstammdatei)" \
-            -m "Ausgelöst von preise_autoupdate.mjs (Ops-Karte #213). Nur Preis + Zuzahlung geändert; gleiche Codes, gleiche Regeln (Dauer/Diagnosegruppen/Notiz 1:1 vom Vorgänger-Fenster übernommen). npm test lief grün vor diesem Commit. Seed-Migration für die Box im selben Commit mitgeschrieben (O-95)." \
-            -m "Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-          # main könnte sich seit dem Checkout bewegt haben (Melih/Kemal pushen
-          # laufend direkt dorthin, siehe CLAUDE.md) — rebase statt hart zu pushen.
-          git pull --rebase origin main
-          git push
-
-      - name: Telegram — automatische Aktualisierung gemeldet
-        if: steps.check.outputs.changed == 'true'
-        working-directory: ./api-backend
-        run: |
-          MSG=$(printf '✅ GKV-Preise automatisch aktualisiert und live ausgerollt.\n\n%s' "$(cat preise-telegram-message.txt)")
+          MSG=$(printf '✅ GKV-Preise geprüft, Commit folgt gleich (zweiter Job).\n\n%s' "$(cat preise-telegram-message.txt)")
           curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=$MSG"
@@ -124,6 +119,144 @@ jobs:
         working-directory: ./api-backend
         run: |
           MSG=$(printf '⚠️ GKV-Preise: manuelle Prüfung nötig (kein automatischer Commit).\n\n%s' "$(cat preise-telegram-message.txt)")
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=$MSG"
+
+  commit-und-push:
+    needs: preise-check
+    if: needs.preise-check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read   # download-artifact braucht das explizit — sobald `permissions`
+                       # gesetzt ist, gilt für jeden nicht genannten Scope "none", nicht
+                       # der sonst übliche Default
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # volle Historie — `git pull --rebase` unten braucht sie
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Geänderte Codedateien herunterladen
+        uses: actions/download-artifact@v4
+        with:
+          name: preise-aenderung
+          path: api-backend/_preise-artefakt
+
+      - name: Telegram-Nachrichtentext an seinen Platz kopieren
+        run: cp api-backend/_preise-artefakt/preise-telegram-message.txt api-backend/preise-telegram-message.txt
+        # _preise-artefakt bleibt bewusst als UNGETRACKTES Verzeichnis liegen
+        # (kein `git add`, kein Eintrag im Repo) — der nächste Schritt kopiert
+        # die Codedateien aus ihm in jeder Retry-Runde neu, und `git reset
+        # --hard` (bei einem gescheiterten Push) fasst untracked Dateien nicht
+        # an, räumt also nur den Commit-Versuch weg, nicht dieses Verzeichnis.
+
+      - name: main-Stand ziehen, Migrationsnummer NEU berechnen, committen, pushen (mit Retry)
+        working-directory: ./api-backend
+        run: |
+          git config user.name "praxura-preise-bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          # O-98 (onprem/REGISTER.md): die Migrationsnummer wird ERST HIER, NACH
+          # dem Rebase auf den aktuellsten main-Stand berechnet — nicht schon in
+          # `preise-check` (dort ist der Checkout möglicherweise Stunden alt).
+          # Schlägt der Push trotzdem fehl (jemand war zwischen Rebase und Push
+          # schneller), wird ALLES neu berechnet und erneut versucht statt eine
+          # zweite Datei mit derselben Nummer zu erzeugen. `git reset --hard`
+          # nach einem gescheiterten Versuch räumt Commit UND Arbeitsverzeichnis
+          # vollständig weg (die Codedateien werden im nächsten Durchlauf aus
+          # dem untrackten _preise-artefakt/ frisch wiederhergestellt) — kein
+          # manuelles Zurückrechnen einzelner Dateien, das im ersten Entwurf
+          # dieses Schritts einen inkonsistenten Zwischenzustand erzeugt hätte.
+          for versuch in 1 2 3 4 5; do
+            git pull --rebase origin main
+
+            cp _preise-artefakt/podologie_positions.js billing/codes/podologie_positions.js
+            cp _preise-artefakt/physio_positions.js billing/codes/physio_positions.js
+
+            NEXT=$(ls db/migrations/*.sql | sed -E 's#.*/([0-9]{4})_.*#\1#' | sort -n | tail -1)
+            NEXT=$(printf '%04d' $((10#$NEXT + 1)))
+            FILE="db/migrations/${NEXT}_seed_heilmittel_katalog_preisrunde_$(date -u +%Y%m%d).sql"
+
+            # O-79's Seed-Kapı (tools/check-onprem.sh, lokaler Git-Hook) verlangt bei
+            # jeder *_positions.js-Änderung eine neue Seed-Migration im selben Commit
+            # — aber dieser Workflow läuft in einem nackten CI-Checkout ohne Hooks
+            # (O-95). sync_heilmittel_katalog.js --sql (kein DB-Zugriff, nur die
+            # gerade geänderten Codedateien) erzeugt hier denselben Inhalt, den ein
+            # Mensch von Hand erzeugen würde.
+            {
+              echo "-- O-95 (onprem/REGISTER.md) — automatisch von preise-check.yml erzeugt,"
+              echo "-- selber Commit wie die Preisrunde in den Codedateien (Ops-Karte #213)."
+              echo "-- Erzeugt von: node sync_heilmittel_katalog.js --sql. Kein zweiter"
+              echo "-- Erzeugungsweg — nur ein zweiter Ausgang derselben Zeilen-Bauer, die"
+              echo "-- auch db/migrations/0012_seed_heilmittel_katalog.sql geschrieben hat."
+              echo "-- ZAEHLER: unveraendert (reine Daten-UPSERT, public — migrations/README.md Kural 6)"
+              echo ""
+              node sync_heilmittel_katalog.js --sql
+              echo "DO \$\$ DECLARE n int; BEGIN"
+              echo "  SELECT count(*) INTO n FROM public.heilmittel_katalog;"
+              echo "  IF n < 94 THEN RAISE EXCEPTION 'seed heilmittel_katalog: % Zeilen, erwartet >= 94', n; END IF;"
+              echo "END \$\$;"
+            } > "$FILE"
+
+            # bis_version mitziehen: reine Daten-UPSERT in eine bestehende Tabelle,
+            # nie ein neues Tabelle/Policy/Funktion/Trigger/Index — daher ohne neue
+            # physische Zählung sicher hochziehbar (migrations/README.md Kural 6).
+            node -e "
+              const fs = require('fs');
+              const p = 'db/erwartete-zaehler.json';
+              const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+              j.bis_version = '$NEXT';
+              fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+            "
+
+            git add billing/codes/podologie_positions.js billing/codes/physio_positions.js
+            git add "db/migrations/${NEXT}_seed_heilmittel_katalog_preisrunde_$(date -u +%Y%m%d).sql" db/erwartete-zaehler.json
+            git commit \
+              -m "chore(preise): automatische Preisrunde übernommen (GKV-Heilmittelpreisstammdatei)" \
+              -m "Ausgelöst von preise_autoupdate.mjs (Ops-Karte #213). Nur Preis + Zuzahlung geändert; gleiche Codes, gleiche Regeln (Dauer/Diagnosegruppen/Notiz 1:1 vom Vorgänger-Fenster übernommen). npm test lief grün im preise-check-Job. Seed-Migration für die Box im selben Commit mitgeschrieben (O-95)." \
+              -m "Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+
+            if git push; then
+              echo "Push erfolgreich (Versuch $versuch)."
+              exit 0
+            fi
+
+            echo "Push fehlgeschlagen (Versuch $versuch) — vermutlich ein Wettlauf mit einem parallelen Commit. Setze Arbeitsverzeichnis vollständig zurück und versuche erneut."
+            git reset --hard HEAD~1
+          done
+
+          echo "::error::Push nach 5 Versuchen weiterhin fehlgeschlagen — manuell prüfen."
+          exit 1
+
+      - name: Telegram — automatische Aktualisierung abgeschlossen
+        if: success()
+        working-directory: ./api-backend
+        run: |
+          MSG=$(printf '✅ GKV-Preise automatisch aktualisiert und live ausgerollt.\n\n%s' "$(cat preise-telegram-message.txt)")
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=$MSG"
+
+      - name: Telegram — Commit/Push fehlgeschlagen
+        if: failure()
+        working-directory: ./api-backend
+        run: |
+          MSG="⚠️ GKV-Preise: preise-check hat eine sichere Änderung gefunden, aber der Commit/Push-Job ist gescheitert (5 Versuche). Bitte Actions-Log prüfen — kein automatischer Commit gelandet."
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=$MSG"
+
+      - name: SaaS-Katalog braucht manuellen Sync-Schritt — Erinnerung
+        if: success()
+        run: |
+          MSG="ℹ️ Erinnerung: die neue Preisrunde ist jetzt in db/migrations/ (für neue Kutu-Installationen) UND in den Codedateien (für die SaaS-Abrechnung selbst, resolvePreis() liest nur die). Die SaaS-Tabelle heilmittel_katalog (nur Anzeige/Auswahl in der UI, KEINE Abrechnungsquelle) bekommt diese Migration NICHT automatisch — DATABASE_URL ist im SaaS-Backend bewusst nicht gesetzt (migrations/README.md). Falls die Anzeige aktualisiert werden soll: node sync_heilmittel_katalog.js (Schreibmodus, mit DB-Zugriff) einmalig von Hand laufen lassen."
           curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=$MSG"

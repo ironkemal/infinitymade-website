@@ -82,6 +82,15 @@ async function saldoFuerRezept(tenantId, rxId) {
  * Betrag fuer eine gegebene Einheitenzahl — ueber den zentralen Calculator.
  * Dieselben Argumente, die auch die gedruckte Rechnung und die DTA-Datei
  * benutzen; deshalb kommt hier zwangslaeufig derselbe Betrag heraus.
+ *
+ * Jede Einheit wird an IHREM EIGENEN Leistungsdatum aufgeloest (rx.prescription_
+ * sessions, sofern mitgeladen), nicht am Ausstellungsdatum der Verordnung —
+ * sonst widerspricht eine Korrektur ueber einen Fensterwechsel hinweg der DTA,
+ * die schon immer pro Sitzung aufloest (gkv-302, O-97, 13.09.2026). `einheiten`
+ * kann kleiner als die Zahl erbrachter Sitzungen sein (abgebrochene Serie) —
+ * die ersten `einheiten` erbrachten Sitzungen (nach Datum sortiert) tragen ihr
+ * eigenes Datum; fehlen Sitzungsdaten ganz (kein Join oder aeltere Verordnung),
+ * faellt jede Einheit wie bisher auf das Ausstellungsdatum zurueck.
  */
 function betragFuerEinheiten({ rx, lead, sector, einheiten }) {
   const bereich = sector === 'podologie' ? 'podologie' : 'physiotherapie';
@@ -89,19 +98,26 @@ function betragFuerEinheiten({ rx, lead, sector, einheiten }) {
     ? abrechnungscodeAusLegs(legsFuer(sector))
     : abrechnungscodeAusLegs(legsFuer('physiotherapy'));
 
-  const { preis_eur, zuzahlung_eur, position_frei } = resolvePreis({
-    bereich,
-    code: rx.heilmittel_position || '',
-    datum: rx.ausstellungsdatum || new Date().toISOString().slice(0, 10),
-    abrechnungscode,
-  });
+  const doneDates = (rx.prescription_sessions || [])
+    .filter(s => s.status === 'done' && s.done_at)
+    .map(s => s.done_at.slice(0, 10))
+    .sort();
 
-  const zuzahlungsfrei = !!rx.zuzahlung_befreit || position_frei;
-  const sessions = Array.from({ length: Math.max(0, einheiten) }, () => ({
-    preis_eur,
-    zuzahlung_eur_position: zuzahlungsfrei ? 0 : zuzahlung_eur,
-    position_frei: zuzahlungsfrei,
-  }));
+  const sessions = Array.from({ length: Math.max(0, einheiten) }, (_, i) => {
+    const dateStr = doneDates[i] || rx.ausstellungsdatum || new Date().toISOString().slice(0, 10);
+    const { preis_eur, zuzahlung_eur, position_frei } = resolvePreis({
+      bereich,
+      code: rx.heilmittel_position || '',
+      datum: dateStr,
+      abrechnungscode,
+    });
+    const zuzahlungsfrei = !!rx.zuzahlung_befreit || position_frei;
+    return {
+      preis_eur,
+      zuzahlung_eur_position: zuzahlungsfrei ? 0 : zuzahlung_eur,
+      position_frei: zuzahlungsfrei,
+    };
+  });
 
   const totals = calcAbrechnungsfallZuzahlung({
     sessions,
@@ -112,7 +128,7 @@ function betragFuerEinheiten({ rx, lead, sector, einheiten }) {
     verordnung_zuzahlungsfrei: !!rx.zuzahlung_befreit,
   });
 
-  return { betrag: r2(totals.gesZuzahlung ?? 0), preisProEinheit: preis_eur };
+  return { betrag: r2(totals.gesZuzahlung ?? 0), preisProEinheit: sessions[0]?.preis_eur ?? 0 };
 }
 
 // ---------------------------------------------------------------------------
@@ -152,7 +168,8 @@ router.post('/zuzahlung/korrektur', async (req, res) => {
       .from('prescriptions')
       .select('id, owner_id, patient_id, business_id, heilmittel_position, ausstellungsdatum, '
         + 'anzahl_einheiten, zuzahlung_eur, zuzahlung_befreit, abrechnung_status, belegnummer, '
-        + 'leads:patient_id (geburtsdatum)')
+        + 'leads:patient_id (geburtsdatum), '
+        + 'prescription_sessions (status, done_at)')
       .eq('id', prescription_id)
       .maybeSingle();
     if (rxErr) return res.status(500).json({ error: rxErr.message });

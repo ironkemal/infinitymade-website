@@ -760,17 +760,18 @@ router.post('/abrechnung/create', async (req, res) => {
       return res.status(500).json({ error: 'Storage upload failed: ' + upDta.error.message });
     }
 
-    const belege = rxRows.map(r => {
+    const belege = rxRows.map((r, i) => {
       const np = nameParts(r.leads);
-      const brutto = (() => {
-        const { preis_eur } = resolvePreis({
-          bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
-          code: r.heilmittel_position,
-          datum: r.ausstellungsdatum || new Date().toISOString().slice(0, 10),
-          abrechnungscode: abrechnungscodeFuer(tenantSector),
-        });
-        return (preis_eur * (r.anzahl_einheiten || 1)).toFixed(2);
-      })();
+      // Nicht erneut über resolvePreis(ausstellungsdatum) rechnen — das würde
+      // (a) die verordnete statt der erbrachten Menge nehmen (r.anzahl_einheiten
+      // statt der tatsächlich "done" Sitzungen) und (b) bei einem Fenster-
+      // wechsel während der Serie einen anderen Betrag ergeben als die DTA, die
+      // pro Sitzung an ihrem eigenen Leistungsdatum auflöst. `prescriptions[i]`
+      // (oben aus mapPrescriptionToDtaShape) hat genau diese Summe schon —
+      // derselbe Aufbau wie im podologischen Zweig weiter unten (O-97, 13.09.2026).
+      const brutto = prescriptions[i].sessions
+        .reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0)
+        .toFixed(2);
       return {
         // Dieselbe Ableitung wie im DTA-Weg (mapPrescriptionToDtaShape) und
         // dieselbe Reihenfolge — `belege` und die Datei entstehen beide aus
@@ -1619,27 +1620,35 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
 
     // ---- Map Sessions & Calculate Totals ----
     // Preis + Zuzahlung über denselben Auflöser wie der §302-Weg, damit
-    // gedruckte Rechnung und Kassendatei nicht auseinanderlaufen.
+    // gedruckte Rechnung und Kassendatei nicht auseinanderlaufen. JEDE Sitzung
+    // an ihrem EIGENEN Leistungsdatum (nicht rx.ausstellungsdatum) — Anlage 2
+    // § 3 Abs. 2 Podologie / Anlage 2 Teil A Physio: massgeblich ist das Datum
+    // der Behandlung. Bis 13.09.2026 wurde einmalig ueber das Ausstellungs-
+    // datum aufgeloest und der eine Einheitspreis auf alle Sitzungen angewandt
+    // — bei einem Fensterwechsel waehrend einer laufenden Serie widersprach das
+    // der DTA, die schon immer pro Sitzung auflöst (gkv-302, O-97).
     const storedPos = rx.heilmittel_position || '';
-    const {
-      preis_eur: priceUnit,
-      zuzahlung_eur: coPayUnit,
-      position_frei: positionFrei,
-      katalogPosition: pos,
-    } = resolvePreis({
-      bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
-      code: storedPos,
-      datum: rx.ausstellungsdatum || new Date().toISOString().slice(0, 10),
-      abrechnungscode: abrechnungscodeFuer(tenantSector),
-    });
-    const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
-
     const doneSessions = (rx.prescription_sessions || [])
       .filter(s => s.status === 'done');
 
-    const calcSessions = doneSessions.map(s => ({
-      preis_eur: priceUnit,
-      zuzahlung_eur_position: zuzahlungsfrei ? 0 : coPayUnit,
+    const resolvedSessions = doneSessions.map(s => {
+      const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
+      const { preis_eur, zuzahlung_eur, position_frei } = resolvePreis({
+        bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
+        code: storedPos,
+        datum: dateStr,
+        abrechnungscode: abrechnungscodeFuer(tenantSector),
+      });
+      return { session: s, preis_eur, zuzahlung_eur, position_frei };
+    });
+    // position_frei haengt an der Position/dem Abrechnungscode, nicht am Datum
+    // — fuer alle Sitzungen derselben Verordnung identisch.
+    const positionFrei = resolvedSessions[0]?.position_frei || false;
+    const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
+
+    const calcSessions = resolvedSessions.map(({ preis_eur, zuzahlung_eur }) => ({
+      preis_eur,
+      zuzahlung_eur_position: zuzahlungsfrei ? 0 : zuzahlung_eur,
       position_frei: zuzahlungsfrei
     }));
 
@@ -1659,12 +1668,12 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
     });
 
-    const printSessions = doneSessions.map(s => ({
+    const printSessions = resolvedSessions.map(({ session: s, preis_eur, zuzahlung_eur }) => ({
       datum: s.done_at,
       position: storedPos,
       bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
-      brutto: priceUnit,
-      zuzahlung: zuzahlungsfrei ? 0 : coPayUnit
+      brutto: preis_eur,
+      zuzahlung: zuzahlungsfrei ? 0 : zuzahlung_eur
     }));
 
     // ---- Render PDF/HTML Template ----
@@ -1806,21 +1815,23 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     if (rx.owner_id !== tenantId) return res.status(403).send('Kein Zugriff');
 
     // ---- Shared data ----
-    // Gleicher zentraler Auflöser wie Zuzahlungsrechnung und §302-Weg.
+    // Gleicher zentraler Auflöser wie Zuzahlungsrechnung und §302-Weg, JE
+    // Sitzung an ihrem eigenen Leistungsdatum (O-97, 13.09.2026 — siehe
+    // Zuzahlungsrechnung oben für die volle Begründung).
     const storedPos = rx.heilmittel_position || '';
-    const {
-      preis_eur: priceUnit,
-      zuzahlung_eur: coPayUnit,
-      position_frei: positionFrei,
-      katalogPosition: pos,
-    } = resolvePreis({
-      bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
-      code: storedPos,
-      datum: rx.ausstellungsdatum || new Date().toISOString().slice(0, 10),
-      abrechnungscode: abrechnungscodeFuer(tenantSector),
-    });
-    const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
     const doneSessions = (rx.prescription_sessions || []).filter(s => s.status === 'done');
+    const resolvedSessions = doneSessions.map(s => {
+      const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
+      const { preis_eur, zuzahlung_eur, position_frei } = resolvePreis({
+        bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
+        code: storedPos,
+        datum: dateStr,
+        abrechnungscode: abrechnungscodeFuer(tenantSector),
+      });
+      return { session: s, preis_eur, zuzahlung_eur, position_frei };
+    });
+    const positionFrei = resolvedSessions[0]?.position_frei || false;
+    const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
 
     const praxisData = {
       name: praxisProfil.business_name || 'Praxis',
@@ -1878,9 +1889,9 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       });
 
     } else if (type === 'rzg_quittung') {
-      const calcSessions = doneSessions.map(s => ({
-        preis_eur: priceUnit,
-        zuzahlung_eur_position: zuzahlungsfrei ? 0 : coPayUnit,
+      const calcSessions = resolvedSessions.map(({ preis_eur, zuzahlung_eur }) => ({
+        preis_eur,
+        zuzahlung_eur_position: zuzahlungsfrei ? 0 : zuzahlung_eur,
         position_frei: zuzahlungsfrei
       }));
       const totals = calcAbrechnungsfallZuzahlung({
@@ -1890,11 +1901,11 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         // wie oben: die Pauschale haengt an der Verordnung, nicht an der Position
         verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
       });
-      const printSessions = doneSessions.map(s => ({
+      const printSessions = resolvedSessions.map(({ session: s, zuzahlung_eur }) => ({
         datum: s.done_at,
         position: storedPos,
         bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
-        zuzahlung: zuzahlungsfrei ? 0 : coPayUnit
+        zuzahlung: zuzahlungsfrei ? 0 : zuzahlung_eur
       }));
       html = renderRzgQuittung({
         praxis: praxisData,
@@ -1915,12 +1926,12 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     } else {
       // rechnung_privat | rechnung_selbstzahler | rechnung_eigenanteil | rechnung_sonder | rechnung_bg
       const zahlungszielTage = parseInt(cj.zahlungsziel_tage, 10) || 14;
-      const bruttoSum = doneSessions.length * priceUnit;
-      const printSessions = doneSessions.map(s => ({
+      const bruttoSum = resolvedSessions.reduce((sum, { preis_eur }) => sum + preis_eur, 0);
+      const printSessions = resolvedSessions.map(({ session: s, preis_eur }) => ({
         datum: s.done_at,
         position: storedPos,
         bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
-        brutto: priceUnit
+        brutto: preis_eur
       }));
       html = renderRechnung({
         type,

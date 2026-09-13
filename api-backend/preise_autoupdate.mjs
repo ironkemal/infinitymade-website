@@ -109,6 +109,14 @@ export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, 
     return { ok: false, grund: `uneinheitliche neue Startdaten in der XML: ${startdaten.join(', ')}` };
   }
   const neuesGueltigAb = startdaten[0];
+  // Direkt aus der XML (extern) — wird unten UNGESCHÜTZT (kein formatWert(),
+  // kein Escaping) in JS-Quellcode interpoliert (gueltig_ab/gueltig_bis dieser
+  // Funktion). Ein Datumsformat-Check hier ist die einzige Bremse gegen ein
+  // manipuliertes oder kaputtes XML, das über ein Anführungszeichen aus dem
+  // String-Literal ausbricht (guvenlik-Review, O-99, 13.09.2026).
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(neuesGueltigAb)) {
+    return { ok: false, grund: `xmlGueltigAb hat kein gültiges Datumsformat (erwartet JJJJ-MM-TT): "${neuesGueltigAb}"` };
+  }
 
   const unsereCodes = new Set(aktuellesFenster.positionen.map(p => p[codeFeld]));
   const xmlCodes = new Set(neuePreisrundeEintraege.map(e => e.code));
@@ -123,6 +131,26 @@ export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, 
   }
 
   const preisByCode = new Map(neuePreisrundeEintraege.map(e => [e.code, e.xmlPreis]));
+
+  // Sicherheitsventil (gkv-302-Review, O-99, 13.09.2026): ein normaler GKV-
+  // Preisschritt liegt im niedrigen einstelligen Prozentbereich. Ein Sprung
+  // >15% bei einem BEKANNTEN Code (Code-Menge stimmt ja schon oben) ist eher
+  // ein XML-Fehler, ein Parserproblem oder ein Fall, der Vertragsprosa
+  // braucht, als ein normales Preisupdate — automatisches Schreiben stoppt,
+  // geht stattdessen in `needsReview`.
+  for (const p of aktuellesFenster.positionen) {
+    const neuerPreis = preisByCode.get(p[codeFeld]);
+    if (neuerPreis == null || !p.preis) continue;
+    const aenderung = Math.abs(neuerPreis - p.preis) / p.preis;
+    if (aenderung > 0.15) {
+      return {
+        ok: false,
+        grund: `${p[codeFeld]}: Preissprung ${(aenderung * 100).toFixed(1)}% `
+          + `(${p.preis} → ${neuerPreis}) — zu groß für Automatik, bitte manuell gegen die Anlage prüfen`,
+      };
+    }
+  }
+
   const neuePositionenZeilen = aktuellesFenster.positionen.map(p => {
     const neuerPreis = preisByCode.get(p[codeFeld]);
     return formatEntry(p, {

@@ -147,7 +147,7 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
   const { dir, ziel } = tempKopie();
   const vorher = readFileSync(ziel, 'utf8');
   const neuePreisrunde = aktuellesFenster.positionen.map(p => ({
-    code: p.hpnr, xmlPreis: p.preis + 1, xmlGueltigAb: '2099-07-01',
+    code: p.hpnr, xmlPreis: Math.round(p.preis * 1.05 * 100) / 100, xmlGueltigAb: '2099-07-01',
   }));
   const ergebnis = await versucheBereich('hpnr', ziel, neuePreisrunde, aktuellesFenster, true);
   const nachher = readFileSync(ziel, 'utf8');
@@ -158,6 +158,51 @@ test('Physio und Podologie sind beide automatisierbar (kein DB-Override mehr)', 
     assert.equal(ergebnis.geschrieben, false);
   });
   test('dry-run: Datei bleibt unverändert', () => {
+    assert.equal(nachher, vorher);
+  });
+}
+
+// ── Fall 5: unsicher — Preissprung >15% bei einem bekannten Code ───────────
+// gkv-302-Review, O-99, 13.09.2026: Sicherheitsventil gegen ein kaputtes/
+// manipuliertes XML oder eine echte Vertragsänderung, die kein einfaches
+// Preisupdate mehr ist.
+{
+  const { dir, ziel } = tempKopie();
+  const vorher = readFileSync(ziel, 'utf8');
+  const neuePreisrunde = aktuellesFenster.positionen.map(p => ({
+    code: p.hpnr, xmlPreis: Math.round(p.preis * 1.30 * 100) / 100, xmlGueltigAb: '2099-07-01',
+  }));
+  const ergebnis = await versucheBereich('hpnr', ziel, neuePreisrunde, aktuellesFenster, false);
+  const nachher = readFileSync(ziel, 'utf8');
+  rmSync(dir, { recursive: true, force: true });
+
+  test('unsicherer Fall (Preissprung >15%): ok:false', () => {
+    assert.equal(ergebnis.ok, false);
+    assert.ok(ergebnis.grund.includes('Preissprung'), `Grund sollte "Preissprung" nennen: ${ergebnis.grund}`);
+  });
+  test('unsicherer Fall (Preissprung >15%): Datei bleibt unverändert', () => {
+    assert.equal(nachher, vorher);
+  });
+}
+
+// ── Fall 6: unsicher — kaputtes Datumsformat in der XML ─────────────────────
+// guvenlik-Review, O-99, 13.09.2026: xmlGueltigAb landet ungeschützt in
+// interpoliertem JS-Quellcode (formatWert() wird dafür nicht durchlaufen).
+{
+  const { dir, ziel } = tempKopie();
+  const vorher = readFileSync(ziel, 'utf8');
+  const neuePreisrunde = aktuellesFenster.positionen.map(p => ({
+    code: p.hpnr, xmlPreis: p.preis, xmlGueltigAb: "2099-07-01'; process.exit(1); //",
+  }));
+  const ergebnis = await versucheBereich('hpnr', ziel, neuePreisrunde, aktuellesFenster, false);
+  const nachher = readFileSync(ziel, 'utf8');
+  rmSync(dir, { recursive: true, force: true });
+
+  test('unsicherer Fall (kaputtes Datumsformat): ok:false', () => {
+    assert.equal(ergebnis.ok, false);
+    assert.ok(ergebnis.grund.includes('Datumsformat'), `Grund sollte "Datumsformat" nennen: ${ergebnis.grund}`);
+  });
+  test('unsicherer Fall (kaputtes Datumsformat): Datei bleibt unverändert', () => {
     assert.equal(nachher, vorher);
   });
 }

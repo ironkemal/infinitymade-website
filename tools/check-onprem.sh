@@ -359,16 +359,18 @@ if [ -n "$seed_ihlal" ]; then
   ihlal="$ihlal
     ✗ seed-besleme kapısı — pozisyon/fiyat kodu değişti, yeni seed migration'ı yok:
 $seed_ihlal
-      İKİ ayrı seed bu koddan besleniyor, ikisi de elle koşuyor:
-      (1) heilmittel_katalog (0012, search_heilmittel()'in kaynağı — kutuda
-          yalnız seçici/rozet metni, resolvePreis() bunu OKUMAZ, düşük etki)
-      (2) heilmittel_tarif (0008, seed_tarifs.js — resolvePreis() bunu
-          VARSA katalog fiyatının ÖNÜNE geçirir, gueltig_bis NULL; asıl
-          §302 tutarı burada, yüksek etki — O-96)
+      Tek seed bu koddan besleniyor, elle koşuyor:
+      heilmittel_katalog (0012, search_heilmittel()'in kaynağı — kutuda
+      terapist seçici/rozet metni; resolvePreis() bunu OKUMAZ, asıl §302
+      tutarı doğrudan physio_positions.js/podologie_positions.js'ten gelir).
+      (13.09.2026, O-96: heilmittel_tarif DB-override tamamen kaldırıldı —
+      resolvePreis() artık SADECE katalog dosyasından okuyor, ikinci bir seed
+      yolu yok. seed_tarifs.js archive/kod/'a taşındı, koşmaya çalışma.)
       Kutuya varmanın tek yolu YENİ bir seed migration'ı (uygulanmış dosya
       değiştirilemez, runner SHA-256 tutar).
-      Çıkış: sync_heilmittel_katalog.js VE seed_tarifs.js'i koş, çıktılarını
-      yeni bir NNNN_seed_heilmittel_katalog_update.sql'e yaz, aynı commit'e ekle.
+      Çıkış: sync_heilmittel_katalog.js --sql'i koş, çıktısını yeni bir
+      NNNN_seed_heilmittel_katalog_update.sql'e yaz, aynı commit'e ekle
+      (preise-check.yml'nin CI adımı bunu otomatik yapıyor — O-95).
       Kozmetik/testte-değişen bir düzeltmeyse: SKIP_SEED_GATE=1 git commit ...
 "
 fi

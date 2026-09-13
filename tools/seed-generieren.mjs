@@ -47,13 +47,12 @@ const TABLES = {
       'art_datenlieferung', 'uebermittlungsmedium', 'bundesland'],
     orderBy: 'kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode, art_datenlieferung, uebermittlungsmedium, bundesland',
   },
-  heilmittel_tarif: {
-    columns: ['id', 'bundesland', 'kostentraeger_ik', 'position_nr', 'heilmittel_code',
-      'preis_eur', 'zuzahlung_pflicht', 'gueltig_ab', 'gueltig_bis'],
-    conflictKeys: ['id'],
-    orderBy: 'id',
-    afterSql: `SELECT setval('public.heilmittel_tarif_id_seq', (SELECT COALESCE(MAX(id),1) FROM public.heilmittel_tarif), true);`,
-  },
+  // heilmittel_tarif ABSICHTLICH entfernt (13.09.2026, O-96, db-ustasi-Review):
+  // die Tabelle wurde als Preis-Override abgeschafft (resolvePreis() liest nur
+  // noch den Katalog, siehe billing/preise/resolver.js Kopf). Ein Eintrag hier
+  // würde einem späteren `node tools/seed-generieren.mjs heilmittel_tarif`
+  // erlauben, genau das tote Seed wieder in eine neue Migration zu schreiben —
+  // db/REGISTER.md → heilmittel_tarif hat die volle Historie.
   krankenkassen: {
     // ⚠️ ik_number bu listede YOK ve BİLİNÇLİ: canlıdaki 16/94 dolu değerin hepsi
     // aynı doğrulanmamış kaynaktan, en az 4'ü kanıtlanmış yanlış (db/REGISTER.md,

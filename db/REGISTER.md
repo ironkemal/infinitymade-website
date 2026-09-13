@@ -707,6 +707,12 @@ Heilmittel-Richtlinie …).
 - **Achtung — nicht neu verdrahten:** Der Tabellenname klingt nach „hier stehen die gültigen Preise". Er tut es nicht. **Preisquelle für Physio ist `billing/codes/physio_positions.js`, für Podologie `heilmittel_katalog`.** Wer diese Tabelle wieder an den Resolver hängt, baut denselben Fehler erneut ein.
 - **Löschung:** Löschkandidat, aber **nicht dringend** — keine Patientendaten, kein Trigger, keine eingehende FK, nur eine reine Lese-Policy (`heilmittel_tarif_read_all`), ausgehende FK auf `kostentraeger`. `0008` ist prüfsummen-verriegelt und kann nicht entschärft werden; ein DROP kostet deshalb immer eine neue Migration — heute wie in drei Monaten, gleicher Preis. Empfehlung: gebündelt mit den übrigen toten Referenztabellen (`heilmittel_catalog`, `heilmittel_position`, `dta_schluessel`) in **einem** Aufräumzug, gemeinsam mit `onprem` und nach ausdrücklicher Freigabe.
 - **Quelle:** `api-backend/billing/PREISE-ANALYSE.md` (Abschnitt 3) · `onprem/REGISTER.md` O-96
+- **Nachtrag 13.09.2026 (db-ustasi-Gegenkontrolle):** `tools/seed-generieren.mjs` führte die Tabelle
+  weiterhin in seiner `TABLES`-Liste — ein späteres `node tools/seed-generieren.mjs heilmittel_tarif`
+  hätte anstandslos neues Seed-SQL für genau die abgeschaffte Tabelle ausgegeben. Eintrag entfernt,
+  mit Verweis hierher. `onprem/NOTICE-QUELLEN.txt:100` bleibt unverändert — der Verweis auf
+  `0008_seed_heilmittel_tarif.sql` ist korrekt, die Datei ist prüfsummen-verriegelt und geht
+  weiterhin in jede Box.
 
 ### `dta_schluessel`
 - **Warum:** Schlüsselverzeichnisse aus Anlage 3 TP5 (Kennzeichen, Gruppen, Codes) als Datenbestand.

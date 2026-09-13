@@ -8,7 +8,7 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-13 (O-80 kazısından — Anlage 3 V21↔V22 + dta_schluessel, 2 yeni kural)
+> Son güncelleme: 2026-09-13 (O-97 — Leistungsdatum vs. Ausstellungsdatum, 1 yeni kural + O-80'in 2'si)
 
 ---
 
@@ -327,6 +327,24 @@
   `abrechnung.routes.js:600-615` (brutto ve zuzahlung ayrı toplanıyor). VKZ 03 özel kuralı
   (Brutto = 0,00) **doğrulanmadı**.
 - **Kapsam:** tüm Leistungserbringergruppen
+
+### Heilmittel fiyatı Leistungsdatum'a göre çözülür, Ausstellungsdatum'a göre değil
+- **Kural:** Bir pozisyonun fiyatı ve Zuzahlung'u, tedavinin **yapıldığı** tarihin
+  içine düştüğü Preisfenster'den okunur; Verordnung'un yazıldığı tarihten değil.
+- **Kaynak:** Anlage 2 Podologie (i.d.F. 01.07.2025) § 3 Abs. 2 — *„für Behandlungen, die
+  ab dem 01.07.2026 stattfinden"* · Anlage 2 §125 Physio (Lesefassung ab 01.01.2026) Teil A —
+  *„für Behandlungen, die ab dem 01.01.2026 durchgeführt werden"*
+- **Geçerlilik:** 01.07.2026 (Podo) · 01.01.2026 (Physio)
+- **Kodda:** ✅ **13.09.2026'da tamamlandı (O-97).** DTA yolu zaten doğruydu
+  (`billing/api/abrechnung.routes.js:317`, podoloji karşılığı `:2461`) — basılı fatura,
+  Zuzahlungsrechnung, rzg-Quittung, Begleitzettel ve Zuzahlung-Korrektur yolları
+  (`abrechnung.routes.js` Zuzahlungsrechnung + `/prescription/:id/rechnung` route'ları,
+  `zuzahlung.routes.js:betragFuerEinheiten()`) tek bir `rx.ausstellungsdatum` ile çözüp bu tek
+  fiyatı tüm seanslara uyguluyordu; artık her biri kendi `done_at`'ine göre seans başına
+  çözüyor (gkv-302'nin ikinci-göz denetiminde bulundu — bir Verordnung iki Preisfenster'e
+  yayılırsa DTA ile diğer belgeler farklı tutar üretiyordu; Podolojide bugün canlı, Physio'da
+  01.01.2027'de ikinci pencere açılınca aynı hata orada da açığa çıkardı).
+- **Kapsam:** Physio + Podologie, standart ve Korrektur Verordnung
 
 ### „Absetzung" §302 teknik spesifikasyonunun kavramı DEĞİLDİR
 - **Kural:** Anlage 1 TP5 V21 metninde `Absetzung`, `Buchung`, `Kontonummer`, `Zahlungsavis`

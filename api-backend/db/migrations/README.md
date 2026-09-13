@@ -68,6 +68,27 @@ dosyanın başına tek başına şu satır konur:
 O dosya **idempotent** yazılmak zorundadır (`IF NOT EXISTS` vb.), çünkü yarıda kalırsa
 geri alınmaz. Bugün böyle bir migration'ımız yok.
 
+## Kural 6 — sayaç beklentisi (`../erwartete-zaehler.json`), ne zaman atlanabilir
+
+`erwartete-zaehler.json`'ın `bis_version`'ını yükseltmeden önce kural şuydu: "pür
+veri-UPSERT ise yapısal sayaç ölçümü gerekmez". **Bu cümle yeterince dar değil —
+13.09.2026'da db-ustasi'nin ikinci-göz denetiminde bulundu.** `api-backend/db/
+schema-zaehler.js`'teki `storage_bucket` sayacı `SELECT count(*) FROM storage.buckets`
+sorgusudur: `storage.buckets`'a bir `INSERT` **veri**dir ama sayacı değiştirir.
+
+Doğru kural: **`public` şemasındaki bir tabloya salt veri-UPSERT (hiç `CREATE`/`ALTER`/
+`DROP`/`GRANT` yok, `grep -niE "alter|create|drop|grant|revoke"` sıfır satır) yapısal
+sayaçları değiştirmez — bu tek şart altında `bis_version` ölçmeden yükseltilebilir.**
+Herhangi bir DDL varsa, ya da hedef tablo `public` dışındaysa (ör. `storage.*`,
+`auth.*`), taze bir on-prem kutusunda ölçüp Kural'ın normal yolunu izle.
+
+`tools/check-onprem.sh`'ın zaehler-kapısı bunu **doğrulayamaz** (yalnız `bis_version ==
+en yüksek staged migration` eşitliğine bakar, sayı elle de yükseltilebilir) — kapı
+kötüye kullanıma karşı değil, unutmaya karşı bir hatırlatıcıdır. Otomatik üretilen
+migration'lar (ör. `.github/workflows/preise-check.yml`, O-95) için: makine-okunur bir
+işaret satırı ekle, ör. `-- ZAEHLER: unveraendert (reine Daten-UPSERT, public)`, ki kapı
+ileride bunu gerçekten doğrulayabilsin.
+
 ---
 
 ## Yeni migration yazarken

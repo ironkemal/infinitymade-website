@@ -87,6 +87,14 @@ if [ -f "$LOG_FILE" ] && [ "$(wc -c < "$LOG_FILE")" -gt 5242880 ]; then
 fi
 
 mkdir -p "$STAND_DIR"
+# O-100 (guvenlik-Review, 13.09.2026): $STAND_DIR trägt Snapshot-Kopien der
+# echten .env (POSTGRES_PASSWORD, SERVICE_ROLE_KEY, JWT_SECRET,
+# DATA_ENCRYPTION_KEY, SMTP_PASS) und owner-bilgi.json (Owner-E-Mail/Praxis-
+# name). Ohne dieses chmod erbte das Verzeichnis umask 022 → 0755, lesbar für
+# jeden anderen lokalen Account auf der Maschine. `backup.sh` setzt für seine
+# eigenen Zielverzeichnisse bereits `chmod 700` — hier fehlte der gleiche
+# Standard.
+chmod 700 "$STAND_DIR"
 
 # ── Schritt 0 — Lock + Vorprüfung ────────────────────────────────────────────
 exec 9>"$LOCK_FILE"
@@ -437,6 +445,7 @@ fi
 # sadıktı, tasarım yanlıştı; düzeltme burada, sırayla).
 SNAPSHOT_DIR="$STAND_DIR/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$SNAPSHOT_DIR"
+chmod 700 "$SNAPSHOT_DIR"   # O-100 — enthält gleich eine .env-Kopie, siehe unten
 for yol in $degisen_dosyalar; do
   hedef="$SCRIPT_DIR/$yol"
   if [ -f "$hedef" ]; then
@@ -445,6 +454,7 @@ for yol in $degisen_dosyalar; do
   fi
 done
 cp "$ENV_FILE" "$SNAPSHOT_DIR/.env" 2>/dev/null || true
+chmod 600 "$SNAPSHOT_DIR/.env" 2>/dev/null || true   # O-100 — Secrets im Klartext
 # Rotasyon: yalnız son 3 anlık görüntü.
 ls -1dt "$STAND_DIR"/2*/ 2>/dev/null | tail -n +4 | xargs -r rm -rf
 

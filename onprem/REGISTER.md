@@ -16,7 +16,7 @@
 
 ---
 
-## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 12.09.2026 akşamı)
+## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 13.09.2026 gece)
 
 > Bu blok sicilin **kısa yolu**. Amacı, yeni bir oturumun 1000 satır okumadan
 > "neredeyiz, sıradaki ne, nereye basmam" sorusuna cevap bulması. Ayrıntı her
@@ -270,12 +270,19 @@ uygulanmayacak.
 insan-commit yolu için bir kapı eklendi (`billing/codes/*_positions.js` migrationsuz
 staged edilirse red), gerçek testle doğrulandı. Kazı sırasında iki yeni madde çıktı,
 aynı gün ikisi de sonuçlandı:
-**O-95** (`preise-check.yml`'in otomatik CI commit'i bu kapıyı görmüyor — düşük etkili,
-`offen` bırakıldı, ertelenebilir) ve **O-96** (⚠️ `gkv-302` doğruladı, ciddi çıktı:
-`heilmittel_tarif`, elle beslenen ve süresiz bir tablo, resolver'da §302 tutarını
-katalog fiyatının önüne geçiriyordu — 01.01.2027'de sessiz eksik ödemeye dönüşecek bir
-zaman bombasıydı. **Aynı gün kapatıldı**: override koddan tamamen kaldırıldı, kendi
-maddesine bak).
+**O-95** (`preise-check.yml`'in otomatik CI commit'i bu kapıyı görmüyordu — aynı gün
+`sync_heilmittel_katalog.js --sql` moduyla kapatıldı, kendi maddesine bak) ve **O-96**
+(⚠️ `gkv-302` doğruladı, ciddi çıktı: `heilmittel_tarif`, elle beslenen ve süresiz bir
+tablo, resolver'da §302 tutarını katalog fiyatının önüne geçiriyordu — 01.01.2027'de
+sessiz eksik ödemeye dönüşecek bir zaman bombasıydı. **Aynı gün kapatıldı**: override
+koddan tamamen kaldırıldı, kendi maddesine bak).
+
+✅ **13.09.2026 gece — ikinci-göz turu (kullanıcı isteği, dört ajan paralel):** bu
+oturumun sekiz maddesi (O-09(a)/O-79/O-96/O-82/O-44/O-33/O-80/O-95) `onprem`/`gkv-302`/
+`db-ustasi`/`guvenlik` tarafından bağımsızca yeniden koda karşı denetlendi. Sonuç: hepsi
+doğrulandı, ama denetim dört YENİ madde buldu (**O-97/O-98/O-99/O-100**, hepsi aynı gece
+kapatıldı — detay kendi maddelerinde, özet §9'da) ve O-95'in düzyazısının (bu blok dahil)
+bir yerde hâlâ `offen` dediğini yakaladı — tablo doğruydu, metin bayattı, düzeltildi.
 
 🟡 **O-82 — bildirim kanalı yazıldı (13.09.2026)** — `update.sh`'ın "ok" dışındaki her
 sonucu artık kutunun kendi SMTP'siyle owner'a mail atıyor (durum değişince hemen, aynı
@@ -295,8 +302,8 @@ sayısı hiç sayılmayacak (b seçeneği kapandı). Uygulaması (lisans dosyas�
 3.3'ün kapsamı, o faz açılmadan gündeme dönmez.
 
 Bağımsız açık madde kalmadı — bu turun kolayca çözülebilir listesi tükendi. Geriye
-kalanlar (O-18/O-23/O-32/O-46/O-75/O-80/O-95) ya büyük fazlara bağlı ya da başka
-bir kararı bekliyor; kendi maddelerine bakılmalı.
+kalanlar (O-18/O-23/O-32/O-46/O-75) ya büyük fazlara bağlı ya da başka bir kararı
+bekliyor; kendi maddelerine bakılmalı. (O-80/O-95 aynı gün kapandı — bkz. yukarı.)
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -2704,6 +2711,50 @@ de eklenebilir (taze kutuda `bookings` boş, orada ölçmek daha az müdahaleci)
 | **Çözüm** | (a) seçildi — `heilmittel_tarif` tamamen kaldırıldı, resolver yalnız katalog/pozisyon fiyatına düştü (Bundesland ayrımı zaten gerçek değildi, kayıp yok) |
 | **Durum** | ✅ **gelöst (13.09.2026)** — `resolver.js`'ten override mantığı, `abrechnung.routes.js`'ten üç okuma noktası + `bundeslandDerPraxis()`/`bundeslandFehler()` gate'i kaldırıldı; `seed_tarifs.js` `archive/kod/`'a taşındı; `preise_autoupdate.mjs`'in Physio `autoWrite`'ı artık güvenle `true` (Ops-Karte #213 physio'yu da kapsıyor). `db-ustasi`: `db/REGISTER.md` kaydı `veraltet` işaretlendi, harita tazelendi. Tüm testler yeşil (231/231, `resolver.test.js`/`legs.test.js`/`plz-bundesland.test.js`/`preise_autoupdate.test.js` güncellendi). Tablonun kendisi (DROP) bilinçli olarak **ayrı bırakıldı** — `db-ustasi`'nin tavsiyesi: aciliyet yok (hasta verisi/trigger/view/gelen-FK yok), diğer üç ölü referans tablosuyla (`heilmittel_catalog`, `heilmittel_position`, `dta_schluessel`) birlikte tek bir temizlik migration'ında, `onprem` ile ortak karar. `wissensbank/SPEC-RULES.md`'ye kural eklendi: "Physio-Vergütung bundeseinheitlich" |
 
+### O-97 — §302 fiyatı 4 basılı belge yolunda Ausstellungsdatum'a göre çözülüyordu, Leistungsdatum'a göre değil ✅ **gelöst (13.09.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `gkv-302`'nin O-96 ikinci-göz turunda bulundu: DTA yolu (`mapPrescriptionToDtaShape`, `mapVerordnungToDtaShape`) `resolvePreis()`'i her seans için KENDİ `done_at`'iyle çağırıyordu — doğru. Ama basılı Zuzahlungsrechnung, rzg-Quittung, `rechnung_privat`/`selbstzahler`/`sonder`/`bg` çıktıları, Begleitzettel (physio) ve Zuzahlung-Korrektur (`betragFuerEinheiten()`) tek bir `resolvePreis()` çağrısını `rx.ausstellungsdatum` (Verordnung'un yazıldığı tarih) ile yapıp o TEK fiyatı tüm seanslara uyguluyordu |
+| **Nerede** | `api-backend/billing/api/abrechnung.routes.js` (Zuzahlungsrechnung-print, `/prescription/:id/rechnung`, physio-Begleitzettel `belege`-map) · `api-backend/billing/api/zuzahlung.routes.js` (`betragFuerEinheiten()`) |
+| **Tip** | D |
+| **Kutuda ne olur** | Kutuya özgü değil — SaaS'ta da geçerli, kutuya aynen taşınır. Anlage 2 Podologie § 3 Abs. 2 ve Anlage 2 §125 Physio Teil A: fiyat, tedavinin **yapıldığı** tarihe göre belirlenir. Bir Verordnung iki Preisfenster'e yayılan seanslar içerdiğinde (ör. 30.06.2026'dan önce yazılmış, Temmuz'da uygulanmış podoloji Verordnung'u — bugün canlı) DTA ile basılı fatura FARKLI tutar üretiyordu. Physio'da bugüne kadar tek pencere olduğu için etkisi sıfırdı, ama 01.01.2027'de ikinci physio penceresi açılınca O-96'nın kapattığı "iki yol farklı tutar veriyor" deliği başka bir kapıdan geri gelecekti |
+| **Çözüm** | Her 4 yol da artık `prescription_sessions`'ı (gerekirse sorguya eklendi: `zuzahlung.routes.js`'in Korrektur sorgusu) okuyup HER seansı kendi `done_at`'i ile ayrı `resolvePreis()` çağrısından geçiriyor; physio-Begleitzettel podoloji-Begleitzettel'in zaten doğru yaptığı deseni (`prescriptions[i].sessions`'tan toplama) izliyor |
+| **Durum** | ✅ **gelöst (13.09.2026)** — 4 çağrı sitesi düzeltildi, `wissensbank/SPEC-RULES.md`'ye kural eklendi ("Heilmittel fiyatı Leistungsdatum'a göre çözülür"), 231/231 test yeşil. `betragFuerEinheiten()`'in Korrektur senaryosu (`neue_einheiten` verordnete'den küçük olabilir) için: ilk N erbrachte Sitzung (tarihe göre sıralı) kendi tarihini taşır, sitzung verisi yoksa eskisi gibi Ausstellungsdatum'a düşer |
+
+### O-98 — CI'nın otomatik migration commit'i ile bir insanın migration commit'i aynı numarayı seçebilirdi ✅ **gelöst (13.09.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `onprem`'in O-95/O-96 ikinci-göz turunda bulundu: `preise-check.yml`, sıradaki migration numarasını checkout ANINDAKİ dosyalardan hesaplıyordu, ama `git pull --rebase origin main` bundan SONRA geliyordu. Aynı gün bir insan da migration eklerse (O-96 ile physio `autoWrite` açıldığı için bot artık HER GÜN commit atma ihtimali taşıyor), rebase dosya adları farklı olduğu için çakışma göstermez — iki farklı `0016_*.sql` sessizce oluşabilirdi |
+| **Nerede** | `.github/workflows/preise-check.yml` |
+| **Tip** | B |
+| **Kutuda ne olur** | Mükerrer versiyon numarası `api-backend/db/migrate.js`'in `pruefeVersionen()`'ında SERT hata olarak yakalanır (`art: 'reihenfolge'`) — ama ancak kutu açılışında, kapı bunu göremez (yerel pre-commit hook, CI'da hiç koşmuyor). Sonuç: yeni kurulan HER müşteri kutusu, mükerrer numara commit'ten sonra açılırsa, migration runner hatasıyla `/health` bakım moduna düşerdi |
+| **Çözüm** | İş akışı ikiye bölündü (bkz. O-99): migrasyon numarası artık `git pull --rebase`'DEN SONRA, push'tan hemen önce hesaplanıyor; push başarısız olursa (gerçek bir yarış oldu demektir) `git reset --hard` ile tamamen temizlenip numara yeniden hesaplanıyor ve en fazla 5 kez yeniden denenıyor |
+| **Durum** | ✅ **gelöst (13.09.2026)** — yeni `commit-und-push` job'ı, lokal bash simülasyonuyla doğrulandı (bir "insan migration'ı" senaryosu taklit edilip yeniden hesaplamanın doğru boş numarayı bulduğu ölçüldü) |
+
+### O-99 — CI botunun `contents: write` yetkisi `npm ci`'nin çalıştırdığı bağımlılık koduna kadar yayılıyordu ✅ **gelöst (13.09.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `guvenlik`'in ikinci-göz turunda bulundu: `preise-check.yml` tek bir job'da hem `npm ci` (lifecycle-skriptleri açık) hem de `git push` (workflow-seviyesinde `contents: write`) çalıştırıyordu, `actions/checkout`'ta `persist-credentials: false` yoktu. Bağımlılık ağacındaki (transitif dahil) herhangi bir paketin kötü niyetli bir install-skripti, iş boyunca kalıcı olan push token'ını okuyup doğrudan `main`'e yazabilirdi — ve `main` bitiş noktası değil: `publish-calendar-api.yml` onu image'a çevirir, Watchtower 60 saniyede canlıya alır, migration zinciriyle her müşteri kutusuna gider |
+| **Nerede** | `.github/workflows/preise-check.yml` · `api-backend/preise_autoupdate.mjs` (yan bulgu: XML'den gelen tarih hiç doğrulanmadan JS string'ine enjekte ediliyordu) |
+| **Tip** | B + G |
+| **Kutuda ne olur** | Tedarik-zinciri sınıfı, kutuya dolaylı yoldan ulaşır (yukarıdaki zincir üzerinden) — doğrudan bir kutu değişkeni değil |
+| **Çözüm** | İş akışı iki job'a bölündü: `preise-check` (SADECE `contents: read` + `actions: write`, `npm ci --ignore-scripts`, `persist-credentials: false`) test eder ve değişen dosyaları artifact olarak yükler; `commit-und-push` (SADECE `contents: write` + `actions: read`, **`npm ci` YOK**) artifact'i indirip commit+push yapar — yazma yetkisi olan job hiçbir üçüncü-parti kodu çalıştırmıyor (`sync_heilmittel_katalog.js --sql` yalnız kendi Codedateien'i import ediyor, bağımlılık yok). Ayrıca `preise_autoupdate.mjs`'e iki emniyet supapı eklendi: XML'den gelen tarih `JJJJ-AA-GG` formatına uymuyorsa red, ve bilinen bir kodda %15'ten büyük fiyat sıçraması otomatik yazmayı durdurup insana bırakıyor |
+| **Durum** | ✅ **gelöst (13.09.2026)** — YAML `js-yaml` ile ayrıştırma-doğrulandı, iki job'un izin kapsamları (`actions: read/write` dahil — GitHub'da bir `permissions` bloğu tanımlanınca listelenmeyen her scope `none` olur, bu tuzağa düşülmedi) tek tek kontrol edildi. `preise_autoupdate.mjs`'e 2 yeni test eklendi (Preissprung >15%, kaputtes Datumsformat), 235/235 (bu dosyanın kendi sayacıyla) yeşil |
+
+### O-100 — `.praxura-stand/` (owner e-postası + `.env` anlık görüntüleri) umask'tan `0755` miras alıyordu ✅ **gelöst (13.09.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `guvenlik`'in O-82 ikinci-göz turunda bulundu: `install.sh`/`update.sh`'taki `mkdir -p "$STAND_DIR"`/`mkdir -p "$SNAPSHOT_DIR"` çağrılarının hiçbirinde `chmod` yoktu → umask 022'de dizin `0755` (herkes okuyabilir/listeleyebilir). Bu dizinde `owner-bilgi.json` (owner e-postası + praksis adı, O-82) VE her update denemesinde bir `.env` anlık görüntüsü (POSTGRES_PASSWORD, SERVICE_ROLE_KEY, JWT_SECRET, DATA_ENCRYPTION_KEY, SMTP_PASS düz metin) duruyor |
+| **Nerede** | `onprem/install.sh` (`.praxura-stand` ilk oluşturma) · `onprem/update.sh` (`$STAND_DIR`, `$SNAPSHOT_DIR`, `.env` kopyası) |
+| **Tip** | G |
+| **Kutuda ne olur** | Ağdan/container'dan yol yok (compose'da mount edilmemiş, `guvenlik` ölçtü) — risk yalnız praksis sunucusundaki İKİNCİ bir yerel hesaptan (praksis IT'si, uzak bakım hesabı, aynı makinedeki başka bir servis) gelir. `backup.sh` kendi hedef dizinlerinde zaten `chmod 700` kullanıyor — aynı standart burada eksikti |
+| **Çözüm** | `install.sh`'ın ilk `mkdir -p "$SCRIPT_DIR/.praxura-stand"`'ına ve `update.sh`'ın hem `$STAND_DIR` hem her yeni `$SNAPSHOT_DIR`'ına `chmod 700`; `.env` anlık görüntüsüne ayrıca `chmod 600` |
+| **Durum** | ✅ **gelöst (13.09.2026)** — 3 nokta düzeltildi (`install.sh` 1, `update.sh` 2), `bash -n` ile sözdizimi doğrulandı, `onprem/manifest.json` tazelendi |
+
 ### O-66 — Sihirbazın SMTP ekranı yapısal olarak çalışamaz: GoTrue ayarını env'den okur
 
 | Alan | İçerik |
@@ -3477,7 +3528,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-## 9. Durum özeti (son sayım: 12.09.2026 akşamı)
+## 9. Durum özeti (son sayım: 13.09.2026)
 
 > ⚠️ **Bu tablo 12.09.2026 akşamı madde madde yeniden sayıldı.** Önceki hâli
 > 04.09.2026 fotoğrafıydı ve altına "fark" notları yığılıyordu — dokuz tur sonra o
@@ -3486,24 +3537,40 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 96 madde** (O-01 … O-96) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
+**Toplam 100 madde** (O-01 … O-100) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
 bildirim-sonrası denetiminden çıktı, §7L; aynı gece üçü (O-85/O-86/O-89) tam, ikisi
 (O-87/O-88) kısmen kapatıldı — detay kendi maddelerinde. Beş yenisi daha (O-90…O-94)
 aynı akşam Faz 2.2 dilim 2b'nin kendi post-hoc denetiminden çıktı — üçü (O-90/O-92/
 O-93) aynı turda kapatıldı, ikisi (O-91/O-94) Faz 2.4'e bırakıldı. İki yenisi daha
-(O-95/O-96) 13.09.2026'da O-79'un kazısından çıktı — O-79 ve O-96 aynı gün kapandı
+(O-95/O-96) 13.09.2026'da O-79'un kazısından çıktı — ikisi de **aynı gün kapandı**
 (O-96: `gkv-302` doğruladı, `heilmittel_tarif`'in Physio §302 fiyatını sessizce
-ezme riski koddan tamamen kaldırıldı — bkz. kendi maddesi), O-95 (düşük etkili
-CI-kapı boşluğu) `offen` kaldı. ⚠️ O-53 ve O-54'ün
-kendi `###` girdisi yok; O-01'in not bloğunda yaşıyorlar — kaybolmaya açıklar, ileride
-kendi girdilerine terfi etmeliler.
+ezme riski koddan tamamen kaldırıldı; O-95: CI'nın otomatik commit'ine seed-migration
+üretimi eklendi). ⚠️ Bu paragrafın önceki hâli O-95'i hâlâ `offen` gösteriyordu —
+tablo (aşağıda) hep doğruydu, yalnız düzyazı bayattı; 13.09.2026 gecesi bir ikinci-göz
+turu (kullanıcı isteğiyle, dört ajan paralel — `onprem`/`gkv-302`/`db-ustasi`/`guvenlik`)
+bunu ve dört yeni maddeyi (O-97…O-100) birden buldu:
+- **O-97** — §302 fiyatı 4 basılı belge yolunda `rx.ausstellungsdatum`'a göre değil
+  `Leistungsdatum`'a göre çözülmeliydi (DTA yolu zaten doğruydu); aynı gün düzeltildi.
+- **O-98** — `preise-check.yml`'in CI-commit'i ile bir insanın migration commit'i aynı
+  numarayı seçebilirdi (rebase, numara hesaplamasından SONRA geliyordu); iş akışı
+  yeniden sıralandı + retry döngüsü eklendi, aynı gün düzeltildi.
+- **O-99** — CI botunun `contents: write` yetkisi TÜM adımlara (dolayısıyla `npm ci`'nin
+  çalıştırdığı bağımlılık kodu dahil) yayılıyordu; iş iki job'a bölündü (yazma yetkisi
+  yalnız `npm ci` çalıştırmayan job'da), + `preise_autoupdate.mjs`'e tarih-format ve
+  %15 preis-sıçraması emniyet supapları eklendi, aynı gün düzeltildi.
+- **O-100** — `.praxura-stand/` (owner e-postası + `.env` anlık görüntüleri, sırlar dahil)
+  umask'tan `0755` miras alıyordu; `backup.sh`'ın kendi `chmod 700` standardı buraya
+  uygulanmamıştı; aynı gün düzeltildi.
+
+⚠️ O-53 ve O-54'ün kendi `###` girdisi yok; O-01'in not bloğunda yaşıyorlar —
+kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
 | `offen` | 5 | O-18 · O-23 · O-32 · O-46 · O-75 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
 | 🟡 `kısmen gelöst` | 16 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
-| `gelöst` | 49 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 |
+| `gelöst` | 53 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda

@@ -497,6 +497,11 @@ chmod +x "$SCRIPT_DIR/update.sh" "$SCRIPT_DIR/lib-health.sh"
 # hätte der allererste Lauf nichts, wogegen er "was haben WIR geändert"
 # vergleichen könnte.
 mkdir -p "$SCRIPT_DIR/.praxura-stand"
+# O-100 (guvenlik-Review, 13.09.2026): update.sh legt hier später echte
+# .env-Schnappschüsse ab (Secrets im Klartext) — das Verzeichnis bekommt von
+# Anfang an dieselbe 0700-Sperre wie backup.sh's Zielverzeichnisse, nicht erst
+# beim ersten update.sh-Lauf.
+chmod 700 "$SCRIPT_DIR/.praxura-stand"
 cp "$ENV_TEMPLATE" "$SCRIPT_DIR/.praxura-stand/env.taban.template"
 
 # Sapma-Tabanı (§7J J3) SOFORT aus dem committeten manifest.json säen — sonst

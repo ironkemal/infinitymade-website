@@ -10,7 +10,17 @@
 -- 94 satırın 92'si zaten 0012 ile birebir aynı; bu dosya --sql'in ürettiği
 -- TAM çıktı (0012 ile aynı yöntem, ikinci bir üretim yolu AÇMIYOR).
 --
+-- 13.09.2026 ek (gkv-302 ikinci-göz denetimi, O-97 turu): atıf bir adım daha
+-- kesinleştirildi — "Nicht am selben Tag wie 78030" ve "Keine Behandlungs-
+-- einheit" cümleleri Anlage 1a'nın Teil 1 Nr. 2'sinden değil Teil 2 Ziff.
+-- 4.1'inden (Besonderheiten) geliyor. Fiyat/tarih/kural yine DEĞİŞMEDİ,
+-- atıf "Teil 1 Nr. 2 u. Teil 2 Ziff. 4.1" olarak genişletildi. Bu dosya
+-- henüz hiçbir kutuda çalıştırılmadı (ilk müşteri kutusu yok), bu yüzden
+-- Kural 2 (uygulanmış dosya değiştirilmez) ihlal edilmiyor — yeni bir migration
+-- yerine aynı dosyanın düzeltilmesi tercih edildi.
+--
 -- Otorite zinciri: api-backend/sync_heilmittel_katalog.js ← billing/codes/*.js
+-- ZAEHLER: unveraendert (reine Daten-UPSERT, public — migrations/README.md Kural 6)
 
 INSERT INTO public.heilmittel_katalog (code, bereich, label, kuerzel, kategorie, diagnosegruppen, preis_eur, zuzahlung_eur, dauer, gueltig_ab, gueltig_bis, deprecated, ungueltig_ab, ersetzt_durch, max_pro_tag, max_pro_termin, notiz, gruppe, telemed, sort) VALUES
   ('X0102','physiotherapy','Unterwasserdruckstrahlmassage',NULL,'Massage',NULL,'33.75','3.38','15-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','0'),
@@ -74,7 +84,7 @@ INSERT INTO public.heilmittel_katalog (code, bereich, label, kuerzel, kategorie,
   ('78010','podologie','Podologische Behandlung (klein)',NULL,NULL,'{DF,NF,QF}','35.16','3.52','35','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,NULL,'f','f','0'),
   ('78020','podologie','Podologische Behandlung (groß)',NULL,NULL,'{DF,NF,QF}','50.55','5.06','50','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,NULL,'f','f','1'),
   ('78030','podologie','Podologische Befundung',NULL,NULL,'{DF,NF,QF}','3.47','0.35',NULL,'2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,NULL,'f','f','2'),
-  ('78040','podologie','Eingangsbefundung',NULL,NULL,'{DF,NF,QF}','22.48','2.25','20','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,'Einmalig bei Erstinanspruchnahme ab 01.11.2023 (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2) — nicht je Verordnung. Nicht am selben Tag wie 78030; mit 78010/78020 am selben Tag erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL.','f','f','3'),
+  ('78040','podologie','Eingangsbefundung',NULL,NULL,'{DF,NF,QF}','22.48','2.25','20','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,'Einmalig bei Erstinanspruchnahme ab 01.11.2023 (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2 u. Teil 2 Ziff. 4.1) — nicht je Verordnung. Nicht am selben Tag wie 78030; mit 78010/78020 am selben Tag erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL.','f','f','3'),
   ('78210','podologie','Anpassung Ross-Fraser-Spange (einteilig)',NULL,NULL,'{UI1,UI2}','99.04','9.9','90','2025-07-01','2025-09-30','t','2025-10-01','78610',NULL,NULL,NULL,'f','f','4'),
   ('78220','podologie','Fertigung Ross-Fraser-Spange (einteilig)',NULL,NULL,'{UI1,UI2}','54.24',NULL,'45','2025-07-01','2025-09-30','t','2025-10-01','78610',NULL,NULL,NULL,'f','f','5'),
   ('78230','podologie','Nachregulierung Ross-Fraser-Spange',NULL,NULL,'{UI1,UI2}','49.64','4.96','45','2025-07-01','2025-09-30','t','2025-10-01','78610',NULL,NULL,NULL,'f','f','6'),
@@ -92,7 +102,7 @@ INSERT INTO public.heilmittel_katalog (code, bereich, label, kuerzel, kategorie,
   ('78010','podologie','Podologische Behandlung (klein)',NULL,NULL,'{DF,NF,QF}','36.1','3.61','35','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','18'),
   ('78020','podologie','Podologische Behandlung (groß)',NULL,NULL,'{DF,NF,QF}','51.92','5.19','50','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','19'),
   ('78030','podologie','Podologische Befundung',NULL,NULL,'{DF,NF,QF}','3.57','0.36',NULL,'2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','20'),
-  ('78040','podologie','Eingangsbefundung',NULL,NULL,'{DF,NF,QF}','23.11','2.31','20','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,'Einmalig bei Erstinanspruchnahme ab 01.11.2023 (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2) — nicht je Verordnung. Nicht am selben Tag wie 78030; mit 78010/78020 am selben Tag erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL.','f','f','21'),
+  ('78040','podologie','Eingangsbefundung',NULL,NULL,'{DF,NF,QF}','23.11','2.31','20','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,'Einmalig bei Erstinanspruchnahme ab 01.11.2023 (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2 u. Teil 2 Ziff. 4.1) — nicht je Verordnung. Nicht am selben Tag wie 78030; mit 78010/78020 am selben Tag erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL.','f','f','21'),
   ('78210','podologie','Anpassung Ross-Fraser-Spange (einteilig)',NULL,NULL,'{UI1,UI2}','101.65','10.17','90','2026-07-01','9999-12-31','t','2025-10-01',NULL,NULL,NULL,NULL,'f','f','22'),
   ('78220','podologie','Fertigung Ross-Fraser-Spange (einteilig)',NULL,NULL,'{UI1,UI2}','55.66',NULL,'45','2026-07-01','9999-12-31','t','2025-10-01',NULL,NULL,NULL,NULL,'f','f','23'),
   ('78230','podologie','Nachregulierung Ross-Fraser-Spange',NULL,NULL,'{UI1,UI2}','50.95','5.1','45','2026-07-01','9999-12-31','t','2025-10-01',NULL,NULL,NULL,NULL,'f','f','24'),
