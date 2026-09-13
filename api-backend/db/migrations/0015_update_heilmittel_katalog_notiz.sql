@@ -1,0 +1,115 @@
+-- O-95 (onprem/REGISTER.md) — heilmittel_katalog'u kod ile yeniden hizalar.
+--
+-- sync_heilmittel_katalog.js'e --sql modu eklenirken (O-95, CI'nın seed-
+-- besleme kapısını görebilmesi için) 0012 ile bugünkü billing/codes/*.js
+-- arasında bir sapma bulundu: 78040 (Eingangsbefundung, iki fiyat penceresi)
+-- 0012'de eski/kısa bir notiz taşıyordu, kod ise 06.09.2026 civarında daha
+-- kesin bir hukuki atıfla güncellenmiş (Anlage 1a i.d.F. 17.06.2024, Teil 1
+-- Nr. 2 — Erstinanspruchnahme/Verordnung ayrımı, aynı gün 78010/78020 ile
+-- birleştirme izni). Fiyat/tarih/kural DEĞİŞMEDİ, yalnız açıklama metni.
+-- 94 satırın 92'si zaten 0012 ile birebir aynı; bu dosya --sql'in ürettiği
+-- TAM çıktı (0012 ile aynı yöntem, ikinci bir üretim yolu AÇMIYOR).
+--
+-- Otorite zinciri: api-backend/sync_heilmittel_katalog.js ← billing/codes/*.js
+
+INSERT INTO public.heilmittel_katalog (code, bereich, label, kuerzel, kategorie, diagnosegruppen, preis_eur, zuzahlung_eur, dauer, gueltig_ab, gueltig_bis, deprecated, ungueltig_ab, ersetzt_durch, max_pro_tag, max_pro_termin, notiz, gruppe, telemed, sort) VALUES
+  ('X0102','physiotherapy','Unterwasserdruckstrahlmassage',NULL,'Massage',NULL,'33.75','3.38','15-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','0'),
+  ('X0106','physiotherapy','Klassische Massagetherapie (KMT)','KMT','Massage',NULL,'21.63','2.16','15-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','1'),
+  ('X0107','physiotherapy','Bindegewebsmassage (BGM)','BGM','Massage',NULL,'25.98','2.6','20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','2'),
+  ('X0108','physiotherapy','Segment-/Periost-/Colonmassage',NULL,'Massage',NULL,'21.63','2.16','15-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','3'),
+  ('X0201','physiotherapy','MLD 45 Min (Großbehandlung)','MLD-45','Lymphdrainage',NULL,'53.94','5.39','45','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','4'),
+  ('X0202','physiotherapy','MLD 60 Min (Ganzbehandlung)','MLD-60','Lymphdrainage',NULL,'71.94','7.19','60','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','5'),
+  ('X0204','physiotherapy','Kompressionsbandagierung',NULL,'Lymphdrainage',NULL,'22.92','2.29',NULL,'1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','6'),
+  ('X0205','physiotherapy','MLD 30 Min (Teilbehandlung)','MLD','Lymphdrainage',NULL,'35.97','3.6','30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','7'),
+  ('X0301','physiotherapy','Übungsbehandlung Einzel','ÜB','Übungsbehandlung',NULL,'13.68','1.37','10-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','8'),
+  ('X0305','physiotherapy','Übungsbehandlung Bewegungsbad Einzel',NULL,'Übungsbehandlung',NULL,'32.88','3.29','20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','9'),
+  ('X0306','physiotherapy','Chirogymnastik Einzel',NULL,'Übungsbehandlung',NULL,'20.43','2.04','15-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','10'),
+  ('X0401','physiotherapy','Übungsbehandlung Gruppe (2-5)',NULL,'Übungsbehandlung',NULL,'8.43','0.84','10-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'t','f','11'),
+  ('X0402','physiotherapy','Übungsbehandlung Bewegungsbad Gruppe (2-3)',NULL,'Übungsbehandlung',NULL,'24','2.4','20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'t','f','12'),
+  ('X0405','physiotherapy','Übungsbehandlung Bewegungsbad Gruppe (4-5)',NULL,'Übungsbehandlung',NULL,'16.28','1.63','20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'t','f','13'),
+  ('X0501','physiotherapy','Allgemeine Krankengymnastik (KG) Einzel','KG','Krankengymnastik',NULL,'29.63','2.96','15-25','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','14'),
+  ('X0521','physiotherapy','KG Einzel telemedizinisch',NULL,'Krankengymnastik',NULL,'29.63','2.96','15-25','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','t','15'),
+  ('X0507','physiotherapy','KG-Gerät parallel bis 3 Patienten',NULL,'KG-Gerät',NULL,'55.81','5.58','60','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','16'),
+  ('X0601','physiotherapy','KG Gruppe (2-5)',NULL,'Krankengymnastik',NULL,'13.26','1.33','20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'t','f','17'),
+  ('X0621','physiotherapy','KG Gruppe (2-5) telemedizinisch',NULL,'Krankengymnastik',NULL,'13.26','1.33','20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'t','t','18'),
+  ('X0702','physiotherapy','KG-Muko Einzel','KG-MUKO','KG-Atemtherapie',NULL,'88.94','8.89','60','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','19'),
+  ('X0722','physiotherapy','KG-Muko Einzel telemedizinisch',NULL,'KG-Atemtherapie',NULL,'88.94','8.89','60','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','t','20'),
+  ('X0708','physiotherapy','KG-ZNS Kinder Bobath Einzel',NULL,'KG-ZNS-Kinder',NULL,'58.83',NULL,'30-45','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','21'),
+  ('X0728','physiotherapy','KG-ZNS Kinder Bobath telemedizinisch',NULL,'KG-ZNS-Kinder',NULL,'58.83',NULL,'30-45','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','t','22'),
+  ('X0709','physiotherapy','KG-ZNS Kinder Vojta Einzel',NULL,'KG-ZNS-Kinder',NULL,'58.83',NULL,'30-45','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','23'),
+  ('X0710','physiotherapy','KG-ZNS Bobath Erwachsene Einzel','KG-ZNS','KG-ZNS',NULL,'47.06','4.71','25-35','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','24'),
+  ('X0720','physiotherapy','KG-ZNS Bobath telemedizinisch',NULL,'KG-ZNS',NULL,'47.06','4.71','25-35','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','t','25'),
+  ('X0711','physiotherapy','KG-ZNS Vojta Erwachsene Einzel',NULL,'KG-ZNS',NULL,'47.06','4.71','25-35','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','26'),
+  ('X0712','physiotherapy','KG-ZNS PNF Einzel',NULL,'KG-ZNS',NULL,'47.06','4.71','25-35','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','27'),
+  ('X0805','physiotherapy','KG Gruppe cerebral Kinder (2-4)',NULL,'KG-ZNS-Kinder',NULL,'16.57',NULL,'20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'t','f','28'),
+  ('X0902','physiotherapy','KG Bewegungsbad Einzel',NULL,'Krankengymnastik',NULL,'33.87','3.39','20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','29'),
+  ('X1004','physiotherapy','KG Bewegungsbad Gruppe (2-3)',NULL,'Krankengymnastik',NULL,'24.16','2.42','20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'t','f','30'),
+  ('X1005','physiotherapy','KG Bewegungsbad Gruppe (4-5)',NULL,'Krankengymnastik',NULL,'15.97','1.6','20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'t','f','31'),
+  ('X1104','physiotherapy','Traktionsbehandlung mit Gerät',NULL,'Traktion',NULL,'8.63','0.86','10-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','32'),
+  ('X1201','physiotherapy','Manuelle Therapie Einzel','MT','Manuelle Therapie',NULL,'35.59','3.56','15-25','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','33'),
+  ('X1221','physiotherapy','Manuelle Therapie telemedizinisch',NULL,'Manuelle Therapie',NULL,'35.59','3.56','15-25','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','t','34'),
+  ('X1302','physiotherapy','Elektrotherapie Einzel','E','Elektrotherapie',NULL,'8.43','0.84','10-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','35'),
+  ('X1303','physiotherapy','Elektrostimulation bei Paresen',NULL,'Elektrotherapie',NULL,'18.7','1.87','5-10','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','36'),
+  ('X1310','physiotherapy','Hydroelektrisches Teilbad (Zwei-/Vierzellenbad)',NULL,'Elektrotherapie',NULL,'14.48','1.45','10-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','37'),
+  ('X1312','physiotherapy','Hydroelektrisches Vollbad (Stangerbad)',NULL,'Elektrotherapie',NULL,'27.61','2.76','10-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','38'),
+  ('X1501','physiotherapy','Warmpackung','W','Wärmetherapie',NULL,'16.16','1.62','20-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','39'),
+  ('X1517','physiotherapy','Wärmetherapie Heißluft',NULL,'Wärmetherapie',NULL,'7.43','0.74','10-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','40'),
+  ('X1530','physiotherapy','Heiße Rolle',NULL,'Wärmetherapie',NULL,'13.47','1.35','10-15','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','41'),
+  ('X1531','physiotherapy','Ultraschall-Wärmetherapie',NULL,'Wärmetherapie',NULL,'14.66','1.47','10-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','42'),
+  ('X1532','physiotherapy','Peloid-Vollbad',NULL,'Wärmetherapie',NULL,'55.39','5.54','15-45','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','43'),
+  ('X1533','physiotherapy','Peloid-Teilbad',NULL,'Wärmetherapie',NULL,'42.84','4.28','15-45','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','44'),
+  ('X1534','physiotherapy','Kältetherapie','K','Kältetherapie',NULL,'11.95','1.2','5-10','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','45'),
+  ('X1714','physiotherapy','Kohlensäurebad',NULL,'Bäder',NULL,'27.72','2.77','10-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','46'),
+  ('X1732','physiotherapy','CO2-Trockenbad Voll-/Dreiviertel-/Halbbad',NULL,'Bäder',NULL,'26.3','2.63','10-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','47'),
+  ('X1733','physiotherapy','CO2-Trockenbad Teilbad',NULL,'Bäder',NULL,'26.3','2.63','45-60','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','48'),
+  ('X1801','physiotherapy','Inhalationstherapie',NULL,'Inhalation',NULL,'12.34','1.23','5-30','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','49'),
+  ('X1906','physiotherapy','Physiotherapeutischer Bericht (auf Anforderung)',NULL,'Bericht',NULL,'67.69',NULL,NULL,'1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','50'),
+  ('X2001','physiotherapy','D1 Standardisierte Heilmittelkombination','D1','Standard-HM-Kombination',NULL,'70.45','7.05','60','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','51'),
+  ('X9701','physiotherapy','Übermittlungsgebühr Bericht',NULL,'Verwaltung',NULL,'1.4',NULL,NULL,'1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','52'),
+  ('X9922','physiotherapy','Hausbesuch Kurzzeit-/Verhinderungs-/Tagespflege',NULL,'Hausbesuch',NULL,'22.78','2.28',NULL,'1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','53'),
+  ('X9950','physiotherapy','Hausbesuch inkl. Wegegeld (Einsatzpauschale)',NULL,'Hausbesuch',NULL,'22.78','2.28',NULL,'1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','54'),
+  ('X9951','physiotherapy','Hausbesuch soziale Einrichtung inkl. Wegegeld',NULL,'Hausbesuch',NULL,'13.09','1.31',NULL,'1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','55'),
+  ('21901','physiotherapy','Geburtsvorbereitung Gruppe',NULL,'Hebamme',NULL,'11.4',NULL,'60','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'t','f','56'),
+  ('21904','physiotherapy','Rückbildungsgymnastik Gruppe',NULL,'Hebamme',NULL,'11.4',NULL,'60','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'t','f','57'),
+  ('78010','podologie','Podologische Behandlung (klein)',NULL,NULL,'{DF,NF,QF}','35.16','3.52','35','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,NULL,'f','f','0'),
+  ('78020','podologie','Podologische Behandlung (groß)',NULL,NULL,'{DF,NF,QF}','50.55','5.06','50','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,NULL,'f','f','1'),
+  ('78030','podologie','Podologische Befundung',NULL,NULL,'{DF,NF,QF}','3.47','0.35',NULL,'2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,NULL,'f','f','2'),
+  ('78040','podologie','Eingangsbefundung',NULL,NULL,'{DF,NF,QF}','22.48','2.25','20','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,'Einmalig bei Erstinanspruchnahme ab 01.11.2023 (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2) — nicht je Verordnung. Nicht am selben Tag wie 78030; mit 78010/78020 am selben Tag erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL.','f','f','3'),
+  ('78210','podologie','Anpassung Ross-Fraser-Spange (einteilig)',NULL,NULL,'{UI1,UI2}','99.04','9.9','90','2025-07-01','2025-09-30','t','2025-10-01','78610',NULL,NULL,NULL,'f','f','4'),
+  ('78220','podologie','Fertigung Ross-Fraser-Spange (einteilig)',NULL,NULL,'{UI1,UI2}','54.24',NULL,'45','2025-07-01','2025-09-30','t','2025-10-01','78610',NULL,NULL,NULL,'f','f','5'),
+  ('78230','podologie','Nachregulierung Ross-Fraser-Spange',NULL,NULL,'{UI1,UI2}','49.64','4.96','45','2025-07-01','2025-09-30','t','2025-10-01','78610',NULL,NULL,NULL,'f','f','6'),
+  ('78300','podologie','Mehrteilige bilaterale Nagelkorrekturspange',NULL,NULL,'{UI1,UI2}','97.64','9.76','75','2025-07-01','2025-09-30','t','2025-10-01','78610',NULL,NULL,NULL,'f','f','7'),
+  ('78400','podologie','Einteilige Kunststoff-/Metall-Nagelkorrekturspange',NULL,NULL,'{UI1,UI2}','53.89','5.39','45','2025-07-01','2025-09-30','t','2025-10-01','78610',NULL,NULL,NULL,'f','f','8'),
+  ('78610','podologie','Nagelspangenbehandlung',NULL,NULL,'{UI1,UI2}','55.9','5.59','45','2025-10-01','2026-06-30','f',NULL,NULL,'2',NULL,'Ersetzt alle alten Nagelspange-Codes. Darf 2x je Tag abgegeben werden.','f','f','9'),
+  ('78620','podologie','Aufschlag für besonderen Aufwand',NULL,NULL,'{UI1,UI2}','16.86','1.69','+15','2025-10-01','2026-06-30','f',NULL,NULL,NULL,'2','Bei Kinder <14 J. oder Nagel Schweregrad UI2/UI3. Max 2x je Behandlungstermin.','f','f','10'),
+  ('78100','podologie','Erstbefundung groß',NULL,NULL,'{UI1,UI2}','56','5.6','45','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,'1x pro Kalenderjahr. Gilt auch bei Wiedervorstellung. Nachtestung nach Heilung möglich.','f','f','11'),
+  ('78110','podologie','Erstbefundung klein',NULL,NULL,'{UI1,UI2}','27.9','2.79','20','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,NULL,'f','f','12'),
+  ('78510','podologie','Kontrolle Sitz- und Passgenauigkeit',NULL,NULL,'{UI1,UI2}','17.21','1.72','15','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,NULL,'f','f','13'),
+  ('78520','podologie','Behandlungsabschluss / Entfernung Nagelkorrekturspange',NULL,NULL,'{UI1,UI2}','25.91','2.59','25','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,NULL,'f','f','14'),
+  ('78530','podologie','Therapiebericht UI 2',NULL,NULL,'{UI2}','16.86',NULL,'15','2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,NULL,'f','f','15'),
+  ('79933','podologie','Hausbesuch (ärztl. verordnet), inkl. Wegegeld',NULL,NULL,'{DF,NF,QF,UI1,UI2}','23.61','2.36',NULL,'2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,'Nur abrechenbar wenn Feld "Hausbesuch = Ja" auf Muster 13 angekreuzt.','f','f','16'),
+  ('79934','podologie','Hausbesuch in soz. Einrichtung, inkl. Wegegeld',NULL,NULL,'{DF,NF,QF,UI1,UI2}','13.6','1.36',NULL,'2025-07-01','2026-06-30','f',NULL,NULL,NULL,NULL,'Nur abrechenbar wenn Feld "Hausbesuch = Ja" auf Muster 13 angekreuzt.','f','f','17'),
+  ('78010','podologie','Podologische Behandlung (klein)',NULL,NULL,'{DF,NF,QF}','36.1','3.61','35','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','18'),
+  ('78020','podologie','Podologische Behandlung (groß)',NULL,NULL,'{DF,NF,QF}','51.92','5.19','50','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','19'),
+  ('78030','podologie','Podologische Befundung',NULL,NULL,'{DF,NF,QF}','3.57','0.36',NULL,'2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','20'),
+  ('78040','podologie','Eingangsbefundung',NULL,NULL,'{DF,NF,QF}','23.11','2.31','20','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,'Einmalig bei Erstinanspruchnahme ab 01.11.2023 (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2) — nicht je Verordnung. Nicht am selben Tag wie 78030; mit 78010/78020 am selben Tag erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL.','f','f','21'),
+  ('78210','podologie','Anpassung Ross-Fraser-Spange (einteilig)',NULL,NULL,'{UI1,UI2}','101.65','10.17','90','2026-07-01','9999-12-31','t','2025-10-01',NULL,NULL,NULL,NULL,'f','f','22'),
+  ('78220','podologie','Fertigung Ross-Fraser-Spange (einteilig)',NULL,NULL,'{UI1,UI2}','55.66',NULL,'45','2026-07-01','9999-12-31','t','2025-10-01',NULL,NULL,NULL,NULL,'f','f','23'),
+  ('78230','podologie','Nachregulierung Ross-Fraser-Spange',NULL,NULL,'{UI1,UI2}','50.95','5.1','45','2026-07-01','9999-12-31','t','2025-10-01',NULL,NULL,NULL,NULL,'f','f','24'),
+  ('78300','podologie','Mehrteilige bilaterale Nagelkorrekturspange',NULL,NULL,'{UI1,UI2}','99.9','9.99','75','2026-07-01','9999-12-31','t','2025-10-01',NULL,NULL,NULL,NULL,'f','f','25'),
+  ('78400','podologie','Einteilige Kunststoff-/Metall-Nagelkorrekturspange',NULL,NULL,'{UI1,UI2}','55.2','5.52','45','2026-07-01','9999-12-31','t','2025-10-01',NULL,NULL,NULL,NULL,'f','f','26'),
+  ('78610','podologie','Nagelspangenbehandlung',NULL,NULL,'{UI1,UI2}','57.2','5.72','45','2026-07-01','9999-12-31','f',NULL,NULL,'2',NULL,NULL,'f','f','27'),
+  ('78620','podologie','Aufschlag für besonderen Aufwand',NULL,NULL,'{UI1,UI2}','17.33','1.73','+15','2026-07-01','9999-12-31','f',NULL,NULL,NULL,'2',NULL,'f','f','28'),
+  ('78100','podologie','Erstbefundung groß',NULL,NULL,'{UI1,UI2}','57.52','5.75','45','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','29'),
+  ('78110','podologie','Erstbefundung klein',NULL,NULL,'{UI1,UI2}','28.63','2.86','20','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','30'),
+  ('78510','podologie','Kontrolle Sitz- und Passgenauigkeit',NULL,NULL,'{UI1,UI2}','17.64','1.76','15','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','31'),
+  ('78520','podologie','Behandlungsabschluss / Entfernung Nagelkorrekturspange',NULL,NULL,'{UI1,UI2}','26.59','2.66','25','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','32'),
+  ('78530','podologie','Therapiebericht UI 2',NULL,NULL,'{UI2}','17.33',NULL,'15','2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','33'),
+  ('79933','podologie','Hausbesuch (ärztl. verordnet), inkl. Wegegeld',NULL,NULL,'{DF,NF,QF,UI1,UI2}','25.54','2.55',NULL,'2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','34'),
+  ('79934','podologie','Hausbesuch in soz. Einrichtung, inkl. Wegegeld',NULL,NULL,'{DF,NF,QF,UI1,UI2}','16.66','1.67',NULL,'2026-07-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','35')
+ON CONFLICT (bereich, code, gueltig_ab) DO UPDATE SET
+  label=EXCLUDED.label, kuerzel=EXCLUDED.kuerzel, kategorie=EXCLUDED.kategorie, diagnosegruppen=EXCLUDED.diagnosegruppen, preis_eur=EXCLUDED.preis_eur, zuzahlung_eur=EXCLUDED.zuzahlung_eur, dauer=EXCLUDED.dauer, gueltig_bis=EXCLUDED.gueltig_bis, deprecated=EXCLUDED.deprecated, ungueltig_ab=EXCLUDED.ungueltig_ab, ersetzt_durch=EXCLUDED.ersetzt_durch, max_pro_tag=EXCLUDED.max_pro_tag, max_pro_termin=EXCLUDED.max_pro_termin, notiz=EXCLUDED.notiz, gruppe=EXCLUDED.gruppe, telemed=EXCLUDED.telemed, sort=EXCLUDED.sort;
+DO $$ DECLARE n int; BEGIN
+  SELECT count(*) INTO n FROM public.heilmittel_katalog;
+  IF n < 94 THEN RAISE EXCEPTION 'seed heilmittel_katalog: % Zeilen, erwartet >= 94', n; END IF;
+END $$;

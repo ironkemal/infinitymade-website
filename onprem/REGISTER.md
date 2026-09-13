@@ -2682,16 +2682,16 @@ kimse görmez (şema sayacı her açılışta koşuyor, bu ikisi koşmuyor). Ç�
 (self-check + sürüm künyesi paneli) işi — orada randevu-düzeyi bir RLS negatif testi
 de eklenebilir (taze kutuda `bookings` boş, orada ölçmek daha az müdahaleci).
 
-### O-95 — `preise-check.yml`'in otomatik commit'i seed-besleme kapısını (O-79) hiç görmüyor
+### O-95 — `preise-check.yml`'in otomatik commit'i seed-besleme kapısını (O-79) hiç görmüyor ✅ **gelöst (13.09.2026)**
 
 | Alan | İçerik |
 |---|---|
-| **Ne** | `.github/workflows/preise-check.yml` (Ops-Karte #213) günlük cron'la `billing/codes/{podologie,physio}_positions.js`'i otomatik günceleyip commit+push ediyor — çıplak bir CI checkout'ta, `.githooks` hiç konfigüre edilmeden. O-79'un pre-commit kapısı (`tools/check-onprem.sh`) bu commit'i hiç görmüyor |
-| **Nerede** | `.github/workflows/preise-check.yml` ("Commit + Push" adımı) · `api-backend/preise_autoupdate.mjs` |
+| **Ne** | `.github/workflows/preise-check.yml` (Ops-Karte #213) günlük cron'la `billing/codes/{podologie,physio}_positions.js`'i otomatik günceleyip commit+push ediyor — çıplak bir CI checkout'ta, `.githooks` hiç konfigüre edilmeden. O-79'un pre-commit kapısı (`tools/check-onprem.sh`) bu commit'i hiç görmüyordu |
+| **Nerede** | `.github/workflows/preise-check.yml` (yeni "Seed-Migration für die Box mitschreiben" adımı) · `api-backend/sync_heilmittel_katalog.js` (yeni `--sql` modu) |
 | **Tip** | B + D |
-| **Kutuda ne olur** | `onprem-review` (13.09.2026) doğruladı: `heilmittel_katalog` §302 tutarını üretmiyor — `resolvePreis()` (`api-backend/billing/preise/resolver.js:72-87`) bu tabloyu hiç okumuyor, fiyat kod içinden geliyor. Tablonun kutudaki tek işi seçici listesi + rozet fiyatı (`katalog-suche.js:464`, `module/podologie-abrechnung.js:92`). Yani sapma **düşük etkili**: rozette eski fiyat görünür, fatura yine doğru çıkar |
-| **Çözüm** | CI adımına O-79'un kapı mantığını koşulsuz bağlamak YANLIŞ — otomasyon zaten yalnız pozisyon dosyalarını değiştiriyor, migration hiç üretmiyor, günlük kırılır. Doğru yol: `sync_heilmittel_katalog.js`'e `--sql` çıktı modu eklemek (satır üreticileri zaten var — `physioRows()`/`podologieRows()`), CI'nın kendisi de aynı üreteci çağırıp yeni seed migration'ı kendi commit'ine eklesin. DB gerekmez, kaynak kod dosyalarının kendisi yeterli |
-| **Durum** | `offen` — düşük etkili, ertelenebilir. `onprem-review` bulgusu, 13.09.2026 |
+| **Kutuda ne olur** | Düşük etkiliydi zaten (`heilmittel_katalog` §302 tutarını üretmiyor, yalnız seçici/rozet metni), ama artık hiç sapma yok — CI'nın kendi commit'i artık seed migration'ı da taşıyor |
+| **Çözüm** | `sync_heilmittel_katalog.js`'e DB'siz çalışan bir `--sql` modu eklendi (`physioRows()`/`podoRows()`'u kullanır, `0012_seed_heilmittel_katalog.sql` ile AYNI çıktıyı üretir — ikinci bir üretim yolu değil, ikinci bir çıkış). CI'nın "Commit + Push"'tan hemen önceki yeni adımı bu modu çağırıp bir sonraki migration numarasıyla (`NNNN_seed_heilmittel_katalog_preisrunde_<tarih>.sql`) dosyaya yazıyor, `db/erwartete-zaehler.json`'ın `bis_version`'ını da mitzieht (saf veri-UPSERT olduğu için yapısal sayaçlar değişmiyor — güvenle otomatik) |
+| **Durum** | ✅ **gelöst.** `node sync_heilmittel_katalog.js --sql` çıktısı 0012 migration'ıyla satır satır karşılaştırıldı: 94/94 satır aynı kimlik, yalnız 2 satırda (78040'ın iki fiyat penceresi) `notiz` metni farklı çıktı — 0012'nin kendisi bayatmış (kod daha kesin bir hukuki atıfla güncellenmiş). Bu sapma da aynı turda `0015_update_heilmittel_katalog_notiz.sql` ile düzeltildi (--sql'in ürettiği TAM çıktı, 92 satır zaten aynıydı). CI adımı izole bash simülasyonuyla test edildi (doğru sıradaki migration numarasını buluyor, doğru dosyayı yazıyor, `bis_version`'ı doğru güncelliyor). 231/231 test + `tools/check-onprem.sh` yeşil |
 
 ### O-96 — `heilmittel_tarif` (elle beslenen, süresiz) §302 tutarını katalog fiyatının ÖNÜNE geçiriyordu ✅ **gelöst (13.09.2026)**
 
@@ -3260,16 +3260,16 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-### O-80 — `dta_schluessel` seed dışında kaldı: bilinçli, ama süresiz
+### O-80 — `dta_schluessel` seed dışında kaldı: bilinçli, ama süresiz ✅ **gelöst (13.09.2026) — plan gkv-302 doğrulamasıyla değişti**
 
 | Alan | İçerik |
 |---|---|
-| **Ne** | O-38'in sekiz tablosuna `dta_schluessel` (94 satır) **girmedi**: içeriği doğru ama `source_version` alanı yanlış ("Anlage 3 V22"; geçerli sürüm **V21**). Yanlış sürüm etiketini checksum-kilitli bir dosyaya gömmek yerine önce düzeltilmesi kararı verildi — doğru karar, ama kimseye bağlanmadı |
-| **Nerede** | `db/SCHEMA.sql` → `dta_schluessel`; `api-backend/db/migrations/` altında karşılığı **yok** |
+| **Ne** | O-38'in sekiz tablosuna `dta_schluessel` (94 satır) **girmedi**: `source_version` alanı "Anlage 3 V22" diyor, geçerli sürüm **V21**. Orijinal plan: (1) etiketi düzelt, (2) seed migration'ı yaz. `gkv-302` her ikisini de sorguladı |
+| **Nerede** | `db/SCHEMA.sql` → `dta_schluessel` (bilinçli olarak migration zincirinde yok) · gerçek DTA-üretim kodu: `api-backend/billing/codes/anlage3_v22.js` |
 | **Tip** | D |
-| **Kutuda ne olur** | Bugün **hiçbir şey** — tablo hiçbir kod yolundan okunmuyor (O-38 turunda doğrulandı). Risk ileride: bu tabloyu okuyan bir özellik yazıldığı anda kutuda **boş** çıkar ve sebebi hiçbir yerde yazılı olmaz |
-| **Çözüm** | Sıra: (1) `gkv-302` `source_version`'ı V21'e düzeltir (canlıda + zincirde), (2) seed migration'ı yazılır. ⚠️ **Bu tabloyu okuyan ilk kod satırı yazılmadan önce** yapılmalı |
-| **Durum** | `offen` (düşük öncelik, ama bilinçli olarak **`unkritisch` değil**: "bugün okuyan yok" geçici bir gerçek, kalıcı bir gerekçe değil). Kaynağı: O-38 turunun açık kalem listesi (3). Kardeşi — `krankenkassen.ik_number`'ın düzeltilmesi — bu sicile **ait değil**: o bir veri kalitesi işi (`gkv-302` + Ops kartı), ve seed bilinçli olarak NULL bıraktığı için **yanlış veri kutuya gitmiyor** |
+| **Kutuda ne olur** | Hiçbir zaman bir şey olmadı ve olmayacak — `gkv-302` V21↔V22 tam metin karşılaştırmasıyla doğruladı: **tüm Anlage 3'te tek içerik farkı** §8.1.5.1 (Haushaltshilfe C1–C4), Heilmittel'e hiç dokunmuyor. Yani seed'in 94 satırı V21 VE V22 altında aynı anda doğru — "yanlış etiketle yanlış veri" riski hiç var olmamış. `dta_schluessel` tablosu zaten hiçbir kod yolundan okunmuyor (O-38'de doğrulanmıştı, bu turda tekrar doğrulandı) |
+| **Çözüm** | **Plan değişti: seed YAZILMAYACAK.** `gkv-302`'nin gerekçesi: okuyan hiçbir kod yolu yok, `source_version` unique key'in parçası — yanlış/gereksiz bir etiketi checksum-kilitli bir migration'a gömmek yerine tabloyu migration zincirinin dışında bırakmak (mevcut, bilinçli karar) doğru duruyor. Bunun yerine **gerçek bulgu** başka yerdeydi: DTA'yı fiilen üreten `anlage3_v22.js`'in dosya adı/başlığı yanıltıcıydı ("V22, gültig ab 01.02.2027" diyordu, ama içerik her iki sürümde geçerli) ve bir yorum satırı var olmayan `anlage3_v22_full.json`'a atıf yapıyordu |
+| **Durum** | ✅ **gelöst.** `anlage3_v22.js`'in başlığı + `ABRECHNUNGSCODE`'un kısaltma yorumu + `TARIFBEREICH`'in eksik `50-64` aralığı hakkındaki yorum düzeltildi (dosya adı bilinçli olarak DEĞİŞTİRİLMEDİ — 4 import + `legs.test.js` ona bağlı, içerik zaten her iki sürümde doğru olduğu için aciliyet yok). `billing/codes/README.md`'nin aynı yanıltıcı atfı da düzeltildi. `wissensbank/SPEC-RULES.md`'ye iki kalıcı kural eklendi: "Anlage 3 V21→V22 tek fark Haushaltshilfe" ve "`dta_schluessel` DTA üretimini beslemez". Canlı DB'deki `source_version` etiketi bilinçli olarak DÜZELTİLMEDİ — kimse okumuyor, düzeltmenin riski (yanlışlıkla iyi durumda bir kaydı bozma ihtimali) faydasından yüksek |
 
 ---
 
@@ -3500,10 +3500,10 @@ kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 7 | O-18 · O-23 · O-32 · O-46 · O-75 · O-80 · O-95 |
+| `offen` | 5 | O-18 · O-23 · O-32 · O-46 · O-75 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
 | 🟡 `kısmen gelöst` | 16 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
-| `gelöst` | 47 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-96 |
+| `gelöst` | 49 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda

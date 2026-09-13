@@ -8,26 +8,45 @@
  * §302-Abrechnung maßgeblich. Diese Tabelle ist nur ihre Projektion, damit das
  * Frontend keine eigenen Listen mehr pflegen muss.
  *
- *   node sync_heilmittel_katalog.js           # schreiben
- *   node sync_heilmittel_katalog.js --check   # nur prüfen (Drift-Test, CI-tauglich)
+ *   node sync_heilmittel_katalog.js           # schreiben (DB-Zugriff)
+ *   node sync_heilmittel_katalog.js --check   # nur prüfen (Drift-Test, CI-tauglich, DB-Zugriff)
+ *   node sync_heilmittel_katalog.js --sql     # INSERT ... ON CONFLICT nach stdout — KEIN DB-Zugriff
  *
  * Bei --check ist Exit-Code 1 = DB weicht von den Codedateien ab.
+ *
+ * --sql (O-95, onprem/REGISTER.md): braucht weder Supabase-URL noch Service-
+ * Role-Key — nur die Codedateien. Existiert, weil `preise-check.yml`'s
+ * automatischer Preis-Commit (Ops-Karte #213) in einem nackten CI-Checkout
+ * läuft, ganz ohne DB-Zugang, und trotzdem eine neue Seed-Migration für die
+ * Box mitschreiben soll (O-79's Seed-Kapı verlangt das für jede *_positions.js-
+ * Änderung; `preise-check.yml` selbst greift das Git-Hook bisher nicht, siehe
+ * O-95). Erzeugt EXAKT dasselbe SQL wie die handschriftlich gepflegte
+ * db/migrations/0012_seed_heilmittel_katalog.sql — derselbe Zeilen-Bauer,
+ * nur ein zweiter Ausgang.
  */
 
-import dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { PODOLOGIE_PREISFENSTER } from './billing/codes/podologie_positions.js';
 
-dotenv.config();
-
 const CHECK_ONLY = process.argv.includes('--check');
+const SQL_ONLY = process.argv.includes('--sql');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { persistSession: false } },
-);
+// Supabase-Client nur bauen, wenn er auch gebraucht wird — --sql läuft ohne
+// SUPABASE_URL/SERVICE_ROLE_KEY (genau der CI-Kontext, für den es gedacht ist),
+// createClient() wirft sofort, wenn die URL fehlt.
+let supabase = null;
+if (!SQL_ONLY) {
+  const [{ default: dotenv }, { createClient }] = await Promise.all([
+    import('dotenv'),
+    import('@supabase/supabase-js'),
+  ]);
+  dotenv.config();
+  supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { persistSession: false } },
+  );
+}
 
 // Verordnungs-Kürzel → X-Code. Ärzte schreiben "KG" auf das Rezept, nicht "X0501".
 // Gleiche Zuordnung wie in seed_tarifs.js; hier zentral, damit die Suche auch
@@ -93,6 +112,32 @@ function podoRows() {
 
 const KEY = r => `${r.bereich}|${r.code}|${r.gueltig_ab}`;
 
+// Spaltenreihenfolge — muss mit db/migrations/0012_seed_heilmittel_katalog.sql
+// und den Objektschlüsseln in physioRows()/podoRows() übereinstimmen.
+const SPALTEN = [
+  'code', 'bereich', 'label', 'kuerzel', 'kategorie', 'diagnosegruppen',
+  'preis_eur', 'zuzahlung_eur', 'dauer', 'gueltig_ab', 'gueltig_bis',
+  'deprecated', 'ungueltig_ab', 'ersetzt_durch', 'max_pro_tag',
+  'max_pro_termin', 'notiz', 'gruppe', 'telemed', 'sort',
+];
+
+function sqlWert(v) {
+  if (v === null || v === undefined) return 'NULL';
+  if (typeof v === 'boolean') return v ? "'t'" : "'f'";
+  if (Array.isArray(v)) return `'{${v.join(',')}}'`;
+  return `'${String(v).replace(/'/g, "''")}'`;
+}
+
+/** Baut EXAKT dieselbe Form wie db/migrations/0012_seed_heilmittel_katalog.sql. */
+function buildInsertSql(rows) {
+  const zeilen = rows.map(r => `  (${SPALTEN.map(s => sqlWert(r[s])).join(',')})`).join(',\n');
+  const setListe = SPALTEN
+    .filter(s => s !== 'code' && s !== 'bereich' && s !== 'gueltig_ab') // Konfliktschlüssel, nicht neu setzen
+    .map(s => `${s}=EXCLUDED.${s}`).join(', ');
+  return `INSERT INTO public.heilmittel_katalog (${SPALTEN.join(', ')}) VALUES\n${zeilen}\n`
+    + `ON CONFLICT (bereich, code, gueltig_ab) DO UPDATE SET\n  ${setListe};\n`;
+}
+
 function normalise(r) {
   // Vergleichbare Form: Zahlen als Zahl, undefined → null
   return JSON.stringify({
@@ -107,6 +152,13 @@ async function main() {
   const want = [...physioRows(), ...podoRows()];
   const dupes = want.length - new Set(want.map(KEY)).size;
   if (dupes) { console.error(`✗ ${dupes} doppelte Schlüssel in den Codedateien`); process.exit(1); }
+
+  if (SQL_ONLY) {
+    // Kein DB-Zugriff — reiner Text aus den Codedateien. Der Aufrufer (CI oder
+    // ein Mensch) leitet stdout in eine neue db/migrations/NNNN_*.sql-Datei um.
+    process.stdout.write(buildInsertSql(want));
+    return;
+  }
 
   const { data: have, error } = await supabase
     .from('heilmittel_katalog')

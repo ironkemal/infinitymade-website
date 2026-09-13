@@ -2,8 +2,8 @@
 
 ## Files
 
-- `anlage3_v22.js` — Schlüsselverzeichnis (codes for VKZ, Verordnungsart, Zuzahlung, Abrechnungscode B, Tarifbereich, etc.) extracted from `handbücher/Anlage_3_TP5_V22_20260218.pdf`.
-- `../../archive/kod/database_v12_billing_codes.sql` — DB seed for `dta_schluessel` table.
+- `anlage3_v22.js` — Schlüsselverzeichnis (codes for VKZ, Verordnungsart, Zuzahlung, Abrechnungscode B, Tarifbereich, etc.). Name says "V22" but content is identical under V21 (gültig) and V22 (ab 01.02.2027) — the only V21↔V22 difference in all of Anlage 3 is §8.1.5.1 Haushaltshilfe, which isn't Heilmittel and isn't in this file (verified 13.09.2026, O-80; see file header for detail). Source: `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt`.
+- `../../archive/kod/database_v12_billing_codes.sql` — alte DB-seed für `dta_schluessel`, archiviert. Tabelle wird von keinem Codepfad gelesen und ist bewusst NICHT in der Migrationskette (`db/REGISTER.md`) — Werte hier sind Referenz, nicht die Quelle der Wahrheit (die ist `anlage3_v22.js`).
 
 ## ⚠️ Missing: Heilmittel-Positionsnummern
 

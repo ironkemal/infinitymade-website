@@ -8,7 +8,7 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-13 (Physio-Vergütung bundeseinheitlich, O-96 kazısından — 1 yeni kural)
+> Son güncelleme: 2026-09-13 (O-80 kazısından — Anlage 3 V21↔V22 + dta_schluessel, 2 yeni kural)
 
 ---
 
@@ -476,6 +476,29 @@
   override okuyordu (16 eyalet, hepsi aynı fiyat — gerçek regionalizasyon
   yoktu); 13.09.2026'da kaldırıldı (O-96, onprem/REGISTER.md)
 - **Kapsam:** Physio, tüm Verordnungsart'lar (standart / Blanko / LHB / BVB)
+
+### Anlage 3 V21 → V22: tek fark Haushaltshilfe, Heilmittel'e dokunmuyor
+- **Kural:** Anlage 3 TP5 V21 ile V22 arasındaki tek içerik farkı §8.1.5.1'dir: V22
+  Haushaltshilfe'ye kendi Abrechnungscode'larını verir (C1–C4) ve Leistungsbereich C
+  başlığından "und Haushaltshilfe" ibaresini çıkarır. Heilmittel (Leistungsbereich B)
+  ile ilgili tüm Schlüssel listeleri iki sürümde AYNIDIR — dolayısıyla bu listeleri
+  taşıyan kod bugün V21 altında geçerlidir, 01.02.2027'de de geçerli kalacaktır.
+- **Kaynak:** Anlage 3 TP5 V21 (Stand 19.09.2025) ↔ V22 (Stand 18.02.2026),
+  Änderungshistorie + tam metin karşılaştırması, §8.1.5.1
+- **Geçerlilik:** 01.10.2025 – süresiz (V22 geçişi bu listelerde değişiklik getirmiyor)
+- **Kodda:** `api-backend/billing/codes/anlage3_v22.js` (tamamı) —
+  dosya adı yanıltıcı, içerik her iki sürümde geçerli
+- **Kapsam:** tüm Heilmittelerbringer (Physio · Ergo · Logo · Podo)
+
+### `dta_schluessel` tablosu DTA üretimini beslemez
+- **Kural:** §302 Schlüssel değerleri yalnız `api-backend/billing/codes/*.js`'ten okunur;
+  `dta_schluessel` tablosu hiçbir kod yolundan okunmaz ve migration zincirinde seed'i yoktur
+  (bilinçli — db/REGISTER.md). Bir Schlüssel değişikliği yalnız kod dosyasında yapılır —
+  tabloya yazmak sessizce etkisizdir.
+- **Kaynak:** `db/REGISTER.md` (`dta_schluessel` kaydı) · `db/NUTZUNG.md` · grep doğrulaması 13.09.2026
+- **Geçerlilik:** 13.09.2026
+- **Kodda:** `billing/dta/builder.js` · `billing/dta/preflight.js` · `billing/dta/zhe-kennzeichen.js`
+- **Kapsam:** tümü
 
 ### Çözülemeyen Kostenträger: sert 412, sessiz fallback yok
 - **Kural:** Bir Kostenträger için elektronik Datenannahmestelle (Verknüpfungsart 02/03 +

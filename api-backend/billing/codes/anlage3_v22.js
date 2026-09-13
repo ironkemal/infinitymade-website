@@ -1,5 +1,17 @@
-// § 302 SGB V — Anlage 3 V22 (Schlüsselverzeichnis), gültig ab 01.02.2027.
-// Source PDF: handbücher/Anlage_3_TP5_V22_20260218.pdf
+// § 302 SGB V — Anlage 3 Schlüsselverzeichnis.
+//
+// ⚠️ 13.09.2026 (gkv-302-Review, O-80): Dateiname/Titel sagten bisher "V22,
+// gültig ab 01.02.2027" — das war ungenau, nicht falsch. V21 (gültig, Stand
+// 19.09.2025) und V22 (ab 01.02.2027) unterscheiden sich in der GESAMTEN
+// Anlage 3 nur an EINER Stelle: §8.1.5.1 gibt Haushaltshilfe (Sammelgruppe D)
+// ab V22 eigene Abrechnungscodes (C1–C4) statt sie unter häuslicher
+// Krankenpflege zu führen. Heilmittel (Leistungsbereich B, alles unten) ist
+// davon nicht betroffen — jede Liste hier ist unter V21 UND V22 identisch
+// gültig, geprüft gegen beide Volltexte. Datei bleibt vorerst so benannt
+// (4 Importe + legs.test.js hängen am Pfad); Inhalt braucht bei der V22-
+// Umstellung 01.02.2027 keine Änderung.
+// Source PDFs: wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt
+//              (Volltext-Referenz, gültig) · …V22_20260218.txt (Vergleich)
 //
 // All canonical code lists for §302 EDIFACT generation. Position numbers
 // (§8.2.1) are NOT included — they live in the externally maintained
@@ -91,7 +103,12 @@ export const ABRECHNUNGSCODE = Object.freeze({
   '33': { label: 'HKP — öffentlich',        leistungsbereich: 'C' },
   '34': { label: 'HKP — Sonstige Pflegedienste', leistungsbereich: 'C' },
   '50': { label: 'Hebamme / Entbindungspfleger', leistungsbereich: 'F' },
-  // ... rest omitted for brevity — see anlage3_v22_full.json for complete list
+  // Weitere Codes (41–49, 55–57, 60–69, 75/76, 91–94, A1–A8, B1 — andere
+  // Leistungsbereiche als B) bewusst NICHT aufgeführt (13.09.2026-Review):
+  // es gibt keine "…_full.json"-Datei, die frühere Notiz zeigte auf nichts.
+  // preflight.js:324-326 lehnt ohnehin jeden Code mit leistungsbereich !== 'B'
+  // ab — Heilmittel (B, oben komplett) ist der einzige Bereich, den diese
+  // Datei bedienen muss. Vollständige Liste bei Bedarf: Anlage 3 V21 §8.1.5.1.
 });
 
 // §8.1.14 — Leistungserbringer-Sammelgruppenschlüssel (UNB.S005)
@@ -151,6 +168,15 @@ export const TARIFBEREICH = Object.freeze({
   '23': 'Berlin (gesamt)',
   '24': 'Bundeseinheitlicher Tarif (West)',
   '25': 'Bundeseinheitlicher Tarif (Ost)',
+  // ⚠️ 13.09.2026 (gkv-302-Review, O-80): Anlage 3 V21 §8.1.5.2 definiert auch
+  // '50'–'64' ("Bundesvertrag" … "Vertrag auf Kassenebene", '65'-'99' leer) —
+  // hier bewusst NICHT ergänzt, weil die pdftotext-Extraktion diese Spalte
+  // verschiebt (zwei Spalten liefen ineinander) und eine falsche Zuordnung
+  // schlimmer wäre als eine fehlende. Heute folgenlos: alle vier §125-
+  // Heilmittelverträge sind bundeseinheitlich, Tarifbereich ist immer '00'
+  // (siehe Notiz unten). Ein Leistungserbringer mit Tarifkennzeichen '50'-'64'
+  // würde preflight.js (Zeile ~111, Mitgliedschaftstest) fälschlich ablehnen —
+  // vor dem Ergänzen: Werte gegen das PDF (nicht nur den Volltext) prüfen.
 });
 
 // Hier stand einmal BUNDESLAND_TO_TARIFBEREICH samt buildTarifkennzeichen().

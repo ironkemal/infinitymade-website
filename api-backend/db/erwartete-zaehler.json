@@ -1,6 +1,6 @@
 {
-  "_kommentar": "RELEASE-STANDARD.md §5.4/1 (10 Zaehler) — onprem/SCHEMA-VERTEILUNG.md §3.3. Werte NICHT aus db/SCHEMA.sql (das ist die SaaS-Live-Zaehlung, 89 Tabellen — 11 davon bewusst NICHT im Paket, onprem/REGISTER.md ~Zeile 1351). Diese Datei ist die Erwartung fuer eine FRISCHE On-Prem-Box nach allen Migrationen bis bis_version. Gemessen 12.09.2026 auf dem lokalen WSL-Testkasten (wsl -d Ubuntu-24.04, praxura-box) nach vollstaendigem install.sh-Lauf, praxura_migrations bestaetigt bis 0014. Bei jeder 'schema güncelle'-Aktualisierung MUSS diese Datei mit-aktualisiert werden — sonst schlaegt der Selbstcheck auf jeder neuen Box faelschlich rot.",
-  "bis_version": "0014",
+  "_kommentar": "RELEASE-STANDARD.md §5.4/1 (10 Zaehler) — onprem/SCHEMA-VERTEILUNG.md §3.3. Werte NICHT aus db/SCHEMA.sql (das ist die SaaS-Live-Zaehlung, 89 Tabellen — 11 davon bewusst NICHT im Paket, onprem/REGISTER.md ~Zeile 1351). Diese Datei ist die Erwartung fuer eine FRISCHE On-Prem-Box nach allen Migrationen bis bis_version. Zaehler zuletzt PHYSISCH auf dem lokalen WSL-Testkasten (wsl -d Ubuntu-24.04, praxura-box) nach install.sh gemessen: 12.09.2026, bis 0014. 0015 (13.09.2026, O-95) ist reine Daten-UPSERT in eine bestehende Tabelle (heilmittel_katalog) — kein neues Tabelle/Policy/Funktion/Trigger/Index, Zaehler bleiben rechnerisch gleich, bis_version nur deshalb ohne neue physische Messung hochgezogen. Bei jeder 'schema güncelle'-Aktualisierung MUSS diese Datei mit-aktualisiert werden — sonst schlaegt der Selbstcheck auf jeder neuen Box faelschlich rot.",
+  "bis_version": "0015",
   "gemessen_am": "2026-09-12",
   "zaehler": {
     "public_tablo": 78,

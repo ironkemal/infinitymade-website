@@ -57,15 +57,53 @@ jobs:
         working-directory: ./api-backend
         run: npm test
 
+      - name: Seed-Migration für die Box mitschreiben (O-95, O-79-Kapı)
+        if: steps.check.outputs.changed == 'true'
+        working-directory: ./api-backend
+        run: |
+          # O-79's Seed-Kapı (tools/check-onprem.sh, lokaler Git-Hook) verlangt bei
+          # jeder *_positions.js-Änderung eine neue Seed-Migration im selben Commit
+          # — aber dieser Workflow läuft in einem nackten CI-Checkout ohne Hooks
+          # (O-95). sync_heilmittel_katalog.js --sql (kein DB-Zugriff, nur die
+          # geraden geänderten Codedateien) erzeugt hier denselben Inhalt, den ein
+          # Mensch von Hand erzeugen würde.
+          NEXT=$(ls db/migrations/*.sql | sed -E 's#.*/([0-9]{4})_.*#\1#' | sort -n | tail -1)
+          NEXT=$(printf '%04d' $((10#$NEXT + 1)))
+          FILE="db/migrations/${NEXT}_seed_heilmittel_katalog_preisrunde_$(date -u +%Y%m%d).sql"
+          {
+            echo "-- O-95 (onprem/REGISTER.md) — automatisch von preise-check.yml erzeugt,"
+            echo "-- selber Commit wie die Preisrunde in den Codedateien (Ops-Karte #213)."
+            echo "-- Erzeugt von: node sync_heilmittel_katalog.js --sql. Kein zweiter"
+            echo "-- Erzeugungsweg — nur ein zweiter Ausgang derselben Zeilen-Bauer, die"
+            echo "-- auch db/migrations/0012_seed_heilmittel_katalog.sql geschrieben hat."
+            echo ""
+            node sync_heilmittel_katalog.js --sql
+            echo "DO \$\$ DECLARE n int; BEGIN"
+            echo "  SELECT count(*) INTO n FROM public.heilmittel_katalog;"
+            echo "  IF n < 94 THEN RAISE EXCEPTION 'seed heilmittel_katalog: % Zeilen, erwartet >= 94', n; END IF;"
+            echo "END \$\$;"
+          } > "$FILE"
+          # bis_version mitziehen: reine Daten-UPSERT in eine bestehende Tabelle,
+          # nie ein neues Tabelle/Policy/Funktion/Trigger/Index — daher ohne neue
+          # physische Zählung sicher hochziehbar (O-95-Review, 13.09.2026).
+          node -e "
+            const fs = require('fs');
+            const p = 'db/erwartete-zaehler.json';
+            const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+            j.bis_version = '$NEXT';
+            fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+          "
+
       - name: Commit + Push (nur wenn Tests grün waren)
         if: steps.check.outputs.changed == 'true'
         run: |
           git config user.name "praxura-preise-bot"
           git config user.email "actions@users.noreply.github.com"
           git add api-backend/billing/codes/podologie_positions.js api-backend/billing/codes/physio_positions.js
+          git add api-backend/db/migrations/*.sql api-backend/db/erwartete-zaehler.json
           git commit \
             -m "chore(preise): automatische Preisrunde übernommen (GKV-Heilmittelpreisstammdatei)" \
-            -m "Ausgelöst von preise_autoupdate.mjs (Ops-Karte #213). Nur Preis + Zuzahlung geändert; gleiche Codes, gleiche Regeln (Dauer/Diagnosegruppen/Notiz 1:1 vom Vorgänger-Fenster übernommen). npm test lief grün vor diesem Commit." \
+            -m "Ausgelöst von preise_autoupdate.mjs (Ops-Karte #213). Nur Preis + Zuzahlung geändert; gleiche Codes, gleiche Regeln (Dauer/Diagnosegruppen/Notiz 1:1 vom Vorgänger-Fenster übernommen). npm test lief grün vor diesem Commit. Seed-Migration für die Box im selben Commit mitgeschrieben (O-95)." \
             -m "Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
           # main könnte sich seit dem Checkout bewegt haben (Melih/Kemal pushen
           # laufend direkt dorthin, siehe CLAUDE.md) — rebase statt hart zu pushen.
