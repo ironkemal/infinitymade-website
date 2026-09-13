@@ -283,8 +283,15 @@ durum sürerse 7 günde bir, `ok`'a dönüşte Entwarnung). Kod + izole mantık 
 tamam, **gerçek kutuda henüz denenmedi** ve `SMTP_HOST` boş kutularda kanal yok — bu
 yüzden kısmen. Detay kendi maddesinde.
 
-Bağımsız açık maddeler (henüz sıralanmadı, kullanıcı seçecek): **O-44** (`prescriptions`
-iki ayrı yazma yolu), **O-33** (on-prem'de "çalışan sayısı/limit" tanımsız).
+✅ **O-44 — sicil güncellendi, iş zaten bitmişti (13.09.2026)** — kod incelenince
+`prescriptions`'ın iki yazma yolu sorununun 06.09.2026'da zaten çözüldüğü ortaya çıktı
+(`module/verordnung-an-backend.js`, "Server kazanır" kararı + Ops #289'da PATCH yolu
+tamamlandı) — register bunu hiç işlememişti, yeni iş yapılmadı, yalnız üç şartın
+(taban adresi tekilliği, owner_id+satır-kanıtı, ağ hatası sessiz geçmiyor) kodda
+gerçekten karşılandığı doğrulanıp sicil `gelöst`e çekildi.
+
+Bağımsız açık maddeler (henüz sıralanmadı, kullanıcı seçecek): **O-33** (on-prem'de
+"çalışan sayısı/limit" tanımsız).
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -1616,21 +1623,20 @@ kapı unutmaz ama düşünmez.
 > dağıtım incelemesi. Soru ürün sorusu değil **yol** sorusu — aynı satır iki farklı
 > bileşenden yazılıyor ve ikisinin kutudaki davranışı aynı değil.
 
-### O-44 — `prescriptions` iki ayrı yoldan yazılıyor: tarayıcı→PostgREST ve tarayıcı→Express
+### O-44 — `prescriptions` iki ayrı yoldan yazılıyor: tarayıcı→PostgREST ve tarayıcı→Express ✅ **gelöst (06.09.2026, sicile 13.09.2026'da işlendi)**
 
 | Alan | İçerik |
 |---|---|
-| **Ne** | Reçete kaydı iki yoldan doğuyor: elle maske RLS altında doğrudan PostgREST'e yazıyor, OCR yolu Express'ten service-role ile yazıyor. Tek yola indirilmesi tartışılıyor (kullanıcı kararı 06.09.2026) |
-| **Nerede** | **A yolu:** `module/verordnung-maske.js:490` (insert) `:502` (update, `.eq('owner_id')` + `.select()` kanıtı). **B yolu:** `dashboard.js:18501` → `api-backend/server.js:2329` `/api/rezept/confirm` (insert + `prescription_validations` denetim satırı + `leads` oluşturma + `resolveOrCreateArzt`). Taban adresi: `dashboard.js:17857` `REZEPT_API` — `dashboard.js:95-97`'deki `API` sabitinin **ikinci kopyası**, ikisi de O-01 sayımında. Ayrıca 13 frontend dosyasında 14 alan-güncellemesi daha var (`sitzungsfortschritt.js:103/111/115`, `verordnung-einheiten.js:143`, `zuzahlung-befreiung.js:252`, `dashboard.js` 8 yer) — **oluşturma** yalnız yukarıdaki iki yerde |
+| **Ne** | Reçete kaydı iki yoldan doğuyordu: elle maske RLS altında doğrudan PostgREST'e yazıyordu, OCR yolu Express'ten service-role ile yazıyordu |
+| **Nerede** | `module/verordnung-an-backend.js` (yeni sınır modülü) · `module/verordnung-maske.js:551-604` (`sendeAnServer`/`schreibeVerordnung`) · `api-backend/server.js:2474` (`POST /api/rezept/confirm`, ANLEGEN) · `:2741` (`PATCH /api/rezept/:id`, DEĞİŞTİRME — Ops #289'da eklendi) |
 | **Tip** | G (+ C) |
-| **Kutuda ne olur** | **Yeni bileşen bağımlılığı doğmaz:** playbook §4.1 kutu stack'inde `api` (Express) zaten var, PoC 0.3'te self-host Supabase'e bağlı çalıştığı doğrulandı. Ama **arıza yüzeyi genişler**: bugün Express ölüyken elle reçete girişi ayakta kalır (tarayıcı → kutunun kendi PostgREST'i), B'de kalmaz. Ölçülen gerçek: `dashboard.js` içinde 31 `${API}` çağrısı var (randevu oluşturma dahil) — yani `api` konteyneri düştüğünde kutu zaten büyük ölçüde durmuş oluyor, elle reçete girişi tek başına ürünü ayakta tutmuyor. Kalan risk gerçek ama küçük ve **tek makinede**: `restart: unless-stopped` + gerçek `/health` (O-40) ile karşılanır. G8 açısından: buluta **yeni zincir yok**, iki kutu-içi yoldan biri kapanıyor — Faz 1'in „tek Express çekirdeği" hedefiyle aynı yöne bakıyor. Yeni env var yok, yeni dış çağrı yok, şema değişikliği yok (`nagel` · `wagner_grad` · `behandlungsanlass` kolonları `db/SCHEMA.sql:1690-1699`'da mevcut) |
-| **Çözüm** | Yön kararı kullanıcıda; **hangi yön seçilirse seçilsin üç şart dağıtım tarafından zorunlu:** (1) Yeni taban adresi sabiti **açılmaz** — çağrı mevcut `API` sabitinden geçer, `REZEPT_API` gibi ikinci bir kopya kapı tabanını 26'nın üstüne çıkarır ve O-01'in Faz 1.1 çözümü tek yerden yapılamaz hale gelir. (2) Backend'e **update** yolu eklenirse `owner_id = req.auth.tenantId` filtresi ve „kaç satır değişti" kanıtı zorunlu: service-role'de RLS'in sessiz sıfır-satır freni yok, yanlış tenant'ın id'si **başarıyla** yazar. SaaS'ta 20+ tenant var (G7), kutuda tek tenant — yani bu gerileme kutuda değil **merkezde** ısırır. (3) Kutu tarafı kabul ölçütü: `api` konteyneri durdurulduğunda maske „kaydedildi" demez, anlaşılır hata verir |
-| **Durum** | `offen` — yön kararı 06.09.2026 kullanıcıda; şart (1) Faz 1.1'e (O-01), şart (2) `guvenlik` siciline bağlanır |
+| **Kutuda ne olur** | Kutu tarafında olumlu: iki ayrı arıza-yüzeyi tek Express çekirdeğine indi, playbook §4.1'in "tek Express çekirdeği" hedefiyle uyumlu. `restart: unless-stopped` + `/health` (O-40) ile karşılanan küçük, tek-makinelik bir risk kaldı — yeni değil |
+| **Çözüm** | 06.09.2026'da karar verildi: **Server kazanır.** Getippte Verordnung artık fotoğraflanan ile AYNI yoldan (`sendeAnServer`) geçiyor — aynı Prüfung, aynı Patient-Anlage, aynı Foto-Bağlama. ANLEGEN 06.09.2026'da, DEĞİŞTİRME (PATCH) sonradan Ops #289'da taşındı |
+| **Durum** | ✅ **gelöst.** Üç şart da koda gömülü, kod okunarak doğrulandı (13.09.2026): **(1)** yeni taban adresi yok — `dashboard.js:16859` `apiBasis: API` satırında birebir yorum: `// KEINE zweite Adresskonstante (onprem O-44)`. `REZEPT_API` (`dashboard.js:17203`) de artık `API + '/rezept'` — ikinci sabit değil, `API`'nin türevi. **(2)** `server.js:2476` `owner_id: tenantId` (JWT'den, gövdeden değil) + PATCH'te `.eq('id', id).eq('owner_id', tenantId)` + `if (!upd || !upd.length) return 404` (satır ~2879) — kaç satır değişti kanıtı var. Ayrıca `patient_id` her iki yolda da `owner_id` ile çapraz doğrulanıyor (guvenlik S-18). **(3)** `sendeAnServer()`'ın kendi yorumu: "Ein Netzfehler MUSS durchschlagen... (onprem O-44, Auflage 3.)" — ağ hatası/başarısız yanıt `throw` ediyor, sessiz "kaydedildi" yok. Frontend'de `.from('prescriptions').insert(` için grep **sıfır sonuç** — oluşturma yolu tamamen kapandı. Sicil bu kapanışı yakalamamıştı, bu turda düzeltildi |
 
-> ⚠️ **O-01'e ek:** sicil bugüne kadar yalnız `dashboard.js:95-97`'deki ternary'yi „doğru deseni
-> bilen" yer olarak anıyordu. `REZEPT_API` (`dashboard.js:17857`) aynı host'u **ikinci kez**
-> sabitliyor ve ternary'yi bile kullanmıyor — Faz 1.1 çözümü bu ikinci kopyayı da kapsamalı,
-> yoksa kutuda reçete yolu bizim VPS'imize gitmeye devam eder.
+> ⚠️ **O-01'e ek (kapandı):** `REZEPT_API`'nin `API`'den ayrı ikinci bir sabit olduğu uyarısı
+> artık geçersiz — `dashboard.js:17203`'te `const REZEPT_API = API + '/rezept';`, `API`'nin
+> türevi, ayrı bir host değil.
 
 ---
 
@@ -3489,10 +3495,10 @@ kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 9 | O-18 · O-23 · O-32 · O-33 · O-44 · O-46 · O-75 · O-80 · O-95 |
+| `offen` | 8 | O-18 · O-23 · O-32 · O-33 · O-46 · O-75 · O-80 · O-95 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
 | 🟡 `kısmen gelöst` | 15 | O-01 · O-02 · O-09 · O-11 · O-30 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
-| `gelöst` | 46 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-96 |
+| `gelöst` | 47 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-96 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda
