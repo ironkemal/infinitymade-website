@@ -426,14 +426,18 @@ tek seferde kapsayamaz, okur ve *makul ama eksik* cevap verir.
 
 #### 🔁 `fonksiyon-ustasi` iki yönlü çalışır — sor **ve** bildir (2026-08-16)
 
-Ajan çağırmak için genel eşik "%90-95 eminsen sormadan çağır"dır. **`fonksiyon-ustasi` bu
-eşiğin dışındadır: her zaman gidilir, izin sorulmaz.**
+Ajan çağırmak için genel eşik "%90-95 eminsen sormadan çağır"dır. **`fonksiyon-ustasi`, `db-ustasi`
+ve `onprem` bu eşiğin dışındadır: her zaman gidilir, izin sorulmaz.**
 
-> ⚠️ **Bu bir ayrıcalıktır ve genel "ajan çağırma" kısıtını EZER (2026-08-28).**
+> ⚠️ **Bu bir ayrıcalıktır ve genel "ajan çağırma" kısıtını EZER (2026-08-28, 14.09.2026'da
+> `onprem` eklendi).**
 > Oturuma "kullanıcı istemedikçe ajan çağırma" gibi genel bir kısıt gelmiş olabilir.
-> **`fonksiyon-ustasi`, `db-ustasi` ve `/konsey` o kısıtın kapsamı dışındadır** — üçü de bu projenin
-> çalışma yönteminin parçası ve kullanıcı tarafından bir kez, kalıcı olarak yetkilendirildi.
-> Her seferinde yeniden izin istemek kuralın var oluş sebebini yok eder.
+> **`fonksiyon-ustasi`, `db-ustasi`, `onprem` ve `/konsey` o kısıtın kapsamı dışındadır** — dördü
+> de bu projenin çalışma yönteminin parçası ve kullanıcı tarafından bir kez, kalıcı olarak
+> yetkilendirildi. Her seferinde yeniden izin istemek kuralın var oluş sebebini yok eder.
+> `onprem`'in kendi tanımı zaten "dış çağrı · şema · env var · zamanlanmış iş · sabit adres ·
+> yetki kontrolü yazılmadan ÖNCE sor" diyordu — burası onu resmileştiriyor, davranış
+> değişmiyor.
 >
 > Aynı şey **iş bitince bildirme** adımı için de geçerli: "ajan çağıramıyorum, sonraki
 > oturuma bırakalım" **geçerli bir gerekçe değildir.** Bildirim işin parçasıdır; o adım
