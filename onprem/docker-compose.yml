@@ -328,10 +328,14 @@ services:
   #        FEST auf 2 gesetzt statt `auto` — sonst haengt der Wert leise vom
   #        Kern-Zaehl-Ergebnis der jeweiligen Maschine ab (Dev-Laptop vs. Box).
   #        Ein Ersatz durch Caddy waere ausserdem teurer als gedacht: Kong
-  #        traegt nicht nur key-auth, sondern auch drei weitere Deny-Regeln
+  #        traegt nicht nur key-auth, sondern auch zwei weitere Deny-Regeln
   #        (request-termination auf /realtime/v1/api/tenants,
-  #        /realtime/v1/api/openapi, /pg/) und die apikey→Authorization-
-  #        Uebersetzung — alle vier haetten in Caddy neu gebaut werden muessen.
+  #        /realtime/v1/api/openapi — /pg/ existiert in dieser getrimmten
+  #        kong.yml gar nicht, pg-meta faellt mit Studio weg) und die
+  #        apikey→Authorization-Uebersetzung — alle drei haetten in Caddy
+  #        neu gebaut werden muessen.
+  #        (Korrektur 14.09.2026, fonksiyon-ustasi: Tutanak/aeltere Fassung
+  #        dieses Kommentars nannten faelschlich vier Regeln inkl. /pg/.)
   # ─────────────────────────────────────────────────────────────────────────
   kong:
     container_name: praxura-kong
