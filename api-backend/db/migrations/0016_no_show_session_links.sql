@@ -41,7 +41,8 @@
 --
 -- ZAEHLER: unveraendert (nur eine Spalte — kein Tabelle/Policy/Funktion/
 --          Trigger/Index, keine storage.*/auth.*-Aenderung).
--- SaaS: noch NICHT angewendet — vor dem Anwenden db-ustasi-Gegenlesen.
+-- SaaS: uygulandı 14.09.2026, MCP (db-ustasi ikinci-göz: trigger/index/RLS temiz,
+--       backfill 2 booking + 2 Sitzungszeile, 0 'done' berührt).
 
 ALTER TABLE public.bookings
   ADD COLUMN IF NOT EXISTS no_show_session_links jsonb NOT NULL DEFAULT '[]'::jsonb;

@@ -11,10 +11,9 @@
 --                    erwartete-zaehler.json unveraendert ausser bis_version.
 --                    Details bei `bookings` unten.
 --                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
---                    ⚠️ Im SaaS noch NICHT angewendet (Stand 14.09.2026):
---                    Migration 0016 wartet auf db-ustasi-Gegenlesen. Der
---                    Anwendungscode faellt ohne die Spalte auf das alte
---                    Verhalten zurueck (module/termin-nicht-erschienen.js).
+--                    ✅ Im SaaS angewendet 14.09.2026 (MCP, db-ustasi-Gegenlesen
+--                    bestanden: Trigger/Index/RLS sauber, Backfill 2 Buchungen +
+--                    2 Sitzungszeilen, 0 'done' beruehrt).
 --                    davor: 2026-09-11 — 0005_praxura_setup
 --                    (On-Premise Faz 2.2, Einrichtungsassistent.)
 --                    EINE NEUE TABELLE: `praxura_setup` — genau EINE Zeile je
