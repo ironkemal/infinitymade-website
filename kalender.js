@@ -3,6 +3,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from './supabase-config.js'
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung } from './module/ausfallrechnung.js?v=20260904';
+import { markiereNichtErschienen } from './module/termin-nicht-erschienen.js?v=20260914';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Frueher hier eine eigene Ternary; jetzt import (O-01). Absichtlich HIER statt
@@ -539,11 +540,30 @@ function setupBookingPanel() {
 
   document.getElementById('bp-noshow').addEventListener('click', async () => {
     if (!activePanelBookingId) return;
+    // Bis zum 14.09.2026 schrieb dieser Knopf NUR bookings.status — kein
+    // no_show-Flag, kein Grund, keine Sitzungszeile, keine Ausfallrechnung.
+    // Derselbe Klick wie im Dashboard, aber ein anderer Datenstand
+    // (Ops-Karte a8186cb8). Jetzt beide über dieselbe Funktion.
+    const reason = await showAbsagegrundModal({ title: 'Grund für Nicht-Erscheinen', confirmText: 'Bestätigen' });
+    if (reason === null) return;
+
+    const event = calendar.getEventById(activePanelBookingId);
+    const booking = { id: activePanelBookingId, ...(event ? event.extendedProps : {}) };
     try {
-      await patchBooking(activePanelBookingId, { status: 'no_show' });
+      const { freigegeben } = await markiereNichtErschienen({ supabase }, booking, { grund: reason });
       document.getElementById('bp-status').textContent = '👻 Nicht erschienen';
       calendar.refetchEvents();
-    } catch(err) { showKalToast(err.message, 'error'); }
+      if (freigegeben) showKalToast(`${freigegeben} Einheit(en) wieder frei.`);
+    } catch(err) { showKalToast(err.message, 'error'); return; }
+
+    // Dieselbe Frage wie im Dashboard: eine Ausfallgebühr kann auch hier fällig
+    // sein. `offerAusfallrechnung` entscheidet anhand der Owner-Einstellung.
+    if (ausfallConfig.ausfall_enabled) {
+      await offerAusfallrechnung({
+        supabase, apiBase: API_BASIS, booking, reason: 'no_show', config: ausfallConfig,
+        priceEur: await ausfallPriceEur(booking.service_id), showToast: showKalToast,
+      });
+    }
   });
 
   document.getElementById('bp-unlock').addEventListener('click', () => {

@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-09-12",
+ "erzeugt": "2026-09-14",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-09-11)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-12)",
+  "schema": "db/SCHEMA.sql (Stand 2026-09-14)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-14)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 89,
@@ -109,7 +109,7 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1216,
+     "start": 1237,
      "module": [],
      "uiPfad": []
     },
@@ -1515,7 +1515,7 @@
   },
   {
    "name": "bookings",
-   "spalten": 36,
+   "spalten": 37,
    "fkRaus": [
     "bookings",
     "leads",
@@ -1531,6 +1531,7 @@
     "api/dsgvo.js",
     "module/booking-status-korrektur.test.js",
     "module/termin-dauer.test.js",
+    "module/termin-nicht-erschienen.test.js",
     "module/warteliste-nachruecker.test.js",
     "onboarding.js"
    ],
@@ -3162,6 +3163,7 @@
     "module/termin-dauer.js",
     "module/termin-heute.js",
     "module/termin-laden.js",
+    "module/termin-nicht-erschienen.js",
     "module/termin-patient-bezug.js",
     "module/verordnung-detail.js",
     "module/verordnung-termine.js",
@@ -4200,6 +4202,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/sync_heilmittel_katalog.js",
     "tools/seed-generieren.mjs"
    ],
    "register": true,
@@ -6526,7 +6529,7 @@
     {
      "name": "main",
      "file": "api-backend/sync_heilmittel_katalog.js",
-     "start": 106,
+     "start": 151,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10165,7 +10168,8 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api/dsgvo.js",
-    "module/booking-status-korrektur.test.js"
+    "module/booking-status-korrektur.test.js",
+    "module/termin-nicht-erschienen.test.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -10566,7 +10570,8 @@
     "module/rezeptinfo-geld.js",
     "module/sitzung-abgleich.js",
     "module/sitzungsfortschritt.js",
-    "module/termin-aktionen.js"
+    "module/termin-aktionen.js",
+    "module/termin-nicht-erschienen.js"
    ],
    "module": [
     "abrechnung",
@@ -12246,7 +12251,7 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1216,
+     "start": 1237,
      "module": [],
      "uiPfad": []
     },

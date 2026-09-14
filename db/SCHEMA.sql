@@ -1,7 +1,21 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-11 — 0005_praxura_setup
+-- ERZEUGT AM:        2026-09-14 — 0016_no_show_session_links
+--                    (Ops-Karte a8186cb8. EINE NEUE SPALTE:
+--                    `bookings.no_show_session_links` — Rueckfahrkarte fuer die
+--                    Einheiten, die ein „Patient nicht erschienen" jetzt wieder
+--                    freigibt. Gegenstueck zu cancelled_session_links (#192),
+--                    aber vom Anwendungscode geschrieben, weil jene Spalte dem
+--                    Trigger gehoert. Keine Tabelle/Policy/Trigger/Index —
+--                    erwartete-zaehler.json unveraendert ausser bis_version.
+--                    Details bei `bookings` unten.
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    ⚠️ Im SaaS noch NICHT angewendet (Stand 14.09.2026):
+--                    Migration 0016 wartet auf db-ustasi-Gegenlesen. Der
+--                    Anwendungscode faellt ohne die Spalte auf das alte
+--                    Verhalten zurueck (module/termin-nicht-erschienen.js).
+--                    davor: 2026-09-11 — 0005_praxura_setup
 --                    (On-Premise Faz 2.2, Einrichtungsassistent.)
 --                    EINE NEUE TABELLE: `praxura_setup` — genau EINE Zeile je
 --                    Installation, die eine einzige Frage beantwortet: ist der
@@ -766,6 +780,7 @@ CREATE TABLE bookings (
   dauer_quelle text
   cancelled_at timestamptz
   cancelled_session_links jsonb NOT NULL DEFAULT '[]'::jsonb
+  no_show_session_links jsonb NOT NULL DEFAULT '[]'::jsonb
 );
 --   CHECK status IN (confirmed, cancelled, completed, pending, no_show)
 --   CHECK dauer_quelle IS NULL OR IN (vorschlag, manuell, serie)
@@ -828,6 +843,21 @@ CREATE TABLE bookings (
 --      (Einheit ist wieder buchbar) — genau das, was frueher ON DELETE SET NULL
 --      beim Loeschen tat. Die alte Zuordnung ueberlebt in
 --      cancelled_session_links.
+--   ★ no_show_session_links — dasselbe fuer „Patient nicht erschienen"
+--     (Migration 0016, 14.09.2026, Ops-Karte a8186cb8). Gleiche Form:
+--       [{session_id, prescription_id, session_number, heilmittel_index}, …]
+--     Seitdem gibt auch das no_show die Einheit frei (booking_id NULL,
+--     status zurueck auf 'planned') — sie wurde nicht erbracht und gehoert in
+--     den Topf zurueck. Die Spur des Ausfalls steht am TERMIN (status='no_show',
+--     no_show, no_show_noted_at, cancellation_reason), nicht an der
+--     Sitzungszeile.
+--     ⚠️ Anders als cancelled_session_links vom ANWENDUNGSCODE geschrieben
+--        (module/termin-nicht-erschienen.js), nicht vom Trigger: die
+--        #192-Trigger setzen bei jedem UPDATE NEW.cancelled_session_links :=
+--        OLD.… zurueck, jene Spalte ist fuer den Client unbeschreibbar. Der
+--        Trigger wurde bewusst nicht umgebaut (er haelt die Absage-Invarianten).
+--     ⚠️ KEIN Sitzungszaehler. Zweck ist der Rueckweg: korrigiereNoShow()
+--        („Patient war doch da") findet die freigegebene Zeile nur hierueber.
 --   ★ verordnung_id — PODOLOGIE-Zweig. Bindet den Termin an die podologische
 --     Verordnung (seit 03.09.2026). Zeigt seit 04.09.2026 auf `prescriptions`
 --     (Zusammenlegung der Verordnungstöpfe) — vorher eine eigene Tabelle

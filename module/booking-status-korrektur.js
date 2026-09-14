@@ -1,4 +1,5 @@
 import { emit } from './signal.js?v=20260813';
+import { rebindeNoShowSitzungen } from './termin-nicht-erschienen.js?v=20260914';
 
 /**
  * booking-status-korrektur.js — nachträgliche bookings.status-Korrektur
@@ -85,8 +86,18 @@ export async function korrigiereNoShow(ctx, booking) {
 
   // Physio/Ergo/Logo: die Sitzungszeile zieht mit, sonst zaehlt die
   // Verordnung die Behandlung weiterhin nicht mit (siehe
-  // handlePatientNichtErschienen() fuer dieselbe Kopplung in Gegenrichtung).
+  // markiereNichtErschienen() fuer dieselbe Kopplung in Gegenrichtung).
+  //
+  // Zwei Wege, weil es zwei Datenstaende gibt:
+  //  1. Zeilen, die noch AM Termin haengen — Altbestand vor dem 14.09.2026 und
+  //     der Notfallpfad ohne Rueckfahrkarte.
+  //  2. Seit 14.09.2026 gibt das no_show die Einheit frei (booking_id = NULL).
+  //     Diese Zeile findet `.eq('booking_id', …)` nicht mehr; sie steht in
+  //     `bookings.no_show_session_links`. Ohne Schritt 2 waere die Korrektur
+  //     stillschweigend wirkungslos — der Termin stuende auf `completed`, die
+  //     Einheit bliebe unerbracht.
   await supabase.from('prescription_sessions').update({ status: 'done' }).eq('booking_id', booking.id);
+  await rebindeNoShowSitzungen(supabase, booking);
 
   const { data: sess } = await supabase.auth.getSession();
   const { error: logErr } = await supabase.from('booking_status_korrekturen').insert({

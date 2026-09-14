@@ -253,7 +253,17 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
   for (const s of sessions) {
     if (ausserBookingId && s.booking_id === ausserBookingId) continue;
     const bk = s.bookings;
-    if (!bk?.start_time || bk.status === 'cancelled') continue;
+    // Abgesagt oder nicht wahrgenommen heisst: es hat nichts stattgefunden.
+    // Als Nachbarbehandlung zaehlt so ein Termin nicht, sonst warnt die
+    // Frequenzpruefung beim Nachholtermin gegen einen Termin, den es fachlich
+    // nie gab (Ops-Karte a8186cb8).
+    //
+    // Seit dem 14.09.2026 gibt das no_show `booking_id` frei, solche Zeilen
+    // kommen durch den `.not('booking_id','is',null)`-Filter oben gar nicht mehr
+    // bis hierher. Die Bedingung bleibt trotzdem stehen: fuer den Altbestand
+    // (no_show vor der Umstellung, Zeile haengt noch am Termin) und fuer den
+    // Notfallpfad ohne Rueckfahrkarte ist sie die einzige Abwehr.
+    if (!bk?.start_time || bk.status === 'cancelled' || bk.status === 'no_show') continue;
     const d = new Date(bk.start_time);
     if (Number.isNaN(d.getTime())) continue;
     const diff = kalendertage(d, neu);

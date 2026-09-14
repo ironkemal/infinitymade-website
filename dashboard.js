@@ -1,4 +1,4 @@
-import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260908';
+import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
 import { zeigePatientTermine } from './module/patient-termine.js?v=20260908';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
@@ -14,8 +14,8 @@ import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260817';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20260908';
-import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260826';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20260914';
+import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche
@@ -37,7 +37,8 @@ import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './mod
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
-import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260905';
+import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
+import { markiereNichtErschienen } from './module/termin-nicht-erschienen.js?v=20260914';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20260906';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht
 // in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
@@ -76,7 +77,7 @@ import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260905g';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
-import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260816a';
+import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260914';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
@@ -86,7 +87,7 @@ import { renderWoche } from './module/kalender-woche.js?v=20260831';
 import { renderMonat } from './module/kalender-monat.js?v=20260831';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate } from './module/datum.js?v=20260831';
-import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260830';
+import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blocker.js?v=20260830';
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
@@ -4523,24 +4524,14 @@ async function handlePatientNichtErschienen() {
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
   try {
-    const updatePayload = { status: 'no_show', no_show: true, no_show_noted_at: new Date().toISOString() };
-    if (reason && reason.trim()) updatePayload.cancellation_reason = reason.trim();
-    const { error: bkErr } = await supabase
-      .from('bookings')
-      .update(updatePayload)
-      .eq('id', bkActionBookingCache.id);
-
-    if (bkErr) throw bkErr;
-
-    const { error: sessErr } = await supabase
-      .from('prescription_sessions')
-      .update({ status: 'no_show' })
-      .eq('booking_id', bkActionBookingCache.id);
-
-    if (sessErr) throw sessErr;
+    // Status, Einheiten-Freigabe und Fortschrittsprüfung in einem Aufruf —
+    // derselbe Weg, den auch kalender.js nimmt (module/termin-nicht-erschienen.js).
+    const { freigegeben } = await markiereNichtErschienen({ supabase }, bkActionBookingCache, { grund: reason });
 
     triggerNoShowBot(bkActionBookingCache);
-    showToast('Patient nicht erschienen — Bot wurde ausgelöst.');
+    showToast(freigegeben
+      ? `Patient nicht erschienen — ${freigegeben} Einheit(en) wieder frei.`
+      : 'Patient nicht erschienen — Bot wurde ausgelöst.');
 
     await kalenderNeuLaden({ calendar: window.calendar || calendar, activePanel, loadTodayBookings, renderCalendarView });
 

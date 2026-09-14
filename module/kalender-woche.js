@@ -33,7 +33,7 @@
 import { WV_SLOT_PX } from './kalender-raster.js?v=20260822';
 import { alsISODatum } from './datum.js?v=20260831';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
-import { mitDeckkraft } from './kalender-farben.js?v=20260825';
+import { mitDeckkraft } from './kalender-farben.js?v=20260914';
 import { istBlockerLeistung } from './kalender-blocker.js?v=20260825';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({

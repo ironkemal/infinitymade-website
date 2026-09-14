@@ -153,7 +153,11 @@ export async function ladeVerlauf(sb, ownerId, leadId) {
   // „Rezept". `therapie_bereich` trennt die beiden Zweige unten.
   const [termine, alleRx, befunde] = await Promise.all([
     frag(sb.from('bookings')
-      .select('id, start_time, status, services:service_id (title)')
+      // `cancellation_reason` traegt beim no_show den Grund, den der Anwender im
+      // Absagegrund-Dialog eingetippt hat (dieselbe Spalte wie bei der Absage —
+      // ein zweites Feld haette nur zwei Orte fuer denselben Satz geschaffen).
+      // Die Akte ist die einzige Stelle, an der er spaeter wieder auftaucht.
+      .select('id, start_time, status, cancellation_reason, services:service_id (title)')
       .eq('owner_id', ownerId).eq('lead_id', leadId)
       .neq('status', 'cancelled')
       .order('start_time', { ascending: false }).limit(50)),
@@ -190,7 +194,12 @@ export async function ladeVerlauf(sb, ownerId, leadId) {
   const zeilen = [
     ...termine.map(t => ({
       datum: t.start_time, art: 'Termin', ziel: 'kalender', id: t.id,
-      text: [t.services?.title, STATUS_TERMIN[t.status]].filter(Boolean).join(' · ') || 'Termin',
+      // Beim no_show steht der Grund mit in der Zeile und die Zeile wird rot:
+      // „nicht erschienen" ist die Information, wegen der jemand die Akte
+      // aufschlaegt, nicht eine Fussnote am Termin (Ops-Karte a8186cb8).
+      text: [t.services?.title, STATUS_TERMIN[t.status], t.status === 'no_show' ? t.cancellation_reason : null]
+        .filter(Boolean).join(' · ') || 'Termin',
+      farbe: t.status === 'no_show' ? AUSFALL_ROT : null,
     })),
     ...verordnungen.map(v => ({
       datum: v.ausstellungsdatum, art: 'Verordnung', ziel: 'podologie', id: v.id,
@@ -218,6 +227,19 @@ export async function ladeVerlauf(sb, ownerId, leadId) {
   return zeilen;
 }
 
+/**
+ * Ausgefallene Termine tragen ihre eigene Farbe — dieselbe wie im Kalender
+ * (module/kalender-farben.js STATUS_FARBEN.no_show). Bewusst dupliziert statt
+ * importiert: die Akte soll nicht von der Kalenderdarstellung abhaengen, und
+ * ein Import fuer einen Hexwert verbindet zwei Module, die sonst nichts
+ * miteinander zu tun haben. Aendert sich der Ton, sind es zwei Stellen — das
+ * ist hier billiger als die Kopplung.
+ */
+const AUSFALL_ROT = '#dc2626';
+
+// Die Farbe sagt sonst, WAS fuer ein Ereignis das war (Termin, Verordnung, …).
+// Einzige Ausnahme: der ausgefallene Termin faerbt nach seinem Zustand, weil
+// genau der die Zeile interessant macht — siehe `farbe` in ladeVerlauf().
 const FARBE = {
   Termin:      '#2563eb',
   Verordnung:  '#7c3aed',
@@ -245,8 +267,8 @@ export function renderVerlauf(el, zeilen, onSprung) {
              text-align:left;padding:8px 10px;border:0;border-bottom:1px solid var(--border);
              background:transparent;color:var(--text-main);font-size:13px;cursor:pointer;">
       <span style="color:var(--text-muted);">${DE(z.datum)}</span>
-      <span style="color:${FARBE[z.art] || 'var(--text-muted)'};font-weight:600;font-size:12px;">${esc(z.art)}</span>
-      <span>${esc(z.text)}</span>
+      <span style="color:${z.farbe || FARBE[z.art] || 'var(--text-muted)'};font-weight:600;font-size:12px;">${esc(z.art)}</span>
+      <span${z.farbe ? ` style="color:${z.farbe};"` : ''}>${esc(z.text)}</span>
     </button>`).join('');
 
   el.querySelectorAll('.pk-verlauf-zeile').forEach(b => {

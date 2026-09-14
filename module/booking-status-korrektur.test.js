@@ -2,24 +2,39 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { pruefeAbrechnungssperre, korrigiereNoShow } from './booking-status-korrektur.js';
 
-function supabaseDoppel({ abrechnungStatus = null, schreibFehler = null } = {}) {
-  const geschrieben = { bookings: [], sessions: [], korrekturen: [] };
-  const kette = (tabelle) => ({
-    select: () => kette(tabelle),
-    eq: () => kette(tabelle),
-    maybeSingle: () => Promise.resolve({
-      data: abrechnungStatus === null ? null : { abrechnung_status: abrechnungStatus },
-      error: null,
-    }),
-    update: (patch) => {
-      geschrieben[tabelle].push(patch);
-      return { eq: () => Promise.resolve({ error: schreibFehler }) };
-    },
-    insert: (row) => {
-      geschrieben[tabelle].push(row);
-      return Promise.resolve({ error: null });
-    },
-  });
+function supabaseDoppel({ abrechnungStatus = null, schreibFehler = null, links = null, freieSitzungen = [] } = {}) {
+  const geschrieben = { bookings: [], sessions: [], korrekturen: [], gebunden: [] };
+  // `update().eq()` endet meistens hier — bei der Rueckbindung einer einzelnen
+  // Sitzungszeile geht die Kette aber noch ueber `.is().select()` weiter
+  // (module/termin-nicht-erschienen.js). Deshalb ist die Kette `then`-faehig
+  // statt an einer festen Stelle ein Promise zu liefern.
+  const kette = (tabelle, istUpdate = false) => {
+    const f = {};
+    const ergebnis = () => {
+      if (istUpdate && tabelle === 'sessions' && f.id) {
+        const frei = freieSitzungen.includes(f.id);
+        if (frei) geschrieben.gebunden.push(f.id);
+        return { data: frei ? [{ id: f.id }] : [], error: null };
+      }
+      return { error: schreibFehler };
+    };
+    const k = {
+      select: () => k,
+      eq: (spalte, wert) => { f[spalte] = wert; return k; },
+      neq: () => k,
+      is: (spalte, wert) => { f[spalte] = wert; return k; },
+      maybeSingle: () => Promise.resolve({
+        data: abrechnungStatus === null && links === null
+          ? null
+          : { abrechnung_status: abrechnungStatus, no_show_session_links: links },
+        error: null,
+      }),
+      update: (patch) => { geschrieben[tabelle].push(patch); return kette(tabelle, true); },
+      insert: (row) => { geschrieben[tabelle].push(row); return Promise.resolve({ error: null }); },
+      then: (ok, fehler) => Promise.resolve(ergebnis()).then(ok, fehler),
+    };
+    return k;
+  };
   return {
     supabase: {
       from: (t) => kette(t === 'bookings' ? 'bookings' : t === 'prescription_sessions' ? 'sessions' : 'korrekturen'),
@@ -88,6 +103,22 @@ test('unbeschränkte Korrektur schreibt Status + Korrekturzeile', async () => {
   assert.ok(geschrieben.korrekturen[0].grund.length >= 3);
   assert.equal(geschrieben.korrekturen[0].geaendert_von, 'u-1');
   assert.equal(booking.status, 'completed');
+});
+
+test('freigegebene Einheit wird ueber die Rueckfahrkarte wieder angebunden', async () => {
+  // Seit dem 14.09.2026 gibt das no_show `booking_id` frei — `.eq('booking_id')`
+  // findet die Zeile nicht mehr. Ohne den zweiten Weg waere die Korrektur
+  // stillschweigend wirkungslos (Ops-Karte a8186cb8).
+  const { supabase, geschrieben } = supabaseDoppel({
+    links: [{ session_id: 's1', prescription_id: 'rx1', session_number: 3 }],
+    freieSitzungen: ['s1'],
+  });
+  const t = toast();
+  const ok = await korrigiereNoShow({ supabase, showToast: t.fn }, { id: 'b1', owner_id: 'o1', status: 'no_show' });
+  assert.equal(ok, true);
+  assert.deepEqual(geschrieben.gebunden, ['s1']);
+  const rueckbindung = geschrieben.sessions.find(p => p.booking_id === 'b1');
+  assert.equal(rueckbindung.status, 'done');
 });
 
 test('Schreibfehler auf bookings wird gemeldet, nicht geworfen', async () => {

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './kalender-farben.js';
+import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN, STATUS_FARBEN } from './kalender-farben.js';
 
 const TEAM = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
 const FARBEN = ['#111111', '#222222', '#333333'];
@@ -65,6 +65,42 @@ test('mitDeckkraft: CSS-Variable wird nicht verstuemmelt', () => {
 test('mitDeckkraft: dreistellige Kurzform waere sonst eine andere Farbe', () => {
   // '#abc' + '22' ergaebe '#abc22'.
   assert.equal(mitDeckkraft('#abc'), 'color-mix(in srgb, #abc 13%, transparent)');
+});
+
+test('no_show uebersteuert die Leistungsfarbe — Flaeche UND Rand', () => {
+  // Ops-Karte a8186cb8: der ausgefallene Termin sah aus wie ein stattgefundener.
+  // Auch der Rand, sonst liest sich der Block in Woche/Monat als „teilweise".
+  const f = terminFarben(
+    { user_id: 'b', status: 'no_show', services: { color: '#ff0000' } },
+    { teamMembers: TEAM, empFarben: FARBEN },
+  );
+  assert.equal(f.flaeche, STATUS_FARBEN.no_show);
+  assert.equal(f.rand, STATUS_FARBEN.no_show);
+  assert.equal(f.quelle, 'status');
+});
+
+test('no_show faerbt auch ohne Leistung und ohne bekannten Mitarbeiter', () => {
+  const f = terminFarben({ status: 'no_show' }, { teamMembers: TEAM, empFarben: FARBEN });
+  assert.equal(f.flaeche, STATUS_FARBEN.no_show);
+});
+
+test('andere Status faerben nicht um', () => {
+  // completed/confirmed sind der Normalfall — nur der Ausfall ist die Ausnahme.
+  for (const status of ['completed', 'confirmed', 'pending', undefined]) {
+    const f = terminFarben(
+      { user_id: 'a', status, services: { color: '#00ff00' } },
+      { teamMembers: TEAM, empFarben: FARBEN },
+    );
+    assert.equal(f.flaeche, '#00ff00', `Status ${status}`);
+    assert.equal(f.quelle, 'leistung');
+  }
+});
+
+test('die Statusfarbe ist ein sechsstelliger Hexwert', () => {
+  // mitDeckkraft() haengt ein Alpha-Suffix an — bei einer Kurzform oder einer
+  // CSS-Variablen ginge der Block den color-mix-Weg statt des schnellen.
+  assert.match(STATUS_FARBEN.no_show, /^#[0-9a-f]{6}$/i);
+  assert.equal(mitDeckkraft(STATUS_FARBEN.no_show, '25', '15%'), STATUS_FARBEN.no_show + '25');
 });
 
 test('die Vorschlagsfarben sind eindeutig und gueltige Hexwerte', () => {

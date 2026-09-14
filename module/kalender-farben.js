@@ -24,7 +24,32 @@
  *
  * Rückfall: hat eine Leistung keine Farbe (oder hängt am Termin gar keine
  * Leistung), färbt die Fläche wie früher nach Mitarbeiter. Nie „unsichtbar".
+ *
+ * Und eine Ausnahme darüber: der STATUS (seit 14.09.2026)
+ * ──────────────────────────────────────────────────────
+ * „Patient nicht erschienen" war im Kalender nicht zu sehen. In der Tagesliste
+ * stand der Name durchgestrichen, sonst nirgends etwas — Woche und Monat zeigten
+ * denselben bunten Block wie ein stattgefundener Termin (Ops-Karte a8186cb8).
+ *
+ * Ein ausgefallener Termin ist aber keine Spielart der Leistung, sondern ihr
+ * Gegenteil: es hat nichts stattgefunden. Deshalb übersteuert `no_show` beide
+ * Farben — Fläche UND Rand werden rot. Nicht nur die Fläche: in Woche und Monat
+ * trägt der Rand den Mitarbeiter, und ein halb roter, halb bunter Block liest
+ * sich als „teilweise". Es gibt hier kein teilweise.
+ *
+ * Bewusst KEIN Eintrag für `cancelled`: abgesagte Termine werden in den
+ * Kalenderabfragen gar nicht erst geladen (Soft-Delete #192). Eine Farbe für
+ * etwas Unsichtbares wäre eine Behauptung, die niemand prüfen kann.
  */
+
+/**
+ * Status, die die Leistungsfarbe übersteuern. Rot = `--danger`-Ton des
+ * Dashboards, als fester Hexwert, weil `mitDeckkraft()` daraus ein Alpha-Suffix
+ * baut (eine CSS-Variable ginge den teureren color-mix-Weg).
+ */
+export const STATUS_FARBEN = {
+  no_show: '#dc2626',
+};
 
 /**
  * Farbe mit Deckkraft für die Blockfläche.
@@ -53,9 +78,12 @@ export function mitDeckkraft(farbe, hexSuffix = '22', anteil = '13%') {
  * @param {Array}  o.empFarben        EMP_COLORS
  * @param {Map}    [o.leistungFarben] service_id -> color, für Ansichten, die
  *                                    `services(color)` nicht mitladen
- * @returns {{flaeche: string, rand: string, quelle: 'leistung'|'mitarbeiter'}}
+ * @returns {{flaeche: string, rand: string, quelle: 'leistung'|'mitarbeiter'|'status'}}
  */
 export function terminFarben(termin, { teamMembers = [], empFarben = [], leistungFarben = null } = {}) {
+  const statusFarbe = STATUS_FARBEN[termin?.status];
+  if (statusFarbe) return { flaeche: statusFarbe, rand: statusFarbe, quelle: 'status' };
+
   const idx = teamMembers.findIndex(e => e.id === termin?.user_id);
   const mitarbeiter = (idx >= 0 && empFarben.length)
     ? empFarben[idx % empFarben.length]

@@ -90,7 +90,7 @@ import { ausTopf } from './verordnung-topf.js?v=20260910';
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
 import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20260907';
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20260906';
-import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260908';
+import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
 
 /** Alles, was die Muster-13-Maske schreibt — plus Patient, Arzt und Nummer. */
 const SELECT_PHYSIO = `

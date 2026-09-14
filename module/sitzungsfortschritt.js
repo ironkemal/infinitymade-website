@@ -31,10 +31,31 @@
  *     erbracht = Sitzungen im Status `done`
  *     fertig   = offen === 0  UND  erbracht >= verordnete Einheiten
  *
- * `cancelled` und `no_show` sind erledigt, nicht offen — der Termin ist vorbei.
- * Die Einheit ist damit aber auch nicht erbracht, und genau das fängt die
- * zweite Hälfte der Regel ab: das Rezept bleibt in Behandlung, bis die Einheit
- * nachgeholt ist. Zählte man sie als „offen", hinge das Rezept wieder ewig.
+ * `cancelled` ist erledigt, nicht offen — der Termin ist vorbei. Die Einheit ist
+ * damit aber auch nicht erbracht, und genau das fängt die zweite Hälfte der
+ * Regel ab: das Rezept bleibt in Behandlung, bis die Einheit nachgeholt ist.
+ * Zählte man sie als „offen", hinge das Rezept wieder ewig.
+ *
+ * ⚠️ `no_show` stand bis zum 14.09.2026 in demselben Satz, mit derselben
+ * Begründung. Die Annahme dahinter — „die no_show-Zeile bleibt am Termin
+ * stehen" — gilt nicht mehr (Ops-Karte a8186cb8): seitdem gibt „Patient nicht
+ * erschienen" die Einheit frei (`booking_id` = NULL, Status zurück auf
+ * 'planned'). Aus Sicht dieser Regel ist sie damit wieder ein **Platzhalter**
+ * und zählt weder als offen noch als erbracht — genau richtig, denn sie ist
+ * beides nicht: nicht geleistet, aber auch nicht terminiert.
+ *
+ * Deshalb ruft `module/termin-nicht-erschienen.js` diese Funktion beim Ausfall
+ * auf: die Zahlen verschieben sich, und ein Rezept in `parsed`/`confirmed`
+ * gehört danach auf `in_therapy`. Ein fälschliches „fertig" kann dabei nicht
+ * entstehen — `erbracht` zählt nur `done` und sinkt durch eine Freigabe nie.
+ *
+ * ⚠️ Bekannte Grenze, bewusst nicht hier gelöst: war das Rezept schon
+ * `completed`/`abrechnung_status='bereit'` und fällt danach eine Einheit aus,
+ * bleibt es das. Diese Funktion schreibt ausschliesslich nach oben (siehe
+ * unten) — eine automatische Rücknahme würde in den Abrechnungsstand
+ * eingreifen, und das ist eine §302-Entscheidung, keine Nebenwirkung eines
+ * Terminklicks. Der Weg zurück führt über „Verordnungen" →
+ * Abrechnungsstatus (module/abrechnungsstatus.js).
  *
  * Beide Hälften sind nötig:
  *
