@@ -1665,26 +1665,32 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       });
       return { session: s, preis_eur, zuzahlung_eur, position_frei };
     });
-    // position_frei haengt an der Position/dem Abrechnungscode, nicht am Datum
-    // — fuer alle Sitzungen derselben Verordnung identisch.
-    const positionFrei = resolvedSessions[0]?.position_frei || false;
-    const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
+    // position_frei haengt an der Position/dem Abrechnungscode UND am Preis-
+    // fenster (ein Code kann in einem Fenster frei sein, im naechsten nicht —
+    // O-101-Nachtrag, gkv-302-Fund 14.09.2026) — deshalb PRO SITZUNG, nicht
+    // von der ersten Sitzung auf alle uebertragen. Verordnungsweite Befreiung
+    // (rx.zuzahlung_befreit) bleibt global, wie es die 10-€-Pauschale unten
+    // ohnehin voraussetzt.
+    const zuzahlungBefreitVerordnung = !!rx.zuzahlung_befreit;
 
-    const calcSessions = resolvedSessions.map(({ preis_eur, zuzahlung_eur }) => ({
-      preis_eur,
-      zuzahlung_eur_position: zuzahlungsfrei ? 0 : zuzahlung_eur,
-      position_frei: zuzahlungsfrei
-    }));
+    const calcSessions = resolvedSessions.map(({ preis_eur, zuzahlung_eur, position_frei }) => {
+      const frei = zuzahlungBefreitVerordnung || position_frei;
+      return {
+        preis_eur,
+        zuzahlung_eur_position: frei ? 0 : zuzahlung_eur,
+        position_frei: frei,
+      };
+    });
 
     const totals = calcAbrechnungsfallZuzahlung({
       sessions: calcSessions,
       patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
       behandlungsende: doneSessions.length ? doneSessions[doneSessions.length - 1].done_at : new Date(),
-      // Bewusst rx.zuzahlung_befreit, NICHT `zuzahlungsfrei`: die 10-€-
-      // Verordnungspauschale haengt an der Verordnung, nicht an der einzelnen
-      // Position. Der §302-Weg (dta/builder.js) berechnet sie ebenfalls immer,
-      // solange das Zuzahlungskennzeichen '3' ist — beide Wege muessen sich hier
-      // einig sein, sonst weicht die Rechnung von dem ab, was die Kasse abzieht.
+      // Bewusst rx.zuzahlung_befreit: die 10-€-Verordnungspauschale haengt an
+      // der Verordnung, nicht an der einzelnen Position. Der §302-Weg
+      // (dta/builder.js) berechnet sie ebenfalls immer, solange das
+      // Zuzahlungskennzeichen '3' ist — beide Wege muessen sich hier einig
+      // sein, sonst weicht die Rechnung von dem ab, was die Kasse abzieht.
       // Der haeufigste Fall (KG-ZNS Kinder) ist ohnehin abgedeckt: der
       // Calculator setzt fuer Patienten unter 18 alles auf 0.
       // ⚠️ Ob eine ausschliesslich zuzahlungsfreie Verordnung die Pauschale
@@ -1692,12 +1698,12 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
     });
 
-    const printSessions = resolvedSessions.map(({ session: s, preis_eur, zuzahlung_eur }) => ({
+    const printSessions = resolvedSessions.map(({ session: s, preis_eur, zuzahlung_eur, position_frei }) => ({
       datum: s.done_at,
       position: storedPos,
       bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
       brutto: preis_eur,
-      zuzahlung: zuzahlungsfrei ? 0 : zuzahlung_eur
+      zuzahlung: (zuzahlungBefreitVerordnung || position_frei) ? 0 : zuzahlung_eur
     }));
 
     // ---- Render PDF/HTML Template ----
@@ -1857,8 +1863,9 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       });
       return { session: s, preis_eur, zuzahlung_eur, position_frei };
     });
-    const positionFrei = resolvedSessions[0]?.position_frei || false;
-    const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
+    // Pro Sitzung, nicht von der ersten auf alle uebertragen — O-101-Nachtrag,
+    // gleiche Begruendung wie in der Zuzahlungsrechnung oben.
+    const zuzahlungBefreitVerordnung = !!rx.zuzahlung_befreit;
 
     const praxisData = {
       name: praxisProfil.business_name || 'Praxis',
@@ -1916,11 +1923,14 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       });
 
     } else if (type === 'rzg_quittung') {
-      const calcSessions = resolvedSessions.map(({ preis_eur, zuzahlung_eur }) => ({
-        preis_eur,
-        zuzahlung_eur_position: zuzahlungsfrei ? 0 : zuzahlung_eur,
-        position_frei: zuzahlungsfrei
-      }));
+      const calcSessions = resolvedSessions.map(({ preis_eur, zuzahlung_eur, position_frei }) => {
+        const frei = zuzahlungBefreitVerordnung || position_frei;
+        return {
+          preis_eur,
+          zuzahlung_eur_position: frei ? 0 : zuzahlung_eur,
+          position_frei: frei,
+        };
+      });
       const totals = calcAbrechnungsfallZuzahlung({
         sessions: calcSessions,
         patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
@@ -1928,11 +1938,11 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         // wie oben: die Pauschale haengt an der Verordnung, nicht an der Position
         verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
       });
-      const printSessions = resolvedSessions.map(({ session: s, zuzahlung_eur }) => ({
+      const printSessions = resolvedSessions.map(({ session: s, zuzahlung_eur, position_frei }) => ({
         datum: s.done_at,
         position: storedPos,
         bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
-        zuzahlung: zuzahlungsfrei ? 0 : zuzahlung_eur
+        zuzahlung: (zuzahlungBefreitVerordnung || position_frei) ? 0 : zuzahlung_eur
       }));
       html = renderRzgQuittung({
         praxis: praxisData,
