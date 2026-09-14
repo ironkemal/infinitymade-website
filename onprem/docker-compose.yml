@@ -423,6 +423,12 @@ services:
       SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
       SUPABASE_ANON_KEY: ${ANON_KEY}
 
+      # O-105 (14.09.2026): server.js braucht die eigene Kutu-Adresse fuer die
+      # CORS-Allowlist — ohne sie lehnt es jeden gleich-Origin POST/PATCH/DELETE
+      # vom Browser ab (Origin-Header wird auch same-origin gesendet). auth
+      # (:160) und caddy (:516) lesen SITE_URL bereits, api bisher nicht.
+      SITE_URL: ${SITE_URL}
+
       # ★ BINDEND: supabase_admin, nicht postgres.
       # Von den 24 `ALTER DEFAULT PRIVILEGES`-Zeilen der Baseline sagen 12
       # `FOR ROLE supabase_admin`, und `postgres` darf fremde Vorgaberechte

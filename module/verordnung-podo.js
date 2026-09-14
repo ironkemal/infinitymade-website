@@ -39,6 +39,8 @@
 import { parseIcdList, dgsAcceptingIcd } from '../icd-dg-match.js?v=20260810e';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260814';
 import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20260906';
+import { sitzungsplan } from './sitzungsplan.js?v=20260914';
+import { TOPF } from './verordnung-topf.js?v=20260910';
 
 // ─── [Q1] Heilmittelkatalog Podologische Therapie ────────────────────────────
 //
@@ -574,12 +576,184 @@ export function podoVerordnungsfelder() {
   };
 }
 
+// ─── [Q3] Sitzungsplan-Vorschau ────────────────────────────────────────────
+//
+// Kemal, 14.09.2026: „genelde erstbefund sonra normal befund kalan her
+// hizmette oluyor" — am ersten Behandlungstag laeuft die Eingangsbefundung
+// (78040) mit, an jedem weiteren die Befundung (78030). Das stimmt und stand
+// in `wissensbank/SPEC-RULES.md` schon als Tabelle; sichtbar war es in der
+// Verordnungsmaske nirgends.
+//
+// ⚠️ ANZEIGE, kein Schreibweg. Hier entsteht keine Abrechnungszeile und kein
+// Kaestchen wird gesetzt — das bleibt allein in der Podologie-Abrechnung, wo
+// alle Sperren mitlaufen. Die Rechnung selbst steht in `module/sitzungsplan.js`
+// neben ihrem Test, die REGEL unveraendert in `eingangsbefundung-regel.js`.
+//
+// Dies ist ausdruecklich NICHT die Stelle, an der mehrere Heilmittel auf die
+// Verordnung kommen: HeilM-RL § 12 Abs. 2 S. 1 erlaubt das Aufteilen der
+// Verordnungseinheiten auf bis zu drei vorrangige Heilmittel nur fuer
+// Physiotherapie und Ergotherapie, S. 2 sinngemaess fuer die Stimm-, Sprech-,
+// Sprach- und Schlucktherapie. Die Podologie ist in beiden Saetzen nicht
+// genannt; ihr Katalog bildet „beides zugleich" als eigenes Heilmittel ab
+// (c) Podologische Komplexbehandlung, § 27a Abs. 4 Nr. 3).
+
+/**
+ * Antwort auf die Altbestandsfrage — war der Patient schon VOR dem 01.11.2023
+ * in podologischer Behandlung? `null` = nicht beantwortet.
+ *
+ * ⚠️ Diese Antwort wird NICHT gespeichert. Sie steuert nur die Vorschau.
+ * Dauerhaft festhalten laesst sie sich erst mit einer eigenen Spalte am
+ * Patienten — in `wissensbank/SPEC-RULES.md` als offene, geldrelevante Luecke
+ * vermerkt („Şema gerektirdiği için ayrı iş"). Sie hier still in eine
+ * vorhandene Spalte zu schreiben waere schlimmer als sie nicht zu haben: vor
+ * der Kasse zaehlt eine quittierte Angabe, kein Nebeneffekt einer Vorschau.
+ */
+let _altbestand = null;
+
+/** Behandlungshistorie je Patient — eine Rundreise, nicht eine je Tastendruck. */
+let _behsCache = { patientId: null, werte: [] };
+
+/**
+ * Alle `podologie_behandlungen` dieses Patienten, ueber ALLE seine
+ * Verordnungen. Gekuerzte Fassung von `podPatientBehandlungen()`
+ * (module/podologie-abrechnung.js) — dort liegt sie am Abrechnungsbildschirm,
+ * hier an der Maske; beide fragen dasselbe.
+ */
+async function podoHistorie(supabase, ctx, patientId) {
+  if (!patientId || !supabase) return [];
+  if (_behsCache.patientId === patientId) return _behsCache.werte;
+
+  const ownerId = ctx?.getOwnerId?.();
+  if (!ownerId) return [];
+
+  // `therapie_bereich` gehoert dazu, seit beide Verordnungstoepfe eine Tabelle
+  // sind — ohne ihn kaemen Physio-Verordnungen mit in die Liste.
+  const { data: vords } = await supabase.from(TOPF).select('id')
+    .eq('owner_id', ownerId).eq('therapie_bereich', 'podo').eq('patient_id', patientId);
+  if (!vords?.length) { _behsCache = { patientId, werte: [] }; return []; }
+
+  const { data: behs } = await supabase.from('podologie_behandlungen')
+    .select('behandlungsdatum, hpnr_codes')
+    .eq('owner_id', ownerId)
+    .in('verordnung_id', vords.map(v => v.id))
+    .order('behandlungsdatum', { ascending: true });
+
+  _behsCache = { patientId, werte: behs || [] };
+  return _behsCache.werte;
+}
+
+function sitzungsplanEl() {
+  let el = $('rzPodoSitzungsplan');
+  if (el) return el;
+  const anker = $('rzAnzahl')?.closest('div')?.parentElement || $('rzHm')?.parentElement;
+  if (!anker) return null;
+  el = document.createElement('div');
+  el.id = 'rzPodoSitzungsplan';
+  el.style.cssText = 'margin-top:10px;padding:10px;border:1px solid var(--border);'
+    + 'border-radius:8px;background:var(--bg-card);display:none;';
+  // Unter die podologischen Felder, aber ueber den Hinweisstreifen.
+  const hinweis = $('rzPodoHinweis');
+  if (hinweis && hinweis.parentElement === anker) anker.insertBefore(el, hinweis);
+  else anker.appendChild(el);
+  return el;
+}
+
+/** Text fuer die Anzeige entschaerfen — Katalogtexte kommen aus der Datenbank. */
+function h(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+/**
+ * Die Vorschau zeichnen. Laeuft im Zusammenlauf mit, sobald Podologie gesetzt
+ * ist; ohne Diagnosegruppe oder ohne Menge bleibt der Kasten leer statt zu
+ * raten.
+ */
+async function sitzungsplanAktualisieren(supabase, ctx) {
+  const el = sitzungsplanEl();
+  if (!el) return false;
+
+  if (!istPodo()) { el.style.display = 'none'; _altbestand = null; return false; }
+
+  const patientId = $('rzPatientId')?.value || '';
+  // Ein Patientenwechsel macht die Antwort zur vorigen Person ungueltig.
+  if (_behsCache.patientId && _behsCache.patientId !== patientId) _altbestand = null;
+
+  let behandlungen = [];
+  try { behandlungen = await podoHistorie(supabase, ctx, patientId); }
+  catch (e) { console.warn('[verordnung-podo] Historie:', e?.message); }
+
+  const plan = sitzungsplan({
+    diagnosegruppe: $('rzDg')?.value || '',
+    anzahl: $('rzAnzahl')?.value,
+    behandlungen,
+    // Der erste Behandlungstag ist noch nicht gebucht; das Ausstellungsdatum
+    // ist die beste bekannte Naeherung und entscheidet nur, ob eine frueher
+    // erbrachte Behandlung VOR diesem Tag liegt.
+    datum: $('rzAusstDate')?.value || '',
+    podologieVor2023: _altbestand,
+  });
+
+  if (!plan.anwendbar && !plan.hinweis) { el.style.display = 'none'; return false; }
+
+  const zeilen = plan.zeilen.map(z => `
+    <div style="display:flex;gap:8px;align-items:baseline;margin-top:4px;">
+      <span style="flex:0 0 auto;font-weight:600;color:var(--text-main);font-size:12px;">${h(z.titel)}</span>
+      <span style="color:var(--text-muted);font-size:12px;">${h(z.text)}</span>
+    </div>`).join('');
+
+  // Die Altbestandsfrage nur zeigen, wenn die Regel sie stellt — beantwortet
+  // oder im Nagelzweig verschwindet sie wieder.
+  const frage = plan.rueckfrage ? `
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+      <div style="font-size:12px;color:var(--text-main);">${h(plan.rueckfrage)}</div>
+      <div style="display:flex;gap:14px;margin-top:5px;font-size:12px;color:var(--text-muted);">
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;">
+          <input type="radio" name="rzPodoVor2023" value="nein"${_altbestand === false ? ' checked' : ''}> Nein
+        </label>
+        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;">
+          <input type="radio" name="rzPodoVor2023" value="ja"${_altbestand === true ? ' checked' : ''}> Ja
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+        Die Antwort steuert nur diese Vorschau und wird nicht gespeichert —
+        vor der Abrechnung gehört sie in die Patientendokumentation.
+      </div>
+    </div>` : '';
+
+  el.innerHTML = `
+    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Sitzungsplan (Vorschau)</div>
+    ${zeilen}
+    ${plan.hinweis ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${h(plan.hinweis)}</div>` : ''}
+    ${frage}
+    <div style="font-size:11px;color:var(--text-muted);margin-top:6px;font-style:italic;">
+      Befundpositionen stehen nicht auf der Verordnung — sie werden in der Podologie-Abrechnung gesetzt.
+    </div>`;
+  el.style.display = 'block';
+
+  el.querySelectorAll('input[name="rzPodoVor2023"]').forEach(r => {
+    r.addEventListener('change', () => {
+      _altbestand = r.value === 'ja';
+      podoMaskeNachziehen();
+    });
+  });
+
+  // Sagt dem Zusammenlauf, ob der alte Einzeiler-Hinweis noch gebraucht wird.
+  return plan.zeilen.length > 0;
+}
+
 // ─── Zusammenlauf ──────────────────────────────────────────────────────────
 
 async function aktualisieren(supabase, ctx) {
   ergaenzendesUmschalten();
 
-  if (!istPodo()) { podoFelderAktualisieren(); zeigeHinweise([]); return; }
+  if (!istPodo()) {
+    podoFelderAktualisieren();
+    await sitzungsplanAktualisieren(supabase, ctx);
+    zeigeHinweise([]);
+    return;
+  }
 
   await ikVorbelegen(supabase, ctx);
   const dgLage = await dgAuswahlEingrenzen(supabase);
@@ -602,8 +776,14 @@ async function aktualisieren(supabase, ctx) {
   zeilen.push(einheitenPruefen());
   zeilen.push(fristHinweis());
 
+  // Der Sitzungsplan sagt dasselbe wie `POD_BEFUND_HINWEIS`, nur genauer (er
+  // kennt auch die Eingangsbefundung und die Sitzungszahl). Solange er steht,
+  // waere der Einzeiler daneben eine zweite, gröbere Fassung derselben Aussage
+  // — er kommt nur zurueck, wenn noch keine Menge eingetragen ist.
+  const planSteht = await sitzungsplanAktualisieren(supabase, ctx);
+
   const root = dgRoot($('rzDg')?.value);
-  if (POD_BEFUND_DGS.includes(root)) zeilen.push({ text: POD_BEFUND_HINWEIS });
+  if (!planSteht && POD_BEFUND_DGS.includes(root)) zeilen.push({ text: POD_BEFUND_HINWEIS });
 
   zeilen.push(podoFelderAktualisieren());
 
@@ -621,6 +801,10 @@ function _aufraeumen() {
   ['rzPodoNagel', 'rzPodoWagner', 'rzPodoAnlass'].forEach(id => { const e = $(id); if (e) e.value = ''; });
   const felder = $('rzPodoFelder');
   if (felder) felder.style.display = 'none';
+  const plan = $('rzPodoSitzungsplan');
+  if (plan) { plan.style.display = 'none'; plan.innerHTML = ''; }
+  _altbestand = null;
+  _behsCache = { patientId: null, werte: [] };
   zeigeHinweise([]);
 }
 

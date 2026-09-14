@@ -62,6 +62,14 @@ const ALLOWED_ORIGINS = [
   'https://app.infinitymade.de',
   'https://admin.infinitymade.de',
 ];
+// O-105 (14.09.2026): on-prem-Kutu addiert ihre eigene Adresse — der Browser
+// sendet den Origin-Header auch bei gleich-Origin-POST/PATCH/DELETE, ohne
+// diese Zeile lehnt server.js jede Schreibaktion der eigenen Box ab. Auf SaaS
+// ist SITE_URL nie gesetzt (/opt/calendar-api/.env.calendar), das Array bleibt
+// dort byte-identisch — NICHT aus Bequemlichkeit auch auf dem SaaS-VPS setzen.
+if (process.env.SITE_URL && process.env.SITE_URL.trim()) {
+  ALLOWED_ORIGINS.push(process.env.SITE_URL.trim());
+}
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);

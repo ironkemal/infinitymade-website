@@ -10,6 +10,7 @@ import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260909';
 import { attachPatientSearch } from './patient-suche.js?v=20260906';
 import { verdrahteRezeptPatientenfeld } from './module/rezept-patientenfeld.js?v=20260906';
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
+import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
 import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
@@ -35,7 +36,7 @@ import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260910';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
-import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
+import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260914';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
 import { markiereNichtErschienen } from './module/termin-nicht-erschienen.js?v=20260914';
@@ -1441,7 +1442,7 @@ async function renderOverview() {
     document.getElementById('pastdue-banner').hidden = false;
   }
 
-  document.getElementById('pastdue-fix-btn')?.addEventListener('click', openStripePortal);
+  document.getElementById('pastdue-fix-btn')?.addEventListener('click', _doStripePortalRedirect);
 
   // B: Certificate expiry warning
   (async function renderCertExpiryBanner() {
@@ -13320,8 +13321,7 @@ document.getElementById('pwChangeBtn').addEventListener('click', async () => {
   showToast(t('pw_changed'));
 });
 
-document.getElementById('subPortalBtn').addEventListener('click', openStripePortal);
-document.getElementById('subUpgradeBtn').addEventListener('click', () => { window.location.href = '/onboarding.html?step=plan'; });
+wireAboButtons({ istKutu: IST_KUTU, portalRedirect: _doStripePortalRedirect });
 
 // DSGVO Art. 15 — Export
 document.getElementById('dsgvoExportBtn')?.addEventListener('click', async () => {
@@ -16799,7 +16799,7 @@ async function init() {
     await loadAusfallConfig();
     renderAusfallSettings({ supabase, profile: currentProfile, config: ausfallConfig, userId: () => currentSession.user.id, showToast });
     renderPreisstufenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
-    renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast });
+    renderKontenSettings({ supabase, profile: currentProfile, ownerId: getOwnerId, showToast, showConfirmModal });
     console.log('[init] ausfallConfig ok');
     // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
     renderLegendeSettings(fussbefundCtx());

@@ -316,6 +316,16 @@ iniyordu ama muhtemelen hiç canlıya çıkmamıştı). `guvenlik`/`gkv-302`/`db
 `fonksiyon-ustasi` bulguları için sırasıyla `guvenlik/REGISTER.md` (S-28), O-101, ve
 `db/migrations/README.md`'nin yeni "SaaS'a hangi migration'lar uygulandı" bölümü.
 
+⚠️ **14.09.2026 (akşam) — yerel kutu testinden iki yeni madde.** Kullanıcının
+kendi on-prem yığınında çalıştırdığı tur: **O-105** (CORS beyaz listesi kutunun kendi
+adresini tanımıyor → kutuda POST/PATCH/DELETE'in tamamı ölüyor) ve **O-106** (Ayarlar'daki
+„Abonnement verwalten"/„Upgrade" butonları kutuda bizim SaaS kayıt akışımıza götürüyor;
+on-prem owner'ın `stripe_subscription_id`'si hiçbir zaman olmayacak, çözüm §7H'deki
+maddede). ⚠️ O-106'nın kenarında bir **kapı dersi** var: `tools/check-onprem.sh`
+`git grep --cached` ile sayar, yani **stage edilmemiş** bir ihlali göremez —
+`app_host` çalışma ağacında **16**, taban **15**; `git add dashboard.js` anında
+commit reddedilecek.
+
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
 > yalnız O-numaralarının Durum satırları güncellenmemişti. Bir onprem-review turu
@@ -815,7 +825,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | G + H |
 | **Kutuda ne olur** | İki buton 404 alır, kullanıcı "Abo verwalten"e basar hiçbir şey olmaz. Sessiz kırılma — kullanıcı ödemesini yönetemediğini anlamaz, sadece butonun bozuk olduğunu görür. Lisans süresi dolarken (Faz 3 durum makinesi) bu ekran **tam da lazım olduğu an** çalışmıyor olur |
 | **Çözüm** | **Faz 3.2** — on-prem'de bu iki buton merkez portalına giden **dış linke** dönüşür (`PUBLIC_BASE_URL` değil, sabit merkez adresi; müşteri tarayıcısı bizim ödeme sayfamıza gider — hasta verisi taşımaz, G1 temiz). Panel banner'ları ve Mahnung akışı (3.2a) aynı yüzeyde |
-| **Durum** | `geplant` (Faz 3.2) |
+| **Durum** | `geplant` (Faz 3.2) — kutudaki **bugünkü** kırık hâli ve ara çözümü **O-106**'da (14.09.2026): `subPortalBtn` kutuda her zaman `/onboarding.html`'a düşüyor, `subUpgradeBtn` ise merkezin **SaaS kayıt** akışına götürüyor |
 
 ### O-20 — Vercel fonksiyon limiti 12/12 — G8'in mekanik yüzü
 
@@ -2810,6 +2820,79 @@ de eklenebilir (taze kutuda `bookings` boş, orada ölçmek daha az müdahaleci)
 | **Çözüm** | `chmod 700 "$STAND_DIR"` → `chmod -R go-rwx "$STAND_DIR"`, her `update.sh` çalışmasında (yani periyodik olarak, mevcut kutularda da) tüm alt ağacı geriye dönük düzeltiyor |
 | **Durum** | ✅ **gelöst (14.09.2026)**, `bash -n` ile doğrulandı |
 
+### O-105 — CORS beyaz listesi yalnız SaaS domain'lerini tanıyor: kutuda **aynı-origin** POST'lar reddediliyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `ALLOWED_ORIGINS` sekiz SaaS domain'ine sabit-kodlu. Kutunun kendi adresi (`SITE_URL`) listede yok ve `api` konteyneri o değeri **hiç almıyor** — bilmesinin bir yolu da yok |
+| **Nerede** | `api-backend/server.js:55-71` (global `app.use(cors(...))`, tüm route'lardan önce) · `onprem/docker-compose.yml:394-480` (`api` servisinin `environment:` bloğunda `SITE_URL` yok; `auth` `:160` ve `caddy` `:516` alıyor) |
+| **Tip** | C (sabit adres) |
+| **Kutuda ne olur** | ⚠️ **Bu bir "cross-origin" sorunu değil — asıl mesele bu.** Kutuda Caddy hem frontend'i hem `/api/*`'ı **aynı origin'de** sunuyor (`onprem/Caddyfile:50` → `reverse_proxy api:3000`), `GET /api/config` de `apiBase: '/api'` göreli döndürüyor (`server.js:411`). Yani tarayıcı zaten aynı origin'e konuşuyor; ama tarayıcı **aynı-origin POST'ta da `Origin` başlığı gönderir**. `ALLOWED_ORIGINS` onu tanımayınca middleware `Error` atıyor → istek daha route'a varmadan ölüyor. Sonuç: kutuda **GET çalışır, POST/PATCH/DELETE çalışmaz** — kurulum sihirbazının jeton doğrulaması (`/api/setup/verify`), login sonrası her yazma işlemi, randevu oluşturma, Rezept yükleme. Hata tarayıcıda "genel hata" gibi görünür, sebebi görünmez. Ölçüldü 14.09.2026, yerel on-prem yığınında (`SITE_URL=https://localhost`) |
+| **Çözüm** | İki satır: **(1)** `onprem/docker-compose.yml`'de `api` servisine `SITE_URL: ${SITE_URL}` (install.sh zaten `.env`'e yazıyor, yeni soru yok). **(2)** `server.js`'te liste `process.env.SITE_URL` doluysa onu da içersin (trim + boşsa ekleme). SaaS'ta `SITE_URL` hiç set edilmemiş → dizi byte-eşdeğer kalır (G7). ⛔ **"Kutuda CORS'u tamamen atla" reddedildi** — bkz. aşağıdaki not. Bu, **O-03**'ün CORS alt-kalemini kapatır; O-03'ün kalan 18 satırı açık kalır |
+| **Durum** | `offen` — düzeltme 14.09.2026'da yazılıyor; kapanışta commit no. buraya |
+
+> **Niye "SETUP_TOKEN varsa CORS'u kapat" değil** (14.09.2026, `onprem` hükmü): (a) `SETUP_TOKEN`
+> tek kullanımlıktır ve kurulum bitince tükenir — CORS'un kutunun **tüm ömrü boyunca**
+> çalışması gerekir, yalnız kurulum penceresinde değil; (b) var olan bir güvenlik kontrolünü
+> kaldırmak demektir (kutu tek-kiracı olabilir ama tarayıcı hâlâ internete bakıyor, CSRF
+> yüzeyi açılır); (c) SaaS ile kutu arasında **davranış ayrımı** yaratır — G7'nin yasakladığı
+> şeyin ta kendisi. Doğru yol tek kod yolu + tek env var.
+>
+> **Niye `PUBLIC_BASE_URL` değil `SITE_URL`:** O-03'ün çözüm sütununda `PUBLIC_BASE_URL` yazıyordu.
+> Bugün `SITE_URL` zaten `install.sh:248`'de üretiliyor, `.env`'de duruyor, `auth` ve `caddy`
+> onu okuyor. İkinci bir ad = aynı değerin iki gerçeği; ilk yanlış kurulumda hangisinin
+> geçerli olduğunu kimse bilmez. **`SITE_URL` kullanılır**, O-03'ün önerisi bu noktada düzeltildi.
+>
+> **Sessiz bağımlılık (kayda geçsin):** eşleşme dizge-eşitliğidir. `install.sh` adım 4 (O-59)
+> `SITE_URL`'i `https://host` biçimine zorluyor — port yok, yol yok, sondaki `/` yok. Tarayıcının
+> `Origin` başlığı tam olarak bu biçimdedir, bu yüzden eşleşir. **O-59'un ön-kontrolü
+> gevşetilirse bu madde sessizce geri gelir** (örn. sonda `/` kabul edilirse eşleşme kırılır).
+> İki madde birbirine bağlıdır.
+
+### O-106 — Kutuda „Abonnement verwalten" / „Upgrade" müşteriyi **bizim SaaS kayıt akışımıza** götürüyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Ayarlar → „Konto & Abonnement" bölümündeki iki buton kutuda da render ediliyor. `onboarding.html` pakete girmediği için (`frontend.Dockerfile:28`, Faz 2.0) ikisi de kutunun içinde var olmayan bir sayfaya gidiyordu; 14.09.2026'da `subUpgradeBtn`'e `IST_KUTU ? 'https://app.praxura.de' : ''` öneki konarak dış linke çevrildi, `subPortalBtn` **dokunulmadan kaldı** |
+| **Nerede** | `dashboard.html:2843-2844` (iki buton) · `dashboard.js:13323` (`subPortalBtn` → `_doStripePortalRedirect`) · `dashboard.js:13324` (`subUpgradeBtn`, yeni sabit adres) · `dashboard.js:2304-2312` (`_doStripePortalRedirect`: `/onboarding.html?step=plan` fallback'i + `/api/stripe/portal-session`) · ayrıca `dashboard.js:1444` (`pastdue-fix-btn`, aynı fonksiyonu çağırıyor) |
+| **Tip** | G + H (+ C: yeni sabit adres) |
+| **Kutuda ne olur** | **On-prem owner'ın `stripe_subscription_id`'si hiçbir zaman olmayacak** — lisans Stripe'tan geçmiyor (K3, Faz 3.1). Yani `_doStripePortalRedirect()` kutuda **her zaman** ilk satırdaki fallback'e düşer: `/onboarding.html?step=plan` → paketin içinde yok → 404. Yönlendirme merkeze çevrilse sonuç daha da kötü: **zaten müşterimiz olan birine „yeni SaaS hesabı aç + kart gir" akışını göstermiş oluruz.** `subUpgradeBtn` bugün tam olarak bunu yapıyor. Üstüne O-67 biner: kutuda `plan_status` `'pending'` kalıyor, yani aynı panelde „Status: pending" ile „Upgrade" yan yana durur — müşteri ödemesinin geçmediğini sanır |
+| **Çözüm** | **İki adım, ayrı zamanlarda.** **(a) Bugün — kaldır, yönlendirme.** Bu depodaki yerleşik desen bu: `login.js:200` (kayıt bloğu + SaaS footer `remove()`) ve `module/lead-suche.js:22` (Apify/B2B çubuğu `remove()`). Aynısı: `IST_KUTU` ise iki buton DOM'dan **çıkarılır**, yerine statik bir satır — „Lizenz & Vertrag: läuft direkt über Praxura · kontakt@praxura.de". İnternet gerektirmez, dış adres gerektirmez, 404 üretmez. ⚠️ Etiket **„Lizenz"** olmalı, „Abrechnung" **değil** — bu üründe „Abrechnung" §302 GKV demektir, aynı ekranda iki anlama gelemez. **(b) Faz 3.2 — O-19'un dış linki.** Lisans sunucusu (Faz 3.1) ayağa kalkınca bu satır merkezdeki lisans sayfasına giden dış linke döner. O-19 bunu zaten kilitledi ve hedefini **sabit merkez adresi** olarak yazdı (env değil) — aşağıdaki not |
+| **Durum** | `offen` — (a) uygulanmadı; bugünkü kod `subUpgradeBtn` için yarım bir (b) uyguluyor, `subPortalBtn` hâlâ kırık |
+
+> **Üç hüküm, 14.09.2026 (`onprem`):**
+>
+> **1. Sabit `https://app.praxura.de` doğru, env'e taşınmaz — ama bu satırda değil.**
+> O-19 bunu zaten karara bağlamıştı: „`PUBLIC_BASE_URL` değil, sabit merkez adresi".
+> Gerekçe: bu değer **bizim** adresimiz, müşterinin değil. `.env`'e konursa kutunun
+> sahibi (ya da hatalı bir kurulum) owner'ı sahte bir ödeme sayfasına yönlendirebilir;
+> `SITE_URL`/`API_BASE` müşterinin kendi adresleridir, bu değildir. Yani **tip C'nin
+> bilinçli istisnası**: „sabit adres yasak" kuralı kutunun **gideceği** adresler içindir,
+> merkezin kendi kimliği için değil. ⛔ Ama (a) uygulanınca bu satır zaten **silinir** —
+> kutuda gidilecek bir yer yok. Sabit adres (b) ile, Faz 3.2'de geri gelir.
+>
+> **2. Kapı bu satırı bugün görmüyor, yarın reddedecek.** `tools/check-onprem.sh`
+> `git grep --cached` kullanıyor, yani **index** üzerinden sayıyor. `dashboard.js` henüz
+> stage edilmediği için kapı yeşil geçti; çalışma ağacındaki gerçek sayı **16**, taban
+> `app_host=15`. `git add dashboard.js` yapıldığı anda commit reddedilir. Doğru çıkış yolu
+> tabanı yükseltmek **değil**, (a)'yı uygulamak — o zaman sayı 15'te kalır, kazanılmış
+> taban korunur. (Kapının bu özelliği genel: çalışma ağacındaki yeni ihlal, stage
+> edilene kadar görünmez.)
+>
+> **3. `portal.praxura.de` — G8/K10 ihlali değil, ama bu turun işi değil.** Kutunun
+> yalnızca **link verdiği** (tarayıcı gezinmesi, `fetch` değil) bir merkez yüzeyi yeni bir
+> bulut zinciri sayılmaz: kutu ona bağımlı çalışmaz, hasta verisi taşımaz (G1 temiz),
+> K10 bozulmaz. Asıl engel teknik değil: **on-prem owner'ın merkezde hesabı yok.**
+> Kullanıcısı yalnız kendi kutusunun Supabase'inde var; merkezdeki bir portalın onu
+> tanıyabilmesi için Faz 3.1'in lisans kimliği (lisans-ID + imza) gerekir — o inmeden
+> portal boş bir kabuktur. Ayrıca **Stripe'ın barındırdığı Customer Portal SaaS tarafını
+> zaten çözüyor** (`api/stripe/portal-session.js` → Stripe'ın kendi sayfası); ona ayrı bir
+> custom domain bağlamak kozmetiktir ve on-prem'in hiçbir sorununa dokunmaz (on-prem
+> müşterinin Stripe müşterisi yok). Tavsiye: **ayrı portal stack'i açma.** Lisans yüzeyi
+> Faz 3.1/3.2 ile birlikte, var olan merkez yüzeyinde (app.praxura.de altında bir rota ya
+> da ops) doğar; 20-200 kutuluk filo için ikinci bir TLS + auth + deploy yüzeyi bugünkü
+> ekiple ödenmeyecek bir borçtur. Karar kullanıcınındır, fiyat etiketi budur.
+
 ### O-66 — Sihirbazın SMTP ekranı yapısal olarak çalışamaz: GoTrue ayarını env'den okur
 
 | Alan | İçerik |
@@ -3592,7 +3675,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 104 madde** (O-01 … O-104) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
+**Toplam 106 madde** (O-01 … O-106) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
 bildirim-sonrası denetiminden çıktı, §7L; aynı gece üçü (O-85/O-86/O-89) tam, ikisi
 (O-87/O-88) kısmen kapatıldı — detay kendi maddelerinde. Beş yenisi daha (O-90…O-94)
 aynı akşam Faz 2.2 dilim 2b'nin kendi post-hoc denetiminden çıktı — üçü (O-90/O-92/
@@ -3651,7 +3734,7 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 5 | O-18 · O-23 · O-32 · O-46 · O-75 |
+| `offen` | 6 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
 | 🟡 `kısmen gelöst` | 16 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
 | `gelöst` | 57 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 |

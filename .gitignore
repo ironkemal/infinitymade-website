@@ -1,6 +1,8 @@
 *.pdf
 INFRASTRUCTURE.md
 PARTNERSHIP_NOTES.md
+onprem/docker-compose.override.yml
+onprem/praxura-local-root.crt
 
 # Sözleşmeler ve imzalı belgeler — depo PUBLIC, asla commit edilmez
 legal/

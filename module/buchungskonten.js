@@ -264,13 +264,25 @@ function zeichneKontenListe(deps) {
 
     // Löschen statt Deaktivieren nur für Konten, auf die noch nichts gebucht
     // sein kann — das weiss die Oberfläche nicht. Deshalb ist „aktiv" der
-    // normale Weg und Entfernen die Ausnahme.
+    // normale Weg und Entfernen die Ausnahme. Rot + Rückfrage (Ops-Feedback
+    // 14.09.2026): ein einzelner Klick entfernte die Zeile bisher sofort und
+    // sah genauso aus wie jeder andere Button in der Reihe.
     const weg = document.createElement('button');
     weg.type = 'button';
-    weg.className = 'btn-ghost btn-sm';
+    weg.className = 'btn-danger btn-sm';
     weg.textContent = '×';
     weg.title = 'Konto entfernen';
-    weg.addEventListener('click', () => {
+    weg.addEventListener('click', async () => {
+      const ok = deps.showConfirmModal
+        ? await deps.showConfirmModal({
+            title: 'Konto entfernen',
+            message: `„${konto.label || konto.code || 'Dieses Konto'}" wirklich entfernen? Das Speichern übernimmt die Änderung erst danach endgültig.`,
+            confirmText: 'Entfernen',
+            cancelText: 'Abbrechen',
+            variant: 'danger',
+          })
+        : window.confirm(`„${konto.label || konto.code || 'Dieses Konto'}" wirklich entfernen?`);
+      if (!ok) return;
       kontenEntwurf.splice(i, 1);
       zeichneKontenListe(deps);
     });

@@ -41,7 +41,7 @@
  */
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260906';
+import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260914';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260907';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 
@@ -409,13 +409,26 @@ function hinweisSetzen(zustand) {
   let text = zustand?.riegel
     ? zustand.riegel
     : 'Gespeicherte Verordnung — „Speichern" schreibt die Änderungen zurück.';
-  // Der einzige Teil der Verordnung, den diese Maske NICHT führt: die
-  // podologischen Positionen (78xxx) liegen in `heilmittel_items` und werden
-  // beim Speichern hier bewusst nicht angefasst. Das gehört gesagt, sonst hält
-  // man das Heilmittelfeld für die Abrechnungsgrundlage — ist es dort nicht.
+  // `heilmittel_items` ist Altbestand und wird hier nicht angefasst.
+  //
+  // ⚠️ Korrektur vom 14.09.2026: hier stand, die podologischen Positionen
+  // (78xxx) laegen in `heilmittel_items` und wuerden „in der Podologie-
+  // Abrechnung gepflegt". Beides stimmt nicht mehr.
+  //   • Geschrieben wird die Spalte seit dem 06.09.2026 von NIEMANDEM — der
+  //     einzige Schreiber war das getrennte Verordnungsformular der
+  //     Abrechnungsseite, das an diesem Tag in diese Maske aufgegangen ist.
+  //     Auch der Scan-Weg schreibt sie nicht (`api-backend/ai/tasks/
+  //     rezept-ocr.js` liefert ein einzelnes `heilmittel`).
+  //   • Abgerechnet wird aus ihr ebenfalls nicht: die §302-Positionen kommen
+  //     aus `podologie_behandlungen.hpnr_codes` ueber `sessions[].
+  //     positionsnummer` (`api-backend/billing/dta/builder.js`). Gelesen wird
+  //     `heilmittel_items` nur noch fuer Anzeige und Statistik.
+  // Der Satz bleibt trotzdem stehen, denn er ist weiter wahr: was in dieser
+  // Spalte steht, bleibt beim Speichern unveraendert — nur eben als
+  // Altbestand, nicht als Abrechnungsgrundlage.
   if (zustand?.hatItems) {
-    text += ' Die podologischen Positionen (78xxx) bleiben unverändert — '
-          + 'sie werden in der Podologie-Abrechnung gepflegt.';
+    text += ' Die früher erfassten Leistungen (78xxx) dieser Verordnung bleiben '
+          + 'unverändert — sie sind Altbestand und keine Abrechnungsgrundlage.';
   }
   el.textContent = text;
   wrap.insertBefore(el, wrap.firstChild);
@@ -458,10 +471,23 @@ export function pruefeAenderungErlaubt() {
  *   `status`     — über den Bearbeitungsstand entscheidet der Ablauf,
  *                  nicht dieses Formular.
  *   `owner_id`   — gehört zum Anlegen, nicht zum Ändern.
- *   `heilmittel_items` — die podologischen Positionen (78xxx) werden in der
- *                  Podologie-Abrechnung gepflegt; ein Muster-13-Feld kann eine
- *                  mehrzeilige Positionsliste nicht abbilden und würde sie
- *                  beim Speichern auf eine Zeile eindampfen.
+ *   `heilmittel_items` — Altbestand. Die Spalte wird seit dem 06.09.2026 von
+ *                  keinem Weg mehr beschrieben (ihr einziger Schreiber, das
+ *                  getrennte Formular der Abrechnungsseite, ist in dieser
+ *                  Maske aufgegangen) und von der Abrechnung nicht gelesen —
+ *                  die §302-Positionen stammen aus
+ *                  `podologie_behandlungen.hpnr_codes`. Sie hier zu füllen
+ *                  ergäbe Daten, aus denen nichts folgt.
+ *
+ *                  ⚠️ Und sie ist NICHT der Ort für „mehrere Heilmittel je
+ *                  Verordnung". HeilM-RL § 12 Abs. 2 S. 1 erlaubt das Aufteilen
+ *                  der Verordnungseinheiten auf bis zu drei vorrangige
+ *                  Heilmittel nur für Physiotherapie und Ergotherapie (S. 2
+ *                  sinngemäss für Stimm-, Sprech-, Sprach- und
+ *                  Schlucktherapie). Die Podologie steht in keinem der beiden
+ *                  Sätze; ihr Katalog bildet „beides zugleich" als eigenes
+ *                  Heilmittel ab — c) Podologische Komplexbehandlung,
+ *                  § 27a Abs. 4 Nr. 3. Geprüft am 14.09.2026.
  *
  * @param {object} v  Was `dashboard.js` schon ausgerechnet hat
  */
