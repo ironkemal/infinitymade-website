@@ -94,7 +94,14 @@ mkdir -p "$STAND_DIR"
 # jeden anderen lokalen Account auf der Maschine. `backup.sh` setzt für seine
 # eigenen Zielverzeichnisse bereits `chmod 700` — hier fehlte der gleiche
 # Standard.
-chmod 700 "$STAND_DIR"
+# -R (onprem-Nachtrag, 14.09.2026): läuft bei JEDEM update.sh-Lauf, also auch
+# auf einer Box, die vor diesem Fix schon Snapshots mit 0755 angelegt hatte —
+# ein reines `chmod 700` auf $STAND_DIR hätte diese alten Unterordner nicht
+# rückwirkend geschlossen (das obere Verzeichnis 700 blockiert zwar den
+# Zugriffspfad, aber die Unterordner selbst blieben 0755 lesbar, falls je ein
+# anderer Pfad dorthin führt). `go-rwx` statt `700`, weil rekursiv über
+# Dateien UND Verzeichnisse läuft (Dateien brauchen kein x-Bit).
+chmod -R go-rwx "$STAND_DIR" 2>/dev/null || true
 
 # ── Schritt 0 — Lock + Vorprüfung ────────────────────────────────────────────
 exec 9>"$LOCK_FILE"

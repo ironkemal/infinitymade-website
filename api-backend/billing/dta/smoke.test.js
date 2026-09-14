@@ -99,7 +99,7 @@ const result = buildDtaFile({
       hausbesuch: false,
       heilmittelBereich: '1',
       therapiefrequenz: '3',
-      zuzahlungskennzeichen: '0',
+      zuzahlungskennzeichen: '3',   // O-101 (14.09.2026): war '0' — falsch, siehe builder.js
       kostentraegerIk: '101000000',
       krankenkasseIk:  '101000000',
     },
@@ -161,7 +161,7 @@ test('SLLA ZHE — 17 fields, Verordnungsart, Leitsymptomatik, Therapiefrequenz'
   // Dringlich, HeilmittelBereich, Therapiefrequenz
   // 6 empty Kann-fields between Verordnungsart (03) and Leitsymptomatik (1010)
   assert.ok(result.content.includes(
-    "ZHE+180000700+999999900+20260502+0+WS2+03+++++++1010++0+1+3'"
+    "ZHE+180000700+999999900+20260502+3+WS2+03+++++++1010++0+1+3'"
   ), result.content);
 });
 test('SLLA DIA — ICD-10', () => {

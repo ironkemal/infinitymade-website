@@ -2,19 +2,19 @@
   "filename": "ESOL0024",
   "segmentCount": 19,
   "messageCount": 2,
-  "byteLength": 584,
+  "byteLength": 603,
   "totals": {
     "brutto": 28.9,
-    "gesZuzahlung": 0,
-    "netto": 28.9,
+    "gesZuzahlung": 12.89,
+    "netto": 16.01,
     "prescriptions": 1,
     "fallTotals": [
       {
         "brutto": 28.9,
-        "prozZuzahlung": 0,
-        "pauschZuzahlung": 0,
-        "gesZuzahlung": 0,
-        "netto": 28.9
+        "prozZuzahlung": 2.89,
+        "pauschZuzahlung": 10,
+        "gesZuzahlung": 12.89,
+        "netto": 16.01
       }
     ]
   }

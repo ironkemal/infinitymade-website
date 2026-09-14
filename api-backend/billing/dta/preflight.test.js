@@ -69,7 +69,7 @@ const validInput = {
     doctor: { lanr: '999999999', bsnr: '999999999' },
     verordnung: { ausstellungsdatum: '2026-05-02', icd10: 'M54.5', diagnosegruppe: 'WS2',
                   verordnungsart: '03', leitsymptomatik: '1010', therapiefrequenz: '3',
-                  zuzahlungskennzeichen: '0', kostentraegerIk: '108310400' },
+                  zuzahlungskennzeichen: '3', kostentraegerIk: '108310400' },
     tarif: { abrechnungscode: '22', tarifkennzeichen: '00501' },
     sessions: ['2026-05-05','2026-05-07','2026-05-12','2026-05-14','2026-05-19','2026-05-21']
       .map(d => ({ positionsnummer: '10210', datumLeistung: d, anzahl: 1, einzelbetrag: 22.50, zuzahlungProPos: 2.25 })),

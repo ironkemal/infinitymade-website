@@ -48,7 +48,7 @@ const result = buildDtaFile({
       hausbesuch: false,
       heilmittelBereich: '1',
       therapiefrequenz: '3',
-      zuzahlungskennzeichen: '0',
+      zuzahlungskennzeichen: '3',   // zuzahlungspflichtig (Anlage 3 TP5 §8.1.3)
       kostentraegerIk: '108310400',
       krankenkasseIk:  '108310400',
     },

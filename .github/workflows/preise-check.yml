@@ -10,8 +10,10 @@ name: GKV Preise prüfen & automatisch aktualisieren
 #      Preisangabe bei einem bereits bekannten Fenster, kein Sprung >15% bei
 #      einem bekannten Code, kein kaputtes Datumsformat) → das neue Preisfenster
 #      wird automatisch angehängt, die Tests laufen, bei Grün wird committet
-#      und gepusht. publish-calendar-api.yml übernimmt danach automatisch
-#      (eigene Tests → Image bauen → Watchtower deployt live).
+#      und gepusht. Danach wird publish-calendar-api.yml EXPLIZIT per
+#      `gh workflow run` angestoßen (eigene Tests → Image bauen → Watchtower
+#      deployt live) — ein normaler `push` mit GITHUB_TOKEN würde das NICHT
+#      von selbst auslösen, siehe O-98-Nachtrag unten.
 #   3. Alles andere (neue/verschwundene Codes, unerwartete Abweichung, zu
 #      großer Preissprung) wird NUR per Telegram gemeldet — keine automatische
 #      Änderung. Das kann nur ein Mensch anhand der Anlage-2-Vertragsprosa
@@ -25,12 +27,30 @@ name: GKV Preise prüfen & automatisch aktualisieren
 #     als Artefakt hoch. Ein manipuliertes Postinstall-Skript in irgendeiner
 #     Abhängigkeit hat hier keinen Schreibzugriff auf das Repo.
 #   - `commit-und-push` hat Schreibzugriff (contents: write), läuft aber OHNE
-#     `npm ci` — die einzigen zwei Skripte, die hier laufen
-#     (sync_heilmittel_katalog.js --sql, ein `node -e`) importieren nur die
-#     eigenen Codedateien, keine Abhängigkeit. Holt vor dem Commit den
-#     aktuellsten `main`-Stand UND berechnet die Migrationsnummer danach neu
-#     (O-98) — verhindert, dass ein menschlicher Commit und dieser Bot
+#     `npm ci` und OHNE `node`-Import irgendeiner Codedatei — der einzige
+#     `node`-Aufruf ist ein `node -e` mit eingebautem `fs`. Holt vor dem Commit
+#     den aktuellsten `main`-Stand UND berechnet die Migrationsnummer danach
+#     neu (O-98) — verhindert, dass ein menschlicher Commit und dieser Bot
 #     dieselbe Nummer vergeben.
+#
+# ⚠️ S-28 (guvenlik, 14.09.2026 Gegenlesen): die erste Fassung dieser Trennung
+# ließ `commit-und-push` trotzdem `node sync_heilmittel_katalog.js --sql`
+# laufen — dieses Skript importiert `billing/codes/{podologie,physio}_
+# positions.js` STATISCH. Ein Paket, das während `npm test` in `preise-check`
+# (Lesezugriff, aber `npm ci` OHNE `--ignore-scripts`-Lücke für Import-Zeit-
+# Code) diese zwei Dateien auf der Festplatte manipuliert hätte, wäre im
+# schreibberechtigten Job unbemerkt AUSGEFÜHRT worden. Behoben: `--sql`
+# läuft jetzt in `preise-check` (kein Schreibzugriff), die reine SQL-Ausgabe
+# geht als Text-Artefakt mit — `commit-und-push` liest nur noch Text, führt
+# keinen Code mehr aus, der von den Codedateien abhängt.
+#
+# ⚠️ O-98-Nachtrag (onprem+muhalif, 14.09.2026 Gegenlesen): `commit-und-push`
+# pusht mit dem Standard-`GITHUB_TOKEN`. GitHub startet dadurch KEINEN neuen
+# Workflow-Lauf für den resultierenden `push`-Event (Absicht: verhindert
+# Endlosschleifen) — `publish-calendar-api.yml` (`on: push`) hätte also NIE
+# automatisch reagiert, obwohl der Kopfkommentar und die Telegram-Meldung das
+# behaupteten. Behoben: ein expliziter `gh workflow run`-Aufruf nach
+# erfolgreichem Push (workflow_dispatch-Events umgehen die Push-Sperre).
 
 on:
   schedule:
@@ -86,6 +106,17 @@ jobs:
         working-directory: ./api-backend
         run: npm test
 
+      - name: Seed-SQL erzeugen (S-28 — läuft HIER, im nicht-schreibberechtigten Job)
+        if: steps.check.outputs.changed == 'true'
+        working-directory: ./api-backend
+        # sync_heilmittel_katalog.js --sql importiert die geänderten Codedateien
+        # statisch (kein DB-Zugriff). Das darf nur in einem Job passieren, der
+        # ohnehin keinen Schreibzugriff hat — deshalb hier und NICHT in
+        # commit-und-push (S-28). Die reine SQL-Textausgabe geht als Artefakt
+        # weiter; der schreibberechtigte Job führt dafür keinen `node`-Import
+        # einer Repo-Datei mehr aus.
+        run: node sync_heilmittel_katalog.js --sql > preise-seed.sql
+
       - name: Geänderte Codedateien als Artefakt hochladen
         if: steps.check.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
@@ -94,6 +125,7 @@ jobs:
           path: |
             api-backend/billing/codes/podologie_positions.js
             api-backend/billing/codes/physio_positions.js
+            api-backend/preise-seed.sql
             api-backend/preise-telegram-message.txt
           retention-days: 3
 
@@ -129,9 +161,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      actions: read   # download-artifact braucht das explizit — sobald `permissions`
-                       # gesetzt ist, gilt für jeden nicht genannten Scope "none", nicht
-                       # der sonst übliche Default
+      actions: write   # download-artifact braucht mindestens `read`; `write` zusätzlich
+                        # für den `gh workflow run`-Dispatch unten (O-98-Nachtrag) — sobald
+                        # `permissions` gesetzt ist, gilt für jeden nicht genannten Scope
+                        # "none", nicht der sonst übliche Default
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -187,18 +220,18 @@ jobs:
             # O-79's Seed-Kapı (tools/check-onprem.sh, lokaler Git-Hook) verlangt bei
             # jeder *_positions.js-Änderung eine neue Seed-Migration im selben Commit
             # — aber dieser Workflow läuft in einem nackten CI-Checkout ohne Hooks
-            # (O-95). sync_heilmittel_katalog.js --sql (kein DB-Zugriff, nur die
-            # gerade geänderten Codedateien) erzeugt hier denselben Inhalt, den ein
-            # Mensch von Hand erzeugen würde.
+            # (O-95). Die SQL-Zeilen selbst wurden bereits im `preise-check`-Job
+            # erzeugt (S-28 — kein `node`-Import einer Codedatei hier, nur Text).
             {
               echo "-- O-95 (onprem/REGISTER.md) — automatisch von preise-check.yml erzeugt,"
               echo "-- selber Commit wie die Preisrunde in den Codedateien (Ops-Karte #213)."
-              echo "-- Erzeugt von: node sync_heilmittel_katalog.js --sql. Kein zweiter"
-              echo "-- Erzeugungsweg — nur ein zweiter Ausgang derselben Zeilen-Bauer, die"
-              echo "-- auch db/migrations/0012_seed_heilmittel_katalog.sql geschrieben hat."
+              echo "-- Erzeugt von: node sync_heilmittel_katalog.js --sql (im preise-check-Job,"
+              echo "-- S-28). Kein zweiter Erzeugungsweg — nur ein zweiter Ausgang derselben"
+              echo "-- Zeilen-Bauer, die auch db/migrations/0012_seed_heilmittel_katalog.sql"
+              echo "-- geschrieben hat."
               echo "-- ZAEHLER: unveraendert (reine Daten-UPSERT, public — migrations/README.md Kural 6)"
               echo ""
-              node sync_heilmittel_katalog.js --sql
+              cat _preise-artefakt/preise-seed.sql
               echo "DO \$\$ DECLARE n int; BEGIN"
               echo "  SELECT count(*) INTO n FROM public.heilmittel_katalog;"
               echo "  IF n < 94 THEN RAISE EXCEPTION 'seed heilmittel_katalog: % Zeilen, erwartet >= 94', n; END IF;"
@@ -208,6 +241,9 @@ jobs:
             # bis_version mitziehen: reine Daten-UPSERT in eine bestehende Tabelle,
             # nie ein neues Tabelle/Policy/Funktion/Trigger/Index — daher ohne neue
             # physische Zählung sicher hochziehbar (migrations/README.md Kural 6).
+            # `_kommentar`/`gemessen_am` bleiben unangetastet (db-ustasi-Fund,
+            # 14.09.2026): ein Bot, der bei jedem Lauf behauptet "frisch gemessen",
+            # macht das Feld nach dem zweiten Lauf zur Lüge.
             node -e "
               const fs = require('fs');
               const p = 'db/erwartete-zaehler.json';
@@ -217,14 +253,21 @@ jobs:
             "
 
             git add billing/codes/podologie_positions.js billing/codes/physio_positions.js
-            git add "db/migrations/${NEXT}_seed_heilmittel_katalog_preisrunde_$(date -u +%Y%m%d).sql" db/erwartete-zaehler.json
+            git add "$FILE" db/erwartete-zaehler.json
             git commit \
               -m "chore(preise): automatische Preisrunde übernommen (GKV-Heilmittelpreisstammdatei)" \
-              -m "Ausgelöst von preise_autoupdate.mjs (Ops-Karte #213). Nur Preis + Zuzahlung geändert; gleiche Codes, gleiche Regeln (Dauer/Diagnosegruppen/Notiz 1:1 vom Vorgänger-Fenster übernommen). npm test lief grün im preise-check-Job. Seed-Migration für die Box im selben Commit mitgeschrieben (O-95)." \
+              -m "Ausgelöst von preise_autoupdate.mjs (Ops-Karte #213). Nur Preis + Zuzahlung geändert; gleiche Codes, gleiche Regeln (Dauer/Diagnosegruppen/Notiz 1:1 vom Vorgänger-Fenster übernommen). npm test lief grün im preise-check-Job. Seed-Migration für die Box im selben Commit mitgeschrieben (O-95). Hinweis für die nächste MANUELLE Veröffentlichung: falls diese Preisrunde die einzige Änderung seit dem letzten Tag ist, ist VERSION mindestens MINOR (enthält eine neue Migration, R6 in publish-calendar-api.yml verbietet das für PATCH)." \
               -m "Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 
             if git push; then
               echo "Push erfolgreich (Versuch $versuch)."
+
+              # O-98-Nachtrag (onprem+muhalif, 14.09.2026): ein Push mit dem
+              # Standard-GITHUB_TOKEN löst KEINEN neuen Workflow-Lauf aus (GitHub
+              # verhindert damit Endlosschleifen) — publish-calendar-api.yml
+              # (on: push) hätte diesen Commit also nie gesehen. Ein expliziter
+              # workflow_dispatch-Aufruf umgeht diese Sperre.
+              gh workflow run "Build and Publish calendar-api image" --ref main
               exit 0
             fi
 
@@ -234,12 +277,16 @@ jobs:
 
           echo "::error::Push nach 5 Versuchen weiterhin fehlgeschlagen — manuell prüfen."
           exit 1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Telegram — automatische Aktualisierung abgeschlossen
         if: success()
         working-directory: ./api-backend
         run: |
-          MSG=$(printf '✅ GKV-Preise automatisch aktualisiert und live ausgerollt.\n\n%s' "$(cat preise-telegram-message.txt)")
+          # "live ausgerollt" wäre falsch — der Dispatch startet gerade erst
+          # Test → Image-Build → Smoke-Test → Push; Watchtower zieht danach.
+          MSG=$(printf '✅ GKV-Preise automatisch übernommen, main aktualisiert, Build+Deploy ausgelöst.\n\n%s' "$(cat preise-telegram-message.txt)")
           curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             --data-urlencode "text=$MSG"

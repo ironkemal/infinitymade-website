@@ -110,6 +110,21 @@ bakım moduna geçer, `/health` ve hata bilgisini servis eder, gerisine 503 dön
 `DATABASE_URL` **yoksa runner sessizce atlar.** Bugünkü SaaS bu durumda; davranış
 değişmeden çalışmaya devam ediyor.
 
+## SaaS'a hangi migration'lar uygulandı? — defter yok, disiplin var (db-ustasi, 14.09.2026)
+
+`praxura_migrations` defteri yalnız `migrate.js`'in kendisi yazıyor — ve SaaS'ta
+`migrate.js` hiç çalışmıyor (yukarıdaki paragraf). Yani SaaS'a MCP ile elle uygulanan
+her migration (CLAUDE.md'nin "3. canlıya uygula (MCP)" adımı) **hiçbir yere iz
+bırakmıyor.** 0015'in SaaS'a hiç uygulanmadığı 13.09.2026'ya kadar fark edilmedi —
+tam bu sessizlik yüzünden (`db-ustasi` ikinci-göz denetimi, O-95).
+
+Kalıcı bir çözüm (SaaS'a özel bir defter tablosu) bugün kapsam dışı — burada yalnız
+disiplin: **bir migration'ı SaaS'a MCP ile uyguladığında, bunu migration dosyasının
+kendi başlık yorumuna bir satırla yaz** (`-- SaaS: uygulandı 14.09.2026, MCP`), ve
+DTA/fatura veya güvenlik açısından önemliyse `onprem/REGISTER.md`'ye de bir not düş.
+Yalnızca on-prem kutusunu etkileyen (SaaS'ın hiç okumadığı tablo/kolon) migration'lar
+için gerekmez.
+
 ## İkinci, kaba bir okuyucu var — `onprem/update.sh` (O-26)
 
 Bu klasörün asıl yorumlayıcısı `../migrate.js`'tir (checksum'lı, dosya adı + defter

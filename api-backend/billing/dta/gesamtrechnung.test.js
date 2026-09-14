@@ -120,8 +120,14 @@ test('T1: zwei Karten-IK ergeben zwei SLGA + zwei SLLA, jede GES nur ihre eigene
   const gesB = gesZeilen(slgaB).find(f => f[1] === '00');
   assert.equal(gesA[3], '100,00', 'Gruppe A darf nur ihre eigenen 100,00 melden');
   assert.equal(gesB[3], '40,00',  'Gruppe B darf nur ihre eigenen 40,00 melden');
-  assert.equal(gesA[2], '100,00');
-  assert.equal(gesB[2], '40,00');
+  // Rechnungsbetrag (Netto) = Brutto - Zuzahlung. Die Sessions hier tragen kein
+  // zuzahlungProPos, also 10% Fallback + 10€-Pauschale (O-101, 14.09.2026: vor
+  // der Zuzahlungskennzeichen-Korrektur rechnete der Builder fuer dieses
+  // Fixture faelschlich gar keine Zuzahlung — Netto=Brutto).
+  // A: 100,00 - (10,00 + 10,00 Pauschale) = 80,00
+  assert.equal(gesA[2], '80,00');
+  // B: 40,00 - (4,00 + 10,00 Pauschale) = 26,00
+  assert.equal(gesB[2], '26,00');
 
   // Die Dateisumme steht in KEINEM GES-Segment.
   for (const m of msgs.filter(m => m.art === 'SLGA')) {

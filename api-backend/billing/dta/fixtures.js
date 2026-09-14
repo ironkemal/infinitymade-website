@@ -10,6 +10,17 @@
 // 07.09.2026, vor dem Umbau). Wer sie ändert, macht die Golden-Dateien in
 // `__golden__/` ungültig — sie sind der eingefrorene Ist-Zustand von VOR dem
 // Umbau und dürfen nicht neu erzeugt werden, um einen Test grün zu bekommen.
+//
+// ⚠️ Ausnahme 14.09.2026 (O-101): `zuzahlungskennzeichen` in beiden Fixtures
+// trug/trägt einen inhaltlichen Fehler (physio: '0' statt '3'; podo: '3', aber
+// `builder.js` prüfte fälschlich auf '0' und rechnete die Zuzahlung deshalb nie).
+// Das ist kein "Test grün klopfen" — der Fehler wurde gegen die Originalquelle
+// (Anlage 3 TP5 §8.1.3, wissensbank/gemeinsam/302-tp5) verifiziert, korrigiert,
+// und die Golden-Dateien wurden NEU aus dem korrigierten Builder erzeugt.
+// physio.edi ändert sich um genau 1 Zeichen (Kennzeichen '0'→'3' im ZHE-Segment),
+// die Summen bleiben gleich (das Fixture war immer als zuzahlungspflichtig
+// gemeint). podo.edi ändert sich in den GES/BES-Summen — vorher rechnete der
+// Builder für dieses Fixture nie eine Zuzahlung, jetzt tut er es korrekt.
 
 import { legsFuer, abrechnungscodeAusLegs, tarifkennzeichenAusLegs } from '../codes/legs.js';
 
@@ -49,7 +60,7 @@ export const physioFixture = {
       hausbesuch: false,
       heilmittelBereich: '1',
       therapiefrequenz: '3',
-      zuzahlungskennzeichen: '0',
+      zuzahlungskennzeichen: '3',   // O-101 (14.09.2026): war '0' — falsch, siehe builder.js
       kostentraegerIk: '101000000',
       krankenkasseIk:  '101000000',
     },

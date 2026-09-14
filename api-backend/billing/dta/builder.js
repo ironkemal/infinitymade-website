@@ -65,7 +65,10 @@ const r2 = (v) => +Number(v).toFixed(2);
 //     verordnungsart, verordnungsbesonderheiten?, unfallkennzeichen?,
 //     hausbesuch?, leitsymptomatik, patLeitsymptomatik?,
 //     dringend, heilmittelBereich = '1', therapiefrequenz,
-//     zuzahlungskennzeichen,        // '0'=zuzahlungspflichtig, '1'=befreit
+//     zuzahlungskennzeichen,        // '3'=zuzahlungspflichtig, '1'=befreit, '0'=keine
+//                                   //   gesetzliche Zuzahlung (Anlage 3 TP5 §8.1.3) —
+//                                   //   O-101, 14.09.2026: vorher stand hier faelschlich
+//                                   //   '0'=zuzahlungspflichtig
 //     kostentraegerIk, krankenkasseIk,
 //     genehmigung?: { kennzeichen, datum, art },
 //     evoId?,
@@ -79,7 +82,7 @@ function calcAbrechnungsfallTotals(item) {
   const { sessions, verordnung } = item;
   const brutto = r2(sessions.reduce((a, s) => a + num(s.einzelbetrag) * num(s.anzahl || 1), 0));
   let prozZuzahlung = 0, pauschZuzahlung = 0;
-  if (verordnung.zuzahlungskennzeichen === '0') {
+  if (verordnung.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig
     // Zweite Zuzahlungsformel entfernt (Aufgabe 2): hier stand
     // `s.zuzahlungProPos || s.einzelbetrag * 0.10`. Bei einer Zuzahlung von
     // GENAU 0 € — also einer zuzahlungsfreien Position — ist 0 falsy, dadurch

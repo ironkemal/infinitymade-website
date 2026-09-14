@@ -14,7 +14,7 @@ import { betraegeFuerVerordnung, leistungenAusSessions, zeilenAusDta }
 
 const rx = (sessions, befreit = false) => ({
   patient: { vorname: 'Anna', nachname: 'Muster', kvnr: 'A123456789', belegnummer: '7-1' },
-  verordnung: { ausstellungsdatum: '2026-03-01', zuzahlungskennzeichen: befreit ? '1' : '0' },
+  verordnung: { ausstellungsdatum: '2026-03-01', zuzahlungskennzeichen: befreit ? '1' : '3' },
   sessions,
 });
 
@@ -117,7 +117,7 @@ test('zeilenAusDta: die Zeilensumme passt zur Kopfsumme der Route', () => {
   for (const p of prescriptions) {
     const brutto = p.sessions.reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0);
     totalBrutto += brutto;
-    if (p.verordnung.zuzahlungskennzeichen === '0') {
+    if (p.verordnung.zuzahlungskennzeichen === '3') {
       totalZu += Math.min(brutto, p.sessions.reduce((a, s) => a + Number(s.zuzahlungProPos) * Number(s.anzahl || 1), 0) + 10);
     }
   }

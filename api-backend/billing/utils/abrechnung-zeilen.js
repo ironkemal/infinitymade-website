@@ -48,8 +48,10 @@ export function betraegeFuerVerordnung(p) {
     (a, s) => a + (Number(s.einzelbetrag) || 0) * (Number(s.anzahl) || 1), 0));
 
   // '1' heisst zuzahlungsbefreit — dann zahlt die Kasse alles.
+  // '3' heisst zuzahlungspflichtig (Anlage 3 TP5 §8.1.3) — O-101, 14.09.2026:
+  // hier stand faelschlich '0' (das bedeutet "keine gesetzliche Zuzahlung").
   let zuzahlung = 0;
-  if (p?.verordnung?.zuzahlungskennzeichen === '0') {
+  if (p?.verordnung?.zuzahlungskennzeichen === '3') {
     const proz = r2(sessions.reduce(
       (a, s) => a + (Number(s.zuzahlungProPos) || 0) * (Number(s.anzahl) || 1), 0));
     zuzahlung = r2(Math.min(brutto, proz + 10));

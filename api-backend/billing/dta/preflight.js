@@ -408,14 +408,14 @@ export function preflight(input) {
 
         const anzahl = Number(s.anzahl || 1);
         pBrutto += betrag * anzahl;
-        if (v.zuzahlungskennzeichen === '0') {
+        if (v.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig
           const zu = Number(s.zuzahlungProPos != null ? s.zuzahlungProPos : betrag * 0.10);
           pZu += zu * anzahl;
         }
       });
 
       // Zuzahlung-Plausibilität: prozZuzahlung ≈ 10% Brutto (± 1ct pro Position toleriert)
-      if (v.zuzahlungskennzeichen === '0') {
+      if (v.zuzahlungskennzeichen === '3') {
         const expected = pBrutto * 0.10;
         const tolerance = 0.01 * p.sessions.length;
         if (Math.abs(pZu - expected) > tolerance + 0.005)

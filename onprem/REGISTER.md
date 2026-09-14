@@ -16,7 +16,7 @@
 
 ---
 
-## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 13.09.2026 gece)
+## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 14.09.2026)
 
 > Bu blok sicilin **kısa yolu**. Amacı, yeni bir oturumun 1000 satır okumadan
 > "neredeyiz, sıradaki ne, nereye basmam" sorusuna cevap bulması. Ayrıntı her
@@ -304,6 +304,17 @@ sayısı hiç sayılmayacak (b seçeneği kapandı). Uygulaması (lisans dosyas�
 Bağımsız açık madde kalmadı — bu turun kolayca çözülebilir listesi tükendi. Geriye
 kalanlar (O-18/O-23/O-32/O-46/O-75) ya büyük fazlara bağlı ya da başka bir kararı
 bekliyor; kendi maddelerine bakılmalı. (O-80/O-95 aynı gün kapandı — bkz. yukarı.)
+
+✅ **14.09.2026 — üçüncü tur, /konsey ile.** Kullanıcı isteğiyle bu oturumun 12 maddesi
+(O-09a/O-79/O-96/O-82/O-44/O-33/O-80/O-95/O-97/O-98/O-99/O-100) yedi üyeli bir konsey
+turunda (dört alan uzmanı + `muhalif`/`deger-mi`/`fonksiyon-ustasi`) tekrar denetlendi.
+Hepsi doğrulandı, dört YENİ ve gerçek sorun bulundu (**O-101…O-104**, hepsi aynı gece
+kapatıldı — özet §9'da, detay kendi maddelerinde). En ciddisi O-101 (Zuzahlungskennzeichen
+ters yazılıyordu, Anlage 3 §8.1.3'e karşı doğrulandı) ve O-102 (CI botunun push'u
+`publish-calendar-api.yml`'i hiç tetiklemiyordu — otomatik fiyat güncellemesi main'e
+iniyordu ama muhtemelen hiç canlıya çıkmamıştı). `guvenlik`/`gkv-302`/`db-ustasi`/
+`fonksiyon-ustasi` bulguları için sırasıyla `guvenlik/REGISTER.md` (S-28), O-101, ve
+`db/migrations/README.md`'nin yeni "SaaS'a hangi migration'lar uygulandı" bölümü.
 
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
@@ -2755,6 +2766,50 @@ de eklenebilir (taze kutuda `bookings` boş, orada ölçmek daha az müdahaleci)
 | **Çözüm** | `install.sh`'ın ilk `mkdir -p "$SCRIPT_DIR/.praxura-stand"`'ına ve `update.sh`'ın hem `$STAND_DIR` hem her yeni `$SNAPSHOT_DIR`'ına `chmod 700`; `.env` anlık görüntüsüne ayrıca `chmod 600` |
 | **Durum** | ✅ **gelöst (13.09.2026)** — 3 nokta düzeltildi (`install.sh` 1, `update.sh` 2), `bash -n` ile sözdizimi doğrulandı, `onprem/manifest.json` tazelendi |
 
+### O-101 — Zuzahlungskennzeichen ters yazılıyordu ('0' yerine '3' gerekiyordu) + DTA'da U18 muafiyeti eksikti ✅ **gelöst (14.09.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kullanıcı isteğiyle 13.09.2026 gecesi çalışılan O-97'nin ikinci konsey turunda `gkv-302` bağımsızca buldu: Anlage 3 TP5 §8.1.3 `Zuzahlungskennzeichen` şöyle tanımlar — `0`=keine gesetzliche Zuzahlung, `1`=Zuzahlungsbefreit, `3`=Zuzahlungspflichtig. Kod normal (zuzahlungspflichtig) hastaya `'0'` yazıyordu — hem yanlış rechtsbegriff hem DTA dosyasının kendisiyle çelişmesi (Zuzahlung tutarı dolu, kennzeichen "yok" diyor). Aynı turda `fonksiyon-ustasi` bağımsız ikinci bir boşluk buldu: DTA mapper'lar (physio + podoloji) yalnız elle işaretlenen `zuzahlung_befreit`'i kontrol ediyordu, **yaş bazlı U18 muafiyeti hiç yoktu** (`calcAbrechnungsfallZuzahlung()`'un `isUnter18()`'i yalnız basılı yollarda çağrılıyordu) — aynı reçete DTA'da ve kağıtta farklı Zuzahlung üretebilirdi. Üçüncü, küçük bulgu: `doneSessions[doneSessions.length-1].done_at` (behandlungsende/U18 referans tarihi için) sıralanmamış diziden alınıyordu — kronolojik son değil, DB'den son okunan satır |
+| **Nerede** | `api-backend/billing/api/abrechnung.routes.js` (2 DTA mapper + 3 dahili toplam hesaplayıcı + 2 print route), `api-backend/billing/dta/builder.js` (`calcAbrechnungsfallTotals`), `api-backend/billing/dta/preflight.js` (plausibilite kontrolü), `api-backend/billing/utils/abrechnung-zeilen.js` (`betraegeFuerVerordnung`) — toplam **5 bağımsız kopya** aynı `zuzahlungskennzeichen === '0'` kontrolünü taşıyordu |
+| **Tip** | D |
+| **Kutuda ne olur** | Kutuya özgü değil — SaaS'ta da aynen geçerli, kutuya birebir taşınır. Etki iki eksende: (1) her normal hastanın DTA dosyasında yanlış kennzeichen karakteri (kasa Prüfstufe 3/4'te reddedebilir veya Zuzahlung'u yanlış yorumlayabilir) — bugün canlı; (2) minör bir hastanın (18 yaş altı) `zuzahlung_befreit` elle işaretlenmediği her durumda DTA'da yanlışlıkla Zuzahlung hesaplanması — sessiz, nadir (çoğu minör kaydı muhtemelen elle işaretleniyor ama garanti değil) |
+| **Çözüm** | 5 kopyanın hepsinde `==='0'` → `==='3'` (ve üretici tarafında `'1':'0'` → `'1':'3'`), DTA mapper'lara `isUnter18(lead?.geburtsdatum, <son seans/behandlung tarihi>)` eklendi, `doneSessions`/`behandlungen` referans-tarih hesapları sıralamalı hale getirildi. Golden-dosya testleri (`gesamtrechnung.test.js` T8 physio/podo, T1) gerçek builder çıktısına karşı **yeniden üretildi** (fixture'lardaki `zuzahlungskennzeichen` de aynı gerekçeyle düzeltildi — `fixtures.js` başlığında gerekçe kayıtlı) |
+| **Durum** | ✅ **gelöst (14.09.2026)** — spec metni (`wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt:357-372`) doğrudan okunarak doğrulandı. 231/231 test yeşil (golden-dosyalar bilinçli, gerekçeli olarak yeniden üretildi — `physio.edi` yalnız 1 karakter değişti, tutar aynı kaldı; `podo.edi`'nin tutarları değişti çünkü fixture zaten doğru `'3'` taşıyordu ama eski kontrol hiç eşleşmiyordu, yani bu fixture'ın testi o güne kadar Zuzahlung'u hiç hesaplamıyordu). `wissensbank/SPEC-RULES.md`'ye kayıt düşülmedi — bu kural zaten Anlage 3'ün kendi tablosu, ayrı süzülmüş kural gerektirmiyor |
+
+### O-102 — CI botunun push'u `publish-calendar-api.yml`'i hiç tetiklemiyordu — otomatik fiyat güncellemesi asla canlıya çıkmamış olabilirdi ✅ **gelöst (14.09.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | İkinci konsey turunda `muhalif` VE `onprem` birbirinden bağımsız aynı bulguya vardı: `preise-check.yml`'in `commit-und-push` job'ı varsayılan `GITHUB_TOKEN` ile push ediyor — GitHub, sonsuz döngüleri önlemek için `GITHUB_TOKEN` ile atılan push'ların **yeni bir workflow çalıştırmasını başlatmasını engeller.** `publish-calendar-api.yml` (`on: push, paths: api-backend/**`) bu yüzden bu commit'ler için **hiç koşmamış olabilir** — dosyanın kendi başlık yorumu ve Telegram mesajı ("live ausgerollt") ise bunun otomatik olduğunu iddia ediyordu |
+| **Nerede** | `.github/workflows/preise-check.yml` |
+| **Tip** | B |
+| **Kutuda ne olur** | Kutuya özgü değil — SaaS'ın backend image'ının güncel kalması bu zincire bağlı. Etki: her otomatik fiyat commit'i main'de duruyor ama image hiç yeniden basılmıyor, Watchtower hiçbir şey çekmiyor — yeni fiyat SaaS'ta hiç canlıya çıkmıyor, sistem "başarılı" diye rapor ediyor |
+| **Çözüm** | Başarılı push'tan hemen sonra `gh workflow run "Build and Publish calendar-api image" --ref main` (workflow_dispatch, GITHUB_TOKEN kuralının istisnası — döngü değil açık bir tetikleme). Job'ın izinlerine `actions: write` eklendi. Telegram mesajı da "live ausgerollt" yerine "main aktualisiert, Build+Deploy ausgelöst" olarak düzeltildi (gerçek deploy hâlâ ayrı workflow'un kendi test+smoke-test zincirine bağlı) |
+| **Durum** | ✅ **gelöst (14.09.2026)** — YAML `js-yaml` ile doğrulandı. **Doğrulanmadı:** gerçek bir CI koşusunda `gh workflow run`'ın GITHUB_TOKEN ile başarılı olduğu — GitHub dokümantasyonuna göre `workflow_dispatch` tetiklemesi bu token için açıkça izinlidir (yalnız otomatik `push`/vb. olayları engellenir), ama ilk gerçek koşu doğrulama sayılmalı. Yan not (`onprem` bulgusu, henüz aksiyon alınmadı, register'a not düşüldü): bot `VERSION`'ı hiç bump'lamıyor — bir sonraki insan yayını PATCH olarak işaretlenirse ve bu arada bot bir migration eklediyse, `publish-calendar-api.yml`'in R6 kapısı (PATCH migration içeremez) o yayını reddeder; commit mesajına bir hatırlatma satırı eklendi ama otomatik bir kapı değil — ileride ayrı bir madde olabilir |
+
+### O-103 — CI'nın yazma-yetkili job'ı, npm ortamında üretilmiş bir dosyayı hâlâ `import` ediyordu (S-28) ✅ **gelöst (14.09.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `guvenlik`'in O-99 ikinci-göz turunda bulduğu S-28 (bkz. `guvenlik/REGISTER.md`, bu depoya girmez): O-99'un iki-job bölünmesi push-token'ı `npm`'li job'tan aldı ama veri akışını tam ayırmadı — `commit-und-push` hâlâ `node sync_heilmittel_katalog.js --sql` çalıştırıyordu, bu da `preise-check`'te (tam `npm ci` ortamında) üretilmiş iki kod dosyasını **statik olarak import ediyordu**. İçe aktarma sırasında kod çalıştıran (yalnız kurulum betiği değil) kötü niyetli bir paket, bu dar pencerede dosyaları değiştirip yazma-yetkili job'da sessizce çalıştırılabilirdi |
+| **Nerede** | `.github/workflows/preise-check.yml` |
+| **Tip** | B |
+| **Kutuda ne olur** | O-99 ile aynı zincir (main → image → Watchtower → her kutu) — bu madde O-99'un kapatmadığı son adımı kapatıyor |
+| **Çözüm** | `sync_heilmittel_katalog.js --sql`'in çağrılma yeri `preise-check` (yazma yetkisi yok) job'ına taşındı, çıktısı (`preise-seed.sql`) düz metin olarak artefakta eklendi; `commit-und-push` artık bu metni yalnız `cat` ile migration dosyasına yazıyor — hiçbir Repo kodu import etmiyor. Kalan tek `node` çağrısı (`erwartete-zaehler.json` bump'ı) yerleşik `fs` dışında hiçbir şey içermiyor |
+| **Durum** | ✅ **gelöst (14.09.2026)**, aynı gün bulunup kapatıldı — detaylı gerekçe `guvenlik/REGISTER.md`'de (S-28, bu depoya girmiyor, `.gitignore`) |
+
+### O-104 — `.praxura-stand/` chmod'u yalnız İLERİYE dönük çalışıyordu, eski anlık görüntüler 0755 kalıyordu ✅ **gelöst (14.09.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `onprem`'in O-100 ikinci-göz turunda bulduğu ek: O-100'ün `chmod 700 "$STAND_DIR"` düzeltmesi tek düzey, tek dizin çalışıyordu — O-100'den ÖNCE zaten oluşmuş eski `$SNAPSHOT_DIR` alt klasörleri (son-3 rotasyonuyla hâlâ diskte duran) `0755` kalıyordu |
+| **Nerede** | `onprem/update.sh` |
+| **Tip** | G |
+| **Kutuda ne olur** | O-100 ile aynı sınıf, daha dar: üst dizin `700` olduğu için erişim yolu zaten kapalı, ama alt klasörlerin kendisi hâlâ açık kalıyordu — savunma derinliği eksikti |
+| **Çözüm** | `chmod 700 "$STAND_DIR"` → `chmod -R go-rwx "$STAND_DIR"`, her `update.sh` çalışmasında (yani periyodik olarak, mevcut kutularda da) tüm alt ağacı geriye dönük düzeltiyor |
+| **Durum** | ✅ **gelöst (14.09.2026)**, `bash -n` ile doğrulandı |
+
 ### O-66 — Sihirbazın SMTP ekranı yapısal olarak çalışamaz: GoTrue ayarını env'den okur
 
 | Alan | İçerik |
@@ -3528,7 +3583,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-## 9. Durum özeti (son sayım: 13.09.2026)
+## 9. Durum özeti (son sayım: 14.09.2026)
 
 > ⚠️ **Bu tablo 12.09.2026 akşamı madde madde yeniden sayıldı.** Önceki hâli
 > 04.09.2026 fotoğrafıydı ve altına "fark" notları yığılıyordu — dokuz tur sonra o
@@ -3537,7 +3592,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 100 madde** (O-01 … O-100) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
+**Toplam 104 madde** (O-01 … O-104) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
 bildirim-sonrası denetiminden çıktı, §7L; aynı gece üçü (O-85/O-86/O-89) tam, ikisi
 (O-87/O-88) kısmen kapatıldı — detay kendi maddelerinde. Beş yenisi daha (O-90…O-94)
 aynı akşam Faz 2.2 dilim 2b'nin kendi post-hoc denetiminden çıktı — üçü (O-90/O-92/
@@ -3562,6 +3617,35 @@ bunu ve dört yeni maddeyi (O-97…O-100) birden buldu:
   umask'tan `0755` miras alıyordu; `backup.sh`'ın kendi `chmod 700` standardı buraya
   uygulanmamıştı; aynı gün düzeltildi.
 
+✅ **14.09.2026 — ÜÇÜNCÜ tur, kullanıcı isteğiyle:** yukarıdaki 12 maddenin TAMAMI (O-09a,
+O-79, O-96, O-82, O-44, O-33, O-80, O-95, O-97, O-98, O-99, O-100) yedi üye paralel (dört
+alan uzmanı + üç daimi: `muhalif`/`deger-mi`/`fonksiyon-ustasi`) bir konsey turunda tekrar
+gerçek koda karşı denetlendi — "yaptıklarımızda gözden kaçan var mı, yapılması gerekip
+yapılmamış bir şey var mı". Sonuç: 12 madde doğrulandı, ama tur DÖRT yeni ve gerçek sorun
+buldu (**O-101…O-104**, hepsi aynı gece kapatıldı):
+- **O-101** — `gkv-302` + `fonksiyon-ustasi`: Zuzahlungskennzeichen ters yazılıyordu
+  (Anlage 3 §8.1.3: `0`≠pflichtig, doğrusu `3`), DTA'da U18 muafiyeti hiç yoktu (yalnız
+  basılı yollarda), `behandlungsende` referans tarihi sıralanmamış diziden alınıyordu.
+  5 bağımsız kod kopyası + 2 golden-test dosyası düzeltildi.
+- **O-102** — `muhalif` + `onprem` bağımsızca aynı bulguya vardı: CI botunun
+  `GITHUB_TOKEN` ile push'u `publish-calendar-api.yml`'i **hiç tetiklemiyordu** (GitHub'ın
+  döngü-önleme kuralı) — otomatik fiyat güncellemesi main'e iniyordu ama asla image'a/
+  canlıya çıkmamış olabilirdi, sistem "live ausgerollt" diye yanlış rapor veriyordu.
+  Açık `gh workflow run` dispatch'i eklendi.
+- **O-103** — `guvenlik`'in S-28 bulgusu: O-99'un iki-job bölünmesi tamamlanmamıştı,
+  yazma-yetkili job hâlâ npm-ortamında üretilmiş bir dosyayı import ediyordu. SQL üretimi
+  salt-okunur job'a taşındı.
+- **O-104** — `onprem`: O-100'ün chmod'u yalnız ileriye dönük çalışıyordu, eski `.praxura-
+  stand` anlık görüntüleri 0755 kalıyordu. `chmod -R go-rwx`'e çevrildi, her `update.sh`
+  koşusunda geriye dönük düzeltiyor.
+
+Ayrıca üç küçük dokümantasyon düzeltmesi (kod değişikliği değil): `db-ustasi` SaaS'a elle
+uygulanan migration'ların hiçbir yere iz bırakmadığını buldu (`migrations/README.md`'ye
+disiplin notu eklendi, 0015'in başlığına "SaaS: uygulandı" satırı düşüldü); `db/REGISTER.md`
+`heilmittel_tarif` girdisindeki "Podologie Preisquelle = heilmittel_katalog" iddiası
+düzeltildi (doğrusu `podologie_positions.js`); `erwartete-zaehler.json`'ın `_kommentar`'ı
+belirli bir migration numarasına ("0015") sabitliydi, versiyon-bağımsız hale getirildi.
+
 ⚠️ O-53 ve O-54'ün kendi `###` girdisi yok; O-01'in not bloğunda yaşıyorlar —
 kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
@@ -3570,7 +3654,7 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 | `offen` | 5 | O-18 · O-23 · O-32 · O-46 · O-75 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
 | 🟡 `kısmen gelöst` | 16 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
-| `gelöst` | 53 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 |
+| `gelöst` | 57 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda

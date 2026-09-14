@@ -21,6 +21,9 @@
 --
 -- Otorite zinciri: api-backend/sync_heilmittel_katalog.js ← billing/codes/*.js
 -- ZAEHLER: unveraendert (reine Daten-UPSERT, public — migrations/README.md Kural 6)
+-- SaaS: uygulandı 13.09.2026, MCP execute_sql (migrations/README.md "SaaS'a hangi
+-- migration'lar uygulandı" bölümü) — canlı heilmittel_katalog, 78040 iki satırı da
+-- doğrulandı (13.09.2026) ve tekrar 14.09.2026'da (db-ustasi ikinci-göz denetimi).
 
 INSERT INTO public.heilmittel_katalog (code, bereich, label, kuerzel, kategorie, diagnosegruppen, preis_eur, zuzahlung_eur, dauer, gueltig_ab, gueltig_bis, deprecated, ungueltig_ab, ersetzt_durch, max_pro_tag, max_pro_termin, notiz, gruppe, telemed, sort) VALUES
   ('X0102','physiotherapy','Unterwasserdruckstrahlmassage',NULL,'Massage',NULL,'33.75','3.38','15-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','0'),

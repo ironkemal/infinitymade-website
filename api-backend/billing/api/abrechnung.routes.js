@@ -27,7 +27,7 @@ import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js'
 import { renderRechnung } from '../pdf/rechnung.template.js';
 import { renderRzgQuittung } from '../pdf/rzg-quittung.template.js';
 import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
-import { calcAbrechnungsfallZuzahlung } from '../zuzahlung/calculator.js';
+import { calcAbrechnungsfallZuzahlung, isUnter18 } from '../zuzahlung/calculator.js';
 import { resolvePreis } from '../preise/resolver.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
 import {
@@ -300,8 +300,13 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
   }
   const resolvedPos = resolvePositionsnummer(stored, abrechnungscode);
 
+  // Aufsteigend sortiert: die letzte Sitzung entscheidet ueber Zuzahlungs-
+  // befreiung wegen Alters (isUnter18() unten) — ohne Sortierung waere
+  // `doneSessions[length-1]` nur "die zuletzt aus der DB gelesene", nicht die
+  // chronologisch letzte (fonksiyon-ustasi-Fund, O-101, 14.09.2026).
   const doneSessions = (rx.prescription_sessions || [])
-    .filter(s => s.status === 'done');
+    .filter(s => s.status === 'done')
+    .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
 
   const sessions = doneSessions.map(s => {
     const booking = s.bookings || s.booking_id || {};
@@ -381,7 +386,22 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
       dringend:                 !!rx.is_dringend,
       heilmittelBereich:        heilmittelBereichFuer(sector),
       therapiefrequenz:         frequenzToDigit(rx.frequenz),
-      zuzahlungskennzeichen:    rx.zuzahlung_befreit ? '1' : '0',
+      // O-101 (onprem/REGISTER.md, gkv-302-Review 14.09.2026): '0' bedeutete hier
+      // "zuzahlungspflichtig" — Anlage 3 TP5 §8.1.3 sagt '0' = "keine gesetzliche
+      // Zuzahlung" (ein eigener Rechtsbegriff), der Wert für den Normalfall ist '3'
+      // = "Zuzahlungspflichtig". Alle Leser dieses Felds (unten Z. ~690,
+      // dta/builder.js, dta/preflight.js, billing/utils/abrechnung-zeilen.js)
+      // wurden im selben Commit auf '3' umgestellt.
+      //
+      // U18-Befreiung (§ 43c/§ 61 SGB V) — vorher NUR in den Druckwegen geprüft
+      // (calcAbrechnungsfallZuzahlung → isUnter18()), die DTA kannte nur das
+      // manuelle Flag rx.zuzahlung_befreit. Ein minderjähriger Patient ohne
+      // gesetztes Flag bekam in der Kassendatei Zuzahlung berechnet, auf dem
+      // Papier nicht — zwei Wahrheiten fuer dieselbe Behandlung (gkv-302-Fund,
+      // O-101). Referenzdatum wie im Druckweg: letzte erbrachte Sitzung.
+      zuzahlungskennzeichen:    (rx.zuzahlung_befreit
+                                  || isUnter18(lead?.geburtsdatum, doneSessions[doneSessions.length - 1]?.done_at))
+                                  ? '1' : '3',
       kostentraegerIk:          rx.kostentraeger_ik,
       // Karten-IK ist bis zur echten Kostenträgerdatei meist NULL — builder.js
       // faellt dann bewusst auf kostentraegerIk zurueck (db-ustasi, 05.09.2026).
@@ -687,7 +707,7 @@ router.post('/abrechnung/create', async (req, res) => {
     for (const p of prescriptions) {
       const brutto = p.sessions.reduce((a, s) => a + (Number(s.einzelbetrag) || 0) * (Number(s.anzahl) || 1), 0);
       totalBrutto += brutto;
-      if (p.verordnung.zuzahlungskennzeichen === '0') {
+      if (p.verordnung.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig (Anlage 3 §8.1.3)
         const proz = p.sessions.reduce((a, s) => a + (Number(s.zuzahlungProPos) || 0) * (Number(s.anzahl) || 1), 0);
         totalZu += Math.min(brutto, proz + 10);
       }
@@ -1628,8 +1648,12 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     // — bei einem Fensterwechsel waehrend einer laufenden Serie widersprach das
     // der DTA, die schon immer pro Sitzung auflöst (gkv-302, O-97).
     const storedPos = rx.heilmittel_position || '';
+    // Sortiert: `behandlungsende` unten braucht die chronologisch LETZTE
+    // Sitzung, nicht nur die zuletzt aus der DB gelesene (fonksiyon-ustasi-Fund,
+    // O-101, 14.09.2026).
     const doneSessions = (rx.prescription_sessions || [])
-      .filter(s => s.status === 'done');
+      .filter(s => s.status === 'done')
+      .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
 
     const resolvedSessions = doneSessions.map(s => {
       const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
@@ -1659,7 +1683,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       // Bewusst rx.zuzahlung_befreit, NICHT `zuzahlungsfrei`: die 10-€-
       // Verordnungspauschale haengt an der Verordnung, nicht an der einzelnen
       // Position. Der §302-Weg (dta/builder.js) berechnet sie ebenfalls immer,
-      // solange das Zuzahlungskennzeichen '0' ist — beide Wege muessen sich hier
+      // solange das Zuzahlungskennzeichen '3' ist — beide Wege muessen sich hier
       // einig sein, sonst weicht die Rechnung von dem ab, was die Kasse abzieht.
       // Der haeufigste Fall (KG-ZNS Kinder) ist ohnehin abgedeckt: der
       // Calculator setzt fuer Patienten unter 18 alles auf 0.
@@ -1819,7 +1843,10 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     // Sitzung an ihrem eigenen Leistungsdatum (O-97, 13.09.2026 — siehe
     // Zuzahlungsrechnung oben für die volle Begründung).
     const storedPos = rx.heilmittel_position || '';
-    const doneSessions = (rx.prescription_sessions || []).filter(s => s.status === 'done');
+    // Sortiert — siehe Zuzahlungsrechnung oben (O-101, fonksiyon-ustasi-Fund).
+    const doneSessions = (rx.prescription_sessions || [])
+      .filter(s => s.status === 'done')
+      .sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
     const resolvedSessions = doneSessions.map(s => {
       const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
       const { preis_eur, zuzahlung_eur, position_frei } = resolvePreis({
@@ -2466,6 +2493,14 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
   const podoLegs = legsFuer('podologie');
   const abrechnungscode = abrechnungscodeAusLegs(podoLegs);
 
+  // Letzte Behandlung entscheidet ueber U18-Befreiung (isUnter18() unten) —
+  // gleiches Referenzdatum-Prinzip wie im physio-Mapper.
+  const letzteBehandlungsdatum = behandlungen
+    .map(b => b.behandlungsdatum)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+
   // Flatten: each behandlung × each hpnr_code = one session entry
   const sessions = [];
   for (const beh of behandlungen) {
@@ -2535,7 +2570,10 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
       dringend:              !!vord.is_dringend,
       heilmittelBereich:     heilmittelBereichFuer('podologie'),
       therapiefrequenz:      frequenzToDigit(vord.frequenz),
-      zuzahlungskennzeichen: vord.zuzahlung_befreit ? '1' : '0',
+      // O-101 — Wert + U18-Befreiung wie im physio-Mapper oben begründet.
+      zuzahlungskennzeichen: (vord.zuzahlung_befreit
+                               || isUnter18(lead?.geburtsdatum, letzteBehandlungsdatum))
+                               ? '1' : '3',
       kostentraegerIk:       vord.kostentraeger_ik,
       // Karten-IK ist bis zur echten Kostenträgerdatei meist NULL — builder.js
       // faellt dann bewusst auf kostentraegerIk zurueck (db-ustasi, 05.09.2026).
@@ -2814,7 +2852,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     for (const p of prescriptions) {
       const brutto = p.sessions.reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0);
       totalBrutto += brutto;
-      if (p.verordnung.zuzahlungskennzeichen === '0') {
+      if (p.verordnung.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig (Anlage 3 §8.1.3)
         totalZu += Math.min(brutto, p.sessions.reduce((a, s) => a + Number(s.zuzahlungProPos) * Number(s.anzahl || 1), 0) + 10);
       }
     }
@@ -3238,7 +3276,7 @@ router.post('/abrechnung/korrektur', async (req, res) => {
     for (const p of prescriptions) {
       const brutto = p.sessions.reduce((a, s) => a + (Number(s.einzelbetrag) || 0) * (Number(s.anzahl) || 1), 0);
       totalBrutto += brutto;
-      if (p.verordnung.zuzahlungskennzeichen === '0') {
+      if (p.verordnung.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig (Anlage 3 §8.1.3)
         const proz = p.sessions.reduce((a, s) => a + (Number(s.zuzahlungProPos) || 0) * (Number(s.anzahl) || 1), 0);
         totalZu += Math.min(brutto, proz + 10);
       }
