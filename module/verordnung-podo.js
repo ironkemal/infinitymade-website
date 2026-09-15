@@ -649,8 +649,8 @@ function sitzungsplanEl() {
   if (!anker) return null;
   el = document.createElement('div');
   el.id = 'rzPodoSitzungsplan';
-  el.style.cssText = 'margin-top:10px;padding:10px;border:1px solid var(--border);'
-    + 'border-radius:8px;background:var(--bg-card);display:none;';
+  el.style.cssText = 'margin-top:6px;padding:6px 10px;border-left:2px solid var(--border);'
+    + 'border-radius:4px;background:var(--bg-card);display:none;';
   // Unter die podologischen Felder, aber ueber den Hinweisstreifen.
   const hinweis = $('rzPodoHinweis');
   if (hinweis && hinweis.parentElement === anker) anker.insertBefore(el, hinweis);
@@ -698,37 +698,36 @@ async function sitzungsplanAktualisieren(supabase, ctx) {
   if (!plan.anwendbar && !plan.hinweis) { el.style.display = 'none'; return false; }
 
   const zeilen = plan.zeilen.map(z => `
-    <div style="display:flex;gap:8px;align-items:baseline;margin-top:4px;">
-      <span style="flex:0 0 auto;font-weight:600;color:var(--text-main);font-size:12px;">${h(z.titel)}</span>
-      <span style="color:var(--text-muted);font-size:12px;">${h(z.text)}</span>
+    <div style="display:flex;gap:6px;align-items:baseline;margin-top:2px;">
+      <span style="flex:0 0 auto;font-weight:600;color:var(--text-main);font-size:11px;">${h(z.titel)}</span>
+      <span style="color:var(--text-muted);font-size:11px;">${h(z.text)}</span>
     </div>`).join('');
 
   // Die Altbestandsfrage nur zeigen, wenn die Regel sie stellt — beantwortet
   // oder im Nagelzweig verschwindet sie wieder.
   const frage = plan.rueckfrage ? `
-    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
-      <div style="font-size:12px;color:var(--text-main);">${h(plan.rueckfrage)}</div>
-      <div style="display:flex;gap:14px;margin-top:5px;font-size:12px;color:var(--text-muted);">
-        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;">
+    <div style="margin-top:5px;padding-top:5px;border-top:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--text-main);">${h(plan.rueckfrage)}</div>
+      <div style="display:flex;gap:12px;margin-top:3px;font-size:11px;color:var(--text-muted);">
+        <label style="display:flex;gap:4px;align-items:center;cursor:pointer;">
           <input type="radio" name="rzPodoVor2023" value="nein"${_altbestand === false ? ' checked' : ''}> Nein
         </label>
-        <label style="display:flex;gap:5px;align-items:center;cursor:pointer;">
+        <label style="display:flex;gap:4px;align-items:center;cursor:pointer;">
           <input type="radio" name="rzPodoVor2023" value="ja"${_altbestand === true ? ' checked' : ''}> Ja
         </label>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
-        Die Antwort steuert nur diese Vorschau und wird nicht gespeichert —
-        vor der Abrechnung gehört sie in die Patientendokumentation.
+      <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">
+        Steuert nur diese Vorschau, wird nicht gespeichert.
       </div>
     </div>` : '';
 
   el.innerHTML = `
-    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Sitzungsplan (Vorschau)</div>
+    <div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Sitzungsplan (Vorschau)</div>
     ${zeilen}
-    ${plan.hinweis ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${h(plan.hinweis)}</div>` : ''}
+    ${plan.hinweis ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${h(plan.hinweis)}</div>` : ''}
     ${frage}
-    <div style="font-size:11px;color:var(--text-muted);margin-top:6px;font-style:italic;">
-      Befundpositionen stehen nicht auf der Verordnung — sie werden in der Podologie-Abrechnung gesetzt.
+    <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">
+      Befundpositionen stehen nicht auf der Verordnung — sie werden in der Abrechnung gesetzt.
     </div>`;
   el.style.display = 'block';
 
