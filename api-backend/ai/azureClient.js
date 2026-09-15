@@ -163,6 +163,9 @@ export function configSummary() {
     endpoint: ENDPOINT ? ENDPOINT.replace(/^https?:\/\//, '').split('.')[0] + '.…' : '(unset)',
     deployment: DEPLOYMENT,
     api_version: API_VERSION,
+    // Region is what the AVV (§ 6) and the VVT promise to customers — expose it
+    // so the live box can be checked against the paperwork without SSH access.
+    region: REGION || '(inferred from endpoint)',
     dry_run: isDryRun()
   };
 }

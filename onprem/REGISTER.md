@@ -326,6 +326,13 @@ maddede). ⚠️ O-106'nın kenarında bir **kapı dersi** var: `tools/check-onp
 `app_host` çalışma ağacında **16**, taban **15**; `git add dashboard.js` anında
 commit reddedilecek.
 
+⚠️ **14.09.2026 (gece) — kullanıcı sorusundan bir yeni madde: O-107.** „Sihirbazda
+girilen owner şifresi nereye yazılıyor, sıfırlamak isterse ne olacak?" Birinci yarısı
+temiz (şifre müşterinin kendi kutusundaki `auth.users`'ta, bize hiçbir şey gitmiyor),
+ikinci yarısı **açık**: SMTP kurulmamış kutuda şifre unutulursa kurtarma yolu yok,
+sihirbaz tek kullanımlık, ve tek görünür seçenek olan `install.sh --neu` veritabanını
+siliyor. Çözüm bir host betiği (`reset-owner-passwort.sh`) — ⛔ **HTTP ucu değil**.
+
 > ⚠️ **12.09.2026 — bu blok neden yeniden yazıldı:** önceki hâli (11.09.2026 gece)
 > Faz 2.1c'yi hâlâ "yapılacak" gösteriyordu, oysa `install.sh` o gece zaten yazılmıştı —
 > yalnız O-numaralarının Durum satırları güncellenmemişti. Bir onprem-review turu
@@ -2820,6 +2827,49 @@ de eklenebilir (taze kutuda `bookings` boş, orada ölçmek daha az müdahaleci)
 | **Çözüm** | `chmod 700 "$STAND_DIR"` → `chmod -R go-rwx "$STAND_DIR"`, her `update.sh` çalışmasında (yani periyodik olarak, mevcut kutularda da) tüm alt ağacı geriye dönük düzeltiyor |
 | **Durum** | ✅ **gelöst (14.09.2026)**, `bash -n` ile doğrulandı |
 
+### O-107 — Owner şifresi unutulursa kutuda **geri dönüş yolu yok**: SMTP opsiyonel, sihirbaz tek kullanımlık, `--neu` veritabanını siliyor
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kutunun tek yöneticisi (owner) şifresini unutursa hesabını kurtaracak hiçbir yol yok — ne self-servis, ne elle. Kutu çalışmaya devam eder ama sahibi kendi hasta verisinden kalıcı olarak dışarıda kalır |
+| **Nerede** | Şifrenin yeri: `api-backend/setup/router.js:199-203` (`supabase.auth.admin.createUser({ email, password, email_confirm: true })`) → `SUPABASE_URL: http://kong:8000` (`onprem/docker-compose.yml:417`), yani **müşterinin kendi** `praxura-db`'sindeki `auth.users`, GoTrue'nun bcrypt'iyle. Tek self-servis kurtarma: `login.js:316` `resetPasswordForEmail` — mail gerektirir. Diğer iki şifre değiştirme yeri **oturum** gerektirir, kilitlenmiş owner'a fayda etmez (`login.js:342` recovery-link sonrası · `dashboard.js:13318` Ayarlar). Kanalın kapalı olduğu yer: `onprem/install.sh:344-353` (SMTP adımı opsiyonel, „n" → `set_env SMTP_HOST ""`) + `onprem/docker-compose.yml:181-190` (GoTrue'nun SMTP'si o env'den gelir). Sihirbaz ikinci kez açılmaz: `api-backend/setup/router.js:77` `istAbgeschlossen()` → `/owner` ve `/verify` 410. Break-glass aracı **yok**: `onprem/*.sh` = install · update · backup · restore; `grep -i "passwor" onprem/*.sh` yalnız `POSTGRES_PASSWORD` (backup/restore) döner, `grep -i "passwor\|reset" onprem/REGISTER.md` bu maddeden önce sıfır ilgili sonuç veriyordu |
+| **Tip** | **G** (merkez mi kutu mu: hesap kurtarma yeteneği kutuda kalmalı, bugün hiçbir tarafta yok). Bizim anahtarımız ya da yetkimiz işin içinde olmadığı için E/H değil |
+| **Kutuda ne olur** | SMTP kurulmamış bir kutuda owner şifresini unuttuğu an: (1) `resetPasswordForEmail` çağrısı GoTrue'da mail gönderemez — kullanıcı arayüzde „mail gönderildi" benzeri bir cevap görür, mail hiç çıkmaz (yine sessiz arıza sınıfı); (2) `DISABLE_SIGNUP=true` (`onprem/.env.template:191`) olduğu için yeni hesap açılamaz; (3) kurulum sihirbazı kapalı, jeton tüketilmiş; (4) **biz giremeyiz — K10 bunu bilinçli olarak yasaklıyor**, yani „destek hattını arar, biz resetleriz" diye bir yol yok ve olmayacak. Geriye tek görünür seçenek `install.sh --neu` kalır ve **o veritabanını siler** (`install.sh:111-122`, `:210-216`). Yani bugün kutunun sahibi için „şifremi unuttum" ile „bütün hasta verimi kaybettim" arasında tek bir yanlış komut var. ⚠️ Bunu ağırlaştıran ikinci bulgu: `install.sh:353`, SMTP'yi atlayan müşteriye „sonradan **`bash install.sh --neu`** ile ya da elle .env'de ekleyebilirsin" diyor — yıkıcı olanı **önce** sayıyor. Silme öncesinde `LÖSCHEN` yazdıran onay var, yani sessiz değil; ama „mail kurayım" diye yola çıkan bir insanı, üstelik tam da paniklediği anda, veri silen komuta yönlendiren bir metin yanlıştır. SMTP kurulu kutularda maddenin ilk yarısı çalışır — ama O-51 ayakta olduğu sürece kurtarma maili de SPF/DMARC yüzünden spam'e düşebilir, yani kanal „var" ile „güvenilir" arasında |
+| **Çözüm** | **Faz 2.1c — `onprem/reset-owner-passwort.sh`** (host betiği ailesi: install · update · backup · restore'un yanı). Müşteri **kendi** sunucusunda, **kendi** root'uyla çalıştırır; biz ne çalıştırırız ne erişiriz → K10 bozulmaz. Tasarım sınırları: (1) **CLI, rota değil** — aşağıdaki kırmızı çizgi; (2) uygulama `docker compose exec -T api node setup/reset-owner-passwort.mjs` ile, O-82'nin `update-alarm-mail.mjs` deseninin aynısı, `api` sağlıksızsa aynı maddedeki `docker compose run --rm --no-deps --pull never api …` yedeği (`--pull never` şart: internetsiz kutu) ; (3) **şifre argv'ye düşmez** — `read -r -s` ile sorulur (backup.sh'ın parmak izi kuralıyla aynı gerekçe: argv host'ta `ps`'te ve shell history'de görünür); (4) hedef hesap `praxura_setup.owner_user_id`'den çözülür — `/test-smtp`'nin zaten kullandığı zincir — yani betik „istediğin kullanıcının şifresini değiştir" aracına dönüşmez, yalnız owner'ı kurtarır; (5) `auth.admin.updateUserById()` kullanılır, `auth.users`'a elle bcrypt **yazılmaz** (GoTrue'nun kendi invariant'ları ve oturum iptali korunur); (6) iz bırakır: `.praxura-stand/` altına zaman damgası + „owner şifresi elle sıfırlandı" satırı, şifre yazılmadan (dizin rejimi O-100/O-104 ile zaten `go-rwx`). **Ek, aynı görevde:** `install.sh:353` cümlesi ters çevrilir — doğru yol („elle `.env` + `docker compose up -d auth api`, HER İKİ konteyner") önce ve tek başına; `--neu` o satırda **hiç anılmaz**. Üçüncü parça belge: kurulum el kitabına „şifre kurtarma" maddesi (`RELEASE-STANDARD.md` destek bölümü) — aracın var olduğunu bilmeyen müşteri için araç yoktur |
+| **Durum** | `offen` — 14.09.2026'da açıldı, henüz uygulanmadı. Karar kullanıcıda (Faz 2.1c'ye alınsın mı, hangi turda) |
+
+> **Üç hüküm, 14.09.2026 (`onprem`):**
+>
+> **1. Korkuluk ihlali yok, veto konusu değil.** G1 nötr (kutudan dışarı hiçbir şey
+> çıkmaz), G2 nötr (kullanılan sırlar müşterinin kendi sunucusunda üretilmiş kendi
+> sırları; bizim hiçbir anahtarımız yok), G7 temiz (SaaS davranışı hiç değişmez — betik
+> kutu paketinin parçası, merkez VPS'inde çalıştırılmaz), K10 korunur. Bu bir
+> **erişilebilirlik/kilitlenme** açığı, gizlilik açığı değil. Yeni bir yetki de
+> yaratmıyor: bu betiği çalıştırabilen kişi host'ta zaten root'tur ve `.env`'deki
+> `POSTGRES_PASSWORD` + `DATA_ENCRYPTION_KEY` ile veritabanının tamamını halihazırda
+> okuyabilir. Yani yeni saldırı yüzeyi değil, **var olan yeteneğin ergonomik
+> sarmalayıcısı**. Yine de tasarım inmeden `guvenlik` bir kez okumalı (hesap ele
+> geçirme yolu + iz bırakma).
+>
+> **2. ⛔ Bu HTTP ucu olarak çözülmez.** `SETUP_TOKEN` ile korunan bir
+> `/api/setup/reset-password` rotası cazip görünür ve **yanlıştır**: praxis ağındaki
+> herkese açık, kalıcı bir hesap-ele-geçirme yüzeyi olur, ve **aynı kod SaaS'ta da
+> koşar** — O-66/O-67'nin dersi tam buydu, `SETUP_TOKEN` merkez VPS'inde asla set
+> edilmez çünkü set edilirse owner-yaratma ucu canlıda açılır (CLAUDE.md'ye de o yüzden
+> yazıldı). Kurtarma yeteneği **host'ta duran bir komut** olmalı, ağdan erişilebilen bir
+> uç değil. Fark şu: host'a erişebilen zaten her şeye erişebilir; ağa açılan uç ise
+> erişemeyene erişim verir.
+>
+> **3. „SMTP'yi zorunlu yapalım" (seçenek a) doğru cevap değil — iki ayrı sebeple.**
+> Birincisi yetki: SMTP'nin opsiyonel olması 11.09.2026'da **kullanıcının verdiği**
+> O-66 kararıdır (seçenek (a): `install.sh` sorar, atlanabilir); ben onu geri açmam,
+> gerekirse kullanıcıya çıkarırım. İkincisi yetersizlik: zorunlu SMTP bu maddeyi
+> **kapatmaz**. Mail tabanlı kurtarma on-prem'de yapı gereği kırılgan bir kanaldır —
+> sağlayıcı şifresi süresi dolar, kutu internetsiz kalır, ve O-51 ayakta olduğu sürece
+> kurtarma maili alıcının spam klasörüne düşer. İkisi birbirinin yerine geçmez: SMTP
+> kurulu kutuda kurtarma **rahatlar**, betik ise **her** kutuda son çare olarak durur.
+> Doğru cevap (b)'dir; (a) ayrıca gerekli değildir.
+
 ### O-105 — CORS beyaz listesi yalnız SaaS domain'lerini tanıyor: kutuda **aynı-origin** POST'lar reddediliyor
 
 | Alan | İçerik |
@@ -3675,7 +3725,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 106 madde** (O-01 … O-106) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
+**Toplam 107 madde** (O-01 … O-107) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
 bildirim-sonrası denetiminden çıktı, §7L; aynı gece üçü (O-85/O-86/O-89) tam, ikisi
 (O-87/O-88) kısmen kapatıldı — detay kendi maddelerinde. Beş yenisi daha (O-90…O-94)
 aynı akşam Faz 2.2 dilim 2b'nin kendi post-hoc denetiminden çıktı — üçü (O-90/O-92/
@@ -3734,7 +3784,7 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 6 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 |
+| `offen` | 7 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-107 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
 | 🟡 `kısmen gelöst` | 16 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
 | `gelöst` | 57 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 |
