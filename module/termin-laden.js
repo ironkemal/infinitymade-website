@@ -37,8 +37,17 @@
 /**
  * Der Spaltensatz der Tagesansicht — die vollständige Sicht auf einen Termin.
  * Sie steht hier, damit Tagesansicht und Nachladen nicht auseinanderlaufen.
+ *
+ * `no_show_session_links` seit 16.09.2026 dabei (Ops a8186cb8, Nachkontrolle):
+ * bei „nicht erschienen" wird `prescription_sessions.booking_id` freigegeben
+ * (module/termin-nicht-erschienen.js), also fand `openBookingActionModal()`
+ * beim erneuten Öffnen desselben Termins keine Sitzungszeile mehr und zeigte
+ * die Rezeptinfo/Sitzungsplan-Karte gar nicht mehr an — obwohl der Termin
+ * ganz normal aussehen soll, nur mit sichtbarem „Status korrigieren". Die
+ * Rückfahrkarte (`no_show_session_links`) trägt die `prescription_id` noch,
+ * wenn die Live-Zeile schon weg ist — Fallback in `openBookingActionModal()`.
  */
-export const TERMIN_SELECT = 'id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,rezeptart,payment_method,services(title,code,color,is_internal),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))';
+export const TERMIN_SELECT = 'id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,rezeptart,payment_method,no_show_session_links,services(title,code,color,is_internal),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))';
 
 /**
  * Lädt den Termin vollständig nach.

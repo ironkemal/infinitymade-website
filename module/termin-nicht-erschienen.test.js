@@ -5,6 +5,7 @@ import {
   markiereNichtErschienen,
   rebindeNoShowSitzungen,
   baueSessionLinks,
+  rueckfahrkarteRxId,
 } from './termin-nicht-erschienen.js';
 
 /**
@@ -276,4 +277,32 @@ test('die Fortschrittspruefung laeuft auch in der Gegenrichtung', async () => {
   const gesehen = [];
   await rebindeNoShowSitzungen(d.supabase, { id: 'b1' }, { fortschritt: async (_sb, id) => { gesehen.push(id); } });
   assert.deepEqual(gesehen, ['rx1']);
+});
+
+// rueckfahrkarteRxId() — Panel-Rueckfall, wenn der Live-Join nach der
+// Freigabe (Schritt 5 in markiereNichtErschienen) schon leer ist.
+test('rueckfahrkarteRxId: no_show ohne Live-Join liefert die juengste prescription_id', () => {
+  const booking = {
+    status: 'no_show',
+    no_show_session_links: [
+      { session_id: 's1', prescription_id: 'rx-alt' },
+      { session_id: 's2', prescription_id: 'rx-neu' },
+    ],
+  };
+  assert.equal(rueckfahrkarteRxId(booking, null), 'rx-neu');
+});
+
+test('rueckfahrkarteRxId: ein lebender Join hat Vorrang, kein Rueckfall', () => {
+  const booking = { status: 'no_show', no_show_session_links: [{ session_id: 's1', prescription_id: 'rx-alt' }] };
+  assert.equal(rueckfahrkarteRxId(booking, { prescriptions: { id: 'rx-live' } }), null);
+});
+
+test('rueckfahrkarteRxId: kein no_show -> kein Rueckfall', () => {
+  const booking = { status: 'confirmed', no_show_session_links: [{ session_id: 's1', prescription_id: 'rx-alt' }] };
+  assert.equal(rueckfahrkarteRxId(booking, null), null);
+});
+
+test('rueckfahrkarteRxId: keine Rueckfahrkarte -> null statt Absturz', () => {
+  assert.equal(rueckfahrkarteRxId({ status: 'no_show' }, null), null);
+  assert.equal(rueckfahrkarteRxId({ status: 'no_show', no_show_session_links: [] }, null), null);
 });

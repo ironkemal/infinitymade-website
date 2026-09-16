@@ -38,3 +38,7 @@ test('die Felder, die der Speicherpfad ueberschreibt, sind alle dabei', () => {
 test('die Sitzungsbeziehung bleibt erhalten', () => {
   assert.match(TERMIN_SELECT, /prescription_sessions\(/);
 });
+
+test('no_show_session_links wird mitgeladen — sonst verschwindet die Rezeptinfo beim erneuten Oeffnen eines Ausfall-Termins', () => {
+  assert.ok(oberflaeche(TERMIN_SELECT).includes('no_show_session_links'));
+});

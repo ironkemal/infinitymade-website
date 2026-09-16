@@ -1,5 +1,5 @@
 {
- "erzeugt": "2026-09-14",
+ "erzeugt": "2026-09-16",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-09-14)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-14)",
@@ -10215,6 +10215,7 @@
    "erwaehnt": [
     "api/dsgvo.js",
     "module/booking-status-korrektur.test.js",
+    "module/sitzung-bindung.test.js",
     "module/termin-nicht-erschienen.test.js"
    ],
    "register": true,
@@ -10625,6 +10626,7 @@
     "module/rechnung-editor.js",
     "module/rezeptinfo-geld.js",
     "module/sitzung-abgleich.js",
+    "module/sitzung-bindung.js",
     "module/sitzungsfortschritt.js",
     "module/termin-aktionen.js",
     "module/termin-nicht-erschienen.js"

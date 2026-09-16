@@ -39,7 +39,7 @@ import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagn
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260914';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
-import { markiereNichtErschienen, ausgefalleneEinheiten } from './module/termin-nicht-erschienen.js?v=20260916';
+import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20260906';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht
 // in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
@@ -94,7 +94,7 @@ import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blo
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
-import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260905g';
+import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260916';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
@@ -1732,7 +1732,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,dauer_quelle,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,dauer_quelle,no_show_session_links,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -3292,7 +3292,7 @@ async function openBookingActionModal(booking, opts = {}) {
   // waren von hier aus unsichtbar. Jetzt blättert man mit ‹ › durch: der Pfeil
   // ruft diese Funktion mit `opts.rxId` erneut auf, das Panel baut sich neu auf.
   const rxWahl = await waehleVerordnungFuerPanel({
-    supabase, booking, verknuepfteSession: ps, gewuenschteRxId: opts.rxId || null,
+    supabase, booking, verknuepfteSession: ps, gewuenschteRxId: opts.rxId || rueckfahrkarteRxId(booking, ps) || null,
   });
   const rx = rxWahl.rx;
   if (rxCard && rx && rx.anzahl_einheiten) {

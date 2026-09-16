@@ -198,6 +198,29 @@ export async function markiereNichtErschienen(ctx, booking, opts = {}) {
 }
 
 /**
+ * Rueckfall-`prescription_id` fuer den Seitenbereich (`openBookingActionModal()`),
+ * wenn der Termin no_show ist und der Live-Join (`booking.prescription_sessions`)
+ * schon leer ist — `markiereNichtErschienen()` hat `booking_id` ja gerade
+ * freigegeben (Schritt 5 oben). Ohne diesen Rueckfall verschwand die ganze
+ * Rezeptinfo-/Sitzungsplan-Karte, sobald man einen ausgefallenen Termin ein
+ * zweites Mal oeffnete — sichtbar sollte nur zusaetzlich „Status korrigieren"
+ * werden, nicht das ganze Panel (Ops a8186cb8, Nachkontrolle 16.09.2026).
+ *
+ * Nimmt den JUENGSTEN Eintrag der Rueckfahrkarte — bei Mehrfachausfall (Ops-
+ * Korrektur und erneutes no_show am selben Termin) ist das der aktuelle Stand.
+ *
+ * @param {{status?:string, no_show_session_links?:Array}} booking
+ * @param {object|null} ps  der Live-Join, falls vorhanden (dann Vorrang, hier nichts zu tun)
+ * @returns {string|null}
+ */
+export function rueckfahrkarteRxId(booking, ps) {
+  if (ps || booking?.status !== 'no_show') return null;
+  const links = booking?.no_show_session_links;
+  if (!Array.isArray(links) || !links.length) return null;
+  return links[links.length - 1]?.prescription_id || null;
+}
+
+/**
  * Welche der offenen Einheiten sind durch einen Ausfall wieder frei geworden —
  * und wann?
  *
