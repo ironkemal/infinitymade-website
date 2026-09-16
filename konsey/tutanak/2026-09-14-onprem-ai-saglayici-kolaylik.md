@@ -204,6 +204,48 @@ Yavuz Kemal Demir
 InfinityMade (Praxura) · Siegburg
 ```
 
-**Durum:** Mail atılmadı, sicile `pending` olarak düşüldü. Cevap geldiğinde `onprem/REGISTER.md`
-O-74 ve bu tutanak güncellenecek.
+**Durum:** Mail 2026-09-14'te atıldı, **cevap 2026-09-15'te geldi** (Vanessa Ribeiro
+Martins, IONOS). Aşağıda tam analiz.
+
+### IONOS'un cevabı — madde madde değerlendirme (2026-09-15)
+
+| # | Soru | Cevap özeti | Sonuç |
+|---|---|---|---|
+| 1 | Kapsam | AI Model Hub, "erweitertes" C5:2020 Typ-1 testatının "KI & Analytik" kümesinde **yazılı olarak teyit edildi**. Tam Prüfbericht + servis listesi **NDA'lı, gizli** | 🟢 Kapsam sorusu kapandı — belge hâlâ görülmedi |
+| 2 | Typ-2 | Tarih yok. "KI & Analytik" kümesi 28.05.2026'da Typ-1'i yeni geçti, Typ-2 için **6-12 ay izlenen operasyon** gerekiyor dediler | 🔴 **Blokaj devam ediyor** — en erken 2026 sonu/2027 ortası, garanti yok |
+| 3 | Gleichwertigkeit (C5GleichwV) | Ayrı bir Maßnahmenplan **yok** — "Typ-1 testatımız zaten kanıt" diyorlar (iki farklı hukuki aracı birbirine karıştırıyorlar, ama en azından hangi yolu izlediklerini netleştirdi: C5GleichwV değil, doğrudan C5 yolu) | 🟡 Cevapsız kaldı ama önemsiz — zaten Typ-1 yoluna gidiyorlar |
+| 4 | Müşteri kriterleri (Abs.3 Nr.3) | Prüfbericht'in içinde, rapor teslim edilince görünür olacak | 🟡 NDA'ya bağlı |
+| 5 | Vertragspartner/AVV | **IONOS Cloud GmbH** doğru muhatap (önceki karışıklık çözüldü). AVV **otomatik**, AGB onayıyla kuruluyor, ayrı imza yok | 🟢 Temiz, sürtünmesiz |
+| 6 | Alt yüklenici/işleme yeri | Alt yüklenici **yok**, işleme tamamen Almanya, personel yalnız AB'de — yazılı teyit | 🟢 Güçlü teyit |
+| 7 | §203 StGB | **Cevapsız — "üzerinde çalışıyoruz, hazır olunca haber veririz"**, tarih yok | 🔴 **Gerçek, açık boşluk** |
+| 8 | Kapasite/Kota (Kemal'in Azure deneyimi) | **Evet, aynı risk sınıfı var** — serverless/shared platform, yoğunlukta HTTP 429/503 dönebiliyor. Garanti kapasite için **dedicated GPU VM** seçeneği var (fiyatı bilinmiyor, ayrı sorulmalı) | 🟡 Mucize yok, ama B planı var |
+| 9 | Onboarding | **Gerçekten kolay** — Data Center Designer UI'dan hesap + Token Manager'dan API anahtarı, teknik bilgisi olmayan praxis sahibi yapabilir. **ISV Partner Programı** da var, ayrıca araştırılmalı | 🟢 Kemal'in asıl endişesini çözüyor |
+
+### Karar üzerindeki etki
+
+**09-14 kararı DEĞİŞMEDİ** — sağlayıcı hâlâ isimle önerilemez, iki blokaj kapanmadı:
+Typ-2 tarihsiz + §203 cevapsız. Ama gerçek ilerleme var (AVV, alt yüklenici, kapsam
+netleşti) ve iki pratik soru (kota, kurulum) cevaplandı.
+
+### Yeni açık maddeler (bu cevaptan doğan)
+
+- [x] **NDA süreci — ERTELENDİ (2026-09-15, Kemal'in kararı, gerekçesi doğru).** NDA
+      yalnız Prüfbericht'in DETAYINI gösterir (kapsam listesi + müşteri kriterleri);
+      Typ-2 olmadan bu detay kararı değiştirmiyor, çünkü §393 Abs.4 S.2 net biçimde
+      Typ-2 istiyor. Rapor içeriği ne olursa olsun blokaj aynı. NDA, IONOS **Typ-2 için
+      somut tarih** verdiğinde anlamlı olacak (o zaman müşteri-kriterlerini önceden
+      görüp checklist'i hazırlamak işe yarar) — şimdi erken.
+- [ ] **§203 belgesi beklemede** — IONOS kendiliğinden haber verecek dedi, takip tarihi
+      yok. `onprem/REGISTER.md` O-74'e "beklemede, IONOS'tan" diye not düşülecek.
+- [ ] **ISV Partner Programı araştırılmalı** — ama önce `onprem`/`legal-de`'ye sorulmalı:
+      bu, 09-12'de veto edilen CSP/reseller modeliyle aynı yapıya mı giriyor (Praxura
+      sözleşme zincirine geri girer mi), yoksa gerçekten zararsız bir teknik/pazarlama
+      ortaklığı mı? **Araştırılmadan varsayılmayacak.**
+- [ ] **Dedicated GPU VM fiyatlandırması** — garanti kapasite ihtiyacı doğarsa (ilk
+      müşteri, yoğun kullanım) bu seçeneğin maliyeti IONOS'a ayrıca sorulmalı.
+
+### Yeniden açma tetiğine üçüncü koşul
+
+09-12'deki iki koşula (IONOS Typ-2, Microsoft C5) ek olarak: **§203 StGB belgesi IONOS'tan
+gelirse** de kısmi bir kapı açılmış olur — ama tek başına yeterli değil, Typ-2 hâlâ şart.
 

@@ -37,7 +37,11 @@
 		X-Frame-Options "SAMEORIGIN"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
-		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# camera=(self): ohne das bricht Rezept-Scan per Webcam lautlos (getUserMedia
+		# → NotAllowedError, kein Fallback ausgelöst, weil isSecureContext hier true
+		# ist). serial=(self): fuer eGK-Kartenleser per Web Serial API vorgesehen,
+		# noch ungenutzt — bewusst explizit statt implizitem Default (O-109).
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), serial=(self)"
 		# Nur bei echtem Zertifikat sinnvoll (HSTS_MAX_AGE=0 bei "internal"/
 		# selbstsigniert lassen — sonst sperrt der Browser den Host fest auf
 		# HTTPS, und der Rückweg liegt beim Kunden, nicht bei uns. O-52).

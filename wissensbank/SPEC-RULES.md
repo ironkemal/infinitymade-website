@@ -8,7 +8,8 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-13 (O-97 — Leistungsdatum vs. Ausstellungsdatum, 1 yeni kural + O-80'in 2'si)
+> Son güncelleme: 2026-09-16 (eGK kart okuyucu araştırması — Versichertenstatus kaynağı
+> + SMC-B'siz eGK okuma, 2 yeni kural)
 
 ---
 
@@ -245,6 +246,33 @@
 - ⚠️ `dashboard.js:9761`'deki „auch bei Wiedervorstellung" ibaresi **hiçbir sözleşme metninde
   geçmiyor** — içerik olarak yanlış değil ama alıntılanabilir değil, 2026-08-31'de sözleşme
   lafzıyla değiştirildi.
+
+### Versichertenstatus kaynağı Verordnung'dur, kart değil
+- **Kural:** SLLA'ya yazılan 5 haneli Versichertenstatus Verordnung'daki basımdan alınır;
+  7 haneli basımda 1-5. haneler kullanılır. KVNR için KV-Karte de meşru kaynaktır. Kart
+  okuması hasta kaydını doldurabilir/doğrulayabilir ama Verordnung alanlarını **ezemez** —
+  çelişkide kullanıcıya fark gösterilir, sessizce üzerine yazılmaz.
+- **Kaynak:** Anlage 1 TP5 V21, § 5.5.3.1 (SLLA Basis-Segmente) —
+  *"Krankenversichertennummer ist zwingend gemäß KV-Karte bzw. ärztlicher Verordnung
+  anzugeben. … Anzugeben ist der Versichertenstatus von der Verordnung."*
+  (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:2059-2081`)
+- **Geçerlilik:** 01.10.2025'ten beri
+- **Kodda:** uygulanmamış — `api-backend/billing/api/abrechnung.routes.js:361` ve `:2551`
+  alan boşsa sessizce `'1'` varsayıyor (kart okuma özelliği yazılınca bu da düzeltilmeli)
+- **Kapsam:** tüm Leistungserbringergruppen, tüm Verordnungsart'lar
+
+### eGK Versichertenstammdaten SMC-B'siz okunabilir
+- **Kural:** eGK'nın EF.PD (kimlik: ad/soyad/doğum tarihi/adres/KVNR), EF.VD (sigorta:
+  Kostenträger-IK/kasa adı/Versichertenart), EF.StatusVD konteynerleri **hiçbir kimlik
+  doğrulaması olmadan** okunur — Konnektor/SMC-B/eHBA/TI gerekmez. Yalnız EF.GVD
+  (Zuzahlungsstatus, besondere Personengruppe, DMP) C2C-Authentisierung (SMC-B veya
+  eHBA) ister.
+- **Kaynak:** gematik gemSpec_eGK_Fach_VSDM V1.2.1, VSDM-A_2971 / VSDM-A_2972
+- **Geçerlilik:** güncel
+- **Kodda:** uygulanmamış — kart okuma özelliği henüz yazılmadı (bkz. `onprem/Caddyfile`
+  `Permissions-Policy: serial=(self)`, 2026-09-16'da Web Serial için önceden açıldı)
+- **Kapsam:** tüm Leistungserbringergruppen — VSDM-Pflicht (§291 Abs.2b) yalnız
+  Vertragsärzte'yi bağlar, bizi değil; bu kural onlardan bağımsız çalışır
 
 # §302 Abrechnung / Korrekturverfahren
 

@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Kartleser-Test — intern</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#1a1d24; --border:#2a2e38; --text:#e8eaed;
+    --muted:#8b93a1; --accent:#4f8cff; --ok:#3ecf8e; --warn:#f5a623; --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;padding:24px;line-height:1.5}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:24px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;max-width:900px}
+  @media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px}
+  .card h2{font-size:15px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .card p.desc{color:var(--muted);font-size:13px;margin:0 0 14px}
+  input[type=text]{width:100%;background:#0c0e12;border:1px solid var(--border);color:var(--text);
+    padding:12px 14px;border-radius:8px;font-size:16px;font-family:var(--mono)}
+  input[type=text]:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;
+    font-size:14px;cursor:pointer;font-weight:600}
+  button:hover{filter:brightness(1.1)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
+  .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px;border-radius:20px;background:#0c0e12;border:1px solid var(--border);color:var(--muted)}
+  .status.ok{color:var(--ok);border-color:var(--ok)}
+  .status.warn{color:var(--warn);border-color:var(--warn)}
+  .row{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  .log{margin-top:14px;background:#0c0e12;border:1px solid var(--border);border-radius:8px;
+    padding:10px 12px;font-family:var(--mono);font-size:12px;max-height:260px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+  .log .line{padding:2px 0;border-bottom:1px solid #1a1d24}
+  .log .ts{color:var(--muted)}
+  .log .fast{color:var(--ok)}
+  .log .slow{color:var(--muted)}
+  .hint{font-size:12px;color:var(--muted);margin-top:10px}
+  .full{grid-column:1/-1}
+  .full .log{max-height:220px}
+  .badge{font-size:11px;padding:2px 7px;border-radius:5px;background:#0c0e12;border:1px solid var(--border);color:var(--muted)}
+  footer{margin-top:24px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+
+<h1>Kartleser-Test <span class="badge">intern · nicht für Patientendaten</span></h1>
+<p class="sub">Ermittelt, wie das Kartenlesegerät Daten liefert — Tastatur-Emulation oder echte
+serielle Verbindung. Nichts wird gespeichert oder gesendet, alles bleibt im Browser.</p>
+
+<div class="grid">
+
+  <div class="card">
+    <h2>A · Tastatur-Emulation <span id="statusA" class="status">wartet</span></h2>
+    <p class="desc">Klicken Sie in das Feld, dann Karte ins Lesegerät stecken. Viele
+      einfache Leser „tippen" die Daten wie eine Tastatur.</p>
+    <input type="text" id="kwInput" placeholder="Hier klicken, dann Karte einlesen …" autocomplete="off">
+    <div class="row">
+      <button class="secondary" id="kwClear">Leeren</button>
+      <button class="secondary" id="kwCopy">Kopieren</button>
+    </div>
+    <div class="log" id="kwLog"></div>
+    <p class="hint">Grün = sehr schnelle Zeichenfolge (typisch für Lesegerät). Grau = normales Tippen.</p>
+  </div>
+
+  <div class="card">
+    <h2>B · Web Serial <span id="statusB" class="status">wartet</span></h2>
+    <p class="desc">Für Lesegeräte, die sich als echter serieller Port melden (USB-CDC).
+      Nur Chrome/Edge, nur Desktop.</p>
+    <div class="row">
+      <button id="serConnect">Gerät verbinden</button>
+      <button class="secondary" id="serDisconnect" disabled>Trennen</button>
+    </div>
+    <div class="log" id="serLog"></div>
+    <p class="hint" id="serHint"></p>
+  </div>
+
+  <div class="card full">
+    <h2>Rohdaten-Protokoll <span class="badge" id="logCount">0 Einträge</span></h2>
+    <p class="desc">Zeitgestempelte Kopie von A und B zusammen — für die Analyse nach dem Test.</p>
+    <div class="row">
+      <button class="secondary" id="allCopy">Alles kopieren</button>
+      <button class="secondary" id="allClear">Alles leeren</button>
+    </div>
+    <div class="log" id="allLog"></div>
+  </div>
+
+</div>
+
+<footer>Praxura · temporäre Diagnoseseite, kein Teil der Patientenverwaltung · 2026-09-16</footer>
+
+<script>
+(() => {
+  'use strict';
+
+  const allLog = document.getElementById('allLog');
+  const logCount = document.getElementById('logCount');
+  let entryCount = 0;
+
+  function ts() {
+    const d = new Date();
+    return d.toTimeString().slice(0,8) + '.' + String(d.getMilliseconds()).padStart(3,'0');
+  }
+
+  function addLine(container, text, cls) {
+    const div = document.createElement('div');
+    div.className = 'line' + (cls ? ' ' + cls : '');
+    div.innerHTML = '<span class="ts">' + ts() + '</span>  ' + text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function record(source, text, cls) {
+    addLine(allLog, '[' + source + '] ' + text, cls);
+    entryCount++;
+    logCount.textContent = entryCount + ' Einträge';
+  }
+
+  // ── Methode A: Tastatur-Emulation ──────────────────────────────────────
+  const kwInput = document.getElementById('kwInput');
+  const kwLog = document.getElementById('kwLog');
+  const statusA = document.getElementById('statusA');
+  let lastKeyTime = 0;
+  let keyIntervals = [];
+
+  kwInput.addEventListener('keydown', (e) => {
+    const now = performance.now();
+    const gap = lastKeyTime ? Math.round(now - lastKeyTime) : null;
+    lastKeyTime = now;
+    if (gap !== null && e.key.length === 1) keyIntervals.push(gap);
+
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      const value = kwInput.value;
+      if (value) {
+        const avgGap = keyIntervals.length
+          ? Math.round(keyIntervals.reduce((a,b)=>a+b,0) / keyIntervals.length)
+          : null;
+        const isFast = avgGap !== null && avgGap < 30;
+        const cls = isFast ? 'fast' : 'slow';
+        const label = isFast
+          ? 'sehr schnell (⌀' + avgGap + 'ms/Zeichen) — sieht nach Lesegerät aus'
+          : (avgGap !== null ? '⌀' + avgGap + 'ms/Zeichen' : '');
+        addLine(kwLog, esc(value) + '  <span class="' + cls + '">' + label + '</span>', cls);
+        record('A', value + (label ? ' (' + label + ')' : ''), cls);
+        statusA.textContent = isFast ? 'Daten erkannt (schnell)' : 'Daten erkannt';
+        statusA.className = 'status ' + (isFast ? 'ok' : 'warn');
+      }
+      keyIntervals = [];
+    }
+  });
+
+  document.getElementById('kwClear').onclick = () => { kwInput.value=''; kwLog.innerHTML=''; };
+  document.getElementById('kwCopy').onclick = () => copyText(kwLog.innerText);
+
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Methode B: Web Serial ───────────────────────────────────────────────
+  const serLog = document.getElementById('serLog');
+  const serHint = document.getElementById('serHint');
+  const statusB = document.getElementById('statusB');
+  const btnConnect = document.getElementById('serConnect');
+  const btnDisconnect = document.getElementById('serDisconnect');
+  let serialPort = null;
+  let serialReader = null;
+  let keepReading = false;
+
+  if (!('serial' in navigator)) {
+    serHint.textContent = 'Web Serial in diesem Browser nicht verfügbar (nur Chrome/Edge, Desktop, HTTPS).';
+    btnConnect.disabled = true;
+  } else if (!window.isSecureContext) {
+    serHint.textContent = 'Seite läuft nicht in einem sicheren Kontext (HTTPS) — Web Serial gesperrt.';
+    btnConnect.disabled = true;
+  } else {
+    serHint.textContent = 'Bereit. Klicken Sie „Gerät verbinden" und wählen Sie das Kartenlesegerät aus der Liste.';
+  }
+
+  btnConnect.onclick = async () => {
+    try {
+      serialPort = await navigator.serial.requestPort();
+      await serialPort.open({ baudRate: 9600 });
+      keepReading = true;
+      statusB.textContent = 'verbunden';
+      statusB.className = 'status ok';
+      btnConnect.disabled = true;
+      btnDisconnect.disabled = false;
+      addLine(serLog, 'Verbunden — warte auf Daten (Karte einlegen) …');
+      record('B', 'Port verbunden');
+      readLoop();
+    } catch (err) {
+      addLine(serLog, 'Fehler: ' + esc(err.message));
+      record('B', 'Fehler beim Verbinden: ' + err.message, 'warn');
+    }
+  };
+
+  btnDisconnect.onclick = async () => {
+    keepReading = false;
+    try {
+      if (serialReader) { await serialReader.cancel(); serialReader = null; }
+      if (serialPort) { await serialPort.close(); serialPort = null; }
+    } catch (e) { /* egal — Port ist ohnehin weg */ }
+    statusB.textContent = 'getrennt';
+    statusB.className = 'status';
+    btnConnect.disabled = false;
+    btnDisconnect.disabled = true;
+    addLine(serLog, 'Getrennt.');
+    record('B', 'Port getrennt');
+  };
+
+  async function readLoop() {
+    const decoder = new TextDecoder();
+    while (serialPort.readable && keepReading) {
+      serialReader = serialPort.readable.getReader();
+      try {
+        while (true) {
+          const { value, done } = await serialReader.read();
+          if (done) break;
+          if (value && value.length) {
+            const hex = Array.from(value).map(b => b.toString(16).padStart(2,'0')).join(' ');
+            let text;
+            try { text = decoder.decode(value, { stream: true }); } catch { text = '(nicht dekodierbar)'; }
+            addLine(serLog, '<strong>' + value.length + ' Bytes</strong><br>hex: ' + hex + '<br>text: ' + esc(text));
+            record('B', value.length + 'B  hex=' + hex + '  text=' + text.replace(/[\r\n]/g,'⏎'));
+          }
+        }
+      } catch (err) {
+        addLine(serLog, 'Lesefehler: ' + esc(err.message));
+      } finally {
+        serialReader.releaseLock();
+      }
+    }
+  }
+
+  // ── Kopieren / Leeren gesamt ─────────────────────────────────────────────
+  function copyText(text) {
+    navigator.clipboard.writeText(text).catch(() => {});
+  }
+  document.getElementById('allCopy').onclick = () => copyText(allLog.innerText);
+  document.getElementById('allClear').onclick = () => { allLog.innerHTML=''; entryCount=0; logCount.textContent='0 Einträge'; };
+
+})();
+</script>
+</body>
+</html>

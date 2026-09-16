@@ -16,7 +16,7 @@
 
 ---
 
-## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 14.09.2026)
+## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 16.09.2026)
 
 > Bu blok sicilin **kısa yolu**. Amacı, yeni bir oturumun 1000 satır okumadan
 > "neredeyiz, sıradaki ne, nereye basmam" sorusuna cevap bulması. Ayrıntı her
@@ -325,6 +325,17 @@ maddede). ⚠️ O-106'nın kenarında bir **kapı dersi** var: `tools/check-onp
 `git grep --cached` ile sayar, yani **stage edilmemiş** bir ihlali göremez —
 `app_host` çalışma ağacında **16**, taban **15**; `git add dashboard.js` anında
 commit reddedilecek.
+
+⚠️ **16.09.2026 — Faz 2.1b'nin header'ından iki madde: O-109 (kapandı) + O-110 (açıldı).**
+Kullanıcının „kart okuyucu için Secure Context var mı" sorusu Caddy'nin
+`Permissions-Policy` satırına bakılmasına yol açtı. Cevap: **Caddy/TLS tarafı sağlam** —
+kutu HTTPS veriyor, kök sertifika kurulduğunda `isSecureContext` true, Web Serial açılabilir.
+Ama aynı satır `camera=()` ile kamerayı kutunun **kendi** sayfasına da kapatmıştı ve
+Rezept-Scan'in webcam yolu kutuda sessizce kırıktı (**O-109**, aynı gün kapatıldı;
+doğrulama borcu: çalışan kutuya karşı ölçülmedi). Kart okuyucunun kendisi **O-110**
+olarak `offen` açıldı — bugünkü tek iş `serial=(self)` izniydi, entegrasyon ORGA 930 care
+Mini-SDK dokümantasyonunu bekliyor. ⚠️ Faz 2.1b **kapalıdır** (12.09.2026'dan beri);
+bu iki madde onu yeniden açmıyor.
 
 ⚠️ **14.09.2026 (gece) — kullanıcı sorusundan bir yeni madde: O-107.** „Sihirbazda
 girilen owner şifresi nereye yazılıyor, sıfırlamak isterse ne olacak?" Birinci yarısı
@@ -3672,6 +3683,67 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
+## 7M — Kural 6'nın üçüncü hâli: sayaç-nötr DDL (16.09.2026)
+
+### O-108 — Kural 6 yalnız "salt veri-UPSERT"i tanıyor; sayacı gerçekten değiştirmeyen DDL için kategori yok 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `api-backend/db/migrations/README.md` Kural 6 iki hâl tanıyor: (1) salt veri-UPSERT (`public`, hiç DDL) → `bis_version` ölçmeden yükseltilebilir, (2) DDL var → taze kutuda ölç. Üçüncü hâl eksik: **DDL var ama on sayacın hiçbirini değiştirmiyor.** İlk örneği 0017 — bir index DROP, bir index CREATE, `pg_indexes` sayısı aynı |
+| **Nerede** | `api-backend/db/migrations/README.md` (Kural 6 metni) · `api-backend/db/schema-zaehler.js:16-27` (sayaç sorguları) · örnek: `api-backend/db/migrations/0017_prescription_sessions_kombi_termin.sql:58-59` (`-- ZAEHLER: unveraendert (+1 Index, -1 Index — netto 0)`) |
+| **Tip** | D |
+| **Kutuda ne olur** | Kapı `bis_version != en yüksek migration` deyip commit'i reddediyor (doğru davranış, O-90). Ama kuralın tanıdığı tek çıkış "taze kutu kur ve ölç" — index takası gibi sık ve ispatlanabilir sayaç-nötr değişikliklerde bu, her seferinde bir tam kurulum turu demek. Ucuz alternatif `SKIP_ZAEHLER_GATE=1`'dir ve **iz bırakmaz**: neden atlandığı hiçbir yerde yazmaz, bir sonraki sefer gerçekten sayacı değiştiren bir migration'da da refleksle kullanılır. Yani kaçış yolu, O-90'ın kapattığı deliği geri açar |
+| **Çözüm** | Kural 6'ya üçüncü hâl yazılsın: migration'da `-- ZAEHLER: unveraendert (<gerekçe>)` satırı varsa **ve** gerekçe on sayacın hiçbirine dokunmadığını gösteriyorsa (`storage.*`/`auth.*` yok; tablo/policy/fonksiyon/trigger yok; index değişimi net sıfır ve silinen index taze kutuda **gerçekten var**), `bis_version` ölçmeden yükseltilebilir; `zaehler`/`gemessen_am` olduğu gibi kalır. Karşılığında `SKIP_ZAEHLER_GATE` kullanımı sicile gerekçe yazmadan yasaklanır — iki yol yerine tek yol. İleri adım (Faz 2.4 adayı): kapı `ZAEHLER:` satırını makine-okunur hâle getirip `unveraendert` iddiasını en azından "DDL kelimeleri var mı" düzeyinde çapraz sorgulasın (Kural 6'nın kendi önerdiği yön) |
+| **Durum** | 🔴 **offen** — 0017 turunda bulundu. 0017 için verilen hüküm: `bis_version="0017"`, `zaehler`/`gemessen_am` dokunulmadı, `SKIP_ZAEHLER_GATE` kullanılmadı. Gerekçe dosyaya karşı doğrulandı: silinen index `0000_baseline.sql:7242`'de duruyor (yani taze kutuda mevcut, `DROP … IF EXISTS` gerçekten bir index düşürüyor), yenisi `IF NOT EXISTS` ile ekleniyor, `index` sayacı `SELECT count(*) FROM pg_indexes WHERE schemaname='public'` (`schema-zaehler.js:27`) → net 0. Diğer dokuz sayaç: tablo/policy/fonksiyon/trigger/extension/publication/storage/auth hiç geçmiyor. Kural metninin kendisi **henüz yazılmadı**, sahibi yok |
+
+---
+
+## 7N — Kutunun `Permissions-Policy`'si: kapattığı ve açtığı özellikler (16.09.2026)
+
+> **Bu bölüm niye var:** Faz 2.1b'nin Caddy turunda (11.09.2026) üç direktiflik bir
+> `Permissions-Policy` header'ı yazıldı ve o gün kimse "bu header kutuda hangi ÖZELLİĞİ
+> kapatıyor" diye sormadı. CSP satır satır incelendi (O-52), kardeşi incelenmedi. Sonuç
+> aşağıdaki O-109: SaaS'ta çalışan bir ekran kutuda sessizce kırıldı. Ders genel —
+> `Caddyfile`'ın `header {}` bloğuna giren her direktif, kutu ile SaaS arasında bir
+> **davranış ayrımı** yaratma adayıdır (G7).
+
+### O-109 — Kutunun `Permissions-Policy`'si kamerayı kendi origin'ine de kapatıyordu: Rezept-Scan webcam yolu kutuda sessizce kırık ✅ **gelöst (16.09.2026)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `onprem/Caddyfile`'ın `Permissions-Policy` header'ında `camera=()` duruyordu — **boş** allowlist, yani kamera kutunun kendi sayfasına da yasak. SaaS tarafında böyle bir header hiç yok |
+| **Nerede** | `onprem/Caddyfile:40` (11.09.2026'daki hâli: `Permissions-Policy "camera=(), microphone=(), geolocation=()"`) · kırılan akış `dashboard.js:17226-17233` (`startWebcamCapture`) · tetiklenmeyen geri düşüş `dashboard.js:17220-17225` (`openNativeCameraInput`, `<input capture>`) |
+| **Tip** | G (dağıtım ayrımı — SaaS'ta olmayan bir header kutuda davranışı değiştiriyor; G7 sapması) |
+| **Kutuda ne olur** | ⚠️ **Geri düşüş kodu vardı ama tetiklenmiyordu — asıl mesele bu.** `startWebcamCapture` şunu soruyor: `if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) → openNativeCameraInput()`. Caddy arkasında HTTPS var, yani `isSecureContext` **true** ve `navigator.mediaDevices` **mevcut** — koşul sağlanmıyor, kod native kamera girişine düşmüyor, doğrudan `getUserMedia`'ya gidiyor ve `NotAllowedError` alıyor. Podolog ekranda hata görüyor, telefon/webcam ile reçete çekemiyor, elle dosya yüklemekten başka yolu kalmıyor. Koddaki yorum (`dashboard.js:17220-17221`) "HTTP'de Secure Context yok" senaryosuna göre yazılmıştı; Caddy geldikten sonra o varsayım değişti, kontrol değişmedi. Hata **yalnız müşterinin kutusunda** ve ancak kurulumdan sonra görünür |
+| **Çözüm** | Header açıkça yazıldı: `camera=(self), microphone=(), geolocation=(), serial=(self)` + `Caddyfile`'a gerekçe yorumu (niye `(self)`, niye `serial` şimdiden). `microphone`/`geolocation` bilinçli olarak kapalı kalıyor — kutuda ikisini kullanan kod yok, kapalı tutmak yüzeyi küçültür |
+| **Durum** | ✅ **gelöst (16.09.2026)** — `onprem/Caddyfile:36-44`; Caddyfile + bu sicil aynı commit'te. Ürün kararı kullanıcıya (Kemal) soruldu ve onaylandı: kutuda kamera **istiyoruz**. ⚠️ **Doğrulama borcu:** değişiklik çalışan kutuya karşı ölçülmedi (Docker Desktop kapalıydı). Açılışta iki kontrol: (1) `curl -skI https://<SITE_URL host>/login.html | grep -i permissions-policy` yeni değeri döndürüyor mu, (2) Rezept-Scan'de webcam bir kez gerçekten açılıyor mu. Bu borç kapanmadan "kutuda kamera çalışıyor" denmez |
+
+> ⚠️ **Numara çakışması — düzeltilecek tek kelime:** `onprem/Caddyfile`'ın yeni yorum bloğu bu
+> maddeye **`(O-108)`** diye atıf veriyor. O numara aynı gün başka bir tur tarafından §7M'e
+> (sayaç-nötr DDL) verildi; doğru atıf **`(O-109)`**. Çalışma zamanına etkisi yok, ama
+> düzeltilmezse altı ay sonra okuyan yanlış maddeye gider. Sicil numarası yeniden kullanılmaz
+> (§4) — düzelen taraf kod yorumudur.
+>
+> **Niye bu madde 11.09'da bulunmadı** (kayda geçsin): o turun gegenlesen'i CSP'yi satır satır
+> okudu (dört not, O-52/O-55), `Permissions-Policy`'yi "üç standart kapatma" diye geçti.
+> Oysa `camera=()` ile `camera=(self)` arasındaki fark tam olarak "kutuda bir ekran çalışır /
+> çalışmaz" farkıydı. **Kontrol listesine giren kural:** kutuya bir özellik-kapısı header'ı
+> eklenirken/değiştirilirken, kapatılan her direktif için "bunu kullanan kod var mı" grep'i
+> zorunlu.
+
+### O-110 — eGK/Kartenleser Web Serial üzerinden: izin hazır, entegrasyonun kendisi yok 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kart okuyucu (ORGA 930 care, USB-CDC) tarayıcıdan **Web Serial API** ile okunacak. Bugün elde yalnız izin hazırlığı var: `serial=(self)`. Protokol, kod, cihaz testi — hiçbiri yok |
+| **Nerede** | `onprem/Caddyfile:40` (`serial=(self)`, bugün **kullanılmıyor**) · `wissensbank/SPEC-RULES.md:273` (kuralın kaydı) · kodda `navigator.serial` **hiç geçmiyor**: `grep -rn "navigator.serial" --include=*.js .` → 0 sonuç (16.09.2026) |
+| **Tip** | G (merkez mi kutu mu) — ⚠️ tip **A değil**: tarayıcı ↔ USB cihaz yerelde kalıyor, dışarı çağrı yok, **G1 temiz** (kart verisi kutuya gider, bize değil). Entegrasyon yazılırken bu yeniden doğrulanacak: kart verisini bizim sunucumuza uğratan herhangi bir tasarım **DUR** alır |
+| **Kutuda ne olur** | Üç ön koşul — bugün hiçbiri engel değil, ama hiçbiri de kurulum belgesinde yazılı değil: **(a) Secure Context** — Web Serial `[SecureContext]` gerektirir (MDN/W3C: origin `https` şemasıyla "potentially trustworthy" olmalı). `CADDY_TLS_ARG=internal` kutularında kutunun kök sertifikası (`caddy:/data/caddy/pki/authorities/local/root.crt`, `install.sh:633`, uyarı `install.sh:340`) **her praxis bilgisayarına** kurulu olmalı; kurulmazsa sertifika hatası kalır ve "uyarıyı tıklayıp geç" yolu bu iş için güvenilir değil. Kök sertifika `caddy_data` **named volume**'unda (`docker-compose.yml:528`) — `docker compose down -v` yeni CA üretir ve dağıtılmış sertifikayı çöpe atar. **(b) Tarayıcı** — yalnız Chromium masaüstü (Chrome/Edge); Firefox ve Safari bu API'yi **hiç** desteklemiyor, yani özellik kutuda bir "tarayıcı seçimi" ürün kararına dönüşür. **(c) Topoloji** — kutu Hetzner RZ'de olabilir, okuyucu ise praxiste; köprü **tarayıcıdır**. "Kutudan USB'ye" diye kurgulanan hiçbir tasarım çalışmaz (aynı topolojik hata 2026-08-30 TI konseyinde bir kez yapıldı ve orada düzeltildi) |
+| **Çözüm** | ORGA 930 care Mini-SDK dokümantasyonu geldiğinde ayrı tur. O turda cevaplanacaklar: veri yolu (okuyucu → tarayıcı → kutu, başka durak yok) · `legal-de`/`gkv-302` tarafı (KVK/eGK okuma yetkisi, SMC-B gereksinimi) · kurulum belgesine "kök sertifika + Chrome/Edge" ön koşulunun yazılması (`install.sh` çıktısı + `onprem/RELEASE-STANDARD.md`) · SaaS'ta aynı kodun koşması (G7: `app.praxura.de` public CA ile zaten Secure Context, ek iş yok). Faz ataması **yok** — sırası kullanıcı kararı |
+| **Durum** | 🔴 **offen** — 16.09.2026'da açıldı. Bugün yapılan tek iş izin hazırlığı (O-109 ile aynı commit), o da "engellemiyoruz" demekten ibaret |
+
+---
+
 ## 8. Kapı — sayaçlar ve tabanlar
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -3725,7 +3797,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 107 madde** (O-01 … O-107) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
+**Toplam 110 madde** (O-01 … O-110) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
 bildirim-sonrası denetiminden çıktı, §7L; aynı gece üçü (O-85/O-86/O-89) tam, ikisi
 (O-87/O-88) kısmen kapatıldı — detay kendi maddelerinde. Beş yenisi daha (O-90…O-94)
 aynı akşam Faz 2.2 dilim 2b'nin kendi post-hoc denetiminden çıktı — üçü (O-90/O-92/
@@ -3784,10 +3856,10 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 7 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-107 |
+| `offen` | 9 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-107 · O-108 · O-110 |
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
 | 🟡 `kısmen gelöst` | 16 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
-| `gelöst` | 57 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 |
+| `gelöst` | 58 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-109 |
 | `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda
