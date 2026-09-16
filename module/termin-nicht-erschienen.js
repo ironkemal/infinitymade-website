@@ -198,6 +198,54 @@ export async function markiereNichtErschienen(ctx, booking, opts = {}) {
 }
 
 /**
+ * Welche der offenen Einheiten sind durch einen Ausfall wieder frei geworden —
+ * und wann?
+ *
+ * Kemal, 31.08.2026, wörtlich: „Dieser Termin, weil er nicht stattgefunden hat,
+ * soll sich zu [den] unvergebenen Terminen mit einer roten Markierung bewegen,
+ * dass man das auch sieht." Die Bewegung selbst macht `markiereNichtErschienen()`
+ * oben. Diese Funktion liefert das, was dafür noch fehlte: die Unterscheidung
+ * zwischen „noch nie vergeben" und „ausgefallen, muss nachgeholt werden". Ohne
+ * sie stehen beide als dieselbe graue Zeile da, und die Praxis weiss nicht,
+ * welche der neun offenen Einheiten diejenige ist, für die sie anrufen muss.
+ *
+ * Gelesen wird `bookings.no_show_session_links` (Migration 0016) — die
+ * Rückfahrkarte, die beim Ausfall geschrieben wird. Eine eigene Spalte an der
+ * Sitzungszeile wäre der zweite Ort für dieselbe Aussage; genau das vermeidet
+ * die Entscheidung vom 14.09.2026 („die Sitzungszeile ist ein Zähler, kein
+ * Tagebuch").
+ *
+ * Eine inzwischen neu vergebene Einheit taucht hier trotzdem auf — der Aufrufer
+ * zeigt ohnehin nur die offenen an, und ihn das entscheiden zu lassen ist
+ * billiger als hier eine zweite Abfrage zu fahren.
+ *
+ * Fehler sind hier folgenlos: ohne Markierung ist die Liste wie vorher.
+ *
+ * @returns {Promise<Map<string, string>>} session_id → ISO-Zeit des Ausfalls
+ */
+export async function ausgefalleneEinheiten(supabase, { leadId } = {}) {
+  const leer = new Map();
+  if (!supabase || !leadId) return leer;
+  const { data, error } = await supabase
+    .from('bookings')
+    .select(`id, start_time, ${FELD_LINKS}`)
+    .eq('lead_id', leadId)
+    .eq('status', 'no_show');
+  if (error || !data?.length) return leer;
+
+  const raus = new Map();
+  for (const b of data) {
+    for (const l of einmalJeSitzung(b?.[FELD_LINKS])) {
+      // Der jüngste Ausfall gewinnt: dieselbe Einheit kann mehrfach ausgefallen
+      // sein, und die Praxis interessiert der letzte Termin, nicht der erste.
+      const bisher = raus.get(l.session_id);
+      if (!bisher || new Date(b.start_time) > new Date(bisher)) raus.set(l.session_id, b.start_time);
+    }
+  }
+  return raus;
+}
+
+/**
  * Rückweg: die bei einem no_show freigegebenen Einheiten wieder an den Termin
  * binden und als erbracht zählen. Gegenstück zu Schritt 4/5 oben, gerufen aus
  * `korrigiereNoShow()`.

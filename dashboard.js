@@ -39,7 +39,7 @@ import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagn
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260914';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
-import { markiereNichtErschienen } from './module/termin-nicht-erschienen.js?v=20260914';
+import { markiereNichtErschienen, ausgefalleneEinheiten } from './module/termin-nicht-erschienen.js?v=20260916';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20260906';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht
 // in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
@@ -58,7 +58,7 @@ import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand } from './module/rechnung-editor.js?v=20260909';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20260916';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260817';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
@@ -105,6 +105,8 @@ import {
   verteileOffeneSitzungen,
 } from './module/termin-aktionen.js?v=20260906';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
+import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
+import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
 // Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
 // steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
 // Einheiten-Hauptbuch (Begründung: module/verordnung-termine.js). Jeder Aufruf
@@ -1307,12 +1309,14 @@ function closeModal(id) {
   }
 }
 
-function showToast(msg, type = 'success') {
+// `dauerMs`: Meldungen, die eine Handlung verlangen, dürfen länger stehen — 3,5 s
+// reichen nicht zum Lesen UND Begreifen (Ops 42a66a3b).
+function showToast(msg, type = 'success', dauerMs = 3500) {
   const d = document.createElement('div');
   d.className = `toast ${type}`;
   d.textContent = msg;
   document.getElementById('toastContainer').appendChild(d);
-  setTimeout(() => d.remove(), 3500);
+  setTimeout(() => d.remove(), dauerMs);
 }
 
 function showQualWarningToast(certCode, empId) {
@@ -3168,40 +3172,19 @@ async function prefillBookingModal(startStr) {
   }
 }
 
+// Die Datumsrechnung steht seit dem 16.09.2026 in module/serien-termine.js —
+// dort ist sie geprüft. Hier bleibt nur das Ablesen der Maske.
 function computeSeriesPreview() {
   const startV = document.getElementById('bkStart').value;
-  const count = parseInt(document.getElementById('bkSeriesCount').value) || 0;
-  const rec = document.getElementById('bkSeriesRecurrence').value;
-  if (!startV || count < 1) return [];
-  const dateStr = startV.substring(0, 10);
-  const recInfo = frequenzToSeries(rec);
-  const step = recInfo.recurrence === 'daily' ? 1 : recInfo.intervalDays;
-  const checked = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value));
-  const wdSet = new Set(checked.length ? checked : [new Date(dateStr + 'T12:00:00Z').getDay()]);
-  const result = [];
-  function addDays(ds, days) {
-    const d = new Date(ds + 'T12:00:00Z');
-    d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().substring(0, 10);
-  }
-  function dayOfWeek(ds) {
-    const probe = new Date(ds + 'T12:00:00Z');
-    return new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Berlin', weekday: 'short' }).format(probe);
-  }
-  const wdMap = { 'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6 };
-
-  const first = new Date(dateStr + 'T12:00:00Z');
-  let current = addDays(dateStr, -first.getUTCDay());
-
-  while (result.length < count) {
-    Array.from(wdSet).sort().forEach(dayNum => {
-      if (result.length >= count) return;
-      const candidate = addDays(current, dayNum);
-      if (wdMap[dayOfWeek(candidate)] === dayNum) result.push(candidate);
-    });
-    current = addDays(current, step);
-  }
-  return result;
+  if (!startV) return [];
+  const recInfo = frequenzToSeries(document.getElementById('bkSeriesRecurrence').value);
+  return serienDaten({
+    startDatum: startV.substring(0, 10),
+    anzahl: parseInt(document.getElementById('bkSeriesCount').value) || 0,
+    intervalDays: recInfo.intervalDays,
+    taeglich: recInfo.recurrence === 'daily',
+    wochentage: Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value)),
+  });
 }
 
 function updateBkSeriesPreview() {
@@ -6177,6 +6160,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
 
   // For update: keep existing insert logic; for insert: need to get the new booking id
   let savedBookingId = id;
+  let bindung = null;
   if (id) {
     const { error } = await supabase.from('bookings').update(payload).eq('id', id);
     if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
@@ -6190,14 +6174,14 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     const _pendIds = (_pend?.sessionIds?.length ? _pend.sessionIds : (_pend?.sessionId ? [_pend.sessionId] : []))
       .filter(Boolean);
     if (_pendIds.length && savedBookingId) {
-      const { error: linkErr } = await supabase.from('prescription_sessions')
-        .update({ booking_id: savedBookingId, status: 'planned' })
-        .in('id', _pendIds);
-      if (linkErr) console.error('[rx session link]', linkErr);
+      // Ergebnis statt nur Fehler — ein UPDATE ohne Treffer meldet nichts.
+      // Was hier vier Wochen still schieflief: module/sitzung-bindung.js.
+      bindung = await bindeSitzungenAnTermin(supabase, savedBookingId, _pendIds);
+      if (!bindung.ok) console.error('[rx session link]', bindung);
       // Ohne diese Meldung blieb der Zähler der aktiven Verordnung stehen, bis
       // jemand die Seite neu lud (Beta-2, 12.08.2026). Wer schreibt, meldet —
       // siehe module/signal.js.
-      if (!linkErr) emit('verordnungen:changed');
+      if (bindung.gebunden) emit('verordnungen:changed');
       window._pendingRxSession = null;
     }
   }
@@ -6212,7 +6196,9 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
 
   closeModal('bookingModal');
   await refreshBookingViews();
-  showToast(t('saved'));
+  // „gespeichert" nur, wenn auch die Einheiten hängen (Ops 42a66a3b).
+  if (bindung && !bindung.ok) showToast(bindung.meldung, 'error', 8000);
+  else showToast(t('saved'));
 });
 
 // "Offene Einheiten als Serie verteilen" — Ablauf in module/termin-aktionen.js.
@@ -6298,20 +6284,34 @@ async function loadRxSessionsPanel(booking, rxId = null) {
 
   // Serienknopf: nur sinnvoll, wenn mindestens zwei Einheiten offen sind —
   // für eine einzelne zieht man schneller, als der KI-Ablauf dauert.
+  // Sind Einheiten angehakt, verteilt der Knopf nur die — neun offene, davon
+  // fünf vor dem Urlaub (Ops 08fa9e2c). Die Beschriftung nennt die Zahl, damit
+  // dieselben Kästchen nicht zweierlei zu bedeuten scheinen; Regel und
+  // Begründung in module/serien-termine.js.
   const serieBtn = document.getElementById('bkRxSerieBtn');
+  const unvList = document.getElementById('bkRxUnvergebeneList');
   if (serieBtn) {
+    const stand = () => {
+      const n = serienAnzahl(unvList, unvergebene.length);
+      serieBtn.textContent = serienKnopfText(n, n !== unvergebene.length);
+    };
     serieBtn.hidden = unvergebene.length < 2;
-    serieBtn.textContent = `🗓 ${unvergebene.length} offene Einheiten als Serie verteilen`;
-    serieBtn.onclick = () => verteileOffeneEinheiten({ rx, offen: unvergebene.length, booking });
+    stand();
+    // Zuweisung statt addEventListener: dieses Panel wird bei jedem Termin neu
+    // gefüllt, Zuhörer würden sich sonst stapeln.
+    if (unvList) unvList.onchange = stand;
+    serieBtn.onclick = () => verteileOffeneEinheiten({ rx, offen: serienAnzahl(unvList, unvergebene.length), booking });
   }
 
-  const unvList = document.getElementById('bkRxUnvergebeneList');
   if (unvList) {
     if (unvergebene.length === 0) {
       unvList.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Alle vergeben ✓</span>';
     } else {
+      // Ausgefallene Einheiten rot markieren (Ops a8186cb8) — Regel und Quelle
+      // in module/termin-nicht-erschienen.js, Aussehen in dashboard.css.
+      const ausgefallen = await ausgefalleneEinheiten(supabase, { leadId: booking.lead_id });
       unvList.innerHTML = unvergebene.map(s => `
-        <div class="rx-unv-item"
+        <div class="rx-unv-item${ausgefallen.has(s.id) ? ' rx-unv-item--ausgefallen' : ''}"
           draggable="true"
           data-session-id="${s.id}"
           data-prescription-id="${rx.id}"
@@ -6321,7 +6321,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
           data-lead-id="${booking.lead_id || ''}"
           data-service-id="${booking.service_id || ''}"
           style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;cursor:grab;font-size:12px;user-select:none;"
-          title="Auf den Kalender ziehen, um einen neuen Termin zu erstellen. Mehrere per Checkbox auswählen → gemeinsamer Termin.">
+          title="${ausgefallen.has(s.id) ? `Ausgefallen am ${new Date(ausgefallen.get(s.id)).toLocaleDateString('de-DE')} — Nachholtermin nötig. ` : ''}Auf den Kalender ziehen, um einen neuen Termin zu erstellen. Mehrere per Checkbox auswählen → gemeinsamer Termin.">
           <input type="checkbox" class="rx-unv-cb" style="flex-shrink:0;cursor:pointer;accent-color:var(--primary);margin:0;" title="Für Kombi-Termin auswählen">
           <span style="color:var(--text-muted);font-size:11px;min-width:16px;">#${s.session_number}</span>
           <span style="font-weight:700;color:var(--primary);min-width:28px;">${escapeHtml(getHmKuerzel(s.heilmittel_index ?? 0))}</span>
@@ -15291,22 +15291,21 @@ function bindInvEvents() {
   };
   let invBookingCache = [];
 
+  // Ein Termin kann mehrere Leistungen tragen (Ops 235) — jede wird eine eigene
+  // Rechnungszeile, mit ihrer Menge. Die Aufteilung macht
+  // `terminLeistungen()` (module/rechnung-editor.js); hier bleibt nur der
+  // GKV-Tarif, der den Privatpreis überschreibt, wenn der Patient gesetzlich
+  // versichert ist.
   function syncInvLinesFromChecks() {
     const wrap = document.getElementById('invBookingChecks');
     if (!wrap) return;
-    const checked = Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked'));
-    invLines = checked.map(cb => {
-      const title = cb.dataset.svc || 'Leistung';
-      let unitPrice = parseFloat(cb.dataset.price) || 0;
-      // Use GKV tariff price if patient is GKV and service has a position number
-      if (invPatientInsuranceType === 'gkv' && typeof GKV_PRICES !== 'undefined') {
-        const srv = ownerServices.find(s => (s.title || '') === title);
-        if (srv && srv.gkv_position_nr) {
-          const gkvP = GKV_PRICES[srv.gkv_position_nr];
-          if (gkvP) unitPrice = gkvP;
-        }
-      }
-      return { title, quantity: 1, unit_price: unitPrice };
+    const gewaehlt = Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked'))
+      .map(cb => invBookingCache.find(b => b.id === cb.dataset.bid)).filter(Boolean);
+    invLines = gewaehlt.flatMap(terminLeistungen).map(z => {
+      const srv = ownerServices.find(s => (s.title || '') === z.title);
+      const gkvP = invPatientInsuranceType === 'gkv' && typeof GKV_PRICES !== 'undefined'
+        && srv?.gkv_position_nr ? GKV_PRICES[srv.gkv_position_nr] : 0;
+      return { ...z, unit_price: gkvP || z.unit_price };
     });
     renderInvLines(); calcInvTotals();
   }
@@ -15363,23 +15362,14 @@ function bindInvEvents() {
       // <details> ist zu, wenn Verordnungen da sind — Selbstzahler-Weg tritt zurück.
       // Ohne Verordnungen wird es aufgeklappt, weil es dann der einzige Weg ist.
       if (vords.length === 0) bookingWrap.open = true;
-      checksWrap.innerHTML = bookings.map(b => {
-        const dt = new Date(b.start_time).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-        const svc = b.services?.title || 'Leistung';
-        const dur = b.services?.duration_minutes || 0;
-        // Get price from services table via price_config if available, otherwise use direct price field
-        let price = parseFloat(b.services?.price) || 0;
-        if (!price && b.services?.price_config?.durations) {
-          const durations = b.services.price_config.durations;
-          const firstActive = Object.keys(durations).find(k => durations[k].active);
-          price = parseFloat(durations[firstActive]?.price) || 0;
-        }
-        const id = `invchk-${b.id}`;
-        return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;cursor:pointer;">
-          <input type="checkbox" id="${id}" data-bid="${b.id}" data-svc="${escapeHtml(svc)}" data-price="${price}" data-dur="${dur}" />
-          <span>${dt} — <strong>${escapeHtml(svc)}</strong>${dur > 0 ? ' (' + dur + ' Min)' : ''} ${price > 0 ? '— ' + formatEur(price) : ''}</span>
-        </label>`;
-      }).join('');
+      // Beschriftung (alle Leistungen des Termins, Summe, Dauer) baut
+      // module/rechnung-editor.js — dieselbe Aufteilung, die gleich die
+      // Rechnungszeilen liefert. Zwei Rechenwege wären zwei Summen.
+      checksWrap.innerHTML = bookings.map(b =>
+        `<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;cursor:pointer;">
+          <input type="checkbox" id="invchk-${b.id}" data-bid="${b.id}" />
+          <span>${terminBeschriftung(b, { escapeHtml, formatEur })}</span>
+        </label>`).join('');
       checksWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.onchange = () => {
           // Termin gewählt → Verordnungsauswahl leeren (Liste bleibt sichtbar)

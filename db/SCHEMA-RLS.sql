@@ -1,7 +1,18 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-11 — 0005_praxura_setup
+-- ERZEUGT AM:        2026-09-16 — 0017_prescription_sessions_kombi_termin
+--                    (Ops-Karte 42a66a3b. `uniq_prescription_sessions_booking`
+--                    (prescription_id, booking_id) → `uniq_prescription_sessions_booking_hm`
+--                    (prescription_id, booking_id, COALESCE(heilmittel_index, 0)).
+--                    Kombi-Termin (zwei Heilmittel derselben Verordnung an einem
+--                    Termin) war seit 17.08.2026 still kaputt — alter Index liess
+--                    nur eine Sitzungszeile je (Verordnung, Termin) zu. Neuer Index
+--                    ist SCHWAECHER als der alte (Praefix-Obermenge), db-ustasi
+--                    gegen Live-Daten geprueft: 0 Verletzungen, kein NULL-Bestand
+--                    in heilmittel_index. Netto: +1 Index, -1 Index, sonst nichts.
+--                    Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-11 — 0005_praxura_setup
 --                    (On-Premise Faz 2.2, Einrichtungsassistent.)
 --                    EINE NEUE TABELLE: `praxura_setup` — das Zeichen, ob der
 --                    SETUP_TOKEN schon gegen den ersten Owner eingetauscht wurde.
@@ -1341,11 +1352,19 @@ CREATE INDEX idx_pod_behandlungen_verordnung_id ON public.podologie_behandlungen
 CREATE INDEX prescription_documents_owner_idx ON public.prescription_documents USING btree (owner_id, created_at DESC);
 CREATE INDEX prescription_documents_rx_idx ON public.prescription_documents USING btree (prescription_id);
 CREATE INDEX idx_prescription_sessions_prescription ON public.prescription_sessions USING btree (prescription_id, session_number);
--- Ein Termin = eine Sitzungszeile je Verordnung. Zweite Verteidigungslinie gegen
--- doppelte Abrechnungspositionen (Befund 12.08.2026): der Code füllt seit 16.08.
--- die leeren Sitzungszeilen per UPDATE, statt je Termin eine neue anzuhängen.
--- Partiell, weil leere Zeilen (booking_id IS NULL) Absicht sind — sie warten auf Termine.
-CREATE UNIQUE INDEX uniq_prescription_sessions_booking ON public.prescription_sessions USING btree (prescription_id, booking_id) WHERE (booking_id IS NOT NULL);
+-- Ein Termin = eine Sitzungszeile je Verordnung UND Heilmittel. Zweite
+-- Verteidigungslinie gegen doppelte Abrechnungspositionen (Befund 12.08.2026):
+-- der Code füllt seit 16.08. die leeren Sitzungszeilen per UPDATE, statt je
+-- Termin eine neue anzuhängen. Partiell, weil leere Zeilen (booking_id IS NULL)
+-- Absicht sind — sie warten auf Termine.
+-- Bis 16.09.2026 stand hier nur (prescription_id, booking_id) — das verbot
+-- unbeabsichtigt auch den Kombi-Termin (zwei Heilmittel derselben Verordnung
+-- an einem Termin): beide Zeilen wollten dasselbe Paar tragen, die zweite
+-- Bindung scheiterte still (Ops 42a66a3b, seit 17.08.2026 kaputt, 0 Kombi-
+-- Termine in 96 verknüpften Terminen). Um COALESCE(heilmittel_index, 0)
+-- erweitert (0017): heilmittel_index ist NULLABLE, NULL kollidiert in UNIQUE
+-- nie, ohne COALESCE wäre der Schutz für den gesamten Altbestand lautlos weg.
+CREATE UNIQUE INDEX uniq_prescription_sessions_booking_hm ON public.prescription_sessions USING btree (prescription_id, booking_id, COALESCE(heilmittel_index, 0)) WHERE (booking_id IS NOT NULL);
 -- Freigabe der geplanten Sitzungen bei der Terminabsage (#192, 08.09.2026).
 -- Der AFTER-Trigger sucht je Absage ueber booking_id; ohne den Index waere das
 -- ein Seq Scan pro abgesagtem Termin.

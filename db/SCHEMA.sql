@@ -2011,9 +2011,11 @@ CREATE TABLE prescription_sessions (
 );
 --   CHECK status IN (planned, done, cancelled, no_show)
 --   PK (id) · UNIQUE (prescription_id, session_number)
---   UNIQUE (prescription_id, booking_id) WHERE booking_id IS NOT NULL — ein Termin
---     hat je Verordnung genau eine Sitzungszeile. Leere Zeilen (booking_id NULL)
---     sind Absicht und bleiben mehrfach erlaubt: sie warten auf Termine.
+--   UNIQUE (prescription_id, booking_id, COALESCE(heilmittel_index, 0)) WHERE
+--     booking_id IS NOT NULL — ein Termin hat je Verordnung UND Heilmittel genau
+--     eine Sitzungszeile (seit 0017, 16.09.2026 — davor ohne heilmittel_index,
+--     das verbot den Kombi-Termin mit). Leere Zeilen (booking_id NULL) sind
+--     Absicht und bleiben mehrfach erlaubt: sie warten auf Termine.
 
 CREATE TABLE prescription_validations (
   id uuid NOT NULL DEFAULT gen_random_uuid()

@@ -8098,3 +8098,34 @@ textarea:focus-visible,
   outline: 2px solid var(--primary);
   outline-offset: 1px;
 }
+
+/* Unvergebene Einheit, die durch einen Ausfall wieder frei geworden ist.
+   Ops-Karte a8186cb8 — Kemal, 31.08.2026: „soll sich zu [den] unvergebenen
+   Terminen mit einer roten Markierung bewegen, dass man das auch sieht."
+
+   Ohne diese Markierung steht eine ausgefallene Einheit als dieselbe graue
+   Zeile da wie eine, die noch nie vergeben war. Genau die eine, für die die
+   Praxis anrufen und einen Nachholtermin geben muss, ist dann nicht zu finden.
+
+   Farbe über `--danger`/`--danger-dim` (dieselbe Achse wie der Ausfall im
+   Kalender und in der Patientenakte, module/kalender-farben.js) — hell/dunkel
+   passt sich mit an, hartkodiert ist hier verboten (CLAUDE.md). Das genaue
+   Datum steht im `title`; hier nur das Wort, sonst bricht die Zeile im
+   schmalen Seitenbereich um. */
+.rx-unv-item--ausgefallen {
+  border-color: var(--danger) !important;
+  background: var(--danger-dim) !important;
+}
+
+.rx-unv-item--ausgefallen::after {
+  content: "ausgefallen";
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--danger-dim);
+  color: var(--danger);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}

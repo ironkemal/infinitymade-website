@@ -365,7 +365,8 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Seit:** spätestens 16.05.2026 · `v10_prescriptions`
 - **Status:** aktiv
 - **Wer:** Sitzungsfortschritt, Terminaktionen, Frequenzprüfung, Rechnungseditor, Backend-Statistik.
-- **Achtung:** Seit `prescription_sessions_booking_unique` (17.08.2026) darf ein Termin nur noch **einmal** auf eine Sitzung zeigen — der Abgleich `module/sitzung-abgleich.js` hängt daran.
+- **Achtung:** Seit `prescription_sessions_booking_unique` (17.08.2026) darf ein Termin nur noch **einmal je Verordnung** auf eine Sitzung zeigen — der Abgleich `module/sitzung-abgleich.js` hängt daran.
+- **Achtung — Index 0017 (16.09.2026):** der obige Index verbot unbeabsichtigt auch den Kombi-Termin (zwei verschiedene Heilmittel derselben Verordnung an einem Termin, `module/sitzung-bindung.js`) — sechs Wochen lang still, weil der Fehler nur in `console.error` landete. `uniq_prescription_sessions_booking` → `uniq_prescription_sessions_booking_hm`, jetzt `(prescription_id, booking_id, COALESCE(heilmittel_index, 0))`. Erlaubt bleibt: zwei verschiedene Heilmittel am selben Termin. Verboten bleibt: zweimal dasselbe Heilmittel derselben Verordnung an einem Termin (Ops 42a66a3b).
 
 ### `prescription_validations`
 - **Warum:** Prüfergebnis der Rezeptvalidierung samt Übersteuerung. Getrennt von `prescriptions`, weil es ein Protokoll ist: wer hat wann welche Warnung überstimmt.

@@ -59,8 +59,12 @@ export async function terminAuswahlLaden(sb, { ownerId, leadId }) {
   if (lead?.phone_normalized) orParts.push(`customer_phone_normalized.eq.${lead.phone_normalized}`);
   if (lead?.email) orParts.push(`customer_email.eq.${lead.email}`);
 
+  // `booking_leistungen` seit Ops 235: ein Termin trägt mehrere Leistungen.
+  // Ohne diesen Join las die Rechnungsmaske nur `service_id` — also die
+  // Hauptleistung (sort_order 0) — und liess jede weitere lautlos weg. Warum
+  // das eine Geldfrage ist, steht bei `terminLeistungen()` weiter unten.
   let query = sb.from('bookings')
-    .select('id,start_time,end_time,status,customer_name,service_id, services(title,price,duration_minutes,price_config)')
+    .select('id,start_time,end_time,status,customer_name,service_id, services(title,price,duration_minutes,price_config), booking_leistungen(anzahl,sort_order,services(title,price,duration_minutes,price_config))')
     .eq('owner_id', ownerId)
     .neq('status', 'cancelled')
     .order('start_time', { ascending: false });
@@ -80,6 +84,89 @@ export async function terminAuswahlLaden(sb, { ownerId, leadId }) {
   // Dedupe just in case the OR overlapped with linked ids
   const seen = new Set();
   return (data || []).filter(b => (seen.has(b.id) ? false : (seen.add(b.id), true)));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Die Leistungen EINES Termins — Ops-Karte 59e8e698
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Seit Ops 235 kann ein Termin mehrere Leistungen tragen („Behandlung +
+   Eingangsbefundung"). Die Rechnungsmaske las aber weiterhin nur
+   `bookings.service_id`. Das ist die Hauptleistung, die
+   `trg_booking_hauptleistung` aus `sort_order = 0` zurückschreibt — also genau
+   EINE von zwei. Die zweite tauchte auf der Selbstzahlerrechnung nie auf.
+
+   Kein Fehler, keine Warnung: die Rechnung sah vollständig aus und war zu
+   billig. Das ist dieselbe Klasse wie der stille Kombi-Termin (42a66a3b) —
+   was schweigend weniger wird, merkt niemand.
+
+   ⚠️ Preis: hier wird der PRIVATpreis aus dem Leistungskatalog gebildet, nicht
+   der GKV-Tarif. Das ist Absicht und in `module/rechnung-bruecke.js`
+   ausführlich begründet („Warum nicht der GKV-Preis"): die Selbstzahlerrechnung
+   ist frei kalkuliert. Der GKV-Fall wird vom Aufrufer oben drübergelegt, wenn
+   der Patient gesetzlich versichert ist.
+*/
+
+/** Privatpreis einer Leistungszeile: `price`, sonst erste aktive `price_config`-Stufe. */
+export function preisAusService(srv) {
+  const direkt = parseFloat(srv?.price) || 0;
+  if (direkt) return direkt;
+  const stufen = srv?.price_config?.durations;
+  if (!stufen) return 0;
+  const ersteAktive = Object.keys(stufen).find(k => stufen[k]?.active);
+  return parseFloat(stufen[ersteAktive]?.price) || 0;
+}
+
+/**
+ * Was auf diesem Termin erbracht wurde — eine Zeile je Leistung.
+ *
+ * Rückfall auf `bookings.services`, wenn keine `booking_leistungen` da sind:
+ * Termine von vor dem 03.09.2026 und alle Wege ausserhalb der Terminmaske
+ * (Backend `booking/create`, Serien, Warteliste-Nachrücker, Termin-Anfrage)
+ * schreiben bis heute keine Zeile — sie tragen genau eine Leistung, und die
+ * steht in `service_id`. Ohne den Rückfall wäre für sie die Liste leer.
+ *
+ * @param {object} booking  Zeile aus `terminAuswahlLaden()`
+ * @returns {{title:string, unit_price:number, quantity:number, duration:number}[]}
+ */
+export function terminLeistungen(booking) {
+  const zeilen = (booking?.booking_leistungen || [])
+    .slice()
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map(z => ({
+      title: z.services?.title || 'Leistung',
+      unit_price: preisAusService(z.services),
+      quantity: Math.max(1, parseInt(z.anzahl, 10) || 1),
+      duration: parseInt(z.services?.duration_minutes, 10) || 0,
+    }));
+  if (zeilen.length) return zeilen;
+
+  if (!booking?.services && !booking?.service_id) return [];
+  return [{
+    title: booking?.services?.title || 'Leistung',
+    unit_price: preisAusService(booking?.services),
+    quantity: 1,
+    duration: parseInt(booking?.services?.duration_minutes, 10) || 0,
+  }];
+}
+
+/**
+ * Die Beschriftung eines Termins in der Auswahlliste.
+ *
+ * Bei mehreren Leistungen werden sie mit „+" genannt und die Summe gezeigt —
+ * sonst stünde dort ein Preis, den die Zeile darunter nicht erklärt.
+ */
+export function terminBeschriftung(booking, { escapeHtml, formatEur }) {
+  const zeilen = terminLeistungen(booking);
+  const dt = new Date(booking.start_time).toLocaleString('de-DE', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+  const namen = zeilen.map(z => (z.quantity > 1 ? `${z.quantity}× ${z.title}` : z.title)).join(' + ');
+  const summe = zeilen.reduce((s, z) => s + z.unit_price * z.quantity, 0);
+  const dauer = zeilen.reduce((s, z) => s + z.duration, 0);
+  return `${escapeHtml(dt)} — <strong>${escapeHtml(namen || 'Leistung')}</strong>`
+    + (dauer > 0 ? ` (${dauer} Min)` : '')
+    + (summe > 0 ? ` — ${escapeHtml(formatEur(summe))}` : '');
 }
 
 /**

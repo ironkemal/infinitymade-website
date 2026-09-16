@@ -268,7 +268,7 @@ async function podGeplanteHpnr(vord, datum) {
   if (!vord?.id || !datum) return new Set();
   const { data } = await ctx.supabase
     .from('bookings')
-    .select('start_time, booking_leistungen(services(gkv_position_nr))')
+    .select('start_time, services(gkv_position_nr), booking_leistungen(services(gkv_position_nr))')
     .eq('owner_id', ctx.getOwnerId())
     .eq('verordnung_id', vord.id)
     .neq('status', 'cancelled');
@@ -277,7 +277,16 @@ async function podGeplanteHpnr(vord, datum) {
     // Tagesvergleich in Berlin, nicht per toISOString() — sonst faellt ein
     // Termin um Mitternacht auf den Vortag (derselbe Grund wie bei todayStr).
     if (!b.start_time || alsISODatum(new Date(b.start_time)) !== datum) continue;
-    for (const zeile of b.booking_leistungen || []) {
+    // Rueckfall auf `bookings.service_id`, wenn keine Zeile da ist. Nur die
+    // Terminmaske schreibt `booking_leistungen`; Backend (`booking/create`,
+    // `batch-create`), `booking/from-request.js`, der Warteliste-Nachruecker
+    // und `termin-aktionen.js` schreiben bis heute keine — richtig, sie tragen
+    // genau EINE Leistung, und die steht in `service_id`. Diese Termine sahen
+    // hier aus wie „ohne Leistung" und ihre Position wurde nicht vorbelegt
+    // (Ops 59e8e698, 16.09.2026). Der Rueckfall ist die kleinere Aenderung als
+    // vier Schreibwege um eine Zeile zu erweitern, die sie nicht brauchen.
+    const quellen = b.booking_leistungen?.length ? b.booking_leistungen : [{ services: b.services }];
+    for (const zeile of quellen) {
       const code = String(zeile?.services?.gkv_position_nr || '').trim();
       if (code) treffer.add(code);
     }
