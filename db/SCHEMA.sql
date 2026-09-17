@@ -1,7 +1,33 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-17 — 0020_prescriptions_festschreibung
+-- ERZEUGT AM:        2026-09-17 — 0021_audit_write_trigger
+--                    (Ops-Karte #254, Sicherheitsregister A-18. Schreibzugriffe
+--                    auf `leads`, `prescriptions` und `podologie_behandlungen`
+--                    waren nicht nachweisbar — die drei hatten KEINEN
+--                    Audit-Trigger (guvenlik, gegen information_schema.triggers
+--                    belegt). Protokolliert wurde nur, was der Express-Backend
+--                    sieht; was der Browser per PostgREST direkt schreibt (der
+--                    Normalfall im Dashboard), lief an jedem Protokoll vorbei.
+--                    NEUE FUNKTION `audit_write_log()` [SECURITY DEFINER] +
+--                    DREI NEUE TRIGGER (AFTER INSERT/UPDATE/DELETE) schreiben
+--                    ab jetzt nach `data_access_log`. KEINE neue Tabelle,
+--                    KEINE neue Spalte, KEINE neue Policy.
+--                    ⚠️ Das Protokoll fuehrt nur SPALTENNAMEN, nie Werte —
+--                    sonst waere es eine zweite Patientenakte ohne
+--                    Loeschkonzept (Befund R12). Lesezugriffe bleiben bewusst
+--                    unprotokolliert. Details bei `data_access_log` unten und
+--                    in db/SCHEMA-RLS.sql.
+--                    Live geprueft (MCP, 17.09.2026, vollstaendig
+--                    zurueckgerollte Proben): direktes INSERT als
+--                    `authenticated` scheitert weiter (42501), Schreiben als
+--                    `authenticated` wird protokolliert, Zusammenspiel mit der
+--                    Festschreibung aus 0020 stimmt, und ein sabotiertes
+--                    Audit-INSERT blockiert den eigentlichen Schreibvorgang
+--                    nicht.
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
+--                    davor: 2026-09-17 — 0020_prescriptions_festschreibung
 --                    (Ops-Karte #167. GoBD-/§302-Festschreibung fuer
 --                    `prescriptions` — die einzige §302-Tabelle ohne diesen
 --                    Schutz (db/SCHEMA-RLS.sql, vormals als "OFFENE LUECKE"
@@ -1088,7 +1114,21 @@ CREATE TABLE data_access_log (
   duration_ms integer
   metadata jsonb
 );
---   PK (id) — DSGVO-Zugriffsprotokoll.
+--   PK (id) — DSGVO-Zugriffsprotokoll (Art. 32), Aufbewahrung 12 Monate.
+--   Zwei Schreiber, sonst keiner:
+--     · api-backend/_lib/access-log.js (service_role) — HTTP-Ebene, method =
+--       GET/POST/... , path = echter Request-Pfad.
+--     · audit_write_log() (SECURITY-DEFINER-Trigger, seit 17.09.2026, Ops #254)
+--       — DB-Ebene, method = 'DB', path = 'db://<tabelle>', action = INSERT/
+--       UPDATE/DELETE. Haengt an leads, prescriptions, podologie_behandlungen.
+--       Faengt die Schreibvorgaenge, die der Browser per PostgREST am Backend
+--       vorbei macht.
+--   ⚠️ `metadata` fuehrt bei den DB-Zeilen NUR Spaltennamen
+--      (`{"geaenderte_spalten": [...]}`), NIE Werte. Wer hier alte/neue Werte
+--      ergaenzt, baut eine zweite Patientenakte, die in keiner Loeschkette
+--      haengt (Befund R12). Nicht tun.
+--   ⚠️ Nur eine SELECT-Policy, mit Absicht — kein Client darf hier einfuegen
+--      oder aendern. Siehe db/SCHEMA-RLS.sql.
 
 CREATE TABLE data_sharing_settings (
   owner_id uuid NOT NULL

@@ -1,7 +1,48 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-17 — 0020_prescriptions_festschreibung
+-- ERZEUGT AM:        2026-09-17 — 0021_audit_write_trigger
+--                    (Ops-Karte #254, Sicherheitsregister A-18. NEUE FUNKTION
+--                    `audit_write_log()` [SECURITY DEFINER] + DREI NEUE TRIGGER
+--                    `trg_audit_write_leads` / `_prescriptions` /
+--                    `_podologie_behandlungen` (AFTER INSERT/UPDATE/DELETE).
+--                    `guvenlik` hatte gegen information_schema.triggers belegt,
+--                    dass die drei Patientendaten-Tabellen KEINEN Audit-Trigger
+--                    hatten: protokolliert wurde nur, was der Express-Backend
+--                    sieht (api-backend/_lib/access-log.js) — alles, was der
+--                    Browser per PostgREST direkt schreibt (der Normalfall im
+--                    Dashboard), lief an jedem Protokoll vorbei.
+--                    ⚠️ `metadata` fuehrt NUR Spaltennamen, nie Werte (Befund
+--                    R12: PHI darf nicht in ein Log sickern). SELECT bleibt
+--                    bewusst unprotokolliert (RLS haelt die Mandantengrenze;
+--                    pgaudit wuerde PHI in ein neues Silo tragen).
+--                    +1 Funktion, +3 Trigger — live nachgezaehlt (17.09.2026):
+--                    75->78 Trigger, 77->78 Funktionen. Policies/Indizes
+--                    unveraendert (165 · 318): ein Trigger legt keine Policy an,
+--                    und data_access_log bekommt BEWUSST keine INSERT-Policy —
+--                    der Definer umgeht RLS, der Client nicht.
+--                    Live geprueft (MCP, 17.09.2026, vier vollstaendig
+--                    zurueckgerollte Proben): (1) direktes INSERT als
+--                    `authenticated` scheitert weiter mit 42501; (2) Schreiben
+--                    ALS `authenticated` erzeugt je 1 Zeile fuer INSERT/UPDATE/
+--                    DELETE mit user_id=auth.uid() und nur Spaltennamen in
+--                    metadata; (3) Zusammenspiel mit 0020: gesperrte Spalte →
+--                    Festschreibung blockt → 0 Audit-Zeilen, offene Spalte →
+--                    geht durch → 1 Audit-Zeile; (4) sabotiertes Audit-INSERT
+--                    (CHECK(false)) → leads-INSERT gelingt trotzdem, 0
+--                    Audit-Zeilen. Das Netz haelt.
+--                    ⚠️ api-backend/db/erwartete-zaehler.json rechnerisch
+--                    nachgezogen (bis_version 0021, fonksiyon 68->69, trigger
+--                    71->74), gleiches Vorgehen wie bei 0020. Das Delta ist
+--                    exakt — die Migration legt genau eine Funktion und genau
+--                    drei Trigger an, und alle drei Tabellen (leads,
+--                    prescriptions, podologie_behandlungen) sind im On-Prem-
+--                    Paket. `gemessen_am` bleibt 17.09.2026: PHYSISCH auf dem
+--                    WSL-Testkasten nachgemessen ist dieser Stand NICHT.
+--                    Bestaetigung beim naechsten install.sh-Lauf → `onprem`.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-17 — 0020_prescriptions_festschreibung
 --                    (Ops-Karte #167. NEUE FUNKTION
 --                    `prescriptions_festschreibung()` + NEUER TRIGGER
 --                    `trg_prescriptions_festschreibung` (BEFORE UPDATE) —
@@ -233,7 +274,12 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            165 RLS-Policies · 318 Indizes · 75 Trigger · 77 Funktionen
+-- UMFANG:            165 RLS-Policies · 318 Indizes · 78 Trigger · 78 Funktionen
+--                    (17.09.2026 live gezaehlt, 0021_audit_write_trigger:
+--                     Trigger 75 -> 78, Funktionen 77 -> 78 (`audit_write_log()`
+--                     + ihre drei Trigger auf leads/prescriptions/
+--                     podologie_behandlungen). Policies/Indizes unveraendert.)
+--                    davor: 165 · 318 · 75 · 77
 --                    (17.09.2026 live gezaehlt, 0020_prescriptions_
 --                     festschreibung: Trigger 74 -> 75, Funktionen 76 -> 77
 --                     (`prescriptions_festschreibung()` + ihr Trigger).
@@ -462,6 +508,15 @@
 
 -- data_access_log
 --   owner reads own access log [SELECT] USING (auth.uid() = owner_id)
+--   ⚠️ NUR diese eine Policy, mit Absicht: kein INSERT/UPDATE/DELETE fuer
+--      irgendeine Client-Rolle. `authenticated` hat zwar das INSERT-GRANT,
+--      scheitert aber an der fehlenden Policy (live geprueft 17.09.2026:
+--      42501). Geschrieben wird ausschliesslich von service_role (Backend,
+--      api-backend/_lib/access-log.js) und seit 17.09.2026 von den
+--      SECURITY-DEFINER-Triggern trg_audit_write_* auf leads/prescriptions/
+--      podologie_behandlungen. Wer hier eine INSERT-Policy ergaenzt, macht das
+--      Protokoll faelschbar — dann kann sich jeder Mandant seine eigene
+--      Zugriffshistorie schreiben.
 
 -- data_sharing_settings
 --   dss_select [SELECT] owner + Team · dss_insert/update [.] owner_id = auth.uid()
@@ -731,7 +786,7 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (76 eigene = alles in `public`, was keiner Extension gehört;
+-- 3. FUNKTIONEN (78 eigene = alles in `public`, was keiner Extension gehört;
 --    PostGIS-Funktionen sind deshalb ausgelassen)
 -- =====================================================================
 
@@ -967,6 +1022,47 @@ $function$;
 --   Loeschkette also so oder so nicht. Kolonlisten-Entscheidung: db-ustasi +
 --   gkv-302 + legal-de, Konsultation 17.09.2026. Live getestet: offenes Feld
 --   ging durch, gesperrtes Feld warf den Fehler, Anonymisierung ging durch.
+-- audit_write_log() -> trigger  (seit 17.09.2026, Ops #254 / A-18)
+--                                                         [SECURITY DEFINER]
+--   Schreibprotokoll fuer die drei Patientendaten-Tabellen `leads`,
+--   `prescriptions`, `podologie_behandlungen`. Haengt dort als AFTER INSERT/
+--   UPDATE/DELETE FOR EACH ROW und legt je Zeilenaenderung einen Eintrag in
+--   `data_access_log` an: user_id=auth.uid(), owner_id/business_id aus der
+--   Zeile, resource=Tabellenname, resource_id=Zeilen-id, action=TG_OP,
+--   method='DB', path='db://<tabelle>'.
+--   ⚠️ `metadata` enthaelt AUSSCHLIESSLICH Spaltennamen
+--      (`{"geaenderte_spalten": [...]}`, nur bei UPDATE), NIE Werte. Ein Log
+--      mit alten/neuen Werten waere eine zweite Patientenakte ohne
+--      Loeschkonzept — Befund R12 im Sicherheitsregister. Was drinsteht,
+--      beantwortet der Datensatz selbst, und nur der haengt in der
+--      DSGVO-Loeschkette (api/dsgvo.js).
+--   Warum SECURITY DEFINER: `data_access_log` hat bewusst NUR eine
+--      SELECT-Policy ("owner reads own access log"). Niemand — auch nicht der
+--      eingeloggte Owner — darf dort einfuegen/aendern/loeschen. Der Definer
+--      (Tabelleneigentuemer) umgeht RLS, der Client nicht; genau das macht das
+--      Protokoll manipulationssicher. Deshalb auch KEIN FORCE ROW LEVEL
+--      SECURITY auf data_access_log und KEIN EXECUTE-Grant an anon/
+--      authenticated (Trigger pruefen EXECUTE bei CREATE TRIGGER, nicht beim
+--      Feuern).
+--   EXCEPTION WHEN OTHERS THEN RETURN COALESCE(NEW, OLD): das Protokoll darf
+--      den Schreibvorgang NIE blockieren. Faellt das Log-INSERT aus, faellt nur
+--      der Protokolleintrag weg, die Behandlungsdokumentation bleibt (live mit
+--      sabotiertem Audit-INSERT geprueft).
+--   Kein Konflikt mit trg_prescriptions_festschreibung (BEFORE UPDATE, 0020):
+--      andere Phase, anderer Zweck. Blockt die Festschreibung, feuert der
+--      AFTER-Trigger nie → korrekterweise kein Eintrag. Umgekehrt sieht der
+--      AFTER-Trigger den Stand NACH allen BEFORE-Triggern, deshalb steht bei
+--      `prescriptions` praktisch immer auch `updated_at` in
+--      `geaenderte_spalten` (von der Festschreibung gesetzt) — so ist es
+--      gewollt.
+--   user_id ist NULL, wenn der Express-Backend mit service_role schreibt (kein
+--      JWT-sub). Das ist die Trennlinie, kein Defekt: user_id gefuellt = der
+--      Browser hat direkt geschrieben; leer + method='DB' = ueber den Backend,
+--      dessen eigenes Protokoll access-log.js fuehrt. owner_id/resource_id
+--      stehen in beiden Faellen.
+--   SELECT wird bewusst NICHT protokolliert (guvenlik, 17.09.2026): RLS haelt
+--      die Mandantengrenze bereits, und ein pgaudit-Leseprotokoll truege PHI in
+--      ein neues Silo. Der Beweiswert (§630f, GoBD) steckt in der Schreibseite.
 -- fn_zuzahlung_guthaben_status() -> trigger
 --   Leitet zuzahlung_guthaben.status aus rest_eur ab (0 = verrechnet,
 --   < betrag_eur = teilweise_verrechnet, sonst offen) und setzt updated_at.
@@ -1130,7 +1226,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (74, siehe UMFANG im Kopf)
+-- 4. TRIGGER (78, siehe UMFANG im Kopf)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -1169,10 +1265,20 @@ $function$;
 --                         → prevent_booking_status_korrekturen_mod(): GoBD-Sperre, siehe Funktionsabschnitt.
 --   leads                 trg_normalize_lead_phone       BEFORE INSERT/UPDATE
 --                         trg_leads_patientennummer      BEFORE INSERT (Nummernvergabe)
+--                         trg_audit_write_leads          AFTER INSERT/UPDATE/DELETE
 --   prescriptions         trg_prescriptions_verordnungsnummer BEFORE INSERT/UPDATE OF patient_id
 --                         trg_prescriptions_festschreibung BEFORE UPDATE
 --                           → prescriptions_festschreibung(): GoBD-Sperre ab gesetzter
 --                           belegnummer, siehe Funktionsabschnitt (seit 17.09.2026, Ops #167).
+--                         trg_audit_write_prescriptions  AFTER INSERT/UPDATE/DELETE
+--   podologie_behandlungen trg_audit_write_podologie_behandlungen
+--                                                        AFTER INSERT/UPDATE/DELETE
+--   → Die drei trg_audit_write_* rufen alle audit_write_log() (seit 17.09.2026,
+--     Ops #254 / Sicherheitsregister A-18) und schreiben je Zeilenaenderung nach
+--     data_access_log. NUR Spaltennamen, nie Werte. Reihenfolge bei
+--     `prescriptions`: BEFORE (Festschreibung) entscheidet OB, AFTER (Audit)
+--     protokolliert DASS — blockt die Festschreibung, entsteht korrekterweise
+--     kein Eintrag. Details im Funktionsabschnitt.
 --   (verordnungen — gedroppt 04.09.2026, trug bis dahin trg_verordnungen_verordnungsnummer
 --    + trg_verordnungen_festschreibung; beide sind mit der Tabelle verschwunden)
 --                         trg_sync_leads_location        BEFORE INSERT/UPDATE OF lat, lng
