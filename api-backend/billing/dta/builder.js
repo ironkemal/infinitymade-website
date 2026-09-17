@@ -43,6 +43,7 @@ import {
   buildSLLA_BES, buildSLLA_GZF,
 } from './segments.js';
 import { buildLogischerDateiname, buildPhysikalischerDateiname } from './filename.js';
+import { buildAuftragsdatei } from './auftragsdatei.js';
 import {
   validateVerarbeitungskennzeichen,
   validateVerordnungsart,
@@ -376,7 +377,8 @@ export function buildDtaFile({
   // Zwei getrennte Namen (gkv-302 Audit 10.09.2026, Anhang 1 zur Anlage 1 TP5
   // Kap. 4) — vorher trug ein einziger 16-stelliger String beide Rollen und
   // erfuellte keine davon spezifikationsgemaess:
-  //   logischerDateiname     → UNB-Anwendungsreferenz (unten) + kuenftige Auftragsdatei
+  //   logischerDateiname     → UNB-Anwendungsreferenz (unten) + Auftragsdatei-Feld
+  //                            "DATEINAME" (auftragsdatei.js, seit 17.09.2026 erzeugt)
   //   physikalischerDateiname → Storage-Dateiname, `abrechnung.dateiname`, Download
   const logischerDateiname = buildLogischerDateiname({
     absenderIk:       absender.ik,
@@ -386,11 +388,13 @@ export function buildDtaFile({
   // Transfernummer ist auf 1..999 begrenzt (§4.3) — `rechnung.datennummer`
   // (Jahreszaehler, siehe abrechnung.routes.js) waechst darueber hinaus.
   // Modulo ist eine bewusste Uebergangsloesung: die Spezifikation schweigt
-  // zum Ueberlauf, und solange keine Auftragsdatei/DFUE existiert, ist dieser
-  // Name nur ein Storage-/Anzeige-Label, keine an den Empfaenger gemeldete
-  // fortlaufende Nummer. Vor einer echten Direktuebermittlung braucht das
-  // einen eigenen, dauerhaften Zaehler je Empfaenger (selbe Baustelle wie
-  // Bulgu 7 — Datenaustauschreferenz).
+  // zum Ueberlauf. Seit 17.09.2026 wird dieselbe Transfernummer auch in die
+  // Auftragsdatei geschrieben (auftragsdatei.js, Feld TRANSFER_NUMMER) — das
+  // aendert NICHTS an diesem Problem, denn ohne DFUE gibt es noch keine echte
+  // Uebermittlung, gegen die der Zaehler stimmen muesste. Vor einer echten
+  // Direktuebermittlung braucht das einen eigenen, dauerhaften Zaehler je
+  // Empfaenger (selbe Baustelle wie Bulgu 7 — Datenaustauschreferenz; bewusst
+  // NICHT Teil dieser Aenderung, Konsey 2026-09-17).
   const transfernummer = ((Math.max(1, Number(rechnung.datennummer) || 1) - 1) % 999) + 1;
   const physikalischerDateiname = buildPhysikalischerDateiname({
     kind:           kind === 'echt' ? 'echt' : 'test',
@@ -570,12 +574,25 @@ export function buildDtaFile({
   const segmentCount = (content.match(/'/g) || []).length - 1;
   const byteLength   = Buffer.byteLength(content, 'latin1');
 
+  // Auftragsdatei (Anhang 2 zur Anlage 1 TP5, Kap. 9, §3.1 — Nutzdatendatei
+  // geht nie allein, die Dateien muessen "paarweise" ankommen). Ihr Feld
+  // "DATEINAME" ist bewusst identisch zur UNB-Anwendungsreferenz oben.
+  // Verschluesselung/Signatur/Uebermittlung sind bewusst NICHT Teil dieser
+  // Funktion (Konsey 2026-09-17) — siehe auftragsdatei.js Kopfkommentar.
+  const auftragsdatei = buildAuftragsdatei({
+    absenderIk:          absender.ik,
+    empfaengerIk:        empfaenger.ik,
+    logischerDateiname,
+    erstellungsdatum,
+    transfernummer,
+    nutzdateiByteLength: byteLength,
+    kind,
+  });
+
   return {
     filename,
-    // Fuer eine kuenftige Auftragsdatei (Anhang 2 zur Anlage 1 TP5, Kap. 9,
-    // §3.1 — Nutzdatendatei geht nie allein) — der logische Name muss dort
-    // im Feld "Dateiname" identisch zur UNB-Anwendungsreferenz stehen.
     logischerDateiname,
+    auftragsdatei,
     content,
     segmentCount,
     messageCount: nachrRef,

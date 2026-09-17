@@ -3,9 +3,12 @@
 > **Bu dosya arşivin tek giriş kapısıdır.** `wissensbank/` altındaki tüm GKV/§302/Heilmittel
 > belgelerinin ne olduğunu, hangi sürümde olduğunu ve ne zaman lazım olacağını listeler.
 >
-> Son güncelleme: 2026-09-10 · **35 belge kayıtlı**
+> Son güncelleme: 2026-09-17 · **37 belge kayıtlı**
 > (10.09.2026: Anhang 1 Kap. 4 „Datenübermittlung" + Anhang 2 Kap. 9 „Prüfverfahren" eklendi
->  — `gkv-302` canlı-gönderim hazırlık denetiminde arşivde eksik oldukları anlaşıldı)
+>  — `gkv-302` canlı-gönderim hazırlık denetiminde arşivde eksik oldukları anlaşıldı.
+>  17.09.2026: GGT Anlage 2 „Auftragsdatei" + GGT Anlage 4 „Verfahrenskennungen" eklendi —
+>  konsey kararı 2026-09-17 sonrası Auftragsdatei üretimi için gerekliydi, REGISTER.md'nin
+>  „eksik belgeler" listesinde duruyordu.)
 >
 > ⚠️ **05.09.2026 — bu dosya artık tek başına değil.** Burası bir belgenin *içinde ne
 > olduğuna* bakar. Belgenin **nereden geldiği**, hangi sürüm olduğu, ne zaman düşeceği ve
@@ -395,6 +398,47 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Geçerlilik:** 01.01.2026
 - **Ne zaman lazım:** Sosyal sigorta kurumları ve hizmet sunucuları arasında elektronik veri iletimi (Datenübermittlung) için teknik ve güvenlik standartlarının uygulanması gerektiğinde.
 - **İçerdiği fiyat/pozisyon numarası var mı:** hayır
+
+### wissensbank/gemeinsam/302-tp5/GGT_Anlage_02_Auftragsdatei.txt
+- **Ne:** Anlage 2 zu den Gemeinsamen Grundsätzen Technik (GGT) — Auftragsdatei (Auftragssatz)
+  formatının tam, byte-pozisyonlu alan tanımı.
+- **Kapsam:** Auftragssatz Version 1.0 — sabit uzunluklu (348 byte, ISO 8859-1) tek satırlık
+  kayıt. 1. Teil „Allgemeine Beschreibung der Krankenkassen-Kommunikation" (IDENTIFIKATOR,
+  VERSION, VERFAHREN_KENNUNG, TRANSFER_NUMMER, ABSENDER_EIGNER/PHYSIKALISCH,
+  EMPFÄNGER_NUTZER/PHYSIKALISCH, DATEINAME, Erstellungs-/Übertragungsdaten,
+  Verschlüsselungsart/Elektronische Unterschrift), 2. Teil „Bandverarbeitung", 3. Teil
+  „Spezifische Informationen für das KKS-Verfahren", 4. Teil „Verarbeitung innerhalb eines RZ",
+  Dateinamen-Konventionen (§3.1).
+- **Sürüm:** Auftragssatz Version 1.0 (Stand des Anhangs: 10.10.2024)
+- **Anzuwenden ab:** 01.01.2025
+- **Ne zaman lazım:** Nutzdatei (SLGA/SLLA) ile birlikte gönderilmesi ZORUNLU olan Auftragsdatei'nin
+  (Anhang 2 zur Anlage 1 TP5, Kap. 9, §3.1 — dosyalar „paarweise" gitmeli) alan yapısını
+  oluştururken/doğrularken. Kodda: `api-backend/billing/dta/auftragsdatei.js`
+  (`buildAuftragsdatei()`, 17.09.2026, konsey/tutanak/2026-09-17-itsg-datenannahmestelle-test-yolu.md).
+- **Anahtar bölümler:**
+  - 1.1 Format der Auftragsdatei (Nutzungstyp/Feldtyp/Feldart-Legende)
+  - 2.1 1. Teil „Allgemeine Beschreibung der Krankenkassen-Kommunikation" (Stellen 1–210)
+  - 2.2–2.4 2.–4. Teil (Stellen 211–348)
+  - 3.1 Dateinamen
+
+### wissensbank/gemeinsam/302-tp5/GGT_Anlage_04_Verfahrenskennungen.txt
+- **Ne:** Anlage 4 zu den Gemeinsamen Grundsätzen Technik (GGT) — VERFAHREN_KENNUNG (Dateityp,
+  Auftragssatz Stelle 20-24) alanının tüm GKV-Datenaustauschverfahren için gültige Wertelistesi.
+- **Kapsam:** 58 farklı veri değişim sürecinin (Arbeitgeber, Rentenversicherung, § 294 ff./
+  § 295 Abs. 1b/§ 301/§ 302 SGB V, Pflegekassen, ITSG, DMP, eGK, vb.) VERFAHREN_KENNUNG kodları.
+  Bizim için kritik olan §1.3 „Datenaustausch zwischen Leistungserbringern und Krankenkassen
+  nach § 294 ff. SGB V": Stelle 21–23 = `'SOL'` (Sonstige Leistungserbringer, Richtung LE → GKV).
+  §1.18'de ayrıca `HEI` = „Lieferung von Heilmitteldaten nach § 302 SGB V" (KK → ITSG yönünde,
+  farklı bir bağlam — bizim akışımız değil, karıştırma).
+- **Sürüm:** Beschreibung des Feldes Version 1.1 (Stand: 06.11.2025)
+- **Anzuwenden ab:** 01.01.2026
+- **Ne zaman lazım:** Auftragsdatei'nin VERFAHREN_KENNUNG alanına (Stelle 20-24) hangi 3 harfli
+  kodun yazılacağını doğrularken — Heilmittelerbringer (Praxura) için her zaman `'SOL'`.
+  Kodda: `api-backend/billing/dta/auftragsdatei.js`.
+- **Anahtar bölümler:**
+  - 1.3 Datenaustausch zwischen Leistungserbringern und Krankenkassen nach § 294 ff. SGB V
+  - 1.18 Datenaustausch der Sozialversicherung mit der ITSG (HEG/HEI — nicht unser Pfad)
+  - 2 Beschreibung des Feldes ‚VERFAHREN_KENNUNG_SPEZIFIKATION'
 
 ### wissensbank/podologie/20230524_Podologie_FAK_bf.txt
 - **Ne:** Fragen-Antworten-Katalog Podologie.
