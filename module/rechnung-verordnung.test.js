@@ -163,6 +163,41 @@ test('verordnungenRendern: Behandlung ohne Termin bleibt ungehakt, auch bei "all
   assert.equal(auswahl.zeilen[0].unit_price, 27.5);
 });
 
+// Gleiche Sperre, Podologie-Ursache: kein HPNR-Code und kein betrag_gkv
+// hinterlegt trägt ebenfalls garantiert 0,00 € ("kein Betrag hinterlegt").
+// Auf Kemal-Wunsch 17.09.2026 auf diese zweite Ursache erweitert — ein Kode,
+// der nur teilweise unbekannt ist ("Position X unbekannt"), bleibt dagegen
+// wählbar, weil dort ein echter Teilbetrag steht.
+test('verordnungenRendern: Podologie-Behandlung ohne Betrag bleibt ungehakt, Teilbetrag bleibt wählbar', () => {
+  const liste = [{
+    id: 'v1', nummer: null, datum: '2026-08-01', titel: 'Testverordnung',
+    gesamt: 36.1, einheiten: 3, quelle: 'podologie',
+    behandlungen: [
+      { id: 'b1', datum: '2026-08-05', betrag: 36.1, hinweis: null,
+        zeilen: [{ title: 'Podologische Behandlung (klein)', quantity: 1, unit_price: 36.1 }] },
+      { id: 'b2', datum: '2026-08-12', betrag: 0, hinweis: 'kein Betrag hinterlegt',
+        zeilen: [{ title: 'Testverordnung', quantity: 1, unit_price: 0 }] },
+      { id: 'b3', datum: '2026-08-19', betrag: 36.1, hinweis: 'Position 99999 unbekannt',
+        zeilen: [{ title: 'Podologische Behandlung (klein)', quantity: 1, unit_price: 36.1 }] },
+    ],
+  }];
+
+  global.document = fakeDocument();
+  const container = fakeElement();
+  verordnungenZuruecksetzen();
+  verordnungenRendern(container, liste, { escapeHtml: (s) => s, formatEur: (n) => n.toFixed(2) + ' €', onAuswahl: () => {} });
+
+  const subList = container.children[1];
+  const subCbOhneBetrag = subList.children[1].children[0];
+  const subCbTeilbekannt = subList.children[2].children[0];
+
+  assert.equal(subCbOhneBetrag.checked, false);
+  assert.equal(subCbOhneBetrag.disabled, true);
+  // Teilweise unbekannter Kode ist keine 0-€-Garantie — bleibt normal wählbar.
+  assert.equal(subCbTeilbekannt.checked, true);
+  assert.equal(!!subCbTeilbekannt.disabled, false);
+});
+
 test('der Verordnungsbetrag ist die Summe ihrer Behandlungen', async () => {
   const liste = await verordnungenLaden(fakeSb({
     prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF', heilmittel_items: [], anzahl_einheiten: 6 }],

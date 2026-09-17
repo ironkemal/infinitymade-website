@@ -336,11 +336,14 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
     const anzahl = vord.behandlungen.length;
     const einheiten = vord.einheiten || 0;
 
-    // Behandlungen ohne verknüpften Termin tragen 0,00 € und werden nicht
-    // automatisch mitgehakt — sonst rutscht eine 0-€-Zeile unbemerkt in die
-    // Rechnung (Ops #293-Nebenfund, Kemal-Entscheidung 17.09.2026). Erst nach
-    // Verknüpfen des Termins taucht die Behandlung hier ohne Hinweis auf.
-    const gesperrt = (b) => b.hinweis === 'kein Termin verknüpft';
+    // Behandlungen, die garantiert 0,00 € tragen (Physio: kein verknüpfter
+    // Termin · Podologie: kein HPNR-Code und kein betrag_gkv hinterlegt),
+    // werden nicht automatisch mitgehakt — sonst rutscht eine 0-€-Zeile
+    // unbemerkt in die Rechnung (Ops #293/#296, Kemal-Entscheidung
+    // 17.09.2026, auf Podologie erweitert). Ein Kode, der nur teilweise im
+    // Katalog fehlt ("Position X unbekannt"), sperrt NICHT — da steht ein
+    // echter Teilbetrag drin, der abrechenbar bleibt.
+    const gesperrt = (b) => b.hinweis === 'kein Termin verknüpft' || b.hinweis === 'kein Betrag hinterlegt';
     const verfuegbareBehandlungen = vord.behandlungen.filter(b => !gesperrt(b));
 
     // Startzustand: Verordnung inaktiv (noch keine Auswahl), alle Behandlungen
