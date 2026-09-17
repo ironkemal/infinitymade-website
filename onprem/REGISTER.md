@@ -631,7 +631,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | A (+ C) |
 | **Kutuda ne olur** | Müşterinin tarayıcısı `js-de.sentry-cdn.com`'a çıkar. Kısıtlı praxis ağında sayfa script bloke olana kadar bekler. Ayrıca **G4**: on-prem pakette telemetri varsayılan KAPALI olmalı; loader HTML'de sabitken "varsayılan kapalı" diye bir şey yok. Vendor kuralımızla da çelişiyor (Konsey 2026-08-13 S3: CDN'e geri dönmek yasak) |
 | **Çözüm** | **Faz 2.6** — Sentry opt-in: sihirbazda kapalı-varsayılan onay kutusu; kapalıysa lokal `error_logs` tablosuna yaz. Loader etiketi HTML'den çıkar, koşullu enjeksiyona döner. Playbook Faz 1.4 bunu bilinçli istisna olarak ayırmış ("Sentry loader hariç — o Faz 2'de koşullu olacak") | Mekanizma **O-58 ile aynı** — yeni bir build target/paketleme script'i değil, mevcut çalışan desen: `/api/config`'e bir alan daha eklenir (örn. `telemetryEnabled`, SaaS'ta hep `true`, kutuda kurulum sihirbazının onay kutusuna bağlı env), `supabase-config.js` onu okur, **statik `<script src="https://js-de.sentry-cdn.com/...">` etiketi 11 HTML dosyasından çıkar**, `sentry-init.js` (ya da önüne konan küçük bir yükleyici) flag true ise script elemanını runtime'da `document.createElement` ile ekler. Flag false ise DOM'a hiç script etiketi girmez — DNS/network isteği doğmaz. CSP'nin bugün bunu bloke ediyor olması (O-52) yeterli **değil**, o kendi notunda da "ikinci savunma hattı tek hat değildir" diyor; asıl kapanış statik etiketin HTML'den çıkmasıdır.
-| **Durum** | `geplant` (Faz 2.6) — kapı tabanı: **12**. 17.09.2026 netleştirme (Ops #166): mekanizma O-58'in `istKutu`/`IST_KUTU` desenini tekrar kullanır, ayrı bir build/paketleme adımı açılmaz (G7) |
+| **Durum** | ✅ **gelöst (17.09.2026, `1935d73`)** — mekanizma O-58'in `istKutu`/`IST_KUTU` deseniyle aynı: `/api/config`'e `telemetryEnabled` eklendi (`server.js:429` kutuda `!process.env.SUPABASE_PUBLIC_URL` → varsayılan **KAPALI**; `api/config.js:16` Vercel'de sabit `true` → SaaS davranışı değişmedi). 11 HTML dosyasından statik `<script src="https://js-de.sentry-cdn.com/...">` + `index.html`'deki `<link rel=preconnect>` çıkarıldı. `sentry-init.js` artık kendi `fetch('/api/config')` çağrısını yapıp flag `true` değilse loader'ı hiç `document.createElement` ile eklemiyor — kutuda (flag false) sayfa hiçbir zaman `sentry-cdn.com`'a DNS isteği atmıyor, CSP tek savunma hattı olmaktan çıktı (O-52'nin uyarısı karşılandı). Kapı tabanı aynı commit'te otomatik sıkıştı: `ext_script` **11→0** (`tools/.onprem-baseline`). Setup-Wizard opt-in ekranı (müşteri isterse açabilsin) hâlâ Faz 2.6'nın kalan parçası — bugünkü hedef (varsayılan kapalı, G4) karşılandı, açma arayüzü henüz yok. Kod tarafı bende doğrulanmadı canlıda; canlı doğrulama `canli-test` görevine bırakıldı |
 
 ---
 
@@ -1924,6 +1924,11 @@ Buna karşılık `cookie-consent.js/css` **hiçbir** kutu sayfasından çağrıl
    CSP onu engelliyor; `sentry-init.js:9-13` `window.Sentry` yoksa sessizce çıktığı
    için kırılma yok. Yani **G4 bu turda CSP ile sağlandı, HTML'den silinerek değil** —
    O-06 açık kalır, ikinci savunma hattı tek hat değildir.
+
+   ⚠️ **Güncelliğini yitirdi (17.09.2026) — O-06 artık `gelöst` (`1935d73`).** Statik
+   loader etiketi HTML'den tamamen çıktı, CSP burada artık tek savunma hattı **değil**
+   (yukarıdaki üçüncü nokta gibi bir CSP-yan-etkisi yok) — kutuda flag varsayılan kapalı
+   olduğu için script hiç eklenmiyor, DNS isteği doğmuyor. Ayrıntı: O-06 girdisi.
 
 ### O-52 — `vercel.json` CSP'si kutuya kopyalanamaz (ve kopyalanırsa iki türlü ısırır)
 
@@ -3775,7 +3780,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | `n8n.infinitymade.de` | ~~26~~ → **7** | `*.js` `*.html` `*.mjs`; `archive/` `vendor/` `funktionen/` `onprem/` `.claude/` `node_modules/` `index-old.html` `ai chatbot proje/` hariç |
 | `app.praxura.de` (uygulama yüzeyi) | ~~19~~ → **15** | `dashboard.js` `dashboard.html` `employee-signup.js` `admin-login.js` `api-backend/server.js` — pazarlama/blog hariç (O-04) |
 | `api/` fonksiyon sayısı | **12** | `find api -name "*.js" -not -path "api/_lib/*"` — artış = red (limit + G8) |
-| Üçüncü-parti `<script src="http…">` | **11** | Yalnız Sentry loader. ⚠️ Sicilin O-06'da "12 satır / 11 dosya" yazıyordu; kapı 04.09.2026'da index üzerinden **11 satır** ölçtü — geçerli sayı kapınınkidir (`tools/.onprem-baseline` → `ext_script=11`). Yeni host = red |
+| Üçüncü-parti `<script src="http…">` | ~~11~~ → **0** | Sentry loader statik olarak kaldırılmıştı, 17.09.2026'da (`1935d73`, O-06) runtime-koşullu yükleyiciye çevrildi — statik etiket 11 HTML dosyasından da çıktı. `tools/.onprem-baseline` → `ext_script=0`. Yeni host = red |
 | `N8N_` env referansı | **3** | `server.js:1216` `:1969` `:1972` (satırlar 11.09.2026 akşamı, `86aae7b` sonrası yeniden ölçüldü) — artış = red, hedef sıfır (Faz 1.2) |
 | `.supabase.co` sabit referansı (ürün kodu) | **1** | ⚠️ Sicil bunu **0** sanıyordu; kapı ölçümünde 1 çıktı: `api-backend/test_schema.js:5` (test dosyası, env fallback'li — O-05'te zaten istisna olarak yazılıydı, sayaçta unutulmuştu). `ops/` ve `vercel.json` hariç. Artış = red |
 | `fonts.googleapis.com` / `esm.sh` / `unpkg` / `jsdelivr` / `cdnjs` | **0** | Uygulama kodu; `ai chatbot proje/` hariç. Sıfırdan artış = red (Konsey 2026-08-13 S3) |
