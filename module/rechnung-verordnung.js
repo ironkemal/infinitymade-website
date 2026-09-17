@@ -336,12 +336,19 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
     const anzahl = vord.behandlungen.length;
     const einheiten = vord.einheiten || 0;
 
+    // Behandlungen ohne verknüpften Termin tragen 0,00 € und werden nicht
+    // automatisch mitgehakt — sonst rutscht eine 0-€-Zeile unbemerkt in die
+    // Rechnung (Ops #293-Nebenfund, Kemal-Entscheidung 17.09.2026). Erst nach
+    // Verknüpfen des Termins taucht die Behandlung hier ohne Hinweis auf.
+    const gesperrt = (b) => b.hinweis === 'kein Termin verknüpft';
+    const verfuegbareBehandlungen = vord.behandlungen.filter(b => !gesperrt(b));
+
     // Startzustand: Verordnung inaktiv (noch keine Auswahl), alle Behandlungen
     // als Voreinstellung in der Menge — aber aktiv erst nach Benutzerinteraktion.
     const zst = {
       vordId: vord.id,
       aktiv: false,
-      behandlungIds: new Set(vord.behandlungen.map(b => b.id)),
+      behandlungIds: new Set(verfuegbareBehandlungen.map(b => b.id)),
       allBehIds: vord.behandlungen.map(b => b.id),
       vordCb: null,  // wird unten gesetzt
       subCbs: [],    // wird unten befüllt
@@ -374,7 +381,7 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
     vordCb.type = 'checkbox';
     vordCb.id = 'vord-cb-' + vi;
     vordCb.checked = false;
-    vordCb.disabled = !hasBeh;
+    vordCb.disabled = !hasBeh || verfuegbareBehandlungen.length === 0;
     vordCb.style.cssText = 'flex-shrink:0;cursor:' + (hasBeh ? 'pointer' : 'default');
     zst.vordCb = vordCb; // Referenz für verordnungAuswahlLeeren
 
@@ -442,7 +449,12 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
 
       const subCb = document.createElement('input');
       subCb.type = 'checkbox';
-      subCb.checked = true; // Voreinstellung: alle Behandlungen gehakt
+      subCb.checked = !gesperrt(beh); // Voreinstellung: alle verfügbaren Behandlungen gehakt
+      subCb.disabled = gesperrt(beh);
+      if (gesperrt(beh)) {
+        subCb.title = 'Kein Termin verknüpft — erst nach Verknüpfung abrechenbar';
+        subRow.style.opacity = '0.6';
+      }
       subCb.dataset.vordIdx = vi;
       subCb.dataset.behId = beh.id;
       zst.subCbs.push(subCb); // Referenz für verordnungAuswahlLeeren
@@ -481,8 +493,9 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
         // Damit gilt: aufklappen + eine Behandlung entfernen = bewusste Auswahl
         // dieser Verordnung, nur ohne diese eine Behandlung.
         zst.aktiv = zst.behandlungIds.size > 0;
-        // Verordnungshaken aus Mengengrösse ableiten
-        const total = vord.behandlungen.length;
+        // Verordnungshaken aus Mengengrösse ableiten — gesperrte Behandlungen
+        // zählen nicht mit, sonst wird der Kopfhaken nie "voll".
+        const total = verfuegbareBehandlungen.length;
         const checked = zst.behandlungIds.size;
         if (checked === 0) {
           vordCb.checked = false;
@@ -502,9 +515,9 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
     vordCb.addEventListener('change', () => {
       zst.aktiv = vordCb.checked;
       if (vordCb.checked) {
-        // Alle Behandlungen haken
-        for (const b of vord.behandlungen) zst.behandlungIds.add(b.id);
-        for (const sc of zst.subCbs) sc.checked = true;
+        // Alle verfügbaren Behandlungen haken — gesperrte bleiben unangetastet
+        for (const b of verfuegbareBehandlungen) zst.behandlungIds.add(b.id);
+        for (const sc of zst.subCbs) { if (!sc.disabled) sc.checked = true; }
         vordCb.indeterminate = false;
       } else {
         // Alle Behandlungen abhaken

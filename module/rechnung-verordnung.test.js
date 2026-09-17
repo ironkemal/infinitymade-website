@@ -1,6 +1,32 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { verordnungenLaden } from './rechnung-verordnung.js';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungenZuruecksetzen } from './rechnung-verordnung.js';
+
+// Minimaler DOM-Stub — genug für verordnungenRendern (createElement/appendChild/
+// addEventListener/dataset/style/setAttribute), kein jsdom im Projekt.
+function fakeElement() {
+  const attrs = {};
+  const listeners = {};
+  return {
+    style: {},
+    dataset: {},
+    children: [],
+    _attrs: attrs,
+    _listeners: listeners,
+    appendChild(child) { this.children.push(child); return child; },
+    setAttribute(name, val) { attrs[name] = val; },
+    getAttribute(name) { return attrs[name]; },
+    addEventListener(type, fn) { (listeners[type] = listeners[type] || []).push(fn); },
+    _fire(type) { for (const fn of (listeners[type] || [])) fn(); },
+  };
+}
+
+function fakeDocument() {
+  return {
+    createElement: () => fakeElement(),
+    createTextNode: (text) => ({ textContent: text }),
+  };
+}
 
 // Warum es diese Datei gibt:
 // Der Betrag einer Podologie-Behandlung entsteht nicht in der Datenbank, sondern
@@ -90,6 +116,51 @@ test('Physio: Preis kommt auch aus booking_leistungen, nicht nur bookings.servic
   assert.equal(beh.zeilen[0].quantity, 2);
   assert.equal(Number(beh.betrag.toFixed(2)), 55);
   assert.equal(beh.hinweis, null);
+});
+
+// Kemal-Entscheidung 17.09.2026 (Ops #296, Nebenfund aus #293): eine Behandlung
+// ohne verknüpften Termin trägt 0,00 € — ihr Kästchen darf nicht mitgehakt
+// bei den Rechnungszeilen landen, auch nicht über den "alles auswählen"-Kopf-
+// haken der Verordnung. Erst nach Verknüpfen des Termins taucht sie ohne
+// Hinweis auf und ist dann normal wählbar.
+test('verordnungenRendern: Behandlung ohne Termin bleibt ungehakt, auch bei "alles auswählen"', () => {
+  const liste = [{
+    id: 'v1', nummer: null, datum: '2026-08-01', titel: 'Testverordnung',
+    gesamt: 27.5, einheiten: 2, quelle: 'physio',
+    behandlungen: [
+      { id: 'b1', datum: '2026-08-05', betrag: 27.5, hinweis: null,
+        zeilen: [{ title: 'Manuelle Therapie', quantity: 1, unit_price: 27.5 }] },
+      { id: 'b2', datum: '2026-08-12', betrag: 0, hinweis: 'kein Termin verknüpft',
+        zeilen: [{ title: 'Manuelle Therapie', quantity: 1, unit_price: 0 }] },
+    ],
+  }];
+
+  global.document = fakeDocument();
+  const container = fakeElement();
+  verordnungenZuruecksetzen();
+  verordnungenRendern(container, liste, { escapeHtml: (s) => s, formatEur: (n) => n.toFixed(2) + ' €', onAuswahl: () => {} });
+
+  const vordRow = container.children[0];
+  const vordCb = vordRow.children[1];
+  const subList = container.children[1];
+  const subCb1 = subList.children[0].children[0];
+  const subCb2 = subList.children[1].children[0];
+
+  // Startzustand: verfügbare Behandlung gehakt, gesperrte nicht — und disabled.
+  assert.equal(subCb1.checked, true);
+  assert.equal(!!subCb1.disabled, false);
+  assert.equal(subCb2.checked, false);
+  assert.equal(subCb2.disabled, true);
+
+  // "Alles auswählen" über den Kopfhaken darf die gesperrte Behandlung nicht mitreissen.
+  vordCb.checked = true;
+  vordCb._fire('change');
+  assert.equal(subCb1.checked, true);
+  assert.equal(subCb2.checked, false);
+
+  const auswahl = verordnungAuswahl();
+  assert.equal(auswahl.zeilen.length, 1);
+  assert.equal(auswahl.zeilen[0].unit_price, 27.5);
 });
 
 test('der Verordnungsbetrag ist die Summe ihrer Behandlungen', async () => {
