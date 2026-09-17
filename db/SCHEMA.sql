@@ -1,7 +1,24 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-17 — 0022_team_zugriff_warteliste_patient_notes
+-- ERZEUGT AM:        2026-09-17 — 0023_aerzte_ausfall_team_insert
+--                    (Ops-Karte #299, Folge der service_role-Pruefung S-30.
+--                    Entscheidung Kemal vom 17.09.2026: statt die beiden
+--                    betroffenen Routen auf 403 zu setzen, wird RLS an das
+--                    tatsaechliche und gewollte Verhalten angeglichen — ueber
+--                    den Service-Role-Client schrieben Angestellte laengst,
+--                    nur stand es nirgends.
+--                    KEINE neue Tabelle, KEINE neue Spalte, KEIN neuer Index,
+--                    KEIN neuer Trigger — die Migration legt ausschliesslich
+--                    DREI RLS-POLICIES an: Team-INSERT/UPDATE auf `aerzte`
+--                    sowie Team-INSERT auf `ausfallrechnungen`. Details, die
+--                    bewussten Grenzen (kein DELETE auf `aerzte`, kein UPDATE
+--                    auf `ausfallrechnungen`) und die zwoelf zurueckgerollten
+--                    Live-Proben stehen in db/SCHEMA-RLS.sql; fuer DIESE Datei
+--                    aendert sich nur die Policy-Zahl im UMFANG: 169 -> 172.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-17 — 0022_team_zugriff_warteliste_patient_notes
 --                    (Ops-Karte #253, Entscheidung `legal-de` vom 17.09.2026 in
 --                    compliance/LEGAL_DECISIONS.md. KEINE neue Tabelle, KEINE
 --                    neue Spalte, KEIN neuer Index, KEIN neuer Trigger — die
@@ -279,8 +296,14 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            89 Tabellen · 1300 Spalten · 169 RLS-Policies
+-- UMFANG:            89 Tabellen · 1300 Spalten · 172 RLS-Policies
 --                    318 Indizes · 78 Trigger · 78 Funktionen · 4 Views
+--                    (17.09.2026 live gezaehlt, Stand 0023_aerzte_ausfall_team_
+--                     insert: Policies 169 -> 172, drei neue Team-Policies
+--                     (zwei auf `aerzte`, eine auf `ausfallrechnungen`).
+--                     Tabellen, Spalten, Indizes, Trigger, Funktionen und Views
+--                     unveraendert.)
+--                    davor: 89 · 1300 · 169 · 318 · 78 · 78 · 4
 --                    (17.09.2026 live gezaehlt, Stand 0022_team_zugriff_
 --                     warteliste_patient_notes: Policies 165 -> 169, vier neue
 --                     Team-Policies (siehe Kopf und db/SCHEMA-RLS.sql).

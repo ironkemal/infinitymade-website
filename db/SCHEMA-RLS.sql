@@ -1,7 +1,53 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-17 — 0022_team_zugriff_warteliste_patient_notes
+-- ERZEUGT AM:        2026-09-17 — 0023_aerzte_ausfall_team_insert
+--                    (Ops-Karte #299, Folge der service_role-Pruefung S-30.
+--                    S-30 fand zwei Routen, die mit dem Service-Role-Client
+--                    schreiben und dabei KEINE Rollenpruefung machen:
+--                    `api-backend/lib/arzt-registry.js` (`resolveOrCreateArzt()`,
+--                    INSERT+UPDATE auf `aerzte`, laeuft im Rezept-Scan) und
+--                    `api-backend/billing/api/ausfall.routes.js`
+--                    `POST /ausfall/create` (INSERT auf `ausfallrechnungen`).
+--                    Beide Bildschirme sind in nav-registry.js fuer
+--                    roles:['owner','employee'] freigegeben und laufen taeglich.
+--                    Entscheidung Kemal vom 17.09.2026: RLS an dieses
+--                    tatsaechliche und gewollte Verhalten angleichen, statt die
+--                    Routen auf 403 zu setzen — eine 403 haette keine Luecke
+--                    geschlossen, sondern zwei laufende Arbeitsablaeufe
+--                    gebrochen.
+--                    DREI NEUE POLICIES, sonst nichts: `Employees can
+--                    insert/update team aerzte` und `Employees can insert team
+--                    ausfallrechnungen`. Alle drei tragen denselben
+--                    EXISTS-Ausdruck gegen `profiles.owner_id` (Schreibweise b
+--                    aus Abschnitt 1) — Mandantenbezug NIE ueber business_id.
+--                    Bestehende Owner-Policies UNVERAENDERT; PERMISSIVE
+--                    Policies werden ODER-verknuepft, es wurde niemandem etwas
+--                    entzogen.
+--                    ⛔ Bewusst KEIN DELETE fuers Team auf `aerzte`
+--                    (`aerzte_delete_owner` bleibt beim Inhaber: ein geloeschter
+--                    Arzt reisst die Auswertung „welcher Arzt ueberweist wie
+--                    viel“ auf und ist aus der Verordnung nicht
+--                    wiederherstellbar; Loeschen ist nie Teil des Scan-Ablaufs)
+--                    und bewusst KEIN UPDATE fuers Team auf
+--                    `ausfallrechnungen` — UPDATE ist dort der Statuswechsel
+--                    offen -> bezahlt|storniert|abgeschrieben, also eine
+--                    Geldaussage. Die passende Code-Sperre steht seit
+--                    17.09.2026 in `PATCH /ausfall/:id/status`
+--                    (`profile.role !== 'owner'` -> 403, Commit 9ac1978);
+--                    RLS und Route sagen damit dasselbe.
+--                    ZWOELF zurueckgerollte Live-Proben (BEGIN..RAISE, als
+--                    `authenticated` mit gesetztem request.jwt.claims.sub eines
+--                    echten Angestellten): aerzte INSERT/UPDATE im eigenen
+--                    Mandanten OK; aerzte DELETE 0 Zeilen; ausfall INSERT im
+--                    eigenen Mandanten OK; ausfall UPDATE auf eigener
+--                    Bestandszeile 0 Zeilen; ausfall SELECT eigene Zeile 1 /
+--                    fremde Zeile 0; INSERT unter FREMDER (echter) owner_id auf
+--                    beiden Tabellen mit SQLSTATE 42501 blockiert — die
+--                    Mandantengrenze haelt, sie ist nicht nur ein FK.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-17 — 0022_team_zugriff_warteliste_patient_notes
 --                    (Ops-Karte #253, Entscheidung `legal-de` vom 17.09.2026 in
 --                    compliance/LEGAL_DECISIONS.md. VIER NEUE POLICIES, sonst
 --                    nichts: `Employees can view team patient_notes` [SELECT]
@@ -324,7 +370,12 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            169 RLS-Policies · 318 Indizes · 78 Trigger · 78 Funktionen
+-- UMFANG:            172 RLS-Policies · 318 Indizes · 78 Trigger · 78 Funktionen
+--                    (17.09.2026 live gezaehlt, 0023_aerzte_ausfall_team_insert:
+--                     Policies 169 -> 172 (zwei auf `aerzte`, eine auf
+--                     `ausfallrechnungen`). Indizes, Trigger und Funktionen
+--                     unveraendert.)
+--                    davor: 169 · 318 · 78 · 78
 --                    (17.09.2026 live gezaehlt, 0022_team_zugriff_warteliste_
 --                     patient_notes: Policies 165 -> 169 (eine auf
 --                     patient_notes, drei auf warteliste). Indizes, Trigger und
@@ -445,7 +496,7 @@
 
 
 -- =====================================================================
--- 2. RLS-POLICIES (169, siehe UMFANG im Kopf)
+-- 2. RLS-POLICIES (172, siehe UMFANG im Kopf)
 -- =====================================================================
 
 -- abrechnung
@@ -483,7 +534,18 @@
 --   aerzte_insert_owner [INSERT] CHECK (auth.uid() = owner_id)
 --   aerzte_update_owner [UPDATE] USING/CHECK (auth.uid() = owner_id)
 --   aerzte_delete_owner [DELETE] USING (auth.uid() = owner_id)
---   ⚠️ Mitarbeiter dürfen LESEN, aber nicht schreiben.
+--   Employees can insert team aerzte [INSERT]
+--     CHECK (EXISTS (SELECT 1 FROM profiles p
+--                     WHERE p.id = auth.uid() AND p.owner_id = aerzte.owner_id))
+--   Employees can update team aerzte [UPDATE]
+--     USING/CHECK (derselbe EXISTS-Ausdruck)
+--   ⚠️ Seit 0023 (17.09.2026) darf das Team LESEN, ANLEGEN und AENDERN.
+--      Grund: `resolveOrCreateArzt()` legt den Arzt im Rezept-Scan an bzw.
+--      reichert ihn bei LANR-Treffer an — und scannt tut der Angestellte.
+--      UPDATE ist dabei der HAeUFIGERE Pfad, ohne ihn waere das INSERT-Recht
+--      halb wertlos. `aerzte` ist Stammdatenregister (Name, LANR, BSNR,
+--      Anschrift), kein Art.-9-Patientendatum, keine § 630f-BGB-Frage.
+--   ⛔ KEIN DELETE fuers Team — bleibt beim Inhaber.
 
 -- ai_audit_log
 --   ai_audit_select_own [SELECT] USING (auth.uid() = tenant_id)
@@ -506,6 +568,22 @@
 --   ausfallrechnungen_select [SELECT] owner + Team
 --   ausfallrechnungen_insert [INSERT] CHECK (auth.uid() = owner_id)
 --   ausfallrechnungen_update [UPDATE] USING/CHECK (auth.uid() = owner_id)
+--   Employees can insert team ausfallrechnungen [INSERT]
+--     CHECK (EXISTS (SELECT 1 FROM profiles p
+--                     WHERE p.id = auth.uid()
+--                       AND p.owner_id = ausfallrechnungen.owner_id))
+--   ⚠️ Seit 0023 (17.09.2026) darf das Team LESEN und ANLEGEN — der Ausfall
+--      entsteht an der Anmeldung und wird dort erfasst
+--      (`handleDirectAusfallrechnung()` -> POST /ausfall/create). Ermessen hat
+--      der Erfassende nicht: Hoehe und Hinweistext kommen aus
+--      `profiles.ausfall_*` des Inhabers, `pruefeAusfallFrist()` entscheidet
+--      ueber die Fristwahrung.
+--   ⛔ KEIN UPDATE fuers Team — das ist der Statuswechsel
+--      offen -> bezahlt|storniert|abgeschrieben und damit eine Geldaussage.
+--      Gleichlautende Code-Sperre: PATCH /ausfall/:id/status, role !== 'owner'
+--      -> 403 (Commit 9ac1978, 17.09.2026).
+--   ⛔ KEIN DELETE — gab es nie: eine vergebene Rechnungsnummer
+--      (Nummernkreis `ausfallrechnung`) verschwindet nicht.
 
 -- b2b_contacts
 --   owner_crud_b2b_contacts [ALL] owner + Team (EXISTS-Variante)
