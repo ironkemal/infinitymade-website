@@ -40,7 +40,7 @@
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
 import { ausTopf } from './verordnung-topf.js?v=20260910';
-import { preisAusService } from './rechnung-bruecke.js?v=20260917';
+import { terminLeistungen } from './rechnung-editor.js?v=20260917';
 
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────
 let _liste = [];    // normalisierte Verordnungsliste aus verordnungenLaden
@@ -240,9 +240,14 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
 
   let bookingsMap = {};
   if (allBookingIds.length) {
+    // booking_leistungen (seit Ops 235: mehrere Leistungen je Termin) +
+    // Rückfall auf bookings.services — gleicher Select wie in
+    // module/rechnung-editor.js:68, sonst liest terminLeistungen() unten
+    // bei modernen Kombi-Terminen `bk.services` (leer) statt der echten
+    // Leistungen und der Preis fällt still auf 0 (Ops #293-Nebenfund).
     const { data: bkgs } = await sb
       .from('bookings')
-      .select('id, services(title, price, price_config)')
+      .select('id, services(title, price, price_config), booking_leistungen(anzahl, sort_order, services(title, price, price_config))')
       .in('id', allBookingIds);
     for (const bk of (bkgs || [])) bookingsMap[bk.id] = bk;
   }
@@ -264,10 +269,9 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
         hinweis = 'kein Termin verknüpft';
       } else {
         const bk = bookingsMap[s.booking_id];
-        const svc = bk?.services;
-        const preis = preisAusService(svc);
-        if (!preis) hinweis = 'kein Termin verknüpft';
-        zeilen = [{ title: rxTitel, quantity: 1, unit_price: preis }];
+        zeilen = terminLeistungen(bk).map(z => ({ title: z.title, quantity: z.quantity, unit_price: z.unit_price }));
+        if (!zeilen.length) zeilen = [{ title: rxTitel, quantity: 1, unit_price: 0 }];
+        if (!zeilen.some(z => z.unit_price > 0)) hinweis = 'kein Termin verknüpft';
       }
 
       const betrag = zeilen.reduce((s, z) => s + (z.quantity || 1) * (z.unit_price || 0), 0);

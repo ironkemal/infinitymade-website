@@ -60,6 +60,38 @@ test('jeder HPNR-Kode wird eine eigene Rechnungszeile mit Katalogpreis', async (
   assert.equal(beh.hinweis, null);
 });
 
+// Ops #293-Nebenfund (Live-Test 17.09.2026): der Physio-Weg löste den Preis
+// bislang nur über `bookings.services` auf. Seit Ops 235 tragen moderne
+// Termine ihre Leistung(en) in `booking_leistungen` — für sie blieb
+// `bookings.services` leer, der Preis fiel still auf 0 (kein Fehler, keine
+// Warnung, die Rechnung sah vollständig aus). `terminLeistungen()` kennt
+// beide Wege; dieser Test nagelt fest, dass der booking_leistungen-Pfad
+// tatsächlich den Katalogpreis liefert statt 0.
+test('Physio: Preis kommt auch aus booking_leistungen, nicht nur bookings.services', async () => {
+  const liste = await verordnungenLaden(fakeSb({
+    prescriptions: [{
+      id: 'rx1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'WS',
+      heilmittel: 'Manuelle Therapie', anzahl_einheiten: 6,
+      prescription_sessions: [{ id: 's1', booking_id: 'bk1', status: 'done', done_at: '2026-08-05' }],
+    }],
+    bookings: [{
+      id: 'bk1',
+      services: null, // moderner Kombi-Termin: die alte Einzel-Spalte ist leer
+      booking_leistungen: [
+        { anzahl: 2, sort_order: 0, services: { title: 'Manuelle Therapie', price: 27.50, price_config: null } },
+      ],
+    }],
+  }), { ownerId: 'o1', leadId: 'p1', sector: 'physio', katalogPodo: [] });
+
+  assert.equal(liste.length, 1);
+  const beh = liste[0].behandlungen[0];
+  assert.equal(beh.zeilen[0].title, 'Manuelle Therapie');
+  assert.equal(beh.zeilen[0].unit_price, 27.5);
+  assert.equal(beh.zeilen[0].quantity, 2);
+  assert.equal(Number(beh.betrag.toFixed(2)), 55);
+  assert.equal(beh.hinweis, null);
+});
+
 test('der Verordnungsbetrag ist die Summe ihrer Behandlungen', async () => {
   const liste = await verordnungenLaden(fakeSb({
     prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-08-01', diagnosegruppe: 'DF', heilmittel_items: [], anzahl_einheiten: 6 }],
