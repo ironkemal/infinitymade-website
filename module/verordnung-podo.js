@@ -394,6 +394,51 @@ function einheitenPruefen() {
   return null;
 }
 
+// ─── 5. Schnellauswahl für Behandlungseinheiten ────────────────────────────
+//
+// Ops #211: die Höchstmenge selbst kam schon aus POD_HOECHSTMENGE (s.o.),
+// offen war nur, sie tippfrei anklickbar zu machen. Zeigt 1..max als Chips;
+// max ist je Diagnosegruppe verschieden (UI2 z. B. nur 4), deshalb wird bei
+// jedem DG-Wechsel neu gerendert statt einmalig aufgebaut.
+
+function schnellauswahlEl() {
+  let el = $('rzAnzahlSchnellwahl');
+  if (el) return el;
+  const zeile = $('rzAnzahl')?.closest('div');
+  if (!zeile) return null;
+  el = document.createElement('div');
+  el.id = 'rzAnzahlSchnellwahl';
+  el.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;';
+  zeile.appendChild(el);
+  return el;
+}
+
+function schnellauswahlRendern() {
+  const feld = $('rzAnzahl');
+  const root = dgRoot($('rzDg')?.value);
+  const max = POD_HOECHSTMENGE[root];
+  if (!feld || !istPodo() || !max) { const el = $('rzAnzahlSchnellwahl'); if (el) el.innerHTML = ''; return; }
+
+  const el = schnellauswahlEl();
+  if (!el) return;
+  const aktuell = parseInt(feld.value, 10);
+  el.innerHTML = '';
+  for (let n = 1; n <= max; n++) {
+    const aktiv = aktuell === n;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = String(n);
+    btn.style.cssText = 'font-size:11px;padding:2px 7px;border-radius:10px;cursor:pointer;'
+      + `border:1px solid var(--border-color,#ccc);background:${aktiv ? 'var(--accent,#2563eb)' : 'transparent'};`
+      + `color:${aktiv ? '#fff' : 'var(--text-main)'};`;
+    btn.addEventListener('click', () => {
+      feld.value = String(n);
+      feld.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    el.appendChild(btn);
+  }
+}
+
 // ─── 6. Dringlicher Behandlungsbedarf ──────────────────────────────────────
 
 function fristHinweis() {
@@ -823,6 +868,7 @@ async function aktualisieren(supabase, ctx) {
   }
 
   zeilen.push(einheitenPruefen());
+  schnellauswahlRendern();
   zeilen.push(fristHinweis());
 
   // Der Sitzungsplan sagt dasselbe wie `POD_BEFUND_HINWEIS`, nur genauer (er
@@ -847,6 +893,8 @@ function _aufraeumen() {
   });
   $('rzDg')?.removeAttribute('data-pod-erlaubt');
   $('rzAnzahl')?.removeAttribute('max');
+  const schnellwahl = $('rzAnzahlSchnellwahl');
+  if (schnellwahl) schnellwahl.innerHTML = '';
   ['rzPodoNagel', 'rzPodoWagner', 'rzPodoAnlass'].forEach(id => { const e = $(id); if (e) e.value = ''; });
   const felder = $('rzPodoFelder');
   if (felder) felder.style.display = 'none';
