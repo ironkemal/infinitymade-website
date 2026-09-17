@@ -43,6 +43,15 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
   - Verordnungen und Behandlungsdokumentation sind für Angestellte **lesend** freigegeben
     (03.09.2026, siehe LEGAL_DECISIONS.md); Anlegen, Ändern und der Abrechnungsstatus
     bleiben beim Inhaber
+  - Patientennotizen (`patient_notes`) sind für Angestellte **lesend** freigegeben, die
+    Warteliste (`warteliste`) **lesend und schreibend, aber ohne Löschrecht**
+    (17.09.2026, siehe LEGAL_DECISIONS.md). Die Schranken sind Teil der Zusicherung, nicht
+    Nachlässigkeit: `patient_notes` führt je Patient genau eine Zeile ohne Verfasserspalte,
+    die in place überschrieben wird (§ 630f Abs. 1 S. 2 BGB); Wartelisteneinträge werden
+    über `status = 'cancelled'` storniert statt gelöscht (Art. 5 Abs. 1 lit. d)
+  - ⚠️ Wo eine Backend-Route mit `service_role` arbeitet, sieht sie RLS nicht — dort steht
+    die Rollenprüfung im Code (z. B. `DELETE /api/warteliste/:id`). Neue Routen dieser Art
+    prüfen die Rolle selbst, sonst hängt die Zusicherung in der Luft
 - Zugriffsprotokoll `data_access_log` (≥ 12 Monate)
   - ⚠️ **Umfang, damit die Zusicherung stimmt (geprüft 03.09.2026):** protokolliert werden
     die Zugriffe über die Backend-API (`api-backend`, Middleware `accessLogger` auf allen

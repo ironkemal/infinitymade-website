@@ -3697,7 +3697,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 13,
+   "sqlTreffer": 14,
    "codeStumm": false
   },
   {
@@ -6367,7 +6367,7 @@
    "schreiber": [],
    "dateien": [],
    "module": [],
-   "sqlTreffer": 2,
+   "sqlTreffer": 3,
    "codeStumm": true
   },
   {
@@ -9213,7 +9213,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 7,
+   "sqlTreffer": 12,
    "codeStumm": false
   },
   {
@@ -9713,7 +9713,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 5,
+   "sqlTreffer": 13,
    "codeStumm": false
   },
   {
@@ -10321,7 +10321,7 @@
     "module/verordnung-nachweis.js"
    ],
    "module": [],
-   "sqlTreffer": 4,
+   "sqlTreffer": 5,
    "codeStumm": false
   },
   {
@@ -13345,7 +13345,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 41,
+   "sqlTreffer": 44,
    "codeStumm": false
   },
   {
@@ -15686,7 +15686,7 @@
     "verordnungen",
     "warteliste"
    ],
-   "sqlTreffer": 6,
+   "sqlTreffer": 18,
    "codeStumm": false
   },
   {
@@ -16467,7 +16467,7 @@
   },
   {
    "name": "fußstatus",
-   "sql": 2,
+   "sql": 3,
    "status": "veraltet"
   },
   {

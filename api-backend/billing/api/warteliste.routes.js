@@ -179,13 +179,27 @@ router.patch('/:id', async (req, res) => {
 
 // ============================================================================
 // DELETE /api/warteliste/:id
-// Removes a waiting-list entry. Only the owning tenant may delete.
+// Removes a waiting-list entry. Only the OWNER may delete — not the team.
+//
+// 17.09.2026 (Ops-Karte #253): das Team hat auf `warteliste` seit Migration
+// 0022 SELECT/INSERT/UPDATE, aber bewusst KEIN DELETE (Art. 5 Abs. 1 lit. d —
+// ein fremder Wunsch soll nicht unbemerkt verschwinden; storniert wird über
+// `status = 'cancelled'`). Diese Route läuft mit dem service_role-Schlüssel
+// und sieht RLS gar nicht: `resolveAuth` löst einen Angestellten auf den
+// Mandanten seines Inhabers auf, `tenantId` hätte also gepasst und die Zeile
+// wäre gelöscht worden — die RLS-Entscheidung wäre hier durchgefallen.
+// Deshalb steht die Rollenprüfung im Code. Siehe compliance/LEGAL_DECISIONS.md,
+// Eintrag vom 17.09.2026.
 // ============================================================================
 router.delete('/:id', async (req, res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
-    const { tenantId } = auth;
+    const { tenantId, profile } = auth;
+
+    if (profile.role !== 'owner') {
+      return res.status(403).json({ error: 'Nur der Inhaber darf Wartelisten-Einträge löschen. Zum Stornieren status=cancelled verwenden.' });
+    }
 
     // Verify ownership before delete
     const { data: existing, error: fetchErr } = await supabase

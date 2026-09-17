@@ -20,7 +20,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `accommodations` | 2 | fremd |
 | `applications` | 2 | fremd |
 | `dta_schluessel` | 4 | Referenz, im Code ungenutzt |
-| `fußstatus` | 2 | veraltet |
+| `fußstatus` | 3 | veraltet |
 | `heilmittel_catalog` | 2 | veraltet |
 | `heilmittel_position` | 5 | veraltet |
 | `heilmittel_tarif` | 4 | **veraltet** (13.09.2026, O-96 — siehe `onprem/REGISTER.md`) |

@@ -35,11 +35,14 @@
  *
  * Warum das Schreiben über die API läuft
  * ──────────────────────────────────────
- * `warteliste` hat Owner-RLS ohne Team-Zugriff (`db/SCHEMA-RLS.sql`). Sagt eine
- * angestellte Therapeutin ab, würde ein direktes `supabase.from('warteliste')`
- * still ins Leere laufen. Die Route löst den Mandanten über `owner_id` auf und
- * setzt `notified_at` gleich mit — deshalb `PATCH /api/warteliste/:id` statt
- * Client-Schreibzugriff. Der Termin selbst wird direkt geschrieben, wie überall
+ * Seit dem 17.09.2026 (Migration 0022, Ops-Karte #253) darf das Team
+ * `warteliste` auch direkt lesen, anlegen und ändern — der ursprüngliche Grund
+ * ("Owner-RLS ohne Team-Zugriff, ein direktes `supabase.from('warteliste')`
+ * einer angestellten Therapeutin liefe still ins Leere") ist damit weg. Der Weg
+ * über die Route bleibt trotzdem richtig, aus dem zweiten Grund: sie setzt
+ * `notified_at` gleich mit und prüft die erlaubten Statusübergänge an einer
+ * Stelle. Also weiter `PATCH /api/warteliste/:id` statt Client-Schreibzugriff.
+ * (Löschen kann das Team weder hier noch dort — bewusst, siehe Route.) Der Termin selbst wird direkt geschrieben, wie überall
  * sonst auch: `bookings` erlaubt Angestellten das Anlegen.
  */
 

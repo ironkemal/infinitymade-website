@@ -1,7 +1,57 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-17 — 0021_audit_write_trigger
+-- ERZEUGT AM:        2026-09-17 — 0022_team_zugriff_warteliste_patient_notes
+--                    (Ops-Karte #253, Entscheidung `legal-de` vom 17.09.2026 in
+--                    compliance/LEGAL_DECISIONS.md. VIER NEUE POLICIES, sonst
+--                    nichts: `Employees can view team patient_notes` [SELECT]
+--                    und `Employees can view/insert/update team warteliste`.
+--                    Alle vier tragen denselben EXISTS-Ausdruck gegen
+--                    `profiles.owner_id` (Schreibweise b aus Abschnitt 1) —
+--                    Mandantenbezug NIE ueber business_id: ein Owner ohne
+--                    `businesses`-Zeile (Normalfall Einzelpraxis) haette
+--                    darueber gar keinen Bezug.
+--                    Bestehende Owner-Policies (`owner_only`, `Owner zugriff
+--                    auf warteliste`) UNVERAENDERT — PERMISSIVE Policies werden
+--                    ODER-verknuepft, es wurde niemandem etwas entzogen.
+--                    ⛔ Bewusst KEIN DELETE fuers Team auf `warteliste`
+--                    (Art. 5 Abs. 1 lit. d — storniert wird ueber `status`,
+--                    nicht durch Loeschen) und bewusst KEIN Schreibrecht auf
+--                    `patient_notes` (keine Verfasserspalte, genau EINE Zeile
+--                    je Patient, die in place ueberschrieben wird — jeder
+--                    Kollege wuerde die Notiz des Inhabers spurlos ersetzen,
+--                    § 630f Abs. 1 S. 2 BGB). Nachgezogen, sobald
+--                    Verfasserspalte + Versionierung da sind; Muster liegt mit
+--                    `pat_fussbefund` fertig vor.
+--                    `fußstatus` bleibt bewusst ohne Team-Zugriff: die Tabelle
+--                    ist tot (Namensverwechslung — der Menuepunkt „Fußbefund"
+--                    liest `pat_fussbefund`, und die hat laengst Team-Zugriff).
+--                    +4 Policies — live nachgezaehlt (17.09.2026): 165 -> 169.
+--                    Trigger/Funktionen/Indizes unveraendert (78 · 78 · 318):
+--                    eine Policy legt weder Trigger noch Index an.
+--                    Live geprueft (MCP, 17.09.2026, zwoelf vollstaendig
+--                    zurueckgerollte Proben als `authenticated` mit der uid
+--                    einer Angestellten): sieht die 2 Zeilen des eigenen
+--                    Inhabers und 0 fremde (beide Tabellen); INSERT im eigenen
+--                    Mandanten gelingt, INSERT unter fremder owner_id
+--                    scheitert (42501); UPDATE gelingt, das Umschreiben der
+--                    owner_id auf einen fremden Mandanten scheitert (42501);
+--                    DELETE trifft 0 Zeilen. patient_notes: SELECT ja,
+--                    UPDATE 0 Zeilen, INSERT 42501, DELETE 0 Zeilen.
+--                    ⚠️ Die Route DELETE /api/warteliste/:id laeuft mit
+--                    service_role und sieht RLS nicht — dort steht die
+--                    Rollenpruefung seit demselben Commit im Code
+--                    (api-backend/billing/api/warteliste.routes.js).
+--                    ⚠️ api-backend/db/erwartete-zaehler.json rechnerisch
+--                    nachgezogen (bis_version 0022, rls_policy 150 -> 154).
+--                    Das Delta ist exakt: genau vier Policies, und beide
+--                    Tabellen sind im On-Prem-Paket (0000_baseline.sql).
+--                    `gemessen_am` bleibt 17.09.2026 — PHYSISCH auf dem
+--                    WSL-Testkasten ist dieser Stand NICHT nachgemessen,
+--                    Bestaetigung beim naechsten install.sh-Lauf → `onprem`.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-17 — 0021_audit_write_trigger
 --                    (Ops-Karte #254, Sicherheitsregister A-18. NEUE FUNKTION
 --                    `audit_write_log()` [SECURITY DEFINER] + DREI NEUE TRIGGER
 --                    `trg_audit_write_leads` / `_prescriptions` /
@@ -274,7 +324,12 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            165 RLS-Policies · 318 Indizes · 78 Trigger · 78 Funktionen
+-- UMFANG:            169 RLS-Policies · 318 Indizes · 78 Trigger · 78 Funktionen
+--                    (17.09.2026 live gezaehlt, 0022_team_zugriff_warteliste_
+--                     patient_notes: Policies 165 -> 169 (eine auf
+--                     patient_notes, drei auf warteliste). Indizes, Trigger und
+--                     Funktionen unveraendert.)
+--                    davor: 165 · 318 · 78 · 78
 --                    (17.09.2026 live gezaehlt, 0021_audit_write_trigger:
 --                     Trigger 75 -> 78, Funktionen 77 -> 78 (`audit_write_log()`
 --                     + ihre drei Trigger auf leads/prescriptions/
@@ -390,7 +445,7 @@
 
 
 -- =====================================================================
--- 2. RLS-POLICIES (165, siehe UMFANG im Kopf)
+-- 2. RLS-POLICIES (169, siehe UMFANG im Kopf)
 -- =====================================================================
 
 -- abrechnung
@@ -564,7 +619,13 @@
 --   feedbacks_select/insert/update_own — auth.uid() = user_id
 
 -- fußstatus
---   owner_fußstatus [ALL] USING (owner_id = auth.uid())   ⚠️ ohne Team-Zugriff
+--   owner_fußstatus [ALL] USING (owner_id = auth.uid())   ohne Team-Zugriff
+--   → bleibt so, BEWUSST (17.09.2026, Ops #253): die Tabelle ist veraltet,
+--     niemand liest oder schreibt sie mehr, sie steht nur noch in der
+--     Loeschreihenfolge (api/dsgvo.js:136,271), damit Altbestaende
+--     mitverschwinden. Der Menuepunkt „Fußbefund" (Panel-Id `fussstatus`)
+--     liest `pat_fussbefund` — reine Namensverwechslung. Naechster Schritt ist
+--     Altbestand zaehlen und droppen, keine Policy.
 
 -- group_scopes
 --   group_scopes_via_group [ALL] über employee_groups -> businesses -> owner + Team
@@ -627,7 +688,19 @@
 --     (Praxisinhaber, AVV/AGB), andere betroffene Person, andere Frist.
 
 -- patient_notes
---   owner_only [ALL] USING (auth.uid() = owner_id)   ⚠️ ohne Team-Zugriff
+--   owner_only [ALL] USING (auth.uid() = owner_id)
+--   Employees can view team patient_notes [SELECT]        (17.09.2026, #253)
+--     USING EXISTS (SELECT 1 FROM profiles p
+--                    WHERE p.id = auth.uid() AND p.owner_id = patient_notes.owner_id)
+--   ⛔ Team liest NUR. Kein INSERT/UPDATE/DELETE — und das ist der Kern der
+--     Entscheidung, keine Vorsicht: die Tabelle hat KEINE Verfasserspalte und
+--     fuehrt je Patient GENAU EINE Zeile (UNIQUE (owner_id, lead_id)), die an
+--     Ort und Stelle ueberschrieben wird (dashboard.js:13825-13828
+--     `.maybeSingle()` + UPDATE, `ai_summary` :13856). Schreibrecht hiesse
+--     heute: jeder Kollege ersetzt die Notiz des Inhabers spurlos — § 630f
+--     Abs. 1 S. 2 BGB verlangt das Gegenteil. Wird nachgezogen, sobald
+--     Verfasserspalte + Versionierung existieren (Muster: `pat_fussbefund`).
+--     Begruendung: compliance/LEGAL_DECISIONS.md, 17.09.2026.
 
 -- patients
 --   owner sees own patients [ALL] owner + Team
@@ -751,7 +824,24 @@
 --   vr_update_authenticated [UPDATE] USING/CHECK (true)
 
 -- warteliste
---   Owner zugriff auf warteliste [ALL] USING (owner_id = auth.uid())   ⚠️ ohne Team-Zugriff
+--   Owner zugriff auf warteliste [ALL] USING (owner_id = auth.uid())
+--   Employees can view   team warteliste [SELECT] USING …     (17.09.2026, #253)
+--   Employees can insert team warteliste [INSERT] WITH CHECK …
+--   Employees can update team warteliste [UPDATE] USING … WITH CHECK …
+--     alle drei: EXISTS (SELECT 1 FROM profiles p
+--                         WHERE p.id = auth.uid() AND p.owner_id = warteliste.owner_id)
+--   ⛔ KEIN DELETE fuers Team (Art. 5 Abs. 1 lit. d): ein fremder Wunsch soll
+--     nicht unbemerkt verschwinden, storniert wird ueber `status = 'cancelled'`.
+--     ⚠️ Die Policy allein reicht dafuer nicht — DELETE /api/warteliste/:id
+--     laeuft mit service_role und sieht RLS nicht; die Rollenpruefung steht
+--     deshalb zusaetzlich in api-backend/billing/api/warteliste.routes.js.
+--     ⚠️ Der Loeschen-Knopf im Wartelisten-Modal (dashboard.js:19433) prueft
+--     den Fehler nicht und meldet Angestellten „geloescht", obwohl RLS 0 Zeilen
+--     trifft — offener UI-Punkt, kein Datenschaden.
+--     Der WITH-CHECK-Ausdruck ist die Mandantensperre: ohne ihn koennte ein
+--     Angestellter Zeilen unter fremder owner_id anlegen oder eine Zeile aus
+--     dem Mandanten herausschreiben. Begruendung: compliance/LEGAL_DECISIONS.md,
+--     17.09.2026.
 
 -- working_hours
 --   working_hours_owner_modify [ALL] USING/CHECK (auth.uid() = user_id OR auth.uid() = owner_id)
@@ -775,14 +865,20 @@
 --      trg_prevent_zuzahlung_korrekturen_mod — Policy allein wuerde den
 --      service_role-Schluessel im Backend nicht bremsen.
 
--- HINWEIS zu den drei verbleibenden "⚠️ ohne Team-Zugriff" markierten Tabellen
--- (fußstatus, patient_notes, warteliste):
--- Nur der Inhaber sieht die Daten, angestellte Therapeuten nicht — bewusst offen
--- gelassene Produktfrage, nicht stillschweigend "korrigieren".
--- `podologie_behandlungen` bekam am 03.09.2026 Team-SELECT (Migration
--- verordnungen_podologie_behandlungen_team_select) — der podologische
--- Verordnungszweig selbst haengt seit 04.09.2026 an `prescriptions`s eigenen,
--- laengeren Policies (Team liest UND schreibt dort), siehe oben.
+-- HINWEIS — Team-Zugriff: die Frage ist ENTSCHIEDEN, nicht mehr offen.
+-- Bis zum 17.09.2026 stand hier, fuenf Tabellen seien "bewusst offen gelassene
+-- Produktfrage". Das ist erledigt (Sicherheitsregister A-06 geschlossen):
+--   03.09.2026  podologie_behandlungen + prescription_documents → Team-SELECT
+--   04.09.2026  der podologische Verordnungszweig haengt an `prescriptions`
+--               mit eigenen, laengeren Policies (Team liest UND schreibt)
+--   17.09.2026  warteliste → Team SELECT/INSERT/UPDATE (kein DELETE),
+--               patient_notes → Team SELECT (kein Schreiben),
+--               fußstatus → nichts, die Tabelle ist tot (Namensverwechslung
+--               mit `pat_fussbefund`, das schon vollen Team-Zugriff hat)
+-- Grundlage jedes Schrittes: compliance/LEGAL_DECISIONS.md (Art. 9 Abs. 2
+-- lit. h DSGVO, § 22 Abs. 1 Nr. 1 lit. b BDSG, § 203 Abs. 3 S. 1 StGB).
+-- Wer hier weiter aufmacht — besonders Schreibrechte auf `patient_notes` —,
+-- geht vorher wieder ueber `legal-de`; die Gruende stehen bei der Tabelle.
 
 
 -- =====================================================================

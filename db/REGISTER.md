@@ -267,7 +267,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Seit:** spätestens 08.06.2026 · `security_hardening_handles_bookings_search_path`
 - **Status:** aktiv
 - **Wer:** `initWlModal()` im Dashboard, `api-backend/billing/api/warteliste.routes.js`.
-- **Achtung:** Eine von fünf Tabellen **ohne Team-Zugriff** — nur der Inhaber sieht sie. Ob angestellte Therapeuten das sehen sollen, ist eine offene Produktfrage, kein Bug.
+- **Achtung:** Seit 17.09.2026 hat das Team **SELECT/INSERT/UPDATE**, aber **kein DELETE** (Migration `0022_team_zugriff_warteliste_patient_notes`, Ops #253, `legal-de` in `compliance/LEGAL_DECISIONS.md`). Storniert wird über `status = 'cancelled'`, nie durch Löschen — ein fremder Wunsch soll nicht unbemerkt verschwinden (Art. 5 Abs. 1 lit. d DSGVO). ⚠️ Die Policy allein trägt das nicht: `DELETE /api/warteliste/:id` läuft mit `service_role` und sieht RLS nicht, die Rollenprüfung steht deshalb zusätzlich in `api-backend/billing/api/warteliste.routes.js`. ⚠️ Der Löschen-Knopf im Wartelisten-Modal prüft den Fehler nicht und meldet Angestellten „gelöscht", obwohl 0 Zeilen getroffen werden — offener UI-Punkt, kein Datenschaden.
 
 ### `attendance`
 - **Warum:** Kommen/Gehen der Mitarbeiter (Arbeitszeiterfassung), getrennt von der Sollarbeitszeit in `working_hours`.
@@ -307,7 +307,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Seit:** spätestens 13.05.2026 · `add_performance_indexes`
 - **Status:** aktiv
 - **Wer:** Notizen-Modul im Dashboard.
-- **Achtung:** Ohne Team-Zugriff — nur der Inhaber sieht sie (offene Produktfrage, siehe `warteliste`).
+- **Achtung:** Seit 17.09.2026 darf das Team **lesen**, aber **nicht schreiben** (Migration `0022_team_zugriff_warteliste_patient_notes`, Ops #253). Grund für die Hälfte: die Tabelle hat **keine Verfasserspalte** und führt je Patient **genau eine Zeile** (`UNIQUE (owner_id, lead_id)`), die per `.maybeSingle()` + UPDATE **an Ort und Stelle überschrieben** wird — Schreibrecht hieße heute: jeder Kollege ersetzt die Notiz des Inhabers spurlos (§ 630f Abs. 1 S. 2 BGB). Das Schreibrecht wird ohne neue Grundsatzentscheidung nachgezogen, sobald Verfasserspalte + Versionierung existieren — Muster: `pat_fussbefund` (`eintrag_id`/`version`/`ist_aktuell`).
 
 ### `patient_consents`
 - **Warum:** Digitale Einwilligung des Patienten mit einfacher elektronischer Signatur. Vorher gab es dafür nur Papier, und der Nachweis fehlte bei Praxisübergabe.
@@ -426,7 +426,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Seit:** 13.06.2026 · `create_fussestatus`
 - **Status:** veraltet
 - **Wer:** niemand mehr im Code. Steht nur noch in der DSGVO-Löschreihenfolge (`api/dsgvo.js`), damit Altbestände mit verschwinden.
-- **Achtung:** In SQL **immer quoten**: `"fußstatus"`. Vor dem Löschen prüfen, ob Altdaten drinstehen — dann erst migrieren.
+- **Achtung:** In SQL **immer quoten**: `"fußstatus"`. Vor dem Löschen prüfen, ob Altdaten drinstehen — dann erst migrieren. ⚠️ **Nicht mit `pat_fussbefund` verwechseln** — der Menüpunkt „Fußbefund" (Panel-Id `fussstatus`!) liest die andere Tabelle, und die hat längst vollen Team-Zugriff. Genau diese Namensverwechslung stand hinter Ops #253; am 17.09.2026 entschieden: **keine Policy**, stattdessen Altbestand zählen und droppen.
 
 ---
 

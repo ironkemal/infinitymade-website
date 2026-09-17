@@ -1,7 +1,19 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-17 — 0021_audit_write_trigger
+-- ERZEUGT AM:        2026-09-17 — 0022_team_zugriff_warteliste_patient_notes
+--                    (Ops-Karte #253, Entscheidung `legal-de` vom 17.09.2026 in
+--                    compliance/LEGAL_DECISIONS.md. KEINE neue Tabelle, KEINE
+--                    neue Spalte, KEIN neuer Index, KEIN neuer Trigger — die
+--                    Migration legt ausschliesslich VIER RLS-POLICIES an:
+--                    Team-SELECT auf `patient_notes` sowie Team-SELECT/INSERT/
+--                    UPDATE auf `warteliste`. Details, Grenzen und die zwoelf
+--                    zurueckgerollten Live-Proben stehen in db/SCHEMA-RLS.sql;
+--                    fuer DIESE Datei aendert sich nur die Policy-Zahl im
+--                    UMFANG: 165 -> 169.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-17 — 0021_audit_write_trigger
 --                    (Ops-Karte #254, Sicherheitsregister A-18. Schreibzugriffe
 --                    auf `leads`, `prescriptions` und `podologie_behandlungen`
 --                    waren nicht nachweisbar — die drei hatten KEINEN
@@ -267,8 +279,23 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            89 Tabellen · 1296 Spalten · 165 RLS-Policies
---                    318 Indizes · 74 Trigger · 76 Funktionen · 4 Views
+-- UMFANG:            89 Tabellen · 1300 Spalten · 169 RLS-Policies
+--                    318 Indizes · 78 Trigger · 78 Funktionen · 4 Views
+--                    (17.09.2026 live gezaehlt, Stand 0022_team_zugriff_
+--                     warteliste_patient_notes: Policies 165 -> 169, vier neue
+--                     Team-Policies (siehe Kopf und db/SCHEMA-RLS.sql).
+--                     Bei der Gelegenheit drei Zahlen nachgezogen, die seit dem
+--                     11.09. hier stehengeblieben waren, obwohl der RUMPF
+--                     dieser Datei sie laengst enthaelt — gegen die Live-DB
+--                     gezaehlt, nicht fortgeschrieben:
+--                       Spalten   1296 -> 1300  (0018/0019/0020; Zaehlweise wie
+--                                 unten: 1267 auf 89 Tabellen + 33 auf 4 Views)
+--                       Trigger     74 -> 78    (0020 + die drei aus 0021)
+--                       Funktionen  76 -> 78    (0020 + 0021)
+--                     db/SCHEMA-RLS.sql hatte Trigger und Funktionen schon
+--                     richtig; die Abweichung war nur in dieser Zeile.
+--                     Tabellen, Views und Indizes unveraendert.)
+--                    davor: 89 · 1296 · 165 · 318 · 74 · 76 · 4
 --                    (11.09.2026 live gezaehlt. Die Deltas gegen die 09.09.-Zeile
 --                     darunter gehen restlos auf drei Schritte auf:
 --                       Tabellen  87 -> 89  praxura_migrations (10.09., vom Runner
@@ -1944,6 +1971,11 @@ CREATE TABLE patient_notes (
   business_id uuid
 );
 --   PK (id) · UNIQUE (owner_id, lead_id)
+--   ⚠️ Genau EINE Zeile je Patient (das UNIQUE oben) — gespeichert wird per
+--     `.maybeSingle()` + UPDATE, also IN PLACE ueberschrieben. Deshalb darf das
+--     Team seit 17.09.2026 zwar LESEN, aber nicht schreiben: ohne
+--     Verfasserspalte und Versionierung wuerde jeder Kollege die Notiz des
+--     Inhabers spurlos ersetzen (§ 630f Abs. 1 S. 2 BGB). db/SCHEMA-RLS.sql.
 
 CREATE TABLE patients (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -2713,6 +2745,11 @@ CREATE TABLE warteliste (
 );
 --   CHECK priority BETWEEN 1 AND 3 · status IN (waiting, matched, cancelled)
 --   PK (id)
+--   ⚠️ Stornieren heisst `status = 'cancelled'`, NICHT loeschen: das Team darf
+--     seit 17.09.2026 lesen, anlegen und aendern, aber DELETE bleibt beim
+--     Inhaber (Art. 5 Abs. 1 lit. d). Gilt auch fuer die Route
+--     DELETE /api/warteliste/:id, die mit service_role laeuft und RLS nicht
+--     sieht — die Rollenpruefung steht dort im Code. db/SCHEMA-RLS.sql.
 
 CREATE TABLE working_hours (
   id uuid NOT NULL DEFAULT uuid_generate_v4()
