@@ -442,7 +442,7 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 
 ### wissensbank/podologie/20230524_Podologie_FAK_bf.txt
 - **Ne:** Fragen-Antworten-Katalog Podologie.
-- **Kapsam:** Podoloji uygulamalarına ilişkin sorular ve yanıtlar (Diagnosestellung, Bestätigung der Leistung, Maßnahmen, Befundpauschale, Behandlungsbeginn, Frequenzabweichung, Empfangsbestätigung, Nagelspangenbehandlung vb.).
+- **Kapsam:** Podoloji uygulamalarına ilişkin sorular ve yanıtlar (Diagnosestellung, Bestätigung der Leistung, Maßnahmen, Befundpauschale, Behandlungsbeginn, Frequenzabweichung, Empfangsbestätigung, Nagelspangenbehandlung, Nr. 30 Blankoverordnung — § 125a SGB V için podolojide henüz sözleşme yok, dolayısıyla Blanko şu an faturalanamaz vb.).
 - **Sürüm:** Stand: 24.05.2023
 - **Geçerlilik:** belirtilmemiş
 - **Ne zaman lazım:** Podoloji uygulamaları, reçete kontrolleri, Nagelspangenbehandlung ve faturalandırma süreçlerindeki pratik soruların yanıtlanması gerektiğinde.
