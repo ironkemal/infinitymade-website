@@ -64,6 +64,7 @@
 
 import { berechneZuzahlung, wirksameEinheiten } from './zuzahlung-rechnen.js?v=20260831';
 import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20260910b';
+import { preisAusService } from './rechnung-bruecke.js?v=20260917';
 
 const fmt = (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n || 0);
 
@@ -133,20 +134,10 @@ export function findePosition(rx, { podoKarte = null, katalog = [] } = {}) {
 }
 
 /**
- * Preis einer eigenen Leistung — erst `price`, sonst die erste aktive Dauer aus
- * `price_config`. Dieselbe Reihenfolge wie `privatpreisFuer` in
- * module/rechnung-bruecke.js; zwei Stellen dürfen nicht verschieden rechnen.
+ * Preis einer eigenen Leistung — Alias auf die einzige Stelle, die das rechnet
+ * (Ops #288, 17.09.2026: vorher stand dieselbe Rechnung hier ein zweites Mal).
  */
-export function preisAusLeistung(service) {
-  if (!service) return 0;
-  let preis = parseFloat(service.price) || 0;
-  if (!preis && service.price_config?.durations) {
-    const dur = service.price_config.durations;
-    const ersteAktive = Object.keys(dur).find(k => dur[k]?.active);
-    preis = parseFloat(dur[ersteAktive]?.price) || 0;
-  }
-  return preis;
-}
+export const preisAusLeistung = preisAusService;
 
 /**
  * Privatbetrag: die erbrachten Sitzungen, bewertet mit dem Preis der Leistung,

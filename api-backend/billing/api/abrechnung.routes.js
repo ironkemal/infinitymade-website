@@ -3014,10 +3014,19 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     }
 
     // Belegnummer einfrieren — siehe /abrechnung/create, gleiche Begruendung.
+    // Ops #247: bislang landete die Zuzahlung nur in `abrechnung_zeile` (unten),
+    // nie auf `prescriptions.zuzahlung_eur` — Mahnwesen/Kassenbuch lesen aber
+    // genau diese Spalte und sahen die podologische Zuzahlung nie. Gleiche
+    // Formel wie in den Totals oben (Zeile 2865-2867), nur pro Verordnung.
     for (let i = 0; i < (vords || []).length; i++) {
       if (vords[i].belegnummer) continue;
+      const p = prescriptions[i];
+      const brutto = p.sessions.reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0);
+      const zuVerordnung = p.verordnung.zuzahlungskennzeichen === '3'
+        ? +Math.min(brutto, p.sessions.reduce((a, s) => a + Number(s.zuzahlungProPos) * Number(s.anzahl || 1), 0) + 10).toFixed(2)
+        : 0;
       const { error: bnErr } = await supabase.from('prescriptions')
-        .update({ belegnummer: prescriptions[i].patient.belegnummer })
+        .update({ belegnummer: prescriptions[i].patient.belegnummer, zuzahlung_eur: zuVerordnung })
         .eq('id', vords[i].id);
       if (bnErr) console.warn('[abrechnung-podo] belegnummer persist failed:', vords[i].id, bnErr.message);
     }

@@ -1,0 +1,840 @@
+Auftragsdatei (Auftragssatz)                  Anlage 2 GGT
+Inhaltsverzeichnis
+
+1. Allgemeines ............................................................................................... 1
+
+      1.1 Format der Auftragsdatei .............................................................................................. 1
+
+2. Auftragssatz 1.0 ........................................................................................ 2
+
+      2.1 1. Teil „Allgemeine Beschreibung der Krankenkassen-Kommunikation“ ........................ 2
+      2.2 2. Teil „Spezifische Information zur Bandverarbeitung“ ................................................. 9
+      2.3 3. Teil „Spezifische Informationen für das KKS-Verfahren“ .......................................... 10
+      2.4 4. Teil „Spezifische Information zur Verarbeitung innerhalb eines RZ“ ......................... 12
+
+3. Weitergehende Parameter für den Datenaustausch..................................... 13
+
+      3.1 Dateinamen ................................................................................................................ 13
+
+1. Allgemeines
+
+1.1 Format der Auftragsdatei
+Nachfolgend ist das Format der Auftragsdatei beschrieben, die den Auftragssatz beinhaltet. Der
+Auftragssatz ist nur aus logischen Gründen in mehrere Tabellen (Objekte) aufgeteilt worden. Phy­
+sikalisch handelt es sich um einen zusammenhängenden Satz. Alle Objekte müssen vorhanden
+sein.
+
+Die Auftragsdatei wird im Zeichensatz ‘I1’, der Kodierung nach ISO 8859-1 codiert.
+
+Die Abkürzungen in den Spalten haben folgende Bedeutung:
+
+        Nutzungstypen:
+              • R: Routing-Informationen
+              • L: Logging- und Statusinformationen
+              • K: Information für KKS-Verfahren
+              • D: Datenträgerspezifische Informationen
+              • I: Interne Nutzung
+              • A: Allgemeine Informationen
+              • S: Informationen zur Verschlüsselung
+
+Gültig ab: 01.01.2025         Seite 1 von 15  Stand: 10.10.2024
+Feldtypen:
+     • N: Numerisch (Zeichen ‘0’ - ‘9’, HEX-Code $30 - $39)
+     • Rechtsbündig mit führenden Nullen
+     • A: Alpha (Zeichen ‘A’ - ‘Z’, HEX-Code $41 - $5A)
+     • Linksbündig mit Leerzeichen aufgefüllt
+     • AN: Alphanumerisch
+     • Zeichen aus dem Zeichenvorrat (‘I1’) nach ISO 8859-1
+     • Linksbündig mit Leerzeichen aufgefüllt
+
+Feldarten:
+     • M: Muss versorgt werden
+     • m: bedingtes Mussfeld, Feldinhalte werden fachbezogen geprüft
+     • K: Kann versorgt werden
+          Dieses Feld muss jedoch auf jeden Fall mit einem Default-Wert versorgt werden Da­
+          bei gelten folgende Default-Werte für die Feldtypen (sofern in den Feldbeschrei­
+          bungen nicht anders gekennzeichnet):
+     • Feldtyp N (Numerisch): wird in jeder Stelle mit ‘0’ (HEX-Code $30) gefüllt
+     • Feldtyp A, AN: wird in jeder Stelle mit ‘ ‘ (HEX-Code $20) gefüllt
+
+2. Auftragssatz 1.0
+
+2.1 1. Teil „Allgemeine Beschreibung der Krankenkassen-Kommunikation“
+
+Bezeichnung  Stellen   Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+IDENTIFIKATOR 01 - 06 6  A  N  M Identifikator des Objektes „Kranken­
+
+                                                                kassen-Kommunikation“
+
+                                                                Konstante ‘500000’.
+
+VERSION      07 - 08 2   A  N  M Version der Auftragssatzstruktur.
+
+                                                                Ändert sich, wenn Felder des Auf­
+
+                                                                tragssatzes hinzugefügt, gelöscht
+
+                                                                oder geändert werden.
+
+                                                                ‘01’: erste Version des Verfahrens.
+
+LÄNGE_       09 - 16 8   A  N  M Länge der Auftragsdatei in Bytes
+
+AUFTRAG                                                         (Objekt „Krankenkassen-
+
+                                                                Kommunikation“)
+
+                                                                Bei VERSION = ‘01’ steht hier als
+
+                                                                Konstante ‘00000348’
+
+SEQUENZ_NR   17 - 19 3   A  N  m Laufende Nummer bei einer Teilliefe­
+
+                                                                rung.
+
+                                                                Gibt die Sequenznummer der Datei
+
+Gültig ab: 01.01.2025       Seite 2 von 15                                           Stand: 10.10.2024
+Bezeichnung  Stellen   Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+                                                                an, sofern eine Nachricht auf mehre­
+                                                                re Datenträger oder physikalische
+                                                                Dateien bei DFÜ verteilt werden
+                                                                muss.
+
+                                                                ‘000’: Nachricht ist nicht segmen­
+
+                                                                tiert
+
+                                                                ‘001’: Erster Teil der Nachricht.
+
+                                                                bis
+
+                                                                ‘098’: Teil 98 der Nachricht
+
+                                                                ‘9xx’: Letzter Teil der Nachricht,
+
+                                                                dabei gibt xx die Nummer des letz­
+
+                                                                ten Teils der Teillieferung an.
+
+                                                                Die Segmentierung darf nur nach
+
+                                                                bilateraler Abstimmung genutzt wer­
+
+                                                                den.
+
+VERFAHREN    20 - 24 5  R  AN M Die VERFAHREN_KENNUNG unterliegt
+_KENNUNG
+(Dateityp)                                                      ständigen aufwärtskompatiblen Än­
+
+TRANSFER                                                        derungen, siehe Anlage 4 zu den
+_NUMMER
+                                                                Gemeinsamen Grundsätzen Technik.
+
+             25 - 27 3  A  N  M Laufende Transfernummer bei der
+
+                                                                Übertragung zwischen zwei direkt
+
+                                                                verbundenen Kommunikationspart­
+
+                                                                nern gemäß KKS-Verfahren.
+
+                                                                Im KKS-Verfahren wird für die Über­
+
+                                                                tragung aus VERFAHREN_KENNUNG
+
+                                                                und der TRANSFERNUMMER ein
+
+                                                                Transferdateiname erzeugt. Das Feld
+
+                                                                TRANSFER_NUMMER wird unabhängig
+
+                                                                vom Feld VERFAHREN_KENNUNG
+
+                                                                festgelegt.
+
+                                                                Die Transfernummer hat keinen Be­
+
+                                                                zug zur lfd. Nr. des Vorlaufsatzes in
+
+                                                                den Nutzdaten. Sie wird ab
+
+                                                                ‘999‘ wieder auf ‘0‘ gesetzt.
+
+                                                                Bei jeder erfolgreichen Übertragung
+
+                                                                einer Datei wird TRANSFER_NUMMER
+
+Gültig ab: 01.01.2025      Seite 3 von 15                                     Stand: 10.10.2024
+Bezeichnung     Stellen  Länge                                    Beschreibung
+                                   Nutzungs-typ
+                                              Feldtyp
+                                                         Feldart
+
+VERFAHREN       28 - 32 5  R                     um eins erhöht. Ist eine Übertragung
+                                                 fehlerhaft, so wird die TRANS­
+_KENNUNG                                         FER_NUMMER für diesen Übertra­
+                                                 gungswunsch beibehalten und bei
+_SPEZIFIKATION                                   einer späteren Übertragung dersel­
+                                                 ben Datei wiederverwendet.
+ABSENDER        33 - 47 15 R                     Das empfangende System ist daher
+_EIGNER                                          dafür verantwortlich, unmittelbar
+                                                 nach Empfang eines Dateipaares
+ABSENDER        48 - 62 15 R                     (Nutzdaten, Auftragssatz) die Datei­
+                                                 en unter einem neuen systemeindeu­
+                                                 tigen Dateinamen abzuspeichern,
+                                                 damit es nicht zu Überschreibungen
+                                                 von Dateien kommt.
+                              AN m Weitere Spezifikation des Verfahrens
+                                                 innerhalb des in VERFAH­
+                                                 REN_KENNUNG festgelegten Verfah­
+                                                 rens
+                              AN M Absendender Eigner der Nutzdaten.
+                                                 Identifikation des Absenders.
+                                                 (z. B. IK: 9 Stellen, Absendernummer
+                                                 (Betriebsnummer oder gesonderte
+                                                 Absendernummer): 8 Stellen, KV-
+                                                 Identifikation: 4 Stellen oder KZV-
+                                                 Nummer: 5 Stellen)
+                                                 Der Eigner ist für die Korrektheit der
+                                                 Daten verantwortlich und nimmt mit
+                                                 seinem Zertifikat die Verschlüsselung
+                                                 und Signierung vor.
+                                                 Dies kennzeichnet die Stelle, die die
+                                                 Verschlüsselung vornimmt.
+                                                 Sofern im Datenaustausch Leistungs­
+                                                 erbringer über Rechenzentren Daten
+                                                 austauschen, ist das Rechenzentrum
+                                                 der Eigner, da es die Daten vor Wei­
+                                                 tergabe aufbereitet.
+                              AN M Tatsächlicher physikalischer Absen­
+
+Gültig ab: 01.01.2025         Seite 4 von 15                                    Stand: 10.10.2024
+Bezeichnung    Stellen  Länge                                    Beschreibung
+                                  Nutzungs-typ
+                                             Feldtyp
+                                                        Feldart
+
+_PHYSIKALISCH                                                    der der Nutzdaten.
+
+                                                                 Identifikation desselben Typs wie im
+
+                                                                 Feld ABSENDER_EIGNER angegeben.
+
+                                                                 Hier steht gegebenenfalls auch eine
+
+                                                                 Datenübermittlungsstelle.
+
+EMPFÄNGER      63 - 77 15 R   AN M Empfänger, der die Daten nutzen soll
+_NUTZER
+                                                                 Identifikation desselben Typs wie im
+
+                                                                 Feld ABSENDER_EIGNER angegeben.
+
+                                                                 Dieser Empfänger ist im Besitz des
+
+                                                                 Schlüssels, um verschlüsselte Infor­
+
+                                                                 mationen zu entschlüsseln.
+
+                                                                 Der Nutzer nimmt die Weiterverar­
+
+                                                                 beitung der Daten vor.
+
+                                                                 Im Fall des Datenaustausches mit
+
+                                                                 den Leistungserbringern ist hier die
+
+                                                                 Datenannahmestelle mit Entschlüs­
+
+                                                                 selungsbefugnis gemäß Kostenträ­
+
+                                                                 gerdatei einzutragen.
+
+EMPFÄNGER      78 - 92 15 R   AN M Empfänger, der Daten physikalisch
+
+_PHYSIKALISCH                                                    empfangen soll (= nächster Empfän­
+
+                                                                 ger).
+
+                                                                 Identifikation desselben Typs wie im
+
+                                                                 Feld ABSENDER_EIGNER angegeben.
+
+                                                                 Hier steht gegebenenfalls auch eine
+
+                                                                 Datenübermittlungsstelle.
+
+FEHLER         93 - 98 6   R  N  M Fehler-Nr. laut Fehlerkatalog bei
+_NUMMER
+                                                                 Rücksendungen von Dateien.
+FEHLER
+_MAßNAHME                                                        ‘000000’: Kein Fehler
+
+               99 -     6  R  N  M Durchzuführende Maßnahme laut
+
+               104                                               Fehlerkatalog.
+
+                                                                 ‘000000’: Keine Maßnahme erforder­
+
+                                                                 lich
+
+                                                                 Siehe Feld FEHLER_NUMMER. Gemäß
+
+                                                                 dem Fehlerverfahren festzulegen.
+
+Kommentar:
+
+Gültig ab: 01.01.2025         Seite 5 von 15                                            Stand: 10.10.2024
+• ABSENDER_EIGNER gibt die verantwortliche Stelle für die Daten an, die mit
+     dem ABSENDER_PHYSIKALISCH übereinstimmen kann.
+
+• ABSENDER_EIGNER verschlüsselt die Nutzdaten.
+• EMPFÄNGER_NUTZER ist die Stelle, die die Daten zur Auswertung verwendet und
+
+     kann mit EMPFÄNGER_PHYSIKALISCH übereinstimmen.
+• EMPFÄNGER_NUTZER entschlüsselt die Nutzdaten.
+
+Bezeichnung  Stellen   Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+DATEINAME    105 - 11 A  AN M Der vom Anwendungssystem verge­
+             115
+                                                                bene Dateiname.
+
+                                                                Siehe Kapitel 3.1 der Anlage 2 zu den
+
+                                                                Gemeinsamen Grundsätzen Technik.
+
+DATUM        116 - 14 L  N  M Erstellungsdatum der Datei aus der
+_ERSTELLUNG  129
+                                                                Anwendung. Format
+
+                                                                JHJJMMTThhmmss (Jahr, Monat, Tag,
+
+                                                                Stunde, Minute, Sekunde).
+
+                                                                Aus den Feldern ABSENDER_EIGNER,
+
+                                                                VERFAHREN_KENNUNG und DA­
+
+                                                                TUM_ERSTELLUNG kann ein eindeuti­
+
+                                                                ger Identifikator gebildet werden,
+
+                                                                anhand dessen eine Sendung ein­
+
+                                                                deutig identifiziert werden kann. Es
+
+                                                                ist vom Absender-Eigner sicherzu­
+
+                                                                stellen, dass zwei unterschiedliche
+
+                                                                Sendungen nicht mit demselben
+
+                                                                Identifikator verschickt werden.
+
+DATUM        130 - 14 L  N  m Start der Übermittlung der Datei.
+
+_ÜBERTRAGUNG 143                                                Format JHJJMMTThhmmss (Jahr, Mo­
+
+_GESENDET                                                       nat, Tag, Stunde, Minute, Sekunde)
+
+                                                                Diese Zeit kann als Logging-
+
+                                                                Information oder auch für Wieder­
+
+                                                                aufsatzverfahren zwischen zwei Part­
+
+                                                                nern genutzt werden.
+
+                                                                Wird vom Absender ausgefüllt.
+
+DATUM        144 - 14 L  N  K Start des Empfangs der Datei.
+
+_ÜBERTRAGUNG 157                                                Format JHJJMMTThhmmss (Jahr, Mo­
+
+_EMPFANGEN                                                      nat, Tag, Stunde, Minute, Sekunde).
+
+_START                                                          Wird nur vom ersten Empfänger aus­
+
+Gültig ab: 01.01.2025    Seite 6 von 15                                               Stand: 10.10.2024
+Bezeichnung  Stellen   Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+                                                                gefüllt, der vertraglich die anneh­
+
+                                                                mende Stelle ist und deren Annah­
+
+                                                                mezeit daher vertragliche Auswir­
+
+                                                                kungen hat (im Falle des vdek ist
+
+                                                                dies T-Systems). Das Feld ist vom
+
+                                                                ersten Absender mit numerischen
+
+                                                                Nullen aufzufüllen.
+
+DATUM        158 - 14 L      N  K Ende der Empfangsübertragung der
+
+_ÜBERTRAGUNG 171                                                Datei. Format JHJJMMTThhmmss
+
+_EMPFANGEN                                                      (Jahr, Monat, Tag, Stunde, Minute,
+
+_ENDE                                                           Sekunde).
+
+                                                                Wird vom Empfänger ausgefüllt.
+
+DATEIVERSION 172 - 6      A  N  M Versionsnummer der Datei.
+
+             177                                                Wird derzeit in keinem Verfahren
+
+                                                                benutzt. Muss auf ‘000000’ gesetzt
+
+                                                                werden.
+
+KORREKTUR    178       1  A  N  M Wird derzeit in keinem Verfahren
+
+                                                                benutzt. Muss auf ‘0’ gesetzt wer­
+
+                                                                den.
+
+DATEIGRÖßE   179 - 12 A      N  M Dateigröße der Nutzdatendatei in
+_NUTZDATEN   190
+                                                                Bytes.
+
+                                                                (unverschlüsselt und unkomprimiert)
+
+DATEIGRÖßE   191 - 12 A      N  M Dateigröße der übertragenen Nutz­
+
+_ÜBERTRAGUNG 202                                                datendatei in Bytes. (Länge nach
+
+                                                                eventueller Verschlüsselung, Unter­
+
+                                                                schrift und Komprimierung)
+
+ZEICHENSATZ  203 - 2      A  AN M ‘I1‘: ISO/IEC 8859-1: 1998(E) bzw.
+
+             204                                                DIN 66303: 2000-06
+
+                                                                * die Zeichensätze sind identisch
+
+                                                                ‘I5’: ISO 8859-15
+
+                                                                ‘I7’: ISO 7-Bit, Code gemäß DIN
+
+                                                                66003 DRV (Deutsche Referenzversi­
+
+                                                                on)
+
+                                                                ‘I8’: DIN 66303 in der Fassung von
+
+                                                                1986-11(DRV8)
+
+                                                                * die neue Norm des DIN 66303 wird
+
+                                                                als I1 verwendet
+
+Gültig ab: 01.01.2025        Seite 7 von 15                                          Stand: 10.10.2024
+Bezeichnung  Stellen   Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+                                                                ‘EB’:EBCDIC (EBCDIC ist im Datenaus­
+
+                                                                tausch mit den Leistungserbringern
+
+                                                                gemäß § 294 ff. SGB V nicht zulässig)
+
+                                                                ’P8’: IBM-CODEPAGE 850
+
+                                                                (gilt nur nach bilateraler Vereinba­
+
+                                                                rung)
+
+                                                                ’U8’: UTF-8
+
+                                                                (Die Verwendung wird explizit im
+
+                                                                Fachverfahren festgelegt.)‘BI’: Binär
+
+KOMPRIMIE-   205 - 2   A  N  M Das Komprimierungsverfahren ist
+RUNG
+             206                                                immer bilateral zwischen dem Ab­
+
+                                                                sender und dem Empfänger abzu­
+
+                                                                stimmen. Die GKV nutzt als bevor­
+
+                                                                zugtes Produkt „gzip“. Weitere Ver­
+
+                                                                fahren sind mit den Annahmestellen
+
+                                                                der GKV abzustimmen.
+
+                                                                00: keine
+                                                                01: keine Belegung
+                                                                02: gzip
+                                                                03: ZIP (komprimierte Einzeldatei)
+                                                                04: keine Belegung
+                                                                05: keine Belegung
+                                                                06: keine Belegung
+                                                                07: bzip2
+                                                                13: ZIP ((komprimiertes) Archiv mit
+                                                                mehreren Dateien ohne Verzeich­
+                                                                nisstruktur); Im Fachverfahren kann
+                                                                eine maximale Anzahl an im Archiv
+                                                                enthaltenen Dateien sowie eine ma­
+                                                                ximale Dateigröße der Archivdatei
+                                                                abgestimmt werden. Eine Segmentie­
+                                                                rung muss bilateral abgestimmt wer­
+                                                                den.
+                                                                23: ZIP (Archiv mit Verzeichnisstruk­
+                                                                tur – ausschließlich für das Verfahren
+                                                                CDS)
+
+Gültig ab: 01.01.2025     Seite 8 von 15                                      Stand: 10.10.2024
+Bezeichnung  Stellen        Länge                                    Beschreibung
+                                      Nutzungs-typ
+                                                 Feldtyp
+                                                            Feldart
+
+VERSCHLÜSSE- 207 - 2        A  N  M Inhalte nur in Kombination mit dem
+
+LUNGSART     208                                                     Feld ELEKTRONISCHE_
+
+                                                                     UNTERSCHRIFT!
+
+                                                                     00 + 00: keine
+
+                                                                     03 + 03: PKCS#7-Format
+
+ELEKTRONI­   209 - 2        A  N  M Inhalte nur in Kombination mit dem
+
+SCHE_UNTERSCH 210                                                    Feld VERSCHÜSSELUNGSART!
+
+RIFT
+
+                                                                     00 + 00: keine
+
+                                                                     03 + 03: PKCS#7-Format
+
+In der nachfolgenden Tabelle sind die zwei zugelassen Kombinationen zu den Tabellenzeilen
+„Verschlüsselungsart und Elektronische_Unterschrift“ aufgeführt:
+
+Elektronische_Unterschrift  Verschlüsselungsart = 00                          Verschlüsselungsart = 03
+= 00                        (00+00)                                           (00+03)
+                            Keine Verschlüsselung und keine                   Nicht zulässig!
+Elektronische_Unterschrift  Elektronische Unterschrift
+= 03                        (03+00)                                           (03+03)
+                            Nicht zulässig!                                   Elektronische Unterschrift
+                                                                              und Verschlüsselung gemäß
+                                                                              PKCS#7
+
+2.2 2. Teil „Spezifische Information zur Bandverarbeitung“
+
+Bezeichnung  Stellen        Länge                                    Beschreibung
+                                      Nutzungs-typ
+                                                 Feldtyp
+                                                            Feldart
+
+SATZFORMAT   211 - 3        D  A  m(* Satzformat der Datei auf dem Daten­
+
+             213                                                     träger:
+
+                                                                     ‘F‘: FIX
+                                                                     ‘V‘: Variabel
+                                                                     ‘U‘: Undefiniert
+                                                                     ‘FB‘: FIX_geblockt
+
+Gültig ab: 01.01.2025          Seite 9 von 15                                             Stand: 10.10.2024
+Bezeichnung   Stellen  Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+                                                                ‘FBA‘: FIX_geblockt_
+                                                                ‘VB‘: Variabel geblockt …
+
+                                                                Bei DFÜ: Konstante ‘ ‘ (Leerzeichen)
+
+SATZLÄNGE     214 - 5     D  N  m(* Satzlänge bei fixem Satzformat.
+
+              218                                               Bei DFÜ: Konstante ‘00000’.
+
+BLOCKLÄNGE    219 - 8     D  N  m(* Blocklänge in Bytes, sofern geblockt.
+
+              226                                               Bei DFÜ: Konstante ‘00000000’.
+
+(* Hinweis: Bei Bandverarbeitung sind alle drei Felder SATZFORMAT, SATZLÄNGE und BLOCKLÄN­
+GE auszufüllen.
+
+2.3 3. Teil „Spezifische Informationen für das KKS-Verfahren“
+Spezifische Informationen zur Verarbeitung mit dem KKS-Verfahren (Kommentare siehe KKS-
+Verfahren, Felder müssen vom Absender nicht ausgefüllt werden):
+
+Bezeichnung   Stellen  Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+Status        227      1  K  AN m Bei Anlieferung durch das Abrech­
+
+                                                                nungssystem: Leerzeichen
+
+                                                                Verarbeitungskennzeichnung (An­
+
+                                                                wendung, FTAM):
+
+                                                                ‘0‘: Einstellung in Ordnung
+
+                                                                ‘1‘: Ändern
+
+                                                                ‘2‘: Suspendieren
+
+                                                                ‘3‘: Löschen
+
+                                                                ‘4‘: Übertragen
+
+                                                                ‘5‘: Transferphase
+
+                                                                ‘6‘: Keine Verbindung
+
+                                                                ‘7‘: Fehlerhafter Transfer
+
+                                                                ‘8‘: Statusabfrage
+
+Wiederholung  228 - 2     K  N  m Hier wird die maximale Anzahl der
+
+              229                                               Übertragungswiederholungen bei
+
+                                                                fehlerhaften Übertragungen angege­
+
+Gültig ab: 01.01.2025        Seite 10 von 15                                           Stand: 10.10.2024
+Bezeichnung  Stellen   Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+                                                                ben. Wenn der angegebene Zähler
+
+                                                                überschritten wird, oder ein nicht-
+
+                                                                behebbarer Fehler beim Übertra­
+
+                                                                gungsversuch aufgetreten ist, wird
+
+                                                                der Auftrag als nicht durchführbar
+
+                                                                mit einem Diagnosecode gekenn­
+
+                                                                zeichnet.
+
+Übertragungs­ 230      1  K  N  m Mögliche Wege sind:
+weg
+
+                                                                ‘1‘: X.25
+
+                                                                ‘2‘: ISDN
+
+                                                                ‘3‘: ISDN, bei Übertragungsproble­
+
+                                                                men erneuter Versuch über X.25
+
+                                                                ‘4‘: X.25, bei Übertragungsproble­
+
+                                                                men erneuter Versuch über ISDN
+
+                                                                ‘5‘: anderer Weg
+
+Verzögerter Ver­ 231 - 10 K  N  m Hier wird der Zeitpunkt eingetragen,
+
+sand         240                                                zu dem der Auftrag ausgeführt wer­
+
+                                                                den soll. Wird das Feld nicht vom
+
+                                                                Abrechnungssystem gefüllt oder ist
+
+                                                                der angegebene Ausführungszeit­
+
+                                                                punkt bereits überschritten, wird der
+
+                                                                Auftrag vom KKS zum nächstmögli­
+
+                                                                chen Zeitpunkt ausgeführt.
+
+                                                                Im Format JJMMTTSSmm (Jahr, Mo­
+
+                                                                nat, Tag, Stunde und Minute).
+
+Info und Fehler­ 241 - 6  K  N  m Fehlernummer aus FTAM.
+
+felder       246                                                Bei erfolgreich ausgeführten Aufträ­
+
+                                                                gen ist das Feld ‘000000’.
+
+Variables Info- 247 - 28 K   AN m Klartextfehlermeldung.
+
+Feld         274                                                Bei erfolgreich ausgeführten Aufträ­
+
+                                                                gen ist das Feld leer.
+
+                                                                Im Verfahren „PF“ wird von der DRV
+
+                                                                beim Weg DRV ⇨ GKV hier die Iden­
+
+                                                                tifikationsnummer eingetragen. So­
+
+                                                                fern beim Weg DRV ⬄ GKV ein Ver­
+
+                                                                fahren mit XML Nutzdaten zur An­
+
+Gültig ab: 01.01.2025        Seite 11 von 15                                            Stand: 10.10.2024
+Bezeichnung  Stellen   Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+                                                                                   wendung kommt, kann nach bilate­
+                                                                                   raler Absprache von der DAV eine
+                                                                                   23-stellige, referenzierbare (Tra­
+                                                                                   cking)-ID eingetragen werden.
+                                                                                   Der GKV-Kommunikationsserver
+                                                                                   setzt beim Weg GKV-KomServer ⇨
+                                                                                   DAV in dieses Feld die 23-stellige
+                                                                                   Tracking-ID ein. Für Rückmeldungen
+                                                                                   der DAV an den GKV- Kommunikati­
+                                                                                   onsserver wird das Feld von der DAV
+                                                                                   mit der 23-stelligen TrackingID ge­
+                                                                                   füllt
+
+2.4 4. Teil „Spezifische Information zur Verarbeitung innerhalb eines RZ“
+
+Kommunikation zwischen externen Partnern und Krankenkassen-Annahmestellen
+In das Feld E-MAIL-ADRESSE ABSENDER (Stelle 275 – 318 des Auftragssatzes) und weiter in das
+Feld DATEI_BEZEICHNUNG (Stelle 319 – 348) kann bis zur Stelle 344 optional die E-Mail-Adresse
+(maximal 70 Zeichen) des Absenders eingetragen werden.
+
+In das Feld DATEI_BEZEICHNUNG (Stelle 319 – 348) kann ab der Stelle 347 optional die Anzahl der
+Sequenzen bei Dateisplitting eingetragen werden (max. 2 Ziffern).
+
+Bezeichnung  Stellen   Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+E-MAIL-ADRESSE 275 - 44 I  AN m E-Mail-Adresse des Absenders; kann
+                                              optional eingetragen werden;
+ABSENDER     318                              Die E-Mail-Adresse wurde auf 70
+                                              Zeichen erweitert, analog zum DSKO
+                                              der DEÜV. Das Feld E-MAIL-ADRESSE
+                                              ABSENDER startet weiterhin im Feld
+                                              275 und kann bei Bedarf auf das Feld
+                                              DATEI_BEZEICHNUNG bis zur Stelle
+                                              344 erweitert werden.
+                                              Alternative Nutzung:
+                                              Interne Kommunikation zwischen
+                                              Organisationen der Krankenkassen
+
+Gültig ab: 01.01.2025      Seite 12 von 15                                    Stand: 10.10.2024
+Bezeichnung  Stellen   Länge                                    Beschreibung
+                                 Nutzungs-typ
+                                            Feldtyp
+                                                       Feldart
+
+DATEI        319 - 30 I                     Dieses Feld kann als DATEINA­
+                                            ME_PHYSIKALISCH genutzt werden
+_BEZEICHNUNG 348                            um spezifische Informationen für die
+                                            Verarbeitung innerhalb der Kranken­
+                                            kassen-Organisationen zu erhalten.
+                         AN m Die Anzahl der Gesamtpakete wird
+                                            2-stellig rechtsbündig in das Feld
+                                            DATEI_BEZEICHNUNG (Stelle 347-
+                                            348) gespeichert.
+                                            Alternative Nutzung:
+                                            Variabler Bereich, um Zusatzinfor­
+                                            mationen zur Datei bereitzustellen
+
+3. Weitergehende Parameter für den Datenaustausch
+
+3.1 Dateinamen
+Beschreibung des Feldes ‘DATEINAME’
+Version 1.0
+Im Arbeitgeberverfahren besteht der DATEINAME aus dem Feld VERFAHREN_KENNUNG und der 6-
+stelligen laufenden Dateinummer aus dem Vorlaufsatz der jeweiligen Nutzdatendatei.
+Für die Verfahren der DRV werden die Dateinamen entsprechend dem Arbeitgeberverfahren er­
+zeugt.
+
+Im Datenaustausch nach § 294 ff. SGB V sind die Dateinamen in den technischen Anlagen zu den
+vertraglichen Regelungen nach § 294 ff. SGB V festgelegt
+
+Im Datenaustausch für amtliche Statistiken sind die Dateinamen wie folgt festgelegt:
+
+Format: kkknnMMJHJJ
+
+     • kkk = Kassenart:
+
+          OKK
+          BKK
+          IKK
+          EAN
+          EAR
+
+Gültig ab: 01.01.2025    Seite 13 von 15                                      Stand: 10.10.2024
+LAK
+LBG
+LKK
+SEE
+BKN
+GKV
+
+• nn = Satzart:
+
+KM1    = 01
+KM6    = 06
+KG1    = 11
+KG2    = 12
+KG3    = 13
+KG4    = 14
+KV451  = 15
+KV452  = 16
+KG8    = 18
+KG5    = 19
+KJ1    = 21
+KJ2    = 22
+KJA1   = 23
+KJA2   = 24
+SGB1K  = 31
+PG1    = 61
+PG2    = 62
+PG4    = 64
+PV45   = 65
+PJ1    = 66
+
+PG5    = 69
+SGB1P  = 81
+
+• MM = Monat (bei Jahresstatistiken = 00)
+
+• JHJJ = Jahr
+
+Bemerkung: Der Eintrag im Feld ‘Dateiname’ muss nicht identisch sein mit dem Transferdateina­
+men.
+
+Gültig ab: 01.01.2025  Seite 14 von 15     Stand: 10.10.2024
+Gültig ab: 01.01.2025  Seite 15 von 15  Stand: 10.10.2024
+

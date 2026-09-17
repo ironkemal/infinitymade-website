@@ -34,9 +34,9 @@ import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffn
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260910';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260917';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
-import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260914';
+import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260917';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
@@ -50,7 +50,7 @@ import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=2026081
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908';
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260908';
-import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20260908';
+import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20260917';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20260909';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260909';
@@ -58,17 +58,17 @@ import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20260916';
-import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260817';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20260917';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260917';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase } from './module/zahlarten.js?v=20260910';
 import { mountKassenbuchBeleg } from './module/kassenbuch-beleg.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
-import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260816';
+import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260917';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260905a';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260917';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260908';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
@@ -5776,23 +5776,23 @@ function setzeBlockerModus(an, knopf = null) {
   document.querySelectorAll('.bk-blocker-btn[data-blocker]').forEach(b =>
     b.classList.toggle('bk-blocker-btn--aktiv', b === knopf));
 }
-// "3x Podologie": das Feld steuert die vorhandene Serienlogik, statt einen
-// zweiten Weg zu bauen. Bei 1 bleibt alles wie vorher.
+// "3x Podologie": das Feld befüllt die vorhandene Serienlogik nur vor, statt
+// sie zu erzwingen. Anzahl>1 und "als Serie speichern" sind zwei getrennte
+// Entscheidungen — ein Einzeltermin muss auch bei Anzahl>1 speicherbar
+// bleiben (Ops #231). Bei 1 bleibt alles wie vorher.
 document.getElementById('bkAnzahl')?.addEventListener('input', () => {
   const n = Math.max(1, parseInt(document.getElementById('bkAnzahl').value, 10) || 1);
   const toggle = document.getElementById('bkSeriesToggle');
   const hinweis = document.getElementById('bkAnzahlHinweis');
   if (!toggle) return;
-  toggle.checked = n > 1;
+  // Nur vorbefüllen — nicht mehr automatisch ankreuzen/entkreuzen. Wenn der
+  // Serien-Toggle bereits an ist, übernimmt die Vorschau sofort die neue Zahl.
   if (n > 1) document.getElementById('bkSeriesCount').value = String(n);
-  // Der vorhandene Zuhoerer am Ankreuzfeld blendet die Serienfelder ein und
-  // baut die Vorschau — deshalb melden statt nachbauen.
-  toggle.dispatchEvent(new Event('change', { bubbles: true }));
+  if (toggle.checked) updateBkSeriesPreview();
   if (hinweis) {
-    hinweis.hidden = n <= 1;
-    hinweis.textContent = n > 1
-      ? `${n} Termine — Wiederholung und Wochentage stehen unter „Mehr Optionen".`
-      : '';
+    const text = anzahlHinweisText(n, toggle.checked);
+    hinweis.hidden = !text;
+    hinweis.textContent = text;
   }
 });
 
@@ -7668,6 +7668,16 @@ document.getElementById('bkWlMatchBtn')?.addEventListener('click', async () => {
   if (toggle) toggle.onchange = () => {
     fields.hidden = !toggle.checked;
     if (toggle.checked) updateBkSeriesPreview();
+    // Hinweistext hängt von "an/aus" ab (anzahlHinweisText) — beim manuellen
+    // Umschalten neu ziehen, sonst zeigt er den Zustand von vorhin.
+    const anzahlFeld = document.getElementById('bkAnzahl');
+    const hinweis = document.getElementById('bkAnzahlHinweis');
+    if (anzahlFeld && hinweis) {
+      const n = Math.max(1, parseInt(anzahlFeld.value, 10) || 1);
+      const text = anzahlHinweisText(n, toggle.checked);
+      hinweis.hidden = !text;
+      hinweis.textContent = text;
+    }
   };
   if (countEl) countEl.oninput = updateBkSeriesPreview;
   if (recEl) recEl.onchange = () => {
@@ -12564,7 +12574,9 @@ function getVorlagenSampleHtml(v, editMode = false) {
   const praxisName = (typeof currentProfile !== 'undefined' && currentProfile?.business_name) || 'Muster-Praxis GmbH';
   const logoUrl = (typeof currentProfile !== 'undefined' && currentProfile?.praxis_logo_url) || '';
   const hinweis = cj.hinweis || '';
-  const fusszeile = cj.fusszeile || `${praxisName} · Musterstr. 1 · 10115 Berlin`;
+  // Ops #68/#114: echte Praxis-Branding-Fußzeile statt erfundener Musteradresse.
+  const zentraleFusszeile = (typeof currentProfile !== 'undefined' && currentProfile?.invoice_footer_text) || '';
+  const fusszeile = cj.fusszeile || zentraleFusszeile || `${praxisName} · Musterstr. 1 · 10115 Berlin`;
   const betreff = cj.betreff || '';
   const zahlungsziel = cj.zahlungsziel_tage || 14;
 
@@ -16814,13 +16826,13 @@ async function init() {
     const bkChannel = window.__praxuraBookingsChannel = supabase.channel('bookings-realtime');
     bkChannel
       .on('postgres_changes', {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
         table: 'bookings',
         filter: `owner_id=eq.${ownerId}`
       }, (payload) => {
-        console.log('[realtime] new booking detected:', payload.new?.id);
-        emit('bookings:changed', { id: payload.new?.id, quelle: 'realtime' });
+        console.log('[realtime] booking change detected:', payload.eventType, payload.new?.id ?? payload.old?.id);
+        emit('bookings:changed', { id: payload.new?.id ?? payload.old?.id, quelle: 'realtime' });
       })
       .subscribe();
 
@@ -20303,19 +20315,6 @@ async function rechnungAusVerordnung(vordId) {
   });
 }
 
-// ===== FUẞSTATUS / WAGNER STAGING =====
-
-const WAGNER_LEVELS = [
-  { grad: 0, label: 'Risikofuß', desc: 'Keine offene Läsion', color: '#22c55e' },
-  { grad: 1, label: 'Grad 1', desc: 'Oberflächliche Ulzeration', color: '#84cc16' },
-  { grad: 2, label: 'Grad 2', desc: 'Tiefes Ulkus (Sehne/Knochen sichtbar)', color: '#eab308' },
-  { grad: 3, label: 'Grad 3', desc: 'Tiefeninfektion / Abszess', color: '#f97316' },
-  { grad: 4, label: 'Grad 4', desc: 'Begrenzte Gangrän', color: '#ef4444' },
-  { grad: 5, label: 'Grad 5', desc: 'Ausgedehnte Gangrän', color: '#7f1d1d' },
-];
-
-const FUSS_BEFUNDE = ['Hyperkeratose','Nagelveränderungen','Durchblutungsstörungen','Sensibilitätsstörungen','Ödem'];
-
 // ============================================================================
 // FUSSBEFUND (Podologie) → module/fussbefund.js
 // ----------------------------------------------------------------------------
@@ -20361,6 +20360,7 @@ function podoCtx() {
     t,
     escapeHtml,
     getOwnerId,                      // als Funktion, nicht aufgerufen
+    getSessionUserId: () => currentSession?.user?.id || null,   // Ops #252: podologie_behandlungen.employee_id
     switchPanel,
     showToast,
     showConfirmModal,

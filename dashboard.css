@@ -625,7 +625,10 @@ textarea {
 .emp-srv-row.is-selected .emp-srv-row-title {
   font-weight: 600;
 }
-@media (max-width: 640px) {
+/* 640px -> 768px (Ops #61, breakpoint konsolidasyonu): tek kural, hedef
+   ölçeğe (480/768/1024) hizalandı. Eşiği yükseltmek yalnızca 1-kolon
+   aralığını genişletiyor (641-768 artık da 1-kolon) — taşma riski yok. */
+@media (max-width: 768px) {
   .emp-srv-list { grid-template-columns: 1fr; }
 }
 
@@ -1558,7 +1561,9 @@ textarea {
   color: var(--bg-card-solid);
 }
 
-@media (max-width: 600px) {
+/* 600px -> 768px (Ops #61, breakpoint konsolidasyonu): hedef ölçeğe hizalandı.
+   Eşiği yükseltmek yalnızca 1-kolon aralığını genişletiyor — taşma riski yok. */
+@media (max-width: 768px) {
   .cal-3col {
     grid-template-columns: 1fr;
     padding: 14px;
@@ -3342,7 +3347,9 @@ textarea {
   margin-top: 10px;
 }
 
-@media (max-width: 860px) {
+/* 860px -> 1024px (Ops #61, breakpoint konsolidasyonu): hedef ölçeğe hizalandı.
+   Eşiği yükseltmek yalnızca 1-kolon aralığını genişletiyor — taşma riski yok. */
+@media (max-width: 1024px) {
   .hours-calendar-section {
     grid-template-columns: 1fr;
   }
@@ -5076,9 +5083,11 @@ textarea {
   }
 }
 
-@media (max-width: 600px) {
-  .kpi-grid { grid-template-columns: 1fr; }
-}
+/* 600px kuralı kaldırıldı (Ops #61, breakpoint konsolidasyonu, 2026-09-17):
+   ≤1024/≤768'de zaten 2 kolona, ≤480'de zaten 1 koluna düşüyordu — bu kural
+   481-600 arasını da 1 kolona zorlayan üçüncü, hedef dışı bir eşikti.
+   481-600 aralığında 2 kolonlu KPI grid'in taşmadığı ölçüldü (demo-dashboard
+   overview paneli, 520px, archive/denetim/mobile-audit/after/). */
 
 @media (max-width: 480px) {
   .kpi-grid {

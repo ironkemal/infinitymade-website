@@ -40,6 +40,7 @@
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
 import { ausTopf } from './verordnung-topf.js?v=20260910';
+import { preisAusService } from './rechnung-bruecke.js?v=20260917';
 
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────
 let _liste = [];    // normalisierte Verordnungsliste aus verordnungenLaden
@@ -264,12 +265,7 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
       } else {
         const bk = bookingsMap[s.booking_id];
         const svc = bk?.services;
-        let preis = parseFloat(svc?.price) || 0;
-        if (!preis && svc?.price_config?.durations) {
-          const dur = svc.price_config.durations;
-          const first = Object.keys(dur).find(k => dur[k].active);
-          preis = parseFloat(dur[first]?.price) || 0;
-        }
+        const preis = preisAusService(svc);
         if (!preis) hinweis = 'kein Termin verknüpft';
         zeilen = [{ title: rxTitel, quantity: 1, unit_price: preis }];
       }

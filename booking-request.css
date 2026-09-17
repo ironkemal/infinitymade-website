@@ -184,7 +184,9 @@ html, body {
   grid-template-columns: 1fr;
 }
 
-@media (max-width: 560px) {
+/* 560 -> 768 (Ops #61, breakpoint konsolidasyonu): hedef ölçeğe hizalandı.
+   Eşiği yükseltmek yalnızca 1-kolon aralığını genişletiyor — taşma riski yok. */
+@media (max-width: 768px) {
   .br-card-grid { grid-template-columns: 1fr; }
 }
 
@@ -547,7 +549,9 @@ html, body {
   align-items: start;
 }
 
-@media (max-width: 760px) {
+/* 760 -> 768 (Ops #61, breakpoint konsolidasyonu): hedef ölçeğe hizalandı,
+   fark yalnızca 8px, davranış aynı. */
+@media (max-width: 768px) {
   .br-scheduler {
     grid-template-columns: 1fr;
   }

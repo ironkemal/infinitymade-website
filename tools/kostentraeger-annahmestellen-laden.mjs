@@ -53,7 +53,10 @@ const ECHT_DATEIEN = {
   'IK05Q326_KE1.txt': '2026-07-01',
   'BN050526_KE0.txt': '2026-05-01',
   'LK05Q226_KE0.txt': '2025-08-26',
-  'EK05Q426_KE0.txt': '2026-10-01',
+  // gkv-302 Entscheidung 2026-09-17 (Ops #292): EK05Q426 (gültig erst ab
+  // 01.10.2026) war live geladen, obwohl EK05Q226 die heute gültige Ausgabe
+  // ist. Am 01.10.2026 zurücktauschen — dann ist EK05Q426 die richtige.
+  'EK05Q226_KE0.txt': '2026-04-01',
 };
 
 const ns = (v) => (v === null || v === undefined ? '' : v);

@@ -904,6 +904,14 @@
       position: relative;
       display: inline-block;
       margin-right: 12px;
+      /* flex-shrink:0 — .topbar-left'in flex-shrink dağıtımı bu kabı içindeki
+         .biz-switcher-chip'in (kendi max-width'i olan) genişliğinden daha dar
+         bir kutuya sıkıştırıyordu; overflow:visible (topbar-left'te kasıtlı,
+         dropdown kırpılmasın diye) yüzünden chip görünürde topbar-right'ın
+         üstüne taşıyordu (bizSwitcherBtn × themeToggle çakışması, 360px'de
+         ölçüldü). Kap artık chip'in zaten breakpoint'lerde sınırlanan
+         genişliğini aynen alıyor, küçülmüyor. */
+      flex-shrink: 0;
     }
     .biz-switcher-chip {
       background: var(--bg-card-solid);
@@ -918,6 +926,14 @@
       font-weight: 500;
       color: var(--text-main);
       transition: background 0.15s ease, border-color 0.15s ease;
+      /* Tek, sürekli formül — iki ayrı breakpoint'in (640px: 120px, 400px: 150px)
+         arasında (401-419px gibi) chip themeToggle'ın üstüne biniyordu (ölçüldü:
+         mobile-audit/before). 170px sabit ön-prefiks (hamburger+brand+"Demo"
+         rozeti+gap) + ~100px topbar-right her zaman aynı kalıyor; 100vw-280px
+         bu ikisi arasında her genişlikte en az 8px boşluk bırakıyor. 60px taban
+         (okunabilir asgari), 260px tavan (masaüstü ile aynı, dashboard.css'teki
+         .biz-switcher-chip varsayılanıyla eşleşiyor). */
+      max-width: clamp(60px, calc(100vw - 280px), 260px);
     }
     .biz-switcher-chip:hover {
       background: var(--bg-hover);
@@ -1039,7 +1055,9 @@
         flex-shrink: 1 !important;
       }
       .biz-switcher-chip {
-        max-width: 150px !important;
+        /* max-width artık aşağıda taban kuralda clamp() ile sürekli —
+           burada sabit 150px vermek 401-419px aralığında themeToggle'la
+           çakışma yaratıyordu (ölçüldü). display/align-items zararsız, kalıyor. */
         display: inline-flex !important;
         align-items: center !important;
       }
@@ -1150,11 +1168,6 @@
       }
     }
 
-    @media (max-width: 400px) {
-      .biz-switcher-chip {
-        max-width: 120px !important;
-      }
-    }
   </style>
 </head>
 

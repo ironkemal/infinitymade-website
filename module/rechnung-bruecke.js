@@ -74,6 +74,28 @@ export async function offeneBehandlungen(sb, { ownerId, verordnungId }) {
 }
 
 /**
+ * Preis EINER Leistung — erst `price`, sonst die erste aktive Stufe aus
+ * `price_config.durations`. Einzige Stelle, die diese Rechnung ausführt;
+ * `privatpreisFuer` unten sowie `module/rezeptinfo-geld.js` (`preisAusLeistung`),
+ * `module/rechnung-verordnung.js` und `module/rechnung-editor.js`
+ * (`preisAusService`) rufen sie auf. Vorher stand dieselbe vierzeilige Rechnung
+ * an vier Stellen und konnte auseinanderlaufen (Ops #288, 17.09.2026
+ * zusammengeführt — Verhalten an allen vier Stellen unverändert).
+ *
+ * @returns {number}
+ */
+export function preisAusService(service) {
+  if (!service) return 0;
+  let preis = parseFloat(service.price) || 0;
+  if (!preis && service.price_config?.durations) {
+    const dur = service.price_config.durations;
+    const ersteAktive = Object.keys(dur).find(k => dur[k]?.active);
+    preis = parseFloat(dur[ersteAktive]?.price) || 0;
+  }
+  return preis;
+}
+
+/**
  * Sucht den Privatpreis einer HPNR in den eigenen Leistungen der Praxis.
  *
  * Die Praxis legt ihre Leistungen ohnehin unter „Dienstleistungen" an (Preis,
@@ -89,14 +111,7 @@ export function privatpreisFuer(code, services) {
     String(s.gkv_position_nr || '').trim() === c || String(s.code || '').trim() === c
   );
   if (!treffer) return null;
-
-  let preis = parseFloat(treffer.price) || 0;
-  if (!preis && treffer.price_config?.durations) {
-    const dur = treffer.price_config.durations;
-    const ersteAktive = Object.keys(dur).find(k => dur[k]?.active);
-    preis = parseFloat(dur[ersteAktive]?.price) || 0;
-  }
-  return { title: treffer.title || c, preis };
+  return { title: treffer.title || c, preis: preisAusService(treffer) };
 }
 
 /**

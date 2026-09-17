@@ -1,7 +1,46 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-16 — 0017_prescription_sessions_kombi_termin
+-- ERZEUGT AM:        2026-09-17 — 0020_prescriptions_festschreibung
+--                    (Ops-Karte #167. NEUE FUNKTION
+--                    `prescriptions_festschreibung()` + NEUER TRIGGER
+--                    `trg_prescriptions_festschreibung` (BEFORE UPDATE) —
+--                    schliesst die seit dem 04.09.2026-Merge offene GoBD-
+--                    Luecke (siehe "OFFENE LUECKE" weiter unten, jetzt
+--                    geschlossen). +1 Trigger, +1 Funktion — live nachgezaehlt
+--                    (17.09.2026): 74->75 Trigger, 76->77 Funktionen (gefiltert
+--                    auf nicht-extension-eigene public-Funktionen, gleiche
+--                    Methode wie UMFANG unten). Policies/Indizes unveraendert
+--                    (165 · 318) — ein BEFORE-UPDATE-Trigger legt keine Policy
+--                    an, keine neue Spalte, kein neuer Index. Details bei
+--                    `prescriptions_festschreibung()` und der Trigger-Tabelle
+--                    unten.
+--                    ⚠️ onprem/erwartete-zaehler.json NICHT mit-aktualisiert:
+--                    diese Datei ist die SaaS-Live-Zaehlung, jene braucht laut
+--                    eigener Regel eine PHYSISCHE Messung auf dem WSL-
+--                    Testkasten (nicht counter-neutral, echte Funktion+Trigger
+--                    dazu) — db-ustasi hat dort NUR bis_version auf 0020
+--                    gezogen und den Rest fuer onprem offen gelassen, siehe
+--                    Kommentar dort.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP, live getestet:
+--                    offenes Feld ging durch, gesperrtes Feld warf Fehler,
+--                    Anonymisierungs-Ausnahme funktioniert).
+--                    davor: 2026-09-17 — 0018_leads_podologie_altbestand +
+--                    0019_podologie_behandlungen_employee_id
+--                    (db-ustasi-Rehberlik zu Ops #244 + #252.) Zwei additive
+--                    Spalten (`leads.podologie_altbestand_vor_2023`,
+--                    `leads.podologie_altbestand_beantwortet_am`,
+--                    `podologie_behandlungen.employee_id` inkl. FK auf
+--                    profiles(id) ON DELETE SET NULL) — KEINE neue
+--                    Policy/Funktion/Trigger/Index. Postgres legt fuer eine
+--                    Fremdschluessel-Spalte KEINEN automatischen Index an;
+--                    gegen Live-DB nachgezaehlt (17.09.2026): Trigger/Policy-
+--                    Anzahl auf `leads`/`podologie_behandlungen` unveraendert.
+--                    Details bei `leads` bzw. `podologie_behandlungen` in
+--                    db/SCHEMA.sql.
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
+--                    davor: 2026-09-16 — 0017_prescription_sessions_kombi_termin
 --                    (Ops-Karte 42a66a3b. `uniq_prescription_sessions_booking`
 --                    (prescription_id, booking_id) → `uniq_prescription_sessions_booking_hm`
 --                    (prescription_id, booking_id, COALESCE(heilmittel_index, 0)).
@@ -194,7 +233,12 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            165 RLS-Policies · 318 Indizes · 74 Trigger · 76 Funktionen
+-- UMFANG:            165 RLS-Policies · 318 Indizes · 75 Trigger · 77 Funktionen
+--                    (17.09.2026 live gezaehlt, 0020_prescriptions_
+--                     festschreibung: Trigger 74 -> 75, Funktionen 76 -> 77
+--                     (`prescriptions_festschreibung()` + ihr Trigger).
+--                     Policies/Indizes unveraendert.)
+--                    davor: 165 · 318 · 74 · 76
 --                    (11.09.2026 live gezaehlt. Delta 316 -> 318: +1 UNIQUE-Index
 --                     aus 0004, +1 pkey aus 0005. Policies/Trigger/Funktionen
 --                     unveraendert — praxura_setup hat bewusst beides nicht.)
@@ -901,17 +945,28 @@ $function$;
 --   Trigger mit ihr verschwunden (Kind-Objekt der Tabelle). Die Funktion
 --   `verordnung_festschreibung()` selbst existiert noch (kein DROP FUNCTION),
 --   haengt aber an keinem Trigger mehr — reiner Rumpf.
---   ⚠️⚠️⚠️ OFFENE LUECKE, unveraendert: `prescriptions` hat KEINEN
---      aequivalenten Festschreibungs-Trigger — weder fuer Physio/Ergo/Logo
---      (hatte nie einen) noch fuer die migrierten Podologie-Zeilen (hatten
---      einen, drei Tage lang, jetzt nicht mehr — und jetzt auch keinen Weg
---      mehr, ihn wiederherzustellen, ohne ihn neu zu bauen). Eine Podologie-
---      Verordnung, die ueber /abrechnung/create-podologie eine `belegnummer`
---      bekommt, ist in `prescriptions` NICHT gegen nachtraegliche Aenderung
---      gesperrt. Nachziehen (neuer Trigger auf prescriptions, Spaltenliste um
---      die physiospezifischen Felder erweitert, alte Funktion als Vorlage)
---      ist bewusst NICHT Teil dieser Migration. Vor der Umsetzung: gkv-302
---      UND legal-de, echtes Geld/GoBD-Pflicht.
+--   ✅ LUECKE GESCHLOSSEN 17.09.2026 (Ops #167, 0020_prescriptions_
+--      festschreibung): siehe `prescriptions_festschreibung()` gleich unten.
+--      Diese Funktion (`verordnung_festschreibung()`) bleibt reiner Rumpf,
+--      haengt an keinem Trigger — nicht wiederverwendet, weil die neue
+--      Funktion ihr Vorbild ist, nicht ihr Nachfolger (eigener Name fuer die
+--      richtige Fehlermeldung, gleiches Muster wie bei den anderen
+--      prevent_*_mod()-Funktionen oben).
+-- prescriptions_festschreibung() -> trigger  (seit 17.09.2026, Ops #167)
+--   GoBD/§302-Festschreibung fuer `prescriptions` — schliesst die Luecke, die
+--   `verordnung_festschreibung()` hinterlassen hat (siehe oben), UND schuetzt
+--   erstmals auch Physio/Ergo/Logo (hatte nie einen Schutz). Tor: solange
+--   `OLD.belegnummer IS NULL`, frei editierbar (Entwurf). Danach gesperrt:
+--   owner_id/business_id/created_at (Mandantenschutz) + Abrechnungsinhalt
+--   aller Fachbereiche (vollstaendige Spaltenliste bei `prescriptions` in
+--   db/SCHEMA.sql). Anonymisierungs-Ausnahme (legal-de, gleiche Form wie
+--   fn_abrechnung_zeile_festschreibung): patient_name, versichertennummer,
+--   patient_id duerfen NUR auf NULL gesetzt werden. KEIN DELETE-Schutz —
+--   `prescriptions` steht in api/dsgvo.js DELETE_TABLES (Hard-Delete); ein
+--   BEFORE-UPDATE-Trigger sieht ein DELETE nie und blockiert die
+--   Loeschkette also so oder so nicht. Kolonlisten-Entscheidung: db-ustasi +
+--   gkv-302 + legal-de, Konsultation 17.09.2026. Live getestet: offenes Feld
+--   ging durch, gesperrtes Feld warf den Fehler, Anonymisierung ging durch.
 -- fn_zuzahlung_guthaben_status() -> trigger
 --   Leitet zuzahlung_guthaben.status aus rest_eur ab (0 = verrechnet,
 --   < betrag_eur = teilweise_verrechnet, sonst offen) und setzt updated_at.
@@ -1115,8 +1170,9 @@ $function$;
 --   leads                 trg_normalize_lead_phone       BEFORE INSERT/UPDATE
 --                         trg_leads_patientennummer      BEFORE INSERT (Nummernvergabe)
 --   prescriptions         trg_prescriptions_verordnungsnummer BEFORE INSERT/UPDATE OF patient_id
---                         ⚠️ KEIN Festschreibungs-Trigger (GoBD) — offene Luecke,
---                           siehe verordnung_festschreibung() weiter oben in dieser Datei.
+--                         trg_prescriptions_festschreibung BEFORE UPDATE
+--                           → prescriptions_festschreibung(): GoBD-Sperre ab gesetzter
+--                           belegnummer, siehe Funktionsabschnitt (seit 17.09.2026, Ops #167).
 --   (verordnungen — gedroppt 04.09.2026, trug bis dahin trg_verordnungen_verordnungsnummer
 --    + trg_verordnungen_festschreibung; beide sind mit der Tabelle verschwunden)
 --                         trg_sync_leads_location        BEFORE INSERT/UPDATE OF lat, lng

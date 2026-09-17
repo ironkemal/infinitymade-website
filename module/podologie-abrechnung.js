@@ -63,7 +63,7 @@
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20260810e';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20260817';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260910b';
-import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260816';
+import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260917';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules } from './diagnosegruppen-regeln.js?v=20260827';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
@@ -778,6 +778,7 @@ async function loadPodologieBilling() {
       diagnosegruppe: dRoot,
       lokalisation: lokal || null,
       notizen: notiz || null,
+      employee_id: ctx.getSessionUserId?.() || null,   // Ops #252 — wer hat behandelt
     });
     if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
 

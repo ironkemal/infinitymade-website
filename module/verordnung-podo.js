@@ -601,17 +601,19 @@ export function podoVerordnungsfelder() {
  * Antwort auf die Altbestandsfrage — war der Patient schon VOR dem 01.11.2023
  * in podologischer Behandlung? `null` = nicht beantwortet.
  *
- * ⚠️ Diese Antwort wird NICHT gespeichert. Sie steuert nur die Vorschau.
- * Dauerhaft festhalten laesst sie sich erst mit einer eigenen Spalte am
- * Patienten — in `wissensbank/SPEC-RULES.md` als offene, geldrelevante Luecke
- * vermerkt („Şema gerektirdiği için ayrı iş"). Sie hier still in eine
- * vorhandene Spalte zu schreiben waere schlimmer als sie nicht zu haben: vor
- * der Kasse zaehlt eine quittierte Angabe, kein Nebeneffekt einer Vorschau.
+ * Seit Ops #244 (Migration 0018) wird die Antwort in
+ * `leads.podologie_altbestand_vor_2023` / `..._beantwortet_am` festgeschrieben
+ * (siehe `altbestandAusLeads()` / `beantworteAltbestand()` unten) — dieses
+ * Modul haelt nur noch den lokalen Zwischenstand fuer die laufende Vorschau,
+ * nicht mehr die einzige Quelle der Antwort.
  */
 let _altbestand = null;
 
 /** Behandlungshistorie je Patient — eine Rundreise, nicht eine je Tastendruck. */
 let _behsCache = { patientId: null, werte: [] };
+
+/** Antwort aus `leads` (Ops #244) — eine Abfrage je Patient, nicht je Tastendruck. */
+let _altbestandCache = { patientId: null, wert: null };
 
 /**
  * Alle `podologie_behandlungen` dieses Patienten, ueber ALLE seine
@@ -640,6 +642,46 @@ async function podoHistorie(supabase, ctx, patientId) {
 
   _behsCache = { patientId, werte: behs || [] };
   return _behsCache.werte;
+}
+
+/**
+ * Bereits beantwortete Altbestandsfrage aus `leads` laden (Ops #244) — einmal
+ * je Patient, nicht bei jedem Tastendruck. `null` = unbeantwortet/unbekannt.
+ */
+async function altbestandAusLeads(supabase, ctx, patientId) {
+  if (!patientId || !supabase) return null;
+  if (_altbestandCache.patientId === patientId) return _altbestandCache.wert;
+
+  const ownerId = ctx?.getOwnerId?.();
+  if (!ownerId) return null;
+
+  const { data } = await supabase.from('leads')
+    .select('podologie_altbestand_vor_2023')
+    .eq('id', patientId).eq('owner_id', ownerId).maybeSingle();
+
+  const wert = data?.podologie_altbestand_vor_2023 ?? null;
+  _altbestandCache = { patientId, wert };
+  return wert;
+}
+
+/**
+ * Antwort in `leads` festschreiben (Ops #244). Die Vorschau reagiert sofort
+ * ueber `_altbestand`; das Schreiben laeuft nebenlaeufig — ein Fehler blockiert
+ * die Anzeige nicht, wird aber nicht verschluckt (Konsole).
+ */
+async function beantworteAltbestand(supabase, ctx, patientId, wert) {
+  if (!patientId || !supabase) return;
+  const ownerId = ctx?.getOwnerId?.();
+  if (!ownerId) return;
+
+  const { error } = await supabase.from('leads')
+    .update({
+      podologie_altbestand_vor_2023: wert,
+      podologie_altbestand_beantwortet_am: new Date().toISOString(),
+    })
+    .eq('id', patientId).eq('owner_id', ownerId);
+
+  if (error) console.warn('[verordnung-podo] Altbestand speichern:', error.message);
 }
 
 function sitzungsplanEl() {
@@ -684,6 +726,12 @@ async function sitzungsplanAktualisieren(supabase, ctx) {
   try { behandlungen = await podoHistorie(supabase, ctx, patientId); }
   catch (e) { console.warn('[verordnung-podo] Historie:', e?.message); }
 
+  // Schon einmal beantwortet? Dann nicht erneut fragen — aus `leads` laden.
+  if (_altbestand === null && patientId) {
+    try { _altbestand = await altbestandAusLeads(supabase, ctx, patientId); }
+    catch (e) { console.warn('[verordnung-podo] Altbestand laden:', e?.message); }
+  }
+
   const plan = sitzungsplan({
     diagnosegruppe: $('rzDg')?.value || '',
     anzahl: $('rzAnzahl')?.value,
@@ -717,7 +765,7 @@ async function sitzungsplanAktualisieren(supabase, ctx) {
         </label>
       </div>
       <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">
-        Steuert nur diese Vorschau, wird nicht gespeichert.
+        Wird beim Auswählen dauerhaft am Patienten gespeichert (Ops #244).
       </div>
     </div>` : '';
 
@@ -734,6 +782,8 @@ async function sitzungsplanAktualisieren(supabase, ctx) {
   el.querySelectorAll('input[name="rzPodoVor2023"]').forEach(r => {
     r.addEventListener('change', () => {
       _altbestand = r.value === 'ja';
+      _altbestandCache = { patientId, wert: _altbestand };
+      beantworteAltbestand(supabase, ctx, patientId, _altbestand);
       podoMaskeNachziehen();
     });
   });

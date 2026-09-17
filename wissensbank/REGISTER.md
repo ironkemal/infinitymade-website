@@ -5,9 +5,11 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 10.09.2026 (W-02 + W-03 girdi — Anhang 1 Kap. 4
-> ve Anhang 2 Kap. 9; `gkv-302` canlı-gönderim hazırlık denetiminin çıktısı)
-> Önceki: 10.09.2026 (kök temizliği sonrası atıf tazeleme) · 07.09.2026 (W-01 zinciri, W-A08)
+> İlk kurulum: 05.09.2026 · Son güncelleme: 17.09.2026 (Ops #285 — Z-08/W-A02 yeniden
+> araştırıldı: orijinal import VE on-prem seed zinciri aslında belgeliydi, gerçek boşluk
+> daha dar — bkz. Z-08. `builder` tarafından yapıldı, `wissensbank` ajanı doğrulamadı.)
+> Önceki: 10.09.2026 (W-02 + W-03 girdi — Anhang 1 Kap. 4 ve Anhang 2 Kap. 9) ·
+> 10.09.2026 (kök temizliği sonrası atıf tazeleme) · 07.09.2026 (W-01 zinciri, W-A08)
 
 ---
 
@@ -174,14 +176,53 @@ wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.pdf/.txt   
 ✅ `heilmittel-catalog.json` içinde `_meta` bloğu var (source, edition, generated_at_utc,
 sayımlar) — **türev dosyada olması gereken şeyin örneği.**
 
-### Z-08 · ICD-10-GM 2026 ⚠️ **zincir kopuk**
+### Z-08 · ICD-10-GM 2026 ⚠️ **zincir kısmen kopuk** (17.09.2026'da yeniden araştırıldı, aşağıda güncellendi)
 ```
-wissensbank/gemeinsam/icd-10-gm/Klassifikationsdateien/icd10gm2026syst_kodes.txt   (4,2 MB)
-  → ???                                       ← BESLEME SCRIPT'İ BULUNAMADI
-  → DB icd10_titles  (yalnız search_diagnosen() RPC'sinden okunur)
+wissensbank/gemeinsam/icd-10-gm/Klassifikationsdateien/icd10gm2026syst_kodes.txt   (4,2 MB, DIMDI)
+  → archive/supabase-migrations-vor-baseline/20260701000000_icd10_titles.sql   ✅ BULUNDU
+    (commit 7eb7a56, 01.07.2026: Filter Feld2=T ∧ Feld13=P, nur Endkodes, 4 Spalten,
+     13.041 Zeilen — Quelle+Filter im Dateikopf dokumentiert)
+  → ??? (nicht committeter Zwischenschritt)   ← WEITERHIN OFFEN, siehe unten
+  → DB icd10_titles  HEUTE: 7 Spalten (+ terminal, code_plain, gruppe), ≥16.905 Zeilen,
+    inkl. Gruppen-/Kapitelköpfe — gelesen nur über search_diagnosen() RPC
+  → tools/seed-generieren.mjs (icd10_titles-Eintrag, O-38 12.09.2026)
+    → api-backend/db/migrations/0013_seed_icd10_titles.sql   ✅ On-Prem-Box-Seed, mit
+      Rechtsgrundlage (legal-de 12.09.2026, § 5 Abs. 2 UrhG „amtliches Werk") + Assert
+      (`n >= 16905`, sonst bricht die Migration ab)
 ```
-Repoda hiçbir import/seed script'i yok. Tablo dolu ama nasıl dolduğu yazılı değil. ICD-10-GM
-2027 çıktığında bu iş sıfırdan çözülecek. → açık madde **W-A02, en ciddi madde.**
+**17.09.2026 — was neu belegt ist (Ops #285, Grep + `git log -S` gegen den Code, keine
+Live-DB-Abfrage in dieser Sitzung):**
+- Der **ursprüngliche** Import (13.041 Endkodes, 4 Spalten) ist doch dokumentiert — nur
+  nicht mehr im aktiven Migrationsordner, sondern archiviert
+  (`archive/supabase-migrations-vor-baseline/`, seit der 04.09.2026-Baseline dort). Quelle,
+  Filterregel und Erzeugungsdatum stehen im Dateikopf. Der alte Satz „kein Import-/
+  Seed-Script existiert im Repo" war für DIESEN Schritt falsch.
+- Der **On-Prem-Box-Weg** (heutige Box bekommt eine Kopie von `icd10_titles`) ist seit
+  O-38 (12.09.2026) vollständig automatisiert und rechtlich geprüft — `tools/seed-generieren.mjs`
+  liest die LIVE-Tabelle und erzeugt eine neue, versionierte Migrationsdatei. Das ist ein
+  reines Repackaging der bereits gefüllten Tabelle, **keine** Quelle für „wie kam die Zeile
+  ursprünglich rein".
+- **Was WEITERHIN fehlt** — die eigentliche Lücke ist enger als W-A02 sie 2026-09-XX
+  beschrieben hatte: zwischen dem 01.07.2026-Import (13.041 Zeilen, 4 Spalten, nur
+  Endkodes) und heute (≥16.905 Zeilen, 7 Spalten, inkl. Gruppen-/Kapitelköpfe) liegt ein
+  zweiter Umbau — neue Spalten `terminal`/`code_plain`/`gruppe`, erweiterter Zeilenumfang.
+  Dafür gibt es **keinen** committeten Migrationsschritt (`git log -S` auf `code_plain` und
+  `search_diagnosen` findet in `*.sql`/`*.js`/`*.mjs` nur die drei oben genannten Dateien,
+  keine vierte) und **keinen** `fortschritte/`-Eintrag. Er muss direkt gegen die Live-DB
+  gefahren worden sein, aus der Zeit vor der Datei-zuerst-Migrationsdisziplin
+  (die erst am 10.09.2026 eingeführt wurde, siehe CLAUDE.md). Insbesondere `gruppe` lässt
+  sich nicht rein aus dem Feld `code` ableiten (Beispiel: `Z99.3` → `gruppe='Z80'`, dem
+  Beginn des amtlichen Gruppenbereichs `Z80–Z99` — das braucht die volle Hierarchie der
+  Systematik, nicht nur die Endkode-Zeile) — der zweite Import muss also erneut die rohe
+  DIMDI-Datei (oder eine gleichwertige Quelle mit Gruppen-/Kapitelstruktur) gelesen haben,
+  nicht nur `icd10_titles` erweitert haben.
+- **Für 2027:** der On-Prem-Repackaging-Weg (`seed-generieren.mjs`) funktioniert unverändert,
+  SOBALD die Live-Tabelle die 2027er Daten trägt. Der fehlende Teil ist ausschließlich der
+  Schritt „2027er DIMDI-Datei → vollständige 7-Spalten-Tabelle in der Live-DB" — dafür gibt
+  es kein wiederholbares Skript. Nicht dringend (Termin laut §1-Kalender: 01.01.2027), aber
+  wer immer den zweiten Umbau im Sommer 2026 gefahren hat, sollte das vor 2027 rekonstruieren
+  oder das Vorgehen aus der Erinnerung aufschreiben, solange es noch möglich ist. → **W-A02**
+  (Text unten entsprechend geschärft, Status bleibt `offen`, aber nicht mehr „kritischste").
 
 ### Z-09 · Kostenträgerdatei / IK  → tam kart **W-01**
 ```
@@ -296,7 +337,7 @@ yeniden araştırılıyor demektir.
 |---|---|---|---|
 | `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste` | Stand 01.01.2026 | ✅ GEÇERLİ | **Z-07** |
-| `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 ⚠ kopuk** |
+| `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 ⚠ 2. Umbau belgesiz** (17.09.2026 geschärft) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/praxiswissen-heilmittel` | Ausgabe 2026 | 📎 REFERANS | — |
 | `wissensbank/physiotherapie/NOVENTI-Leitfaden-Blankoverordnung-Physiotherapie` | Stand 03.2026 | 📎 REFERANS (ticari kaynak, otorite değil) | — |
 | `wissensbank/_archiv/Zusatzdateien/*.pdf` (11 adet) | 2026 | 🚫 KAPSAM DIŞI (Barthel, MMSE, FIM…) | — |
@@ -583,12 +624,19 @@ Kalan: 31.
 (Diagnoseliste) · `g-ba.de` (HeilM-RL).
 **Ölçüt:** bir belge silinse, kayıttan bakıp 2 dakikada yerine yenisi indirilebilmeli.
 
-### W-A02 · ICD-10-GM → `icd10_titles` besleme zinciri belgesiz — `offen` ⚠️ **en ciddi**
-Tablo dolu, ama repoda hiçbir import/seed script'i yok (Z-08). ICD-10-GM her yıl
-güncelleniyor; 2027 sürümü çıktığında iş sıfırdan çözülecek ve o an kimse bugün ne
-yapıldığını hatırlamayacak.
-**Yapılacak:** ya script bulunup kayda bağlanır, ya bir kereye mahsus yapıldıysa bu
-yazılır ve 2027 için tekrarlanabilir yol tarif edilir. `db-ustasi` ile birlikte.
+### W-A02 · ICD-10-GM → `icd10_titles`: 2. Umbau (terminal/code_plain/gruppe) unbelegt — `offen`
+**17.09.2026 neu untersucht (Ops #285) — Beschreibung geschärft, siehe Z-08 für die volle
+Beweiskette.** Der ursprüngliche Import (01.07.2026, 13.041 Endkodes) UND der On-Prem-Box-Weg
+(O-38, 12.09.2026, `tools/seed-generieren.mjs` + `api-backend/db/migrations/0013_seed_icd10_titles.sql`)
+sind beide dokumentiert und automatisiert — das war der alte, zu pauschale Befund dieser
+Karte, der jetzt zurückgenommen wird. Offen bleibt ausschließlich der **zweite** Umbau
+zwischen 01.07. und heute: 4 → 7 Spalten, 13.041 → ≥16.905 Zeilen (Gruppen-/Kapitelköpfe
+dazu), ohne committetes Skript und ohne `fortschritte/`-Eintrag — vermutlich direkt gegen
+die Live-DB gefahren, vor der Datei-zuerst-Migrationsdisziplin (10.09.2026).
+**Yapılacak:** 2027 sürümü düşmeden önce, o ikinci dönüşümü kim yaptıysa (veya git blame ile
+bulunabilirse) yöntemi hatırlıyorken yazsın — özellikle `gruppe` alanı için (amtliche
+Gruppenbereiche, `code`'dan tek başına türetilemez). Aciliyet yok — takvim 01.01.2027.
+`db-ustasi` ile birlikte, DB tarafını (canlı satır sayısı/sütun doldurulma oranı) o teyit eder.
 
 ### W-A03 · `anlage3_v22.js` dosya adı bugün geçerli olmayan sürümü taşıyor — `offen`
 Baş yorumu dürüst ("gültig ab 01.02.2027") ama dosya adı okuyanı yanıltıyor; bugün

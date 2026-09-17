@@ -1,7 +1,45 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-14 — 0016_no_show_session_links
+-- ERZEUGT AM:        2026-09-17 — 0020_prescriptions_festschreibung
+--                    (Ops-Karte #167. GoBD-/§302-Festschreibung fuer
+--                    `prescriptions` — die einzige §302-Tabelle ohne diesen
+--                    Schutz (db/SCHEMA-RLS.sql, vormals als "OFFENE LUECKE"
+--                    markiert). NEUE FUNKTION `prescriptions_festschreibung()`
+--                    + NEUER TRIGGER `trg_prescriptions_festschreibung` (BEFORE
+--                    UPDATE). Kolonlisten-Entscheidung: db-ustasi (Schema) +
+--                    gkv-302 (Abrechnungsrelevanz) + legal-de (Anonymisierungs-
+--                    Ausnahme), Konsultation 17.09.2026. Tor wie beim alten
+--                    Vorbild (`verordnung_festschreibung()`, verwaist):
+--                    `OLD.belegnummer IS NULL` laesst jede Aenderung durch.
+--                    Details bei `prescriptions` unten und in db/SCHEMA-RLS.sql.
+--                    Live getestet (Kemal, 17.09.2026): offenes Feld (status)
+--                    ging durch, gesperrtes Feld (kostentraeger_ik) warf den
+--                    Fehler, patient_name→NULL-Anonymisierung ging durch.
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
+--                    davor: 2026-09-17 — 0018_leads_podologie_altbestand +
+--                    0019_podologie_behandlungen_employee_id
+--                    (db-ustasi-Rehberlik zu Ops #244 + #252, Migrationen von
+--                    Kemal geschrieben und per MCP angewendet.)
+--                    ZWEI NEUE SPALTEN, keine Tabelle/Policy/Trigger/Index:
+--                    `leads.podologie_altbestand_vor_2023` (boolean) +
+--                    `leads.podologie_altbestand_beantwortet_am` (timestamptz) —
+--                    haelt die HPNR-78040-Altbestandsfrage (01.11.2023) dauerhaft
+--                    fest statt nur in einer modulscope JS-Variable
+--                    (module/verordnung-podo.js `_altbestand`). Patientenbezogen,
+--                    deshalb an `leads`, nicht an `prescriptions`.
+--                    `podologie_behandlungen.employee_id` (uuid, FK profiles(id)
+--                    ON DELETE SET NULL) — wer die Behandlung durchgefuehrt hat;
+--                    fehlte komplett und blockierte den geplanten Team-
+--                    Schreibausbau (Sicherheitsagent-Fund). Beide Migrationen
+--                    legen nur Spalten an, das Befuellen aus dem UI/Session-
+--                    Kontext steht noch aus (Ops #244, #252 bleiben offen).
+--                    Details bei `leads` bzw. `podologie_behandlungen` unten.
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP, db-ustasi-Gegenlesen
+--                    bestanden: keine RLS/Trigger-Beruehrung, additive Spalten).
+--                    davor: 2026-09-14 — 0016_no_show_session_links
 --                    (Ops-Karte a8186cb8. EINE NEUE SPALTE:
 --                    `bookings.no_show_session_links` — Rueckfahrkarte fuer die
 --                    Einheiten, die ein „Patient nicht erschienen" jetzt wieder
@@ -1643,6 +1681,8 @@ CREATE TABLE leads (
   krankenkasse_enc bytea
   pii_encrypted boolean NOT NULL DEFAULT false
   ausfallvereinbarung_am date
+  podologie_altbestand_vor_2023 boolean
+  podologie_altbestand_beantwortet_am timestamptz
 );
 --   CHECK geschlecht IN (m, f, d) · insurance_type IN (gkv, privat)
 --   ★ `geschlecht`: m = männlich, f = weiblich, d = divers (§ 22 Abs. 3 PStG),
@@ -1672,6 +1712,15 @@ CREATE TABLE leads (
 --     fahrten, ausfallrechnungen hängen alle hier dran.
 --   ★ PII-Verschlüsselung: *_enc bytea + pii_encrypted-Flag
 --     (api-backend/lib/phi-encrypt.js).
+--   ★ podologie_altbestand_vor_2023 (17.09.2026, Ops #244): NULL = noch nicht
+--     gefragt/unbekannt, true/false = Patient hat vor dem 01.11.2023 erstmals
+--     podologische Behandlung begonnen (HPNR 78040, Aenderungsvereinbarung
+--     20.10.2023 -- kein Anspruch, wenn true). Patientenbezogen, nicht
+--     verordnungsbezogen (wissensbank/SPEC-RULES.md:139-168), deshalb hier und
+--     nicht an prescriptions. podologie_altbestand_beantwortet_am haelt fest,
+--     WANN geantwortet wurde -- Beleg gegenueber der Kasse, kein fluechtiger
+--     Dialog. Schreibpunkt noch offen (Ops #244 UI-Teil steht aus); die
+--     Migration legt nur die Spalten an.
 
 CREATE TABLE mahnungen (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -1910,14 +1959,23 @@ CREATE TABLE podologie_behandlungen (
   betrag_gkv numeric(8,2)
   created_at timestamptz DEFAULT now()
   invoice_id uuid
+  employee_id uuid
 );
 --   FK verordnung_id -> prescriptions(id) ON DELETE SET NULL · PK (id)
 --      (Ziel seit 04.09.2026 prescriptions, ids der migrierten Zeilen unveraendert)
 --   FK invoice_id -> invoices(id) ON DELETE SET NULL
+--   FK employee_id -> profiles(id) ON DELETE SET NULL
 --   ★ Podologie-Behandlungstopf (Gegenstück zu prescription_sessions).
 --   ★ invoice_id ist gesetzt, sobald die Sitzung auf einer Rechnung steht.
 --     Ohne dieses Feld war „ist diese Behandlung schon abgerechnet?" nicht
 --     beantwortbar und dieselbe Sitzung konnte zweimal berechnet werden.
+--   ★ employee_id (17.09.2026, Ops #252, Sicherheitsagent-Fund): wer die
+--     Behandlung durchgefuehrt hat. NULL bei Altbestand-Zeilen und wenn der
+--     Owner selbst behandelt hat (Owner ist kein employee). Einziger
+--     Schreibpunkt: module/podologie-abrechnung.js:773 (INSERT) -- das
+--     tatsaechliche Befuellen aus dem eingeloggten Nutzer steht noch aus,
+--     die Migration legt nur die Spalte an. Bis dahin bleibt die Spalte NULL
+--     und blockiert den geplanten Team-Schreibausbau nicht.
 
 CREATE TABLE praxura_migrations (
   version text NOT NULL
@@ -2182,6 +2240,26 @@ CREATE TABLE prescriptions (
 --   ⚠️ `verordnungsnummer` / `belegnummer`: fortlaufend je Patient
 --      (Trigger trg_prescriptions_verordnungsnummer), Belegnummer bei der
 --      DTA-Erzeugung eingefroren.
+--   ★ GoBD-Festschreibung (17.09.2026, Ops #167, 0020_prescriptions_
+--     festschreibung): TRIGGER trg_prescriptions_festschreibung (BEFORE UPDATE)
+--     -> prescriptions_festschreibung(). Tor: solange OLD.belegnummer NULL ist,
+--     frei editierbar (Entwurf). Danach gesperrt: owner_id/business_id/
+--     created_at (Mandantenschutz) + Abrechnungsinhalt aller Fachbereiche
+--     (belegnummer, ausstellungsdatum, diagnosegruppe, icd10, icd10_2,
+--     icd10_enc, leitsymptomatik, pat_leitsymptomatik, is_dringend, hausbesuch,
+--     frequenz, rezeptart, zuzahlung_befreit, zuzahlung_eur, kostentraeger_ik,
+--     arzt_id, wagner_grad, nagel, krankenkasse_ik, behandlungsanlass,
+--     heilmittel, heilmittel_position, anzahl_einheiten, doctor_lanr,
+--     doctor_bsnr, rezept_typ, is_blanko, is_lhb_bvb, behandlungsbeginn,
+--     gueltig_bis). Anonymisierungs-Ausnahme (legal-de): patient_name,
+--     versichertennummer, patient_id duerfen NUR auf NULL gesetzt werden.
+--     Bewusst OFFEN (Post-Belegnummer-Folgeprozesse): abrechnung_status,
+--     absetzung_*, storno_*, zuzahlung_kassiert_*, zuzahlung_zahlart,
+--     bericht_*, deadline_reminders, dmrz_exported_at, status, confirmed_*.
+--     KEIN DELETE-Schutz (anders als abrechnung_zeile) — liefe gegen den
+--     heutigen Hard-Delete-Weg in api/dsgvo.js DELETE_TABLES. Offene
+--     Retention-Folgefrage (gesendete Verordnungen ohne Aufbewahrungsfrist)
+--     separat an gkv-302+legal-de geflaggt, nicht Teil dieser Migration.
 
 CREATE TABLE profiles (
   id uuid NOT NULL                      -- = auth.users.id

@@ -401,7 +401,10 @@
       border-radius: 28px;
       padding: 5rem 4rem;
       display: grid;
-      grid-template-columns: 1fr 1.1fr;
+      /* minmax(0, ...): sade 1fr/1.1fr icerigin min-content genisligine kadar
+         kucultulemiyordu (Grid "blowout"), dar ekranda 4px yatay tasmaya
+         yol aciyordu -- olculdu (360px). */
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
       gap: 5rem;
       align-items: center;
     }
@@ -435,7 +438,7 @@
     }
     .px-why-item {
       display: grid;
-      grid-template-columns: 80px 1fr;
+      grid-template-columns: 80px minmax(0, 1fr);
       gap: 1.5rem;
       padding: 1.6rem 0;
       border-top: 1px solid var(--line);
@@ -455,12 +458,16 @@
       font-weight: 500;
       color: var(--ink);
       margin-bottom: 0.4rem;
+      /* uzun bilesik Almanca sozcukler ("Patientensicherheit") 160px'lik
+         sutunu 360px genislikte tasiriyordu -- olculdu */
+      overflow-wrap: break-word;
     }
     .px-why-h em { font-style: italic; font-weight: 400; color: var(--bronze); }
     .px-why-p {
       font-size: 0.94rem;
       line-height: 1.55;
       color: var(--ink-mute);
+      overflow-wrap: break-word;
     }
 
     /* ── Process ── */
@@ -745,7 +752,7 @@
       .px-features { grid-template-columns: 1fr; }
       .px-feature.span-2 { grid-column: span 1; }
       .px-feature-inner { min-height: auto; }
-      .px-why-block { grid-template-columns: 1fr; padding: 3rem 1.75rem; gap: 2.5rem; }
+      .px-why-block { grid-template-columns: minmax(0, 1fr); padding: 3rem 1.75rem; gap: 2.5rem; }
       .px-process { grid-template-columns: 1fr 1fr; }
       .px-branchen { grid-template-columns: 1fr; }
       .px-closing-card { grid-template-columns: 1fr; padding: 2.8rem 1.8rem; gap: 2rem; }

@@ -578,7 +578,11 @@
     /* ── Zielgruppen (Branchen detail) ── */
     .px-zielgruppen-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      /* minmax(0,1fr) değil sade 1fr: Grid track'i içeriğin min-content
+         genişliğinin altına asla küçültmüyordu (klasik Grid "blowout").
+         1025-1033px arası (1024px breakpoint'in HEMEN üstü) 9px yatay taşma
+         vardı — ölçüldü, iki ayrı genişlikte doğrulandı. */
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 1.25rem;
     }
     .px-br {
@@ -1006,8 +1010,13 @@
       .px-closing-side-mail:hover { border-color: var(--highlight); }
     }
 
-    /* ── Mobile ── */
-    @media (max-width: 1000px) {
+    /* ── Mobile ──
+       Eşik 1000px'den 1024px'e çıkarıldı (mobil-ui denetimi, 2026-09-17):
+       .px-zielgruppen-grid 4 sabit sütunla 1000-1024px arasında (ör. 1024px
+       tablet yatay) sayfayı 9px yatay taşırıyordu — ölçüldü, kanıt
+       archive/denetim/mobile-audit/before/results.json → index@1024.
+       1024, Ops #61'in hedef ölçeğiyle de örtüşüyor. */
+    @media (max-width: 1024px) {
       .px-hero {
         grid-template-columns: 1fr;
         padding: 7rem 1.25rem 3rem;

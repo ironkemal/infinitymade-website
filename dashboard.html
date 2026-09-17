@@ -3882,7 +3882,10 @@
       border-top:1px dashed #9aa8bd; padding-top:14px; }
     .m13-sig{ font-size:15px; font-weight:700; }
 
-    @media (max-width:680px){
+    /* 680 -> 768 (Ops #61, breakpoint konsolidasyonu): hedef ölçeğe hizalandı.
+       Tümü 1-kolona/kısma düşüren kurallar — eşiği yükseltmek yalnızca
+       aralığı genişletiyor, taşma riski yok. */
+    @media (max-width:768px){
       .m13-top{ grid-template-columns:1fr; }
       .m13-dgrow{ grid-template-columns:1fr 1fr; }
       .m13-opts{ grid-template-columns:1fr; }
@@ -5726,7 +5729,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260914"></script>
+  <script type="module" src="dashboard.js?v=20260917"></script>
 </body>
 
 </html>

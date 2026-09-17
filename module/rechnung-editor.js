@@ -5,7 +5,8 @@
  * Hier landen die Teile, die beim Live-Test vom 15.08.2026 aufgefallen sind.
  */
 
-import { verordnungenZuruecksetzen } from './rechnung-verordnung.js?v=20260817';
+import { verordnungenZuruecksetzen } from './rechnung-verordnung.js?v=20260917';
+import { preisAusService } from './rechnung-bruecke.js?v=20260917';
 
 /**
  * Lädt die Termine eines Patienten für die Einzeltermin-Auswahl (Selbstzahler).
@@ -107,15 +108,10 @@ export async function terminAuswahlLaden(sb, { ownerId, leadId }) {
    der Patient gesetzlich versichert ist.
 */
 
-/** Privatpreis einer Leistungszeile: `price`, sonst erste aktive `price_config`-Stufe. */
-export function preisAusService(srv) {
-  const direkt = parseFloat(srv?.price) || 0;
-  if (direkt) return direkt;
-  const stufen = srv?.price_config?.durations;
-  if (!stufen) return 0;
-  const ersteAktive = Object.keys(stufen).find(k => stufen[k]?.active);
-  return parseFloat(stufen[ersteAktive]?.price) || 0;
-}
+// preisAusService kommt jetzt aus module/rechnung-bruecke.js (Ops #288,
+// 17.09.2026 zusammengeführt) — hier weiterhin re-exportiert, weil Aufrufer
+// und Test in dieser Datei den Namen von hier importieren.
+export { preisAusService };
 
 /**
  * Was auf diesem Termin erbracht wurde — eine Zeile je Leistung.

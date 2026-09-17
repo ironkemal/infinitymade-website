@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-09-16",
+ "erzeugt": "2026-09-17",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-09-14)",
+  "schema": "db/SCHEMA.sql (Stand 2026-09-17)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-14)",
   "register": "db/REGISTER.md"
  },
@@ -232,7 +232,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 15,
+   "sqlTreffer": 14,
    "codeStumm": false
   },
   {
@@ -7232,7 +7232,7 @@
   },
   {
    "name": "leads",
-   "spalten": 51,
+   "spalten": 53,
    "fkRaus": [
     "aerzte"
    ],
@@ -8427,6 +8427,7 @@
     "module/rechnung-editor.test.js",
     "module/termin-patient-bezug.js",
     "module/verordnung-patient-abgleich.js",
+    "module/verordnung-podo.js",
     "module/verordnung-uebersicht.js"
    ],
    "module": [
@@ -8460,7 +8461,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 16,
+   "sqlTreffer": 20,
    "codeStumm": false
   },
   {
@@ -9684,10 +9685,11 @@
   },
   {
    "name": "podologie_behandlungen",
-   "spalten": 11,
+   "spalten": 12,
    "fkRaus": [
     "prescriptions",
-    "invoices"
+    "invoices",
+    "profiles"
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": true,
@@ -9698,7 +9700,7 @@
    "register": true,
    "status": "aktiv",
    "warum": "Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions`. `verordnung_id` zeigt seit 04.09.2026 auf `prescriptions` (Zusammenlegung der Verordnungstöpfe, ids unverändert) — vorher auf die eigene Tabelle `verordnungen`.",
-   "seit": "13.06.2026 · `create_podologie_behandlungen` (Team-SELECT nachgezogen: 03.09.2026 · `verordnungen_podologie_behandlungen_team_select`)",
+   "seit": "13.06.2026 · `create_podologie_behandlungen` (Team-SELECT nachgezogen: 03.09.2026 · `verordnungen_podologie_behandlungen_team_select`; `employee_id` nachgezogen: 17.09.2026 · `0019_podologie_behandlungen_employee_id`, Ops #252)",
    "ungeklaert": false,
    "leser": [
     {
@@ -10087,7 +10089,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 7,
+   "sqlTreffer": 10,
    "codeStumm": false
   },
   {
@@ -13216,7 +13218,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 40,
+   "sqlTreffer": 41,
    "codeStumm": false
   },
   {

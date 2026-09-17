@@ -1,0 +1,1979 @@
+Verfahrenskennungen                    Anlage 4 GGT
+
+Inhaltsverzeichnis
+
+1. Verfahrenskennungen ................................................................................ 4
+
+      1.1 Datenaustausch mit Arbeitgebern................................................................................. 4
+      1.2 Datenaustausch mit der Rentenversicherung ................................................................ 6
+      1.3 Datenaustausch zwischen Leistungserbringern und Krankenkassen nach § 294 ff. SGB V
+
+         8
+      1.4 Datenaustausch zwischen Leistungserbringern und Krankenkassen nach § 295 Abs. 1b
+      SGB V (Direktabrechner)........................................................................................................ 9
+      1.5 Datenaustausch zwischen Leistungserbringern und Pflegekassen nach § 105 SGB XI .... 9
+      1.6 Datenübertragung mit Erstellern von Versichertenkarten ............................................ 10
+      1.7 Datenaustausch zwischen den Krankenkassen / Weiterleitungsstellen ........................ 10
+      1.8 Datenübermittlung zwischen der Bundesagentur für Arbeit und den Krankenkassen /
+      Weiterleitungsstellen .......................................................................................................... 12
+      1.9 Amtliche Statistiken im Datenaustausch mit dem BMG/BMAS...................................... 12
+      1.10 Datenaustausch der Krankenkassen über die Spitzenverbände der Krankenkassen mit
+      dem BAS ............................................................................................................................. 13
+      1.11 Datenaustausch der Spitzenverbände der Krankenkassen mit der Deutschen
+      Verbindungsstelle Krankenversicherung – Ausland ............................................................. 14
+      1.12 Datenaustausch der Krankenkassen / Weiterleitungsstellen mit Hochschulen ........... 14
+      1.13 Datenaustausch der Krankenkassen mit Zahlstellen .................................................. 14
+      1.14 Datenaustausch der Krankenkassen mit der Sammel- und Verteilstelle
+      Institutionskennzeichen (SVI) .............................................................................................. 15
+      1.15 Interne Verfahren der Krankenkassen / Pflegekassen ................................................ 15
+      1.16 Datenaustausch der Krankenkassen für Disease-Management-Programme .............. 17
+      1.17 Datenaustausch zwischen Medizinischem Dienst und Krankenkassen / Pflegekassen 19
+      1.18 Datenaustausch der Sozialversicherung mit der ITSG ................................................ 20
+      1.19 Datenaustausch zwischen den zugelassenen kommunalen Trägern nach § 6a SGB II und
+      den Krankenkassen ............................................................................................................ 21
+      1.20 Meldeverfahren für Rabattvereinbarungen nach § 31 Abs. 2 SGB V in Verbindung mit
+      § 130a Abs. 8 SGB V ........................................................................................................... 21
+      1.21 Datenaustausch zwischen Unfallversicherungsträgern und Krankenkassen ............... 22
+      1.22 Datenaustausch mit dem Institut des Bewertungsausschusses .................................. 22
+      1.23 Datenaustausch zwischen Leistungserbringern und Krankenkassen nach § 126 Abs. 1a
+      SGB V (Präqualifizierungsdaten) .......................................................................................... 22
+      1.24 Datenaustausch der Arzt- und Versichertenverzeichnisse für Hausarztzentrierte
+      Versorgung nach § 73b SGB V ............................................................................................ 23
+
+Gültig ab: 01.01.2026  Seite 1 von 47  Stand: 06.11.2025
+1.25 Datenaustausch der Rentenversicherung mit sonstigen Stellen ................................. 23
+1.26 Datenaustausch zwischen Unfallversicherung und der Rentenversicherung ............... 24
+1.27 Datenaustausch zwischen Bundesamt für Soziale Sicherung und Rentenversicherung 24
+1.28 Impfstoffabschläge nach §130a Abs. 2 SGB V ........................................................... 24
+1.29 Datenaustausch zwischen dem Endoprothesenregister Deutschland (EPRD) und den
+Krankenkassen ................................................................................................................... 25
+1.30 Datenaustausch zwischen Klinischen Krebsregistern und Krankenkassen .................. 25
+1.31 Datenaustausch zwischen der Zentralen Prüfstelle für Prävention und den
+Krankenkassen ................................................................................................................... 25
+1.32 Sozialdaten der Krankenkassen gemäß § 299 SGB V ................................................. 26
+1.33 Datenaustausch der Ambulanten Spezialfachärztlichen Versorgung (ASV) nach § 116b
+SGB V 26
+1.34 Datenaustausch nach § 301 SGB V mit der UV........................................................... 26
+1.35 Heilmittelpreismonitoring ......................................................................................... 27
+1.36 SPV-MD „Mitteilungsmanagement“............................................................................ 27
+1.37 Übermittlung von Daten nach §264 Abs. 1 und 2 SGB V ............................................ 27
+1.38 Stammdatenübermittlung von der UV an Arbeitgeber................................................ 27
+1.39 Verteilung der Zahlstellendatei an die DAVn ............................................................. 28
+1.40 Datenübermittlung EESSI........................................................................................... 28
+1.41 Elektronische Arbeitsunfähigkeitsbescheinigung (eAU) ............................................. 28
+1.42 Datenaustausch zur Wirtschaftlichkeitsprüfung nach §106 SGB V ............................. 29
+1.43 Datenaustausch zum Teilhabeverfahrensbericht nach § 41 Abs. 1 SGB IX.................. 29
+1.44 Übermittlung von Mindestmengen nach § 136 b SGB V ............................................. 29
+1.45 Übermittlung von Krankenhausstatistiken nach §275c Abs. 4 SGB V und §17c Abs. 6
+KHG 29
+1.46 Verteilung der Hochschuldatei gemäß §199a SGB V an die Datenannahmestellen...... 30
+1.47 Standortverzeichnis nach §293 Absatz 6 SGB V......................................................... 30
+1.48 Qualitätssicherung Reha ........................................................................................... 30
+1.49 Datenübertragung zur ambulanten spezialfachärztlichen Versorgung ....................... 31
+1.50 Entgeltschlüssel für Krankenhäuser .......................................................................... 31
+1.51 Zulassungsverzeichnis für Heilmittelleistungserbringer............................................. 31
+1.52 Datentransparenz nach § 303b SGB V ....................................................................... 31
+1.53 Digitale Gesundheitsanwendungen (DiGA) nach § 33a SGB V .................................... 32
+1.54 Datenaustausch zwischen den Krankenhäusern und den Landesverbänden der
+Krankenkassen (LV KK) bzw. Landesaufsichtsbehörden (LAB) .............................................. 32
+1.55 Meldung von Versorgungsabgaben aus Kranken-, Verletzten- und
+Pflegeunterstützungsgeld, sowie für Pflegepersonen .......................................................... 33
+
+Gültig ab: 01.01.2026  Seite 2 von 47  Stand: 06.11.2025
+      1.56 Übermittlung des reduzierten IK Verzeichnisses an die Trustcenter (TC) ................... 33
+      1.57 Vertragspartnerliste nach § 134a SGB V Abs. 2a und 2c ............................................ 34
+      1.58 Beschäftigtenverzeichnis der ambulanten Pflege (BeVaP) nach § 293 Absatz 8 SGB V 34
+
+2. Beschreibung des Feldes ‚VERFAHREN_KENNUNG_SPEZIFIKATION’ .............. 35
+3. Verzeichnis der Verfahrenskennungen ...................................................... 37
+
+Gültig ab: 01.01.2026  Seite 3 von 47  Stand: 06.11.2025
+1. Verfahrenskennungen
+
+Beschreibung des Feldes ‘VERFAHREN_KENNUNG’ (Dateityp), Version 1.1
+
+Das Feld VERFAHREN_KENNUNG (Dateityp) ist in den Stellen 20-24 des Auftragssatzes festgelegt.
+
+Sofern eine Dateinummer verwendet wird, wird diese bezogen auf die jeweilig beschriebene Ver-
+fahrenskennung hochgezählt.
+
+1.1 Datenaustausch mit Arbeitgebern
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23   ‚DUA’          für Meldungen nach der DEÜV monatlich/jährlich      DAV  AG
+        ‚DUA‘          Sofortmeldungen                                     DSRV  AG
+        ‚DSV’          Versicherungsnummern Anfrage                        DSRV  AG
+        ‚BNA’          für Beitragsnachweise von Arbeitgebern              DAV  AG
+        ‚EEL’          für Entgeltersatzleistungen (ab der Version 6.0)    DAV  AG
+        ‚AAG’          für Erstattungsanträge (nach AAG)                   DAV  AG
+        ‚AAK’          Rückmeldungen für Erstattungsanträge (AAG)          DAV  AG
+        ‚BEA’          für Beitragserhebung berufsständischen Versor-      DAV  AG
+                       gungseinrichtungen
+        ‚KSK’          für Abrechnungen mit den Künstlersozialkassen       DAV  KSK
+        ‚VSA’          für Rückmeldungen Versicherungsnummer im DEÜV       DAV  AG
+                       Verfahren, gilt auch bei möglichen Fehlerrückmel-
+        ‚SAG’          dungen im Versicherungsnummernvergabeverfah-        DAV  AG
+        ‚EEK’          ren der DSRV                                        DAV  AG
+                       Fachliche Rückmeldung der Krankenkasse
+        ‚EBE’          für Entgeltersatzleistungen für fachlichen Meldung  DSRV  AG
+        ‚EBF’          an den Arbeitgeber (ab der Version 8.0)             DSRV  AG
+        ‚EBM’          euBP Entgeltbuchhaltung                             DSRV  AG
+        ‚EBP’          euBP Finanzbuchhaltung                              DSRV  AG
+        ‚EBR’          euBP Meldekorrekturen                               DSRV  AG
+        ‚ALG’          euBP Prüfergebnis                                   AG  BA
+                       euBP Rückmeldung
+        ‚AKA’          Arbeitsbescheinigungen für Zwecke des über- und     DAV  AG
+                       zwischenstaatlichen Rechts, Nebeneinkommen und
+                       allgemeine Arbeitsbescheinigungen
+                       Arbeitgeber-Konto Anlage
+
+Gültig ab: 01.01.2026                 Seite 4 von 47                       Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                       Richtung
+        ‚BUB’          Beantragung von Unbedenklichkeitsbescheinigun-     DAV  AG
+                       gen nach § 108b SGB IV                             DAV  AG
+        ‚AUB’          Ausstellung von Unbedenklichkeitsbescheinigungen   AG  GKV-SV
+                       nach § 108b SGB IV                                 GKV-SV  AG
+        ‚AZK’          Abruf der zuständigen Krankenkasse                 AG  UV
+        ‚RZK’          Rückmeldung der zuständigen Krankenkasse           AG  UV
+        ‚UVL’          für den elektronischen Lohnnachweis UV             AG  SV
+        ‚UVS’          für die Stammdaten-Abfrage UV
+        ,A1A‘          Übermittlung der Anträge der Arbeitgeber im A1-    SV  AG
+                       Verfahren oder der Ablehnung oder der Quittierung  DSRV  AG
+        ,A1S‘          oder von Fehlern                                   AG  DSRV
+        ,RVA‘          Übermittlung der Bewilligung                       AG  ITSG
+                       Anlassbezogene Anforderung der in der EBV defi-    ITSG  AG
+        ,ARV‘          nierten Werte durch den RV-Träger (rvBEA)          PH  MJZ
+                       Rückmeldung der angeforderten EBV-Werte durch      AG  BA
+        ,ZAA‘          registrierte Arbeitgeber (rvBEA)                   AG  BA
+                       Beantragung einer Zahlstellen- oder Absendernum-   AG  BA
+        ,ZAS‘          mer                                                AG  SV
+                       Rückmeldung bei Beantragung einer Zahlstellen-
+        ,HPH‘          oder Absendernummer                                SV  AG
+                       Elektronische Übermittlung der Haushaltschecks     AG  DSRV
+        ,KUG‘          von Privathaushalten
+        ,KUL‘          Antrag auf Kurzarbeitergeld                        DSRV  AG
+        ,KUA‘          Abrechnungsliste Kurzarbeitergeld                  AG  ULAK
+        ,SVA‘          Anzeige Kurzarbeitergeld
+                       Übermittlung der Anträge der Arbeitgeber im Ver-
+        ,SVS‘          fahren nach § 106c SGB IV oder die Übermittlung
+        ,APR‘          von Quittierungen und Fehlern
+                       Übermittlung der Ablehnung oder Bewilligung auf
+        ,RPA‘          Anträge nach § 106c SGB IV
+        UKV            Übermittlung der Anträge beitragsabführender
+                       Stellen im Verfahren gemäß § 55a Abs. 1 Satz 3
+                       SGB XI oder die Übermittlung von Quittierungen
+                       und Fehlern
+                       Übermittlung der Antworten auf Anträge gemäß §
+                       55a Abs. 4 Satz 3 SGB XI
+                       DA für das Sozialkassenverfahren im Baugewerbe
+                       nach § 110 Abs. 4 SGB IV – Meldeverfahren der Ur-
+                       laubs- und Lohnausgleichskasse der Bauwirtschaft
+                       (ULAK)
+
+Gültig ab: 01.01.2026  Seite 5 von 47                                     Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                       Richtung
+        UKR            DA für das Sozialkassenverfahren im Baugewerbe     ULAK  AG
+                       nach § 110 Abs. 4 SGB IV – Rückmeldeverfahren der
+        AXL            Urlaubs- und Lohnausgleichskasse der Bauwirt-      AG  BA
+                       schaft (ULAK)
+                       Übermittlung von XML-basierten Bescheinigungs-
+                       datensätzen zur Versicherungspflicht sowie Be-
+                       scheinigungen über das fortgeführte Beschäfti-
+                       gungsverhältnis im Rahmen der Gewährung von
+                       Teilarbeitslosengeld
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+zusätzliche Kennung in Feld VERFAHREN_KENNUNG_SPEZIFIKATION für UKV
+
+Stelle Abk.            Beschreibung                                 Richtung
+
+        URM            Urlaubsmeldung
+
+        ANM            Stammdaten
+
+        RAM            Restanspruchsmeldung
+
+zusätzliche Kennung in Feld VERFAHREN_KENNUNG_SPEZIFIKATION für UKR
+
+Stelle Abk.            Beschreibung                                 Richtung
+
+        ANR            Stammdaten
+
+1.2 Datenaustausch mit der Rentenversicherung
+Die Besonderheiten des Datenaustauschs mit der Rentenversicherung sind in Anlage 5 beschrie-
+ben.
+
+VK      Beschreibung                                                          Richtung
+
+A1      Mitteilung von Entsendungen über die DVKA für die A1-Datei bei der DVKA  DRV
+
+        DSRV bedingt durch EESSI
+
+AN      Anforderungssätze mit Fehlernummern 01-06                             BA  DRV
+
+BB      Elektronische Benachrichtigung über die Erstattung zu Unrecht ge- GKV  DRV
+
+        zahlter Beiträge nach § 211 Satz 3 SGB VI
+
+BJ      Betriebsnummerndatei Gesamtbestand 1 Mal pro Jahr                     BA  DRV
+
+BK      Betriebsprüfung                                                       GKV  DRV
+
+BR      Update der Betriebsnummerndatei                                       BA  DRV
+
+BS      Elektronisches Bescheinigungsverfahren gem. § 313a Abs. 2 SGB III BA  DRV
+
+        i.V.m. § 312 Abs. 2 SGB III
+
+BW      Beitragsnachweis der Rentenversicherungsträger (entfallen)            GKV  DRV
+
+CP      CUP-Druckdaten                                                        BA  DRV
+
+Gültig ab: 01.01.2026                  Seite 6 von 47                         Stand: 06.11.2025
+VK  Beschreibung                                                   Richtung
+
+CT  Einzugsstellenprüfung                                          GKV  DRV
+
+DE  Datenaustausch DEÜV zwischen Krankenkassen und Rentenversiche- GKV  DRV
+
+    rungsträgern
+
+DE  Datenaustausch DEÜV zwischen Bundesagentur und Rentenversiche- BA  DRV
+
+    rungsträgern
+
+EA  Maschinelles Erstattungsverfahren (ab 2. JH 2018)              GKV  DRV
+
+EA  Maschinelles Erstattungsverfahren (ab 2. JH 2018)              BA  DRV
+
+ED  Datenaustausch zwischen Krankenkassen und Rentenversicherungs- GKV  DRV
+
+    trägern für Entgeltdaten nach §69 SGB IX
+
+EL  Datenaustausch Entgeltersatzleistungen                         GKV  DRV
+
+EL  Datenaustausch Entgeltersatzleistungen                         BA  DRV
+
+EM  Austausch von Daten für Monatsabrechnungen                     GKV  DRV
+
+EM  Austausch von Daten für Monatsabrechnungen                     BA  DRV
+
+ES  MOASB Monatsabrechnung „Sonstiger Beitragszahler“              GKV  DRV
+
+FP  Ausgleichfonds Pflegeversicherung                              DRV  GKV
+
+FP  Ausgleichfonds Pflegeversicherung                              DRV  BAS
+
+FP  Ausgleichfonds Pflegeversicherung                              DRV  BMG
+
+GA  Grundsicherungsdatenabgleich nach § 52 Absatz 1 Satz 1 Nummer 5 BA  DRV
+
+    SGB II
+
+GK  Grundsicherungsdatenabgleich nach § 52 Absatz 1 Satz 3 SGB II  BA  DRV
+
+GM  gesonderte Meldungen                                           BA  DRV
+
+GR  Grundsicherungsdatenabgleich nach § 52 Absatz 1 Satz 1 SGB II  BA  DRV
+
+IN  Daten von Insolvenzereignissen                                 BA  DRV
+
+IR  EESSI Institution Repository für KE-Verfahren                  ITSG  DRV
+
+JQ  Fehlende Jahresmeldungen                                       DRV  GKV
+
+KE  Erstattungsforderungen der Träger der Deutschen Rentenversiche- DVKA  DRV
+
+    rung gegenüber EU-Trägern über die DVKA
+
+KM  Weiterleitung der Daten von den Meldebehörden                  GKV  DRV
+
+KM  Adressänderung der Meldebehörden                               BA  DRV
+
+KP  Programmversand                                                GKV  DRV
+
+KR  Datenaustausch zwischen Krankenkassen und Rentenversicherungs- GKV  DRV
+
+    trägern für KVdR nach § 201 SGB V
+
+KV  Datenaustausch nach § 301 Absatz 1 SGB V                       GKV  DRV
+
+PE  Betriebsprüfungsdaten                                          GKV  DRV
+
+PF  Betriebsprüfungsdaten (PDF-Dokumente)                          GKV  DRV
+
+PH  Meldungen maschineller Prüfhilfen                              GKV  DRV
+
+PH  Meldungen maschineller Prüfhilfen                              BA  DRV
+
+RA  Elektronische Übermittlung von ad hoc-Prüfaufträgen durch die Ein- GKV  DRV
+
+    zugsstellen
+
+RM  Mitteilungsverfahren im Rahmen des DTA-Reha                    DRV  GKV
+
+Gültig ab: 01.01.2026               Seite 7 von 47                 Stand: 06.11.2025
+VK      Beschreibung                                                     Richtung
+
+RW      Mitteilungsverfahren im Rahmen des DA-Reha, SWE                  DRV  GKV
+
+SH      Sozialhilfedatenabgleich § 118 Absatz 1 Satz 1 Nummer 1 SGB XII  BA  DRV
+
+SO      Sondersendungen                                                  BA  DRV
+
+SY      Statistikdaten 1 Mal jährlich                                    BA  DRV
+
+TM      Monatsabrechnungen Testdaten                                     GKV  DRV
+
+TR      Test                                                             GKV  DRV
+
+U1      Anforderungssätze / Leistungssätze ALGI                          BA  DRV
+
+U3      Versicherungsfreiheitssätze ALGI                                 BA  DRV
+
+U5      Übergangsgeld                                                    BA  DRV
+
+VA      Datensätze von Verleihbetrieben nach dem Arbeitnehmerüberlas-    BA  DRV
+
+        sungsgesetz
+
+VM      Datenübermittlung zwischen Reha-Kliniken und Krankenkassen, Mit- DRV  GKV
+
+        teilungsverfahren
+
+VR      Datenübermittlung von Reha-Kliniken der RV an Krankenkassen      DRV  GKV
+
+VW      Datenübermittlung von Reha-Kliniken an Krankenkassen, SWE        DRV  GKV
+
+1.3 Datenaustausch zwischen Leistungserbringern und Krankenkassen nach § 294 ff. SGB V
+Generell sind die Verfahrenskennungen wie nachfolgend definiert festgelegt:
+
+Stelle  Abk.           Beschreibung                                     Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23   ‚KAV’          für Kassenärztliche Vereinigungen                LE  GKV
+        ‚KZV’          für Kassenzahnärztliche Vereinigungen            LE  GKV
+        ‚APO’          für Apotheken                                    LE  GKV
+        ,IMG‘          für die Imagedaten nach § 7 der Vereinbarung     LE  GKV
+                       nach § 300 SGB V
+        ‚KRH’          für Krankenhäuser                                LE  GKV
+        ‚REH’          für Reha-Einrichtungen                           LE  GKV
+        ‚SOL’          für Sonstige Leistungserbringer                  LE  GKV
+        ,EBZ‘          für das Elektronisches Beantragungs- und Geneh-  Zahnärzte  GKV
+                       migungsverfahren Zahnärzte
+        ,GKH‘          Grundsatz-Datenaustausch zwischen Kranken-       LE  GKV
+                       häusern und Krankenkassen
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Gültig ab: 01.01.2026                     Seite 8 von 47                 Stand: 06.11.2025
+1.4 Datenaustausch zwischen Leistungserbringern und Krankenkassen nach § 295 Abs. 1b
+           SGB V (Direktabrechner)
+
+Stelle  Abk.           Beschreibung                                            Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚DIR’            für Direktabrechner (für Technische Anlage 1.0, gültig  LE  GKV
+                       für bestehende Verfahren für einen Übergangszeit-
+            ‚DRB‘      raum bis Ende 2011)                                     LE  GKV
+                       für hausarztzentrierte Versorgung (für Technische
+            ‚DRC’      Anlage ab Version 2.0, anzuwenden für neue Verfah-      LE  GKV
+                       ren ab sofort)
+            ‚DRI’      für besondere ärztlich ambulante Versorgung (für        LE  GKV
+            DRM        Technische Anlage ab Version 2.0, anzuwenden für        LE  GKV
+            DRS        neue Verfahren ab sofort)                               LE  GKV
+                       Integrierte Versorgung (für Technische Anlage 3.0)
+                       Modellvorhaben nach § 64d SGB V
+                       Verträge nach § 132e,f SGB V
+
+        Es ist vereinbart, für alle Selektivverträge die Stellen 21-22 mit ‚DR’ zu belegen und
+        eine weitere Spezifizierung in Stelle 23 vorzunehmen (Buchstaben A-Z).
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Mit der Fachabteilung sowie mit den Verbänden in der Referentenrunde Direktabrechner wurde
+besprochen, für alle Selektivverträge die Stellen 21-22 mit ‚DR’ zu belegen und eine weitere Spe-
+zifizierung in Stelle 23 vorzunehmen (Buchstaben A-Z). Es entspricht auch den beiden verwende-
+ten Verfahrenskennungen ‚RB’ und ‚RC’ in der abgestimmten und veröffentlichten Technischen
+Anlage Direktabrechner Version 2.0.
+
+1.5 Datenaustausch zwischen Leistungserbringern und Pflegekassen nach § 105 SGB XI
+
+Stelle  Abk.           Beschreibung                              Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23   ‚PFL’          Datenaustausch nach § 105 SGB XI          LE  GKV
+        ‚PFU’          Übermittlung elektronischer Urbeleg nach  LE  GKV
+                       § 105 Abs. 2 SGB XI
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Gültig ab: 01.01.2026                 Seite 9 von 47                           Stand: 06.11.2025
+1.6 Datenübertragung mit Erstellern von Versichertenkarten
+
+Stelle  Abk.           Beschreibung                          Richtung
+20      ‚E’            für Echtdaten                         GKV  Personalisierer
+        ‚T’            für Testdaten
+
+21-23 ‚KVK’            für Krankenversichertenkarte
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.7 Datenaustausch zwischen den Krankenkassen / Weiterleitungsstellen
+
+Stelle  Abk.           Beschreibung                                            Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23   ‚BNM’          für Beschäftigtenangaben (Mini-Update)
+        ‚BNJ’          für Betriebsnummernbestand (Gesamt)
+        ‚BNR’          für Betriebsnummernbestand (Differenz)
+        ‚DUV’          für DEÜV-Meldeverfahren
+        ‚EGV’          für Entgeltdaten nach §69 SGB IX
+        ‚GAM’          für GKV-Abrechnungsverzeichnis Arzneimittel
+        ‚IKB’          für Institutionskennzeichen-Bestand (Änderungs-
+                       dienst)
+        ‚IKB’          für Institutionskennzeichen-Bestand (Änderungs-
+                       dienst)
+        ‚IKV’          für die Übermittlung von Daten zur Vergabestelle
+                       KVNR
+        ‚KRV’          für KVdR-Meldeverfahren KV-RV
+        ‚KVR’          für KVdR-Meldeverfahren KV-KV
+        ‚RVN’          für Beitragsnachweise der RV nach § 255 SGB V
+        ‚BAK’          für Arbeitslosengeld I (ggf. plus Arbeitslosengeld II)
+        ‚BMZ’          für Monatszusammenstellungen
+        ‚BNK’          für Beitragsnachweise von versicherungspflichtigen
+                       Beziehern von Arbeitslosengeld II
+        ‚DUK’          für Arbeitslosengeld II
+        ‚VBK’          für Entgeltersatzleistungen
+        ‚BNA’          für Beitragsnachweise Arbeitgeberverfahren
+        ‚BNZ’          für Beitragsnachweise von Zahlstellen
+
+Gültig ab: 01.01.2026                 Seite 10 von 47                          Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                           Richtung
+        ‚MOA’          für Monatsabrechnung
+        ‚RSU’          für Rentenanpassungsmitteilung des Postrenten-         KK  WL
+                       dienstes
+        ‚ZLD’          für Zahlstellendatei                                   KK  WL
+        ‚ZAK’          für das Meldeverfahren der Krankenkasse an die         GKVSV  WL
+                       Zahlstelle                                             SVLFG  KK
+        ‚ZAV’          für das Meldeverfahren der Zahlstelle an die Kranken-  GKVSV  WL
+                       kasse                                                  GKVSV  KK
+        ‚DMB’          für das Meldeverfahren mit Meldebehörde                KK  WL
+        ‚PRE’          für das Meldeverfahren Betriebsprüfungen nach § 28p    KK  WL
+                       Abs. 1 SGB I                                           KK  WL
+        ‚MAV’          für Übermittlung der Steuernummer
+        ‚MZ1’          für Übermittlung der Beiträge                          KK  BA
+        ‚EEF’          für den Datenaustausch mit Finanzbehörden              KK  OK
+        ‚MFV’          für das Meldeverfahren Familienversicherung            BA  KK
+        ‚UVT’          für die Übermittlung der IK-Unfallversicherungsträger  OK  KK
+                       (UVT)                                                  KK  WL
+        ‚MBA‘          Maschineller Bestandsabgleich
+        ‚VKP‘          Verteilung von Kernprüfprogrammen                      KK  WL
+        ‚HEB’          Sicherstellungszuschlag Hebammen                       KK  WL
+        ‚EAV‘          Maschinelles Erstattungsverfahren
+        ‚MZ3‘          Übermittlung steuerfreier Zuschüsse und Erstattun-
+                       gen
+        ‚KWR‘          Elektronische Meldeverfahren zwischen den Kranken-
+                       kassen nach § 175 Abs. 2 SGB V bei Durchführung
+        GRA            des Krankenkassenwechsels
+        GRK            Fachliche Rückmeldungen der KK an die BA
+        BMA            Fachliche Rückmeldungen der KK an die OK
+        BMK            Bestandsmeldungen der BA an die KK
+        WAN            Bestandsmeldungen der OK an die KK
+                       Weiterleitung der Anforderung einer elektronischen
+        WAU            Arbeitsunfähigkeitsbescheinigung des Arbeitgebers
+        BPV            nach § 109 SGB IV
+                       Weiterleitung der elektronischen Arbeitsunfähigkeits-
+                       bescheinigung nach § 304 Abs. 2 SGB V
+                       § 55a SGB XI Automatisiertes Übermittlungsverfahren
+                       zur Erhebung und zum Nachweis der Elterneigen-
+                       schaft
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Gültig ab: 01.01.2026  Seite 11 von 47                                        Stand: 06.11.2025
+Stelle Abk.            Beschreibung                                      Richtung
+
+1.8 Datenübermittlung zwischen der Bundesagentur für Arbeit und den Krankenkassen / Wei-
+           terleitungsstellen
+
+Stelle  Abk.           Beschreibung                                      Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21- ‚BAK’              für DÜBAK                                         BA  WL
+23
+                       für DEÜV-Meldungen als Rehabilitationsträger      BA  WL
+            ‚BDV’      für Betriebsnummernbestand (Gesamt)               BA  WL
+            ‚BNJ’      für Betriebsnummernbestand (Differenz)            BA  WL
+            ‚BNR’      für Beschäftigtenangaben (Mini-Update)            BA  WL
+            ‚BNM’      für Monatszusammenstellungen                      BA  WL
+            ‚BMZ’      Beitragsnachweise für die Empfänger von Arbeits-  BA  WL
+            ‚BNB’      losengeld
+                       Beitragsnachweise für die Empfänger von Über-     BA  WL
+            ‚BNU’      gangsgeld
+                       für Meldungen maschineller Prüfhilfe              BA  WL
+            ‚PHI’      für Meldungen im Sozialausgleich an die BA        BA  WL
+            ‚BAS’      Maschinelles Erstattungsverfahren                 BA  WL
+            ‚EAV‘
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.9 Amtliche Statistiken im Datenaustausch mit dem BMG/BMAS
+
+Stelle  Abk.           Beschreibung                                      Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten                                     WL  GKV-SV
+        ‚B’            für Berichtigung                                  WL  GKV-SV
+                                                                         WL  GKV-SV
+21-23   ‚ASK’          Amtliche Statistiken Krankenversicherung          WL  ITSG
+        ‚ASP’          Amtliche Statistiken Pflegeversicherung
+        ‚ASR’          Rückläufer Amtliche Statistiken
+        ‚ASX’          Prüfung Amtliche Statistiken
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Zusätzliche Kennung in Feld VERFAHREN_KENNUNG_SPEZIFIKATION:
+
+Gültig ab: 01.01.2026                    Seite 12 von 47                 Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                         Richtung
+        ‚KM7’          Amtliche Statistiken Krankenversicherung             KK  GKV-SV
+
+1.10    Datenaustausch der Krankenkassen über die Spitzenverbände der Krankenkassen mit
+        dem BAS
+
+Stelle  Abk.           Beschreibung                                         Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+        ‚B’            für Berichtigung
+
+        ‚MRS’          für die Übermittlung der Morbi-RSA-Daten             WL  GKV-SV
+        ‚PDK‘          Prüfdienste Kranken- und Pflegeversicherung – Prü-   WL  KK/PK
+                       fungen nach § 274 SGB V bzw. § 46 SGB XI
+        ‚RSR’          für das RSA- Rückmeldeverfahren                      WL  GKV-SV
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Zusätzliche Kennung in Feld VERFAHREN_KENNUNG_SPEZIFIKATION:
+
+Stelle  Abk.           Beschreibung                                         Richtung
+        ‚MR100’        für MRS – Morbi-RSA, Satzart 100, Versicherten-      WL  GKV-SV
+        ‚MR400’        daten                                                WL  GKV-SV
+        ‚MR500’        für MRS – Morbi-RSA, Satzart 400, Arzneimittel-      WL  GKV-SV
+        ‚MR600’        daten                                                WL  GKV-SV
+        ‚MR610’        für MRS – Morbi-RSA, Satzart 500, Krankenhaus-       WL  GKV-SV
+        ‚MR700’        behandlungen                                         WL  GKV-SV
+        ‚MR110’        für MRS – Morbi-RSA, Satzart 600, Ambulante Be-      WL  GKV-SV
+        ‚MR111’        handlungen                                           WL  GKV-SV
+                       für MRS – Morbi-RSA, Satzart 610, Ambulante Proze-
+                       dur
+                       für MRS – Morbi-RSA, Satzart 700, Berücksichti-
+                       gungsfähige Leistungen
+                       für MRS – Morbi-RSA, Satzart 110, Korrekturmeldung
+                       der Versichertenstammdaten
+                       für MRS – Morbi-RSA, Satzart 111, erweiterte Versi-
+                       chertendaten
+
+Gültig ab: 01.01.2026                    Seite 13 von 47                    Stand: 06.11.2025
+1.11    Datenaustausch der Spitzenverbände der Krankenkassen mit der Deutschen Verbin-
+        dungsstelle Krankenversicherung – Ausland
+
+Stelle  Abk.           Beschreibung                                    Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚TES’            für die Übermittlung der Daten im Rahmen des    KK  DVKA
+                       Projektes TESS/SoSeNet
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.12 Datenaustausch der Krankenkassen / Weiterleitungsstellen mit Hochschulen
+
+Stelle  Abk.           Beschreibung                                    Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚SMV’            Meldungen der Hochschulen an die                HS  DAV
+21-23 ‚SMK’            Krankenkassen                                   DAV  HS
+                       Meldungen der Krankenkassen an die
+                       Hochschulen
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.13 Datenaustausch der Krankenkassen mit Zahlstellen
+
+Stelle  Abk.           Beschreibung                                    Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚ZAV’            für das Meldeverfahren der Zahlstelle an die    DAV  ZS
+                       Krankenkasse
+            ‚BNZ’      für Beitragsnachweise von Zahlstellen           ZS  DAV
+            ‚ZAK’      für das Meldeverfahren der Krankenkasse an die  DAV  ZS
+                       Zahlstelle
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Gültig ab: 01.01.2026                 Seite 14 von 47                  Stand: 06.11.2025
+1.14    Datenaustausch der Krankenkassen mit der Sammel- und Verteilstelle Institutionskenn-
+        zeichen (SVI)
+
+Stelle  Abk.           Beschreibung                           Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚SVI’            für die Übermittlung von Verzeichnissen der SVI SVI  Kasse
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.15 Interne Verfahren der Krankenkassen / Pflegekassen
+Zusätzlich zu den genannten Verfahrenskennungen sind Adressräume für Verfahrenskennungen
+an/für die Verbände der GKV und deren Dienstleister zur Nutzung in internen Verfahren wie folgt
+zugeordnet:
+
+Stelle  Abk.           Beschreibung                           Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21      ‚1’            für Ortskrankenkassen
+                       für Betriebskrankenkassen
+        ‚2’            für Innungskrankenkassen
+                       für die ITSG
+        ‚3’            für Landwirtschaftliche Krankenkassen
+                       für Knappschaft
+        ‚4’            für Ersatzkassen
+                       für GKV-Spitzenverband
+        ‚5’            für Bitmarck
+
+        ‚6’
+
+        ‚7’
+
+        ‚8’
+
+        ‚9’
+
+22-23   Kann frei von dem durch die Stelle 21 spezifizierten Verband der GKV für interne Ver-
+        fahren festgelegt werden.
+
+        Im Zuge der Ausgabe und Nutzung der elektronischen Gesundheitskarte (kurz: eGK)
+        werden Daten zwischen verschiedenen IT-Systemen der Kostenträger des Gesundheits-
+        wesens sowie mit externen Partnern ausgetauscht. Hierfür sind die folgenden Kennun-
+        gen und Übertragungswege reserviert:
+
+        ‚BK’           eGK-Verfahren                          Bestandssystem
+                                                              Kasse  Kartenma-
+                                                              nagement-system
+
+Gültig ab: 01.01.2026                 Seite 15 von 47         Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                    Richtung
+        ‚KB’           eGK-Verfahren                   Bestandssystem
+                                                       Kasse  Kartenma-
+        ‚BV’           eGK-Verfahren                   nagement-system
+                                                       Bestandssystem
+        ‚VB’           eGK-Verfahren                   Kasse  Versicher-
+                                                       tenstamm-daten-
+        ‚PK’           eGK-Verfahren                   dienst
+                                                       Bestandssystem
+        ‚KP’           eGK-Verfahren                   Kasse  Versicher-
+                                                       tenstamm-daten-
+        ‚KV’           eGK-Verfahren                   dienst
+                                                       Bildsystem  Kar-
+        ‚VK’           eGK-Verfahren                   ten-management-
+                                                       system
+21-23 EGK              eGK-Verfahren                   Bildsystem  Kar-
+                                                       ten-management-
+        EGQ            eGK-Verfahren                   system
+                                                       Kartenmanage-
+        CEH            eGK-Verfahren                   ment-system 
+                                                       Versicherten-
+        CER            eGK-Verfahren                   stammdatendienst
+                                                       Kartenmanage-
+        KVC            Übermittlung KVNR-Clearing      ment-system 
+                                                       Versicherten-
+Gültig ab: 01.01.2026                 Seite 16 von 47  stammdatendienst
+
+                                                       Kartenmanage-
+                                                       ment-system 
+                                                       Personalisierer
+                                                       Kartenmanage-
+                                                       ment-system 
+                                                       Personalisierer
+                                                       Kartenmanage-
+                                                       ment-system 
+                                                       Trust Center
+                                                       Kartenmanage-
+                                                       ment-system 
+                                                       Trust Center
+                                                       KK  KK
+
+                                                           Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                           Richtung
+        HMK            Übermittlung von Statistikdaten zum Hilfsmittel-       KK  GKV-SV
+                       Mehrkostenbericht
+        BGR            Übermittlung von Statistikdaten zum Bericht geriatri-  KK  GKV-SV
+                       sche Rehabilitation
+        PVS            Übermittlung von Statistikdaten der Pflegekassen an    Pflegekasse 
+                       den GKV-Spitzenverband                                 GKV-SV
+
+20-24 BWNAC Für Sammeldateien Beitragsnachweise
+
+24                     Ziffer für Version des Verfahrens, beginnend mit 0.
+
+zusätzliche Kennung in Feld VERFAHREN_KENNUNG_SPEZIFIKATION für PVS
+
+Stelle  Abk.           Beschreibung                                     Richtung
+        RAHAE          Reha-Statistik nach § 18a Abs. 2 SGB XI          Pflegekasse  GKV-SV
+        BEGFR          Einhaltung der Begutachtungsfristen nach § 18    Pflegekasse  GKV-SV
+                       Abs. 3b SGB XI                                   Pflegekasse  GKV-SV
+        DIPAB          Bericht über digitale Pflegeanwendungen und
+                       ergänzende Unterstützungsleistungen nach §       Pflegekasse  GKV-SV
+        ANTRA          78a Abs. 9 SGB XI
+                       Statistikdaten nach § 18d Abs. 3 SGB°XI
+                       (Anträge auf Pflegeleistungen)
+
+1.16 Datenaustausch der Krankenkassen für Disease-Management-Programme
+
+Stelle  Abk.           Beschreibung                                         Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚DMP’            für die Übermittlung von Statistikinformationen      DMP-Datenstelle ->
+                                                                            Kasse
+
+        ‚DAH’          Brustkrebs, Hinweg                                   DMP-Datenstelle ->
+        ‚DAR’          Brustkrebs, Rückweg                                  Kasse
+                                                                            Kasse->DMP-Daten-
+                                                                            stelle
+
+Gültig ab: 01.01.2026                 Seite 17 von 47                         Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                Richtung
+        ‚DKH’          DMP Koronare Herzkrankheit Hinweg           DMP-Datenstelle ->
+                       DMP Koronare Herzkrankheit Rückweg          Kasse
+        ‚DKR’          DMP Asthma bronchiale, Hinweg               Kasse->DMP-Daten-
+                       DMP Asthma bronchiale, Rückweg              stelle
+        ‚DDH’          DMP COPD, Hinweg                            DMP-Datenstelle ->
+                       DMP COPD, Rückweg                           Kasse
+        ‚DDR’          DMP-Protokollierungsdaten                   Kasse->DMP-Daten-
+                       Datenversand im Rahmen der Evaluation       stelle
+        ‚DSH’                                                      DMP-Datenstelle ->
+                                                                   Kasse
+        ‚DSR’                                                      Kasse->DMP-Daten-
+                                                                   stelle
+        ‚DPP’                                                      DMP-Datenstelle ->
+                                                                   Kasse
+        ‚DVE’                                                      DMP-Datenstelle <->
+                                                                   Kasse/Evaluator
+        ‚DZH’          DMP Diabetes mellitus Typ 1 und 2, Hinweg   Kasse <-> Evaluator
+        ‚DZR’          DMP Diabetes mellitus Typ 1 und 2, Rückweg  DMP-Datenstelle ->
+        ‚DHH’          DMP Herzinsuffizienz, Hinweg                Kasse
+        ‚DHR’          DMP Herzinsuffizienz, Rückweg               Kasse->DMP-Daten-
+        ‚DEH’          DMP Depression                              stelle
+        ‚DER’          DMP Depression                              DMP-Datenstelle ->
+        ‚DQH’          DMP Rheumatoide Athritis                    Kasse
+        ‚DQR’          DMP Rheumatoide Athritis                    Kasse->DMP-Daten-
+        ‚DRH’          DMP Rückenschmerz                           stelle
+        ‚DRR’          DMP Rückenschmerz                           DMP-Datenstelle 
+        ‚DOH’          DMP Osteoporose                             Kasse
+                                                                   Kasse  DMP-Daten-
+                                                                   stelle
+                                                                   DMP-Datenstelle 
+                                                                   Kasse
+                                                                   Kasse  DMP-Daten-
+                                                                   stelle
+                                                                   DMP-Datenstelle 
+                                                                   Kasse
+                                                                   Kasse  DMP-Daten-
+                                                                   stelle
+                                                                   DMP-Datenstelle 
+                                                                   Kasse
+
+Gültig ab: 01.01.2026  Seite 18 von 47                             Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                      Richtung
+        ‚DOR’          DMP Osteoporose                                   Kasse  DMP-Daten-
+                                                                         stelle
+        ‚DMT’          DMP Teilnahme- und Einwilligungserklärung (von    DMP-Datenstelle 
+                       Datenstelle erzeugter Datensatz gemäß papierge-   Kasse
+        DTE            bundene TE/EWE)
+                       Datenaustausch von durch Ärzt:innen und Ein-      DMP-Datenstelle 
+        DTI            richtungen elektronisch erstellten DMP-Teil-      Kasse
+                       nahme-/Einwilligungserklärungen
+        DWH            Datenaustausch von Images (im Original papier-    DMP-Datenstelle 
+        DWR            gebundener) DMP-Teilnahme-/Einwilligungser-       Kasse
+        DJH            klärungen
+        DJR            DMP Adipositas – Erwachsene                       DMP-Datenstelle 
+                                                                         Kasse
+                       DMP Adipositas – Erwachsene                       Kasse  DMP-Daten-
+                                                                         stelle
+                       DMP Adipositas – Kinder und Jugendliche           DMP-Datenstelle 
+                                                                         Kasse
+                       DMP Adipositas – Kinder und Jugendliche           Kasse  DMP-Daten-
+                                                                         stelle
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.17 Datenaustausch zwischen Medizinischem Dienst und Krankenkassen / Pflegekassen
+
+Stelle  Abk.           Beschreibung                                      Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚PRP’            für die Übermittlung von Daten der Primärpräven-  MD  Kasse
+                       tion
+            ‚MDK’      Datenaustausch mit „MD Bereich Krankenhaus“       MD  Kasse
+            ‚MDP’      Datenaustausch mit „MD Bereich Pflege“            MD  Kasse
+            ‚MDT’      Datenaustausch „Transparenzberichte Pflege“ MD    MD  Kasse
+                       an DatenClearingstelle
+            ‚MAU‘      Datenaustausch „MD Bereich Arbeitsunfähigkeit /   Kasse  MD
+                       Krankengeld“
+            ‚MDH‘      Datenaustausch „MD Bereich Hilfsmittel“           Kasse  MD
+            ,MDW‘      Datenaustausch GKV – MD „Weitere Begutach-        Kasse  MD
+                       tungsbereiche“
+
+Gültig ab: 01.01.2026                 Seite 19 von 47                    Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                         Richtung
+        ,MDR‘          Datenaustausch GKV – MD „Reha“                       Kasse  MD
+        ,QPR‘          Prüfberichte und Anlagen aus Prüfungen ambu-         MD  Kasse
+                       lanter (und später stationärer) Pflegeeinrichtungen
+        ‚MDQ‘          Datenlieferungen entsprechend technischer Spe-       Pflegekasse  MD
+                       zifikation zum Datenaustausch Qualitätsprüfun-       Krankenkasse  MD
+                       gen
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.18 Datenaustausch der Sozialversicherung mit der ITSG
+
+Stelle  Abk.           Beschreibung                                         Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚IQM’            für die Übermittlung von Daten zum Qualitätsma-      KK  ITSG
+            ‚ISU’      nagement                                             KK  ITSG
+            ‚ITB’      für die Übermittlung von Daten zur PROD/MOD-         KK  ITSG
+            ‚IKV’      ID                                                   KK  ITSG
+            ‚LEO’      für die Übermittlung von Daten zur Teilnehmer-       KK  ITSG
+                       datenbank
+            ‚LEB’      für die Übermittlung von Daten zur Vergabestelle     KK  ITSG
+            ‚BIV’      KVNR                                                 BIVA  ITSG
+            ‚TBN’      für die Datenübermittlung zwischen dem vdek          DAVen  ITSG
+            ‚KIB’      und der Veröffentlichungsplattform für Transpa-      ITSG  GKV-SV
+            ‚GLD’      renzberichte                                         KK  ITSG
+            ‚GLR’      für die Übernahme der LEO-Daten in Pflegelotse       ITSG  KK
+            ‚AND’      Berlin                                               ITSG  KK
+            ‚ANR’      für die Datenübermittlung zwischen dem vdek /        ITSG  KK
+            ‚HLD’      der ITSG (Pflegelotse) und der BIVA und zurück       KK  ITSG
+                       für die Verteilung der Testbetriebsnummern-Datei
+                       Kassenindividueller Zusatzbeitrag an GKV-SV
+                       Lieferung von GamSi-Daten an die ITSG
+                       Quittierung des Empfangs von GamSi-Datenliefe-
+                       rungen
+                       für die Datenübermittlung zur Absendernummer
+                       für die Datenübermittlung zur Absendernummer
+                       (2. Variante)
+                       Lieferung von HIS-Daten an die ITSG
+
+Gültig ab: 01.01.2026                 Seite 20 von 47                       Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                        Richtung
+        ‚HLR’          Quittierung des Empfangs von HIS-Datenlieferun-     ITSG  KK
+                       gen
+        ,HEG’          Lieferung von Heilmitteldaten nach § 84 SGB V       KK  ITSG
+        ,HEI’          Lieferung von Heilmitteldaten nach § 302 SGB V      KK  ITSG
+        BSD            Lieferung der Beitragssatzdatei an die DSRV         ITSG  DRV
+        AZK            Abruf der zuständigen Krankenkasse                  GKV-SV  DAV
+        RZK            Rückmeldung der zuständigen Krankenkasse            DAV  GKV-SV
+        SDD            Lieferung der Stammdatendatei an die DSRV           ITSG  DRV
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.19    Datenaustausch zwischen den zugelassenen kommunalen Trägern nach § 6a SGB II und
+        den Krankenkassen
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚DUK’            für Meldungen zur Kranken- und Pflegeversiche-      KT  KK
+            ‚BNK’      rung                                                KT  KK
+            ‚BMZ’      für Beitragsnachweise von für versicherungspflich-  KT  KK
+                       tigen Beziehern von Arbeitslosengeld II
+                       für Monatszusammenstellungen
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.20    Meldeverfahren für Rabattvereinbarungen nach § 31 Abs. 2 SGB V in Verbindung mit
+        § 130a Abs. 8 SGB V
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23   ‚RBH’          Meldung zur SpiK-Kopfstelle                         KK  SpiK-Kopfstelle
+        ‚RBR’          Rückmeldung von der SpiK-Kopfstelle                 KK  SpiK-Kopfstelle
+        ‚RBA’          Meldung der SpiK-Kopfstelle zur ABDATA              ABDATA  SpiK-
+                                                                           Kopfst.
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Gültig ab: 01.01.2026                 Seite 21 von 47                      Stand: 06.11.2025
+1.21 Datenaustausch zwischen Unfallversicherungsträgern und Krankenkassen
+
+Stelle  Abk.           Beschreibung                                       Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚DUT’            Datenaustausch mit Unfallversicherungsträgern      UV  KK
+            ‚UVM’      (D-Arztberichte)                                   UV  GKV
+            ‚UVG‘      Übermittlung des Mitgliedsverzeichnisses der Un-   UV  GKV
+                       fallversicherungsträger
+                       Übermittlung des Gefahrtarifstellenverzeichnisses
+                       der Unfallversicherungsträger
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.22 Datenaustausch mit dem Institut des Bewertungsausschusses
+
+Stelle  Abk.           Beschreibung                                       Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23   ‚ISV’          Annahme Selektivvertragsdaten                      KK  GKV-SV
+        ‚ISW’          Weiterleitung Selektivvertragsdaten
+        ‚IGS’          Annahme Geburtstagsstichprobe                      KK  GKV-SV
+        ‚IGW’          Weiterleitung Geburtstagsstichprobe
+        ‚IAV’          Annahme Versichertenanzahl                         KK  GKV-SV
+        ‚IAW’          Weiterleitung Versichertenanzahl
+        ‚SBA’          Verfahren für Datenlieferungen- und –Bereitstel-   GKV-SV Kassen, Ge-
+                       lungen des Bewertungsausschusses                   samtvertragspartner,
+        ‚IAS’                                                             Dienstleister
+        ‚BVZ’          Amtliche Statistik KM1 für das InBA                GKV-SV  InBA
+                       Meldung zum Bereinigungsverzicht                   GKV-SV  InBA
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.23    Datenaustausch zwischen Leistungserbringern und Krankenkassen nach § 126 Abs. 1a
+        SGB V (Präqualifizierungsdaten)
+
+Stelle  Abk.           Beschreibung                                       Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+Gültig ab: 01.01.2026                 Seite 22 von 47                      Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                     Richtung
+21-23   ‚PQD’          Präqualifizierungsdaten von den PQ-Stellen nach  PQ-St  GKV-SV
+                       § 126 Abs. 1a SGB V für Hilfsmittel Annahme Se-
+        ‚PQV’          lektivvertragsdaten                              GKV-SV  KK
+                       Das Präqualifizierungsverzeichnis enthält alle
+                       Zertifikate, die aus den PQ-Stellen an den GKV-
+                       SV geliefert wurden
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.24    Datenaustausch der Arzt- und Versichertenverzeichnisse für Hausarztzentrierte Versor-
+        gung nach § 73b SGB V
+
+Stelle  Abk.           Beschreibung                                     Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚HZH’            Hausarztzentrierte Versorgung, Hinweg (zur
+            ‚HZR’      Krankenkasse oder zu der von Krankenkasse be-
+                       auftragten Stelle) *
+                       Hausarztzentrierte Versorgung, Rückweg (von
+                       der Krankenkasse oder von der von Kranken-
+                       kasse beauftragten Stelle) *
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+*) Bereits vereinbarte Verfahrenskennungen behalten bis auf weiteres ihre Gültigkeit.
+
+1.25 Datenaustausch der Rentenversicherung mit sonstigen Stellen
+
+Stelle  Abk.           Beschreibung                                     Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23   ‚DUR’          für Meldungen nach der DEÜV mit Institutionen
+        ‚BWK’          für Meldungen von Beitragsnachweisen der priva-
+                       ten Pflegekassen
+        ‚BWW’          für Meldungen von Beitragsnachweisen der Bun-
+                       deswehr
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Gültig ab: 01.01.2026                 Seite 23 von 47                   Stand: 06.11.2025
+Stelle Abk.            Beschreibung                                     Richtung
+
+1.26 Datenaustausch zwischen Unfallversicherung und der Rentenversicherung
+Die Besonderheiten des Datenaustauschs mit der Rentenversicherung sind in Anlage 5 beschrie-
+ben.
+
+VK      Beschreibung                                                              Richtung
+BU      Betriebsprüfungsdaten von und zu den Uven                                 DGUV  DRV
+BUPDF   Betriebsprüfungsnotizen zu den Uven                                       DGUV  DRV
+EL      Entgeltersatzleistungen                                                   DGUV  DRV
+IK      IK-Nummern-Austausch (DGUV)                                               DGUV  DRV
+UV      Lohnnachweisdaten                                                         DGUV  DRV
+ZU      Zentrales Mitgliedsnummernverzeichnis (DGUV)                              DGUV  DRV
+UZ      Zentrales Gefahrtarifstellenverzeichnis (DGUV)                            DGUV  DRV
+
+Eingesetzte Netztopologien: Extranet
+
+1.27 Datenaustausch zwischen Bundesamt für Soziale Sicherung und Rentenversicherung
+Die Besonderheiten des Datenaustauschs mit der Rentenversicherung sind in Anlage 5 beschrie-
+ben.
+
+VK      Beschreibung                                                              Richtung
+                                                                                  DRV  BAS
+EM      Austausch von Daten für Monatsabrechnungen (MOAKV)                        DRV  BAS
+                                                                                  DRV  BAS
+ES      MOASB-Monatsabrechnung „Sonstiger Beitragszahler“ (MOASB)                 DRV  BAS
+
+GF      Datenaustausch an den Gesundheitsfond (EBNK)
+
+TM      Monatsabrechnungen Testdaten
+
+1.28 Impfstoffabschläge nach §130a Abs. 2 SGB V
+
+Stelle  Abk.           Beschreibung                                     Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten                                    KK => GKV-SV =>
+                                                                        ABDATA
+21-23 ‚MIA’            Meldeverfahren Impfstoffabschläge                KK => GKV-SV =>
+                                                                        ABDATA
+        ‚MRZ’          Meldeverfahren Rabattvereinbarungen Zytostatika
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Gültig ab: 01.01.2026                 Seite 24 von 47                   Stand: 06.11.2025
+1.29    Datenaustausch zwischen dem Endoprothesenregister Deutschland (EPRD) und den Kran-
+        kenkassen
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚ERK’            Datenlieferungen entsprechend technischer Spezifi-  Vertrauensstelle
+            ‚ERB’      kation                                              (VST-EPRD) <=>
+            ‚ERA’                                                          KK
+                       Datenlieferungen entsprechend technischer Spezifi-  Vertrauensstelle
+                       kation                                              (VST-EPRD) <=>
+                                                                           KK
+                       Datenlieferungen entsprechend technischer Spezifi-  Vertrauensstelle
+                       kation                                              (VST-EPRD) => KK
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.30 Datenaustausch zwischen Klinischen Krebsregistern und Krankenkassen
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚KKR’            Abrechnungsdaten der Klinischen Krebsregister       Klinische Krebsre-
+                                                                           gister <=> KK
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.31 Datenaustausch zwischen der Zentralen Prüfstelle für Prävention und den Krankenkassen
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚ZPP‘            Datenlieferungen entsprechend technischer Spezifi-  Vertrauensstelle
+                       kation                                              (VST)
+                                                                            KK
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+Gültig ab: 01.01.2026                 Seite 25 von 47                      Stand: 06.11.2025
+1.32 Sozialdaten der Krankenkassen gemäß § 299 SGB V
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚SQS‘            Sozialdaten der Krankenkassen für die Qualitätssi-  KK  DAS KK des
+                       cherung                                             G-BA
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+zusätzliche Kennung in Feld VERFAHREN_KENNUNG_SPEZIFIKATION:
+
+Stelle  Abk.           Beschreibung                                    Richtung
+        ‚P’            für SQS – PID-Datei                             KK  DAS KK des G-BA
+        ‚Q’            für SQS – QS-Datei                              KK  DAS KK des G-BA
+        ‚R’            für SQS – QS-Datei für Nicht-PID-Verfahren      KK  DAS KK des G-BA
+        ‚B’            für SQS– - Empfangsbestätigung                  DAS KK des G-BA  KK
+        ‚O’            für SQS – Datenflussprotokoll Status ‚OK‘       DAS KK des G-BA  KK
+        ‚E’            für SQS – Datenflussprotokoll Status ‚Error‘    DAS KK des G-BA  KK
+        ‚W’            für SQS – Datenflussprotokoll Status ‚Warning‘  DAS KK des G-BA  KK
+
+1.33    Datenaustausch der Ambulanten Spezialfachärztlichen Versorgung (ASV) nach § 116b SGB
+        V
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23   ‚ASV‘          Datenlieferung entsprechend technischer Spezifika-  LE  GKV
+24
+                       tion (Anfang 2015)                                  ASV-Servicestelle
+                                                                           GKV-SVGKV/LE
+        ‚ASS‘          Datenlieferung entsprechend technischer Spezifika-
+
+                       tion (Ende 2014)
+
+        Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.34 Datenaustausch nach § 301 SGB V mit der UV
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚UVK‘            Datenlieferung entsprechend technischer Spezifika-  KRKUV
+                       tion
+
+Gültig ab: 01.01.2026                      Seite 26 von 47                 Stand: 06.11.2025
+Stelle Abk.            Beschreibung                                          Richtung
+
+24      Ziffer für Version des Verfahrens, beginnend mit 0.
+
+1.35 Heilmittelpreismonitoring
+
+Stelle  Abk.           Beschreibung                                          Richtung
+20      ‚E’            für Echtdaten                                         KKGKV-SV
+        ‚T’            für Testdaten
+
+21-23 ‚HMP‘            Ermittlung der Heilmittelpreisuntergrenze
+
+1.36 SPV-MD „Mitteilungsmanagement“
+
+Stelle  Abk.           Beschreibung                                          Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚MMM‘            Datenaustausch GKV/SPV-MD „Mitteilungsmanage-         KK/Pflegekas-
+                       ment“                                                 senMD
+
+1.37 Übermittlung von Daten nach §264 Abs. 1 und 2 SGB V
+
+Stelle  Abk.           Beschreibung                                          Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚SHT‘            Meldeverfahren zur Übernahme der Krankenbehand-       ITSGKK
+                       lung für nicht Versicherungspflichtige gegen Kosten-
+                       erstattung
+
+1.38 Stammdatenübermittlung von der UV an Arbeitgeber
+
+Stelle  Abk.           Beschreibung                                          Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚UVU‘            Stammdatenübermittlung der Unfallversicherung an      UVAG
+                       die Arbeitgeber
+
+Gültig ab: 01.01.2026                 Seite 27 von 47                        Stand: 06.11.2025
+1.39 Verteilung der Zahlstellendatei an die DAVn
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten                                       GKV-SVDAV
+        ‚T’            für Testdaten
+
+21-23                  Verteilung der Zahlstellendatei über die DAW des
+            ‚VZX‘      GKV-Spitzenverbandes an die Datenannahme- und
+                       Verteilstellen im Format XML
+
+1.40 Datenübermittlung EESSI
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚NAE‘            Übermittlung von EESSI-Daten zwischen dem National  National Gateway
+                       Gateway und den Datenannahme- und Verteilstellen    DAV
+            ‚IRS‘      der GKV
+            ‚CDS‘      Synchronisation des Institution Repository          National Gateway
+                                                                           DAV
+                       Synchronisation des Common Data Model               National Gateway
+                                                                           DAV
+
+1.41 Elektronische Arbeitsunfähigkeitsbescheinigung (eAU)
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚EAU‘            Übermittlung einer Elektronischen Arbeitsunfähig-   Arzt  KK
+            ‚EAA‘      keitsbescheinigung (eAU)                            AG  KK
+            ‚EAR‘      Anfrage eines Arbeitgebers bei der Krankenkasse     KK  AG
+            ‚EAS‘      zum Vorliegen einer eAU                             AG  KK
+                       Rückmeldung der Krankenkasse an den Arbeitgeber
+                       zum Vorliegen einer eAU
+
+                       Anfrage zur Elektronischen Arbeitsunfähigkeitsbe-
+                       scheinigung (eAU)
+
+Gültig ab: 01.01.2026                 Seite 28 von 47                      Stand: 06.11.2025
+1.42 Datenaustausch zur Wirtschaftlichkeitsprüfung nach §106 SGB V
+
+Stelle  Abk.           Beschreibung                                         Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚WPR‘            Datenaustausch zur Wirtschaftlichkeitsprüfung nach   KK  Prüfungs-
+                       §106ff SGB V in Verbindung mit §§269, 297 und 298    stelle
+                       SGB V
+
+1.43 Datenaustausch zum Teilhabeverfahrensbericht nach § 41 Abs. 1 SGB IX
+
+Stelle  Abk.           Beschreibung                                         Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚TVB‘            Datenaustausch zum Teilhabeverfahrensbericht nach    KK  GKV-SV
+                       § 41 Abs. 1 SGB IX der Krankenkassen im Auftrag der
+                       Bundesarbeitsgemeinschaft für Rehabilitation
+
+1.44 Übermittlung von Mindestmengen nach § 136 b SGB V
+
+Stelle  Abk.           Beschreibung                                         Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚MMR‘            Übermittlung von Mindestmengen (Fallzahlen) durch    KH  KK
+                       die Krankenhäuser an die Landesverbände der Kran-
+                       kenkassen
+
+1.45 Übermittlung von Krankenhausstatistiken nach §275c Abs. 4 SGB V und §17c Abs. 6 KHG
+
+Stelle  Abk.           Beschreibung                                         Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23   ‚PRV‘          Übermittlung von Krankenhausstatistiken              KK  GKV-SV
+        ‚PRR‘          Übermittlung von Krankenhausstatistiken (Rückweg)    GKV-SV  KK
+
+Gültig ab: 01.01.2026                 Seite 29 von 47                       Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                        Richtung
+24
+        Ziffer für Version des Verfahrens, beginnend mit 0.
+
+zusätzliche Kennung in Feld VERFAHREN_KENNUNG_SPEZIFIKATION für PRV
+
+Stelle  Abk.           Beschreibung                               Richtung
+        ‚QAP’          Quartalsauswertung § 275c Abs. 4 SGB V     GKV-SV  KK
+        ‚QAN’          Quartalsauswertung § 275c Abs. 4 SGB V     GKV-SV  KK
+        ‚JAU’          Jahresauswertung § 17c Abs. 6 KHG          GKV-SV  KK
+        ‚QST’          Quartalsstatistik                          KK  GKV-SV
+        ‚JST’          Jahresstatistik                            KK  GKV-SV
+        ‚ANZ’          Anzeige nach § 275c Abs, 2 Satz 7 SGB V    KK  GKV-SV
+        ‚STR’          Veröffentlichung zu den Strukturprüfungen  KK  GKV-SV
+                       nach § 275d SGB V
+
+1.46 Verteilung der Hochschuldatei gemäß §199a SGB V an die Datenannahmestellen
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚HSD‘            Verteilung der Hochschuldatei gemäß §199a SGB V an  GKV-SV  DAV
+                       die DAVn
+
+1.47 Standortverzeichnis nach §293 Absatz 6 SGB V
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚KSV‘            Übermittlung von Daten zum Krankenhausstandort-     KK  GKV-SV
+            ‚KHN‘      verzeichnis                                         KK  GKV-SV
+                       Krankenhaus Arztnummern Verzeichnis
+
+1.48 Qualitätssicherung Reha
+
+Stelle  Abk.           Beschreibung                                        Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+Gültig ab: 01.01.2026                 Seite 30 von 47                      Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                    Richtung
+21-23   ‚QSR‘          Daten zum QS-Reha Verfahren                     GKV-SV  Kassen-
+                                                                       verbände
+        ‚QSV‘          Vorabberichte zum QS-Reha Verfahren
+                                                                       GKV-SV  KK
+
+1.49 Datenübertragung zur ambulanten spezialfachärztlichen Versorgung
+
+Stelle  Abk.           Beschreibung                                    Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚ASA‘            Übermittlung ambulanter Abrechnungsdaten        Krankenkassen 
+                                                                       GKV-SV
+
+        ‚ASI‘          Weiterleitung der IK-Daten                      GKV-SV  Dienst-
+                                                                       leister ASV Service-
+                                                                       stelle
+
+1.50 Entgeltschlüssel für Krankenhäuser
+
+Stelle  Abk.           Beschreibung                                    Richtung
+20      ‚E’            für Echtdaten                                   vdek  GKV-SV
+        ‚T’            für Testdaten
+
+21-23 ‚ESE‘            Entgeltschlüssel für Krankenhäuser
+
+1.51 Zulassungsverzeichnis für Heilmittelleistungserbringer
+
+Stelle  Abk.           Beschreibung                                    Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten                                   Arbeitsgemein-
+                                                                       schaft  GKV-SV
+21-23 ‚HLV‘            Heilmittelleistungserbringerverzeichnis         GKV-SV  Kran-
+                                                                       kenkassen
+1.52 Datentransparenz nach § 303b SGB V                                Richtung
+
+Stelle  Abk.           Beschreibung                                        Stand: 06.11.2025
+20      ‚E’            für Echtdaten
+
+Gültig ab: 01.01.2026                 Seite 31 von 47
+Stelle  Abk.           Beschreibung                                         Richtung
+        ‚T’            für Testdaten
+
+21-23 ‚DTV‘            Datentransparenz nach § 303b SGB V
+
+Zusätzliche Kennung in Feld VERFAHREN_KENNUNG_SPEZIFIKATION:
+
+Stelle  Abk.           Beschreibung                                         Richtung
+        ‚UVVST’        Datentransparenz nach § 303b SGB V                   GKV-SV 
+                                                                            Vertrauensstelle
+        ‚UVFDZ’ Datentransparenz nach § 303b SGB V                          GKV-SV 
+                                                                            Forschungsdaten-
+        ‚RVDSS’        Datentransparenz nach § 303b SGB V                   zentrum
+        ‚RVFDZ’        Datentransparenz nach § 303b SGB V                   KK  GKV-SV
+                                                                            GKV-SV 
+        ‚RVVST Datentransparenz nach § 303b SGB V                           Forschungsdaten-
+                                                                            zentrum
+1.53 Digitale Gesundheitsanwendungen (DiGA) nach § 33a SGB V                GKV-SV 
+                                                                            Vertrauensstelle
+Stelle  Abk.           Beschreibung
+20      ‚E’            für Echtdaten                                        Richtung
+        ‚T’            für Testdaten
+                                                                            LE  Kasse
+21-23 ‚DGA‘            Übermittlung von DiGA-Abrechnungsdaten
+
+1.54    Datenaustausch zwischen den Krankenhäusern und den Landesverbänden der Kranken-
+        kassen (LV KK) bzw. Landesaufsichtsbehörden (LAB)
+
+Stelle  Abk.           Beschreibung                                         Richtung
+20      ‚E’            für Echtdaten
+        ‚T’            für Testdaten
+
+21-23 ‚PPP‘            Personalausstattung Psychiatrie und Psychosomatik-   KH  LV KK
+                       Richtlinie des G-BA nach § 136a Absatz 2 Satz 1 SGB
+                       V
+
+Gültig ab: 01.01.2026                 Seite 32 von 47                       Stand: 06.11.2025
+Stelle  Abk.           Beschreibung                                        Richtung
+        ‚FFX‘          Richtlinie zur Versorgung der hüftgelenknahen       KH  LV KK
+                       Femurfraktur
+
+Zusätzliche Kennung in Feld VERFAHREN_KENNUNG_SPEZIFIKATION:
+
+Stelle  Abk.           Beschreibung                                        Richtung
+        ‚EXPKK’        Export der Daten von den Krankenhäusern an die LV-  KH  LV KK
+                       KK/EK
+        ‚ANTKK’        Technische Antwortdatei der LV-KK/EK an die Kran-   LV KK  KH
+                       kenhäuser
+        ‚EXPLA’        Export an die Landesaufsichtsbehörden (LAB)         KH  LAB
+        ‚ANTLA’        Technische Antwort der Landesaufsichtsbehörden      LAB  KH
+                       (LAB) an die Krankenhäuser
+
+1.55    Meldung von Versorgungsabgaben aus Kranken-, Verletzten- und Pflegeunterstützungs-
+        geld, sowie für Pflegepersonen
+
+Datenaustausch zwischen Krankenkassen und berufsständischen Versorgungseinrichtungen (BV)
+
+VK      Beschreibung                                                            Richtung
+
+MVA     Meldung von Versorgungsabgaben aus Kranken- und Pflegeunter- KK  BV
+
+        stützungsgeld, sowie für Pflegepersonen nach § 47a Absatz 2 Satz
+
+        1 SGB V und §§ 44 Absatz 2 Satz 2, 44a Absatz 4 Satz 7 SGB XI.
+
+        Meldepflicht besteht auch bei der Zahlung von Versorgungsabgaben
+
+        aus Verletztengeld nach § 47a Absatz 2 SGB VII.
+
+MVS     Meldung von Versorgungsabgaben aus Kranken- und Pflegeunter- BV  KK
+
+        stützungsgeld, sowie für Pflegepersonen nach § 47a Absatz 2 Satz
+
+        1 SGB V und §§ 44 Absatz 2 Satz 2, 44a Absatz 4 Satz 7 SGB XI.
+
+        Meldepflicht besteht auch bei der Zahlung von Versorgungsabgaben
+        aus Verletztengeld nach § 47a Absatz 2 SGB VII.
+
+1.56    Übermittlung des reduzierten IK Verzeichnisses an die Trustcenter (TC)  Richtung
+ VK          Beschreibung                                                       GKV-SV  TC
+ IKT         Übermittlung des IK Verzeichnisses
+
+Gültig ab: 01.01.2026  Seite 33 von 47                                          Stand: 06.11.2025
+1.57    Vertragspartnerliste nach § 134a SGB V Abs. 2a und 2c               Richtung
+ VK          Beschreibung                                                   Hebammen-
+ HAV         Übermittlung von Vertragspartnerlisten der Hebammen/-verbände  /-verbände 
+                                                                            GKV-SV  KK
+
+Zusätzliche Kennung in Feld VERFAHREN_KENNUNG_SPEZIFIKATION:
+
+Stelle Abk.            Beschreibung                                         Richtung
+                                                                            Hebammen-/-ver-
+        VPL            Übermittlung von Vertragspartnerlisten               bände  GKV-SV 
+                                                                            KK
+
+1.58    Beschäftigtenverzeichnis der ambulanten Pflege (BeVaP) nach § 293 Absatz 8 SGB V
+ VK
+ BVP    Beschreibung                                                      Richtung
+        Übermittlung des Beschäftigtenverzeichnisses                      BfArM  GKV-SV
+                                                                           Kranken-/Pfle-
+                                                                          gekasse
+
+1.59 AOP-Daten gemäß § 115b SGB V
+
+Stelle  Abk.           Beschreibung                                         Richtung
+20      E              für Echtdaten
+        T              für Testdaten
+
+21-23 AOP              Übermittlung von Daten zum Ambulanten Operieren      KK,KK-ORG,DL-
+                       (AOP)                                                GKV-SV- InBA
+
+1.60 Leistungsbezug nach dem SGB III (DXBV) - § 173 Abs. 5 SGB III
+
+Stelle  Abk.           Beschreibung                                         Richtung
+20      E              für Echtdaten
+        T              für Testdaten
+
+21-23 MAA              Meldungen von Leistungsbezug nach dem SGB III §      BA  BV
+            MAS        173 Abs. 5 SGB III                                   BV  BA
+                       Rückmeldungen von Leistungsbezug nach dem SGB III
+                       § 173 Abs. 5 SGB III
+
+Gültig ab: 01.01.2026                 Seite 34 von 47                       Stand: 06.11.2025
+2. Beschreibung des Feldes ‚VERFAHREN_KENNUNG_SPEZIFIKATION’
+
+Die Werte werden eindeutig pro Verfahren (bei Datenaustausch z. B. der Nachrichtentyp, sofern
+eindeutig pro Lieferung) festgelegt. Damit ist pro Verfahren eine weitere Unterscheidung der
+Nachrichtenart möglich. Dieses Feld kann benutzt werden, um die Verarbeitungspriorität auszu-
+drücken.
+
+Im Datenaustausch mit dem BMG/BMAS gelten für die Übermittlung der „Amtlichen Statisti-
+ken“ die nachfolgenden Verfahrensspezifikationen.
+
+Die folgenden Verfahrensspezifikationen sind beispielhaft, sie sind i. d. R. nicht komplett. Für die
+vollständige Übersicht nutzen Sie bitte die entsprechenden Verfahrensbeschreibungen:
+
+Verfahren                  Spezifikation
+KM1                        KM1
+KM6                        KM6
+KG1                        KG1
+KG2                        KG2
+KG3                        KG3
+KG4                        KG4
+KG5                        KG5
+KG8                        KG8
+KV45 Teil I                KV451
+KV45 Teil II               KV452
+KJ1                        KJ1
+KJ2                        KJ2
+SGB-01                     SGB1K
+SGB-01 Pflegeversicherung  SGB1P
+PG1                        PG1
+PG2                        PG2
+PG4                        PG4
+PG5                        PG5
+PV45                       PV45
+PJ1                        PJ1
+
+Im Datenaustausch mit dem BAS gelten für die Übermittlung die nachfolgenden Verfahrensspezi-
+fikationen:
+
+Verfahren                  Spezifikation
+MRS                        MR100, MR111, MR400, MR500, MR600,
+                           MR610, MR700
+
+Gültig ab: 01.01.2026      Seite 35 von 47  Stand: 06.11.2025
+Im Datenaustausch mit dem GKV-SV gelten für die Übermittlung die nachfolgenden Verfahrens-
+spezifikationen:
+
+Verfahren              Spezifikation
+PQD, PQV               UPDT, VOLL
+
+Die Listen werden nicht mit neuen Verfahrensspezifikationen fortgeschrieben.
+
+Gültig ab: 01.01.2026  Seite 36 von 47                                        Stand: 06.11.2025
+3. Verzeichnis der Verfahrenskennungen
+
+Kennung  Verfahren für den Datenaustausch                                   gültig ab
+1xx      Interne Verfahren
+2xx      Interne Verfahren
+3xx      Interne Verfahren
+4xx      Interne Verfahren
+5xx      Interne Verfahren
+6xx      Interne Verfahren
+7xx      Interne Verfahren
+8xx      Interne Verfahren
+9xx      Interne Verfahren
+AAG      für Erstattungsanträge nach AAG
+AAK      Rückmeldungen für Erstattungsanträge nach AAG
+AKA      AG-Konto Anlage
+ALG      Arbeitsbescheinigungen für Zwecke des über- und zwischenstaatli-
+         chen Rechts sowie Nebeneinkommen
+AN       Anforderungssätze mit Fehlernummern 01-06
+AND      für die Datenübermittlung zur Absendernummer
+ANR      für die Datenübermittlung zur Absendernummer (2. Variante)
+AOP      AOP-Daten gemäß § 115b SGB V
+APO      Datenaustausch nach § 294 ff. SGB V
+APR      Anträge beitragsabführender Stellen im Verfahren gemäß § 55a
+         Abs. 1 Satz 3 SGB XI
+ARV      Rückmeldung der angeforderten EBV-Werte durch registrierte Ar-
+         beitgeber (rvBEA)
+ASA      Übermittlung ambulanter Abrechnungsdaten
+ASI      Weiterleitung IK-Daten
+ASK      Amtliche Statistiken im Datenaustausch mit dem/den BMG,BMAS,
+         obersten Landesbehörden, gesetzlichen Krankenkassen, Kassenver-
+ASP      bänden auf Bundesebene, Dienstleistern der gesetzlichen Kranken-
+         kassen
+ASR      Amtliche Statistiken im Datenaustausch mit dem/den BMG, BMAS,
+ASS      obersten Landesbehörden, gesetzlichen Krankenkassen, Kassenver-
+         bänden auf Bundesebene, Dienstleistern der gesetzlichen Kranken-
+         kassen
+         Rückläufer Amtliche Statistiken
+         Verfahrenskennzeichen für die Datenlieferung entsprechend techni-
+         scher Spezifikation
+
+Gültig ab: 01.01.2026  Seite 37 von 47  Stand: 06.11.2025
+Kennung  Verfahren für den Datenaustausch                                    gültig ab
+ASV      Verfahrenskennzeichen für die Datenlieferung entsprechend techni-
+         scher Spezifikation
+ASX      Prüfung Amtliche Statistiken
+A1A      Übermittlung der Anträge der Arbeitgeber im A1 Verfahren oder der
+         Ablehnung oder der Quittierung oder von Fehlern
+A1S      Übermittlung der Bewilligung
+AUB      Ausstellung von Unbedenklichkeitsbescheinigungen nach § 108b
+         SGB IV
+AUF      Dateierweiterung für Auftragssatz (Kennung wird für Fehlermeldun-
+         gen genutzt)
+AXL      Bescheinigung zur Versicherungspflicht sowie über das fortgeführte
+         Beschäftigungsverhältnis bei Gewährung von Teilarbeitslosengeld
+AZK      Abruf der zuständigen Krankenkasse
+BAK      Bundesagentur für Arbeit und den Krankenkassen / Weiterleitungs-
+         stellen
+BAK      zwischen den Krankenkassen / Weiterleitungsstellen
+BAS      für Meldungen im Sozialausgleich an die BA
+BB       Elektronische Benachrichtigung über die Erstattung zu Unrecht ge-
+         zahlter Beiträge nach § 211 Satz 3 SGB VI
+BDV      Bundesagentur für Arbeit und den Krankenkassen / Weiterleitungs-
+         stellen
+BEA      Beitragserhebung der berufsständischen Versorgungseinrichtungen
+BGR      Übermittlung von Statistikdaten zum Bericht geriatrische Rehabili-
+         tation
+BIV      für die Datenübermittlung zwischen dem vdek / der ITSG (Pflege-
+         lotse) und der BIVA und zurück
+BJ       Betriebsnummerndatei Gesamtbestand 1 Mal pro Jahr
+BK       Betriebsprüfung; DA zwischen GKV und DRV
+BK       eGK-Verfahren; Bestandssystem Kasse an Kartenmanagementsys-
+         tem
+BMA      Bestandsmeldungen der BA an die KK
+BMK      Bestandsmeldungen der OK an die KK
+BMZ      zugelassene kommunale Träger nach § 6a SGB II und den Kranken-
+         kassen oder zwischen den Krankenkassen / Weiterleitungsstellen
+BNA      oder der Bundesagentur für Arbeit und den Krankenkassen / Wei-
+         terleitungsstellen
+         Beitragsnachweise Arbeitgeber an Krankenkassen oder
+         Beitragsnachweise zwischen den Krankenkassen / Weiterleitungs-
+         stellen
+
+Gültig ab: 01.01.2026  Seite 38 von 47  Stand: 06.11.2025
+Kennung  Verfahren für den Datenaustausch                                   gültig ab
+BNB      Beitragsnachweise für die Empfänger von Arbeitslosengeld
+BNJ      zwischen den Krankenkassen / Weiterleitungsstellen oder
+         der Bundesagentur für Arbeit und den Krankenkassen / Weiterlei-
+BNK      tungsstellen
+         zugelassene kommunalen Träger nach § 6a SGB II und den Kran-
+BNM      kenkassen oder zwischen den Krankenkassen / Weiterleitungsstel-
+         len
+BNR      zwischen den Krankenkassen / Weiterleitungsstellen oder
+         der Bundesagentur für Arbeit und den Krankenkassen / Weiterlei-
+BNU      tungsstellen
+BNZ      zwischen den Krankenkassen / Weiterleitungsstellen oder
+BPV      Bundesagentur für Arbeit und den Krankenkassen / Weiterleitungs-
+BR       stellen
+BS       Beitragsnachweise für die Empfänger von Übergangsgeld
+         Beitragsnachweise von Zahlstellen
+BSD      Erhebung und Nachweis der Elterneigenschaft gem. § 55a SGB XI
+BU       Update der Betriebsnummerndatei
+BUB      Elektronisches Bescheinigungsverfahren gem. § 313a Abs. 2 SGB III
+         i.V.m. § 312 Abs. 2 SGB III
+BUPDF    Betriebsnummerndatei an die Rentenversicherung
+BV       Betriebsprüfungsdaten von und zu den UVen
+         Beantragung von Unbedenklichkeitsbescheinigungen nach § 108b
+BVP      SGB IV
+         Betriebsprüfungsnotizen zu den Uven
+BVZ      eGK-Verfahren; Bestandsystem Kasse an Versichertenstammdaten-
+BW       dienst
+BWK      Beschäftigtenverzeichnis der ambulanten Pflege nach § 293 Abs. 8
+BWW      SGB V
+BWNAC    Meldung zum Bereinigungsverzicht
+CEH      Beitragsnachweis der Rentenversicherungsträger (entfallen)
+CER      für Meldungen von Beitragsnachweise der privaten Pflegekassen
+CP       für Meldungen von Beitragsnachweisen der Bundeswehr
+CT       Interne Sammeldateien Beitragsnachweise
+DAH      eGK-Verfahren; Kartenmanagementsystem an Trust Center
+DAR      eGK-Verfahren; Trust Center an Kartenmanagementsystem
+         CUP-Druckdaten
+         Einzugsstellenprüfung mit der AOK
+         Krankenkassen für Disease-Management-Programme
+         Krankenkassen für Disease-Management-Programme
+
+Gültig ab: 01.01.2026  Seite 39 von 47  Stand: 06.11.2025
+Kennung  Verfahren für den Datenaustausch                                         gültig ab
+DDH      Krankenkassen für Disease-Management-Programme
+DDR      Krankenkassen für Disease-Management-Programme                           01.07.2026
+DE       Datenaustausch DEÜV zwischen Krankenkassen und Rentenversi-              01.07.2026
+         cherungsträgern sowie zwischen der Bundesagentur für Arbeit und
+DEH      Rentenversicherungsträgern
+DER      DMP Depression
+DGA      DMP Depression
+DHH      DiGA-Abrechnungsdaten
+DHR      DMP Herzinsuffizienz, Hinweg
+DIR      DMP Herzinsuffizienz, Rückweg
+DJH      Direkt-Abrechner mit Krankenkassen
+DJR      DMP Adipositas – Kinder und Jugendliche, Hinweg
+DK       DMP Adipositas – Kinder und Jugendliche, Rückweg
+DKH      RV-Krankenhäuser mit den Krankenkassen § 301 (EKRH)
+DKR      Krankenkassen für Disease-Management-Programme
+DMB      Krankenkassen für Disease-Management-Programme
+DMP      DTA mit Meldebehörde (über DRV-Bund)
+DMT      Krankenkassen für Disease-Management-Programme
+DOH      DMP Teilnahme- und Einwilligungserklärung
+DOR      DMP Osteoporose
+DPP      DMP Osteoporose
+DQH      Krankenkassen für Disease-Management-Programme
+DQR      DMP Rheumatoide Arthritis
+DR       DMP Rheumatoide Arthritis
+         Es ist vereinbart, für alle Selektivverträge die Stellen 21-22 mit ‚DR’
+DRB      zu belegen und eine weitere Spezifizierung in Stelle 23 vorzuneh-
+DRC      men (Buchstaben A-Z).
+         für hausarztzentrierte Versorgung
+DRH      für besondere ärztlich ambulante Versorgung (für Technische An-
+DRI      lage 2.0, anzuwenden für neue Verfahren ab sofort)
+DRM      DMP Rückenschmerz
+DRR      für Integrierte Versorgung
+DRS      Modellvorhaben nach § 64d SGB V
+DSH      DMP Rückenschmerz
+DSR      Verträge nach § 132e,f SGB V
+DSV      Krankenkassen für Disease-Management-Programme
+DTE      Krankenkassen für Disease-Management-Programme
+         Versicherungsnummern Abfrage
+         elektronisch erstellte DMP-Teilnahme-/Einwilligungserklärungen
+
+Gültig ab: 01.01.2026  Seite 40 von 47  Stand: 06.11.2025
+Kennung  Verfahren für den Datenaustausch                                   gültig ab
+DTI      Images (im Original papiergebundener) DMP-Teilnahme-/Einwilli-
+         gungserklärungen                                                   01.07.2026
+DTV      Datentransparenz nach § 303b SGB V                                 01.07.2026
+DUA      Arbeitgeber
+DUK      zugelassene kommunale Träger nach § 6a SGB II und den Kranken-
+         kassen oder zwischen den Krankenkassen / Weiterleitungsstellen
+DUR      für Meldungen nach der DEÜV mit Optionskommunen
+DUT      Datenaustausch mit Unfallträgern
+DUV      zwischen den Krankenkassen / Weiterleitungsstellen
+DWH      DMP Adipositas – Erwachsene, Hinweg
+DWR      DMP Adipositas – Erwachsene, Rückweg
+DZH      Diabetes mellitus Typ 1 und 2, Hinweg
+DZR      Diabetes mellitus Typ 1 und 2, Rückweg
+EA       Maschinelles Erstattungsverfahren
+EAA      Anfrage eines Arbeitgeber bei der Krankenkasse zum Vorliegen ei-
+         ner eAU
+EAR      Rückmeldung der Krankenkasse an den Arbeitgeber zum Vorliegen
+         einer eAU
+EAS      Anfrage zur Elektronischen Arbeitsunfähigkeitsbescheinigung
+EAU      Übermittlung einer Elektronischen Arbeitsunfähig-
+         keitsbescheinigung (eAU)
+EAV      Maschinelles Erstattungsverfahren
+EBE      euBP Entgeltbuchhaltung
+EBF      euBP Finanzbuchhaltung
+EBM      euBP Meldekorrektur
+EBP      euBP Prüfergebnis
+EBR      euBP Rückmeldung
+EBZ      für das Elektronisches Beantragungs- und Genehmigungsverfahren
+         Zahnärzte
+EEF      Datenaustausch mit Finanzbehörden
+EEL      Entgeltersatzleistungen Arbeitgeber
+EEK      für Entgeltersatzleistungen für fachlichen Meldung an den Arbeit-
+         geber (ab der Version 8.0)
+ED       Datenaustausch zwischen Krankenkassen und Rentenversiche-
+         rungsträgern für Entgeltdaten nach §69 SGB IX
+EGK      eGK-Verfahren; Kartenmanagementsystem an Personalisierer
+EGQ      eGK-Verfahren; Personalisierer an Kartenmanagementsystem
+EGV      Entgeltdaten nach §69 SGB IX
+
+Gültig ab: 01.01.2026  Seite 41 von 47  Stand: 06.11.2025
+Kennung  Verfahren für den Datenaustausch                                   gültig ab
+EL       Datenaustausch Entgeltersatzleistungen zwischen GKV und DRV
+         oder zwischen DGUV und DRV oder zwischen BA und DRV
+EM       Austausch von Daten für Monatsabrechnungen zwischen GKV und
+         DRV oder zwischen BA und DRV oder zwischen DRV und BAS
+ES       MOASB Monatsabrechnung „Sonstiger Beitragszahler“ zwischen GKV
+         und DRV oder zwischen DRV und BAS
+ERA      Datenlieferungen entsprechend technischer Spezifikation
+ERB      Datenlieferungen entsprechend technischer Spezifikation
+ERK      Datenlieferungen entsprechend technischer Spezifikation
+ESE      Entgeltschlüssel der Krankenhäuser
+FFX      Richtlinie zur Versorgung der hüftgelenknahen Femurfraktur
+FP       Ausgleichsfond Pflegeversicherung
+GA       Grundsicherungsdatenabgleich nach § 52 Absatz 1 Satz 1 Nummer
+         5 SGB II
+GAM      zwischen den Krankenkassen / Weiterleitungsstellen
+GF       Datenaustausch an den Gesundheitsfond (EBNK)
+GK       Grundsicherungsdatenabgleich nach § 52 Absatz 1 Satz 3 SGB II
+GKH      Grundsatz-Datenaustausch zwischen Krankenhäusern und Kran-
+         kenkassen
+GLD      Lieferung von GAmSi-Daten an die ITSG
+GLR      Quittierung des Empfangs von GAmSi-Datenlieferungen
+GM       Gesonderte Meldungen
+GR       Grundsicherungsdatenabgleich nach § 52 Absatz 1 Satz 1 SGB II
+GRA      Fachliche Rückmeldungen der KK an die BA
+GRK      Fachliche Rückmeldungen der KK an die OK
+HAV      Übermittlung von Vertragspartnerlisten der Hebammen/-verbände
+HEB      Sicherstellungszuschlag Hebammen
+HEG      Lieferung von Heilmitteldaten nach § 84 SGB V
+HEI      Lieferung von Heilmitteldaten nach § 302 SGB V
+HLD      Lieferung von HIS-Daten an die ITSG
+HLR      Quittierung des Empfangs von HIS-Datenlieferungen
+HLV      Heilmittelleistungserbringerverzeichnis
+HMK      Übermittlung von Statistikdaten zum Hilfsmittel-Mehrkostenbericht
+HMP      Heilmittelpreismonitoring
+HSD      Verteilung der Hochschuldatei an die DAVn
+HZH      Hausarztzentrierte Versorgung, Hinweg
+HZR      Hausarztzentrierte Versorgung, Rückweg
+IAS      Amtliche Statistik KM1 für das InBA
+IAV      Institut des Bewertungsausschusses
+
+Gültig ab: 01.01.2026  Seite 42 von 47  Stand: 06.11.2025
+Kennung  Verfahren für den Datenaustausch                                   gültig ab
+IAW      Institut des Bewertungsausschusses
+IGS      Institut des Bewertungsausschusses
+IGW      Institut des Bewertungsausschusses
+IK       IK-Nummern-Austausch (DGUV)
+IKB      zwischen den Krankenkassen / Weiterleitungsstellen
+IKV      zwischen den Krankenkassen / Weiterleitungsstellen
+IKT      Übermittlung des reduzierten IK Verzeichnisses an die Trustcenter
+IMG      für die Imagedaten nach § 7 der Vereinbarung nach § 300 SGB V
+IQM      Krankenkassen mit der ITSG
+ISU      Krankenkassen mit der ITSG
+ITB      Krankenkassen mit der ITSG
+JQ       Fehlende Jahresmeldungen
+KAV      Datenaustausch nach § 294 ff. SGB V
+KB       eGK-Verfahren; Kartenmanagementsystem an Bestandssystem
+         Kasse
+KIB      Kassenindividueller Zusatzbeitrag an GKV-SV
+KE       Erstattungsforderungen der Träger der Deutschen Rentenversiche-
+         rung gegenüber EU-Trägern über die DVKA
+KHN      Krankenhaus Arztnummern Verzeichnis
+KKR      Abrechnungsdaten der Klinischen Krebsregister
+KM       Adressänderung der Meldebehörden; DA zwischen BA und DRV
+KP       Programmversand oder eGK-Verfahren Kartenmanagementsystem
+         an Bildsystem
+KR       Datenaustausch zwischen Krankenkassen und Rentenversiche-
+         rungsträgern
+KRH      Datenaustausch nach § 294 ff. SGB V
+KRV      zwischen den Krankenkassen / Weiterleitungsstellen
+KSK      Meldungen der Künstlersozialkasse
+KSV      Übermittlung von Daten zum Krankenhausstandortverzeichnis
+KUA      Anzeige Kurzarbeitergeld
+KUG      Antrag Kurzarbeitergeld
+KUL      Abrechnungsliste Kurzarbeitergeld
+KV       Datenaustausch § 301 Absatz 1 SGB V oder eGK-Verfahren Karten-
+         managementsystem an Versichertenstammdatendienst
+KVC      Übermittlung KVNR-Clearing
+KVK      Ersteller von Versichertenkarten
+KVR      zwischen den Krankenkassen / Weiterleitungsstellen
+KWR      Elektronische Meldeverfahren zwischen den Krankenkassen nach §
+         175 Abs. 2 SGB V bei Durchführung des Krankenkassenwechsels
+
+Gültig ab: 01.01.2026  Seite 43 von 47                                      Stand: 06.11.2025
+Kennung  Verfahren für den Datenaustausch                                   gültig ab
+KZV      Datenaustausch nach § 294 ff. SGB V
+LEB      Datenübermittlung vdek für Pflegelotsen                            01.01.2026
+LEO      Datenübermittlung vdek für Transparenzberichte                     01.01.2026
+MAA      Meldungen von Leistungsbezug nach § 173 Abs. 5 SGB III
+MAS      Rückmeldungen von Leistungsbezug nach § 173 Abs. 5 SGB III
+MAU      Datenaustausch mit „MD Bereich Arbeitsunfähigkeit/Krankengeld“
+MAV      für Übermittlung der Steuernummer
+MBA      Maschineller Bestandsabgleich
+MDK      Krankenkassen mit dem medizinischen Dienst (MD/MD Bund) –
+         Krankenhausdaten
+MDH      Datenaustausch mit „MD Bereich Hilfsmittel“
+MDP      Krankenkassen mit dem medizinischen Dienst (MD/MD Bund) –
+         Pflegedaten
+MDQ      Datenaustausch Qualitätsprüfungen
+MDT      Medizinischer Dienst (MD) an DatenClearingStelle – Transparenzbe-
+         richte Pflege
+MDW      Datenaustausch GKV – MD „Weitere Begutachtungsbereiche“
+MDR      Datenaustausch GKV – MD „Reha“
+MFV      für das Meldeverfahren Familienversicherung
+MIA      Meldeverfahren Impfstoffe nach §130a Abs.2 SGB V
+MMM      Datenaustausch GKV/SPV-MD „Mitteilungsmanagement“
+MMR      Übermittlung von Mindestmengen nach § 136 b SGB V
+MOA      zwischen den Krankenkassen / Weiterleitungsstellen
+MRS      Krankenkassen über die Spitzenverbände der Krankenkassen mit
+         dem BAS
+MRZ      Meldeverfahren Rabattvereinbarungen Zytostatika
+MVA      Meldung von Versorgungsabgaben aus Kranken- und Pflegeunter-
+         stützungsgeld, sowie für Pflegepersonen (KK  BV)
+MVS      Meldung von Versorgungsabgaben aus Kranken- und Pflegeunter-
+         stützungsgeld, sowie für Pflegepersonen (BV  KK)
+MZ1      für Übermittlung der Beiträge
+MZ3      Übermittlung steuerfreier Zuschüsse und Erstattungen
+NAE      Nationale Datenübermittlung Nationale Anbindung EESSI
+PDK      Prüfdienste Kranken- und Pflegeversicherung
+PE       Betriebsprüfungsdaten
+PF       Betriebsprüfungsdaten (PDF-Dokumente)
+PFL      Datenaustausch nach § 105 SGB XI
+PFU      Elektronischer Urbeleg nach § 105 Abs. 2 SGB XI
+
+Gültig ab: 01.01.2026  Seite 44 von 47  Stand: 06.11.2025
+Kennung  Verfahren für den Datenaustausch                                   gültig ab
+PH       Meldungen maschineller Prüfhilfen zwischen GKV und DRV oder
+         zwischen BA und DRV
+PHI      für Meldungen maschineller Prüfhilfen
+PK       eGK-Verfahren; Bildsystem an Kartenmanagementsystem
+PPP      Personalausstattung Psychiatrie und Psychosomatik-Richtlinie des
+         G-BA nach § 136a Absatz 2 Satz 1 SGB V
+PQD      Präqualifizierungsdaten nach § 126 Abs. 1a SGB V für Hilfsmittel
+PQV      Präqualifizierungsverzeichnis
+PRE      Betriebsprüfungen nach § 28p Abs. 1 SGB IV
+PRF      Betriebsprüfungen nach § 28p Abs. 1 SGB IV
+PRP      Krankenkassen mit dem medizinischen Dienst (MD/MD Bund)
+PRV      Übermittlung Krankenhausstatistik
+PRR      Übermittlung Krankenhausstatistik (Rückweg)
+PVS      Übermittlung von Statistikdaten der Pflegekassen an den GKV-Spit-
+         zenverband
+QPR      Prüfberichte und Anlagen aus Prüfungen ambulanter (und später
+         stationärer) Pflegeeinrichtungen
+QSR      Daten zum QS-Reha Verfahren
+QSV      Vorabberichte zum QS-Reha Verfahren
+RBA      Rabattvereinbarungen nach § 31(2) SGB V in Verbindung mit §
+         130a(8) SGB V
+RBH      Rabattvereinbarungen nach § 31(2) SGB V in Verbindung mit §
+         130a(8) SGB V
+RBR      Rabattvereinbarungen nach § 31(2) SGB V in Verbindung mit §
+         130a(8) SGB V
+RA       Elektronische Übermittlung von ad hoc-Prüfaufträgen durch die
+         Einzugsstellen
+RE       Reha-DEÜV
+REH      Datenaustausch nach § 294 ff. SGB V
+RM       Mitteilungsverfahren im Rahmen des DTA-Reha
+RPA      Antworten auf Anträge gemäß § 55a Abs. 4 Satz 3 SGB XI
+RSR      für das RSA- Rückmeldeverfahren
+RSU      zwischen den Krankenkassen / Weiterleitungsstellen
+RVA      Anlassbezogene Anforderung der in der EBV definierten Werte
+         durch den RV-Träger (rvBEA)
+RVN      zwischen den Krankenkassen / Weiterleitungsstellen
+RW       Mitteilungsverfahren im Rahmen des DA-Reha, SWE
+RZK      Rückmeldung der zuständigen Krankenkasse
+SAG      Fachliche Rückmeldung der Krankenkasse
+
+Gültig ab: 01.01.2026  Seite 45 von 47  Stand: 06.11.2025
+Kennung  Verfahren für den Datenaustausch                                    gültig ab
+SDD      Lieferung der Stammdatendatei an die DSRV
+SH       Sozialhilfedatenabgleich § 118 Absatz 1 Satz 1 Nummer 1 SGB XII
+SHT      Übermittlung der Daten nach §264 Abs. 1 und 2 SGB V
+SL       Datenaustausch der Reha-Kliniken mit den Krankenkassen (§ 302)
+SMK      Meldungen der Krankenkassen an die Hochschulen
+SMV      Meldungen der Hochschulen an die Krankenkassen
+SO       Sondersetzung, DA zwischen DRV und BA
+SOL      Datenaustausch nach § 294 ff. SGB V
+SQS      Sozialdaten der Krankenkassen für die Qualitätssicherung
+SVA      AG-Anträge nach 106c SGB IV inkl. Quittierungen und Fehler
+SVI      Krankenkassen mit der Sammel- und Verteilstelle Institutionskenn-
+         zeichen (SVI)
+SVS      Ablehnung oder Bewilligung auf Anträge nach 106c SGB IV
+SY       Statistikdaten 1 Mal jährlich
+TBN      Für die Verteilung der Testbetriebsnummern-Datei
+TES      Spitzenverbände der Kassen mit Deutschen Verbindungsstelle
+         Krankenversicherung-Ausland
+TM       Monatsabrechnungen Testdaten zwischen GKV und DRV oder zwi-
+         schen DRV und BAS
+TR       Test
+TVB      Datenaustausch zum Teilhabeverfahrensbericht nach § 41 Abs. 1
+         SGB IX
+U1       Anforderungssätze / Leistungssätze ALGI
+U3       Versicherungsfreiheitssätze ALGI
+U5       Übergangsgeld
+UD       Zentrales Mitgliedsnummernverzeichnis (DGUV)
+UKR      Rückmeldemeldeverfahren der Urlaubs- und Lohnausgleichskasse
+         der Bauwirtschaft
+UKV      Meldeverfahren der Urlaubs- und Lohnausgleichskasse der Bauwirt-
+         schaft
+UV       Lohnnachweisdaten
+UVG      Übermittlung des Gefahrtarifstellenverzeichnisses der Unfallversi-
+         cherungsträger
+UVK      Verfahrenskennzeichen für die Datenlieferung entsprechend techni-
+         scher Spezifikation
+UVL      für den elektronischen Lohnnachweis UV
+UVM      Übermittlung des Mitgliedsverzeichnisses der Unfallversicherungs-
+         träger
+UVS      für die Stammdaten-Abfrage UV
+
+Gültig ab: 01.01.2026  Seite 46 von 47  Stand: 06.11.2025
+Kennung  Verfahren für den Datenaustausch                                    gültig ab
+UVT      Übermittlung der IK-Unfallversicherungsträger (UVT)
+UVU      Stammdatenübermittlung der UV an AG
+VA       Datensätze von Verleihbetrieben nach dem Arbeitnehmerüberlas-
+         sungsgesetz
+VB       eGK-Verfahren; Versichertenstammdatendienst an Bestandssystem
+         Kasse
+VBK      Entgeltersatzleistungen zwischen den Krankenkassen / Weiterlei-
+         tungsstellen
+VK       eGK-Verfahren; Versichertenstammdatendienst an Kartenmanage-
+         mentsystem
+VKP      Verfahrenskennzeichen für die Verteilung von Kernprüfprogrammen
+VM       Datenübermittlung zwischen Reha-Kliniken und Krankenkassen,
+         Mitteilungsverfahren
+VR       Datenübermittlung von Reha-Kliniken der RV an Krankenkassen
+VSA      Rückmeldungen Versicherungsnummern
+VW       Datenübermittlung von Reha-Kliniken an Krankenkassen, SWE
+VZX      Verteilung der Zahlstellendatei über die DAW des GKV-Spitzenver-
+         bandes an die DAVn im Format XML
+WAN      Weiterleitung der Anforderung einer elektronischen Arbeitsunfähig-
+         keitsbescheinigung des Arbeitgebers nach § 109 SGB IV
+WAU      Weiterleitung der elektronischen Arbeitsunfähigkeitsbescheinigung
+         nach § 304 Abs. 2 SGB V
+WPR      Datenaustausch zur Wirtschaftlichkeitsprüfung nach §106ff SGB V
+         in Verbindung mit §§269, 297 und 298 SGB V
+ZAA      Beantragung einer Zahlstellen- oder Absendernummer
+ZAS      Rückmeldung bei Beantragung einer Zahlstellen- oder Absender-
+         nummer
+ZAK      Krankenkasse mit Zahlstelle
+ZAV      Zahlstelle mit Krankenkasse
+ZLD      zwischen den Krankenkassen / Weiterleitungsstellen
+ZPP      Datenaustausch zwischen der Zentralen Prüfstelle für Prävention
+         und den Krankenkassen
+
+Gültig ab: 01.01.2026  Seite 47 von 47  Stand: 06.11.2025
+

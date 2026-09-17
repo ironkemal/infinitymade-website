@@ -112,8 +112,8 @@ export async function downloadDmrzForInvoice(deps) {
   if (!invId) { showToast('Bitte zuerst die Rechnung speichern.', 'error'); return; }
 
   const okExport = await showConfirmModal({
-    title: 'DMRZ-Export (§302) erstellen?',
-    message: 'Es wird eine lokale Exportdatei erzeugt und die Rechnung als „abgerechnet" markiert.\n\nACHTUNG: Dies ist KEINE §302-Übermittlung an die Krankenkasse. Die eigentliche §302-Abrechnung erfolgt weiterhin über den Abrechnungs-Bereich.',
+    title: 'DMRZ-Export (interner Export) erstellen?',
+    message: 'Es wird eine lokale Exportdatei erzeugt.\n\nACHTUNG: Dies ist KEIN §302-Versand an die Krankenkasse und markiert die Rechnung NICHT als abgerechnet. Die eigentliche §302-Abrechnung erfolgt ausschließlich über den Abrechnungs-Bereich (DTA-Export).',
     confirmText: 'Exportieren',
     cancelText: 'Abbrechen',
     variant: 'danger'
@@ -126,21 +126,20 @@ export async function downloadDmrzForInvoice(deps) {
       .select('*').eq('id', invId).eq('owner_id', ownerId).maybeSingle();
     if (e1 || !invoice) throw new Error(e1?.message || 'Rechnung nicht gefunden');
 
+    if (!invoice.prescription_id) {
+      showToast('DMRZ-Export nicht möglich: Diese Rechnung ist keinem Rezept zugeordnet (prescription_id fehlt). Ein Rezept wird nicht automatisch geraten.', 'error');
+      return;
+    }
+
     const { data: patient } = await supabase.from('leads')
       .select('id,first_name,last_name,title,dob,versichertennummer,krankenkasse,email,phone')
       .eq('id', invoice.patient_id).maybeSingle();
 
-    let prescription = null;
-    if (invoice.prescription_id) {
-      const { data: p } = await supabase.from('prescriptions')
-        .select('*').eq('id', invoice.prescription_id).maybeSingle();
-      prescription = p || null;
-    }
-    if (!prescription) {
-      const { data: prescriptions } = await supabase.from('prescriptions')
-        .select('*').eq('patient_id', invoice.patient_id)
-        .order('created_at', { ascending: false }).limit(1);
-      prescription = prescriptions?.[0] || null;
+    const { data: prescription, error: e2 } = await supabase.from('prescriptions')
+      .select('*').eq('id', invoice.prescription_id).maybeSingle();
+    if (e2 || !prescription) {
+      showToast('DMRZ-Export nicht möglich: Das verknüpfte Rezept wurde nicht gefunden.', 'error');
+      return;
     }
 
     let arzt = null;
@@ -169,11 +168,13 @@ export async function downloadDmrzForInvoice(deps) {
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
 
-    if (prescription?.id) {
-      await supabase.from('prescriptions')
-        .update({ dmrz_exported_at: new Date().toISOString(), status: 'billed' })
-        .eq('id', prescription.id);
-    }
+    // Nur den Export-Zeitpunkt festhalten — `status` NICHT auf 'billed' setzen.
+    // Ein Beleg gilt ausschließlich über den DTA-Weg (abrechnung_status) als
+    // abgerechnet; dieser interne Export ist keine §302-Übermittlung und darf
+    // keine zweite, widersprüchliche Wahrheit erzeugen (bkz. Dateikopf-Kommentar).
+    await supabase.from('prescriptions')
+      .update({ dmrz_exported_at: new Date().toISOString() })
+      .eq('id', prescription.id);
     showToast('DMRZ XML heruntergeladen ✓');
   } catch (e) {
     console.error('[dmrz-export]', e);
