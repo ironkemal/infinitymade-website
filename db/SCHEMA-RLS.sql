@@ -1,7 +1,80 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-17 — 0023_aerzte_ausfall_team_insert
+-- ERZEUGT AM:        2026-09-17 — 0024_revoke_unused_function_grants
+--                    (Ops-Karte #297, Nebenfund der Advisor-Pruefung waehrend
+--                    Ops #254. KEINE Struktur-Aenderung: null Policies, null
+--                    Funktionen, null Trigger, null Indizes — nur EXECUTE-ACLs.
+--                    Die Zaehler bleiben deshalb unveraendert, und zwar
+--                    nachweislich: kein einziger der zehn Zaehler in
+--                    api-backend/db/schema-zaehler.js liest ACLs. Live
+--                    nachgezaehlt (17.09.2026, nach dem REVOKE): 172 Policies ·
+--                    78 eigene Funktionen · 78 Trigger · 318 Indizes · 89
+--                    Tabellen — identisch zum Stand vor der Migration.
+--                    Advisor-Lints 0028/0029 meldeten 16 Funktionen aus `anon`
+--                    und 17 aus `authenticated` als per /rest/v1/rpc/<name>
+--                    aufrufbare SECURITY DEFINER.
+--                    ⚠️ Der eigentliche Befund war NICHT der anon-GRANT, sondern
+--                    PUBLIC: fast alle trugen `=X/postgres` in proacl, also
+--                    EXECUTE fuer JEDE Rolle. Ein REVOKE nur FROM anon,
+--                    authenticated haette gar nichts geschlossen — beide Rollen
+--                    haetten es ueber PUBLIC weiter geerbt. Gleiche Klasse wie
+--                    S-01/S-02 (0001) und S-24 (0002).
+--                    ENTZOGEN wurde EXECUTE (PUBLIC + anon + authenticated) fuer
+--                    (a) alle 43 nicht-extension-eigenen Trigger-Funktionen in
+--                    `public` — darunter die 7 vom Advisor gemeldeten SECURITY
+--                    DEFINER (fn_patient_consents_immutable, set_invoice_nummer,
+--                    set_next_beleg_nr, set_next_mahnung_nr,
+--                    set_next_ausfallrechnung_nr, vergebe_patientennummer,
+--                    vergebe_verordnungsnummer_rx) — und
+--                    (b) delete_expired_accounts(). Das war der einzige ECHTE
+--                    Fund: SECURITY DEFINER, argumentlos, schreibend, und ueber
+--                    PUBLIC OHNE LOGIN per POST /rest/v1/rpc/ ausloesbar. Sie
+--                    anonymisiert Profile (Name/Adresse/IBAN/IK/Steuernummer).
+--                    Der Radius war begrenzt — sie fasst nur Profile mit
+--                    faelligem deletion_scheduled_at und plan_status in
+--                    ('canceled','expired') an; ein Fremder haette also nichts
+--                    auswaehlen, hoechstens den ohnehin faelligen Lauf vorziehen
+--                    koennen. Einziger Aufrufer bleibt der Cron in
+--                    api-backend/server.js:3855 (service_role, behaelt EXECUTE).
+--                    Live geprueft (MCP, 17.09.2026, vollstaendig zurueckgerollte
+--                    Proben): (1) VOR dem Schreiben bewiesen, dass PostgreSQL
+--                    EXECUTE auf Trigger-Funktionen bei CREATE TRIGGER prueft und
+--                    nicht bei jedem Feuern — ein INSERT als `authenticated` nach
+--                    dem REVOKE setzt updated_at weiterhin; (2) nach dem Schreiben
+--                    feuern sechs echte Trigger-Funktionen unveraendert, waehrend
+--                    zwoelf direkte Aufrufe (6 Funktionen x anon/authenticated)
+--                    ausnahmslos mit 42501 permission denied enden; (3) die
+--                    bewusst stehengelassenen Wege laufen weiter (siehe unten).
+--                    ⛔ BEWUSST NICHT ANGEFASST — und das ist hier die eigentliche
+--                    Arbeit, nicht der REVOKE: auth_tenant_id() und is_admin()
+--                    sind RLS-HELFER, keine RPCs. Policy-Ausdruecke werden mit den
+--                    Rechten der FRAGENDEN Rolle ausgewertet, die EXECUTE-ACL wird
+--                    also mitgeprueft. Gemessen: REVOKE auf auth_tenant_id() laesst
+--                    SELECT auf `profiles` als `authenticated` mit 42501 enden
+--                    (Policy "Profiles tenant read" — das ist der Login-/
+--                    Dashboard-Pfad, also ein Totalausfall), REVOKE auf is_admin()
+--                    dasselbe fuer `visibility_reports` (vr_admin_read). Der
+--                    Advisor meldet beide, aber der Advisor kennt den
+--                    Policy-Graphen nicht.
+--                    Ebenfalls stehen geblieben: search_diagnosen() /
+--                    search_heilmittel() (katalog-suche.js:59/73, oeffentliche
+--                    Kataloge ohne Mandanten- oder Patientenbezug),
+--                    public_praxis_sector() (booking-request.html:677, laeuft als
+--                    anon), find_owner_id_by_code() (booking.js:75) und die drei
+--                    st_estimatedextent()-Overloads (PostGIS-eigen; ein REVOKE
+--                    waere beim naechsten Extension-Update ein stiller Konflikt
+--                    statt einer Loesung).
+--                    Advisor danach: anon 16 -> 8, authenticated 17 -> 9 — die
+--                    Reste sind genau diese bewussten Ausnahmen.
+--                    ⚠️ api-backend/db/erwartete-zaehler.json: NUR bis_version auf
+--                    0024 gezogen, `zaehler`/`gemessen_am` unveraendert —
+--                    rechnerisch exakt, weil ACLs von keinem Zaehler gelesen
+--                    werden (README Kural 6 dem Sinn nach, nicht dem Buchstaben:
+--                    kein Daten-UPSERT, aber counter-neutral).
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
+--                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
+--                    davor: 2026-09-17 — 0023_aerzte_ausfall_team_insert
 --                    (Ops-Karte #299, Folge der service_role-Pruefung S-30.
 --                    S-30 fand zwei Routen, die mit dem Service-Role-Client
 --                    schreiben und dabei KEINE Rollenpruefung machen:
@@ -964,6 +1037,25 @@
 --    PostGIS-Funktionen sind deshalb ausgelassen)
 -- =====================================================================
 
+-- ⚠️ EXECUTE-Rechte: seit 0024 (17.09.2026, Ops #297) hat KEINE der 43
+--    Trigger-Funktionen in dieser Liste noch EXECUTE fuer PUBLIC, anon oder
+--    authenticated. Das kostet nichts und schliesst eine ganze Klasse: eine
+--    Funktion mit RETURNS trigger ist Innenleben der Tabelle und hat in der
+--    exponierten API nichts verloren. PostgreSQL prueft EXECUTE auf
+--    Trigger-Funktionen bei CREATE TRIGGER, nicht bei jedem Feuern — die
+--    Trigger laufen also unveraendert weiter (live in einer zurueckgerollten
+--    Transaktion bewiesen, siehe Kopf).
+--    Ausgenommen sind die zwei PostGIS-eigenen Trigger-Funktionen
+--    (`postgis_cache_bbox()`, `checkauthtrigger()`, beide supabase_admin):
+--    Extension-eigene ACLs fasst 0024 bewusst nicht an. Wer die Kontrollabfrage
+--    ohne den pg_depend-Filter (deptype='e') laufen laesst, bekommt genau diese
+--    zwei als "noch offen" gemeldet — das ist kein Rueckfall, sondern die
+--    Ausnahme.
+--    ⛔ Wer eine dieser Funktionen per DROP+CREATE ersetzt, MUSS den REVOKE
+--    mitnehmen — CREATE FUNCTION vergibt EXECUTE per Default wieder an PUBLIC,
+--    und zwar still. Dieselbe Falle wie bei get_gmail_token (0001),
+--    naechste_nummer (0002) und pruefe_booking_verordnung_owner (20260903…).
+
 -- --- Berechtigung / Mandant --------------------------------------------
 -- auth_tenant_id() -> uuid                                [SECURITY DEFINER]
 CREATE OR REPLACE FUNCTION public.auth_tenant_id()
@@ -1045,7 +1137,16 @@ $function$;
 -- handle_new_user() -> trigger                                                     [SEC DEF]
 --   Legt beim Signup den profiles-Datensatz an (auth.users-Trigger).
 -- delete_expired_accounts() -> void                                                [SEC DEF]
---   Löscht Konten nach Ablauf von deletion_scheduled_at.
+--   Löscht (genauer: anonymisiert) Konten nach Ablauf von deletion_scheduled_at:
+--   business_name/Name -> '[gelöscht]', Adresse/Telefon/IBAN/BIC/IK/Steuernummer
+--   -> NULL. Greift nur bei plan_status in ('canceled','expired').
+--   ⚠️ Bis 0024 (17.09.2026, Ops #297) trug sie `=X/postgres` in proacl — also
+--   EXECUTE fuer PUBLIC. Damit war eine schreibende, DSGVO-relevante
+--   Aufraeumfunktion OHNE LOGIN per POST /rest/v1/rpc/delete_expired_accounts
+--   ausloesbar. Auswaehlen konnte ein Fremder nichts (die WHERE-Bedingung steht
+--   im Rumpf), aber den ohnehin faelligen Lauf vorziehen schon. Jetzt entzogen
+--   fuer PUBLIC/anon/authenticated; service_role behaelt EXECUTE, der einzige
+--   Aufrufer ist der Cron in api-backend/server.js:3855.
 
 
 -- --- Gmail-Token (Vault) ------------------------------------------------

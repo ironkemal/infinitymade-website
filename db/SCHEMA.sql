@@ -1,7 +1,21 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-17 — 0023_aerzte_ausfall_team_insert
+-- ERZEUGT AM:        2026-09-17 — 0024_revoke_unused_function_grants
+--                    (Ops-Karte #297. Fuer DIESE Datei eine Null-Aenderung:
+--                    keine Tabelle, keine Spalte, kein Constraint, kein Index —
+--                    die Migration entzieht ausschliesslich EXECUTE-Rechte auf
+--                    Funktionen. Tabellen-/Spaltenzahl unveraendert.
+--                    Der Eintrag steht hier trotzdem, damit beide Dumps
+--                    dieselbe Migrationskette fuehren und niemand aus
+--                    "SCHEMA.sql ist bei 0023" schliesst, die Box sei es auch.
+--                    Die inhaltliche Begruendung (PUBLIC statt anon war das
+--                    eigentliche Loch; auth_tenant_id()/is_admin() sind
+--                    RLS-Helfer und wurden BEWUSST nicht angefasst) steht
+--                    vollstaendig im Kopf von db/SCHEMA-RLS.sql — dort gehoert
+--                    sie hin, weil es um Funktionsrechte geht.
+--                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
+--                    davor: 2026-09-17 — 0023_aerzte_ausfall_team_insert
 --                    (Ops-Karte #299, Folge der service_role-Pruefung S-30.
 --                    Entscheidung Kemal vom 17.09.2026: statt die beiden
 --                    betroffenen Routen auf 403 zu setzen, wird RLS an das
