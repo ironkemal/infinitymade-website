@@ -2049,47 +2049,8 @@ router.get('/belegliste', async (req, res) => {
       query = query.lte('created_at', `${to}T23:59:59Z`);
     }
 
-    let rows;
-    try {
-      const { data, error: qErr } = await query;
-      if (qErr) throw qErr;
-      rows = data;
-    } catch (dbErr) {
-      if (dbErr.message && dbErr.message.includes("Could not find the table")) {
-        console.warn('[Belegliste] Table public.belegliste not found in database. Returning high-fidelity mock data for visual verification.');
-        rows = [
-          {
-            id: 'mock-1', owner_id: tenantId, beleg_nr: 1, created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-            type: 'zuzahlung', amount_eur: 13.50, reference_text: 'Zuzahlung erhalten: Jane Doe', created_by: u.user.id
-          },
-          {
-            id: 'mock-2', owner_id: tenantId, beleg_nr: 2, created_at: new Date(Date.now() - 3600000).toISOString(),
-            type: 'barverkauf', amount_eur: 25.00, reference_text: '1x Gutschein Massage', created_by: u.user.id
-          },
-          {
-            id: 'mock-3', owner_id: tenantId, beleg_nr: 3, created_at: new Date().toISOString(),
-            type: 'storno', amount_eur: -25.00, reference_text: 'STORNO für Beleg-Nr: 000002 (1x Gutschein Massage)', created_by: u.user.id
-          }
-        ];
-        // Sort descending by beleg_nr
-        rows.sort((a, b) => b.beleg_nr - a.beleg_nr);
-        // Apply filters in-memory
-        if (type && type !== 'all') {
-          rows = rows.filter(r => r.type === type);
-        }
-        if (zahlart && zahlart !== 'all') {
-          rows = rows.filter(r => r.zahlart === zahlart);
-        }
-        if (from) {
-          rows = rows.filter(r => r.created_at >= `${from}T00:00:00Z`);
-        }
-        if (to) {
-          rows = rows.filter(r => r.created_at <= `${to}T23:59:59Z`);
-        }
-      } else {
-        throw dbErr;
-      }
-    }
+    const { data: rows, error: qErr } = await query;
+    if (qErr) throw qErr;
 
     return res.json(rows || []);
   } catch (e) {
@@ -2128,48 +2089,23 @@ router.post('/belegliste', async (req, res) => {
     }
 
     // ---- Database Insert ----
-    let newRow;
-    try {
-      const { data, error: insErr } = await supabase
-        .from('belegliste')
-        .insert({
-          owner_id: tenantId,
-          type,
-          amount_eur: Number(amount_eur),
-          patient_id: patient_id || null,
-          prescription_id: prescription_id || null,
-          abrechnung_id: abrechnung_id || null,
-          reference_text: reference_text || null,
-          created_by: u.user.id,
-          zahlart: zahlart || null,
-          storno_reason: (type === 'storno' ? (storno_reason || null) : null)
-        })
-        .select()
-        .single();
-      if (insErr) throw insErr;
-      newRow = data;
-    } catch (dbErr) {
-      if (dbErr.message && dbErr.message.includes("Could not find the table")) {
-        console.warn('[Belegliste] Table public.belegliste not found in database. Simulating successful insert.');
-        newRow = {
-          id: 'mock-uuid-' + Date.now(),
-          owner_id: tenantId,
-          beleg_nr: Math.floor(Math.random() * 1000) + 10,
-          type,
-          amount_eur: Number(amount_eur),
-          patient_id: patient_id || null,
-          prescription_id: prescription_id || null,
-          abrechnung_id: abrechnung_id || null,
-          reference_text: reference_text || null,
-          created_at: new Date().toISOString(),
-          created_by: u.user.id,
-          zahlart: zahlart || null,
-          storno_reason: (type === 'storno' ? (storno_reason || null) : null)
-        };
-      } else {
-        throw dbErr;
-      }
-    }
+    const { data: newRow, error: insErr } = await supabase
+      .from('belegliste')
+      .insert({
+        owner_id: tenantId,
+        type,
+        amount_eur: Number(amount_eur),
+        patient_id: patient_id || null,
+        prescription_id: prescription_id || null,
+        abrechnung_id: abrechnung_id || null,
+        reference_text: reference_text || null,
+        created_by: u.user.id,
+        zahlart: zahlart || null,
+        storno_reason: (type === 'storno' ? (storno_reason || null) : null)
+      })
+      .select()
+      .single();
+    if (insErr) throw insErr;
 
     return res.status(201).json(newRow);
   } catch (e) {
@@ -2225,47 +2161,8 @@ router.get('/belegliste/export', async (req, res) => {
       query = query.lte('created_at', `${to}T23:59:59Z`);
     }
 
-    let rows;
-    try {
-      const { data, error: qErr } = await query;
-      if (qErr) throw qErr;
-      rows = data;
-    } catch (dbErr) {
-      if (dbErr.message && dbErr.message.includes("Could not find the table")) {
-        console.warn('[Belegliste] Table public.belegliste not found in database. Exporting high-fidelity mock CSV data.');
-        rows = [
-          {
-            beleg_nr: 1, created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-            type: 'zuzahlung', amount_eur: 13.50, reference_text: 'Zuzahlung erhalten: Jane Doe'
-          },
-          {
-            beleg_nr: 2, created_at: new Date(Date.now() - 3600000).toISOString(),
-            type: 'barverkauf', amount_eur: 25.00, reference_text: '1x Gutschein Massage'
-          },
-          {
-            beleg_nr: 3, created_at: new Date().toISOString(),
-            type: 'storno', amount_eur: -25.00, reference_text: 'STORNO für Beleg-Nr: 000002 (1x Gutschein Massage)'
-          }
-        ];
-        // Sort ascending by beleg_nr
-        rows.sort((a, b) => a.beleg_nr - b.beleg_nr);
-        // Apply filters in-memory
-        if (type && type !== 'all') {
-          rows = rows.filter(r => r.type === type);
-        }
-        if (zahlart && zahlart !== 'all') {
-          rows = rows.filter(r => r.zahlart === zahlart);
-        }
-        if (from) {
-          rows = rows.filter(r => r.created_at >= `${from}T00:00:00Z`);
-        }
-        if (to) {
-          rows = rows.filter(r => r.created_at <= `${to}T23:59:59Z`);
-        }
-      } else {
-        throw dbErr;
-      }
-    }
+    const { data: rows, error: qErr } = await query;
+    if (qErr) throw qErr;
 
     const csvContent = generateCsvString(rows);
     const buffer = Buffer.from(csvContent, 'latin1');

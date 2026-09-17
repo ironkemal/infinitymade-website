@@ -8,6 +8,7 @@
 
 | Tarih | Karar | Gerekçe / Fundstelle | Durum | Yeniden değerlendirme tetiği |
 |---|---|---|---|---|
+| 2026-09-17 | **Kassenbuch/TSE: § 146a AO muafiyeti KAPATILMADI (🔧 koşullu). Ödenmemiş fatura Kassenbuch'a girmez. Export hedefi DATEV EXTF, Elster DEĞİL.** | Beta-1'in "silinemez + export = TSE gerekmez" gerekçesi yanlış: GoBD (§ 146 Abs. 4, § 147 AO) ile § 146a AO ayrı raylar. Ölçüt AEAO zu § 146a Nr. 1.2 "Kassenfunktion" = *Erfassung und Abwicklung zumindest teilweise barer Zahlungsvorgänge*, **yetenek testi** ("auf die Funktionsweise ... nicht was tatsächlich erfasst wird"), Kassenlade gerekmez; § 1 S. 2 KassenSichV'nin Buchhaltungsprogramm istisnası yalnız Tagesendsummen içindir. `dashboard.html:1553` "GoBD-Kassenbuch" + `:1556` "Barverkauf eintragen" + Kassieren-Dialog + storno + Beleg → Kassenfunktion lehine. Bize özel risk müşteride değil bizde: § 146a Abs. 1 S. 5 AO (gewerbsmäßig bewerben/in Verkehr bringen yasağı) + § 379 Abs. 1 Nr. 6 i.V.m. Abs. 6 AO, **bis 25.000 €**. Gerçekçi sonuç: Bußgeld değil, Steuerberater onayı alamayan satışın kapanmaması. Seçilen yol (B+C): kapsam dışına çıkma — "Kasse/Kassenbuch" dili kaldırılır, serbest "Barverkauf" gözden geçirilir, Kassenbon basılmaz, Verfahrensdokumentation'da offene Ladenkasse praxiste kalır + Steuerberater'dan tek soruluk yazılı teyit. TSE satın alma reddedildi: Cloud-TSE 8–20 €/ay/praxis + DSFinV-K/TR-03153, üstelik on-prem kutudan zorunlu dış çağrı (G8/K6 çatışması). GoBD tarafı: ödeme anında kayıt **doğru** (§ 146 Abs. 1 AO Kassensturzfähigkeit) — Ops #223 "jede Rechnung muss einfließen" Kassenbuch'a uygulanmaz, ayrı Umsatz/Offene-Posten görünümü olur. Tespit edilen GoBD kusuru: `api-backend/billing/api/abrechnung.routes.js:2234-2249` + `:2152-2168` mock-fallback uydurma satırları `gobd_kassenbuch.csv` adıyla veriyor → kaldırılacak. Elster export hedefi değildir (import yok); § 146a Abs. 4 Kassenmeldung praxisin ödevi, Praxura yapmaz (§ 5 StBerG, 05.09.2026 kararıyla aynı çizgi). | **Açık — 🔧 koşullu:** B (dil/kapsam düzeltmesi) + C (Steuerberater yazılı teyidi) tamamlanınca kapanır | Steuerberater teyidi gelmesi · "Barverkauf"/Bondruck özelliklerinin genişletilmesi · TSE'li bir müşteri talebi · AEAO/KassenSichV'de Kassenbuch tanımının netleşmesi |
 | 2026-09-17 | **Beta müşterinin kendi ITSG/Trust-Center hesabına Kemal'in girip §302 test dosyası göndermesi YAPILMAZ (koşullu ⛔)** | Praxis'in ITSG Trust-Center sertifikası kendi IK'sına bağlı; Kemal bu hesapla işlem yaparsa GKV'ye karşı kimin beyanda bulunduğu belirsizleşir (gönderen fiilen Praxura, beyan sahibi görünen praxis) — hatalı/test verisi gerçek IK altında giderse § 263 StGB Abrechnungsbetrug şüphesi praxis'e düşer, Praxura "mitwirkende Person" olarak zincire girer. Ayrıca "Tool, kein Abrechnungsdienstleister" konumlandırması (bkz. yukarıdaki kapalı karar) çöker — müşteri adına gönderim yapmak fiilen Abrechnung'a katılmaktır. Testkennzeichen'in EDIFACT dosya adında olması (`TSOL0nnn`) tek başına yetmez — yanlış bayrak = canlı Abrechnung riski kalıcıdır. → `konsey/tutanak/2026-09-17-itsg-datenannahmestelle-test-yolu.md` | **⛔ koşullu — üç şart birlikte sağlanırsa açılır:** (a) praxis'ten yazılı Vollmacht + AVV, (b) praxis'in Trust-Center sözleşmesinin devri yasaklamadığının yazılı teyidi, (c) Datenannahmestelle'ye "Softwarehersteller-Test, IK X üzerinden" önceden bildirim — VE Kemal şifreyle asla girmez, praxis kendi tıklar, Praxura yalnız ekran paylaşımında izler. Bugün üçü de sağlanmıyor → kapalı | Üç şartın hepsi yazılı olarak sağlandığında; veya §302 test süreci için ayrı bir dummy/sandbox-IK mekanizması Datenannahmestelle tarafından teyit edilirse |
 | 2026-06-11 | **Externer DSB atanmayacak** | Art. 37 Abs. 1 lit. a–c DSGVO'nun üç kriteri de karşılanmıyor; beta fazı, ErwG 91 anlamında "umfangreich" eşiği altında → `compliance/DSB_PRUEFVERMERK.md` | Kapalı | Aktif müşteri > 50, veri erişimli 2. çalışan, veya Kerntätigkeit değişimi |
 | 2026-07-06 | **SaaS → on-premise pivotu** | §393 SGB V / BSI C5 Typ-2 yükümlülüğünden kapsam dışına çıkma; C5 maliyeti >€200k = ⛔ varoluşsal → `ON_PREMISE_ANALYSE.md`, `ONPREM_MIGRATION_PLAYBOOK.md` | Uygulanıyor | C5 denklik kuralının değişmesi; cloud'da hasta verisi işleyen yeni bir zincir eklenmesi |
@@ -158,3 +159,101 @@ Zweck noch neue Empfänger.
 Standorttrennung ist keine RLS-Zusicherung), oder wenn die Rolle `employee` auch an
 nicht-klinisches Personal (Empfang) vergeben wird. Beide Auslöser sind identisch mit
 denen des Eintrags vom 28.08.2026.
+
+## 2026-09-17 — Team-Zugriff: `warteliste` und `patient_notes` freigegeben, `fußstatus` gegenstandslos (A-06 geschlossen)
+
+**Fortsetzung des Eintrags vom 03.09.2026** (direkt darüber). Dort blieben drei der fünf
+Tabellen aus Registereintrag A-06 offen; sie werden hier einzeln entschieden. Ops-Karte #253.
+
+**1. `fußstatus` — keine Freigabe, die Frage stellt sich nicht.**
+Die Tabelle ist **veraltet** (`db/REGISTER.md` → `fußstatus`: „niemand mehr im Code");
+sie wird von keiner Stelle gelesen oder geschrieben und steht nur noch in der
+Löschreihenfolge (`api/dsgvo.js:136,271`), damit Altbestände mitverschwinden. Der im
+Ticket beschriebene Widerspruch ist eine **Namensverwechslung**: der Menüpunkt
+„Fußbefund" (`nav-registry.js:110`, bereits `roles: ['owner','employee']`) hat die
+Panel-Id `fussstatus`, seine Datenquelle ist aber `pat_fussbefund`
+(`module/fussbefund.js`) — und die trägt mit `pat_fussbefund_owner_access [ALL] owner +
+Team` längst vollen Team-Zugriff, lesend **und** schreibend. Angestellte Therapeuten
+sehen und dokumentieren den Fußbefund heute schon. **Entschieden: keine Policy-Änderung.**
+Stattdessen Altbestand zählen und die Tabelle löschen — Aufräumarbeit, keine Rechtsfrage;
+der `api/dsgvo.js`-Eintrag bleibt bis zum Drop stehen.
+
+**2. `warteliste` — Team bekommt SELECT, INSERT, UPDATE.**
+Inhalt sind Kontaktdaten und Wunschzeiten, kein Befund; der Gesundheitsbezug entsteht nur
+mittelbar über den Umstand der Behandlung bei einem Heilmittelerbringer (Art. 9 Abs. 1
+DSGVO in der Auslegung des EuGH v. 04.10.2024, C-21/23 — deshalb wie ein Gesundheitsdatum
+behandelt, aber die Erforderlichkeit ist hier am deutlichsten von allen drei Tabellen).
+Rechtsgrundlage wie am 03.09.: **Art. 9 Abs. 2 lit. h i. V. m. Abs. 3 DSGVO, § 22 Abs. 1
+Nr. 1 lit. b BDSG** — Terminorganisation ist Teil der Behandlungsorganisation;
+**§ 203 Abs. 3 S. 1 StGB** — berufsmäßig tätiger Gehilfe, die Lage des Inhabers
+verschlechtert sich nicht. **Schreibrecht wird hier — anders als am 03.09. —
+mitentschieden**, weil die drei damaligen Gegengründe sämtlich entfallen: wer einen Termin
+absagt, muss den frei werdenden Platz auch nachbesetzen dürfen (genau die im Ticket
+beschriebene Reibung); ein Wartelisteneintrag ist **keine Dokumentation nach § 630f BGB**,
+sondern eine Organisationsnotiz, also kein Granularitätsproblem; es gibt keine
+Statusmaschine wie bei `verordnungen.status`, an der ein Direktschreiben vorbeiliefe.
+**DELETE bleibt beim Inhaber** (Art. 5 Abs. 1 lit. d — ein fremder Wunsch soll nicht
+unbemerkt verschwinden; Stornieren geschieht über `status`, nicht über Löschen).
+⚠️ Ohne Oberfläche bleibt die Policy wirkungslos: `nav-registry.js` Zeilen 63, 92 und 126
+führen `warteliste` heute als `roles: ['owner']` und müssen `employee` bekommen.
+
+**3. `patient_notes` — Team bekommt SELECT, Schreiben bleibt beim Inhaber.**
+Dieselbe nie geschlossene Lücke wie bei den Verordnungen: der Menüpunkt „Notizen" ist in
+`nav-registry.js:65,95,128` seit jeher für `employee` frei, die Seite bleibt leer.
+Zusätzlich liest das Terminfenster die Zeile (`module/termin-panel-patient.js:169`) — der
+behandelnde Angestellte sieht dort heute stillschweigend ein leeres Notizfeld und weiß
+nicht, dass eine Notiz existiert. Der Freitext ist die sensibelste der drei Tabellen; die
+Freigabe trägt trotzdem, weil der Zweck identisch ist (Behandlung durch genau diese
+Person, Art. 9 Abs. 2 lit. h) und die Alternative das größere Risiko wäre: der Therapeut
+behandelt, ohne den Hinweis zu kennen, den der Inhaber notiert hat.
+**Kein Schreibrecht**, aus zwei Gründen, die den drei Gründen vom 03.09. entsprechen:
+(a) die Tabelle führt **keine Verfasserspalte**; (b) sie wird **pro Patient als genau eine
+Zeile geführt und an Ort und Stelle überschrieben** (`dashboard.js:13825-13828`:
+`.maybeSingle()` + UPDATE, zusätzlich `ai_summary` in `:13856`). Ein Team-Schreibrecht
+hieße heute: jeder Kollege überschreibt die Notiz des Inhabers spurlos. Soweit die Notiz
+überhaupt Behandlungsdokumentation ist, verlangt § 630f Abs. 1 S. 2 BGB, dass
+Berichtigungen und der ursprüngliche Inhalt erkennbar bleiben. Das Schreibrecht wird
+nachgezogen, sobald Verfasserspalte + Versionierung existieren — das Muster liegt mit
+`pat_fussbefund` (`eintrag_id`/`version`/`ist_aktuell`) fertig vor.
+
+**Umsetzung (für `db-ustasi`, eine Migration in `api-backend/db/migrations/`).**
+Additive SELECT-/Schreib-Policies nach dem Muster `Employees can view team
+podologie_behandlungen`; bestehende Owner-Policies bleiben unverändert (PERMISSIVE
+Policies werden ODER-verknüpft, es wird nichts entzogen). Mandantenbezug strikt über
+`profiles.owner_id`, nie über `business_id`:
+- `patient_notes` (heute: `owner_only [ALL] USING (auth.uid() = owner_id)`) → **eine**
+  neue Policy `Employees can view team patient_notes` [SELECT] USING
+  `EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.owner_id = patient_notes.owner_id)`.
+  Kein INSERT/UPDATE/DELETE.
+- `warteliste` (heute: `Owner zugriff auf warteliste [ALL] USING (owner_id = auth.uid())`)
+  → **drei** neue Policies mit demselben `EXISTS`-Ausdruck gegen `warteliste.owner_id`:
+  `Employees can view team warteliste` [SELECT] USING …,
+  `Employees can insert team warteliste` [INSERT] WITH CHECK … (der `EXISTS`-Ausdruck im
+  WITH CHECK ist die Mandantensperre — ohne ihn könnte ein Angestellter Zeilen unter
+  fremder `owner_id` anlegen), `Employees can update team warteliste` [UPDATE] USING …
+  WITH CHECK …. **Kein DELETE.**
+- `fußstatus`: **keine Änderung.** In SQL immer quoten (`"fußstatus"`).
+- Danach `db/SCHEMA-RLS.sql` + `db/SCHEMA.sql` im selben Commit auffrischen; der
+  HINWEIS-Block zu den „drei verbleibenden ⚠️ ohne Team-Zugriff"-Tabellen
+  (`db/SCHEMA-RLS.sql:723-730`) ist gegenstandslos und wird ersetzt, ebenso die
+  „Achtung"-Zeilen in `db/REGISTER.md` bei `warteliste` und `patient_notes`.
+
+**AVV/DPA unberührt** — die Rollenverteilung innerhalb der Praxis ist eine
+Organisationsentscheidung des Verantwortlichen (Art. 32 Abs. 4 DSGVO), keine Frage der
+Auftragsverarbeitung. **Keine neue DSFA** nach Art. 35 (weder neue Technologie noch neuer
+Zweck noch neue Empfänger). Mitlaufend: `VVT.md` Verarbeitung 3 (Zeile „Zugriff innerhalb
+der Praxis") und `TOM.md` §1.3 um die beiden Tabellen ergänzen.
+
+**Sicherheitsseite.** Kein Veto zu erwarten: die Mandantengrenze bleibt unberührt, es ist
+eine Grenze *innerhalb* eines Auftraggebers, und in allen vier Policies steht der
+`profiles.owner_id`-Vergleich. Registereintrag **A-06 ist mit diesem Eintrag vollständig
+geschlossen**: zwei Tabellen am 03.09.2026, zwei hier freigegeben, eine gegenstandslos.
+
+**Neubewertung ausgelöst durch:** die Rolle `employee` wird auch an **nicht-klinisches
+Personal (Empfang)** vergeben — dann ist `patient_notes` der Punkt, an dem nachgeschärft
+werden muss (Freitext ohne Behandlungsbezug beim Empfang ist von Art. 9 Abs. 2 lit. h
+nicht mehr gedeckt), **nicht** `warteliste`, die für den Empfang gerade der richtige
+Bildschirm ist; erster Kunde mit mehreren Standorten (die Standorttrennung ist keine
+RLS-Zusicherung). Beide Auslöser identisch mit den Einträgen vom 03.09.2026 und
+28.08.2026. Zusätzlich: sobald `patient_notes` eine Verfasserspalte und Versionierung
+bekommt, wird das Schreibrecht ohne neue Grundsatzentscheidung nachgezogen.
