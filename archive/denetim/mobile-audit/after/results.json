@@ -3613,27 +3613,6 @@
         {
           "tag": "BUTTON",
           "id": null,
-          "cls": "active",
-          "w": 43,
-          "h": 25
-        },
-        {
-          "tag": "BUTTON",
-          "id": null,
-          "cls": null,
-          "w": 43,
-          "h": 25
-        },
-        {
-          "tag": "BUTTON",
-          "id": null,
-          "cls": null,
-          "w": 43,
-          "h": 25
-        },
-        {
-          "tag": "BUTTON",
-          "id": null,
           "cls": "pw-toggle",
           "w": 26,
           "h": 26
@@ -3691,7 +3670,7 @@
       ]
     },
     "issues": [
-      "10 small touch targets",
+      "7 small touch targets",
       "1 overlaps"
     ]
   },

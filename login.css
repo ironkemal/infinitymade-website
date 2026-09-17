@@ -229,16 +229,16 @@ input:focus {
    Phone & Tablet Responsive Rules
    =========================================================== */
 
-/* Tablet & Landscape Phone Band (min-width: 641px) */
-@media (min-width: 641px) {
-  .login-card {
-    width: 100%;
-    max-width: 440px;
-  }
-}
+/* min-width:641px bloğu 17.09.2026'da (Ops #61) kaldırıldı: .login-card
+   zaten satır 58-60'ta width:100%; max-width:440px — blok birebir aynı
+   değerleri tekrarlıyordu, hiçbir görünür etkisi yoktu (ölçüldü:
+   archive/denetim/mobile-audit/after/results.json login@768/1024). */
 
-/* Phone Portrait (max-width: 640px) */
-@media (max-width: 640px) {
+/* 640px -> 768px (Ops #61, breakpoint konsolidasyonu): hedef ölçeğe
+   hizalandı. Eşiği yükseltmek dokunma-hedefi/padding iyileştirmelerini
+   641-768 aralığına (küçük tabletler) da yayıyor — taşma riski yok,
+   .login-card zaten max-width:440px ile sınırlı. */
+@media (max-width: 768px) {
   .login-wrap {
     padding: 24px 16px;
   }

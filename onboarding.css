@@ -1277,8 +1277,10 @@ body:has([data-step="plan"]:not([hidden])) .ob-main {
   }
 }
 
-/* Tablet centering & sizing optimization (min-width: 641px and max-width: 1024px) */
-@media (min-width: 641px) and (max-width: 1024px) {
+/* Tablet centering & sizing optimization (min-width: 769px and max-width: 1024px)
+   641 -> 769 (Ops #61, breakpoint konsolidasyonu): alt sınır, aşağıdaki
+   641-768 stacking bloğuyla artık aynı yerde bölünüyor — çakışma yok. */
+@media (min-width: 769px) and (max-width: 1024px) {
   body {
     display: flex;
     flex-direction: column;
@@ -1312,7 +1314,13 @@ body:has([data-step="plan"]:not([hidden])) .ob-main {
   .ob-logout { padding: 5px 10px; font-size: 0.75rem; }
 }
 
-@media (max-width: 640px) {
+/* 640px -> 768px (Ops #61, breakpoint konsolidasyonu): hedef ölçeğe
+   hizalandı. Bu blok service/hours-row'u tek-sütuna yığıyor ve plan-grid'i
+   1-kolona indiriyor — önceden 641-768 aralığı (küçük tablet dikey) bunun
+   yerine yukarıdaki 1024-bloğunun 2-kolonunu alıyordu, orada sabit
+   genişlikli hücreler (80px/80px) sıkışıp taşabiliyordu. Ölçüldü:
+   archive/denetim/mobile-audit/after/ onboarding@768. */
+@media (max-width: 768px) {
   /* General screen padding */
   .ob-main {
     padding: 32px 16px 60px;

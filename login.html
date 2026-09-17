@@ -206,7 +206,10 @@
     }
     .back-home a:hover { color: var(--ink); }
 
-    @media (max-width: 640px) {
+    /* 640px -> 768px (Ops #61, breakpoint konsolidasyonu, 17.09.2026): hedef
+       ölçeğe hizalandı ve aynı öğe için ayrı 768px bloğuyla birleştirildi —
+       iki farklı eşik aynı .login-card'a çakışan davranış dayatıyordu. */
+    @media (max-width: 768px) {
       body { padding: 1.5rem 1rem; }
       .login-card { padding: 2.2rem 1.6rem; }
       form input, .btn-primary, .btn-register {
@@ -222,8 +225,6 @@
         min-height: 44px;
         padding: 0.6rem 1rem;
       }
-    }
-    @media (max-width: 768px) {
       input[type="text"],
       input[type="email"],
       input[type="password"],

@@ -1,0 +1,4394 @@
+{
+  "onboarding@360": {
+    "width": 360,
+    "raw": {
+      "innerWidth": 360,
+      "scrollWidth": 360,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-account@360": {
+    "width": 360,
+    "raw": {
+      "innerWidth": 360,
+      "scrollWidth": 360,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-business@360": {
+    "width": 360,
+    "raw": {
+      "innerWidth": 360,
+      "scrollWidth": 360,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-billing@360": {
+    "width": 360,
+    "raw": {
+      "innerWidth": 360,
+      "scrollWidth": 360,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "INPUT",
+          "id": "bizTaxExempt",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-owner@360": {
+    "width": 360,
+    "raw": {
+      "innerWidth": 360,
+      "scrollWidth": 360,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-services@360": {
+    "width": 360,
+    "raw": {
+      "innerWidth": 360,
+      "scrollWidth": 360,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-hours@360": {
+    "width": 360,
+    "raw": {
+      "innerWidth": 360,
+      "scrollWidth": 360,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-plan@360": {
+    "width": 360,
+    "raw": {
+      "innerWidth": 360,
+      "scrollWidth": 360,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn active",
+          "w": 118,
+          "h": 39
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn",
+          "w": 156,
+          "h": 39
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 207,
+          "h": 36
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAgb",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 29,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 144,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 149,
+          "h": 17
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAvv",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 199,
+          "h": 37
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "12 small touch targets"
+    ]
+  },
+  "onboarding-done@360": {
+    "width": 360,
+    "raw": {
+      "innerWidth": 360,
+      "scrollWidth": 360,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "admin-login@360": {
+    "width": 360,
+    "raw": {
+      "innerWidth": 360,
+      "scrollWidth": 360,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "brand",
+          "w": 83,
+          "h": 27
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "1 small touch targets"
+    ]
+  },
+  "onboarding@390": {
+    "width": 390,
+    "raw": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-account@390": {
+    "width": 390,
+    "raw": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-business@390": {
+    "width": 390,
+    "raw": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-billing@390": {
+    "width": 390,
+    "raw": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "INPUT",
+          "id": "bizTaxExempt",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-owner@390": {
+    "width": 390,
+    "raw": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-services@390": {
+    "width": 390,
+    "raw": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-hours@390": {
+    "width": 390,
+    "raw": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-plan@390": {
+    "width": 390,
+    "raw": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn active",
+          "w": 118,
+          "h": 39
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn",
+          "w": 156,
+          "h": 39
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 207,
+          "h": 36
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAgb",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 29,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 144,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 149,
+          "h": 17
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAvv",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 239,
+          "h": 37
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "12 small touch targets"
+    ]
+  },
+  "onboarding-done@390": {
+    "width": 390,
+    "raw": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "admin-login@390": {
+    "width": 390,
+    "raw": {
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "brand",
+          "w": 83,
+          "h": 27
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "1 small touch targets"
+    ]
+  },
+  "onboarding@414": {
+    "width": 414,
+    "raw": {
+      "innerWidth": 414,
+      "scrollWidth": 414,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-account@414": {
+    "width": 414,
+    "raw": {
+      "innerWidth": 414,
+      "scrollWidth": 414,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-business@414": {
+    "width": 414,
+    "raw": {
+      "innerWidth": 414,
+      "scrollWidth": 414,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-billing@414": {
+    "width": 414,
+    "raw": {
+      "innerWidth": 414,
+      "scrollWidth": 414,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "INPUT",
+          "id": "bizTaxExempt",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-owner@414": {
+    "width": 414,
+    "raw": {
+      "innerWidth": 414,
+      "scrollWidth": 414,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-services@414": {
+    "width": 414,
+    "raw": {
+      "innerWidth": 414,
+      "scrollWidth": 414,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-hours@414": {
+    "width": 414,
+    "raw": {
+      "innerWidth": 414,
+      "scrollWidth": 414,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-plan@414": {
+    "width": 414,
+    "raw": {
+      "innerWidth": 414,
+      "scrollWidth": 414,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn active",
+          "w": 118,
+          "h": 39
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn",
+          "w": 156,
+          "h": 39
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 207,
+          "h": 36
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAgb",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 29,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 144,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 149,
+          "h": 17
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAvv",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 274,
+          "h": 37
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "12 small touch targets"
+    ]
+  },
+  "onboarding-done@414": {
+    "width": 414,
+    "raw": {
+      "innerWidth": 414,
+      "scrollWidth": 414,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "admin-login@414": {
+    "width": 414,
+    "raw": {
+      "innerWidth": 414,
+      "scrollWidth": 414,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "brand",
+          "w": 83,
+          "h": 27
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "1 small touch targets"
+    ]
+  },
+  "onboarding@480": {
+    "width": 480,
+    "raw": {
+      "innerWidth": 480,
+      "scrollWidth": 480,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-account@480": {
+    "width": 480,
+    "raw": {
+      "innerWidth": 480,
+      "scrollWidth": 480,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-business@480": {
+    "width": 480,
+    "raw": {
+      "innerWidth": 480,
+      "scrollWidth": 480,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-billing@480": {
+    "width": 480,
+    "raw": {
+      "innerWidth": 480,
+      "scrollWidth": 480,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "INPUT",
+          "id": "bizTaxExempt",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-owner@480": {
+    "width": 480,
+    "raw": {
+      "innerWidth": 480,
+      "scrollWidth": 480,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-services@480": {
+    "width": 480,
+    "raw": {
+      "innerWidth": 480,
+      "scrollWidth": 480,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-hours@480": {
+    "width": 480,
+    "raw": {
+      "innerWidth": 480,
+      "scrollWidth": 480,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-plan@480": {
+    "width": 480,
+    "raw": {
+      "innerWidth": 480,
+      "scrollWidth": 480,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn active",
+          "w": 118,
+          "h": 39
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn",
+          "w": 156,
+          "h": 39
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 279,
+          "h": 36
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAgb",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 29,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 144,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 149,
+          "h": 17
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAvv",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 304,
+          "h": 37
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "12 small touch targets"
+    ]
+  },
+  "onboarding-done@480": {
+    "width": 480,
+    "raw": {
+      "innerWidth": 480,
+      "scrollWidth": 480,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "admin-login@480": {
+    "width": 480,
+    "raw": {
+      "innerWidth": 480,
+      "scrollWidth": 480,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "brand",
+          "w": 83,
+          "h": 27
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "1 small touch targets"
+    ]
+  },
+  "onboarding@641": {
+    "width": 641,
+    "raw": {
+      "innerWidth": 641,
+      "scrollWidth": 641,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-account@641": {
+    "width": 641,
+    "raw": {
+      "innerWidth": 641,
+      "scrollWidth": 641,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-business@641": {
+    "width": 641,
+    "raw": {
+      "innerWidth": 641,
+      "scrollWidth": 641,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-billing@641": {
+    "width": 641,
+    "raw": {
+      "innerWidth": 641,
+      "scrollWidth": 641,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "INPUT",
+          "id": "bizTaxExempt",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-owner@641": {
+    "width": 641,
+    "raw": {
+      "innerWidth": 641,
+      "scrollWidth": 641,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-services@641": {
+    "width": 641,
+    "raw": {
+      "innerWidth": 641,
+      "scrollWidth": 641,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": "addServiceBtn",
+          "cls": "ob-link-btn",
+          "w": 247,
+          "h": 34
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-hours@641": {
+    "width": 641,
+    "raw": {
+      "innerWidth": 641,
+      "scrollWidth": 641,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-plan@641": {
+    "width": 641,
+    "raw": {
+      "innerWidth": 641,
+      "scrollWidth": 641,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn active",
+          "w": 118,
+          "h": 39
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn",
+          "w": 156,
+          "h": 39
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 293,
+          "h": 16
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAgb",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 29,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 144,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 149,
+          "h": 17
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAvv",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 407,
+          "h": 37
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "12 small touch targets"
+    ]
+  },
+  "onboarding-done@641": {
+    "width": 641,
+    "raw": {
+      "innerWidth": 641,
+      "scrollWidth": 641,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "admin-login@641": {
+    "width": 641,
+    "raw": {
+      "innerWidth": 641,
+      "scrollWidth": 641,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "brand",
+          "w": 83,
+          "h": 27
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "1 small touch targets"
+    ]
+  },
+  "onboarding@700": {
+    "width": 700,
+    "raw": {
+      "innerWidth": 700,
+      "scrollWidth": 700,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-account@700": {
+    "width": 700,
+    "raw": {
+      "innerWidth": 700,
+      "scrollWidth": 700,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-business@700": {
+    "width": 700,
+    "raw": {
+      "innerWidth": 700,
+      "scrollWidth": 700,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-billing@700": {
+    "width": 700,
+    "raw": {
+      "innerWidth": 700,
+      "scrollWidth": 700,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "INPUT",
+          "id": "bizTaxExempt",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-owner@700": {
+    "width": 700,
+    "raw": {
+      "innerWidth": 700,
+      "scrollWidth": 700,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-services@700": {
+    "width": 700,
+    "raw": {
+      "innerWidth": 700,
+      "scrollWidth": 700,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": "addServiceBtn",
+          "cls": "ob-link-btn",
+          "w": 247,
+          "h": 34
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-hours@700": {
+    "width": 700,
+    "raw": {
+      "innerWidth": 700,
+      "scrollWidth": 700,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-plan@700": {
+    "width": 700,
+    "raw": {
+      "innerWidth": 700,
+      "scrollWidth": 700,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn active",
+          "w": 118,
+          "h": 39
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn",
+          "w": 156,
+          "h": 39
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 293,
+          "h": 16
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAgb",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 29,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 144,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 149,
+          "h": 17
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAvv",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 426,
+          "h": 37
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "12 small touch targets"
+    ]
+  },
+  "onboarding-done@700": {
+    "width": 700,
+    "raw": {
+      "innerWidth": 700,
+      "scrollWidth": 700,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "admin-login@700": {
+    "width": 700,
+    "raw": {
+      "innerWidth": 700,
+      "scrollWidth": 700,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "brand",
+          "w": 83,
+          "h": 27
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "1 small touch targets"
+    ]
+  },
+  "onboarding@768": {
+    "width": 768,
+    "raw": {
+      "innerWidth": 768,
+      "scrollWidth": 768,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-account@768": {
+    "width": 768,
+    "raw": {
+      "innerWidth": 768,
+      "scrollWidth": 768,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-business@768": {
+    "width": 768,
+    "raw": {
+      "innerWidth": 768,
+      "scrollWidth": 768,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-billing@768": {
+    "width": 768,
+    "raw": {
+      "innerWidth": 768,
+      "scrollWidth": 768,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "INPUT",
+          "id": "bizTaxExempt",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-owner@768": {
+    "width": 768,
+    "raw": {
+      "innerWidth": 768,
+      "scrollWidth": 768,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-services@768": {
+    "width": 768,
+    "raw": {
+      "innerWidth": 768,
+      "scrollWidth": 768,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": "addServiceBtn",
+          "cls": "ob-link-btn",
+          "w": 247,
+          "h": 34
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-hours@768": {
+    "width": 768,
+    "raw": {
+      "innerWidth": 768,
+      "scrollWidth": 768,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-plan@768": {
+    "width": 768,
+    "raw": {
+      "innerWidth": 768,
+      "scrollWidth": 768,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn active",
+          "w": 118,
+          "h": 39
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn",
+          "w": 156,
+          "h": 39
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 293,
+          "h": 16
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAgb",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 29,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 144,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 149,
+          "h": 17
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAvv",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 373,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "12 small touch targets"
+    ]
+  },
+  "onboarding-done@768": {
+    "width": 768,
+    "raw": {
+      "innerWidth": 768,
+      "scrollWidth": 768,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "admin-login@768": {
+    "width": 768,
+    "raw": {
+      "innerWidth": 768,
+      "scrollWidth": 768,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "brand",
+          "w": 83,
+          "h": 27
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "1 small touch targets"
+    ]
+  },
+  "onboarding@1024": {
+    "width": 1024,
+    "raw": {
+      "innerWidth": 1024,
+      "scrollWidth": 1024,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-account@1024": {
+    "width": 1024,
+    "raw": {
+      "innerWidth": 1024,
+      "scrollWidth": 1024,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "ob-pw-toggle",
+          "w": 26,
+          "h": 26
+        },
+        {
+          "tag": "INPUT",
+          "id": "accountAccept",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 30,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 148,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPassword",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "INPUT",
+            "id": "accountPasswordConfirm",
+            "cls": null
+          },
+          "b": {
+            "tag": "BUTTON",
+            "id": null,
+            "cls": "ob-pw-toggle"
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "8 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-business@1024": {
+    "width": 1024,
+    "raw": {
+      "innerWidth": 1024,
+      "scrollWidth": 1024,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-billing@1024": {
+    "width": 1024,
+    "raw": {
+      "innerWidth": 1024,
+      "scrollWidth": 1024,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "INPUT",
+          "id": "bizTaxExempt",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-owner@1024": {
+    "width": 1024,
+    "raw": {
+      "innerWidth": 1024,
+      "scrollWidth": 1024,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-services@1024": {
+    "width": 1024,
+    "raw": {
+      "innerWidth": 1024,
+      "scrollWidth": 1024,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": "addServiceBtn",
+          "cls": "ob-link-btn",
+          "w": 247,
+          "h": 34
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "4 small touch targets"
+    ]
+  },
+  "onboarding-hours@1024": {
+    "width": 1024,
+    "raw": {
+      "innerWidth": 1024,
+      "scrollWidth": 1024,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "onboarding-plan@1024": {
+    "width": 1024,
+    "raw": {
+      "innerWidth": 1024,
+      "scrollWidth": 1024,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn active",
+          "w": 118,
+          "h": 39
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "plan-toggle-btn",
+          "w": 156,
+          "h": 39
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 293,
+          "h": 16
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAgb",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 29,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 144,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 489,
+          "h": 37
+        },
+        {
+          "tag": "INPUT",
+          "id": "consentAvv",
+          "cls": null,
+          "w": 18,
+          "h": 18
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 373,
+          "h": 17
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": [
+        {
+          "a": {
+            "tag": "A",
+            "id": null,
+            "cls": null
+          },
+          "b": {
+            "tag": "A",
+            "id": null,
+            "cls": null
+          },
+          "overlapPct": 100
+        },
+        {
+          "a": {
+            "tag": "A",
+            "id": null,
+            "cls": null
+          },
+          "b": {
+            "tag": "A",
+            "id": null,
+            "cls": null
+          },
+          "overlapPct": 100
+        }
+      ]
+    },
+    "issues": [
+      "12 small touch targets",
+      "2 overlaps"
+    ]
+  },
+  "onboarding-done@1024": {
+    "width": 1024,
+    "raw": {
+      "innerWidth": 1024,
+      "scrollWidth": 1024,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "ob-brand",
+          "w": 74,
+          "h": 32
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 66,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "id": null,
+          "cls": null,
+          "w": 74,
+          "h": 16
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "3 small touch targets"
+    ]
+  },
+  "admin-login@1024": {
+    "width": 1024,
+    "raw": {
+      "innerWidth": 1024,
+      "scrollWidth": 1024,
+      "hOverflow": false,
+      "overflowEls": [],
+      "smallTargets": [
+        {
+          "tag": "A",
+          "id": null,
+          "cls": "brand",
+          "w": 83,
+          "h": 27
+        }
+      ],
+      "overlaps": []
+    },
+    "issues": [
+      "1 small touch targets"
+    ]
+  }
+}
