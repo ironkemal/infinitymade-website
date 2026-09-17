@@ -5,7 +5,11 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 17.09.2026 (Ops #285 — Z-08/W-A02 `wissensbank`
+> İlk kurulum: 05.09.2026 · Son güncelleme: 17.09.2026 (Ops #290 — `gkv-302`'nin üç DTA
+> alanı araştırması `SPEC-RULES.md`'ye kaydedildi: Muster 13 → ZHE 7/8/9, Arbeitsunfall
+> kapsam dışı, LHB/SKZ § 8 Abs. 3. Kaynaklar orijinallere karşı doğrulandı; kod uygulaması
+> **yok** ve vertikal sıralama gereği ertelendi. Zincir notları Z-01/Z-02'ye işlendi.)
+> Aynı gün, önceki tur: 17.09.2026 (Ops #285 — Z-08/W-A02 `wissensbank`
 > ajanı tarafından doğrulandı: `builder`'ın bulguları git log + dosya karşılaştırmasıyla
 > teyit edildi, boşluk penceresi **01.07.–10.08.2026**'ya daraltıldı — bkz. Z-08.)
 > Önceki: 10.09.2026 (W-02 + W-03 girdi — Anhang 1 Kap. 4 ve Anhang 2 Kap. 9) ·
@@ -100,6 +104,16 @@ wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.pdf/.txt   (V21, ab 01.1
 ```
 Durum: ✅ geçerli. `legs.js` belgeye satır düzeyinde atıf yapıyor — **istenen desen bu.**
 
+📌 **17.09.2026 (Ops #290) — bu zincirden üç kural daha süzüldü, kod tarafı boş:**
+Anlage 1 V21 Kap. 5.5.3.3 (s. 70, SLLA-B ZHE alan listesi) ve s. 72-73 (SKZ segmenti)
+→ `SPEC-RULES.md` § „Muster 13 Kopfteil → ZHE alan 7/8/9" · „Arbeitsunfall … girmez" ·
+„LHB Genehmigungskennzeichen (SKZ) …". Üçünün de **yazıcı tarafı hazır**
+(`billing/dta/builder.js:192-194` ve `:210-216` → `segments.js:267-269,318-328`),
+**besleyen tarafı yok** — ne DB kolonu ne maske, yani alanlar bugün her dosyada boş
+gidiyor. Bu bir hata değil **durum tespiti**: uygulama Podoloji bitene kadar bilinçli
+ertelendi (Ops #290). Kaynak atıfları `wissensbank` tarafından orijinal `.txt`'lere karşı
+satır satır doğrulandı (17.09.2026), `gkv-302`'nin raporu olduğu gibi devralınmadı.
+
 **Z-01 iki ek dala sahip (10.09.2026'dan beri)** — Anlage 1'in kendisi değil, ona bağlı Anhang'lar:
 ```
 wissensbank/gemeinsam/302-tp5/Anhang_01_…_Kapitel_4_Datenuebermittlung_20170831   (ab 01.09.2017)  → W-02
@@ -123,6 +137,14 @@ wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218.pdf/.txt    (V22, ab 01.
 ⚠️ **Dikkat:** kod dosyasının adı `anlage3_v22` ve baş yorumu V22 PDF'ini kaynak
 gösteriyor, ama bugün geçerli olan **V21**. Baş yorum "gültig ab 01.02.2027" diyerek
 dürüst davranıyor; yine de dosya adı yanıltıcı. → açık madde W-A03.
+
+⚠️ **Atıf tuzağı (17.09.2026'da ölçüldü, Ops #290): Anlage 3'ün İÇİNDEKİLER'i gövdeyle
+uyuşmuyor.** İçindekiler §8.1.2 = „BVG/SER", §8.1.10 = „Verordnungsbesonderheiten",
+§8.1.16 = „Art der Genehmigung" derken **gövdede** aynı başlıklar §8.1.2.1, §8.1.11,
+§8.1.17'de duruyor (V21 `.txt` satır 103-122 ↔ 316-343 / 1009 / 1279). `SPEC-RULES.md`
+ve kod yorumlarındaki bütün § atıfları **gövde numaralandırmasına** göredir. İçindekiler
+sayfasından atıf verilmez — verilirse bir sonraki okuyan yanlış bölüme bakar ve „kural
+belgede yok" sonucuna varır.
 
 ### Z-03 · Physiotherapie fiyatları
 ```

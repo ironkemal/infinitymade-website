@@ -8,7 +8,10 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-16 (eGK kart okuyucu araştırması — Versichertenstatus kaynağı
+> Son güncelleme: 2026-09-17 (Ops #290 — `gkv-302`'nin DTA alan araştırması: Muster 13 →
+> ZHE 7/8/9, Arbeitsunfall kapsam dışı, LHB/SKZ § 8 Abs. 3; 3 yeni kural, `wissensbank`
+> tarafından orijinallere karşı doğrulandı. Kod uygulaması Podoloji sonrasına ertelendi.)
+> Önceki: 2026-09-16 (eGK kart okuyucu araştırması — Versichertenstatus kaynağı
 > + SMC-B'siz eGK okuma, 2 yeni kural)
 
 ---
@@ -476,6 +479,99 @@
   Ortak mapper ise `sector` parametresini zaten alıyor olmasına rağmen herkes için `'1'`
   yazıyordu, yani Ergo ve Logo da „Physiotherapie" diye gidiyordu.
 
+### Muster 13 Kopfteil → ZHE alan 7/8/9 (Verordnungsbesonderheiten · Unfall · BVG/SER)
+- **Kural:** Muster 13'ün baş kısmındaki üç kutu doğrudan üç ZHE alanına gider:
+  - **„Unfallfolgen"** işaretliyse → `ZHE` alan 8 **Unfallkennzeichen** = **`2`**
+    (sonstige Unfallfolgen). ⛔ Değer **`1`** (Arbeitsunfall/Wegeunfall/Berufskrankheit)
+    §302 akışına **hiç girmez** — ayrı kural, aşağıda. Değer **`3`** = Sonstiges
+    (BVFG, BEG, HHG, OEG, IfSG, SVG) belgede vardır, bugün kapsam dışı tutuldu.
+  - **„BVG/SER"** işaretliyse → `ZHE` alan 9 **Kennzeichen BVG/Sonstiges/SER** = **`6`**.
+    Tek değerdir. 01.07.2024'ten itibaren KBV muster'ları „BVG"den „SER"e geçiyor;
+    `6` bu geçiş boyunca **her ikisini birden** karşılar (Anlage 3 §8.1.2.1 Hinweis).
+  - `ZHE` alan 7 **Verordnungsbesonderheiten** Feldart **K**'dır ama koşullu bağlayıcıdır:
+    *„Sofern ein Sachverhalt aus 8.1.11 zutrifft, ist der entsprechende Schlüssel zwingend
+    anzugeben."* Heilmittel'de pratikte **üç değer** uygulanır: **`1`** Zahnarzt-/KFO-
+    Verordnung · **`2`** Schwangerschaft/Entbindung · **`4`** Entlassmanagement
+    (hastane, taburculuktan sonra **7 takvim gününe kadar** reçete eder — HeilM-RL § 16a
+    Abs. 1/3).
+- **Kaynak:** `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:3348-3393`
+  (Kap. 5.5.3.3 „SLLA: B (Heilmittel)", s. 70 — alan sırası ve Feldart'lar) ·
+  `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt:316-343` (§8.1.2
+  Unfall/Sonstiges + §8.1.2.1 BVG/SER) ve `:1009-1030` (§8.1.11
+  Verordnungsbesonderheiten) · `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:736-757`
+  (§ 16a, 7 gün)
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21 / Anlage 3 V21) · HeilM-RL iK 05.08.2025
+- **Kodda:** ⛔ **alanlar var, veri yok.** `api-backend/billing/dta/builder.js:192-194`
+  (`verordnung.verordnungsbesonderheiten || ''` · `unfallkennzeichen || ''` ·
+  `bvgSonstigesSer || ''`) → `api-backend/billing/dta/segments.js:267-269,297-299`
+  (ZHE alan 7/8/9 — sıra 17.09.2026'da segment dizisine karşı doğrulandı). Üçünü de
+  dolduran **hiçbir mapper yok**: ne `abrechnung.routes.js`, ne DB kolonu, ne Muster-13
+  maskesi — bugün her Verordnung'da **her zaman boş** gidiyor (grep 17.09.2026, `db/` +
+  `api-backend/` + `module/` + `dashboard.js`).
+- **Kapsam:** tüm Heilmittelerbringer (Physio · Ergo · Logo · Podologie). `gkv-302`
+  değerlendirmesi: pratikte neredeyse yalnız Physio/Ergo/Logo'da karşılaşılır — bu yüzden
+  uygulama vertikal sıralama kuralı gereği **ertelendi** (Ops #290, podoloji bitene kadar).
+- ⚠️ **Anlage 3'ün Inhaltsverzeichnis'i gövdeyle uyuşmuyor** — içindekilerde §8.1.2 =
+  „BVG/SER", §8.1.10 = „Verordnungsbesonderheiten", §8.1.16 = „Art der Genehmigung"
+  yazıyor; **gövdede** aynı başlıklar §8.1.2.1, §8.1.11 ve §8.1.17'de duruyor. Bu dosyadaki
+  bütün § atıfları **gövde numaralandırmasına** göredir (mevcut „Verordnungsart §8.1.12"
+  kaydıyla da tutarlı). İçindekilerden atıf verilmez.
+- ⚠️ **7 / 8 / 9 değerleri Heilmittel'e uygulanmaz** — `8` için gerekçe belgede yazılı
+  (*„nur Hilfsmittel"*, §8.1.11). `7` (Terminservicestellen) ve `9` (Modellvorhaben
+  § 64d SGB V) için belge bir Leistungsbereich kısıtı **yazmıyor**; bunlar `gkv-302`'nin
+  değerlendirmesidir, kaynaktan alıntı değildir. Koda girerken bu ayrım korunur.
+- 📌 Yan bulgu, aynı sayfadan: ZHE alan **10 „Behandlungsbeginn" artık doldurulmaz**
+  (*„Dieses Feld wird nicht mehr gefüllt. Das Feld wird als Leerfeld übermittelt."*,
+  Anlage 1 V21 s. 70). Kod bunu zaten doğru yapıyor — `segments.js:300` sabit `''`.
+
+### Arbeitsunfall (Unfallkennzeichen `1`) §302 akışına girmez
+- **Kural:** `ZHE` Unfallkennzeichen = **`1`** (Arbeitsunfall / Wegeunfall /
+  Berufskrankheit) GKV §302 DTA akışında **kullanılmaz ve kullanıcıya sunulmaz**. Bu vaka
+  Berufsgenossenschaft / DGUV'nin ayrı sözleşme ve fatura sistemine aittir; GKV'ye
+  Arbeitsunfall olarak fatura kesmek ret ve karışıklık riski taşır. Değer teknik olarak
+  Schlüssel'de vardır (Anlage 3 onu tanımlar) — **teknik varlığı, bizim akışımızda
+  meşruluğu anlamına gelmez.**
+- **Kaynak:** `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt:325`
+  (§8.1.2, *„1 = Arbeitsunfall / Wegeunfall / Berufskrankheit"*) · Ops kartı **#135**
+  (BG/DGUV ayrı Vertragswesen notu — kapsam kararı orada)
+- **Geçerlilik:** 01.10.2025 (Anlage 3 V21)
+- **Kodda:** henüz ilgili bir maske/seçenek **yok**. İleride Unfallkennzeichen alanı
+  yazıldığında `1` seçenek listesine **hiç konmaz**; yine de bir yoldan girerse DTA
+  üretiminden önce kesilmeli (preflight'ın işi — `api-backend/billing/dta/preflight.js`).
+- **Kapsam:** tüm Heilmittelerbringer
+
+### LHB Genehmigungskennzeichen (SKZ) yalnız § 8 Abs. 3 vakasında dolar
+- **Kural:** Langfristiger Heilmittelbedarf'ta (LHB/BVB) **kural, SKZ'nin boş olmasıdır.**
+  HeilM-RL **§ 8 Abs. 2**: Anlage-2 listesindeki tanı + ilgili Diagnosegruppe birleşiminde
+  langfristiger Heilmittelbedarf **varsayılır** ve *„Ein Antrags- und Genehmigungsverfahren
+  findet nicht statt."* → Genehmigungskennzeichen boş kalır ve bu **doğrudur**; vakaların
+  ezici çoğunluğu budur. SKZ segmenti yalnız **§ 8 Abs. 3** istisnasında zorunludur:
+  tanı Anlage 2'de **yok**, hasta kasaya **kendi** başvurmuş ve kasa genehmigung vermiştir.
+  O hâlde `SKZ` üç alanını taşır — Genehmigungskennzeichen (..20 AN), Datum der Genehmigung
+  (8 N), Art der Genehmigung (2 AN). **Art der Genehmigung Heilmittel'de sabit `B2`'dir**
+  („Genehmigung gem. § 8 Abs. 3 HeilM-RL"); aynı Leistungsbereich'te **`B1` nicht belegt**,
+  yani Heilmittel'de asla yazılmaz.
+- **Kaynak:** `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:453-461`
+  (§ 8 Abs. 2 ve Abs. 3) · `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:2876-2881`
+  (Kap. 5.5.3.3, SKZ segmenti, s. 72-73 — *„Das Segment ist je Abrechnungsfall einmal zu
+  übermitteln, wenn eine Kostenzusage/Genehmigung vorliegt."*) ·
+  `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919.txt:1279-1305` (§8.1.17
+  Art der Genehmigung: `B1 = nicht belegt`, `B2 = Genehmigung gem. § 8 Abs. 3`)
+- **Geçerlilik:** 01.10.2025 (Anlage 1/3 V21) · HeilM-RL iK 05.08.2025
+- **Kodda:** ⚠️ **yazıcı taraf hazır, veri kaynağı yok.** `api-backend/billing/dta/builder.js:210-216`
+  (`if (verordnung.genehmigung) { buildSLLA_SKZ(...) }`) →
+  `api-backend/billing/dta/segments.js:318-328`. Ama `verordnung.genehmigung`'u kuran
+  **hiçbir yer yok** → SKZ bugün hiç üretilmiyor. Eksik olan iki DB kolonu:
+  `genehmigungsnummer`, `genehmigungsdatum` (`art` sabit `B2` olduğu için üçüncü kolon
+  gerekmez). `prescription_documents.art='lhb_genehmigung'` bu vakayı **zaten tanıyor**
+  (`db/SCHEMA.sql:2055` CHECK · yükleyen yol `module/verordnung-nachweis.js:116,128`) —
+  yani belge ekleniyor, ama numarası DTA'ya taşınmıyor.
+- **Kapsam:** tüm Heilmittelerbringer, Verordnungsart `04` (§ 7 Abs. 6 HeilM-RL)
+- 🟠 **Önerilen kapı (uygulanmadı, Ops #290):** `rezept_typ='lhb_bvb'` **ve** ekli bir
+  `lhb_genehmigung` belgesi var **ve** SKZ boşsa → DTA üretiminden **önce uyarı**. Sert ret
+  değil uyarı, çünkü § 8 Abs. 2 vakasında boş SKZ doğrudur — sert ret meşru dosyayı
+  keserdi. Amaç sessiz Absetzung riskini görünür kılmak.
+
 ### Abrechnungscode 20 Podologie'yi kapsamaz
 - **Kural:** Kostenträgerdatei-Routing'inde Gruppenschlüssel 20 yalnız Abrechnungscode 21-29'u
   (Masseur/Physio/Logo/Ergo/Krankenhaus/Kurbetrieb) temsil eder. Podologie (71) ve Med.
@@ -747,6 +843,17 @@
       `fehlendePflichtangaben()`, `aktiv → abrechenbar` geçişinde. Backend'de, çünkü
       tarayıcıdaki riegel riegel değildir; DB CHECK'i olarak değil, çünkü o taramayı
       daha INSERT'te reddederdi (Unterschriftsfeld'deki aynı tuzak).
+- [ ] 🟡 **Verordnungsbesonderheiten `2` (Schwangerschaft) ↔ Zuzahlungsbefreiung bağı
+      doğrulanmadı** (Ops #290, 17.09.2026). §24c/§24d SGB V gebelik/doğum bağlamında
+      Zuzahlung muafiyeti getiriyor mu, ve getiriyorsa `ZHE` alan 7 = `2` ile
+      Zuzahlungskennzeichen (Anlage 3 §8.1.3) arasında zorunlu bir tutarlılık var mı —
+      bu turda kaynaktan **hiç bakılmadı**. Koda girmeden önce SGB V + Anlage 1 Kap. 7
+      (Zuzahlung) okunmalı; yanlış eşleme sessiz Absetzung üretir.
+- [ ] 🟡 **Zahnärztliche Heilmittelverordnung (Verordnungsbesonderheiten `1`) hangi
+      Muster'la geliyor?** (Ops #290, 17.09.2026) Muster 13 zahnärztlich değildir; Anlage 1
+      V21 birkaç yerde „Bei Verordnungen durch Zahnärzte …" diyor ve Diagnosegruppe yerine
+      **Indikationsgruppe** (ör. `CD2a`) istiyor. Hangi formun tarandığı ve OCR/maskenin
+      bunu nasıl ayırt edeceği **incelenmedi**. Podoloji/Physio akışını bugün etkilemiyor.
 - [ ] 28 gün başlama süresi — HeilM-RL § 15'ten teyit (şu an kaynak NOVENTI = ticari yayın)
 - [ ] `blankoRules.js:124-132` — `ok !== true` iken bonuslar yine hesaplanıyor (`total_bonuses_eur`
       dolu dönüyor). Sessiz yanlış fatura riski.
