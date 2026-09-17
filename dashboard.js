@@ -19426,10 +19426,10 @@ function initWlModal() {
     if (!id) return;
     const ok = await showConfirmModal({ title: 'Eintrag löschen', message: 'Diesen Wartelisten-Eintrag wirklich löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
     if (!ok) return;
-    await supabase.from('warteliste').delete().eq('id', id);
-    document.getElementById('wlModal').hidden = true;
-    showToast('Eintrag gelöscht');
-    await loadWarteliste();
+    const { data: deleted, error: delErr } = await supabase.from('warteliste').delete().eq('id', id).select('id');
+    if (delErr) { showToast('Fehler: ' + delErr.message, 'error'); return; }
+    if (!deleted?.length) { showToast('Löschen nicht möglich — keine Berechtigung.', 'error'); return; }
+    document.getElementById('wlModal').hidden = true; showToast('Eintrag gelöscht'); await loadWarteliste();
   });
 }
 
