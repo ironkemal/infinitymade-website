@@ -63,7 +63,6 @@ import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAu
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase } from './module/zahlarten.js?v=20260910';
-import { mountKassenbuchBeleg } from './module/kassenbuch-beleg.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260917';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
@@ -190,7 +189,7 @@ const T = {
     lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
     lbl_select_patient: 'Patient wählen', lbl_notes_empty: 'Keine Notizen vorhanden.',
     nav_abrechnung: '§302-Abrechnung', abrechnung_sub: 'Sammelrechnung § 302 SGB V an Krankenkassen vorbereiten',
-    nav_belegliste: 'Kassenbuch',
+    nav_belegliste: 'Zahlungsjournal',
     nav_mahnwesen: 'Mahnwesen',
     nav_verordnungen: 'Verordnungen',
     nav_statistik: 'Auswertungen',
@@ -297,12 +296,12 @@ const T = {
     kass_ok: 'Zuzahlung kassiert ✓', kass_storno_ok: 'Zuzahlung storniert ✓',
     kass_err_betrag: 'Kein Zuzahlungsbetrag hinterlegt — bitte zuerst am Rezept eintragen.',
     kass_err_bereits: 'Diese Zuzahlung wurde bereits kassiert.',
-    kass_err_beleg: 'Kassenbuch-Beleg fehlgeschlagen, nichts wurde gebucht:',
+    kass_err_beleg: 'Beleg im Zahlungsjournal fehlgeschlagen, nichts wurde gebucht:',
     kass_storno_title: 'Zuzahlung stornieren',
-    kass_storno_msg: 'Der Beleg im Kassenbuch kann nicht gelöscht werden. Es wird eine Gegenbuchung erzeugt.',
+    kass_storno_msg: 'Der Beleg im Zahlungsjournal kann nicht gelöscht werden. Es wird eine Gegenbuchung erzeugt.',
     kass_storno_grund: 'Storno-Grund (optional)',
     kass_storno_confirm: 'Stornieren',
-    kass_storno_kein_beleg: 'Für dieses Rezept gibt es keinen Kassenbuch-Beleg (vor August 2026 kassiert). Der Vermerk wird zurückgenommen, im Kassenbuch ändert sich nichts.',
+    kass_storno_kein_beleg: 'Für dieses Rezept gibt es keinen Beleg im Zahlungsjournal (vor August 2026 kassiert). Der Vermerk wird zurückgenommen, im Zahlungsjournal ändert sich nichts.',
     kass_popup: 'Popup-Blocker verhindert das Öffnen des Druckfensters.',
     kass_popup_gebucht: 'Gebucht — aber die Quittung konnte nicht geöffnet werden (Popup-Blocker). Über „Rechnung öffnen“ nachholen.',
     af_keine_vereinbarung: 'Für diesen Patienten ist keine unterschriebene Ausfallvereinbarung hinterlegt. Ohne sie ist die Forderung in der Regel nicht durchsetzbar.',
@@ -389,7 +388,7 @@ const T = {
     lbl_ai_summary: 'AI Report', lbl_send_patient: 'Send to patient',
     lbl_select_patient: 'Select patient', lbl_notes_empty: 'No notes available.',
     nav_abrechnung: '§302 Billing', abrechnung_sub: 'Prepare § 302 SGB V batch billing to health insurers',
-    nav_belegliste: 'Cash Ledger',
+    nav_belegliste: 'Payment Journal',
     nav_mahnwesen: 'Dunning',
     nav_verordnungen: 'Prescriptions',
     nav_statistik: 'Analytics',
@@ -477,12 +476,12 @@ const T = {
     kass_ok: 'Co-payment collected ✓', kass_storno_ok: 'Co-payment reversed ✓',
     kass_err_betrag: 'No co-payment amount set — please enter it on the prescription first.',
     kass_err_bereits: 'This co-payment has already been collected.',
-    kass_err_beleg: 'Cash ledger entry failed, nothing was booked:',
+    kass_err_beleg: 'Payment journal entry failed, nothing was booked:',
     kass_storno_title: 'Reverse co-payment',
-    kass_storno_msg: 'The cash ledger entry cannot be deleted. A counter-entry will be created.',
+    kass_storno_msg: 'The payment journal entry cannot be deleted. A counter-entry will be created.',
     kass_storno_grund: 'Reason for reversal (optional)',
     kass_storno_confirm: 'Reverse',
-    kass_storno_kein_beleg: 'There is no cash ledger entry for this prescription (collected before August 2026). The note will be removed; the ledger stays unchanged.',
+    kass_storno_kein_beleg: 'There is no payment journal entry for this prescription (collected before August 2026). The note will be removed; the journal stays unchanged.',
     kass_popup: 'A popup blocker prevented the print window from opening.',
     kass_popup_gebucht: 'Booked — but the receipt could not be opened (popup blocker). Use “Open invoice” to retrieve it.',
     af_keine_vereinbarung: 'No signed cancellation agreement is on file for this patient. Without one the claim is usually not enforceable.',
@@ -569,7 +568,7 @@ const T = {
     lbl_ai_summary: 'AI Raporu', lbl_send_patient: 'Hastaya gönder',
     lbl_select_patient: 'Hasta seç', lbl_notes_empty: 'Not bulunmuyor.',
     nav_abrechnung: '§302 Faturalama', abrechnung_sub: '§ 302 SGB V Krankenkasse toplu faturası hazırlama',
-    nav_belegliste: 'Kasa Defteri',
+    nav_belegliste: 'Ödeme Defteri',
     nav_mahnwesen: 'Tahsilat',
     nav_verordnungen: 'Reçeteler',
     nav_statistik: 'Analizler',
@@ -657,12 +656,12 @@ const T = {
     kass_ok: 'Katkı payı tahsil edildi ✓', kass_storno_ok: 'Katkı payı iptal edildi ✓',
     kass_err_betrag: 'Katkı payı tutarı girilmemiş — önce reçetede belirtin.',
     kass_err_bereits: 'Bu katkı payı zaten tahsil edilmiş.',
-    kass_err_beleg: 'Kasa defteri kaydı başarısız, hiçbir şey kaydedilmedi:',
+    kass_err_beleg: 'Ödeme defteri kaydı başarısız, hiçbir şey kaydedilmedi:',
     kass_storno_title: 'Katkı payını iptal et',
-    kass_storno_msg: 'Kasa defteri kaydı silinemez. Ters kayıt oluşturulacak.',
+    kass_storno_msg: 'Ödeme defteri kaydı silinemez. Ters kayıt oluşturulacak.',
     kass_storno_grund: 'İptal gerekçesi (isteğe bağlı)',
     kass_storno_confirm: 'İptal et',
-    kass_storno_kein_beleg: 'Bu reçete için kasa defteri kaydı yok (Ağustos 2026 öncesi tahsil edilmiş). Not geri alınır, kasa defteri değişmez.',
+    kass_storno_kein_beleg: 'Bu reçete için ödeme defteri kaydı yok (Ağustos 2026 öncesi tahsil edilmiş). Not geri alınır, ödeme defteri değişmez.',
     kass_popup: 'Popup engelleyici yazdırma penceresini açmayı engelledi.',
     kass_popup_gebucht: 'Kaydedildi — ancak makbuz açılamadı (popup engelleyici). „Faturayı aç“ ile tekrar deneyin.',
     af_keine_vereinbarung: 'Bu hasta için imzalı randevu iptal sözleşmesi kayıtlı değil. Sözleşme olmadan alacak genelde tahsil edilemez.',
@@ -18442,7 +18441,7 @@ window.openRezeptModal = openRezeptModal;
 window.openBookingModal = openBookingModal;
 
 // ============================================================================
-// GoBD-Kassenbuch (Belegliste) UI Mechanics (Feature 4)
+// Zahlungsjournal (Belegliste) UI Mechanics
 // ============================================================================
 
 async function loadBelegliste() {
@@ -18517,7 +18516,7 @@ async function loadBelegliste() {
       btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref, btn.dataset.rx || null, btn.dataset.pat || null));
     });
   } catch (err) {
-    showToast('Kassenbuch Fehler: ' + err.message, 'error');
+    showToast('Zahlungsjournal Fehler: ' + err.message, 'error');
   }
 }
 
@@ -18613,14 +18612,6 @@ function initBeleglisteUI() {
     if (to) url.searchParams.append('to', to);
 
     window.open(url.toString(), '_blank');
-  });
-
-  mountKassenbuchBeleg({
-    apiBasis: API,
-    token: async () => (await supabase.auth.getSession()).data.session?.access_token,
-    escapeHtml, showToast, t,
-    openModal, closeModal,
-    neuLaden: () => loadBelegliste(),
   });
 }
 

@@ -12,9 +12,19 @@ function test(name, fn) {
 
 console.log('GoBD Belegliste validation checks');
 
-test('validateBelegEntry: allows positive barverkauf', () => {
-  const res = validateBelegEntry('barverkauf', 25.50);
+test('validateBelegEntry: allows positive rechnung', () => {
+  const res = validateBelegEntry('rechnung', 25.50);
   assert.equal(res.isValid, true);
+});
+
+// 17.09.2026: Der frei erfassbare Barverkauf ist entfallen (§ 146a AO — sonst
+// wäre die Software ein Kassensystem mit TSE-Pflicht). Der Knopf im Dashboard
+// ist weg; dieser Test hält die zweite Tür, den POST-Weg, zu. Altbelege dieses
+// Typs bleiben lesbar und stornierbar — nur neu anlegen geht nicht mehr.
+test('validateBelegEntry: lehnt neue barverkauf-Belege ab', () => {
+  const res = validateBelegEntry('barverkauf', 25.50);
+  assert.equal(res.isValid, false);
+  assert.ok(res.error.includes('Ungültiger oder fehlender Typ'));
 });
 
 test('validateBelegEntry: allows positive zuzahlung', () => {
@@ -27,8 +37,8 @@ test('validateBelegEntry: allows negative storno', () => {
   assert.equal(res.isValid, true);
 });
 
-test('validateBelegEntry: rejects negative barverkauf', () => {
-  const res = validateBelegEntry('barverkauf', -10.00);
+test('validateBelegEntry: rejects negative zuzahlung', () => {
+  const res = validateBelegEntry('zuzahlung', -10.00);
   assert.equal(res.isValid, false);
   assert.ok(res.error.includes('positiven Betrag'));
 });
@@ -40,7 +50,7 @@ test('validateBelegEntry: rejects positive storno', () => {
 });
 
 test('validateBelegEntry: rejects zero amount', () => {
-  const res = validateBelegEntry('barverkauf', 0);
+  const res = validateBelegEntry('zuzahlung', 0);
   assert.equal(res.isValid, false);
 });
 
@@ -51,7 +61,7 @@ test('validateBelegEntry: rejects unknown type', () => {
 });
 
 test('validateBelegEntry: rejects non-numeric amount', () => {
-  const res = validateBelegEntry('barverkauf', 'not-a-number');
+  const res = validateBelegEntry('zuzahlung', 'not-a-number');
   assert.equal(res.isValid, false);
 });
 

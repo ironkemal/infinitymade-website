@@ -1470,7 +1470,7 @@ textarea {
   flex-shrink: 0;
 }
 
-/* Zahlart-Wahl (Kassieren-Dialog + Barverkauf-Modal, module/zahlarten.js) */
+/* Zahlart-Wahl (Kassieren-Dialog, module/zahlarten.js) */
 .zahlart-chip {
   display: flex;
   align-items: center;

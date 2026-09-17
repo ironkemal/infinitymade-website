@@ -1303,7 +1303,7 @@
           
           <button class="sidebar-item" onclick="switchPanel('panel-cashbook')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-            <span>Kassenbuch (GoBD)</span>
+            <span>Zahlungsjournal</span>
             <span class="enterprise-sidebar-badge" style="margin-left: 6px;">E</span>
             <span class="sidebar-badge live">Live</span>
           </button>
@@ -2347,7 +2347,7 @@
                       </label>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                      <span>Kassenbuch (GoBD)</span>
+                      <span>Zahlungsjournal</span>
                       <label class="switch-label">
                         <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
                         <span class="switch-slider"></span>
@@ -2519,7 +2519,7 @@
                       </label>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                      <span>Kassenbuch (GoBD)</span>
+                      <span>Zahlungsjournal</span>
                       <label class="switch-label">
                         <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
                         <span class="switch-slider"></span>
@@ -2691,7 +2691,7 @@
                       </label>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                      <span>Kassenbuch (GoBD)</span>
+                      <span>Zahlungsjournal</span>
                       <label class="switch-label">
                         <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
                         <span class="switch-slider"></span>
@@ -2863,7 +2863,7 @@
                       </label>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                      <span>Kassenbuch (GoBD)</span>
+                      <span>Zahlungsjournal</span>
                       <label class="switch-label">
                         <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
                         <span class="switch-slider"></span>
@@ -3035,7 +3035,7 @@
                       </label>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                      <span>Kassenbuch (GoBD)</span>
+                      <span>Zahlungsjournal</span>
                       <label class="switch-label">
                         <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
                         <span class="switch-slider"></span>
@@ -3402,25 +3402,29 @@
           </div>
         </section>
 
-        <!-- ================= PANEL 13: KASSENBUCH (GoBD) ================= -->
+        <!-- ================= PANEL 13: ZAHLUNGSJOURNAL ================= -->
+        <!-- 17.09.2026: hiess bis heute "Kassenbuch (GoBD)" und zeigte einen
+             Knopf "Eintrag hinzufügen". Beides entfernt — eine Software, die
+             frei erfassbare Bargeschäfte aufzeichnet, ist ein Kassensystem nach
+             § 146a AO (TSE-Pflicht). Praxura zeichnet nur Zahlungen zu Rezept,
+             Rechnung und Ausfallhonorar auf, und wirbt auch nur damit. -->
         <section class="panel" id="panel-cashbook">
           <div class="panel-header" style="margin-bottom: 20px;">
             <div>
-              <h2>Kassenbuch (GoBD)</h2>
-              <p class="panel-sub">Elektronisches, manipulationssicheres Kassenbuch entsprechend GoBD-Richtlinien</p>
+              <h2>Zahlungsjournal</h2>
+              <p class="panel-sub">Unveränderliche, fortlaufende Aufzeichnung aller Zahlungsbewegungen</p>
             </div>
             <div style="display: flex; gap: 12px;">
-              <button class="btn btn-secondary" onclick="showToast('GoBD-konformer Export wird erstellt...')">Export PDF</button>
-              <button class="btn btn-primary" onclick="openModal('modal-new-cash')">Eintrag hinzufügen</button>
+              <button class="btn btn-secondary" onclick="showToast('Export wird erstellt...')">Export PDF</button>
             </div>
           </div>
 
-          <!-- Cashbook stats -->
+          <!-- Journal stats -->
           <div class="kpi-grid">
             <div class="kpi-card">
-              <div class="kpi-label">Aktueller Kassenstand</div>
+              <div class="kpi-label">Aktueller Saldo</div>
               <div class="kpi-value">€1.323,50</div>
-              <div class="kpi-sub">Kassensturz-geprüft</div>
+              <div class="kpi-sub">Fortlaufend, unveränderlich</div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label">Einnahmen Mai</div>
@@ -3442,7 +3446,7 @@
                   <th>Beleg-Beschreibung</th>
                   <th>Zahlungstyp</th>
                   <th>Betrag</th>
-                  <th>Kassenstand (Saldo)</th>
+                  <th>Saldo</th>
                 </tr>
               </thead>
               <tbody>
@@ -4014,7 +4018,7 @@
               <div style="background: var(--bg-main); border: 1px solid var(--border-strong); padding: 18px; border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center;">
                 <div>
                   <strong style="font-size: 16px; display: block;">Professional Plan</strong>
-                  <span style="font-size: 12px; color: var(--text-muted);">Rechnungen, Kassenbuch & Termine</span>
+                  <span style="font-size: 12px; color: var(--text-muted);">Rechnungen, Zahlungsjournal & Termine</span>
                 </div>
                 <span style="font-family: var(--serif); font-size: 20px; font-weight: bold; color: var(--highlight);">€49/Monat</span>
               </div>

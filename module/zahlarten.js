@@ -15,8 +15,10 @@
  * i18n-Schlüssel); der Backend-Wertebereich bleibt in belegliste/helper.js,
  * weil Frontend und Backend getrennt deployt werden (Watchtower/Vercel).
  *
- * Erste Verwendung: dashboard.js (openKassierenDialog, zahlartLabel),
- * module/kassenbuch-beleg.js (Barverkauf-Formular).
+ * Erste Verwendung: dashboard.js (openKassierenDialog, zahlartLabel). Der
+ * zweite Nutzer, das Barverkauf-Formular (module/kassenbuch-beleg.js), ist am
+ * 17.09.2026 entfallen — freies Erfassen von Barverkäufen hätte die Software
+ * zum Kassensystem nach § 146a AO gemacht (TSE-Pflicht).
  */
 
 export const ZAHLARTEN = [
@@ -38,8 +40,8 @@ export function zahlartLabel(key, t) {
 
 /**
  * Markup für die Zahlart-Chip-Auswahl — bis 10.09.2026 in dashboard.js
- * (openKassierenDialog) und module/kassenbuch-beleg.js je eine eigene, leicht
- * abweichende Kopie (Padding, Gap, Klassenname). Jetzt eine Quelle; die
+ * (openKassierenDialog) und im damaligen Barverkauf-Modal je eine eigene,
+ * leicht abweichende Kopie (Padding, Gap, Klassenname). Jetzt eine Quelle; die
  * Auswahl-Optik kommt aus der CSS-Klasse `.zahlart-chip.active`
  * (dashboard.css), nicht mehr aus inline gesetzten Style-Werten.
  *

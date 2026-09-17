@@ -2037,8 +2037,8 @@ router.get('/belegliste', async (req, res) => {
       query = query.eq('type', type);
     }
     // Zahlart-Filter (Ops #271, 08.09.2026): seit belegliste ein Belegjournal
-    // ist (jede Zahlart, nicht nur bar), ist das die praktische Umsetzung von
-    // "Bar-Kassenbuch = Filter auf zahlart='bar'" fuer die Kassensturzfaehigkeit.
+    // ist (jede Zahlart, nicht nur bar), holt dieser Filter die Barzahlungen
+    // wieder einzeln heraus.
     if (zahlart && zahlart !== 'all') {
       query = query.eq('zahlart', zahlart);
     }
@@ -2168,7 +2168,7 @@ router.get('/belegliste/export', async (req, res) => {
     const buffer = Buffer.from(csvContent, 'latin1');
 
     res.setHeader('Content-Type', 'text/csv; charset=ISO-8859-1');
-    res.setHeader('Content-Disposition', 'attachment; filename=gobd_kassenbuch.csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=zahlungsjournal.csv');
     return res.send(buffer);
   } catch (e) {
     console.error('[belegliste/export]', e);

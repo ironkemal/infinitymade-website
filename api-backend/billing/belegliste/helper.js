@@ -10,9 +10,14 @@
 export const ZAHLARTEN = ['bar', 'ec', 'ueberweisung', 'sonstiges', 'paypal'];
 
 /**
- * Erlaubte Belegtypen. Muss zum CHECK-Constraint `belegliste_type_check`
- * passen — die Liste steht an zwei Orten, das ist unvermeidbar, aber sie darf
- * nicht auseinanderlaufen.
+ * Erlaubte Belegtypen beim SCHREIBEN. Die Tabelle kennt per CHECK-Constraint
+ * einen Typ mehr — `barverkauf`. Das ist Absicht und kein Auseinanderlaufen:
+ * Altbelege dieses Typs bleiben lesbar und stornierbar, neu angelegt werden
+ * darf so einer seit 17.09.2026 nicht mehr. Ein frei erfassbarer Barverkauf
+ * (beliebiger Betrag + freier Text) hätte Praxura zum elektronischen
+ * Aufzeichnungssystem nach § 146a AO gemacht — mit TSE-Pflicht und
+ * Bußgeldrisiko beim Hersteller. Der Erfassungsweg im Dashboard ist im
+ * selben Zug entfallen; diese Zeile ist die zweite Tür.
  *
  * `rechnung` = Zahlungseingang auf eine Privatrechnung OHNE Rezeptbezug.
  * Hängt die Rechnung an einem Rezept, wird bewusst `zuzahlung` gebucht:
@@ -20,7 +25,7 @@ export const ZAHLARTEN = ['bar', 'ec', 'ueberweisung', 'sonstiges', 'paypal'];
  * würden eine `rechnung`-Zeile übersehen. Der Typ beschreibt den
  * Geschäftsvorfall, nicht den Erfassungsweg.
  */
-export const BELEG_TYPEN = ['zuzahlung', 'barverkauf', 'storno', 'ausfall', 'rechnung'];
+export const BELEG_TYPEN = ['zuzahlung', 'storno', 'ausfall', 'rechnung'];
 
 /**
  * Deutsche Beschriftung für den CSV-Export / die Belegliste.
@@ -41,7 +46,7 @@ export const ZAHLART_LABELS = {
  * - Zahlart ist optional (Altbelege vor v32 haben keine), muss aber, wenn
  *   angegeben, einer der bekannten Werte sein.
  *
- * @param {string} type - 'zuzahlung' | 'barverkauf' | 'storno' | 'ausfall' | 'rechnung'
+ * @param {string} type - 'zuzahlung' | 'storno' | 'ausfall' | 'rechnung'
  * @param {number} amount - The currency amount in EUR
  * @param {string|null} [zahlart] - 'bar' | 'ec' | 'ueberweisung' | 'sonstiges'
  * @returns {{isValid: boolean, error?: string}} Validation result
@@ -67,7 +72,7 @@ export function validateBelegEntry(type, amount, zahlart) {
     }
   } else {
     if (numAmount <= 0) {
-      return { isValid: false, error: 'Zuzahlungen und Barverkäufe müssen einen positiven Betrag haben.' };
+      return { isValid: false, error: 'Zahlungseingänge müssen einen positiven Betrag haben.' };
     }
   }
 
