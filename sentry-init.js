@@ -1,14 +1,28 @@
-// Sentry frontend init — runs after loader script (js-de.sentry-cdn.com)
-// pulls the SDK. DSN is baked into the loader URL; this file only configures
-// behavior (environment, sample rates, PII scrubbing).
+// Sentry frontend init. Loads the CDN loader script itself, at runtime, only
+// if telemetry is enabled — so an on-prem box with telemetryEnabled=false
+// never makes a single request to sentry-cdn.com (Ops #166, O-06, onprem-
+// Review 17.09.2026). DSN is baked into the loader URL; this file configures
+// behavior (environment, sample rates, PII scrubbing) once it loads.
 //
-// Include AFTER the loader script:
-//   <script src="https://js-de.sentry-cdn.com/.../...min.js" crossorigin="anonymous"></script>
-//   <script src="/sentry-init.js?v=20260523b"></script>
+// Include standalone, no loader script needed in HTML anymore:
+//   <script src="/sentry-init.js?v=20260917"></script>
 
 (function () {
-  if (typeof window === 'undefined' || !window.Sentry || !window.Sentry.onLoad) {
-    // Loader missing — fail silent (don't break page if Sentry blocked by ad-blocker etc.)
+  if (typeof window === 'undefined') return;
+
+  fetch('/api/config').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }).then(function (cfg) {
+    if (cfg.telemetryEnabled !== true) return; // safe default: off (box) unless SaaS says on
+
+    var loader = document.createElement('script');
+    loader.src = 'https://js-de.sentry-cdn.com/1247311e4965725138bca7ddb32101ce.min.js';
+    loader.crossOrigin = 'anonymous';
+    loader.onload = initSentry;
+    document.head.appendChild(loader);
+  });
+
+  function initSentry() {
+  if (!window.Sentry || !window.Sentry.onLoad) {
+    // Loader failed to expose expected API — fail silent.
     return;
   }
 
@@ -112,4 +126,5 @@
       }
     } catch (e) {}
   });
+  }
 })();

@@ -421,7 +421,12 @@ app.get('/api/config', (req, res) => {
     // verbraucht/geloescht, SUPABASE_PUBLIC_URL bleibt die ganze Lebenszeit
     // der Box gesetzt — ohne sie startet die Box gar nicht (O-58 a,
     // onprem-Review 12.09.2026).
-    istKutu: !!process.env.SUPABASE_PUBLIC_URL
+    istKutu: !!process.env.SUPABASE_PUBLIC_URL,
+    // telemetryEnabled (Ops #166, O-06, onprem-Review 17.09.2026): auf der
+    // Box standardmaessig AUS (G4 — kein Telemetrie-Opt-out noetig, weil es
+    // nie an ist). Setup-Wizard-Opt-in kommt in Faz 2.6, noch nicht gebaut —
+    // bis dahin ist "aus" der sichere Default.
+    telemetryEnabled: !process.env.SUPABASE_PUBLIC_URL
   });
 });
 

@@ -22,3 +22,8 @@ export const API_BASE = _cfg.apiBase || 'https://n8n.infinitymade.de/api';
 // linkleri (Impressum/Datenschutz/AGB/Vorregistrieren/praxura.de) kutuda
 // gizlemek için — güvenlik sınırı DEĞİL, RLS/apikey burada devrede değil.
 export const IST_KUTU = _cfg.istKutu === true;
+
+// Telemetri-Bayrağı (Ops #166, O-06, onprem-Review 17.09.2026): aynı desen.
+// SaaS hep true, kutuda varsayılan false (Setup-Wizard opt-in'i Faz 2.6'da
+// gelecek). `/api/config` yoksa (fetch fehlgeschlagen) güvenli taraf: kapalı.
+export const TELEMETRY_ENABLED = _cfg.telemetryEnabled === true;

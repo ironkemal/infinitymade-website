@@ -31,7 +31,7 @@ app_host=15
 vercel_fn=12
 
 # Üçüncü-parti <script src>. Bugün yalnız Sentry loader. Faz 2.6 koşullu yapacak.
-ext_script=11
+ext_script=0
 
 # N8N_ env referansı. Hedef 0 (Faz 1.2 kabul kriteri).
 #

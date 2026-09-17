@@ -11,5 +11,7 @@ export default function handler(req, res) {
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
   // SaaS ist nie eine Box — fest false, damit beide Deployments dieselbe
   // Vertragsform zurückgeben (O-58 a, onprem-Review 12.09.2026).
-  res.json({ supabaseUrl, supabaseAnonKey, apiBase, istKutu: false });
+  // telemetryEnabled (Ops #166, onprem-Review 17.09.2026): SaaS sendet immer
+  // Sentry-Telemetrie — fest true, gleiches Vertragsformat wie istKutu.
+  res.json({ supabaseUrl, supabaseAnonKey, apiBase, istKutu: false, telemetryEnabled: true });
 }
