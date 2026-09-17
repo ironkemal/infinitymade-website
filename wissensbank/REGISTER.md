@@ -5,9 +5,9 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 17.09.2026 (Ops #285 — Z-08/W-A02 yeniden
-> araştırıldı: orijinal import VE on-prem seed zinciri aslında belgeliydi, gerçek boşluk
-> daha dar — bkz. Z-08. `builder` tarafından yapıldı, `wissensbank` ajanı doğrulamadı.)
+> İlk kurulum: 05.09.2026 · Son güncelleme: 17.09.2026 (Ops #285 — Z-08/W-A02 `wissensbank`
+> ajanı tarafından doğrulandı: `builder`'ın bulguları git log + dosya karşılaştırmasıyla
+> teyit edildi, boşluk penceresi **01.07.–10.08.2026**'ya daraltıldı — bkz. Z-08.)
 > Önceki: 10.09.2026 (W-02 + W-03 girdi — Anhang 1 Kap. 4 ve Anhang 2 Kap. 9) ·
 > 10.09.2026 (kök temizliği sonrası atıf tazeleme) · 07.09.2026 (W-01 zinciri, W-A08)
 
@@ -176,7 +176,7 @@ wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste.pdf/.txt   
 ✅ `heilmittel-catalog.json` içinde `_meta` bloğu var (source, edition, generated_at_utc,
 sayımlar) — **türev dosyada olması gereken şeyin örneği.**
 
-### Z-08 · ICD-10-GM 2026 ⚠️ **zincir kısmen kopuk** (17.09.2026'da yeniden araştırıldı, aşağıda güncellendi)
+### Z-08 · ICD-10-GM 2026 ⚠️ **dar boşluk, tarihen sınırlı: 01.07.–10.08.2026** (17.09.2026 `wissensbank` doğrulaması)
 ```
 wissensbank/gemeinsam/icd-10-gm/Klassifikationsdateien/icd10gm2026syst_kodes.txt   (4,2 MB, DIMDI)
   → archive/supabase-migrations-vor-baseline/20260701000000_icd10_titles.sql   ✅ BULUNDU
@@ -223,6 +223,43 @@ Live-DB-Abfrage in dieser Sitzung):**
   wer immer den zweiten Umbau im Sommer 2026 gefahren hat, sollte das vor 2027 rekonstruieren
   oder das Vorgehen aus der Erinnerung aufschreiben, solange es noch möglich ist. → **W-A02**
   (Text unten entsprechend geschärft, Status bleibt `offen`, aber nicht mehr „kritischste").
+
+**17.09.2026 — `wissensbank`-Doğrulaması (Ops #285, ikinci oturum; bu ajanın kendisi bu
+sefer çağrıldı, MCP/canlı-DB erişimi bu oturumda yoktu — kod ve git geçmişine karşı
+bağımsız doğrulama yapıldı):**
+- **Pencere daha da daraltıldı: 01.07.2026 → 10.08.2026 (21:18).** `git show 9c93292 --
+  db/SCHEMA.sql` (10.08.2026, ilk schema dump commit'i) `icd10_titles`'ı **zaten 7 sütunlu**
+  gösteriyor (`code, titel, kapitel, ebene, terminal, code_plain, gruppe`). Yani ikinci
+  dönüşüm 01.07 (4 sütun, 13.041 satır, commit `7eb7a56`) ile 10.08.2026 arasındaki
+  **~40 günlük pencerede** yapılmış — önceki oturumun "01.07 ile bugün arası" tarifinden
+  çok daha dar.
+- **`git log -S "code_plain"` ve `git log --follow -- '*icd10_titles*'` her ikisi de
+  temiz** — üç commit dönüyor (`7eb7a56` orijinal import, `c94c7af` eski migration'ların
+  arşivlenmesi, `62aedd2` O-38 seed) ve hiçbiri ikinci dönüşümün kaynağı değil. **Doğrulama:
+  önceki oturumun "committeten Skript yok" bulgusu teyit edildi, çürütülmedi.**
+- **`db/REGISTER.md` (db-ustasi sicili) satır sayısını bağımsız olarak doğruluyor:**
+  `icd10_titles` girdisi "16.905 Kodes" ve "Seit: 01.07.2026 · `icd10_titles_ddl`" diyor —
+  `icd10_titles_ddl` repoda **hiçbir dosyaya karşılık gelmiyor** (yalnız `db/REGISTER.md` ve
+  `db/NUTZUNG.json`'da geçiyor), yani muhtemelen canlı DB'nin kendi migration defterindeki
+  bir isim — bu da "doğrudan canlıya, dosyasız" tezini destekliyor. Bu oturumda MCP ile canlı
+  DB'ye ayrıca sorgu **atılmadı** (araç bu oturumda yoktu); db-ustasi'nin kendi kaydı ikinci,
+  bağımsız bir kaynak olarak kullanıldı.
+- **`api-backend/db/migrations/0013_seed_icd10_titles.sql` başlığı ve `RAISE EXCEPTION`
+  eşiği doğrulandı** (satır ~17064: `n < 16905` → migration durur) — önceki oturumun
+  aktardığı sayıyla birebir eşleşiyor.
+- **2027 süreci zaten kısmen yazılı:** aynı dosyanın başlığında *"⚠️ Jährliche
+  Aktualisierung … die 2027er Fassung braucht eine NEUE Migrationsdatei
+  (tools/seed-generieren.mjs), niemals eine Änderung dieser hier"* notu var. Yani
+  **repackaging** adımı (canlı tablo → on-prem seed dosyası) zaten tarif edilmiş ve
+  tekrarlanabilir. Eksik olan **hâlâ ve yalnızca** şu: canlı `icd10_titles` tablosunun
+  kendisini 2027 DIMDI verisiyle **kim, nasıl** dolduracak — `seed-generieren.mjs` bunu
+  yapamaz, yalnız zaten dolu olanı paketler (`tools/seed-generieren.mjs` içindeki sorgu
+  `SELECT * FROM public.icd10_titles` — kaynağı canlı tablo, ham DIMDI dosyası değil).
+- **Sonuç:** Z-08/W-A02'nin 17.09.2026 (ilk oturum) tarafından bırakılan tarifi doğru VE
+  eksiksizdi; bu oturum onu **daraltarak** ve **bağımsız kaynaklarla teyit ederek**
+  kapattı. "Belgesiz" etiketi artık yanlış genelleme değil — tek, tarihen sınırlı, adı
+  konmuş bir boşluk: *"2027 DIMDI ham dosyasını 7-sütunlu tam hiyerarşiye çeviren adım
+  bilinmiyor ve tekrarlanabilir değil."* Aciliyet yok (takvim: 01.01.2027, bkz. §1).
 
 ### Z-09 · Kostenträgerdatei / IK  → tam kart **W-01**
 ```
@@ -337,7 +374,7 @@ yeniden araştırılıyor demektir.
 |---|---|---|---|
 | `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste` | Stand 01.01.2026 | ✅ GEÇERLİ | **Z-07** |
-| `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 ⚠ 2. Umbau belgesiz** (17.09.2026 geschärft) |
+| `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 — dar boşluk 01.07.–10.08.2026, doğrulandı** (17.09.2026 `wissensbank`) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/praxiswissen-heilmittel` | Ausgabe 2026 | 📎 REFERANS | — |
 | `wissensbank/physiotherapie/NOVENTI-Leitfaden-Blankoverordnung-Physiotherapie` | Stand 03.2026 | 📎 REFERANS (ticari kaynak, otorite değil) | — |
 | `wissensbank/_archiv/Zusatzdateien/*.pdf` (11 adet) | 2026 | 🚫 KAPSAM DIŞI (Barthel, MMSE, FIM…) | — |
@@ -624,19 +661,30 @@ Kalan: 31.
 (Diagnoseliste) · `g-ba.de` (HeilM-RL).
 **Ölçüt:** bir belge silinse, kayıttan bakıp 2 dakikada yerine yenisi indirilebilmeli.
 
-### W-A02 · ICD-10-GM → `icd10_titles`: 2. Umbau (terminal/code_plain/gruppe) unbelegt — `offen`
-**17.09.2026 neu untersucht (Ops #285) — Beschreibung geschärft, siehe Z-08 für die volle
-Beweiskette.** Der ursprüngliche Import (01.07.2026, 13.041 Endkodes) UND der On-Prem-Box-Weg
-(O-38, 12.09.2026, `tools/seed-generieren.mjs` + `api-backend/db/migrations/0013_seed_icd10_titles.sql`)
-sind beide dokumentiert und automatisiert — das war der alte, zu pauschale Befund dieser
-Karte, der jetzt zurückgenommen wird. Offen bleibt ausschließlich der **zweite** Umbau
-zwischen 01.07. und heute: 4 → 7 Spalten, 13.041 → ≥16.905 Zeilen (Gruppen-/Kapitelköpfe
-dazu), ohne committetes Skript und ohne `fortschritte/`-Eintrag — vermutlich direkt gegen
-die Live-DB gefahren, vor der Datei-zuerst-Migrationsdisziplin (10.09.2026).
-**Yapılacak:** 2027 sürümü düşmeden önce, o ikinci dönüşümü kim yaptıysa (veya git blame ile
-bulunabilirse) yöntemi hatırlıyorken yazsın — özellikle `gruppe` alanı için (amtliche
-Gruppenbereiche, `code`'dan tek başına türetilemez). Aciliyet yok — takvim 01.01.2027.
-`db-ustasi` ile birlikte, DB tarafını (canlı satır sayısı/sütun doldurulma oranı) o teyit eder.
+### W-A02 · ICD-10-GM 2027: canlı tabloyu ham DIMDI'den 7-sütuna çeviren adım tekrarlanabilir değil — `offen`, acil değil
+**17.09.2026, iki oturumda araştırıldı ve `wissensbank` tarafından doğrulandı (Ops #285) —
+bkz. Z-08 için tam kanıt zinciri.** Eski, geniş tanım ("2. Umbau belgesiz") geri çekildi;
+gerçek boşluk artık şu kadar dar: 01.07.2026 (13.041 satır, 4 sütun, `7eb7a56`) ile
+10.08.2026 21:18 (schema dump `9c93292` — tabloda o an zaten 7 sütun + ≥16.905 satır)
+arasında, canlı DB'ye doğrudan uygulanmış ve **hiçbir committeten script'te izi olmayan**
+bir dönüşüm var. `git log -S`/`git log --follow` iki oturumda da temiz çıktı; `db/REGISTER.md`
+(db-ustasi, bağımsız kaynak) satır sayısını (16.905) teyit ediyor ama yöntemi açıklamıyor.
+On-prem tarafı **W-A02'nin kapsamında değil**: `tools/seed-generieren.mjs` +
+`api-backend/db/migrations/0013_seed_icd10_titles.sql` (O-38, 12.09.2026) canlı tabloyu
+**olduğu gibi** paketler (`SELECT * FROM public.icd10_titles`) — zaten dolu bir tabloyu
+kutuya taşır, boş bir soruyu (2027 verisi canlıya nasıl girer) cevaplamaz. O migration
+dosyasının kendi başlığı zaten 2027 için yeni bir dosya gerektiğini yazıyor — süreç o
+kadarıyla tarif edilmiş.
+**Yapılacak — tek gerçek eksik:** 2027 DIMDI dosyası yayımlandığında (Klassifikation, tipik
+olarak yaz sonu/sonbahar), birisi onu 01.07.2026'daki gibi filtrelenmiş Endkode importuna
+değil, **`terminal`/`code_plain`/`gruppe` dahil tam hiyerarşiye** çeviren bir adım çalıştırmalı
+— bunun **hiçbir hazır script'i yok**, 2026 yazında kim yaptıysa elle veya kayıt dışı bir
+araçla yapmış olmalı. `db-ustasi` ile birlikte ya (a) o kişi hatırlıyorsa yöntemi yazdırmak,
+ya da (b) DIMDI ham dosyasından 7-sütunlu tabloyu üreten **yeni, tekrarlanabilir bir script**
+yazmak (`gruppe` alanı `code`'dan türetilemez — amtliche Gruppenbereiche gerekiyor, tam
+Systematik-Datei okunmalı). **Aciliyet yok** — takvim 01.01.2027 (§1), bugünden ~3,5 ay önce
+yeterli. Bu madde **büyütülmedi, daraltıldı**; ikinci bir genişletici araştırma gerekmiyor,
+gerekli olan tek şey sürecin yazılı hale getirilmesi.
 
 ### W-A03 · `anlage3_v22.js` dosya adı bugün geçerli olmayan sürümü taşıyor — `offen`
 Baş yorumu dürüst ("gültig ab 01.02.2027") ama dosya adı okuyanı yanıltıyor; bugün
