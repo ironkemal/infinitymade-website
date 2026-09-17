@@ -215,17 +215,24 @@ export async function zahlungsartNachRechnungAbfragen({
  */
 export async function starteZahlungseingang({ invoiceId, apiBasis, token, profile, showToast }) {
   let stand;
+  // Ops #293: kein Timeout hing hier hängen lassen, wenn das Backend nicht
+  // antwortet — dieselbe Absicherung wie module/podologie-positionen.js:80f.
+  const abbruch = new AbortController();
+  const uhr = setTimeout(() => abbruch.abort(), 8000);
   try {
     const jwt = await token();
     const res = await fetch(`${apiBasis}/billing/rechnungen/${invoiceId}/zahlungen`, {
       headers: { 'Authorization': 'Bearer ' + jwt },
+      signal: abbruch.signal,
     });
     stand = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(stand.error || `Serverfehler (${res.status})`);
   } catch (e) {
     console.error('[zahlungseingang] laden:', e);
-    showToast('Zahlungsstand konnte nicht geladen werden: ' + e.message, 'error');
+    showToast('Zahlungsstand konnte nicht geladen werden: ' + (e.name === 'AbortError' ? 'Zeitüberschreitung — bitte erneut versuchen.' : e.message), 'error');
     return false;
+  } finally {
+    clearTimeout(uhr);
   }
 
   return oeffneZahlungseingang({
@@ -444,6 +451,11 @@ export function oeffneZahlungseingang(opts) {
       // zweiter Aufruf würde ein zweites Mal buchen.
       buchenBtn.disabled = true;
       buchenBtn.textContent = '…';
+      // Ops #293: gleiche Absicherung wie starteZahlungseingang() oben — ohne
+      // Timeout blieb der Knopf bei einem haengenden Backend fuer immer auf
+      // "…" stehen, die Rechnungsliste wurde nie neu geladen.
+      const abbruch = new AbortController();
+      const uhr = setTimeout(() => abbruch.abort(), 8000);
       try {
         const jwt = await token();
         const res = await fetch(`${apiBasis}/billing/rechnungen/${rechnung.id}/zahlung`, {
@@ -456,6 +468,7 @@ export function oeffneZahlungseingang(opts) {
             restbetrag_modus: modus(),
             ausbuchungskonto_code: ausKontoEl?.value || AUSBUCHUNGSKONTO_STANDARD,
           }),
+          signal: abbruch.signal,
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.error || `Serverfehler (${res.status})`);
@@ -466,10 +479,12 @@ export function oeffneZahlungseingang(opts) {
         schliessen(true);
       } catch (e) {
         console.error('[zahlungseingang]', e);
-        fehlerEl.textContent = e.message;
+        fehlerEl.textContent = e.name === 'AbortError' ? 'Zeitüberschreitung — bitte erneut versuchen.' : e.message;
         fehlerEl.style.display = '';
         buchenBtn.disabled = false;
         buchenBtn.textContent = 'Buchen';
+      } finally {
+        clearTimeout(uhr);
       }
     });
 
