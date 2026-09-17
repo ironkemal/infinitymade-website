@@ -221,6 +221,7 @@ router.post('/ausfall/create', async (req, res) => {
     const { data: existing } = await supabase
       .from('ausfallrechnungen')
       .select('id, status')
+      .eq('owner_id', tenantId)
       .eq('booking_id', bookingId)
       .not('status', 'eq', 'storniert');
     if (existing && existing.length > 0) {
@@ -432,7 +433,10 @@ router.patch('/ausfall/:id/status', async (req, res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
-    const { user, tenantId } = auth;
+    const { user, profile, tenantId } = auth;
+    if (profile.role !== 'owner') {
+      return res.status(403).json({ error: 'Nur der Inhaber darf den Status einer Ausfallrechnung ändern.' });
+    }
 
     const { status, zahlart } = req.body || {};
     if (!['bezahlt', 'storniert', 'abgeschrieben'].includes(status)) {

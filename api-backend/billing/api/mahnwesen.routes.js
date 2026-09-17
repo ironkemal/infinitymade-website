@@ -227,6 +227,9 @@ router.post('/mahnwesen/create', async (req, res) => {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
     const { user, profile, tenantId } = auth;
+    if (profile.role !== 'owner') {
+      return res.status(403).json({ error: 'Nur der Inhaber darf Mahnungen erstellen.' });
+    }
 
     const { prescriptionId, ausfallrechnungId, level } = req.body || {};
     if (!prescriptionId && !ausfallrechnungId) {
@@ -396,7 +399,10 @@ router.patch('/mahnwesen/:id/status', async (req, res) => {
   try {
     const auth = await resolveAuth(req, res);
     if (!auth) return;
-    const { tenantId } = auth;
+    const { tenantId, profile } = auth;
+    if (profile.role !== 'owner') {
+      return res.status(403).json({ error: 'Nur der Inhaber darf den Mahnungsstatus ändern.' });
+    }
 
     const { status } = req.body || {};
     if (!['bezahlt', 'abgeschrieben'].includes(status)) {
