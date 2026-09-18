@@ -8,11 +8,14 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-17 (Ops #290 — `gkv-302`'nin DTA alan araştırması: Muster 13 →
-> ZHE 7/8/9, Arbeitsunfall kapsam dışı, LHB/SKZ § 8 Abs. 3; 3 yeni kural, `wissensbank`
-> tarafından orijinallere karşı doğrulandı. Kod uygulaması Podoloji sonrasına ertelendi.)
-> Önceki: 2026-09-16 (eGK kart okuyucu araştırması — Versichertenstatus kaynağı
-> + SMC-B'siz eGK okuma, 2 yeni kural)
+> Son güncelleme: 2026-09-18 (Ops #211 — `gkv-302`'nin Podologie Höchstmenge araştırması:
+> je Verordnung DF/NF/QF 6 · UI1 8 · UI2 4; orientierende Menge yalnız UI'da ve 8. 1 yeni
+> kural, `wissensbank` tarafından HeilM-RL s. 73-77 + § 7 Abs. 2/5 ve Podologie Anlage 3
+> Ziffer 3 f)'ye karşı doğrulandı. Kod bunu zaten uyguluyor — zincir `REGISTER.md` Z-11.)
+> Önceki: 2026-09-17 (Ops #290 — DTA alan araştırması: Muster 13 → ZHE 7/8/9, Arbeitsunfall
+> kapsam dışı, LHB/SKZ § 8 Abs. 3; 3 yeni kural, kod uygulaması Podoloji sonrasına ertelendi)
+> · 2026-09-16 (eGK kart okuyucu araştırması — Versichertenstatus kaynağı + SMC-B'siz eGK
+> okuma, 2 yeni kural)
 
 ---
 
@@ -116,6 +119,72 @@
   Önerilen: `heilmittel_massnahme` ∈ {Hornhautabtragung, Nagelbearbeitung, Podologische
   Komplexbehandlung}
 - **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF
+
+### Podologie Höchstmenge je Verordnung — UI2 dörttür, sekiz değil
+- **Kural:** Höchstmenge je Verordnung: **DF 6 · NF 6 · QF 6 · UI1 8 · UI2 4.**
+  Orientierende Behandlungsmenge yalnız UI1/UI2'de vardır (ikisi de **8**) ve birden çok
+  Verordnung'a yayılır; DF/NF/QF'de § 7 Abs. 2 Satz 4 gereği **hiç yoktur**. UI2'de 4'ün
+  üstü ancak **Wiedervorstellung + yeni Verordnung** ile mümkündür. Höchstmenge'yi aşan
+  reçete geçersiz değildir — yalnız fazlası abrechenbar değildir: erbringen edilen ve
+  faturalanan miktar zulässig olanla sınırlıdır, arzt bilgilendirilir. Bu yüzden UI'da
+  **sert blok değil uyarı** olmalı — 7 einheitli bir Verordnung kâğıt üzerinde vardır ve
+  sisteme girilebilmelidir.
+- **Kaynak:** HeilM-RL (değişiklik 15.05.2025, iK 05.08.2025), Zweiter Teil,
+  Heilmittelkatalog II. Maßnahmen der Podologischen Therapie —
+  `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt`
+  s. 73 DF (Z.3383-3393) · s. 74 NF (Z.3436-3446) · s. 75 QF (Z.3485-3495) ·
+  s. 76 UI1 (Z.3523-3528) · s. 77 UI2 (Z.3560-3570) — *„Höchstmenge je VO: - bis zu 6 x/VO"*
+  (DF/NF/QF, üçünde de ayrıca *„In dieser Diagnosegruppe sind keine orientierenden
+  Behandlungsmengen gemäß § 7 Absatz 2 festgelegt."*) · *„- bis zu 8x/VO"* +
+  *„Orientierende Behandlungsmenge: - bis zu 8 Einheiten"* (UI1) · *„- bis zu 4x/VO"* +
+  *„Die Verordnung weiterer Einheiten bedarf einer Wiedervorstellung beim verordnenden
+  Arzt."* + *„Orientierende Behandlungsmenge: - bis zu 8 Einheiten"* (UI2).
+  Dayanak maddeler: **§ 7 Abs. 2 Satz 4** (Z.406-409) — *„Abweichend hiervon sind für die
+  Podologische Therapie bei Fußschädigungen durch Diabetes mellitus … keine orientierenden
+  Behandlungsmengen festgelegt."* · **§ 7 Abs. 5 Satz 1** (Z.419-420) — *„Im
+  Heilmittelkatalog ist zudem die zulässige Höchstmenge an Behandlungseinheiten je
+  Verordnung festgelegt."*
+  Aşım hâlinin sonucu: Vertrag § 125 Abs. 1 SGB V Podologie, **Anlage 3 i.d.F. 16.06.2025,
+  Ziffer 3 f) b)** (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:416-431`)
+  — *„Sofern auf der ärztlichen Verordnung die Verordnungshöchstmengen überschritten werden,
+  kann der zugelassene Leistungserbringer maximal so viele Therapieeinheiten erbringen und
+  abrechnen, wie sie nach der HeilM-RL zulässig sind. Die Ärztin oder der Arzt ist darüber
+  zu informieren."* + *„Eine Änderung der Verordnung ist nicht erforderlich."*
+- **Geçerlilik:** 05.08.2025
+- **Kodda:** ✅ uygulanmış, **kasten uyarı seviyesinde** (blok değil). Sayı bugün **üç
+  dosyada** duruyor, üçü de tutarlı (18.09.2026'da satır satır sayıldı):
+  1. `module/verordnung-regeln.js:91` (`POD_HOECHSTMENGE`) + `:97` (`POD_ORIENTIEREND`) —
+     **niyet edilen tek adres**, `[Q1]` (HeilM-RL) / `[Q2]` (Anlage 3) kaynak etiketleriyle;
+     `REGELSTAND` listesi (`:250-257`) yeni bir Richtlinie geldiğinde gözden geçirilecek
+     satırları sayıyor. Runtime önceliği `regelnFuerBereich()` (`:189-204`): **DB kazanır**,
+     bu değerler yalnız `diagnosegruppen.hoechstmenge` boşken devreye girer — podolojide
+     dosyanın kendi 03.09.2026 notuna göre boş (canlı DB'ye karşı doğrulanmadı).
+  2. `module/verordnung-podo.js:72` / `:75` + `:365-395` (`einheitenPruefen()` — `max`/`min`
+     attribute + uyarı metni). ⚠️ **Kendi kopyası**: `verordnung-regeln.js`'in baş yorumu
+     „`verordnung-podo.js` liest sie von hier — eine Zahl, ein Ort" diyor ama dosya onu
+     **import etmiyor**, sabitleri yeniden tanımlıyor → `REGISTER.md` W-A10.
+  3. `api-backend/ai/validators/diagnosegruppen.json:162-279` — backend kopyası; DF `:164` ·
+     NF `:187` · QF `:215` · UI1 `:248` · UI2 `:265`, her birinde `hoechstmenge` +
+     `orientierende_menge`.
+
+  Uyarı yolu: `module/verordnung-pruefung.js:220-234` (`UEBER_HOECHSTMENGE`,
+  `SCHWERE.warnung`). DB tarafı: `diagnosegruppen.hoechstmenge` kolonu **var**
+  (`db/SCHEMA.sql:1240`) — physio'da dolu, podolojide boş; dolduğu gün 1. maddedeki
+  değerler kendiliğinden devre dışı kalır. Zincirin tamamı: `REGISTER.md` → **Z-11**.
+- **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF/UI1/UI2, standart Verordnung.
+  § 7 Abs. 6 HeilM-RL (besonderer Verordnungsbedarf / langfristiger Heilmittelbedarf) başka
+  bir Höchstmenge tanımlayabilir — Anlage 3 Ziffer 3 f) bunu açıkça anıyor; podolojide bugün
+  kullanılmıyor, koda da girmedi.
+- ⚠️ **Karıştırma tuzağı — „Nagelspange sekiz gider" doğru değil.** 8 yalnız **UI1**'in
+  Höchstmenge'sidir; UI2'de 8 **orientierende Menge**'dir ve birden çok Verordnung'a yayılır.
+  UI2'ye pauschal 8 einheit yazmak Absetzung üretir. Kod yorumu
+  `module/verordnung-podo.js:66-71` bu ayrımı zaten kayda geçirmiş — silme.
+- 📌 **Bezugsgröße farkı:** Höchstmenge **Verordnung** başına, orientierende Menge
+  **Verordnungsfall** başınadır (§ 7 Abs. 3: *„Der Verordnungsfall und die orientierende
+  Behandlungsmenge beziehen sich auf die jeweilige Verordnerin oder den jeweiligen
+  Verordner."*). İkisi aynı sayaçla ölçülmez. 78040 hiçbirine sayılmaz — Anlage 1a Teil 2
+  Ziff. 4.1: *„keine Behandlungseinheit im Sinne der Heilmittel-Richtlinie"* (yukarıdaki
+  78040 kaydı).
 
 ---
 

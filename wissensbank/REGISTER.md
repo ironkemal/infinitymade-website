@@ -5,7 +5,14 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 17.09.2026 (Ops #290 — `gkv-302`'nin üç DTA
+> İlk kurulum: 05.09.2026 · Son güncelleme: 18.09.2026 (Ops #211 — Podologie Höchstmenge
+> je Verordnung kuralı `SPEC-RULES.md`'ye kaydedildi, zinciri **Z-11** olarak açıldı:
+> HeilM-RL Heilmittelkatalog + Podologie Anlage 3 Ziffer 3 f) → `verordnung-regeln.js` →
+> `verordnung-podo.js` / `verordnung-pruefung.js` / `diagnosegruppen.json`. Alıntılar
+> HeilM-RL s. 73-77 ve § 7 Abs. 2/5'e karşı doğrulandı; `gkv-302`'nin verdiği kod atfında
+> iki düzeltme yapıldı — `diagnosegruppen.json` podologie bloğu **:162-279** (:162-271
+> değil) ve sayının asıl adresi `verordnung-regeln.js:91/:97`. Yeni açık madde: **W-A10**.)
+> Önceki: 17.09.2026 (Ops #290 — `gkv-302`'nin üç DTA
 > alanı araştırması `SPEC-RULES.md`'ye kaydedildi: Muster 13 → ZHE 7/8/9, Arbeitsunfall
 > kapsam dışı, LHB/SKZ § 8 Abs. 3. Kaynaklar orijinallere karşı doğrulandı; kod uygulaması
 > **yok** ve vertikal sıralama gereği ertelendi. Zincir notları Z-01/Z-02'ye işlendi.)
@@ -24,7 +31,7 @@
 | Kayıtlı kaynak belge (INDEX'te) | 35 |
 | Arşivdeki PDF | 49 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
-| Kaynak→kod zinciri kayıtlı | 10 |
+| Kaynak→kod zinciri kayıtlı | 11 |
 | Tam kimlik kartı yazılmış kaynak | 3 (**W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9) |
 | **Herkunft (indirme URL'i) kayıtlı** | **4 / 36** ← asıl boşluk, W-A01 |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
@@ -80,7 +87,7 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 | **01.02.2027** | **Anlage 3 TP5 V21 → V22** yürürlüğe girer | Z-02 → `anlage3_v22.js` (dosya hazır, açılmayı bekliyor) | ⏳ dosya var, geçiş planı yok |
 | **01.02.2027** | **Anhang 03 Anlage 1 TP5 V10** (Kostenträgerdatei) yürürlüğe girer | Z-09 → `billing/kostentraeger/parser.js` | ⏳ parser 05.09.2026'da yazıldı |
 | açık uçlu | Anlage 1 TP5 V21 geçerli (01.10.2025'ten) | Z-01 → `billing/dta/*`, `legs.js` | ✅ geçerli |
-| açık uçlu | HeilM-RL 15.05.2025 değişikliği (05.08.2025'ten) | Z-07 | ✅ geçerli |
+| açık uçlu | HeilM-RL 15.05.2025 değişikliği (05.08.2025'ten) | Z-07 · **Z-11** | ✅ geçerli |
 | **her fiyat turu** | Heilmittelpreisstammdatei yeni `Stand_TT-MM-JJ` | Z-06 → otomatik, Telegram bildirimi | ✅ **tek otomatik kontrol** |
 
 > ⚠️ **Erken geçiş dosya reddi demektir.** V22 ve V10 dosyaları repoda duruyor ve kod
@@ -336,6 +343,30 @@ zauberware/postal-codes-json-xml-csv (GeoNames), CC BY 4.0
 ✅ Kaynak + lisans + üretim tarihi + üretim aracı + "elle düzenleme" uyarısı, hepsi
 dosyanın içinde. **Diğer türevlerin ulaşması gereken standart budur.**
 
+### Z-11 · Podologie Höchstmenge / Verordnung kuralları (HeilM-RL Heilmittelkatalog)
+```
+wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.pdf/.txt
+    (iK 05.08.2025 — Heilmittelkatalog II. Podologische Therapie s. 73-77; § 7 Abs. 2/5)
+wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.pdf/.txt
+    (i.d.F. 16.06.2025, Ziffer 3 f) — Höchstmenge aşılırsa ne olur)
+  → module/verordnung-regeln.js:91   POD_HOECHSTMENGE {DF:6,NF:6,QF:6,UI1:8,UI2:4}  [Q1/Q2 etiketli]
+                             :97   POD_ORIENTIEREND {UI1:8, UI2:8}
+                             :189-204  regelnFuerBereich() — DB kazanır, bunlar Rückfall
+                             :250-257  REGELSTAND — yeni Richtlinie geldiğinde gözden geçirme listesi
+    → module/verordnung-pruefung.js:220-234  UEBER_HOECHSTMENGE (uyarı, blok değil)
+    → module/verordnung-podo.js:72/:75 → :365-395 einheitenPruefen()   ⚠ kendi kopyası (W-A10)
+    → api-backend/ai/validators/diagnosegruppen.json:162-279           (backend kopyası)
+  → DB diagnosegruppen.hoechstmenge (db/SCHEMA.sql:1240) — physio'da dolu, **podolojide boş**
+```
+📌 Runtime sırası tersinden okunur: DB doluysa **DB kazanır**, koddaki değerler yalnız
+boşluğu doldurur (`verordnung-regeln.js:198-204`). Yani podolojide bugün geçerli olan sayı
+kodun içindedir; `diagnosegruppen.hoechstmenge` podoloji için doldurulduğu gün Rückfall
+kendiliğinden devre dışı kalır — **o gün DB'deki değerin bu kaynağa uyduğu doğrulanmalıdır.**
+⚠️ Aynı sayı üç dosyada duruyor (18.09.2026'da üçü de sayıldı, tutarlı). HeilM-RL veya
+Anlage 3 güncellenirse üçü birden yürünür; biri unutulursa sistem *kısmen* güncel olur.
+Kural metni, alıntılar ve satır numaraları: `SPEC-RULES.md` → „Podologie Höchstmenge je
+Verordnung — UI2 dörttür, sekiz değil".
+
 ---
 
 ## 3. Kaynak envanteri
@@ -379,7 +410,7 @@ yeniden araştırılıyor demektir.
 | `20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei` | Lesefassung, ab 01.01.2026 | ✅ GEÇERLİ | Z-03 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_2` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | Z-04 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_1c_Leistungsbeschreibung` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | podoloji akışı |
-| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı |
+| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı · **Z-11** |
 | `wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung` | 16.06.2025 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20240725_Anlage_1a` + `1b_Leistungsbeschreibung` | i.d.F. 17.06.2024 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20230524_Podologie_FAK_bf` | Stand 24.05.2023 | ✅ GEÇERLİ | HPNR referansı |
@@ -394,7 +425,7 @@ yeniden araştırılıyor demektir.
 
 | Dosya | Sürüm / Stand | Durum | Besler |
 |---|---|---|---|
-| `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı |
+| `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı · **Z-11 doğrudan** (Höchstmenge) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste` | Stand 01.01.2026 | ✅ GEÇERLİ | **Z-07** |
 | `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 — dar boşluk 01.07.–10.08.2026, doğrulandı** (17.09.2026 `wissensbank`) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/praxiswissen-heilmittel` | Ausgabe 2026 | 📎 REFERANS | — |
@@ -827,6 +858,26 @@ listesi, bugün indirilmedi** (kullanıcı kararı: acil değil).
 **Tarih bağı:** ilk ikisi **01.02.2027 geçiş paketinden önce** kapanmalı; üçüncüsü canlı
 gönderim denemesinden önce. **Ölçüt:** üçü de indirildiğinde W-02'deki dosya adı çelişkisi
 ya çözülür ya da „Anlage 17 geçerli" diye gerekçeli kapanır.
+
+### W-A10 · Podologie Höchstmenge sayısı üç dosyada ayrı ayrı duruyor — `offen`, bugün `unkritisch`
+`module/verordnung-regeln.js` kendini „eine Zahl, ein Ort" diye tarif ediyor ve baş yorumunda
+*„`verordnung-podo.js` liest sie von hier"* yazıyor — **ama okumuyor**:
+`module/verordnung-podo.js:72/:75` `POD_HOECHSTMENGE`/`POD_ORIENTIEREND` sabitlerini import
+etmek yerine yeniden tanımlıyor. Üçüncü kopya backend'de:
+`api-backend/ai/validators/diagnosegruppen.json` (DG başına `hoechstmenge` +
+`orientierende_menge`).
+18.09.2026'da **üçü de aynı** (DF/NF/QF 6 · UI1 8 · UI2 4 · orientierend 8/8), yani bugün
+yanlış bir sayı üretmiyor — bu yüzden `unkritisch`. Risk ileride: HeilM-RL'nin
+Heilmittelkatalog'u değişirse ikisi güncellenip biri unutulabilir ve kimse fark etmez
+(kapı yok, test yalnız `verordnung-pruefung` yolunu sayıyor).
+**Yapılacak (sahibi: `builder`, aciliyet yok):** `verordnung-podo.js` sabitleri
+`verordnung-regeln.js`'ten import etsin (`verordnung-pruefung.js` zaten oradan besleniyor);
+JSON kopyası için `diagnosegruppen.json`'un `_note`'unda anılan drift kontrolü
+(`node api-backend/check_diagnosegruppen_icd.js --check`) `hoechstmenge`'yi de kapsasın.
+**Ölçüt:** sayı tek dosyada değiştirilip `npm test` koşulduğunda diğer iki yolun da
+değişmesi — ya da kapının bağırması.
+**Tarih bağı yok**; bir sonraki HeilM-RL/Anlage 3 değişikliğinde Z-11'in ilk satırı olarak
+okunur.
 
 ### ✅ Kapalı / doğrulanmış
 
