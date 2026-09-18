@@ -5469,10 +5469,9 @@ async function updateBkDuration(srvId, defaultValue = null) {
   if (!srv || !srv.price_config) {
     const { data } = await supabase.from('services').select('id,title,duration_minutes,price,price_config').eq('id', srvId).single();
     if (data) {
-      srv = data;
-      // Update local cache
+      // Zusammenführen, nicht ersetzen — dieser Select hat nur 5 Spalten, ein Ersetzen löschte code/is_internal (Ops #195).
       const idx = ownerServices.findIndex(s => s.id === srvId);
-      if (idx >= 0) ownerServices[idx] = srv;
+      srv = idx >= 0 ? Object.assign(ownerServices[idx], data) : data;
     }
   }
   if (istKombinierterTermin()) return;
@@ -5878,9 +5877,9 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
   const isGroup = document.getElementById('bkIsGroup')?.checked || false;
-  const istBlocker = istBlockerLeistung(servicesCache.find(s => s.id === srvId));
+  const istBlocker = istBlockerLeistung(servicesCache.find(s => s.id === srvId) || [...(_blockerDienste?.values() || [])].find(s => s.id === srvId)); // Ops #195: servicesCache kann hier veraltet sein
   if (istBlocker) {
-    cust = cust || servicesCache.find(s => s.id === srvId)?.title || 'Blocker';
+    cust = cust || (servicesCache.find(s => s.id === srvId) || [...(_blockerDienste?.values() || [])].find(s => s.id === srvId))?.title || 'Blocker';
     custId = '';
   } else if (!isGroup) {
     if (!cust || !custId) { showToast('Bitte einen Kunden aus der Liste auswählen.', 'error'); return; }
@@ -6008,7 +6007,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     };
     const res = await fetch(API + '/booking/batch-create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await supabase.auth.getSession()).data.session?.access_token },
       body: JSON.stringify(payload)
     });
     if (!res.ok) { showToast('Fehler beim Erstellen der Serientermine.', 'error'); return; }
