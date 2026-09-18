@@ -440,11 +440,19 @@ export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
 /**
  * Heilmittel/Positionen an ein Textfeld hängen.
  * @param {object} [opts] bereich, diagnosegruppe, datum (alle string|Function),
- *                        codeOnly, multi, limit, onSelect
+ *                        codeOnly, multi, limit, onSelect, extraItems
+ *
+ * `extraItems` (Function → Array): Zeilen, die VOR die HPNR-Liste kommen und
+ * keine Positionsnummer sind — heute die Katalogtexte der Leitsymptomatik
+ * a)/b)/c) der Podologie (module/verordnung-podo.js). Eine solche Zeile trägt
+ * `__ls` (der Buchstabe) statt eines `code`; ihr Text wird NICHT ins Feld
+ * geschrieben, das übernimmt der `onSelect`-Aufrufer. Gleiches Muster wie
+ * `item.kind === 'dg'` im Diagnosefeld: eine Markierung am Datensatz, keine
+ * zweite Implementierung des Dropdowns.
  */
 export function attachHeilmittelSearch(inputEl, sb, opts = {}) {
   if (!inputEl || !sb) return;
-  const { multi = false, codeOnly = false, limit = 100, onSelect = null } = opts;
+  const { multi = false, codeOnly = false, limit = 100, onSelect = null, extraItems = null } = opts;
   const fn = v => (typeof v === 'function' ? v : () => v ?? null);
   const getBereich = fn(opts.bereich);
   const getDg      = fn(opts.diagnosegruppe);
@@ -454,12 +462,23 @@ export function attachHeilmittelSearch(inputEl, sb, opts = {}) {
     ariaLabel: 'Heilmittel-Vorschläge',
     multi, onSelect,
     minChars: 0,                      // leeres Feld zeigt die gültige Gesamtliste
-    fetchItems: q => searchHeilmittel(sb, q, {
-      bereich: getBereich(), diagnosegruppe: getDg(), datum: getDatum(), limit,
-    }),
-    toText: it => (codeOnly ? it.code : `${it.code} – ${it.label}`),
-    renderItem: it =>
-      `<span class="icd-code">${esc(it.kuerzel || it.code)}</span>` +
+    fetchItems: async q => {
+      const rows = await searchHeilmittel(sb, q, {
+        bereich: getBereich(), diagnosegruppe: getDg(), datum: getDatum(), limit,
+      });
+      const extra = typeof extraItems === 'function' ? (extraItems() || []) : [];
+      if (!extra.length) return rows;
+      // Bei Eingabe nur die Zeilen, deren Text passt — sonst blieben die drei
+      // Katalogzeilen bei jeder Suche oben kleben.
+      const suche = String(q || '').trim().toLowerCase();
+      const passt = it => !suche || String(it.label || '').toLowerCase().includes(suche);
+      return [...extra.filter(passt), ...rows];
+    },
+    toText: it => (it.__ls ? '' : (codeOnly ? it.code : `${it.code} – ${it.label}`)),
+    renderItem: it => it.__ls
+      ? `<span class="icd-code">${esc(it.kuerzel || String(it.__ls).toUpperCase())}</span>` +
+        `<span class="icd-title">${esc(it.label)}</span>`
+      : `<span class="icd-code">${esc(it.kuerzel || it.code)}</span>` +
       `<span class="icd-title">${esc(it.label)}</span>` +
       (it.preis_eur != null
         ? `<span class="icd-badge">${Number(it.preis_eur).toFixed(2).replace('.', ',')} €</span>`

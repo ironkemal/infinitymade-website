@@ -41,7 +41,7 @@
  */
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260914';
+import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260918';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260907';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 
@@ -382,7 +382,6 @@ export function fuelleMuster13(rx, opt = {}) {
   // an, sobald der Bereich auf Podologie steht. Steht er nicht darauf,
   // greift `setz` ins Leere und tut nichts.
   setz('rzPodoNagel', rx.nagel || '');
-  setz('rzPodoWagner', rx.wagner_grad == null ? '' : String(rx.wagner_grad));
   setz('rzPodoAnlass', rx.behandlungsanlass || '');
   haken('rzUnterschrift', rx.unterschrift_vorhanden);
   // Die Kasse der Verordnung schlägt die aus der Akte: auf dem Papier steht,
@@ -553,11 +552,12 @@ export function nutzlastAusMaske(v) {
     hinweise: txt('rzHinweise') || null,
     unterschrift_vorhanden: an('rzUnterschrift'),
     kostentraeger_ik: txt('rzPatKasseIk') || null,
-    // Podologische Zusatzangaben (nagel/wagner_grad/behandlungsanlass).
-    // Ausserhalb der Podologie ein leeres Objekt — die Spalten bleiben
-    // unberuehrt. Bis zum 06.09.2026 fuellte sie nur das getrennte
-    // Formular der Abrechnungsseite; `nagel` ist abrechnungsrelevant
-    // (§ 3b lit. a, Erstbefundung je Nagelspangen-Serie).
+    // Podologische Zusatzangaben (nagel/behandlungsanlass). Ausserhalb der
+    // Podologie ein leeres Objekt — die Spalten bleiben unberuehrt. Bis zum
+    // 06.09.2026 fuellte sie nur das getrennte Formular der Abrechnungsseite;
+    // `nagel` ist abrechnungsrelevant (§ 3b lit. a, Erstbefundung je
+    // Nagelspangen-Serie). `wagner_grad` stand hier bis 18.09.2026 auch drin —
+    // das Feld ist aus der Maske raus (siehe podoVerordnungsfelder()).
     ...podoVerordnungsfelder(),
     // Gescannt? Dann gehoeren Beleg, Vertrauen und Herkunft dazu — sonst
     // bleibt `quelle` auf dem Vorgabewert `papier`.

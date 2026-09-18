@@ -36,7 +36,7 @@ import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260917';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260918';
-import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260917';
+import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260918';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
@@ -15699,10 +15699,8 @@ document.addEventListener('focusin', (e) => {
     if (!hcfg) return;
     attachHeilmittelSearch(el, supabase, {
       bereich: _getDiagnoseBereich,
-      onSelect: (it) => {
-        const pos = document.getElementById(hcfg.posField);
-        if (pos) pos.value = it.code;
-      },
+      extraItems: heilmittelKatalogVorschlaege,   // Katalogtexte a)/b)/c) vor der HPNR-Liste
+      onSelect: (it) => heilmittelAuswahlUebernehmen(it, hcfg.posField),
     });
   }
   // Der modul-eigene focus-Handler ist für diesen ersten Fokus zu spät.

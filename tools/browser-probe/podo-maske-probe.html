@@ -1,0 +1,117 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Probe: Podologie-Feinschliff der Muster-13-Maske</title>
+<!--
+  Prüft im echten Browser, was `node --test` nicht sieht (kein DOM):
+    • Wagner-Feld ist aus der Maske und aus der Nutzlast raus (18.09.2026)
+    • Leitsymptomatik-Kästchen tragen den Katalogtext; UI1/UI2 verstecken b)/c)
+    • das rzHm-Dropdown zeigt die Katalogzeilen VOR der HPNR-Liste, und die Wahl
+      von „Podologische Komplexbehandlung" kreuzt c) an und füllt das Feld
+    • Physio/Ergo/Logo bleiben unberührt
+  Die Maske ist die ECHTE aus dashboard.html. Kein Login, keine Datenbank —
+  `supabase` ist eine Attrappe, die nur `search_heilmittel` beantwortet.
+-->
+<div id="buehne"></div>
+
+<script type="module">
+const ergebnis = [];
+const pruef = (name, ok, detail = '') => ergebnis.push({ name, ok: !!ok, detail: String(detail) });
+const warte = ms => new Promise(r => setTimeout(r, ms));
+const $ = id => document.getElementById(id);
+
+try {
+  const html = await (await fetch('../../dashboard.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  $('buehne').appendChild(document.importNode(doc.getElementById('rezeptModal'), true));
+
+  const podo = await import('../../module/verordnung-podo.js?v=20260918');
+  const { attachHeilmittelSearch } = await import('../../katalog-suche.js?v=20260817');
+
+  // Attrappe: nur die HPNR-Suche, mit zwei Positionen.
+  const HPNR = [
+    { code: '78010', label: 'Podologische Behandlung (klein)', kuerzel: '78010' },
+    { code: '78020', label: 'Podologische Behandlung (groß)',  kuerzel: '78020' },
+  ];
+  const supabase = { rpc: async () => ({ data: HPNR, error: null }) };
+
+  podo.mountVerordnungPodo(supabase, { getOwnerId: () => 'owner', getProfile: () => ({ ik_number: '260000000' }) });
+  attachHeilmittelSearch($('rzHm'), supabase, {
+    bereich: () => 'podologie',
+    extraItems: podo.heilmittelKatalogVorschlaege,
+    onSelect: it => podo.heilmittelAuswahlUebernehmen(it, 'rzHmPosition'),
+  });
+
+  const setzeBereich = async (wert, dg) => {
+    $('rzTherapieBereich').value = wert;
+    $('rzDg').value = dg;
+    $('rzDg').dispatchEvent(new Event('input', { bubbles: true }));
+    await warte(350);
+  };
+  const text = id => $(id).closest('label.m13-th').textContent.replace(/\s+/g, ' ').trim();
+  const versteckt = id => $(id).closest('label.m13-th').style.display === 'none';
+
+  // ── Wagner ist weg ──────────────────────────────────────────────────────
+  await setzeBereich('podo', 'DF');
+  pruef('kein Wagner-Feld in der Maske', !$('rzPodoWagner'));
+  pruef('Nutzlast enthält keinen wagner_grad-Schlüssel', !('wagner_grad' in podo.podoVerordnungsfelder()),
+    Object.keys(podo.podoVerordnungsfelder()).join(','));
+  pruef('Nagel und Behandlungsanlass bleiben in der Nutzlast',
+    'nagel' in podo.podoVerordnungsfelder() && 'behandlungsanlass' in podo.podoVerordnungsfelder());
+
+  // ── Kästchen-Beschriftung ───────────────────────────────────────────────
+  pruef('DF: a) Hornhautabtragung', text('rzLsA') === 'a) Hornhautabtragung', text('rzLsA'));
+  pruef('DF: b) Nagelbearbeitung',  text('rzLsB') === 'b) Nagelbearbeitung',  text('rzLsB'));
+  pruef('DF: c) Podologische Komplexbehandlung', text('rzLsC') === 'c) Podologische Komplexbehandlung', text('rzLsC'));
+
+  await setzeBereich('podo', 'UI1');
+  pruef('UI1: a) Nagelspangenbehandlung', text('rzLsA') === 'a) Nagelspangenbehandlung', text('rzLsA'));
+  pruef('UI1: b) und c) sind versteckt', versteckt('rzLsB') && versteckt('rzLsC'));
+
+  await setzeBereich('podo', '');
+  pruef('ohne Diagnosegruppe: Originalbeschriftung, nichts versteckt',
+    text('rzLsA') === 'a' && !versteckt('rzLsB') && !versteckt('rzLsC'), `${text('rzLsA')}|${text('rzLsB')}|${text('rzLsC')}`);
+
+  // ── Dropdown: Katalogzeilen vor der HPNR-Liste ──────────────────────────
+  await setzeBereich('podo', 'DF');
+  // Das Modal ist hier verborgen, focus() bliebe wirkungslos — das Ereignis direkt senden.
+  $('rzHm').dispatchEvent(new Event('focus'));
+  await warte(400);
+  const zeilen = [...document.querySelectorAll('.icd10-dropdown-item')].map(e => e.textContent.replace(/\s+/g, ' ').trim());
+  pruef('Dropdown: drei Katalogzeilen VOR den zwei HPNR',
+    zeilen.length === 5 && zeilen[2].includes('Podologische Komplexbehandlung') && zeilen[3].includes('78010'),
+    zeilen.join(' | '));
+
+  // ── Wahl „Komplexbehandlung" kreuzt c) an und füllt das Feld ────────────
+  const zeileC = [...document.querySelectorAll('.icd10-dropdown-item')][2];
+  zeileC.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  await warte(400);
+  pruef('Wahl kreuzt c) an', $('rzLsC').checked);
+  pruef('Feld trägt „Podologische Komplexbehandlung"', $('rzHm').value === 'Podologische Komplexbehandlung', $('rzHm').value);
+  pruef('Position bleibt bei c) leer (78010 oder 78020 entscheidet der Behandlungstag)', $('rzHmPosition').value === '', $('rzHmPosition').value);
+
+  // ── Wahl „Hornhautabtragung" → 78010 ────────────────────────────────────
+  $('rzLsC').checked = false; $('rzLsC').dispatchEvent(new Event('change', { bubbles: true }));
+  await warte(300);
+  podo.heilmittelAuswahlUebernehmen({ __ls: 'a', label: 'Hornhautabtragung', code: '' }, 'rzHmPosition');
+  await warte(400);
+  pruef('a) → Feld „Hornhautabtragung"', $('rzHm').value === 'Hornhautabtragung', $('rzHm').value);
+  pruef('a) → Position 78010', $('rzHmPosition').value === '78010', $('rzHmPosition').value);
+  pruef('keine „von Hand geändert"-Warnung nach der Wahl',
+    !($('rzPodoHinweis')?.textContent || '').includes('von Hand geändert'), $('rzPodoHinweis')?.textContent);
+
+  // ── 78020 bei a) → Hinweis, kein Block ──────────────────────────────────
+  podo.heilmittelAuswahlUebernehmen({ code: '78020', label: 'groß' }, 'rzHmPosition');
+  pruef('78020 gegen a) warnt', ($('rzPodoHinweis')?.textContent || '').includes('78020'), $('rzPodoHinweis')?.textContent);
+  pruef('…und schreibt die Nummer trotzdem (kein Block)', $('rzHmPosition').value === '78020', $('rzHmPosition').value);
+
+  // ── Physio: nichts angefasst ────────────────────────────────────────────
+  await setzeBereich('physio', 'KG');
+  pruef('Physio: Kästchen wieder a / b / c und sichtbar',
+    text('rzLsA') === 'a' && text('rzLsB') === 'b' && text('rzLsC') === 'c' && !versteckt('rzLsB'),
+    `${text('rzLsA')}|${text('rzLsB')}|${text('rzLsC')}`);
+  pruef('Physio: keine Katalogzeilen', podo.heilmittelKatalogVorschlaege().length === 0);
+} catch (e) {
+  pruef('Probe läuft durch', false, e?.stack || e?.message || String(e));
+}
+window.__probe = ergebnis;
+</script>

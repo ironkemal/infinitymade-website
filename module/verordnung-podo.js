@@ -131,6 +131,58 @@ function gewaehlteLeitsymptome() {
   return ['a', 'b', 'c'].filter(b => $(`rzLs${b.toUpperCase()}`)?.checked);
 }
 
+// ─── 1b. Leitsymptomatik-Kästchen beschriften ───────────────────────────────
+//
+// Kemal, 18.09.2026: Muster 13 zeigt an den Kästchen nur „a b c" — welches
+// davon die Komplexbehandlung ist, sieht man nicht, obwohl das System sie
+// selbst automatisch ins Heilmittelfeld schreibt (`leitsymptomatikAnwenden()`
+// unten). Hier wird NUR angezeigt, was dort ohnehin schon steht — derselbe
+// `POD_KATALOG`, kein zweites Wörterbuch.
+//
+// UI 1 / UI 2 kennen laut Katalog nur a); b) und c) werden dort versteckt
+// statt eine Ankreuzung zuzulassen, die laut `leitsymptomatikAnwenden()`
+// ohnehin zur Fehlermeldung („kennt nur die Leitsymptomatik a)") führt —
+// verstecken ist ehrlicher als anklickbar lassen und dann meckern.
+
+/** Setzt den sichtbaren Text NACH dem Kästchen, ohne Checkbox/Span anzufassen. */
+function _lsLabelText(label, text) {
+  let textNode = Array.from(label.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+  if (!textNode) {
+    textNode = document.createTextNode('');
+    label.appendChild(textNode);
+  }
+  textNode.textContent = ` ${text}`;
+}
+
+function leitsymptomatikBeschriften() {
+  const podo = istPodo();
+  const root = podo ? dgWurzel($('rzDg')?.value) : null;
+  const katalog = root ? POD_KATALOG[root] : null;
+
+  for (const buchstabe of ['a', 'b', 'c']) {
+    const cb = $(`rzLs${buchstabe.toUpperCase()}`);
+    const label = cb?.closest('label.m13-th');
+    if (!cb || !label) continue;
+
+    // Physio/Ergo/Logo, oder Podologie ohne (erkannte) Diagnosegruppe: der
+    // Katalog ist unbekannt — Originalbeschriftung, nichts verstecken.
+    if (!podo || !katalog) {
+      label.style.display = '';
+      _lsLabelText(label, buchstabe);
+      continue;
+    }
+
+    const text = katalog[buchstabe];
+    if (!text) {
+      label.style.display = 'none';
+      if (cb.checked) cb.checked = false;   // sonst bliebe ein verstecktes Kreuz aktiv
+      continue;
+    }
+    label.style.display = '';
+    _lsLabelText(label, `${buchstabe}) ${text}`);
+  }
+}
+
 /**
  * Schreibt in ein Feld, ohne dass der eigene input-Wächter das als Handeingabe
  * missversteht. Ohne diese Klammer löschte der Wächter die `auto`-Markierung
@@ -250,6 +302,92 @@ function leitsymptomatikAnwenden() {
       + '78010 bis 20 Minuten Therapiezeit, sonst 78020 (FAK Podologie Q25).' };
   }
   return meldung;
+}
+
+// ─── 1c. Heilmittelfeld-Dropdown: Katalogtexte neben den Positionsnummern ───
+//
+// Kemal, 18.09.2026: „sistemde komplex var ama dropdownda yok". Das Feld
+// `rzHm` bekam bisher nur die HPNR-Liste (78010, 78020, 78030 …) aus dem
+// Leistungskatalog, während `leitsymptomatikAnwenden()` den Text des
+// HeilM-RL-Katalogs („Podologische Komplexbehandlung") hineinschrieb — zwei
+// verschiedene Wörterbücher im selben Feld: das System konnte „Komplex"
+// schreiben, der Anwender konnte es nicht wählen.
+//
+// Die drei Zeilen kommen VOR die HPNR-Liste (`extraItems` in katalog-suche.js)
+// und sind kein zweiter Schreibweg: Wahl = Kästchen a)/b)/c) ankreuzen, den
+// Rest schreibt weiterhin allein `leitsymptomatikAnwenden()`.
+
+/**
+ * Katalogzeilen für das `rzHm`-Dropdown. Leer ausserhalb der Podologie oder
+ * ohne erkannte Diagnosegruppe — ohne Katalog gibt es nichts vorzuschlagen.
+ */
+export function heilmittelKatalogVorschlaege() {
+  if (!istPodo()) return [];
+  const katalog = POD_KATALOG[dgWurzel($('rzDg')?.value)];
+  if (!katalog) return [];
+  return Object.entries(katalog).map(([buchstabe, label]) => ({
+    __ls: buchstabe, code: '', label, kuerzel: buchstabe.toUpperCase(),
+  }));
+}
+
+/**
+ * Eine Katalogzeile wurde im Dropdown gewählt: Kästchen ankreuzen, fertig.
+ *
+ * Das Feld wird vorher geleert (und nicht mit dem Text vorbelegt), weil
+ * `leitsymptomatikAnwenden()` die Positionsnummer nur schreibt, wenn sich der
+ * Text ändert — stünde er schon da, bliebe bei a)/b) die 78010 aus. Ein leeres
+ * Feld ist ausserdem immer „unser", die Automatik übernimmt es also ohne
+ * Handeingabe-Warnung.
+ *
+ * @param {'a'|'b'|'c'} buchstabe
+ */
+function leitsymptomatikAusDropdownWaehlen(buchstabe) {
+  const hm = $('rzHm');
+  const kaestchen = $(`rzLs${String(buchstabe).toUpperCase()}`);
+  if (!hm || !kaestchen) return;
+  schreibe(hm, '');
+  if (!kaestchen.checked) {
+    kaestchen.checked = true;
+    kaestchen.dispatchEvent(new Event('change', { bubbles: true }));   // AUSLOESER → lauf()
+  } else if (_lauf) {
+    setTimeout(_lauf, 0);   // schon angekreuzt: Automatik trotzdem neu anstossen
+  }
+}
+
+/**
+ * 78020 („Behandlung groß") ist nur bei c) Komplexbehandlung abrechenbar; bei
+ * a)/b) ist es immer 78010, auch über 20 Minuten (FAK Podologie Q25). Wer 78020
+ * trotzdem aus der HPNR-Liste wählt, bekommt einen Hinweis — keinen Block: die
+ * Verordnung trägt keine Therapiezeit, endgültig entscheidet die Abrechnung
+ * (`module/podologie-abrechnung.js`, dort greift die harte Sperre).
+ *
+ * @param {string} code  gewählte Positionsnummer aus dem Dropdown
+ */
+function pruefeHpnrWahl(code) {
+  if (!istPodo() || code !== '78020') return;
+  const gewaehlt = gewaehlteLeitsymptome();
+  if (gewaehlt.includes('c') || !gewaehlt.some(b => b === 'a' || b === 'b')) return;
+  zeigeHinweise([{
+    farbe: 'var(--warning,#f59e0b)',
+    text: '78020 ist nur bei verordneter Komplexbehandlung (c) abrechenbar — bei '
+        + 'Hornhautabtragung oder Nagelbearbeitung allein immer 78010 (FAK Podologie Q25).',
+  }]);
+}
+
+/**
+ * Die eine Stelle, an der `dashboard.js` eine Wahl aus dem `rzHm`-Dropdown
+ * weiterreicht. Katalogzeile → Kästchen ankreuzen; HPNR → in das Positionsfeld
+ * schreiben (bisheriges Verhalten) und 78020 gegen a)/b) prüfen. Steht hier
+ * statt in `dashboard.js`, weil die Datei nicht wachsen darf (Konsey 2026-08-13).
+ *
+ * @param {{__ls?:string, code?:string}} it   gewählte Zeile
+ * @param {string} posFeldId                  ID des Positionsfeldes (`rzHmPosition`)
+ */
+export function heilmittelAuswahlUebernehmen(it, posFeldId) {
+  if (it?.__ls) { leitsymptomatikAusDropdownWaehlen(it.__ls); return; }
+  const pos = $(posFeldId);
+  if (pos) pos.value = it?.code ?? '';
+  pruefeHpnrWahl(it?.code);
 }
 
 // ─── 2. IK des Leistungserbringers ─────────────────────────────────────────
@@ -510,15 +648,6 @@ const POD_ANLASS_DEFAULT = 'Podologische Komplexbehandlung';
 /** Nur die Nagelspangen-Diagnosegruppen fuehren einen Nagel. */
 const POD_NAGEL_DGS = ['UI1', 'UI2'];
 
-const WAGNER_STUFEN = [
-  ['0', 'Grad 0 – Risikofuß (keine offene Läsion)'],
-  ['1', 'Grad 1 – Oberflächliche Ulzeration'],
-  ['2', 'Grad 2 – Tiefes Ulkus (Sehne/Knochen)'],
-  ['3', 'Grad 3 – Tiefeninfektion / Abszess'],
-  ['4', 'Grad 4 – Begrenzte Gangrän'],
-  ['5', 'Grad 5 – Ausgedehnte Gangrän'],
-];
-
 const FELD_STIL = 'width:100%;padding:7px 9px;border-radius:6px;border:1px solid var(--border);'
   + 'background:var(--bg-card-solid);color:var(--text-main);font-size:13px;';
 const LABEL_STIL = 'font-size:12px;color:var(--text-muted);display:block;margin-bottom:3px;';
@@ -546,13 +675,6 @@ function podoFelderEl() {
         ${NAGEL_WERTE.map(w => `<option value="${w}">${nagelLabel(w)}</option>`).join('')}
       </select>
       <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Eine Verordnung = ein Nagel. Der Nagel hält die Behandlungsserie über mehrere Verordnungen zusammen.</div>
-    </div>
-    <div>
-      <label style="${LABEL_STIL}" for="rzPodoWagner">Wagner-Klassifikation</label>
-      <select id="rzPodoWagner" style="${FELD_STIL}">
-        <option value="">— nicht angegeben —</option>
-        ${WAGNER_STUFEN.map(([w, t]) => `<option value="${w}">${t}</option>`).join('')}
-      </select>
     </div>
     <div>
       <label style="${LABEL_STIL}" for="rzPodoAnlass">Behandlungsanlass</label>
@@ -597,18 +719,25 @@ function podoFelderAktualisieren() {
 }
 
 /**
- * Die drei Werte fuer die Nutzlast (module/verordnung-maske.js).
+ * Die Werte fuer die Nutzlast (module/verordnung-maske.js).
  * Ausserhalb der Podologie ein leeres Objekt — die Spalten bleiben unberuehrt.
  *
- * @returns {{nagel?:?string, wagner_grad?:?number, behandlungsanlass?:?string}}
+ * ⚠️ `wagner_grad` steht bewusst NICHT mehr drin (18.09.2026, Kemal — das Feld
+ * kostete Platz und wurde nie ausgefuellt). Die Spalte selbst bleibt: sie ist
+ * kein Schreibweg mehr, aber Altbestand liest sie weiterhin
+ * (module/verordnung-detail.js). Wuerde hier `wagner_grad: null`
+ * zurueckgegeben, loeschte ein simples Abspeichern jeden vorhandenen Wert —
+ * und bei einer laut Migration 0020 bereits festgeschriebenen Verordnung
+ * schluege das Update sogar fehl (der Trigger bewacht genau diese Spalte).
+ * Der Schluessel fehlt deshalb komplett statt auf `null` zu stehen.
+ *
+ * @returns {{nagel?:?string, behandlungsanlass?:?string}}
  */
 export function podoVerordnungsfelder() {
   if (!istPodo()) return {};
   const brauchtNagel = POD_NAGEL_DGS.includes(dgWurzel($('rzDg')?.value));
-  const wagnerRoh = $('rzPodoWagner')?.value ?? '';
   return {
     nagel: brauchtNagel ? ($('rzPodoNagel')?.value || null) : null,
-    wagner_grad: wagnerRoh === '' ? null : parseInt(wagnerRoh, 10),
     behandlungsanlass: ($('rzPodoAnlass')?.value || '').trim() || POD_ANLASS_DEFAULT,
   };
 }
@@ -833,6 +962,7 @@ async function sitzungsplanAktualisieren(supabase, ctx) {
 
 async function aktualisieren(supabase, ctx) {
   ergaenzendesUmschalten();
+  leitsymptomatikBeschriften();
 
   if (!istPodo()) {
     podoFelderAktualisieren();
@@ -887,7 +1017,7 @@ function _aufraeumen() {
   $('rzAnzahl')?.removeAttribute('max');
   const schnellwahl = $('rzAnzahlSchnellwahl');
   if (schnellwahl) schnellwahl.innerHTML = '';
-  ['rzPodoNagel', 'rzPodoWagner', 'rzPodoAnlass'].forEach(id => { const e = $(id); if (e) e.value = ''; });
+  ['rzPodoNagel', 'rzPodoAnlass'].forEach(id => { const e = $(id); if (e) e.value = ''; });
   const felder = $('rzPodoFelder');
   if (felder) felder.style.display = 'none';
   const plan = $('rzPodoSitzungsplan');
