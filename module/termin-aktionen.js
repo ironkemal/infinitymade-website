@@ -320,8 +320,13 @@ export async function waehleVerordnungFuerPanel({ supabase, booking, verknuepfte
  */
 export function zeichneRezeptFortschritt({ rx, total, current }) {
   const wrap = document.getElementById('bkRxRemainingWrap');
+  // „Letzte Behandlung": genau eine Einheit ist noch offen — also ist die
+  // hier gerade offene die letzte. Hängt an derselben `current`-Zählung wie
+  // der Balken, also an derselben Podologie-Bremse.
+  const letzterWarnEl = document.getElementById('bkRxLetzterTermin');
   if (rx?.therapie_bereich === 'podo') {
     if (wrap) wrap.hidden = true;
+    if (letzterWarnEl) letzterWarnEl.hidden = true;
     return;
   }
   if (wrap) wrap.hidden = false;
@@ -335,6 +340,7 @@ export function zeichneRezeptFortschritt({ rx, total, current }) {
       ? `${current} von ${total} Behandlungen erbracht — noch ${remaining} offen`
       : `${current} von ${total} Behandlungen erbracht — Verordnung aufgebraucht, Folgeverordnung nötig`;
   }
+  if (letzterWarnEl) letzterWarnEl.hidden = remaining !== 1;
 }
 
 /**

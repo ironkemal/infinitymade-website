@@ -3458,13 +3458,6 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
       }
     }
 
-    // „Letzte Behandlung": genau eine Einheit ist noch offen — also ist die
-    // hier gerade offene die letzte. Vorher stand hier `current === total`, was
-    // mit der Terminnummer stimmte; seit `current` die erbrachten Sitzungen
-    // zählt, wäre die Verordnung dann bereits aufgebraucht.
-    const letzterWarnEl = document.getElementById('bkRxLetzterTermin');
-    if (letzterWarnEl) letzterWarnEl.hidden = remaining !== 1;
-
     // Die „Sitzungsübersicht" stand hier als eigene Tabelle und lud dafür alle
     // Sitzungen der Verordnung ein zweites Mal nach. Entfallen: der Block
     // „Aktive Verordnung" unten im Panel führt dieselbe Liste bereits, und
