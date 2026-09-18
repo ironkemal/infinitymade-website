@@ -5878,9 +5878,9 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
   const isGroup = document.getElementById('bkIsGroup')?.checked || false;
-  const istBlocker = istBlockerLeistung(servicesCache.find(s => s.id === srvId));
+  const istBlocker = istBlockerLeistung(servicesCache.find(s => s.id === srvId) || [...(_blockerDienste?.values() || [])].find(s => s.id === srvId)); // Ops #195: servicesCache kann hier veraltet sein
   if (istBlocker) {
-    cust = cust || servicesCache.find(s => s.id === srvId)?.title || 'Blocker';
+    cust = cust || (servicesCache.find(s => s.id === srvId) || [...(_blockerDienste?.values() || [])].find(s => s.id === srvId))?.title || 'Blocker';
     custId = '';
   } else if (!isGroup) {
     if (!cust || !custId) { showToast('Bitte einen Kunden aus der Liste auswählen.', 'error'); return; }
@@ -6008,7 +6008,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     };
     const res = await fetch(API + '/booking/batch-create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await supabase.auth.getSession()).data.session?.access_token },
       body: JSON.stringify(payload)
     });
     if (!res.ok) { showToast('Fehler beim Erstellen der Serientermine.', 'error'); return; }
