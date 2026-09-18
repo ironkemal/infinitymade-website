@@ -89,6 +89,46 @@ function istPodo() {
   return ($('rzTherapieBereich')?.value || '') === 'podo';
 }
 
+// ─── Der Block unter der Heilmitteltabelle ──────────────────────────────────
+//
+// Kemal, 18.09.2026: „bir Heilmittel seçildikten sonra sayfanın uzayıp …
+// gelmesi lazım" — die Podologie-Zeilen (Angaben, Sitzungsplan, Hinweise)
+// müssen die Maske verlängern, nicht in ihr stecken bleiben.
+//
+// Ursache, warum sie es bisher nicht taten: alle drei hingen an
+// `$('rzAnzahl').closest('div').parentElement` — das ist die ERSTE
+// `.m13-hmline`, ein Raster mit zwei Spalten (`1fr 96px`). Jedes angehängte
+// Element wurde damit zur dritten, vierten, fünften Rasterzelle und landete
+// abwechselnd in der breiten und in der 96 px schmalen Spalte. Sie stehen jetzt
+// in EINEM Block direkt hinter `.m13-hmtable`, über die volle Breite.
+//
+// Die Reihenfolge (Angaben → Sitzungsplan → Hinweise) legt `order` fest, nicht
+// die Reihenfolge der Erzeugung — die hing bisher davon ab, welcher Zweig von
+// `aktualisieren()` zuerst lief.
+
+const REIHENFOLGE = { rzPodoFelder: 1, rzPodoSitzungsplan: 2, rzPodoHinweis: 3 };
+
+function blockEl() {
+  let el = $('rzPodoBlock');
+  if (el) return el;
+  const tabelle = $('rzHm')?.closest('.m13-hmtable');
+  if (!tabelle) return null;
+  el = document.createElement('div');
+  el.id = 'rzPodoBlock';
+  el.style.cssText = 'display:flex;flex-direction:column;';
+  tabelle.after(el);
+  return el;
+}
+
+/** Hängt ein Element in den Block und setzt seine Position darin. */
+function inBlock(el) {
+  const block = blockEl();
+  if (!block) return false;
+  el.style.order = String(REIHENFOLGE[el.id] ?? 9);
+  block.appendChild(el);
+  return true;
+}
+
 // ─── Anzeigezeile unter dem Formular ────────────────────────────────────────
 // Ein einziger Hinweisstreifen für alle Meldungen dieses Moduls, damit die
 // Maske nicht mit fünf Warnzeilen zugestellt wird.
@@ -96,13 +136,10 @@ function istPodo() {
 function hinweisEl() {
   let el = $('rzPodoHinweis');
   if (el) return el;
-  const anker = $('rzAnzahl')?.closest('div')?.parentElement || $('rzHm')?.parentElement;
-  if (!anker) return null;
   el = document.createElement('div');
   el.id = 'rzPodoHinweis';
   el.style.cssText = 'font-size:11px;line-height:1.5;margin-top:6px;color:var(--text-muted);';
-  anker.appendChild(el);
-  return el;
+  return inBlock(el) ? el : null;
 }
 
 function zeigeHinweise(zeilen) {
@@ -660,8 +697,6 @@ const LABEL_STIL = 'font-size:12px;color:var(--text-muted);display:block;margin-
 function podoFelderEl() {
   let el = $('rzPodoFelder');
   if (el) return el;
-  const anker = $('rzAnzahl')?.closest('div')?.parentElement || $('rzHm')?.parentElement;
-  if (!anker) return null;
   el = document.createElement('div');
   el.id = 'rzPodoFelder';
   el.style.cssText = 'margin-top:10px;padding:10px;border:1px dashed var(--border);'
@@ -680,11 +715,7 @@ function podoFelderEl() {
       <label style="${LABEL_STIL}" for="rzPodoAnlass">Behandlungsanlass</label>
       <input type="text" id="rzPodoAnlass" placeholder="${POD_ANLASS_DEFAULT}" style="${FELD_STIL}">
     </div>`;
-  // Der Hinweisstreifen soll UNTER den Feldern stehen, nicht darueber.
-  const hinweis = $('rzPodoHinweis');
-  if (hinweis && hinweis.parentElement === anker) anker.insertBefore(el, hinweis);
-  else anker.appendChild(el);
-  return el;
+  return inBlock(el) ? el : null;
 }
 
 /**
@@ -853,17 +884,11 @@ async function beantworteAltbestand(supabase, ctx, patientId, wert) {
 function sitzungsplanEl() {
   let el = $('rzPodoSitzungsplan');
   if (el) return el;
-  const anker = $('rzAnzahl')?.closest('div')?.parentElement || $('rzHm')?.parentElement;
-  if (!anker) return null;
   el = document.createElement('div');
   el.id = 'rzPodoSitzungsplan';
   el.style.cssText = 'margin-top:6px;padding:6px 10px;border-left:2px solid var(--border);'
     + 'border-radius:4px;background:var(--bg-card);display:none;';
-  // Unter die podologischen Felder, aber ueber den Hinweisstreifen.
-  const hinweis = $('rzPodoHinweis');
-  if (hinweis && hinweis.parentElement === anker) anker.insertBefore(el, hinweis);
-  else anker.appendChild(el);
-  return el;
+  return inBlock(el) ? el : null;
 }
 
 /** Text fuer die Anzeige entschaerfen — Katalogtexte kommen aus der Datenbank. */

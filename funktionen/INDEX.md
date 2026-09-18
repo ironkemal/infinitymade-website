@@ -3,7 +3,7 @@
 > Üretim: 2026-09-18 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**2296 fonksiyon** · 252 dosya · 39 sidebar modülü
+**2299 fonksiyon** · 252 dosya · 39 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -113,8 +113,8 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `downloadDmrzForInvoice()` — [module/rechnung-dmrz.js:109](module/rechnung-dmrz.js#L109-L183) · 75 satır · prescriptions:update
 
 **Yol 5 — `pruefeVerordnungsfortschritt()`** · Ekran: _UI yolu çözülemedi_
-- `pruefeVerordnungsfortschritt()` — [module/sitzungsfortschritt.js:106](module/sitzungsfortschritt.js#L106-L148) · 43 satır · prescriptions:update
-- `zaehler()` — [module/sitzungsfortschritt.js:109](module/sitzungsfortschritt.js#L109-L141) · 33 satır · prescriptions:update
+- `pruefeVerordnungsfortschritt()` — [module/sitzungsfortschritt.js:128](module/sitzungsfortschritt.js#L128-L173) · 46 satır · prescriptions:update
+- `zaehler()` — [module/sitzungsfortschritt.js:131](module/sitzungsfortschritt.js#L131-L166) · 36 satır · prescriptions:update
 
 **Yol 6 — `speichereEinheiten()`** · Ekran: ortak yardımcı — 28 modülden çağrılıyor
 - `speichereEinheiten()` — [module/verordnung-einheiten.js:126](module/verordnung-einheiten.js#L126-L160) · 35 satır · prescriptions:update
@@ -176,7 +176,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `verordnungPatientenAbgleich()` — [module/verordnung-patient-abgleich.js:18](module/verordnung-patient-abgleich.js#L18-L92) · 75 satır · leads:update
 
 **Yol 5 — `beantworteAltbestand()`** · Ekran: ortak yardımcı — 28 modülden çağrılıyor
-- `beantworteAltbestand()` — [module/verordnung-podo.js:838](module/verordnung-podo.js#L838-L851) · 14 satır · leads:update
+- `beantworteAltbestand()` — [module/verordnung-podo.js:869](module/verordnung-podo.js#L869-L882) · 14 satır · leads:update
 
 ### `prescription_sessions` — 5 bağımsız yazma yolu
 

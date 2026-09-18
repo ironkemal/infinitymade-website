@@ -58,6 +58,18 @@ try {
   pruef('Nagel und Behandlungsanlass bleiben in der Nutzlast',
     'nagel' in podo.podoVerordnungsfelder() && 'behandlungsanlass' in podo.podoVerordnungsfelder());
 
+  // ── Yerleşim: Blok, iki sütunlu Heilmittel-Rasterinin DIŞINDA (18.09.2026) ─
+  // Vorher hingen Angaben/Sitzungsplan/Hinweise in der ersten .m13-hmline
+  // (Raster 1fr 96px) und landeten abwechselnd in der 96-px-Spalte.
+  const block = $('rzPodoBlock');
+  pruef('Podologie-Block steht direkt HINTER der Heilmitteltabelle',
+    !!block && block.previousElementSibling?.classList.contains('m13-hmtable'));
+  pruef('Angaben liegen nicht mehr in einer .m13-hmline',
+    !$('rzPodoFelder')?.closest('.m13-hmline') && !$('rzPodoHinweis')?.closest('.m13-hmline'));
+  pruef('Reihenfolge Angaben → Hinweise per order festgelegt',
+    $('rzPodoFelder')?.style.order === '1' && $('rzPodoHinweis')?.style.order === '3',
+    $('rzPodoFelder')?.style.order + '/' + $('rzPodoHinweis')?.style.order);
+
   // ── Kästchen-Beschriftung ───────────────────────────────────────────────
   pruef('DF: a) Hornhautabtragung', text('rzLsA') === 'a) Hornhautabtragung', text('rzLsA'));
   pruef('DF: b) Nagelbearbeitung',  text('rzLsB') === 'b) Nagelbearbeitung',  text('rzLsB'));

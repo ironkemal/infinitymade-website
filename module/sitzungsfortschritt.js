@@ -89,6 +89,28 @@ export function istFertigBehandelt({ offen, erbracht, einheiten }) {
 }
 
 /**
+ * Führt `prescription_sessions` den Status dieser Verordnung?
+ *
+ * NEIN bei der Podologie. Dort schreibt die Abrechnungsmaske
+ * (`module/podologie-abrechnung.js`) `status='completed'` und
+ * `abrechnung_status='bereit'` aus `count(podologie_behandlungen) >=
+ * behandlungseinheiten`. Sobald Podologie-Verordnungen ebenfalls Zeilen in
+ * `prescription_sessions` tragen (Sitzungsplan, 18.09.2026), würden zwei
+ * Zähler dieselben zwei Spalten beschreiben — und der aus dem Hauptbuch könnte
+ * nie „fertig" melden, denn ein „erbracht" wird dort für die Podologie nie
+ * gesetzt (erbracht heisst hier: eine Zeile in `podologie_behandlungen`).
+ * Ergebnis wäre die Falle aus dem Kopf dieser Datei, nur lautlos in die andere
+ * Richtung: die Verordnung bliebe ewig `in_therapy`, käme nie auf `bereit`
+ * und tauchte in der §302-Liste nie auf. Eine Spalte, ein Schreiber.
+ *
+ * @param {?string} therapieBereich  `prescriptions.therapie_bereich`
+ * @returns {boolean}
+ */
+export function hauptbuchFuehrtStatus(therapieBereich) {
+  return therapieBereich !== 'podo';
+}
+
+/**
  * Prüft den Fortschritt einer Verordnung und hebt ihren Status, wenn fällig.
  *
  * Schreibt nur nach oben und nur, wenn kein Mensch bereits eingegriffen hat:
@@ -114,8 +136,11 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
   const [offenRes, erbrachtRes, rxRes] = await Promise.all([
     zaehler().not('booking_id', 'is', null).eq('status', 'planned'),
     zaehler().eq('status', 'done'),
-    supabase.from('prescriptions').select('anzahl_einheiten').eq('id', prescriptionId).maybeSingle(),
+    supabase.from('prescriptions').select('anzahl_einheiten, therapie_bereich').eq('id', prescriptionId).maybeSingle(),
   ]);
+
+  // Podologie: der Status gehört der Abrechnungsmaske, siehe hauptbuchFuehrtStatus().
+  if (!hauptbuchFuehrtStatus(rxRes.data?.therapie_bereich)) return null;
 
   const offen     = offenRes.count || 0;
   const erbracht  = erbrachtRes.count || 0;
