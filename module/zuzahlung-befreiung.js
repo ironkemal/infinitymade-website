@@ -240,6 +240,48 @@ export async function oeffneBefreiungsFormular({
 }
 
 /**
+ * Checkbox „Zuzahlungsbefreit" im Muster-13-Mask (#rezeptModal) verdrahten —
+ * Ankreuzen öffnet sofort dieses Formular, dieselbe Schreibstelle wie
+ * Patientenakte/Termin-Panel. Einmalig aus `wireM13Toggles()` (dashboard.js)
+ * gerufen. Programmatisches `.checked`-Setzen (Vorbefüllen einer bestehenden
+ * Verordnung, Reset beim Öffnen der Maske) löst kein `change` aus — das
+ * Formular kommt nur bei echtem Nutzerklick.
+ *
+ * @param {object} cfg
+ * @param {string} cfg.checkboxId
+ * @param {string} cfg.patientIdId  Feld mit der `leads.id` (z.B. rzPatientId)
+ * @param {string} cfg.vornameId
+ * @param {string} cfg.nachnameId
+ * @param {object} cfg.supabase
+ * @param {Function} cfg.ownerId   () => string
+ * @param {Function} cfg.toast
+ * @param {Function} [cfg.confirm]
+ */
+export function verdrahteZuzahlungsbefreitCheckbox({ checkboxId, patientIdId, vornameId, nachnameId, supabase, ownerId, toast, confirm }) {
+  const box = document.getElementById(checkboxId);
+  if (!box) return;
+  box.addEventListener('change', async () => {
+    if (!box.checked) return;
+    const leadId = document.getElementById(patientIdId)?.value;
+    if (!leadId) {
+      toast('Bitte zuerst Patient auswählen', 'error');
+      box.checked = false;
+      return;
+    }
+    const vorname = document.getElementById(vornameId)?.value || '';
+    const nachname = document.getElementById(nachnameId)?.value || '';
+    await oeffneBefreiungsFormular({
+      supabase,
+      patientId: leadId,
+      ownerId: ownerId(),
+      patientName: `${vorname} ${nachname}`.trim(),
+      toast,
+      confirm,
+    });
+  });
+}
+
+/**
  * Der Trigger setzt das Kennzeichen `zuzahlung_befreit` datumsgenau. Der
  * geforderte Betrag muss danach noch auf 0 — aber ausschliesslich bei den
  * Rezepten, die der Trigger auch wirklich als befreit markiert hat, und nur

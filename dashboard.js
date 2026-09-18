@@ -65,7 +65,7 @@ import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase } from './module/zahlarten.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260917';
-import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
+import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20260918';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260917';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
@@ -15927,6 +15927,9 @@ function wireM13Toggles() {
     labelOf:  rzPatientLabel,
     onSelect: lead => fillRzPatientFromLead(lead.id),
   });
+
+  // Zuzahlungsbefreit angekreuzt → Zeitraum sofort erfassen → module/zuzahlung-befreiung.js
+  verdrahteZuzahlungsbefreitCheckbox({ checkboxId: 'rzZuzahlungBefreit', patientIdId: 'rzPatientId', vornameId: 'rzPatVorname', nachnameId: 'rzPatName', supabase, ownerId: getOwnerId, toast: showToast, confirm: showConfirmModal });
 }
 
 function setM13Therapy(key) {
