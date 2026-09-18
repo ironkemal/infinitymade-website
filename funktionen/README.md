@@ -91,3 +91,21 @@ Adres bir değişkende duruyorsa (`const URL = '…'; fetch(URL, …)`) alan **b
 
 "Bu ekran hangi backend yolunu çağırıyor" sorusu bu alandan tek başına cevaplanmaz;
 `grep "n8n.infinitymade.de"` ile tamamlanır.
+
+### `kopieKandidaten` yalnız YAZAN yolları sayar — çizen kopyalar görünmez (18.09.2026'da ölçüldü)
+
+Üretici, kopya adaylarını `writes[]` alanından (tablo başına bağımsız insert/update/upsert/
+delete yolu) çıkarır. Bu yüzden **salt-okunur iki render yolu asla kuyruğa girmez**, aynı
+DOM'u iki ayrı şablonla doldursalar bile.
+
+Ölçülen olay — Ops #308, sağdaki Termin-Panel'i (`#bkActionModal`) iki giriş doldurur:
+`openBookingActionModal` (dashboard.js:3223, 477 satır) ve `zeigePatientOhneTermin`
+(module/termin-panel-patient.js:135, 54 satır). İkisi de hiçbir tabloya yazmaz; harita
+ikisini de "kopya adayı" saymadı, ikinci yol dokuz ay boyunca birinci yolun bloklarının
+çoğunu hiç çizmeden yaşadı. Aynı denetimde `bkVerordnungSection`'ın panelden değil
+`#bookingModal`'dan geldiği de yalnız DOM id'lerini elle sayarak bulundu.
+
+**Kural:** "aynı ekranı kaç yol çiziyor" sorusu `kopieKandidaten`'dan cevaplanmaz. Aynı
+`getElementById('…')` kimliğine dokunan fonksiyonları say — bugün elle, `INDEX.json`'daki
+`start`/`end` aralıklarını dosya gövdesinde tarayarak. Üreticiye bir `domIds[]` boyutu
+eklenene kadar bu boşluk açık.

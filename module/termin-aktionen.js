@@ -68,6 +68,12 @@ export function setzeAktionsKopf({ patientName = '', dob = null } = {}) {
  *     Fall wäre die Suche für genau die Patienten nutzlos, für die sie
  *     gebaut wurde.
  *
+ * Seit 18.09.2026 (Ops #308) führen beide Zweige in DENSELBEN Panel-Renderer —
+ * `openBookingActionModal()`. Der einzige Unterschied ist, ob `booking` gesetzt
+ * ist oder null. Vorher zeichnete der zweite Zweig ein eigenes Panel, und die
+ * beiden Ansichten liefen auseinander: das Panel sah bei jedem Patienten
+ * anders aus.
+ *
  * @param {object} deps
  * @param {object} deps.supabase
  * @param {function} deps.attachPatientSearch  aus patient-suche.js
