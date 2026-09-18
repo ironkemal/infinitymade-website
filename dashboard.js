@@ -66,7 +66,7 @@ import { ZAHLARTEN, zahlartLabel as zahlartLabelBase } from './module/zahlarten.
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260917';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20260918';
-import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
+import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260917';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20260918';
@@ -6341,7 +6341,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
 
   // Eine Liste über die volle Breite statt zwei enger Spalten — der
   // Umschalter darüber entscheidet welche (module/sitzungen-ansicht.js).
-  verdrahteSitzungsUmschalter(() => ({ offen: unvergebene.length, vergeben: vergebene.length }));
+  verdrahteSitzungsUmschalter();
   zeigeSitzungsSeiten({ offen: unvergebene.length, vergeben: vergebene.length });
 
   // „Leistungen des Tages": springt in die vorhandene Behandlungsdokumentation

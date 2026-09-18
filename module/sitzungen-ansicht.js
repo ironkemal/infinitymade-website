@@ -42,6 +42,21 @@ const TABS = [
 let gewaehlt = 'unvergeben';
 
 /**
+ * Der zuletzt GEZEICHNETE Stand (19.09.2026, Bug-Fix). `verdrahteSitzungsUmschalter()`
+ * bindet den Klick-Listener bewusst nur EINMAL je Sitzung (siehe dort). Vorher
+ * bekam er dafür eine `standLesen`-Closure als Argument und rief die beim Klick
+ * auf — aber jeder Patient/Termin baut beim Neuzeichnen eine NEUE Closure mit
+ * seinen eigenen Zahlen, und ein einmal gebundener Listener sieht nur die vom
+ * ALLERERSTEN Aufruf der Sitzung. Jeder Klick zeigte darum für den Rest der
+ * Sitzung die Zahlen des ersten je geöffneten Patienten — bei zwei Aufrufern
+ * (Physio/Ergo/Logo hier, Podologie in `podo-einheiten.js`, gleiches Panel)
+ * je nachdem sogar die Zahlen der falschen Fachrichtung.
+ * Fix: `zeigeSitzungsSeiten()` merkt sich den Stand, mit dem es zuletzt
+ * gezeichnet hat; der Listener liest diese Variable statt einer Closure.
+ */
+let letzterStand = { offen: 0, vergeben: 0 };
+
+/**
  * Die Regel allein — ohne DOM, damit sie prüfbar bleibt.
  *
  * @param {{wunsch:string, offen:number, vergeben:number}} stand
@@ -64,6 +79,7 @@ export function waehleSeite({ wunsch, offen, vergeben }) {
  * @param {{offen:number, vergeben:number}} stand  Anzahl der Einträge je Seite
  */
 export function zeigeSitzungsSeiten({ offen = 0, vergeben = 0 } = {}) {
+  letzterStand = { offen, vergeben };
   const leiste = document.getElementById('bkRxSitzungTabs');
   if (!leiste) return;
 
@@ -85,11 +101,12 @@ export function zeigeSitzungsSeiten({ offen = 0, vergeben = 0 } = {}) {
 
 /**
  * Verdrahtet die beiden Knöpfe. Einmal je Sitzung — `zeigeSitzungsSeiten`
- * übernimmt danach jedes Neuzeichnen.
- *
- * @param {{offen:number, vergeben:number}} standLesen  liefert den aktuellen Stand beim Klick
+ * übernimmt danach jedes Neuzeichnen. Braucht kein Argument mehr (19.09.2026):
+ * der Klick-Handler liest `letzterStand`, den `zeigeSitzungsSeiten()` bei
+ * jedem Aufruf hinterlässt — nicht mehr eine Closure vom Zeitpunkt des
+ * Verdrahtens.
  */
-export function verdrahteSitzungsUmschalter(standLesen) {
+export function verdrahteSitzungsUmschalter() {
   const leiste = document.getElementById('bkRxSitzungTabs');
   if (!leiste || leiste.dataset.umschalterWired === '1') return;
   leiste.dataset.umschalterWired = '1';
@@ -98,7 +115,7 @@ export function verdrahteSitzungsUmschalter(standLesen) {
     const knopf = e.target.closest('[data-ziel]');
     if (!knopf) return;
     gewaehlt = knopf.dataset.ziel;
-    zeigeSitzungsSeiten(standLesen ? standLesen() : {});
+    zeigeSitzungsSeiten(letzterStand);
   });
 }
 

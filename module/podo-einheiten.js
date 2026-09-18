@@ -49,7 +49,7 @@ import { sitzungsplan } from './sitzungsplan.js?v=20260918';
 import { positionVon } from './podo-geplant.js?v=20260918';
 import { istVergeben, ladePodoTermine, bindeTermin } from './verordnung-termine.js?v=20260908';
 import { zeigeSitzungenArbeit } from './termin-panel.js?v=20260918';
-import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260903';
+import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
 
 /** Klartext der Befundpositionen — dieselben Namen wie im Sitzungsplan. */
 const BEFUND_NAME = Object.freeze({
@@ -360,7 +360,7 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
       </div>`).join('')
     : '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Keine</span>';
 
-  verdrahteSitzungsUmschalter(() => ({ offen: offene.length, vergeben: belegte.length }));
+  verdrahteSitzungsUmschalter();
   zeigeSitzungsSeiten({ offen: offene.length, vergeben: belegte.length });
 
   const leistBtn = document.getElementById('bkRxLeistungenBtn');
