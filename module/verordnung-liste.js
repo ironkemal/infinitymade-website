@@ -44,7 +44,7 @@
  */
 
 import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260906';
-import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260910b';
+import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260910b';
 import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260908';
 import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20260918';
 import { on } from './signal.js?v=20260813';
@@ -140,6 +140,18 @@ export async function verordnungenListeLaden(ctx) {
       oeffne({ supabase, escapeHtml, quelle: row.dataset.quelle, id: row.dataset.vordId });
     });
   });
+  // Ops #310: Statuswechsel direkt aus der Zeile, ohne die Verordnung zu
+  // öffnen — stopPropagation sonst würde derselbe Klick zusätzlich `oeffne()`
+  // auslösen (dieselbe Zeile trägt beide Listener). Kein eigener Reload nötig:
+  // `setzeStatus()` sendet `verordnungen:changed`, und diese Seite hört schon
+  // darauf (oben, `on('verordnungen:changed', …)`).
+  tbody.querySelectorAll('.vord-status-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      oeffneStatusDialogFuer(btn.dataset.vordId, { supabase })
+        .catch(err => console.error('[verordnung-liste] Status:', err.message));
+    });
+  });
 
   // Nach einem Neuladen die vorherige Auswahl wieder anzeichnen. Ohne das
   // stünde unten weiter eine Verordnung, die oben nicht mehr markiert ist.
@@ -182,7 +194,10 @@ function zeileHtml(v, esc) {
     <td style="white-space:nowrap;">${nummer}</td>
     <td>${bereichBadge(v.quelle)}</td>
     <td style="text-align:center;white-space:nowrap;color:var(--text-muted);">${zaehler}</td>
-    <td>${statusBadgeGross(v.quelle, v.status)}</td>
+    <td>${v.quelle === 'podologie'
+      ? `<button type="button" class="vord-status-btn" data-vord-id="${esc(v.id)}" title="Abrechnungsstatus ändern"
+           style="background:none;border:0;padding:0;cursor:pointer;">${statusBadgeGross(v.quelle, v.status)}</button>`
+      : statusBadgeGross(v.quelle, v.status)}</td>
   </tr>`;
 }
 

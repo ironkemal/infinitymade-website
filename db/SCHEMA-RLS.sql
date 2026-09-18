@@ -1,7 +1,17 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-17 — 0024_revoke_unused_function_grants
+-- ERZEUGT AM:        2026-09-18 — 0025_abrechnung_status_manuell
+--                    (Ops-Karte #310. Fuer DIESE Datei eine Null-Aenderung:
+--                    die Migration legt zwei nullable Spalten samt FK an
+--                    `prescriptions` an, keine neue Policy, keine neue
+--                    Funktion, kein neuer Trigger, kein neuer Index. Der
+--                    Eintrag steht hier trotzdem, damit beide Dumps dieselbe
+--                    Migrationskette fuehren (siehe db/SCHEMA.sql Kopf für
+--                    den inhaltlichen Teil). Live nachgezaehlt (18.09.2026):
+--                    172 Policies · 89 Tabellen — unveraendert.
+--                    ✅ Im SaaS angewendet 18.09.2026 (MCP).
+--                    davor: 2026-09-17 — 0024_revoke_unused_function_grants
 --                    (Ops-Karte #297, Nebenfund der Advisor-Pruefung waehrend
 --                    Ops #254. KEINE Struktur-Aenderung: null Policies, null
 --                    Funktionen, null Trigger, null Indizes — nur EXECUTE-ACLs.

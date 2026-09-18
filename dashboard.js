@@ -8432,14 +8432,13 @@ async function flipAbrechnungStatus(rxId, newStatus, leadId) {
       }
     }
 
-    // Hinweis: abrechnung_status beschreibt ausschließlich den §302-Weg
-    // (bereit → in_abrechnung → gesendet → accepted/rejected durch die Kasse).
-    // Die Patientenzuzahlung wird davon getrennt über kassiereZuzahlung()
-    // gebucht — früher wurden beide hier vermischt.
-    const { error } = await supabase
-      .from('prescriptions')
-      .update({ abrechnung_status: newStatus })
-      .eq('id', rxId);
+    // abrechnung_status ist nur der §302-Weg, Zuzahlung läuft getrennt über
+    // kassiereZuzahlung(). Stempel wie verordnung-status.routes.js (Ops #310)
+    // — sonst haelt die Automatik das nicht fuer eine Handentscheidung.
+    const { error } = await supabase.from('prescriptions').update({
+      abrechnung_status: newStatus, abrechnung_status_manuell_am: new Date().toISOString(),
+      abrechnung_status_manuell_von: currentSession.user.id,
+    }).eq('id', rxId);
     if (error) throw error;
 
     showToast(newStatus === 'bereit' ? 'Als abrechnungsbereit markiert ✓' : 'Zurück auf offen ✓');

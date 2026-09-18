@@ -272,7 +272,17 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
     // `status` → `abrechnung_status` uebersetzen, den Rest unveraendert
     // durchreichen (absetzung_*, storno_*, abrechnung_id — gleiche Namen).
     const { status: statusZiel, ...restPatch } = patch;
-    const dbPatch = { ...restPatch, abrechnung_status: abrechnungStatusAusStatus(statusZiel) };
+    // Ops #310: JEDER Wechsel ueber diese Route ist eine Handentscheidung —
+    // der Stempel haelt fest, dass ab hier ein Mensch entschieden hat. Die
+    // automatische "bereit"-Markierung (podologie-abrechnung.js,
+    // sitzungsfortschritt.js) fragt danach, bevor sie erneut hochsetzt, und
+    // ueberschreibt eine einmal getroffene Entscheidung nie wieder still.
+    const dbPatch = {
+      ...restPatch,
+      abrechnung_status: abrechnungStatusAusStatus(statusZiel),
+      abrechnung_status_manuell_am: new Date().toISOString(),
+      abrechnung_status_manuell_von: auth.user.id,
+    };
 
     const { error: upErr } = await supabase
       .from('prescriptions').update(dbPatch)

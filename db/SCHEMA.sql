@@ -1,7 +1,14 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-17 — 0024_revoke_unused_function_grants
+-- ERZEUGT AM:        2026-09-18 — 0025_abrechnung_status_manuell
+--                    (Ops-Karte #310. +2 Spalten an `prescriptions`
+--                    (abrechnung_status_manuell_am/_von), keine neue Tabelle,
+--                    kein neuer Index, kein neuer Trigger. Live nachgezaehlt
+--                    (18.09.2026, MCP): 89 Tabellen · 1269 Spalten ·
+--                    172 RLS-Policies — unveraendert bis auf die zwei Spalten.
+--                    ✅ Im SaaS angewendet 18.09.2026 (MCP).
+--                    davor: 2026-09-17 — 0024_revoke_unused_function_grants
 --                    (Ops-Karte #297. Fuer DIESE Datei eine Null-Aenderung:
 --                    keine Tabelle, keine Spalte, kein Constraint, kein Index —
 --                    die Migration entzieht ausschliesslich EXECUTE-Rechte auf
@@ -2285,6 +2292,8 @@ CREATE TABLE prescriptions (
   rezeptart text
   nagel text
   krankenkasse_ik text
+  abrechnung_status_manuell_am timestamptz
+  abrechnung_status_manuell_von uuid
 );
 --   CHECK zuzahlung_zahlart IS NULL ODER IN (bar, ec, ueberweisung, sonstiges, paypal)
 --      ('paypal' seit 09.09.2026, Ops #271 — sonst koennte eine per PayPal
@@ -2321,7 +2330,18 @@ CREATE TABLE prescriptions (
 --     das ist ein abfragbarer Zustand und würde beim Kopieren von
 --     `kostentraeger_ik` unsichtbar. Migration: prescriptions_krankenkasse_ik.
 --   FK patient_id -> leads(id) · arzt_id -> aerzte(id) · abrechnung_id -> abrechnung(id)
---   FK kostentraeger_ik -> kostentraeger(ik) · PK (id)
+--   FK kostentraeger_ik -> kostentraeger(ik)
+--   FK abrechnung_status_manuell_von -> auth.users(id) ON DELETE SET NULL · PK (id)
+--   ★ abrechnung_status_manuell_am/_von (18.09.2026, Ops #310, Migration 0025):
+--     Beta-1 wollte die automatische "bereit zur Abrechnung"-Markierung als
+--     reinen Reminder, ueberschreibbar ohne dass die Automatik sie beim naechsten
+--     Durchlauf still zuruecksetzt. Gesetzt einzig von der gated Route
+--     `PATCH /billing/verordnung/:id/abrechnungsstatus` (jeder erfolgreiche
+--     Wechsel stempelt); `module/podologie-abrechnung.js` und
+--     `module/sitzungsfortschritt.js` pruefen beide `IS NULL` auf diese Spalte,
+--     bevor sie `abrechnung_status` automatisch auf 'bereit' heben. Bewusst
+--     NICHT in `prescriptions_festschreibung()` (0020) gesperrt — bleibt nach
+--     der Belegnummer aenderbar, wie `abrechnung_status` selbst.
 --   ★ SEIT 04.09.2026: EIN Verordnungstopf für ALLE Fachbereiche
 --     (Physio/Ergo/Logo UND Podologie, `therapie_bereich` unterscheidet).
 --     Die alte, separate `verordnungen`-Tabelle (Podologie-Topf) ist an diesem

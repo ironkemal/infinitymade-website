@@ -93,8 +93,11 @@ export function istFertigBehandelt({ offen, erbracht, einheiten }) {
  *
  * Schreibt nur nach oben und nur, wenn kein Mensch bereits eingegriffen hat:
  * `status` wird ausschliesslich aus `parsed|confirmed|in_therapy` gehoben, und
- * `abrechnung_status` nur gesetzt, solange er `null` ist (manuelle Wahl
- * gewinnt).
+ * `abrechnung_status` nur gesetzt, solange er `null` ist UND
+ * `abrechnung_status_manuell_am` `null` ist (Ops #310 — vorher stand hier nur
+ * die Absicht "manuelle Wahl gewinnt", ohne dass eine Spalte sie festhielt;
+ * eine spaeter nachgetragene Sitzung hob den Status doch wieder an, sobald er
+ * per Hand auf NULL/'aktiv' zurueckgesetzt worden war).
  *
  * @param supabase         aktiver Supabase-Client
  * @param {string} prescriptionId
@@ -128,9 +131,13 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
     // Rezept in der Gruppe „Kostenträger fehlt“ und wird dort zugewiesen.
     // Mit der alten Bedingung war diese Gruppe unerreichbar — fertig behandelte
     // Rezepte ohne IK verschwanden lautlos aus der Abrechnung.
+    // Ops #310: der Stempel haelt eine Handentscheidung fest
+    // (verordnung-status.routes.js) — solange er steht, hebt die Automatik
+    // nicht erneut an, auch wenn spaeter noch eine Sitzung nachgetragen wird.
     await supabase.from('prescriptions')
       .update({ abrechnung_status: 'bereit' }).eq('id', prescriptionId)
-      .is('abrechnung_status', null);
+      .is('abrechnung_status', null)
+      .is('abrechnung_status_manuell_am', null);
   } else {
     await supabase.from('prescriptions')
       .update({ status: 'in_therapy' }).eq('id', prescriptionId)

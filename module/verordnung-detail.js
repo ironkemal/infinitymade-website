@@ -67,7 +67,7 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260910b';
+import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260910b';
 // Ops-Kart #269 (05.09.2026): dasselbe Urteil wie in den Listen/Karten
 // (module/verordnung-uebersicht.js), hier auf die eine geöffnete Zeile
 // angewandt — „gleiches Urteil, wo auch immer geklickt wird" (siehe
@@ -740,7 +740,11 @@ export function verordnungDetailHtml(rx, opt = {}) {
       <span style="font-size:15px;font-weight:700;color:var(--text-main);">${esc(name)}</span>
       ${nummer ? `<span title="${esc(nummerHerkunft)}" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;font-weight:700;padding:2px 9px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);">${esc(nummer)}</span>` : ''}
       ${bereichBadge(quelle, { gross: true })}
-      ${statusBadgeGross(quelle, rx.status)}
+      ${quelle === 'podologie'
+        ? `<button type="button" data-status-btn data-vord-id="${esc(rx.id)}" title="Abrechnungsstatus ändern"
+             style="background:none;border:0;padding:0;cursor:pointer;">${statusBadgeGross(quelle, rx.status)}</button>`
+        : statusBadgeGross(quelle, rx.status)}
+      ${_manuellHinweis(rx, esc)}
     </div>
     ${_merkmale(rx, esc, quelle, opt.pruefung)}
 
@@ -821,6 +825,34 @@ function _verdrahteEinheiten(wurzel, { supabase, vord, ctx }) {
   eingabe.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); speichern(); }
     if (e.key === 'Escape') { e.preventDefault(); umschalten(false); }
+  });
+}
+
+/**
+ * Ops #310: sichtbar machen, DASS und WANN von Hand eingegriffen wurde —
+ * ohne dieses Etikett merkt eine Praxis nicht, warum die Automatik hier
+ * schweigt. WER, in Textform, fehlt bewusst: das bräuchte die Mitarbeiter-
+ * liste (`teamMembers`, nur `dashboard.js` bekannt) hier im Modul, nur für
+ * einen Tooltip — die Zeitangabe allein beantwortet die Ops-Karte schon.
+ */
+function _manuellHinweis(rx, esc) {
+  if (!rx.abrechnung_status_manuell_am) return '';
+  const wann = new Date(rx.abrechnung_status_manuell_am)
+    .toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return `<span style="font-size:11px;color:var(--text-muted);" title="Die automatische „Bereit zur Abrechnung"-Markierung greift ab hier nicht mehr ein.">von Hand geändert am ${esc(wann)}</span>`;
+}
+
+/**
+ * Ops #310: der grosse Status-Rosette im Kopf war reines Etikett — Beta-1
+ * suchte hier den Weg, den Status von Hand zu ändern, und fand ihn nur in
+ * der Patientenliste (`module/patientenliste.js`). Derselbe Dialog, nur von
+ * hier aus angestossen; nach dem Speichern lädt die ganze Ansicht neu wie
+ * bei `_verdrahteEinheiten()`.
+ */
+function _verdrahteStatus(wurzel, { supabase, vord, ctx }) {
+  wurzel.querySelector('[data-status-btn]')?.addEventListener('click', () => {
+    oeffneStatusDialogFuer(vord.id, { supabase, onFertig: () => zeigeVerordnungDetail(ctx) })
+      .catch(e => console.error('[verordnung-detail] Status:', e.message));
   });
 }
 
@@ -1056,6 +1088,7 @@ export async function zeigeVerordnungDetail(ctx) {
     if (quelle === 'podologie') {
       _verdrahteEinheiten(inhalt, { supabase, vord: rx, ctx });
       _verdrahteTermine(inhalt, { supabase, vord: rx, ctx });
+      _verdrahteStatus(inhalt, { supabase, vord: rx, ctx });
     }
     if (panel && typeof panel.scrollIntoView === 'function') {
       panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

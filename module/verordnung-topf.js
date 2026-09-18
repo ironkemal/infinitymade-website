@@ -245,6 +245,11 @@ export function inTopf(v) {
   // Fehlt er, heisst das „nicht anfassen" — ein blindes `null` holte eine
   // eingereichte Verordnung zurück auf „aktiv" und damit ein zweites Mal in
   // die Abrechnung.
+  // ⚠️ Ops #310: `inTopf()` hat heute (18.09.2026) KEINEN Aufrufer in
+  // Produktion (nur Tests) — falls das je aktiv wird, muss dieser Zweig auch
+  // `abrechnung_status_manuell_am/_von` setzen, sonst umgeht dieser Schreibweg
+  // den Stempel aus `verordnung-status.routes.js` und die Automatik ueberschreibt
+  // eine hier gesetzte Entscheidung doch wieder still.
   if (v.status != null) nutzlast.abrechnung_status = statusInTopf(v.status);
 
   return nutzlast;

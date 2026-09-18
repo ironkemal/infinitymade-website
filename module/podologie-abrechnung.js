@@ -794,7 +794,11 @@ async function loadPodologieBilling() {
           // Nur aus 'aktiv' (= abrechnung_status IS NULL) heraus: sonst holt
           // eine nachgetragene Behandlung eine bereits eingereichte oder
           // stornierte Verordnung zurück in die Abrechnung.
-          .eq('id', _podState.selectedVordId).is('abrechnung_status', null);
+          // Ops #310: UND nur, solange nie von Hand eingegriffen wurde — sonst
+          // holt eine spät nachgetragene Behandlung eine Verordnung zurück,
+          // die die Praxis bewusst auf "aktiv" gesetzt hat.
+          .eq('id', _podState.selectedVordId).is('abrechnung_status', null)
+          .is('abrechnung_status_manuell_am', null);
         ctx.showToast('Alle Einheiten aufgebraucht — Verordnung bereit zur Abrechnung ✓', 'info');
       } else {
         ctx.showToast('Behandlung gespeichert ✓');
