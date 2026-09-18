@@ -103,8 +103,8 @@ import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './mo
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
-  verteileOffeneSitzungen,
-} from './module/termin-aktionen.js?v=20260906';
+  verteileOffeneSitzungen, zeichneRezeptFortschritt,
+} from './module/termin-aktionen.js?v=20260919';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
@@ -3311,16 +3311,10 @@ async function openBookingActionModal(booking, opts = {}) {
   const rx = rxWahl.rx;
   if (rxCard && rx && rx.anzahl_einheiten) {
     const total = rx.anzahl_einheiten;
-    // ?? statt ||: 0 erbrachte Sitzungen sind ein gültiger Stand und dürfen
-    // nicht zu 1 werden. `current` zählt seit 02.09.2026 erbrachte Sitzungen
-    // (status `done`), nicht mehr die Nummer des angeklickten Termins.
+    // ?? statt ||: 0 erbrachte Sitzungen sind ein gültiger Stand. Bleibt hier
+    // (nicht in zeichneRezeptFortschritt): die Geldzeile unten braucht sie auch.
     const current = rxWahl.aktuelleSitzung ?? 0;
-    const remaining = Math.max(0, total - current);
-    const pct = Math.round((current / total) * 100);
-    document.getElementById('bkRxRemainingFill').style.width = pct + '%';
-    document.getElementById('bkRxRemainingText').textContent = remaining > 0
-      ? `${current} von ${total} Behandlungen erbracht — noch ${remaining} offen`
-      : `${current} von ${total} Behandlungen erbracht — Verordnung aufgebraucht, Folgeverordnung nötig`;
+    zeichneRezeptFortschritt({ rx, total, current });
 
     // Blätter-Pfeile + „Verordnung übernehmen" in die Kopfzeile der Rezeptinfo.
     rendereVerordnungsNavigation({

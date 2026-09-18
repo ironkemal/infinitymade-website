@@ -256,10 +256,25 @@ export async function waehleVerordnungFuerPanel({ supabase, booking, verknuepfte
     .limit(12);
   if (error || !liste?.length) return leer;
 
-  const gewaehlt = (gewuenschteRxId && liste.find(r => r.id === gewuenschteRxId))
+  let gewaehlt = (gewuenschteRxId && liste.find(r => r.id === gewuenschteRxId))
     || liste.find(r => r.id === verknuepfteRx?.id)
     || verknuepfteRx
     || liste[0];
+
+  // `liste` schliesst Podologie aus (s.o.) — eine ausdrücklich angeforderte
+  // Verordnung (Klick auf eine Karte in "Aktive Verordnungen", die auch
+  // Podologie zeigt, dashboard.js) kann darin also NIE stehen. Ohne diesen
+  // Nachschlag fiel der Klick lautlos auf `verknuepfteRx` zurück — das Panel
+  // zeigte für jede angeklickte Karte immer dieselbe, am Termin hängende
+  // Verordnung (19.09.2026, Bug-Fix; live an einem Patienten mit zwei aktiven
+  // Podologie-Verordnungen nachvollzogen: derselbe `id=eq.…`-Request nach jedem
+  // Kartenklick). `liste` selbst bleibt Podologie-frei — die Blätterpfeile
+  // (`rendereVerordnungsNavigation`) sind bewusst nur für den Physio-Topf da.
+  if (gewuenschteRxId && gewaehlt?.id !== gewuenschteRxId) {
+    const { data: direkt } = await supabase.from('prescriptions')
+      .select(RX_FELDER).eq('id', gewuenschteRxId).eq('patient_id', patientId).maybeSingle();
+    if (direkt) gewaehlt = direkt;
+  }
 
   // Gezählt wird, was erbracht IST — nicht, die wievielte Sitzung der
   // angeklickte Termin wäre. Beta-1 will im Panel „2 von 6" lesen und die Zahl
@@ -283,6 +298,43 @@ export async function waehleVerordnungFuerPanel({ supabase, booking, verknuepfte
   }
 
   return { rx: gewaehlt, liste, aktuelleSitzung };
+}
+
+/**
+ * Die Fortschrittsleiste „N von M Behandlungen erbracht" — oder ihr Fehlen.
+ *
+ * Podologie führt kein `prescription_sessions`-Hauptbuch (module/verordnung-topf.js,
+ * fuehrtSitzungsbuch) — `current` zählt dort IMMER 0, ganz gleich wie oft
+ * behandelt wurde. Bis 19.09.2026 kam eine Podologie-Verordnung hier nur über
+ * die zufällige `verknuepfteRx`-Rückfalllogik an (`waehleVerordnungFuerPanel`
+ * ignorierte einen expliziten Kartenklick); seit dem Fix für den Kartenwechsel
+ * ist das der Normalfall — und hätte sonst wortwörtlich „0 von 6 Behandlungen
+ * erbracht" behauptet, egal wie viele Termine schon liefen. Die echte Zahl
+ * steht im Block „Aktive Verordnung" darunter (offen/vergeben aus
+ * `bookings.verordnung_id`, module/podo-einheiten.js) — hier nur verstecken.
+ *
+ * @param {object} args
+ * @param {object} args.rx      Zeile aus `prescriptions` (braucht therapie_bereich)
+ * @param {number} args.total   rx.anzahl_einheiten
+ * @param {number} args.current rxWahl.aktuelleSitzung
+ */
+export function zeichneRezeptFortschritt({ rx, total, current }) {
+  const wrap = document.getElementById('bkRxRemainingWrap');
+  if (rx?.therapie_bereich === 'podo') {
+    if (wrap) wrap.hidden = true;
+    return;
+  }
+  if (wrap) wrap.hidden = false;
+  const remaining = Math.max(0, total - current);
+  const pct = Math.round((current / total) * 100);
+  const fill = document.getElementById('bkRxRemainingFill');
+  if (fill) fill.style.width = pct + '%';
+  const text = document.getElementById('bkRxRemainingText');
+  if (text) {
+    text.textContent = remaining > 0
+      ? `${current} von ${total} Behandlungen erbracht — noch ${remaining} offen`
+      : `${current} von ${total} Behandlungen erbracht — Verordnung aufgebraucht, Folgeverordnung nötig`;
+  }
 }
 
 /**
