@@ -127,6 +127,10 @@ test('befundDienstId findet die Leistung über die Positionsnummer, auch mit Lee
   assert.equal(befundDienstId(null, '78030'), null);
 });
 
+test('befundDienstId findet auch eine Leistung, deren HPNR nur im code steht', () => {
+  assert.equal(befundDienstId([{ id: 'x', gkv_position_nr: null, code: '78040' }], '78040'), 'x');
+});
+
 // ── Was beim Ziehen mitgeht ──────────────────────────────────────────────────
 
 test('Ziehnutzlast: kein sessionId, aber podoVordId und Befund — Format der Physio-Karten', () => {

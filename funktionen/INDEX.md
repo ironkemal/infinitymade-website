@@ -176,7 +176,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `verordnungPatientenAbgleich()` — [module/verordnung-patient-abgleich.js:18](module/verordnung-patient-abgleich.js#L18-L92) · 75 satır · leads:update
 
 **Yol 5 — `beantworteAltbestand()`** · Ekran: ortak yardımcı — 28 modülden çağrılıyor
-- `beantworteAltbestand()` — [module/verordnung-podo.js:869](module/verordnung-podo.js#L869-L882) · 14 satır · leads:update
+- `beantworteAltbestand()` — [module/verordnung-podo.js:871](module/verordnung-podo.js#L871-L884) · 14 satır · leads:update
 
 ### `prescription_sessions` — 5 bağımsız yazma yolu
 

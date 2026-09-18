@@ -9,9 +9,24 @@
 
 import { istVergeben } from './verordnung-termine.js?v=20260908';
 
-/** `gkv_position_nr` eines Dienstes, bereinigt. */
+/**
+ * Welche HPNR trägt eine Leistung? `gkv_position_nr`, sonst `code`.
+ *
+ * Dieselbe Regel wie `hpnrVonDienst()` (`module/termin-leistungen.js`), aus
+ * demselben Grund: die Beta-Praxen führen beides, der GKV-Katalog schreibt
+ * `gkv_position_nr`, ältere Handanlagen nur `code`. Vorher las diese Funktion nur
+ * `gkv_position_nr` — in einer Praxis mit der HPNR nur im `code` fiel der
+ * geplante Termin aus der Historie, und der zweite Termin einer Serie bekam
+ * wieder 78040 (fonksiyon-ustasi, 18.09.2026): genau der Fehler, den dieses Modul
+ * beheben soll, nur lautlos in der Hälfte der Praxen. Beide Stellen innerhalb
+ * EINES Befundungsvorschlags müssen dieselbe Frage gleich beantworten.
+ *
+ * Dass `code` auch Freitext sein kann („MASSAGE"), schadet nicht:
+ * `geplanteAlsBehandlungen()` lässt nur `78xxx` durch, `befundDienstId()` vergleicht
+ * auf Gleichheit.
+ */
 export function positionVon(dienst) {
-  return String(dienst?.gkv_position_nr ?? '').trim();
+  return String(dienst?.gkv_position_nr || dienst?.code || '').trim();
 }
 
 /**

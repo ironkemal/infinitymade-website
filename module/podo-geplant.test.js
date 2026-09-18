@@ -62,6 +62,38 @@ test('Müll in der Liste stürzt nicht ab', () => {
   assert.deepEqual(geplanteAlsBehandlungen([null, {}, { start_time: null }]), []);
 });
 
+// Beta-Praxen mit der HPNR nur im Feld `code` (ältere Handanlage). Ohne den
+// Rückfall fiel ihr geplanter Termin aus der Historie: der zweite Termin einer
+// Serie bekam wieder 78040 — der Fehler, den dieses Modul beheben soll.
+test('HPNR nur im Feld code: der geplante Termin zählt trotzdem', () => {
+  const r = geplanteAlsBehandlungen([
+    { id: 'a', start_time: '2026-09-20T09:00:00Z', status: 'confirmed',
+      booking_leistungen: [{ services: { gkv_position_nr: null, code: '78040' } }] },
+  ]);
+  assert.deepEqual(r.map(x => x.hpnr_codes), [['78040']]);
+});
+
+test('HPNR nur im code: der zweite Termin bekommt 78030', () => {
+  const geplant = geplanteAlsBehandlungen([
+    { id: 't1', start_time: '2026-09-20T09:00:00Z', status: 'confirmed',
+      booking_leistungen: [{ services: { code: '78010' } }, { services: { code: '78040' } }] },
+  ]);
+  assert.equal(befundungFuerLeistung({ ...REGEL, behandlungen: geplant }).code, '78030');
+});
+
+test('code mit Freitext lässt keinen Nicht-Podologie-Termin durch', () => {
+  const r = geplanteAlsBehandlungen([
+    { id: 'm', start_time: '2026-09-20T09:00:00Z', status: 'confirmed',
+      booking_leistungen: [{ services: { code: 'MASSAGE' } }] },
+  ]);
+  assert.deepEqual(r, []);
+});
+
+test('gkv_position_nr geht vor code, wenn beide da sind', () => {
+  assert.equal(positionVon({ gkv_position_nr: '78030', code: 'X' }), '78030');
+  assert.equal(positionVon({ gkv_position_nr: '', code: '78040' }), '78040');
+});
+
 test('positionVon: Leerraum und fehlende Werte', () => {
   assert.equal(positionVon({ gkv_position_nr: ' 78030 ' }), '78030');
   assert.equal(positionVon({ gkv_position_nr: null }), '');

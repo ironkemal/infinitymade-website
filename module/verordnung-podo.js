@@ -667,9 +667,11 @@ function ergaenzendesUmschalten() {
 //                      erkennen, und die Kasse setzt die zweite Erstbefundung
 //                      ab. Nur bei UI 1 / UI 2 sichtbar — nur dort gibt es
 //                      ueberhaupt eine Nagelspange.
-//   wagner_grad        Klinische Dokumentation (§ 630f BGB), kein
-//                      Abrechnungsfeld — deshalb unabhaengig von der
-//                      Diagnosegruppe sichtbar (Konsey 2026-08-10).
+//   wagner_grad        (18.09.2026 aus der Maske ENTFERNT, Kemal.) Stand bis dahin
+//                      als klinische Dokumentation (§ 630f BGB) unabhaengig von
+//                      der Diagnosegruppe sichtbar (Konsey 2026-08-10). Die Spalte
+//                      bleibt, siehe podoVerordnungsfelder(). Offen als Produkt-
+//                      frage: hat Wagner ueberhaupt noch einen Erfassungsort?
 //   behandlungsanlass  Freitext, vorbelegt mit dem Katalogtext.
 //
 // Werte und Beschriftungen des Nagels kommen aus
