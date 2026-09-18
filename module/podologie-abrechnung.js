@@ -68,6 +68,7 @@ import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules } from './diagnosegruppen-regeln.js?v=20260918';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20260901';
+import { positionVon } from './podo-geplant.js?v=20260918';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
 // dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
 import { darf78040, darf78100, darfErstbefundungNagel,
@@ -268,7 +269,7 @@ async function podGeplanteHpnr(vord, datum) {
   if (!vord?.id || !datum) return new Set();
   const { data } = await ctx.supabase
     .from('bookings')
-    .select('start_time, services(gkv_position_nr), booking_leistungen(services(gkv_position_nr))')
+    .select('start_time, services(gkv_position_nr, code), booking_leistungen(services(gkv_position_nr, code))')
     .eq('owner_id', ctx.getOwnerId())
     .eq('verordnung_id', vord.id)
     .neq('status', 'cancelled');
@@ -287,7 +288,10 @@ async function podGeplanteHpnr(vord, datum) {
     // vier Schreibwege um eine Zeile zu erweitern, die sie nicht brauchen.
     const quellen = b.booking_leistungen?.length ? b.booking_leistungen : [{ services: b.services }];
     for (const zeile of quellen) {
-      const code = String(zeile?.services?.gkv_position_nr || '').trim();
+      // Dieselbe Regel wie die Terminmaske (gkv_position_nr, sonst code) — sonst
+      // wird die Leistung einer Praxis, die die HPNR nur im code fuehrt, hier nicht
+      // vorangekreuzt, obwohl sie im Termin steht.
+      const code = positionVon(zeile?.services);
       if (code) treffer.add(code);
     }
   }

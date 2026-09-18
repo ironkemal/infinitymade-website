@@ -32,7 +32,7 @@
  */
 
 import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260904';
-import { geplanteAlsBehandlungen } from './podo-geplant.js?v=20260918';
+import { geplanteAlsBehandlungen, positionVon } from './podo-geplant.js?v=20260918';
 import { setzeDauer } from './termin-dauer.js?v=20260903b';
 
 /** Fallback-Dauer, wenn eine Leistung keine `duration_minutes` fuehrt. */
@@ -178,7 +178,7 @@ export function entferneZeile(zeilen, index) {
  * bekommt bei der Haelfte der Saetze nichts.
  */
 export function hpnrVonDienst(srv) {
-  return String(srv?.gkv_position_nr || srv?.code || '').trim();
+  return positionVon(srv);   // eine Definition — module/podo-geplant.js
 }
 
 /**
@@ -517,7 +517,7 @@ async function patientenBehandlungen() {
   // im Voraus gebuchte Termin einer Serie dieselbe Antwort „noch keine
   // Behandlung → 78040" — siehe geplanteAlsBehandlungen() (module/podo-einheiten.js).
   const { data: geplant } = await ctx.supabase.from('bookings')
-    .select('id, start_time, status, no_show, services(gkv_position_nr), booking_leistungen(services(gkv_position_nr))')
+    .select('id, start_time, status, no_show, services(gkv_position_nr, code), booking_leistungen(services(gkv_position_nr, code))')
     .eq('owner_id', ctx.getOwnerId()).eq('lead_id', leadId).neq('status', 'cancelled');
   const eigene = document.getElementById('bk-id')?.value || '';
   return [...(behs || []), ...geplanteAlsBehandlungen(geplant, { ohneId: eigene })];

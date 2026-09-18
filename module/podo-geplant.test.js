@@ -126,3 +126,19 @@ test('der erste Termin selbst bleibt 78040, wenn sonst nichts geplant ist', () =
   const geplant = geplanteAlsBehandlungen([buchung('eigen', '2026-09-20T09:00:00Z', ['78010', '78040'])], { ohneId: 'eigen' });
   assert.equal(befundungFuerLeistung({ ...REGEL, datum: '2026-09-20', behandlungen: geplant }).code, '78040');
 });
+
+// ── Die Abfragen müssen `code` auch holen ────────────────────────────────────
+// positionVon() liest gkv_position_nr, sonst code. Fehlt `code` im select, ist der
+// Rückfall toter Code — die Tests oben gaben grün, obwohl die echte Abfrage nie ein
+// `code` lieferte (18.09.2026). Diese Prüfung liest den Quelltext.
+import { readFileSync } from 'node:fs';
+for (const datei of ['./termin-leistungen.js', './podologie-abrechnung.js']) {
+  test(`${datei}: jede Dienst-Abfrage nach gkv_position_nr holt auch code`, () => {
+    const text = readFileSync(new URL(datei, import.meta.url), 'utf8');
+    // Nur echte Abfragen — Kommentare, die die Schreibweise erwähnen, zählen nicht.
+    const abfragen = text.split('\n').filter(z => z.includes('.select(')).join('\n');
+    const treffer = abfragen.match(/services\(gkv_position_nr[^)]*\)/g) || [];
+    assert.ok(treffer.length > 0, 'die Abfrage steht nicht mehr da — Prüfung anpassen');
+    for (const t of treffer) assert.match(t, /\bcode\b/, t);
+  });
+}
