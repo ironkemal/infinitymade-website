@@ -2053,6 +2053,28 @@ textarea {
   pointer-events: none;
 }
 
+/* Wochenansicht, „Alle Mitarbeiter": eine Tagesspalte zeigt mehrere
+   Mitarbeiter gemischt, ein Vollflächen-Balken würde auch die Termine der
+   anwesenden Kollegen verdecken — deshalb nur ein schmaler Hinweis. Absolut
+   positioniert (nicht im Fluss): sonst schiebt er das Raster gegenüber der
+   Zeitleiste nach unten, die denselben Hinweis nicht bekommt. */
+.wv-col-abwesend-hinweis {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 1px 4px;
+  background: rgba(148, 163, 184, 0.25);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* ── Tagesansicht: vergangene Zeit verblasst + Live-"Jetzt"-Linie ── */
 .dv-slot {
   transition: background-color 0.4s ease;
@@ -7359,6 +7381,17 @@ textarea:focus-visible,
   color: var(--text-muted);
   margin-bottom: 3px;
 }
+.month-absent-badge {
+  font-size: 9px;
+  color: var(--text-muted);
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .month-cell-events { display: flex; flex-wrap: wrap; gap: 2px; }
 .month-event-pill {
   font-size: 10px;
@@ -7837,59 +7870,6 @@ textarea:focus-visible,
 
 .bk-mehr-titel:hover {
   color: var(--text-main);
-}
-
-/* ── Blocker-Schnellwahl in der Terminmaske ────────────────────────────────
-   module/kalender-blocker.js. Bewusst unauffällig: der Normalfall ist der
-   Patiententermin, nicht die Pause. */
-.bk-blocker-zeile {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.bk-blocker-btn {
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg-card-solid);
-  color: var(--text-muted);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.bk-blocker-btn:hover {
-  color: var(--text-main);
-}
-
-.bk-blocker-btn--aktiv {
-  color: var(--text-main);
-  border-color: var(--text-muted);
-}
-
-.bk-blocker-btn--zurueck {
-  margin-left: auto;
-}
-
-/* Blocker im Kalender: schraffiert, damit ein zugeklebter Tag nicht nach
-   Umsatz aussieht. */
-.dv-booking-block--blocker,
-.wv-booking-block--blocker {
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent 0 6px,
-    rgba(148, 163, 184, 0.25) 6px 12px
-  );
-}
-
-/* Im Blockermodus sind Patient, Telefon, Verordnung und Gruppe gegenstandslos.
-   Über eine Klasse statt einzelner hidden-Flags — sonst müsste man sich beim
-   Zurückschalten merken, was vorher schon verborgen war. */
-.bk-blocker-modus #bkCustomerGroup,
-.bk-blocker-modus #bkPhoneGroup,
-.bk-blocker-modus #bkVerordnungSection,
-.bk-blocker-modus #bkGroupBlock {
-  display: none !important;
 }
 
 /* Kompaktere Abstände in der Grundmaske des Termindialogs. Bewusst nur dort und

@@ -22,9 +22,10 @@ const d = await page.evaluate(() => {
     slotOben: slot0900 ? Math.round(slot0900.getBoundingClientRect().top) : null,
     blockFlaeche: bloecke[0] ? getComputedStyle(bloecke[0]).backgroundColor : null,
     blockRand: bloecke[0] ? getComputedStyle(bloecke[0]).borderLeftColor : null,
-    blockerSchraffur: [...q('.wv-booking-block--blocker')].length,
     monatsZellen: q('.month-cell').length,
     monatsPillen: q('.month-event-pill').length,
+    wvAbwesendHinweis: [...q('.wv-col-abwesend-hinweis')].map(el => el.textContent),
+    monatAbwesendBadges: [...q('.month-absent-badge')].map(el => el.textContent),
     gruppen: [...q('#servicesGrid .srv-gruppe')].map(s => s.dataset.typ),
     zeilen: q('#servicesGrid tbody tr').length,
     gkvZeilen: q('#gkvCatalogSection tbody tr').length,
@@ -40,11 +41,12 @@ p('Termine gezeichnet', d.wochenBloecke === 2, String(d.wochenBloecke));
 p('09:00-Termin sitzt exakt auf der 09:00-Linie', d.blockOben === d.slotOben, `Block ${d.blockOben}, Slot ${d.slotOben}`);
 p('Blockfläche trägt die Leistungsfarbe', /239, 68, 68/.test(d.blockFlaeche || ''), d.blockFlaeche);
 p('linker Rand trägt die Mitarbeiterfarbe', /34, 197, 94/.test(d.blockRand || ''), d.blockRand);
-p('Blocker ist schraffiert markiert', d.blockerSchraffur === 1, String(d.blockerSchraffur));
+p('Abwesenheit (Bert) steht im Spaltenkopf, blockiert die Spalte nicht', d.wvAbwesendHinweis.some(t => t.includes('Bert')), d.wvAbwesendHinweis.join(' | '));
 
 console.log('\n══ MONATSANSICHT');
 p('volle Wochen (durch 7 teilbar)', d.monatsZellen % 7 === 0, `${d.monatsZellen} Zellen`);
 p('Termin-Pillen gezeichnet', d.monatsPillen > 0, String(d.monatsPillen));
+p('Abwesenheits-Badge (Bert) auf dem Tag', d.monatAbwesendBadges.some(t => t.includes('Bert')), d.monatAbwesendBadges.join(' | '));
 
 console.log('\n══ LEISTUNGSLISTE');
 p('nach Kostenträger gruppiert', JSON.stringify(d.gruppen) === JSON.stringify(['gkv','privat','selbstzahler','bg','intern']), d.gruppen.join(' · '));
@@ -57,7 +59,9 @@ p('Trenner eingeblendet', d.dividerVersteckt === false);
 
 // Interaktion
 console.log('\n══ INTERAKTION');
-await page.dblclick('.wv-col-slots .dv-slot[data-time$="T14:30"]');
+// Seit 18.09.2026 reicht ein Klick, um in der Woche einen Termin anzulegen
+// (Rückmeldung: Doppelklick war unnötig umständlich) — kein dblclick mehr.
+await page.click('.wv-col-slots .dv-slot[data-time$="T14:30"]');
 await page.click('.wv-booking-block');
 await page.click('.month-cell[data-datum="2026-08-19"]');
 await page.click('#servicesGrid tbody tr');
@@ -72,7 +76,7 @@ const menueZu = await page.evaluate(() => !document.querySelector('.kal-kontextm
 const ev = await page.evaluate(() => window.__ereignisse);
 
 const hat = (was) => ev.some(e => e.was === was);
-p('Doppelklick Woche meldet Zeit', hat('woche-dblclick'), JSON.stringify(ev.find(e=>e.was==='woche-dblclick')||{}));
+p('Ein Klick auf ein leeres Feld legt in der Woche einen Termin an', hat('woche-slot-klick'), JSON.stringify(ev.find(e=>e.was==='woche-slot-klick')||{}));
 p('Klick auf Wochentermin meldet Termin', hat('woche-termin'));
 const monatKlick = ev.find(e => e.was === 'monat-klick');
 p('Klick auf Monatszelle meldet Tag', hat('monat-klick'));

@@ -85,13 +85,13 @@ import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatiente
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
 import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260830';
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
-import { renderWoche } from './module/kalender-woche.js?v=20260831';
-import { renderMonat } from './module/kalender-monat.js?v=20260831';
+import { renderWoche } from './module/kalender-woche.js?v=20260918';
+import { renderMonat } from './module/kalender-monat.js?v=20260918';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
 import { alsISODatum as toISODate } from './module/datum.js?v=20260831';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
-import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blocker.js?v=20260830';
+import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwesenheit.js?v=20260918';
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
@@ -2751,11 +2751,7 @@ async function renderDayView(dateStr) {
     .neq('status', 'cancelled');
 
   const empIds = emps.map(e => e.id);
-  const { data: timeOffs } = await supabase.from('time_offs')
-    .select('employee_id,start_date,end_date,reason')
-    .in('employee_id', empIds)
-    .lte('start_date', dEnd)
-    .gte('end_date', dStart);
+  const abwesenheiten = await ladeAbwesenheiten(supabase, { empIds, vonISO: dStart, bisISO: dEnd });
 
   emps.forEach((emp) => {
     const col = document.createElement('div');
@@ -2847,7 +2843,6 @@ async function renderDayView(dateStr) {
       const block = document.createElement('div');
       block.className = 'dv-booking-block';
       block._termin = b;
-      if (istBlockerLeistung(b.services)) block.classList.add('dv-booking-block--blocker');
       if (moveBooking && moveBooking.id === b.id) block.classList.add('dv-move-source');
       block.style.top = topPx + 'px';
       block.style.height = Math.max(hPx, 28) + 'px';
@@ -2884,11 +2879,10 @@ async function renderDayView(dateStr) {
       slotWrap.appendChild(block);
     });
 
-    const empOffs = (timeOffs || []).filter(t => t.employee_id === emp.id);
-    if (empOffs.length) {
+    if (istAbwesend(abwesenheiten, emp.id, dateStr)) {
       const bar = document.createElement('div');
       bar.className = 'dv-absent';
-      bar.textContent = 'Abwesend';
+      bar.textContent = abwesenheitsGrund(abwesenheiten, emp.id, dateStr) || 'Abwesend';
       slotWrap.appendChild(bar);
     }
 
@@ -3134,7 +3128,6 @@ async function prefillBookingModal(startStr) {
   if (_bkPickerBlock) _bkPickerBlock.hidden = true;
   window._bkGewaehlteRx = null;
   zeigeDienstleistungsfeld(true);
-  setzeBlockerModus(false);
 
   populateEmpSelects();
   // Einzelpraxen haben genau einen Mitarbeiter — das Feld ist dort ein toter
@@ -5716,9 +5709,6 @@ document.getElementById('bkHbBerechnenBtn')?.addEventListener('click', async () 
 window._collectHeilmittelItems = function() { return []; };
 window._resetRezeptartUI = function() {};
 
-// Blocker: Zeit ohne Patient. Die beiden internen Leistungen entstehen beim
-// ersten Klick und bleiben dann bestehen (module/kalender-blocker.js).
-let _blockerDienste = null;
 // Wird an jedem Einstieg in die Terminmaske gerufen. Ohne das bliebe eine
 // vorher eingetippte 3 stehen und der naechste Termin waere still eine Serie.
 function resetBkAnzahl() {
@@ -5728,12 +5718,6 @@ function resetBkAnzahl() {
   if (hinweis) { hinweis.hidden = true; hinweis.textContent = ''; }
 }
 
-function setzeBlockerModus(an, knopf = null) {
-  document.getElementById('bookingModal')?.classList.toggle('bk-blocker-modus', !!an);
-  document.getElementById('bkBlockerZurueck').hidden = !an;
-  document.querySelectorAll('.bk-blocker-btn[data-blocker]').forEach(b =>
-    b.classList.toggle('bk-blocker-btn--aktiv', b === knopf));
-}
 // "3x Podologie": das Feld befüllt die vorhandene Serienlogik nur vor, statt
 // sie zu erzwingen. Anzahl>1 und "als Serie speichern" sind zwei getrennte
 // Entscheidungen — ein Einzeltermin muss auch bei Anzahl>1 speicherbar
@@ -5752,32 +5736,6 @@ document.getElementById('bkAnzahl')?.addEventListener('input', () => {
     hinweis.hidden = !text;
     hinweis.textContent = text;
   }
-});
-
-document.getElementById('bkBlockerZeile')?.addEventListener('click', async (ev) => {
-  const zurueck = ev.target.closest('#bkBlockerZurueck');
-  if (zurueck) {
-    setzeBlockerModus(false);
-    document.getElementById('bkCustomerSearch').value = '';
-    document.getElementById('bkCustomer').value = '';
-    await populateSrvSelect();
-    return;
-  }
-  const knopf = ev.target.closest('.bk-blocker-btn[data-blocker]');
-  if (!knopf) return;
-  if (!_blockerDienste) {
-    _blockerDienste = await ensureBlockerServices(supabase, getOwnerId(), currentSession?.user?.id);
-    await loadServices();
-  }
-  const dienst = _blockerDienste.get(knopf.dataset.blocker);
-  if (!dienst) { showToast('Blocker konnte nicht angelegt werden.', 'error'); return; }
-  // populateSrvSelect blendet interne Leistungen aus — ausser der gewaehlten.
-  await populateSrvSelect(dienst.id);
-  document.getElementById('bkService').value = dienst.id;
-  document.getElementById('bkCustomer').value = dienst.title;
-  document.getElementById('bkCustomerId').value = '';
-  document.getElementById('bkCustomerSearch').value = dienst.title;
-  setzeBlockerModus(true, knopf);
 });
 
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
@@ -5837,11 +5795,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
   const isGroup = document.getElementById('bkIsGroup')?.checked || false;
-  const istBlocker = istBlockerLeistung(servicesCache.find(s => s.id === srvId) || [...(_blockerDienste?.values() || [])].find(s => s.id === srvId)); // Ops #195: servicesCache kann hier veraltet sein
-  if (istBlocker) {
-    cust = cust || (servicesCache.find(s => s.id === srvId) || [...(_blockerDienste?.values() || [])].find(s => s.id === srvId))?.title || 'Blocker';
-    custId = '';
-  } else if (!isGroup) {
+  if (!isGroup) {
     if (!cust || !custId) { showToast('Bitte einen Kunden aus der Liste auswählen.', 'error'); return; }
   }
 
@@ -7855,10 +7809,16 @@ document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
   const end = document.getElementById('leaveEnd').value;
   const reason = document.getElementById('leaveReason').value.trim();
   if (!start || !end) { showToast(t('err_generic'), 'error'); return; }
+  // Reines Datum, kein lokal gebautes ISO: `new Date(start+'T00:00:00').toISOString()`
+  // verschob den gespeicherten Zeitpunkt um die Zeitzonen-Offsetstunden und liess
+  // eine Abwesenheit im Kalender einen Tag zu frueh beginnen (Sommerzeit-Praxis).
+  // Postgres legt ein reines Datum als 00:00 UTC ab — genau das, was die
+  // Abwesend-Anzeige (module/abwesenheit.js) beim Lesen erwartet.
   const { error } = await supabase.from('time_offs').insert({
     employee_id: empId,
-    start_date: new Date(start + 'T00:00:00').toISOString(),
-    end_date: new Date(end + 'T23:59:59').toISOString(),
+    owner_id: getOwnerId(),
+    start_date: start,
+    end_date: end,
     reason
   });
   if (error) { showToast(t('err_generic'), 'error'); return; }
@@ -10666,11 +10626,14 @@ async function saveUrlaub() {
   if (!von || !bis) { showToast('Bitte Von- und Bis-Datum eingeben.', 'error'); return; }
   if (von > bis) { showToast('Von-Datum muss vor Bis-Datum liegen.', 'error'); return; }
 
+  // Reines Datum statt fester "+01:00"-Zone: der feste Offset galt im Sommer
+  // nicht mehr (MESZ ist +02:00) und verschob den gespeicherten Zeitpunkt
+  // gegenueber der Abwesend-Anzeige (module/abwesenheit.js liest UTC-Tage).
   const { error } = await supabase.from('time_offs').insert({
     employee_id: empId,
     owner_id: getOwnerId(),
-    start_date: von + 'T00:00:00+01:00',
-    end_date: bis + 'T23:59:59+01:00',
+    start_date: von,
+    end_date: bis,
     type,
     reason: type === 'urlaub' ? 'Jahresurlaub' : type,
   });

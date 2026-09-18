@@ -715,10 +715,17 @@ document.getElementById('leave-form').addEventListener('submit', async (e) => {
   const end = document.getElementById('leave-end').value;
   const reason = document.getElementById('leave-reason').value;
 
+  // Reines Datum, kein lokal gebautes ISO: `new Date(start+'T00:00:00').toISOString()`
+  // verschob den gespeicherten Zeitpunkt um die Zeitzonen-Offsetstunden und liess
+  // eine Abwesenheit im Kalender einen Tag zu frueh beginnen (Sommerzeit-Praxis).
+  // Postgres legt ein reines Datum als 00:00 UTC ab — genau das, was die
+  // Abwesend-Anzeige (module/abwesenheit.js) beim Lesen erwartet.
+  const ownerId = profile.role === 'owner' ? session.user.id : profile.owner_id;
   const { error } = await supabase.from('time_offs').insert({
     employee_id: empId,
-    start_date: new Date(start + 'T00:00:00').toISOString(),
-    end_date: new Date(end + 'T23:59:59').toISOString(),
+    owner_id: ownerId,
+    start_date: start,
+    end_date: end,
     reason
   });
 

@@ -24,6 +24,7 @@
 
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { alsISODatum } from './datum.js?v=20260831';
+import { ladeAbwesenheiten, abwesendeMitarbeiterIds } from './abwesenheit.js?v=20260918';
 
 const MONATE_DE = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -149,6 +150,14 @@ export async function renderMonat({
     .in('user_id', empIds.length ? empIds : ['none'])
     .neq('status', 'cancelled');
 
+  const monatsStart = new Date(year, month, 1);
+  const monatsEnd = new Date(year, month + 1, 0, 23, 59, 59);
+  const abwesenheiten = await ladeAbwesenheiten(supabase, {
+    empIds,
+    vonISO: monatsStart.toISOString(),
+    bisISO: monatsEnd.toISOString(),
+  });
+
   if (setzeDatumsLabel) setzeDatumsLabel(`${MONATE_DE[month]} ${year}`);
 
   grid.innerHTML = '';
@@ -166,6 +175,21 @@ export async function renderMonat({
     tagesZahl.className = 'month-cell-day';
     tagesZahl.textContent = String(date.getDate());
     zelle.appendChild(tagesZahl);
+
+    // Abwesenheit (Urlaub/Krank/Frei/Elternzeit, `time_offs`). Die Kachel ist
+    // zu knapp für einen Namen pro Mitarbeiter — ein kurzes Badge, der volle
+    // Name steht im title-Tooltip.
+    const abwesendeIds = abwesendeMitarbeiterIds(abwesenheiten, ds);
+    if (abwesendeIds.length) {
+      const namen = mitarbeiter
+        .filter(e => abwesendeIds.includes(e.id))
+        .map(e => e.business_name || e.email?.split('@')[0] || '—');
+      const badge = document.createElement('div');
+      badge.className = 'month-absent-badge';
+      badge.textContent = namen.length === 1 ? `Abwesend: ${namen[0]}` : `Abwesend (${namen.length})`;
+      badge.title = namen.join(', ');
+      zelle.appendChild(badge);
+    }
 
     const wrap = document.createElement('div');
     wrap.className = 'month-cell-events';

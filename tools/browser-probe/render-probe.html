@@ -64,12 +64,23 @@ const TERMINE = [
     customer_name: 'Testpatient', services: { title: 'Komplexbehandlung', color: '#ef4444' } },
   { id: 'b2', user_id: 'e2', service_id: 's2', status: 'confirmed',
     start_time: `${tagISO(heute)}T11:20:00`, end_time: `${tagISO(heute)}T12:00:00`,
-    customer_name: 'Zweiter', services: { title: 'Pause', color: '#94a3b8', code: 'BLOCK_PAUSE', is_internal: true } },
+    customer_name: 'Zweiter', services: { title: 'Beratung', color: '#94a3b8' } },
+];
+
+// Bert (e2) ist heute abwesend — prueft den neuen Abwesend-Hinweis in Woche
+// und Monat (module/abwesenheit.js).
+const ABWESENHEITEN = [
+  { employee_id: 'e2', start_date: `${tagISO(heute)}T00:00:00+00:00`, end_date: `${tagISO(heute)}T23:59:59+00:00`, reason: 'Fortbildung' },
 ];
 
 // Kleinster Ersatz fuer supabase: jede Kette endet bei denselben Daten.
-const fakeSupabase = { from() { return this; }, select() { return this; }, eq() { return this; },
-  gte() { return this; }, lte() { return this; }, in() { return this; },
+// `time_offs` und `bookings` teilen sich dieselben Kettenmethoden, enden aber
+// auf unterschiedlichen ("neq" vs. "gte") — die zuletzt gewaehlte Tabelle
+// entscheidet, welche Antwort die terminale Methode liefert.
+let _tabelle = null;
+const fakeSupabase = { from(t) { _tabelle = t; return this; }, select() { return this; }, eq() { return this; },
+  lte() { return this; }, in() { return this; },
+  gte() { return _tabelle === 'time_offs' ? Promise.resolve({ data: ABWESENHEITEN }) : this; },
   neq() { return Promise.resolve({ data: TERMINE }); } };
 
 const ereignisse = [];
@@ -79,7 +90,9 @@ await renderWoche({
   teamMembers: TEAM, calEmpFilter: 'all',
   farbeFuer: (b) => terminFarben(b, { teamMembers: TEAM, empFarben: EMP_COLORS }),
   moveAktiv: false,
-  onSlotDoppelklick: (d) => ereignisse.push({ was: 'woche-dblclick', ...d }),
+  // Name des Parameters ist historisch (onSlotDoppelklick) — Ausloeser ist
+  // seit 18.09.2026 der einfache Klick, siehe kalender-woche.js.
+  onSlotDoppelklick: (d) => ereignisse.push({ was: 'woche-slot-klick', ...d }),
   onTerminKlick: (b) => ereignisse.push({ was: 'woche-termin', id: b.id }),
   setzeDatumsLabel: () => {},
 });

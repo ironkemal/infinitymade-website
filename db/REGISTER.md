@@ -239,8 +239,10 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Warum:** Urlaub, Krankheit, Fortbildung. Anders als `custom_days` personenbezogen und mehrtägig.
 - **Seit:** spätestens 13.05.2026 · `add_performance_indexes`
 - **Status:** aktiv
-- **Wer:** Team-Verwaltung, Kalender, Backend-Slots.
+- **Wer:** Team-Verwaltung, Kalender, Backend-Slots, `module/abwesenheit.js` (Wochen-/Monatsansicht, seit 18.09.2026).
 - **Achtung:** Wie `employee_services` — Schreibrecht mandantenübergreifend offen. Bekannt und dokumentiert.
+- **Achtung (Datumskonvention, 18.09.2026):** `start_date`/`end_date` sind `timestamptz`, sind aber als **reiner Tag** gemeint. Geschrieben wird ausschliesslich `'YYYY-MM-DD'` (Postgres legt das als 00:00 UTC ab), gelesen wird gegen UTC-Tagesgrenzen. Kein `toISOString()` aus einem lokalen `Date` und kein fester Offset (`+01:00`) — beides verschiebt den Tag im Sommer um eine Stunde. Vier Schreibwege waren betroffen, am 18.09.2026 vereinheitlicht (`dashboard.js` 7812/10491/10623/11175, `kalender.js` 718); die eine krumme Demo-Zeile (`5323cce4…`, 2026-07-11 23:00 UTC) wurde am selben Tag auf 2026-07-12 00:00 / 2026-07-15 23:59:59 UTC gesetzt.
+- **Achtung:** Die zwei Seed-Zeilen vom 08.06.2026 haben `owner_id = NULL` (und damit auch kein `business_id` — der Trigger `trg_set_business_id` läuft nur bei INSERT). Leser, die nach `owner_id` filtern, sehen sie nicht; beim Testen der Abwesenheitsanzeige nicht als Bug missdeuten.
 
 ### `calendar_integrations`
 - **Warum:** Google-Kalender-Anbindung je Nutzer: Tokens, Kalender-ID, Synchronisationszustand.

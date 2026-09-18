@@ -19,7 +19,10 @@
  *
  * Was dieses Modul kann und die alte Fassung nicht konnte
  * ──────────────────────────────────────────────────────
- *   1. Rasterfelder statt leerer Fläche — Doppelklick legt einen Termin an.
+ *   1. Rasterfelder statt leerer Fläche — ein Klick legt einen Termin an
+ *      (bis 18.09.2026 brauchte es einen Doppelklick — unnötig umständlich,
+ *      siehe Parameter `onSlotDoppelklick` unten: der Name blieb, der Auslöser
+ *      ist jetzt der einfache Klick).
  *   2. Klick auf einen Terminblock öffnet den Seitenbereich. Die Blöcke hatten
  *      vorher `cursor:pointer`, aber keinen Zuhörer; ein Klick tat nichts.
  *   3. Verschieben funktioniert in der Woche. Bisher zwang `startMoveBooking`
@@ -34,7 +37,7 @@ import { WV_SLOT_PX } from './kalender-raster.js?v=20260822';
 import { alsISODatum } from './datum.js?v=20260831';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { mitDeckkraft } from './kalender-farben.js?v=20260914';
-import { istBlockerLeistung } from './kalender-blocker.js?v=20260825';
+import { ladeAbwesenheiten, istAbwesend, abwesendeMitarbeiterIds, abwesenheitsGrund } from './abwesenheit.js?v=20260918';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -100,7 +103,10 @@ export function pixelFuerMinute(minuteDesTages) {
  * @param {string}   o.calEmpFilter   Mitarbeiter-Id oder 'all'
  * @param {function} o.farbeFuer      (booking) => { flaeche, rand }
  * @param {boolean}  o.moveAktiv      Verschieben-Modus läuft
- * @param {function} o.onSlotDoppelklick ({ dateStr, timeStr, empId }) => void
+ * @param {function} o.onSlotDoppelklick ({ dateStr, timeStr, empId }) => void — trotz des
+ *   Namens seit 18.09.2026 der Auslöser für den einfachen Klick auf ein leeres
+ *   Rasterfeld (legt einen Termin an); der Name blieb wegen `letzterStand`/
+ *   Langdruck-Verdrahtung unten unverändert.
  * @param {function} o.onSlotKlick       ({ timeStr, empId, slotEl, ev }) => void
  * @param {function} o.onTerminKlick     (booking) => void
  * @param {function} [o.setzeDatumsLabel] (text) => void
@@ -186,6 +192,12 @@ export async function renderWoche({
   // leer — lieber ein Klick mehr als ein Termin still beim Falschen.
   const eindeutigerEmp = calEmpFilter !== 'all' ? calEmpFilter : null;
 
+  const abwesenheiten = await ladeAbwesenheiten(supabase, {
+    empIds,
+    vonISO: vonDatum.toISOString(),
+    bisISO: bisDatum.toISOString(),
+  });
+
   // ── Sieben Tagesspalten ──────────────────────────────────────────────────
   tage.forEach(tag => {
     const tagISO = alsISODatum(tag);
@@ -203,8 +215,39 @@ export async function renderWoche({
     kopf.textContent = `${DAY_NAMES[tag.getDay()]} ${tag.getDate()}.${tag.getMonth() + 1}.`;
     spalte.appendChild(kopf);
 
+    // Abwesenheit (Urlaub/Krank/Frei/Elternzeit aus dem Mitarbeiter-Bereich,
+    // `time_offs`). Bei genau einem gewählten Mitarbeiter deckt die Spalte
+    // ohnehin nur ihn ab — dort reicht derselbe Vollflächen-Balken wie in der
+    // Tagesansicht (`.dv-absent`). Bei „Alle" zeigt eine Spalte mehrere
+    // Mitarbeiter gemischt; ein Vollflächen-Balken würde dann auch die
+    // Termine der anwesenden Kollegen verdecken — dort nur ein kurzer,
+    // absolut positionierter Hinweis. Absolut und nicht im normalen Fluss,
+    // weil die Zeitleiste links keinen solchen Hinweis bekommt — im Fluss
+    // würde er das Raster gegenüber der Zeitleiste nach unten verschieben
+    // (WV_SLOT_PX-Ausrichtung, siehe Modul-Kopf).
+    let tagesAbwesenheitEmp = null;
+    let tagesAbwesenheitHinweis = null;
+    if (eindeutigerEmp) {
+      if (istAbwesend(abwesenheiten, eindeutigerEmp, tagISO)) tagesAbwesenheitEmp = eindeutigerEmp;
+    } else {
+      const abwesendeIds = abwesendeMitarbeiterIds(abwesenheiten, tagISO);
+      if (abwesendeIds.length) {
+        const namen = mitarbeiter
+          .filter(e => abwesendeIds.includes(e.id))
+          .map(e => e.business_name || e.email?.split('@')[0] || '—');
+        tagesAbwesenheitHinweis = `Abwesend: ${namen.join(', ')}`;
+      }
+    }
+
     const inner = document.createElement('div');
     inner.className = 'wv-col-slots';
+
+    if (tagesAbwesenheitHinweis) {
+      const hinweis = document.createElement('div');
+      hinweis.className = 'wv-col-abwesend-hinweis';
+      hinweis.textContent = tagesAbwesenheitHinweis;
+      inner.appendChild(hinweis);
+    }
 
     // Rasterfelder. Sie liegen im normalen Fluss, die Terminblöcke schweben
     // absolut darüber — deshalb werden die Blöcke danach angehängt.
@@ -219,21 +262,28 @@ export async function renderWoche({
         feld.dataset.time = timeStr;
         if (eindeutigerEmp) feld.dataset.empId = eindeutigerEmp;
 
-        // Einfachklick gehört dem Verschieben-Modus. Ausserhalb davon tut er
-        // nichts — sonst würde jeder Klick auf dem Weg zum Doppelklick schon
-        // eine Maske öffnen.
+        // Ein Klick reicht (Rückmeldung 18.09.2026 — Doppelklick war unnötig
+        // umständlich). Im Verschieben-Modus gehört der Klick weiter dem
+        // Verschieben; ausserhalb davon legt er direkt einen Termin an. Der
+        // frühere Doppelklick-Zuhörer entfaellt — er würde nach dem Anlegen
+        // durch den ersten Klick nur ein zweites Mal dieselbe Maske öffnen.
         feld.addEventListener('click', (ev) => {
-          if (!moveAktiv || !onSlotKlick) return;
-          onSlotKlick({ timeStr, empId: eindeutigerEmp, slotEl: feld, ev });
-        });
-
-        feld.addEventListener('dblclick', () => {
-          if (moveAktiv || !onSlotDoppelklick) return;
-          onSlotDoppelklick({ dateStr: tagISO, timeStr, empId: eindeutigerEmp });
+          if (moveAktiv) {
+            if (onSlotKlick) onSlotKlick({ timeStr, empId: eindeutigerEmp, slotEl: feld, ev });
+            return;
+          }
+          if (onSlotDoppelklick) onSlotDoppelklick({ dateStr: tagISO, timeStr, empId: eindeutigerEmp });
         });
 
         inner.appendChild(feld);
       }
+    }
+
+    if (tagesAbwesenheitEmp) {
+      const balken = document.createElement('div');
+      balken.className = 'dv-absent';
+      balken.textContent = abwesenheitsGrund(abwesenheiten, tagesAbwesenheitEmp, tagISO) || 'Abwesend';
+      inner.appendChild(balken);
     }
 
     if (istHeute && jetztMinute >= START_STUNDE * 60 && jetztMinute < END_STUNDE * 60) {
@@ -257,7 +307,6 @@ export async function renderWoche({
 
       const block = document.createElement('div');
       block.className = 'wv-booking-block';
-      if (istBlockerLeistung(b.services)) block.classList.add('wv-booking-block--blocker');
       // Das Kontextmenü (module/kalender-kontextmenue.js) liest den Termin vom
       // Element. Über eine Id müsste es ihn erst wieder suchen — die Liste
       // steht aber nur hier, im Rumpf dieses Zeichenlaufs.
