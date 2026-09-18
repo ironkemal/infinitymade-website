@@ -35,7 +35,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260917';
-import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
+import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260918';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260917';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
@@ -45,7 +45,7 @@ import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-prue
 // in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
 // Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft }
-  from './module/verordnung-maske.js?v=20260907';
+  from './module/verordnung-maske.js?v=20260918';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908';
@@ -15695,8 +15695,6 @@ const DIAGNOSE_FIELDS = {
   rzDg:        { kind: 'dg',   icdField: 'rzIcd',   codeOnly: true,
                  nurCodes: () => (document.getElementById('rzDg')?.getAttribute('data-pod-erlaubt') || '')
                    .split(',').filter(Boolean) },
-  podNewIcd10: { kind: 'icd',  dgField: 'podNewDiag', dgKind: 'select', warnId: 'podIcd10Warning',
-                 multi: true, codeOnly: true, bereich: 'podologie', strict: true },
 };
 
 // Heilmittel-Felder — dieselbe Idee, andere Quelle (RPC search_heilmittel).
@@ -15779,23 +15777,22 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
   async function onIcdChange(commit) {
     const codes   = parseIcdList(icdEl.value);
     const warnEl  = warnId ? document.getElementById(warnId) : null;
-    const l60hint = document.getElementById('podL60Hint');
 
     // Keine Kodes → kein Hinweis, keine Sperre
     if (codes.length === 0) {
       if (warnEl) warnEl.style.display = 'none';
-      if (l60hint) l60hint.style.display = 'none';
       dgOptionenSperren(dgEl, null, { t });
       return;
     }
 
-    // FIX 1: Nur Podologie hat Regeln; Fachbereich wurde beim Verdrahten eingefroren.
-    // Regeln bei Bedarf nachladen (z.B. Rezept-Formular ohne vorherigen Podologie-Besuch).
-    if (bereich !== 'podologie') return;
-    if (!getDgIcdRules() || !Object.keys(getDgIcdRules()).length) {
-      await loadDgIcdRules(supabase);
+    // Fachbereich wurde beim Verdrahten eingefroren (s.o.). Regeln pro Bereich
+    // bei Bedarf nachladen. Ausserhalb Podologie sind icd_accept-Regeln heute
+    // leer (bewusst, s. module/diagnosegruppen-regeln.js) — macht den Ablauf
+    // dort automatisch wirkungslos, kein gesondertes Gate nötig.
+    if (!getDgIcdRules(bereich) || !Object.keys(getDgIcdRules(bereich)).length) {
+      await loadDgIcdRules(supabase, bereich);
     }
-    const rules = getDgIcdRules() || {};
+    const rules = getDgIcdRules(bereich) || {};
     if (!Object.keys(rules).length) return;
 
     // Vorschlag und Sperren in einem Zug — die Regeln stehen in der Tabelle
@@ -15803,7 +15800,6 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
     // Kode gehoert normativ genau einer Gruppe (heute nur L60.0 → UI1/UI2),
     // dann kommt die Rueckfrage statt einer geratenen Auswahl.
     const v = dgVorschlag(codes, rules);
-    if (l60hint) l60hint.style.display = v.normativ ? 'block' : 'none';
     // Unmoegliche Kombinationen sperren — mit Begruendung an der Option selbst.
     // Geraeumt wird nur beim Verlassen des Feldes, s. dgOptionenSperren.
     dgOptionenSperren(dgEl, v, { codes, t, raeumen: commit === true });
@@ -15870,9 +15866,8 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
     dgEl.addEventListener('change', async () => {
       if (dgEl.dataset.autoSetting) return;          // kein Ping-Pong
       if (icdEl.value.trim()) return;                // Gefülltes Feld bleibt
-      if (bereich !== 'podologie') return;
-      if (!getDgIcdRules() || !Object.keys(getDgIcdRules()).length) await loadDgIcdRules(supabase);
-      const rule = (getDgIcdRules() || {})[normDgCode(dgEl.value)];
+      if (!getDgIcdRules(bereich) || !Object.keys(getDgIcdRules(bereich)).length) await loadDgIcdRules(supabase, bereich);
+      const rule = (getDgIcdRules(bereich) || {})[normDgCode(dgEl.value)];
       const sole = rule ? soleIcdForDg(rule) : null;
       if (!sole || icdEl.value.trim()) return;
       icdEl.value = sole;
@@ -16856,6 +16851,10 @@ async function init() {
       setTherapiebereich: setM13Therapy,
       setHausbesuch: setM13Hausbesuch,
       setFrequenz: setFreqValue,
+      // Stellt sicher, dass rzIcd/rzDg verdrahtet sind, BEVOR fuelleMuster13()
+      // Werte hineinschreibt (module/verordnung-maske.js) — ohne Fokus des
+      // Anwenders passiert das sonst nie (Ops: DG-Autofill nach KI-Scan tot).
+      ensureDgIcdWiring: () => _wireDgIcdPair('rzIcd', 'rzDg', 'text', 'rzIcdDgWarning', _getDiagnoseBereich()),
     });
     document.getElementById('anamRezeptBtn')?.addEventListener('click', () => {
       const sel = document.getElementById('anamPatientSelect');

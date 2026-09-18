@@ -12,9 +12,10 @@
  * Die Tabelle `diagnosegruppen` gehört nicht der Podologie. `_wireDgIcdPair` in
  * dashboard.js verdrahtet damit auch das Rezept-Formular und den Rezept-Scan.
  * Läge die Regeltabelle im Podologie-Modul, müsste das Rezept-Formular aus der
- * Podologie lesen — eine Abhängigkeit in die falsche Richtung. Heute filtert
- * `loadDgIcdRules` zwar auf `bereich === 'podologie'`, das ist aber eine
- * Datenfrage, keine Zuständigkeitsfrage.
+ * Podologie lesen — eine Abhängigkeit in die falsche Richtung. `loadDgIcdRules`
+ * lädt seit 18.09.2026 alle Bereiche und hält sie getrennt (Parameter
+ * `bereich`, Default `'podologie'`) — das ist eine Datenfrage, keine
+ * Zuständigkeitsfrage.
  *
  * Abhängigkeiten
  * ──────────────
@@ -25,6 +26,7 @@
  */
 
 import { parseIcdList, matchIcdToDg, normDgCode } from '../icd-dg-match.js?v=20260831a';
+import { bereichSchluessel } from './verordnung-regeln.js?v=20260918';
 
 /** Wortgleiche Kopie aus dashboard.js — reiner Umzug, kein anderes Verhalten. */
 function escapeHtml(str) {
@@ -37,30 +39,41 @@ function escapeHtml(str) {
 // icd_enforcement), geladen beim ersten Aufruf. Fällt die Abfrage fehl (z. B.
 // weil die Migration noch nicht eingespielt ist), wird still auf "keine Regeln"
 // zurückgefallen — dann wird nicht gewarnt.
-let _dgIcdRules   = null;  // { [dgCode]: { icd_accept, icd_exclude, ... } } (podologie)
-let _podDiagGroups = null;  // [{code,label,untergruppen}] aus der Tabelle
+//
+// { [bereich]: { [dgCode]: { icd_accept, icd_exclude, ... } } } — ein Fetch,
+// pro Bereich getrennt gehalten. Ausserhalb Podologie sind die icd_accept/
+// icd_exclude/icd_auto_select/icd_accept_unsicher-Arrays heute leer (Stand
+// 18.09.2026, geprüft) — bewusst so, keine normative ICD-Zuordnung für
+// Physio/Ergo/Logopädie (Physio/Ergo/Logo verordnen über die Diagnosegruppe
+// selbst, s. `regelnFuerBereich()` in verordnung-regeln.js). Getrennt pro
+// Bereich statt einer flachen Code-Map, damit ein Physio-Code nie als
+// Kandidat im Podologie-Formular auftaucht (`code` ist zwar global
+// PRIMARY KEY, aber fachlich nicht austauschbar).
+let _dgIcdRulesByBereich = null;
+let _podDiagGroups = null;  // [{code,label,untergruppen}] aus der Tabelle — NUR Podologie
 
-export async function loadDgIcdRules(sb) {
-  if (_dgIcdRules) return _dgIcdRules;
+export async function loadDgIcdRules(sb, bereich = 'podologie') {
+  const key = bereichSchluessel(bereich);
+  if (_dgIcdRulesByBereich && _dgIcdRulesByBereich[key]) return _dgIcdRulesByBereich[key];
   const { data, error } = await sb
     .from('diagnosegruppen')
     .select('code, label, untergruppen, icd_accept, icd_exclude, icd_auto_select, icd_accept_unsicher, icd_enforcement, bereich, sort')
     .eq('aktiv', true)
     .order('sort');
   if (error) { console.warn('[diagnosegruppen] load failed:', error.message); return {}; }
-  _dgIcdRules = Object.fromEntries(
-    (data || [])
-      .filter(r => r.bereich === 'podologie')
-      .map(r => [r.code, {
-        icd_accept:          r.icd_accept          || [],
-        icd_exclude:         r.icd_exclude         || [],
-        icd_auto_select:     r.icd_auto_select     || [],
-        icd_accept_unsicher: r.icd_accept_unsicher || [],
-        icd_enforcement:     r.icd_enforcement     || 'warn',
-      }])
-  );
-  _podDiagGroups = (data || []).filter(r => r.bereich === 'podologie');
-  return _dgIcdRules;
+  _dgIcdRulesByBereich = {};
+  for (const r of (data || [])) {
+    const k = bereichSchluessel(r.bereich);
+    (_dgIcdRulesByBereich[k] || (_dgIcdRulesByBereich[k] = {}))[r.code] = {
+      icd_accept:          r.icd_accept          || [],
+      icd_exclude:         r.icd_exclude         || [],
+      icd_auto_select:     r.icd_auto_select     || [],
+      icd_accept_unsicher: r.icd_accept_unsicher || [],
+      icd_enforcement:     r.icd_enforcement     || 'warn',
+    };
+  }
+  _podDiagGroups = (data || []).filter(r => bereichSchluessel(r.bereich) === 'podologie');
+  return _dgIcdRulesByBereich[key] || {};
 }
 
 // Optionen der Podologie-Diagnosegruppe. Bezeichnungen kommen aus der Tabelle
@@ -92,17 +105,20 @@ export function podDiagOptionsHtml(selected = '') {
  * Interne Hilfsfunktion — außen nur noch matchIcdToDg verwenden.
  */
 function _icdMatchesDgRule(code, dg) {
-  const rule = (_dgIcdRules || {})[dg];
+  const rule = (getDgIcdRules() || {})[dg];
   if (!rule || !rule.icd_accept || rule.icd_accept.length === 0) return true;
   const codes = parseIcdList(code);
   if (codes.length === 0) return true;
   return matchIcdToDg(codes, rule).status === 'ok';
 }
 
-// ES-Modul-Bindungen sind schreibgeschützt: `_dgIcdRules` darf nur über diese
-// Getter nach draussen, sonst hält der Aufrufer den Stand vom Importzeitpunkt.
-/** Die geladenen ICD-Regeln je Diagnosegruppe — `null`, solange nichts geladen wurde. */
-export function getDgIcdRules() { return _dgIcdRules; }
+// ES-Modul-Bindungen sind schreibgeschützt: `_dgIcdRulesByBereich` darf nur
+// über diese Getter nach draussen, sonst hält der Aufrufer den Stand vom
+// Importzeitpunkt.
+/** Die geladenen ICD-Regeln je Diagnosegruppe für einen Bereich — `null`, solange nichts geladen wurde. */
+export function getDgIcdRules(bereich = 'podologie') {
+  return _dgIcdRulesByBereich ? (_dgIcdRulesByBereich[bereichSchluessel(bereich)] || null) : null;
+}
 /** Die Diagnosegruppen-Zeilen aus der Tabelle — `null`, solange nichts geladen wurde. */
 export function getPodDiagGroups() { return _podDiagGroups; }
 

@@ -322,6 +322,10 @@ export function fuelleMuster13(rx, opt = {}) {
   if (!rx) return;
   const alsVorlage = opt.alsVorlage !== false;
   const g = (id) => document.getElementById(id);
+  // rzIcd/rzDg verdrahten, BEVOR Werte gesetzt werden — sonst existiert der
+  // Listener nie, wenn der Anwender die Felder nie von Hand fokussiert hat
+  // (Haupteinstieg: KI-Rezept-Scan bestätigen, ohne rzIcd anzufassen).
+  _bruecke?.ensureDgIcdWiring?.();
   // Bei einer Vorlage werden nur gefüllte Werte gesetzt (die Maske ist frisch
   // zurückgesetzt); beim Bearbeiten muss auch ein LEERER Wert ankommen, sonst
   // bliebe der Rest der vorherigen Verordnung stehen.
@@ -356,6 +360,16 @@ export function fuelleMuster13(rx, opt = {}) {
   // Zuzahlungsbefreiung ist eine Eigenschaft des Patienten im laufenden Jahr,
   // nicht des Papiers — sie darf auch in eine Folgeverordnung mit.
   haken('rzZuzahlungBefreit', rx.zuzahlung_befreit);
+
+  // Verdrahtung existiert jetzt garantiert (s.o.), aber `setz()` löst kein
+  // Event aus — ohne diesen Anstoss bliebe die DG-Vorbefüllung/-Warnung nach
+  // programmatischem Befüllen stumm. Vor dem `alsVorlage`-Return, damit auch
+  // die Folgeverordnung-Vorlage (termin-aktionen.js) ihn bekommt.
+  const _icdEl = g('rzIcd');
+  if (_icdEl && _icdEl.value.trim()) {
+    _icdEl.dispatchEvent(new Event('input',  { bubbles: true }));
+    _icdEl.dispatchEvent(new Event('change', { bubbles: true }));
+  }
 
   if (alsVorlage) return;
 

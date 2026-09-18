@@ -65,7 +65,7 @@ import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=2
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260910b';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260917';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
-import { loadDgIcdRules } from './diagnosegruppen-regeln.js?v=20260827';
+import { loadDgIcdRules } from './diagnosegruppen-regeln.js?v=20260918';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20260901';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
