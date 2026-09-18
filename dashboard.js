@@ -72,6 +72,7 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902'
 import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260908';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260905c';
+import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
 import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20260906';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
@@ -3022,7 +3023,7 @@ async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
   // Dienstleistung automatisch anhand des Heilmittels wählen (Fallback: serviceId der Quellbuchung)
   const matchedSrvIds = [];
   for (const s of sessions) {
-    matchedSrvIds.push(s.heilmittelName ? await findMatchingServiceId(s.heilmittelName) : null);
+    matchedSrvIds.push(s.heilmittelName ? await findMatchingServiceId({ heilmittel: s.heilmittelName }) : null);
   }
   const primarySrvId = matchedSrvIds[0] || sessionData.serviceId || '';
   const srvSel = document.getElementById('bkService');
@@ -3798,20 +3799,24 @@ async function uebernehmeDienstleistungAusRx(rx) {
   const srvSel = document.getElementById('bkService');
   if (!srvSel) return;
   const heilmittel = rx.heilmittel || rx.heilmittel_position || '';
-  const srvId = heilmittel ? await findMatchingServiceId(heilmittel) : null;
+  const srvId = await findMatchingServiceId(rx);
+  const hinweis = document.getElementById('bkServiceAusVerordnung');
+  zeigeDienstleistungsfeld(!srvId);
   if (srvId) {
     if (!srvSel.querySelector(`option[value="${srvId}"]`)) await populateSrvSelect(srvId);
     srvSel.value = srvId;
     await updateBkDuration(srvId);
+    if (hinweis) hinweis.textContent = `Leistung aus der Verordnung: ${srvSel.options[srvSel.selectedIndex]?.textContent || heilmittel || '—'}`;
+  } else {
+    // Ops #306: alte/geratene Auswahl nicht stehen lassen, und sichtbar machen
+    // WARUM manuell gewählt werden muss — zeigeDienstleistungsfeld() hat den
+    // Hinweis eben ausgeblendet (Normalfall: Feld sichtbar = kein Hinweis nötig).
+    srvSel.value = '';
+    if (hinweis && heilmittel) {
+      hinweis.textContent = `„${heilmittel}" passt zu keiner eingerichteten Leistung — bitte auswählen.`;
+      hinweis.hidden = false;
+    }
   }
-  const hinweis = document.getElementById('bkServiceAusVerordnung');
-  if (hinweis) {
-    const gewaehlt = srvSel.options[srvSel.selectedIndex];
-    hinweis.textContent = `Leistung aus der Verordnung: ${gewaehlt?.textContent || heilmittel || '—'}`;
-  }
-  // Ohne passende Leistung im Katalog bleibt das Feld sichtbar — sonst
-  // scheitert das Speichern an einer Pflichtangabe, die niemand sehen kann.
-  zeigeDienstleistungsfeld(!srvId);
 }
 
 async function loadCalRpRezeptInfo(leadId) {
@@ -3885,23 +3890,18 @@ async function loadCalRpUnverga(leadId) {
   });
 }
 
-async function findMatchingServiceId(heilmittel) {
+// Ops #306: Matching-Logik in module/verordnung-leistung-match.js (testbar,
+// kein DOM) — hier bleibt nur das Laden des Katalogs, das dashboard.js kennt.
+async function findMatchingServiceId(rx) {
   let list = ownerServices || [];
   if (!list.length) {
     const ownerId = getOwnerId();
     const { data } = await bizScope(supabase.from('services')
-      .select('id,title,code')
+      .select('id,title,code,gkv_position_nr')
       .or(`owner_id.eq.${ownerId},user_id.eq.${ownerId}`), 'services');
     list = data || [];
   }
-  if (!list.length) return null;
-  const hmLower = (heilmittel || '').toLowerCase();
-  const match = list.find(s => 
-    (s.title && s.title.toLowerCase().includes(hmLower)) ||
-    (s.code && s.code.toLowerCase().includes(hmLower))
-  );
-  if (match) return match.id;
-  return list[0].id;
+  return passendeLeistungId(rx, list);
 }
 
 async function handleSessionDrop(sessionId, timeStr, empId) {
@@ -3934,7 +3934,7 @@ async function handleSessionDrop(sessionId, timeStr, empId) {
       return;
     }
 
-    const serviceId = await findMatchingServiceId(sess.prescriptions.heilmittel);
+    const serviceId = await findMatchingServiceId(sess.prescriptions);
     if (!serviceId) {
       showToast('Kein passender Service für dieses Heilmittel gefunden.', 'error');
       return;
