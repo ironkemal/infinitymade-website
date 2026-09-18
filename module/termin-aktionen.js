@@ -247,34 +247,42 @@ export async function waehleVerordnungFuerPanel({ supabase, booking, verknuepfte
   // `.or()` statt `.neq()`: die meisten physio/ergo/logo-Zeilen führen
   // `therapie_bereich = NULL`, und `col <> 'podo'` liesse NULL-Zeilen in SQL
   // aus dem Ergebnis fallen — das hätte das Panel für den Regelfall geleert.
-  const { data: liste, error } = await supabase.from('prescriptions')
+  const { data: listeRoh, error } = await supabase.from('prescriptions')
     .select(RX_FELDER)
     .eq('patient_id', patientId)
     .not('status', 'in', '("cancelled")')
     .or('therapie_bereich.is.null,therapie_bereich.neq.podo')
     .order('ausstellungsdatum', { ascending: false, nullsFirst: false })
     .limit(12);
-  if (error || !liste?.length) return leer;
+  // `liste` schliesst Podologie aus (s.o.) und ist bei einem reinen
+  // Podologie-Patienten deshalb oft leer — das darf NICHT sofort mit `leer`
+  // abbrechen (früherer Fehler, 19.09.2026): eine ausdrücklich angeforderte
+  // Verordnung (Klick auf eine Karte in "Aktive Verordnungen", die auch
+  // Podologie zeigt, dashboard.js) muss trotzdem gesucht werden — sonst
+  // bricht schon DAVOR ab, was `gewuenschteRxId` eigentlich auflösen soll.
+  const liste = (!error && listeRoh) ? listeRoh : [];
 
   let gewaehlt = (gewuenschteRxId && liste.find(r => r.id === gewuenschteRxId))
     || liste.find(r => r.id === verknuepfteRx?.id)
     || verknuepfteRx
-    || liste[0];
+    || liste[0]
+    || null;
 
-  // `liste` schliesst Podologie aus (s.o.) — eine ausdrücklich angeforderte
-  // Verordnung (Klick auf eine Karte in "Aktive Verordnungen", die auch
-  // Podologie zeigt, dashboard.js) kann darin also NIE stehen. Ohne diesen
-  // Nachschlag fiel der Klick lautlos auf `verknuepfteRx` zurück — das Panel
-  // zeigte für jede angeklickte Karte immer dieselbe, am Termin hängende
-  // Verordnung (19.09.2026, Bug-Fix; live an einem Patienten mit zwei aktiven
-  // Podologie-Verordnungen nachvollzogen: derselbe `id=eq.…`-Request nach jedem
-  // Kartenklick). `liste` selbst bleibt Podologie-frei — die Blätterpfeile
-  // (`rendereVerordnungsNavigation`) sind bewusst nur für den Physio-Topf da.
+  // `liste` kann eine angeforderte Podologie-Verordnung nie enthalten (s.o.).
+  // Ohne diesen Nachschlag fiel der Kartenklick lautlos auf `verknuepfteRx`
+  // zurück — das Panel zeigte für jede angeklickte Karte immer dieselbe, am
+  // Termin hängende Verordnung (19.09.2026, Bug-Fix; live an einem Patienten
+  // mit zwei aktiven Podologie-Verordnungen nachvollzogen: derselbe
+  // `id=eq.…`-Request nach jedem Kartenklick). `liste` selbst bleibt
+  // Podologie-frei — die Blätterpfeile (`rendereVerordnungsNavigation`) sind
+  // bewusst nur für den Physio-Topf da.
   if (gewuenschteRxId && gewaehlt?.id !== gewuenschteRxId) {
     const { data: direkt } = await supabase.from('prescriptions')
       .select(RX_FELDER).eq('id', gewuenschteRxId).eq('patient_id', patientId).maybeSingle();
     if (direkt) gewaehlt = direkt;
   }
+
+  if (!gewaehlt) return leer;
 
   // Gezählt wird, was erbracht IST — nicht, die wievielte Sitzung der
   // angeklickte Termin wäre. Beta-1 will im Panel „2 von 6" lesen und die Zahl
