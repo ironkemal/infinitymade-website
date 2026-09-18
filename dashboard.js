@@ -69,7 +69,7 @@ import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260917';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260908';
+import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20260918';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260905c';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
@@ -295,6 +295,9 @@ const T = {
     kass_befreit: 'Zuzahlung befreit', kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung bezahlt', kass_btn: 'Kassieren',
     kass_beleg: 'Beleg', kass_rechnung: 'Rechnung öffnen', stat_bezahlt: 'Bezahlt', stat_offen: 'Offen', kass_undo: 'stornieren',
     kass_ok: 'Zuzahlung kassiert ✓', kass_storno_ok: 'Zuzahlung storniert ✓',
+    sitz_leer_kein_termin: 'Keine Verordnung zugeordnet.', sitz_leer_keine_vo: 'Für diesen Patienten ist keine aktive Verordnung hinterlegt.',
+    sitz_leer_fehler: 'Verordnung konnte nicht geladen werden.', sitz_leer_keine_sitzungen: 'Noch keine Sitzungen erfasst.',
+    sitz_leer_podo: 'Podologie führt kein Einheiten-Hauptbuch — die erbrachten Leistungen stehen in den Behandlungen.',
     kass_err_betrag: 'Kein Zuzahlungsbetrag hinterlegt — bitte zuerst am Rezept eintragen.',
     kass_err_bereits: 'Diese Zuzahlung wurde bereits kassiert.',
     kass_err_beleg: 'Beleg im Zahlungsjournal fehlgeschlagen, nichts wurde gebucht:',
@@ -475,6 +478,9 @@ const T = {
     kass_befreit: 'Exempt from co-payment', kass_offen: 'Co-payment open', kass_bezahlt: 'Co-payment paid', kass_btn: 'Collect',
     kass_beleg: 'Receipt', kass_rechnung: 'Open invoice', stat_bezahlt: 'Paid', stat_offen: 'Outstanding', kass_undo: 'reverse',
     kass_ok: 'Co-payment collected ✓', kass_storno_ok: 'Co-payment reversed ✓',
+    sitz_leer_kein_termin: 'No prescription linked.', sitz_leer_keine_vo: 'No active prescription on file for this patient.',
+    sitz_leer_fehler: 'Prescription could not be loaded.', sitz_leer_keine_sitzungen: 'No sessions recorded yet.',
+    sitz_leer_podo: 'Podiatry does not keep a unit ledger — the services performed are listed under treatments.',
     kass_err_betrag: 'No co-payment amount set — please enter it on the prescription first.',
     kass_err_bereits: 'This co-payment has already been collected.',
     kass_err_beleg: 'Payment journal entry failed, nothing was booked:',
@@ -655,6 +661,9 @@ const T = {
     kass_befreit: 'Katkı payından muaf', kass_offen: 'Katkı payı açık', kass_bezahlt: 'Katkı payı ödendi', kass_btn: 'Tahsil et',
     kass_beleg: 'Fiş', kass_rechnung: 'Faturayı aç', stat_bezahlt: 'Ödenen', stat_offen: 'Açık', kass_undo: 'iptal et',
     kass_ok: 'Katkı payı tahsil edildi ✓', kass_storno_ok: 'Katkı payı iptal edildi ✓',
+    sitz_leer_kein_termin: 'Bağlı reçete yok.', sitz_leer_keine_vo: 'Bu hasta için kayıtlı aktif reçete yok.',
+    sitz_leer_fehler: 'Reçete yüklenemedi.', sitz_leer_keine_sitzungen: 'Henüz seans kaydı yok.',
+    sitz_leer_podo: 'Podoloji seans defteri tutmaz — verilen hizmetler Behandlungen altında.',
     kass_err_betrag: 'Katkı payı tutarı girilmemiş — önce reçetede belirtin.',
     kass_err_bereits: 'Bu katkı payı zaten tahsil edilmiş.',
     kass_err_beleg: 'Ödeme defteri kaydı başarısız, hiçbir şey kaydedilmedi:',
@@ -3221,13 +3230,24 @@ function updateNoShowButton(startTime) {
   if (hint) hint.hidden = true;
 }
 
+/**
+ * Der Seitenbereich rechts — EIN Aufbau fuer zwei Wege (Ops #308).
+ *
+ * `booking` darf null sein: dann kommt der Patient aus `opts.lead` (Suche im
+ * Kopf des Panels, Patient ohne kommenden Termin). Gezeichnet werden in beiden
+ * Faellen dieselben Bloecke in derselben Reihenfolge; nur die Handlungen, die
+ * einen konkreten Termin voraussetzen, bleiben zu. Welche das sind, steht in
+ * module/termin-panel.js (TERMIN_AKTIONEN) — nicht mehr hier.
+ */
 async function openBookingActionModal(booking, opts = {}) {
-  if (!booking || booking.status === 'cancelled') { closeBkActionPanel(); return; }
+  const leadVorgabe = opts.lead || null;
+  if (booking && booking.status === 'cancelled') { closeBkActionPanel(); return; }
+  if (!booking && !leadVorgabe) { closeBkActionPanel(); return; }
   // Der Seitenbereich geht auch aus dem Tagesplan auf, nicht nur aus dem
   // Kalender — die Patientensuche im Kopf muss dann trotzdem verdrahtet sein.
   if (!window._calRpInited) { window._calRpInited = true; initCalRightPanel(); }
-  zeigeTerminModus();   // nimmt zurueck, was der Patientenmodus geschlossen hat
-  bkActionBookingCache = booking;
+  setzeAktionsSichtbarkeit(!!booking);
+  bkActionBookingCache = booking || null;
   // Der Kassenstatus steht am Patienten, und der wird erst weiter unten geladen.
   // Die Geldzeile zeichnet deshalb zweimal: sofort (noch ohne Zahler) und
   // erneut, sobald `lead` da ist. Ohne das zweite Zeichnen fragt der €-Knopf
@@ -3235,7 +3255,7 @@ async function openBookingActionModal(booking, opts = {}) {
   let bkGeldNeuZeichnen = null;
   verdrahteFussbefundKnopf(fussbefundCtx(), booking);
   setzeTerminAuswahlLabel(booking);
-  if (booking.status === 'confirmed') {
+  if (booking && booking.status === 'confirmed') {
     const endTime = new Date(booking.end_time || (new Date(booking.start_time).getTime() + 30*60000));
     if (endTime < new Date()) {
       supabase.from('bookings').update({ status: 'completed' }).eq('id', booking.id).then(({ error }) => {
@@ -3248,35 +3268,25 @@ async function openBookingActionModal(booking, opts = {}) {
   }
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
-  // "Frank Becker · 1977-04-05" formatını ayır
-  const rawName = booking.customer_name || '';
+  // "Frank Becker · 1977-04-05" formatını ayır — ohne Termin kommt der Name
+  // aus dem Patientenstamm.
+  const rawName = booking?.customer_name || '';
   const dotMatch = rawName.match(/^(.+?)\s*·\s*(\d{4}-\d{2}-\d{2})$/);
-  const patientName = dotMatch ? dotMatch[1].trim() : (rawName || booking.services?.title || 'Termin');
-  const parsedDob = dotMatch ? dotMatch[2] : null;
-  const patientPhone = booking.customer_phone || '';
+  const patientName = dotMatch ? dotMatch[1].trim()
+    : (rawName || booking?.services?.title
+       || [leadVorgabe?.first_name, leadVorgabe?.last_name].filter(Boolean).join(' ').trim()
+       || leadVorgabe?.title || 'Termin');
+  const parsedDob = dotMatch ? dotMatch[2] : (leadVorgabe?.geburtsdatum || null);
+  const patientPhone = booking?.customer_phone || leadVorgabe?.phone || '';
   setzeAktionsKopf({ patientName, dob: parsedDob });
 
   const ownerId = getOwnerId();
 
-  // --- Detay kartı doldur ---
-  const svc = booking.services?.title || booking.title || '';
-  const empName = booking.employee_name || booking.employee?.name || '';
-  const start = new Date(booking.start_time);
-  const end = new Date(booking.end_time || (start.getTime() + 30*60000));
-  const durationMin = Math.round((end - start) / 60000);
-  const dateStr = start.toLocaleDateString('de-DE', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
-  const timeStr = start.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) + ' – ' + end.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+  // --- Detay kartı (Inhalt: module/termin-panel.js) ---
+  zeichneTerminkarte({ booking, patientName });
 
-  const detailCard = document.getElementById('bkDetailCard');
-  if (detailCard) {
-    document.getElementById('bkDetailService').textContent = svc;
-    document.getElementById('bkDetailDateTime').textContent = `${dateStr}, ${timeStr}`;
-    document.getElementById('bkDetailTherapist').textContent = empName ? `Therapeut: ${empName}` : '';
-    document.getElementById('bkDetailDuration').textContent = `${durationMin} Min.`;
-  }
-
-  // --- Termin notları ---
-  const bkNotesCd = document.getElementById('bkBookingNotesCard');
+  // --- Termin notları --- (gehoert zum Termin; ohne Termin ist die Karte zu)
+  const bkNotesCd = booking ? document.getElementById('bkBookingNotesCard') : null;
   if (bkNotesCd) {
     const notesText = booking.notes || '';
     document.getElementById('bkBookingNotesText').textContent = notesText;
@@ -3286,13 +3296,20 @@ async function openBookingActionModal(booking, opts = {}) {
   // --- Heilmittel / Rezept kalan seans (prescription_sessions join'den) ---
   const rxCard = document.getElementById('bkRxInfoCard');
   if (rxCard) rxCard.hidden = true;
-  const ps = Array.isArray(booking.prescription_sessions) ? booking.prescription_sessions[0] : null;
+  const ps = (booking && Array.isArray(booking.prescription_sessions)) ? booking.prescription_sessions[0] : null;
   // Ein Patient kann mehrere Verordnungen gleichzeitig laufen haben. Bis
   // hierher zeigte das Panel stumm die des angeklickten Termins; die anderen
   // waren von hier aus unsichtbar. Jetzt blättert man mit ‹ › durch: der Pfeil
   // ruft diese Funktion mit `opts.rxId` erneut auf, das Panel baut sich neu auf.
+  // Ohne Termin gibt es keine verknuepfte Verordnung — dann waehlt
+  // standardVerordnung() die neueste des Patienten. Sonst blieben Rezeptinfo
+  // und Einheitenliste im Patientenmodus leer (Ops #308).
+  const wunschRx = opts.rxId
+    || (booking ? rueckfahrkarteRxId(booking, ps) : await standardVerordnung(supabase, leadVorgabe.id))
+    || null;
   const rxWahl = await waehleVerordnungFuerPanel({
-    supabase, booking, verknuepfteSession: ps, gewuenschteRxId: opts.rxId || rueckfahrkarteRxId(booking, ps) || null,
+    supabase, booking: booking || { lead_id: leadVorgabe.id },
+    verknuepfteSession: ps, gewuenschteRxId: wunschRx,
   });
   const rx = rxWahl.rx;
   if (rxCard && rx && rx.anzahl_einheiten) {
@@ -3312,7 +3329,7 @@ async function openBookingActionModal(booking, opts = {}) {
     rendereVerordnungsNavigation({
       liste: rxWahl.liste,
       aktuelleRxId: rx.id,
-      aufWechsel: (neueRxId) => openBookingActionModal(booking, { rxId: neueRxId }),
+      aufWechsel: (neueRxId) => openBookingActionModal(booking, { ...opts, rxId: neueRxId }),
       aufUebernehmen: () => uebernimmVerordnungAlsVorlage(rx),
     });
 
@@ -3366,7 +3383,10 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     }
 
     const mandantEl = document.getElementById('bkRxMandant');
-    if (mandantEl) mandantEl.textContent = empName || '—';
+    if (mandantEl) {
+      const empName = booking?.employee_name || booking?.employee?.name || '';
+      mandantEl.textContent = empName || '—';
+    }
 
 
     const statusBadge = document.getElementById('bkRxStatusBadge');
@@ -3466,34 +3486,35 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
   // dem Knopf "Verlauf" in der Patientenkarte und oeffnet die Patientenakte.
   // Verdrahtet wird der Knopf weiter unten, sobald der Lead bekannt ist.
 
-  const isOwn = booking.user_id === currentSession.user.id;
-  document.getElementById('bkActionNoShowBtn').hidden = !isOwn;
-  document.getElementById('bkActionNoShowHint').hidden = !isOwn;
+  // Alles ab hier bis zur Patientenkarte setzt einen konkreten Termin voraus.
+  const isOwn = !!booking && booking.user_id === currentSession.user.id;
+  if (booking) {
+    document.getElementById('bkActionNoShowBtn').hidden = !isOwn;
+    document.getElementById('bkActionNoShowHint').hidden = !isOwn;
 
-  const ausfallBtn = document.getElementById('bkActionAusfallBtn');
-  if (ausfallBtn) {
-    ausfallBtn.hidden = !ausfallBizForBooking(booking);
+    const ausfallBtn = document.getElementById('bkActionAusfallBtn');
+    if (ausfallBtn) ausfallBtn.hidden = !ausfallBizForBooking(booking);
+
+    const korrekturBtn = document.getElementById('bkActionKorrekturBtn');
+    if (korrekturBtn) korrekturBtn.hidden = !(isOwn && booking.status === 'no_show');
+
+    // Fahrtenbuch: Hausbesuch state machine UI
+    await renderBkActionFahrtState(booking, isOwn);
+    if (isOwn) updateNoShowButton(booking.start_time);
   }
-
-  const korrekturBtn = document.getElementById('bkActionKorrekturBtn');
-  if (korrekturBtn) korrekturBtn.hidden = !(isOwn && booking.status === 'no_show');
 
   // Load prescription sessions panel (Unvergebene Heilmittel)
   // Die gewaehlte Verordnung steuert auch den Block "Aktive Verordnung" unten:
   // blaettert man oben weiter, wechseln unten die unvergebenen Einheiten mit.
-  loadRxSessionsPanel(booking, rx?.id || null).catch(e => console.error('[loadRxSessionsPanel]', e));
-
-  // Fahrtenbuch: Hausbesuch state machine UI
-  await renderBkActionFahrtState(booking, isOwn);
-
-  if (isOwn) {
-    updateNoShowButton(booking.start_time);
-  }
+  // Ohne Termin bekommt der Block einen Ersatzkontext: er braucht nur Patient
+  // und Name, um die Einheiten zu zeichnen und ziehbar zu machen.
+  loadRxSessionsPanel(booking || { lead_id: leadVorgabe.id, customer_name: patientName }, rx?.id || null)
+    .catch(e => console.error('[loadRxSessionsPanel]', e));
 
   // --- Hasta profil kartı + aktif reçeteler ---
-  let leadId = booking.lead_id || null;
+  let leadId = booking?.lead_id || leadVorgabe?.id || null;
   // Fallback: booking may have customer_phone but no lead_id (older bookings)
-  if (!leadId && booking.customer_phone) {
+  if (!leadId && booking?.customer_phone) {
     const { data: fl } = await supabase.from('leads').select('id').eq('owner_id', ownerId).eq('phone', booking.customer_phone).maybeSingle();
     if (fl) leadId = fl.id;
   }
@@ -3516,10 +3537,14 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
   bkActionLeadCache = null;
 
   // Termin ohne Patientenakte (Altbestand, Fremdbuchung): die Karte zeigt sich
-  // trotzdem — aber ohne Knöpfe, denn es gibt keine Akte zu öffnen.
-  if (!leadId && patientCard) {
-    setzePatientenKarte({ lead: null, booking, oeffneAkte: null });
-    patientCard.hidden = false;
+  // trotzdem — aber ohne Knöpfe, denn es gibt keine Akte zu öffnen. Verlauf und
+  // Verordnungen gehoeren zur Akte; ohne sie muessen sie WEG, sonst zeigt das
+  // Panel still die Angaben des zuvor geoeffneten Patienten.
+  if (!leadId) {
+    if (patientCard) { setzePatientenKarte({ lead: null, booking, oeffneAkte: null }); patientCard.hidden = false; }
+    zeichneVerlauf({ sb: supabase, ownerId, leadId: null });
+    const leerWrap = document.getElementById('bkVeroPanelWrap');
+    if (leerWrap) leerWrap.hidden = true;
   }
 
   if (leadId) {
@@ -3562,105 +3587,47 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
       // „Zahler ?" gezeigt und richtet sich nun nach dem Patienten.
       bkGeldNeuZeichnen?.(lead);
 
-      // Zuzahlungsbefreiung badge + management
-      const zbBadge = document.getElementById('bkZuzahlungBadge');
-      if (zbBadge) {
-        if (zuzahlBefreiung) {
-          const bis = zuzahlBefreiung.befreit_bis ? new Date(zuzahlBefreiung.befreit_bis).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}) : '';
-          zbBadge.innerHTML = `${bis ? `Zuzahlungsbefreit bis ${bis}` : 'Zuzahlungsbefreit'} <span style="cursor:pointer;color:var(--accent,#b1891b);font-size:11px;margin-left:6px;text-decoration:underline;" data-zb-edit="1">ändern</span>`;
-          zbBadge.hidden = false;
-        } else {
-          zbBadge.innerHTML = `<span style="cursor:pointer;color:var(--text-muted);font-size:12px;text-decoration:underline;" data-zb-edit="1">+ Befreiungsnachweis eintragen</span>`;
-          zbBadge.hidden = false;
-        }
-        zbBadge.querySelector('[data-zb-edit]')?.addEventListener('click', () => {
-          // Dasselbe Formular wie in der Patientenakte — siehe
-          // module/zuzahlung-befreiung.js. Vorher waren es zwei verschiedene.
-          oeffneBefreiungsFormular({
-            supabase,
-            patientId: leadId,
-            ownerId: getOwnerId(),
-            patientName: `${lead.first_name || ''} ${lead.last_name || ''}`.trim(),
-            existing: zuzahlBefreiung || null,
-            toast: showToast,
-            confirm: showConfirmModal,
-          }).then(ok => {
-            // Nach dem Speichern muss das Abzeichen die neue Wahrheit zeigen,
-            // sonst steht dort weiter „+ Befreiungsnachweis eintragen".
-            if (ok && bkActionBookingCache) openBookingActionModal(bkActionBookingCache);
-          });
-        });
-      }
-
-      // Insurance type badge
-      const insBadge = document.getElementById('bkInsuranceBadge');
-      if (insBadge) {
-        if (lead.insurance_type === 'gkv') {
-          insBadge.textContent = 'GKV';
-          insBadge.style.cssText = 'font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);';
-          insBadge.hidden = false;
-        } else if (lead.insurance_type === 'privat') {
-          insBadge.textContent = 'Privat';
-          insBadge.style.cssText = 'font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:rgba(177,137,27,0.15);color:#b1891b;border:1px solid rgba(177,137,27,0.3);';
-          insBadge.hidden = false;
-        } else {
-          insBadge.hidden = true;
-        }
-      }
+      // Zuzahlungsbefreiung + Versicherungsart (Zeichnung: module/termin-panel.js)
+      zeichnePatientAbzeichen({
+        lead, befreiung: zuzahlBefreiung,
+        // Dasselbe Formular wie in der Patientenakte — siehe
+        // module/zuzahlung-befreiung.js. Vorher waren es zwei verschiedene.
+        aufBefreiung: () => oeffneBefreiungsFormular({
+          supabase, patientId: leadId, ownerId: getOwnerId(),
+          patientName: `${lead.first_name || ''} ${lead.last_name || ''}`.trim(),
+          existing: zuzahlBefreiung || null, toast: showToast, confirm: showConfirmModal,
+        }).then(ok => {
+          // Nach dem Speichern muss das Abzeichen die neue Wahrheit zeigen,
+          // sonst steht dort weiter „+ Befreiungsnachweis eintragen".
+          if (ok) openBookingActionModal(bkActionBookingCache, opts);
+        }),
+      });
 
       patientCard.hidden = false;
     }
 
-    // --- Anamnese özeti ---
-    const anamCard = document.getElementById('bkAnamneseCard');
-    const anamContent = document.getElementById('bkAnamneseContent');
-    const anamDatum = document.getElementById('bkAnamneseDatum');
-    if (anamCard && anamContent) {
-      if (anamneseData) {
-        const aRow = (label, val) => val ? `<div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div><div style="color:var(--text-main);font-weight:500;">${escapeHtml(String(val))}</div></div>` : '';
-        const skalaBadge = anamneseData.schmerz_skala != null
-          ? `<span style="background:${anamneseData.schmerz_skala>=7?'rgba(239,68,68,0.15)':anamneseData.schmerz_skala>=4?'rgba(245,158,11,0.15)':'rgba(34,197,94,0.15)'};color:${anamneseData.schmerz_skala>=7?'#f87171':anamneseData.schmerz_skala>=4?'#fbbf24':'#4ade80'};border-radius:4px;padding:1px 6px;font-size:11px;font-weight:700;">${anamneseData.schmerz_skala}/10</span>` : '';
-        const rows = [
-          anamneseData.hauptbeschwerde ? `<div style="grid-column:1/-1;"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">Hauptbeschwerde</div><div style="color:var(--text-main);font-weight:500;">${escapeHtml(anamneseData.hauptbeschwerde)}</div></div>` : '',
-          anamneseData.diagnose ? `<div style="grid-column:1/-1;"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">Diagnose</div><div style="color:var(--text-main);font-weight:500;">${escapeHtml(anamneseData.diagnose)}</div></div>` : '',
-          anamneseData.schmerz_skala != null ? `<div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">Schmerzskala</div><div>${skalaBadge}${anamneseData.schmerz_art ? ' · ' + escapeHtml(anamneseData.schmerz_art) : ''}</div></div>` : '',
-          aRow('Arzt', anamneseData.arzt_name),
-          aRow('Medikamente', anamneseData.medikamente),
-          aRow('Allergien', anamneseData.allergien),
-          aRow('Vorerkrankungen', anamneseData.vorerkrankungen),
-          anamneseData.besondere_wuensche ? `<div style="grid-column:1/-1;">${aRow('Besondere Wünsche', anamneseData.besondere_wuensche)}</div>` : '',
-          anamneseData.notizen ? `<div style="grid-column:1/-1;">${aRow('Notizen', anamneseData.notizen)}</div>` : '',
-        ].filter(Boolean);
-        anamContent.innerHTML = rows.join('');
-        if (anamDatum && anamneseData.updated_at) {
-          anamDatum.textContent = new Date(anamneseData.updated_at).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
-        }
-        anamCard.hidden = false;
-      } else {
-        anamCard.hidden = true;
-      }
-    }
-
-    // --- Therapeuten-/Arztnotizen --- (Renderer: module/termin-panel-patient.js,
-    // damit Termin- und Patientenmodus dieselben drei Bloecke zeichnen)
+    // --- Anamnese, Notizen, Verlauf --- (Renderer: module/termin-panel.js,
+    // damit Termin- und Patientenmodus dieselben Bloecke zeichnen)
+    zeichneAnamnese(document.getElementById('bkAnamneseCard'),
+                    document.getElementById('bkAnamneseContent'),
+                    document.getElementById('bkAnamneseDatum'), anamneseData);
     rendereNotizen(document.getElementById('bkPatNotesCard'),
                    document.getElementById('bkPatNotesContent'), patNotesData);
+    // Ohne await: der Verlauf soll den Rest des Panels nicht aufhalten.
+    zeichneVerlauf({ sb: supabase, ownerId, leadId, aufSprung: pdSpringeZu });
 
-    // Aktive Verordnungen
-    const rezWrap = document.getElementById('bkRezepteWrap');
-    const rezList = document.getElementById('bkRezepteList');
-    const veroSection = document.getElementById('bkVerordnungSection');
-    const veroCards  = document.getElementById('bkVeroCards');
-
-    // bkRezepteWrap (eski read-only bölge) gizle — artık bkVeroCards kullanıyoruz
-    if (rezWrap) rezWrap.hidden = true;
-
-    if (veroSection && veroCards) {
+    // Aktive Verordnungen — in den Seitenbereich, nicht in #bookingModal.
+    const veroWrap  = document.getElementById('bkVeroPanelWrap');
+    const veroCards = document.getElementById('bkVeroPanelCards');
+    if (veroWrap && veroCards) {
       rendereVeroKarten({
-        container: veroCards, rxs: aktiveRxs, escapeHtml, onSelect: selectVerordnung,
+        container: veroCards, rxs: aktiveRxs, escapeHtml,
+        // Hier waehlt eine Karte, WELCHE Verordnung das Panel zeigt — sie fuellt
+        // nicht die Terminmaske (das tut selectVerordnung in #bookingModal).
+        onSelect: (gewaehlt) => openBookingActionModal(booking, { ...opts, rxId: gewaehlt.id }),
         onAnlegen: () => oeffneAnlegenWahl(leadId),
       });
-      veroSection.hidden = false;
+      veroWrap.hidden = false;
     }
   }
 
@@ -3670,7 +3637,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     noShowWarningEl.hidden = true;
     noShowWarningEl.textContent = '';
   }
-  if (leadId) {
+  if (leadId && booking) {
     const { data: prevNoShows } = await supabase
       .from('bookings')
       .select('id,start_time')
@@ -3716,23 +3683,12 @@ function initCalRightPanel() {
       return data || [];
     },
     oeffneTermin: (b) => openBookingActionModal(b),
-    // Patient ohne kommenden Termin: es gibt nichts anzuzeigen, aber sehr wohl
-    // etwas zu tun — genau dafür wurde die Suche gebaut. Direkt in die
-    // Terminanlage mit vorausgewähltem Patienten; die Verordnungskarten laden
-    // sich dort mit, also lässt sich die Sitzung sofort zuordnen.
-    // Ohne kommenden Termin sprang hier die Maske „Neuer Termin" auf. Das
-    // Panel bleibt jetzt offen und zeigt den Patienten — Ablauf in
-    // module/termin-panel-patient.js (Kemal, 31.08.2026).
-    onOhneTermin: async (lead) => {
-      bkActionBookingCache = null;
-      await zeigePatientOhneTermin({
-        sb: supabase, ownerId: getOwnerId(), lead,
-        setzeKopf: setzeAktionsKopf, setzeKarte: setzePatientenKarte,
-        setzeAuswahlLabel: setzeTerminAuswahlLabel,
-        oeffneAkte: () => openPatientDetailModal(lead),
-        aufSprung: pdSpringeZu,
-      });
-    },
+    // Patient ohne kommenden Termin: derselbe Panel-Aufbau, nur ohne Termin.
+    // Bis 18.09.2026 zeichnete hier ein zweiter, eigener Ablauf
+    // (zeigePatientOhneTermin) — er versteckte vierzehn Block-Ids von Hand und
+    // war der Grund, warum das Panel bei jedem Patienten anders aussah
+    // (Ops #308). Jetzt ein Renderer, ein Unterschied: `booking` ist null.
+    onOhneTermin: (lead) => openBookingActionModal(null, { lead }),
     toast: showToast,
   });
 }
@@ -6212,9 +6168,44 @@ function verteileOffeneEinheiten({ rx, offen, booking }) {
 }
 
 /**
+ * Sprung in die Behandlungsdokumentation der Podologie.
+ *
+ * Zwei Einstiege, ein Weg: der Knopf "Leistungen des Tages" im Einheitenblock
+ * und der Hinweis, der im selben Block steht, wenn die Verordnung podologisch
+ * ist (dann gibt es dort nichts zu vergeben — Podologie fuehrt kein
+ * Einheiten-Hauptbuch). Bewusst KEINE zweite Maske: dort haengen die Pruefungen,
+ * die Geld kosten, wenn man sie umgeht (78040 nicht neben 78030, 78100 einmal
+ * je Kalenderjahr, Behandlungsbeginn innerhalb der Frist).
+ */
+async function oeffnePodoBehandlungen(leadId) {
+  if (!leadId) { showToast('Kein Patient zu dieser Verordnung gefunden.', 'warning'); return; }
+  // aktiv→NULL, abrechenbar→bereit (verordnung-topf.js). `.or()` statt
+  // `.in()`: `aktiv` ist in der Spalte NULL, `.in()` trifft NULL nicht.
+  const { data: vords } = await supabase.from('prescriptions')
+    .select('id, abrechnung_status, ausstellungsdatum')
+    .eq('owner_id', getOwnerId()).eq('patient_id', leadId)
+    .eq('therapie_bereich', 'podo')
+    .or('abrechnung_status.is.null,abrechnung_status.eq.bereit')
+    .order('ausstellungsdatum', { ascending: false }).limit(1);
+  const vord = vords?.[0];
+  if (!vord) {
+    showToast('Für diesen Patienten ist keine laufende Podologie-Verordnung angelegt.', 'warning');
+    return;
+  }
+  closeBkActionPanel();
+  setPodVorwahl(vord.id);
+  await switchPanel('podologie-billing');
+}
+
+/**
  * Der Block "Aktive Verordnung" ganz unten im Seitenbereich.
  *
- * @param {object} booking
+ * Er verschwand bis 18.09.2026 aus fuenf Stellen wortlos (`panel.hidden = true`
+ * plus `return`). Jetzt bleibt der Block stehen und nennt seinen Grund — Texte
+ * und Zeichnung in module/termin-panel.js (Ops #308).
+ *
+ * @param {object} booking  darf ein Ersatzkontext ohne `id` sein (Patient ohne
+ *   Termin): dann traegt er nur `lead_id` und `customer_name`.
  * @param {string|null} rxId  Welche Verordnung? Wird oben mit den Blaetter-
  *   Pfeilen gewaehlt. Ohne Angabe die zum Termin verknuepfte — sonst zeigte
  *   der Block eine andere Verordnung als die Rezeptinfo darueber.
@@ -6222,9 +6213,8 @@ function verteileOffeneEinheiten({ rx, offen, booking }) {
 async function loadRxSessionsPanel(booking, rxId = null) {
   const panel = document.getElementById('bkRxSessionsPanel');
   if (!panel) return;
-  panel.hidden = true;
 
-  if (!booking?.id && !rxId) return;
+  if (!booking?.id && !rxId) return zeichneSitzungenLeer('keinTermin', { t });
 
   let prescriptionId = rxId;
   if (!prescriptionId) {
@@ -6235,18 +6225,23 @@ async function loadRxSessionsPanel(booking, rxId = null) {
       .maybeSingle();
     prescriptionId = linkedSession?.prescription_id || null;
   }
-  if (!prescriptionId) return;
+  if (!prescriptionId) return zeichneSitzungenLeer('keineVo', { t });
   const linkedSession = { prescription_id: prescriptionId };
 
   const { data: rx } = await supabase.from('prescriptions')
     .select('id,heilmittel,heilmittel_items,heilmittel_position,anzahl_einheiten,status,rezept_typ,frequenz,therapie_bereich')
     .eq('id', prescriptionId)
     .maybeSingle();
-  if (!rx) return;
+  if (!rx) return zeichneSitzungenLeer('ladefehler', { t });
   // Zweite Bremse (die erste sitzt an der Quelle, waehleVerordnungFuerPanel):
   // dieses Panel legt gleich ein Sitzungs-Hauptbuch an, das die Podologie
   // bewusst nicht fuehrt (module/verordnung-topf.js, fuehrtSitzungsbuch).
-  if (rx.therapie_bereich === 'podo') return;
+  // Der Hinweis nennt jetzt den Weg dorthin, wo die Podologie wirklich zaehlt.
+  if (rx.therapie_bereich === 'podo') {
+    return zeichneSitzungenLeer('podologie', {
+      t, aufBehandlungen: () => oeffnePodoBehandlungen(booking?.lead_id),
+    });
+  }
 
   // Fehlende Sitzungszeilen ergänzen, BEVOR gelesen wird — sonst zeigt der
   // Seitenbereich weniger Einheiten an, als verordnet sind, und die fehlenden
@@ -6267,7 +6262,8 @@ async function loadRxSessionsPanel(booking, rxId = null) {
     .eq('prescription_id', linkedSession.prescription_id)
     .order('session_number');
 
-  if (!allSessions) return;
+  if (!allSessions) return zeichneSitzungenLeer('keineSitzungen', { t });
+  zeigeSitzungenArbeit();   // ab hier die echte Liste
 
   const heilmittelItems = rx.heilmittel_items || [];
   const getHmName = (idx) => heilmittelItems[idx]?.name || heilmittelItems[idx]?.kuerzel || rx.heilmittel || '—';
@@ -6405,24 +6401,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   if (leistBtn) {
     const istPodo = getSector() === 'podologie';
     leistBtn.hidden = !istPodo || !booking.lead_id;
-    leistBtn.onclick = !istPodo ? null : async () => {
-      // aktiv→NULL, abrechenbar→bereit (verordnung-topf.js). `.or()` statt
-      // `.in()`: `aktiv` ist in der Spalte NULL, `.in()` trifft NULL nicht.
-      const { data: vords } = await supabase.from('prescriptions')
-        .select('id, abrechnung_status, ausstellungsdatum')
-        .eq('owner_id', getOwnerId()).eq('patient_id', booking.lead_id)
-        .eq('therapie_bereich', 'podo')
-        .or('abrechnung_status.is.null,abrechnung_status.eq.bereit')
-        .order('ausstellungsdatum', { ascending: false }).limit(1);
-      const vord = vords?.[0];
-      if (!vord) {
-        showToast('Für diesen Patienten ist keine laufende Podologie-Verordnung angelegt.', 'warning');
-        return;
-      }
-      closeBkActionPanel();
-      setPodVorwahl(vord.id);
-      await switchPanel('podologie-billing');
-    };
+    leistBtn.onclick = !istPodo ? null : () => oeffnePodoBehandlungen(booking.lead_id);
   }
 
   panel.hidden = false;
