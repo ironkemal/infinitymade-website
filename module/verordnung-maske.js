@@ -376,7 +376,6 @@ export function fuelleMuster13(rx, opt = {}) {
   // Nur beim Bearbeiten: was zu DIESEM Papier gehört.
   setz('rzPatientId', rx.patient_id || '');
   setz('rzAusstDate', rx.ausstellungsdatum || '');
-  setz('rzZuzahlung', rx.zuzahlung_eur ?? '');
   setz('rzBerichtStatus', rx.bericht_status || 'offen');
   // Podologische Zusatzangaben — die Felder legt module/verordnung-podo.js
   // an, sobald der Bereich auf Podologie steht. Steht er nicht darauf,
@@ -542,7 +541,6 @@ export function nutzlastAusMaske(v) {
     is_blanko: an('rzBlanko'),
     is_lhb_bvb: an('rzLhbBvb'),
     zuzahlung_befreit: an('rzZuzahlungBefreit'),
-    zuzahlung_eur: parseFloat(el('rzZuzahlung')?.value) || null,
     bericht_angefordert: an('rzBerichtAngefordert'),
     bericht_status: el('rzBerichtStatus')?.value || 'offen',
     diagnose_freitext: txt('rzDiagnoseText') || null,

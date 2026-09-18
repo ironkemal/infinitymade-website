@@ -714,6 +714,7 @@ ajana sor** — hepsi kendi alanının belgelerini zaten biliyor.
 | `muhalif` | Yapıcı muhalif — fikir nerede kırılır, gizli maliyet ne. Alternatifsiz itiraz yasak | ❌ |
 | `todo-maker` | Ham girdiyi (toplantı dökümü, transkript, hata raporu) zengin pano kartlarına çevirir — hangi ekran, hangi dosya, kim istedi, bitti sayılır ölçütü, gerekirse kopyala-yapıştır Fix-Prompt | ❌ (JSON üretir) |
 | `deger-mi` | Efor/değer, fırsat maliyeti, daha küçük sürüm yeterli mi | ❌ |
+| `mentor` | ★ Kurucu danışmanı + şirket hafızası. "Bu kararı neye göre vereceğim", "yol haritam doğru mu", "bu tavsiye bize uyar mı". İlk-kez-kurucu hatalarını önceden işaretler, dış tavsiyeyi kanıt katmanına göre süzer. Sicili `mentor/REGISTER.md` (gitignore'lu) — hedefler, stratejik kararlar, **tahmin defteri**. Konseye ticari/stratejik kararlarda katılır, vetosu yok | ❌ |
 
 **`/konsey`** — karar **öncesi** danışma kurulu. "Şunu şöyle mi yapsam böyle mi" tipi
 sorularda ilgili ajanları paralel toplar, tek uygulanabilir KARAR üretir; `builder` uygular.

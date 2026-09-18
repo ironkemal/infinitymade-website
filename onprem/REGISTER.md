@@ -16,7 +16,7 @@
 
 ---
 
-## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 16.09.2026)
+## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 18.09.2026)
 
 > Bu blok sicilin **kısa yolu**. Amacı, yeni bir oturumun 1000 satır okumadan
 > "neredeyiz, sıradaki ne, nereye basmam" sorusuna cevap bulması. Ayrıntı her
@@ -402,6 +402,15 @@ siliyor. Çözüm bir host betiği (`reset-owner-passwort.sh`) — ⛔ **HTTP uc
   sihirbaz yalnız test eder ve teşhis gösterir. Uygulama açık, sınırları maddede.
   **O-51 ile tek tur**; ayrı yapılırsa test maili „gitti“ der ve spam'e düşer
 - **O-67** (`plan_status` köprü değeri) → **O-33**'ü bekliyor; dilim 1 bunsuz bitirilebilir
+
+**18.09.2026 — konsey: on-prem şema reformu REDDEDİLDİ (O-111, §7O).** Çoklu-kiracı
+deseni (`owner_id`/`business_id`/RLS) **her iki dağıtımda aynen kalır** — tek şema gerçeği,
+tek migration zinciri. ⛔ Kapanmış karar, yeniden açılmaz. İki yanlış öncül de orada
+kayıtlı: **(1)** baseline **donmuş durumda** (10.09.2026; 0001…0025 üzerinde koşuyor,
+`migrate.js` SHA-256 tutuyor) — "baseline'ı değiştirelim" artık **DUR** alır, düzeltme her
+zaman yeni dosyayla; **(2)** `owner_id` ayrıştırılabilir iki eksen değil, kutuda da
+employee↔owner bağını taşıyor. Açık kalan tek iş: 5 ölü tablo + 5 ölü kolonun ayrı
+DROP migration'ı (**Faz 5.1**, bu hafta değil).
 
 **Sicili nasıl okursun:** durum değerleri §9'da sayılı. 🟡 **kısmen** demek "yarısı
 yapıldı, kalanı maddede yazılı" demek — `gelöst` yalnız kalanı da bittiğinde konur.
@@ -3749,6 +3758,40 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
+## 7O — Şema multi-tenancy reformu: konsey kararı (18.09.2026)
+
+### O-111 — On-prem'de `owner_id`/`business_id`/RLS deseni **sadeleştirilmez** — tek şema gerçeği ⚪ **unkritisch**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | "Kutu tek praxis'e hizmet ediyor, çoklu-kiracı sütunları on-prem'de fazlalık; baseline donmadan sadeleştirelim" önerisi konseye geldi (18.09.2026). Karar **A**: desen her iki dağıtımda da **aynen kalır**, şema tek gerçek olarak sürer. Bu madde kararı ve **niye tekrar açılmayacağını** kaydeder |
+| **Nerede** | `db/SCHEMA.sql` — 51 `owner_id`, 40 `business_id`, 18 `user_id` kolonu · `db/SCHEMA-RLS.sql` — 86 `auth.uid()` policy · `owner_id`'yi okuyan 66 dosya (`module/` + `api-backend/`) · 42 `bizScope` atfı · zincir: `api-backend/db/migrations/0000_baseline.sql` (12.570 satır) + `0001`…`0025` · tutanak: `konsey/tutanak/2026-09-18-onprem-sema-multi-tenant-reform.md` |
+| **Tip** | D (şema değişikliği) — reddedilen bir tip-D önerisi. Kayda geçiyor ki altı ay sonra üçüncü kez araştırılmasın |
+| **Kutuda ne olur** | **Bugünkü hâliyle: hiçbir şey.** Kutu tek praxis'e hizmet eder ama `owner_id` orada da boş durmaz — `profiles.owner_id` employee→owner bağıdır, yani "müşteri ayrımı" ile "praxis-içi rol ayrımı" **ayrı kolonlar değil, aynı eksen**. Tek-kiracılı kutuda bile RLS'in ~%95'i bu eksene dayanıyor (konsey ölçümü: 172 policy'nin 115'i, 699 kod referansı); sökülürse çalışan ile owner arasındaki sınır düşer. `business_id` ise Standort ekseni (2026-08-28 podologie-standort-zuschnitt kararının taşıyıcısı) ve RLS'te zaten izolasyon sağlamıyor — yalnız 4 tabloda 7 policy + `bizScope()` yumuşak filtresi; yani "fazlalık gibi duran şey" korunmak istenen eksenin **yarım kurulmuş** hâli. **Sadeleştirilseydi ne olurdu:** dağıtıma göre farklı kolon → `0000_baseline.sql`'in iki hâli → koşullu SQL → **zincir çatallanması**. Bu doğrudan **G7** ihlali ve `onprem/SCHEMA-VERTEILUNG.md` §5.2'nin ("kutuda 0000'dan, SaaS'ta 0001'den — aynı defter, aynı dosyalar, fork yok") tersi |
+| **Çözüm** | ⚪ `unkritisch` — üç gerekçeyle: **(1)** kolonlar iki dağıtımda da işlevli, kaldırılacak bir şey yok. **(2)** Okunabilirlik isteği ("tabloya bakınca ne olduğunu anlayayım") şemayla değil **dokümanla** karşılanıyor → `db/REGISTER.md`'ye kolon-anlamı notu (`db-ustasi` işi). **(3)** Gerçek dağınıklık ölü tablo/kolondur, desen değil: 5 tablo (`accommodations`, `applications`, `trip_history`, `trip_plans`, `user_credits`) + 5 kolon (3× `whatsapp_*`, `has_dta_pro`, `dta_pro_subscription_item_id`) → **ayrı DROP migration'ı** (zincirin üstüne, `0026…`), playbook **Faz 5.1** (D7), bu hafta değil. Ön koşul: `db-ustasi` dört-kaynak doğrulamasını tazeler; sonrası: `guvenlik`'in standart şartı — her DROP sonrası GRANT/ACL karşılaştırması (DROP+CREATE `EXECUTE`'u PUBLIC'e sıfırlar, S-03/S-04 emsali) |
+| **Durum** | ⚪ **unkritisch** — konsey kararı 18.09.2026, `konsey/KARARLAR.md`. ⛔ **Kapanmış karar, yeniden açılmaz** |
+
+> **⚠️ Bu turda düzelen iki yanlış öncül** — maddenin asıl değeri bunlar, ikisi de sicile bu yüzden giriyor:
+>
+> 1. **"Baseline henüz dondurulmadı, bedelsiz değiştirebileceğimiz tek pencere."** Yanlış.
+>    `api-backend/db/migrations/0000_baseline.sql` 10.09.2026'da üretildi, üstünde
+>    **0001…0025** koşuyor, `api-backend/db/migrate.js:68` + `:113` her uygulanmış dosyanın
+>    SHA-256'sını tutuyor ve değişirse kutuyu açmıyor, canlının `praxura_migrations`
+>    defterinde baseline satırı yazılı. Pencere bir hafta önce kapandı.
+>    **Genel kural:** "baseline'ı değiştirelim" cümlesi bundan sonra **DUR** alır; şema
+>    düzeltmesi her zaman **yeni dosyayla** (`CLAUDE.md` şema protokolü zaten bunu diyor).
+> 2. **"`owner_id` iki işi birden yapıyor, birini ayırıp atarız."** Ayrılabilir iki kolon
+>    yok — `profiles.owner_id` zaten praxis-içi eksenin kendisi. Öneriye konu küme **boş**.
+>
+> **Belge statüsü sorusu — cevap:** `ONPREM_MIGRATION_PLAYBOOK.md:135`'teki
+> "Multi-tenancy | Her tabloda `owner_id` + RLS | AYNEN KALIR" satırı **§5 MEVCUT DURUM
+> ENVANTERİ** tablosundadır, §2'deki K1-K14'te **değil** — yani biçimsel olarak kilitli
+> karar değil, envanter notu. Ama bağlayıcılığı oradan gelmiyor: taşıyıcısı **G7** ve
+> tek-zincir kararı (`onprem/SCHEMA-VERTEILUNG.md` §5). Bugünden sonra bu satırın arkasında
+> ayrıca bir **konsey kararı** var (18.09.2026) — statü sorusu kapandı.
+
+---
+
 ## 8. Kapı — sayaçlar ve tabanlar
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -3793,7 +3836,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-## 9. Durum özeti (son sayım: 14.09.2026)
+## 9. Durum özeti (son sayım: 18.09.2026)
 
 > ⚠️ **Bu tablo 12.09.2026 akşamı madde madde yeniden sayıldı.** Önceki hâli
 > 04.09.2026 fotoğrafıydı ve altına "fark" notları yığılıyordu — dokuz tur sonra o
@@ -3802,7 +3845,10 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 110 madde** (O-01 … O-110) — beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
+**Toplam 111 madde** (O-01 … O-111) — sonuncusu (**O-111**, §7O) 18.09.2026 konsey
+turundan çıktı: on-prem'de çoklu-kiracı deseninin (`owner_id`/`business_id`/RLS)
+sadeleştirilmesi **reddedildi** (karar A), `unkritisch` kapandı; aynı tur "baseline henüz
+dondurulmadı" öncülünü de çürüttü. Beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
 bildirim-sonrası denetiminden çıktı, §7L; aynı gece üçü (O-85/O-86/O-89) tam, ikisi
 (O-87/O-88) kısmen kapatıldı — detay kendi maddelerinde. Beş yenisi daha (O-90…O-94)
 aynı akşam Faz 2.2 dilim 2b'nin kendi post-hoc denetiminden çıktı — üçü (O-90/O-92/
@@ -3865,7 +3911,7 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 | `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
 | 🟡 `kısmen gelöst` | 16 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
 | `gelöst` | 58 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-109 |
-| `unkritisch` | 11 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 |
+| `unkritisch` | 12 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 |
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda
 > doğrulandı (kendi maddesindeki kapanış notuna bak). Kalan tek gerçek boşluk:

@@ -31,6 +31,10 @@ AUDIT_*.md
 # Sicherheits-Register: offene Schwachstellen MIT Angriffsweg. In einem oeffentlichen
 # Repo waere das eine Anleitung. Weitergabe nur ueber Google Drive (wie INFRASTRUCTURE.md).
 guvenlik/
+
+# Mentor-Sicil: Strategie, Finanzen, Ziele, Partnerschaft. Gehoert nicht in ein
+# oeffentliches Repo. Weitergabe nur ueber Google Drive (wie INFRASTRUCTURE.md).
+mentor/
 .vercel
 .env*
 api-backend/.env.poc

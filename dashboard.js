@@ -15972,7 +15972,6 @@ async function openRezeptModal(phone, leadId) {
   g('rzLhbBvb').checked = false;
   g('rzZuzahlungBefreit').checked = false;
   g('rzBerichtAngefordert').checked = false;
-  g('rzZuzahlung').value = '';
   g('rzBerichtStatus').value = 'offen';
   // Neue Muster-13-Felder
   ['rzPatKasse','rzKkNum','rzPatName','rzPatVorname','rzPatGeb','rzPatStrasse','rzPatOrt',
