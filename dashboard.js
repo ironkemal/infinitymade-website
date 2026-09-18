@@ -5469,10 +5469,9 @@ async function updateBkDuration(srvId, defaultValue = null) {
   if (!srv || !srv.price_config) {
     const { data } = await supabase.from('services').select('id,title,duration_minutes,price,price_config').eq('id', srvId).single();
     if (data) {
-      srv = data;
-      // Update local cache
+      // Zusammenführen, nicht ersetzen — dieser Select hat nur 5 Spalten, ein Ersetzen löschte code/is_internal (Ops #195).
       const idx = ownerServices.findIndex(s => s.id === srvId);
-      if (idx >= 0) ownerServices[idx] = srv;
+      srv = idx >= 0 ? Object.assign(ownerServices[idx], data) : data;
     }
   }
   if (istKombinierterTermin()) return;
