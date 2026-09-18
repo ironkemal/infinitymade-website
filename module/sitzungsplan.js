@@ -94,8 +94,11 @@ function spanne(von, bis) {
  * @param {?boolean} [opt.podologieVor2023]  war der Patient schon vor dem
  *        01.11.2023 in podologischer Behandlung? `null` = nicht beantwortet
  * @returns {{anwendbar:boolean, grund:string, zeilen:Array<{titel:string,
- *           codes:Array<string>, text:string}>, hinweis:string,
- *           rueckfrage:?string}}
+ *           von:number, bis:number, codes:Array<string>, text:string}>,
+ *           hinweis:string, rueckfrage:?string}}
+ *   `von`/`bis` (1-basiert, einschliesslich) tragen dieselbe Spanne wie `titel`
+ *   als Zahlen — `module/podo-einheiten.js` rechnet damit je Einheit, statt den
+ *   Titel zu zerlegen.
  *   `anwendbar:false` heisst: es gibt nichts zu zeigen (kein podologischer
  *   Zweig, keine Menge). `zeilen` leer bei gesetztem `hinweis` heisst: wir
  *   sagen etwas, aber planen nichts — so im Nagelzweig.
@@ -148,12 +151,14 @@ export function sitzungsplan({
     // stehen; 78030 entfaellt an genau diesem Tag (Anlage 1a Teil 2 Ziff. 4.1).
     zeilen.push({
       titel: spanne(1, 1),
+      von: 1, bis: 1,
       codes: ['78040'],
       text: `Eingangsbefundung (78040) + ${BEHANDLUNG_TEXT} — die Befundung (78030) entfällt an diesem Tag.`,
     });
     if (n > 1) {
       zeilen.push({
         titel: spanne(2, n),
+        von: 2, bis: n,
         codes: ['78030'],
         text: `Befundung (78030) + ${BEHANDLUNG_TEXT} — vor jeder weiteren Behandlung.`,
       });
@@ -164,6 +169,7 @@ export function sitzungsplan({
     // Behandlung / Altbestand vor dem 01.11.2023).
     zeilen.push({
       titel: spanne(1, n),
+      von: 1, bis: n,
       codes: ['78030'],
       text: `Befundung (78030) + ${BEHANDLUNG_TEXT} — vor jeder Behandlung.`,
     });

@@ -77,6 +77,7 @@ import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from '.
 import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20260906';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260905g';
+import { zeichnePodoEinheiten, bindePodoAnTermin, befundDienstId } from './module/podo-einheiten.js?v=20260918';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260914';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
@@ -3002,7 +3003,7 @@ async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
   window._pendingRxSession = {
     sessionIds: sessions.map(s => s.sessionId),
     sessionId: sessions[0].sessionId,
-    prescriptionId: sessionData.prescriptionId,
+    prescriptionId: sessionData.prescriptionId, podoVordId: sessionData.podoVordId,
   };
 
   // Die Frequenzprüfung beim Speichern liest `bkSelectedRxId` — und
@@ -3058,7 +3059,10 @@ async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
   // rechnet die Summe. Hier stand bis zum 03.09.2026 eine zweite,
   // ungetestete Summenrechnung — module/termin-leistungen.js macht dasselbe
   // und wird geprueft (Ops 235).
-  if (sessions.length > 1) setzeLeistungen(matchedSrvIds);
+  // Podologie: die an dieser Einheit fällige Befundung kommt als zweite Leistung mit (module/podo-einheiten.js).
+  const befundId = befundDienstId(ownerServices, sessionData.befund);
+  if (sessionData.befund && !befundId) showToast(`Befundung ${sessionData.befund} ist als Leistung nicht eingerichtet — bitte in den Einstellungen anlegen.`, 'warning', 8000);
+  if (sessions.length > 1 || befundId) setzeLeistungen(befundId ? [...matchedSrvIds, befundId] : matchedSrvIds);
 
   // Rezeptart + Heilmittel ausblenden (Folgetermin, keine neue Verordnung)
   const rxGroup = document.getElementById('bkRezeptartGroup');
@@ -3069,7 +3073,7 @@ async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
   // Session-Banner
   const banner = document.getElementById('bkSpecialBanner');
   if (banner) {
-    banner.textContent = '📋 ' + sessions.map(s => `Sitzung #${s.sessionNum}: ${s.heilmittelName || '—'}`).join('  +  ');
+    banner.textContent = '📋 ' + (sessionData.bannerText || sessions.map(s => `Sitzung #${s.sessionNum}: ${s.heilmittelName || '—'}`).join('  +  '));
     banner.style.cssText = 'display:block;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.1);border:1px solid var(--primary);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--primary);margin-bottom:8px;';
     banner.hidden = false;
   }
@@ -6138,6 +6142,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       if (bindung.gebunden) emit('verordnungen:changed');
       window._pendingRxSession = null;
     }
+    if (_pend?.podoVordId && savedBookingId) { bindung = await bindePodoAnTermin(supabase, savedBookingId, _pend, { emit }); window._pendingRxSession = null; }
   }
 
   // Die Leistungszeilen des Termins (Ops 235). Erst hier, weil sie die Id
@@ -6214,7 +6219,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   const panel = document.getElementById('bkRxSessionsPanel');
   if (!panel) return;
 
-  if (!booking?.id && !rxId) return zeichneSitzungenLeer('keinTermin', { t });
+  if (!booking?.id && !rxId) return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, aufBehandlungen: oeffnePodoBehandlungen })) || zeichneSitzungenLeer('keinTermin', { t });
 
   let prescriptionId = rxId;
   if (!prescriptionId) {
@@ -6225,7 +6230,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
       .maybeSingle();
     prescriptionId = linkedSession?.prescription_id || null;
   }
-  if (!prescriptionId) return zeichneSitzungenLeer('keineVo', { t });
+  if (!prescriptionId) return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, aufBehandlungen: oeffnePodoBehandlungen })) || zeichneSitzungenLeer('keineVo', { t });
   const linkedSession = { prescription_id: prescriptionId };
 
   const { data: rx } = await supabase.from('prescriptions')
@@ -6233,15 +6238,9 @@ async function loadRxSessionsPanel(booking, rxId = null) {
     .eq('id', prescriptionId)
     .maybeSingle();
   if (!rx) return zeichneSitzungenLeer('ladefehler', { t });
-  // Zweite Bremse (die erste sitzt an der Quelle, waehleVerordnungFuerPanel):
-  // dieses Panel legt gleich ein Sitzungs-Hauptbuch an, das die Podologie
-  // bewusst nicht fuehrt (module/verordnung-topf.js, fuehrtSitzungsbuch).
-  // Der Hinweis nennt jetzt den Weg dorthin, wo die Podologie wirklich zaehlt.
-  if (rx.therapie_bereich === 'podo') {
-    return zeichneSitzungenLeer('podologie', {
-      t, aufBehandlungen: () => oeffnePodoBehandlungen(booking?.lead_id),
-    });
-  }
+  // Podologie: KEIN Einheiten-Hauptbuch (module/verordnung-topf.js, fuehrtSitzungsbuch) —
+  // gleicheSitzungenAb() darf hier nicht laufen. Die Einheiten werden berechnet: module/podo-einheiten.js.
+  if (rx.therapie_bereich === 'podo') return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, vordId: rx.id, aufBehandlungen: oeffnePodoBehandlungen })) || zeichneSitzungenLeer('podologie', { t, aufBehandlungen: () => oeffnePodoBehandlungen(booking?.lead_id) });
 
   // Fehlende Sitzungszeilen ergänzen, BEVOR gelesen wird — sonst zeigt der
   // Seitenbereich weniger Einheiten an, als verordnet sind, und die fehlenden

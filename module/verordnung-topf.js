@@ -265,6 +265,12 @@ export function inTopf(v) {
  * nicht „welche der 6 Einheiten hat dieser Termin erfüllt?" — Begründung mit
  * Fundstellen in `module/verordnung-termine.js`.
  *
+ * Bestätigt am 18.09.2026 (`db-ustasi` + `fonksiyon-ustasi`), als der
+ * Terminbereich für die Podologie offene Einheiten bekam: sie werden dort
+ * BERECHNET (`module/podo-einheiten.js`), nicht als Zeilen geführt. Die
+ * Begründung — drei konkrete Kollisionen — steht in `db/REGISTER.md`, Eintrag
+ * `prescription_sessions`.
+ *
  * Seit der Zusammenlegung tragen podologische Zeilen `anzahl_einheiten`, und
  * ohne diese Bremse legte `gleicheSitzungenAb()` ihnen beim ersten Öffnen des
  * Seitenbereichs ein Hauptbuch an, das niemand pflegt und das dem Zähler in

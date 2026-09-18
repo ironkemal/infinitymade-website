@@ -1,0 +1,132 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Probe: Podologie-Einheiten im Terminbereich</title>
+<!--
+  Prüft im echten Browser, was `node --test` nicht sieht (kein DOM):
+    • der Einheitenblock für eine podologische Verordnung wird in das ECHTE
+      Markup von #bkRxSessionsPanel (aus dashboard.html) gezeichnet
+    • offene Einheiten tragen ihre Befundung, vergebene ihr Datum
+    • Ziehen legt das Format der Physio-Karten in den DataTransfer
+    • ohne podologische Verordnung bleibt alles unberührt (false)
+  Kein Login, keine Datenbank: `sb` ist eine Attrappe, die pro Tabelle antwortet.
+-->
+<div id="buehne"></div>
+
+<script type="module">
+const ergebnis = [];
+const pruef = (name, ok, detail = '') => ergebnis.push({ name, ok: !!ok, detail: String(detail) });
+const $ = id => document.getElementById(id);
+const warte = ms => new Promise(r => setTimeout(r, ms));
+
+/**
+ * Attrappe: jede Abfrage-Methode gibt dieselbe Kette zurück; erwartet man sie,
+ * kommt { data } der Tabelle; `maybeSingle()` liefert das erste Element.
+ */
+function attrappe(tabellen) {
+  return {
+    from(name) {
+      const daten = tabellen[name] ?? [];
+      const kette = new Proxy({}, {
+        get(_, prop) {
+          if (prop === 'then') return (f) => f({ data: daten, error: null });
+          if (prop === 'maybeSingle') return async () => ({ data: Array.isArray(daten) ? (daten[0] ?? null) : daten, error: null });
+          return () => kette;
+        },
+      });
+      return kette;
+    },
+  };
+}
+
+const VORD = {
+  id: 'vord-1', heilmittel: 'Podologische Komplexbehandlung', heilmittel_feld_text: null,
+  heilmittel_position: null, diagnosegruppe: 'DF', anzahl_einheiten: 6,
+  ausstellungsdatum: '2026-09-15', patient_id: 'lead-1', therapie_bereich: 'podo',
+};
+
+try {
+  const html = await (await fetch('../../dashboard.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const panel = doc.getElementById('bkRxSessionsPanel');
+  pruef('dashboard.html enthält #bkRxSessionsPanel', !!panel);
+  $('buehne').appendChild(document.importNode(panel, true));
+  for (const id of ['bkRxUnvergebeneList', 'bkRxTermineList', 'bkRxSessionsBadge', 'bkRxSerieBtn', 'bkRxLeistungenBtn']) {
+    pruef(`Element #${id} existiert im Markup`, !!$(id));
+  }
+
+  const { zeichnePodoEinheiten } = await import('../../module/podo-einheiten.js?v=20260918');
+
+  // ── Fall 1: 6 Einheiten, eine gebucht ──────────────────────────────────────
+  const sb = attrappe({
+    prescriptions: [VORD],
+    bookings: [{ id: 'b1', start_time: '2026-09-22T08:00:00Z', end_time: '2026-09-22T08:45:00Z', status: 'confirmed', no_show: false, customer_name: 'Test Patient' }],
+    podologie_behandlungen: [],
+    leads: { podologie_altbestand_vor_2023: false },
+  });
+  let sprung = null;
+  const gezeichnet = await zeichnePodoEinheiten({
+    sb, ownerId: 'owner', booking: { lead_id: 'lead-1', customer_name: 'Test Patient' },
+    aufBehandlungen: (id) => { sprung = id; },
+  });
+  pruef('zeichnet und meldet true', gezeichnet === true);
+  pruef('Block wird sichtbar', $('bkRxSessionsPanel').hidden === false);
+  pruef('Abzeichen: 5 offen / 6 ges.', $('bkRxSessionsBadge').textContent === '5 offen / 6 ges.', $('bkRxSessionsBadge').textContent);
+
+  const offene = [...$('bkRxUnvergebeneList').querySelectorAll('.rx-unv-item')];
+  pruef('fünf ziehbare offene Einheiten', offene.length === 5 && offene.every(e => e.draggable), offene.length);
+  const txt = e => e.textContent.replace(/\s+/g, ' ').trim();
+  pruef('erste offene ist Einheit #2 (die 1 ist gebucht)', /^#2\b/.test(txt(offene[0])), txt(offene[0]));
+  pruef('Einheit #2 trägt Befundung (78030) — nicht ein zweites 78040',
+    txt(offene[0]).includes('Befundung (78030) + Behandlung') && !txt(offene[0]).includes('78040'), txt(offene[0]));
+  pruef('Einheit #1 (gebucht) steht als Eingangsbefundung bei den vergebenen',
+    txt($('bkRxTermineList')).includes('#1') && txt($('bkRxTermineList')).includes('Eingangsbefundung (78040)'), txt($('bkRxTermineList')));
+  pruef('vergebene Einheit nennt ihr Datum', /22\.09\.26/.test(txt($('bkRxTermineList'))), txt($('bkRxTermineList')));
+  pruef('Serienknopf bleibt aus (er verteilt Sitzungszeilen, die es hier nicht gibt)', $('bkRxSerieBtn').hidden === true);
+  pruef('„Leistungen des Tages" springt in die Behandlungen', $('bkRxLeistungenBtn').hidden === false);
+  $('bkRxLeistungenBtn').click();
+  pruef('…und übergibt den Patienten', sprung === 'lead-1', sprung);
+
+  // ── Ziehen: Format der Physio-Karten ───────────────────────────────────────
+  const dt = new DataTransfer();
+  offene[0].dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt }));
+  const roh = dt.getData('application/rx-session');
+  pruef('dragstart legt application/rx-session ab', !!roh);
+  const nutz = roh ? JSON.parse(roh) : {};
+  pruef('Nutzlast trägt podoVordId + Befund', nutz.podoVordId === 'vord-1' && nutz.befund === '78030', roh);
+  pruef('Nutzlast hat KEINE Sitzungszeile zum Binden', nutz.sessionId === null && nutz.sessions?.[0]?.sessionId === null);
+  pruef('Nutzlast nennt Patient und Einheit', nutz.patientName === 'Test Patient' && nutz.sessions?.[0]?.sessionNum === 2);
+  pruef('Bannertext sagt, was mitläuft', /Einheit #2: Befundung \(78030\) \+ Behandlung/.test(nutz.bannerText || ''), nutz.bannerText);
+
+  // ── Fall 2: alles vergeben ─────────────────────────────────────────────────
+  const sechs = ['01', '02', '03', '04', '05', '06'].map((d, i) => ({
+    id: `b${i}`, start_time: `2026-09-${10 + i}T08:00:00Z`, status: 'confirmed', no_show: false }));
+  await zeichnePodoEinheiten({
+    sb: attrappe({ prescriptions: [VORD], bookings: sechs, podologie_behandlungen: [], leads: { podologie_altbestand_vor_2023: false } }),
+    ownerId: 'owner', booking: { lead_id: 'lead-1' },
+  });
+  pruef('alle vergeben: „Alle vergeben ✓"', txt($('bkRxUnvergebeneList')).includes('Alle vergeben'), txt($('bkRxUnvergebeneList')));
+  pruef('alle vergeben: nichts ziehbar', $('bkRxUnvergebeneList').querySelectorAll('.rx-unv-item').length === 0);
+
+  // ── Fall 3: Einheitenzahl nicht erfasst ────────────────────────────────────
+  await zeichnePodoEinheiten({
+    sb: attrappe({ prescriptions: [{ ...VORD, anzahl_einheiten: null }], bookings: [], podologie_behandlungen: [], leads: {} }),
+    ownerId: 'owner', booking: { lead_id: 'lead-1' },
+  });
+  pruef('ohne Einheitenzahl: keine erfundene Restmenge', txt($('bkRxUnvergebeneList')).includes('nicht erfasst'), txt($('bkRxUnvergebeneList')));
+  pruef('ohne Einheitenzahl: nichts ziehbar', $('bkRxUnvergebeneList').querySelectorAll('.rx-unv-item').length === 0);
+
+  // ── Fall 4: keine podologische Verordnung ──────────────────────────────────
+  $('bkRxUnvergebeneList').innerHTML = 'UNVERÄNDERT';
+  const nichts = await zeichnePodoEinheiten({
+    sb: attrappe({ prescriptions: [] }), ownerId: 'owner', booking: { lead_id: 'lead-2' },
+  });
+  pruef('ohne podologische Verordnung: false, Aufrufer zeigt seinen Leerzustand', nichts === false);
+  pruef('…und der Block wird nicht angefasst', $('bkRxUnvergebeneList').textContent === 'UNVERÄNDERT');
+
+  const ohnePatient = await zeichnePodoEinheiten({ sb, ownerId: 'owner', booking: {} });
+  pruef('ohne Patient und ohne Verordnung: false', ohnePatient === false);
+} catch (e) {
+  pruef('Probe läuft durch', false, e?.stack || e?.message || String(e));
+}
+window.__probe = ergebnis;
+</script>

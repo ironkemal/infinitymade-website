@@ -966,7 +966,8 @@ async function sitzungsplanAktualisieren(supabase, ctx) {
     ${plan.hinweis ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${h(plan.hinweis)}</div>` : ''}
     ${frage}
     <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">
-      Befundpositionen stehen nicht auf der Verordnung — sie werden in der Abrechnung gesetzt.
+      Befundpositionen stehen nicht auf der Verordnung. Sie erscheinen an den Einheiten im Terminbereich
+      und laufen beim Buchen als zweite Leistung mit — gesetzt werden sie in der Abrechnung.
     </div>`;
   el.style.display = 'block';
 
