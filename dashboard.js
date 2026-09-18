@@ -16863,16 +16863,12 @@ async function init() {
     // Arzt-Felder → gemeinsamer Picker (arzt-suche.js): Name ODER LANR tippen,
     // Auswahl füllt Name + LANR + BSNR zusammen.
     wireArztFeld({ name: 'rzArztName',  lanr: 'rzLanr',  bsnr: 'rzBsnr'  });
-    // Wire rzHm → rzHmPosition (reuse same physio positions cache)
-    const rzHmInput = document.getElementById('rzHm');
-    const rzHmPosInput = document.getElementById('rzHmPosition');
-    if (rzHmInput && rzHmPosInput) {
-      rzHmInput.addEventListener('input', async () => {
-        const positions = await loadPhysioPositions().catch(() => []);
-        const m = aiMatchHeilmittel(rzHmInput.value, positions);
-        rzHmPosInput.value = m ? m.x : '';
-      });
-    }
+    // rzHm → rzHmPosition laeuft ueber attachHeilmittelSearch (HEILMITTEL_FIELDS,
+    // dashboard.js oben) — der hier frueher vorhandene aiMatchHeilmittel-Listener
+    // gewann per Race-Timing IMMER gegen dessen onSelect (dieser ist async,
+    // onSelect feuert synchron vorher) und matchte ausserdem nur gegen den
+    // Physio-Katalog, loeschte die Position also in jedem anderen Fachbereich
+    // bei jedem Tastendruck wieder. Entfernt am 18.09.2026.
     lsWireToggle('rz');
     // Diagnose-Felder verdrahten sich beim Fokus selbst — siehe DIAGNOSE_FIELDS.
     await loadAerzte();
@@ -17344,8 +17340,8 @@ async function uploadRezeptImage(dataUri) {
 
 // Rest des alten 4-Stufen-Assistenten: nur noch der Kassen-Katalog (kkMap) und
 // der lazy geladene Positionskatalog (positions). Beide werden ausserhalb dieses
-// Bildschirms mitbenutzt — kkMap von openDasGuideModal(), positions von der
-// Rezept-Maske (aiMatchHeilmittel) und von module/abrechnung-auswahl.js.
+// Bildschirms mitbenutzt — kkMap von openDasGuideModal(), positions von
+// module/abrechnung-auswahl.js.
 const _abState = { kkMap: new Map(), positions: [], positionsLoaded: false };
 
 // ---------- Sprint 8+ : Krankenkasse + Heilmittel datalist + AI auto-match ----------
@@ -17361,83 +17357,6 @@ async function loadKkList() {
   if (error) { console.warn('[kkList]', error); return []; }
   _kkListCache = (data || []).map(k => ({ ik: k.ik_number || null, name: k.name, type: k.type }));
   return _kkListCache;
-}
-
-// Normalize for fuzzy compare: lowercase, strip diacritics, punctuation, runs of whitespace.
-function _norm(s) {
-  return String(s || '')
-    .toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9 ]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-// Score how close needle matches haystack (0 = no overlap, 1 = exact). Token Jaccard + prefix bonus.
-function _matchScore(needle, haystack) {
-  const a = _norm(needle), b = _norm(haystack);
-  if (!a || !b) return 0;
-  if (a === b) return 1;
-  if (b.startsWith(a) || a.startsWith(b)) return 0.95;
-  if (b.includes(a) || a.includes(b)) return 0.85;
-  const ta = new Set(a.split(' ')), tb = new Set(b.split(' '));
-  let common = 0;
-  ta.forEach(t => { if (tb.has(t)) common++; });
-  const union = ta.size + tb.size - common;
-  return union ? common / union : 0;
-}
-
-function aiMatchHeilmittel(text, positions) {
-  if (!text) return null;
-  const t = _norm(text);
-  // Try exact short-code match first (KG, MT, MLD, etc. → first token of label)
-  // and also X-template match (X0501 / 20501).
-  if (/^x\d{4}$/i.test(text.trim())) {
-    const exact = positions.find(p => p.x.toLowerCase() === text.trim().toLowerCase());
-    if (exact) return { ...exact, score: 1 };
-  }
-  if (/^\d{5}$/.test(text.trim())) {
-    const x = 'X' + text.trim().slice(1);
-    const exact = positions.find(p => p.x === x);
-    if (exact) return { ...exact, score: 1 };
-  }
-  // Short-code → first letters of label (KG ~ "Allgemeine Krankengymnastik")
-  // Use a small alias table for accuracy.
-  const aliases = {
-    kg: 'X0501',
-    'kg einzel': 'X0501',
-    krankengymnastik: 'X0501',
-    mt: 'X1201',
-    'manuelle therapie': 'X1201',
-    mld: 'X0205',
-    'mld 30': 'X0205',
-    'mld 45': 'X0201',
-    'mld 60': 'X0202',
-    'manuelle lymphdrainage': 'X0205',
-    kmt: 'X0106',
-    'klassische massage': 'X0106',
-    massage: 'X0106',
-    bgm: 'X0107',
-    traktion: 'X1104',
-    'kg geraet': 'X0507',
-    'kg-geraet': 'X0507',
-    'krankengymnastik am gerat': 'X0507',
-    'krankengymnastik am gerat kg g': 'X0507',
-    'krankengymnastik am gerat kg gerat': 'X0507',
-    'kg zns': 'X0710',
-    'kg-muko': 'X0702',
-  };
-  if (aliases[t]) {
-    const found = positions.find(p => p.x === aliases[t]);
-    if (found) return { ...found, score: 0.95 };
-  }
-  // Fallback: score against label
-  let best = null, bestScore = 0;
-  for (const p of positions) {
-    const s = _matchScore(text, p.label + ' ' + p.x);
-    if (s > bestScore) { bestScore = s; best = p; }
-  }
-  return bestScore >= 0.55 ? { ...best, score: bestScore } : null;
 }
 
 // Früher füllte das ein <datalist> (im Haus untersagt) mit 93 Kassen in

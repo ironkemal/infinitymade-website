@@ -38,12 +38,16 @@
  * ⚠️ Warum die Behandlung als „78010/78020" und nicht als eine Nummer
  * dasteht: welche der beiden es wird, haengt an der Therapiezeit (78020 „gross"
  * erst ueber 20 Minuten, FAK Podologie Q25) und entscheidet sich am
- * Behandlungstag, nicht bei der Verordnung. `verordnung-podo.js` laesst
- * `rzHmPosition` in der Podologie aus demselben Grund bewusst leer: „Ein leeres
- * Feld ist besser als eine falsche Nummer (die landet im DTA)."
+ * Behandlungstag, nicht bei der Verordnung. Bei Leitsymptomatik a)/b) ist die
+ * Nummer dagegen nie strittig (immer 78010, FAK Q25) — `verordnung-podo.js`
+ * traegt sie deshalb seit 18.09.2026 dort in `rzHmPosition` ein. Nur c)
+ * „Podologische Komplexbehandlung" bleibt dort bewusst leer, aus genau diesem
+ * Grund: „Ein leeres Feld ist besser als eine falsche Nummer."
  */
 
 import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260914';
+export { dgWurzel } from './verordnung-regeln.js?v=20260918';
+import { dgWurzel } from './verordnung-regeln.js?v=20260918';
 
 /**
  * Stellvertretende Behandlungsposition je Diagnosegruppe — nur, um
@@ -64,19 +68,6 @@ const BEHANDLUNG_TEXT = 'Behandlung (78010/78020)';
 
 /** Diagnosegruppen mit Befundungszweig DF/NF/QF. */
 const DFNFQF = ['DF', 'NF', 'QF'];
-
-/**
- * Wurzel einer Diagnosegruppe: „DF-a" → „DF". Spiegel von `dgRoot()` in
- * `module/verordnung-podo.js` — dort am DOM, hier pruefbar.
- *
- * @param {?string} raw
- * @returns {string}
- */
-export function dgWurzel(raw) {
-  const v = String(raw || '').trim().toUpperCase();
-  if (!v) return '';
-  return v.startsWith('DF') ? 'DF' : v.split('-')[0];
-}
 
 /**
  * Beschriftung einer Sitzungsspanne. Eine einzelne Sitzung bekommt keine

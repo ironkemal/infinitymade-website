@@ -41,38 +41,12 @@ import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fri
 import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20260906';
 import { sitzungsplan } from './sitzungsplan.js?v=20260914';
 import { TOPF } from './verordnung-topf.js?v=20260910';
+import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20260918';
 
-// ─── [Q1] Heilmittelkatalog Podologische Therapie ────────────────────────────
-//
-// Leitsymptomatik und vorrangiges Heilmittel tragen in der Richtlinie
-// denselben Buchstaben: a↔a, b↔b, c↔c. Für DF, NF und QF ist der Katalog
-// wortgleich. UI 1 und UI 2 haben nur eine Leitsymptomatik a) und als
-// vorrangiges Heilmittel die Nagelspangenbehandlung.
-//
-// ⚠ Beta-2 sagte „C ist die podologische Behandlung gross". Das ist die
-// ABRECHNUNGSSEITE und gilt nur eingeschränkt: verordnet wird
-// „Podologische Komplexbehandlung"; als 78020 („gross") ist sie nur bei
-// Therapiezeit über 20 Minuten abrechenbar, sonst 78010 zzgl. 78030
-// (FAK Podologie Q25). Das Verordnungsfeld trägt deshalb den Katalogtext,
-// nicht den Abrechnungsbegriff.
-const POD_KATALOG = {
-  DF: { a: 'Hornhautabtragung', b: 'Nagelbearbeitung', c: 'Podologische Komplexbehandlung' },
-  NF: { a: 'Hornhautabtragung', b: 'Nagelbearbeitung', c: 'Podologische Komplexbehandlung' },
-  QF: { a: 'Hornhautabtragung', b: 'Nagelbearbeitung', c: 'Podologische Komplexbehandlung' },
-  UI1: { a: 'Nagelspangenbehandlung' },
-  UI2: { a: 'Nagelspangenbehandlung' },
-};
-
-// [Q1] Höchstmenge je Verordnung. ⚠ Hier lag die Besprechung daneben:
-// „Nagelspange geht bis acht" stimmt nur für UI 1. UI 2 ist auf 4 je VO
-// begrenzt; die bis zu 8 Einheiten sind dort die ORIENTIERENDE
-// Behandlungsmenge über mehrere Verordnungen hinweg und setzen eine
-// Wiedervorstellung beim verordnenden Arzt voraus. Eine pauschale 8 würde
-// bei UI 2 Absetzungen produzieren.
-const POD_HOECHSTMENGE = { DF: 6, NF: 6, QF: 6, UI1: 8, UI2: 4 };
-
-// [Q1] Nur ein Hinweistext für die orientierende Menge, keine harte Grenze.
-const POD_ORIENTIEREND = { UI1: 8, UI2: 8 };
+// [Q1] Heilmittelkatalog Podologische Therapie, Höchstmenge und orientierende
+// Menge je Diagnosegruppe stehen zentral in `verordnung-regeln.js` — dort
+// steht auch die Quellenlage (Q1) und die Warnung zur Abrechnungsseite
+// (78020 „gross" erst bei Therapiezeit >20 Min, FAK Podologie Q25).
 
 // Die 14/28-Tage-Frist ist NICHT podologiespezifisch: [Q2] Abschnitt 3 e)
 // wiederholt nur HeilM-RL § 15, der im allgemeinen Teil steht. Sie wohnt
@@ -106,13 +80,6 @@ const POD_BEFUND_HINWEIS =
 const POD_BEFUND_DGS = ['DF', 'NF', 'QF'];
 
 const $ = (id) => document.getElementById(id);
-
-/** Wurzel einer Diagnosegruppe: "DF-a" → "DF"; NF/QF/UI1/UI2 unverändert. */
-function dgRoot(raw) {
-  const v = String(raw || '').trim().toUpperCase();
-  if (!v) return '';
-  return v.startsWith('DF') ? 'DF' : v.split('-')[0];
-}
 
 /**
  * Podologie-Modus des Formulars. Der Bereich hängt an den Ankreuzfeldern oben
@@ -179,6 +146,19 @@ function schreibe(el, wert) {
 }
 
 /**
+ * Heilmittel-Text UND Positionsnummer gemeinsam leeren. Beide werden immer
+ * im selben Schritt gesetzt (s. `leitsymptomatikAnwenden()`) — wird der Text
+ * ungültig (Ankreuzung passt nicht mehr zur Diagnosegruppe, DG geleert), darf
+ * die zuvor abgeleitete Position nicht überleben. Eine verwaiste 78010 ist
+ * eine falsche Nummer, die genau in die Zuzahlung einfliesst.
+ */
+function raeumeHmUndPosition(hm) {
+  schreibe(hm, '');
+  const pos = $('rzHmPosition');
+  if (pos) pos.value = '';
+}
+
+/**
  * @returns {{farbe?:string,text:string}|null} Meldung, falls die Ankreuzung
  *          nicht zum Katalog der gewählten Diagnosegruppe passt.
  */
@@ -186,7 +166,7 @@ function leitsymptomatikAnwenden() {
   const hm = $('rzHm');
   if (!hm || !istPodo()) return null;
 
-  const root = dgRoot($('rzDg')?.value);
+  const root = dgWurzel($('rzDg')?.value);
   const katalog = POD_KATALOG[root];
   const gewaehlt = gewaehlteLeitsymptome();
 
@@ -196,19 +176,23 @@ function leitsymptomatikAnwenden() {
   // Nichts angekreuzt → unser Eintrag verschwindet wieder. Genau das ist
   // gemeint mit „nochmal auf c drücken und es ist weg".
   if (gewaehlt.length === 0) {
-    if (unser && hm.value) schreibe(hm, '');
+    if (unser && hm.value) raeumeHmUndPosition(hm);
     return null;
   }
 
-  // Ohne Diagnosegruppe wissen wir nicht, aus welchem Katalog wir schöpfen.
-  if (!katalog) return null;
+  // Ohne Diagnosegruppe wissen wir nicht, aus welchem Katalog wir schöpfen —
+  // ein zuvor von uns abgeleitetes Heilmittel+Position ist jetzt ungültig.
+  if (!katalog) {
+    if (unser && hm.value) raeumeHmUndPosition(hm);
+    return null;
+  }
 
   // [Q1] UI 1 und UI 2 kennen nur eine Leitsymptomatik a). b) oder c) gibt es
   // dort nicht — das ist keine stille Nicht-Ableitung, sondern ein Fehler auf
   // der Verordnung, der zur Absetzung führt.
   const fremd = gewaehlt.filter(b => !katalog[b]);
   if (fremd.length && !katalog.c) {
-    if (unser && hm.value) schreibe(hm, '');
+    if (unser && hm.value) raeumeHmUndPosition(hm);
     return {
       farbe: 'var(--danger,#ef4444)',
       text: `${root} kennt nur die Leitsymptomatik a) — ${fremd.map(b => b + ')').join(' und ')} `
@@ -231,7 +215,7 @@ function leitsymptomatikAnwenden() {
     if (katalog.c) {
       buchstabe = 'c';   // a + b = Komplexbehandlung
     } else {
-      if (unser && hm.value) schreibe(hm, '');
+      if (unser && hm.value) raeumeHmUndPosition(hm);
       return {
         farbe: 'var(--danger,#ef4444)',
         text: `Mehrere Leitsymptomatiken angekreuzt — ${root} hat dafür kein eigenes Heilmittel.`,
@@ -250,12 +234,20 @@ function leitsymptomatikAnwenden() {
     };
   }
 
+  // [gkv-302, 18.09.2026] a)/b) sind laut FAK Podologie Q25 IMMER 78010 —
+  // 78020 ist dort nie abrechenbar, also keine Vermutung, sondern die einzig
+  // mögliche Nummer. c) „Podologische Komplexbehandlung" bleibt offen: ob
+  // 78010 oder 78020 gilt, entscheidet die Therapiezeit am Behandlungstag
+  // (>20 Min), nicht die Verordnung — siehe sitzungsplan.js:38-43.
+  const hpnrSicher = (buchstabe === 'a' || buchstabe === 'b') && POD_BEFUND_DGS.includes(root);
   if (hm.value !== text) {
     schreibe(hm, text);
-    // Positionsnummer nicht raten: die hängt am Katalog-Suchmodul. Ein leeres
-    // Feld ist besser als eine falsche Nummer (die landet im DTA).
     const pos = $('rzHmPosition');
-    if (pos) pos.value = '';
+    if (pos) pos.value = hpnrSicher ? '78010' : '';
+  }
+  if (buchstabe === 'c' && !meldung) {
+    meldung = { text: '„Podologische Komplexbehandlung": Position steht erst am Behandlungstag fest — '
+      + '78010 bis 20 Minuten Therapiezeit, sonst 78020 (FAK Podologie Q25).' };
   }
   return meldung;
 }
@@ -344,7 +336,7 @@ async function dgAuswahlEingrenzen(supabase) {
 
   // Steht schon eine Gruppe drin, die der Kode nicht zulässt, wird sie
   // nicht still ersetzt — der Arzt hat sie so verordnet. Wir melden nur.
-  const aktuell = dgRoot(dgFeld.value);
+  const aktuell = dgWurzel(dgFeld.value);
   const passt = !aktuell || erlaubt.includes(aktuell);
 
   // Genau eine Möglichkeit und noch nichts gewählt → übernehmen.
@@ -366,7 +358,7 @@ function einheitenPruefen() {
   const feld = $('rzAnzahl');
   if (!feld || !istPodo()) return null;
 
-  const root = dgRoot($('rzDg')?.value);
+  const root = dgWurzel($('rzDg')?.value);
   const max  = POD_HOECHSTMENGE[root];
   if (!max) return null;
 
@@ -415,7 +407,7 @@ function schnellauswahlEl() {
 
 function schnellauswahlRendern() {
   const feld = $('rzAnzahl');
-  const root = dgRoot($('rzDg')?.value);
+  const root = dgWurzel($('rzDg')?.value);
   const max = POD_HOECHSTMENGE[root];
   if (!feld || !istPodo() || !max) { const el = $('rzAnzahlSchnellwahl'); if (el) el.innerHTML = ''; return; }
 
@@ -586,7 +578,7 @@ function podoFelderAktualisieren() {
   if (!istPodo()) { el.style.display = 'none'; return null; }
   el.style.display = 'grid';
 
-  const brauchtNagel = POD_NAGEL_DGS.includes(dgRoot($('rzDg')?.value));
+  const brauchtNagel = POD_NAGEL_DGS.includes(dgWurzel($('rzDg')?.value));
   const wrap = $('rzPodoNagelWrap');
   if (wrap) wrap.style.display = brauchtNagel ? 'block' : 'none';
 
@@ -612,7 +604,7 @@ function podoFelderAktualisieren() {
  */
 export function podoVerordnungsfelder() {
   if (!istPodo()) return {};
-  const brauchtNagel = POD_NAGEL_DGS.includes(dgRoot($('rzDg')?.value));
+  const brauchtNagel = POD_NAGEL_DGS.includes(dgWurzel($('rzDg')?.value));
   const wagnerRoh = $('rzPodoWagner')?.value ?? '';
   return {
     nagel: brauchtNagel ? ($('rzPodoNagel')?.value || null) : null,
@@ -877,7 +869,7 @@ async function aktualisieren(supabase, ctx) {
   // — er kommt nur zurueck, wenn noch keine Menge eingetragen ist.
   const planSteht = await sitzungsplanAktualisieren(supabase, ctx);
 
-  const root = dgRoot($('rzDg')?.value);
+  const root = dgWurzel($('rzDg')?.value);
   if (!planSteht && POD_BEFUND_DGS.includes(root)) zeilen.push({ text: POD_BEFUND_HINWEIS });
 
   zeilen.push(podoFelderAktualisieren());

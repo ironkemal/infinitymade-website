@@ -115,10 +115,38 @@
   Therapie — DF Z.3369-3381 / NF Z.3421-3434 / QF Z.3471-3483; Anlage 3 i.d.F. 16.06.2025
   `g1` (Z.443-454), `g2` (Z.465-472)
 - **Geçerlilik:** 05.08.2025
-- **Kodda:** **uygulanmamış** — `verordnungen` tablosunda verordnetes Heilmittel için alan yok.
-  Önerilen: `heilmittel_massnahme` ∈ {Hornhautabtragung, Nagelbearbeitung, Podologische
-  Komplexbehandlung}
+- **Kodda:** `module/verordnung-podo.js` `leitsymptomatikAnwenden()` — Leitsymptomatik-Kreuz
+  a/b/c yazıyor `prescriptions.heilmittel` alanına metni (`verordnung-maske.js:525`).
+  18.09.2026'dan beri `prescriptions.heilmittel_position`'ı da dolduruyor (bkz. aşağıdaki
+  iki yeni kural).
 - **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF
+
+### Podologie: HPNR auf der Verordnung — a/b determiniert, c erst am Behandlungstag
+- **Kural:** Muster 13 Feld g1 kendisi Positionsnummer bilmez (Pflicht olan Katalog-metnidir).
+  Buna rağmen `prescriptions.heilmittel_position` a) Hornhautabtragung ve b) Nagelbearbeitung'ta
+  **78010** ile önceden doldurulabilir — ikisi FAK Q25'e göre HER ZAMAN 78010'dur, 78020 orada
+  hiçbir zaman abrechenbar değildir. c) Podologische Komplexbehandlung'ta alan BOŞ kalır:
+  78010 mü 78020 mi olacağı Therapiezeit'e (>20 Min) bağlıdır ve Behandlungstag'da belli olur.
+- **Kaynak:** Podologie Anlage 3 i.d.F. 16.06.2025 § g1 (Z.443-454) · FAK Podologie Q25
+  (Stand 24.05.2023, Z.199-207) · Anlage 3 TP5 V21 § 8.2.1 (5 haneli)
+- **Geçerlilik:** 16.06.2025 (Anlage 3) / 24.05.2023 (FAK)
+- **Kodda:** `module/verordnung-podo.js:220-232` (`leitsymptomatikAnwenden()`, 18.09.2026'da
+  gkv-302 onayıyla eklendi — önceden hepsi boş bırakılıyordu)
+- **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF, standart Verordnung (Muster 13)
+
+### Podologie: `prescriptions.heilmittel_position` DTA'yı BESLEMEZ
+- **Kural:** Podolojik dalda §302 dosyası EHE pozisyonlarını `podologie_behandlungen.hpnr_codes`
+  tablosundan kurar, `prescriptions.heilmittel_position`'dan DEĞİL. "heilmittel_position eksik"
+  422 kilidi yalnız Physio/Ergo/Logo dalı içindir. Bu alanın podolojideki tek — ve hatalı —
+  okuyucusu Zuzahlung düzeltmesidir: alan boşken sessizce 0 € hesaplar (mevcut hata, bu
+  değişiklikten bağımsız — a/b artık 78010 dolu geldiği için onlarda düzeliyor, c'de hâlâ 0 €).
+- **Kaynak:** Kod gerçeği (spec değil) — Anlage 1 TP5 V21 § 5.5.3.3 EHE-Segment
+- **Geçerlilik:** 18.09.2026
+- **Kodda:** `api-backend/billing/api/abrechnung.routes.js:2411-2434`
+  (`mapVerordnungToDtaShape`) · `api-backend/billing/utils/abrechnung-zeilen.js:138-140` ·
+  `api-backend/billing/api/zuzahlung.routes.js:106-113` (hatalı okuyucu — düzeltme Ops-Dashboard
+  → Teknik, bu değişikliğin kapsamı dışında)
+- **Kapsam:** Podologie, tüm Verordnungsart'lar
 
 ### Podologie Höchstmenge je Verordnung — UI2 dörttür, sekiz değil
 - **Kural:** Höchstmenge je Verordnung: **DF 6 · NF 6 · QF 6 · UI1 8 · UI2 4.**

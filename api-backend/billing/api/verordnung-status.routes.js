@@ -87,9 +87,15 @@ const LABEL = {
  */
 const NAGEL_PFLICHT_DGS = ['UI1', 'UI2'];
 
-/** „UI1-a" → „UI1", „DF-c" → „DF". Spiegel von `dgRoot()` in verordnung-podo.js. */
+/**
+ * „UI1-a" → „UI1", „UI 1" → „UI1", „DF-c" → „DF". Spiegel von `dgWurzel()`
+ * in `module/verordnung-regeln.js` — Backend kann das Frontend-Modul nicht
+ * importieren (getrennte Laufzeiten), deshalb eigene Kopie. Muss den
+ * Whitespace-Strip mittragen: „UI 1" ist das Format, wie es auf Muster 13
+ * gedruckt steht (`module/verordnung-pruefung.test.js` deckt genau das ab).
+ */
 function dgStamm(roh) {
-  const v = String(roh || '').trim().toUpperCase();
+  const v = String(roh || '').trim().toUpperCase().replace(/\s+/g, '');
   if (!v) return '';
   return v.startsWith('DF') ? 'DF' : v.split('-')[0];
 }
