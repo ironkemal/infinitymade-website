@@ -3426,8 +3426,8 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
         rzgWarnEl.hidden = false;
         rzgWarnEl.dataset.rxId = rx.id;
         rzgWarnEl.dataset.betrag = String(betrag ?? 0);
-        rzgWarnEl.dataset.patientId = rx.patient_id || booking.lead_id || '';
-        rzgWarnEl.dataset.patientName = booking.customer_name || '';
+        rzgWarnEl.dataset.patientId = rx.patient_id || booking?.lead_id || leadVorgabe?.id || '';
+        rzgWarnEl.dataset.patientName = booking?.customer_name || patientName || '';
 
         // Grün, sobald nichts mehr offen ist — bezahlt oder befreit.
         const gruen = befreit || bezahlt;
