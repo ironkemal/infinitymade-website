@@ -70,6 +70,28 @@ try {
     $('rzPodoFelder')?.style.order === '1' && $('rzPodoHinweis')?.style.order === '3',
     $('rzPodoFelder')?.style.order + '/' + $('rzPodoHinweis')?.style.order);
 
+  // ── Befund-Bestätigung (Kemal 18.09.2026: „göstermeyince sanki yok, elle
+  // yapmam gerek gibi bir fikir oluyor") ──────────────────────────────────
+  const planTxt = () => ($('rzPodoSitzungsplan')?.textContent || '').replace(/\s+/g, ' ').trim();
+  const planSichtbar = () => $('rzPodoSitzungsplan')?.style.display === 'block';
+  pruef('DF ohne Menge: Befund-Bestätigung ist schon sichtbar',
+    planSichtbar() && planTxt().includes('✓ Befund ist eingeplant'), planTxt().slice(0, 120));
+  pruef('DF ohne Menge: sagt, wann der Plan je Einheit erscheint', planTxt().includes('Behandlungseinheiten'));
+  $('rzAnzahl').value = '6'; $('rzAnzahl').dispatchEvent(new Event('input', { bubbles: true }));
+  await warte(400);
+  pruef('DF mit 6 Einheiten: Einheit 1 = Eingangsbefundung (78040)',
+    planTxt().includes('Sitzung 1') && planTxt().includes('Eingangsbefundung (78040)'), planTxt().slice(0, 200));
+  pruef('DF mit 6 Einheiten: Einheit 2–6 = Befundung (78030)', planTxt().includes('Sitzung 2–6') && planTxt().includes('Befundung (78030)'));
+  pruef('DF mit 6 Einheiten: Bestätigung bleibt stehen', planTxt().includes('✓ Befund ist eingeplant'));
+  pruef('Bestätigung ist grün umrandet', $('rzPodoSitzungsplan').style.borderLeftColor.includes('success') || $('rzPodoSitzungsplan').style.borderLeftColor.includes('34, 197, 94'), $('rzPodoSitzungsplan').style.borderLeftColor);
+  pruef('Der alte graue Einzeiler steht nicht daneben', !($('rzPodoHinweis')?.textContent || '').includes('Podologische Befundung (78030) läuft'), $('rzPodoHinweis')?.textContent);
+  await setzeBereich('podo', 'UI1');
+  pruef('UI1 (Nagelspange): KEIN grünes Häkchen — dort läuft keine Automatik', !planTxt().includes('✓ Befund ist eingeplant'), planTxt().slice(0, 160));
+  await setzeBereich('physio', 'KG');
+  pruef('Physio: kein Befund-Kasten', !planSichtbar());
+  $('rzAnzahl').value = '';
+  await setzeBereich('podo', 'DF');
+
   // ── Kästchen-Beschriftung ───────────────────────────────────────────────
   pruef('DF: a) Hornhautabtragung', text('rzLsA') === 'a) Hornhautabtragung', text('rzLsA'));
   pruef('DF: b) Nagelbearbeitung',  text('rzLsB') === 'b) Nagelbearbeitung',  text('rzLsB'));

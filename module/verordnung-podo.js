@@ -936,7 +936,21 @@ async function sitzungsplanAktualisieren(supabase, ctx) {
     podologieVor2023: _altbestand,
   });
 
-  if (!plan.anwendbar && !plan.hinweis) { el.style.display = 'none'; return false; }
+  // Kemal, 18.09.2026: „göstermeyince sanki yok, elle manuel yapmam gerek gibi
+  // bir fikir oluyor." Bei DF/NF/QF gehört die Befundung IMMER dazu (Anlage 1a
+  // Teil 2 Nr. 4.2) und wird von allein eingeplant — das muss man SEHEN, sonst
+  // sucht der Anwender einen Knopf, den er nie drücken muss. Deshalb steht der
+  // Kasten schon nach der Diagnosegruppe da, nicht erst mit der Menge.
+  //
+  // Die grüne Bestätigung gilt nur, wo sie stimmt: DF/NF/QF, und entweder ist
+  // noch keine Menge da (dann gilt die Regel allgemein) oder die Rechnung hat
+  // wirklich Zeilen geliefert. Im Nagelzweig (UI1/UI2) laeuft KEINE Automatik —
+  // dort entscheidet die Praxis (eingangsbefundung-regel.js) — und ein gruenes
+  // Haekchen waere gelogen.
+  const root = dgWurzel($('rzDg')?.value);
+  const mengeDa = Number.parseInt($('rzAnzahl')?.value, 10) >= 1;
+  const automatisch = POD_BEFUND_DGS.includes(root) && (!mengeDa || plan.zeilen.length > 0);
+  if (!plan.anwendbar && !plan.hinweis && !automatisch) { el.style.display = 'none'; return false; }
 
   const zeilen = plan.zeilen.map(z => `
     <div style="display:flex;gap:6px;align-items:baseline;margin-top:2px;">
@@ -962,14 +976,28 @@ async function sitzungsplanAktualisieren(supabase, ctx) {
       </div>
     </div>` : '';
 
+  const gruen = 'var(--success,#22c55e)';
+  el.style.borderLeftColor = automatisch ? gruen : 'var(--border)';
+  el.style.borderLeftWidth = automatisch ? '3px' : '2px';
+  const kopf = automatisch
+    ? `<div style="font-size:12px;font-weight:700;color:${gruen};">✓ Befund ist eingeplant — Sie müssen nichts ergänzen</div>`
+    : `<div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Befund</div>`;
+  // Ohne Menge gibt es noch keinen Plan je Einheit — die Regel im Klartext.
+  const ohneMenge = automatisch && !mengeDa ? `
+    <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">
+      Die Befundung (78030) läuft vor jeder Behandlung mit, bei der Erstbehandlung zuerst die
+      Eingangsbefundung (78040). Sobald die Behandlungseinheiten eingetragen sind, steht hier der Plan je Einheit.
+    </div>` : '';
+
   el.innerHTML = `
-    <div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Sitzungsplan (Vorschau)</div>
+    ${kopf}
+    ${ohneMenge}
     ${zeilen}
     ${plan.hinweis ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${h(plan.hinweis)}</div>` : ''}
     ${frage}
     <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">
-      Befundpositionen stehen nicht auf der Verordnung. Sie erscheinen an den Einheiten im Terminbereich
-      und laufen beim Buchen als zweite Leistung mit — gesetzt werden sie in der Abrechnung.
+      Nicht auf dem Papier-Rezept: Die Befundung erscheint an den Einheiten im Terminbereich und wird beim
+      Buchen als zweite Leistung ergänzt. Abgerechnet wird sie in der Abrechnung.
     </div>`;
   el.style.display = 'block';
 
@@ -983,7 +1011,7 @@ async function sitzungsplanAktualisieren(supabase, ctx) {
   });
 
   // Sagt dem Zusammenlauf, ob der alte Einzeiler-Hinweis noch gebraucht wird.
-  return plan.zeilen.length > 0;
+  return plan.zeilen.length > 0 || automatisch;
 }
 
 // ─── Zusammenlauf ──────────────────────────────────────────────────────────
