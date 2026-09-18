@@ -15691,8 +15691,7 @@ document.addEventListener('focusin', (e) => {
   if (dcfg) {
     attachDiagnoseSearch(el, supabase, { bereich: _getDiagnoseBereich, ...dcfg });
     // ICD-Felder: bidirektionale DG-Verdrahtung beim ersten Fokus anstossen.
-    // bereich zur Laufzeit auflösen: dcfg.bereich hat Vorrang (podNewIcd10),
-    // für rzIcd gilt der Mandanten-Fachbereich.
+    // dcfg.bereich hätte Vorrang, sonst gilt der Mandanten-Fachbereich.
     if (dcfg.kind === 'icd' && dcfg.dgField) {
       _wireDgIcdPair(el.id, dcfg.dgField, dcfg.dgKind || 'text', dcfg.warnId, dcfg.bereich ?? _getDiagnoseBereich());
     }
@@ -15722,11 +15721,12 @@ document.addEventListener('focusin', (e) => {
 
 /**
  * Verdrahtet das bidirektionale Verhalten für ein ICD-Feld und sein DG-Gegenstück.
- * @param {string} icdId   - ID des ICD-Feldes (z.B. 'podNewIcd10', 'rzIcd')
- * @param {string} dgId    - ID des DG-Feldes (z.B. 'podNewDiag', 'rzDg')
+ * @param {string} icdId   - ID des ICD-Feldes (z.B. 'rzIcd')
+ * @param {string} dgId    - ID des DG-Feldes (z.B. 'rzDg')
  * @param {string} dgKind  - 'select' oder 'text'
  * @param {string} [warnId] - ID des Warn-Elements
- * @param {string} [bereich] - Fachbereich ('podologie' od. leer für andere)
+ * @param {string} [bereich] - Fachbereich; nur Podologie hat heute echte
+ *   icd_accept-Regeln (s. module/diagnosegruppen-regeln.js).
  */
 function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
   const icdEl  = document.getElementById(icdId);
