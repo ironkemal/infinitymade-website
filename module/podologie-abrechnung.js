@@ -65,7 +65,7 @@ import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=2
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260910b';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260917';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
-import { loadDgIcdRules } from './diagnosegruppen-regeln.js?v=20260918';
+import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20260918';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20260901';
 import { positionVon } from './podo-geplant.js?v=20260918';
@@ -664,7 +664,7 @@ async function loadPodologieBilling() {
     const dRoot = vord ? podDiagRoot(vord.diagnosegruppe) : '';
     const isUIx = dRoot === 'UI1' || dRoot === 'UI2';
     const icd10 = vord?.icd10 || [];
-    const uiRule = (_dgIcdRules || {})[dRoot];
+    const uiRule = (getDgIcdRules() || {})[dRoot];
     // Der Nagel aus der Verordnung ist die Lokalisation. Nur wo er fehlt
     // (Verordnung von vor dem 04.09.2026), zaehlt noch der Freitext.
     const lokal = vord?.nagel || lokalFrei;
