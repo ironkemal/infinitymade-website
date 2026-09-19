@@ -124,7 +124,7 @@ export async function bindeTermin(sb, { bookingId, vordId }) {
     .update({ verordnung_id: vordId })
     .eq('id', bookingId)
     .select('id');
-  if (error) return { ok: false, fehler: fehlerText(error) };
+  if (error) return { ok: false, fehler: dbFehlerText(error) };
   if (!data?.length) return { ok: false, fehler: NICHT_GESCHRIEBEN };
   return { ok: true };
 }
@@ -135,7 +135,7 @@ export async function loeseTermin(sb, { bookingId }) {
     .update({ verordnung_id: null })
     .eq('id', bookingId)
     .select('id');
-  if (error) return { ok: false, fehler: fehlerText(error) };
+  if (error) return { ok: false, fehler: dbFehlerText(error) };
   if (!data?.length) return { ok: false, fehler: NICHT_GESCHRIEBEN };
   return { ok: true };
 }
@@ -157,8 +157,12 @@ const NICHT_GESCHRIEBEN =
  * fertigen deutschen Text. Ihn roh durchzureichen wäre dasselbe Muster wie
  * beim `no_overlapping_bookings`-Constraint: der Anwender sieht eine
  * Postgres-Meldung und weiss nicht, was er tun soll.
+ *
+ * `db`-Präfix, weil `module/abrechnung-auswahl.js` ein anderes `fehlerText`
+ * hat (liest eine fetch-Antwort, keinen Supabase-Fehler) — gleicher Name
+ * verwechselte die Funktionskarte.
  */
-function fehlerText(error) {
+function dbFehlerText(error) {
   if (!error) return 'Unbekannter Fehler.';
   if (error.code === '42501') {
     return error.message || 'Diese Verordnung gehört zu einer anderen Praxis.';
