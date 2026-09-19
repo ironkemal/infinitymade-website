@@ -20096,10 +20096,10 @@ async function loadUeberblickVacations(ownerId, todayStr) {
 
 window.openPatientDetail = async function(leadId) {
   if (!leadId) return;
-  let lead = (window.leadsCache || []).find(l => l.id === leadId);
+  let lead = leadsCache.find(l => l.id === leadId);
   if (!lead) {
     const { data } = await supabase.from('leads').select('*').eq('id', leadId).maybeSingle();
-    lead = data;
+    lead = data; if (data) leadsCache.push(data);   // loadPatientDetailTermine() sucht ihn dort wieder (19.09.2026)
   }
   if (lead) {
     openPatientDetailModal(lead);
