@@ -66,6 +66,7 @@ import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechn
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260917';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20260918';
+import { leiteBehandlungsbeginnAb } from './behandlungsbeginn.js?v=20260919';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20260901';
 import { positionVon } from './podo-geplant.js?v=20260918';
@@ -785,6 +786,13 @@ async function loadPodologieBilling() {
       employee_id: ctx.getSessionUserId?.() || null,   // Ops #252 — wer hat behandelt
     });
     if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+
+    // Behandlungsbeginn = erste dokumentierte Behandlung (module/behandlungsbeginn.js).
+    // Ohne das blieb er NULL: die Liste meldete „Frist abgelaufen" und jede spätere
+    // Behandlung löste den Dialog „Datum nach Beginn spätestens" aus.
+    const beginn = await leiteBehandlungsbeginnAb(ctx.supabase, _podState.selectedVordId, vord?.behandlungsstart);
+    if (beginn.fehler) console.warn('[podologie-abrechnung] Behandlungsbeginn:', beginn.fehler);
+    if (vord && beginn.beginn) vord.behandlungsstart = beginn.beginn;
 
     // Status machine: wenn alle Einheiten verbraucht → abrechenbar
     if (vord?.behandlungseinheiten) {
