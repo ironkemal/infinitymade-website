@@ -152,6 +152,80 @@ export function podoStrukturBlocker(v, hpnrs = []) {
   return gruende;
 }
 
+/**
+ * Die Gründe aus einer abgewiesenen Abrechnung lesbar machen.
+ *
+ * Der Server antwortet auf einen gescheiterten Preflight mit 422 und
+ * `{ error, preflight: { ok, errors:[{code,severity,where,message}], warnings } }`
+ * (`api-backend/billing/api/abrechnung.routes.js`, drei Stellen: `create`,
+ * `create-podologie`, Korrekturrechnung). Angezeigt wurde bis zum 19.09.2026
+ * nur `error` — also „Preflight-Fehler." und sonst nichts. Der Anwender sah,
+ * DASS die Kasse die Datei abgewiesen hätte, nirgends WARUM; die Begründung
+ * stand im Netzwerk-Tab des Browsers. Genau diese Lücke hat die untere Hälfte
+ * derselben Seite („Fehlerhafte Rezepte") schon geschlossen — dort steht die
+ * Liste der Gründe unter der Zeile. Hier fehlte sie.
+ *
+ * Warnungen kommen nur zum Zug, wenn es keinen einzigen Fehler gibt: abgewiesen
+ * wird wegen der Fehler, und eine Liste, in der beides untereinander steht,
+ * lässt den Anwender das Blockierende suchen.
+ *
+ * Reine Funktion (kein DOM, kein Netz) — deshalb steht der Test daneben.
+ *
+ * @param {object} json  geparste Antwort des Servers
+ * @returns {Array<string>} Klartextzeilen, leer wenn es nichts zu sagen gibt
+ */
+export function preflightGruende(json) {
+  const p = json?.preflight;
+  if (!p) return [];
+  const fehler = Array.isArray(p.errors) ? p.errors : [];
+  const quelle = fehler.length ? fehler : (Array.isArray(p.warnings) ? p.warnings : []);
+
+  const gesehen = new Set();
+  const zeilen = [];
+  for (const b of quelle) {
+    const text = String(b?.message || '').trim();
+    if (!text) continue;
+    // `where` ist ein Pfad wie „prescription[0].verordnung.patLeitsymptomatik".
+    // Die laufende Nummer ist das einzig Brauchbare daran — sie trennt zwei
+    // Verordnungen mit demselben Mangel. Sie zählt in der Reihenfolge des
+    // SERVERS, nicht der Liste auf dem Bildschirm; deshalb „Verordnung 1"
+    // als Unterscheidung, nicht als Wegweiser.
+    const wo = String(b?.where || '');
+    const nr = wo.match(/^prescription\[(\d+)\]/);
+    const herkunft = [
+      nr ? `Verordnung ${Number(nr[1]) + 1}` : '',
+      wo.replace(/^prescription\[\d+\]\./, ''),
+      b?.code || '',
+    ].filter(Boolean).join(' · ');
+
+    const zeile = herkunft ? `${text} (${herkunft})` : text;
+    if (gesehen.has(zeile)) continue;   // derselbe Mangel zweimal hilft niemandem
+    gesehen.add(zeile);
+    zeilen.push(zeile);
+  }
+  return zeilen;
+}
+
+/**
+ * Die Überschrift über den Gründen.
+ *
+ * `create-podologie` meldet wörtlich „Preflight-Fehler." — Fachjargon aus dem
+ * Dateiformat, der in einer Podologiepraxis nichts sagt. Genau dieser eine
+ * Satz wird ersetzt, jede andere Servermeldung bleibt unverändert: der
+ * Physio-Weg schickt bereits einen erklärenden Satz mit („Abrechnung enthält
+ * Fehler, die vom DMRZ abgelehnt würden"), und eine Meldung umzudichten, die
+ * man nicht kennt, macht die Fehlersuche schwerer statt leichter.
+ *
+ * @param {object} json    geparste Antwort des Servers
+ * @param {number} status  HTTP-Status (Notnagel, wenn der Körper leer ist)
+ */
+export function fehlerText(json, status) {
+  const roh = json?.error || `HTTP ${status}`;
+  return (json?.preflight && roh === 'Preflight-Fehler.')
+    ? 'Die Datei hätte die Prüfung der Annahmestelle nicht bestanden.'
+    : roh;
+}
+
 /** Eindeutiger Schlüssel einer Gruppe. `bereich` gehört dazu — siehe Kopf. */
 export function gruppenKey(bereich, ik) { return `${bereich}|${ik}`; }
 
@@ -939,10 +1013,17 @@ function _wireEinmal() {
 
 // ─── Erstellen ──────────────────────────────────────────────────────────────
 
-function _fehlerZeigen(text) {
+/**
+ * Die rote Zeile unter der Liste. `gruende` steht darunter, eine je Zeile —
+ * `white-space:pre-line` statt einer zweiten Liste, weil dieses Element
+ * Klartext trägt und nicht mit fremdem HTML gefüttert werden soll.
+ */
+function _fehlerZeigen(text, gruende = []) {
   const el = document.getElementById('abAuswahlError');
   if (!el) return;
-  el.textContent = text;
+  const zeilen = (Array.isArray(gruende) ? gruende : []).slice(0, 12);
+  el.style.whiteSpace = 'pre-line';
+  el.textContent = [text, ...zeilen.map(g => `• ${g}`)].filter(Boolean).join('\n');
   el.style.display = text ? 'block' : 'none';
 }
 
@@ -1007,7 +1088,7 @@ async function _erstelleGruppen(keys, knopf) {
         · ${esc(String(json.prescriptionCount ?? json.sessionCount ?? ''))} Positionen</div>`;
     } catch (err) {
       fehler++;
-      zeilen[zeilen.length - 1] = `<div style="padding:2px 0;color:#ef4444;">✕ ${esc(g.name)} — ${esc(err.message || 'Fehler')}</div>`;
+      zeilen[zeilen.length - 1] = protokollFehlerHtml(g.name, err);
     }
     schreibe();
   }
@@ -1060,8 +1141,42 @@ async function _sendeGruppe(g, freigabe) {
     body: JSON.stringify(body),
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+  if (!res.ok) throw fehlerMitGruenden(json, res.status);
   return json;
+}
+
+/**
+ * Ein Fehler, der seine Begründung mitträgt.
+ *
+ * `throw new Error(json.error)` warf die Preflight-Befunde weg — der Aufrufer
+ * bekam „Preflight-Fehler." und konnte nichts damit anfangen. Die Gründe
+ * hängen jetzt am Fehler und werden dort angezeigt, wo er ankommt.
+ */
+function fehlerMitGruenden(json, status) {
+  const e = new Error(fehlerText(json, status));
+  e.gruende = preflightGruende(json);
+  return e;
+}
+
+/**
+ * Eine fehlgeschlagene Gruppe im Protokoll — mit den Gründen darunter.
+ * Gleiche Bauart wie die Liste unter „Fehlerhafte Rezepte" (`fehlerhaftHtml()`):
+ * derselbe Befund soll auf dieser Seite überall gleich aussehen.
+ */
+function protokollFehlerHtml(name, err) {
+  const gruende = Array.isArray(err?.gruende) ? err.gruende : [];
+  // Bei einer Sammelabrechnung über viele Verordnungen kann dieselbe Lücke
+  // dutzendfach auftreten. Zwölf Zeilen zeigen das Muster; alles darüber
+  // schiebt nur den Rest der Seite weg.
+  const sichtbar = gruende.slice(0, 12);
+  const rest = gruende.length - sichtbar.length;
+  const liste = sichtbar.length
+    ? `<ul style="margin:2px 0 8px;padding-left:20px;font-size:12px;color:var(--text-muted);">
+        ${sichtbar.map(g => `<li>${esc(g)}</li>`).join('')}
+        ${rest > 0 ? `<li>… und ${rest} weitere${rest === 1 ? 'r Punkt' : ' Punkte'}</li>` : ''}
+      </ul>`
+    : '';
+  return `<div style="padding:2px 0;color:#ef4444;">✕ ${esc(name)} — ${esc(err?.message || 'Fehler')}</div>${liste}`;
 }
 
 /** „Trotzdem übernehmen" — eine EINZELNE gesperrte Verordnung mit Begründung. */
@@ -1088,12 +1203,15 @@ async function _uebersteuere(btn) {
       }),
     });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+    if (!res.ok) throw fehlerMitGruenden(json, res.status);
     ctx.showToast?.(`§302 DTA erstellt (übersteuert): ${json.rechnungsnummer || ''} ✓`);
     await ctx.nachErstellung?.();
     await ladeAbrechnungAuswahl();
   } catch (err) {
-    _fehlerZeigen(err.message || 'Fehler beim Übernehmen.');
+    // „Trotzdem übernehmen" scheitert am häufigsten am Preflight — und dann ist
+    // die Begründung das Einzige, was weiterhilft: übersteuert wurden ja gerade
+    // die Sperren, die der Browser kennt.
+    _fehlerZeigen(err.message || 'Fehler beim Übernehmen.', err.gruende);
     btn.disabled = false;
     btn.textContent = 'Trotzdem übernehmen';
   }

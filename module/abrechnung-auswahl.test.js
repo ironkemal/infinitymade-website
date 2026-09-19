@@ -18,7 +18,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { kassenanteil, podoSperren, gruppenKey, baueGruppen, auswahlStand, imZeitraum,
-         keineDokumentierteBehandlung, podoStrukturBlocker }
+         keineDokumentierteBehandlung, podoStrukturBlocker, preflightGruende, fehlerText }
   from './abrechnung-auswahl.js';
 
 const quelle = readFileSync(new URL('./abrechnung-auswahl.js', import.meta.url), 'utf8');
@@ -184,6 +184,83 @@ test('Podologie geht nur ueber create-podologie, Physio nur ueber create', () =>
   // podologischer 78xxx-HPNR). Eine Verwechslung faellt erst als Absetzung auf.
   assert.ok(/g\.bereich === 'podo'\s*\n?\s*\?\s*`\$\{ctx\.apiBase\}\/billing\/abrechnung\/create-podologie`/.test(quelle),
     'Die Endpunktwahl muss am Fachbereich haengen, nicht an etwas anderem.');
+});
+
+// ── Die Gründe einer abgewiesenen Abrechnung ───────────────────────────────
+//
+// Live gefunden am 19.09.2026 (Podologie Nord): „Erstellen" scheiterte, auf
+// dem Bildschirm stand „✕ DAV AOK Bayern — Preflight-Fehler." und sonst
+// nichts. Die Begründung — fehlende Leitsymptomatik — kam im selben
+// Antwortkörper mit, wurde aber nie gelesen.
+
+test('preflightGruende: der Grund aus der 422-Antwort landet in der Liste', () => {
+  const g = preflightGruende({
+    error: 'Preflight-Fehler.',
+    preflight: { ok: false, errors: [{
+      code: 'V:01011', severity: 'error',
+      where: 'prescription[0].verordnung.patLeitsymptomatik',
+      message: 'Keine Leitsymptomatik angekreuzt — dann ist die patientenindividuelle Leitsymptomatik Pflicht.',
+    }] },
+  });
+  assert.equal(g.length, 1);
+  assert.match(g[0], /Keine Leitsymptomatik angekreuzt/);
+  // Die laufende Nummer trennt zwei Verordnungen mit demselben Mangel.
+  assert.match(g[0], /Verordnung 1/);
+  assert.match(g[0], /V:01011/);
+});
+
+test('preflightGruende: zwei Verordnungen mit demselben Mangel bleiben zwei Zeilen', () => {
+  const mangel = (i) => ({ code: 'P:01003', severity: 'error',
+    where: `prescription[${i}].patient.nachname`, message: 'Nachname fehlt' });
+  const g = preflightGruende({ preflight: { errors: [mangel(0), mangel(1)] } });
+  assert.equal(g.length, 2);
+  assert.match(g[0], /Verordnung 1/);
+  assert.match(g[1], /Verordnung 2/);
+});
+
+test('preflightGruende: derselbe Befund doppelt wird einmal gezeigt', () => {
+  const b = { code: 'F:01001', severity: 'error', where: 'absender.ik', message: 'Absender-IK fehlt' };
+  assert.deepEqual(preflightGruende({ preflight: { errors: [b, { ...b }] } }),
+    ['Absender-IK fehlt (absender.ik · F:01001)']);
+});
+
+test('preflightGruende: Warnungen nur, wenn es keinen Fehler gibt', () => {
+  const fehler  = { code: 'F:01001', severity: 'error',   where: 'absender.ik', message: 'IK fehlt' };
+  const warnung = { code: 'W:01', severity: 'warning', where: 'rechnung', message: 'Nur ein Hinweis' };
+  // Abgewiesen wird wegen der Fehler — eine gemischte Liste liesse den
+  // Anwender das Blockierende suchen.
+  assert.deepEqual(preflightGruende({ preflight: { errors: [fehler], warnings: [warnung] } }),
+    ['IK fehlt (absender.ik · F:01001)']);
+  assert.deepEqual(preflightGruende({ preflight: { errors: [], warnings: [warnung] } }),
+    ['Nur ein Hinweis (rechnung · W:01)']);
+});
+
+test('preflightGruende: ohne Preflight-Block bleibt es bei der blossen Meldung', () => {
+  assert.deepEqual(preflightGruende({ error: 'Nicht angemeldet' }), []);
+  assert.deepEqual(preflightGruende(null), []);
+  assert.deepEqual(preflightGruende({ preflight: { errors: [{ code: 'X', where: 'y' }] } }), [],
+    'ein Befund ohne Text ist keine Zeile');
+});
+
+test('fehlerText: nur das nackte „Preflight-Fehler." wird übersetzt', () => {
+  assert.equal(fehlerText({ error: 'Preflight-Fehler.', preflight: { ok: false } }, 422),
+    'Die Datei hätte die Prüfung der Annahmestelle nicht bestanden.');
+  // Der Physio-Weg erklärt sich schon selbst — nicht anfassen.
+  const physio = 'Abrechnung enthält Fehler, die vom DMRZ abgelehnt würden.';
+  assert.equal(fehlerText({ error: physio, preflight: { ok: false } }, 422), physio);
+  // Ohne Preflight-Block ist es ein anderer Fehler und bleibt wörtlich stehen.
+  assert.equal(fehlerText({ error: 'Preflight-Fehler.' }, 422), 'Preflight-Fehler.');
+  assert.equal(fehlerText({}, 500), 'HTTP 500');
+});
+
+test('die Gruende werden am Fehler weitergereicht, nicht verworfen', () => {
+  // `throw new Error(json.error)` war die Ursache: der Aufrufer bekam
+  // "Preflight-Fehler." und der Rest der Antwort fiel auf den Boden.
+  assert.ok(/throw fehlerMitGruenden\(json, res\.status\)/.test(quelle),
+    'Beide Netzaufrufe (_sendeGruppe, _uebersteuere) muessen die Gruende mitgeben.');
+  assert.equal((quelle.match(/throw fehlerMitGruenden\(/g) || []).length, 2);
+  assert.ok(!/throw new Error\(json\.error\s*\|\|/.test(quelle),
+    'Kein Pfad darf die Begruendung wieder wegwerfen.');
 });
 
 test('imZeitraum: leer heisst alles, ohne Datum heisst raus', () => {
