@@ -207,6 +207,32 @@ export async function maskeEinbetten({ host, rx }) {
     catch (e) { console.warn('[verordnung-maske] Patientenkopf:', e?.message); }
   }
   fuelleMuster13(rx, { alsVorlage: false });
+
+  // Das Suchfeld oben ("Patient auswählen") gehört zum selben wiederverwendeten
+  // Maskenknoten (s.o., "Die Brücke zu dashboard.js") und überlebt das Umhängen
+  // zwischen Modal und Seite — es zeigte bisher weiter den zuletzt gesuchten
+  // oder neu angelegten Patienten, ganz gleich, welche Verordnung gerade
+  // geladen wird (19.09.2026, live gefunden: eine frisch angelegte Verordnung
+  // liess "Patient auswählen" beim Öffnen einer FREMDEN, älteren Verordnung auf
+  // dem neuen Patienten stehen — Kasse/BSNR/LANR/Datum stimmten, nur der
+  // angezeigte Name nicht. Nicht datenverändernd, aber ein Speichern in diesem
+  // Zustand hätte auf den falschen Eindruck "das ist Patient X" gestützt).
+  // `fillRzPatientFromLead` (patient_id-Fall, oben) füllt `rzPatName`/
+  // `rzPatVorname` bereits; ohne `patient_id` ("ohne Akte") bleiben sie
+  // unberührt, deshalb hier aus dem Freitext `patient_name` nachgezogen.
+  if (!rx.patient_id) {
+    const teile = String(rx.patient_name || '').trim().split(/\s+/).filter(Boolean);
+    const vorEl = document.getElementById('rzPatVorname');
+    const nachEl = document.getElementById('rzPatName');
+    if (vorEl) vorEl.value = teile.slice(0, -1).join(' ');
+    if (nachEl) nachEl.value = teile.slice(-1).join(' ') || rx.patient_name || '';
+  }
+  const patSuchfeld = document.getElementById('rzPatientSearch');
+  if (patSuchfeld) {
+    const vorname = document.getElementById('rzPatVorname')?.value || '';
+    const nachname = document.getElementById('rzPatName')?.value || '';
+    patSuchfeld.value = [nachname, vorname].filter(Boolean).join(', ') || (rx.patient_name || '');
+  }
   // Die podologische Feinschliff-Automatik haengt sonst am `hidden` des
   // Modals — das springt hier nie um. Ohne diesen Anstoss blieben die
   // podologischen Felder in der eingebetteten Maske unsichtbar.

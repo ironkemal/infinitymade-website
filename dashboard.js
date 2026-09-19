@@ -45,7 +45,7 @@ import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-prue
 // in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
 // Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft }
-  from './module/verordnung-maske.js?v=20260918';
+  from './module/verordnung-maske.js?v=20260919';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908';
