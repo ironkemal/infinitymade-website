@@ -100,7 +100,7 @@ try {
     unbekannt.gesetzt === 0 && unbekannt.ohneFeld.length === 1);
 
   // ── Der Prüfmotor liefert nur Feldnamen, die es hier gibt ───────────────
-  const { pruefeVerordnung } = await import('../../module/verordnung-pruefung.js?v=20260906');
+  const { pruefeVerordnung } = await import('../../module/verordnung-pruefung.js?v=20260919');
   const leer = pruefeVerordnung({ rezeptart: 'gkv' }, { bereich: 'podologie', gruppen: {}, luecken: [] });
   const unbekannteFelder = [...new Set(leer.befunde
     .filter(b => b.schwere !== 'hinweis' && b.feld)

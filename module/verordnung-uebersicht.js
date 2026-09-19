@@ -81,7 +81,7 @@ import { ausTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260910';
 // der Eingabemaske (`verordnung-pruefen-knopf.js`) — `voAusGespeicherterVerordnung`
 // ist der fehlende Weg, dieselbe Prüfung auch auf eine gespeicherte Zeile
 // anzuwenden, ohne einen zweiten Motor zu schreiben.
-import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260906';
+import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260919';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
 import { on } from './signal.js?v=20260813';
 

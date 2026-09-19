@@ -162,6 +162,29 @@ test('ohne ICD blockiert die Podologie, Physio gibt nur einen Hinweis', () => {
   assert.equal(physio.ok, true);
 });
 
+test('zwei ICD-Kodes als Array: kein „fehlt", und der DG-Abgleich läuft weiter', () => {
+  // Rückfall 19.09.2026 (canli-test): die Liste band das Array mit einem
+  // LEERZEICHEN zusammen, bevor sie es an `parseIcdList()` gab. Das Leerzeichen
+  // ist kein Trenner — aus ['E11.74','I70.24'] wurde ein einziger Pseudokode,
+  // also null Kodes. Folge: falsches „ICD-10-Kode fehlt" (in der Podologie
+  // sogar ein Blocker) und ein wortlos übersprungener ICD⇄DG-Abgleich.
+  const passend = pruefeVerordnung(saubereVo({ icd: ['E11.74', 'I70.24'] }), PODO, HEUTE);
+  assert.ok(!codes(passend).includes('PFLICHT_ICD'), 'zwei Kodes sind nicht „kein Kode"');
+  assert.ok(!codes(passend).includes('ICD_FEHLT'));
+  assert.ok(passend.geprueft.includes('ICD ⇄ Diagnosegruppe'), 'der Abgleich darf nicht stumm ausfallen');
+  assert.ok(!codes(passend).includes('ICD_DG_MISMATCH'), 'E11.74 passt zu DF');
+  assert.equal(passend.ok, true);
+
+  // Und er urteilt auf dem Array auch wirklich — nicht nur „still".
+  const fremd = pruefeVerordnung(saubereVo({ icd: ['M54.5', 'M99.0'] }), PODO, HEUTE);
+  assert.ok(codes(fremd).includes('ICD_DG_MISMATCH'));
+
+  // Dasselbe Urteil, egal ob Array oder Komma-Zeichenkette (die Maske liefert
+  // die eine Form, die gespeicherte Zeile die andere — ein Motor, ein Urteil).
+  const alsText = pruefeVerordnung(saubereVo({ icd: 'E11.74, I70.24' }), PODO, HEUTE);
+  assert.deepEqual(codes(alsText), codes(passend));
+});
+
 // ── ICD ⇄ Diagnosegruppe ────────────────────────────────────────────────────
 
 test('ein fachfremder Kode warnt — bei harter Regel blockiert er', () => {

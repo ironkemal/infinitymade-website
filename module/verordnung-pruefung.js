@@ -168,7 +168,16 @@ export function pruefeVerordnung(vo, regelsatz, opt = {}) {
   // Der ICD ist nur dort Pflicht, wo die Diagnosegruppe an ihm hängt
   // (Podologie). Sonst fehlt er nicht der Verordnung, sondern der späteren
   // §302-Abgabe — das ist ein Hinweis, kein Fehler auf dem Formular.
-  const icdCodes = parseIcdList(typeof vo?.icd === 'string' ? vo.icd : (vo?.icd || []).join(' '));
+  // `parseIcdList()` nimmt Zeichenkette UND Array entgegen (icd-dg-match.js:64)
+  // — roh durchreichen. Hier stand bis zum 19.09.2026 ein `.join(' ')` für den
+  // Array-Fall; das Leerzeichen ist aber keiner der Trenner, an denen
+  // `parseIcdList()` schneidet (`,` `;` `\n`). Zwei Kodes wurden dadurch zu
+  // „E11.74I70.24" verklebt, fielen durch `ICD_SHAPE` und die Liste meldete
+  // „ICD-10-Kode fehlt" an einer vollständig ausgefüllten Verordnung —
+  // während der Knopf „Verordnung prüfen" dieselbe Zeile für in Ordnung
+  // erklärte. Stiller Zweitschaden: `icdCodes` war leer, also übersprang
+  // Abschnitt 3 den ICD⇄Diagnosegruppe-Abgleich wortlos.
+  const icdCodes = parseIcdList(vo?.icd);
   if (!icdCodes.length) {
     if (profil?.pflichtIcd) {
       melde(SCHWERE.blocker, 'PFLICHT_ICD', 'ICD-10-Kode fehlt — in der Podologie bestimmt er die Diagnosegruppe.', 'icd', QUELLE_PFLICHT);

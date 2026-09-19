@@ -37,7 +37,7 @@
  * eine fehlerhafte Verordnung muss erfassbar bleiben.
  */
 
-import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20260906';
+import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20260919';
 import { markiereBefunde, loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { POD_KATALOG, dgWurzel } from './verordnung-regeln.js?v=20260903';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
