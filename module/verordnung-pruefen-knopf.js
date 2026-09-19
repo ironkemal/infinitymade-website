@@ -62,7 +62,13 @@ function lesenMuster13() {
   const ls = ['a', 'b', 'c'].filter(b => haken(`rzLs${b.toUpperCase()}`));
   return {
     bereich:            wert('rzTherapieBereich'),
-    icd:                wert('rzIcd'),
+    // Beide Diagnosefelder, komma-getrennt: `parseIcdList()` (icd-dg-match.js)
+    // trennt am Komma und schneidet danach den Titel ab — ein Titel mit Komma
+    // („Diabetes mellitus, Typ 2") zerfällt dabei in einen gültigen Kode und
+    // Resttext, der als Nicht-Kode verworfen wird. Ohne `rzIcd2` prüfte der
+    // Knopf nur die halbe Verordnung: die Kassen-Sperre UI1/UI2 (nur L60.0)
+    // sieht im Backend beide Kodes.
+    icd:                [wert('rzIcd'), wert('rzIcd2')].filter(Boolean).join(', '),
     diagnosegruppe:     wert('rzDg'),
     leitsymptomatik:    ls,
     // Kästchen d) trägt keinen Katalogbuchstaben, sondern Freitext. Ohne

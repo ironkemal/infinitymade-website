@@ -40,12 +40,12 @@ import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUeb
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
-import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20260906';
+import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20260919';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht
 // in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
 // Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft }
-  from './module/verordnung-maske.js?v=20260919';
+  from './module/verordnung-maske.js?v=20260919b';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908';
@@ -15617,8 +15617,8 @@ function lsWireToggle(prefix) {
 // abhängig, sie bekommen strict, wenn Physio/Ergo/Logopädie an der Reihe sind.
 const DIAGNOSE_FIELDS = {
   rzIcd:       { kind: 'icd',  dgField: 'rzDg',     dgKind: 'text', warnId: 'rzIcdDgWarning'  }, // Rezept anlegen
-  // Diagnosegruppe. `nurCodes` liest die Allowlist, die module/verordnung-podo.js
-  // aus dem eingegebenen ICD-Kode ableitet (leer = keine Einengung).
+  rzIcd2:      { kind: 'icd' },  // 2. Diagnose — BEWUSST ohne dgField: die DG folgt der ERSTEN, zwei Felder auf demselben `rzDg` überschrieben sich
+  // Diagnosegruppe. `nurCodes` liest die Allowlist, die module/verordnung-podo.js aus dem eingegebenen ICD-Kode ableitet (leer = keine Einengung).
   rzDg:        { kind: 'dg',   icdField: 'rzIcd',   codeOnly: true,
                  nurCodes: () => (document.getElementById('rzDg')?.getAttribute('data-pod-erlaubt') || '')
                    .split(',').filter(Boolean) },
@@ -15962,7 +15962,7 @@ async function openRezeptModal(phone, leadId) {
   g('rzBerichtStatus').value = 'offen';
   // Neue Muster-13-Felder
   ['rzPatKasse','rzKkNum','rzPatName','rzPatVorname','rzPatGeb','rzPatStrasse','rzPatOrt',
-   'rzPatKasseIk','rzPatVersNr','rzPatStatus','rzDiagnoseText','rzHmErg','rzAnzahlErg',
+   'rzPatKasseIk','rzPatVersNr','rzPatStatus','rzIcd2','rzDiagnoseText','rzHmErg','rzAnzahlErg',
    'rzHinweise','rzIkLE'].forEach(k => { const el = g(k); if (el) el.value = ''; });
   g('rzUnterschrift').checked = false;
   // Therapiebereich nach Praxis-Sektor vorbelegen (spart Klicks)

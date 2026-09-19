@@ -31,7 +31,7 @@
  * spaeter und mit Rueckfrage (module/verordnung-patient-abgleich.js).
  */
 
-import { fuelleMuster13, setzeScanHerkunft, setzePatientNeu } from './verordnung-maske.js?v=20260919';
+import { fuelleMuster13, setzeScanHerkunft, setzePatientNeu } from './verordnung-maske.js?v=20260919b';
 import {
   ocrAlsVerordnung, ocrAlsPatientkopf, ocrAlsPatientensuche, patientAbgleichAusOcr,
 } from './verordnung-aus-ocr.js?v=20260906';

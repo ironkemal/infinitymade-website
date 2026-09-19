@@ -367,6 +367,11 @@ export function fuelleMuster13(rx, opt = {}) {
   setz('rzLanr', rx.doctor_lanr || rx.aerzte?.lanr || '');
   setz('rzBsnr', rx.doctor_bsnr || rx.aerzte?.bsnr || '');
   setz('rzIcd', rx.icd10 || '');
+  // Zweite Diagnose. Der Scan liest sie seit jeher (`module/verordnung-aus-ocr.js`,
+  // `icd10_2`), in die Maske kam sie bis zum 19.09.2026 nicht — das Feld gab es
+  // nicht. Sie ging damit auf JEDEM Weg verloren, auch beim Scan, denn gespeichert
+  // wird, was in der Maske steht (`nutzlastAusMaske()`).
+  setz('rzIcd2', rx.icd10_2 || '');
   setz('rzDiagnoseText', rx.diagnose_freitext || '');
   setz('rzDg', rx.diagnosegruppe || '');
   _bruecke?.lsApply?.('rz', rx.leitsymptomatik || null, rx.pat_leitsymptomatik || null);
@@ -542,6 +547,23 @@ export function patientkopfAusMaske() {
   return kopf;
 }
 
+/**
+ * Aus „E11.74 – Diabetes mellitus…" wird „E11.74".
+ *
+ * Die Katalogsuche schreibt Kode UND Titel ins Feld (`katalog-suche.js`,
+ * `toText`), die Spalte führt nur den Kode. Für `rzIcd` macht `saveRezept()`
+ * (dashboard.js) dasselbe eine Zeile vor dem Aufruf hierher; das zweite Feld
+ * wird erst hier gelesen und braucht deshalb dieselbe Regel.
+ *
+ * Bewusst NICHT `parseIcdList()`: die verwirft alles, was nicht die Form eines
+ * ICD-Kodes hat. Was jemand eintippt, soll erhalten bleiben — auch wenn es
+ * krumm ist. Prüfen tut der Prüfknopf, nicht das Speichern.
+ */
+function nurIcdKode(roh) {
+  const t = String(roh ?? '').trim();
+  return t.includes(' – ') ? t.split(' – ')[0].trim() : t;
+}
+
 export function nutzlastAusMaske(v) {
   const el = (id) => document.getElementById(id);
   const txt = (id) => (el(id)?.value || '').trim();
@@ -552,6 +574,12 @@ export function nutzlastAusMaske(v) {
     arzt_id: v.arztId,
     ausstellungsdatum: v.ausstDate,
     icd10: v.icd10,
+    // Zweite Diagnose (Muster 13 sagt „Diagnose(n)"). Die §302-Datei bekommt je
+    // Kode ein eigenes DIA-Segment (`api-backend/billing/dta/builder.js`), und
+    // `[icd10, icd10_2]` ist die Liste, aus der sie gebaut wird
+    // (`abrechnung.routes.js`). Leeres Feld heisst `null`, nicht „unverändert":
+    // wer den zweiten Kode löscht, will ihn los sein.
+    icd10_2: nurIcdKode(txt('rzIcd2')) || null,
     gueltig_bis: v.gueltigBis,
     anzahl_einheiten: v.anzahl,
     is_dringend: v.isDringend,

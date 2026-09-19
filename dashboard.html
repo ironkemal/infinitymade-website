@@ -3583,6 +3583,17 @@
                 <input class="m13-v m13-uline" id="rzDiagnoseText" placeholder="">
               </div>
               <div id="rzIcdDgWarning" style="display:none;color:var(--warning);font-size:11px;margin-top:3px;"></div>
+              <!-- Zweite Diagnose. Auf dem Papier steht „Diagnose(n)" — zwei Kodes sind der
+                   Normalfall (z.B. E11.74 + I70.24 beim diabetischen Fusssyndrom). Ohne dieses
+                   Feld liess sich der zweite Kode nur per Rezept-Scan erfassen; von Hand
+                   getippt ging er verloren, obwohl `prescriptions.icd10_2` ihn führt und die
+                   §302-Datei je Kode ein eigenes DIA-Segment verlangt
+                   (api-backend/billing/dta/builder.js). Optional: viele Verordnungen tragen
+                   nur einen Kode. -->
+              <div class="m13-diagrow" style="margin-top:8px;">
+                <input class="m13-v m13-uline" id="rzIcd2" autocomplete="off" placeholder="">
+                <span class="m13-cap">2. ICD-10-Code<br>(nur falls auf dem Rezept)</span>
+              </div>
               <div class="m13-dgrow">
                 <div class="m13-dgfield">
                   <span class="m13-cap">Diagnose&shy;gruppe</span>
@@ -5710,7 +5721,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260918c"></script>
+  <script type="module" src="dashboard.js?v=20260919"></script>
 </body>
 
 </html>

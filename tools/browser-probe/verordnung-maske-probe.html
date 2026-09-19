@@ -108,6 +108,26 @@ try {
   pruef('alle Pflichtbefunde zeigen auf ein Feld der Maske',
     unbekannteFelder.length === 0, unbekannteFelder.join(', '));
 
+  // ── Zweiter ICD-Kode: Feld da, und er überlebt den Weg Maske → Nutzlast ─
+  //
+  // Bis zum 19.09.2026 gab es das Feld nicht. Der zweite Kode war damit von
+  // Hand nicht erfassbar — und die §302-Datei bekommt je Kode ein eigenes
+  // DIA-Segment, das also nie entstand. Diese Proben stehen hier, weil der
+  // Weg nur mit echtem Markup prüfbar ist: `nutzlastAusMaske()` liest das DOM.
+  // Als LETZTES, weil `fuelleMuster13` die Maske überschreibt.
+  pruef('die Maske hat ein Feld für den zweiten ICD-Kode', !!document.getElementById('rzIcd2'));
+  maske.fuelleMuster13({ icd10: 'E11.74', icd10_2: 'I70.24 – Atherosklerose' }, { alsVorlage: false });
+  pruef('fuelleMuster13 schreibt den zweiten Kode in die Maske',
+    document.getElementById('rzIcd2')?.value === 'I70.24 – Atherosklerose',
+    document.getElementById('rzIcd2')?.value);
+  const mitZwei = maske.nutzlastAusMaske({ icd10: 'E11.74' });
+  pruef('nutzlastAusMaske gibt den zweiten Kode ohne Titel weiter',
+    mitZwei.icd10_2 === 'I70.24', String(mitZwei.icd10_2));
+  document.getElementById('rzIcd2').value = '';
+  pruef('leeres Feld heisst null — der gelöschte Kode wird auch in der Spalte gelöscht',
+    maske.nutzlastAusMaske({ icd10: 'E11.74' }).icd10_2 === null,
+    String(maske.nutzlastAusMaske({ icd10: 'E11.74' }).icd10_2));
+
 } catch (e) {
   pruef('Probe läuft durch', false, e?.stack || e?.message || String(e));
 }
