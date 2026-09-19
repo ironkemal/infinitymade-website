@@ -32,6 +32,25 @@ ok(r1.errors[0].code === '101' && r1.errors[0].belegnummer === '0001234', 'first
 ok(r1.errors[0].uebersetzung && r1.errors[0].uebersetzung.includes('Positionsnummer'), 'enriches with translation');
 ok(r1.errors[1].loesung, 'second row has fix hint');
 
+// 2b. Entwertetes Apostroph im Freitext der Kasse.
+// Der frühere naive split("'") zerschnitt das FEHL-Segment an dieser Stelle:
+// die erste Absetzung verlor ihren Text, der Rest wurde als eigenes (unbekanntes)
+// Segment gelesen. Mit segmenteTrennen bleibt das Segment ganz.
+const ediEscaped = [
+  "UNB+UNOC:3+TESTABS+TESTREC+250519:1200+1'",
+  "UNH+1+SLLA:21:0:0'",
+  "INV+A1234567890123:1+0+0001234'",
+  "FEHL+101+0001234+Pos.Nr. im Vertrag ?'Anlage 5?' nicht gelistet'",
+  "FEHL+15+0001235+KVNR fehlt'",
+  "UNT+5+1'",
+  "UNZ+1+1'",
+].join('');
+const r1b = parseZaaFile(ediEscaped);
+ok(r1b.errors.length === 2, 'entwertetes Apostroph zerschneidet das Segment nicht');
+ok(r1b.errors[0].belegnummer === '0001234' && r1b.errors[1].belegnummer === '0001235',
+   'beide Absetzungen behalten ihre Belegnummer');
+ok(r1b.errors[0].text.includes('Anlage 5'), 'Freitext der Kasse bleibt vollständig');
+
 // 3. Plain text
 const plainSample = `Bericht ZAA — Davaso\n` +
   `0001234\t101\tPositionsnummer unbekannt\n` +

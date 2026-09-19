@@ -12,15 +12,19 @@
 // We try EDIFACT first, then fall back to a regex-driven plain-text scan.
 
 import { translateZaaCode } from './error-translations.js';
+import { segmenteTrennen } from '../dta/preflight.js';
 
-const SEG_END = "'";
 const FIELD_SEP = '+';
 
+// Segmente trennen — dieselbe Routine wie beim Erzeugen (dta/preflight.js),
+// bewusst nicht noch einmal hier nachgebaut. Der frühere `split("'")` kannte
+// das Entwertungszeichen nicht: schickt die Kasse in einem FEHL-Freitext ein
+// entwertetes Apostroph (`?'`), zerschnitt er das Segment an der falschen
+// Stelle und eine Absetzung ging verloren oder landete auf dem falschen Beleg.
+// Das `\r`-Strippen und das Trimmen bleiben hier, weil Antwortdateien mit
+// CRLF und Zeilenumbrüchen zwischen den Segmenten ankommen.
 function splitSegments(content) {
-  // EDIFACT segments terminated by apostrophe; handle CRLF / LF noise.
-  return content
-    .replace(/\r/g, '')
-    .split(SEG_END)
+  return segmenteTrennen(String(content || '').replace(/\r/g, ''))
     .map(s => s.trim())
     .filter(Boolean);
 }
