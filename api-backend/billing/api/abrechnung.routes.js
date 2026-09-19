@@ -18,6 +18,7 @@ import { verordnungsartFuer, heilmittelBereichFuer } from '../dta/zhe-kennzeiche
 // Preise/Zuzahlung kommen ab Aufgabe 2 ausschliesslich über preise/resolver.js.
 // Aus den Katalogen wird hier nur noch gebraucht, was nichts mit Geld zu tun hat.
 import { resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positions.js';
+import { podoPositionsnummer } from '../codes/podo_positionsnummer.js';
 import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt } from '../kostentraeger/annahmestelle.js';
@@ -2421,7 +2422,7 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
         abrechnungscode,
       });
       sessions.push({
-        positionsnummer:  `${abrechnungscode}${hpnr}`.slice(0, 9),
+        positionsnummer:  podoPositionsnummer(hpnr),
         datumLeistung:    datum,
         anzahl:           1,
         einzelbetrag,
