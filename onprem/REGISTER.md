@@ -16,7 +16,7 @@
 
 ---
 
-## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 18.09.2026)
+## ⏭️ Buradan devam — yeni oturum bunu okusun (son güncelleme: 20.09.2026)
 
 > Bu blok sicilin **kısa yolu**. Amacı, yeni bir oturumun 1000 satır okumadan
 > "neredeyiz, sıradaki ne, nereye basmam" sorusuna cevap bulması. Ayrıntı her
@@ -411,6 +411,23 @@ kayıtlı: **(1)** baseline **donmuş durumda** (10.09.2026; 0001…0025 üzerin
 zaman yeni dosyayla; **(2)** `owner_id` ayrıştırılabilir iki eksen değil, kutuda da
 employee↔owner bağını taşıyor. Açık kalan tek iş: 5 ölü tablo + 5 ölü kolonun ayrı
 DROP migration'ı (**Faz 5.1**, bu hafta değil).
+
+⚠️ **20.09.2026 — §302 Echtbetrieb turu: bir geriye dönük denetim, bir ön kontrol (§7P).**
+19–20.09 gecesi `api-backend/billing/*` altına **12 commit** indi ve push'landı; tetikleyici
+kural işlemedi, `onprem` çağrılmadı. Geriye dönük denetim: **yeni bulut zinciri yok**
+(ölçüldü — eklenen satırlarda `process.env`/`fetch(`/`http://`/cron/n8n **0**, migration
+dosyası **0**, kapı exit **0**; **O-112** `unkritisch`). Ama tur iki kutu sonucu doğurdu:
+**O-113** (preflight artık sert `throw` ediyor — yanlış tek bir kural, kutuda **günlerce**
+düzeltilemeyecek bir abrechnung durması demek; SaaS'ta aynı hata 60 saniyede kapanıyor) ve
+**O-114** (19.09'da iki bozuk satır canlıda SQL ile silindi — kutuda o yol yok, satırı
+kaldıran ekran da yok). Aynı gece yazılan `ABRECHNUNG_ECHTBETRIEB_PLAN.md`'nin her adımına
+ön kontrol uygulandı → **O-115** (Datenaustauschreferenz sayacı göç/geri-yüklemede geri
+sarar) · **O-116** (alıcı sertifikası: kutudan runtime indirme **DUR**, tip B + son-kullanma
+kapısı) · **O-117** (`kind` env değil **DB**, ve kutuda anahtarı müşteri çevirmeli) ·
+**O-118** (Kostenträger/Annahmestellen seed'i Mayıs 2026'da dondu, besleme kapısı yok) ·
+**O-119** (⛔ §302 dosyası merkezden proxy'lenmez — G1, şimdiden konan kısıt) · **O-120**
+(özel anahtar bize gelmez: kalıcı kısıt; eksik olan sertifika son-kullanma uyarısı).
+Toplam **120** madde.
 
 **Sicili nasıl okursun:** durum değerleri §9'da sayılı. 🟡 **kısmen** demek "yarısı
 yapıldı, kalanı maddede yazılı" demek — `gelöst` yalnız kalanı da bittiğinde konur.
@@ -3792,6 +3809,122 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
+## 7P — §302 Echtbetrieb yolu: 19–20.09 turunun kutu denetimi + planın ön kontrolü (20.09.2026)
+
+> **Bu bölüm niye var:** iki ayrı iş aynı gün buraya düştü. **(1)** 19–20.09.2026 gecesi
+> `api-backend/billing/*` altında 12 commit indi ve push'landı — yani **müşterinin kutusuna
+> giden kod** — ama tetikleyici kural işlemedi, `onprem` çağrılmadı; bu bölüm o turu
+> geriye dönük denetler (O-112 ve ondan çıkan iki madde). **(2)** Aynı gece yazılan
+> `ABRECHNUNG_ECHTBETRIEB_PLAN.md` (commit `39d7d34`) gerçek §302 gönderimine giden yolu
+> tarif ediyor; planın her adımına §3'ün dört sorusu uygulandı (O-115…O-120).
+>
+> ⚠️ **Turun dersi (ve niye bu sefer ucuz atlatıldı):** bildirim gecikti ama **bedeli
+> çıkmadı** — tur saf hesaplama koduydu, yeni zincir açmadı (ölçüm O-112'de). Bir sonraki
+> tur böyle olmayacak: aynı planın Adım 1.2/1.3/1.4'ü şema, dış bağımlılık ve yetki
+> kontrolüne dokunuyor. **Kod yazıldıktan sonra durdurmak on kat pahalıdır** — bu yüzden
+> plan daha uygulanmadan altı madde açıldı.
+
+### O-112 — 19–20.09.2026 §302 turu: kutuya giden 13 düzeltme, **yeni bulut zinciri yok** ⚪ **unkritisch**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | §302 DTA dosya formatının altı biçim hatası (GES Summenstatus · UNT/UNZ 6-hane dolgu · serbest metinde virgül kaçışı · iki ICD tek DIA'da · podolojide Therapiefrequenz · NAD'da hasta adresi) + gereksiz `UNA` kaldırıldı · yeni üretim-sonrası öz-denetim (`pruefeDatenstrom()`) · ZAA parser'ın kaçış-duyarsız `split("'")`'ı · dört frontend düzeltmesi. Hepsi image ile kutuya gider. `onprem` çağrılmadı, tur **geriye dönük** denetlendi |
+| **Nerede** | `1c93760` (15 dosya, `billing/dta/*` + `billing/api/abrechnung.routes.js`) · `d8249d6` (`billing/zaa/parser.js`) · `50f45f9` · `4c3ce6e` · `272d980` · `c4332d5` · `1201618` · `4fecec7` · `bdff16f` · `39d7d34` (plan) · `fa52c71`+`eb168c6` (harita tazelemesi) · tur boyunca eklenen yeni dosya yalnız iki tane: `api-backend/billing/dta/datenstrom-form.test.js` ve `ABRECHNUNG_ECHTBETRIEB_PLAN.md` |
+| **Tip** | Hiçbiri (A-H'nin hiçbir kutusuna girmiyor) — image ile giden saf hesaplama kodu |
+| **Kutuda ne olur** | Düzeltmeler kutuda **aynen** geçerli; yol image → `update.sh` gecesi. Ölçüm (dokuz kod commit'inin birleşik diff'inde, yalnız eklenen satırlar): `process.env` **0** · `fetch(` **0** · `http(s)://` **0** · `cron`/`setInterval` **0** · `n8n`/`supabase.co`/`app.praxura` **0** · `api-backend/db/migrations/` altında dosya **0** · yeni `api/` fonksiyonu **0**. Dokunulan frontend modülleri taban adresini `ctx.apiBase`'den alıyor (`module/abrechnung-auswahl.js:1125-1126, 1195`), koda gömülü host eklenmedi. Kapı: `sh tools/check-onprem.sh` → **exit 0**, dokuz sayaç tabanında. `preflight.js` dış bağımlılık **almıyor** (yalnız `codes/legs.js` + `leitsymptomatik.js`) |
+| **Çözüm** | ⚪ `unkritisch` — G1/G2/G3/G8'in hiçbirine dokunulmadı. Kullanıcının kendi değerlendirmesi (yeni env yok · yeni dış servis yok · yeni sabit adres yok · yeni zamanlanmış iş yok · şema/DDL yok · yeni yetki kontrolü yok) **doğrulandı, altısı da doğru** |
+| **Durum** | ⚪ **unkritisch** — ama tur **iki gerçek kutu sonucu** doğurdu, ikisi de kendi numarasını aldı: **O-113** (sert `throw` eden bir kural filoyu durdurabilir) ve **O-114** (bozuk satırın onarım yolu kutuda yok). İkisi de turun kodundan değil, turun **ortaya çıkardığı desenden** geliyor |
+
+### O-113 — Preflight'ın sert `throw`'u: yanlış tek bir kural bütün filonun abrechnung'unu durdurur, kutuda geri dönüş yolu yok 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `buildDtaFile()` artık çıktısını üretim sonrası denetliyor ve uyuşmazlıkta **throw** ediyor; route bunu 422'ye çeviriyor. Doğru tasarım (yanlış dosya üretmektense üretmemek), ama kural kümesi **image ile** dağıtılıyor: bir kuralın yanlış olması, o kuralın kapsadığı **her** müşterinin §302 dosyasının üretilememesi demek |
+| **Nerede** | `api-backend/billing/dta/preflight.js` (`pruefeDatenstrom()`, `V:`/`S:` kural kimlikleri) · çağrı `api-backend/billing/dta/builder.js` · 422 dönüşü `api-backend/billing/api/abrechnung.routes.js:713` ve iki kardeş route · **kanıt, varsayım değil:** `c4332d5` tam bu sınıftı — gelecek tarihli **tek** bir Behandlung tüm dosyayı reddettiriyordu; `4c3ce6e` de ret gerekçesinin ekranda hiç görünmediğini düzeltti |
+| **Tip** | G (merkez mi kutu mu — image ile giden iş kuralının dağıtım sonucu) |
+| **Kutuda ne olur** | SaaS'ta yanlış kural **60 saniyede** düzelir (push → build → Watchtower). Kutuda: en iyi ihtimalle **ertesi gece** (`praxura-update.timer`), `:stable` kanalındaki müşteride **günler** sonra, GHCR'ye çıkamayan kutuda **hiç**. O süre boyunca müşteri fatura kesemez — parası gelmez. Üstüne bunu **göremeyiz** (O-46: filo görünürlüğü yok, telemetri yok); müşteri arayana kadar haberimiz olmaz |
+| **Çözüm** | Üç parça: **(a)** her preflight hatası kural kimliği + hangi satır olduğu ile gösterilsin — frontend yarısı `4c3ce6e`'de yapıldı, kalıcı kural olarak yazılsın. **(b)** Kural sınıflaması: "spec'in kesin reddedeceği" hatalar sert `throw`, bizim türettiğimiz/heuristik kurallar **uyarı** olsun; sert listeye yeni kural eklemek bilinçli karardır ve `gkv-302` onayı ister (spec maddesi gösterilmeden sert kural eklenmez). **(c)** Hızlandırılmış yama yolu **belgelensin**: kutu sahibi destek çağrısında `update.sh`'ı elle tetikleyebilmeli, bu `onprem/RELEASE-STANDARD.md`'nin destek bölümünde yazılı olmalı. ⛔ Çözüm "kutuya bağlanıp düzeltiriz" **olamaz** (K10) |
+| **Durum** | 🔴 **offen** — 20.09.2026'da açıldı. (b) plan Adım 1.3/1.5'ten **önce** kararlaştırılmalı: plan yeni kurallar ekliyor (bu turda `V:01014` eklendi), sınıflama yazılmadan her yeni kural filo riskini büyütür |
+
+### O-114 — Bozuk veri satırının onarımı: canlıda SQL bizim ayrıcalığımız, müşterinin kutusunda **kimsenin değil** 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | 19.09.2026'da `podologie_behandlungen`'de gelecek tarihli iki test satırı oluştu; preflight `S:01005`/`S:01006` ile o Kostenträger'in **tüm** §302 dosyasını reddetti. Canlıda çözüm: `db-ustasi` iki satırı MCP ile sildi. Kutuda o yol **yok** — ve satırı gösteren/düzelten bir ekran da yok |
+| **Nerede** | `api-backend/billing/dta/preflight.js:408` ve `:412` (iki kural) · önleme `module/podologie-abrechnung.js` (`c4332d5`, artık gelecek tarihte soruyor) · gösterim `module/podologie-abrechnung.js` "Bereits dokumentiert" bloğu (`1201618` — **sadece gösteriyor, silmiyor**) · şema tarafı `db/REGISTER.md` → `podologie_behandlungen` (19.09.2026 notu: ne GoBD kilidi ne tarih kısıtı var, tabloya gelen FK yok) |
+| **Tip** | G |
+| **Kutuda ne olur** | Tek bozuk satır → o kasanın dosyası üretilemez. Müşteri satırı kendi arayüzünden silemez; biz kutuya giremeyiz (K10); uzaktan SQL koşacak bir kanal **bilinçli olarak yok**. Sonuç: destek çağrısı, ve verecek bir yol yok. `c4332d5`'in önlemesi yalnız **yeni** satırlar için geçerli — kurulu kutuda satır zaten varsa iş görmez |
+| **Çözüm** | Planın **Açık Karar 1**'i (dokümante edilmiş seans: DELETE mi Storno mu) kapandığında ekran gelir; bu madde o kararın **kutu gerekçesidir**: SaaS'ta karar ertelenebilir (biz düzeltiriz), kutuda ertelenemez. Asgari yeterli hâli: faturaya girmemiş (`invoice_id IS NULL`) satırı owner kendisi kaldırabilsin — 19.09'daki iki satır tam olarak bu sınıftaydı. Planın Faz 3 "durum ekranı" maddesiyle aynı yere düşer |
+| **Durum** | 🔴 **offen** — 20.09.2026'da açıldı, plan Açık Karar 1'e bağlı |
+
+### O-115 — Datenaustauschreferenz sayacı: göç ve geri yükleme numarayı **geri sarar**, kasa mükerrer teslimat sanar 🟠 **geplant (plan Adım 1.2)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Plan sayacı `COUNT(*)`'tan kalıcı/atomik bir sayaca taşıyor (doğru iş). Kutu tarafında planın **yazmadığı** risk: sayaç DB'de yaşayacağı için, veritabanının geri gitmesi numaranın da geri gitmesi demektir |
+| **Nerede** | `api-backend/billing/api/abrechnung.routes.js:679-686` · `:2769-2773` · `:3202-3206` (üçü de `abrechnung` tablosunda `owner_id` + o yılın satırlarını sayıyor) · alan `api-backend/billing/dta/envelope.js:36` (UNB 0020, 5 hane) · `api-backend/billing/dta/builder.js:427` (fiziksel dosya adının Transfernummer'ı, `mod 999`) · geri yükleme `onprem/restore.sh` (O-26) |
+| **Tip** | D (+G) |
+| **Kutuda ne olur** | Üç senaryo, üçü de gerçek: **(1) SaaS → kutu göçü.** Aynı praxis, aynı Absender-IK, ama kutunun `abrechnung` tablosu boş → sayaç **1'den** başlar ve SaaS'ın zaten gönderdiği referansları ikinci kez üretir. DAS "bereits eingereicht" der; ret dosyanın içeriğiyle ilgisiz olduğu için teşhisi zordur. Aynı numaradan `buildSammelRechnungsnummer()` ile fatura numarası da türüyor → mükerrer Rechnungsnummer (GoBD tarafı ayrıca ısırır). **(2) `restore.sh` ile dünkü yedeğe dönüş** — sayaç da o güne döner, aradaki gönderimler tekrar numaralanır. Bu, O-26 çözüldükten **sonra** doğan yeni bir sonuç ve bugün hiçbir yerde yazılı değil. **(3) Yılbaşı sıfırlaması** — bugünkü sorgu `gte(<yıl>-01-01)`, yani her 1 Ocak'ta referans `00001`'e döner; bu davranışın spec'in "fortlaufend" beklentisine uyup uymadığı **`gkv-302`'nin sorusu** ve sayaç yazılmadan cevaplanmalı |
+| **Çözüm** | Sayaç **monoton** olsun: (a) hiçbir koşulda azalmaz; (b) yalnız **ileri** alınabilen bir yönetim yolu olsun (göç ve geri yükleme sonrası), kutuda owner'ın kendi erişebileceği bir ekranda — çünkü orada bunu bizim yapmamız mümkün değil (K10); (c) göç ve `restore.sh` runbook'una "sayaç ileri alındı mı" adımı eklensin, `restore.sh`'ın onay ekranına uyarı satırı düşsün. Tablo mu sequence mi `db-ustasi`'nın kararı; **tek dağıtım kısıtı:** değer kutunun kendi veritabanında üretilsin — numarayı merkezden dağıtan her tasarım yeni bir tip A'dır ve **DUR** alır (kutu offline'ken fatura kesilemez hâle gelir) |
+| **Durum** | 🟠 **geplant** — plan Adım 1.2. Migration zinciri kuralı (önce `api-backend/db/migrations/NNNN_*.sql`, aynı commit'te döküm tazelemesi, sonra canlı) planda **doğru** yazılmış |
+
+### O-116 — Alıcı sertifikası (ITSG Annahmeliste): kutudan runtime indirme **DUR**; tip B zorunlu + yerel son-kullanma kapısı 🟠 **geplant (plan Adım 1.3)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | CMS EnvelopedData için Datenannahmestelle'nin **açık** anahtarı gerekiyor. Kaynağı ITSG Trust Center'ın Annahmeliste'si: Leistungserbringer tarafı `annahme-rsa4096.key` (PKCS#7 liste, `https://trustcenter-data.itsg.de/dale/annahme-rsa4096.key`), yayıncının kendi tarifiyle "i.d.R. alle 3 Jahre oder auch bei Änderungen" güncelleniyor, bugünkü liste **31.12.2027**'ye kadar geçerli (Gesamtlisten iş günleri ~15:00 tazeleniyor). Planın Açık Karar 2'si "nereden gelecek" diye soruyordu — dağıtım cevabı burada |
+| **Nerede** | Plan Adım 1.3 + Açık Karar 2 · bugün kodda **yok**: `api-backend/billing/dta/filename.js:78` `buildEncryptedFilename()` çağrısız duruyor · `api-backend/billing/dta/auftragsdatei.js` VERSCHLÜSSELUNGSART/ELEKTRONISCHE_UNTERSCHRIFT'i sabit `00`/`00` yazıyor (şifreleme gelince bu iki alan **ve** Adım 1.1'de kaydedilmiş eski çiftler değişir — sıralama notu) |
+| **Tip** | A → **B'ye çevrilecek**. ⚠️ Tip E **değil**: liste açık anahtar taşır, sır değil — image'a gömülmesi G2'ye dokunmaz |
+| **Kutuda ne olur** | Runtime indirme seçilirse dört şey birden: **(1)** internetsiz/kısıtlı kutu §302 üretemez; **(2)** koda yeni bir sabit host girer (tip C, kapı sayacı artar); **(3)** ITSG'nin erişilebilirliği bizim dosya üretimimizin ön koşulu olur; **(4)** hangi praxis ne zaman fatura kesiyor bilgisi kutu dışına sızar. Tip B'ye çevrildiğinde dördü de yok olur: kutu bu adrese **hiç** çıkmaz |
+| **Çözüm** | `preise-check.yml` şablonu (O-34, tip B'nin canlı örneği): bir Actions işi listeyi çeker → repoya commit'ler → image build → Watchtower dağıtır. Üç ek şart: **(a) elle yükleme yolu** — airgap kutu ve plan dışı rotasyon için (liste "bei Änderungen" de değişebiliyor, biz o gün image basamayabiliriz); **(b) yerel geçerlilik kapısı** — dosya üretilmeden önce alıcı sertifikasının `notAfter`'ı kontrol edilir, **60 gün kala** panelde uyarı, dolmuşsa **anlaşılır bir mesajla** DUR. Sessizce başarısız olmak ya da süresi geçmiş anahtarla şifrelemek en kötü sonuçtur: dosya gider, kasa açamaz, ret haftalar sonra döner; **(c)** listenin pakete gömülmesi `onprem/NOTICE-QUELLEN.txt`'e **altıncı kaynak** olarak yazılır (O-78 deseni; `legal-de` tek cümleyle dağıtım hakkını onaylar) |
+| **Durum** | 🟠 **geplant** — plan Adım 1.3. ⚠️ **Şifrelemenin nerede koşacağı (Açık Karar 2) `guvenlik`'in kararı;** dağıtım tarafının tek şartı G7: **tek kod yolu**, iki dağıtımda da aynı. Backend seçilirse kutuda PHI yeni bir yere gitmez (orası zaten müşterinin kendi sunucusu), SaaS'ta da dosya zaten bizim Storage'ımızda — yani backend seçeneği yeni bir PHI yeri **açmıyor**. Tarayıcı seçeneği listeyi tarayıcıya indirmeyi ve ikinci bir kripto yolunu gerektirir (G7 riski), ama G1'i ihlal etmez. `onprem` tarafından **veto yok** — kısıt var |
+
+### O-117 — `kind` (Test/Erprobung/Echt) anahtarı env var'a **değil** DB'ye; ve kutuda anahtarı **müşteri** çevirebilmeli 🟠 **geplant (plan Adım 1.4)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Plan `kind: 'test'` sabitini yapılandırılabilir yapıyor ve "per-tenant olmalı" diyor. Doğru, ama mekanizma sorusu açık kalmış: env var mı DB mi. Cevap **DB**, ve bir ek şart var — kutuda o anahtarı çevirebilecek tek kişi müşteridir |
+| **Nerede** | `api-backend/billing/api/abrechnung.routes.js:705` · `:2783` · `:3216` (üçünde de `kind: 'test'` sabit) · `api-backend/billing/dta/builder.js:403` (`kind` → UNB 0035 Testindikator `0`/`1`/`2`) · `api-backend/billing/dta/filename.js` (fiziksel dosya adının `E`/`T` harfi) |
+| **Tip** | H (yetkilendirme) + E'nin reddi |
+| **Kutuda ne olur** | Env var çözümü **iki yerden birden** kırılır: SaaS çok kiracılı, tek env bütün tenant'ları birden çevirir → Zulassung'u olmayan bir praxis `echt` dosya üretir (kasaya geçersiz gönderim, geri dönüşü idari). Kutuda ise env'i değiştirmek `.env`'i düzenleyip konteyneri yeniden yaratmak demek — müşteri bunu yapmaz, biz de kutuya giremeyiz (K10). Yani env: SaaS'ta yanlış, kutuda ulaşılamaz. DB alanı ikisinde de çalışır ve yedek/`restore.sh` ile birlikte taşınır |
+| **Çözüm** | Per-tenant **DB alanı**, varsayılan `'test'`, owner'ın kendi arayüzünden çevirdiği bir ayar; çevirirken Zulassung referansı + tarihi girilsin, kim/ne zaman çevirdi kaydedilsin (kutuda bu kaydın tek sahibi müşteri). ⚠️ **`gkv-302`'ye eksen sorusu:** Zulassung praxis başına mı, yoksa praxis × Datenannahmestelle başına mı? İkincisiyse tek boolean **yanlış** olur — bir DAS'ta zugelassen olan praxis, onay vermemiş başka bir DAS'a `echt` gönderir. Alanın yeri `db-ustasi`'nın kararı (aday: `terapeut_zertifikat` — zaten owner + IK taşıyor; alternatif `profiles`, owner-seviyesi ayar kuralına uygun). ⛔ Kutu-özel bir yer (`praxura_setup`) **kullanılmaz** — o tablo kuruluma ait, SaaS'ta karşılığı yok (G7) |
+| **Durum** | 🟠 **geplant** — plan Adım 1.4. Planın "⛔ bu adım bitse bile hiçbir tenant `echt`'e alınmaz" kilidi **doğru ve korunmalı** |
+
+### O-118 — Kostenträger/Annahmestellen seed'i Mayıs 2026'da dondu: güncelleme zinciri de kapısı da yok 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | DTA'nın **kime** gideceği `kostentraeger_annahmestellen`'den çözülüyor. Kutudaki kopya bir seed migration'ı ve kaynağı **`BN050526_KE0.txt`** — Mayıs 2026 yayını. GKV Kostenträgerdatei düzenli yenileniyor; yeni sürümü kutuya taşıyan bir mekanizma **yok**, hatırlatan bir kapı da yok (O-79'un kapısı yalnız `billing/codes/*_positions.js`'i izliyor) |
+| **Nerede** | `api-backend/db/migrations/0006_seed_kostentraeger.sql` · `0007_seed_kostentraeger_annahmestellen.sql` (11.409 satır, `quelle='BN050526_KE0.txt'`) · çözücü `api-backend/billing/kostentraeger/annahmestelle.js` (`ladeAnnahmestelle`) · okuyan üç route (`abrechnung.routes.js:587, 2332, 2596`) · parser `api-backend/billing/kostentraeger/parser.js` · kapı `tools/check-onprem.sh` (seed-besleme bloğu — bu tabloları **kapsamıyor**) |
+| **Tip** | B (besleme zinciri) + D |
+| **Kutuda ne olur** | Bayat liste iki türlü ısırır: **(1)** IK/Annahmestelle değişmişse dosya **yanlış alıcıya** gider — Echtbetrieb'te doğrudan gecikmiş/kayıp para; **(2)** yeni bir kasa/Verknüpfung eklenmişse `ladeAnnahmestelle()` bilinçli olarak üretimi **durdurur** (`annahmestelleFehlt`) — müşteri o kasaya hiç fatura kesemez ve sebebini anlamaz. SaaS'ta fark edip aynı gün elle düzeltebiliriz; kutuda kimse fark etmez, biz de göremeyiz (O-46) |
+| **Çözüm** | O-79/O-95 deseni: kaynak dosya güncellendiğinde **yeni seed migration'ı** zorunlu olsun (kapı), üretimi `tools/` altındaki bir script yapsın (11k satır elle yazılmaz). Ek iki şart: arayüzde verinin **Stand** tarihi görünsün (müşteri "bu liste ne kadar eski" sorusunu kendi cevaplayabilsin) ve sürümün geçerlilik takvimi `wissensbank/REGISTER.md`'ye girsin (orası bu işin doğal yeri) |
+| **Durum** | 🔴 **offen** — 20.09.2026'da açıldı. Bugün acil değil (test modundayız), ama **plan Faz 2.2'den (Testverfahren) önce** kapanmalı: bayat alıcı listesiyle girilen bir test, testin kendisini geçersiz kılar |
+
+### O-119 — §302 dosyası kutudan çıkarken **bizim sunucumuza uğramaz** — şimdiden konan kısıt 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Plan dosyanın **üretimini** uçtan uca tarif ediyor, **teslimini** tarif etmiyor (Faz 2.1'in randevu sorularına bırakılmış). O boşluk doldurulurken en cazip ürün fikri şudur: "gönderimi merkezden yapalım, müşteri tek tıkla göndersin." Bu madde o cümleyi **bugünden** kapatıyor |
+| **Nerede** | Plan Faz 2.1 (randevuda sorulacaklar: "test dosyası hangi kanaldan gönderiliyor") · bugünkü tasarım: dosya Storage'dan indirilir, müşteri kendi kanalıyla gönderir (`module/abrechnung-detail.js` indirme yolu) |
+| **Tip** | A — ve **G1**'in tam merkezi |
+| **Kutuda ne olur** | §302 dosyası hasta adı, doğum tarihi, KVNR, ICD kodları ve tedavi tarihlerini taşır — ürettiğimiz **en yoğun PHI'li çıktı**. Bunu merkezden proxy'lemek kutuya geçişin bütün amacını tek adımda iptal eder; üstelik bizi §203 StGB ve AVV tarafında yeni bir role sokar. ⛔ **Sert veto (G1).** Yalnız kutu için değil: aynı proxy SaaS'ta yazılırsa kutuda ikinci bir kod yolu doğar (G7) |
+| **Çözüm** | Kısıt şöyle yazılsın (plan metnine ve Faz 2.1 randevu notlarına): dosya müşterinin kendi kutusundan iner ve **müşterinin kendi kanalıyla** (DAS portalı / kendi KIM-maili / kendi SFTP'si) gider. İleride otomatik gönderim istenirse yol açıktır ama şartlıdır: **kutudan doğrudan** DAS'a, **müşterinin kendi** kimlik bilgileriyle, bizim sunucumuza uğramadan — o gün ayrı bir tip-A maddesi açılır (kimin anahtarı, offline davranışı, hangi host, hata görünürlüğü) |
+| **Durum** | 🔴 **offen** — 20.09.2026'da açıldı. Kapanışı ucuz: plan metni bu cümleyi taşıdığı anda `unkritisch`'e döner. Mekanik kapısı **yok**, yargı işi — bu yüzden yazılı olması şart |
+
+### O-120 — Özel anahtar hiçbir dağıtımda bize gelmez (kalıcı kısıt); ama kutuda sertifika süresini **kimse izlemiyor** 🟡 **kısmen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | İmzalama tarayıcıda, müşterinin kendi `.p12`'siyle yapılıyor; `terapeut_zertifikat` yalnız **metadata** tutuyor. Bu tesadüf değil, korunacak bir kazanım — ve **her iki dağıtımda da** böyle kalmalı. Eksik olan taraf: sertifikanın süresi dolmadan uyaran bir yer yok |
+| **Nerede** | `db/SCHEMA.sql:2638` `terapeut_zertifikat` (`cert_subject`, `cert_thumbprint`, `cert_serial`, `cert_valid_from`, `cert_valid_to` — **blob ve anahtar kolonu yok**) · imzalı dosyanın alındığı uç `api-backend/billing/api/abrechnung.routes.js` (`/abrechnung/:id/upload-signed`) · tarayıcı tarafı `vendor/node-forge` (yerelleştirilmiş, O-36 — kutuda internetsiz çalışır) |
+| **Tip** | E (sır) + G |
+| **Kutuda ne olur** | Bugünkü tasarım kutuda **olduğu gibi** çalışır ve orada ayrıca değerlidir: anahtar müşterinin kendi makinesinde kalır, kutuya bile girmez. ⛔ Tersi bir tasarım ("anahtarı sunucuya alalım, imzalamayı backend yapsın") kutuda "zaten müşterinin kendi sunucusu" diye savunulur ama SaaS'ta savunulamaz → iki kod yolu, **G7 ihlali**. **Eksik:** `cert_valid_to` şemada duruyor, onu okuyup uyaran hiçbir ekran yok. ITSG sertifikaları 3 yıl geçerli; kutuda bunu fark edecek ikinci bir insan yok — sertifika dolduğu gün abrechnung durur ve sebebi görünmez |
+| **Çözüm** | Kısıt kayıtlı ve korunuyor: ⛔ `terapeut_zertifikat`'a özel anahtar/PKCS#12 blob'u ekleyen her tasarım **DUR** alır. Kalan iş: yerel son-kullanma uyarısı (60 gün kala panelde, dolmuşsa net mesaj) — **O-116'nın alıcı-sertifikası kapısıyla aynı ekranda** olmalı, ikisi tek kontrol listesi. Planın Faz 3 "müşteriye durumunu gösteren ekran" maddesi tam olarak burasıdır; o ekran ayrıca `kind` anahtarının (O-117) ve Kommunikationspartner kaydının da yeridir |
+| **Durum** | 🟡 **kısmen** — kısıt sağlam ve doğrulandı (şemada anahtar kolonu yok, 20.09.2026); uyarı tarafı yazılmadı. Planın Faz 3'üne bağlandı |
+
+---
+
 ## 8. Kapı — sayaçlar ve tabanlar
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -3836,7 +3969,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-## 9. Durum özeti (son sayım: 18.09.2026)
+## 9. Durum özeti (son sayım: 20.09.2026)
 
 > ⚠️ **Bu tablo 12.09.2026 akşamı madde madde yeniden sayıldı.** Önceki hâli
 > 04.09.2026 fotoğrafıydı ve altına "fark" notları yığılıyordu — dokuz tur sonra o
@@ -3845,7 +3978,10 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 111 madde** (O-01 … O-111) — sonuncusu (**O-111**, §7O) 18.09.2026 konsey
+**Toplam 120 madde** (O-01 … O-120) — son dokuzu (**O-112…O-120**, §7P) 20.09.2026'da
+açıldı: 19–20.09 §302 turunun **geriye dönük** kutu denetimi (tetikleyici işlemedi, ajan
+çağrılmadı) + `ABRECHNUNG_ECHTBETRIEB_PLAN.md`'nin adım adım ön kontrolü. Ondan önceki
+(**O-111**, §7O) 18.09.2026 konsey
 turundan çıktı: on-prem'de çoklu-kiracı deseninin (`owner_id`/`business_id`/RLS)
 sadeleştirilmesi **reddedildi** (karar A), `unkritisch` kapandı; aynı tur "baseline henüz
 dondurulmadı" öncülünü de çürüttü. Beşi (O-85…O-89) 12.09.2026 gecesi `restore.sh`'ın
@@ -3907,11 +4043,17 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 9 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-107 · O-108 · O-110 |
-| `geplant` | 15 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 |
-| 🟡 `kısmen gelöst` | 16 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 |
+| `offen` | 14 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-106 · O-107 · O-108 · O-110 · O-113 · O-114 · O-118 · O-119 |
+| `geplant` | 18 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-115 · O-116 · O-117 |
+| 🟡 `kısmen gelöst` | 17 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-120 |
 | `gelöst` | 58 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-109 |
-| `unkritisch` | 12 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 |
+| `unkritisch` | 13 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 |
+
+> ⚠️ **20.09.2026 — tabloda bir madde eksikti:** **O-106** (kutudaki „Abonnement
+> verwalten"/„Upgrade" butonları SaaS kayıt akışına götürüyor, 14.09.2026'da açıldı)
+> hiçbir satırda geçmiyordu; toplam 111 diyordu ama satırların toplamı 110 çıkıyordu.
+> `offen` satırına eklendi. Ders, 12.09'un dersinin aynısı: **tablo da sayılmadan
+> doğru sayılmaz** — bundan sonra her tur toplamı satır satır toplanarak doğrulanır.
 
 > ✅ **O-26 artık TAM kapalı (12.09.2026)** — `restore.sh` yazıldı ve gerçek kutuda
 > doğrulandı (kendi maddesindeki kapanış notuna bak). Kalan tek gerçek boşluk:

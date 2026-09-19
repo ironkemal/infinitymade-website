@@ -6,6 +6,13 @@ onprem/praxura-local-root.crt
 
 # Sözleşmeler ve imzalı belgeler — depo PUBLIC, asla commit edilmez
 legal/
+
+# Echte Kassen-/Patientendaten zum Abgleich (Beta-Kunden-DTA, Begleitzettel).
+# Der Ordnername sagt „gitignore", die Regel dazu fehlte aber — die .dta trägt
+# im NAD-Segment Namen, Anschrift und Diagnose eines echten Patienten, und ein
+# einziges `git add -A` hätte sie in dieses PUBLIC-Repo geschrieben.
+# Gefunden vom onprem-Agenten, 20.09.2026.
+gitignore/
 .agents/
 .claude/
 .mcp.json
