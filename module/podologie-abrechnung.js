@@ -560,7 +560,16 @@ async function loadPodologieBilling() {
       <div style="display:grid;gap:12px;">
         <div>
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_behandlungsdatum')}</label>
-          <input type="date" id="podBehDatum" value="${todayStr}" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+          <!-- max=heute: eine Behandlung wird dokumentiert, NACHDEM sie
+               erbracht wurde — ein Datum in der Zukunft gibt es nicht. Ohne
+               diese Schranke liess sich der Tag frei vorstellen und fiel erst
+               Wochen spaeter auf, beim Bau der §302-Datei: der Preflight
+               wirft dort S:01005 (Leistungsdatum in der Zukunft) bzw. S:01006
+               (Leistungsdatum nach Rechnungsdatum) — und weist nicht die eine
+               Zeile ab, sondern die GANZE Datei an die Kasse zurueck.
+               Der Browser ist hier nur die erste, billige Sperre; die
+               verbindliche steht unten im Speichern-Handler. -->
+          <input type="date" id="podBehDatum" value="${todayStr}" max="${todayStr}" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
         </div>
         <div>
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${ctx.t('pod_hpnr')}</label>
@@ -671,8 +680,19 @@ async function loadPodologieBilling() {
     const lokal = vord?.nagel || lokalFrei;
 
     // Validasyon
+    //
+    // Das Behandlungsdatum zuerst: es ist die einzige Angabe, die eine
+    // vollstaendige §302-Datei zu Fall bringt (S:01005 / S:01006 treffen die
+    // Datei, nicht die Zeile). `max` am Feld faengt den Normalfall ab, aber
+    // `max` ist eine Bitte an den Browser — getippte Eingaben, aeltere
+    // Browser und der Weg ueber die Entwicklerwerkzeuge gehen daran vorbei.
+    // „Heute" wird hier frisch gerechnet, nicht aus `todayStr` genommen: die
+    // Maske kann seit dem Rendern ueber Mitternacht gestanden haben.
+    const heuteStr = alsISODatum(new Date());
     let err = '';
-    if (checks.length === 0) err = ctx.t('pod_kein_hpnr');
+    if (!datum) err = 'Bitte ein Behandlungsdatum angeben.';
+    else if (datum > heuteStr) err = 'Das Behandlungsdatum darf nicht in der Zukunft liegen.';
+    else if (checks.length === 0) err = ctx.t('pod_kein_hpnr');
     else if (isUIx && checks.includes('78030')) err = 'Befundung (78030) kann bei UI1/UI2 nicht verwendet werden.';
     // Regeln nicht geladen → auf die feste Literal-Regel zurückfallen, nicht durchwinken.
     else if (isUIx && !(uiRule

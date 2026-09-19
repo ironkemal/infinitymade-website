@@ -45,6 +45,28 @@ test('der Zuhoerer der Verordnungsliste steht auf Modulebene', () => {
     `Erwartet: genau der Listen-Zuhoerer (Status · Rechnung · Zeile waehlen). Gefunden: ${aufModulebene}.`);
 });
 
+test('das Behandlungsdatum ist zweifach gegen die Zukunft gesperrt', () => {
+  // canli-test, 19.09.2026: ein Behandlungsdatum in der Zukunft liess sich
+  // ohne Rueckfrage speichern. Bemerkt haette es erst der §302-Preflight —
+  // S:01005 (Leistungsdatum in der Zukunft) und S:01006 (Leistungsdatum nach
+  // Rechnungsdatum) weisen aber nicht die Zeile zurueck, sondern die ganze
+  // Datei an die Kasse.
+  //
+  // Zwei Sperren, weil beide fuer sich zu wenig sind: `max` ist eine Bitte an
+  // den Browser (getippte Eingabe, altes Geraet, Entwicklerwerkzeuge gehen
+  // vorbei), und eine reine JS-Pruefung meldet den Fehler erst beim
+  // Speichern, statt die Eingabe gar nicht erst zuzulassen.
+  assert.match(quelle, /id="podBehDatum"[^>]*\smax="\$\{todayStr\}"/,
+    'Dem Feld #podBehDatum fehlt die Browser-Schranke max="${todayStr}".');
+  assert.match(quelle, /datum\s*>\s*heuteStr/,
+    'Im Speichern-Handler fehlt die verbindliche Pruefung gegen „heute".');
+  // „heute" muss beim Speichern frisch gerechnet werden: die Maske kann seit
+  // dem Rendern ueber Mitternacht gestanden haben, `todayStr` waere dann der
+  // Vortag und liesse den heutigen Tag durchfallen.
+  assert.match(quelle, /const\s+heuteStr\s*=\s*alsISODatum\(new Date\(\)\)/,
+    'heuteStr darf nicht aus dem beim Rendern eingefrorenen todayStr stammen.');
+});
+
 test('der §302-Teil ist wirklich weg und kommt nicht als dritter Weg zurueck', () => {
   // „Kein dritter Weg, der spaeter aufgeraeumt wird" — genau so ist die
   // Doppelung prescriptions/verordnungen entstanden (Plan, Phase 1).
