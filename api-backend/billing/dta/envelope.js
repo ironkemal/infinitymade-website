@@ -51,17 +51,22 @@ export function buildUNH({ nachrichtenreferenz, nachrichtenart, versionsnummer =
 }
 
 // UNT — message trailer. Segment count INCLUDES UNH and UNT.
+//
+// Der Zaehler ist n6 mit fuehrenden Nullen (Anlage 1 TP5 V21, Kap. 5.4):
+// "UNT+000015+00002'", nicht "UNT+15+00002'". Bis zum 19.09.2026 stand hier
+// die ungepolsterte Zahl — ein Formfehler in Pruefstufe 2, der nicht die
+// einzelne Nachricht, sondern die ganze Datei zurueckgibt.
 export function buildUNT({ segmentCount, nachrichtenreferenz }) {
   return buildSegment('UNT', [
-    String(segmentCount),
+    String(segmentCount).padStart(6, '0'),
     String(nachrichtenreferenz).padStart(5, '0'),
   ]);
 }
 
-// UNZ — interchange trailer.
+// UNZ — interchange trailer. Nachrichtenzaehler ebenfalls n6 (Kap. 5.4).
 export function buildUNZ({ messageCount, datennummer }) {
   return buildSegment('UNZ', [
-    String(messageCount),
+    String(messageCount).padStart(6, '0'),
     String(datennummer).padStart(5, '0'),
   ]);
 }

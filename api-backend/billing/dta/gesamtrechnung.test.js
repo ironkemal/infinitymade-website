@@ -103,7 +103,7 @@ test('T1: zwei Karten-IK ergeben zwei SLGA + zwei SLLA, jede GES nur ihre eigene
   assert.deepEqual(msgs.map(m => m.art), ['SLGA', 'SLLA', 'SLGA', 'SLLA'],
     'Reihenfolge muss SLGA + zugehoerige SLLA je Gesamtrechnung sein');
   assert.equal(r.messageCount, 4);
-  assert.ok(r.content.endsWith("UNZ+4+00024'"), 'UNZ zaehlt alle vier Nachrichten: ' + r.content.slice(-20));
+  assert.ok(r.content.endsWith("UNZ+000004+00024'"), 'UNZ zaehlt alle vier Nachrichten: ' + r.content.slice(-20));
 
   const slgaA = msgs[0], slgaB = msgs[2];
 

@@ -14,7 +14,7 @@ import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
 import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
-import { verordnungsartFuer, heilmittelBereichFuer } from '../dta/zhe-kennzeichen.js';
+import { verordnungsartFuer, heilmittelBereichFuer, therapiefrequenzFuer } from '../dta/zhe-kennzeichen.js';
 // Preise/Zuzahlung kommen ab Aufgabe 2 ausschliesslich über preise/resolver.js.
 // Aus den Katalogen wird hier nur noch gebraucht, was nichts mit Geld zu tun hat.
 import { resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positions.js';
@@ -359,10 +359,20 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
   return {
     patient: {
       kvnr:               lead?.versichertennummer || '',
-      versichertenstatus: /^[1359]\d{4}$/.test(lead?.versichertenstatus || '') ? lead.versichertenstatus : '1',
+      // Ersatzwert ist der 5-stellige '10000', nicht '1'. Das Feld ist n5
+      // (SLLA.INV Feld 2), und `preflight.js` (P:01002) hat den einstelligen
+      // Wert ohnehin immer angehalten — Absicht und Verhalten liefen
+      // auseinander, der Rueckfall war nie ein Rueckfall.
+      versichertenstatus: /^[1359]\d{4}$/.test(lead?.versichertenstatus || '') ? lead.versichertenstatus : '10000',
       nachname:           np.nachname,
       vorname:            np.vorname,
       geburtsdatum:       lead?.geburtsdatum || '',
+      // Anschrift ist im NAD-Segment Kann-Feld (bei gefuellter KVNR), stand
+      // aber in der DB laengst bereit und wurde bisher nur in die PDF-Wege
+      // gereicht. Mitzugeben kostet nichts und hilft der Kasse beim Zuordnen.
+      strasse:            lead?.street || '',
+      plz:                lead?.plz || '',
+      ort:                lead?.city || '',
       belegnummer:        buildBelegnummer(rx, lead?.patientennummer),
     },
     doctor: {
@@ -372,6 +382,12 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
     verordnung: {
       ausstellungsdatum:        rx.ausstellungsdatum,
       icd10:                    rx.icd10 || '',
+      // Je Diagnose ein eigenes DIA-Segment (Anlage 1 TP5 V21, Kap. 5.5.3.3
+      // S. 72). `prescriptions` fuehrt zwei ICD-Spalten; auch der
+      // physiotherapeutische Weg kann beide tragen (Muster 13 laesst zwei
+      // Diagnosen zu), deshalb steht die Liste hier genauso wie im
+      // podologischen Mapper.
+      icd10Liste:               [rx.icd10, rx.icd10_2].filter(Boolean),
       // Suffix -a/-b/-c ist Leitsymptomatik, keine Diagnosegruppe. Im ZHE-Feld
       // sind nur 4 Stellen aus A-Z0-9 erlaubt, Sonderzeichen machen die Datei
       // ungültig (Anlage 1 TP5 V21). Gleiche Bereinigung wie im Podologie-Weg.
@@ -386,7 +402,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
       patLeitsymptomatik:       rx.pat_leitsymptomatik || '',
       dringend:                 !!rx.is_dringend,
       heilmittelBereich:        heilmittelBereichFuer(sector),
-      therapiefrequenz:         frequenzToDigit(rx.frequenz),
+      therapiefrequenz:         therapiefrequenzFuer(sector, frequenzToDigit(rx.frequenz)),
       // O-101 (onprem/REGISTER.md, gkv-302-Review 14.09.2026): '0' bedeutete hier
       // "zuzahlungspflichtig" — Anlage 3 TP5 §8.1.3 sagt '0' = "keine gesetzliche
       // Zuzahlung" (ein eigener Rechtsbegriff), der Wert für den Normalfall ist '3'
@@ -594,7 +610,7 @@ router.post('/abrechnung/create', async (req, res) => {
       .select(`
         id, owner_id, patient_id, arzt_id, kostentraeger_ik, krankenkasse_ik,
         verordnungsnummer, belegnummer,
-        ausstellungsdatum, behandlungsbeginn, icd10, diagnosegruppe,
+        ausstellungsdatum, behandlungsbeginn, icd10, icd10_2, diagnosegruppe,
         heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
@@ -602,7 +618,7 @@ router.post('/abrechnung/create', async (req, res) => {
         abrechnung_status, therapie_bereich,
         bericht_angefordert,
         bericht_status,
-        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer),
+        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer, street, plz, city),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
           id, session_number, status, done_at,
@@ -2255,7 +2271,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
       .select(`
         id, owner_id, patient_id, arzt_id, kostentraeger_ik, krankenkasse_ik,
         verordnungsnummer, belegnummer,
-        ausstellungsdatum, behandlungsbeginn, icd10, diagnosegruppe,
+        ausstellungsdatum, behandlungsbeginn, icd10, icd10_2, diagnosegruppe,
         heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
@@ -2263,7 +2279,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
         abrechnung_status, therapie_bereich,
         bericht_angefordert,
         bericht_status,
-        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer),
+        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer, street, plz, city),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
           id, session_number, status, done_at,
@@ -2441,15 +2457,27 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
 
   // icd10 steht in `prescriptions` als zwei Einzelfelder (icd10 + icd10_2),
   // nicht mehr als Array wie im alten Podologie-Topf.
-  const icd10 = [vord.icd10, vord.icd10_2].filter(Boolean).join(',');
+  //
+  // Bis zum 19.09.2026 wurden die beiden hier mit einem Komma zu EINEM String
+  // verbunden und landeten so in EINEM DIA-Feld ("E11.40,I70.24"). Das Feld
+  // traegt genau einen Schluessel; die Annahmestelle liest den Rest als Teil
+  // des Kodes und setzt ab. Richtig ist ein DIA-Segment je Diagnose
+  // (Anlage 1 TP5 V21, Kap. 5.5.3.3 S. 72) — die Schleife dazu steht in
+  // `dta/builder.js`, hier wird nur noch die Liste gereicht.
+  const icd10Liste = [vord.icd10, vord.icd10_2].filter(Boolean);
 
   return {
     patient: {
       kvnr:               vord.versichertennummer || lead?.versichertennummer || '',
-      versichertenstatus: /^[1359]\d{4}$/.test(lead?.versichertenstatus || '') ? lead.versichertenstatus : '1',
+      // '10000' statt '1' — n5-Feld, Begruendung im physiotherapeutischen
+      // Mapper oben.
+      versichertenstatus: /^[1359]\d{4}$/.test(lead?.versichertenstatus || '') ? lead.versichertenstatus : '10000',
       nachname:           np.nachname,
       vorname:            np.vorname,
       geburtsdatum:       lead?.geburtsdatum || '',
+      strasse:            lead?.street || '',
+      plz:                lead?.plz || '',
+      ort:                lead?.city || '',
       belegnummer:        buildBelegnummer(vord, lead?.patientennummer),
     },
     doctor: {
@@ -2462,7 +2490,10 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
     },
     verordnung: {
       ausstellungsdatum:     vord.ausstellungsdatum,
-      icd10,
+      // `icd10` bleibt der Hauptkode (so prueft ihn der Preflight, V:01002),
+      // `icd10Liste` traegt alle Diagnosen fuer die DIA-Segmente.
+      icd10:                 vord.icd10 || '',
+      icd10Liste,
       diagnosegruppe:        (vord.diagnosegruppe || '').replace(/-[abc]$/i, '') || '9999',
       verordnungsart:        verordnungsartFuer(vord),
       hausbesuch:            !!vord.hausbesuch,
@@ -2477,7 +2508,10 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
       patLeitsymptomatik:    vord.pat_leitsymptomatik || '',
       dringend:              !!vord.is_dringend,
       heilmittelBereich:     heilmittelBereichFuer('podologie'),
-      therapiefrequenz:      frequenzToDigit(vord.frequenz),
+      // Immer '0' — Anlage 1 TP5 V21, Kap. 5.5.3.3 S. 72. Die echte Frequenz
+      // aus dem Freitext stand hier bis zum 19.09.2026 und war eine Angabe,
+      // die es in der Podologie fachlich nicht gibt.
+      therapiefrequenz:      therapiefrequenzFuer('podologie', frequenzToDigit(vord.frequenz)),
       // O-101 — Wert + U18-Befreiung wie im physio-Mapper oben begründet.
       zuzahlungskennzeichen: (vord.zuzahlung_befreit
                                || isUnter18(lead?.geburtsdatum, letzteBehandlungsdatum))
@@ -2575,7 +2609,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       .from('prescriptions')
       .select(`
         *,
-        leads:patient_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer),
+        leads:patient_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer, street, plz, city),
         aerzte:arzt_id (id, arzt_name, lanr, bsnr)
       `)
       .eq('owner_id', tenantId)
@@ -3107,7 +3141,7 @@ router.post('/abrechnung/korrektur', async (req, res) => {
       .from('prescriptions')
       .select(`
         *,
-        leads:patient_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer),
+        leads:patient_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer, street, plz, city),
         aerzte:arzt_id   (id, arzt_name, lanr, bsnr),
         prescription_sessions (
           id, session_number, status, done_at,

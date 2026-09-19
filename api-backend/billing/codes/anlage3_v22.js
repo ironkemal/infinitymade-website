@@ -69,6 +69,35 @@ export const SUMMENSTATUS = Object.freeze({
   '99': 'nicht zuzuordnende Status',
 });
 
+/**
+ * Versichertenstatus (5-stellig, SLLA.INV Feld 2) → Summenstatus der
+ * GES-Zeile (2-stellig, SLGA.GES Feld 1) — Anlage 3 TP5 V21, § 8.1.6.
+ *
+ * Die Tabelle darueber gibt es seit dem ersten Tag, benutzt hat sie niemand:
+ * `builder.js` nahm die erste Stelle des Versichertenstatus und polsterte sie
+ * auf zwei Zeichen. Daraus wurde '01' statt '11', '03' statt '31', '05' statt
+ * '51' — Werte, die in keiner Schluesseltabelle stehen. Das faellt nicht als
+ * stiller Rechenfehler auf, sondern in Pruefstufe 2, und dort weist die
+ * Annahmestelle die GANZE Datei ab.
+ *
+ * Unbekanntes wird bewusst zu '99' und nicht zu einem Fehler: die
+ * Schluesseltabelle sieht fuer genau diesen Fall einen eigenen Wert vor
+ * ("nicht zuzuordnende Status"). Ein Rezept mit ungewoehnlichem Status soll
+ * die Monatsabrechnung der ganzen Praxis nicht anhalten — und der Preflight
+ * (P:01002) hat den Status vorher ohnehin schon auf 1/3/5/9 geprueft.
+ *
+ * @param {string} versichertenstatus  z. B. '10000', '30000', '50000'
+ * @returns {'11'|'31'|'51'|'99'}
+ */
+export function summenstatusFuer(versichertenstatus) {
+  switch (String(versichertenstatus ?? '').trim().slice(0, 1)) {
+    case '1': return '11';
+    case '3': return '31';
+    case '5': return '51';
+    default:  return '99';
+  }
+}
+
 export const BELEGINFORMATION = Object.freeze({
   '0': 'keine Belegübermittlung zum Fall',
   '1': 'Belege per Post übermittelt',

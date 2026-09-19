@@ -13,8 +13,9 @@
 //   - Trailing empty Kann-fields are dropped by buildSegment automatically.
 //   - Empty Kann-fields in the middle MUST be passed as '' to keep their `+`.
 
-import { buildSegment, fmtAmount, fmtDate } from './encoding.js';
+import { buildSegment, fmtAmount, fmtDate, freitext } from './encoding.js';
 import { LEITSYMPTOMATIK_MUSTER } from './leitsymptomatik.js';
+import { SUMMENSTATUS } from '../codes/anlage3_v22.js';
 
 // ===========================================================================
 // SLGA segments — §5.5.2
@@ -104,17 +105,37 @@ export function buildSLGA_SKO({ skontoProzent, zahlungszielTage }) {
 // Fields: Status(n2), Gesamtrechnungsbetrag, Gesamtbruttobetrag, GesZuzahlung(K)
 export function buildSLGA_GES(rows) {
   // rows: [{ status, rechnungsbetrag, brutto, zuzahlung }]
-  return rows.map(r => buildSegment('GES', [
-    String(r.status).padStart(2, '0'),
-    fmtAmount(r.rechnungsbetrag),
-    fmtAmount(r.brutto),
-    r.zuzahlung != null ? fmtAmount(r.zuzahlung) : '',
-  ]));
+  return rows.map(r => {
+    // Kein padStart mehr. Das alte `String(r.status).padStart(2,'0')` sah aus
+    // wie eine Formatierung, war aber die Stelle, an der ein falscher Wert
+    // unauffaellig wurde: aus '1' machte es '01', und '01' ist in § 8.1.6
+    // nicht vergeben. Zulaessig sind nur 00/11/31/51/99 — wer hier etwas
+    // anderes uebergibt, hat einen Denkfehler und keinen Formfehler, und der
+    // gehoert laut gemeldet (dieselbe Linie wie FKT und ZHE oben: Pruefstufe 2
+    // weist die ganze Datei ab, nicht die einzelne Zeile).
+    const status = String(r.status ?? '');
+    if (!SUMMENSTATUS[status]) {
+      throw new Error(
+        `SLGA.GES.Summenstatus "${status}" ungültig — erlaubt sind nur ` +
+        `${Object.keys(SUMMENSTATUS).join(', ')}. Anlage 3 TP5 V21, § 8.1.6.`
+      );
+    }
+    return buildSegment('GES', [
+      status,
+      fmtAmount(r.rechnungsbetrag),
+      fmtAmount(r.brutto),
+      r.zuzahlung != null ? fmtAmount(r.zuzahlung) : '',
+    ]);
+  });
 }
 
 // NAM (SLGA) — §5.5.2 p.37-38. M, 1.
+// Vier Freitextfelder (Name und Anschrift des Rechnungsstellers) — das Komma
+// darin ist zu entwerten, siehe `freitext()` in encoding.js.
 export function buildSLGA_NAM({ name1, name2 = '', name3 = '', name4 = '' }) {
-  return [buildSegment('NAM', [name1, name2, name3, name4])];
+  return [buildSegment('NAM', [
+    freitext(name1), freitext(name2), freitext(name3), freitext(name4),
+  ])];
 }
 
 // ===========================================================================
@@ -187,13 +208,16 @@ export function buildSLLA_NAD({
   ort = '',
   laenderkennzeichen = '',
 }) {
+  // Name, Strasse und Ort sind Freitext (Komma entwerten — „Musterstr. 1a,
+  // Hinterhaus" ist eine reale Eingabe). PLZ und Laenderkennzeichen sind
+  // Kodes und bleiben unberuehrt.
   return [buildSegment('NAD', [
-    nachname,
-    vorname,
+    freitext(nachname),
+    freitext(vorname),
     fmtDate(geburtsdatum),
-    strasse,
+    freitext(strasse),
     plz,
-    ort,
+    freitext(ort),
     laenderkennzeichen,
   ])];
 }
@@ -248,7 +272,7 @@ export function buildSLLA_EHE({
 
 // TXT (SLLA-B) — §5.5.3.3 p.67. K, 0..1 per EHE.
 export function buildSLLA_TXT({ text }) {
-  return [buildSegment('TXT', [text])];
+  return [buildSegment('TXT', [freitext(text)])];
 }
 
 // MWS (SLLA-B) — §5.5.3.3 p.67-68. K, 0..1 per EHE.
@@ -301,7 +325,7 @@ export function buildSLLA_ZHE({
     therapieberichtAngefordert,
     hausbesuch,
     leitsymptomatik,
-    patientenLeitsymptomatik,
+    freitext(patientenLeitsymptomatik),   // ..70 AN Freitext — Komma entwerten
     String(dringlicherBehandlungsbedarf),
     heilmittelBereich,
     String(therapiefrequenz),
@@ -310,8 +334,15 @@ export function buildSLLA_ZHE({
 
 // DIA (SLLA-B) — §5.5.3.3 p.72. M, 1..n per ZHE for Heilmittel.
 // Either icd10 OR text must be filled.
+//
+// „1..n" heisst: je Diagnose ein eigenes Segment. Zwei ICD-Kodes in EIN Feld
+// zu schreiben ("E11.40,I70.24") ist kein zulaessiger Kurzweg — das Feld ist
+// an..12 fuer EINEN Schluessel, und das Komma darin liest die Annahmestelle
+// als Teil des Kodes. Die Schleife darueber steht in builder.js, damit dieses
+// Modul bei „ein Segment je Aufruf" bleibt wie alle anderen hier.
+// Der Diagnosetext ist Freitext (Komma entwerten), der Kode nicht.
 export function buildSLLA_DIA({ icd10 = '', text = '' }) {
-  return [buildSegment('DIA', [icd10, text])];
+  return [buildSegment('DIA', [icd10, freitext(text)])];
 }
 
 // SKZ (SLLA-B) — §5.5.3.3 p.72-73. K, 0..1 per ZHE. Kostenzusage data.

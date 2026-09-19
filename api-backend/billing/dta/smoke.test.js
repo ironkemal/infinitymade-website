@@ -44,10 +44,10 @@ test('UNH SLLA:21:0:0', () => {
                "UNH+00002+SLLA:21:0:0'");
 });
 test('UNT echoes count + ref', () => {
-  assert.equal(buildUNT({ segmentCount: 15, nachrichtenreferenz: 2 }), "UNT+15+00002'");
+  assert.equal(buildUNT({ segmentCount: 15, nachrichtenreferenz: 2 }), "UNT+000015+00002'");
 });
 test('UNZ', () => {
-  assert.equal(buildUNZ({ messageCount: 4, datennummer: 7 }), "UNZ+4+00007'");
+  assert.equal(buildUNZ({ messageCount: 4, datennummer: 7 }), "UNZ+000004+00007'");
 });
 
 console.log('filename');
@@ -116,9 +116,11 @@ const result = buildDtaFile({
 });
 
 test('envelope present', () => {
-  assert.ok(result.content.startsWith(UNA_HEADER));
+  // Kein UNA mehr (19.09.2026) — der Datenstrom beginnt direkt mit UNB.
+  assert.ok(!result.content.startsWith('UNA'), 'UNA darf nicht mehr erzeugt werden');
+  assert.ok(result.content.startsWith('UNB+UNOC:3+'));
   assert.ok(result.content.includes('UNB+UNOC:3+123456789+987654321+'));
-  assert.ok(result.content.endsWith("UNZ+2+00023'"));
+  assert.ok(result.content.endsWith("UNZ+000002+00023'"));
 });
 test('SLGA + SLLA messages', () => {
   assert.ok(result.content.includes("UNH+00001+SLGA:21:0:0'"));

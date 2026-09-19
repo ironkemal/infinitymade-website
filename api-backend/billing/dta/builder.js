@@ -5,8 +5,7 @@
 // Jede Karten-IK-Gruppe ist EINE Gesamtrechnung mit eigener SLGA und eigenen
 // GES-Summen. Die Summe der ganzen Datei steht in keinem GES-Segment.
 //
-// Output structure:
-//   UNA
+// Output structure (kein UNA — Anlage 1 TP5 V21 sieht es nicht vor, siehe unten):
 //   UNB ... B ...                              // Leistungsbereich B
 //     [UNH SLGA:21:0:0]                        // nur bei Sammelrechnung:
 //       FKT('J', IK-KK leer) REC GES* NAM      //   kein UST
@@ -28,7 +27,6 @@
 // prescriptions[0] fuer die ganze Datei und rechnete die GES-Summen ueber
 // alle Rezepte — mit einer zweiten Karten-IK ergab das still falsche Summen.
 
-import { UNA_HEADER } from './encoding.js';
 import { calcSessionZuzahlung } from '../zuzahlung/calculator.js';
 import {
   buildUNB, buildUNH, buildUNT, buildUNZ,
@@ -49,8 +47,9 @@ import {
   validateVerordnungsart,
   validateZuzahlungskennzeichen,
   isPhysioAbrechnungscode,
+  summenstatusFuer,
 } from '../codes/anlage3_v22.js';
-import { preflight as runPreflight } from './preflight.js';
+import { preflight as runPreflight, pruefeDatenstrom } from './preflight.js';
 
 const num = (v) => Number(v) || 0;
 const r2 = (v) => +Number(v).toFixed(2);
@@ -201,11 +200,38 @@ function buildSLLAMessage({
     therapiefrequenz:              verordnung.therapiefrequenz,
   }));
 
-  // DIA (M, 1..n) — at least one. If we have only ICD-10, emit one row.
-  lines.push(...buildSLLA_DIA({
-    icd10: verordnung.icd10 || '',
-    text:  verordnung.diagnosetext || '',
-  }));
+  // DIA (M, 1..n) — je Diagnose ein eigenes Segment (Anlage 1 TP5 V21,
+  // Kap. 5.5.3.3, S. 72).
+  //
+  // Vorher ging genau ein DIA hinaus, und der podologische Mapper hat seine
+  // zwei ICD-Kodes vorher mit einem Komma zusammengeklebt. Das Feld ist
+  // an..12 fuer EINEN Schluessel — die Annahmestelle liest "E11.40,I70.24"
+  // nicht als zwei Diagnosen, sondern als einen unbekannten Kode und setzt ab.
+  //
+  // `icd10Liste` ist der neue Weg, `icd10` bleibt als Einzelwert zulaessig
+  // (so rufen die Fixtures und der physiotherapeutische Pfad heute auf). Der
+  // Komma-Split ist Absicht und kein Rest: er faengt Altbestaende ein, die den
+  // zusammengeklebten String noch mitbringen.
+  const icdListe = (Array.isArray(verordnung.icd10Liste) && verordnung.icd10Liste.length
+      ? verordnung.icd10Liste
+      : String(verordnung.icd10 || '').split(','))
+    .map(s => String(s ?? '').trim())
+    .filter(Boolean);
+
+  if (icdListe.length === 0) {
+    // Kein Kode — dann traegt der Freitext die Diagnose. Mindestens ein DIA
+    // muss stehen, das Segment ist Mussfeld.
+    lines.push(...buildSLLA_DIA({ icd10: '', text: verordnung.diagnosetext || '' }));
+  } else {
+    // Der Freitext gehoert zur Hauptdiagnose, nicht an jede Zeile — sonst
+    // stuende derselbe Befund mehrfach in der Datei.
+    icdListe.forEach((kode, idx) => {
+      lines.push(...buildSLLA_DIA({
+        icd10: kode,
+        text:  idx === 0 ? (verordnung.diagnosetext || '') : '',
+      }));
+    });
+  }
 
   if (verordnung.genehmigung) {
     lines.push(...buildSLLA_SKZ({
@@ -271,8 +297,11 @@ function buildSLGAMessage({
   // GES rows: '00' = total, then per-Versichertenstatus
   const gesRows = [{ status: '00', ...gesamtTotals }, ...perStatusTotals];
   if (gesRows.length < 2) {
-    // ensure min 2 — duplicate '00' as per-status fallback if no breakdown known
-    gesRows.push({ status: '1', ...gesamtTotals });
+    // Mindestens zwei Zeilen sind Pflicht. Ohne Aufschluesselung ist der
+    // ehrliche Wert '99' ("nicht zuzuordnende Status", § 8.1.6) — hier stand
+    // frueher '1', das ist gar kein Summenstatus, sondern die erste Stelle
+    // eines Versichertenstatus.
+    gesRows.push({ status: '99', ...gesamtTotals });
   }
   lines.push(...buildSLGA_GES(gesRows.map(r => ({
     status:          r.status,
@@ -428,7 +457,10 @@ export function buildDtaFile({
       const t = fallTotals[i];
       brutto += t.brutto;
       gesZ   += t.gesZuzahlung;
-      const vs = (prescriptions[i].patient.versichertenstatus || '1').slice(0, 1);
+      // Nicht die erste Stelle des Versichertenstatus, sondern der daraus
+      // abgeleitete Summenstatus (11/31/51/99) — § 8.1.6. Die alte Fassung
+      // schrieb '01'/'03'/'05' in die GES-Zeile, Werte ohne Schluessel.
+      const vs = summenstatusFuer(prescriptions[i].patient.versichertenstatus || '1');
       const cur = perStatus.get(vs) || { brutto: 0, gesZuzahlung: 0, netto: 0 };
       cur.brutto       += t.brutto;
       cur.gesZuzahlung += t.gesZuzahlung;
@@ -570,9 +602,20 @@ export function buildDtaFile({
   });
   const unz = buildUNZ({ messageCount: nachrRef, datennummer: rechnung.datennummer });
 
-  const content      = UNA_HEADER + unb + allLines.join('') + unz;
-  const segmentCount = (content.match(/'/g) || []).length - 1;
+  // Kein UNA mehr (gkv-302 Audit 19.09.2026): die Anlage 1 TP5 V21 sieht das
+  // Segment nicht vor, und in der echten, von der Kasse angenommenen
+  // Referenzdatei steht es nicht. Begruendung ausfuehrlich in encoding.js.
+  // Damit faellt auch das `- 1` weg, das vorher den UNA-Abschluss abzog.
+  const content      = unb + allLines.join('') + unz;
+  const segmentCount = (content.match(/'/g) || []).length;
   const byteLength   = Buffer.byteLength(content, 'latin1');
+
+  // Selbstpruefung des erzeugten Datenstroms. Der Preflight oben sieht nur die
+  // EINGABE; die beiden Formfehler, die der Audit vom 19.09.2026 gefunden hat
+  // (ungepolsterte UNT/UNZ-Zaehler, Summenstatus '01' statt '11'), standen
+  // ausschliesslich in der AUSGABE und konnten deshalb monatelang unbemerkt
+  // bleiben. Ab hier liest die Pipeline einmal ihr eigenes Ergebnis.
+  pruefeDatenstrom(content);
 
   // Auftragsdatei (Anhang 2 zur Anlage 1 TP5, Kap. 9, §3.1 — Nutzdatendatei
   // geht nie allein, die Dateien muessen "paarweise" ankommen). Ihr Feld

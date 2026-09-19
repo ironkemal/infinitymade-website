@@ -19,6 +19,7 @@ import {
   ZUZAHLUNGSKENNZEICHEN,
   TARIFBEREICH,
   ABRECHNUNGSCODE,
+  SUMMENSTATUS,
 } from '../codes/anlage3_v22.js';
 import { istGueltigerLegs, GUELTIGE_LEGS } from '../codes/legs.js';
 import { LEITSYMPTOMATIK_MUSTER } from './leitsymptomatik.js';
@@ -259,6 +260,22 @@ export function preflight(input) {
     if (!isValidIcd10(v.icd10))
       E(errors, 'V:01002', `${at}.verordnung.icd10`, `ICD-10 "${v.icd10}" ungültiges Format`);
 
+    // Zweite und weitere Diagnose. Seit dem 19.09.2026 bekommt jede ein
+    // eigenes DIA-Segment (vorher wurden sie mit Komma in EIN Feld geklebt) —
+    // damit wandert auch jede einzeln in die Datei und muss einzeln stimmen.
+    // Ungeprueft waere das eine Luecke, die es vorher nicht gab.
+    if (Array.isArray(v.icd10Liste)) {
+      v.icd10Liste
+        .map(k => String(k ?? '').trim())
+        .filter(Boolean)
+        .forEach((kode, k) => {
+          if (k === 0) return;                      // = v.icd10, oben geprueft
+          if (!isValidIcd10(kode))
+            E(errors, 'V:01014', `${at}.verordnung.icd10Liste[${k}]`,
+              `Weiterer ICD-10-Kode "${kode}" hat ein ungültiges Format`);
+        });
+    }
+
     if (!isValidDiagnosegruppe(v.diagnosegruppe))
       E(errors, 'V:01003', `${at}.verordnung.diagnosegruppe`, `Diagnosegruppe "${v.diagnosegruppe}" ungültig`);
 
@@ -438,6 +455,125 @@ export function preflight(input) {
       netto: +(totalBrutto - totalZuzahlung).toFixed(2),
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Selbstpruefung des ERZEUGTEN Datenstroms
+// ---------------------------------------------------------------------------
+//
+// Alles oberhalb prueft die Eingabe. Das reicht nicht: der Audit vom
+// 19.09.2026 hat zwei Fehler gefunden, die ausschliesslich beim Schreiben
+// entstanden — ungepolsterte UNT/UNZ-Zaehler und ein Summenstatus, den es
+// nicht gibt. Eine fehlerfreie Eingabe kann durch einen fehlerhaften Builder
+// laufen, und genau das ist passiert, ueber Monate, ohne dass irgendetwas
+// Alarm geschlagen haette.
+//
+// Bewusst schmal gehalten: hier steht nur, was sich aus dem Text allein und
+// ohne Kenntnis der Eingabe beweisen laesst. Ein zweiter vollstaendiger
+// Validator waere eine zweite Wahrheit, die irgendwann von der ersten
+// abweicht.
+
+// Segmente trennen und dabei das Entwertungszeichen achten: ein `?'` in einem
+// Freitext beendet KEIN Segment. Der naive `split("'")` in den Tests kommt
+// damit nicht klar — hier darf er nicht stehen, sonst meldet die Pruefung
+// Fehler, die es nicht gibt (oder uebersieht welche).
+export function segmenteTrennen(inhalt) {
+  const out = [];
+  let akt = '';
+  for (let i = 0; i < inhalt.length; i++) {
+    const c = inhalt[i];
+    if (c === '?') { akt += c + (inhalt[i + 1] ?? ''); i++; continue; }
+    if (c === "'") { if (akt) out.push(akt); akt = ''; continue; }
+    akt += c;
+  }
+  if (akt.trim()) out.push(akt);
+  return out;
+}
+
+/**
+ * Prueft den fertigen EDIFACT-Text gegen sich selbst.
+ * Wirft bei Abweichung — eine Datei mit falschen Zaehlern darf nicht einmal
+ * entstehen, geschweige denn hochgeladen werden.
+ *
+ * @param {string} inhalt  vollstaendiger Datenstrom (UNB … UNZ)
+ * @returns {{segmente:number, nachrichten:number}}
+ */
+export function pruefeDatenstrom(inhalt) {
+  const fehler = [];
+  const segmente = segmenteTrennen(String(inhalt || ''));
+
+  let offen = null;        // { referenz, anzahl }
+  let unhZaehler = 0;
+  let unzGesehen = false;
+
+  for (const seg of segmente) {
+    const felder = seg.split('+');
+    const tag = felder[0];
+
+    if (offen) offen.anzahl += 1;   // UNH selbst wird beim Oeffnen mitgezaehlt
+
+    switch (tag) {
+      case 'UNH':
+        if (offen) fehler.push(`UNH ${felder[1]} beginnt, obwohl Nachricht ${offen.referenz} nicht mit UNT geschlossen wurde`);
+        unhZaehler += 1;
+        offen = { referenz: felder[1], anzahl: 1 };
+        break;
+
+      case 'UNT': {
+        if (!offen) { fehler.push('UNT ohne vorangehendes UNH'); break; }
+        const gezaehlt = String(felder[1] ?? '');
+        if (!/^\d{6}$/.test(gezaehlt)) {
+          fehler.push(`UNT-Segmentzähler "${gezaehlt}" ist nicht 6-stellig mit führenden Nullen (Anlage 1 TP5 V21, Kap. 5.4)`);
+        }
+        if (Number(gezaehlt) !== offen.anzahl) {
+          fehler.push(`UNT der Nachricht ${offen.referenz} meldet ${Number(gezaehlt)} Segmente, gezählt wurden ${offen.anzahl}`);
+        }
+        if (String(felder[2] ?? '') !== String(offen.referenz)) {
+          fehler.push(`UNT-Nachrichtenreferenz "${felder[2]}" passt nicht zum UNH "${offen.referenz}"`);
+        }
+        offen = null;
+        break;
+      }
+
+      case 'GES': {
+        const status = String(felder[1] ?? '');
+        if (!SUMMENSTATUS[status]) {
+          fehler.push(`GES-Summenstatus "${status}" steht nicht in der Schlüsseltabelle (erlaubt: ${Object.keys(SUMMENSTATUS).join(', ')}) — Anlage 3 TP5 V21, § 8.1.6`);
+        }
+        break;
+      }
+
+      case 'UNZ': {
+        unzGesehen = true;
+        const gezaehlt = String(felder[1] ?? '');
+        if (!/^\d{6}$/.test(gezaehlt)) {
+          fehler.push(`UNZ-Nachrichtenzähler "${gezaehlt}" ist nicht 6-stellig mit führenden Nullen (Anlage 1 TP5 V21, Kap. 5.4)`);
+        }
+        if (Number(gezaehlt) !== unhZaehler) {
+          fehler.push(`UNZ meldet ${Number(gezaehlt)} Nachrichten, gezählt wurden ${unhZaehler} UNH`);
+        }
+        break;
+      }
+    }
+  }
+
+  if (offen) fehler.push(`Nachricht ${offen.referenz} wurde nie mit UNT geschlossen`);
+  if (!unzGesehen) fehler.push('UNZ fehlt — der Datenstrom ist nicht abgeschlossen');
+  if (segmente[0] && !segmente[0].startsWith('UNB')) {
+    fehler.push(`Datenstrom beginnt mit "${segmente[0].slice(0, 12)}…" statt mit UNB`);
+  }
+
+  if (fehler.length) {
+    const err = new Error(
+      `Selbstprüfung des erzeugten DTA-Datenstroms fehlgeschlagen (${fehler.length}):\n  ` +
+      fehler.join('\n  ')
+    );
+    err.code = 'DTA_SELBSTPRUEFUNG';
+    err.fehler = fehler;
+    throw err;
+  }
+
+  return { segmente: segmente.length, nachrichten: unhZaehler };
 }
 
 // Convenience: throw if preflight fails. Use in build pipeline.

@@ -76,6 +76,31 @@ export function heilmittelBereichFuer(sector) {
   }
 }
 
+/**
+ * Therapiefrequenz im ZHE-Segment (Feld 17, n1) — Anlage 1 TP5 V21,
+ * Kap. 5.5.3.3, S. 72: „Bei Podologie ... ist 0 anzugeben".
+ *
+ * Die Podologie kennt keine woechentliche Behandlungsfrequenz im Sinne der
+ * Heilmittel-Richtlinie; das Feld bleibt dort fachlich leer und wird mit '0'
+ * belegt. Bis zum 19.09.2026 schickte der podologische Mapper die aus dem
+ * Freitext abgeleitete echte Frequenz ('1'..'9'). Das weist keine Kasse ab —
+ * die Datei wird angenommen und enthaelt eine Angabe, die es fachlich nicht
+ * gibt. Die stille Sorte Fehler also, und ein Absetzungsgrund bei Pruefung.
+ *
+ * Steht hier und nicht in `abrechnung.routes.js`, weil es dieselbe Art Regel
+ * ist wie `heilmittelBereichFuer()` direkt darueber: eine Festlegung der
+ * Spezifikation je Fachbereich, die an zwei Mapper-Stellen gebraucht wird und
+ * an keiner von beiden fest verdrahtet gehoert.
+ *
+ * @param {string} sector     Wert aus `profiles.sector`
+ * @param {string} frequenz   die sonst ermittelte Frequenz (n1)
+ * @returns {string}
+ */
+export function therapiefrequenzFuer(sector, frequenz) {
+  if (heilmittelBereichFuer(sector) === '2') return '0';   // Podologie
+  return frequenz;
+}
+
 /** Nur fuer Tests und Aufrufer, die den Klartext anzeigen wollen. */
 export function verordnungsartText(schluessel) {
   return VERORDNUNGSART_HEILMITTEL[schluessel] || null;
