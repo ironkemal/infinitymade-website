@@ -44,7 +44,7 @@ import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-prue
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht
 // in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
 // Verordnung aufgeschlagen wird (module/verordnung-maske.js).
-import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft }
+import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode }
   from './module/verordnung-maske.js?v=20260919b';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
@@ -16064,8 +16064,7 @@ async function saveRezept() {
     }
 
     // 2. Parse ICD value — strip the " – Titel" part to get just the code
-    const icdRaw = document.getElementById('rzIcd').value.trim();
-    const icd10 = icdRaw.includes(' – ') ? icdRaw.split(' – ')[0].trim() : icdRaw;
+    const icd10 = nurIcdKode(document.getElementById('rzIcd').value);
 
     const anzahl = parseInt(document.getElementById('rzAnzahl').value) || null;
     const ausstDate = document.getElementById('rzAusstDate').value || null;

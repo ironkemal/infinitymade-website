@@ -559,7 +559,7 @@ export function patientkopfAusMaske() {
  * ICD-Kodes hat. Was jemand eintippt, soll erhalten bleiben — auch wenn es
  * krumm ist. Prüfen tut der Prüfknopf, nicht das Speichern.
  */
-function nurIcdKode(roh) {
+export function nurIcdKode(roh) {
   const t = String(roh ?? '').trim();
   return t.includes(' – ') ? t.split(' – ')[0].trim() : t;
 }
