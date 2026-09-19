@@ -243,6 +243,42 @@ async function podPatientBehandlungen(vord) {
   return (behs || []).map(b => ({ ...b, nagel: nagelJeVord.get(b.verordnung_id) || null }));
 }
 
+/**
+ * Die bereits dokumentierten Behandlungen EINER Verordnung, aelteste zuerst.
+ *
+ * Warum es diese Funktion gibt (19.09.2026, canli-test): wer sich beim
+ * Behandlungsdatum vertippt hatte, sah das auf diesem Bildschirm nirgends.
+ * Die Liste der erbrachten Leistungen gab es zwar schon — aber nur in der
+ * Verordnungs-Detailkarte (`_verschreibung()` in verordnung-detail.js), also
+ * hinter einem anderen Menuepunkt. Der Fehler entsteht hier, bemerkt wurde er
+ * dort; deshalb steht die Liste jetzt auch dort, wo getippt wird.
+ *
+ * Bewusst NICHT `podPatientBehandlungen()` wiederverwendet: die sammelt ueber
+ * ALLE Verordnungen des Patienten und liefert keine `id` — sie beantwortet die
+ * Frage der Einmaligkeitssperren, nicht „was steht an diesem Rezept".
+ *
+ * `invoice_id` kommt mit, weil eine bereits berechnete Behandlung anders zu
+ * behandeln ist als eine frische — heute nur als Hinweis in der Zeile, und als
+ * Anker fuer die noch offene Korrekturmoeglichkeit (siehe Kommentar an der
+ * Liste unten).
+ *
+ * @param {string} vordId
+ * @returns {Promise<Array<{id:string, behandlungsdatum:string, hpnr_codes:?Array<string>, lokalisation:?string, invoice_id:?string}>>}
+ */
+async function podBehandlungenDerVerordnung(vordId) {
+  if (!vordId) return [];
+  const { data, error } = await ctx.supabase
+    .from('podologie_behandlungen')
+    .select('id, behandlungsdatum, hpnr_codes, lokalisation, invoice_id')
+    .eq('owner_id', ctx.getOwnerId())
+    .eq('verordnung_id', vordId)
+    .order('behandlungsdatum', { ascending: true });
+  // Ein Fehler hier darf den Bildschirm nicht kosten: die Liste ist eine
+  // Zugabe, das Erfassen ist die Aufgabe.
+  if (error) { console.warn('[podologie-abrechnung] Behandlungen laden:', error.message); return []; }
+  return data || [];
+}
+
 async function podEingangsbefundungLage(vord, datum) {
   const behs = await podPatientBehandlungen(vord);
   if (!behs.length) return { erlaubt: true, grund: '', schonAm: null, ersteAm: null };
@@ -554,6 +590,9 @@ async function loadPodologieBilling() {
   // Was am Telefon fuer heute gebucht wurde (Ops 235) — nur Vorbelegung.
   const geplanteHpnr = selectedVord ? await podGeplanteHpnr(selectedVord, todayStr) : new Set();
 
+  // Was an DIESER Verordnung bereits dokumentiert ist.
+  const dokumentiert = selectedVord ? await podBehandlungenDerVerordnung(selectedVord.id) : [];
+
   const behandlungFormHtml = selectedVord ? `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
       <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')}</h4>
@@ -612,6 +651,45 @@ async function loadPodologieBilling() {
         </div>
         <div id="podBehError" style="color:#ef4444;font-size:13px;display:none;"></div>
         <button id="podSaveBehBtn" class="btn-primary" style="width:fit-content;">${ctx.t('pod_save_behandlung')}</button>
+
+        <!-- Was an dieser Verordnung schon steht. Nur lesen: eine dokumentierte
+             Behandlung zu LOESCHEN ist keine Anzeigefrage, sondern eine
+             Belegfrage — sie haengt an invoice_id (steht sie schon auf einer
+             Rechnung?), am Abrechnungsstatus der Verordnung (schon an die Kasse
+             gegangen?), am abgeleiteten Behandlungsbeginn und an den
+             Einmaligkeitssperren 78040/78100. Solange das nicht entschieden ist
+             (Storno statt DELETE?), zeigt dieser Block den Irrtum wenigstens
+             an, statt ihn unsichtbar zu lassen. Korrigiert wird bis dahin ueber
+             die Verordnungs-Detailkarte bzw. den Inhaber.
+             Beschriftung fest auf Deutsch wie die Nachbartexte dieses Panels —
+             das dashboard.js-Woerterbuch steht an seiner Groessenschranke. -->
+        <div style="border-top:1px solid var(--border);padding-top:12px;">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">
+            Bereits dokumentiert${dokumentiert.length ? ` (${dokumentiert.length})` : ''}
+          </div>
+          ${dokumentiert.length === 0
+            ? `<div style="font-size:12px;color:var(--text-muted);">Für diese Verordnung ist noch keine Behandlung erfasst.</div>`
+            : dokumentiert.map(b => {
+                const codes = (Array.isArray(b.hpnr_codes) ? b.hpnr_codes : []).filter(Boolean);
+                // Ein Datum in der Zukunft kann aus der Zeit vor dem 19.09.2026
+                // stammen — damals liess es sich speichern. Es faellt die
+                // §302-Datei, also wird es hier rot benannt statt stumm gelistet.
+                const kuenftig = b.behandlungsdatum > todayStr;
+                return `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid var(--border);">
+                  <div style="min-width:0;">
+                    <div style="font-size:12px;color:${kuenftig ? '#ef4444' : 'var(--text-main)'};">
+                      ${ctx.escapeHtml(b.behandlungsdatum ? new Date(b.behandlungsdatum).toLocaleDateString('de-DE') : '—')}
+                      ${kuenftig ? ' ⚠ Datum liegt in der Zukunft — die Kasse weist damit die ganze Abrechnungsdatei zurück.' : ''}
+                    </div>
+                    <div style="font-size:11px;color:var(--text-muted);word-break:break-word;">${ctx.escapeHtml(codes.join(' · ') || '—')}</div>
+                    ${b.lokalisation ? `<div style="font-size:11px;color:var(--text-muted);">${ctx.escapeHtml(b.lokalisation)}</div>` : ''}
+                  </div>
+                  ${b.invoice_id
+                    ? `<div style="font-size:10px;color:var(--text-muted);white-space:nowrap;" title="Steht bereits auf einer Rechnung">berechnet</div>`
+                    : ''}
+                </div>`;
+              }).join('')}
+        </div>
       </div>
     </div>` : `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
 
