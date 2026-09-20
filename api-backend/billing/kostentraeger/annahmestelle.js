@@ -16,6 +16,8 @@
 // ohne Datenbank testen — und genau diese Kette ist die Stelle, an der eine
 // Datei beim falschen Empfänger landet.
 
+import { waehlePostanschrift } from './parser.js';
+
 /** Die Kassenart steckt in den ersten zwei Zeichen des Quelldateinamens
  *  ('AO05Q326_KE3.txt' → 'AO'). null, wenn nicht ableitbar — nicht raten. */
 export function kassenartAusQuelle(quelle) {
@@ -237,14 +239,27 @@ export function waehlePapierannahmestelle(zeilen, { ketten, bundeslandVkg = null
 }
 
 /**
- * Laedt die VKG-Zeilen des Kostentraegers und waehlt die Papierannahmestelle.
- * Gleiche Signatur und Rueckgabeform wie ladeAnnahmestelle().
+ * Laedt die VKG-Zeilen des Kostentraegers, waehlt die Papierannahmestelle (VKG 09)
+ * und laedt deren Postanschrift aus `kostentraeger_anschriften`.
  *
- * ⚠️ Die `kostentraeger`-Tabelle hat KEINE Adressspalte — nur IK + Name.
- * Die Anschrift muss separat aus den geparsten Kostentraegerdaten kommen
- * (parser.js / waehlePostanschrift). Diese Funktion gibt nur ik + name zurueck.
+ * Die Anschrift ist auf die IK der Papierannahmestelle (treffer.partnerIk) zu holen,
+ * nicht auf den urspruenglichen Kostentraeger. Findet sich keine Anschrift oder
+ * fehlt die Tabelle noch (vor Migration), bleibt `anschrift` null und `ok: true` —
+ * die Abrechnung darf dadurch nicht angehalten werden.
  *
- * @returns {{ ok: true, ik, name, treffer } | { ok: false, grund: string }}
+ * @param {object} supabase
+ * @param {object} opts
+ * @param {string} opts.kostentraegerIk
+ * @param {string} opts.bereich
+ * @param {string} [opts.eigenerAbrechnungscode]
+ * @param {string|null} [opts.bundeslandVkg]
+ * @returns {Promise<{
+ *   ok: true,
+ *   ik: string,
+ *   name: string,
+ *   anschrift: { art: string, plz: string, ort: string, strasse: string } | null,
+ *   treffer: object
+ * } | { ok: false, grund: string }>}
  */
 export async function ladePapierannahmestelle(supabase, {
   kostentraegerIk, bereich, eigenerAbrechnungscode, bundeslandVkg = null,
@@ -271,5 +286,39 @@ export async function ladePapierannahmestelle(supabase, {
   const { data: partner } = await supabase
     .from('kostentraeger').select('name').eq('ik', treffer.partnerIk).maybeSingle();
 
-  return { ok: true, ik: treffer.partnerIk, name: partner?.name || '', treffer };
+  // Anschrift der Papierannahmestelle laden (Urbelege-Postweg, Richtlinien § 2(1)/§ 4).
+  // ⚠️ Die Adresse gehoert zur IK der PAPIERANNAHMESTELLE (treffer.partnerIk),
+  // nicht zum Kostentraeger, dessen VKG-Zeile sie gefunden hat.
+  // Ein Fehler hier (leere Liste, null, Tabelle fehlt noch weil die Migration nicht
+  // eingespielt ist) darf die Abrechnung NICHT anhalten: die elektronische Datei ist
+  // korrekt adressiert; nur die Postadresse fehlt und erscheint als Warnung.
+  // Der Rueckfall ist still gegenueber der Abrechnung, aber NICHT gegenueber
+  // dem Log: ein lautloser Rueckfall waere in diesem Projekt schon zweimal
+  // teuer geworden. Wer sich fragt, warum der Begleitzettel keine Adresse
+  // traegt, soll die Antwort in `docker logs` finden.
+  let anschrift = null;
+  try {
+    const { data: adressen, error: adrFehler } = await supabase
+      .from('kostentraeger_anschriften')
+      .select('art, plz, ort, strasse')
+      .eq('kostentraeger_ik', treffer.partnerIk);
+    if (adrFehler) {
+      console.warn(
+        `[annahmestelle] Anschrift der Papierannahmestelle ${treffer.partnerIk} nicht lesbar `
+        + `(Migration 0032 eingespielt?): ${adrFehler.message}`
+      );
+    } else {
+      anschrift = waehlePostanschrift(adressen);
+      if (!anschrift) {
+        console.warn(
+          `[annahmestelle] Zur Papierannahmestelle ${treffer.partnerIk} ist keine Anschrift `
+          + `hinterlegt — der Begleitzettel bleibt ohne Empfaengeradresse.`
+        );
+      }
+    }
+  } catch (e) {
+    console.warn('[annahmestelle] Anschrift-Abfrage fehlgeschlagen:', e?.message || e);
+  }
+
+  return { ok: true, ik: treffer.partnerIk, name: partner?.name || '', anschrift, treffer };
 }

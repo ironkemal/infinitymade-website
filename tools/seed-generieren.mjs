@@ -41,11 +41,24 @@ const TABLES = {
     orderBy: 'ik',
   },
   kostentraeger_annahmestellen: {
+    // ⚠️ `quelle_stand` burada eksikti (20.09.2026, Nebenbefund Schritt 1.4):
+    // Komşu `kostentraeger` tablosunda varken burada unutulmuştu. Sonuç: dağıtılan
+    // 0007_seed_kostentraeger_annahmestellen.sql müşteri kutusunda quelle_stand = NULL
+    // yazdı ve kutuda bu alıcı listesinin NE KADAR ESKİ olduğu (hangi döneme ait olduğu)
+    // cevaplanamaz hale geldi. Üçer aylık periyotlarla güncellenen ana verilerde
+    // (Stammdaten) tam da bu soru belirleyicidir — yanlış dönemin Annahmestelle'si
+    // §302'de doğrudan dosya reddi (Abweisung) demektir. Buraya eklendi.
     columns: ['kostentraeger_ik', 'verknuepfungsart', 'partner_ik', 'leistungserbringergruppe',
-      'abrechnungscode', 'art_datenlieferung', 'uebermittlungsmedium', 'bundesland', 'quelle'],
+      'abrechnungscode', 'art_datenlieferung', 'uebermittlungsmedium', 'bundesland', 'quelle',
+      'quelle_stand'],
     conflictKeys: ['kostentraeger_ik', 'verknuepfungsart', 'partner_ik', 'abrechnungscode',
       'art_datenlieferung', 'uebermittlungsmedium', 'bundesland'],
     orderBy: 'kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode, art_datenlieferung, uebermittlungsmedium, bundesland',
+  },
+  kostentraeger_anschriften: {
+    columns: ['kostentraeger_ik', 'art', 'plz', 'ort', 'strasse', 'quelle', 'quelle_stand'],
+    conflictKeys: ['kostentraeger_ik', 'art', 'plz', 'ort', 'strasse'],
+    orderBy: 'kostentraeger_ik, art, plz, ort, strasse',
   },
   // heilmittel_tarif ABSICHTLICH entfernt (13.09.2026, O-96, db-ustasi-Review):
   // die Tabelle wurde als Preis-Override abgeschafft (resolvePreis() liest nur

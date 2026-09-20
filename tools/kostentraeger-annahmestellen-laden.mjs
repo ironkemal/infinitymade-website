@@ -11,12 +11,17 @@
 //   node tools/kostentraeger-annahmestellen-laden.mjs           # nur anzeigen
 //   node tools/kostentraeger-annahmestellen-laden.mjs --write   # tatsächlich laden
 //
-// Voraussetzung: api-backend/.env mit SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.
 // Lädt NICHT automatisch — bei neuen Dateien zuerst die Liste ECHT_DATEIEN und
 // die Stichtage (quelle_stand, von der Herausgeberseite / VDT-Segment) unten
-// von Hand aktualisieren. `--write` räumt die Tabelle komplett und baut sie neu
-// auf (TRUNCATE + INSERT) — sicher, weil `kostentraeger_annahmestellen` laut
-// db/REGISTER.md noch codeStumm ist (kein Produktionscode liest sie).
+// von Hand aktualisieren.
+// ⚠️ `kostentraeger_annahmestellen` und `kostentraeger_anschriften` sind seit
+// 19./20.09.2026 NICHT mehr codeStumm: `ladeAnnahmestelle()` und
+// `ladePapierannahmestelle()` lesen sie im laufenden Produktivbetrieb.
+// Ein TRUNCATE im laufenden Betrieb würde parallele Abrechnungen unterbrechen
+// (412-Fehler beim Routing). Das Script nutzt daher idempotentes Upsert
+// (on_conflict / resolution=ignore-duplicates). Ein TRUNCATE darf — falls überhaupt
+// zur Bereinigung veralteter Quartalsstände nötig — nur in einem exklusiven
+// Wartungsfenster außerhalb des Abrechnungsbetriebs erfolgen.
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -96,14 +101,21 @@ function stichtageWarnen() {
   return problem;
 }
 
-function ladeZeilen() {
-  const rows = [];
+function ladeDaten() {
+  const vkgRows = [];
+  const anschriftenRows = [];
+  let ungueltigeAnschriften = 0;
+  const proDatei = {};
+
   for (const [datei, stand] of Object.entries(ECHT_DATEIEN)) {
     const text = readFileSync(join(ECHT_DIR, datei), 'utf8');
     const records = parseKostentraegerDatei(text);
+    let vkgCount = 0;
+    let anschriftenCount = 0;
+
     for (const r of records) {
       for (const v of r.datenannahmestellen) {
-        rows.push({
+        vkgRows.push({
           kostentraeger_ik: r.ik,
           verknuepfungsart: ns(v.verknuepfungsart),
           partner_ik: ns(v.partner_ik),
@@ -115,10 +127,29 @@ function ladeZeilen() {
           quelle: datei,
           quelle_stand: stand,
         });
+        vkgCount++;
+      }
+      for (const a of (r.anschriften || [])) {
+        const art = String(a.art ?? '').trim();
+        if (art === '1' || art === '2' || art === '3') {
+          anschriftenRows.push({
+            kostentraeger_ik: r.ik,
+            art,
+            plz: ns(a.plz),
+            ort: ns(a.ort),
+            strasse: ns(a.strasse),
+            quelle: datei,
+            quelle_stand: stand,
+          });
+          anschriftenCount++;
+        } else {
+          ungueltigeAnschriften++;
+        }
       }
     }
+    proDatei[datei] = { vkg: vkgCount, anschriften: anschriftenCount };
   }
-  return rows;
+  return { vkgRows, anschriftenRows, ungueltigeAnschriften, proDatei };
 }
 
 function envLesen() {
@@ -133,8 +164,17 @@ function envLesen() {
 
 async function main() {
   const write = process.argv.includes('--write');
-  const rows = ladeZeilen();
-  console.log(`${rows.length} VKG-Zeilen aus ${Object.keys(ECHT_DATEIEN).length} Dateien geparst.`);
+  const { vkgRows, anschriftenRows, ungueltigeAnschriften, proDatei } = ladeDaten();
+
+  console.log('Geparste Datensaetze je Datei:');
+  for (const [datei, counts] of Object.entries(proDatei)) {
+    console.log(`  ${datei}: ${counts.vkg} VKG-Zeilen, ${counts.anschriften} Anschriften`);
+  }
+  console.log(`Gesamt: ${vkgRows.length} VKG-Zeilen und ${anschriftenRows.length} Anschriften aus ${Object.keys(ECHT_DATEIEN).length} Dateien geparst.`);
+  if (ungueltigeAnschriften > 0) {
+    console.warn(`⚠️  ${ungueltigeAnschriften} Anschrift-Segmente mit ungueltiger art (nicht in '1','2','3') ignoriert.`);
+  }
+
   const zeitProblem = stichtageWarnen();
   if (zeitProblem && write && !process.argv.includes('--trotzdem')) {
     console.error('Abbruch: Stichtagsproblem (siehe oben). Bewusst trotzdem laden: --trotzdem');
@@ -153,20 +193,24 @@ async function main() {
     process.exit(1);
   }
 
-  // TRUNCATE geht nur per SQL (Management API / MCP), nicht per REST — das
-  // muss vor diesem Script separat laufen (siehe Kommentar oben: die Tabelle
-  // ist codeStumm, ein TRUNCATE vor dem Neu-Laden ist sicher).
-  console.log('⚠️  Dieses Script LÄDT nur (Upsert per on_conflict) — TRUNCATE vorher separat ausführen,');
-  console.log('    sonst bleiben veraltete Zeilen aus dem letzten Quartal stehen.');
-
-  const onConflict = 'kostentraeger_ik,verknuepfungsart,partner_ik,abrechnungscode,art_datenlieferung,uebermittlungsmedium,bundesland';
-  const endpoint = `${SUPABASE_URL}/rest/v1/kostentraeger_annahmestellen?on_conflict=${onConflict}`;
+  // TRUNCATE geht nur per SQL (Management API / MCP), nicht per REST.
+  // ⚠️ Achtung: kostentraeger_annahmestellen und kostentraeger_anschriften werden
+  // seit 19./20.09.2026 produktiv von ladeAnnahmestelle() / ladePapierannahmestelle()
+  // gelesen. Ein TRUNCATE im laufenden Betrieb wuerde Abrechnungen abbrechen lassen.
+  // Daher arbeitet dieses Script sicher per Upsert (on_conflict).
+  console.log('⚠️  Dieses Script LÄDT per Upsert (on_conflict) — kein TRUNCATE im laufenden Abrechnungsbetrieb.');
 
   const BATCH = 500;
-  let inserted = 0;
-  for (let i = 0; i < rows.length; i += BATCH) {
-    const chunk = rows.slice(i, i + BATCH);
-    const res = await fetch(endpoint, {
+
+  // 1) VKG-Zeilen laden
+  console.log(`Lade ${vkgRows.length} VKG-Zeilen in kostentraeger_annahmestellen...`);
+  const onConflictVkg = 'kostentraeger_ik,verknuepfungsart,partner_ik,abrechnungscode,art_datenlieferung,uebermittlungsmedium,bundesland';
+  const endpointVkg = `${SUPABASE_URL}/rest/v1/kostentraeger_annahmestellen?on_conflict=${onConflictVkg}`;
+
+  let insertedVkg = 0;
+  for (let i = 0; i < vkgRows.length; i += BATCH) {
+    const chunk = vkgRows.slice(i, i + BATCH);
+    const res = await fetch(endpointVkg, {
       method: 'POST',
       headers: {
         apikey: SUPABASE_SERVICE_ROLE_KEY,
@@ -178,13 +222,41 @@ async function main() {
     });
     if (!res.ok) {
       const t = await res.text();
-      console.error(`Batch ${i}-${i + chunk.length} fehlgeschlagen: ${res.status} ${t.slice(0, 500)}`);
+      console.error(`VKG Batch ${i}-${i + chunk.length} fehlgeschlagen: ${res.status} ${t.slice(0, 500)}`);
       process.exit(1);
     }
-    inserted += chunk.length;
-    console.log(`${inserted}/${rows.length}`);
+    insertedVkg += chunk.length;
+    console.log(`  VKG: ${insertedVkg}/${vkgRows.length}`);
   }
-  console.log('Fertig.');
+
+  // 2) Anschriften laden
+  console.log(`Lade ${anschriftenRows.length} Anschriften in kostentraeger_anschriften...`);
+  const onConflictAnschriften = 'kostentraeger_ik,art,plz,ort,strasse';
+  const endpointAnschriften = `${SUPABASE_URL}/rest/v1/kostentraeger_anschriften?on_conflict=${onConflictAnschriften}`;
+
+  let insertedAnschriften = 0;
+  for (let i = 0; i < anschriftenRows.length; i += BATCH) {
+    const chunk = anschriftenRows.slice(i, i + BATCH);
+    const res = await fetch(endpointAnschriften, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=ignore-duplicates,return=minimal',
+      },
+      body: JSON.stringify(chunk),
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      console.error(`Anschriften Batch ${i}-${i + chunk.length} fehlgeschlagen: ${res.status} ${t.slice(0, 500)}`);
+      process.exit(1);
+    }
+    insertedAnschriften += chunk.length;
+    console.log(`  Anschriften: ${insertedAnschriften}/${anschriftenRows.length}`);
+  }
+
+  console.log(`Fertig: ${insertedVkg} VKG-Zeilen und ${insertedAnschriften} Anschriften geladen.`);
 }
 
 main();

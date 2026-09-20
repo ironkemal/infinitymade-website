@@ -11,6 +11,7 @@ import {
   ELEKTRONISCHE_DATENLIEFERUNG,
   VERKNUEPFUNGSART_KETTE,
   waehlePapierannahmestelle,
+  ladePapierannahmestelle,
   PAPIER_DATENLIEFERUNG,
 } from './annahmestelle.js';
 
@@ -342,4 +343,227 @@ test('IKK-Realbeispiel: VKG 09 + abrechnungscode 71/72 → 661430035, 99 → 100
   const kette99 = abrechnungscodeKette('podologie', null).filter((_, i) => i > 0);
   const t99 = waehlePapierannahmestelle(zeilen, { ketten: kette99 });
   assert.equal(t99.partnerIk, '100202549');
+});
+
+// ── ladePapierannahmestelle mit Anschrift-Auflösung (§302 Schritt 1.4) ────────
+
+// Erzeugt einen leichtgewichtigen Mock für Supabase, der exakt die von
+// ladePapierannahmestelle() aufgerufenen Tabellen und Methoden bedient.
+function erzeugeMockSupabase({
+  annahmestellen = [],
+  kostentraeger = [],
+  anschriften = [],
+  wirfFehlerTabelle = null,
+  datenFehlerTabelle = null,
+} = {}) {
+  const aufrufe = [];
+  return {
+    aufrufe,
+    from(tabelle) {
+      return {
+        select(spalten) {
+          return {
+            eq(feld, wert) {
+              aufrufe.push({ tabelle, spalten, feld, wert });
+
+              if (wirfFehlerTabelle === tabelle) {
+                throw new Error(`Simulierter Verbindungs-/DB-Fehler fuer Tabelle ${tabelle}`);
+              }
+              if (datenFehlerTabelle === tabelle) {
+                return Promise.resolve({
+                  data: null,
+                  error: { message: `relation "${tabelle}" does not exist` },
+                });
+              }
+
+              if (tabelle === 'kostentraeger_annahmestellen') {
+                const zeilen = annahmestellen.filter(z => z[feld] === wert);
+                return Promise.resolve({ data: zeilen, error: null });
+              }
+
+              if (tabelle === 'kostentraeger') {
+                return {
+                  maybeSingle: async () => {
+                    const treffer = kostentraeger.find(k => k[feld] === wert);
+                    return { data: treffer || null, error: null };
+                  },
+                };
+              }
+
+              if (tabelle === 'kostentraeger_anschriften') {
+                const zeilen = anschriften.filter(a => a[feld] === wert);
+                return Promise.resolve({ data: zeilen, error: null });
+              }
+
+              return Promise.resolve({ data: [], error: null });
+            },
+          };
+        },
+      };
+    },
+  };
+}
+
+test('L1: ladePapierannahmestelle() liefert die Anschrift mit und waehlt nach 1 > 2 > 3', async () => {
+  const supabase = erzeugeMockSupabase({
+    annahmestellen: [
+      {
+        kostentraeger_ik: '100000001',
+        partner_ik: '661430035',
+        verknuepfungsart: '09',
+        art_datenlieferung: '28',
+        abrechnungscode: '71',
+        bundesland: '',
+      },
+    ],
+    kostentraeger: [
+      { ik: '661430035', name: 'IQVIA Health System Services GmbH' },
+    ],
+    anschriften: [
+      { kostentraeger_ik: '661430035', art: '3', plz: '04310', ort: 'Leipzig', strasse: '' },
+      { kostentraeger_ik: '661430035', art: '1', plz: '04425', ort: 'Taucha', strasse: 'Gaertnerweg 12' },
+      { kostentraeger_ik: '661430035', art: '2', plz: '42100', ort: 'Wuppertal', strasse: '' },
+    ],
+  });
+
+  const res = await ladePapierannahmestelle(supabase, {
+    kostentraegerIk: '100000001',
+    bereich: 'podologie',
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.ik, '661430035');
+  assert.equal(res.name, 'IQVIA Health System Services GmbH');
+  assert.ok(res.anschrift, 'Anschrift muss vorhanden sein');
+  assert.equal(res.anschrift.art, '1', 'Hausanschrift (1) muss Vorrang vor Postfach (2) und Grosskunde (3) haben');
+  assert.equal(res.anschrift.plz, '04425');
+  assert.equal(res.anschrift.ort, 'Taucha');
+  assert.equal(res.anschrift.strasse, 'Gaertnerweg 12');
+});
+
+test('L2: keine Anschriften vorhanden → ok: true und anschrift: null (Abrechnung darf nicht scheitern)', async () => {
+  const supabase = erzeugeMockSupabase({
+    annahmestellen: [
+      {
+        kostentraeger_ik: '100000001',
+        partner_ik: '661430035',
+        verknuepfungsart: '09',
+        art_datenlieferung: '28',
+        abrechnungscode: '71',
+        bundesland: '',
+      },
+    ],
+    kostentraeger: [
+      { ik: '661430035', name: 'IQVIA Health System Services GmbH' },
+    ],
+    anschriften: [],
+  });
+
+  const res = await ladePapierannahmestelle(supabase, {
+    kostentraegerIk: '100000001',
+    bereich: 'podologie',
+  });
+
+  assert.equal(res.ok, true, 'Fehlende Anschrift darf die Abrechnung nicht anhalten');
+  assert.equal(res.ik, '661430035');
+  assert.equal(res.anschrift, null);
+});
+
+test('L3: Fehler oder fehlende Tabelle beim Adress-Select → ebenfalls ok: true und anschrift: null', async () => {
+  // Fall 3a: Tabelle existiert noch nicht vor Migration (Supabase liefert error-Objekt)
+  const supabaseFehler = erzeugeMockSupabase({
+    annahmestellen: [
+      {
+        kostentraeger_ik: '100000001',
+        partner_ik: '661430035',
+        verknuepfungsart: '09',
+        art_datenlieferung: '28',
+        abrechnungscode: '71',
+        bundesland: '',
+      },
+    ],
+    kostentraeger: [
+      { ik: '661430035', name: 'IQVIA Health System Services GmbH' },
+    ],
+    datenFehlerTabelle: 'kostentraeger_anschriften',
+  });
+
+  const res3a = await ladePapierannahmestelle(supabaseFehler, {
+    kostentraegerIk: '100000001',
+    bereich: 'podologie',
+  });
+
+  assert.equal(res3a.ok, true, 'DB-Fehler bei Adress-Tabelle darf Abrechnung nicht stoppen');
+  assert.equal(res3a.ik, '661430035');
+  assert.equal(res3a.anschrift, null);
+
+  // Fall 3b: Query wirft Exception (Netzwerk- oder Client-Fehler)
+  const supabaseWurf = erzeugeMockSupabase({
+    annahmestellen: [
+      {
+        kostentraeger_ik: '100000001',
+        partner_ik: '661430035',
+        verknuepfungsart: '09',
+        art_datenlieferung: '28',
+        abrechnungscode: '71',
+        bundesland: '',
+      },
+    ],
+    kostentraeger: [
+      { ik: '661430035', name: 'IQVIA Health System Services GmbH' },
+    ],
+    wirfFehlerTabelle: 'kostentraeger_anschriften',
+  });
+
+  const res3b = await ladePapierannahmestelle(supabaseWurf, {
+    kostentraegerIk: '100000001',
+    bereich: 'podologie',
+  });
+
+  assert.equal(res3b.ok, true, 'Geworfene Exception darf Abrechnung nicht stoppen');
+  assert.equal(res3b.ik, '661430035');
+  assert.equal(res3b.anschrift, null);
+});
+
+test('L4: die Adresse wird zur Partner-IK geholt, nicht zur Kostentraeger-IK', async () => {
+  const supabase = erzeugeMockSupabase({
+    annahmestellen: [
+      {
+        kostentraeger_ik: '100000001',
+        partner_ik: '661430035',
+        verknuepfungsart: '09',
+        art_datenlieferung: '28',
+        abrechnungscode: '71',
+        bundesland: '',
+      },
+    ],
+    kostentraeger: [
+      { ik: '100000001', name: 'Krankenkasse Muenchen' },
+      { ik: '661430035', name: 'IQVIA Health System Services GmbH' },
+    ],
+    anschriften: [
+      // Falsche Adresse (haengt an der Kostentraeger-IK 100000001):
+      { kostentraeger_ik: '100000001', art: '1', plz: '80331', ort: 'Muenchen', strasse: 'Kassenstr. 1' },
+      // Richtige Adresse (haengt an der Partner-IK / Papierannahmestelle 661430035):
+      { kostentraeger_ik: '661430035', art: '1', plz: '04425', ort: 'Taucha', strasse: 'Gaertnerweg 12' },
+    ],
+  });
+
+  const res = await ladePapierannahmestelle(supabase, {
+    kostentraegerIk: '100000001',
+    bereich: 'podologie',
+  });
+
+  assert.equal(res.ok, true);
+  assert.equal(res.ik, '661430035');
+  // Anschrift muss die der Papierannahmestelle (Taucha) sein, nicht die der Kasse (Muenchen)
+  assert.equal(res.anschrift.plz, '04425');
+  assert.equal(res.anschrift.ort, 'Taucha');
+  assert.equal(res.anschrift.strasse, 'Gaertnerweg 12');
+
+  // Pruefen, dass die DB-Abfrage tatsaechlich mit der Partner-IK erfolgte
+  const adressAufruf = supabase.aufrufe.find(a => a.tabelle === 'kostentraeger_anschriften');
+  assert.ok(adressAufruf, 'kostentraeger_anschriften muss abgefragt werden');
+  assert.equal(adressAufruf.feld, 'kostentraeger_ik');
+  assert.equal(adressAufruf.wert, '661430035', 'Abfrage muss mit partnerIk laufen, NICHT mit kostentraegerIk (100000001)');
 });
