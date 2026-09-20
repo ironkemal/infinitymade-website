@@ -6,14 +6,15 @@
   "_hinweis_0031": "0031_betriebsart_je_empfaenger (§302-Echtbetrieb, Schritt 1.7, 20.09.2026): +1 Tabelle (betriebsart_empfaenger), +1 RLS-Policy (betriebsart_empfaenger_owner_all), +1 Index (der zusammengesetzte Primaerschluessel owner_id, empfaenger_ik legt in PG automatisch einen Index an), +0 Funktion, +0 Trigger. Fremdschluessel (owner_id auf auth.users, updated_by auf public.profiles) legen in PG keinen Index an, und ihre RI-Trigger sind tgisinternal=true, werden also von schema-zaehler.js weder in `trigger` noch in `auth_trigger` gezaehlt (dieselbe Regel wie _hinweis_0025). Rechnerisch: public_tablo 79->80, rls_policy 157->158, index 296->297, alle anderen Zaehler unveraendert. ⚠️ Diese Migration ist zum Zeitpunkt des Schreibens NOCH NICHT auf die Live-Datenbank angewandt (wartet auf Freigabe) — db/SCHEMA.sql ist deshalb bewusst noch der Stand davor.",
   "_hinweis_0032": "0032_kostentraeger_anschriften (§302-Echtbetrieb, Schritt 1.4, 20.09.2026): +1 Tabelle (kostentraeger_anschriften), +1 RLS-Policy (kostentraeger_anschriften_read_all), +2 Index, +0 Funktion, +0 Trigger. Die ZWEI Indizes sind PRIMARY KEY (id) und der UNIQUE-Constraint (kostentraeger_ik, art, plz, ort, strasse) — ein UNIQUE-Constraint legt in PG einen Index an, ein Fremdschluessel NICHT, und dessen RI-Trigger sind tgisinternal=true (dieselbe Regel wie _hinweis_0025). Rechnerisch: public_tablo 80->81, rls_policy 158->159, index 297->299. NACHGERECHNET, nicht neu gemessen — deshalb bleibt gemessen_am stehen. ⚠️ Noch nicht auf die Live-Datenbank angewandt.",
   "_hinweis_0033": "0033_abrechnung_verworfen (§302, GoBD-Erklaerbarkeit verbrannter Nummern, 20.09.2026): eine geaenderte CHECK-Constraint (abrechnung_status_check, Wert verworfen ergaenzt) und eine neue nullable Spalte (abrechnung.verwerfungsgrund). Kein neues Tabelle/Policy/Index/Funktion/Trigger -> COUNTER-NEUTRAL, bis_version ohne neue Messung hochgezogen. Nachgerechnet, nicht geraten.",
-  "bis_version": "0033",
+  "_hinweis_0034": "0034_abrechnung_uebermittlung (§302-Echtbetrieb, Schritt 1.10, 20.09.2026): +1 Tabelle (abrechnung_uebermittlung), +1 RLS-Policy (Abrechnung uebermittlung select scoping, nur FOR SELECT — es gibt bewusst keine INSERT/UPDATE-Policy), +3 Index (PRIMARY KEY (id) + abr_uebermittlung_owner_zeit_idx + der partielle abr_uebermittlung_abrechnung_idx), +1 Funktion (fn_abrechnung_uebermittlung_festschreibung), +1 Trigger (trg_abrechnung_uebermittlung_festschreibung). Die fuenf Fremdschluessel legen in PG keinen Index an, und ihre RI-Trigger sind tgisinternal=true (dieselbe Regel wie _hinweis_0025). Rechnerisch: public_tablo 81->82, rls_policy 159->160, fonksiyon 74->75, trigger 76->77, index 299->302. NACHGERECHNET, nicht neu gemessen. ⚠️ Noch nicht auf die Live-Datenbank angewandt — db/SCHEMA.sql ist deshalb bewusst weiterhin der Stand davor.",
+  "bis_version": "0034",
   "gemessen_am": "2026-09-17",
   "zaehler": {
-    "public_tablo": 81,
-    "rls_policy": 159,
-    "fonksiyon": 74,
-    "trigger": 76,
-    "index": 299,
+    "public_tablo": 82,
+    "rls_policy": 160,
+    "fonksiyon": 75,
+    "trigger": 77,
+    "index": 302,
     "rls_kapali_tablolar": [
       "spatial_ref_sys"
     ],

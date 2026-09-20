@@ -101,6 +101,7 @@ const USER_TABLES = [
   // GKV-Seite unvollständig.
   { table: 'abrechnung_zeile',             filter: 'owner_id'  },
   { table: 'abrechnung_zahlung',           filter: 'owner_id'  },
+  { table: 'abrechnung_uebermittlung',     filter: 'owner_id'  },
   { table: 'zuzahlung_befreiung',          filter: 'owner_id'  },
   { table: 'zuzahlung_korrekturen',        filter: 'owner_id'  },
   { table: 'zuzahlung_guthaben',           filter: 'owner_id'  },
@@ -359,6 +360,22 @@ const DELETE_TABLES = [
   //                       (§ 146 Abs. 4 AO) — ein Eintrag in DELETE_TABLES oder
   //                       ANONYMIZE_TABLES würde nur scheitern. Gleiche Lage
   //                       wie `rechnung_zahlungen`, nur auf der GKV-Seite.
+  //   `abrechnung_uebermittlung` — Gesetzliche Übermittlungsdokumentation
+  //                       des Datenaustauschs nach Anlage 1 TP5 Kap. 3(2)
+  //                       (mindestens 2 Jahre Aufbewahrungspflicht für den
+  //                       gesamten Datenaustausch von der Initiierung bis zur
+  //                       Quittierung). Dieselbe Kategorie wie `abrechnung` und
+  //                       `abrechnung_zeile`. Der Trigger
+  //                       `fn_abrechnung_uebermittlung_festschreibung()` blockt
+  //                       DELETE bedingungslos. Als reines Transportprotokoll
+  //                       unterliegt die Tabelle einem strikten PHI-Verbot
+  //                       (keine Personendaten), daher auch keine
+  //                       Anonymisierung nötig.
+  //                       ⚠️ Folge, die ehrlich benannt gehört: `owner_id`
+  //                       steht auf RESTRICT. Solange solche Zeilen stehen,
+  //                       lässt sich auch die `profiles`-Zeile nicht löschen —
+  //                       derselbe Zustand wie bei `belegliste` und
+  //                       `patient_consents`.
   //   `invoices`        — wird oben anonymisiert statt gelöscht (Absicht).
   //   `rechnung_zahlungen` — Zahlungshistorie zu Privatrechnungen (07.09.2026).
   //                       `owner_id` UND `invoice_id` stehen auf RESTRICT, beide
