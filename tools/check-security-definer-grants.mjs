@@ -202,12 +202,13 @@ function extrahiereNormalenText(sql) {
 export function pruefeDatei(dateiname, inhalt) {
   const bulgular = [];
   const dateiBasisname = (dateiname || '').split(/[/\\]/).pop();
+  const normalerText = extrahiereNormalenText(inhalt);
 
   // 1) Bestehende Pruefung: Alle Funktionen aus PROTECTED muessen
   //    REVOKE-Anweisungen fuer alle drei Grantees (PUBLIC, anon, authenticated) haben.
   for (const name of PROTECTED) {
     const creates = new RegExp(
-      'CREATE\\s+(OR\\s+REPLACE\\s+)?FUNCTION\\s+public\\.' + name + '\\s*\\(',
+      'CREATE\\s+(OR\\s+REPLACE\\s+)?FUNCTION\\s+(?:public\\.)?' + name + '\\s*\\(',
       'i'
     ).test(inhalt);
     if (!creates) continue;
@@ -216,9 +217,9 @@ export function pruefeDatei(dateiname, inhalt) {
     // ("FROM PUBLIC, anon, authenticated") oder je Grantee eine eigene
     // Anweisung haben (Bauart 0001/0002/0035). Beides zaehlt.
     const fehlend = GRANTEES.filter((rolle) => !new RegExp(
-      'REVOKE\\s+(EXECUTE|ALL)\\b[^;]*\\bpublic\\.' + name + '\\b[^;]*\\bFROM\\b[^;]*\\b' + rolle + '\\b',
+      'REVOKE\\s+(EXECUTE|ALL)\\b[^;]*\\b(?:public\\.)?' + name + '\\b[^;]*\\bFROM\\b[^;]*\\b' + rolle + '\\b',
       'is'
-    ).test(inhalt));
+    ).test(normalerText));
 
     if (fehlend.length) {
       const istAltlast = BEKANNTE_ALTLASTEN.some(
@@ -242,7 +243,6 @@ export function pruefeDatei(dateiname, inhalt) {
   //    Zustandsautomat: extrahiert reinen SQL-Text ausserhalb von Kommentaren,
   //    Strings und Dollar-Quotes. Danach wird nach Statements (Semikolons) getrennt
   //    und per robustem Regex nach CREATE FUNCTION und SECURITY DEFINER gesucht.
-  const normalerText = extrahiereNormalenText(inhalt);
   const deyimler = normalerText.split(';');
 
   for (const deyimRoh of deyimler) {

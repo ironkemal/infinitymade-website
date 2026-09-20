@@ -445,3 +445,49 @@ LANGUAGE plpgsql SECURITY DEFINER AS $$ BEGIN END $$;
   assert.equal(bulgular[0].art, 'unbekannte_definer_funktion');
   assert.equal(bulgular[0].name, 'echte_definer_nach_dollar_str');
 });
+
+test('24. Unpraefixierte PROTECTED-Funktion mit auskommentiertem REVOKE (Kommentar-Falle) -> art: fehlende_revokes', () => {
+  const sql = `
+CREATE OR REPLACE FUNCTION naechste_nummer(p_owner uuid)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN 1;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION naechste_nummer(uuid) FROM PUBLIC;
+-- REVOKE EXECUTE ON FUNCTION naechste_nummer(uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION naechste_nummer(uuid) FROM authenticated;
+`;
+
+  const bulgular = pruefeDatei('api-backend/db/migrations/9999_kommentar_falle.sql', sql);
+  assert.equal(bulgular.length, 1);
+  assert.equal(bulgular[0].art, 'fehlende_revokes');
+  assert.equal(bulgular[0].name, 'naechste_nummer');
+  assert.deepEqual(bulgular[0].fehlend, ['anon']);
+});
+
+test('25. Unpraefixierte PROTECTED-Funktion mit allen unpraefixierten REVOKEs -> keine Befunde', () => {
+  const sql = `
+CREATE OR REPLACE FUNCTION naechste_nummer(p_owner uuid)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN 1;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION naechste_nummer(uuid) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION naechste_nummer(uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION naechste_nummer(uuid) FROM authenticated;
+`;
+
+  const bulgular = pruefeDatei('api-backend/db/migrations/9999_unpraefixiert_vollstaendig.sql', sql);
+  assert.deepEqual(bulgular, []);
+});
+

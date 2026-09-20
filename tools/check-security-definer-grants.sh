@@ -22,10 +22,12 @@
 # eigener Fund, hier nicht erneut gemeldet).
 #
 # Liste erweitern: neue SECURITY-DEFINER-Funktion mit Mandanten-Argument statt
-# auth.uid()-Check und PII/Credential/Geld-Bezug -> hier eintragen. Die Liste
-# ist bewusst eine Allowlist mit Begründung, kein automatischer Scan über alle
-# Funktionen (der wäre zu breit und würde legitime service_role-only-Funktionen
-# mit erfassen, die nie PUBLIC hatten).
+# auth.uid()-Check und PII/Credential/Geld-Bezug -> hier eintragen. Ergänzend
+# scannt tools/check-security-definer-grants.mjs (Prüfung 2) automatisch JEDE
+# in den gestagten Migrationen neu angelegte SECURITY-DEFINER-Funktion: taucht
+# ihr Name weder in PROTECTED noch in AUSNAHMEN auf, schlägt der Commit fehl.
+# PROTECTED/AUSNAHMEN sind also die Klassifizierung für diesen automatischen
+# Scan, keine geschlossene Liste mehr, an der er vorbeiläuft.
 #
 # Devre dışı (bilinçli istisna): SKIP_SECDEF_GATE=1 git commit ...
 
