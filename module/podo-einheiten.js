@@ -247,6 +247,8 @@ async function ladeBehandlungen(sb, { ownerId, leadId }) {
   if (!vords?.length) return [];
   const { data } = await sb.from('podologie_behandlungen')
     .select('behandlungsdatum, hpnr_codes')
+    // Stornierte Behandlungen verbrauchen keine Einheit (Migration 0026).
+    .is('storniert_am', null)
     .eq('owner_id', ownerId).in('verordnung_id', vords.map(v => v.id));
   return data || [];
 }

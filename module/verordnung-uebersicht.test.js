@@ -47,6 +47,10 @@ function fakeSb(tabellen) {
         return selbst;
       },
       in: (col, arr) => { bedingungen.push(row => arr.includes(row[col])); return selbst; },
+      // `.is(col, null)` — seit Migration 0026 filtert der Lesepfad
+      // `.is('storniert_am', null)`. Echt gefiltert statt durchgereicht:
+      // die Fixtures tragen das Feld nicht, `undefined == null` ist wahr.
+      is: (col, wert) => { bedingungen.push(row => (wert === null ? row[col] == null : row[col] === wert)); return selbst; },
       // `.not(col, 'in', '("a","b")')` — NULL zählt (wie in Postgres) als
       // nicht-getroffen und fällt damit aus der Ausschlussliste heraus.
       not: (col, _op, pgListe) => {

@@ -206,6 +206,10 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
       const { count } = await supabase
         .from('podologie_behandlungen')
         .select('id', { count: 'exact', head: true })
+        // Eine stornierte Behandlung ist keine dokumentierte Behandlung
+        // (Migration 0026) — sonst gaelte eine Verordnung als abrechenbar,
+        // deren einzige Behandlung zurueckgenommen wurde.
+        .is('storniert_am', null)
         .eq('verordnung_id', v.id)
         .eq('owner_id', tenantId);
       if (!count) {

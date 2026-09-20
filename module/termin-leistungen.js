@@ -31,7 +31,7 @@
  * umgestellt haette, haette fuenfzehn Aufrufer gleichzeitig anfassen muessen.
  */
 
-import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260904';
+import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260920s';
 import { geplanteAlsBehandlungen, positionVon } from './podo-geplant.js?v=20260918';
 import { setzeDauer } from './termin-dauer.js?v=20260903b';
 
@@ -512,6 +512,7 @@ async function patientenBehandlungen() {
   const { data: behs } = vords?.length ? await ctx.supabase.from('podologie_behandlungen')
     .select('behandlungsdatum, hpnr_codes')
     .eq('owner_id', ctx.getOwnerId())
+    .is('storniert_am', null)          // stornierte Behandlungen zaehlen nicht (Migration 0026)
     .in('verordnung_id', vords.map(v => v.id)) : { data: [] };
   // Dazu die GEPLANTEN Termine (noch nicht dokumentiert): sonst bekommt jeder
   // im Voraus gebuchte Termin einer Serie dieselbe Antwort „noch keine

@@ -31,7 +31,7 @@
 'use strict';
 
 import { geschlechtLabel } from './geschlecht.js?v=20260816';
-import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260906';
+import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260920s';
 import { mountBehandlungsbestaetigung } from './behandlungsbestaetigung.js?v=20260905a';
 
 const DE = (iso) => {
@@ -182,6 +182,7 @@ export async function ladeVerlauf(sb, ownerId, leadId) {
     ? await frag(sb.from('podologie_behandlungen')
         .select('id, behandlungsdatum, hpnr_codes, verordnung_id')
         .eq('owner_id', ownerId)
+        .is('storniert_am', null)      // stornierte Behandlungen zaehlen nicht (Migration 0026)
         .in('verordnung_id', verordnungen.map(v => v.id))
         .order('behandlungsdatum', { ascending: false }).limit(100))
     : [];

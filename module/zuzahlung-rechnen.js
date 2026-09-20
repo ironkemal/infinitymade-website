@@ -215,7 +215,10 @@ export function zuzahlungFuerRezept(rx, position) {
  *           befreit:boolean, zeilen:Array, unbekannt:Array<string>}}
  */
 export function zuzahlungFuerPodoVerordnung(vord, behandlungen, findePosition) {
-  const behs = Array.isArray(behandlungen) ? behandlungen : [];
+  // Stornierte Behandlungen erzeugen keine Zuzahlung — die Leistung gilt als
+  // nicht erbracht (Migration 0026). Zweite Tür: die Leseorte filtern schon,
+  // aber aus dieser Funktion fällt ein Geldbetrag heraus.
+  const behs = (Array.isArray(behandlungen) ? behandlungen : []).filter(b => !b?.storniert_am);
   const posten = [];
   const proCode = new Map();
   const unbekannt = new Set();

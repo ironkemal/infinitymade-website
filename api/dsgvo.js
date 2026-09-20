@@ -228,7 +228,12 @@ async function handleExport(req, res) {
 
 const ANONYMIZE_TABLES = [
   { table: 'invoices', filter: 'owner_id', nullify: ['patient_name', 'patient_id', 'notes'] },
-  // 09.09.2026. Die Zeile selbst muss nach § 302/§ 304 SGB V stehenbleiben
+  // 09.09.2026. Die Zeile selbst muss nach § 302 SGB V i. V. m. § 147 AO
+  // stehenbleiben
+  // ⚠️ Hier stand bis 20.09.2026 „§ 304 SGB V". Falsche Fundstelle: § 304
+  // adressiert die Aufbewahrung bei KRANKENKASSEN und Kassenärztlichen
+  // Vereinigungen, nicht bei Leistungserbringern. Für die Praxis gilt
+  // § 630f Abs. 3 BGB (Patientenakte, 10 Jahre) bzw. § 147 AO (steuerlich).
   // (siehe ⛔-Block unten), der Personenbezug nicht. Der Trigger
   // `fn_abrechnung_zeile_festschreibung()` ist genau dafür gebaut: er blockt
   // jede Änderung an Identität und Betrag, lässt aber diese beiden Felder auf
@@ -257,17 +262,20 @@ const ANONYMIZE_TABLES = [
 //      am Ende dieser Kette für jede echte Praxis fehlgeschlagen. Der Endpunkt
 //      meldete trotzdem `success: true`. Das ist der ernsteste Teil des Befunds.
 const DELETE_TABLES = [
-  // Patientennahe Fachdaten zuerst: `podologie_behandlungen`, `fußstatus`,
-  // `messreihen` und `booking_requests` zeigen mit NO ACTION auf `profiles`
-  // und blockieren sonst das Löschen des Profils.
+  // Patientennahe Fachdaten zuerst: `fußstatus`, `messreihen` und
+  // `booking_requests` zeigen mit NO ACTION auf `profiles` und blockieren
+  // sonst das Löschen des Profils.
   //
   // `verordnungen` stand hier bis 04.09.2026 — Zusammenlegung der zwei
   // Verordnungstöpfe: `podologie_behandlungen.verordnung_id` zeigt seit dem
   // auf `prescriptions` (weiter unten in dieser Liste, Zeile mit
-  // 'prescriptions'), die alte Tabelle wurde gedroppt. Reihenfolge bleibt
-  // trotzdem richtig: podologie_behandlungen muss vor prescriptions weg.
+  // 'prescriptions'), die alte Tabelle wurde gedroppt.
+  //
+  // ⚠️ `podologie_behandlungen` stand hier bis 20.09.2026 und ist bewusst
+  //    heraus — siehe ⛔-Block unten. Kurz: seit Migration 0026 wirft ein
+  //    BEFORE-DELETE-Trigger dort bedingungslos (§ 630f Abs. 1 S. 2 BGB),
+  //    der DELETE hier würde also jede Kontolöschung in eine 500 kippen.
   'prescription_documents', 'mahnungen', 'ausfallrechnungen',
-  'podologie_behandlungen',
   'messreihen', 'pat_fussbefund', 'fußstatus',
   'warteliste', 'booking_requests',
 
@@ -303,7 +311,25 @@ const DELETE_TABLES = [
   //                       `leads`: solange Einwilligungen stehen, lässt sich
   //                       nicht einmal die Patientenakte löschen. Das ist die
   //                       Nachweiskette der Einwilligung selbst.
-  //   `abrechnung`      — § 302 SGB V / § 304 SGB V Aufbewahrung.
+  //   `podologie_behandlungen` — seit 20.09.2026 (Migration 0026, Entscheidung
+  //                       K3 von `legal-de`). Die Behandlungsdokumentation
+  //                       selbst: § 630f Abs. 1 S. 2 BGB verlangt, dass eine
+  //                       Änderung den ursprünglichen Inhalt erkennbar lässt,
+  //                       und die Frist beginnt mit der AUFZEICHNUNG, nicht
+  //                       mit der Abrechnung. Korrigiert wird deshalb durch
+  //                       Storno (`storniert_am` + Grund), nicht durch DELETE;
+  //                       ein BEFORE-DELETE-Trigger wirft bedingungslos.
+  //                       Stünde die Tabelle weiter in DELETE_TABLES, liefe
+  //                       jede Kontolöschung in genau diesen Trigger.
+  //                       ⚠️ Folge, die ehrlich benannt gehört: `owner_id`
+  //                       steht hier auf NO ACTION. Solange diese Zeilen
+  //                       stehen, lässt sich auch die `profiles`-Zeile nicht
+  //                       löschen — derselbe Zustand wie bei `belegliste`,
+  //                       `patient_consents` und `rechnung_zahlungen`, und
+  //                       dieselbe Lösung (Auslagerungspaket, siehe ⚠️ ROLLE
+  //                       unten). Die Löschung meldet das seit 28.08.2026
+  //                       ehrlich als unvollständig statt `success: true`.
+  //   `abrechnung`      — § 302 SGB V Aufbewahrung.
   //   `abrechnung_zeile`— dieselbe Kategorie, dieselbe Norm: sie IST der
   //                       Nachweis, was in einer Einreichung stand. `owner_id`
   //                       und `abrechnung_id` stehen auf RESTRICT, der Trigger
@@ -346,14 +372,15 @@ const DELETE_TABLES = [
   //                       jeder `ausbuchung` ist diese Tabelle der einzige
   //                       Nachweis des Vorgangs.
   //                       → legal-de 08.09.2026
-  // ⚠️ ROLLE, gilt für alle sieben: Art. 17 Abs. 3 lit. b ist auf der Patienten-
+  // ⚠️ ROLLE, gilt für alle acht: Art. 17 Abs. 3 lit. b ist auf der Patienten-
   // seite NICHT unsere Norm — dort sind wir Auftragsverarbeiter, es gilt
   // Art. 28 Abs. 3 lit. g DSGVO. Die steuerliche Aufbewahrungspflicht trifft
   // die Praxis, nicht Praxura. Der Weg zur echten Löschung führt deshalb über
   // ein Auslagerungspaket nach GoBD Rz. 142 ff. (an den Verantwortlichen
   // übergeben, dann hier löschen) — noch nicht umgesetzt, gehört gemeinsam
   // für `belegliste`, `invoices`, `abrechnung`, `abrechnung_zeile`,
-  // `abrechnung_zahlung`, `patient_consents` und `rechnung_zahlungen` gelöst.
+  // `abrechnung_zahlung`, `patient_consents`, `rechnung_zahlungen` und
+  // seit 20.09.2026 `podologie_behandlungen` gelöst.
   // Auslöser: erster echter Kontolöschungsantrag.
 ];
 
@@ -476,7 +503,11 @@ async function handleDelete(req, res) {
   if (vollstaendig) {
     return json(res, 200, {
       success: true,
-      message: 'Ihre Daten wurden gelöscht. Abrechnungsdaten bleiben anonymisiert aus gesetzlicher Aufbewahrungspflicht (§ 147 AO, § 304 SGB V) gespeichert.',
+      // § 304 SGB V stand hier bis 20.09.2026 und war die falsche Fundstelle —
+      // er verpflichtet Krankenkassen und KVen, nicht Leistungserbringer.
+      // Für die Praxis sind es § 147 AO (steuerlich) und § 630f Abs. 3 BGB
+      // (Patientenakte, 10 Jahre).
+      message: 'Ihre Daten wurden gelöscht. Abrechnungs- und Behandlungsdaten bleiben aus gesetzlicher Aufbewahrungspflicht (§ 147 AO, § 630f Abs. 3 BGB) gespeichert, soweit möglich anonymisiert.',
       log,
     });
   }

@@ -324,6 +324,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
     const behs = await frag(sb.from('podologie_behandlungen')
       .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
       .eq('owner_id', ownerId)
+      .is('storniert_am', null)        // stornierte Behandlungen zaehlen nicht (Migration 0026)
       .in('verordnung_id', vords.map(v => v.id)));
     for (const b of behs) {
       if (!behsProVord.has(b.verordnung_id)) behsProVord.set(b.verordnung_id, []);

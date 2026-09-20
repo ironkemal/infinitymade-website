@@ -61,7 +61,7 @@
 import { fmtEur } from './geld.js?v=20260909';
 import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
          frageBerichtFreigabe } from './abrechnung-freigabe.js?v=20260826';
-import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260902';
+import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260910';
@@ -478,6 +478,10 @@ export async function ladeAbrechnungAuswahl() {
     const { data: allBeh } = await ctx.supabase
       .from('podologie_behandlungen')
       .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
+      // Stornierte Behandlungen bleiben sichtbar, aber sie sind nicht erbracht
+      // (§ 630f Abs. 1 S. 2 BGB, Migration 0026). Ohne diesen Filter stünde
+      // eine stornierte Zeile in der §302-Datei bei der Kasse.
+      .is('storniert_am', null)
       .in('verordnung_id', podoBereit.map(v => v.id));
     const behJeVord = {};
     for (const b of allBeh || []) (behJeVord[b.verordnung_id] ||= []).push(b);

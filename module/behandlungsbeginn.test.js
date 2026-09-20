@@ -10,7 +10,9 @@ function fakeSb({ erste = null, selectFehler = null, updateFehler = null } = {})
     from(tabelle) {
       if (tabelle === 'podologie_behandlungen') {
         const b = {
-          select: () => b, eq: () => b, order: () => b,
+          // `is` gehört seit Migration 0026 dazu (.is('storniert_am', null)) —
+          // ohne diesen Platzhalter bricht die Kette im Test, nicht im Code.
+          select: () => b, eq: () => b, is: () => b, order: () => b,
           limit: async () => selectFehler
             ? { data: null, error: selectFehler }
             : { data: erste ? [{ behandlungsdatum: erste }] : [], error: null },

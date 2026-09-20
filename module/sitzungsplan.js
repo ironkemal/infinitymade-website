@@ -45,7 +45,7 @@
  * Grund: „Ein leeres Feld ist besser als eine falsche Nummer."
  */
 
-import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260914';
+import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260920s';
 export { dgWurzel } from './verordnung-regeln.js?v=20260918';
 import { dgWurzel } from './verordnung-regeln.js?v=20260918';
 

@@ -32,6 +32,7 @@ export async function leiteBehandlungsbeginnAb(sb, verordnungId, aktuell = null,
   const { data, error } = await sb.from('podologie_behandlungen')
     .select('behandlungsdatum')
     .eq('verordnung_id', verordnungId)
+    .is('storniert_am', null)          // stornierte Zeilen setzen keinen Behandlungsbeginn
     .order('behandlungsdatum', { ascending: true })
     .limit(1);
   if (error) return { ok: false, geaendert: false, beginn: aktuell, fehler: error.message };

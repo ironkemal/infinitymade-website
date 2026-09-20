@@ -43,9 +43,9 @@
  * dieselbe Zusammenführung steht.
  */
 
-import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260906';
+import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260920s';
 import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260910b';
-import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260908';
+import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260920s';
 import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20260919b';
 import { on } from './signal.js?v=20260813';
 

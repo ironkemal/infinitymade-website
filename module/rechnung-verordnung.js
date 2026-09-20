@@ -167,6 +167,7 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
         .from('podologie_behandlungen')
         .select('id, verordnung_id, behandlungsdatum, hpnr_codes, diagnosegruppe, betrag_gkv')
         .eq('owner_id', ownerId)
+        .is('storniert_am', null)      // stornierte Behandlungen gehören auf keine Rechnung (0026)
         .in('verordnung_id', vordIds)
         .order('behandlungsdatum', { ascending: true });
       if (bErr) { console.error('[verordnungenLaden:podo:behandlungen]', bErr); }

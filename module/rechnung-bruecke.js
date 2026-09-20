@@ -68,6 +68,8 @@ export async function offeneBehandlungen(sb, { ownerId, verordnungId }) {
     .eq('owner_id', ownerId)
     .eq('verordnung_id', verordnungId)
     .is('invoice_id', null)
+    // Eine stornierte Behandlung wird nicht in Rechnung gestellt (Migration 0026).
+    .is('storniert_am', null)
     .order('behandlungsdatum', { ascending: true });
   if (error) { console.error('[bruecke:offeneBehandlungen]', error); return []; }
   return data || [];
@@ -183,6 +185,10 @@ export async function behandlungenVerknuepfen(sb, { invoiceId, behandlungIds }) 
   const { error } = await sb
     .from('podologie_behandlungen')
     .update({ invoice_id: invoiceId })
+    // Zweite Tür vor derselben Regel: eine stornierte Behandlung kommt auf
+    // keine Rechnung, auch wenn ihre id aus einer älteren Auswahl stammt
+    // (Migration 0026).
+    .is('storniert_am', null)
     .in('id', ids);
   if (error) { console.error('[bruecke:verknuepfen]', error); return { ok: false, error }; }
   return { ok: true, anzahl: ids.length };
@@ -198,6 +204,10 @@ export async function verknuepfungLoesen(sb, { invoiceId }) {
   if (!invoiceId) return { ok: true };
   const { error } = await sb
     .from('podologie_behandlungen')
+    // ⚠️ HIER ABSICHTLICH KEIN `storniert_am`-Filter: wurde eine Behandlung
+    // storniert, nachdem sie auf der Rechnung stand, muss sie beim Storno der
+    // Rechnung trotzdem losgelöst werden — sonst bliebe `invoice_id` auf eine
+    // Rechnung zeigen, die es nicht mehr gibt.
     .update({ invoice_id: null })
     .eq('invoice_id', invoiceId);
   if (error) { console.error('[bruecke:loesen]', error); return { ok: false, error }; }

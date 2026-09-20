@@ -55,6 +55,8 @@ function fakeSb(tabellen) {
       select: () => selbst,
       eq: () => selbst,
       in: () => selbst,
+      is: () => selbst,   // .is('storniert_am', null) — Migration 0026
+
       order: () => Promise.resolve({ data: tabellen[tabelle] || [], error: null }),
       then: (res) => res({ data: tabellen[tabelle] || [], error: null }),
     };

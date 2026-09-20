@@ -63,20 +63,22 @@
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20260810e';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20260817';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260910b';
-import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260917';
+import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260920s';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20260918';
-import { leiteBehandlungsbeginnAb } from './behandlungsbeginn.js?v=20260919';
+import { leiteBehandlungsbeginnAb } from './behandlungsbeginn.js?v=20260920s';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20260901';
 import { positionVon } from './podo-geplant.js?v=20260918';
+// Storno statt Löschen (Entscheidung K3, § 630f Abs. 1 S. 2 BGB) — siehe dort.
+import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20260920';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
 // dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
 import { darf78040, darf78100, darfErstbefundungNagel,
          POD_EINGANGSBEFUNDUNG, POD_BEFUNDPAUSCHALE,
          POD_ERSTBEFUNDUNG_GROSS, POD_ERSTBEFUNDUNGEN,
          nagelLabel }
-  from './eingangsbefundung-regel.js?v=20260904';
+  from './eingangsbefundung-regel.js?v=20260920s';
 // Seit 04.09.2026 gibt es EINEN Verordnungstopf (`prescriptions`). Diese Datei
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
@@ -236,6 +238,7 @@ async function podPatientBehandlungen(vord) {
   const { data: behs } = await ctx.supabase
     .from('podologie_behandlungen').select('verordnung_id, behandlungsdatum, hpnr_codes')
     .eq('owner_id', ctx.getOwnerId())
+    .is('storniert_am', null)          // stornierte Behandlungen zaehlen nicht (Migration 0026)
     .in('verordnung_id', allVords.map(v => v.id))
     .order('behandlungsdatum', { ascending: true });
 
@@ -269,7 +272,12 @@ async function podBehandlungenDerVerordnung(vordId) {
   if (!vordId) return [];
   const { data, error } = await ctx.supabase
     .from('podologie_behandlungen')
-    .select('id, behandlungsdatum, hpnr_codes, lokalisation, invoice_id')
+    // ⚠️ HIER ABSICHTLICH KEIN `storniert_am`-Filter. Das ist die Liste, in
+    // der der Podologe seine erfassten Behandlungen sieht — eine stornierte
+    // Zeile muss dort DURCHGESTRICHEN stehenbleiben, mit Grund und Datum
+    // ("Durchstreichen statt Radieren", § 630f Abs. 1 S. 2 BGB). Alle anderen
+    // Leseorte filtern; dieser zeigt.
+    .select('id, behandlungsdatum, hpnr_codes, lokalisation, invoice_id, storniert_am, storno_grund')
     .eq('owner_id', ctx.getOwnerId())
     .eq('verordnung_id', vordId)
     .order('behandlungsdatum', { ascending: true });
@@ -652,20 +660,19 @@ async function loadPodologieBilling() {
         <div id="podBehError" style="color:#ef4444;font-size:13px;display:none;"></div>
         <button id="podSaveBehBtn" class="btn-primary" style="width:fit-content;">${ctx.t('pod_save_behandlung')}</button>
 
-        <!-- Was an dieser Verordnung schon steht. Nur lesen: eine dokumentierte
-             Behandlung zu LOESCHEN ist keine Anzeigefrage, sondern eine
-             Belegfrage — sie haengt an invoice_id (steht sie schon auf einer
-             Rechnung?), am Abrechnungsstatus der Verordnung (schon an die Kasse
-             gegangen?), am abgeleiteten Behandlungsbeginn und an den
-             Einmaligkeitssperren 78040/78100. Solange das nicht entschieden ist
-             (Storno statt DELETE?), zeigt dieser Block den Irrtum wenigstens
-             an, statt ihn unsichtbar zu lassen. Korrigiert wird bis dahin ueber
-             die Verordnungs-Detailkarte bzw. den Inhaber.
+        <!-- Was an dieser Verordnung schon steht.
+             Seit dem 20.09.2026 (Entscheidung K3, legal-de) ist die Frage
+             "wie korrigiere ich einen Irrtum" beantwortet: STORNO, nicht
+             DELETE. Das Löschen ist in der Datenbank gesperrt (Migration 0026,
+             § 630f Abs. 1 S. 2 BGB); stornierte Zeilen bleiben hier stehen —
+             durchgestrichen, mit Grund und Datum. Genau deshalb filtert diese
+             EINE Abfrage als einzige NICHT nach storniert_am.
+             Bedienung und Regeln: module/podo-storno.js.
              Beschriftung fest auf Deutsch wie die Nachbartexte dieses Panels —
              das dashboard.js-Woerterbuch steht an seiner Groessenschranke. -->
         <div style="border-top:1px solid var(--border);padding-top:12px;">
           <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">
-            Bereits dokumentiert${dokumentiert.length ? ` (${dokumentiert.length})` : ''}
+            Bereits dokumentiert${dokumentiert.length ? ` (${dokumentiert.filter(b => !b.storniert_am).length}${dokumentiert.some(b => b.storniert_am) ? ` + ${dokumentiert.filter(b => b.storniert_am).length} storniert` : ''})` : ''}
           </div>
           ${dokumentiert.length === 0
             ? `<div style="font-size:12px;color:var(--text-muted);">Für diese Verordnung ist noch keine Behandlung erfasst.</div>`
@@ -674,19 +681,29 @@ async function loadPodologieBilling() {
                 // Ein Datum in der Zukunft kann aus der Zeit vor dem 19.09.2026
                 // stammen — damals liess es sich speichern. Es faellt die
                 // §302-Datei, also wird es hier rot benannt statt stumm gelistet.
-                const kuenftig = b.behandlungsdatum > todayStr;
-                return `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid var(--border);">
+                const kuenftig = !b.storniert_am && b.behandlungsdatum > todayStr;
+                const storniert = !!b.storniert_am;
+                const lage = darfStornieren(b);
+                return `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid var(--border);${storniert ? 'opacity:.6;' : ''}">
                   <div style="min-width:0;">
-                    <div style="font-size:12px;color:${kuenftig ? '#ef4444' : 'var(--text-main)'};">
+                    <div style="font-size:12px;color:${kuenftig ? '#ef4444' : 'var(--text-main)'};${storniert ? 'text-decoration:line-through;' : ''}">
                       ${ctx.escapeHtml(b.behandlungsdatum ? new Date(b.behandlungsdatum).toLocaleDateString('de-DE') : '—')}
                       ${kuenftig ? ' ⚠ Datum liegt in der Zukunft — die Kasse weist damit die ganze Abrechnungsdatei zurück.' : ''}
                     </div>
-                    <div style="font-size:11px;color:var(--text-muted);word-break:break-word;">${ctx.escapeHtml(codes.join(' · ') || '—')}</div>
-                    ${b.lokalisation ? `<div style="font-size:11px;color:var(--text-muted);">${ctx.escapeHtml(b.lokalisation)}</div>` : ''}
+                    <div style="font-size:11px;color:var(--text-muted);word-break:break-word;${storniert ? 'text-decoration:line-through;' : ''}">${ctx.escapeHtml(codes.join(' · ') || '—')}</div>
+                    ${b.lokalisation ? `<div style="font-size:11px;color:var(--text-muted);${storniert ? 'text-decoration:line-through;' : ''}">${ctx.escapeHtml(b.lokalisation)}</div>` : ''}
+                    ${storniert ? `<div style="font-size:11px;color:#f59e0b;">Storniert am ${ctx.escapeHtml(new Date(b.storniert_am).toLocaleDateString('de-DE'))} — ${ctx.escapeHtml(b.storno_grund || 'ohne Grund')}</div>` : ''}
                   </div>
-                  ${b.invoice_id
-                    ? `<div style="font-size:10px;color:var(--text-muted);white-space:nowrap;" title="Steht bereits auf einer Rechnung">berechnet</div>`
-                    : ''}
+                  <div style="display:flex;align-items:flex-start;gap:8px;white-space:nowrap;">
+                    ${b.invoice_id && !storniert
+                      ? `<span style="font-size:10px;color:var(--text-muted);" title="Steht bereits auf einer Rechnung">berechnet</span>`
+                      : ''}
+                    ${storniert
+                      ? ''
+                      : lage.erlaubt
+                        ? `<button type="button" class="pod-storno-btn" data-beh="${ctx.escapeHtml(b.id)}" style="background:none;border:1px solid var(--border);color:var(--text-muted);font-size:11px;padding:2px 8px;border-radius:5px;cursor:pointer;">Stornieren</button>`
+                        : `<span style="font-size:10px;color:var(--text-muted);cursor:help;" title="${ctx.escapeHtml(lage.text)}">nicht stornierbar</span>`}
+                  </div>
                 </div>`;
               }).join('')}
         </div>
@@ -733,6 +750,31 @@ async function loadPodologieBilling() {
   // entfallen — angelegt wird jetzt nur noch in der Muster-13-Maske.
   // Diese Seite behaelt die BEHANDLUNG: sie bucht Leistungen auf eine
   // bestehende Verordnung und rechnet ab.
+
+  // Storno-Knöpfe der Liste „Bereits dokumentiert".
+  //
+  // Delegiert an `el` (#podBillingContent) und GENAU EINMAL angehängt: dieses
+  // Element überlebt jedes Neuzeichnen, die Knöpfe darin nicht. Ein Zuhörer je
+  // Durchlauf war hier schon einmal die Ursache einer doppelt eingereichten
+  // Abrechnung (abrechnung.routes.js ~2660) — derselbe Fehler, andere Stelle.
+  if (!el.dataset.stornoGebunden) {
+    el.dataset.stornoGebunden = '1';
+    el.addEventListener('click', async (e) => {
+      const btn = e.target.closest?.('.pod-storno-btn');
+      if (!btn) return;
+      const beh = (await podBehandlungenDerVerordnung(_podState.selectedVordId))
+        .find(b => b.id === btn.dataset.beh);
+      if (!beh) return;
+      btn.disabled = true;
+      const r = await behandlungStornieren(ctx, beh);
+      btn.disabled = false;
+      if (r.ok) { loadPodologieBilling(); return; }
+      if (!r.abgebrochen && r.fehler
+          && !['bereits_storniert', 'auf_rechnung', 'grund_fehlt'].includes(r.fehler)) {
+        ctx.showToast(`Stornierung fehlgeschlagen: ${r.fehler}`, 'error');
+      }
+    });
+  }
 
   document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {
     const datum   = document.getElementById('podBehDatum').value;
@@ -897,6 +939,10 @@ async function loadPodologieBilling() {
       const { count } = await ctx.supabase
         .from('podologie_behandlungen')
         .select('*', { count: 'exact', head: true })
+        // Stornierte Zeilen verbrauchen keine Einheit — sonst gälte eine
+        // Verordnung als aufgebraucht, obwohl die Behandlung zurückgenommen
+        // wurde (Migration 0026).
+        .is('storniert_am', null)
         .eq('verordnung_id', _podState.selectedVordId);
       if (count != null && count >= vord.behandlungseinheiten) {
         await ctx.supabase.from(TOPF)

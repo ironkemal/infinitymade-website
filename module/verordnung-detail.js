@@ -75,9 +75,9 @@ import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialog
 // übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
 import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260919';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
-import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20260906';
+import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20260920s';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
-import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260902';
+import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
 import { ladePodoTermine, terminZaehler, istVergeben, bindeTermin, loeseTermin } from './verordnung-termine.js?v=20260908';
 import { emit } from './signal.js?v=20260813';
@@ -115,8 +115,26 @@ const SELECT_PODO = `
                   patientennummer ),
   aerzte!arzt_id ( arzt_name, lanr, bsnr, fachrichtung ),
   podologie_behandlungen ( id, behandlungsdatum, hpnr_codes, lokalisation,
-                           betrag_gkv, invoice_id, notizen )
+                           betrag_gkv, invoice_id, notizen, storniert_am )
 `;
+
+/**
+ * Stornierte Behandlungen aus einem eingebetteten Ergebnis entfernen.
+ *
+ * Warum hier und nicht in der Abfrage: PostgREST filtert eingebettete
+ * Ressourcen nur mit `!inner` — das würde jede Verordnung OHNE Behandlung
+ * ganz aus dem Ergebnis werfen. Also EINE Stelle hinter der Abfrage statt
+ * fünf Filter an den fünf Leseorten weiter unten.
+ *
+ * Fachlich: eine stornierte Zeile bleibt lesbar (§ 630f Abs. 1 S. 2 BGB),
+ * zählt aber nirgends mit — weder als verbrauchte Einheit noch als Betrag.
+ * Die einzige Ansicht, die sie zeigt, ist die Erfassungsliste in
+ * module/podologie-abrechnung.js.
+ */
+function ohneStornierte(rx) {
+  if (!rx || !Array.isArray(rx.podologie_behandlungen)) return rx;
+  return { ...rx, podologie_behandlungen: rx.podologie_behandlungen.filter(b => !b?.storniert_am) };
+}
 
 const BERICHT_LABEL = {
   offen: 'offen', erstellt: 'erstellt', versendet: 'versendet'
@@ -991,7 +1009,10 @@ export async function zeigeVerordnungDetail(ctx) {
       .eq('id', id);
     if (quelle === 'podologie') q = q.eq('therapie_bereich', 'podo');
     const { data: rxRoh, error } = await q.maybeSingle();
-    const rx = (quelle === 'podologie' && rxRoh) ? ausTopf(rxRoh) : rxRoh;
+    // Stornierte Behandlungen hier EINMAL herausfiltern — danach sehen alle
+    // Leseorte weiter unten (Positionsliste, Summen, Einheitenzähler,
+    // Nachweis) schon den bereinigten Stand.
+    const rx = (quelle === 'podologie' && rxRoh) ? ohneStornierte(ausTopf(rxRoh)) : rxRoh;
 
     if (error || !rx) {
       console.error('[zeigeVerordnungDetail]', error);

@@ -38,7 +38,7 @@
 
 import { parseIcdList, dgsAcceptingIcd } from '../icd-dg-match.js?v=20260810e';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260814';
-import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20260906';
+import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20260920s';
 import { sitzungsplan } from './sitzungsplan.js?v=20260914';
 import { TOPF } from './verordnung-topf.js?v=20260910';
 import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20260918';
@@ -836,6 +836,7 @@ async function podoHistorie(supabase, ctx, patientId) {
   const { data: behs } = await supabase.from('podologie_behandlungen')
     .select('behandlungsdatum, hpnr_codes')
     .eq('owner_id', ownerId)
+    .is('storniert_am', null)          // stornierte Behandlungen zaehlen nicht (Migration 0026)
     .in('verordnung_id', vords.map(v => v.id))
     .order('behandlungsdatum', { ascending: true });
 

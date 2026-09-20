@@ -61,6 +61,12 @@ export const POD_BEFUNDPAUSCHALE = '78030';
  */
 export function darf78040(behandlungen, datum) {
   const behs = (behandlungen || [])
+    // Zweite Tür vor derselben Regel: eine stornierte Behandlung hat nicht
+    // stattgefunden und darf keine Einmaligkeitssperre auslösen. Die
+    // Leseorte filtern bereits (Migration 0026) — hier steht es nochmal,
+    // weil ein künftiger Aufrufer ungefiltert hereinkommen kann und die
+    // Folge eine still gesperrte, abrechenbare Leistung wäre.
+    .filter(b => b && !b.storniert_am)
     .filter(b => b && b.behandlungsdatum)
     .slice()
     .sort((a, b) => String(a.behandlungsdatum).localeCompare(String(b.behandlungsdatum)));
@@ -315,6 +321,7 @@ export function darf78100(behandlungen, datum) {
   if (!/^\d{4}$/.test(jahr)) return { erlaubt: true, grund: '', schonAm: null };
 
   const schon = (behandlungen || [])
+    .filter(b => b && !b.storniert_am)        // s. darf78040(): stornierte sperren nicht
     .filter(b => b && b.behandlungsdatum)
     .filter(b => String(b.behandlungsdatum).slice(0, 4) === jahr)
     .filter(b => (b.hpnr_codes || []).includes(POD_ERSTBEFUNDUNG_GROSS))
@@ -435,6 +442,7 @@ export function darfErstbefundungNagel(behandlungen, nagel, datum) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(tag)) return frei('kein_datum');
 
   const behs = (behandlungen || [])
+    .filter(b => b && !b.storniert_am)        // s. darf78040(): stornierte sperren nicht
     .filter(b => b && b.behandlungsdatum)
     .map(b => ({ am: String(b.behandlungsdatum), codes: b.hpnr_codes || [] }))
     .sort((a, b) => a.am.localeCompare(b.am));
