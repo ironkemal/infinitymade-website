@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { darfStornieren, grundPruefen, behandlungStornieren } from './podo-storno.js';
+import { MELDEPFLICHT_TEXT } from './abrechnungsstatus.js';
 
 // ===== darfStornieren =====
 
@@ -87,8 +88,15 @@ test('grundPruefen: Zahl als Eingabe -> null oder gueltiger String (kein Absturz
 
 // Hilfsfunktion: baut einen minimalen stub-ctx auf.
 // supabase-Kette wird nur dann gebaut, wenn der Test sie wirklich benötigt.
-function makeCtx({ showInputModal = async () => 'Falsches Datum', showToast = () => {} } = {}) {
-  const aufgerufen = { update: false };
+function makeCtx({ showInputModal, showToast = () => {} } = {}) {
+  const aufgerufen = { update: false, modalOpts: null };
+  const modalFn = async (opts) => {
+    aufgerufen.modalOpts = opts;
+    if (showInputModal) {
+      return showInputModal(opts);
+    }
+    return 'Falsches Datum';
+  };
   const supabase = {
     from: () => ({
       update: () => {
@@ -104,7 +112,7 @@ function makeCtx({ showInputModal = async () => 'Falsches Datum', showToast = ()
       supabase,
       getOwnerId: () => 'owner-1',
       getSessionUserId: () => 'user-1',
-      showInputModal,
+      showInputModal: modalFn,
       showToast,
     },
     aufgerufen,
@@ -134,4 +142,59 @@ test('behandlungStornieren: Benutzer bricht Modal ab -> kein DB-Aufruf, abgebroc
   assert.equal(r.ok, false);
   assert.equal(r.abgebrochen, true);
   assert.equal(aufgerufen.update, false);
+});
+
+test('behandlungStornieren: verordnungStatus ist undefined -> message ohne Zusatztexte', async () => {
+  const { ctx, aufgerufen } = makeCtx();
+  const beh = { id: 'beh-7', storniert_am: null, invoice_id: null, behandlungsdatum: '2026-09-19' };
+
+  const r = await behandlungStornieren(ctx, beh);
+
+  assert.equal(r.ok, true);
+  assert.ok(aufgerufen.modalOpts);
+  assert.equal(aufgerufen.modalOpts.message.includes(MELDEPFLICHT_TEXT), false);
+  assert.equal(aufgerufen.modalOpts.message.includes('Zuzahlungsbetrag'), false);
+  assert.ok(aufgerufen.modalOpts.message.startsWith('Behandlung vom '));
+  assert.ok(aufgerufen.modalOpts.message.includes('Die Zeile bleibt in der Dokumentation sichtbar'));
+});
+
+test('behandlungStornieren: verordnungStatus = "abgerechnet" -> message enthält MELDEPFLICHT_TEXT und Zuzahlungshinweis', async () => {
+  const { ctx, aufgerufen } = makeCtx();
+  const beh = { id: 'beh-8', storniert_am: null, invoice_id: null, behandlungsdatum: '2026-09-19' };
+
+  const r = await behandlungStornieren(ctx, beh, 'abgerechnet');
+
+  assert.equal(r.ok, true);
+  assert.ok(aufgerufen.modalOpts);
+  assert.ok(aufgerufen.modalOpts.message.includes(MELDEPFLICHT_TEXT));
+  assert.ok(aufgerufen.modalOpts.message.includes('Außerdem: Diese Behandlung ist Teil einer bereits eingereichten Rechnung.'));
+  assert.ok(aufgerufen.modalOpts.message.includes('Zuzahlungsbetrag kann dadurch nicht mehr stimmen'));
+  assert.ok(aufgerufen.modalOpts.message.startsWith('Behandlung vom '));
+});
+
+test('behandlungStornieren: verordnungStatus = "abgesetzt" oder "teilabsetzung" -> message enthält ebenfalls Zusatztexte', async () => {
+  for (const st of ['abgesetzt', 'teilabsetzung']) {
+    const { ctx, aufgerufen } = makeCtx();
+    const beh = { id: `beh-st-${st}`, storniert_am: null, invoice_id: null, behandlungsdatum: '2026-09-19' };
+
+    const r = await behandlungStornieren(ctx, beh, st);
+
+    assert.equal(r.ok, true);
+    assert.ok(aufgerufen.modalOpts.message.includes(MELDEPFLICHT_TEXT));
+    assert.ok(aufgerufen.modalOpts.message.includes('Zuzahlungsbetrag'));
+  }
+});
+
+test('behandlungStornieren: verordnungStatus = "aktiv" oder "abrechenbar" -> keine Zusatztexte in message', async () => {
+  for (const st of ['aktiv', 'abrechenbar']) {
+    const { ctx, aufgerufen } = makeCtx();
+    const beh = { id: `beh-st-${st}`, storniert_am: null, invoice_id: null, behandlungsdatum: '2026-09-19' };
+
+    const r = await behandlungStornieren(ctx, beh, st);
+
+    assert.equal(r.ok, true);
+    assert.equal(aufgerufen.modalOpts.message.includes(MELDEPFLICHT_TEXT), false);
+    assert.equal(aufgerufen.modalOpts.message.includes('Zuzahlungsbetrag'), false);
+    assert.ok(aufgerufen.modalOpts.message.startsWith('Behandlung vom '));
+  }
 });

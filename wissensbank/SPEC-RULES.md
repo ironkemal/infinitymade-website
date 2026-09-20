@@ -412,6 +412,32 @@
 - **Kodda:** doğrulanmadı — `api-backend/billing/dta/` ve `billing/codes/` kontrol edilmeli
 - **Kapsam:** tüm Heilmittel Abrechnung
 
+### LE'nin kendi keşfettiği aşırı faturalama Korrekturverfahren kapsamı dışıdır
+- **Kural:** Leistungserbringer'in (LE) kendi fark ettiği bir aşırı faturalama/hatalı
+  Abrechnung, resmi Korrekturverfahren'in kapsamına girmez — bu yalnız Kasa'nın
+  geri bildirimine (Absetzung/ZAA) dayalı düzeltmeler için tanımlıdır. LE kendi hatasını
+  Kasa'ya elle (yazılı veya telefonla) bildirmek zorundadır; sistem bunu otomatik bir
+  VKZ 04 Korrekturrechnung akışına sokamaz.
+- **Kaynak:** Gemeinsame Umsetzungsempfehlungen zum Korrekturverfahren Heilmittel
+  (13.02.2025), Frage 5
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** `module/podo-storno.js`'e 20.09.2026'da eklendi (Meldepflicht-Hinweis bei
+  Storno einer bereits eingereichten Verordnung)
+- **Kapsam:** tüm Heilmittel Storno/Korrektur
+
+### Podolojik DTA'da kısmi (Teilabrechnung) normaldir; kalan birimler VKZ 02 Nachforderung ile
+- **Kural:** Podolojik §302 dosyasının bir Verordnung'un TÜM birimlerini değil, o ana kadar
+  dokümante edilmiş birimlerini içermesi (Teilabrechnung) normal ve beklenen bir durumdur —
+  hata değildir. Kalan/sonradan erbracht edilen birimler ayrı bir dosyada
+  **VKZ 02 (Nachforderung)** ile gönderilir.
+- **Kaynak:** Gemeinsame Umsetzungsempfehlungen zum Korrekturverfahren Heilmittel
+  (13.02.2025), Frage 1
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** `api-backend/billing/api/abrechnung.routes.js:2945-2963` Teilabrechnung'ı zaten
+  üretiyor (yalnız storno edilmemiş, o ana kadar dokümante edilmiş Behandlungen'i topluyor),
+  ama VKZ 02 ikinci-tur (Nachforderung) yolu **HENÜZ YOK** — açık iş, Adım 1.6/sonrası.
+- **Kapsam:** Podologie
+
 
 ### Abrechnungscode 71 = Podologen (72 = med. Fußpfleger)
 - **Kural:** Podoloji Verordnung/DTA ekranlarında görünen sabit **„71"** Anlage 3'ün

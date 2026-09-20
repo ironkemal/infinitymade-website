@@ -29,6 +29,16 @@
 // RLS-Policy `owner_behandlungen` (USING owner_id = auth.uid()); Angestellte
 // haben auf dieser Tabelle nur SELECT. Ein Storno ist eine Belegentscheidung.
 
+import { MELDEPFLICHT_TEXT } from './abrechnungsstatus.js?v=20260920c';
+
+/**
+ * Podologischer Wortschatz-Status der ELTERN-Verordnung (siehe
+ * `verordnung-topf.js` → `statusAusTopf()`), bei dem eine Behandlung bereits
+ * Teil einer §302-Datei war/ist. `bereit`/`aktiv` (=null) sind ausgenommen —
+ * dort ist noch nichts eingereicht.
+ */
+const VERORDNUNG_BEREITS_EINGEREICHT = ['abgerechnet', 'abgesetzt', 'teilabsetzung'];
+
 /** Mindestlaenge des Grundes. Kuerzer ist keine Begruendung, sondern ein Haken. */
 const GRUND_MIN = 3;
 const GRUND_MAX = 500;
@@ -75,9 +85,10 @@ export function grundPruefen(roh) {
  *
  * @param {object} ctx  { supabase, getOwnerId, getSessionUserId, showInputModal, showToast }
  * @param {object} beh  die Zeile (braucht id, invoice_id, storniert_am, behandlungsdatum)
+ * @param {string} [verordnungStatus]  aktueller Abrechnungsstatus der Verordnung, siehe oben
  * @returns {Promise<{ ok: boolean, abgebrochen?: boolean, fehler?: string }>}
  */
-export async function behandlungStornieren(ctx, beh) {
+export async function behandlungStornieren(ctx, beh, verordnungStatus) {
   const lage = darfStornieren(beh);
   if (!lage.erlaubt) {
     ctx.showToast?.(lage.text, 'error');
@@ -88,14 +99,27 @@ export async function behandlungStornieren(ctx, beh) {
     ? new Date(beh.behandlungsdatum).toLocaleDateString('de-DE')
     : '—';
 
+  const bereitsEingereicht = VERORDNUNG_BEREITS_EINGEREICHT.includes(verordnungStatus);
+
+  let message = `Behandlung vom ${datum} stornieren. Die Zeile bleibt in der Dokumentation sichtbar (durchgestrichen) `
+              + `und zählt ab dann nicht mehr — weder für die Einheiten noch für die Abrechnung. `
+              + `Rückgängig machen lässt sich eine Stornierung nicht.`;
+
+  if (bereitsEingereicht) {
+    message += `\n\n${MELDEPFLICHT_TEXT}`;
+    message += '\n\nAußerdem: Diese Behandlung ist Teil einer bereits eingereichten Rechnung. Der '
+             + 'Zuzahlungsbetrag kann dadurch nicht mehr stimmen, lässt sich hier aber nicht korrigieren. '
+             + 'Bitte die Krankenkasse informieren — erst nach einer Absetzung durch die Kasse (Status '
+             + 'fällt zurück auf „Bereit zur Abrechnung") öffnet sich das gewohnte '
+             + 'Zuzahlung-Korrektur-Formular wieder.';
+  }
+
   const eingabe = await ctx.showInputModal?.({
     title:       'Behandlung stornieren',
     // Der Text sagt ausdruecklich, dass nichts verschwindet. Sonst klickt
     // niemand auf "Stornieren", wenn er "Loeschen" sucht — und der Irrtum
     // bleibt in der Datei stehen.
-    message:     `Behandlung vom ${datum} stornieren. Die Zeile bleibt in der Dokumentation sichtbar (durchgestrichen) `
-               + `und zählt ab dann nicht mehr — weder für die Einheiten noch für die Abrechnung. `
-               + `Rückgängig machen lässt sich eine Stornierung nicht.`,
+    message,
     inputLabel:  'Grund der Stornierung',
     inputPlaceholder: 'z. B. falsches Datum erfasst, Behandlung fand nicht statt',
     confirmText: 'Stornieren',

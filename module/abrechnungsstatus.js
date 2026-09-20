@@ -45,7 +45,7 @@ import { emit } from './signal.js?v=20260813';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). Diese Datei spricht
 // weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
 // uebersetzt wird nur an den beiden Lesestellen unten.
-import { TOPF, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260910';
+import { TOPF, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260920t';
 // O-01, 11.09.2026: import statt eigenem Literal — top-level await in
 // supabase-config.js haelt diese Datei an, bis /api/config zurueck ist.
 import { API_BASE } from '../supabase-config.js';
@@ -110,6 +110,19 @@ export const STATUS = [
 
 const BY_KEY = new Map(STATUS.map(s => [s.key, s]));
 const RANG = new Map(STATUS.map((s, i) => [s.key, i]));
+
+/**
+ * Meldepflicht-Hinweis bei Storno nach bereits erfolgter Einreichung.
+ *
+ * Wird auch von `module/podo-storno.js` verwendet: dieselbe Meldepflicht-Regel
+ * (Korrekturverfahren Umsetzungsempfehlungen 13.02.2025, Frage 5: LE-seitig
+ * entdeckte Überzahlung liegt außerhalb des Korrekturverfahrens) gilt für den
+ * Storno einer Verordnung genauso wie für den Storno einer Behandlung.
+ */
+export const MELDEPFLICHT_TEXT =
+  'Diese Verordnung wurde bereits bei der Kasse eingereicht. Wurde dadurch zu viel '
+  + 'gezahlt, muss die Krankenkasse informiert werden (schriftlich oder telefonisch). '
+  + 'Ich habe das veranlasst.';
 
 /**
  * Warnfarbe für „Bitte prüfen"-Befunde (Ops-Kart #269, 05.09.2026). Das ist
@@ -527,6 +540,11 @@ export function oeffneStatusDialog(verordnung, opts = {}) {
                   background:var(--bg-card,#111827);color:inherit;resize:vertical;"></textarea>
       </div>
 
+      <div id="as-abgesetzt-hilfe" style="display:none;background:var(--bg-card,#111827);border:1px solid var(--border,#374151);
+           border-radius:8px;padding:8px 10px;margin-bottom:12px;color:var(--text-muted,#9ca3af);font-size:12px;line-height:1.45;">
+        Dieses Feld hält eine echte Kassen-Absetzung fest (ZAA oder schriftliche Mitteilung). Die erneute Einreichung wird eine Korrekturrechnung (VKZ 04), keine neue Erstrechnung.
+      </div>
+
       <div id="as-meldung" style="display:none;background:rgba(194,65,12,.12);border:1px solid rgba(194,65,12,.35);
            border-radius:8px;padding:10px;margin-bottom:12px;font-size:12.5px;line-height:1.45;">
         <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;">
@@ -553,25 +571,26 @@ export function oeffneStatusDialog(verordnung, opts = {}) {
 
   if (!ziele.length) return;
 
-  const zielEl    = overlay.querySelector('#as-ziel');
-  const grundFeld = overlay.querySelector('#as-grund-feld');
-  const betrFeld  = overlay.querySelector('#as-betrag-feld');
-  const meldung   = overlay.querySelector('#as-meldung');
-  const fehlerEl  = overlay.querySelector('#as-fehler');
+  const zielEl         = overlay.querySelector('#as-ziel');
+  const grundFeld      = overlay.querySelector('#as-grund-feld');
+  const betrFeld       = overlay.querySelector('#as-betrag-feld');
+  const abgesetztHilfe = overlay.querySelector('#as-abgesetzt-hilfe');
+  const meldung        = overlay.querySelector('#as-meldung');
+  const fehlerEl       = overlay.querySelector('#as-fehler');
 
   function zeichne() {
     const ziel = zielEl.value;
     const b = bedarf(ziel);
     grundFeld.style.display = b.grund ? '' : 'none';
     betrFeld.style.display  = b.betrag ? '' : 'none';
+    if (abgesetztHilfe) {
+      abgesetztHilfe.style.display = ziel === 'abgesetzt' ? '' : 'none';
+    }
     overlay.querySelector('#as-hilfe').textContent = statusInfo(ziel).hilfe;
     const nachEinreichung = ['abgerechnet', 'teilabsetzung', 'abgesetzt'].includes(aktuell);
     if (ziel === 'storniert' && nachEinreichung) {
       meldung.style.display = '';
-      overlay.querySelector('#as-meldung-text').textContent =
-        'Diese Verordnung wurde bereits bei der Kasse eingereicht. Wurde dadurch zu viel '
-        + 'gezahlt, muss die Krankenkasse informiert werden (schriftlich oder telefonisch). '
-        + 'Ich habe das veranlasst.';
+      overlay.querySelector('#as-meldung-text').textContent = MELDEPFLICHT_TEXT;
     } else {
       meldung.style.display = 'none';
     }

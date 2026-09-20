@@ -71,7 +71,7 @@ import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=2026
 import { alsISODatum } from './datum.js?v=20260901';
 import { positionVon } from './podo-geplant.js?v=20260918';
 // Storno statt Löschen (Entscheidung K3, § 630f Abs. 1 S. 2 BGB) — siehe dort.
-import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20260920';
+import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20260920a';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
 // dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
 import { darf78040, darf78100, darfErstbefundungNagel,
@@ -833,7 +833,9 @@ async function loadPodologieBilling() {
         .find(b => b.id === btn.dataset.beh);
       if (!beh) return;
       btn.disabled = true;
-      const r = await behandlungStornieren(ctx, beh);
+      // Meldepflicht-/Zuzahlungs-Hinweis in podo-storno.js braucht den Status der
+      // ELTERN-Verordnung — alle Zeilen dieser Liste gehören zu selectedVordId.
+      const r = await behandlungStornieren(ctx, beh, findVord(_podState.selectedVordId)?.status);
       btn.disabled = false;
       if (r.ok) { loadPodologieBilling(); return; }
       if (!r.abgebrochen && r.fehler
