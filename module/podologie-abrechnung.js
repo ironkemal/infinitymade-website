@@ -83,6 +83,7 @@ import { darf78040, darf78100, darfErstbefundungNagel,
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
   from './verordnung-topf.js?v=20260920t';
+import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -266,7 +267,7 @@ async function podPatientBehandlungen(vord) {
  * Liste unten).
  *
  * @param {string} vordId
- * @returns {Promise<Array<{id:string, behandlungsdatum:string, hpnr_codes:?Array<string>, lokalisation:?string, invoice_id:?string}>>}
+ * @returns {Promise<Array<{id:string, behandlungsdatum:string, hpnr_codes:?Array<string>, lokalisation:?string, invoice_id:?string, created_at:string}>>}
  */
 async function podBehandlungenDerVerordnung(vordId) {
   if (!vordId) return [];
@@ -277,7 +278,7 @@ async function podBehandlungenDerVerordnung(vordId) {
     // Zeile muss dort DURCHGESTRICHEN stehenbleiben, mit Grund und Datum
     // ("Durchstreichen statt Radieren", § 630f Abs. 1 S. 2 BGB). Alle anderen
     // Leseorte filtern; dieser zeigt.
-    .select('id, behandlungsdatum, hpnr_codes, lokalisation, invoice_id, storniert_am, storno_grund')
+    .select('id, behandlungsdatum, hpnr_codes, lokalisation, invoice_id, storniert_am, storno_grund, created_at')
     .eq('owner_id', ctx.getOwnerId())
     .eq('verordnung_id', vordId)
     .order('behandlungsdatum', { ascending: true });
@@ -652,8 +653,21 @@ async function loadPodologieBilling() {
 
   const istAbgerechnet = !!selectedVord && _podState.verordnungenAbgerechnet.some(v => v.id === selectedVord.id);
 
-  const behFaturali = dokumentiert.filter(b => !b.storniert_am && b.invoice_id).length;
-  const behBekliyor  = dokumentiert.filter(b => !b.storniert_am && !b.invoice_id).length;
+  // Wann wurde DIESE Verordnung eingereicht? Nur relevant wenn istAbgerechnet.
+  // `prescriptions.abrechnung_id` zeigt immer auf die zuletzt gueltige Abrechnung
+  // (Ersteinreichung oder Korrektur) — die UNIQUE(abrechnung_id, prescription_id)
+  // macht die Zeile eindeutig, kein Zusatzfilter noetig.
+  let cutoffCreatedAt = null;
+  if (istAbgerechnet && selectedVord?.abrechnung_id) {
+    const { data: zeile } = await ctx.supabase
+      .from('abrechnung_zeile')
+      .select('created_at')
+      .eq('abrechnung_id', selectedVord.abrechnung_id)
+      .eq('prescription_id', selectedVord.id)
+      .maybeSingle();
+    cutoffCreatedAt = zeile?.created_at ?? null;
+  }
+  const { behFaturali, behBekliyor } = podAbrechnetZaehler(dokumentiert, cutoffCreatedAt);
   const abgerechnetHinweisHtml = istAbgerechnet ? `
   <div style="font-size:12px;color:var(--text-muted);background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:12px;">
     Diese Verordnung wurde bereits (teilweise) eingereicht — ${behFaturali} Einheit(en) abgerechnet, ${behBekliyor} Einheit(en) noch offen. Neue Behandlungen können weiterhin dokumentiert werden.
