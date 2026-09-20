@@ -1,15 +1,15 @@
 {
  "erzeugt": "2026-09-20",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-09-18)",
+  "schema": "db/SCHEMA.sql (Stand 2026-09-20)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-20)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 89,
+ "anzahl": 93,
  "tabellen": [
   {
    "name": "abrechnung",
-   "spalten": 22,
+   "spalten": 32,
    "fkRaus": [
     "businesses",
     "kostentraeger",
@@ -244,7 +244,49 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 14,
+   "sqlTreffer": 15,
+   "codeStumm": false
+  },
+  {
+   "name": "abrechnung_uebermittlung",
+   "spalten": 25,
+   "fkRaus": [
+    "profiles",
+    "businesses",
+    "abrechnung",
+    "abrechnung_uebermittlung",
+    "auth.users"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/billing/api/uebermittlung.test.js",
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv, aber **noch nicht angeschlossen** — ✅ Migration am 20.09.2026 live angewandt (MCP); der Versandweg selbst entsteht erst in Faz 2, die Tabelle ist deshalb leer. Die Tabelle und ihre Schreibfunktion existieren vorab, damit niemand die Dokumentation später rückwirkend erfinden muss.",
+   "warum": "Anlage 1 TP5 Kap. 3(2) schreibt vor: *„Über den Datenaustausch ist eine Dokumentation zu führen … mindestens **2 Jahre** aufzubewahren … **alle Schritte von der Initiierung bis ggf. zur Quittierung**.\"* Anhang 1 § 4.5(2) zählt zehn Mindestfelder auf (physikalischer Dateiname, Erstellungsdatum, lfd. Nr., Kommunikationspartner, Beginn/Ende, Dateigröße, Verarbeitungshinweise, Senden/Empfangen, Verarbeitungskennzeichen, Fehlerstatus). **Diese Dokumentation lässt sich nicht nachträglich erzeugen** — deshalb entsteht die Tabelle, bevor der Versandschritt gebaut wird, und nicht danach.",
+   "seit": "20.09.2026 · `api-backend/db/migrations/0034_abrechnung_uebermittlung.sql` (ABRECHNUNG_ECHTBETRIEB_PLAN.md, Schritt 1.10)",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [
+    {
+     "name": "uebermittlungProtokollieren",
+     "file": "api-backend/billing/api/uebermittlung.js",
+     "start": 76,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/uebermittlung.js"
+   ],
+   "module": [],
+   "sqlTreffer": 6,
    "codeStumm": false
   },
   {
@@ -1329,6 +1371,193 @@
     "verordnungen"
    ],
    "sqlTreffer": 6,
+   "codeStumm": false
+  },
+  {
+   "name": "betriebsart_empfaenger",
+   "spalten": 7,
+   "fkRaus": [
+    "auth.users",
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/billing/api/betriebsart.test.js",
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv — ✅ **am 20.09.2026 live angewandt** (MCP). Die Tabelle ist leer, und das ist der Normalzustand: eine Zeile entsteht erst, wenn für eine bestimmte Datenannahmestelle vom Vorgabewert abgewichen wird.",
+   "warum": "§302-Abrechnung: Erprobung und Zulassung zum Echtverfahren laufen nach Spezifikation (Anlage 1 TP5 V21 Kap. 2 (1)(2), Kap. 3 (1) + Kap. 8, Anhang 2 zur Anlage 1 Kap. 9 § 1/§ 5/§ 6) **zwischen Absender und Empfänger**. Ein praxisweites Einzel-Flag ist in beide Richtungen still falsch: zu früh `echt` schickt eine Echtdatei an eine Datenannahmestelle ohne Zulassung; zu spät `echt` schickt eine Testdatei an eine Datenannahmestelle mit Zulassung („löst keine Zahlungen aus\" — das Geld bleibt einfach aus, es kommt keine Fehlermeldung). `gkv-302` hat deshalb am 20.09.2026 entschieden, dass die Betriebsart je Paar (Praxis-Inhaber × Datenannahmestelle) gilt. Migration 0028 (`terapeut_zertifikat.betriebsart`) bleibt als Vorgabewert erhalten, diese Tabelle ist die Ausnahme je Empfänger.",
+   "seit": "20.09.2026 · api-backend/db/migrations/0031_betriebsart_je_empfaenger.sql (ABRECHNUNG_ECHTBETRIEB_PLAN.md, Schritt 1.7)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "_renderAusnahmenBlock",
+     "file": "module/abrechnung-einstellungen.js",
+     "start": 648,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "qvSaveBtn",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 28 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "ladeBetriebsart",
+     "file": "api-backend/billing/api/betriebsart.js",
+     "start": 54,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "_speichereAusnahme",
+     "file": "module/abrechnung-einstellungen.js",
+     "start": 783,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "qvSaveBtn",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 28 modülden çağrılıyor"
+     ],
+     "ops": [
+      "upsert"
+     ]
+    },
+    {
+     "name": "wireAbrechnungSettings",
+     "file": "module/abrechnung-einstellungen.js",
+     "start": 267,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "qvSaveBtn",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 28 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/betriebsart.js",
+    "module/abrechnung-einstellungen.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "qvSaveBtn",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "sqlTreffer": 3,
    "codeStumm": false
   },
   {
@@ -4238,6 +4467,28 @@
    "codeStumm": false
   },
   {
+   "name": "datenaustausch_zaehler",
+   "spalten": 6,
+   "fkRaus": [
+    "profiles"
+   ],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv — ✅ **am 20.09.2026 live angewandt** (MCP, zusammen mit 0026–0034). Die Tabelle ist noch leer: die erste Zeile entsteht, sobald die erste Datei unter dem neuen Verfahren erzeugt wird. Ein rückwirkender Backfill aus dem Bestand wurde bewusst **nicht** gemacht — die Altzeilen tragen keinen `empfaenger_ik`, eine je Paar aufgebaute Folge wäre geraten, nicht gewusst. Wer den Zähler vor dem ersten Lauf setzen will, nimmt `datenaustausch_zaehler_vorstellen()`.",
+   "warum": "Die zwei dauerhaften Zähler des §302-Datenaustauschs. Bis zum 20.09.2026 rechneten alle drei Erzeugungsrouten `COUNT(*) + 1` über `abrechnung` — je `owner_id`, mit `created_at >= 1. Januar`. Daran war dreierlei falsch: die **Datenaustauschreferenz** (UNB 0020) läuft laut Anlage 1 TP5 V21 Kap. 5.4/7.2 je **Paar (Absender-IK, Empfänger-IK)** fort, nicht je Konto; ein Neustart ist nur beim Überlauf von 99999 erlaubt, nicht jedes Jahr; und ein `COUNT(*)` gibt eine gelöschte Nummer wieder her und kollidiert bei zwei gleichzeitigen Einreichungen. Belegter Schaden: die Reihenfolge im Korrekturverfahren bricht — eine Korrektur, die vor ihrer Erstrechnung verarbeitet wird, weist die Kasse ab (Kap. 7.2), und der Fehler ist von außen kaum zu erkennen. Rechtlich (`legal-de`, 20.09.2026) ist eine doppelte Einreichung eine **Fehlfunktion**, kein Anwenderfehler — über AGB § 9(2) haften wir dafür. Die **Transfernummer** ist ausdrücklich etwas anderes („keinen Bezug zur lfd. Nr. des Vorlaufsatzes\", Anhang 1 § 4.3) und wurde bis dahin per Modulo aus genau dieser Nummer abgeleitet.",
+   "seit": "20.09.2026 · `api-backend/db/migrations/0029_datenaustausch_zaehler.sql` (ABRECHNUNG_ECHTBETRIEB_PLAN.md, Schritt 1.2)",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 3,
+   "codeStumm": true
+  },
+  {
    "name": "demo_bookings",
    "spalten": 11,
    "fkRaus": [],
@@ -6997,7 +7248,7 @@
     "api-backend/server.js"
    ],
    "module": [],
-   "sqlTreffer": 2,
+   "sqlTreffer": 4,
    "codeStumm": false
   },
   {
@@ -7076,7 +7327,7 @@
     {
      "name": "ladeAnnahmestelle",
      "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-     "start": 130,
+     "start": 140,
      "module": [],
      "uiPfad": []
     },
@@ -7121,7 +7372,7 @@
     {
      "name": "ladePapierannahmestelle",
      "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-     "start": 264,
+     "start": 262,
      "module": [],
      "uiPfad": []
     }
@@ -7224,14 +7475,14 @@
     {
      "name": "ladeAnnahmestelle",
      "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-     "start": 130,
+     "start": 140,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "ladePapierannahmestelle",
      "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-     "start": 264,
+     "start": 262,
      "module": [],
      "uiPfad": []
     }
@@ -7271,7 +7522,41 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 5,
+   "sqlTreffer": 6,
+   "codeStumm": false
+  },
+  {
+   "name": "kostentraeger_anschriften",
+   "spalten": 9,
+   "fkRaus": [
+    "kostentraeger"
+   ],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/billing/kostentraeger/annahmestelle.test.js"
+   ],
+   "register": true,
+   "status": "aktiv (Referenz) — ✅ **am 20.09.2026 live angewandt** (MCP). Befüllt wird sie von `tools/kostentraeger-annahmestellen-laden.mjs --write` (derselbe Lauf wie die VKG-Zeilen); die Seed-Migration für die Kundenbox entsteht daraus über `tools/seed-generieren.mjs`. ZEILENSTAND_PLATZHALTER",
+   "warum": "Die Urbelege (Verordnungen im Original) gehen **per Post** an die **Papierannahmestelle** (Verknüpfungsart **09**), nicht an die Datenannahmestelle (02/03) — Richtlinien-Text § 2(1) und § 4. Der Begleitzettel trug bis zum 20.09.2026 **keine Empfängeradresse**, weil es in der Datenbank keinen Ort dafür gab: `kostentraeger` hat nur IK und Name. Im Echtbetrieb muss der Podologe wissen, wohin der Umschlag geht.",
+   "seit": "20.09.2026 · `api-backend/db/migrations/0032_kostentraeger_anschriften.sql` (ABRECHNUNG_ECHTBETRIEB_PLAN.md, Schritt 1.4)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "ladePapierannahmestelle",
+     "file": "api-backend/billing/kostentraeger/annahmestelle.js",
+     "start": 262,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/billing/kostentraeger/annahmestelle.js"
+   ],
+   "module": [],
+   "sqlTreffer": 2,
    "codeStumm": false
   },
   {
@@ -9063,7 +9348,7 @@
    "schreiber": [],
    "dateien": [],
    "module": [],
-   "sqlTreffer": 3,
+   "sqlTreffer": 6,
    "codeStumm": true
   },
   {
@@ -9984,11 +10269,11 @@
   },
   {
    "name": "podologie_behandlungen",
-   "spalten": 12,
+   "spalten": 15,
    "fkRaus": [
+    "profiles",
     "prescriptions",
-    "invoices",
-    "profiles"
+    "invoices"
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
@@ -10544,7 +10829,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 15,
+   "sqlTreffer": 18,
    "codeStumm": false
   },
   {
@@ -14040,7 +14325,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 49,
+   "sqlTreffer": 51,
    "codeStumm": false
   },
   {
@@ -14811,8 +15096,10 @@
   },
   {
    "name": "terapeut_zertifikat",
-   "spalten": 10,
-   "fkRaus": [],
+   "spalten": 15,
+   "fkRaus": [
+    "profiles"
+   ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
@@ -15029,7 +15316,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 5,
+   "sqlTreffer": 6,
    "codeStumm": false
   },
   {
@@ -17176,12 +17463,7 @@
  ],
  "ohneRegister": [],
  "ungeklaert": [],
- "registerVerwaist": [
-  "datenaustausch_zaehler",
-  "betriebsart_empfaenger",
-  "kostentraeger_anschriften",
-  "abrechnung_uebermittlung"
- ],
+ "registerVerwaist": [],
  "codeStumm": [
   {
    "name": "accommodations",
@@ -17192,6 +17474,11 @@
    "name": "applications",
    "sql": 2,
    "status": "fremd"
+  },
+  {
+   "name": "datenaustausch_zaehler",
+   "sql": 3,
+   "status": "aktiv — ✅ **am 20.09.2026 live angewandt** (MCP, zusammen mit 0026–0034). Die Tabelle ist noch leer: die erste Zeile entsteht, sobald die erste Datei unter dem neuen Verfahren erzeugt wird. Ein rückwirkender Backfill aus dem Bestand wurde bewusst **nicht** gemacht — die Altzeilen tragen keinen `empfaenger_ik`, eine je Paar aufgebaute Folge wäre geraten, nicht gewusst. Wer den Zähler vor dem ersten Lauf setzen will, nimmt `datenaustausch_zaehler_vorstellen()`."
   },
   {
    "name": "dta_schluessel",
@@ -17230,7 +17517,7 @@
   },
   {
    "name": "nummernkreise",
-   "sql": 3,
+   "sql": 6,
    "status": "aktiv"
   },
   {
@@ -17333,6 +17620,7 @@
    "attendance",
    "ausfallrechnungen",
    "b2b_contacts",
+   "betriebsart_empfaenger",
    "booking_leistungen",
    "booking_requests",
    "bookings",
@@ -17385,6 +17673,7 @@
    "admin_users",
    "applications",
    "booking_status_korrekturen",
+   "datenaustausch_zaehler",
    "praxura_setup"
   ]
  }

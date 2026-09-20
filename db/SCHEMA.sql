@@ -1,7 +1,66 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-18 — 0025_abrechnung_status_manuell
+-- ERZEUGT AM:        2026-09-20 — 0035_datenaustausch_zaehler_rpc_revoke
+--                    (Sicherheitskorrektur zu 0029, am selben Tag. Fuer DIESE
+--                    Datei eine NULL-Aenderung: keine Tabelle, keine Spalte,
+--                    kein Constraint, kein Index — ausschliesslich EXECUTE-ACLs
+--                    auf sechs Funktionen. Der Eintrag steht hier trotzdem,
+--                    damit beide Dumps dieselbe Migrationskette fuehren.
+--                    Kurz: die drei SECURITY-DEFINER-Zaehlerfunktionen aus 0029
+--                    waren fuer anon und authenticated per RPC aufrufbar, weil
+--                    Supabase jeder NEUEN Funktion in `public` explizites
+--                    EXECUTE an beide Rollen gibt (ALTER DEFAULT PRIVILEGES) und
+--                    ein REVOKE FROM PUBLIC das nicht wegnimmt. Vollstaendige
+--                    Begruendung, Messwerte und der zurueckgerollte Live-Nachweis
+--                    stehen im Kopf von db/SCHEMA-RLS.sql — dort gehoeren sie
+--                    hin, weil es um Funktionsrechte geht.
+--                    ✅ Im SaaS angewendet 20.09.2026 (MCP).
+--                    davor: 2026-09-20 — 0026 bis 0034 (§302-Echtbetrieb, Faz 1)
+--                    (ABRECHNUNG_ECHTBETRIEB_PLAN.md. NEUN Migrationen in EINEM
+--                    Zug am 20.09.2026 live angewendet (MCP), in der Reihenfolge
+--                    0026 -> 0034, jede einzeln bestaetigt:
+--                      0026_podologie_behandlungen_storno
+--                        +3 Spalten (storniert_am/_von, storno_grund), +1 CHECK,
+--                        +2 Funktionen, +2 Trigger. Die Behandlungsdokumentation
+--                        ist ab jetzt UNVERAENDERLICH und NICHT LOESCHBAR
+--                        (§ 630f Abs. 1 S. 2 BGB, Entscheidung K3 von legal-de) —
+--                        Korrektur = Storno mit Grund + neue Zeile.
+--                        ⚠️ Vorbedingung war, `podologie_behandlungen` aus
+--                        DELETE_TABLES in api/dsgvo.js zu nehmen; beim Anwenden
+--                        war das bereits erledigt (nachgeprueft — sonst waere ab
+--                        diesem Moment jede Kontoloeschung in eine 500 gelaufen).
+--                      0027_abrechnung_auftragsdatei_und_hashes
+--                        +6 Spalten an `abrechnung` (auftragsdatei_path/_size,
+--                        dta_sha256, auftragsdatei_sha256, signed_sha256,
+--                        betriebsart), +1 CHECK. Counter-neutral.
+--                      0028_terapeut_zertifikat_betriebsart
+--                        +5 Spalten, +2 CHECK. Der zweite CHECK ist der Riegel:
+--                        betriebsart='echt' nur mit Zulassungsnachweis.
+--                      0029_datenaustausch_zaehler
+--                        +1 Tabelle, +3 Funktionen, +1 Index (PK), +3 Spalten an
+--                        `abrechnung`. RLS an, bewusst OHNE Policy (wie
+--                        `nummernkreise`).
+--                      0030_abrechnungen_bucket_pkcs7
+--                        UPDATE auf eine BESTEHENDE storage.buckets-Zeile:
+--                        PKCS#7-MIME-Typen erlaubt, Groessengrenze 10 -> 20 MB.
+--                        Bucket-Zahl bleibt 5, live gegengeprueft.
+--                      0031_betriebsart_je_empfaenger
+--                        +1 Tabelle, +1 Policy, +1 Index (zusammengesetzter PK).
+--                      0032_kostentraeger_anschriften
+--                        +1 Tabelle, +1 Policy, +2 Indizes (PK + UNIQUE).
+--                      0033_abrechnung_verworfen
+--                        abrechnung_status_check neu gefasst (Wert 'verworfen'
+--                        ergaenzt), +1 Spalte verwerfungsgrund. Counter-neutral.
+--                      0034_abrechnung_uebermittlung
+--                        +1 Tabelle, +1 Policy (nur SELECT), +3 Indizes,
+--                        +1 Funktion, +1 Trigger.
+--                    Summe gegen die Live-DB GEZAEHLT, nicht fortgeschrieben:
+--                    Tabellen 89 -> 93 · Policies 172 -> 175 · Indizes 318 -> 325 ·
+--                    Trigger 78 -> 81 · Funktionen 78 -> 84. Alle fuenf Deltas
+--                    gehen restlos auf die neun Migrationen auf.
+--                    ✅ Im SaaS angewendet 20.09.2026 (MCP).
+--                    davor: 2026-09-18 — 0025_abrechnung_status_manuell
 --                    (Ops-Karte #310. +2 Spalten an `prescriptions`
 --                    (abrechnung_status_manuell_am/_von), keine neue Tabelle,
 --                    kein neuer Index, kein neuer Trigger. Live nachgezaehlt
@@ -317,8 +376,24 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            89 Tabellen · 1300 Spalten · 172 RLS-Policies
---                    318 Indizes · 78 Trigger · 78 Funktionen · 4 Views
+-- UMFANG:            93 Tabellen · 1367 Spalten · 175 RLS-Policies
+--                    325 Indizes · 81 Trigger · 84 Funktionen · 4 Views
+--                    (20.09.2026 live gezaehlt, Stand 0034. Die vier neuen
+--                     Tabellen sind datenaustausch_zaehler (0029),
+--                     betriebsart_empfaenger (0031), kostentraeger_anschriften
+--                     (0032) und abrechnung_uebermittlung (0034).
+--                     ⚠️ Spalten: nach Bauplan bringen die neun Migrationen +65
+--                     (abrechnung +10, podologie_behandlungen +3,
+--                     terapeut_zertifikat +5, dazu 6+7+9+25 in den vier neuen
+--                     Tabellen). 1300 + 65 waeren 1365, gezaehlt wurden 1367 —
+--                     der Rest von 2 stammt aus dem ALTEN Wert, nicht aus diesen
+--                     Migrationen. Gegenprobe: der RUMPF dieser Datei war
+--                     richtig (abrechnung 22 + 10 = 32 live,
+--                     podologie_behandlungen 12 + 3 = 15 live,
+--                     terapeut_zertifikat 10 + 5 = 15 live). Gleiche Klasse wie
+--                     die am 17.09. nachgezogenen Abweichungen: die Kopfzahl
+--                     war fortgeschrieben statt gezaehlt.)
+--                    davor: 89 · 1300 · 172 · 318 · 78 · 78 · 4
 --                    (17.09.2026 live gezaehlt, Stand 0023_aerzte_ausfall_team_
 --                     insert: Policies 169 -> 172, drei neue Team-Policies
 --                     (zwei auf `aerzte`, eine auf `ausfallrechnungen`).
@@ -462,12 +537,109 @@ CREATE TABLE abrechnung (
   signed_at timestamptz
   signed_by_cert_thumbprint text
   business_id uuid
+  auftragsdatei_path text
+  auftragsdatei_size integer
+  dta_sha256 text
+  auftragsdatei_sha256 text
+  signed_sha256 text
+  betriebsart text
+  datenaustauschreferenz integer
+  transfernummer integer
+  empfaenger_ik text
+  verwerfungsgrund text
 );
---   CHECK status IN (erstellt, heruntergeladen, gesendet, accepted, rejected, paid)
+--   CHECK status IN (erstellt, heruntergeladen, gesendet, accepted, rejected, paid, verworfen)
+--   CHECK betriebsart IS NULL OR betriebsart IN (test, erprobung, echt)
 --   FK business_id -> businesses(id) ON DELETE CASCADE
 --   FK kostentraeger_ik -> kostentraeger(ik)
 --   FK owner_id -> auth.users(id) ON DELETE CASCADE
 --   PK (id)
+--   ★ 20.09.2026 (§302-Echtbetrieb, Faz 1) — zehn Spalten dazu, drei Gruppen:
+--     (a) auftragsdatei_path/_size (0027): die Auftragsdatei (348-Byte-Auftrags-
+--         satz, GGT Anlage 2) wurde seit 17.09. erzeugt und WEGGEWORFEN. Sie
+--         geht nur PAARWEISE mit der .dta raus — fehlt sie, lehnt die
+--         Annahmestelle ab, ohne den Inhalt zu lesen (Anhang 2 Kap. 9 § 3.1).
+--     (b) dta_sha256 / auftragsdatei_sha256 / signed_sha256 (0027): eine Summe
+--         JE STUFE, weil Signatur (und spaeter Verschluesselung) die Bytes
+--         aendern. Beantwortet "war das diese Datei?" — der Storage-Pfad kann
+--         ueberschrieben sein, alle Uploads laufen mit upsert:true.
+--     (c) betriebsart, datenaustauschreferenz, transfernummer, empfaenger_ik
+--         (0027/0029): WELCHE Nummern diese Datei getragen hat und an WEN sie
+--         ging. Nicht neu berechnen — sie sind bei der Kasse hinterlegt.
+--         Der Zaehler laeuft je Paar (Absender-IK, Empfaenger-IK), siehe
+--         datenaustausch_zaehler.
+--   ★ verwerfungsgrund + Status 'verworfen' (0033): vergebeNummern() zieht die
+--     Nummern VOR dem Bauen der Datei — scheitert danach der Preflight, sind sie
+--     verbraucht. Die Reihenfolge bleibt absichtlich so (sonst waeren die Regeln
+--     F:03001-F:03004 geblendet, die genau diese Nummer pruefen). Die Spezifikation
+--     verlangt "fortlaufend", nicht "lueckenlos" — GoBD verlangt aber, dass jede
+--     Luecke ERKLAERBAR ist. Genau das steht hier drin, PHI-frei.
+
+-- 20.09.2026 (0034) — gesetzliche Uebermittlungsdokumentation. NICHT mit
+-- `abrechnung` verwechseln: dort steht die Datei, hier steht jeder TRANSPORT
+-- dieser Datei. Eigene Tabelle aus zwei zwingenden Gruenden: (1) 1:n — eine
+-- Abrechnung kann mehrfach uebertragen werden, und Quittungen (CONTRL, APERAK)
+-- treffen zeitversetzt als Antwort ein (`antwort_auf`); (2) `abrechnung` ist
+-- festgeschrieben, Transportfelder dort nachzupflegen wuerde den Trigger
+-- verletzen. Angelegt VOR dem Versandschritt (Faz 2), weil sich eine gesetzliche
+-- Transportdokumentation nicht rueckwirkend erzeugen laesst.
+CREATE TABLE abrechnung_uebermittlung (
+  id uuid NOT NULL DEFAULT gen_random_uuid()
+  owner_id uuid NOT NULL
+  business_id uuid
+  abrechnung_id uuid
+  antwort_auf uuid
+  richtung text NOT NULL
+  physikalischer_dateiname text NOT NULL
+  erstellt_am timestamptz NOT NULL
+  laufende_nummer integer
+  transfernummer integer
+  partner_ik text NOT NULL
+  partner_name text
+  begonnen_am timestamptz NOT NULL DEFAULT now()
+  beendet_am timestamptz
+  dateigroesse_bytes bigint
+  verarbeitungshinweise text
+  verarbeitungskennzeichen text
+  fehlerstatus text NOT NULL DEFAULT 'offen'::text
+  fehlertext text
+  uebertragungsweg text
+  sha256 text
+  betriebsart text
+  absender_ik text
+  created_by uuid
+  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+--   CHECK richtung IN (senden, empfangen)
+--   CHECK fehlerstatus IN (offen, ok, fehler, abgebrochen)
+--   CHECK betriebsart IS NULL OR betriebsart IN (test, erprobung, echt)
+--   CHECK uebertragungsweg IS NULL OR uebertragungsweg IN (portal, dfue, mail, datentraeger, papier)
+--   FK owner_id      -> profiles(id)                ON DELETE RESTRICT
+--   FK business_id   -> businesses(id)              ON DELETE SET NULL
+--   FK abrechnung_id -> abrechnung(id)              ON DELETE RESTRICT
+--   FK antwort_auf   -> abrechnung_uebermittlung(id) ON DELETE SET NULL
+--   FK created_by    -> auth.users(id)              ON DELETE SET NULL
+--   PK (id)
+--   Fundstelle: Anlage 1 TP5 Kap. 3(2) ("ueber den Datenaustausch ist eine
+--   Dokumentation zu fuehren … mindestens 2 Jahre aufzubewahren") und Anhang 1
+--   § 4.5(2), der die Pflichtfelder einzeln aufzaehlt — sie stehen 1:1 oben.
+--   ⚠️ FESTGESCHRIEBEN. trg_abrechnung_uebermittlung_festschreibung blockt
+--     DELETE ganz. Beim UPDATE sind drei Gruppen zu unterscheiden:
+--       gesperrt      id, richtung, physikalischer_dateiname, erstellt_am,
+--                     laufende_nummer, transfernummer, partner_ik, absender_ik,
+--                     begonnen_am, dateigroesse_bytes, sha256, betriebsart,
+--                     owner_id, abrechnung_id, created_at
+--       einmalig      beendet_am, antwort_auf, uebertragungsweg (NULL -> Wert)
+--       frei          verarbeitungskennzeichen, fehlerstatus, fehlertext,
+--                     partner_name, verarbeitungshinweise
+--     business_id und created_by stehen ABSICHTLICH in keiner Liste: beide
+--     haengen an ON DELETE SET NULL, und PG fuehrt SET NULL als UPDATE aus —
+--     waeren sie gesperrt, liesse sich weder ein Standort noch ein Konto
+--     loeschen. Dieselbe Falle wie bei podologie_behandlungen.
+--   ⛔ PHI-VERBOT. Kein Patientenname, keine Versichertennummer, kein
+--     Geburtsdatum, keine Diagnose. Die zwei Risikostellen sind die Freitexte
+--     `verarbeitungshinweise` und `fehlertext`: wer spaeter ZAA- oder
+--     Annahmestellen-Rueckmeldungen hineinkopiert, maskiert sie VORHER.
 
 -- 09.09.2026 — die Geschichtsachse zu `abrechnung`. Was in EINER Datei
 -- tatsaechlich an die Kasse ging, eingefroren. Vorher wurde die Zeilenliste aus
@@ -792,6 +964,33 @@ CREATE TABLE belegliste (
 --   PK (id) · UNIQUE (owner_id, beleg_nr)
 --   ⚠️ GoBD: TRIGGER prevent_belegliste_mod() blockt UPDATE und DELETE.
 --      Korrektur nur durch neuen Beleg mit type='storno'.
+
+-- 20.09.2026 (0031) — Betriebsart je Paar (Praxis-Inhaber × Datenannahmestelle).
+-- Der Vorgabewert steht in terapeut_zertifikat.betriebsart; DIESE Tabelle ist
+-- die Ausnahme. Grund (gkv-302): Erprobung und Zulassung zum Echtverfahren
+-- laufen zwischen Absender und Empfaenger, ein praxisweites Einzel-Flag ist in
+-- BEIDE Richtungen still falsch — zu frueh echt heisst Echtdatei an eine
+-- Annahmestelle ohne Zulassung, zu spaet echt heisst Testdatei an eine mit
+-- Zulassung, und die "loest keine Zahlungen aus": das Geld bleibt einfach aus,
+-- ohne Fehlermeldung.
+CREATE TABLE betriebsart_empfaenger (
+  owner_id uuid NOT NULL
+  empfaenger_ik text NOT NULL
+  betriebsart text NOT NULL DEFAULT 'test'::text
+  zulassung_referenz text
+  zulassung_datum date
+  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_by uuid
+);
+--   CHECK betriebsart IN (test, erprobung, echt)
+--   CHECK betriebsart <> 'echt' OR (zulassung_referenz nicht leer AND zulassung_datum IS NOT NULL)
+--   FK owner_id   -> auth.users(id)  ON DELETE CASCADE
+--   FK updated_by -> profiles(id)    ON DELETE SET NULL
+--   PK (owner_id, empfaenger_ik)
+--   ★ betriebsart steuert den UNB-Testindikator (0/1/2) UND den ersten
+--     Buchstaben des physikalischen Dateinamens (T/T/E).
+--   ⚠️ In der ERPROBUNG bleibt der Dateiname "T", obwohl echte Daten rausgehen.
+--     Das ist gegenintuitiv und jemand wird es "korrigieren" wollen — nicht tun.
 
 CREATE TABLE booking_leistungen (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -1213,6 +1412,42 @@ CREATE TABLE data_sharing_settings (
 );
 --   PK (owner_id) — steuert den bizScope-Helper (Datenteilung zwischen Standorten).
 --   Termine sind bewusst NICHT teilbar.
+
+-- 20.09.2026 (0029) — die zwei dauerhaften §302-Zaehler. Vorher rechneten alle
+-- drei Erzeugungsrouten `(weekCount || 0) + 1` aus einem COUNT(*) auf
+-- `abrechnung`: falscher Geltungsbereich (je owner_id statt je IK-Paar),
+-- jaehrlicher Neustart am 1. Januar, und zwei gleichzeitige Einreichungen
+-- bekamen dieselbe Nummer. Belegter Schaden: die Reihenfolge im
+-- Korrekturverfahren bricht, die Kasse weist ab (Kap. 7.2), und von aussen ist
+-- der Fehler kaum zu sehen.
+CREATE TABLE datenaustausch_zaehler (
+  absender_ik text NOT NULL
+  empfaenger_ik text NOT NULL
+  owner_id uuid
+  letzte_referenz bigint NOT NULL DEFAULT 0
+  letzte_transfernummer integer NOT NULL DEFAULT 0
+  aktualisiert_am timestamptz NOT NULL DEFAULT now()
+);
+--   FK owner_id -> profiles(id) ON DELETE SET NULL
+--   PK (absender_ik, empfaenger_ik)
+--   ⛔ RLS ist AN, aber es gibt BEWUSST KEINE POLICY — genau wie `nummernkreise`.
+--     Kein Client, kein PostgREST. Angefasst wird die Tabelle ausschliesslich
+--     ueber die drei SECURITY-DEFINER-Funktionen
+--     naechste_datenaustauschreferenz(), naechste_transfernummer() und
+--     datenaustausch_zaehler_vorstellen() (db/SCHEMA-RLS.sql).
+--     Wer hier eine fehlende Policy "repariert", oeffnet einen Nummernkreis,
+--     aus dem ueber buildSammelRechnungsnummer() auch Rechnungsnummern entstehen.
+--   ★ letzte_referenz ist monoton, OHNE Jahresruecksetzung und ohne Obergrenze.
+--     Der 5-stellige UNB-0020-Wert entsteht erst bei der Ausgabe
+--     (((n-1) mod 99999) + 1) — so laeuft das SPEZIFIKATIONSFELD bei 99999 ueber,
+--     die HISTORIE aber nicht.
+--   ★ letzte_transfernummer ist ein EIGENER Zaehler, 0..999 im Kreis
+--     (GGT Anlage 2, Feld TRANSFER_NUMMER: "ab '999' wieder auf '0'") und hat
+--     ausdruecklich KEINEN Bezug zur Datenaustauschreferenz (Anhang 1 § 4.3).
+--     Deshalb steht die vergebene Nummer auf `abrechnung`: ein zweiter
+--     Sendeversuch derselben Datei nimmt dieselbe Nummer.
+--   ⚠️ owner_id ist Herkunftsvermerk, NICHT Teil des Schluessels — fortlaufend
+--     ist die Folge je IK-Paar, nicht je Konto.
 
 CREATE TABLE demo_bookings (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -1700,6 +1935,35 @@ CREATE TABLE kostentraeger_annahmestellen (
 --      lässt sich der DTA-Empfänger heute nicht auflösen.
 --      Offener Rest von Ops #264, siehe db/REGISTER.md.
 
+-- 20.09.2026 (0032) — Postanschriften aus dem ANS-Segment der
+-- Kostentraegerdatei. Eine §302-Abrechnung besteht aus sechs Teilen, darunter
+-- die Urbelege im ORIGINAL — und die gehen per Post an die Papierannahmestelle
+-- (Verknuepfungsart 09), nicht an die Datenannahmestelle (02/03). Der
+-- Begleitzettel trug bisher keine Empfaengeradresse, weil sie nirgends stand.
+-- Kindtabelle und keine flachen Spalten an `kostentraeger`: das ANS-Segment ist
+-- wie VKG wiederholbar (Haus, Postfach und Grosskunde koennen nebeneinander
+-- stehen). Eine Einzelspalte waere exakt der Fehler von `kostentraeger.das_ik`.
+CREATE TABLE kostentraeger_anschriften (
+  id bigint NOT NULL GENERATED ALWAYS AS IDENTITY
+  kostentraeger_ik text NOT NULL
+  art text NOT NULL
+  plz text NOT NULL DEFAULT ''::text
+  ort text NOT NULL DEFAULT ''::text
+  strasse text NOT NULL DEFAULT ''::text
+  quelle text
+  quelle_stand date
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+--   CHECK art IN (1, 2, 3)
+--   FK kostentraeger_ik -> kostentraeger(ik) ON DELETE CASCADE
+--   PK (id) · UNIQUE (kostentraeger_ik, art, plz, ort, strasse)
+--   ★ art nach Anhang 03 zu Anlage 1 TP5 V10 § 7: '1' Hausanschrift,
+--     '2' Postfach, '3' Grosskunde.
+--   ★ ALLE ANS-Zeilen werden unveraendert gespeichert. Die Vorzugsreihenfolge
+--     1 > 2 > 3 wird beim LESEN angewandt (waehlePostanschrift() in
+--     billing/kostentraeger/parser.js) und bewusst NICHT in die Daten
+--     eingebrannt — sonst geht Information verloren.
+
 CREATE TABLE krankenkassen (
   id uuid NOT NULL DEFAULT gen_random_uuid()
   name text NOT NULL
@@ -2076,7 +2340,12 @@ CREATE TABLE podologie_behandlungen (
   created_at timestamptz DEFAULT now()
   invoice_id uuid
   employee_id uuid
+  storniert_am timestamptz
+  storniert_von uuid
+  storno_grund text
 );
+--   CHECK storniert_am IS NULL OR storno_grund nicht leer
+--   FK storniert_von -> profiles(id) ON DELETE SET NULL
 --   FK verordnung_id -> prescriptions(id) ON DELETE SET NULL · PK (id)
 --      (Ziel seit 04.09.2026 prescriptions, ids der migrierten Zeilen unveraendert)
 --   FK invoice_id -> invoices(id) ON DELETE SET NULL
@@ -2092,6 +2361,29 @@ CREATE TABLE podologie_behandlungen (
 --     tatsaechliche Befuellen aus dem eingeloggten Nutzer steht noch aus,
 --     die Migration legt nur die Spalte an. Bis dahin bleibt die Spalte NULL
 --     und blockiert den geplanten Team-Schreibausbau nicht.
+--   ⚠️ FESTGESCHRIEBEN seit 20.09.2026 (0026, Entscheidung K3 von legal-de).
+--     trg_podologie_behandlungen_kein_delete blockt DELETE BEDINGUNGSLOS,
+--     trg_podologie_behandlungen_festschreibung blockt jede Aenderung an
+--     behandlungsdatum, hpnr_codes, diagnosegruppe, lokalisation, notizen,
+--     betrag_gkv, owner_id und created_at. Eine falsch erfasste Behandlung wird
+--     STORNIERT (storniert_am + storno_grund + storniert_von) und daneben neu
+--     erfasst; die stornierte Zeile bleibt lesbar und zaehlt nicht mehr.
+--     Grundlage: § 630f Abs. 1 S. 2 BGB (Aenderung muss den urspruenglichen
+--     Inhalt erkennbar lassen — die Frist beginnt mit der AUFZEICHNUNG, nicht
+--     mit der Abrechnung) und BGH VI ZR 84/19 (Dokumentation ohne sichtbare
+--     Aenderungshistorie hat keinen Beweiswert). ⛔ Kein Kulanzfenster.
+--   ★ Eine Stornierung laesst sich NICHT zuruecknehmen — sonst waere sie eine
+--     Notiz und kein Beleg.
+--   ★ verordnung_id und employee_id duerfen auf NULL gehen, aber nicht auf einen
+--     ANDEREN Wert: beide FKs stehen auf ON DELETE SET NULL, und PG fuehrt das
+--     als UPDATE aus. Waeren sie hart gesperrt, liesse sich keine Verordnung und
+--     kein Mitarbeiterkonto mehr loeschen. invoice_id bleibt ganz offen (die
+--     Rechnungsbruecke setzt sie).
+--   ⛔ DESHALB steht diese Tabelle seit 20.09.2026 NICHT MEHR in DELETE_TABLES
+--     von api/dsgvo.js — sonst endet jede Kontoloeschung in einer 500. Fuer die
+--     Auskunft (USER_TABLES) bleibt sie drin. Der offene Rest ist ein
+--     Auslagerungspaket nach GoBD Rz. 142 ff., gemeinsam mit belegliste,
+--     invoices, abrechnung und patient_consents.
 
 CREATE TABLE praxura_migrations (
   version text NOT NULL
@@ -2646,8 +2938,31 @@ CREATE TABLE terapeut_zertifikat (
   uploaded_at timestamptz DEFAULT now()
   updated_at timestamptz DEFAULT now()
   business_id uuid
+  betriebsart text NOT NULL DEFAULT 'test'::text
+  betriebsart_geaendert_am timestamptz
+  betriebsart_geaendert_von uuid
+  zulassung_referenz text
+  zulassung_datum date
 );
+--   CHECK betriebsart IN (test, erprobung, echt)
+--   CHECK betriebsart <> 'echt' OR (zulassung_referenz nicht leer AND zulassung_datum IS NOT NULL)
+--   FK betriebsart_geaendert_von -> profiles(id) ON DELETE SET NULL
 --   PK (owner_id) — §302-Signaturzertifikat (PKCS#7, Browser-Signatur).
+--   ★ betriebsart (20.09.2026, 0028): test | erprobung | echt — der VORGABEWERT
+--     der Praxis. Die Ausnahme je Datenannahmestelle steht in
+--     betriebsart_empfaenger. Hier, weil die Tabelle bereits owner_id (PK) UND
+--     ik_nummer traegt, also genau das Paar, unter dem eine Praxis einreicht.
+--   ⛔ KEINE Umgebungsvariable (onprem O-117): im SaaS wuerde sie ALLE Praxen
+--     gleichzeitig umstellen, auch die ohne Zulassung; in der Kundenbox muesste
+--     der Kunde .env bearbeiten und den Container neu erzeugen — er tut es
+--     nicht, und wir kommen nicht hinein. Der Schalter muss dort liegen, wo der
+--     Inhaber drankommt.
+--   ⚠️ Der zweite CHECK ist der eigentliche Riegel: ohne zulassung_referenz UND
+--     zulassung_datum ist betriebsart='echt' gar nicht speicherbar. Die Pruefung
+--     steht in der DB und nicht (nur) in der Route, weil `abrechnung` auch vom
+--     Frontend ueber PostgREST geschrieben wird — eine Regel in einer von drei
+--     Routen ist keine Regel. Die Zulassung erteilt die KRANKENKASSE, nicht die
+--     Datenannahmestelle.
 --   ⚠️ Name ist türkisch ("terapeut"), nicht "therapeut". Nicht verwechseln
 --      mit therapist_certificates (das sind MT/MLD/KGG-Qualifikationen).
 

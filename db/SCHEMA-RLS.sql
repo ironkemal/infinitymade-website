@@ -1,7 +1,106 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-18 — 0025_abrechnung_status_manuell
+-- ERZEUGT AM:        2026-09-20 — 0035_datenaustausch_zaehler_rpc_revoke
+--                    (Sicherheitskorrektur, am selben Tag unmittelbar nach
+--                    0026-0034 gefunden und geschlossen. Fuer die Zaehler dieser
+--                    Datei eine NULL-Aenderung: keine Policy, keine Funktion,
+--                    kein Trigger, kein Index — ausschliesslich EXECUTE-ACLs.
+--                    BEFUND (Advisor-Lints 0028/0029): die drei SECURITY-
+--                    DEFINER-Funktionen aus 0029 waren fuer `anon` UND
+--                    `authenticated` per POST /rest/v1/rpc/<name> aufrufbar.
+--                    Der Mandant kommt bei allen dreien als ARGUMENT und wird
+--                    nicht gegen auth.uid() geprueft — ein Fremder haette die
+--                    Nummernfolge einer anderen Praxis weiterdrehen oder per
+--                    _vorstellen() auf einen beliebigen Wert ziehen koennen.
+--                    Aus derselben Nummer entsteht ueber
+--                    buildSammelRechnungsnummer() auch die Rechnungsnummer, es
+--                    beisst also §302 UND GoBD. Exakt der Angriffsweg von S-24.
+--                    ⚠️ WARUM 0029 ES NICHT VERHINDERT HAT — der eigentliche
+--                    Fund, und er korrigiert die Lehre aus 0024:
+--                    0029 ENTHIELT `REVOKE ... FROM PUBLIC`, und das hat auch
+--                    gewirkt (der `=X/postgres`-Eintrag fehlte in der Messung).
+--                    Die Rechte von anon/authenticated kamen hier NICHT ueber
+--                    PUBLIC, sondern als EIGENE Grants aus ALTER DEFAULT
+--                    PRIVILEGES. Live gegengemessen (pg_default_acl,
+--                    defaclobjtype='f', Schema public, Grantor postgres):
+--                      {postgres=X, anon=X, authenticated=X, service_role=X}
+--                    Supabase vergibt also auf JEDE neu angelegte Funktion in
+--                    `public` explizites EXECUTE an anon und authenticated.
+--                    Damit gibt es ZWEI Wege, nicht einen:
+--                      • Bestandsfunktionen tragen oft PUBLIC (`=X/`) — 0024.
+--                      • Neue Funktionen tragen explizite Rollen-Grants — 0035.
+--                    Wer nur einen schliesst, schliesst nichts.
+--                    MITGENOMMEN (kleinerer Teil): die drei am 20.09.2026 neu
+--                    entstandenen TRIGGERFUNKTIONEN
+--                    podologie_behandlungen_festschreibung/_kein_delete (0026,
+--                    dort stand sogar ein ausdrueckliches GRANT ALL ... TO anon)
+--                    und fn_abrechnung_uebermittlung_festschreibung (0034)
+--                    trugen die Rechte entgegen 0024 wieder. PostgREST stellt
+--                    Funktionen mit RETURNS trigger gar nicht als RPC bereit —
+--                    kein Angriffsweg, aber eine Regel, die nach drei Tagen
+--                    still wieder aufgeht, ist keine Regel.
+--                    NACHWEIS, live und vollstaendig zurueckgerollt: nach dem
+--                    REVOKE feuern beide podologie-Trigger unveraendert (UPDATE
+--                    wirft "unveraenderlich (§ 630f...)", DELETE wirft "kann
+--                    nicht geloescht werden") — PostgreSQL prueft EXECUTE auf
+--                    Triggerfunktionen bei CREATE TRIGGER, nicht bei jedem
+--                    Feuern. Dieselbe Mechanik wie bei 0024, erneut gemessen.
+--                    ACL aller sechs danach: {postgres=X, service_role=X} —
+--                    identisch zu naechste_nummer.
+--                    Advisor danach: die drei Funktionen sind aus
+--                    anon_security_definer_function_executable (8 Reste) und
+--                    authenticated_... (9 Reste) verschwunden; die Reste sind
+--                    genau die in 0024 bewusst stehengelassenen Ausnahmen.
+--                    ⚠️ tools/check-security-definer-grants.mjs hat NICHT wegen
+--                    einer Luecke in der Namensliste versagt — alle drei standen
+--                    seit 0029 darauf. Das PRUEFMUSTER verlangte nur "FROM
+--                    PUBLIC", und genau das stand in 0029. Das Tor war gruen und
+--                    das Loch offen. Im selben Commit verlangt es zusaetzlich
+--                    anon und authenticated; gegen 0029 nachgestellt, es schlaegt
+--                    jetzt rot aus, gegen 0001/0002 bleibt es gruen.
+--                    ✅ Im SaaS angewendet 20.09.2026 (MCP).
+--                    davor: 2026-09-20 — 0026 bis 0034 (§302-Echtbetrieb, Faz 1)
+--                    (Neun Migrationen am 20.09.2026 live angewendet (MCP).
+--                    Der inhaltliche Teil steht im Kopf von db/SCHEMA.sql;
+--                    fuer DIESE Datei aendern sich vier Zaehler:
+--                      Policies    172 -> 175
+--                        + betriebsart_empfaenger_owner_all       (0031, ALL)
+--                        + kostentraeger_anschriften_read_all     (0032, SELECT)
+--                        + "Abrechnung uebermittlung select scoping" (0034, SELECT)
+--                      Funktionen   78 -> 84
+--                        + podologie_behandlungen_festschreibung  (0026)
+--                        + podologie_behandlungen_kein_delete     (0026)
+--                        + naechste_datenaustauschreferenz        (0029, SEC DEF)
+--                        + naechste_transfernummer                (0029, SEC DEF)
+--                        + datenaustausch_zaehler_vorstellen      (0029, SEC DEF)
+--                        + fn_abrechnung_uebermittlung_festschreibung (0034)
+--                      Trigger      78 -> 81
+--                        + trg_podologie_behandlungen_festschreibung (0026)
+--                        + trg_podologie_behandlungen_kein_delete    (0026)
+--                        + trg_abrechnung_uebermittlung_festschreibung (0034)
+--                      Indizes     318 -> 325
+--                        +1 PK datenaustausch_zaehler (0029)
+--                        +1 PK betriebsart_empfaenger (0031)
+--                        +2 PK + UNIQUE kostentraeger_anschriften (0032)
+--                        +3 PK + abr_uebermittlung_owner_zeit_idx +
+--                           abr_uebermittlung_abrechnung_idx (0034)
+--                    ⚠️ ZWEI Stellen, die beim Lesen leicht falsch verstanden
+--                    werden:
+--                    (1) `datenaustausch_zaehler` (0029) hat RLS AN und
+--                        BEWUSST KEINE POLICY — deshalb steigt die Policy-Zahl
+--                        nur um drei, obwohl vier Tabellen dazukamen. Gleiches
+--                        Muster wie `nummernkreise` und `kiosk_pins`.
+--                    (2) ⚠️ KORRIGIERT AM SELBEN TAG, siehe 0035 oben. Hier stand
+--                        zunaechst, die drei SECURITY-DEFINER-Funktionen aus 0029
+--                        haetten "von Anfang an KEIN EXECUTE fuer PUBLIC/anon/
+--                        authenticated". Das war FALSCH und der Irrtum ist
+--                        lehrreich genug, um stehen zu bleiben: 0029 revoked nur
+--                        FROM PUBLIC, und das griff auch — anon und authenticated
+--                        hatten ihr EXECUTE aber als EIGENEN Grant aus den
+--                        Default Privileges. Gemessen, nicht vermutet.
+--                    ✅ Im SaaS angewendet 20.09.2026 (MCP).
+--                    davor: 2026-09-18 — 0025_abrechnung_status_manuell
 --                    (Ops-Karte #310. Fuer DIESE Datei eine Null-Aenderung:
 --                    die Migration legt zwei nullable Spalten samt FK an
 --                    `prescriptions` an, keine neue Policy, keine neue
@@ -453,7 +552,11 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            172 RLS-Policies · 318 Indizes · 78 Trigger · 78 Funktionen
+-- UMFANG:            175 RLS-Policies · 325 Indizes · 81 Trigger · 84 Funktionen
+--                    (20.09.2026 live gezaehlt, Stand 0034. Die Herleitung aller
+--                     vier Deltas steht im Kopf; sie gehen restlos auf die neun
+--                     Migrationen auf.)
+--                    davor: 172 · 318 · 78 · 78
 --                    (17.09.2026 live gezaehlt, 0023_aerzte_ausfall_team_insert:
 --                     Policies 169 -> 172 (zwei auf `aerzte`, eine auf
 --                     `ausfallrechnungen`). Indizes, Trigger und Funktionen
@@ -579,12 +682,23 @@
 
 
 -- =====================================================================
--- 2. RLS-POLICIES (172, siehe UMFANG im Kopf)
+-- 2. RLS-POLICIES (175, siehe UMFANG im Kopf)
 -- =====================================================================
 
 -- abrechnung
 --   abrechnung_owner_all [ALL]
 --     USING (auth.uid() = owner_id OR auth.uid() IN (SELECT id FROM profiles WHERE owner_id = abrechnung.owner_id))
+
+-- abrechnung_uebermittlung                                    (20.09.2026, 0034)
+--   Abrechnung uebermittlung select scoping [SELECT / authenticated]
+--     USING (auth.uid() = owner_id OR auth.uid() IN (SELECT id FROM profiles WHERE owner_id = abrechnung_uebermittlung.owner_id))
+--   ⚠️ KEINE INSERT-/UPDATE-/DELETE-Policy: geschrieben wird ausschliesslich mit
+--      service_role aus dem Backend. DELETE blockt zusaetzlich der Trigger
+--      (2 Jahre Aufbewahrungspflicht, Anlage 1 TP5 Kap. 3(2)).
+--   ⚠️ Bewusst NICHT komplett verschlossen wie `nummernkreise` — Bedingung von
+--      `onprem`: in der Kundenbox muss der Inhaber die Frage "wann ist diese
+--      Datei rausgegangen" am EIGENEN Bildschirm beantworten koennen, wir
+--      kommen dort nicht hinein. Genau dafuer ist die SELECT-Policy da.
 
 -- abrechnung_zeile                                            (09.09.2026)
 --   Abrechnungszeile select scoping [SELECT]
@@ -676,6 +790,13 @@
 --   Belegliste insert scoping [INSERT] owner + Team
 --   ⚠️ KEIN UPDATE/DELETE — GoBD. Trigger prevent_belegliste_mod() blockt zusätzlich.
 
+-- betriebsart_empfaenger                                      (20.09.2026, 0031)
+--   betriebsart_empfaenger_owner_all [ALL]
+--     USING (auth.uid() = owner_id OR auth.uid() IN (SELECT id FROM profiles WHERE owner_id = betriebsart_empfaenger.owner_id))
+--   Die Ausnahme je Datenannahmestelle zur praxisweiten
+--   terapeut_zertifikat.betriebsart. Der Riegel gegen eine verfruehte Echtdatei
+--   ist KEIN Policy-Thema, sondern ein CHECK (siehe db/SCHEMA.sql).
+
 -- booking_leistungen
 --   booking_leistungen_owner_all [ALL] owner + Team (eigene owner_id, kein Join
 --   auf bookings — dort liegen acht ueberlappende Policies, die hier niemand
@@ -736,6 +857,15 @@
 
 -- data_sharing_settings
 --   dss_select [SELECT] owner + Team · dss_insert/update [.] owner_id = auth.uid()
+
+-- datenaustausch_zaehler   ⚠️ RLS AKTIV, ABER BEWUSST OHNE POLICY (20.09.2026, 0029)
+--   Keine einzige Policy — dasselbe Muster wie `nummernkreise` und
+--   `kiosk_pins`. Kein Client, kein PostgREST: angefasst wird der Zaehler nur
+--   ueber naechste_datenaustauschreferenz(), naechste_transfernummer() und
+--   datenaustausch_zaehler_vorstellen() (alle SECURITY DEFINER, EXECUTE nur
+--   fuer service_role).
+--   ⛔ Wer hier eine "fehlende" Policy ergaenzt, oeffnet einen Nummernkreis, aus
+--      dem ueber buildSammelRechnungsnummer() auch Rechnungsnummern entstehen.
 
 -- demo_bookings
 --   anon can insert demo_bookings [INSERT / anon] CHECK (true)
@@ -806,6 +936,12 @@
 
 -- invoices
 --   owner_and_employee_invoices [ALL] owner + Team
+
+-- kostentraeger_anschriften                                   (20.09.2026, 0032)
+--   kostentraeger_anschriften_read_all [SELECT] USING (auth.role() = 'authenticated')
+--   Postanschriften aus dem ANS-Segment — Referenzdaten wie
+--   kostentraeger_annahmestellen, keine Patientendaten, deshalb ohne
+--   Mandantenfilter und bewusst NICHT fuer anon.
 
 -- krankenkassen
 --   Allow authenticated read [SELECT / authenticated] USING (true)
@@ -1043,7 +1179,7 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (78 eigene = alles in `public`, was keiner Extension gehört;
+-- 3. FUNKTIONEN (84 eigene = alles in `public`, was keiner Extension gehört;
 --    PostGIS-Funktionen sind deshalb ausgelassen)
 -- =====================================================================
 
@@ -1292,6 +1428,32 @@ $function$;
 --      Funktion ihr Vorbild ist, nicht ihr Nachfolger (eigener Name fuer die
 --      richtige Fehlermeldung, gleiches Muster wie bei den anderen
 --      prevent_*_mod()-Funktionen oben).
+-- podologie_behandlungen_festschreibung() -> trigger         (20.09.2026, 0026)
+-- podologie_behandlungen_kein_delete()    -> trigger         (20.09.2026, 0026)
+--   Die Behandlungsdokumentation der Podologie wird unveraenderlich.
+--   Grundlage: § 630f Abs. 1 S. 2 BGB (eine Aenderung muss den urspruenglichen
+--   Inhalt erkennbar lassen) und BGH VI ZR 84/19 ("Durchstreichen statt
+--   Radieren" — eine Dokumentation ohne sichtbare Aenderungshistorie hat keinen
+--   Beweiswert). Entscheidung K3 von `legal-de`.
+--   ⚠️ ZWEI Unterschiede zum Vorbild prescriptions_festschreibung():
+--      (a) KEIN Tor. 0020 laesst alles durch, solange belegnummer IS NULL
+--          (Entwurf). Hier gibt es kein Tor — die Frist beginnt mit der
+--          AUFZEICHNUNG, nicht mit der Abrechnung. Ein Schutz an
+--          `invoice_id IS NOT NULL` liesse genau das Fenster offen, das die
+--          Norm schliessen will.
+--      (b) DELETE wirft. 0020 tut das bewusst nicht, dort haengt der
+--          DSGVO-Loeschweg dran.
+--   ⛔ Kein Kulanzfenster. Auch "5 Minuten lang loeschbar" waere nicht gedeckt.
+--   ★ Korrektur = Stornierung (storniert_am + storno_grund + storniert_von) und
+--     daneben eine NEUE Zeile. Eine Stornierung ist nicht zuruecknehmbar.
+--   ★ verordnung_id und employee_id duerfen auf NULL, aber nicht auf einen
+--     anderen Wert: beide FKs stehen auf ON DELETE SET NULL. invoice_id bleibt
+--     ganz offen (Rechnungsbruecke).
+--   ⛔ FOLGE AUSSERHALB DER DB: `podologie_behandlungen` musste im selben Schritt
+--     aus DELETE_TABLES in api/dsgvo.js heraus — sonst endet jede Kontoloeschung
+--     in einer 500. In USER_TABLES (Auskunft) bleibt die Tabelle.
+--   SECURITY INVOKER, SET search_path = public.
+
 -- prescriptions_festschreibung() -> trigger  (seit 17.09.2026, Ops #167)
 --   GoBD/§302-Festschreibung fuer `prescriptions` — schliesst die Luecke, die
 --   `verordnung_festschreibung()` hinterlassen hat (siehe oben), UND schuetzt
@@ -1395,6 +1557,57 @@ $function$;
 --      war ein PostgREST-„function not found" auf dem Geld-Pfad. Wer die
 --      Signatur aendert, deployt SQL und Backend zusammen.
 
+
+-- naechste_datenaustauschreferenz(p_owner, p_absender_ik, p_empfaenger_ik)
+--                                        -> integer        [SECURITY DEFINER]
+-- naechste_transfernummer(p_owner, p_absender_ik, p_empfaenger_ik)
+--                                        -> integer        [SECURITY DEFINER]
+-- datenaustausch_zaehler_vorstellen(p_owner, p_absender_ik, p_empfaenger_ik,
+--                                   p_referenz, p_transfernummer) -> void
+--                                                          [SECURITY DEFINER]
+--   (20.09.2026, 0029) Die §302-Nummernvergabe. Gleiche Bauart wie
+--   naechste_nummer(): INSERT .. ON CONFLICT DO UPDATE .. RETURNING sperrt die
+--   Zeile, zwei gleichzeitige Einreichungen bekommen verschiedene Nummern.
+--   ⚠️ Beide Zaehler laufen JE PAAR (Absender-IK, Empfaenger-IK), nicht je
+--      owner_id — die Folge ist an der IK fortlaufend, nicht am Konto
+--      (Anlage 1 TP5 V21 Kap. 5.4/7.2).
+--   ⚠️ Es sind ZWEI verschiedene Nummern. Die Transfernummer wurde frueher aus
+--      der Datenaustauschreferenz abgeleitet (builder.js, Modulo) — genau das,
+--      wovon die Spezifikation sagt, sie habe "keinen Bezug zur lfd. Nr. des
+--      Vorlaufsatzes". Referenz: monoton, ohne Jahresruecksetzung, 5-stellig
+--      erst bei der Ausgabe. Transfernummer: 0..999 im Kreis (GGT Anlage 2).
+--   ★ _vorstellen() geht NUR VORWAERTS (greatest(...)). Es ist der Heilungsweg
+--      fuer die drei Faelle aus onprem O-115: Umzug SaaS -> Box (leere Tabelle,
+--      der Zaehler begaenne bei 1 und vergaebe Referenzen ein zweites Mal),
+--      restore.sh (dreht den Zaehler zurueck) und Migration. Ein Ruecksetzen
+--      waere genau der Schaden, gegen den der Zaehler gebaut ist.
+--   ⛔ Vergabe aus der Zentrale ist ausgeschlossen (neue Typ-A-Abhaengigkeit;
+--      eine Box ohne Netz koennte keine Rechnung mehr schreiben).
+--   EXECUTE: {postgres=X, service_role=X} — anon und authenticated haben KEINS.
+--   ⚠️ Das war NICHT von Anfang an so. 0029 revoked nur FROM PUBLIC; anon und
+--      authenticated behielten ihr EXECUTE als eigenen Grant aus den Default
+--      Privileges und konnten die Funktionen drei Tage lang ueber
+--      POST /rest/v1/rpc/<name> aufrufen. Geschlossen hat das erst
+--      0035_datenaustausch_zaehler_rpc_revoke (20.09.2026, Details im Kopf).
+--      Wer diese Funktionen je per DROP+CREATE ersetzt, braucht ALLE DREI
+--      REVOKEs (PUBLIC, anon, authenticated) — FROM PUBLIC allein genuegt nicht.
+
+-- fn_abrechnung_uebermittlung_festschreibung() -> trigger    (20.09.2026, 0034)
+--   Unveraenderlichkeit der gesetzlichen Uebermittlungsdokumentation
+--   (Anlage 1 TP5 Kap. 3(2), mindestens 2 Jahre). DELETE wirft immer.
+--   Beim UPDATE drei Gruppen: gesperrt (Identitaet, Nummern, Partner,
+--   Zeitpunkt, Groesse, sha256, betriebsart, owner_id, abrechnung_id),
+--   einmalig ergaenzbar (beendet_am, antwort_auf, uebertragungsweg) und frei
+--   (fehlerstatus, fehlertext, verarbeitungskennzeichen, partner_name,
+--   verarbeitungshinweise).
+--   ⚠️ business_id und created_by stehen mit ABSICHT in keiner Liste: beide
+--      haengen an ON DELETE SET NULL, PG fuehrt das als UPDATE aus — waeren sie
+--      gesperrt, liesse sich weder ein Standort noch ein Konto mehr loeschen.
+--      Dieselbe Falle wie bei podologie_behandlungen.
+--   ★ verarbeitungshinweise ist VOLLSTAENDIG frei, weil es in der Kundenbox
+--      keinen SQL-Zugang gibt (O-114): laeuft etwas schief, muss die Korrektur
+--      eine zusaetzliche NOTIZ sein koennen — sonst gibt es gar keinen Weg.
+--   SECURITY INVOKER, SET search_path = public.
 
 -- fn_abrechnung_zeile_festschreibung() -> trigger            (09.09.2026)
 --   GoBD-/§-302-Festschreibung auf abrechnung_zeile. DELETE wirft immer.
@@ -1511,7 +1724,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (78, siehe UMFANG im Kopf)
+-- 4. TRIGGER (81, siehe UMFANG im Kopf)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -1622,6 +1835,20 @@ $function$;
 --                             vom Aufrufer, weil eine Datei zu genau einem
 --                             Standort gehoert und ein Default hier die falsche
 --                             Zuordnung still festschreiben wuerde.
+--   podologie_behandlungen trg_podologie_behandlungen_festschreibung BEFORE UPDATE   (20.09.2026)
+--                         trg_podologie_behandlungen_kein_delete      BEFORE DELETE
+--                         → § 630f Abs. 1 S. 2 BGB: DELETE wirft BEDINGUNGSLOS,
+--                           UPDATE wirft bei jeder inhaltlichen Aenderung.
+--                           Korrektur = Storno + neue Zeile. Details im
+--                           Funktionsabschnitt. ⛔ Deshalb steht die Tabelle
+--                           nicht mehr in DELETE_TABLES von api/dsgvo.js.
+--   abrechnung_uebermittlung trg_abrechnung_uebermittlung_festschreibung
+--                                                        BEFORE DELETE OR UPDATE  (20.09.2026)
+--                         → fn_abrechnung_uebermittlung_festschreibung(): DELETE
+--                           wirft immer (2 Jahre Aufbewahrungspflicht);
+--                           beim UPDATE bleiben Fehlerstatus, Freitexte und
+--                           partner_name offen, beendet_am/antwort_auf/
+--                           uebertragungsweg lassen sich genau einmal ergaenzen.
 --   feedbacks             trg_feedback_telegram          AFTER INSERT
 --   referral_drafts       trigger_notify_new_referral_draft AFTER INSERT
 --
@@ -1648,6 +1875,13 @@ CREATE INDEX idx_abrechnung_zeile_beleg ON public.abrechnung_zeile USING btree (
 CREATE INDEX idx_abrechnung_zeile_rx ON public.abrechnung_zeile USING btree (prescription_id) WHERE (prescription_id IS NOT NULL);
 CREATE INDEX idx_abrechnung_zahlung_datei ON public.abrechnung_zahlung USING btree (abrechnung_id, datum);
 CREATE INDEX idx_abrechnung_zahlung_owner ON public.abrechnung_zahlung USING btree (owner_id, datum DESC);
+-- abrechnung_uebermittlung (20.09.2026, 0034). Zwei Fragen: "was ist bei
+-- diesem Inhaber wann rausgegangen" (owner_zeit, absteigend — der Bildschirm
+-- zeigt das Neueste zuerst) und "welche Transporte gehoeren zu DIESER Datei"
+-- (abrechnung). Der zweite ist partiell, weil eingehende Rueckmeldungen ohne
+-- abrechnung_id ankommen koennen.
+CREATE INDEX abr_uebermittlung_owner_zeit_idx ON public.abrechnung_uebermittlung USING btree (owner_id, begonnen_am DESC);
+CREATE INDEX abr_uebermittlung_abrechnung_idx ON public.abrechnung_uebermittlung USING btree (abrechnung_id) WHERE (abrechnung_id IS NOT NULL);
 CREATE INDEX idx_aerzte_business ON public.aerzte USING btree (business_id);
 CREATE INDEX idx_aerzte_lanr ON public.aerzte USING btree (owner_id, lanr) WHERE (lanr IS NOT NULL);
 CREATE INDEX idx_aerzte_owner ON public.aerzte USING btree (owner_id);

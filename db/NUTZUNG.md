@@ -3,12 +3,11 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-20 · 89 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-18), funktionen/INDEX.json (erzeugt 2026-09-20)
+**Erzeugt:** 2026-09-20 · 93 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-20), funktionen/INDEX.json (erzeugt 2026-09-20)
 
 ## Kayıt durumu
 
-- Register kaydı olan: **89/89**
-- 🧹 **Register içinde var, şemada yok (4):** `datenaustausch_zaehler`, `betriebsart_empfaenger`, `kostentraeger_anschriften`, `abrechnung_uebermittlung`
+- Register kaydı olan: **93/93**
 
 ## Kodda hiç çağrılmayan tablolar
 
@@ -20,6 +19,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 |---|---|---|
 | `accommodations` | 2 | fremd |
 | `applications` | 2 | fremd |
+| `datenaustausch_zaehler` | 3 | aktiv — ✅ **am 20.09.2026 live angewandt** (MCP, zusammen mit 0026–0034). Die Tabelle ist noch leer: die erste Zeile entsteht, sobald die erste Datei unter dem neuen Verfahren erzeugt wird. Ein rückwirkender Backfill aus dem Bestand wurde bewusst **nicht** gemacht — die Altzeilen tragen keinen `empfaenger_ik`, eine je Paar aufgebaute Folge wäre geraten, nicht gewusst. Wer den Zähler vor dem ersten Lauf setzen will, nimmt `datenaustausch_zaehler_vorstellen()`. |
 | `dta_schluessel` | 4 | Referenz, im Code ungenutzt |
 | `fußstatus` | 3 | veraltet |
 | `heilmittel_catalog` | 2 | veraltet |
@@ -27,7 +27,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `heilmittel_tarif` | 4 | **veraltet** (13.09.2026, O-96 — siehe `onprem/REGISTER.md`) |
 | `icd10_titles` | 7 | aktiv (Referenz) |
 | `icd_sector_ranges` | 3 | aktiv (Referenz) |
-| `nummernkreise` | 3 | aktiv |
+| `nummernkreise` | 6 | aktiv |
 | `praxura_migrations` | 5 | aktiv |
 | `referral_drafts` | 9 | verdächtig |
 | `spatial_ref_sys` | 1 | System |
@@ -37,11 +37,11 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 
 ## DSGVO-Abdeckung (`api/dsgvo.js`)
 
-Auskunft (Art. 15): **59** · Löschung (Art. 17): **48** · anonymisiert statt gelöscht: **2**
+Auskunft (Art. 15): **59** · Löschung (Art. 17): **49** · anonymisiert statt gelöscht: **2**
 
 ⚠️ Personenbezug (FK auf `leads`/`profiles`/`auth.users`) aber **nicht** in der Auskunftsliste:
 
-`accommodations`, `admin_users`, `applications`, `booking_status_korrekturen`, `praxura_setup`
+`accommodations`, `admin_users`, `applications`, `booking_status_korrekturen`, `datenaustausch_zaehler`, `praxura_setup`
 
 Prüfen, nicht blind nachtragen: manche davon sind Konfigurations- oder
 Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
@@ -71,16 +71,16 @@ Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
 | `working_hours` | 3 | 11 | 8 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 | `abrechnung` | 2 | 4 | 6 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 | `b2b_contacts` | 2 | 1 | 2 | abrechnung, anamnese, b2b, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
+| `betriebsart_empfaenger` | 2 | 2 | 2 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 | `email_logs` | 2 | 0 | 2 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 | `employee_scope_overrides` | 2 | 1 | 1 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 | `messreihen` | 2 | 0 | 1 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
-| `module_visibility` | 2 | 1 | 2 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 
 ## Alle Tabellen
 
 ### `abrechnung`
 
-22 Spalten · Status: aktiv
+32 Spalten · Status: aktiv
 Warum: Der Abrechnungslauf als Ganzes: eine Sammelrechnung an einen Kostenträger, mit DTA-Datei, Signaturzustand, Upload- und Zahlungsdatum. Ohne diesen Kopfsatz gäbe es keinen Bezugspunkt für Absetzungen.
 
 **Schreibt (2):** `downloadAbrechnungFile()` [update] — module/abrechnung-detail.js:666 · `verworfeneNummerFesthalten()` [insert] — api-backend/billing/api/verworfen.js:126
@@ -90,6 +90,15 @@ Warum: Der Abrechnungslauf als Ganzes: eine Sammelrechnung an einen Kostenträge
 **Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/verworfen.js`, `dashboard.js`, `module/abrechnung-detail.js`, `module/abrechnung-verlauf.js`
 
 **Module:** abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen
+
+### `abrechnung_uebermittlung`
+
+25 Spalten · Status: aktiv, aber **noch nicht angeschlossen** — ✅ Migration am 20.09.2026 live angewandt (MCP); der Versandweg selbst entsteht erst in Faz 2, die Tabelle ist deshalb leer. Die Tabelle und ihre Schreibfunktion existieren vorab, damit niemand die Dokumentation später rückwirkend erfinden muss.
+Warum: Anlage 1 TP5 Kap. 3(2) schreibt vor: *„Über den Datenaustausch ist eine Dokumentation zu führen … mindestens **2 Jahre** aufzubewahren … **alle Schritte von der Initiierung bis ggf. zur Quittierung**."* Anhang 1 § 4.5(2) zählt zehn Mindestfelder auf (physikalischer Dateiname, Erstellungsdatum, lfd. Nr., Kommunikationspartner, Beginn/Ende, Dateigröße, Verarbeitungshinweise, Senden/Empfangen, Verarbeitungskennzeichen, Fehlerstatus). **Diese Dokumentation lässt sich nicht nachträglich erzeugen** — deshalb entsteht die Tabelle, bevor der Versandschritt gebaut wird, und nicht danach.
+
+**Schreibt (1):** `uebermittlungProtokollieren()` [insert] — api-backend/billing/api/uebermittlung.js:76
+
+**Dateien:** `api-backend/billing/api/uebermittlung.js`
 
 ### `abrechnung_zahlung`
 
@@ -206,6 +215,19 @@ Warum: GoBD-Belegjournal: jeder Geldvorgang lückenlos und unveränderlich.
 **Liest (3):** `loadPatientDetailRezepte()`, `saldoFuerRezept()`, `storniereZuzahlung()`
 
 **Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/ausfall.routes.js`, `api-backend/billing/api/mahnwesen.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/zuzahlung.routes.js`, `dashboard.js`
+
+**Module:** abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen
+
+### `betriebsart_empfaenger`
+
+7 Spalten · Status: aktiv — ✅ **am 20.09.2026 live angewandt** (MCP). Die Tabelle ist leer, und das ist der Normalzustand: eine Zeile entsteht erst, wenn für eine bestimmte Datenannahmestelle vom Vorgabewert abgewichen wird.
+Warum: §302-Abrechnung: Erprobung und Zulassung zum Echtverfahren laufen nach Spezifikation (Anlage 1 TP5 V21 Kap. 2 (1)(2), Kap. 3 (1) + Kap. 8, Anhang 2 zur Anlage 1 Kap. 9 § 1/§ 5/§ 6) **zwischen Absender und Empfänger**. Ein praxisweites Einzel-Flag ist in beide Richtungen still falsch: zu früh `echt` schickt eine Echtdatei an eine Datenannahmestelle ohne Zulassung; zu spät `echt` schickt eine Testdatei an eine Datenannahmestelle mit Zulassung („löst keine Zahlungen aus" — das Geld bleibt einfach aus, es kommt keine Fehlermeldung). `gkv-302` hat deshalb am 20.09.2026 entschieden, dass die Betriebsart je Paar (Praxis-Inhaber × Datenannahmestelle) gilt. Migration 0028 (`terapeut_zertifikat.betriebsart`) bleibt als Vorgabewert erhalten, diese Tabelle ist die Ausnahme je Empfänger.
+
+**Schreibt (2):** `_speichereAusnahme()` [upsert] — module/abrechnung-einstellungen.js:783 · `wireAbrechnungSettings()` [delete] — module/abrechnung-einstellungen.js:267
+
+**Liest (2):** `_renderAusnahmenBlock()`, `ladeBetriebsart()`
+
+**Dateien:** `api-backend/billing/api/betriebsart.js`, `module/abrechnung-einstellungen.js`
 
 **Module:** abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen
 
@@ -338,6 +360,11 @@ Warum: Ein Inhaber mit mehreren Standorten muss je Datenkategorie entscheiden: g
 **Liest (1):** `loadDataSharing()`
 
 **Dateien:** `dashboard.js`
+
+### `datenaustausch_zaehler`
+
+6 Spalten · Status: aktiv — ✅ **am 20.09.2026 live angewandt** (MCP, zusammen mit 0026–0034). Die Tabelle ist noch leer: die erste Zeile entsteht, sobald die erste Datei unter dem neuen Verfahren erzeugt wird. Ein rückwirkender Backfill aus dem Bestand wurde bewusst **nicht** gemacht — die Altzeilen tragen keinen `empfaenger_ik`, eine je Paar aufgebaute Folge wäre geraten, nicht gewusst. Wer den Zähler vor dem ersten Lauf setzen will, nimmt `datenaustausch_zaehler_vorstellen()`.
+Warum: Die zwei dauerhaften Zähler des §302-Datenaustauschs. Bis zum 20.09.2026 rechneten alle drei Erzeugungsrouten `COUNT(*) + 1` über `abrechnung` — je `owner_id`, mit `created_at >= 1. Januar`. Daran war dreierlei falsch: die **Datenaustauschreferenz** (UNB 0020) läuft laut Anlage 1 TP5 V21 Kap. 5.4/7.2 je **Paar (Absender-IK, Empfänger-IK)** fort, nicht je Konto; ein Neustart ist nur beim Überlauf von 99999 erlaubt, nicht jedes Jahr; und ein `COUNT(*)` gibt eine gelöschte Nummer wieder her und kollidiert bei zwei gleichzeitigen Einreichungen. Belegter Schaden: die Reihenfolge im Korrekturverfahren bricht — eine Korrektur, die vor ihrer Erstrechnung verarbeitet wird, weist die Kasse ab (Kap. 7.2), und der Fehler ist von außen kaum zu erkennen. Rechtlich (`legal-de`, 20.09.2026) ist eine doppelte Einreichung eine **Fehlfunktion**, kein Anwenderfehler — über AGB § 9(2) haften wir dafür. Die **Transfernummer** ist ausdrücklich etwas anderes („keinen Bezug zur lfd. Nr. des Vorlaufsatzes", Anhang 1 § 4.3) und wurde bis dahin per Modulo aus genau dieser Nummer abgeleitet.
 
 ### `demo_bookings`
 
@@ -554,6 +581,15 @@ Warum: Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin 
 
 **Module:** abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, qvSaveBtn, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen
 
+### `kostentraeger_anschriften`
+
+9 Spalten · Status: aktiv (Referenz) — ✅ **am 20.09.2026 live angewandt** (MCP). Befüllt wird sie von `tools/kostentraeger-annahmestellen-laden.mjs --write` (derselbe Lauf wie die VKG-Zeilen); die Seed-Migration für die Kundenbox entsteht daraus über `tools/seed-generieren.mjs`. ZEILENSTAND_PLATZHALTER
+Warum: Die Urbelege (Verordnungen im Original) gehen **per Post** an die **Papierannahmestelle** (Verknüpfungsart **09**), nicht an die Datenannahmestelle (02/03) — Richtlinien-Text § 2(1) und § 4. Der Begleitzettel trug bis zum 20.09.2026 **keine Empfängeradresse**, weil es in der Datenbank keinen Ort dafür gab: `kostentraeger` hat nur IK und Name. Im Echtbetrieb muss der Podologe wissen, wohin der Umschlag geht.
+
+**Liest (1):** `ladePapierannahmestelle()`
+
+**Dateien:** `api-backend/billing/kostentraeger/annahmestelle.js`
+
 ### `krankenkassen`
 
 6 Spalten · Status: aktiv (Referenz) — ⛔ `ik_number` **fehlerhaft**, siehe unten
@@ -676,7 +712,7 @@ Warum: Zwischen „Formular ausgefüllt" und „bezahlt" existiert der Account n
 
 ### `podologie_behandlungen`
 
-12 Spalten · Status: aktiv
+15 Spalten · Status: aktiv
 Warum: Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions`. `verordnung_id` zeigt seit 04.09.2026 auf `prescriptions` (Zusammenlegung der Verordnungstöpfe, ids unverändert) — vorher auf die eigene Tabelle `verordnungen`.
 
 **Schreibt (3):** `behandlungenVerknuepfen()` [update] — module/rechnung-bruecke.js:182 · `behandlungStornieren()` [update] — module/podo-storno.js:80 · `loadPodologieBilling()` [insert] — module/podologie-abrechnung.js:446
@@ -803,7 +839,7 @@ Warum: Systemtabelle der PostGIS-Erweiterung (Koordinatensysteme). Kam mit `enab
 
 ### `terapeut_zertifikat`
 
-10 Spalten · Status: aktiv
+15 Spalten · Status: aktiv
 Warum: Das **Signaturzertifikat** für die §302-Einreichung (PKCS#7). Ohne gültiges Zertifikat lässt sich keine DTA-Datei signieren.
 
 **Schreibt (2):** `_speichereBetriebsart()` [upsert] — module/abrechnung-einstellungen.js:471 · `wireAbrechnungSettings()` [upsert] — module/abrechnung-einstellungen.js:267
