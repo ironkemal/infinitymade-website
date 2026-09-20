@@ -116,6 +116,7 @@ const USER_TABLES = [
   { table: 'ueberweisungen',               filter: 'owner_id'  },
   { table: 'referral_drafts',              filter: 'owner_id'  },
   { table: 'terapeut_zertifikat',          filter: 'owner_id'  },
+  { table: 'betriebsart_empfaenger',       filter: 'owner_id'  },
   // `employee_groups` hat kein `owner_id`, nur `business_id`.
   { table: 'employee_groups',              filter: 'businesses.owner_id',
     select: '*,businesses!inner(owner_id)' },
@@ -283,7 +284,7 @@ const DELETE_TABLES = [
   'patient_notes', 'anamnese', 'prescription_validations', 'prescription_sessions',
   'prescriptions', 'zuzahlung_befreiung', 'zuzahlung_guthaben',
   'referral_drafts', 'ueberweisungen',
-  'aerzte', 'b2b_contacts', 'leads', 'fahrten', 'vehicles', 'terapeut_zertifikat',
+  'aerzte', 'b2b_contacts', 'leads', 'fahrten', 'vehicles', 'terapeut_zertifikat', 'betriebsart_empfaenger',
   // `booking_leistungen` vor `bookings` UND vor `services` — CASCADE räumt es
   // ohnehin ab, aber eine stille Lücke in dieser Liste war am 28.08.2026 schon
   // einmal der Fehler.
@@ -297,6 +298,19 @@ const DELETE_TABLES = [
 
   'employee_business_assignments', 'employee_groups', 'businesses', 'user_preferences',
 
+  // ⛔ BEWUSST NICHT HIER, weil dort gar keine Personendaten liegen:
+  //   `datenaustausch_zaehler` — zwei Institutionskennzeichen und zwei ganze
+  //                       Zahlen, sonst nichts. Der Unterschied zu
+  //                       `nummernkreise` (das oben steht und gelöscht wird)
+  //                       ist der Schlüssel: dort ist er `owner_id`-basiert,
+  //                       hier `(absender_ik, empfaenger_ik)`. Die Folge hängt
+  //                       an der IK, nicht am Konto — und sie darf nie
+  //                       zurückgehen, sonst ginge dieselbe
+  //                       Datenaustauschreferenz ein zweites Mal an die Kasse.
+  //                       Aus demselben Grund steht der Fremdschlüssel auf
+  //                       `ON DELETE SET NULL` (Migration 0029): die Zeile
+  //                       überlebt das Konto bewusst.
+  //
   // ⛔ BEWUSST NICHT HIER, weil es eine Rechtsfrage ist und keine technische:
   //   `belegliste`      — Fremdschlüssel auf `profiles` ist RESTRICT, also
   //                       ausdrücklich als Sperre gebaut. GoBD/§ 147 AO.

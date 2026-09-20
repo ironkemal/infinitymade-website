@@ -41,8 +41,15 @@ import {
   legsFuer, LEGS_BY_FACHBEREICH,
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
 } from '../codes/legs.js';
+// § 302-Echtbetrieb, Schritt 1.7 — Betriebsart je (Inhaber × Datenannahmestelle).
+import { ladeBetriebsart } from './betriebsart.js';
 
 const router = express.Router();
+// ⚠️ Bewusst OHNE Absicherung auf fehlende Umgebungsvariablen: fehlen sie,
+// wirft `createClient` beim Import und der Container stirbt laut (server.js:166
+// `process.exit(1)`). Genau das ist gewollt — ein Backend, das ohne
+// service-role-Schluessel weiterlaeuft, beantwortet Abrechnungsanfragen mit
+// kryptischen Fehlern statt gar nicht erst zu starten.
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -61,17 +68,11 @@ function sha256Hex(buf) {
   return createHash('sha256').update(buf).digest('hex');
 }
 
-// § 302-Echtbetrieb, Schritt 1.7 (onprem O-117).
-// Welche Betriebsart gilt fuer diese Praxis? Kommt aus der Datenbank, NICHT
-// aus einer Umgebungsvariablen: im SaaS wuerde eine Variable alle Mandanten
-// gleichzeitig umstellen, und in der Kundenbox koennte sie niemand aendern.
-// Der Riegel "echt nur mit Zulassung" steht als CHECK in Migration 0028; hier
-// wird nur gelesen, und im Zweifel ist die Antwort 'test'.
-const BETRIEBSARTEN = new Set(['test', 'erprobung', 'echt']);
-function betriebsartAus(cert) {
-  const b = String(cert?.betriebsart || '').trim();
-  return BETRIEBSARTEN.has(b) ? b : 'test';
-}
+// § 302-Echtbetrieb, Schritt 1.7 — Betriebsart je Paar (Inhaber × Datenannahmestelle).
+//
+// Die Aufloesung liegt in `./betriebsart.js`, nicht hier. Grund steht dort im
+// Kopf: sie ist ohne Datenbank pruefbar, und dafuer darf der service-role-
+// Riegel oben nicht aufgeweicht werden.
 
 // § 302-Echtbetrieb, Schritt 1.9 (b) — Rechnungsart.
 //
@@ -687,12 +688,22 @@ router.post('/abrechnung/create', async (req, res) => {
     }
 
     // ---- therapist cert / IK ----
-    let { data: cert } = await supabase
+    let { data: cert, error: certErr } = await supabase
       .from('terapeut_zertifikat')
       // `betriebsart` seit Migration 0028 — test | erprobung | echt (Schritt 1.7).
-      .select('ik_nummer, cert_subject, cert_valid_to, betriebsart')
+      // `zulassung_referenz`, `zulassung_datum` für Echtabrechnungs-Riegel (Migration 0031).
+      .select('ik_nummer, cert_subject, cert_valid_to, betriebsart, zulassung_referenz, zulassung_datum')
       .eq('owner_id', tenantId)
       .maybeSingle();
+
+    if (certErr && /column|does not exist|42703/i.test(String(certErr.message || certErr.code || ''))) {
+      const fallback = await supabase
+        .from('terapeut_zertifikat')
+        .select('ik_nummer, cert_subject, cert_valid_to')
+        .eq('owner_id', tenantId)
+        .maybeSingle();
+      cert = fallback.data;
+    }
 
     // Fallback: profiles.ik_number (legacy DMRZ field). If present, materialize
     // a terapeut_zertifikat row so subsequent calls find it.
@@ -830,7 +841,9 @@ router.post('/abrechnung/create', async (req, res) => {
       ownerId: tenantId, absenderIk: cert.ik_nummer, empfaengerIk: dasIk,
     });
     const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
-    const betriebsart = betriebsartAus(cert);
+    // Schritt 1.7 (20.09.2026): Betriebsart je Paar (Inhaber x Datenannahmestelle).
+    // Ausnahme in betriebsart_empfaenger hat Vorrang vor dem Vorgabewert aus terapeut_zertifikat.
+    const betriebsart = await ladeBetriebsart({ ownerId: tenantId, empfaengerIk: dasIk, cert, db: supabase });
 
     // ---- map prescriptions ----
     const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tenantSector));
@@ -2792,10 +2805,18 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     const sperreUebersteuert = new Set(Array.isArray(sperrenIgnoriert) ? sperrenIgnoriert : []);
 
     // ---- cert / IK ----
-    let { data: cert } = await supabase
+    let { data: cert, error: certErr } = await supabase
       .from('terapeut_zertifikat')
-      .select('ik_nummer, cert_subject, cert_valid_to, betriebsart')   // betriebsart: Migration 0028
+      .select('ik_nummer, cert_subject, cert_valid_to, betriebsart, zulassung_referenz, zulassung_datum')   // betriebsart: Migration 0028, zulassung: 0031
       .eq('owner_id', tenantId).maybeSingle();
+    if (certErr && /column|does not exist|42703/i.test(String(certErr.message || certErr.code || ''))) {
+      const fallback = await supabase
+        .from('terapeut_zertifikat')
+        .select('ik_nummer, cert_subject, cert_valid_to')
+        .eq('owner_id', tenantId)
+        .maybeSingle();
+      cert = fallback.data;
+    }
     if (!cert?.ik_nummer) {
       // Feldname-Tippfehler bis 10.09.2026 (wissensbank-Fund): `.select('ik_number')`
       // (Legacy-DMRZ-Feld auf `profiles`), aber danach `tp?.ik_nummer` geprüft —
@@ -3008,7 +3029,8 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       ownerId: tenantId, absenderIk: cert.ik_nummer, empfaengerIk: dasIk,
     });
     const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
-    const betriebsart = betriebsartAus(cert);
+    // Schritt 1.7 (20.09.2026): Betriebsart je Paar (Inhaber x Datenannahmestelle).
+    const betriebsart = await ladeBetriebsart({ ownerId: tenantId, empfaengerIk: dasIk, cert, db: supabase });
 
     // ---- build DTA ----
     let dta;
@@ -3375,10 +3397,23 @@ router.post('/abrechnung/korrektur', async (req, res) => {
     const bereich = istPodo ? 'podologie' : tenantSector;
 
     // ---- IK der Praxis ----
-    let { data: cert } = await supabase
-      .from('terapeut_zertifikat').select('ik_nummer, betriebsart')   // betriebsart: Migration 0028
+    let { data: cert, error: certErr } = await supabase
+      .from('terapeut_zertifikat').select('ik_nummer, betriebsart, zulassung_referenz, zulassung_datum')   // betriebsart: Migration 0028, zulassung: 0031
       .eq('owner_id', tenantId).maybeSingle();
-    if (!cert?.ik_nummer && praxisProfil.ik_number) cert = { ik_nummer: praxisProfil.ik_number, betriebsart: cert?.betriebsart };
+    if (certErr && /column|does not exist|42703/i.test(String(certErr.message || certErr.code || ''))) {
+      const fallback = await supabase
+        .from('terapeut_zertifikat').select('ik_nummer')
+        .eq('owner_id', tenantId).maybeSingle();
+      cert = fallback.data;
+    }
+    if (!cert?.ik_nummer && praxisProfil.ik_number) {
+      cert = {
+        ik_nummer: praxisProfil.ik_number,
+        betriebsart: cert?.betriebsart,
+        zulassung_referenz: cert?.zulassung_referenz,
+        zulassung_datum: cert?.zulassung_datum,
+      };
+    }
     if (!cert?.ik_nummer) return res.status(400).json({ error: 'Kein IK-Nummer hinterlegt.' });
 
     // ---- Empfänger ----
@@ -3469,7 +3504,8 @@ router.post('/abrechnung/korrektur', async (req, res) => {
       ownerId: tenantId, absenderIk: cert.ik_nummer, empfaengerIk: das.ik,
     });
     const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
-    const betriebsart = betriebsartAus(cert);
+    // Schritt 1.7 (20.09.2026): Betriebsart je Paar (Inhaber x Datenannahmestelle).
+    const betriebsart = await ladeBetriebsart({ ownerId: tenantId, empfaengerIk: das.ik, cert, db: supabase });
 
     // ---- Datei bauen ----
     let dta;

@@ -170,7 +170,16 @@ export async function renderAbrechnungSettings(deps) {
   const zulassungReferenz = data?.zulassung_referenz || '';
   const zulassungDatum = data?.zulassung_datum || '';
 
+  const mount = document.getElementById('betriebsartMount');
+  if (mount && !document.getElementById('baVorgabewertMount')) {
+    mount.innerHTML = `
+      <div id="baVorgabewertMount"></div>
+      <div id="baAusnahmenMount"></div>
+    `;
+  }
+
   _renderBetriebsartSchalter({ aktuell, geaendertAm, zulassungReferenz, zulassungDatum });
+  await _renderAusnahmenBlock(deps);
 }
 
 /**
@@ -178,7 +187,7 @@ export async function renderAbrechnungSettings(deps) {
  * Private Funktion — nur von renderAbrechnungSettings aufgerufen.
  */
 function _renderBetriebsartSchalter({ aktuell, geaendertAm, zulassungReferenz, zulassungDatum }) {
-  const mount = document.getElementById('betriebsartMount');
+  const mount = document.getElementById('baVorgabewertMount') || document.getElementById('betriebsartMount');
   if (!mount) return;
 
   // Modustext + Erläuterung je Modus.
@@ -196,17 +205,17 @@ function _renderBetriebsartSchalter({ aktuell, geaendertAm, zulassungReferenz, z
   mount.innerHTML = `
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
       <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-bottom:4px;">
-        Betriebsart der §302-Abrechnung
+        Betriebsart der §302-Abrechnung (Vorgabewert)
       </div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
-        Aktuell: <strong id="baModeLabel">${BETRIEBSART_LABELS[aktuell] || aktuell}</strong>
+        Aktuell (Vorgabewert): <strong id="baModeLabel">${BETRIEBSART_LABELS[aktuell] || aktuell}</strong>
         ${geaendertAm ? `<span style="margin-left:10px;font-size:11px;color:var(--text-muted);">zuletzt umgestellt am ${geaendertAm}</span>` : ''}
       </div>
       <div id="baBeschreibung" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;padding:8px 10px;background:var(--bg-card-solid,#1f2937);border-radius:6px;border:1px solid var(--border);">
         ${beschreibungen[aktuell] || ''}
       </div>
       <div class="form-group" style="margin-bottom:10px;">
-        <label class="form-label" style="margin-bottom:6px;">Betriebsart wählen</label>
+        <label class="form-label" style="margin-bottom:6px;">Vorgabewert wählen</label>
         <div style="display:flex;flex-direction:column;gap:6px;" id="baModeRadioGroup">
           ${['test','erprobung','echt'].map(m => `
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;border-radius:6px;border:1px solid ${m === aktuell ? 'var(--primary,#6366f1)' : 'var(--border)'};background:${m === aktuell ? 'var(--bg-card)' : 'transparent'};" data-ba-option="${m}">
@@ -239,7 +248,7 @@ function _renderBetriebsartSchalter({ aktuell, geaendertAm, zulassungReferenz, z
           Bitte Aktenzeichen und Datum der Zulassung ausfüllen, um den Echtbetrieb zu speichern.
         </div>
       </div>
-      <button class="btn-primary" id="baSpeichernBtn" style="margin-top:4px;">Betriebsart speichern</button>
+      <button class="btn-primary" id="baSpeichernBtn" style="margin-top:4px;">Vorgabewert speichern</button>
     </div>
   `;
 }
@@ -295,19 +304,120 @@ export function wireAbrechnungSettings(deps) {
     deps.showToast(ik ? 'IK gespeichert ✓' : 'IK entfernt.');
   });
 
-  // --- Betriebsart-Schalter: Radio-Gruppe, Zulassungsfelder, Speichern ---
-  // Der Schalter wird bei jedem renderAbrechnungSettings neu in den DOM
-  // geschrieben. Damit addEventListener nicht ins Leere läuft, verwenden wir
-  // Event-Delegation auf dem stabilen abrSection-Container.
+  // --- Betriebsart-Schalter: Vorgabewert & Ausnahmen je Datenannahmestelle ---
   abrSection.addEventListener('change', (e) => {
     const radio = e.target.closest('input[type="radio"][name="betriebsart"]');
-    if (!radio) return;
-    _aktualisiereBaAnsicht(radio.value);
+    if (radio) {
+      _aktualisiereBaAnsicht(radio.value);
+      return;
+    }
+    const ausnahmeRadio = e.target.closest('input[type="radio"][name="ausnahme_betriebsart"]');
+    if (ausnahmeRadio) {
+      _aktualisiereAusnahmeBaAnsicht(ausnahmeRadio.value);
+    }
+  });
+
+  abrSection.addEventListener('input', async (e) => {
+    if (e.target.id !== 'baAusnahmeIk') return;
+    const val = e.target.value.trim();
+    const previewEl = document.getElementById('baAusnahmeNamePreview');
+    if (!previewEl) return;
+    if (!/^\d{9}$/.test(val)) {
+      previewEl.textContent = val.length === 0 ? '' : (val.length < 9 ? '9-stellige IK eingeben…' : 'IK muss genau 9 Ziffern enthalten.');
+      previewEl.style.color = 'var(--text-muted)';
+      return;
+    }
+    previewEl.textContent = 'Name wird geladen…';
+    previewEl.style.color = 'var(--text-muted)';
+    const name = await _loeseEmpfaengerNameAuf(deps.supabase, val);
+    if (document.getElementById('baAusnahmeIk')?.value.trim() === val) {
+      if (name) {
+        previewEl.textContent = name;
+        previewEl.style.color = 'var(--text-main)';
+      } else {
+        previewEl.textContent = 'Name nicht gefunden (Speichern trotzdem möglich)';
+        previewEl.style.color = 'var(--text-muted)';
+      }
+    }
   });
 
   abrSection.addEventListener('click', async (e) => {
-    if (!e.target.closest('#baSpeichernBtn')) return;
-    await _speichereBetriebsart(deps);
+    if (e.target.closest('#baSpeichernBtn')) {
+      await _speichereBetriebsart(deps);
+      return;
+    }
+
+    if (e.target.closest('#baAusnahmeSpeichernBtn')) {
+      await _speichereAusnahme(deps);
+      return;
+    }
+
+    const editBtn = e.target.closest('[data-action="edit-ausnahme"]');
+    if (editBtn) {
+      const ik = editBtn.dataset.ik || '';
+      const mode = editBtn.dataset.mode || 'test';
+      const ref = editBtn.dataset.ref || '';
+      const dat = editBtn.dataset.date || '';
+
+      const ikInp = document.getElementById('baAusnahmeIk');
+      if (ikInp) {
+        ikInp.value = ik;
+        ikInp.focus();
+      }
+      const radio = document.querySelector(`input[name="ausnahme_betriebsart"][value="${mode}"]`);
+      if (radio) {
+        radio.checked = true;
+        _aktualisiereAusnahmeBaAnsicht(mode);
+      }
+      const refInp = document.getElementById('baAusnahmeZulassungReferenz');
+      if (refInp) refInp.value = ref;
+      const datInp = document.getElementById('baAusnahmeZulassungDatum');
+      if (datInp) datInp.value = dat;
+
+      const previewEl = document.getElementById('baAusnahmeNamePreview');
+      if (previewEl && ik) {
+        previewEl.textContent = 'Name wird geladen…';
+        previewEl.style.color = 'var(--text-muted)';
+        const name = await _loeseEmpfaengerNameAuf(deps.supabase, ik);
+        if (document.getElementById('baAusnahmeIk')?.value.trim() === ik) {
+          if (name) {
+            previewEl.textContent = name;
+            previewEl.style.color = 'var(--text-main)';
+          } else {
+            previewEl.textContent = 'Name nicht gefunden (Speichern trotzdem möglich)';
+            previewEl.style.color = 'var(--text-muted)';
+          }
+        }
+      }
+      return;
+    }
+
+    const delBtn = e.target.closest('[data-action="delete-ausnahme"]');
+    if (delBtn) {
+      const ik = delBtn.dataset.ik;
+      if (!ik) return;
+      const ok = await deps.showConfirmModal({
+        title: 'Ausnahme entfernen?',
+        message: `Soll die Ausnahme für die Datenannahmestelle ${ik} wirklich gelöscht werden? Anschließend gilt wieder der oben festgelegte Vorgabewert.`,
+        confirmText: 'Ausnahme löschen',
+        variant: 'danger',
+      });
+      if (!ok) return;
+
+      const { error } = await deps.supabase
+        .from('betriebsart_empfaenger')
+        .delete()
+        .eq('owner_id', deps.ownerId())
+        .eq('empfaenger_ik', ik);
+
+      if (error) {
+        deps.showToast('Fehler beim Löschen: ' + error.message, 'error');
+      } else {
+        deps.showToast(`Ausnahme für Datenannahmestelle ${ik} entfernt ✓`);
+        await _renderAusnahmenBlock(deps);
+      }
+      return;
+    }
   });
 }
 
@@ -386,7 +496,7 @@ async function _speichereBetriebsart(deps) {
   const alterModus = vorhanden?.betriebsart || 'test';
 
   if (alterModus === neueModus) {
-    deps.showToast('Betriebsart ist bereits auf „' + BETRIEBSART_LABELS[neueModus] + '" gesetzt.');
+    deps.showToast('Vorgabewert ist bereits auf „' + BETRIEBSART_LABELS[neueModus] + '" gesetzt.');
     return;
   }
 
@@ -413,19 +523,19 @@ async function _speichereBetriebsart(deps) {
   let bestaetigung;
   if (neueModus === 'echt') {
     bestaetigung = await deps.showConfirmModal({
-      title: 'In den Echtbetrieb wechseln?',
+      title: 'Vorgabewert: In den Echtbetrieb wechseln?',
       message:
-        'Ab jetzt werden alle erzeugten §302-Dateien als verbindliche Kassenabrechnung behandelt ' +
-        '(Dateiname beginnt mit „E"). Dieser Schritt setzt eine schriftliche Zulassung der ' +
+        'Ab jetzt werden alle erzeugten §302-Dateien ohne gesonderte Ausnahme als verbindliche Kassenabrechnung ' +
+        'behandelt (Dateiname beginnt mit „E"). Dieser Schritt setzt eine schriftliche Zulassung der ' +
         'Krankenkasse voraus. Fortfahren?',
       confirmText: 'Ja, Echtbetrieb aktivieren',
       variant: 'danger',
     });
   } else if (alterModus === 'echt') {
     bestaetigung = await deps.showConfirmModal({
-      title: 'Echtbetrieb verlassen?',
+      title: 'Vorgabewert: Echtbetrieb verlassen?',
       message:
-        'Die Betriebsart wird auf „' + BETRIEBSART_LABELS[neueModus] + '" zurückgestellt. ' +
+        'Der Vorgabewert wird auf „' + BETRIEBSART_LABELS[neueModus] + '" zurückgestellt. ' +
         'Bereits erzeugte Abrechnungsdateien bleiben unverändert. Fortfahren?',
       confirmText: 'Ja, zurückstellen',
       variant: 'warning',
@@ -433,9 +543,9 @@ async function _speichereBetriebsart(deps) {
   } else {
     // test ↔ erprobung ohne Echtbetrieb-Beteiligung: kürzere Frage
     bestaetigung = await deps.showConfirmModal({
-      title: 'Betriebsart ändern?',
+      title: 'Vorgabewert der Betriebsart ändern?',
       message:
-        'Betriebsart von „' + BETRIEBSART_LABELS[alterModus] + '" auf „' +
+        'Vorgabewert von „' + BETRIEBSART_LABELS[alterModus] + '" auf „' +
         BETRIEBSART_LABELS[neueModus] + '" umstellen?',
       confirmText: 'Ja, umstellen',
     });
@@ -469,7 +579,7 @@ async function _speichereBetriebsart(deps) {
     if (error) throw error;
 
     deps.showToast(
-      'Betriebsart auf „' + BETRIEBSART_LABELS[neueModus] + '" umgestellt ✓'
+      'Vorgabewert auf „' + BETRIEBSART_LABELS[neueModus] + '" umgestellt ✓'
     );
 
     // Ansicht sofort auf den neuen Modus bringen, ohne loadSettings erneut aufzurufen
@@ -484,7 +594,271 @@ async function _speichereBetriebsart(deps) {
     console.error('[abrechnung-einstellungen/betriebsart]', e);
     deps.showToast('Fehler: ' + (e.message || 'Speichern fehlgeschlagen'), 'error');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Betriebsart speichern'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Vorgabewert speichern'; }
+  }
+}
+
+/**
+ * Löst eine 9-stellige Datenannahmestellen-IK zu einem lesbaren Kostenträger-Namen auf.
+ * Reihenfolge:
+ * 1. kostentraeger_annahmestellen (partner_ik = ik -> kostentraeger_ik -> Name aus kostentraeger)
+ * 2. kostentraeger direkt (ik = ik -> name)
+ * Findet sich nichts, liefert die Funktion null (Name ist reine Anzeige, kein Sperrgrund).
+ */
+async function _loeseEmpfaengerNameAuf(supabase, ik) {
+  if (!ik || !/^\d{9}$/.test(ik)) return null;
+
+  try {
+    const { data: ann } = await supabase
+      .from('kostentraeger_annahmestellen')
+      .select('kostentraeger_ik')
+      .eq('partner_ik', ik)
+      .limit(1)
+      .maybeSingle();
+
+    if (ann?.kostentraeger_ik) {
+      const { data: kt } = await supabase
+        .from('kostentraeger')
+        .select('name')
+        .eq('ik', ann.kostentraeger_ik)
+        .maybeSingle();
+      if (kt?.name) return kt.name;
+    }
+
+    const { data: ktDirect } = await supabase
+      .from('kostentraeger')
+      .select('name')
+      .eq('ik', ik)
+      .maybeSingle();
+
+    if (ktDirect?.name) return ktDirect.name;
+  } catch (err) {
+    console.warn('[abrechnung-einstellungen] Namensauflösung für IK ' + ik + ' fehlgeschlagen:', err);
+  }
+
+  return null;
+}
+
+/**
+ * Rendert den Abschnitt «Ausnahmen je Datenannahmestelle» in #baAusnahmenMount.
+ * Listet vorhandene Einträge aus betriebsart_empfaenger und stellt das Formular bereit.
+ * Fehlt die Tabelle (Migration 0031 noch nicht eingespielt), blendet sich der Block
+ * lautlos aus und loggt eine Warnung (stört den Rest der Einstellungsseite nicht).
+ */
+async function _renderAusnahmenBlock(deps) {
+  const mount = document.getElementById('baAusnahmenMount');
+  if (!mount) return;
+
+  if (deps.profile()?.role !== 'owner') {
+    mount.innerHTML = '';
+    return;
+  }
+
+  let { data: ausnahmen, error } = await deps.supabase
+    .from('betriebsart_empfaenger')
+    .select('empfaenger_ik, betriebsart, zulassung_referenz, zulassung_datum, updated_at')
+    .eq('owner_id', deps.ownerId())
+    .order('empfaenger_ik');
+
+  if (error) {
+    if (/relation|column|table|does not exist|42P01|42703/i.test(String(error.message || error.code || ''))) {
+      console.warn('[abrechnung-einstellungen] Tabelle betriebsart_empfaenger fehlt noch (Migration 0031 ausstehend). Ausnahmen-Abschnitt wird ausgeblendet.');
+      mount.innerHTML = '';
+      return;
+    }
+    console.error('[abrechnung-einstellungen] Fehler beim Laden von betriebsart_empfaenger:', error);
+  }
+
+  const rows = ausnahmen || [];
+  const namen = await Promise.all(rows.map(r => _loeseEmpfaengerNameAuf(deps.supabase, r.empfaenger_ik)));
+
+  mount.innerHTML = `
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+      <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-bottom:4px;">
+        Ausnahmen je Datenannahmestelle
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.4;">
+        Zulassung und Erprobung laufen je Absender↔Empfänger-Paar (Anlage 1 TP5 V21, Kap. 2 und 8). Für Datenannahmestellen ohne gesonderten Eintrag gilt der oben festgelegte Vorgabewert.
+      </div>
+
+      ${rows.length === 0 ? `
+        <div style="font-size:12px;color:var(--text-muted);padding:10px 12px;background:var(--bg-card-solid,var(--bg-card));border:1px dashed var(--border);border-radius:6px;margin-bottom:16px;">
+          Keine abweichenden Ausnahmen hinterlegt — für alle Datenannahmestellen gilt der Vorgabewert.
+        </div>
+      ` : `
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;" id="baAusnahmenListe">
+          ${rows.map((r, i) => `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg-card-solid,var(--bg-card));border:1px solid var(--border);border-radius:6px;gap:12px;flex-wrap:wrap;">
+              <div style="display:flex;flex-direction:column;gap:3px;min-width:200px;flex:1;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:13px;font-weight:600;color:var(--text-main);font-family:monospace;">${_escHtml(r.empfaenger_ik)}</span>
+                  <span style="font-size:11px;padding:2px 6px;border-radius:4px;border:1px solid var(--border);color:var(--text-main);background:var(--bg-card);font-weight:500;">${_escHtml(BETRIEBSART_LABELS[r.betriebsart] || r.betriebsart)}</span>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);">${_escHtml(namen[i] || 'Name nicht gefunden')}</div>
+                ${r.betriebsart === 'echt' ? `
+                  <div style="font-size:11px;color:var(--text-muted);">
+                    Zulassung: <strong>${_escHtml(r.zulassung_referenz || '—')}</strong> · Datum: <strong>${_escHtml(r.zulassung_datum ? new Date(r.zulassung_datum).toLocaleDateString('de-DE') : '—')}</strong>
+                  </div>
+                ` : ''}
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button type="button" class="btn-secondary" data-action="edit-ausnahme" data-ik="${_escHtml(r.empfaenger_ik)}" data-mode="${_escHtml(r.betriebsart)}" data-ref="${_escHtml(r.zulassung_referenz || '')}" data-date="${_escHtml(r.zulassung_datum || '')}" style="padding:4px 8px;font-size:12px;">Bearbeiten</button>
+                <button type="button" class="btn-secondary" data-action="delete-ausnahme" data-ik="${_escHtml(r.empfaenger_ik)}" style="padding:4px 8px;font-size:12px;color:var(--danger,#ef4444);">Löschen</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `}
+
+      <div style="padding:12px;background:var(--bg-card-solid,var(--bg-card));border:1px solid var(--border);border-radius:6px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:10px;">
+          Ausnahme anlegen oder ändern
+        </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label" style="margin-bottom:4px;">Institutionskennzeichen (IK) der Datenannahmestelle</label>
+          <input class="form-input" id="baAusnahmeIk" type="text" maxlength="9" placeholder="9-stellige IK, z. B. 660530010" style="max-width:240px;font-family:monospace;" />
+          <div id="baAusnahmeNamePreview" style="font-size:12px;color:var(--text-muted);margin-top:4px;"></div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label" style="margin-bottom:6px;">Betriebsart für diese Datenannahmestelle</label>
+          <div style="display:flex;flex-direction:column;gap:6px;" id="baAusnahmeRadioGroup">
+            ${['test','erprobung','echt'].map(m => `
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;border-radius:6px;border:1px solid ${m === 'test' ? 'var(--primary,#6366f1)' : 'var(--border)'};background:${m === 'test' ? 'var(--bg-card)' : 'transparent'};" data-ba-option="${m}">
+                <input type="radio" name="ausnahme_betriebsart" value="${m}" ${m === 'test' ? 'checked' : ''} style="accent-color:var(--primary,#6366f1);">
+                <span style="color:var(--text-main);font-weight:${m === 'test' ? '600' : '400'};">${BETRIEBSART_LABELS[m]}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+
+        <div id="baAusnahmeZulassungFelder" style="display:none;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;padding:8px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;">
+            Für den Echtbetrieb ist eine schriftliche <strong>Zulassung zum Echtverfahren</strong> durch die Krankenkasse erforderlich (nicht durch die Datenannahmestelle). Bitte Referenz und Datum der Zulassung eintragen.
+          </div>
+          <div class="form-row" style="gap:10px;">
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Aktenzeichen / Referenz der Zulassung</label>
+              <input class="form-input" id="baAusnahmeZulassungReferenz" type="text" placeholder="z. B. KK-2026/302-1234" />
+            </div>
+            <div class="form-group" style="flex:0 0 160px;">
+              <label class="form-label">Datum der Zulassung</label>
+              <input class="form-input" id="baAusnahmeZulassungDatum" type="date" />
+            </div>
+          </div>
+          <div id="baAusnahmeZulassungFehler" style="font-size:12px;color:var(--danger,#ef4444);margin-top:4px;display:none;">
+            Bitte Aktenzeichen und Datum der Zulassung ausfüllen, um den Echtbetrieb zu speichern.
+          </div>
+        </div>
+
+        <button class="btn-primary" id="baAusnahmeSpeichernBtn" type="button" style="margin-top:4px;">Ausnahme speichern</button>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Passt die Radiogruppen-Optik und Zulassungsfelder des Ausnahmen-Formulars an.
+ */
+function _aktualisiereAusnahmeBaAnsicht(gewaehlterModus) {
+  document.querySelectorAll('#baAusnahmeRadioGroup label[data-ba-option]').forEach(lbl => {
+    const m = lbl.dataset.baOption;
+    const aktiv = m === gewaehlterModus;
+    lbl.style.border = `1px solid ${aktiv ? 'var(--primary,#6366f1)' : 'var(--border)'}`;
+    lbl.style.background = aktiv ? 'var(--bg-card)' : 'transparent';
+    const span = lbl.querySelector('span');
+    if (span) span.style.fontWeight = aktiv ? '600' : '400';
+  });
+
+  const felder = document.getElementById('baAusnahmeZulassungFelder');
+  if (felder) felder.style.display = gewaehlterModus === 'echt' ? '' : 'none';
+
+  const fehler = document.getElementById('baAusnahmeZulassungFehler');
+  if (fehler) fehler.style.display = 'none';
+}
+
+/**
+ * Speichert eine Ausnahme in betriebsart_empfaenger.
+ */
+async function _speichereAusnahme(deps) {
+  const ikInp = document.getElementById('baAusnahmeIk');
+  const ik = (ikInp?.value || '').trim();
+  if (!ik || !/^\d{9}$/.test(ik)) {
+    deps.showToast('IK muss genau 9 Ziffern enthalten.', 'error');
+    ikInp?.focus();
+    return;
+  }
+
+  const radio = document.querySelector('input[name="ausnahme_betriebsart"]:checked');
+  const betriebsart = radio?.value || 'test';
+
+  let ref = null;
+  let dat = null;
+
+  if (betriebsart === 'echt') {
+    ref = (document.getElementById('baAusnahmeZulassungReferenz')?.value || '').trim();
+    dat = (document.getElementById('baAusnahmeZulassungDatum')?.value || '').trim();
+    if (!ref || !dat) {
+      const fehlerEl = document.getElementById('baAusnahmeZulassungFehler');
+      if (fehlerEl) fehlerEl.style.display = '';
+      return;
+    }
+  }
+
+  if (betriebsart === 'echt') {
+    const ok = await deps.showConfirmModal({
+      title: 'Echtbetrieb für Datenannahmestelle aktivieren?',
+      message:
+        `Ab jetzt werden alle §302-Dateien an die Datenannahmestelle ${ik} als verbindliche Kassenabrechnung ` +
+        `behandelt (Dateiname beginnt mit „E"). Dieser Schritt setzt eine schriftliche Zulassung der ` +
+        `Krankenkasse voraus. Fortfahren?`,
+      confirmText: 'Ja, Ausnahme auf Echtbetrieb setzen',
+      variant: 'danger',
+    });
+    if (!ok) return;
+  }
+
+  const btn = document.getElementById('baAusnahmeSpeichernBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+  try {
+    const payload = {
+      owner_id:           deps.ownerId(),
+      empfaenger_ik:      ik,
+      betriebsart,
+      zulassung_referenz: betriebsart === 'echt' ? ref : null,
+      zulassung_datum:    betriebsart === 'echt' ? dat : null,
+      updated_at:         new Date().toISOString(),
+      updated_by:         deps.userId(),
+    };
+
+    const { error } = await deps.supabase
+      .from('betriebsart_empfaenger')
+      .upsert(payload, { onConflict: 'owner_id,empfaenger_ik' });
+
+    if (error) throw error;
+
+    deps.showToast(`Ausnahme für Datenannahmestelle ${ik} gespeichert ✓`);
+
+    if (ikInp) ikInp.value = '';
+    const previewEl = document.getElementById('baAusnahmeNamePreview');
+    if (previewEl) previewEl.textContent = '';
+    const refInp = document.getElementById('baAusnahmeZulassungReferenz');
+    if (refInp) refInp.value = '';
+    const datInp = document.getElementById('baAusnahmeZulassungDatum');
+    if (datInp) datInp.value = '';
+    const defaultRadio = document.querySelector('input[name="ausnahme_betriebsart"][value="test"]');
+    if (defaultRadio) {
+      defaultRadio.checked = true;
+      _aktualisiereAusnahmeBaAnsicht('test');
+    }
+
+    await _renderAusnahmenBlock(deps);
+  } catch (e) {
+    console.error('[abrechnung-einstellungen/ausnahme]', e);
+    deps.showToast('Fehler beim Speichern der Ausnahme: ' + (e.message || 'Unbekannter Fehler'), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Ausnahme speichern'; }
   }
 }
 
