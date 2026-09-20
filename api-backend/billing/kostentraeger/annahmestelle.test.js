@@ -10,6 +10,8 @@ import {
   kassenartAusQuelle,
   ELEKTRONISCHE_DATENLIEFERUNG,
   VERKNUEPFUNGSART_KETTE,
+  waehlePapierannahmestelle,
+  PAPIER_DATENLIEFERUNG,
 } from './annahmestelle.js';
 
 // Eine VKG-Zeile, wie sie in kostentraeger_annahmestellen steht.
@@ -230,4 +232,114 @@ test('fehlende quelle macht die Auswahl nicht kaputt, nur die Kassenart null', (
   const t = waehleAnnahmestelle([zeile('661430035', '71')], { ketten: podoKette });
   assert.equal(t.partnerIk, '661430035');
   assert.equal(t.kassenart, null);
+});
+
+// ── waehlePapierannahmestelle (VKG 09) ───────────────────────────────────────
+
+// Hilfsfunktion analog zu zeile(), aber fuer Papier-VKG-Zeilen.
+const papierZeile = (partner_ik, abrechnungscode, opt = {}) => ({
+  partner_ik,
+  abrechnungscode,
+  verknuepfungsart:   '09',
+  art_datenlieferung: opt.adl ?? '28',   // 28 = Papier (unbelegt, Praxiserfahrung)
+  bundesland:         opt.bl  ?? '',
+});
+
+test('P1: VKG-09 mit Papier-Datenlieferung wird als Papierannahmestelle gewaehlt', () => {
+  const t = waehlePapierannahmestelle(
+    [papierZeile('661430035', '71')],
+    { ketten: podoKette }
+  );
+  assert.ok(t, 'Papierannahmestelle muss gefunden werden');
+  assert.equal(t.partnerIk, '661430035');
+  assert.equal(t.abrechnungscode, '71');
+});
+
+test('P2: elektronische art_datenlieferung (07, 30) auf einer VKG-09-Zeile wird NICHT gewaehlt', () => {
+  // Der elektronische Kanal laeuft ueber VKG 02/03 — eine VKG-09-Zeile mit
+  // art_datenlieferung 07 waere ein Datenfehler in der Kostentraegerdatei.
+  // Die Funktion muss sie dennoch sicher ignorieren.
+  for (const adl of ['07', '30']) {
+    const t = waehlePapierannahmestelle(
+      [{ ...papierZeile('661430035', '71'), art_datenlieferung: adl }],
+      { ketten: podoKette }
+    );
+    assert.equal(t, null, `art_datenlieferung ${adl} ist elektronisch und darf nicht als Papier gewaehlt werden`);
+  }
+  // Die Liste der Papier-Werte ist definiert.
+  assert.deepEqual([...PAPIER_DATENLIEFERUNG], ['21', '24', '26', '28', '29']);
+});
+
+test('P3: Podologie nimmt 71/72 vor 99 vor 00 (dieselbe Kette wie elektronisch)', () => {
+  const zeilen = [
+    papierZeile('100000001', '00'),
+    papierZeile('100000002', '99'),
+    papierZeile('100000003', '71'),
+  ];
+  const t = waehlePapierannahmestelle(zeilen, { ketten: podoKette });
+  assert.equal(t.partnerIk, '100000003');
+  assert.equal(t.abrechnungscode, '71');
+  assert.equal(t.stufe, 0);
+});
+
+test('P3b: 71/72 fehlen → Fallback auf 99', () => {
+  const t = waehlePapierannahmestelle(
+    [papierZeile('100000006', '99'), papierZeile('100000007', '00')],
+    { ketten: podoKette }
+  );
+  assert.equal(t.partnerIk, '100000006');
+  assert.equal(t.stufe, 1);
+});
+
+test('P3c: Podologie-Kette ueberspringt die 20 (Anhang 03 §8.14 Fussnote 4)', () => {
+  const t = waehlePapierannahmestelle(
+    [papierZeile('100000005', '20')],
+    { ketten: podoKette }
+  );
+  assert.equal(t, null, '20 deckt Podologie auch beim Papierweg nicht ab');
+});
+
+test('P4: Bundesland-Filter funktioniert wie bei waehleAnnahmestelle', () => {
+  const zeilen = [papierZeile('100000017', '71', { bl: '05' })];
+  // Ohne Bundeslandangabe → nicht gewaehlt.
+  assert.equal(waehlePapierannahmestelle(zeilen, { ketten: podoKette }), null,
+    'landesspezifische Zeile darf ohne bekanntes Land nicht gezogen werden');
+  // Mit passendem Bundesland → gewaehlt.
+  assert.equal(
+    waehlePapierannahmestelle(zeilen, { ketten: podoKette, bundeslandVkg: '05' }).partnerIk,
+    '100000017'
+  );
+  // Mit anderem Bundesland → nicht gewaehlt.
+  assert.equal(waehlePapierannahmestelle(zeilen, { ketten: podoKette, bundeslandVkg: '01' }), null);
+});
+
+test('P5: keine passende Zeile → null', () => {
+  assert.equal(waehlePapierannahmestelle([], { ketten: podoKette }), null);
+  assert.equal(waehlePapierannahmestelle(null, { ketten: podoKette }), null);
+  // VKG-02-Zeile darf nicht als Papierannahmestelle zaehlen.
+  assert.equal(
+    waehlePapierannahmestelle(
+      [{ ...papierZeile('661430035', '71'), verknuepfungsart: '02' }],
+      { ketten: podoKette }
+    ),
+    null
+  );
+});
+
+test('IKK-Realbeispiel: VKG 09 + abrechnungscode 71/72 → 661430035, 99 → 100202549', () => {
+  // Aus IK05Q326_KE1.txt, IDK+100202549 (IKK - Die Innovationskasse).
+  // VKG+09+661430035+5++28++++71 und +72, VKG+09+100202549+5++28++++99
+  const zeilen = [
+    papierZeile('661430035', '71'),
+    papierZeile('661430035', '72'),
+    papierZeile('100202549', '99'),
+  ];
+  const t71 = waehlePapierannahmestelle(zeilen, { ketten: podoKette });
+  assert.equal(t71.partnerIk, '661430035', 'Podologie-Code 71 muss zu IQVIA HSS fuehren');
+  assert.equal(t71.stufe, 0);
+
+  // Mit Kette ohne 71/72 → faellt auf 99 = IKK selbst.
+  const kette99 = abrechnungscodeKette('podologie', null).filter((_, i) => i > 0);
+  const t99 = waehlePapierannahmestelle(zeilen, { ketten: kette99 });
+  assert.equal(t99.partnerIk, '100202549');
 });

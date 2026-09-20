@@ -162,3 +162,42 @@ test('T12f: dta.gruppen speist die Blaetter eins zu eins', () => {
   assert.ok(teile[1].includes('40,00'));
   assert.ok(!html.includes('150,00'), 'die Dateisumme gehoert auf keinen Begleitzettel');
 });
+
+// ── Papierannahmestelle-Adressblock ──────────────────────────────────────────
+
+const papier = (anschrift) => ({
+  ik: '661430035',
+  name: 'IQVIA Health System Services GmbH',
+  anschrift,
+});
+
+test('T12g: Papierannahmestelle mit Anschrift erscheint als dritter Adressblock', () => {
+  const html = renderBegleitzettel({
+    ...blattFuer(1, '101000001', 100, [beleg('0000010', 'Schulz')]),
+    papierannahmestelle: papier({ art: '1', plz: '04425', ort: 'Taucha', strasse: 'Gaertnerweg 12' }),
+  });
+  assert.ok(html.includes('Urbelege senden an (Papierannahmestelle)'), 'Adressblock-Label fehlt');
+  assert.ok(html.includes('IQVIA Health System Services GmbH'), 'Name der Papierannahmestelle fehlt');
+  assert.ok(html.includes('661430035'), 'IK der Papierannahmestelle fehlt');
+  assert.ok(html.includes('Gaertnerweg 12'), 'Strasse fehlt');
+  assert.ok(html.includes('04425'), 'PLZ fehlt');
+  assert.ok(html.includes('Taucha'), 'Ort fehlt');
+  assert.ok(html.includes('Papierannahmestelle'), 'Checklisten-Hinweis fehlt');
+});
+
+test('T12h: anschrift null → Klartext-Warnung sichtbar, kein leerer Block', () => {
+  const html = renderBegleitzettel({
+    ...blattFuer(1, '101000001', 100, [beleg('0000010', 'Schulz')]),
+    papierannahmestelle: papier(null),
+  });
+  assert.ok(html.includes('Urbelege senden an (Papierannahmestelle)'), 'Adressblock-Label fehlt');
+  assert.ok(html.includes('Anschrift nicht hinterlegt'), 'Klartext-Warnung fehlt');
+  assert.ok(html.includes('NICHT an die Datenannahmestelle'), 'DAS-Warnung fehlt');
+  assert.ok(html.includes('661430035'), 'IK trotzdem anzeigen');
+});
+
+test('T12i: kein papierannahmestelle-Feld → kein Adressblock (bisheriges Verhalten)', () => {
+  const html = renderBegleitzettel(blattFuer(1, '101000001', 100, [beleg('0000010', 'Schulz')]));
+  assert.ok(!html.includes('Urbelege senden an'), 'ohne Feld darf kein Papier-Block erscheinen');
+  assert.ok(!html.includes('Papierannahmestelle'), 'ohne Feld kein Checklisten-Hinweis');
+});

@@ -164,3 +164,112 @@ export function annahmestelleFehlt(res, { ik, name }) {
     kostentraegerIk: ik,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Papierannahmestelle (Verknuepfungsart 09) — Urbelege-Postweg
+//
+// Die Papierannahmestelle ist von der Datenannahmestelle (02/03) getrennt.
+// Urbelege (Original-Verordnungen) gehen per Post an die Papierannahmestelle;
+// die elektronische Datei geht an die Datenannahmestelle. Beide Wege muessen
+// getrennt aufgeloest werden — ein einziger Empfaenger fuer beides waere falsch.
+// ---------------------------------------------------------------------------
+
+/** Art-der-Datenlieferung-Werte, die einen Papierversand anzeigen.
+ *  Quelle dieselbe wie bei ELEKTRONISCHE_DATENLIEFERUNG oben: Anhang 3,
+ *  Abschnitt 5.2 — 07 und 30 sind elektronisch, 21/24/26/28/29 sind Papier.
+ *  Die Liste ist damit nicht abgeleitet, sondern abgelesen. */
+export const PAPIER_DATENLIEFERUNG = Object.freeze(['21', '24', '26', '28', '29']);
+
+/**
+ * Waehlt aus den VKG-Zeilen EINES Kostentraegers die Papierannahmestelle.
+ *
+ * Gegenstueck zu waehleAnnahmestelle(), aber ausschliesslich fuer
+ * Verknuepfungsart 09 (Papierannahmestelle — kein Kettenfall wie bei 02/03).
+ * Die Abrechnungscode-Kette (abrechnungscodeKette()) und der Bundesland-Filter
+ * sind identisch mit waehleAnnahmestelle(), damit beide Wege denselben
+ * Versicherten demselben Sachbearbeitungsweg zuordnen.
+ *
+ * Bundesland-Filter: '' und '99' gelten immer; ein konkreter Landesschluessel
+ * wird nur hinzugezogen, wenn der Aufrufer ihn kennt. Ohne diesen Filter wuerden
+ * landesspezifische Zeilen anderer Bundeslaender die Auswahl verfaelschen
+ * (dieselbe Begruendung wie in waehleAnnahmestelle, db-ustasi 07.09.2026).
+ *
+ * @param {Array} zeilen  Rohzeilen aus `kostentraeger_annahmestellen`
+ * @param {object} opts
+ * @param {string[][]} opts.ketten        aus abrechnungscodeKette()
+ * @param {string|null} [opts.bundeslandVkg]  2-stelliger VKG-Landesschluessel
+ * @returns {{
+ *   partnerIk: string, abrechnungscode: string,
+ *   bundesland: string, stufe: number, kandidaten: number
+ * } | null}
+ */
+export function waehlePapierannahmestelle(zeilen, { ketten, bundeslandVkg = null } = {}) {
+  // Bundesland-Filter — identisch mit waehleAnnahmestelle().
+  const erlaubtesLand = new Set(['', '99']);
+  if (bundeslandVkg) erlaubtesLand.add(bundeslandVkg);
+
+  // Nur VKG-09-Zeilen mit einer Papier-Datenlieferungsart auswaehlen.
+  const brauchbar = (zeilen || []).filter(z =>
+    String(z.verknuepfungsart || '') === '09' &&
+    PAPIER_DATENLIEFERUNG.includes(String(z.art_datenlieferung || '')) &&
+    erlaubtesLand.has(String(z.bundesland ?? ''))
+  );
+  if (!brauchbar.length) return null;
+
+  // Abrechnungscode-Kette: Podologie 71/72 → 99 → 00, Physio 22 → 20 → 99 → 00.
+  // Dieselbe Logik wie bei der elektronischen Annahmestelle — der Papierweg gilt
+  // denselben fachlichen Abgrenzungen.
+  for (let stufe = 0; stufe < ketten.length; stufe++) {
+    const codes = ketten[stufe];
+    const treffer = brauchbar.filter(z => codes.includes(String(z.abrechnungscode || '')));
+    if (!treffer.length) continue;
+
+    const eindeutig = [...new Set(treffer.map(t => String(t.partner_ik)))];
+    return {
+      partnerIk:       String(treffer[0].partner_ik),
+      abrechnungscode: String(treffer[0].abrechnungscode || ''),
+      bundesland:      String(treffer[0].bundesland ?? ''),
+      stufe,
+      kandidaten:      eindeutig.length,
+    };
+  }
+  return null;
+}
+
+/**
+ * Laedt die VKG-Zeilen des Kostentraegers und waehlt die Papierannahmestelle.
+ * Gleiche Signatur und Rueckgabeform wie ladeAnnahmestelle().
+ *
+ * ⚠️ Die `kostentraeger`-Tabelle hat KEINE Adressspalte — nur IK + Name.
+ * Die Anschrift muss separat aus den geparsten Kostentraegerdaten kommen
+ * (parser.js / waehlePostanschrift). Diese Funktion gibt nur ik + name zurueck.
+ *
+ * @returns {{ ok: true, ik, name, treffer } | { ok: false, grund: string }}
+ */
+export async function ladePapierannahmestelle(supabase, {
+  kostentraegerIk, bereich, eigenerAbrechnungscode, bundeslandVkg = null,
+}) {
+  const { data: zeilen, error } = await supabase
+    .from('kostentraeger_annahmestellen')
+    .select('partner_ik, verknuepfungsart, abrechnungscode, art_datenlieferung, bundesland')
+    .eq('kostentraeger_ik', kostentraegerIk);
+  if (error) return { ok: false, grund: 'DB-Fehler: ' + error.message };
+
+  const treffer = waehlePapierannahmestelle(zeilen, {
+    ketten: abrechnungscodeKette(bereich, eigenerAbrechnungscode),
+    bundeslandVkg,
+  });
+  if (!treffer) return { ok: false, grund: 'keine Papierannahmestelle (VKG 09) hinterlegt' };
+
+  if (treffer.kandidaten > 1) {
+    console.warn(
+      `[annahmestelle] Kostentraeger ${kostentraegerIk}: ${treffer.kandidaten} moegliche ` +
+      `Papierannahmestellen unter Abrechnungscode ${treffer.abrechnungscode} — genommen wird ${treffer.partnerIk}.`
+    );
+  }
+
+  const { data: partner } = await supabase
+    .from('kostentraeger').select('name').eq('ik', treffer.partnerIk).maybeSingle();
+
+  return { ok: true, ik: treffer.partnerIk, name: partner?.name || '', treffer };
+}

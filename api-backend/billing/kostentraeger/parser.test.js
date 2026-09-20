@@ -6,6 +6,7 @@ import {
   routeToDatenannahmestelle,
   parseKostentraegerDatei,
   toUpsertRows,
+  waehlePostanschrift,
 } from './parser.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -130,6 +131,98 @@ test('Segmente auf eigener Zeile (wie in der echten Datei) werden genauso gepars
   assert.equal(records[0].datenannahmestellen[0].partner_ik, '660500345');
 });
 
+// ── ANS-Segment und waehlePostanschrift ──────────────────────────────────────
+
+console.log('kostentraeger.parser.ANS');
+
+test('ANS: drei Adressarten werden korrekt geparst', () => {
+  // Echte Beispiele aus IK05Q326_KE1.txt (IQVIA HSS / IKK).
+  const sample =
+    "UNA:+,? '" +
+    "IDK+661430035+99+IQVIA HSS'" +
+    "NAM+01+IQVIA+Health System Services GmbH'" +
+    "ANS+1+04425+Taucha+Gaertnerweg 12'" +
+    "ANS+3+04310+Leipzig'";
+  const records = parseKostentraegerDatei(sample);
+  assert.equal(records[0].anschriften.length, 2);
+
+  const haus = records[0].anschriften[0];
+  assert.equal(haus.art, '1');
+  assert.equal(haus.plz, '04425');
+  assert.equal(haus.ort, 'Taucha');
+  assert.equal(haus.strasse, 'Gaertnerweg 12');
+
+  const gross = records[0].anschriften[1];
+  assert.equal(gross.art, '3');
+  assert.equal(gross.plz, '04310');
+  assert.equal(gross.ort, 'Leipzig');
+  assert.equal(gross.strasse, '', 'Grosskundeanschrift ohne Strassenfeld → leerer String');
+});
+
+test('ANS: Postfach-Anschrift (Art 2) ohne Strasse wird korrekt eingelesen', () => {
+  const sample =
+    "UNA:+,? '" +
+    "IDK+100202549+99+IKK'" +
+    "ANS+2+42100+Wuppertal'";
+  const [rec] = parseKostentraegerDatei(sample);
+  assert.equal(rec.anschriften.length, 1);
+  assert.equal(rec.anschriften[0].art, '2');
+  assert.equal(rec.anschriften[0].strasse, '');
+});
+
+test('ANS: kein ANS-Segment → anschriften ist leeres Array', () => {
+  const sample =
+    "UNA:+,? '" +
+    "IDK+107436001+01+AOK Rheinland/Hamburg'" +
+    "VKG+02+660500345+5++30'";
+  const [rec] = parseKostentraegerDatei(sample);
+  assert.deepEqual(rec.anschriften, []);
+});
+
+test('NAM: namensteile enthaelt alle Namenszeilen (vollstaendiger Firmenname)', () => {
+  const sample =
+    "UNA:+,? '" +
+    "IDK+661430035+99+IQVIA HSS'" +
+    "NAM+01+IQVIA+Health System Services GmbH'";
+  const [rec] = parseKostentraegerDatei(sample);
+  assert.ok(Array.isArray(rec.namensteile));
+  assert.ok(rec.namensteile.includes('IQVIA'));
+  assert.ok(rec.namensteile.includes('Health System Services GmbH'));
+});
+
+console.log('kostentraeger.parser.waehlePostanschrift');
+
+test('waehlePostanschrift: Hausanschrift (1) hat Vorrang vor Postfach und Grosskunde', () => {
+  const anschriften = [
+    { art: '3', plz: '04310', ort: 'Leipzig', strasse: '' },
+    { art: '1', plz: '04425', ort: 'Taucha', strasse: 'Gaertnerweg 12' },
+    { art: '2', plz: '42100', ort: 'Wuppertal', strasse: '' },
+  ];
+  const a = waehlePostanschrift(anschriften);
+  assert.equal(a.art, '1', 'Hausanschrift muss bevorzugt werden');
+  assert.equal(a.plz, '04425');
+});
+
+test('waehlePostanschrift: Postfach (2) vor Grosskundeanschrift (3)', () => {
+  const anschriften = [
+    { art: '3', plz: '04310', ort: 'Leipzig', strasse: '' },
+    { art: '2', plz: '42100', ort: 'Wuppertal', strasse: '' },
+  ];
+  const a = waehlePostanschrift(anschriften);
+  assert.equal(a.art, '2', 'Postfach muss Grosskundeanschrift schlagen');
+});
+
+test('waehlePostanschrift: nur Grosskundeanschrift → gibt sie zurueck', () => {
+  const a = waehlePostanschrift([{ art: '3', plz: '04310', ort: 'Leipzig', strasse: '' }]);
+  assert.equal(a.art, '3');
+});
+
+test('waehlePostanschrift: leere Liste → null', () => {
+  assert.equal(waehlePostanschrift([]), null);
+  assert.equal(waehlePostanschrift(null), null);
+  assert.equal(waehlePostanschrift(undefined), null);
+});
+
 // ── Gegen die echte Kostenträgerdatei (Ops-Kart #264, wissensbank Kart W-01) ──
 //
 // 1.329 Datensätze / 1.043 eindeutige IK ist die von wissensbank per Websuche
@@ -147,6 +240,7 @@ test('echte Kostenträgerdatei (7 Kassenart-Dateien): 1.329 Datensätze / 1.043 
     for (const r of records) {
       assert.match(r.ik, /^\d{9}$/, `${datei}: unplausible IK "${r.ik}"`);
       assert.ok(r.name, `${datei}: Datensatz ohne Name (IK ${r.ik})`);
+      assert.ok(Array.isArray(r.anschriften), `${datei}: anschriften-Feld fehlt`);
       iks.add(r.ik);
     }
     gesamt += records.length;

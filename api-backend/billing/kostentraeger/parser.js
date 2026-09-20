@@ -157,6 +157,7 @@ export function parseKostentraegerDatei(text) {
           ik:          seg.fields[0],
           name:        seg.fields[2],
           contacts:    [],
+          anschriften: [],          // ANS-Segmente dieses Eintrags (Anhang 03 V10 §7)
           datenannahmestellen: [],
         };
         break;
@@ -167,7 +168,18 @@ export function parseKostentraegerDatei(text) {
         }
         break;
       case 'NAM':
+        // Bestehende Logik unveraendert: name wird nur gesetzt, wenn das IDK-Feld
+        // leer war (IDK hat Vorrang). Zusaetzlich sammeln wir alle Namensteile in
+        // namensteile[], damit der vollstaendige Firmenname auf dem Begleitzettel
+        // angezeigt werden kann — "IQVIA Health System Services GmbH" ist laenger
+        // als das IDK-Bezeichnungsfeld erlaubt (Anhang 03 V10 §7.1 max. 70 Zeichen).
+        // NAM-Feldstruktur: fields[0]='01' (Art), fields[1..] = Namenszeilen.
+        // seg.fields-Elemente koennen String oder Array sein (Bauteil-Trenner ':'),
+        // deshalb flat() — waehle postanschrift() kann beides verarbeiten.
         if (current && !current.name) current.name = seg.fields[0];
+        if (current) {
+          current.namensteile = seg.fields.slice(1).flat().filter(Boolean);
+        }
         break;
       case 'VKG':
         // Feldreihenfolge gegen Anhang 03 V10 §7.2 geprüft (Seite 18): Art der
@@ -196,14 +208,50 @@ export function parseKostentraegerDatei(text) {
           });
         }
         break;
+      case 'ANS':
+        // Anschrift-Segment (Anhang 03 V10 §7): Art + PLZ + Ort [+ Strasse].
+        // Art: '1' = Hausanschrift, '2' = Postfach, '3' = Grosskundeanschrift.
+        // Grosskunden (3) und Postfach (2) tragen haeufig kein Strassenfeld;
+        // strasse ist dann '' statt null — einheitlich mit den anderen Feldern.
+        // art bleibt als roher String — keine Interpretation hier.
+        if (current) {
+          current.anschriften.push({
+            art:     String(seg.fields[0] ?? ''),
+            plz:     String(seg.fields[1] ?? ''),
+            ort:     String(seg.fields[2] ?? ''),
+            strasse: String(seg.fields[3] ?? ''),
+          });
+        }
+        break;
       case 'KTO':
         if (current) current.contacts.push(seg.fields.flat().filter(Boolean));
         break;
-      // ANS, UEM, DFU, FKT — ignored for Faz A2
+      // UEM, DFU, FKT — ignored for Faz A2
     }
   }
   if (current) records.push(current);
   return records;
+}
+
+/**
+ * Waehlt die fuer einen Postversand geeignetste Anschrift aus der ANS-Liste.
+ *
+ * Vorzugsreihenfolge: Hausanschrift (1) > Postfach (2) > Grosskundeanschrift (3).
+ * Begruendung: Grosskundeanschrift (Art 3) ist eine institutseigene PLZ ohne
+ * Strassenfeld — postalisch gueltig, aber weniger vollstaendig als Hausanschrift
+ * oder Postfach. Wir bevorzugen die informationsreichste Variante. Quelle fuer
+ * die Art-Schluessel: Anhang 03 V10 §7 (Anschrift-Segment ANS).
+ *
+ * @param {Array<{art:string,plz:string,ort:string,strasse:string}>} anschriften
+ * @returns {{art:string,plz:string,ort:string,strasse:string}|null}
+ */
+export function waehlePostanschrift(anschriften) {
+  if (!anschriften || !anschriften.length) return null;
+  for (const art of ['1', '2', '3']) {
+    const treffer = anschriften.find(a => String(a.art) === art);
+    if (treffer) return treffer;
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------

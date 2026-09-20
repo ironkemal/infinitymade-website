@@ -15,10 +15,11 @@
 // (`page-break-before`). Der Ausdruck lässt sich blattweise trennen und in die
 // jeweiligen Umschläge legen; die Praxis muss nichts zusammensuchen.
 //
-// ⚠️ Die Adresse der Datenannahmestelle steht hier BEWUSST NICHT.
-// Die Urbelege gehen zur Papierannahmestelle (Verknüpfungsart 09), nicht zur
-// Datenannahmestelle (02/03), an die die Datei elektronisch geht. Anlage 4
-// verlangt das Feld nicht — lieber leer als falsch adressiert.
+// ⚠️ Die Adresse der Datenannahmestelle (Verknuepfungsart 02/03) steht hier
+// BEWUSST NICHT — Urbelege gehen zur Papierannahmestelle (Verknuepfungsart 09),
+// nicht zur Datenannahmestelle, an die die elektronische Datei geht. Beide
+// Empfaenger werden getrennt aufgeloest (annahmestelle.js). Die Papierannahmestelle
+// erscheint als optionaler dritter Adressblock, wenn sie aufgeloest werden konnte.
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -119,8 +120,11 @@ const DRUCK_SKRIPT = `
  * }
  * @param {Array} opts.belege
  * @param {{nummer:number,von:number}} [opts.blatt]  Seitenzähler bei mehreren Blättern
+ * @param {{ik:string, name:string, anschrift:{art:string,plz:string,ort:string,strasse:string}|null}|undefined} [opts.papierannahmestelle]
+ *   Papierannahmestelle (VKG 09). Fehlt das Feld komplett → kein Adressblock.
+ *   Ist anschrift null → IK + Name + Klartext-Warnung (Adresse nicht hinterlegt).
  */
-function renderBlatt({ praxis = {}, abrechnung = {}, belege = [], blatt = null }) {
+function renderBlatt({ praxis = {}, abrechnung = {}, belege = [], blatt = null, papierannahmestelle }) {
   const belegRows = belege.map((b, i) => `
     <tr>
       <td class="num">${i + 1}</td>
@@ -134,6 +138,34 @@ function renderBlatt({ praxis = {}, abrechnung = {}, belege = [], blatt = null }
   const zaehler = blatt
     ? `<div class="zaehler">Gesamtrechnung ${blatt.nummer} von ${blatt.von}</div>`
     : '';
+
+  // Dritter Adressblock: nur wenn papierannahmestelle uebergeben wurde.
+  // Fehlt die Anschrift, erscheint ein Hinweistext statt einer leeren Box —
+  // schweigen waere schlimmer als ein unvollstaendiger Eintrag.
+  let papierBlock = '';
+  if (papierannahmestelle !== undefined) {
+    const pa = papierannahmestelle;
+    const ans = pa?.anschrift;
+    let anschriftHtml;
+    if (ans) {
+      anschriftHtml = [
+        ans.strasse ? escapeHtml(ans.strasse) + '<br>' : '',
+        escapeHtml(ans.plz) + ' ' + escapeHtml(ans.ort),
+      ].filter(Boolean).join('');
+    } else {
+      // Anschrift nicht bekannt — Praxis muss selbst nachfragen.
+      anschriftHtml =
+        '<em style="color:#b00">Anschrift nicht hinterlegt — bitte bei der Krankenkasse erfragen. ' +
+        'Die Urbelege gehen NICHT an die Datenannahmestelle.</em>';
+    }
+    papierBlock = `
+    <div class="box">
+      <div class="label">Urbelege senden an (Papierannahmestelle)</div>
+      <strong>${escapeHtml(pa?.name || '')}</strong><br>
+      IK: ${escapeHtml(pa?.ik || '')}<br>
+      ${anschriftHtml}
+    </div>`;
+  }
 
   return `
   <section class="blatt">
@@ -157,7 +189,7 @@ function renderBlatt({ praxis = {}, abrechnung = {}, belege = [], blatt = null }
       <div class="label">Rechnungsempfänger (Kostenträger)</div>
       <strong>${escapeHtml(abrechnung.kostentraeger_name || '')}</strong><br>
       IK: ${escapeHtml(abrechnung.kostentraeger_ik || '')}
-    </div>
+    </div>${papierBlock}
   </section>
 
   <div class="meta">
@@ -200,6 +232,9 @@ function renderBlatt({ praxis = {}, abrechnung = {}, belege = [], blatt = null }
       <li>Bei Hausbesuch-Pauschalen (X9922/X9950/X9951) ist der Hausbesuchsnachweis beigefügt.</li>
       <li>DTA-Datei <strong>${escapeHtml(abrechnung.dateiname || '')}</strong> wurde im Portal der Datenannahmestelle hochgeladen.</li>
       <li>Belege sind nach Belegnummer aufsteigend sortiert.</li>
+      ${papierannahmestelle !== undefined
+        ? `<li>Diesen Umschlag mit Original-Verordnungen an die <strong>Papierannahmestelle</strong> schicken (s. Adressblock oben) — NICHT an die Datenannahmestelle.</li>`
+        : ''}
       ${blatt ? `<li><strong>Dieser Umschlag enthält nur die Belege der Gesamtrechnung ${escapeHtml(abrechnung.rechnungsnummer || '')} (IK ${escapeHtml(abrechnung.krankenkasse_ik || '')}).</strong></li>` : ''}
     </ul>
   </div>
