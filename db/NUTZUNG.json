@@ -7538,7 +7538,7 @@
     "api-backend/billing/kostentraeger/annahmestelle.test.js"
    ],
    "register": true,
-   "status": "aktiv (Referenz) — ✅ **am 20.09.2026 live angewandt** (MCP). Befüllt wird sie von `tools/kostentraeger-annahmestellen-laden.mjs --write` (derselbe Lauf wie die VKG-Zeilen); die Seed-Migration für die Kundenbox entsteht daraus über `tools/seed-generieren.mjs`. ZEILENSTAND_PLATZHALTER",
+   "status": "aktiv (Referenz) — ✅ **am 20.09.2026 live angewandt** (MCP). Befüllt wird sie von `tools/kostentraeger-annahmestellen-laden.mjs --write` (derselbe Lauf wie die VKG-Zeilen); die Seed-Migration für die Kundenbox entsteht daraus über `tools/seed-generieren.mjs`.",
    "warum": "Die Urbelege (Verordnungen im Original) gehen **per Post** an die **Papierannahmestelle** (Verknüpfungsart **09**), nicht an die Datenannahmestelle (02/03) — Richtlinien-Text § 2(1) und § 4. Der Begleitzettel trug bis zum 20.09.2026 **keine Empfängeradresse**, weil es in der Datenbank keinen Ort dafür gab: `kostentraeger` hat nur IK und Name. Im Echtbetrieb muss der Podologe wissen, wohin der Umschlag geht.",
    "seit": "20.09.2026 · `api-backend/db/migrations/0032_kostentraeger_anschriften.sql` (ABRECHNUNG_ECHTBETRIEB_PLAN.md, Schritt 1.4)",
    "ungeklaert": false,

@@ -1920,20 +1920,28 @@ CREATE TABLE kostentraeger_annahmestellen (
 --   art_datenlieferung: nur 07 und 30 gelten für die elektronische Abrechnung
 --      (Abschnitt 5.2). 21/24/26/28/29 gehören zu Papierannahmestellen.
 --
---   ⚠️ UNVOLLSTÄNDIG GELADEN (live gezählt 06.09.2026): 2800 Zeilen zu 530
---      Kostenträgern. Segmente kamen nur aus 4 der 6 Quelldateien, und aus
---      EK05Q426 nur 11 statt der 726 im Rohtext:
---          AO05Q326_KE3   502 Segmente   (Rohdatei:  764 VKG)
---          BK05Q326_KE1  1565            (         3234)
---          BN050526_KE0   722            (         6183)
---          EK05Q426_KE0    11            (          726)  ← Ersatzkassen, fast leer
---          IK05Q326_KE1     0            (          475)  ← gar nicht geladen
---          LK05Q226_KE0     0            (           27)  ← gar nicht geladen
---      Folge: 110 der 302 abrechnenden Kostenträger haben KEINE
---      Datenannahmestelle — darunter TK (101575519), BARMER (104940005),
---      DAK-Gesundheit (105830016), KKH, hkk, HEK. Für genau diese Kassen
---      lässt sich der DTA-Empfänger heute nicht auflösen.
---      Offener Rest von Ops #264, siehe db/REGISTER.md.
+--   ✅ VOLLSTÄNDIG GELADEN (live gezählt 20.09.2026): 11407 Zeilen aus 6 von 6
+--      Quelldateien. Jede Datei trägt jetzt genau so viele Zeilen, wie der
+--      Rohtext VKG-Segmente hat:
+--          AO05Q326_KE3   764 · BK05Q326_KE1  3234 · BN050526_KE0  6183
+--          EK05Q226_KE0   724 · IK05Q326_KE1   475 · LK05Q226_KE0    27
+--      ⚠️ Hier stand bis zum 20.09.2026 der Stand vom 06.09. ("2800 Zeilen,
+--      nur 4 von 6 Dateien, 110 von 302 Kostenträgern ohne Datenannahmestelle,
+--      darunter TK/BARMER/DAK"). Das war überholt und damit die gefährliche
+--      Sorte falsch: wer es liest, hält einen gelösten Blocker für offen.
+--      Live gegengeprüft am 20.09.2026: TK (101575519) hat 25,
+--      BARMER (104940005) 49, DAK-Gesundheit (105830016) 18 Zeilen mit
+--      Verknüpfungsart 02/03 — der DTA-Empfänger löst für alle drei auf.
+--      Ebenfalls korrigiert: geladen ist jetzt EK05Q2 26 (gültig ab
+--      01.04.2026, also die HEUTE gültige Ausgabe), nicht mehr das zu früh
+--      eingespielte EK05Q426. Der Stichtagsfehler ist damit weg, und das
+--      Ladescript warnt von selbst, wenn ein "gültig ab" in der Zukunft liegt.
+--   ⏳ OFFEN bleibt ein kleinerer Rest: 82 der 302 abrechnenden Kostenträger
+--      haben weiterhin keine eigene Zeile mit Verknüpfungsart 02/03 (vorher
+--      110). Das ist kein Ladefehler mehr, sondern die Datenlage — für diese
+--      Kostenträger führt der Weg über die Verweiskette (Verknüpfungsart 01)
+--      bzw. den abrechnenden Kostenträger. Die Fallback-Kette entscheidet
+--      `gkv-302`, siehe db/REGISTER.md.
 
 -- 20.09.2026 (0032) — Postanschriften aus dem ANS-Segment der
 -- Kostentraegerdatei. Eine §302-Abrechnung besteht aus sechs Teilen, darunter
