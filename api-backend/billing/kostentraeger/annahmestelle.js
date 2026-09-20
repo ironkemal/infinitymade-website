@@ -54,16 +54,26 @@ export function abrechnungscodeKette(bereich, eigenerCode) {
 /**
  * Wählt aus den VKG-Zeilen EINES Kostenträgers die Annahmestelle.
  *
+ * Gemeinsamer Kern für elektronische Annahmestellen (03/02) und
+ * Papierannahmestellen (09).
+ *
  * @param {Array} zeilen  Rohzeilen aus `kostentraeger_annahmestellen`
  * @param {object} opts
  * @param {string[][]} opts.ketten        aus abrechnungscodeKette()
  * @param {string|null} [opts.bundeslandVkg]  2-stelliger VKG-Landesschlüssel, falls bekannt
+ * @param {readonly string[]} [opts.arten]  erlaubte Arten der Datenlieferung
+ * @param {readonly string[]} [opts.vkgKette]  Verknüpfungsarten in Vorzugsreihenfolge
  * @returns {{
  *   partnerIk: string, verknuepfungsart: string, abrechnungscode: string,
- *   bundesland: string, stufe: number, kandidaten: number
+ *   bundesland: string, kassenart: string|null, stufe: number, kandidaten: number
  * } | null}  null = nicht auflösbar
  */
-export function waehleAnnahmestelle(zeilen, { ketten, bundeslandVkg = null } = {}) {
+export function waehleAnnahmestelle(zeilen, {
+  ketten,
+  bundeslandVkg = null,
+  arten = ELEKTRONISCHE_DATENLIEFERUNG,
+  vkgKette = VERKNUEPFUNGSART_KETTE,
+} = {}) {
   // Bundesland-Filter. '' und '99' sind die landesunabhängigen Zeilen; ein
   // konkreter Landesschlüssel kommt nur dazu, wenn der Aufrufer ihn kennt.
   //
@@ -78,7 +88,7 @@ export function waehleAnnahmestelle(zeilen, { ketten, bundeslandVkg = null } = {
   if (bundeslandVkg) erlaubtesLand.add(bundeslandVkg);
 
   const brauchbar = (zeilen || []).filter(z =>
-    ELEKTRONISCHE_DATENLIEFERUNG.includes(String(z.art_datenlieferung || '')) &&
+    arten.includes(String(z.art_datenlieferung || '')) &&
     erlaubtesLand.has(String(z.bundesland ?? ''))
   );
   if (!brauchbar.length) return null;
@@ -88,7 +98,7 @@ export function waehleAnnahmestelle(zeilen, { ketten, bundeslandVkg = null } = {
   // Adresse als eine ohne (02), auch wenn 02 unter einem spezifischeren
   // Abrechnungscode stünde. Auf 02 fällt heute genau ein Kostenträger
   // (105810615) zurück.
-  for (const art of VERKNUEPFUNGSART_KETTE) {
+  for (const art of vkgKette) {
     const derArt = brauchbar.filter(z => String(z.verknuepfungsart || '') === art);
     if (!derArt.length) continue;
 
@@ -185,16 +195,19 @@ export const PAPIER_DATENLIEFERUNG = Object.freeze(['21', '24', '26', '28', '29'
 /**
  * Waehlt aus den VKG-Zeilen EINES Kostentraegers die Papierannahmestelle.
  *
- * Gegenstueck zu waehleAnnahmestelle(), aber ausschliesslich fuer
- * Verknuepfungsart 09 (Papierannahmestelle — kein Kettenfall wie bei 02/03).
- * Die Abrechnungscode-Kette (abrechnungscodeKette()) und der Bundesland-Filter
- * sind identisch mit waehleAnnahmestelle(), damit beide Wege denselben
- * Versicherten demselben Sachbearbeitungsweg zuordnen.
+ * Duenner Wrapper um den gemeinsamen Kern waehleAnnahmestelle() mit
+ * arten=PAPIER_DATENLIEFERUNG und vkgKette=['09'] (ausschliesslich fuer
+ * Verknuepfungsart 09, kein Kettenfall wie bei 02/03). Nutzt denselben
+ * Kern mit angepassten Parametern, damit Abrechnungscode-Kette
+ * (abrechnungscodeKette()) und Bundesland-Filter denselben Versicherten
+ * demselben Sachbearbeitungsweg zuordnen.
  *
  * Bundesland-Filter: '' und '99' gelten immer; ein konkreter Landesschluessel
  * wird nur hinzugezogen, wenn der Aufrufer ihn kennt. Ohne diesen Filter wuerden
  * landesspezifische Zeilen anderer Bundeslaender die Auswahl verfaelschen
  * (dieselbe Begruendung wie in waehleAnnahmestelle, db-ustasi 07.09.2026).
+ *
+ * Liefert das schlankere 5-Felder-Ergebnis ohne verknuepfungsart und kassenart.
  *
  * @param {Array} zeilen  Rohzeilen aus `kostentraeger_annahmestellen`
  * @param {object} opts
@@ -206,36 +219,21 @@ export const PAPIER_DATENLIEFERUNG = Object.freeze(['21', '24', '26', '28', '29'
  * } | null}
  */
 export function waehlePapierannahmestelle(zeilen, { ketten, bundeslandVkg = null } = {}) {
-  // Bundesland-Filter — identisch mit waehleAnnahmestelle().
-  const erlaubtesLand = new Set(['', '99']);
-  if (bundeslandVkg) erlaubtesLand.add(bundeslandVkg);
+  const treffer = waehleAnnahmestelle(zeilen, {
+    ketten,
+    bundeslandVkg,
+    arten: PAPIER_DATENLIEFERUNG,
+    vkgKette: ['09'],
+  });
+  if (!treffer) return null;
 
-  // Nur VKG-09-Zeilen mit einer Papier-Datenlieferungsart auswaehlen.
-  const brauchbar = (zeilen || []).filter(z =>
-    String(z.verknuepfungsart || '') === '09' &&
-    PAPIER_DATENLIEFERUNG.includes(String(z.art_datenlieferung || '')) &&
-    erlaubtesLand.has(String(z.bundesland ?? ''))
-  );
-  if (!brauchbar.length) return null;
-
-  // Abrechnungscode-Kette: Podologie 71/72 → 99 → 00, Physio 22 → 20 → 99 → 00.
-  // Dieselbe Logik wie bei der elektronischen Annahmestelle — der Papierweg gilt
-  // denselben fachlichen Abgrenzungen.
-  for (let stufe = 0; stufe < ketten.length; stufe++) {
-    const codes = ketten[stufe];
-    const treffer = brauchbar.filter(z => codes.includes(String(z.abrechnungscode || '')));
-    if (!treffer.length) continue;
-
-    const eindeutig = [...new Set(treffer.map(t => String(t.partner_ik)))];
-    return {
-      partnerIk:       String(treffer[0].partner_ik),
-      abrechnungscode: String(treffer[0].abrechnungscode || ''),
-      bundesland:      String(treffer[0].bundesland ?? ''),
-      stufe,
-      kandidaten:      eindeutig.length,
-    };
-  }
-  return null;
+  return {
+    partnerIk:       treffer.partnerIk,
+    abrechnungscode: treffer.abrechnungscode,
+    bundesland:      treffer.bundesland,
+    stufe:           treffer.stufe,
+    kandidaten:      treffer.kandidaten,
+  };
 }
 
 /**

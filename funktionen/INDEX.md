@@ -376,7 +376,6 @@ Bunları birleştirme — birleştirilecek olsaydı zaten tek dosya olurdu.
 - `leitsymptomatikAlsBitmaske()` — [api-backend/billing/dta/leitsymptomatik.js:58](api-backend/billing/dta/leitsymptomatik.js#L58-L96) — Spiegel von `leitsymptomatikListe()` in `module/verordnung-pruefung
 - `leitsymptomatikListe()` — [module/verordnung-pruefung.js:108](module/verordnung-pruefung.js#L108-L120) — Spiegel von `api-backend/billing/dta/leitsymptomatik
 - `pruefTitel()` — [module/verordnung-uebersicht.js:535](module/verordnung-uebersicht.js#L535-L541) — Spiegel von `pruefTitel` in module/verordnung-liste
-- `waehlePapierannahmestelle()` — [api-backend/billing/kostentraeger/annahmestelle.js:208](api-backend/billing/kostentraeger/annahmestelle.js#L208-L239) — identisch mit waehleAnnahmestelle(), damit beide Wege denselben Versicherten demselben Sachbearbeitungsweg zuordnen
 
 ## Aynı ada sahip birden fazla tanım
 
