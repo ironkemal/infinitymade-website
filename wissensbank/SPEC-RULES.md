@@ -794,6 +794,20 @@
   üzerinden) · şablon `api-backend/billing/pdf/begleitzettel.template.js`
 - **Kapsam:** tümü
 
+### Sammel-Rechnungsnummer ..14, Einzel-Rechnungsnummer ..6, Zeichenvorrat
+- **Kural:** REC segmentinde Sammel-Rechnungsnummer en fazla **14**, Einzel-Rechnungsnummer
+  en fazla **6** hanedir (`..n` = höchstmögliche Stellenbelegung), ikisi de AN/Muss.
+  Sonderzeichen ve boşluk kabul edilmez; ayraç olarak yalnız `-` ve `/`, asla ardışık, asla
+  başta veya sonda. Numara **tüm fatura yılları boyunca her Krankenkasse için tekil** olmalıdır.
+  Uzunluk ihlali Prüfstufe 2'de yakalanır (Anhang 2 Kap. 9 § 3.2) — **dosyanın tamamı** reddedilir.
+- **Kaynak:** Anlage 1 TP5 V21 Kap. 5.5.2 (SLGA REC, S. 34) ve Kap. 5.5.3.1 (SLLA REC, S. 44);
+  notasyon Kap. 5.1 (8)
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** uzunluk `F:03002` (`api-backend/billing/dta/preflight.js`); Zeichenvorrat `F:03006`
+  ve Einzel-uzunluk `F:03007` — ikisi 20.09.2026'da eklendi, `gkv-302` onayıyla sert kural
+  (`api-backend/billing/dta/regel-schwere.js` · `REGELN.md`)
+- **Kapsam:** tüm Leistungserbringergruppen, SLGA + SLLA
+
 ---
 
 
@@ -827,6 +841,22 @@
 - **Kodda:** ⛔ uygulanmamış — Auftragsdatei üreten kod yok (aşağıdaki kurala bak)
 - **Kapsam:** tüm gruplar
 
+### Transfernummer 0..999 arasında döner ve 999'dan sonra 0'a atlar
+- **Kural:** Auftragsdatei'nin `TRANSFER_NUMMER` alanı (25.–27. haneler, 3 N, Muss) 000–999
+  değerlerini alır. *„Sie wird ab '999' wieder auf '0' gesetzt."* Her **başarılı** aktarımda
+  +1; **başarısız** aktarımda numara korunur ve aynı dosyanın bir sonraki denemesinde tekrar
+  kullanılır. Vorlaufsatz'ın lfd. Nr.'si (Datenaustauschreferenz) ile **hiçbir ilgisi yoktur**.
+  Sayaç Absender↔Empfänger çifti başına yürür.
+- **Kaynak:** GGT Anlage 2 „Auftragsdatei", Auftragssatz V1.0 Stand 10.10.2024, geçerlilik
+  01.01.2025, alan `TRANSFER_NUMMER`. ⚠️ Anhang 1 zur Anlage 1 TP5 Kap. 4.3 yalnız **konumu**
+  (6.–8. hane) verir, **hiçbir değer aralığı vermez** — kodda 20.09.2026'ya kadar duran
+  „1–999" **kaynaksızdı**.
+- **Geçerlilik:** 01.01.2025
+- **Kodda:** aralık `[0, 999]` → `api-backend/billing/dta/filename.js` ·
+  `dta/auftragsdatei.js` · `dta/builder.js`; sayaç `datenaustausch_zaehler` içinde `% 1000`
+  ile döner (`api-backend/db/migrations/0029_datenaustausch_zaehler.sql`)
+- **Kapsam:** her DTA aktarımı
+
 ### Testdatei ödeme tetiklemez
 - **Kural:** UNB Feld 0035 = `0` (Test) veya `1` (Erprobung) olan dosyaların işlenmesi
   hiçbir ödeme tetiklemez.
@@ -850,6 +880,25 @@
 - **Kodda:** ⛔ uygulanmamış — `kind` kodda sabit, sürecin hangi aşamada olduğunu tutan DB
   alanı yok. „Test → Erprobung → Echt" geçişi bugün bir kod düzenlemesi gerektiriyor.
 - **Kapsam:** tüm gruplar
+
+### Zulassung zum Echtverfahren praxis başına değil, Absender×Empfänger çifti başına geçerlidir
+- **Kural:** Erprobung ve Echtverfahren-Zulassung „Absender ile Empfänger arasında" yürür;
+  Zulassung'u **Krankenkasse** verir, ayrıntılar ilgili **Datenannahmestelle** ile mutabık
+  kalınır. UNB-Testindikator (0 Test · 1 Erprobung · 2 Echt) Nutzdatendatei başına **TEK**
+  değerdir ve dosya birimi „je Datenannahmestelle mit Entschlüsselungsbefugnis je Kassenart"
+  olduğundan ifade edilebilir en ince granülarite (DAS × Kassenart)'tır. Praxis genelinde tek
+  bir bayrak **yanlıştır**: erken `echt` → Zulassung'suz bir DAS'a gerçek veri gider; geç
+  `echt` → „keine Zahlungen auslösen" diyen Testdatei gider, yani **para sessizce gelmez.**
+- **Kaynak:** Anlage 1 TP5 V21 Kap. 2 (1)(2) (S. 8) · Kap. 3 (1) + Kap. 8 (S. 175) ·
+  Kap. 5.4 UNB 0035 · Anhang 2 zur Anlage 1 Kap. 9 § 1, § 5, § 6
+- **Geçerlilik:** 01.10.2025 (Anlage 1 V21) / Anhang 2 Stand 10.11.2003
+- **Kodda:** Betriebsart `(owner_id, empfaenger_ik)` başına → `betriebsart_empfaenger`
+  (`api-backend/db/migrations/0031_betriebsart_je_empfaenger.sql`);
+  `terapeut_zertifikat.betriebsart` Vorgabewert olarak kalır
+- **Açık (belgelenmemiş):** Krankenkasse'nin Zulassung'u **Kassenart** bazında mı yoksa
+  **tek tek Krankenkasse** bazında mı verdiği hiçbir kaynakta yazmıyor — DAS randevusunda
+  (plan Abschnitt 2.1) sorulacak
+- **Kapsam:** tüm Leistungserbringergruppen, tüm Verordnungsarten
 
 ### Nutzdatendatei + Auftragsdatei çift gider
 - **Kural:** Prüfstufe 1'de dosyaların **çift hâlinde** (Auftragsdatei + zugehörige Nutzdatei)

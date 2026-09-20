@@ -130,8 +130,13 @@ yansıtıyor; `canli-test` canlıda doğruluyor.
 3. **`COUNT(*)`** — silme numarayı geri alır, eşzamanlılıkta çakışır.
 
 **Ve ikinci bir sayaç lazım:** `TRANSFER_NUMMER` ayrı bir şeydir — başarılı **aktarım** başına
-artar, `0..999` döner, **başarısız aktarımda aynı numara korunur.** Bugün `datennummer`'dan
-türetiliyor, yani spec'in "ilgisizdir" dediği şey yapılıyor.
+artar, **`0..999`** döner (999'dan sonra **0**), **başarısız aktarımda aynı numara korunur.**
+Bugün `datennummer`'dan türetiliyor, yani spec'in "ilgisizdir" dediği şey yapılıyor.
+
+> ✅ **Aralık 20.09.2026'da kaynağa bağlandı.** Kaynak **GGT Anlage 2 `TRANSFER_NUMMER`**
+> (Auftragssatz V1.0, Stand 10.10.2024, ab 01.01.2025): *„Sie wird ab '999' wieder auf '0'
+> gesetzt."* Anhang 1 § 4.3 yalnız konumu (6.–8. hane) verir, **değer aralığı vermez** —
+> kodda duran „1–999" kaynaksızdı ve düzeltildi.
 
 > ⚠️ **v1'deki "kasa 'bereits eingereicht' der" cümlesi kaynaksızdı, düzeltildi.** Spec böyle bir
 > ret gerekçesi tanımlamıyor. Belgelenmiş zarar: **Korrekturverfahren sırası bozulur** — bir
@@ -370,8 +375,15 @@ Varsayılan **`test`** kalır.
 > Alan yeri `db-ustasi`'nın (aday: `terapeut_zertifikat`, zaten owner+IK taşıyor).
 > ⛔ `praxura_setup` kullanılmaz (kutu-özel, SaaS'ta karşılığı yok → G7).
 >
-> ⚠️ **`gkv-302`'ye eksen sorusu:** Zulassung **praxis başına mı, praxis × Datenannahmestelle
-> başına mı?** İkincisiyse tek boolean yanlış olur.
+> ✅ **ÇÖZÜLDÜ 20.09.2026 — Zulassung Absender×Empfänger başına, `betriebsart_empfaenger`
+> tablosu.** `gkv-302`'ye sorulan eksen sorusunun cevabı: Erprobung ve Zulassung „Absender
+> ile Empfänger arasında" yürür (Anlage 1 TP5 V21 Kap. 2 (1)(2), Kap. 3 (1) + Kap. 8;
+> Anhang 2 zur Anlage 1 Kap. 9 § 1/§ 5/§ 6). Tek praxis-bayrağı iki yönde de sessiz yanlış
+> üretirdi: erken `echt` → Zulassung'suz DAS'a Echtdatei; geç `echt` → Zulassung'lu DAS'a
+> Testdatei, o da „keine Zahlungen auslösen" demek — **para gelmez, hata da gelmez.**
+> Çözüm: `betriebsart_empfaenger (owner_id, empfaenger_ik)` istisna tablosu
+> (`0031_betriebsart_je_empfaenger.sql`); `terapeut_zertifikat.betriebsart` (0028)
+> **Vorgabewert** olarak kalır, silinmez. Kural kaydı: `wissensbank/SPEC-RULES.md`.
 
 **Bitti ölçütü:** Üç mod da seçilebiliyor; Zulassung almamış tenant hiçbir şekilde `echt` dosya
 üretemiyor; geçiş kod değişikliği gerektirmiyor; **owner kutuda kendisi çevirebiliyor.**
@@ -514,6 +526,24 @@ vorzuhalten"*. On-prem'de müşterinin yedekleme politikasına bağlanıyor → 
   diyor, Erprobung için sessiz)
 - Logischer Dateiname'deki "Abrechnungsmonat" hizmet ayı mı, oluşturma ayı mı? (Kod oluşturma
   ayını kullanıyor, spec açık yazmıyor)
+- **Zulassung Kassenart bazında mı yoksa tek tek Krankenkasse bazında mı veriliyor?**
+  (Yazılı kaynakta yok — 20.09.2026'da `gkv-302` "Absender×Empfänger çifti" eksenini belgeledi
+  ama bu alt ayrım hiçbir belgede geçmiyor. `betriebsart_empfaenger` bugün DAS-IK başına
+  çalışıyor; cevap "Kassenart başına" çıkarsa anahtar genişler.)
+
+### ⛔ 2.2'den (ve ilk Erprobung dosyasından) ÖNCE yapılacak tek teknik adım
+
+**`0029` geriye dönük doldurma yapmıyor — bilinçli.** Migration uygulandığı anda
+`datenaustausch_zaehler` **sıfırdan** başlar, oysa `abrechnung` tablosunda eski `COUNT(*)`
+yöntemiyle verilmiş numaralar duruyor. Araya girilmezse aynı Datenaustauschreferenz **ikinci
+kez** dışarı çıkar — ve aynı numaradan `buildSammelRechnungsnummer()` ile **fatura numarası**
+da türediği için GoBD tarafı da ısırır.
+
+→ **İlk `erprobung` dosyasından ÖNCE**, ilgili her (Absender-IK, Empfänger-IK) çifti için
+`datenaustausch_zaehler_vorstellen()` ile mevcut en yüksek eski değer girilecek. Fonksiyon
+yalnız **ileri** alır (`greatest(…)`), yani iki kez çalıştırmak zararsızdır. Otomatik backfill
+bilerek yazılmadı: eski satırlarda `empfaenger_ik` yok, hangi numaranın hangi çifte ait olduğu
+**bilinmiyor** — tahmin edilseydi sessiz yanlış olurdu.
 
 ⛔ **Prüfstufe 1/2/3 testleri sentetik veriyle yapılır** (`guvenlik` sert veto). Erprobung
 spec gereği gerçek veriyle yapılır ve o meşrudur — ama müşterinin AVV/Vollmacht durumu
