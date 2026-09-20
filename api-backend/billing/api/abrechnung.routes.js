@@ -1521,7 +1521,7 @@ async function mandantUndAbrechnung(req, res) {
 
   const { data: ab } = await supabase
     .from('abrechnung')
-    .select('id, owner_id, business_id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, zaa_uploaded_at, paid_at, created_at')
+    .select('id, owner_id, business_id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, zaa_uploaded_at, paid_at, created_at')
     .eq('id', req.params.id)
     .maybeSingle();
   if (!ab) { res.status(404).json({ error: 'Abrechnung nicht gefunden' }); return null; }

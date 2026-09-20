@@ -68,6 +68,8 @@ const BETRIEBSART_LABELS = {
   echt:      'Echtbetrieb',
 };
 
+let _aktuellerModus = 'test';
+
 // IK-Nummer bereits aus terapeut_zertifikat gelesen und in certStatus angezeigt?
 // Wird als dataset-Flag auf dem Mount-Punkt gehalten, damit kein zweiter Select
 // losgeht, wenn der Block nach einem Tab-Wechsel neu gerendert wird.
@@ -189,6 +191,8 @@ export async function renderAbrechnungSettings(deps) {
 function _renderBetriebsartSchalter({ aktuell, geaendertAm, zulassungReferenz, zulassungDatum }) {
   const mount = document.getElementById('baVorgabewertMount') || document.getElementById('betriebsartMount');
   if (!mount) return;
+
+  _aktuellerModus = aktuell || 'test';
 
   // Modustext + Erläuterung je Modus.
   // Erprobung braucht besondere Betonung: echte Daten, aber der Dateiname
@@ -421,6 +425,18 @@ export function wireAbrechnungSettings(deps) {
   });
 }
 
+/** Das „Aktuell"-Etikett spiegelt die DATENBANK, nicht die Auswahl im
+ *  Formular. Es wird deshalb nur beim Aufbau der Ansicht und nach einem
+ *  ERFOLGREICHEN Speichern gesetzt — sonst behauptet der Bildschirm einen
+ *  Betriebsmodus, den der Server abgelehnt hat (z. B. „echt" ohne Zulassung). */
+function _setzeAktuellLabel(modus) {
+  _aktuellerModus = modus || 'test';
+  const lbl = document.getElementById('baModeLabel');
+  if (lbl) lbl.textContent = BETRIEBSART_LABELS[modus] || modus;
+  const ung = document.getElementById('baUngespeichert');
+  if (ung) ung.remove();
+}
+
 /**
  * Passt die Radiogruppen-Optik und die Zulassungsfelder an die gewählte
  * Betriebsart an, ohne die Seite neu zu laden.
@@ -445,10 +461,6 @@ function _aktualisiereBaAnsicht(gewaehlterModus) {
   const desc = document.getElementById('baBeschreibung');
   if (desc) desc.textContent = beschreibungen[gewaehlterModus] || '';
 
-  // Aktuellen Modusnamen in der Kopfzeile aktualisieren
-  const lbl = document.getElementById('baModeLabel');
-  if (lbl) lbl.textContent = BETRIEBSART_LABELS[gewaehlterModus] || gewaehlterModus;
-
   // Zulassungsfelder nur bei „echt" einblenden
   const felder = document.getElementById('baZulassungFelder');
   if (felder) felder.style.display = gewaehlterModus === 'echt' ? '' : 'none';
@@ -456,6 +468,25 @@ function _aktualisiereBaAnsicht(gewaehlterModus) {
   // Fehlerhinweis zurücksetzen
   const fehler = document.getElementById('baZulassungFehler');
   if (fehler) fehler.style.display = 'none';
+
+  // Ungespeichert-Hinweis anzeigen oder entfernen
+  const modeLbl = document.getElementById('baModeLabel');
+  let ungEl = document.getElementById('baUngespeichert');
+  if (gewaehlterModus !== _aktuellerModus) {
+    if (!ungEl && modeLbl) {
+      ungEl = document.createElement('span');
+      ungEl.id = 'baUngespeichert';
+      modeLbl.insertAdjacentElement('afterend', ungEl);
+    }
+    if (ungEl) {
+      ungEl.style.marginLeft = '8px';
+      ungEl.style.fontSize = '11px';
+      ungEl.style.color = '#ea580c';
+      ungEl.textContent = 'noch nicht gespeichert';
+    }
+  } else if (ungEl) {
+    ungEl.remove();
+  }
 }
 
 /**
@@ -572,18 +603,24 @@ async function _speichereBetriebsart(deps) {
       patch.zulassung_datum    = dat;
     }
 
-    const { error } = await deps.supabase
+    const { data: gespeichert, error } = await deps.supabase
       .from('terapeut_zertifikat')
-      .upsert(patch, { onConflict: 'owner_id' });
+      .upsert(patch, { onConflict: 'owner_id' })
+      .select('betriebsart')
+      .maybeSingle();
 
     if (error) throw error;
 
+    const bestaetigterModus = gespeichert?.betriebsart || neueModus;
+
     deps.showToast(
-      'Vorgabewert auf „' + BETRIEBSART_LABELS[neueModus] + '" umgestellt ✓'
+      'Vorgabewert auf „' + (BETRIEBSART_LABELS[bestaetigterModus] || bestaetigterModus) + '" umgestellt ✓'
     );
 
     // Ansicht sofort auf den neuen Modus bringen, ohne loadSettings erneut aufzurufen
-    _aktualisiereBaAnsicht(neueModus);
+    _aktualisiereBaAnsicht(bestaetigterModus);
+    _setzeAktuellLabel(bestaetigterModus);
+
     // Zeitstempel in der Kopfzeile nachziehen
     const lbl = document.getElementById('baModeLabel');
     const heute = new Date().toLocaleDateString('de-DE');

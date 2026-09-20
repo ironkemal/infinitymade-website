@@ -32,7 +32,7 @@
  */
 
 import { fmtEur } from './geld.js?v=20260909';
-import { aggregierterDateiStatus, dateiStatusBadge, dateiStatusInfo } from './abrechnung-status.js?v=20260909';
+import { aggregierterDateiStatus, dateiStatusBadge, dateiStatusInfo, istVerworfen } from './abrechnung-status.js?v=20260920b';
 import { emit } from './signal.js?v=20260813';
 
 // ─── Reines Sortieren (ohne DOM — hier liegen die Tests) ────────────────────
@@ -48,6 +48,7 @@ import { emit } from './signal.js?v=20260813';
  *   3  unterwegs, wir warten auf die Antwort
  *   4  angenommen, wir warten auf das Geld
  *   5  fertig
+ *   9  abgebrochen — nie eine Datei gewesen
  */
 export const DRINGLICHKEIT = {
   rejected: 0, abgewiesen: 0,
@@ -56,6 +57,7 @@ export const DRINGLICHKEIT = {
   gesendet: 3,
   accepted: 4,
   paid: 5,
+  verworfen: 9,
 };
 
 /** @param {string} key @returns {number} */
@@ -187,7 +189,7 @@ export async function ladeAbrechnungVerlauf() {
 
   const [dateiRes, zeilenRes, zahlungRes] = await Promise.all([
     ctx.supabase.from('abrechnung')
-      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, zaa_uploaded_at, paid_at, created_at')
+      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, zaa_uploaded_at, paid_at, created_at')
       .eq('owner_id', ownerId)
       .order('created_at', { ascending: false })
       .limit(50),
@@ -230,6 +232,7 @@ function zeichneVerlauf() {
 
   tbody.innerHTML = sortiert.map(a => {
     const gewaehlt = _auswahl === a.id;
+    const verworfen = istVerworfen(a);
     const info = dateiStatusInfo(a.anzeigeStatus);
     const datum = a.created_at ? new Date(a.created_at).toLocaleDateString('de-DE') : '—';
     const signiert = a.signed_storage_path
@@ -238,17 +241,30 @@ function zeichneVerlauf() {
     // Die Fälligkeit steht in der Liste nur, wenn sie überschritten ist —
     // 4 Wochen ab Einreichung (Richtlinien-Text 20.11.2006 § 7 Abs. 2).
     const ueber = istUeberfaellig(a);
+    const dateiCode = verworfen
+      ? esc(a.rechnungsnummer || a.id.slice(0, 8))
+      : esc(a.dateiname || a.rechnungsnummer || a.id.slice(0, 8));
+    const grundDiv = (verworfen && a.verwerfungsgrund)
+      ? `<div style="white-space:normal;max-width:260px;font-size:11px;color:var(--text-muted);">${esc(a.verwerfungsgrund)}</div>`
+      : '';
+    const sollZelle = verworfen
+      ? `<td style="text-align:right;white-space:nowrap;color:var(--text-muted);">—</td>`
+      : `<td style="text-align:right;white-space:nowrap;color:var(--text-main);">${esc(fmtEur(a.soll))}</td>`;
+    const offenZelle = verworfen
+      ? `<td style="text-align:right;white-space:nowrap;color:var(--text-muted);">—</td>`
+      : `<td style="text-align:right;white-space:nowrap;color:${a.offen > 0.005 ? 'var(--text-main)' : 'var(--text-muted)'};">
+        ${esc(fmtEur(a.offen))}${ueber ? ` <span title="Zahlungsfrist von 4 Wochen überschritten (Richtlinien § 7 Abs. 2)" style="color:#ea580c;">⏰</span>` : ''}
+      </td>`;
+
     return `<tr class="ab-verlauf-row${gewaehlt ? ' ab-verlauf-gewaehlt' : ''}" data-id="${esc(a.id)}"
-        style="cursor:pointer;border-left:3px solid ${info.farbe};${gewaehlt ? 'background:var(--bg-card);' : ''}"
+        style="cursor:pointer;border-left:3px solid ${info.farbe};${gewaehlt ? 'background:var(--bg-card);' : ''}${verworfen ? 'opacity:0.7;' : ''}"
         title="${esc(info.hilfe)}">
-      <td style="white-space:nowrap;"><code style="font-size:12px;color:var(--text-main);">${esc(a.dateiname || a.rechnungsnummer || a.id.slice(0, 8))}</code> ${signiert}</td>
+      <td style="white-space:nowrap;"><code style="font-size:12px;color:var(--text-main);">${dateiCode}</code> ${signiert}${grundDiv}</td>
       <td style="color:var(--text-main);">${esc(a.kassenName)}</td>
       <td style="white-space:nowrap;">${datum}</td>
       <td style="text-align:center;color:var(--text-muted);">${a.prescription_count || 0}</td>
-      <td style="text-align:right;white-space:nowrap;color:var(--text-main);">${esc(fmtEur(a.soll))}</td>
-      <td style="text-align:right;white-space:nowrap;color:${a.offen > 0.005 ? 'var(--text-main)' : 'var(--text-muted)'};">
-        ${esc(fmtEur(a.offen))}${ueber ? ` <span title="Zahlungsfrist von 4 Wochen überschritten (Richtlinien § 7 Abs. 2)" style="color:#ea580c;">⏰</span>` : ''}
-      </td>
+      ${sollZelle}
+      ${offenZelle}
       <td>${dateiStatusBadge(a.anzeigeStatus, { kurz: true })}</td>
     </tr>`;
   }).join('');
@@ -262,15 +278,41 @@ export function istUeberfaellig(a, heute = new Date()) {
   return heute.getTime() - new Date(a.zaa_uploaded_at).getTime() > 28 * 864e5;
 }
 
+/**
+ * Die Zeile über der Liste. `verworfen` zählt hier NICHT als Datei: es ist
+ * kein Beleg unterwegs, kein Euro offen, nichts abgesetzt — nur eine
+ * verbrannte Nummer. Wer sie mitzählt, meldet der Praxis Arbeit, die es
+ * nicht gibt.
+ * @returns {{dateien:number, offenZahl:number, offenSumme:number, rot:number, verworfen:number, text:string}}
+ */
+export function verlaufZusammenfassung(zeilen) {
+  const alle = zeilen || [];
+  const verworfen = alle.filter(a => istVerworfen(a)).length;
+  const echt = alle.filter(a => !istVerworfen(a));
+  const dateien = echt.length;
+  const offenZahl = echt.filter(a => a.offen > 0.005).length;
+  const offenSumme = echt.reduce((s, a) => s + (a.offen > 0 ? a.offen : 0), 0);
+  const rot = echt.filter(a => a.anzeigeStatus === 'rejected' || a.anzeigeStatus === 'abgewiesen').length;
+
+  let text;
+  if (!alle.length) {
+    text = 'Noch keine Abrechnungen erstellt';
+  } else if (dateien === 0) {
+    text = `Noch keine Abrechnungen erstellt · ${verworfen} verworfen`;
+  } else {
+    text = `${dateien} Datei${dateien > 1 ? 'en' : ''} · ${offenZahl} offen`
+      + (rot ? ` · ${rot} abgesetzt` : '')
+      + (verworfen ? ` · ${verworfen} verworfen` : '')
+      + ` · ${fmtEur(offenSumme)} offen`;
+  }
+
+  return { dateien, offenZahl, offenSumme, rot, verworfen, text };
+}
+
 function _einstiegAktualisieren() {
   const el = document.getElementById('abEinstiegAltInfo');
   if (!el) return;
-  if (!_zeilen.length) { el.textContent = 'Noch keine Abrechnungen erstellt'; return; }
-  const offenZahl = _zeilen.filter(a => a.offen > 0.005).length;
-  const offenSumme = _zeilen.reduce((s, a) => s + (a.offen > 0 ? a.offen : 0), 0);
-  const rot = _zeilen.filter(a => a.anzeigeStatus === 'rejected' || a.anzeigeStatus === 'abgewiesen').length;
-  el.textContent = `${_zeilen.length} Datei${_zeilen.length > 1 ? 'en' : ''} · ${offenZahl} offen`
-    + (rot ? ` · ${rot} abgesetzt` : '') + ` · ${fmtEur(offenSumme)} offen`;
+  el.textContent = verlaufZusammenfassung(_zeilen).text;
 }
 
 // ─── Ereignisse ─────────────────────────────────────────────────────────────

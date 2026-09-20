@@ -9,11 +9,11 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DATEI_STATUS, dateiStatusInfo, aggregierterDateiStatus, dateiStatusBadge } from './abrechnung-status.js';
+import { DATEI_STATUS, dateiStatusInfo, aggregierterDateiStatus, dateiStatusBadge, istVerworfen } from './abrechnung-status.js';
 
 test('DATEI_STATUS deckt alle rohen abrechnung.status-Werte aus dem Schema ab', () => {
-  // db/SCHEMA.sql: CHECK status IN (erstellt, heruntergeladen, gesendet, accepted, rejected, paid)
-  const rohwerte = ['erstellt', 'heruntergeladen', 'gesendet', 'accepted', 'rejected', 'paid'];
+  // db/SCHEMA.sql: CHECK status IN (erstellt, heruntergeladen, gesendet, accepted, rejected, paid, verworfen)
+  const rohwerte = ['erstellt', 'heruntergeladen', 'gesendet', 'accepted', 'rejected', 'paid', 'verworfen'];
   const keys = DATEI_STATUS.map(s => s.key);
   for (const w of rohwerte) assert.ok(keys.includes(w), `${w} fehlt in DATEI_STATUS`);
 });
@@ -74,4 +74,19 @@ test('Absetzung und Teilabsetzung tragen dieselben Farben wie auf der Verordnung
   const teilweise = DATEI_STATUS.find(s => s.key === 'teilweise_abgesetzt');
   assert.equal(rejected.farbe, '#be185d');   // abrechnungsstatus.js: 'abgesetzt'
   assert.equal(teilweise.farbe, '#ea580c');  // abrechnungsstatus.js: 'teilabsetzung'
+});
+
+test('istVerworfen erkennt vor der Dateierzeugung abgebrochene Abrechnungen', () => {
+  // Zeilenobjekt mit status: 'verworfen'
+  assert.equal(istVerworfen({ status: 'verworfen' }), true);
+  // Reiner Status-String
+  assert.equal(istVerworfen('verworfen'), true);
+  // Andere Statuswerte dürfen nicht als verworfen gelten
+  assert.equal(istVerworfen({ status: 'erstellt' }), false);
+  assert.equal(istVerworfen({ status: 'rejected' }), false);
+  assert.equal(istVerworfen('paid'), false);
+  // null und undefined dürfen nicht werfen
+  assert.equal(istVerworfen(null), false);
+  assert.equal(istVerworfen(undefined), false);
+  assert.equal(istVerworfen({}), false);
 });

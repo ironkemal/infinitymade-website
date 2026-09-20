@@ -30,7 +30,8 @@
  * `teilweise_abgesetzt` steht NICHT in der Datenbank
  * ───────────────────────────────────────────────────
  * `abrechnung.status` kennt laut `db/SCHEMA.sql` nur
- * `erstellt, heruntergeladen, gesendet, accepted, rejected, paid` — kein
+ * `erstellt, heruntergeladen, gesendet, accepted, rejected, paid` und seit
+ * 20.09.2026 `verworfen` (Migration `api-backend/db/migrations/0033_abrechnung_verworfen.sql`) — kein
  * „teilweise". Ob eine Datei ganz oder teilweise abgesetzt wurde, steht in
  * zwei separaten Spalten (`rejected_count`, `prescription_count`) und wird
  * hier aus beiden ZUSAMMEN abgeleitet (`aggregierterDateiStatus()`).
@@ -128,7 +129,23 @@ export const DATEI_STATUS = [
     farbe: '#15803d', bg: 'rgba(21,128,61,0.16)',
     hilfe: 'Der volle Rechnungsbetrag (abzüglich Absetzungen) ist eingegangen.',
   },
+  {
+    // Kein Status auf dem Weg zum Geld, sondern ein Abbruch DAVOR: die Datei
+    // wurde nie erzeugt, die Kasse hat nie etwas gesehen. Deshalb steht er
+    // ganz unten und trägt ausdrücklich KEINES der beiden Rot — Rot heisst auf
+    // diesem Bildschirm „die Kasse hat Geld verweigert" (gkv-302, Veto V2).
+    // Hier ist nichts verweigert worden, hier ist nichts losgeschickt worden.
+    key: 'verworfen', label: 'Verworfen — keine Datei erzeugt', kurz: 'Verworfen',
+    farbe: '#57534e', bg: 'rgba(87,83,78,0.16)',
+    hilfe: 'Die Vorprüfung hat diesen Abrechnungsversuch abgelehnt — es wurde keine Datei erzeugt und nichts eingereicht. Die bereits vergebene Datenaustauschreferenz und Transfernummer sind dennoch verbraucht; der Eintrag erklärt die Lücke im Nummernkreis (GoBD).',
+  },
 ];
+
+/** Ein Abbruch vor der Dateierzeugung — keine Datei, kein Einreichen, kein Geld.
+ *  Eigene Funktion, weil drei Bildschirme dieselbe Frage stellen. */
+export function istVerworfen(abrechnung) {
+  return (typeof abrechnung === 'string' ? abrechnung : abrechnung?.status) === 'verworfen';
+}
 
 const BY_KEY = new Map(DATEI_STATUS.map(s => [s.key, s]));
 

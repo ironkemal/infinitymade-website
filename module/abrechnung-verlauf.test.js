@@ -12,7 +12,7 @@
 //                    (Text 20.11.2006 § 7 Abs. 2).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { dringlichkeit, sortiereVerlauf, reichereAn, istUeberfaellig, DRINGLICHKEIT }
+import { dringlichkeit, sortiereVerlauf, reichereAn, istUeberfaellig, verlaufZusammenfassung, DRINGLICHKEIT }
   from './abrechnung-verlauf.js';
 
 const datei = (o) => ({
@@ -26,6 +26,8 @@ test('dringlichkeit: was zu tun ist steht oben, Erledigtes unten', () => {
   assert.ok(dringlichkeit('abgewiesen') < dringlichkeit('gesendet'));
   assert.ok(dringlichkeit('gesendet')   < dringlichkeit('accepted'));
   assert.ok(dringlichkeit('accepted')   < dringlichkeit('paid'));
+  assert.ok(dringlichkeit('verworfen')  > dringlichkeit('paid'),
+    'verworfen steht ganz unten — es war nie eine echte Datei unterwegs');
   assert.equal(DRINGLICHKEIT.rejected, DRINGLICHKEIT.abgewiesen,
     'beide Rot sind gleich dringend — unterschieden werden sie in Farbe und Aktion');
   // Ein Status, den niemand kennt, ist eher etwas zum Ansehen als etwas
@@ -114,4 +116,48 @@ test('istUeberfaellig: 4 Wochen ab Einreichung, und nur wenn Geld offen ist', ()
   assert.equal(istUeberfaellig({ zaa_uploaded_at: eingereicht(90), offen: 0 }, heute), false);
   // Noch nicht eingereicht: eine Frist waere eine erfundene Mahnung.
   assert.equal(istUeberfaellig({ zaa_uploaded_at: null, offen: 100 }, heute), false);
+});
+
+test('verlaufZusammenfassung: verworfene Abrechnungen zählen nicht als echte Dateien', () => {
+  // 2 normale Dateien und 1 verworfener Preflight-Abbruch: nur die echten Dateien
+  // werden gezählt, die verbrannte Nummer wird als Zusatzinformation ausgewiesen.
+  const zeilen = [
+    { status: 'gesendet', anzeigeStatus: 'gesendet', offen: 150 },
+    { status: 'paid', anzeigeStatus: 'paid', offen: 0 },
+    { status: 'verworfen', anzeigeStatus: 'verworfen', offen: 0 },
+  ];
+  const z = verlaufZusammenfassung(zeilen);
+  assert.equal(z.dateien, 2);
+  assert.equal(z.verworfen, 1);
+  assert.match(z.text, /2 Dateien/);
+  assert.doesNotMatch(z.text, /3 Datei/);
+  assert.match(z.text, /1 verworfen/);
+});
+
+test('verlaufZusammenfassung: offene Beträge verworfener Versuche fliessen nicht in offenSumme', () => {
+  // Selbst wenn an einer verworfenen Zeile rechnerisch ein Betrag hinge:
+  // da nie eine Datei eingereicht wurde, darf hier kein offenes Geld gemeldet werden.
+  const zeilen = [
+    { status: 'gesendet', anzeigeStatus: 'gesendet', offen: 100 },
+    { status: 'verworfen', anzeigeStatus: 'verworfen', offen: 999 },
+  ];
+  const z = verlaufZusammenfassung(zeilen);
+  assert.equal(z.offenZahl, 1);
+  assert.equal(z.offenSumme, 100);
+});
+
+test('verlaufZusammenfassung: Leerzustand und reine Abbruchliste ohne echte Dateien', () => {
+  // Noch gar nichts eingereicht
+  assert.equal(verlaufZusammenfassung([]).text, 'Noch keine Abrechnungen erstellt');
+  assert.equal(verlaufZusammenfassung(null).text, 'Noch keine Abrechnungen erstellt');
+
+  // Nur verworfene Abrechnungsversuche vorhanden — keine echte Datei, aber Hinweis auf Abbrüche
+  const nurVerworfen = [
+    { status: 'verworfen', anzeigeStatus: 'verworfen', offen: 0 },
+    { status: 'verworfen', anzeigeStatus: 'verworfen', offen: 0 },
+  ];
+  const z = verlaufZusammenfassung(nurVerworfen);
+  assert.equal(z.dateien, 0);
+  assert.equal(z.verworfen, 2);
+  assert.equal(z.text, 'Noch keine Abrechnungen erstellt · 2 verworfen');
 });

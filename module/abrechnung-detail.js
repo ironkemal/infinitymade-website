@@ -44,7 +44,7 @@
  */
 
 import { fmtEur } from './geld.js?v=20260909';
-import { dateiStatusBadge, aggregierterDateiStatus, dateiStatusInfo } from './abrechnung-status.js?v=20260909';
+import { dateiStatusBadge, aggregierterDateiStatus, dateiStatusInfo, istVerworfen } from './abrechnung-status.js?v=20260920b';
 import { ladeDateieinheiten, dateieinheitVon } from './podologie-dateieinheit.js?v=20260907';
 import { on } from './signal.js?v=20260813';
 
@@ -96,6 +96,25 @@ export function faelligkeit(abrechnung, heute = new Date()) {
     tageRest: Math.ceil((faellig.getTime() - heute.getTime()) / 864e5),
     ueberfaellig: faellig.getTime() < heute.getTime(),
   };
+}
+
+/**
+ * Was steht da, wenn zu einer Datei keine Zeilen gespeichert sind? Drei
+ * verschiedene Gründe, drei verschiedene Sätze — der Satz über „Altdateien"
+ * stand bisher auch unter Dateien von heute und war dort schlicht falsch.
+ */
+export function leerHinweisText(ab, heute = new Date()) {
+  if (istVerworfen(ab)) {
+    const grund = ab?.verwerfungsgrund;
+    return 'Diese Abrechnung wurde in der Vorprüfung abgelehnt — es wurde keine Datei erzeugt' + (grund ? ': ' + grund : '.');
+  }
+  const n = ab?.prescription_count || 0;
+  const d = ab?.created_at ? new Date(ab.created_at) : null;
+  const vorStichtag = Boolean(d && !isNaN(d.getTime()) && d.getTime() < new Date('2026-09-09T00:00:00Z').getTime());
+  if (vorStichtag) {
+    return `Für diese Datei sind keine Zeilen gespeichert. Das betrifft Dateien, die vor dem 09.09.2026 entstanden sind — damals hielt nur der Kopfsatz fest, wie viele Belege drin waren (${n}).`;
+  }
+  return `Für diese Datei sind keine Zeilen gespeichert. Laut Kopfsatz enthält sie ${n} Beleg(e).`;
 }
 
 const ZEILEN_STATUS = {
@@ -183,11 +202,23 @@ export function korrigierbareZeilen(zeilen) {
     && z.prescription_id && z.belegnummer && z.einzel_rechnungsnummer);
 }
 
+function verwerfungHtml(ab) {
+  if (!istVerworfen(ab)) return '';
+  const grundHtml = ab?.verwerfungsgrund
+    ? `<div style="margin-top:4px;">Grund: ${esc(ab.verwerfungsgrund)}</div>`
+    : '';
+  return `<div style="border:1px solid #57534e;border-radius:8px;padding:10px 12px;margin-bottom:12px;background:var(--bg-card);font-size:12px;color:var(--text-main);">
+    <strong>Diese Abrechnung wurde in der Vorprüfung abgelehnt — es wurde keine Datei erzeugt.</strong>
+    ${grundHtml}
+    <div style="margin-top:4px;">Die vergebene Datenaustauschreferenz und Transfernummer sind verbraucht; dieser Eintrag erklärt die Lücke im Nummernkreis (GoBD). Die Verordnungen sind unverändert und können nach Behebung des Fehlers erneut abgerechnet werden.</div>
+  </div>`;
+}
+
 function kopfHtml(ab, zeilen, geld) {
   const z = zeitraumAusZeilen(zeilen);
   const dat = (d) => d ? new Date(d).toLocaleDateString('de-DE') : '—';
   const status = aggregierterDateiStatus(ab);
-  const f = faelligkeit(ab);
+  const f = istVerworfen(ab) ? null : faelligkeit(ab);
 
   const felder = [
     ['Rechnungsnummer', `<code style="font-size:12px;">${esc(ab.rechnungsnummer || '—')}</code>`],
@@ -206,6 +237,7 @@ function kopfHtml(ab, zeilen, geld) {
        ${f.ueberfaellig ? `überfällig seit ${Math.abs(f.tageRest)} Tag${Math.abs(f.tageRest) === 1 ? '' : 'en'}` : `fällig in ${f.tageRest} Tag${f.tageRest === 1 ? '' : 'en'}`}
      </span>` : ''}
   </div>
+  ${verwerfungHtml(ab)}
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px 18px;margin-bottom:14px;">
     ${felder.map(([k, v]) => `<div>
       <div style="font-size:11px;color:var(--text-muted);">${esc(k)}</div>
@@ -223,7 +255,8 @@ function geldHtml(geld, ab) {
     ['Bezahlt',     geld.bezahlt,     Number(geld.bezahlt)   > 0 ? '#16a34a' : 'var(--text-muted)'],
     ['Offen',       geld.offen,       Number(geld.offen) > 0.005 ? '#ea580c' : 'var(--text-muted)'],
   ];
-  const rekonstruiert = Number(ab.total_eur) > 0 && !(Number(geld.eingereicht) > 0);
+  const verworfen = istVerworfen(ab);
+  const rekonstruiert = !verworfen && Number(ab.total_eur) > 0 && !(Number(geld.eingereicht) > 0);
   return `
   <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding:10px 14px;margin-bottom:14px;
        border:1px solid var(--border);border-radius:8px;background:var(--bg-card);">
@@ -233,7 +266,7 @@ function geldHtml(geld, ab) {
     </div>`).join('')}
     ${rekonstruiert ? `<div style="font-size:11px;color:#b45309;max-width:280px;">
       Beträge aus dem Kopfsatz — für diese Altdatei gibt es keine eingefrorenen Zeilenbeträge.</div>` : ''}
-    <button class="btn-ghost btn-sm" data-ab-akt="zahlung-erfassen" style="margin-left:auto;">💶 Zahlung erfassen</button>
+    ${!verworfen ? '<button class="btn-ghost btn-sm" data-ab-akt="zahlung-erfassen" style="margin-left:auto;">💶 Zahlung erfassen</button>' : ''}
   </div>`;
 }
 
@@ -404,9 +437,9 @@ function vkz01AusnahmeHtml(zeilen) {
 }
 
 function leerHtml(ab) {
-  return `<div style="padding:14px;border:1px dashed var(--border);border-radius:8px;color:var(--text-muted);font-size:13px;">
-    Für diese Datei sind keine Zeilen gespeichert. Das betrifft Dateien, die vor dem 09.09.2026 entstanden sind —
-    damals hielt nur der Kopfsatz fest, wie viele Belege drin waren (${ab.prescription_count || 0}).
+  const border = istVerworfen(ab) ? '#57534e' : 'var(--border)';
+  return `<div style="padding:14px;border:1px dashed ${border};border-radius:8px;color:var(--text-muted);font-size:13px;">
+    ${esc(leerHinweisText(ab))}
   </div>`;
 }
 
@@ -422,7 +455,9 @@ function aktionenHtml(ab) {
   if (ab.begleitzettel_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="begleit">Begleitzettel</button>`);
   if (ab.signed_storage_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="p7m">Signierte Datei (.p7m)</button>`);
   else if (ab.storage_path)   k.push(`<button class="btn-primary btn-sm" data-ab-akt="signieren">✍ Signieren</button>`);
-  k.push(`<button class="btn-ghost btn-sm" data-ab-akt="zaa">📨 ZAA hochladen</button>`);
+  if (!istVerworfen(ab)) {
+    k.push(`<button class="btn-ghost btn-sm" data-ab-akt="zaa">📨 ZAA hochladen</button>`);
+  }
   if (ab.status === 'rejected' || ab.status === 'accepted') {
     k.push(`<button class="btn-ghost btn-sm" data-ab-akt="fehler">🔍 ZAA-Fehler</button>`);
   }
@@ -432,6 +467,7 @@ function aktionenHtml(ab) {
   // stille Ein-Klick-Retry ist entfernt (Veto V1). Der richtige Weg steht
   // stattdessen im Korrektur-Panel: korrekturHtml()/vkz01AusnahmeHtml() oben,
   // sichtbar am Kopf des Inhalts, nicht in dieser Aktionsleiste.
+  // Verworfene Abrechnungen bieten kein ZAA-Hochladen an, da mangels Dateierzeugung nichts eingereicht wurde.
   return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
     ${k.join('')}
   </div>`;
