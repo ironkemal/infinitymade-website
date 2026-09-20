@@ -24,6 +24,7 @@ const result = buildDtaFile({
     rechnungsart: '1',
   },
   kind: 'test',  // → TSOL0nnn physikalischer Dateiname, testindikator='0'
+  transfernummer: 1, // ((Math.max(1, 1) - 1) % 999) + 1 = 1 (alter Notweg aus datennummer: 1)
   vkz: '01',
   prescriptions: [{
     patient: {

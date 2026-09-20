@@ -26,7 +26,8 @@
 //                  (Testkennzeichen), nicht im Dateinamen.
 //   Stellen 2–4:   "SOL" (Sonstige Leistungserbringer)
 //   Stelle 5:      "0"
-//   Stellen 6–8:   dreistellige Transfernummer (1–999)
+//   Stellen 6–8:   dreistellige Transfernummer (0–999; Anhang 1 § 4.3 nennt keinen
+//                  Wertebereich; der Bereich stammt aus GGT Anlage 2, Feld TRANSFER_NUMMER)
 //
 // Referenzen:
 //   wissensbank/gemeinsam/302-tp5/Anhang_01_Anlage_1_TP5_Kapitel_4_Datenuebermittlung_20170831.txt
@@ -63,12 +64,14 @@ export function buildLogischerDateiname({ absenderIk, rolle = 'S', abrechnungsmo
  * @param {'echt'|'test'|'erprobung'} [opts.kind]  'erprobung' zählt als
  *   Testdaten ("T") — §4.3 kennt nur E/T, die Erprobungsphase unterscheidet
  *   sich über UNB 0035, nicht über den Dateinamen.
- * @param {number} opts.transfernummer    1–999, fortlaufend je Absender
+ * @param {number} opts.transfernummer    0–999, fortlaufend je Absender
  */
 export function buildPhysikalischerDateiname({ kind = 'echt', transfernummer }) {
   const t = Number(transfernummer);
-  if (!Number.isInteger(t) || t < 1 || t > 999) {
-    throw new Error('transfernummer must be an integer in [1, 999]');
+  // Untere Grenze 0: Anhang 1 § 4.3 nennt keinen Wertebereich; der Bereich stammt
+  // aus GGT Anlage 2, Feld TRANSFER_NUMMER (bis 20.09.2026 stand hier 1, ohne Beleg).
+  if (!Number.isInteger(t) || t < 0 || t > 999) {
+    throw new Error('transfernummer must be an integer in [0, 999]');
   }
   const echtBuchstabe = kind === 'echt' ? 'E' : 'T';
   return `${echtBuchstabe}SOL0${String(t).padStart(3, '0')}`;

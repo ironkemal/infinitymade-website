@@ -1,6 +1,12 @@
 -- §302-Echtbetrieb, Schritt 1.2 (ABRECHNUNG_ECHTBETRIEB_PLAN.md) —
 -- ZWEI dauerhafte Zaehler: Datenaustauschreferenz und Transfernummer.
 --
+-- ⚠️ DIREKTE KORREKTUR (20.09.2026): Diese Migration ist noch nicht auf die
+-- Live-Datenbank angewandt und noch nicht gepusht (siehe auch Hinweis in
+-- db/erwartete-zaehler.json: "warten auf Freigabe"). Gemäß Projektregel wird
+-- sie direkt korrigiert, es gibt keine Nachfolge-Migration (die Regel
+-- „angewandte Datei wird nie geändert" greift hier nicht).
+--
 -- WAS HEUTE FALSCH IST (gkv-302, 20.09.2026). Alle drei Erzeugungsrouten
 -- rechnen `const datennummer = (weekCount || 0) + 1;` aus einem COUNT(*) auf
 -- `abrechnung`. Daran stimmt dreierlei nicht:
@@ -25,15 +31,17 @@
 -- ZWEITER ZAEHLER: die Transfernummer ist etwas anderes und wurde bisher aus
 -- `datennummer` abgeleitet (builder.js:427, Modulo) — genau das, wovon die
 -- Spezifikation sagt, es habe "keinen Bezug zur lfd. Nr. des Vorlaufsatzes".
--- Sie zaehlt UEBERTRAGUNGEN, laeuft 1..999 im Kreis (Anhang 1 § 4.3,
--- buildPhysikalischerDateiname) und bleibt bei einer FEHLGESCHLAGENEN
--- Uebertragung gleich. Deshalb wird sie einmal je Datei vergeben und AUF DER
--- ZEILE festgehalten: ein zweiter Sendeversuch derselben Datei nimmt dieselbe
--- Nummer, weil er dieselbe Zeile liest.
---   ❓ Offene Frage an `gkv-302`: der Plan schreibt "0..999", der Wortlaut in
---      Anhang 1 § 4.3 (so wie er in filename.js zitiert ist) "1..999". Diese
---      Migration folgt dem Code/Zitat (1..999). Falls 0 zulaessig ist, ist das
---      eine reine Erweiterung des Wertebereichs.
+-- Sie zaehlt UEBERTRAGUNGEN, laeuft 0..999 im Kreis und bleibt bei einer
+-- FEHLGESCHLAGENEN Uebertragung gleich. Deshalb wird sie einmal je Datei vergeben
+-- und AUF DER ZEILE festgehalten: ein zweiter Sendeversuch derselben Datei nimmt
+-- dieselbe Nummer, weil er dieselbe Zeile liest.
+--   Fundstelle Wertebereich (Antwort auf frühere offene Frage, 20.09.2026):
+--   GGT Anlage 2 „Auftragsdatei", Auftragssatz V1.0 Stand 10.10.2024 (gültig ab
+--   01.01.2025), Feld TRANSFER_NUMMER (Stellen 25–27, 3 N, Muss): Wertebereich
+--   000–999, und wörtlich: „Sie wird ab '999' wieder auf '0' gesetzt."
+--   Anhang 1 § 4.3 nennt nur die Position (6.–8. Stelle des physikalischen
+--   Dateinamens) und keinen Wertebereich; der Bereich 0..999 stammt verbindlich
+--   aus GGT Anlage 2, Feld TRANSFER_NUMMER.
 --
 -- ⚠️ DREI SZENARIEN, die `onprem` (O-115) nachgetragen hat:
 --   1) SaaS -> Box: die `abrechnung`-Tabelle der Box ist leer, der Zaehler
@@ -51,6 +59,10 @@
 --          wie `nummernkreise`), +1 Index (der Primaerschluessel), +3 Spalten
 --          an `abrechnung` (datenaustauschreferenz, transfernummer,
 --          empfaenger_ik).
+--          Hinweis zur Korrektur 20.09.2026: Durch (a) Wertebereich 0..999 und
+--          (b) Fremdschlüssel owner_id (SET NULL statt CASCADE) ändert sich
+--          keine der zehn Zählgrößen (kein neues Objekt, nur geänderte
+--          Definitionen innerhalb von Tabelle und Funktionen).
 
 -- --------------------------------------------------------------------------
 -- 1) Die Zaehlerzeile
@@ -59,7 +71,7 @@
 CREATE TABLE public.datenaustausch_zaehler (
   absender_ik    text NOT NULL,
   empfaenger_ik  text NOT NULL,
-  owner_id       uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  owner_id       uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
   letzte_referenz      bigint NOT NULL DEFAULT 0,
   letzte_transfernummer integer NOT NULL DEFAULT 0,
   aktualisiert_am      timestamptz NOT NULL DEFAULT now(),
@@ -71,9 +83,9 @@ COMMENT ON TABLE public.datenaustausch_zaehler IS
 COMMENT ON COLUMN public.datenaustausch_zaehler.letzte_referenz IS
   'Monoton, ohne Jahresruecksetzung, ohne Obergrenze. Der 5-stellige UNB-Wert entsteht daraus erst bei der Ausgabe (((n-1) %% 99999) + 1) — so ueberlaeuft das SPEZIFIKATIONSFELD bei 99999, die HISTORIE aber nicht.';
 COMMENT ON COLUMN public.datenaustausch_zaehler.letzte_transfernummer IS
-  'Eigener Zaehler, 1..999 im Kreis. Ausdruecklich ohne Bezug zur Datenaustauschreferenz (Anhang 1 § 4.3).';
+  'Eigener Zaehler, 0..999 im Kreis (GGT Anlage 2, Feld TRANSFER_NUMMER: ab 999 wieder auf 0). Ausdruecklich ohne Bezug zur Datenaustauschreferenz (Anhang 1 § 4.3).';
 COMMENT ON COLUMN public.datenaustausch_zaehler.owner_id IS
-  'Mandant, zu dem die Absender-IK gehoert. Nicht Teil des Schluessels: fortlaufend ist die Folge je IK-Paar, nicht je Konto.';
+  'Herkunftsvermerk, nicht Teil des Schluessels: fortlaufend ist die Folge je IK-Paar, nicht je Konto. Fällt das Profil weg, bleibt der Zählerstand per ON DELETE SET NULL stehen (die Folge an der IK darf nie zurueckgehen).';
 
 ALTER TABLE public.datenaustausch_zaehler ENABLE ROW LEVEL SECURITY;
 -- Bewusst KEINE Policy — wie `nummernkreise`. Kein Client fasst den Zaehler
@@ -103,6 +115,9 @@ begin
   values (p_absender_ik, p_empfaenger_ik, p_owner, 1)
   on conflict (absender_ik, empfaenger_ik) do update
     set letzte_referenz = datenaustausch_zaehler.letzte_referenz + 1,
+        -- Heilt eine verwaiste Zeile (owner_id IS NULL durch ON DELETE SET NULL),
+        -- falls die IK später durch ein neues Mandantenkonto weitergenutzt wird:
+        owner_id = coalesce(datenaustausch_zaehler.owner_id, excluded.owner_id),
         aktualisiert_am = now()
   returning letzte_referenz into v_n;
 
@@ -125,11 +140,21 @@ begin
     raise exception 'naechste_transfernummer: owner, Absender-IK und Empfaenger-IK sind Pflicht';
   end if;
 
+  -- Erstwert-Entscheidung: Erstwert ist 1.
+  -- Begründung: Die Tabellenspalte `letzte_transfernummer` hat DEFAULT 0 (Ruhezustand:
+  -- noch keine Übertragung). Wurde die Zeile durch das parallele
+  -- `naechste_datenaustauschreferenz()` angelegt, steht dort 0. Der ON CONFLICT-Zweig
+  -- rechnet (0 + 1) % 1000 = 1. Setzt der INSERT-Zweig ebenfalls 1 ein, liefern BEIDE
+  -- Zweige deterministisch denselben Erstwert 1, frei von Race Conditions zwischen
+  -- den Promise.all-Aufrufen in vergebeNummern().
+  -- Die Folge läuft 1..999, und erst nach 999 setzt sie wieder auf 0 zurück:
+  -- (999 + 1) % 1000 = 0 (GGT Anlage 2: "Sie wird ab '999' wieder auf '0' gesetzt").
+  -- Danach 0 -> 1 -> ... Lückenlos umlaufend im Bereich [0, 999].
   insert into datenaustausch_zaehler (absender_ik, empfaenger_ik, owner_id, letzte_transfernummer)
   values (p_absender_ik, p_empfaenger_ik, p_owner, 1)
   on conflict (absender_ik, empfaenger_ik) do update
-    -- 1..999 im Kreis: nach 999 kommt wieder 1, nicht 0.
-    set letzte_transfernummer = (datenaustausch_zaehler.letzte_transfernummer % 999) + 1,
+    set letzte_transfernummer = (datenaustausch_zaehler.letzte_transfernummer + 1) % 1000,
+        owner_id = coalesce(datenaustausch_zaehler.owner_id, excluded.owner_id),
         aktualisiert_am = now()
   returning letzte_transfernummer into v_n;
 
@@ -151,6 +176,8 @@ CREATE FUNCTION public.datenaustausch_zaehler_vorstellen(
     SET search_path TO 'public'
     AS $$
 begin
+  -- Klemmen für transfernummer: [0, 999] per GGT Anlage 2.
+  -- Untere Grenze 0 (greatest(..., 0)) und obere Grenze 999 (least(..., 999)).
   insert into datenaustausch_zaehler (absender_ik, empfaenger_ik, owner_id, letzte_referenz, letzte_transfernummer)
   values (p_absender_ik, p_empfaenger_ik, p_owner,
           greatest(coalesce(p_referenz, 0), 0),
@@ -158,7 +185,8 @@ begin
   on conflict (absender_ik, empfaenger_ik) do update
     set letzte_referenz = greatest(datenaustausch_zaehler.letzte_referenz, coalesce(p_referenz, 0)),
         letzte_transfernummer = greatest(datenaustausch_zaehler.letzte_transfernummer,
-                                         least(coalesce(p_transfernummer, 0), 999)),
+                                         least(greatest(coalesce(p_transfernummer, 0), 0), 999)),
+        owner_id = coalesce(datenaustausch_zaehler.owner_id, excluded.owner_id),
         aktualisiert_am = now();
 end $$;
 
@@ -185,7 +213,7 @@ ALTER TABLE public.abrechnung
 COMMENT ON COLUMN public.abrechnung.datenaustauschreferenz IS
   'Der 5-stellige UNB-0020-Wert DIESER Datei, wie vergeben. Nicht neu berechnen — er ist bei der Kasse hinterlegt.';
 COMMENT ON COLUMN public.abrechnung.transfernummer IS
-  'Die 1..999-Transfernummer DIESER Datei (Stellen 6-8 des physikalischen Dateinamens). Ein wiederholter Sendeversuch nimmt dieselbe Nummer (Anhang 1 § 4.3).';
+  'Die 0..999-Transfernummer DIESER Datei (Stellen 6-8 des physikalischen Dateinamens; Wertebereich aus GGT Anlage 2, Feld TRANSFER_NUMMER: ab 999 wieder auf 0). Ein wiederholter Sendeversuch nimmt dieselbe Nummer (Anhang 1 § 4.3).';
 COMMENT ON COLUMN public.abrechnung.empfaenger_ik IS
   'IK der Datenannahmestelle, an die diese Datei geht. Bisher nur fluechtig in der Route bekannt; der Zaehler laeuft je (Absender-IK, Empfaenger-IK) und ohne diese Spalte ist im Nachhinein nicht mehr feststellbar, welche Folge die Datei fortgeschrieben hat.';
 

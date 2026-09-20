@@ -61,6 +61,10 @@ test('physikalischer Dateiname: test', () => assert.equal(
   buildPhysikalischerDateiname({ kind: 'test', transfernummer: 1 }), 'TSOL0001'));
 test('physikalischer Dateiname: Erprobung zaehlt als Testdaten ("T")', () => assert.equal(
   buildPhysikalischerDateiname({ kind: 'erprobung', transfernummer: 1 }), 'TSOL0001'));
+test('physikalischer Dateiname: transfernummer 0 (TSOL0000 / ESOL0000)', () => {
+  assert.equal(buildPhysikalischerDateiname({ kind: 'test', transfernummer: 0 }), 'TSOL0000');
+  assert.equal(buildPhysikalischerDateiname({ kind: 'echt', transfernummer: 0 }), 'ESOL0000');
+});
 
 console.log('builder — V21 Heilmittel');
 const result = buildDtaFile({
@@ -75,6 +79,7 @@ const result = buildDtaFile({
     rechnungsart: '1',
   },
   kind: 'echt',
+  transfernummer: 23,
   vkz: '01',
   prescriptions: [{
     patient: {
@@ -185,6 +190,7 @@ test('validator rejects invalid VKZ', () => {
     absender: { ik: '123456789' },
     empfaenger: { ik: '987654321' },
     rechnung: { sammelRechnungsnummer: 'X', datum: '2026-05-18', datennummer: 1 },
+    transfernummer: 1,
     prescriptions: [{ patient:{kvnr:'A1',belegnummer:'1'}, verordnung:{verordnungsart:'03',zuzahlungskennzeichen:'3',kostentraegerIk:'1'}, tarif:{tarifkennzeichen:'00501'}, sessions:[] }],
     vkz: '99',
     preflight: false,
@@ -195,6 +201,7 @@ test('validator rejects non-Heilmittel Abrechnungscode', () => {
     absender: { ik: '123456789' },
     empfaenger: { ik: '987654321' },
     rechnung: { sammelRechnungsnummer: 'X', datum: '2026-05-18', datennummer: 1 },
+    transfernummer: 1,
     prescriptions: [{
       patient:{kvnr:'A1',belegnummer:'1'},
       verordnung:{verordnungsart:'03',zuzahlungskennzeichen:'3',kostentraegerIk:'1'},
@@ -209,6 +216,7 @@ test('throws when no prescriptions', () => {
     absender:   { ik: '123456789' },
     empfaenger: { ik: '987654321' },
     rechnung:   { sammelRechnungsnummer: 'X', datum: '2026-05-18', datennummer: 1 },
+    transfernummer: 1,
     prescriptions: [],
     preflight: false,
   }));
@@ -237,6 +245,7 @@ const podoResult = buildDtaFile({
     rechnungsart: '1',
   },
   kind: 'echt',
+  transfernummer: 24,
   vkz: '01',
   prescriptions: [{
     patient: {

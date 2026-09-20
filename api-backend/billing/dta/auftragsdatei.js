@@ -87,8 +87,9 @@ function fmtDateTime14(d) {
  *   GGT Anlage 2 Kap. 3.1 „Dateinamen").
  * @param {Date|string} opts.erstellungsdatum  Erstellungszeitpunkt der
  *   Nutzdatendatei (aus der die 14-stellige DATUM_ERSTELLUNG wird).
- * @param {number} opts.transfernummer       1–999 — DERSELBE Zähler wie in
- *   `filename.js#buildPhysikalischerDateiname()` (Anhang 1 §4.3).
+ * @param {number} opts.transfernummer       0–999 — DERSELBE Zähler wie in
+ *   `filename.js#buildPhysikalischerDateiname()` (Feld TRANSFER_NUMMER; Anhang 1 § 4.3
+ *   nennt keinen Wertebereich; der Bereich stammt aus GGT Anlage 2, Feld TRANSFER_NUMMER).
  * @param {number} opts.nutzdateiByteLength  Byte-Länge der unverschlüsselten,
  *   unkomprimierten Nutzdatendatei (DATEIGRÖSSE_NUTZDATEN).
  * @param {'echt'|'test'|'erprobung'} [opts.kind='echt']  Wie in
@@ -119,8 +120,11 @@ export function buildAuftragsdatei({
     throw new Error('logischerDateiname must be an 11-character string (see filename.js)');
   }
   const tnr = Number(transfernummer);
-  if (!Number.isInteger(tnr) || tnr < 1 || tnr > 999) {
-    throw new Error('transfernummer must be an integer in [1, 999]');
+  // Feld TRANSFER_NUMMER (Stellen 25–27, 3 N, Muss): Wertebereich 000–999
+  // (GGT Anlage 2, Auftragssatz V1.0: "Sie wird ab '999' wieder auf '0' gesetzt").
+  // Anhang 1 § 4.3 nennt keinen Wertebereich; er stammt aus genau diesem Feld.
+  if (!Number.isInteger(tnr) || tnr < 0 || tnr > 999) {
+    throw new Error('transfernummer must be an integer in [0, 999]');
   }
   if (kind !== 'echt' && kind !== 'test' && kind !== 'erprobung') {
     throw new Error("kind must be 'echt', 'test' or 'erprobung'");

@@ -151,6 +151,7 @@ test('T1: zwei Karten-IK ergeben zwei SLGA + zwei SLLA, jede GES nur ihre eigene
 test('T2: Sammelrechnung — Sammel-SLGA ohne UST, FKT Feld2=J und Feld5 leer, Einzelnummern 1,2', () => {
   const r = buildDtaFile({
     ...zweiKartenIk(),
+    transfernummer: 24,
     sammelrechnung: true,
     rechnung: { ...zweiKartenIk().rechnung, rechnungsart: '3' },
     ust: { steuernummer: 'DE123456789', ustBefreit: true },

@@ -36,6 +36,7 @@ export const physioFixture = {
     rechnungsart: '1',
   },
   kind: 'echt',
+  transfernummer: 23, // ((Math.max(1, 23) - 1) % 999) + 1 = 23 (alter Notweg aus datennummer: 23)
   vkz: '01',
   prescriptions: [{
     patient: {
@@ -90,6 +91,7 @@ export const podoFixture = {
     rechnungsart: '1',
   },
   kind: 'echt',
+  transfernummer: 24, // ((Math.max(1, 24) - 1) % 999) + 1 = 24 (alter Notweg aus datennummer: 24)
   vkz: '01',
   prescriptions: [{
     patient: {

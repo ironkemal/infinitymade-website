@@ -336,13 +336,13 @@ export function buildDtaFile({
   // --- Dateieinheit (Anlage 1 TP5 V21, Kap. 5.3.1) -------------------------
   davIk,            // IK der Datenannahmestelle, für die diese Datei bestimmt ist
   kassenart,        // 'AO'|'EK'|'BK'|'IK'|'BN'|'LK'|'GK'|'SB'
-  // Transfernummer (1..999) — Anhang 1 § 4.3. Seit dem 20.09.2026 vergibt sie
-  // der AUFRUFER aus einem dauerhaften Zaehler je (Absender-IK, Empfaenger-IK)
-  // und haelt sie auf `abrechnung.transfernummer` fest (Migration 0029).
-  // Ohne Uebergabe bleibt der alte Notweg (Modulo aus `datennummer`) — er ist
-  // spezifikationswidrig ("keinen Bezug zur lfd. Nr. des Vorlaufsatzes"), aber
-  // die Fixtures und `dump.js` rufen ohne Zaehler auf, und eine Datei ohne
-  // Transfernummer laesst sich gar nicht benennen.
+  // Transfernummer (0..999) — Anhang 1 § 4.3 nennt keinen Wertebereich; der
+  // Bereich stammt aus GGT Anlage 2, Feld TRANSFER_NUMMER ("Sie wird ab '999' wieder auf '0' gesetzt").
+  // Seit 20.09.2026 vergibt der Aufrufer sie zwingend aus einem dauerhaften
+  // Zaehler je (Absender-IK, Empfaenger-IK) ueber `naechste_transfernummer()`
+  // (Migration 0029). Der frühere Notweg (Modulo aus datennummer) ist
+  // ersatzlos entfernt, da die Spezifikation ausdrücklich untersagt, die
+  // Transfernummer aus der Vorlaufsatz-Nummer abzuleiten.
   transfernummer: transfernummerVorgabe,
   // Sammelrechnung (Rechnungsart 3). Der Weg ist gebaut, aber bewusst
   // ABGESCHALTET: heute ruft ihn kein Produktivpfad auf. Er steht hier, damit
@@ -426,20 +426,24 @@ export function buildDtaFile({
     rolle:            'S', // Selbstabrechner — Praxura ist kein Abrechnungsdienstleister
     abrechnungsmonat: (erstellungsdatum instanceof Date ? erstellungsdatum : new Date(erstellungsdatum)).getMonth() + 1,
   });
-  // Transfernummer ist auf 1..999 begrenzt (§4.3).
+  // Transfernummer ist auf 0..999 begrenzt (Anhang 1 § 4.3 nennt keinen Wertebereich;
+  // der Bereich stammt aus GGT Anlage 2, Feld TRANSFER_NUMMER).
   //
-  // Der Aufrufer gibt sie seit dem 20.09.2026 vor — aus `naechste_transfernummer()`
+  // Der Aufrufer MUSS sie zwingend vorgeben — aus `naechste_transfernummer()`
   // (Migration 0029), einem eigenen Zaehler je (Absender-IK, Empfaenger-IK).
-  // Das war faellig: die Spezifikation sagt ausdruecklich, die Transfernummer
-  // habe "keinen Bezug zur lfd. Nr. des Vorlaufsatzes" — der alte Modulo aus
-  // `rechnung.datennummer` stellte genau diesen Bezug her.
-  //
-  // Der Notweg unten bleibt fuer die Aufrufer OHNE Zaehler (Fixtures, dump.js,
-  // Tests). In einer echten Einreichung ist er nicht mehr im Spiel.
-  const transfernummer = Number.isInteger(Number(transfernummerVorgabe))
-      && Number(transfernummerVorgabe) >= 1 && Number(transfernummerVorgabe) <= 999
-    ? Number(transfernummerVorgabe)
-    : ((Math.max(1, Number(rechnung.datennummer) || 1) - 1) % 999) + 1;
+  // Die Spezifikation stellt klar: die Transfernummer hat "keinen Bezug zur lfd. Nr.
+  // des Vorlaufsatzes" (GGT Anlage 2 / Anhang 1 § 4.3). Der alte Notweg (Modulo aus
+  // `rechnung.datennummer`) ist entfernt; fehlt oder ist die Vorgabe ungültig, wird geworfen.
+  const tnr = Number(transfernummerVorgabe);
+  if (!Number.isInteger(tnr) || tnr < 0 || tnr > 999) {
+    throw new Error(
+      `transfernummer must be an integer in [0, 999], got ${JSON.stringify(transfernummerVorgabe)}. ` +
+      'Die Transfernummer muss vom Aufrufer ueber naechste_transfernummer() (Migration 0029) vergeben werden ' +
+      'und darf gemaess GGT Anlage 2 / Anhang 1 § 4.3 nicht aus rechnung.datennummer abgeleitet werden ' +
+      '("keinen Bezug zur lfd. Nr. des Vorlaufsatzes").'
+    );
+  }
+  const transfernummer = tnr;
   const physikalischerDateiname = buildPhysikalischerDateiname({
     kind:           kind === 'echt' ? 'echt' : 'test',
     transfernummer,
