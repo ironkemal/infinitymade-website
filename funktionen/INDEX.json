@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-09-20",
- "dateien": 260,
- "funktionen": 2362,
+ "dateien": 262,
+ "funktionen": 2365,
  "module": [
   "abrechnung",
   "anamnese",
@@ -2905,8 +2905,8 @@
    "name": "sha256Hex",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 67,
-   "end": 69,
+   "start": 69,
+   "end": 71,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -2958,8 +2958,8 @@
    "name": "rechnungsartFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 90,
-   "end": 101,
+   "start": 92,
+   "end": 103,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -2977,8 +2977,8 @@
    "name": "vergebeNummern",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 111,
-   "end": 126,
+   "start": 113,
+   "end": 128,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -3001,8 +3001,8 @@
    "name": "speichereAuftragsdatei",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 137,
-   "end": 154,
+   "start": 139,
+   "end": 156,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [
@@ -3026,8 +3026,8 @@
    "name": "isoWeek",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 156,
-   "end": 163,
+   "start": 158,
+   "end": 165,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -3045,8 +3045,8 @@
    "name": "buildSammelRechnungsnummer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 165,
-   "end": 167,
+   "start": 167,
+   "end": 169,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3064,8 +3064,8 @@
    "name": "nameParts",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 169,
-   "end": 171,
+   "start": 171,
+   "end": 173,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3086,8 +3086,8 @@
    "name": "frequenzToDigit",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 182,
-   "end": 196,
+   "start": 184,
+   "end": 198,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -3108,8 +3108,8 @@
    "name": "legsFuerSector",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 220,
-   "end": 223,
+   "start": 222,
+   "end": 225,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -3133,8 +3133,8 @@
    "name": "abrechnungscodeFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 228,
-   "end": 230,
+   "start": 230,
+   "end": 232,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3157,9 +3157,9 @@
    "name": "baueBegleitzettel",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 244,
-   "end": 313,
-   "lines": 70,
+   "start": 246,
+   "end": 319,
+   "lines": 74,
    "spiegelHinweis": null,
    "tables": [
     "kostentraeger"
@@ -3184,9 +3184,9 @@
    "name": "papierFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 264,
-   "end": 284,
-   "lines": 21,
+   "start": 266,
+   "end": 290,
+   "lines": 25,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -3209,8 +3209,8 @@
    "name": "bereichTexte",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 322,
-   "end": 324,
+   "start": 328,
+   "end": 330,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3228,8 +3228,8 @@
    "name": "buildBankverbindung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 328,
-   "end": 335,
+   "start": 334,
+   "end": 341,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -3247,8 +3247,8 @@
    "name": "fehlendePflichtangaben",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 339,
-   "end": 344,
+   "start": 345,
+   "end": 350,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -3301,8 +3301,8 @@
    "name": "pflichtangabenHinweisHtml",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 359,
-   "end": 384,
+   "start": 365,
+   "end": 390,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -3320,8 +3320,8 @@
    "name": "buildBelegnummer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 400,
-   "end": 406,
+   "start": 406,
+   "end": 412,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -3342,8 +3342,8 @@
    "name": "mapPrescriptionToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 412,
-   "end": 582,
+   "start": 418,
+   "end": 588,
    "lines": 171,
    "spiegelHinweis": null,
    "tables": [],
@@ -3375,8 +3375,8 @@
    "name": "nurInhaber",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1119,
-   "end": 1138,
+   "start": 1136,
+   "end": 1155,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [
@@ -3398,8 +3398,8 @@
    "name": "mandantUndAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1494,
-   "end": 1514,
+   "start": 1511,
+   "end": 1531,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [
@@ -3422,8 +3422,8 @@
    "name": "geldstand",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1525,
-   "end": 1546,
+   "start": 1542,
+   "end": 1563,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -3444,8 +3444,8 @@
    "name": "r2",
    "kind": "arrow",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1526,
-   "end": 1545,
+   "start": 1543,
+   "end": 1562,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -3516,8 +3516,8 @@
    "name": "mapVerordnungToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2634,
-   "end": 2776,
+   "start": 2651,
+   "end": 2793,
    "lines": 143,
    "spiegelHinweis": null,
    "tables": [],
@@ -4055,6 +4055,29 @@
    "uiPfad": []
   },
   {
+   "name": "uebermittlungProtokollieren",
+   "kind": "function",
+   "file": "api-backend/billing/api/uebermittlung.js",
+   "start": 76,
+   "end": 187,
+   "lines": 112,
+   "spiegelHinweis": null,
+   "tables": [
+    "abrechnung_uebermittlung"
+   ],
+   "rpcs": [],
+   "writes": [
+    "abrechnung_uebermittlung:insert"
+   ],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "resolveAuth",
    "kind": "function",
    "file": "api-backend/billing/api/verordnung-status.routes.js",
@@ -4146,6 +4169,52 @@
    "storage": [],
    "calls": [
     "dgStamm"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "formatiereVerwerfungsgrund",
+   "kind": "function",
+   "file": "api-backend/billing/api/verworfen.js",
+   "start": 50,
+   "end": 107,
+   "lines": 58,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "verworfeneNummerFesthalten"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "verworfeneNummerFesthalten",
+   "kind": "function",
+   "file": "api-backend/billing/api/verworfen.js",
+   "start": 126,
+   "end": 178,
+   "lines": 53,
+   "spiegelHinweis": null,
+   "tables": [
+    "abrechnung"
+   ],
+   "rpcs": [],
+   "writes": [
+    "abrechnung:insert"
+   ],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "formatiereVerwerfungsgrund"
    ],
    "calledBy": [],
    "modules": [],
@@ -7806,8 +7875,8 @@
    "name": "kassenartAusQuelle",
    "kind": "function",
    "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-   "start": 21,
-   "end": 24,
+   "start": 23,
+   "end": 26,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -7827,8 +7896,8 @@
    "name": "abrechnungscodeKette",
    "kind": "function",
    "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-   "start": 46,
-   "end": 50,
+   "start": 48,
+   "end": 52,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -7849,8 +7918,8 @@
    "name": "waehleAnnahmestelle",
    "kind": "function",
    "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-   "start": 64,
-   "end": 119,
+   "start": 66,
+   "end": 121,
    "lines": 56,
    "spiegelHinweis": null,
    "tables": [],
@@ -7873,8 +7942,8 @@
    "name": "ladeAnnahmestelle",
    "kind": "function",
    "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-   "start": 128,
-   "end": 154,
+   "start": 130,
+   "end": 156,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -7898,8 +7967,8 @@
    "name": "annahmestelleFehlt",
    "kind": "function",
    "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-   "start": 159,
-   "end": 166,
+   "start": 161,
+   "end": 168,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -7919,8 +7988,8 @@
    "name": "waehlePapierannahmestelle",
    "kind": "function",
    "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-   "start": 206,
-   "end": 237,
+   "start": 208,
+   "end": 239,
    "lines": 32,
    "spiegelHinweis": "identisch mit waehleAnnahmestelle(), damit beide Wege denselben Versicherten demselben Sachbearbeitungsweg zuordnen",
    "tables": [],
@@ -7942,13 +8011,14 @@
    "name": "ladePapierannahmestelle",
    "kind": "function",
    "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-   "start": 249,
-   "end": 275,
-   "lines": 27,
+   "start": 264,
+   "end": 324,
+   "lines": 61,
    "spiegelHinweis": null,
    "tables": [
     "kostentraeger_annahmestellen",
-    "kostentraeger"
+    "kostentraeger",
+    "kostentraeger_anschriften"
    ],
    "rpcs": [],
    "writes": [],
@@ -7956,7 +8026,9 @@
    "storage": [],
    "calls": [
     "abrechnungscodeKette",
-    "waehlePapierannahmestelle"
+    "laden",
+    "waehlePapierannahmestelle",
+    "waehlePostanschrift"
    ],
    "calledBy": [
     "baueBegleitzettel",
@@ -8088,6 +8160,7 @@
    "calls": [],
    "calledBy": [
     "baueBegleitzettel",
+    "ladePapierannahmestelle",
     "papierFuer"
    ],
    "modules": [],
@@ -15478,8 +15551,8 @@
    "name": "handleExport",
    "kind": "function",
    "file": "api/dsgvo.js",
-   "start": 178,
-   "end": 226,
+   "start": 179,
+   "end": 227,
    "lines": 49,
    "spiegelHinweis": null,
    "tables": [],
@@ -15501,8 +15574,8 @@
    "name": "handleDelete",
    "kind": "function",
    "file": "api/dsgvo.js",
-   "start": 401,
-   "end": 537,
+   "start": 418,
+   "end": 554,
    "lines": 137,
    "spiegelHinweis": null,
    "tables": [],
@@ -72576,6 +72649,7 @@
    "calledBy": [
     "bindInvEvents",
     "fillRzPatientFromLead",
+    "ladePapierannahmestelle",
     "openVehicleEditModal",
     "orteZu"
    ],
@@ -111712,6 +111786,77 @@
    ]
   },
   {
+   "tabelle": "abrechnung",
+   "anzahl": 2,
+   "pfade": [
+    {
+     "leitfunktion": "verworfeneNummerFesthalten",
+     "funktionen": [
+      {
+       "name": "verworfeneNummerFesthalten",
+       "file": "api-backend/billing/api/verworfen.js",
+       "start": 126,
+       "end": 178,
+       "lines": 53,
+       "writes": [
+        "abrechnung:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "downloadAbrechnungFile",
+     "funktionen": [
+      {
+       "name": "downloadAbrechnungFile",
+       "file": "module/abrechnung-detail.js",
+       "start": 666,
+       "end": 683,
+       "lines": 18,
+       "writes": [
+        "abrechnung:update"
+       ],
+       "modules": [
+        "abrechnung",
+        "anamnese",
+        "bkActionArrivedBtn",
+        "bkActionFahrtEndBtn",
+        "bkActionFahrtStartBtn",
+        "bkActionHbCopyBtn",
+        "doctors",
+        "fbFahrtenExportCsv",
+        "fbFahrtenRefresh",
+        "fbReportRefresh",
+        "fbVehicleAddBtn",
+        "feSaveBtn",
+        "fsAddVehicleBtn",
+        "fsSaveBtn",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "mahnwesen",
+        "notizen",
+        "podologie-billing",
+        "qvSaveBtn",
+        "rechnungen",
+        "services",
+        "settings",
+        "team",
+        "ueberblick",
+        "vehEditSaveBtn",
+        "verordnungen"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 28 modülden çağrılıyor"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
    "tabelle": "breaks",
    "anzahl": 2,
    "pfade": [
@@ -113241,7 +113386,7 @@
   {
    "name": "r2",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:1526",
+    "api-backend/billing/api/abrechnung.routes.js:1543",
     "api-backend/billing/api/statistik.routes.js:176",
     "api-backend/billing/api/zuzahlung.routes.js:45",
     "api-backend/billing/dta/builder.js:55",
@@ -113754,7 +113899,7 @@
   {
    "name": "sha256Hex",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:67",
+    "api-backend/billing/api/abrechnung.routes.js:69",
     "module/einwilligung-texte.js:354"
    ],
    "aynalar": []
@@ -113762,7 +113907,7 @@
   {
    "name": "fehlendePflichtangaben",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:339",
+    "api-backend/billing/api/abrechnung.routes.js:345",
     "module/beleg-druck.js:55"
    ],
    "aynalar": [
@@ -114347,8 +114492,8 @@
   {
    "name": "waehlePapierannahmestelle",
    "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-   "start": 206,
-   "end": 237,
+   "start": 208,
+   "end": 239,
    "hinweis": "identisch mit waehleAnnahmestelle(), damit beide Wege denselben Versicherten demselben Sachbearbeitungsweg zuordnen"
   }
  ]

@@ -20,6 +20,7 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api-backend/_lib/access-log.js",
+    "api-backend/billing/api/verworfen.test.js",
     "api/dsgvo.js",
     "module/nav-registry.test.js",
     "nav-registry.js"
@@ -109,7 +110,7 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1494,
+     "start": 1511,
      "module": [],
      "uiPfad": []
     },
@@ -193,11 +194,22 @@
      "ops": [
       "update"
      ]
+    },
+    {
+     "name": "verworfeneNummerFesthalten",
+     "file": "api-backend/billing/api/verworfen.js",
+     "start": 126,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
     }
    ],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
     "api-backend/billing/api/statistik.routes.js",
+    "api-backend/billing/api/verworfen.js",
     "dashboard.js",
     "module/abrechnung-detail.js",
     "module/abrechnung-verlauf.js"
@@ -6998,6 +7010,7 @@
    "erwaehnt": [
     "api-backend/billing/dta/preflight.js",
     "api-backend/billing/dta/preflight.test.js",
+    "api-backend/billing/kostentraeger/annahmestelle.test.js",
     "api-backend/billing/kostentraeger/parser.test.js",
     "api-backend/lib/rezept-felder.test.js",
     "tools/kostentraeger-annahmestellen-laden.mjs"
@@ -7049,7 +7062,7 @@
     {
      "name": "baueBegleitzettel",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 244,
+     "start": 246,
      "module": [],
      "uiPfad": []
     },
@@ -7063,7 +7076,7 @@
     {
      "name": "ladeAnnahmestelle",
      "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-     "start": 128,
+     "start": 130,
      "module": [],
      "uiPfad": []
     },
@@ -7108,7 +7121,7 @@
     {
      "name": "ladePapierannahmestelle",
      "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-     "start": 249,
+     "start": 264,
      "module": [],
      "uiPfad": []
     }
@@ -7161,7 +7174,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/billing/kostentraeger/annahmestelle.test.js"
+   ],
    "register": true,
    "status": "aktiv (Referenz) — **vollständig geladen**, aber mit einem Zeitfehler, siehe unten",
    "warum": "Beantwortet die Frage, an der der §302-Versand sonst scheitert: **wohin geht diese Datei?** Der Empfänger ist nicht die Kasse, sondern ihre Datenannahmestelle — und die hängt am Viererschlüssel (Kostenträger, Abrechnungscode, Art der Datenlieferung, Bundesland). Eine einzelne Spalte an `kostentraeger` (`das_ik`) konnte das nie abbilden; deshalb eine eigene Tabelle statt weiterer Spalten. Sie ist damit auch die Antwort auf „hätte eine Spalte gereicht?\" — nein, es ist eine echte 1:n-Beziehung.",
@@ -7209,14 +7224,14 @@
     {
      "name": "ladeAnnahmestelle",
      "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-     "start": 128,
+     "start": 130,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "ladePapierannahmestelle",
      "file": "api-backend/billing/kostentraeger/annahmestelle.js",
-     "start": 249,
+     "start": 264,
      "module": [],
      "uiPfad": []
     }
@@ -13069,14 +13084,14 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1494,
+     "start": 1511,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "nurInhaber",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1119,
+     "start": 1136,
      "module": [],
      "uiPfad": []
     },
@@ -17163,7 +17178,9 @@
  "ungeklaert": [],
  "registerVerwaist": [
   "datenaustausch_zaehler",
-  "betriebsart_empfaenger"
+  "betriebsart_empfaenger",
+  "kostentraeger_anschriften",
+  "abrechnung_uebermittlung"
  ],
  "codeStumm": [
   {
@@ -17250,6 +17267,7 @@
  "dsgvo": {
   "auskunft": [
    "abrechnung",
+   "abrechnung_uebermittlung",
    "abrechnung_zahlung",
    "abrechnung_zeile",
    "aerzte",
