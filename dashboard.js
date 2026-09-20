@@ -33,6 +33,7 @@ import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogF
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
+import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260920s';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260918';
@@ -12164,36 +12165,9 @@ async function loadSettings() {
   // nicht im if-Block: dort war es blockskopiert und die TI-Zeile warf
   // "sec is not defined", was den Rest von loadSettings abbrach.
   const sec = getSector();
-  const abrSection = document.getElementById('settingsAbrechnungSection');
-  if (abrSection) {
-    if (isPraxisSector(sec)) {
-      abrSection.style.display = '';
-      document.getElementById('setIkNumber').value = currentProfile.ik_number || '';
-      // Pull existing terapeut_zertifikat metadata (IK takes precedence here if set)
-      supabase.from('terapeut_zertifikat')
-        .select('ik_nummer, cert_subject, cert_valid_to')
-        .eq('owner_id', getOwnerId())
-        .maybeSingle()
-        .then(({ data }) => {
-          if (!data) return;
-          const ikInp = document.getElementById('setIkNumber');
-          if (data.ik_nummer && !ikInp.value) ikInp.value = data.ik_nummer;
-          const status = document.getElementById('certStatus');
-          if (status) {
-            if (data.cert_subject) {
-              const valid = data.cert_valid_to ? new Date(data.cert_valid_to).toLocaleDateString('de-DE') : '—';
-              status.textContent = `Zertifikat: ${data.cert_subject} · gültig bis ${valid}`;
-              status.style.color = '#15803d';
-            } else {
-              status.textContent = 'Noch kein ITSG-Zertifikat hinterlegt.';
-              status.style.color = '';
-            }
-          }
-        });
-    } else {
-      abrSection.style.display = 'none';
-    }
-  }
+  // IK, Zertifikatsstatus und Betriebsart-Schalter: ausgelagert nach
+  // module/abrechnung-einstellungen.js (Umzingelungsregel, 20.09.2026).
+  renderAbrechnungSettings({ supabase, profile: () => currentProfile, ownerId: getOwnerId, userId: () => currentSession.user.id, sector: sec, isPraxisSector, showToast, showConfirmModal });
   const tiSection = document.getElementById('settingsTiSection');
   if (tiSection) {
     tiSection.style.display = isPraxisSector(sec) ? '' : 'none';
@@ -13165,32 +13139,12 @@ document.getElementById('dgZaaBtn')?.addEventListener('click', () => {
 });
 
 document.getElementById('zaaRunBtn')?.addEventListener('click', runZaaUpload);
-
-document.getElementById('ikSaveBtn')?.addEventListener('click', async () => {
-  const raw = document.getElementById('setIkNumber').value.trim();
-  if (raw && !/^\d{9}$/.test(raw)) {
-    showToast('IK muss genau 9 Ziffern enthalten.', 'error');
-    return;
-  }
-  const ik = raw || null;
-  const ownerId = getOwnerId();
-
-  // 1) profiles.ik_number (legacy DMRZ flow)
-  const { error: pErr } = await supabase.from('profiles').update({ ik_number: ik }).eq('id', currentSession.user.id);
-  if (pErr) { showToast('Fehler: ' + pErr.message, 'error'); return; }
-  currentProfile.ik_number = ik;
-
-  // 2) terapeut_zertifikat upsert (§302 Sammelabrechnung route reads this)
-  if (ik) {
-    const { error: zErr } = await supabase.from('terapeut_zertifikat').upsert({
-      owner_id: ownerId,
-      ik_nummer: ik,
-    }, { onConflict: 'owner_id' });
-    if (zErr) console.warn('[ik/zertifikat-upsert]', zErr);
-  }
-
-  showToast(ik ? 'IK gespeichert ✓' : 'IK entfernt.');
-});
+// IK-Speichern und Betriebsart-Schalter: ausgelagert nach
+// module/abrechnung-einstellungen.js (Umzingelungsregel, 20.09.2026).
+// Läuft beim Laden des Moduls, also VOR der Anmeldung: `currentProfile` und
+// `currentSession` sind hier noch null. Deshalb kommen beide als Funktion herein
+// und werden erst beim Klick ausgewertet (Details im Kopf des Moduls).
+wireAbrechnungSettings({ supabase, profile: () => currentProfile, ownerId: getOwnerId, userId: () => currentSession.user.id, isPraxisSector, showToast, showConfirmModal });
 
 document.getElementById('profileSaveBtn').addEventListener('click', async () => {
   const v = id => (document.getElementById(id)?.value || '').trim();
@@ -20163,7 +20117,7 @@ function fussbefundCtx() {
     profile: currentProfile,
     bizScope,
     showToast,
-    showConfirmModal, showInputModal,   // showInputModal: Storno-Grund (module/podo-storno.js)
+    showConfirmModal,
     displayName,
     displayNameWithBirth,
     leadBirthDate,
@@ -20197,7 +20151,7 @@ function podoCtx() {
     getSessionUserId: () => currentSession?.user?.id || null,   // Ops #252: podologie_behandlungen.employee_id
     switchPanel,
     showToast,
-    showConfirmModal,
+    showConfirmModal, showInputModal,   // showInputModal: Storno-Grund (module/podo-storno.js)
     displayName,
     displayNameWithBirth,
     patientMatchesQuery,
