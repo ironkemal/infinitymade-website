@@ -121,6 +121,7 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 ├── .githooks/pre-commit           Üç kapıyı da çalıştırır (kurulum: bkz. Kurallar)
 │
 ├── funktionen/                    Fonksiyon haritası (üretilir) — INDEX.json + INDEX.md
+├── canli-test/                    ★ Ekran/akış sicili (elle) — REGISTER.md, bkz. Kurallar
 ├── fortschritte/                  Günlük ilerleme kaydı — bir gün = bir dosya
 ├── konsey/                        Konsey tutanakları + KARARLAR.md
 ├── compliance/                    DSGVO: VVT · TOM · DSFA · LEGAL_DECISIONS.md
@@ -461,6 +462,36 @@ ve `onprem` bu eşiğin dışındadır: her zaman gidilir, izin sorulmaz.**
 > elimizdeki fonksiyon ikinci kez sıfırdan yazılır. Maliyet asimetrisi tek yönlü.
 - Kopya adayları `funktionen/INDEX.md`'de; **karar kullanıcınındır**, sessizce birleştirilmez.
 
+### 🖥️ Ekran/akış sicili protokolü (2026-09-19)
+
+**"Bu ekran/buton ne yapmalı, en son ne zaman doğrulandı" sorusu tahminle değil
+`canli-test/REGISTER.md` okunarak cevaplanır.** `canli-test` ajanı önceden tek seferlik
+akış testi yapıyordu (bir kez gez, bulguyu raporla, unut) — artık bu kayıt sayesinde
+**kümülatif**: her test turu bir/birkaç ekranın "beklenen davranışını" ve son test
+tarihini biriktirir, bir dahaki turda sıfırdan başlanmaz.
+
+İki bölümü var:
+
+| Bölüm | Ne | Kim yazar |
+|---|---|---|
+| Ekran/Fonksiyon kayıtları | Panel/akış başına: beklenen davranış, bağımlı ekranlar, son test tarihi+sonucu | `canli-test` — her test turunda |
+| Bildirilen anomaliler | Test dışında fark edilen arayüz tuhaflığı (çift render, yanlış buton, eksik bildirim) | **herhangi bir ajan** — `fonksiyon-ustasi`, `db-ustasi`, `builder`, `podoloji`, `mobil-ui` |
+
+- **Domain doğruluğu (bu akış podolog için mantıklı mı) `canli-test`'in kendi yargısı
+  değildir** — önce `podoloji` ajanına sorulur, cevap registera yazılır. `canli-test`
+  kendi başına yalnız mekanik doğruluğu (çalışıyor mu, konsol temiz mi, sayfa
+  yenilenince veri duruyor mu) yargılar.
+- **Otomatik/periyodik tarama kurulmadı** — bu ajan sadece istendiğinde çalışır
+  ("şunu test et", "deploy oldu mu bak"). Sürekli izleme değil, kontrol elde kalsın
+  diye bilinçli tercih (2026-09-19).
+- Kayıt **elle tutulur, üretilmez** ve **kümülatif** doldurulur — 23 panelin tamamını
+  tek seferde katalogla**ma**, `fonksiyon-ustasi`'nin "okuyarak kapsama iddiası etme"
+  ilkesiyle aynı gerekçe (bkz. yukarıdaki fonksiyon haritası protokolü).
+- Ajan/kod ilişkisi: `canli-test` mekanik test altyapısını (Playwright, üç kapı, devir
+  paketi) zaten tutuyordu — bu, o altyapıya eklenen bir **hafıza katmanı**, ayrı bir
+  agent değil. Gerekçe ve alternatiflerin değerlendirmesi kullanıcıyla netleştirildi
+  (2026-09-19): ayrı agent açmak aynı browser-test mekaniğini iki yerde tekrar ederdi.
+
 ### 📚 Belge arşivi protokolü (2026-08-04 · genişletildi 2026-09-05)
 
 **İki dosya, iki ayrı soru — karıştırma:**
@@ -711,6 +742,7 @@ ajana sor** — hepsi kendi alanının belgelerini zaten biliyor.
 | `wissensbank` | ★ Dışarıdan indirilen resmî verinin kütüphanecisi. Her PDF/XML/XLSX nereden geldi, hangi sürüm, ne zaman düşer, **hangi kod satırını ve hangi tabloyu besler**. "Bu bilgi nerede", "bunu indirmiş miydik", "yeni sürüm var mı", "bu PDF'i neye çevirelim" sorularının cevabı. Sicili `wissensbank/REGISTER.md`. Konsey üyesi, vetosu yok | ❌ (sicil + türev üretimi hariç) |
 | `onprem` | ★ İki dağıtım bekçisi + on-prem geçişin kurumsal hafızası. Tek soru: "bu değişiklik müşterinin kutusunda ne yapar, merkezden oraya nasıl varır?" Sicili `onprem/REGISTER.md`. Dış çağrı · şema · env var · zamanlanmış iş · sabit adres · yetki kontrolü yazılmadan ÖNCE sor. Dört korkulukta sert veto (G1/G2/G3/G8) | ❌ (sicil + kapı hariç) |
 | `mobil-ui` | Küçük ekran: üst üste binme, yatay taşma, dokunma hedefi, breakpoint çakışması. Playwright ile **ölçer**, sonra sadece CSS'te düzeltir | ✅ (yalnız CSS) |
+| `canli-test` | ★ Canlı ortam test pilotu. Deploy indi mi, akış uçtan uca çalışıyor mu, konsol/ağ hatası var mı — gerçekten tarayıcıda gezerek doğrular. Sicili `canli-test/REGISTER.md`: ekranların beklenen davranışı + diğer ajanların bildirdiği anomaliler, kümülatif. Domain doğruluğunu kendi yargılamaz, `podoloji`'ye sorar. Otomatik çalışmaz, sadece istendiğinde | ❌ |
 | `muhalif` | Yapıcı muhalif — fikir nerede kırılır, gizli maliyet ne. Alternatifsiz itiraz yasak | ❌ |
 | `todo-maker` | Ham girdiyi (toplantı dökümü, transkript, hata raporu) zengin pano kartlarına çevirir — hangi ekran, hangi dosya, kim istedi, bitti sayılır ölçütü, gerekirse kopyala-yapıştır Fix-Prompt | ❌ (JSON üretir) |
 | `deger-mi` | Efor/değer, fırsat maliyeti, daha küçük sürüm yeterli mi | ❌ |

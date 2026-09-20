@@ -32,6 +32,7 @@ fortschritte/
 db/
 funktionen/
 archive/
+canli-test/
 
 # Database schema & scripts (full DB blueprint — do not publish)
 *.sql
