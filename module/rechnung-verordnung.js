@@ -39,7 +39,7 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { ausTopf } from './verordnung-topf.js?v=20260910';
+import { ausTopf } from './verordnung-topf.js?v=20260920t';
 import { terminLeistungen } from './rechnung-editor.js?v=20260917';
 
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────

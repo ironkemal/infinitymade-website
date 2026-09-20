@@ -145,6 +145,19 @@ export function statusInTopf(status) {
 export const PODO_ARBEITSLISTE_OR =
   'abrechnung_status.is.null,abrechnung_status.in.(bereit,rejected,teilabsetzung)';
 
+/**
+ * Bereits an die Kasse gegangene (oder von ihr beantwortete) Verordnungen —
+ * NUR für die read-only Anzeige, NICHT für Faturalama-Uygunluğu.
+ *
+ * Getrennt von PODO_ARBEITSLISTE_OR gehalten, weil jener Filter mit dem
+ * Backend gespiegelt ist (siehe dort) und über AUSWAHL für den Sammellauf
+ * entscheidet. Diese Konstante entscheidet nur, was in der Liste (eingeklappt,
+ * salt-okunur) und in der Patientenakte SICHTBAR ist — Absetzung/Zahlung
+ * ändert daran nichts, die Verordnung bleibt für den Podologen einsehbar.
+ */
+export const PODO_ABGERECHNET_OR =
+  'abrechnung_status.in.(in_abrechnung,gesendet,accepted,paid)';
+
 // ── Zeilenübersetzung ───────────────────────────────────────────────────────
 
 /**

@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ausTopf, inTopf, statusAusTopf, statusInTopf,
-  fuehrtSitzungsbuch, PODO_ARBEITSLISTE_OR, TOPF,
+  fuehrtSitzungsbuch, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, TOPF,
 } from './verordnung-topf.js';
 
 test('Zieltabelle steht an einer Stelle', () => {
@@ -48,6 +48,13 @@ test('die Arbeitsliste trifft NULL — sonst faellt jede laufende Verordnung rau
   assert.match(PODO_ARBEITSLISTE_OR, /abrechnung_status\.is\.null/);
   assert.match(PODO_ARBEITSLISTE_OR, /teilabsetzung/);
   assert.match(PODO_ARBEITSLISTE_OR, /rejected/);
+});
+
+test('die Abgerechnet-Anzeige trifft gesendet/in_abrechnung/accepted/paid', () => {
+  assert.match(PODO_ABGERECHNET_OR, /gesendet/);
+  assert.match(PODO_ABGERECHNET_OR, /in_abrechnung/);
+  assert.match(PODO_ABGERECHNET_OR, /accepted/);
+  assert.match(PODO_ABGERECHNET_OR, /paid/);
 });
 
 // ── Zeilen lesen ────────────────────────────────────────────────────────────

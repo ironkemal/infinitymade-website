@@ -75,7 +75,7 @@ import { bereichFarbe, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsst
 // therapiefrequenz, dringend, icd10 als Array, status als podologische
 // Achse) — dieselbe Grenzfunktion, die auch module/podologie-abrechnung.js
 // benutzt.
-import { ausTopf, PODO_ARBEITSLISTE_OR } from './verordnung-topf.js?v=20260910';
+import { ausTopf, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR } from './verordnung-topf.js?v=20260920t';
 // Ops-Kart #269 (05.09.2026): Verordnungen mit offenen „Bitte prüfen"-Befunden
 // sollen in den Karten/Zeilen auffallen. Der Prüfmotor lief bis dahin nur auf
 // der Eingabemaske (`verordnung-pruefen-knopf.js`) — `voAusGespeicherterVerordnung`
@@ -290,9 +290,7 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = 
   // verschwindet, sieht aus wie ein Datenverlust.
   if (nurAktive) {
     rxQ = rxQ.not('status', 'in', `(${PHYSIO_ABGESCHLOSSEN.map(s => `"${s}"`).join(',')})`);
-    // Gleiche Menge wie PODO_AKTIV (aktiv/abrechenbar/abgesetzt/teilabsetzung),
-    // nur auf die Spalte abrechnung_status übersetzt — siehe verordnung-topf.js.
-    voQ = voQ.or(PODO_ARBEITSLISTE_OR);
+    voQ = voQ.or(`${PODO_ARBEITSLISTE_OR},${PODO_ABGERECHNET_OR}`);
   }
 
   const [rxs, vordsRoh, lead] = await Promise.all([

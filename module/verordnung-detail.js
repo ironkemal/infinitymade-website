@@ -75,7 +75,7 @@ import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialog
 // übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
 import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260919';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
-import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20260920s';
+import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20260920t';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
@@ -84,7 +84,7 @@ import { emit } from './signal.js?v=20260813';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
 // eine podologische Zeile in den Wortschatz, den `_felderPodo()` und die
 // restlichen Podologie-Funktionen dieser Datei schon immer erwartet haben.
-import { ausTopf } from './verordnung-topf.js?v=20260910';
+import { ausTopf } from './verordnung-topf.js?v=20260920t';
 // Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
 // Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.

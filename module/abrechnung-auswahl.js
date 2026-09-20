@@ -64,7 +64,7 @@ import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
 import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';
-import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260910';
+import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260920t';
 import { initDateieinheit, ladeDateieinheiten, dateieinheitBadge,
          auswahlHinweis } from './podologie-dateieinheit.js?v=20260907';
 

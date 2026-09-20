@@ -81,8 +81,8 @@ import { darf78040, darf78100, darfErstbefundungNagel,
   from './eingangsbefundung-regel.js?v=20260920s';
 // Seit 04.09.2026 gibt es EINEN Verordnungstopf (`prescriptions`). Diese Datei
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
-import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
-  from './verordnung-topf.js?v=20260910';
+import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
+  from './verordnung-topf.js?v=20260920t';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -402,7 +402,12 @@ function podVordMassnahme(vord) {
   return ausItem || '';
 }
 
-let _podState = { selectedVordId: null, verordnungen: [] };
+let _podState = { selectedVordId: null, verordnungen: [], verordnungenAbgerechnet: [], zeigeAbgerechnet: false };
+
+function findVord(id) {
+  return _podState.verordnungen.find(v => v.id === id)
+      || _podState.verordnungenAbgerechnet.find(v => v.id === id);
+}
 
 // Nur 'kassen' ist eine GKV-Verordnung. Für alles andere gibt es weder eine
 // Diagnosegruppe nach HeilM-RL noch einen Kostenträger — die Abrechnungsfelder
@@ -416,6 +421,13 @@ const POD_ANLASS_DEFAULT = 'Podologische Komplexbehandlung';
 // klicken"). Am document ist er unabhängig davon, wie weit das Rendern kommt.
 document.addEventListener('click', (e) => {
   if (!e.target.closest?.('#podVordList')) return;
+  const toggleBtn = e.target.closest('.pod-abgerechnet-toggle');
+  if (toggleBtn) {
+    e.stopPropagation();
+    _podState.zeigeAbgerechnet = !_podState.zeigeAbgerechnet;
+    loadPodologieBilling();
+    return;
+  }
   const stBtn = e.target.closest('.pod-vord-status');
   if (stBtn) {
     e.stopPropagation();
@@ -484,6 +496,14 @@ async function loadPodologieBilling() {
 
   if (error) { el.innerHTML = `<p style="color:var(--danger)">Fehler: ${ctx.escapeHtml(error.message)}</p>`; return; }
 
+  const { data: rohZeilenAbg, error: errorAbg } = await ctx.supabase
+    .from(TOPF)
+    .select(PODO_SELECT)
+    .eq('owner_id', ownerId)
+    .eq('therapie_bereich', 'podo')
+    .or(PODO_ABGERECHNET_OR)
+    .order('created_at', { ascending: false });
+
   // Ab hier spricht diese Datei weiter podologisch (`lead_id`,
   // `behandlungseinheiten`, `status='aktiv'`) — uebersetzt wird nur hier.
   const vords = (rohZeilen || []).map(ausTopf);
@@ -495,6 +515,16 @@ async function loadPodologieBilling() {
   const zuschnitt = standortZuschnitt(vords || [], ctx.aktiverStandort?.());
   _podState.verordnungen = zuschnitt.zeilen;
   const zeigeHerkunft = zuschnitt.zeigeHerkunft;
+
+  const vordsAbg = errorAbg ? [] : (rohZeilenAbg || []).map(ausTopf);
+  const zuschnittAbg = standortZuschnitt(vordsAbg || [], ctx.aktiverStandort?.());
+  _podState.verordnungenAbgerechnet = zuschnittAbg.zeilen;
+
+  if (_podState.selectedVordId
+      && !_podState.verordnungen.some(v => v.id === _podState.selectedVordId)
+      && _podState.verordnungenAbgerechnet.some(v => v.id === _podState.selectedVordId)) {
+    _podState.zeigeAbgerechnet = true;
+  }
 
   const today = new Date(); today.setHours(0,0,0,0);
 
@@ -519,56 +549,75 @@ async function loadPodologieBilling() {
     return alerts;
   }
 
+  function podVordRowHtml(v, { zeigeHerkunft, isSelected, zeigeStatusBtn = true }) {
+    const alerts = vordAlerts(v);
+    const alertHtml = alerts.map(a =>
+      `<div style="color:${a.type==='danger'?'#ef4444':'#f59e0b'};font-size:12px;margin-top:4px;">⚠ ${ctx.escapeHtml(a.msg)}</div>`
+    ).join('');
+    const _hmLetter = podVordMassnahme(v);
+    const _isGkv    = (v.rezeptart || 'kassen') === POD_GKV_REZEPTART;
+    const _hmRozet  = (_isGkv && _hmLetter && POD_HEILMITTEL_KATALOG[_hmLetter])
+      ? `<span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);border:1px solid var(--border);">` +
+        ctx.escapeHtml((v.diagnosegruppe ? `${v.diagnosegruppe}-` : '') + `${_hmLetter} · ${POD_HEILMITTEL_KATALOG[_hmLetter].heilmittel}`) +
+        `</span>`
+      : '';
+    const statusBtnHtml = zeigeStatusBtn !== false
+      ? `<button class="pod-vord-status" data-status-id="${v.id}" title="Abrechnungsstatus ändern" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;cursor:pointer;white-space:nowrap;">Status</button>`
+      : '';
+    return `<div class="pod-vord-row${isSelected?' pod-vord-selected':''}" data-vord-id="${v.id}" style="
+      padding:12px 14px;border:1px solid ${isSelected?'var(--primary)':'var(--border-subtle,var(--border))'};
+      border-radius:8px;cursor:pointer;background:${isSelected?'var(--bg-card)':'transparent'};
+      margin-bottom:8px;transition:border-color .15s;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+          <span style="font-weight:600;color:var(--text-main);">${ctx.escapeHtml(patientAnzeigename(v) || '—')}</span>${belegnummerRosette(v, { patientennummer: v.leads?.patientennummer, escapeHtml: ctx.escapeHtml, titel: 'Patientennummer-Verordnungsnummer — dieselbe Nummer steht auf Rechnung und Abrechnungsdatei' })}
+          <span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${ctx.escapeHtml(
+            _isGkv
+              ? (v.diagnosegruppe || '—')
+              : (v.behandlungsanlass || POD_ANLASS_DEFAULT)
+          )}</span>
+          ${_hmRozet}
+          ${zeigeHerkunft ? podPraxisweitMarke(v) : ''}
+          ${!_isGkv ? `<span style="font-size:11px;background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);padding:2px 7px;border-radius:12px;color:var(--text-muted);">${ctx.escapeHtml(v.rezeptart)}</span>` : ''}
+          ${v.status && v.status !== 'aktiv' ? abrStatusBadge(v.status) : ''}
+          ${v.absetzung_betrag ? `<span style="font-size:11px;color:#c2410c;font-weight:600;">−${Number(v.absetzung_betrag).toFixed(2).replace('.', ',')} €</span>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span style="font-size:12px;color:var(--text-muted);">${v.ausstellungsdatum ? new Date(v.ausstellungsdatum).toLocaleDateString('de-DE') : '—'}</span>
+          ${statusBtnHtml}
+          ${rechnungButtonHtml(v, { label: ctx.t('pod_rechnung') })}
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
+        ${v.behandlungseinheiten ? `${v.behandlungseinheiten} Einheiten` : ''}
+        ${v.therapiefrequenz ? ' · ' + ctx.escapeHtml(v.therapiefrequenz) : ''}
+        ${v.dringend ? ' · <strong style="color:#ef4444;">Dringend</strong>' : ''}
+        ${v.hausbesuch ? ' · Hausbesuch' : ''}
+      </div>
+      ${alertHtml}
+    </div>`;
+  }
+
   const vordListHtml = _podState.verordnungen.length === 0
     ? `<p style="color:var(--text-muted);padding:12px 0;">${ctx.t('pod_no_vord')}</p>`
-    : _podState.verordnungen.map(v => {
-        const alerts = vordAlerts(v);
-        const alertHtml = alerts.map(a =>
-          `<div style="color:${a.type==='danger'?'#ef4444':'#f59e0b'};font-size:12px;margin-top:4px;">⚠ ${ctx.escapeHtml(a.msg)}</div>`
-        ).join('');
-        const isSelected = _podState.selectedVordId === v.id;
-        const _hmLetter = podVordMassnahme(v);
-        const _isGkv    = (v.rezeptart || 'kassen') === POD_GKV_REZEPTART;
-        const _hmRozet  = (_isGkv && _hmLetter && POD_HEILMITTEL_KATALOG[_hmLetter])
-          ? `<span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);border:1px solid var(--border);">` +
-            ctx.escapeHtml((v.diagnosegruppe ? `${v.diagnosegruppe}-` : '') + `${_hmLetter} · ${POD_HEILMITTEL_KATALOG[_hmLetter].heilmittel}`) +
-            `</span>`
-          : '';
-        return `<div class="pod-vord-row${isSelected?' pod-vord-selected':''}" data-vord-id="${v.id}" style="
-          padding:12px 14px;border:1px solid ${isSelected?'var(--primary)':'var(--border-subtle,var(--border))'};
-          border-radius:8px;cursor:pointer;background:${isSelected?'var(--bg-card)':'transparent'};
-          margin-bottom:8px;transition:border-color .15s;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
-              <span style="font-weight:600;color:var(--text-main);">${ctx.escapeHtml(patientAnzeigename(v) || '—')}</span>${belegnummerRosette(v, { patientennummer: v.leads?.patientennummer, escapeHtml: ctx.escapeHtml, titel: 'Patientennummer-Verordnungsnummer — dieselbe Nummer steht auf Rechnung und Abrechnungsdatei' })}
-              <span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${ctx.escapeHtml(
-                _isGkv
-                  ? (v.diagnosegruppe || '—')
-                  : (v.behandlungsanlass || POD_ANLASS_DEFAULT)
-              )}</span>
-              ${_hmRozet}
-              ${zeigeHerkunft ? podPraxisweitMarke(v) : ''}
-              ${!_isGkv ? `<span style="font-size:11px;background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);padding:2px 7px;border-radius:12px;color:var(--text-muted);">${ctx.escapeHtml(v.rezeptart)}</span>` : ''}
-              ${v.status && v.status !== 'aktiv' ? abrStatusBadge(v.status) : ''}
-              ${v.absetzung_betrag ? `<span style="font-size:11px;color:#c2410c;font-weight:600;">−${Number(v.absetzung_betrag).toFixed(2).replace('.', ',')} €</span>` : ''}
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-              <span style="font-size:12px;color:var(--text-muted);">${v.ausstellungsdatum ? new Date(v.ausstellungsdatum).toLocaleDateString('de-DE') : '—'}</span>
-              <button class="pod-vord-status" data-status-id="${v.id}" title="Abrechnungsstatus ändern" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;cursor:pointer;white-space:nowrap;">Status</button>
-              ${rechnungButtonHtml(v, { label: ctx.t('pod_rechnung') })}
-            </div>
-          </div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
-            ${v.behandlungseinheiten ? `${v.behandlungseinheiten} Einheiten` : ''}
-            ${v.therapiefrequenz ? ' · ' + ctx.escapeHtml(v.therapiefrequenz) : ''}
-            ${v.dringend ? ' · <strong style="color:#ef4444;">Dringend</strong>' : ''}
-            ${v.hausbesuch ? ' · Hausbesuch' : ''}
-          </div>
-          ${alertHtml}
-        </div>`;
-      }).join('');
+    : _podState.verordnungen.map(v => podVordRowHtml(v, {
+        zeigeHerkunft, isSelected: _podState.selectedVordId === v.id, zeigeStatusBtn: true,
+      })).join('');
 
-  const selectedVord = _podState.verordnungen.find(v => v.id === _podState.selectedVordId);
+  const abgListe = _podState.verordnungenAbgerechnet || [];
+  const abgToggleHtml = abgListe.length ? `
+  <div class="pod-abgerechnet-toggle" style="cursor:pointer;padding:8px 4px;margin-top:8px;border-top:1px solid var(--border-subtle,var(--border));color:var(--text-muted);font-size:13px;display:flex;align-items:center;gap:6px;user-select:none;">
+    <span>${_podState.zeigeAbgerechnet ? '▾' : '▸'}</span>
+    <span>Abgerechnet (${abgListe.length})</span>
+  </div>
+  ${_podState.zeigeAbgerechnet
+    ? `<div style="margin-top:6px;">${abgListe.map(v => podVordRowHtml(v, {
+         zeigeHerkunft, isSelected: _podState.selectedVordId === v.id, zeigeStatusBtn: false,
+       })).join('')}</div>`
+    : ''}
+` : '';
+
+  const selectedVord = findVord(_podState.selectedVordId);
   const diagRoot = selectedVord ? podDiagRoot(selectedVord.diagnosegruppe) : '';
   const isUI = diagRoot === 'UI1' || diagRoot === 'UI2';
   // `toISOString()` rechnet nach UTC — in Berlin (UTC+1/+2) ergab das um
@@ -601,9 +650,62 @@ async function loadPodologieBilling() {
   // Was an DIESER Verordnung bereits dokumentiert ist.
   const dokumentiert = selectedVord ? await podBehandlungenDerVerordnung(selectedVord.id) : [];
 
-  const behandlungFormHtml = selectedVord ? `
+  const istAbgerechnet = !!selectedVord && _podState.verordnungenAbgerechnet.some(v => v.id === selectedVord.id);
+
+  const behFaturali = dokumentiert.filter(b => !b.storniert_am && b.invoice_id).length;
+  const behBekliyor  = dokumentiert.filter(b => !b.storniert_am && !b.invoice_id).length;
+  const abgerechnetHinweisHtml = istAbgerechnet ? `
+  <div style="font-size:12px;color:var(--text-muted);background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:12px;">
+    Diese Verordnung wurde bereits (teilweise) eingereicht — ${behFaturali} Einheit(en) abgerechnet, ${behBekliyor} Einheit(en) noch offen. Neue Behandlungen können weiterhin dokumentiert werden.
+  </div>` : '';
+
+  const bereitsDokumentiertHtml = `
+        <div style="border-top:1px solid var(--border);padding-top:12px;">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">
+            Bereits dokumentiert${dokumentiert.length ? ` (${dokumentiert.filter(b => !b.storniert_am).length}${dokumentiert.some(b => b.storniert_am) ? ` + ${dokumentiert.filter(b => b.storniert_am).length} storniert` : ''})` : ''}
+          </div>
+          ${dokumentiert.length === 0
+            ? `<div style="font-size:12px;color:var(--text-muted);">Für diese Verordnung ist noch keine Behandlung erfasst.</div>`
+            : dokumentiert.map(b => {
+                const codes = (Array.isArray(b.hpnr_codes) ? b.hpnr_codes : []).filter(Boolean);
+                // Ein Datum in der Zukunft kann aus der Zeit vor dem 19.09.2026
+                // stammen — damals liess es sich speichern. Es faellt die
+                // §302-Datei, also wird es hier rot benannt statt stumm gelistet.
+                const kuenftig = !b.storniert_am && b.behandlungsdatum > todayStr;
+                const storniert = !!b.storniert_am;
+                const lage = darfStornieren(b);
+                return `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid var(--border);${storniert ? 'opacity:.6;' : ''}">
+                  <div style="min-width:0;">
+                    <div style="font-size:12px;color:${kuenftig ? '#ef4444' : 'var(--text-main)'};${storniert ? 'text-decoration:line-through;' : ''}">
+                      ${ctx.escapeHtml(b.behandlungsdatum ? new Date(b.behandlungsdatum).toLocaleDateString('de-DE') : '—')}
+                      ${kuenftig ? ' ⚠ Datum liegt in der Zukunft — die Kasse weist damit die ganze Abrechnungsdatei zurück.' : ''}
+                    </div>
+                    <div style="font-size:11px;color:var(--text-muted);word-break:break-word;${storniert ? 'text-decoration:line-through;' : ''}">${ctx.escapeHtml(codes.join(' · ') || '—')}</div>
+                    ${b.lokalisation ? `<div style="font-size:11px;color:var(--text-muted);${storniert ? 'text-decoration:line-through;' : ''}">${ctx.escapeHtml(b.lokalisation)}</div>` : ''}
+                    ${storniert ? `<div style="font-size:11px;color:#f59e0b;">Storniert am ${ctx.escapeHtml(new Date(b.storniert_am).toLocaleDateString('de-DE'))} — ${ctx.escapeHtml(b.storno_grund || 'ohne Grund')}</div>` : ''}
+                  </div>
+                  <div style="display:flex;align-items:flex-start;gap:8px;white-space:nowrap;">
+                    ${b.invoice_id && !storniert
+                      ? `<span style="font-size:10px;color:var(--text-muted);" title="Steht bereits auf einer Rechnung">berechnet</span>`
+                      : ''}
+                    ${storniert
+                      ? ''
+                      : lage.erlaubt
+                        ? `<button type="button" class="pod-storno-btn" data-beh="${ctx.escapeHtml(b.id)}" style="background:none;border:1px solid var(--border);color:var(--text-muted);font-size:11px;padding:2px 8px;border-radius:5px;cursor:pointer;">Stornieren</button>`
+                        : `<span style="font-size:10px;color:var(--text-muted);cursor:help;" title="${ctx.escapeHtml(lage.text)}">nicht stornierbar</span>`}
+                  </div>
+                </div>`;
+              }).join('')}
+        </div>`;
+
+  let behandlungFormHtml = '';
+  if (!selectedVord) {
+    behandlungFormHtml = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
+  } else {
+    behandlungFormHtml = `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
       <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')}</h4>
+      ${abgerechnetHinweisHtml}
       <div style="display:grid;gap:12px;">
         <div>
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_behandlungsdatum')}</label>
@@ -670,45 +772,10 @@ async function loadPodologieBilling() {
              Bedienung und Regeln: module/podo-storno.js.
              Beschriftung fest auf Deutsch wie die Nachbartexte dieses Panels —
              das dashboard.js-Woerterbuch steht an seiner Groessenschranke. -->
-        <div style="border-top:1px solid var(--border);padding-top:12px;">
-          <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">
-            Bereits dokumentiert${dokumentiert.length ? ` (${dokumentiert.filter(b => !b.storniert_am).length}${dokumentiert.some(b => b.storniert_am) ? ` + ${dokumentiert.filter(b => b.storniert_am).length} storniert` : ''})` : ''}
-          </div>
-          ${dokumentiert.length === 0
-            ? `<div style="font-size:12px;color:var(--text-muted);">Für diese Verordnung ist noch keine Behandlung erfasst.</div>`
-            : dokumentiert.map(b => {
-                const codes = (Array.isArray(b.hpnr_codes) ? b.hpnr_codes : []).filter(Boolean);
-                // Ein Datum in der Zukunft kann aus der Zeit vor dem 19.09.2026
-                // stammen — damals liess es sich speichern. Es faellt die
-                // §302-Datei, also wird es hier rot benannt statt stumm gelistet.
-                const kuenftig = !b.storniert_am && b.behandlungsdatum > todayStr;
-                const storniert = !!b.storniert_am;
-                const lage = darfStornieren(b);
-                return `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid var(--border);${storniert ? 'opacity:.6;' : ''}">
-                  <div style="min-width:0;">
-                    <div style="font-size:12px;color:${kuenftig ? '#ef4444' : 'var(--text-main)'};${storniert ? 'text-decoration:line-through;' : ''}">
-                      ${ctx.escapeHtml(b.behandlungsdatum ? new Date(b.behandlungsdatum).toLocaleDateString('de-DE') : '—')}
-                      ${kuenftig ? ' ⚠ Datum liegt in der Zukunft — die Kasse weist damit die ganze Abrechnungsdatei zurück.' : ''}
-                    </div>
-                    <div style="font-size:11px;color:var(--text-muted);word-break:break-word;${storniert ? 'text-decoration:line-through;' : ''}">${ctx.escapeHtml(codes.join(' · ') || '—')}</div>
-                    ${b.lokalisation ? `<div style="font-size:11px;color:var(--text-muted);${storniert ? 'text-decoration:line-through;' : ''}">${ctx.escapeHtml(b.lokalisation)}</div>` : ''}
-                    ${storniert ? `<div style="font-size:11px;color:#f59e0b;">Storniert am ${ctx.escapeHtml(new Date(b.storniert_am).toLocaleDateString('de-DE'))} — ${ctx.escapeHtml(b.storno_grund || 'ohne Grund')}</div>` : ''}
-                  </div>
-                  <div style="display:flex;align-items:flex-start;gap:8px;white-space:nowrap;">
-                    ${b.invoice_id && !storniert
-                      ? `<span style="font-size:10px;color:var(--text-muted);" title="Steht bereits auf einer Rechnung">berechnet</span>`
-                      : ''}
-                    ${storniert
-                      ? ''
-                      : lage.erlaubt
-                        ? `<button type="button" class="pod-storno-btn" data-beh="${ctx.escapeHtml(b.id)}" style="background:none;border:1px solid var(--border);color:var(--text-muted);font-size:11px;padding:2px 8px;border-radius:5px;cursor:pointer;">Stornieren</button>`
-                        : `<span style="font-size:10px;color:var(--text-muted);cursor:help;" title="${ctx.escapeHtml(lage.text)}">nicht stornierbar</span>`}
-                  </div>
-                </div>`;
-              }).join('')}
-        </div>
+        ${bereitsDokumentiertHtml}
       </div>
-    </div>` : `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
+    </div>`;
+  }
 
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
@@ -731,7 +798,7 @@ async function loadPodologieBilling() {
 
         <div class="card" style="background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
           <h4 style="margin:0 0 12px;color:var(--text-main);font-size:15px;">${ctx.t('pod_active_vord')}</h4>
-          <div id="podVordList">${vordListHtml}</div>
+          <div id="podVordList">${vordListHtml}${abgToggleHtml}</div>
         </div>
       </div>
 
@@ -790,7 +857,7 @@ async function loadPodologieBilling() {
     // die harte UI1/UI2-Abrechnungsregel darf es das aber nicht sein.
     await loadDgIcdRules(ctx.supabase);
 
-    const vord = _podState.verordnungen.find(v => v.id === _podState.selectedVordId);
+    const vord = findVord(_podState.selectedVordId);
     const dRoot = vord ? podDiagRoot(vord.diagnosegruppe) : '';
     const isUIx = dRoot === 'UI1' || dRoot === 'UI2';
     const icd10 = vord?.icd10 || [];
@@ -988,5 +1055,5 @@ export function setPodVorwahl(id) {
  * dashboard.js, das nicht mit umziehen konnte und trotzdem an `_podState` muss.
  */
 export function getPodVerordnung(id) {
-  return _podState.verordnungen.find(v => v.id === id);
+  return findVord(id);
 }

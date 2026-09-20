@@ -264,3 +264,15 @@ test('eine podologische Zeile erscheint nur einmal, nicht doppelt', () => {
     assert.equal(liste[0].quelle, 'podologie');
   });
 });
+
+test('gesendete Podologie-Verordnung erscheint auch bei nurAktive:true — sonst verschwindet die Behandlung aus der Akte', async () => {
+  const liste = await ladeAktiveVerordnungen(fakeSb({
+    prescriptions: [
+      { id: 'v1', therapie_bereich: 'podo', patient_id: 'p1', ausstellungsdatum: '2026-09-01', abrechnung_status: 'gesendet', anzahl_einheiten: 4 },
+    ],
+  }), OPTS); // nurAktive Standard = true
+
+  assert.equal(liste.length, 1);
+  assert.equal(liste[0].id, 'v1');
+});
+
