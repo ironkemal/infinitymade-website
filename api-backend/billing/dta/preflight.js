@@ -179,10 +179,29 @@ export function preflight(input) {
   else if (!/^\d{9}$/.test(input.empfaenger.ik)) E(errors, 'F:02002', 'empfaenger.ik', 'Empfänger-IK muss 9 Ziffern haben');
   else if (!isValidIkChecksum(input.empfaenger.ik)) E(errors, 'F:02003', 'empfaenger.ik', 'Empfänger-IK Prüfziffer ungültig');
 
-  if (!input.rechnung?.sammelRechnungsnummer)
+  // --- Rechnungsnummern (SLGA REC Kap. 5.5.2, S. 34 + SLLA REC Kap. 5.5.3.1, S. 44) ---
+  // Ein Längen- oder Zeichenverstoß wird in Prüfstufe 2 erkannt (Anhang 2 Kap. 9 § 3.2):
+  // die Annahmestelle weist die GANZE DATEI ab.
+  // Die 14er-Grenze stand bis zum 20.09.2026 unbelegt im Code und ist nun durch Anlage 1
+  // TP5 V21 belegt (..14 AN M; Notation Kap. 5.1 (8)).
+  if (!input.rechnung?.sammelRechnungsnummer) {
     E(errors, 'F:03001', 'rechnung.sammelRechnungsnummer', 'Sammelrechnungsnummer fehlt');
-  else if (input.rechnung.sammelRechnungsnummer.length > 14)
-    E(errors, 'F:03002', 'rechnung.sammelRechnungsnummer', 'Sammelrechnungsnummer max. 14 Zeichen');
+  } else {
+    if (input.rechnung.sammelRechnungsnummer.length > 14) {
+      E(errors, 'F:03002', 'rechnung.sammelRechnungsnummer', 'Sammelrechnungsnummer max. 14 Zeichen');
+    }
+    // Genau dieser Regex deckt alle vier Forderungen in einem ab: nur alphanumerisch
+    // plus '-' und '/', kein Gliederungszeichen am Anfang oder Ende, keine zwei hintereinander.
+    if (!/^[A-Za-z0-9]+([-/][A-Za-z0-9]+)*$/.test(input.rechnung.sammelRechnungsnummer)) {
+      E(errors, 'F:03006', 'rechnung.sammelRechnungsnummer', 'Sammelrechnungsnummer enthält unzulässige Zeichen (nur A-Z a-z 0-9, Gliederung nur - und /)');
+    }
+  }
+
+  // Einzel-Rechnungsnummer: ..6 AN M (Kap. 5.5.3.1). Vorgabewert '0' (builder.js) muss
+  // durchgehen; ein fehlender Wert ist kein Fehler hier (den setzt der Builder).
+  if (input.rechnung?.einzelRechnungsnummer && String(input.rechnung.einzelRechnungsnummer).length > 6) {
+    E(errors, 'F:03007', 'rechnung.einzelRechnungsnummer', 'Einzelrechnungsnummer max. 6 Zeichen');
+  }
 
   if (!input.rechnung?.datennummer || input.rechnung.datennummer < 1)
     E(errors, 'F:03003', 'rechnung.datennummer', 'Datennummer fehlt oder < 1');

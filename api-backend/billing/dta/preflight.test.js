@@ -360,5 +360,101 @@ test('Vorname/Straße/PLZ/Ort haben eigene Grenzen', () => {
   assert.ok(hasErr(r, 'P:01014'), 'Ort');
 });
 
+// ---------------------------------------------------------------------------
+// Rechnungsnummern (SLGA REC Kap. 5.5.2 / SLLA REC Kap. 5.5.3.1)
+// ---------------------------------------------------------------------------
+
+console.log('preflight — Rechnungsnummern');
+
+test('Gegenprobe: R2026-W38-001 aus abrechnung.routes.js besteht alle Regeln', () => {
+  const i = clone(validInput);
+  i.rechnung.sammelRechnungsnummer = 'R2026-W38-001';
+  const r = preflight(i);
+  assert.equal(r.ok, true);
+  assert.equal(hasErr(r, 'F:03002'), false);
+  assert.equal(hasErr(r, 'F:03006'), false);
+});
+
+test('Sammelrechnungsnummer mit 15 Zeichen meldet F:03002', () => {
+  const i = clone(validInput);
+  i.rechnung.sammelRechnungsnummer = 'R2026-W38-00001'; // 15 Zeichen
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'F:03002'));
+  assert.equal(hasErr(r, 'F:03006'), false);
+});
+
+test('Sammelrechnungsnummer mit Leerzeichen meldet F:03006', () => {
+  const i = clone(validInput);
+  i.rechnung.sammelRechnungsnummer = 'RE 2026 001';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'F:03006'));
+  assert.equal(hasErr(r, 'F:03002'), false);
+});
+
+test('Sammelrechnungsnummer mit Sonderzeichen meldet F:03006', () => {
+  const i = clone(validInput);
+  i.rechnung.sammelRechnungsnummer = 'RE#2026';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'F:03006'));
+  assert.equal(hasErr(r, 'F:03002'), false);
+});
+
+test('Sammelrechnungsnummer mit Gliederungszeichen am Rand meldet F:03006', () => {
+  for (const nr of ['-R2026', 'R2026-']) {
+    const i = clone(validInput);
+    i.rechnung.sammelRechnungsnummer = nr;
+    const r = preflight(i);
+    assert.equal(r.ok, false, nr);
+    assert.ok(hasErr(r, 'F:03006'), nr);
+    assert.equal(hasErr(r, 'F:03002'), false, nr);
+  }
+});
+
+test('Sammelrechnungsnummer mit aufeinanderfolgenden Gliederungszeichen meldet F:03006', () => {
+  const i = clone(validInput);
+  i.rechnung.sammelRechnungsnummer = 'R2026--001';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'F:03006'));
+  assert.equal(hasErr(r, 'F:03002'), false);
+});
+
+test('Sammelrechnungsnummer R2026/W38-001 mit gemischten Trennern ist zulaessig', () => {
+  const i = clone(validInput);
+  i.rechnung.sammelRechnungsnummer = 'R2026/W38-001';
+  const r = preflight(i);
+  assert.equal(r.ok, true);
+  assert.equal(hasErr(r, 'F:03002'), false);
+  assert.equal(hasErr(r, 'F:03006'), false);
+});
+
+test('Einzelrechnungsnummer 0 und 123456 fehlerfrei, 1234567 meldet F:03007', () => {
+  const ok0 = clone(validInput);
+  ok0.rechnung.einzelRechnungsnummer = '0';
+  assert.equal(preflight(ok0).ok, true);
+
+  const ok6 = clone(validInput);
+  ok6.rechnung.einzelRechnungsnummer = '123456';
+  assert.equal(preflight(ok6).ok, true);
+
+  const zuLang = clone(validInput);
+  zuLang.rechnung.einzelRechnungsnummer = '1234567';
+  const r = preflight(zuLang);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'F:03007'));
+});
+
+test('Sammelrechnungsnummer gleichzeitig zu lang und ungueltig formatiert meldet F:03002 und F:03006', () => {
+  const i = clone(validInput);
+  i.rechnung.sammelRechnungsnummer = 'RE 2026 W38 0001'; // 16 Zeichen + Leerzeichen
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'F:03002'), 'F:03002 bei Überlänge');
+  assert.ok(hasErr(r, 'F:03006'), 'F:03006 bei unzulässigen Zeichen');
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

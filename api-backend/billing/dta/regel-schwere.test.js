@@ -20,7 +20,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { REGEL_SCHWERE } from './regel-schwere.js';
+import { REGEL_SCHWERE, harteRegeln } from './regel-schwere.js';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const QUELLE = readFileSync(join(HIER, 'preflight.js'), 'utf8');
@@ -62,3 +62,29 @@ test('jeder Eintrag trägt die drei Pflichtfelder in zulässiger Form', () => {
     assert.ok(String(v.hinweis || '').trim().length > 0, `${code}: hinweis fehlt`);
   }
 });
+
+test('harteRegeln() liefert genau die Codes mit schwere "hart" oder "beides" — sortiert und ohne Doppelte', () => {
+  const codes = harteRegeln();
+  const erwartet = Object.entries(REGEL_SCHWERE)
+    .filter(([, v]) => v.schwere === 'hart' || v.schwere === 'beides')
+    .map(([k]) => k)
+    .sort();
+
+  assert.deepEqual(codes, erwartet, 'harteRegeln() muss exakt den harten/beides-Codes entsprechen');
+  assert.equal(codes.length, new Set(codes).size, 'harteRegeln() darf keine Duplikate enthalten');
+  assert.deepEqual(codes, [...codes].sort(), 'harteRegeln() muss aufsteigend sortiert sein');
+});
+
+test('jeder Code aus harteRegeln() kommt auch im Quelltext von preflight.js vor', () => {
+  const imCode = codesImQuelltext();
+  const fehlend = harteRegeln().filter(c => !imCode.has(c)).sort();
+
+  assert.deepEqual(fehlend, [],
+    `Harte Regel(n) aus harteRegeln(), aber nicht im Preflight-Quelltext vorhanden: ${fehlend.join(', ')}.\n`
+    + 'Jede harte Regel muss in preflight.js implementiert sein.\n'
+    + '⚠️ Eine neue HARTE Regel braucht vorher die Zustimmung von `gkv-302` '
+    + '(onprem O-113): sie hält im Fehlerfall die Abrechnung jedes betroffenen '
+    + 'Kunden an, und in einer Kundenbox kommt die Korrektur frühestens in der '
+    + 'nächsten Nacht an — im Kanal :stable Tage später, ohne Netz nie.');
+});
+

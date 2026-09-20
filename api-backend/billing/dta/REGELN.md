@@ -114,12 +114,27 @@ entschieden:
    Vorschlag: die Warnung bekommt einen eigenen Code. Nicht hier geändert —
    das wäre eine Verhaltensänderung an einer Regel, und genau dafür gilt der
    Absatz oben.
-2. **`F:03002` — Sammelrechnungsnummer „max. 14 Zeichen".** Diese Grenze ist
-   im Text von Anlage 1 TP5 V21 nicht auffindbar (Kap. 5.5.2, REC). Woher
-   stammt sie? Wenn die echte Grenze größer ist, weisen wir heute gültige
-   Nummern ab; wenn sie kleiner ist, lassen wir ungültige durch.
-3. **`S:01005` (Leistungsdatum in der Zukunft) ist heute `hart`.** Das war die
+2. **`S:01005` (Leistungsdatum in der Zukunft) ist heute `hart`.** Das war die
    Ursache von `c4332d5`. Richtig ist die Regel — aber sollte sie die ganze
    Datei kosten oder nur den einen Abrechnungsfall herausnehmen?
-4. **`kasse: 'unbekannt'`** steht bei 8 Regeln. Für jede davon wäre die
+3. **`kasse: 'unbekannt'`** steht bei 8 Regeln. Für jede davon wäre die
    Prüfstufe (1/2/3) hilfreich, falls sie sich belegen lässt.
+
+---
+
+## 6. Beschlossene Änderungen und Belege (20.09.2026)
+
+### Beantwortete Fragen
+- **`F:03002` (Sammelrechnungsnummer max. 14 Zeichen):** Belegt durch Anlage 1 TP5 V21,
+  Kap. 5.5.2 (SLGA REC, S. 34) und Kap. 5.5.3.1 (SLLA REC, S. 44): Sammel-Rechnungsnummer
+  `..14 AN M` (Notation Kap. 5.1 (8): `..n` = höchstmögliche Stellenbelegung, alphanumerisch, Mussfeld).
+  Prüfstufe 2 (Anhang 2 Kap. 9 § 3.2) weist bei Längenverstoß die ganze Datei ab (`kasse: 'datei'`, `schwere: 'hart'`).
+
+### Neue harte Regeln (Zustimmung von `gkv-302` liegt vor)
+Gemäß § 3 Punkt 3 wurden folgende neue harte Regeln nach Freigabe durch `gkv-302` aufgenommen:
+- **`F:03006` — Zeichenvorrat Sammelrechnungsnummer:** Nur Alphanumerik (`A-Z`, `a-z`, `0-9`),
+  als Gliederungszeichen ausschließlich `-` und `/`, nie am Anfang oder Ende, nie aufeinanderfolgend
+  (Anlage 1 TP5 V21, Kap. 5.5.2 SLGA REC, S. 34 + Kap. 5.5.3.1 SLLA REC, S. 44). `kasse: 'datei'`, `schwere: 'hart'`.
+- **`F:03007` — Länge Einzelrechnungsnummer:** Höchstens 6 Stellen (`..6 AN M`, Anlage 1 TP5 V21,
+  Kap. 5.5.3.1 SLLA REC, S. 44). Ein Längenverstoß führt in Prüfstufe 2 zur Abweisung der Datei (`kasse: 'datei'`, `schwere: 'hart'`).
+
