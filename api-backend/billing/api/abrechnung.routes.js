@@ -43,6 +43,8 @@ import {
 } from '../codes/legs.js';
 // § 302-Echtbetrieb, Schritt 1.7 — Betriebsart je (Inhaber × Datenannahmestelle).
 import { ladeBetriebsart } from './betriebsart.js';
+// § 302-Abrechnung — Verworfene Nummern festhalten (GoBD-Erklärbarkeit, Migration 0033).
+import { verworfeneNummerFesthalten } from './verworfen.js';
 
 const router = express.Router();
 // ⚠️ Bewusst OHNE Absicherung auf fehlende Umgebungsvariablen: fehlen sie,
@@ -271,10 +273,14 @@ async function baueBegleitzettel({
         eigenerAbrechnungscode,
       });
       if (r.ok) {
-        ergebnis = { ik: r.ik, name: r.name, anschrift: null };
-        // Anschrift steht nicht in der DB (keine Adressspalte in `kostentraeger`).
-        // Sobald ein Importpfad fuer geparste ANS-Segmente existiert, kann hier
-        // waehlePostanschrift() nachgeschaltet werden.
+        // Schritt 1.4 (20.09.2026): die Anschrift kommt jetzt mit — aus
+        // `kostentraeger_anschriften` (Migration 0032), ausgewaehlt von
+        // `waehlePostanschrift()` in `ladePapierannahmestelle()`.
+        // ⚠️ `anschrift` darf `null` bleiben: solange die Migration nicht
+        // eingespielt oder zur Annahmestelle keine ANS-Zeile geladen ist, geht
+        // der Begleitzettel ohne Empfaengeradresse raus — mit Warnung, aber die
+        // Abrechnung laeuft. Die elektronische Datei ist davon unberuehrt.
+        ergebnis = { ik: r.ik, name: r.name, anschrift: r.anschrift || null };
       } else {
         console.warn(`[begleitzettel] Papierannahmestelle fuer ${ktIk} nicht aufloesbar: ${r.grund}`);
       }
@@ -880,6 +886,17 @@ router.post('/abrechnung/create', async (req, res) => {
         },
       });
     } catch (e) {
+      // GoBD-Erklärbarkeit: verworfene Nummer festhalten, bevor der Fehler weitergereicht wird
+      await verworfeneNummerFesthalten({
+        db: supabase,
+        ownerId: tenantId,
+        kostentraegerIk,
+        sammelRechnungsnummer,
+        datennummer,
+        transfernummer,
+        empfaengerIk: dasIk,
+        error: e,
+      });
       if (e.preflight) {
         return res.status(422).json({
           error: 'Abrechnung enthält Fehler, die vom DMRZ abgelehnt würden.',
@@ -3051,6 +3068,17 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         rechnungssteller: { name: profile.business_name || 'Praxis', telefon: profile.phone || '' },
       });
     } catch (e) {
+      // GoBD-Erklärbarkeit: verworfene Nummer festhalten, bevor der Fehler weitergereicht wird
+      await verworfeneNummerFesthalten({
+        db: supabase,
+        ownerId: tenantId,
+        kostentraegerIk,
+        sammelRechnungsnummer,
+        datennummer,
+        transfernummer,
+        empfaengerIk: dasIk,
+        error: e,
+      });
       if (e.preflight) return res.status(422).json({ error: 'Preflight-Fehler.', preflight: e.preflight });
       throw e;
     }
@@ -3526,6 +3554,17 @@ router.post('/abrechnung/korrektur', async (req, res) => {
         rechnungssteller: { name: praxisProfil.business_name || 'Praxis', telefon: praxisProfil.phone || '' },
       });
     } catch (e) {
+      // GoBD-Erklärbarkeit: verworfene Nummer festhalten, bevor der Fehler weitergereicht wird
+      await verworfeneNummerFesthalten({
+        db: supabase,
+        ownerId: tenantId,
+        kostentraegerIk,
+        sammelRechnungsnummer,
+        datennummer,
+        transfernummer,
+        empfaengerIk: das.ik,
+        error: e,
+      });
       if (e.preflight) return res.status(422).json({ error: 'Korrekturrechnung enthält Fehler, die vom DMRZ abgelehnt würden.', preflight: e.preflight });
       throw e;
     }

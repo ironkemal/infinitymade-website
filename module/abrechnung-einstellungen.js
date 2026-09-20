@@ -134,7 +134,7 @@ export async function renderAbrechnungSettings(deps) {
           ? new Date(data.cert_valid_to).toLocaleDateString('de-DE')
           : '—';
         statusEl.textContent = `Zertifikat: ${data.cert_subject} · gültig bis ${valid}`;
-        statusEl.style.color = '#15803d';
+        statusEl.style.color = 'var(--success, #15803d)';
       } else {
         statusEl.textContent = 'Noch kein ITSG-Zertifikat hinterlegt.';
         statusEl.style.color = '';
