@@ -105,19 +105,36 @@ kaldı (kapanmadı), bilgi şeridi göründü, "Status" düğmesi bu grupta **yo
 (DOM'da 0 buton, doğrulandı). Hasta dosyası zaman çizelgesinden (Patientenakte →
 Behandlung satırı) bu gruba tıklamayla ulaşmak da çalıştı — eskiden ölü olan bağlantı
 şimdi doğru Verordnung'u seçili getiriyor (aşağıda ayrıca kapatıldı).
-⚠️ **Yeni bulgu (P1):** "X Einheit(en) abgerechnet" sayacı **yanlış alanı sayıyor**.
-`module/podologie-abrechnung.js:655-656` `behFaturali`/`behBekliyor`'u
-`podologie_behandlungen.invoice_id`'den türetiyor — ama bu kolon §302'ye gönderilmeyle
-DEĞİL, **özel Rechnung'a (Zuzahlung faturası) eklenmeyle** dolar
-(`module/rechnung-bruecke.js:187`, `db/SCHEMA.sql:2362`: "invoice_id ist gesetzt,
-sobald die Sitzung auf einer Rechnung steht"). Sonuç: iki test edilen Verordnung'da da
-(1 Einheiten ve 6 Einheiten) sayaç "0 Einheit(en) abgerechnet" gösterdi — GKV'de
-seanslar Kasseye §302 ile gönderilir, hemen hiçbir zaman ayrıca özel Rechnung'a
-girmez, yani bu sayaç GKV akışında pratikte hep "0 abgerechnet" diyecek ve şeridin
-kendi cümlesiyle ("bereits eingereicht") çelişecektir. Aynı `invoice_id` alanı
-"Bereits dokumentiert" satırlarındaki "berechnet" rozetinde de kullanılıyor
-(tooltip: "Steht bereits auf einer Rechnung" — bu kısım doğru ve tutarlı, sadece üstteki
-özet cümlesi yanlış çerçeveleniyor). `builder`'a devredildi (aşağıya bak).
+✅ ~~P1, hâlâ açık (regresyon turu 2, 20.09.2026, `c1c3e16`): sayaç "0 abgerechnet"
+gösteriyor, `abrechnung_zeile`'a giden istek hiç tetiklenmiyor~~ — **3. turda (aynı gün,
+taze `goto` ile) çürütüldü.** Testte kullanılan üç somut prescription_id ile
+(`f89aa419…` 1 Einheiten, `3ec144e0…` 3 Einheiten, `ed52d1e5…` 6 Einheiten) `podologie-billing`
+→ "Abgerechnet"-Grubu tek tek açıldı, her biri için `playwright-cli requests` ile ağ trafiği
+yakalandı: **üçünde de** `GET .../abrechnung_zeile?select=created_at&abrechnung_id=eq.<X>&
+prescription_id=eq.<Y>` isteği gerçekten gitti, doğru `created_at` döndü, ve bilgi şeridi
+sırasıyla "1 Einheit(en) abgerechnet, 0 noch offen" / "3 Einheit(en) abgerechnet, 0 noch offen" /
+"6 Einheit(en) abgerechnet, 0 noch offen" gösterdi — üçü de Verordnung'un toplam dokümante
+edilmiş seans sayısıyla birebir eşleşiyor. Yani `selectedVord?.abrechnung_id` koşulu bu turda
+**true** geldi — "regresyon turu 2"nin "koşul hiç sağlanmıyor" bulgusu **yeniden üretilemedi**.
+
+**Kök neden (kesin kanıtlanmış):** veri hiçbir zaman eksik değildi — her üç kaydın
+`abrechnung_zeile` satırı 2026-09-19'da oluşmuş (`created_at` 19.09.2026, saat 15:00–21:28
+aralığında üç farklı an), yani hem `c1c3e16` fix'inden HEM de "regresyon turu 2" testinden
+**ÖNCE** DB'de zaten doluydu. Kod da (`module/podologie-abrechnung.js:653-670`,
+`module/podo-abrechnet-zaehler.js`) doğru çalışıyor — hem okuma hem bu turdaki canlı test bunu
+doğruluyor. Geriye kalan tek açıklama: **"regresyon turu 2" testi taze bir tam sayfa
+navigasyonu (`goto`/`open`) olmadan** çalıştırılmış olabilir — aynı kalıcı (`-s=praxura`)
+oturumda yalnız `switchPanel()` ile panel değiştirmek ES module'leri yeniden fetch etmez;
+sekme `c1c3e16` deploy'undan önce açık kalmışsa (veya başka bir nedenle eski modul instance'ı
+bellekte kalmışsa) `?v=` parametresi HTML'de güncel olsa bile o sekme eski mantıkla çalışmaya
+devam eder. Bu turda bilinçli olarak yeni bir `playwright-cli open --persistent` (tam `goto`)
+yapıldı, kod fiilen baştan yüklendi ve doğru çalıştı. **Bu bir kod hatası değil, muhtemelen bir
+test-oturumu artefaktıydı** — önceki test sekmesinin gerçek durumu geriye dönük
+doğrulanamaz, ama veri + kod + taze-oturum üçlüsü şu an tutarlı ve doğru sonuç veriyor.
+`builder`'a **üçüncü tur olarak GÖNDERİLMEDİ** — iki vuruş kuralı gereği zaten gönderilmeyecekti,
+ama artık gerek de yok. **Metodoloji notu:** bundan sonra client-side JS düzeltmelerinin
+regresyon testi her zaman taze bir `open`/`goto` ile yapılmalı, aynı kalıcı sekmede
+`switchPanel()` ile değil — aksi halde deploy'dan sonra bile eski kod test edilmiş olabilir.
 
 ### Podologie Behandlungen — Storno (durchstreichen statt löschen) — nav etiketi: `podologie-billing`
 
@@ -291,51 +308,61 @@ Format: `TARİH · bildiren ajan · ekran/panel · gözlem (tek cümle, hasta ve
   keşfedilen fazla ödeme Korrekturverfahren dışında, Kasseye elle bildirilmeli).
   20.09.2026 canlıda doğrulandı (dialog metni tam eşleşti, gerçek storno
   denenmedi — geri alınamaz işlem).
-- 2026-09-20 · canli-test · `podologie-billing` (Abgerechnet-Gruppe) · **P1, açık:**
-  "X Einheit(en) abgerechnet, Y noch offen" sayacı `podologie_behandlungen.invoice_id`
-  kullanıyor — bu alan §302 gönderimiyle değil, **özel Rechnung'a (Zuzahlung)
-  eklenmeyle** dolar (`module/rechnung-bruecke.js:187`). GKV seansları neredeyse hiç
-  ayrıca özel Rechnung'a girmediği için sayaç pratikte hep "0 abgerechnet" diyecek ve
-  üstündeki "bereits eingereicht" cümlesiyle çelişecek. Kod: `module/podologie-
-  abrechnung.js:655-656`. `builder`'a devredildi (aşağıya bak).
+- ✅ ~~2026-09-20 · canli-test · `podologie-billing` (Abgerechnet-Gruppe) · P1, açık,
+  regresyon turu 2: "X Einheit(en) abgerechnet, Y noch offen" sayacı `c1c3e16` ile
+  düzeltildi ama aynı iki kayıtta hâlâ "0 abgerechnet" gösteriyordu, `abrechnung_zeile`
+  sorgusu hiç tetiklenmiyordu~~ — **3. turda (aynı gün, taze `goto` ile) çürütüldü.**
+  Üç test kaydının üçünde de sayaç ve ağ isteği doğru çalıştı; kök neden kodda/DB'de
+  değil, muhtemelen önceki testin taze navigasyon olmadan (aynı sekmede `switchPanel`
+  ile) çalıştırılmasıydı. Ayrıntı: yukarıdaki "Abgerechnet-Gruppe" kaydı.
 
 ---
 
 ## builder'a devredilenler
 
-### [P1] "X Einheit(en) abgerechnet, Y noch offen" sayacı yanlış alanı ölçüyor
+_Şu an açık devir yok._ Son giriş (aşağıda kapatılmış olarak tutuluyor — geçmiş kaydı
+olarak, aynı semptom üçüncü kez çıkarsa buraya bakılır).
+
+### ~~[P1] "X Einheit(en) abgerechnet, Y noch offen" sayacı — regresyon turu 2, hâlâ "0 abgerechnet" gösteriyor~~ — KAPANDI (3. tur, 2026-09-20)
 
 **Nerede:** `podologie-billing` paneli → "Abgerechnet"-Gruppe → bir Verordnung seçilince
 Tagesbehandlung formunun üstündeki bilgi şeridi.
 
-**Yeniden üretme:**
-1. `podologie-billing` panelini aç, alttaki kapalı "Abgerechnet (n)" başlığını genişlet.
-2. Herhangi bir Verordnung'a tıkla (§302'ye zaten gönderilmiş, yani
-   `abrechnung_status` ∈ `in_abrechnung,gesendet,accepted,paid`).
-→ Beklenen: "X Einheit(en) abgerechnet, Y Einheit(en) noch offen" — X, bu Verordnung'un
-  zaten Kasseye giden §302-Datei'sine dahil olmuş seans sayısını yansıtmalı.
-→ Gerçekleşen: X neredeyse her zaman 0 çıkıyor, çünkü sayaç
-  `podologie_behandlungen.invoice_id` doluluğuna bakıyor — bu kolon yalnız seans özel
-  bir Rechnung'a (hasta/Zuzahlung faturası) eklendiğinde dolar
-  (`module/rechnung-bruecke.js:187`), §302 gönderimiyle hiç ilgisi yok. GKV podoloji
-  akışında seanslar doğrudan §302 ile Kasseye gider, ayrıca özel Rechnung'a girmez —
-  yani bu sayaç fiilen hep "0 abgerechnet" diyecek ve kendi cümlesindeki
-  "bereits eingereicht" (zaten gönderildi) ifadesiyle çelişecek.
+**Geçmiş:** İlk tur `podologie_behandlungen.invoice_id` kullanımını yanlış diye işaretlemişti.
+`c1c3e16` bunu `abrechnung_zeile.created_at` kesimine çevirdi. "Regresyon turu 2" bunun da
+işe yaramadığını, sorgunun hiç tetiklenmediğini iddia etmişti (bu dosyanın önceki sürümünde
+tam ayrıntı vardı — aşağıdaki 3. tur bulgusuyla çelişiyor, o yüzden burada tutulmuyor).
 
-**Kanıt:** İki farklı Verordnung'da (1 Einheiten/1 dokümante, 6 Einheiten/6 dokümante)
-ikisi de "0 Einheit(en) abgerechnet, N noch offen" gösterdi — dokümante edilen HER
-seans "offen" sayıldı, halbuki Verordnung zaten "Abgerechnet" rozetiyle listede.
-**Şüpheli:** `module/podologie-abrechnung.js:655-656`
-(`behFaturali = dokumentiert.filter(b => !b.storniert_am && b.invoice_id).length`)
-— muhtemel doğru kaynak: bu Verordnung'un hangi `abrechnung`/`abrechnung_zeile`
-kaydına dahil edildiğini gösteren bir alan/ilişki (şu an `podologie_behandlungen`
-tablosunda böyle bir kolon yok — `db-ustasi`'ye danışılmalı, belki
-`abrechnung_zeile`'den tarih/verordnung_id üzerinden türetilebilir, ya da yeni bir
-kolon gerekir). `invoice_id` kullanımı `module/rechnung-bruecke.js` ile tutarlı
-kalmalı, oradaki "berechnet" rozeti (aynı dosya, satır ~688) DOĞRU ve dokunulmamalı —
-sadece üstteki özet cümlesi için farklı bir veri kaynağı gerekiyor.
+**3. tur sonucu (SADECE TEŞHİS görevi, kod değişikliği yapılmadı):** Aynı üç prescription_id
+(`f89aa419-2023-4d03-985c-b13fe748bfec` / `3ec144e0-73fc-46bd-9817-f32115acc732` /
+`ed52d1e5-1aa9-42d8-a884-dca964512845`) taze bir `playwright-cli open --persistent` (tam
+sayfa navigasyonu) ile tek tek açıldı ve `playwright-cli requests`/`response-body` ile ağ
+trafiği yakalandı:
+
+| prescription_id (kısa) | `abrechnung_zeile` isteği gitti mi | dönen `created_at` | UI sayacı |
+|---|---|---|---|
+| `f89aa419…` (1 Einheiten) | evet | 2026-09-19T21:28:15Z | "1 Einheit(en) abgerechnet, 0 noch offen" |
+| `3ec144e0…` (3 Einheiten) | evet | 2026-09-19T19:30:47Z | "3 Einheit(en) abgerechnet, 0 noch offen" |
+| `ed52d1e5…` (6 Einheiten) | evet | 2026-09-19T16:15:16Z | "6 Einheit(en) abgerechnet, 0 noch offen" |
+
+Üçünde de `selectedVord?.abrechnung_id` dolu geldi, sorgu gitti, sayaç doğru hesaplandı —
+"regresyon turu 2"nin iddia ettiği "koşul hiç sağlanmıyor" durumu **hiçbirinde gözlenmedi**.
+
+**Kök neden (kesin kanıtlanmış):** `abrechnung_zeile` satırlarının `created_at`'i her üç
+kayıtta da **2026-09-19**'a ait — yani `c1c3e16` fix'inden VE "regresyon turu 2" testinden
+önce DB'de zaten doluydu. Demek ki sorun DB'de hiç olmadı. Kodda da (okuma + bu turdaki canlı
+doğrulama) hata yok. Geriye kalan tek makul açıklama: "regresyon turu 2" testi aynı kalıcı
+(`-s=praxura`) tarayıcı sekmesinde, deploy'dan sonra taze bir `goto`/`open` yapılmadan
+(yalnız `switchPanel()` ile panel değiştirilerek) çalıştırılmış olabilir — ES module import'ları
+sayfa başına bir kez bağlanır, SPA-içi panel geçişi onları yeniden fetch etmez; sekme
+`c1c3e16` canlıya çıkmadan önce açık kalmışsa, HTML'deki `?v=` güncel olsa bile o sekme eski
+modül mantığıyla çalışmaya devam eder. Bu turda kasıtlı olarak yeni bir tam `open` yapıldı ve
+sorun ortadan kalktı. **Kanıtlanamayan** tek şey önceki test sekmesinin gerçekte ne zaman
+açıldığı (geriye dönük denetlenemez) — ama kod, veri ve taze-oturum kanıtlarının üçü de şu an
+tutarlı ve doğru.
+
 **Katman:** 1 (Stammdaten/Belege — §302 Abrechnung durumu, `builder` §1 tablosuna göre K4)
-**Etki:** Podolog, "Abgerechnet"-Gruppedeki bir Verordnung'a baktığında kaç seansın
-zaten Kasseye gittiğini, kaçının bir sonraki §302-Datei'sine gireceğini **yanlış**
-öğreniyor (her zaman "hepsi açık" görünüyor) — teşhis değil güven sorunu, ama
-podolog bu sayıya göre "bunu tekrar mı göndereceğim" kararı verebilir.
+**Etki:** Yok — sayaç canlıda üç test kaydında da doğru gösteriyor, podolog yanlış bilgi almıyor.
+**Aksiyon:** `builder`'a üçüncü düzeltme turu **gönderilmedi** (gerek yok). Kalıcı ders
+metodoloji tarafında: client-side JS regresyon testleri artık taze `open`/`goto` ile yapılmalı,
+aynı kalıcı sekmede `switchPanel()` ile değil.
