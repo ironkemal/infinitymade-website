@@ -164,6 +164,25 @@ migration zincirde, döküm tazelenmiş.
 > 3. **Yılbaşı sıfırlamasının** "fortlaufend" beklentisine uyup uymadığı `gkv-302`'nin sorusu —
 >    sayaç yazılmadan sorulmalı.
 >
+> ✅ **`gkv-302` cevabı, 20.09.2026 — numara boşluğu spec'e aykırı DEĞİL.**
+> `naechste_datenaustauschreferenz()` numarayı **çekildiği anda** tüketir; `buildDtaFile()`
+> sonradan preflight'ta düşerse o numara yanar ve dizide bir boşluk kalır. Bu **dosya reddi
+> sebebi değildir** — spec "fortlaufend" der, "lückenlos" demez; Prüfstufe 1/2/3'te boşluk
+> arayan bir kriter yok. Yani tasarım **doğru** ve değiştirilmiyor.
+>
+> ⛔ **Ama numara vergisi preflight'tan SONRAYA alınmaz.** Cazip görünür ("önce doğrula,
+> sonra numara ver"), ve tam da bu yüzden burada yazılı: `F:03001`–`F:03004` kuralları
+> **datennummer'ın kendisini** denetliyor (var mı, < 1 mi, > 99999 mü). Numara preflight'tan
+> sonra verilirse o dört kural her seferinde bir yer tutucuyu denetler — **kör olurlar.**
+>
+> 🟡 **Açık, küçük iş (bu turda YAPILMADI):** yanan numara bugün hiçbir yere yazılmıyor.
+> Altı ay sonra "12 ile 14 arasındaki 13 nereye gitti" sorusunun cevabı yok, ve GoBD
+> tarafında boşluğun **açıklanabilir** olması gerekiyor (`nummernkreise` için aynı gerekçe
+> `db/REGISTER.md`'de zaten yazılı). En ucuz çözüm: `buildDtaFile()` throw ettiğinde
+> `abrechnung`'a `status = 'verworfen'` bir satır — yanan `datennummer` + `transfernummer`
+> + hata kodu, dosya yok. Mevcut tabloya bir status değeri eklemek yeni tablo açmaktan
+> ucuz; **yeni tablo düşünülürse önce `db-ustasi`'ya sorulur.**
+>
 > **Şart:** sayaç **monoton**, yalnız **ileri** alınabilen bir yönetim yolu (kutuda owner'ın
 > erişebileceği bir ekranda — orada bunu biz yapamayız), göç + `restore.sh` runbook'una
 > "sayaç ileri alındı mı" adımı.
