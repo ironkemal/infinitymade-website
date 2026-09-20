@@ -9,6 +9,14 @@ const PROTECTED = [
   'clear_gmail_token',
   'naechste_nummer',
   'naechste_verordnungsnummer',
+  // §302-Echtbetrieb Schritt 1.2 (0029). Dieselbe Bauart wie naechste_nummer:
+  // SECURITY DEFINER, Mandant kommt als ARGUMENT statt aus auth.uid(), und aus
+  // dem Ergebnis entsteht eine Rechnungs-/Datenaustauschnummer. Wer die
+  // Funktion aufrufen darf, darf die Nummernfolge einer fremden Praxis
+  // weiterdrehen — deshalb gehoert sie auf diese Liste.
+  'naechste_datenaustauschreferenz',
+  'naechste_transfernummer',
+  'datenaustausch_zaehler_vorstellen',
 ];
 
 const files = process.argv.slice(2);

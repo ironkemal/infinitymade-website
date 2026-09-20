@@ -71,6 +71,18 @@ ok(r2b.errors.length === 2, 'kurze Belegnummern werden erkannt');
 ok(r2b.errors[0].belegnummer === '1-1', 'Belegnummer 1-1 erkannt');
 ok(r2b.errors[1].belegnummer === '147-12', 'Belegnummer 147-12 erkannt');
 
+// 3c. Entwertetes Plus im Freitext (Schritt 1.9 e).
+// `d8249d6` hat die SEGMENT-Trennung entwertungsfest gemacht, die FELD-Trennung
+// nicht. Ein `?+` im Freitext zerschnitt das Segment eine Ebene tiefer an der
+// falschen Stelle — die Absetzung landete auf dem falschen Beleg oder ganz im
+// Nichts. Beides kostet Geld, und beides waere nicht aufgefallen.
+const entwertet = "UNB+x'FEHL+101+0001234+Zuschlag A ?+ B nicht abrechenbar'";
+const r2c = parseZaaFile(entwertet);
+ok(r2c.errors.length === 1, 'ein FEHL trotz entwertetem Plus im Freitext');
+ok(r2c.errors[0].code === '101', 'Fehlercode bleibt 101');
+ok(r2c.errors[0].belegnummer === '0001234', 'Belegnummer bleibt am richtigen Beleg');
+ok(/A \?\+ B/.test(r2c.errors[0].text), 'der Freitext bleibt in EINEM Feld: ' + r2c.errors[0].text);
+
 // 4. Empty
 const r3 = parseZaaFile('no errors here\nblob blob');
 ok(r3.format === 'empty', 'empty format when nothing matches');

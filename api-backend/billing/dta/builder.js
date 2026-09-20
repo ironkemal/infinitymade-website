@@ -336,6 +336,14 @@ export function buildDtaFile({
   // --- Dateieinheit (Anlage 1 TP5 V21, Kap. 5.3.1) -------------------------
   davIk,            // IK der Datenannahmestelle, für die diese Datei bestimmt ist
   kassenart,        // 'AO'|'EK'|'BK'|'IK'|'BN'|'LK'|'GK'|'SB'
+  // Transfernummer (1..999) — Anhang 1 § 4.3. Seit dem 20.09.2026 vergibt sie
+  // der AUFRUFER aus einem dauerhaften Zaehler je (Absender-IK, Empfaenger-IK)
+  // und haelt sie auf `abrechnung.transfernummer` fest (Migration 0029).
+  // Ohne Uebergabe bleibt der alte Notweg (Modulo aus `datennummer`) — er ist
+  // spezifikationswidrig ("keinen Bezug zur lfd. Nr. des Vorlaufsatzes"), aber
+  // die Fixtures und `dump.js` rufen ohne Zaehler auf, und eine Datei ohne
+  // Transfernummer laesst sich gar nicht benennen.
+  transfernummer: transfernummerVorgabe,
   // Sammelrechnung (Rechnungsart 3). Der Weg ist gebaut, aber bewusst
   // ABGESCHALTET: heute ruft ihn kein Produktivpfad auf. Er steht hier, damit
   // die Struktur beim ersten echten Sammelrechnungs-Fall nicht neu erfunden
@@ -344,7 +352,11 @@ export function buildDtaFile({
   sammelrechnung = false,
 }) {
   if (preflight) {
-    const pf = runPreflight({ absender, empfaenger, rechnung, prescriptions, vkz });
+    // `rechnungssteller` kommt seit 20.09.2026 mit: aus ihm entsteht das
+    // NAM-Segment (..30 Zeichen), und der Preflight prueft jetzt dessen Laenge
+    // (Schritt 1.9 d). Ohne die Uebergabe haette er `absender.name` geprueft
+    // und damit einen anderen Wert als den, der tatsaechlich in die Datei geht.
+    const pf = runPreflight({ absender, empfaenger, rechnung, prescriptions, vkz, rechnungssteller });
     if (!pf.ok) {
       const summary = pf.errors.slice(0, 5).map(e => `[${e.code}] ${e.where}: ${e.message}`).join('; ');
       const err = new Error(`Preflight failed (${pf.errors.length} errors): ${summary}`);
@@ -414,17 +426,20 @@ export function buildDtaFile({
     rolle:            'S', // Selbstabrechner — Praxura ist kein Abrechnungsdienstleister
     abrechnungsmonat: (erstellungsdatum instanceof Date ? erstellungsdatum : new Date(erstellungsdatum)).getMonth() + 1,
   });
-  // Transfernummer ist auf 1..999 begrenzt (§4.3) — `rechnung.datennummer`
-  // (Jahreszaehler, siehe abrechnung.routes.js) waechst darueber hinaus.
-  // Modulo ist eine bewusste Uebergangsloesung: die Spezifikation schweigt
-  // zum Ueberlauf. Seit 17.09.2026 wird dieselbe Transfernummer auch in die
-  // Auftragsdatei geschrieben (auftragsdatei.js, Feld TRANSFER_NUMMER) — das
-  // aendert NICHTS an diesem Problem, denn ohne DFUE gibt es noch keine echte
-  // Uebermittlung, gegen die der Zaehler stimmen muesste. Vor einer echten
-  // Direktuebermittlung braucht das einen eigenen, dauerhaften Zaehler je
-  // Empfaenger (selbe Baustelle wie Bulgu 7 — Datenaustauschreferenz; bewusst
-  // NICHT Teil dieser Aenderung, Konsey 2026-09-17).
-  const transfernummer = ((Math.max(1, Number(rechnung.datennummer) || 1) - 1) % 999) + 1;
+  // Transfernummer ist auf 1..999 begrenzt (§4.3).
+  //
+  // Der Aufrufer gibt sie seit dem 20.09.2026 vor — aus `naechste_transfernummer()`
+  // (Migration 0029), einem eigenen Zaehler je (Absender-IK, Empfaenger-IK).
+  // Das war faellig: die Spezifikation sagt ausdruecklich, die Transfernummer
+  // habe "keinen Bezug zur lfd. Nr. des Vorlaufsatzes" — der alte Modulo aus
+  // `rechnung.datennummer` stellte genau diesen Bezug her.
+  //
+  // Der Notweg unten bleibt fuer die Aufrufer OHNE Zaehler (Fixtures, dump.js,
+  // Tests). In einer echten Einreichung ist er nicht mehr im Spiel.
+  const transfernummer = Number.isInteger(Number(transfernummerVorgabe))
+      && Number(transfernummerVorgabe) >= 1 && Number(transfernummerVorgabe) <= 999
+    ? Number(transfernummerVorgabe)
+    : ((Math.max(1, Number(rechnung.datennummer) || 1) - 1) % 999) + 1;
   const physikalischerDateiname = buildPhysikalischerDateiname({
     kind:           kind === 'echt' ? 'echt' : 'test',
     transfernummer,
@@ -636,6 +651,10 @@ export function buildDtaFile({
     filename,
     logischerDateiname,
     auftragsdatei,
+    // Die tatsaechlich verwendete Transfernummer — der Aufrufer schreibt sie
+    // auf `abrechnung.transfernummer`, damit ein zweiter Sendeversuch derselben
+    // Datei dieselbe Nummer traegt (Anhang 1 § 4.3).
+    transfernummer,
     content,
     segmentCount,
     messageCount: nachrRef,

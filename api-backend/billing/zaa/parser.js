@@ -12,7 +12,7 @@
 // We try EDIFACT first, then fall back to a regex-driven plain-text scan.
 
 import { translateZaaCode } from './error-translations.js';
-import { segmenteTrennen } from '../dta/preflight.js';
+import { segmenteTrennen, felderTrennen } from '../dta/preflight.js';
 
 const FIELD_SEP = '+';
 
@@ -38,7 +38,11 @@ function parseEdifactFehl(content) {
   let currentBeleg = null;
 
   for (const raw of segs) {
-    const fields = raw.split(FIELD_SEP);
+    // Entwertungsfest (`?+` in einem Freitext ist KEIN Feldtrenner) — die
+    // zweite Haelfte des Fundes von `d8249d6`, der nur die Segmentebene
+    // geheilt hatte. Ein falsch zerlegtes FEHL setzt die Absetzung auf den
+    // falschen Beleg.
+    const fields = felderTrennen(raw);
     const tag = (fields[0] || '').trim().toUpperCase();
     if (tag === 'INV' && fields.length > 1) {
       // Belegnummer is the 4th sub-element of INV per Anlage 1 V21;

@@ -267,5 +267,98 @@ test('allows therapist certificate qualification if hasCert = true', () => {
   assert.equal(r.ok, true);
 });
 
+// ---------------------------------------------------------------------------
+// Schritt 1.8 — ICD-10 ODER Diagnosetext (Anlage 1 TP5 V21, Kap. 5.5.3.3 S.72)
+//
+// Der Fall ist kein Randfall: auf Muster 13 ist der ICD-Kode keine
+// Pflichtangabe (Anlage 3 k). Bis zum 20.09.2026 war eine solche Verordnung
+// gar nicht abrechenbar.
+// ---------------------------------------------------------------------------
+
+console.log('preflight — ICD oder Diagnosetext');
+
+test('ohne ICD, aber mit Diagnosetext: geht durch', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.icd10 = '';
+  i.prescriptions[0].verordnung.diagnosetext = 'Diabetisches Fußsyndrom, plantar rechts';
+  const r = preflight(i);
+  assert.equal(r.ok, true);
+  assert.equal(hasErr(r, 'V:01002'), false, 'kein Formatfehler auf einem leeren Feld');
+  assert.equal(hasErr(r, 'V:01015'), false);
+});
+
+test('weder ICD noch Diagnosetext: V:01015', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.icd10 = '';
+  i.prescriptions[0].verordnung.diagnosetext = '';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'V:01015'));
+});
+
+test('ICD vorhanden aber unbrauchbar: bleibt V:01002, auch mit Diagnosetext', () => {
+  // Wichtig: der Diagnosetext ist KEIN Freibrief fuer einen kaputten Kode.
+  // Steht ein Kode da, muss er stimmen — sonst setzt die Kasse ab.
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.icd10 = 'XX99';
+  i.prescriptions[0].verordnung.diagnosetext = 'irgendwas';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'V:01002'));
+});
+
+// ---------------------------------------------------------------------------
+// Schritt 1.9 (d) — Feldlängen. Alle Grenzen aus Anlage 1 TP5 V21,
+// Kap. 5.5.2 (SLGA.NAM) und 5.5.3.1 (SLLA.NAD).
+//
+// Warum das Gewicht: eine Überlänge kostet die GANZE Datei, nicht die Zeile —
+// und die Werte kommen aus Anwenderdaten (Praxisname, Patientenakte).
+// ---------------------------------------------------------------------------
+
+console.log('preflight — Feldlängen');
+
+test('Praxisname mit 30 Zeichen geht durch, mit 31 nicht', () => {
+  const ok31 = clone(validInput);
+  ok31.rechnungssteller = { name: 'x'.repeat(30) };
+  assert.equal(preflight(ok31).ok, true);
+
+  const zu = clone(validInput);
+  zu.rechnungssteller = { name: 'x'.repeat(31) };
+  const r = preflight(zu);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'F:03010'));
+});
+
+test('ohne `rechnungssteller` zählt `absender.name`', () => {
+  const i = clone(validInput);
+  i.absender.name = 'Praxis für Physiotherapie und Rehabilitation Dr. Müller';  // > 30
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'F:03010'));
+});
+
+test('Nachname 47 ok, 48 nicht', () => {
+  const ok47 = clone(validInput);
+  ok47.prescriptions[0].patient.nachname = 'a'.repeat(47);
+  assert.equal(preflight(ok47).ok, true);
+
+  const zu = clone(validInput);
+  zu.prescriptions[0].patient.nachname = 'a'.repeat(48);
+  assert.ok(hasErr(preflight(zu), 'P:01010'));
+});
+
+test('Vorname/Straße/PLZ/Ort haben eigene Grenzen', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].patient.vorname = 'v'.repeat(31);
+  i.prescriptions[0].patient.strasse = 's'.repeat(31);
+  i.prescriptions[0].patient.plz     = '1'.repeat(8);
+  i.prescriptions[0].patient.ort     = 'o'.repeat(26);
+  const r = preflight(i);
+  assert.ok(hasErr(r, 'P:01011'), 'Vorname');
+  assert.ok(hasErr(r, 'P:01012'), 'Straße');
+  assert.ok(hasErr(r, 'P:01013'), 'PLZ');
+  assert.ok(hasErr(r, 'P:01014'), 'Ort');
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

@@ -196,6 +196,41 @@ export function preflight(input) {
   if (input.vkz && !VERARBEITUNGSKENNZEICHEN[input.vkz])
     E(errors, 'F:04001', 'vkz', `VKZ "${input.vkz}" unbekannt`);
 
+  // --- Feldlängen (Schritt 1.9 d) ------------------------------------------
+  //
+  // Bis zum 20.09.2026 prüfte der Preflight nur vier Felder auf Länge. Alles
+  // andere kam ungeprüft aus Anwenderdaten — und eine Überlänge ist kein
+  // Schönheitsfehler: die Annahmestelle weist in Prüfstufe 2 die GANZE DATEI
+  // zurück, nicht die eine Zeile. Ein Praxisname mit 31 Zeichen hätte also
+  // eine komplette Einreichung gekostet, ohne dass irgendjemand die Ursache
+  // gesehen hätte.
+  //
+  // Alle Grenzen unten sind AUS DER SPEZIFIKATION abgelesen, nicht geschätzt:
+  // Anlage 1 TP5 V21, Kap. 5.5.2 (SLGA.NAM) und 5.5.3.1 (SLLA.NAD),
+  // wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt.
+  // Wo die Vorlage keine Länge nennt, steht hier KEINE Prüfung — eine
+  // erfundene Grenze wäre schlimmer als keine.
+  //
+  // ⚠️ Gezählt wird der Klartext, nicht die entwertete Fassung: die
+  //    Spezifikation meint die Nutzzeichen. `escapeEdifact()` kann ein Feld
+  //    beim Schreiben verlängern (`?+`), das ist eine Transportfrage.
+  const laenge = (wert) => String(wert ?? '').trim().length;
+  const pruefeLaenge = (wert, max, code, wo, was) => {
+    const n = laenge(wert);
+    if (n > max) {
+      E(errors, code, wo,
+        `${was}: ${n} Zeichen, erlaubt sind höchstens ${max} `
+        + `(Anlage 1 TP5 V21). Bei Überlänge weist die Annahmestelle die ganze Datei zurück.`);
+    }
+  };
+
+  // SLGA.NAM „Name 1" — ..30 AN M. Das ist `profiles.business_name`; der
+  // Builder nimmt `rechnungssteller.name`, sonst `absender.name`.
+  pruefeLaenge(
+    input.rechnungssteller?.name || input.absender?.name,
+    30, 'F:03010', 'absender.name',
+    'Praxisname (Einstellungen → Praxis)');
+
   if (!Array.isArray(input.prescriptions) || input.prescriptions.length === 0) {
     E(errors, 'F:05001', 'prescriptions', 'Mindestens ein Rezept erforderlich');
     return { ok: false, errors, warnings };
@@ -231,6 +266,16 @@ export function preflight(input) {
     if (p.patient?.plz && !isValidPlz(p.patient.plz))
       W(warnings, 'P:01008', `${at}.patient.plz`, 'PLZ ist nicht 5-stellig (nur bei DE Pflicht)');
 
+    // Feldlängen SLLA.NAD (Schritt 1.9 d) — Anlage 1 TP5 V21, Kap. 5.5.3.1.
+    // Diese fünf kommen direkt aus der Patientenakte und sind damit die
+    // wahrscheinlichste Quelle einer Überlänge: ein Doppelname, eine lange
+    // Straße, ein langer Ortsname. Folge wäre die Abweisung der ganzen Datei.
+    pruefeLaenge(p.patient?.nachname, 47, 'P:01010', `${at}.patient.nachname`, 'Nachname des Versicherten');
+    pruefeLaenge(p.patient?.vorname,  30, 'P:01011', `${at}.patient.vorname`,  'Vorname des Versicherten');
+    pruefeLaenge(p.patient?.strasse,  30, 'P:01012', `${at}.patient.strasse`,  'Straße/Nr. des Versicherten');
+    pruefeLaenge(p.patient?.plz,       7, 'P:01013', `${at}.patient.plz`,       'PLZ des Versicherten');
+    pruefeLaenge(p.patient?.ort,      25, 'P:01014', `${at}.patient.ort`,       'Wohnort des Versicherten');
+
     // Arzt — §302 fordert für LANR/BSNR nur "9 Stellen, nur Ziffern 0-9" und
     // erlaubt den Ersatzwert 999999999 (Anlage 1 TP5 V21, 5.5.3.3). Eine
     // Prüfziffernprüfung schreibt die Spezifikation NICHT vor; sie darf den
@@ -257,8 +302,32 @@ export function preflight(input) {
     if (!ausstellung)
       E(errors, 'V:01001', `${at}.verordnung.ausstellungsdatum`, 'Ausstellungsdatum ungültig');
 
-    if (!isValidIcd10(v.icd10))
-      E(errors, 'V:01002', `${at}.verordnung.icd10`, `ICD-10 "${v.icd10}" ungültiges Format`);
+    // ICD-10 ODER Diagnosetext — nicht ICD-10 zwingend.
+    //
+    // Bis zum 20.09.2026 stand hier ein bedingungsloses `if (!isValidIcd10(...))`.
+    // Damit war eine Verordnung OHNE ICD-Kode gar nicht abrechenbar — obwohl
+    // die Spezifikation den Fall ausdruecklich vorsieht (Anlage 1 TP5 V21,
+    // Kap. 5.5.3.3, S. 72): „Ist im Feld 'ICD-10-Code' kein ICD-10-Code
+    // eingetragen, ist der Diagnosetext anzugeben." Auf Muster 13 ist der
+    // ICD-Kode keine Pflichtangabe (Anlage 3 k) — das war also kein Randfall,
+    // sondern unmittelbar verlorene Einnahme.
+    //
+    // Der Riegel bleibt bestehen, er verschiebt sich nur: ohne BEIDES wird
+    // weiterhin abgewiesen. Das ist wichtig, denn ein leeres DIA'-Segment ist
+    // ein leeres MUSS-Feld, und dafuer weist Pruefstufe 2 die GANZE Datei ab.
+    const hatIcd  = !!String(v.icd10 ?? '').trim()
+                 || (Array.isArray(v.icd10Liste) && v.icd10Liste.some(k => String(k ?? '').trim()));
+    const hatText = !!String(v.diagnosetext ?? '').trim();
+
+    if (hatIcd) {
+      if (!isValidIcd10(v.icd10))
+        E(errors, 'V:01002', `${at}.verordnung.icd10`, `ICD-10 "${v.icd10}" ungültiges Format`);
+    } else if (!hatText) {
+      E(errors, 'V:01015', `${at}.verordnung.icd10`,
+        'Weder ICD-10-Kode noch Diagnosetext vorhanden. Eines von beiden ist Pflicht '
+        + '(Anlage 1 TP5 V21, Kap. 5.5.3.3, S. 72) — ohne Angabe entsteht ein leeres '
+        + 'DIA-Segment und die Kasse weist die ganze Datei zurück.');
+    }
 
     // Zweite und weitere Diagnose. Seit dem 19.09.2026 bekommt jede ein
     // eigenes DIA-Segment (vorher wurden sie mit Komma in EIN Feld geklebt) —
@@ -491,6 +560,38 @@ export function segmenteTrennen(inhalt) {
 }
 
 /**
+ * Felder EINES Segments trennen — dieselbe Regel eine Ebene tiefer.
+ *
+ * Commit `d8249d6` hat die SEGMENT-Trennung entwertungsfest gemacht, die
+ * FELD-Trennung blieb naiv (`raw.split('+')`). Das ist derselbe Fehler, nur
+ * kleiner und teurer: schickt eine Kasse in einem FEHL-Freitext ein
+ * entwertetes Plus (`?+`), zerfaellt das Segment an der falschen Stelle —
+ * die Absetzung landet dann auf dem falschen Beleg oder geht ganz verloren.
+ * Das sind Euro, keine Kosmetik.
+ *
+ * Das Entwertungszeichen bleibt im Ergebnis stehen, genau wie bei
+ * `segmenteTrennen()`. Wer den Klartext braucht, entwertet selbst — ein
+ * stilles Auflösen hier würde die beiden Funktionen unterschiedlich machen,
+ * und dann wüsste niemand mehr, welche Ebene was liefert.
+ *
+ * @param {string} segment  ein Segment OHNE den abschliessenden Apostroph
+ * @returns {string[]} Felder in Reihenfolge; `['']` bei leerer Eingabe
+ */
+export function felderTrennen(segment) {
+  const out = [];
+  let akt = '';
+  const s = String(segment ?? '');
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === '?') { akt += c + (s[i + 1] ?? ''); i++; continue; }
+    if (c === '+') { out.push(akt); akt = ''; continue; }
+    akt += c;
+  }
+  out.push(akt);
+  return out;
+}
+
+/**
  * Prueft den fertigen EDIFACT-Text gegen sich selbst.
  * Wirft bei Abweichung — eine Datei mit falschen Zaehlern darf nicht einmal
  * entstehen, geschweige denn hochgeladen werden.
@@ -507,7 +608,7 @@ export function pruefeDatenstrom(inhalt) {
   let unzGesehen = false;
 
   for (const seg of segmente) {
-    const felder = seg.split('+');
+    const felder = felderTrennen(seg);   // s. felderTrennen(): `?+` ist kein Trenner
     const tag = felder[0];
 
     if (offen) offen.anzahl += 1;   // UNH selbst wird beim Oeffnen mitgezaehlt

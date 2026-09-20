@@ -903,6 +903,72 @@
 
 ---
 
+### GES.Summenstatus yalnız 00/11/31/51/99 — Versichertenstatus'un ilk hanesi değildir
+- **Kural:** SLGA'daki GES segmentinin Status alanı yalnız `00` (Gesamtsumme), `11` (Mitglieder),
+  `31` (Angehörige), `51` (Rentner), `99` (nicht zuzuordnen) olabilir. INV.Versichertenstatus'un
+  ilk hanesi (1/3/5) **doğrudan yazılmaz**, `11`/`31`/`51`'e çevrilir; 2.–5. haneler dikkate alınmaz.
+- **Kaynak:** Anlage 3 TP5 V21 § 8.1.6 (Schlüssel Summenstatus) + Anlage 1 TP5 V21 Kap. 5.5.2 S. 35
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** ❌ **uygulanmamış** — `api-backend/billing/dta/builder.js:431` ilk haneyi alıyor,
+  `:275` fallback `'1'` yazıyor, `dta/segments.js:108` `padStart(2,'0')` ile `01` üretiyor.
+  Doğru tablo `billing/codes/anlage3_v22.js:64` (`SUMMENSTATUS`) zaten var ama **hiç kullanılmıyor**.
+- **Kapsam:** tüm gruplar, tüm Verordnungsart'lar
+
+### UNT.Anzahl Einheiten ve UNZ.Anzahl Nachrichten 6 hane, führende Nullen ile
+- **Kural:** UNT alan 0074 ve UNZ alan 0036 sabit **6 hane, Feldtyp N**, „mit führenden Nullen".
+  `UNT+000008+00001'` doğrudur, `UNT+8+00001'` değildir.
+- **Kaynak:** Anlage 1 TP5 V21 Kap. 5.4 (Nachrichtentypendesegment / Endesegment der Nutzdatendatei)
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** ❌ **uygulanmamış** — `api-backend/billing/dta/envelope.js:56` ve `:64`
+  `String(...)` kullanıyor, `padStart(6,'0')` yok. Golden fixture'lar da hatayı sabitlemiş
+  (`dta/__golden__/physio.edi`, `podo.edi`).
+- **Kapsam:** tüm gruplar
+
+### Virgül de bir Steuerzeichen'dir — serbest metinde `?` ile kaçırılmalı
+- **Kural:** `:` `+` `,` `?` `'` beşi birden Steuerzeichen'dir. Bunlardan biri bir alanın
+  **metin içeriği** olarak geçecekse önüne Aufhebungszeichen `?` konur. (Sayısal
+  Betragsfeld'lerdeki virgül Dezimalzeichen'dir, kaçırılmaz — ayrım alan tipine göredir.)
+- **Kaynak:** Anlage 1 TP5 V21 Kap. 5.1 (11) + hemen ardındaki „Ein Beispiel: … +D?'Angelo+Luigi+"
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** ❌ **eksik** — `api-backend/billing/dta/encoding.js:14-19` `RESERVED` listesinde
+  `,` yok. `DIA.Diagnosetext` (..70 AN, serbest metin) veya virgüllü bir soyad dosyayı böler.
+  ⚠️ Düzeltme `escapeEdifact`'e körlemesine `,` eklemekle yapılamaz: `fmtAmount` çıktısı
+  (`51,92`) aynı yoldan geçiyor, `51?,92` olurdu. Metin alanı / sayı alanı ayrımı gerekir.
+- **Kapsam:** tüm gruplar
+
+### DIA her tanı için ayrı segment — iki ICD tek alana yazılmaz
+- **Kural:** „Das Segment ist 1 mal je Diagnose zu übermitteln." İki ICD varsa iki DIA
+  segmenti gider; Diagnoseschlüssel alanı ..12 AN'dir.
+- **Kaynak:** Anlage 1 TP5 V21 Kap. 5.5.3.3 S. 72 (DIA)
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** ❌ **uygulanmamış** — `api-backend/billing/api/abrechnung.routes.js:2444`
+  `[vord.icd10, vord.icd10_2].join(',')` ile tek alana koyuyor; `dta/builder.js:205` tek DIA basıyor.
+- **Kapsam:** tüm gruplar
+
+### ZHE.Therapiefrequenz Podolojide her zaman „0"
+- **Kural:** „Bei Podologie, Ernährungstherapie oder Verordnungen ohne Frequenzangabe ist
+  ‚0' anzugeben." Podolojide reçetedeki frekans DTA'ya taşınmaz.
+- **Kaynak:** Anlage 1 TP5 V21 Kap. 5.5.3.3 S. 72 (Therapiefrequenz)
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** ❌ **uygulanmamış** — `api-backend/billing/api/abrechnung.routes.js:2480`
+  `therapiefrequenz: frequenzToDigit(vord.frequenz)`. Gerçek, kasadan geçmiş bir podoloji
+  DTA'sında bu alan `0`; bizim test dosyamızda `1`.
+- **Kapsam:** Podologie (ve Ernährungstherapie)
+
+### NAD adresi Kann-Feld'dir — Versichertennummer + Status biliniyorsa zorunlu değil
+- **Kural:** NAD'ın Straße/PLZ/Ort/Länderkennzeichen alanları Feldart **K**'dir.
+  „Die Anschrift ist zwingend anzugeben, sofern die Versichertennummer/Versichertenstatus
+  nicht bekannt ist." INV tarafı da aynısını söylüyor: KVNR bilinmiyorsa adres + doğum
+  tarihi NAD ile gider.
+- **Kaynak:** Anlage 1 TP5 V21 Kap. 5.5.3.1 S. 47-48 (NAD) + S. 45 (INV)
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** ⚠️ builder destekliyor (`dta/segments.js:181-199`), ama route mapper'ları alanı
+  hiç doldurmuyor (`billing/api/abrechnung.routes.js:360-367` physio, `:2446-2453` podo) —
+  veri `leads.street/plz/city`'de var ve aynı dosyada `:1725-1727`'de zaten okunuyor.
+- **Kapsam:** tüm gruplar — **dosya reddi sebebi değil**, 2026-09-19'da böyle iddia edilmişti, çürütüldü
+
+---
+
 
 # Sürüm yönetimi
 

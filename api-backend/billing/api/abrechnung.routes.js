@@ -11,6 +11,7 @@
 // Faz A2: DTA oluşturulur, browser-side PKCS#7 imzalama dashboard signModal ile yapılır (sprint-6-complete).
 
 import express from 'express';
+import { createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
 import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
@@ -21,7 +22,7 @@ import { resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positi
 import { podoPositionsnummer } from '../codes/podo_positionsnummer.js';
 import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
-import { ladeAnnahmestelle, annahmestelleFehlt } from '../kostentraeger/annahmestelle.js';
+import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
 import { parseZaaFile } from '../zaa/parser.js';
 import { logAccess } from '../../_lib/access-log.js';
 import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js';
@@ -49,6 +50,107 @@ const supabase = createClient(
 );
 
 // ---------- helpers ----------
+
+// § 302-Echtbetrieb, Schritt 1.11/Ö1 (guvenlik 20.09.2026).
+// Welche Bytes sind rausgegangen? Ohne Pruefsumme ist das sechs Monate spaeter
+// nicht mehr beantwortbar: alle Uploads laufen mit `upsert: true`, der
+// Storage-Pfad sagt also nichts ueber den Inhalt von damals.
+// ⚠️ Ein Hash ist KEIN Personenbezug — er steht deshalb ohne DSGVO-Auflage in
+//    `abrechnung` und nicht in einer der anonymisierten Tabellen.
+function sha256Hex(buf) {
+  return createHash('sha256').update(buf).digest('hex');
+}
+
+// § 302-Echtbetrieb, Schritt 1.7 (onprem O-117).
+// Welche Betriebsart gilt fuer diese Praxis? Kommt aus der Datenbank, NICHT
+// aus einer Umgebungsvariablen: im SaaS wuerde eine Variable alle Mandanten
+// gleichzeitig umstellen, und in der Kundenbox koennte sie niemand aendern.
+// Der Riegel "echt nur mit Zulassung" steht als CHECK in Migration 0028; hier
+// wird nur gelesen, und im Zweifel ist die Antwort 'test'.
+const BETRIEBSARTEN = new Set(['test', 'erprobung', 'echt']);
+function betriebsartAus(cert) {
+  const b = String(cert?.betriebsart || '').trim();
+  return BETRIEBSARTEN.has(b) ? b : 'test';
+}
+
+// § 302-Echtbetrieb, Schritt 1.9 (b) — Rechnungsart.
+//
+// Anlage 1 TP5 V21, Kap. 5.3.2: Rechnungsart '1' (Einzelrechnung des
+// Leistungserbringers) setzt voraus, dass die IK des Zertifikats UND die IK,
+// unter der bezahlt wird, dieselbe ist. Sind sie verschieden, ist '2' zu
+// verwenden. Bis zum 20.09.2026 stand an drei Stellen hart `'1'`.
+//
+// Heute traegt das Datenmodell keinen abweichenden Zahlungsempfaenger — die
+// Praxis rechnet als Selbstabrechner unter ihrer eigenen IK ab. Deshalb ist
+// diese Funktion HEUTE immer '1'. Sie steht trotzdem hier, damit der Tag, an
+// dem ein abweichender Zahlungsempfaenger dazukommt (interdisziplinaere
+// Praxis mit mehreren IKs — genau unsere Zielgruppe), nicht still eine
+// falsche Rechnungsart erzeugt, sondern hier anschlaegt.
+function rechnungsartFuer({ absenderIk, zahlungsempfaengerIk = null }) {
+  if (zahlungsempfaengerIk && String(zahlungsempfaengerIk) !== String(absenderIk)) {
+    const e = new Error(
+      `Die Zahlungsempfänger-IK (${zahlungsempfaengerIk}) weicht von der Zertifikats-IK `
+      + `(${absenderIk}) ab. Rechnungsart 1 ist dann nicht zulässig (Anlage 1 TP5 V21, `
+      + `Kap. 5.3.2) — bitte bei der Datenannahmestelle klären, bevor eingereicht wird.`
+    );
+    e.status = 422;
+    throw e;
+  }
+  return '1';
+}
+
+// § 302-Echtbetrieb, Schritt 1.2 — die beiden dauerhaften Zaehler.
+//
+// Datenaustauschreferenz (UNB 0020) laeuft je PAAR (Absender-IK, Empfaenger-IK)
+// fort, ohne Jahresruecksetzung; die Transfernummer ist ein davon UNABHAENGIGER
+// Zaehler (Anhang 1 § 4.3, "keinen Bezug zur lfd. Nr. des Vorlaufsatzes").
+// Beide vergibt die Datenbank atomar (Migration 0029) — der alte
+// `COUNT(*) + 1` gab geloeschte Nummern zurueck und kollidierte bei zwei
+// gleichzeitigen Einreichungen.
+async function vergebeNummern({ ownerId, absenderIk, empfaengerIk }) {
+  const args = { p_owner: ownerId, p_absender_ik: absenderIk, p_empfaenger_ik: empfaengerIk };
+  const [ref, tnr] = await Promise.all([
+    supabase.rpc('naechste_datenaustauschreferenz', args),
+    supabase.rpc('naechste_transfernummer', args),
+  ]);
+  if (ref.error || tnr.error) {
+    // Kein stiller Rueckfall auf einen gezaehlten Wert: eine doppelt vergebene
+    // Datenaustauschreferenz bringt das Korrekturverfahren durcheinander
+    // (Kap. 7.2) und ist von aussen kaum zu erkennen. Lieber gar keine Datei.
+    const e = new Error('Nummernvergabe fehlgeschlagen: ' + (ref.error?.message || tnr.error?.message));
+    e.status = 500;
+    throw e;
+  }
+  return { datennummer: Number(ref.data), transfernummer: Number(tnr.data) };
+}
+
+// § 302-Echtbetrieb, Schritt 1.1 — Auftragsdatei ablegen.
+//
+// Anhang 2 zur Anlage 1 TP5, Kap. 9 § 3.1 (Pruefstufe 1): die Dateien muessen
+// "paarweise, d. h. Auftragsdatei und zugehoerige Nutzdatei" ankommen. Bis zum
+// 20.09.2026 erzeugte `buildDtaFile()` die Auftragsdatei und keine der drei
+// Routen nahm sie entgegen — sie wurde gebaut und weggeworfen.
+//
+// Zeichensatz: ISO 8859-1 (latin1), genau wie die Nutzdatei. `utf8` wuerde
+// Umlaute zweibytig schreiben und die feste Satzlaenge von 348 Byte brechen.
+async function speichereAuftragsdatei({ dta, verzeichnis }) {
+  if (!dta?.auftragsdatei) return { pfad: null, groesse: null, sha256: null, fehler: 'nicht erzeugt' };
+  const puffer = Buffer.from(dta.auftragsdatei, 'latin1');
+  // Namensgebung: gleicher Stamm wie die Nutzdatei, andere Endung. So liegen
+  // die beiden im Storage nebeneinander und die Zusammengehoerigkeit ist am
+  // Namen ablesbar — nicht nur in der Datenbankzeile.
+  const pfad = `${verzeichnis}/${dta.filename}.auf`;
+  const up = await supabase.storage.from('abrechnungen').upload(pfad, puffer, {
+    contentType: 'application/octet-stream', upsert: true,
+  });
+  if (up.error) {
+    // Kein `return res.status(500)` von hier aus: der Aufrufer entscheidet, ob
+    // das die ganze Einreichung kostet. Aber es verschwindet nicht lautlos.
+    console.error('[abrechnung] Auftragsdatei-Upload fehlgeschlagen:', up.error.message);
+    return { pfad: null, groesse: puffer.length, sha256: sha256Hex(puffer), fehler: up.error.message };
+  }
+  return { pfad, groesse: puffer.length, sha256: sha256Hex(puffer), fehler: null };
+}
 
 function isoWeek(d) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -140,6 +242,7 @@ function abrechnungscodeFuer(sector) {
  */
 async function baueBegleitzettel({
   dta, belege, kk, kostentraegerIk, now, praxis, sammelRechnungsnummer,
+  bereich, eigenerAbrechnungscode,
 }) {
   const gruppen = dta.gruppen || [];
 
@@ -151,25 +254,58 @@ async function baueBegleitzettel({
     : { data: [] };
   const nameVonIk = new Map((kartenKassen || []).map(k => [k.ik, k.name]));
 
-  const blaetter = gruppen.map(g => ({
-    praxis,
-    abrechnung: {
-      dateiname: dta.filename,
-      // Wie in SLGA.REC: Sammel- und Einzelnummer zusammen. Die
-      // Sammelrechnungsnummer allein bezeichnet die Datei, nicht diese Rechnung.
-      rechnungsnummer:    `${sammelRechnungsnummer}:${g.einzelRechnungsnummer}`,
-      datum:              now,
-      abrechnungsmonat:   `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`,
-      prescription_count: g.prescriptionCount,
-      total_brutto:       g.totals.brutto,
-      total_zuzahlung:    g.totals.gesZuzahlung,
-      total_netto:        g.totals.netto,
-      krankenkasse_name:  nameVonIk.get(g.kartenIk) || (g.kartenIk === kostentraegerIk ? kk?.name || '' : ''),
-      krankenkasse_ik:    g.kartenIk,
-      kostentraeger_name: kk?.name || '',
-      kostentraeger_ik:   g.kostentraegerIk || kostentraegerIk,
-    },
-    belege: g.prescriptionIndices.map(i => belege[i]).filter(Boolean),
+  // Papierannahmestelle je Kostentraeger-IK aufloesen — mit Map-Cache, damit
+  // dieselbe IK nicht mehrfach abgefragt wird (eine Datei enthaelt meistens
+  // genau eine Kostentraeger-IK, aber die Logik ist sicher auch fuer mehrere).
+  // Ein Fehler stoppt NICHT die Abrechnung: die elektronische Datei ist korrekt
+  // adressiert; die fehlende Postadresse erscheint als Warnung im Begleitzettel.
+  const papierCache = new Map();
+  async function papierFuer(ktIk) {
+    if (papierCache.has(ktIk)) return papierCache.get(ktIk);
+    let ergebnis = null;
+    if (bereich && ktIk) {
+      const r = await ladePapierannahmestelle(supabase, {
+        kostentraegerIk:       ktIk,
+        bereich,
+        eigenerAbrechnungscode,
+      });
+      if (r.ok) {
+        ergebnis = { ik: r.ik, name: r.name, anschrift: null };
+        // Anschrift steht nicht in der DB (keine Adressspalte in `kostentraeger`).
+        // Sobald ein Importpfad fuer geparste ANS-Segmente existiert, kann hier
+        // waehlePostanschrift() nachgeschaltet werden.
+      } else {
+        console.warn(`[begleitzettel] Papierannahmestelle fuer ${ktIk} nicht aufloesbar: ${r.grund}`);
+      }
+    }
+    papierCache.set(ktIk, ergebnis);
+    return ergebnis;
+  }
+
+  const blaetter = await Promise.all(gruppen.map(async g => {
+    const ktIk = g.kostentraegerIk || kostentraegerIk;
+    const papierannahmestelle = await papierFuer(ktIk);
+    return {
+      praxis,
+      papierannahmestelle: papierannahmestelle ?? undefined,
+      abrechnung: {
+        dateiname: dta.filename,
+        // Wie in SLGA.REC: Sammel- und Einzelnummer zusammen. Die
+        // Sammelrechnungsnummer allein bezeichnet die Datei, nicht diese Rechnung.
+        rechnungsnummer:    `${sammelRechnungsnummer}:${g.einzelRechnungsnummer}`,
+        datum:              now,
+        abrechnungsmonat:   `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`,
+        prescription_count: g.prescriptionCount,
+        total_brutto:       g.totals.brutto,
+        total_zuzahlung:    g.totals.gesZuzahlung,
+        total_netto:        g.totals.netto,
+        krankenkasse_name:  nameVonIk.get(g.kartenIk) || (g.kartenIk === kostentraegerIk ? kk?.name || '' : ''),
+        krankenkasse_ik:    g.kartenIk,
+        kostentraeger_name: kk?.name || '',
+        kostentraeger_ik:   g.kostentraegerIk || kostentraegerIk,
+      },
+      belege: g.prescriptionIndices.map(i => belege[i]).filter(Boolean),
+    };
   }));
 
   return renderBegleitzettelBundle({ blaetter, dateiname: dta.filename });
@@ -388,6 +524,15 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
       // Diagnosen zu), deshalb steht die Liste hier genauso wie im
       // podologischen Mapper.
       icd10Liste:               [rx.icd10, rx.icd10_2].filter(Boolean),
+      // Schritt 1.8 — Anlage 1 TP5 V21, Kap. 5.5.3.3 S. 72: "Ist im Feld
+      // 'ICD-10-Code' kein ICD-10-Code eingetragen, ist der Diagnosetext
+      // anzugeben." Bis zum 20.09.2026 fuellte diesen Wert NIEMAND
+      // (`grep diagnosetext api-backend/billing/api/` → 0 Treffer), der
+      // Builder haette also ein leeres Muss-Segment DIA' geschrieben — und
+      // Pruefstufe 2 weist dafuer die GANZE Datei zurueck. Zusammen mit der
+      // gelockerten Preflight-Regel (V:01015) ist das der Weg, auf dem eine
+      // Verordnung OHNE ICD ueberhaupt erst abrechenbar wird.
+      diagnosetext:             (rx.diagnose_freitext || '').trim(),
       // Suffix -a/-b/-c ist Leitsymptomatik, keine Diagnosegruppe. Im ZHE-Feld
       // sind nur 4 Stellen aus A-Z0-9 erlaubt, Sonderzeichen machen die Datei
       // ungültig (Anlage 1 TP5 V21). Gleiche Bereinigung wie im Podologie-Weg.
@@ -544,7 +689,8 @@ router.post('/abrechnung/create', async (req, res) => {
     // ---- therapist cert / IK ----
     let { data: cert } = await supabase
       .from('terapeut_zertifikat')
-      .select('ik_nummer, cert_subject, cert_valid_to')
+      // `betriebsart` seit Migration 0028 — test | erprobung | echt (Schritt 1.7).
+      .select('ik_nummer, cert_subject, cert_valid_to, betriebsart')
       .eq('owner_id', tenantId)
       .maybeSingle();
 
@@ -676,14 +822,15 @@ router.post('/abrechnung/create', async (req, res) => {
     const now = new Date();
     const { year, week } = isoWeek(now);
 
-    const { count: weekCount } = await supabase
-      .from('abrechnung')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_id', tenantId)
-      .gte('created_at', `${year}-01-01`);
-
-    const datennummer = (weekCount || 0) + 1;  // integer; filename + envelope helpers pad internally
+    // Schritt 1.2: zwei dauerhafte Zaehler aus der Datenbank statt COUNT(*).
+    // Hier stand bis 20.09.2026 `(weekCount || 0) + 1` ueber `created_at >=
+    // 1. Januar` — je Konto statt je IK-Paar, mit Jahresruecksetzung und
+    // rueckgaengig durch jedes DELETE.
+    const { datennummer, transfernummer } = await vergebeNummern({
+      ownerId: tenantId, absenderIk: cert.ik_nummer, empfaengerIk: dasIk,
+    });
     const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
+    const betriebsart = betriebsartAus(cert);
 
     // ---- map prescriptions ----
     const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tenantSector));
@@ -699,11 +846,21 @@ router.post('/abrechnung/create', async (req, res) => {
           einzelRechnungsnummer: '0',
           datum: now,
           datennummer,
-          rechnungsart: '1',
+          rechnungsart: rechnungsartFuer({ absenderIk: cert.ik_nummer }),
         },
         prescriptions,
-        kind: 'test',  // Faz A2 starts in test mode; flip to 'echt' once DAS portal acks
+        // Schritt 1.7: nicht mehr hart 'test'. Die Betriebsart steht je Praxis
+        // in `terapeut_zertifikat` und wird vom Inhaber umgestellt; 'echt'
+        // setzt die nachgewiesene Zulassung voraus (CHECK in Migration 0028).
+        kind: betriebsart,
         vkz: '01',
+        transfernummer,
+        // Schritt 1.9 (a): Dateieinheit-Pruefung (Kap. 5.3.1) war wirkungslos,
+        // weil der Builder diese beiden Werte nie bekam. Eine Datei gilt genau
+        // EINER Datenannahmestelle und EINER Kassenart — kommt ein Gemisch
+        // herein, weist Pruefstufe 1 die GANZE Datei zurueck.
+        davIk:     dasIk,
+        kassenart: das.treffer?.kassenart || undefined,
         rechnungssteller: {
           name:    profile.business_name || 'Praxis',
           telefon: profile.phone || '',
@@ -744,6 +901,13 @@ router.post('/abrechnung/create', async (req, res) => {
       dta_file_size:      dta.byteLength,
       dta_segment_count:  dta.segmentCount,
       prescription_count: prescriptions.length,
+      // Schritte 1.2 / 1.7: festhalten, WAS vergeben wurde und unter welcher
+      // Betriebsart. Beides ist danach unveraenderlich — die Einstellung kann
+      // sich aendern, die abgegebene Datei nicht.
+      datenaustauschreferenz: datennummer,
+      transfernummer:         dta.transfernummer,
+      empfaenger_ik:          dasIk,
+      betriebsart,
     };
     const { data: ab, error: abErr } = await supabase
       .from('abrechnung')
@@ -797,6 +961,12 @@ router.post('/abrechnung/create', async (req, res) => {
       return res.status(500).json({ error: 'Storage upload failed: ' + upDta.error.message });
     }
 
+    // Schritt 1.1 — die Auftragsdatei gehoert danebem, sonst weist Pruefstufe 1
+    // ab, ohne die Nutzdatei ueberhaupt zu lesen (Anhang 2 Kap. 9 § 3.1).
+    const auftrag = await speichereAuftragsdatei({
+      dta, verzeichnis: `${tenantId}/${datePath}/${ab.id}`,
+    });
+
     const belege = rxRows.map((r, i) => {
       const np = nameParts(r.leads);
       // Nicht erneut über resolvePreis(ausstellungsdatum) rechnen — das würde
@@ -832,6 +1002,8 @@ router.post('/abrechnung/create', async (req, res) => {
         ik:       cert.ik_nummer,
       },
       sammelRechnungsnummer,
+      bereich:                tenantSector,
+      eigenerAbrechnungscode: abrechnungscodeFuer(tenantSector),
     });
 
     const begleitPath = `${tenantId}/${datePath}/${ab.id}/begleitzettel.html`;
@@ -844,6 +1016,10 @@ router.post('/abrechnung/create', async (req, res) => {
     await supabase.from('abrechnung').update({
       storage_path:       dtaPath,
       begleitzettel_path: upBeg.error ? null : begleitPath,
+      auftragsdatei_path:   auftrag.pfad,
+      auftragsdatei_size:   auftrag.groesse,
+      auftragsdatei_sha256: auftrag.sha256,
+      dta_sha256:           sha256Hex(dtaBuffer),   // Ö1
     }).eq('id', ab.id);
 
     const { error: upRxErr } = await supabase.from('prescriptions').update({
@@ -913,26 +1089,53 @@ router.post('/abrechnung/create', async (req, res) => {
   }
 });
 
+/**
+ * Anmeldung + Mandant + ROLLE für die Einreichungswege.
+ *
+ * § 302-Echtbetrieb, Schritt 1.11/Ö3 (guvenlik 20.09.2026): `dta-bytes` und
+ * `upload-signed` lösten einen Angestellten bisher auf den Mandanten seines
+ * Inhabers auf und liessen ihn durch — es gab keine Rollentrennung. Eine Datei
+ * an die Kasse zu geben ist aber eine INHABER-Entscheidung: darin stehen
+ * Rechnungsbeträge, sie wird mit dem persönlichen Zertifikat des Inhabers
+ * signiert, und die Haftung für den Inhalt liegt bei ihm.
+ *
+ * ⚠️ Das ist keine Datenschutz-, sondern eine Verantwortungsgrenze: ein
+ *    Angestellter darf dieselben Behandlungen längst sehen. Deshalb 403 mit
+ *    verständlichem Text statt eines stillen Filters.
+ */
+async function nurInhaber(req, res) {
+  const hdr = req.headers.authorization || '';
+  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+  if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
+  const { data: u, error: uErr } = await supabase.auth.getUser(token);
+  if (uErr || !u?.user) { res.status(401).json({ error: 'Invalid token' }); return null; }
+
+  const { data: profile } = await supabase
+    .from('profiles').select('id, role, owner_id').eq('id', u.user.id).maybeSingle();
+
+  if (profile?.role === 'employee') {
+    res.status(403).json({
+      error: 'Das Einreichen einer §302-Abrechnung ist dem Inhaber vorbehalten. '
+           + 'Bitte lassen Sie die Datei von der Praxisinhaberin/dem Praxisinhaber signieren und übermitteln.',
+      code: 'NUR_INHABER',
+    });
+    return null;
+  }
+  return { userId: u.user.id, tenantId: u.user.id };
+}
+
 // Fetch unsigned DTA bytes so the browser can PKCS#7-sign them locally.
 router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
   try {
-    const hdr = req.headers.authorization || '';
-    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
-    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
-    const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
-
-    const { data: profile } = await supabase
-      .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
-    const tenantId = profile?.role === 'employee' && profile?.owner_id
-      ? profile.owner_id
-      : u.user.id;
+    const wer = await nurInhaber(req, res);
+    if (!wer) return;                       // Antwort ist schon raus (401/403)
+    const { tenantId } = wer;
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
       .select('id, owner_id, dateiname, storage_path')
       .eq('id', req.params.id)
-      .single();
+      .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
     if (!ab.storage_path) return res.status(409).json({ error: 'Kein DTA-Inhalt vorhanden' });
@@ -954,19 +1157,19 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
 });
 
 // Receive browser-signed PKCS#7 payload and store as .p7m next to the .dta.
+//
+// ⛔ LOG-REGEL (guvenlik Ö5, 20.09.2026), gilt fuer diese Route und den
+//    gesamten Signier-/Verschluesselungsweg: NIEMALS den Dateiinhalt, das
+//    base64-Payload oder eine PIN protokollieren — weder mit console.log noch
+//    ueber Sentry noch in `logAccess`-Metadaten. Der Inhalt ist die dichteste
+//    PHI-Sammlung, die dieses System erzeugt (Name + Geburtsdatum + KVNR +
+//    ICD + Behandlungstage, je Patient, in einer Datei).
+//    Erlaubt sind: Laenge, SHA-256, Pfad, Fingerprint, Fehlermeldung.
 router.post('/abrechnung/:id/upload-signed', async (req, res) => {
   try {
-    const hdr = req.headers.authorization || '';
-    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
-    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
-    const { data: u, error: uErr } = await supabase.auth.getUser(token);
-    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
-
-    const { data: profile } = await supabase
-      .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
-    const tenantId = profile?.role === 'employee' && profile?.owner_id
-      ? profile.owner_id
-      : u.user.id;
+    const wer = await nurInhaber(req, res);   // Ö3 — Einreichen ist Inhabersache
+    if (!wer) return;
+    const { tenantId } = wer;
 
     const { signedBase64, certSubject, certValidTo, certThumbprint, certSerial } = req.body || {};
     if (!signedBase64 || typeof signedBase64 !== 'string') {
@@ -993,7 +1196,7 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
       .from('abrechnung')
       .select('id, owner_id, storage_path')
       .eq('id', req.params.id)
-      .single();
+      .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
 
@@ -1008,17 +1211,41 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
       signed_storage_path:        signedPath,
       signed_at:                  new Date().toISOString(),
       signed_by_cert_thumbprint:  certThumbprint || null,
+      signed_sha256:              sha256Hex(signedBytes),   // Ö1
     }).eq('id', req.params.id);
 
     // Persist cert metadata for the therapist (private key never sees the server).
+    //
+    // Schritt 1.9 (g): hier stand bis zum 20.09.2026 ein `update()`. Existiert
+    // fuer den Mandanten noch keine Zeile in `terapeut_zertifikat` — der Fall
+    // tritt ein, wenn die IK ueber `profiles.ik_number` gefunden wurde —,
+    // betrifft das UPDATE null Zeilen und PostgREST meldet trotzdem Erfolg.
+    // Die Signatur sah dann gelungen aus, die Zertifikatsdaten waren still weg.
+    // ⚠️ `ik_nummer` ist NOT NULL, ein upsert ohne sie schlaegt fehl — deshalb
+    //    wird sie aus der bestehenden Zeile bzw. dem Profil mitgegeben.
     if (certSubject || certValidTo || certThumbprint) {
-      await supabase.from('terapeut_zertifikat').update({
-        cert_subject:    certSubject || null,
-        cert_valid_to:   certValidTo || null,
-        cert_thumbprint: certThumbprint || null,
-        cert_serial:     certSerial || null,
-        updated_at:      new Date().toISOString(),
-      }).eq('owner_id', tenantId);
+      const { data: vorhanden } = await supabase
+        .from('terapeut_zertifikat').select('ik_nummer').eq('owner_id', tenantId).maybeSingle();
+      const { data: prof } = vorhanden?.ik_nummer ? { data: null } : await supabase
+        .from('profiles').select('ik_number').eq('id', tenantId).maybeSingle();
+      const ik = vorhanden?.ik_nummer || prof?.ik_number || null;
+
+      if (!ik) {
+        // Ohne IK laesst sich die Zeile nicht anlegen. Kein Abbruch — die
+        // Signatur liegt bereits im Storage —, aber auch nicht lautlos.
+        console.warn('[abrechnung/upload-signed] Zertifikats-Metadaten nicht gespeichert: keine IK hinterlegt', tenantId);
+      } else {
+        const { error: zErr } = await supabase.from('terapeut_zertifikat').upsert({
+          owner_id:        tenantId,
+          ik_nummer:       ik,
+          cert_subject:    certSubject || null,
+          cert_valid_to:   certValidTo || null,
+          cert_thumbprint: certThumbprint || null,
+          cert_serial:     certSerial || null,
+          updated_at:      new Date().toISOString(),
+        }, { onConflict: 'owner_id' });
+        if (zErr) console.error('[abrechnung/upload-signed] Zertifikats-Metadaten:', zErr.message);
+      }
     }
 
     return res.json({ ok: true, signedPath });
@@ -1264,7 +1491,7 @@ async function mandantUndAbrechnung(req, res) {
 
   const { data: ab } = await supabase
     .from('abrechnung')
-    .select('id, owner_id, business_id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, begleitzettel_path, signed_storage_path, signed_at, zaa_uploaded_at, paid_at, created_at')
+    .select('id, owner_id, business_id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, zaa_uploaded_at, paid_at, created_at')
     .eq('id', req.params.id)
     .maybeSingle();
   if (!ab) { res.status(404).json({ error: 'Abrechnung nicht gefunden' }); return null; }
@@ -2494,6 +2721,10 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
       // `icd10Liste` traegt alle Diagnosen fuer die DIA-Segmente.
       icd10:                 vord.icd10 || '',
       icd10Liste,
+      // Schritt 1.8 — s. Physio-Mapper oben. Gerade in der Podologie ist der
+      // Fall haeufig: auf Muster 13 ist der ICD-Kode keine Pflichtangabe, die
+      // Diagnose darf im Klartext stehen (Anlage 3 k).
+      diagnosetext:          (vord.diagnose_freitext || '').trim(),
       diagnosegruppe:        (vord.diagnosegruppe || '').replace(/-[abc]$/i, '') || '9999',
       verordnungsart:        verordnungsartFuer(vord),
       hausbesuch:            !!vord.hausbesuch,
@@ -2563,7 +2794,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // ---- cert / IK ----
     let { data: cert } = await supabase
       .from('terapeut_zertifikat')
-      .select('ik_nummer, cert_subject, cert_valid_to')
+      .select('ik_nummer, cert_subject, cert_valid_to, betriebsart')   // betriebsart: Migration 0028
       .eq('owner_id', tenantId).maybeSingle();
     if (!cert?.ik_nummer) {
       // Feldname-Tippfehler bis 10.09.2026 (wissensbank-Fund): `.select('ik_number')`
@@ -2678,6 +2909,11 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       .from('podologie_behandlungen')
       .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
       .eq('owner_id', tenantId)
+      // ⛔ Stornierte Behandlungen gehoeren NICHT in die §302-Datei. Seit
+      // Migration 0026 wird nicht mehr geloescht, sondern storniert — ohne
+      // diesen Filter ginge eine zurueckgenommene Behandlung als erbrachte
+      // Leistung an die Kasse (§ 630f Abs. 1 S. 2 BGB / Abrechnungsbetrug).
+      .is('storniert_am', null)
       .in('verordnung_id', verordnungIds)
       .order('behandlungsdatum', { ascending: true });
 
@@ -2766,11 +3002,13 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // ---- numbering ----
     const now = new Date();
     const { year, week } = isoWeek(now);
-    const { count: weekCount } = await supabase
-      .from('abrechnung').select('id', { count: 'exact', head: true })
-      .eq('owner_id', tenantId).gte('created_at', `${year}-01-01`);
-    const datennummer = (weekCount || 0) + 1;
+    // Schritt 1.2 — wie im Physio/Ergo/Logo-Zweig: dauerhafte Zaehler je
+    // (Absender-IK, Empfaenger-IK) statt COUNT(*) je Konto und Jahr.
+    const { datennummer, transfernummer } = await vergebeNummern({
+      ownerId: tenantId, absenderIk: cert.ik_nummer, empfaengerIk: dasIk,
+    });
     const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
+    const betriebsart = betriebsartAus(cert);
 
     // ---- build DTA ----
     let dta;
@@ -2778,10 +3016,16 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       dta = buildDtaFile({
         absender:   { ik: cert.ik_nummer, name: profile.business_name || 'Praxis' },
         empfaenger: { ik: dasIk, name: dasName },
-        rechnung: { sammelRechnungsnummer, einzelRechnungsnummer: '0', datum: now, datennummer, rechnungsart: '1' },
+        rechnung: {
+          sammelRechnungsnummer, einzelRechnungsnummer: '0', datum: now, datennummer,
+          rechnungsart: rechnungsartFuer({ absenderIk: cert.ik_nummer }),
+        },
         prescriptions,
-        kind: 'test',
+        kind: betriebsart,          // Schritt 1.7
         vkz: '01',
+        transfernummer,
+        davIk:     dasIk,           // Schritt 1.9 (a) — Dateieinheit, Kap. 5.3.1
+        kassenart: das.treffer?.kassenart || undefined,
         rechnungssteller: { name: profile.business_name || 'Praxis', telefon: profile.phone || '' },
       });
     } catch (e) {
@@ -2814,6 +3058,10 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         dta_file_size:      dta.byteLength,
         dta_segment_count:  dta.segmentCount,
         prescription_count: prescriptions.length,
+        datenaustauschreferenz: datennummer,     // Schritte 1.2 / 1.7
+        transfernummer:         dta.transfernummer,
+        empfaenger_ik:          dasIk,
+        betriebsart,
       }).select('id, business_id').single();
     if (abErr) return res.status(500).json({ error: 'abrechnung insert: ' + abErr.message });
 
@@ -2854,6 +3102,11 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       return res.status(500).json({ error: 'Storage upload: ' + upDta.error.message });
     }
 
+    // Schritt 1.1 — Auftragsdatei paarweise daneben (Anhang 2 Kap. 9 § 3.1).
+    const auftrag = await speichereAuftragsdatei({
+      dta, verzeichnis: `${tenantId}/${datePath}/${ab.id}`,
+    });
+
     // ---- Begleitzettel (Anlage 4 §302 SGB V, Urbeleg-Postversand) ----
     //
     // Fehlte hier komplett (05.09.2026 entdeckt, beim FKT-Fix) — dieser Zweig
@@ -2889,6 +3142,8 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         ik:       cert.ik_nummer,
       },
       sammelRechnungsnummer,
+      bereich:                'podologie',
+      eigenerAbrechnungscode: '71',
     });
 
     const begleitPath = `${tenantId}/${datePath}/${ab.id}/begleitzettel.html`;
@@ -2900,6 +3155,10 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     await supabase.from('abrechnung').update({
       storage_path:       dtaPath,
       begleitzettel_path: upBeg.error ? null : begleitPath,
+      auftragsdatei_path:   auftrag.pfad,
+      auftragsdatei_size:   auftrag.groesse,
+      auftragsdatei_sha256: auftrag.sha256,
+      dta_sha256:           sha256Hex(dtaBuffer),   // Ö1
     }).eq('id', ab.id);
 
     // ---- mark verordnungen as abgerechnet ----
@@ -3117,8 +3376,9 @@ router.post('/abrechnung/korrektur', async (req, res) => {
 
     // ---- IK der Praxis ----
     let { data: cert } = await supabase
-      .from('terapeut_zertifikat').select('ik_nummer').eq('owner_id', tenantId).maybeSingle();
-    if (!cert?.ik_nummer && praxisProfil.ik_number) cert = { ik_nummer: praxisProfil.ik_number };
+      .from('terapeut_zertifikat').select('ik_nummer, betriebsart')   // betriebsart: Migration 0028
+      .eq('owner_id', tenantId).maybeSingle();
+    if (!cert?.ik_nummer && praxisProfil.ik_number) cert = { ik_nummer: praxisProfil.ik_number, betriebsart: cert?.betriebsart };
     if (!cert?.ik_nummer) return res.status(400).json({ error: 'Kein IK-Nummer hinterlegt.' });
 
     // ---- Empfänger ----
@@ -3161,6 +3421,9 @@ router.post('/abrechnung/korrektur', async (req, res) => {
       const { data: behs } = await supabase
         .from('podologie_behandlungen')
         .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
+        // ⛔ Wie im create-Weg: stornierte Behandlungen gehoeren auch in eine
+        // KORREKTURrechnung nicht hinein (Migration 0026).
+        .is('storniert_am', null)
         .eq('owner_id', tenantId).in('verordnung_id', rxIds);
       for (const b of behs || []) (behByVord[b.verordnung_id] ||= []).push(b);
     }
@@ -3199,11 +3462,14 @@ router.post('/abrechnung/korrektur', async (req, res) => {
     // ---- Nummerierung, wie in beiden create-Wegen ----
     const now = new Date();
     const { year, week } = isoWeek(now);
-    const { count: jahresCount } = await supabase
-      .from('abrechnung').select('id', { count: 'exact', head: true })
-      .eq('owner_id', tenantId).gte('created_at', `${year}-01-01`);
-    const datennummer = (jahresCount || 0) + 1;
+    // Schritt 1.2 — dieselben dauerhaften Zaehler wie in beiden create-Wegen.
+    // Gerade HIER zaehlt es: eine Korrekturrechnung, die vor ihrer
+    // Erstrechnung verarbeitet wird, weist die Kasse ab (Kap. 7.2).
+    const { datennummer, transfernummer } = await vergebeNummern({
+      ownerId: tenantId, absenderIk: cert.ik_nummer, empfaengerIk: das.ik,
+    });
     const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
+    const betriebsart = betriebsartAus(cert);
 
     // ---- Datei bauen ----
     let dta;
@@ -3211,10 +3477,16 @@ router.post('/abrechnung/korrektur', async (req, res) => {
       dta = buildDtaFile({
         absender:   { ik: cert.ik_nummer, name: praxisProfil.business_name || 'Praxis' },
         empfaenger: { ik: das.ik, name: das.name || kk.name },
-        rechnung: { sammelRechnungsnummer, einzelRechnungsnummer: '0', datum: now, datennummer, rechnungsart: '1' },
+        rechnung: {
+          sammelRechnungsnummer, einzelRechnungsnummer: '0', datum: now, datennummer,
+          rechnungsart: rechnungsartFuer({ absenderIk: cert.ik_nummer }),
+        },
         prescriptions,
-        kind: 'test',
+        kind: betriebsart,          // Schritt 1.7
         vkz: '04',
+        transfernummer,
+        davIk:     das.ik,          // Schritt 1.9 (a) — Dateieinheit, Kap. 5.3.1
+        kassenart: das.treffer?.kassenart || undefined,
         rechnungssteller: { name: praxisProfil.business_name || 'Praxis', telefon: praxisProfil.phone || '' },
       });
     } catch (e) {
@@ -3246,18 +3518,28 @@ router.post('/abrechnung/korrektur', async (req, res) => {
       dta_file_size:      dta.byteLength,
       dta_segment_count:  dta.segmentCount,
       prescription_count: prescriptions.length,
+      datenaustauschreferenz: datennummer,     // Schritte 1.2 / 1.7
+      transfernummer:         dta.transfernummer,
+      empfaenger_ik:          das.ik,
+      betriebsart,
     }).select('id, business_id').single();
     if (abErr) return res.status(500).json({ error: 'abrechnung insert: ' + abErr.message });
 
     // ---- hochladen ----
     const datePath = `${year}/${String(now.getMonth() + 1).padStart(2, '0')}`;
     const dtaPath  = `${tenantId}/${datePath}/${ab.id}/${dta.filename}.dta`;
+    const dtaBuffer = Buffer.from(dta.content, 'latin1');
     const upDta = await supabase.storage.from('abrechnungen')
-      .upload(dtaPath, Buffer.from(dta.content, 'latin1'), { contentType: 'application/octet-stream', upsert: true });
+      .upload(dtaPath, dtaBuffer, { contentType: 'application/octet-stream', upsert: true });
     if (upDta.error) {
       await supabase.from('abrechnung').delete().eq('id', ab.id);
       return res.status(500).json({ error: 'Storage upload: ' + upDta.error.message });
     }
+
+    // Schritt 1.1 — Auftragsdatei paarweise daneben (Anhang 2 Kap. 9 § 3.1).
+    const auftrag = await speichereAuftragsdatei({
+      dta, verzeichnis: `${tenantId}/${datePath}/${ab.id}`,
+    });
 
     const belege = prescriptions.map((p, i) => ({
       belegnummer:      p.patient.belegnummer,
@@ -3277,6 +3559,8 @@ router.post('/abrechnung/korrektur', async (req, res) => {
         ik:      cert.ik_nummer,
       },
       sammelRechnungsnummer,
+      bereich,
+      eigenerAbrechnungscode: istPodo ? '71' : abrechnungscodeFuer(tenantSector),
     });
     const begleitPath = `${tenantId}/${datePath}/${ab.id}/begleitzettel.html`;
     const upBeg = await supabase.storage.from('abrechnungen')
@@ -3285,6 +3569,10 @@ router.post('/abrechnung/korrektur', async (req, res) => {
 
     await supabase.from('abrechnung').update({
       storage_path: dtaPath, begleitzettel_path: upBeg.error ? null : begleitPath,
+      auftragsdatei_path:   auftrag.pfad,
+      auftragsdatei_size:   auftrag.groesse,
+      auftragsdatei_sha256: auftrag.sha256,
+      dta_sha256:           sha256Hex(dtaBuffer),   // Ö1
     }).eq('id', ab.id);
 
     // ---- Arbeitsachse umhängen ----

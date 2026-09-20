@@ -113,8 +113,25 @@ export const podoFixture = {
       leitsymptomatik: '1010',
       dringend: false,
       hausbesuch: false,
-      heilmittelBereich: '5',
-      therapiefrequenz: '1',
+      // ⚠️ Hier stand bis zum 20.09.2026 `heilmittelBereich: '5'` und
+      // `therapiefrequenz: '1'`. Beides ist fuer die Podologie falsch:
+      //   Heilmittel-Bereich  = '2' (Anlage 1 TP5 V21, Kap. 5.5.3.3 —
+      //                         1 Physio · 2 Podologie · 3 Logopaedie ·
+      //                         4 Ergotherapie; eine '5' gibt es nicht)
+      //   Therapiefrequenz    = '0' (ebd.: „Bei Podologie ... ist 0
+      //                         anzugeben" — die Podologie kennt keine
+      //                         woechentliche Frequenz)
+      // Der PRODUKTIVE Mapper macht seit dem 19.09.2026 beides richtig
+      // (zhe-kennzeichen.js `heilmittelBereichFuer` / `therapiefrequenzFuer`).
+      // Das Fixture nicht — und weil die Golden-Datei aus dem Fixture
+      // entsteht, fror sie eine FALSCHE Ausgabe als „richtig" ein: waere der
+      // Produktivpfad zurueckgefallen, waere der Golden-Test gruen geblieben.
+      // Ein Regressionstest, der die Regression nicht sieht, ist schlimmer
+      // als keiner.
+      // Golden-Dateien wurden daraufhin neu erzeugt (dump.js), nicht der Test
+      // angepasst — dieselbe Begruendungspflicht wie bei O-101 oben.
+      heilmittelBereich: '2',
+      therapiefrequenz: '0',
       zuzahlungskennzeichen: '3',
       kostentraegerIk: '101000000',
       krankenkasseIk:  '101000000',

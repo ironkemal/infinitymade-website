@@ -413,6 +413,12 @@ function leerHtml(ab) {
 function aktionenHtml(ab) {
   const k = [];
   if (ab.storage_path)       k.push(`<button class="btn-ghost btn-sm" data-ab-akt="dta">DTA herunterladen</button>`);
+  // Die Auftragsdatei gehört zur Nutzdatei wie der Umschlag zum Brief: die
+  // Datenannahmestelle prüft in Stufe 1, ob beide PAARWEISE ankommen (Anhang 2
+  // zur Anlage 1 TP5, Kap. 9 § 3.1). Fehlt sie, wird abgewiesen, ohne dass
+  // jemand den Inhalt gelesen hat — deshalb steht der Knopf direkt neben der
+  // DTA und nicht irgendwo weiter unten.
+  if (ab.auftragsdatei_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="auftrag" title="Gehört zwingend zusammen mit der DTA-Datei übermittelt">Auftragsdatei</button>`);
   if (ab.begleitzettel_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="begleit">Begleitzettel</button>`);
   if (ab.signed_storage_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="p7m">Signierte Datei (.p7m)</button>`);
   else if (ab.storage_path)   k.push(`<button class="btn-primary btn-sm" data-ab-akt="signieren">✍ Signieren</button>`);
@@ -439,6 +445,9 @@ function _verdrahteAktionen(ab, gruppen = []) {
       switch (btn.dataset.abAkt) {
         case 'dta':        return downloadAbrechnungFile(ab.storage_path, ab.id, 'dta');
         case 'p7m':        return downloadAbrechnungFile(ab.signed_storage_path, ab.id, 'dta');
+        // Kein Statuswechsel: „heruntergeladen" meint die Nutzdatei. Wer nur
+        // den Umschlag holt, hat noch nichts eingereicht.
+        case 'auftrag':    return downloadAbrechnungFile(ab.auftragsdatei_path, null, 'begleit');
         case 'begleit':    return downloadAbrechnungFile(ab.begleitzettel_path, null, 'begleit');
         case 'signieren':  return ctx.aktionen?.signieren?.(ab.id, ab.dateiname);
         case 'zaa':        return ctx.aktionen?.zaaHochladen?.(ab.id, ab.dateiname);
