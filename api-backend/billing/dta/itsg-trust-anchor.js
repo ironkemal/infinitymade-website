@@ -200,15 +200,24 @@ export function schreibeItsgTrustAnchors({
   fs.mkdirSync(verzeichnis, { recursive: true });
 
   const zertifikateMeta = [];
+  const vergebeneDateinamen = new Map(); // dateiName -> sha256, zur Kollisionserkennung
 
   for (const cert of certs) {
     if (!cert.der || !cert.sha256) {
       throw new Error('Ungültiges Zertifikatsobjekt: der oder sha256 fehlt.');
     }
-    const prefix = cert.sha256.slice(0, 8);
+    const prefix = cert.sha256.slice(0, 16); // 64 Bit statt bisher 32 Bit — praktisch kollisionsfrei
     const dateiName = `anchor-${prefix}.der`;
-    const dateiPfad = path.join(verzeichnis, dateiName);
 
+    const vorhandenerSha256 = vergebeneDateinamen.get(dateiName);
+    if (vorhandenerSha256 && vorhandenerSha256 !== cert.sha256) {
+      throw new Error(
+        `Dateinamenskollision: "${dateiName}" würde sowohl für SHA-256 ${vorhandenerSha256} als auch ${cert.sha256} vergeben — zwei unterschiedliche Zertifikate. Abbruch statt stillem Überschreiben.`
+      );
+    }
+    vergebeneDateinamen.set(dateiName, cert.sha256);
+
+    const dateiPfad = path.join(verzeichnis, dateiName);
     fs.writeFileSync(dateiPfad, cert.der);
 
     zertifikateMeta.push({
@@ -282,19 +291,27 @@ export function ladeItsgTrustAnchors({ verzeichnis = DEFAULT_TRUST_ANCHORS_DIR }
 }
 
 /**
- * Frische-Prüfung: bestimmt aus den geladenen Metadaten das früheste `notAfter` aller
- * Anker-Zertifikate.
+ * Frische-Prüfung: prüft den Gültigkeitszeitraum des gesamten Trust-Anchor-Stores.
  *
- * Wirft einen klaren deutschen Fehler, wenn `jetzt` bereits danach liegt (harter Stopp —
- * KEINE Verschlüsselung mit abgelaufenem Vertrauensanker).
- * Gibt eine Warnung zurück (kein Fehler), wenn `jetzt` innerhalb von `warnTageVorher` Tagen
- * davor liegt.
+ * Harter Stopp NUR, wenn der GESAMTE Trust Store abgelaufen ist (jedes einzelne
+ * Zertifikat) — nicht schon, wenn nur EIN Anker (z. B. eine einzelne Sub-CA) unter
+ * vielen abläuft. Ein einzelner früh ablaufender Anker darf nicht die Verschlüsselung
+ * für alle anderen, noch gültigen Empfängerzertifikate blockieren (Kaltprüfung
+ * 21.09.2026: mit der alten Logik hätte am 06.01.2027 EIN abgelaufener Sub-CA-Anker
+ * die gesamte §302-Verschlüsselung für alle Kassen gestoppt, obwohl die meisten der
+ * 60 Annahmestellen-Zertifikate bis 31.12.2027 gültig sind).
+ *
+ * Warnung, sobald der FRÜHESTE Anker in den Vorwarnzeitraum fällt oder bereits
+ * abgelaufen ist — informativ, blockiert aber nichts (einzelne noch gültige Anker
+ * bedienen weiterhin ihre jeweiligen Empfänger).
  *
  * @param {object} opts
  * @param {object} opts.meta           Geparste Metadaten aus meta.json
  * @param {Date|string} [opts.jetzt]   Prüfzeitpunkt (Standard: new Date())
  * @param {number} [opts.warnTageVorher=60] Vorwarnzeitraum in Tagen
- * @returns {{ ok: true, warnung: string|null, ankerGueltigBis: Date }}
+ * @returns {{ ok: true, warnung: string|null, ankerGueltigBis: Date, fruehesterAblauf: Date }}
+ *   ankerGueltigBis: spätestes notAfter aller Anker (Ablauf des gesamten Stores)
+ *   fruehesterAblauf: frühestes notAfter aller Anker (erster Anker, der rotiert werden muss)
  */
 export function pruefeTrustAnchorFrische({ meta, jetzt = new Date(), warnTageVorher = 60 }) {
   if (!meta || !meta.zertifikate || !Array.isArray(meta.zertifikate) || meta.zertifikate.length === 0) {
@@ -306,27 +323,41 @@ export function pruefeTrustAnchorFrische({ meta, jetzt = new Date(), warnTageVor
     throw new Error(`Ungültiger Prüfzeitpunkt: ${jetzt}`);
   }
 
-  const dates = meta.zertifikate.map(c => new Date(c.notAfter));
-  const ankerGueltigBis = new Date(Math.min(...dates.map(d => d.getTime())));
+  const dates = meta.zertifikate.map(c => new Date(c.notAfter).getTime());
+  const fruehestesNotAfter = new Date(Math.min(...dates));
+  const spaetestesNotAfter = new Date(Math.max(...dates));
 
-  if (pruefzeit > ankerGueltigBis) {
+  // Harter Stopp NUR, wenn der GESAMTE Trust Store abgelaufen ist (jedes einzelne
+  // Zertifikat) — nicht schon, wenn nur EIN Anker (z. B. eine einzelne Sub-CA) unter
+  // vielen abläuft. Ein einzelner früh ablaufender Anker darf nicht die Verschlüsselung
+  // für alle anderen, noch gültigen Empfängerzertifikate blockieren (Kaltprüfung
+  // 21.09.2026: mit der alten Logik hätte am 06.01.2027 EIN abgelaufener Sub-CA-Anker
+  // die gesamte §302-Verschlüsselung für alle Kassen gestoppt, obwohl die meisten der
+  // 60 Annahmestellen-Zertifikate bis 31.12.2027 gültig sind).
+  if (pruefzeit > spaetestesNotAfter) {
     throw new Error(
-      `ITSG-Trust-Anchor ist abgelaufen (Gültig bis: ${ankerGueltigBis.toISOString()}, Prüfzeitpunkt: ${pruefzeit.toISOString()}). Keine Verschlüsselung möglich.`
+      `ITSG-Trust-Anchor-Store ist vollständig abgelaufen (spätestes Gültig-bis: ${spaetestesNotAfter.toISOString()}, Prüfzeitpunkt: ${pruefzeit.toISOString()}). Keine Verschlüsselung möglich — Trust-Anchor-Liste muss aktualisiert werden.`
     );
   }
 
-  const diffMs = ankerGueltigBis.getTime() - pruefzeit.getTime();
+  // Warnung, sobald der FRÜHESTE Anker in den Vorwarnzeitraum fällt oder bereits
+  // abgelaufen ist — informativ, blockiert aber nichts (einzelne noch gültige Anker
+  // bedienen weiterhin ihre jeweiligen Empfänger).
+  const diffMs = fruehestesNotAfter.getTime() - pruefzeit.getTime();
   const warnSchwelleMs = warnTageVorher * 24 * 60 * 60 * 1000;
 
   let warnung = null;
-  if (diffMs <= warnSchwelleMs) {
+  if (diffMs <= 0) {
+    warnung = `Mindestens ein ITSG-Trust-Anchor ist bereits abgelaufen (frühestes Gültig-bis: ${fruehestesNotAfter.toISOString()}). Betroffene Empfänger können nicht mehr verschlüsselt werden — Liste sollte aktualisiert werden.`;
+  } else if (diffMs <= warnSchwelleMs) {
     const verbleibendeTage = Math.max(0, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
-    warnung = `ITSG-Trust-Anchor läuft in ${verbleibendeTage} Tagen ab (am ${ankerGueltigBis.toISOString()}). Bitte rechtzeitig aktualisieren.`;
+    warnung = `Mindestens ein ITSG-Trust-Anchor läuft in ${verbleibendeTage} Tagen ab (am ${fruehestesNotAfter.toISOString()}). Bitte rechtzeitig aktualisieren.`;
   }
 
   return {
     ok: true,
     warnung,
-    ankerGueltigBis
+    ankerGueltigBis: spaetestesNotAfter,
+    fruehesterAblauf: fruehestesNotAfter
   };
 }

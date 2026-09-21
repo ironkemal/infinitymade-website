@@ -119,10 +119,10 @@ test('Test 2: schreibeItsgTrustAnchors -> ladeItsgTrustAnchors Round-Trip in Tem
     assert.equal(metaGeschrieben.quelleDatum, '2026-09-21');
     assert.equal(metaGeschrieben.onaylayan, 'CI-Bot');
 
-    // Prüfen, ob meta.json und .der Dateien existieren
+    // Prüfen, ob meta.json und .der Dateien existieren (16-Hex-Präfix)
     assert.ok(fs.existsSync(path.join(tempDir, 'meta.json')));
-    assert.ok(fs.existsSync(path.join(tempDir, `anchor-${sha1.slice(0, 8)}.der`)));
-    assert.ok(fs.existsSync(path.join(tempDir, `anchor-${sha2.slice(0, 8)}.der`)));
+    assert.ok(fs.existsSync(path.join(tempDir, `anchor-${sha1.slice(0, 16)}.der`)));
+    assert.ok(fs.existsSync(path.join(tempDir, `anchor-${sha2.slice(0, 16)}.der`)));
 
     // Wieder einladen
     const geladen = ladeItsgTrustAnchors({ verzeichnis: tempDir });
@@ -142,10 +142,10 @@ test('Test 2: schreibeItsgTrustAnchors -> ladeItsgTrustAnchors Round-Trip in Tem
   }
 });
 
-test('Test 3: pruefeTrustAnchorFrische — Gültig, Vorwarnung (30 Tage) und Abgelaufen', () => {
+test('Test 3: pruefeTrustAnchorFrische — Gültig, Vorwarnung (30 Tage), Einzelner abgelaufen (Warnung), Alle abgelaufen (Stopp)', () => {
   const pruefzeit = new Date('2026-09-21T12:00:00.000Z');
 
-  // Fall (a): Anker weit in der Zukunft gültig (> 60 Tage, z. B. bis 2028)
+  // Fall (a): Anker weit in der Zukunft gültig (> 60 Tage, z. B. bis 2028/2029)
   const metaZukunft = {
     quelle: 'test',
     zertifikate: [
@@ -156,9 +156,10 @@ test('Test 3: pruefeTrustAnchorFrische — Gültig, Vorwarnung (30 Tage) und Abg
   const resZukunft = pruefeTrustAnchorFrische({ meta: metaZukunft, jetzt: pruefzeit, warnTageVorher: 60 });
   assert.equal(resZukunft.ok, true);
   assert.equal(resZukunft.warnung, null, 'Keine Warnung bei Gültigkeit weit in der Zukunft');
-  assert.equal(resZukunft.ankerGueltigBis.toISOString(), '2028-12-31T23:59:59.000Z');
+  assert.equal(resZukunft.ankerGueltigBis.toISOString(), '2029-06-30T23:59:59.000Z', 'ankerGueltigBis ist spätestes notAfter');
+  assert.equal(resZukunft.fruehesterAblauf.toISOString(), '2028-12-31T23:59:59.000Z', 'fruehesterAblauf ist frühestes notAfter');
 
-  // Fall (b): Anker läuft in 30 Tagen ab (innerhalb der 60 Tage Vorwarnzeit)
+  // Fall (b): Ein Anker läuft in 30 Tagen ab (innerhalb der 60 Tage Vorwarnzeit)
   const datumIn30Tagen = new Date(pruefzeit.getTime() + 30 * 24 * 60 * 60 * 1000);
   const metaBaldAbgelaufen = {
     quelle: 'test',
@@ -171,20 +172,37 @@ test('Test 3: pruefeTrustAnchorFrische — Gültig, Vorwarnung (30 Tage) und Abg
   assert.equal(resBaldAbgelaufen.ok, true);
   assert.ok(typeof resBaldAbgelaufen.warnung === 'string' && resBaldAbgelaufen.warnung.length > 0, 'Warnung muss gesetzt sein');
   assert.match(resBaldAbgelaufen.warnung, /läuft in 30 Tagen ab/, 'Warnung muss verbleibende Tage nennen');
+  assert.equal(resBaldAbgelaufen.ankerGueltigBis.toISOString(), '2028-12-31T23:59:59.000Z');
+  assert.equal(resBaldAbgelaufen.fruehesterAblauf.toISOString(), datumIn30Tagen.toISOString());
 
-  // Fall (c): Anker bereits abgelaufen (z. B. vor 5 Tagen abgelaufen)
+  // Fall (c): EIN Anker bereits abgelaufen, aber ANDERE noch gültig (Semantik: nur warnen, ok: true, kein harter Stopp)
   const datumAbgelaufen = new Date(pruefzeit.getTime() - 5 * 24 * 60 * 60 * 1000);
-  const metaAbgelaufen = {
+  const metaEinzelnAbgelaufen = {
     quelle: 'test',
     zertifikate: [
       { datei: 'a.der', sha256: 'abc', notAfter: datumAbgelaufen.toISOString() },
       { datei: 'b.der', sha256: 'def', notAfter: '2028-12-31T23:59:59.000Z' }
     ]
   };
+  const resEinzelnAbgelaufen = pruefeTrustAnchorFrische({ meta: metaEinzelnAbgelaufen, jetzt: pruefzeit, warnTageVorher: 60 });
+  assert.equal(resEinzelnAbgelaufen.ok, true, 'Einzelner abgelaufener Anker darf noch gültige Kassen nicht blockieren');
+  assert.ok(typeof resEinzelnAbgelaufen.warnung === 'string', 'Warnung muss gesetzt sein');
+  assert.match(resEinzelnAbgelaufen.warnung, /bereits abgelaufen/, 'Warnung muss auf abgelaufenen Anker hinweisen');
+  assert.equal(resEinzelnAbgelaufen.ankerGueltigBis.toISOString(), '2028-12-31T23:59:59.000Z');
+  assert.equal(resEinzelnAbgelaufen.fruehesterAblauf.toISOString(), datumAbgelaufen.toISOString());
+
+  // Fall (d): ALLE Anker im Store sind abgelaufen (harter Stopp — wirft Exception)
+  const metaAlleAbgelaufen = {
+    quelle: 'test',
+    zertifikate: [
+      { datei: 'a.der', sha256: 'abc', notAfter: datumAbgelaufen.toISOString() },
+      { datei: 'b.der', sha256: 'def', notAfter: new Date(pruefzeit.getTime() - 1000).toISOString() }
+    ]
+  };
   assert.throws(
-    () => pruefeTrustAnchorFrische({ meta: metaAbgelaufen, jetzt: pruefzeit, warnTageVorher: 60 }),
-    /ITSG-Trust-Anchor ist abgelaufen/,
-    'Muss mit klarem deutschem Fehler abbrechen'
+    () => pruefeTrustAnchorFrische({ meta: metaAlleAbgelaufen, jetzt: pruefzeit, warnTageVorher: 60 }),
+    /vollständig abgelaufen/,
+    'Muss mit Fehler abbrechen, wenn der gesamte Store abgelaufen ist'
   );
 });
 
@@ -320,3 +338,55 @@ test('Test 6: Fehlerbehandlung bei ungültigen Eingaben', () => {
   assert.throws(() => pruefeTrustAnchorFrische({ meta: null }), /ITSG-Trust-Anchor-Metadaten fehlen/);
   assert.throws(() => pruefeTrustAnchorFrische({ meta: { zertifikate: [] } }), /ITSG-Trust-Anchor-Metadaten fehlen/);
 });
+
+test('Test 7: schreibeItsgTrustAnchors bricht bei Dateinamenskollision zweier unterschiedlicher Zertifikate mit gleichem 16-Hex-Präfix ab', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'itsg-collision-test-'));
+
+  try {
+    const certDer1 = crypto.randomBytes(512);
+    const certDer2 = crypto.randomBytes(640);
+
+    // Künstlich konstruierter gleicher 16-Zeichen-Präfix, aber unterschiedliche Gesamthashes
+    const prefix16 = '0123456789abcdef';
+    const sha1 = prefix16 + '111111111111111111111111111111111111111111111111';
+    const sha2 = prefix16 + '222222222222222222222222222222222222222222222222';
+
+    const testCerts = [
+      {
+        der: certDer1,
+        sha256: sha1,
+        subject: 'CN=Kollision 1',
+        issuer: 'CN=Root',
+        notBefore: new Date('2025-01-01T00:00:00.000Z'),
+        notAfter: new Date('2028-12-31T23:59:59.000Z')
+      },
+      {
+        der: certDer2,
+        sha256: sha2,
+        subject: 'CN=Kollision 2',
+        issuer: 'CN=Root',
+        notBefore: new Date('2025-01-01T00:00:00.000Z'),
+        notAfter: new Date('2028-12-31T23:59:59.000Z')
+      }
+    ];
+
+    // Dokumentiertes beobachtetes Verhalten:
+    // schreibeItsgTrustAnchors() schreibt das erste Zertifikat, erkennt beim zweiten Zertifikat
+    // dieselbe Zieldatei (anchor-0123456789abcdef.der) für einen unterschiedlichen SHA-256-Hash,
+    // und wirft sofort mit einer Dateinamenskollisions-Exception ab.
+    // Resultat auf der Festplatte: Nur die erste Datei wurde angelegt, meta.json wurde nicht geschrieben.
+    assert.throws(
+      () => schreibeItsgTrustAnchors({ certs: testCerts, verzeichnis: tempDir }),
+      /Dateinamenskollision/,
+      'Muss bei unterschiedlichen Zertifikaten mit gleichem Dateinamen abbrechen'
+    );
+
+    // Bestätigung des tatsächlichen Dateisystem-Zustands:
+    // Erste Datei existiert, meta.json wurde durch den vorzeitigen Abbruch NICHT angelegt
+    assert.ok(fs.existsSync(path.join(tempDir, `anchor-${prefix16}.der`)), 'Erste Datei vor Abbruch angelegt');
+    assert.ok(!fs.existsSync(path.join(tempDir, 'meta.json')), 'meta.json wurde wegen Abbruch nicht geschrieben');
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
