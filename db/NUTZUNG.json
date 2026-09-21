@@ -1,11 +1,11 @@
 {
- "erzeugt": "2026-09-20",
+ "erzeugt": "2026-09-21",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-09-20)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-20)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-21)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 93,
+ "anzahl": 94,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -72,7 +72,7 @@
     {
      "name": "ladeAbrechnungVerlauf",
      "file": "module/abrechnung-verlauf.js",
-     "start": 179,
+     "start": 181,
      "module": [
       "abrechnung",
       "anamnese",
@@ -110,7 +110,7 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1511,
+     "start": 1518,
      "module": [],
      "uiPfad": []
     },
@@ -157,7 +157,7 @@
     {
      "name": "downloadAbrechnungFile",
      "file": "module/abrechnung-detail.js",
-     "start": 666,
+     "start": 702,
      "module": [
       "abrechnung",
       "anamnese",
@@ -313,7 +313,7 @@
     {
      "name": "ladeAbrechnungVerlauf",
      "file": "module/abrechnung-verlauf.js",
-     "start": 179,
+     "start": 181,
      "module": [
       "abrechnung",
       "anamnese",
@@ -411,7 +411,45 @@
     {
      "name": "ladeAbrechnungVerlauf",
      "file": "module/abrechnung-verlauf.js",
-     "start": 179,
+     "start": 181,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "qvSaveBtn",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 28 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "loadPodologieBilling",
+     "file": "module/podologie-abrechnung.js",
+     "start": 459,
      "module": [
       "abrechnung",
       "anamnese",
@@ -450,7 +488,8 @@
    "schreiber": [],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
-    "module/abrechnung-verlauf.js"
+    "module/abrechnung-verlauf.js",
+    "module/podologie-abrechnung.js"
    ],
    "module": [
     "abrechnung",
@@ -1396,7 +1435,7 @@
     {
      "name": "_renderAusnahmenBlock",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 648,
+     "start": 685,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1443,7 +1482,7 @@
     {
      "name": "_speichereAusnahme",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 783,
+     "start": 820,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1484,7 +1523,7 @@
     {
      "name": "wireAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 267,
+     "start": 271,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2530,7 +2569,7 @@
     {
      "name": "loadUeberblickNoShows",
      "file": "dashboard.js",
-     "start": 19963,
+     "start": 19946,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2651,7 +2690,7 @@
     {
      "name": "podGeplanteHpnr",
      "file": "module/podologie-abrechnung.js",
-     "start": 313,
+     "start": 314,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3815,7 +3854,7 @@
     {
      "name": "ensureBusinessCoords",
      "file": "dashboard.js",
-     "start": 20208,
+     "start": 20191,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5407,6 +5446,26 @@
    "codeStumm": false
   },
   {
+   "name": "empfaenger_zertifikate",
+   "spalten": 9,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv (Referenz) — Migration vorbereitet, Tabelle initial leer. Befüllung erfolgt manuell über das Admin-CLI-Werkzeug `tools/empfaenger-zertifikat-laden.mjs`.",
+   "warum": "Für die §302 CMS EnvelopedData-Verschlüsselung (GGT Anlage 16 §5.1, SECON) wird der öffentliche X.509-Schlüssel der zuständigen Annahmestelle benötigt. Anders als bei `terapeut_zertifikat` (wo nur Metadaten des Therapeuten-Signaturschlüssels gespeichert werden) muss hier das echte Zertifikat (DER-Bytes) der Empfänger-Annahmestellen im System hinterlegt sein.",
+   "seit": "21.09.2026 · `api-backend/db/migrations/0038_empfaenger_zertifikate.sql` (ABRECHNUNG_ECHTBETRIEB_PLAN.md, Schritt 1.3 C)",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": true
+  },
+  {
    "name": "employee_business_assignments",
    "spalten": 5,
    "fkRaus": [
@@ -6381,7 +6440,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 17815,
+     "start": 17798,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6442,7 +6501,7 @@
     {
      "name": "toLocal",
      "file": "dashboard.js",
-     "start": 17900,
+     "start": 17883,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7275,7 +7334,7 @@
     {
      "name": "_loeseEmpfaengerNameAuf",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 608,
+     "start": 645,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7437,7 +7496,7 @@
     {
      "name": "_loeseEmpfaengerNameAuf",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 608,
+     "start": 645,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7556,7 +7615,7 @@
     "api-backend/billing/kostentraeger/annahmestelle.js"
    ],
    "module": [],
-   "sqlTreffer": 2,
+   "sqlTreffer": 3,
    "codeStumm": false
   },
   {
@@ -8043,7 +8102,7 @@
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 19159,
+     "start": 19142,
      "module": [],
      "uiPfad": []
     },
@@ -8507,7 +8566,7 @@
     {
      "name": "loadUeberblickBirthdays",
      "file": "dashboard.js",
-     "start": 19915,
+     "start": 19898,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8870,7 +8929,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 17480,
+     "start": 17463,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8968,7 +9027,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 18872,
+     "start": 18855,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10564,7 +10623,7 @@
     {
      "name": "podBehandlungenDerVerordnung",
      "file": "module/podologie-abrechnung.js",
-     "start": 271,
+     "start": 272,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10640,7 +10699,7 @@
     {
      "name": "podPatientBehandlungen",
      "file": "module/podologie-abrechnung.js",
-     "start": 221,
+     "start": 222,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10704,7 +10763,7 @@
     {
      "name": "behandlungStornieren",
      "file": "module/podo-storno.js",
-     "start": 80,
+     "start": 91,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10745,7 +10804,7 @@
     {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 446,
+     "start": 459,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12095,7 +12154,7 @@
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 19748,
+     "start": 19731,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12178,7 +12237,7 @@
     {
      "name": "loadUeberblickDeadlines",
      "file": "dashboard.js",
-     "start": 19850,
+     "start": 19833,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12351,7 +12410,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 17480,
+     "start": 17463,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12751,7 +12810,7 @@
     {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 18324,
+     "start": 18307,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12885,7 +12944,7 @@
     {
      "name": "_speichereBetriebsart",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 471,
+     "start": 502,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13086,7 +13145,7 @@
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 17755,
+     "start": 17738,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13125,7 +13184,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 17815,
+     "start": 17798,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13164,7 +13223,7 @@
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 18137,
+     "start": 18120,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13331,7 +13390,7 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 19989,
+     "start": 19972,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13369,7 +13428,7 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1511,
+     "start": 1518,
      "module": [],
      "uiPfad": []
     },
@@ -14056,7 +14115,7 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 20720,
+     "start": 20703,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14219,7 +14278,7 @@
     {
      "name": "wireAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 267,
+     "start": 271,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15153,7 +15212,7 @@
     {
      "name": "renderAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 84,
+     "start": 86,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15200,7 +15259,7 @@
     {
      "name": "_speichereBetriebsart",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 471,
+     "start": 502,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15241,7 +15300,7 @@
     {
      "name": "wireAbrechnungSettings",
      "file": "module/abrechnung-einstellungen.js",
-     "start": 267,
+     "start": 271,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15694,7 +15753,7 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 19989,
+     "start": 19972,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16328,7 +16387,7 @@
     {
      "name": "q",
      "file": "dashboard.js",
-     "start": 17973,
+     "start": 17956,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16383,7 +16442,7 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 17999,
+     "start": 17982,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16435,7 +16494,7 @@
     {
      "name": "saveVehicleEdit",
      "file": "dashboard.js",
-     "start": 18102,
+     "start": 18085,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -16614,7 +16673,7 @@
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 19037,
+     "start": 19020,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16655,7 +16714,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 19189,
+     "start": 19172,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -17110,7 +17169,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 17480,
+     "start": 17463,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17484,6 +17543,11 @@
    "name": "dta_schluessel",
    "sql": 4,
    "status": "Referenz, im Code ungenutzt"
+  },
+  {
+   "name": "empfaenger_zertifikate",
+   "sql": 2,
+   "status": "aktiv (Referenz) — Migration vorbereitet, Tabelle initial leer. Befüllung erfolgt manuell über das Admin-CLI-Werkzeug `tools/empfaenger-zertifikat-laden.mjs`."
   },
   {
    "name": "fußstatus",

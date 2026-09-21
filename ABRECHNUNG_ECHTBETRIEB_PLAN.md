@@ -12,6 +12,22 @@
 
 ---
 
+## 0.1 Durum güncellemesi (21.09.2026, ikinci oturum) — Faz 1'in çoğu zaten bitti
+
+**Bu dosyanın altındaki 🔴/🟠/🟡 işaretleri 20.09.2026'dan sonra hiç güncellenmedi — commit
+geçmişi (`16d8863`, `cb2dc7e`, `5c0a276`, `7e13d75`, `379bd64`, `06067e4`, `7911f91`, `c66232d`,
+`4d34c6f`, `86c5df8`, `33dcaf1`, `b86b775`, hepsi 2026-09-20/21) aşağıdaki adımların **zaten
+tamamlandığını** gösteriyor: **1.1, 1.2, 1.4, 1.5, 1.7, 1.8, 1.9(a,b,c,e,f,g), 1.9c, 1.10,
+1.11(Ö1/Ö3/Ö5).** Bir builder turu 1.1'i "yapılmamış" sanıp denetledi, kodun zaten doğru
+olduğunu buldu — bu satır o karışıklığın bir daha olmaması için.
+
+**Gerçekten açık kalan:** **1.3 (şifreleme, en büyük parça)**, 1.6 (canlı test, izin engeline
+takıldı), 1.9b/1.9d (onprem veri tazeliği/onarım yolu), 1.11 Ö7 (sertifika bitiş uyarı ekranı).
+Her adıma dokunmadan önce **yine de** ilgili "Durum" satırını koda karşı bir kez daha kontrol et
+— bu not bugünün fotoğrafı, gelecekte yine eskiyebilir.
+
+---
+
 ## 0. Bugün neredeyiz
 
 19–20.09.2026'da §302 **dosya formatı** uçtan uca düzeltildi, canlıda gerçek dosya üretilerek

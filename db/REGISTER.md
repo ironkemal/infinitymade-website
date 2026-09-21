@@ -744,6 +744,16 @@ Heilmittel-Richtlinie …).
 - **Achtung — eine fehlende Adresse hält die Abrechnung NICHT an.** Fehlt die Zeile (oder die Tabelle, solange die Migration aussteht), bleibt `anschrift: null`, es gibt eine Warnung im Log, und der Begleitzettel druckt statt der Adresse einen Klartexthinweis. Die **elektronische** Datei ist davon unberührt und korrekt adressiert — sie geht an die Datenannahmestelle, nicht an die Papierannahmestelle.
 - **Nicht in `api/dsgvo.js`** — und das ist Absicht: Referenzdaten ohne `owner_id` und ohne Personenbezug, gleiche Kategorie wie `kostentraeger` und `kostentraeger_annahmestellen`.
 
+### `empfaenger_zertifikate`
+- **Warum:** Für die §302 CMS EnvelopedData-Verschlüsselung (GGT Anlage 16 §5.1, SECON) wird der öffentliche X.509-Schlüssel der zuständigen Annahmestelle benötigt. Anders als bei `terapeut_zertifikat` (wo nur Metadaten des Therapeuten-Signaturschlüssels gespeichert werden) muss hier das echte Zertifikat (DER-Bytes) der Empfänger-Annahmestellen im System hinterlegt sein.
+- **Seit:** 21.09.2026 · `api-backend/db/migrations/0038_empfaenger_zertifikate.sql` (ABRECHNUNG_ECHTBETRIEB_PLAN.md, Schritt 1.3 C)
+- **Status:** aktiv (Referenz) — Migration vorbereitet, Tabelle initial leer. Befüllung erfolgt manuell über das Admin-CLI-Werkzeug `tools/empfaenger-zertifikat-laden.mjs`.
+- **Wer:** `verschluesseleFuerEmpfaenger()` in `api-backend/billing/dta/verschluesselung.js` (über Lesezugriff via IK der Annahmestelle). Geschrieben ausschließlich per CLI-Ladescript über `SUPABASE_SERVICE_ROLE_KEY`.
+- **Quelle:** ITSG Trust Center Annahmeliste (`trustcenter-data.itsg.de/dale/annahme-rsa4096.key` bzw. `.agv`).
+- **Achtung — Sicherheitskorken (Fingerprint-Prüfung):** Das Ladescript berechnet den SHA-256-Fingerprint der Zertifikats-DER-Bytes eigenständig und bricht sofort ab, wenn er nicht exakt mit dem vom Admin übergebenen `--fingerprint` (aus der ITSG-Veröffentlichung) übereinstimmt. Kein automatischer Download ohne menschlichen Abgleich.
+- **Achtung — RLS:** Authentifizierte Nutzer haben ausschließlich Leserechte (`FOR SELECT`). INSERT und UPDATE sind für alle Rollen außer `service_role` gesperrt.
+- **Nicht in `api/dsgvo.js`:** Referenzdaten ohne `owner_id` und ohne Personenbezug (wie `kostentraeger_anschriften` und `kostentraeger_annahmestellen`).
+
 ### `abrechnung_uebermittlung`
 - **Warum:** Anlage 1 TP5 Kap. 3(2) schreibt vor: *„Über den Datenaustausch ist eine Dokumentation zu führen … mindestens **2 Jahre** aufzubewahren … **alle Schritte von der Initiierung bis ggf. zur Quittierung**."* Anhang 1 § 4.5(2) zählt zehn Mindestfelder auf (physikalischer Dateiname, Erstellungsdatum, lfd. Nr., Kommunikationspartner, Beginn/Ende, Dateigröße, Verarbeitungshinweise, Senden/Empfangen, Verarbeitungskennzeichen, Fehlerstatus). **Diese Dokumentation lässt sich nicht nachträglich erzeugen** — deshalb entsteht die Tabelle, bevor der Versandschritt gebaut wird, und nicht danach.
   **Warum eine eigene Tabelle und keine Spalten an `abrechnung`** (`db-ustasi`, 20.09.2026): die Kardinalität ist **1:n** — eine Abrechnung kann mehrfach übertragen werden, und Quittungen kommen zeitversetzt zurück (`antwort_auf`). Außerdem ist `abrechnung` festgeschrieben; Transportvorgänge dort nachzutragen hieße, gegen den eigenen GoBD-Riegel zu arbeiten.

@@ -55,6 +55,8 @@
 --                      0034_abrechnung_uebermittlung
 --                        +1 Tabelle, +1 Policy (nur SELECT), +3 Indizes,
 --                        +1 Funktion, +1 Trigger.
+--                      0038_empfaenger_zertifikate
+--                        +1 Tabelle, +1 Policy (nur SELECT), +1 Index (PK).
 --                    Summe gegen die Live-DB GEZAEHLT, nicht fortgeschrieben:
 --                    Tabellen 89 -> 93 · Policies 172 -> 175 · Indizes 318 -> 325 ·
 --                    Trigger 78 -> 81 · Funktionen 78 -> 84. Alle fuenf Deltas
@@ -1523,6 +1525,24 @@ CREATE TABLE dta_schluessel (
 );
 --   PK (id) · UNIQUE (schluessel_typ, code, source_version)
 --   §302-Schlüsselverzeichnisse (Anlage 3).
+
+-- 21.09.2026 (0038) — Öffentliche X.509-Verschlüsselungszertifikate der
+-- Annahmestellen (ITSG/GKV) zur Erzeugung von CMS EnvelopedData (§302 SECON).
+-- Globale Referenztabelle wie `kostentraeger_anschriften`; Befüllung nur per Admin-Ladescript.
+CREATE TABLE empfaenger_zertifikate (
+  ik text NOT NULL
+  zertifikat_der bytea NOT NULL
+  fingerprint_sha256 text NOT NULL
+  gueltig_von date NOT NULL
+  gueltig_bis date NOT NULL
+  quelle text NOT NULL
+  quelle_datum date NOT NULL
+  onaylayan text NOT NULL
+  hochgeladen_am timestamptz NOT NULL DEFAULT now()
+);
+--   PK (ik)
+--   ★ Öffentliche Schlüssel für CMS EnvelopedData Verschlüsselung (GGT Anlage 16).
+--   ★ Befüllung per tools/empfaenger-zertifikat-laden.mjs (mit Fingerprint-Prüfung).
 
 CREATE TABLE email_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid()
