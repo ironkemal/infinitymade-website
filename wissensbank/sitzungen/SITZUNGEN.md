@@ -36,3 +36,4 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 |---|---|---|---|
 | 2026-09-21 | Ops #302 | [[2026-09-21_ops-302_komplex-suche-78020]] | umgesetzt, getestet, committet (`8df4143`, `ae61dcb`) · **nicht gepusht** · Migration `0038` **nicht live** |
 | 2026-09-21 | Ops #303 | [[2026-09-21_ops-303_heilmittel-aufteilung-nur-physio-ergo]] | Board-Karten umgesetzt · Code-Kommentare committet (`3c0f04e`), nicht gepusht · SPEC-RULES-Korrektur offen |
+| 2026-09-21 | Ops #300 | [[2026-09-21_ops-300_ik-suche-kassenfeld]] | reine Suchfunktionen committet (`fa86f5b`, im #301-Commit), nicht gepusht · **nicht am Feld angeschlossen**, View-Migration und Live-Anwendung offen |
