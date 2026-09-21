@@ -3,7 +3,7 @@
 //
 // Geprüft wird nicht ein Zwischenstand im Code, sondern das, was wirklich in die
 // Datenbank geht: die Ausgabe von `sync_heilmittel_katalog.js --sql` (dieselbe
-// Vollausgabe wie in db/migrations/0038_…). Daraus wird die Suchregel der RPC
+// Vollausgabe wie in db/migrations/0039_…). Daraus wird die Suchregel der RPC
 // search_heilmittel() nachgebildet (api-backend/db/migrations/0000_baseline.sql:
 // 1849-1866) — die RPC selbst braucht eine echte Datenbank und wird nach dem
 // Anwenden von 0039 einmal live gegengeprüft (siehe Ops #302).

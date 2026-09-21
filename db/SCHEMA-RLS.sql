@@ -68,6 +68,7 @@
 --                        + betriebsart_empfaenger_owner_all       (0031, ALL)
 --                        + kostentraeger_anschriften_read_all     (0032, SELECT)
 --                        + "Abrechnung uebermittlung select scoping" (0034, SELECT)
+--                        + empfaenger_zertifikate_read_all        (0038, SELECT)
 --                      Funktionen   78 -> 84
 --                        + podologie_behandlungen_festschreibung  (0026)
 --                        + podologie_behandlungen_kein_delete     (0026)
@@ -85,6 +86,7 @@
 --                        +2 PK + UNIQUE kostentraeger_anschriften (0032)
 --                        +3 PK + abr_uebermittlung_owner_zeit_idx +
 --                           abr_uebermittlung_abrechnung_idx (0034)
+--                        +1 PK empfaenger_zertifikate (0038)
 --                    ⚠️ ZWEI Stellen, die beim Lesen leicht falsch verstanden
 --                    werden:
 --                    (1) `datenaustausch_zaehler` (0029) hat RLS AN und
@@ -879,6 +881,12 @@
 
 -- dta_schluessel
 --   dta_schluessel_read_all [SELECT] USING (auth.role() = 'authenticated')
+
+-- empfaenger_zertifikate                                      (21.09.2026, 0038)
+--   empfaenger_zertifikate_read_all [SELECT] USING (auth.role() = 'authenticated')
+--   Öffentliche X.509-Verschlüsselungszertifikate der Annahmestellen. Referenzdaten
+--   wie kostentraeger_anschriften, keine Patientendaten, deshalb ohne Mandantenfilter
+--   und bewusst NICHT für anon. Schreibzugriff nur via service_role.
 
 -- email_logs
 --   owner_all [ALL] owner + Team

@@ -137,10 +137,32 @@ ist stets die jeweils aktuelle, von den Vertragsparteien veröffentlichte
 Fassung.
 
 -------------------------------------------------------------------
+6) ITSG Trust Center Annahmeliste (Verschlüsselungszertifikate der Datenannahmestellen)
+-------------------------------------------------------------------
+Herausgeber: ITSG Trust Center (Informationstechnische Servicestelle der Gesetzlichen
+             Krankenversicherung GmbH)
+Bezug:       https://trustcenter-data.itsg.de/dale/annahme-rsa4096.key
+Format:      PKCS#7 (Zertifikatsbündel, "certs-only" SignedData) / Base64-Zertifikate
+Enthalten in: api-backend/billing/dta/trust-anchors/ (befüllt durch
+              .github/workflows/itsg-trust-anchor-check.yml bzw. manuell durch
+              tools/itsg-trust-anchor-laden.mjs)
+
+Die Liste enthält ausschließlich öffentliche X.509-Zertifikate der Datenannahmestellen
+zur Verschlüsselung nach § 302 SGB V (GGT Anlage 16 Security-Schnittstelle SECON) —
+kein Geheimnis, kein Personenbezug. Die Zertifikate tragen öffentliche Schlüssel
+(RSA 4096 Bit) zur Absicherung des Datenaustauschs mit den gesetzlichen Krankenkassen.
+Maßgeblich ist stets die jeweils aktuelle, von der ITSG unter der o. g. Adresse
+veröffentlichte Fassung; die hier im Image mitgelieferte Kopie ist eine periodisch
+aktualisierte Ableitung zur Sicherstellung der Offline- und Airgap-Fähigkeit der
+On-Premise-Installation, keine Live-Verbindung zum Trust Center zur Laufzeit
+(onprem/REGISTER.md O-116).
+
+-------------------------------------------------------------------
 Regel für neue Quellen
 -------------------------------------------------------------------
 Fügt eine neue Migration (api-backend/db/migrations/000N_seed_*.sql) eine
-amtliche oder vertragliche Referenzdatenquelle hinzu, kommt im selben Commit
+amtliche oder vertragliche Referenzdatenquelle hinzu (oder wird ein dateibasiertes
+Referenzdaten-Artefakt wie in Abschnitt 6 ergänzt), kommt im selben Commit
 ein neuer Abschnitt hier hinzu — vor dem ersten zahlenden Kunden, nicht danach
 (onprem/REGISTER.md O-78, Begründung: Verstoß entsteht mit der Auslieferung,
 nicht mit dem Fehlen der Angabe an sich).

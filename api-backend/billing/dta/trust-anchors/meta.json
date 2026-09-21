@@ -1,0 +1,529 @@
+{
+  "quelle": "https://trustcenter-data.itsg.de/dale/annahme-rsa4096.key",
+  "quelleDatum": "2026-09-21",
+  "onaylayan": "Admin",
+  "geschriebenAm": "2026-09-21T18:55:59.356Z",
+  "ankerAnzahl": 65,
+  "zertifikate": [
+    {
+      "datei": "anchor-426fcfde08b8775f.der",
+      "sha256": "426fcfde08b8775f2e1fb9f5bf48e1a80bc2c3e3b71291f967b7535b94fd89d8",
+      "subject": "C=DE\nO=Datenaustausch im Gesundheits- und Sozialwesen",
+      "issuer": "C=DE\nO=Datenaustausch im Gesundheits- und Sozialwesen",
+      "notBefore": "2021-11-30T10:43:14.000Z",
+      "notAfter": "2029-01-30T10:43:14.000Z"
+    },
+    {
+      "datei": "anchor-a8b28fd1cda0cb6e.der",
+      "sha256": "a8b28fd1cda0cb6e527cbbdc509f2daa6581cf27dc5435627a30f0c3097a96be",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "issuer": "C=DE\nO=Datenaustausch im Gesundheits- und Sozialwesen",
+      "notBefore": "2021-11-30T11:27:38.000Z",
+      "notAfter": "2027-01-05T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-9de6e14f0f26546f.der",
+      "sha256": "9de6e14f0f26546f1dd5ceec01c96573cae1fa26ec8dd7bbf2e2cf0df135ddec",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "issuer": "C=DE\nO=Datenaustausch im Gesundheits- und Sozialwesen",
+      "notBefore": "2023-11-28T09:53:10.000Z",
+      "notAfter": "2029-01-06T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-0a0e76e81960d023.der",
+      "sha256": "0a0e76e81960d02305bdc4b1b78d4af2725caea709696e87918e26d3c6608f52",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=AOK Mecklenburg-Vorpommern\nOU=IK100395611\nCN=Hr. Christof Koenig",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-0051c8713281489d.der",
+      "sha256": "0051c8713281489d2ec593d39cb463cdeae6ded520470eb60958f38207e87832",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=AOK-Brandenburg\nOU=IK100696012\nCN=Hr. Christof Koenig",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-a558d4179d0c3e2f.der",
+      "sha256": "a558d4179d0c3e2f4bbbf6c0a7142ed4fc2ae31f7d97d067aba626bbf3a19220",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=AOK-Sachsen-Anhalt Die Gesundheitskasse\nOU=IK101097008\nCN=Annette Petrick",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-66732b8de072d1d1.der",
+      "sha256": "66732b8de072d1d13bb20cdf2d939bf11bac94705fe55f6072b9645ae5e5e516",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=AOK Schleswig-Holstein\nOU=IK101317004\nCN=Hr. Christof Koenig",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-e36132c4fa981b0b.der",
+      "sha256": "e36132c4fa981b0b53a80a73a0bde4f2913b9b59adb307a79dbe5243a4bde75a",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=AOK Hamburg\nOU=IK101519213\nCN=Hr. Christof Koenig",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-01d97f1c70ff48c3.der",
+      "sha256": "01d97f1c70ff48c31faeb315a78a6fea66efee36b31526e0ea404ec32ded0b57",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Mobil Krankenkasse\nOU=IK101520078\nCN=Annette Petrick",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-13758f241e2c9fa6.der",
+      "sha256": "13758f241e2c9fa634514ce9e600de3e7603db1384cc830014ec90ff8e69c8d5",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=HEK\nOU=IK101570104\nCN=Dr. Heiko Stamer",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-17dab5f6ec399603.der",
+      "sha256": "17dab5f6ec3996039ab33a49d1a25fec102d0b0111a6907bc5c8c691a533809c",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Techniker Krankenkasse\nOU=IK101575519\nCN=Fabian Dahlheimer",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-eb3c5e91d4c4f100.der",
+      "sha256": "eb3c5e91d4c4f10074f1c15a525fdb2f58709f57448c381333b179b71172e0d3",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Rezeptpruefstelle Duderstadt GmbH\nOU=IK102030647\nCN=Uwe Bachmann",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-2b3e4871de337de1.der",
+      "sha256": "2b3e4871de337de1ea691a641f81edf761105c66f08515e938ac3a5348e6d711",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=SVLFG (Bitmarck Service)\nOU=IK102109128\nCN=Stefan Kuehn",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-968af30220e38b7f.der",
+      "sha256": "968af30220e38b7f1d13a5539d8765cd0f491f9f3d0f4aaaf3b3a9fcb269e0cb",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=AOK Niedersachsen\nOU=IK102110939\nCN=Ingo Sultan",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-0a0cc025f1fb5947.der",
+      "sha256": "0a0cc025f1fb5947b1c177a7c3d561ba44b919093d964d03f09dec2e2077651a",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=KKH\nOU=IK102171012\nCN=Christian Rudolph",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-18af6e5f59c439ac.der",
+      "sha256": "18af6e5f59c439aca13b56ba41d6a110f9287105198f432ece1a371f9ff7205c",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Mobil ISC GmbH\nOU=IK102193212\nCN=Annette Petrick",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-5c3aadbff1955dad.der",
+      "sha256": "5c3aadbff1955dad61ba740a12727a18dc86237a1fc2a1aab0a4fd40ceb35b52",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Mobil ISC GmbH\nOU=IK102193234\nCN=Annette Petrick",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-a29a01163f43ede9.der",
+      "sha256": "a29a01163f43ede93d60f355efbda3cf58f07ce2ffaf90fb9b22af9ed8b2abb6",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=AOK Bremen\nOU=IK103119199\nCN=Ingo Sultan",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-31179dde0d99ff09.der",
+      "sha256": "31179dde0d99ff095cfb68493f11e45c125d5410baef3c57322ec67c16b79f2d",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=AOK Westfalen-Lippe\nOU=IK103411401\nCN=Christof Koenig",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-5a22c3dcef6117f8.der",
+      "sha256": "5a22c3dcef6117f8ee94c48593e142543c3a991182c9b91af5e0ca7bcca34c41",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=BITMARCK Service GmbH\nOU=IK104027544\nCN=Stefan Kuehn",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-3775c218e640889f.der",
+      "sha256": "3775c218e640889f53d7c44f37b254610c089ffa901950458f75993594b01e5d",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=AOK RHEINLAND\nOU=IK104212516\nCN=Hr. Christof Koenig",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-7ec573cb34cbf7f7.der",
+      "sha256": "7ec573cb34cbf7f79a260ce6b5b2d05ad3b9c07dae1b62390b185a72edc21346",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=VIACTIV Krankenkasse\nOU=IK104526376\nCN=Annette Petrick",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-6ced727c2a791684.der",
+      "sha256": "6ced727c2a791684e802bc85b74f521a483e34048af6ef537a596f6008374f57",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=BITMARCK Service GmbH\nOU=IK104593971\nCN=Stefan Kuehn",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-55c5a3f0f6a040ba.der",
+      "sha256": "55c5a3f0f6a040ba20c2a0ec7347c1452c0c8a251896c75aed398d611c417a99",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=BITMARCK Service GmbH\nOU=IK104593982\nCN=Stefan Kuehn",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-8c75dff6d9817643.der",
+      "sha256": "8c75dff6d9817643f38b41d6455aad7ee72dd4c3ae7840089b41b2aea0b9360c",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=BITMARCK Service GmbH\nOU=IK104593993\nCN=Stefan Kuehn",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-b9725821c80300eb.der",
+      "sha256": "b9725821c80300eb92612bfce008c6fcd6febd2dd010f8fd1db2321008cce953",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Barmer Ersatzkasse\nOU=IK104940005\nCN=Dr. Heiko Stamer",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-65c3c88602a040c3.der",
+      "sha256": "65c3c88602a040c38ebae051e489ac032370c03c16703826353abd16a84349ca",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=ITSCare/AOK Hessen\nOU=IK105810615\nCN=Marco Domnick",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-c25a922621586da1.der",
+      "sha256": "c25a922621586da1cf3a4e5af897d5dcb4d66f66019c9e46592301e27b34ce5c",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=kubus IT/AOK PLUS (Thueringen)\nOU=IK106198626\nCN=Martin Stiefler",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-23667fc418e4ca81.der",
+      "sha256": "23667fc418e4ca81969bc8f815e05c23258c462c0da88eabb5f0f3d75d59ef3e",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=kubus IT/AOK PLUS (Sachsen)\nOU=IK107299005\nCN=Lutz Werner",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-59e536eb9b76902b.der",
+      "sha256": "59e536eb9b76902b0b52282ef5183092887b35ee495da2c813f4997e854a2094",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=ITSCare/AOK Rheinland-Pfalz\nOU=IK107310373\nCN=Marco Domnick",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-dc5d1604b7f639e5.der",
+      "sha256": "dc5d1604b7f639e5a54959a395f37980997da33ad57cf254e44df1e550c7cc47",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=ARZ Emmendingen\nOU=IK107436557\nCN=Herr Marco Salis",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-77256c5cf71b71c2.der",
+      "sha256": "77256c5cf71b71c29471a1c95db7fd6ca8bf9ca89f84dff1180344359f91c92e",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=ITSCare/AOK-Baden-Wuerttemberg\nOU=IK108018007\nCN=Marco Domnick",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-5af838ea82b52de9.der",
+      "sha256": "5af838ea82b52de9f4cbc63ef30825442507634297143c0f70c3c117837c6f2a",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=kubus IT/AOK Bayern\nOU=IK108310400\nCN=Lucas Happ",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-8e5d2f76220794b6.der",
+      "sha256": "8e5d2f76220794b6281dab120fe3965ea10af6085d797e9be02506c7d0da3855",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Sozialvers. fuer Landw. Forsten und Gartenbau\nOU=IK108509136\nCN=Hr. Lippert",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-e0a55de4c3d26105.der",
+      "sha256": "e0a55de4c3d26105695832874092bd0bca65b588c64a717498b96d4a74b12088",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=ITSCare/AOK Saarland\nOU=IK109319309\nCN=Marco Domnick",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-d4fe247f19703eb9.der",
+      "sha256": "d4fe247f19703eb951e24fad17299bad205c00e9497b1ffcfbb3f8279b0d0704",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=AOK-BERLIN\nOU=IK109519005\nCN=Hr. Christof Koenig",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-6d85507e466e5fd4.der",
+      "sha256": "6d85507e466e5fd4be432d5be8f2cb523d59ccc0b95504239a30f60d3d401e3a",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=BITMARCK Service GmbH\nOU=IK109900019\nCN=Stefan Kuehn",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-45693f06f636edd3.der",
+      "sha256": "45693f06f636edd3aa01ba70864b25aa38e5bdde39ab0197643a964d085024b3",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Deutsche Rentenversicherung Knappschaft-Bahn-See\nOU=IK109905003\nCN=Marco Pasquale Longo",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-d0c9823fab54a30a.der",
+      "sha256": "d0c9823fab54a30a3cbd890f585d447387d15f07f6d7c9fedd9962cccac2e668",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Deutsche Rentenversicherung Knappschaft-Bahn-See\nOU=IK109905150\nCN=Marco Pasquale Longo",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-39b9220e392737b3.der",
+      "sha256": "39b9220e392737b32bb70bcbcb7e1fc6d6d0b4c4e51815457b0f893bb6d7954b",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Deutsche Rentenversicherung Knappschaft-Bahn-See\nOU=IK109906048\nCN=Marco Pasquale Longo",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-218e511a4c786418.der",
+      "sha256": "218e511a4c786418456aa1f1340faba3098a08233e0102f81d8d27e1c905b6fb",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Sozialvers. fuer Landw. Forsten und Gartenbau\nOU=IK109908701\nCN=Hr. Lippert",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-75a18933fb11f280.der",
+      "sha256": "75a18933fb11f280409f7ab9184a1b68c3bce0e4d816310c4f86672ada1f32ad",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=GKV-Spitzenverband\nOU=IK109911114\nCN=Bjoern Gramsch",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-b3923595aeb97a70.der",
+      "sha256": "b3923595aeb97a703cd4b665b6d2d3c4d00cd8ed81a6f758740aafed78b43ba7",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=vdek\nOU=IK109979978\nCN=Dr. Heiko Stamer",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-736bf7c86e626be4.der",
+      "sha256": "736bf7c86e626be49bf1a2c12ed3db9468163df850ba8fa95afbc7fe8e23b4ad",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Deutsche Rentenversicherung Bund\nOU=IK110999007\nCN=Tino Pfeil",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-b50acb9d0c17bc1e.der",
+      "sha256": "b50acb9d0c17bc1e35890491f924587f8a740a12f43c998ba376d1fee679e647",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Techniker Krankenkasse\nOU=IK181575519\nCN=Fabian Dahlheimer",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-af3933e2ade769bb.der",
+      "sha256": "af3933e2ade769bb4fb8f50efa69b62071e9ec494b12287876b6936b989c5df8",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Element44 GmbH\nOU=IK590105277\nCN=Marcus Hettlage",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-b4deb9f1b0259340.der",
+      "sha256": "b4deb9f1b025934052506d499ce4612274125425b106f0b2d55cf1bbc4000ffe",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=CONVEMA Versorgungsmanagment GmbH\nOU=IK591103482\nCN=Carsten Suchanek",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-bbdad9a843e45142.der",
+      "sha256": "bbdad9a843e45142df7b01b75eba9f174a978f3fe049aeeab3f5f5cc8ef162db",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=BITMARCK Service GmbH\nOU=IK660500345\nCN=Stefan Kuehn",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-9caabdece3cb94ad.der",
+      "sha256": "9caabdece3cb94ad28a0ee6a77eec22888fdf7d983ae969225939552bf585c43",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=BITMARCK Service GmbH\nOU=IK660500620\nCN=Stefan Kuehn",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-b85c299041a72e4d.der",
+      "sha256": "b85c299041a72e4db5283fc7457998c2242c89aefd26e9709c3b4c54d01e4ff6",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=DDG GmbH\nOU=IK660510336\nCN=Danny Hammacher",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-1f7754bdb246484a.der",
+      "sha256": "1f7754bdb246484ae5211666f746b36312d293e11402213216ea8556315c0e6a",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=ITSG GmbH Trust Center\nOU=IK660640162\nCN=Andrew Lynch",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-a0ad6cbf1ebe2bd6.der",
+      "sha256": "a0ad6cbf1ebe2bd6f0c37d669b872adead24ac4c664b9f2b4993ab7088ebae8e",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=ITSG GmbH\nOU=IK660640184\nCN=Stefan Ecke",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-e32101d0d9d90ca4.der",
+      "sha256": "e32101d0d9d90ca4a8b123a66dc55673d22847f2f8aa1aadeebe4863312d9b90",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Medicomp GmbH\nOU=IK660730070\nCN=Sascha Brutscher",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-468d4888c2fac240.der",
+      "sha256": "468d4888c2fac24057a88cb54f65d9419d82f7bc0e90d8c3bf9a4907e46bcde4",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=CONDATESTA GmbH und Co. KG\nOU=IK661400073\nCN=Lutz Thrandorf",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-44d7537ef5da7852.der",
+      "sha256": "44d7537ef5da785206029282a1cfb231d09eacbd29ee61d123ade642d4a3ec4e",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=GFS mbH\nOU=IK661420011\nCN=Alexander Ralf Schmitt",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-5e60e759fb5327ad.der",
+      "sha256": "5e60e759fb5327ad1bb223479ad10f818f4e3400bbed4f1b062f37d2939f620d",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Davaso GmbH\nOU=IK661430035\nCN=Sebastian Vogt",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-f98f5f0f49f9e838.der",
+      "sha256": "f98f5f0f49f9e8387adcb5ffaabd7c35da01e6ccb3b5dba1e352d6578cc8ac34",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Davaso GmbH\nOU=IK661430046\nCN=Sebastian Vogt",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-69f386a7080eff05.der",
+      "sha256": "69f386a7080eff052a2a5ff65d4bf76b005b274e5b89a9f1bf044019276d9520",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Davaso GmbH\nOU=IK661430057\nCN=Sebastian Vogt",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-4e7f4a0e7da45f41.der",
+      "sha256": "4e7f4a0e7da45f4135a977bebd76301106c3f7aaff18260a9ee9ffe10ef9685c",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Davaso GmbH\nOU=IK661430079\nCN=Sebastian Vogt",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-5a5db323116ec0d9.der",
+      "sha256": "5a5db323116ec0d958e14c44bfbbfea1e610ac8a8ee71dd81f7c6c1bda18123e",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Davaso GmbH\nOU=IK661430080\nCN=Sebastian Vogt",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-cd0bf15e642f6840.der",
+      "sha256": "cd0bf15e642f6840aeae0a489788065cec96a252a5d8e38092c7ac3453069b81",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Davaso GmbH\nOU=IK661430091\nCN=Sebastian Vogt",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-e7351d8d234c1c9d.der",
+      "sha256": "e7351d8d234c1c9d3f0ac2d82f4cdbc40456d3870d43254bbcebcb0e6615aae5",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=Davaso GmbH\nOU=IK661430115\nCN=Sebastian Vogt",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2024-11-12T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-4301a9590f3c9964.der",
+      "sha256": "4301a9590f3c9964804610bc20ff12d524f122bebf04f973cd7f0002c69d3c20",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer\nOU=spectrumK GmbH\nOU=IK591103701\nCN=Thomas Deickert",
+      "issuer": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "notBefore": "2025-01-08T00:00:00.000Z",
+      "notAfter": "2027-12-31T23:59:59.000Z"
+    },
+    {
+      "datei": "anchor-2babf339f3c50623.der",
+      "sha256": "2babf339f3c50623a10b116d6b97dd4629d5b229648110634b188d04e6495b3b",
+      "subject": "C=DE\nO=Datenaustausch im Gesundheits- und Sozialwesen",
+      "issuer": "C=DE\nO=Datenaustausch im Gesundheits- und Sozialwesen",
+      "notBefore": "2025-12-02T10:01:24.000Z",
+      "notAfter": "2033-01-27T10:01:24.000Z"
+    },
+    {
+      "datei": "anchor-97a8003e8865878a.der",
+      "sha256": "97a8003e8865878aca8f1edf96a8d9d01527b306c7c1b8b61a6f2a287eda570b",
+      "subject": "C=DE\nO=ITSG TrustCenter fuer sonstige Leistungserbringer",
+      "issuer": "C=DE\nO=Datenaustausch im Gesundheits- und Sozialwesen",
+      "notBefore": "2025-12-02T10:34:29.000Z",
+      "notAfter": "2031-01-06T23:59:59.000Z"
+    }
+  ]
+}

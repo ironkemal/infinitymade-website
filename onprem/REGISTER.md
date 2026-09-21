@@ -452,7 +452,19 @@ taze kurulum her çeyrekte bir tam kopya daha koşacak) · **O-129** (`-- SaaS: 
 satırı 10 dosyanın 10'unda da yok — 14.09'da konan disiplin iki dosya sonra sustu).
 İki eski madde ilerledi: **O-118** (besleme yürüdü, kapı hâlâ yok) · **O-125** (şart 1
 tam, kapı yazılmadı).
-Toplam **129** madde.
+
+⭐ **21.09.2026 — Adım 1.3: ITSG Trust-Anchor zinciri, push'tan ÖNCE (§7S).** Üç commit
+(`9cafbc9`/`981f1b7`/`b39222e`) main'de ama origin'de değil; denetim yine ucuz anda.
+Hüküm: **GEÇER, KAYITLA — sert şart yok, push bloklanmıyor.** O-116'nın üç şartı da
+gerçekten uygulanmış ve kutu ITSG'ye **hiç çıkmıyor** (tek `curl` merkezde, Actions'ta);
+yeni secret yok (`TELEGRAM_*` + `GITHUB_TOKEN`, hepsi eskiden var). Ama tur **üç sessiz
+kırılma** buldu: **O-130** (runtime'da düzeltilen "tek bitmiş anker her şeyi durdurur"
+hatasının ikizi CI'da duruyor — 06.01.2027'de otomatik güncelleme zinciri kalıcı olarak
+ölüyor, tarih ölçüldü) · **O-131** (şifreli dosya üretiliyor ama kimse okumuyor; müşteri
+hâlâ şifrelenmemiş `.p7m`'i indiriyor, ve `verschluesselt:false` hiç gösterilmiyor) ·
+**O-132** (alıcı sertifikası kutuya hiç varmıyor — tabloyu dolduran tek yol bizim yönetici
+makinemiz, K10). Bu üçü yüzünden **O-116** 🟠 → 🟡, `gelöst` değil.
+Toplam **132** madde.
 
 **Sicili nasıl okursun:** durum değerleri §9'da sayılı. 🟡 **kısmen** demek "yarısı
 yapıldı, kalanı maddede yazılı" demek — `gelöst` yalnız kalanı da bittiğinde konur.
@@ -3893,7 +3905,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Çözüm** | Sayaç **monoton** olsun: (a) hiçbir koşulda azalmaz; (b) yalnız **ileri** alınabilen bir yönetim yolu olsun (göç ve geri yükleme sonrası), kutuda owner'ın kendi erişebileceği bir ekranda — çünkü orada bunu bizim yapmamız mümkün değil (K10); (c) göç ve `restore.sh` runbook'una "sayaç ileri alındı mı" adımı eklensin, `restore.sh`'ın onay ekranına uyarı satırı düşsün. Tablo mu sequence mi `db-ustasi`'nın kararı; **tek dağıtım kısıtı:** değer kutunun kendi veritabanında üretilsin — numarayı merkezden dağıtan her tasarım yeni bir tip A'dır ve **DUR** alır (kutu offline'ken fatura kesilemez hâle gelir) |
 | **Durum** | 🟡 **kısmen** — 20.09.2026 akşamı: `0029` sayacın kendisini doğru kurdu (monoton · atomik · yıl-sıfırlamasız · merkezden değil). İki şarttan biri aynı gece kapandı: **O-122** ✅ (`ON DELETE SET NULL` + üç RPC'de `coalesce()` ile öksüz satırın kendini onarması). Kalan tek şart **O-123** — `vorstellen()` hâlâ hiçbir yerden çağrılmıyor ve `restore.sh`'ta adımı yok. Detay §7Q + §7R |
 
-### O-116 — Alıcı sertifikası (ITSG Annahmeliste): kutudan runtime indirme **DUR**; tip B zorunlu + yerel son-kullanma kapısı 🟠 **geplant (plan Adım 1.3)**
+### O-116 — Alıcı sertifikası (ITSG Annahmeliste): kutudan runtime indirme **DUR**; tip B zorunlu + yerel son-kullanma kapısı 🟡 **kısmen (21.09.2026, `9cafbc9`+`981f1b7`+`b39222e`)**
 
 | Alan | İçerik |
 |---|---|
@@ -3902,7 +3914,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Tip** | A → **B'ye çevrilecek**. ⚠️ Tip E **değil**: liste açık anahtar taşır, sır değil — image'a gömülmesi G2'ye dokunmaz |
 | **Kutuda ne olur** | Runtime indirme seçilirse dört şey birden: **(1)** internetsiz/kısıtlı kutu §302 üretemez; **(2)** koda yeni bir sabit host girer (tip C, kapı sayacı artar); **(3)** ITSG'nin erişilebilirliği bizim dosya üretimimizin ön koşulu olur; **(4)** hangi praxis ne zaman fatura kesiyor bilgisi kutu dışına sızar. Tip B'ye çevrildiğinde dördü de yok olur: kutu bu adrese **hiç** çıkmaz |
 | **Çözüm** | `preise-check.yml` şablonu (O-34, tip B'nin canlı örneği): bir Actions işi listeyi çeker → repoya commit'ler → image build → Watchtower dağıtır. Üç ek şart: **(a) elle yükleme yolu** — airgap kutu ve plan dışı rotasyon için (liste "bei Änderungen" de değişebiliyor, biz o gün image basamayabiliriz); **(b) yerel geçerlilik kapısı** — dosya üretilmeden önce alıcı sertifikasının `notAfter`'ı kontrol edilir, **60 gün kala** panelde uyarı, dolmuşsa **anlaşılır bir mesajla** DUR. Sessizce başarısız olmak ya da süresi geçmiş anahtarla şifrelemek en kötü sonuçtur: dosya gider, kasa açamaz, ret haftalar sonra döner; **(c)** listenin pakete gömülmesi `onprem/NOTICE-QUELLEN.txt`'e **altıncı kaynak** olarak yazılır (O-78 deseni; `legal-de` tek cümleyle dağıtım hakkını onaylar) |
-| **Durum** | 🟠 **geplant** — plan Adım 1.3. ⚠️ **Şifrelemenin nerede koşacağı (Açık Karar 2) `guvenlik`'in kararı;** dağıtım tarafının tek şartı G7: **tek kod yolu**, iki dağıtımda da aynı. Backend seçilirse kutuda PHI yeni bir yere gitmez (orası zaten müşterinin kendi sunucusu), SaaS'ta da dosya zaten bizim Storage'ımızda — yani backend seçeneği yeni bir PHI yeri **açmıyor**. Tarayıcı seçeneği listeyi tarayıcıya indirmeyi ve ikinci bir kripto yolunu gerektirir (G7 riski), ama G1'i ihlal etmez. `onprem` tarafından **veto yok** — kısıt var |
+| **Durum** | 🟠 **geplant** — plan Adım 1.3. ⚠️ **Şifrelemenin nerede koşacağı (Açık Karar 2) `guvenlik`'in kararı;** dağıtım tarafının tek şartı G7: **tek kod yolu**, iki dağıtımda da aynı. Backend seçilirse kutuda PHI yeni bir yere gitmez (orası zaten müşterinin kendi sunucusu), SaaS'ta da dosya zaten bizim Storage'ımızda — yani backend seçeneği yeni bir PHI yeri **açmıyor**. Tarayıcı seçeneği listeyi tarayıcıya indirmeyi ve ikinci bir kripto yolunu gerektirir (G7 riski), ama G1'i ihlal etmez. `onprem` tarafından **veto yok** — kısıt var. ⭐ **21.09.2026: 🟡 kısmen.** Üç şartın üçü de uygulandı (airgap yolu `tools/itsg-trust-anchor-laden.mjs` · yerel son-kullanma kapısı `pruefeTrustAnchorFrische()` · NOTICE §6) ve kutudan runtime indirme hiç yazılmadı (ölçüldü: 0 çağrı, tek `curl` merkezde). `gelöst` **değil**, çünkü zincirin ikinci yarısı eksik: **alıcı** sertifikası kutuya hiç varmıyor (**O-132**) ve şifrelenmiş dosyanın teslim yolu yok (**O-131**); ayrıca besleme zinciri 06.01.2027'de sessizce ölüyor (**O-130**). Detay §7S |
 
 ### O-117 — `kind` (Test/Erprobung/Echt) anahtarı env var'a **değil** DB'ye; ve kutuda anahtarı **müşteri** çevirebilmeli ✅ **gelöst (20.09.2026, `0028` + `0031`)**
 
@@ -4165,6 +4177,106 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
+## 7S — Adım 1.3: ITSG Trust-Anchor zinciri + `/upload-signed` şifrelemesi (21.09.2026)
+
+> **Bu bölüm niye var:** §302 Echtbetrieb planının Adım 1.3'ü üç commit'te indi
+> (`9cafbc9` · `981f1b7` · `b39222e`), **main'de commitli ama push'lanmadı** — yani
+> denetim yine ucuz anda yapıldı. Turu yürüten worker'ın bu oturumda `onprem`'i çağırma
+> aracı yoktu ve **O-116'daki onayı gerçek diff'i görmeden varsaydı**; bu bölüm o
+> varsayımın doğrulamasıdır.
+>
+> **Toplu hüküm: GEÇER, KAYITLA — push bloklanmıyor, sert şart yok.**
+> O-116'nın üç şartının **üçü de** gerçekten uygulanmış:
+> **(a) elle/airgap yükleme yolu** → `tools/itsg-trust-anchor-laden.mjs` (kendi parser'ını
+> yazmıyor, modülün `parseAnnahmeliste()`'sini kullanıyor — G7);
+> **(b) yerel son-kullanma kapısı** → `pruefeTrustAnchorFrische()`, 60 gün uyarı +
+> tükenmişse net mesajla dur;
+> **(c) altıncı kaynak** → `onprem/NOTICE-QUELLEN.txt` §6, ve "Regel für neue Quellen"
+> paragrafı dosya-tabanlı artefaktları da kapsayacak şekilde genişletilmiş (O-78 deseni).
+>
+> **Ölçülen kutu sonuçları:**
+> - Kutu ITSG'ye **hiç çıkmıyor**: `grep -rn "trustcenter"` runtime kodunda **3 satır**,
+>   üçü de veri değil metin (`itsg-trust-anchor.js:189` provenance varsayılanı,
+>   iki test satırı) + `dashboard.html:4178` insanın tıklayacağı bağlantı. Gerçek
+>   `fetch`/`curl` **yalnız** `.github/workflows/itsg-trust-anchor-check.yml:55`'te,
+>   yani merkezde. **Tip B doğrulandı.**
+> - **G7 tek kod yolu:** ankerler `api-backend/billing/dta/trust-anchors/` altında ve
+>   `Dockerfile:20 COPY billing ./billing` ile image'a giriyor — SaaS konteyneri ile kutu
+>   konteyneri **aynı dizini aynı fonksiyonla** okuyor (`ladeItsgTrustAnchors()`).
+>   İkinci yol yok.
+> - **G2:** 65 dosyanın tamamı açık X.509; `terapeut_zertifikat`'a özel anahtar kolonu
+>   eklenmemiş (O-120 kısıtı korundu), `empfaenger_zertifikate` yalnız açık sertifika
+>   DER'i tutuyor.
+> - **G1:** yeni günlük satırlarında PHI yok — yalnız IK, abrechnung-ID, SHA-256 ve hata
+>   metni (Ö5 kuralı kodun içine yazılmış).
+> - **Yeni secret yok** (soru 2'nin cevabı, sayıldı): bütün workflow'larda geçen secret
+>   kümesi `TELEGRAM_BOT_TOKEN` · `TELEGRAM_CHAT_ID` · `GITHUB_TOKEN` — üçü de zaten
+>   `preise-check.yml`/`publish-*.yml`'de kullanılıyordu. Yetki bölünmesi O-99/O-103
+>   dersine uygun: job 1 `contents: read` + `npm ci --ignore-scripts`, job 2 `contents:
+>   write` ve **hiçbir repo dosyasını node ile import etmiyor** (sadece `cp`/`git`).
+> - **Paketleme yüzeyi:** `.vercelignore:45 api-backend/` → 65 `.der` pazarlama sitesine
+>   çıkmıyor. `.dockerignore` yalnız `node_modules`/`.env`/`*.test.js` eliyor, ankerler
+>   image'a giriyor.
+> - **Bağımlılık tuzağı yok:** `asn1js`/`pkijs` `dependencies`'te (devDependencies'te
+>   **değil**) — `33f502c`'nin `node-forge` hatasının tekrarı olmamış. Runtime import
+>   eden dört dosya da prod image'da çalışır.
+> - Testler: `node --test` → **17/17 geçti**.
+>
+> Tur **üç yeni madde** açtı (O-130 · O-131 · O-132). Üçü de push'u bloklamıyor,
+> ama üçü de **ilk gerçek Echtbetrieb gönderiminden önce** kapanmalı.
+
+### O-130 — CI'ın tazelik doğrulaması, 06.01.2027'de otomatik güncelleme zincirini **kalıcı olarak** öldürüyor 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `b39222e` soğuk denetimde **runtime** tarafını doğru düzeltti: tek bir erken biten anker artık bütün kasalar için şifrelemeyi durdurmuyor, yalnız uyarıyor (`pruefeTrustAnchorFrische`). **Aynı hatanın ikizi CI tarafında olduğu gibi duruyor** ve kimse düzeltmedi: indirilen listede **bir tane** bile süresi geçmiş sertifika varsa iş `needs_review=true, changed=false` verip commit'i tamamen iptal ediyor |
+| **Nerede** | `tools/itsg-trust-anchor-ci-abrufen.mjs:55` (`certs.filter(c => c.notAfter < jetzt)`) → `:61-68` (`needs_review`, `changed=false`) · tetiklediği dal `.github/workflows/itsg-trust-anchor-check.yml:78-85` (yalnız Telegram) · karşılaştır: doğru yapılmış hâli `api-backend/billing/dta/itsg-trust-anchor.js:337` (`pruefzeit > spaetestesNotAfter`, yani **hepsi** bitmişse) |
+| **Tip** | B (besleme zinciri) + F (zamanlanmış iş) |
+| **Kutuda ne olur** | Tarih **sayıldı, tahmin değil**: `meta.json`'daki 65 ankerin notAfter dağılımı → **1 adet 2027-01-05**, 60 adet 2027-12-31, 4 adet 2029–2033. Yani **06.01.2027'den itibaren her haftalık koşu** listeyi indirir, o tek bitmiş sertifikayı görür, `changed=false` der ve **bir daha asla commit atmaz.** Görünen tek şey haftalık bir Telegram uyarısıdır — ve 11 ay boyunca her hafta gelen, hiçbir şeyi değişmeyen bir uyarının okunmayı bırakacağını varsaymak gerekir. Sonra **31.12.2027**: ankerlerin %92'si biter, `pruefeTrustAnchorFrische` sert `throw` eder ve **bütün kutularda** §302 şifrelemesi durur. Tam o sırada ITSG'nin yeni listesi yayında olacaktır; onu kutuya taşıyacak zincir ise 11 aydır ölüdür. Kutuda bunu fark edecek ikinci bir insan yok (O-46) ve biz kutuya giremeyiz (K10) — tek çıkış, her kutuya elle yeni image basmaktır |
+| **Çözüm** | Runtime ile **aynı** kuralı CI'a taşı: sert dur **yalnız** `certs.every(c => c.notAfter < jetzt)` olduğunda (liste tamamen çürük = gerçekten indirme/parse hatası). Tek bir bitmiş anker → **commit yine atılır**, Telegram mesajına "N anker süresi geçmiş, bilgi" satırı eklenir. İkinci şart: `needs_review` dalı bugün `changed`'ı da bastırdığı için **hiçbir şey** olmuyor; ayrıştırılsın — inceleme gereği ile güncelleme reddi iki ayrı karardır. `builder`'ın işi, tek dosya, ~10 satır |
+| **Durum** | 🔴 **offen** — 21.09.2026'da açıldı. **Bugün zararsız** (henüz bitmiş anker yok, bu yüzden push'u bloklamıyor), **06.01.2027'den sonra sessiz.** Düzeltme bugün ucuz; kapanış tarihi olarak **2026-12-01**'den geç olmamalı |
+
+### O-131 — Şifrelenmiş dosya üretiliyor ama **hiçbir yerden ulaşılamıyor**: müşteri hâlâ şifrelenmemiş `.p7m`'i indiriyor 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `verarbeiteVerschluesselungsSchritt()` CMS EnvelopedData'yı üretip Storage'a yazıyor ve `{verschluesselt, encryptedPath, encryptedSha256, verschluesselungHinweis}` döndürüyor. **Bu dört alanı okuyan hiç kimse yok.** Ne DB'ye yazılıyor, ne ekranda gösteriliyor, ne de indirilebiliyor |
+| **Nerede** | Üretim: `api-backend/billing/api/abrechnung.routes.js:1308-1325` · cevabı alan tek yer `dashboard.js:17653-17657` — `upJson`'dan yalnız hata okunuyor, ardından **sabit** metin: „Signiert ✓ Lade Sie die .p7m-Datei jetzt im DAS-Portal hoch." · indirme düğmesi `module/abrechnung-detail.js:456`/`:483` → `ab.signed_storage_path`, yani `<ad>.dta.p7m` = **imzalı ama şifrelenmemiş** dosya. `grep -rn "encryptedPath"` → yalnız üreten dosya + testler |
+| **Tip** | G (merkez mi kutu mu — burada: özellik yarım) + O-116'nın (b) şartının ruhu |
+| **Kutuda ne olur** | İki katmanlı ve ikisi de sessiz. **(1)** Şifreleme başarısız olduğunda (`verschluesselt:false` — en sık hâli "bu IK için sertifika yok", Fall A) kullanıcı **hiçbir şey görmez**: ekran „Signiert ✓" der, `verschluesselungHinweis` metni çöpe gider. SaaS'ta biz günlüğe bakıp yakalarız; kutuda günlüğe bakan yok. **(2)** Şifreleme başarılı olsa bile müşteri yanlış dosyayı indirir ve DAS portalına **şifrelenmemiş** olanı yükler; ret haftalar sonra kasadan döner. O-116 bunu kelimesi kelimesine yazmıştı: *"Sessizce başarısız olmak ya da süresi geçmiş anahtarla şifrelemek en kötü sonuçtur: dosya gider, kasa açamaz, ret haftalar sonra döner."* ⚠️ **Ek mayın:** `buildEncryptedFilename(base)` = `` `${base}.dta.p7m` `` ve `basePath` = `storage_path`, o da zaten `.dta` ile bitiyor (`abrechnung.routes.js:986`) — bugünkü sonuç `<ad>.dta.dta.p7m`, yani çirkin ama **çakışmıyor**. Biri bu çift uzantıyı "temizlemek" için `.dta`'sız bir taban geçirirse yol `signedPath` ile **birebir aynı** olur ve `upsert:true` yüzünden şifreli dosya **imzalı dosyanın üstüne yazar** — kutuda geri dönüşü olmayan, görünmeyen bir kayıp |
+| **Çözüm** | Üç parça, hiçbiri şema gerektirmiyor: **(a)** `verschluesselungHinweis` ekranda gösterilsin (`verschluesselt:false` ise toast „Signiert ✓" **olmasın**, eksik ne ise o yazsın) · **(b)** indirme düğmesi `verschluesselt` olduğunda şifreli dosyayı sunsun — yolu aynı `buildEncryptedFilename()` ile **türetilsin**, kolon eklenmesin (soru 3'ün cevabı: türetme doğru tercih) · **(c)** ⛔ yüklemeden önce tek satırlık koruma: `encryptedPath === signedPath` ise **yükleme yapılmaz, hata döner** — çift uzantı mayınını kalıcı olarak etkisizleştirir. (a)+(c) bir commit'lik iş |
+| **Durum** | 🔴 **offen** — 21.09.2026'da açıldı. Adım 1.3 fonksiyonel olarak **yarım**: kripto çalışıyor, teslim yolu yok. ⛔ **İlk `echt` gönderimden önce kapanmalı** — planın "hiçbir tenant `echt`'e alınmaz" kilidi bu yüzden de yerinde kalmalı |
+
+### O-132 — `empfaenger_zertifikate`'yi dolduran tek yol bizim yönetici makinemiz: kutuda tablo **hep boş kalır** 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Şifreleme, alıcının sertifikasını `public.empfaenger_zertifikate`'den okuyor. O tabloya yazan tek şey `tools/empfaenger-zertifikat-laden.mjs`; script `api-backend/.env`'den `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` okuyup PostgREST'e POST atıyor — yani **bizim elimizden, bizim projemize.** Kutuda ne bu script koşar, ne biz koşabiliriz (K10). Ne seed migration'ı var, ne owner'ın kendi ekranından yükleyebileceği bir yer, ne de kurulum adımı |
+| **Nerede** | Yazan: `tools/empfaenger-zertifikat-laden.mjs:25-39` (`.env` okuma) · `:154-168` (service_role ile POST) · Okuyan: `api-backend/billing/api/abrechnung.routes.js:1240` · Tablo: `api-backend/db/migrations/0038_empfaenger_zertifikate.sql` (RLS: okuma herkese, yazma yalnız `service_role` — "Kein öffentlicher HTTP-Upload-Endpunkt (G8-Regel)") · `grep -rn "empfaenger_zertifikate"` → kutuda çalışan **hiçbir** yazma yolu yok |
+| **Tip** | D (şema/veri kutuya nasıl varacak) + G |
+| **Kutuda ne olur** | Kutu kurulur, migration koşar, tablo **boş** doğar. Her şifreleme denemesi Fall A'ya düşer (`verschluesselt:false`) — ve O-131 yüzünden müşteri bunu **göremez** bile. Yani §302 şifrelemesi kutuda **hiç** çalışmaz, ve bunun sebebi bir hata değil, eksik bir dağıtım yoludur. İroni kayda değer: alıcıların sertifikaları **zaten image'ın içinde** — `annahme-rsa4096.key` Annahmeliste'sinin ta kendisi 65 dosya olarak `billing/dta/trust-anchors/` altında duruyor. Aynı veri iki mekanizmayla taşınıyor; biri (dosya artefaktı, tip B) kutuda çalışıyor, diğeri (DB tablosu, elle) çalışmıyor |
+| **Çözüm** | Sıralı iki seçenek, ikisi de G7'ye uygun (tek kod yolu): **(1) tercih edilen —** çözücü önce `empfaenger_zertifikate`'ye baksın (override/istisna için), satır yoksa **image'daki listeden IK'ya göre** alıcı sertifikasını seçsin. Böylece kutu da SaaS da aynı dosyadan beslenir, elle adım kalmaz. ⚠️ Ön şart `gkv-302`'ye tek soru: Annahmeliste'deki sertifikanın Subject'i IK'yı taşıyor mu, taşımıyorsa eşleme neye göre yapılır. **(2) yedek —** liste bir **seed migration**'a dönüştürülsün (O-79/O-118 deseni, üretici `tools/` altında, elle 65 satır yazılmaz) — ama bu O-128'i (seed migration'larının birikmesi) büyütür ve her rotasyonda yeni migration ister; bu yüzden ikinci sırada. ⛔ **Üçüncü bir seçenek olarak "kutu listeyi kendisi indirsin" DUR alır** — O-116'nın kapattığı kapı odur |
+| **Durum** | 🔴 **offen** — 21.09.2026'da açıldı. Bu, O-116'nın **çözülmeyen yarısıdır**: anker (CA) tarafı tip B ile kutuya vardı, **alıcı sertifikası** tarafı varmadı. Bu yüzden O-116 `gelöst` değil 🟡 `kısmen` |
+
+### Bu turda durumu değişen madde
+
+- **O-116** 🟠 geplant → 🟡 **kısmen (`9cafbc9` + `981f1b7` + `b39222e`)**: üç şartın üçü de
+  uygulandı (airgap yolu · yerel son-kullanma kapısı · NOTICE §6), kutudan runtime indirme
+  **hiç yazılmadı** (ölçüldü: 0 çağrı), G7 tek kod yolu korundu. `gelöst` sayılmıyor,
+  çünkü zincirin ikinci yarısı (**alıcı** sertifikasının kutuya varması) O-132 olarak açık
+  ve teslim yolu O-131 olarak eksik.
+
+> **Küçük notlar (kendi numarasını hak etmeyen, ama kaydı düşülen):**
+> - `.github/workflows/itsg-trust-anchor-check.yml:117` `cp -r` ile kopyalıyor, **silmiyor** —
+>   listeden düşen bir anker `.der` dosyası olarak repoda kalır. Güven sorunu **değil**:
+>   `ladeItsgTrustAnchors()` dizini taramıyor, yalnız `meta.json`'daki listeyi okuyor
+>   (`itsg-trust-anchor.js:277-288`), yani düşmüş anker yüklenmez. Yalnız çöp birikir.
+> - `.gitignore`'da `api-backend/_staging_trust_anchors/` ve
+>   `api-backend/trust-anchors-telegram-message.txt` yok — CI'da zararsız (o job commit
+>   atmıyor), ama script'i yerelde çalıştıran biri bu iki artığı yanlışlıkla commit'leyebilir.
+
+---
+
 ## 8. Kapı — sayaçlar ve tabanlar
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -4209,7 +4321,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
-## 9. Durum özeti (son sayım: 20.09.2026 akşamı)
+## 9. Durum özeti (son sayım: 21.09.2026)
 
 > ⚠️ **Bu tablo 12.09.2026 akşamı madde madde yeniden sayıldı.** Önceki hâli
 > 04.09.2026 fotoğrafıydı ve altına "fark" notları yığılıyordu — dokuz tur sonra o
@@ -4218,7 +4330,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
 
-**Toplam 129 madde** (O-01 … O-129) — son dördü (**O-126…O-129**, §7R) 20.09.2026
+**Toplam 132 madde** (O-01 … O-132) — son üçü (**O-130…O-132**, §7S) 21.09.2026'da, §302 planının **Adım 1.3**'ünün (ITSG Trust-Anchor zinciri + `/upload-signed` şifrelemesi) **push'tan önce** yapılan denetiminden çıktı: biri merkezdeki besleme zincirinin 06.01.2027'de sessizce ölmesi (**O-130** — runtime'da düzeltilen hatanın ikizi CI'da duruyor), biri üretilen şifreli dosyanın hiçbir yerden ulaşılamaması (**O-131**), biri de alıcı sertifikasının kutuya hiç varmaması (**O-132**, O-116'nın çözülmeyen yarısı). Aynı tur **O-116**'yı 🟠 → 🟡 taşıdı. Ondan önceki dördü (**O-126…O-129**, §7R) 20.09.2026
 **gecesi**, §302 Faz 1'in ikinci yarısının (`0031`–`0037` + güvenlik düzeltmesi `0035`)
 kutu denetiminden çıktı: biri seed üretim yolunun yazısız kalan kanıt kuralı (**O-126**),
 biri şimdiden konan bir G1 kısıtı (**O-127**: `verwerfungsgrund`/`fehlertext` kutudan bize
@@ -4297,14 +4409,17 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 16 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-106 · O-107 · O-108 · O-110 · O-113 · O-119 · O-123 · **O-127** · **O-128** · **O-129** |
-| `geplant` | 17 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-116 · O-121 |
-| 🟡 `kısmen gelöst` | 21 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · **O-118** · O-120 · **O-125** · **O-126** |
+| `offen` | 19 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-106 · O-107 · O-108 · O-110 · O-113 · O-119 · O-123 · O-127 · O-128 · O-129 · **O-130** · **O-131** · **O-132** |
+| `geplant` | 16 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 |
+| 🟡 `kısmen gelöst` | 22 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · **O-116** · O-118 · O-120 · O-125 · O-126 |
 | `gelöst` | 62 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-109 · **O-114** · **O-117** · **O-122** · **O-124** |
 | `unkritisch` | 13 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 |
 
 > ✅ **20.09.2026 gecesi — toplam satır satır toplandı (12.09'un dersi uygulandı):**
 > 16 + 17 + 21 + 62 + 13 = **129**, ve en yüksek madde numarası **O-129**. Uyuşuyor.
+>
+> ✅ **21.09.2026 — yeniden toplandı:** 19 + 16 + 22 + 62 + 13 = **132**, en yüksek madde
+> numarası **O-132**. Uyuşuyor. (O-116 `geplant`→🟡 taşındı, üç yeni madde `offen` açıldı.)
 >
 > ⚠️ **20.09.2026 — tabloda bir madde eksikti:** **O-106** (kutudaki „Abonnement
 > verwalten"/„Upgrade" butonları SaaS kayıt akışına götürüyor, 14.09.2026'da açıldı)

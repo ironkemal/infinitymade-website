@@ -12,6 +12,22 @@
 
 ---
 
+## 0.1 Durum güncellemesi (21.09.2026, ikinci oturum) — Faz 1'in çoğu zaten bitti
+
+**Bu dosyanın altındaki 🔴/🟠/🟡 işaretleri 20.09.2026'dan sonra hiç güncellenmedi — commit
+geçmişi (`16d8863`, `cb2dc7e`, `5c0a276`, `7e13d75`, `379bd64`, `06067e4`, `7911f91`, `c66232d`,
+`4d34c6f`, `86c5df8`, `33dcaf1`, `b86b775`, hepsi 2026-09-20/21) aşağıdaki adımların **zaten
+tamamlandığını** gösteriyor: **1.1, 1.2, 1.4, 1.5, 1.7, 1.8, 1.9(a,b,c,e,f,g), 1.9c, 1.10,
+1.11(Ö1/Ö3/Ö5).** Bir builder turu 1.1'i "yapılmamış" sanıp denetledi, kodun zaten doğru
+olduğunu buldu — bu satır o karışıklığın bir daha olmaması için.
+
+**Gerçekten açık kalan:** **1.3 (şifreleme, en büyük parça)**, 1.6 (canlı test, izin engeline
+takıldı), 1.9b/1.9d (onprem veri tazeliği/onarım yolu), 1.11 Ö7 (sertifika bitiş uyarı ekranı).
+Her adıma dokunmadan önce **yine de** ilgili "Durum" satırını koda karşı bir kez daha kontrol et
+— bu not bugünün fotoğrafı, gelecekte yine eskiyebilir.
+
+---
+
 ## 0. Bugün neredeyiz
 
 19–20.09.2026'da §302 **dosya formatı** uçtan uca düzeltildi, canlıda gerçek dosya üretilerek
@@ -191,10 +207,31 @@ migration zincirde, döküm tazelenmiş.
 
 ---
 
-### 🔴 Adım 1.3 — CMS EnvelopedData şifrelemesi (K5: zorunlu, opsiyonel değil)
+### 🟡 Adım 1.3 — CMS EnvelopedData şifrelemesi (K5: zorunlu, opsiyonel değil)
 
-**Durum:** İmzalama var (tarayıcıda node-forge → `/upload-signed` → `.p7m`). Şifreleme **yok**.
-`buildEncryptedFilename()` (`filename.js:78`) hazır, çağıran yok.
+**Durum (21.09.2026, commit `8af45da` + `33f502c`):** A (çekirdek şifreleme modülü) ve B
+(V4 korkulukları) **tamamlandı ve iki katmanlı denetimden geçti** — yazan `agy` worker'ı +
+soğuk/bağımsız ikinci `agy` worker'ı + builder'ın kendi satır satır okuması, hepsi bağımsız
+olarak `node --test` (12/12) ve `openssl cms -decrypt` / `openssl asn1parse` ile çapraz
+doğruladı. C (alıcı sertifikası deposu — `empfaenger_zertifikate` tablosu + elle yükleme
+CLI'ı) de tamamlandı. **Açık kalanlar:**
+- Migration `api-backend/db/migrations/0038_empfaenger_zertifikate.sql` dosyası yazıldı ve
+  `db/SCHEMA.sql`/`SCHEMA-RLS.sql`/`REGISTER.md` tazelendi, ama **canlıya MCP ile henüz
+  uygulanmadı** — builder'ın bu oturumda Supabase MCP erişimi yoktu.
+- **D (gerçek `/upload-signed` akışına bağlama) bilinçli olarak yapılmadı** — plan
+  gereği bu turun kapsamı dışında bırakıldı.
+- ITSG Trust Anchor listesi **henüz yok** — `pruefeEmpfaengerZertifikat()` anchor'sız
+  çağrılırsa açık hatayla durur (sessiz geçmiyor), ama gerçek şifreleme bu liste olmadan
+  hiç çalışamaz. Sıradaki adım: O-116 (`onprem` onayı gerekli).
+- Test kapsamında küçük bir boşluk: sadece self-signed/tek-adım anchor senaryosu test
+  edildi, gerçek ara-CA zinciri (anchor ≠ sertifika) test edilmedi — kod yolu var, testi yok.
+- Yeni dosyalar: `api-backend/billing/dta/verschluesselung.js` (çekirdek),
+  `empfaenger-zertifikat-pruefung.js` (V4), `verschluesselung.test.js`,
+  `tools/empfaenger-zertifikat-laden.mjs`.
+
+**Önceki durum (referans için bırakıldı):** İmzalama var (tarayıcıda node-forge →
+`/upload-signed` → `.p7m`). `buildEncryptedFilename()` (`filename.js:78`) hazır, henüz
+hiçbir yerden çağrılmıyor (D'de bağlanacak).
 
 **Sıra kesin** (GGT §5.1): *"zunächst mit seinem privaten Schlüssel signiert und bei der
 folgenden Verschlüsselung unter Nutzung des öffentlichen Schlüssels des Empfängers"* —
@@ -657,6 +694,16 @@ posta/faks/e-posta (`info@arge-ik.de`); süre belirtilmemiş.
   hiçbir resmi belgede yok. Bu bilgi bağlayıcı değildir, plana sadece not olarak düşülüyor.
 - **Bitti ölçütü:** sentetik golden dosyalarımız (Adım 1.9c'nin `podoFixture`'ı dahil)
   TA-Validator'dan hatasız geçiyor.
+  **Podoloji için TAMAMLANDI ✅ (21.09.2026):** Gerçek üretim koduyla (`buildDtaFile()`)
+  üretilen, tamamen sentetik veri içeren, Testindikator=0 işaretli bir test dosyası
+  `portal.davaso.de` TA-Validator'a yüklendi. Sonuç: "Die Datei ist syntaktisch und
+  semantisch korrekt. Herzlichen Glückwunsch." — Verschlüsselung: PLAIN_EDIFACT olarak
+  doğru tanındı. Bu, kasa tarafının kendi doğrulayıcısından gelen ilk bağımsız dış teyit.
+  Physio/Ergo/Logo için henüz denenmedi (vertikal sıralama gereği podoloji öncelikli,
+  bkz. proje kuralları).
+  ⚠️ Bu sonuç bir Zulassung/resmi Testverfahren sonucu **DEĞİL** — yalnız Prüfstufe 2/3'ü
+  kapsıyor, Prüfstufe 1 (Kommunikationspartner kaydı) ve Krankenkasse'nin Zulassung kararı
+  hâlâ ayrı ve gerekli.
 - **Sıralama:** Bu adım Faz 1 kod işleriyle **PARALEL** yürür, 2.1'den **ÖNCE veya bağımsız**
   başlayabilir — kritik yolu bloklamıyor.
 
