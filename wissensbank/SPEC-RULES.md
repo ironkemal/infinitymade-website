@@ -955,15 +955,50 @@
 
 ### Teilnehmer-Zertifikat azami geçerlilik 1 yıl
 - **Kural:** SECON teilnehmer sertifikalarının azami geçerlilik süresi üç yıldan **bir yıla**
-  indirildi.
-- **Kaynak:** Änderungshistorie (GGT Anlagen), Anlage 16 – Security Schnittstelle (SECON)
-- **Geçerlilik:** ⚠️ **belirtilmemiş** — belgedeki „gültig ab" sütunu metin dönüşümünde
-  okunamadı, PDF'ten teyit edilmeli (tahmin yazılmadı)
+  indirildi. „Die Teilnehmer-Zertifikate haben grundsätzlich eine Gültigkeitsdauer von
+  maximal einem Jahr. Für die PCA … 7 Jahre und für die CA 5 Jahre." Geçiş: 31.12.2025'e
+  kadar tamamlanan başvurular eski süreyi (3 yıl) korudu, **02.01.2026'dan itibaren** yalnız
+  1 yıllık sertifika veriliyor (ITSG duyurusu, post-quantum gerekçeli).
+- **Kaynak:** GGT Anlage 16 – Security Schnittstelle (SECON) §4.5, satır 1889-1891
+  (gültig ab 01.01.2026, Stand 02.09.2025) · ITSG duyurusu „Warum Zertifikate bald nur
+  noch ein Jahr lang gültig sind"
+- **Geçerlilik:** 02.01.2026 (21.09.2026'da `gkv-302` tarafından doğrulandı, önceki
+  "belirtilmemiş" notu kapatıldı)
 - **Kodda:** `cert_valid_to` **yazılıyor** (`abrechnung.routes.js:1011`) ve iki yerde **SELECT
   ediliyor** (`:534`, `:2598` — ikisi de `.select('ik_nummer, cert_subject, cert_valid_to')`),
   ama hiçbir yerde bugünün tarihiyle **karşılaştırılmıyor**: süresi dolmuş sertifikayla gönderim
-  engellenmiyor. Ayrıca `blog/heilmittel-selbst-abrechnen-vs-abrechnungszentrum.html:251` hâlâ
-  „einmalig für drei Jahre" diyor → pazarlama metni yanlış bilgi veriyor.
+  engellenmiyor. Ayrıca iki pazarlama sayfası yanlış bilgi veriyordu, 21.09.2026'da düzeltildi:
+  `blog/heilmittel-selbst-abrechnen-vs-abrechnungszentrum.html` ("einmalig für drei Jahre")
+  ve `blog/paragraph-302-dakota-zertifikat-datenannahmestellen.html` ("100–180 €, 2 Jahre" →
+  doğrusu 79 €/49 €, 1 Jahr).
+- **Kapsam:** tüm gruplar
+
+### §302 gönderimi belirli bir ürüne bağlı değildir
+- **Kural:** Aktarım ortamı ve şifreleme prosedürü Anlage A–F'de (GGT, SECON, FTAM, X.400,
+  E-Mail, http/https) standart olarak tanımlıdır; hiçbir spesifikasyon belirli bir yazılım
+  ürününü (ör. ITSG'nin `dakota.le`'si) zorunlu kılmaz. SECON'a uygun PKCS#7/PKCS#10 üreten
+  her yazılım meşrudur — ITSG'nin kendi sitesi sertifikanın "Abrechnungssoftware für
+  Leistungserbringer" (yani bizim yazılımımız) üzerinden de alınabileceğini açıkça yazıyor.
+  38 resmi belgenin tam metin taramasında "dakota" kelimesi **hiç geçmiyor**.
+- **Kaynak:** Anhang 1 zur Anlage 1 TP5, Kap. 4.1 (Stand 31.08.2017, anzuwenden ab
+  01.09.2017), satır 60-83 · GGT Anlage 16 SECON §3.2, §5.4 (gültig ab 01.01.2026) ·
+  itsg.de Trust-Center „Zertifikat beantragen" + FAQ
+- **Geçerlilik:** açık uçlu
+- **Kodda:** `api-backend/billing/dta/` dosya üretimini uyguluyor; şifreleme katmanı henüz
+  yok (Adım 1.3, iptal edilmedi — bu bulgu mimariyi DEĞİL, yalnız 21.09.2026'da
+  `REGULATORY_AUDIT.md`'deki yanlış "dakota zorunlu" iddiasını kapatıyor)
+- **Kapsam:** tüm gruplar
+
+### http/https ile gönderim bilateral anlaşma gerektirir
+- **Kural:** Anlage F (http/https) üzerinden aktarım için gönderen ile Datenannahmestelle
+  arasında **bilaterale Vereinbarung** şarttır: „Zur Übermittlung auf Grundlage dieser
+  Anlage bedarf es der bilateralen Vereinbarung zwischen …" — tek taraflı bir HTTPS POST
+  yeterli değildir, önce DAS ile yazılı/sözlü mutabakat kurulmalı.
+- **Kaynak:** Anhang 1 zur Anlage 1 TP5, Kap. 4.1, Anlage F, satır 82-83
+- **Geçerlilik:** 01.09.2017'den beri
+- **Kodda:** uygulanmamış — gönderim adaptörü henüz yazılmadı. `ABRECHNUNG_ECHTBETRIEB_PLAN.md`
+  Adım 2.1 soru listesine eklendi (21.09.2026): DAS'a hangi Austauschart'ı kabul ettiği ve
+  https için bilateral anlaşma şart olup olmadığı sorulmalı.
 - **Kapsam:** tüm gruplar
 
 ### Bir Nutzdatendatei birden çok SLGA ve SLLA taşıyabilir

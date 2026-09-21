@@ -578,6 +578,28 @@ vorzuhalten"*. On-prem'de müşterinin yedekleme politikasına bağlanıyor → 
   (Yazılı kaynakta yok — 20.09.2026'da `gkv-302` "Absender×Empfänger çifti" eksenini belgeledi
   ama bu alt ayrım hiçbir belgede geçmiyor. `betriebsart_empfaenger` bugün DAS-IK başına
   çalışıyor; cevap "Kassenart başına" çıkarsa anahtar genişler.)
+- **"Welche Austauschart nach Anhang 1 Kap. 4.1 akzeptieren Sie (sFTP/https/E-Mail) und
+  setzt https eine bilaterale Vereinbarung voraus?"** (21.09.2026, `gkv-302`: Anlage F
+  (http/https) spec'te açıkça "bedarf der bilateralen Vereinbarung zwischen…" diyor —
+  tek taraflı bir HTTPS POST'un yeterli olmayabileceği anlamına gelir. Planın "kendi
+  API'mizden göndeririz" varsayımının gerçek riski burada, dakota.le'de değil — bkz.
+  aşağıdaki not.)
+
+> **21.09.2026 — "dakota.le zorunlu mu?" sorusu çürütüldü.** Depo kökünde eski bir denetim
+> dosyası (`REGULATORY_AUDIT.md`) "gönderim zorunlu olarak ITSG'nin dakota.le yazılımını
+> gerektirir" diyordu — Kemal'in beta müşterisinin bilgisayarında gerçekten böyle bir
+> program görmesi bunu doğruluyor sanılmıştı. `gkv-302` 38 resmi belgeyi tam metin taradı:
+> "dakota" hiçbirinde geçmiyor, aktarım standardı (GGT/SECON) ürün-bağımsız, ITSG'nin
+> kendi sitesi sertifikanın "Abrechnungssoftware für Leistungserbringer" üzerinden de
+> alınabileceğini açıkça yazıyor. **1.3 mimarisi değişmiyor** — dakota.le sadece piyasada
+> bulunan opsiyonel bir araç (müşteri isterse bizim ürettiğimiz şifreli dosyayı kendi
+> dakota.le'siyle de gönderebilir, bu bize bir yedek çıkış yolu veriyor). Düzeltilen yan
+> hatalar: sertifika 45-60€/3 yıl değil **79€ (ilk başvuru) / 49€ (online yenileme), 1 yıl**
+> (zaten satır ~aşağıda "1 yıl" doğru yazıyordu); Kostenträgerdatei "sadece ITSG
+> sözleşmesiyle 500-2000€/yıl" iddiası çürük, dosyalar zaten ücretsiz indirilip DB'ye
+> yüklü. `REGULATORY_AUDIT.md`'ye "ÇÜRÜTÜLDÜ" notu düşüldü, canlı blog sayfasındaki
+> (`blog/paragraph-302-dakota-zertifikat-datenannahmestellen.html`) yanlış fiyat/süre
+> düzeltildi.
 
 ### ⛔ 2.2'den (ve ilk Erprobung dosyasından) ÖNCE yapılacak tek teknik adım
 

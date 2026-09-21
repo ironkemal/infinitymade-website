@@ -141,6 +141,15 @@ Eine Datenschutz-Folgenabschätzung ist zwingend bei umfangreicher Verarbeitung 
 
 ## LANDMINE 5: §302 SGB V — ITSG/dakota-Integration
 
+> ⚠️ **ÇÜRÜTÜLDÜ 21.09.2026 — `gkv-302`.** Bu bölümdeki "dakota.le zorunlu" iddiası ve
+> aşağıdaki maliyet kalemlerinin üçü **yanlış/eski**, spec'te (38 resmi belge tam metin
+> tarandı) "dakota" kelimesi hiç geçmiyor. Gerçek durum: aktarım standart bir prosedürdür
+> (GGT/SECON), belirli bir ürüne bağlı değildir — Praxura kendi şifreleme/gönderim
+> katmanını yazabilir, `dakota.le` yalnız piyasadaki opsiyonel araçlardan biri. Doğru
+> rakamlar ve kaynaklar: [[project_billing302_status]] memory'sinde ve
+> `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 1.3'te. Bu bölüm yalnız tarihsel referans için
+> kalıyor, aksiyon almadan önce güncel kaynağa bak.
+
 **Severity: 🟠 Vor erstem Live-Abrechnungskunden**
 
 ### Aktueller Praxura-Status
