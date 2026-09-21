@@ -109,6 +109,77 @@ export function sucheKassen(kassen, query, limit = 300) {
     .slice(0, limit);
 }
 
+// ── IK-Suche (Ops #300, Konsey 21.09.2026) ─────────────────────────────────
+//
+// Der Podologe tippt die IK von Muster 13 — die KARTEN-IK. Sie steht nur in
+// `kostentraeger` (eigene Zeile, die per `abrechnender_kt_ik` auf die abrechnende
+// IK verweist), nicht in `krankenkassen.ik_number` (dort steht die abrechnende
+// IK). DAK: Karte 100167999 → abgerechnet wird bei 105830016.
+//
+// Diese drei Funktionen sind der reine Teil: sie kennen weder Netz noch DOM.
+// Welche Zeilen überhaupt Kassen sind (ohne Rechenzentren und Pflegekassen),
+// entscheidet die View `kostentraeger_auswahl`, nicht dieser Code.
+
+/**
+ * Erst ab drei Ziffern wird nach IK gesucht: 1.020 von 1.043 IK beginnen mit
+ * „10", bei zwei Stellen filtert der Präfix nichts. Bei drei Stellen hat der
+ * größte Präfix („108") 189 Treffer, bei vier („1080") 86 — gemessen am Seed
+ * `0006_seed_kostentraeger.sql` (Obergrenze; die View zeigt weniger Zeilen).
+ * gkv-302 hatte vier empfohlen; drei ist die Entscheidung von Melih (21.09.2026),
+ * dafür ist die Trefferliste länger und scrollt.
+ */
+export const IK_MIN_ZIFFERN = 3;
+
+/**
+ * Ist die Eingabe eine IK-Suche? Dann die Ziffern, sonst null.
+ * Nur reine Ziffern zählen (Leerzeichen und Punkte werden vorher entfernt).
+ * „AOK 105" ist ein Name und bleibt bei der Namenssuche.
+ */
+export function ikAusEingabe(query) {
+  const ziffern = String(query ?? '').replace(/[\s.]/g, '');
+  return /^\d+$/.test(ziffern) && ziffern.length >= IK_MIN_ZIFFERN ? ziffern : null;
+}
+
+/**
+ * IK, an die abgerechnet wird: der Verweis der Karten-IK, sonst die eigene.
+ * Wie `COALESCE(abrechnender_kt_ik, ik)` — nur zählt hier auch ein leerer String
+ * als „fehlt" (`||` statt `??`): eine leere IK im Feld wäre schlechter als die
+ * eigene. Das ist der Wert, den `rzPatKasseIk` speichert
+ * (→ `prescriptions.kostentraeger_ik`).
+ */
+export function aufgeloesteIk(zeile) {
+  return zeile.abrechnender_kt_ik || zeile.ik;
+}
+
+/**
+ * IK-Präfixsuche über Zeilen der View `kostentraeger_auswahl`.
+ * Die Treffer haben dieselbe Form wie Kassen aus `sucheKassen` — so rendern und
+ * wählen `attachKrankenkasseSuche` beide Quellen mit demselben Code. `ik` ist die
+ * AUFGELÖSTE IK (das, was ins Feld kommt), `kartenIk` die abgetippte.
+ * Sortiert nach IK; die Kassenhäufigkeit der Praxis spielt hier keine Rolle.
+ * Limit grosszuegig wie bei `sucheKassen`: der größte Präfix ab drei Ziffern hat
+ * 189 Treffer, und ein zu kleines Limit schnitte hier still Kassen ab. Das
+ * Dropdown scrollt ohnehin (max-height in dashboard.css).
+ */
+export function sucheKostentraeger(zeilen, query, limit = 300) {
+  const ziffern = ikAusEingabe(query);
+  if (!ziffern) return [];
+
+  return (zeilen || [])
+    .filter(z => z.ik && z.ik.startsWith(ziffern))
+    .sort((a, b) => a.ik.localeCompare(b.ik, 'de'))
+    .slice(0, limit)
+    .map(z => ({
+      name: z.name,
+      kurz: z.kurzname || null,
+      ik: aufgeloesteIk(z),
+      kartenIk: z.ik,
+      typ: 'gesetzlich',
+      anzahl: 0,
+      quelle: 'kostentraeger',
+    }));
+}
+
 /**
  * Hängt die Kassenauswahl an ein Textfeld.
  *
