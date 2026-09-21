@@ -421,7 +421,7 @@ wissensbank/podologie/Podologie_Positionsnummern_2026_Filtered.csv   (Z.21 · Z.
       = „Podologische Behandlung (klein/groß)" → LEISTUNG 78010 / 78020
   → api-backend/billing/codes/podologie_positions.js:33-34,75-76   label (amtlich) + kat (Suchanker)
     → api-backend/sync_heilmittel_katalog.js:94   kategorie: p.kat
-      → DB heilmittel_katalog.kategorie   (Migration 0038 · ⚠ SaaS'a HENÜZ UYGULANMADI, 21.09.2026)
+      → DB heilmittel_katalog.kategorie   (Migration 0039 · ⚠ SaaS'a HENÜZ UYGULANMADI, 21.09.2026)
         → RPC search_heilmittel()  LIKE code/kuerzel/label/kategorie
   → module/verordnung-regeln.js:73-76   POD_KATALOG.c   (Heilmittel c) metni)
       ↔ Çapa == POD_KATALOG.c, module/heilmittel-suche-komplex.test.js ile zorlanıyor

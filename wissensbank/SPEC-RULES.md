@@ -150,7 +150,7 @@
 - **Kodda:** `api-backend/billing/codes/podologie_positions.js:33-34,75-76` — `label` amtlich
   wortgleich, `kat: 'Podologische Komplexbehandlung'` yalnız arama çapası →
   `api-backend/sync_heilmittel_katalog.js:94` (`kategorie: p.kat`) → `heilmittel_katalog.kategorie`
-  (Migration `0038_seed_heilmittel_katalog_podo_komplex_suche.sql`); Verordnung tarafı
+  (Migration `0039_seed_heilmittel_katalog_podo_komplex_suche.sql`); Verordnung tarafı
   `module/verordnung-regeln.js:73-76` `POD_KATALOG.c`. Çapa == `POD_KATALOG.c`,
   `module/heilmittel-suche-komplex.test.js` ile zorlanıyor.
 - ⛔ **Açık (gkv-302 bulgusu, 21.09.2026 repo-genelinde grep ile teyit edildi):** >20 dk şartı
