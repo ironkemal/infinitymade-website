@@ -8,7 +8,11 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-18 (Ops #202 — Muster 13 Heilmittel-Limit: max 3 vorrangiges + 1
+> Son güncelleme: 2026-09-21 (DAVASO/IQVIA HSS derinlemesine araştırması — TA-Validator
+> ücretsiz format-doğrulama aracı (Zulassung/Testverfahren yerine geçmez), Zulassung'u
+> Krankenkasse verir Datenannahmestelle değil, test dosyasındaki IK DAS ile kararlaştırılır,
+> BARMER'in Heilmittel-DAS'ı ayrı bir şirket (DDG GmbH). 4 yeni kural.)
+> Önceki: 2026-09-18 (Ops #202 — Muster 13 Heilmittel-Limit: max 3 vorrangiges + 1
 > ergänzendes für Physio/Ergo/Logo, Podologie ohne Aufteilung/Ergänzung. 1 yeni kural.)
 > Önceki: 2026-09-18 (Ops #211 — `gkv-302`'nin Podologie Höchstmenge araştırması:
 > je Verordnung DF/NF/QF 6 · UI1 8 · UI2 4; orientierende Menge yalnız UI'da ve 8. 1 yeni
@@ -1115,6 +1119,44 @@
 - **Geçerlilik:** 01.01.2026
 - **Kodda:** `api-backend/ai/validators/diagnosegruppen.json`
 - **Kapsam:** LHB / BVB / Blankoverordnung tanı eşlemesi
+
+---
+
+# DAVASO / IQVIA HSS — Testverfahren araçları (21.09.2026 araştırması)
+
+### Testverfahren: Zulassung'u Krankenkasse verir, Datenannahmestelle değil
+- **Kural:** §302'de Echtverfahren'e geçiş izni Krankenkasse'den gelir; Datenannahmestelle
+  yalnız Prüfstufe 1–3 sonucunu bildirir, Zulassung vermez.
+- **Kaynak:** Anhang 2 zur Anlage 1 TP5, Kap. 9 §4 + §6 (Stand 10.11.2003)
+- **Geçerlilik:** bugün geçerli (halefi yok)
+- **Kodda:** `kind` üç değerli alanı — Adım 1.7, uygulandı (betriebsart_empfaenger)
+- **Kapsam:** tüm Leistungserbringergruppen, tüm Verordnungsarten
+
+### Test dosyasında kullanılacak IK, DAS ile kararlaştırılır
+- **Kural:** Softwarehersteller-Test'te hangi IK'nın Absender olacağı spec'te sabit değildir;
+  „die Angabe von IKs" açıkça Datenannahmestelle ile mutabakata bırakılmıştır.
+- **Kaynak:** Anhang 2 zur Anlage 1 TP5, Kap. 9 §5 son paragraf
+- **Geçerlilik:** bugün geçerli
+- **Kodda:** `api-backend/billing/dta/software-hersteller-ik.js` (korkuluk, `SOFTWARE_HERSTELLER_IK = null`)
+- **Kapsam:** yalnız Testverfahren (`UNB Testindikator 0`) — Echtbetrieb'te asla
+
+### BARMER'in Heilmittel-Datenannahmestelle'si DDG GmbH (Essen), IK 660510336
+- **Kural:** BARMER (IK 104940005) Abrechnungscode 20/68/71/72 için DAS olarak 660510336'yı
+  gösterir; IQVIA HSS (661430035) BARMER için DAS DEĞİLDİR.
+- **Kaynak:** Kostenträgerdatei `EK05Q226_KE0.txt:1072 ff.` (vdek, gültig ab 01.04.2026),
+  VKG+03 satırları; DAS adı `EK05Q226_KE0.txt:2589`
+- **Geçerlilik:** 01.04.2026 – (Q4 dosyası 01.10.2026'da devralır)
+- **Kodda:** `kostentraeger_annahmestellen` tablosu üzerinden `ladeAnnahmestelle()`
+- **Kapsam:** tüm Heilmittel-Fachbereiche
+
+### DAVASO = IQVIA Health System Services (19.03.2026'dan beri)
+- **Kural:** `edi302@davaso.de` ve `edi302@iqvia-hss.de` aynı kurumun adresleridir;
+  Kostenträgerdatei'de kurum adı dosya sürümüne göre `DAVASO` ya da `IQVIA HSS` görünebilir —
+  IK `661430035` değişmedi ve eşleştirmede **IK esas alınır, ad değil.**
+- **Kaynak:** kvbawue.de / kvn.de duyuruları (Mart–Mayıs 2026) + Kostenträgerdatei IDK satırları
+- **Geçerlilik:** 19.03.2026'dan itibaren
+- **Kodda:** `api-backend/billing/kostentraeger/parser.js` — ad üzerinden eşleştirme yapılmamalı
+- **Kapsam:** tüm Fachbereiche
 
 ---
 

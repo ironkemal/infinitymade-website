@@ -483,6 +483,11 @@ yalnız `billing/codes/*_positions.js`'i izliyor).
 ⚠️ **Faz 2.2'den (Testverfahren) önce kapanmalı** — bayat alıcı listesiyle girilen bir test,
 testin kendisini geçersiz kılar.
 
+⚠️ **21.09.2026 — karıştırılmasın:** IQVIA'ya (=DAVASO) atılacak bir mail bu sorunu
+**ÇÖZMÜYOR.** Kostenträgerdatei'nin yayıncısı IQVIA değil, **GKV-Spitzenverband /
+Bundesverband** — sorun besleme kaynağının kendisi değil, **merkezden kutuya dağıtım
+mekanizmasının eksikliği** (onprem konusu, bkz. O-118). İki ayrı sorun, iki ayrı çözüm.
+
 ---
 
 ### 🟠 Adım 1.9c — Preflight'ın sert `throw`'u sınıflandırılsın (O-113)
@@ -557,7 +562,8 @@ vorzuhalten"*. On-prem'de müşterinin yedekleme politikasına bağlanıyor → 
 
 | # | Ne | Kim | Zorunlu mu | UNB 0035 | Ne alınır |
 |---|---|---|---|---|---|
-| 2.0 | ARGE·IK'ya Klass-68 Softwarehersteller-IK başvurusu | **Praxura** | Opsiyonel ama önerilir — **2.1 ile paralel**, kritik yolu bloklamıyor | — | Yazılı IK tahsisi (Klassifikation 68) |
+| 2.0 | ARGE·IK'ya Klass-68 Softwarehersteller-IK başvurusu | **Praxura** | "İyi olur" sınıfına düştü (21.09.2026) — TA-Validator IK istemiyor, artık olmazsa olmaz değil | — | Yazılı IK tahsisi (Klassifikation 68) |
+| 2.0b | **TA-Validator döngüsü** (`portal.davaso.de` = IQVIA HSS) | **Praxura** | Opsiyonel, ücretsiz, kritik yolu bloklamıyor — **2.1'den ÖNCE/bağımsız başlanabilir** | — | Format geri bildirimi (Prüfstufe 2/3 benzeri) — Zulassung/Prüfstufe-1 kaydı DEĞİL |
 | 2.1 | Datenannahmestelle ile mutabakat + randevu | **Praxura** (Softwarehersteller) | Testverfahren için şart | — | Randevu + teknik irtibat |
 | 2.2 | **Testverfahren** — Prüfstufe 1-3 | Praxura | **Opsiyonel**, şiddetle önerilir | `0` | DAS'tan yazılı test sonucu. Ödeme tetiklemez |
 | 2.3 | **Erprobungsverfahren** | **Praxis**, kendi IK'sıyla | **Zorunlu** · "jederzeit" başlanabilir | `1` | — |
@@ -631,6 +637,28 @@ posta/faks/e-posta (`info@arge-ik.de`); süre belirtilmemiş.
 > yüklü. `REGULATORY_AUDIT.md`'ye "ÇÜRÜTÜLDÜ" notu düşüldü, canlı blog sayfasındaki
 > (`blog/paragraph-302-dakota-zertifikat-datenannahmestellen.html`) yanlış fiyat/süre
 > düzeltildi.
+
+### Adım 2.0b — TA-Validator döngüsü
+
+**21.09.2026 — yeni bulgu.** Kemal telefonla IQVIA HSS'i (eski adıyla DAVASO) aradı ve
+`portal.davaso.de` üzerinde ücretsiz bir self-servis **TA-Validator** aracı keşfetti.
+`gkv-302` derinlemesine araştırdı:
+
+- **Ne:** Kayıt IK istemiyor — yalnız ad + e-posta + şifre, iki adımlı kayıt. Sertifika veya
+  randevu gerektirmiyor. **Bugün, hiçbir ön koşul olmadan kullanılabilir.**
+- **Kapsam — dikkat, sınırlı:** TA-Validator yalnız **Prüfstufe 2/3** (segment/alan/kombinasyon
+  format doğrulaması) sağlıyor. Resmi **Testverfahren'in kendisi DEĞİL.** **Prüfstufe 1**
+  (Kommunikationspartner kaydı, bkz. Faz 2.2/2.1) ve **Zulassung zum Echtverfahren**
+  (yalnız Krankenkasse verir, Anhang 2 §6) **YERİNE GEÇMEZ.**
+- ⛔ **Kural — istisnasız:** TA-Validator'a yalnız `api-backend/billing/dta/fixtures.js`
+  türevi **SENTETİK** veri yüklenir. Asla gerçek hasta verisi gönderilmez — üçüncü tarafa
+  AVV'siz veri aktarımı §203 StGB + DSGVO ihlali olur.
+- **Bağlayıcı değil:** telefonda duyulan "3-4 test sonrası production'a geçilebilir" iddiası
+  hiçbir resmi belgede yok. Bu bilgi bağlayıcı değildir, plana sadece not olarak düşülüyor.
+- **Bitti ölçütü:** sentetik golden dosyalarımız (Adım 1.9c'nin `podoFixture`'ı dahil)
+  TA-Validator'dan hatasız geçiyor.
+- **Sıralama:** Bu adım Faz 1 kod işleriyle **PARALEL** yürür, 2.1'den **ÖNCE veya bağımsız**
+  başlayabilir — kritik yolu bloklamıyor.
 
 ### ⛔ 2.2'den (ve ilk Erprobung dosyasından) ÖNCE yapılacak tek teknik adım
 
@@ -732,7 +760,9 @@ olduğu.
 ```
 ŞİMDİ, paralel:
   2.1 DAS randevusu (Kemal)        ← EN ERKEN başlat, beklemesi var, kodu beklemez
-  2.0 ARGE·IK Klass-68 başvurusu (Kemal) ← 2.1 ile paralel, kritik yolu bloklamıyor
+  2.0b TA-Validator döngüsü (Praxura) ← ücretsiz, IK istemiyor, 2.1'den ÖNCE/bağımsız başlanabilir
+  2.0 ARGE·IK Klass-68 başvurusu (Kemal) ← "iyi olur" sınıfına düştü (21.09.2026, TA-Validator
+       IK istemediği için artık olmazsa olmaz değil) — 2.1 ile paralel, kritik yolu bloklamıyor
   0.5 wissensbank → GGT Anlage 16  ← 1.3 bu belge olmadan başlamaz
   5.1–5.7 hukuk hattı              ← bedava, kod işlerinden bağımsız
   7.  Kemal: gerçek hasta verisi var mı?
