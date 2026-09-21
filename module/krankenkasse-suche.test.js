@@ -220,6 +220,164 @@ test('Vorgabe schneidet den größten Präfix nicht ab — „108" hat im Seed 1
   assert.equal(fn('sucheKostentraeger')(viele, '108').length, 189);
 });
 
+// ── Anschluss ans Feld: sucheKassenfeld(), ikAnzeige(), hinweisZeile() ──────────
+//
+// Ein Supabase-Doppel, das `from().select().like().order().limit()` und die
+// awaitbare Kette kann — wie PostgREST: ein Präfix-`like` ('1001%') und `limit`
+// werden tatsächlich angewandt, ein Fehler kommt als { data: null, error }.
+function sbDoppel({ view = [], viewFehler = null, kassen = [], werfen = false } = {}) {
+  const aufrufe = [];
+  return {
+    aufrufe,
+    from(tabelle) {
+      if (werfen) throw new Error('Netzwerk weg');
+      const st = { tabelle, like: null, order: null, limit: null };
+      aufrufe.push(st);
+      const b = {
+        select() { return b; }, eq() { return b; }, not() { return b; },
+        order(spalte) { st.order = spalte; return b; },
+        like(spalte, muster) { st.like = [spalte, muster]; return b; },
+        limit(n) { st.limit = n; return b; },
+        then(ok, nok) {
+          let res;
+          if (tabelle === 'kostentraeger_auswahl') {
+            if (viewFehler) res = { data: null, error: viewFehler };
+            else {
+              const pre = st.like ? st.like[1].replace(/%$/, '') : '';
+              res = { data: view.filter(z => z.ik.startsWith(pre)).slice(0, st.limit ?? Infinity), error: null };
+            }
+          } else if (tabelle === 'krankenkassen') res = { data: kassen, error: null };
+          else res = { data: [], error: null };       // leads (Häufigkeit)
+          return Promise.resolve(res).then(ok, nok);
+        },
+      };
+      return b;
+    },
+  };
+}
+const tabellen = sb => sb.aufrufe.map(a => a.tabelle);
+const stammKassen = [
+  { name: 'BKK 24', abbreviation: null, ik_number: '104000999', type: 'gesetzlich' },
+  { name: 'BKK 1058 plus', abbreviation: null, ik_number: null, type: 'gesetzlich' },
+  { name: 'Techniker Krankenkasse', abbreviation: 'TK', ik_number: '101575519', type: 'gesetzlich' },
+];
+
+test('Ziffern (≥ 3) fragen NUR die View ab — Präfix, nach IK sortiert, Limit 300', async () => {
+  suche.verwerfeKassenCache?.();
+  const sb = sbDoppel({ view: ktZeilen, kassen: stammKassen });
+  const r = await fn('sucheKassenfeld')(sb, 'mandant-1', '100167999');
+  assert.deepEqual(tabellen(sb), ['kostentraeger_auswahl'], 'krankenkassen darf bei einer IK-Eingabe nicht gelesen werden');
+  assert.deepEqual(sb.aufrufe[0].like, ['ik', '100167999%']);
+  assert.equal(sb.aufrufe[0].order, 'ik');
+  assert.equal(sb.aufrufe[0].limit, 300);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].name, 'DAK-Gesundheit');
+  assert.equal(r[0].ik, '105830016');
+});
+
+test('drei Ziffern reichen; Leerzeichen und Punkte werden vor der Abfrage entfernt', async () => {
+  suche.verwerfeKassenCache?.();
+  const sb = sbDoppel({ view: ktZeilen });
+  const r1 = await fn('sucheKassenfeld')(sb, 'm', '100');
+  assert.deepEqual(sb.aufrufe[0].like, ['ik', '100%']);
+  assert.deepEqual(r1.map(k => k.kartenIk), ['100167999']);
+  await fn('sucheKassenfeld')(sb, 'm', '100 167.999');
+  assert.deepEqual(sb.aufrufe[1].like, ['ik', '100167999%']);
+});
+
+test('bei IK-Eingabe läuft KEINE Namenssuche — auch ein Name mit denselben Ziffern erscheint nicht', async () => {
+  suche.verwerfeKassenCache?.();
+  const sb = sbDoppel({ view: ktZeilen, kassen: stammKassen });
+  const r = await fn('sucheKassenfeld')(sb, 'm', '1058');
+  assert.ok(!r.some(k => k.name === 'BKK 1058 plus'), '„BKK 1058 plus" ist ein Name, keine IK-Treffer');
+  assert.ok(!tabellen(sb).includes('krankenkassen'));
+});
+
+test('unter 3 Ziffern und bei Namen bleibt es bei der Namenssuche — die View wird nicht gefragt', async () => {
+  const sucheKassenfeld = fn('sucheKassenfeld');
+  suche.verwerfeKassenCache?.();
+  const sb1 = sbDoppel({ view: ktZeilen, kassen: stammKassen });
+  const r1 = await sucheKassenfeld(sb1, 'm1', '24');           // zwei Ziffern → Name
+  assert.deepEqual(r1.map(k => k.name), ['BKK 24']);
+  assert.ok(!tabellen(sb1).includes('kostentraeger_auswahl'));
+  suche.verwerfeKassenCache?.();
+  const sb2 = sbDoppel({ view: ktZeilen, kassen: stammKassen });
+  const r2 = await sucheKassenfeld(sb2, 'm2', 'TK');
+  assert.deepEqual(r2.map(k => k.name), ['Techniker Krankenkasse']);
+  assert.ok(!tabellen(sb2).includes('kostentraeger_auswahl'));
+});
+
+test('fehlende View (Migration noch nicht live): leere Liste, eine Warnung, Namenssuche unberührt', async (t) => {
+  suche._warnungZuruecksetzen?.();
+  suche.verwerfeKassenCache?.();
+  const warn = t.mock.method(console, 'warn', () => {});
+  const sb = sbDoppel({ viewFehler: { message: 'relation "public.kostentraeger_auswahl" does not exist', code: '42P01' }, kassen: stammKassen });
+  const sucheKassenfeld = fn('sucheKassenfeld');
+  assert.deepEqual(await sucheKassenfeld(sb, 'm', '100167999'), []);
+  assert.deepEqual(await sucheKassenfeld(sb, 'm', '100167998'), []);
+  assert.equal(warn.mock.callCount(), 1, 'die Warnung kommt nur einmal, nicht bei jedem Tastendruck');
+  assert.deepEqual((await sucheKassenfeld(sb, 'm', 'TK')).map(k => k.name), ['Techniker Krankenkasse']);
+});
+
+test('sucheKassenfeld wirft nie — attachAutocomplete fängt eine Ausnahme aus fetchItems nicht ab', async (t) => {
+  suche._warnungZuruecksetzen?.();
+  suche.verwerfeKassenCache?.();
+  t.mock.method(console, 'warn', () => {});
+  const sucheKassenfeld = fn('sucheKassenfeld');
+  assert.deepEqual(await sucheKassenfeld(sbDoppel({ werfen: true }), 'm', '100167999'), []);
+  assert.deepEqual(await sucheKassenfeld(sbDoppel({ werfen: true }), 'm', 'TK'), []);
+});
+
+test('ikAnzeige: Karte → abrechnende IK, sonst die IK der Zeile', () => {
+  const ikAnzeige = fn('ikAnzeige');
+  assert.equal(ikAnzeige({ quelle: 'kostentraeger', kartenIk: '100167999', ik: '105830016' }), 'IK 100167999 → 105830016');
+  assert.equal(ikAnzeige({ quelle: 'kostentraeger', kartenIk: '105313145', ik: '105313145' }), 'IK 105313145');
+  assert.equal(ikAnzeige({ name: 'X', ik: '101575519', anzahl: 3 }), 'IK 101575519');
+  assert.equal(ikAnzeige({ name: 'Y', ik: null, anzahl: 0 }), '');
+});
+
+test('hinweisZeile: „Karte X → rechnet ab bei Y" bleibt nach der Auswahl stehen (de/en/tr)', () => {
+  const hinweisZeile = fn('hinweisZeile');
+  const dak = { quelle: 'kostentraeger', kartenIk: '100167999', ik: '105830016' };
+  const de = hinweisZeile(dak, '', 'de');
+  assert.match(de, /100167999/); assert.match(de, /105830016/); assert.match(de, /rechnet ab/);
+  const en = hinweisZeile(dak, '', 'en');
+  const tr = hinweisZeile(dak, '', 'tr');
+  assert.notEqual(en, de); assert.notEqual(tr, de);
+  for (const s of [en, tr]) { assert.match(s, /100167999/); assert.match(s, /105830016/); }
+  assert.equal(hinweisZeile(dak, '', 'fr'), de, 'unbekannte Sprache fällt auf Deutsch zurück');
+  assert.equal(hinweisZeile(dak, '', undefined), de);
+});
+
+test('hinweisZeile: kein Hinweis, wenn Karte und Abrechnung dieselbe IK sind oder nichts Besonderes passiert', () => {
+  const hinweisZeile = fn('hinweisZeile');
+  assert.equal(hinweisZeile({ quelle: 'kostentraeger', kartenIk: '105313145', ik: '105313145' }, '', 'de'), '');
+  assert.equal(hinweisZeile({ name: 'TK', ik: '101575519', anzahl: 3 }, '', 'de'), '', 'Namenstreffer, Feld war leer');
+  assert.equal(hinweisZeile(null, '', 'de'), '');
+  assert.equal(hinweisZeile({ name: 'Y', ik: null }, '', 'de'), '');
+});
+
+test('hinweisZeile: gefülltes Feld wird nicht überschrieben — die Abweichung wird sichtbar (Konsey)', () => {
+  const hinweisZeile = fn('hinweisZeile');
+  const dak = { quelle: 'kostentraeger', kartenIk: '100167999', ik: '105830016' };
+  const s = hinweisZeile(dak, '101570104', 'de');           // z. B. von OCR gesetzt
+  assert.match(s, /101570104/); assert.match(s, /105830016/); assert.match(s, /nicht überschrieben/i);
+  assert.equal(hinweisZeile(dak, '105830016', 'de'), hinweisZeile(dak, '', 'de'),
+    'steht schon dieselbe IK im Feld, gibt es nichts zu warnen — nur die Auflösung');
+  assert.match(hinweisZeile({ name: 'TK', ik: '101575519' }, '999999999', 'de'), /999999999/,
+    'gilt auch für Treffer aus der Namenssuche');
+});
+
+test('Anschluss: fetchItems ruft sucheKassenfeld, der Hinweis wird mit textContent gesetzt (kein innerHTML)', () => {
+  assert.match(quelle, /fetchItems:\s*query\s*=>\s*sucheKassenfeld\(\s*sb\s*,\s*ownerId\(\)\s*,\s*query\s*\)/,
+    'attachKrankenkasseSuche muss die Ziffern-Weiche in sucheKassenfeld() benutzen');
+  const start = quelle.indexOf('function zeigeIkHinweis');
+  assert.ok(start > 0, 'zeigeIkHinweis nicht gefunden');
+  const rumpf = quelle.slice(start, start + 900);
+  assert.match(rumpf, /textContent\s*=/);
+  assert.doesNotMatch(rumpf, /innerHTML/, 'IKs kommen aus der Datenbank — kein innerHTML für den Hinweis');
+});
+
 test('aufgeloesteIk: abrechnende IK, sonst die eigene', () => {
   const aufgeloesteIk = fn('aufgeloesteIk');
   assert.equal(aufgeloesteIk({ ik: '100167999', abrechnender_kt_ik: '105830016' }), '105830016');
