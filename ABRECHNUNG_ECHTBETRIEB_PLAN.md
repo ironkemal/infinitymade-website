@@ -657,6 +657,16 @@ posta/faks/e-posta (`info@arge-ik.de`); süre belirtilmemiş.
   hiçbir resmi belgede yok. Bu bilgi bağlayıcı değildir, plana sadece not olarak düşülüyor.
 - **Bitti ölçütü:** sentetik golden dosyalarımız (Adım 1.9c'nin `podoFixture`'ı dahil)
   TA-Validator'dan hatasız geçiyor.
+  **Podoloji için TAMAMLANDI ✅ (21.09.2026):** Gerçek üretim koduyla (`buildDtaFile()`)
+  üretilen, tamamen sentetik veri içeren, Testindikator=0 işaretli bir test dosyası
+  `portal.davaso.de` TA-Validator'a yüklendi. Sonuç: "Die Datei ist syntaktisch und
+  semantisch korrekt. Herzlichen Glückwunsch." — Verschlüsselung: PLAIN_EDIFACT olarak
+  doğru tanındı. Bu, kasa tarafının kendi doğrulayıcısından gelen ilk bağımsız dış teyit.
+  Physio/Ergo/Logo için henüz denenmedi (vertikal sıralama gereği podoloji öncelikli,
+  bkz. proje kuralları).
+  ⚠️ Bu sonuç bir Zulassung/resmi Testverfahren sonucu **DEĞİL** — yalnız Prüfstufe 2/3'ü
+  kapsıyor, Prüfstufe 1 (Kommunikationspartner kaydı) ve Krankenkasse'nin Zulassung kararı
+  hâlâ ayrı ve gerekli.
 - **Sıralama:** Bu adım Faz 1 kod işleriyle **PARALEL** yürür, 2.1'den **ÖNCE veya bağımsız**
   başlayabilir — kritik yolu bloklamıyor.
 
