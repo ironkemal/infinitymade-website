@@ -45,6 +45,10 @@ import {
 import { ladeBetriebsart } from './betriebsart.js';
 // § 302-Abrechnung — Verworfene Nummern festhalten (GoBD-Erklärbarkeit, Migration 0033).
 import { verworfeneNummerFesthalten } from './verworfen.js';
+// § 302-Echtbetrieb, Schritt 1.3 D — CMS EnvelopedData Verschlüsselung & Trust Anchors.
+import { buildEncryptedFilename } from '../dta/filename.js';
+import { verschluesseleFuerEmpfaenger } from '../dta/verschluesselung.js';
+import { ladeItsgTrustAnchors, pruefeTrustAnchorFrische } from '../dta/itsg-trust-anchor.js';
 
 const router = express.Router();
 // ⚠️ Bewusst OHNE Absicherung auf fehlende Umgebungsvariablen: fehlen sie,
@@ -1186,6 +1190,149 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
   }
 });
 
+/**
+ * Schritt 1.3 D — Führt die CMS EnvelopedData Verschlüsselung für eine signierte Abrechnung durch.
+ *
+ * Verzweigungslogik:
+ *   - empfaengerIk fehlt: Überspringen (verschluesselt: false)
+ *   - Fall A: Kein Empfängerzertifikat in public.empfaenger_zertifikate hinterlegt
+ *             -> verschluesselt: false, Hinweis für Praxisinhaber (erwartbarer Zustand, console.warn)
+ *   - Fall B: Zertifikat vorhanden, aber ITSG Trust Anchors fehlen/leer/abgelaufen
+ *             -> verschluesselt: false, Hinweis aus Fehlermeldung (operatives Problem, console.error)
+ *   - Fall C: Zertifikat + Anker vorhanden -> verschluesseleFuerEmpfaenger()
+ *             - Bei Krypto-/V4-Fehler: console.error, verschluesselt: false, Hinweis: e.message
+ *             - Bei Storage-Fehler: console.error, verschluesselt: false, Hinweis mit Storage-Fehler
+ *             - Bei Erfolg: verschluesselt: true, encryptedPath, encryptedSha256
+ *
+ * ⚠️ Fängt alle Fehler intern ab und wirft NIEMALS (damit der Signatur-Upload immer 200 liefert).
+ * ⛔ Ö5: NIEMALS Dateiinhalt, Base64-Payload oder PIN loggen (nur IK, Abrechnungs-ID, SHA-256, Fehler).
+ *
+ * @param {object} opts
+ * @param {string} opts.abrechnungId
+ * @param {string|null} opts.empfaengerIk
+ * @param {string} opts.basePath
+ * @param {Buffer} opts.signedBytes
+ * @param {object} [opts.db]
+ * @param {Function} [opts.ladeAnchors]
+ * @param {Function} [opts.pruefeFrische]
+ * @param {Function} [opts.verschluessele]
+ * @returns {Promise<{ verschluesselt: boolean, verschluesselungHinweis?: string, encryptedPath?: string, encryptedSha256?: string }>}
+ */
+export async function verarbeiteVerschluesselungsSchritt({
+  abrechnungId,
+  empfaengerIk,
+  basePath,
+  signedBytes,
+  db = supabase,
+  ladeAnchors = ladeItsgTrustAnchors,
+  pruefeFrische = pruefeTrustAnchorFrische,
+  verschluessele = verschluesseleFuerEmpfaenger,
+}) {
+  try {
+    if (!empfaengerIk) {
+      return {
+        verschluesselt: false,
+        verschluesselungHinweis: 'Es fehlt eine Datenannahmestellen-Zuordnung (empfaenger_ik) auf der Abrechnung.',
+      };
+    }
+
+    const { data: empfZert, error: certErr } = await db
+      .from('empfaenger_zertifikate')
+      .select('zertifikat_der')
+      .eq('ik', empfaengerIk)
+      .maybeSingle();
+
+    if (certErr) {
+      console.error(`[abrechnung/upload-signed] Fehler beim Laden des Empfängerzertifikats für IK ${empfaengerIk} (Abrechnung ${abrechnungId}):`, certErr.message);
+      return {
+        verschluesselt: false,
+        verschluesselungHinweis: 'Fehler beim Laden des Empfängerzertifikats: ' + certErr.message,
+      };
+    }
+
+    if (!empfZert || !empfZert.zertifikat_der) {
+      // Fall A — kein Zertifikat hinterlegt (häufigster Fall am Anfang, kein Nutzer-/Serverfehler)
+      // ⛔ Ö5: Keine PHI loggen (nur IK + Abrechnungs-ID)
+      console.warn(`[abrechnung/upload-signed] Kein Verschlüsselungszertifikat für IK ${empfaengerIk} (Abrechnung ${abrechnungId})`);
+      return {
+        verschluesselt: false,
+        verschluesselungHinweis: `Für die zuständige Datenannahmestelle (IK ${empfaengerIk}) liegt noch kein Verschlüsselungszertifikat vor. Die signierte Datei ist gespeichert, kann aber noch nicht für den Versand verschlüsselt werden.`,
+      };
+    }
+
+    // Fall B — Zertifikat vorhanden, aber Trust-Anchor-Liste fehlt/leer/abgelaufen
+    // Operatives Problem, das alle Kunden betrifft -> console.error
+    let trustAnchors = [];
+    try {
+      const { anchors, meta } = ladeAnchors();
+      if (!anchors || anchors.length === 0) {
+        throw new Error('ITSG-Trust-Anchor-Liste ist leer oder nicht vorhanden.');
+      }
+      const frische = pruefeFrische({ meta });
+      if (frische?.warnung) {
+        console.warn(`[abrechnung/upload-signed] ITSG-Trust-Anchor-Warnung (IK ${empfaengerIk}, Abrechnung ${abrechnungId}):`, frische.warnung);
+      }
+      trustAnchors = anchors;
+    } catch (anchorErr) {
+      console.error(`[abrechnung/upload-signed] ITSG-Trust-Anchor-Problem (IK ${empfaengerIk}, Abrechnung ${abrechnungId}):`, anchorErr.message);
+      return {
+        verschluesselt: false,
+        verschluesselungHinweis: anchorErr.message,
+      };
+    }
+
+    // Fall C — alles vorhanden: verschluesseleFuerEmpfaenger aufrufen
+    const rawDer = empfZert.zertifikat_der;
+    const empfaengerZertifikatDer = typeof rawDer === 'string'
+      ? Buffer.from(rawDer.startsWith('\\x') ? rawDer.slice(2) : rawDer, 'hex')
+      : Buffer.from(rawDer);
+
+    let encryptedBytes;
+    try {
+      encryptedBytes = verschluessele({
+        signedBytes,
+        empfaengerZertifikatDer,
+        erwarteteIk: empfaengerIk,
+        itsgAnkerZertifikate: trustAnchors,
+      });
+    } catch (vErr) {
+      // V4-Verletzung / fehlerhaftes Zertifikat in eigener DB
+      console.error(`[abrechnung/upload-signed] Verschlüsselung fehlgeschlagen für IK ${empfaengerIk} (Abrechnung ${abrechnungId}):`, vErr.message);
+      return {
+        verschluesselt: false,
+        verschluesselungHinweis: vErr.message,
+      };
+    }
+
+    // Storage-Upload in denselben Bucket 'abrechnungen'
+    const encryptedPath = buildEncryptedFilename(basePath);
+    const encUp = await db.storage.from('abrechnungen').upload(encryptedPath, encryptedBytes, {
+      contentType: 'application/pkcs7-mime',
+      upsert: true,
+    });
+
+    if (encUp.error) {
+      console.error(`[abrechnung/upload-signed] Storage-Upload für verschlüsselte Datei fehlgeschlagen (Abrechnung ${abrechnungId}):`, encUp.error.message);
+      return {
+        verschluesselt: false,
+        verschluesselungHinweis: 'Verschlüsselung erfolgreich, Speichern fehlgeschlagen: ' + encUp.error.message,
+      };
+    }
+
+    return {
+      verschluesselt: true,
+      encryptedPath,
+      encryptedSha256: sha256Hex(encryptedBytes),
+    };
+  } catch (outerErr) {
+    console.error(`[abrechnung/upload-signed] Unerwarteter Fehler bei der Verschlüsselung (Abrechnung ${abrechnungId}):`, outerErr.message);
+    return {
+      verschluesselt: false,
+      verschluesselungHinweis: 'Unerwarteter Fehler bei der Verschlüsselung.',
+    };
+  }
+}
+
 // Receive browser-signed PKCS#7 payload and store as .p7m next to the .dta.
 //
 // ⛔ LOG-REGEL (guvenlik Ö5, 20.09.2026), gilt fuer diese Route und den
@@ -1224,13 +1371,14 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
-      .select('id, owner_id, storage_path')
+      .select('id, owner_id, storage_path, empfaenger_ik')
       .eq('id', req.params.id)
       .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
 
-    const signedPath = (ab.storage_path || `${tenantId}/${req.params.id}/payload`) + '.p7m';
+    const basePath = ab.storage_path || `${tenantId}/${req.params.id}/payload`;
+    const signedPath = basePath + '.p7m';
     const up = await supabase.storage.from('abrechnungen').upload(signedPath, signedBytes, {
       contentType: 'application/pkcs7-mime',
       upsert: true,
@@ -1278,7 +1426,30 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
       }
     }
 
-    return res.json({ ok: true, signedPath });
+    // Schritt 1.3 D — Verschlüsselung (CMS EnvelopedData nach SECON / GGT Anlage 16)
+    // ⚠️ Äußerer try/catch: NIEMALS den HTTP-Status auf 500 umschlagen, wenn bei der
+    //    Verschlüsselung etwas schiefgeht — der Signatur-Upload ist der primäre Zweck.
+    let verschluesselungErgebnis;
+    try {
+      verschluesselungErgebnis = await verarbeiteVerschluesselungsSchritt({
+        abrechnungId: req.params.id,
+        empfaengerIk: ab.empfaenger_ik,
+        basePath,
+        signedBytes,
+      });
+    } catch (outerErr) {
+      console.error(`[abrechnung/upload-signed] Unerwarteter Fehler bei der Verschlüsselung (Abrechnung ${req.params.id}):`, outerErr.message);
+      verschluesselungErgebnis = {
+        verschluesselt: false,
+        verschluesselungHinweis: 'Unerwarteter Fehler bei der Verschlüsselung.',
+      };
+    }
+
+    return res.json({
+      ok: true,
+      signedPath,
+      ...verschluesselungErgebnis,
+    });
   } catch (e) {
     console.error('[abrechnung/upload-signed]', e);
     return res.status(500).json({ error: e.message });
