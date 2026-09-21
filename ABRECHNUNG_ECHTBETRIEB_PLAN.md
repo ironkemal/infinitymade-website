@@ -207,10 +207,31 @@ migration zincirde, döküm tazelenmiş.
 
 ---
 
-### 🔴 Adım 1.3 — CMS EnvelopedData şifrelemesi (K5: zorunlu, opsiyonel değil)
+### 🟡 Adım 1.3 — CMS EnvelopedData şifrelemesi (K5: zorunlu, opsiyonel değil)
 
-**Durum:** İmzalama var (tarayıcıda node-forge → `/upload-signed` → `.p7m`). Şifreleme **yok**.
-`buildEncryptedFilename()` (`filename.js:78`) hazır, çağıran yok.
+**Durum (21.09.2026, commit `8af45da` + `33f502c`):** A (çekirdek şifreleme modülü) ve B
+(V4 korkulukları) **tamamlandı ve iki katmanlı denetimden geçti** — yazan `agy` worker'ı +
+soğuk/bağımsız ikinci `agy` worker'ı + builder'ın kendi satır satır okuması, hepsi bağımsız
+olarak `node --test` (12/12) ve `openssl cms -decrypt` / `openssl asn1parse` ile çapraz
+doğruladı. C (alıcı sertifikası deposu — `empfaenger_zertifikate` tablosu + elle yükleme
+CLI'ı) de tamamlandı. **Açık kalanlar:**
+- Migration `api-backend/db/migrations/0038_empfaenger_zertifikate.sql` dosyası yazıldı ve
+  `db/SCHEMA.sql`/`SCHEMA-RLS.sql`/`REGISTER.md` tazelendi, ama **canlıya MCP ile henüz
+  uygulanmadı** — builder'ın bu oturumda Supabase MCP erişimi yoktu.
+- **D (gerçek `/upload-signed` akışına bağlama) bilinçli olarak yapılmadı** — plan
+  gereği bu turun kapsamı dışında bırakıldı.
+- ITSG Trust Anchor listesi **henüz yok** — `pruefeEmpfaengerZertifikat()` anchor'sız
+  çağrılırsa açık hatayla durur (sessiz geçmiyor), ama gerçek şifreleme bu liste olmadan
+  hiç çalışamaz. Sıradaki adım: O-116 (`onprem` onayı gerekli).
+- Test kapsamında küçük bir boşluk: sadece self-signed/tek-adım anchor senaryosu test
+  edildi, gerçek ara-CA zinciri (anchor ≠ sertifika) test edilmedi — kod yolu var, testi yok.
+- Yeni dosyalar: `api-backend/billing/dta/verschluesselung.js` (çekirdek),
+  `empfaenger-zertifikat-pruefung.js` (V4), `verschluesselung.test.js`,
+  `tools/empfaenger-zertifikat-laden.mjs`.
+
+**Önceki durum (referans için bırakıldı):** İmzalama var (tarayıcıda node-forge →
+`/upload-signed` → `.p7m`). `buildEncryptedFilename()` (`filename.js:78`) hazır, henüz
+hiçbir yerden çağrılmıyor (D'de bağlanacak).
 
 **Sıra kesin** (GGT §5.1): *"zunächst mit seinem privaten Schlüssel signiert und bei der
 folgenden Verschlüsselung unter Nutzung des öffentlichen Schlüssels des Empfängers"* —
