@@ -557,10 +557,36 @@ vorzuhalten"*. On-prem'de müşterinin yedekleme politikasına bağlanıyor → 
 
 | # | Ne | Kim | Zorunlu mu | UNB 0035 | Ne alınır |
 |---|---|---|---|---|---|
+| 2.0 | ARGE·IK'ya Klass-68 Softwarehersteller-IK başvurusu | **Praxura** | Opsiyonel ama önerilir — **2.1 ile paralel**, kritik yolu bloklamıyor | — | Yazılı IK tahsisi (Klassifikation 68) |
 | 2.1 | Datenannahmestelle ile mutabakat + randevu | **Praxura** (Softwarehersteller) | Testverfahren için şart | — | Randevu + teknik irtibat |
 | 2.2 | **Testverfahren** — Prüfstufe 1-3 | Praxura | **Opsiyonel**, şiddetle önerilir | `0` | DAS'tan yazılı test sonucu. Ödeme tetiklemez |
 | 2.3 | **Erprobungsverfahren** | **Praxis**, kendi IK'sıyla | **Zorunlu** · "jederzeit" başlanabilir | `1` | — |
 | 2.4 | **Zulassung zum Echtverfahren** | **Krankenkasse** verir | — | sonra `2` | Yazılı izin. Ancak bundan sonra `kind='echt'` |
+
+### Adım 2.0 — ARGE·IK'ya Klass-68 Softwarehersteller-IK başvurusu
+
+**21.09.2026 — yeni bulgu.** ARGE·IK'dan (dguv.de) **ücretsiz, yazılı** başvuruyla
+"Softwarehersteller im Sozialversicherungswesen für zertifikatsbasierte Testverfahren"
+(Klassifikation 68) adında bir IK alınabilir. Bu, Praxura'nın (Kleingewerbe, şirket türü
+şartı yok) 2.2'deki (opsiyonel) Softwarehersteller-Test'e **kendi başına** girebilmesini
+sağlar — **2.3 Erprobungsverfahren (zorunlu) yine praksisin kendi IK'sı/sertifikasıyla
+yürür, bu değişmiyor.**
+
+**`legal-de` onayladı, üç şartla** (tam gerekçe: `compliance/LEGAL_DECISIONS.md`,
+2026-09-21):
+1. Bu IK **asla** gerçek (Echtbetrieb) faturada Absender-IK olarak kullanılmaz — yalnız
+   Testverfahren'de. Kalıcı korkuluk kodda: `api-backend/billing/dta/software-hersteller-ik.js`
+   (`SOFTWARE_HERSTELLER_IK`, bugün `null`) + `builder.js`'teki
+   `assertNichtSoftwareHerstellerIkAlsAbsender()` — `kind==='echt'` VE Absender-IK bu sabite
+   eşitse throw eder. IK gelince tek satır (sabitin değeri) değişir, kural otomatik aktifleşir.
+2. Başvuru **"InfinityMade, Inh. Yavuz Kemal Demir"** adına yapılır, Kemal'in şahsı değil.
+3. Dışa dönük hiçbir metinde çıplak "ARGE·IK'ya kayıtlıyız" cümlesi kullanılmaz. Standart
+   formülasyon (yalnız ihtiyaç olursa): *"Softwarehersteller-IK (Klassifikation 68) —
+   ausschließlich für das zertifikatsbasierte Testverfahren nach Anhang 2 zur Anlage 1 (TP5).
+   Die Abrechnung nach § 302 SGB V erfolgt durch die Praxis unter ihrem eigenen IK."*
+
+**Yapılacak (Kemal):** `dguv.de/arge-ik/downloads/` → "Erfassungsbeleg IK" formu; gönderim
+posta/faks/e-posta (`info@arge-ik.de`); süre belirtilmemiş.
 
 **2.1 randevusunda sorulacaklar:**
 - Auftragsdatei'nin tam beklenen biçimi nedir?
@@ -568,8 +594,13 @@ vorzuhalten"*. On-prem'de müşterinin yedekleme politikasına bağlanıyor → 
 - **Alıcı sertifikasının fingerprint'ini nereden/hangi kanaldan yayımlıyorsunuz, değiştiğinde
   nasıl haber veriyorsunuz?** (V5'in çalışması için doğrulanabilir bir kaynak şart)
 - Test dosyası hangi kanaldan gönderiliyor?
-- **"Softwarehersteller-Test hangi IK altında koşuyor — bize Test-IK mı veriliyor, yoksa bir
-  Praxis-IK'sı mı gerekiyor?"** (İkincisi ise praxis kendi tıklamak zorunda — S-29/17.09 kararı)
+- **"Softwarehersteller-Test hangi IK altında koşuyor — Test-IK / Praxis-IK / kendi Klass-68
+  IK'mız?"** Somut soru cümlesi (`gkv-302`, 21.09.2026): *"Wir sind Softwarehersteller ohne
+  eigenes IK und haben ein IK der Klassifikation 68 bei der ARGE·IK beantragt. Reicht Ihnen
+  das für einen Softwarehersteller-Test nach Anhang 2 Kap. 9, oder muss der Test unter dem IK
+  einer Praxis laufen? Und: brauchen wir für die Testdatei überhaupt ein Zertifikat, oder
+  nehmen Sie Testdateien über ein Portal entgegen?"* (Praxis-IK yolu ise praxis kendi
+  tıklamak zorunda — S-29/17.09 kararı)
 - Erprobung (Testindikator `1`) ödeme tetikliyor mu? (Spec yalnız Testverfahren için "tetiklemez"
   diyor, Erprobung için sessiz)
 - Logischer Dateiname'deki "Abrechnungsmonat" hizmet ayı mı, oluşturma ayı mı? (Kod oluşturma
@@ -701,6 +732,7 @@ olduğu.
 ```
 ŞİMDİ, paralel:
   2.1 DAS randevusu (Kemal)        ← EN ERKEN başlat, beklemesi var, kodu beklemez
+  2.0 ARGE·IK Klass-68 başvurusu (Kemal) ← 2.1 ile paralel, kritik yolu bloklamıyor
   0.5 wissensbank → GGT Anlage 16  ← 1.3 bu belge olmadan başlamaz
   5.1–5.7 hukuk hattı              ← bedava, kod işlerinden bağımsız
   7.  Kemal: gerçek hasta verisi var mı?

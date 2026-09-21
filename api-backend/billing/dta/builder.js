@@ -28,6 +28,7 @@
 // alle Rezepte — mit einer zweiten Karten-IK ergab das still falsche Summen.
 
 import { calcSessionZuzahlung } from '../zuzahlung/calculator.js';
+import { assertNichtSoftwareHerstellerIkAlsAbsender } from './software-hersteller-ik.js';
 import {
   buildUNB, buildUNH, buildUNT, buildUNZ,
 } from './envelope.js';
@@ -365,6 +366,11 @@ export function buildDtaFile({
     }
   }
   if (!absender?.ik || !empfaenger?.ik) throw new Error('absender.ik and empfaenger.ik are required');
+  // Korkuluk (compliance/LEGAL_DECISIONS.md, 2026-09-21): die künftige
+  // Software-Hersteller-IK (ARGE·IK Klassifikation 68) darf niemals als
+  // Absender einer Echtbetrieb-Datei auftauchen — nur Testverfahren.
+  // No-Op, solange SOFTWARE_HERSTELLER_IK (software-hersteller-ik.js) `null` ist.
+  assertNichtSoftwareHerstellerIkAlsAbsender({ kind, absenderIk: absender.ik });
   if (!Array.isArray(prescriptions) || prescriptions.length === 0) {
     throw new Error('at least one prescription required');
   }
