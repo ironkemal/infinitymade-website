@@ -341,6 +341,12 @@ Format: `TARİH · bildiren ajan · ekran/panel · gözlem (tek cümle, hasta ve
   Üç test kaydının üçünde de sayaç ve ağ isteği doğru çalıştı; kök neden kodda/DB'de
   değil, muhtemelen önceki testin taze navigasyon olmadan (aynı sekmede `switchPanel`
   ile) çalıştırılmasıydı. Ayrıntı: yukarıdaki "Abgerechnet-Gruppe" kaydı.
+- 2026-09-21 · fonksiyon-ustasi · `abrechnung` → ZAA-Modal ("ZAA-Fehler dieser
+  Abrechnung" görünümü, `showZaaErrors`) · Koyu temada okunabilirlik: tablodaki "Lösung"
+  sütunu sabit `color:#444` ile, "Keine Fehler" kutusu sabit `#f0fdf4/#bbf7d0/#166534`
+  ile çiziliyor (CSS değişkeni değil) — aynı modalın upload-sonrası kardeş görünümü
+  (`renderZaaUploadResult`, 21.09.2026 modüle taşındı) değişken kullanıyor, yani iki
+  görünüm koyu temada farklı davranıyor. Düzeltilmedi, sadece kaydedildi.
 
 ---
 
