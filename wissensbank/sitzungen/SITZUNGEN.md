@@ -34,4 +34,4 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
-| 2026-09-21 | Ops #302 | [[2026-09-21_ops-302_komplex-suche-78020]] | lokal umgesetzt und getestet · **nicht committet** · Migration `0038` **nicht live** |
+| 2026-09-21 | Ops #302 | [[2026-09-21_ops-302_komplex-suche-78020]] | umgesetzt, getestet, committet (`8df4143`, `ae61dcb`) · **nicht gepusht** · Migration `0038` **nicht live** |
