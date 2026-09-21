@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-09-21",
  "dateien": 264,
- "funktionen": 2379,
+ "funktionen": 2380,
  "module": [
   "abrechnung",
   "anamnese",
@@ -12825,12 +12825,12 @@
    "uiPfad": []
   },
   {
-   "name": "kostentraegerIkAufloesen",
+   "name": "kostentraegerEndzieleAufloesen",
    "kind": "function",
    "file": "api-backend/lib/rezept-felder.js",
-   "start": 55,
-   "end": 66,
-   "lines": 12,
+   "start": 64,
+   "end": 80,
+   "lines": 17,
    "spiegelHinweis": null,
    "tables": [
     "kostentraeger"
@@ -12840,6 +12840,31 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
+   "calledBy": [
+    "kostentraegerIkAufloesen"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "kostentraegerIkAufloesen",
+   "kind": "function",
+   "file": "api-backend/lib/rezept-felder.js",
+   "start": 103,
+   "end": 115,
+   "lines": 13,
+   "spiegelHinweis": null,
+   "tables": [
+    "kostentraeger"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "kostentraegerEndzieleAufloesen"
+   ],
    "calledBy": [],
    "modules": [],
    "gemeinsam": false,
