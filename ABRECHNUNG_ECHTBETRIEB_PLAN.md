@@ -378,9 +378,19 @@ Korrekturrechnung üretiyor; VKZ 03 Zuzahlungsforderung akışı da bir kez yür
 > `rejected_count` artık hata-satırı değil Beleg-sayısı tutuyor (`abrechnung.routes.js`),
 > ve eşleşmeyen `belegnummer`'lar artık `nichtZugeordnet` sayacıyla API yanıtında ve
 > arayüzde sarı uyarıyla görünür oluyor (önceden sessizce `prescription_id:null`
-> yazılıyordu). Soğuk ikinci `agy` worker'la denetlendi, `node --test` yeşil — ama
-> tarayıcıda CANLI sınanmadı (aynı blokaj). VKZ 03 yarısı zaten ayrı bir Ops-Dashboard
-> kartında, bu maddeye dahil değil.
+> yazılıyordu). Soğuk ikinci `agy` worker'la denetlendi, `node --test` yeşil, **pushlandı**
+> (`27caac6`). VKZ 03 yarısı zaten ayrı bir Ops-Dashboard kartında, bu maddeye dahil değil.
+>
+> **Aynı gün ikinci deneme, ikinci farklı engel.** Kemal veri riskini bilerek kabul edip
+> Podologie Nord hesabıyla devam etmeyi onayladı — ama builder Adım 1'i başlatırken bu
+> sefer **Claude Code'un permission sınıflandırıcısı** ("Modify Shared Resources"
+> gerekçesiyle) hem doğrudan SQL/curl denemesini hem de `agy`'ye devretmeyi iki kez
+> reddetti. Bu, ajanın kendi kararı değildi — bypass edilmedi, ana oturuma bildirildi.
+> Kemal'e üç seçenek sunuldu (ana oturum manuel koştursun / ayarı Kemal açsın / ertele) —
+> **ertelendi.** VKZ 04 canlı testi hâlâ 🟡 açık, kritik yolu (2.3 Erprobung, asıl darboğaz
+> 2.1 DAS randevusu) bloklamıyor. Bir dahaki sefere: ya Kemal ilgili Bash iznini
+> settings'ten ekler, ya da ana oturum (subagent değil) doğrudan koştururken izin
+> istemlerini kendisi onaylar.
 
 ---
 
