@@ -1,0 +1,158 @@
+name: ITSG Trust-Anchor prüfen & automatisch aktualisieren
+
+# Ops-Register onprem/REGISTER.md Eintrag O-116 — "ITSG Trust-Anchor-Liste aktuell halten".
+#
+# Läuft wöchentlich montags um 06:10 UTC (10 Minuten nach preise-check.yml, um Runner-Last
+# zu entkoppeln) sowie manuell per workflow_dispatch:
+#   1. Lädt die offizielle ITSG-Annahmeliste annahme-rsa4096.key herunter.
+#   2. Parst die Zertifikate über api-backend/billing/dta/itsg-trust-anchor.js.
+#   3. Validiert: mindestens 1 Zertifikat vorhanden, kein Anker zum Abrufzeitpunkt bereits abgelaufen.
+#   4. Vergleicht Fingerprints (SHA-256-Set) gegen die im Repository committeten Anker in meta.json.
+#   5. Bei Änderung: Staging-Artefakt hochladen, im zweiten Job committen und pushen.
+#   6. Nach erfolgreichem Push: expliziter Dispatch auf "Build and Publish calendar-api image"
+#      (Variante a aus O-98, da Standard-GITHUB_TOKEN-Pushes keine neuen Workflows auslösen).
+#
+# Sicherheitsarchitektur (guvenlik-Review S-28 / O-99 / O-116):
+#   - Job 1 (`anker-abrufen`): nur Lesezugriff (contents: read), npm ci --ignore-scripts,
+#     validiert und schreibt in ein isoliertes Staging-Verzeichnis.
+#   - Job 2 (`anker-committen`): Schreibzugriff (contents: write), führt KEINEN node-Import
+#     irgendeiner Repository-Datei aus (reines Text-/Dateikopieren), Rebase vor Commit (O-98).
+
+on:
+  schedule:
+    - cron: '10 6 * * 1'   # wöchentlich Montag 06:10 UTC (ca. 08:10 Sommerzeit / 07:10 Winterzeit Berlin)
+  workflow_dispatch: {}    # manueller Test-Trigger
+
+permissions:
+  contents: read
+
+jobs:
+  anker-abrufen:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write   # actions/upload-artifact@v4 benötigt dies explizit
+    outputs:
+      changed: ${{ steps.abrufen.outputs.changed }}
+      needs_review: ${{ steps.abrufen.outputs.needs_review }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Abhängigkeiten installieren
+        working-directory: ./api-backend
+        run: npm ci --no-audit --no-fund --ignore-scripts
+
+      - name: ITSG Annahmeliste herunterladen
+        run: |
+          curl -fsSL -o annahme-rsa4096.key https://trustcenter-data.itsg.de/dale/annahme-rsa4096.key
+
+      - name: Annahmeliste parsen, validieren und stagen
+        id: abrufen
+        run: node tools/itsg-trust-anchor-ci-abrufen.mjs annahme-rsa4096.key
+
+      - name: Staging-Artefakt hochladen (nur bei Änderung)
+        if: steps.abrufen.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: trust-anchors-aenderung
+          path: api-backend/_staging_trust_anchors
+          retention-days: 3
+
+      - name: Telegram — Aktualisierung angekündigt
+        if: steps.abrufen.outputs.changed == 'true'
+        working-directory: ./api-backend
+        run: |
+          MSG=$(printf '✅ ITSG Trust-Anchor geprüft, Commit folgt gleich (zweiter Job).\n\n%s' "$(cat trust-anchors-telegram-message.txt)")
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=$MSG"
+
+      - name: Telegram — Manuelle Prüfung nötig (abgelaufene Anker gefunden)
+        if: steps.abrufen.outputs.needs_review == 'true'
+        working-directory: ./api-backend
+        run: |
+          MSG=$(printf '⚠️ ITSG Trust-Anchor: Manuelle Prüfung nötig (kein automatischer Commit).\n\n%s' "$(cat trust-anchors-telegram-message.txt)")
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=$MSG"
+
+  anker-committen:
+    needs: anker-abrufen
+    if: needs.anker-abrufen.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write   # für gh workflow run Dispatch
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Staging-Artefakt herunterladen
+        uses: actions/download-artifact@v4
+        with:
+          name: trust-anchors-aenderung
+          path: api-backend/_trust_anchors_artefakt
+
+      - name: main-Stand ziehen, Dateien kopieren, committen und pushen (mit Retry)
+        run: |
+          git config user.name "praxura-trust-anchor-bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          # S-28: Keine Ausführung von dynamischem Code aus dem Checkout im schreibberechtigten Job.
+          # Nur bash, git und Dateikopieren.
+          for versuch in 1 2 3 4 5; do
+            git pull --rebase origin main
+
+            mkdir -p api-backend/billing/dta/trust-anchors
+            cp -r api-backend/_trust_anchors_artefakt/* api-backend/billing/dta/trust-anchors/
+
+            git add api-backend/billing/dta/trust-anchors/
+            git commit \
+              -m "chore(302): ITSG Trust-Anchor-Liste aktualisiert" \
+              -m "Automatisch aktualisiert durch .github/workflows/itsg-trust-anchor-check.yml (Ops-Register O-116). Vertrauensanker-Zertifikate für § 302 SGB V Datenübermittlung (annahme-rsa4096.key)." \
+              -m "Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+
+            if git push; then
+              echo "Push erfolgreich (Versuch $versuch)."
+
+              # O-98-Nachtrag: Ein Push mit Standard-GITHUB_TOKEN löst keinen nachgelagerten
+              # push-Workflow aus. Der explizite workflow_dispatch stößt den Image-Build an,
+              # damit die Kunden-Box den neuen Trust-Anchor-Stand zeitnah erhält.
+              gh workflow run "Build and Publish calendar-api image" --ref main
+              exit 0
+            fi
+
+            echo "Push fehlgeschlagen (Versuch $versuch) — setze Arbeitsverzeichnis zurück und versuche erneut."
+            git reset --hard HEAD~1
+          done
+
+          echo "::error::Push nach 5 Versuchen fehlgeschlagen — manuell prüfen."
+          exit 1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Telegram — Aktualisierung abgeschlossen
+        if: success()
+        run: |
+          MSG="✅ ITSG-Trust-Anchor-Liste erfolgreich aktualisiert, main committet, Image-Build angestoßen."
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=$MSG"
+
+      - name: Telegram — Commit/Push fehlgeschlagen
+        if: failure()
+        run: |
+          MSG="⚠️ ITSG-Trust-Anchor: anker-committen Job ist gescheitert (5 Versuche). Bitte Actions-Log prüfen — kein automatischer Commit gelandet."
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=$MSG"
