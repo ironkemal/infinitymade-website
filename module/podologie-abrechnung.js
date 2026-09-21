@@ -1073,3 +1073,39 @@ export function setPodVorwahl(id) {
 export function getPodVerordnung(id) {
   return findVord(id);
 }
+
+/**
+ * Rendert das Ergebnis eines ZAA-Antwortdatei-Uploads (POST /upload-zaa).
+ *
+ * Zeigt Zusammenfassung (akzeptiert / abgelehnt), gelbe Warnbox bei nicht
+ * zuordenbaren Absetzungen (Bulgu 6) und die Fehlertabelle.
+ */
+export function renderZaaUploadResult(json, { escapeHtml } = {}) {
+  const esc = escapeHtml || ctx?.escapeHtml || (s => s);
+  const summary = json?.errorCount
+    ? `<div style="padding:10px;background:var(--danger-dim, rgba(239,68,68,0.12));border:1px solid var(--danger, #ef4444);border-radius:6px;margin-bottom:10px;color:var(--danger, #ef4444);">
+         ${json.errorCount} Fehler erkannt — Abrechnung als <strong>abgelehnt</strong> markiert.
+       </div>`
+    : `<div style="padding:10px;background:var(--success-dim, rgba(34,197,94,0.12));border:1px solid var(--success, #22c55e);border-radius:6px;margin-bottom:10px;color:var(--success, #22c55e);">
+         Keine Fehler erkannt — Abrechnung als <strong>akzeptiert</strong> markiert.
+       </div>`;
+
+  const warnung = (json?.nichtZugeordnet && json.nichtZugeordnet > 0)
+    ? `<div style="padding:10px;background:var(--warning-dim, rgba(245,158,11,0.12));border:1px solid var(--warning, #f59e0b);border-radius:6px;margin-bottom:10px;color:var(--warning-text, var(--warning, #f59e0b));">
+         ${json.nichtZugeordnet} Absetzung(en) konnte(n) keinem Beleg zugeordnet werden — bitte manuell prüfen.
+       </div>`
+    : '';
+
+  const rows = (json?.errors || []).map(e => `
+    <tr>
+      <td><code>${esc(e.code)}</code></td>
+      <td>${esc(e.belegnummer || '—')}</td>
+      <td>${esc(e.uebersetzung || e.text || '')}</td>
+      <td style="color:var(--text-muted);">${esc(e.loesung || '')}</td>
+    </tr>
+  `).join('');
+
+  return summary + warnung + (rows
+    ? `<table class="data-table"><thead><tr><th>Code</th><th>Beleg</th><th>Fehler</th><th>Lösung</th></tr></thead><tbody>${rows}</tbody></table>`
+    : '');
+}

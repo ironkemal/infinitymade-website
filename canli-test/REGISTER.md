@@ -288,6 +288,32 @@ Format: `TARİH · bildiren ajan · ekran/panel · gözlem (tek cümle, hasta ve
 - 2026-09-19 · canli-test · `podologie-billing` (Tagesbehandlung) · Behandlungsdatum
   gelecek tarihe izin veriyor; §302 preflight sonra bütün dosyayı reddediyor
   (S:01005/S:01006). — `c4332d5` geri-soru ekledi, canlıda tekrar sınanmadı.
+- 2026-09-21 · builder · Korrekturverfahren (VKZ 04) canlı-test denemesi · **AÇIK,
+  ENGELLENDİ.** `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 1.6'yı kapatmak için planlanan
+  8 adımlık canlı test turu **Adım 0'da durdu.** `qa_credentials.py`'deki
+  `PRAXURA_QA_EMAIL` hesabının `betriebsart` alanı gerçekten `'test'` (literal kapı
+  geçti) — ama bu hesap sentetik/boş bir sandbox tenant DEĞİL, **gerçek, aktif bir
+  beta müşterisinin hesabı** (plan=professional, plan_status=active, 22 lead, 19
+  prescription, 4 abrechnung — canlı üretim verisi). Plandaki Adım 1-8, bu tenant'ın
+  GERÇEK `prescriptions` kayıtlarını sahte ZAA ile "abgesetzt" işaretleyip
+  Korrekturverfahren ile gerçek fatura numaralarını değiştirecekti — `betriebsart='test'`
+  kapısı yalnızca DAS'a giden dosyanın Testindikator'ünü koruyor, DB'deki gerçek
+  müşteri kayıtlarını korumuyor. Kullanıcıya soruldu, cevap bekleniyor. Öneri: ayrı,
+  gerçekten boş/sentetik bir test-tenant açılsın (leads/prescriptions sıfırdan
+  üretilmiş, hiçbir gerçek hastaya ait olmayan) ve `PRAXURA_QA_EMAIL` ona işaret
+  etsin — bugünkü QA hesabı hem login/smoke-test hem de yıkıcı billing-test için
+  aynı anda kullanılmamalı.
+- ✅ 2026-09-21 · builder (Görev B, aynı tur) · `podologie-billing` ZAA-Upload sonucu ·
+  İki gerçek bug düzeltildi ve soğuk ikinci `agy` worker'la denetlendi (GEÇTİ):
+  (1) `abrechnung.rejected_count` hata-satırı sayısını değil Beleg sayısını
+  (`vordGrund.size`) tutuyor artık — eskisi `module/abrechnung-status.js`'teki
+  "teilweise/vollständig abgesetzt" ayrımını bozabiliyordu; (2) ZAA dosyasındaki bir
+  `belegnummer` hiçbir `prescriptions` kaydıyla eşleşmezse artık API yanıtında
+  `nichtZugeordnet` sayacıyla görünür ve arayüzde sarı uyarı çıkıyor (eskiden
+  `prescription_id:null` sessizce yazılıyordu). ⚠️ **Yalnız `node --test` +
+  statik diff denetimiyle doğrulandı — tarayıcıda gerçek bir upload-zaa akışıyla
+  CANLI sınanmadı** (yukarıdaki blokaj yüzünden). Bir sonraki canlı test turunda,
+  yeni sentetik tenant açılınca bu iki davranış da tarayıcıdan doğrulanmalı.
 - ✅ ~~2026-09-20 · fonksiyon-ustasi'nin bildirdiği, canli-test canlıda gözledi ·
   `abrechnung` (Verlauf + Detay) · `status='verworfen'` arayüzde karşılıksız~~ —
   `69c7a0e` ile düzeldi: satır listenin sonunda, özet sayacına dahil değil,

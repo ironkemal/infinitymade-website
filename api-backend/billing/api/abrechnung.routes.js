@@ -1342,27 +1342,25 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
     // Wipe stale errors for this abrechnung (re-upload semantics).
     await supabase.from('zaa_fehler').delete().eq('abrechnung_id', req.params.id);
 
-    const inserts = parsed.errors.map(e => ({
-      abrechnung_id:   req.params.id,
-      prescription_id: e.belegnummer ? (belegToRxId.get(e.belegnummer) || null) : null,
-      fehler_code:     e.code,
-      fehler_text:     e.text || null,
-      uebersetzung:    e.uebersetzung || null,
-      loesung_hint:    e.loesung || null,
-      status:          'offen',
-    }));
+    let nichtZugeordnet = 0;
+    const inserts = parsed.errors.map(e => {
+      const rxId = e.belegnummer ? (belegToRxId.get(e.belegnummer) || null) : null;
+      if (e.belegnummer && !rxId) nichtZugeordnet++;
+      return {
+        abrechnung_id:   req.params.id,
+        prescription_id: rxId,
+        fehler_code:     e.code,
+        fehler_text:     e.text || null,
+        uebersetzung:    e.uebersetzung || null,
+        loesung_hint:    e.loesung || null,
+        status:          'offen',
+      };
+    });
 
     if (inserts.length) {
       const { error: insErr } = await supabase.from('zaa_fehler').insert(inserts);
       if (insErr) return res.status(500).json({ error: 'zaa_fehler insert failed: ' + insErr.message });
     }
-
-    const newStatus = inserts.length ? 'rejected' : 'accepted';
-    await supabase.from('abrechnung').update({
-      status:          newStatus,
-      rejected_count:  inserts.length,
-      zaa_uploaded_at: new Date().toISOString(),
-    }).eq('id', req.params.id);
 
     // ⛔ EINE Regel für beide Zweige: 'abgesetzt' mit Grund und Datum an der
     // Verordnung. Kein stiller Rücksprung.
@@ -1390,6 +1388,14 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
       const txt = [e.code, e.uebersetzung || e.text].filter(Boolean).join(' — ');
       vordGrund.set(vId, [...(vordGrund.get(vId) || []), txt]);
     }
+
+    const newStatus = inserts.length ? 'rejected' : 'accepted';
+    await supabase.from('abrechnung').update({
+      status:          newStatus,
+      rejected_count:  vordGrund.size,
+      zaa_uploaded_at: new Date().toISOString(),
+    }).eq('id', req.params.id);
+
     const heute = new Date().toISOString().slice(0, 10);
     for (const [vId, gruende] of vordGrund) {
       await supabase.from('prescriptions').update({
@@ -1447,6 +1453,7 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
       status: newStatus,
       errors: parsed.errors,
       verordnungenAbgesetzt: vordGrund.size,
+      nichtZugeordnet,
       zeilenAktualisiert,
       filename: filename || null,
     });

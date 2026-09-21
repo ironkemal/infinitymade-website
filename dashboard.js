@@ -35,7 +35,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260920u';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260921';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260918';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260920s';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
@@ -17446,24 +17446,7 @@ async function runZaaUpload() {
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
 
-    const summary = json.errorCount
-      ? `<div style="padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;margin-bottom:10px;color:#991b1b;">
-           ${json.errorCount} Fehler erkannt — Abrechnung als <strong>abgelehnt</strong> markiert.
-         </div>`
-      : `<div style="padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;margin-bottom:10px;color:#166534;">
-           Keine Fehler erkannt — Abrechnung als <strong>akzeptiert</strong> markiert.
-         </div>`;
-    const rows = (json.errors || []).map(e => `
-      <tr>
-        <td><code>${escapeHtml(e.code)}</code></td>
-        <td>${escapeHtml(e.belegnummer || '—')}</td>
-        <td>${escapeHtml(e.uebersetzung || e.text || '')}</td>
-        <td style="color:#444;">${escapeHtml(e.loesung || '')}</td>
-      </tr>
-    `).join('');
-    out.innerHTML = summary + (rows
-      ? `<table class="data-table"><thead><tr><th>Code</th><th>Beleg</th><th>Fehler</th><th>Lösung</th></tr></thead><tbody>${rows}</tbody></table>`
-      : '');
+    out.innerHTML = renderZaaUploadResult(json, { escapeHtml });
 
     showToast(json.errorCount ? `${json.errorCount} Fehler importiert.` : 'Abrechnung akzeptiert.');
     btn.disabled = false;

@@ -363,6 +363,25 @@ ama uçtan uca hiç koşturulmadı.
 **Bitti ölçütü:** Sahte bir ZAA (Absetzung) dosyası yüklendiğinde sistem doğru URI'li bir VKZ 04
 Korrekturrechnung üretiyor; VKZ 03 Zuzahlungsforderung akışı da bir kez yürütülmüş.
 
+> ⚠️ **21.09.2026 — VKZ 04 yarısı DENENDİ, ENGELLENDİ (henüz ✅ değil).** `gkv-302`'nin
+> hazırladığı 8 adımlık canlı test planı Adım 0'da durduruldu: `qa_credentials.py`'deki
+> QA hesabının `betriebsart='test'` olduğu doğru, ama hesabın kendisi sentetik bir
+> sandbox değil — **gerçek, aktif bir beta müşterisinin canlı hesabı** (Podologie Nord,
+> plan=professional/active, 22 lead, 19 prescription, 4 abrechnung). Plan bu tenant'ın
+> gerçek reçetelerini sahte ZAA ile "abgesetzt" işaretleyip Korrekturverfahren ile gerçek
+> fatura numaralarını değiştirecekti — geri alınamaz/karışıklık yaratan bir müdahale.
+> Kullanıcıya soruldu, ayrı bir sentetik test-tenant açılana kadar bekliyor. Detay:
+> `canli-test/REGISTER.md` → Bildirilen anomaliler, 2026-09-21 girdisi.
+>
+> **Bu turda yan ürün olarak iki gerçek bug bulunup düzeltildi** (test planına hazırlanırken
+> kod okunurken ortaya çıktı, canlı teste bağlı değildi): `upload-zaa` route'unda
+> `rejected_count` artık hata-satırı değil Beleg-sayısı tutuyor (`abrechnung.routes.js`),
+> ve eşleşmeyen `belegnummer`'lar artık `nichtZugeordnet` sayacıyla API yanıtında ve
+> arayüzde sarı uyarıyla görünür oluyor (önceden sessizce `prescription_id:null`
+> yazılıyordu). Soğuk ikinci `agy` worker'la denetlendi, `node --test` yeşil — ama
+> tarayıcıda CANLI sınanmadı (aynı blokaj). VKZ 03 yarısı zaten ayrı bir Ops-Dashboard
+> kartında, bu maddeye dahil değil.
+
 ---
 
 ### 🟠 Adım 1.7 — `kind` ÜÇ değerli olsun (test / erprobung / echt)
