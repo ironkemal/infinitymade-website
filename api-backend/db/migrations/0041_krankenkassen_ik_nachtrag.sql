@@ -74,7 +74,7 @@ BEGIN
     LEFT JOIN public.krankenkassen k ON k.id = p.id
    WHERE k.id IS NULL OR k.ik_number IS DISTINCT FROM p.neu;
   IF abweichung IS NOT NULL THEN
-    RAISE EXCEPTION '0040 krankenkassen_ik_nachtrag: Zeile weicht vom Sollwert ab: %', abweichung;
+    RAISE EXCEPTION '0041 krankenkassen_ik_nachtrag: Zeile weicht vom Sollwert ab: %', abweichung;
   END IF;
 
   -- Selbstprüfung 2: jede geschriebene IK ist ein echter Kostenträger (FK-Ziel von
@@ -85,7 +85,7 @@ BEGIN
    WHERE p.neu IS NOT NULL
      AND NOT EXISTS (SELECT 1 FROM public.kostentraeger t WHERE t.ik = p.neu AND t.datensatz_status = 'echt');
   IF ohne_ziel IS NOT NULL THEN
-    RAISE EXCEPTION '0040 krankenkassen_ik_nachtrag: IK nicht in kostentraeger (echt): %', ohne_ziel;
+    RAISE EXCEPTION '0041 krankenkassen_ik_nachtrag: IK nicht in kostentraeger (echt): %', ohne_ziel;
   END IF;
 
   -- Selbstprüfung 3: keine der neun Mock-IKs steht mehr in krankenkassen.
@@ -94,7 +94,7 @@ BEGIN
     FROM public.krankenkassen k
    WHERE k.ik_number IN (SELECT p.alt FROM jsonb_to_recordset(plan) AS p(id uuid, kasse text, neu text, alt text) WHERE p.alt IS NOT NULL);
   IF uebrig IS NOT NULL THEN
-    RAISE EXCEPTION '0040 krankenkassen_ik_nachtrag: Mock-IK steht noch: %', uebrig;
+    RAISE EXCEPTION '0041 krankenkassen_ik_nachtrag: Mock-IK steht noch: %', uebrig;
   END IF;
 END
 $mig$;

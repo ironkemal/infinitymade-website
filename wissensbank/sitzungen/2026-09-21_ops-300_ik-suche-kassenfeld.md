@@ -4,7 +4,7 @@ datum: 2026-09-21
 typ: sitzung
 ticket: "Ops #300"
 bereich: podologie, abrechnung
-status: Frontend am Feld angeschlossen (4078c8c) und Migration 0039 geschrieben (a2d8e68), Konsey-Tutanak committet (8f6db9b), nicht gepusht · die View ist NICHT live angewandt, bis dahin findet die IK-Suche in der App nichts · erster Teil des Codes steht durch ein Git-Race in fa86f5b (#301-Commit)
+status: Frontend am Feld angeschlossen (4078c8c) und Migration 0040 geschrieben (a2d8e68), Konsey-Tutanak committet (8f6db9b), nicht gepusht · die View ist NICHT live angewandt, bis dahin findet die IK-Suche in der App nichts · erster Teil des Codes steht durch ein Git-Race in fa86f5b (#301-Commit)
 tags: [sitzung, ik-suche, kassenfeld, kostentraeger, karten-ik, muster-13, konsey, ops-board]
 verwandt: ["[[SITZUNGEN]]", "[[REGISTER]]", "[[SPEC-RULES]]", "[[INDEX]]", "[[2026-09-21_ops-302_komplex-suche-78020]]", "[[2026-09-21_ops-303_heilmittel-aufteilung-nur-physio-ergo]]"]
 ---
@@ -62,7 +62,7 @@ nur in `kostentraeger`, nicht in `krankenkassen.ik_number` (dort steht die abrec
   `<html lang>`). Ein gefülltes Feld wird nicht überschrieben, die Abweichung wird sichtbar. Fehlt die View: leere Liste + **eine**
   Warnung, die Namenssuche bleibt unberührt; `sucheKassenfeld()` wirft nie (`attachAutocomplete` fängt eine Ausnahme aus
   `fetchItems` nicht ab). `dashboard.js`: nur der Cache-Buster der Importzeile, Zeilenzahl gleich.
-- **Migration** `api-backend/db/migrations/0039_kostentraeger_auswahl_view.sql` (siehe [[REGISTER]], Eintrag `kostentraeger_auswahl`):
+- **Migration** `api-backend/db/migrations/0040_kostentraeger_auswahl_view.sql` (siehe [[REGISTER]], Eintrag `kostentraeger_auswahl`):
   `security_invoker`, `REVOKE ALL` inkl. `service_role`, `GRANT SELECT` nur `authenticated`. Filter am Box-Seed **offline nachgerechnet**:
   1043 → **893** Zeilen, keine bekannten Rechenzentren drin. Rund ein Dutzend ausgeschlossener Zeilen hat einen schlichten Kassennamen
   (AOK NORDWEST, DAK ×2, TK …) — dort kein Treffer, keine falschen Daten.
@@ -81,7 +81,7 @@ nur in `kostentraeger`, nicht in `krankenkassen.ik_number` (dort steht die abrec
 
 ## Offen
 
-- **Melih wendet die Migration `0039` live an** (Supabase-MCP nicht autorisiert; der SQL-Editor geht auch) — erst dann wirkt die
+- **Melih wendet die Migration `0040` live an** (Supabase-MCP nicht autorisiert; der SQL-Editor geht auch) — erst dann wirkt die
   IK-Suche. **Vorher/nachher** die Abfragen aus dem Kopf der Datei. **Reihenfolge:** View live, **dann** das Frontend pushen.
 - **Danach:** `db/SCHEMA.sql`, `SCHEMA-RLS.sql`-Kopf und der Vermerk „SaaS: angewandt" als **zweiter Commit** (der Dump ist ein
   Live-Abzug; `SKIP_MIGRATION_GATE=1`).

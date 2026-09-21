@@ -197,7 +197,7 @@ function warneEinmal(grund) {
 }
 
 /**
- * Präfixabfrage gegen die View `kostentraeger_auswahl` (Migration 0039) — pro
+ * Präfixabfrage gegen die View `kostentraeger_auswahl` (Migration 0040) — pro
  * Eingabe serverseitig statt die ganze Tabelle zu laden: kein Cache, der
  * veralten könnte, und kein PostgREST-Zeilenlimit. `ziffern` sind nur Ziffern
  * (`ikAusEingabe`), es gelangt also kein Platzhalter in das `like`.

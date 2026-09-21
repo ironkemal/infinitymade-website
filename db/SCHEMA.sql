@@ -1984,7 +1984,7 @@ CREATE TABLE krankenkassen (
 --   ⚠️ ik_number ist eine VORBELEGUNG, nur wenn die Kasse genau EINEN Kostenträger hat
 --      (Ops #301, Konsey 21.09.2026). Live 21.09.2026: 76 von 94 gefüllt, davon 9 IKs,
 --      die in der Kostenträgerdatei nicht existieren (alter Mock-Seed) — die Migration
---      0040_krankenkassen_ik_nachtrag räumt sie auf (vorbereitet, noch nicht angewandt).
+--      0041_krankenkassen_ik_nachtrag räumt sie auf (vorbereitet, noch nicht angewandt).
 --      Kassen mit mehreren echten IKs (AOK BW: 14 gleichrangige Bezirks-IKs) bleiben NULL:
 --      die richtige IK hängt an der Versichertenkarte, nicht an der Kasse.
 --      Details und Begründung: db/REGISTER.md, Eintrag `krankenkassen`.

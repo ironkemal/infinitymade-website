@@ -93,7 +93,7 @@ ileride bunu gerçekten doğrulayabilsin.
 `schema-zaehler.js`'teki on sayacın hiçbirine dokunmadığını **yazılı bir türetimle** gösterebiliyorsa
 (ör. `CREATE VIEW` — `public_tablo` yalnız `BASE TABLE` sayar —, yalnız `REVOKE`/`GRANT`, bir `CHECK`,
 nullable kolon), `bis_version` yeni bir fiziksel ölçüm olmadan yükseltilebilir. Türetim
-`erwartete-zaehler.json`'da `_hinweis_NNNN` olarak durur (örnekler: 0024, 0025, 0033, 0035, 0039) ve
+`erwartete-zaehler.json`'da `_hinweis_NNNN` olarak durur (örnekler: 0024, 0025, 0033, 0035, 0040) ve
 **"nachgerechnet, nicht gemessen"** diye işaretlenir; `zaehler`/`gemessen_am` değişmez. Sayaç sorgularından
 birine değen her değişiklikte (yeni tablo, policy, fonksiyon, trigger, index) türetim yetmez — o zaman
 taze bir kutuda ölçülür.
