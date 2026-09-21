@@ -35,5 +35,5 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
 | 2026-09-21 | Ops #302 | [[2026-09-21_ops-302_komplex-suche-78020]] | umgesetzt, getestet, committet · Migration `0039` **nicht live** (Stand 21.09.2026) |
-| 2026-09-21 | Ops #303 | [[2026-09-21_ops-303_heilmittel-aufteilung-nur-physio-ergo]] | Board-Karten umgesetzt · Code-Kommentare committet (`3c0f04e`) und gepusht (22.09.2026, Merge `ff39026`) · SPEC-RULES-Korrektur offen |
-| 2026-09-21 | Ops #300 | [[2026-09-21_ops-300_ik-suche-kassenfeld]] | Frontend (`4078c8c`) und Migration `0040` (`a2d8e68`) committet und gepusht (22.09.2026, Merge `ff39026`) · **View nicht live angewandt** — bis dahin wirkungslos · Live-Anwendung durch Melih offen |
+| 2026-09-21 | Ops #303 | [[2026-09-21_ops-303_heilmittel-aufteilung-nur-physio-ergo]] | Board-Karten umgesetzt · Code-Kommentare committet (`3c0f04e`) und gepusht (21.09.2026, Merge `ff39026`) · SPEC-RULES-Korrektur offen |
+| 2026-09-21 | Ops #300 | [[2026-09-21_ops-300_ik-suche-kassenfeld]] | Frontend (`4078c8c`) und Migration `0040` (`a2d8e68`) committet und gepusht (21.09.2026, Merge `ff39026`) · **View nicht live angewandt** — bis dahin wirkungslos · Live-Anwendung durch Melih offen |
