@@ -7,7 +7,8 @@
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
 > İlk kurulum: 05.09.2026 · Son güncelleme: 21.09.2026 (**GGT Anlage 16 (SECON) indirildi**
 > — `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 1.3’ün „bu belge olmadan başlanmaz" kaydı üzerine.
-> Kart **W-04**, zincir **Z-12**. Aynı turda **ana GGT belgesinin sürüm düşümü yakalandı**:
+> Kart **W-04**, zincir **Z-12**. Aynı gün ikinci tur: Ops #302 — „Komplexbehandlung" = verordnete
+> Heilmittel c), 78020'nin adı değil; zincir **Z-13**, kural `SPEC-RULES.md`'de. Aynı turda **ana GGT belgesinin sürüm düşümü yakalandı**:
 > arşivdeki Fassung `ab 01.01.2026` idi, yayıncıda 01.09.2026’dan beri yenisi var — eskisi
 > `_archiv/`’e alındı, yenisi indirildi, farkı deterministik `diff` ile ölçüldü (kart **W-05**).
 > Yeni açık maddeler: **W-A11** (GGT § 4.2.5.1 XML yönelimi, `gkv-302`’ye) ve Z-12 altındaki
@@ -405,6 +406,36 @@ dosya adları da değişir.
 ⚠️ Sayılar YZ ile okunmadı: OID'ler, anahtar uzunlukları ve alan adları
 `GGT_Anlage_16_…SECON.txt` § 2.1.3 / 2.1.4 / 2.2.4 / 3.2.2 satırlarından birebir alındı
 (bkz. `INDEX.md` anahtar bölümler listesi).
+
+---
+
+### Z-13 · Podologie: Heilmittelname ≠ Leistungsname — „Komplex" araması (Ops #302)
+```
+wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt
+    (§ 27a Abs. 4 Nr. 3 Z.1130-1142 · Heilmittelkatalog DF/NF/QF c) Z.3381/3434/3483)
+      = „Podologische Komplexbehandlung" → verordnetes HEILMITTEL c)
+wissensbank/podologie/20240725_Anlage_1a_Leistungsbeschreibung_lesefassung_b.pdf/.txt
+    (Teil 1 Nr. 4 Z.167-171 · Teil 2 Ziff. 3 Z.358-366)
+wissensbank/podologie/20250617_Podologie_Anlage_2.pdf/.txt   (§ 2 Z.82 · § 3 Z.332)
+wissensbank/podologie/Podologie_Positionsnummern_2026_Filtered.csv   (Z.21 · Z.24)
+      = „Podologische Behandlung (klein/groß)" → LEISTUNG 78010 / 78020
+  → api-backend/billing/codes/podologie_positions.js:33-34,75-76   label (amtlich) + kat (Suchanker)
+    → api-backend/sync_heilmittel_katalog.js:94   kategorie: p.kat
+      → DB heilmittel_katalog.kategorie   (Migration 0039 · ⚠ SaaS'a HENÜZ UYGULANMADI, 21.09.2026)
+        → RPC search_heilmittel()  LIKE code/kuerzel/label/kategorie
+  → module/verordnung-regeln.js:73-76   POD_KATALOG.c   (Heilmittel c) metni)
+      ↔ Çapa == POD_KATALOG.c, module/heilmittel-suche-komplex.test.js ile zorlanıyor
+```
+📌 Etiket **bilinçli olarak değişmedi**: 78020'yi „Komplexbehandlung" diye adlandırmak yanlış
+kuralı öğretir (78010 de c)'nin pozisyonu) ve abrechenbar olmayan 78003'ün resmî adıyla çarpışır
+(SPEC-RULES → „Maßnahme ≠ Leistung"). `kuerzel` podolojide **boş kalmalı**: `katalog-suche.js`
+`kuerzel || code` gösterir, doldurulursa HPNR seçicide kaybolur.
+⚠️ Yeni Preisfenster eklerken (her 01.07.) `kat` alanı yeni pencerenin 78010/78020 satırlarına
+taşınmalı (`preise_autoupdate.mjs` alanı jenerik kopyalar, doğrulandı) — unutulursa
+`heilmittel-suche-komplex.test.js` her pencerede kırmızı olur (fensterzahl-unabhängig). ⚠️ Anlage 1a Z.136 hâlâ eski „§ 28 HeilM-RL" diyor; kodun § 27a atfı doğru.
+Açık iki madde (bu turda **yapılmadı**, karar kullanıcıda): a) Hornhautabtragung/Nagelbearbeitung ve
+„gross"↔„groß" arama boşlukları (`kategorie` tek değer taşır; çoklu terim için `suchbegriffe`
+sütunu gerekir), b) c) için >20 dk şartı (SPEC-RULES'ta ⛔).
 
 ---
 

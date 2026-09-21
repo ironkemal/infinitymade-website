@@ -90,8 +90,8 @@ function podoRows() {
     code:            p.hpnr,
     bereich:         'podologie',
     label:           p.label,
-    kuerzel:         null,
-    kategorie:       null,
+    kuerzel:         null,          // NICHT füllen: katalog-suche.js zeigt `kuerzel || code` — die HPNR verschwände aus dem Dropdown
+    kategorie:       p.kat || null, // Such-Anker (78010/78020 → „Komplex"), siehe podologie_positions.js
     diagnosegruppen: p.diagnosegruppen || null,
     preis_eur:       p.preis ?? null,
     zuzahlung_eur:   p.zuzahlung ?? null,

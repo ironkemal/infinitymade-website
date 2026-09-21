@@ -83,3 +83,6 @@ onprem/update.log
 # update.sh (O-77): migration-öncesi pg_dump yedekleri — hasta verisi (E),
 # kutu içi, depoya asla girmez.
 onprem/backups/
+
+# Lokale Obsidian-Vault-Konfiguration fuer wissensbank/ (persoenlich, nicht teilen)
+wissensbank/.obsidian/

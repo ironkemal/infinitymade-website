@@ -8,7 +8,10 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-21 (DAVASO/IQVIA HSS derinlemesine araştırması — TA-Validator
+> Son güncelleme: 2026-09-21 (Ops #302 — „Komplexbehandlung" 78020'nin adı değil, verordnete
+> Heilmittel c)'nin adıdır; 78010 ve 78020 ikisi de c)'den faturalanır. 1 yeni kural, tüm
+> Fundstellen orijinallere karşı okundu; açık madde: >20 dk şartı c) için uygulanmıyor.)
+> Önceki (aynı gün): 2026-09-21 (DAVASO/IQVIA HSS derinlemesine araştırması — TA-Validator
 > ücretsiz format-doğrulama aracı (Zulassung/Testverfahren yerine geçmez), Zulassung'u
 > Krankenkasse verir Datenannahmestelle değil, test dosyasındaki IK DAS ile kararlaştırılır,
 > BARMER'in Heilmittel-DAS'ı ayrı bir şirket (DDG GmbH). 4 yeni kural.)
@@ -122,6 +125,40 @@
   `78020_nur_komplexbehandlung` (2026-08-10 eklendi). Canlı katalog
   `api-backend/billing/codes/podologie_positions.js:22-23,64-65` etiket/fiyat olarak doğru,
   ama Maßnahme bazlı kısıt **uygulanmamış**.
+- **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF, Standard-Verordnung (Muster 13)
+
+### Podologie: Maßnahme (Verordnung) ≠ Leistung (Abrechnung) — „Komplexbehandlung" 78020'nin adı değildir
+- **Kural:** „Podologische Komplexbehandlung" Heilmittelkatalog'daki **verordnete Heilmittel c)**'nin
+  adıdır (Maßnahme düzlemi, Muster 13'te doktorun yazdığı). Abrechnung düzleminde adlar
+  „Podologische Behandlung (klein)" = **78010** ve „Podologische Behandlung (groß)" = **78020**'dir.
+  c) verordnet edilmişse Therapiezeit ≤ 20 dk → 78010, > 20 dk → 78020; a)/b) her zaman 78010.
+  Bu yüzden 78020'ye „Komplexbehandlung" etiketi **yazılmaz**, ve „Komplex" araması 78020'yi
+  **tek başına** bulmaz — 78010 ve 78020 birlikte bulunur. Ek çarpışma: „Podologische
+  Komplexbehandlung" aynı zamanda abrechenbar olmayan **78003**'ün resmî adıdır (bkz. sonraki kural).
+- **Kaynak:** HeilM-RL 15.05.2025 (iK 05.08.2025) § 27a Abs. 4 Nr. 3 (`wissensbank/gemeinsam/
+  heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt` Z.1130-1142) + Heilmittelkatalog
+  DF/NF/QF c) (Z.3381 / 3434 / 3483); Anlage 1a i.d.F. 17.06.2024 Teil 1 Nr. 4 (Z.167-171) +
+  Teil 2 Ziff. 3 (Z.358-366) (`wissensbank/podologie/20240725_Anlage_1a_…lesefassung_b.txt`);
+  Anlage 2 i.d.F. 01.07.2025 § 2 Z.82 + § 3 Z.332 (`…/20250617_Podologie_Anlage_2.txt`);
+  HPNR-Verzeichnis gültig ab 01.01.2026 Z.21/24 (`…/Podologie_Positionsnummern_2026_Filtered.csv`);
+  FAK Podologie Q25 Z.199-207 (`…/20230524_Podologie_FAK_bf.txt`). Alle Zeilen am 21.09.2026
+  gegen die Originale gelesen.
+- **Geçerlilik:** 05.08.2025 (HeilM-RL) · 01.07.2025 / 01.07.2026 (Anlage 2 Preisfenster).
+  ⚠️ Anlage 1a Z.136 verweist noch auf „§ 28 HeilM-RL" (alt); der Inhalt steht in der
+  aktuellen HeilM-RL in § 27a Abs. 4 — Kodun `§ 27a Abs. 4 Nr. 3` atfı **doğru**, Anlage 1a'ya
+  bakıp „düzeltilmemeli".
+- **Kodda:** `api-backend/billing/codes/podologie_positions.js:33-34,75-76` — `label` amtlich
+  wortgleich, `kat: 'Podologische Komplexbehandlung'` yalnız arama çapası →
+  `api-backend/sync_heilmittel_katalog.js:94` (`kategorie: p.kat`) → `heilmittel_katalog.kategorie`
+  (Migration `0039_seed_heilmittel_katalog_podo_komplex_suche.sql`); Verordnung tarafı
+  `module/verordnung-regeln.js:73-76` `POD_KATALOG.c`. Çapa == `POD_KATALOG.c`,
+  `module/heilmittel-suche-komplex.test.js` ile zorlanıyor.
+- ⛔ **Açık (gkv-302 bulgusu, 21.09.2026 repo-genelinde grep ile teyit edildi):** >20 dk şartı
+  yalnız a)/b) için uygulanıyor (`module/podologie-abrechnung.js:907-913`). c) + Therapiezeit
+  ≤ 20 dk için kontrol **yok**: Therapiezeit hiçbir yerde değer olarak alınmıyor — DB'de sütun
+  yok, formda alan yok; yalnız Hinweis metinleri (`dashboard.js:237`, `verordnung-podo.js:339`)
+  ve Regelleistungszeit özelliği (`dashboard.js:9403-9406`). Etki: ~15,39 € (2025) / ~15,82 €
+  (2026) seans başına sessiz fazla faturalama, Prüfstufe 4'te geri alınır. Ayrı Ops kartı gerekir.
 - **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF, Standard-Verordnung (Muster 13)
 
 ### Podologie: HPNR 78001–78006 abrechenbar değildir

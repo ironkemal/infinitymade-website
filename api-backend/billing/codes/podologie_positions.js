@@ -25,8 +25,13 @@ export const PREISSTAND = '01-07-26';
 export const PODOLOGIE_POSITIONS_2025 = Object.freeze([
 
   // ── a) Diagnosegruppen DF / NF / QF ─────────────────────────────────────
-  { hpnr: '78010', label: 'Podologische Behandlung (klein)',   diagnosegruppen: ['DF','NF','QF'], preis: 35.16, zuzahlung: 3.52,  dauer: '35', gueltig_ab: '2025-07-01', gueltig_bis: '2026-06-30' },
-  { hpnr: '78020', label: 'Podologische Behandlung (groß)',    diagnosegruppen: ['DF','NF','QF'], preis: 50.55, zuzahlung: 5.06,  dauer: '50', gueltig_ab: '2025-07-01', gueltig_bis: '2026-06-30' },
+  // `kat` (Ops #302): reiner Such-Anker für heilmittel_katalog.kategorie, KEIN amtlicher Name.
+  // „Podologische Komplexbehandlung" ist das VERORDNETE Heilmittel c) (HeilM-RL § 27a Abs. 4
+  // Nr. 3), keine Leistung: c) wird mit 78010 (bis 20 Min) ODER 78020 (über 20 Min) abgerechnet
+  // (Anlage 1a Teil 1 Nr. 4, FAK Podologie Q25). Deshalb tragen BEIDE Positionen den Anker —
+  // „Komplex" darf nie nur 78020 finden. `label` bleibt wortgleich mit Anlage 2 §2/§3.
+  { hpnr: '78010', label: 'Podologische Behandlung (klein)',   kat: 'Podologische Komplexbehandlung', diagnosegruppen: ['DF','NF','QF'], preis: 35.16, zuzahlung: 3.52,  dauer: '35', gueltig_ab: '2025-07-01', gueltig_bis: '2026-06-30' },
+  { hpnr: '78020', label: 'Podologische Behandlung (groß)',    kat: 'Podologische Komplexbehandlung', diagnosegruppen: ['DF','NF','QF'], preis: 50.55, zuzahlung: 5.06,  dauer: '50', gueltig_ab: '2025-07-01', gueltig_bis: '2026-06-30' },
   { hpnr: '78030', label: 'Podologische Befundung',           diagnosegruppen: ['DF','NF','QF'], preis:  3.47, zuzahlung: 0.35,  dauer: null, gueltig_ab: '2025-07-01', gueltig_bis: '2026-06-30' },
   { hpnr: '78040', label: 'Eingangsbefundung',                diagnosegruppen: ['DF','NF','QF'], preis: 22.48, zuzahlung: 2.25,  dauer: '20', gueltig_ab: '2025-07-01', gueltig_bis: '2026-06-30',
     notiz: 'Einmalig bei Erstinanspruchnahme ab 01.11.2023 (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2 u. Teil 2 Ziff. 4.1) — nicht je Verordnung. Nicht am selben Tag wie 78030; mit 78010/78020 am selben Tag erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL.' },
@@ -67,8 +72,8 @@ export const PODOLOGIE_POSITIONS_2025 = Object.freeze([
 // ─── Preise ab 01.07.2026 ────────────────────────────────────────────────────
 
 export const PODOLOGIE_POSITIONS_2026 = Object.freeze([
-  { hpnr: '78010', label: 'Podologische Behandlung (klein)',   diagnosegruppen: ['DF','NF','QF'], preis: 36.10, zuzahlung: 3.61,  dauer: '35', gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31' },
-  { hpnr: '78020', label: 'Podologische Behandlung (groß)',    diagnosegruppen: ['DF','NF','QF'], preis: 51.92, zuzahlung: 5.19,  dauer: '50', gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31' },
+  { hpnr: '78010', label: 'Podologische Behandlung (klein)',   kat: 'Podologische Komplexbehandlung', diagnosegruppen: ['DF','NF','QF'], preis: 36.10, zuzahlung: 3.61,  dauer: '35', gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31' },
+  { hpnr: '78020', label: 'Podologische Behandlung (groß)',    kat: 'Podologische Komplexbehandlung', diagnosegruppen: ['DF','NF','QF'], preis: 51.92, zuzahlung: 5.19,  dauer: '50', gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31' },
   { hpnr: '78030', label: 'Podologische Befundung',           diagnosegruppen: ['DF','NF','QF'], preis:  3.57, zuzahlung: 0.36,  dauer: null, gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31' },
   { hpnr: '78040', label: 'Eingangsbefundung',                diagnosegruppen: ['DF','NF','QF'], preis: 23.11, zuzahlung: 2.31,  dauer: '20', gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31',
     notiz: 'Einmalig bei Erstinanspruchnahme ab 01.11.2023 (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2 u. Teil 2 Ziff. 4.1) — nicht je Verordnung. Nicht am selben Tag wie 78030; mit 78010/78020 am selben Tag erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL.' },
