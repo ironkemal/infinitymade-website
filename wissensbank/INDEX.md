@@ -3,7 +3,12 @@
 > **Bu dosya arşivin tek giriş kapısıdır.** `wissensbank/` altındaki tüm GKV/§302/Heilmittel
 > belgelerinin ne olduğunu, hangi sürümde olduğunu ve ne zaman lazım olacağını listeler.
 >
-> Son güncelleme: 2026-09-17 · **37 belge kayıtlı**
+> Son güncelleme: 2026-09-21 · **38 belge kayıtlı**
+> (21.09.2026: **GGT Anlage 16 „Security Schnittstelle (SECON)"** eklendi — §302 dosyasının
+>  şifrelenmesinin (CMS/PKCS#7 EnvelopedData) bağlayıcı profili, `ABRECHNUNG_ECHTBETRIEB_PLAN.md`
+>  Adım 1.3 bu belge olmadan başlamıyordu. **Aynı turda GGT ana belgesinin sürüm düşümü
+>  yakalandı:** arşivdeki Fassung `ab 01.01.2026` idi, yayıncıda **01.09.2026**'dan beri yeni
+>  Fassung var — eskisi `_archiv/`'e alındı, yenisi indirildi.)
 > (10.09.2026: Anhang 1 Kap. 4 „Datenübermittlung" + Anhang 2 Kap. 9 „Prüfverfahren" eklendi
 >  — `gkv-302` canlı-gönderim hazırlık denetiminde arşivde eksik oldukları anlaşıldı.
 >  17.09.2026: GGT Anlage 2 „Auftragsdatei" + GGT Anlage 4 „Verfahrenskennungen" eklendi —
@@ -392,12 +397,27 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **İçerdiği fiyat/pozisyon numarası var mı:** hayır
 
 ### wissensbank/gemeinsam/302-tp5/GGT.txt
-- **Ne:** Gemeinsame Grundsätze Technik für die elektronische Datenübermittlung gemäß § 95 SGB IV in der vom 01.01.2026 an geltenden Fassung.
+- **Ne:** Gemeinsame Grundsätze Technik für die elektronische Datenübermittlung gemäß § 95 SGB IV in der **vom 01.09.2026 an geltenden Fassung** (Stand 29.06.2026, 16 sayfa).
 - **Kapsam:** Datenaustauschverfahren (KKS, eXTra), Parameter für den Datenaustausch (Verfahrenskennung, Verfahrensteilnehmer), Datenaustauscharten (DFÜ, E-Mail, HTTP/HTTPS, FTP/SFTP, FTAM over IP, XML-Richtlinie, Kommunikationsserver) und Sicherheitsverfahren (Verschlüsselung, Signatur, IT-Sicherheit).
-- **Sürüm:** in der vom 01.01.2026 an geltenden Fassung
-- **Geçerlilik:** 01.01.2026
+- **Sürüm:** in der vom 01.09.2026 an geltenden Fassung (kapak tarihi 29.06.2026, onay 03.08.2026)
+- **Geçerlilik:** 01.09.2026 — ✅ bugün yürürlükte
 - **Ne zaman lazım:** Sosyal sigorta kurumları ve hizmet sunucuları arasında elektronik veri iletimi (Datenübermittlung) için teknik ve güvenlik standartlarının uygulanması gerektiğinde.
 - **İçerdiği fiyat/pozisyon numarası var mı:** hayır
+- **Anahtar bölümler:**
+  - 2.3 KKS → Anlage 1 (KKS) + **Anlage 2 (Auftragsdatei)**
+  - **4.2.5.1 Nutzung von XML in den Datenaustauschverfahren** — ⚠️ **21.09.2026'da YENİ geldi.**
+    XML standart format; 01.01.2027 öncesi uygulanmış verfahren'ler, *esaslı bir fachlich/teknik
+    revizyon* olduğunda ve ekonomik olduğunda XML'e çevrilecek. EDIFACT'i bugün kaldırmıyor,
+    ama §302 zincirinin uzun vadeli yönünü işaretliyor → `gkv-302` değerlendirmeli
+  - **5.1 Verschlüsselung und Signatur** — sıra: önce imzala (kendi özel anahtarın), sonra
+    **alıcının açık anahtarıyla** şifrele. Metin 01.01.2026 Fassung'undan **değişmedi**
+  - 5.2 Gültigkeitsprüfung der Zertifikate → **Anlage 16 (SECON)**
+  - 5.3 IT-Sicherheit — BSI TR-02102-1/-2/-4, eIDAS 910/2014 bağlayıcı
+- ⚠️ **Sürüm düşümü 21.09.2026'da yakalandı.** Bir önceki Fassung (Stand 06.11.2025,
+  ab 01.01.2026) `wissensbank/_archiv/GGT_Fassung_ab_01.01.2026_Stand_06.11.2025.txt`
+  altında duruyor — Absetzung itirazında eski sürüme başvurulabilir diye silinmedi.
+  İki Fassung arasındaki **tek esaslı fark** § 4.2.5.1'dir (yukarıda); § 5.1 aynen aynı.
+- **Sicil kaydı:** `wissensbank/REGISTER.md` → **W-05**.
 
 ### wissensbank/gemeinsam/302-tp5/GGT_Anlage_02_Auftragsdatei.txt
 - **Ne:** Anlage 2 zu den Gemeinsamen Grundsätzen Technik (GGT) — Auftragsdatei (Auftragssatz)
@@ -439,6 +459,50 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - 1.3 Datenaustausch zwischen Leistungserbringern und Krankenkassen nach § 294 ff. SGB V
   - 1.18 Datenaustausch der Sozialversicherung mit der ITSG (HEG/HEI — nicht unser Pfad)
   - 2 Beschreibung des Feldes ‚VERFAHREN_KENNUNG_SPEZIFIKATION'
+
+### wissensbank/gemeinsam/302-tp5/GGT_Anlage_16_Security_Schnittstelle_SECON.txt
+- **Ne:** Anlage 16 zu den Gemeinsamen Grundsätzen Technik (GGT) — **Security Schnittstelle
+  (SECON)**. Sosyal sigorta veri aktarımında imzalama ve **şifrelemenin** bağlayıcı tam profili:
+  algoritmalar, OID'ler, PKCS#7/CMS veri yapıları, sertifika profili ve PKI süreci. 94 sayfa.
+- **Kapsam:** Krypto-Algorithmen (hash, imza RSASSA-PSS, içerik şifrelemesi AES-256-CBC,
+  anahtar şifrelemesi RSAES-OAEP, RSA 4096), Datenformate (Session-Key, Interchange-Key,
+  X.509v3 sertifika, PKCS#7), **Nachrichtenaustausch** (SignedData + EnvelopedData yapısı,
+  alan alan profilleme, şifreli dosyanın transport formatı, TLS), **Schlüsselmanagement**
+  (sertifika alanları, IK/BN adlandırma, geçerlilik süresi, ITSG/DKTIG **Schlüssellisten** ve
+  LDAP dizini), PKI-Verfahrensbeschreibung (PCA/CA/RA/Teilnehmer, PKCS#10 Zertifizierungs-
+  anfrage, PKCS#7 Zertifizierungsantwort, Sperrlisten), Anhang (ASN.1 + **çalışan örnekler**).
+- **Sürüm:** sürüm numarası yok — kapak/altbilgi `Stand: 02.09.2025`
+- **Anzuwenden ab:** 01.01.2026 (altbilgi `Gültig ab:01.01.2026`, 94 sayfanın hepsinde)
+- **Ne zaman lazım:** §302 DTA dosyasının **şifrelenmesi** yazılırken — hangi algoritma, hangi
+  anahtar uzunluğu, EnvelopedData'nın hangi alanı nasıl doldurulur, alıcı sertifikası nasıl
+  tanımlanır, açık anahtar nereden alınır. Ayrıca sertifika geçerlilik/yenileme kuralı için.
+- **Anahtar bölümler:**
+  - **2.1.3** Content Encryption Algorithmus — `id-aes256-CBC`, OID `2.16.840.1.101.3.4.1.42`
+  - **2.1.4** Key Encryption Algorithmus — RSAES-OAEP, OID `1.2.840.113549.1.1.7`,
+    açık üs e = 65537, RSA **4096 Bit**; 2.1.4.1 OAEP parametreleri (SHA-256, MGF1)
+  - 2.1.2 Signaturalgorithmus — **RSASSA-PSS** · 2.2.3 Hash = **SHA-256** · 2.3 Zufallszahlen
+    (asgari 120 Bit entropi)
+  - **2.2.7** Zertifikate — X.509v3, **DER** kodlama, zorunlu Extensions (KeyUsage,
+    BasicConstraints, SubjectKeyIdentifier, AuthorityKeyIdentifier, CRLDistributionPoints …)
+  - **3.1 / 3.2** Sıra kesin: önce `SignedData`, sonra `EnvelopedData` (SignedData objesi
+    şifrelemenin girdisidir)
+  - **3.2.2** EnvelopedData alan alan — `version` = 0, `originatorInfo` **entfällt**,
+    `unprotectedAttrs` **entfällt**, yalnız `KeyTransRecipientInfo`, `rid` için **yalnız**
+    `issuerAndSerialNumber`, `contentType` = `id-data` (`1.2.840.113549.1.7.1`)
+  - **3.2.3.1** Transportformat — şifreli dosya **uzantısızdır** („keine Dateiendung"), binary
+  - 3.3 TLS — opsiyonel ek katman, asgari TLS 1.2; Nutzdaten şifrelemesinin **yerine geçmez**
+  - **4.4.5** Name von Zertifikatsinhabern (IK / Betriebsnummer sertifikada nerede durur)
+  - **4.5** Gültigkeitszeitraum — Teilnehmer-Zertifikat **azami 1 yıl**, CA 5 yıl, PCA 7 yıl
+  - **4.6.1** Schlüssellisten — `annahme-rsa4096.key` (Datenannahmestelle açık anahtarları),
+    `gesamt-pkcs.key`, `sperrliste-le-rsa4096.crl`; ITSG indirmeye sunar, **iş günleri güncel**
+  - 4.6.2 LDAP-Verzeichnis (ikinci dağıtım yolu)
+  - 5.8 / 5.9 PKCS#10 Zertifizierungsanfrage · PKCS#7 Zertifizierungsantwort
+  - **6.4.3** PKCS#7 ile şifrelenmiş örnek mesaj (çözümlenmiş ASN.1) — testte referans
+- ⚠️ **Belgede sürüm numarası alanı yok.** Atıf biçimi: „Anlage 16 GGT, Stand 02.09.2025, § x.y".
+- ⚠️ Altbilgi `Gültig ab: 01.01.2026` diyor; **ana belge GGT** ise 01.09.2026'dan beri yeni
+  Fassung'da. Yayıncı sayfası Anlagen için ayrı tarih vermiyor — bu yüzden buradaki tarih
+  belgenin **kendi** altbilgisinden alınmıştır, GGT ana belgesinden türetilmemiştir.
+- **Sicil kaydı:** `wissensbank/REGISTER.md` → **W-04** (Herkunft, tazelik yordamı, zincir Z-12).
 
 ### wissensbank/podologie/20230524_Podologie_FAK_bf.txt
 - **Ne:** Fragen-Antworten-Katalog Podologie.

@@ -1,0 +1,3551 @@
+Security Schnittstelle (SECON)                  Anlage 16 GGT
+Inhaltsverzeichnis
+
+1. Grundlagen ................................................................................................ 4
+
+      1.1 Einleitung ..................................................................................................................... 4
+      1.2 Grundlagen .................................................................................................................. 4
+      1.2.1 Verwendung von Schlüsselworten ...................................................................................4
+      1.2.2 Definitionen.....................................................................................................................5
+      1.3 Vorbemerkungen.......................................................................................................... 6
+
+      1.4 Kommunikation zum Datenaustausch im Gesundheits- und Sozialwesen ..................... 7
+      1.5 Verbindlichkeit ............................................................................................................. 7
+
+2. Kryptografische Algorithmen und Datenformate .......................................... 7
+
+      2.1 Krypto-Algorithmen ..................................................................................................... 8
+      2.1.1 Einweg-Hashfunktionen (One-Way Hash Functions) ......................................................8
+      2.1.2 Signaturalgorithmen (Signature Algorithms)...................................................................9
+      2.1.3 Verschlüsselungsalgorithmen für Daten (Content Encryption Algorithmus)................ 11
+      2.1.4 Verschlüsselungsalgorithmen für den Nachrichtenschlüssel (Key Encryption
+      Algorithmus) ........................................................................................................................... 12
+      2.1.5 Algorithmen zur Nutzung des öffentlichen Schlüssels (Subject Public Key Algorithmus)
+
+               15
+      2.2 Datenformate ............................................................................................................. 15
+      2.2.1 Spezifikation: Session-Key ........................................................................................... 16
+      2.2.2 Spezifikation: Interchange Key ..................................................................................... 16
+      2.2.3 Spezifikation: Hashfunktion/Signaturalgorithmus ....................................................... 16
+      2.2.4 Spezifikation: RSA Schlüssellänge ................................................................................ 16
+      2.2.5 Spezifikation: Öffentlicher Exponent des RSA Algorithmus ......................................... 16
+      2.2.6 Spezifikation: Schlüsselformat für den Public-Key....................................................... 16
+      2.2.7 Spezifikation: Zertifikate .............................................................................................. 16
+      2.2.8 Spezifikation: PKCS#7 (Public Key Cryptography Standards) ....................................... 17
+      2.3 Zufallszahlen .............................................................................................................. 17
+
+3. Nachrichtenaustausch .............................................................................. 17
+
+      3.1 Signierte und verschlüsselte Nachrichten .................................................................... 17
+
+      3.2 Aufbau der PKCS#7-signierten und verschlüsselten Nachricht .................................... 18
+
+      3.2.1 Aufbau der Teildatenstruktur Content vom ContentType „SignedData“...................... 19
+      3.2.2 Aufbau der Teildatenstruktur Content vom ContentType „EnvelopedData“ ............... 22
+      3.2.3 Transport der verschlüsselten Nachricht ..................................................................... 26
+      3.3 Sichere Transportebene mit TLS (SSL) ......................................................................... 27
+
+Gültig ab:01.01.2026            Seite 1 von 94  Stand: 02.09.2025
+      3.3.1 Authentisierungsmethoden bei TLS-Verbindungen ..................................................... 27
+      3.3.2 Vorgaben bei TLS-Verbindungen ................................................................................. 28
+
+4. Schlüsselmanagement .............................................................................. 28
+
+      4.1 Allgemein ................................................................................................................... 28
+
+      4.2 Namenskonventionen ................................................................................................. 29
+
+      4.3 PKI-Nachrichten ......................................................................................................... 29
+
+      4.4 Definition der Zertifikate ............................................................................................ 30
+
+      4.4.1 Versionsnummer .......................................................................................................... 31
+      4.4.2 Seriennummer .............................................................................................................. 31
+      4.4.3 Signaturalgorithmus ..................................................................................................... 32
+      4.4.4 Name der Zertifizierungsstelle ..................................................................................... 32
+      4.4.5 Name von Zertifikatsinhabern ...................................................................................... 35
+      4.4.6 Gültigkeitsdauer ........................................................................................................... 37
+      4.4.7 Basic Constraints .......................................................................................................... 37
+      4.4.8 Öffentlicher Schlüssel des Zertifikatsinhabers ............................................................. 38
+      4.4.9 Prüfwert von Signaturschlüsseln (subject key identifier).............................................. 38
+      4.4.10 Identifizierung von Ausstellerzertifikaten (authority key identifier) ............................ 38
+      4.4.11 Syntax für x.509v3 Zertifikate...................................................................................... 39
+      4.4.12 Signatur der CA ............................................................................................................ 39
+      4.4.13 Identifizierung des verwendeten Signaturalgorithmus ................................................ 39
+      4.4.14 Nicht verwendete optionale Datenfelder ...................................................................... 40
+      4.5 Gültigkeitszeitraum der Zertifikate ............................................................................. 40
+
+      4.6 Öffentliche Schlüsselverzeichnisse.............................................................................. 41
+
+      4.6.1 Schlüssellisten .............................................................................................................. 41
+      4.6.2 LDAP-Verzeichnis......................................................................................................... 42
+
+5. PKI-Verfahrensbeschreibung..................................................................... 49
+
+      5.1 Struktur der Zertifizierungshierarchie ......................................................................... 49
+
+      5.2 Rollen und ihre Funktionen......................................................................................... 49
+
+      5.3 PCA-Wurzel der Zertifizierungshierarchie ................................................................... 49
+
+      5.3.1 Identität der PCA .......................................................................................................... 50
+      5.3.2 Zuständigkeitsbereich der PCA .................................................................................... 50
+      5.4 Trust Center (Certification Authority) .......................................................................... 51
+
+      5.4.1 Zertifizierungsanforderung .......................................................................................... 51
+      5.4.2 Zertifikatsüberprüfung ................................................................................................. 51
+      5.4.3 Eindeutigkeit von Namen ............................................................................................. 51
+      5.4.4 Propagierung Zertifizierungsinformation..................................................................... 52
+      5.4.5 Sperrlisten Management............................................................................................... 52
+      5.5 Registrierungsstelle (RA = Registration Authority) ...................................................... 53
+
+      5.6 Teilnehmer ................................................................................................................. 55
+
+      5.7 Erzeugung und Schutz der Teilnehmerschlüssel ......................................................... 55
+
+Gültig ab:01.01.2026  Seite 2 von 94  Stand: 02.09.2025
+5.7.1 Certification Request .................................................................................................... 55
+5.7.2 Definition von Zertifikatsanfragen nach PKCS#10 ....................................................... 56
+5.7.3 Zertifikate X.509v3 ....................................................................................................... 57
+5.8 PKCS#10-ZERTIFIZIERUNGSANFRAGE .......................................................................... 57
+
+5.8.1 Überblick ...................................................................................................................... 57
+5.8.2 Aufbau des PKCS#10-Datentyps .................................................................................. 57
+5.8.3 Aufbau der Teildatenstruktur CertificationRequestInfo ............................................... 59
+5.8.4 Transport der PKCS#10 Zertifizierungsanfrage ........................................................... 60
+5.9 PKCS#7-ZERTIFIZIERUNGSANTWORT ........................................................................... 61
+
+5.9.1  Überblick PKCS#7 ......................................................................................................... 61
+5.9.2  Aufbau der PKCS#7-Zertifizierungsantwort................................................................. 62
+5.9.3  Aufbau der Teildatenstruktur Content vom ContentType „SignedData“...................... 64
+5.9.4  Transport der PKCS#7-Zertifizierungsantwort ............................................................ 65
+5.9.5  Sperrlisten .................................................................................................................... 66
+
+6. Anhang.................................................................................................... 67
+
+6.1 ASN.1 Syntax relevante Datenstrukturen ..................................................................... 67
+
+6.1.1 Öffentlicher und privater Schlüssel nach X.509 ........................................................... 67
+6.1.2 X.509v3-Zertifikat, Zertifizierungspfad ....................................................................... 68
+6.1.3 Sperrliste ...................................................................................................................... 68
+6.2 ASN.1 Syntax relevanter Makros ................................................................................. 69
+
+6.2.1 Signierte Struktur ......................................................................................................... 69
+6.2.2 ASN.1 Syntax einer Signatur......................................................................................... 69
+6.3 Kommunikationssystem ............................................................................................. 70
+
+6.3.1 Grundsatz..................................................................................................................... 70
+6.3.2 Voraussetzungen und Forderungen für den Datenaustausch signierter und verschlü
+sselter Datenobjekte (Datenträger und sonstige Datenfernübertragungsverfahren).............. 70
+6.4 Beispiele ..................................................................................................................... 71
+
+6.4.1  Struktur einer Schlüsselliste gemäß Kapitel 4.6.1 ........................................................ 71
+6.4.2  Beispiel einer signierten Nachricht gemäß Kapitel 3.2................................................. 71
+6.4.3  Beispiel einer PKCS#7-verschlüsselten Nachricht gemäß Kapitel 3.2.2 ....................... 78
+6.4.4  Beispiel einer PKCS#10 Zertifizierungsanfrage gemäß Kapitel 5.8 .............................. 82
+6.4.5  Beispiel einer PKCS#7 Zertifizierungsantwort gemäß Kapitel 5.9 ................................ 84
+
+7. Literaturverzeichnis .................................................................................. 92
+
+7.1 Literaturverzeichnis .................................................................................................... 92
+7.2 Abkürzungsverzeichnis .............................................................................................. 94
+
+Gültig ab:01.01.2026  Seite 3 von 94  Stand: 02.09.2025
+1. Grundlagen
+
+Generelle Forderungen an die Sicherheitsdienste sind die Vertraulichkeit, die Integrität, die Authen-
+tifikation sowie die Verbindlichkeit der Kommunikation.
+
+Als grundlegendes Verfahren der Sicherheitstechnologie nimmt die kryptographische Technik die
+zentrale Rolle auch in der angestrebten Public-Key-Infrastruktur (PKI) ein. Die Verfahren sollen fol-
+genden Ansprüchen genügen, bzw. die ersten Voraussetzungen dafür schaffen:
+
+     • RSA-Algorithmus mit mindestens 4096 Bit Schlüssellänge
+     • AES – Advanced Encryption Standard [RFC 3565] (256 Bit, CBC-Modus)
+     • SHA-256 Algorithmus (256 Bit)
+     • X.509 v3-Zertifikate ( Common PKI 2.02)
+     • lokale oder zentrale Generierung von Schlüsseln
+     • PKCS#7 – elektronische Signatur und Verschlüsselung
+     • Verzeichnisdienst
+     • Transportprotokoll (LDAP v3)
+
+1.1 Einleitung
+Die folgende Definition einer Security Schnittstelle ist als festgeschriebene, jedoch offengelegte
+Schnittstelle für das Gesundheits- und Sozialwesen gedacht.
+
+Ziel der folgenden Definitionen ist es, im Gesundheits- und Sozialwesen eine gesicherte digitale
+Kommunikation unabhängig von der Art der jeweiligen Systeme zu gewährleisten.
+
+Die Sicherheit eines Kryptogramms –der verschlüsselten Inhalte– hängt wesentlich von der Länge
+der zur Erzeugung verwendeten Schlüssel ab. Dazu werden technische Richtlinien des BSI heraus-
+gegeben, die gemäß § 95 SGB IV für diese Anlage verbindlich sind.
+
+Um den Empfehlungen des BSI zu entsprechen, wurde eine Schlüssellänge von 4096 Bit und bei
+Signaturverfahren die Verwendung des Algorithmus RSASSA-PSS sowie bei Verschlüsselungsverfah-
+ren für den Nachrichtenschlüssel EME-OAEP (RSAES-OAEP) festgelegt.
+
+Die Registrierungsprozesse in den beteiligten Trust Centern entsprechen den technischen Richtli-
+nien des BSI, so dass die Vorgaben eines substanziellen Schutzbedarfs erfüllt werden.
+
+1.2 Grundlagen
+
+1.2.1  Verwendung von Schlüsselworten
+
+Für die genaue Unterscheidung zwischen der Verbindlichkeit und Aussagekraft von Inhalten und
+Vorgaben werden entsprechende Schlüsselworte in deutscher Sprache verwendet. Zu den folgenden
+Schlüsselworten ist jeweils die Mehrzahl eingeschlossen:
+
+Gültig ab:01.01.2026  Seite 4 von 94   Stand: 02.09.2025
+• MUSS, IST, WIRD oder FORDERT bedeutet, dass es sich um eine absolut gültige Festlegung
+     bzw. Anforderung handelt. Die verbindlichen Vorgaben sind mit einer Profilierung in grauen
+     Anmerkungsfelder zu den einzelnen Punkten aufgeführt
+
+• DARF NICHT, IST NICHT, WIRD NICHT, ENTFÄLLT oder VERWENDET KEINE bezeichnet den
+     absolut gültigen Ausschluss einer Festlegung bzw. Anforderung.
+
+• SOLL oder VORSCHLAG beschreibt eine Empfehlung. Abweichungen zu diesen Festlegungen
+     sind in begründeten Fällen möglich.
+
+• SOLL NICHT kennzeichnet die Empfehlung, eine Eigenschaft auszuschließen. Abweichun-
+     gen sind in begründeten Fällen möglich
+
+• KANN oder OPTIONAL bedeutet, dass die Eigenschaften fakultativ oder optional sind und
+     damit keinen allgemeingültigen Empfehlungscharakter besitzen.
+
+1.2.2  Definitionen
+
+Anhand des Standards PKSC#10 wird ein Profil erarbeitet. PKCS#10 (Certification Request Syntax
+Standard) beschreibt eine Syntax für Zertifikatsanfragen; vgl. [PKCS#10]. Das technische Profil für
+Zertifikatsanfragen nach PKCS#10 ist im Kapitel 5.8 beschrieben.
+
+Zertifikate X.509v3
+X.509 ist eine Empfehlung der ITU-T Recommendation. Sie spezifiziert die Authentifizierungs-
+dienstleistung für X.500-Verzeichnisse und die weit verbreitete X.509-Zertifikatsstruktur. Seit Ver-
+sion 3 (1993) sind Sicherheitsprobleme behoben, die in Version 1 und 2 noch bestanden. X.509
+spezifiziert keine bestimmten kryptographischen Algorithmen, doch wird im Anhang der RSA-Al-
+gorithmus beschrieben und damit propagiert.
+
+Anhand des X.509-Standards wird ein Profil erarbeitet. Das technische Profil für X.509v3-Zertifi-
+kate ist im Kapitel 4.4 beschrieben.
+
+Dieses gilt insbesondere für die Vorgaben hinsichtlich des Signaturgesetzes im Abschnitt 1.1 „Ein-
+leitung“, die Forderungen nach qualifizierten Zertifikaten mit Anbieterakkreditierung werden der-
+zeit nicht gestellt. Hinsichtlich der digitalen Umschläge für PKCS#10-Zertifizierungsanfragen und
+für PKCS#10-Zertifizierunganfragen wird keine MIME-Einbettung im Sinne eines digitalen Um-
+schlags verwendet.
+
+PKCS#7-Objekte:
+     • Für PKCS#7- Zertifizierungsantworten wird keine MIME-Einbettung im Sinne eines digitalen
+          Umschlags verwendet.
+     • Für PKCS#7- verschlüsselte Nachrichten wird keine MIME-Einbettung im Sinne eines digita-
+          len Umschlags verwendet.
+
+Gültig ab:01.01.2026  Seite 5 von 94  Stand: 02.09.2025
+1.3 Vorbemerkungen
+Es werden derzeit auf dem Markt verschiedene Verfahren für die Generierung von Sicherheitsfunk-
+tionen angeboten. Die bedeutenden Verfahren haben im Allgemeinen gleiche Konstruktionsmerk-
+male, unterscheiden sich aber in einigen Details.
+
+Grundlage sind die Common PKI 2.0 Spezifikationen für das PKI-Management, welche sich im We-
+sentlichen an den Spezifikationen des PKIX-Dokumentes „Certificate Management Protokolls PKIX-
+CMP 98 orientieren. Da kein „neues“ Verfahren dem Sinne nach konzipiert wird, wurde auf vorhan-
+dene Funktionalitäten aufgebaut und das Fachwissen am Markt etablierter Hersteller/Anbieter von
+Security-Software und Tele Trust Deutschland e. V. integriert.
+
+Grundlage des Schlüsselmanagements ist die Verwendung von Zertifikaten, um öffentliche Schlüs-
+selinformationen authentisch dem Sender und dem Empfänger einer Nachricht zur Verfügung zu
+stellen.
+
+Derzeitige Basis des Ansatzes bilden dabei die in den RFC1421 - RFC1424 festgelegten Grundlagen
+zu Electronic Mail.
+
+Die aufgeführten Spezifikationen orientieren sich an etablierten Standards (z. B. X.509 und
+PKCS7). Die Spezifikationen beschreiben die Minimalanforderungen, die zur Teilnahme am Verfah-
+ren zu erfüllen sind.
+
+Das Management von Zertifikaten und Schlüsseln orientiert sich an Standards (Basis des Ansatzes
+bildet z. B. CMC – Certificate Management Messages over CMS) – siehe auch RFC 6402 bzw. RFC
+5272. Diese Festlegung ist mit Hinblick auf die Trust Center-Betreiber sinnvoll. Damit ist die Bean-
+tragung von Zertifikaten über PKCS#10 und PKCS#7 neben CMS vorgesehen. Der ausschließliche
+Verweis auf CMS unterstellt, dass eine Vielzahl an Nachrichtentypen zu unterstützen wäre, die aber
+zum Teil für das Verfahren nicht bedeutend sind.
+
+Die Zertifikatsformate X.509v3 werden entsprechend in der ASN.1-Syntax beschrieben. Erklärtes
+Ziel ist es, eine Absprache bezüglich einiger Parameter zu treffen, um für das Sicherheitsverfahren
+im Gesundheitswesen eine, auch im Hinblick auf die Zukunft, sichere Kommunikation zu gewähr-
+leisten. Dieses Ziel kann nur durch die Beteiligung der am Markt etablierten Anbieter und Hersteller
+von Sicherheitssoftware, die i. d. R. dem TeleTrust Deutschland e. V. angehören, erreicht werden.
+Die vorliegende Dokumentation folgt einem international konsolidierten Konzept für Informations-
+und Kommunikationssicherheit in offenen IT-Systemen. Die Auswahl der Algorithmen und Schlüs-
+seldefinitionen, der Datenformate, der Zertifizierungsstruktur und der Struktur der Adressen für die
+Schnittstelle sind Grundlage dafür, dass
+
+• die Interoperabilität von Anwendungen,
+• die Interoperabilität zwischen Zertifizierungsinstanzen beim
+• Schlüsselmanagement und anderen Trusted Third Party - Diensten,
+
+Gültig ab:01.01.2026  Seite 6 von 94                               Stand: 02.09.2025
+     • die Bereitstellung von miteinander kompatiblen Hard- und
+     • Softwarekomponenten und Diensten durch Technologie- und Produktentwickler
+
+gewährleistet werden können.
+
+1.4 Kommunikation zum Datenaustausch im Gesundheits- und Sozialwesen
+
+Sowohl die Trust Center als auch die zur Verfügung stehenden Sicherheitssysteme decken derzeit
+die Anforderungen einer X.500 Implementierung nicht ab. Die Anzahl an Zertifikaten und auch die
+mittelfristig erwarteten Teilnehmerzahlen ermöglichen den kompletten Austausch der Verzeich-
+nisse auf der Grundlage der heute verwendeten TCP/IP-Protokollfamilie mittels E-Mail, ftp oder
+http. Die Basis hierfür bildet die heutige Ausrichtung des Datenaustauschverfahrens innerhalb der
+Sozialversicherung.
+
+Für den Aufruf von Zertifikaten und Sperrlisten wird ein Protokoll benötigt, welches Funktionalitä-
+ten bietet, wie z. B. das selektive Suchen in Verzeichnissen usw. Hier bietet LDAP (Ligthweight Di-
+rectory Access Protocol) v3 [RFC 4510 - 4519] die geeigneten Funktionalitäten für den Verzeich-
+nisabruf. Das Verzeichnis entspricht dem X.500 Modell. Zertifikate sind als Werte vom Typ „user-
+Certificate“ codiert, die Sperrlisten sind vom Typ „certificateRevocationlist“ codiert. Die Zertifikate
+und Sperrlisten sind im Verzeichnis in ihrer BER-codierten Form als Binärdateien gespeichert. Bei
+der Nutzung von LDAP sind in Anlehnung an die MailTrust (Common-PKI 2.0) Spezifikationen min-
+destens die Operationen: „bind“, „search“ und „unbind“ vorgesehen. Dabei sind in Anlehnung an die
+aktuell gültigen MailTrust Spezifikationen die diesbezüglichen Vorgaben zu den Austauschforma-
+ten zu berücksichtigen.
+
+Als Datei-Extensions sind anzugeben:
+
+Revocation List                       .crl
+Zertifizierungsantwort                .p7c
+Zertifizierungsanfrage                .p10
+
+1.5 Verbindlichkeit
+Die in diesem Dokument getroffenen Spezifikationen haben einen verbindlichen Charakter. Wird bei
+der Datenannahme ein Abweichen von diesen Spezifikationen festgestellt, so führt dies zur Abwei-
+sung der Datenlieferung.
+
+2. Kryptografische Algorithmen und Datenformate
+
+In diesem Kapitel werden die zulässigen kryptografischen Algorithmen, die einzuhaltenden Schlüs-
+sellängen sowie die grundlegenden Datenformate für Zertifikate beschrieben. Auf Basis der damit
+gebildeten Sicherheitsinfrastruktur werden in den folgenden Kapiteln der Nachrichtenaustausch
+und das Schlüsselmanagement aufgesetzt.
+
+Gültig ab:01.01.2026                  Seite 7 von 94  Stand: 02.09.2025
+2.1 Krypto-Algorithmen
+Die Auswahl der kryptografischen Algorithmen ist an [CommonPKI-6] angelehnt und folgt daher
+auch der dort vorgenommenen Einteilung in verschiedene Gruppen je nach Verwendungszweck,
+wobei die einzelnen Algorithmen dann in den Unterabschnitten ggf. auch mehrfach genannt wer-
+den. Die Algorithmen dienen als Grundbausteine für eine technische Sicherheitsinfrastruktur, in
+welcher die eingangs genannten Schutzziele, d.h. die Gewährleistung von Vertraulichkeit, Integrität
+und Authentizität ausgetauschter Informationen im Gesundheits- und Sozialwesen, schließlich er-
+reicht werden sollen.
+
+Neben der dominierenden Frage hinsichtlich der sicherheitstechnischen Eignung bestimmter Ver-
+fahren (vgl. z.B. Ausführungen in [BNA-AlgKat] oder [BSI-TR02102]) muss auch die Effizienz des
+Datenaustausches in der Risikoabwägung beachtet werden. Dies betrifft sowohl die Algorithmen als
+auch deren spezifische Parameter (Schlüssellängen, Betriebsmodi etc.) bzw. ihre Einbettung im Ge-
+samtsystem. Beispielsweise wird durch die Kombination von Secret-Key-Verfahren und Public-Key-
+Verfahren in Form eines hybriden Verschlüsselungssystems einerseits die aufgewandte Rechenzeit
+verkürzt und andererseits stehen auch die Vorteile einer effizienten Schlüsselverteilung zur Verfü-
+gung.
+
+2.1.1  Einweg-Hashfunktionen (One-Way Hash Functions)
+
+Als Hashfunktionen ist ausschließlich der vom NIST in [FIPS180-3] definierte Algorithmus SHA-256
+zu verwenden.
+
+                      Name     OID
+                      SHA-256  2.16.840.1.101.3.4.2.1
+
+Die Einweg-Hashfunktionen werden dazu verwendet, aus einer gegebenen Nachricht einen so ge-
+nannten „Message Digest“ zu errechnen. Ein „Message Digest“ ist dabei ein Wert, der weitgehend
+eindeutig einer Nachricht zugeordnet werden kann (Kollisionsresistenz der Hashfunktion). Aus dem
+„Message Digest“ lässt sich jedoch die zugrundeliegende Nachricht nicht wieder zurückberechnen
+(Einweg-Eigenschaft der Hashfunktion).
+
+• Eingabe: die zu verarbeitende Nachricht
+• Ausgabe:eine Zeichenfolge (Hashwert) fester Bit Länge
+
+Die Ausgabe der jeweiligen Hashfunktion wird nicht explizit in Zertifikaten oder ausgetauschten
+Nachrichten angegeben. Sie wird jedoch u.a. bei der Signaturerstellung verwendet und hat damit
+Auswirkungen auf die Schutzziele Integrität und Authentizität. Der erzeugte Hashwert hat bei SHA-
+256 eine Länge von 256 Bit. Bei der Implementierung ist darauf zu achten, dass jeweils der durch
+den oben angegebenen Objektbezeichner (OID) referenzierte Algorithmus gemäß den Vorgaben in
+[FIPS180-3] verwendet wird.
+
+Gültig ab:01.01.2026           Seite 8 von 94            Stand: 02.09.2025
+       Profilierung:
+       In der vorliegenden Spezifikation werden Werte von Hashfunktionen sowohl bei
+       der Signaturerstellung als auch für so genannte „Fingerprints“ verwendet. Sie die-
+       nen dazu die Einmaligkeit eines Schlüssels im Verfahren und die Zugehörigkeit
+       eines Schlüssels zum jeweiligen Antragsteller schneller überprüfen zu können.
+       Hierzu wird der Hashwert über den zur Zertifizierung vorgelegten öffentlichen
+       Schlüssel gebildet und als Ausdruck dem schriftlichen Antrag beigefügt.
+
+       Der öffentliche Schlüssel ist sowohl in einem X.509-Zertifikat als auch in einem
+       PKCS#10-Request als BITSTRING mit der Bezeichnung subjectPublicKey in der
+       Struktur subjectPublicKeyInfo enthalten. Der „Fingerprint“ ist ausschließlich über
+       den kompletten BITSTRING zu bilden.
+
+2.1.2  Signaturalgorithmen (Signature Algorithms)
+
+Es findet das Verfahren Signature Scheme with Appendix PSS“ (üblicherweise mit „RSASSA-PSS“ ab-
+gekürzt) gemäß RFC 8017 mit nachfolgenden Parameter Verwendung.
+
+                      Name          OID
+
+                      id-RSAES-PSS  1.2.840.113549.1.1.10
+
+Es wird als öffentlicher Exponent „e“ die 4. Fermatsche Zahl (0x10001 bzw. 2^16 + 1 = 65537 de-
+zimal) verwendet.
+
+Dies betrifft die Erstellung und Validierung von Signaturen
+     • von Zertifikaten,
+     • der PKCS#10-Zertifizierungsanfragen,
+     • der PKCS#7-Zertififizierungsantworten,
+     • der eigentlichen Nachrichten im Nachrichtenaustausch
+
+Der Signaturalgorithmus wird zum elektronischen Signieren von Daten verwendet, um sie einerseits
+gegen unbefugte Veränderung zu schützen (Integrität) sowie andererseits ihre Herkunft nachzu-
+weisen (Authentizität). Er ist eine Kombination aus einer Hashfunktion und einem Public-Key-Ver-
+fahren (öffentlicher und privater Schlüssel).
+
+• Eingabe: die zu signierende Nachricht, der private Schlüssel des Signierenden
+• Ausgabe:die digitale Signatur
+
+Gültig ab:01.01.2026                Seite 9 von 94           Stand: 02.09.2025
+Der zugehörige Objektbezeichner (OID) aus der obigen Tabelle wird im Feld Algorithm der Struktur
+Signature eines Zertifikates oder eines PKCS#10-Requests eingetragen.
+
+2.1.2.1        Datenfelder zur Verwendung des Signaturalgorithmus RSAES-PSS
+
+Der im RSASSA-PSS-Verfahren verwendete Hashalgorithmus und weitere Werte werden über ent-
+sprechende Parameter mittels RSASSA-PSS-params definiert. Deren ASN1-Struktur mit den
+Default-Werten ist wie folgt definiert:
+
+RSASSA-PSS-params ::= SEQUENCE {
+
+   hashAlgorithm [0] HashAlgorithm DEFAULT sha1,
+
+   maskGenAlgorithm [1] MaskGenAlgorithm DEFAULT mgf1SHA1,
+
+   saltLength  [2] INTEGER        DEFAULT 20,
+
+   trailerField [3] TrailerField DEFAULT trailerFieldBC
+
+}
+
+Im Folgenden werden die Parameter-Werte für die Verwendung von SHA256 als Signaturverfahren
+erläutert.
+
+2.1.2.1.1      Datenfeld HashAlgorithm
+
+Das Feld HashAlgorithm gibt den zu verwendenden Hash-Algorithmus an. Da SHA1 als Default-
+
+Wert nicht unterstützt wird, ist die explizite Angabe des Parameter-Wertes für die Verwendung von
+
+SHA256 als Signaturverfahren erforderlich. Nach [RFC-8017] ist die ASN1-Struktur für das Feld, das
+
+den Signaturalgorithmus angibt, wie folgt definiert:
+
+   HashAlgorithm ::= AlgorithmIdentifier {
+         {OAEP-PSSDigestAlgorithms}
+
+   }
+
+   OAEP-PSSDigestAlgorithms ALGORITHM-IDENTIFIER ::= {
+
+         { OID id-sha1      PARAMETERS NULL }|
+
+         { OID id-sha224    PARAMETERS NULL }|
+
+         { OID id-sha256    PARAMETERS NULL }|
+
+         { OID id-sha384    PARAMETERS NULL }|
+
+         { OID id-sha512    PARAMETERS NULL }|
+
+         { OID id-sha512-224 PARAMETERS NULL }|
+
+         { OID id-sha512-256 PARAMETERS NULL },
+
+         ... -- Allows for future expansion --
+
+   }
+
+Für die Angabe der Hashfunktion SHA256 ist die OID gemäß Kapitel 2.1.1 Einweg-Hashfunktionen
+zu verwenden.
+
+    sha256 HashAlgorithm ::= {
+           algorithm id-sha256,
+           parameters SHA256Parameters : NULL
+
+    }
+
+Gültig ab:01.01.2026              Seite 10 von 94                            Stand: 02.09.2025
+2.1.2.1.2  Datenfeld MaskGenAlgorithm
+
+Das Feld MaskGenAlgorithm definiert das Formatierungsverfahren. RFC-8017 sieht aktuell nur das
+
+Verfahren MGF1 vor.
+
+MaskGenAlgorithm ::= AlgorithmIdentifier { {PKCS1MGFAlgorithms} }
+
+PKCS1MGFAlgorithms ALGORITHM-IDENTIFIER ::= {
+      { OID id-mgf1 PARAMETERS HashAlgorithm },
+      ... -- Allows for future expansion --
+
+}
+
+id-mgf1    OBJECT IDENTIFIER ::= { pkcs-1 8 }
+
+                      Name             OID
+                      id-mgf1          1.2.840.113549.1.1.8
+
+Das Formatierungsverfahren ist generisch und basiert wiederrum auf einem Hash-Verfahren, dass
+entsprechend der Hash-Funktion im Feld HashAlgorithm zu wählen ist. Daraus ergibt sich für die
+Verwendung von SHA256 folgende Parameter-Definition:
+
+mgf1SHA256 MaskGenAlgorithm ::= {
+      algorithm id-mgf1,
+      parameters HashAlgorithm : sha256
+
+}
+
+Für die Angabe der Hashfunktion SHA256 ist die OID gemäß Kapitel 2.1.1 Einweg-Hashfunktionen
+zu verwenden.
+
+2.1.2.1.3  Datenfeld saltLength
+
+Das Feld saltLength gibt die Länge des zu verwendenden Salt-Wertes an und ist in RFC-8017 defi-
+
+niert. Gemäß der Empfehlung des BSI wird bei SHA256 eine Salt-Länge 32 verwendet.
+
+2.1.2.1.4  Datenfeld TrailerField
+
+Für das Feld TrailerField ist gemäß RFC-8017 ein fester Wert vorgesehen:
+
+TrailerField ::= INTEGER { trailerFieldBC(1) }
+
+2.1.3      Verschlüsselungsalgorithmen für Daten (Content Encryption Algorithmus)
+
+Als Verschlüsselungsalgorithmus für Daten ist standardmäßig der AES-Algorithmus [RFC 3565] mit
+256 Bit Schlüssellänge und CBC-Betriebsmodus (id-aes256-CBC) zu verwenden.
+
+           Name                          OID
+           id-aes256-CBC                 2.16.840.1.101.3.4.1.42
+
+Gültig ab:01.01.2026               Seite 11 von 94                        Stand: 02.09.2025
+Der symmetrische Verschlüsselungsalgorithmus (Secret-Key-Verfahren) ist der eigentliche Algo-
+rithmus mit dem die Daten ver- und entschlüsselt werden, um die Vertraulichkeit der ausgetausch-
+ten Informationen zu schützen. Hierzu müssen Verschlüsseler und Entschlüsseler über den glei-
+chen Nachrichtenschlüssel (auch Session-Key genannt) verfügen, der wiederum zufällig und indivi-
+duell für jede Nachricht gewählt werden sollte.
+
+       • Eingabe:     Verschlüsselung                     Entschlüsselung
+       • Ausgabe:     die zu verschlüsselnden Daten       die verschlüsselten Daten
+                      der Nachrichtenschlüssel            der Nachrichtenschlüssel
+                      die verschlüsselten Daten           die entschlüsselten Daten
+
+Der Nachrichtenschlüssel ist der Schlüssel, mit dem die Daten verschlüsselt werden. Er wird für
+jede Nachricht jeweils zufällig bestimmt.
+
+Der zugehörige Objektbezeichner (OID) wird im Feld contentEncryptionAlgorithm der Struktur Enc-
+ryptedContentInfo in der PKCS#7-Nachricht eingetragen.
+
+2.1.4  Verschlüsselungsalgorithmen für den Nachrichtenschlüssel
+       (Key Encryption Algorithmus)
+
+Es findet das Verfahren „EME-OAEP“ (bei Verwendung mit RSA auch als RSAES-OAEP bezeichnet)
+gemäß RFC 8017 mit nachfolgendem Parameter Verwendung.
+
+                      Name  OID
+
+                      id-RSAES-OAEP 1.2.840.113549.1.1.7
+
+Es wird als öffentlicher Exponent „e“ die 4. Fermatsche Zahl (0x10001 bzw. 2^16 + 1 = 65537 de-
+zimal) festgelegt.
+
+Die Verschlüsselung des Nachrichtenschlüssels erfolgt mit Hilfe eines asymmetrischen Verfahrens,
+damit die Schlüsselverteilung über eine Public-Key-Infrastruktur (PKI) möglich ist. Hierfür gibt es
+ein Schlüsselpaar (auch Interchange-Key genannt) bestehend aus öffentlichem und privaten Schlüs-
+sel für jeden Teilnehmer.
+
+       • Eingabe:     Verschlüsselung                     Entschlüsselung
+       • Ausgabe:     der Nachrichtenschlüssel            der private Schlüssel des
+                      der öffentliche Schlüssel des Emp-  Empfängers
+                      fängers                             der Nachrichtenschlüssel
+                      der verschlüsselte Nachrichten-     der Nachrichtenschlüssel
+                      schlüssel
+
+Gültig ab:01.01.2026        Seite 12 von 94                      Stand: 02.09.2025
+Für den oben angegebenen RSA-Algorithmus ist hier eine Schlüssellänge von 4096 Bit zu verwen-
+den. Der zugehörige Objektbezeichner wird im Feld Algorithm der Struktur subjectPublicKeyInfo
+eines Zertifikates oder PKCS#10-Requests eingetragen.
+
+2.1.4.1    Datenfelder zur Verwendung des Verschlüsselungsalgorithmus RSAES-OAEP
+
+Im OAEP-Verfahren werden einige verfahrensspezifische Werte über entsprechende Parameter mit-
+tels RSAES-OAEP-params definiert. Dabei handelt es sich um die Angabe eines Hash-Verfahrens,
+eines Formatierungsverfahrens sowie eines Labels. Deren ASN1-Struktur mit den Default-Werten
+ist wie folgt definiert:
+
+RSAES-OAEP-params ::= SEQUENCE {
+   hashAlgorithm [0] HashAlgorithm DEFAULT sha1,
+   maskGenAlgorithm [1] MaskGenAlgorithm DEFAULT mgf1SHA1,
+   pSourceAlgorithm [2] PSourceAlgorithm DEFAULT pSpecifiedEmpty
+
+Im Folgenden werden die Parameter-Werte für die Verwendung von SHA256 als Hashverfahren er-
+läutert.
+
+2.1.4.1.1  Datenfeld HashAlgorithm
+
+Das Feld HashAlgorithm gibt den zu verwendenden Hash-Algorithmus an. Da SHA1 als Default-
+
+Wert nicht unterstützt wird, ist die explizite Angabe des Parameter-Wertes für die Verwendung von
+
+SHA256 als Hashverfahren erforderlich.
+
+HashAlgorithm ::= AlgorithmIdentifier {
+   {OAEP-PSSDigestAlgorithms}
+
+}
+
+OAEP-PSSDigestAlgorithms ALGORITHM-IDENTIFIER ::= {
+   { OID id-sha1 PARAMETERS NULL }|
+   { OID id-sha224 PARAMETERS NULL }|
+   { OID id-sha256 PARAMETERS NULL }|
+   { OID id-sha384 PARAMETERS NULL }|
+   { OID id-sha512 PARAMETERS NULL }|
+   { OID id-sha512-224 PARAMETERS NULL }|
+   { OID id-sha512-256 PARAMETERS NULL },
+   ... -- Allows for future expansion --
+
+}
+
+Für die Angabe der Hashfunktion SHA256 ist die OID gemäß Kapitel 2.1.1zu verwenden.
+
+sha256 HashAlgorithm ::= {               Seite 13 von 94          Stand: 02.09.2025
+Gültig ab:01.01.2026
+   algorithm id-sha256,
+   parameters SHA256Parameters : NULL
+}
+
+2.1.4.1.2  Datenfeld MaskGenAlgorithm
+
+Das Feld MaskGenAlgorithm definiert das Formatierungsverfahren. [RFC-8017] sieht aktuell nur
+
+das Verfahren MGF1 vor.
+
+MaskGenAlgorithm ::= AlgorithmIdentifier { {PKCS1MGFAlgorithms} }
+
+PKCS1MGFAlgorithms ALGORITHM-IDENTIFIER ::= {
+   { OID id-mgf1 PARAMETERS HashAlgorithm },
+   ... -- Allows for future expansion --
+
+}
+
+id-mgf1 OBJECT IDENTIFIER ::= { pkcs-1 8 }
+
+                      Name                  OID
+                      id-mgf1               1.2.840.113549.1.1.8
+
+Das Formatierungsverfahren ist generisch und basiert wiederrum auf einem Hash-Verfahren, dass
+entsprechend der Hash-Funktion im Feld HashAlgorithm zu wählen ist. Daraus ergibt sich für die
+Verwendung von SHA256 folgende Parameter-Definition:
+
+mgf1SHA256 MaskGenAlgorithm ::= {
+   algorithm id-mgf1,
+   parameters HashAlgorithm : sha256
+
+}
+
+Für die Angabe der Hashfunktion SHA256 ist die OID gemäß Kapitel 2.1.1 Einweg-Hashfunktionen
+zu verwenden.
+
+2.1.4.1.3  Datenfeld PSourceAlgorithm
+
+Das Feld PSourceAlgorithm definiert die zu verwendenden Verschlüsselungsparameter. [RFC-8017]
+
+sieht aktuell nur die Angabe eines „Labels“ einen „Octet String“ mit festem Wert vor.
+
+PSourceAlgorithm ::= AlgorithmIdentifier {
+   {PKCS1PSourceAlgorithms}
+
+}
+
+PKCS1PSourceAlgorithms ALGORITHM-IDENTIFIER ::= {
+
+Gültig ab:01.01.2026                   Seite 14 von 94             Stand: 02.09.2025
+   { OID id-pSpecified PARAMETERS EncodingParameters },
+   ... -- Allows for future expansion --
+}
+
+id-pSpecified OBJECT IDENTIFIER ::= { pkcs-1 9 }
+
+EncodingParameters ::= OCTET STRING(SIZE(0..MAX))
+
+Als Default-Wert für das Label ist in [RFC-8017] die Angabe eines leeren Labels vorgesehen:
+
+pSpecifiedEmpty PSourceAlgorithm ::= {
+          algorithm id-pSpecified,
+          parameters EncodingParameters : emptyString
+
+      }
+
+emptyString EncodingParameters ::= ''H
+
+2.1.5  Algorithmen zur Nutzung des öffentlichen Schlüssels
+       (Subject Public Key Algorithmus)
+
+Auch zur weiteren Nutzung des öffentlichen Schlüssels (z.B. zur Signaturverifikation) wird RSA ge-
+mäß RFC 8017 eingesetzt. Mit folgender OID wird die zulässige Verwendung der Schlüssel gemäß
+RFC 4055 definiert:
+
+                      Name           OID
+                      rsaEncryption  1.2.840.113549.1.1.1
+
+Als Schlüssellänge wird sowohl für Zertifizierungsstellen (PCA und CA) als auch für einfache Teil-
+nehmer eine Länge von 4096 Bit vorgeschrieben. Für Zertifizierungsstellen kann die Schlüssellänge
+nach gesonderter Festlegung auch größer sein.
+
+Je nach Anwendungsumfeld (Signatur oder Ver-/Entschlüsselung des Nachrichtenschlüssels) wer-
+den die Schlüssel im entsprechenden Algorithmus wie unter 2.1.2 oder 2.1.4 beschrieben verwen-
+det.
+
+Der zugehörige Objektbezeichner (OID) wird im Feld Algorithm der Struktur subjectPublicKeyInfo
+eines Zertifikates oder PKCS#10-Requests eingetragen (vgl. Abschnitt 4.4.8).
+2.2 Datenformate
+Die folgenden Spezifikationen und Datenformate sind vorgesehen.
+
+Gültig ab:01.01.2026                 Seite 15 von 94        Stand: 02.09.2025
+2.2.1  Spezifikation: Session-Key
+
+Als Session-Key ist standardmäßig der AES-Algorithmus mit 256 Bit Schüssellänge und CBC-Be-
+triebsmodus (id-aes256-CBC) vorzusehen.
+
+2.2.2  Spezifikation: Interchange Key
+
+Als Interchange Key ist RSA mit den unten beschriebenen Parametern einzusetzen.
+
+2.2.3  Spezifikation: Hashfunktion/Signaturalgorithmus
+
+Als Hash-Funktion ist standardmäßig SHA-256 vorzusehen.
+Die Hash-Funktion wird zum Erzeugen eines so genannten Message Digest verwendet, aus dem die
+elektronische Unterschrift gebildet wird.
+
+2.2.4  Spezifikation: RSA Schlüssellänge
+
+Die RSA Schlüssellänge beträgt:
+
+• PCA-Schlüssel 4096 Bit (Standard); nach gesonderter Festlegung auch größer
+• CA-Schlüssel 4096 Bit (Standard); nach gesonderter Festlegung auch größer
+• Teilnehmer 4096 Bit (Standard)
+
+2.2.5  Spezifikation: Öffentlicher Exponent des RSA Algorithmus
+
+Als RSA Exponent soll die 4. Fermat Zahl (216+1) gewählt werden (siehe X.509).
+
+2.2.6  Spezifikation: Schlüsselformat für den Public-Key
+
+Hier ist die „Abstract Syntax Notation“ (ASN.1) sowie der Standard X.509 maßgeblich.
+
+2.2.7  Spezifikation: Zertifikate
+
+Es sind V3-Zertifikate gemäß X.509 (inklusive Extensions, soweit deren Unterstützung im Standard
+gefordert ist; siehe unten) zu verwenden. Die Komponenten/ Implementierungen sind so einzustel-
+len/ anzulegen, dass Objektbezeichner (OIDs) für unbekannte Extensions in Zertifikaten ignoriert
+werden. Damit bleiben eine spätere Verfahrenserweiterung und die Nutzung spezifischer Extensi-
+ons möglich.
+
+Zertifikate sind in ASN.1 Syntax Notation sowie entsprechend der Norm X.509 zu implementieren.
+Bei der Codierung der Zertifikate sind die „Distinguished Encoding Rules“ (DER) entsprechend X.509
+einzuhalten.
+
+Die Extensions “SubjectKey-Identifier”, “AuthorityKey-Identifier”, “KeyUsage”, “CertificatesPolicies”,
+“SubjectAlternative-Name”, “BasicConstraints” und “CRLDistributions_Points“ müssen unterstützt
+werden.
+
+Die Erweiterung „BasicConstraints“ dient der Erkennung von CA-Zertifikaten und umfasst die Felder
+„CA“ und „PathLenConstraint“: Das CA-Feld von „BasicContraints“ muss den Wert „TRUE“ (Teilneh-
+mer darf Zertifikate signieren) enthalten. Das Feld „PathLenConstraint“ kann gesetzt sein. Wenn es
+angegeben ist, dann muss die Pfadlänge auf „0“ gesetzt werden, soweit die Zertifizierungsstelle
+ausschließlich Teilnehmerzertifikate (d.h. keine Zertifikate für andere CAs) ausstellen darf.
+
+Gültig ab:01.01.2026                   Seite 16 von 94                          Stand: 02.09.2025
+2.2.8   Spezifikation: PKCS#7 (Public Key Cryptography Standards)
+
+Die allgemeine Syntax für Datenströme oder Dateien, die mit den kryptografischen Algorithmen aus
+Abschnitt 2.1 bearbeitet werden, ist gemäß PKCS#7 vorzunehmen.
+
+2.3 Zufallszahlen
+
+Modernen kryptographischen Verfahren liegt die Erzeugung von ausreichend sicheren Zufallszahlen
+zu Grunde. Ausreichend sicher bedeutet in diesem Zusammenhang insbesondere, dass diese aus-
+reichend groß und ausreichend zufällig erzeugt und verwendet werden. Nach den Empfehlungen
+des BSI sollen Zufallszahlen zukünftig in der Regel mit einer Entropie von mindestens 120 Bit –
+statt bislang 100 Bit – erzeugt werden. Da das Generieren von ausreichend sicheren Zufallszahlen
+insbesondere bei der Erzeugung der (privaten und öffentlichen sowie symmetrischen) Schlüssel er-
+forderlich ist, ist diese Anforderung insbesondere auf Seiten der einzelnen Teilnehmer des Verfah-
+rens relevant und entsprechend zu berücksichtigen.
+
+3. Nachrichtenaustausch
+
+Für den Datenaustausch im Sinne dieser Richtlinie sind insgesamt drei verschiedene Nachrichtenty-
+pen nach PKI-Nachrichten und Nachrichten für den Datenaustausch zu unterscheiden.
+
+Nachrichten werden im Datenaustausch des Gesundheits- und Sozialwesen gesichert übertragen
+(Typ 3: signierte und verschlüsselte Nachricht). In der Antwort der Zertifizierungsinstanz ist das
+beantragte Zertifikat enthalten, mit dem der Teilnehmer (Leistungserbringer oder Arbeitgeber)
+seine Nachrichten signiert. Die Zertifikate haben eine definierte Gültigkeit, in der der signierte und
+verschlüsselte Datenaustausch mit den Sozialversicherungsträgern durchgeführt werden kann. Der
+Nachrichtenaustausch findet zwischen den folgenden Beteiligten statt:
+
+     •  Leistungserbringer und Sozialversicherungsträger zur Übermittlung der Abrechnungsdaten
+oder    Arbeitgebern zur Übermittlung von Meldungen zum Sozialversicherungsträger
+        Sozialversicherungsträger untereinander.
+     •
+oder
+
+     •
+
+3.1 Signierte und verschlüsselte Nachrichten
+
+Für den Datenaustausch zwischen Sozialversicherungsträgern und Leistungserbringern / Arbeitge-
+bern / untereinander (unter Anwendung des von der CA erhaltenen Zertifikats, das sich in der Zer-
+tifizierungsantwort befindet,) dürfen beim PKCS#7-Verfahren ausschließlich signierte und ver-
+schlüsselte Nachrichten nach PKCS#7 eingesetzt werden.
+
+     ▪
+                  ▪ Profilierung:
+                       Für die signierte Nachricht wird der ContentType SignedData verwendet.
+
+Gültig ab:01.01.2026  Seite 17 von 94                              Stand: 02.09.2025
+                       Für die Verschlüsselung der signierten Nachricht wird der ContentType
+                       EnvelopedData verwendet.
+
+Die PKCS#7-signierte und verschlüsselte Nachricht wird in [CommonPKI-3] behandelt. Abschnitt 4
+beschreibt hierzu ein allgemeines Vorgehen (4.1 File Signature, 4.2 File Encryption). Abschnitt 3.2
+und 3.3 liefern die erforderlichen Datenstrukturen.
+
+3.2 Aufbau der PKCS#7-signierten und verschlüsselten Nachricht
+
+Referenz:  [CommonPKI-3] Tabelle 3.2
+           [CommonPKI-3] Tabelle 3.3,
+           [RFC 5652] Abschnitt 5
+           [RFC 5652] Abschnitt 6
+
+Eine verschlüsselte Nachricht ist gemäß [CommonPKI-3] Abschnitt 3.3 vom Typ EnvelopedData,
+eine signierte gemäß [CommonPKI-3] Abschnitt 3.2 vom Typ SignedData. Die zu sichernden Daten
+werden wie in [CommonPKI-3] Abschnitt 4 beschrieben zuerst signiert und danach verschlüsselt.
+
+Der Typ SignedData besteht allgemein aus den zu signierenden Daten, den für die Verifizierung der
+Signatur notwendigen Zertifikaten sowie Informationen zu dem signierenden Absender. Die Daten
+vom Typ SignedData werden wie in Kapitel 3.2.1 beschrieben erstellt. Da hier jedoch das ganze
+SignedData-Objekt statt der degenerierten Form benötigt wird, sind folgende zusätzliche Felder zu
+verwenden:
+
+• Die zu sichernden Daten werden im Feld encapContentInfo abgelegt.
+• Die notwendigen Informationen zum Absender werden in ein Feld SignerInfo gefüllt.
+• Die Signatur mit dem privaten Schlüssel des Absenders erfolgt wie gehabt.
+
+Bei der Erstellung der Daten vom Typ EnvelopedData, gemäß Kapitel 3.2.2, wird das SignedData-
+Objekt als Input verwendet. Der Typ EnvelopedData besteht allgemein aus zu verschlüsselnden Da-
+ten und einem für einen oder mehrere Empfänger separat verschlüsselten Nachrichtenschlüssel.
+Die Daten vom Typ EnvelopedData werden durch die folgenden Schritte generiert:
+
+• Ein Nachrichtenschlüssel (content-encryption key) wird zufällig erzeugt.
+• Die Daten, in diesem Fall das SignedData-Objekt, werden mit dem Nachrichtenschlüssel
+
+     verschlüsselt.
+• Der Nachrichtenschlüssel wird für jeden Empfänger mit dessen öffentlichem Verschlüsse-
+
+     lungsschlüssel verschlüsselt.
+• Der verschlüsselte Nachrichtenschlüssel und andere empfängerspezifische Informationen
+
+     werden in einem RecipientInfo-Wert zusammengefasst.
+• Abschließend werden alle RecipientInfo-Werte mit den verschlüsselten Daten zum CMS-
+
+     Objekt EnvelopedData zusammengesetzt.
+
+Gültig ab:01.01.2026  Seite 18 von 94                           Stand: 02.09.2025
+3.2.1    Aufbau der Teildatenstruktur Content vom ContentType „SignedData“
+
+Der Typ SignedData hat folgende Syntax:
+
+SignedData ::= SEQUENCE {
+       version CMSVersion,
+       digestAlgorithms DigestAlgorithmIdentifiers,
+       encapContentInfo EncapsulatedContentInfo,
+       certificates [0] IMPLICIT CertificateSet OPTIONAL,
+       crls [1] IMPLICIT CertificateRevocationLists OPTIONAL,
+       signerInfos SignerInfos }
+
+3.2.1.1  Datenfeld „version“
+
+Das Feld version enthält die Versionsnummer der Syntax.
+
+         Profilierung:
+         Für das Datenfeld version soll in dieser Datenstruktur immer der Wert
+         „1“ eingesetzt werden.
+
+3.2.1.2  Datenfeld „digestAlgorithms“
+
+Dieses Datenfeld enthält genau einen Objektbezeichner1 für den Hash-Algorithmus, der zur Signa-
+
+tur der Daten eingesetzt wird.
+
+         Als Hash-Algorithmen ist nur SHA-256 vorgesehen. Der zu verwen-
+         dende Objektbezeichner ist von [CommonPKI-2] Tabelle 2 auf OID
+         2.16.840.1.101.3.4.2.1 (SHA-256) festgelegt; vgl. Abschnitt 2.1.1.
+
+3.2.1.3  Datenfeld „encapContentInfo“
+
+EncapsulatedContentInfo ::= SEQUENCE {
+ eContentType ContentType,
+ eContent [0] EXPLICIT OCTET STRING OPTIONAL }
+
+         Profilierung:
+         Gemäß [IMMTP3] wird hierfür der eContentType id-data mit der OID
+         1.2.840.113549.1.7.1 verwendet, die angibt, dass nicht interpre-
+         tierte binäre Daten in das Teildatenfeld eContent eingetragen wur-
+         den.
+
+1 Theoretisch sind mehrere OID-Angaben möglich, aber in diesem Zusammenhang besitzt das SignedData-Objekt nur
+eine Signatur, und daher nur eine Angabe des hierfür verwendeten Hash-Algorithmus.
+
+Gültig ab:01.01.2026                     Seite 19 von 94                    Stand: 02.09.2025
+3.2.1.4  Datenfeld „certificates“
+
+Dieses Datenfeld enthält das Zertifikat, das für die Signatur verwendet wurde und alle dazugehöri-
+
+gen Zertifikate des Zertifizierungspfades:
+
+CertificateSet ::= SET OF CertificateChoices
+
+CertificateChoices ::= CHOICE {
+certificate Certificate, -- See X.509
+
+ extendedCertificate [0] IMPLICIT ExtendedCertificate,
+-- Obsolete
+attrCert [1] IMPLICIT AttributeCertificate }
+-- See X.509 & X9.57
+
+         Profilierung:
+         Verwendet werden ausschließlich X509-Zertifikate. Die Reihenfolge
+         ist in [CommonPKI-2] nicht festgelegt und ist deshalb als Festle-
+         gungsvorschlag anzusehen.
+
+Hier findet die Spezifikation der X509v3-Zertifikate Anwendung; vgl. Kapitel 4.4. Jedes der im
+PKCS#7-Datenobjekt unter der Datenstruktur SignedData im Feld Certificates anzugebende Zertifi-
+kat hat den im Kapitel 4.4 formulierten Anforderungen einschließlich der Profilierung an X509v3-
+Zertifikate zu genügen.
+
+3.2.1.5  Datenfeld „crls“.
+
+Das Feld crls ermöglicht es üblicherweise, dem Empfänger der Nachricht die Sperrlisten bereitzu-
+
+stellen, die er für die Verifikation der digitalen Signatur benötigt.
+
+         Profilierung:
+         Dieses Datenfeld wird nicht verwendet und entfällt daher. Es ist ge-
+         plant Sperrlisten in einem Verzeichnis zur Verfügung zu stellen.
+
+3.2.1.6  Datenfeld „signerInfos“
+
+Das Feld signerInfos enthält üblicherweise die Informationen über die Signierer, u. a. deren Signa-
+
+turen.
+
+Das Datenfeld hat folgende Syntax:
+
+SignerInfos ::= SET OF SignerInfo
+
+      SignerInfo ::= SEQUENCE {             Seite 20 von 94            Stand: 02.09.2025
+      version CMSVersion,
+
+Gültig ab:01.01.2026
+sid SignerIdentifier,
+digestAlgorithm DigestAlgorithmIdentifier,
+signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
+signatureAlgorithm SignatureAlgorithmIdentifier,
+signature SignatureValue,
+unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
+
+3.2.1.6.1  Datenfeld „version“
+
+Das Feld version enthält die Versionsnummer der Syntax. Die Versionsnummer ist „1“.
+
+           Profilierung:
+           Für das Datenfeld version soll in dieser Datenstruktur immer der
+           Wert „1“ eingesetzt werden.
+
+3.2.1.6.2  Datenfeld „sid“
+
+Das Feld sid enthält Hinweise um das Zertifikat des Absenders zu Identifizieren.
+
+SignerIdentifier ::= CHOICE {
+issuerAndSerialNumber IssuerAndSerialNumber,
+subjectKeyIdentifier [0] SubjectKeyIdentifier }
+
+           Profilierung:
+           Wie in [IMMTP3] empfohlen soll das Feld IssuerAndSerialNumber ge-
+           nutzt werden.
+
+3.2.1.6.3  Datenfeld „digestAlgorithm“
+
+Das Feld digestAlgorithm enthält den Indentifikator des Hash-Algorithmus des Absenders.
+
+           Profilierung:
+           Siehe 2.1.1 Einweg-Hash-Funktionen (One-Way Hash Functions).
+
+3.2.1.6.4  Datenfeld „signedAttrs“
+
+Das Feld signerAttrs enthält zusätzliche Informationen, wie beispielsweise den Zeitpunkt der Signa-
+
+tur, die in die Signatur einbezogen werden.
+
+           Profilierung:
+           Die Verwendung dieses Feldes ist optional. Einzelheiten sind in [RFC
+           5652] beschrieben.
+
+3.2.1.6.5  Datenfeld „signatureAlgorithm“
+
+Das Feld signatureAlgorithm enthält den Indentifikator des Signatur Algorithmus des Absenders.
+
+Gültig ab:01.01.2026                Seite 21 von 94                               Stand: 02.09.2025
+           Profilierung:
+           Siehe 2.1.2 Signaturalgorithmen (Signature Algorithms).
+
+3.2.1.6.6  Datenfeld „signature“
+
+Das Feld signature enthält die digitale Signatur des Absenders.
+
+3.2.1.6.7  Datenfeld „unsignedAttrs“
+
+Das Feld unsignerAttrs enthält zusätzliche Informationen, die nicht in die Signatur einbezogen wer-
+
+den.
+
+           Profilierung:
+           Dieses Feld entfällt.
+
+3.2.2      Aufbau der Teildatenstruktur Content vom ContentType
+           „EnvelopedData“
+
+Der Typ EnvelopedData hat folgende Syntax:
+     ▪
+      EnvelopedData ::= SEQUENCE {
+      version CMSVersion,
+      originatorInfo [0] IMPLICIT OriginatorInfo OPTIONAL,
+      recipientInfos RecipientInfos,
+      encryptedContentInfo EncryptedContentInfo,
+      unprotectedAttrs [1] IMPLICIT UnprotectedAttributes OPTIONAL }
+
+RecipientInfos ::= SET OF RecipientInfo
+
+3.2.2.1    Datenfeld „version“
+Referenz:      [CommonPKI-3] Tabelle 6#1,
+               [RFC 5652] Abschnitt 6.1
+
+Das Feld version enthält die Versionsnummer der Syntax. Die Versionsnummer für die in der vorlie-
+genden Spezifikation verwendete Syntax ist „0“. Die Versionsnummer richtet sich danach, ob das
+Feld originatorInfo vorhanden ist, nach der Versionsnummer für die Datenstruktur RecipientInfos
+und ob das Feld unprotectedAttrs vorhanden ist.
+
+           Profilierung:
+           Gemäß [CommonPKI-3] Tabelle 3.3#1 soll das Datenfeld “version” den
+           Wert “0” erhalten, was impliziert, dass die Datenfelder originatorInfo
+           und unprotectedAttrs entfallen müssen und dass alle Strukturen vom
+           Typ RecipientInfos die Version “0” haben.
+
+Gültig ab:01.01.2026              Seite 22 von 94                     Stand: 02.09.2025
+3.2.2.2    Datenfeld „originatorInfo“
+Referenz:  [CommonPKI-3] Tabelle 6
+
+Das Feld originatorInfo enthält üblicherweise Informationen über den Aussteller der Nachricht. Es
+ist optional, da es vom verwendeten Algorithmus für das Schlüsselmanagement abhängig ist, ob
+dieses Feld verwendet werden muss. Falls nur Algorithmen verwendet werden, deren Unterstützung
+gefordert oder empfohlen wird, wird dieses Feld nicht benötigt.
+
+           Profilierung:
+           Von diesem optionalen Feld soll in den Nachrichten kein Gebrauch ge-
+           macht werden. Ohne Angabe einer originatorInfo muss es aus der Da-
+           tenstruktur EnvelopedData entfallen; vgl. auch 3.2.2
+
+3.2.2.3    Datenfeld „RecipientInfos“
+
+Referenz: [CommonPKI-3] Tabellen 6 und 7
+
+[RFC 5652], Abschnitt 6.2
+
+Die Datenstruktur RecipientInfos enthält Informationen für einen oder mehrere Empfänger der
+Nachricht. Für das Feld RecipientInfos wird folgende Syntax verwendet:
+
+Vgl. [CommonPKI-3] Tabelle 7 und [RFC 5652], Abschnitt 6.2:
+
+RecipientInfos ::= SET OF RecipientInfo
+RecipientInfo ::= CHOICE {
+ktri KeyTransRecipientInfo,
+kari [1] KeyAgreeRecipientInfo,
+kekri [2] KEKRecipientInfo }
+
+Wie in [CommonPKI-3] wird ausschließlich die Datenstruktur „KeyTransRecipientInfo“ verwendet.
+Vgl. [CommonPKI-3] Tabelle 8:
+
+KeyTransRecipientInfo ::= SEQUENCE {
+version CMSVersion,
+rid RecipientIdentifier,
+keyEncryptionAlgorithm KeyEncryptionAlgorithmIdentifier,
+encryptedKey EncryptedKey }
+
+RecipientIdentifier ::= CHOICE {
+issuerAndSerialNumber IssuerAndSerialNumber,
+subjectKeyIdentifier [0] SubjectKeyIdentifier }
+
+Gültig ab:01.01.2026                   Seite 23 von 94       Stand: 02.09.2025
+EncryptedKey ::= OCTET STRING
+
+Für jeden Empfänger wird eine Datenstruktur vom Typ KeyTransRecipientInfo verwendet; alle ande-
+ren Schlüsseltransport-Alternativen werden von [CommonPKI-3] nicht berücksichtigt. Die anderen
+Datenstrukturen der Auswahl beziehen sich auf ein Schlüsselmanagement mit Diffie-Hellman-
+Schlüsseln bzw. symmetrischen Schlüsseln. Für dieses Profil ist nur das RSA-Schlüsselaustausch-
+verfahren vorgesehen.
+
+Die Datenstruktur könnte auch für den Absender verwendet werden, falls er selbst in der Lage sein
+will, die Nachricht wieder zu entschlüsseln.
+
+3.2.2.3.1  Teildatenfeld „version“
+
+Referenz: [CommonPKI-3] Tabelle 8.#1
+
+[RFC 5652], Abschnitt 6.2
+
+           Profilierung:
+           Der Wert für das Feld version der Datenstruktur KeyTransRecipien-
+           tInfo, der die Versionsnummer der CMS-Syntax angibt, muss stets
+           „0“ sein; vgl. [CommonPKI-3] Tabelle 8, Notes [1]. Entsprechend Kapi-
+           tel 6.2.1 [RFC 5652] ist dies der Fall, wenn die Variante issuerAndSeri-
+           alNumber gewählt wird. (s. u.)
+
+3.2.2.3.2  Datenfeld „rid“
+
+Referenz: [CommonPKI-3] Tabelle 8.#2
+
+[RFC 5652], Abschnitt 6.2
+
+Mit dem Datenfeld das Feld rid wird das Zertifikat des Empfängers (und damit der öffentliche
+Schlüssel des Empfängers) identifiziert.
+
+           Profilierung:
+           Für das Datenfeld rid darf nur die Variante issuerAndSerialNumber ge-
+           wählt werden; vgl. [CommonPKI-3] Tabelle 8, Notes [2]. Das Zertifikat
+           wird damit durch den Namen der ausstellenden CA und die Serien-
+           nummer eindeutig bestimmt. Dies stimmt mit den Vorgaben zur Iden-
+           tifizierung der Signaturschlüssel von CAs überein.
+
+3.2.2.3.3  Teildatenfeld „keyEncryptionAlgorithm“
+
+Referenz: [CommonPKI-3] Tabelle 8.#3
+
+[RFC 5652], Abschnitt 6.2
+
+▪ Das Feld keyEncryptionAlgorithm enthält den OID für den Verschlüsselungsalgorithmus, mit
+     dem der Nachrichtenschlüssel verschlüsselt wird.
+
+Gültig ab:01.01.2026                  Seite 24 von 94  Stand: 02.09.2025
+           Profilierung:
+           Als Verschlüsselungsalgorithmus für den Nachrichtenschlüssel ist
+           RSA-OAEP vorgesehen; vgl. Abschnitt 2.1.4.
+
+3.2.2.3.4        Teildatenfeld „encryptedKey“
+
+Referenz: [CommonPKI-3] Tabelle 8.#1
+
+[RFC 5652], Abschnitt 6.2
+
+Das Feld encryptedKey enthält den verschlüsselten Nachrichtenschlüssel. Dies ist das Ergebnis der
+
+Verschlüsselung des Nachrichtenschlüssels (content-encryption key) mit dem öffentlichen Schlüssel
+
+des Empfängers.
+
+3.2.2.4    Datenfeld „ encryptedContentInfo“
+
+Referenz: [RFC 5652], Abschnitt 6.1
+
+Das Feld encryptedContentInfo der Datenstruktur EnvelopedData enthält die verschlüsselten Daten.
+Es wird folgende Datenstruktur verwendet:
+
+EncryptedContentInfo ::= SEQUENCE {
+contentType ContentType,
+contentEncryptionAlgorithm ContentEncryptionAlgorithmIdentifier,
+encryptedContent [0] IMPLICIT EncryptedContent OPTIONAL }
+
+EncryptedContent ::= OCTET STRING
+
+Die folgenden Unterabschnitte beschreiben die einzelnen Teildatenfelder der Datenstruktur Encryp-
+tedContentInfo.
+
+3.2.2.4.1        Teildatenfeld „contentType“
+
+Referenz: [CommonPKI-3] Tabelle 9#1
+
+[RFC 5652], Abschnitt 6.1
+
+Das Feld contentType enthält den Inhaltstyp der verschlüsselten Daten.
+
+                 ▪ Profilierung:
+                      Gemäß [IMMTP3] wird hierfür genau ein contentType verwen-
+                      det: “id-data”, mit der OID 1.2.840.113549.1.7.1, die angibt,
+                      dass nicht interpretierte binäre Daten verschlüsselt und in das
+                      Teildatenfeld encryptedContent eingetragen wurden.
+
+Gültig ab:01.01.2026                  Seite 25 von 94                        Stand: 02.09.2025
+3.2.2.4.2  Teildatenfeld „contentEncryptionAlgorithm“
+
+Referenz: [CommonPKI-3] Tabelle 9#2
+
+[RFC 5652], Abschnitt 6.1
+
+           Profilierung:
+           Als Verschlüsselungsalgorithmus für die Daten ist AES (id-aes256-
+           CBC) vorgesehen; vgl. Abschnitt 2.1.3.
+
+Das Feld contentEncryptionAlgorithm identifiziert den Verschlüsselungsalgorithmus, mit dem die
+Daten, die in das Teildatenfeld encryptedContent eingetragen werden, verschlüsselt werden.
+
+3.2.2.4.3  Teildatenfeld „encryptedcontent“
+
+Referenz: [CommonPKI-3] Tabelle 9#3
+
+[RFC 5652], Abschnitt 6.1
+
+Das Feld encryptedContent enthält die verschlüsselten Daten, also das Ergebnis der Verschlüsse-
+
+lung mit dem Nachrichtenschlüssel.
+
+3.2.2.5    Datenfeld „unprotectedAttrs“ (entfällt!)
+
+Referenz: [CommonPKI-3] Tabelle 6#5
+
+Das Feld unprotectedAttrs kann Attribute enthalten, die nicht verschlüsselt werden.
+
+           ▪ Profilierung:
+                Von diesem Feld darf in den Nachrichten kein Gebrauch ge-
+                macht werden, es muss aus der Datenstruktur EnvelopedData
+                entfallen; vgl. auch 3.2.2.2
+
+3.2.3      Transport der verschlüsselten Nachricht
+
+Nachdem die signierte und verschlüsselte PKCS#7-Nachricht die Kombination eines Datenobjekt
+vom Typ SignedData und eines vom Typ EnvelopedData (vgl. 3.2„Aufbau der PKCS#7-signierten
+und verschlüsselten Nachricht) zusammengestellt wurde, liegt ein solches Datenobjekt als ASN.1 -
+Struktur vor. Es folgt eine DER-Kodierung, die als Transportsicherung dient. Der daraus resultie-
+rende Bytestream wird in eine Datei abgelegt, die folgende Dateiendung aufweist:
+
+           Nachrichtenart            Dateiendung
+           Verschlüsselte Nachricht  <keine>2
+
+2 Die Dateinamen der verschlüsselten Nachrichten im Gesundheits- und Sozialwesen werden von der Sozialversicherung als
+   Identifikatoren für Verfahrensspezifische Ausprägungen genutzt. Diese werden als Verfahrenskennungen bezeichnet. Eine
+   Dateiendung ist für den verschlüsselten Nachrichtenaustausch nicht vorgesehen. Alle verschlüsselten Nutzdaten werden
+   ohne ein Suffix versendet. Die verschlüsselten Nutzdaten haben keinen Suffix; vgl. Gemeinsame Grundsätze Technik
+
+Gültig ab:01.01.2026                 Seite 26 von 94                          Stand: 02.09.2025
+Das physikalisch so gesicherte PKCS#7-Datenobjekt kann auf verschiedenen Transportwegen ge-
+
+sendet werden.
+
+3.2.3.1  Transportformat
+
+Referenz: [CommonPKI-3], Abschnitt 2.1.1,
+
+Eine verschlüsselte Nachricht als PKCS#7-Datenobjekt wird für den Datenaustausch zwischen zwei
+Kommunikationspartnern eingesetzt, um eine Nutzdatendatei verschlüsselt auszutauschen.
+
+Eine verschlüsselte Nachricht als PKCS#7-Datenobjekt wird in einer Datei abgelegt, die keine Datei-
+
+endung aufweist. Physikalisch handelt es sich um eine Binärdatei, die auf den weiteren Transport-
+
+wegen als eben solche zu behandeln ist.
+
+3.2.3.2  Transportwege
+
+Die zu berücksichtigenden Transportwege zwischen den Kommunikationspartnern des ITSG-Trust
+
+Centers zum Austausch von Zertifizierungsanfragen sind in den Anlagen 7 (E-Mail) und 14 (Daten-
+
+träger) spezifiziert.
+
+3.3 Sichere Transportebene mit TLS (SSL)
+Die Transport Layer Security (TLS), weitläufiger bekannt unter der Vorgängerbezeichnung Secure
+Socket Layer (SSL), ist ein kryptografisches Netzwerkprotokoll zur sicheren Datenübertragung im
+Internet. Das SSL-Protokoll wurde zuletzt 1996 in der Version 3.0 veröffentlicht, seitdem wird es
+unter dem neuen Namen TLS weiterentwickelt und standardisiert. Aktuell wird die TLS-Version 1.3
+im RFC 8446 beschrieben.
+
+Für den elektronischen Datenaustausch im Gesundheits- und Sozialwesen sind die zu übermittel-
+ten Nutzdaten unabhängig von der Transportebene gemäß 3.1 zu signieren und zu verschlüsseln.
+Eine zusätzliche Transportsicherung mit dem TLS-Protokoll kann optional angewendet werden, um
+z.B. beim Verbindungsaufbau eine Authentisierung der Kommunikationspartner zu ermöglichen.
+
+Bei der Nutzung einer Authentisierung beim Verbindungsaufbau und einer Transportverschlüsse-
+lung der zu übertragenen Daten ist mindestens die TLS-Version 1.2 zu nutzen.
+
+3.3.1    Authentisierungsmethoden bei TLS-Verbindungen
+
+In Abhängigkeit der Anforderung eines Dienstes zur Verwaltung und Authentisierung der Kommu-
+nikationspartner können für TLS-Verbindungen folgende Authentisierungsmethoden angewendet
+werden:
+
+• einseitige Zertifikats-Authentisierung des Servers
+▪ beidseitige Authentisierung von Server und Client
+
+                     - mit Serverzertifikat und Client-Login
+
+Gültig ab:01.01.2026                     Seite 27 von 94      Stand: 02.09.2025
+                           - beidseitige Zertifikats-Authentisierung von Server und Client
+
+Die Authentisierung-Methode mit einseitiger Zertifikats-Authentisierung bietet keine ausreichende
+Sicherheit, da lediglich der Server authentisiert wird. Für eine sichere Authentisierung der Kommu-
+nikationspartner werden daher beidseitige Authentisierungs-Methoden empfohlen.
+
+Für eine Zertifikats-Authentisierung gelten folgende Anforderungen an die Zertifikate:
+
+     • TLS-Zertifikate für Client und Server müssen von einer – selbst wiederum zertifizierten –
+          Zertifizierungsstelle (trusted root) ausgestellt sein, die den Client und Server mit dessen
+          Domain eindeutig identifiziert.
+
+     • Für spezielle Anwendungen im Gesundheits- und Sozialwesen gelten dabei für die Zertifi-
+          kate folgende Anforderungen:
+                - Zertifikate auf der Clientseite müssen von einer vertrauenswürdigen Zertifizie-
+                     rungsstelle im Gesundheits- und Sozialwesen ausgestellt sein; d.h. die vorhande-
+                     nen Zertifikate aus den Arbeitgeber- und Leistungserbringerverfahren sind zu ver-
+                     wenden (siehe Kapitel 4.4).
+                - Daraus ergibt sich, dass selbst-signierte Zertifikate (self-signed certificate), die
+                     ohne Beteiligung einer vertrauenswürdigen Zertifizierungsstelle erstellt wurden,
+                     nicht verwendet werden dürfen.
+
+3.3.2  Vorgaben bei TLS-Verbindungen
+
+Das hybride Netzwerkprotokoll TLS besteht aus einer Kombination von symmetrischen und asym-
+metrischen Algorithmen, um deren jeweilige Vorteile zu vereinen. Der Verbindungsaufbau erfolgt
+im Public-Key-Verfahren und die nachfolgende Datenübermittlung wird mit symmetrischen Verfah-
+ren gesichert. Die diversen unterstützten Algorithmen sind in sogenannten Cipher-Suites spezifi-
+ziert, die beim Verbindungsaufbau zwischen Client und Server ausgehandelt werden.
+
+Grundsätzlich gelten die Vorgaben in der technischen Richtlinie TR-02102-2 des BSI in der Version
+2024-01.
+
+4. Schlüsselmanagement
+
+4.1 Allgemein
+Die Integration eines asymmetrischen (Public-Key-Verfahren) Schlüsselmanagements begründet
+sich auf der Einrichtung einer vertrauenswürdigen Instanz (der Certification Authority - CA), der
+Schlüsselverwaltungsstelle oder dem Trust Center. Aufgabe des Trust Centers ist es, kryptographi-
+sche Schlüssel sicher zu erzeugen, zu verwalten und zu verteilen. Das Schlüsselmanagement ba-
+siert auf der Verwendung von Zertifikaten zur Propagierung von öffentlichen Schlüsseln an Kom-
+munikationspartner.
+
+Gültig ab:01.01.2026  Seite 28 von 94  Stand: 02.09.2025
+Das beschriebene Schlüsselmanagement umfasst insbesondere:
+
+• die Zertifizierungshierarchie,
+• die Zertifikate,
+• die Erzeugung und Prüfung von Zertifikaten,
+• das Sperrlistenmanagement sowie
+• die Rollen innerhalb der Systemarchitektur.
+
+Die öffentlichen Teilnehmerschlüssel werden durch eine vertrauenswürdige Instanz - der Certifica-
+tion Authority (CA) - zertifiziert. Dazu werden die öffentlichen Teilnehmerschlüssel in Form einer
+komplexen von der CA signierten Datenstruktur im System propagiert. Die Spezifikation der Zertifi-
+kate basiert auf dem aktuellen Zertifikatsformat X.509v3 (ITU-T X.509 97). Gegenüber dem bishe-
+rigen Zertifikatsformat sind zusätzliche Felder im Sinne von Zertifikatserweiterungen möglich.
+
+Die Zertifikatsverifizierung durch den Leistungserbringer oder Arbeitgeber wird durch die Überprü-
+fung der zugehörigen Gültigkeitsdauer und dem Abgleich einer durch die CA verteilten Sperrliste
+abgeschlossen. Die Identitäten von Subjekt und CA sind sogenannte „Distinguished Names", wie sie
+in X.500 festgelegt sind.
+
+4.2 Namenskonventionen
+Die unter X.500 vorzuhaltende Namenskonvention lautet:
+
+C =   Country                                  (DE)
+O =   Organization                             (Name des Trust Centers)
+OU =  Organization Unit                        (Name der Institution)
+OU =  Organization Unit                        IK-Nummer oder Betriebs- bzw.
+                                               Zahlstellennummer der Institution
+CN = Common Name (Allgemeiner Name)            (Name des Ansprechpartners)
+
+Die für die OU-Segmente gewählten Konventionen können im Rahmen der Pilotverfahren und der
+Interoperabilitätstests angepasst sowie um weitere OU-Segmente ergänzt werden.
+
+Für die Zertifizierungsstellen lautet die unter X.500 vorzuhaltende Namenskonvention:
+
+C =   Country                                  (DE)
+O =   Organization                             (Name des Trust Centers)
+
+Als Zeichensatz zur einheitlichen Darstellungsform ist US-ASCII vorzusehen (Zeilenende CR/LF).
+
+4.3 PKI-Nachrichten
+PKI-Nachrichten ergeben sich aus den Kommunikationsschritten im Beantragungsverfahren für ein
+Zertifikat. Das Beantragungsverfahren für ein Zertifikat besteht aus zwei wesentlichen Kommunika-
+tionsschritten:
+
+Gültig ab:01.01.2026     Seite 29 von 94                    Stand: 02.09.2025
+• Der Antragsteller, der ein Zertifikat wünscht, stellt einen Antrag bei der Zertifizierungs-
+     instanz (CA-Certification Authority) (Typ 1: Zertifizierungsanfrage).
+
+• Die Zertifizierungsinstanz schickt eine Antwort mit Zertifikat zurück (Typ 2: signierte Zerti-
+     fizierungsantwort).
+
+4.4 Definition der Zertifikate
+Die folgende Definition der Zertifikate enthält aufgrund des gewählten Ansatzes einer konzeptio-
+nellen Darstellung keine direkten Spezifikationen der Datenfelder. Zertifikate sind die zentralen
+Datenstrukturen innerhalb des Schlüsselmanagements für X.509. Dieser Abschnitt enthält einen
+Überblick über die Inhalte eines Zertifikats. Im Anhang 6.1 befindet sich die ASN.1 Syntax eines
+X.509v3-Zertifikats. Ein Zertifikat besteht danach aus den folgenden Datenfeldern:
+
+Referenz: [CommonPKI-1], Kapitel 2, Tabellen 1 und 4
+
+Das Feld tbsCertificate besteht aus einer Folge von Teilfeldern, die die zu signierenden Daten ent-
+halten:
+
+      TBSCertificate ::= SEQUENCE {
+      version [0] EXPLICIT Version DEFAULT v1,
+      serialNumber CertificateSerialNumber,
+      signature AlgorithmIdentifier,
+      issuer Name,
+      validity Validity,
+      subject Name,
+      subjectPublicKeyInfo SubjectPublicKeyInfo
+      issuerUniqueID [1] IMPLICIT UniqueIdentifier OPTIONAL
+
+                                          (if present, version MUST be v2 or v3)
+      subjectUniqueID [2] IMPLICIT UniqueIdentifier OPTIONAL
+
+                                          (if present, version MUST be v2 or v3)
+      extensions [3] EXPLICIT Extensions OPTIONAL }
+
+                                          (if present, version MUST be v3)
+
+Im Folgenden werden diese Felder beschrieben, wobei zu jedem Feld folgende Informationen ange-
+geben und erläutert werden:
+
+     ▪ Semantik des Feldes,
+     ▪ die ASN.1-Struktur,
+     ▪ die Bedeutung der einzelnen Teilfelder,
+     ▪ Auswahl und Belegung der Teilfelder,
+     ▪ Spezielle Interoperablititätsanforderungen.
+
+Gültig ab:01.01.2026  Seite 30 von 94  Stand: 02.09.2025
+4.4.1  Versionsnummer
+
+Die Versionsnummer identifiziert die Version des Zertifikates. Das Feld version könnte entspre-
+chend den drei standardisierten Zertifikatsversionen nach ISS-MTT einen von drei Werten enthalten:
+
+Version ::= INTEGER { v1(0), v2(1), v3(2) }
+
+und kennzeichnet die Zertifikatsformate X.509v1, X.509v2 und X.509v3, d. h. die Integer Werte „0“,
+„1“ oder „2“ sind entsprechend angegeben.
+
+       Profilierung:
+       Es sind ausschließlich X.509v3-Zertifikate zu verwenden, der Integer Wert
+       für das Datenfeld version beträgt „2“.
+
+4.4.2  Seriennummer
+
+Die Seriennummer dient dazu, ein Zertifikat (als Element der Menge aller von einer CA erstellten
+Zertifikate) eindeutig zu identifizieren. Das Paar - bestehend aus Seriennummer (serialNumber) und
+Name der ausstellenden CA (issuer) - muss innerhalb einer PKI stets eindeutig sein, da es z. B. zur
+Identifizierung von Zertifikaten in Sperrlisten verwendet wird.
+
+Dieses ist insbesondere wichtig zu berücksichtigen, wenn in zwei verschiedenen Zertifikaten
+(sprich: das eindeutige Paar aus Seriennummer und CA ist ungleich) der gleiche DN (Distinguished
+Name) vorhanden ist.
+
+Beispiel3: Ein gleicher DN in zwei Zertifikaten kann entstehen, wenn für das gleiche Verfahren für
+die gleiche Institution ein und derselbe Mitarbeiter ein zweites Zertifikat beantragt und dieses er-
+hält. Auch wenn der DN in beiden Zertifikaten gleich ist, sind es doch völlig unterschiedliche Zerti-
+fikate, da sie unterschiedliche Seriennummern haben. Dies ist selbst dann richtig, wenn die Zertifi-
+kate sogar auch noch denselben Gültigkeitszeitraum haben.
+
+Die Seriennummer wird als natürliche Zahl dargestellt:
+
+CertificateSerialNumber ::= INTEGER
+
+       Profilierung:
+       In Übereinstimmung mit dem ISIS-MTT-Profil müssen Seriennummern mit
+       einer Länge von bis zu 20 Byte unterstützt werden, sie sind immer positiv.
+
+3 Dieses Beispiel entstammt der bisherigen Praxis im ITSG-Trust Center. Das hier beschriebene Vorgehen ist nicht verein-
+   bar mit den Regelungen des Signaturgesetzes zu den Angaben in einem qualifizierten Zertifikat: SigG § 7 Absatz (1) be-
+   sagt, dass der Name des Inhabers eines Zertifikats unverwechselbar sein muss, was ggf. durch einen Zusatz zum Namen
+   erreicht wird.
+
+Gültig ab:01.01.2026                 Seite 31 von 94    Stand: 02.09.2025
+       Für die Seriennummern steht der Zahlenraum von 1 ... 2159 zur Verfügung,
+       das verbleibende Bit (Most Significant Bit) ist zur Darstellung des positiven
+       Vorzeichens zu verwenden. Führende Nullen (Ziffer) sind gestattet.
+
+4.4.3  Signaturalgorithmus
+
+Dieses Datenfeld informiert über den Algorithmus und die zugehörigen Parameter, die vom Zertifi-
+katserzeuger zur Signaturbildung verwendet werden.
+
+Referenz: [CommonPKI-1], Kapitel 2, Tabelle 2.#3
+
+Das Signatur-Datenfeld signature dient der Bezeichnung des Algorithmus, mit dem die Signatur
+gebildet wird4. Die Struktur ist mit der des Feldes signatureAlgorithm identisch (s. Abschnitt
+4.4.13). Auch die Werte beider Felder müssen identisch sein; vgl. ISIS-MTT, Tabelle 4, Notes 4. Dies
+entspricht [RFC 2459].
+
+AlgorithmIdentifier ::= SEQUENCE {
+algorithm OBJECT IDENTIFIER,
+parameters ANY DEFINED BY algorithm OPTIONAL }
+
+       Profilierung:
+       Die Inhalte der Datenfelder signatureAlgorithm (aus der Datenstruktur Certi-
+       ficate) und signature (aus der Datenstruktur „tbsCertificate“) müssen iden-
+       tisch sein. Die Security Schnittstelle legt fest, dass RSASSA-PSS einzusetzen
+       ist; vgl. Abschnitt 2.1.2.
+
+4.4.4  Name der Zertifizierungsstelle
+
+Referenz: [CommonPKI-1], Kapitel 2, Tabellen 2.#5, 5, 6 und 15
+
+Das Datenfeld issuer gibt den eindeutigen Namen des Zertifikaterzeugers (der CA) an. Er muss
+stets entsprechend der X.500-Syntax als Distinguished Name (DN) angegeben werden. Der Wert
+NULL ist nicht erlaubt.
+
+issuer ist vom Datentyp „Name“. X.500-Distinguished-Names (kurz: DN) müssen folgender Syntax
+entsprechen:
+
+      Name ::= CHOICE { RDNSequence }
+      RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
+      RelativeDistinguishedName ::= SET OF AttributeTypeAndValue
+
+4 Es darf nicht mit dem gleichnamigen Feld verwechselt werden, das die Signatur enthält (s. o).
+
+Gültig ab:01.01.2026                   Seite 32 von 94                                           Stand: 02.09.2025
+AttributeTypeAndValue ::= SEQUENCE {
+typ AttributeType,
+value AttributeValue }
+AttributeType ::= OBJECT IDENTIFIER
+AttributeValue ::= ANY DEFINED BY AttributeType
+
+Der Datentyp Name besteht aus einer Folge von RelativeDistinguishedNames. Die Syntax sieht vor,
+dass ein RelativeDistinguishedName aus mehreren Komponenten vom Typ AttributeTypeAndValue
+bestehen kann. Entgegen der Syntax darf jedoch von dieser Möglichkeit gemäß [CommonPKI-1]
+kein Gebrauch gemacht werden. Die Menge der AttributeTypeAndValue-Komponenten eines Rela-
+tiveDistinguishedName darf nur ein Element enthalten.
+
+[CommonPKI-1] verlangt weiterhin,
+
+▪ dass der Inhalt des Datenfelds issuer identisch ist mit dem Datenfeld subject in dem Zerti-
+     fikat der CA,
+
+▪ das Datenfeld issuer muss mindestens die Attribute CountryName und Organization ent-
+     halten.
+
+Der DN besteht je nach Verwendungszweck des Zertifikats aus verschiedenen Attributen. Im vorlie-
+genden Profil lassen sich zwei Typen von DNs unterscheiden:
+
+▪ allgemeine Teilnehmerzertifikate und
+▪ Zertifizierungsstellen (PCA oder CA).
+
+Da für das Feld issuer nur Zertifikate für Zertifizierungsstellen relevant sind, werden hierzu die bei-
+den folgenden Tabellen angeführt:
+
+Aufbau des DNs für Zertifizierungsstellen (CA)
+
+Pos. Attribute                            Erläuterung
+                                   C Zweistelliges Kürzel für die Länderkennung, wie
+1  CountryName (ver-
+                                          “DE” für Deutschland.
+   pflichtend)                     O Name des Trust Centers als Zeichenkette.
+
+2  OrganizationName                       - „ITSG TrustCenter fuer Arbeitgeber“
+                                          - „ITSG TrustCenter fuer sonstige Leistungserbrin-
+   (verpflichtend)                        ger“
+                                          - „DKTIG TrustCenter fuer Krankenhaeuser und
+                                          Leistungserbringer PKC“
+
+Aufbau des DNs für Zertifizierungsstellen (PCA)
+
+Gültig ab:01.01.2026               Seite 33 von 94  Stand: 02.09.2025
+Pos. Attribute                    Erläuterung
+                          C Zweistelliges Kürzel für die Länderkennung, wie “DE”
+1  CountryName (ver-
+                                  für Deutschland.
+   pflichtend)            O Name der PCA als feste Zeichenkette:
+
+2  OrganizationName                 „Datenaustausch im Gesundheits- und Sozialwe-
+                                  sen“
+   (verpflichtend, fest)
+
+In welcher Reihenfolge die Attribute im Namen enthalten sind, ist für dieses Profil festgelegt. Die
+Reihenfolge der durch die Spalte “Pos.” angegebenen Position der Attribute muss eingehalten wer-
+den.
+
+Die möglichen Werte für ein Attribut werden durch die Typangabe bestimmt. Die Werte für die ver-
+wendeten Attribute sind wie folgt:
+
+Attribute                 Typangabe        Tabelle 7 in   Maximale Länge der
+                                           ISIS-MTT       Zeichenkette
+CommonName                PrintableString  V1.0.2 Part 1
+OrganizationName          PrintableString  # 1            128
+OrganizationalUnitName    PrintableString  # 6            64
+CountryName               PrintableString  # 7            64
+                          (Size2)          # 13           2
+
+Der Typ PrintableString ist eine Untermenge der Zeichensatz-Auswahl, die mit DirectoryString zur
+Verfügung steht. DirectoryString ist als Auswahl zwischen den folgenden Zeichensätzen definiert:
+
+DirectoryString ::= CHOICE {
+printableString PrintableString (SIZE (1..maxSize)),
+teletexString TeletexString (SIZE (1..maxSize)),
+utf8String UTF8String (SIZE (1..maxSize)),
+bmpString BMPString (SIZE (1..maxSize)),
+universalString UniversalString (SIZE (1..maxSize)) }
+
+Hinweis:
+ISIS-MTT definiert einen speziellen Zeichensatz als Teilmenge des Zeichensatzes UTF8String 5, der
+es ermöglicht, alle Zeichen des Zeichensatzes US-ASCII und ISO-8859-1 (Latin-1) darzustellen.
+Diese Teilmenge soll als ISIS-MTT-UTF8String bezeichnet werden. Zeichen dieser Teilmenge wer-
+den durch ein oder zwei Byte dargestellt. Die Darstellung jedes Zeichens des Zeichensatzes 7-Bit-
+
+5 UTF steht für Universal Character Set (UCS) Transformation Format. UTF-8 ist eine 8-Bit-Kodierung variabler Länge (s.
+   [RFC 3629 2003]).
+
+Gültig ab:01.01.2026      Seite 34 von 94                 Stand: 02.09.2025
+US-ASCII bleibt identisch erhalten. Diese Zeichen können weiterhin durch ein Byte dargestellt wer-
+den. UTF8String wird nicht gefordert, obwohl ISIS-MTT ("must") dieses für alle Zertifikate fordert.
+
+Der Wert für „maxSize“ ist nicht in der Datenstruktur „SIZE (1..maxSize)“ selbst festgelegt, sondern
+wie oben bereits ausgeführt in Tabelle 7 der [CommonPKI-1].
+
+                  Profilierung:
+                  Die oben in den Tabellen ausgeführten Angaben zum DN und zu den
+                  Längen der Attribute des DNs sind verbindlich.
+
+                  Für die Werteangaben dürfen dabei lediglich die folgenden Zeichen ver-
+                  wendet werden:
+                 ABCDEFGHIJKLMNOPQRSTUVWXYZ
+                 abcdefghijklmnopqrstuvwxyz
+                 0123456789/ -.()
+
+4.4.5      Name von Zertifikatsinhabern
+Referenz:   [CommonPKI-1], Kapitel 2, Tabelle 2.#7 und 5
+
+Der Name im Feld subject gibt an, für wen das Zertifikat ausgestellt wurde, wer also Inhaber des
+Zertifikats und damit auch des darin enthaltenen öffentlichen und des zugehörigen privaten
+Schlüssels ist.
+
+Das subject-Feld hat dasselbe Format wie das oben bereits beschriebene issuer-Feld. Auch für das
+subject-Feld sind nur X.500-Distinguished-Names zulässig.
+
+Wie oben beschrieben, lassen sich im vorliegenden Profil die beiden Typen von DNs “allgemeine
+Teilnehmerzertifikate” und „Zertifizierungsstellen (PCA oder CA)“ unterscheiden.
+
+Für das Feld subject ist der Erstere der Typen relevant, die Zusammensetzung der Attribute für die-
+sen Typ wird entsprechend der bereits oben angewendeten Darstellung in der folgenden Tabelle
+aufgeführt:
+
+Aufbau des DNs im “subject”-Datenfeld für Teilnehmerzertifikate
+
+Pos. Attribute              Erläuterung
+
+1          CountryName C Zweistelliges Kürzel für die Länderkennung, wie “DE” für
+
+           (verpflichtend)  Deutschland.
+
+Gültig ab:01.01.2026        Seite 35 von 94                      Stand: 02.09.2025
+Pos. Attribute        Erläuterung
+
+2  Organization- O Name des Trust Centers als feste Zeichenkette
+
+   Name (ver-         - „ITSG TrustCenter fuer Arbeitgeber“
+
+   pflichtend,        - „ITSG TrustCenter fuer sonstige Leistungserbringer“
+
+   fest)              - „DKTIG TrustCenter fuer Krankenhaeuser und Leis-
+
+                      tungserbringer PKC“
+
+3  Organization- O Name der Institution (Firmenname des Leistungserbrin-
+
+   UnitName           U gers oder des Arbeitgebers)
+
+   (verpflichtend)
+
+4  Organization- O Institutionskennzeichen oder Betriebs- bzw. Zahlstellen-
+
+   UnitName           U nummer. Mit vorangestellter Kennung „IK“ (bei Leistungs-
+
+   (verpflichtend)    erbringer) oder „BN“ (bei Arbeitgeber oder Zahlstelle).
+
+5  CommonName C Der Name einer natürlichen Person, die als Ansprechpart-
+
+   (verpflichtend) N ner für die Institution fungiert.
+
+Aufbau des DNs im “subject”-Datenfeld für Zertifizierungsstellen
+
+Pos. Attribute        Erläuterung
+
+1  CountryName C Zweistelliges Kürzel für die Länderkennung, wie “DE” für
+
+   (verpflichtend)    Deutschland.
+
+2  Organization       O Name des Trust Centers, das das Zertifikat ausstellt. Für
+
+   Name (ver-         beide Zertifikatsarten (PCA-Zertifikat und CA-Zertifikat)
+
+   pflichtend, fest)  ist hier der Name der PCA einzutragen. Die hierfür fest-
+
+                      gelegten Zeichenketten siehe oben bzw. in Abschnitt
+
+                      4.4.4.
+
+Die möglichen Werte für ein Attribut werden durch die Typangabe gemäß Abschnitt 4.4.4 be-
+stimmt.
+
+   Profilierung:
+   Die oben in der Tabelle ausgeführten Angaben zum DN sind verbindlich.
+   Im Übrigen gelten die Anforderungen an DNs im Feld issuer entspre-
+   chend.
+
+   In welcher Reihenfolge die Attribute im Namen enthalten sind, ist für die-
+   ses Profil festgelegt. Die Reihenfolge der durch die Spalte “Pos.” angege-
+   benen Position der Attribute muss eingehalten werden.
+
+   Die von [CommonPKI-1] vorgesehene Pseudonyme-Regelung nach dem
+   31.12.2003 wird nicht unterstützt, da eine Pseudonymisierung des Zerti-
+   fikatsinhabers nicht wünschenswert ist.
+
+Gültig ab:01.01.2026  Seite 36 von 94                             Stand: 02.09.2025
+4.4.6  Gültigkeitsdauer
+
+Referenz: [CommonPKI-1], Kapitel 2, Tabelle 2.#6 und 3
+
+Durch das Feld validity wird angegeben, für welchen Zeitraum das Zertifikat gültig ist. Das Teilfeld
+notBefore gibt den Anfang und das Teilfeld notAfter das Ende des Gültigkeitszeitraums an, wobei
+beide Zeitpunkte in den Gültigkeitszeitraum eingeschlossen sind.
+
+Die Gültigkeitsdauer des Zertifikates wird durch folgende Datenstrukturen definiert:
+
+      Validity ::= SEQUENCE {
+      notBefore Time,
+      notAfter Time }
+      Time ::= CHOICE {
+      utcTime UTCTime,
+      generalizedTime GeneralizedTime }
+
+                  Profilierung:
+                  Bei der Generierung von Zertifikaten ist UTCTime zu verwenden, d. h. die
+                  Verwendung von GeneralizedTime ist verboten6.
+                  Die Datums- und Zeitangaben müssen im Format YYMMDDHHMMSSZ7
+                  erfolgen, das in folgender Tabelle beschrieben wird:
+
+Datumsangaben                   Zeitangaben
+
+Feld Bedeutung                  Feld                    Bedeutung
+
+YY     zweistellige Jahreszahl  HH                      Stunde: 00, 01, ..., 23
+
+MM Monat 01, 02, ..., 12        MM                      Minute 00, 01, ..., 59
+
+DD     Tag 01, 02, ..., 31      SS8                     Sekunde 00, 01, ..., 59
+
+4.4.7  Basic Constraints
+
+Das Feld BasicConstraints ist eine optionale Datenstruktur, die das Zertifikat des Teilnehmers einer
+Rolle zuordnet. Die Zertifikate der CA und PCA müssen mit CA=TRUE versorgt werden. Die Teilneh-
+merzertifikate müssen mit CA=FALSE versorgt werden.
+
+Bei optionaler Verwendung gilt folgende Datenstruktur:
+
+6 Anmerkung: Nach dem Profil des NIST ist stets „UTCTime“ zu verwenden. Das SigI-Profil sieht stets „Generalized-
+Time“ vor. Die IETF schreibt vor, ab dem Jahr 2050 „GeneralizedTime“ zu verwenden, davor „UTCTime“. Entsprechend dem
+Ansatz des SigI-Profils soll so schnell wie möglich auf „GeneralizedTime“ umgestellt werden.
+7 Das ‘Z’ am Ende steht für „Zulu-Zeit“ und ist die allgemein übliche Kurzform für Greenwich Mean Time (GMT).
+8 Sekunden sind stets anzugeben, auch wenn die Anzahl der Sekunden Null ist.
+
+Gültig ab:01.01.2026            Seite 37 von 94                    Stand: 02.09.2025
+BasicConstrints::= SEQUENCE {
+CA {TRUE, FALSE}
+pathLenConstraint OCTET STRING}
+
+4.4.8  Öffentlicher Schlüssel des Zertifikatsinhabers
+
+Referenz: [CommonPKI-1], Kapitel 2, Tabelle 2.#8 und 2.#14
+
+Das Feld subjectPublicKeyInfo ist eine Datenstruktur, die den öffentlichen Schlüssel des Zertifikats-
+inhabers im Teilfeld subjectPublicKey und die zulässigen Algorithmen, mit denen die Verwendung
+des Schlüssels zulässig ist, im Teilfeld algorithm enthält.
+
+Es wird folgende Datenstruktur verwendet:
+
+      SubjectPublicKeyInfo ::= SEQUENCE {
+      algorithm AlgorithmIdentifier,
+      subjectPublicKey BIT STRING }
+
+Die Belegung des Feldes AlgorithmIdentifier erfolgt gemäß Abschnitt 2.1.5.
+
+In Kapitel 2 werden außerdem die in diesem Profil vorgesehenen AlgorithmIdentifier zusammen mit
+dem Zweck beschrieben, für den der jeweilige Algorithmus verwendet werden darf (Signieren, Ver-
+schlüsseln). Dort finden sich auch Vorgaben für die Kodierung der öffentlichen Schlüssel.
+
+4.4.9  Prüfwert von Signaturschlüsseln (subject key identifier)
+
+Das Feld SubjectKeyIdentifier (SKI) ist eine optionale Datenstruktur, die einen Prüfwert des öffentli-
+cen Schlüssels eines Zertifikats enthält.
+Bei optionaler Verwendung gilt folgende Datenstruktur:
+
+      SubjectKeyIdentifier ::= KeyIdentifier
+Diese Erweiterung muss in allen CA-Zertifikaten enthalten sein.
+
+4.4.10 Identifizierung von Ausstellerzertifikaten (authority key identifier)
+
+Gültig ab:01.01.2026             Seite 38 von 94                              Stand: 02.09.2025
+Die optionale Datenstruktur AuthorityKeyIdentifier (AKI) dient der Erleichterung und Sicherstellung
+des Aufbaus eines Zertifizierungspfades bei der Zertifikatsvalidierung. Sie beinhaltet eine eindeu-
+tige Referenzierung auf das Ausstellerzertifikat. Der in der AKI-Erweiterung angegebene Wert im
+Feld keyIdentifier muss identisch sein mit dem Wert im Feld keyIdentifier der SKI-Erweiterung des
+Ausstellerzertifikats. Die eindeutige Referenzierung des Ausstellerzertifkats erfolgt über das Paar
+authorityCertIssuer und authorityCertSerialNumber. Der Wert im Feld authorityCertIssuer ergibt sich
+aus den in der Datenstruktur Issuer (vgl. 4.4.4 Name der Zertifizierungsstelle) angegebenen Inhalte
+des Ausstellerzertifikats, wohingegen der Wert im Feld authorityCertSerialNumber ergänzend auf
+den Inhalt der Datenstruktur Serial Number (4.4.2 Seriennummer) des Ausstellerzertifikats zeigt,
+wodurch das Ausstellerzertifikat eindeutig bestimmt ist.
+
+Es wird folgende Datenstruktur verwendet:
+
+      AuthorityKeyIdentifier ::= SEQUENCE {
+            keyIdentifier [0] KeyIdentifier OPTIONAL,
+            authorityCertIssuer [1] GeneralNames OPTIONAL,
+            authorityCertSerialNumber [2] CertifcateSerialNumber OPTIONAL
+
+      }
+
+Diese Erweiterung ist in allen CA- und Teilnehmer-Zertifikaten enthalten.
+
+4.4.11 Syntax für x.509v3 Zertifikate
+Der X.509v3 Standard beinhaltet eine Vielzahl an Zertifikatserweiterungen. Die Zertifikate und
+Sperrlisten müssen die für die Prüfung der Gültigkeit (einschließlich der elektronischen Signatur)
+notwendigen Informationen enthalten. Soweit daneben Extensions verwendet werden, ist eine vor-
+herige Abstimmung zwischen allen am Verfahren beteiligten erforderlich. Als Basis gelten die Fest-
+legungen der Profile für Zertifikate und Sperrlisten nach den entsprechenden MTTv2 -Spezifikatio-
+nen.
+4.4.12 Signatur der CA
+Referenz: [CommonPKI-1], Kapitel 2, Tabelle 1
+
+Das Feld signature enthält die Signatur, die durch Anwendung des Algorithmus und des privaten
+Schlüssels der CA auf die zu signierenden Daten gebildet wird9.
+4.4.13 Identifizierung des verwendeten Signaturalgorithmus
+Referenz: [CommonPKI-1], Kapitel 2, Tabellen 1 und 4
+
+9 Der Wert, der sich aus der DER-Kodierung des Inhaltes des Feldes „tbsCertificate“ ergibt, wird durch eine Hash-
+Funktion transformiert. Auf das Ergebnis werden der Verschlüsselungsalgorithmus und der private Schlüssel der CA ange-
+wandt. Das als ASN.1-Bitstring kodierte Ergebnis ist die Signatur.
+
+Gültig ab:01.01.2026  Seite 39 von 94  Stand: 02.09.2025
+Der Signaturalgorithmus signatureAlgorithm wird durch den Objektbezeichner (Object Identifier,
+OID) für den verwendeten Algorithmus und die verwendeten Parameterwerte identifiziert.
+
+Es wird die folgende Struktur gebildet:
+
+      AlgorithmIdentifier ::= SEQUENCE {
+      algorithm OBJECT IDENTIFIER,
+      parameters ANY DEFINED BY algorithm OPTIONAL }
+
+Im Feld algorithm wird ein Algorithmus angegeben. Das Feld parameters ist optional, da es nur bei
+Algorithmen von Bedeutung ist, für die Parameter angegeben werden müssen. Auch wenn für die
+Anwendung des Algorithmus ein Parameter angegeben werden muss, darf das Feld parameters
+nicht zur Übergabe dieses Parameters verwendet werden.
+In Kapitel 2 werden die in diesem vorgesehenen AlgorithmIdentifier zusammen mit dem Zweck be-
+schrieben, für den der jeweilige Algorithmus verwendet werden darf (Signieren, Verschlüsseln).
+
+                 Profilierung:
+                 Die Inhalte der Datenfelder signatureAlgorithm (aus der Datenstruktur Cer-
+                 tificate) und signature (aus der Datenstruktur tbsCertificate) müssen iden-
+                 tisch sein. Die Security Schnittstelle legt fest, dass RSAES-PSS einzusetzen
+                 ist; vgl. Abschnitt 2.1.2 Signaturalgorithmen. Die Datenfelder gemäß dem
+                 verwendeten Algorithmus zu belegen (vgl. Abschnitt 2.1.2.1).
+
+4.4.14 Nicht verwendete optionale Datenfelder
+Eindeutige Bezeichner für CAs und Zertifikatsinhaber
+
+Referenz: [CommonPKI-1], Kapitel 2, Tabelle 2.#8 und 2.#14
+
+Profilierung:
+Gemäß [CommonPKI-1, Tabelle 2.#9 und 2.#10] ist es verboten (MUST
+NOT), die optionalen Datenfelder issuerUniqueId und subjectUniqueID zu
+verwenden. Es ist erforderlich, dass die in den Datenfeldern issuer (vgl.
+Abschnitt 4.4.4) und subject (vgl. Abschnitt 4.4.5) eingetragenen DNs
+eindeutig sind.
+
+4.5 Gültigkeitszeitraum der Zertifikate
+
+Die Teilnehmer-Zertifikate haben grundsätzlich eine Gültigkeitsdauer von maximal einem Jahr.
+Für die PCA (Policy Certification Authority) beträgt die Gültigkeitsdauer des Zertifikates 7
+Jahre und für die CA 5 Jahre.
+Die Security Schnittstelle sieht die Anwendung eines Schalenmodells für die
+
+Gültig ab:01.01.2026  Seite 40 von 94  Stand: 02.09.2025
+Zertifikatshierarchie vor. Voraussetzung für Anwendungen, die das Schalenmodell
+unterstützen ist dabei, dass die Laufzeit eines Zertifikats vollständig innerhalb der Laufzeit
+des ausstellenden (CA-) Zertifikates liegt. Dies wird dann zu einem Problem, wenn die CA-Zertifi-
+kate nicht mehr lange gültig sind, da man dann nur noch für den verbleibenden
+Zeitraum Zertifikate ausstellen kann. Um dieses Problem zu beheben, hat das Zertifikat der
+PCA eine Laufzeit von 7 Jahren. Bereits nach fünf Jahren wird das nächste Zertifikat
+erzeugt, mit dem von da an zertifiziert wird (das alte Zertifikat stellt dann nur noch die
+Gültigkeit der vorher ausgestellten Zertifikate, insbesondere durch die regelmäßige
+Erzeugung aktueller Sperrlisten, sicher). Somit ist es für die PCA jederzeit möglich, CA -Zertifikate
+mit einer Laufzeit von 5 Jahren zu erzeugen.
+Die beteiligten Trust Center sind verantwortlich für die Einhaltung dieser Konvention. Sie
+prüfen vor der jeweiligen Teilnehmerzertifizierung die Laufzeiten des eigenen
+CA-Zertifikats und des PCA-Zertifikats und stellen sicher, dass die Laufzeiten nicht
+überschritten werden. Dazu beantragen die Trust Center rechtzeitig vor dem Auslauf des
+CA-Zertifikates die Neu-Zertifizierung durch die PCA.
+
+4.6 Öffentliche Schlüsselverzeichnisse
+
+Alle öffentlichen Schlüssel der Teilnehmer des Datenaustauschverfahrens im Gesundheits - und So-
+zialwesen werden in öffentlichen Schlüsselverzeichnissen veröffentlicht, damit eine Überprüfung
+möglich ist, welche zertifizierte Schlüssel für das Verfahren registriert sind. Die Empfänger der Da-
+ten (z.B. Datenannahmestellen) können anhand der öffentlichen Schlüssel-Verzeichnisse die Ab-
+sender einer verschlüsselten Nachricht eindeutig identifizieren. Die öffentlichen Schlüssel werden
+in Dateiform oder als LDAP-Verzeichnis zur Verfügung gestellt. Die Schlüsselaktualisierung erfolgt
+an Werktagen von Montag bis Freitag.
+
+4.6.1  Schlüssellisten
+
+Die Schlüssellisten im Dateiformat enthalten öffentliche Schlüssel in base64-Kodierung. Sie enthal-
+ten die gültigen Schlüssel der beiden Trust Center der DKTIG und der ITSG und werden von der
+ITSG zum Download zur Verfügung gestellt. In Abhängigkeit der öffentlichen Teilnehmerschlüssel
+in den einzelnen Schlüssellisten sind die zugeordneten PCA- und der CA-Schlüssel enthalten, wo-
+bei alle PCA- und CA-Schlüssel nur in den Gesamtlisten mit allen öffentlichen Schlüsseln enthalten
+sind. Diese haben im Rahmen des Schalenmodells einen überlappenden Gültigkeitszeitraum (siehe
+Kapitel 4.5).
+Zusätzlich stellt jedes Trustcenter tagesaktuell eine Liste der Meldestellen für Verfahren unter Ver-
+wendung der Betriebsnummer als Identifikationsmerkmal im AG-Bereich und eine Liste der Melde-
+stellen für Verfahren unter Verwendung des Institutionskennzeichens als Identifikationsmerkmal im
+LE-Bereich den SV-Trägern zur Verfügung. Diese Liste besteht aus den Betriebsnummern bzw. In-
+stitutionskennzeichen aller Teilnehmer, die über ein gültiges Zertifikat mit dem Attribut „AG -Mel-
+destelle“ bzw. „LE-Meldestelle“ verfügen.
+
+Gültig ab:01.01.2026    Seite 41 von 94  Stand: 02.09.2025
+4.6.1.1      Übersicht der verfügbaren öffentlichen Schlüssellisten
+
+Für das Arbeitgeberverfahren existieren folgende Schlüssellisten mit öffentlichen Teilnehmer-
+
+schlüsseln:
+
+• gesamt-pkcs.agv                 (alle Teilnehmerschlüssel mit 4096 Bit Schlüssellänge)
+
+• gesamt-rsa4096.agv              (optional10, alle Teilnehmerschlüssel mit 4096 Bit Schlüssellänge)
+
+• annahme-rsa4096.agv (Schlüssel der Datenannahmestellen mit 4096 Bit Schlüssellänge)
+
+• sperrliste-ag-rsa4096.crl (gesperrte Teilnehmerschlüssel mit 4096 Bit Schlüssellänge)
+
+Für das Leistungserbringerverfahren existieren folgende Schlüssellisten mit öffentlichen Teilneh-
+merschlüsseln:
+
+• gesamt-pkcs.key                 (alle Teilnehmerschlüssel und 4096 Bit Schlüssellänge)
+
+• gesamt-rsa4096.key              (optional11, alle Teilnehmerschlüssel mit 4096 Bit Schlüssellänge)
+
+• annahme-rsa4096.key (Schlüssel der Datenannahmestellen mit 4096 Bit Schlüssellänge)
+
+• pkv-rsa4096.key                 (Sonderliste mit Schlüssel der PKV mit 4096 Bit Schlüssellänge)
+
+• sperrliste-le-rsa4096.crl (gesperrte Teilnehmerschlüssel mit 4096 Bit Schlüssellänge)
+
+4.6.2        LDAP-Verzeichnis
+
+In diesem Abschnitt werden die LDAP-Verzeichnisdienste beschrieben, die gemäß Abschnitt 1.4 zur
+Anwendung kommen. Der Verzeichnisdienst basiert auf der aktuellen Version LDAP v3, die im [RFC
+4511] dokumentiert ist und berücksichtigt die Spezifikationen von [CommonPKI-4]. Das LDAP-Ver-
+zeichnis wird von der ITSG ausschließlich für Datenannahmestellen bereitgestellt.
+
+4.6.2.1      Aufbau des LDAP-Verzeichnis
+
+Referenz: Abschnitt 2.3 [RFC 4511]
+
+[RFC 4513]
+
+[CommonPKI-4]
+
+Das LDAP-Verzeichnis ist in einem DIT (Directory Information Tree) in mehrere Zweige aufgeteilt:
+
+Der Trust Center-Zweig ist für eine manuelle Suche aus Sicht eines Trust Centers optimiert. Der
+Zertifikatszweig und der Alias-Zweig sind für eine maschinelle Suche optimiert. Der Alias-Zweig
+unterstützt bei der Suche ohne Kenntnis der zugeordneten CA mittels eines Alias-Eintrags. Der Up-
+date-Zweig unterstützt das Trust Center bei der Verwaltung von Aktualisierungen.
+
+Die Hierarchie ist baumförmig aufgebaut. Folgendes Schaubild veranschaulicht dies:
+
+10 Bereitstellung bis 31.12.2025    Seite 42 von 94                  Stand: 02.09.2025
+11 Bereitstellung bis 31.12.2025
+
+Gültig ab:01.01.2026
+                                                                                   Kap.
+                                                                                   4.6.2.3
+                                                                                   4.6.2.4
+                                                                                   4.6.2.5
+                                                                                   4.6.2.6
+
+Grobstruktur des LDAP Servers mit Toplevel des DIT
+
+Der LDAP-Server wird über den Standard-Port 389 (LDAP) betrieben.
+
+4.6.2.2    Aufbau der Wurzel
+
+Name                  Object Class  Attribute
+De                    Country            • countryName=de
+
+4.6.2.3    Aufbau des Trust Center Zweigs (geordnet nach Datenaustauschverfahren)
+
+Der Trust Center Zweig ist nach den Datenaustauschverfahren für Arbeitgeber und Leistungserbrin-
+
+ger aufgeteilt. Die nachfolgende Abbildung zeigt den Directory Information Tree mit den beiden
+
+Datenaustausch-verfahren und den zugeordneten PCA’s und CA’s.
+
+                                                                                                    Kap.
+                                                                                                    4.6.2.3.1
+
+4.6.2.3.1  Aufbau der PCA- und CA-Ebene
+
+Für jede PCA und CA wird ein eigenes Objekt der Klasse „Organization“ angelegt.
+
+Gültig ab:01.01.2026                Seite 43 von 94                              Stand: 02.09.2025
+         Name                   Object Class   Attribute
+         <Seriennummer aus      Organization        • Trust Center-Name
+         dem Zertifikat>                            • Seriennummer des Zertifikats
+                                                    • Zertifikat binär
+
+4.6.2.4    Aufbau des Zertifikatzweigs (geordnet nach Herausgeber)
+
+Die nachfolgende Abbildung zeigt den Directory Information Tree für den Zertifikatzweig. Auf der
+
+Zertifikat-Issuer Ebene befinden sich alle CA’s. Eine Ebene tiefer sind dann alle dem Herausgeber
+
+(Issuer) zugeordneten Zertifikate angeordnet.
+
+                                                                    Kap.
+                                                                    4.6.2.4.1
+
+                                                                    Kap.
+                                                                    4.6.2.4.2
+
+4.6.2.4.1  Aufbau der Issuer-Ebene
+
+Für jede PCA und CA wird ein eigenes Objekt der Klasse „Organization“ angelegt. Auf der Issuer -
+
+Ebene wird in den einzelnen CA-Zweigen die zugeordnete Sperrliste (certificateRevocationList) als
+
+Binärdatei bereitgestellt.
+
+         Name                   Object Class   Attribute
+         <OrganizationName aus  Organization   certificateRevocationList = <CRL der
+         dem Zertifikat>        Unit           CA>
+                                               Seriennummer des Zertifikats
+
+4.6.2.4.2  Aufbau der Zertifikats-Ebene
+
+Gültig ab:01.01.2026            Seite 44 von 94                     Stand: 02.09.2025
+Name                  Object Class             Attribute
+<Seriennum-           Organization Unit             • Firmenname
+mer des Zertifi-                                    • Institutionskennzeichen oder Betriebs-
+kats>                                                    bzw. Zahlstellennummer
+                                                    • Seriennummer des Zertifikats
+                                                    • Zertifikat (binär)
+
+4.6.2.5    Aufbau des Alias-Zweigs
+
+Die nachfolgende Abbildung zeigt den Directory Information Tree für den suchoptimierten Alias-
+
+Zweig geordnet nach PCA, CA, AG und LE. Die Alias-Zweige beinhalten nicht die Binärdateien, stel-
+
+len aber alle wesentlichen Attribute eines Zertifikats für eine Recherche bereit. Eine Referenz ver-
+
+weist auf die Binärdateien der Zertifikate in dem zugeordneten Issuer-Zweig. Damit wird eine Re-
+
+dundanz der Daten in der LDAP-Struktur verhindert.
+
+                                                             C = DE
+
+                      PCA           CA              AG               LE                Kap.           Annahmestellen
+                                                                                                             LE
+                      OU = PCA1      OU = CA1       OU = BN          OU = IK     Annahmestellen
+                      OU = PCA2      OU = CA2       OU = BN          OU = IK                                 OU = IK
+                      OU = PCAn      OU = CAn       OU = BN          OU = IK         A4G .6.2.5.1            OU = IK
+                                                                                                             OU = IK
+                                                                                        OU = BN
+
+                                                                                       Kap.
+
+                                                                                        OU = BN
+
+                                                                                     OU4=.6BN.2.5.2
+
+4.6.2.5.1          Aufbau der PCA-, CA -, AG-, LE- Ebene
+
+Für die PCA, CA, AG und LE wird ein eigenes Objekt der Klasse „Organization“ angelegt.
+
+Name                  Object Class             Attribute
+<Organization-        Organization                  • Trust Center-Name oder
+Name aus dem                                        • Institutionskennzeichen oder Betriebs-
+Zertifikat>                                              bzw. Zahlstellennummer
+
+4.6.2.5.2          Aufbau der Verweis-Ebene
+
+Für jedes Zertifikat, das von einem Trust Center zu einem Institutionskennzeichen oder einer Be-
+
+triebs- bzw. Zahlstellennummer erstellt wurde, wird ein eigenes Objekt der Klasse „Organization
+
+Unit“ angelegt. Der Objektname ist die Seriennummer des jeweiligen Zertifikats.
+
+         Name         Object Class       Attribute
+         <Serien-     Organization Unit       • Trust Center-Name oder Firmenname
+         nummer                               • Seriennummer des Zertifikats
+                                              • Referenz zum Zertifikat (seeAlso)
+
+Gültig ab:01.01.2026                     Seite 45 von 94                         Stand: 02.09.2025
+         Name          Object Class              Attribute
+         des Zertifi-                                 • Gültigkeit des Zertifikats „von“
+         kats>                                        • Gültigkeit des Zertifikats „bis“
+                                                      • Verschlüsselungsverfahren
+                                                      • Ansprechpartner im Fall AG oder LE
+
+4.6.2.6         Aufbau des Update-Zweig
+
+Die nachfolgende Abbildung zeigt den Directory Information Tree für den Update-Zweig. Die Up-
+
+dates werden zur besseren Übersicht und Sortierung in Zweige nach dem Jahr und in Unterzweigen
+
+für jeden Tag unterhalb des zugehörigen Trust Centers (CA) fortlaufend angelegt.
+
+HINWEIS:
+Die Update-Zweige nehmen in der überarbeiteten LDAP-Struktur nur noch eine Verwaltungsrolle
+für das Trust Center ein und erheben keinen Anspruch auf alle Änderungen zum letzten Stand,
+denn es werden immer nur neue Zertifikate hinzugefügt. Um den Datenbestand für eine Daten-
+Replizierung in einem notwendigen Rahmen zu halten, werden in den Update-Zweigen nur gültige
+Schlüssel gespeichert. Ungültige Schlüssel werden regelmäßig aus den Update-Zweigen gelöscht.
+
+                                                        C = DE
+
+                         O = Jahr                                                O = Jahr
+
+                O = Tag                 O = Tag                 O = Tag                    O = Tag    Kap.
+                                                                                                      4.6.2.6
+
+OU = CA1               OU = CA2         OU = CA1                OU = CA2                   Kap.
+                                                                                           4.6.2.6.1
+    CN = lfdnr              CN = lfdnr      CN = lfdnr               CN = lfdnr
+    CN = lfdnr              CN = lfdnr      CN = lfdnr               CN = lfdnr
+    CN = lfdnr              CN = lfdnr      CN = lfdnr               CN = lfdnr
+
+4.6.2.6.1       Aufbau der Datums-Ebene
+
+Für jede inkrementelle Speicherung neuer Zertifikate wird ein Objekt der Klasse „Organization“ an-
+
+gelegt. Der Organization Name wird aus dem aktuellen Datum generiert und als String in der Form
+
+YYYY für das Jahr und YYYYMMDD für einen Tag (e.g. “20061117“) dargestellt.
+
+           Name                          Object Class           Attribute
+           <Organization Name aus        Organization                • Trust Center-Name
+           dem aktuellen Datum>
+                                         Seite 46 von 94                                   Stand: 02.09.2025
+Gültig ab:01.01.2026
+4.6.2.7    Zugriffsrechte und -rollen
+
+Die Annahmestellen der Sozialversicherung erhalten vom LDAP-Betreiber eine Benutzerkennung
+
+mit Kennwort, mit der sie sich auf dem LDAP-Server anmelden können. Mit dieser Kennung erhält
+
+jede Annahmestelle Lesezugriff auf den kompletten LDAP-Server. Schreibzugriffe sind nicht mög-
+
+lich. Die Benutzer werden in einer separaten Datenbank gepflegt.
+
+Es kann über LDAP (Port 389) zugegriffen werden.
+
+4.6.2.8    Suchfunktionen
+
+Die Suche nach Binärdateien der Teilnehmer-Zertifikate ist über das Institutionskennzeichen oder
+
+über die Betriebs- bzw. Zahlstellennummer sowie über die Seriennummer in den Zertifikats-Zwei-
+
+gen möglich. Dabei ist wichtig, dass der Präfix „BN“ bzw. „IK“ zur Nummer mit angegeben wird.
+
+Auch die Binärdateien der Sperrlisten (CRL) können in den Zertifikats-Zweigen gesucht werden. Für
+
+die Recherche nach bestimmten Attributen ist zudem eine Suche nach dem Firmennamen, An-
+
+sprechpartner, Gültigkeit und Verschlüsselungsverfahren in den Alias-Zweigen möglich.
+
+HINWEIS:
+Gesucht werden kann über Standard LDAP-Routinen in allen Teilästen, in denen der Benutzer Le-
+serechte hat.
+
+4.6.2.9    Zertifikatshandling
+
+4.6.2.9.1  Sperrung eines Zertifikats
+
+Sobald ein Zertifikat gesperrt wird, wird die aktualisierte Sperrliste bei der zugehörigen CA veröf-
+
+fentlicht und der zu dem Zertifikat zugehörige Benutzereintrag im LDAP-Server gelöscht.
+
+Wird ein CA-Zertifikat gesperrt, wird der komplette Zweig der CA und alle Benutzer-Zertifikate, die
+von dieser gesperrten CA erzeugt wurden, vom LDAP-Server gelöscht.
+
+Wird ein PCA-Zertifikat gesperrt, wird der komplette Zweig der PCA, alle von dieser PCA erzeugten
+CAs mit allen Teilnehmern der entsprechenden CA vom LDAP-Server gelöscht.
+
+Somit ist die Prüfung, ob ein Zertifikat gesperrt wurde, sowohl über die zugehörige Sperrliste, als
+auch über einen Positiv-Abgleich mit dem LDAP-Server möglich.
+
+4.6.2.9.2  Abgelaufene Zertifikate
+
+Abgelaufene Benutzerzertifikate werden vom LDAP-Server gelöscht. Bei abgelaufenen CA- oder
+
+PCA-Zertifikaten wird die komplette Teillast vom LDAP-Server gelöscht. Dieser Abgleich auf abge-
+
+laufene Benutzerzertifikate wird nicht über die Update-Zweige angewendet!
+
+Gültig ab:01.01.2026                   Seite 47 von 94                     Stand: 02.09.2025
+4.6.2.9.3  Abholung eines einzelnen Zertifikats vom LDAP-Server
+
+Um Zertifikate und weitere Informationen vom LDAP-Server zu holen, kann über unterschiedliche
+
+Wege erfolgen. Prinzipiell müssen die Anfragen an den LDAP-Server nach Ver- oder Entschlüsseln
+
+unterschieden werden. Beim Verschlüsseln liegt in der Regel nur die Betriebs- bzw. Zahlstellen-
+
+nummer oder das Institutionskennzeichen des Empfängers vor, wogegen beim Entschlüsseln die
+
+Seriennummer und das Issuer-Trust Center bekannt ist (aus der verschlüsselten Nachricht). Aus
+
+diesen Anforderungen bieten sich die folgenden Suchwege an:
+
+▪ Zur Verschlüsselung kann nach dem zugehörigen Institutionskennzeichen oder der zuge-
+     hörigen Betriebs- bzw. Zahlstellennummer entweder im Zertifikatszweig im Aliaszweig AG
+     oder LE gesucht werden. Als Suchergebnis werden 0-n Zertifikatsinformationen aufgelistet.
+     Im Zertifikatszweig stehen die Binaries direkt zur Verfügung. Im Aliaszweig muss zunächst
+     aus den gelieferten Informationen anhand der Attribute (von – bis, Verfahren, etc.) der ge-
+     wünschte Verweis ( = SeeAlso) selektiert werden und im zweiten Zugriffsschritt werden an-
+     hand der SeeAlso-Informationen die eindeutigen Zertifikatsinformationen (binary) im Zerti-
+     fikatszweig gelesen.
+
+▪ Beim Entschlüsselungsvorgang kann zum Verifizieren einer Signatur anhand der Serien-
+     nummer und dem Trust Center-Namen auf die eindeutigen Informationen des Zertifikates
+     zugegriffen werden. Dabei wird direkt der Zertifikatszweig ausgelesen.
+
+Die CA- und PCA-Zertifikate können wahlweise über den Objektnamen oder das Attribut „serial-
+number“ gesucht werden. Dort liegt im Attribut „caCertificate“ das zugehörige Zertifikat.
+
+Zertifikate, die vom LDAP-Server geladen werden, sind zu diesem Zeitpunkt immer gültig.
+
+4.6.2.9.4  Abholung einer Sperrliste vom LDAP-Server
+
+Um eine Sperrliste für Enduser-Zertifikate abholen zu können, muss zunächst der zugehörige CA-
+
+Zertifikatseintrag über den Objektnamen (Kapitel 4.6.2.4.1) gesucht werden. Dort ist im Attribut
+
+„CertificateRevocationList“ die zugehörige CRL zu finden.
+
+Um die Gültigkeit eines CA-Zertifikats zu prüfen, muss im Eintrag des zugehörigen PCA-Zertifikats
+die „authorityRevocationList“ heruntergeladen werden.
+
+4.6.2.10 Betrieb des LDAP-Dienstes
+Jedes Trust Center, das am Datenaustausch-Verfahren teilnimmt, stellt einen eigenen LDAP Dienst
+zu Verfügung der von dem jeweiligen Trust Center eigenständig betrieben und gepflegt wird.
+
+Die Trust Center können untereinander eine automatisierte Replizierung vereinbaren, oder Sie kön-
+nen in bilateraler Absprache alle öffentlichen Schlüssel über die ITSG zum Abruf bereitstellen.
+
+Gültig ab:01.01.2026  Seite 48 von 94                            Stand: 02.09.2025
+5. PKI-Verfahrensbeschreibung
+
+5.1 Struktur der Zertifizierungshierarchie
+Die Zertifizierungshierarchie folgt nachfolgendem Aufbau.
+
+                                                                                        PCA =
+                                                                     Policy Certification Authorityhy
+
+                    CA =                       CA =                       CA =                                       CA =
+      Certification Authorityhy  Certification Authorityhy  Certification Authorityhy                  Certification Authorityhy
+
+    UA =        UA =                 UA =                       UA =             UA =                      UA =
+Teilnehmer  Teilnehmer           Teilnehmer                 Teilnehmer       Teilnehmer                Teilnehmer
+
+  fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+  fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+Die oberste Wurzel des Zertifizierungsbaumes ist die Policy Certification Authority. Auf der nächs-
+
+  fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+tefnfffEfbffeffnffefffdffeffrffZffeffrfftfifffifzffifefrffuffnffgffsffhffifefrffaffrfcffhffifeffbffeffffifnffdffeffnfffsffifcffhfffdffifefffCffAff’feffnfffuffmffffTffeffiflfnffeffhffmfffeffrffuffnffdfffwffeitere Struk-
+tufrfeffnfffeffifnffeffrffOfffrfgffaffnffifsfafftfifoffnfffzffufffzffeffrftffiffifzffieffrffefnfff.ffZffuffrfzffeffiftffwffifrffdfffdffifefffPfCfffAfffgffeffbffiflfdffefftffdffuffrfcffhfffdffifefffKffoffoffperationsge-
+
+mfefifnffsffcffhffaffftffTffrfuffsfftffCfffefnfftffefrfffuffnfftfeffrffLffeffiftfuffnffgfffdffeffrffIfnffffoffrfmfffafftfifoffnffsfftfeffcfhffnffifsffcffhffeffnfffSfeffrffvfifcffeffsftffeflflfefffdffeffrfffgesetzlichen
+Krfaffnffkffeffnffvfeffrfsffifcffhffeffrfuffnffgfff(fIfTffSffGfffGfffmfffbffHff)f.ffDfffeffrffVffeffrftfrffaffgfffzfufffrffKffoffoffpffeffrfafftfifoffnfffrffefgffefflftfffdffefnfffZffufftffrfiftftffwfffeffiterer Trust
+
+  fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+Center, sofern die Bedingungen der Policy der PCA erfüllt werden.
+
+  fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+  fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+5.f2fffffffffRffofflflfeffnfffuffnffdfffifhffrffeffFffuffnffkfftfifoffnffeffnffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                    fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+Die Systemarchitektur wird anhand der im System vorhandenen Rollen und ihren Funktionalitäten
+
+beschrieben. Innerhalb der Architektur können danach die folgenden vier Rollen identifiziert wer-
+
+den:
+
+▪ Teilnehmer (UA),
+▪ Zertifizierungsstelle (CA),
+▪ Registrierungsstelle (RA) und
+▪ Verzeichnisdienst (DIR).
+
+5.3 PCA-Wurzel der Zertifizierungshierarchie
+
+Die PCA (Policy Certification Authority) verfügt über eine Policy, in dem die PCA-Sicherheitspolitik
+festgelegt wird. Eine signierte Kopie dieses Dokumentes wird allgemein verfügbar gemacht. Die
+Autorisierung einer CA, innerhalb der Zertifizierungshierarchie zu operieren, basiert auf diesem
+Dokument sowie auf dem herausgegebenen Zertifikat der PCA.
+
+Gültig ab:01.01.2026                                        Seite 49 von 94                                        Stand: 02.09.2025
+Die Sicherheitspolitik folgt dabei den Sicherheitsleitlinien einer obersten Zertifizierungsstelle, die
+allgemein als Policy Certification Authority (PCA) bezeichnet wird. Es haben sich
+
+      die von den Spitzenverbänden der gesetzlichen Krankenkassen eingerichtete
+      Informationstechnische Servicestelle der
+      Gesetzlichen Krankenversicherung GmbH (ITSG)
+
+      und
+
+      die von der Deutsche Krankenhausgesellschaft eingerichtete
+      Deutsche Krankenhaus TrustCenter und
+      Informationsverarbeitung GmbH (DKTIG)
+
+auf die gemeinsame Gestaltung der PCA Datenübermittlung im Gesundheits- und Sozialwesen und
+deren Policy verständigt.
+
+5.3.1  Identität der PCA
+
+Die o. g. Organisationen betreiben die PCA als gleichberechtigte Partner. Mit dem Aufbau und der
+Wahrnehmung der DV-technischen Aufgaben der PCA ist derzeit die Eviden Germany GmbH be-
+traut.
+
+5.3.2  Zuständigkeitsbereich der PCA
+
+Als Zuständigkeitsbereich der PCA ist vorrangig das deutsche Gesundheits- und Sozialwesen vor-
+gesehen. Das primäre Ziel besteht in der Sicherung der Kommunikation im Rahmen des Datenaus-
+tausches zwischen der GKV, GRV und allen Leistungserbringern, die über eine IK-Nummer, sowie
+Arbeitgebern/Zahlstellen, die über eine Betriebsnummer oder Zahlstellennummer verfügen.
+
+Der Name der PCA wurde daher so gewählt, dass nicht nur CA's aus dem Gesundheitswesen oder
+dem Bereich der Rentenversicherung, sondern darüber hinaus ggf. auch CA's und Teilnehmer aus
+anderen Bereichen des Sozialwesens im Interesse einer für alle Beteiligten vereinfachten Gestaltung
+der CA (insbesondere auch im Hinblick auf den Austausch der von ihnen zertifizierten Schlüssel)
+die Funktion der PCA in Anspruch nehmen können.
+
+PCAs sollten substantiell unterschiedliche Sicherheitsleitlinien haben. Für das deutsche Gesund-
+heits- und Sozialwesen sind aus Sicht der genannten Partner substantiell unterschiedliche Sicher-
+heitsleitlinien nicht erforderlich. Darüber hinaus sind die vorhandenen Sicherheitsleitlinien auch für
+weitere Bereiche des Sozialwesens ausreichend (z. B. für Arbeitgeber für die Übermittlung von
+DEÜV-Meldungen und Beitragsnachweise).
+
+Gültig ab:01.01.2026      Seite 50 von 94  Stand: 02.09.2025
+5.4 Trust Center (Certification Authority)
+
+5.4.1  Zertifizierungsanforderung
+
+Die CA (Trust Center) generiert auf Anfrage ein Zertifikat das u.a. den Namen des Systemteilneh-
+mers, den öffentlichen Schlüssel sowie den Namen des Zertifikatserzeugers enthält. Dabei signiert
+die CA diese Daten unter Verwendung ihres privaten Schlüssels. Für diesen Vorgang sind vom Teil-
+nehmer bzw. UA mindestens der öffentliche Schlüssel und der Name mitzuteilen. Innerhalb dieses
+Prozesses ist es erforderlich, dass die CA den Teilnehmer authentisiert, d. h. sich von der Korrekt-
+heit der Teilnehmeridentität überzeugt, bevor sie die Zusammengehörigkeit von Teilnehmername
+und öffentlichem Schlüssel durch das zu erzeugende Zertifikat bestätigt (siehe RA). Die dazu ein-
+gesetzten Mechanismen werden durch die CA festgelegt.
+
+Zur Zertifikatsanforderung (Certification Request) durch einen Teilnehmer an eine CA werden im
+Folgenden die Varianten
+
+▪ Anforderung mittels PKCS#10-Request in elektronischer Form
+▪ Anforderung mittels PKCS#10-Request über eine Online-Schnittstelle (nur ITSG-Trust Cen-
+
+     ter),
+
+beschrieben.
+
+Im ersten Fall erfolgt die Kommunikation zwischen dem Teilnehmer und dem Trust Center in elekt-
+ronischer Form. Optional können Trust Center weitere Kommunikationswege unterstützen. Sie un-
+terscheiden sich durch die von der CA vorgenommenen Form der Authentikation der anfordernden
+Teilnehmer.
+
+5.4.2  Zertifikatsüberprüfung
+
+Ein erster Schritt einer jeden Zertifikatsprüfung ist die Verifizierung der Signatur des Zertifikatser-
+zeugers unter Verwendung des zugehörigen öffentlichen Schlüssels.
+
+Die Prüfung umfasst folgende Schritte:
+
+1. Erfolgreiche Validierung des Certification Requests (PKCS#10),
+2. erfolgreiche Verifizierung der Signatur bzw. des Hashwertes des öffentlichen Schlüssels,
+3. sowie einer positiven Konsistenzprüfung beider Nachrichteninhalte.
+4. Der Teilnehmer bzw. Antragsteller erhält eine entsprechende Nachricht, sofern die Prüfung
+
+     ein negatives Ergebnis erbringt.
+
+5.4.3  Eindeutigkeit von Namen
+
+Eine wesentliche Anforderung an das Zertifizierungsschema ist die Eigenschaft der Namenseindeu-
+tigkeit aller Knoten und insbesondere aller zertifizierenden Trust Center.
+
+Gültig ab:01.01.2026                    Seite 51 von 94  Stand: 02.09.2025
+Bei Zertifizierung einer CA richtet die zertifizierende PCA / CA eine Anfrage an die Datenbank. Be-
+steht kein Konflikt bezüglich dieses Datums, so kann die CA in der Datenbank registriert werden.
+Dazu sind von der PCA / CA Name, öffentlicher Schlüssel und Name der CA anzugeben.
+
+5.4.4  Propagierung Zertifizierungsinformation
+
+Jeder Sender einer signierten Nachricht muss dem Empfänger die notwendige Zertifizierungsinfor-
+mation zur Verfügung stellen, d. h. im Zweifelsfalle die vollständige Information, um alle Zertifikate
+des Zertifizierungspfads verifizieren zu können.
+
+Steht ein geeignetes Public Directory zur Verfügung, so kann auf die Übermittlung der Zertifizie-
+rungsinformation verzichtet werden, falls dem Empfänger der Nachricht die Nutzung des Directorys
+möglich ist.
+
+5.4.5  Sperrlisten Management
+
+Anwendungen für einen rechtsverbindlichen Geschäftsverkehr mit Einsatz der elektronischen Sig-
+natur erfordern einen Verzeichnisdienst auch zum Abruf von Sperrlisten (alternativ können CAs auf
+Online-Sperrbenachrichtigungsmechanismen wie z. B. das OCSP-Protokoll zurückgreifen).
+
+Jede CA ist verantwortlich für die Ausgabe der von ihr gesperrten Zertifikate. Für die Sperrung eines
+Zertifikates können mehrere Gründe ausschlaggebend sein:
+
+▪ das Schlüsselpaar wurde kompromittiert oder es besteht ein begründeter Verdacht der
+     Kompromittierung und
+
+▪ organisatorische Gründe (z.B. die Entfernung des Teilnehmernamens aus dem System),
+▪ falsche Angaben im Zertifikat.
+
+In Anhang 6.1.3 „Sperrliste“ ist die ASN.1 Syntax einer Sperrliste wiedergegeben. Es ist das Format
+„CRLv2“ nach der Spezifikation X.509v3 (ITU-X.509 97) zu unterstützen.
+
+Eine Sperrliste besteht aus den folgenden Einträgen:
+
+▪ Signatur
+     (Identität des Signaturalgorithmus und zugehörige Parameter)
+
+Dieses Datenelement entspricht dem gleichnamigen Datenfeld im Zertifikat.
+
+▪ Erzeuger der Sperrliste
+     Name der CA, die die Sperrliste signiert hat.
+     Ausgabedatum
+     Datum der Listenerstellung.
+     nächste Aktualisierung
+
+Gültig ab:01.01.2026           Seite 52 von 94                             Stand: 02.09.2025
+          Hier wird der vorgesehene Zeitpunkt zur Verteilung der nächsten aktualisierten Sperrliste
+          angegeben.
+          Liste der gesperrten Zertifikate
+          Für jedes gesperrte Zertifikat wird die zugehörige Seriennummer und der Zeitpunkt der
+          Sperrung angegeben.
+
+Die CRL’s werden sofort nach einer Sperrung, spätestens alle 2 Wochen aktualisiert.
+
+5.5 Registrierungsstelle (RA = Registration Authority)
+Eine Identifizierung und Authentifizierung des Teilnehmers kann durch eine Registrierungsstelle
+unterstützt werden, die auch räumlich getrennt von der CA agieren kann. Die Beglaubigung des
+Antrages wird von der RA an die CA übermittelt. In diesem Fall wird die RA a priori als vertrauens-
+volle Instanz angesehen.
+
+Die Zertifikatsübermittlung durch die CA an den Teilnehmer erfolgt in der beschriebenen elektroni-
+scher Form.
+
+Die beschriebenen Abläufe für eine Certification Request (Zertifikatsanforderung) sind im nachfol-
+gend veranschaulicht:
+
+                  CA
+
+                                                                                Identifizierung und
+                                                                                 Authentifizierung
+
+               manuelle,  elektronische                   RA
+           elektronische  Zertifikats-
+Zertifikatsanforderung    übermittlung
+
+                 Antragsteller
+
+Die CA nimmt die Zertifizierung der Schlüssel vor, muss sich dabei jedoch in geeigneter Form da-
+von überzeugen, dass der Antragsteller tatsächlich derjenige ist, der er zu sein vorgibt.
+
+Zur Identifizierung und Authentifizierung des Antragstellers anhand der elektronischen Antragsda-
+ten sind die folgenden Schritte umzusetzen:
+
+Gültig ab:01.01.2026                     Seite 53 von 94      Stand: 02.09.2025
+     ▪ Zusendung eines Ausdrucks eines eindeutigen Hashwerts seines öffentlichen Schlüssels
+     ▪ Nachweis der Identität durch eine geeignete Maßnahme, die die Anforderungen an eine
+
+          substantielle Authentifizierung des BSI erfüllt (z.B. PostIdent oder eID-Funktion des Perso-
+          nalausweises)
+     ▪ im AG-Verfahren bei einem Erstantrag Angabe der Betriebsnummer, Absendernummer,
+          Zahlstellennummer. Das Trust Center muss durch geeignete Maßnahmen prüfen, ob die Be-
+          triebsnummer dem Antragsteller zugeordnet werden darf. Dies kann durch einen Frei-
+          schaltcode erfolgen, der postalisch an die in der Betriebsstättendatei der Bundesagentur für
+          Arbeit oder in den Verzeichnissen für Absendernummern und Zahlstellennummern hinter-
+          legte Adresse versendet wird. Dieser Freischaltcode muss vom Antragsteller mit dem
+          Schlüsselpaar verknüpft ans Trust Center gesendet werden (idealerweise durch eine Signa-
+          tur des Freischaltcodes mit dem privaten Schlüssel aus dem Antrag).
+     ▪ im LE-Verfahren bei einem Erstantrag Angabe des Institutionskennzeichen (IK). Das Trust
+          Center muss durch geeignete Maßnahmen prüfen, ob das IK dem Antragsteller zugeordnet
+          werden darf. Dies kann durch einen Freischaltcode erfolgen, der postalisch an die in dem
+          Verzeichnis der ArGe IK hinterlegte Adresse versendet wird. Dieser Freischaltcode muss
+          vom Antragsteller mit dem Schlüsselpaar verknüpft ans Trust Center gesendet werden (ide-
+          alerweise durch eine Signatur des Freischaltcodes mit dem privaten Schlüssel aus dem An-
+          trag).
+
+Der Registrierungsstelle ist es gestattet, dem bereits identifizierten Antragsteller die hinterlegten
+Adressen zu seiner Betriebsnummer / seinem IK anzuzeigen, damit dieser (bei mehreren hinterleg-
+ten Adressen) die korrekte auswählen kann. Weiter kann der Antragsteller dadurch reagieren, falls
+die Adressdaten nicht mehr aktuell sind. Die Registrierungsstelle darf den Freischaltcode an keine
+alternative Lieferadresse außerhalb der Registerdaten versenden, der Antragsteller muss beim zu-
+ständigen Betreiber des Registers eine Änderung initiieren.
+Wenn ein Antragsteller für weitere Betriebsnummern oder Institutionskennzeichen Meldungen ab-
+geben möchte, muss er entweder für jede Betriebsnummer bzw. jedes Institutionskennzeichen ein
+eigenes Zertifikat beantragen oder ein Zertifikat als Meldestelle für Verfahren im AG-Bereich unter
+Verwendung der Betriebsnummer als Identifikationsmerkmal bzw. im LE-Bereich unter Verwen-
+dung des Institutionskennzeichens als Identifikationsmerkmal beantragen. Diesem Antrag muss
+zusätzlich eine Eigenerklärung beigefügt werden, dass ausschließlich Meldungen für Meldepflich-
+tige getätigt werden, die gegenüber der Meldestelle oder deren Vertragspartner nach substantiel-
+lem Sicherheitsniveau identifiziert wurden. Die Identifikation des Vertragspartners durch die Mel-
+destelle muss dabei nach substantiellem Sicherheitsniveau erfolgt sein. Ein Muster für die Eigener-
+klärung ist dieser Anlage als Anhang beigefügt. Für die Meldestellen wird im Trust Center getrennt
+nach Verfahren im AG-Bereich bzw. im LE-Bereich je eine Zuordnungstabelle gepflegt, welche Be-
+triebsnummern bzw. Institutionskennzeichen sich erfolgreich als Meldestelle registriert haben.
+Die Listen der Betriebsnummern bzw. der Institutionskennzeichen aller Meldestellen werden tages-
+aktuell an alle Sozialversicherungsträger und deren Dienstleister verteilt, damit beim Dateneingang
+Prüfungen durchgeführt werden können, ob der Absender befugt ist, für andere zu melden.
+
+Gültig ab:01.01.2026  Seite 54 von 94  Stand: 02.09.2025
+Eine Sonderstellung nehmen die Sozialversicherungsträger und deren Dienstleister inkl. der Daten-
+annahmestellen ein. Da diese in einem gemeinschaftlichen Prozess zu einem bestimmten Stichtag
+ihre Zertifikate wechseln, wird hier ein separater manueller Prozess durchgeführt, bei dem manuell
+die Echtheit und Authentizität des Antragsstellers festgestellt wird.
+
+Bei einem papierlosen Online-Folgeantrag sind keine Antragsunterlagen beim ITSG-Trust Center
+einzureichen. Der Online-Folgeantrag muss mit einem gültigen Zertifikat vom ITSG-Trust Center
+elektronisch signiert werden. Online-Folgeanträge dürfen nur durch den identifizierten Antrags-
+steller gestellt werden. Ansonsten ist ein neuer Erstantrag erforderlich.
+Eine bestehende Eigenerklärung einer Meldestelle kann im Rahmen eines erneuten Antrags wäh-
+rend der Laufzeit eines gültigen Zertifikats bestätigt werden und muss nicht neu eingereicht wer-
+den.
+
+5.6 Teilnehmer
+Die Teilnehmer nehmen unter Verwendung technischer Hilfsmittel (Hard- und Software) als Initia-
+toren (Sender) bzw. eigentliche Endabnehmer (Empfänger) am System teil. Dabei kann der im Auf-
+trag eines Teilnehmers agierende Prozess als Teilnehmer-Repräsentant angesehen werden. Diese
+Sichtweise wird durch den separaten Begriff "User Agent" (UA) unterstützt. Teilnehmer bzw. UA
+müssen nachfolgende Funktionalitäten zur Verfügung stellen.
+
+5.7 Erzeugung und Schutz der Teilnehmerschlüssel
+Die Schlüsselpaare sind vom Teilnehmer zu erzeugen. Bei jedem Zertifizierungsantrag ist ein neues
+Schlüsselpaar zu erzeugen, dies gilt auch bei Online-Folgeanträgen.
+
+An die Erzeugung der Teilnehmerschlüssel sind hohe Sicherheitsanforderungen zu stellen. Für die
+Speicherung muss die Vertraulichkeit des privaten Schlüssels gewährleistet sein. Dazu muss der
+private Schlüssel mindestens durch ein sicheres Passwort gesichert sein. Die Definition eines siche-
+ren Passwortes wird aus dem Baustein ORP.4 „Identitäts- und Berechtigungsmanagement“ des BSI
+IT-Grundschutz-Kompendiums inklusive der Umsetzungs-Hinweise übernommen. Insbesondere
+„ORP.4.A22 Regelung zur Passwortqualität“ ist zu berücksichtigen.
+
+Der private Schlüssel ist in einer PSE (Personal Security Environment) sicher zu speichern.
+
+5.7.1  Certification Request
+
+Eine Zertifizierungsanforderung/Zertifizierungsanfrage (ein in MIME eingebettetes PKCS#10 -Ob-
+jekt) kann von einem Teilnehmer, einer RA oder einer CA erstellt werden.
+
+Die Zertifikatsanforderung (Certification Request) besteht aus einer elektronischen Anforderung in
+Form eines Certification Requests, den der Teilnehmer durch seine Komponenten, erstellen lassen
+kann und der an die CA gesendet wird. Durch die Anforderung/Anfrage wird das Zertifikat spezifi-
+ziert, welches von der CA generiert werden soll.
+
+Gültig ab:01.01.2026          Seite 55 von 94  Stand: 02.09.2025
+Für den Zertifizierungsprozess werden zwei PKI-Nachrichtentypen ausgetauscht. Die erste davon
+stellt die erwähnte Zertifizierungs-Anfrage dar, mit der das zu erstellende Zertifikat spezifiziert
+wird (self-signed). Die zweite Nachricht (Antwort auf die Anfrage/Anforderung) enthält u. a. das er-
+stellte Zertifikat bzw. eine Fehlermeldung.
+
+Um die zur Zertifikatsbildung notwendigen Informationen auch über die Schlüsselinformation zu
+sichern, sind die Anforderungen mit den folgenden Daten zu belegen:
+
+Ein Certification Request besteht aus drei Teilen:
+
+     ▪ CertificationRequestInfo,
+     ▪ Ein Identifier für den Signatur-Algorithmus,
+     ▪ Eine elektronische Signatur des Antragstellers auf der CertificationRequestInfo.
+
+Ein CertificationRequestInfo wiederum besteht aus:
+
+     ▪ Der Versionsnummer der verwendeten PKCS-Version,
+     ▪ Dem Distinguished Name des Antragstellers,
+     ▪ Dem öffentlichen Schlüssel des Antragstellers (inklusive PK-Algorithmus),
+     ▪ Eine Menge von Attributen.
+
+Attribute werden verwendet:
+
+     ▪ Zur Angabe von zusätzlichen Informationen über den Antragsteller, die die Certification
+          Authority (CA) benötigt, um die Zertifizierungsanfrage bearbeiten zu können (z. B. die Ad-
+          resse, an die das Zertifikat zugestellt werden soll).
+
+     ▪ Um Attribute zu spezifizieren, die in dem zu erstellenden X.509 Zertifikat erhalten sein sol-
+          len.
+
+Eine Zertifikatserstellung und Verteilung durch die CA für den anfordernden Teilnehmer erfolgt nur
+unter den Bedingungen:
+
+     ▪ Erfolgreiche Validierung des Certification Request,
+     ▪ erfolgreiche Verifizierung der Signatur bzw. des Hashwertes des öffentlichen Schlüssels.
+
+Der Ablauf ergibt sich aus der Anwendung von X.509 und PKCS#10.
+
+5.7.2  Definition von Zertifikatsanfragen nach PKCS#10
+
+Anhand des Standards PKSC#10 wird ein Profil erarbeitet.
+
+Gültig ab:01.01.2026  Seite 56 von 94                     Stand: 02.09.2025
+PKCS#10 (Certification Request Syntax Standard) beschreibt eine Syntax für Zertifikatsanfragen; vgl.
+[PKCS#10]. Das technische Profil für Zertifikatsanfragen nach PKCS#10 ist im Kapitel 5.8 beschrie-
+ben.
+
+5.7.3  Zertifikate X.509v3
+
+X.509 ist eine Empfehlung der ITU-T Recommendation. Sie spezifiziert die Authentifizierungs-
+dienstleistung für X.500-Verzeichnisse und die weit verbreitete X.509-Zertifikatsstruktur. Seit Ver-
+sion 3 (1993) sind Sicherheitsprobleme behoben, die in Version 1 und 2 noch bestanden. X.509
+spezifiziert keine bestimmten kryptographischen Algorithmen, doch wird im Anhang der RSA-Al-
+gorithmus beschrieben und damit propagiert.
+
+Anhand des X.509-Standards wird ein Profil erarbeitet. Das technische Profil für X.509v3-Zertifi-
+kate ist im Kapitel 4.4 beschrieben.
+
+5.8 PKCS#10-ZERTIFIZIERUNGSANFRAGE
+
+5.8.1  Überblick
+
+Eine Zertifizierungsanfrage nach PKCS#10 besteht aus
+
+▪ einem Distinguished Name (DN),
+▪ einem öffentlichen Schlüssel und
+▪ einem Satz an Erweiterungen, welche zusammen vom Antragsteller (mit seinem zum öf-
+
+     fentlichen Schlüssel gehörenden privaten Schlüssel) signiert werden.
+
+Eine Anfrage ist eine selbstsignierte Datenstruktur (ein sogenanntes selbstsigniertes Zertifikat). Sie
+weist in großen Teilen eine zu einem X.509v3-Zertifikat vergleichbare Datenstruktur auf. Diese Da-
+tenstruktur ist an den Stellen reduziert, an denen eine Dateneinheit keinen Sinn hat. So ist bei-
+spielsweise kein issuer-Datenfeld zu finden, das im X.509v3-Zertifikat die ausstellende Instanz an-
+gibt.
+
+Zertifizierungsanfragen werden zu einer Zertifizierungsinstanz (Certification Authority - CA) ge-
+sendet, die die Anfrage in ein X.509-Zertifikat transformiert. In welcher Form die CA das nun von
+ihr signierte Zertifikat zurückgibt, ist nicht Gegenstand des PKCS#10-Standards. Eine PKCS#7-
+Nachricht ist eine der möglichen Formen.
+
+5.8.2  Aufbau des PKCS#10-Datentyps
+
+Der Datentyp eines PKCS#10-Request ist mit dem ASN.1-Datentyp CertificationRequest in [Com-
+monPKI-2] Tabelle 1 und in [PKCS#10] in Abschnitt 4.2 festgelegt:
+
+aus [CommonPKI-2] Tabelle 1:
+
+Gültig ab:01.01.2026          Seite 57 von 94         Stand: 02.09.2025
+1      certificationRequest-  DER-kodierte Anfrage-Information, bestehend aus:
+       Info
+1.1    version                Versionsnummer
+1.2    Subject                DN des Antragstellers
+1.3    subjectPublicKeyInfo   Informationen über den öffentlichen Schlüssel, der zu
+                              zertifizieren ist
+1.4    attributes             Satz an Erweiterungen zum Feld “subject”
+1.4.1  ExtensionReq           Erweiterung, die es erlaubt, eine oder mehr Attribute
+                              nach Standard-X.509v3-Erweiterungen hinzuzufügen
+
+2      signatureAlgorithm Kennzeichen für den Signaturalgorithmus, mit dem
+
+                              CertificationRequestInfo signiert wird.
+
+2.1    Signature              Ergebnis des Signierens von CertificationRequestInfo,
+
+                              dargestellt als Datentyp BITSTRING
+
+aus [PKCS#10] in Abschnitt 4.2:
+
+      CertificationRequest ::= SEQUENCE {
+      certificationRequestInfo CertificationRequestInfo,
+      signatureAlgorithm AlgorithmIdentifier{{ SignatureAlgorithms }},
+      signature BIT STRING}
+
+Dieser Aufbau entspricht dem äußeren Aufbau eines X.509v3-Zertifikats, die weiter innen liegen-
+den Datenstrukturen unterscheiden sich jedoch. Vor allen Dingen ist die Datenstruktur gegenüber
+der X.509v3-Zertifikatsstruktur um Felder reduziert, die für eine Zertifizierungsanfrage keine Be-
+deutung haben, so z. B. der Gültigkeitszeitraum validity.
+
+CertificationRequestInfo ist die Anfrageinformation; dies ist das Datenfeld, das zu signieren ist.
+
+Für signatureAlgorithm gelten die Angaben, die im Abschnitt 4.4.13 „Identifizierung des verwende-
+ten Signaturalgorithmus“ zum signatureAlgorithm der Datenstruktur TBSCertificate gemacht wor-
+den sind. signatureAlgorithm kennzeichnet den Signaturalgorithmus, mit dem CertificationRe-
+questInfo signiert wird.
+
+                  Profilierung:
+                  Die Security Schnittstelle legt fest, dass als Signaturalgorithmus RSAES-
+                  PSS einzusetzen ist; vgl. Abschnitt 2.1.2. Die Datenfelder sind entspre-
+                  chend dem verwendeten Algorithmus zu belegen (vgl. Abschnitt 2.1.2.1).
+
+Gültig ab:01.01.2026          Seite 58 von 94                          Stand: 02.09.2025
+Das Datenfeld signature enthält das Ergebnis des Signierens von CertificationRequestInfo mit dem
+privaten Schlüssel des Antragstellers, der im Datenfeld CertificationRequestInfo.subject angegeben
+ist
+
+5.8.3    Aufbau der Teildatenstruktur CertificationRequestInfo
+
+5.8.3.1  Versionsnummer
+
+Dieses Datenfeld entspricht nicht der Versionsnummer eines X.509v3-Zertifikats.
+
+         Profilierung:
+         In [CommonPKI-2], Tabelle 1 ist die Versionsnummer v1(0) für dieses
+         Feld festgelegt, da in [PKCS#10] Abschnitt 4.1 verlangt wird: „It „ (- ge-
+         meint ist: version -) “shall be 0 for this version of the standard”.
+
+5.8.3.2  Namen von Zertifikatsinhabern
+
+Das Datenfeld subject in einem PKCS#10-Datentyp entspricht dem gleichnamigen Datenfeld in ei-
+
+nem X.509v3-Zertifikat; vgl Abschnitt 4.4.5.
+
+Dieses Datenfeld soll exakt den Aufbau eines DNs für Teilnehmerzertifikate aufweisen, der für
+X.509v3-Zertifikate gefordert wird, denn die Angabe des DNs wird bei der Transformation in ein
+X.509v3-Zertifikat übernommen.
+
+         Profilierung:
+         Die Angaben in Abschnitt 4.4.5 zum DN für Teilnehmerzertifikate sind
+         verbindlich.
+
+5.8.3.3  Öffentlicher Schlüssel des Zertifikatsinhabers
+
+Mit dem Datenfeld subjectPublicKeyInfo wird der öffentliche Schlüssel an die Zertifizierungsinstanz
+
+übergeben. Für dieses Datenfeld gelten dieselben Anforderungen, wie an das gleichnamige Daten-
+
+feld in der X-509v3-Zertifikatsstruktur. Dieses Feld wird bei der Transformation in ein X.509v3 -
+
+Zertifikat übernommen.
+
+Zusätzlich wird dieses Feld daraufhin überprüft, ob der hierin enthaltene öffentliche Schlüssel zu
+
+dem privaten Schlüssel gehört, der die Zertifizierungsanfrage signiert hat (engl. Proof of Possession
+
+– dt. Besitznachweis).
+
+Die im Antrag enthaltene Signatur ist eine Signatur über die gesamte Datenstruktur CertificationRe-
+questInfo und steht im Datenfeld CertificationRequest.signature. Diese Signatur wird gegen das
+Datenfeld subjectPublicKeyInfo geprüft.
+
+Gültig ab:01.01.2026     Seite 59 von 94                                         Stand: 02.09.2025
+Die Signatur ist gültig, wenn sie sich mit dem öffentlichen Schlüssel – also dem Datenfeld subject-
+PublicKeyInfo – verifizieren lässt. Damit ist es nicht erforderlich, den privaten Schlüssel bei der An-
+tragstellung an die Zertifizierungsstelle zu übergeben, sondern der private Schlüssel verbleibt in
+sicherer Verwahrung.
+
+5.8.3.4  Profilierung
+
+Die Angaben in Abschnitt Abschnitt 4.4.7 „Basic Constraints
+
+Das Feld BasicConstraints ist eine optionale Datenstruktur, die das Zertifikat des Teilnehmers einer
+
+Rolle zuordnet. Die Zertifikate der CA und PCA müssen mit CA=TRUE versorgt werden. Die Teilneh-
+
+merzertifikate müssen CA=FALSE versorgt werden.
+
+Bei optionaler Verwendung gilt folgende Datenstruktur:
+
+BasicConstrints::= SEQUENCE {
+CA {TRUE, FALSE}
+pathLenConstrint OCTET STRING}
+Öffentlicher Schlüssel des Zertifikatsinhabers
+
+         Öffentlicher Schlüssel des Zertifikatsinhabers zum Aufbau des Datenfel-
+         des subjectPublicKeyInfo ist verbindlich.
+
+5.8.3.5  Erweiterungen
+
+Da es nicht erforderlich ist, dass bei der Antragstellung Daten für die später in den Zertifikaten ver-
+
+wendeten Erweiterungen übergeben werden, sondern diese ausschließlich von der Zertifizierungs-
+
+instanz selbst gesetzt werden, sind die Datenfelder attributes, insbesondere ExtensionReq nicht zu
+
+füllen.
+
+         Profilierung:
+         Die Zertifizierungsanfrage soll keine Erweiterungen enthalten.
+
+5.8.4    Transport der PKCS#10 Zertifizierungsanfrage
+
+5.8.4.1  Transportformat
+
+Referenz: [CommonPKI-2], Abschnitt 2.3
+
+Abschnitte 1.4
+
+Nachdem ein Datenobjekt vom Typ certificationRequestInfo (vgl. 5.8.2 „Aufbau des PKCS#10-Da-
+tentyps“) so zusammengestellt wurde, wie von der Datentyp-Spezifikation definiert, liegt es als
+ASN.1-Struktur vor. Es folgt eine DER-Kodierung, die als Transportsicherung dient. Der daraus re-
+
+Gültig ab:01.01.2026      Seite 60 von 94                                Stand: 02.09.2025
+sultierende Bytestream wird in eine Datei abgelegt, die die Dateiendung „p10“ aufweist. Das physi-
+kalisch so gesicherte PKCS#10-Datenobjekt kann auf verschiedenen Transportwegen zur CA ge-
+sendet werden.
+
+Physikalisch handelt es sich bei einer PKCS#10-Datei um eine Binärdatei, die auf den weiteren
+Transportwegen als eben solche zu behandeln ist.
+
+5.8.4.2  Transportwege
+
+Es muss beachtet werden, dass jedes Trust Center nur bestimmte Transportwege anbietet, unab-
+hängig der möglichen Transportwege in den Anlagen der Gemeinsamen Grundsätze Technik. Die
+Spezifikationen zu den Transportwegen sind auf den Webseiten der Trust Center (z. B. www.trust-
+center.info, www.dktig.de) veröffentlicht.
+
+5.9 PKCS#7-ZERTIFIZIERUNGSANTWORT
+Referenz: [CommonPKI-2], Abschnitt 2.3
+
+5.9.1    Überblick PKCS#7
+
+In welcher Form die CA das von ihr signierte Zertifikat zurückgibt, ist unter anderem Gegenstand
+von PKCS#7. PKCS#7 legt Anforderungen für viele Nachrichtentypen (vgl. nachfolgende Liste in die-
+sem Abschnitt mit den verschiedenen Nachrichten-Typen) fest, z. B. eine PKCS#7-Zertifizierungs-
+antwort.
+
+PKCS#712 wird auch als Cryptographic Message Syntax Standard (CMS) bezeichnet und beschreibt
+eine Syntax, nach der Daten durch kryptographische Maßnahmen wie digitale Signaturen oder Ver-
+schlüsselung geschützt werden können
+
+Die allgemeine Syntax eines CMS-Objektes ist:
+
+ContentInfo ::= SEQUENCE {
+ contentType ContentType,
+ content
+   [0] EXPLICIT ANY DEFINED BY contentType OPTIONAL }
+
+ContentType ::= OBJECT IDENTIFIER
+
+Im Feld „contentType“ wird der Typ des geschützten Objektes durch einen OID angegeben.
+Im Feld „content“ sind die geschützten Daten enthalten.
+
+12 PKCS#7v1.5 wird als CMS bezeichnet. Es gibt von PKCS#7 bereits eine Nachfolgerversion, die jedoch nicht verwendet wer-
+   den soll. PKCS#7v1.5 dient als Grundlage für S/MIME Version 3.
+
+Gültig ab:01.01.2026       Seite 61 von 94             Stand: 02.09.2025
+Insgesamt sind für CMS-Objekte sechs „Inhalts“-Typen (die content types) definiert.
+
+Jeder der Typen zeichnet sich durch die Verfahren aus, die auf die ihm anvertrauten Daten - den
+Inhalt - anzuwenden sind, um eine besondere Form von Schutz zu gewährleisten. Es wird zwischen
+Basistypen und erweiterten Typen unterschieden. Basistypen haben keine kryptographische Funkti-
+onalität. Die folgende Tabelle gibt einen kurzen Überblick über die Typen:
+
+       Typ      Typenklasse      Bedeutung
+       Data     Basistyp         Modellierung von Daten
+       Signed-  erweiterter Typ  Format, um Datenintegrität und Senderauthentizität
+       Data                      durch die Verwendung von digitalen Signaturen und
+                                 Zertifikaten zu gewährleisten.
+       Envelo-  erweiterter Typ  Empfängerspezifische Verschlüsselung von Daten
+       pedData  erweiterter Typ
+       Signe-                    Kombination von Signed-data und Enveloped-data: di-
+       dAnd-    erweiterter Typ  gitale Signatur und Verschlüsselung
+       Envelo-  erweiterter Typ
+       pedData                   Gewährleistung der Integrität von Daten durch einen
+       Di-                       Hashwert
+       gested-
+       Data                      Datenverschlüsselung
+       Encryp-
+       tedData
+
+5.9.2  Aufbau der PKCS#7-Zertifizierungsantwort
+
+Eine PKCS#7-Zertifizierungsantwort nach [CommonPKI-2] ist ein CMS-Datenobjekt vom „Inhalts“-
+Typ SignedData.
+
+                Profilierung:
+                [CommonPKI-2] fordert für die PKCS#7-Zertifizierungsantwort den Ein-
+                satz des content-type signedData mit der OID 1.2.840.113549.1.7.2
+
+CMS-Objekte vom Typ SignedData umfassen die zu schützenden Daten und eine oder mehrere di-
+gitale Signaturen. Sie werden üblicherweise durch die folgenden Schritte generiert:
+
+                1. Es wird ein Hash-Wert über die zu schützenden Daten gebildet.
+                2. Die Signatur wird durch Anwendung des privaten Signaturschlüssels auf den
+
+                     Hash-Wert gebildet.
+                3. Jede Signatur wird mit anderen für die Signatur spezifischen Werten zu einem
+
+                     Wert vom Typ SignerInfo zusammengefasst.
+
+Gültig ab:01.01.2026             Seite 62 von 94  Stand: 02.09.2025
+   4. Der Hash-Algorithmus wird mit dem Wert SignerInfo und den zu schützenden Da-
+        ten zu einem Wert vom Typ SignedData zusammengefasst.
+
+   5. Da es sich bei einer Zertifizierungsantwort um ein sogenanntes degeneriertes Sig-
+        nedData handelt, gelten Einschränkungen, die im Folgenden bei der Beschreibung
+        der einzelnen Datenfelder erläutert werden. Gemäß [CommonPKI-2], Abschnitt
+        2.1.1 entfallen die Datenfelder encapContent und signerInfos für eine Zertifizie-
+        rungsantwort aus dem CMS-Datenobjekt.
+
+   6. Der Zusatz „degeneriert“ zu SignedData bezieht sich auf die Sonderrolle des Sig-
+        nedData als Übertragungsobjekt für ein neues von der CA ausgestelltes Zertifikat
+        zum Teilnehmer. Eigentlich wird ein SignedData verwendet, um signierte Daten
+        zusammen mit dem Zertifikat, dessen Inhaber mit seinem privaten Schlüssel sig-
+        niert hat, zu transportieren. In diesem Fall kommt es überhaupt nicht auf den Da-
+        teninhalt an, sondern nur auf das mitgelieferte Zertifikat, das der Empfänger das
+        erste Mal erhält. Zur Übergabe an den Empfänger wird es in ein SignedData ge-
+        packt.
+
+   7. Die Struktur der PKCS#7-Zertifizierungsantwort wird in [CommonPKI-2], Ab-
+        schnitt 2.1.2. und [PKCS#7], Kapitel 7 durch den ASN.1-Datentyp ContentInfo
+        (siehe oben) und in [PKCS#7], Abschnitt 9.1 durch den festgeschriebenen Conten-
+        tType SignedData spezifiziert:
+
+aus [PKCS#7] Abschnitt 9.1:
+
+SignedData ::= SEQUENCE {
+ version Version,
+ digestAlgorithms DigestAlgorithmIdentifiers,
+ contentInfo ContentInfo,
+ certificates
+      [0] IMPLICIT ExtendedCertificatesAndCertificates
+      OPTIONAL,
+ crls
+   [1] IMPLICIT CertificateRevocationLists OPTIONAL,
+ signerInfos SignerInfos }
+
+aus [CommonPKI-2] Tabelle 1:
+
+1  certificationRequestInfo   DER-kodierte Anfrage-Information, bestehend
+                              aus:
+1.1 version                   Versionsnummer
+                              Indication of the type of content
+1  ContentType                Content of signed-data
+                              Version number of CMS syntax
+2  Content
+
+2.1 Version
+
+Gültig ab:01.01.2026          Seite 63 von 94           Stand: 02.09.2025
+2.2 DigestAlgorithms                   Collection (including zero) of message digest al-
+
+                                       gorithm identifiers
+
+2.3 EncapContentInfo contentInfo Data to be protected
+
+2.4 Certificates                       Collection of certificates
+
+2.5 Crls                               Collection of CRLs
+
+2.6 SignerInfos                        Collection of per-signer information
+
+In den nachfolgenden Abschnitten werden die Anforderungen an die Datenfelder der Struktur Sig-
+nedData aufgeführt.
+
+5.9.3    Aufbau der Teildatenstruktur Content vom ContentType „SignedData“
+
+5.9.3.1  Datenfeld “version”
+
+Das Feld version enthält die Versionsnummer der Syntax. Die Versionsnummer ist je nach Art der
+
+zu signierenden Daten entweder „1“ oder „3“13.
+
+         Profilierung:
+         Für das Datenfeld version soll in dieser Datenstruktur immer der Wert
+         „1“ eingesetzt werden.
+
+5.9.3.2  Datenfeld “digestAlgorithms”
+
+Dieses Datenfeld enthält genau einen Objektbezeichner14 für den Hash-Algorithmus, der zur Sig-
+
+natur von content eingesetzt wird.
+
+         Der zu verwendende Objektbezeichner ist von [CommonPKI-2] Tabelle 2 auf
+         OID 2.16.840.1.101.3.4.2.1 für SHA-256 festgelegt; vgl. Abschnitt 2.1.1
+
+5.9.3.3  Datenfeld „encapContentInfo“
+
+Das Datenfeld encapContentInfo enthält üblicherweise in einer SignedData-Struktur die zu schüt-
+
+zenden Daten.
+
+               ▪ Profilierung:
+                    Gemäß [CommonPKI-2], Abschnitt 2.1.1 entfallen die Datenfelder
+                    encapContent und signerInfos für eine Zertifizierungsantwort aus
+                    dem CMS-Datenobjekt.
+
+13 Dies entspricht den Versionsnummern aus Kapitel 5.1 [RFC 2630 99]. Die Versionsnummer 1 ist zu verwenden, wenn un-
+   interpretierte binäre Daten (OID „id-data“) signiert werden sollen. Falls den Daten jedoch ein Formatbezeichner zugewie-
+   sen ist (in der vorliegenden Spezifikation werden OIDs für die verschiedenen Formatbezeichner verwendet) muss die Ver-
+   sionsnummer „3“ sein.
+
+14 Theoretisch sind mehrere OID-Angaben möglich, aber in diesem Zusammenhang besitzt das PKCS#10-Objekt nur eine
+   Signatur für SignedData, und daher nur eine Angabe des hierfür verwendeten Hash-Algorithmus.
+
+Gültig ab:01.01.2026                Seite 64 von 94                             Stand: 02.09.2025
+5.9.3.4  Datenfeld “certificates”
+
+Dieses Datenfeld enthält das neu von der Zertifizierungsinstanz erstellte Zertifikat und alle Zertifi-
+
+kate des Zertifizierungspfades in der folgenden Form:
+
+ExtendedCertificatesAndCertificates ::= SET OF ExtendedCertificateOrCertificate
+
+ExtendedCertificateOrCertificate ::= CHOICE {
+certificate Certificate, -- X.509
+
+ extendedCertificate [0] IMPLICIT ExtendedCertificate}
+
+Die Reihenfolge ist in [CommonPKI-2] nicht festgelegt. Das Datenfeld certificates besteht also aus
+einer nicht geordneten Liste von (X.509-)Zertifikaten oder erweiterten Zertifikaten (ExtendedCerti-
+ficates)
+
+         Profilierung:
+         Erweiterte Zertifikate werden in diesem Profil nicht verwendet. Bei dem Da-
+         tenfeld certificates handelt es sich daher um eine ungeordnete Liste von
+         (X.509-)Zertifikaten.
+
+5.9.3.5  Datenfeld “crls”
+
+Das Feld crls ermöglicht es üblicherweise, dem Empfänger der Nachricht die Sperrlisten bereitzu-
+
+stellen, die er für die Verifikation der digitalen Signatur benötigt.
+
+         Profilierung:
+         Dieses Datenfeld wird in diesem Profil nicht verwendet und soll den Wert
+         “Null” enthalten. Die Sperrlisten werden in einem Verzeichnis zur Verfügung
+         gestellt.
+
+5.9.3.6  Datenfeld “signerInfos”
+
+Das Feld signerInfos enthält üblicherweise die Informationen über die Signierer, u. a. deren Signa-
+
+turen.
+
+         Profilierung:
+         Gemäß [CommonPKI-2], Abschnitt 2.1.1 entfallen die Datenfelder en-
+         capContent und signerInfos für eine Zertifizierungsantwort aus dem CMS-
+         Datenobjekt.
+
+5.9.4    Transport der PKCS#7-Zertifizierungsantwort
+
+Nachdem für die PKCS#7-Nachrichten im Falle der signierten Nachricht mit einem Datenobjekt vom
+Typ SignedData erstellt wurde, liegt ein solches Datenobjekt als ASN.1-Struktur vor. Es folgt eine
+
+Gültig ab:01.01.2026               Seite 65 von 94                     Stand: 02.09.2025
+DER-Kodierung, die als Transportsicherung dient. Der daraus resultierende Bytestream wird in eine
+Datei abgelegt, die folgende Dateiendung aufweist:
+
+                      Nachrichtenart           Dateiendung
+                      Zertifizierungsantwort   p7c
+
+5.9.4.1  Transportformat..
+
+Referenz: [CommonPKI-2], Abschnitt 2.3
+
+Abschnitte 1.4
+
+Eine Zertifizierungsantwort als PKCS#7-Datenobjekt wird in einer Datei abgelegt, die die Dateien-
+dung „p7c“ aufweist. Das physikalisch so gesicherte Datenobjekt kann auf verschiedenen Trans-
+portwegen von der CA zum Teilnehmer gesendet werden.
+
+Physikalisch handelt es sich bei einer „p7c“-Datei um eine Binärdatei, die auf den weiteren Trans-
+portwegen als eben solche zu behandeln ist.
+
+5.9.4.2  Transportwege
+
+Für den Transport von PKCS#7-Zertifizierungsantwort zu den Antragstellern gelten die gleichen
+
+Transportwege wie bei der Antragsstellung.
+
+5.9.5    Sperrlisten
+
+Die Sperrlisten werden in regelmäßigen Abständen (bei jeder Änderung) innerhalb des Verzeichnis-
+dienstes veröffentlicht. Unter Bezug auf das Gültigkeitsmodell ist der aktuelle Abruf der Sperrlisten
+notwendig (Empfehlung - tagesaktueller Abruf).
+
+Die Verarbeitung der jeweils aktuellen Sperrlisten wird vorausgesetzt. Die Definition der Profile für
+Zertifikate und Sperrlisten entspricht den MTTv2-Spezifikationen.
+
+Analog zu dem vorgesehenen Gültigkeitsmodell ist die Gültigkeit von Schlüssel und Zertifikaten
+entsprechend MTTv2 als sogenanntes „Schalenmodell“ ausreichend definiert.
+
+Auf dieser Grundlage haben die Teilnehmer auf eigenes Risiko zu bestimmen, ob und in welchen
+Intervallen Sperrlisten herangezogen werden.
+
+Verarbeitung von Sperrlisten
+Jeder Teilnehmer bzw. UA muss die Verarbeitung von Sperrlisten (Certificate Revocation List, CRL)
+unterstützen. Dazu sind die folgenden Funktionalitäten bereitzustellen:
+
+▪ Anforderung zur Sperrung eines Zertifikats,
+▪ Anforderung von Sperrlisten von einer CA,
+
+Gültig ab:01.01.2026        Seite 66 von 94                 Stand: 02.09.2025
+▪ Echtheits-Verifizierung von Sperrlisten (Sperrlisten sind von der CA signiert),
+▪ Abgleich der Sperrliste mit lokaler Zertifikatsliste (Adressliste),
+▪ periodisches Überprüfen des Gültigkeitszeitraums einer Sperrliste (dadurch kann das An-
+
+     fordern einer neuen Sperrliste ausgelöst werden).
+
+6. Anhang
+
+Um Kompatibilität zwischen den verschiedenen Teilnehmern erreichen zu können, müssen neben
+den kryptographischen Sicherheitsverfahren auch die Strukturen sicherheitsrelevanter Daten so
+weit wie nötig festgelegt werden. Diese Strukturen sind kompatibel zu den Datenstrukturen und
+Zertifikaten nach INTERNET-Konventionen (diverse RFC) sowie nach ITU-T (X.500-Serie) festzule-
+gen.
+
+6.1 ASN.1 Syntax relevante Datenstrukturen
+
+6.1.1  Öffentlicher und privater Schlüssel nach X.509
+
+Öffentliche und private RSA-Schlüssel haben die folgende Syntax:
+
+       RSAPublicKey :: =     SEQUENCE {                           /* n */
+             modulus         INTEGER,                             /* e */
+             publicExponent  INTEGER }
+
+       RSAPrivateKey :: =    SEQUENCE {                           /* n */
+             modulus         INTEGER,                             /* d */
+             secretExponent  INTEGER }
+
+Alternativ dazu, kann das Format des privaten Schlüssels auch wie folgt realisiert werden:
+
+       RSAPrivateKey :: =    SEQUENCE {                           /* p */
+             prime1          INTEGER,                             /* q */
+             prime2          INTEGER }
+
+In diesem Fall kann mit den Strukturen für den öffentlichen und privaten Schlüssel bei Bedarf eine
+an PKCS angelehnte Struktur erzeugt werden. Der erforderliche Speicherplatz lässt sich gegenüber
+diesem Format minimieren. Dieser Effekt ist besonders dann von Vorteil, wenn die Implementie-
+rung auf Systemen erfolgen muss, die relativ wenig Speicherplatz zur Verfügung haben (z. B. Chip-
+karten). Bei Anwendung des privaten Schlüssels sind allerdings die zugehörigen Parameter - insbe-
+sondere der geheime Exponent - erst zu erzeugen.
+
+Gültig ab:01.01.2026         Seite 67 von 94                      Stand: 02.09.2025
+6.1.2  X.509v3-Zertifikat, Zertifizierungspfad
+
+X.509-Zertifikate sowie Zertifizierungspfade werden durch die folgenden Strukturen in ASN.1 Syn-
+tax definiert:
+
+       Certificate :: =                SIGNED SEQUENCE {
+             version [0]               Version DEFAULT v1988,
+             serialNumber              CertificateSerialNumber,
+             signature                 AlgorithmIdentifier,
+             issuer                    Name,
+             validity                  Validity,
+             subject                   Name,
+             subjectPublicKeyInfo      SubjectPublicKeyInfo }
+
+       IssuerUniqueIdentifier          Name, {OPTIONAL}
+       SubjectUniqueIdentifier         Name, {OPTIONAL}
+
+       Version ::=                     INTEGER { v1988(0) } (Version 1 oder 3)
+
+       CertificateSerialNumber ::=     INTEGER
+       Validity ::=                    SEQUENCE {
+                                       GeneralizedTime,
+             notBefore                 GeneralizedTime }
+             notAfter                  SEQUENCE {
+       SubjectPublicKeyInfo ::=        AlgorithmIdentifier,
+             algorithm                 BIT STRING }
+             subjectPublicKey
+
+       Certification Extensions        SEQUENCE {
+       AlgorithmIdentifier ::=         OBJECT IDENTIFIER,
+                                       ANY DEFINED BY algorithm OPTIONAL }
+             algorithm                 SEQUENCE {
+             parameters                Certificate,
+       Certificates ::=                ForwardCertificationPath OPTIONAL }
+             certificate
+             certificationPath
+
+6.1.3  Sperrliste
+
+Die folgende ASN.1 Syntax definiert das Format einer Sperrliste:
+
+       CertificateRevocationList :: =  SIGNED SEQUENCE {
+             signature                 AlgorithmIdentifier,
+             issuer                    Name,
+
+Gültig ab:01.01.2026                   Seite 68 von 94            Stand: 02.09.2025
+             lastUpdate             GeneralizedTime,
+             nextUpdate             GeneralizedTime,
+             revokedCertificates    SEQUENCE OF CRLEntry OPTIONAL }
+
+       CRLEntry ::=                 SEQUENCE {
+             userCertificate        SerialNumber,
+             revocationDate         GeneralizedTime }
+
+6.2 ASN.1 Syntax relevanter Makros
+
+6.2.1  Signierte Struktur
+
+Die folgende ASN.1 Syntax eines Makros definiert das Format einer signierten Struktur:
+
+       SIGNED MACRO ::=
+       BEGIN
+
+       TYPE NOTATION ::=            type (ToBeSigned)
+
+       VALUE NOTATION ::=           value (VALUE
+
+            SEQUENCE {
+
+               ToBeSigned,
+
+               AlgorithmIdentifier (des Signaturverfahrens),
+
+               ENCRYPTED OCTET STRING (OCTET STRING ist der Hashwert
+
+               vom Datenelement "ToBeSigned") }
+
+            )
+
+       END            of SIGNED
+
+6.2.2  ASN.1 Syntax einer Signatur
+
+Die folgende ASN.1 Syntax definiert das Format einer Signatur ;
+
+       SIGNATURE MACRO ::=
+       BEGIN
+
+       TYPE NOTATION ::=            type (ofSignature)
+
+       VALUE NOTATION ::=           value (VALUE
+
+            SEQUENCE {
+                  AlgorithmIdentifier (des Signaturverfahrens),
+
+Gültig ab:01.01.2026                Seite 69 von 94                   Stand: 02.09.2025
+             )  ENCRYPTED OCTET STRING (OCTET STRING ist der Hashwert
+       END      vom Datenelement "ofSignature") }
+
+                of SIGNATURE
+
+6.3 Kommunikationssystem
+
+6.3.1  Grundsatz
+
+Die für das Routing der Daten erforderlichen Informationen sind zu liefern. Im Rahmen des Daten-
+austausches werden zwischen zwei Kommunikationspartnern Nutzdatendateien ausgetauscht. Da-
+bei können, in Abhängigkeit der vorhandenen Übertragungswege eine oder mehrere Stellen als
+Vermittlungsstellen fungieren. Unabhängig von der Art der Daten sollen die kommunizierenden
+Stellen die notwendigen Informationen erhalten, die es erlauben, Nutzdaten ohne Kenntnis der ei-
+gentlichen Dateninhalte zu befördern.
+
+6.3.2  Voraussetzungen und Forderungen für den Datenaustausch signierter und verschlüs-
+       selter Datenobjekte (Datenträger und sonstige Datenfernübertragungsverfahren)
+
+Zur Nutzung von Übertragungsprotokollen (HTTP, FTP u.s.w.) sowie alternativen Datenfernübertra-
+gungsverfahren z. B. auf Datenträgern werden Datenobjekte entsprechend der PKCS#7 -Syntax sig-
+niert und verschlüsselt.
+
+Die Organisationen der Beteiligten im Datenaustausch sieht vor, dass Datenpakete auch über Dritte
+(sog. Weiterleitungsstellen) vermittelt werden, die nicht befugt sind, die Nutzdaten zu entschlüs-
+seln. Dementsprechend müssen die Transportinformationen begleitend zu den Nutzdaten unver-
+schlüsselt übermittelt werden.
+
+Die signierten und verschlüsselten Nutzdaten werden von einer Auftragssatzdatei (siehe Anlage 2
+der Gemeinsamen Grundsätzen Technik) begleitet, die alle relevanten Transportinformationen in
+unverschlüsselter Form enthält.
+
+Die Rahmenbedingungen werden in der jeweils geltenden Fassung der Gemeinsamen Grundsätzen
+Technik beschrieben
+
+Gültig ab:01.01.2026      Seite 70 von 94                              Stand: 02.09.2025
+6.4 Beispiele
+
+6.4.1  Struktur einer Schlüsselliste gemäß Kapitel 4.6.1
+
+Die Struktur einer Gesamtliste mit allen öffentlichen Schlüsseln ist anhand der nachfolgenden
+Auflistung beispielhaft dargestellt:
+
+• PCA-Schlüssel mit Serien-Nummer 0001
+• CA-Schlüssel mit Serien-Nummer 0010 (z.B. ITSG Trust Center)
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0001
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0002
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0003
+• …. Serien-Nummer 000x
+• …. Serien-Nummer 000y
+• …. Serien-Nummer 000z
+• CA-Schlüssel mit Serien-Nummer 0011 (z.B. DKTIG Trust Center)
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0001
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0002
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0003
+• …. Serien-Nummer 000x
+• …. Serien-Nummer 000y
+• …. Serien-Nummer 000z
+• PCA-Schlüssel mit Serien-Nummer 0002
+• CA-Schlüssel mit Serien-Nummer 0012 (z.B. ITSG Trust Center)
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0001
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0002
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0003
+• …. Serien-Nummer 000x
+• …. Serien-Nummer 000y
+• …. Serien-Nummer 000z
+• CA-Schlüssel mit Serien-Nummer 0013 (z.B. DKTIG Trust Center)
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0001
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0002
+• Teilnehmerschlüssel ausgestellt von der CA mit Serien-Nummer 0003
+• …. Serien-Nummer 000x
+• …. Serien-Nummer 000y
+• …. Serien-Nummer 000z
+
+6.4.2  Beispiel einer signierten Nachricht gemäß Kapitel 3.2
+
+Das hier gezeigte Beispiel einer PKCS#7-signierten Nachricht wird mit dem ASN.1 Anzeigetool
+BERViewer dargestellt und kommentiert.
+
+Gültig ab:01.01.2026  Seite 71 von 94                                Stand: 02.09.2025
+Übersicht einer signierten Nachricht
+
+Gültig ab:01.01.2026                  Seite 72 von 94  Stand: 02.09.2025
+Teil 1
+Teil 2
+
+Gültig ab:01.01.2026  Seite 73 von 94  Stand: 02.09.2025
+Teil 3
+
+                                       Distinguished Name Kapitel 5.8.3.2
+
+Gültig ab:01.01.2026  Seite 74 von 94  Stand: 02.09.2025
+Teil 4
+Teil 5
+
+Gültig ab:01.01.2026  Seite 75 von 94  Stand: 02.09.2025
+Teil 6
+Teil 7
+
+Gültig ab:01.01.2026  Seite 76 von 94  Stand: 02.09.2025
+Teil 8
+Teil 9
+
+Gültig ab:01.01.2026  Seite 77 von 94  Stand: 02.09.2025
+Teil 10
+
+6.4.3    Beispiel einer PKCS#7-verschlüsselten Nachricht gemäß Kapitel 3.2.2
+
+Das hier gezeigte Beispiel einer PKCS#7-verschlüsselten Nachricht mit RSA keyEncryption und AES
+ContentEncryption ist auf die drei wesentlichen Sequenzen zusammengezogen und entsprechend
+kommentiert.
+
+Gültig ab:01.01.2026  Seite 78 von 94                                         Stand: 02.09.2025
+Übersicht einer verschlüsselten Nachricht
+
+                                                                               OriginatorInfo, Kapitel 3.2.2.2
+                                                                               RecipientInfo, Kapitel 3.2.2.3
+                                                                               EncryptedContentInfo, Kapitel 3.2.2.4
+
+Gültig ab:01.01.2026                       Seite 79 von 94  Stand: 02.09.2025
+Teil 1, OriginatorInfo
+Hier werden die wesentlichen Details in den beiden Sequenzen für Absender (Originator) gelistet.
+
+                                                                                                                                                            ausstellende CA (issuer) , Kapitel 3.2.2.3.2
+                                                                                                                                                            Seriennummer Absender, Kapitel 3.2.2.3.2
+
+Gültig ab:01.01.2026  Seite 80 von 94  Stand: 02.09.2025
+Teil 2 ReciepientInfo
+Hier werden die wesentlichen Details in den beiden Sequenzen für und Empfänger (Recipient) gelistet.
+
+                                                                                                                                                            ausstellende CA (issuer) , Kapitel 3.2.2.3.2
+                                                                                                                                                            Seriennummer Empfänger, Kapitel 3.2.2.3.2
+
+Gültig ab:01.01.2026  Seite 81 von 94  Stand: 02.09.2025
+Teil 3, EncryptedContentInfo
+
+                                                                                           Encryptedcontent, Kapitel 3.2.2.4.3
+
+6.4.4  Beispiel einer PKCS#10 Zertifizierungsanfrage gemäß Kapitel 5.8
+
+Das hier gezeigte Beispiel einer PKCS#10 Zertifizierungsanfrage wird mit dem ASN.1 Anzeigetool BERViewer dargestellt und ents prechend kommentiert.
+Die Zertifizierungsanfrage ist zur besseren Übersichtlichkeit in zwei Teile aufgegliedert.
+
+Gültig ab:01.01.2026          Seite 82 von 94                           Stand: 02.09.2025
+Teil 1
+
+                                                          Distinguished Name Kapitel 5.8.3.2
+
+Gültig ab:01.01.2026  Seite 83 von 94  Stand: 02.09.2025
+Teil 2
+
+6.4.5   Beispiel einer PKCS#7 Zertifizierungsantwort gemäß Kapitel 5.9
+
+Das hier gezeigte Beispiel einer PKCS#7 Zertifizierungsantwort mit der Hash-Variante SHA-256
+wird mit dem ASN.1 Anzeigetool BERViewer
+dargestellt und entsprechend kommentiert. Die Zertifizierungsantwort ist in mehrere Teile aufge-
+gliedert, um eine bessere Übersicht zu erhalten.
+
+Gültig ab:01.01.2026  Seite 84 von 94                                   Stand: 02.09.2025
+Übersicht einer Zertifizierungsantwort
+
+Gültig ab:01.01.2026                    Seite 85 von 94  Stand: 02.09.2025
+Teil 1a
+
+                                                          Zertifikat Serienummer, Kapitel 4.4.2
+
+                                                          Gültig von, bis
+
+Gültig ab:01.01.2026  Seite 86 von 94  Stand: 02.09.2025
+Teil 1b
+
+                                                          Distinguished Name,
+                                                          Kapitel 4.4.4 und 4.4.5
+
+Gültig ab:01.01.2026  Seite 87 von 94  Stand: 02.09.2025
+Teil 1c
+Teil 2a
+
+Gültig ab:01.01.2026  Seite 88 von 94  Stand: 02.09.2025
+Teil 2b
+
+Gültig ab:01.01.2026  Seite 89 von 94  Stand: 02.09.2025
+Teil 2c
+
+Teil 3a
+
+Gültig ab:01.01.2026  Seite 90 von 94  Stand: 02.09.2025
+Teil 3b
+
+Teil 3c
+
+Gültig ab:01.01.2026  Seite 91 von 94  Stand: 02.09.2025
+Teil 4
+
+Teil 5
+
+7. Literaturverzeichnis
+
+7.1 Literaturverzeichnis
+
+[ANS.1]               X.208 CCITT Recommendation X.209: Specification of Abstract syntax
+[BNA-AlgKat]          Notation One (ASN.1), 1988
+[BSI-TR02102]         X.209 CCITT Recommendation X.209: Specification of basic ncoding rules
+                      for Abstract Syntax Notation One (ASN.1), 1988
+                      Bekanntmachung zur elektronischen Signatur nach dem Signaturgesetz
+                      und der Signaturverordnung (Übersicht über geeignete Algorithmen),
+                      Bundesnetzagentur für Elektrizität, Gas, Telekommunikation, Post und
+                      Eisenbahnen, Entwurf vom 15.11.2016
+                      Kryptographische Verfahren: Empfehlungen und Schlüssellängen, Tech-
+                      nische Richtlinie TR-02102-1, Bundesamt für Sicherheit in der Informati-
+                      onstechnik (BSI), Stand 08.02.2017 (Version 2024-01)
+
+Gültig ab:01.01.2026      Seite 92 von 94  Stand: 02.09.2025
+[EG-SIG]              Richtlinie 1999/93 EG des Europäischen Parlaments und Rates vom
+                      13.Dezember 1999 über gemeinschaftliche Rahmenbedingungen für
+[ENISA-AlgRep]        elektronische Signaturen
+                      Algorithms, Key Sizes and Parameters Report, 2013 recommendations,
+[FIPS180-3]           European Union Agency for Network and Information Security (ENISA),
+[CommonPKI-0]         version 1.0 – October 2013
+[CommonPKI-1]         Federal Information Processing Standards (FIPS PUB) 180-3: Secure Hash
+[CommonPKI-2]         Standard; October 2008
+[CommonPKI-3]         Common PKI Specifications for Interoperable Applications; T7 & Tele-
+[CommonPKI-4]         Trust; Introduction; V2.0 – 20 January 2009
+[CommonPKI-6]         Common PKI Specifications for Interoperable Applications; T7 & Tele-
+[PKCS#1]              Trust; Part 1: Certificate and CRL Profiles; V2.0 – 20 January 2009
+[PKCS#7]              Common PKI Specifications for Interoperable Applications; T7 & Tele-
+                      Trust; Part 2: PKI Management; V2.0 – 20 January 2009
+[PKCS#10]             Common PKI Specifications for Interoperable Applications; T7 & Tele-
+[PKCS#11]             Trust; Part 3: CMS Bases Message Formats; V2.0 – 20 January 2009
+                      Common PKI Specifications for Interoperable Applications; T7 & Tele-
+[RFC 22736299 98]     Trust; Part 4: Operational Protocols; V2.0 – 20 January 2009
+[RFC 2315]            Common PKI Specifications for Interoperable Applications; T7 & Tele-
+[RFC 5652]            Trust; Part 6: Cryptographic Algorithms; V2.0 – 20 January 2009
+[RFC 5754]            RSA Laboratories: PKCS #1 v.2.2: RSA Cryptography Standard, RSA Labor-
+[RFC 8017]            atories, 27 Oktober 2012; vgl. [RFC 8017]
+[RFC 4513]            RSA Laboratories: PKCS #7: Cryptographic Message Syntax Standard; An
+                      RSA Laboratories Technical Note; Version 1.5; Revised November 1,
+Gültig ab:01.01.2026  1993; vgl. [RFC 2315] bzw. [RFC 5652].
+                      RSA Laboratories: PKCS #10 v1.7: Certification Request Syntax Standard;
+                      May 26, 2000; vgl. [RFC 2314]
+                      RSA Laboratories. PKCS#11:Cryptographic Token Interface Standard, Ver-
+                      sion 2.3, 28.10.2009[RFC 4511] Lightweight Directory Access Protocol
+                      (LDAP): The Protocol. J. Sermersheim. June 2006
+                      UTF-8, a transformation format of ISO 10646; F. Yergeau; Januar Novem-
+                      ber 20031998
+                      PKCS #7: Cryptographic Message Syntax Version 1.5. B. Kaliski. March
+                      1998. (Format: TXT=69679 bytes) (Status: INFORMATIONAL)
+                      Cryptographic Message Syntax, R. Housley, September 2009
+                      Using SHA2 Algorithms with Cryptograpfhic Message Syntax, S. Truner,
+                      January 2010
+                      PKCS #1: RSA Cryptography Specifications Version 2.2; K. Moriarty, B.
+                      Kaliski, J. Jonsson, A. Rusch; November 2016
+                      Lightweight Directory Access Protocol (LDAP): Authentication Methods
+                      and Security Mechanisms. R. Harrison. June 2006
+
+                      Seite 93 von 94  Stand: 02.09.2025
+[RFC 2849]            The LDAP Data Interchange Format (LDIF) - Technical Specification. G.
+[RFC 3565]            Good. June 2000.
+[RFC 4510]            Use of the Advanced Encryption Standard (AES) Encryption Algorithm in
+[RFC 5246]            Cryptographic Message Syntax (CMS), J. Schaad, July 2003
+                      LDAP v2 Light-weight Directory Access Protocol
+[X.500]               The Transport Layer Security (TLS) Protocol Version 1.2. Dierks &
+[X.509]               Rescorla. August 2008.[SecS2.0.1] Security Schnittstelle V2.0.1 – Stand
+                      Februar 2012
+                      CCITT: Recommendation X.500: The Directory Overview and Concepts,
+                      models and Services. 1988.
+                      CCITT: Recommendation X.509: The Directory-Authentication Frame-
+                      work. 1988.
+
+7.2 Abkürzungsverzeichnis
+
+CA                    Certification Authority
+CMS                   Cryptographic Message Syntax
+ISIS-MTT              Einheitlicher Interoperabilitäts-Standard der Trust Center ISIS (Industrial
+                      Signature Interoperability Specification)
+MTRUST                TeleTrust: MailTrust Spezifikationen Version 2
+LDAP                  Lightweight Directory Access Protocol
+OID                   Object Identifier, Objektbezeichner
+OCSP                  Online Certificate Status Protocol
+PCA                   Policy CA
+PKCS                  Public Key Cryptography Standards
+PKCS#1                RSA Cryptography Standard
+PKCS#3                Diffie-Hellmann Key Agreement
+PKCS#5                Password-based Encryption Standard
+PKCS#6                Extended-Certificate Syntax Standard
+PKCS#7                Cryptographic Message Syntax Standard
+PKCS#8                Private-Key Information Syntax Standard
+PKCS#9                Selected Attribute Types
+PKCS#10               Certification Request Standard
+PKCS#11               Cryptographic Token Interface (cryptoki)
+PKCS#12               Personal Information Exchange Syntax Standard
+*.p7b                 Datei-Endung für PKCS#7-Zertifikat
+*.p7c                 Datei-Endung für PKCS#7-Zertifikat
+*.p7m                 Datei-Endung für PKCS#7 MIMe-Nachricht (oft mit eingebettetem Origi-
+                      nal-Dokument)
+*.p7s                 Datei-Endung für PKCS#7-Signatur
+
+Gültig ab:01.01.2026       Seite 94 von 94  Stand: 02.09.2025
+

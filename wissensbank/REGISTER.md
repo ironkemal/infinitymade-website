@@ -5,7 +5,14 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 18.09.2026 (Ops #211 — Podologie Höchstmenge
+> İlk kurulum: 05.09.2026 · Son güncelleme: 21.09.2026 (**GGT Anlage 16 (SECON) indirildi**
+> — `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 1.3’ün „bu belge olmadan başlanmaz" kaydı üzerine.
+> Kart **W-04**, zincir **Z-12**. Aynı turda **ana GGT belgesinin sürüm düşümü yakalandı**:
+> arşivdeki Fassung `ab 01.01.2026` idi, yayıncıda 01.09.2026’dan beri yenisi var — eskisi
+> `_archiv/`’e alındı, yenisi indirildi, farkı deterministik `diff` ile ölçüldü (kart **W-05**).
+> Yeni açık maddeler: **W-A11** (GGT § 4.2.5.1 XML yönelimi, `gkv-302`’ye) ve Z-12 altındaki
+> `.p7m` uzantı çelişkisi. W-A09 kısmen kapandı.)
+> Önceki: 18.09.2026 (Ops #211 — Podologie Höchstmenge
 > je Verordnung kuralı `SPEC-RULES.md`'ye kaydedildi, zinciri **Z-11** olarak açıldı:
 > HeilM-RL Heilmittelkatalog + Podologie Anlage 3 Ziffer 3 f) → `verordnung-regeln.js` →
 > `verordnung-podo.js` / `verordnung-pruefung.js` / `diagnosegruppen.json`. Alıntılar
@@ -28,12 +35,12 @@
 
 | | Sayı |
 |---|---|
-| Kayıtlı kaynak belge (INDEX'te) | 35 |
+| Kayıtlı kaynak belge (INDEX'te) | 38 |
 | Arşivdeki PDF | 49 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
-| Kaynak→kod zinciri kayıtlı | 11 |
-| Tam kimlik kartı yazılmış kaynak | 3 (**W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9) |
-| **Herkunft (indirme URL'i) kayıtlı** | **4 / 36** ← asıl boşluk, W-A01 |
+| Kaynak→kod zinciri kayıtlı | 12 |
+| Tam kimlik kartı yazılmış kaynak | 5 (**W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT) |
+| **Herkunft (indirme URL'i) kayıtlı** | **6 / 38** ← asıl boşluk, W-A01 |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
 | Çeyreklik ritmi olan kaynak | 1 (Kostenträgerdatei — W-01, §1 takviminde) |
 
@@ -369,6 +376,38 @@ Verordnung — UI2 dörttür, sekiz değil".
 
 ---
 
+### Z-12 · Şifreleme / imzalama profili (SECON) — ⏳ **kod tarafı henüz yok**
+```
+wissensbank/gemeinsam/302-tp5/GGT.pdf/.txt                              (Fassung ab 01.09.2026)
+  → § 5.1  sıra: önce imzala, sonra alıcının açık anahtarıyla şifrele
+  → § 5.2  → GGT Anlage 16
+wissensbank/gemeinsam/302-tp5/GGT_Anlage_16_Security_Schnittstelle_SECON.pdf/.txt
+    (Stand 02.09.2025 · Gültig ab 01.01.2026 · 94 s.)
+  → api-backend/billing/dta/filename.js:80  buildEncryptedFilename()   ⛔ ÇELİŞKİ (aşağıda)
+  → api-backend/billing/api/abrechnung.routes.js   (SignedData OID · cert_valid_to)
+  → DB terapeut_zertifikat (cert_subject/thumbprint/serial/valid_from/valid_to — yalnız metadata)
+  → ⛔ EnvelopedData üreten kod              YOK — zincirin eksik halkası, plan Adım 1.3
+  → ⛔ Alıcı açık anahtarı (annahme-rsa4096.key) çeken/pinleyen yol   YOK — plan O-116
+```
+📌 **Bu zincir 21.09.2026'da açıldı**, `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 1.3'ün „bu belge
+olmadan başlanmaz" kaydı üzerine. Belge indirildi, **kod tarafı bilinçli olarak boş** — bu bir
+hata değil durum tespiti.
+
+⛔ **Belgenin hemen doğurduğu bir çelişki var (`gkv-302` + `builder` karar vermeli):**
+`filename.js:80` şifreli dosyaya `.dta.p7m` uzantısı veriyor; Anlage 16 § 3.2.3.1 ise
+*„Eine verschlüsselte Nachricht als PKCS#7-Datenobjekt wird in einer Datei abgelegt, die
+**keine Dateiendung** aufweist. Physikalisch handelt es sich um eine Binärdatei"* diyor.
+Aynı belgenin Abkürzungsverzeichnis'i `.p7m`'i „PKCS#7 **MIME**-Nachricht" uzantısı olarak
+tanımlıyor — yani `.p7m` bu profilin dosya adı değil, e-posta dünyasının adı. Bugün zararsız
+(canlı gönderim yok), ama **1.3 yazılmadan önce kapanmalı**; sonradan kapatılırsa üretilmiş
+dosya adları da değişir.
+
+⚠️ Sayılar YZ ile okunmadı: OID'ler, anahtar uzunlukları ve alan adları
+`GGT_Anlage_16_…SECON.txt` § 2.1.3 / 2.1.4 / 2.2.4 / 3.2.2 satırlarından birebir alındı
+(bkz. `INDEX.md` anahtar bölümler listesi).
+
+---
+
 ## 3. Kaynak envanteri
 
 `wissensbank/INDEX.md`'deki 33 kayıt, sicil gözüyle. **Herkunft sütunu neredeyse tamamen
@@ -417,7 +456,11 @@ yeniden araştırılıyor demektir.
 | `20260212_Vertrag_125_sssst_Anlage_2_Verguetungsvereinbarung` | i.d.F. 12.02.2026 | ✅ GEÇERLİ | Logo/Stimme — ⬜ koda girmedi |
 | `20240531_Ergo_Anlage_2_Vertrag_nach_125…` | Stand 01.06.2024 | ✅ GEÇERLİ | Ergo — ⬜ koda girmedi |
 | `20220421_Lesefassung_Anlage_3_Ernaehrungstherapie` | 25.04.2022 | 🚫 KAPSAM DIŞI (Ernährungstherapie) | — |
-| `wissensbank/gemeinsam/302-tp5/GGT` | ab 01.01.2026 | ✅ GEÇERLİ | — |
+| `wissensbank/gemeinsam/302-tp5/GGT` | Fassung ab **01.09.2026** (Stand 29.06.2026) | ✅ GEÇERLİ | Z-12 · **kart W-05** |
+| `wissensbank/_archiv/GGT_Fassung_ab_01.01.2026_Stand_06.11.2025` | ab 01.01.2026 | 🚫 DÜŞMÜŞ (21.09.2026) | — |
+| `wissensbank/gemeinsam/302-tp5/GGT_Anlage_16_Security_Schnittstelle_SECON` | Stand 02.09.2025, ab 01.01.2026 | ✅ GEÇERLİ | Z-12 · **kart W-04** |
+| `wissensbank/gemeinsam/302-tp5/GGT_Anlage_02_Auftragsdatei` | Auftragssatz V1.0 (Stand 10.10.2024), ab 01.01.2025 | ✅ GEÇERLİ | `dta/auftragsdatei.js` · ⬜ Herkunft yok |
+| `wissensbank/gemeinsam/302-tp5/GGT_Anlage_04_Verfahrenskennungen` | Feldbeschreibung V1.1 (Stand 06.11.2025), ab 01.01.2026 | ✅ GEÇERLİ | `dta/auftragsdatei.js` · ⬜ Herkunft yok |
 | `wissensbank/physiotherapie/anlage2.txt` | — | 01.01.2026 | ⬜ hangi Fachbereich, netleştirilmeli |
 | `Podoloji/…HPNR…_2026.xlsx` + 2 CSV | Stand 15.12.2025, ab 01.01.2026 | ✅ GEÇERLİ | Z-05 |
 
@@ -697,6 +740,108 @@ Kart yazılırken kod okundu ve ölçüldü (10.09.2026), tahmin edilmedi.
 
 ---
 
+### W-04 · GGT Anlage 16 — Security Schnittstelle (SECON)
+
+- **Dosya:** `wissensbank/gemeinsam/302-tp5/GGT_Anlage_16_Security_Schnittstelle_SECON.pdf`
+  + `.txt` (94 sayfa · PDF 5.170.155 bayt · txt 180.034 bayt · 3.550 satır) · başka türev **yok**
+  (gerekçe: §4 format kararı — tek seferlik değil ama *düzyazı spec*; `.txt` + INDEX bölüm
+  haritası yeterli, md'ye çevirmek § atıflarını bozar ve kazanç sıfırdır)
+- **Herkunft:** https://www.gkv-datenaustausch.de/media/dokumente/standards_und_normen/technische_spezifikationen/Anlage_16_-_Security_Schnittstelle.pdf
+  · liste sayfası: https://www.gkv-datenaustausch.de/technische_standards_1/technische_standards.jsp
+  · login/lisans yok, açık indirme · **İndirme:** 21.09.2026 · **İndiren:** `wissensbank`
+  (kaynak: `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 1.3 + §10 „Kalan Faz 0 işi")
+- **Yayıncı:** GKV-Spitzenverband · Deutsche Rentenversicherung Bund · DRV Knappschaft-Bahn-See ·
+  Bundesagentur für Arbeit · DGUV (GGT'nin ortak yayıncı kurulu, § 95 SGB IV)
+- **Sürüm / Stand:** **sürüm numarası yok** — kapak ve her sayfa altbilgisi yalnız
+  `Stand: 02.09.2025` diyor. Atıf biçimi: „Anlage 16 GGT, Stand 02.09.2025, § x.y"
+- **Anzuwenden ab:** **01.01.2026** (altbilgi `Gültig ab:01.01.2026`, 94 sayfanın hepsinde —
+  deterministik sayıldı, 94/94) · **Düşer:** açık uçlu
+- **Durum:** ✅ **GEÇERLİ**
+- **Neyi besler:** **Z-12** → bugün yalnız `filename.js` + `abrechnung.routes.js` (imza tarafı) ·
+  EnvelopedData üreten kod **henüz yok**, plan Adım 1.3'ün girdisi. DB tarafında
+  `terapeut_zertifikat` (yalnız metadata — özel anahtar sisteme hiç girmiyor, `guvenlik` K2)
+- **Tazelik kontrolü:** ⛔ otomatik yok. Elle: yukarıdaki liste sayfası açılır, „Anlage 16 -
+  Security Schnittstelle (SECON)" satırının dosya boyutu (bugün **5,2 MB**) ve indirilen PDF'in
+  kapak `Stand:` tarihi karşılaştırılır. ⚠️ **Sayfa Anlagen için ayrı „gültig ab" tarihi
+  vermiyor** — tarih yalnız belgenin kendi altbilgisinden okunur, ana GGT'ninkinden
+  türetilmez. **Kontrol anı:** ana GGT her değiştiğinde Anlagen de gözden geçirilir
+  (21.09.2026 bunun canlı örneği: GGT düşmüştü, Anlagen'e bakılmamıştı)
+- **Yeniden dağıtım:** ⚠️ **şüpheli — dağıtılmıyor.** `.gitignore:1` → `*.pdf`, yani PDF git'te
+  değil; `.txt` git'te izleniyor ama yayın yüzeyi kapalı (`.vercelignore` → `wissensbank/`).
+  Kutuya (on-prem image) **girmiyor** ve girmesi gerekmiyor — kodun ihtiyacı belgenin metni
+  değil, ondan süzülen sabitler. `legal-de`'ye sorulması gereken bir durum bugün **yok**;
+  soru ancak belge müşteriye dağıtılmak istenirse doğar. W-A07 kapsamında (GKV Lesefassung)
+- **Yedek:** ⚠️ PDF **git izlemiyor** (`*.pdf` ignore) — W-A05 kapsamında, tek kopya bu makinede.
+  `.txt` git'te.
+
+#### 1.3 için kritik olan altı satır (kaynağa karşı doğrulandı, YZ çevirisi değil)
+
+| Ne | Değer | Nerede yazıyor |
+|---|---|---|
+| İçerik şifrelemesi | AES-256, **CBC** — `id-aes256-CBC`, OID `2.16.840.1.101.3.4.1.42` | § 2.1.3 · § 2.2.1 |
+| Nachrichtenschlüssel şifrelemesi | **RSAES-OAEP** (EME-OAEP, RFC 8017), OID `1.2.840.113549.1.1.7`, hash SHA-256 + MGF1 | § 2.1.4 · § 2.1.4.1 |
+| RSA anahtar uzunluğu | **4096 Bit** (Teilnehmer, CA, PCA) · açık üs `65537` | § 2.1.4 · § 2.2.4 · § 2.2.5 |
+| Sıra | önce `SignedData`, sonra `EnvelopedData` (SignedData objesi şifrelemenin **girdisi**) | § 3.1 · § 3.2 |
+| Alıcı kimliği | yalnız `KeyTransRecipientInfo`; `rid` için **yalnız** `issuerAndSerialNumber` (CA adı + seri no), `subjectKeyIdentifier` **yasak** | § 3.2.2.3 · § 3.2.2.3.2 |
+| Sertifika ömrü | Teilnehmer **azami 1 yıl** · CA 5 yıl · PCA 7 yıl (Schalenmodell) | § 4.5 |
+
+Ayrıca zorunlu boşaltılan alanlar: `version` = 0, `originatorInfo` **entfällt**,
+`unprotectedAttrs` **entfällt** (§ 3.2.2.1, § 3.2.2.2, § 3.2.2.5) · `contentType` = `id-data`
+(`1.2.840.113549.1.7.1`, § 3.2.2.4.1) · sertifika kodlaması **DER**, X.509v3 (§ 2.2.7).
+
+Alıcının açık anahtarı **Kostenträgerdatei'den gelmez** (o IK ve adres taşır): § 4.6.1'e göre
+ITSG'nin yayımladığı `annahme-rsa4096.key` listesinden (Datenannahmestelle anahtarları,
+base64) veya § 4.6.2 LDAP dizininden alınır; ayrıca `sperrliste-le-rsa4096.crl`. Listeler
+**iş günleri** güncelleniyor. Bu, plan O-116'nın „kaynak belli" satırının belge tarafındaki
+karşılığıdır.
+
+---
+
+### W-05 · Gemeinsame Grundsätze Technik (GGT) — § 95 SGB IV
+
+- **Dosya:** `wissensbank/gemeinsam/302-tp5/GGT.pdf` + `.txt` (16 sayfa · PDF 241.027 bayt ·
+  txt 33.603 bayt) · türev yok
+  · **Düşmüş sürüm arşivde:** `wissensbank/_archiv/GGT_Fassung_ab_01.01.2026_Stand_06.11.2025.pdf/.txt`
+- **Herkunft:** https://www.gkv-datenaustausch.de/media/dokumente/standards_und_normen/gg_technik/GGT.pdf
+  · liste sayfası: https://www.gkv-datenaustausch.de/technische_standards_1/technische_standards.jsp
+  · Änderungshistorie: `…/standards_und_normen/gg_technik/Aenderungshistorie.pdf`
+  · **İndirme:** 21.09.2026 (güncel Fassung) · **İndiren:** `wissensbank`
+  · önceki Fassung indirme tarihi: belirtilmemiş (arşivdeki dosya 18.05.2026'dan beri diskte)
+- **Yayıncı:** GKV-Spitzenverband · DRV Bund · DRV Knappschaft-Bahn-See · BA · DGUV
+- **Sürüm / Stand:** `in der vom 01.09.2026 an geltenden Fassung`, kapak tarihi **29.06.2026**,
+  BMG/BDA onayı 03.08.2026
+- **Anzuwenden ab:** **01.09.2026** · **Düşer:** açık uçlu
+- **Durum:** ✅ **GEÇERLİ** (önceki Fassung `ab 01.01.2026` → 🚫 **DÜŞMÜŞ**, arşivde)
+- **Neyi besler:** **Z-12** (§ 5.1 imzala-sonra-şifrele sırası) · dolaylı olarak Z-01 dalı
+  (Anhang 1 Kap. 4.1, DFÜ yolları) · Anlagen listesi üzerinden W-04, GGT Anlage 2, GGT Anlage 4
+- **Tazelik kontrolü:** ⛔ otomatik yok. Elle: liste sayfasındaki „Gemeinsame Grundsätze
+  Technik" satırının **„gültig ab" tarihi** okunur ve buradaki tarihle karşılaştırılır. Bu
+  sayfa, ana belge için tarih **veriyor** (Anlagen için vermiyor) — yani en ucuz tazelik
+  sinyali burada. **Kontrol anı:** yılda en az iki kez, ayrıca §302 teknik anlagen turlarında
+- **Yeniden dağıtım:** W-04 ile aynı — PDF git'te değil, `.txt` izleniyor, yayın yüzeyi kapalı
+- **Yedek:** ⚠️ PDF git izlemiyor (W-A05)
+
+#### 21.09.2026 sürüm geçişi — ne değişti, ne değişmedi
+
+Deterministik `diff` ile ölçüldü (sayfa numarası ve satır kaydırmaları elenerek), YZ
+kullanılmadı. Belge 15 → 16 sayfa:
+
+| | Sonuç |
+|---|---|
+| **Tek esaslı ekleme** | **§ 4.2.5.1 „Nutzung von XML in den Datenaustauschverfahren"** (yeni) |
+| § 5.1 Verschlüsselung und Signatur | **değişmedi** — planın Adım 1.3'te alıntıladığı cümle aynen duruyor |
+| § 5.2 → Anlage 16 atfı | değişmedi |
+| Anlagen listesi (1–17) | değişmedi |
+| Datenaustauscharten tablosu (§ 4.1) | yalnız dizgi/hizalama farkı, içerik aynı |
+
+⚠️ **§ 4.2.5.1 `gkv-302`'ye gidiyor, `wissensbank`'ın yorumlayacağı bir madde değil.** Metnin
+söylediği: XML standart formattır; **01.01.2027'den önce** uygulanmış verfahren'ler, *esaslı
+bir fachlich/teknik revizyon* geçirdiklerinde ve ekonomiklik ilkesi elverdiğinde XML'e
+çevrilecektir. Bu, §302 EDIFACT zincirini bugün **kaldırmıyor** ve bir tarih dayatmıyor — ama
+uzun vadeli yönü işaretliyor. → açık madde **W-A11**.
+
+---
+
 ## 4. Açık maddeler
 
 Her madde ya bir sahibe, ya bir tarihe, ya `unkritisch` gerekçesine bağlanır. Üçü de
@@ -844,20 +989,34 @@ kayıtsız olduğu için yok sayılmış.
 ⚠️ Depo public: W-A07 altındaki kullanıcı kararıyla bu veri için yeniden dağıtım sorusu
 **kapandı** (kamuya açık kurum verisi, hasta verisi yok).
 
-### W-A09 · Üç belge arşivde eksik, üçü de canlı gönderimin önünde — `offen` ⚠️
-10.09.2026'da `gkv-302`'nin canlı-gönderim hazırlık denetiminde ortaya çıktı. **Sıradaki iş
-listesi, bugün indirilmedi** (kullanıcı kararı: acil değil).
+### W-A09 · Eksik belgeler — **kısmen kapandı**, biri hâlâ `offen` ⚠️
+10.09.2026’da `gkv-302`’nin canlı-gönderim hazırlık denetiminde ortaya çıktı.
+
+✅ **GGT Anlage 2 (Auftragsdatei) 17.09.2026’da indirildi** (`GGT_Anlage_02_Auftragsdatei.pdf/.txt`,
+yanında Anlage 4 Verfahrenskennungen) — INDEX’te kaydı var, kod tarafı
+`api-backend/billing/dta/auftragsdatei.js`. Bu satır **sicilde güncellenmemişti**; 21.09.2026’da
+düzeltildi. ⬜ İkisinin de **Herkunft’u yazılmadı** → W-A01.
+
+✅ **Üçüncü satır (GKV-DA Anlage 17) yanlış hedefliydi.** GGT’nin Anlage 17’si
+„KomServer RV"dir (Rentenversicherung), „Nutzdatendateien" değil — bkz. `GGT.txt` § 4.2.7.
+Ayrıca `filename.js`’in iddia ettiği kaynak artık Anlage 17 değil: dosya 20.09.2026’dan beri
+**11 haneli** logischer + **8 haneli** physikalischer ad üretiyor ve kaynak olarak Anhang 1
+Kap. 4 § 4.2 / § 4.3’ü gösteriyor (başlığı okundu, doğrulandı). W-02’deki „16 hane" çelişkisi
+bu yüzden **belge eksikliğiyle değil, kodun düzeltilmesiyle** kapanmış.
+
+⏳ **Kalan tek eksik: Anlage 1 TP5 V22.** İndirilmedi (kullanıcı kararı: acil değil).
 
 | Eksik belge | Niye lazım | Nereden |
 |---|---|---|
 | **Anlage 1 TP5 V22** (21.05.2026) | Bugün geçerli olan V21; V22'nin `Anzuwenden ab` tarihi **bizde yazılı değil** ve §1 takviminde yeri yok. Anlage 3 V22 ve Anhang 03 V10 01.02.2027'de giriyor — Anlage 1 V22 de aynı tarihteyse geçiş **tek pakettir**, ayrı ayrı planlanamaz | `gkv-datenaustausch.de` → Sonstige Leistungserbringer → Technische Anlagen (aktuell) |
-| **GGT Anlage 2** (Auftragsdatei) | Auftragsdatei'nin **tam alan yapısı**. Anhang 1 §4.3 „Aufbau … ist in der Anlage A beschrieben" diyor, yani yapı bizde **hiç yok**. Prüfstufe 1 dosyaları çift bekliyor (W-03 → §3.1); Auftragsdatei olmadan DFÜ yolu kapalı | `gkv-datenaustausch.de` → Gemeinsame Grundsätze Technik (GGT), Anlagen listesi |
-| **GKV-DA Anlage 17** (Nutzdatendateien) | `filename.js`'in **iddia ettiği kaynak**. Elimizde olmadığı için 16 haneli ad kuralının doğru mu yanlış mı olduğu bugün **kanıtlanamıyor** — W-02'deki çelişki bu belge gelmeden kapanmaz | aynı sayfa, GGT Anlagen |
+| ~~GGT Anlage 2 (Auftragsdatei)~~ | ✅ **KAPANDI 17.09.2026** — indirildi, INDEX kaydı açıldı, `dta/auftragsdatei.js` ondan yazıldı | ✅ elimizde |
+| ~~GKV-DA Anlage 17 (Nutzdatendateien)~~ | ✅ **KAPANDI 21.09.2026 — yanlış hedefti**, gerekçe yukarıda | — |
 
 **Sahibi:** `wissensbank` (indirme + kayıt) → `gkv-302` (yorum + karar).
-**Tarih bağı:** ilk ikisi **01.02.2027 geçiş paketinden önce** kapanmalı; üçüncüsü canlı
-gönderim denemesinden önce. **Ölçüt:** üçü de indirildiğinde W-02'deki dosya adı çelişkisi
-ya çözülür ya da „Anlage 17 geçerli" diye gerekçeli kapanır.
+**Tarih bağı:** kalan tek belge (Anlage 1 TP5 V22) **01.02.2027 geçiş paketinden önce**
+indirilmeli — `Anzuwenden ab` tarihi bizde yazılı olmadığı için geçişin tek paket mi yoksa
+ayrı ayrı mı olduğu bugün bilinmiyor. **Ölçüt:** V22’nin kapak sayfası okunduğunda §1
+takvimine ya yeni bir satır girer ya da mevcut 01.02.2027 satırına eklenir.
 
 ### W-A10 · Podologie Höchstmenge sayısı üç dosyada ayrı ayrı duruyor — `offen`, bugün `unkritisch`
 `module/verordnung-regeln.js` kendini „eine Zahl, ein Ort" diye tarif ediyor ve baş yorumunda
@@ -878,6 +1037,20 @@ JSON kopyası için `diagnosegruppen.json`'un `_note`'unda anılan drift kontrol
 değişmesi — ya da kapının bağırması.
 **Tarih bağı yok**; bir sonraki HeilM-RL/Anlage 3 değişikliğinde Z-11'in ilk satırı olarak
 okunur.
+
+### W-A11 · GGT § 4.2.5.1 — „XML standart formattır" — `offen`, karar `gkv-302`’nin
+21.09.2026’da GGT’nin yeni Fassung’uyla (ab 01.09.2026) **tek esaslı yenilik** olarak geldi.
+Metin: XML standart formattır; **01.01.2027 öncesi** uygulanmış verfahren’ler, *esaslı bir
+fachlich veya teknik revizyon* geçirdiklerinde ve Wirtschaftlichkeitsgebot elverdiğinde XML’e
+çevrilecektir.
+**Niye burada duruyor:** bu bir sicil yorumu değil, §302 zincirinin **yönü** hakkında bir soru.
+Bugün §302 EDIFACT (SLGA/SLLA V21) ile çalışıyor ve metin ona **tarih dayatmıyor** — ama
+TP6/HKP tarafında XML şemaları zaten var (`0_Änderungen.txt`), yani yön belli.
+**Yapılacak (sahibi: `gkv-302`):** tek soru — „§302 Heilmittel-DTA için ilan edilmiş bir XML
+geçiş takvimi var mı, yoksa bu yalnızca genel bir ilke mi?" Cevap „takvim yok" ise madde
+`unkritisch` olarak kapanır ve bir daha açılmaz; „takvim var" ise §1 takvimine satır girer.
+**Aciliyet yok** — canlı gönderim başlamadı ve ilkenin kendisi revizyon şartına bağlı.
+**Kaynak:** `wissensbank/gemeinsam/302-tp5/GGT.txt` § 4.2.5.1 (Fassung ab 01.09.2026).
 
 ### ✅ Kapalı / doğrulanmış
 

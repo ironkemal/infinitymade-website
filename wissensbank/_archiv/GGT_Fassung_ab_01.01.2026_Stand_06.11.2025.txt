@@ -4,12 +4,12 @@ Deutsche Rentenversicherung Knappschaft-Bahn-See, Bochum
 Bundesagentur für Arbeit, Nürnberg
 Deutsche Gesetzliche Unfallversicherung e.V., Berlin
 
-                                                                                                                         29.06.2026
+                                                                                                                         06.11.2025
 
           Gemeinsame Grundsätze Technik für die elektronische
                       Datenübermittlung gemäß § 95 SGB IV
 
-                                    in der vom 01.09.2026 an geltenden Fassung1
+                                    in der vom 01.01.2026 an geltenden Fassung1
 
 Der Spitzenverband Bund der Krankenkassen (GKV-Spitzenverband), die Deutsche Rentenversiche-
 rung Bund, die Deutsche Rentenversicherung Knappschaft-Bahn-See, die Bundesagentur für Arbeit
@@ -29,8 +29,8 @@ Die gemeinsamen Grundsätze werden durch gemeinsame Verlautbarungen der Spitzeno
 onen der Sozialversicherung erläutert.
 
 1 Das Bundesministerium für Arbeit und Soziales hat die Gemeinsamen Grundsätze nach Anhörung des Bundesministeri-
-   ums für Gesundheit und der Bundesvereinigung Deutscher Arbeitgeberverbände e.V. am 03.08.2026 genehmigt;
-                                                                           Seite 1 von 16
+   ums für Gesundheit und der Bundesvereinigung Deutscher Arbeitgeberverbände e.V. am 17.12.2025 genehmigt;
+                                                                           Seite 1 von 15
 Inhaltsverzeichnis
 
 1. Allgemeines ............................................................................................... 4
@@ -56,10 +56,10 @@ onen der Sozialversicherung erläutert.
       4.2.3 Internet – (s)ftp(s)-Kommunikation ..............................................................................11
       4.2.4 File Transfer, Access und Management over IP – FTAM over IP ....................................11
       4.2.5 XML-Richtlinie ...............................................................................................................12
-      4.2.6 GKV-Kommunikationsserver .........................................................................................13
+      4.2.6 GKV-Kommunikationsserver .........................................................................................12
       4.2.7 DSRV-Kommunikationsserver .......................................................................................13
       4.3 Datenträger ................................................................................................................ 13
-      4.4 Zeichensätze .............................................................................................................. 14
+      4.4 Zeichensätze .............................................................................................................. 13
 
 5. Sicherheitsverfahren ................................................................................. 14
 
@@ -68,7 +68,7 @@ onen der Sozialversicherung erläutert.
       5.3 Überprüfung und Fortschreibung der IT-Sicherheit..................................................... 14
       5.4 Elektronische Identitäten und Vertrauensdienste ........................................................ 15
 
-                                                                           Seite 2 von 16
+                                                                           Seite 2 von 15
 Anlagen
 
 An-      Titel
@@ -96,7 +96,7 @@ lage
  20      Synchroner Dialog
  21
 
-         Seite 3 von 16
+         Seite 3 von 15
 1. Allgemeines
 
 Der GKV-Spitzenverband, die Deutsche Rentenversicherung Bund, die Deutsche Rentenversiche-
@@ -126,7 +126,7 @@ Datenaustausch der beteiligten Partner Verschlüsselungsverfahren und elektronis
 auf der Grundlage kryptographischer Verfahren eingesetzt. Die Nutzdaten müssen mit einem gül-
 tigen Zertifikat elektronisch signiert und verschlüsselt werden.
 
-                                                                           Seite 4 von 16
+                                                                           Seite 4 von 15
 2. Datenaustauschverfahren
 
 2.1 Grundlagen
@@ -166,7 +166,7 @@ aus Verfahrensmerkmalen und einer eindeutigen Ziffernfolge. Somit lässt sich, o
 teiinhalt zurückzugreifen, eine Zuordnung für die Weiterverarbeitung der Datenlieferung erken-
 nen. Eine detaillierte Beschreibung dieser Steuerung folgt im Kapitel 3.
 
-                                                                           Seite 5 von 16
+                                                                           Seite 5 von 15
 2.3 Krankenkassenkommunikationssystem (KKS)
 Das Krankenkassenkommunikationssystem beschreibt eine universelle Struktur von Daten, die
 per Datenfernübertragung wie auch per Datenträger übertragen werden können. Der Aufbau der
@@ -208,7 +208,7 @@ und 3 Ebenen:
                 o Transportebene
                 o Logistikebene
 
-                                                                           Seite 6 von 16
+                                                                           Seite 6 von 15
 Der eXTra-Standard trifft keine Festlegungen zur Registrierung, Authentifizierung, zu Format und
 Struktur der fachlichen Nutzdaten, zu Übertragungsverfahren und -protokollen, zur Archivierung
 und zur Kommunikation innerhalb der Sender- bzw. Empfängerseite.
@@ -225,7 +225,7 @@ rung Bund, Berner Straße 1, 97084 Würzburg archiviert.
 
      • Anlage 3 - eXTra
 
-                                                                           Seite 7 von 16
+                                                                           Seite 7 von 15
 3. Parameter für den Datenaustausch
 
 3.1 Verfahrenskennung
@@ -259,7 +259,7 @@ heiten definiert, siehe dazu folgende Anlagen:
       • Anlage 6 - Besonderheiten des GKV-internen Datenaustauschs und des Datenaustauschs
            der GKV mit Leistungserbringern
 
-                                                                           Seite 8 von 16
+                                                                           Seite 8 von 15
 4. Datenaustauscharten
 
 4.1 Allgemeines
@@ -280,16 +280,16 @@ dierte Nutzdatendatei im Nachrichtenbody in einer einzigen XML-Nachricht übertr
 Die unter den Punkten 4.2 und 4.3 aufgeführten Datenaustauscharten unterliegen verfahrensab-
 hängig folgender Gültigkeit:
 
-Internet-E-Mail-Kommunikation      Arbeitgeberverfahren                                           Verfahren der
-Internet-http(s)-Kommunikation                                                                 Leistungserbringer
-Internet-(s)ftp(s)-Kommunikation                 -
-FTAM                                             -2                                                   zulässig
-X.400                                            -                                                    zulässig
-GKV-Kommunikationsserver (eXTra)                 -                                                    zulässig
-DSRV-Kommunikationsserver (eXTra)                -                                                    zulässig
-Datenträger                                 zulässig                                                  zulässig
-                                            zulässig
-                                                 -                                                          -
+                                   Arbeitgeberverfahren                                           Verfahren der
+                                                                                               Leistungserbringer
+Internet-E-Mail-Kommunikation           -
+Internet-http(s)-Kommunikation         -2                                                             zulässig
+Internet-(s)ftp(s)-Kommunikation        -                                                             zulässig
+FTAM                                    -                                                             zulässig
+X.400                                   -                                                             zulässig
+GKV-Kommunikationsserver (eXTra)   zulässig                                                           zulässig
+DSRV-Kommunikationsserver (eXTra)  zulässig
+Datenträger                             -                                                                   -
                                                                                                       zulässig
                                                                                                       zulässig
 
@@ -302,7 +302,7 @@ mit Routinginformationen als Anhang an die E-Mail gehängt und versendet.
 
 2 Zulässig im Rahmen der Kommunikation über die Kommunikationsserver und ausschließlich https
 
-                                                                           Seite 9 von 16
+                                                                           Seite 9 von 15
 Um zu verhindern, dass die Meldungen verfälscht oder von Unberechtigten gelesen werden, wer-
 den sie nach den Vorgaben im Gesundheits- und Sozialwesen verschlüsselt.
 
@@ -343,7 +343,7 @@ werden.
 
 3 Für die Verfahren im Datenaustausch mit Arbeitgebern ist ausschließlich die Verwendung von https zugelassen.
 
-                                                                          Seite 10 von 16
+                                                                          Seite 10 von 15
 4.2.3 Internet – (s)ftp(s)-Kommunikation
 Das File Transfer Protocol (FTP) ist ein standardisiertes Netzwerkprotokoll zur Übertragung von
 Dateien über TCP/IP-Netzwerke. FTP wird benutzt, um Dateien vom Server zum Client (Herunter-
@@ -383,7 +383,7 @@ tierten Dateiorganisation zu gewährleisten, verwendet FTAM ein logisches Dateis
 tual Filestore. Dieser Virtual Filestore wird durch die jeweilige Herstellerimplementierung auf das
 reale System abgebildet.
 
-                                                                          Seite 11 von 16
+                                                                          Seite 11 von 15
 Der Zugang zu den entfernten Dateien erfolgt dabei nicht unmittelbar, sondern über Dienste der
 dort installierten FTAM-Software, ist also nicht mit einem allgemeinen Zugang zum entfernten
 System gleichzusetzen.
@@ -402,7 +402,6 @@ FTAM over IP zulässig.
      • Anlage 10 – FTAM over IP
 
 4.2.5 XML-Richtlinie
-
 Durch die Schaffung einer einheitlichen XML-Richtlinie sollen sämtliche XML-Aktivitäten im Um-
 feld der Sozialversicherung zentralisiert und gebündelt werden. Durch deren modularisierten Auf-
 bau sollen so zukünftig einheitliche und integrierte XML-Schnittstellen entwickelt werden können.
@@ -419,23 +418,14 @@ fahrensneutral festgelegt.
 Sofern im Datenaustausch XML-Strukturen verwendet werden, die durch die Koordinierungsstelle
 für IT-Standards (KoSIT) bundeseinheitlich vorgeben sind, ist die Richtlinie nicht anzuwenden.
 
-• Anlage 12 – XML Richtlinie
+     • Anlage 12 – XML Richtlinie
 
-4.2.5.1  Nutzung von XML in den Datenaustauschverfahren
-
-Für den Datenaustausch ist XML als Standardformat zu verwenden. Bestehende Verfahren, die vor
-
-dem 01.01.2027 implementiert wurden, sind auf XML umzustellen, sofern eine grundlegende
-
-fachliche oder technische Überarbeitung des Verfahrens erfolgt und die Wirtschaftlichkeit der
-
-Umstellung im Sinne des Wirtschaftlichkeitsgebots der öffentlichen Verwaltung gegeben ist.
-
-                              Seite 12 von 16
-4.2.6 GKV-Kommunikationsserver
+4.2.6 GKV-Kommunikationsserver
 Die Spitzenorganisationen der Krankenkassen auf Bundesebene haben die Einrichtung und den
 Betrieb eines zentralen GKV-Kommunikationsservers umgesetzt, um ein zentrales „Tor“ sowohl
-für die Annahme der Meldungen der Arbeitgeber, als auch zum Abruf der Rückmeldungen von
+
+                                                                          Seite 12 von 15
+für die Annahme der Meldungen der Arbeitgeber, als auch zum Abruf der Rückmeldungen von
 den Datenannahme- und Verteilstellen (DAV) bereitzustellen.
 
 Dieser Kommunikationsserver etabliert ein zentrales elektronisches Verfahren, um vom Arbeitge-
@@ -470,14 +460,14 @@ durch gesetzliche oder vertragliche Regelungen ausgeschlossen ist.
 
      • Anlage 14 - Datenträger
 
-                                                                          Seite 13 von 16
-4.4 Zeichensätze
+4.4 Zeichensätze
 Zur Vermeidung von technischen Problemen bei der Übertragung von Daten zwischen Systemen
 unterschiedlicher Basis ist es unabdingbar, sich vor dem vereinbarten Datenaustausch auf einen ,
 der in der Anlage 15 aufgeführten, für alle beteiligte Systeme gültigen Zeichensatz zu verständi-
 gen.
 
-     • Anlage 15 – Zeichensätze
+                                                                          Seite 13 von 15
+     • Anlage 15 – Zeichensätze
 
 5. Sicherheitsverfahren
 
@@ -510,8 +500,7 @@ Elektrizität, Gas, Telekommunikation, Post und Eisenbahn sowie aus der Technisc
 TR-02102-1, TR-02102-2 und TR-02102-4 des Bundesamtes für Sicherheit in der Informations-
 technik (BSI). Es sind folgende Dokumente maßgeblich:
 
-                                                                          Seite 14 von 16
-     • Die Verordnung (EU) Nr. 910/2014 (eiDAS-Verordnung) sowie ergänzend das Vertrauens-
+     • Die Verordnung (EU) Nr. 910/2014 (eiDAS-Verordnung) sowie ergänzend das Vertrauens-
           dienstegesetz in der aktuellen Fassung vom 18.07.2017
 
      • BSI Technische Richtlinie TR-02102-1 „Kryptographische Verfahren: Empfehlungen und
@@ -520,7 +509,8 @@ technik (BSI). Es sind folgende Dokumente maßgeblich:
      • BSI Technische Richtlinie TR-02102-2 „Kryptographische Verfahren: Verwendung von
           Transport Layer Security (TLS)“
 
-     • BSI Technische Richtlinie TR-02102-4 „Kryptographische Verfahren: Verwendung von
+                                                                          Seite 14 von 15
+     • BSI Technische Richtlinie TR-02102-4 „Kryptographische Verfahren: Verwendung von
           Secure Shell (SSH)“
 
 Die o. g. Technischen Richtlinien des BSI werden im Jahresrhythmus veröffentlicht und anschlie-
@@ -556,6 +546,5 @@ Die Teilnehmer am elektronischen Datenaustausch haben folglich sicherzustellen, 
 gaben der einschlägigen BSI-Richtlinien umgesetzt sind. Die Umsetzung ist auf Anforderung, im
 Rahmen einer Selbsterklärung, bei Ausstellung des Zertifikates abzugeben.
 
-                                                                          Seite 15 von 16
-Seite 16 von 16
+                                                                          Seite 15 von 15
 
