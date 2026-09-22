@@ -420,6 +420,8 @@ Warum: Welche Mail ging wann an wen raus. Bei Terminbestätigungen ist „ist di
 9 Spalten · Status: aktiv (Referenz) — Migration vorbereitet, Tabelle initial leer. Befüllung erfolgt manuell über das Admin-CLI-Werkzeug `tools/empfaenger-zertifikat-laden.mjs`.
 Warum: Für die §302 CMS EnvelopedData-Verschlüsselung (GGT Anlage 16 §5.1, SECON) wird der öffentliche X.509-Schlüssel der zuständigen Annahmestelle benötigt. Anders als bei `terapeut_zertifikat` (wo nur Metadaten des Therapeuten-Signaturschlüssels gespeichert werden) muss hier das echte Zertifikat (DER-Bytes) der Empfänger-Annahmestellen im System hinterlegt sein.
 
+**Liest (1):** `verarbeiteVerschluesselungsSchritt()`
+
 **Dateien:** `api-backend/billing/api/abrechnung.routes.js`
 
 ### `employee_business_assignments`
@@ -571,7 +573,7 @@ Warum: Der Kiosk-Modus (Tablet im Wartezimmer) braucht eine Anmeldung, die kein 
 15 Spalten · Status: aktiv — **Echtdaten**, mit 9 Mock-Resten
 Warum: Die §302-Seite der Kassen. Seit dem 06.09.2026 trägt sie zwei Dinge, die vorher gefehlt haben: die **echten** IK-Nummern aus der TP5-Kostenträgerdatei — und die **n:1-Beziehung**, ohne die eine IK allein nichts wert ist. Eine Versichertenkarte nennt fast nie die Stelle, die am Ende abrechnet: die DAK-Karte trägt `100167999`, das Geld holt man aber bei `105830016`. Genau diese Auflösung steckt in `abrechnender_kt_ik` / `ist_abrechnender_kt` (VKG-Verknüpfungsart 01).
 
-**Liest (6):** `_loeseEmpfaengerNameAuf()`, `baueBegleitzettel()`, `kostentraegerIkAufloesen()`, `ladeAnnahmestelle()`, `ladeKostentraegerNamen()`, `ladePapierannahmestelle()`
+**Liest (7):** `_loeseEmpfaengerNameAuf()`, `baueBegleitzettel()`, `kostentraegerEndzieleAufloesen()`, `kostentraegerIkAufloesen()`, `ladeAnnahmestelle()`, `ladeKostentraegerNamen()`, `ladePapierannahmestelle()`
 
 **Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/kostentraeger/annahmestelle.js`, `api-backend/lib/rezept-felder.js`, `dashboard.js`, `module/abrechnung-einstellungen.js`
 
@@ -599,8 +601,8 @@ Warum: Die Urbelege (Verordnungen im Original) gehen **per Post** an die **Papie
 
 ### `krankenkassen`
 
-6 Spalten · Status: aktiv (Referenz) — ⛔ `ik_number` **fehlerhaft**, siehe unten
-Warum: Die Kassenliste für das Auswahlfeld in der Oberfläche. 94 Zeilen (live 06.09.2026), gesetzt am 02.06.2026.
+6 Spalten · Status: aktiv (Referenz) — `ik_number` ist eine **Vorbelegung, nur wenn eindeutig**, keine Abrechnungswahrheit (Ops #301, Konsey 21.09.2026). Live 21.09.2026: 76 von 94 gefüllt, 18 NULL. Nach Migration `0041_krankenkassen_ik_nachtrag`: 74 gefüllt, 20 NULL — ⏳ **vorbereitet, noch nicht angewandt** (beim Anwenden diese Zeile auf ✅ mit Datum ändern).
+Warum: Die Kassenliste für das Auswahlfeld in der Oberfläche. 94 Zeilen (live 21.09.2026), gesetzt am 02.06.2026.
 
 **Liest (3):** `ladeKassen()`, `loadKkList()`, `toRad()`
 
