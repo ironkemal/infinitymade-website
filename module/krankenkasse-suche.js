@@ -109,6 +109,193 @@ export function sucheKassen(kassen, query, limit = 300) {
     .slice(0, limit);
 }
 
+// ── IK-Suche (Ops #300, Konsey 21.09.2026) ─────────────────────────────────
+//
+// Der Podologe tippt die IK von Muster 13 — die KARTEN-IK. Sie steht nur in
+// `kostentraeger` (eigene Zeile, die per `abrechnender_kt_ik` auf die abrechnende
+// IK verweist), nicht in `krankenkassen.ik_number` (dort steht die abrechnende
+// IK). DAK: Karte 100167999 → abgerechnet wird bei 105830016.
+//
+// Diese drei Funktionen sind der reine Teil: sie kennen weder Netz noch DOM.
+// Welche Zeilen überhaupt Kassen sind (ohne Rechenzentren und Pflegekassen),
+// entscheidet die View `kostentraeger_auswahl`, nicht dieser Code.
+
+/**
+ * Erst ab drei Ziffern wird nach IK gesucht: 1.020 von 1.043 IK beginnen mit
+ * „10", bei zwei Stellen filtert der Präfix nichts. Bei drei Stellen hat der
+ * größte Präfix („108") 189 Treffer, bei vier („1080") 86 — gemessen am Seed
+ * `0006_seed_kostentraeger.sql` (Obergrenze; die View zeigt weniger Zeilen).
+ * gkv-302 hatte vier empfohlen; drei ist die Entscheidung von Melih (21.09.2026),
+ * dafür ist die Trefferliste länger und scrollt.
+ */
+export const IK_MIN_ZIFFERN = 3;
+
+/** Mehr Treffer als der größte Dreier-Präfix (189 im Seed) — sonst schnitte die Liste still ab. */
+const IK_TREFFER_MAX = 300;
+
+/**
+ * Ist die Eingabe eine IK-Suche? Dann die Ziffern, sonst null.
+ * Nur reine Ziffern zählen (Leerzeichen und Punkte werden vorher entfernt).
+ * „AOK 105" ist ein Name und bleibt bei der Namenssuche.
+ */
+export function ikAusEingabe(query) {
+  const ziffern = String(query ?? '').replace(/[\s.]/g, '');
+  return /^\d+$/.test(ziffern) && ziffern.length >= IK_MIN_ZIFFERN ? ziffern : null;
+}
+
+/**
+ * IK, an die abgerechnet wird: der Verweis der Karten-IK, sonst die eigene.
+ * Wie `COALESCE(abrechnender_kt_ik, ik)` — nur zählt hier auch ein leerer String
+ * als „fehlt" (`||` statt `??`): eine leere IK im Feld wäre schlechter als die
+ * eigene. Das ist der Wert, den `rzPatKasseIk` speichert
+ * (→ `prescriptions.kostentraeger_ik`).
+ */
+export function aufgeloesteIk(zeile) {
+  return zeile.abrechnender_kt_ik || zeile.ik;
+}
+
+/**
+ * IK-Präfixsuche über Zeilen der View `kostentraeger_auswahl`.
+ * Die Treffer haben dieselbe Form wie Kassen aus `sucheKassen` — so rendern und
+ * wählen `attachKrankenkasseSuche` beide Quellen mit demselben Code. `ik` ist die
+ * AUFGELÖSTE IK (das, was ins Feld kommt), `kartenIk` die abgetippte.
+ * Sortiert nach IK; die Kassenhäufigkeit der Praxis spielt hier keine Rolle.
+ * Limit grosszuegig wie bei `sucheKassen`: der größte Präfix ab drei Ziffern hat
+ * 189 Treffer, und ein zu kleines Limit schnitte hier still Kassen ab. Das
+ * Dropdown scrollt ohnehin (max-height in dashboard.css).
+ */
+export function sucheKostentraeger(zeilen, query, limit = IK_TREFFER_MAX) {
+  const ziffern = ikAusEingabe(query);
+  if (!ziffern) return [];
+
+  return (zeilen || [])
+    .filter(z => z.ik && z.ik.startsWith(ziffern))
+    .sort((a, b) => a.ik.localeCompare(b.ik, 'de'))
+    .slice(0, limit)
+    .map(z => ({
+      name: z.name,
+      kurz: z.kurzname || null,
+      ik: aufgeloesteIk(z),
+      kartenIk: z.ik,
+      typ: 'gesetzlich',
+      anzahl: 0,
+      quelle: 'kostentraeger',
+    }));
+}
+
+// ── Anschluss ans Feld ──────────────────────────────────────────────────────
+
+let viewWarnungGezeigt = false;
+
+/** Nur für Tests: die „nur einmal warnen"-Sperre zurücksetzen. */
+export function _warnungZuruecksetzen() { viewWarnungGezeigt = false; }
+
+function warneEinmal(grund) {
+  if (viewWarnungGezeigt) return;
+  viewWarnungGezeigt = true;
+  console.warn('[krankenkasse-suche] IK-Suche nicht verfügbar (View kostentraeger_auswahl):', grund);
+}
+
+/**
+ * Präfixabfrage gegen die View `kostentraeger_auswahl` (Migration 0040) — pro
+ * Eingabe serverseitig statt die ganze Tabelle zu laden: kein Cache, der
+ * veralten könnte, und kein PostgREST-Zeilenlimit. `ziffern` sind nur Ziffern
+ * (`ikAusEingabe`), es gelangt also kein Platzhalter in das `like`.
+ * Fehlt die View noch (Migration nicht live), kommt eine leere Liste und EINE
+ * Warnung — die Namenssuche bleibt davon unberührt.
+ */
+async function holeKostentraeger(sb, ziffern) {
+  try {
+    const { data, error } = await sb.from('kostentraeger_auswahl')
+      .select('ik, name, kurzname, abrechnender_kt_ik')
+      .like('ik', `${ziffern}%`)
+      .order('ik')
+      .limit(IK_TREFFER_MAX);
+    if (error) { warneEinmal(error.message || error.code); return []; }
+    return data || [];
+  } catch (e) {
+    warneEinmal(e?.message || e);
+    return [];
+  }
+}
+
+/**
+ * Die Weiche des Kassenfelds: reine Ziffern (≥ 3) → IK-Suche in der View, sonst
+ * die Namenssuche über `krankenkassen`. Bei einer IK-Eingabe läuft KEINE
+ * Namenssuche (Entscheidung Melih 21.09.2026). Wirft nie: `attachAutocomplete`
+ * fängt eine Ausnahme aus `fetchItems` nicht ab.
+ */
+export async function sucheKassenfeld(sb, ownerId, query) {
+  try {
+    const ziffern = ikAusEingabe(query);
+    if (ziffern) return sucheKostentraeger(await holeKostentraeger(sb, ziffern), ziffern);
+    const { kassen } = await ladeKassen(sb, ownerId);
+    return sucheKassen(kassen, query);
+  } catch (e) {
+    console.warn('[krankenkasse-suche] Suche:', e);
+    return [];
+  }
+}
+
+/** IK-Angabe in der Trefferzeile: bei einer Auflösung „Karte → abrechnende IK". */
+export function ikAnzeige(k) {
+  if (k.quelle === 'kostentraeger' && k.kartenIk && k.kartenIk !== k.ik) return `IK ${k.kartenIk} → ${k.ik}`;
+  return k.ik ? `IK ${k.ik}` : '';
+}
+
+// Texte des Hinweises unter dem IK-Feld. Bewusst hier und nicht im Wörterbuch
+// von dashboard.js: das darf nicht wachsen (CLAUDE.md, Konsey 2026-08-13). Die
+// Sprache kommt aus <html lang>, das dashboard.js beim Wechsel setzt.
+const HINWEISE = {
+  de: {
+    aufgeloest: (karte, ik) => `Karte ${karte} → rechnet ab bei ${ik}`,
+    abweichend: (vorhanden, ik) => `Im Feld steht bereits ${vorhanden} — die Kasse rechnet ab bei ${ik}. Nicht überschrieben.`,
+  },
+  en: {
+    aufgeloest: (karte, ik) => `Card ${karte} → bills via ${ik}`,
+    abweichend: (vorhanden, ik) => `The field already contains ${vorhanden} — this fund bills via ${ik}. Not overwritten.`,
+  },
+  tr: {
+    aufgeloest: (karte, ik) => `Kart ${karte} → ${ik} üzerinden faturalanır`,
+    abweichend: (vorhanden, ik) => `Alanda zaten ${vorhanden} var — bu kasa ${ik} üzerinden faturalanır. Üzerine yazılmadı.`,
+  },
+};
+
+/**
+ * Was unter dem IK-Feld stehen bleibt, nachdem eine Kasse gewählt wurde.
+ *  - Feld war schon mit einer ANDEREN IK gefüllt (Handeingabe, OCR): sie wird nicht
+ *    überschrieben, die Abweichung wird sichtbar (Konsey 21.09.2026).
+ *  - Sonst, wenn die Karten-IK auf eine andere IK verweist: die Auflösung. Sonst
+ *    steht im Feld eine IK, die der Anwender nicht getippt hat — er hielte sie
+ *    für einen Tippfehler und schriebe sie zurück (podoloji).
+ */
+export function hinweisZeile(k, vorhandeneIk, sprache = 'de') {
+  if (!k || !k.ik) return '';
+  const T = HINWEISE[sprache] || HINWEISE.de;
+  const vorhanden = String(vorhandeneIk || '').trim();
+  if (vorhanden && vorhanden !== k.ik) return T.abweichend(vorhanden, k.ik);
+  if (k.quelle === 'kostentraeger' && k.kartenIk && k.kartenIk !== k.ik) return T.aufgeloest(k.kartenIk, k.ik);
+  return '';
+}
+
+function zeigeIkHinweis(ikEl, k, vorher) {
+  if (!ikEl) return;
+  let el = document.getElementById(ikEl.id + 'Hinweis');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = ikEl.id + 'Hinweis';
+    el.setAttribute('role', 'status');
+    el.style.cssText = 'font-size:11px;color:var(--text-muted);margin-top:2px;';
+    ikEl.insertAdjacentElement('afterend', el);
+  }
+  el.textContent = hinweisZeile(k, vorher, document.documentElement.lang || 'de');
+}
+
+function loescheIkHinweis(ikEl) {
+  const el = document.getElementById(ikEl.id + 'Hinweis');
+  if (el) el.textContent = '';
+}
+
 /**
  * Hängt die Kassenauswahl an ein Textfeld.
  *
@@ -143,15 +330,14 @@ export function attachKrankenkasseSuche(inputEl, cfg = {}) {
     // Trenner genau dort, wo die eigenen Kassen aufhören.
     needsSeparator: (prev, cur) => prev.anzahl > 0 && cur.anzahl === 0,
 
-    fetchItems: async (query) => {
-      const { kassen } = await ladeKassen(sb, ownerId());
-      return sucheKassen(kassen, query);
-    },
+    // Ziffern → IK-Suche (View), sonst Namenssuche — siehe sucheKassenfeld().
+    fetchItems: query => sucheKassenfeld(sb, ownerId(), query),
 
     toText: k => k.name,
 
     renderItem: k => {
-      const ik = k.ik ? `<span style="color:var(--text-muted);font-size:11px;">IK ${k.ik}</span>` : '';
+      const ikText = ikAnzeige(k);
+      const ik = ikText ? `<span style="color:var(--text-muted);font-size:11px;">${esc(ikText)}</span>` : '';
       // Die Zahl erklärt die Reihenfolge. Ohne sie wirkt eine nicht-alphabetische
       // Liste wie ein Fehler.
       const zaehler = k.anzahl > 0
@@ -164,10 +350,21 @@ export function attachKrankenkasseSuche(inputEl, cfg = {}) {
     },
 
     onSelect: k => {
+      const vorher = ikEl ? ikEl.value : '';
       if (ikEl && k.ik && !ikEl.value) ikEl.value = k.ik;
+      zeigeIkHinweis(ikEl, k, vorher);
       if (onSelect) onSelect(k);
     },
   });
+
+  // Ein neuer Tastendruck im Kassen- oder im IK-Feld macht den alten Hinweis
+  // ungültig. Die Auswahl selbst löst ebenfalls ein input-Ereignis aus — der
+  // Hinweis wird danach in onSelect gesetzt, nicht davor gelöscht.
+  if (ikEl) {
+    const weg = () => loescheIkHinweis(ikEl);
+    inputEl.addEventListener('input', weg);
+    ikEl.addEventListener('input', weg);
+  }
 }
 
 function esc(s) {

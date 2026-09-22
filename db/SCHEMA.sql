@@ -2055,19 +2055,16 @@ CREATE TABLE krankenkassen (
   created_at timestamptz DEFAULT now()
   ik_number text
 );
---   PK (id) — 94 Zeilen (live 06.09.2026). Quelle für das UI-Dropdown.
---   ⚠️ ik_number ist nur in 16 Zeilen gefüllt, und diese 16 sind dieselben
---      erfundenen IKs wie im alten `v14_kostentraeger_mock_seed`.
---      Gegen die echte Kostenträgerdatei geprüft (06.09.2026) sind davon
---      mindestens VIER schlicht falsch — die IK gehört einer anderen Kasse:
---          „AOK Baden-Württemberg“ 109519005 → real AOK Nordost Region Berlin
---          „DAK-Gesundheit“        101570104 → real HEK - Hanseatische KK
---          „hkk Krankenkasse“      102171012 → real KKH Kaufmännische KK
---          „KKH Kaufmännische KK“  108310400 → real DAV AOK Bayern - kubus IT
---      Das ist kein Schönheitsfehler: loadKkList() (dashboard.js:18644) füttert
---      das Feld `podNewKk`, dessen Wert als prescriptions.kostentraeger_ik
---      gespeichert und im DTA als „IK des Kostenträgers“ gesendet wird.
---      Ein DAK-Rezept ginge damit an die HEK.
+--   PK (id) — 94 Zeilen (live 21.09.2026). Quelle für das UI-Dropdown.
+--   ⚠️ ik_number ist eine VORBELEGUNG, nur wenn die Kasse genau EINEN Kostenträger hat
+--      (Ops #301, Konsey 21.09.2026). Live 21.09.2026: 76 von 94 gefüllt, davon 9 IKs,
+--      die in der Kostenträgerdatei nicht existieren (alter Mock-Seed) — die Migration
+--      0041_krankenkassen_ik_nachtrag räumt sie auf (vorbereitet, noch nicht angewandt).
+--      Kassen mit mehreren echten IKs (AOK BW: 14 gleichrangige Bezirks-IKs) bleiben NULL:
+--      die richtige IK hängt an der Versichertenkarte, nicht an der Kasse.
+--      Details und Begründung: db/REGISTER.md, Eintrag `krankenkassen`.
+--   ⚠️ loadKkList() (dashboard.js) füttert das Feld podNewKk → prescriptions.kostentraeger_ik
+--      → DTA „IK des Kostenträgers": eine geratene IK bedeutet Dateiabweisung/Fehlleitung.
 --   ⚠️ Nicht dasselbe wie `kostentraeger` (das ist die §302-Seite).
 
 CREATE TABLE kiosk_pins (

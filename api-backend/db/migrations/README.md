@@ -89,6 +89,15 @@ migration'lar (ör. `.github/workflows/preise-check.yml`, O-95) için: makine-ok
 işaret satırı ekle, ör. `-- ZAEHLER: unveraendert (reine Daten-UPSERT, public)`, ki kapı
 ileride bunu gerçekten doğrulayabilsin.
 
+**Üçüncü yol — türetilmiş sayaç-nötrlüğü (21.09.2026, `db-ustasi`).** DDL içeren bir migration,
+`schema-zaehler.js`'teki on sayacın hiçbirine dokunmadığını **yazılı bir türetimle** gösterebiliyorsa
+(ör. `CREATE VIEW` — `public_tablo` yalnız `BASE TABLE` sayar —, yalnız `REVOKE`/`GRANT`, bir `CHECK`,
+nullable kolon), `bis_version` yeni bir fiziksel ölçüm olmadan yükseltilebilir. Türetim
+`erwartete-zaehler.json`'da `_hinweis_NNNN` olarak durur (örnekler: 0024, 0025, 0033, 0035, 0039) ve
+**"nachgerechnet, nicht gemessen"** diye işaretlenir; `zaehler`/`gemessen_am` değişmez. Sayaç sorgularından
+birine değen her değişiklikte (yeni tablo, policy, fonksiyon, trigger, index) türetim yetmez — o zaman
+taze bir kutuda ölçülür.
+
 ---
 
 ## Yeni migration yazarken

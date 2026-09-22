@@ -525,12 +525,12 @@ export function pruefeAenderungErlaubt() {
  *                  ⚠️ Und sie ist NICHT der Ort für „mehrere Heilmittel je
  *                  Verordnung". HeilM-RL § 12 Abs. 2 S. 1 erlaubt das Aufteilen
  *                  der Verordnungseinheiten auf bis zu drei vorrangige
- *                  Heilmittel nur für Physiotherapie und Ergotherapie (S. 2
- *                  sinngemäss für Stimm-, Sprech-, Sprach- und
- *                  Schlucktherapie). Die Podologie steht in keinem der beiden
- *                  Sätze; ihr Katalog bildet „beides zugleich" als eigenes
- *                  Heilmittel ab — c) Podologische Komplexbehandlung,
- *                  § 27a Abs. 4 Nr. 3. Geprüft am 14.09.2026.
+ *                  Heilmittel nur für Physiotherapie und Ergotherapie; S. 2 ist
+ *                  für Stimm-, Sprech-, Sprach- und Schlucktherapie eine eigene
+ *                  Regel (drei Behandlungszeiten bzw. Einzel-/Gruppen). Die
+ *                  Podologie steht in keinem der beiden Sätze; ihr Katalog
+ *                  bildet „beides zugleich" als eigenes Heilmittel ab — c)
+ *                  Komplexbehandlung, § 27a Abs. 4 Nr. 3. Geprüft 14./21.09.2026.
  *
  * @param {object} v  Was `dashboard.js` schon ausgerechnet hat
  */

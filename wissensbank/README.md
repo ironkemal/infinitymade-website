@@ -32,6 +32,7 @@ okunduğunda kayıt açılır.
 | `ergotherapie/` | Yalnız ergoterapiye özel | Ergo Anlage 2 Vergütungsvereinbarung |
 | `logopaedie/` | Yalnız logopediye özel (`sssst` = Stimm-, Sprech-, Sprach-, Schlucktherapie) | sssst Anlage 2 |
 | `_archiv/` | Düşmüş · kapsam dışı · mükerrer | Ernährungstherapie, Rettungsdienst-Anhang, duplikatlar |
+| `sitzungen/` | ⚠️ **Belge değil** — kendi oturum notlarımız (tek istisna, bkz. aşağıdaki „Buraya girmeyen") | `2026-09-21_ops-302_komplex-suche-78020.md` |
 
 `gemeinsam/` içindeki alt bölümler:
 
@@ -50,6 +51,13 @@ hatadır (fazladan bir kişi görür); ortak belgeyi alan klasörüne koymak pah
 **Buraya girmeyen:** kendi ürettiğimiz iş. Prototip, ürün kararı, loop promptu, kod, ekran
 görüntüsü — bunlar `Podoloji/`, `module/`, `compliance/` gibi kendi yerlerinde kalır.
 Ölçüt basit: **dışarıdan mı indirdik?** Hayırsa buraya girmez.
+
+**Tek, sınırlı istisna (21.09.2026, Melih kararı): `sitzungen/`.** Çalışma oturumlarının
+notları (ne bulundu, niye böyle karar verildi, ne açık kaldı). Bunlar **belge değil, kaynak
+değil**: `REGISTER.md`/`INDEX.md`'ye girmezler, hiçbir Fatura-/hukuk iddiası yalnız onlara
+dayanmaz, „bunu indirmiş miydik" sorusu onlara bakılarak cevaplanmaz. Kurallar ve liste:
+`sitzungen/SITZUNGEN.md`. `wissensbank/` klasörü ayrıca bir Obsidian vault'u olarak
+açılabilir (`.obsidian/` yerel, `.gitignore`'da).
 
 ---
 
