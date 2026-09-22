@@ -1,13 +1,19 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-22 — 0039_abrechnung_verschluesselung
---                    (§302-Echtbetrieb Faz 1.3D, O-131. Fuer DIESE Datei eine
---                    NULL-Aenderung: keine Policy, keine Funktion, kein
---                    Trigger, kein Index — reine Spalten-Migration auf
---                    `abrechnung` (Details im Kopf von db/SCHEMA.sql). Der
---                    Eintrag steht hier trotzdem, damit beide Dumps dieselbe
---                    Migrationskette fuehren.
+-- ERZEUGT AM:        2026-09-22 — 0042_abrechnung_verschluesselung
+--                    (§302-Echtbetrieb Faz 1.3D, O-131. Urspruenglich als 0039
+--                    geschrieben, umnummeriert wegen Kollision mit Melihs
+--                    parallel auf origin/main gelandeten 0039-0041 (Ops
+--                    #300-302) — Details im Kopf von db/SCHEMA.sql. Melihs
+--                    0039-0041 sind auf SaaS live GEPRUEFT NICHT angewendet
+--                    (kostentraeger_auswahl-View existiert nicht, 22.09.2026
+--                    bestaetigt) und fehlen deshalb zu Recht in diesem Dump.
+--                    Fuer DIESE Datei ist 0042 eine NULL-Aenderung: keine
+--                    Policy, keine Funktion, kein Trigger, kein Index — reine
+--                    Spalten-Migration auf `abrechnung`. Der Eintrag steht
+--                    hier trotzdem, damit beide Dumps dieselbe Migrationskette
+--                    fuehren.
 --                    ✅ Im SaaS angewendet 22.09.2026 (MCP).
 --                    davor: 2026-09-20/21 — 0036 bis 0038 (§302-Echtbetrieb,
 --                    ITSG-Anbindung): 0036/0037 reine Daten-Migrationen (keine

@@ -1,15 +1,28 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-22 — 0039_abrechnung_verschluesselung
---                    (§302-Echtbetrieb Faz 1.3D, O-131. +5 Spalten an
---                    `abrechnung` (encrypted_storage_path, encrypted_sha256,
---                    verschluesselt_am, verschluesselt_fuer_fingerprint,
---                    verschluesselung_hinweis) — Persistenz des CMS-
---                    EnvelopedData-Verschluesselungsergebnisses, das bis dahin
---                    nur im HTTP-Response von /upload-signed stand und nach
---                    einem Reload verloren war. Keine neue Tabelle, keine
---                    neue Policy, kein neuer Index/Trigger/Funktion.
+-- ERZEUGT AM:        2026-09-22 — 0042_abrechnung_verschluesselung
+--                    (§302-Echtbetrieb Faz 1.3D, O-131. Urspruenglich als 0039
+--                    geschrieben — auf origin/main landete PARALLEL Melihs
+--                    Kette 0039_seed_heilmittel_katalog_podo_komplex_suche /
+--                    0040_kostentraeger_auswahl_view / 0041_krankenkassen_ik_
+--                    nachtrag (Ops #300-302, umnummeriert von 0038-0040 wegen
+--                    Kollision mit Kemals 0038_empfaenger_zertifikate). Da nur
+--                    Kemals Datei oeffentliches DDL enthielt, wanderte SIE nach
+--                    oben (0039 -> 0042), nicht Melihs Kette. Diese drei
+--                    Migrationen (0039-0041) sind auf SaaS live GEPRUEFT NICHT
+--                    angewendet (kostentraeger_auswahl-View existiert nicht,
+--                    22.09.2026 per information_schema.views bestaetigt) —
+--                    deshalb fehlen sie in dieser Datei zu Recht, nicht aus
+--                    Versehen.
+--                    +5 Spalten an `abrechnung` (encrypted_storage_path,
+--                    encrypted_sha256, verschluesselt_am,
+--                    verschluesselt_fuer_fingerprint, verschluesselung_hinweis)
+--                    — Persistenz des CMS-EnvelopedData-Verschluesselungs-
+--                    ergebnisses, das bis dahin nur im HTTP-Response von
+--                    /upload-signed stand und nach einem Reload verloren war.
+--                    Keine neue Tabelle, keine neue Policy, kein neuer
+--                    Index/Trigger/Funktion.
 --                    ✅ Im SaaS angewendet 22.09.2026 (MCP).
 --                    davor: 2026-09-20/21 — 0036 bis 0038 (§302-Echtbetrieb,
 --                    ITSG-Anbindung). Diese drei Migrationen wurden bereits in
@@ -605,7 +618,7 @@ CREATE TABLE abrechnung (
 --     F:03001-F:03004 geblendet, die genau diese Nummer pruefen). Die Spezifikation
 --     verlangt "fortlaufend", nicht "lueckenlos" — GoBD verlangt aber, dass jede
 --     Luecke ERKLAERBAR ist. Genau das steht hier drin, PHI-frei.
---   ★ 22.09.2026 (0039, O-131) — fuenf Spalten fuer die CMS-EnvelopedData-
+--   ★ 22.09.2026 (0042, O-131) — fuenf Spalten fuer die CMS-EnvelopedData-
 --     Verschluesselung, im selben Muster wie die signed_*-Gruppe:
 --     encrypted_storage_path/encrypted_sha256 (Pfad+Summe der verschluesselten
 --     Datei, Pendant zu signed_storage_path/signed_sha256), verschluesselt_am
