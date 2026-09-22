@@ -189,7 +189,7 @@ export async function ladeAbrechnungVerlauf() {
 
   const [dateiRes, zeilenRes, zahlungRes] = await Promise.all([
     ctx.supabase.from('abrechnung')
-      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, zaa_uploaded_at, paid_at, created_at')
+      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, encrypted_storage_path, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, paid_at, created_at')
       .eq('owner_id', ownerId)
       .order('created_at', { ascending: false })
       .limit(50),
@@ -238,6 +238,14 @@ function zeichneVerlauf() {
     const signiert = a.signed_storage_path
       ? `<span title="signiert${a.signed_at ? ' am ' + new Date(a.signed_at).toLocaleString('de-DE') : ''}" style="color:#16a34a;">✍</span>`
       : '';
+    const verschluesselt = a.encrypted_storage_path
+      ? `<span title="verschlüsselt${a.verschluesselt_am ? ' am ' + new Date(a.verschluesselt_am).toLocaleString('de-DE') : ''}" style="color:#16a34a;">🔒</span>`
+      : a.signed_storage_path
+        // O-131-Nachaudit (22.09.2026): auch ohne expliziten Hinweis anzeigen —
+        // sonst wirkt eine signierte-aber-nie-verschlüsselte Altabrechnung in
+        // der Liste wie ein vollständig erledigter Fall.
+        ? `<span title="${esc(a.verschluesselung_hinweis || 'Verschlüsselung noch nicht durchgeführt.')}" style="color:#ea580c;">⚠️</span>`
+        : '';
     // Die Fälligkeit steht in der Liste nur, wenn sie überschritten ist —
     // 4 Wochen ab Einreichung (Richtlinien-Text 20.11.2006 § 7 Abs. 2).
     const ueber = istUeberfaellig(a);
@@ -259,7 +267,7 @@ function zeichneVerlauf() {
     return `<tr class="ab-verlauf-row${gewaehlt ? ' ab-verlauf-gewaehlt' : ''}" data-id="${esc(a.id)}"
         style="cursor:pointer;border-left:3px solid ${info.farbe};${gewaehlt ? 'background:var(--bg-card);' : ''}${verworfen ? 'opacity:0.7;' : ''}"
         title="${esc(info.hilfe)}">
-      <td style="white-space:nowrap;"><code style="font-size:12px;color:var(--text-main);">${dateiCode}</code> ${signiert}${grundDiv}</td>
+      <td style="white-space:nowrap;"><code style="font-size:12px;color:var(--text-main);">${dateiCode}</code> ${signiert}${verschluesselt}${grundDiv}</td>
       <td style="color:var(--text-main);">${esc(a.kassenName)}</td>
       <td style="white-space:nowrap;">${datum}</td>
       <td style="text-align:center;color:var(--text-muted);">${a.prescription_count || 0}</td>

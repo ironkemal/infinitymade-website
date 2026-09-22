@@ -25,8 +25,8 @@ import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freig
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20260920s';
-import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260920b';
-import { initAbrechnungDetail, downloadAbrechnungFile } from './module/abrechnung-detail.js?v=20260920b';
+import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260922';
+import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20260922';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260905a';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260831a';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260920c';
@@ -13069,7 +13069,7 @@ async function openDasGuideModal(abrechnungId, forceStep) {
 
   const { data: ab } = await supabase
     .from('abrechnung')
-    .select('id, dateiname, status, storage_path, signed_storage_path, signed_at, zaa_uploaded_at, kostentraeger_ik, prescription_count')
+    .select('id, dateiname, status, storage_path, signed_storage_path, signed_at, encrypted_storage_path, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, kostentraeger_ik, prescription_count')
     .eq('id', abrechnungId)
     .maybeSingle();
   _dasGuideState.abrechnung = ab;
@@ -13094,16 +13094,8 @@ document.getElementById('dgSignBtn')?.addEventListener('click', () => {
   openSignModal(id, { filename: ab?.dateiname });
 });
 
-document.getElementById('dgDownloadBtn')?.addEventListener('click', () => {
-  const ab = _dasGuideState.abrechnung;
-  if (!ab) return;
-  const path = ab.signed_storage_path || ab.storage_path;
-  if (!path) {
-    showToast('Datei nicht verfügbar — bitte erst signieren.', 'error');
-    return;
-  }
-  downloadAbrechnungFile(path, ab.id, 'dta');
-});
+// Logik in module/abrechnung-detail.js (dasGuideVersandKlick) — Platzgrund, s. dort.
+document.getElementById('dgDownloadBtn')?.addEventListener('click', () => dasGuideVersandKlick(_dasGuideState.abrechnung));
 
 document.getElementById('dgMarkSentBtn')?.addEventListener('click', async () => {
   const id = _dasGuideState.abrechnungId;
@@ -17654,7 +17646,12 @@ async function runSignAbrechnung() {
     const upJson = await upRes.json();
     if (!upRes.ok) throw new Error(upJson.error || ('HTTP ' + upRes.status));
 
-    showToast('Signiert ✓ Lade Sie die .p7m-Datei jetzt im DAS-Portal hoch.');
+    // O-131 (22.09.2026): Toast spiegelt jetzt das echte Verschlüsselungsergebnis,
+    // statt immer pauschal zum .p7m-Upload aufzufordern.
+    showToast(upJson.verschluesselt
+      ? 'Signiert & verschlüsselt ✓ Laden Sie die verschlüsselte Datei jetzt im DAS-Portal hoch.'
+      : 'Signiert ✓ — ' + (upJson.verschluesselungHinweis || 'Verschlüsselung noch nicht abgeschlossen, bitte Datei-Status prüfen.'),
+      upJson.verschluesselt ? 'success' : 'warning');
     closeModal('signModal');
     
     await loadAbrechnung();

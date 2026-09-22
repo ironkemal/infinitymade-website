@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-09-21",
+ "erzeugt": "2026-09-22",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-09-20)",
+  "schema": "db/SCHEMA.sql (Stand 2026-09-22)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-21)",
   "register": "db/REGISTER.md"
  },
@@ -9,7 +9,7 @@
  "tabellen": [
   {
    "name": "abrechnung",
-   "spalten": 32,
+   "spalten": 37,
    "fkRaus": [
     "businesses",
     "kostentraeger",
@@ -20,6 +20,7 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api-backend/_lib/access-log.js",
+    "api-backend/billing/api/upload-signed-verschluesselung.test.js",
     "api-backend/billing/api/verworfen.test.js",
     "api/dsgvo.js",
     "module/nav-registry.test.js",
@@ -244,7 +245,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 15,
+   "sqlTreffer": 16,
    "codeStumm": false
   },
   {
@@ -5452,7 +5453,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/billing/api/upload-signed-verschluesselung.test.js"
+   ],
    "register": true,
    "status": "aktiv (Referenz) — Migration vorbereitet, Tabelle initial leer. Befüllung erfolgt manuell über das Admin-CLI-Werkzeug `tools/empfaenger-zertifikat-laden.mjs`.",
    "warum": "Für die §302 CMS EnvelopedData-Verschlüsselung (GGT Anlage 16 §5.1, SECON) wird der öffentliche X.509-Schlüssel der zuständigen Annahmestelle benötigt. Anders als bei `terapeut_zertifikat` (wo nur Metadaten des Therapeuten-Signaturschlüssels gespeichert werden) muss hier das echte Zertifikat (DER-Bytes) der Empfänger-Annahmestellen im System hinterlegt sein.",
@@ -5460,10 +5463,12 @@
    "ungeklaert": false,
    "leser": [],
    "schreiber": [],
-   "dateien": [],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js"
+   ],
    "module": [],
    "sqlTreffer": 2,
-   "codeStumm": true
+   "codeStumm": false
   },
   {
    "name": "employee_business_assignments",
@@ -17543,11 +17548,6 @@
    "name": "dta_schluessel",
    "sql": 4,
    "status": "Referenz, im Code ungenutzt"
-  },
-  {
-   "name": "empfaenger_zertifikate",
-   "sql": 2,
-   "status": "aktiv (Referenz) — Migration vorbereitet, Tabelle initial leer. Befüllung erfolgt manuell über das Admin-CLI-Werkzeug `tools/empfaenger-zertifikat-laden.mjs`."
   },
   {
    "name": "fußstatus",

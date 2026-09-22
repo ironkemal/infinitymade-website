@@ -77,7 +77,20 @@ export function buildPhysikalischerDateiname({ kind = 'echt', transfernummer }) 
   return `${echtBuchstabe}SOL0${String(t).padStart(3, '0')}`;
 }
 
-// Encrypted/signed variant: same (physikalischer) basename + .p7m
+// Encrypted variant of the physikalischer Dateiname.
+//
+// `base` kommt in der Praxis bereits als `storage_path` an — das ist
+// `${dta.filename}.dta` (abrechnung.routes.js, dtaPath) — während der
+// UNVERSCHLÜSSELTE signierte Pfad daneben separat als `${basePath}.p7m`
+// gebaut wird (upload-signed-Route). Würde diese Funktion einfach `.dta.p7m`
+// anhängen, entstünde bei einem bereits mit ".dta" endenden `base` ein
+// doppeltes "....dta.dta.p7m" — und wer das später als Tippfehler "bereinigt"
+// (ein ".dta" entfernt), landet exakt auf dem unverschlüsselten signedPath
+// und überschreibt ihn per upsert stillschweigend mit der verschlüsselten
+// Datei (O-131, Kaltprüfung 21.09.2026). Deshalb: ein vorhandenes ".dta"
+// abschneiden, dann ein eigenes, von signedPath eindeutig unterscheidbares
+// Suffix anhängen statt es zu duplizieren.
 export function buildEncryptedFilename(base) {
-  return `${base}.dta.p7m`;
+  const stamm = base.replace(/\.dta$/i, '');
+  return `${stamm}.dta.enc.p7m`;
 }

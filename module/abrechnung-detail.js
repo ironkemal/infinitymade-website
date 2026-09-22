@@ -453,8 +453,22 @@ function aktionenHtml(ab) {
   // DTA und nicht irgendwo weiter unten.
   if (ab.auftragsdatei_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="auftrag" title="Gehört zwingend zusammen mit der DTA-Datei übermittelt">Auftragsdatei</button>`);
   if (ab.begleitzettel_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="begleit">Begleitzettel</button>`);
-  if (ab.signed_storage_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="p7m">Signierte Datei (.p7m)</button>`);
+  if (ab.signed_storage_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="p7m">Signierte Datei (unverschlüsselt)</button>`);
   else if (ab.storage_path)   k.push(`<button class="btn-primary btn-sm" data-ab-akt="signieren">✍ Signieren</button>`);
+  // Für den Versand an die Kasse ist NUR die verschlüsselte Datei zulässig
+  // (GGT Anlage 16 SECON, CMS EnvelopedData) — bis O-131 (22.09.2026) gab es
+  // dafür weder einen Button noch eine sichtbare Fehlermeldung, wenn die
+  // Verschlüsselung fehlgeschlagen war (fehlendes Empfängerzertifikat/
+  // Trust-Anchor). Jetzt: eigener Button bei Erfolg, sichtbarer Hinweis bei
+  // Fehlschlag statt stillem Nichts.
+  if (ab.encrypted_storage_path) {
+    k.push(`<button class="btn-primary btn-sm" data-ab-akt="enc" title="Für den Versand an die Kasse — CMS EnvelopedData nach GGT Anlage 16">🔒 Verschlüsselte Datei (Versand)</button>`);
+  } else if (ab.signed_storage_path) {
+    // O-131-Nachaudit (22.09.2026): auch OHNE expliziten Hinweis anzeigen —
+    // signiert-aber-nie-verschlüsselt (z. B. Altdaten von vor der Verschlüsselungs-
+    // Anbindung) darf nicht wie "alles in Ordnung" aussehen.
+    k.push(`<span class="btn-ghost btn-sm" style="color:#ea580c;cursor:default;" title="${esc(ab.verschluesselung_hinweis || 'Verschlüsselung noch nicht durchgeführt.')}">⚠️ Nicht verschlüsselt</span>`);
+  }
   if (!istVerworfen(ab)) {
     k.push(`<button class="btn-ghost btn-sm" data-ab-akt="zaa">📨 ZAA hochladen</button>`);
   }
@@ -481,6 +495,7 @@ function _verdrahteAktionen(ab, gruppen = []) {
       switch (btn.dataset.abAkt) {
         case 'dta':        return downloadAbrechnungFile(ab.storage_path, ab.id, 'dta');
         case 'p7m':        return downloadAbrechnungFile(ab.signed_storage_path, ab.id, 'dta');
+        case 'enc':        return downloadAbrechnungFile(ab.encrypted_storage_path, ab.id, 'dta', ab.dateiname);
         // Kein Statuswechsel: „heruntergeladen" meint die Nutzdatei. Wer nur
         // den Umschlag holt, hat noch nichts eingereicht.
         case 'auftrag':    return downloadAbrechnungFile(ab.auftragsdatei_path, null, 'begleit');
@@ -698,11 +713,20 @@ function _erfasseAbsetzung(btn, ab) {
  * @param {string} path  Pfad im Bucket `abrechnungen`
  * @param {string|null} abrechnungId  nur für den Statuswechsel
  * @param {'dta'|'begleit'} kind
+ * @param {string} [downloadName]  Erzwingt per Content-Disposition einen vom
+ *   Storage-Pfad abweichenden lokalen Dateinamen. Für die verschlüsselte
+ *   CMS-EnvelopedData-Datei bindend (gkv-302, 22.09.2026): SECON § 3.2.3.1
+ *   schreibt für die verschlüsselte Nutzdatei KEINE Dateiendung vor — der zu
+ *   übermittelnde Name ist der physikalische Dateiname selbst (`ab.dateiname`,
+ *   z. B. "ESOL0001"), kanalunabhängig (Portal/E-Mail/FTP). Der interne
+ *   Storage-Pfad bleibt bewusst `*.dta.enc.p7m` (O-131-Kollisionsschutz,
+ *   filename.js) — nur der lokale Download-Name muss normgerecht sein.
  */
-export async function downloadAbrechnungFile(path, abrechnungId, kind) {
+export async function downloadAbrechnungFile(path, abrechnungId, kind, downloadName) {
   if (!path) return;
   try {
-    const { data, error } = await ctx.supabase.storage.from('abrechnungen').createSignedUrl(path, 300);
+    const { data, error } = await ctx.supabase.storage.from('abrechnungen')
+      .createSignedUrl(path, 300, downloadName ? { download: downloadName } : undefined);
     if (error) throw error;
     window.open(data.signedUrl, '_blank');
     if (abrechnungId && kind === 'dta') {
@@ -716,4 +740,28 @@ export async function downloadAbrechnungFile(path, abrechnungId, kind) {
     console.error('[abrechnung/download]', e);
     ctx.showToast?.('Download fehlgeschlagen: ' + e.message, 'error');
   }
+}
+
+/**
+ * Klick-Handler für den DAS-Guide-Downloadbutton (dashboard.js `dgDownloadBtn`).
+ * Aus dashboard.js hierher verlegt (22.09.2026, O-131) — Platzgrund
+ * (`tools/check-dashboard-size.sh`), nicht Zuständigkeitsgrund.
+ *
+ * Für den Versand an die Kasse ist ausschließlich die verschlüsselte Datei
+ * zulässig (GGT Anlage 16 SECON, CMS EnvelopedData) — die signierte, aber
+ * unverschlüsselte .p7m darf hier nicht als Ersatz durchgehen, sonst schickt
+ * der Praxisinhaber unbemerkt die falsche Datei. Lokaler Dateiname MUSS
+ * ab.dateiname sein (physikalischer Dateiname ohne Endung, SECON §3.2.3.1,
+ * gkv-302 22.09.2026) — nicht der interne Storage-Pfad-Name.
+ *
+ * @param {object|null} ab  `_dasGuideState.abrechnung`
+ */
+export function dasGuideVersandKlick(ab) {
+  if (!ab) return;
+  if (ab.encrypted_storage_path) return downloadAbrechnungFile(ab.encrypted_storage_path, ab.id, 'dta', ab.dateiname);
+  if (ab.signed_storage_path) {
+    return ctx.showToast?.(ab.verschluesselung_hinweis
+      || 'Verschlüsselung noch nicht abgeschlossen — die Datei ist signiert, aber noch nicht für den Versand verschlüsselt.', 'error');
+  }
+  ctx.showToast?.('Datei nicht verfügbar — bitte erst signieren.', 'error');
 }

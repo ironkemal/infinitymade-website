@@ -1191,7 +1191,9 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
 });
 
 /**
- * Schritt 1.3 D — Führt die CMS EnvelopedData Verschlüsselung für eine signierte Abrechnung durch.
+ * Interne Verzweigungslogik der CMS-EnvelopedData-Verschlüsselung — schreibt selbst
+ * NICHTS in die DB. Persistenz übernimmt der Wrapper verarbeiteVerschluesselungsSchritt()
+ * weiter unten, der diese Funktion aufruft.
  *
  * Verzweigungslogik:
  *   - empfaengerIk fehlt: Überspringen (verschluesselt: false)
@@ -1202,7 +1204,7 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
  *   - Fall C: Zertifikat + Anker vorhanden -> verschluesseleFuerEmpfaenger()
  *             - Bei Krypto-/V4-Fehler: console.error, verschluesselt: false, Hinweis: e.message
  *             - Bei Storage-Fehler: console.error, verschluesselt: false, Hinweis mit Storage-Fehler
- *             - Bei Erfolg: verschluesselt: true, encryptedPath, encryptedSha256
+ *             - Bei Erfolg: verschluesselt: true, encryptedPath, encryptedSha256, empfaengerFingerprint
  *
  * ⚠️ Fängt alle Fehler intern ab und wirft NIEMALS (damit der Signatur-Upload immer 200 liefert).
  * ⛔ Ö5: NIEMALS Dateiinhalt, Base64-Payload oder PIN loggen (nur IK, Abrechnungs-ID, SHA-256, Fehler).
@@ -1212,21 +1214,21 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
  * @param {string|null} opts.empfaengerIk
  * @param {string} opts.basePath
  * @param {Buffer} opts.signedBytes
- * @param {object} [opts.db]
- * @param {Function} [opts.ladeAnchors]
- * @param {Function} [opts.pruefeFrische]
- * @param {Function} [opts.verschluessele]
- * @returns {Promise<{ verschluesselt: boolean, verschluesselungHinweis?: string, encryptedPath?: string, encryptedSha256?: string }>}
+ * @param {object} opts.db
+ * @param {Function} opts.ladeAnchors
+ * @param {Function} opts.pruefeFrische
+ * @param {Function} opts.verschluessele
+ * @returns {Promise<{ verschluesselt: boolean, verschluesselungHinweis?: string, encryptedPath?: string, encryptedSha256?: string, empfaengerFingerprint?: string }>}
  */
-export async function verarbeiteVerschluesselungsSchritt({
+async function berechneVerschluesselung({
   abrechnungId,
   empfaengerIk,
   basePath,
   signedBytes,
-  db = supabase,
-  ladeAnchors = ladeItsgTrustAnchors,
-  pruefeFrische = pruefeTrustAnchorFrische,
-  verschluessele = verschluesseleFuerEmpfaenger,
+  db,
+  ladeAnchors,
+  pruefeFrische,
+  verschluessele,
 }) {
   try {
     if (!empfaengerIk) {
@@ -1238,7 +1240,7 @@ export async function verarbeiteVerschluesselungsSchritt({
 
     const { data: empfZert, error: certErr } = await db
       .from('empfaenger_zertifikate')
-      .select('zertifikat_der')
+      .select('zertifikat_der, fingerprint_sha256')
       .eq('ik', empfaengerIk)
       .maybeSingle();
 
@@ -1323,6 +1325,7 @@ export async function verarbeiteVerschluesselungsSchritt({
       verschluesselt: true,
       encryptedPath,
       encryptedSha256: sha256Hex(encryptedBytes),
+      empfaengerFingerprint: empfZert.fingerprint_sha256 || null,
     };
   } catch (outerErr) {
     console.error(`[abrechnung/upload-signed] Unerwarteter Fehler bei der Verschlüsselung (Abrechnung ${abrechnungId}):`, outerErr.message);
@@ -1331,6 +1334,70 @@ export async function verarbeiteVerschluesselungsSchritt({
       verschluesselungHinweis: 'Unerwarteter Fehler bei der Verschlüsselung.',
     };
   }
+}
+
+/**
+ * Schritt 1.3 D — Führt berechneVerschluesselung() aus und schreibt das Ergebnis
+ * IMMER als vollständige Gruppe von fünf Spalten auf `abrechnung` zurück (O-131,
+ * db-ustasi 22.09.2026).
+ *
+ * ⚠️ Bindend: /upload-signed ist wiederholbar (Storage-Upload läuft mit
+ * upsert:true). Bei jedem Lauf werden ALLE fünf Spalten neu gesetzt — Erfolg
+ * füllt sie, jeder Fehlschlag setzt sie auf NULL zurück (mit Hinweistext).
+ * Sonst bliebe nach einer erneuten Signierung mit fehlgeschlagener Ver-
+ * schlüsselung die verschlüsselte Datei des VORHERIGEN Laufs fälschlich als
+ * aktuell gültig stehen, obwohl encrypted_sha256 nicht mehr zur neuen
+ * signed_sha256 passt.
+ *
+ * @returns {Promise<{ verschluesselt: boolean, verschluesselungHinweis?: string, encryptedPath?: string, encryptedSha256?: string }>}
+ */
+export async function verarbeiteVerschluesselungsSchritt({
+  abrechnungId,
+  empfaengerIk,
+  basePath,
+  signedBytes,
+  db = supabase,
+  ladeAnchors = ladeItsgTrustAnchors,
+  pruefeFrische = pruefeTrustAnchorFrische,
+  verschluessele = verschluesseleFuerEmpfaenger,
+}) {
+  const ergebnis = await berechneVerschluesselung({
+    abrechnungId, empfaengerIk, basePath, signedBytes, db, ladeAnchors, pruefeFrische, verschluessele,
+  });
+
+  let persistFehler = null;
+  try {
+    const { error: persistErr } = await db.from('abrechnung').update({
+      encrypted_storage_path:          ergebnis.verschluesselt ? ergebnis.encryptedPath : null,
+      encrypted_sha256:                ergebnis.verschluesselt ? ergebnis.encryptedSha256 : null,
+      verschluesselt_am:               ergebnis.verschluesselt ? new Date().toISOString() : null,
+      verschluesselt_fuer_fingerprint: ergebnis.verschluesselt ? (ergebnis.empfaengerFingerprint || null) : null,
+      verschluesselung_hinweis:        ergebnis.verschluesselt ? null : (ergebnis.verschluesselungHinweis || null),
+    }).eq('id', abrechnungId);
+    if (persistErr) persistFehler = persistErr.message;
+  } catch (err) {
+    persistFehler = err.message;
+  }
+
+  // empfaengerFingerprint ist nur fuer die Persistenz gedacht, nicht Teil des HTTP-Response-Vertrags.
+  const { empfaengerFingerprint, ...oeffentlichesErgebnis } = ergebnis;
+
+  if (persistFehler) {
+    console.error(`[abrechnung/upload-signed] Verschlüsselungsstatus konnte nicht gespeichert werden (Abrechnung ${abrechnungId}):`, persistFehler);
+    // O-131-Nachaudit (22.09.2026): Wenn der Verschlüsselungserfolg NICHT in
+    // die DB geschrieben werden konnte, darf der HTTP-Response trotzdem nicht
+    // "verschluesselt: true" behaupten — sonst meldet das Frontend dem Nutzer
+    // Erfolg, obwohl nach dem naechsten Reload keine verschluesselte Datei
+    // mehr auffindbar ist (DB-Stand und Response-Stand wären widersprüchlich).
+    return {
+      verschluesselt: false,
+      verschluesselungHinweis: ergebnis.verschluesselt
+        ? 'Verschlüsselung erfolgreich, aber der Status konnte nicht gespeichert werden. Bitte Seite neu laden und ggf. erneut signieren.'
+        : (oeffentlichesErgebnis.verschluesselungHinweis || 'Verschlüsselungsstatus konnte nicht gespeichert werden.'),
+    };
+  }
+
+  return oeffentlichesErgebnis;
 }
 
 // Receive browser-signed PKCS#7 payload and store as .p7m next to the .dta.
@@ -1390,6 +1457,18 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
       signed_at:                  new Date().toISOString(),
       signed_by_cert_thumbprint:  certThumbprint || null,
       signed_sha256:              sha256Hex(signedBytes),   // Ö1
+      // O-131-Nachaudit (22.09.2026, unabhängige Kaltprüfung): die fünf
+      // Verschlüsselungsspalten hier VORSORGLICH auf NULL setzen, nicht erst
+      // in verarbeiteVerschluesselungsSchritt() weiter unten. Zwischen diesem
+      // Update und dem der Verschlüsselung liegen weitere await-Aufrufe
+      // (terapeut_zertifikat) — stürzt der Prozess dazwischen ab, blieben
+      // sonst encrypted_* eines FRÜHEREN Laufs stehen, obwohl signed_sha256
+      // bereits die NEUE Signatur trägt (Fehlpaarung).
+      encrypted_storage_path:          null,
+      encrypted_sha256:                null,
+      verschluesselt_am:               null,
+      verschluesselt_fuer_fingerprint: null,
+      verschluesselung_hinweis:        null,
     }).eq('id', req.params.id);
 
     // Persist cert metadata for the therapist (private key never sees the server).
@@ -1699,7 +1778,7 @@ async function mandantUndAbrechnung(req, res) {
 
   const { data: ab } = await supabase
     .from('abrechnung')
-    .select('id, owner_id, business_id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, zaa_uploaded_at, paid_at, created_at')
+    .select('id, owner_id, business_id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, encrypted_storage_path, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, paid_at, created_at')
     .eq('id', req.params.id)
     .maybeSingle();
   if (!ab) { res.status(404).json({ error: 'Abrechnung nicht gefunden' }); return null; }

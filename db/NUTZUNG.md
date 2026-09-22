@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-21 · 94 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-20), funktionen/INDEX.json (erzeugt 2026-09-21)
+**Erzeugt:** 2026-09-22 · 94 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-22), funktionen/INDEX.json (erzeugt 2026-09-21)
 
 ## Kayıt durumu
 
@@ -21,7 +21,6 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `applications` | 2 | fremd |
 | `datenaustausch_zaehler` | 3 | aktiv — ✅ **am 20.09.2026 live angewandt** (MCP, zusammen mit 0026–0034). Die Tabelle ist noch leer: die erste Zeile entsteht, sobald die erste Datei unter dem neuen Verfahren erzeugt wird. Ein rückwirkender Backfill aus dem Bestand wurde bewusst **nicht** gemacht — die Altzeilen tragen keinen `empfaenger_ik`, eine je Paar aufgebaute Folge wäre geraten, nicht gewusst. Wer den Zähler vor dem ersten Lauf setzen will, nimmt `datenaustausch_zaehler_vorstellen()`. |
 | `dta_schluessel` | 4 | Referenz, im Code ungenutzt |
-| `empfaenger_zertifikate` | 2 | aktiv (Referenz) — Migration vorbereitet, Tabelle initial leer. Befüllung erfolgt manuell über das Admin-CLI-Werkzeug `tools/empfaenger-zertifikat-laden.mjs`. |
 | `fußstatus` | 3 | veraltet |
 | `heilmittel_catalog` | 2 | veraltet |
 | `heilmittel_position` | 5 | veraltet |
@@ -81,7 +80,7 @@ Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
 
 ### `abrechnung`
 
-32 Spalten · Status: aktiv
+37 Spalten · Status: aktiv
 Warum: Der Abrechnungslauf als Ganzes: eine Sammelrechnung an einen Kostenträger, mit DTA-Datei, Signaturzustand, Upload- und Zahlungsdatum. Ohne diesen Kopfsatz gäbe es keinen Bezugspunkt für Absetzungen.
 
 **Schreibt (2):** `downloadAbrechnungFile()` [update] — module/abrechnung-detail.js:702 · `verworfeneNummerFesthalten()` [insert] — api-backend/billing/api/verworfen.js:126
@@ -420,6 +419,8 @@ Warum: Welche Mail ging wann an wen raus. Bei Terminbestätigungen ist „ist di
 
 9 Spalten · Status: aktiv (Referenz) — Migration vorbereitet, Tabelle initial leer. Befüllung erfolgt manuell über das Admin-CLI-Werkzeug `tools/empfaenger-zertifikat-laden.mjs`.
 Warum: Für die §302 CMS EnvelopedData-Verschlüsselung (GGT Anlage 16 §5.1, SECON) wird der öffentliche X.509-Schlüssel der zuständigen Annahmestelle benötigt. Anders als bei `terapeut_zertifikat` (wo nur Metadaten des Therapeuten-Signaturschlüssels gespeichert werden) muss hier das echte Zertifikat (DER-Bytes) der Empfänger-Annahmestellen im System hinterlegt sein.
+
+**Dateien:** `api-backend/billing/api/abrechnung.routes.js`
 
 ### `employee_business_assignments`
 

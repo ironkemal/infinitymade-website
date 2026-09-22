@@ -50,7 +50,13 @@ if (!certs || certs.length === 0) {
 
 console.log(`Geparst: ${certs.length} Zertifikate.`);
 
-// Validierung 2: Kein geparster Anker darf zum Abrufzeitpunkt bereits abgelaufen sein
+// Validierung 2: Harter Stopp NUR, wenn die GESAMTE heruntergeladene Liste bereits
+// abgelaufen ist — nicht schon, wenn nur EINZELNE Anker (z. B. rotierte Sub-CAs, die
+// ITSG weiter in der Annahmeliste führt) abgelaufen sind. Muss dieselbe Semantik wie
+// pruefeTrustAnchorFrische() in itsg-trust-anchor.js haben (Kaltprüfung 21.09.2026 fand
+// die Laufzeit-Version bereits korrigiert, die CI-Version hatte die alte "ein Anker
+// reicht" Logik behalten — hätte sonst ab dem ersten einzelnen Ablauf jedes künftige
+// wöchentliche Update dauerhaft blockiert, bis der komplette Store 31.12.2027 ausläuft).
 const jetzt = new Date();
 const abgelaufene = certs.filter(c => c.notAfter < jetzt);
 
@@ -58,15 +64,22 @@ let changed = false;
 let needsReview = false;
 let message = '';
 
-if (abgelaufene.length > 0) {
+if (abgelaufene.length === certs.length) {
   needsReview = true;
   changed = false;
-  message = `⚠️ ACHTUNG: Die heruntergeladene ITSG-Annahmeliste enthält ${abgelaufene.length} bereits abgelaufene Zertifikate!\n` +
+  message = `⚠️ ACHTUNG: ALLE ${certs.length} Zertifikate der heruntergeladenen ITSG-Annahmeliste sind bereits abgelaufen!\n` +
     `Automatischer Commit wurde gestoppt. Bitte manuell prüfen.\n` +
     `Abgelaufene Zertifikate:\n` +
     abgelaufene.map(c => `• ${c.sha256.slice(0, 16)}... (Gültig bis: ${c.notAfter.toISOString()}): ${c.subject.replace(/\r?\n/g, ', ')}`).join('\n');
   console.warn(message);
 } else {
+  if (abgelaufene.length > 0) {
+    console.warn(
+      `Hinweis: ${abgelaufene.length} von ${certs.length} heruntergeladenen Ankern sind bereits abgelaufen ` +
+      `(vermutlich rotierte Sub-CAs, die ITSG weiter in der Liste führt). Update läuft trotzdem weiter, da ` +
+      `${certs.length - abgelaufene.length} Anker noch gültig sind.`
+    );
+  }
   // Validierung 3: Fingerprints (SHA-256-Set) gegen vorhandene meta.json prüfen
   const existingMetaPath = join(REPO, 'api-backend', 'billing', 'dta', 'trust-anchors', 'meta.json');
   let existingSet = new Set();
@@ -106,12 +119,20 @@ if (abgelaufene.length > 0) {
       onaylayan: 'CI-Bot'
     });
 
-    const dates = certs.map(c => c.notAfter.getTime());
+    // O-131-Nachaudit (22.09.2026): "Frühestes Ablaufdatum" nur ueber die noch
+    // GÜLTIGEN Anker bilden, nicht ueber alle (inkl. bereits rotierter/abge-
+    // laufener Sub-CAs, die abgelaufene.length > 0 oben bewusst durchlaesst).
+    // Sonst meldet die Erfolgsnachricht ein Datum in der Vergangenheit und ein
+    // Operator haelt den frisch verifizierten Release faelschlich fuer bereits
+    // ablaufend.
+    const gueltige = certs.filter(c => c.notAfter >= jetzt);
+    const dates = gueltige.map(c => c.notAfter.getTime());
     const earliestNotAfter = new Date(Math.min(...dates));
 
     message = `Neue ITSG-Trust-Anchor-Liste erfolgreich verifiziert und bereitgestellt.\n` +
-      `• Anzahl Zertifikate: ${certs.length}\n` +
-      `• Frühestes Ablaufdatum: ${earliestNotAfter.toISOString()}\n` +
+      `• Anzahl Zertifikate: ${certs.length}` +
+      (abgelaufene.length > 0 ? ` (davon ${abgelaufene.length} bereits abgelaufene Alt-Anker, ignoriert)` : '') + `\n` +
+      `• Frühestes Ablaufdatum (unter den gültigen Ankern): ${earliestNotAfter.toISOString()}\n` +
       `• Vorherige Anzahl: ${existingSet.size}\n` +
       `• Commit & Deploy erfolgen im anschließenden Job.`;
   } else {

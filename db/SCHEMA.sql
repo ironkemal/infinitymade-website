@@ -1,7 +1,31 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-20 — 0035_datenaustausch_zaehler_rpc_revoke
+-- ERZEUGT AM:        2026-09-22 — 0039_abrechnung_verschluesselung
+--                    (§302-Echtbetrieb Faz 1.3D, O-131. +5 Spalten an
+--                    `abrechnung` (encrypted_storage_path, encrypted_sha256,
+--                    verschluesselt_am, verschluesselt_fuer_fingerprint,
+--                    verschluesselung_hinweis) — Persistenz des CMS-
+--                    EnvelopedData-Verschluesselungsergebnisses, das bis dahin
+--                    nur im HTTP-Response von /upload-signed stand und nach
+--                    einem Reload verloren war. Keine neue Tabelle, keine
+--                    neue Policy, kein neuer Index/Trigger/Funktion.
+--                    ✅ Im SaaS angewendet 22.09.2026 (MCP).
+--                    davor: 2026-09-20/21 — 0036 bis 0038 (§302-Echtbetrieb,
+--                    ITSG-Anbindung). Diese drei Migrationen wurden bereits in
+--                    den Tabellenkoerper dieser Datei uebernommen (u. a.
+--                    `empfaenger_zertifikate`, siehe unten), nur der Kopf-
+--                    zeiger oben blieb bei 0035 stehen, bis er hier nachgezogen
+--                    wurde:
+--                      0036_seed_kostentraeger_anschriften
+--                        Reine Daten-Migration (1588 Adresszeilen), keine
+--                        Struktur betroffen.
+--                      0037_seed_kostentraeger_annahmestellen_quelle_stand
+--                        Reine Daten-Migration, keine Struktur betroffen.
+--                      0038_empfaenger_zertifikate
+--                        +1 Tabelle, +1 Policy (nur SELECT), +1 Index (PK).
+--                    ✅ Alle drei im SaaS angewendet 20./21.09.2026 (MCP).
+--                    davor: 2026-09-20 — 0035_datenaustausch_zaehler_rpc_revoke
 --                    (Sicherheitskorrektur zu 0029, am selben Tag. Fuer DIESE
 --                    Datei eine NULL-Aenderung: keine Tabelle, keine Spalte,
 --                    kein Constraint, kein Index — ausschliesslich EXECUTE-ACLs
@@ -549,6 +573,11 @@ CREATE TABLE abrechnung (
   transfernummer integer
   empfaenger_ik text
   verwerfungsgrund text
+  encrypted_storage_path text
+  encrypted_sha256 text
+  verschluesselt_am timestamptz
+  verschluesselt_fuer_fingerprint text
+  verschluesselung_hinweis text
 );
 --   CHECK status IN (erstellt, heruntergeladen, gesendet, accepted, rejected, paid, verworfen)
 --   CHECK betriebsart IS NULL OR betriebsart IN (test, erprobung, echt)
@@ -576,6 +605,19 @@ CREATE TABLE abrechnung (
 --     F:03001-F:03004 geblendet, die genau diese Nummer pruefen). Die Spezifikation
 --     verlangt "fortlaufend", nicht "lueckenlos" — GoBD verlangt aber, dass jede
 --     Luecke ERKLAERBAR ist. Genau das steht hier drin, PHI-frei.
+--   ★ 22.09.2026 (0039, O-131) — fuenf Spalten fuer die CMS-EnvelopedData-
+--     Verschluesselung, im selben Muster wie die signed_*-Gruppe:
+--     encrypted_storage_path/encrypted_sha256 (Pfad+Summe der verschluesselten
+--     Datei, Pendant zu signed_storage_path/signed_sha256), verschluesselt_am
+--     (Pendant zu signed_at), verschluesselt_fuer_fingerprint (Fingerprint des
+--     zum Verschluesselungszeitpunkt genutzten Empfaengerzertifikats aus
+--     empfaenger_zertifikate.fingerprint_sha256 — Annahmestellen rotieren ihre
+--     Zertifikate), verschluesselung_hinweis (Klartext-Status/Fehlermeldung
+--     fuer die UI, NULL bei Erfolg). Bindende Schreibregel: alle fuenf werden
+--     bei JEDEM Lauf von upload-signed als EINE Gruppe neu gesetzt — ein
+--     Fehlschlag setzt die ersten vier auf NULL zurueck, sonst bliebe nach
+--     erneuter Signierung eine verschluesselte Datei eines FRUEHEREN Laufs
+--     faelschlich als aktuell stehen.
 
 -- 20.09.2026 (0034) — gesetzliche Uebermittlungsdokumentation. NICHT mit
 -- `abrechnung` verwechseln: dort steht die Datei, hier steht jeder TRANSPORT

@@ -1,7 +1,22 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-20 — 0035_datenaustausch_zaehler_rpc_revoke
+-- ERZEUGT AM:        2026-09-22 — 0039_abrechnung_verschluesselung
+--                    (§302-Echtbetrieb Faz 1.3D, O-131. Fuer DIESE Datei eine
+--                    NULL-Aenderung: keine Policy, keine Funktion, kein
+--                    Trigger, kein Index — reine Spalten-Migration auf
+--                    `abrechnung` (Details im Kopf von db/SCHEMA.sql). Der
+--                    Eintrag steht hier trotzdem, damit beide Dumps dieselbe
+--                    Migrationskette fuehren.
+--                    ✅ Im SaaS angewendet 22.09.2026 (MCP).
+--                    davor: 2026-09-20/21 — 0036 bis 0038 (§302-Echtbetrieb,
+--                    ITSG-Anbindung): 0036/0037 reine Daten-Migrationen (keine
+--                    Struktur betroffen), 0038_empfaenger_zertifikate +1
+--                    Policy (nur SELECT). Bereits im Policy-Koerper dieser
+--                    Datei enthalten, nur der Kopfzeiger blieb bei 0035
+--                    stehen, bis er hier nachgezogen wurde.
+--                    ✅ Alle drei im SaaS angewendet 20./21.09.2026 (MCP).
+--                    davor: 2026-09-20 — 0035_datenaustausch_zaehler_rpc_revoke
 --                    (Sicherheitskorrektur, am selben Tag unmittelbar nach
 --                    0026-0034 gefunden und geschlossen. Fuer die Zaehler dieser
 --                    Datei eine NULL-Aenderung: keine Policy, keine Funktion,
