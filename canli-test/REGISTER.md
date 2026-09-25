@@ -68,6 +68,36 @@ Diagnosegruppe DF kaldı. Eski "maskede `icd10_2` yok" boşluğu **kapandı**.
 ⚠️ Yeni bulgu: iki ICD'li bir kayıt listede yanlışlıkla "ICD-10-Kode fehlt" uyarısı
 alıyor (aşağıdaki anomali kutusu).
 
+**ICD (`rzIcd`) ↔ Diagnosegruppe (`rzDg`) alan çifti — beklenen (Ops #304, 25.09.2026):**
+> Domain kaynağı: `podoloji` (praksis UX) + `gkv-302` (norm: DG **yalnız hekim tarafında**
+> değiştirilebilir — Podologie-Vertrag Anlage 3 Ziffer 5 j), ikisi de 25.09.2026'da soruldu.
+> Durum: **yerel kod 25.09.2026, henüz deploy edilmedi.** Yukarıdaki "ICD girilince
+> Diagnosegruppe türetilir" cümlesi bu kurallarla daraltılır — türetme yalnız **boş** DG'ye yazar.
+> Uyarı satırı: `rzIcdDgWarning`.
+- **Boş DG + tek anlamlı ICD** (E11.74, E11.75, G63.2 → DF) → DF otomatik yazılır.
+- **L60.0 tek başına** → DG yazılmaz, uyarı: „Passende Diagnosegruppen: UI1, UI2".
+- **Çok anlamlı** (E11.74 + L60.0) → DG yazılmaz, uyarıda DF, UI1, UI2 adayları; DF daha
+  önce **otomatik** yazılmışsa ICD alanından çıkılınca (blur) geri alınır.
+- **Yüklenmiş DG** (Scan übernehmen, Bearbeiten, Folgeverordnung) veya katalogdan seçilmiş /
+  alandan çıkılarak kabul edilmiş DG → **asla ezilmez.** ICD uymuyorsa uyarı:
+  „Der ICD benennt nicht die für diese Diagnosegruppe geforderte Diagnose: … (DG)".
+- DG alanına **seçim yapmadan tıklamak** otomatiği KAPATMAZ. DG alanını boşaltmak →
+  otomatik yeniden devrede. Önceki rezeptin ardından yeni rezept açmak → otomatik devrede.
+- **Bilinen açık — Soll sapması değil, sonraki adım (L4):** boş DG'de fachfremd (Z99.9) veya
+  belirsiz ICD (E11.72/.73) için uyarı **yok**; otomatik yazılan DG'de „aus ICD" işareti **yok**.
+  Canlı turda bunlar KALDI diye yazılmaz.
+
+**Canlı tur test senaryoları (kaynak `podoloji`):**
+a) boş DG, E11.74 → DF · b) NF'li Verordnung'u Bearbeiten, E11.74 yaz → NF kalır + uyarı ·
+c) DG'yi boşalt → DF yeniden yazılır · d) E11.74 + L60.0 → DG yok, adaylar gösterilir ·
+e) Z99.9 → (bugün uyarı yok, sonraki adım) · f) E11.72 → DF yazılmaz ·
+g) Rezept A kaydet, yeni Rezept B'de E11.74 → DF.
+Her senaryoda kaydet → **sayfa yenile** → `prescriptions` üzerinde DG gerçekten duruyor mu.
+
+**Son test (ICD↔DG):** lokal nachgestellt (Fake-DOM-Harness gegen echten Quelltext, 18/20 Soll
+erfüllt, die 2 offenen = L4-Folgeschritt) 25.09.2026 — **live ungetestet**. Deploy sonrası
+Kapı 2 (`?v=` karşılaştırması) geçilmeden a–g koşulmaz.
+
 ### Podologie Behandlungen — Tagesbehandlung erfassen — nav etiketi: `podologie-billing`
 
 **Beklenen:** Sol listeden aktif Verordnung seçilir, sağda tarih + HPNR kutuları gelir

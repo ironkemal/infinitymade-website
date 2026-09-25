@@ -250,3 +250,48 @@
   öyle kalmalı — otomasyon azaltma yönünde istisna.
 - **Tarih:** 2026-09-05
 - **Etkilenen:** HPNR seçim bloğu, `module/podologie-abrechnung.js` (~satır 622)
+
+---
+
+### Yüklenmiş Diagnosegruppe = hekim beyanıdır; ICD otomatiği yalnız boş alanı doldurur
+- **Karar:** Muster 13'teki Diagnosegruppe (DG) hekimin beyanıdır, yazılımın çıkarımı değil.
+  ICD→DG otomatiği bir DG'yi **yalnız boş alana** yazar veya **kendi önceki önerisini**
+  değiştirir. Kâğıttan / tarama (Scan) ile / mevcut kayıttan / Folgeverordnung'dan yüklenen
+  ya da podologun elle üstlendiği DG **asla üzerine yazılmaz** — ICD ile uyuşmazsa yalnız uyarı.
+  - **Belirsizlikte hiçbir şey yazılmaz:** ICD birden fazla gruba uyuyorsa (ör. `E11.74` +
+    `L60.0` → DF ve UI1/UI2) DG boş kalır, adaylar gösterilir. Otomatiğin daha önce yazdığı
+    değer, ICD alanından çıkılırken (blur/`change`) **geri alınır**.
+  - **DG alanını boşaltmak** otomatiği yeniden serbest bırakır.
+  - **Alana salt tıklamak "üstlenme" sayılmaz** — üstlenme yalnız katalogdan seçim veya
+    değer girip alandan çıkmaktır.
+- **Neden:** Podologie-Vertrag Anlage 3 Ziffer 5 j: Verordnung'daki DG yalnız hekim tarafından,
+  imza + tarihle değiştirilebilir. TA1 (Anlage 1 TP5 V21) §5.5.3.3: ZHE'deki DG =
+  Verordnung'un DG'si. Yani otomatiğin hekim beyanını ezmesi, dosyaya **Verordnung'da olmayan
+  bir DG** yazmak demektir — red değil, yanlış içerikli kabul/Absetzung riski. Kaynaklar
+  `gkv-302` üzerinden; `wissensbank/SPEC-RULES.md` karşılığını `wissensbank` paralel olarak
+  doğruluyor (bu kaydın yazıldığı tarihte doğrulama sonuçlanmamıştı).
+- **Melih kararı (2026-09-25):** Boş alan **otomatik doldurulmaya devam eder** (Beta-1 isteği —
+  tık ekonomisi), ama değer **öneri olarak işaretlenir**: *„aus ICD – mit Verordnung
+  abgleichen"*. İşaret ve L4 uyarısı (fachfremd / belirsiz ICD, ör. `Z99.9`, `E11.72`)
+  **sonraki adımda** gelir. Aday butonları / „DF übernehmen" düğmesi **istek, henüz karar
+  değil.** (Yeni UI metinleri de/en/tr üç dilde gerekir.)
+- **Tarih:** 2026-09-25
+- **Durum:** L1–L3 **yerelde uygulandı (2026-09-25), henüz commit edilmedi / canlıda değil.**
+  L4 + öneri işareti açık.
+- **Etkilenen:** `icd-dg-match.js` (`dgVorschlag`: `auto` yalnız tek aday varsa),
+  `dashboard.js` (`_wireDgIcdPair`: `dataset.dgAuto` sahiplik işareti, geri alma, `change`
+  ile üstlenme; `init` → `ensureDgIcdWiring` yüklenen DG'yi hekim beyanı sayar; i18n
+  `pod_icd_mismatch` de/en/tr), `module/icd-dg-vorschlag.test.js`, `dashboard.html`
+  (import sürümü). Ops #304.
+- **Reddedilen alternatif:** (1) Otomatiği tamamen kapatmak — Beta-1'in açık isteği, boş
+  alanda tık kazancı gerçek. (2) Yüklenen DG'yi ICD'ye göre "düzeltmek" — hekim beyanını
+  yazılım değiştirir, Ziffer 5 j'ye aykırı. (3) Belirsizlikte en olası grubu seçmek — kararı
+  Verordnung verir, yazılım değil.
+- **Test senaryosu:** (a) Boş form, ICD `E11.74` → DG `DF` otomatik dolar. (b) Aynı formda ICD'ye
+  `L60.0` eklenir → alan çıkışında DF geri alınır, adaylar (DF, UI1/UI2) gösterilir. (c) Taranmış
+  Muster 13, DG `UI1`, ICD `E11.74` → DG `UI1` kalır, yalnız uyarı. (d) DG alanına tıkla, çık →
+  otomatik hâlâ çalışır. (e) DG'yi boşalt, ICD `E11.74` → DF yeniden dolar.
+- **İlişkili:** „Fazla faturalandırma riski taşıyan Zusatzleistung otomatik işaretlenmez"
+  (2026-09-05) — aynı desen: belirsizlikte **yazma, öner**. O karar burada yeniden açılmıyor.
+- **Doğrulanmadı:** Podologun kâğıttaki DG ile ICD uyuşmazlığında pratikte ne yaptığı (hekime
+  mi döner, olduğu gibi mi faturalar) — Beta-1'e sorulacak; `podoloji` ajanı varsayımı.

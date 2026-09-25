@@ -28,7 +28,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260922';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20260922';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260905a';
-import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260831a';
+import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260925a';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260920c';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
@@ -236,7 +236,7 @@ const T = {
     pod_heilmittel_g: 'Verordnetes Heilmittel (Muster 13, Feld g)',
     pod_hm_gross: 'Therapiezeit über 20 Minuten → Behandlung groß (78020)',
     pod_icd10_label: 'ICD-10 Code',
-    pod_icd_mismatch: 'Code stimmt nicht mit der Diagnosegruppe überein',
+    pod_icd_mismatch: 'Der ICD benennt nicht die für diese Diagnosegruppe geforderte Diagnose',
     pod_icd_hard: 'Eine Korrektur ist nur mit erneuter Arztunterschrift und Datumsangabe zulässig und muss vor der Einreichung zur Abrechnung erfolgt sein.',
     pod_dg_nur_mit: 'nur mit {icd}',
     pod_dg_passt_nicht: 'passt nicht zu {icd}',
@@ -426,7 +426,7 @@ const T = {
     pod_heilmittel_g: 'Prescribed remedy (Muster 13, field g)',
     pod_hm_gross: 'Therapy time over 20 minutes → large treatment (78020)',
     pod_icd10_label: 'ICD-10 Code',
-    pod_icd_mismatch: 'Code does not match the diagnosis group',
+    pod_icd_mismatch: 'The ICD code does not state the diagnosis required for this diagnosis group',
     pod_icd_hard: 'A correction is only permitted with a new physician signature and date and must be completed before submission for billing.',
     pod_dg_nur_mit: 'only with {icd}',
     pod_dg_passt_nicht: 'does not match {icd}',
@@ -609,7 +609,7 @@ const T = {
     pod_heilmittel_g: 'Reçete edilen Heilmittel (Muster 13, alan g)',
     pod_hm_gross: 'Tedavi süresi 20 dakikadan uzun → büyük tedavi (78020)',
     pod_icd10_label: 'ICD-10 Kodu',
-    pod_icd_mismatch: 'Kod, tanı grubuyla örtüşmüyor',
+    pod_icd_mismatch: 'ICD kodu, bu tanı grubunun gerektirdiği tanıyı belirtmiyor',
     pod_icd_hard: 'Düzeltme yalnızca yeni hekim imzası ve tarihiyle yapılabilir; faturalandırma için gönderimden önce tamamlanmalıdır.',
     pod_dg_nur_mit: 'yalnızca {icd} ile',
     pod_dg_passt_nicht: '{icd} ile uyuşmuyor',
@@ -15630,14 +15630,17 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
    * Setzt die Diagnosegruppe programmatisch und löst dabei input/change aus,
    * damit abhängige Logik mitläuft. Die Marke `autoSetting` sorgt dafür, dass
    * das eigene Ereignis nicht als Eingabe des Anwenders gewertet wird.
-   * Ein vom Anwender gesetzter Wert wird nie überschrieben.
+   * Ersetzt wird nur ein leeres Feld oder der eigene frühere Vorschlag (`dgAuto`).
+   * Jeder andere Wert — Papier, Scan, Bestand, Handeingabe — ist ärztliche
+   * Angabe und bleibt stehen (Podologie-Vertrag Anlage 3 Ziffer 5 j, Ops #304).
    */
   function _setDgProgrammatically(value) {
-    if (!dgEl || dgEl.dataset.manualOverride) return;
+    if (!dgEl || (dgEl.value.trim() && dgEl.value !== dgEl.dataset.dgAuto)) return;
     if (dgEl.value === value) return;
     dgEl.dataset.autoSetting = '1';
     try {
       dgEl.value = value;
+      if (value) dgEl.dataset.dgAuto = value; else delete dgEl.dataset.dgAuto;
       dgEl.dispatchEvent(new Event('input',  { bubbles: true }));
       dgEl.dispatchEvent(new Event('change', { bubbles: true }));
     } finally {
@@ -15653,6 +15656,7 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
     if (codes.length === 0) {
       if (warnEl) warnEl.style.display = 'none';
       dgOptionenSperren(dgEl, null, { t });
+      if (commit === true) _setDgProgrammatically('');   // eigenen Vorschlag zurücknehmen
       return;
     }
 
@@ -15680,20 +15684,19 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
     // bliebe genau der interessante Fall ohne Hinweis: der Anwender hat die
     // Gruppe von Hand gewählt und der Kode passt nicht dazu.
 
-    // Genau eine Gruppe passt → eintragen (beim <select> nur, wenn es die
-    // Option wirklich gibt).
-    if (v.auto && dgEl) {
-      const optExists = dgEl.tagName !== 'SELECT'
-        || Array.from(dgEl.options).some(o => o.value === v.auto);
-      if (optExists) _setDgProgrammatically(v.auto);
-    }
+    // Genau eine Gruppe passt und keine andere kommt in Frage (dgVorschlag) →
+    // eintragen (beim <select> nur, wenn es die Option gibt). Sonst beim Verlassen
+    // des Feldes den eigenen früheren Vorschlag zurücknehmen (E11.74, dann L60.0).
+    const optExists = v.auto && (dgEl?.tagName !== 'SELECT' || Array.from(dgEl.options).some(o => o.value === v.auto));
+    if (optExists) _setDgProgrammatically(v.auto);
+    else if (commit === true) _setDgProgrammatically('');
 
     // Warnhinweis
     if (!warnEl || !dgEl) return;
     const dgRoot = normDgCode(dgEl.value);
     if (!dgRoot) {
       // Noch keine Gruppe gewaehlt: die passenden benennen statt schweigen.
-      const zeig = !v.auto && v.kandidaten.length > 1;
+      const zeig = v.kandidaten.length > 1;
       warnEl.textContent   = zeig ? `${t('pod_dg_kandidaten')} ${v.kandidaten.join(', ')}` : '';
       warnEl.style.fontWeight = '';
       warnEl.style.display = zeig ? 'block' : 'none';
@@ -15715,21 +15718,17 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
     }
   }
 
-  // Manuell-Override-Erkennung auf dem DG-Feld.
-  //
-  // ⚠ Der Wert wird auch programmatisch gesetzt, und dabei werden input/change
-  //   ausgelöst, damit abhängige Logik (Wagner-Feld, Heilmittelliste) mitläuft.
-  //   Ohne die Marke `autoSetting` würde sich die Automatik damit selbst als
-  //   „vom Anwender geändert" eintragen und ab der ersten automatischen Auswahl
-  //   nie wieder greifen.
+  // Übernimmt der Anwender einen Wert (Katalogauswahl oder Feld verlassen, beides
+  // `change`), gehört er nicht mehr der Automatik. Bewusst nicht `input`: das feuern
+  // auch der Fokus-Anstoß (focusin oben) und verordnung-podo.js:schreibe() — ein
+  // Klick ins Feld hat sonst die Automatik abgeschaltet (Ops #304).
   if (dgEl && !dgEl.dataset.dgManualWired) {
     dgEl.dataset.dgManualWired = '1';
     const markManual = () => {
       if (dgEl.dataset.autoSetting) return;
-      dgEl.dataset.manualOverride = '1';
+      delete dgEl.dataset.dgAuto;
     };
     dgEl.addEventListener('change', markManual);
-    if (dgEl.tagName === 'INPUT') dgEl.addEventListener('input', markManual);
 
     // Gegenrichtung DG → ICD: nur wo sich aus der Diagnosegruppe genau ein Kode
     // ableiten lässt. Das ist ausschließlich UI1/UI2 → L60.0; bei DF/NF/QF ist
@@ -16723,7 +16722,8 @@ async function init() {
       // Stellt sicher, dass rzIcd/rzDg verdrahtet sind, BEVOR fuelleMuster13()
       // Werte hineinschreibt (module/verordnung-maske.js) — ohne Fokus des
       // Anwenders passiert das sonst nie (Ops: DG-Autofill nach KI-Scan tot).
-      ensureDgIcdWiring: () => _wireDgIcdPair('rzIcd', 'rzDg', 'text', 'rzIcdDgWarning', _getDiagnoseBereich()),
+      // Die DG, die gleich geladen wird, stammt vom Papier, nicht von der Automatik (Ops #304).
+      ensureDgIcdWiring: () => { delete document.getElementById('rzDg')?.dataset.dgAuto; _wireDgIcdPair('rzIcd', 'rzDg', 'text', 'rzIcdDgWarning', _getDiagnoseBereich()); },
     });
     document.getElementById('anamRezeptBtn')?.addEventListener('click', () => {
       const sel = document.getElementById('anamPatientSelect');

@@ -8,7 +8,12 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-21 (Ops #302 — „Komplexbehandlung" 78020'nin adı değil, verordnete
+> Son güncelleme: 2026-09-25 (Ops #304 — ICD→Diagnosegruppe, Podologie: 4 yeni kural
+> (DG yalnız arztseitig · ZHE DG/„9999" · Diagnose Pflicht, ICD Klartext ile ikame edilebilir ·
+> Diagnose düzeltmesi Einreichung'dan önce). `gkv-302` bulguları `wissensbank` vekili tarafından
+> orijinal .txt'lere karşı okundu. Açık: `PFLICHT_ICD` Blocker'ı + „Anlage 3 k der HeilM-RL"
+> kaynak atfı kod yorumlarında yanlış.)
+> Önceki: 2026-09-21 (Ops #302 — „Komplexbehandlung" 78020'nin adı değil, verordnete
 > Heilmittel c)'nin adıdır; 78010 ve 78020 ikisi de c)'den faturalanır. 1 yeni kural, tüm
 > Fundstellen orijinallere karşı okundu; açık madde: >20 dk şartı c) için uygulanmıyor.)
 > Önceki (aynı gün): 2026-09-21 (DAVASO/IQVIA HSS derinlemesine araştırması — TA-Validator
@@ -416,6 +421,94 @@
   geçmiyor** — içerik olarak yanlış değil ama alıntılanabilir değil, 2026-08-31'de sözleşme
   lafzıyla değiştirildi.
 
+### Podologie: Diagnosegruppe yalnız hekim tarafından değiştirilir — yazılım yalnız boş alanı doldurur
+- **Kural:** Diagnosegruppe Muster 13'te **Pflichtangabe**'dir ve *„kann nur arztseitig mit
+  erneuter Arztunterschrift und Datumsangabe ergänzt oder geändert werden."* Praxis/yazılım
+  hekimin yazdığı DG'yi ICD'den türetilen bir DG ile **ezemez**; ICD→DG otomatiği yalnız boş
+  alan için bir **öneridir**, Verordnung'da ne yazıyorsa o esastır. Korrektur zamanı (DG):
+  *„Nachträgliche Korrekturen sind gemäß Ziffer 4 Absatz 2 möglich"* — yani Abrechnung'dan
+  **sonra** da: kasa absetzt eder, bir kez düzeltme imkânı verir, 3 ay içinde gelmezse Absetzung
+  kalır (Ziffer 4 Abs. 2). ⚠️ ICD/Diagnose (Ziffer 5 k) için bu **geçmez** — bkz. aşağıdaki kural.
+- **Kaynak:** Podologie Anlage 3 i.d.F. 16.06.2025 Ziffer 5 j
+  (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:512-519`, S. 14;
+  Korrekturzeitpunkt `:528-529`, S. 15) + Ziffer 4 Abs. 2 (`:102-112`) · HeilM-RL 15.05.2025
+  (iK 05.08.2025) Anlage 3 Zeile *„j. Diagnosegruppe"* — Kreuz in Spalte *„Änderung nur mit
+  erneuter Unterschrift des Verordners und Datumsangabe"*
+  (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:2373`,
+  S. 58) · § 13 Abs. 1 Satz 3 (`:608-609`)
+- **Geçerlilik:** 16.06.2025 (Anlage 3) / 05.08.2025 (HeilM-RL)
+- **Kodda:** ✅ `dashboard.js:15623` `_wireDgIcdPair` → `_setDgProgrammatically` (`:15638`)
+  yalnız boş alanı veya kendi önceki önerisini (`dataset.dgAuto`) değiştirir ·
+  `icd-dg-match.js:243` `dgVorschlag` — birden çok DG adayı varsa `auto = null` (yorum `:266-269`).
+  Ops #304, 25.09.2026 (çalışma kopyasında, commit edilmemiş haliyle okundu).
+- **Kapsam:** Podologie, tüm Diagnosegruppen; HeilM-RL kısmı tüm Heilmittel-Bereiche
+
+### Podologie: Diagnose Pflichtangabe'dir — ICD-Kode değil, Klartext yeterli (UI1/UI2: L60.0 maßgeblich, Klartext ungeklärt)
+- **Kural:** Behandlungsrelevante Diagnose **Pflichtangabe**'dir; *„Die Angabe der
+  therapierelevanten Diagnose muss in Form eines oder mehrerer ICD-10-Schlüssel und/oder als
+  Klartext erfolgen. Der ICD-10-Klartext kann ergänzt oder durch einen Freitext ersetzt
+  werden."* Yani podolojide **ICD-Kode tek başına zorunlu değil, Diagnose zorunlu.**
+  Therapierelevanz: a) DF → Diabetisches Fußsyndrom veya diabetische Neuropathie; b) NF/QF →
+  sensible/sensomotorische Neuropathie veya Querschnittsyndrom; c) *„In den Diagnosegruppen UI1
+  und UI2 ist ausschließlich der ICD-Schlüssel L60.0 maßgeblich, bei anderen Diagnosen ist eine
+  Korrektur erforderlich."* Ek ICD/Freitext *„für die Gültigkeit der Verordnung unschädlich."*
+  DTA: ICD yoksa `DIA.Diagnosetext` doldurulur.
+- **Kaynak:** Podologie Anlage 3 i.d.F. 16.06.2025 Ziffer 5 k
+  (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:531-537` Pflicht + Form,
+  `:539-555` a–c, `:557-562` „unschädlich", S. 15) · HeilM-RL 15.05.2025 (iK 05.08.2025)
+  § 13 Abs. 2 Satz 3 k (`…/HeilM-RL_2025-05-15_iK-2025-08-05.txt:625-628`, S. 15) ·
+  Anlage 1 TP5 V21 Kap. 5.5.3.3 SLLA B, DIA, S. 72
+  (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:3492-3505`: *„Ist im Feld
+  ‚Behandlungsrelevante Diagnose(n)' bzw. ‚ICD-10-Code' kein ICD-10-Code eingetragen, ist der
+  Diagnosetext anzugeben."*) · FAK Podologie Stand 24.05.2023 Nr. 1
+  (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt:5-8`: Neuropathie *„in der Diagnose
+  oder per ICD-10 Code"* yeterli) — FAK Vertragspartner yorumudur, norm değil.
+- ⚠️ **HeilM-RL ile ince fark:** § 13 Abs. 2 k *„Die Diagnose ist grundsätzlich als
+  ICD-10-Code anzugeben"* der; oradaki Freitext izni ICD'nin **Klartext'ini** değiştirir, kodun
+  kendisini değil. ICD'siz, yalnız Klartext'li Verordnung'u geçerli kılan dayanak **Podologie
+  Anlage 3 Ziffer 5 k**'dır („und/oder als Klartext"), HeilM-RL değil. UI1/UI2'de L60.0 dışındaki
+  tanı düzeltme gerektirir; L60.0'ın yalnız Klartext'le („eingewachsener Nagel") karşılanıp
+  karşılanmadığı metinde **açık değil** — ungeklärt.
+- **Geçerlilik:** 16.06.2025 (Anlage 3) / 05.08.2025 (HeilM-RL) / 01.10.2025 (Anlage 1 V21)
+- **Kodda:**
+  - ✅ `api-backend/billing/dta/preflight.js:324-345` — ICD **veya** Diagnosetext (V:01015 ikisi
+    de yoksa) · `api-backend/billing/dta/builder.js:222-235` — ICD yoksa DIA yalnız Diagnosetext ile
+  - ❌ **Çelişki (Befund, düzeltilmedi):** `module/verordnung-pruefung.js:181-184` Podologie'de
+    ICD yoksa **Blocker** `PFLICHT_ICD` üretir (profil `pflichtIcd: true`,
+    `module/verordnung-regeln.js:129,143`). Klartext-Diagnose'lu geçerli bir Verordnung'u bloke
+    eder; sözleşmeye göre en fazla UI1/UI2 için savunulabilir.
+  - ⚠️ **Korrekturbedürftige Prämisse in Kommentaren:** `icd-dg-match.js:60` + `:193`,
+    `api-backend/ai/validators/icdDgRules.js:10-11` + `:71`, `api-backend/billing/api/abrechnung.routes.js:3012-3013`
+    + `:3247-3248`, `preflight.js:331` — hepsi *„ICD nicht Pflicht (Anlage 3 k der HeilM-RL)"* der.
+    Sonuç (kod zorunlu değil) Podologie için doğru, ama **kaynak yanlış** (HeilM-RL Anlage 3 k
+    yalnız „Änderung nur mit Unterschrift" der; doğru yer Podologie-Vertrag Anlage 3 Ziffer 5 k)
+    ve eksik: **Diagnose** Pflicht'tir, UI1/UI2'de L60.0 maßgeblich.
+- **Kapsam:** Podologie (DF/NF/QF/UI1/UI2); DTA-DIA kuralı tüm Heilmittel
+
+### Podologie: Diagnose/ICD düzeltmesi yalnız hekimle ve Einreichung'dan ÖNCE
+- **Kural:** Diagnose eksikse veya *„erkennbar nicht therapierelevant"*se *„mit einer erneuten
+  Arztunterschrift und Datumsangabe zu ergänzen oder zu korrigieren"*; *„Erforderliche
+  Korrekturen und/oder Ergänzungen müssen vor Einreichung der Verordnung zur Abrechnung mit der
+  Krankenkasse erfolgt sein."* DG'den (Ziffer 5 j) farklı olarak Ziffer 4 Abs. 2'deki
+  Abrechnung-sonrası düzeltme yolu **yok** — hata DTA'dan önce yakalanmalı.
+- **Kaynak:** Podologie Anlage 3 i.d.F. 16.06.2025 Ziffer 5 k
+  (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:563-566`, S. 15;
+  Korrekturzeitpunkt `:575-577`, S. 16) · HeilM-RL 15.05.2025 (iK 05.08.2025) Anlage 3 Zeile
+  *„k. konkrete(n) behandlungsrelevante(n) Diagnose(n)"* — Spalte „nur mit erneuter
+  Unterschrift … und Datumsangabe" (`…/HeilM-RL_2025-05-15_iK-2025-08-05.txt:2374-2375`, S. 58)
+- **Auslegung (Norm değil):** FAK Podologie Stand 24.05.2023 Nr. 28
+  (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt:232-244`): ICD Indikation'u yeterince
+  göstermiyor veya yanlışsa Verordnung *„nur dann gültig, wenn eine gemäß Heilmittel-Richtlinie
+  einschlägige therapierelevante Diagnose im Freitext angegeben ist."* — **Zamanlama hakkında
+  değil**, Freitext'in yanlış ICD'yi „kurtarabildiği" hakkındadır.
+- **Geçerlilik:** 16.06.2025 (Anlage 3) / 24.05.2023 (FAK)
+- **Kodda:** Einreichung-öncesi kapı `api-backend/billing/dta/preflight.js:324-345` (ICD veya
+  Diagnosetext var mı) — **therapierelevanz** (ICD↔DG uyumu) yalnız uyarı:
+  `api-backend/ai/validators/icdDgRules.js` (Warnungen, `hard_before_dta` opsiyonel), frontend
+  `dashboard.js:15623` `_wireDgIcdPair`. Uyumsuzluğun DTA'dan önce sert kesilip kesilmeyeceği
+  ürün kararıdır (Ops #304).
+- **Kapsam:** Podologie
+
 ### Versichertenstatus kaynağı Verordnung'dur, kart değil
 - **Kural:** SLLA'ya yazılan 5 haneli Versichertenstatus Verordnung'daki basımdan alınır;
   7 haneli basımda 1-5. haneler kullanılır. KVNR için KV-Karte de meşru kaynaktır. Kart
@@ -670,6 +763,25 @@
 - 📌 **06.09.2026 öncesi:** podoloji **`'5'`** gönderiyordu — o Ernährungstherapie'dir.
   Ortak mapper ise `sector` parametresini zaten alıyor olmasına rağmen herkes için `'1'`
   yazıyordu, yani Ergo ve Logo da „Physiotherapie" diye gidiyordu.
+
+### ZHE.Diagnosegruppe = Verordnung'daki DG; yoksa „9999"
+- **Kural:** `ZHE` Diagnosegruppe/Indikationsgruppe `..4 AN M`: *„Die auf der
+  Heilmittelverordnung angegebene Diagnosegruppe ist hier anzugeben. Es sind nur Ziffern 0-9 und
+  Buchstaben (ohne Umlaute) zugelassen. Die Übermittlung von Leer- und Sonderzeichen ist nicht
+  zulässig."* (Beispiel: `ZN`, `PS2`) · *„Sofern keine Diagnosegruppe angegeben wurde, ist das
+  Feld mit "9999" zu füllen soweit keine anderweitigen Regelungen bestehen."* Zahnärzte:
+  Indikationsgruppe (z.B. `CD2a`). Buna göre `DF-c` gibi Leitsymptomatik ekli değer gönderilmez;
+  ve gönderilen DG **Verordnung'daki** DG'dir, ICD'den türetilen değil.
+- ⚠️ „9999" bir **DTA dolgu değeridir**, geçerlilik izni değildir: podolojide DG Pflichtangabe
+  (Anlage 3 Ziffer 5 j) — `9999` giden Verordnung kasada Ziffer 4 Abs. 2 yoluyla absetzt
+  edilebilir.
+- **Kaynak:** Anlage 1 TP5 V21 (Stand 15.01.2026, anzuwenden ab 01.10.2025) Kap. 5.5.3.3
+  SLLA: B, Segment ZHE, S. 69 (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:3296-3330`)
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** ✅ `api-backend/billing/dta/builder.js:190` (`|| '9999'`) ·
+  `api-backend/billing/api/abrechnung.routes.js:551` (Physio) + `:3015` (Podo) —
+  `.replace(/-[abc]$/i, '') || '9999'`
+- **Kapsam:** tüm Heilmittel (SLLA B)
 
 ### Muster 13 Kopfteil → ZHE alan 7/8/9 (Verordnungsbesonderheiten · Unfall · BVG/SER)
 - **Kural:** Muster 13'ün baş kısmındaki üç kutu doğrudan üç ZHE alanına gider:

@@ -109,3 +109,30 @@ ikisini de "kopya adayı" saymadı, ikinci yol dokuz ay boyunca birinci yolun bl
 `getElementById('…')` kimliğine dokunan fonksiyonları say — bugün elle, `INDEX.json`'daki
 `start`/`end` aralıklarını dosya gövdesinde tarayarak. Üreticiye bir `domIds[]` boyutu
 eklenene kadar bu boşluk açık.
+
+## Niyet kaydı — haritanın göremediği "niye"
+
+Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştirildiğini tutmaz.
+Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
+En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
+
+### 25.09.2026 · Ops #304 — DG-Automatik nimmt nur Eindeutiges, Papierwert gewinnt
+Yeni fonksiyon yok, silinen yok; davranış değişikliği.
+- `icd-dg-match.js` `dgVorschlag()` — `auto` artık yalnız başka hiçbir grup `icd_accept` ile
+  eşleşmiyorsa döner (`kandidaten.every(k => k === auto)`). Niye: E11.74 + L60.0 `auto:'DF'`
+  veriyordu, oysa DF/UI1/UI2 hepsi mümkün; DG kâğıttan gelmeli (Podologie-Vertrag Anlage 3
+  Ziffer 5 j). **`autoSelectDg` bilinçli olarak değişmedi** — `api-backend/ai/validators/icdDgRules.js`
+  ile parite (ayna çifti, biri değişirse ikisi). Tek tüketici: `dashboard.js` `_wireDgIcdPair`.
+- `dashboard.js` `_wireDgIcdPair` — `dataset.manualOverride` kalktı, yerine `dataset.dgAuto`
+  (otomatiğin kendi koyduğu değer). `_setDgProgrammatically` yalnız boş alanı ya da kendi
+  değerini değiştirir; `''` kendi önerisini geri alır (ICD alanından çıkışta: belirsiz ya da ICD
+  silindi). `markManual` yalnız `change`'i dinler, `dgAuto`'yu siler → focusin/`input` dürtüsü
+  ve `verordnung-podo.js:schreibe()` otomatiği artık kapatmaz. >1 aday → aday ipucu her zaman.
+- `dashboard.js` köprü `ensureDgIcdWiring` (tek çağıran `module/verordnung-maske.js`
+  `fuelleMuster13`) — yüklemeden önce `dgAuto` silinir: tarama/düzenleme/Folgeverordnung ile
+  gelen DG kâğıt değeridir, üzerine yazılmaz.
+- i18n `pod_icd_mismatch` (de/en/tr) yeniden yazıldı · cache `?v=20260925a` · `module/icd-dg-vorschlag.test.js` +2 test.
+- İlk kullanım: Rezept-Maske Muster 13 (`rzIcd` → `rzDg`), podoloji.
+- **Açık kalan:** DG alanına ikinci yazan yol `module/verordnung-podo.js` `dgAuswahlEingrenzen` /
+  `podRegelnLaden` — kopya kartı Melih'te, karar bekliyor. Bu değişiklik onu çözmedi, yalnız
+  `schreibe()`'nin otomatiği kapatmasını engelledi.
