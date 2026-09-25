@@ -4,7 +4,7 @@ datum: 2026-09-25
 typ: sitzung
 ticket: "Ops #304"
 bereich: podologie (Abgrenzung physiotherapie, ergotherapie, logopaedie)
-status: L1–L3 lokal umgesetzt und lokal getestet · nicht committet, nicht live · L4 + Kennzeichnung „aus ICD" offen
+status: L1–L3 umgesetzt und lokal getestet · committet (a7b1ff3), nicht gepusht, nicht live · L4 + Kennzeichnung „aus ICD" offen
 tags: [sitzung, muster-13, diagnosegruppe, icd-10, podologie, anlage-3-podologie, dta-zhe, automatik]
 verwandt: ["[[SITZUNGEN]]", "[[SPEC-RULES]]", "[[REGISTER]]", "[[INDEX]]", "[[2026-09-21_ops-300_ik-suche-kassenfeld]]"]
 ---
@@ -82,7 +82,7 @@ stehen, wenn danach L60.0 dazukam (Mehrdeutigkeit) — ohne Hinweis und ohne War
 - **Automatik sofort beim Tippen zurücknehmen:** Zwischenstände wie „E11.7" hätten DF ständig entfernt und neu gesetzt
   und abhängige Logik (Wagner-Feld, Heilmittelliste) mitgerissen. Zurückgenommen wird nur beim Verlassen des ICD-Feldes.
 
-## Gebaut (lokal, nicht committet)
+## Gebaut (Commit `a7b1ff3`, nicht gepusht)
 
 - `icd-dg-match.js` `dgVorschlag`: `auto` nur, wenn keine andere Gruppe per `icd_accept` ebenfalls passt.
 - `dashboard.js` `_wireDgIcdPair`: Marke `dataset.dgAuto` statt `manualOverride`; ersetzt wird nur ein leeres Feld oder
@@ -113,7 +113,7 @@ stehen, wenn danach L60.0 dazukam (Mehrdeutigkeit) — ohne Hinweis und ohne War
 
 - L4-Hinweise + Kennzeichnung „aus ICD" (braucht neue i18n-Texte; `dashboard.js` ist am Gate → `_wireDgIcdPair` nach
   `module/` umziehen, vorher `fonksiyon-ustasi`).
-- Commit, Push, Live-Durchgang (`canli-test`, Szenarien a–g in `canli-test/REGISTER.md`).
+- Push, Live-Durchgang (`canli-test`, Szenarien a–g in `canli-test/REGISTER.md`).
 - Folgekarten: Frontend-Blocker `PFLICHT_ICD` (`module/verordnung-pruefung.js:182-183`) sperrt Klartext-Verordnungen,
   die abrechenbar wären · Backend sperrt UI1/UI2-Mismatch nicht · `dgOptionenSperren` mit `raeumen` würde eine
   ärztliche DG leeren (heute unerreichbar) · Kommentare zitieren „Anlage 3 k der HeilM-RL" statt Anlage 3 Podologie
