@@ -149,6 +149,9 @@ Yeni fonksiyon yok, silinen yok; davranış değişikliği.
 - `dashboard.js` `_wireDgIcdPair` — `dataset.manualOverride` kalktı, yerine `dataset.dgAuto`
   (otomatiğin kendi koyduğu değer). `_setDgProgrammatically` yalnız boş alanı ya da kendi
   değerini değiştirir; `''` kendi önerisini geri alır (ICD alanından çıkışta: belirsiz ya da ICD
+- `module/icd-dg-verdrahtung.js` `icdMehrAlsEinKodeJeFeld` (26.09.2026 akşam) — `saveRezept`'teki
+  „Trotzdem speichern?" kuralı modüle alındı. Niye: canlı turda yerel `confirm()` otomasyonla
+  doğrulanamadı; kural artık testli. Tek kullanım: `dashboard.js` `saveRezept`.
   silindi). `markManual` yalnız `change`'i dinler, `dgAuto`'yu siler → focusin/`input` dürtüsü
   ve `verordnung-podo.js:schreibe()` otomatiği artık kapatmaz. >1 aday → aday ipucu her zaman.
 - `dashboard.js` köprü `ensureDgIcdWiring` (tek çağıran `module/verordnung-maske.js`

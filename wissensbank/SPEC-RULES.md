@@ -509,6 +509,47 @@
   ürün kararıdır (Ops #304).
 - **Kapsam:** Podologie
 
+### Podologie UI1/UI2: L60.0 varsa ek ICD zararsızdır — düzeltme yalnız L60.0 YOKSA
+- **Kural:** *„In den Diagnosegruppen UI1 und UI2 ist ausschließlich der ICD-Schlüssel L60.0
+  maßgeblich, bei anderen Diagnosen ist eine Korrektur erforderlich."* ile aynı Ziffer'in
+  Korrekturmöglichkeit'i birlikte okunur: *„Weitere Angaben zur Schädigung in Form eines oder
+  mehrerer ICD-10-Schlüssel oder eines Freitextvermerkes sind für die Gültigkeit der Verordnung
+  unschädlich."* → „maßgeblich" belirleyici kodu söyler; **L60.0 + E11.74 (UI1/UI2) geçerlidir**,
+  düzeltme gerekmez. Düzeltme (hekim, yeni imza + tarih, Einreichung'dan önce) yalnız L60.0 hiç
+  yoksa. Sıra kuralı yok — L60.0'ın ilk sırada olması istenemez (`gkv-302`, 26.09.2026).
+- **Kaynak:** Podologie Anlage 3 i.d.F. 16.06.2025 Ziffer 5 k c) + Korrekturmöglichkeit
+  (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:552-562`, S. 15)
+- **Geçerlilik:** 16.06.2025
+- **Kodda:** ✅ `icd-dg-match.js:78` `matchIcdToDg` — kümede bir kod `icd_accept` tutarsa `ok`
+  (L60.0 + E11.74 → UI1 `ok`, `dgSperrenFuerIcd` UI'yi kapatmaz; E11.74 tek başına → UI1/UI2 kapalı) ·
+  ayna `api-backend/ai/validators/icdDgRules.js` `checkIcdDg` aynı sonucu verir (26.09.2026 denendi).
+  Kod değişikliği gerekmedi.
+- **Kapsam:** Podologie UI1/UI2
+
+### Birden çok ICD: her biri ayrı DIA; Muster-13 maskesi iki kod saklar, üçüncüsü yalnız uyarılır
+- **Kural:** Diagnose *„in Form eines oder mehrerer ICD-10-Schlüssel"* verilir; DTA'da DIA
+  *„1 mal je Diagnose"*, *„immer der im Feld ‚Behandlungsrelevante Diagnose(n)' bzw. ‚ICD-10-Code'
+  eingetragene ICD-10-Code"*. Orijinalde olup dosyada eksik ICD, Korrekturverfahren'de *„Fehlende
+  Daten, die auf den Originalunterlagen vorhanden sind (z.B. ICD-10 Code)"* sayılır → üçüncü kodun
+  iletilmemesi küçük ama gerçek bir Beanstandung riskidir. Verordnung yine de **geçerlidir** →
+  kayıt engellenmez.
+- **Kaynak:** Podologie Anlage 3 i.d.F. 16.06.2025 Ziffer 5 k (`…/20250617_Podologie_Anlage_3_Lesefassung.txt:533-537`)
+  · HeilM-RL 15.05.2025 (iK 05.08.2025) § 13 Abs. 2 k (`…/HeilM-RL_2025-05-15_iK-2025-08-05.txt:625-628`)
+  · Anlage 1 TP5 V21 Kap. 5.5.3.3 DIA (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:3492-3500`)
+  · Kap. 7 dipnot 2, S. 171 (`…:8318`)
+- ⚠️ **Belgelenemedi:** Muster 13'teki ICD kod kutusu sayısı. Vordruck metni `praxiswissen-heilmittel.txt:2192`
+  yalnız „Behandlungsrelevante Diagnose(n) / ICD-10 - Code" başlığını verir, kutu sayısını değil;
+  KBV Vordruck-Erläuterungen Muster 13 `wissensbank/`'ta yok.
+- **Karar (26.09.2026):** Saklama iki kodla kalır (`prescriptions.icd10`, `icd10_2`, DIA listesi
+  `[icd10, icd10_2]`). Prod: 67 Verordnung'ta ikinci ICD 2 kez, üç+ kod hiç (26.09.2026 sayıldı).
+  Üçüncü kod → kaydederken uyarı + Diagnosetext'e yazma önerisi. **Yeniden açma tetiği:** ilk gerçek
+  3-kodlu Verordnung ya da bir kasanın eksik ICD Beanstandung'u → `db-ustasi` (dizi kolonu).
+- **Kodda:** `module/icd-dg-verdrahtung.js:56` `icdAufZweiFelder` + `:137` `aufteilen` (iki kod →
+  ikinci alana) · `:76` `icdMehrAlsEinKodeJeFeld` (`dashboard.js` `saveRezept` → „Trotzdem
+  speichern?") · `api-backend/billing/api/abrechnung.routes.js:537` `icd10Liste` ·
+  `api-backend/billing/dta/preflight.js` V:01002 / V:01014.
+- **Kapsam:** tüm Heilmittel (DIA), Maske: Muster 13
+
 ### Versichertenstatus kaynağı Verordnung'dur, kart değil
 - **Kural:** SLLA'ya yazılan 5 haneli Versichertenstatus Verordnung'daki basımdan alınır;
   7 haneli basımda 1-5. haneler kullanılır. KVNR için KV-Karte de meşru kaynaktır. Kart

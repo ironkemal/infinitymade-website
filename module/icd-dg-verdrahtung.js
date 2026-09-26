@@ -63,6 +63,21 @@ export function icdAufZweiFelder(roh1, roh2) {
 }
 
 /**
+ * Beim Speichern: steht in einem der zwei ICD-Felder mehr als ein Kode?
+ * Dann landet ein Komma-String in `icd10`/`icd10_2`, den der Preflight als EINEN
+ * Kode prueft (V:01002) — und ein dritter Kode hat heute keinen Speicherort,
+ * fehlt also in den DIA-Segmenten („Fehlende Daten, die auf den
+ * Originalunterlagen vorhanden sind (z.B. ICD-10 Code)", Anlage 1 TP5 V21,
+ * Kap. 7, S. 171). Nur Warnung, keine Sperre: die Verordnung ist gueltig
+ * (Podologie Anlage 3 Ziffer 5 k „eines oder mehrerer ICD-10-Schlüssel").
+ * Zwei Kodes im ersten Feld bei leerem zweitem kommen hier nicht an — die
+ * verteilt `aufteilen()` schon beim Verlassen des Feldes.
+ */
+export function icdMehrAlsEinKodeJeFeld(roh1, roh2) {
+  return [roh1, roh2].some(w => icdKodesAusFeld(w).length > 1);
+}
+
+/**
  * Verdrahtet das ICD-Feld (und optional das zweite) mit der Diagnosegruppe.
  * Idempotent (data-Marke am ICD-Feld). Wird fuer die Podologie-Maske nach
  * jedem Re-Render erneut aufgerufen (die Elemente werden neu erzeugt).

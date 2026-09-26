@@ -305,9 +305,14 @@
   - ≥3 kod veya ikinci alan dolu → taşınmaz, ipucu + kaydederken uyarı; **sperre yok.** `gkv-302`:
     Anlage 3 k „eines oder mehrerer ICD-10-Schlüssel", Anlage 1 V21 DIA „1-n, so oft wiederholbar
     wie Diagnosen vorliegen" — 3 kodlu Verordnung geçerli ve abrechenbar; sperre para getirmez.
-    3.+ kod için saklama yeri yok (bugün `icd10`/`icd10_2`) → açık iş, `db-ustasi`.
+    3.+ kod için saklama yeri yok (bugün `icd10`/`icd10_2`). **Karar 26.09.2026: şimdilik yapılmaz** —
+    Prod'da 67 Verordnung'ta üç+ kod hiç yok. Tetik: ilk gerçek 3-kodlu Verordnung veya eksik-ICD
+    Beanstandung'u → `db-ustasi`. Gerekçe + kaynak: `wissensbank/SPEC-RULES.md` „Birden çok ICD".
   - DG ipucu tek yerde (ICD alanının altında); „passt nicht" ipucu uygun grupları da söyler.
     Podologie kutusundaki ikinci, kırmızı „passt nicht / zulässig" satırı kaldırıldı.
   - Otomatik, maskede işaretli Fachbereich'e göre çalışır (interdisziplinäre `praxis` mandantı dahil).
   - **Sıra kuralı yok** (`gkv-302`): DF için Diabetes kodu, UI için L60.0 herhangi bir sırada yeter.
-    Açık: L60.0 + başka kod UI'de „Korrektur erforderlich" sayılır mı — metin iki türlü okunuyor.
+    ~~Açık: L60.0 + başka kod UI'de „Korrektur erforderlich" sayılır mı~~ → **Hayır (26.09.2026):**
+    Anlage 3 Ziffer 5 k „Korrekturmöglichkeit": ek ICD'ler „für die Gültigkeit … unschädlich";
+    düzeltme yalnız L60.0 yoksa. Kod zaten böyle (frontend + backend aynası); SPEC-RULES „UI1/UI2: L60.0
+    varsa ek ICD zararsızdır".

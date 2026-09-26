@@ -9,7 +9,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { verdrahteIcdDg, icdAufZweiFelder, icdKodesAusFeld } from './icd-dg-verdrahtung.js';
+import { verdrahteIcdDg, icdAufZweiFelder, icdKodesAusFeld, icdMehrAlsEinKodeJeFeld } from './icd-dg-verdrahtung.js';
 
 const ZEILEN = [
   { code: 'DF', bereich: 'podologie', icd_enforcement: 'warn',
@@ -84,6 +84,18 @@ test('icdAufZweiFelder: verteilt nur zwei Kodes in ein leeres zweites Feld', () 
   assert.equal(icdAufZweiFelder('E11.74', 'L60.0').verschoben, false);
   assert.equal(icdAufZweiFelder('E11.74, L60.0', 'G63.2').zuViele, true);
   assert.equal(icdAufZweiFelder('E11.74, L60.0, G63.2', '').zuViele, true);
+});
+
+test('Speichern warnt („Trotzdem speichern?") nur bei mehr als einem Kode in EINEM Feld', () => {
+  // dashboard.js saveRezept → formatErrors. Das native confirm() selbst ist nicht
+  // automatisierbar (Browser-Werkzeuge bedienen keine Dialoge) — diese Regel schon.
+  assert.equal(icdMehrAlsEinKodeJeFeld('E11.74, L60.0, G63.2', ''), true);
+  assert.equal(icdMehrAlsEinKodeJeFeld('E11.74', 'L60.0 G63.2'), true);
+  assert.equal(icdMehrAlsEinKodeJeFeld('E11.74, L60.0', 'G63.2'), true);
+  assert.equal(icdMehrAlsEinKodeJeFeld('E11.74', 'L60.0'), false);
+  assert.equal(icdMehrAlsEinKodeJeFeld('E11.74 – Diabetes mellitus, Typ 2: Mit diabetischem Fußsyndrom', ''), false);
+  assert.equal(icdMehrAlsEinKodeJeFeld('E11.74, E11.74', ''), false);
+  assert.equal(icdMehrAlsEinKodeJeFeld('', ''), false);
 });
 
 // ── Szenarien canli-test/REGISTER.md (Ops #304) ─────────────────────────────

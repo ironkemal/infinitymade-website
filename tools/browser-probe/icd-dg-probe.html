@@ -43,7 +43,7 @@ try {
   const supabase = { from: kette, rpc: async () => ({ data: [], error: null }) };
 
   const podo = await import('../../module/verordnung-podo.js?v=20260926a');
-  const { verdrahteIcdDg } = await import('../../module/icd-dg-verdrahtung.js?v=20260926a');
+  const { verdrahteIcdDg } = await import('../../module/icd-dg-verdrahtung.js?v=20260926b');
   const TEXTE = {
     pod_dg_kandidaten: 'Passende Diagnosegruppen:',
     pod_icd_mismatch: 'Der ICD benennt nicht die für diese Diagnosegruppe geforderte Diagnose',

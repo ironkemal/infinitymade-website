@@ -121,11 +121,19 @@ Her senaryoda kaydet → **sayfa yenile** → `prescriptions` üzerinde DG gerç
   hiç geri alınmıyordu (c de etkileniyordu). Artık DG'ye tek yazan `module/icd-dg-verdrahtung.js`;
   Fachbereich maskeden okunur (`praxis` mandantında otomatik susuyordu). Kanıt: `icd-dg-verdrahtung.test.js`
   19/19 + **`tools/browser-probe/icd-dg-probe.mjs` 15/15 — gerçek Muster-13 maskesi, klavye + Tab**
-  (a, c, d, d2, f, L60.0 tek, DG'ye tıklama, elle DF). **Oturumlu canlı tur hâlâ yapılmadı.**
+  (a, c, d, d2, f, L60.0 tek, DG'ye tıklama, elle DF).
+- **Canlı tur 26.09.2026 (`632d1f0`, oturumlu; sonucu Melih bildirdi):** ✅ ana düzeltme — tek alandaki
+  çoklu ICD'nin ikinci alana bölünmesi, d ve d2 — **sorunsuz**. ⚠️ **Doğrulanamadı:** >2 kodda
+  kaydederken „Trotzdem speichern?" listesindeki satır. Sebep büyük olasılıkla araç: liste yerel
+  `window.confirm()`, tarayıcı otomasyonu diyaloğu okuyamaz/tıklayamaz. Karşılığı: kural
+  `icdMehrAlsEinKodeJeFeld` olarak modüle alındı ve testli (`icd-dg-verdrahtung.test.js`, 7 durum);
+  `dashboard.js` `saveRezept` yalnız onu çağırır. **Elle kontrol (bir kez, otomasyonsuz):** ilk ICD
+  alanına `E11.74, L60.0, G63.2` yaz → Speichern → diyalogda „Hinweise: • Mehr als zwei ICD-Codes: …"
+  satırı görünmeli → „Abbrechen".
 
-**Son test (ICD↔DG):** lokal nachgestellt (Fake-DOM-Harness gegen echten Quelltext, 18/20 Soll
-erfüllt, die 2 offenen = L4-Folgeschritt) 25.09.2026 — **live ungetestet**. Deploy sonrası
-Kapı 2 (`?v=` karşılaştırması) geçilmeden a–g koşulmaz.
+**Son test (ICD↔DG):** 26.09.2026 canlı (`632d1f0`) — GEÇTİ: bölme, d, d2 (Melih bildirdi).
+Açık: >2 kodda „Trotzdem speichern?" satırı (yerel `confirm()`, elle bakılacak — yukarıda).
+Yerel: `icd-dg-verdrahtung.test.js` + `tools/browser-probe/icd-dg-probe.mjs` 15/15.
 
 ### Podologie Behandlungen — Tagesbehandlung erfassen — nav etiketi: `podologie-billing`
 

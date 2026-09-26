@@ -28,7 +28,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260922';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20260922';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260905a';
-import { verdrahteIcdDg, icdKodesAusFeld } from './module/icd-dg-verdrahtung.js?v=20260926a';
+import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20260926b';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260920c';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
@@ -15910,7 +15910,7 @@ async function saveRezept() {
     const formatErrors = [];
     if (rzLanr && !/^\d{9}$/.test(rzLanr)) formatErrors.push('LANR muss 9 Ziffern haben');
     if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
-    if (['rzIcd', 'rzIcd2'].some(id => icdKodesAusFeld(val(id)).length > 1)) formatErrors.push(t('pod_icd_je_feld'));
+    if (icdMehrAlsEinKodeJeFeld(val('rzIcd'), val('rzIcd2'))) formatErrors.push(t('pod_icd_je_feld'));
 
     let overridden = false;
     if (missing.length || formatErrors.length) {
