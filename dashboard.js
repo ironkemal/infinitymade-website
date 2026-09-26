@@ -17877,7 +17877,7 @@ function openFbFahrtEditModal(f) {
   document.getElementById('fbEditKennzeichen').value = f.kennzeichen_snapshot || '';
   document.getElementById('fbEditStartKm').value = f.start_km ?? '';
   document.getElementById('fbEditEndKm').value = f.end_km ?? '';
-  const toLocal = iso => iso ? iso.slice(0, 16) : '';
+  const toLocal = alsDatetimeLocal; // UTC → Ortszeit, wie beim Speichern unten (QA 26.09.2026, gleicher Fehler wie Termin-Dialog)
   document.getElementById('fbEditStartedAt').value = toLocal(f.fahrt_started_at);
   document.getElementById('fbEditEndedAt').value = toLocal(f.fahrt_ended_at);
   document.getElementById('fbEditZweck').value = f.zweck || '';
