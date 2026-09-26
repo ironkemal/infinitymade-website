@@ -111,6 +111,9 @@ stehen, wenn danach L60.0 dazukam (Mehrdeutigkeit) — ohne Hinweis und ohne War
 
 ## Offen
 
+> **Fortsetzung 26.09.2026:** [[2026-09-26_ops-304_nachtrag-zwei-icd-felder]] — gepusht und live bestätigt;
+> L5, L6 und der Umzug nach `module/` sind dort erledigt. Die Liste unten ist der Stand vom 25.09.
+
 - L4-Hinweise + Kennzeichnung „aus ICD" (braucht neue i18n-Texte; `dashboard.js` ist am Gate → `_wireDgIcdPair` nach
   `module/` umziehen, vorher `fonksiyon-ustasi`).
 - Push, Live-Durchgang (`canli-test`, Szenarien a–g in `canli-test/REGISTER.md`).
