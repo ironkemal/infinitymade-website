@@ -5,8 +5,8 @@ import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20260913';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260817';
-import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260909';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260926';
+import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260926';
 import { attachPatientSearch } from './patient-suche.js?v=20260906';
 import { verdrahteRezeptPatientenfeld } from './module/rezept-patientenfeld.js?v=20260906';
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
@@ -89,7 +89,7 @@ import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=202
 import { renderWoche } from './module/kalender-woche.js?v=20260918';
 import { renderMonat } from './module/kalender-monat.js?v=20260918';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
-import { alsISODatum as toISODate } from './module/datum.js?v=20260831';
+import { alsISODatum as toISODate, alsDatetimeLocal } from './module/datum.js?v=20260926';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwesenheit.js?v=20260918';
@@ -100,7 +100,7 @@ import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
-import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260903';
+import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260926';
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
@@ -140,7 +140,7 @@ const T = {
     logout: 'Abmelden',
     nav_overview: 'Dashboard', nav_ueberblick: 'Überblick', nav_calendar: 'Terminkalender', nav_kunden: 'Patienten',
     nav_services: 'Leistungen', nav_hours: 'Verfügbarkeit',
-    nav_team: 'Team', nav_b2b: 'Zuweiser', nav_b2c: 'Patientenpost', nav_rechnungen: 'Rechnungen', nav_feedback: 'Bewertungen', nav_vorlagen: 'Vorlagen', nav_settings: 'Einstellungen', vorlagen_disclaimer: 'Beispieldarstellung — der tatsächliche Druck kann abweichen (Bankdaten, Logo, Steuerpflichtangaben werden aus Ihrem Profil ergänzt).',
+    nav_team: 'Team', nav_b2b: 'Zuweiser', nav_b2c: 'Patientenpost', nav_rechnungen: 'Rechnungen', nav_feedback: 'Feedback & Support', nav_vorlagen: 'Vorlagen', nav_settings: 'Einstellungen', vorlagen_disclaimer: 'Beispieldarstellung — der tatsächliche Druck kann abweichen (Bankdaten, Logo, Steuerpflichtangaben werden aus Ihrem Profil ergänzt).',
     overview_sub: 'Ihr heutiger Überblick',
     welcome_text: 'Willkommen',
     kpi_plan: 'Paket', kpi_status: 'Status', kpi_today_bookings: 'Heute', kpi_today_sub: 'Termine', kpi_support: 'Support',
@@ -344,7 +344,7 @@ const T = {
     logout: 'Sign out',
     nav_overview: 'Dashboard', nav_ueberblick: 'Overview Hub', nav_calendar: 'Calendar', nav_kunden: 'Patients',
     nav_services: 'Services', nav_hours: 'Availability',
-    nav_team: 'Team', nav_b2b: 'Referrers', nav_b2c: 'Email Marketing', nav_rechnungen: 'Invoices', nav_feedback: 'Reviews', nav_vorlagen: 'Templates', nav_settings: 'Settings', vorlagen_disclaimer: 'Example preview — actual printouts may differ (bank details, logo and tax fields are filled in from your profile).',
+    nav_team: 'Team', nav_b2b: 'Referrers', nav_b2c: 'Email Marketing', nav_rechnungen: 'Invoices', nav_feedback: 'Feedback & Support', nav_vorlagen: 'Templates', nav_settings: 'Settings', vorlagen_disclaimer: 'Example preview — actual printouts may differ (bank details, logo and tax fields are filled in from your profile).',
     overview_sub: 'Your daily overview',
     welcome_text: 'Welcome',
     kpi_plan: 'Plan', kpi_status: 'Status', kpi_today_bookings: 'Today', kpi_today_sub: 'Appointments', kpi_support: 'Support',
@@ -527,7 +527,7 @@ const T = {
     logout: 'Çıkış',
     nav_overview: 'Dashboard', nav_ueberblick: 'Genel Bakış', nav_calendar: 'Takvim', nav_kunden: 'Hastalar',
     nav_services: 'Hizmetler', nav_hours: 'Müsaitlik',
-    nav_team: 'Ekip', nav_b2b: 'Yönlendirenler', nav_b2c: 'E-posta', nav_rechnungen: 'Faturalar', nav_feedback: 'Değerlendirmeler', nav_vorlagen: 'Şablonlar', nav_settings: 'Ayarlar', vorlagen_disclaimer: 'Örnek görünüm — gerçek çıktı farklı olabilir (banka bilgisi, logo ve vergi alanları profilinizden tamamlanır).',
+    nav_team: 'Ekip', nav_b2b: 'Yönlendirenler', nav_b2c: 'E-posta', nav_rechnungen: 'Faturalar', nav_feedback: 'Geri Bildirim & Destek', nav_vorlagen: 'Şablonlar', nav_settings: 'Ayarlar', vorlagen_disclaimer: 'Örnek görünüm — gerçek çıktı farklı olabilir (banka bilgisi, logo ve vergi alanları profilinizden tamamlanır).',
     overview_sub: 'Günlük genel bakışınız',
     welcome_text: 'Hoşgeldin',
     kpi_plan: 'Paket', kpi_status: 'Durum', kpi_today_bookings: 'Bugün', kpi_today_sub: 'Randevu', kpi_support: 'Destek',
@@ -4967,7 +4967,7 @@ async function openBookingModal(b) {
   document.getElementById('bkWlMatchBtn').hidden = false;
   document.getElementById('bkDeleteBtn').hidden = false;
   document.getElementById('bkMoveBtn').hidden = false;
-  document.getElementById('bkStart').value = b.start_time ? b.start_time.substring(0, 16) : '';
+  document.getElementById('bkStart').value = alsDatetimeLocal(b.start_time); // UTC → Ortszeit, wie beim Speichern (QA 26.09.2026)
   document.getElementById('bkCustomer').value = b.customer_name || '';
   document.getElementById('bkCustomerId').value = b.lead_id || '';
   document.getElementById('bkPhone').value = b.customer_phone || '';
@@ -17018,7 +17018,7 @@ async function openBookingFromRxPreset(preset) {
     const dow = today.getDay();
     const daysToMon = (8 - dow) % 7 || 7;
     const start = new Date(today.getTime() + daysToMon * 86400000);
-    const iso = start.toISOString().slice(0, 10) + 'T09:00';
+    const iso = toISODate(start) + 'T09:00';
     document.getElementById('bkStart').value = iso;
 
     // Series

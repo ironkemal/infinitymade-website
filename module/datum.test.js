@@ -64,3 +64,17 @@ test('ungültige Eingabe wird zu Leerstring, nicht zu "NaN-NaN-NaN"', () => {
   assert.equal(alsISODatum('kein Datum'), '');
   assert.equal(alsISODatum(new Date('kaputt')), '');
 });
+
+test('alsDatetimeLocal: Rundreise Feld → Date → Feld bleibt gleich (Termin-Dialog, QA 26.09.2026)', async () => {
+  const { alsDatetimeLocal } = await import('./datum.js');
+  // `new Date("…T10:00")` ist Ortszeit — genau so speichert der Dialog.
+  for (const wert of ['2026-09-26T10:00', '2026-01-19T08:30', '2026-03-29T03:15', '2026-10-25T02:45', '2026-12-31T23:59']) {
+    const gespeichert = new Date(wert).toISOString();          // was in `bookings.start_time` landet
+    assert.equal(alsDatetimeLocal(gespeichert), wert, wert);
+  }
+});
+
+test('alsDatetimeLocal: leer und Unsinn geben Leerstring', async () => {
+  const { alsDatetimeLocal } = await import('./datum.js');
+  for (const v of [null, undefined, '', 'kein datum']) assert.equal(alsDatetimeLocal(v), '');
+});

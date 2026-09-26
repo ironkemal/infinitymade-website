@@ -315,6 +315,36 @@ Format: `TARİH · bildiren ajan · ekran/panel · gözlem (tek cümle, hasta ve
   tarafı (`verordnung-pruefen-knopf.js:71`) `", "` ile birleştirdiği için aynı reçete
   için iki farklı hüküm çıkıyor. Yan etki: ICD⇄Diagnosegruppe kontrolü de sessizce
   atlanıyor. — bu turda tekrar sınanmadı, hâlâ açık.
+**QA turu 2026-09-26 (Claude in Chrome, Owner görünümü) — 7 bulgu.** Durum: 🔧 = yerelde
+düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki turda kapatılır).
+- 🔧 2026-09-26 · QA · `verordnungen` (+ `katalog-suche.js` kullanan her alan) · ICD/DG/Heilmittel
+  dropdown'undan seçim alanı güvenilir doldurmuyor — kök neden: seçimden sonra bekleyen debounce
+  / yoldaki RPC cevabı dropdown'u dolu alanın üstünde yeniden açıyordu (alan dolu ama seçim
+  "tutmamış" görünüyordu, sonraki tık eski listeye düşüyordu). `katalog-suche.js` `verwirfSuche()`.
+  Kanıt: `tools/browser-probe/katalog-auswahl-probe` önce 5/8, sonra 8/8; podo-/verordnung-maske 32/32.
+  Canlı kontrol: hızlı yazıp hemen seç → dropdown kapalı kalmalı.
+- 🔧 2026-09-26 · QA · `calendar` · Termin-Bearbeiten 2 saat kaymış gösteriyor — kök neden
+  `openBookingModal`: `start_time.substring(0,16)` UTC metni alana yazıyordu, kaydederken yerel
+  okunuyor → **açıp değiştirmeden kaydetmek terimi 2 saat öne kaydırıyordu** (veri bozan, P1).
+  `module/datum.js` `alsDatetimeLocal()`. Kanıt: `module/datum.test.js` gidiş-dönüş testi.
+  Canlı kontrol: 10:00 terimi aç → alanda 10:00; kaydet → takvimde 10:00 kalmalı.
+- 🔧 2026-09-26 · QA · `warteliste` · "Wartend"/"Vermittelt" sekmeleri filtrelemiyor — sorgu
+  doğru filtreliyordu (canlıda 26.09: yalnız 4 `waiting`, 0 `matched`); kök neden yarış: panel
+  açılışındaki "Wartend" cevabı, hızlı tıklanan "Vermittelt"in boş cevabından SONRA gelip listeyi
+  eziyordu. `module/warteliste-ansicht.js` sekmeye ait olmayan cevabı atar. Kanıt: yerel tarayıcı
+  denemesi (0 satır / 1 satır). Canlı kontrol: panele gir, hemen "Vermittelt" → boş mesaj.
+- 🔧 2026-09-26 · QA · sidebar · "Bewertungen" "Feedback & Support"u açıyor — routing hatası
+  DEĞİL: panel zaten destek bileti formu, etiket yanlıştı. `nav-registry.js` + i18n (de/en/tr)
+  "Feedback & Support" / "Geri Bildirim & Destek". Gerçek bir değerlendirme özelliği yok.
+- 🔧 2026-09-26 · QA · public `booking-request.html` · takvim blokerleri ("Fortbildung"/"Privat")
+  hizmet listesinde — `/api/services/public` `is_internal` filtrelemiyordu. Canlı veri 26.09:
+  6 blokerin hepsi `is_internal=true`, NULL yok. `server.js` `.not('is_internal','is',true)`.
+  Canlı kontrol: backend deploy (Watchtower) sonrası liste blokersiz.
+- ⏳ 2026-09-26 · QA · `verordnungen` · bulgu 6 — QA raporunda açıklaması yok, **düzeltilmedi.**
+- 🔧 2026-09-26 · QA · `overview` @390px · yatay taşma — `.schedule-header` nowrap, `#ovCountSelector`
+  `#mainArea`'dan 34px taşıyordu. `dashboard.css` ≤768px `flex-wrap: wrap`. Kanıt: statik markup
+  360/390/430/768px'de taşan öğe yok. ⚠️ Oturumla gelen JS içerik (termin kartları) ölçülmedi.
+
 - 2026-09-19 · canli-test · `podologie-billing` (Tagesbehandlung) · Behandlungsdatum
   gelecek tarihe izin veriyor; §302 preflight sonra bütün dosyayı reddediyor
   (S:01005/S:01006). — `c4332d5` geri-soru ekledi, canlıda tekrar sınanmadı.

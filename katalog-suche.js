@@ -203,6 +203,15 @@ export function attachAutocomplete(inputEl, cfg) {
     renderItems(res.items, res.note);
   }
 
+  // Noch ausstehende Suche verwerfen: den Debounce-Timer und eine RPC, die
+  // unterwegs ist. Sonst öffnet deren späte Antwort das Dropdown über dem
+  // gerade gefüllten (oder schon verlassenen) Feld wieder — QA 26.09.2026,
+  // "Auswahl füllt das Feld nicht zuverlässig" (tools/browser-probe/katalog-auswahl-probe).
+  function verwirfSuche() {
+    clearTimeout(debounceTimer);
+    requestSeq++;
+  }
+
   function closeDropdown() {
     dropdown.innerHTML = '';
     activeIndex = -1; currentItems = [];
@@ -229,6 +238,7 @@ export function attachAutocomplete(inputEl, cfg) {
     } else {
       inputEl.value = text;
     }
+    verwirfSuche();
     closeDropdown();
     // Das eigene input-Ereignis darf die Suche nicht erneut anwerfen — sonst
     // stünde 180 ms nach der Auswahl wieder ein Dropdown offen.
@@ -346,7 +356,14 @@ export function attachAutocomplete(inputEl, cfg) {
     else if (e.key === 'Enter')     { if (activeIndex >= 0 && currentItems[activeIndex]) { e.preventDefault(); selectItem(currentItems[activeIndex]); } }
     else if (e.key === 'Escape')    { closeDropdown(); }
   });
-  inputEl.addEventListener('blur', () => { markierungOffen = false; setTimeout(closeDropdown, 150); });
+  inputEl.addEventListener('blur', () => {
+    markierungOffen = false;
+    setTimeout(() => {
+      if (document.activeElement === inputEl) return;   // schon wieder im Feld
+      verwirfSuche();
+      closeDropdown();
+    }, 150);
+  });
   window.addEventListener('scroll', () => {
     if (dropdown.style.display === 'block') positionDropdown();
   }, true);
