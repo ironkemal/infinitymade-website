@@ -328,6 +328,9 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
   okunuyor → **açıp değiştirmeden kaydetmek terimi 2 saat öne kaydırıyordu** (veri bozan, P1).
   `module/datum.js` `alsDatetimeLocal()`. Kanıt: `module/datum.test.js` gidiş-dönüş testi.
   Canlı kontrol: 10:00 terimi aç → alanda 10:00; kaydet → takvimde 10:00 kalmalı.
+- 🔧 2026-09-26 · fonksiyon-ustasi · `fahrtenbuch` · aynı hata Fahrt-Bearbeiten'de (`toLocal =
+  iso.slice(0,16)`): açıp kaydetmek başlangıç/bitişi 2 saat kaydırıyordu. `c82e831`, `alsDatetimeLocal`.
+  Canlı kontrol: bir Fahrt aç → saatler listedekiyle aynı; değiştirmeden kaydet → aynı kalmalı.
 - 🔧 2026-09-26 · QA · `warteliste` · "Wartend"/"Vermittelt" sekmeleri filtrelemiyor — sorgu
   doğru filtreliyordu (canlıda 26.09: yalnız 4 `waiting`, 0 `matched`); kök neden yarış: panel
   açılışındaki "Wartend" cevabı, hızlı tıklanan "Vermittelt"in boş cevabından SONRA gelip listeyi
