@@ -279,7 +279,7 @@
 - **Durum:** L1–L3 **yerelde uygulandı (2026-09-25), henüz commit edilmedi / canlıda değil.**
   L4 + öneri işareti açık.
 - **Etkilenen:** `icd-dg-match.js` (`dgVorschlag`: `auto` yalnız tek aday varsa),
-  `dashboard.js` (`_wireDgIcdPair`: `dataset.dgAuto` sahiplik işareti, geri alma, `change`
+  `dashboard.js` (`_wireDgIcdPair` — 26.09.2026'dan beri `module/icd-dg-verdrahtung.js` `verdrahteIcdDg`: `dataset.dgAuto` sahiplik işareti, geri alma, `change`
   ile üstlenme; `init` → `ensureDgIcdWiring` yüklenen DG'yi hekim beyanı sayar; i18n
   `pod_icd_mismatch` de/en/tr), `module/icd-dg-vorschlag.test.js`, `dashboard.html`
   (import sürümü). Ops #304.
@@ -295,3 +295,19 @@
   (2026-09-05) — aynı desen: belirsizlikte **yazma, öner**. O karar burada yeniden açılmıyor.
 - **Doğrulanmadı:** Podologun kâğıttaki DG ile ICD uyuşmazlığında pratikte ne yaptığı (hekime
   mi döner, olduğu gibi mi faturalar) — Beta-1'e sorulacak; `podoloji` ajanı varsayımı.
+- **Nachtrag 26.09.2026 — iki ICD alanı** (`podoloji` + `gkv-302` soruldu):
+  - Otomatik **iki ICD alanını birlikte** okur: `E11.74` birinci + `L60.0` ikinci alanda → DG yok,
+    adaylar DF, UI1, UI2 (tek alandaki virgüllü girişle aynı sonuç).
+  - İlk alana iki kod yazılır, ikinci alan boşsa → çıkışta ikinci kod ikinci alana geçer
+    („E11.74, L60.0" veya „E11.74 L60.0"). Kâğıtta da satır başına bir kod; uyarı yerine taşımak
+    Podologa ~4 işlem kazandırır. Sebep ayrıca teknik: `icd10` tek kod tutar, virgüllü değer
+    abrechnung'da V:01002 ile takılırdı.
+  - ≥3 kod veya ikinci alan dolu → taşınmaz, ipucu + kaydederken uyarı; **sperre yok.** `gkv-302`:
+    Anlage 3 k „eines oder mehrerer ICD-10-Schlüssel", Anlage 1 V21 DIA „1-n, so oft wiederholbar
+    wie Diagnosen vorliegen" — 3 kodlu Verordnung geçerli ve abrechenbar; sperre para getirmez.
+    3.+ kod için saklama yeri yok (bugün `icd10`/`icd10_2`) → açık iş, `db-ustasi`.
+  - DG ipucu tek yerde (ICD alanının altında); „passt nicht" ipucu uygun grupları da söyler.
+    Podologie kutusundaki ikinci, kırmızı „passt nicht / zulässig" satırı kaldırıldı.
+  - Otomatik, maskede işaretli Fachbereich'e göre çalışır (interdisziplinäre `praxis` mandantı dahil).
+  - **Sıra kuralı yok** (`gkv-302`): DF için Diabetes kodu, UI için L60.0 herhangi bir sırada yeter.
+    Açık: L60.0 + başka kod UI'de „Korrektur erforderlich" sayılır mı — metin iki türlü okunuyor.

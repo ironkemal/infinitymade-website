@@ -307,6 +307,23 @@ test('ICD vorhanden aber unbrauchbar: bleibt V:01002, auch mit Diagnosetext', ()
   assert.ok(hasErr(r, 'V:01002'));
 });
 
+test('nur zweites ICD-Feld gefuellt: kein V:01002 auf leerem icd10, Kode wird geprueft', () => {
+  // icd10 leer, icd10_2 = L60.0 → abrechnung.routes.js baut icd10Liste = ['L60.0'].
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.icd10 = '';
+  i.prescriptions[0].verordnung.icd10Liste = ['L60.0'];
+  const r = preflight(i);
+  assert.equal(hasErr(r, 'V:01002'), false, 'kein Formatfehler auf dem leeren Hauptfeld');
+  assert.equal(hasErr(r, 'V:01014'), false);
+  assert.equal(hasErr(r, 'V:01015'), false);
+
+  const kaputt = clone(validInput);
+  kaputt.prescriptions[0].verordnung.icd10 = '';
+  kaputt.prescriptions[0].verordnung.icd10Liste = ['XX99'];
+  const r2 = preflight(kaputt);
+  assert.ok(hasErr(r2, 'V:01014'), 'der einzige Kode wird geprueft');
+});
+
 // ---------------------------------------------------------------------------
 // Schritt 1.9 (d) — Feldlängen. Alle Grenzen aus Anlage 1 TP5 V21,
 // Kap. 5.5.2 (SLGA.NAM) und 5.5.3.1 (SLLA.NAD).

@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Probe: ICD ↔ Diagnosegruppe in der Muster-13-Maske</title>
+<!--
+  Bühne für icd-dg-probe.mjs (Ops #304, 26.09.2026). Die Maske ist die ECHTE
+  aus dashboard.html, dazu der echte Podologie-Feinschliff (verordnung-podo.js)
+  und die echte ICD↔DG-Verdrahtung (module/icd-dg-verdrahtung.js). Die Probe
+  tippt mit der Tastatur und verlässt Felder mit Tab — also echtes `change`
+  beim Verlassen, was `node --test` nicht nachstellen kann.
+  Kein Login: `supabase` ist eine Attrappe, die die Podologie-Zeilen der Tabelle
+  `diagnosegruppen` liefert (Stand Prod 26.09.2026).
+-->
+<div id="buehne"></div>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+try {
+  const html = await (await fetch('../../dashboard.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  $('buehne').appendChild(document.importNode(doc.getElementById('rezeptModal'), true));
+  $('rezeptModal').style.display = 'block';
+
+  const ZEILEN = [
+    { code: 'DF', label: 'DF', bereich: 'podologie', sort: 1, aktiv: true, icd_enforcement: 'warn',
+      icd_accept: [{ re: '^E1[0-4]\\.7[45]$' }, { re: '^E1[0-4]\\.4[01]$' }, { re: '^G63\\.2\\*?$' }],
+      icd_exclude: [], icd_accept_unsicher: [{ re: '^E1[0-4]\\.7[23]$' }],
+      icd_auto_select: [{ re: '^E1[0-4]\\.7[45]$' }, { re: '^E1[0-4]\\.4[01]$' }, { re: '^G63\\.2\\*?$' }] },
+    { code: 'NF', label: 'NF', bereich: 'podologie', sort: 2, aktiv: true, icd_enforcement: 'warn',
+      icd_accept: [{ re: '^G60\\.' }, { re: '^G61\\.' }, { re: '^G62\\.' }, { re: '^G63\\.[013-68]\\*?$' }],
+      icd_exclude: [{ re: '^G63\\.2\\*?$' }, { re: '^E1[0-4]\\.' }], icd_accept_unsicher: [],
+      icd_auto_select: [{ re: '^G6[012]\\.' }, { re: '^G63\\.[013-68]\\*?$' }] },
+    { code: 'UI1', label: 'UI1', bereich: 'podologie', sort: 4, aktiv: true, icd_enforcement: 'hard_before_dta',
+      icd_accept: [{ re: '^L60\\.0$' }], icd_exclude: [], icd_auto_select: [], icd_accept_unsicher: [] },
+    { code: 'UI2', label: 'UI2', bereich: 'podologie', sort: 5, aktiv: true, icd_enforcement: 'hard_before_dta',
+      icd_accept: [{ re: '^L60\\.0$' }], icd_exclude: [], icd_auto_select: [], icd_accept_unsicher: [] },
+  ];
+  // Attrappe: jede Abfrage-Kette endet in den Diagnosegruppen, alles andere leer.
+  const kette = () => {
+    const k = { select: () => k, eq: () => k, in: () => k, order: async () => ({ data: ZEILEN, error: null }),
+                maybeSingle: async () => ({ data: null, error: null }), single: async () => ({ data: null, error: null }) };
+    return k;
+  };
+  const supabase = { from: kette, rpc: async () => ({ data: [], error: null }) };
+
+  const podo = await import('../../module/verordnung-podo.js?v=20260926a');
+  const { verdrahteIcdDg } = await import('../../module/icd-dg-verdrahtung.js?v=20260926a');
+  const TEXTE = {
+    pod_dg_kandidaten: 'Passende Diagnosegruppen:',
+    pod_icd_mismatch: 'Der ICD benennt nicht die für diese Diagnosegruppe geforderte Diagnose',
+    pod_icd_nach_feld2: '2. Code nach ICD 2 übernommen',
+    pod_icd_je_feld: 'Mehr als zwei ICD-Codes',
+  };
+  podo.mountVerordnungPodo(supabase, { getOwnerId: () => 'owner', getProfile: () => ({ ik_number: '260000000' }) });
+  // Podologie ankreuzen wie setM13Therapy in dashboard.js
+  $('rzTherapieBereich').value = 'podo';
+  document.querySelector('.m13-chk[data-th="podo"]')?.classList.add('on');
+  podo.podoMaskeNachziehen();
+  // wie dashboard.js `_verdrahteIcdPaar`
+  verdrahteIcdDg({ icdId: 'rzIcd', icd2Id: 'rzIcd2', dgId: 'rzDg', warnId: 'rzIcdDgWarning',
+                   bereich: () => $('rzTherapieBereich').value || 'praxis', supabase, t: k => TEXTE[k] || k });
+  window.__bereit = true;
+} catch (e) {
+  window.__fehler = String(e && e.stack || e);
+}
+</script>

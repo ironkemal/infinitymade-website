@@ -71,13 +71,22 @@ alıyor (aşağıdaki anomali kutusu).
 **ICD (`rzIcd`) ↔ Diagnosegruppe (`rzDg`) alan çifti — beklenen (Ops #304, 25.09.2026):**
 > Domain kaynağı: `podoloji` (praksis UX) + `gkv-302` (norm: DG **yalnız hekim tarafında**
 > değiştirilebilir — Podologie-Vertrag Anlage 3 Ziffer 5 j), ikisi de 25.09.2026'da soruldu.
-> Durum: **yerel kod 25.09.2026, henüz deploy edilmedi.** Yukarıdaki "ICD girilince
+> Durum: **deploy edildi 25.09.2026 (`a7b1ff3`, canlı `?v=20260925a`) — canlıda HENÜZ TEST EDİLMEDİ** (aşağıdaki 25.09.2026 notu). Yukarıdaki "ICD girilince
 > Diagnosegruppe türetilir" cümlesi bu kurallarla daraltılır — türetme yalnız **boş** DG'ye yazar.
 > Uyarı satırı: `rzIcdDgWarning`.
 - **Boş DG + tek anlamlı ICD** (E11.74, E11.75, G63.2 → DF) → DF otomatik yazılır.
 - **L60.0 tek başına** → DG yazılmaz, uyarı: „Passende Diagnosegruppen: UI1, UI2".
 - **Çok anlamlı** (E11.74 + L60.0) → DG yazılmaz, uyarıda DF, UI1, UI2 adayları; DF daha
   önce **otomatik** yazılmışsa ICD alanından çıkılınca (blur) geri alınır.
+- **26.09.2026'dan beri — iki ICD alanı birlikte sayılır** (`rzIcd` + `rzIcd2`): E11.74 birinci,
+  L60.0 ikinci alanda → aynı sonuç (DG yok, DF/UI1/UI2). İkinci alan boşken birinciye iki kod
+  yazılırsa („E11.74, L60.0" veya „E11.74 L60.0") alandan çıkınca ikinci kod `rzIcd2`'ye geçer,
+  ipucu „2. Code nach ICD 2 übernommen". ≥3 kod / ikinci alan dolu → taşınmaz, ipucu „Mehr als zwei
+  ICD-Codes: übertragen werden zwei (je Feld einer) – weitere bitte in den Diagnosetext", kaydederken
+  „Trotzdem speichern?" listesinde (sperre YOK — `gkv-302`: 3+ kodlu Verordnung geçerli).
+- DG ipucu **yalnız** ICD alanının altında (`rzIcdDgWarning`); Podologie kutusunda „Zulässige
+  Diagnosegruppen …" / „… passt nicht zum eingegebenen ICD-Kode" satırı artık **çıkmaz**. „Passt nicht"
+  ipucu uygun grupları da sayar. DG elle boşaltılınca otomatik hemen yeniden önerir.
 - **Yüklenmiş DG** (Scan übernehmen, Bearbeiten, Folgeverordnung) veya katalogdan seçilmiş /
   alandan çıkılarak kabul edilmiş DG → **asla ezilmez.** ICD uymuyorsa uyarı:
   „Der ICD benennt nicht die für diese Diagnosegruppe geforderte Diagnose: … (DG)".
@@ -89,10 +98,30 @@ alıyor (aşağıdaki anomali kutusu).
 
 **Canlı tur test senaryoları (kaynak `podoloji`):**
 a) boş DG, E11.74 → DF · b) NF'li Verordnung'u Bearbeiten, E11.74 yaz → NF kalır + uyarı ·
-c) DG'yi boşalt → DF yeniden yazılır · d) E11.74 + L60.0 → DG yok, adaylar gösterilir ·
+c) DG'yi boşalt → DF yeniden yazılır · d) „E11.74, L60.0" birinci alanda → L60.0 ikinci alana geçer, DG yok, adaylar ·
+d2) E11.74 → DF, sonra ikinci alana L60.0 → DF geri alınır ·
 e) Z99.9 → (bugün uyarı yok, sonraki adım) · f) E11.72 → DF yazılmaz ·
 g) Rezept A kaydet, yeni Rezept B'de E11.74 → DF.
 Her senaryoda kaydet → **sayfa yenile** → `prescriptions` üzerinde DG gerçekten duruyor mu.
+
+**Canlı tur 2026-09-25 (Ops #304, `c4e5b5f`) — TEST EDİLEMEDİ.**
+- Kapı 1 ✅ `/health` 200 · Kapı 2 ✅ `dashboard.html` → `dashboard.js?v=20260925a` →
+  `icd-dg-match.js?v=20260925a`, `dgVorschlag` içinde `kandidaten.every(k => k === auto)` canlıda;
+  canlı `dashboard.html` / `dashboard.js` / `icd-dg-match.js` commit ile **bayt bayt aynı**
+  (Vercel deploy 20:23 UTC tamamlandı, push'tan ~8 dk sonra).
+- Kapı 3 ❌ bu makinede (macOS) `playwright-cli` kurulu değil, oturumlu bir tarayıcı profili bu tur için erişilebilir değildi;
+  `.env.local`'da `PRAXURA_QA_*` yok. Oturumsuz tarayıcı `login.html`'e düşüyor.
+- Senaryolar a · c · d · d2 · f · h · i · b · g · e → hepsi **atlandı (oturum yok)**, hiçbiri
+  geçti/kaldı sayılmaz. Talimat gereği bu turda zaten kayıt yapılmayacaktı (maske açılıp
+  kaydetmeden kapatılacaktı), yani yukarıdaki "kaydet → yenile" adımı bu tur için geçerli değil.
+- Yerine kanıt (canlı değil): `node --test module/icd-dg-vorschlag.test.js` 18/18 geçti — canlıyla
+  aynı `icd-dg-match.js` üzerinde. `dgAuto`/blur geri alma kablolaması `dashboard.js`'te, testsiz.
+- **26.09.2026:** d/d2'nin canlıdaki kök nedeni bulundu — ikinci DG yazanı `module/verordnung-podo.js`
+  `dgAuswahlEingrenzen` DF'yi `dgAuto` işaretsiz yazıyordu; ağda önce o dönerse DF hekim beyanı sayılıp
+  hiç geri alınmıyordu (c de etkileniyordu). Artık DG'ye tek yazan `module/icd-dg-verdrahtung.js`;
+  Fachbereich maskeden okunur (`praxis` mandantında otomatik susuyordu). Kanıt: `icd-dg-verdrahtung.test.js`
+  19/19 + **`tools/browser-probe/icd-dg-probe.mjs` 15/15 — gerçek Muster-13 maskesi, klavye + Tab**
+  (a, c, d, d2, f, L60.0 tek, DG'ye tıklama, elle DF). **Oturumlu canlı tur hâlâ yapılmadı.**
 
 **Son test (ICD↔DG):** lokal nachgestellt (Fake-DOM-Harness gegen echten Quelltext, 18/20 Soll
 erfüllt, die 2 offenen = L4-Folgeschritt) 25.09.2026 — **live ungetestet**. Deploy sonrası

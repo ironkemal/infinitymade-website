@@ -28,7 +28,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260922';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20260922';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260905a';
-import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260925a';
+import { verdrahteIcdDg, icdKodesAusFeld } from './module/icd-dg-verdrahtung.js?v=20260926a';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260920c';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
@@ -36,8 +36,7 @@ import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260921';
-import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260918';
-import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260920s';
+import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260926a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
@@ -241,6 +240,8 @@ const T = {
     pod_dg_nur_mit: 'nur mit {icd}',
     pod_dg_passt_nicht: 'passt nicht zu {icd}',
     pod_dg_kandidaten: 'Passende Diagnosegruppen:',
+    pod_icd_nach_feld2: '2. Code nach ICD 2 übernommen',
+    pod_icd_je_feld: 'Mehr als zwei ICD-Codes: übertragen werden zwei (je Feld einer) – weitere bitte in den Diagnosetext',
     pod_l60_hint: 'L60.0 – bitte Stadium bestätigen (maßgeblich ist die Angabe auf der Verordnung):',
     pod_l60_ui1: 'Unguis incarnatus – Stadium 1 (UI1)',
     pod_l60_ui2: 'Stadium 2 oder 3 (UI2)',
@@ -431,6 +432,8 @@ const T = {
     pod_dg_nur_mit: 'only with {icd}',
     pod_dg_passt_nicht: 'does not match {icd}',
     pod_dg_kandidaten: 'Matching diagnosis groups:',
+    pod_icd_nach_feld2: '2nd code moved to ICD field 2',
+    pod_icd_je_feld: 'More than two ICD codes: two are transmitted (one per field) – please put further codes in the diagnosis text',
     pod_l60_hint: 'L60.0 – please confirm the stage (use the physician\'s notation on the prescription):',
     pod_l60_ui1: 'Unguis incarnatus – Stage 1 (UI1)',
     pod_l60_ui2: 'Stage 2 or 3 (UI2)',
@@ -614,6 +617,8 @@ const T = {
     pod_dg_nur_mit: 'yalnızca {icd} ile',
     pod_dg_passt_nicht: '{icd} ile uyuşmuyor',
     pod_dg_kandidaten: 'Uygun tanı grupları:',
+    pod_icd_nach_feld2: '2. kod ICD 2 alanına taşındı',
+    pod_icd_je_feld: 'İkiden fazla ICD kodu: iki kod iletilir (her alana bir) – diğerlerini lütfen tanı metnine yazın',
     pod_l60_hint: 'L60.0 – lütfen evresi onaylayın (reçetedeki hekim kaydı geçerlidir):',
     pod_l60_ui1: 'Unguis incarnatus – Evre 1 (UI1)',
     pod_l60_ui2: 'Evre 2 veya 3 (UI2)',
@@ -15562,8 +15567,8 @@ function lsWireToggle(prefix) {
 // (CLAUDE.md, "Vertikal sıralaması"). Die Felder unten sind mandanten-
 // abhängig, sie bekommen strict, wenn Physio/Ergo/Logopädie an der Reihe sind.
 const DIAGNOSE_FIELDS = {
-  rzIcd:       { kind: 'icd',  dgField: 'rzDg',     dgKind: 'text', warnId: 'rzIcdDgWarning'  }, // Rezept anlegen
-  rzIcd2:      { kind: 'icd' },  // 2. Diagnose — BEWUSST ohne dgField: die DG folgt der ERSTEN, zwei Felder auf demselben `rzDg` überschrieben sich
+  rzIcd:       { kind: 'icd',  dgField: 'rzDg', icd2Field: 'rzIcd2', warnId: 'rzIcdDgWarning', bereichFeld: 'rzTherapieBereich' }, // Rezept anlegen
+  rzIcd2:      { kind: 'icd',  paar: 'rzIcd' },  // 2. Diagnose — kein eigenes dgField (zwei Verdrahtungen auf `rzDg` überschrieben sich); zählt über das Paar von rzIcd mit
   // Diagnosegruppe. `nurCodes` liest die Allowlist, die module/verordnung-podo.js aus dem eingegebenen ICD-Kode ableitet (leer = keine Einengung).
   rzDg:        { kind: 'dg',   icdField: 'rzIcd',   codeOnly: true,
                  nurCodes: () => (document.getElementById('rzDg')?.getAttribute('data-pod-erlaubt') || '')
@@ -15584,11 +15589,9 @@ document.addEventListener('focusin', (e) => {
   const dcfg = DIAGNOSE_FIELDS[el.id];
   if (dcfg) {
     attachDiagnoseSearch(el, supabase, { bereich: _getDiagnoseBereich, ...dcfg });
-    // ICD-Felder: bidirektionale DG-Verdrahtung beim ersten Fokus anstossen.
-    // dcfg.bereich hätte Vorrang, sonst gilt der Mandanten-Fachbereich.
-    if (dcfg.kind === 'icd' && dcfg.dgField) {
-      _wireDgIcdPair(el.id, dcfg.dgField, dcfg.dgKind || 'text', dcfg.warnId, dcfg.bereich ?? _getDiagnoseBereich());
-    }
+    // ICD-Felder: bidirektionale DG-Verdrahtung beim ersten Fokus anstossen —
+    // auch vom zweiten ICD-Feld aus (`paar`), sonst zählte es erst nach rzIcd.
+    if (dcfg.kind === 'icd' && (dcfg.dgField || dcfg.paar)) _verdrahteIcdPaar(dcfg.dgField ? el.id : dcfg.paar);
   } else {
     const hcfg = HEILMITTEL_FIELDS[el.id];
     if (!hcfg) return;
@@ -15605,152 +15608,14 @@ document.addEventListener('focusin', (e) => {
 });
 
 // ── Bidirektionale ICD ↔ DG Verdrahtung ─────────────────────────────────────
-//
-// Registriert input/change-Handler auf ICD- und DG-Feldern, sobald sie im DOM
-// auftauchen. Wird beim ersten Fokus gecheckt und ist idempotent (data-attr).
-// Für das Podologie-Panel wird diese Funktion nach jedem Re-Render erneut
-// aufgerufen (die Elemente werden neu erzeugt).
-
-/**
- * Verdrahtet das bidirektionale Verhalten für ein ICD-Feld und sein DG-Gegenstück.
- * @param {string} icdId   - ID des ICD-Feldes (z.B. 'rzIcd')
- * @param {string} dgId    - ID des DG-Feldes (z.B. 'rzDg')
- * @param {string} dgKind  - 'select' oder 'text'
- * @param {string} [warnId] - ID des Warn-Elements
- * @param {string} [bereich] - Fachbereich; nur Podologie hat heute echte
- *   icd_accept-Regeln (s. module/diagnosegruppen-regeln.js).
- */
-function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
-  const icdEl  = document.getElementById(icdId);
-  const dgEl   = document.getElementById(dgId);
-  if (!icdEl || icdEl.dataset.dgIcdWired) return;
-  icdEl.dataset.dgIcdWired = '1';
-
-  /**
-   * Setzt die Diagnosegruppe programmatisch und löst dabei input/change aus,
-   * damit abhängige Logik mitläuft. Die Marke `autoSetting` sorgt dafür, dass
-   * das eigene Ereignis nicht als Eingabe des Anwenders gewertet wird.
-   * Ersetzt wird nur ein leeres Feld oder der eigene frühere Vorschlag (`dgAuto`).
-   * Jeder andere Wert — Papier, Scan, Bestand, Handeingabe — ist ärztliche
-   * Angabe und bleibt stehen (Podologie-Vertrag Anlage 3 Ziffer 5 j, Ops #304).
-   */
-  function _setDgProgrammatically(value) {
-    if (!dgEl || (dgEl.value.trim() && dgEl.value !== dgEl.dataset.dgAuto)) return;
-    if (dgEl.value === value) return;
-    dgEl.dataset.autoSetting = '1';
-    try {
-      dgEl.value = value;
-      if (value) dgEl.dataset.dgAuto = value; else delete dgEl.dataset.dgAuto;
-      dgEl.dispatchEvent(new Event('input',  { bubbles: true }));
-      dgEl.dispatchEvent(new Event('change', { bubbles: true }));
-    } finally {
-      delete dgEl.dataset.autoSetting;
-    }
-  }
-
-  async function onIcdChange(commit) {
-    const codes   = parseIcdList(icdEl.value);
-    const warnEl  = warnId ? document.getElementById(warnId) : null;
-
-    // Keine Kodes → kein Hinweis, keine Sperre
-    if (codes.length === 0) {
-      if (warnEl) warnEl.style.display = 'none';
-      dgOptionenSperren(dgEl, null, { t });
-      if (commit === true) _setDgProgrammatically('');   // eigenen Vorschlag zurücknehmen
-      return;
-    }
-
-    // Fachbereich wurde beim Verdrahten eingefroren (s.o.). Regeln pro Bereich
-    // bei Bedarf nachladen. Ausserhalb Podologie sind icd_accept-Regeln heute
-    // leer (bewusst, s. module/diagnosegruppen-regeln.js) — macht den Ablauf
-    // dort automatisch wirkungslos, kein gesondertes Gate nötig.
-    if (!getDgIcdRules(bereich) || !Object.keys(getDgIcdRules(bereich)).length) {
-      await loadDgIcdRules(supabase, bereich);
-    }
-    const rules = getDgIcdRules(bereich) || {};
-    if (!Object.keys(rules).length) return;
-
-    // Vorschlag und Sperren in einem Zug — die Regeln stehen in der Tabelle
-    // `diagnosegruppen`, nicht mehr hier. `normativ` heisst: jeder eingegebene
-    // Kode gehoert normativ genau einer Gruppe (heute nur L60.0 → UI1/UI2),
-    // dann kommt die Rueckfrage statt einer geratenen Auswahl.
-    const v = dgVorschlag(codes, rules);
-    // Unmoegliche Kombinationen sperren — mit Begruendung an der Option selbst.
-    // Geraeumt wird nur beim Verlassen des Feldes, s. dgOptionenSperren.
-    dgOptionenSperren(dgEl, v, { codes, t, raeumen: commit === true });
-
-    // Eine vom Anwender gesetzte Diagnosegruppe wird nicht überschrieben — das
-    // prüft _setDgProgrammatically. Hier darf NICHT abgebrochen werden, sonst
-    // bliebe genau der interessante Fall ohne Hinweis: der Anwender hat die
-    // Gruppe von Hand gewählt und der Kode passt nicht dazu.
-
-    // Genau eine Gruppe passt und keine andere kommt in Frage (dgVorschlag) →
-    // eintragen (beim <select> nur, wenn es die Option gibt). Sonst beim Verlassen
-    // des Feldes den eigenen früheren Vorschlag zurücknehmen (E11.74, dann L60.0).
-    const optExists = v.auto && (dgEl?.tagName !== 'SELECT' || Array.from(dgEl.options).some(o => o.value === v.auto));
-    if (optExists) _setDgProgrammatically(v.auto);
-    else if (commit === true) _setDgProgrammatically('');
-
-    // Warnhinweis
-    if (!warnEl || !dgEl) return;
-    const dgRoot = normDgCode(dgEl.value);
-    if (!dgRoot) {
-      // Noch keine Gruppe gewaehlt: die passenden benennen statt schweigen.
-      const zeig = v.kandidaten.length > 1;
-      warnEl.textContent   = zeig ? `${t('pod_dg_kandidaten')} ${v.kandidaten.join(', ')}` : '';
-      warnEl.style.fontWeight = '';
-      warnEl.style.display = zeig ? 'block' : 'none';
-      return;
-    }
-    const rule = rules[dgRoot];
-    if (!rule || !rule.icd_accept || !rule.icd_accept.length) { warnEl.style.display = 'none'; return; }
-    const result = matchIcdToDg(codes, rule);
-    if (result.status === 'mismatch') {
-      const isHard = rule.icd_enforcement === 'hard_before_dta';
-      let msg = `${t('pod_icd_mismatch')}: ${codes.join(', ')} (${dgRoot})`;
-      if (result.hints.length > 0) msg += ` — ${result.hints.join('; ')}`;
-      if (isHard) { msg += ' ⚠ ' + t('pod_icd_hard'); warnEl.style.fontWeight = '600'; }
-      else { warnEl.style.fontWeight = ''; }
-      warnEl.textContent = msg;
-      warnEl.style.display = 'block';
-    } else {
-      warnEl.style.display = 'none';
-    }
-  }
-
-  // Übernimmt der Anwender einen Wert (Katalogauswahl oder Feld verlassen, beides
-  // `change`), gehört er nicht mehr der Automatik. Bewusst nicht `input`: das feuern
-  // auch der Fokus-Anstoß (focusin oben) und verordnung-podo.js:schreibe() — ein
-  // Klick ins Feld hat sonst die Automatik abgeschaltet (Ops #304).
-  if (dgEl && !dgEl.dataset.dgManualWired) {
-    dgEl.dataset.dgManualWired = '1';
-    const markManual = () => {
-      if (dgEl.dataset.autoSetting) return;
-      delete dgEl.dataset.dgAuto;
-    };
-    dgEl.addEventListener('change', markManual);
-
-    // Gegenrichtung DG → ICD: nur wo sich aus der Diagnosegruppe genau ein Kode
-    // ableiten lässt. Das ist ausschließlich UI1/UI2 → L60.0; bei DF/NF/QF ist
-    // der Pool nicht normativ, dort wird nichts eingetragen.
-    dgEl.addEventListener('change', async () => {
-      if (dgEl.dataset.autoSetting) return;          // kein Ping-Pong
-      if (icdEl.value.trim()) return;                // Gefülltes Feld bleibt
-      if (!getDgIcdRules(bereich) || !Object.keys(getDgIcdRules(bereich)).length) await loadDgIcdRules(supabase, bereich);
-      const rule = (getDgIcdRules(bereich) || {})[normDgCode(dgEl.value)];
-      const sole = rule ? soleIcdForDg(rule) : null;
-      if (!sole || icdEl.value.trim()) return;
-      icdEl.value = sole;
-      icdEl.dispatchEvent(new Event('input',  { bubbles: true }));
-      icdEl.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-  }
-
-  icdEl.addEventListener('input',  () => onIcdChange(false));
-  icdEl.addEventListener('change', () => onIcdChange(true));
-
-  // Wenn Feld bereits befüllt: sofort prüfen
-  if (icdEl.value.trim()) onIcdChange(true);
+// Seit 26.09.2026 in module/icd-dg-verdrahtung.js (vorher `_wireDgIcdPair` hier).
+// Hier nur noch, welches Feldpaar gemeint ist — aus DIAGNOSE_FIELDS. Der
+// Fachbereich ist der angekreuzte der Maske, sonst der des Mandanten: bei
+// `praxis` (interdisziplinär) hatte der Mandanten-Bereich keine Regeln.
+function _verdrahteIcdPaar(icdId) {
+  const p = DIAGNOSE_FIELDS[icdId];
+  const bereich = p.bereich ?? (() => document.getElementById(p.bereichFeld)?.value || _getDiagnoseBereich());
+  verdrahteIcdDg({ icdId, icd2Id: p.icd2Field, dgId: p.dgField, warnId: p.warnId, bereich, supabase, t });
 }
 
 let rzPatientCache = [];
@@ -15769,6 +15634,9 @@ function wireM13Toggles() {
       root.querySelectorAll('.m13-chk[data-th]').forEach(o => o.classList.remove('on'));
       if (!wasOn) box.classList.add('on');
       document.getElementById('rzTherapieBereich').value = wasOn ? '' : (box.dataset.th || '');
+      // Anderer Bereich, andere ICD↔DG-Regeln: die Verdrahtung neu auswerten lassen.
+      const icd = document.getElementById('rzIcd');
+      if (icd?.value.trim()) icd.dispatchEvent(new Event('change', { bubbles: true }));
     });
   });
 
@@ -16042,6 +15910,7 @@ async function saveRezept() {
     const formatErrors = [];
     if (rzLanr && !/^\d{9}$/.test(rzLanr)) formatErrors.push('LANR muss 9 Ziffern haben');
     if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
+    if (['rzIcd', 'rzIcd2'].some(id => icdKodesAusFeld(val(id)).length > 1)) formatErrors.push(t('pod_icd_je_feld'));
 
     let overridden = false;
     if (missing.length || formatErrors.length) {
@@ -16723,7 +16592,7 @@ async function init() {
       // Werte hineinschreibt (module/verordnung-maske.js) — ohne Fokus des
       // Anwenders passiert das sonst nie (Ops: DG-Autofill nach KI-Scan tot).
       // Die DG, die gleich geladen wird, stammt vom Papier, nicht von der Automatik (Ops #304).
-      ensureDgIcdWiring: () => { delete document.getElementById('rzDg')?.dataset.dgAuto; _wireDgIcdPair('rzIcd', 'rzDg', 'text', 'rzIcdDgWarning', _getDiagnoseBereich()); },
+      ensureDgIcdWiring: () => { delete document.getElementById('rzDg')?.dataset.dgAuto; _verdrahteIcdPaar('rzIcd'); },
     });
     document.getElementById('anamRezeptBtn')?.addEventListener('click', () => {
       const sel = document.getElementById('anamPatientSelect');
@@ -20141,7 +20010,6 @@ function podoCtx() {
     loadKkList,
     resolveArzt,
     toastArztErgebnis,
-    _wireDgIcdPair,
     rechnungAusVerordnung,           // bleibt hier, schreibt in die inv*-Variablen
     leads:    () => leadsCache,      // Getter — siehe oben
     services: () => ownerServices,   // Getter — siehe oben

@@ -116,6 +116,29 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 26.09.2026 · Ops #304 Nachtrag — iki ICD alanı, DG'ye tek yazan
+- **Yeni modül `module/icd-dg-verdrahtung.js`** (`verdrahteIcdDg`, `icdAufZweiFelder`,
+  `icdKodesAusFeld`) — `dashboard.js` `_wireDgIcdPair` buraya taşındı (kuşatma). Niye: test
+  edilebilsin (`module/icd-dg-verdrahtung.test.js` 19 test + `tools/browser-probe/icd-dg-probe`
+  gerçek maskede klavye/Tab ile 15 kontrol) ve kurallar: (1) `rzIcd` **ve** `rzIcd2` birlikte
+  sayılır; (2) ilk alanda iki kod + ikinci boş → çıkışta ikinci kod `rzIcd2`'ye (`icd10` tek kod:
+  `preflight.js` V:01002); ≥3 kod → taşınmaz, ipucu + kaydederken `formatErrors` (sperre yok —
+  `gkv-302`: 3+ kodlu Verordnung geçerli); (3) Fachbereich **maskeninki** (`rzTherapieBereich`),
+  yoksa mandantınki — `praxis` mandantında kural yoktu, otomatik susuyordu; (4) DG elle
+  boşaltılınca hemen yeni öneri; (5) "passt nicht" ipucu uygun grupları da söyler.
+  Fachlich: `podoloji` + `gkv-302` 26.09.2026. İlk kullanım: Muster 13.
+- **Kopya kararı verildi (26.09.2026, kullanıcı devretti):** `rzDg`'ye otomatik yazan artık
+  yalnız `verdrahteIcdDg`. `module/verordnung-podo.js` `dgAuswahlEingrenzen` yalnız seçim
+  listesini daraltır (`data-pod-erlaubt`), DG yazmaz, "passt nicht / zulässig" satırlarını da
+  basmaz. Niye: iki yazan + iki kriter = ağ yarışı; işaretsiz DF hiç geri alınmıyordu (d/d2
+  canlıda bu yüzden kaldı) ve aynı ipucu iki yerde çıkıyordu.
+- `api-backend/billing/dta/preflight.js` — `icd10` boş + `icd10_2` dolu: V:01002 boş alanda
+  yanlış alarm veriyordu ve tek kod hiç denetlenmiyordu (`gkv-302` buldu). `preflight.test.js` +1.
+- `dashboard.js` `podoCtx()` — ölü `_wireDgIcdPair` aktarımı silindi. `wireM13Toggles` —
+  Fachbereich değişince ICD yeniden değerlendirilir.
+- i18n `pod_icd_nach_feld2`, `pod_icd_je_feld` (de/en/tr) · cache `dashboard.js` ve
+  `verordnung-podo.js` `?v=20260926a` · `modul-probe.html` listesi · `npm run probe` +`icd-dg-probe`.
+
 ### 25.09.2026 · Ops #304 — DG-Automatik nimmt nur Eindeutiges, Papierwert gewinnt
 Yeni fonksiyon yok, silinen yok; davranış değişikliği.
 - `icd-dg-match.js` `dgVorschlag()` — `auto` artık yalnız başka hiçbir grup `icd_accept` ile

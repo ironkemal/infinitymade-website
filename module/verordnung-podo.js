@@ -496,7 +496,8 @@ async function dgAuswahlEingrenzen(supabase) {
   const dgFeld  = $('rzDg');
   if (!icdFeld || !dgFeld || !istPodo()) return null;
 
-  const codes = parseIcdList(icdFeld.value);
+  // Beide ICD-Felder von Muster 13 zählen — wie in module/icd-dg-verdrahtung.js.
+  const codes = parseIcdList([icdFeld.value, $('rzIcd2')?.value].filter(Boolean).join(', '));
   if (!codes.length) { dgFeld.removeAttribute('data-pod-erlaubt'); return null; }
 
   const regeln = await podRegelnLaden(supabase);
@@ -509,15 +510,13 @@ async function dgAuswahlEingrenzen(supabase) {
   // nur parametriert. Als Attribut ist im DOM sichtbar, warum die Liste kurz ist.
   dgFeld.setAttribute('data-pod-erlaubt', erlaubt.join(','));
 
-  // Steht schon eine Gruppe drin, die der Kode nicht zulässt, wird sie
-  // nicht still ersetzt — der Arzt hat sie so verordnet. Wir melden nur.
-  const aktuell = dgWurzel(dgFeld.value);
-  const passt = !aktuell || erlaubt.includes(aktuell);
-
-  // Genau eine Möglichkeit und noch nichts gewählt → übernehmen.
-  if (!aktuell && erlaubt.length === 1) schreibe(dgFeld, erlaubt[0]);
-
-  return { erlaubt, passt, aktuell, regeln };
+  // Die Diagnosegruppe selbst schreibt hier niemand mehr (26.09.2026): das tut
+  // allein module/icd-dg-verdrahtung.js. Zwei Schreiber mit zwei Kriterien
+  // haben sich um `rzDg` ein Rennen geliefert — wessen Regelabfrage zuerst
+  // zurückkam, gewann, und ein von hier geschriebenes DF wurde bei E11.74 +
+  // L60.0 nie zurückgenommen (Ops #304, d/d2). Aus demselben Grund steht auch
+  // der Hinweis „passt nicht / zulässig" nur noch dort, am ICD-Feld.
+  return { erlaubt, regeln };
 }
 
 // ─── 4. Behandlungseinheiten ───────────────────────────────────────────────
@@ -1029,22 +1028,10 @@ async function aktualisieren(supabase, ctx) {
   }
 
   await ikVorbelegen(supabase, ctx);
-  const dgLage = await dgAuswahlEingrenzen(supabase);
+  await dgAuswahlEingrenzen(supabase);   // nur die Auswahlliste einengen, s. dort
   const lsMeldung = leitsymptomatikAnwenden();
 
   const zeilen = [lsMeldung];
-
-  if (dgLage && dgLage.erlaubt.length) {
-    if (!dgLage.passt) {
-      zeilen.push({
-        farbe: 'var(--danger,#ef4444)',
-        text: `${dgLage.aktuell} passt nicht zum eingegebenen ICD-Kode. Zulässig: `
-            + dgLage.erlaubt.join(' oder ') + '.',
-      });
-    } else if (dgLage.erlaubt.length > 1 && !dgLage.aktuell) {
-      zeilen.push({ text: `Zulässige Diagnosegruppen für diesen ICD-Kode: ${dgLage.erlaubt.join(' oder ')}.` });
-    }
-  }
 
   zeilen.push(einheitenPruefen());
   schnellauswahlRendern();
@@ -1124,7 +1111,7 @@ export function mountVerordnungPodo(supabase, ctx = {}) {
     if (el?.dataset?.auto === '1') delete el.dataset.auto;
   }, true);
 
-  const AUSLOESER = ['rzLsA', 'rzLsB', 'rzLsC', 'rzLsD', 'rzDg', 'rzIcd',
+  const AUSLOESER = ['rzLsA', 'rzLsB', 'rzLsC', 'rzLsD', 'rzDg', 'rzIcd', 'rzIcd2',
                      'rzAnzahl', 'rzAusstDate', 'rzDringend', 'rzPodoNagel'];
   ['change', 'input'].forEach(ev => maske.addEventListener(ev, (e) => {
     if (AUSLOESER.includes(e.target?.id || '')) lauf();

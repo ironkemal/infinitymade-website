@@ -42,7 +42,7 @@
  *
  * Die ICD-Regeln der Diagnosegruppen sind in `diagnosegruppen-regeln.js`
  * gelandet, nicht hier: die Tabelle `diagnosegruppen` gehört nicht der
- * Podologie, `_wireDgIcdPair` bedient damit auch Rezept-Formular und
+ * Podologie, `verdrahteIcdDg` (module/icd-dg-verdrahtung.js) bedient damit auch Rezept-Formular und
  * Rezept-Scan.
  *
  * Nicht verwechseln

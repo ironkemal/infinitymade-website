@@ -437,7 +437,7 @@
   (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:2373`,
   S. 58) · § 13 Abs. 1 Satz 3 (`:608-609`)
 - **Geçerlilik:** 16.06.2025 (Anlage 3) / 05.08.2025 (HeilM-RL)
-- **Kodda:** ✅ `dashboard.js:15623` `_wireDgIcdPair` → `_setDgProgrammatically` (`:15638`)
+- **Kodda:** ✅ `module/icd-dg-verdrahtung.js:73` `verdrahteIcdDg` (26.09.2026'ya kadar `dashboard.js` `_wireDgIcdPair`) → `_setDgProgrammatically` (`:92`)
   yalnız boş alanı veya kendi önceki önerisini (`dataset.dgAuto`) değiştirir ·
   `icd-dg-match.js:243` `dgVorschlag` — birden çok DG adayı varsa `auto = null` (yorum `:266-269`).
   Ops #304, 25.09.2026 (çalışma kopyasında, commit edilmemiş haliyle okundu).
@@ -505,7 +505,7 @@
 - **Kodda:** Einreichung-öncesi kapı `api-backend/billing/dta/preflight.js:324-345` (ICD veya
   Diagnosetext var mı) — **therapierelevanz** (ICD↔DG uyumu) yalnız uyarı:
   `api-backend/ai/validators/icdDgRules.js` (Warnungen, `hard_before_dta` opsiyonel), frontend
-  `dashboard.js:15623` `_wireDgIcdPair`. Uyumsuzluğun DTA'dan önce sert kesilip kesilmeyeceği
+  `module/icd-dg-verdrahtung.js:73` `verdrahteIcdDg`. Uyumsuzluğun DTA'dan önce sert kesilip kesilmeyeceği
   ürün kararıdır (Ops #304).
 - **Kapsam:** Podologie
 
