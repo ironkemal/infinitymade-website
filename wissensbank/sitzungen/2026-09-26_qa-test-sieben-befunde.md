@@ -39,11 +39,25 @@ Auslöser: QA-Durchlauf mit Claude in Chrome (Owner-Sicht) auf app.praxura.de. A
 - `canli-test`-Agent kann auf diesem Mac nicht einloggen (kein `.env.local` mit QA-Zugang, kein
   `playwright-cli`). Live-Prüfung lief über Claude in Chrome mit Melihs Sitzung, nur lesend.
 
+## Live-Prüfung nach Deploy (26.09.2026, nur lesend)
+
+- ✅ bestätigt: Termin-Uhrzeit (Karte = Feld), Warteliste-Reiter, Sidebar-Label, Blocker weg aus
+  `/api/services/public` (23 → 20), eingebettete Maske bei PODOLOGIE-Zeilen (Kästchen + Klicks).
+- **Kein Bug, sondern Daten:** „HEILMITTEL"-Zeilen zeigen keinen Bereich, weil
+  `prescriptions.therapie_bereich` bei 42 von 67 Zeilen NULL ist. Nachfüllen = Datenentscheidung (`db-ustasi`).
+- **Falscher Alarm:** „Patientenname auf der öffentlichen Seite" — `/api/team/public` liest nur `profiles`;
+  der Owner des Testkontos (Gründer) steht zusätzlich als Test-Patient mit gleichem Namen in `leads`.
+- **Wahrscheinlich gewollt:** „Dropdown bleibt nach Tab offen" — Tab von „2. ICD" landet in der Diagnosegruppe,
+  die beim Fokus absichtlich ihre eigene Liste öffnet.
+- **Nicht messbar mit Claude in Chrome:** 390px (Fenster min. ~789px, iframe durch `X-Frame-Options`
+  blockiert). Bei 789px kein Seitenüberlauf; `.ov-week-grid` scrollt in seinem Container.
+- Nicht auffindbar im UI: Fahrtenbuch, Sprachumschalter → Produkt-/Scope-Frage.
+
 ## Offen
 
-- Befund 6 live: Bereich-Häkchen nach Öffnen aus der Liste erneut prüfen (beim 2. Lauf war
-  `rzTherapieBereich` leer — wahrscheinlich Maske noch nicht befüllt; ungeprüft).
-- Befund 2/2b live: Termin/Fahrt öffnen → Feld = angezeigte Zeit; Speicher-Test nur mit Freigabe.
+- 42 Verordnungen ohne `therapie_bereich` (Datenkorrektur, Entscheidung offen).
+- Befund 2: Speicher-Test (öffnen + unverändert speichern) nur mit Freigabe; Anzeige ist live bestätigt.
 - **Altlast:** Termine/Fahrten, die vor dem Fix geöffnet+gespeichert wurden, können bereits um
   1–2 h verschoben in der DB stehen. Nicht untersucht.
-- Befund 7 mit eingeloggtem Inhalt (Terminkarten) bei 390px messen.
+- Befund 7 mit eingeloggtem Inhalt bei echtem 390px-Viewport messen (`mobil-ui`/Gerät, nicht Claude in Chrome).
+- Fahrtenbuch-Fix live: Einstieg ins Fahrtenbuch im UI finden, dann Feld- vs. Listenzeit vergleichen.

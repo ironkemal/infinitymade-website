@@ -398,6 +398,26 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
   `#mainArea`'dan 34px taşıyordu. `dashboard.css` ≤768px `flex-wrap: wrap`. Kanıt: statik markup
   360/390/430/768px'de taşan öğe yok. ⚠️ Oturumla gelen JS içerik (termin kartları) ölçülmedi.
 
+**Canlı doğrulama turu 2026-09-26 (deploy `8bae297` sonrası; Claude in Chrome + Claude Code, salt-okur, hiçbir şey kaydedilmedi):**
+- ✅ Termin-Uhrzeit: kart saati = dialog alanı (3 termin). Kaydetme testi yapılmadı (izin yok).
+- ✅ Warteliste: hızlı "Vermittelt" → sekme aktif kalıyor, "0 vermittelte Einträge".
+- ✅ Sidebar: "Feedback & Support" (DE); formu açıyor.
+- ✅ Public Leistungen: `/api/services/public` 23 → 20, "Fortbildung/Pause/Privat" yok (API ile ölçüldü).
+  Chrome turu booking sayfasında hiç Leistung listesi görmedi — ayrı konu (akış adımına bağlı olabilir), bug sayılmadı.
+- ✅ Verordnung gömülü maske, PODOLOGIE satırları: Bereich + Hausbesuch X'li, tıklama çalışıyor (`m13Wired=1`).
+- ℹ️ Verordnung "HEILMITTEL" satırında Bereich kutusu boş → **veri, hata değil:** `prescriptions.therapie_bereich`
+  67 satırın 42'sinde NULL (26.09 sayım). Maske NULL'u doğru boş gösteriyor. Geriye dönük doldurma = veri
+  kararı (`db-ustasi`), Ops kartı.
+- ℹ️ "Public sayfada hasta adı" şüphesi → **yanlış alarm:** `/api/team/public` yalnız `profiles` okur; test
+  hesabının Owner'ı (kurucu) aynı adla test hastası olarak da kayıtlı. Hasta verisi sızmıyor.
+- ⚠️ Katalog "Tab sonrası dropdown açık kalıyor": `rzIcd2` → Tab → `rzDg`; DG alanı odakta KENDİ listesini
+  bilerek açar (minChars 0). Büyük olasılıkla bu görüldü. `rzHm` → Tab → `rzAnzahl` probe'da kapanıyor. Canlıda
+  hangi alandan Tab'landığı belirsiz → sonraki turda alan adıyla tekrar.
+- ⚠️ 390px: canlı ölçülemedi (Chrome penceresi ≥789px, iframe `X-Frame-Options` ile bloklu). 789px'de sayfa
+  taşmıyor; `.ov-week-grid` (140+7×120px) kendi kabında kayıyor. Chrome turunun "KPI satırı taşıyor" iddiası
+  koddan okunmuş, ölçülmemiş → `mobil-ui` ile gerçek mobil viewport'ta ölçülmeli.
+- ⏸ Test edilemedi: Fahrtenbuch (UI'da bulunamadı), dil değiştirici (bulunamadı) — ürün/kapsam sorusu, bug değil.
+
 - 2026-09-19 · canli-test · `podologie-billing` (Tagesbehandlung) · Behandlungsdatum
   gelecek tarihe izin veriyor; §302 preflight sonra bütün dosyayı reddediyor
   (S:01005/S:01006). — `c4332d5` geri-soru ekledi, canlıda tekrar sınanmadı.
