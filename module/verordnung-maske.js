@@ -182,6 +182,11 @@ export async function maskeEinbetten({ host, rx }) {
   };
 
   host.appendChild(wrap);
+  // Klick-Verdrahtung der Maske (Therapiebereich, Hausbesuch, Patientensuche,
+  // LHB-Nachweis, Zuzahlungsbefreiung) lief bisher nur über openRezeptModal().
+  // Wer eine Verordnung direkt aus der Liste öffnete, bekam eine tote Maske —
+  // QA 26.09.2026. Idempotent: `wireM13Toggles` merkt sich, dass es lief.
+  _bruecke?.verdrahteToggles?.();
 
   // Im Modal beendet „Abbrechen" die Eingabe. In der Seite gäbe es nichts zu
   // schliessen — der Knopf würde nur so aussehen, als täte er etwas.

@@ -15758,7 +15758,7 @@ let rzKkList = [];
 let rzLabelToId = new Map();
 
 function wireM13Toggles() {
-  const root = document.getElementById('rezeptModal');
+  const root = document.getElementById('rzMaskeWrap') || document.getElementById('rezeptModal'); // Maske wandert in die Verordnungsansicht (QA 26.09.2026)
   if (!root || root.dataset.m13Wired) return;
   root.dataset.m13Wired = '1';
 
@@ -15798,13 +15798,13 @@ function wireM13Toggles() {
 }
 
 function setM13Therapy(key) {
-  const root = document.getElementById('rezeptModal');
+  const root = document.getElementById('rzMaskeWrap') || document.getElementById('rezeptModal'); // Maske wandert in die Verordnungsansicht (QA 26.09.2026)
   root.querySelectorAll('.m13-chk[data-th]').forEach(o =>
     o.classList.toggle('on', !!key && o.dataset.th === key));
   document.getElementById('rzTherapieBereich').value = key || '';
 }
 function setM13Hausbesuch(isJa) {
-  const root = document.getElementById('rezeptModal');
+  const root = document.getElementById('rzMaskeWrap') || document.getElementById('rezeptModal'); // Maske wandert in die Verordnungsansicht (QA 26.09.2026)
   root.querySelectorAll('.m13-chk[data-hb]').forEach(o =>
     o.classList.toggle('on', o.dataset.hb === (isJa ? 'ja' : 'nein')));
   document.getElementById('rzHausbesuch').checked = !!isJa;
@@ -16717,7 +16717,7 @@ async function init() {
       fuellePatient: fillRzPatientFromLead,
       lsApply,
       setTherapiebereich: setM13Therapy,
-      setHausbesuch: setM13Hausbesuch,
+      setHausbesuch: setM13Hausbesuch, verdrahteToggles: wireM13Toggles,   // auch für die eingebettete Maske
       setFrequenz: setFreqValue,
       // Stellt sicher, dass rzIcd/rzDg verdrahtet sind, BEVOR fuelleMuster13()
       // Werte hineinschreibt (module/verordnung-maske.js) — ohne Fokus des

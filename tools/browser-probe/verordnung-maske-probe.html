@@ -42,6 +42,16 @@ try {
   maske.maskeHeimschicken();
   pruef('Rückweg ins Modal', !maske.istEingebettet() && wrap.parentElement === heim);
 
+  // QA 26.09.2026: aus der Liste geöffnet war die Maske ohne Klick-Verdrahtung
+  // (Therapiebereich/Hausbesuch reagierten nicht), weil nur openRezeptModal()
+  // wireM13Toggles() rief. Das Einbetten muss sie über die Brücke anstossen.
+  let verdrahtet = 0;
+  maske.setzeMaskeBruecke({ verdrahteToggles: () => { verdrahtet++; } });
+  await maske.maskeEinbetten({ host, rx: { id: 'probe-rx', therapie_bereich: 'podo' } }).catch(e => pruef('Einbetten läuft', false, e?.message));
+  pruef('Einbetten stösst die Klick-Verdrahtung an', verdrahtet === 1, verdrahtet);
+  maske.maskeHeimschicken();
+  maske.setzeMaskeBruecke(null);
+
   // ── Riegel ──────────────────────────────────────────────────────────────
   pruef('eingereichte Verordnung ist gesperrt (Belegnummer)',
     !!maske.schreibRiegel({ belegnummer: '7-3' }));

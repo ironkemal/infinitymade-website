@@ -343,7 +343,20 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
   hizmet listesinde — `/api/services/public` `is_internal` filtrelemiyordu. Canlı veri 26.09:
   6 blokerin hepsi `is_internal=true`, NULL yok. `server.js` `.not('is_internal','is',true)`.
   Canlı kontrol: backend deploy (Watchtower) sonrası liste blokersiz.
-- ⏳ 2026-09-26 · QA · `verordnungen` · bulgu 6 — QA raporunda açıklaması yok, **düzeltilmedi.**
+- 🔧 2026-09-26 · QA · `verordnungen` · bulgu 6 — QA raporunun metni kayboldu (Chrome oturumu
+  özetlendi); aynı gün canlıda salt-okur yeniden tarandı (hiçbir şey kaydedilmedi), şu bulundu:
+  listeden açılan (gömülü) Muster-13 maskesinde **Therapiebereich ve Hausbesuch ja/nein kutuları
+  boş** görünüyordu (veri doğru: `rzTherapieBereich=podo`), ve kutulara tıklamak hiçbir şey
+  yapmıyordu. Kök neden iki: (a) `setM13Therapy`/`setM13Hausbesuch` kutuları yalnız
+  `#rezeptModal` içinde arıyordu, maske ise `#vordMaskeHost`'a taşınmış oluyordu; (b)
+  `wireM13Toggles()` yalnız `openRezeptModal()`'dan çağrılıyordu — listeden açınca maske hiç
+  kablolanmıyordu (Patientensuche, LHB-Nachweis, Zuzahlungsbefreiung dahil). Düzeltme: kök
+  `#rzMaskeWrap`, `maskeEinbetten()` köprü üzerinden `verdrahteToggles` çağırır. Kanıt:
+  `verordnung-maske-probe` 33/33 (yeni: "Einbetten stösst die Klick-Verdrahtung an").
+  ⚠️ QA'nın kastettiği bulgu bu olmayabilir. Canlı kontrol: listeden podolojik Verordnung aç →
+  "Podologische Therapie" X'li, Hausbesuch'tan biri X'li; "nein"e tıkla → X yer değiştirir
+  (kaydetmeden kapat). Ayrıca not: dar pencerede (≈1050px) liste tablosu yatay kayıyor, Status
+  sütunu kesik görünüyor — hata sayılmadı.
 - 🔧 2026-09-26 · QA · `overview` @390px · yatay taşma — `.schedule-header` nowrap, `#ovCountSelector`
   `#mainArea`'dan 34px taşıyordu. `dashboard.css` ≤768px `flex-wrap: wrap`. Kanıt: statik markup
   360/390/430/768px'de taşan öğe yok. ⚠️ Oturumla gelen JS içerik (termin kartları) ölçülmedi.
