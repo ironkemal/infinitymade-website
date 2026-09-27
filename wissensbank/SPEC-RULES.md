@@ -8,7 +8,13 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-25 (Ops #304 — ICD→Diagnosegruppe, Podologie: 4 yeni kural
+> Son güncelleme: 2026-09-27 (Ops #303 Nachtrag — „Muster 13 en fazla 3 vorrangiges + 1
+> ergänzendes" kuralı 3 noktada düzeltildi: § 12 Abs. 2 S. 1'in "katalog birden çok vorrangiges
+> öngörüyorsa" koşulu eklendi, Logopädie'nin S. 2'si ayrı/farklı konulu kural olarak
+> netleştirildi (ergänzendes Heilmittel Logo katalogunda yok), KVN Ausfüllhilfe Stand 10/2024
+> kaynağı arşivde bulunamadığı için ⚠️ işaretlendi. gkv-302 bulgusu 21.09.2026, wortlaut
+> 27.09.2026 orijinale karşı yeniden okundu.)
+> Önceki: 2026-09-25 (Ops #304 — ICD→Diagnosegruppe, Podologie: 4 yeni kural
 > (DG yalnız arztseitig · ZHE DG/„9999" · Diagnose Pflicht, ICD Klartext ile ikame edilebilir ·
 > Diagnose düzeltmesi Einreichung'dan önce). `gkv-302` bulguları `wissensbank` vekili tarafından
 > orijinal .txt'lere karşı okundu. Açık: `PFLICHT_ICD` Blocker'ı + „Anlage 3 k der HeilM-RL"
@@ -92,26 +98,40 @@
 
 ### Muster 13 en fazla 3 vorrangiges + 1 ergänzendes Heilmittel taşır — Podologie'de bölme hakkı yok
 - **Kural:** Physio/Ergo'da Verordnungseinheiten je Verordnung max **3** farklı vorrangiges
-  Heilmittel'e bölünebilir; Logopädie'de max 3 farklı Behandlungszeit/Einzel-Gruppe
-  kombinasyonu. Buna ek olarak max **1** ergänzendes Heilmittel verordnet edilebilir → Muster 13
-  formunda toplam 4 satır. **Podologie'de bölme hakkı YOKTUR** (§ 12 Abs. 2 Podologie'yi
-  saymıyor) ve ergänzendes Heilmittel alanı (Anlage 3 g2) *"entfällt"* — Podologie = 1
-  vorrangig, 0 ergänzend.
-- **Kaynak:** HeilM-RL 15.05.2025 (iK 05.08.2025) § 12 Abs. 2 Satz 1 — *"…können die
-  Verordnungseinheiten je Verordnung auf maximal drei unterschiedliche vorrangige Heilmittel
-  aufgeteilt werden…"* und Abs. 3 Satz 1 — *"…kann zu ‚vorrangigen Heilmitteln' maximal ein
-  … ‚ergänzendes Heilmittel' verordnet werden."*
-  (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:555-568`);
-  Podologie Anlage 3 i.d.F. 16.06.2025 Feld g2
-  (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:465-473`); Formteyidi
-  KVN Ausfüllhilfe Muster 13, Stand 10/2024, Nr. 5. Ergänzendes'in Höchstmenge'si vorrangig'lerin
-  toplamına bağlıdır: HeilM-RL § 7 Abs. 5 Satz 2-3 (`:419-426`).
+  Heilmittel'e bölünebilir — **ama yalnızca** Heilmittelkatalog ilgili Diagnosegruppe'de zaten
+  birden çok vorrangiges Heilmittel öngörüyorsa (§ 12 Abs. 2 S. 1 koşulu; katalogda tek
+  vorrangiges varsa bölme diye bir şey yok). **Logopädie'de (Stimm-/Sprech-/Sprach-/
+  Schlucktherapie) bu, ayrı ve farklı konulu bir kuraldır** (S. 2): orada bölünen "vorrangiges
+  Heilmittel" değil, max 3 farklı Behandlungszeit veya Einzel-/Gruppenbehandlung
+  kombinasyonudur — S. 1'in "sinngemäß" uzantısı değil. Buna ek olarak Physio/Ergo'da max **1**
+  ergänzendes Heilmittel verordnet edilebilir (Abs. 3) → Muster 13 formunda toplam 4 satır.
+  Logopädie'nin katalogunda ergänzendes Heilmittel **hiç yok** (0 Stelle — Physio 12, Ergo 6,
+  nachgezählt 21.09.2026), yani Abs. 3 metin olarak Logopädie'yi dışlamasa da pratikte hiç
+  uygulanmaz. **Podologie'de bölme hakkı YOKTUR** (§ 12 Abs. 2 Podologie'yi saymıyor) ve
+  ergänzendes Heilmittel alanı (Anlage 3 g2) *"entfällt"* — Podologie = 1 vorrangig, 0 ergänzend.
+- **Kaynak:** HeilM-RL 15.05.2025 (iK 05.08.2025) § 12 Abs. 2 Satz 1 — *"Bei Maßnahmen der
+  Physiotherapie und der Ergotherapie können die Verordnungseinheiten je Verordnung auf
+  maximal drei unterschiedliche vorrangige Heilmittel aufgeteilt werden, soweit der
+  Heilmittelkatalog in der Diagnosegruppe mehrere vorrangige Heilmittel vorsieht."*; Satz 2 —
+  *"In der Stimm-, Sprech-, Sprach- und Schlucktherapie können maximal drei verschiedene
+  Behandlungszeiten oder Einzel- und Gruppenbehandlungen miteinander kombiniert werden."*; und
+  Abs. 3 Satz 1 — *"Soweit medizinisch erforderlich, kann zu ‚vorrangigen Heilmitteln' maximal
+  ein … ‚ergänzendes Heilmittel' verordnet werden."*
+  (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:555-568`,
+  wortlaut 27.09.2026 erneut gegen Original gelesen); Podologie Anlage 3 i.d.F. 16.06.2025 Feld g2
+  (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:465-473`). Ergänzendes'in
+  Höchstmenge'si vorrangig'lerin toplamına bağlıdır: HeilM-RL § 7 Abs. 5 Satz 2-3 (`:419-426`).
+  ⚠️ "Formteyidi KVN Ausfüllhilfe Muster 13, Stand 10/2024, Nr. 5" önceden ikincil kaynak olarak
+  anılmıştı — bu belge `wissensbank`'ta YOK (21.09.2026 aranmış, bulunamamış), doğrulanmamış
+  sayılır, üstteki HeilM-RL alıntısı tek bağlayıcı kaynaktır.
 - **Geçerlilik:** 05.08.2025
 - **Kodda:** uygulanmamış — `dashboard.html:3621/3625` tek `rzHm` + tek `rzHmErg` alanı;
   `prescriptions.heilmittel_items` (`db/SCHEMA.sql:2256`) liste taşıyabilir ama sayı kapısı yok.
   Ops #202 (Kategorie Physiotherapie — önceki "Podoloji" etiketi yanlıştı, bu kural onu düzeltti).
-- **Kapsam:** Physiotherapie, Ergotherapie, Logopädie — Muster 13. Podologie ve Blankoverordnung
-  hariç (Blanko'da alana "BLANKOVERORDNUNG" basılır, Heilmittel/Einheit girilmez).
+- **Kapsam:** Physiotherapie, Ergotherapie — vorrangige+ergänzende Heilmittel, Muster 13.
+  Logopädie — yalnız Behandlungszeit/Einzel-Gruppe kombinasyonu (S. 2), ergänzendes Heilmittel
+  kapsam dışı (katalogda yok). Podologie ve Blankoverordnung hariç (Blanko'da alana
+  "BLANKOVERORDNUNG" basılır, Heilmittel/Einheit girilmez).
 - ⚠️ DTA tarafında üst sınır yok (Anlage 1 TP5 V21 § 5.5.3.3: `EHE` 1-n) — sınır aşılırsa hata
   Prüfstufe 1-3'te yakalanmaz, ancak kasanın Fachprüfung'unda (Prüfstufe 4) Absetzung olarak
   geri gelir. UI kapısı bu yüzden tek koruma.
