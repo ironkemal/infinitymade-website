@@ -4,7 +4,7 @@ datum: 2026-09-27
 typ: sitzung
 ticket: "Ops #300, #301, #302"
 bereich: podologie
-status: alle drei Migrationen live und verifiziert · Doku aktualisiert und committet (`fc89d5b`, `377b3a5`)
+status: alle drei Migrationen live und verifiziert, #300 zusätzlich im echten Browser end-to-end bestätigt · Doku aktualisiert und committet (`fc89d5b`, `377b3a5`, `65f5f26`)
 tags: [sitzung, podologie, migration, kostentraeger, krankenkassen, heilmittelkatalog, deployment]
 verwandt: ["[[SITZUNGEN]]", "[[REGISTER]]", "[[2026-09-21_ops-300_ik-suche-kassenfeld]]", "[[2026-09-21_ops-302_komplex-suche-78020]]"]
 ---
@@ -42,6 +42,19 @@ sauber deployt, nur die View fehlte auf Prod — genau der in `0040` beschrieben
 - Kein gefüllter `ik_number`-Wert ohne passenden `kostentraeger`-Eintrag (`datensatz_status='echt'`) — 0 Treffer.
 - Keine der 9 alten Mock-IKs (`108310401`, `107436001`, `101000026`, `107708612`, `101317994`, `107636345`, `109006429`, `101000016`, `107300000`) steht noch in `krankenkassen` — 0 Treffer.
 - `BKK Salzgitter`: `ik_number = '101922757'` (Haupt-Kostenträger). Die Ost-IK `101921814` ist unangetastet — 0041 fasst Mehr-IK-Kassen bewusst nicht an; ob dort trotzdem ein Wert gesetzt werden soll, ist offener Produktentscheid, keine Auswirkung dieser Migration.
+
+## Nachtrag: End-to-End-Bestätigung im Browser (Claude in Chrome, app.praxura.de)
+
+Nach den DB-seitigen Checks oben zusätzlich der volle UI-Flow geprüft, nicht nur die Sicht selbst:
+
+- "108" im Kassenfeld → mehrere echte Treffer (Dropdown, nicht mehr leer). Netzwerk: `GET kostentraeger_auswahl` → **200** (vorher 404).
+- "100167999" (volle IK) → genau ein Treffer „DAK-Gesundheit", `100167999 → 105830016`.
+- "10" (2 Ziffern) → kein Dropdown, kein Request — Mindestlänge 3 hält weiterhin.
+- "AOK" (Name) → Namenssuche unverändert, nicht durch die IK-Logik beeinträchtigt.
+- Treffer angeklickt → Feld befüllt, Hinweiszeile „Karte 100167999 → rechnet ab bei 105830016" erscheint korrekt.
+- Konsole: keine neuen Fehler/Warnungen in diesem Durchlauf (nur alte Warnungen vom Test vor der Migration, noch im Log sichtbar).
+
+Damit ist **#300 nicht nur DB-seitig, sondern vollständig end-to-end bestätigt.**
 
 ## Reihenfolge- und Berechtigungs-Hürden (Lernpunkt)
 
