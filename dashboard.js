@@ -8,7 +8,7 @@ import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260926';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260926';
 import { attachPatientSearch } from './patient-suche.js?v=20260906';
-import { verdrahteRezeptPatientenfeld } from './module/rezept-patientenfeld.js?v=20260906';
+import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezept-patientenfeld.js?v=20260927';
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
 import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
 import { emit, on } from './module/signal.js?v=20260815';
@@ -45,7 +45,7 @@ import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-prue
 // in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
 // Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode }
-  from './module/verordnung-maske.js?v=20260919b';
+  from './module/verordnung-maske.js?v=20260927';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908';
@@ -15620,7 +15620,6 @@ function _verdrahteIcdPaar(icdId) {
 
 let rzPatientCache = [];
 let rzKkList = [];
-let rzLabelToId = new Map();
 
 function wireM13Toggles() {
   const root = document.getElementById('rzMaskeWrap') || document.getElementById('rezeptModal'); // Maske wandert in die Verordnungsansicht (QA 26.09.2026)
@@ -15797,40 +15796,29 @@ async function openRezeptModal(phone, leadId) {
 
   // Patientenliste für den Kopf-Selector. Die Suche selbst macht
   // patient-suche.js; hier wird nur der Cache gefüllt, aus dem sie liest.
-  rzLabelToId = new Map();
-  try {
-    const ownerId = getOwnerId();
-    // bizScope ist Pflicht — sonst stehen im Rezept-Kopf Patienten aller
-    // Standorte zur Auswahl, obwohl die Freigabe abgeschaltet sein kann.
-    const { data, error } = await bizScope(supabase.from('leads')
-      .select('id,first_name,last_name,title,geburtsdatum,phone,metadata,versichertennummer')
-      .eq('owner_id', ownerId)
-      .order('last_name', { ascending: true }), 'patients');
-    if (error) throw error;
-    rzPatientCache = data || [];
-    await heuteAktualisieren(supabase, ownerId);   // Ops #267: heutige Termine nach oben
-    rzPatientCache.forEach(l => rzLabelToId.set(rzPatientLabel(l), l.id));
-    if (hint) {
-      if (!rzPatientCache.length) {
-        hint.textContent = '⚠ Keine Patienten gefunden — bitte zuerst Patienten anlegen';
-        hint.style.color = '#b45309';
-      } else {
-        hint.textContent = `${rzPatientCache.length} Patienten — tippen zum Suchen`;
-        hint.style.color = '';
-      }
-    }
-    // Bei vorausgewähltem Patienten (aus Patientenkarte) Suchfeld setzen
-    if (leadId && search) {
-      const pre = rzPatientCache.find(l => l.id === leadId);
-      if (pre) search.value = rzPatientLabel(pre);
-    }
-  } catch (e) {
-    console.error('[openRezeptModal] patients', e);
-    if (hint) { hint.textContent = 'Fehler beim Laden der Patienten'; hint.style.color = '#b45309'; }
+  const ownerId = await ladeRzPatientenCache();
+  // Bei vorausgewähltem Patienten (aus Patientenkarte) Suchfeld setzen
+  if (leadId && search) {
+    const pre = rzPatientCache.find(l => l.id === leadId);
+    if (pre) search.value = rzPatientLabel(pre);
   }
 
   // Bei vorausgewähltem Patienten (aus Patientenkarte) direkt befüllen
   if (leadId) await fillRzPatientFromLead(leadId);
+}
+
+// Dünner Wrapper — die eigentliche Ladelogik liegt in module/rezept-patientenfeld.js
+// (Ops #302 QA-Nachtrag), auch von der eingebetteten Maske gebraucht (Bruecke unten).
+async function ladeRzPatientenCache() {
+  const { ownerId, leads } = await ladePatientenCache({ supabase, bizScope, getOwnerId });
+  rzPatientCache = leads;
+  // NACH der Zuweisung: `loadLeads` liest rzPatientCache synchron — davor
+  // latchte patient-suche.js die noch leere Liste und `loaded` blieb true.
+  document.getElementById('rzPatientSearch')?._patientSearchApi?.refresh();
+  // Hier statt nur in openRezeptModal(), damit auch die eingebettete Maske
+  // (module/verordnung-maske.js) den „heute im Haus"-Vorschlag bekommt.
+  if (ownerId) await heuteAktualisieren(supabase, ownerId);   // Ops #267
+  return ownerId;
 }
 
 // Liste und Detailansicht liegen in module/verordnung-liste.js — dort kamen die
@@ -16587,6 +16575,7 @@ async function init() {
       lsApply,
       setTherapiebereich: setM13Therapy,
       setHausbesuch: setM13Hausbesuch, verdrahteToggles: wireM13Toggles,   // auch für die eingebettete Maske
+      ladePatienten: ladeRzPatientenCache,   // dito — sonst leere Patientensuche dort (Ops #302 QA-Nachtrag)
       setFrequenz: setFreqValue,
       // Stellt sicher, dass rzIcd/rzDg verdrahtet sind, BEVOR fuelleMuster13()
       // Werte hineinschreibt (module/verordnung-maske.js) — ohne Fokus des

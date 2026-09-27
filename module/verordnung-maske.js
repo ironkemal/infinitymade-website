@@ -187,6 +187,9 @@ export async function maskeEinbetten({ host, rx }) {
   // Wer eine Verordnung direkt aus der Liste öffnete, bekam eine tote Maske —
   // QA 26.09.2026. Idempotent: `wireM13Toggles` merkt sich, dass es lief.
   _bruecke?.verdrahteToggles?.();
+  // Patientencache kommt sonst nur aus openRezeptModal() — hier lief das nie,
+  // die Suche blieb leer (Ops #302 QA-Nachtrag 27.09.2026).
+  _bruecke?.ladePatienten?.();
 
   // Im Modal beendet „Abbrechen" die Eingabe. In der Seite gäbe es nichts zu
   // schliessen — der Knopf würde nur so aussehen, als täte er etwas.
