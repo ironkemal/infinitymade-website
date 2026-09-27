@@ -39,6 +39,10 @@
 --
 -- Jede Datei läuft in EINER Transaktion (README Kural 5): schlägt die Selbstprüfung an,
 -- wird nichts geschrieben.
+--
+-- SAAS: angewendet 27.09.2026, MCP (Freigabe Melih). Alle drei Selbstprüfungen bestanden,
+-- Nachzählung: 74 gefüllt / 20 NULL / 94 gesamt — genau Ziel. Vorab-Dry-Run (BEGIN/ROLLBACK)
+-- bestätigte dasselbe Ergebnis.
 
 DO $mig$
 DECLARE
