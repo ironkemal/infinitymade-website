@@ -690,8 +690,8 @@ Heilmittel-Richtlinie …).
   im Eintrag `krankenkassen`: die Spalte ist eine Vorbelegung nur bei eindeutiger IK; der SaaS-Bestand
   trug erfundene Werte). Die Spalte fehlt zusätzlich in der `DO UPDATE SET`-Liste — dadurch
   überschreibt ein erneuter Lauf **gegen SaaS** die dortigen Altwerte nicht. Beabsichtigt oder nicht:
-  es ist die sichere Richtung. **Ab `0041_krankenkassen_ik_nachtrag`** (⏳ vorbereitet, noch nicht
-  angewandt) trägt die Kundenbox die 7 eindeutigen IKs (`105313145`, `104926702`, `102529638`,
+  es ist die sichere Richtung. **Ab `0041_krankenkassen_ik_nachtrag`** (✅ live seit 27.09.2026)
+  trägt die Kundenbox die 7 eindeutigen IKs (`105313145`, `104926702`, `102529638`,
   `108934142`, `101520078`, `102114819`, `107299005` — alle in `0006` als `echt` vorhanden); alle
   übrigen Zeilen bleiben NULL.
 - **`dta_schluessel` ist bewusst NICHT geseedet:** alle 94 Zeilen tragen
