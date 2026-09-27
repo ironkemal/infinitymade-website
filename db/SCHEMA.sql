@@ -1,20 +1,20 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-22 — 0042_abrechnung_verschluesselung
---                    (§302-Echtbetrieb Faz 1.3D, O-131. Urspruenglich als 0039
---                    geschrieben — auf origin/main landete PARALLEL Melihs
---                    Kette 0039_seed_heilmittel_katalog_podo_komplex_suche /
---                    0040_kostentraeger_auswahl_view / 0041_krankenkassen_ik_
---                    nachtrag (Ops #300-302, umnummeriert von 0038-0040 wegen
---                    Kollision mit Kemals 0038_empfaenger_zertifikate). Da nur
---                    Kemals Datei oeffentliches DDL enthielt, wanderte SIE nach
---                    oben (0039 -> 0042), nicht Melihs Kette. Diese drei
---                    Migrationen (0039-0041) sind auf SaaS live GEPRUEFT NICHT
---                    angewendet (kostentraeger_auswahl-View existiert nicht,
---                    22.09.2026 per information_schema.views bestaetigt) —
---                    deshalb fehlen sie in dieser Datei zu Recht, nicht aus
---                    Versehen.
+-- ERZEUGT AM:        2026-09-27 — Nachtrag: 0039_seed_heilmittel_katalog_podo_
+--                    komplex_suche + 0040_kostentraeger_auswahl_view (Ops #300/
+--                    #302) im SaaS angewendet und geprueft (kostentraeger_auswahl
+--                    893 Zeilen, Stichprobe 100167999 -> DAK-Gesundheit/
+--                    105830016; 78010/78020 kategorie='Podologische Komplex-
+--                    behandlung' in beiden Preisfenstern). Sicht unten unter
+--                    "2. VIEWS" ergaenzt. 0039 ist reine Daten-UPSERT (kein DDL),
+--                    daher sonst kein Eintrag hier. 0041_krankenkassen_ik_
+--                    nachtrag (Ops #301) ist WEITERHIN NICHT angewendet (braucht
+--                    eigenes OK/Dry-Run, siehe CLAUDE.md) — fehlt hier zu Recht.
+--                    Vorherige Notiz (22.09.2026, ERZEUGT AM 0042_abrechnung_
+--                    verschluesselung): Kollision 0038 mit Kemals Datei fuehrte
+--                    zur Umnummerierung 0038->0042 fuer Kemals Datei; Melihs
+--                    Kette blieb bei 0039-0041.
 --                    +5 Spalten an `abrechnung` (encrypted_storage_path,
 --                    encrypted_sha256, verschluesselt_am,
 --                    verschluesselt_fuer_fingerprint, verschluesselung_hinweis)
@@ -3345,5 +3345,19 @@ CREATE VIEW fahrten_monthly_summary AS
   WHERE end_km IS NOT NULL
   GROUP BY owner_id, user_id, vehicle_id, kennzeichen_snapshot, kind_snapshot,
            date_trunc('month', fahrt_started_at);
+
+CREATE VIEW kostentraeger_auswahl WITH (security_invoker = true) AS
+  SELECT kt.ik, kt.name, kt.kurzname, kt.abrechnender_kt_ik
+  FROM kostentraeger kt
+  WHERE kt.datensatz_status = 'echt'
+    AND kt.active IS TRUE
+    AND kt.payer_type = 'gkv'
+    AND (kt.valid_to IS NULL OR kt.valid_to >= current_date)
+    AND (kt.abrechnender_kt_ik IS NOT NULL
+         OR EXISTS (SELECT 1 FROM kostentraeger_annahmestellen ka
+                     WHERE ka.kostentraeger_ik = kt.ik));
+--   Ops #300 — Auswahlsicht für die IK-Suche im Kassenfeld (0040_kostentraeger_auswahl_view.sql).
+--   security_invoker, REVOKE ALL inkl. service_role, GRANT SELECT nur authenticated (siehe SCHEMA-RLS.sql).
+--   ✅ Im SaaS angewendet 27.09.2026 (MCP), 893 Zeilen verifiziert.
 
 -- geometry_columns, geography_columns → PostGIS-Systemviews, hier ausgelassen.
