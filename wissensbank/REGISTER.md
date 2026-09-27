@@ -5,7 +5,10 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 21.09.2026 (**GGT Anlage 16 (SECON) indirildi**
+> İlk kurulum: 05.09.2026 · Son güncelleme: 27.09.2026 (**Z-14 açıldı** — Muster 13
+> Heilmittel-Limit § 12 Abs. 2/3, Ops #202/#303 zinciri: kural doğru kaydedildi, kod hâlâ
+> uygulanmamış. `SPEC-RULES.md` kural metni aynı gün 3 noktada düzeltildi — bkz. Z-14.)
+> Önceki: 21.09.2026 (**GGT Anlage 16 (SECON) indirildi**
 > — `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 1.3’ün „bu belge olmadan başlanmaz" kaydı üzerine.
 > Kart **W-04**, zincir **Z-12**. Aynı gün ikinci tur: Ops #302 — „Komplexbehandlung" = verordnete
 > Heilmittel c), 78020'nin adı değil; zincir **Z-13**, kural `SPEC-RULES.md`'de. Aynı turda **ana GGT belgesinin sürüm düşümü yakalandı**:
@@ -439,6 +442,37 @@ sütunu gerekir), b) c) için >20 dk şartı (SPEC-RULES'ta ⛔).
 
 ---
 
+### Z-14 · Muster 13 Heilmittel-Limit (§ 12 Abs. 2/3 HeilM-RL) — Physio/Ergo/Logo, Podologie ohne (Ops #202/#303)
+```
+wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt
+    (§ 12 Abs. 2 S.1-3, Abs. 3 S.1-3 · Z.555-568)
+      = Physio/Ergo: max 3 vorrangige Heilmittel, NUR wenn Katalog in der Diagnosegruppe
+        mehrere vorsieht (S.1) + max 1 ergänzendes Heilmittel (Abs.3)
+      = Logopädie (S.2): eigene, andersartige Regel — max 3 Behandlungszeiten/Einzel-Gruppe-
+        Kombinationen, KEINE Aufteilung auf vorrangige Heilmittel, kein ergänzendes Heilmittel
+        (Katalog hat dort 0 Stellen, nachgezählt 21.09.2026)
+wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt   (Feld g2, Z.465-473)
+      = Podologie: Aufteilung entfällt komplett (§ 12 Abs. 2 zählt Podologie nicht)
+  → SPEC-RULES.md „Muster 13 en fazla 3 vorrangiges + 1 ergänzendes …" (Kural-Text)
+  → Kodda: ⛔ UYGULANMAMIŞ — dashboard.html:3621/3625 tek rzHm + tek rzHmErg alanı,
+    prescriptions.heilmittel_items (db/SCHEMA.sql:2256) liste taşır ama sayı kapısı yok
+  → module/verordnung-maske.js:~525-533, module/verordnung-podo.js  (Code-Kommentare,
+    korrigiert Commit 3c0f04e — nur Kommentartext, kein Verhalten)
+```
+📌 **Ops #202/#303 zinciri:** #202 önce yanlış Podoloji kategorisindeydi ve `.pod-hm-row`/
+`heilmittel_items`'ın iki tabloda olduğunu iddia ediyordu (her ikisi de veraltet — `verordnungen`
+04.09.2026'da silindi). 21.09.2026'da `gkv-302` kaynağa karşı doğruladı, #200/#202 kategorisi
+Physiotherapie'ye çekildi, kod yorumları düzeltildi. 27.09.2026'da `SPEC-RULES.md`'deki kural
+metninin kendisi de 3 noktada düzeltildi (S.1 koşulu eksikti, Logo yanlış ergänzendes-Heilmittel
+kapsamındaydı, KVN Ausfüllhilfe kaynağı arşivde yok). Detay:
+`wissensbank/sitzungen/2026-09-21_ops-303_heilmittel-aufteilung-nur-physio-ergo.md`.
+⚠️ **Hâlâ uygulanmamış** — bu bir kod zinciri değil, yalnız doğru kaydedilmiş bir kural. Sayı
+kapısı (max 3 + 1) UI'da yok, DTA tarafında da yok (Anlage 1 TP5 V21 § 5.5.3.3 EHE 1-n sınırsız).
+⛔ Board-tarafı hâlâ açık (Ops-Dashboard, repo dışı): #302 kartı eski "Alias für 78020" metnini
+taşıyor, #209 hâlâ #200 altında asılı duruyor (aidiyeti #302).
+
+---
+
 ## 3. Kaynak envanteri
 
 `wissensbank/INDEX.md`'deki 33 kayıt, sicil gözüyle. **Herkunft sütunu neredeyse tamamen
@@ -480,7 +514,7 @@ yeniden araştırılıyor demektir.
 | `20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei` | Lesefassung, ab 01.01.2026 | ✅ GEÇERLİ | Z-03 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_2` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | Z-04 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_1c_Leistungsbeschreibung` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | podoloji akışı |
-| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı · **Z-11** |
+| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı · **Z-11** · Z-14 (g2) |
 | `wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung` | 16.06.2025 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20240725_Anlage_1a` + `1b_Leistungsbeschreibung` | i.d.F. 17.06.2024 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20230524_Podologie_FAK_bf` | Stand 24.05.2023 | ✅ GEÇERLİ | HPNR referansı |
@@ -499,7 +533,7 @@ yeniden araştırılıyor demektir.
 
 | Dosya | Sürüm / Stand | Durum | Besler |
 |---|---|---|---|
-| `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı · **Z-11 doğrudan** (Höchstmenge) |
+| `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı · **Z-11 doğrudan** (Höchstmenge) · **Z-14** (Heilmittel-Limit) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste` | Stand 01.01.2026 | ✅ GEÇERLİ | **Z-07** |
 | `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 — dar boşluk 01.07.–10.08.2026, doğrulandı** (17.09.2026 `wissensbank`) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/praxiswissen-heilmittel` | Ausgabe 2026 | 📎 REFERANS | — |
