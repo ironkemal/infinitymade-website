@@ -90,6 +90,9 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
 import { erstePositionAusItems } from './verordnung-pruefung.js?v=20260928';
 import { behandlungspositionVorschlag } from './podo-behandlungsposition-regel.js?v=20260928';
+// Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
+// "heute" — s. `setPodVorwahl()` unten.
+import { podBehandlungsdatumVorschlag } from './podo-behandlungsdatum-vorwahl.js?v=20260928';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -423,7 +426,13 @@ function podVordBehandlungsposition(vord) {
   return behandlungspositionVorschlag(massnahme, roh);
 }
 
-let _podState = { selectedVordId: null, verordnungen: [], verordnungenAbgerechnet: [], zeigeAbgerechnet: false };
+// `vorwahlDatum` kommt aus `setPodVorwahl(id, { datum })` (Sprung aus einem
+// Termin) — ein einziges Mal gültig: `loadPodologieBilling()` verbraucht es
+// beim ersten Rendern der gewählten Verordnung und löscht es danach wieder
+// (s. dort), damit ein späteres Neuladen (Speichern, Toggle) nicht am alten
+// Termin-Datum kleben bleibt. Eine neue Verordnungsauswahl per Klick löscht
+// es ebenfalls sofort (Klick-Handler unten).
+let _podState = { selectedVordId: null, verordnungen: [], verordnungenAbgerechnet: [], zeigeAbgerechnet: false, vorwahlDatum: null };
 
 function findVord(id) {
   return _podState.verordnungen.find(v => v.id === id)
@@ -466,6 +475,10 @@ document.addEventListener('click', (e) => {
   const row = e.target.closest('[data-vord-id]');
   if (!row) return;
   _podState.selectedVordId = row.dataset.vordId === _podState.selectedVordId ? null : row.dataset.vordId;
+  // Manuelle Auswahl beendet die Termin-Vorwahl (falls eine offen war) —
+  // sonst würde ein späterer Klick auf eine ANDERE Verordnung fälschlich
+  // noch das Datum des ursprünglichen Termins übernehmen.
+  _podState.vorwahlDatum = null;
   loadPodologieBilling();
 });
 
@@ -646,9 +659,19 @@ async function loadPodologieBilling() {
   // und eine falsche Gültigkeitsprüfung der HPNR-Liste. `alsISODatum()`
   // liest die lokalen Feldwerte (Projektstandard, s. CLAUDE.md).
   const todayStr = alsISODatum(today);
+  // Termin-Vorwahl (S1.7, 28.09.2026): `setPodVorwahl(id, { datum })` legt das
+  // Formular auf den Termin-Tag statt auf heute. Einmalig verbraucht — sobald
+  // sie für DIESE Verordnung gelesen wurde, wird sie sofort gelöscht, damit
+  // ein späteres Neuladen (Speichern, Status-Toggle) nicht am alten Termin-
+  // Datum kleben bleibt (reine Auswahl-Logik + Test: `podo-behandlungsdatum-vorwahl.js`).
+  const vorwahlFuerDiese = (selectedVord && _podState.vorwahlDatum && _podState.selectedVordId === selectedVord.id)
+    ? _podState.vorwahlDatum
+    : null;
+  if (vorwahlFuerDiese) _podState.vorwahlDatum = null;
+  const { datum: behDatumStr, istZukunft: behDatumZukunft } = podBehandlungsdatumVorschlag(vorwahlFuerDiese, todayStr);
   // Gültige Positionen zum Behandlungsdatum — abgelöste (z. B. Ross-Fraser)
   // filtert die RPC bereits heraus.
-  const hpnrRows = diagRoot ? await podLoadHpnr(diagRoot, todayStr) : [];
+  const hpnrRows = diagRoot ? await podLoadHpnr(diagRoot, behDatumStr) : [];
   _podCurrentHpnr = hpnrRows;
 
   // Welche Befundung gehört auf DIESEN Tag? Genau eine von beiden:
@@ -662,11 +685,11 @@ async function loadPodologieBilling() {
   // beim ersten Termin von Hand umstellen, und wer das vergass, verlor die
   // Eingangsbefundung; wer sie zu spät nachtrug, bekam eine Absetzung.
   const eingangsLage = (selectedVord && !isUI)
-    ? await podEingangsbefundungLage(selectedVord, todayStr)
+    ? await podEingangsbefundungLage(selectedVord, behDatumStr)
     : { erlaubt: false };
 
-  // Was am Telefon fuer heute gebucht wurde (Ops 235) — nur Vorbelegung.
-  const geplanteHpnr = selectedVord ? await podGeplanteHpnr(selectedVord, todayStr) : new Set();
+  // Was am Telefon fuer diesen Tag gebucht wurde (Ops 235) — nur Vorbelegung.
+  const geplanteHpnr = selectedVord ? await podGeplanteHpnr(selectedVord, behDatumStr) : new Set();
 
   // Die Behandlungsposition (78010/78020) aus dem REZEPT selbst — unabhaengig
   // davon, ob fuer heute ueberhaupt ein Termin geplant war (S1.5, 28.09.2026,
@@ -756,8 +779,14 @@ async function loadPodologieBilling() {
                (Leistungsdatum nach Rechnungsdatum) — und weist nicht die eine
                Zeile ab, sondern die GANZE Datei an die Kasse zurueck.
                Der Browser ist hier nur die erste, billige Sperre; die
-               verbindliche steht unten im Speichern-Handler. -->
-          <input type="date" id="podBehDatum" value="${todayStr}" max="${todayStr}" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+               verbindliche steht unten im Speichern-Handler.
+               `max` bleibt deshalb auf heute stehen, auch wenn `value` (aus
+               einer Termin-Vorwahl, S1.7) in der Zukunft liegt — die Zeile
+               unten erklärt dann, warum, statt das Datum still auf heute zu
+               ziehen (das Formular soll den gewählten Termin erkennbar
+               lassen). -->
+          <input type="date" id="podBehDatum" value="${behDatumStr}" max="${todayStr}" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+          ${behDatumZukunft ? `<div style="color:var(--text-muted);font-size:12px;margin-top:4px;">⚠ Termin liegt in der Zukunft — Behandlung kann erst am Behandlungstag dokumentiert werden.</div>` : ''}
         </div>
         <div>
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${ctx.t('pod_hpnr')}</label>
@@ -1086,11 +1115,18 @@ export async function mountPodologieAbrechnung(deps) {
 }
 
 /**
- * Verordnung vorwählen, bevor das Panel öffnet — Sprung aus der Patientenakte.
+ * Verordnung vorwählen, bevor das Panel öffnet — Sprung aus der Patientenakte
+ * oder (Reform-Sprint S1.7, 28.09.2026) aus einem Termin heraus.
  * Ersetzt den früheren Direktzugriff `_podState.selectedVordId = id` in dashboard.js.
+ *
+ * @param {string} id
+ * @param {{ datum?: string }} [opts]  `datum` = Termin-Tag, `YYYY-MM-DD`
+ *   (Europe/Berlin, lokal gelesen — s. `alsISODatum()`). Ohne `datum`
+ *   verhält sich der Aufruf wie vorher (Formular zeigt heute).
  */
-export function setPodVorwahl(id) {
+export function setPodVorwahl(id, { datum } = {}) {
   _podState.selectedVordId = id;
+  _podState.vorwahlDatum = datum || null;
 }
 
 /**
