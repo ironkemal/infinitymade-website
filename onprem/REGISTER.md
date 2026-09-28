@@ -714,6 +714,8 @@ kapı unutmaz ama düşünmez.
 | **Çözüm** | **Faz 1.3** — `ai/azureClient.js` → `ai/llmClient.js`, `AI_PROVIDER` (ionos veya azure) + `AI_ENDPOINT` + `AI_API_KEY` + `AI_MODEL_TEXT/VISION`. Anahtar **müşterinin** (K4 BYO-key, sihirbaz adımı Faz 2.2). Merkezi AI-proxy **yasak** (K6) — reçete görüntüsü bizden geçerse §393 kapsamına geri gireriz. Ek şart: anahtar yokken uygulama açılmalı, yalnız AI özelliği kapalı olmalı |
 | **Durum** | `geplant` (Faz 1.3 + 2.2) |
 
+> **Nachtrag 28.09.2026 (bildirim, kod değişmedi):** SaaS Azure kaynağı işletme aboneliğine taşındı — Sweden Central, Standard (Global değil) deployment, `gpt-4.1-mini` 2025-04-14, otomatik sürüm yükseltme kapalı. VPS `.env.calendar`’da yalnız 4 `AZURE_OPENAI_*` **değeri** değişti, yeni env adı yok; boot’ta EU Data Boundary kontrolü `region=swedencentral` ile geçti. Kutuya etkisi yok (AI kutuda varsayılan kapalı, E kararı). **Faz 1.3 için yeni girdi:** Microsoft Modified Abuse Monitoring başvurusu “managed customer” şartı taşıyor ve **her praxis kendi adına** başvurmak zorunda — yani `AI_PROVIDER=azure` BYO-key seçeneğinde abuse-monitoring muafiyeti bizim tarafımızdan sağlanamaz, her müşteriye ayrı iş yükü. K4’ün IONOS varsayılanını güçlendirir; Azure seçeneği sihirbazda sunulacaksa bu şart ekranda yazılmalı. C5 (dipnot 6) ve §203 ticket’ları açık, sonuç gelince buraya.
+
 ### O-08 — Google Calendar / Gmail OAuth — bizim OAuth uygulamamız
 
 | Alan | İçerik |
