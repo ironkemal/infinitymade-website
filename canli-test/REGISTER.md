@@ -198,8 +198,9 @@ senkron okuduğu için ters sırada boş liste latch'lenir. Düzeltmenin kendisi
   girilebiliyor → `zahlerTyp()` (`module/rezeptinfo-geld.js:87-89`) onu sessizce GKV zuzahlung
   mantığıyla hesaplıyor. **Ayrı P2-ticket, ilk PKV-Verordnung vakasından önce** — bkz.
   `Podoloji/PRODUKT-ENTSCHEIDUNGEN.md` „Podologische Angaben"-Block girişi.
-- **Doğrulanamadı (test ortamında yok):** Prod'da mevcut bir Podoloji-Verordnung'un `rezeptart`
-  sütununun gerçekten hep `kassen`/NULL olduğu — sayım `db-ustasi`'ye kaldı.
+- **Doğrulandı (MCP, 28.09.2026):** Prod'da `bereich='podo'` olan **24** Verordnung'un tamamı
+  `rezeptart` NULL (20) veya `kassen` (4) — **sıfır** privat/selbstzahler/bg. Boşluk varsayım
+  değil, ölçülmüş: 06.09.2026'dan bu yana açılan HİÇBİR Podoloji-Verordnung GKV-dışı değil.
 
 ### Podologie Behandlungen — Tagesbehandlung erfassen — nav etiketi: `podologie-billing`
 

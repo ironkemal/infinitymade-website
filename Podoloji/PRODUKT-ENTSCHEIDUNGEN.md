@@ -354,6 +354,20 @@
 - **Offen (`podoloji`, unbestätigt):** Ob Privatpraxen den Rechnungstext tatsächlich vom Standard
   abweichend ändern, hat noch keine Podologin bestätigt. Wenn nie — könnte auch der Privat-Fall
   auf den Standardwert ohne sichtbares Feld reduziert werden.
+- **QA-Nachtrag 28.09.2026 (Claude-in-Chrome-Verifikation, `gkv-302` eingeholt):** Die Nicht-GKV-
+  Sichtbarkeit konnte live nicht getestet werden — kein Bug hier, sondern eine seit 06.09.2026
+  bestehende, unabhängige Lücke: der podologische Schnellweg (`podNew*`, inkl. Rezeptart-
+  Umschalter) wurde bei der Verordnungs-Konsolidierung abgeschafft, die Muster-13-Maske ist
+  seitdem der einzige Anlegeweg — ohne Rezeptart-Umschalter. **Per MCP nachgezählt:** alle 24
+  Podoloji-Verordnungen in Prod stehen auf `rezeptart` NULL (20) oder `kassen` (4), keine einzige
+  privat/selbstzahler/bg. `module/verordnung-pruefen-knopf.js` bereinigt (toter `podNew*`-Code
+  entfernt). **Eigenes P2-Ticket nötig** (vor dem ersten PKV-Verordnungsfall): Rezeptart-
+  Umschalter in `#rzMaskeWrap` nachbauen, `nutzlastAusMaske()` um `rezeptart` erweitern,
+  GKV-Pflichtfelder (Diagnosegruppe/Kasse/Versichertennummer) bei `≠ kassen` zugeklappt statt
+  verlangt (Beschluss 10.08.2026 oben), `lesenMuster13()` den echten Wert statt hart `'gkv'`
+  übergeben lassen. Bislang **nicht ins Ops-Dashboard eingetragen** — dieser Sitzung fehlte der
+  Zugriff (separates Supabase-Projekt, kein MCP, `ops/.env.ops` fehlt lokal).
 - **Tarih:** 2026-09-28 (Ops #313)
 - **Etkilenen:** `module/verordnung-podo.js` (`podoFelderAktualisieren()`, neue `rezeptart()`-Hilfe),
-  `module/verordnung-maske.js` (`fuelleMuster13()`, `maskeHeimschicken()`)
+  `module/verordnung-maske.js` (`fuelleMuster13()`, `maskeHeimschicken()`),
+  `module/verordnung-pruefen-knopf.js` (toter Code entfernt, 28.09.2026)
