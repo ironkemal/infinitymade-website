@@ -23,6 +23,9 @@
  * wächst nicht mehr.
  */
 
+import { ladePodoTermine, terminZaehler } from './verordnung-termine.js?v=20260908';
+import { ausTopf } from './verordnung-topf.js?v=20260920t';
+
 // ── Frequenz ─────────────────────────────────────────────────────────────
 
 // Die Frequenzprüfung ist nach module/frequenz-pruefung.js umgezogen. Der erste
@@ -139,8 +142,8 @@ const PUNKT_STIL = {
  *
  * deps: { escapeHtml, aufDienstleistung(rx), aufAbwahl() }
  */
-export function waehleVerordnung(rx, sessions, deps = {}) {
-  const { aufDienstleistung } = deps;
+export async function waehleVerordnung(rx, sessions, deps = {}) {
+  const { aufDienstleistung, sb, ownerId, leadId } = deps;
 
   document.querySelectorAll('.bk-vero-card').forEach(c => {
     c.style.borderColor = 'var(--border)';
@@ -163,52 +166,80 @@ export function waehleVerordnung(rx, sessions, deps = {}) {
   const infoEl = document.getElementById('bkSessionPickerInfo');
   if (!pickerBlock || !dotsEl) return;
 
-  const total = rx.anzahl_einheiten || sessions.length || 0;
+  const total = rx.anzahl_einheiten || sessions?.length || 0;
   if (titleEl) {
     titleEl.textContent = `${rx.heilmittel || '—'}${rx.icd10 ? ' · ' + rx.icd10 : ''} · ${total} Einh.`
       + (rx.frequenz ? ` · ${rx.frequenz}` : '');
   }
 
-  const offeneSessions = sessions
-    .filter(s => !s.booking_id || s.status === 'planned')
-    .sort((a, b) => a.session_number - b.session_number);
-  const naechste = offeneSessions[0] || null;
+  const istPodo = rx?.therapie_bereich === 'podo';
 
-  dotsEl.innerHTML = sessions
-    .slice()
-    .sort((a, b) => a.session_number - b.session_number)
-    .map(s => {
-      const erledigt = s.status === 'done' || s.status === 'completed';
-      const geplant = !!s.booking_id && !erledigt;
-      const stil = erledigt ? PUNKT_STIL.done : geplant ? PUNKT_STIL.planned : PUNKT_STIL.offen;
-      const waehlbar = !erledigt;
-      return `<button type="button" class="bk-sess-dot" data-sess-id="${s.id}" data-sess-num="${s.session_number}" data-pending="${waehlbar ? '1' : '0'}"
-      title="Sitzung ${s.session_number}: ${stil.titel}"
-      style="width:32px;height:32px;border-radius:50%;border:2px ${stil.art} ${stil.rand};background:${stil.fuell};cursor:${waehlbar ? 'pointer' : 'default'};font-size:13px;font-weight:700;color:${stil.text};display:flex;align-items:center;justify-content:center;line-height:1;">
-      ${s.session_number}
-    </button>`;
-    }).join('');
-
-  dotsEl.querySelectorAll('.bk-sess-dot').forEach(dot => {
-    dot.addEventListener('click', () => {
-      if (dot.dataset.pending !== '1') return;
-      markiereGewaehltenPunkt(dotsEl, dot);
-      setzeWert('bkSelectedSessionId', dot.dataset.sessId);
-      window._pendingRxSession = { sessionId: dot.dataset.sessId, prescriptionId: rx.id };
-      if (infoEl) infoEl.textContent = `Sitzung ${dot.dataset.sessNum} von ${total} ausgewählt`;
-    });
-  });
-
-  if (naechste) {
-    setzeWert('bkSelectedSessionId', naechste.id);
-    window._pendingRxSession = { sessionId: naechste.id, prescriptionId: rx.id };
-    if (infoEl) infoEl.textContent = `Nächste: Sitzung ${naechste.session_number} von ${total}`;
-    const standardPunkt = dotsEl.querySelector(`.bk-sess-dot[data-sess-id="${naechste.id}"]`);
-    if (standardPunkt) markiereGewaehltenPunkt(dotsEl, standardPunkt);
-  } else {
-    if (infoEl) infoEl.textContent = 'Alle Sitzungen bereits vergeben.';
+  if (istPodo) {
+    dotsEl.innerHTML = '';
     setzeWert('bkSelectedSessionId', '');
-    window._pendingRxSession = null;
+    window._pendingRxSession = { prescriptionId: rx.id, podoVordId: rx.id };
+
+    if (sb && ownerId) {
+      try {
+        const { vergeben } = await ladePodoTermine(sb, { ownerId, vordId: rx.id, leadId });
+        const z = terminZaehler(ausTopf(rx), vergeben);
+        if (z.offen === 0) {
+          if (infoEl) infoEl.textContent = 'Alle Sitzungen bereits vergeben.';
+          window._pendingRxSession = null;
+        } else if (z.offen !== null) {
+          if (infoEl) infoEl.textContent = `Noch ${z.offen} von ${z.verordnet} Einheiten offen.`;
+        } else {
+          if (infoEl) infoEl.textContent = 'Termin wird der Verordnung zugeordnet.';
+        }
+      } catch (e) {
+        console.error('[waehleVerordnung] Fehler beim Laden der Podo-Termine:', e);
+        if (infoEl) infoEl.textContent = 'Termin wird der Verordnung zugeordnet.';
+      }
+    } else {
+      if (infoEl) infoEl.textContent = 'Termin wird der Verordnung zugeordnet.';
+    }
+  } else {
+    const offeneSessions = (sessions || [])
+      .filter(s => !s.booking_id || s.status === 'planned')
+      .sort((a, b) => a.session_number - b.session_number);
+    const naechste = offeneSessions[0] || null;
+
+    dotsEl.innerHTML = (sessions || [])
+      .slice()
+      .sort((a, b) => a.session_number - b.session_number)
+      .map(s => {
+        const erledigt = s.status === 'done' || s.status === 'completed';
+        const geplant = !!s.booking_id && !erledigt;
+        const stil = erledigt ? PUNKT_STIL.done : geplant ? PUNKT_STIL.planned : PUNKT_STIL.offen;
+        const waehlbar = !erledigt;
+        return `<button type="button" class="bk-sess-dot" data-sess-id="${s.id}" data-sess-num="${s.session_number}" data-pending="${waehlbar ? '1' : '0'}"
+        title="Sitzung ${s.session_number}: ${stil.titel}"
+        style="width:32px;height:32px;border-radius:50%;border:2px ${stil.art} ${stil.rand};background:${stil.fuell};cursor:${waehlbar ? 'pointer' : 'default'};font-size:13px;font-weight:700;color:${stil.text};display:flex;align-items:center;justify-content:center;line-height:1;">
+        ${s.session_number}
+      </button>`;
+      }).join('');
+
+    dotsEl.querySelectorAll('.bk-sess-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        if (dot.dataset.pending !== '1') return;
+        markiereGewaehltenPunkt(dotsEl, dot);
+        setzeWert('bkSelectedSessionId', dot.dataset.sessId);
+        window._pendingRxSession = { sessionId: dot.dataset.sessId, prescriptionId: rx.id };
+        if (infoEl) infoEl.textContent = `Sitzung ${dot.dataset.sessNum} von ${total} ausgewählt`;
+      });
+    });
+
+    if (naechste) {
+      setzeWert('bkSelectedSessionId', naechste.id);
+      window._pendingRxSession = { sessionId: naechste.id, prescriptionId: rx.id };
+      if (infoEl) infoEl.textContent = `Nächste: Sitzung ${naechste.session_number} von ${total}`;
+      const standardPunkt = dotsEl.querySelector(`.bk-sess-dot[data-sess-id="${naechste.id}"]`);
+      if (standardPunkt) markiereGewaehltenPunkt(dotsEl, standardPunkt);
+    } else {
+      if (infoEl) infoEl.textContent = 'Alle Sitzungen bereits vergeben.';
+      setzeWert('bkSelectedSessionId', '');
+      window._pendingRxSession = null;
+    }
   }
 
   pickerBlock.hidden = false;

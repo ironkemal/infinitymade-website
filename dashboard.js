@@ -71,7 +71,7 @@ import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20260918';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
-import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260905c';
+import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260928';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
 import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20260906';
@@ -3545,7 +3545,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
         .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status,insurance_type')
         .eq('id', leadId).maybeSingle(),
       supabase.from('prescriptions')
-        .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id)')
+        .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id),therapie_bereich')
         .eq('patient_id', leadId)
         .not('status', 'in', '("completed","billed","cancelled")')
         .order('created_at', { ascending: false })
@@ -3708,11 +3708,11 @@ function uebernimmVerordnungAlsVorlage(rx) {
   }).catch(e => { console.error('[verordnung-uebernehmen]', e); showToast('Übernehmen fehlgeschlagen.', 'error'); });
 }
 
-function selectVerordnung(rx, sessions) {
-  // Zeichnen und Auswaehlen liegt in module/termin-verordnung.js. Hier bleibt
-  // nur, was dashboard.js kennt: die Leistung aus der Verordnung ableiten.
+async function selectVerordnung(rx, sessions) {
+  // Zeichnen und Auswaehlen liegt in module/termin-verordnung.js (wird hier nur angestossen).
   window._bkGewaehlteRx = rx;
-  waehleVerordnung(rx, sessions, { aufDienstleistung: uebernehmeDienstleistungAusRx });
+  const leadId = document.getElementById('bkCustomerId')?.value || null;
+  await waehleVerordnung(rx, sessions, { aufDienstleistung: uebernehmeDienstleistungAusRx, sb: supabase, ownerId: getOwnerId(), leadId });
   uebernimmSerienfrequenzAusRx(rx);
 }
 
@@ -5132,7 +5132,7 @@ async function initBkCustomerAutocomplete() {
 
     const { data: rxs } = await supabase
       .from('prescriptions')
-      .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id)')
+      .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id),therapie_bereich')
       .eq('patient_id', leadId)
       .not('status', 'in', '("completed","billed","cancelled")')
       .order('created_at', { ascending: false })
