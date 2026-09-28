@@ -372,8 +372,16 @@ export function fuelleMuster13(rx, opt = {}) {
   // immer GKV (`lesenMuster13()` in verordnung-pruefen-knopf.js setzt
   // `rezeptart: 'gkv'` hart, `nutzlastAusMaske()` schreibt die Spalte beim
   // Anlegen gar nicht) — nur beim BEARBEITEN einer bestehenden, nicht-GKV
-  // Verordnung (angelegt über den podologischen Schnellweg `podNew*`) ist der
-  // tatsächliche Wert wichtig.
+  // Verordnung ist der tatsächliche Wert wichtig.
+  //
+  // ⚠ Ops #313 QA-Nachtrag (28.09.2026): so eine Verordnung entsteht heute
+  // NIRGENDS mehr — der frühere podologische Schnellweg (`podNew*`-Felder),
+  // der `rezeptart` setzen konnte, ist seit 06.09.2026 abgeschafft (diese
+  // Maske ist seitdem der einzige Weg, siehe module/verordnung-podo.js
+  // "Was NICHT hier steht"). Das ist eine bestehende, von dieser Änderung
+  // unabhängige Lücke, kein hier zu behebender Fehler — gkv-302: P2,
+  // eigenes Ticket vor dem ersten PKV-Verordnungsfall. Der Code hier ist
+  // bereits korrekt FÜR den Tag, an dem ein Rezeptart-Umschalter zurückkommt.
   const maskeWrap = g('rzMaskeWrap');
   if (maskeWrap) maskeWrap.dataset.rezeptart = alsVorlage ? 'kassen' : (rx.rezeptart || 'kassen');
   // Bei einer Vorlage werden nur gefüllte Werte gesetzt (die Maske ist frisch

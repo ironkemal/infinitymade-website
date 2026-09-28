@@ -7,26 +7,23 @@
  * `verordnung-regeln.js`; hier steht nur, wie man an die Werte der Maske
  * kommt und wie das Urteil aussieht.
  *
- * Zwei Masken, ein Urteil
- * ───────────────────────
- * Eine Verordnung entsteht von Hand an zwei Stellen:
+ * Eine Maske, ein Urteil
+ * ──────────────────────
+ * Eine Verordnung entsteht von Hand an genau einer Stelle: `#rezeptModal`
+ * (Muster 13, alle Fachbereiche, Felder `rz*`). Bis zum 06.09.2026 gab es
+ * daneben einen zweiten, podologischen Schnellweg (`podNew*`-Felder) mit
+ * eigenem Prüf-Aufruf (`MASKEN.podologie`, `lesenPodologie()`) — der wurde
+ * bei der Verordnungs-Konsolidierung abgeschafft (module/verordnung-podo.js,
+ * "Was NICHT hier steht") und am 28.09.2026 (Ops #313 QA-Nachtrag) hier
+ * entfernt: `montiereVerordnungPruefen(supabase, 'podologie')` wurde seit der
+ * Abschaffung nie mehr aufgerufen, die gelesenen Feld-IDs (`podNewDiag` u.a.)
+ * existierten nirgends mehr im DOM — totes Format ohne Aufrufer.
  *
- *   `#rezeptModal`         Muster 13, alle Fachbereiche — Felder `rz*`
- *   Podologie-Abrechnung   podologischer Schnellweg     — Felder `podNew*`
- *
- * Zwei Masken, weil zwei Arbeitsweisen — nicht, weil dahinter zwei Tabellen
- * stehen (seit dem 04.09.2026 ist es eine, s. `verordnung-topf.js`). Dieser
- * Knopf hängt deshalb an der MASKE, nicht am Speicherziel.
- *
- * Bis heute hingen die podologischen Prüfungen nur an der ersten Maske
- * (`verordnung-podo.js`): wer seine Verordnung über die Podologie-Abrechnung
- * anlegte, bekam keine einzige davon zu sehen. Beide Masken bekommen deshalb
- * denselben Motor — gleiche Eingabe, gleiches Urteil, egal wo getippt wird.
- *
- * ⚠️ Stand 03.09.2026 ist nur `muster13` eingehängt. Die Podologie-Maske wird
- *    gerade umgebaut (Topf-Zusammenlegung); ihr Aufruf
- *    `montiereVerordnungPruefen(supabase, 'podologie')` gehört ans Ende ihres
- *    Renderns und wird nachgezogen, sobald der Umbau steht.
+ * ⚠️ Eine nicht-GKV Podologie-Verordnung (privat/selbstzahler/bg) lässt sich
+ *    seit derselben Abschaffung über KEINEN Weg mehr anlegen — der
+ *    Rezeptart-Umschalter des alten Schnellwegs wurde nicht in diese Maske
+ *    übernommen. Bestehende Lücke, kein Verhalten dieser Datei; eigenes
+ *    Ticket (gkv-302, P2, vor dem ersten PKV-Verordnungsfall).
  *
  * Warum der Knopf nichts blockiert
  * ────────────────────────────────
@@ -39,7 +36,6 @@
 
 import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20260919';
 import { markiereBefunde, loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { POD_KATALOG, dgWurzel } from './verordnung-regeln.js?v=20260903';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
 
 const $ = (id) => document.getElementById(id);
@@ -90,54 +86,18 @@ function lesenMuster13() {
   };
 }
 
-/**
- * Podologie-Maske (`podNew*`). Zwei Eigenheiten gegenüber Muster 13:
- *
- * 1. `podNewHeilmittel` ist ein Auswahlfeld mit den Werten a/b/c — es trägt
- *    Leitsymptomatik UND Heilmittel in einem. Der Klartext wird deshalb aus
- *    dem Katalog abgeleitet, sonst meldete die Prüfung eine Abweichung
- *    zwischen zwei Feldern, die in Wahrheit dasselbe Feld sind.
- * 2. Die Positionsnummern stehen in eigenen Zeilen (`.pod-hm-code`), nicht in
- *    einem einzelnen versteckten Feld.
- */
-function lesenPodologie() {
-  const brief = wert('podNewHeilmittel');           // '' | 'a' | 'b' | 'c'
-  const dg = dgWurzel(wert('podNewDiag'));
-  const katalog = POD_KATALOG[dg] || {};
-  const positionen = [...document.querySelectorAll('#podHeilmittelItems .pod-hm-code')]
-    .map(el => (el.value || '').trim()).filter(Boolean);
-
-  return {
-    bereich:            'podologie',
-    icd:                wert('podNewIcd10'),
-    diagnosegruppe:     wert('podNewDiag'),
-    leitsymptomatik:    brief ? [brief] : [],
-    heilmittel:         brief ? (katalog[brief] || brief) : '',
-    heilmittelPosition: positionen[0] || '',
-    anzahl:             wert('podNewEinheiten'),
-    frequenz:           wert('podNewFrequenz'),
-    ausstellungsdatum:  wert('podNewAusstelldatum'),
-    behandlungsbeginn:  '',
-    dringend:           haken('podNewDringend'),
-    versichertennummer: wert('podNewVsnr'),
-    kasseIk:            wert('podNewKk'),
-    arztLanr:           wert('podNewArztLanr'),
-    arztBsnr:           wert('podNewArztBsnr'),
-    rezeptart:          wert('podNewRezeptart') || 'kassen',
-  };
-}
-
 // `wurzel` ist der Bereich, in dem die Befunde an die Felder gesetzt werden
 // (module/verordnung-feldmarker.js), `formular` der Bereich, dessen Tippen das
 // Urteil veralten lässt. Beide bewusst als ID und nicht per `closest()`: die
 // Muster-13-Maske zieht zwischen Modal und Seite um (module/verordnung-maske.js),
 // und `closest('.card')` fände dabei einmal die Karte der Seite und einmal
 // nichts — zwei verschiedene Verhalten für dieselbe Maske.
+//
+// Nur noch EIN Eintrag (`muster13`) — der frühere `podologie`-Eintrag samt
+// `lesenPodologie()` ist am 28.09.2026 entfernt worden, s. Dateikopf.
 const MASKEN = {
-  muster13:  { anker: 'rzSaveBtn',      panel: 'rzPruefErgebnis',      knopf: 'rzPruefBtn',
-               lesen: lesenMuster13,  wurzel: 'rzMaskeWrap',      formular: 'rzMaskeWrap' },
-  podologie: { anker: 'podSaveVordBtn', panel: 'podNewPruefErgebnis',  knopf: 'podNewPruefBtn',
-               lesen: lesenPodologie, wurzel: null,               formular: null },
+  muster13: { anker: 'rzSaveBtn', panel: 'rzPruefErgebnis', knopf: 'rzPruefBtn',
+              lesen: lesenMuster13, wurzel: 'rzMaskeWrap', formular: 'rzMaskeWrap' },
 };
 
 // ─── Darstellung ────────────────────────────────────────────────────────────
@@ -221,7 +181,7 @@ function wurzelVon(cfg) {
  * bereits gestellt — das Ausrufezeichen in der Liste hat sie gestellt.
  *
  * @param {object} supabase
- * @param {'muster13'|'podologie'} maskeKey
+ * @param {'muster13'} maskeKey
  * @returns {Promise<object|null>} das Prüfergebnis (oder `null` ohne Regeldaten)
  */
 export async function pruefeMaske(supabase, maskeKey) {
@@ -243,12 +203,10 @@ export async function pruefeMaske(supabase, maskeKey) {
 
 /**
  * Knopf und Ergebnisfeld in eine Maske einhängen. Idempotent: ein zweiter
- * Aufruf für dieselbe, noch vorhandene Maske tut nichts. Die Podologie-Maske
- * wird per `innerHTML` neu gebaut, dort ist der erneute Aufruf nach jedem
- * Rendern nötig — der Knopf ist dann weg und wird neu gesetzt.
+ * Aufruf für dieselbe, noch vorhandene Maske tut nichts.
  *
  * @param {object} supabase  Client aus dashboard.js
- * @param {'muster13'|'podologie'} maskeKey
+ * @param {'muster13'} maskeKey
  */
 export function montiereVerordnungPruefen(supabase, maskeKey) {
   const cfg = MASKEN[maskeKey];
