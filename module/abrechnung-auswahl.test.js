@@ -18,7 +18,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { kassenanteil, podoSperren, gruppenKey, baueGruppen, auswahlStand, imZeitraum,
-         keineDokumentierteBehandlung, podoStrukturBlocker, preflightGruende, fehlerText }
+         keineDokumentierteBehandlung, podoStrukturBlocker, podoBefundOhneBehandlung,
+         preflightGruende, fehlerText }
   from './abrechnung-auswahl.js';
 
 const quelle = readFileSync(new URL('./abrechnung-auswahl.js', import.meta.url), 'utf8');
@@ -53,6 +54,48 @@ test('podoSperren: Befundpauschale ist bei Nagelspange nicht abrechenbar', () =>
   assert.match(g[0], /78030/);
   // Beide Sperren zugleich
   assert.equal(podoSperren({ diagnosegruppe: 'UI1', icd10: ['M20.1'] }, ['88030']).length, 2);
+});
+
+// ── podoBefundOhneBehandlung() — S1.6, Spiegel von
+// api-backend/billing/dta/befundpauschale-regeln.js ────────────────────────
+
+test('podoBefundOhneBehandlung greift NICHT bei UI1/UI2 (eigene Sperre)', () => {
+  const v = { diagnosegruppe: 'UI1' };
+  const behs = [{ behandlungsdatum: '2026-09-01', hpnr_codes: ['78030'] }];
+  assert.deepEqual(podoBefundOhneBehandlung(v, behs), { hart: [], uebersteuerbar: [] });
+});
+
+test('podoBefundOhneBehandlung: 78030 ohne 78010/78020 am selben Tag ist hart', () => {
+  const v = { diagnosegruppe: 'DF' };
+  const behs = [{ behandlungsdatum: '2026-09-01', hpnr_codes: ['78030'] }];
+  const r = podoBefundOhneBehandlung(v, behs);
+  assert.equal(r.hart.length, 1);
+  assert.match(r.hart[0], /78030/);
+  assert.match(r.hart[0], /01\.09\./);
+  assert.equal(r.uebersteuerbar.length, 0);
+});
+
+test('podoBefundOhneBehandlung: 78030 mit 78010 am selben Tag ist frei', () => {
+  const v = { diagnosegruppe: 'NF-a' };
+  const behs = [{ behandlungsdatum: '2026-09-01', hpnr_codes: ['78030', '78010'] }];
+  assert.deepEqual(podoBefundOhneBehandlung(v, behs), { hart: [], uebersteuerbar: [] });
+});
+
+test('podoBefundOhneBehandlung: 78040 ganz ohne Behandlung ist uebersteuerbar, nicht hart', () => {
+  const v = { diagnosegruppe: 'QF' };
+  const behs = [{ behandlungsdatum: '2026-09-01', hpnr_codes: ['78040'] }];
+  const r = podoBefundOhneBehandlung(v, behs);
+  assert.equal(r.hart.length, 0);
+  assert.equal(r.uebersteuerbar.length, 1);
+});
+
+test('podoBefundOhneBehandlung: 78040 an einem Tag, 78010 an anderem Tag ist frei', () => {
+  const v = { diagnosegruppe: 'DF' };
+  const behs = [
+    { behandlungsdatum: '2026-09-01', hpnr_codes: ['78040'] },
+    { behandlungsdatum: '2026-09-08', hpnr_codes: ['78010'] },
+  ];
+  assert.deepEqual(podoBefundOhneBehandlung(v, behs), { hart: [], uebersteuerbar: [] });
 });
 
 test('keineDokumentierteBehandlung: leer oder fehlend heisst blockiert', () => {

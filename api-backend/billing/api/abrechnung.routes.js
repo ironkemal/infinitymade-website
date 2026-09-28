@@ -15,6 +15,7 @@ import { createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
 import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
+import { befundpauschaleRegeln } from '../dta/befundpauschale-regeln.js';
 import { verordnungsartFuer, heilmittelBereichFuer, therapiefrequenzFuer } from '../dta/zhe-kennzeichen.js';
 // Preise/Zuzahlung kommen ab Aufgabe 2 ausschliesslich über preise/resolver.js.
 // Aus den Katalogen wird hier nur noch gebraucht, was nichts mit Geld zu tun hat.
@@ -3236,12 +3237,13 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     for (const v of (vords || [])) {
       const dgRoot = String(v.diagnosegruppe || '')
         .replace(/\s+/g, '').toUpperCase().replace(/-[ABC]$/, '');
-      if (dgRoot !== 'UI1' && dgRoot !== 'UI2') continue;
+      const istNagelspange = dgRoot === 'UI1' || dgRoot === 'UI2';
       const beleg = v.id.slice(0, 8);
       const ueberst = sperreUebersteuert.has(v.id);
       const zielListe = ueberst ? [] : sperren;
       const uebersteuerteRegeln = [];
 
+      if (istNagelspange) {
       // 1) UI1/UI2 lassen ausschließlich L60.0 zu.
       //    Fehlt der ICD ganz, wird NICHT gesperrt — auf Muster 13 ist der
       //    ICD-Kode keine Pflichtangabe, die Diagnose darf im Klartext stehen
@@ -3276,6 +3278,30 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
           `UI1 und UI2) nicht abrechenbar. Bitte die Position aus der Verordnung entfernen.`
         );
         if (ueberst) uebersteuerteRegeln.push('BEFUNDPAUSCHALE_NAGELSPANGE');
+      }
+      } else {
+      // 3) DF/NF/QF: Befund-/Verlaufspauschale ohne Behandlung.
+      //    Reform-Sprint S1.6 — FAK Podologie Stand 24.05.2023 Q7 (Z.44-47) +
+      //    Anlage 1a Leistungsbeschreibung (Z.83-84, Z.460), reine Funktion in
+      //    `../dta/befundpauschale-regeln.js` (dort auch die Herleitung).
+      //    UI1/UI2 sind hiervon ausgenommen — die haben die eigene Sperre oben.
+      const sessions = (behByVord[v.id] || []).map(b => ({
+        datum: b.behandlungsdatum,
+        positionen: b.hpnr_codes || [],
+      }));
+      const { hart, uebersteuerbar } = befundpauschaleRegeln(sessions);
+
+      // (a) ist NIE übersteuerbar — landet immer in `sperren`, unabhängig
+      // von `sperreUebersteuert`.
+      for (const grund of hart) {
+        sperren.push(`Verordnung ${beleg} (${v.patient_name || '—'}): ${grund}`);
+      }
+
+      // (b) folgt demselben Übersteuerungsweg wie die UI1/UI2-Regeln oben.
+      for (const grund of uebersteuerbar) {
+        zielListe.push(`Verordnung ${beleg} (${v.patient_name || '—'}): ${grund}`);
+        if (ueberst) uebersteuerteRegeln.push('BEFUNDPAUSCHALE_OHNE_BEHANDLUNG');
+      }
       }
 
       if (ueberst && uebersteuerteRegeln.length) {

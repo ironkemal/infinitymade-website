@@ -106,6 +106,70 @@ export function podoSperren(vord, hpnrs = []) {
   return gruende;
 }
 
+// Tedavi (Behandlung) im Sinne der Befundpauschale-Regel unten — bewusst nur
+// diese zwei Kodes, gespiegelt aus `api-backend/billing/dta/befundpauschale-regeln.js`
+// (dort auch die Quellenbelege: FAK Podologie Q7 + Anlage 1a). Frontend und
+// Backend können denselben ES-Modul-Pfad nicht teilen (`api-backend/` läuft
+// im VPS-Container, nicht in Vercels statischem Ausliefer-Baum — gleiche
+// Begründung wie `geschlecht.js` oben im Datei-Kommentar), deshalb hier
+// wortgleich dupliziert statt importiert.
+const TEDAVI_POSITIONEN = ['78010', '78020'];
+
+function _formatDatumKurz(datum) {
+  const s = String(datum ?? '').trim();
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  return m ? `${m[3]}.${m[2]}.` : (s || 'unbekanntem Datum');
+}
+
+/**
+ * 78030 (Podologische Befundung) / 78040 (Podologische Eingangsbefundung)
+ * ohne Behandlung — DF/NF/QF (Podoloji Reform-Sprint S1.6, gkv-302-Hinweis).
+ * Exakt gespiegelt aus dem Backend
+ * (`api-backend/billing/dta/befundpauschale-regeln.js`, dort die vollen
+ * Quellenbelege: FAK Podologie Stand 24.05.2023 Nr. 6/7 + Anlage 1a
+ * Leistungsbeschreibung). UI1/UI2 sind ausgenommen — die haben
+ * `podoSperren()` oben.
+ *
+ *   hart:           78030 an einem Tag OHNE 78010/78020 AM SELBEN TAG.
+ *                   Nicht übersteuerbar — abgeleitet aus der Bindung von
+ *                   78030 an „Behandlung groß/klein" (FAK Nr. 7).
+ *   uebersteuerbar: 78040 irgendwo in der Verordnung, aber KEIN Tag der
+ *                   GANZEN Verordnung hat 78010/78020. Rückschluss aus
+ *                   „zusätzlich zur podologischen Behandlung" (Anlage 1a),
+ *                   kein ausdrücklicher Verbotssatz — deshalb per „Trotzdem
+ *                   übernehmen" umgehbar wie die UI1/UI2-Regeln oben.
+ *
+ * @param {object} vord Zeile im podologischen Wortschatz (verordnung-topf.js)
+ * @param {Array<{behandlungsdatum: string, hpnr_codes: string[]}>} behs
+ * @returns {{ hart: string[], uebersteuerbar: string[] }}
+ */
+export function podoBefundOhneBehandlung(vord, behs = []) {
+  const dgRoot = String(vord?.diagnosegruppe || '').replace(/\s+/g, '').toUpperCase().replace(/-[ABC]$/, '');
+  if (dgRoot === 'UI1' || dgRoot === 'UI2') return { hart: [], uebersteuerbar: [] };
+
+  const tage = (Array.isArray(behs) ? behs : []).map(b => ({
+    datum: b?.behandlungsdatum,
+    positionen: (b?.hpnr_codes || []).map(c => String(c).trim()),
+  }));
+  const hatTedavi = (positionen) => (positionen || []).some(p => TEDAVI_POSITIONEN.includes(p));
+
+  const hart = [];
+  for (const tag of tage) {
+    if (tag.positionen.includes('78030') && !hatTedavi(tag.positionen)) {
+      hart.push(`78030 (Befundung) am ${_formatDatumKurz(tag.datum)} ohne Behandlung 78010/78020 — nicht abrechenbar.`);
+    }
+  }
+
+  const uebersteuerbar = [];
+  const hatIrgendein78040 = tage.some(tag => tag.positionen.includes('78040'));
+  const hatIrgendeineTedavi = tage.some(tag => hatTedavi(tag.positionen));
+  if (hatIrgendein78040 && !hatIrgendeineTedavi) {
+    uebersteuerbar.push('78040 (Eingangsbefundung) in einer Verordnung ohne Behandlung 78010/78020 — nicht abrechenbar.');
+  }
+
+  return { hart, uebersteuerbar };
+}
+
 /**
  * Keine dokumentierte Behandlung (keine HPNR) an dieser Verordnung.
  * Anders als `podoSperren()` NICHT übersteuerbar: `mapVerordnungToDtaShape()`
@@ -512,8 +576,9 @@ export async function ladeAbrechnungAuswahl() {
       };
       zeile.soll = kassenanteil(zeile.brutto, zeile.zuzahlung);
 
-      const gruende = podoSperren(v, hpnrs);
-      const strukturGruende = podoStrukturBlocker(v, hpnrs);
+      const befund = podoBefundOhneBehandlung(v, behs);
+      const gruende = [...podoSperren(v, hpnrs), ...befund.uebersteuerbar];
+      const strukturGruende = [...podoStrukturBlocker(v, hpnrs), ...befund.hart];
       gruende.push(...strukturGruende);
       if (gruende.length) fehlerhaft.push({ bereich: 'podo', zeile, gruende, uebersteuerbar: !strukturGruende.length });
       else zeilen.push(zeile);

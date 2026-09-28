@@ -330,6 +330,21 @@
 - ⚠️ Beta-1'in 31.08.2026'daki „Erstbehandlung mit Befundung und Behandlung zusammen" itirazı
   **78030**'u kastediyor, 78010/78020'yi değil. Kod bu ayrımı zaten doğru yapıyordu.
 
+### Podologie: 78030/78040 tedavisiz faturalanamaz (Reform S1.6, 28.09.2026)
+- **Kural:** DF/NF/QF'te (a) 78030 içeren ama **aynı gün** 78010/78020 içermeyen tedavi günü →
+  **sert blok**; (b) 78040 içeren ama reçetenin **hiçbir** gününde 78010/78020 olmayan reçete →
+  blok, „Trotzdem übernehmen" ile atlanabilir; (c) 78040 tek başına bir günde, başka günde
+  78010/78020 varsa → serbest. Tedavi listesi yalnız `['78010','78020']`. UI1/UI2 hariç.
+- **Kaynak:** (a) FAK Podologie 24.05.2023 Nr. 6/7 (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt`
+  Z.42-47) — *"die Befundposition 78030 ist zu jeder der Abrechnungspositionen „Behandlung groß"
+  oder „Behandlung klein" abrechenbar"*. (b) Anlage 1a i.d.F. 17.06.2024 Z.458-462
+  (*"zusätzlich zur podologischen Behandlung"*) + Z.83-84 — **çıkarım**, açık yasak cümlesi yok;
+  GKV-SV/ZFD teyidi gelene kadar atlanabilir tutuldu (gkv-302).
+- **Kodda:** `api-backend/billing/dta/befundpauschale-regeln.js` (saf kural + test) →
+  `api-backend/billing/api/abrechnung.routes.js` `create-podologie` sperren döngüsü;
+  ön yüz aynası `module/abrechnung-auswahl.js` `podoBefundOhneBehandlung()`.
+- **Kapsam:** Podologie, DF/NF/QF
+
 ### Podologie: 78040 — hak koşulu Erstinanspruchnahme, Verordnung başına DEĞİL
 - **Kural:** 78040 **„einmalig"**'dir ve dayanağı **Verordnung değil, hastanın podolojiyi ilk
   kez kullanması**dır: yalnızca **01.11.2023 tarihinde veya sonrasında** ilk kez podolojik
