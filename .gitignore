@@ -98,3 +98,6 @@ kostentraeger-check-out/
 
 # KI-Masken-Spike (02.10.2026): Messausgabe, wird bei jedem Lauf neu geschrieben
 spike/ki-maske/ergebnis-ist.json
+# Codex-Spiegel der Agents (wie .claude/ und .agents/ — interne Prozessbeschreibungen,
+# Supabase-MCP-Config). 28.09.2026
+.codex/
