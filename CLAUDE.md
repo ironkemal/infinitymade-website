@@ -654,7 +654,10 @@ hukuki kayıt: `compliance/LEGAL_DECISIONS.md`
 - Opsiyonel lookup'ta `.single()` **kullanma** → 406 döner, `.maybeSingle()` kullan
 - UI metinleri Almanca (DE varsayılan)
 - `git push`'u **ana context'te ve ön planda** çalıştır — subagent'ta veya
-  `run_in_background` ile Windows Credential Manager'a erişilemiyor, sessizce asılı kalır
+  `run_in_background` ile kimlik deposuna (Windows Credential Manager / macOS Keychain)
+  erişilemiyor, sessizce asılı kalır. Ekipte iki ortam var: Kemal Windows, Melih macOS —
+  yollar (`I:\My Drive\…`, `c:\Users\…`) Windows'a aittir, macOS'ta Drive klasörü aynı adla
+  başka bir yerde durur.
 
 ### 🌿 Doğrudan `main` üzerinde çalışılır — feature branch AÇILMAZ (2026-08-30)
 
@@ -824,4 +827,10 @@ sıfır referans oldukları için arşive değil, doğrudan silindi. Ayrıca kö
 
 ---
 
-*Son güncelleme: 09.09.2026 | Status: Beta, ilk müşteriler test ediyor 🟡*
+*Son güncelleme: 28.09.2026 (yalnız platform notu + Codex-yansıması; rakamlar 09.09.2026'dan —
+güncel sayımlar üreticilerde: `funktionskarte.mjs --check`, `tabellenkarte.mjs`, `npm test`) |
+Status: Beta, ilk müşteriler test ediyor 🟡*
+
+> **Codex yansıması:** `AGENTS.md` bu dosyanın Codex için kopyasıdır, `.codex/agents/` ise
+> `.claude/agents/`'ın kopyasıdır (`.codex/` gitignore'lu). Kaynak **bu dosya**; kopya
+> sürüklenir, iki yerde ayrı düzenleme yapma.
