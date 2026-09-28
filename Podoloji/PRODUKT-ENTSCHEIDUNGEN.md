@@ -316,3 +316,44 @@
     Anlage 3 Ziffer 5 k „Korrekturmöglichkeit": ek ICD'ler „für die Gültigkeit … unschädlich";
     düzeltme yalnız L60.0 yoksa. Kod zaten böyle (frontend + backend aynası); SPEC-RULES „UI1/UI2: L60.0
     varsa ek ICD zararsızdır".
+
+---
+
+### „Podologische Angaben"-Block: Anlass nur bei Privat/Selbstzahler, nicht bei jeder GKV-Verordnung
+- **Karar:** Im Block unter der Heilmitteltabelle der Muster-13-Maske (`module/verordnung-podo.js`,
+  `rzPodoFelder`) bleibt „Behandelter Zehennagel" unverändert immer offen sichtbar, sobald die
+  Diagnosegruppe UI1/UI2 ist (Pflichtfeld, abrechnungsrelevant). „Behandlungsanlass" wird dagegen
+  nur noch bei einer **nicht-GKV**-Verordnung (privat/selbstzahler/bg) eingeblendet. Trifft weder
+  das eine noch das andere zu — der weit überwiegende Fall, GKV ohne Nagelspange —, verschwindet
+  der ganze Block. Kein „optional angeben"-Einklapp-Link.
+- **Neden:** Beta-1-Feedback: „Podologische Angaben — wofür steht das? Wir benutzen das nicht."
+  `podoloji`-Agent (28.09.2026) eingeholt: Bei einer Kassenverordnung steht Diagnosegruppe, ICD,
+  Leitsymptomatik und Heilmittel bereits auf dem Muster 13 — für einen eigenen „Anlass" gibt es dort
+  weder Feld noch Bedarf. Das Feld ist aber nicht zwecklos: Bei Privat-/Selbstzahler-/BG-Verordnungen
+  gibt es keine Diagnosegruppe, und der Anlass übernimmt drei Aufgaben — Rechnungstext ohne
+  Heilmittel-Positionsnummer (`module/rechnung-bruecke.js:147`), Titel in der Verordnungsübersicht
+  (`module/verordnung-uebersicht.js:466`), Kennzeichen in der Abrechnungsliste
+  (`module/podologie-abrechnung.js:578`). Ein Einklapp-Link wäre bei GKV toter Platz und würde bei
+  Privatrezepten das einzige Feld verstecken, das dort die Diagnosegruppe ersetzt.
+- **Woher die Maske die Rezeptart kennt:** Über dieses Formular ist eine NEUANLAGE immer GKV
+  (`module/verordnung-pruefen-knopf.js:89` setzt `rezeptart: 'gkv'` hart für die Prüfung,
+  `nutzlastAusMaske()` schreibt die Spalte beim Anlegen gar nicht — Privat-/Selbstzahler-
+  Verordnungen entstehen über den separaten podologischen Schnellweg, `podNew*`-Felder in
+  `module/podologie-abrechnung.js`, der KEIN Anlass-Feld hat). Relevant wird die tatsächliche
+  Rezeptart deshalb nur beim BEARBEITEN einer bestehenden Nicht-GKV-Verordnung. `fuelleMuster13()`
+  (`module/verordnung-maske.js`) schreibt sie dafür als Datenattribut auf `#rzMaskeWrap`
+  (`dataset.rezeptart`) — kein Import, weil `verordnung-maske.js` bereits aus `verordnung-podo.js`
+  importiert (Ringabhängigkeit). `maskeHeimschicken()` setzt das Attribut bei jeder Neuanlage
+  („+ Neue Verordnung") defensiv auf `kassen` zurück.
+- **Speichern ändert sich nicht:** Ist das Feld leer/versteckt, wird weiterhin der Standardwert
+  „Podologische Komplexbehandlung" geschrieben (`podoVerordnungsfelder()`).
+- **Reddedilen alternatif:** Ganzer Block/Anlass-Feld standardmäßig eingeklappt statt bedingt
+  gerendert — verworfen, weil es beim Privatrezept das einzige echte Feld hinter einem Klick
+  versteckt hätte, ohne den GKV-Regelfall wirklich sauberer zu machen (der Block bliebe als leerer
+  Rahmen mit nur der Überschrift stehen).
+- **Offen (`podoloji`, unbestätigt):** Ob Privatpraxen den Rechnungstext tatsächlich vom Standard
+  abweichend ändern, hat noch keine Podologin bestätigt. Wenn nie — könnte auch der Privat-Fall
+  auf den Standardwert ohne sichtbares Feld reduziert werden.
+- **Tarih:** 2026-09-28 (Ops #313)
+- **Etkilenen:** `module/verordnung-podo.js` (`podoFelderAktualisieren()`, neue `rezeptart()`-Hilfe),
+  `module/verordnung-maske.js` (`fuelleMuster13()`, `maskeHeimschicken()`)

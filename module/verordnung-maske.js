@@ -139,6 +139,11 @@ export function maskeHeimschicken() {
   _bearbeitung = null;
   _scanHerkunft = null;
   _patientNeu = false;
+  // Neuanlage ist über dieses Formular immer GKV — ein von der vorherigen
+  // Bearbeitung stehengebliebenes `rezeptart=privat` darf für die nächste,
+  // per „+ Neue Verordnung" geöffnete Maske nicht mehr gelten
+  // (module/verordnung-podo.js liest dieses Attribut, s. `fuelleMuster13()`).
+  if (wrap) wrap.dataset.rezeptart = 'kassen';
   // Der Belegstreifen gehoert zum Scan. Wer die Maske von Hand oeffnet,
   // soll nicht das Foto der vorherigen Verordnung sehen.
   const beleg = document.getElementById('rzScanBeleg');
@@ -360,6 +365,17 @@ export function fuelleMuster13(rx, opt = {}) {
   // Listener nie, wenn der Anwender die Felder nie von Hand fokussiert hat
   // (Haupteinstieg: KI-Rezept-Scan bestätigen, ohne rzIcd anzufassen).
   _bruecke?.ensureDgIcdWiring?.();
+
+  // Rezeptart als Datenattribut an der Maske — module/verordnung-podo.js liest
+  // es darüber (kein Import, sonst Ringabhängigkeit: diese Datei importiert
+  // bereits AUS verordnung-podo.js). Neuanlage/Vorlage ist über dieses Formular
+  // immer GKV (`lesenMuster13()` in verordnung-pruefen-knopf.js setzt
+  // `rezeptart: 'gkv'` hart, `nutzlastAusMaske()` schreibt die Spalte beim
+  // Anlegen gar nicht) — nur beim BEARBEITEN einer bestehenden, nicht-GKV
+  // Verordnung (angelegt über den podologischen Schnellweg `podNew*`) ist der
+  // tatsächliche Wert wichtig.
+  const maskeWrap = g('rzMaskeWrap');
+  if (maskeWrap) maskeWrap.dataset.rezeptart = alsVorlage ? 'kassen' : (rx.rezeptart || 'kassen');
   // Bei einer Vorlage werden nur gefüllte Werte gesetzt (die Maske ist frisch
   // zurückgesetzt); beim Bearbeiten muss auch ein LEERER Wert ankommen, sonst
   // bliebe der Rest der vorherigen Verordnung stehen.

@@ -671,7 +671,11 @@ function ergaenzendesUmschalten() {
 //                      der Diagnosegruppe sichtbar (Konsey 2026-08-10). Die Spalte
 //                      bleibt, siehe podoVerordnungsfelder(). Offen als Produkt-
 //                      frage: hat Wagner ueberhaupt noch einen Erfassungsort?
-//   behandlungsanlass  Freitext, vorbelegt mit dem Katalogtext.
+//   behandlungsanlass  Freitext, vorbelegt mit dem Katalogtext. Nur bei
+//                      Privat-/Selbstzahler-/BG-Verordnungen sichtbar (Ops
+//                      #313, 28.09.2026) — dort ist er der Rechnungstext,
+//                      bei GKV steht auf dem Muster 13 kein Feld dafuer.
+//                      Siehe `podoFelderAktualisieren()`.
 //
 // Werte und Beschriftungen des Nagels kommen aus
 // module/eingangsbefundung-regel.js — dieselbe Liste, die auch die Abrechnung
@@ -712,16 +716,41 @@ function podoFelderEl() {
       </select>
       <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Eine Verordnung = ein Nagel. Der Nagel hält die Behandlungsserie über mehrere Verordnungen zusammen.</div>
     </div>
-    <div>
-      <label style="${LABEL_STIL}" for="rzPodoAnlass">Behandlungsanlass</label>
+    <div id="rzPodoAnlassWrap" style="display:none;">
+      <label style="${LABEL_STIL}" for="rzPodoAnlass">Behandlungsanlass (Text auf der Rechnung)</label>
       <input type="text" id="rzPodoAnlass" placeholder="${POD_ANLASS_DEFAULT}" style="${FELD_STIL}">
     </div>`;
   return inBlock(el) ? el : null;
 }
 
 /**
+ * Rezeptart der aktuell geladenen Verordnung — geschrieben von
+ * `fuelleMuster13()` (module/verordnung-maske.js) als Datenattribut an
+ * `#rzMaskeWrap`. Kein Import von dort: diese Datei wird selbst von
+ * verordnung-maske.js importiert, ein Rückimport gäbe eine Ringabhängigkeit.
+ * Fehlt das Attribut (z. B. sehr frühe Ladephase), gilt „kassen" — die
+ * Neuanlage über dieses Formular ist ohnehin immer GKV.
+ */
+function rezeptart() {
+  return ($('rzMaskeWrap') || $('rezeptModal'))?.dataset.rezeptart || 'kassen';
+}
+
+/**
  * Sichtbarkeit nachziehen und melden, wenn der Nagel bei einer Nagelspangen-
  * Verordnung fehlt.
+ *
+ * Beta-1, 08.08.2026: „Podologische Angaben — wofür steht das? Wir benutzen
+ * das nicht." Ursache: „Behandlungsanlass" stand bei JEDER podologischen
+ * Verordnung offen da, hat aber nur bei Privat-/Selbstzahler-/BG-Verordnungen
+ * eine Funktion — dort ist er der Rechnungstext (module/rechnung-bruecke.js,
+ * module/verordnung-uebersicht.js, module/podologie-abrechnung.js). Bei einer
+ * GKV-Verordnung (der weit überwiegende Fall, und über DIESES Formular die
+ * einzig mögliche Neuanlage — s. `rezeptart()` oben) steht auf dem Muster 13
+ * kein passendes Feld dafür, und der Katalogtext trägt die Verordnung bereits
+ * vollständig. Der ganze Block verschwindet deshalb, wenn weder der Nagel
+ * (Pflicht bei UI1/UI2) noch der Anlass (nur Nicht-GKV) etwas beizutragen
+ * haben — kein leerer Rahmen mit nichts drin (Produktentscheid,
+ * s. Podoloji/PRODUKT-ENTSCHEIDUNGEN.md).
  *
  * @returns {{farbe?:string,text:string}|null}
  */
@@ -730,17 +759,21 @@ function podoFelderAktualisieren() {
   if (!el) return null;
 
   if (!istPodo()) { el.style.display = 'none'; return null; }
-  el.style.display = 'grid';
 
   const brauchtNagel = POD_NAGEL_DGS.includes(dgWurzel($('rzDg')?.value));
   const wrap = $('rzPodoNagelWrap');
   if (wrap) wrap.style.display = brauchtNagel ? 'block' : 'none';
-
   // Ausserhalb der Nagelspange traegt die Verordnung keinen Nagel — ein
   // stehengebliebener Wert waere schlicht falsch.
-  if (!brauchtNagel) { const n = $('rzPodoNagel'); if (n) n.value = ''; return null; }
+  if (!brauchtNagel) { const n = $('rzPodoNagel'); if (n) n.value = ''; }
 
-  if (!$('rzPodoNagel')?.value) {
+  const brauchtAnlass = rezeptart() !== 'kassen';
+  const anlassWrap = $('rzPodoAnlassWrap');
+  if (anlassWrap) anlassWrap.style.display = brauchtAnlass ? 'block' : 'none';
+
+  el.style.display = (brauchtNagel || brauchtAnlass) ? 'grid' : 'none';
+
+  if (brauchtNagel && !$('rzPodoNagel')?.value) {
     return {
       farbe: 'var(--danger,#ef4444)',
       text: 'Bei UI 1 / UI 2 gehört der behandelte Zehennagel auf die Verordnung — '
