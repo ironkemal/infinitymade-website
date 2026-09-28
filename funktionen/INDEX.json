@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-09-27",
+ "erzeugt": "2026-09-28",
  "dateien": 268,
- "funktionen": 2412,
+ "funktionen": 2413,
  "module": [
   "abrechnung",
   "anamnese",
@@ -15481,6 +15481,7 @@
     "round2",
     "runde",
     "signaturePad",
+    "slotSpanHinweis",
     "sollAbstand",
     "splitSessionsByTarif",
     "toHex",
@@ -46868,8 +46869,8 @@
    "name": "showKalToast",
    "kind": "function",
    "file": "kalender.js",
-   "start": 28,
-   "end": 42,
+   "start": 34,
+   "end": 48,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -46891,8 +46892,8 @@
    "name": "applyLang",
    "kind": "function",
    "file": "kalender.js",
-   "start": 80,
-   "end": 98,
+   "start": 86,
+   "end": 104,
    "lines": 19,
    "spiegelHinweis": null,
    "tables": [],
@@ -46912,8 +46913,8 @@
    "name": "authFetch",
    "kind": "function",
    "file": "kalender.js",
-   "start": 108,
-   "end": 117,
+   "start": 114,
+   "end": 123,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -46933,8 +46934,8 @@
    "name": "patchBooking",
    "kind": "function",
    "file": "kalender.js",
-   "start": 119,
-   "end": 129,
+   "start": 125,
+   "end": 135,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -46958,8 +46959,8 @@
    "name": "isWithinWorkingHours",
    "kind": "function",
    "file": "kalender.js",
-   "start": 131,
-   "end": 140,
+   "start": 137,
+   "end": 146,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -46979,8 +46980,8 @@
    "name": "init",
    "kind": "function",
    "file": "kalender.js",
-   "start": 155,
-   "end": 207,
+   "start": 161,
+   "end": 213,
    "lines": 53,
    "spiegelHinweis": null,
    "tables": [
@@ -47012,8 +47013,8 @@
    "name": "loadAusfallConfig",
    "kind": "function",
    "file": "kalender.js",
-   "start": 212,
-   "end": 226,
+   "start": 218,
+   "end": 232,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [
@@ -47035,8 +47036,8 @@
    "name": "ausfallPriceEur",
    "kind": "function",
    "file": "kalender.js",
-   "start": 231,
-   "end": 241,
+   "start": 237,
+   "end": 247,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [
@@ -47058,8 +47059,8 @@
    "name": "loadTeam",
    "kind": "function",
    "file": "kalender.js",
-   "start": 244,
-   "end": 290,
+   "start": 250,
+   "end": 296,
    "lines": 47,
    "spiegelHinweis": null,
    "tables": [],
@@ -47120,9 +47121,9 @@
    "name": "initCalendar",
    "kind": "function",
    "file": "kalender.js",
-   "start": 294,
-   "end": 425,
-   "lines": 132,
+   "start": 300,
+   "end": 441,
+   "lines": 142,
    "spiegelHinweis": null,
    "tables": [
     "bookings",
@@ -47138,7 +47139,8 @@
     "patchBooking",
     "render",
     "setupBookingPanel",
-    "showKalToast"
+    "showKalToast",
+    "slotSpanHinweis"
    ],
    "calledBy": [
     "init",
@@ -47152,8 +47154,8 @@
    "name": "openBookingPanel",
    "kind": "function",
    "file": "kalender.js",
-   "start": 427,
-   "end": 458,
+   "start": 443,
+   "end": 474,
    "lines": 32,
    "spiegelHinweis": null,
    "tables": [],
@@ -47173,8 +47175,8 @@
    "name": "closeBookingPanel",
    "kind": "function",
    "file": "kalender.js",
-   "start": 460,
-   "end": 464,
+   "start": 476,
+   "end": 480,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -47194,8 +47196,8 @@
    "name": "frageNachrueckerAb",
    "kind": "function",
    "file": "kalender.js",
-   "start": 484,
-   "end": 519,
+   "start": 500,
+   "end": 535,
    "lines": 36,
    "spiegelHinweis": null,
    "tables": [
@@ -47222,8 +47224,8 @@
    "name": "setupBookingPanel",
    "kind": "function",
    "file": "kalender.js",
-   "start": 528,
-   "end": 624,
+   "start": 544,
+   "end": 640,
    "lines": 97,
    "spiegelHinweis": null,
    "tables": [],
@@ -47252,8 +47254,8 @@
    "name": "loadServices",
    "kind": "function",
    "file": "kalender.js",
-   "start": 658,
-   "end": 677,
+   "start": 674,
+   "end": 693,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [
@@ -47311,8 +47313,8 @@
    "name": "loadHours",
    "kind": "function",
    "file": "kalender.js",
-   "start": 742,
-   "end": 759,
+   "start": 758,
+   "end": 775,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [
@@ -47334,8 +47336,8 @@
    "name": "loadIntegrations",
    "kind": "function",
    "file": "kalender.js",
-   "start": 777,
-   "end": 799,
+   "start": 793,
+   "end": 815,
    "lines": 23,
    "spiegelHinweis": null,
    "tables": [
@@ -67292,18 +67294,75 @@
    "kind": "arrow",
    "file": "module/kalender-raster.js",
    "start": 105,
-   "end": 108,
-   "lines": 4,
+   "end": 127,
+   "lines": 23,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "slotSpanHinweis"
+   ],
    "calledBy": [
     "_heute",
     "zeitPlusMinuten"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "qvSaveBtn",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 28 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "slotSpanHinweis",
+   "kind": "function",
+   "file": "module/kalender-raster.js",
+   "start": 127,
+   "end": 136,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "round"
+   ],
+   "calledBy": [
+    "initCalendar",
+    "p"
    ],
    "modules": [
     "abrechnung",
@@ -112362,8 +112421,8 @@
       {
        "name": "init",
        "file": "kalender.js",
-       "start": 155,
-       "end": 207,
+       "start": 161,
+       "end": 213,
        "lines": 53,
        "writes": [
         "profiles:update"
@@ -114028,8 +114087,8 @@
       {
        "name": "loadIntegrations",
        "file": "kalender.js",
-       "start": 777,
-       "end": 799,
+       "start": 793,
+       "end": 815,
        "lines": 23,
        "writes": [
         "calendar_integrations:delete"
@@ -115416,7 +115475,7 @@
     "booking.js:58",
     "cookie-consent.js:139",
     "dashboard.js:16496",
-    "kalender.js:155",
+    "kalender.js:161",
     "onboarding.js:77",
     "setup.js:225"
    ],
@@ -115579,7 +115638,7 @@
     "booking-request.js:423",
     "booking.js:199",
     "dashboard.js:9285",
-    "kalender.js:658"
+    "kalender.js:674"
    ],
    "aynalar": []
   },
@@ -115686,7 +115745,7 @@
    "orte": [
     "booking-request.js:517",
     "dashboard.js:10330",
-    "kalender.js:244"
+    "kalender.js:250"
    ],
    "aynalar": []
   },
@@ -115695,14 +115754,14 @@
    "orte": [
     "booking-request.js:566",
     "dashboard.js:2564",
-    "kalender.js:294"
+    "kalender.js:300"
    ],
    "aynalar": []
   },
   {
    "name": "applyLang",
    "orte": [
-    "kalender.js:80",
+    "kalender.js:86",
     "login.js:119",
     "setup.js:158"
    ],
@@ -116073,7 +116132,7 @@
    "name": "loadAusfallConfig",
    "orte": [
     "dashboard.js:857",
-    "kalender.js:212"
+    "kalender.js:218"
    ],
    "aynalar": []
   },
