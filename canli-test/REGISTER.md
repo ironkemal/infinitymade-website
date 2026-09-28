@@ -254,6 +254,109 @@ göründü, "Bereits dokumentiert (6)" listesi tıklanan tarihi içeriyordu. Esk
 tıklama ölü/boş bir dala düşüyordu (commit mesajı: "eine tote Verzweigung von der
 Patientenakte-Zeitleiste") — **kapandı**.
 
+### Uçtan uca podoloji turu (sentetik hesap) — 2026-09-28
+
+> Bu turun kapsamı ve tüm ham bulgular `canli-test` dışı bir oturumda toplandı (Claude ana
+> oturumu, `playwright-cli -s=praxura-qa`, sentetik owner "TEST-Podologie QA", klinik/active,
+> betriebsart `test`). Yeni sentetik tenant 21.09 blokajındaki öneriyi karşılıyor: bu hesap
+> hiçbir gerçek müşteriye ait değil. Ayrıntılı rapor Kemal'e ayrı teslim edildi.
+
+### Patienten — Neuer Patient ("Neuer Lead") — nav etiketi: `kunden`
+
+**Beklenen:** Vorname/Nachname/Geburtsdatum/Versicherungsart zorunlu. "GKV" seçilince
+Krankenkasse (arama), Versichertennummer, Versichertenstatus alanları açılır. KVNR Prüfziffer
+anında kontrol edilir. "Hausbesuch" işareti `leads.hausbesuch` sütununa yazılmalı (terminmodal
+ve Fahrt akışı onu okur).
+**Bağımlı ekranlar:** `calendar` (terminmodal Hausbesuch önseçimi), `verordnungen` (Muster-13 otomatik dolum)
+**Son test:** 2026-09-28 — KISMEN. Kayıt + KVNR kontrolü GEÇTİ (geçersiz A123456789 uyarı verdi,
+T000000002 kabul). KALDI: Hausbesuch ve Geburtsdatum yalnız `metadata`'ya yazılıyor, sütunlar
+boş (terminmodal Hausbesuch'u önseçmedi); başlık/düğme hâlâ "Neuer Lead".
+
+### Terminkalender — Neuer Termin (Verordnung kartı ile) — nav etiketi: `calendar`
+
+**Beklenen:** Hasta seçilince aktif Verordnung kartı çıkar; kart seçilince Leistung satırları
+(ilk seansta 78040+78010, sonra 78030+78010) önerilir ve kayıt sonrası termin
+`bookings.verordnung_id` ile Verordnung'a bağlanır (sayaç "Termine (n)" artar). Çakışan saat
+DB kısıtıyla (`no_overlapping_bookings`) reddedilir ve kullanıcıya anlaşılır mesaj gösterilir.
+**Bağımlı ekranlar:** `verordnungen` (Termine vergeben/unvergeben), Termin-Aktionen paneli, `podologie-billing`
+**Son test:** 2026-09-28 — KALDI. (1) Kart seçilerek kaydedilen 2/2 termin `verordnung_id=NULL`
+(bağlanmadı; bağlama yalnız portaldan sürüklenen seansta çalışıyor). (2) Çakışma 23P01 ile
+reddedildi ama UI sessiz (modal açık kalıyor, mesaj yok). (3) Kart seçildikten sonra "Alle
+Sitzungen bereits vergeben." yazıyor (0/3 iken). Taşıma (Ändern → Verschieben → hedef → onay)
+GEÇTİ; takvimde sürükle-bırak yok.
+**Son test:** 2026-09-28 (kontrol turu) — madde (2) ÇÜRÜTÜLDÜ: UI sessiz DEĞİL. TEST-Karl,
+Selbstzahler, 29.09 09:30 → tek `POST bookings` 400/23P01, ~0,45 sn sonra kırmızı toast
+"Dieser Zeitraum ist für diese:n Mitarbeiter:in bereits belegt. Bitte eine andere Uhrzeit
+wählen." — 3,5 sn ekranda (ölçülen 452→3959 ms), modal açık kalıyor, randevu yazılmadı (iki
+denemede de 400). Kalan zayıflık yalnız UX: toast sağ altta, modaldan uzak ve kısa; modal
+içinde kalıcı bir hata satırı yok → gözden kaçabilir (ilk turun kaçırma sebebi muhtemelen bu).
+Önem P1 → P3. Kanıt: `C:\tmp\pq\shots\kontrol\k1-toast.png`. (1) ve (3) bu turda sınanmadı.
+
+### Termin-Aktionen (sağ panel) — nav etiketi: (Terminkalender içinden)
+
+**Beklenen:** Termin başlığı + Ändern, hasta özeti, Verlauf, "Termin Starten", Fußbefund,
+Bearbeiten/Absagen/Nicht erschienen, Verordnung özeti ve seans listesi. Değişiklikten
+(taşıma) sonra panel güncel zamanı göstermeli.
+**Son test:** 2026-09-28 — KALDI. "Löschen" düğmesi aslında "Termin absagen" diyaloğu açıyor
+(absage + gerekçe GEÇTİ). Taşımadan sonra panel eski saati göstermeye devam etti. Podolojide
+"Termin Starten" → "Sitzungsnotiz … Sitzung abschließen": not hiçbir tabloya yazılmıyor
+(`markPrescriptionSession` fizyo defterine yazıyor), booking `confirmed` kalıyor, ekran fizyo
+Anamnese paneline atlıyor.
+**Son test:** 2026-09-28 (kontrol turu) — "Offene Einheiten als Serie verteilen" podolojide
+YOK: `#bkRxSerieBtn` DOM'da var ama gizli; `module/podo-einheiten.js:320` onu podoloji
+Verordnung'unda bilerek kapatıyor ("prescription_sessions-Zeilen, die es hier nicht gibt").
+Tek yol tek tek sürüklemek. Aynı panelde çelişki: "Aktive Verordnungen: 78010 … 0/3" listesi
+görünürken hemen altındaki "Aktive Verordnung" kutusu "Für diesen Patienten ist keine aktive
+Verordnung hinterlegt." diyor (reçete 1-1 "Abgerechnet"). Ayrıca "Ändern" ile Hausbesuch
+işaretlenince termin süresi sessizce 65 → 87 dk uzadı (bitiş 10:05 → 10:27) — niyet mi, `podoloji`'ye
+sorulmalı. Kanıt: `k4-aktionen.png`, `k3-termin-starten.png`.
+
+### Hausbesuch — Fahrt Starten / Angekommen / Fahrt Beenden — nav etiketi: (Termin-Aktionen içinden)
+
+**Beklenen:** Araç seç + Start-km → "Ich bin angekommen" → Termin Starten → Fahrt Beenden (End-km)
+→ `fahrten` satırı. "+ Neues Privatfahrzeug" tek araç, `kind='privat'` yazmalı.
+**Son test:** 2026-09-28 — KISMEN. Fahrt zinciri GEÇTİ (fahrten satırı 4 km, zaman damgaları
+doğru). KALDI: "+ Neues Privatfahrzeug" tek tıkta iki araç satırı + `kind='gewerblich'`.
+Podoloji menüsünde Fahrtenbuch girişi yok.
+**Son test:** 2026-09-28 (kontrol turu) — çift bağlama DOĞRULANDI. Statik: 9/9 düğmede inline
+`onclick=window.__fb.*` var, `window.__fb` yüklü, `__fbDelegatedBound=true` → her tık iki handler.
+Canlı (20.10 TEST-Hilde, Hausbesuch'a çevrildi, araç TEST-QA 1): "Fahrt Starten"-Kaydet →
+2× `PATCH bookings` + 2× `POST fahrten?on_conflict=booking_id`; "Ich bin angekommen" → 2× `PATCH
+bookings`; "Fahrt Beenden"-Kaydet (20003) → 2× `PATCH bookings` + 2× `POST fahrten`. Veri
+bozulmadı: upsert sayesinde tek `fahrten` satırı (20000→20003, 3 km), booking `fahrt_completed`.
+Modal açan düğmeler (Fahrt Starten/Beenden aç) iki kez açıyor, görünür etki yok. Gerçek hasar
+yalnız guard'sız insert'lerde (araç ekleme — 28.09'da iki satır kanıtlandı; araç listesinde hâlâ
+iki "TEST-QA 1"). Önem P1 kalır (araç çiftlenmesi), Fahrt zinciri için P3.
+
+### Fußbefund — nav etiketi: `fussstatus`
+
+**Beklenen:** Hasta + (opsiyonel) termin seçilir, işaretler/diagram kaydedilir, sağda "Gespeicherte Befunde" listesi.
+**Son test:** 2026-09-28 — GEÇTİ (mekanik): Diabetes/Gerinnungshemmer/Hornhaut + 1 Clavus
+işareti kaydedildi, liste güncellendi. Domain açığı (Wagner/Sensibilität/Puls yok) `podoloji`'ye soruldu.
+
+### §302-Abrechnung — Neue Abrechnung → Erstellen (UI geri bildirimi) — nav etiketi: `abrechnung`
+
+**Beklenen:** "Erstellen" sonrası başarı mesajı + "Bisherige Abrechnungen"a dönüş; Praxis-IK
+yoksa anlaşılır, ayara yönlendiren hata.
+**Son test:** 2026-09-28 — KALDI (UI). IK'siz: "Kein IK-Nummer hinterlegt" (dilbilgisi, yönlendirme
+yok). IK'li: TSOL0001.dta + .auf + Begleitzettel DB/Storage'da oluştu (Auftragsdatei düğmesi
+detayda GÖRÜNDÜ — 20.09'da sınanamayan madde kapandı), ama ekran "Neue Abrechnung — keine
+abrechnungsbereiten Verordnungen" görünümünde kaldı; yalnız sayfa yenileme listeyi gösterdi.
+Sonrasında Verordnung "an die Kasse übermittelt, festgeschrieben" diyor — dosya yalnız oluşturuldu.
+**Son test:** 2026-09-28 (kontrol turu) — "‹ Zurück" KISMEN. Taze yüklemede: Bisherige → Zurück
+✓, Bisherige → satır seç → Zurück ✓, Neue Abrechnung → Zurück ✓; yeni konsol hatası yok (taban
+5 hata sabit kaldı). Asıl iddia ("Erstellen"den SONRA Zurück/panel değişimi takılıyor) bu turda
+sınanmadı — "Erstellen"e basmak yasaktı. Yani Zurück'ün kendisi sağlam; takılma, Erstellen
+sonrası durum yenilenmemesine bağlı olabilir (başarı toast'ı yok + liste yenilenmiyor maddesi
+açık kalır). Kanıt: `k2-bisherige.png`, `k2-zurueck1.png`, `k2-neue.png`, `k2-zurueck2.png`.
+
+### Online-Buchung / Termin-Anfrage (hasta tarafı) — sayfa: `booking.html?u=`, `booking-request.html?business=`
+
+**Beklenen:** Yeni praxis'in public linki en az bir bookable Leistung gösterir; Termin-Anfrage 7 adımda talep toplar.
+**Son test:** 2026-09-28 — KISMEN. `booking.html`: "Keine Dienstleistungen verfügbar" (yeni podoloji
+praxis). `booking-request.html`: ilk yükleme boş sayfa, reload sonrası çalıştı; adım 5'e kadar
+gezildi, "Absenden" bilerek BASILMADI (mail tetikler) → owner onayı sınanmadı.
+
 ---
 
 ## Bildirilen anomaliler
@@ -347,6 +450,22 @@ Format: `TARİH · bildiren ajan · ekran/panel · gözlem (tek cümle, hasta ve
   ile çiziliyor (CSS değişkeni değil) — aynı modalın upload-sonrası kardeş görünümü
   (`renderZaaUploadResult`, 21.09.2026 modüle taşındı) değişken kullanıyor, yani iki
   görünüm koyu temada farklı davranıyor. Düzeltilmedi, sadece kaydedildi.
+- 2026-09-28 · fonksiyon-ustasi · Fahrtenbuch/Hausbesuch düğmeleri · B-101'in kökü tek düğme değil: `dashboard.html`'de 9 düğme (`qvSaveBtn`, `vehEditSaveBtn`, `fsSaveBtn`, `feSaveBtn`, `fbVehicleAddBtn`, `bkActionFahrtStartBtn`, `bkActionArrivedBtn`, `bkActionFahrtEndBtn`, `bkActionHbCopyBtn`) hem inline `onclick=window.__fb.*` hem `dashboard.js:17705` document-delegation ile bağlı → her tık iki kez çalışıyor; guard'sız insert yapanlar (quick + Fahrtenbuch-paneli "Neues Fahrzeug") çift satır üretiyor olmalı — diğer yedisi canlıda sınanmadı. Düzeltilmedi, sadece kaydedildi.
+  → canli-test 2026-09-28 kontrol turu: DOĞRULANDI (9/9 statik; Fahrt Starten/Angekommen/Beenden
+  canlıda ikişer istek). Fahrt zincirinde veri hasarı yok (upsert), hasar araç insert'lerinde.
+  Ayrıntı: yukarıdaki "Hausbesuch" kaydı.
+- 2026-09-28 · canli-test · tüm dashboard (her taze yükleme) · konsolda 5 sabit hata: `[loadActivityFeed]
+  TypeError: str.replace is not a function` (`escapeHtml`, `dashboard.js:875` ← `:2096`) — aktivite
+  akışı boş/eksik kalıyor olabilir; `visibility_reports` upsert 2× 403 (RLS); `nominatim.openstreetmap.org`
+  isteği CSP `connect-src` tarafından engelleniyor (adres→koordinat çalışmıyor). Düzeltilmedi, sadece kaydedildi.
+- 2026-09-28 · canli-test · `employee-signup.html` adım 3 ("Konto erstellen") · çalışan kaydı tamamlanamadı:
+  `POST /auth/v1/signup` 3× 504 `request_timeout` (~10 sn, GoTrue onay mailini gönderirken takılıyor —
+  SMTP şüphesi), 4. deneme 200 loglandı ama `auth.users`'ta kayıt YOK. Ayrıca adım 2'deki
+  `pending_employee_registrations` upsert'i 401 döndü (INSERT policy var ama upsert=INSERT+UPDATE,
+  UPDATE policy'si yok — muhtemel sebep); kod bunu yalnız `console.warn` ile yutuyor → kayıt başarılı
+  olsa bile owner bağı/çalışma saatleri kaybolur. Çalışan yetki testi (kontrol #5) bu yüzden ertelendi
+  (kullanıcı kararı, 28.09.2026). Düzeltilmedi, sadece kaydedildi.
+- 2026-09-28 · fonksiyon-ustasi · Termin-Portal "Nicht erschienen" · başarı toast'ı "Patient nicht erschienen — Bot wurde ausgelöst." diyor (`dashboard.js:4458`), oysa `triggerNoShowBot` yalnız console.log yapan ölü WhatsApp kalıntısı — kullanıcıya olmayan bir işlem bildiriliyor. Düzeltilmedi, sadece kaydedildi.
 
 ---
 
