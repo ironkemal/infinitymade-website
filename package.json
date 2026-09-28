@@ -12,7 +12,7 @@
     "test:backend": "node --test \"api-backend/ai/**/*.test.js\" \"api-backend/billing/**/*.test.js\" \"api-backend/booking/**/*.test.js\" \"api-backend/db/**/*.test.js\" \"api-backend/lib/**/*.test.js\" \"api-backend/*.test.js\"",
     "test:tools": "node --test \"tools/**/*.test.js\"",
     "typecheck": "tsc -p jsconfig.json",
-    "probe": "node tools/browser-probe/layout-probe.mjs && node tools/browser-probe/modul-probe.mjs && node tools/browser-probe/render-probe.mjs && node tools/browser-probe/leistungen-probe.mjs && node tools/browser-probe/verordnung-maske-probe.mjs && node tools/browser-probe/podo-maske-probe.mjs && node tools/browser-probe/podo-einheiten-probe.mjs && node tools/browser-probe/abrechnung-probe.mjs"
+    "probe": "node tools/browser-probe/layout-probe.mjs && node tools/browser-probe/modul-probe.mjs && node tools/browser-probe/render-probe.mjs && node tools/browser-probe/leistungen-probe.mjs && node tools/browser-probe/verordnung-maske-probe.mjs && node tools/browser-probe/podo-maske-probe.mjs && node tools/browser-probe/podo-einheiten-probe.mjs && node tools/browser-probe/icd-dg-probe.mjs && node tools/browser-probe/abrechnung-probe.mjs"
   },
   "dependencies": {
     "nodemailer": "^6.9.14"

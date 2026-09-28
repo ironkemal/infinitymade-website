@@ -34,7 +34,7 @@
 // Beide Werte gehören zusammen; wird einer geändert, muss der andere mit.
 export const BK_PANEL_OFFSET = '456px';
 
-import { fuelleMuster13 } from './verordnung-maske.js?v=20260919b';
+import { fuelleMuster13 } from './verordnung-maske.js?v=20260927';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',

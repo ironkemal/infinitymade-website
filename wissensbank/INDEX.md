@@ -727,4 +727,4 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
     Noted"**: DS-1, SDL-1, PE-4, VM-6, BC-8, SOC2-1, SDL-2 (7 kontrol-seviyesi istisna)
 - ⚠️ Rapor **servis↔bölge eşlemesi vermiyor** — datacenter listesinde bir bölgenin olması, o
   servisin orada denetlendiği anlamına gelmez.
-- **Sicil kaydı:** `wissensbank/REGISTER.md` → **W-06** (Herkunft, dağıtım şartları, zincir Z-14).
+- **Sicil kaydı:** `wissensbank/REGISTER.md` → **W-06** (Herkunft, dağıtım şartları, zincir Z-15).

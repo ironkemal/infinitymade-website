@@ -35,12 +35,22 @@ try {
     !!wrap?.querySelector('#rzSaveBtn'), 'rzSaveBtn muss INNERHALB von #rzMaskeWrap stehen');
 
   // ── Umzug in die Seite und zurück ───────────────────────────────────────
-  const maske = await import('../../module/verordnung-maske.js?v=20260918');
+  const maske = await import('../../module/verordnung-maske.js?v=20260927');
   const host = document.getElementById('seiten-host');
   host.appendChild(wrap);
   pruef('Umzug in die Seite', maske.istEingebettet());
   maske.maskeHeimschicken();
   pruef('Rückweg ins Modal', !maske.istEingebettet() && wrap.parentElement === heim);
+
+  // QA 26.09.2026: aus der Liste geöffnet war die Maske ohne Klick-Verdrahtung
+  // (Therapiebereich/Hausbesuch reagierten nicht), weil nur openRezeptModal()
+  // wireM13Toggles() rief. Das Einbetten muss sie über die Brücke anstossen.
+  let verdrahtet = 0;
+  maske.setzeMaskeBruecke({ verdrahteToggles: () => { verdrahtet++; } });
+  await maske.maskeEinbetten({ host, rx: { id: 'probe-rx', therapie_bereich: 'podo' } }).catch(e => pruef('Einbetten läuft', false, e?.message));
+  pruef('Einbetten stösst die Klick-Verdrahtung an', verdrahtet === 1, verdrahtet);
+  maske.maskeHeimschicken();
+  maske.setzeMaskeBruecke(null);
 
   // ── Riegel ──────────────────────────────────────────────────────────────
   pruef('eingereichte Verordnung ist gesperrt (Belegnummer)',

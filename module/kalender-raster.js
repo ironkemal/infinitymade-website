@@ -105,3 +105,32 @@ export function zeitPlusMinuten(timeStr, min) {
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
+
+/**
+ * Hinweistext, wenn eine FullCalendar-`select`-Auswahl (kalender.js, Schnelltermin
+ * per Klick/Drag) mehr als ein Zeitraster umfasst.
+ *
+ * Ops #314: Kemal meldete nach einem Dreifachklick/Drag eine verdreifachte
+ * Termindauer. Es gab keinen Code, der etwas verdreifacht — FullCalendar liefert
+ * bei einem Drag über 3 Zeilen einfach `startStr`/`endStr` mit 3x der
+ * Raster-Länge, und das Schnelltermin-Formular übernimmt das unverändert, ohne
+ * dass der User vor dem Speichern sieht, wie lang die Auswahl tatsächlich ist.
+ * Diese Funktion macht die Spanne sichtbar, statt sie stillschweigend
+ * durchzureichen. `slotMinutes` kommt bewusst als Parameter (nicht `DV_SLOT_MIN`
+ * oben — das ist das Raster der eigenen dashboard.js-Tagesansicht, nicht von
+ * FullCalendar) und muss zum `slotDuration` passen, das kalender.js an
+ * FullCalendar übergibt.
+ *
+ * @returns {string|null} Hinweistext, oder null wenn die Auswahl genau ein
+ *   Raster (oder weniger, z.B. bei rundungsbedingt zu kurzen Werten) umfasst.
+ */
+export function slotSpanHinweis(startISO, endISO, slotMinutes) {
+  if (!startISO || !endISO || !slotMinutes || slotMinutes <= 0) return null;
+  const start = new Date(startISO);
+  const end = new Date(endISO);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+  const spanMin = Math.round((end.getTime() - start.getTime()) / 60000);
+  if (spanMin <= slotMinutes) return null;
+  const slots = Math.round(spanMin / slotMinutes);
+  return `${spanMin} Minuten ausgewählt (${slots} Zeitraster durch Ziehen) — Endzeit bitte prüfen.`;
+}

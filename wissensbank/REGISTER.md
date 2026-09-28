@@ -6,9 +6,12 @@
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
 > İlk kurulum: 05.09.2026 · Son güncelleme: 28.09.2026 (**Microsoft C5 raporu kaydedildi — depo
-> DIŞINDA.** Kart **W-06**, zincir **Z-14**, açık madde **W-A12**. İlk depo-dışı kayıt: belge dağıtım
+> DIŞINDA.** Kart **W-06**, zincir **Z-15**, açık madde **W-A12**. İlk depo-dışı kayıt: belge dağıtım
 > kısıtlı olduğu için Drive'da durur, sicil yalnız kimliğini ve neyi beslediğini tutar. Kayıt
 > sırasında istisna sayısı düzeltildi: 2 değil, 7 kontrol-seviyesi istisna / 20 C5 kriteri.)
+> Önceki: 27.09.2026 (**Z-14 açıldı** — Muster 13
+> Heilmittel-Limit § 12 Abs. 2/3, Ops #202/#303 zinciri: kural doğru kaydedildi, kod hâlâ
+> uygulanmamış. `SPEC-RULES.md` kural metni aynı gün 3 noktada düzeltildi — bkz. Z-14.)
 > Önceki: 21.09.2026 (**GGT Anlage 16 (SECON) indirildi**
 > — `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 1.3’ün „bu belge olmadan başlanmaz" kaydı üzerine.
 > Kart **W-04**, zincir **Z-12**. Aynı gün ikinci tur: Ops #302 — „Komplexbehandlung" = verordnete
@@ -43,7 +46,7 @@
 | Kayıtlı kaynak belge (INDEX'te) | 39 (38 depoda + 1 depo dışı, W-06) |
 | Arşivdeki PDF | 49 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
-| Kaynak→kod zinciri kayıtlı | 14 (Z-01…Z-14) |
+| Kaynak→kod zinciri kayıtlı | 15 (Z-01…Z-15) |
 | Tam kimlik kartı yazılmış kaynak | 6 (**W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
 | Depo **dışında** duran kayıtlı kaynak | 1 (W-06 — dağıtım kısıtlı, Drive'da) |
 | **Herkunft (indirme URL'i) kayıtlı** | **6 / 38** ← asıl boşluk, W-A01 |
@@ -101,7 +104,7 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 | **01.02.2027** | **Anhang 03 Anlage 1 TP5 V10** (Kostenträgerdatei) yürürlüğe girer | Z-09 → `billing/kostentraeger/parser.js` | ⏳ parser 05.09.2026'da yazıldı |
 | açık uçlu | Anlage 1 TP5 V21 geçerli (01.10.2025'ten) | Z-01 → `billing/dta/*`, `legs.js` | ✅ geçerli |
 | açık uçlu | HeilM-RL 15.05.2025 değişikliği (05.08.2025'ten) | Z-07 · **Z-11** | ✅ geçerli |
-| **~Temmuz 2027** | Microsoft C5 raporunun **sonraki dönemi** (01.04.2026–31.03.2027) Service Trust Portal'da beklenir. Gelene kadar Azure OpenAI için C5 Typ-2 kapsamı **31.12.2025'te biter** (dipnot 6) — 01.01.2026 sonrası boşluk büyüyor. Geldiğinde: W-06 `DÜŞMÜŞ`, yeni rapor kaydedilir, Azure OpenAI satırı + dipnotları yeniden okunur, KARARLAR 2026-09-12/09-28'e bildirilir | Z-14 → W-06 → on-prem AI kararı · `azureClient.js` | ⏳ **elle**, portal oturumlu — W-A12 |
+| **~Temmuz 2027** | Microsoft C5 raporunun **sonraki dönemi** (01.04.2026–31.03.2027) Service Trust Portal'da beklenir. Gelene kadar Azure OpenAI için C5 Typ-2 kapsamı **31.12.2025'te biter** (dipnot 6) — 01.01.2026 sonrası boşluk büyüyor. Geldiğinde: W-06 `DÜŞMÜŞ`, yeni rapor kaydedilir, Azure OpenAI satırı + dipnotları yeniden okunur, KARARLAR 2026-09-12/09-28'e bildirilir | Z-15 → W-06 → on-prem AI kararı · `azureClient.js` | ⏳ **elle**, portal oturumlu — W-A12 |
 | **her fiyat turu** | Heilmittelpreisstammdatei yeni `Stand_TT-MM-JJ` | Z-06 → otomatik, Telegram bildirimi | ✅ **tek otomatik kontrol** |
 
 > ⚠️ **Erken geçiş dosya reddi demektir.** V22 ve V10 dosyaları repoda duruyor ve kod
@@ -427,7 +430,7 @@ wissensbank/podologie/Podologie_Positionsnummern_2026_Filtered.csv   (Z.21 · Z.
       = „Podologische Behandlung (klein/groß)" → LEISTUNG 78010 / 78020
   → api-backend/billing/codes/podologie_positions.js:33-34,75-76   label (amtlich) + kat (Suchanker)
     → api-backend/sync_heilmittel_katalog.js:94   kategorie: p.kat
-      → DB heilmittel_katalog.kategorie   (Migration 0039 · ⚠ SaaS'a HENÜZ UYGULANMADI, 21.09.2026)
+      → DB heilmittel_katalog.kategorie   (Migration 0039 · ✅ SaaS'a uygulandı 27.09.2026, MCP)
         → RPC search_heilmittel()  LIKE code/kuerzel/label/kategorie
   → module/verordnung-regeln.js:73-76   POD_KATALOG.c   (Heilmittel c) metni)
       ↔ Çapa == POD_KATALOG.c, module/heilmittel-suche-komplex.test.js ile zorlanıyor
@@ -445,7 +448,38 @@ sütunu gerekir), b) c) için >20 dk şartı (SPEC-RULES'ta ⛔).
 
 ---
 
-### Z-14 · Bulut AI sağlayıcısının §393 SGB V kanıtı (Microsoft C5) → tam kart **W-06**
+### Z-14 · Muster 13 Heilmittel-Limit (§ 12 Abs. 2/3 HeilM-RL) — Physio/Ergo/Logo, Podologie ohne (Ops #202/#303)
+```
+wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt
+    (§ 12 Abs. 2 S.1-3, Abs. 3 S.1-3 · Z.555-568)
+      = Physio/Ergo: max 3 vorrangige Heilmittel, NUR wenn Katalog in der Diagnosegruppe
+        mehrere vorsieht (S.1) + max 1 ergänzendes Heilmittel (Abs.3)
+      = Logopädie (S.2): eigene, andersartige Regel — max 3 Behandlungszeiten/Einzel-Gruppe-
+        Kombinationen, KEINE Aufteilung auf vorrangige Heilmittel, kein ergänzendes Heilmittel
+        (Katalog hat dort 0 Stellen, nachgezählt 21.09.2026)
+wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt   (Feld g2, Z.465-473)
+      = Podologie: Aufteilung entfällt komplett (§ 12 Abs. 2 zählt Podologie nicht)
+  → SPEC-RULES.md „Muster 13 en fazla 3 vorrangiges + 1 ergänzendes …" (Kural-Text)
+  → Kodda: ⛔ UYGULANMAMIŞ — dashboard.html:3621/3625 tek rzHm + tek rzHmErg alanı,
+    prescriptions.heilmittel_items (db/SCHEMA.sql:2256) liste taşır ama sayı kapısı yok
+  → module/verordnung-maske.js:~525-533, module/verordnung-podo.js  (Code-Kommentare,
+    korrigiert Commit 3c0f04e — nur Kommentartext, kein Verhalten)
+```
+📌 **Ops #202/#303 zinciri:** #202 önce yanlış Podoloji kategorisindeydi ve `.pod-hm-row`/
+`heilmittel_items`'ın iki tabloda olduğunu iddia ediyordu (her ikisi de veraltet — `verordnungen`
+04.09.2026'da silindi). 21.09.2026'da `gkv-302` kaynağa karşı doğruladı, #200/#202 kategorisi
+Physiotherapie'ye çekildi, kod yorumları düzeltildi. 27.09.2026'da `SPEC-RULES.md`'deki kural
+metninin kendisi de 3 noktada düzeltildi (S.1 koşulu eksikti, Logo yanlış ergänzendes-Heilmittel
+kapsamındaydı, KVN Ausfüllhilfe kaynağı arşivde yok). Detay:
+`wissensbank/sitzungen/2026-09-21_ops-303_heilmittel-aufteilung-nur-physio-ergo.md`.
+⚠️ **Hâlâ uygulanmamış** — bu bir kod zinciri değil, yalnız doğru kaydedilmiş bir kural. Sayı
+kapısı (max 3 + 1) UI'da yok, DTA tarafında da yok (Anlage 1 TP5 V21 § 5.5.3.3 EHE 1-n sınırsız).
+⛔ Board-tarafı hâlâ açık (Ops-Dashboard, repo dışı): #302 kartı eski "Alias für 78020" metnini
+taşıyor, #209 hâlâ #200 altında asılı duruyor (aidiyeti #302).
+
+---
+
+### Z-15 · Bulut AI sağlayıcısının §393 SGB V kanıtı (Microsoft C5) → tam kart **W-06**
 ```
 Microsoft C5:2020 Report „Azure + Dynamics 365 + Online Services" (01.04.2025–31.03.2026)
     ⛔ DEPODA YOK — Drive: I:\My Drive\Ops Praxura gitnogo\ (dağıtım kısıtlı, W-06)
@@ -509,7 +543,7 @@ yeniden araştırılıyor demektir.
 | `20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei` | Lesefassung, ab 01.01.2026 | ✅ GEÇERLİ | Z-03 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_2` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | Z-04 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_1c_Leistungsbeschreibung` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | podoloji akışı |
-| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı · **Z-11** |
+| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı · **Z-11** · Z-14 (g2) |
 | `wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung` | 16.06.2025 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20240725_Anlage_1a` + `1b_Leistungsbeschreibung` | i.d.F. 17.06.2024 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20230524_Podologie_FAK_bf` | Stand 24.05.2023 | ✅ GEÇERLİ | HPNR referansı |
@@ -528,7 +562,7 @@ yeniden araştırılıyor demektir.
 
 | Dosya | Sürüm / Stand | Durum | Besler |
 |---|---|---|---|
-| `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı · **Z-11 doğrudan** (Höchstmenge) |
+| `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı · **Z-11 doğrudan** (Höchstmenge) · **Z-14** (Heilmittel-Limit) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste` | Stand 01.01.2026 | ✅ GEÇERLİ | **Z-07** |
 | `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 — dar boşluk 01.07.–10.08.2026, doğrulandı** (17.09.2026 `wissensbank`) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/praxiswissen-heilmittel` | Ausgabe 2026 | 📎 REFERANS | — |
@@ -540,7 +574,7 @@ yeniden araştırılıyor demektir.
 
 | Belge | Dönem | Durum | Besler | Nerede | Herkunft |
 |---|---|---|---|---|---|
-| Microsoft C5:2020 Report — Azure inkl. Dynamics 365 (Public & Government), Deloitte | 01.04.2025–31.03.2026 (Azure OpenAI: yalnız –31.12.2025) | 📎 REFERANS | Z-14 | Drive `I:\My Drive\Ops Praxura gitnogo\` | **✅ kart W-06** (STP, oturumlu) |
+| Microsoft C5:2020 Report — Azure inkl. Dynamics 365 (Public & Government), Deloitte | 01.04.2025–31.03.2026 (Azure OpenAI: yalnız –31.12.2025) | 📎 REFERANS | Z-15 | Drive `I:\My Drive\Ops Praxura gitnogo\` | **✅ kart W-06** (STP, oturumlu) |
 
 ---
 
@@ -932,7 +966,7 @@ uzun vadeli yönü işaretliyor. → açık madde **W-A11**.
   düşme tarihi yok; **dönem 31.03.2026'da bitti** ve boşluk o günden beri büyüyor. Sonraki dönem
   raporu (01.04.2026–31.03.2027) **~Temmuz 2027** bekleniyor — geldiğinde bu kart `DÜŞMÜŞ` olur
 - **Durum:** 📎 **REFERANS** — koda sabit/sayı vermiyor; bir kararın hukuki kanıtı
-- **Neyi besler:** **Z-14** → §393 SGB V C5 Typ-2 kanıtı → `konsey/KARARLAR.md` 2026-09-12
+- **Neyi besler:** **Z-15** → §393 SGB V C5 Typ-2 kanıtı → `konsey/KARARLAR.md` 2026-09-12
   Seçenek E + 2026-09-28 olgu güncellemesi (on-prem AI sağlayıcı kararı) ·
   `api-backend/ai/azureClient.js` (SaaS'ın Azure OpenAI istemcisi, `EU_DATA_BOUNDARY_REGIONS`
   kontrolü) · DB: **yok**
@@ -1250,7 +1284,7 @@ geçiş takvimi var mı, yoksa bu yalnızca genel bir ilke mi?" Cevap „takvim 
    düşürülürse `*.pdf` ignore'u korur ama bilerek girmesi de yasak (W-06 Yeniden dağıtım).
 2. **Tazelik** (tarih: **~Temmuz 2027**, §1 takvimi) — sonraki dönem raporu STP'de aranır.
    Otomatik takip mümkün değil (portal oturumlu). Ops kartı yok — **açılması önerilir**
-   (kategori Teknik, tarih 01.07.2027, „C5 raporu yeni dönem — W-06/Z-14 zincirini yürü“).
+   (kategori Teknik, tarih 01.07.2027, „C5 raporu yeni dönem — W-06/Z-15 zincirini yürü“).
 3. **Boşluk sorusu** (sahibi: `legal-de` + Microsoft ticket, KARARLAR 2026-09-28 açık madde 1)
    — Azure OpenAI'nin 01.01.2026 sonrası C5 kapsamı ve Sweden Central eşlemesi. Sicilin işi
    yalnız cevap geldiğinde kaynağını W-06'ya eklemek; cevabın hukuki değeri `legal-de`'nin.

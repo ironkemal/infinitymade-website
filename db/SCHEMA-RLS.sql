@@ -1,19 +1,18 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-22 — 0042_abrechnung_verschluesselung
---                    (§302-Echtbetrieb Faz 1.3D, O-131. Urspruenglich als 0039
---                    geschrieben, umnummeriert wegen Kollision mit Melihs
---                    parallel auf origin/main gelandeten 0039-0041 (Ops
---                    #300-302) — Details im Kopf von db/SCHEMA.sql. Melihs
---                    0039-0041 sind auf SaaS live GEPRUEFT NICHT angewendet
---                    (kostentraeger_auswahl-View existiert nicht, 22.09.2026
---                    bestaetigt) und fehlen deshalb zu Recht in diesem Dump.
---                    Fuer DIESE Datei ist 0042 eine NULL-Aenderung: keine
---                    Policy, keine Funktion, kein Trigger, kein Index — reine
---                    Spalten-Migration auf `abrechnung`. Der Eintrag steht
---                    hier trotzdem, damit beide Dumps dieselbe Migrationskette
---                    fuehren.
+-- ERZEUGT AM:        2026-09-27 — Nachtrag: 0040_kostentraeger_auswahl_view
+--                    (Ops #300) im SaaS angewendet und geprueft. Rechte-Eintrag
+--                    unten bei "kostentraeger_auswahl (Sicht)". 0039 (Ops #302)
+--                    ist reine Daten-UPSERT, betrifft diese Datei nicht. 0041
+--                    (Ops #301) ist WEITERHIN NICHT angewendet (eigenes OK/
+--                    Dry-Run noetig) — fehlt hier zu Recht.
+--                    Vorherige Notiz (22.09.2026, 0042_abrechnung_
+--                    verschluesselung): Kollision 0038 mit Melihs Kette fuehrte
+--                    zur Umnummerierung von Kemals Datei (0038->0042); fuer
+--                    DIESE Datei war 0042 eine NULL-Aenderung (reine Spalten-
+--                    Migration auf `abrechnung`, keine Policy/Funktion/Trigger/
+--                    Index).
 --                    ✅ Im SaaS angewendet 22.09.2026 (MCP).
 --                    davor: 2026-09-20/21 — 0036 bis 0038 (§302-Echtbetrieb,
 --                    ITSG-Anbindung): 0036/0037 reine Daten-Migrationen (keine
@@ -962,6 +961,12 @@
 --   ohne Mandantenfilter. Bewusst NICHT für anon: die Datei ist öffentlich
 --   beziehbar, aber die Buchungsseite braucht sie nicht, und jede zusätzliche
 --   anon-Tabelle vergrößert die Angriffsfläche ohne Gegenwert.
+
+-- kostentraeger_auswahl (Sicht, seit 27.09.2026, 0040 — Ops #300)
+--   security_invoker = true -> erbt RLS von kostentraeger + kostentraeger_annahmestellen.
+--   REVOKE ALL FROM PUBLIC, anon, authenticated, service_role; GRANT SELECT nur an
+--   authenticated. service_role bewusst ausgeschlossen (umgeht sonst die RLS von
+--   kostentraeger via die Sicht) — Details: db/REGISTER.md.
 
 -- invoices
 --   owner_and_employee_invoices [ALL] owner + Team

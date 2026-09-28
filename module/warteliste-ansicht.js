@@ -74,6 +74,11 @@ export function rendereWarteliste({ rows = [], status = 'waiting', aufZurueck = 
   const leerEl = document.getElementById('wlEmpty');
   const summaryEl = document.getElementById('wlSummary');
   if (!tbody) return;
+  // Späte Antwort für den ANDEREN Reiter verwerfen. Beim Öffnen lädt das Panel
+  // „Wartend"; wer sofort auf „Vermittelt" klickt, bekam dessen (leere) Antwort
+  // zuerst — und danach überschrieb die langsamere „Wartend"-Antwort die Liste,
+  // während der Reiter auf „Vermittelt" stand (QA 26.09.2026: „Tabs filtern nicht").
+  if (document.querySelector('#wlStatusTabs [data-wl-status]') && status !== wartelisteStatus()) return;
 
   const vermittelt = status === 'matched';
 

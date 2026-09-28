@@ -334,12 +334,17 @@ export function preflight(input) {
     // Der Riegel bleibt bestehen, er verschiebt sich nur: ohne BEIDES wird
     // weiterhin abgewiesen. Das ist wichtig, denn ein leeres DIA'-Segment ist
     // ein leeres MUSS-Feld, und dafuer weist Pruefstufe 2 die GANZE Datei ab.
-    const hatIcd  = !!String(v.icd10 ?? '').trim()
+    // `icdHaupt` leer, aber `icd10Liste` gefuellt heisst: auf der Maske stand
+    // nur das zweite ICD-Feld (icd10_2). Bis 26.09.2026 lief das hier in
+    // `isValidIcd10('')` → V:01002 auf einem leeren Feld, und der einzige Kode
+    // wurde unten als „= v.icd10" uebersprungen, also nie geprueft (gkv-302).
+    const icdHaupt = String(v.icd10 ?? '').trim();
+    const hatIcd  = !!icdHaupt
                  || (Array.isArray(v.icd10Liste) && v.icd10Liste.some(k => String(k ?? '').trim()));
     const hatText = !!String(v.diagnosetext ?? '').trim();
 
     if (hatIcd) {
-      if (!isValidIcd10(v.icd10))
+      if (icdHaupt && !isValidIcd10(icdHaupt))
         E(errors, 'V:01002', `${at}.verordnung.icd10`, `ICD-10 "${v.icd10}" ungültiges Format`);
     } else if (!hatText) {
       E(errors, 'V:01015', `${at}.verordnung.icd10`,
@@ -357,7 +362,7 @@ export function preflight(input) {
         .map(k => String(k ?? '').trim())
         .filter(Boolean)
         .forEach((kode, k) => {
-          if (k === 0) return;                      // = v.icd10, oben geprueft
+          if (k === 0 && icdHaupt) return;          // = v.icd10, oben geprueft
           if (!isValidIcd10(kode))
             E(errors, 'V:01014', `${at}.verordnung.icd10Liste[${k}]`,
               `Weiterer ICD-10-Kode "${kode}" hat ein ungültiges Format`);

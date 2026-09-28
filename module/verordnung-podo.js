@@ -496,7 +496,8 @@ async function dgAuswahlEingrenzen(supabase) {
   const dgFeld  = $('rzDg');
   if (!icdFeld || !dgFeld || !istPodo()) return null;
 
-  const codes = parseIcdList(icdFeld.value);
+  // Beide ICD-Felder von Muster 13 zählen — wie in module/icd-dg-verdrahtung.js.
+  const codes = parseIcdList([icdFeld.value, $('rzIcd2')?.value].filter(Boolean).join(', '));
   if (!codes.length) { dgFeld.removeAttribute('data-pod-erlaubt'); return null; }
 
   const regeln = await podRegelnLaden(supabase);
@@ -509,15 +510,13 @@ async function dgAuswahlEingrenzen(supabase) {
   // nur parametriert. Als Attribut ist im DOM sichtbar, warum die Liste kurz ist.
   dgFeld.setAttribute('data-pod-erlaubt', erlaubt.join(','));
 
-  // Steht schon eine Gruppe drin, die der Kode nicht zulässt, wird sie
-  // nicht still ersetzt — der Arzt hat sie so verordnet. Wir melden nur.
-  const aktuell = dgWurzel(dgFeld.value);
-  const passt = !aktuell || erlaubt.includes(aktuell);
-
-  // Genau eine Möglichkeit und noch nichts gewählt → übernehmen.
-  if (!aktuell && erlaubt.length === 1) schreibe(dgFeld, erlaubt[0]);
-
-  return { erlaubt, passt, aktuell, regeln };
+  // Die Diagnosegruppe selbst schreibt hier niemand mehr (26.09.2026): das tut
+  // allein module/icd-dg-verdrahtung.js. Zwei Schreiber mit zwei Kriterien
+  // haben sich um `rzDg` ein Rennen geliefert — wessen Regelabfrage zuerst
+  // zurückkam, gewann, und ein von hier geschriebenes DF wurde bei E11.74 +
+  // L60.0 nie zurückgenommen (Ops #304, d/d2). Aus demselben Grund steht auch
+  // der Hinweis „passt nicht / zulässig" nur noch dort, am ICD-Feld.
+  return { erlaubt, regeln };
 }
 
 // ─── 4. Behandlungseinheiten ───────────────────────────────────────────────
@@ -672,7 +671,11 @@ function ergaenzendesUmschalten() {
 //                      der Diagnosegruppe sichtbar (Konsey 2026-08-10). Die Spalte
 //                      bleibt, siehe podoVerordnungsfelder(). Offen als Produkt-
 //                      frage: hat Wagner ueberhaupt noch einen Erfassungsort?
-//   behandlungsanlass  Freitext, vorbelegt mit dem Katalogtext.
+//   behandlungsanlass  Freitext, vorbelegt mit dem Katalogtext. Nur bei
+//                      Privat-/Selbstzahler-/BG-Verordnungen sichtbar (Ops
+//                      #313, 28.09.2026) — dort ist er der Rechnungstext,
+//                      bei GKV steht auf dem Muster 13 kein Feld dafuer.
+//                      Siehe `podoFelderAktualisieren()`.
 //
 // Werte und Beschriftungen des Nagels kommen aus
 // module/eingangsbefundung-regel.js — dieselbe Liste, die auch die Abrechnung
@@ -713,16 +716,41 @@ function podoFelderEl() {
       </select>
       <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Eine Verordnung = ein Nagel. Der Nagel hält die Behandlungsserie über mehrere Verordnungen zusammen.</div>
     </div>
-    <div>
-      <label style="${LABEL_STIL}" for="rzPodoAnlass">Behandlungsanlass</label>
+    <div id="rzPodoAnlassWrap" style="display:none;">
+      <label style="${LABEL_STIL}" for="rzPodoAnlass">Behandlungsanlass (Text auf der Rechnung)</label>
       <input type="text" id="rzPodoAnlass" placeholder="${POD_ANLASS_DEFAULT}" style="${FELD_STIL}">
     </div>`;
   return inBlock(el) ? el : null;
 }
 
 /**
+ * Rezeptart der aktuell geladenen Verordnung — geschrieben von
+ * `fuelleMuster13()` (module/verordnung-maske.js) als Datenattribut an
+ * `#rzMaskeWrap`. Kein Import von dort: diese Datei wird selbst von
+ * verordnung-maske.js importiert, ein Rückimport gäbe eine Ringabhängigkeit.
+ * Fehlt das Attribut (z. B. sehr frühe Ladephase), gilt „kassen" — die
+ * Neuanlage über dieses Formular ist ohnehin immer GKV.
+ */
+function rezeptart() {
+  return ($('rzMaskeWrap') || $('rezeptModal'))?.dataset.rezeptart || 'kassen';
+}
+
+/**
  * Sichtbarkeit nachziehen und melden, wenn der Nagel bei einer Nagelspangen-
  * Verordnung fehlt.
+ *
+ * Beta-1, 08.08.2026: „Podologische Angaben — wofür steht das? Wir benutzen
+ * das nicht." Ursache: „Behandlungsanlass" stand bei JEDER podologischen
+ * Verordnung offen da, hat aber nur bei Privat-/Selbstzahler-/BG-Verordnungen
+ * eine Funktion — dort ist er der Rechnungstext (module/rechnung-bruecke.js,
+ * module/verordnung-uebersicht.js, module/podologie-abrechnung.js). Bei einer
+ * GKV-Verordnung (der weit überwiegende Fall, und über DIESES Formular die
+ * einzig mögliche Neuanlage — s. `rezeptart()` oben) steht auf dem Muster 13
+ * kein passendes Feld dafür, und der Katalogtext trägt die Verordnung bereits
+ * vollständig. Der ganze Block verschwindet deshalb, wenn weder der Nagel
+ * (Pflicht bei UI1/UI2) noch der Anlass (nur Nicht-GKV) etwas beizutragen
+ * haben — kein leerer Rahmen mit nichts drin (Produktentscheid,
+ * s. Podoloji/PRODUKT-ENTSCHEIDUNGEN.md).
  *
  * @returns {{farbe?:string,text:string}|null}
  */
@@ -731,17 +759,21 @@ function podoFelderAktualisieren() {
   if (!el) return null;
 
   if (!istPodo()) { el.style.display = 'none'; return null; }
-  el.style.display = 'grid';
 
   const brauchtNagel = POD_NAGEL_DGS.includes(dgWurzel($('rzDg')?.value));
   const wrap = $('rzPodoNagelWrap');
   if (wrap) wrap.style.display = brauchtNagel ? 'block' : 'none';
-
   // Ausserhalb der Nagelspange traegt die Verordnung keinen Nagel — ein
   // stehengebliebener Wert waere schlicht falsch.
-  if (!brauchtNagel) { const n = $('rzPodoNagel'); if (n) n.value = ''; return null; }
+  if (!brauchtNagel) { const n = $('rzPodoNagel'); if (n) n.value = ''; }
 
-  if (!$('rzPodoNagel')?.value) {
+  const brauchtAnlass = rezeptart() !== 'kassen';
+  const anlassWrap = $('rzPodoAnlassWrap');
+  if (anlassWrap) anlassWrap.style.display = brauchtAnlass ? 'block' : 'none';
+
+  el.style.display = (brauchtNagel || brauchtAnlass) ? 'grid' : 'none';
+
+  if (brauchtNagel && !$('rzPodoNagel')?.value) {
     return {
       farbe: 'var(--danger,#ef4444)',
       text: 'Bei UI 1 / UI 2 gehört der behandelte Zehennagel auf die Verordnung — '
@@ -1029,22 +1061,10 @@ async function aktualisieren(supabase, ctx) {
   }
 
   await ikVorbelegen(supabase, ctx);
-  const dgLage = await dgAuswahlEingrenzen(supabase);
+  await dgAuswahlEingrenzen(supabase);   // nur die Auswahlliste einengen, s. dort
   const lsMeldung = leitsymptomatikAnwenden();
 
   const zeilen = [lsMeldung];
-
-  if (dgLage && dgLage.erlaubt.length) {
-    if (!dgLage.passt) {
-      zeilen.push({
-        farbe: 'var(--danger,#ef4444)',
-        text: `${dgLage.aktuell} passt nicht zum eingegebenen ICD-Kode. Zulässig: `
-            + dgLage.erlaubt.join(' oder ') + '.',
-      });
-    } else if (dgLage.erlaubt.length > 1 && !dgLage.aktuell) {
-      zeilen.push({ text: `Zulässige Diagnosegruppen für diesen ICD-Kode: ${dgLage.erlaubt.join(' oder ')}.` });
-    }
-  }
 
   zeilen.push(einheitenPruefen());
   schnellauswahlRendern();
@@ -1124,7 +1144,7 @@ export function mountVerordnungPodo(supabase, ctx = {}) {
     if (el?.dataset?.auto === '1') delete el.dataset.auto;
   }, true);
 
-  const AUSLOESER = ['rzLsA', 'rzLsB', 'rzLsC', 'rzLsD', 'rzDg', 'rzIcd',
+  const AUSLOESER = ['rzLsA', 'rzLsB', 'rzLsC', 'rzLsD', 'rzDg', 'rzIcd', 'rzIcd2',
                      'rzAnzahl', 'rzAusstDate', 'rzDringend', 'rzPodoNagel'];
   ['change', 'input'].forEach(ev => maske.addEventListener(ev, (e) => {
     if (AUSLOESER.includes(e.target?.id || '')) lauf();

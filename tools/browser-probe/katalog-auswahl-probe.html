@@ -1,0 +1,72 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Probe: Auswahl im Katalog-Dropdown (Wettlauf)</title>
+<!--
+  QA-Test 26.09.2026, Bug 1: „Auswahl aus der ICD/Heilmittel-Suche füllt das
+  Zielfeld nicht zuverlässig." Ursache: nach einer Wahl lief eine noch
+  ausstehende Suche weiter (Debounce-Timer oder RPC unterwegs) und öffnete das
+  Dropdown über dem frisch gefüllten Feld wieder — die Wahl sah aus wie nicht
+  übernommen, der nächste Klick landete in der alten Liste.
+  Die RPC-Attrappe antwortet absichtlich langsam (300 ms), wie in echt.
+-->
+<input id="feld" style="width:300px">
+<input id="anderes" style="width:300px">
+
+<script type="module">
+const ergebnis = [];
+const pruef = (name, ok, detail = '') => ergebnis.push({ name, ok: !!ok, detail: String(detail) });
+const warte = ms => new Promise(r => setTimeout(r, ms));
+const $ = id => document.getElementById(id);
+
+try {
+  const { attachHeilmittelSearch } = await import('../../katalog-suche.js?v=' + Date.now());
+  const HPNR = [
+    { code: '78010', label: 'Podologische Behandlung (klein)', kuerzel: '78010' },
+    { code: '78020', label: 'Podologische Behandlung (groß)',  kuerzel: '78020' },
+  ];
+  const supabase = { rpc: async () => { await warte(300); return { data: HPNR, error: null }; } };
+  let gewaehlt = null;
+  attachHeilmittelSearch($('feld'), supabase, { onSelect: it => { gewaehlt = it.code; } });
+
+  const dd = () => [...document.querySelectorAll('.icd10-dropdown')].find(d => d._owner === $('feld'));
+  const offen = () => dd()?.style.display === 'block';
+  const tippe = t => { $('feld').value = t; $('feld').dispatchEvent(new Event('input', { bubbles: true })); };
+  const klicke = i => dd().querySelectorAll('.icd10-dropdown-item')[i]
+    .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+
+  // 1) Liste steht, Nutzer tippt weiter und klickt, BEVOR die neue Suche zurück ist.
+  $('feld').focus();
+  tippe('78');
+  await warte(600);
+  pruef('Liste erscheint nach Eingabe', offen());
+  tippe('780');                 // Debounce läuft …
+  await warte(250);             // … Suche ist unterwegs (Antwort erst nach 300 ms)
+  klicke(0);
+  pruef('Wahl schreibt das Feld', $('feld').value.startsWith('78010'), $('feld').value);
+  pruef('onSelect bekommt die Zeile', gewaehlt === '78010', gewaehlt);
+  await warte(500);
+  pruef('späte Antwort öffnet das Dropdown NICHT wieder', !offen());
+  pruef('Feld bleibt gefüllt', $('feld').value.startsWith('78010'), $('feld').value);
+
+  // 2) Wahl innerhalb der Debounce-Zeit (Timer noch nicht abgelaufen).
+  tippe('78');
+  await warte(600);
+  tippe('7802');
+  await warte(50);              // Debounce (180 ms) noch offen
+  klicke(1);
+  await warte(700);
+  pruef('ausstehender Debounce öffnet das Dropdown NICHT wieder', !offen());
+  pruef('Feld trägt die zweite Wahl', $('feld').value.startsWith('78020'), $('feld').value);
+
+  // 3) Feld verlassen, während die Suche unterwegs ist.
+  $('feld').focus();
+  tippe('78');
+  await warte(200);
+  $('anderes').focus();
+  await warte(600);
+  pruef('nach Verlassen des Feldes bleibt das Dropdown zu', !offen());
+} catch (e) {
+  pruef('Probe lief durch', false, e?.stack || e);
+}
+window.__probe = ergebnis;
+</script>

@@ -59,3 +59,24 @@ export function alsISODatum(d) {
   if (Number.isNaN(x.getTime())) return '';
   return `${x.getFullYear()}-${zwei(x.getMonth() + 1)}-${zwei(x.getDate())}`;
 }
+
+/**
+ * Ein Zeitpunkt als Wert für `<input type="datetime-local">` (`YYYY-MM-DDTHH:MM`),
+ * lokal gelesen — die Gegenrichtung zu `new Date(feld.value)` beim Speichern.
+ *
+ * QA-Test 26.09.2026: der Termin-Dialog schrieb `start_time.substring(0, 16)`
+ * ins Feld. Aus der Datenbank kommt `timestamptz` aber als UTC
+ * (`…T08:00:00+00:00`), das Feld zeigte also 08:00 statt 10:00 — und wer
+ * ohne Änderung speicherte, verschob den Termin um zwei Stunden, weil
+ * `new Date("…T08:00")` wieder als Ortszeit gelesen wird. Laden und Speichern
+ * müssen dieselbe Zeitzone meinen; beide lesen jetzt lokal.
+ *
+ * @param {Date|string|number} d
+ * @returns {string} `YYYY-MM-DDTHH:MM`, oder `''` bei leerem/ungültigem Wert
+ */
+export function alsDatetimeLocal(d) {
+  const tag = alsISODatum(d);
+  if (!tag) return '';
+  const x = d instanceof Date ? d : new Date(d);
+  return `${tag}T${zwei(x.getHours())}:${zwei(x.getMinutes())}`;
+}

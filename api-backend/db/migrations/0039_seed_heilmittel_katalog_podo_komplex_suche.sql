@@ -18,8 +18,8 @@
 --
 -- Otorität: api-backend/billing/codes/podologie_positions.js → sync_heilmittel_katalog.js
 -- ZAEHLER: unveraendert (reine Daten-UPSERT, public — migrations/README.md Kural 6)
--- SaaS: NOCH NICHT angewandt (Stand 21.09.2026) — nach dem Anwenden hier eintragen
---       und mit `node sync_heilmittel_katalog.js --check` gegenprüfen.
+-- SaaS: uygulandı 27.09.2026, MCP. Verifiziert: 78010/78020 in beiden Preisfenstern
+--       kategorie='Podologische Komplexbehandlung', kuerzel weiterhin NULL.
 
 INSERT INTO public.heilmittel_katalog (code, bereich, label, kuerzel, kategorie, diagnosegruppen, preis_eur, zuzahlung_eur, dauer, gueltig_ab, gueltig_bis, deprecated, ungueltig_ab, ersetzt_durch, max_pro_tag, max_pro_termin, notiz, gruppe, telemed, sort) VALUES
   ('X0102','physiotherapy','Unterwasserdruckstrahlmassage',NULL,'Massage',NULL,'33.75','3.38','15-20','1900-01-01','9999-12-31','f',NULL,NULL,NULL,NULL,NULL,'f','f','0'),

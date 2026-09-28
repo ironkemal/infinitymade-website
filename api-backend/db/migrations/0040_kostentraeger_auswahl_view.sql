@@ -77,11 +77,10 @@
 --   Stichprobe (1 Zeile, abrechnender_kt_ik = 105830016):
 --   SELECT * FROM kostentraeger_auswahl WHERE ik = '100167999';
 --
--- SaaS: NICHT angewandt (Stand beim Schreiben, 21.09.2026). Bei Anwendung hier mit Datum
---   vermerken (Kural aus migrations/README.md, "SaaS'a hangi migration'lar uygulandi"),
---   solange noch keine Box diese Datei ausgefuehrt hat.
---   REIHENFOLGE: View live, DANN das Frontend deployen (das Frontend faengt eine
---   fehlende Sicht ab, ist aber ohne sie ohne IK-Suche).
+-- SaaS: uygulandı 27.09.2026, MCP. Verifiziert: 893 Zeilen (deckt sich exakt mit der
+--   Vorhersage oben), 0 Rechenzentren-Treffer, Stichprobe ik=100167999 -> DAK-Gesundheit,
+--   abrechnender_kt_ik=105830016. Frontend war bereits live und fing die fehlende Sicht
+--   vorher sauber ab (canli-test, Ops #300 Live-Check vor dieser Migration).
 --
 -- ZAEHLER: counter-neutral. Keiner der zehn Zaehler (schema-zaehler.js) zaehlt Sichten:
 --   public_tablo zaehlt nur table_type = 'BASE TABLE'; Policy/Funktion/Trigger/Index

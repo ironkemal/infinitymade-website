@@ -3907,6 +3907,11 @@ app.get('/api/services/public', async (req, res) => {
     // noch Behandlungsdauer angezeigt. duration bleibt — sie steuert die Slot-Abfrage.
     .select('id, name:title, description, duration:duration_minutes')
       .eq('owner_id', owner_id)
+      // Interne Einträge (Kalender-Blocker "Fortbildung"/"Privat"/"Pause", code
+      // BLOCK_*) sind keine buchbaren Leistungen — QA 26.09.2026 fand sie in der
+      // öffentlichen Auswahl. `not is true` statt `eq false`, damit ein NULL
+      // (Spalte hat nur einen DEFAULT, kein NOT NULL) nicht verschwindet.
+      .not('is_internal', 'is', true)
       .order('title');
     if (error) throw error;
     return res.json({ services: data || [] });

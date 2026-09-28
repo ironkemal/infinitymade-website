@@ -250,3 +250,124 @@
   öyle kalmalı — otomasyon azaltma yönünde istisna.
 - **Tarih:** 2026-09-05
 - **Etkilenen:** HPNR seçim bloğu, `module/podologie-abrechnung.js` (~satır 622)
+
+---
+
+### Yüklenmiş Diagnosegruppe = hekim beyanıdır; ICD otomatiği yalnız boş alanı doldurur
+- **Karar:** Muster 13'teki Diagnosegruppe (DG) hekimin beyanıdır, yazılımın çıkarımı değil.
+  ICD→DG otomatiği bir DG'yi **yalnız boş alana** yazar veya **kendi önceki önerisini**
+  değiştirir. Kâğıttan / tarama (Scan) ile / mevcut kayıttan / Folgeverordnung'dan yüklenen
+  ya da podologun elle üstlendiği DG **asla üzerine yazılmaz** — ICD ile uyuşmazsa yalnız uyarı.
+  - **Belirsizlikte hiçbir şey yazılmaz:** ICD birden fazla gruba uyuyorsa (ör. `E11.74` +
+    `L60.0` → DF ve UI1/UI2) DG boş kalır, adaylar gösterilir. Otomatiğin daha önce yazdığı
+    değer, ICD alanından çıkılırken (blur/`change`) **geri alınır**.
+  - **DG alanını boşaltmak** otomatiği yeniden serbest bırakır.
+  - **Alana salt tıklamak "üstlenme" sayılmaz** — üstlenme yalnız katalogdan seçim veya
+    değer girip alandan çıkmaktır.
+- **Neden:** Podologie-Vertrag Anlage 3 Ziffer 5 j: Verordnung'daki DG yalnız hekim tarafından,
+  imza + tarihle değiştirilebilir. TA1 (Anlage 1 TP5 V21) §5.5.3.3: ZHE'deki DG =
+  Verordnung'un DG'si. Yani otomatiğin hekim beyanını ezmesi, dosyaya **Verordnung'da olmayan
+  bir DG** yazmak demektir — red değil, yanlış içerikli kabul/Absetzung riski. Kaynaklar
+  `gkv-302` üzerinden; `wissensbank/SPEC-RULES.md` karşılığını `wissensbank` paralel olarak
+  doğruluyor (bu kaydın yazıldığı tarihte doğrulama sonuçlanmamıştı).
+- **Melih kararı (2026-09-25):** Boş alan **otomatik doldurulmaya devam eder** (Beta-1 isteği —
+  tık ekonomisi), ama değer **öneri olarak işaretlenir**: *„aus ICD – mit Verordnung
+  abgleichen"*. İşaret ve L4 uyarısı (fachfremd / belirsiz ICD, ör. `Z99.9`, `E11.72`)
+  **sonraki adımda** gelir. Aday butonları / „DF übernehmen" düğmesi **istek, henüz karar
+  değil.** (Yeni UI metinleri de/en/tr üç dilde gerekir.)
+- **Tarih:** 2026-09-25
+- **Durum:** L1–L3 **yerelde uygulandı (2026-09-25), henüz commit edilmedi / canlıda değil.**
+  L4 + öneri işareti açık.
+- **Etkilenen:** `icd-dg-match.js` (`dgVorschlag`: `auto` yalnız tek aday varsa),
+  `dashboard.js` (`_wireDgIcdPair` — 26.09.2026'dan beri `module/icd-dg-verdrahtung.js` `verdrahteIcdDg`: `dataset.dgAuto` sahiplik işareti, geri alma, `change`
+  ile üstlenme; `init` → `ensureDgIcdWiring` yüklenen DG'yi hekim beyanı sayar; i18n
+  `pod_icd_mismatch` de/en/tr), `module/icd-dg-vorschlag.test.js`, `dashboard.html`
+  (import sürümü). Ops #304.
+- **Reddedilen alternatif:** (1) Otomatiği tamamen kapatmak — Beta-1'in açık isteği, boş
+  alanda tık kazancı gerçek. (2) Yüklenen DG'yi ICD'ye göre "düzeltmek" — hekim beyanını
+  yazılım değiştirir, Ziffer 5 j'ye aykırı. (3) Belirsizlikte en olası grubu seçmek — kararı
+  Verordnung verir, yazılım değil.
+- **Test senaryosu:** (a) Boş form, ICD `E11.74` → DG `DF` otomatik dolar. (b) Aynı formda ICD'ye
+  `L60.0` eklenir → alan çıkışında DF geri alınır, adaylar (DF, UI1/UI2) gösterilir. (c) Taranmış
+  Muster 13, DG `UI1`, ICD `E11.74` → DG `UI1` kalır, yalnız uyarı. (d) DG alanına tıkla, çık →
+  otomatik hâlâ çalışır. (e) DG'yi boşalt, ICD `E11.74` → DF yeniden dolar.
+- **İlişkili:** „Fazla faturalandırma riski taşıyan Zusatzleistung otomatik işaretlenmez"
+  (2026-09-05) — aynı desen: belirsizlikte **yazma, öner**. O karar burada yeniden açılmıyor.
+- **Doğrulanmadı:** Podologun kâğıttaki DG ile ICD uyuşmazlığında pratikte ne yaptığı (hekime
+  mi döner, olduğu gibi mi faturalar) — Beta-1'e sorulacak; `podoloji` ajanı varsayımı.
+- **Nachtrag 26.09.2026 — iki ICD alanı** (`podoloji` + `gkv-302` soruldu):
+  - Otomatik **iki ICD alanını birlikte** okur: `E11.74` birinci + `L60.0` ikinci alanda → DG yok,
+    adaylar DF, UI1, UI2 (tek alandaki virgüllü girişle aynı sonuç).
+  - İlk alana iki kod yazılır, ikinci alan boşsa → çıkışta ikinci kod ikinci alana geçer
+    („E11.74, L60.0" veya „E11.74 L60.0"). Kâğıtta da satır başına bir kod; uyarı yerine taşımak
+    Podologa ~4 işlem kazandırır. Sebep ayrıca teknik: `icd10` tek kod tutar, virgüllü değer
+    abrechnung'da V:01002 ile takılırdı.
+  - ≥3 kod veya ikinci alan dolu → taşınmaz, ipucu + kaydederken uyarı; **sperre yok.** `gkv-302`:
+    Anlage 3 k „eines oder mehrerer ICD-10-Schlüssel", Anlage 1 V21 DIA „1-n, so oft wiederholbar
+    wie Diagnosen vorliegen" — 3 kodlu Verordnung geçerli ve abrechenbar; sperre para getirmez.
+    3.+ kod için saklama yeri yok (bugün `icd10`/`icd10_2`). **Karar 26.09.2026: şimdilik yapılmaz** —
+    Prod'da 67 Verordnung'ta üç+ kod hiç yok. Tetik: ilk gerçek 3-kodlu Verordnung veya eksik-ICD
+    Beanstandung'u → `db-ustasi`. Gerekçe + kaynak: `wissensbank/SPEC-RULES.md` „Birden çok ICD".
+  - DG ipucu tek yerde (ICD alanının altında); „passt nicht" ipucu uygun grupları da söyler.
+    Podologie kutusundaki ikinci, kırmızı „passt nicht / zulässig" satırı kaldırıldı.
+  - Otomatik, maskede işaretli Fachbereich'e göre çalışır (interdisziplinäre `praxis` mandantı dahil).
+  - **Sıra kuralı yok** (`gkv-302`): DF için Diabetes kodu, UI için L60.0 herhangi bir sırada yeter.
+    ~~Açık: L60.0 + başka kod UI'de „Korrektur erforderlich" sayılır mı~~ → **Hayır (26.09.2026):**
+    Anlage 3 Ziffer 5 k „Korrekturmöglichkeit": ek ICD'ler „für die Gültigkeit … unschädlich";
+    düzeltme yalnız L60.0 yoksa. Kod zaten böyle (frontend + backend aynası); SPEC-RULES „UI1/UI2: L60.0
+    varsa ek ICD zararsızdır".
+
+---
+
+### „Podologische Angaben"-Block: Anlass nur bei Privat/Selbstzahler, nicht bei jeder GKV-Verordnung
+- **Karar:** Im Block unter der Heilmitteltabelle der Muster-13-Maske (`module/verordnung-podo.js`,
+  `rzPodoFelder`) bleibt „Behandelter Zehennagel" unverändert immer offen sichtbar, sobald die
+  Diagnosegruppe UI1/UI2 ist (Pflichtfeld, abrechnungsrelevant). „Behandlungsanlass" wird dagegen
+  nur noch bei einer **nicht-GKV**-Verordnung (privat/selbstzahler/bg) eingeblendet. Trifft weder
+  das eine noch das andere zu — der weit überwiegende Fall, GKV ohne Nagelspange —, verschwindet
+  der ganze Block. Kein „optional angeben"-Einklapp-Link.
+- **Neden:** Beta-1-Feedback: „Podologische Angaben — wofür steht das? Wir benutzen das nicht."
+  `podoloji`-Agent (28.09.2026) eingeholt: Bei einer Kassenverordnung steht Diagnosegruppe, ICD,
+  Leitsymptomatik und Heilmittel bereits auf dem Muster 13 — für einen eigenen „Anlass" gibt es dort
+  weder Feld noch Bedarf. Das Feld ist aber nicht zwecklos: Bei Privat-/Selbstzahler-/BG-Verordnungen
+  gibt es keine Diagnosegruppe, und der Anlass übernimmt drei Aufgaben — Rechnungstext ohne
+  Heilmittel-Positionsnummer (`module/rechnung-bruecke.js:147`), Titel in der Verordnungsübersicht
+  (`module/verordnung-uebersicht.js:466`), Kennzeichen in der Abrechnungsliste
+  (`module/podologie-abrechnung.js:578`). Ein Einklapp-Link wäre bei GKV toter Platz und würde bei
+  Privatrezepten das einzige Feld verstecken, das dort die Diagnosegruppe ersetzt.
+- **Woher die Maske die Rezeptart kennt:** Über dieses Formular ist eine NEUANLAGE immer GKV
+  (`module/verordnung-pruefen-knopf.js:89` setzt `rezeptart: 'gkv'` hart für die Prüfung,
+  `nutzlastAusMaske()` schreibt die Spalte beim Anlegen gar nicht — Privat-/Selbstzahler-
+  Verordnungen entstehen über den separaten podologischen Schnellweg, `podNew*`-Felder in
+  `module/podologie-abrechnung.js`, der KEIN Anlass-Feld hat). Relevant wird die tatsächliche
+  Rezeptart deshalb nur beim BEARBEITEN einer bestehenden Nicht-GKV-Verordnung. `fuelleMuster13()`
+  (`module/verordnung-maske.js`) schreibt sie dafür als Datenattribut auf `#rzMaskeWrap`
+  (`dataset.rezeptart`) — kein Import, weil `verordnung-maske.js` bereits aus `verordnung-podo.js`
+  importiert (Ringabhängigkeit). `maskeHeimschicken()` setzt das Attribut bei jeder Neuanlage
+  („+ Neue Verordnung") defensiv auf `kassen` zurück.
+- **Speichern ändert sich nicht:** Ist das Feld leer/versteckt, wird weiterhin der Standardwert
+  „Podologische Komplexbehandlung" geschrieben (`podoVerordnungsfelder()`).
+- **Reddedilen alternatif:** Ganzer Block/Anlass-Feld standardmäßig eingeklappt statt bedingt
+  gerendert — verworfen, weil es beim Privatrezept das einzige echte Feld hinter einem Klick
+  versteckt hätte, ohne den GKV-Regelfall wirklich sauberer zu machen (der Block bliebe als leerer
+  Rahmen mit nur der Überschrift stehen).
+- **Offen (`podoloji`, unbestätigt):** Ob Privatpraxen den Rechnungstext tatsächlich vom Standard
+  abweichend ändern, hat noch keine Podologin bestätigt. Wenn nie — könnte auch der Privat-Fall
+  auf den Standardwert ohne sichtbares Feld reduziert werden.
+- **QA-Nachtrag 28.09.2026 (Claude-in-Chrome-Verifikation, `gkv-302` eingeholt):** Die Nicht-GKV-
+  Sichtbarkeit konnte live nicht getestet werden — kein Bug hier, sondern eine seit 06.09.2026
+  bestehende, unabhängige Lücke: der podologische Schnellweg (`podNew*`, inkl. Rezeptart-
+  Umschalter) wurde bei der Verordnungs-Konsolidierung abgeschafft, die Muster-13-Maske ist
+  seitdem der einzige Anlegeweg — ohne Rezeptart-Umschalter. **Per MCP nachgezählt:** alle 24
+  Podoloji-Verordnungen in Prod stehen auf `rezeptart` NULL (20) oder `kassen` (4), keine einzige
+  privat/selbstzahler/bg. `module/verordnung-pruefen-knopf.js` bereinigt (toter `podNew*`-Code
+  entfernt). **Eigenes P2-Ticket nötig** (vor dem ersten PKV-Verordnungsfall): Rezeptart-
+  Umschalter in `#rzMaskeWrap` nachbauen, `nutzlastAusMaske()` um `rezeptart` erweitern,
+  GKV-Pflichtfelder (Diagnosegruppe/Kasse/Versichertennummer) bei `≠ kassen` zugeklappt statt
+  verlangt (Beschluss 10.08.2026 oben), `lesenMuster13()` den echten Wert statt hart `'gkv'`
+  übergeben lassen. Bislang **nicht ins Ops-Dashboard eingetragen** — dieser Sitzung fehlte der
+  Zugriff (separates Supabase-Projekt, kein MCP, `ops/.env.ops` fehlt lokal).
+- **Tarih:** 2026-09-28 (Ops #313)
+- **Etkilenen:** `module/verordnung-podo.js` (`podoFelderAktualisieren()`, neue `rezeptart()`-Hilfe),
+  `module/verordnung-maske.js` (`fuelleMuster13()`, `maskeHeimschicken()`),
+  `module/verordnung-pruefen-knopf.js` (toter Code entfernt, 28.09.2026)

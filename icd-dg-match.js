@@ -234,6 +234,9 @@ export function dgSperrenFuerIcd(codes, rulesByDg) {
  *                fest verdrahtete L60.0-Sonderbehandlung falsch beschieden —
  *                sie hat DF auch dann ausgeblendet.
  *
+ * `auto` ist gesetzt, wenn genau eine Gruppe per icd_auto_select passt UND
+ * keine andere Gruppe den Kode per icd_accept ebenfalls annimmt.
+ *
  * @returns {{ auto: string|null, kandidaten: string[],
  *             gesperrt: {dg,grund,erwartet,hints}[], normativ: boolean }}
  */
@@ -260,5 +263,11 @@ export function dgVorschlag(codes, rulesByDg) {
     }
   }
 
-  return { auto: autoSelectDg(codes, rulesByDg), kandidaten, gesperrt, normativ };
+  // `auto` nur, wenn keine andere Gruppe ebenfalls passt. E11.74 + L60.0 trifft
+  // DF ueber icd_auto_select, UI1/UI2 ueber icd_accept — welche Gruppe gilt,
+  // steht auf der Verordnung (Podologie-Vertrag Anlage 3 Ziffer 5 j), nicht in
+  // der Software. autoSelectDg bleibt unveraendert (Paritaet mit dem Backend).
+  const auto = autoSelectDg(codes, rulesByDg);
+  const eindeutig = !!auto && kandidaten.every(k => k === auto);
+  return { auto: eindeutig ? auto : null, kandidaten, gesperrt, normativ };
 }

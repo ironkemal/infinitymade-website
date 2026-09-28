@@ -96,3 +96,33 @@ Alte Notizen stehen jeweils **unverändert am Ende** der Karte. Kontrolle nach d
 2. **„Geprüft am …" im Kommentar ist ein Commit-Datum**, keine Quelle. Bei Datumsfragen `git blame` + Wissensbank-Eintrag trennen.
 3. **Board schreiben ohne Datenverlust:** neuen Text vor die alte Notiz setzen (`neu || notes`) und per `WHERE … AND notes NOT LIKE '<Marker>%'` idempotent halten; vorher Backup ziehen. Das Repo-Skript `ops/tools/ingest.mjs` kann nur anlegen, nicht ändern; Änderungen gehen per SQL gegen das Ops-Projekt (Management-API, Token aus der Shell-Umgebung, Datei `ops/.env.ops` fehlt auf diesem Rechner).
 4. **Karten und Kommentare nennen Ebene und Wort getrennt:** verordnetes Heilmittel c) (Maßnahme) ≠ Position 78010/78020 (Leistung) ≠ HPNR 78003 (gleicher Name, nicht abrechenbar).
+
+## Nachtrag (27.09.2026): SPEC-RULES.md korrigiert
+
+Die oben unter „Offen/ungeprüft" genannte Korrektur von `wissensbank/SPEC-RULES.md`
+(„Muster 13 … Heilmittel-Limit") ist jetzt gemacht — die andere Sitzung (#302) ist längst
+committet, die Datei war frei:
+
+1. Bedingung aus § 12 Abs. 2 S. 1 ergänzt: Aufteilung auf bis zu 3 vorrangige Heilmittel gilt
+   nur „soweit der Heilmittelkatalog in der Diagnosegruppe mehrere vorrangige Heilmittel
+   vorsieht" — fehlte komplett im Kural-Text.
+2. Logopädie (S. 2) als eigene, andersartige Regel klargestellt (Behandlungszeit/
+   Einzel-Gruppe-Kombination, nicht Aufteilung auf vorrangige Heilmittel); Kapsam-Zeile trennt
+   jetzt „Physio/Ergo: vorrangig+ergänzend" von „Logo: nur S. 2, ergänzendes Heilmittel entfällt
+   (Katalog hat 0 Stellen)".
+3. KVN Ausfüllhilfe Muster 13 Stand 10/2024 als ⚠️ nicht im Archiv befindlich markiert statt als
+   bestätigte Quelle.
+
+Wortlaut 27.09.2026 erneut gegen `HeilM-RL_2025-05-15_iK-2025-08-05.txt:555-568` gelesen
+(Zeilen zitiert, keine Abweichung zu den 21.09.-Angaben von `gkv-302` gefunden).
+Changelog-Header in `SPEC-RULES.md` ergänzt.
+
+**Weiterhin offen (nicht Teil dieses Nachtrags):**
+- Board #302: Fix-Text „Alias für 78020" nicht nachgezogen (tatsächlich: Suchanker 78010+78020,
+  `8df4143`) — Ops-Board-Bearbeitung, kein Repo-Zugriff aus dieser Session.
+- Board #209: hängt noch unter #200, gehört inhaltlich zu #302 — nicht angefasst, Ops-Board.
+- #94: Zuordnung „a → 78020, c → 78010" in der Karte falsch — Code dazu geprüft (27.09.2026):
+  es gibt **keine** Maßnahme-basierte a/b/c-Unterscheidung im Code (`Podoloji/podologie-hpnr-reference.js:399`
+  hat nur das Regel-Tag `78020_nur_komplexbehandlung`, keine Durchsetzung — deckt sich mit
+  `SPEC-RULES.md` Zeile 132 „uygulanmamış"). Die Karte ist also inhaltlich falsch UND der Code
+  erzwingt ohnehin nichts — Board-Korrektur weiterhin offen, Ops-Board.

@@ -68,6 +68,140 @@ Diagnosegruppe DF kaldı. Eski "maskede `icd10_2` yok" boşluğu **kapandı**.
 ⚠️ Yeni bulgu: iki ICD'li bir kayıt listede yanlışlıkla "ICD-10-Kode fehlt" uyarısı
 alıyor (aşağıdaki anomali kutusu).
 
+**ICD (`rzIcd`) ↔ Diagnosegruppe (`rzDg`) alan çifti — beklenen (Ops #304, 25.09.2026):**
+> Domain kaynağı: `podoloji` (praksis UX) + `gkv-302` (norm: DG **yalnız hekim tarafında**
+> değiştirilebilir — Podologie-Vertrag Anlage 3 Ziffer 5 j), ikisi de 25.09.2026'da soruldu.
+> Durum: **deploy edildi 25.09.2026 (`a7b1ff3`, canlı `?v=20260925a`) — canlıda HENÜZ TEST EDİLMEDİ** (aşağıdaki 25.09.2026 notu). Yukarıdaki "ICD girilince
+> Diagnosegruppe türetilir" cümlesi bu kurallarla daraltılır — türetme yalnız **boş** DG'ye yazar.
+> Uyarı satırı: `rzIcdDgWarning`.
+- **Boş DG + tek anlamlı ICD** (E11.74, E11.75, G63.2 → DF) → DF otomatik yazılır.
+- **L60.0 tek başına** → DG yazılmaz, uyarı: „Passende Diagnosegruppen: UI1, UI2".
+- **Çok anlamlı** (E11.74 + L60.0) → DG yazılmaz, uyarıda DF, UI1, UI2 adayları; DF daha
+  önce **otomatik** yazılmışsa ICD alanından çıkılınca (blur) geri alınır.
+- **26.09.2026'dan beri — iki ICD alanı birlikte sayılır** (`rzIcd` + `rzIcd2`): E11.74 birinci,
+  L60.0 ikinci alanda → aynı sonuç (DG yok, DF/UI1/UI2). İkinci alan boşken birinciye iki kod
+  yazılırsa („E11.74, L60.0" veya „E11.74 L60.0") alandan çıkınca ikinci kod `rzIcd2`'ye geçer,
+  ipucu „2. Code nach ICD 2 übernommen". ≥3 kod / ikinci alan dolu → taşınmaz, ipucu „Mehr als zwei
+  ICD-Codes: übertragen werden zwei (je Feld einer) – weitere bitte in den Diagnosetext", kaydederken
+  „Trotzdem speichern?" listesinde (sperre YOK — `gkv-302`: 3+ kodlu Verordnung geçerli).
+- DG ipucu **yalnız** ICD alanının altında (`rzIcdDgWarning`); Podologie kutusunda „Zulässige
+  Diagnosegruppen …" / „… passt nicht zum eingegebenen ICD-Kode" satırı artık **çıkmaz**. „Passt nicht"
+  ipucu uygun grupları da sayar. DG elle boşaltılınca otomatik hemen yeniden önerir.
+- **Yüklenmiş DG** (Scan übernehmen, Bearbeiten, Folgeverordnung) veya katalogdan seçilmiş /
+  alandan çıkılarak kabul edilmiş DG → **asla ezilmez.** ICD uymuyorsa uyarı:
+  „Der ICD benennt nicht die für diese Diagnosegruppe geforderte Diagnose: … (DG)".
+- DG alanına **seçim yapmadan tıklamak** otomatiği KAPATMAZ. DG alanını boşaltmak →
+  otomatik yeniden devrede. Önceki rezeptin ardından yeni rezept açmak → otomatik devrede.
+- **Bilinen açık — Soll sapması değil, sonraki adım (L4):** boş DG'de fachfremd (Z99.9) veya
+  belirsiz ICD (E11.72/.73) için uyarı **yok**; otomatik yazılan DG'de „aus ICD" işareti **yok**.
+  Canlı turda bunlar KALDI diye yazılmaz.
+
+**Canlı tur test senaryoları (kaynak `podoloji`):**
+a) boş DG, E11.74 → DF · b) NF'li Verordnung'u Bearbeiten, E11.74 yaz → NF kalır + uyarı ·
+c) DG'yi boşalt → DF yeniden yazılır · d) „E11.74, L60.0" birinci alanda → L60.0 ikinci alana geçer, DG yok, adaylar ·
+d2) E11.74 → DF, sonra ikinci alana L60.0 → DF geri alınır ·
+e) Z99.9 → (bugün uyarı yok, sonraki adım) · f) E11.72 → DF yazılmaz ·
+g) Rezept A kaydet, yeni Rezept B'de E11.74 → DF.
+Her senaryoda kaydet → **sayfa yenile** → `prescriptions` üzerinde DG gerçekten duruyor mu.
+
+**Canlı tur 2026-09-25 (Ops #304, `c4e5b5f`) — TEST EDİLEMEDİ.**
+- Kapı 1 ✅ `/health` 200 · Kapı 2 ✅ `dashboard.html` → `dashboard.js?v=20260925a` →
+  `icd-dg-match.js?v=20260925a`, `dgVorschlag` içinde `kandidaten.every(k => k === auto)` canlıda;
+  canlı `dashboard.html` / `dashboard.js` / `icd-dg-match.js` commit ile **bayt bayt aynı**
+  (Vercel deploy 20:23 UTC tamamlandı, push'tan ~8 dk sonra).
+- Kapı 3 ❌ bu makinede (macOS) `playwright-cli` kurulu değil, oturumlu bir tarayıcı profili bu tur için erişilebilir değildi;
+  `.env.local`'da `PRAXURA_QA_*` yok. Oturumsuz tarayıcı `login.html`'e düşüyor.
+- Senaryolar a · c · d · d2 · f · h · i · b · g · e → hepsi **atlandı (oturum yok)**, hiçbiri
+  geçti/kaldı sayılmaz. Talimat gereği bu turda zaten kayıt yapılmayacaktı (maske açılıp
+  kaydetmeden kapatılacaktı), yani yukarıdaki "kaydet → yenile" adımı bu tur için geçerli değil.
+- Yerine kanıt (canlı değil): `node --test module/icd-dg-vorschlag.test.js` 18/18 geçti — canlıyla
+  aynı `icd-dg-match.js` üzerinde. `dgAuto`/blur geri alma kablolaması `dashboard.js`'te, testsiz.
+- **26.09.2026:** d/d2'nin canlıdaki kök nedeni bulundu — ikinci DG yazanı `module/verordnung-podo.js`
+  `dgAuswahlEingrenzen` DF'yi `dgAuto` işaretsiz yazıyordu; ağda önce o dönerse DF hekim beyanı sayılıp
+  hiç geri alınmıyordu (c de etkileniyordu). Artık DG'ye tek yazan `module/icd-dg-verdrahtung.js`;
+  Fachbereich maskeden okunur (`praxis` mandantında otomatik susuyordu). Kanıt: `icd-dg-verdrahtung.test.js`
+  19/19 + **`tools/browser-probe/icd-dg-probe.mjs` 15/15 — gerçek Muster-13 maskesi, klavye + Tab**
+  (a, c, d, d2, f, L60.0 tek, DG'ye tıklama, elle DF).
+- **Canlı tur 26.09.2026 (`632d1f0`, oturumlu; sonucu Melih bildirdi):** ✅ ana düzeltme — tek alandaki
+  çoklu ICD'nin ikinci alana bölünmesi, d ve d2 — **sorunsuz**. ⚠️ **Doğrulanamadı:** >2 kodda
+  kaydederken „Trotzdem speichern?" listesindeki satır. Sebep büyük olasılıkla araç: liste yerel
+  `window.confirm()`, tarayıcı otomasyonu diyaloğu okuyamaz/tıklayamaz. Karşılığı: kural
+  `icdMehrAlsEinKodeJeFeld` olarak modüle alındı ve testli (`icd-dg-verdrahtung.test.js`, 7 durum);
+  `dashboard.js` `saveRezept` yalnız onu çağırır. **Elle kontrol (bir kez, otomasyonsuz):** ilk ICD
+  alanına `E11.74, L60.0, G63.2` yaz → Speichern → diyalogda „Hinweise: • Mehr als zwei ICD-Codes: …"
+  satırı görünmeli → „Abbrechen".
+
+**Son test (ICD↔DG):** 26.09.2026 canlı (`632d1f0`) — GEÇTİ: bölme, d, d2 (Melih bildirdi).
+Açık: >2 kodda „Trotzdem speichern?" satırı (yerel `confirm()`, elle bakılacak — yukarıda).
+Yerel: `icd-dg-verdrahtung.test.js` + `tools/browser-probe/icd-dg-probe.mjs` 15/15.
+
+**Patientenkopf — „Patient auswählen" (`#rzPatientSearch` + ipucu `#rzPatientHint`):**
+**Beklenen:** Maske **hangi yoldan açılırsa açılsın** hasta listesi yüklenir — (a) listeden bir
+Verordnung'a tıklayınca açılan **gömülü** maske, (b) „+ Neue Verordnung" **modalı**. Alanın
+altındaki ipucu „N Patienten — tippen zum Suchen" yazar; liste gerçekten boşsa
+„⚠ Keine Patienten gefunden — bitte zuerst Patienten anlegen". İsim yazınca eşleşenler listelenir.
+Bugün randevusu olan hastada „Heute HH:MM" işareti çıkar ve o hasta listede üste sıralanır —
+**yalnız sıralama, otomatik seçim YOK** (Ops #267: Verordnung'da otomatik seçilen hasta
+dokümantasyon hatası olurdu).
+**Bağımlı:** `patient-suche.js` (`_patientSearchApi.refresh()` — `loaded` latch'i yalnız `force`
+ile açılır) · `module/termin-heute.js` (`heuteRang`/`heuteHinweis`) · `module/verordnung-maske.js`
+köprüsü (`setzeMaskeBruecke({ladePatienten})`) · `module/rezept-patientenfeld.js:ladePatientenCache`
+**Sıra bağlayıcıdır:** önce `rzPatientCache` atanır, **sonra** `refresh()` — `loadLeads` cache'i
+senkron okuduğu için ters sırada boş liste latch'lenir. Düzeltmenin kendisi bu sıradır.
+**Son test:** 2026-09-27 (`70a5b3f`) — canlı yayımlanan modüllere karşı **GEÇTİ**, ama
+**tarayıcıda oturumlu tıklama turu YAPILAMADI** (aşağıdaki nota bak).
+
+**Canlı tur 2026-09-27 (Ops #302 QA-Nachtrag, `70a5b3f`) — KISMİ: mekanik GEÇTİ, oturumlu tur TEST EDİLEMEDİ.**
+- Kapı 1 ✅ `/health` 200, `/api/krankenkassen` 200 · Kapı 2 ✅ canlı `dashboard.js` yerelle
+  **bayt bayt aynı** (20620 satır), `module/rezept-patientenfeld.js?v=20260927` + 
+  `verordnung-maske.js?v=20260927` canlıda 200.
+- ⚠️ `dashboard.html`'in `?v=` değeri bump **edilmedi** (`20260926b` kaldı) hâlbuki `dashboard.js`
+  değişti. Bu turda **zararsız**: Vercel `cache-control: public, max-age=0, must-revalidate` +
+  ETag gönderiyor, yani tarayıcı her açılışta revalidate ediyor. Bulgu sayılmadı, ama kural
+  (`?v=YYYYMMDD` tazele) yine de atlanmış — bir sonraki dokunuşta düzelir.
+- Kapı 3 ❌ 25.09.2026'nın aynısı: bu makinede `playwright-cli` kurulu değil, oturumlu tarayıcı
+  profili yok, `.env.local`'da `PRAXURA_QA_*` yok. **Talimattaki 8 adımlı tıklama turu
+  (listeden maske → yaz → modal → yaz, arada reload YOK) koşulmadı** — „geçti" denmiyor.
+- Yerine kanıt (canlı **yayımlanan** modüller, `page.route` ile app.praxura.de origin'inde
+  sahte tek sayfa; gerçek modüller ağdan, supabase stub, **kunstname** — gerçek hasta verisi
+  kullanılmadı):
+  - Wurzel 2 (latch/race) **10/10**: alan önce fokuslanıp latch kurulduktan sonra cache
+    dolduruluyor → `refresh()` ile eşleşmeler geliyor; ipucu tam „3 Patienten — tippen zum Suchen";
+    **karşı-prova**: `refresh()` çağrılmazsa liste boş kalıyor (yani prova hatayı gerçekten görüyor).
+    „Heute HH:MM" işareti ve üste sıralama (rang 1 > 0) çalışıyor. Konsol temiz.
+  - Wurzel 1 (gömülü maske köprüsü) **5/5**: canlı `maskeEinbetten()` köprüden hem
+    `verdrahteToggles` hem `ladePatienten` çağırıyor, doğru sırada (önce alan kablolanır, sonra yüklenir).
+  - `node --test module/rezept-patientenfeld.test.js` 2/2 · `npm run test:frontend` **1056/1056** ·
+    `verordnung-maske-probe` 33/33 · `modul-probe` 91/91 (iki konsol hatası yerel `/api/config`
+    500'ü, ürün hatası değil) · silinen ölü kod `rzLabelToId`'ye canlıda/repoda **sıfır** atıf.
+- **Açık kalan (yalnız oturumla görülebilir):** gerçek `bizScope`/`getOwnerId` ile listenin
+  gerçekten dolması, ve „Heute" işaretinin gerçek randevu verisiyle görünmesi. Melih'in
+  oturumlu turunda bakılacak: adım 3'te ipucu „N Patienten …" mi, adım 6'da (reload YOK) aynı mı.
+
+**Canlı tur 2026-09-28 (Ops #313, `70cb3e9`) — Claude-in-Chrome, oturumlu: KISMİ GEÇTİ.**
+- Konu: `rzPodoFelder` bloğu ("Podologische Angaben") artık koşullu — Nagel yalnız UI1/UI2'de
+  (zorunlu), Anlass yalnız GKV-olmayan Rezeptart'ta, ikisi de yoksa blok tamamen gizli.
+- ✅ Deploy güncel (hard-reload, `dashboard.js?v=20260926b`) · DF seçili: blok tamamen görünmez
+  (ne Nagel ne Anlass, boş çerçeve de yok) · UI1 seçili: blok görünür, yalnız "Behandelter
+  Zehennagel" (kırmızı *) — Anlass gizli kalıyor · konsol boyunca **hatasız**.
+- ❌ **Anlass-görünürlük Privat/Selbstzahler/BG'de DOĞRULANAMADI** — ama kodda hata değil,
+  **önceden var olan ayrı bir boşluk**: Muster-13-Maske'de Rezeptart seçici (kassen/privat/
+  selbstzahler/bg) hiçbir yerde yok. `module/verordnung-podo.js`'in kendi yorumu (06.09.2026)
+  ve `gkv-302` teyidiyle: eski podolojik hızlı yol (`podNew*` alanları, Rezeptart seçici dahil)
+  **06.09.2026'da tamamen kaldırıldı**, Muster-13 o günden beri TEK giriş yolu — ama Rezeptart
+  anahtarı oraya hiç taşınmadı. Yani üç hafta önce, bu değişiklikten bağımsız olarak, GKV-dışı
+  bir Podoloji-Verordnung açma yolu zaten yoktu. `module/verordnung-pruefen-knopf.js`'teki ölü
+  `podNew*` referansları (`lesenPodologie()`, `MASKEN.podologie` — hiç çağrılmıyordu) aynı turda
+  temizlendi.
+- **gkv-302 payı:** §302 için zararsız (privat/selbstzahler/bg zaten §302'ye girmiyor,
+  sunucu ayrıca reddediyor). Gerçek boşluk: PKV-Verordnung'lu hasta bugün yalnız `kassen` olarak
+  girilebiliyor → `zahlerTyp()` (`module/rezeptinfo-geld.js:87-89`) onu sessizce GKV zuzahlung
+  mantığıyla hesaplıyor. **Ayrı P2-ticket, ilk PKV-Verordnung vakasından önce** — bkz.
+  `Podoloji/PRODUKT-ENTSCHEIDUNGEN.md` „Podologische Angaben"-Block girişi.
+- **Doğrulandı (MCP, 28.09.2026):** Prod'da `bereich='podo'` olan **24** Verordnung'un tamamı
+  `rezeptart` NULL (20) veya `kassen` (4) — **sıfır** privat/selbstzahler/bg. Boşluk varsayım
+  değil, ölçülmüş: 06.09.2026'dan bu yana açılan HİÇBİR Podoloji-Verordnung GKV-dışı değil.
+
 ### Podologie Behandlungen — Tagesbehandlung erfassen — nav etiketi: `podologie-billing`
 
 **Beklenen:** Sol listeden aktif Verordnung seçilir, sağda tarih + HPNR kutuları gelir
@@ -362,6 +496,82 @@ gezildi, "Absenden" bilerek BASILMADI (mail tetikler) → owner onayı sınanmad
 ## Bildirilen anomaliler
 
 Format: `TARİH · bildiren ajan · ekran/panel · gözlem (tek cümle, hasta verisi yok)`
+
+**QA turu 2026-09-26 (Claude in Chrome, Owner görünümü) — 7 bulgu.** Durum: 🔧 = yerelde
+düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki turda kapatılır).
+- 🔧 2026-09-26 · QA · `verordnungen` (+ `katalog-suche.js` kullanan her alan) · ICD/DG/Heilmittel
+  dropdown'undan seçim alanı güvenilir doldurmuyor — kök neden: seçimden sonra bekleyen debounce
+  / yoldaki RPC cevabı dropdown'u dolu alanın üstünde yeniden açıyordu (alan dolu ama seçim
+  "tutmamış" görünüyordu, sonraki tık eski listeye düşüyordu). `katalog-suche.js` `verwirfSuche()`.
+  Kanıt: `tools/browser-probe/katalog-auswahl-probe` önce 5/8, sonra 8/8; podo-/verordnung-maske 32/32.
+  Canlı kontrol: hızlı yazıp hemen seç → dropdown kapalı kalmalı.
+- 🔧 2026-09-26 · QA · `calendar` · Termin-Bearbeiten 2 saat kaymış gösteriyor — kök neden
+  `openBookingModal`: `start_time.substring(0,16)` UTC metni alana yazıyordu, kaydederken yerel
+  okunuyor → **açıp değiştirmeden kaydetmek terimi 2 saat öne kaydırıyordu** (veri bozan, P1).
+  `module/datum.js` `alsDatetimeLocal()`. Kanıt: `module/datum.test.js` gidiş-dönüş testi.
+  Canlı kontrol: 10:00 terimi aç → alanda 10:00; kaydet → takvimde 10:00 kalmalı.
+- 🔧 2026-09-26 · fonksiyon-ustasi · `fahrtenbuch` · aynı hata Fahrt-Bearbeiten'de (`toLocal =
+  iso.slice(0,16)`): açıp kaydetmek başlangıç/bitişi 2 saat kaydırıyordu. `c82e831`, `alsDatetimeLocal`.
+  Canlı kontrol: bir Fahrt aç → saatler listedekiyle aynı; değiştirmeden kaydet → aynı kalmalı.
+- 🔧 2026-09-26 · QA · `warteliste` · "Wartend"/"Vermittelt" sekmeleri filtrelemiyor — sorgu
+  doğru filtreliyordu (canlıda 26.09: yalnız 4 `waiting`, 0 `matched`); kök neden yarış: panel
+  açılışındaki "Wartend" cevabı, hızlı tıklanan "Vermittelt"in boş cevabından SONRA gelip listeyi
+  eziyordu. `module/warteliste-ansicht.js` sekmeye ait olmayan cevabı atar. Kanıt: yerel tarayıcı
+  denemesi (0 satır / 1 satır). Canlı kontrol: panele gir, hemen "Vermittelt" → boş mesaj.
+- 🔧 2026-09-26 · QA · sidebar · "Bewertungen" "Feedback & Support"u açıyor — routing hatası
+  DEĞİL: panel zaten destek bileti formu, etiket yanlıştı. `nav-registry.js` + i18n (de/en/tr)
+  "Feedback & Support" / "Geri Bildirim & Destek". Gerçek bir değerlendirme özelliği yok.
+- 🔧 2026-09-26 · QA · public `booking-request.html` · takvim blokerleri ("Fortbildung"/"Privat")
+  hizmet listesinde — `/api/services/public` `is_internal` filtrelemiyordu. Canlı veri 26.09:
+  6 blokerin hepsi `is_internal=true`, NULL yok. `server.js` `.not('is_internal','is',true)`.
+  Canlı kontrol: backend deploy (Watchtower) sonrası liste blokersiz.
+- 🔧 2026-09-26 · QA · `verordnungen` · bulgu 6 — QA raporunun metni kayboldu (Chrome oturumu
+  özetlendi); aynı gün canlıda salt-okur yeniden tarandı (hiçbir şey kaydedilmedi), şu bulundu:
+  listeden açılan (gömülü) Muster-13 maskesinde **Therapiebereich ve Hausbesuch ja/nein kutuları
+  boş** görünüyordu (veri doğru: `rzTherapieBereich=podo`), ve kutulara tıklamak hiçbir şey
+  yapmıyordu. Kök neden iki: (a) `setM13Therapy`/`setM13Hausbesuch` kutuları yalnız
+  `#rezeptModal` içinde arıyordu, maske ise `#vordMaskeHost`'a taşınmış oluyordu; (b)
+  `wireM13Toggles()` yalnız `openRezeptModal()`'dan çağrılıyordu — listeden açınca maske hiç
+  kablolanmıyordu (Patientensuche, LHB-Nachweis, Zuzahlungsbefreiung dahil). Düzeltme: kök
+  `#rzMaskeWrap`, `maskeEinbetten()` köprü üzerinden `verdrahteToggles` çağırır. Kanıt:
+  `verordnung-maske-probe` 33/33 (yeni: "Einbetten stösst die Klick-Verdrahtung an").
+  ⚠️ QA'nın kastettiği bulgu bu olmayabilir. Canlı kontrol: listeden podolojik Verordnung aç →
+  "Podologische Therapie" X'li, Hausbesuch'tan biri X'li; "nein"e tıkla → X yer değiştirir
+  (kaydetmeden kapat). Ayrıca not: dar pencerede (≈1050px) liste tablosu yatay kayıyor, Status
+  sütunu kesik görünüyor — hata sayılmadı.
+- ✅ 2026-09-27 · QA (Ops #302 Nachtrag) · `verordnungen` · Muster-13 kopfundaki hasta arama
+  **hangi isim yazılırsa yazılsın 0 sonuç** veriyordu (QA iki gerçek hasta adıyla denedi — adlar
+  buraya yazılmaz, §7). İki kök neden: (a) listeden açılan **gömülü** maske `rzPatientCache`'i hiç
+  doldurmuyordu (yükleme yalnız `openRezeptModal()` içindeydi), (b) `patient-suche.js`'te latch —
+  boş ilk yüklemeden sonra `loaded = true` kalıyor, alan bir kez fokuslandıysa bir daha yüklemiyor.
+  Düzeltme `70a5b3f`: yükleme `module/rezept-patientenfeld.js:ladePatientenCache()`'e çıkarıldı,
+  köprüyle gömülü maskeye de verildi, `dashboard.js` cache'i atadıktan **sonra**
+  `_patientSearchApi.refresh()` çağırıyor (force → latch açılır); `heuteAktualisieren()` artık
+  iki yolda da çalışıyor. **KAPANDI** — canlı modüllere karşı 10/10 + 5/5 prova (yukarıdaki
+  27.09.2026 turu). ⚠️ Oturumlu tıklama turu hâlâ yapılmadı.
+- 🔧 2026-09-26 · QA · `overview` @390px · yatay taşma — `.schedule-header` nowrap, `#ovCountSelector`
+  `#mainArea`'dan 34px taşıyordu. `dashboard.css` ≤768px `flex-wrap: wrap`. Kanıt: statik markup
+  360/390/430/768px'de taşan öğe yok. ⚠️ Oturumla gelen JS içerik (termin kartları) ölçülmedi.
+
+**Canlı doğrulama turu 2026-09-26 (deploy `8bae297` sonrası; Claude in Chrome + Claude Code, salt-okur, hiçbir şey kaydedilmedi):**
+- ✅ Termin-Uhrzeit: kart saati = dialog alanı (3 termin). Kaydetme testi yapılmadı (izin yok).
+- ✅ Warteliste: hızlı "Vermittelt" → sekme aktif kalıyor, "0 vermittelte Einträge".
+- ✅ Sidebar: "Feedback & Support" (DE); formu açıyor.
+- ✅ Public Leistungen: `/api/services/public` 23 → 20, "Fortbildung/Pause/Privat" yok (API ile ölçüldü).
+  Chrome turu booking sayfasında hiç Leistung listesi görmedi — ayrı konu (akış adımına bağlı olabilir), bug sayılmadı.
+- ✅ Verordnung gömülü maske, PODOLOGIE satırları: Bereich + Hausbesuch X'li, tıklama çalışıyor (`m13Wired=1`).
+- ℹ️ Verordnung "HEILMITTEL" satırında Bereich kutusu boş → **veri, hata değil:** `prescriptions.therapie_bereich`
+  67 satırın 42'sinde NULL (26.09 sayım). Maske NULL'u doğru boş gösteriyor. Geriye dönük doldurma = veri
+  kararı (`db-ustasi`), Ops kartı.
+- ℹ️ "Public sayfada hasta adı" şüphesi → **yanlış alarm:** `/api/team/public` yalnız `profiles` okur; test
+  hesabının Owner'ı (kurucu) aynı adla test hastası olarak da kayıtlı. Hasta verisi sızmıyor.
+- ⚠️ Katalog "Tab sonrası dropdown açık kalıyor": `rzIcd2` → Tab → `rzDg`; DG alanı odakta KENDİ listesini
+  bilerek açar (minChars 0). Büyük olasılıkla bu görüldü. `rzHm` → Tab → `rzAnzahl` probe'da kapanıyor. Canlıda
+  hangi alandan Tab'landığı belirsiz → sonraki turda alan adıyla tekrar.
+- ⚠️ 390px: canlı ölçülemedi (Chrome penceresi ≥789px, iframe `X-Frame-Options` ile bloklu). 789px'de sayfa
+  taşmıyor; `.ov-week-grid` (140+7×120px) kendi kabında kayıyor. Chrome turunun "KPI satırı taşıyor" iddiası
+  koddan okunmuş, ölçülmemiş → `mobil-ui` ile gerçek mobil viewport'ta ölçülmeli.
+- ⏸ Test edilemedi: Fahrtenbuch (UI'da bulunamadı), dil değiştirici (bulunamadı) — ürün/kapsam sorusu, bug değil.
 
 - ✅ ~~2026-09-19 · canli-test · `abrechnung` · Preflight 422'de sunucunun verdiği
   ayrıntılı hata mesajı arayüzde yutuluyor~~ — `4c3ce6e` ile düzeldi, 19.09.2026

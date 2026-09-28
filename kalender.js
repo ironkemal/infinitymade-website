@@ -4,6 +4,12 @@ import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot } from './module/
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung } from './module/ausfallrechnung.js?v=20260904';
 import { markiereNichtErschienen } from './module/termin-nicht-erschienen.js?v=20260914';
+import { slotSpanHinweis } from './module/kalender-raster.js?v=20260928';
+
+// FullCalendar-Rasterlänge für Schnelltermine (select-Callback unten) — bewusst
+// explizit statt implizitem Default (Ops #314), sonst bricht slotSpanHinweis()
+// still, sobald hier mal ein anderer Wert eingestellt wird.
+const KAL_SLOT_MIN = 30;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Frueher hier eine eigene Ternary; jetzt import (O-01). Absichtlich HIER statt
@@ -309,6 +315,7 @@ async function initCalendar() {
     allDaySlot: true,
     slotMinTime: '06:00:00',
     slotMaxTime: '23:00:00',
+    slotDuration: `00:${String(KAL_SLOT_MIN).padStart(2,'0')}:00`,
     contentHeight: 'auto',
     expandRows: true,
     editable: true,
@@ -334,11 +341,20 @@ async function initCalendar() {
       const endTime = info.endStr.includes('T') ? info.endStr.split('T')[1].substring(0,5) : '10:00';
       document.getElementById('manual-start').value = startTime;
       document.getElementById('manual-end').value = endTime;
+      // Ops #314: zwei unabhängige Hinweise, in derselben Box gesammelt statt
+      // dass der zweite den ersten überschreibt (siehe Kommentar oben bei
+      // KAL_SLOT_MIN).
       const warning = document.getElementById('manual-hours-warning');
+      const hinweise = [];
       if (!isWithinWorkingHours(info.startStr)) {
         const wh = workingHours.find(h => h.day_of_week === new Date(info.start).getDay() && h.is_active);
         const range = wh ? `${(wh.start_time||'').substring(0,5)}–${(wh.end_time||'').substring(0,5)}` : 'kein Arbeitstag';
-        document.getElementById('manual-hours-warning-text').textContent = `⚠️ Außerhalb der Arbeitszeiten (${range}). Termin wird trotzdem gespeichert.`;
+        hinweise.push(`⚠️ Außerhalb der Arbeitszeiten (${range}). Termin wird trotzdem gespeichert.`);
+      }
+      const spanHinweis = slotSpanHinweis(info.startStr, info.endStr, KAL_SLOT_MIN);
+      if (spanHinweis) hinweise.push(`⚠️ ${spanHinweis}`);
+      if (hinweise.length) {
+        document.getElementById('manual-hours-warning-text').textContent = hinweise.join(' ');
         warning.style.display = 'block';
       } else {
         warning.style.display = 'none';

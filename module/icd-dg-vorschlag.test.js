@@ -96,8 +96,27 @@ test('dgVorschlag: L60.0 neben einem freien Kode sperrt NICHT normativ', () => {
   // hat DF hier frueher ausgeblendet — falsch, beide Befunde stehen nebeneinander.
   const v = dgVorschlag(['L60.0', 'E11.74'], REGELN);
   assert.equal(v.normativ, false);
+  assert.equal(v.auto, null, 'mehrere Gruppen kommen in Frage → kein Vorschlag');
   assert.ok(v.kandidaten.includes('DF'));
   assert.deepEqual(v.gesperrt, [], 'kein Ausschluss, solange die Kodemenge nicht eindeutig ist');
+});
+
+test('dgVorschlag: E11.74 + L60.0 schlaegt nichts vor (Ops #304)', () => {
+  // DF trifft ueber icd_auto_select, UI1/UI2 nur ueber icd_accept — autoSelectDg
+  // allein saehe DF als eindeutig. Welche Gruppe gilt, steht auf der Verordnung
+  // (Podologie-Vertrag Anlage 3 Ziffer 5 j), die Software raet nicht.
+  const v = dgVorschlag(['E11.74', 'L60.0'], REGELN);
+  assert.equal(v.auto, null);
+  assert.deepEqual(v.kandidaten.sort(), ['DF', 'UI1', 'UI2']);
+});
+
+test('dgVorschlag: auto_select ohne konkurrierenden accept-Treffer bleibt Vorschlag', () => {
+  // Seed: QF waehlt auch Kodes automatisch, die nicht in icd_accept stehen
+  // (0011_seed_diagnosegruppen.sql). Ohne Mitbewerber bleibt der Vorschlag.
+  const regeln = { ...REGELN, QF: { ...REGELN.QF, icd_auto_select: [{ re: '^S14\\.1$' }] } };
+  const v = dgVorschlag(['S14.1'], regeln);
+  assert.equal(v.auto, 'QF');
+  assert.deepEqual(v.kandidaten, []);
 });
 
 test('dgVorschlag: Ausschlussregel schlaegt durch — G63.2 ist DF, nicht NF', () => {

@@ -9,8 +9,8 @@
  *
  * Warum eine eigene Datei und nicht `podologie-abrechnung.js`?
  * ───────────────────────────────────────────────────────────
- * Die Tabelle `diagnosegruppen` gehört nicht der Podologie. `_wireDgIcdPair` in
- * dashboard.js verdrahtet damit auch das Rezept-Formular und den Rezept-Scan.
+ * Die Tabelle `diagnosegruppen` gehört nicht der Podologie. `verdrahteIcdDg` in
+ * module/icd-dg-verdrahtung.js verdrahtet damit auch das Rezept-Formular und den Rezept-Scan.
  * Läge die Regeltabelle im Podologie-Modul, müsste das Rezept-Formular aus der
  * Podologie lesen — eine Abhängigkeit in die falsche Richtung. `loadDgIcdRules`
  * lädt seit 18.09.2026 alle Bereiche und hält sie getrennt (Parameter

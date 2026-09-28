@@ -2199,6 +2199,13 @@ textarea {
   margin-bottom: 10px;
 }
 
+/* QA 26.09.2026: bei 390px ragte die Mitarbeiter-Anzahl (#ovCountSelector)
+   34px aus #mainArea — Titel + Heute-Knopf + Auswahl passen nicht in eine
+   Zeile. Umbrechen statt überlaufen; margin-left:auto hält sie rechtsbündig. */
+@media (max-width: 768px) {
+  .schedule-header { flex-wrap: wrap; row-gap: 8px; }
+}
+
 .schedule-title {
   font-size: 13px;
   font-weight: 700;

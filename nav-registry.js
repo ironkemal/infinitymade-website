@@ -51,7 +51,7 @@ export const NAV_REGISTRY = {
     { id: 'rechnungen',    key: 'nav_rechnungen',    label: 'Rechnungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'b2b',           key: 'nav_b2b',           label: 'Zuweiser',        roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'b2c',           key: 'nav_b2c',           label: 'Patientenpost',   roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'feedback',      key: 'nav_feedback',      label: 'Bewertungen',     roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'feedback',      key: 'nav_feedback',      label: 'Feedback & Support', roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'vorlagen',      key: 'nav_vorlagen',      label: 'Vorlagen',        roles: ['owner'],             group: 'einstellungen' },
     { id: 'settings',      key: 'nav_settings',      label: 'Einstellungen',   roles: ['owner', 'employee'], group: 'einstellungen' }
   ],
@@ -77,7 +77,7 @@ export const NAV_REGISTRY = {
     { id: 'b2b',           key: 'nav_b2b',           label: 'Zuweiser',        roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'b2c',           key: 'nav_b2c',           label: 'Patientenpost',   roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'beispielmodus', key: 'nav_beispielmodus', label: 'Demo-Modus',      roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'feedback',      key: 'nav_feedback',      label: 'Bewertungen',     roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'feedback',      key: 'nav_feedback',      label: 'Feedback & Support', roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'vorlagen',      key: 'nav_vorlagen',      label: 'Vorlagen',        roles: ['owner'],             group: 'einstellungen' },
     // Beta-2, 05.09.2026 (Ops #274): Ärzte war unter "Rezepte" — dort sollte
     // nur stehen, was man selbst konfiguriert, nicht die Ärzteverwaltung.
@@ -114,7 +114,7 @@ export const NAV_REGISTRY = {
     { id: 'b2b',               key: 'nav_b2b',               label: 'Zuweiser',             roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'b2c',               key: 'nav_b2c',               label: 'Patientenpost',        roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'beispielmodus',     key: 'nav_beispielmodus',     label: 'Demo-Modus',           roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'feedback',          key: 'nav_feedback',          label: 'Bewertungen',          roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'feedback',          key: 'nav_feedback',          label: 'Feedback & Support',      roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'vorlagen',          key: 'nav_vorlagen',          label: 'Vorlagen',             roles: ['owner'],             group: 'einstellungen' },
     { id: 'settings',          key: 'nav_settings',          label: 'Einstellungen',        roles: ['owner', 'employee'], group: 'einstellungen' }
   ],

@@ -41,7 +41,7 @@
  */
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260920s';
+import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260926a';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260907';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 
@@ -139,6 +139,11 @@ export function maskeHeimschicken() {
   _bearbeitung = null;
   _scanHerkunft = null;
   _patientNeu = false;
+  // Neuanlage ist über dieses Formular immer GKV — ein von der vorherigen
+  // Bearbeitung stehengebliebenes `rezeptart=privat` darf für die nächste,
+  // per „+ Neue Verordnung" geöffnete Maske nicht mehr gelten
+  // (module/verordnung-podo.js liest dieses Attribut, s. `fuelleMuster13()`).
+  if (wrap) wrap.dataset.rezeptart = 'kassen';
   // Der Belegstreifen gehoert zum Scan. Wer die Maske von Hand oeffnet,
   // soll nicht das Foto der vorherigen Verordnung sehen.
   const beleg = document.getElementById('rzScanBeleg');
@@ -182,6 +187,14 @@ export async function maskeEinbetten({ host, rx }) {
   };
 
   host.appendChild(wrap);
+  // Klick-Verdrahtung der Maske (Therapiebereich, Hausbesuch, Patientensuche,
+  // LHB-Nachweis, Zuzahlungsbefreiung) lief bisher nur über openRezeptModal().
+  // Wer eine Verordnung direkt aus der Liste öffnete, bekam eine tote Maske —
+  // QA 26.09.2026. Idempotent: `wireM13Toggles` merkt sich, dass es lief.
+  _bruecke?.verdrahteToggles?.();
+  // Patientencache kommt sonst nur aus openRezeptModal() — hier lief das nie,
+  // die Suche blieb leer (Ops #302 QA-Nachtrag 27.09.2026).
+  _bruecke?.ladePatienten?.();
 
   // Im Modal beendet „Abbrechen" die Eingabe. In der Seite gäbe es nichts zu
   // schliessen — der Knopf würde nur so aussehen, als täte er etwas.
@@ -352,6 +365,25 @@ export function fuelleMuster13(rx, opt = {}) {
   // Listener nie, wenn der Anwender die Felder nie von Hand fokussiert hat
   // (Haupteinstieg: KI-Rezept-Scan bestätigen, ohne rzIcd anzufassen).
   _bruecke?.ensureDgIcdWiring?.();
+
+  // Rezeptart als Datenattribut an der Maske — module/verordnung-podo.js liest
+  // es darüber (kein Import, sonst Ringabhängigkeit: diese Datei importiert
+  // bereits AUS verordnung-podo.js). Neuanlage/Vorlage ist über dieses Formular
+  // immer GKV (`lesenMuster13()` in verordnung-pruefen-knopf.js setzt
+  // `rezeptart: 'gkv'` hart, `nutzlastAusMaske()` schreibt die Spalte beim
+  // Anlegen gar nicht) — nur beim BEARBEITEN einer bestehenden, nicht-GKV
+  // Verordnung ist der tatsächliche Wert wichtig.
+  //
+  // ⚠ Ops #313 QA-Nachtrag (28.09.2026): so eine Verordnung entsteht heute
+  // NIRGENDS mehr — der frühere podologische Schnellweg (`podNew*`-Felder),
+  // der `rezeptart` setzen konnte, ist seit 06.09.2026 abgeschafft (diese
+  // Maske ist seitdem der einzige Weg, siehe module/verordnung-podo.js
+  // "Was NICHT hier steht"). Das ist eine bestehende, von dieser Änderung
+  // unabhängige Lücke, kein hier zu behebender Fehler — gkv-302: P2,
+  // eigenes Ticket vor dem ersten PKV-Verordnungsfall. Der Code hier ist
+  // bereits korrekt FÜR den Tag, an dem ein Rezeptart-Umschalter zurückkommt.
+  const maskeWrap = g('rzMaskeWrap');
+  if (maskeWrap) maskeWrap.dataset.rezeptart = alsVorlage ? 'kassen' : (rx.rezeptart || 'kassen');
   // Bei einer Vorlage werden nur gefüllte Werte gesetzt (die Maske ist frisch
   // zurückgesetzt); beim Bearbeiten muss auch ein LEERER Wert ankommen, sonst
   // bliebe der Rest der vorherigen Verordnung stehen.

@@ -5,10 +5,10 @@ import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20260913';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260817';
-import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260909';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260926';
+import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260926';
 import { attachPatientSearch } from './patient-suche.js?v=20260906';
-import { verdrahteRezeptPatientenfeld } from './module/rezept-patientenfeld.js?v=20260906';
+import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezept-patientenfeld.js?v=20260927';
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
 import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
 import { emit, on } from './module/signal.js?v=20260815';
@@ -28,7 +28,7 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260922';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20260922';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260905a';
-import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260831a';
+import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20260926b';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260920c';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
@@ -36,8 +36,7 @@ import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260921';
-import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260918';
-import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260920s';
+import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260926a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
@@ -46,7 +45,7 @@ import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-prue
 // in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
 // Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode }
-  from './module/verordnung-maske.js?v=20260919b';
+  from './module/verordnung-maske.js?v=20260927';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908';
@@ -81,6 +80,7 @@ import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistu
 import { zeichnePodoEinheiten, bindePodoAnTermin, befundDienstId } from './module/podo-einheiten.js?v=20260920s';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260914';
+import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
@@ -89,7 +89,7 @@ import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=202
 import { renderWoche } from './module/kalender-woche.js?v=20260918';
 import { renderMonat } from './module/kalender-monat.js?v=20260918';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
-import { alsISODatum as toISODate } from './module/datum.js?v=20260831';
+import { alsISODatum as toISODate, alsDatetimeLocal } from './module/datum.js?v=20260926';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwesenheit.js?v=20260918';
@@ -100,7 +100,7 @@ import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
-import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260903';
+import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260926';
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
@@ -140,7 +140,7 @@ const T = {
     logout: 'Abmelden',
     nav_overview: 'Dashboard', nav_ueberblick: 'Überblick', nav_calendar: 'Terminkalender', nav_kunden: 'Patienten',
     nav_services: 'Leistungen', nav_hours: 'Verfügbarkeit',
-    nav_team: 'Team', nav_b2b: 'Zuweiser', nav_b2c: 'Patientenpost', nav_rechnungen: 'Rechnungen', nav_feedback: 'Bewertungen', nav_vorlagen: 'Vorlagen', nav_settings: 'Einstellungen', vorlagen_disclaimer: 'Beispieldarstellung — der tatsächliche Druck kann abweichen (Bankdaten, Logo, Steuerpflichtangaben werden aus Ihrem Profil ergänzt).',
+    nav_team: 'Team', nav_b2b: 'Zuweiser', nav_b2c: 'Patientenpost', nav_rechnungen: 'Rechnungen', nav_feedback: 'Feedback & Support', nav_vorlagen: 'Vorlagen', nav_settings: 'Einstellungen', vorlagen_disclaimer: 'Beispieldarstellung — der tatsächliche Druck kann abweichen (Bankdaten, Logo, Steuerpflichtangaben werden aus Ihrem Profil ergänzt).',
     overview_sub: 'Ihr heutiger Überblick',
     welcome_text: 'Willkommen',
     kpi_plan: 'Paket', kpi_status: 'Status', kpi_today_bookings: 'Heute', kpi_today_sub: 'Termine', kpi_support: 'Support',
@@ -236,11 +236,13 @@ const T = {
     pod_heilmittel_g: 'Verordnetes Heilmittel (Muster 13, Feld g)',
     pod_hm_gross: 'Therapiezeit über 20 Minuten → Behandlung groß (78020)',
     pod_icd10_label: 'ICD-10 Code',
-    pod_icd_mismatch: 'Code stimmt nicht mit der Diagnosegruppe überein',
+    pod_icd_mismatch: 'Der ICD benennt nicht die für diese Diagnosegruppe geforderte Diagnose',
     pod_icd_hard: 'Eine Korrektur ist nur mit erneuter Arztunterschrift und Datumsangabe zulässig und muss vor der Einreichung zur Abrechnung erfolgt sein.',
     pod_dg_nur_mit: 'nur mit {icd}',
     pod_dg_passt_nicht: 'passt nicht zu {icd}',
     pod_dg_kandidaten: 'Passende Diagnosegruppen:',
+    pod_icd_nach_feld2: '2. Code nach ICD 2 übernommen',
+    pod_icd_je_feld: 'Mehr als zwei ICD-Codes: übertragen werden zwei (je Feld einer) – weitere bitte in den Diagnosetext',
     pod_l60_hint: 'L60.0 – bitte Stadium bestätigen (maßgeblich ist die Angabe auf der Verordnung):',
     pod_l60_ui1: 'Unguis incarnatus – Stadium 1 (UI1)',
     pod_l60_ui2: 'Stadium 2 oder 3 (UI2)',
@@ -344,7 +346,7 @@ const T = {
     logout: 'Sign out',
     nav_overview: 'Dashboard', nav_ueberblick: 'Overview Hub', nav_calendar: 'Calendar', nav_kunden: 'Patients',
     nav_services: 'Services', nav_hours: 'Availability',
-    nav_team: 'Team', nav_b2b: 'Referrers', nav_b2c: 'Email Marketing', nav_rechnungen: 'Invoices', nav_feedback: 'Reviews', nav_vorlagen: 'Templates', nav_settings: 'Settings', vorlagen_disclaimer: 'Example preview — actual printouts may differ (bank details, logo and tax fields are filled in from your profile).',
+    nav_team: 'Team', nav_b2b: 'Referrers', nav_b2c: 'Email Marketing', nav_rechnungen: 'Invoices', nav_feedback: 'Feedback & Support', nav_vorlagen: 'Templates', nav_settings: 'Settings', vorlagen_disclaimer: 'Example preview — actual printouts may differ (bank details, logo and tax fields are filled in from your profile).',
     overview_sub: 'Your daily overview',
     welcome_text: 'Welcome',
     kpi_plan: 'Plan', kpi_status: 'Status', kpi_today_bookings: 'Today', kpi_today_sub: 'Appointments', kpi_support: 'Support',
@@ -426,11 +428,13 @@ const T = {
     pod_heilmittel_g: 'Prescribed remedy (Muster 13, field g)',
     pod_hm_gross: 'Therapy time over 20 minutes → large treatment (78020)',
     pod_icd10_label: 'ICD-10 Code',
-    pod_icd_mismatch: 'Code does not match the diagnosis group',
+    pod_icd_mismatch: 'The ICD code does not state the diagnosis required for this diagnosis group',
     pod_icd_hard: 'A correction is only permitted with a new physician signature and date and must be completed before submission for billing.',
     pod_dg_nur_mit: 'only with {icd}',
     pod_dg_passt_nicht: 'does not match {icd}',
     pod_dg_kandidaten: 'Matching diagnosis groups:',
+    pod_icd_nach_feld2: '2nd code moved to ICD field 2',
+    pod_icd_je_feld: 'More than two ICD codes: two are transmitted (one per field) – please put further codes in the diagnosis text',
     pod_l60_hint: 'L60.0 – please confirm the stage (use the physician\'s notation on the prescription):',
     pod_l60_ui1: 'Unguis incarnatus – Stage 1 (UI1)',
     pod_l60_ui2: 'Stage 2 or 3 (UI2)',
@@ -527,7 +531,7 @@ const T = {
     logout: 'Çıkış',
     nav_overview: 'Dashboard', nav_ueberblick: 'Genel Bakış', nav_calendar: 'Takvim', nav_kunden: 'Hastalar',
     nav_services: 'Hizmetler', nav_hours: 'Müsaitlik',
-    nav_team: 'Ekip', nav_b2b: 'Yönlendirenler', nav_b2c: 'E-posta', nav_rechnungen: 'Faturalar', nav_feedback: 'Değerlendirmeler', nav_vorlagen: 'Şablonlar', nav_settings: 'Ayarlar', vorlagen_disclaimer: 'Örnek görünüm — gerçek çıktı farklı olabilir (banka bilgisi, logo ve vergi alanları profilinizden tamamlanır).',
+    nav_team: 'Ekip', nav_b2b: 'Yönlendirenler', nav_b2c: 'E-posta', nav_rechnungen: 'Faturalar', nav_feedback: 'Geri Bildirim & Destek', nav_vorlagen: 'Şablonlar', nav_settings: 'Ayarlar', vorlagen_disclaimer: 'Örnek görünüm — gerçek çıktı farklı olabilir (banka bilgisi, logo ve vergi alanları profilinizden tamamlanır).',
     overview_sub: 'Günlük genel bakışınız',
     welcome_text: 'Hoşgeldin',
     kpi_plan: 'Paket', kpi_status: 'Durum', kpi_today_bookings: 'Bugün', kpi_today_sub: 'Randevu', kpi_support: 'Destek',
@@ -609,11 +613,13 @@ const T = {
     pod_heilmittel_g: 'Reçete edilen Heilmittel (Muster 13, alan g)',
     pod_hm_gross: 'Tedavi süresi 20 dakikadan uzun → büyük tedavi (78020)',
     pod_icd10_label: 'ICD-10 Kodu',
-    pod_icd_mismatch: 'Kod, tanı grubuyla örtüşmüyor',
+    pod_icd_mismatch: 'ICD kodu, bu tanı grubunun gerektirdiği tanıyı belirtmiyor',
     pod_icd_hard: 'Düzeltme yalnızca yeni hekim imzası ve tarihiyle yapılabilir; faturalandırma için gönderimden önce tamamlanmalıdır.',
     pod_dg_nur_mit: 'yalnızca {icd} ile',
     pod_dg_passt_nicht: '{icd} ile uyuşmuyor',
     pod_dg_kandidaten: 'Uygun tanı grupları:',
+    pod_icd_nach_feld2: '2. kod ICD 2 alanına taşındı',
+    pod_icd_je_feld: 'İkiden fazla ICD kodu: iki kod iletilir (her alana bir) – diğerlerini lütfen tanı metnine yazın',
     pod_l60_hint: 'L60.0 – lütfen evresi onaylayın (reçetedeki hekim kaydı geçerlidir):',
     pod_l60_ui1: 'Unguis incarnatus – Evre 1 (UI1)',
     pod_l60_ui2: 'Evre 2 veya 3 (UI2)',
@@ -4967,7 +4973,7 @@ async function openBookingModal(b) {
   document.getElementById('bkWlMatchBtn').hidden = false;
   document.getElementById('bkDeleteBtn').hidden = false;
   document.getElementById('bkMoveBtn').hidden = false;
-  document.getElementById('bkStart').value = b.start_time ? b.start_time.substring(0, 16) : '';
+  document.getElementById('bkStart').value = alsDatetimeLocal(b.start_time); // UTC → Ortszeit, wie beim Speichern (QA 26.09.2026)
   document.getElementById('bkCustomer').value = b.customer_name || '';
   document.getElementById('bkCustomerId').value = b.lead_id || '';
   document.getElementById('bkPhone').value = b.customer_phone || '';
@@ -5735,7 +5741,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   let cust = document.getElementById('bkCustomer').value.trim();
   let custId = document.getElementById('bkCustomerId').value.trim();
   const phone = document.getElementById('bkPhone').value.trim();
-  const notes = document.getElementById('bkNotes').value.trim();
+  let notes = document.getElementById('bkNotes').value.trim();
 
   // Validation: Required fields
   if (!empId) { showToast('Bitte einen Mitarbeiter auswählen.', 'error'); return; }
@@ -5833,25 +5839,16 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     if (!proceedPast) return;
   }
 
-  // Working hours check: kapalı gün veya mesai dışı saat → engelle
+  // Working hours: warnen statt blockieren (Ops #307). Logik in module/arbeitszeit-pruefung.js.
   {
-    const dow = startDate.getDay(); // 0=Sun,1=Mon,...,6=Sat
-    const { data: wh } = await supabase
-      .from('working_hours')
-      .select('start_time,end_time,is_active')
-      .eq('user_id', empId)
-      .eq('day_of_week', dow)
-      .eq('is_active', true);
-    if (!wh || wh.length === 0) {
-      showToast('Dieser Tag ist kein Arbeitstag für den gewählten Mitarbeiter.', 'error');
-      return;
-    }
-    const hhmm = startDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false });
-    const withinAny = wh.some(w => hhmm >= w.start_time.substring(0,5) && hhmm < w.end_time.substring(0,5));
-    if (!withinAny) {
-      const ranges = wh.map(w => `${w.start_time.substring(0,5)}–${w.end_time.substring(0,5)}`).join(', ');
-      showToast(`Uhrzeit liegt außerhalb der Arbeitszeit (${ranges}).`, 'error');
-      return;
+    const dow = startDate.getDay();
+    const { data: wh } = await supabase.from('working_hours')
+      .select('start_time,end_time,is_active').eq('user_id', empId).eq('day_of_week', dow).eq('is_active', true);
+    const warnung = pruefeArbeitszeit({ wh, startDate });
+    if (warnung) {
+      const proceed = await showConfirmModal({ title: warnung.titel, message: warnung.meldung, confirmText: 'Trotzdem eintragen', cancelText: 'Abbrechen', variant: 'warning' });
+      if (!proceed) return;
+      notes = [notes, warnung.notiz].filter(Boolean).join('\n');
     }
   }
 
@@ -15562,8 +15559,8 @@ function lsWireToggle(prefix) {
 // (CLAUDE.md, "Vertikal sıralaması"). Die Felder unten sind mandanten-
 // abhängig, sie bekommen strict, wenn Physio/Ergo/Logopädie an der Reihe sind.
 const DIAGNOSE_FIELDS = {
-  rzIcd:       { kind: 'icd',  dgField: 'rzDg',     dgKind: 'text', warnId: 'rzIcdDgWarning'  }, // Rezept anlegen
-  rzIcd2:      { kind: 'icd' },  // 2. Diagnose — BEWUSST ohne dgField: die DG folgt der ERSTEN, zwei Felder auf demselben `rzDg` überschrieben sich
+  rzIcd:       { kind: 'icd',  dgField: 'rzDg', icd2Field: 'rzIcd2', warnId: 'rzIcdDgWarning', bereichFeld: 'rzTherapieBereich' }, // Rezept anlegen
+  rzIcd2:      { kind: 'icd',  paar: 'rzIcd' },  // 2. Diagnose — kein eigenes dgField (zwei Verdrahtungen auf `rzDg` überschrieben sich); zählt über das Paar von rzIcd mit
   // Diagnosegruppe. `nurCodes` liest die Allowlist, die module/verordnung-podo.js aus dem eingegebenen ICD-Kode ableitet (leer = keine Einengung).
   rzDg:        { kind: 'dg',   icdField: 'rzIcd',   codeOnly: true,
                  nurCodes: () => (document.getElementById('rzDg')?.getAttribute('data-pod-erlaubt') || '')
@@ -15584,11 +15581,9 @@ document.addEventListener('focusin', (e) => {
   const dcfg = DIAGNOSE_FIELDS[el.id];
   if (dcfg) {
     attachDiagnoseSearch(el, supabase, { bereich: _getDiagnoseBereich, ...dcfg });
-    // ICD-Felder: bidirektionale DG-Verdrahtung beim ersten Fokus anstossen.
-    // dcfg.bereich hätte Vorrang, sonst gilt der Mandanten-Fachbereich.
-    if (dcfg.kind === 'icd' && dcfg.dgField) {
-      _wireDgIcdPair(el.id, dcfg.dgField, dcfg.dgKind || 'text', dcfg.warnId, dcfg.bereich ?? _getDiagnoseBereich());
-    }
+    // ICD-Felder: bidirektionale DG-Verdrahtung beim ersten Fokus anstossen —
+    // auch vom zweiten ICD-Feld aus (`paar`), sonst zählte es erst nach rzIcd.
+    if (dcfg.kind === 'icd' && (dcfg.dgField || dcfg.paar)) _verdrahteIcdPaar(dcfg.dgField ? el.id : dcfg.paar);
   } else {
     const hcfg = HEILMITTEL_FIELDS[el.id];
     if (!hcfg) return;
@@ -15605,161 +15600,21 @@ document.addEventListener('focusin', (e) => {
 });
 
 // ── Bidirektionale ICD ↔ DG Verdrahtung ─────────────────────────────────────
-//
-// Registriert input/change-Handler auf ICD- und DG-Feldern, sobald sie im DOM
-// auftauchen. Wird beim ersten Fokus gecheckt und ist idempotent (data-attr).
-// Für das Podologie-Panel wird diese Funktion nach jedem Re-Render erneut
-// aufgerufen (die Elemente werden neu erzeugt).
-
-/**
- * Verdrahtet das bidirektionale Verhalten für ein ICD-Feld und sein DG-Gegenstück.
- * @param {string} icdId   - ID des ICD-Feldes (z.B. 'rzIcd')
- * @param {string} dgId    - ID des DG-Feldes (z.B. 'rzDg')
- * @param {string} dgKind  - 'select' oder 'text'
- * @param {string} [warnId] - ID des Warn-Elements
- * @param {string} [bereich] - Fachbereich; nur Podologie hat heute echte
- *   icd_accept-Regeln (s. module/diagnosegruppen-regeln.js).
- */
-function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
-  const icdEl  = document.getElementById(icdId);
-  const dgEl   = document.getElementById(dgId);
-  if (!icdEl || icdEl.dataset.dgIcdWired) return;
-  icdEl.dataset.dgIcdWired = '1';
-
-  /**
-   * Setzt die Diagnosegruppe programmatisch und löst dabei input/change aus,
-   * damit abhängige Logik mitläuft. Die Marke `autoSetting` sorgt dafür, dass
-   * das eigene Ereignis nicht als Eingabe des Anwenders gewertet wird.
-   * Ein vom Anwender gesetzter Wert wird nie überschrieben.
-   */
-  function _setDgProgrammatically(value) {
-    if (!dgEl || dgEl.dataset.manualOverride) return;
-    if (dgEl.value === value) return;
-    dgEl.dataset.autoSetting = '1';
-    try {
-      dgEl.value = value;
-      dgEl.dispatchEvent(new Event('input',  { bubbles: true }));
-      dgEl.dispatchEvent(new Event('change', { bubbles: true }));
-    } finally {
-      delete dgEl.dataset.autoSetting;
-    }
-  }
-
-  async function onIcdChange(commit) {
-    const codes   = parseIcdList(icdEl.value);
-    const warnEl  = warnId ? document.getElementById(warnId) : null;
-
-    // Keine Kodes → kein Hinweis, keine Sperre
-    if (codes.length === 0) {
-      if (warnEl) warnEl.style.display = 'none';
-      dgOptionenSperren(dgEl, null, { t });
-      return;
-    }
-
-    // Fachbereich wurde beim Verdrahten eingefroren (s.o.). Regeln pro Bereich
-    // bei Bedarf nachladen. Ausserhalb Podologie sind icd_accept-Regeln heute
-    // leer (bewusst, s. module/diagnosegruppen-regeln.js) — macht den Ablauf
-    // dort automatisch wirkungslos, kein gesondertes Gate nötig.
-    if (!getDgIcdRules(bereich) || !Object.keys(getDgIcdRules(bereich)).length) {
-      await loadDgIcdRules(supabase, bereich);
-    }
-    const rules = getDgIcdRules(bereich) || {};
-    if (!Object.keys(rules).length) return;
-
-    // Vorschlag und Sperren in einem Zug — die Regeln stehen in der Tabelle
-    // `diagnosegruppen`, nicht mehr hier. `normativ` heisst: jeder eingegebene
-    // Kode gehoert normativ genau einer Gruppe (heute nur L60.0 → UI1/UI2),
-    // dann kommt die Rueckfrage statt einer geratenen Auswahl.
-    const v = dgVorschlag(codes, rules);
-    // Unmoegliche Kombinationen sperren — mit Begruendung an der Option selbst.
-    // Geraeumt wird nur beim Verlassen des Feldes, s. dgOptionenSperren.
-    dgOptionenSperren(dgEl, v, { codes, t, raeumen: commit === true });
-
-    // Eine vom Anwender gesetzte Diagnosegruppe wird nicht überschrieben — das
-    // prüft _setDgProgrammatically. Hier darf NICHT abgebrochen werden, sonst
-    // bliebe genau der interessante Fall ohne Hinweis: der Anwender hat die
-    // Gruppe von Hand gewählt und der Kode passt nicht dazu.
-
-    // Genau eine Gruppe passt → eintragen (beim <select> nur, wenn es die
-    // Option wirklich gibt).
-    if (v.auto && dgEl) {
-      const optExists = dgEl.tagName !== 'SELECT'
-        || Array.from(dgEl.options).some(o => o.value === v.auto);
-      if (optExists) _setDgProgrammatically(v.auto);
-    }
-
-    // Warnhinweis
-    if (!warnEl || !dgEl) return;
-    const dgRoot = normDgCode(dgEl.value);
-    if (!dgRoot) {
-      // Noch keine Gruppe gewaehlt: die passenden benennen statt schweigen.
-      const zeig = !v.auto && v.kandidaten.length > 1;
-      warnEl.textContent   = zeig ? `${t('pod_dg_kandidaten')} ${v.kandidaten.join(', ')}` : '';
-      warnEl.style.fontWeight = '';
-      warnEl.style.display = zeig ? 'block' : 'none';
-      return;
-    }
-    const rule = rules[dgRoot];
-    if (!rule || !rule.icd_accept || !rule.icd_accept.length) { warnEl.style.display = 'none'; return; }
-    const result = matchIcdToDg(codes, rule);
-    if (result.status === 'mismatch') {
-      const isHard = rule.icd_enforcement === 'hard_before_dta';
-      let msg = `${t('pod_icd_mismatch')}: ${codes.join(', ')} (${dgRoot})`;
-      if (result.hints.length > 0) msg += ` — ${result.hints.join('; ')}`;
-      if (isHard) { msg += ' ⚠ ' + t('pod_icd_hard'); warnEl.style.fontWeight = '600'; }
-      else { warnEl.style.fontWeight = ''; }
-      warnEl.textContent = msg;
-      warnEl.style.display = 'block';
-    } else {
-      warnEl.style.display = 'none';
-    }
-  }
-
-  // Manuell-Override-Erkennung auf dem DG-Feld.
-  //
-  // ⚠ Der Wert wird auch programmatisch gesetzt, und dabei werden input/change
-  //   ausgelöst, damit abhängige Logik (Wagner-Feld, Heilmittelliste) mitläuft.
-  //   Ohne die Marke `autoSetting` würde sich die Automatik damit selbst als
-  //   „vom Anwender geändert" eintragen und ab der ersten automatischen Auswahl
-  //   nie wieder greifen.
-  if (dgEl && !dgEl.dataset.dgManualWired) {
-    dgEl.dataset.dgManualWired = '1';
-    const markManual = () => {
-      if (dgEl.dataset.autoSetting) return;
-      dgEl.dataset.manualOverride = '1';
-    };
-    dgEl.addEventListener('change', markManual);
-    if (dgEl.tagName === 'INPUT') dgEl.addEventListener('input', markManual);
-
-    // Gegenrichtung DG → ICD: nur wo sich aus der Diagnosegruppe genau ein Kode
-    // ableiten lässt. Das ist ausschließlich UI1/UI2 → L60.0; bei DF/NF/QF ist
-    // der Pool nicht normativ, dort wird nichts eingetragen.
-    dgEl.addEventListener('change', async () => {
-      if (dgEl.dataset.autoSetting) return;          // kein Ping-Pong
-      if (icdEl.value.trim()) return;                // Gefülltes Feld bleibt
-      if (!getDgIcdRules(bereich) || !Object.keys(getDgIcdRules(bereich)).length) await loadDgIcdRules(supabase, bereich);
-      const rule = (getDgIcdRules(bereich) || {})[normDgCode(dgEl.value)];
-      const sole = rule ? soleIcdForDg(rule) : null;
-      if (!sole || icdEl.value.trim()) return;
-      icdEl.value = sole;
-      icdEl.dispatchEvent(new Event('input',  { bubbles: true }));
-      icdEl.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-  }
-
-  icdEl.addEventListener('input',  () => onIcdChange(false));
-  icdEl.addEventListener('change', () => onIcdChange(true));
-
-  // Wenn Feld bereits befüllt: sofort prüfen
-  if (icdEl.value.trim()) onIcdChange(true);
+// Seit 26.09.2026 in module/icd-dg-verdrahtung.js (vorher `_wireDgIcdPair` hier).
+// Hier nur noch, welches Feldpaar gemeint ist — aus DIAGNOSE_FIELDS. Der
+// Fachbereich ist der angekreuzte der Maske, sonst der des Mandanten: bei
+// `praxis` (interdisziplinär) hatte der Mandanten-Bereich keine Regeln.
+function _verdrahteIcdPaar(icdId) {
+  const p = DIAGNOSE_FIELDS[icdId];
+  const bereich = p.bereich ?? (() => document.getElementById(p.bereichFeld)?.value || _getDiagnoseBereich());
+  verdrahteIcdDg({ icdId, icd2Id: p.icd2Field, dgId: p.dgField, warnId: p.warnId, bereich, supabase, t });
 }
 
 let rzPatientCache = [];
 let rzKkList = [];
-let rzLabelToId = new Map();
 
 function wireM13Toggles() {
-  const root = document.getElementById('rezeptModal');
+  const root = document.getElementById('rzMaskeWrap') || document.getElementById('rezeptModal'); // Maske wandert in die Verordnungsansicht (QA 26.09.2026)
   if (!root || root.dataset.m13Wired) return;
   root.dataset.m13Wired = '1';
 
@@ -15770,6 +15625,9 @@ function wireM13Toggles() {
       root.querySelectorAll('.m13-chk[data-th]').forEach(o => o.classList.remove('on'));
       if (!wasOn) box.classList.add('on');
       document.getElementById('rzTherapieBereich').value = wasOn ? '' : (box.dataset.th || '');
+      // Anderer Bereich, andere ICD↔DG-Regeln: die Verdrahtung neu auswerten lassen.
+      const icd = document.getElementById('rzIcd');
+      if (icd?.value.trim()) icd.dispatchEvent(new Event('change', { bubbles: true }));
     });
   });
 
@@ -15799,13 +15657,13 @@ function wireM13Toggles() {
 }
 
 function setM13Therapy(key) {
-  const root = document.getElementById('rezeptModal');
+  const root = document.getElementById('rzMaskeWrap') || document.getElementById('rezeptModal'); // Maske wandert in die Verordnungsansicht (QA 26.09.2026)
   root.querySelectorAll('.m13-chk[data-th]').forEach(o =>
     o.classList.toggle('on', !!key && o.dataset.th === key));
   document.getElementById('rzTherapieBereich').value = key || '';
 }
 function setM13Hausbesuch(isJa) {
-  const root = document.getElementById('rezeptModal');
+  const root = document.getElementById('rzMaskeWrap') || document.getElementById('rezeptModal'); // Maske wandert in die Verordnungsansicht (QA 26.09.2026)
   root.querySelectorAll('.m13-chk[data-hb]').forEach(o =>
     o.classList.toggle('on', o.dataset.hb === (isJa ? 'ja' : 'nein')));
   document.getElementById('rzHausbesuch').checked = !!isJa;
@@ -15930,40 +15788,29 @@ async function openRezeptModal(phone, leadId) {
 
   // Patientenliste für den Kopf-Selector. Die Suche selbst macht
   // patient-suche.js; hier wird nur der Cache gefüllt, aus dem sie liest.
-  rzLabelToId = new Map();
-  try {
-    const ownerId = getOwnerId();
-    // bizScope ist Pflicht — sonst stehen im Rezept-Kopf Patienten aller
-    // Standorte zur Auswahl, obwohl die Freigabe abgeschaltet sein kann.
-    const { data, error } = await bizScope(supabase.from('leads')
-      .select('id,first_name,last_name,title,geburtsdatum,phone,metadata,versichertennummer')
-      .eq('owner_id', ownerId)
-      .order('last_name', { ascending: true }), 'patients');
-    if (error) throw error;
-    rzPatientCache = data || [];
-    await heuteAktualisieren(supabase, ownerId);   // Ops #267: heutige Termine nach oben
-    rzPatientCache.forEach(l => rzLabelToId.set(rzPatientLabel(l), l.id));
-    if (hint) {
-      if (!rzPatientCache.length) {
-        hint.textContent = '⚠ Keine Patienten gefunden — bitte zuerst Patienten anlegen';
-        hint.style.color = '#b45309';
-      } else {
-        hint.textContent = `${rzPatientCache.length} Patienten — tippen zum Suchen`;
-        hint.style.color = '';
-      }
-    }
-    // Bei vorausgewähltem Patienten (aus Patientenkarte) Suchfeld setzen
-    if (leadId && search) {
-      const pre = rzPatientCache.find(l => l.id === leadId);
-      if (pre) search.value = rzPatientLabel(pre);
-    }
-  } catch (e) {
-    console.error('[openRezeptModal] patients', e);
-    if (hint) { hint.textContent = 'Fehler beim Laden der Patienten'; hint.style.color = '#b45309'; }
+  const ownerId = await ladeRzPatientenCache();
+  // Bei vorausgewähltem Patienten (aus Patientenkarte) Suchfeld setzen
+  if (leadId && search) {
+    const pre = rzPatientCache.find(l => l.id === leadId);
+    if (pre) search.value = rzPatientLabel(pre);
   }
 
   // Bei vorausgewähltem Patienten (aus Patientenkarte) direkt befüllen
   if (leadId) await fillRzPatientFromLead(leadId);
+}
+
+// Dünner Wrapper — die eigentliche Ladelogik liegt in module/rezept-patientenfeld.js
+// (Ops #302 QA-Nachtrag), auch von der eingebetteten Maske gebraucht (Bruecke unten).
+async function ladeRzPatientenCache() {
+  const { ownerId, leads } = await ladePatientenCache({ supabase, bizScope, getOwnerId });
+  rzPatientCache = leads;
+  // NACH der Zuweisung: `loadLeads` liest rzPatientCache synchron — davor
+  // latchte patient-suche.js die noch leere Liste und `loaded` blieb true.
+  document.getElementById('rzPatientSearch')?._patientSearchApi?.refresh();
+  // Hier statt nur in openRezeptModal(), damit auch die eingebettete Maske
+  // (module/verordnung-maske.js) den „heute im Haus"-Vorschlag bekommt.
+  if (ownerId) await heuteAktualisieren(supabase, ownerId);   // Ops #267
+  return ownerId;
 }
 
 // Liste und Detailansicht liegen in module/verordnung-liste.js — dort kamen die
@@ -16043,6 +15890,7 @@ async function saveRezept() {
     const formatErrors = [];
     if (rzLanr && !/^\d{9}$/.test(rzLanr)) formatErrors.push('LANR muss 9 Ziffern haben');
     if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
+    if (icdMehrAlsEinKodeJeFeld(val('rzIcd'), val('rzIcd2'))) formatErrors.push(t('pod_icd_je_feld'));
 
     let overridden = false;
     if (missing.length || formatErrors.length) {
@@ -16718,12 +16566,14 @@ async function init() {
       fuellePatient: fillRzPatientFromLead,
       lsApply,
       setTherapiebereich: setM13Therapy,
-      setHausbesuch: setM13Hausbesuch,
+      setHausbesuch: setM13Hausbesuch, verdrahteToggles: wireM13Toggles,   // auch für die eingebettete Maske
+      ladePatienten: ladeRzPatientenCache,   // dito — sonst leere Patientensuche dort (Ops #302 QA-Nachtrag)
       setFrequenz: setFreqValue,
       // Stellt sicher, dass rzIcd/rzDg verdrahtet sind, BEVOR fuelleMuster13()
       // Werte hineinschreibt (module/verordnung-maske.js) — ohne Fokus des
       // Anwenders passiert das sonst nie (Ops: DG-Autofill nach KI-Scan tot).
-      ensureDgIcdWiring: () => _wireDgIcdPair('rzIcd', 'rzDg', 'text', 'rzIcdDgWarning', _getDiagnoseBereich()),
+      // Die DG, die gleich geladen wird, stammt vom Papier, nicht von der Automatik (Ops #304).
+      ensureDgIcdWiring: () => { delete document.getElementById('rzDg')?.dataset.dgAuto; _verdrahteIcdPaar('rzIcd'); },
     });
     document.getElementById('anamRezeptBtn')?.addEventListener('click', () => {
       const sel = document.getElementById('anamPatientSelect');
@@ -17018,7 +16868,7 @@ async function openBookingFromRxPreset(preset) {
     const dow = today.getDay();
     const daysToMon = (8 - dow) % 7 || 7;
     const start = new Date(today.getTime() + daysToMon * 86400000);
-    const iso = start.toISOString().slice(0, 10) + 'T09:00';
+    const iso = toISODate(start) + 'T09:00';
     document.getElementById('bkStart').value = iso;
 
     // Series
@@ -17877,7 +17727,7 @@ function openFbFahrtEditModal(f) {
   document.getElementById('fbEditKennzeichen').value = f.kennzeichen_snapshot || '';
   document.getElementById('fbEditStartKm').value = f.start_km ?? '';
   document.getElementById('fbEditEndKm').value = f.end_km ?? '';
-  const toLocal = iso => iso ? iso.slice(0, 16) : '';
+  const toLocal = alsDatetimeLocal; // UTC → Ortszeit, wie beim Speichern unten (QA 26.09.2026, gleicher Fehler wie Termin-Dialog)
   document.getElementById('fbEditStartedAt').value = toLocal(f.fahrt_started_at);
   document.getElementById('fbEditEndedAt').value = toLocal(f.fahrt_ended_at);
   document.getElementById('fbEditZweck').value = f.zweck || '';
@@ -20141,7 +19991,6 @@ function podoCtx() {
     loadKkList,
     resolveArzt,
     toastArztErgebnis,
-    _wireDgIcdPair,
     rechnungAusVerordnung,           // bleibt hier, schreibt in die inv*-Variablen
     leads:    () => leadsCache,      // Getter — siehe oben
     services: () => ownerServices,   // Getter — siehe oben
