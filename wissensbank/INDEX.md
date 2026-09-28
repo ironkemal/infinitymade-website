@@ -3,7 +3,10 @@
 > **Bu dosya arşivin tek giriş kapısıdır.** `wissensbank/` altındaki tüm GKV/§302/Heilmittel
 > belgelerinin ne olduğunu, hangi sürümde olduğunu ve ne zaman lazım olacağını listeler.
 >
-> Son güncelleme: 2026-09-21 · **38 belge kayıtlı**
+> Son güncelleme: 2026-09-28 · **39 belge kayıtlı** (38'i `wissensbank/` altında, **1'i depo dışında**)
+> (28.09.2026: **Microsoft C5 raporu (Azure, 01.04.2025–31.03.2026)** — ilk depo-dışı kayıt.
+>  Dağıtım kısıtlı olduğu için PDF de `.txt` de depoya girmez; aşağıda en sondaki
+>  „Depo dışı belgeler“ bölümünde yalnız bölüm haritası var. Sicil: REGISTER W-06.)
 > (21.09.2026: **GGT Anlage 16 „Security Schnittstelle (SECON)"** eklendi — §302 dosyasının
 >  şifrelenmesinin (CMS/PKCS#7 EnvelopedData) bağlayıcı profili, `ABRECHNUNG_ECHTBETRIEB_PLAN.md`
 >  Adım 1.3 bu belge olmadan başlamıyordu. **Aynı turda GGT ana belgesinin sürüm düşümü
@@ -683,3 +686,45 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - Feld 26: Schlüsselnummer mit Inhalt belegt? (J=Ja, N=Nein)
   - Feld 27: IfSG-Meldung (Arzt-Meldepflicht nach Infektionsschutzgesetz: J=Ja, N=Nein)
   - Feld 28: IfSG-Labor (Laborausschlussziffer EBM 32006: J=Ja, N=Nein)
+
+---
+
+## Depo dışı belgeler — ⛔ dağıtım kısıtlı, yalnız harita
+
+> Bu bölümdeki belgeler **depoda yoktur ve girmez** (public depo, yayıncının dağıtım kısıtı).
+> Dosya Drive'da durur; burada yalnız *içinde nerede ne var* haritası tutulur ki belge her
+> seferinde baştan taranmasın. Okumak gerekirse `pdftotext -enc UTF-8 -layout` **depo dışına**
+> (scratch/temp) çıkarılır, iş bitince silinir. Sayfa numaraları **PDF sayfasıdır** (basılı no değil).
+
+### Microsoft C5 Report — „Azure + Dynamics 365 + Online Services – Public & Government C5 Report (04-01-2025 to 3-31-2026).pdf"
+- **Nerede:** Drive `I:\My Drive\Ops Praxura gitnogo\` (28.09.2026'da henüz Kemal'in masaüstünde,
+  taşıma bekliyor — REGISTER W-A12). 208 sayfa, ~1,9 MB. Metin çıkarımı ~11.500 satır.
+- **Ne:** Microsoft Corporation – Azure Including Dynamics 365 (Azure & Azure Government) için
+  BSI **C5:2020** denetim raporu; denetçi **Deloitte & Touche LLP**, rapor tarihi 07.07.2026.
+- **Kapsam:** Azure + Dynamics 365 + Microsoft datacenter'ları; servis bazında kapsam tablosu
+  (Azure / Azure Government sütunları + H1/H2 dönem sütunları), C5 kriteri başına kontrol ve
+  test sonucu, Microsoft yönetiminin istisnalara cevabı.
+- **Sürüm:** inceleme dönemi **01.04.2025 – 31.03.2026** (kapak). Sürüm numarası yok.
+- **Anzuwenden ab:** — (testat belgesi). Sonraki dönem ~Temmuz 2027.
+- **Ne zaman lazım:** bir bulut AI/hosting sağlayıcısının §393 SGB V C5 **Typ-2** kanıtı
+  sorulduğunda — hangi servis kapsamda, hangi dönem, istisna var mı.
+- **Anahtar bölümler:**
+  - s.1 — **dağıtım kısıtı** paragrafı (kapağın üstü)
+  - s.3 — içindekiler (Section 1–5, basılı sayfa noları)
+  - s.4–6 — Executive Summary: kapsam, dönem, **datacenter listesi** (EMEA: Germany West Central,
+    Germany North, Sweden Central, Sweden South … — s.5)
+  - s.8–11 — **Section 1** Deloitte görüşü: şartsız, „suitability of the design and operating
+    effectiveness … throughout the period" (= Typ 2) · CUEC notu s.9 · rapor tarihi s.11
+  - s.12–13 — Section 2 Management's Assertion
+  - s.14– — **Section 3**; kapsam tablosu s.16–24: s.16 dipnot 5 (H1/H2 tanımı) · s.17 dipnot 6/7
+    (servis bazında kısaltılmış dönemler) · **s.19 „AI + Machine Learning"**: Azure OpenAI Service
+    (dipnot 6 → yalnız 01.04.–31.12.2025), Microsoft Foundry + alt servisleri
+  - s.45 — servis açıklamaları: Azure OpenAI Service · **Microsoft Foundry kapsam cümlesi**
+    („Foundry Models is limited to Azure Direct Models; third-party model providers … excluded")
+  - s.~89–198 — **Section 4** C5 kriteri × kontrol × test sonucu. Grep: `Exception Noted:` /
+    `Exceptions Noted:` → 20 kriter (s.100–161)
+  - s.199+ — Section 5 Other Information · **s.200–201 „Management's Response to Exceptions
+    Noted"**: DS-1, SDL-1, PE-4, VM-6, BC-8, SOC2-1, SDL-2 (7 kontrol-seviyesi istisna)
+- ⚠️ Rapor **servis↔bölge eşlemesi vermiyor** — datacenter listesinde bir bölgenin olması, o
+  servisin orada denetlendiği anlamına gelmez.
+- **Sicil kaydı:** `wissensbank/REGISTER.md` → **W-06** (Herkunft, dağıtım şartları, zincir Z-14).

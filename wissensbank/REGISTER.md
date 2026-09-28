@@ -5,7 +5,11 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 21.09.2026 (**GGT Anlage 16 (SECON) indirildi**
+> İlk kurulum: 05.09.2026 · Son güncelleme: 28.09.2026 (**Microsoft C5 raporu kaydedildi — depo
+> DIŞINDA.** Kart **W-06**, zincir **Z-14**, açık madde **W-A12**. İlk depo-dışı kayıt: belge dağıtım
+> kısıtlı olduğu için Drive'da durur, sicil yalnız kimliğini ve neyi beslediğini tutar. Kayıt
+> sırasında istisna sayısı düzeltildi: 2 değil, 7 kontrol-seviyesi istisna / 20 C5 kriteri.)
+> Önceki: 21.09.2026 (**GGT Anlage 16 (SECON) indirildi**
 > — `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 1.3’ün „bu belge olmadan başlanmaz" kaydı üzerine.
 > Kart **W-04**, zincir **Z-12**. Aynı gün ikinci tur: Ops #302 — „Komplexbehandlung" = verordnete
 > Heilmittel c), 78020'nin adı değil; zincir **Z-13**, kural `SPEC-RULES.md`'de. Aynı turda **ana GGT belgesinin sürüm düşümü yakalandı**:
@@ -36,11 +40,12 @@
 
 | | Sayı |
 |---|---|
-| Kayıtlı kaynak belge (INDEX'te) | 38 |
+| Kayıtlı kaynak belge (INDEX'te) | 39 (38 depoda + 1 depo dışı, W-06) |
 | Arşivdeki PDF | 49 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
-| Kaynak→kod zinciri kayıtlı | 12 |
-| Tam kimlik kartı yazılmış kaynak | 5 (**W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT) |
+| Kaynak→kod zinciri kayıtlı | 14 (Z-01…Z-14) |
+| Tam kimlik kartı yazılmış kaynak | 6 (**W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
+| Depo **dışında** duran kayıtlı kaynak | 1 (W-06 — dağıtım kısıtlı, Drive'da) |
 | **Herkunft (indirme URL'i) kayıtlı** | **6 / 38** ← asıl boşluk, W-A01 |
 | Otomatik tazelik kontrolü olan | 1 (sadece fiyat: `preise-check.yml`) |
 | Çeyreklik ritmi olan kaynak | 1 (Kostenträgerdatei — W-01, §1 takviminde) |
@@ -96,6 +101,7 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 | **01.02.2027** | **Anhang 03 Anlage 1 TP5 V10** (Kostenträgerdatei) yürürlüğe girer | Z-09 → `billing/kostentraeger/parser.js` | ⏳ parser 05.09.2026'da yazıldı |
 | açık uçlu | Anlage 1 TP5 V21 geçerli (01.10.2025'ten) | Z-01 → `billing/dta/*`, `legs.js` | ✅ geçerli |
 | açık uçlu | HeilM-RL 15.05.2025 değişikliği (05.08.2025'ten) | Z-07 · **Z-11** | ✅ geçerli |
+| **~Temmuz 2027** | Microsoft C5 raporunun **sonraki dönemi** (01.04.2026–31.03.2027) Service Trust Portal'da beklenir. Gelene kadar Azure OpenAI için C5 Typ-2 kapsamı **31.12.2025'te biter** (dipnot 6) — 01.01.2026 sonrası boşluk büyüyor. Geldiğinde: W-06 `DÜŞMÜŞ`, yeni rapor kaydedilir, Azure OpenAI satırı + dipnotları yeniden okunur, KARARLAR 2026-09-12/09-28'e bildirilir | Z-14 → W-06 → on-prem AI kararı · `azureClient.js` | ⏳ **elle**, portal oturumlu — W-A12 |
 | **her fiyat turu** | Heilmittelpreisstammdatei yeni `Stand_TT-MM-JJ` | Z-06 → otomatik, Telegram bildirimi | ✅ **tek otomatik kontrol** |
 
 > ⚠️ **Erken geçiş dosya reddi demektir.** V22 ve V10 dosyaları repoda duruyor ve kod
@@ -439,6 +445,29 @@ sütunu gerekir), b) c) için >20 dk şartı (SPEC-RULES'ta ⛔).
 
 ---
 
+### Z-14 · Bulut AI sağlayıcısının §393 SGB V kanıtı (Microsoft C5) → tam kart **W-06**
+```
+Microsoft C5:2020 Report „Azure + Dynamics 365 + Online Services" (01.04.2025–31.03.2026)
+    ⛔ DEPODA YOK — Drive: I:\My Drive\Ops Praxura gitnogo\ (dağıtım kısıtlı, W-06)
+    (Section 1 s.8-11 görüş · Section 3 s.19 kapsam tablosu „Azure OpenAI Service" dipnot 6
+     · s.45 Foundry kapsam cümlesi · Executive Summary s.5 datacenter listesi)
+  → konsey/KARARLAR.md  2026-09-12 Seçenek E  +  2026-09-28 olgu güncellemesi
+      → on-prem AI sağlayıcı kararı (bugün: ertelendi, E yeniden AÇILMADI)
+  → api-backend/ai/azureClient.js   SaaS'ın Azure OpenAI istemcisi
+      EU_DATA_BOUNDARY_REGIONS (… 'swedencentral' …) + bölge assert'i
+      → api-backend/ai/router.js (Rezept OCR, b2c-draft)
+  → DB: yok (hiçbir tablo beslenmiyor)
+```
+📌 Bu zincir **kod sabiti taşımıyor** — belge bir sayı değil, bir **hukuki kanıt** besliyor:
+„sağlayıcının §393'ün istediği C5 Typ-2 testatı var mı, hangi dönem, hangi servis". Rapor
+düştüğünde (bkz. §1 takvimi) koddaki hiçbir şey kırılmaz; kırılan şey **iddianın dayanağıdır**.
+⚠️ `azureClient.js`'teki `swedencentral` satırı ile rapordaki „Sweden Central" **aynı iddia
+değil**: rapor datacenter'ı listeliyor, **servis↔bölge eşlemesi vermiyor** (Azure OpenAI'nin
+Sweden Central'da denetim kapsamında koştuğu raporda yazmıyor — KARARLAR 2026-09-28 açık
+madde 1). Zincir okunurken bu bir doğrulama değil, bir **boşluk** olarak okunmalı.
+
+---
+
 ## 3. Kaynak envanteri
 
 `wissensbank/INDEX.md`'deki 33 kayıt, sicil gözüyle. **Herkunft sütunu neredeyse tamamen
@@ -506,6 +535,12 @@ yeniden araştırılıyor demektir.
 | `wissensbank/physiotherapie/NOVENTI-Leitfaden-Blankoverordnung-Physiotherapie` | Stand 03.2026 | 📎 REFERANS (ticari kaynak, otorite değil) | — |
 | `wissensbank/_archiv/Zusatzdateien/*.pdf` (11 adet) | 2026 | 🚫 KAPSAM DIŞI (Barthel, MMSE, FIM…) | — |
 | `wissensbank/_archiv/_duplikate_2026-08-04/` (5 PDF) | — | 🗄 KARANTİNA | — |
+
+### Bulut sağlayıcı testatları — ⛔ depo dışı (dağıtım kısıtlı)
+
+| Belge | Dönem | Durum | Besler | Nerede | Herkunft |
+|---|---|---|---|---|---|
+| Microsoft C5:2020 Report — Azure inkl. Dynamics 365 (Public & Government), Deloitte | 01.04.2025–31.03.2026 (Azure OpenAI: yalnız –31.12.2025) | 📎 REFERANS | Z-14 | Drive `I:\My Drive\Ops Praxura gitnogo\` | **✅ kart W-06** (STP, oturumlu) |
 
 ---
 
@@ -873,6 +908,82 @@ uzun vadeli yönü işaretliyor. → açık madde **W-A11**.
 
 ---
 
+### W-06 · Microsoft C5:2020 Report — Azure inkl. Dynamics 365 (Public & Government), 01.04.2025–31.03.2026
+
+- **Dosya:** ⛔ **DEPODA YOK — kasıtlı (dağıtım kısıtlı, aşağıya bak).** Kalıcı saklama yeri:
+  `I:\My Drive\Ops Praxura gitnogo\` (Kemal taşıyacak). 28.09.2026 itibarıyla geçici olarak
+  Kemal'in masaüstünde: `Azure + Dynamics 365 + Online Services – Public & Government C5 Report
+  (04-01-2025 to 3-31-2026).pdf` (1.868.335 bayt · 208 sayfa). **Türev yok** — `.txt` de depoya
+  girmez (metin de raporun kendisidir). Okuma gerekirse `pdftotext -enc UTF-8 -layout` ile
+  **depo dışında** (scratch/temp) üretilir, iş bitince atılır. Bölüm haritası:
+  `INDEX.md` → „Depo dışı belgeler".
+- **Herkunft:** Microsoft Service Trust Portal — https://servicetrust.microsoft.com/ ·
+  **oturum gerektirir**, belgenin kalıcı açık URL'i yok (belge URL'i: belirtilmemiş).
+  Portaldaki başlık birebir: *„Azure + Dynamics 365 + Online Services – Public & Government C5
+  Report (04-01-2025 to 3-31-2026)"* · **İndirme:** 28.09.2026 · **İndiren:** Kemal
+- **Yayıncı:** Microsoft Corporation (rapor sahibi) · **Denetçi:** Deloitte & Touche LLP
+  (Section 1 „Independent Accountant's Examination Report", rapor tarihi **07.07.2026**, s.11)
+- **Sürüm / Stand:** BSI C5:2020 raporu, inceleme dönemi **01.04.2025 – 31.03.2026** (kapak +
+  Executive Summary). Belgenin kapak başlığı: „Microsoft Corporation – Azure Including Dynamics 365
+  (Azure & Azure Government) · Cloud Computing Compliance Criteria Catalogue (C5) Report".
+  STP'de yayın **09.07.2026** — portal beyanı, belgenin kendisinde yazmıyor (belgede yalnız
+  07.07.2026 rapor tarihi var)
+- **Anzuwenden ab:** belirtilmemiş (testat belgesi, yürürlük tarihi taşımaz) · **Düşer:** resmî
+  düşme tarihi yok; **dönem 31.03.2026'da bitti** ve boşluk o günden beri büyüyor. Sonraki dönem
+  raporu (01.04.2026–31.03.2027) **~Temmuz 2027** bekleniyor — geldiğinde bu kart `DÜŞMÜŞ` olur
+- **Durum:** 📎 **REFERANS** — koda sabit/sayı vermiyor; bir kararın hukuki kanıtı
+- **Neyi besler:** **Z-14** → §393 SGB V C5 Typ-2 kanıtı → `konsey/KARARLAR.md` 2026-09-12
+  Seçenek E + 2026-09-28 olgu güncellemesi (on-prem AI sağlayıcı kararı) ·
+  `api-backend/ai/azureClient.js` (SaaS'ın Azure OpenAI istemcisi, `EU_DATA_BOUNDARY_REGIONS`
+  kontrolü) · DB: **yok**
+- **Tazelik kontrolü:** ⛔ otomatik yok, olamaz (portal oturumlu). Elle: Service Trust Portal →
+  „C5" araması → Azure raporları; başlığında `(04-01-2026 to 3-31-2027)` geçen raporun çıkıp
+  çıkmadığına bakılır. **Kontrol anı:** Temmuz 2027 başından itibaren ayda bir; ayrıca her AI
+  sağlayıcı kararı tartışmasından **önce**. ⚠️ 14.09.2026 turunda yalnız Microsoft Learn
+  sayfasına bakılıp „yayımlanmadı" denmişti — yanlıştı. **Kaynak Learn değil, STP'nin kendisi.**
+- **Yeniden dağıtım:** ⛔ **depoya: yasak.** Kapak (s.1) kısıtı: rapor üçüncü taraflara
+  dağıtılamaz; **istisna** — Azure bizim müşteriye verdiğimiz hizmetin bileşeniyse *mevcut ve
+  aday müşterilerimize* verilebilir, **şartlarıyla**: (a) alıcıya Microsoft'un hizmetimizdeki
+  işlevi yazılı açıklanır, (b) raporu alan kurumların **ve kişilerin** tam kaydı tutulur,
+  Microsoft/Deloitte isterse derhal verilir, (c) kısıt paragrafı (veya eşdeğeri) alıcıya iletilir.
+  Public depo (b)'yi imkânsız kılar → depoya, Vercel'e, on-prem image'a **girmez**. Bir praxis'e /
+  müşteriye verilmek istenirse bu üç şart **`legal-de`'ye** gider, burada karar verilmez.
+  (Not: KARARLAR 2026-09-28'deki „NDA şartlı" ifadesi tam değil — belge bir NDA değil,
+  **koşullu dağıtım izni** veriyor; müşteriye verme yolu şartlarla açık.)
+- **Yedek:** git izlemiyor (depoda yok; olsaydı da `.gitignore` → `*.pdf`). Drive'a taşınana
+  kadar **tek kopya** Kemal'in makinesinde. Kaybolursa STP'den yeniden indirilebilir (oturumla),
+  ama Microsoft eski dönem raporunu yenisi gelince portaldan kaldırabilir — Drive kopyası
+  o gün tek kaynak olur (Absetzung itirazının eski-sürüm mantığı burada da geçerli).
+
+#### Bizim için kritik satırlar (pdftotext ile belgeye karşı doğrulandı, YZ okuması değil · „s." = PDF sayfası, basılı sayfa no değil)
+
+| Ne | Değer | Nerede |
+|---|---|---|
+| Görüş | **Şartsız** — „In our opinion, in all material respects" … „suitability of the design and operating effectiveness … throughout the period April 1, 2025 to March 31, 2026" → **Typ 2** | Section 1, s.8–11 |
+| Azure OpenAI Service | Kapsam tablosunda Azure ✓ (Government –), H1 ✓ H2 ✓ — **ama dipnot 6:** „Examination period for this offering / service was from April 1, 2025 to **December 31, 2025**" → 01.01.–31.03.2026 **incelenmedi** | Section 3 kapsam tablosu s.19 („AI + Machine Learning"); dipnot 6 metni s.17 |
+| Microsoft Foundry | Tam dönem ✓; „the scope of certification for Microsoft Foundry Models is limited to **Azure Direct Models**. All components operated by third-party model providers … are excluded from scope" | s.19 tablo · s.45 servis açıklaması |
+| Azure OpenAI ↔ Foundry | OpenAI'nin 2026'da Foundry kapsamına taşındığı **raporda yazmıyor** — çıkarımdır | — |
+| Sweden Central | Executive Summary datacenter listesinde EMEA altında var („Sweden Central", „Sweden South") | s.5 |
+| Servis ↔ bölge | Rapor **eşleme vermiyor** — hangi servisin hangi bölgede denetlendiği yazmıyor | — |
+| H1 / H2 | H1 = 01.04.–30.09.2025 · H2 = 01.10.2025–31.03.2026 | s.16, dipnot 5 |
+| Complementary User Entity Controls | Görüş, müşteri tarafı tamamlayıcı kontrollerin uygulandığı varsayımına dayanıyor; denetim onları kapsamıyor | Section 1, s.9 |
+
+⚠️ **İstisna sayısı düzeltmesi (28.09.2026).** Kayıt talebiyle „Section 4'te 2 istisna (SDL review
+cadence)" diye geldi — **eksik.** Deterministik sayım: Section 4'te **20** C5 kriterinde
+„Exception(s) Noted" var; bunlar **7 kontrol-seviyesi istisnaya** dayanıyor (Section 5
+„Management's Response to Exceptions Noted", s.200 vd.):
+**SDL-1** (9/23 serviste SDL review yıllık döngüde yapılmamış — DEV-01, PSS-02 vd.) · **SDL-2** ·
+**DS-1** (1/35 secret rotasyonu gecikmiş + bazı iç platform anahtarları — IDM-08, CRY-03, CRY-04) ·
+**PE-4** (2/20 datacenter'da fiziksel erişim, arızalı kilit — PS-01, PS-03, PS-04) · **VM-6**
+(2/27 serviste — OPS-18, PSS-03, PSS-09) · **BC-8** · **SOC2-1** (1/25 serviste varlık
+sınıflandırması — AM-01). „2 istisna", SDL-1'in iki kriterde (DEV-01, PSS-02) görünen çoğul
+„Exceptions Noted" başlığıdır; diğerleri tekil „Exception Noted" başlığıyla yazılı.
+**Görüş yine de şartsız** — hiçbir istisna görüşü niteliklendirmiyor ve Azure OpenAI'nin kapsamını
+daraltmıyor. İstisnaların §393 açısından önemsiz olduğu yorumu **`legal-de`'nindir**; sicil yalnız
+sayıyı düzeltir.
+
+---
+
 ## 4. Açık maddeler
 
 Her madde ya bir sahibe, ya bir tarihe, ya `unkritisch` gerekçesine bağlanır. Üçü de
@@ -1130,6 +1241,20 @@ geçiş takvimi var mı, yoksa bu yalnızca genel bir ilke mi?" Cevap „takvim 
   kaydığında atıf yine bulunabilsin.
   **Wissensbank'a dokunmayan taşımalar:** `wissensbank/` altındaki hiçbir belge
   taşınmadı, hiçbir türev zinciri kırılmadı — temizlik kök dizini hedefledi.
+
+### W-A12 · Microsoft C5 raporu (W-06): Drive'a taşıma + tazelik takibi — `offen`
+Üç ayrı iş, üç ayrı sahip:
+1. **Taşıma** (sahibi: **Kemal**) — PDF masaüstünden `I:\My Drive\Ops Praxura gitnogo\`'e.
+   Taşınınca W-06 „Dosya“ alanındaki geçici masaüstü yolu silinir, tam Drive yolu yazılır.
+   Taşınana kadar tek kopya. ⛔ Depoya kopyalanmaz — `Desktop\claude\website\` altına
+   düşürülürse `*.pdf` ignore'u korur ama bilerek girmesi de yasak (W-06 Yeniden dağıtım).
+2. **Tazelik** (tarih: **~Temmuz 2027**, §1 takvimi) — sonraki dönem raporu STP'de aranır.
+   Otomatik takip mümkün değil (portal oturumlu). Ops kartı yok — **açılması önerilir**
+   (kategori Teknik, tarih 01.07.2027, „C5 raporu yeni dönem — W-06/Z-14 zincirini yürü“).
+3. **Boşluk sorusu** (sahibi: `legal-de` + Microsoft ticket, KARARLAR 2026-09-28 açık madde 1)
+   — Azure OpenAI'nin 01.01.2026 sonrası C5 kapsamı ve Sweden Central eşlemesi. Sicilin işi
+   yalnız cevap geldiğinde kaynağını W-06'ya eklemek; cevabın hukuki değeri `legal-de`'nin.
+   Microsoft'tan gelen teyit (ör. bridge letter) **ayrı bir belgedir** → ayrı kart açılır.
 
 ---
 
