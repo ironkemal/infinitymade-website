@@ -120,3 +120,6 @@ assets/img/fn/_raw/
 
 # Spike-/Messmaterial (02.10.2026) — nie zur Laufzeit geladen
 spike/
+# Codex-Spiegel der Agents + lose Prompt-Ablage — kein Web-Asset (28.09.2026)
+.codex/
+Claude outputs/
