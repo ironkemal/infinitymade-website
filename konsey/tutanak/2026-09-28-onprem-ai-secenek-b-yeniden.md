@@ -81,3 +81,10 @@ Belirleyici görüş `legal-de`'nin: §393 Abs. 3 Nr. 2, C5'i "eingesetzte Cloud
 
 ## Yeniden karar tetikleyicisi
 Dört ön şartın sonuncusu tamamlandığında 1 saatlik karar turu yapılır. Bundan önce ilk on-prem müşteri AI isterse C elle kurulur (09-14 kararı).
+
+## Ek (aynı gün) — legal-de memosu
+`compliance/MEMO-2026-09-28-onprem-ai-azure-modell.md`. Memo B'yi konsey turundan **daha riskli** buldu:
+- **F1 hâlâ AÇIK:** Bulunan bütün kaynaklar (activeMind, Rödl, Blackfort, DSN) Auftragsverarbeiter'in kendi C5 testatını şart koşuyor. activeMind'ın aktardığına göre BMG, alt işleyicinin testatı var diye istisna tanımıyor. Kendi bulut katmanı olmayan aracı durumunu ele alan kaynak yok. Kanun sıkı okunursa B fiilen biter (kendi ISO 27001 belgemiz tahminen €15–40k).
+- **F5:** Microsoft lisans kılavuzunun şartlarından biri, API'nin "platformun sınırları içinde" kalması. Kutudaki okunabilir ham anahtar bu şartı riske sokuyor.
+- **§203 düzeltmesi:** Praxura→Microsoft zinciri için geçerli madde Abs. 4 S. 2 Nr. 2.
+Sonuç: C'nin hukuki üstünlüğü güçlendi. B'nin 3. şartı (avukat görüşü) artık belirleyici.
