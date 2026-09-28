@@ -80,6 +80,7 @@ import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistu
 import { zeichnePodoEinheiten, bindePodoAnTermin, befundDienstId } from './module/podo-einheiten.js?v=20260920s';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260914';
+import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
@@ -5740,7 +5741,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   let cust = document.getElementById('bkCustomer').value.trim();
   let custId = document.getElementById('bkCustomerId').value.trim();
   const phone = document.getElementById('bkPhone').value.trim();
-  const notes = document.getElementById('bkNotes').value.trim();
+  let notes = document.getElementById('bkNotes').value.trim();
 
   // Validation: Required fields
   if (!empId) { showToast('Bitte einen Mitarbeiter auswählen.', 'error'); return; }
@@ -5838,25 +5839,16 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     if (!proceedPast) return;
   }
 
-  // Working hours check: kapalı gün veya mesai dışı saat → engelle
+  // Working hours: warnen statt blockieren (Ops #307). Logik in module/arbeitszeit-pruefung.js.
   {
-    const dow = startDate.getDay(); // 0=Sun,1=Mon,...,6=Sat
-    const { data: wh } = await supabase
-      .from('working_hours')
-      .select('start_time,end_time,is_active')
-      .eq('user_id', empId)
-      .eq('day_of_week', dow)
-      .eq('is_active', true);
-    if (!wh || wh.length === 0) {
-      showToast('Dieser Tag ist kein Arbeitstag für den gewählten Mitarbeiter.', 'error');
-      return;
-    }
-    const hhmm = startDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false });
-    const withinAny = wh.some(w => hhmm >= w.start_time.substring(0,5) && hhmm < w.end_time.substring(0,5));
-    if (!withinAny) {
-      const ranges = wh.map(w => `${w.start_time.substring(0,5)}–${w.end_time.substring(0,5)}`).join(', ');
-      showToast(`Uhrzeit liegt außerhalb der Arbeitszeit (${ranges}).`, 'error');
-      return;
+    const dow = startDate.getDay();
+    const { data: wh } = await supabase.from('working_hours')
+      .select('start_time,end_time,is_active').eq('user_id', empId).eq('day_of_week', dow).eq('is_active', true);
+    const warnung = pruefeArbeitszeit({ wh, startDate });
+    if (warnung) {
+      const proceed = await showConfirmModal({ title: warnung.titel, message: warnung.meldung, confirmText: 'Trotzdem eintragen', cancelText: 'Abbrechen', variant: 'warning' });
+      if (!proceed) return;
+      notes = [notes, warnung.notiz].filter(Boolean).join('\n');
     }
   }
 
