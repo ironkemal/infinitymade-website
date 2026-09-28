@@ -84,6 +84,12 @@ import { darf78040, darf78100, darfErstbefundungNagel,
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
   from './verordnung-topf.js?v=20260920t';
 import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
+// Reform-Sprint S1.5 (28.09.2026): Rezept-Position (78010/78020) für die
+// Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
+// Ermittlung wird NICHT geschrieben — die von `verordnung-pruefung.js`
+// wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
+import { erstePositionAusItems } from './verordnung-pruefung.js?v=20260928';
+import { behandlungspositionVorschlag } from './podo-behandlungsposition-regel.js?v=20260928';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -403,6 +409,20 @@ function podVordMassnahme(vord) {
   return ausItem || '';
 }
 
+/**
+ * Behandlungsposition (78010/78020) der Verordnung — für die Vorbelegung im
+ * Tagesbehandlungs-Formular (Reform-Sprint S1.5, 28.09.2026). Ermittelt hier
+ * nur die beiden Eingaben (Maßnahme + rohe Rezeptposition); die eigentliche
+ * Regel steht — testbar, ohne DOM — in `podo-behandlungsposition-regel.js`.
+ *
+ * @returns {'78010'|'78020'|''}
+ */
+function podVordBehandlungsposition(vord) {
+  const massnahme = podVordMassnahme(vord);
+  const roh = vord?.heilmittel_position || erstePositionAusItems(vord?.heilmittel_items);
+  return behandlungspositionVorschlag(massnahme, roh);
+}
+
 let _podState = { selectedVordId: null, verordnungen: [], verordnungenAbgerechnet: [], zeigeAbgerechnet: false };
 
 function findVord(id) {
@@ -648,6 +668,11 @@ async function loadPodologieBilling() {
   // Was am Telefon fuer heute gebucht wurde (Ops 235) — nur Vorbelegung.
   const geplanteHpnr = selectedVord ? await podGeplanteHpnr(selectedVord, todayStr) : new Set();
 
+  // Die Behandlungsposition (78010/78020) aus dem REZEPT selbst — unabhaengig
+  // davon, ob fuer heute ueberhaupt ein Termin geplant war (S1.5, 28.09.2026,
+  // s. `podVordBehandlungsposition()`).
+  const rezeptPosition = selectedVord ? podVordBehandlungsposition(selectedVord) : '';
+
   // Was an DIESER Verordnung bereits dokumentiert ist.
   const dokumentiert = selectedVord ? await podBehandlungenDerVerordnung(selectedVord.id) : [];
 
@@ -747,9 +772,11 @@ async function loadPodologieBilling() {
               // Die im Termin geplanten Positionen ankreuzen — aber NICHT die
               // beiden Befundungen: welche davon auf diesen Tag gehoert,
               // entscheidet oben die Vertragsregel, nicht der Terminplan.
+              // Zusaetzlich (S1.5): die Rezept-Behandlungsposition selbst,
+              // auch wenn fuer heute kein Termin geplant war.
               const geplant = (!autoChecked
                 && code !== POD_EINGANGSBEFUNDUNG && code !== POD_BEFUNDPAUSCHALE
-                && geplanteHpnr.has(code)) ? 'checked' : '';
+                && (geplanteHpnr.has(code) || code === rezeptPosition)) ? 'checked' : '';
               return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
                 <input type="checkbox" class="pod-hpnr-cb" value="${ctx.escapeHtml(code)}" ${autoChecked || geplant}> ${ctx.escapeHtml(code)} – ${ctx.escapeHtml(r.label)}
               </label>`;

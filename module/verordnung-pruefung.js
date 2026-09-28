@@ -358,7 +358,7 @@ export function zaehleBefunde(ergebnis) {
  * massnahme}]`, siehe verordnung-detail.js) — der podologische Zweig führt die
  * Position dort, nicht in der Spalte `heilmittel_position`.
  */
-function erstePositionAusItems(items) {
+export function erstePositionAusItems(items) {
   if (!Array.isArray(items) || !items.length) return '';
   const erste = items[0];
   return (typeof erste === 'string' ? erste : erste?.code) || '';
