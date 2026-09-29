@@ -23,7 +23,7 @@
  * wächst nicht mehr.
  */
 
-import { ladePodoTermine, terminZaehler } from './verordnung-termine.js?v=20260908';
+import { ladePodoTermine, terminZaehler, loeseTermin } from './verordnung-termine.js?v=20260908';
 import { ausTopf } from './verordnung-topf.js?v=20260920t';
 
 // ── Frequenz ─────────────────────────────────────────────────────────────
@@ -257,7 +257,7 @@ function markiereGewaehltenPunkt(dotsEl, dot) {
 }
 
 function setzeWert(id, wert) {
-  const el = document.getElementById(id);
+  const el = typeof document !== 'undefined' ? document.getElementById(id) : null;
   if (el) el.value = wert;
 }
 
@@ -267,10 +267,148 @@ function setzeWert(id, wert) {
  * `bookings.service_id` weiterhin Pflicht ist.
  */
 export function zeigeDienstleistungsfeld(sichtbar) {
-  const gruppe = document.getElementById('bkServiceGroup');
+  const gruppe = typeof document !== 'undefined' ? document.getElementById('bkServiceGroup') : null;
   if (gruppe) gruppe.hidden = !sichtbar;
-  const hinweis = document.getElementById('bkServiceAusVerordnung');
+  const hinweis = typeof document !== 'undefined' ? document.getElementById('bkServiceAusVerordnung') : null;
   if (hinweis) hinweis.hidden = sichtbar;
+}
+
+/**
+ * Leert die Verordnungsauswahl und verbundene Felder im Termin-Fenster.
+ */
+export function resetVerordnungFelder() {
+  setzeWert('bkSelectedRxId', '');
+  setzeWert('bkSelectedSessionId', '');
+  if (typeof window !== 'undefined') {
+    window._pendingRxSession = null;
+    window._bkGewaehlteRx = null;
+    window._bkUrspruenglicheVordId = null;
+  }
+  const pickerBlock = typeof document !== 'undefined' ? document.getElementById('bkSessionPickerBlock') : null;
+  if (pickerBlock) pickerBlock.hidden = true;
+  if (typeof document !== 'undefined') {
+    document.querySelectorAll?.('.bk-vero-card')?.forEach(c => {
+      if (c?.style) {
+        c.style.borderColor = 'var(--border)';
+        c.style.background = 'transparent';
+      }
+    });
+  }
+  zeigeDienstleistungsfeld(true);
+}
+
+/**
+ * Lädt die aktiven Verordnungen eines Patienten in das Termin-Fenster und
+ * wählt bei Bedarf die zum Termin gehörende Verordnung vor.
+ *
+ * @param {object} sb - Supabase Client
+ * @param {object} [params]
+ * @param {string|null} [params.leadId] - Patient ID
+ * @param {string|null} [params.bookingId] - Termin ID
+ * @param {string|null|undefined} [params.bekannteVerordnungId] - Vorab bekannte Verordnungs-ID (z. B. aus Termin)
+ * @param {object} [deps] - DOM-Elemente und Callbacks
+ */
+export async function zeigeVerordnungenFuerTermin(sb, { leadId, bookingId, bekannteVerordnungId } = {}, deps = {}) {
+  const veroSection = deps.veroSection ?? (typeof document !== 'undefined' ? document.getElementById('bkVerordnungSection') : null);
+  const veroCards = deps.veroCards ?? (typeof document !== 'undefined' ? document.getElementById('bkVeroCards') : null);
+  const resetFn = deps.resetFelder || resetVerordnungFelder;
+
+  resetFn?.();
+
+  if (!leadId) {
+    if (veroSection) veroSection.hidden = true;
+    return;
+  }
+
+  let vordId = bekannteVerordnungId;
+  if (vordId === undefined && bookingId && sb) {
+    const { data } = await sb.from('bookings').select('verordnung_id').eq('id', bookingId).maybeSingle();
+    vordId = data?.verordnung_id ?? null;
+  }
+
+  const { data: rxs } = await sb
+    .from('prescriptions')
+    .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id),therapie_bereich')
+    .eq('patient_id', leadId)
+    .not('status', 'in', '("completed","billed","cancelled")')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const renderFn = deps.rendereVeroKarten || rendereVeroKarten;
+  renderFn({
+    container: veroCards,
+    rxs: rxs || [],
+    escapeHtml: deps.escapeHtml || ((s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))),
+    onSelect: deps.onSelect,
+    onAnlegen: deps.onAnlegen,
+  });
+
+  if (veroSection) veroSection.hidden = false;
+
+  if (vordId && rxs?.length) {
+    const match = rxs.find(r => r.id === vordId);
+    if (match && typeof deps.onSelect === 'function') {
+      // Nur merken, wenn die Karte sichtbar ist — sonst könnte „Abwählen"
+      // eine Bindung lösen, die der Anwender gar nicht gesehen hat.
+      if (typeof window !== 'undefined') window._bkUrspruenglicheVordId = vordId;
+      await deps.onSelect(match, match.prescription_sessions || []);
+    }
+  }
+}
+
+/**
+ * „Abwählen" im Bearbeiten-Fenster. `prefillBookingModal()` verdrahtet den
+ * Knopf nur beim Neu-Termin; beim Bearbeiten fehlte der Handler.
+ * WeakSet statt Datenattribut: `cloneNode` würde ein Attribut mitkopieren,
+ * den Listener aber nicht.
+ */
+const _abwahlVerdrahtet = new WeakSet();
+export function verdrahteAbwahl() {
+  const btn = typeof document !== 'undefined' ? document.getElementById('bkVeroDeselect') : null;
+  if (!btn || _abwahlVerdrahtet.has(btn)) return;
+  _abwahlVerdrahtet.add(btn);
+  btn.addEventListener('click', () => {
+    setzeWert('bkIsSelbstzahler', '');
+    const selbst = document.getElementById('bkSelbstzahlerBtn');
+    if (selbst?.style) { selbst.style.borderColor = 'var(--border)'; selbst.style.color = 'var(--text-muted)'; }
+    // Ursprüngliche Bindung behalten: sie entscheidet beim Speichern über das Lösen.
+    const orig = window._bkUrspruenglicheVordId;
+    resetVerordnungFelder();
+    window._bkUrspruenglicheVordId = orig;
+  });
+}
+
+/**
+ * Verordnungsbindung beim Speichern eines BESTEHENDEN Termins.
+ * Podologie: neu/anders gewählt -> binden; ursprünglich gebunden und jetzt
+ * abgewählt -> lösen; unverändert -> nichts schreiben.
+ * Physio (Sitzungszeilen) bleibt bewusst unberührt.
+ *
+ * @param {Function} binde  bindePodoAnTermin (injiziert — vermeidet DOM-Importe)
+ * @returns {Promise<null|{ok:boolean, meldung:string}>}
+ */
+export async function aktualisiereBindungBeimSpeichern(sb, bookingId, { emit, binde } = {}) {
+  if (typeof window === 'undefined') return null;
+  const pend = window._pendingRxSession;
+  const gewaehlt = pend?.podoVordId || null;
+  const orig = window._bkUrspruenglicheVordId || null;
+  const rxFeld = typeof document !== 'undefined' ? document.getElementById('bkSelectedRxId') : null;
+  let ergebnis = null;
+  if (gewaehlt && gewaehlt !== orig) {
+    ergebnis = await binde(sb, bookingId, pend, { emit });
+    if (ergebnis.ok) window._bkUrspruenglicheVordId = gewaehlt;
+  } else if (!gewaehlt && orig && (rxFeld?.value ?? '') === '') {
+    const r = await loeseTermin(sb, { bookingId });
+    if (r.ok) {
+      window._bkUrspruenglicheVordId = null;
+      emit?.('verordnungen:changed');
+      ergebnis = { ok: true, meldung: '' };
+    } else {
+      ergebnis = { ok: false, meldung: `Die Zuordnung zur Verordnung konnte nicht gelöst werden: ${r.fehler}` };
+    }
+  }
+  if (gewaehlt) window._pendingRxSession = null;
+  return ergebnis;
 }
 
 // ── Rezeptart des Termins ────────────────────────────────────────────────

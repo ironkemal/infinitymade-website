@@ -71,7 +71,7 @@ import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20260918';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
-import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske } from './module/termin-verordnung.js?v=20260928';
+import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260929b';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
 import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20260906';
@@ -4985,19 +4985,22 @@ async function openBookingModal(b) {
   document.getElementById('bkSpecialBanner').hidden = true;
   const pmEl2 = document.getElementById('bkPaymentMethod');
   if (pmEl2) pmEl2.value = b.payment_method || '';
-  // Verordnung seçimini reset et
-  const _omRxId = document.getElementById('bkSelectedRxId');
-  if (_omRxId) _omRxId.value = '';
-  const _omSessId = document.getElementById('bkSelectedSessionId');
-  if (_omSessId) _omSessId.value = '';
   setzeRezeptartInMaske(b.rezeptart);
-  const _omVeroSection = document.getElementById('bkVerordnungSection');
-  if (_omVeroSection) _omVeroSection.hidden = true;
-  const _omPickerBlock = document.getElementById('bkSessionPickerBlock');
-  if (_omPickerBlock) _omPickerBlock.hidden = true;
-  window._bkGewaehlteRx = null;
-  zeigeDienstleistungsfeld(true);
-  window._pendingRxSession = null;
+  const _omLeadId = b.lead_id || document.getElementById('bkCustomerId')?.value || null;
+  await zeigeVerordnungenFuerTermin(supabase, {
+    leadId: _omLeadId,
+    bookingId: b.id || null,
+    bekannteVerordnungId: b.verordnung_id,
+  }, {
+    veroSection: document.getElementById('bkVerordnungSection'),
+    veroCards: document.getElementById('bkVeroCards'),
+    escapeHtml,
+    rendereVeroKarten,
+    onSelect: selectVerordnung,
+    onAnlegen: () => { closeModal('bookingModal'); oeffneAnlegenWahl(_omLeadId); },
+    resetFelder: resetVerordnungFelder,
+  });
+  verdrahteAbwahl();
   document.getElementById('bkDocAssignHint').hidden = true;
   if (typeof refreshBkHausbesuchPanel === 'function') refreshBkHausbesuchPanel();
   if (b.customer_phone) {
@@ -5118,34 +5121,20 @@ async function initBkCustomerAutocomplete() {
   }
 
   async function loadBkVerordnungen(leadId) {
-    const veroSection = document.getElementById('bkVerordnungSection');
-    const veroCards   = document.getElementById('bkVeroCards');
-    if (!veroSection || !veroCards) return;
-
-    // Reset
-    document.getElementById('bkSelectedRxId').value = '';
-    document.getElementById('bkSelectedSessionId').value = '';
-    document.getElementById('bkIsSelbstzahler').value = '';
-    window._pendingRxSession = null;
-    const pickerBlock = document.getElementById('bkSessionPickerBlock');
-    if (pickerBlock) pickerBlock.hidden = true;
-
-    const { data: rxs } = await supabase
-      .from('prescriptions')
-      .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id),therapie_bereich')
-      .eq('patient_id', leadId)
-      .not('status', 'in', '("completed","billed","cancelled")')
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    rendereVeroKarten({
-      container: veroCards, rxs, escapeHtml, onSelect: selectVerordnung,
+    const isSelbst = document.getElementById('bkIsSelbstzahler');
+    if (isSelbst) isSelbst.value = '';
+    await zeigeVerordnungenFuerTermin(supabase, { leadId, bookingId: null, bekannteVerordnungId: null }, {
+      veroSection: document.getElementById('bkVerordnungSection'),
+      veroCards: document.getElementById('bkVeroCards'),
+      escapeHtml,
+      rendereVeroKarten,
+      onSelect: selectVerordnung,
       onAnlegen: () => {
         closeModal('bookingModal');
         oeffneAnlegenWahl(leadId);
       },
+      resetFelder: resetVerordnungFelder,
     });
-    veroSection.hidden = false;
   }
 
   if (!input.dataset.bkAutoBound) {
@@ -6061,6 +6050,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (id) {
     const { error } = await supabase.from('bookings').update(payload).eq('id', id);
     if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
+    bindung = await aktualisiereBindungBeimSpeichern(supabase, id, { emit, binde: bindePodoAnTermin });
   } else {
     const { data: newBooking, error } = await supabase.from('bookings').insert(payload).select('id').single();
     if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
