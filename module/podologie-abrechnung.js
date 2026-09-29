@@ -780,7 +780,7 @@ async function loadPodologieBilling() {
                Zeile ab, sondern die GANZE Datei an die Kasse zurueck.
                Der Browser ist hier nur die erste, billige Sperre; die
                verbindliche steht unten im Speichern-Handler.
-               `max` bleibt deshalb auf heute stehen, auch wenn `value` (aus
+               max bleibt deshalb auf heute stehen, auch wenn value (aus
                einer Termin-Vorwahl, S1.7) in der Zukunft liegt — die Zeile
                unten erklärt dann, warum, statt das Datum still auf heute zu
                ziehen (das Formular soll den gewählten Termin erkennbar
