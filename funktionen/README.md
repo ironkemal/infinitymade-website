@@ -116,6 +116,65 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 29.09.2026 · Podoloji reform sprinti S1.12 + S2 + S3 — Befundpauschale önerisi, Test dosyası, Abrechnung/Termin/Fahrtenbuch
+- S2.1 (13d4351) — `api-backend/billing/api/betriebsart.js` yeni `verordnungFestschreiben(betriebsart)`.
+  Niye: §302 Test dosyası (Anhang 2 Kap. 9 §5, keine Zahlung) reçeteye `belegnummer` yazıp GoBD
+  kilidini tetikliyordu, reçete bir daha faturalanamıyordu. Nerede: `abrechnung.routes.js` →
+  `create-podologie` — test'te `prescriptions` güncellemesi ve belegnummer döngüsü atlanır.
+  ⚠️ Physio `/abrechnung/create` ve Korrektur yolunda aynı hata **bilerek bırakıldı** (fizyo
+  ertelendi) — o yollara dokunulduğunda bu yardımcı oraya da bağlanmalı, ikinci kural yazılmamalı.
+- S1.12 (ee51827) — `module/termin-leistungen.js`: `mitBefundungsvorschlag()` artık satır eklemiyor,
+  `vorschlag` döndürüyor; yeni `vorschlagText()`, `zeilenFuerTermin()`, `raeumeAngenommenenVorschlag()`,
+  iç `zeichneVorschlag()`/`serieAktiv()`. Niye: 05.09 kararı ("Befundpauschale önerilir, işaretsiz")
+  arayüzde uygulanmamıştı; öneri otomatik satır olarak kaydediliyor, S1.10'dan beri her seri
+  randevusuna 78030 (yeni hastada 78040) kopyalanıyordu. Nerede: Terminmaske (tekli + seri,
+  "Serie verteilen" dahil), `speichereLeistungen`. `module/eingangsbefundung-regel.js` yeni
+  `datumDe()` (ISO→TT.MM.JJJJ), ipucu metni "eingeplant/dokumentiert".
+  `api-backend/billing/dta/befundpauschale-regeln.js` (d)+(e) iki sert kural; frontend aynası
+  `module/abrechnung-auswahl.js` → `podoBefundOhneBehandlung()`. Kural iki yerde bilinçli (sunucu
+  otorite, istemci ön uyarı) — ayna değişirse ikisi birlikte değişir.
+  - **Kopya adayı notu:** `eingangsbefundung-regel.js` artık iki farklı `?v=` ile import ediliyor
+    (`termin-leistungen` → 20260929, diğerleri → 20260920s). Tarayıcı iki ayrı modül örneği yükler.
+    Saf modül olduğu için bugün zararsız; modüle durum (state) eklenirse iki kopya ayrışır.
+    Bir sonraki dokunuşta `?v` birleştirilmeli.
+- S2.2 (36fb9ff) — `module/abrechnung-detail.js` yeni `etikettFuer()`, `istTestDatei()`. Niye: dosya
+  detayında karışık dil + test dosyası gerçek dosyadan ayırt edilmiyordu. Nerede: Abrechnung → dosya detayı.
+- S2.3 (2c3fc45) — `api-backend/billing/utils/offene-einheiten.js` + ayna `module/offene-einheiten.js`.
+  Niye: açık birim = `anzahl_einheiten` − iptal edilmemiş `podologie_behandlungen`; açık birimle
+  faturalamada 428 `OFFENE_EINHEITEN`, bilinçli onay `prescription_validations`'a yazılır. Kural iki
+  yerde bilinçli (sunucu kural sahibi). ⚠️ Ham satırda `anzahl_einheiten`, `verordnung-topf`'ta
+  `behandlungseinheiten` — ayna değişirse ad çevirisine dikkat.
+- S2.4 (9a71119) — `module/abrechnung-auswahl.js` yeni `ansichtNachErstellung()`: Erstellen sonrası
+  "Bisherige"ye geçiş kararı; boş durumda protokol çizimi. Nerede: Abrechnung → Erstellen.
+- S2.6 (8486dee) — `api-backend/billing/dta/hausbesuch-regeln.js` `hausbesuchRegeln()` + ayna
+  `podoHausbesuchSperren()` (`abrechnung-auswahl.js`) + yeni `module/podo-hausbesuch.js`
+  (Tagesbehandlung). Niye: 79933/79934 yalnız Hausbesuch=Ja iken faturalanabilir (Podo Anlage 3 c)).
+- S2.7 (e2144ac) — `api-backend/billing/utils/ik-fehlt.js` `ikFehltAntwort()` + ön yüz `zeigeIkKnopf()`
+  (`abrechnung-auswahl.js`). Niye: IK yoksa anlaşılır metin + Einstellungen'e düğme.
+  - **Kopya notu (bilinçli bırakıldı):** IK çözümlemesi 3 yerde (physio upsert, podo, korrektur) —
+    birleştirilmedi; fizyo ertelendiği için. O yollara dokunulduğunda tek yardımcıya indirilmeli.
+- S3.1 (1fb3a7e) — yeni `module/lead-felder.js`: `leadGeburtsdatum`, `leadHausbesuch`,
+  `leadMetadataZusammenfuehren`. Niye: `leads` sütunu kaynak, metadata üzerine yazılmaz birleştirilir.
+- S3.2 (f117668) — yeni `module/vorlagen-seed.js` (`DEFAULT_VORLAGE_SEEDS`, `fehlendeSeedZeilen`,
+  `seedeVorlagen`): tek toplu insert yerine satır satır fallback; migration 0043. `seedMissingVorlagen`
+  `dashboard.js`'te ince sarmalayıcı olarak duruyor, gövdesi bu modüle indi.
+- S3.3/S3.4 (cc6f346) — Fahrtenbuch: `window.__fb`, `saveQuickVehicleHandler`, `openQuickVehicleModal`
+  **SİLİNDİ** (araç hızlı-ekleme ikinci yolu). Yerine `openVehicleEditModal(v, { zurueckZuFahrtStart })`;
+  `saveVehicleEdit` → çekirdek `saveVehicleEditCore`. Kopya kapandı: araç kaydı tek yoldan.
+- S3.5 (a541ae3) — yeni `module/termin-fehler.js`: Terminmaske hata kutusu (Speichern düğmesi yanında),
+  `confirm()` yerine kendi dialog.
+- S3.6 (5e764a8) — `katalog-suche.js` yeni `nichtEndstaendigHinweis()`; preflight `icdTerminal` → V:01016
+  uyarısı. Nerede: ICD seçimi + Podologie-Preflight.
+- S3.7 (22480aa) — yeni `module/podo-arztangaben.js`, `module/lanr-pruefung.js` (preflight `isValidLanr`
+  aynası), `api-backend/billing/utils/arztangaben.js` `fehlendeArztangaben()`. Niye: Arzt-Nr./imza
+  yoksa ne Behandlung ne "Bereit". LANR kuralı iki yerde bilinçli (sunucu otorite).
+- S3.9 (0418566) — `katalog-suche.js` closeDropdown/Escape: liste güvenilir kapanır, Escape yalnız listeyi kapatır.
+- S3.10 (410cc6f) — `customer_name` yalnız ad; okuyucular eski veriyi `parseNameMitGeburt` ile tolere eder.
+- S3.11 (7331d46) — `termin-leistungen.js` yeni `zeilenMinuten()` (süresiz Befundpauschale = 0 dk);
+  `schlageBefundungVor` export edildi (Folgetermin yolu kullanıyor).
+- S3.13 (46faff6) — yeni `module/fahrt-beenden.js`: Tagesbehandlung'dan "Fahrt beenden";
+  `openFahrtEndModal` opsiyonel bağlam alır (ikinci modal yazılmadı).
+
 ### 28-29.09.2026 · Podoloji reform sprinti S1 — Termin ↔ Verordnung, Tagesbehandlung
 - S1.11 (24d751b) — yeni `module/termin-mail-angebot.js`: `mailAngebotZustand` (saf),
   `istPodoOhneRechnung`, `oeffneMailAngebotModal`. `openMailOfferModal` `dashboard.js`'ten buraya
