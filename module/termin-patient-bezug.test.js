@@ -99,3 +99,14 @@ test('ohne ownerId wird nichts zugeordnet', async () => {
   assert.equal(await findeLeadIdZuTermin(sbNie,
     { customer_name: 'Klaus Fischer' }, null, { leads }), null);
 });
+
+test('parseNameMitGeburt: leerer Text und nur Leerzeichen ergeben leeren Namen', () => {
+  assert.deepEqual(parseNameMitGeburt(''), { name: '', geburtsdatum: null });
+  assert.deepEqual(parseNameMitGeburt('   '), { name: '', geburtsdatum: null });
+});
+
+test('lead_id gewinnt auch dann, wenn der Termintext noch ein Altbestands-Geburtsdatum trägt', async () => {
+  const treffer = await findeLeadIdZuTermin(sbNie,
+    { lead_id: 'L-7', customer_name: 'Frank Becker · 1977-04-05' }, OWNER);
+  assert.equal(treffer, 'L-7');
+});

@@ -106,7 +106,7 @@ import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
-} from './module/termin-aktionen.js?v=20260929';
+} from './module/termin-aktionen.js?v=20260929b';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
@@ -2197,7 +2197,7 @@ function renderBookingSlotInner(b, childBookings = []) {
 
   // "Vorname Nachname" → "Nachname, Vorname" (best-effort). Single token or
   // already comma-formatted strings pass through.
-  const raw = (b.customer_name || (b.services?.title) || 'Termin').trim();
+  const raw = (parseNameMitGeburt(b.customer_name).name || b.services?.title || 'Termin').trim();
   let displayName = raw;
   if (raw.includes(',')) {
     displayName = raw;
@@ -3970,7 +3970,7 @@ async function renderBkActionFahrtState(booking, isOwn) {
     }
     if (!lead && booking.customer_name) {
       // Name match — "Vorname Nachname · YYYY-MM-DD" formatından sadece isim kısmı
-      const cleanName = booking.customer_name.split('·')[0].trim().toLowerCase();
+      const cleanName = parseNameMitGeburt(booking.customer_name).name.toLowerCase();
       const { data: all } = await supabase.from('leads')
         .select('id,first_name,last_name,title,phone,street,plz,city,distance_km,duration_min')
         .eq('owner_id', ownerScope);
@@ -4356,7 +4356,7 @@ async function handleTerminStarten() {
 
   let leadId = null;
   if (patientName) {
-    const cleanName = patientName.split('·')[0].trim().toLowerCase();
+    const cleanName = parseNameMitGeburt(patientName).name.toLowerCase();
     const { data: leads } = await bizScope(supabase.from('leads')
       .select('id,first_name,last_name,title,phone,metadata')
       .eq('owner_id', ownerId), 'patients');
@@ -4830,7 +4830,7 @@ async function initBkGroupPatientAutocomplete() {
     } else {
       html = filtered.map(l => {
         const name = displayNameWithBirth(l);
-        return `<li data-id="${l.id}" data-title="${escapeHtml(name)}" data-phone="${escapeHtml(l.phone || '')}" style="font-size:13px;padding:6px 12px;cursor:pointer;">👥 ${escapeHtml(name)}</li>`;
+        return `<li data-id="${l.id}" data-title="${escapeHtml(name)}" data-name="${escapeHtml(displayName(l))}" data-phone="${escapeHtml(l.phone || '')}" style="font-size:13px;padding:6px 12px;cursor:pointer;">👥 ${escapeHtml(name)}</li>`;
       }).join('');
     }
     
@@ -4841,7 +4841,7 @@ async function initBkGroupPatientAutocomplete() {
     list.querySelectorAll('li').forEach(li => {
       li.addEventListener('click', async () => {
         const leadId = li.dataset.id;
-        const leadName = li.dataset.title;
+        const leadName = li.dataset.name;
         const leadPhone = li.dataset.phone;
         
         input.value = '';
@@ -5069,7 +5069,7 @@ async function initBkCustomerAutocomplete() {
     const lead = (window.bkAllLeads || []).find(l => l.id === id);
     if (!lead) return;
     input.value = displayNameWithBirth(lead);
-    nameH.value = displayNameWithBirth(lead);
+    nameH.value = displayName(lead);   // customer_name = nur der Name; Geburtsdatum liegt am Patienten (lead_id)
     idH.value = lead.id;
     if (phoneInput) phoneInput.value = lead.phone || '';
     list.hidden = true;
@@ -5685,7 +5685,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const empId = document.getElementById('bkEmployee').value;
   const srvId = document.getElementById('bkService').value;
   const startV = document.getElementById('bkStart').value;
-  let cust = document.getElementById('bkCustomer').value.trim();
+  let cust = parseNameMitGeburt(document.getElementById('bkCustomer').value).name;
   let custId = document.getElementById('bkCustomerId').value.trim();
   const phone = document.getElementById('bkPhone').value.trim();
   let notes = document.getElementById('bkNotes').value.trim();
@@ -5729,7 +5729,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       ) || window.bkAllLeads.find(l => (l.title || '').toLowerCase().startsWith(lower));
       if (match) {
         custId = match.id;
-        cust = displayNameWithBirth(match);
+        cust = displayName(match);
         document.getElementById('bkCustomer').value = cust;
         document.getElementById('bkCustomerId').value = custId;
       }

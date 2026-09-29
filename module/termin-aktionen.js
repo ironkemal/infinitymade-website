@@ -35,6 +35,7 @@
 export const BK_PANEL_OFFSET = '456px';
 
 import { fuelleMuster13 } from './verordnung-maske.js?v=20260927';
+import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20260929b';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
@@ -547,7 +548,7 @@ export async function verteileOffeneSitzungen({
     // beim ersten Termin dieser Verordnung schon einmal richtig zugeordnet.
     service_id: booking?.service_id || null,
     hausbesuch,
-    patient_name: (booking?.customer_name || '').split('·')[0].trim(),
+    patient_name: parseNameMitGeburt(booking?.customer_name).name,
   };
 
   window._physioFlow = preset;
