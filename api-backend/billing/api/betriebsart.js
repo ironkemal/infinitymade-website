@@ -141,3 +141,19 @@ export async function ladeBetriebsart({ ownerId, empfaengerIk, cert, db }) {
 
   return gewaehlt;
 }
+
+/**
+ * Darf diese Datei die Verordnung festschreiben? (Reform S2.1, 29.09.2026)
+ *
+ * Eine Testdatei „loest keine Zahlungen aus" (Anhang 2 zur Anlage 1 Kap. 9 § 5).
+ * Sie darf deshalb weder die Belegnummer setzen (GoBD-Sperre der Verordnung,
+ * `prescriptions_festschreibung()` greift an `belegnummer IS NOT NULL`) noch
+ * Status, `abrechnung_id` oder Zuzahlung der Verordnung veraendern — sonst ist
+ * die Verordnung nach einem Probelauf fuer den Echtlauf verbrannt.
+ * `erprobung` und `echt` schreiben fest wie bisher. Unbekannte Werte gelten
+ * wie in `betriebsartAus` als 'test' (im Zweifel nichts festschreiben).
+ */
+export function verordnungFestschreiben(betriebsart) {
+  const b = String(betriebsart || '').trim();
+  return BETRIEBSARTEN.has(b) ? b !== 'test' : false;
+}

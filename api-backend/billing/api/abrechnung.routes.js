@@ -43,7 +43,7 @@ import {
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
 } from '../codes/legs.js';
 // § 302-Echtbetrieb, Schritt 1.7 — Betriebsart je (Inhaber × Datenannahmestelle).
-import { ladeBetriebsart } from './betriebsart.js';
+import { ladeBetriebsart, verordnungFestschreiben } from './betriebsart.js';
 // § 302-Abrechnung — Verworfene Nummern festhalten (GoBD-Erklärbarkeit, Migration 0033).
 import { verworfeneNummerFesthalten } from './verworfen.js';
 // § 302-Echtbetrieb, Schritt 1.3 D — CMS EnvelopedData Verschlüsselung & Trust Anchors.
@@ -3505,12 +3505,18 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // Zeilen zurueck als sie angefordert hat und raeumt ihre eigene Abrechnung
     // wieder ab. Eine reine Vorabpruefung reichte dafuer nicht: beide Anfragen
     // lesen den alten Zustand, bevor eine von beiden schreibt.
-    const { data: uebernommen, error: updErr } = await supabase.from('prescriptions')
+    // Reform S2.1: eine TESTdatei loest keine Zahlung aus (Anhang 2 Kap. 9 § 5)
+    // und darf die Verordnung nicht festschreiben — sie bleibt `bereit` und ist
+    // erneut testbar. Die abrechnung/abrechnung_zeile-Zeilen entstehen weiter.
+    const festschreiben = verordnungFestschreiben(betriebsart);
+    const { data: uebernommen, error: updErr } = festschreiben
+      ? await supabase.from('prescriptions')
       .update({ abrechnung_status: abrechnungStatusAusStatus('abgerechnet'), abrechnung_id: ab.id })
       .in('id', verordnungIds)
       .eq('therapie_bereich', 'podo')
       .or(einreichbarFilterAbrechnungStatus())
-      .select('id');
+      .select('id')
+      : { data: verordnungIds.map(id => ({ id })), error: null };
     if (updErr || (uebernommen || []).length !== verordnungIds.length) {
       // Zuerst die Zeilen zurueckdrehen, die WIR uns geholt haben. Eine
       // Verordnung, die 'abgerechnet' heisst, ohne dass eine Datei existiert,
@@ -3543,6 +3549,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // genau diese Spalte und sahen die podologische Zuzahlung nie. Gleiche
     // Formel wie in den Totals oben (Zeile 2865-2867), nur pro Verordnung.
     for (let i = 0; i < (vords || []).length; i++) {
+      if (!festschreiben) break;   // Testdatei: nichts auf die Verordnung schreiben (S2.1)
       if (vords[i].belegnummer) continue;
       const p = prescriptions[i];
       const brutto = p.sessions.reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0);

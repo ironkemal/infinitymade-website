@@ -261,3 +261,21 @@ test('7. Beliebiger anderer DB-Fehler -> wirft Fehler mit status 500 (faellt nic
     }
   );
 });
+
+import { verordnungFestschreiben } from './betriebsart.js';
+
+test('verordnungFestschreiben: test schreibt die Verordnung NICHT fest (Reform S2.1)', () => {
+  assert.equal(verordnungFestschreiben('test'), false);
+});
+
+test('verordnungFestschreiben: erprobung und echt schreiben fest wie bisher', () => {
+  assert.equal(verordnungFestschreiben('erprobung'), true);
+  assert.equal(verordnungFestschreiben('echt'), true);
+});
+
+test('verordnungFestschreiben: leer/unbekannt gilt als test, schreibt nicht fest', () => {
+  assert.equal(verordnungFestschreiben(undefined), false);
+  assert.equal(verordnungFestschreiben(null), false);
+  assert.equal(verordnungFestschreiben(''), false);
+  assert.equal(verordnungFestschreiben('produktiv'), false);
+});
