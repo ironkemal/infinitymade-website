@@ -13,6 +13,7 @@ import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezep
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
 import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
 import { emit, on } from './module/signal.js?v=20260815';
+import { podoArztHinweise } from './module/podo-arztangaben.js?v=20260929r';
 import { zeigeTerminFehler as terminFehler, loescheTerminFehler, verdrahteTerminFehler } from './module/termin-fehler.js?v=20260929q';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
@@ -36,7 +37,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260929c';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260929r';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss } from './module/fahrt-beenden.js?v=20260929';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260926a';
@@ -15694,11 +15695,9 @@ async function saveRezept() {
   // Zweiter Riegel gegen das Ändern einer bereits eingereichten Verordnung —
   // der Knopf ist dann schon gesperrt, aber ein gesperrter Knopf im Browser
   // ist keine Zusicherung. Regeln: module/verordnung-maske.js.
-  const _nein = pruefeAenderungErlaubt();
-  if (_nein) { showToast(_nein, 'error'); return; }
+  const _nein = pruefeAenderungErlaubt(); if (_nein) { showToast(_nein, 'error'); return; }
 
-  const btn = document.getElementById('rzSaveBtn');
-  btn.disabled = true;
+  const btn = document.getElementById('rzSaveBtn'); btn.disabled = true;
 
   try {
     // 1. Arzt ins Register übernehmen. Früher wurde hier nur gesucht — stand
@@ -15748,7 +15747,8 @@ async function saveRezept() {
     if (!document.getElementById('rzUnterschrift').checked) missing.push('Unterschrift des Arztes');
 
     // Format-Fehler (nur wenn ausgefüllt)
-    const formatErrors = [];
+    const arzt = podoArztHinweise({ bereich: val('rzTherapieBereich'), lanr: rzLanr, bsnr: rzBsnr, unterschrift: document.getElementById('rzUnterschrift').checked });
+    const formatErrors = [...arzt.hinweise];
     if (rzLanr && !/^\d{9}$/.test(rzLanr)) formatErrors.push('LANR muss 9 Ziffern haben');
     if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
     if (icdMehrAlsEinKodeJeFeld(val('rzIcd'), val('rzIcd2'))) formatErrors.push(t('pod_icd_je_feld'));
@@ -15758,7 +15758,7 @@ async function saveRezept() {
       const lines = [];
       if (missing.length) lines.push('Folgende Felder sind noch leer:\n  • ' + missing.join('\n  • '));
       if (formatErrors.length) lines.push('Hinweise:\n  • ' + formatErrors.join('\n  • '));
-      const ok = await showConfirmModal({ title: 'Verordnung speichern?', message: lines.join('\n\n') + '\n\nTrotzdem speichern?', confirmText: 'Trotzdem speichern', cancelText: 'Abbrechen', variant: 'warning' });
+      const ok = await showConfirmModal({ title: 'Verordnung speichern?', message: lines.join('\n\n') + (arzt.satz ? '\n\n' + arzt.satz : '') + '\n\nTrotzdem speichern?', confirmText: 'Trotzdem speichern', cancelText: 'Abbrechen', variant: 'warning' });
       if (!ok) { btn.disabled = false; return; }
       overridden = true;
     }

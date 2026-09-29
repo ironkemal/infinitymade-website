@@ -83,6 +83,7 @@ import { darf78040, darf78100, darfErstbefundungNagel,
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
   from './verordnung-topf.js?v=20260920t';
+import { behandlungGesperrt, BEHANDLUNG_GESPERRT_TEXT } from './podo-arztangaben.js?v=20260929r';
 import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Reform-Sprint S1.5 (28.09.2026): Rezept-Position (78010/78020) für die
 // Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
@@ -953,7 +954,9 @@ async function loadPodologieBilling() {
     // Maske kann seit dem Rendern ueber Mitternacht gestanden haben.
     const heuteStr = alsISODatum(new Date());
     let err = '';
-    if (!datum) err = 'Bitte ein Behandlungsdatum angeben.';
+    // Reform S3.7: ohne Arzt-Nr. oder Unterschrift/Stempel darf keine Behandlung beginnen (kein Override).
+    if (behandlungGesperrt(vord).gesperrt) err = BEHANDLUNG_GESPERRT_TEXT;
+    else if (!datum) err = 'Bitte ein Behandlungsdatum angeben.';
     else if (datum > heuteStr) err = 'Das Behandlungsdatum darf nicht in der Zukunft liegen.';
     else if (checks.length === 0) err = ctx.t('pod_kein_hpnr');
     else if (hausbesuchSpeicherFehler(vord, checks)) err = hausbesuchSpeicherFehler(vord, checks);

@@ -32,6 +32,7 @@ import { createClient } from '@supabase/supabase-js';
 // (UEBERGAENGE unten bleibt unangetastet) — uebersetzt wird nur am Rand.
 import { statusAusAbrechnungStatus, abrechnungStatusAusStatus } from '../utils/einreichbar.js';
 import { offeneJeVerordnung, pruefeBestaetigung, offeneEinheitenAntwort, protokollZeilen } from '../utils/offene-einheiten.js';
+import { fehlendeArztangaben } from '../utils/arztangaben.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -115,7 +116,8 @@ function dgStamm(roh) {
  * @returns {string[]} leer = darf freigegeben werden
  */
 function fehlendeVerordnungsangaben(v) {
-  const fehlt = [];
+  // Reform S3.7: Arzt-Nr. + Unterschrift/Stempel — harte Sperre, kein Override.
+  const fehlt = fehlendeArztangaben(v);
   if (NAGEL_PFLICHT_DGS.includes(dgStamm(v.diagnosegruppe)) && !String(v.nagel || '').trim()) {
     fehlt.push('Bei UI 1 / UI 2 fehlt der behandelte Zehennagel (§ 3b Satz 5, Anlage 3 o2)');
   }
@@ -150,7 +152,7 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
 
     const { data: vRoh, error: vErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel, anzahl_einheiten')
+      .select('id, owner_id, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel, anzahl_einheiten, doctor_lanr, unterschrift_vorhanden')
       .eq('id', req.params.id)
       .maybeSingle();
     if (vErr) return res.status(500).json({ error: vErr.message });
