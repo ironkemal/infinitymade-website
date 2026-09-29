@@ -39,7 +39,7 @@ dolanmaz, Kemal'e sorar.
 | Oturum | Konu | Karar gerekir mi | Durum |
 |---|---|---|---|
 | S0 | Ürün kararları (/konsey) + Beta-1 soruları | evet | ⏳ |
-| S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | ✅ kod tamam (1.1–1.11, 29.09); 1.9–1.11 canlı doğrulaması bekliyor — bkz. S1 devir notu |
+| S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | ✅ 1.1–1.11 (29.09) — canlı geçti, 1.9 QA'da veri yok (birim testleri); açık: 1.12 — bkz. S1 devir notu |
 | S2 | §302 durum semantiği | kısmen (gkv-302) | ⏳ |
 | S3 | Güvenilirlik ve veri doğruluğu | hayır | ⏳ |
 | S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | ⏳ |
@@ -89,6 +89,7 @@ S0 ile S1–S3 paralel yürüyebilir; S4 S0 bitmeden başlamaz.
 | 1.9 ✅ `dbd79f0` | **gkv-302 bulgusu 29.09:** podolojide kesinti Verordnung'u geçersiz KILMAZ (HeilM-RL §16 Abs.4 S.5) — `module/frequenz-pruefung.js:53` `UNTERBRECHUNG_TAGE=12*7` + 329-331 metni yanlış (FAK Nr. 11 ters okunmuş). Seride ilk randevu için Behandlungsbeginn fristi 28 gün / dringlich 14 gün (§15) = BLOK; frekans sapması SARI uyarı, UI1/UI2'de uyarı yok. İki kural `wissensbank/SPEC-RULES.md`'ye | `module/frequenz-pruefung.js`, seri önizlemesi | S–M | Podoloji serisinde 12 hafta uyarısı yok; ilk randevu fristi aşarsa onay engelli |
 | 1.10 ✅ `32f1a4d` | **canli-test 29.09 (S1.8), P1:** KI seri yolu (`aiSuggestConfirm` dashboard.js ~6773-6791) yalnız `service.duration` gönderiyor, batch sonrası `speichereLeistungen` yok → seri randevuları 35 dk ve `booking_leistungen`'siz (maske 78010+78030 / 65 dk gösteriyordu) | `dashboard.js` aiSuggestConfirm, `module/termin-leistungen.js` | S–M | Seriyle oluşan her randevuda maskedeki Leistungen ve süre |
 | 1.11 ✅ `24d751b` | **canli-test 29.09 (S1.8), P2:** (a) seri/randevu maskesindeki Verordnung kartı podo'da 0/3 — `zeigeVerordnungenFuerTermin` → `rendereVeroKarten` çağrısına `sb/ownerId/leadId` geçmiyor (1.3 yalnız paneli düzeltti); (b) seri sonrası e-posta diyaloğu ✕ → podolojide Rechnungen paneline gidiyor (`proceedToRechnungForPhysio`), gelecek tarihli seride yanlış. **podoloji kararı:** podo seride fatura adımı tamamen atlanır (`proceedToRechnungForPhysio` ~7462, çağrı ~7356/~7404), kullanıcı Verordnung/hasta görünümünde kalır; e-posta varsa tek tıkla geçilebilir „Terminübersicht mitgeben (Drucken / E-Mail)", yoksa yalnız Drucken, e-posta sorulmaz | `module/termin-verordnung.js`, `dashboard.js` ~6830 | S | Maske sayacı doğru; podo seride fatura adımı yok |
+| 1.12 | **canli-test 29.09 (S1.9–1.11), P2:** seri maskesi „Befundung (78030) … am 2026-09-28 bereits abgerechnet" uyarısı gösterirken 78030 satırını „von der Software vorgeschlagen" diye SEÇİLİ bırakıyor → S1.10'dan beri her seri randevusuna 78030 yazılıyor. Befundpauschale seride önseçilmemeli (1.5 kuralı: Befund önerili ama işaretsiz; S0-2b ile bağlantılı) — podoloji + gkv-302'ye sor | `module/termin-leistungen.js` öneri mantığı | S | Seri randevularında 78030/78040 önseçili değil |
 
 Ajanlar: fonksiyon-ustasi (önce/sonra), gkv-302 (1.5/1.6), canli-test (sonra).
 
