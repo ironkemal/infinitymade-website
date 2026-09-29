@@ -88,3 +88,11 @@ Dört ön şartın sonuncusu tamamlandığında 1 saatlik karar turu yapılır. 
 - **F5:** Microsoft lisans kılavuzunun şartlarından biri, API'nin "platformun sınırları içinde" kalması. Kutudaki okunabilir ham anahtar bu şartı riske sokuyor.
 - **§203 düzeltmesi:** Praxura→Microsoft zinciri için geçerli madde Abs. 4 S. 2 Nr. 2.
 Sonuç: C'nin hukuki üstünlüğü güçlendi. B'nin 3. şartı (avukat görüşü) artık belirleyici.
+
+## Ek (29.09.2026) — Ön şart 2 düştü
+Microsoft, Modified Abuse Monitoring başvurusunu reddetti. Cevaptaki gerekçe: **"Unmanaged"**. Microsoft'un eklediği not: *"We are unable to accept applications to obtain managed customer status at this time."*
+- Şirket e-postasıyla yeniden başvurmak işe yaramaz. Engel e-posta değil, müşteri statüsü.
+- Ön şart 2 bugünkü koşullarda sağlanamıyor. B askıda; memo F6'ya göre onaysız B serbest bırakılamaz.
+- Konseyin "B'de tek başvuru yeter" avantajı ortadan kalktı. C'de Azure seçen her praxis de aynı şarta takılır.
+- Yeniden açılma: managed statüsüne götüren somut ve yazılı teyitli bir yol (account team, program, partner).
+- SaaS'taki Rezept-OCR da standart abuse monitoring altında çalışıyor. Avukat sorusuna eklenmeli (bkz. KARARLAR 2026-09-29).

@@ -715,6 +715,8 @@ kapı unutmaz ama düşünmez.
 | **Durum** | `geplant` (Faz 1.3 + 2.2) |
 
 > **Nachtrag 28.09.2026 (bildirim, kod değişmedi):** SaaS Azure kaynağı işletme aboneliğine taşındı — Sweden Central, Standard (Global değil) deployment, `gpt-4.1-mini` 2025-04-14, otomatik sürüm yükseltme kapalı. VPS `.env.calendar`’da yalnız 4 `AZURE_OPENAI_*` **değeri** değişti, yeni env adı yok; boot’ta EU Data Boundary kontrolü `region=swedencentral` ile geçti. Kutuya etkisi yok (AI kutuda varsayılan kapalı, E kararı). **Faz 1.3 için yeni girdi:** Microsoft Modified Abuse Monitoring başvurusu “managed customer” şartı taşıyor ve **her praxis kendi adına** başvurmak zorunda — yani `AI_PROVIDER=azure` BYO-key seçeneğinde abuse-monitoring muafiyeti bizim tarafımızdan sağlanamaz, her müşteriye ayrı iş yükü. K4’ün IONOS varsayılanını güçlendirir; Azure seçeneği sihirbazda sunulacaksa bu şart ekranda yazılmalı. C5 (dipnot 6) ve §203 ticket’ları açık, sonuç gelince buraya.
+>
+> **Nachtrag 29.09.2026 (bildirim, kod değişmedi):** Modified Abuse Monitoring başvurusu **reddedildi**, gerekçe “Unmanaged”; Microsoft şu an managed statüsü başvurusu kabul etmiyor. Seçenek B’nin ön şartı 2 düştü (KARARLAR 2026-09-29). Kutuya etkisi yok (E geçerli). Faz 1.3 için: Azure BYO-key seçeneğinde bu muafiyet pratikte kimse için alınamıyor. K4’teki IONOS varsayılanı bir kez daha güçlendi.
 
 ### O-08 — Google Calendar / Gmail OAuth — bizim OAuth uygulamamız
 

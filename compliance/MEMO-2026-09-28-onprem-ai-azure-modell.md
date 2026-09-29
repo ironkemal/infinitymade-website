@@ -170,6 +170,8 @@ Gesetzeswortlaute: § 393 SGB V, § 203 StGB, C5GleichwV am 28.09.2026 auf geset
 - *Praktisch:* Die Wahrscheinlichkeit, dass OCR-Anfragen zu Rezeptbildern als missbräuchlich markiert werden, halten wir für gering; das ist nicht belegt. Rechtlich trägt das nicht, weil schon die Möglichkeit der Einsichtnahme relevant sein kann.
 - *Vorteil von Modell B gegenüber C:* Der Inhaber kann als ein Kunde **einmal** die Modifikation beantragen. Eine einzelne Praxis wäre regelmäßig kein „managed customer" und bekäme sie in Modell C voraussichtlich nicht.
 
+**Nachtrag 29.09.2026:** Der Antrag des Inhabers auf Modified Abuse Monitoring wurde **abgelehnt**. Begründung laut Microsoft: „Unmanaged“; Anträge auf den Status als managed customer nimmt Microsoft derzeit nicht an. Damit ist die Voraussetzung für Modell B derzeit nicht erfüllbar, und der oben genannte Vorteil von B gegenüber C („einmal beantragen“) entfällt. Für die heutige SaaS-Nutzung (Rezept-OCR über Azure) gilt der Standard-Abuse-Monitoring-Sachstand unverändert. Die Frage nach § 203 und Art. 9 aus diesem Abschnitt stellt sich damit auch für den SaaS-Betrieb und sollte in den Anwaltsauftrag aufgenommen werden.
+
 **Offene Punkte.** Welche Rolle hat Microsoft beim Abuse Monitoring nach dem Products and Services DPA? Genügt das Amendment ohne Modified Abuse Monitoring (F4), oder ist die Modifikation zwingend?
 
 ---
@@ -182,7 +184,7 @@ Gesetzeswortlaute: § 393 SGB V, § 203 StGB, C5GleichwV am 28.09.2026 auf geset
 | Rolle von Microsoft | Unterauftragsverarbeiter des Inhabers | Auftragsverarbeiter der Praxis |
 | § 393 SGB V | Praxis und Inhaber im Anwendungsbereich; **F1 offen** (eigenes Testat?) | Nur die Praxis; Microsoft ist die datenverarbeitende Stelle; der Wortlaut passt unmittelbar. F2 (Fußnote 6) bleibt |
 | § 203 StGB | Kette Praxis → Inhaber → Microsoft; Amendment durch den Inhaber (Verfügbarkeit offen) | Praxis → Microsoft; das Amendment müsste die Praxis selbst erlangen (Verfügbarkeit für Kleinstkunden fraglich) |
-| Modified Abuse Monitoring | **ein** Antrag durch den Inhaber, Erfolgsaussicht offen | je Praxis; für Einzelpraxen voraussichtlich **nicht erreichbar** |
+| Modified Abuse Monitoring | **ein** Antrag durch den Inhaber — **am 29.09.2026 abgelehnt („Unmanaged“)** | je Praxis; für Einzelpraxen voraussichtlich **nicht erreichbar** |
 | Lizenzbedingungen (F5) | Customer Solution; Risiko bei Kriterium 5 | kein Thema |
 | Dokumente beim Inhaber | AVV, Unterauftragsverarbeiter-Liste, Verpflichtung nach § 203, TOM, DSFA-Baustein, Meldekette | nur neutrale Einrichtungsanleitung und Checkliste; keine Anbieterempfehlung (Falschberatungsrisiko) |
 | Hauptrisiko | Bei strenger Lesart von F1 eigenes Testat nötig, also wirtschaftlich ausgeschlossen | Praxis kann die Anforderungen aus § 203 und Abuse Monitoring faktisch nicht erfüllen, die Funktion ist dann ungenutzt |
