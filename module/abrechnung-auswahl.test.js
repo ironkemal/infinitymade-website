@@ -19,7 +19,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { kassenanteil, podoSperren, gruppenKey, baueGruppen, auswahlStand, imZeitraum,
          keineDokumentierteBehandlung, podoStrukturBlocker, podoBefundOhneBehandlung,
-         preflightGruende, fehlerText, ansichtNachErstellung }
+         preflightGruende, fehlerText, ansichtNachErstellung, zeigeIkKnopf }
   from './abrechnung-auswahl.js';
 
 const quelle = readFileSync(new URL('./abrechnung-auswahl.js', import.meta.url), 'utf8');
@@ -344,4 +344,11 @@ test('ansichtNachErstellung: nur vollständiger Erfolg wechselt zu Bisherige', (
   assert.equal(ansichtNachErstellung(2, 1), null);
   assert.equal(ansichtNachErstellung(0, 2), null);
   assert.equal(ansichtNachErstellung(0, 0), null);
+});
+
+test('zeigeIkKnopf: nur bei ausdrücklichem Code IK_FEHLT', () => {
+  assert.equal(zeigeIkKnopf({ code: 'IK_FEHLT' }), true);
+  assert.equal(zeigeIkKnopf({ code: '' }), false);
+  assert.equal(zeigeIkKnopf(new Error('Kein IK')), false);
+  assert.equal(zeigeIkKnopf(null), false);
 });

@@ -305,6 +305,14 @@ export function fehlerText(json, status) {
     : roh;
 }
 
+/**
+ * Soll unter der Fehlermeldung der Knopf „IK jetzt eintragen" stehen?
+ * Nur wenn das Backend ausdrücklich `IK_FEHLT` meldet — kein Raten am Text.
+ */
+export function zeigeIkKnopf(err) { return err?.code === 'IK_FEHLT'; }
+
+const IK_KNOPF_HTML = '<button type="button" class="ab-ik-gehzu" style="margin-top:6px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-main);cursor:pointer;font-size:12px;">IK jetzt eintragen</button>';
+
 /** Eindeutiger Schlüssel einer Gruppe. `bereich` gehört dazu — siehe Kopf. */
 export function gruppenKey(bereich, ik) { return `${bereich}|${ik}`; }
 
@@ -1026,6 +1034,11 @@ function _wireEinmal() {
       return;
     }
 
+    if (e.target.closest('.ab-ik-gehzu')) {
+      window.gehZuEinstellung?.('settingsAbrechnungSection', 'setIkNumber');
+      return;
+    }
+
     const fehler = e.target.closest('.ab-fehler-btn');
     if (fehler && !fehler.disabled) { _uebersteuere(fehler); return; }
 
@@ -1110,13 +1123,14 @@ function _wireEinmal() {
  * `white-space:pre-line` statt einer zweiten Liste, weil dieses Element
  * Klartext trägt und nicht mit fremdem HTML gefüttert werden soll.
  */
-function _fehlerZeigen(text, gruende = []) {
+function _fehlerZeigen(text, gruende = [], mitIkKnopf = false) {
   const el = document.getElementById('abAuswahlError');
   if (!el) return;
   const zeilen = (Array.isArray(gruende) ? gruende : []).slice(0, 12);
   el.style.whiteSpace = 'pre-line';
   el.textContent = [text, ...zeilen.map(g => `• ${g}`)].filter(Boolean).join('\n');
   el.style.display = text ? 'block' : 'none';
+  if (text && mitIkKnopf) el.insertAdjacentHTML('beforeend', `<div>${IK_KNOPF_HTML}</div>`);
 }
 
 /**
@@ -1263,6 +1277,7 @@ async function _sendeGruppe(g, freigabe) {
 function fehlerMitGruenden(json, status) {
   const e = new Error(fehlerText(json, status));
   e.gruende = preflightGruende(json);
+  e.code = json?.code || '';
   return e;
 }
 
@@ -1284,7 +1299,8 @@ function protokollFehlerHtml(name, err) {
         ${rest > 0 ? `<li>… und ${rest} weitere${rest === 1 ? 'r Punkt' : ' Punkte'}</li>` : ''}
       </ul>`
     : '';
-  return `<div style="padding:2px 0;color:#ef4444;">✕ ${esc(name)} — ${esc(err?.message || 'Fehler')}</div>${liste}`;
+  const ik = zeigeIkKnopf(err) ? `<div>${IK_KNOPF_HTML}</div>` : '';
+  return `<div style="padding:2px 0;color:#ef4444;">✕ ${esc(name)} — ${esc(err?.message || 'Fehler')}</div>${liste}${ik}`;
 }
 
 /** „Trotzdem übernehmen" — eine EINZELNE gesperrte Verordnung mit Begründung. */
@@ -1322,7 +1338,7 @@ async function _uebersteuere(btn) {
     // „Trotzdem übernehmen" scheitert am häufigsten am Preflight — und dann ist
     // die Begründung das Einzige, was weiterhilft: übersteuert wurden ja gerade
     // die Sperren, die der Browser kennt.
-    _fehlerZeigen(err.message || 'Fehler beim Übernehmen.', err.gruende);
+    _fehlerZeigen(err.message || 'Fehler beim Übernehmen.', err.gruende, zeigeIkKnopf(err));
     btn.disabled = false;
     btn.textContent = 'Trotzdem übernehmen';
   }

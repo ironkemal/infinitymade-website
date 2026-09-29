@@ -38,6 +38,7 @@ import {
   statusAusAbrechnungStatus, abrechnungStatusAusStatus,
 } from '../utils/einreichbar.js';
 import { zeilenAusDta } from '../utils/abrechnung-zeilen.js';
+import { ikFehltAntwort } from '../utils/ik-fehlt.js';
 import {
   legsFuer, LEGS_BY_FACHBEREICH,
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
@@ -3101,7 +3102,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       const { data: tp } = await supabase.from('profiles').select('ik_number').eq('id', tenantId).maybeSingle();
       if (tp?.ik_number) cert = { ik_nummer: tp.ik_number };
     }
-    if (!cert?.ik_nummer) return res.status(400).json({ error: 'Kein IK-Nummer hinterlegt.' });
+    if (!cert?.ik_nummer) { const a = ikFehltAntwort(); return res.status(a.status).json(a.body); }
 
     // ---- KK routing ----
     const { data: kk } = await supabase
@@ -3732,7 +3733,7 @@ router.post('/abrechnung/korrektur', async (req, res) => {
         zulassung_datum: cert?.zulassung_datum,
       };
     }
-    if (!cert?.ik_nummer) return res.status(400).json({ error: 'Kein IK-Nummer hinterlegt.' });
+    if (!cert?.ik_nummer) { const a = ikFehltAntwort(); return res.status(a.status).json(a.body); }
 
     // ---- Empfänger ----
     const { data: kk } = await supabase
