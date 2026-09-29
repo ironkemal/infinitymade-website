@@ -352,8 +352,15 @@ export const VERORDNUNG_REGELN = {
     // Die Aussage stammt aus Nr. 11 (Frequenzabweichung bei Krankheit/Urlaub).
   },
   unterbrechung: {
-    max_wochen_ohne_ungueltig: 12,  // Unterbrechungen <12 Wochen lassen Rezept gültig
-    notiz: 'Bei >12 Wochen Unterbrechung wird Verordnung ungültig',
+    max_wochen_bleibt_gueltig: 12,  // Unterbrechungen <12 Wochen lassen Rezept gültig
+    // Reform S1.9 (29.09.2026): hier stand vorher "Bei >12 Wochen Unterbrechung
+    // wird Verordnung ungültig" — das ist die Quelle FALSCH HERUM gelesen. FAK
+    // Nr. 11 sagt nur, was bei WENIGER als 12 Wochen gilt (bleibt gültig); was
+    // bei MEHR gilt, sagt die Quelle nicht. In der Podologie macht eine lange
+    // Unterbrechung die Verordnung NICHT automatisch ungültig — der lebende
+    // Code (module/frequenz-pruefung.js, pruefeFrequenz) prüft das seither gar
+    // nicht mehr für therapie_bereich='podo'.
+    notiz: 'FAK Nr. 11 regelt nur "<12 Wochen bleibt gültig" — keine Aussage zu >12 Wochen.',
     quelle: '§ 16 Abs. 4 Satz 5 Heilmittel-Richtlinie, zitiert in FAK Nr. 11',
   },
   pflichtfelder: [

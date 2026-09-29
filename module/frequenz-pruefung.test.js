@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  sollAbstand, werktageZwischen, bewerteAbstand, pruefeFrequenz,
+  sollAbstand, werktageZwischen, bewerteAbstand, pruefeFrequenz, pruefeErsttermin,
   sitzungenProWoche, verteileWochentage,
   TOLERANZ_WERKTAGE, UNTERBRECHUNG_TAGE,
 } from './frequenz-pruefung.js';
@@ -198,6 +198,225 @@ test('Lesefehler führt nicht zu einer Warnung', async () => {
 
 test('ohne bisherige Termine gibt es nichts zu vergleichen', async () => {
   const r = await pruefeFrequenz({ supabase: doppel([]), rx: rxWoche, neuesDatum: new Date() });
+  assert.equal(r.ok, true);
+});
+
+// ── Podologie: Nachbartermine kommen aus ladePodoTermine, nicht aus
+//    prescription_sessions (Reform S1.9) — vorher war das hier IMMER {ok:true},
+//    weil Podologie kein Sitzungs-Hauptbuch führt. ──────────────────────────
+
+/**
+ * Fake-Supabase, das `prescription_sessions` mit einem Fehler beantwortet
+ * (der Podologie-Zweig darf diese Tabelle gar nicht erst anfragen) und
+ * `bookings` mit den übergebenen Zeilen.
+ */
+function doppelPodo(bookings) {
+  const bookingKette = {
+    select: () => bookingKette,
+    eq: () => bookingKette,
+    neq: () => bookingKette,
+    is: () => bookingKette,
+    not: () => bookingKette,
+    order: () => Promise.resolve({ data: bookings, error: null }),
+    limit: () => Promise.resolve({ data: [], error: null }),
+  };
+  return {
+    from: (table) => {
+      if (table === 'bookings') return bookingKette;
+      throw new Error(`Podologie darf "${table}" hier nicht abfragen`);
+    },
+  };
+}
+
+const podoBooking = (id, iso, status = 'confirmed') =>
+  ({ id, start_time: iso, end_time: null, status, no_show: false, customer_name: '', service_id: null, business_id: null });
+
+const rxPodoWoche = { id: 'rx-podo', frequenz: '1x wöchentlich', therapie_bereich: 'podo' };
+
+test('Podologie: Nachbartermine kommen aus bookings (ladePodoTermine), sauberer Takt meldet nichts', async () => {
+  const supabase = doppelPodo([podoBooking('b1', '2026-08-03T09:00:00Z')]);
+  const r = await pruefeFrequenz({
+    supabase, rx: rxPodoWoche, neuesDatum: new Date('2026-08-10T09:00:00Z'), ownerId: 'owner-1',
+  });
+  assert.equal(r.ok, true);
+});
+
+test('Podologie: Frequenzabweichung wird ebenfalls erkannt (Datenquelle bookings)', async () => {
+  const supabase = doppelPodo([podoBooking('b1', '2026-08-09T09:00:00Z')]); // 1 Tag statt 1 Woche
+  const r = await pruefeFrequenz({
+    supabase, rx: rxPodoWoche, neuesDatum: new Date('2026-08-10T09:00:00Z'), ownerId: 'owner-1',
+  });
+  assert.equal(r.ok, false);
+});
+
+test('Podologie: ohne ownerId keine Abfrage, also keine Warnung', async () => {
+  const r = await pruefeFrequenz({
+    supabase: doppelPodo([podoBooking('b1', '2026-08-09T09:00:00Z')]),
+    rx: rxPodoWoche, neuesDatum: new Date('2026-08-10T09:00:00Z'),
+  });
+  assert.equal(r.ok, true);
+});
+
+// Der eigentliche Fehler, den Reform S1.9 behebt: eine >12-Wochen-Pause darf
+// in der Podologie NICHT automatisch als „Verordnung ungültig" gemeldet
+// werden — FAK Nr. 11 sagt nur, was bei WENIGER als 12 Wochen gilt.
+test('Podologie: lange Pause allein löst KEINE Unterbrechungswarnung aus', async () => {
+  const supabase = doppelPodo([podoBooking('b1', '2026-05-04T09:00:00Z')]); // > 12 Wochen vor dem Zieldatum
+  const rx = { id: 'rx-podo-2', frequenz: 'nach Bedarf', therapie_bereich: 'podo' }; // kein Sollabstand
+  const r = await pruefeFrequenz({
+    supabase, rx, neuesDatum: new Date('2026-08-10T09:00:00Z'), ownerId: 'owner-1',
+  });
+  assert.equal(r.ok, true);
+});
+
+// Storno/no_show zählen für Podologie genauso wenig als Nachbar wie im
+// Physio-Zweig — istVergeben() filtert sie aus ladePodoTermine() heraus.
+test('Podologie: abgesagte/no_show-Termine zählen nicht als Nachbar', async () => {
+  const supabase = doppelPodo([
+    podoBooking('b1', '2026-08-09T09:00:00Z', 'cancelled'),
+    { ...podoBooking('b2', '2026-08-09T10:00:00Z'), no_show: true },
+  ]);
+  const r = await pruefeFrequenz({
+    supabase, rx: rxPodoWoche, neuesDatum: new Date('2026-08-10T09:00:00Z'), ownerId: 'owner-1',
+  });
+  assert.equal(r.ok, true);
+});
+
+// ── UI1/UI2: keine Frequenzwarnung, unabhängig vom Fachbereich ────────────
+
+test('UI1/UI2-Diagnosegruppen: keine Frequenzwarnung (Anlage 3 Podologie lit. i)', async () => {
+  // Würde ohne die Ausnahme warnen (1 Tag statt 1 Woche Abstand) — die
+  // Ausnahme muss also VOR jeder Datenbankabfrage greifen.
+  const rx = { id: 'rx-ui', frequenz: '1x wöchentlich', diagnosegruppe: 'UI1' };
+  const r = await pruefeFrequenz({
+    supabase: doppel(null, { message: 'darf nicht aufgerufen werden' }),
+    rx, neuesDatum: new Date('2026-08-10T09:00:00Z'),
+  });
+  assert.equal(r.ok, true);
+});
+
+// ── Physio/Ergo/Logo: unverändertes Verhalten (kein therapie_bereich) ──────
+
+test('Physio/Ergo/Logo: 12-Wochen-Unterbrechung bleibt unverändert scharf', async () => {
+  const supabase = doppel([sitzung(1, '2026-05-04T09:00:00Z')]);
+  const r = await pruefeFrequenz({ supabase, rx: rxWoche, neuesDatum: new Date('2026-08-10T09:00:00Z') });
+  assert.equal(r.ok, false);
+  assert.equal(r.titel, 'Behandlungspause über 12 Wochen');
+  assert.match(r.meldung, /HeilM-RL § 16 Abs. 4/);
+  assert.doesNotMatch(r.meldung, /Gültigkeit — die Kasse kann die Leistung absetzen/);
+});
+
+// ── bewerteAbstand: Unterbrechungsprüfung ist jetzt abschaltbar ───────────
+
+test('bewerteAbstand: pruefeUnterbrechung=false ignoriert die 12-Wochen-Grenze', () => {
+  assert.equal(bewerteAbstand(85, 61, wochentakt, false), 'zu_selten');
+  assert.equal(bewerteAbstand(85, 61, wochentakt, true), 'unterbrechung');
+  assert.equal(bewerteAbstand(85, 61, wochentakt), 'unterbrechung'); // Default bleibt true
+});
+
+// ── pruefeErsttermin: Behandlungsbeginn-Frist, nur Podologie, nur erster Termin ─
+
+/**
+ * Fake-Supabase für `pruefeErsttermin`: `.from('prescriptions')` liefert die
+ * übergebene Verordnungszeile, `.from('bookings')` die übergebenen Termine
+ * (für `ladePodoTermine`).
+ */
+function doppelErsttermin({ rx, bookings = [] }) {
+  const bookingKette = {
+    select: () => bookingKette,
+    eq: () => bookingKette,
+    neq: () => bookingKette,
+    is: () => bookingKette,
+    not: () => bookingKette,
+    order: () => Promise.resolve({ data: bookings, error: null }),
+    limit: () => Promise.resolve({ data: [], error: null }),
+  };
+  const rxKette = {
+    select: () => rxKette,
+    eq: () => rxKette,
+    maybeSingle: () => Promise.resolve({ data: rx, error: null }),
+  };
+  return { from: (table) => (table === 'bookings' ? bookingKette : rxKette) };
+}
+
+const rxPodoNormal = { id: 'rx-1', therapie_bereich: 'podo', ausstellungsdatum: '2026-01-01', is_dringend: false, behandlungsbeginn: null };
+const rxPodoDringend = { id: 'rx-2', therapie_bereich: 'podo', ausstellungsdatum: '2026-01-01', is_dringend: true, behandlungsbeginn: null };
+
+test('erster Termin innerhalb der 28-Tage-Frist: ok', async () => {
+  const supabase = doppelErsttermin({ rx: rxPodoNormal, bookings: [] });
+  const r = await pruefeErsttermin({
+    supabase, prescriptionId: 'rx-1', ersterTermin: '2026-01-20', ownerId: 'owner-1',
+  });
+  assert.equal(r.ok, true);
+});
+
+test('erster Termin nach der 28-Tage-Frist: BLOCK mit Meldung', async () => {
+  const supabase = doppelErsttermin({ rx: rxPodoNormal, bookings: [] });
+  const r = await pruefeErsttermin({
+    supabase, prescriptionId: 'rx-1', ersterTermin: '2026-02-01', ownerId: 'owner-1',
+  });
+  assert.equal(r.ok, false);
+  assert.match(r.meldung, /Behandlungsbeginn verpasst/);
+});
+
+test('dringlich: 14-Tage-Frist statt 28', async () => {
+  const supabase = doppelErsttermin({ rx: rxPodoDringend, bookings: [] });
+  assert.equal((await pruefeErsttermin({
+    supabase, prescriptionId: 'rx-2', ersterTermin: '2026-01-15', ownerId: 'owner-1',
+  })).ok, true);
+  assert.equal((await pruefeErsttermin({
+    supabase, prescriptionId: 'rx-2', ersterTermin: '2026-01-16', ownerId: 'owner-1',
+  })).ok, false);
+});
+
+test('behandlungsbeginn bereits dokumentiert: kein Block mehr, egal wie spät', async () => {
+  const rx = { ...rxPodoNormal, behandlungsbeginn: '2026-01-10' };
+  const supabase = doppelErsttermin({ rx, bookings: [] });
+  const r = await pruefeErsttermin({
+    supabase, prescriptionId: rx.id, ersterTermin: '2026-06-01', ownerId: 'owner-1',
+  });
+  assert.equal(r.ok, true);
+});
+
+test('nicht Podologie: kein Block', async () => {
+  const rx = { id: 'rx-3', therapie_bereich: null, ausstellungsdatum: '2026-01-01', is_dringend: false, behandlungsbeginn: null };
+  const supabase = doppelErsttermin({ rx, bookings: [] });
+  const r = await pruefeErsttermin({
+    supabase, prescriptionId: rx.id, ersterTermin: '2026-06-01', ownerId: 'owner-1',
+  });
+  assert.equal(r.ok, true);
+});
+
+test('schon ein ANDERER vergebener Termin vorhanden: nicht mehr der erste, kein Block', async () => {
+  const supabase = doppelErsttermin({
+    rx: rxPodoNormal,
+    bookings: [{ id: 'b-alt', start_time: '2026-01-05T09:00:00Z', status: 'confirmed', no_show: false }],
+  });
+  const r = await pruefeErsttermin({
+    supabase, prescriptionId: rxPodoNormal.id, ersterTermin: '2026-06-01', ownerId: 'owner-1',
+  });
+  assert.equal(r.ok, true);
+});
+
+// Der Fehler, den `ausserBookingId` verhindert: verschiebt man den EINZIGEN
+// (ersten) Termin einer Verordnung, zählt `ladePodoTermine` ihn selbst als
+// "schon vergeben" — ohne Ausschluss würde die Frist nie mehr geprüft.
+test('der einzige Termin ist der bearbeitete selbst: gilt weiterhin als erster Termin', async () => {
+  const supabase = doppelErsttermin({
+    rx: rxPodoNormal,
+    bookings: [{ id: 'b-selbst', start_time: '2026-01-05T09:00:00Z', status: 'confirmed', no_show: false }],
+  });
+  const r = await pruefeErsttermin({
+    supabase, prescriptionId: rxPodoNormal.id, ersterTermin: '2026-02-01',
+    ownerId: 'owner-1', ausserBookingId: 'b-selbst',
+  });
+  assert.equal(r.ok, false);
+  assert.match(r.meldung, /Behandlungsbeginn verpasst/);
+});
+
+test('ohne ownerId: keine Podo-Abfrage möglich, kein Block', async () => {
+  const supabase = doppelErsttermin({ rx: rxPodoNormal, bookings: [] });
+  const r = await pruefeErsttermin({ supabase, prescriptionId: rxPodoNormal.id, ersterTermin: '2026-06-01' });
   assert.equal(r.ok, true);
 });
 

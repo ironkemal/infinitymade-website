@@ -30,24 +30,37 @@
  *
  *   • ±2 WERKTAGE Abweichung vom Sollabstand → unbedenklich, keine Meldung.
  *     Darüber: Absprache mit dem Arzt nötig, Dokumentation auf der VO.
- *   • 12 WOCHEN Unterbrechung → die Verordnung verliert ihre Gültigkeit.
- *     Das ist die teure Schwelle, deshalb eine eigene, deutlichere Meldung.
+ *   • 12 WOCHEN Unterbrechung → NUR für Physio/Ergo/Logo ein eigener,
+ *     deutlicherer Hinweis (s. u. — für Podologie gilt sie NICHT).
  *
  * Werktage, nicht Kalendertage — so steht es in der Quelle. Ein Termin, der
  * über ein Wochenende rutscht, ist deshalb kein Verstoss.
  *
- * ⚠️ Der 2-Werktage-Wert stammt aus dem PODOLOGIE-Katalog. Die 12 Wochen
- * stehen in der Heilmittel-Richtlinie und gelten allgemein. Bevor die Prüfung
- * für Physio/Ergo/Logo scharf geschaltet wird, gehört der Toleranzwert von
- * `gkv-302` gegengeprüft — das ist genau die Sorte Zahl, die je Fachbereich
- * abweicht. Bis dahin ist die Vertikalen-Reihenfolge aus CLAUDE.md ohnehin
- * Podologie.
+ * ⚠️ Reform S1.9 (29.09.2026), Korrektur einer falsch herum gelesenen Quelle:
+ * Nr. 11 sagt „unter 12 Wochen bleibt die Verordnung gültig" — sie sagt NICHT
+ * das Gegenteil, dass eine LÄNGERE Unterbrechung die podologische Verordnung
+ * ungültig macht. Diese Datei tat bis dahin genau das. Für Podologie wird die
+ * 12-Wochen-Unterbrechung deshalb gar nicht mehr geprüft; die Frequenz­warnung
+ * (die ±2-Werktage-Schwelle) bleibt unverändert ein Warn-, kein Block-Hinweis.
  *
- * Blockiert wird NIE. Beta-2 hat das am 12.08.2026 ausdrücklich so gewollt,
- * und es ist sachlich richtig: Nachholtermine, Urlaub und Krankheit sind
- * Alltag, und die Abweichung ist mit ärztlichem Einvernehmen zulässig. Die
- * Oberfläche widerspricht, die Praxis entscheidet.
+ * Physio/Ergo/Logo behalten die 12-Wochen-Schwelle vorerst unverändert — sie
+ * ist dort weiterhin unbelegt geschätzt, nicht durch `gkv-302` bestätigt
+ * (`gkv-302`, 29.09.2026: die tatsächliche Schwelle könnte für Physio bei
+ * 14 Tagen statt 12 Wochen liegen). Das ist eine eigene, noch offene Aufgabe
+ * für die Physio-Feinabstimmung (CLAUDE.md, Vertikal-Reihenfolge — Podologie
+ * zuerst) und wird hier bewusst NICHT mitgelöst; nur der Text unten wurde von
+ * einer falschen Quellenbehauptung befreit.
+ *
+ * Blockiert wird bei der Frequenz NIE. Beta-2 hat das am 12.08.2026
+ * ausdrücklich so gewollt, und es ist sachlich richtig: Nachholtermine,
+ * Urlaub und Krankheit sind Alltag, und die Abweichung ist mit ärztlichem
+ * Einvernehmen zulässig. Die Oberfläche widerspricht, die Praxis entscheidet.
+ * (Die Behandlungsbeginn-Frist aus `heilmittel-fristen.js` ist davon getrennt
+ * zu sehen — dort BLOCKIERT `pruefeErsttermin()` unten, siehe dort.)
  */
+
+import { ladePodoTermine, istVergeben } from './verordnung-termine.js?v=20260908';
+import { pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20260929';
 
 export const TOLERANZ_WERKTAGE = 2;
 export const UNTERBRECHUNG_TAGE = 12 * 7;   // § 16 Abs. 4 Satz 5 HeilM-RL
@@ -207,10 +220,15 @@ export function kalendertage(a, b) {
 
 /**
  * Bewertet EINEN Abstand gegen den Sollabstand.
+ *
+ * @param {boolean} [pruefeUnterbrechung=true]  Podologie schaltet das aus —
+ *        FAK Nr. 11 begründet nur "kürzer als 12 Wochen bleibt gültig", nicht
+ *        deren Umkehrung. Physio/Ergo/Logo behalten die Schwelle (eigene,
+ *        noch offene Aufgabe, s. Dateikopf).
  * @returns {'ok'|'zu_dicht'|'zu_selten'|'unterbrechung'}
  */
-export function bewerteAbstand(abstandTage, werktage, soll) {
-  if (abstandTage > UNTERBRECHUNG_TAGE) return 'unterbrechung';
+export function bewerteAbstand(abstandTage, werktage, soll, pruefeUnterbrechung = true) {
+  if (pruefeUnterbrechung && abstandTage > UNTERBRECHUNG_TAGE) return 'unterbrechung';
   if (!soll) return 'ok';
   // Die Toleranz zählt in Werktagen (Quelle Nr. 11), der Sollabstand in
   // Kalendertagen. Verglichen wird deshalb der Werktage-Abstand gegen den
@@ -230,48 +248,71 @@ export function bewerteAbstand(abstandTage, werktage, soll) {
  * Termin DANACH — genau das braucht die Praxis am Bildschirm: „vorher war der
  * 3., nachher ist der 10., du legst den 6. dazwischen".
  *
+ * Podologie (Reform S1.9) führt kein Sitzungs-Hauptbuch
+ * (`prescription_sessions`) — die Nachbartermine kommen dort über
+ * `ladePodoTermine()` direkt aus `bookings.verordnung_id`, sonst wäre die
+ * Prüfung für jede podologische Verordnung ein stilles `{ok:true}` gewesen
+ * (`rx.id` existiert zwar, aber nie eine passende `prescription_sessions`-
+ * Zeile). Und: bei Podologie zählt die 12-Wochen-Unterbrechung nicht mit,
+ * siehe Dateikopf.
+ *
+ * @param {?string} [ownerId]  nötig für den Podologie-Zweig (`ladePodoTermine`)
+ * @param {?string} [leadId]   Patient — eingrenzt, nicht zwingend
  * @returns {Promise<{ok:boolean, titel?:string, meldung?:string, befund?:object}>}
  */
-export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId = null }) {
+export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId = null, ownerId = null, leadId = null }) {
   if (!supabase || !rx?.id || !neuesDatum) return { ok: true };
   const neu = new Date(neuesDatum);
   if (Number.isNaN(neu.getTime())) return { ok: true };
 
+  // UI1/UI2 (venöse/arterielle Ulcera): der Arzt darf hier frei von der
+  // Frequenz abweichen (Anlage 3 Podologie lit. i) — eine Warnung wäre falsch.
+  const dgWurzel = String(rx.diagnosegruppe || '').trim().toUpperCase();
+  if (dgWurzel === 'UI1' || dgWurzel === 'UI2') return { ok: true };
+
+  const istPodo = rx.therapie_bereich === 'podo';
   const soll = sollAbstand(rx.frequenz);
 
-  const { data: sessions, error } = await supabase
-    .from('prescription_sessions')
-    .select('id,session_number,booking_id,bookings(start_time,status)')
-    .eq('prescription_id', rx.id)
-    .not('booking_id', 'is', null);
-  // Ohne Datengrundlage nicht warnen — eine unbegründete Warnung wird
-  // weggeklickt und entwertet alle übrigen.
-  if (error || !sessions?.length) return { ok: true };
+  let nachbarn; // [{start_time, nummer}]
+  if (istPodo) {
+    if (!ownerId) return { ok: true }; // ohne Standortkontext keine Abfrage möglich
+    const { vergeben } = await ladePodoTermine(supabase, { ownerId, vordId: rx.id, leadId });
+    nachbarn = (vergeben || [])
+      .filter(b => b.id !== ausserBookingId && istVergeben(b) && b.start_time)
+      .map(b => ({ start_time: b.start_time, nummer: null }));
+  } else {
+    const { data: sessions, error } = await supabase
+      .from('prescription_sessions')
+      .select('id,session_number,booking_id,bookings(start_time,status)')
+      .eq('prescription_id', rx.id)
+      .not('booking_id', 'is', null);
+    // Ohne Datengrundlage nicht warnen — eine unbegründete Warnung wird
+    // weggeklickt und entwertet alle übrigen.
+    if (error || !sessions?.length) return { ok: true };
+    nachbarn = sessions
+      .filter(s => !(ausserBookingId && s.booking_id === ausserBookingId))
+      // Abgesagt oder nicht wahrgenommen heisst: es hat nichts stattgefunden.
+      // Als Nachbarbehandlung zaehlt so ein Termin nicht, sonst warnt die
+      // Frequenzpruefung beim Nachholtermin gegen einen Termin, den es fachlich
+      // nie gab (Ops-Karte a8186cb8). Seit 14.09.2026 gibt no_show `booking_id`
+      // frei und kommt durch den `.not()`-Filter oben ohnehin nicht mehr durch;
+      // die Bedingung bleibt für den Altbestand und den Notfallpfad stehen.
+      .filter(s => s.bookings?.start_time && s.bookings.status !== 'cancelled' && s.bookings.status !== 'no_show')
+      .map(s => ({ start_time: s.bookings.start_time, nummer: s.session_number }));
+  }
+  if (!nachbarn.length) return { ok: true };
 
   let vorher = null;
   let nachher = null;
-  for (const s of sessions) {
-    if (ausserBookingId && s.booking_id === ausserBookingId) continue;
-    const bk = s.bookings;
-    // Abgesagt oder nicht wahrgenommen heisst: es hat nichts stattgefunden.
-    // Als Nachbarbehandlung zaehlt so ein Termin nicht, sonst warnt die
-    // Frequenzpruefung beim Nachholtermin gegen einen Termin, den es fachlich
-    // nie gab (Ops-Karte a8186cb8).
-    //
-    // Seit dem 14.09.2026 gibt das no_show `booking_id` frei, solche Zeilen
-    // kommen durch den `.not('booking_id','is',null)`-Filter oben gar nicht mehr
-    // bis hierher. Die Bedingung bleibt trotzdem stehen: fuer den Altbestand
-    // (no_show vor der Umstellung, Zeile haengt noch am Termin) und fuer den
-    // Notfallpfad ohne Rueckfahrkarte ist sie die einzige Abwehr.
-    if (!bk?.start_time || bk.status === 'cancelled' || bk.status === 'no_show') continue;
-    const d = new Date(bk.start_time);
+  for (const n of nachbarn) {
+    const d = new Date(n.start_time);
     if (Number.isNaN(d.getTime())) continue;
     const diff = kalendertage(d, neu);
     if (diff > 0 && (!vorher || diff < kalendertage(vorher.datum, neu))) {
-      vorher = { datum: d, nummer: s.session_number };
+      vorher = { datum: d, nummer: n.nummer };
     }
     if (diff < 0 && (!nachher || diff > kalendertage(nachher.datum, neu))) {
-      nachher = { datum: d, nummer: s.session_number };
+      nachher = { datum: d, nummer: n.nummer };
     }
   }
   if (!vorher && !nachher) return { ok: true };
@@ -281,7 +322,7 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
     if (!treffer) continue;
     const kt = Math.abs(kalendertage(treffer.datum, neu));
     const wt = werktageZwischen(treffer.datum, neu);
-    seiten.push({ rolle, ...treffer, kalendertage: kt, werktage: wt, urteil: bewerteAbstand(kt, wt, soll) });
+    seiten.push({ rolle, ...treffer, kalendertage: kt, werktage: wt, urteil: bewerteAbstand(kt, wt, soll, !istPodo) });
   }
 
   const problem = seiten.find(s => s.urteil !== 'ok');
@@ -295,6 +336,41 @@ export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId
     meldung: baueMeldung({ soll, seiten, problem, neu }),
     befund: { soll, seiten, urteil: problem.urteil },
   };
+}
+
+/**
+ * Behandlungsbeginn-Frist (§ 15 HeilM-RL), NUR Podologie, NUR beim ersten
+ * Termin einer Verordnung — anders als `pruefeFrequenz` oben ein BLOCK, keine
+ * Alltagstoleranz (Reform S1.9). „Erster Termin" heisst hier: es gibt noch
+ * keinen anderen vergebenen Termin an dieser Verordnung (`ladePodoTermine`) —
+ * dann hat die Behandlung im Sinne der Frist noch nicht begonnen. Ist
+ * `behandlungsbeginn` bereits gesetzt (dokumentierte erste Behandlung), lief
+ * die Behandlung ohnehin schon und die Frist ist gegenstandslos.
+ *
+ * Holt sich die Verordnungsfelder selbst per `prescriptionId` — die Aufrufer
+ * (Termin-Fenster, KI-Serienbestätigung) haben unterschiedlich reichhaltige
+ * `rx`-Objekte im Zugriff, eines davon (KI-Weg) nur die ID.
+ *
+ * `ausserBookingId` schliesst den gerade bearbeiteten Termin selbst aus der
+ * "gibt es schon einen anderen vergebenen Termin"-Prüfung aus — sonst würde
+ * das Verschieben des EINZIGEN (ersten) Termins nach der Frist als "nicht der
+ * erste Termin" durchgewunken, weil er sich selbst als Nachbarn zählt.
+ *
+ * @returns {Promise<{ok:boolean, meldung?:string}>}
+ */
+export async function pruefeErsttermin({ supabase, prescriptionId, ersterTermin, ownerId = null, leadId = null, ausserBookingId = null }) {
+  if (!supabase || !prescriptionId || !ersterTermin) return { ok: true };
+  const { data: rx } = await supabase.from('prescriptions')
+    .select('id,therapie_bereich,ausstellungsdatum,is_dringend,behandlungsbeginn')
+    .eq('id', prescriptionId).maybeSingle();
+  if (!rx || rx.therapie_bereich !== 'podo' || rx.behandlungsbeginn) return { ok: true };
+  if (!ownerId) return { ok: true };
+  const { vergeben } = await ladePodoTermine(supabase, { ownerId, vordId: rx.id, leadId });
+  const andereVergeben = (vergeben || []).filter(b => b.id !== ausserBookingId);
+  if (andereVergeben.some(istVergeben)) return { ok: true }; // nicht der erste Termin
+  return pruefeBehandlungsbeginn({
+    ersterTermin, ausstellungsdatum: rx.ausstellungsdatum, istDringend: rx.is_dringend, behandlungsbeginn: rx.behandlungsbeginn,
+  });
 }
 
 function datumStr(d) {
@@ -326,9 +402,9 @@ function baueMeldung({ soll, seiten, problem, neu }) {
 
   if (problem.urteil === 'unterbrechung') {
     zeilen.push('');
-    zeilen.push(`Zwischen den Terminen liegen mehr als 12 Wochen. Damit verliert die`);
-    zeilen.push(`Verordnung ihre Gültigkeit — die Kasse kann die Leistung absetzen.`);
-    zeilen.push(`(§ 16 Abs. 4 Satz 5 Heilmittel-Richtlinie)`);
+    zeilen.push(`Zwischen den Terminen liegen mehr als 12 Wochen.`);
+    zeilen.push(`Lange Behandlungsunterbrechung — bitte die Gültigkeit der Verordnung`);
+    zeilen.push(`prüfen (HeilM-RL § 16 Abs. 4).`);
   } else if (problem.urteil === 'zu_dicht') {
     zeilen.push('');
     zeilen.push(`Der Termin liegt DICHTER als verordnet. Abweichungen über 2 Werktage`);

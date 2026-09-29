@@ -35,7 +35,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260921';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260929';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260926a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
@@ -47,7 +47,7 @@ import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-prue
 // Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode }
   from './module/verordnung-maske.js?v=20260927';
-import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
+import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260929';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260908';
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260920s';
@@ -80,7 +80,7 @@ import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-n
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260920s';
 import { zeichnePodoEinheiten, bindePodoAnTermin, befundDienstId, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20260929b';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
-import { pruefeFrequenz } from './module/frequenz-pruefung.js?v=20260914';
+import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20260929';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
@@ -5776,11 +5776,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
 
   const startDate = new Date(startV);
 
-  // Frequenz der Verordnung: warnen, NICHT blockieren. Nachholtermine, Urlaub
-  // und Krankheit sind Alltag — die Vorgabe ist ärztlich, kein Abrechnungs-
-  // verbot (Beta-2, 12.08.2026: „wenn man weitermachen möchte, weiter drücken,
-  // dann soll der Termin gebaut werden"). Regelwerk und Quelle der Schwellen:
-  // module/frequenz-pruefung.js.
+  // Frequenz WARNT nur (Beta-2, 12.08.2026, Quelle frequenz-pruefung.js) — die Beginn-Frist direkt darunter ist dagegen ein BLOCK (§15 HeilM-RL).
   {
     // Massgeblich ist das versteckte Feld, nicht der zuletzt angeklickte
     // Datensatz: beim Ziehen einer Sitzung auf den Kalender und beim Bearbeiten
@@ -5789,12 +5785,12 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     let gewaehlteRx = window._bkGewaehlteRx?.id === rxId ? window._bkGewaehlteRx : null;
     if (rxId && !gewaehlteRx) {
       const { data } = await supabase.from('prescriptions')
-        .select('id,frequenz').eq('id', rxId).maybeSingle();
+        .select('id,frequenz,therapie_bereich,diagnosegruppe').eq('id', rxId).maybeSingle();
       gewaehlteRx = data || null;
     }
     if (gewaehlteRx?.id) {
       const pruef = await pruefeFrequenz({
-        supabase, rx: gewaehlteRx, neuesDatum: startDate, ausserBookingId: id || null,
+        supabase, rx: gewaehlteRx, neuesDatum: startDate, ausserBookingId: id || null, ownerId: getOwnerId(), leadId: custId || null,
       });
       if (!pruef.ok) {
         const weiter = await showConfirmModal({
@@ -5806,6 +5802,10 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         });
         if (!weiter) return;
       }
+      const beginnPruef = await pruefeErsttermin({
+        supabase, prescriptionId: gewaehlteRx.id, ersterTermin: startDate, ownerId: getOwnerId(), leadId: custId || null, ausserBookingId: id || null,
+      });
+      if (!beginnPruef.ok) { showToast(beginnPruef.meldung, 'error'); return; }
     }
   }
 
@@ -6771,15 +6771,18 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
   const notes = document.getElementById('bkNotes').value.trim();
   const hausbesuch = document.getElementById('bkHausbesuch').checked;
 
+  // Behandlungsbeginn-Frist (§15), nur Podologie/erster Termin — s. frequenz-pruefung.js.
+  const ersterSlot = selected.slice().sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
+  const beginnPruef = await pruefeErsttermin({ supabase, prescriptionId: window._physioFlow?.prescription_id || null, ersterTermin: new Date(ersterSlot.date + 'T' + ersterSlot.time), ownerId: getOwnerId(), leadId: custIdAtConfirm || window._physioFlow?.patient_id || null });
+  if (!beginnPruef.ok) { showToast(beginnPruef.meldung, 'error'); return; }
+
   const payload = {
     ownerId: getOwnerId(),
     serviceId: service?.id || document.getElementById('bkService').value,
     duration: service?.duration,
     slots: selected,
     customerName: cust,
-    // Der Patientenbezug wurde bis 17.08.2026 erst NACH dem Anlegen ermittelt
-    // (unten, für die Bestätigungsmail) — die Terminzeilen selbst blieben ohne
-    // `lead_id`. Beim Rezept-Weg steht der Patient in `_physioFlow`.
+    // Patientenbezug: Rezept-Weg über `_physioFlow`, sonst `custIdAtConfirm`.
     leadId: custIdAtConfirm || window._physioFlow?.patient_id || null,
     customerPhone: phone || null,
     notes: notes || null,
@@ -7959,20 +7962,19 @@ function computeRxDeadlineAlerts(rx) {
   now.setHours(0, 0, 0, 0);
 
   if (!rx.ausstellungsdatum) return alerts;
-  const issued = new Date(rx.ausstellungsdatum);
 
   // Kein Deadline-Hinweis bei abgeschlossenen / abgerechneten Rezepten
   if (['completed','billed','cancelled'].includes(rx.status)) return alerts;
 
   const started = rx.behandlungsbeginn ? new Date(rx.behandlungsbeginn) : null;
 
-  // --- 28-Tage Startfrist ---
+  // --- Startfrist: dringlich 14 Tage, sonst 28 (module/heilmittel-fristen.js) ---
   if (!started) {
-    const deadline28 = new Date(issued.getTime() + 28 * 86400000);
-    const daysLeft = Math.round((deadline28 - now) / 86400000);
-    if (daysLeft < 0) {
+    const frist = behandlungsbeginnFrist(rx.ausstellungsdatum, rx.is_dringend);
+    const daysLeft = frist ? Math.round((new Date(frist) - now) / 86400000) : null;
+    if (daysLeft !== null && daysLeft < 0) {
       alerts.push({ level: 'danger', icon: '🔴', msg: `Behandlungsbeginn-Frist abgelaufen (seit ${Math.abs(daysLeft)} Tagen)` });
-    } else if (daysLeft <= 14) {
+    } else if (daysLeft !== null && daysLeft <= 14) {
       alerts.push({ level: 'warning', icon: '🟡', msg: `Behandlungsbeginn-Frist: noch ${daysLeft} Tag${daysLeft !== 1 ? 'e' : ''}` });
     }
   }
@@ -15826,12 +15828,9 @@ async function saveRezept() {
     const ausstDate = document.getElementById('rzAusstDate').value || null;
     const isDringend = document.getElementById('rzDringend').checked;
 
-    // 3. gueltig_bis = spätester Behandlungsbeginn nach HeilM-RL § 15
-    // (14 Kalendertage bei dringlichem Behandlungsbedarf, sonst 28; wird die
-    // Frist versäumt, verliert die Verordnung ihre Gültigkeit, § 15 Abs. 2).
-    // Gilt für alle Fachbereiche — Beleg in module/heilmittel-fristen.js.
-    // Vorher standen hier 84 Tage für alles ausser dringlich; diese Zahl hat
-    // in Richtlinie und Anlagen keine Entsprechung.
+    // 3. gueltig_bis = spätester Behandlungsbeginn nach HeilM-RL § 15, für
+    // alle Fachbereiche (Quelle, Fristwerte, frühere 84-Tage-Fehlzahl und die
+    // neue Block-Prüfung beim ersten Termin: module/heilmittel-fristen.js).
     const gueltigBis = behandlungsbeginnFrist(ausstDate, isDringend);
 
     const rzLanr = document.getElementById('rzLanr').value.trim() || null;
@@ -19638,7 +19637,7 @@ async function loadUeberblickDeadlines(ownerId, todayStr) {
 
   const { data, error } = await supabase
     .from('prescriptions')
-    .select('id, ausstellungsdatum, behandlungsbeginn, status, leads!patient_id(first_name, last_name)')
+    .select('id, ausstellungsdatum, behandlungsbeginn, status, is_dringend, leads!patient_id(first_name, last_name)')
     .eq('owner_id', ownerId)
     .not('status', 'in', '(completed,billed,rejected)')
     .order('ausstellungsdatum', { ascending: true })
@@ -19654,12 +19653,13 @@ async function loadUeberblickDeadlines(ownerId, todayStr) {
   const alerts = [];
   data.forEach(rx => {
     const name = [rx.leads?.first_name, rx.leads?.last_name].filter(Boolean).join(' ') || '—';
-    const issued = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum) : null;
     const started = rx.behandlungsbeginn ? new Date(rx.behandlungsbeginn) : null;
+    // Dringlich 14 Tage, sonst 28 (module/heilmittel-fristen.js) — vorher hier
+    // fest 28 Tage für alle, dringlich wurde nicht berücksichtigt.
+    const frist = behandlungsbeginnFrist(rx.ausstellungsdatum, rx.is_dringend);
 
-    if (issued) {
-      // 28-Tage Behandlungsbeginn Frist
-      const deadline28 = new Date(issued.getTime() + 28 * 86400000);
+    if (frist) {
+      const deadline28 = new Date(frist);
       if (!started && deadline28 >= new Date(todayStr) && deadline28 <= new Date(plus28)) {
         const daysLeft = Math.round((deadline28 - new Date(todayStr)) / 86400000);
         alerts.push({ type: 'warning', text: `${escapeHtml(name)} — Behandlungsbeginn in ${daysLeft} Tagen fällig (bis ${fmt(deadline28)})` });

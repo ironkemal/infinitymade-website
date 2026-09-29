@@ -93,6 +93,9 @@ import { behandlungspositionVorschlag } from './podo-behandlungsposition-regel.j
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
 // "heute" — s. `setPodVorwahl()` unten.
 import { podBehandlungsdatumVorschlag } from './podo-behandlungsdatum-vorwahl.js?v=20260928';
+// Reform S1.9 (29.09.2026): Behandlungsbeginn-Frist (§15 HeilM-RL) nicht mehr
+// zweimal von Hand nachrechnen (hier + vordAlerts unten) — ein Ort, eine Regel.
+import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20260929';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -565,15 +568,11 @@ async function loadPodologieBilling() {
   function vordAlerts(v) {
     const alerts = [];
     if (!v.behandlungsstart) {
-      let deadline = null;
-      if (v.beginn_spaetestens) {
-        deadline = new Date(v.beginn_spaetestens);
-      } else if (v.ausstellungsdatum) {
-        const issued = new Date(v.ausstellungsdatum);
-        const frist = v.dringend ? 14 : 28;
-        deadline = new Date(issued); deadline.setDate(deadline.getDate() + frist);
-      }
-      if (deadline && today > deadline) {
+      // `beginn_spaetestens` (= prescriptions.gueltig_bis) ist der gespeicherte
+      // Wert; fehlt er (Altbestand), liefert der gemeinsame Rechner denselben
+      // Wert frisch — kein zweites, eigenes 14/28-Tage-Rechenwerk mehr hier.
+      const deadline = v.beginn_spaetestens || behandlungsbeginnFrist(v.ausstellungsdatum, v.dringend);
+      if (deadline && today > new Date(deadline)) {
         const frist = v.dringend ? 14 : 28;
         alerts.push({ type: 'danger', msg: `Behandlungsfrist abgelaufen (${frist}-Tage-Regel)` });
       }
@@ -1030,23 +1029,18 @@ async function loadPodologieBilling() {
       }
     }
 
-    // beginn_spaetestens check: warn if first treatment is after deadline
+    // beginn_spaetestens check: warn if first treatment is after deadline.
+    // Rechenweg jetzt im gemeinsamen module/heilmittel-fristen.js (Reform S1.9)
+    // statt eines zweiten, eigenen 14/28-Tage-Rechenwerks — s. vordAlerts oben.
     if (vord && !vord.behandlungsstart && datum) {
-      let deadline = null;
-      if (vord.beginn_spaetestens) {
-        deadline = vord.beginn_spaetestens;
-      } else if (vord.ausstellungsdatum) {
-        const issued = new Date(vord.ausstellungsdatum);
-        const frist = vord.dringend ? 14 : 28;
-        issued.setDate(issued.getDate() + frist);
-        deadline = issued.toISOString().split('T')[0];
-      }
-      if (deadline && datum > deadline) {
-        const datumFormatted = new Date(datum).toLocaleDateString('de-DE');
-        const deadlineFormatted = new Date(deadline).toLocaleDateString('de-DE');
+      const pruef = pruefeBehandlungsbeginn({
+        ersterTermin: datum, ausstellungsdatum: vord.ausstellungsdatum,
+        istDringend: vord.dringend, behandlungsbeginn: vord.behandlungsstart,
+      });
+      if (!pruef.ok) {
         const proceed = await ctx.showConfirmModal({
           title: '⚠️ Datum nach Beginn spätestens',
-          message: `Das gewählte Datum (${datumFormatted}) liegt nach dem Beginn spätestens (${deadlineFormatted}). Trotzdem fortfahren?`,
+          message: `${pruef.meldung} Trotzdem fortfahren?`,
           confirmText: 'Trotzdem fortfahren',
           cancelText: 'Abbrechen'
         });

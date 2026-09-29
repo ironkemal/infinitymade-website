@@ -41,7 +41,7 @@
  */
 
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20260903';
-import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260814';
+import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260929';
 import { dgWurzel, bereichSchluessel } from './verordnung-regeln.js?v=20260903';
 
 /** Dringlichkeit der Meldung. `blocker` heisst: so geht die Verordnung nicht durch. */

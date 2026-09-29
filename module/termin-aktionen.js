@@ -35,7 +35,7 @@
 export const BK_PANEL_OFFSET = '456px';
 
 import { fuelleMuster13 } from './verordnung-maske.js?v=20260927';
-import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20260914';
+import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20260929';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
