@@ -117,6 +117,24 @@ Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir");
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
 ### 28-29.09.2026 · Podoloji reform sprinti S1 — Termin ↔ Verordnung, Tagesbehandlung
+- S1.4 (45d91c3) — yeni `module/podo-behandlungen-oeffnen.js`: `oeffnePodoBehandlungen`
+  `dashboard.js`'ten buraya **taşındı** (kuşatma; `dashboard.js`'te ince sarmalayıcı +
+  `podoBehandlungenDeps()` enjeksiyonu). İkinci parametre `{ vordId, datum, mehrdeutigFragen }`
+  — niye: tarihsiz `setPodVorwahl` çağrısı Tagesbehandlung ön seçimini eziyordu; eski
+  çağıranlar yalnız `leadId` ile çağırıyor, davranışları değişmedi. Yeni yardımcılar
+  `terminIstPodo`, `terminDatum`, `terminInZukunft`, `terminStartenPodo`. Nerede:
+  `handleTerminStarten` (normal + Hausbesuch dalı) — podoloji randevusu artık Physio'nun
+  `markPrescriptionSession` yolunu değil Tagesbehandlung'u açar (reçete + randevu günü).
+  Gelecek tarihli randevuda onay sorulur; bağsız randevu + 2 laufend reçetede ön seçim
+  yapılmaz (`podoloji` ajanı önerisi). Bu, `podBehandlungsdatumVorschlag`/`setPodVorwahl
+  { datum }` için beklenen ilk çağıranı bağladı (aşağıdaki 2d8aea5 maddesi).
+- S1.3 (2a596dc) — `TERMIN_SELECT` ve `loadScheduleBookings` select'ine `verordnung_id`;
+  `openBookingActionModal` `wunschRx` zincirine `booking.verordnung_id`;
+  `module/termin-verordnung.js` `rendereVeroKarten` opsiyonel `sb/ownerId/leadId` + podo dalı
+  (`ladePodoTermine` + `terminZaehler`, sayaç `[data-vero-zaehler]` asenkron dolar). Niye:
+  panel podolojide aynı anda "0/3" ve "keine aktive Verordnung" gösteriyordu (podolojide
+  `prescription_sessions` yok, sayım `bookings.verordnung_id` üzerinden). Nerede:
+  Termin-Aktionen paneli.
 - `module/termin-verordnung.js` `waehleVerordnung` podo dalı (b41d31d) — niye: kartla
   kaydedilen podoloji randevusu `bookings.verordnung_id` almıyordu. Nerede: Terminmodal kart
   seçimi (`dashboard.js` `selectVerordnung`).

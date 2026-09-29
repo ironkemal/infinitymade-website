@@ -223,6 +223,7 @@ SyntaxError veriyor (`Unexpected identifier 'max'`, satır 783: `2d8aea5`'in tem
 HTML yorumuna koyduğu backtick'ler dizgiyi erken kapatıyor). `dashboard.js:38` bu modülü statik
 import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) — P0, bütün hesaplar. S1.5 sınanamadı.
 **Son test:** 2026-09-29 (S1 regresyon, hotfix `94c753c`) — GEÇTİ (kısmi). P0 kapandı: dashboard taze yüklemede açılıyor, `Unexpected identifier` yok. QA tenant'ta aktif podo-Verordnung yok; "Abgerechnet (1)" grubundaki DF (a) Verordnung seçildi (form açık kaldı, bilgi şeridi var): 78010 önseçili ✓, 78030 işaretli ✓ (1 behandlung zaten dokümante → 78040 değil, doğru), `podBehDatum` = bugün ✓. KAYDEDİLMEDİ. İlk-gün 78040 dalı ve b)→78020 dalı veri olmadığı için sınanamadı.
+**Son test:** 2026-09-29 (S1.4+S1.7, `45d91c3`) — GEÇTİ. Termin-Aktionen → "Termin Starten" (bağlı, geçmiş tarihli test randevusu 28.09) doğrudan bu panele düşüyor: Sitzungsnotiz yok, Anamnese yok; Tagesbehandlung doğru Verordnung ile açık (tenant'ta tek podo-Verordnung var, 1-1 DF "Abgerechnet" — çoklu reçetede ayırt etme sınanamadı), `podBehDatum` = 2026-09-28 (randevu günü). Gelecek tarihli randevu (06.10): "Termin liegt in der Zukunft" sorusu çıktı; "Abbrechen" → takvimde kalındı, panel açılmadı; "Heute behandeln" → `podBehDatum` = 2026-09-29. KAYDEDİLMEDİ, `podologie_behandlungen` sayısı değişmedi (1). Hausbesuch dalı sınanmadı. Kanıt: `C:\tmp\pq29\05-termin-starten-vergangen.png`, `07-zukunft-frage.png`, `08-heute-behandeln.png`.
 
 ### Podologie Behandlungen — Abgerechnet-Gruppe (gesendete Verordnungen) — nav etiketi: `podologie-billing`
 
@@ -435,6 +436,7 @@ SyntaxError veriyor (`Unexpected identifier 'max'`, satır 783: `2d8aea5`'in tem
 HTML yorumuna koyduğu backtick'ler dizgiyi erken kapatıyor). `dashboard.js:38` bu modülü statik
 import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) — P0, bütün hesaplar. S1.1 sınanamadı.
 **Son test:** 2026-09-29 (S1 regresyon, hotfix `94c753c`) — GEÇTİ. QA tenant, TEST-hasta, DF Verordnung kartı seçildi: "Alle Sitzungen bereits vergeben" YOK, "Noch 3 von 3 Einheiten offen." var. Kaydet → `POST bookings` 201 + `PATCH bookings?id=eq.ac98464a` gövdesi `{"verordnung_id":"796aae21…"}` 200. Sayfa yenilendikten sonra Verordnung portalında "Termine: 1 vergeben — 01.10.26 · 11:00" (madde (1) ve (3) kapandı). Test randevusu Bearbeiten → "Löschen" (= `absageTerminMitGrund`, status=cancelled, silme değil) → sebep seçilip iptal edildi, `PATCH /api/booking/ac98464a` 200. Yeni konsol hatası yok. Not: yan paneldeki buton "Löschen" etiketli ama işlevi Absagen; önceki "Absagen" beklenti metni buna göre okunmalı.
+**Son test:** 2026-09-29 (S1.2, `2db4146`) — GEÇTİ. Kartsız kaydedilmiş podo randevusu (test, 28.09 16:00, `51841395`) → Termin-Aktionen "Bearbeiten" → Verordnung kartı seçildi ("Noch 3 von 3 Einheiten offen.") → Speichern → "Termin in der Vergangenheit" onayı → DB'de `verordnung_id=796aae21` yazıldı; panel hemen 1/3 gösterdi, yenileme sonrası takvimden açınca da 1/3 + "Termine (1)". Bilinen P3 duruyor: düzenleme penceresinin başlığı "Neuer Termin". Yan gözlem: geçmiş tarihli randevunun paneli açılınca `status` kendiliğinden `completed` oluyor (realtime UPDATE) — mevcut davranış, bu turun kapsamı dışı. Kanıt: `C:\tmp\pq29\02-bearbeiten-karte.png`, `03-panel-nach-bearbeiten.png`.
 
 ### Termin-Aktionen (sağ panel) — nav etiketi: (Terminkalender içinden)
 
@@ -454,6 +456,7 @@ görünürken hemen altındaki "Aktive Verordnung" kutusu "Für diesen Patienten
 Verordnung hinterlegt." diyor (reçete 1-1 "Abgerechnet"). Ayrıca "Ändern" ile Hausbesuch
 işaretlenince termin süresi sessizce 65 → 87 dk uzadı (bitiş 10:05 → 10:27) — niyet mi, `podoloji`'ye
 sorulmalı. Kanıt: `k4-aktionen.png`, `k3-termin-starten.png`.
+**Son test:** 2026-09-29 (S1.3, `2a596dc`) — GEÇTİ. Bağlı podo randevusunda "Für diesen Patienten ist keine aktive Verordnung hinterlegt." YOK; kart sayacı bağlı (iptal edilmemiş) randevu sayısını gösteriyor: 1 bağlıyken 1/3, 3 bağlıyken 3/3 (iptal edilmiş eski bağlı randevu sayılmıyor). Alt blok "Aktive Verordnung — n offen / 3 ges." + "Termine (n)" aynı reçeteyi gösteriyor. İki yükleme yolu, ikisi de sayfa yenilendikten sonra: takvim (Tag görünümü) ve Dashboard "Heutige Termine" listesi — ikisi de doğru. Kartsız (bağsız) randevuda eski metin hâlâ çıkıyor (beklenen, S1.3 kapsamı bağlı randevu). Yan gözlem (P2, kapsam dışı): Rezeptinfo "Status: gesendet" için tooltip "Unbekannter Status — steht so in der Datenbank." diyor, `gesendet` geçerli bir `abrechnung_status`. Kanıt: `C:\tmp\pq29\04-panel-kalender-reload.png`, `06-panel-heute-liste.png`.
 
 ### Hausbesuch — Fahrt Starten / Angekommen / Fahrt Beenden — nav etiketi: (Termin-Aktionen içinden)
 
@@ -691,6 +694,9 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
   olsa bile owner bağı/çalışma saatleri kaybolur. Çalışan yetki testi (kontrol #5) bu yüzden ertelendi
   (kullanıcı kararı, 28.09.2026). Düzeltilmedi, sadece kaydedildi.
 - 2026-09-28 · fonksiyon-ustasi · Termin-Portal "Nicht erschienen" · başarı toast'ı "Patient nicht erschienen — Bot wurde ausgelöst." diyor (`dashboard.js:4458`), oysa `triggerNoShowBot` yalnız console.log yapan ölü WhatsApp kalıntısı — kullanıcıya olmayan bir işlem bildiriliyor. Düzeltilmedi, sadece kaydedildi.
+- 2026-09-29 · canli-test · Termin-Aktionen → Rezeptinfo · abrechnung_status `gesendet` olan Verordnung'da Status rozetinin tooltip'i "Unbekannter Status — steht so in der Datenbank." (P2 — `gesendet` §302 akışının normal durumu; etiket haritası eksik görünüyor). Düzeltilmedi, sadece kaydedildi.
+- 2026-09-29 · canli-test · `dashboard.js?v=` cache-bust · 29.09'da `dashboard.js` iki kez değişti (`2a596dc`, `45d91c3`) ama `dashboard.html` hâlâ `?v=20260926b` — dosyayı daha önce önbelleğe almış tarayıcı eski sürümü çalıştırabilir (yeni modül `?v=20260929` ile bump'lı, ama onu import eden `dashboard.js` değil). P2, builder'a.
+- 2026-09-29 · canli-test · QA tenant temizliği AÇIK · S1 testi için üç test randevusu açıldı (TEST-hasta, bağlı Verordnung `796aae21`): `51841395` (28.09 16:00, status completed), `bc643b06` (06.10 10:00), `cd20da08` (29.09 17:00). Doğrudan REST ile iptal denemesi izin sisteminde reddedildi → kullanıcı kararı bekliyor. İptal edilmezse Verordnung sayacı 3/3 görünür ve sonraki testleri etkiler.
 
 ---
 

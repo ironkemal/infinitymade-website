@@ -80,11 +80,11 @@ S0 ile S1–S3 paralel yürüyebilir; S4 S0 bitmeden başlamaz.
 |---|---|---|---|---|
 | 1.1 ✅ `b41d31d` | Terminmodal'da reçete kartı seçilince podoloji reçetesini tanı, `_pendingRxSession = { prescriptionId, podoVordId }` kur; "Alle Sitzungen bereits vergeben" 0/3'te çıkmasın | `module/termin-verordnung.js:142` (`waehleVerordnung`), `dashboard.js:5114/5129` (`loadBkVerordnungen` select'ine `therapie_bereich`) | S | Kartla kaydedilen randevuda `bookings.verordnung_id` dolu; portalda "Termine (1)" |
 | 1.2 ✅ `2db4146` | Bağlamayı UPDATE koluna da taşı (mevcut randevuyu düzenleyip kart seçmek) | `dashboard.js:6064-6088` | S | Düzenlenen randevu bağlanıyor |
-| 1.3 | Aynı panelde "0/3" ile "keine aktive Verordnung hinterlegt" çelişkisini gider | Termin-Aktionen, `module/podo-einheiten.js` | S | Tek, tutarlı Verordnung bloğu |
-| 1.4 | Podolojide "Termin Starten" → `oeffnePodoBehandlungen(b.lead_id)`; `markPrescriptionSession` ve isimle hasta arama atlanır; Hausbesuch dalı da | `dashboard.js:4349-4417`, hedef `dashboard.js:6126` | S | Not kaybı yok, Tagesbehandlung o hastanın reçetesiyle açılır |
+| 1.3 ✅ `2a596dc` | Aynı panelde "0/3" ile "keine aktive Verordnung hinterlegt" çelişkisini gider | Termin-Aktionen, `module/podo-einheiten.js` | S | Tek, tutarlı Verordnung bloğu |
+| 1.4 ✅ `45d91c3` | Podolojide "Termin Starten" → `oeffnePodoBehandlungen(b.lead_id)`; `markPrescriptionSession` ve isimle hasta arama atlanır; Hausbesuch dalı da | `dashboard.js:4349-4417`, hedef `dashboard.js:6126` | S | Not kaybı yok, Tagesbehandlung o hastanın reçetesiyle açılır |
 | 1.5 ✅ `65a1b9e` | Tagesbehandlung'da reçetenin `heilmittel_position`'ı (78010/78020) her seansta önseçili; 78030/78040 kurala göre önerili | `module/podologie-abrechnung.js:314-320` | S | 2. seansta 78030 + 78010 hazır gelir |
 | 1.6 ✅ `0520c3f` | Preflight: "78030/78040 var, 78010/78020 yok" = blok | `api-backend/billing/…/preflight.js` | S | Test ile kanıtlı (`node --test`) |
-| 1.7 🟡 modül `2d8aea5`+hotfix `94c753c`; çağıran 1.4'te | Tagesbehandlung tarihi randevudan gelsin (bugün sabit "heute") | `module/podologie-abrechnung.js` | M | Randevudan açılınca tarih = randevu tarihi |
+| 1.7 ✅ modül `2d8aea5`+hotfix `94c753c`, çağıran `45d91c3` | Tagesbehandlung tarihi randevudan gelsin (bugün sabit "heute") | `module/podologie-abrechnung.js` | M | Randevudan açılınca tarih = randevu tarihi |
 | 1.8 | Podolojide seri dağıtma kapalı (`module/podo-einheiten.js:320`) → açılabilir mi, 1.1'le aynı bağlama yolu | `module/termin-aktionen.js:467`, `module/podo-einheiten.js:320` | M | Kalan seanslar tek adımda dağıtılır ve bağlanır |
 
 Ajanlar: fonksiyon-ustasi (önce/sonra), gkv-302 (1.5/1.6), canli-test (sonra).
@@ -143,6 +143,7 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 | 3.9 | ICD öneri listesi panel değişince kapansın (`requestSeq++` in `closeDropdown`, `activeElement` kontrolü) | `katalog-suche.js:206/349` | S |
 | 3.10 | `customer_name` = yalnız ad; kalender kartı `parseNameMitGeburt()`; `split('·')` 4 yer | `dashboard.js:2191-2204, 5105`, `module/termin-patient-bezug.js:42` | S–M |
 | 3.11 | 78030 süresi (`duration: null`) Folgetermin'e +30 dk eklemesin | `dashboard.js:9409` | S |
+| 3.13 | **Tagesbehandlung'dan "Fahrt beenden"** (podoloji, 29.09, P2): Hausbesuch'ta "Termin starten" artık Tagesbehandlung'a gidiyor; kayıttan sonra `fahrt_status=in_progress` ise kaydet onayının yanında "Fahrt beenden" düğmesi — yoksa Fahrt açık kalır, Fahrtenbuch eksik | `module/podo-behandlungen-oeffnen.js`, `podologie-abrechnung.js`, `renderBkActionFahrtState` | S |
 | 3.12 | Açık metin PHI (guvenlik sicili S-34/S-35) — yön guvenlik + db-ustasi ile | `api-backend/server.js` /rezept/confirm, `leads` | M |
 
 ---
@@ -152,6 +153,7 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 - Menü: S0 kararındaki yapı; Fahrtenbuch podoloji menüsüne; Demo-Modus kaldır; Feedback yardım ikonuna.
 - Sağ panel: 1 birincil ("Behandlung dokumentieren") + Verschieben · Absagen · Nicht erschienen · Folgetermin · Akte; "…": Drucken, Löschen. "Löschen" etiketi Absage'den ayrılır. Taşıma sonrası panel güncellenir.
 - Hasta dosyası: 11 → 6 sekme (Verlauf · Anamnese · Fußbefund · Verordnungen · Dokumente · Rechnungen), başlıkta "+ Termin", "+ Verordnung". Messreihen ve Überweisung podolojide gizli.
+- Anamnese: Tagesbehandlung'da hastanın Anamnese kaydı yoksa engellemeyen "Anamnese fehlt" uyarısı + tek tık bağlantı (podoloji, 29.09 — S1.4 ilk seansta otomatik Anamnese yönlendirmesini kaldırdı; gkv-302'ye sor: fatura şartı mı?).
 - Anamnese: podoloji içeriği (diyabet/HbA1c, antikoagülasyon, pAVK, nöropati, ülser/amputasyon, dializ, alerji, ayakkabı/Einlagen, Hausarzt/Diabetologe); kiosk'ta yalnız onam.
 - Fußbefund: Wagner/Armstrong (S0-2a), DF'de Sensibilität, Fußpulse, Ulkus; L/R etiketi; Speichern altta sabit.
 - Terminoloji: "Neuer Lead" → "Neuer Patient", "Kundenname" → "Patient", "Dienstleistung" → "Leistung"; "(Ops #244)" kullanıcıdan gizli.
