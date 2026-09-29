@@ -33,7 +33,7 @@ import { renderPatientenliste, patientPasstZurSuche } from './module/patientenli
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20260926b';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260929a';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
-import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
+import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260930a';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';

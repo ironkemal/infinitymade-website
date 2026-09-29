@@ -78,7 +78,7 @@ import { darf78040, darf78100, darfErstbefundungNagel,
          POD_EINGANGSBEFUNDUNG, POD_BEFUNDPAUSCHALE,
          POD_ERSTBEFUNDUNG_GROSS, POD_ERSTBEFUNDUNGEN,
          nagelLabel }
-  from './eingangsbefundung-regel.js?v=20260920s';
+  from './eingangsbefundung-regel.js?v=20260930a';
 // Seit 04.09.2026 gibt es EINEN Verordnungstopf (`prescriptions`). Diese Datei
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }

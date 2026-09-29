@@ -28,6 +28,8 @@
  * Quelle der Feldnamen: `db/SCHEMA.sql` → `pat_fussbefund`. Nicht geraten.
  */
 
+import { datumDe } from './datum.js?v=20260930a';
+
 /** Risiken, die für einen Podologen den Blick auf den Fuß ändern. */
 const RISIKO_LABEL = {
   diabetes:              'Diabetes',
@@ -39,11 +41,6 @@ const RISIKO_LABEL = {
 /** Diabetes zuerst: das ist die Angabe, wegen der ein Fuß anders behandelt wird. */
 const RISIKO_REIHENFOLGE = ['diabetes', 'infektionskrankheiten', 'gerinnungshemmer', 'allergien'];
 
-function datumDe(wert) {
-  const d = new Date(wert);
-  if (isNaN(d)) return '—';
-  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
 
 /** Aktive Risiken einer Befundzeile, in klinischer Reihenfolge. */
 function risiken(row) {
@@ -152,7 +149,7 @@ export async function renderFussbefundArchiv(deps, leadId, containerId = 'pdFuss
         '<td style="padding:9px 10px;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600;">' +
           '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;' +
           'background:' + esc(row.serie_farbe || '#2563eb') + ';" title="Befundserie"></span>' +
-          datumDe(row.erstellt_am) +
+          datumDe(row.erstellt_am, '—') +
         '</td>' +
         '<td style="padding:9px 10px;">' +
           (marken.length

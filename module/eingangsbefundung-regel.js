@@ -45,11 +45,10 @@ export const POD_EINGANGSBEFUNDUNG = '78040';
 /** HPNR der podologischen Befundung — an jedem ANDEREN Behandlungstag. */
 export const POD_BEFUNDPAUSCHALE = '78030';
 
-/** `YYYY-MM-DD` → `TT.MM.JJJJ`; alles andere unveraendert. */
-export function datumDe(iso) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso ?? ''));
-  return m ? `${m[3]}.${m[2]}.${m[1]}` : String(iso ?? '');
-}
+// `datumDe` lebt in datum.js (eine Fassung im Baum); hier nur weiter ausgefuehrt,
+// damit bestehende Importe dieses Moduls nicht brechen.
+import { datumDe } from './datum.js?v=20260930a';
+export { datumDe };
 
 /**
  * Darf am `datum` noch 78040 abgerechnet werden?

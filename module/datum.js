@@ -61,6 +61,27 @@ export function alsISODatum(d) {
 }
 
 /**
+ * Ein Kalendertag als `TT.MM.JJJJ` — die einzige Anzeige-Fassung im Baum.
+ *
+ * Zwei Wege, weil zwei Sorten Eingabe: ein reiner Kalendertag (`date`-Spalte,
+ * `2026-09-30`) hat keine Zeitzone und darf keine bekommen — über `new Date()`
+ * würde er als UTC-Mitternacht gelesen und in Zeitzonen westlich von UTC auf
+ * den Vortag kippen. Der Zeitpunkt (`timestamptz`, Date, ms) dagegen ist ein
+ * echter Moment und wird über `alsISODatum` als der Tag gelesen, den der
+ * Nutzer auf seiner Uhr sieht.
+ *
+ * @param {Date|string|number} wert
+ * @param {string} [leer='']  Anzeige bei leerem/ungültigem Wert (z. B. '—')
+ * @returns {string}
+ */
+export function datumDe(wert, leer = '') {
+  const iso = typeof wert === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(wert) ? wert : alsISODatum(wert);
+  if (!iso) return leer;
+  const [j, m, t] = iso.split('-');
+  return `${t}.${m}.${j}`;
+}
+
+/**
  * Ein Zeitpunkt als Wert für `<input type="datetime-local">` (`YYYY-MM-DDTHH:MM`),
  * lokal gelesen — die Gegenrichtung zu `new Date(feld.value)` beim Speichern.
  *

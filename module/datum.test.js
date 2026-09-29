@@ -78,3 +78,30 @@ test('alsDatetimeLocal: leer und Unsinn geben Leerstring', async () => {
   const { alsDatetimeLocal } = await import('./datum.js');
   for (const v of [null, undefined, '', 'kein datum']) assert.equal(alsDatetimeLocal(v), '');
 });
+
+test('datumDe: reiner Kalendertag ohne Zeitzonen-Umweg', async () => {
+  const { datumDe } = await import('./datum.js');
+  assert.equal(datumDe('2026-09-30'), '30.09.2026');
+  assert.equal(datumDe('2026-01-01'), '01.01.2026');
+});
+
+test('datumDe: Zeitpunkt wird als lokaler Tag gelesen (Date, timestamptz, ms)', async () => {
+  const { datumDe } = await import('./datum.js');
+  // Zeitzonen-unabhaengig: lokale Felder rein, dieselben Felder raus.
+  const lokal = new Date(2026, 8, 30, 23, 30);
+  assert.equal(datumDe(lokal), '30.09.2026');
+  assert.equal(datumDe(lokal.toISOString()), '30.09.2026');
+  assert.equal(datumDe(lokal.getTime()), '30.09.2026');
+  // Der Fall aus dem Auftrag: Tag richtet sich nach der lokalen Uhr, nicht nach UTC.
+  const x = new Date('2026-09-30T21:30:00Z');
+  const erwartet = `${String(x.getDate()).padStart(2, '0')}.${String(x.getMonth() + 1).padStart(2, '0')}.${x.getFullYear()}`;
+  assert.equal(datumDe('2026-09-30T21:30:00Z'), erwartet);
+});
+
+test('datumDe: leer/ungueltig gibt `leer` (Standard \'\', frei waehlbar)', async () => {
+  const { datumDe } = await import('./datum.js');
+  for (const v of [null, undefined, '', 'kein datum', new Date('kaputt')]) {
+    assert.equal(datumDe(v), '');
+    assert.equal(datumDe(v, '—'), '—');
+  }
+});
