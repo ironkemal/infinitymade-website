@@ -35,6 +35,7 @@
 export const BK_PANEL_OFFSET = '456px';
 
 import { fuelleMuster13 } from './verordnung-maske.js?v=20260927';
+import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20260914';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -446,6 +447,56 @@ export async function uebernimmVerordnung(rx, deps) {
 // ── Offene Einheiten als Serie ─────────────────────────────────────────────
 
 /**
+ * Ist der Frequenztext etwas, das die Serienplanung versteht?
+ *
+ * Podoloji-Denetim (29.09.2026, S1.8-Fund): eine podologische Verordnung
+ * trägt typischerweise „1x alle 4–6 Wochen" — Freitext wie „4–6 wöchig",
+ * „monatlich" oder „alle 4-6 Wo." fiel bisher kommentarlos durch
+ * `frequenzToSeries()` (dashboard.js, versteht nur „täglich" und
+ * „alle N(–M) Wochen") auf 7 Tage zurück, macht also aus einer 4–6-wöchigen
+ * Verordnung eine wöchentliche Serie — die Praxis bestätigt sechsmal zu viel,
+ * ohne es zu merken.
+ *
+ * Bewusst ohne Abgleich gegen `FREQUENZ_OPTIONS` (dashboard.js): jeder
+ * Eintrag dort fällt unter eine der drei Regeln unten, geprüft in
+ * termin-aktionen.test.js — „täglich"/„2x täglich" über die erste Regel,
+ * „N(–M)x pro Woche" über `sitzungenProWoche()`, der Rest („alle N Wochen",
+ * „Flex (1–8 Wochen)") über die Zahl-vor-„Wochen"-Regel.
+ */
+export function frequenzErkannt(text) {
+  const txt = String(text || '').trim();
+  if (!txt) return false;
+  if (/t[äa]gl/i.test(txt)) return true;
+  if (sitzungenProWoche(txt) != null) return true;
+  return /\d+\s*(?:[-–—]\s*\d+\s*)?\s*wochen/i.test(txt);
+}
+
+// Was ohne erkannte Frequenz vorgeschlagen wird — die häufigste podologische
+// Frequenz (Podologie-FAK, siehe frequenz-pruefung.js: DF/NF/QF „4–6-wöchig").
+const PODO_FREQUENZ_STANDARD = '1x alle 4 Wochen';
+
+/**
+ * Frequenz einer podologischen Verordnung normalisieren, BEVOR sie in die
+ * Serienplanung geht (`verteileOffeneSitzungen` unten).
+ *
+ * Leere oder unverstandene Texte fielen bisher still auf „1x pro Woche" —
+ * diese Funktion macht daraus einen lauten Standardwert mit Hinweis statt
+ * eines leisen falschen. Reine Rechnung, kein DOM: der Aufrufer entscheidet,
+ * was mit `hinweis` geschieht (Toast).
+ *
+ * @param {?string} rxFrequenz
+ * @returns {{frequenz: string, hinweis: ?string}}
+ */
+export function normalisierePodoFrequenz(rxFrequenz) {
+  const txt = String(rxFrequenz || '').trim();
+  if (txt && frequenzErkannt(txt)) return { frequenz: txt, hinweis: null };
+  const hinweis = txt
+    ? `Frequenz der Verordnung nicht erkannt („${txt}") — „${PODO_FREQUENZ_STANDARD}" vorgeschlagen. Bitte prüfen.`
+    : `Frequenz der Verordnung nicht erkannt — „${PODO_FREQUENZ_STANDARD}" vorgeschlagen. Bitte prüfen.`;
+  return { frequenz: PODO_FREQUENZ_STANDARD, hinweis };
+}
+
+/**
  * Vergibt alle noch offenen Einheiten einer Verordnung auf einmal.
  *
  * Bis hierher gab es dafür nur das Ziehen einzelner Einheiten auf den
@@ -463,6 +514,12 @@ export async function uebernimmVerordnung(rx, deps) {
  * `window._physioFlow` ist die Brücke zum Abschluss: danach hängt
  * `linkBookingsToPrescriptionSessions()` die neuen Termine an genau diese
  * Verordnung — deshalb wandern sie im Panel von „Unvergebene" zu „Termine".
+ *
+ * Frequenz + Hausbesuch (S1.8, 29.09.2026, podoloji-Denetim): NUR für
+ * podologische Verordnungen (`rx.therapie_bereich === 'podo'`) — dieselbe
+ * Funktion bedient auch den Physio/Ergo/Logo-Serienknopf (dashboard.js
+ * `loadRxSessionsPanel`), und dessen `rx` führt an dieser Stelle weder ein
+ * verlässliches `hausbesuch` noch dieselbe Frequenzkultur. Bleibt unverändert.
  */
 export async function verteileOffeneSitzungen({
   rx, offen, booking, patientId, schliessePanel, starteSerienplanung, toast,
@@ -470,23 +527,90 @@ export async function verteileOffeneSitzungen({
   if (!patientId) { toast?.('Kein Patient zur Verordnung gefunden.', 'error'); return; }
   if (!rx?.id) { toast?.('Keine Verordnung ausgewählt.', 'error'); return; }
 
+  let frequenz = rx.frequenz || '';
+  let hausbesuch = !!booking?.hausbesuch;
+  if (rx.therapie_bereich === 'podo') {
+    const norm = normalisierePodoFrequenz(rx.frequenz);
+    frequenz = norm.frequenz;
+    if (norm.hinweis) toast?.(norm.hinweis, 'warning');
+    hausbesuch = hausbesuch || !!rx.hausbesuch;
+  }
+
   const preset = {
     prescription_id: rx.id,
     patient_id: patientId,
     anzahl: offen,
-    frequenz: rx.frequenz || '',
+    frequenz,
     heilmittel: rx.heilmittel,
     heilmittel_position: rx.heilmittel_position || null,
     // Die Leistung des laufenden Termins ist die richtige Vorgabe — sie wurde
     // beim ersten Termin dieser Verordnung schon einmal richtig zugeordnet.
     service_id: booking?.service_id || null,
-    hausbesuch: !!booking?.hausbesuch,
+    hausbesuch,
     patient_name: (booking?.customer_name || '').split('·')[0].trim(),
   };
 
   window._physioFlow = preset;
   schliessePanel?.();
   await starteSerienplanung(preset);
+}
+
+// ── Frequenz → Serienplanungs-Maske ─────────────────────────────────────────
+
+/**
+ * Serientermin-„Wiederholung" + Wochentag-Kästchen aus einer Verordnung
+ * vorbelegen. Aus dashboard.js hierher verschoben (S1.8, 29.09.2026,
+ * podoloji-Denetim) — dabei behoben:
+ *
+ * Bei „alle N Wochen" liefert `sitzungenProWoche()` bewusst `null` (die Serie
+ * plant über den Wochenabstand, nicht über eine Wochentagzahl) — die alte
+ * Fassung liess die Kästchen dann UNANGETASTET. Standen von einer früheren
+ * Auswahl noch zwei-drei Tage angehakt, schickte `batch-create`
+ * (api-backend/server.js: es iteriert `wdSet` je Intervallschritt) für JEDEN
+ * angehakten Tag einen eigenen Termin JE Intervall — aus „1x alle 4 Wochen"
+ * wurden bis zu fünf Termine alle vier Wochen statt einem. Jetzt bekommt jede
+ * Frequenz ohne Wochentag-Zahl genau EIN angehaktes Kästchen: den Starttag.
+ * Vorschlag, kein Zwang — die Haken bleiben bedienbar.
+ *
+ * @param {{frequenz?: string}} rx
+ */
+export function uebernimmSerienfrequenzAusRx(rx) {
+  if (!rx?.frequenz) return;
+  setFreqValue('bkSeriesRecurrence', rx.frequenz);
+
+  const boxen = document.querySelectorAll('#bkSeriesWeekdays input');
+  if (!boxen.length) return;
+
+  const startV = document.getElementById('bkStart')?.value;
+  const startTag = startV
+    ? new Date(startV.substring(0, 10) + 'T12:00:00Z').getUTCDay()
+    : new Date().getDay();
+
+  const proWoche = sitzungenProWoche(rx.frequenz);
+  const tage = proWoche ? new Set(verteileWochentage(startTag, proWoche)) : new Set([startTag]);
+  boxen.forEach(cb => { cb.checked = tage.has(parseInt(cb.value, 10)); });
+}
+
+/**
+ * Select mit freiem Text füllen (alte Datensätze / OCR-Ausgabe stehen nicht
+ * unbedingt in der Optionsliste): normalisieren, passende Option wählen,
+ * sonst als provisorische Option anhängen. Mit `uebernimmSerienfrequenzAusRx`
+ * aus dashboard.js hierher verschoben.
+ *
+ * EXPORTIERT: nicht nur hier intern gebraucht — dashboard.js reicht sie auch
+ * als `setFrequenz`-Brücke an `verordnung-maske.js` weiter (`setzeMaskeBruecke()`,
+ * füllt `#rzFreq` beim „übernehmen"/OCR-Weg der Muster-13-Maske).
+ */
+export function setFreqValue(id, value) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const v = (value || '').trim();
+  if (!v) { sel.value = ''; return; }
+  const norm = s => s.toLowerCase().replace(/×/g, 'x').replace(/-/g, '–').replace(/\s+/g, ' ');
+  const match = Array.from(sel.options).find(o => o.value && norm(o.value) === norm(v));
+  if (match) { sel.value = match.value; return; }
+  sel.add(new Option(v, v));
+  sel.value = v;
 }
 
 // ── Auswahl sichtbar machen ────────────────────────────────────────────────

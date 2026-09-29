@@ -50,6 +50,7 @@ import { positionVon } from './podo-geplant.js?v=20260918';
 import { istVergeben, ladePodoTermine, bindeTermin } from './verordnung-termine.js?v=20260908';
 import { zeigeSitzungenArbeit } from './termin-panel.js?v=20260918';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
+import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20260916';
 
 /** Klartext der Befundpositionen — dieselben Namen wie im Sitzungsplan. */
 const BEFUND_NAME = Object.freeze({
@@ -204,6 +205,161 @@ export async function bindePodoAnTermin(sb, bookingId, pend, { emit } = {}) {
   return { ok: true, gebunden: 1, erwartet: 1, fehlend: [], meldung: '' };
 }
 
+/**
+ * Der Sortierschlüssel eines neu angelegten Termins — für `bindePodoSerie()`,
+ * damit bei einer Kappung (siehe dort) die ZEITLICH ersten Termine gebunden
+ * werden, nicht die zuerst in der Antwort stehenden.
+ *
+ * Zwei Formen kommen vor: `POST /booking/batch-create` liefert `start_time`
+ * (ISO), `POST /booking/batch-create-explicit` liefert `date` + `time` statt.
+ */
+function terminSortierschluessel(b) {
+  if (b?.start_time) return b.start_time;
+  if (b?.date && b?.time) return `${b.date}T${b.time}`;
+  return b?.date || '';
+}
+
+/**
+ * Serien-Zwilling zu `bindePodoAnTermin()`: bindet mehrere neu angelegte
+ * Termine auf einmal an dieselbe podologische Verordnung.
+ *
+ * Aufgerufen vom Serienknopf (`aufSerie` oben) über den KI-Serienweg
+ * (`aiSuggestConfirm`, dashboard.js) und vom manuellen Serienweg
+ * (`batch-create`, dashboard.js) — beide münden in `linkBookingsToPrescriptionSessions()`
+ * bzw. `bindePodoSerieVonRezept()`, die dort zwischen podologisch und
+ * Physio/Ergo/Logo entscheiden.
+ *
+ * Kappung: übersteigen die neuen Termine zusammen mit den bereits vergebenen
+ * die verordnete Menge, wird NICHT MEHR nachgefragt (S1.8-Nachbesserung,
+ * 29.09.2026, podoloji-Denetim — vorher stand hier eine Rückfrage „Trotzdem
+ * alle zuordnen?"). Grund: eine Kasse zahlt nur die verordnete Menge, „alle
+ * zuordnen" hätte also nie eine gültige Wahl sein dürfen — es band Termine an
+ * eine Verordnung, die sie gar nicht deckt, und genau das erzeugt später eine
+ * Absetzung. Gebunden werden deshalb IMMER nur die ZEITLICH ersten Termine
+ * bis zur Kapazitätsgrenze; der Rest bleibt ohne Verordnung (kein Fehler,
+ * `meldung` sagt es) und braucht eine Folgeverordnung.
+ *
+ * @param {object} sb
+ * @param {object} opt
+ * @param {string} opt.ownerId
+ * @param {string} opt.vordId          `prescriptions.id`
+ * @param {*}      opt.anzahlEinheiten `prescriptions.anzahl_einheiten` — `null`/leer
+ *        heisst „nicht erfasst": dann wird ohne Kappung gebunden, wie bei
+ *        `einheitenPlan()` (Regel 1 dort).
+ * @param {Array}  opt.created         `json.created` aus `batch-create(-explicit)`
+ * @param {Function} [opt.emit]
+ * @returns {Promise<{ok:boolean, gebunden:number, erwartet:number, fehlend:string[], meldung:string, warnung:boolean}>}
+ *          `warnung` = true, wenn die Kappung gegriffen hat — der Aufrufer
+ *          zeigt `meldung` dann als Warnung, nicht als reine Info.
+ */
+export async function bindePodoSerie(sb, { ownerId, vordId, anzahlEinheiten, created, emit } = {}) {
+  const eintraege = (created || [])
+    .map(b => ({ id: typeof b === 'string' ? b : (b?.id || b?.booking_id), schluessel: terminSortierschluessel(b) }))
+    .filter(e => e.id)
+    .sort((a, b) => String(a.schluessel).localeCompare(String(b.schluessel)));
+
+  if (!eintraege.length || !vordId) {
+    return { ok: true, gebunden: 0, erwartet: 0, fehlend: [], meldung: '', warnung: false };
+  }
+
+  let zuBinden = eintraege;
+  let ueberschuss = 0;
+  const kappe = Number.parseInt(anzahlEinheiten, 10);
+  if (Number.isFinite(kappe) && kappe > 0) {
+    const { vergeben } = await ladePodoTermine(sb, { ownerId, vordId, leadId: null });
+    const belegt = (vergeben || []).filter(istVergeben).length;
+    const frei = Math.max(0, kappe - belegt);
+    if (eintraege.length > frei) {
+      ueberschuss = eintraege.length - frei;
+      zuBinden = eintraege.slice(0, frei);
+    }
+  }
+
+  const fehlend = [];
+  let gebunden = 0;
+  for (const e of zuBinden) {
+    const r = await bindeTermin(sb, { bookingId: e.id, vordId });
+    if (r.ok) gebunden++; else fehlend.push(e.id);
+  }
+  if (gebunden > 0) emit?.('verordnungen:changed');
+
+  let meldung = '';
+  if (fehlend.length) {
+    meldung = `${gebunden} von ${zuBinden.length} Terminen der Verordnung zugeordnet — ${fehlend.length} `
+      + 'fehlgeschlagen. Bitte unter „Verordnungen" von Hand nachtragen.';
+  } else if (ueberschuss > 0) {
+    const wort = ueberschuss === 1 ? 'Termin liegt' : 'Termine liegen';
+    meldung = `${gebunden} Termine der Verordnung zugeordnet. ${ueberschuss} ${wort} über der verordneten Menge `
+      + 'und bleiben ohne Verordnung — Folgeverordnung nötig.';
+  }
+
+  return { ok: fehlend.length === 0, gebunden, erwartet: zuBinden.length, fehlend, meldung, warnung: ueberschuss > 0 };
+}
+
+/**
+ * Selbstständiger Einstieg für `bindePodoSerie()`: prüft selbst, ob die
+ * Verordnung überhaupt podologisch ist, und holt sich dafür `anzahl_einheiten`
+ * gleich mit.
+ *
+ * Für den Aufrufer (dashboard.js, sowohl der KI-Serienweg als auch der manuelle
+ * Serienweg über `batch-create`) heisst `{ podo: false }`: „das war keine
+ * podologische Verordnung, mach mit deinem eigenen (Sitzungsbuch-)Weg weiter."
+ * Die Entscheidung hängt an dieser einen DB-Spalte — nicht an einer
+ * Fachbereich-Einstellung der Praxis (Kopf dieser Datei).
+ *
+ * @returns {Promise<{podo:boolean, ok?:boolean, gebunden?:number, erwartet?:number, fehlend?:string[], meldung?:string, warnung?:boolean}>}
+ */
+export async function bindePodoSerieVonRezept(sb, { ownerId, prescriptionId, created, emit } = {}) {
+  if (!sb || !ownerId || !prescriptionId) return { podo: false };
+  const { data: rx } = await sb.from('prescriptions')
+    .select('anzahl_einheiten, therapie_bereich')
+    .eq('id', prescriptionId).maybeSingle();
+  if (rx?.therapie_bereich !== 'podo') return { podo: false };
+
+  const ergebnis = await bindePodoSerie(sb, {
+    ownerId, vordId: prescriptionId, anzahlEinheiten: rx.anzahl_einheiten, created, emit,
+  });
+  return { podo: true, ...ergebnis };
+}
+
+/**
+ * Dünner Serien-Einstieg für dashboard.js: bindet, meldet per Toast und kappt
+ * `window._physioFlow.prescription_id` — alles, was `linkBookingsToPrescriptionSessions()`
+ * und der manuelle Serienweg (`batch-create`) sonst je einzeln tun müssten.
+ * `dashboard.js` wächst nicht (Konsey 2026-08-13) — diese Bündelung hält beide
+ * Aufrufer bei einer Zeile.
+ *
+ * Rückgabe `true` heisst „war podologisch, ist erledigt" — der Aufrufer bricht
+ * dort ab. `false` heisst „keine podologische Verordnung", er macht mit seinem
+ * eigenen (Sitzungsbuch-)Weg weiter.
+ *
+ * @param {object} sb
+ * @param {object} opt
+ * @param {string} opt.ownerId
+ * @param {string} opt.prescriptionId
+ * @param {Array}  opt.created
+ * @param {Function} [opt.emit]
+ * @param {Function} [opt.toast]    `showToast`-kompatibel: (text, art, dauerMs)
+ * @returns {Promise<boolean>}
+ */
+export async function meldePodoSerienBindung(sb, { ownerId, prescriptionId, created, emit, toast } = {}) {
+  const bindung = await bindePodoSerieVonRezept(sb, { ownerId, prescriptionId, created, emit });
+  if (!bindung.podo) return false;
+  // Reihenfolge zählt: ein Schreibfehler (`ok:false`) ist wichtiger als die
+  // Kappungswarnung — beide können theoretisch gleichzeitig eintreten.
+  if (bindung.meldung) toast?.(bindung.meldung, bindung.ok === false ? 'error' : (bindung.warnung ? 'warning' : 'info'), 8000);
+  // Der Physio-Zweig räumt `_physioFlow` erst später auf (`proceedToRechnungForPhysio`,
+  // dashboard.js) — Podologie geht diesen Weg nie. Nur `prescription_id` kappen,
+  // nicht das ganze Objekt: `dashboard.js` liest danach noch `_physioFlow?.patient_id`
+  // als Fallback für den Patienten (~6833, E-Mail-Angebot nach KI-Bestätigung) —
+  // ein komplettes `= null` hätte diesen Fallback mitgerissen. Beide Bindungs-
+  // Aufrufer prüfen ohnehin `_physioFlow?.prescription_id`, also bleibt eine
+  // spätere, unabhängige Serie weiter davor geschützt, sich an eine bayat
+  // gewordene Verordnung zu binden.
+  if (window._physioFlow) window._physioFlow.prescription_id = null;
+  return true;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Anzeige
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -222,8 +378,18 @@ const datumKurz = (iso) => (iso
  * abrechenbar (`bereit`); `.or()`, weil `.in()` NULL nicht trifft.
  */
 async function ladeVerordnung(sb, { ownerId, leadId, vordId }) {
+  // `frequenz` seit S1.8 (28.09.2026): die Serienverteilung
+  // (`verteileOffeneSitzungen`, module/termin-aktionen.js) schlägt damit die
+  // Wochentage vor (`uebernimmSerienfrequenzAusRx`, jetzt ebenfalls dort) —
+  // ohne das Feld wäre die Vorbelegung leer und die Praxis müsste die
+  // Wochentage jedes Mal von Hand ankreuzen.
+  // `hausbesuch` seit S1.8-Nachbesserung (29.09.2026, podoloji-Denetim):
+  // `verteileOffeneSitzungen` übernimmt es in den Serien-Preset, wenn der
+  // laufende Termin selbst keinen Hausbesuch trägt — vorher stand dort immer
+  // nur `booking?.hausbesuch`, und eine Verordnung "Hausbesuch: ja" wurde bei
+  // der Serienverteilung ignoriert, sobald der Ausgangstermin keiner war.
   const spalten = 'id, heilmittel, heilmittel_feld_text, heilmittel_position, diagnosegruppe, '
-                + 'anzahl_einheiten, ausstellungsdatum, patient_id, therapie_bereich';
+                + 'anzahl_einheiten, ausstellungsdatum, patient_id, therapie_bereich, frequenz, hausbesuch';
   if (vordId) {
     const { data } = await sb.from('prescriptions').select(spalten)
       .eq('id', vordId).eq('owner_id', ownerId).eq('therapie_bereich', 'podo').maybeSingle();
@@ -274,10 +440,16 @@ async function ladeAltbestand(sb, { ownerId, leadId }) {
  *        Ersatzkontext ohne `id` sein (Patient ohne Termin)
  * @param {?string} [opt.vordId]           gewünschte Verordnung (Blätterpfeile)
  * @param {Function} [opt.aufBehandlungen] Sprung in die Behandlungsdokumentation
+ * @param {Function} [opt.aufSerie]        alle offenen Einheiten auf einmal verteilen
+ *        (`verteileOffeneEinheiten` → `verteileOffeneSitzungen`, dashboard.js/
+ *        module/termin-aktionen.js) — derselbe Ablauf wie bei Physio, nur ohne
+ *        `prescription_sessions`: gebunden wird am Ende über `bindePodoSerie()`.
+ *        Fehlt die Funktion, bleibt der Knopf verborgen (S1.8, 28.09.2026 —
+ *        vorher immer verborgen, siehe Git-Historie dieser Datei).
  * @returns {Promise<boolean>}  `false` = keine podologische Verordnung — der
  *          Aufrufer zeigt seinen Leerzustand
  */
-export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null, aufBehandlungen } = {}) {
+export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null, aufBehandlungen, aufSerie } = {}) {
   const panel    = document.getElementById('bkRxSessionsPanel');
   const unvList  = document.getElementById('bkRxUnvergebeneList');
   const termList = document.getElementById('bkRxTermineList');
@@ -315,10 +487,28 @@ export async function zeichnePodoEinheiten({ sb, ownerId, booking, vordId = null
       : `${plan.offen} offen / ${plan.einheiten.length} ges.`;
   }
 
-  // Keine Serienplanung: sie verteilt `prescription_sessions`-Zeilen, die es hier
-  // nicht gibt.
+  // Serienverteilung (S1.8, 28.09.2026): bis dahin stand hier "verteilt
+  // `prescription_sessions`-Zeilen, die es hier nicht gibt" — richtig für den
+  // WEG (Physio: Sitzungszeilen vorausfüllen), falsch als Grund, den Knopf ganz
+  // zu verbergen. Das Ziel bleibt dieselbe Verordnung (`vord.id`); gebunden wird
+  // am Ende nicht über Sitzungszeilen, sondern über `bindePodoSerie()`
+  // (aufgerufen aus `linkBookingsToPrescriptionSessions`, dashboard.js, nach
+  // REZEPT entschieden, nicht nach Fachbereich-Einstellung).
   const serieBtn = document.getElementById('bkRxSerieBtn');
-  if (serieBtn) { serieBtn.hidden = true; serieBtn.onclick = null; }
+  if (serieBtn) {
+    const aktivierbar = typeof aufSerie === 'function' && plan.offen > 0;
+    serieBtn.hidden = !aktivierbar;
+    if (aktivierbar) {
+      // `serienAnzahl` fällt von selbst auf `plan.offen` zurück, wenn die Liste
+      // keine (angehakten) `.rx-unv-cb`-Kästchen hat — heute der Regelfall hier,
+      // die Podologie-Liste zeigt (noch) keine Checkboxen.
+      const anzahl = serienAnzahl(unvList, plan.offen);
+      serieBtn.textContent = serienKnopfText(anzahl, anzahl !== plan.offen);
+      serieBtn.onclick = () => aufSerie({ rx: vord, offen: anzahl, booking });
+    } else {
+      serieBtn.onclick = null;
+    }
+  }
 
   const patientName = booking?.customer_name || '';
   const stil = 'display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--bg-card-solid);'

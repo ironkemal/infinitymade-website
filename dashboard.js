@@ -78,9 +78,9 @@ import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from '.
 import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20260906';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260920s';
-import { zeichnePodoEinheiten, bindePodoAnTermin, befundDienstId } from './module/podo-einheiten.js?v=20260920s';
+import { zeichnePodoEinheiten, bindePodoAnTermin, befundDienstId, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20260929b';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
-import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260914';
+import { pruefeFrequenz } from './module/frequenz-pruefung.js?v=20260914';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
@@ -105,8 +105,8 @@ import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './mo
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
-  verteileOffeneSitzungen, zeichneRezeptFortschritt,
-} from './module/termin-aktionen.js?v=20260919';
+  verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
+} from './module/termin-aktionen.js?v=20260929';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
@@ -3717,28 +3717,9 @@ async function selectVerordnung(rx, sessions) {
   uebernimmSerienfrequenzAusRx(rx);
 }
 
-// Die Serienplanung kannte die Verordnung bisher nicht: `frequenzToSeries()`
-// gibt für alles ausser „täglich" und „alle N Wochen" sieben Tage zurück. Bei
-// „3x pro Woche" musste die Praxis die Wochentage von Hand ankreuzen — tat sie
-// es nicht, entstand eine wöchentliche Serie, die der Verordnung widerspricht
-// und die unsere eigene Frequenzprüfung anschliessend zu Recht beanstandet.
-// Jetzt schlägt die Verordnung die Wochentage vor. Vorschlag, kein Zwang: die
-// Haken bleiben bedienbar.
-function uebernimmSerienfrequenzAusRx(rx) {
-  if (!rx?.frequenz) return;
-  setFreqValue('bkSeriesRecurrence', rx.frequenz);
-
-  const proWoche = sitzungenProWoche(rx.frequenz);
-  const boxen = document.querySelectorAll('#bkSeriesWeekdays input');
-  if (!proWoche || !boxen.length) return;
-
-  const startV = document.getElementById('bkStart')?.value;
-  const startTag = startV
-    ? new Date(startV.substring(0, 10) + 'T12:00:00Z').getUTCDay()
-    : new Date().getDay();
-  const tage = new Set(verteileWochentage(startTag, proWoche));
-  boxen.forEach(cb => { cb.checked = tage.has(parseInt(cb.value)); });
-}
+// uebernimmSerienfrequenzAusRx() + setFreqValue(): nach module/termin-aktionen.js
+// verschoben (S1.8, 29.09.2026, podoloji-Denetim) — dort auch der Fix für die
+// bei "alle N Wochen" stehenbleibenden Wochentag-Kästchen.
 
 // Die Verordnung enthaelt die Leistung bereits — die Praxis soll sie nicht ein
 // zweites Mal auswaehlen muessen (Beta-2, 12.08.2026). Das Feld wird deshalb
@@ -5916,6 +5897,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     closeModal('bookingModal');
     await refreshBookingViews();
 
+    if (created.length && window._physioFlow?.prescription_id) await meldePodoSerienBindung(supabase, { ownerId: getOwnerId(), prescriptionId: window._physioFlow.prescription_id, created, emit, toast: showToast });
     // Terminbestätigung drucken dialog — pass patient email if available
     let _serPatEmail = '';
     if (custId && Array.isArray(window.bkAllLeads)) {
@@ -6140,7 +6122,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   const panel = document.getElementById('bkRxSessionsPanel');
   if (!panel) return;
 
-  if (!booking?.id && !rxId) return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, aufBehandlungen: oeffnePodoBehandlungen })) || zeichneSitzungenLeer('keinTermin', { t });
+  if (!booking?.id && !rxId) return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, aufBehandlungen: oeffnePodoBehandlungen, aufSerie: verteileOffeneEinheiten })) || zeichneSitzungenLeer('keinTermin', { t });
 
   let prescriptionId = rxId;
   if (!prescriptionId) {
@@ -6151,7 +6133,7 @@ async function loadRxSessionsPanel(booking, rxId = null) {
       .maybeSingle();
     prescriptionId = linkedSession?.prescription_id || null;
   }
-  if (!prescriptionId) return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, aufBehandlungen: oeffnePodoBehandlungen })) || zeichneSitzungenLeer('keineVo', { t });
+  if (!prescriptionId) return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, aufBehandlungen: oeffnePodoBehandlungen, aufSerie: verteileOffeneEinheiten })) || zeichneSitzungenLeer('keineVo', { t });
   const linkedSession = { prescription_id: prescriptionId };
 
   const { data: rx } = await supabase.from('prescriptions')
@@ -6159,9 +6141,8 @@ async function loadRxSessionsPanel(booking, rxId = null) {
     .eq('id', prescriptionId)
     .maybeSingle();
   if (!rx) return zeichneSitzungenLeer('ladefehler', { t });
-  // Podologie: KEIN Einheiten-Hauptbuch (module/verordnung-topf.js, fuehrtSitzungsbuch) —
-  // gleicheSitzungenAb() darf hier nicht laufen. Die Einheiten werden berechnet: module/podo-einheiten.js.
-  if (rx.therapie_bereich === 'podo') return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, vordId: rx.id, aufBehandlungen: oeffnePodoBehandlungen })) || zeichneSitzungenLeer('podologie', { t, aufBehandlungen: () => oeffnePodoBehandlungen(booking?.lead_id) });
+  // Podologie: KEIN Einheiten-Hauptbuch (module/verordnung-topf.js) — gleicheSitzungenAb() darf hier nicht laufen, Einheiten werden berechnet: module/podo-einheiten.js.
+  if (rx.therapie_bereich === 'podo') return (await zeichnePodoEinheiten({ sb: supabase, ownerId: getOwnerId(), booking, vordId: rx.id, aufBehandlungen: oeffnePodoBehandlungen, aufSerie: verteileOffeneEinheiten })) || zeichneSitzungenLeer('podologie', { t, aufBehandlungen: () => oeffnePodoBehandlungen(booking?.lead_id) });
 
   // Fehlende Sitzungszeilen ergänzen, BEVOR gelesen wird — sonst zeigt der
   // Seitenbereich weniger Einheiten an, als verordnet sind, und die fehlenden
@@ -7262,10 +7243,10 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
       .eq('id', prescriptionId)
       .maybeSingle();
 
-    // Erst die Sollzeilen herstellen, dann füllen. Ohne das legte genau dieser
-    // Pfad eine Zeile je *Termin* an — und die Verordnung hatte am Ende so
-    // viele Sitzungen, wie zufällig gebucht wurden, statt so viele wie
-    // verordnet (Fund vom 16.08.2026, module/sitzung-abgleich.js).
+    if (await meldePodoSerienBindung(supabase, { ownerId: getOwnerId(), prescriptionId, created, emit, toast: showToast })) return;
+    // Erst die Sollzeilen herstellen, dann füllen. Ohne das legte genau dieser Pfad eine Zeile
+    // je *Termin* an — und die Verordnung hatte am Ende so viele Sitzungen, wie zufällig gebucht
+    // wurden, statt so viele wie verordnet (Fund vom 16.08.2026, module/sitzung-abgleich.js).
     const _abgl = await gleicheSitzungenAb({
       supabase, prescriptionId, anzahlEinheiten: rx?.anzahl_einheiten, status: rx?.status,
     });
@@ -7285,7 +7266,7 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
     if (cap && used + adding > cap) {
       const hm = rx?.heilmittel ? ` (${rx.heilmittel})` : '';
       const ok = await showConfirmModal({
-        title: 'Reçete Sınırı Aşılıyor',
+        title: 'Verordnung würde überschritten',
         message: `Diese Verordnung${hm} erlaubt ${cap} Einheit${cap === 1 ? '' : 'en'}. Bereits verplant: ${used}. Neue Termine: ${adding}. Gesamt wäre ${used + adding} — ${used + adding - cap} zu viel.\n\nTrotzdem fortfahren?`,
         confirmText: 'Trotzdem eintragen',
         cancelText: 'Abbrechen',
@@ -16649,19 +16630,8 @@ function frequenzToSeries(freq) {
   return { recurrence: 'weekly', intervalDays: 7 };
 }
 
-// Select'e serbest-metin değer yaz (eski kayıtlar / OCR çıktısı listede olmayabilir):
-// normalize edip eşleşen option'ı seç, yoksa değeri geçici option olarak ekle.
-function setFreqValue(id, value) {
-  const sel = document.getElementById(id);
-  if (!sel) return;
-  const v = (value || '').trim();
-  if (!v) { sel.value = ''; return; }
-  const norm = s => s.toLowerCase().replace(/×/g, 'x').replace(/-/g, '–').replace(/\s+/g, ' ');
-  const match = Array.from(sel.options).find(o => o.value && norm(o.value) === norm(v));
-  if (match) { sel.value = match.value; return; }
-  sel.add(new Option(v, v));
-  sel.value = v;
-}
+// setFreqValue() ist jetzt in module/termin-aktionen.js (Import oben) — auch
+// `setzeMaskeBruecke({ setFrequenz: setFreqValue })` weiter unten nutzt sie.
 
 
 // Heilmittel-Position (X-Code) oder 5-stelliger Abrechnungscode → einheitliches X-Format.
