@@ -2589,12 +2589,11 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
           street: patient.street || null,
           plz: patient.plz || null,
           city: patient.city || null,
+          hausbesuch: !!rezept.hausbesuch,   // S3.1: Spalte, nicht metadata
           status: 'booked',
           metadata: {
-            geburtsdatum: dob,
             versichertennummer: patient.versichertennummer || null,
-            krankenkasse: patient.krankenkasse || null,
-            hausbesuch: !!rezept.hausbesuch
+            krankenkasse: patient.krankenkasse || null
           }
         })
         .select('id')

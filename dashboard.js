@@ -16,7 +16,8 @@ import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260921';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20260920s';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20260929a';
+import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
@@ -68,7 +69,7 @@ import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260917';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20260918';
+import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20260929a';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260929d';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
@@ -4809,7 +4810,7 @@ async function initBkGroupPatientAutocomplete() {
     const ownerId = getOwnerId();
     const { data } = await bizScope(supabase
       .from('leads')
-      .select('id,title,first_name,last_name,phone,metadata,street,plz,city')
+      .select('id,title,first_name,last_name,phone,geburtsdatum,hausbesuch,metadata,street,plz,city')
       .eq('owner_id', ownerId)
       .order('title'), 'patients');
     window.bkAllLeads = data || [];
@@ -5024,7 +5025,7 @@ async function initBkCustomerAutocomplete() {
     const ownerId = getOwnerId();
     const { data } = await bizScope(supabase
       .from('leads')
-      .select('id,title,first_name,last_name,phone,metadata,street,plz,city,lat,lng,distance_km,duration_min,route_calculated_at')
+      .select('id,title,first_name,last_name,phone,geburtsdatum,hausbesuch,metadata,street,plz,city,lat,lng,distance_km,duration_min,route_calculated_at')
       .eq('owner_id', ownerId)
       .order('title'), 'patients');
     window.bkAllLeads = data || [];
@@ -5073,6 +5074,7 @@ async function initBkCustomerAutocomplete() {
     idH.value = lead.id;
     if (phoneInput) phoneInput.value = lead.phone || '';
     list.hidden = true;
+    if (leadHausbesuch(lead)) document.getElementById('bkHausbesuch').checked = true;   // nur setzen, nie abwaehlen
     refreshBkHausbesuchPanel();
     loadBkVerordnungen(lead.id);
   }
@@ -7707,10 +7709,7 @@ function displayName(lead) {
   if (ln) return ln;
   return lead.title || '—';
 }
-function leadBirthDate(lead) {
-  const md = lead.metadata || {};
-  return lead.geburtsdatum || md.geburtsdatum || null;
-}
+function leadBirthDate(lead) { return leadGeburtsdatum(lead); }
 function displayNameWithBirth(lead) {
   const name = displayName(lead);
   const bd = leadBirthDate(lead);
@@ -8839,7 +8838,7 @@ async function openLeadModal(lead) {
   document.getElementById('leadModalTitle').textContent = lead ? t('lead_modal_edit') : t('lead_modal_new');
 
   const md = lead?.metadata || {};
-  document.getElementById('lead-geburtsdatum').value = md.geburtsdatum || '';
+  document.getElementById('lead-geburtsdatum').value = leadGeburtsdatum(lead) || '';
 
   const sector = getSector();
   const sectorFieldsEl = document.getElementById('lead-sector-fields');
@@ -8891,7 +8890,7 @@ async function openLeadModal(lead) {
       if (!document.getElementById('lead-city').value) document.getElementById('lead-city').value = parsed.city || '';
     }
     attachPlzOrt(plzEl, document.getElementById('lead-city'));   // → module/plz.js
-    const hb = !!md.hausbesuch;
+    const hb = leadHausbesuch(lead);
     document.getElementById('lead-hausbesuch').checked = hb;
     toggleLeadHausbesuchUI(hb);
 
@@ -9029,16 +9028,17 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     }
   }
 
-  const metadata = { geburtsdatum };
+  // S3.1: geburtsdatum/hausbesuch = Spalten; metadata wird zusammengefuehrt (OCR-Schluessel bleiben)
+  const formMeta = {};
   if (isPraxisSector(sector)) {
-    metadata.krankenkasse = document.getElementById('lead-krankenkasse').value || null;
-    metadata.krankenkassennummer = versichertennummer;
-    metadata.versichertenstatus = versichertenstatus;
-    metadata.hausbesuch = hausbesuch;
-    // metadata.adresse'yi artık kullanmıyoruz (strukturlu kolonlar var). Eski kayıtları
-    // upsert sırasında silmek istemiyoruz → kolonlarda doluysa metadata.adresse'i drop edelim.
-    if (street || plz) metadata.adresse = null;
+    formMeta.krankenkasse = document.getElementById('lead-krankenkasse').value || null;
+    formMeta.krankenkassennummer = versichertennummer;
+    formMeta.versichertenstatus = versichertenstatus;
+    if (street || plz) formMeta.adresse = null;   // Altlast: Spalten sind fuehrend
   }
+  const altLead = id ? (Array.isArray(leadsCache) ? leadsCache : []).find(l => l.id === id) : null;
+  const metadata = leadMetadataZusammenfuehren(altLead?.metadata, formMeta,
+    isPraxisSector(sector) ? ['geburtsdatum', 'hausbesuch'] : ['geburtsdatum']);
 
   const payload = {
     owner_id: getOwnerId(),
@@ -9054,7 +9054,9 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     plz,
     city: city || null,
     notes: document.getElementById('lead-notes').value.trim() || null,
-    metadata: Object.keys(metadata).length ? metadata : null,
+    geburtsdatum,
+    ...(isPraxisSector(sector) ? { hausbesuch } : {}),
+    metadata,
     krankenkasse: document.getElementById('lead-krankenkasse').value || null,
     versichertennummer: versichertennummer,
     versichertenstatus: versichertenstatus,
@@ -15557,7 +15559,7 @@ async function fillRzPatientFromLead(leadId) {
   g('rzPatName').value = lead.last_name || '';
   g('rzPatVorname').value = lead.first_name || '';
   // Geburtsdatum → dt. Format TT.MM.JJJJ
-  const bd = lead.geburtsdatum || md.geburtsdatum || '';
+  const bd = leadGeburtsdatum(lead) || '';
   const m = String(bd).match(/^(\d{4})-(\d{2})-(\d{2})/);
   g('rzPatGeb').value = m ? `${m[3]}.${m[2]}.${m[1]}` : (bd || '');
   g('rzPatStrasse').value = lead.street || '';
@@ -15571,7 +15573,7 @@ async function fillRzPatientFromLead(leadId) {
   g('rzPatKasseIk').value = kk?.ik || '';
 
   // Hausbesuch + Arzt vom Patienten übernehmen (nur wenn Felder noch leer)
-  if (lead.hausbesuch) setM13Hausbesuch(true);
+  if (leadHausbesuch(lead)) setM13Hausbesuch(true);
   if (lead.arzt_id && !g('rzArztName').value) {
     try {
       const { data: arzt } = await supabase.from('aerzte')
@@ -15597,7 +15599,7 @@ async function fillRzPatientFromLead(leadId) {
 function rzPatientLabel(l) {
   const md = l.metadata || {};
   const name = [l.last_name, l.first_name].filter(Boolean).join(', ') || l.title || '—';
-  const bdRaw = l.geburtsdatum || md.geburtsdatum || '';
+  const bdRaw = leadGeburtsdatum(l) || '';
   const m = String(bdRaw).match(/^(\d{4})-(\d{2})-(\d{2})/);
   const bd = m ? `${m[3]}.${m[2]}.${m[1]}` : (bdRaw || '');
   const tel = l.phone || md.phone || '';
@@ -18628,9 +18630,7 @@ function initSchnellerfassung() {
         phone: telefon,
         geschlecht,
       };
-      if (geburt) {
-        payload.metadata = { geburtsdatum: geburt };
-      }
+      if (geburt) payload.geburtsdatum = geburt;
       const { data: newLead, error } = await supabase
         .from('leads')
         .insert(payload)
@@ -18644,7 +18644,7 @@ function initSchnellerfassung() {
       // Direkt yüklüyoruz:
       const { data: freshLeads } = await supabase
         .from('leads')
-        .select('id,title,first_name,last_name,phone,metadata,street,plz,city,lat,lng,distance_km,duration_min,route_calculated_at')
+        .select('id,title,first_name,last_name,phone,geburtsdatum,hausbesuch,metadata,street,plz,city,lat,lng,distance_km,duration_min,route_calculated_at')
         .eq('owner_id', ownerId)
         .order('title');
       window.bkAllLeads = freshLeads || [];

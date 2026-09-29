@@ -33,6 +33,7 @@
 import { geschlechtLabel } from './geschlecht.js?v=20260816';
 import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260920t';
 import { mountBehandlungsbestaetigung } from './behandlungsbestaetigung.js?v=20260905a';
+import { leadGeburtsdatum, leadHausbesuch } from './lead-felder.js?v=20260929a';
 
 const DE = (iso) => {
   if (!iso) return '—';
@@ -58,7 +59,7 @@ export function renderStammdaten(grid, lead, deps = {}) {
   const md = lead.metadata || {};
   const name = deps.name ? deps.name(lead) : `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
 
-  const geburt = lead.geburtsdatum || md.geburtsdatum || '';
+  const geburt = leadGeburtsdatum(lead) || '';
   const alter = berechneAlter(geburt);
   const adresse = [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')]
     .filter(Boolean).join(', ') || '—';
@@ -96,7 +97,7 @@ export function renderStammdaten(grid, lead, deps = {}) {
     ['Adresse', esc(adresse)],
   ];
 
-  if (md.hausbesuch) {
+  if (leadHausbesuch(lead)) {
     const auto = deps.icons?.car
       ? `<span class="svg-icon" style="width:14px;height:14px;display:inline-flex;">${deps.icons.car}</span> `
       : '';
