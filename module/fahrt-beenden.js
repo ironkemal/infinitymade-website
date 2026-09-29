@@ -3,7 +3,7 @@
  * beenden (Reform-Sprint S3.13, 29.09.2026).
  *
  * Problem: "Termin starten" auf einem Hausbesuch setzt die Fahrt auf
- * `in_progress` und springt in die Tagesbehandlung (S1.4). Von dort gab es
+ * `fahrt_return_pending` (der DB-CHECK kennt kein `in_progress`) und springt in die Tagesbehandlung (S1.4). Von dort gab es
  * keinen Weg zurück zum Fahrt-Ende-Dialog — die Fahrt blieb offen, das
  * Fahrtenbuch unvollständig.
  *
@@ -22,7 +22,7 @@
  * @param {{bookingId?:string|null, fahrt_status?:string|null}} p
  */
 export function zeigeFahrtBeenden({ bookingId, fahrt_status } = {}) {
-  return !!bookingId && fahrt_status === 'in_progress';
+  return !!bookingId && fahrt_status === 'fahrt_return_pending';
 }
 
 /** HTML des Hinweises samt Knopf (id `podFahrtBeendenBtn`, Handler delegiert). */

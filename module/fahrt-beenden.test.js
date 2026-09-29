@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml, fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss } from './fahrt-beenden.js';
 
 test('Knopf nur mit Buchung und offener Fahrt', () => {
-  assert.equal(zeigeFahrtBeenden({ bookingId: 'b1', fahrt_status: 'in_progress' }), true);
+  assert.equal(zeigeFahrtBeenden({ bookingId: 'b1', fahrt_status: 'fahrt_return_pending' }), true);
   assert.equal(zeigeFahrtBeenden({ bookingId: 'b1', fahrt_status: 'fahrt_completed' }), false);
   assert.equal(zeigeFahrtBeenden({ bookingId: 'b1', fahrt_status: 'fahrt_arrived' }), false);
-  assert.equal(zeigeFahrtBeenden({ bookingId: null, fahrt_status: 'in_progress' }), false);
+  assert.equal(zeigeFahrtBeenden({ bookingId: null, fahrt_status: 'fahrt_return_pending' }), false);
   assert.equal(zeigeFahrtBeenden(), false);
 });
 

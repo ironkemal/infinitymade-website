@@ -37,9 +37,9 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260929s';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260929t';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
-import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss } from './module/fahrt-beenden.js?v=20260929';
+import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss } from './module/fahrt-beenden.js?v=20260929b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260926a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
@@ -4006,8 +4006,7 @@ async function renderBkActionFahrtState(booking, isOwn) {
     null: 'Nicht gestartet',
     fahrt_started: 'Fahrt unterwegs',
     fahrt_arrived: 'Angekommen',
-    in_progress: 'Termin läuft',
-    fahrt_return_pending: 'Rückkehr offen',
+    fahrt_return_pending: 'Termin läuft / Rückkehr offen',
     fahrt_completed: 'Abgeschlossen'
   };
   statusBadge.textContent = statusLabels[booking.fahrt_status] || statusLabels.null;
@@ -4028,11 +4027,8 @@ async function renderBkActionFahrtState(booking, isOwn) {
   } else if (s === 'fahrt_arrived') {
     // Termin Starten aktif (mevcut buton)
     startTerminGroup.hidden = false;
-  } else if (s === 'in_progress') {
-    // Termin başlatılmış — Fahrt Beenden henüz aktif değil ama gösterelim
-    startTerminGroup.hidden = true;
-    fahrtEndGroup.hidden = false;
   } else if (s === 'fahrt_return_pending') {
+    // Termin gestartet (S3.13: vorher 'in_progress', vom DB-CHECK abgelehnt)
     startTerminGroup.hidden = true;
     fahrtEndGroup.hidden = false;
   } else if (s === 'fahrt_completed') {
@@ -4309,15 +4305,16 @@ async function handleTerminStarten() {
   const ownerId = getOwnerId();
   const istPodoTermin = terminIstPodo(b, getSector()); // s. module/podo-behandlungen-oeffnen.js
 
-  // Hausbesuch: fahrt_status'u in_progress yap, modal'da kal — Fahrt Beenden göster
+  // Hausbesuch: fahrt_status'u fahrt_return_pending yap (CHECK-konform), modal'da kal — Fahrt Beenden göster
   if (b.hausbesuch) {
-    if (b.fahrt_status !== 'fahrt_arrived' && b.fahrt_status !== 'in_progress') {
+    if (b.fahrt_status !== 'fahrt_arrived' && b.fahrt_status !== 'fahrt_return_pending') {
       showToast('Bitte zuerst "Fahrt Starten" → "Ich bin angekommen" durchlaufen.', 'error');
       return;
     }
     if (b.fahrt_status === 'fahrt_arrived') {
-      await supabase.from('bookings').update({ fahrt_status: 'in_progress' }).eq('id', b.id);
-      b.fahrt_status = 'in_progress';
+      const { error: fsErr } = await supabase.from('bookings').update({ fahrt_status: 'fahrt_return_pending' }).eq('id', b.id);
+      if (fsErr) showToast('Fahrt-Status konnte nicht gespeichert werden - die Behandlung kann trotzdem dokumentiert werden.', 'error');
+      else b.fahrt_status = 'fahrt_return_pending';
     }
     if (istPodoTermin) { await terminStartenPodo(b, podoBehandlungenDeps()); return; }
     markPrescriptionSession(b.id, 'done');
@@ -13561,7 +13558,7 @@ document.getElementById('notesSaveBtn').addEventListener('click', async () => {
     : await supabase.from('patient_notes').insert(payload);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   showToast(t('saved'));
-  if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'in_progress') {
+  if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') {
     setTimeout(() => openBookingActionModal(bkActionBookingCache), 300);
   }
 });
@@ -14946,8 +14943,8 @@ async function saveAnamnese() {
     const { error } = await supabase.from('anamnese').update(payload).eq('id', currentAnamneseId);
     if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
     showToast('Anamnese aktualisiert.');
-    // Hausbesuch flow: termin in_progress → fahrt beenden ekranını göster
-    if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'in_progress') {
+    // Hausbesuch flow: termin gestartet (fahrt_return_pending) → fahrt beenden ekranını göster
+    if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') {
       setTimeout(() => openBookingActionModal(bkActionBookingCache), 300);
     }
   } else {
@@ -14955,8 +14952,8 @@ async function saveAnamnese() {
     if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
     if (data && data[0]) currentAnamneseId = data[0].id;
     showToast('Anamnese gespeichert.');
-    // Hausbesuch flow: termin in_progress → fahrt beenden ekranını göster
-    if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'in_progress') {
+    // Hausbesuch flow: termin gestartet (fahrt_return_pending) → fahrt beenden ekranını göster
+    if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') {
       setTimeout(() => openBookingActionModal(bkActionBookingCache), 300);
     }
   }
