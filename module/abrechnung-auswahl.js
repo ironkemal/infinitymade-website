@@ -186,6 +186,35 @@ export function podoBefundOhneBehandlung(vord, behs = []) {
 }
 
 /**
+ * 79933/79934 (Hausbesuch) nur bei „Hausbesuch: Ja" auf der Verordnung
+ * (Podologie Anlage 3 c), Reform S2.6). Wortgleich gespiegelt aus
+ * `api-backend/billing/dta/hausbesuch-regeln.js`. Hart, nicht übersteuerbar,
+ * gilt für alle Diagnosegruppen.
+ * @param {object} vord Zeile im podologischen Wortschatz (verordnung-topf.js)
+ * @param {Array<{behandlungsdatum: string, hpnr_codes: string[]}>} behs
+ * @returns {Array<string>} harte Gründe
+ */
+export function podoHausbesuchSperren(vord, behs = []) {
+  if (vord?.hausbesuch === true) return [];
+  const gruende = [];
+  for (const b of (Array.isArray(behs) ? behs : [])) {
+    const pos = (b?.hpnr_codes || []).map(c => String(c ?? '').trim());
+    const treffer = ['79933', '79934'].filter(c => pos.includes(c));
+    if (treffer.length) {
+      const s = String(b?.behandlungsdatum ?? '').trim();
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+      const datum = m ? `${m[3]}.${m[2]}.${m[1]}` : (s || 'unbekanntem Datum');
+      gruende.push(
+        `Hausbesuch (${treffer.join('/')}) am ${datum} nicht abrechenbar — ` +
+        'auf der Verordnung ist „Hausbesuch: Ja" nicht angekreuzt (Podologie Anlage 3 c)). ' +
+        'Änderung nur durch die Ärztin/den Arzt mit erneuter Unterschrift und Datum.'
+      );
+    }
+  }
+  return gruende;
+}
+
+/**
  * Keine dokumentierte Behandlung (keine HPNR) an dieser Verordnung.
  * Anders als `podoSperren()` NICHT übersteuerbar: `mapVerordnungToDtaShape()`
  * (Backend) wirft `sessions.length === 0` unbedingt — es gibt dort keine
@@ -601,7 +630,7 @@ export async function ladeAbrechnungAuswahl() {
 
       const befund = podoBefundOhneBehandlung(v, behs);
       const gruende = [...podoSperren(v, hpnrs), ...befund.uebersteuerbar];
-      const strukturGruende = [...podoStrukturBlocker(v, hpnrs), ...befund.hart];
+      const strukturGruende = [...podoStrukturBlocker(v, hpnrs), ...befund.hart, ...podoHausbesuchSperren(v, behs)];
       gruende.push(...strukturGruende);
       if (gruende.length) fehlerhaft.push({ bereich: 'podo', zeile, gruende, uebersteuerbar: !strukturGruende.length });
       else zeilen.push(zeile);

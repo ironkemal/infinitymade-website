@@ -16,6 +16,7 @@ import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
 import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
 import { befundpauschaleRegeln } from '../dta/befundpauschale-regeln.js';
+import { hausbesuchRegeln } from '../dta/hausbesuch-regeln.js';
 import { verordnungsartFuer, heilmittelBereichFuer, therapiefrequenzFuer } from '../dta/zhe-kennzeichen.js';
 // Preise/Zuzahlung kommen ab Aufgabe 2 ausschliesslich über preise/resolver.js.
 // Aus den Katalogen wird hier nur noch gebraucht, was nichts mit Geld zu tun hat.
@@ -3303,6 +3304,17 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         zielListe.push(`Verordnung ${beleg} (${v.patient_name || '—'}): ${grund}`);
         if (ueberst) uebersteuerteRegeln.push('BEFUNDPAUSCHALE_OHNE_BEHANDLUNG');
       }
+      }
+
+      // S2.6: 79933/79934 nur bei „Hausbesuch: Ja" auf der Verordnung
+      // (Anlage 3 c)). Gilt für ALLE Diagnosegruppen inkl. UI1/UI2 und ist
+      // wie (a) nie übersteuerbar — immer direkt in `sperren`.
+      const hbGruende = hausbesuchRegeln({
+        hausbesuch: v.hausbesuch,
+        tage: (behByVord[v.id] || []).map(b => ({ datum: b.behandlungsdatum, positionen: b.hpnr_codes || [] })),
+      });
+      for (const grund of hbGruende) {
+        sperren.push(`Verordnung ${beleg} (${v.patient_name || '—'}): ${grund}`);
       }
 
       if (ueberst && uebersteuerteRegeln.length) {

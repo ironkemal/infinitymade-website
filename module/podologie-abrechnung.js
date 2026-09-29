@@ -93,6 +93,7 @@ import { behandlungspositionVorschlag } from './podo-behandlungsposition-regel.j
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
 // "heute" — s. `setPodVorwahl()` unten.
 import { podBehandlungsdatumVorschlag } from './podo-behandlungsdatum-vorwahl.js?v=20260928';
+import { hausbesuchGesperrt, hausbesuchSpeicherFehler, HAUSBESUCH_HINWEIS } from './podo-hausbesuch.js?v=20260929a';
 // Reform S1.9 (29.09.2026): Behandlungsbeginn-Frist (§15 HeilM-RL) nicht mehr
 // zweimal von Hand nachrechnen (hier + vordAlerts unten) — ein Ort, eine Regel.
 import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20260929';
@@ -805,8 +806,10 @@ async function loadPodologieBilling() {
               const geplant = (!autoChecked
                 && code !== POD_EINGANGSBEFUNDUNG && code !== POD_BEFUNDPAUSCHALE
                 && (geplanteHpnr.has(code) || code === rezeptPosition)) ? 'checked' : '';
-              return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
-                <input type="checkbox" class="pod-hpnr-cb" value="${ctx.escapeHtml(code)}" ${autoChecked || geplant}> ${ctx.escapeHtml(code)} – ${ctx.escapeHtml(r.label)}
+              // 79933/79934 nur bei Hausbesuch=Ja auf der Verordnung (S2.6).
+              const hbGesperrt = hausbesuchGesperrt(selectedVord, code);
+              return `<label ${hbGesperrt ? 'title="' + ctx.escapeHtml(HAUSBESUCH_HINWEIS) + '"' : ''} style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:${hbGesperrt ? 'not-allowed' : 'pointer'};${hbGesperrt ? 'opacity:.5;' : ''}background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
+                <input type="checkbox" class="pod-hpnr-cb" value="${ctx.escapeHtml(code)}" ${hbGesperrt ? 'disabled' : (autoChecked || geplant)}> ${ctx.escapeHtml(code)} – ${ctx.escapeHtml(r.label)}${hbGesperrt ? '<span style="color:var(--text-muted);font-size:11px;"> — ' + ctx.escapeHtml(HAUSBESUCH_HINWEIS) + '</span>' : ''}
               </label>`;
             }).join('')}
           </div>
@@ -951,6 +954,7 @@ async function loadPodologieBilling() {
     if (!datum) err = 'Bitte ein Behandlungsdatum angeben.';
     else if (datum > heuteStr) err = 'Das Behandlungsdatum darf nicht in der Zukunft liegen.';
     else if (checks.length === 0) err = ctx.t('pod_kein_hpnr');
+    else if (hausbesuchSpeicherFehler(vord, checks)) err = hausbesuchSpeicherFehler(vord, checks);
     else if (isUIx && checks.includes('78030')) err = 'Befundung (78030) kann bei UI1/UI2 nicht verwendet werden.';
     // Regeln nicht geladen → auf die feste Literal-Regel zurückfallen, nicht durchwinken.
     else if (isUIx && !(uiRule

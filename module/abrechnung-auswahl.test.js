@@ -352,3 +352,18 @@ test('zeigeIkKnopf: nur bei ausdrücklichem Code IK_FEHLT', () => {
   assert.equal(zeigeIkKnopf(new Error('Kein IK')), false);
   assert.equal(zeigeIkKnopf(null), false);
 });
+
+// ── podoHausbesuchSperren() — S2.6, Spiegel von api-backend/billing/dta/hausbesuch-regeln.js
+import { podoHausbesuchSperren } from './abrechnung-auswahl.js';
+
+test('podoHausbesuchSperren: Ja frei, Nein/leer blockiert 79933/79934', () => {
+  const behs = [{ behandlungsdatum: '2026-09-10', hpnr_codes: ['78010', '79933'] }];
+  assert.deepEqual(podoHausbesuchSperren({ hausbesuch: true }, behs), []);
+  for (const hb of [false, null, undefined]) {
+    const g = podoHausbesuchSperren({ hausbesuch: hb }, behs);
+    assert.equal(g.length, 1);
+    assert.match(g[0], /am 10.09.2026 nicht abrechenbar/);
+  }
+  assert.equal(podoHausbesuchSperren({ hausbesuch: false }, [{ behandlungsdatum: '2026-09-10', hpnr_codes: ['79934'] }]).length, 1);
+  assert.deepEqual(podoHausbesuchSperren({ hausbesuch: false }, [{ behandlungsdatum: '2026-09-10', hpnr_codes: ['78010'] }]), []);
+});
