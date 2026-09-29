@@ -13,6 +13,7 @@ import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezep
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
 import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
 import { emit, on } from './module/signal.js?v=20260815';
+import { zeigeTerminFehler as terminFehler, loescheTerminFehler, verdrahteTerminFehler } from './module/termin-fehler.js?v=20260929q';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260929';
@@ -116,7 +117,7 @@ import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from '.
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260920t';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260814';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260929q';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20260929';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -5681,6 +5682,7 @@ document.getElementById('bkAnzahl')?.addEventListener('input', () => {
 
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!checkPlanActive()) return;
+  loescheTerminFehler();
   const id = document.getElementById('bk-id').value;
   const empId = document.getElementById('bkEmployee').value;
   const srvId = document.getElementById('bkService').value;
@@ -5691,9 +5693,9 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   let notes = document.getElementById('bkNotes').value.trim();
 
   // Validation: Required fields
-  if (!empId) { showToast('Bitte einen Mitarbeiter auswählen.', 'error'); return; }
-  if (!srvId) { showToast('Bitte eine Dienstleistung auswählen.', 'error'); return; }
-  if (!startV) { showToast('Bitte Datum und Uhrzeit auswählen.', 'error'); return; }
+  if (!empId) { terminFehler('Bitte einen Mitarbeiter auswählen.'); return; }
+  if (!srvId) { terminFehler('Bitte eine Dienstleistung auswählen.'); return; }
+  if (!startV) { terminFehler('Bitte Datum und Uhrzeit auswählen.'); return; }
 
   // Qualifikation gating: sertifika kontrolü (sadece yeni termin)
   if (!id) {
@@ -5737,7 +5739,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   }
   const isGroup = document.getElementById('bkIsGroup')?.checked || false;
   if (!isGroup) {
-    if (!cust || !custId) { showToast('Bitte einen Kunden aus der Liste auswählen.', 'error'); return; }
+    if (!cust || !custId) { terminFehler('Bitte einen Kunden aus der Liste auswählen.'); return; }
   }
 
   const startDate = new Date(startV);
@@ -5771,7 +5773,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       const beginnPruef = await pruefeErsttermin({
         supabase, prescriptionId: gewaehlteRx.id, ersterTermin: startDate, ownerId: getOwnerId(), leadId: custId || null, ausserBookingId: id || null,
       });
-      if (!beginnPruef.ok) { showToast(beginnPruef.meldung, 'error'); return; }
+      if (!beginnPruef.ok) { terminFehler(beginnPruef.meldung); return; }
     }
   }
 
@@ -5807,15 +5809,9 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   let totalBlockMin = dur;
   if (isHausbesuch) {
     const selLead = getSelectedBkLead();
-    if (!selLead) {
-      showToast('Bitte zuerst den Patienten auswählen.', 'error'); return;
-    }
-    if (!selLead.street || !selLead.plz || !selLead.city) {
-      showToast('Hausbesuch: Patientenadresse fehlt — Patient bearbeiten.', 'error'); return;
-    }
-    if (selLead.duration_min == null) {
-      showToast('Bitte zuerst "Entfernung berechnen" klicken.', 'error'); return;
-    }
+    if (!selLead) { terminFehler('Bitte zuerst den Patienten auswählen.'); return; }
+    if (!selLead.street || !selLead.plz || !selLead.city) { terminFehler('Hausbesuch: Patientenadresse fehlt — Patient bearbeiten.'); return; }
+    if (selLead.duration_min == null) { terminFehler('Bitte zuerst "Entfernung berechnen" klicken.'); return; }
     totalBlockMin = Number(selLead.duration_min) * 2 + dur + HAUSBESUCH_BUFFER_MIN;
   }
 
@@ -5853,7 +5849,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await supabase.auth.getSession()).data.session?.access_token },
       body: JSON.stringify(payload)
     });
-    if (!res.ok) { showToast('Fehler beim Erstellen der Serientermine.', 'error'); return; }
+    if (!res.ok) { terminFehler('Fehler beim Erstellen der Serientermine.'); return; }
     const data = await res.json();
     const created = data.created || [];
     const conflicts = data.conflicts || [];
@@ -5901,7 +5897,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         
       if (upErr) {
         console.error('[group parent update]', upErr);
-        showToast(upErr.message || t('err_generic'), 'error');
+        terminFehler(upErr.message || t('err_generic'));
         return;
       }
       
@@ -5948,7 +5944,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         
       if (pErr) {
         console.error('[group parent save]', pErr);
-        showToast(bookingErrMsg(pErr), 'error');
+        terminFehler(bookingErrMsg(pErr));
         return;
       }
       
@@ -6007,11 +6003,11 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   let bindung = null;
   if (id) {
     const { error } = await supabase.from('bookings').update(payload).eq('id', id);
-    if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
+    if (error) { console.error('[booking save]', error); terminFehler(bookingErrMsg(error)); return; }
     bindung = await aktualisiereBindungBeimSpeichern(supabase, id, { emit, binde: bindePodoAnTermin });
   } else {
     const { data: newBooking, error } = await supabase.from('bookings').insert(payload).select('id').single();
-    if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
+    if (error) { console.error('[booking save]', error); terminFehler(bookingErrMsg(error)); return; }
     savedBookingId = newBooking?.id;
 
     // If pending drag-drop or Verordnung-picker session(s): link them
@@ -15762,7 +15758,7 @@ async function saveRezept() {
       const lines = [];
       if (missing.length) lines.push('Folgende Felder sind noch leer:\n  • ' + missing.join('\n  • '));
       if (formatErrors.length) lines.push('Hinweise:\n  • ' + formatErrors.join('\n  • '));
-      const ok = window.confirm(lines.join('\n\n') + '\n\nTrotzdem speichern?');
+      const ok = await showConfirmModal({ title: 'Verordnung speichern?', message: lines.join('\n\n') + '\n\nTrotzdem speichern?', confirmText: 'Trotzdem speichern', cancelText: 'Abbrechen', variant: 'warning' });
       if (!ok) { btn.disabled = false; return; }
       overridden = true;
     }
@@ -18676,13 +18672,13 @@ function initKioskModeWired() {
   // Einwilligungs-Ablauf (module/patienten-einwilligung.js). Baut sein Overlay
   // selbst, braucht von hier nur den Mandanten- und Sitzungskontext.
   mountEinwilligung({
-    supabase, showToast,
+    supabase, showToast, showConfirmModal,
     getOwnerId,
     getProfile: () => currentProfile,
     getBusinessId: () => currentBusiness?.id || null,
     getSessionUserId: () => currentSession?.user?.id || null,
   });
-  window.openEinwilligungFlow = openEinwilligungFlow;   // inline onclick aus ES-Modul
+  window.openEinwilligungFlow = openEinwilligungFlow; verdrahteTerminFehler();   // inline onclick aus ES-Modul · Fehlerbox der Terminmaske (S3.5)
 }
 
 // Init çağrıları — DOMContentLoaded'dan sonra

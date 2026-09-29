@@ -238,8 +238,11 @@ function renderStep() {
 
   const pad = signaturePad(d('ewCanvas'), d('ewHinweis'));
   d('ewLoeschen').addEventListener('click', () => pad.clear());
-  d('ewAbbrechen').addEventListener('click', () => {
-    if (window.confirm('Ablauf abbrechen? Bereits unterschriebene Erklärungen bleiben gespeichert.')) closeFlow();
+  d('ewAbbrechen').addEventListener('click', async () => {
+    const ok = deps.showConfirmModal
+      ? await deps.showConfirmModal({ title: 'Ablauf abbrechen?', message: 'Ablauf abbrechen? Bereits unterschriebene Erklärungen bleiben gespeichert.', confirmText: 'Ablauf abbrechen', cancelText: 'Zurück', variant: 'warning' })
+      : window.confirm('Ablauf abbrechen? Bereits unterschriebene Erklärungen bleiben gespeichert.');
+    if (ok) closeFlow();
   });
   d('ewWeiter').addEventListener('click', () => weiter(pad, type));
 
