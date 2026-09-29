@@ -31,7 +31,7 @@
  * umgestellt haette, haette fuenfzehn Aufrufer gleichzeitig anfassen muessen.
  */
 
-import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260929';
+import { befundungFuerLeistung, IST_BEFUNDUNG } from './eingangsbefundung-regel.js?v=20260929b';
 import { geplanteAlsBehandlungen, positionVon } from './podo-geplant.js?v=20260918';
 import { setzeDauer } from './termin-dauer.js?v=20260903b';
 
@@ -53,6 +53,27 @@ export function neueZeile(serviceId = null) {
 }
 
 /**
+ * Rohsumme der Zeilen in Minuten — OHNE die Untergrenze von `gesamtDauer()`.
+ *
+ * Eine Befundpauschale (78030/78040, `IST_BEFUNDUNG`) ohne eigene Dauer zaehlt
+ * 0 Minuten (S3.11, 29.09.2026): sie ist keine eigene Behandlungszeit, sie
+ * wird im selben Termin miterledigt (Beschluss 05.09.2026). Frueher zaehlte sie
+ * den Standard von 30 Minuten und machte aus 35 Minuten Behandlung einen
+ * 65-Minuten-Block. Fuehrt die Praxis fuer die Befundung selbst eine Dauer,
+ * gilt diese. Alle anderen Leistungen ohne Dauer bleiben beim Standard.
+ */
+export function zeilenMinuten(zeilen, dienste) {
+  return (zeilen || []).reduce((acc, z) => {
+    if (!z || !z.serviceId) return acc;
+    const srv = (dienste || []).find(d => d && d.id === z.serviceId);
+    const dauer = Number.parseInt(srv?.duration_minutes, 10);
+    if (Number.isFinite(dauer) && dauer > 0) return acc + dauer * begrenzeAnzahl(z.anzahl);
+    const je = IST_BEFUNDUNG.has(hpnrVonDienst(srv)) ? 0 : STANDARD_DAUER_MIN;
+    return acc + je * begrenzeAnzahl(z.anzahl);
+  }, 0);
+}
+
+/**
  * Gesamtdauer eines Termins in Minuten.
  *
  * Jede Zeile zaehlt mit ihrer Anzahl. Der Block im Kalender ist genau so lang —
@@ -67,13 +88,7 @@ export function neueZeile(serviceId = null) {
  * @returns {number} Minuten, mindestens `STANDARD_DAUER_MIN`
  */
 export function gesamtDauer(zeilen, dienste) {
-  const summe = (zeilen || []).reduce((acc, z) => {
-    if (!z || !z.serviceId) return acc;
-    const srv = (dienste || []).find(d => d && d.id === z.serviceId);
-    const dauer = Number.parseInt(srv?.duration_minutes, 10);
-    const je = Number.isFinite(dauer) && dauer > 0 ? dauer : STANDARD_DAUER_MIN;
-    return acc + je * begrenzeAnzahl(z.anzahl);
-  }, 0);
+  const summe = zeilenMinuten(zeilen, dienste);
   return summe > 0 ? summe : STANDARD_DAUER_MIN;
 }
 
@@ -578,7 +593,7 @@ function zeichneVorschlag() {
     el.append(box, text);
     anker.parentNode.insertBefore(el, anker);
   }
-  const minuten = gesamtDauer([neueZeile(_vorschlag.serviceId)], ctx?.getServices?.() || []);
+  const minuten = zeilenMinuten([neueZeile(_vorschlag.serviceId)], ctx?.getServices?.() || []);
   el.hidden = false;
   el.querySelector('input').checked = _extra.some(z => z.serviceId === _vorschlag.serviceId);
   el.querySelector('span').textContent = vorschlagText(_vorschlag.code, { serie: serieAktiv(), minuten });
@@ -667,7 +682,7 @@ async function patientenBehandlungen() {
 }
 
 /** Befundung vorschlagen — der Telefonablauf aus Karte 221. */
-async function schlageBefundungVor() {
+export async function schlageBefundungVor() {
   if (!ctx) return;
   const datum = (document.getElementById('bkStart')?.value || '').slice(0, 10)
              || new Date().toISOString().slice(0, 10);

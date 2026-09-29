@@ -76,8 +76,8 @@ import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=2026
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
 import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20260906';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
-import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen } from './module/termin-leistungen.js?v=20260929b';
-import { zeichnePodoEinheiten, bindePodoAnTermin, befundDienstId, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20260929c';
+import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20260929c';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20260929c';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20260929b';
@@ -3061,10 +3061,9 @@ async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
   // rechnet die Summe. Hier stand bis zum 03.09.2026 eine zweite,
   // ungetestete Summenrechnung — module/termin-leistungen.js macht dasselbe
   // und wird geprueft (Ops 235).
-  // Podologie: die an dieser Einheit fällige Befundung kommt als zweite Leistung mit (module/podo-einheiten.js).
-  const befundId = befundDienstId(ownerServices, sessionData.befund);
-  if (sessionData.befund && !befundId) showToast(`Befundung ${sessionData.befund} ist als Leistung nicht eingerichtet — bitte in den Einstellungen anlegen.`, 'warning', 8000);
-  if (sessions.length > 1 || befundId) setzeLeistungen(befundId ? [...matchedSrvIds, befundId] : matchedSrvIds);
+  // S3.11: die Befundung kommt NICHT als Zeile mit, sondern als ungehaktes Angebot der Maske.
+  if (sessions.length > 1) setzeLeistungen(matchedSrvIds);
+  schlageBefundungVor();
 
   // Rezeptart + Heilmittel ausblenden (Folgetermin, keine neue Verordnung)
   const rxGroup = document.getElementById('bkRezeptartGroup');

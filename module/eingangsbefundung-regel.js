@@ -146,7 +146,7 @@ const NAGEL_POSITIONEN = new Set([
 ]);
 
 /** Positionen, die selbst schon eine Befundung SIND — die bekommen keine zweite. */
-const IST_BEFUNDUNG = new Set(['78030', '78040', '78100', '78110']);
+export const IST_BEFUNDUNG = new Set(['78030', '78040', '78100', '78110']);
 
 /** Zuschlaege ohne eigenen Zweig — ein Hausbesuch allein ist keine Behandlung. */
 const ZUSCHLAEGE = new Set(['79933', '79934']);

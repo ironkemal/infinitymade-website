@@ -34,9 +34,18 @@ test('Anzahl multipliziert die Dauer', () => {
 });
 
 test('Leistung ohne Dauer faellt auf den Standard, nicht auf 0', () => {
-  // 78030 fuehrt keine Regelleistungszeit. Mit 0 waere der Block zu kurz und
+  // Eine gewoehnliche Leistung ohne Dauer: mit 0 waere der Block zu kurz und
   // der naechste Patient laege darin.
-  assert.equal(gesamtDauer([neueZeile('s-bef')], DIENSTE), STANDARD_DAUER_MIN);
+  const d = [{ id: 's-x', gkv_position_nr: '78010', duration_minutes: null }];
+  assert.equal(gesamtDauer([neueZeile('s-x')], d), STANDARD_DAUER_MIN);
+});
+
+test('S3.11: Befundpauschale ohne Dauer zaehlt 0 Minuten, mit Dauer ihre Dauer', () => {
+  assert.equal(gesamtDauer([neueZeile('s-beh-kl'), neueZeile('s-bef')], DIENSTE), 35, '35 + 0, nicht 65');
+  assert.equal(gesamtDauer([neueZeile('s-beh-kl'), neueZeile('s-eing')], DIENSTE), 55);
+  const mit = [{ id: 's-bef', gkv_position_nr: '78030', duration_minutes: 15 }, DIENSTE[0]];
+  assert.equal(gesamtDauer([neueZeile('s-beh-kl'), neueZeile('s-bef')], mit), 50);
+  assert.equal(gesamtDauer([neueZeile('s-bef')], DIENSTE), STANDARD_DAUER_MIN, 'allein: Untergrenze');
 });
 
 test('leere Liste und unbekannte Leistung ergeben nie 0 Minuten', () => {
