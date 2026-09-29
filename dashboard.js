@@ -68,13 +68,14 @@ import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20260918';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
-import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260929c';
+import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260929d';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
 import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20260906';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen } from './module/termin-leistungen.js?v=20260929';
-import { zeichnePodoEinheiten, bindePodoAnTermin, befundDienstId, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20260929b';
+import { zeichnePodoEinheiten, bindePodoAnTermin, befundDienstId, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20260929c';
+import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20260929b';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
@@ -4986,7 +4987,7 @@ async function openBookingModal(b) {
     rendereVeroKarten,
     onSelect: selectVerordnung,
     onAnlegen: () => { closeModal('bookingModal'); oeffneAnlegenWahl(_omLeadId); },
-    resetFelder: resetVerordnungFelder,
+    resetFelder: resetVerordnungFelder, ownerId,
   });
   verdrahteAbwahl();
   document.getElementById('bkDocAssignHint').hidden = true;
@@ -5121,7 +5122,7 @@ async function initBkCustomerAutocomplete() {
         closeModal('bookingModal');
         oeffneAnlegenWahl(leadId);
       },
-      resetFelder: resetVerordnungFelder,
+      resetFelder: resetVerordnungFelder, ownerId: getOwnerId(),
     });
   }
 
@@ -7139,66 +7140,6 @@ async function storniereZuzahlung({ rxId, patientId, patientName, betragEur }) {
   return true;
 }
 
-function openMailOfferModal({ hasEmail, patientName }) {
-  return new Promise(resolve => {
-    const modal = document.getElementById('mailOfferModal');
-    const textEl = document.getElementById('mailOfferText');
-    const emailWrap = document.getElementById('mailOfferEmailWrap');
-    const emailInput = document.getElementById('mailOfferEmail');
-    const yesBtn = document.getElementById('mailOfferYesBtn');
-    const noBtn = document.getElementById('mailOfferNoBtn');
-    const printBtn = document.getElementById('mailOfferPrintBtn');
-    const footer = document.getElementById('mailOfferFooter');
-    const content = document.getElementById('mailOfferContent');
-    const progressWrap = document.getElementById('mailOfferProgressWrap');
-    const closeBtn = modal.querySelector('.modal-close');
-
-    // Reset to initial state
-    content.hidden = false;
-    progressWrap.hidden = true;
-    footer.hidden = false;
-    closeBtn.style.visibility = '';
-
-    textEl.textContent = hasEmail
-      ? `Möchten Sie ${patientName || 'dem Patienten'} die erstellten Termine per E-Mail bestätigen?`
-      : `Wir haben keine E-Mail-Adresse für ${patientName || 'den Patienten'}. Bitte fragen Sie nach und tragen Sie sie unten ein — oder drucken Sie die Terminbestätigung direkt aus.`;
-    emailWrap.hidden = hasEmail;
-    emailInput.value = '';
-
-    const cleanupNo = () => {
-      yesBtn.onclick = null; noBtn.onclick = null; closeBtn.onclick = null;
-      if (printBtn) printBtn.onclick = null;
-      closeModal('mailOfferModal');
-    };
-
-    yesBtn.onclick = () => {
-      let resolvedEmail;
-      if (!hasEmail) {
-        const val = (emailInput.value || '').trim();
-        if (!val.includes('@')) {
-          emailInput.focus();
-          emailInput.style.borderColor = '#e74c3c';
-          return;
-        }
-        resolvedEmail = val;
-      }
-      // Switch modal to loading state — keep modal open until fetch completes
-      yesBtn.onclick = null; noBtn.onclick = null; closeBtn.onclick = null;
-      content.hidden = true;
-      footer.hidden = true;
-      closeBtn.style.visibility = 'hidden';
-      progressWrap.hidden = false;
-      resolve({ ok: true, email: resolvedEmail });
-    };
-    noBtn.onclick = () => { cleanupNo(); resolve({ ok: false }); };
-    closeBtn.onclick = () => { cleanupNo(); resolve({ ok: false }); };
-    // Ohne E-Mail direkt drucken — gleicher Inhalt wie die Bestätigungs-Mail
-    if (printBtn) printBtn.onclick = () => { cleanupNo(); resolve({ ok: false, print: true }); };
-
-    openModal('mailOfferModal');
-  });
-}
-
 async function markPrescriptionSession(bookingId, status, notes) {
   if (!bookingId) return;
   try {
@@ -7341,7 +7282,11 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
   }
   if (!custId && !email) return;
 
-  const offer = await openMailOfferModal({ hasEmail: !!email, patientName: custName });
+  // ohneRechnung (Reform S1.11b): Podo-Serie hat noch keine erledigte Sitzung —
+  // `proceedToRechnungForPhysio` weiss das selbst und bricht früh ab, hier nur
+  // der Toast-Text, der sonst faelschlich „weiter zur Rechnung" verspraeche.
+  const ohneRechnung = istPodoOhneRechnung(window._physioFlow);
+  const offer = await oeffneMailAngebotModal({ hasEmail: !!email, patientName: custName, ohneRechnung }, { openModal, closeModal });
   if (!offer.ok) {
     if (offer.print) {
       // Direkt drucken ohne E-Mail — gleiche Termine wie im Mail-Entwurf
@@ -7353,7 +7298,7 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
           employee_name: empMap[sl.employeeId] || ''
         }))
       });
-    } else {
+    } else if (!ohneRechnung) {
       showToast('OK — weiter zur Rechnung.');
     }
     proceedToRechnungForPhysio({ patientId: custId, patientName: custName });
@@ -7464,6 +7409,9 @@ async function ensureBlankoBonusServices() {
 
 async function proceedToRechnungForPhysio({ patientId, patientName }) {
   const flow = window._physioFlow || {};
+  // Reform S1.11b: Podo-Serie ist frisch gebunden, noch keine Sitzung erledigt —
+  // hier gibt es nichts zu berechnen, die Praxis bleibt wo sie war.
+  if (istPodoOhneRechnung(flow)) { window._physioFlow = null; return; }
   const isBlanko = !!flow.is_blanko;
   const prescriptionId = flow.prescription_id || null;
   try {

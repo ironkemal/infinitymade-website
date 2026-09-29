@@ -392,6 +392,9 @@ test('meldePodoSerienBindung: Podologie -> true, Toast informiert, nur `prescrip
   assert.equal(ok, true);
   assert.equal(window._physioFlow.prescription_id, null, 'bayat Bayrag darf keine spätere Serie mehr binden');
   assert.equal(window._physioFlow.patient_id, 'p1', 'Patient-Fallback (dashboard.js ~6833) bleibt erhalten');
+  // Reform S1.11b: einziges Zeichen, das dem Mail-Angebot/Rechnungs-Anschluss
+  // noch verrät, dass dieser Flow podologisch war (prescription_id ist weg).
+  assert.equal(window._physioFlow.podo, true, 'ohne dieses Flag ueberspringt proceedToRechnungForPhysio den Podo-Fall nicht mehr');
   // Volle Bindung ohne Kappung erzeugt keine Meldung — kein Toast erwartet.
   assert.deepEqual(meldungen, []);
 });

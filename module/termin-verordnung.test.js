@@ -297,6 +297,23 @@ test('zeigeVerordnungenFuerTermin: bekannteVerordnungId === null ueberspringt bo
   assert.equal(gerendert, true);
 });
 
+test('zeigeVerordnungenFuerTermin: reicht sb/ownerId/leadId an renderFn weiter (Reform S1.11a, Podo-Zaehler)', async () => {
+  const veroSection = { hidden: true };
+  const rxs = [{ id: 'rx-1', therapie_bereich: 'podo' }];
+  const sb = erstelleSbMock({ rxs });
+  let empfangen = null;
+
+  await zeigeVerordnungenFuerTermin(sb, { leadId: 'lead-9', bookingId: 'b-1', bekannteVerordnungId: null }, {
+    veroSection,
+    ownerId: 'owner-9',
+    rendereVeroKarten: (args) => { empfangen = args; },
+  });
+
+  assert.equal(empfangen?.sb, sb, 'sb muss an rendereVeroKarten durchgereicht werden, sonst bleibt der Podo-Zaehler bei 0/x');
+  assert.equal(empfangen?.ownerId, 'owner-9');
+  assert.equal(empfangen?.leadId, 'lead-9');
+});
+
 test('zeigeVerordnungenFuerTermin: bekannteVerordnungId undefined mit bookingId laedt verordnung_id und waehlt Match vor', async () => {
   const veroSection = { hidden: true };
   const rx1 = { id: 'rx-1', therapie_bereich: 'podo' };

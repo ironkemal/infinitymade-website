@@ -363,6 +363,7 @@ export async function zeigeVerordnungenFuerTermin(sb, { leadId, bookingId, bekan
     escapeHtml: deps.escapeHtml || ((s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))),
     onSelect: deps.onSelect,
     onAnlegen: deps.onAnlegen,
+    sb, ownerId: deps.ownerId, leadId,
   });
 
   if (veroSection) veroSection.hidden = false;

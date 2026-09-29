@@ -356,7 +356,12 @@ export async function meldePodoSerienBindung(sb, { ownerId, prescriptionId, crea
   // Aufrufer prüfen ohnehin `_physioFlow?.prescription_id`, also bleibt eine
   // spätere, unabhängige Serie weiter davor geschützt, sich an eine bayat
   // gewordene Verordnung zu binden.
-  if (window._physioFlow) window._physioFlow.prescription_id = null;
+  // `podo = true` (Reform S1.11b, 29.09.2026): einziger Ort, der noch weiss,
+  // dass dieser Flow podologisch war, BEVOR `prescription_id` gleich darunter
+  // gekappt wird. `proceedToRechnungForPhysio` und `openMailOfferModal` lesen
+  // das danach — ohne dieses Flag gäbe es keinen Weg mehr, die Rechnung für
+  // eine Serie zu überspringen, bei der noch keine einzige Sitzung stattfand.
+  if (window._physioFlow) { window._physioFlow.prescription_id = null; window._physioFlow.podo = true; }
   return true;
 }
 
