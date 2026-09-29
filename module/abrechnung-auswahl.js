@@ -59,6 +59,8 @@
  */
 
 import { fmtEur } from './geld.js?v=20260909';
+// Gleiche ?v-Zeichenfolge wie dashboard.js — sonst zweite Modulinstanz, `aktuell` spaltet sich.
+import { zeigeAbrechnungAnsicht } from './abrechnung-ansicht.js?v=20260909';
 import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
          frageBerichtFreigabe } from './abrechnung-freigabe.js?v=20260826';
 import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
@@ -668,7 +670,15 @@ function zeichne() {
   if (!ziel) return;
 
   if (!_st.gruppen.length && !_st.fehlerhaft.length) {
-    ziel.innerHTML = zeitraumHtml() + `<div class="table-empty" style="padding:24px;text-align:center;color:var(--text-muted);">
+    // Das Protokoll des letzten Erstellens bleibt auch hier sichtbar: nach dem
+    // letzten Erfolg ist die Liste leer, die Meldung darf trotzdem nicht fehlen.
+    ziel.innerHTML = zeitraumHtml() + `<div id="abSammelProtokoll" style="display:${_st.protokollHtml ? 'block' : 'none'};font-size:12px;margin-bottom:12px;
+         border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--bg-card);">
+      ${_st.protokollHtml ? `<div style="display:flex;justify-content:flex-end;margin:-2px -2px 4px 0;">
+        <button type="button" id="abProtokollSchliessen" class="btn-ghost" style="font-size:11px;padding:1px 7px;line-height:1.4;">✕</button>
+      </div>${_st.protokollHtml}` : ''}
+    </div>
+    <div class="table-empty" style="padding:24px;text-align:center;color:var(--text-muted);">
       ${_st.ausgefiltert
         ? `Keine Verordnung im gewählten Abrechnungszeitraum (${_st.ausgefiltert} ausgeblendet).`
         : 'Keine abrechnungsbereiten Verordnungen.'}
@@ -1158,7 +1168,7 @@ async function _erstelleGruppen(keys, knopf) {
     if (protokoll) { protokoll.style.display = 'block'; protokoll.innerHTML = _st.protokollHtml; }
   };
 
-  let ok = 0, fehler = 0;
+  let ok = 0, fehler = 0, letzteDatei = '';
   for (let i = 0; i < gruppen.length; i++) {
     const g = gruppen[i];
     zeilen.push(`<div style="padding:2px 0;color:var(--text-muted);">⏳ ${esc(g.name)} … (${i + 1}/${gruppen.length})</div>`);
@@ -1166,6 +1176,7 @@ async function _erstelleGruppen(keys, knopf) {
     try {
       const json = await _sendeGruppe(g, freigabe);
       ok++;
+      letzteDatei = json.dtaFilename || '';
       zeilen[zeilen.length - 1] = `<div style="padding:2px 0;color:#16a34a;">✓ ${esc(g.name)} — ${esc(json.sammelRechnungsnummer || json.rechnungsnummer || '')}
         · ${esc(String(json.prescriptionCount ?? json.sessionCount ?? ''))} Positionen</div>`;
     } catch (err) {
@@ -1180,7 +1191,11 @@ async function _erstelleGruppen(keys, knopf) {
     ${ok ? ' Jede Datei hat einen eigenen Begleitzettel — bitte getrennt versenden. Herunterladen und signieren unter „Bisherige Abrechnungen".' : ''}</div>`);
   schreibe();
 
-  if (ok) ctx.showToast?.(`${ok} §302-Abrechnung${ok > 1 ? 'en' : ''} erstellt ✓`);
+  if (ok) {
+    ctx.showToast?.(ok === 1 && letzteDatei
+      ? `Abrechnungsdatei erstellt: ${letzteDatei} ✓`
+      : `${ok} §302-Abrechnung${ok > 1 ? 'en' : ''} erstellt ✓`);
+  }
   if (knopf) { knopf.disabled = false; knopf.style.opacity = '1'; if (altText) knopf.textContent = altText; }
   _st.busy = false;
 
@@ -1191,7 +1206,18 @@ async function _erstelleGruppen(keys, knopf) {
   if (ok > 0) {
     await ctx.nachErstellung?.();
     await ladeAbrechnungAuswahl();
+    if (ansichtNachErstellung(ok, fehler)) zeigeAbrechnungAnsicht(ansichtNachErstellung(ok, fehler));
   }
+}
+
+/**
+ * Nach dem Erstellen: welche Ansicht? Nur ein vollständiger Erfolg führt in
+ * „Bisherige Abrechnungen" (dort liegt die neue Datei). Teilerfolg oder Fehler
+ * bleiben in „Neu", damit Protokoll und Fehlergründe sichtbar bleiben.
+ * @returns {'bisherige'|null}
+ */
+export function ansichtNachErstellung(ok, fehler) {
+  return ok > 0 && !fehler ? 'bisherige' : null;
 }
 
 async function _sendeGruppe(g, freigabe) {
@@ -1286,9 +1312,12 @@ async function _uebersteuere(btn) {
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw fehlerMitGruenden(json, res.status);
-    ctx.showToast?.(`§302 DTA erstellt (übersteuert): ${json.rechnungsnummer || ''} ✓`);
+    ctx.showToast?.(json.dtaFilename
+      ? `Abrechnungsdatei erstellt (übersteuert): ${json.dtaFilename} ✓`
+      : `§302 DTA erstellt (übersteuert): ${json.rechnungsnummer || ''} ✓`);
     await ctx.nachErstellung?.();
     await ladeAbrechnungAuswahl();
+    zeigeAbrechnungAnsicht(ansichtNachErstellung(1, 0));
   } catch (err) {
     // „Trotzdem übernehmen" scheitert am häufigsten am Preflight — und dann ist
     // die Begründung das Einzige, was weiterhilft: übersteuert wurden ja gerade

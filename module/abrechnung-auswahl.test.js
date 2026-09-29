@@ -19,7 +19,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { kassenanteil, podoSperren, gruppenKey, baueGruppen, auswahlStand, imZeitraum,
          keineDokumentierteBehandlung, podoStrukturBlocker, podoBefundOhneBehandlung,
-         preflightGruende, fehlerText }
+         preflightGruende, fehlerText, ansichtNachErstellung }
   from './abrechnung-auswahl.js';
 
 const quelle = readFileSync(new URL('./abrechnung-auswahl.js', import.meta.url), 'utf8');
@@ -336,4 +336,12 @@ test('podoBefundOhneBehandlung: 78040 und 78030 am selben Tag ist hart', () => {
   const r = podoBefundOhneBehandlung(v, behs);
   assert.equal(r.hart.length, 1);
   assert.match(r.hart[0], /zusammen/);
+});
+
+test('ansichtNachErstellung: nur vollständiger Erfolg wechselt zu Bisherige', () => {
+  assert.equal(ansichtNachErstellung(1, 0), 'bisherige');
+  assert.equal(ansichtNachErstellung(3, 0), 'bisherige');
+  assert.equal(ansichtNachErstellung(2, 1), null);
+  assert.equal(ansichtNachErstellung(0, 2), null);
+  assert.equal(ansichtNachErstellung(0, 0), null);
 });
