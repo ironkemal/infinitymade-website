@@ -36,6 +36,7 @@ import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260921';
+import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260926a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
@@ -4358,6 +4359,7 @@ async function handleTerminStarten() {
   const patientName = b.customer_name || '';
   const patientPhone = b.customer_phone || '';
   const ownerId = getOwnerId();
+  const istPodoTermin = terminIstPodo(b, getSector()); // s. module/podo-behandlungen-oeffnen.js
 
   // Hausbesuch: fahrt_status'u in_progress yap, modal'da kal — Fahrt Beenden göster
   if (b.hausbesuch) {
@@ -4369,12 +4371,21 @@ async function handleTerminStarten() {
       await supabase.from('bookings').update({ fahrt_status: 'in_progress' }).eq('id', b.id);
       b.fahrt_status = 'in_progress';
     }
+    if (istPodoTermin) { await terminStartenPodo(b, podoBehandlungenDeps()); return; }
     markPrescriptionSession(b.id, 'done');
     await renderBkActionFahrtState(b, true);
     return;
   }
 
-  // Normal randevu: modal kapat, anamnese/notizen'e yönlendir
+  if (istPodoTermin) {
+    // Podologie (Reform S1.4): kein Sitzungsbuch, keine Notiz, keine Namenssuche — s. module/podo-behandlungen-oeffnen.js
+    closeBkActionPanel();
+    if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
+    await terminStartenPodo(b, podoBehandlungenDeps());
+    return;
+  }
+
+  // Normal randevu (Physio/Ergo/Logo): modal kapat, anamnese/notizen'e yönlendir
   closeBkActionPanel();
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
@@ -6101,34 +6112,15 @@ function verteileOffeneEinheiten({ rx, offen, booking }) {
   });
 }
 
-/**
- * Sprung in die Behandlungsdokumentation der Podologie.
- *
- * Zwei Einstiege, ein Weg: der Knopf "Leistungen des Tages" im Einheitenblock
- * und der Hinweis, der im selben Block steht, wenn die Verordnung podologisch
- * ist (dann gibt es dort nichts zu vergeben — Podologie fuehrt kein
- * Einheiten-Hauptbuch). Bewusst KEINE zweite Maske: dort haengen die Pruefungen,
- * die Geld kosten, wenn man sie umgeht (78040 nicht neben 78030, 78100 einmal
- * je Kalenderjahr, Behandlungsbeginn innerhalb der Frist).
- */
-async function oeffnePodoBehandlungen(leadId) {
-  if (!leadId) { showToast('Kein Patient zu dieser Verordnung gefunden.', 'warning'); return; }
-  // aktiv→NULL, abrechenbar→bereit (verordnung-topf.js). `.or()` statt
-  // `.in()`: `aktiv` ist in der Spalte NULL, `.in()` trifft NULL nicht.
-  const { data: vords } = await supabase.from('prescriptions')
-    .select('id, abrechnung_status, ausstellungsdatum')
-    .eq('owner_id', getOwnerId()).eq('patient_id', leadId)
-    .eq('therapie_bereich', 'podo')
-    .or('abrechnung_status.is.null,abrechnung_status.eq.bereit')
-    .order('ausstellungsdatum', { ascending: false }).limit(1);
-  const vord = vords?.[0];
-  if (!vord) {
-    showToast('Für diesen Patienten ist keine laufende Podologie-Verordnung angelegt.', 'warning');
-    return;
-  }
-  closeBkActionPanel();
-  setPodVorwahl(vord.id);
-  await switchPanel('podologie-billing');
+// Dünner Wrapper — Logik + JSDoc in module/podo-behandlungen-oeffnen.js (S1.4).
+// Bestehende Aufrufer rufen weiter mit nur `leadId`: altes Verhalten unverändert.
+function oeffnePodoBehandlungen(leadId, opt) {
+  return oeffnePodoBehandlungenModul(leadId, opt, podoBehandlungenDeps());
+}
+
+/** Injektion für `module/podo-behandlungen-oeffnen.js` — an einer Stelle gebaut. */
+function podoBehandlungenDeps() {
+  return { sb: supabase, ownerId: getOwnerId(), showToast, closeBkActionPanel, setPodVorwahl, switchPanel, showConfirmModal };
 }
 
 /**
