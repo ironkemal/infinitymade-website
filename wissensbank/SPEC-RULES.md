@@ -8,7 +8,14 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-29 (Reform S1.9, commit `dbd79f0` — 2 yeni kural: Podologie'de
+> Son güncelleme: 2026-09-29 (Reform S1.12 + S2 — `gkv-302` bulguları, `wissensbank` orijinallere
+> karşı okudu. 3 yeni kural: Hausbesuch yalnız „Ja" ile (S2.6) · Abrechnung Verordnung bitince,
+> VKZ 02 sonradan yapılan seans için DEĞİL (S2.3) · Datenaustausch durum terimleri (S2.1) ·
+> IK des Leistungserbringers Muss (S2.7). **1 kayıt düzeltildi:** „Teilabrechnung normaldir;
+> kalan birimler VKZ 02" — kaynağa aykırıydı, eski metin üstü çizili duruyor. „Testdatei ödeme
+> tetiklemez" netleşti (yalnız Testindikator 0; Erprobung için kaynak yok). 78040/78030 seri
+> sonucuna S1.12 eklendi, yeni kural açılmadı.)
+> Önceki: 2026-09-29 (Reform S1.9, commit `dbd79f0` — 2 yeni kural: Podologie'de
 > Behandlungsunterbrechung Verordnung'u geçersiz kılmaz (HeilM-RL § 16 Abs. 4 S. 5; FAK Nr. 11
 > ters okunmuştu) · Behandlungsbeginn-Frist 28/14 gün (HeilM-RL § 15, Podologie Anlage 3 lit. e).
 > Tüm alıntılar `wissensbank` tarafından orijinal .txt'lere karşı okundu. Açık: `frequenz-pruefung.js:66`
@@ -402,6 +409,44 @@
 
 ---
 
+### Podologie: Hausbesuch (79933 / 79934) yalnız Verordnung'da „Ja" işaretliyse faturalanır
+- **Kural:** Hausbesuch-Position yalnız Muster 13'teki Hausbesuch alanında **„Ja"** işaretliyse
+  abrechenbar'dır. **„Nein" işaretli ya da alan boş** → Hausbesuch faturalanamaz (**sert blok**).
+  Verordnung'un kendi geçerliliği bundan **etkilenmez** — Behandlung'lar normal faturalanır.
+  „Ja"'ya düzeltme **yalnız hekim** yapar, **yeni imza + tarih** ile, ve **Einreichung'dan
+  önce**. Praxis bu alanı kendisi düzeltemez, „Information an den Arzt" yolu yoktur.
+- **Kaynak:** Podologie Anlage 3 i.d.F. **16.06.2025** lit. c) „Hausbesuch"
+  (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:357-370`, S. 10) —
+  *„Art der Angabe: Konditionale Pflichtangabe · Erläuterung: Ein Hausbesuch kann nur
+  abgerechnet werden, wenn das Feld „Ja" angekreuzt ist. · Korrekturmöglichkeit: Ist das Feld
+  „Nein" angekreuzt oder fehlt die Angabe, ist die Abrechnung eines Hausbesuches nicht möglich;
+  die Gültigkeit der Verordnung ist nicht berührt. · Korrekturzeitpunkt: Eine Änderung auf „Ja"
+  kann ausschließlich arztseitig mit erneuter Arztunterschrift und Datumsangabe erfolgen. Die
+  Korrektur muss vor Einreichung der Verordnung zur Abrechnung erfolgt sein."*
+  Teyit: HeilM-RL i.d.F. 15.05.2025 (iK 05.08.2025) Anlage 3 „Anforderungen zur Änderung von
+  Heilmittelverordnungen" — satır *„c. Hausbesuch bei Änderung auf „ja" X"* sütun „Änderung nur
+  mit erneuter Unterschrift des Verordners und Datumsangabe"
+  (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:2315-2349`).
+  Verordnungsfähigkeit: HeilM-RL § 11 Abs. 1 S. 2-3 (`:523-528`) — yalnız tıbbi gerekçeyle;
+  *„Die Behandlung in einer Einrichtung … allein ist keine ausreichende Begründung"*.
+- **HPNR:** 79933 = *„Hausbesuch, ärztlich verordnet, inkl. Wegegeld"* · 79934 = *„Hausbesuch
+  in soz. Einrichtung, inkl. Wegegeld"* — HPNR-Verzeichnis gültig ab 01.01.2026
+  (`wissensbank/gemeinsam/positionsnummern/Positionsnummernverzeichnis_2026_Full.csv:1814,1823`;
+  `wissensbank/podologie/Podologie_Positionsnummern_2026_Filtered.csv:68-69`). Anlage 2 i.d.F.
+  16.06.2025 lit. e) „Hausbesuche" (`20250617_Podologie_Anlage_2.txt:298-306`) — ⚠️ orada
+  pdftotext tabloyu kaydırmış, **fiyatı bu .txt'den okuma** (kural 2; fiyat zinciri
+  `preise_pruefen.mjs`).
+- ⚠️ **Çıkarım — 79934:** Anlage 3 c) HPNR ayırmadan *„ein Hausbesuch"* diyor, 79934'ü ayrıca
+  anan cümle arşivde **yok**. 79934 adıyla bir Hausbesuch olduğu için aynı kurala girdiği
+  **çıkarımdır**. Ters okumaya da dayanak yok: HeilM-RL § 11 Abs. 2'nin *„ohne Verordnung eines
+  Hausbesuches außerhalb der Praxis"* istisnası (`:529-537`) yalnız Tageseinrichtung'daki
+  çocuk/gençler içindir ve Behandlungsort'u düzenler, Hausbesuch-Vergütung'unu değil.
+- **Geçerlilik:** 16.06.2025 (Anlage 3 Podologie) · 05.08.2025 (HeilM-RL)
+- **Kodda:** açık — Reform **S2.6** (sprint kaydı `PODOLOGIE_REFORM_SPRINT.md`). Kod satırı
+  uygulanınca buraya yazılır.
+- **Kapsam:** Podologie (Anlage 3 LEGS 71/72). HeilM-RL Anlage 3 satırı tüm Heilmittel-Bereiche
+  için aynı.
+
 ### Podologie: 78040 Eingangsbefundung — aynı gün kombinasyonu
 - **Kural:** 78040 aynı Behandlungstag'da **78010/78020 ile birlikte abrechenbar'dır** — bu
   normal hâldir, istisna değil. Yasak olan tek kombinasyon **78040 + 78030**'dur.
@@ -500,10 +545,22 @@
   78040 **yalnız ilk serinin ilk Behandlungstag'ında** olur; „nasılsa hiç almadık" diye 3.
   Termin'e sonradan konması sözleşmeye aykırıdır (*"erfolgt **vor der ersten Abgabe** einer
   podologischen Leistung"*).
-- **Kaynak:** Anlage 1a i.d.F. 17.06.2024 Teil 1 Nr. 2 (Z.80-84) + Teil 2 Ziff. 4.1/4.2
+- **Seri Termin'leri 78040'ı devralmaz (29.09.2026, Reform S1.12):** ilk Termin'in maskesinde
+  78040 seçiliyse, seri üretimi onu Termin 2-6'ya **kopyalamaz**; Termin 2-6 78030 +
+  78010/78020 alır. Dayanak yukarıdaki üç alıntının toplamıdır — *„einmalig"* (Z.460),
+  *„vor der ersten Abgabe"* (Z.83) ve 78030'un *„im Vorfeld jeder Behandlung"* (Z.491-493) —
+  „seri" kelimesi kaynakta geçmez, bu satır **sonuçtur**, ayrı bir hüküm değil. 78030'un
+  UI1/UI2'de hiç olmaması: GKV-SV FAK Podologie Stand 24.05.2023 Nr. 6
+  (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt:42-49` — *„Ja, die Befundposition 78030
+  ist zu jeder der Abrechnungspositionen „Behandlung groß" oder „Behandlung klein" abrechenbar.
+  Eine Abrechnung ist bei Nagelspangenbehandlungen (Diagnosegruppen UI1 und UI2) nicht
+  möglich."*; pdftotext Nr. 6/7 sütunlarını iç içe basmış, cevap Nr. 6 sorusuna aittir).
+- **Kaynak:** Anlage 1a i.d.F. 17.06.2024 Teil 1 Nr. 2 (Z.80-84) + Teil 2 Ziff. 4.1 (Z.458-462)
+  / 4.2 (Z.491-493) — 29.09.2026'da satırlar yeniden okundu
 - **Geçerlilik:** 01.11.2023'ten beri
 - **Kodda:** `module/podologie-abrechnung.js:396-420` (otomatik işaretleme) +
-  `:1198-1246` (doğrulama)
+  `:1198-1246` (doğrulama). Seri devri: açık — Reform **S1.12** (bulgu 1.12: 78030 seride
+  önceden seçili geliyordu; kod satırı uygulanınca buraya yazılır)
 - **Kapsam:** Podologie, DF/NF/QF
 
 ### Podologie: 78100/78110 Erstbefundung (Nagelspange) — 78040'tan FARKLI bezugsgröße
@@ -727,18 +784,78 @@
   Storno einer bereits eingereichten Verordnung)
 - **Kapsam:** tüm Heilmittel Storno/Korrektur
 
-### Podolojik DTA'da kısmi (Teilabrechnung) normaldir; kalan birimler VKZ 02 Nachforderung ile
-- **Kural:** Podolojik §302 dosyasının bir Verordnung'un TÜM birimlerini değil, o ana kadar
+### ~~Podolojik DTA'da kısmi (Teilabrechnung) normaldir; kalan birimler VKZ 02 Nachforderung ile~~ — ⛔ korrigiert 29.09.2026
+> **YANLIŞ — silinmedi, iz kalsın diye üstü çizili.** Gösterdiği kaynak (UE Korrekturverfahren
+> Frage 1) bunun **tersini** söylüyor: VKZ 02 yalnız Ursprungsrechnung anında *zaten*
+> Vergütungsanspruch doğmuş Leistung içindir. „Teilabrechnung" kelimesi arşivdeki hiçbir .txt'de
+> geçmiyor. Doğrusu hemen aşağıdaki kayıtta.
+- ~~**Kural:** Podolojik §302 dosyasının bir Verordnung'un TÜM birimlerini değil, o ana kadar
   dokümante edilmiş birimlerini içermesi (Teilabrechnung) normal ve beklenen bir durumdur —
   hata değildir. Kalan/sonradan erbracht edilen birimler ayrı bir dosyada
-  **VKZ 02 (Nachforderung)** ile gönderilir.
-- **Kaynak:** Gemeinsame Umsetzungsempfehlungen zum Korrekturverfahren Heilmittel
-  (13.02.2025), Frage 1
-- **Geçerlilik:** 01.10.2025
-- **Kodda:** `api-backend/billing/api/abrechnung.routes.js:2945-2963` Teilabrechnung'ı zaten
+  **VKZ 02 (Nachforderung)** ile gönderilir.~~
+- ~~**Kaynak:** Gemeinsame Umsetzungsempfehlungen zum Korrekturverfahren Heilmittel
+  (13.02.2025), Frage 1~~
+- ~~**Geçerlilik:** 01.10.2025~~
+- ~~**Kodda:** `api-backend/billing/api/abrechnung.routes.js:2945-2963` Teilabrechnung'ı zaten
   üretiyor (yalnız storno edilmemiş, o ana kadar dokümante edilmiş Behandlungen'i topluyor),
-  ama VKZ 02 ikinci-tur (Nachforderung) yolu **HENÜZ YOK** — açık iş, Adım 1.6/sonrası.
-- **Kapsam:** Podologie
+  ama VKZ 02 ikinci-tur (Nachforderung) yolu **HENÜZ YOK** — açık iş, Adım 1.6/sonrası.~~
+- ~~**Kapsam:** Podologie~~
+
+### Podologie: Abrechnung Verordnung bittikten sonra — VKZ 02 fatura SONRASI yapılan seans için DEĞİL
+- **Kural:** Bir Verordnung **bittikten sonra, bir kez** faturalanır. „Bitti" = verordnete
+  Behandlungsmenge tamamlandı, **ya da** erken bitirildi: o zaman Verordnung'a
+  **Behandlungsabbruch tarihi** yazılır (konditionelle Pflichtangabe). Nagelspange'de
+  Therapieziel erken ulaşılırsa bu Abbruch **değil**, reguläres Ende'dir. VKZ 02
+  (Nachforderung) yalnız, Ursprungsrechnung (VKZ 01) kesildiği anda **zaten Vergütungsanspruch
+  doğmuş ama faturada unutulmuş** Leistung içindir (tipik örnek: unutulmuş Hausbesuch).
+  Faturadan **sonra** yapılan seans o anda anspruch'suzdu → VKZ 02 ile **istenemez**. Yani
+  „şimdiye kadarki seansları faturala, kalanı sonra VKZ 02 ile" akışının kaynakta dayanağı yok.
+- **Kaynak:**
+  - Richtlinien nach § 302 Abs. 2 SGB V i.d.F. **20.11.2006** § 7 Abs. 1
+    (`wissensbank/gemeinsam/302-tp5/Richtlinien-Text_061120.txt:249-255`) — *„Soweit die
+    Leistung/en gemäß der vertragsärztlichen Verordnung … vollständig erbracht wurde/n,
+    ist/sind sie - soweit in Verträgen nichts anderes geregelt ist - einmal monatlich je
+    Leistungserbringer-Institutionskennzeichen mit der Krankenkasse abzurechnen"*
+  - Podologie Anlage 3 i.d.F. **16.06.2025** lit. p) „Rechnungsdaten"
+    (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:689-694`) — *„Hier sind
+    vom Leistungserbringer nach Beendigung der entsprechenden Verordnung die notwendigen
+    Angaben zur Abrechnung der jeweiligen Verordnung einzutragen."*
+  - aynı belge lit. q) „Behandlungsabbruch" (`:708-721`) — *„Konditionelle Pflichtangabe ·
+    Wird die Behandlung vor Erreichen der verordneten Behandlungsmenge abgebrochen, ist dies
+    mit dem Datum des Behandlungsabbruches zu vermerken. Wird im Verlauf einer
+    Nagelspangenbehandlung das angestrebte Therapieziel vor der vollständigen Inanspruchnahme
+    der verordneten Behandlungsmenge je Verordnung erreicht, ist die Therapie nach § 7 Abs. 2
+    des Vertrags zu beenden. Die Behandlung ist dann regulär beendet, dies stellt keinen
+    Therapieabbruch dar."* (pdftotext sütunları iç içe basmış; Korrekturmöglichkeit/-zeitpunkt
+    = „Entfällt")
+  - Gemeinsame Umsetzungsempfehlungen zum Korrekturverfahren Heilmittel Stand **13.02.2025**
+    (in Kraft 01.10.2025) Frage 1
+    (`wissensbank/gemeinsam/302-tp5/Gemeinsame_Umsetzungsempfehlungen_zum_Korrekturverfahren_Heilmittel_20250213.txt:77-91`)
+    — *„darf immer dann eine Nachforderung (VKZ 2) stellen, wenn bei einer Ursprungsrechnung
+    (VKZ 1) Leistungen nicht berechnet worden sind, für die jedoch bereits ein Anspruch auf
+    Vergütung bestand. Dies schließt eine Ergänzung/Änderung rechnungsbegründender Unterlagen
+    im Rahmen einer Nachforderung aus."* · Frage 2 (`:93-103`) — *„Fälle, bei denen die
+    Originalverordnungen der Krankenkasse bereits vorliegen, da sie bei der Ursprungsrechnung
+    bereits mit angeliefert wurden"* · Grundsatz-örneği (`:17`) *„Nachforderung (z.B.
+    Hausbesuch wurde bei der Erstrechnung versehentlich vergessen)"*
+- 📌 **Çıkarım (kaynakta tek cümle değil):** Frage 2'ye göre Originalverordnung Ursprungsrechnung
+  ile kasaya gider; kâğıt Verordnung artık praxis'te olmadığından aynı Verordnung'a sonradan
+  seans eklemek pratikte de mümkün değildir. Frage 1'in *„Ergänzung … rechnungsbegründender
+  Unterlagen … ausgeschlossen"* cümlesi de sonradan imzalatılmış Bestätigungsfeld satırını
+  dışlar.
+- ⚠️ **Açık:** § 7 Abs. 1 *„soweit in Verträgen nichts anderes geregelt ist"* diyor. Podologie
+  Rahmenvertrag § 125 Abs. 1 **ana metni** (i.d.F. 30.11.2020) arşivde **yok** — yalnız
+  Anlagen + Änderungsvereinbarung var. Anlage 3 p) aynı yönde, ters hüküm görülmedi, ama ana
+  metin okunmadan „Vertrag bunu değiştirmiyor" kesin değil. → Doğrulama kuyruğu (78040 § 3a
+  için de aynı belge gerekli).
+- **Geçerlilik:** 20.11.2006 (Richtlinien) · 16.06.2025 (Anlage 3) · 01.10.2025 (UE)
+- **Kodda:** açık — Reform **S2.3** (Abrechnung onay modalı: Verordnung bitmediyse ya
+  Behandlungsabbruch tarihi ya da bekle). Eski kaydın gösterdiği
+  `api-backend/billing/api/abrechnung.routes.js:2945-2963` Teilabrechnung üretiyordu — bu turda
+  satır **ölçülmedi**, S2.3'te builder doğrulasın. VKZ 02 yolu yazılırsa kapsamı yalnız
+  „unutulmuş, anspruch'u fatura anında var olan" Leistung olmalı.
+- **Kapsam:** Podologie (Anlage 3 p/q); § 7 Abs. 1 tüm „Sonstige Leistungserbringer"; UE tüm
+  Heilmittel
 
 
 ### Abrechnungscode 71 = Podologen (72 = med. Fußpfleger)
@@ -767,6 +884,30 @@
   her iki alana aynı değeri (`rx.kostentraeger_ik`) veriyor; `billing/dta/builder.js:106,234`
   `krankenkasseIk || kostentraegerIk` ile bunu maskeliyor. Şemada da tek alan var
   (`prescriptions.kostentraeger_ik`, `db/SCHEMA.sql:1485`) — ikinci IK saklanacak yer yok.
+- **Kapsam:** tüm Leistungserbringergruppen, tüm Verordnungsart'lar
+
+### IK des Leistungserbringers Muss'tur, 9 hane — yoksa dosya üretilmez
+- **Kural:** Leistungserbringer'in IK'sı (9 hane, numerik) SLLA-FKT ve SLGA-FKT'de **Muss**
+  alanıdır; Selbstabrechner'da UNB S002 „Absender Datei" de aynı IK'dır (Abrechnungsstelle
+  varsa UNB'ye onun IK'sı girer). IK yoksa ya da 9 hane değilse dosya **üretilmez** — Muss
+  alan eksikliği Prüfstufe 2'de dosyanın tamamını düşürür (bkz. „Format hatası … DOSYANIN
+  TAMAMINI düşürür").
+- **Kaynak:** Anlage 1 TP5 **V21** (Stand 15.01.2026, anzuwenden ab 01.10.2025)
+  (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt`):
+  - § 5.4 UNB S002 (`:830-848`, S. 20) — *„Absender Datei · M · IK des Absenders
+    (Abrechnungsstelle mit oder ohne Inkassobefugnis oder LE). Genutzt werden die ersten 9
+    Stellen; einzutragen ist das IK der absendenden Stelle. Diese Angabe muss übereinstimmen
+    mit SLGA.FKT.IK Absender der Datei."*
+  - § 5.5.3.1 SLLA-FKT (`:1875-1885`, S. 41) — *„IK des Leistungserbringers · 9 · N · M ·
+    Einzutragen ist das IK des Leistungserbringers."* (pdftotext tip/art sütununu „NM" olarak
+    birleştirmiş)
+  - § 5.5.2 SLGA-FKT (`:1427-1437`) — *„IK des Rechnungsstellers/Leistungserbringers · 9 · N ·
+    M · Es ist das IK des Leistungserbringers anzugeben"* (Abrechnungsstelle mit
+    Inkassovollmacht istisnası: Sammelrechnungs-SLGA'da onun IK'sı)
+  - Podologie Anlage 3 i.d.F. 16.06.2025 lit. p) (`20250617_Podologie_Anlage_3_Lesefassung.txt:696-705`)
+    — IK Verordnung'un arka yüzüne (Rechnungsdaten) yazılır; ön yüzde eksikliği *„unschädlich"*.
+- **Geçerlilik:** 01.10.2025 (V21) — V22'de bu alanlar için değişiklik kaydı bu turda okunmadı
+- **Kodda:** açık — Reform **S2.7** (IK boşsa üretim reddi). Kod satırı uygulanınca buraya.
 - **Kapsam:** tüm Leistungserbringergruppen, tüm Verordnungsart'lar
 
 ### Kostenträgerdatei: birden çok KV-Kart-IK → tek Kostenträger (n:1)
@@ -1205,10 +1346,29 @@
 - **Kapsam:** her DTA aktarımı
 
 ### Testdatei ödeme tetiklemez
-- **Kural:** UNB Feld 0035 = `0` (Test) veya `1` (Erprobung) olan dosyaların işlenmesi
-  hiçbir ödeme tetiklemez.
-- **Kaynak:** Anhang 2 zur Anlage 1 TP5, Kapitel 9, § 5 — *„Die Verarbeitung der unter den
-  zuvorgenannten Kriterien gemeldeten Testdaten löst keine Zahlungen aus."*
+- ⛔ **korrigiert 29.09.2026** — eski kural metni: ~~UNB Feld 0035 = `0` (Test) veya `1`
+  (Erprobung) olan dosyaların işlenmesi hiçbir ödeme tetiklemez.~~ Kaynak cümlesi yalnız
+  Testindikator **0**'ı kapsıyor; Erprobung'u (1) kapsadığı okuması kaynakta yok.
+- **Kural:** UNB Feld 0035 = `0` (**Testdatei**, Prüfverfahren § 5) → işlenmesi **ödeme
+  tetiklemez**. `1` (**Erprobungsdatei**, § 6) için ödeme hakkında kaynakta **hiçbir cümle
+  yok** — ne „ödenir" ne „ödenmez". **Çıkarım:** Richtlinien § 9 Abs. 2'deki *„zweigleisige
+  Erprobung mit einer konventionellen und einer maschinellen Datenübermittlung"* nedeniyle
+  Erprobung sırasında **konvansiyonel (kâğıt) fatura paralel** yürür ve para o yoldan gelir;
+  Erprobungsdatei tek başına ödeme yolu sayılmamalı. **DAS'a açık soru** (aşağıda).
+- **Kaynak:** Anhang 2 zur Anlage 1 TP5, Kapitel 9, Stand 10.11.2003
+  (`wissensbank/gemeinsam/302-tp5/Anhang_02_Anlage_1_TP5_Kapitel_9_Pruefverfahren_20031110.txt`)
+  § 5 (`:137-154`) — *„Die Daten sind wie folgt als Testdateien zu kennzeichnen: •
+  Testindikator im Segment UNB = 0 … Die Verarbeitung der unter den zuvorgenannten Kriterien
+  gemeldeten Testdaten löst keine Zahlungen aus."* · § 6 Erprobungsverfahren (`:156-165`) —
+  *„Testindikator im Segment UNB = 1"*, ödeme cümlesi yok. Anlage 1 TP5 V21 UNB 0035
+  (`Anlage_1_TP5_V21_20260115.txt:913-917`) yalnız değerleri tanımlar (0 Test · 1 Erprobung ·
+  2 Echt). Richtlinien § 302 i.d.F. 20.11.2006 § 9 Abs. 2
+  (`Richtlinien-Text_061120.txt:306-309`) — *„Der Teilnahme geht im Einzelfall eine
+  zweigleisige Erprobung mit einer konventionellen und einer maschinellen Datenübermittlung
+  im Sinne dieser Richtlinien voraus."*
+- **Açık — DAS'a sorulacak:** Erprobungsdatei (`1`) işlenince ödeme tetikler mi, yoksa
+  Erprobung boyunca kâğıt Urbeleg + konvansiyonel fatura mı esas? DAS randevusunda (bkz.
+  „Zulassung … Absender×Empfänger" kaydının açık maddesi) aynı listede sorulur.
 - **Geçerlilik:** 10.11.2003 — hâlâ geçerli
 - **Kodda:** `api-backend/billing/api/abrechnung.routes.js` — üç çağrının üçü de `kind: 'test'`
   (satır **700 · 2810 · 3242**; ilkinin yanında *„Faz A2 starts in test mode; flip to 'echt'
@@ -1217,6 +1377,47 @@
 - **Kapsam:** tüm gruplar
 - ⚠️ Bu kural „yanlışlıkla Echt gönderme" riskine değil, **„Test gönderip para bekleme"**
   hatasına karşı duruyor — bugün kod zaten yalnız Test üretiyor.
+
+### Datenaustausch durum terimleri: Initiierung → Übermittlung → Quittierung / Zurückweisung → Bezahlung
+- **Kural:** Bir gönderimin durumu spesifikasyonun kendi kelimeleriyle adlandırılır:
+  **Initiierung** (dosya üretildi) → **Übermittlung** → Empfänger Prüfstufe 1-3'ü koşar →
+  **Quittierung der Übernahme** ya da **Zurückweisung / Abweisung** (Prüfstufe 1-3'te hata
+  **dosyanın tamamını** döndürür) → **Bezahlung**. Prüfstufe 4 (vertrags-, versicherungs-,
+  leistungsrechtlich) **kassenspezifisch**tir, kassenartenübergreifend kural yoktur; oradan
+  dönen kesintinin teknik adı yok (günlük dildeki „Absetzung" §302 terimi değildir — bkz.
+  aşağıdaki kayıt). Absender **Bezahlung'a kadar** Sicherungskopie tutar; Datenaustausch
+  dokümantasyonu **en az 2 yıl** saklanır ve Initiierung'dan Quittierung'a + Weiterverarbeitung'a
+  kadar her adımı içerir. Zurückgewiesen veri düzeltilip **yeniden** gönderilir.
+- **Kaynak:** Anlage 1 TP5 **V21** (Stand 15.01.2026, anzuwenden ab 01.10.2025)
+  (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt`):
+  - Kap. 3 (2) (`:353-356`, S. 9) — *„Über den Datenaustausch ist eine Dokumentation zu führen.
+    Die Dokumentation ist mindestens 2 Jahre aufzubewahren. Dabei sind alle Schritte von der
+    Initiierung bis ggf. zur Quittierung der Übernahme sowie der Weiterverarbeitung zu
+    dokumentieren."*
+  - Kap. 3 (4) (`:361-364`) — *„Eine Sicherungskopie der Daten ist durch den Absender bis zur
+    Bezahlung vorzuhalten, insbesondere für die Rekonstruktion der Daten im Falle eines
+    Dateiverlustes auf dem Transportweg oder einer Dateirückweisung."*
+  - Kap. 3 (6) (`:370-372`) — *„Der Absender ist über festgestellte Mängel unverzüglich zu
+    unterrichten. Die zurückgewiesenen Daten sind zu berichtigen und die korrigierten Daten
+    erneut zu übermitteln."*
+  - Kap. 6.1-6.3 (`:7958-7994`, S. 161-162) — 6.1 *„erfolgt eine Abweisung der Datei"* · 6.2
+    *„ist die gesamte Datei zurückzuweisen"* · 6.3 *„Bei Abweisung der Datei erfolgt die
+    Benachrichtigung unter Angabe des Fehlers."*
+  - Kap. 6.4 (`:7996-8004`) — *„Die kassenartenspezifischen vertrags-, versicherungs- und
+    leistungsrechtlichen Prüfungen werden individuell bei den einzelnen Krankenkassen
+    durchgeführt. Für diesen Bereich werden keine kassenartenübergreifende Regelungen
+    vereinbart. Die Art, Schwere und Häufigkeit von Fehlern, die zur Rechnungsabweisung führen,
+    werden kassenspezifisch geregelt."*
+  - Kap. 7 (`:8054-8056`) — „erfolgreicher Dateieingang" = Ursprungsrechnung Prüfstufe 1-3'ü
+    fehlerfrei geçti (Korrekturverfahren süreleri buna bağlanır).
+- 📌 Terim sırası kaynakta tek bir liste olarak yazılı değil; **sıralama** yukarıdaki cümlelerin
+  birleşimidir. Kelimelerin kendisi (Initiierung, Quittierung der Übernahme, Zurückweisung,
+  Bezahlung) birebir kaynaktandır. „Übermittlung" Kap. 3 (1)'de *„Übermittlungsvorgang"*.
+- **Geçerlilik:** 01.10.2025 (V21)
+- **Kodda:** açık — Reform **S2.1** (bir **Test**dosyası Verordnung'u kilitlememeli: Testindikator
+  0 ödeme tetiklemez, yani o Verordnung için Bezahlung hiç gelmeyecek — bkz. „Testdatei ödeme
+  tetiklemez"). Kod satırı uygulanınca buraya.
+- **Kapsam:** tüm DTA gönderimi
 
 ### Echt'e geçiş kasadan Zulassung gerektirir
 - **Kural:** Erprobungsphase ancak Leistungserbringer kasa tarafından „zum Echtverfahren
@@ -1236,6 +1437,8 @@
   olduğundan ifade edilebilir en ince granülarite (DAS × Kassenart)'tır. Praxis genelinde tek
   bir bayrak **yanlıştır**: erken `echt` → Zulassung'suz bir DAS'a gerçek veri gider; geç
   `echt` → „keine Zahlungen auslösen" diyen Testdatei gider, yani **para sessizce gelmez.**
+  (29.09.2026 notu: bu cümle yalnız Testindikator `0` için kaynaklı; `1` Erprobung'da ödeme
+  hakkında kaynak yok — bkz. „Testdatei ödeme tetiklemez".)
 - **Kaynak:** Anlage 1 TP5 V21 Kap. 2 (1)(2) (S. 8) · Kap. 3 (1) + Kap. 8 (S. 175) ·
   Kap. 5.4 UNB 0035 · Anhang 2 zur Anlage 1 Kap. 9 § 1, § 5, § 6
 - **Geçerlilik:** 01.10.2025 (Anlage 1 V21) / Anhang 2 Stand 10.11.2003
@@ -1515,6 +1718,13 @@
       **Indikationsgruppe** (ör. `CD2a`) istiyor. Hangi formun tarandığı ve OCR/maskenin
       bunu nasıl ayırt edeceği **incelenmedi**. Podoloji/Physio akışını bugün etkilemiyor.
 - [x] ~~28 gün başlama süresi — HeilM-RL § 15'ten teyit~~ — **kapandı 29.09.2026** (`wissensbank`): § 15 Abs. 1-2 HeilM-RL `:677-682` orijinalden okundu, kural „Behandlungsbeginn-Frist" (Verordnung bölümü).
+- [ ] 🟠 **Erprobungsdatei (UNB 0035 = 1) ödeme tetikler mi?** (29.09.2026) Anhang 2 § 6 sessiz,
+      Richtlinien § 9 Abs. 2 „zweigleisig" → konvansiyonel fatura paralel çıkarımı. DAS
+      randevusunda sorulacak (bkz. `project_das_ik_registrierung` — DAS randevusu açık iş).
+- [ ] 🟠 **Podologie Rahmenvertrag § 125 Abs. 1 ana metni (i.d.F. 30.11.2020 + 20.10.2023)
+      arşivde yok.** İki açık buna bağlı: 78040 praxis mi hasta mı (§ 3a) ve Richtlinien § 7
+      Abs. 1'in „soweit in Verträgen nichts anderes geregelt ist" istisnası (Abrechnung
+      zamanı). GKV-SV sunucusu otomatik indirmeye vermiyor — elle indirilecek.
 - [ ] `blankoRules.js:124-132` — `ok !== true` iken bonuslar yine hesaplanıyor (`total_bonuses_eur`
       dolu dönüyor). Sessiz yanlış fatura riski.
 - [ ] VKZ değerlerinin `billing/dta/` ve `billing/codes/` içinde doğru uygulanması

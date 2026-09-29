@@ -5,7 +5,11 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 29.09.2026 (**Z-16 açıldı** — Podologie Behandlungsunterbrechung/Behandlungsbeginn-Frist, Reform S1.9 `dbd79f0`; HeilM-RL § 15/§ 16 Abs. 4, Anlage 3 lit. e, FAK Nr. 11/34 orijinale karşı okundu.)
+> İlk kurulum: 05.09.2026 · Son güncelleme: 29.09.2026 (**Z-17 açıldı** — Podologie Reform S1.12 + S2:
+> Hausbesuch „Ja", Abrechnung nach Beendigung / VKZ 02, Test vs. Erprobung, Datenaustausch-Status,
+> IK des LE. `SPEC-RULES.md`'de 1 kayıt düzeltildi (Teilabrechnung/VKZ 02), 1 kayıt netleşti (Testdatei).
+> `Richtlinien-Text_061120` artık teyitli: Anlage 1 V21 kapağı „Stand der Richtlinien: 20.11.2006".)
+> Önceki: 29.09.2026 (**Z-16 açıldı** — Podologie Behandlungsunterbrechung/Behandlungsbeginn-Frist, Reform S1.9 `dbd79f0`; HeilM-RL § 15/§ 16 Abs. 4, Anlage 3 lit. e, FAK Nr. 11/34 orijinale karşı okundu.)
 > Önceki: 28.09.2026 (**Microsoft C5 raporu kaydedildi — depo
 > DIŞINDA.** Kart **W-06**, zincir **Z-15**, açık madde **W-A12**. İlk depo-dışı kayıt: belge dağıtım
 > kısıtlı olduğu için Drive'da durur, sicil yalnız kimliğini ve neyi beslediğini tutar. Kayıt
@@ -47,7 +51,7 @@
 | Kayıtlı kaynak belge (INDEX'te) | 39 (38 depoda + 1 depo dışı, W-06) |
 | Arşivdeki PDF | 49 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
-| Kaynak→kod zinciri kayıtlı | 15 (Z-01…Z-15) |
+| Kaynak→kod zinciri kayıtlı | 17 (Z-01…Z-17) |
 | Tam kimlik kartı yazılmış kaynak | 6 (**W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
 | Depo **dışında** duran kayıtlı kaynak | 1 (W-06 — dağıtım kısıtlı, Drive'da) |
 | **Herkunft (indirme URL'i) kayıtlı** | **6 / 38** ← asıl boşluk, W-A01 |
@@ -531,6 +535,37 @@ unbelegt. Podologie unberührt.
 **Bei neuer HeilM-RL-Fassung:** § 15 und § 16 Abs. 4 neu lesen → `BEHANDLUNGSBEGINN_TAGE` und
 den `!istPodo`-Schalter prüfen. Bei neuer Anlage 3 Podologie: lit. e. Neuer FAK: Nr. 11/34.
 
+### Z-17 · Podologie Reform S1.12 + S2 — Abrechnungszeitpunkt, Hausbesuch, Test/Erprobung, Status, IK
+```
+wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt  (i.d.F. 16.06.2025)
+    lit. c (Z.357-370)  = Hausbesuch nur bei „Ja"; leer/Nein → nicht abrechenbar, VO gültig
+    lit. p (Z.689-705)  = Rechnungsdaten „nach Beendigung der Verordnung"; IK LE
+    lit. q (Z.708-721)  = Behandlungsabbruch-Datum (konditionelle Pflicht); Nagelspange = reg. Ende
+wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_…txt  Anlage 3 (Z.2315-2349) · § 11 (Z.516-537)
+wissensbank/gemeinsam/positionsnummern/Positionsnummernverzeichnis_2026_Full.csv:1814,1823  (79933/79934)
+wissensbank/gemeinsam/302-tp5/Richtlinien-Text_061120.txt  § 7 Abs. 1 (Z.249-255) · § 9 Abs. 2 (Z.306-309)
+wissensbank/gemeinsam/302-tp5/Gemeinsame_Umsetzungsempfehlungen_…_20250213.txt  Frage 1/2 (Z.77-103)
+wissensbank/gemeinsam/302-tp5/Anhang_02_…_20031110.txt  § 5 (Z.137-154) · § 6 (Z.156-166)
+wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt
+    Kap. 3 (2)(4)(6) (Z.353-372) · Kap. 6.1-6.4 (Z.7958-8004) · UNB S002 (Z.830-848)
+    SLGA-FKT (Z.1427-1437) · SLLA-FKT (Z.1875-1885) · UNB 0035 (Z.913-917)
+wissensbank/podologie/20240725_Anlage_1a_…txt  Teil 1 Nr. 2 (Z.80-84) · 4.1 (Z.458-462) · 4.2 (Z.491-493)
+  → S2.6 Hausbesuch-Sperre · S2.3 Abrechnungs-Bestätigungsmodal · S2.1 Testdatei sperrt VO nicht
+  → S2.7 IK-Pflicht vor Dateierzeugung · S1.12 Serie erbt 78040 nicht
+  → Kodzeilen: ALLE OFFEN (noch nicht umgesetzt) — nach Umsetzung hier + in SPEC-RULES eintragen
+  → SPEC-RULES.md: „Hausbesuch (79933/79934) …" · „Abrechnung Verordnung bittikten sonra …"
+     · „Testdatei ödeme tetiklemez" (netleşti) · „Datenaustausch durum terimleri …"
+     · „IK des Leistungserbringers Muss'tur …" · „6 seanslık serinin …" (S1.12 satırı)
+```
+⚠️ **offen — Sahip `builder` (Reform S2):** Kod satırları beş maddenin hiçbirinde henüz yok. Uygulandıkça
+bu kart ve SPEC-RULES `Kodda:` satırları doldurulur; dolmadan sprint maddesi kapanmış sayılmaz.
+⚠️ **offen — Sahip DAS-Termin (`project_das_ik_registrierung`):** Erprobungsdatei (UNB 0035 = 1) ödeme
+tetikler mi — Anhang 2 § 6 sessiz, çıkarım: zweigleisig (§ 9 Abs. 2) → konvansiyonel fatura paralel.
+⚠️ **offen — elle indirme:** Podologie Rahmenvertrag § 125 ana metni (i.d.F. 30.11.2020 / 20.10.2023)
+arşivde yok — § 7 Abs. 1 „soweit in Verträgen nichts anderes" istisnası ve 78040 § 3a buna bağlı.
+**Bei neuer Anlage 3 Podologie:** lit. c/p/q neu lesen. **Bei neuem Korrekturverfahren-Stand:** Frage 1/2.
+**Bei Anlage 1 V22-Nachfolger (TA):** Kap. 3, Kap. 6, UNB S002, FKT-IK-Felder.
+
 ---
 
 
@@ -566,7 +601,7 @@ yeniden araştırılıyor demektir.
 | `TP5_Infoschreiben_BAHN-BKK_…_01.01.2026` | — | 01.01.2026 | 📎 REFERANS (tek kasa duyurusu) |
 | `Aenderungshistorie` · `0_Änderungen` | — | — | 📎 REFERANS (değişiklik geçmişi) |
 | `Anlage_4_061101` | 2.0 | 01.12.2006 | 📎 REFERANS (çok eski, teyit edilmeli) |
-| `Richtlinien-Text_061120` | — | 01.06.1996 | 📎 REFERANS (çok eski, teyit edilmeli) |
+| `Richtlinien-Text_061120` | i.d.F. 20.11.2006 | 01.06.1996 | ✅ GEÇERLİ — teyit 29.09.2026: `Anlage_1_TP5_V21_20260115.txt:14` „Stand der Richtlinien: 20.11.2006". § 7 Abs. 1 / § 9 Abs. 2 → **Z-17** |
 
 ### §125 SGB V sözleşmeleri ve ücret anlaşmaları
 
@@ -575,7 +610,7 @@ yeniden araştırılıyor demektir.
 | `20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei` | Lesefassung, ab 01.01.2026 | ✅ GEÇERLİ | Z-03 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_2` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | Z-04 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_1c_Leistungsbeschreibung` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | podoloji akışı |
-| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı · **Z-11** · Z-14 (g2) · **Z-16** (lit. e) |
+| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı · **Z-11** · Z-14 (g2) · **Z-16** (lit. e) · **Z-17** (lit. c/p/q) |
 | `wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung` | 16.06.2025 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20240725_Anlage_1a` + `1b_Leistungsbeschreibung` | i.d.F. 17.06.2024 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20230524_Podologie_FAK_bf` | Stand 24.05.2023 | ✅ GEÇERLİ | HPNR referansı · **Z-16** (Nr. 11/34, yorum — norm değil) |
