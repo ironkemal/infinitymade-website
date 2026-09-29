@@ -40,8 +40,8 @@ dolanmaz, Kemal'e sorar.
 |---|---|---|---|
 | S0 | Ürün kararları (/konsey) + Beta-1 soruları | evet | ⏳ |
 | S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | ✅ 1.1–1.11 (29.09) — canlı geçti, 1.9 QA'da veri yok (birim testleri); açık: 1.12 — bkz. S1 devir notu |
-| S2 | §302 durum semantiği | kısmen (gkv-302) | ⏳ |
-| S3 | Güvenilirlik ve veri doğruluğu | hayır | ⏳ |
+| S2 | §302 durum semantiği | kısmen (gkv-302) | ✅ 2.1–2.4, 2.6, 2.7 (29.09) — 2.5 bilerek yok; canlı: 2.1 geçti, diğerleri bkz. canli-test |
+| S3 | Güvenilirlik ve veri doğruluğu | hayır | ✅ 3.1–3.7, 3.9–3.11, 3.13 (29.09) — açık: 3.8, 3.12 (Kemal kararı) |
 | S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | ⏳ |
 | S5 | Mobil / tablet (yalnız CSS) | hayır | ⏳ |
 | S6 | Temizlik: yalnız Almanca, ölü kod, konsol | hayır | ⏳ |
@@ -89,7 +89,7 @@ S0 ile S1–S3 paralel yürüyebilir; S4 S0 bitmeden başlamaz.
 | 1.9 ✅ `dbd79f0` | **gkv-302 bulgusu 29.09:** podolojide kesinti Verordnung'u geçersiz KILMAZ (HeilM-RL §16 Abs.4 S.5) — `module/frequenz-pruefung.js:53` `UNTERBRECHUNG_TAGE=12*7` + 329-331 metni yanlış (FAK Nr. 11 ters okunmuş). Seride ilk randevu için Behandlungsbeginn fristi 28 gün / dringlich 14 gün (§15) = BLOK; frekans sapması SARI uyarı, UI1/UI2'de uyarı yok. İki kural `wissensbank/SPEC-RULES.md`'ye | `module/frequenz-pruefung.js`, seri önizlemesi | S–M | Podoloji serisinde 12 hafta uyarısı yok; ilk randevu fristi aşarsa onay engelli |
 | 1.10 ✅ `32f1a4d` | **canli-test 29.09 (S1.8), P1:** KI seri yolu (`aiSuggestConfirm` dashboard.js ~6773-6791) yalnız `service.duration` gönderiyor, batch sonrası `speichereLeistungen` yok → seri randevuları 35 dk ve `booking_leistungen`'siz (maske 78010+78030 / 65 dk gösteriyordu) | `dashboard.js` aiSuggestConfirm, `module/termin-leistungen.js` | S–M | Seriyle oluşan her randevuda maskedeki Leistungen ve süre |
 | 1.11 ✅ `24d751b` | **canli-test 29.09 (S1.8), P2:** (a) seri/randevu maskesindeki Verordnung kartı podo'da 0/3 — `zeigeVerordnungenFuerTermin` → `rendereVeroKarten` çağrısına `sb/ownerId/leadId` geçmiyor (1.3 yalnız paneli düzeltti); (b) seri sonrası e-posta diyaloğu ✕ → podolojide Rechnungen paneline gidiyor (`proceedToRechnungForPhysio`), gelecek tarihli seride yanlış. **podoloji kararı:** podo seride fatura adımı tamamen atlanır (`proceedToRechnungForPhysio` ~7462, çağrı ~7356/~7404), kullanıcı Verordnung/hasta görünümünde kalır; e-posta varsa tek tıkla geçilebilir „Terminübersicht mitgeben (Drucken / E-Mail)", yoksa yalnız Drucken, e-posta sorulmaz | `module/termin-verordnung.js`, `dashboard.js` ~6830 | S | Maske sayacı doğru; podo seride fatura adımı yok |
-| 1.12 | **canli-test 29.09 (S1.9–1.11), P2:** seri maskesi „Befundung (78030) … am 2026-09-28 bereits abgerechnet" uyarısı gösterirken 78030 satırını „von der Software vorgeschlagen" diye SEÇİLİ bırakıyor → S1.10'dan beri her seri randevusuna 78030 yazılıyor. Befundpauschale seride önseçilmemeli (1.5 kuralı: Befund önerili ama işaretsiz; S0-2b ile bağlantılı) — podoloji + gkv-302'ye sor | `module/termin-leistungen.js` öneri mantığı | S | Seri randevularında 78030/78040 önseçili değil |
+| 1.12 ✅ `ee51827` | **canli-test 29.09 (S1.9–1.11), P2:** seri maskesi „Befundung (78030) … am 2026-09-28 bereits abgerechnet" uyarısı gösterirken 78030 satırını „von der Software vorgeschlagen" diye SEÇİLİ bırakıyor → S1.10'dan beri her seri randevusuna 78030 yazılıyor. Befundpauschale seride önseçilmemeli (1.5 kuralı: Befund önerili ama işaretsiz; S0-2b ile bağlantılı) — podoloji + gkv-302'ye sor | `module/termin-leistungen.js` öneri mantığı | S | Seri randevularında 78030/78040 önseçili değil |
 
 Ajanlar: fonksiyon-ustasi (önce/sonra), gkv-302 (1.5/1.6), canli-test (sonra).
 
@@ -122,15 +122,26 @@ Ajanlar: fonksiyon-ustasi (önce/sonra), gkv-302 (1.5/1.6), canli-test (sonra).
 
 | # | İş | Efor | Bitti ölçütü |
 |---|---|---|---|
-| 2.1 | **Test dosyası reçeteyi festschreiben yapmaz.** Durum zinciri: `erstellt` → `übermittelt` (yalnız Echt, kilit burada) → `quittiert/abgewiesen` → `bezahlt/abgesetzt` (gkv-302, Anhang 2 Kap. 9 §5) | M–L | Test DTA sonrası reçete düzenlenebilir, "an die Kasse übermittelt" yazmaz |
-| 2.2 | Detayda "Eingereicht: noch nicht" ↔ "Eingereicht 43,29 €" çelişkisi → "In Datei (Test)" | S | Tek, doğru dil |
-| 2.3 | **Kemal kararı 28.09 (VKZ 02 yerine):** açık seanslı reçete "Bereit"e alınırken ya da §302 seçimine girerken `showConfirmModal`: „Es sind noch N Einheit(en) offen. Die Verordnung wird damit abgeschlossen, offene Einheiten verfallen. Trotzdem abrechnen?" Onaysız Teilabrechnung yok; onay loglanır | S | Onaysız geçiş imkânsız; metin gkv-302 onaylı |
-| 2.4 | Erstellen sonrası: protokol boş-durum dalında da çizilir, görünüm "Bisherige"ye geçer | S | Yenilemeden liste görünür (`module/abrechnung-auswahl.js:590-598, 1043`) |
+| 2.1 ✅ `13d4351` | **Test dosyası reçeteyi festschreiben yapmaz.** Durum zinciri: `erstellt` → `übermittelt` (yalnız Echt, kilit burada) → `quittiert/abgewiesen` → `bezahlt/abgesetzt` (gkv-302, Anhang 2 Kap. 9 §5) | M–L | Test DTA sonrası reçete düzenlenebilir, "an die Kasse übermittelt" yazmaz |
+| 2.2 ✅ `36fb9ff` | Detayda "Eingereicht: noch nicht" ↔ "Eingereicht 43,29 €" çelişkisi → "In Datei (Test)" | S | Tek, doğru dil |
+| 2.3 ✅ `2c3fc45` | **Kemal kararı 28.09 (VKZ 02 yerine):** açık seanslı reçete "Bereit"e alınırken ya da §302 seçimine girerken `showConfirmModal`: „Es sind noch N Einheit(en) offen. Die Verordnung wird damit abgeschlossen, offene Einheiten verfallen. Trotzdem abrechnen?" Onaysız Teilabrechnung yok; onay loglanır | S | Onaysız geçiş imkânsız; metin gkv-302 onaylı |
+| 2.4 ✅ `9a71119` | Erstellen sonrası: protokol boş-durum dalında da çizilir, görünüm "Bisherige"ye geçer | S | Yenilemeden liste görünür (`module/abrechnung-auswahl.js:590-598, 1043`) |
 | 2.5 | ~~VKZ 02 Nachforderung~~ — **bu sprintte YAPILMAZ** (Kemal, 28.09). Gerekçe: Muster-13 aslı faturayla gider, yarım reçetenin kalanını sonra faturalamak nadir; 2.3 bilinçli kararı sağlar. Beta-1'e soru: "Yarım kalan reçeteyi ne yapıyorsun?" — cevap "sık" ise ayrı iş olarak açılır | — | — |
-| 2.6 | 79933 yalnız reçetede Hausbesuch=Ja iken önerilir; Nein/boşsa 79933/79934 blok | S | Anlage 3 Podo c) |
-| 2.7 | IK hatası "Kein IK-Nummer" → "Praxis-IK fehlt — unter Einstellungen → Abrechnung eintragen" + link | S | — |
+| 2.6 ✅ `8486dee` | 79933 yalnız reçetede Hausbesuch=Ja iken önerilir; Nein/boşsa 79933/79934 blok | S | Anlage 3 Podo c) |
+| 2.7 ✅ `e2144ac` | IK hatası "Kein IK-Nummer" → "Praxis-IK fehlt — unter Einstellungen → Abrechnung eintragen" + link | S | — |
 
 Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şema değişirse).
+
+**S2 notları (29.09 akşam):**
+- 2.1 kapsamı: yalnız podoloji `create-podologie`, yalnız Betriebsart `test` (Anhang 2 Kap. 9 §5). Erprobung/Echt bugünkü gibi kilitler — Erprobung'da hangi fatura geçerli, **DAS'a yazılı sorulacak** (SPEC-RULES doğrulama kuyruğu). Physio `/abrechnung/create` ve Korrektur yolunda aynı hata bilerek bırakıldı (fizyo ertelendi; `verordnungFestschreiben()` oraya bağlanacak). Canlı GEÇTİ (`f77efc4c`, TSOL0002). QA'daki `796aae21` 28.09'dan beri DB'de kilitli (eski hata) — trigger atlatılmadan açılamaz, dokunulmadı.
+- Açık (ayrı iş, karar gerekli): "dosya üretilince `gesendet`" anlam hatası (podo yolu; `in_abrechnung` olmalı, `gesendet` gönderimde) — `einreichbar.js` eşlemesi ve Abgerechnet-Gruppe'yi etkiler. Test dosyaları `geldstand()`/Verlauf/"offen €" toplamına karışıyor (canli-test: her testte büyüyor) — 2.2 detayda etiketliyor, dışlama ayrı karar.
+- canli-test yan bulguları (P2): Neue Verordnung'da öneri listesi açıkken Escape bütün maskeyi kapatıp veriyi siliyor (`dashboard.js:~1279`); Neue Abrechnung tablosunda "Einheiten 2 / 1" — 78030 seans sayılıyor (`abrechnung-auswahl.js:~843`). S3'e aday.
+- 2.3: onay metni gkv-302 onaylı; sunucu 428 `OFFENE_EINHEITEN`; onay `prescription_validations` (engine `abrechnung-freigabe`, yalnız Erprobung/Echt). Denetimde yakalandı: ajan olmayan kolon `prescriptions.behandlungseinheiten` kullanmıştı (doğrusu `anzahl_einheiten`; `behandlungseinheiten` yalnız `verordnung-topf.js` sınır adı) — PATCH route'u tümden 500'e düşürecekti.
+- 2.2: test dosyasında ödeme/ZAA düğmeleri gizli; ama Anleitung rehberindeki "gönderildi işaretle" (`dashboard.js:~13016`, mark-sent) test dosyasında hâlâ görünüyor — küçük boşluk.
+- **2.3b (açık, podoloji önerisi B, 29.09):** Bereit'te onaylanan açık birimli reçete §302 listesinde „N offen" etiketiyle **varsayılan seçili** gelsin, Erstellen'de ikinci onay çıkmasın; ancak onaydan sonra açık birim sayısı değiştiyse ya da reçeteye ileri tarihli Termin bağlıysa bir kez daha sorulsun. Şemasız yol: sunucu `prescription_validations` (`abrechnung-freigabe` / `OFFENE_EINHEITEN` / `result.aktion='bereit'`) kaydındaki `input_snapshot.offen`'a bakar. canli-test 29.09: Bereit yolu (428 + birebir metin + Abbrechen) GEÇTİ; podo listesi yalnız `bereit` gösterdiği için liste/Erstellen yolu yalnız Bereit sonrası erişilebilir — sınanmadı (QA reçetesi `ddf57e1b`, 1/3).
+- S2.2 canlı yan gözlemler (P2, gkv-302 teyidi): test dosyasında Beleg satırı „Rückmeldung: eingereicht" (`abrechnung_zeile.status`) üst blokla çelişiyor; test dosyasında „Offen 25,70 €"; „✍ Signieren" düğmesi test dosyasında görünüyor.
+- IK çözümlemesi üç kopya (physio `terapeut_zertifikat` upsert, podo, korrektur) — 2.7'de birleştirilmedi, karar Kemal'in.
+
 
 ---
 
@@ -138,19 +149,38 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 
 | # | İş | Nerede | Efor |
 |---|---|---|---|
-| 3.1 | Neuer Patient: `geburtsdatum` + `hausbesuch` sütuna yazılsın; metadata'dan backfill; terminmodal hasta seçince Hausbesuch önseçsin | `dashboard.js:9154-9164`, `applyLeadById` 5102; backfill db-ustasi | S+M |
-| 3.2 | Vorlagen CHECK'e `rechnung_ausfall` (migration + döküm) | `api-backend/db/migrations/`, `db/SCHEMA*.sql` | S |
-| 3.3 | Çift bağlı 9 düğme: inline `onclick` kaldır (canlıda Fahrt zinciri 2× istek, araç 2× satır doğrulandı) | `dashboard.html` 1966, 4825, 4834, 4841, 4858, 5103, 5129, 5215, 5254 | S |
-| 3.4 | **Kemal kararı 28.09:** araç için TEK kaydetme yolu kalır = `saveVehicleEdit` (tür kullanıcı seçer). Fahrt Starten'deki "+ Neues Privatfahrzeug" → "+ Fahrzeug" olur ve aynı küçük formu açar; formda "Praxisfahrzeug / Privatfahrzeug" seçimi, varsayılan owner→Praxis, çalışan→Privat. `saveQuickVehicleHandler` kaldırılır (kod modüle göç ederse `dashboard.js` küçülür). Bitti: tek tık = tek satır, tür seçilen değer | `dashboard.js:4105-4127`, `saveVehicleEdit` 18082, `dashboard.html` quickVehicleModal | S |
-| 3.5 | Hata kaydetme düğmesinin yanında (çakışma dahil); toast yalnız başarı. Tarayıcı `confirm()` → `showConfirmModal` | `dashboard.js:6066`, Verordnung formu | S |
-| 3.6 | Endständig olmayan ICD seçimde ve preflight'ta blok | `katalog-suche.js`, `preflight.js:99-101` | S |
-| 3.7 | LANR Prüfziffer formda uyarı; LANR/Unterschrift yoksa Behandlung/"Bereit" blok, BSNR yalnız uyarı | `arzt-register.js`, Verordnung formu, preflight 305-307 | S |
+| 3.1 ✅ `1fb3a7e` | Neuer Patient: `geburtsdatum` + `hausbesuch` sütuna yazılsın; metadata'dan backfill; terminmodal hasta seçince Hausbesuch önseçsin | `dashboard.js:9154-9164`, `applyLeadById` 5102; backfill db-ustasi | S+M |
+| 3.2 ✅ `f117668` | Vorlagen CHECK'e `rechnung_ausfall` (migration + döküm) | `api-backend/db/migrations/`, `db/SCHEMA*.sql` | S |
+| 3.3 ✅ `cc6f346` | Çift bağlı 9 düğme: inline `onclick` kaldır (canlıda Fahrt zinciri 2× istek, araç 2× satır doğrulandı) | `dashboard.html` 1966, 4825, 4834, 4841, 4858, 5103, 5129, 5215, 5254 | S |
+| 3.4 ✅ `cc6f346` | **Kemal kararı 28.09:** araç için TEK kaydetme yolu kalır = `saveVehicleEdit` (tür kullanıcı seçer). Fahrt Starten'deki "+ Neues Privatfahrzeug" → "+ Fahrzeug" olur ve aynı küçük formu açar; formda "Praxisfahrzeug / Privatfahrzeug" seçimi, varsayılan owner→Praxis, çalışan→Privat. `saveQuickVehicleHandler` kaldırılır (kod modüle göç ederse `dashboard.js` küçülür). Bitti: tek tık = tek satır, tür seçilen değer | `dashboard.js:4105-4127`, `saveVehicleEdit` 18082, `dashboard.html` quickVehicleModal | S |
+| 3.5 ✅ `a541ae3` | Hata kaydetme düğmesinin yanında (çakışma dahil); toast yalnız başarı. Tarayıcı `confirm()` → `showConfirmModal` | `dashboard.js:6066`, Verordnung formu | S |
+| 3.6 ✅ `5e764a8` (uyarı, blok değil — gkv-302) | Endständig olmayan ICD seçimde ve preflight'ta blok | `katalog-suche.js`, `preflight.js:99-101` | S |
+| 3.7 ✅ `22480aa` | LANR Prüfziffer formda uyarı; LANR/Unterschrift yoksa Behandlung/"Bereit" blok, BSNR yalnız uyarı | `arzt-register.js`, Verordnung formu, preflight 305-307 | S |
 | 3.8 | Kasse IK'sı Kostenträgerdatei'den, hastaya IK yazılsın; IK boşsa formda sert uyarı | `krankenkassen` dropdown ← `kostentraeger`, db-ustasi | M |
-| 3.9 | ICD öneri listesi panel değişince kapansın (`requestSeq++` in `closeDropdown`, `activeElement` kontrolü) | `katalog-suche.js:206/349` | S |
-| 3.10 | `customer_name` = yalnız ad; kalender kartı `parseNameMitGeburt()`; `split('·')` 4 yer | `dashboard.js:2191-2204, 5105`, `module/termin-patient-bezug.js:42` | S–M |
-| 3.11 | 78030 süresi (`duration: null`) Folgetermin'e +30 dk eklemesin | `dashboard.js:9409` | S |
-| 3.13 | **Tagesbehandlung'dan "Fahrt beenden"** (podoloji, 29.09, P2): Hausbesuch'ta "Termin starten" artık Tagesbehandlung'a gidiyor; kayıttan sonra `fahrt_status=in_progress` ise kaydet onayının yanında "Fahrt beenden" düğmesi — yoksa Fahrt açık kalır, Fahrtenbuch eksik | `module/podo-behandlungen-oeffnen.js`, `podologie-abrechnung.js`, `renderBkActionFahrtState` | S |
+| 3.9 ✅ `0418566` | ICD öneri listesi panel değişince kapansın (`requestSeq++` in `closeDropdown`, `activeElement` kontrolü) | `katalog-suche.js:206/349` | S |
+| 3.10 ✅ `410cc6f` | `customer_name` = yalnız ad; kalender kartı `parseNameMitGeburt()`; `split('·')` 4 yer | `dashboard.js:2191-2204, 5105`, `module/termin-patient-bezug.js:42` | S–M |
+| 3.11 ✅ `7331d46` | 78030 süresi (`duration: null`) Folgetermin'e +30 dk eklemesin | `dashboard.js:9409` | S |
+| 3.13 ✅ `46faff6` | **Tagesbehandlung'dan "Fahrt beenden"** (podoloji, 29.09, P2): Hausbesuch'ta "Termin starten" artık Tagesbehandlung'a gidiyor; kayıttan sonra `fahrt_status=in_progress` ise kaydet onayının yanında "Fahrt beenden" düğmesi — yoksa Fahrt açık kalır, Fahrtenbuch eksik | `module/podo-behandlungen-oeffnen.js`, `podologie-abrechnung.js`, `renderBkActionFahrtState` | S |
 | 3.12 | Açık metin PHI (guvenlik sicili S-34/S-35) — yön guvenlik + db-ustasi ile | `api-backend/server.js` /rezept/confirm, `leads` | M |
+
+**S3 notları (29.09 gece):**
+- **3.8 açık — Kemal kararı:** `leads`'te IK kolonu yok; en küçük çözüm yeni nullable `leads.krankenkasse_ik` (kart IK'sı, CHECK 9 hane) + formda `lead-krankenkasseIk` (otomatik doldurma `attachKrankenkasseSuche` ile hazır). **Önkoşul:** `0041_krankenkassen_ik_nachtrag` SaaS'a hâlâ uygulanmadı — canlı `krankenkassen.ik_number`'da 9 mock IK var, ada göre seçim bunları dolduruyor. Önce 0041 (onay + dry-run), sonra şema (onprem'e sor). 0041 konsey kararı (çok IK'lı kasa NULL) yeniden açılmaz.
+- **3.12 açık — guvenlik yönü:** `leads.*_enc` ve `prescriptions.ocr_raw_enc` var ama kullanılmıyor/yarım (db-ustasi 29.09 sayımı); eski satır temizliği yıkıcı, onay ister. `idx_leads_name_dob` arama düz metne dayanıyor.
+- 3.2: 0043 canlıda (29.09, MCP). 12.08 sonrası Vorlage'siz hesaplar panel açılışında kendiliğinden tamamlanır (seedMissingVorlagen).
+- 3.6: canlıda yalnız uyarı; sunucu `warnungen` dönüyor ama ön yüz (Erstellen protokolü) henüz göstermiyor. Açık gkv-302 sorusu: E11.7- („multiple Komplikationen") „erkennbar nicht therapierelevant" mı → therapierelevant bloku ayrı iş.
+- 3.7: `unterschrift_vorhanden` yalnız `true` geçer; canlıda 27 podo reçetenin 10'u (hepsi test verisi) bloklanır.
+- 3.10: `calculateSessionInfo` (dashboard.js ~3213) seans numarasını `customer_name` tam eşleşmesiyle sayıyor — eski „Ad · tarih" ve yeni ad-only kayıtlar geçişte ayrı sayılır (canlı müşteri yok, düşük). Tooltip/Fahrtenbuch gibi salt-gösterim okuyucular eski kayıtta tarihi göstermeye devam eder.
+- S1 dışı not (2) (seri yollarında Hausbesuch yol süresi) ve `hausbesuchBlockMin` kopyası (4×) hâlâ açık.
+- Anomali (canli-test sicili): `vehEditSaveBtn` 3× tetikleme 3.3 ile kapandı; başlık id uyuşmazlığı 3.4 ile kapandı.
+
+### S2/S3 devir notu (29.09.2026 gece)
+
+**Canlı GEÇTİ:** 1.12, 2.1, 2.2, 2.3 (Bereit + liste yolu), 2.4, 2.6, 3.1, 3.3/3.4, 3.9, 3.11. **Statik:** 2.7 (IK silinmedi). **Canlıda henüz sınanmadı:** 3.5, 3.6, 3.7, 3.10, 3.13 hotfix.
+**3.13 P1 (canli-test):** „Termin Starten" `fahrt_status='in_progress'` yazıyordu, CHECK bunu hiç kabul etmedi (`eace931`'den beri) → Hausbesuch Fahrt'ı arayüzden kapatılamıyordu. Hotfix `96c0320`: `fahrt_return_pending` (şemasız).
+
+**Sıradaki oturumun ilk işi:** canli-test ile 3.13 hotfix (Hausbesuch: Fahrt Starten → angekommen → Termin Starten → Tagesbehandlung → „Fahrt beenden") + 3.5/3.6/3.7/3.10 akışları. Sonra Kemal kararları: 3.8 (önce 0041'in SaaS'a uygulanması), 3.12 (guvenlik), 2.3b. S0 ayrı oturum; S4 S0 bitmeden başlamaz.
+
+**QA test verisi (29.09, silinmedi):** reçeteler `f77efc4c` (1/1, bereit, test dosyaları TSOL0002/0003), `ddf57e1b` (2/3, bereit, TSOL0004, Bereit onay logu `31efe963`), `796aae21` (DB'de kilitli, 1/3); hasta `1abd135e` (TEST-QA Spalten); araçlar `c79a59f1`, `8a674747`; randevu `7a6fc08b` (completed, Behandlung `81cd1398`, Fahrt `97206371` elle kapatıldı).
 
 ---
 
