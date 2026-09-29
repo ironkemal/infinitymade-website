@@ -391,6 +391,18 @@ export function attachAutocomplete(inputEl, cfg) {
  * @param {object} [opts] bereich (string|Function), kind 'icd'|'dg'|'both',
  *                        multi, codeOnly, limit, strict, onSelect
  */
+/**
+ * Hinweistext für einen nicht endständigen ICD-Kode (Reform S3.6).
+ * Nur `terminal === false` löst ihn aus; null/undefined (unbekannt) und
+ * Diagnosegruppen nicht. Reine Warnung — die Auswahl bleibt möglich: die
+ * Praxis darf den Kode nicht selbst ändern, das kann nur der Arzt
+ * (neue Unterschrift + Datum).
+ */
+export function nichtEndstaendigHinweis(item) {
+  if (!item || item.kind === 'dg' || item.terminal !== false) return '';
+  return 'ICD-Code ist nicht endständig. Bitte mit der Verordnung vergleichen — Korrektur nur durch den Arzt (neue Unterschrift + Datum).';
+}
+
 export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
   if (!inputEl || !sb) return;
   // limit 50: "E" trifft in der Podologie allein 155 gültige ICD-Kodes. Mit 25
@@ -430,9 +442,30 @@ export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
   // in diesem Fall bewusst auf die alte Rangfolge zurück.
   const strictNow = () => strict && !!normalizeBereich(resolveBereich());
 
+  // Hinweis unter dem Feld, vom Modul selbst gezeichnet (kein Eingriff in
+  // dashboard.js nötig). Verschwindet, sobald der Nutzer den Text ändert.
+  let hinweisEl = null;
+  const hinweisZeigen = (text) => {
+    if (!text) { if (hinweisEl) hinweisEl.style.display = 'none'; return; }
+    if (!hinweisEl) {
+      hinweisEl = document.createElement('div');
+      hinweisEl.className = 'icd10-nicht-endstaendig';
+      hinweisEl.setAttribute('role', 'status');
+      hinweisEl.style.cssText = 'font-size:12px;margin-top:4px;color:var(--text-muted);';
+      inputEl.insertAdjacentElement('afterend', hinweisEl);
+    }
+    hinweisEl.textContent = text;
+    hinweisEl.style.display = '';
+  };
+  inputEl.addEventListener('input', () => hinweisZeigen(''));
+
   attachAutocomplete(inputEl, {
     ariaLabel: 'Diagnose-Vorschläge',
-    multi, onSelect,
+    multi,
+    onSelect: (it) => {
+      hinweisZeigen(nichtEndstaendigHinweis(it));
+      if (onSelect) onSelect(it);
+    },
     // Diagnosegruppen sind eine kurze, feste Auswahl (Podologie 5, Physio 28):
     // ein Klick ins leere Feld listet sie. ICD-Felder brauchen weiter ein Zeichen.
     minChars: opts.minChars ?? (kind === 'dg' ? 0 : 1),
@@ -459,7 +492,9 @@ export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
     renderItem: it =>
       `<span class="icd-code">${esc(it.code)}</span>` +
       `<span class="icd-title">${esc(it.titel)}</span>` +
-      (it.kind === 'dg' ? `<span class="icd-badge">Diagnosegruppe</span>` : ''),
+      (it.kind === 'dg' ? `<span class="icd-badge">Diagnosegruppe</span>` : '') +
+      (it.kind !== 'dg' && it.terminal === false
+        ? `<span style="font-size:11px;margin-left:6px;color:var(--text-muted)">nicht endständig</span>` : ''),
     // Own Fachbereich on top, everything else below a divider — ranked, never
     // hidden. Im strict-Modus gibt es nichts zu trennen, dann entfällt er.
     needsSeparator: (prev, cur) => !strictNow() && prev.in_sector && !cur.in_sector,

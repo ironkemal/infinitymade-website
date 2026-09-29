@@ -473,5 +473,22 @@ test('Sammelrechnungsnummer gleichzeitig zu lang und ungueltig formatiert meldet
   assert.ok(hasErr(r, 'F:03006'), 'F:03006 bei unzulässigen Zeichen');
 });
 
+test('icdTerminal false -> Warnung V:01016, kein Fehler', () => {
+  const i = clone(validInput);
+  i.icdTerminal = { 'M54.5': false };
+  const r = preflight(i);
+  assert.equal(r.ok, true);
+  assert.ok(r.warnings.some(w => w.code === 'V:01016'));
+  assert.ok(!r.errors.some(e => e.code === 'V:01016'));
+});
+
+test('icdTerminal true/leer/fehlend -> keine V:01016', () => {
+  const a = clone(validInput); a.icdTerminal = { 'M54.5': true };
+  assert.ok(!preflight(a).warnings.some(w => w.code === 'V:01016'));
+  const b = clone(validInput); b.icdTerminal = {};
+  assert.ok(!preflight(b).warnings.some(w => w.code === 'V:01016'));
+  assert.ok(!preflight(clone(validInput)).warnings.some(w => w.code === 'V:01016'));
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

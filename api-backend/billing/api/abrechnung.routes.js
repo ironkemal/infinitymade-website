@@ -3352,6 +3352,20 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       mapVerordnungToDtaShape(v, v.leads, v.aerzte, behByVord[v.id] || [])
     );
 
+    // ---- ICD endstaendig? (Reform S3.6) — nur WARNUNG, nie Sperre ----
+    // Quelle icd10_titles.terminal (db/SCHEMA.sql). Fehler hier darf die
+    // Dateierzeugung NICHT verhindern: dann entfaellt lediglich der Hinweis.
+    let icdTerminal;
+    try {
+      const kodes = [...new Set(prescriptions.flatMap(p => p.verordnung?.icd10Liste || []).filter(Boolean))];
+      if (kodes.length) {
+        const { data: icdRows, error: icdErr } = await supabase
+          .from('icd10_titles').select('code, terminal').in('code', kodes);
+        if (icdErr) console.warn('[abrechnung-podo] icd10_titles terminal:', icdErr.message);
+        else icdTerminal = Object.fromEntries((icdRows || []).map(r => [r.code, r.terminal]));
+      }
+    } catch (e) { console.warn('[abrechnung-podo] icd10_titles terminal:', e.message); }
+
     // ---- numbering ----
     const now = new Date();
     const { year, week } = isoWeek(now);
@@ -3381,6 +3395,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         davIk:     dasIk,           // Schritt 1.9 (a) — Dateieinheit, Kap. 5.3.1
         kassenart: das.treffer?.kassenart || undefined,
         rechnungssteller: { name: profile.business_name || 'Praxis', telefon: profile.phone || '' },
+        icdTerminal,                // Reform S3.6: nur Warnung V:01016
       });
     } catch (e) {
       // GoBD-Erklärbarkeit: verworfene Nummer festhalten, bevor der Fehler weitergereicht wird
@@ -3626,6 +3641,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       verordnungCount: verordnungIds.length,
       sessionCount: prescriptions.reduce((a, p) => a + p.sessions.length, 0),
       zeilenGespeichert,
+      warnungen: (dta.preflightWarnings || []).filter(w => w.code === 'V:01016'),
     });
   } catch (e) {
     console.error('[abrechnung/create-podologie]', e);

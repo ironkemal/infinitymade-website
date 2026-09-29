@@ -6,7 +6,7 @@ import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20260913';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260929';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260929b';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260926';
 import { attachPatientSearch } from './patient-suche.js?v=20260906';
 import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezept-patientenfeld.js?v=20260927';
@@ -17,7 +17,7 @@ import { podoArztHinweise } from './module/podo-arztangaben.js?v=20260929r';
 import { zeigeTerminFehler as terminFehler, loescheTerminFehler, verdrahteTerminFehler } from './module/termin-fehler.js?v=20260929q';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
-import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260929';
+import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260929b';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20260929a';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
@@ -37,7 +37,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260929r';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260929s';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss } from './module/fahrt-beenden.js?v=20260929';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260926a';
@@ -119,7 +119,7 @@ import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from '.
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260920t';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260929q';
-import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20260929';
+import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20260929b';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Einzige Quelle seit O-01 (11.09.2026, kommt aus /api/config via supabase-config.js).

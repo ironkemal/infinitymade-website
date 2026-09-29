@@ -369,6 +369,23 @@ export function preflight(input) {
         });
     }
 
+    // Nicht endstaendiger ICD-Kode: WARNUNG, kein Fehler (gkv-302 + wissensbank
+    // 29.09.2026, SPEC-RULES Z-18). Der Kode wird laut TA V21 Kap. 5.5.3.3 (DIA)
+    // unveraendert aus der Verordnung uebernommen, Pruefstufe 3 prueft den ICD
+    // nicht — die Datei wird deshalb nicht abgewiesen. Korrigieren kann die
+    // Praxis den Kode nicht selbst: nur der Arzt, mit neuer Unterschrift + Datum
+    // (Podo Anlage 3 Ziffer 4 Abs. 4/5, 5 k). Ohne `input.icdTerminal` entfaellt
+    // die Pruefung vollstaendig (Fizyo-Pfad unveraendert).
+    if (input.icdTerminal && typeof input.icdTerminal === 'object') {
+      const kodes = [icdHaupt, ...(Array.isArray(v.icd10Liste) ? v.icd10Liste : [])]
+        .map(k => String(k ?? '').trim()).filter(Boolean);
+      [...new Set(kodes)].forEach(kode => {
+        if (input.icdTerminal[kode] === false)
+          W(warnings, 'V:01016', `${at}.verordnung.icd10`,
+            `ICD-10 "${kode}" ist nicht endständig. Bitte mit der Verordnung vergleichen — Korrektur nur durch den Arzt (neue Unterschrift + Datum).`);
+      });
+    }
+
     if (!isValidDiagnosegruppe(v.diagnosegruppe))
       E(errors, 'V:01003', `${at}.verordnung.diagnosegruppe`, `Diagnosegruppe "${v.diagnosegruppe}" ungültig`);
 

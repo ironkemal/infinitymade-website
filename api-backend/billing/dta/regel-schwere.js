@@ -119,6 +119,7 @@ export const REGEL_SCHWERE = Object.freeze({
   'V:01013': { schwere: 'warnung', kasse: 'unbekannt', quelle: 'hausregel',                          hinweis: 'Nur Freitext, kein Katalog-Kreuz — gegen den Urbeleg prüfen' },
   'V:01014': { schwere: 'hart', kasse: 'zeile', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.3, S. 72 (je Diagnose ein DIA)', hinweis: 'Weiterer ICD-10-Kode ungültig' },
   'V:01015': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.3, S. 72',    hinweis: 'Weder ICD noch Diagnosetext — leeres DIA-Muss-Segment (Schritt 1.8)' },
+  'V:01016': { schwere: 'warnung', kasse: 'unbekannt', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.3 (DIA); SPEC-RULES Z-18', hinweis: 'ICD nicht endständig — kein Ablehnungsgrund, Korrektur nur durch den Arzt' },
 
   // ── Leistungen (SLLA.EHE / SLLA.BES) ─────────────────────────────────────
   'S:01001': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.2 (EHE, 1..n)', hinweis: 'Abrechnungsfall ohne Leistung' },

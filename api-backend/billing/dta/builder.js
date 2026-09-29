@@ -351,13 +351,18 @@ export function buildDtaFile({
   // werden muss. Einzel- und Sammelrechnung duerfen nicht in derselben Datei
   // stehen (Kap. 5.3.2) — deshalb ein Schalter fuer die ganze Datei, nicht je Gruppe.
   sammelrechnung = false,
+  // Optional: { 'E11.7': false, … } — nur `false` erzeugt die Warnung V:01016
+  // (nicht endständiger ICD). Ohne Angabe ändert sich nichts.
+  icdTerminal,
 }) {
+  let preflightWarnings = [];
   if (preflight) {
     // `rechnungssteller` kommt seit 20.09.2026 mit: aus ihm entsteht das
     // NAM-Segment (..30 Zeichen), und der Preflight prueft jetzt dessen Laenge
     // (Schritt 1.9 d). Ohne die Uebergabe haette er `absender.name` geprueft
     // und damit einen anderen Wert als den, der tatsaechlich in die Datei geht.
-    const pf = runPreflight({ absender, empfaenger, rechnung, prescriptions, vkz, rechnungssteller });
+    const pf = runPreflight({ absender, empfaenger, rechnung, prescriptions, vkz, rechnungssteller, icdTerminal });
+    preflightWarnings = pf.warnings || [];
     if (!pf.ok) {
       const summary = pf.errors.slice(0, 5).map(e => `[${e.code}] ${e.where}: ${e.message}`).join('; ');
       const err = new Error(`Preflight failed (${pf.errors.length} errors): ${summary}`);
@@ -677,5 +682,6 @@ export function buildDtaFile({
     davIk:     davIk     || null,
     kassenart: kassenart || null,
     sammelrechnung: !!sammelrechnung,
+    preflightWarnings,
   };
 }
