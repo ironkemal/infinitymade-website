@@ -5,7 +5,8 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 28.09.2026 (**Microsoft C5 raporu kaydedildi — depo
+> İlk kurulum: 05.09.2026 · Son güncelleme: 29.09.2026 (**Z-16 açıldı** — Podologie Behandlungsunterbrechung/Behandlungsbeginn-Frist, Reform S1.9 `dbd79f0`; HeilM-RL § 15/§ 16 Abs. 4, Anlage 3 lit. e, FAK Nr. 11/34 orijinale karşı okundu.)
+> Önceki: 28.09.2026 (**Microsoft C5 raporu kaydedildi — depo
 > DIŞINDA.** Kart **W-06**, zincir **Z-15**, açık madde **W-A12**. İlk depo-dışı kayıt: belge dağıtım
 > kısıtlı olduğu için Drive'da durur, sicil yalnız kimliğini ve neyi beslediğini tutar. Kayıt
 > sırasında istisna sayısı düzeltildi: 2 değil, 7 kontrol-seviyesi istisna / 20 C5 kriteri.)
@@ -103,7 +104,7 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 | **01.02.2027** | **Anlage 3 TP5 V21 → V22** yürürlüğe girer | Z-02 → `anlage3_v22.js` (dosya hazır, açılmayı bekliyor) | ⏳ dosya var, geçiş planı yok |
 | **01.02.2027** | **Anhang 03 Anlage 1 TP5 V10** (Kostenträgerdatei) yürürlüğe girer | Z-09 → `billing/kostentraeger/parser.js` | ⏳ parser 05.09.2026'da yazıldı |
 | açık uçlu | Anlage 1 TP5 V21 geçerli (01.10.2025'ten) | Z-01 → `billing/dta/*`, `legs.js` | ✅ geçerli |
-| açık uçlu | HeilM-RL 15.05.2025 değişikliği (05.08.2025'ten) | Z-07 · **Z-11** | ✅ geçerli |
+| açık uçlu | HeilM-RL 15.05.2025 değişikliği (05.08.2025'ten) | Z-07 · **Z-11** · **Z-16** | ✅ geçerli |
 | **~Temmuz 2027** | Microsoft C5 raporunun **sonraki dönemi** (01.04.2026–31.03.2027) Service Trust Portal'da beklenir. Gelene kadar Azure OpenAI için C5 Typ-2 kapsamı **31.12.2025'te biter** (dipnot 6) — 01.01.2026 sonrası boşluk büyüyor. Geldiğinde: W-06 `DÜŞMÜŞ`, yeni rapor kaydedilir, Azure OpenAI satırı + dipnotları yeniden okunur, KARARLAR 2026-09-12/09-28'e bildirilir | Z-15 → W-06 → on-prem AI kararı · `azureClient.js` | ⏳ **elle**, portal oturumlu — W-A12 |
 | **her fiyat turu** | Heilmittelpreisstammdatei yeni `Stand_TT-MM-JJ` | Z-06 → otomatik, Telegram bildirimi | ✅ **tek otomatik kontrol** |
 
@@ -501,6 +502,37 @@ Sweden Central'da denetim kapsamında koştuğu raporda yazmıyor — KARARLAR 2
 madde 1). Zincir okunurken bu bir doğrulama değil, bir **boşluk** olarak okunmalı.
 
 ---
+### Z-16 · Podologie: Behandlungsunterbrechung + Behandlungsbeginn-Frist (HeilM-RL § 15 / § 16 Abs. 4) — Reform S1.9
+```
+wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt
+    § 15 Abs. 1-2 (Z.677-682)      = 28 Kalendertage / dringlich 14 → sonst Verordnung ungültig
+    § 16 Abs. 4 S.1-2 (Z.698-700)  = >14 KT ohne Begründung → ungültig   (Physio/Ergo/Logo)
+    § 16 Abs. 4 S.5 (Z.702-704)    = Podologie: Unterbrechung → NICHT ungültig
+wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt  lit. e (Z.390-414)
+    = 14/28 wiederholt; Ungültigkeit dort explizit nur für dringlich
+wissensbank/podologie/20230524_Podologie_FAK_bf.txt  Nr. 11 (Z.92-110) · Nr. 34 (Z.295-303)
+    = Auslegung, kein Norm — "<12 Wochen bleibt gültig", Nagelspange ">12 Wochen: Nein"
+  → module/heilmittel-fristen.js:41 BEHANDLUNGSBEGINN_TAGE · :52 behandlungsbeginnFrist
+      → prescriptions.gueltig_bis (dashboard.js:15834)
+      · :80 pruefeBehandlungsbeginn
+  → module/frequenz-pruefung.js:361 pruefeErsttermin  (nur podo, erster Termin → BLOCK)
+      ← dashboard.js:5805 (Termin-Fenster) · :6776 (KI-Serienbestätigung)
+  → module/frequenz-pruefung.js:263 pruefeFrequenz → :325 bewerteAbstand(…, !istPodo)
+      (podo: keine Unterbrechungsprüfung)
+  → Tests: module/heilmittel-fristen.test.js · module/frequenz-pruefung.test.js:317-419
+  → SPEC-RULES.md „Podologie: Behandlungsunterbrechung …" + „Behandlungsbeginn-Frist …"
+```
+📌 Commit `dbd79f0` (29.09.2026). Vorher: FAK Nr. 11 falsch herum gelesen → 84-Tage-Ungültigkeit
+auch für Podologie; und keine Beginn-Frist-Prüfung beim Verplanen.
+⚠️ **offen — Sahip `builder` (Physio-Feinabstimmung, Ops → Teknik):** `module/frequenz-pruefung.js:66`
+`UNTERBRECHUNG_TAGE = 12 * 7` trägt die Quellenangabe „§ 16 Abs. 4 Satz 5" — Satz 5 enthält keine
+Frist; für Physio/Ergo/Logo gilt Satz 1 (14 Kalendertage ohne Begründung). Die 84 Tage sind
+unbelegt. Podologie unberührt.
+**Bei neuer HeilM-RL-Fassung:** § 15 und § 16 Abs. 4 neu lesen → `BEHANDLUNGSBEGINN_TAGE` und
+den `!istPodo`-Schalter prüfen. Bei neuer Anlage 3 Podologie: lit. e. Neuer FAK: Nr. 11/34.
+
+---
+
 
 ## 3. Kaynak envanteri
 
@@ -543,10 +575,10 @@ yeniden araştırılıyor demektir.
 | `20251201_Physiotherapie_Vertrag_125_Anlage_2_barrierefrei` | Lesefassung, ab 01.01.2026 | ✅ GEÇERLİ | Z-03 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_2` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | Z-04 |
 | `wissensbank/podologie/20250617_Podologie_Anlage_1c_Leistungsbeschreibung` | i.d.F. 01.07.2025 | ✅ GEÇERLİ | podoloji akışı |
-| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı · **Z-11** · Z-14 (g2) |
+| `wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung` | i.d.F. 16.06.2025 | ✅ GEÇERLİ | podoloji akışı · **Z-11** · Z-14 (g2) · **Z-16** (lit. e) |
 | `wissensbank/podologie/20250617_Podologie_Aenderungsvereinbarung` | 16.06.2025 | ✅ GEÇERLİ | — |
 | `wissensbank/podologie/20240725_Anlage_1a` + `1b_Leistungsbeschreibung` | i.d.F. 17.06.2024 | ✅ GEÇERLİ | — |
-| `wissensbank/podologie/20230524_Podologie_FAK_bf` | Stand 24.05.2023 | ✅ GEÇERLİ | HPNR referansı |
+| `wissensbank/podologie/20230524_Podologie_FAK_bf` | Stand 24.05.2023 | ✅ GEÇERLİ | HPNR referansı · **Z-16** (Nr. 11/34, yorum — norm değil) |
 | `20260212_Vertrag_125_sssst_Anlage_2_Verguetungsvereinbarung` | i.d.F. 12.02.2026 | ✅ GEÇERLİ | Logo/Stimme — ⬜ koda girmedi |
 | `20240531_Ergo_Anlage_2_Vertrag_nach_125…` | Stand 01.06.2024 | ✅ GEÇERLİ | Ergo — ⬜ koda girmedi |
 | `20220421_Lesefassung_Anlage_3_Ernaehrungstherapie` | 25.04.2022 | 🚫 KAPSAM DIŞI (Ernährungstherapie) | — |
@@ -562,7 +594,7 @@ yeniden araştırılıyor demektir.
 
 | Dosya | Sürüm / Stand | Durum | Besler |
 |---|---|---|---|
-| `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı · **Z-11 doğrudan** (Höchstmenge) · **Z-14** (Heilmittel-Limit) |
+| `wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05` | değişiklik 15.05.2025, iK 05.08.2025 | ✅ GEÇERLİ | Z-07 dolaylı · **Z-11 doğrudan** (Höchstmenge) · **Z-14** (Heilmittel-Limit) · **Z-16** (§ 15 Beginn-Frist, § 16 Abs. 4 Unterbrechung) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/heilmittel-diagnoseliste` | Stand 01.01.2026 | ✅ GEÇERLİ | **Z-07** |
 | `wissensbank/gemeinsam/icd-10-gm/` (ICD-10-GM 2026) | Klassifikation 12.09.2025 | ✅ GEÇERLİ | **Z-08 — dar boşluk 01.07.–10.08.2026, doğrulandı** (17.09.2026 `wissensbank`) |
 | `wissensbank/gemeinsam/heilmittel-richtlinie/praxiswissen-heilmittel` | Ausgabe 2026 | 📎 REFERANS | — |

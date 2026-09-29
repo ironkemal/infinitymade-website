@@ -117,6 +117,18 @@ Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir");
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
 ### 28-29.09.2026 · Podoloji reform sprinti S1 — Termin ↔ Verordnung, Tagesbehandlung
+- S1.9 (dbd79f0) — `module/heilmittel-fristen.js` yeni `pruefeBehandlungsbeginn` (saf; 28/14 gün,
+  Berlin günü). `module/frequenz-pruefung.js` yeni `pruefeErsttermin` (yalnız podo, yalnız ilk
+  randevu → BLOK); `bewerteAbstand` 4. parametre `pruefeUnterbrechung`; `pruefeFrequenz` podo'da
+  `ladePodoTermine`'den okuyor, kesinti kuralı yok, UI1/UI2 muaf. Niye: `gkv-302`, HeilM-RL §16
+  Abs. 4 S. 5 ve §15 — eski kod FAK Nr. 11'i ters okuyordu (podolojiye 12-hafta kesinti kuralı
+  uyguluyordu); podo frekans kontrolü `prescription_sessions` üzerinden sayıldığı için fiilen
+  ölüydü. Nerede: `bkSaveBtn`, `aiSuggestConfirm` (KI seri yolu, `batch-create-explicit` öncesi).
+  **Tek kaynağa inen hesaplar:** `podologie-abrechnung.js` `vordAlerts` / `podSaveBehBtn` ve
+  `dashboard.js` `computeRxDeadlineAlerts` / `loadUeberblickDeadlines` artık ortak
+  `behandlungsbeginnFrist` kullanıyor (dringlich önceden atlanıyordu). 14/28 hesabının ön yüzde
+  ikinci bir kopyası kalmadı. Bilinçli ayna: `api-backend/ai/validators/standardRules.js`
+  (`DEFAULT_/DRINGEND_GUELTIG_TAGE`) — ayrı deploy yüzeyi, kopya adayı sayılmaz; kural değişirse ikisi.
 - S1.8 (72e56cb) — `module/podo-einheiten.js`: yeni `bindePodoSerie`, `bindePodoSerieVonRezept`,
   `meldePodoSerienBindung`; `zeichnePodoEinheiten` yeni `aufSerie` enjeksiyonu; `ladeVerordnung`
   select'ine `frequenz`, `hausbesuch`. Niye: podolojide seri düğmesi gizliydi; KI seri yolu podo

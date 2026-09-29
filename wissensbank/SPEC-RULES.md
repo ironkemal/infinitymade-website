@@ -8,7 +8,12 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `wissensbank/INDEX.md`
-> Son güncelleme: 2026-09-27 (Ops #303 Nachtrag — „Muster 13 en fazla 3 vorrangiges + 1
+> Son güncelleme: 2026-09-29 (Reform S1.9, commit `dbd79f0` — 2 yeni kural: Podologie'de
+> Behandlungsunterbrechung Verordnung'u geçersiz kılmaz (HeilM-RL § 16 Abs. 4 S. 5; FAK Nr. 11
+> ters okunmuştu) · Behandlungsbeginn-Frist 28/14 gün (HeilM-RL § 15, Podologie Anlage 3 lit. e).
+> Tüm alıntılar `wissensbank` tarafından orijinal .txt'lere karşı okundu. Açık: `frequenz-pruefung.js:66`
+> yanlış § 16 Abs. 4 S. 5 atfı — Physio dalı.)
+> Önceki: 2026-09-27 (Ops #303 Nachtrag — „Muster 13 en fazla 3 vorrangiges + 1
 > ergänzendes" kuralı 3 noktada düzeltildi: § 12 Abs. 2 S. 1'in "katalog birden çok vorrangiges
 > öngörüyorsa" koşulu eklendi, Logopädie'nin S. 2'si ayrı/farklı konulu kural olarak
 > netleştirildi (ergänzendes Heilmittel Logo katalogunda yok), KVN Ausfüllhilfe Stand 10/2024
@@ -94,7 +99,7 @@
 - **Kodda:** doğrulanmadı
 - **Kapsam:** Physiotherapie Blankoverordnung
 - ⚠️ **Kaynak niteliği: ticari yayın.** Bağlayıcı metin HeilM-RL § 15'tir — kural koda
-  girmeden önce § 15'ten teyit edilmeli.
+  girmeden önce § 15'ten teyit edilmeli. → ✅ 29.09.2026 teyit edildi: HeilM-RL § 15 Abs. 1 (`:678`), bkz. kural „Behandlungsbeginn-Frist". Blanko için ayrı kod yolu yok, `behandlungsbeginnFrist` ortak.
 
 ### Muster 13 en fazla 3 vorrangiges + 1 ergänzendes Heilmittel taşır — Podologie'de bölme hakkı yok
 - **Kural:** Physio/Ergo'da Verordnungseinheiten je Verordnung max **3** farklı vorrangiges
@@ -307,6 +312,93 @@
   Verordner."*). İkisi aynı sayaçla ölçülmez. 78040 hiçbirine sayılmaz — Anlage 1a Teil 2
   Ziff. 4.1: *„keine Behandlungseinheit im Sinne der Heilmittel-Richtlinie"* (yukarıdaki
   78040 kaydı).
+
+### Podologie: Behandlungsunterbrechung macht die Verordnung NICHT ungültig — keine 12-Wochen-Grenze
+- **Kural:** Podolojide seanslar arasındaki kesinti — süresi ne olursa olsun — Verordnung'u
+  **geçersiz kılmaz.** HeilM-RL § 16 Abs. 4'ün genel kuralı (Satz 1: gerekçesiz >14 Kalendertage
+  kesinti → Verordnung düşer; Satz 2: gerekçeli kesinti Verordnung'a yazılır) Podologie'ye
+  **uygulanmaz** (Satz 5). Kesinti Verordnung'a dokümante edilmek zorunda da değildir.
+  Yazılım podolojide kesinti yüzünden ne blok ne "ungültig" uyarısı üretir; ±2 Werktage
+  frekans sapması uyarısı (FAK Nr. 11 ilk cümlesi) bundan ayrıdır ve uyarı olarak kalır.
+- **Kaynak:** HeilM-RL i.d.F. 15.05.2025 (iK 05.08.2025) § 16 Abs. 4 Satz 5 — *„Abweichend von
+  Satz 1 und 2 führen Behandlungsunterbrechungen bei Maßnahmen der Podologischen Therapie sowie
+  der Ernährungstherapie nicht zur Ungültigkeit der Verordnung."*
+  (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:698-704`,
+  S. 17 — Satz 1/2 `:698-700`, Satz 5 `:702-704`; kapak „in Kraft getreten am 5. August 2025"
+  `:14`). Tamamlayıcı, norm değil: GKV-SV FAK Podologie Stand 24.05.2023 Nr. 11 — *„Wird die
+  Behandlung kürzer als 12 Wochen unterbrochen (z.B. wegen Krankheit oder Urlaub), bleibt die
+  Verordnung gültig. Unterbrechungen brauchen nicht auf der VO dokumentiert werden. (vgl. § 16
+  Abs. 4 Satz 5 Heilmittel-Richtlinie)"* (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt:92-110`)
+  · Nr. 34 (Therapiefrequenz Nagelspangenbehandlung) — *„Verliert eine Verordnung auch dann ihre
+  Gültigkeit, wenn zwischen zwei Spangenanlagen zwar mehr als 12 Wochen liegen, in der
+  Zwischenzeit (z. B. nach 6 Wochen) aber eine Kontrolle stattfand? …"* → *„Nein"* (`:295-303`).
+  Tüm satırlar 29.09.2026'da orijinale karşı okundu.
+- ⚠️ **Ters okuma tuzağı (eski hata, `dbd79f0`'da düzeltildi):** FAK Nr. 11 yalnız "<12 hafta →
+  geçerli kalır" der; **">12 hafta → geçersiz"** demez. Bunu çıkarımla 84 günlük geçersizlik
+  sınırına çevirmek HeilM-RL Satz 5'e aykırıdır — FAK'ın kendisi Satz 5'e atıf yapıyor ve
+  Satz 5'te süre yok. Nr. 34 ">12 hafta"da da geçersizliği reddediyor; ancak soru araya
+  Kontrolle girmiş vakayı soruyor, "Kontrolle olmadan da Nein" diye **ayrıca** yazmıyor —
+  dayanak her durumda FAK değil Satz 5'tir.
+- **Geçerlilik:** 05.08.2025 (HeilM-RL Fassung 15.05.2025) · FAK Stand 24.05.2023
+- **Kodda:** ✅ `module/frequenz-pruefung.js:263` `pruefeFrequenz` → `:273` `istPodo` →
+  `:325` `bewerteAbstand(kt, wt, soll, !istPodo)`; `bewerteAbstand` `:230-231`
+  (`pruefeUnterbrechung=false` iken `'unterbrechung'` hükmü hiç verilmez). Commit `dbd79f0`
+  (Reform S1.9, 29.09.2026). Test: `module/frequenz-pruefung.test.js`.
+  - ⚠️ **Yanlış atıf kaldı (`offen`, sahip `builder` — Physio ince ayarı, Ops → Teknik):**
+    `module/frequenz-pruefung.js:66` `UNTERBRECHUNG_TAGE = 12 * 7; // § 16 Abs. 4 Satz 5 HeilM-RL`
+    — Satz 5 süre içermez (podoloji istisnasıdır), 84 gün **hiçbir** HeilM-RL satırında yok.
+    Sabit bugün yalnız Physio/Ergo/Logo dalında çalışıyor; oranın dayanağı Satz 1 =
+    **14 Kalendertage ohne angemessene Begründung**'dur (`:698-699`), 12 hafta değil. Kod
+    yorumu (`:43-51`) bunu "Physio-Feinabstimmung'a ertelendi" diye kaydetmiş; `:66`'daki
+    atıf düzeltilmemiş. Podolojiyi etkilemez.
+- **Kapsam:** Podologie (DF/NF/QF/UI1/UI2 — Nagelspange dahil). Ernährungstherapie de Satz 5
+  kapsamında (bizim kapsam dışı). Physio/Ergo/Logo: **§ 16 Abs. 4 Satz 1-2 geçerli**, bu kural
+  onlara taşınmaz.
+
+### Behandlungsbeginn-Frist: 28 Kalendertage, dringlich 14 — kaçarsa Verordnung geçersiz
+- **Kural:** Tedavi Verordnungsdatum'dan itibaren **28 Kalendertage** içinde başlamalıdır;
+  Verordnung'da **dringlicher Behandlungsbedarf** işaretliyse **en geç 14 Kalendertage**.
+  Süre içinde başlanamazsa Verordnung **Gültigkeit'ini kaybeder**. Dringlich işaretini yalnız
+  hekim, yeni imza + tarihle kaldırabilir; o zaman 28 gün geçerlidir.
+- **Kaynak:** HeilM-RL i.d.F. 15.05.2025 (iK 05.08.2025) § 15 Abs. 1-2 — *„(1) 1Die Behandlung
+  hat innerhalb von 28 Kalendertagen nach Verordnung zu beginnen. 2Liegt ein dringlicher
+  Behandlungsbedarf vor, hat die Behandlung spätestens innerhalb von 14 Kalendertagen zu
+  beginnen. 3Dies ist auf der Verordnung kenntlich zu machen. (2) Kann die
+  Heilmittelbehandlung in den genannten Zeiträumen nach Absatz 1 nicht aufgenommen werden,
+  verliert die Verordnung ihre Gültigkeit."*
+  (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:677-682`,
+  S. 17) · Podologie Anlage 3 i.d.F. 16.06.2025 lit. e „Dringlicher Behandlungsbedarf"
+  (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:390-414`, S. 11) —
+  *„Ist das Feld dringlicher Behandlungsbedarf angekreuzt, muss die Behandlung innerhalb von
+  14 Kalendertagen beginnen. In allen anderen Fällen muss die Behandlung innerhalb von 28
+  Kalendertragen* [sic] *nach dem Verordnungsdatum begonnen werden. Wird der ärztlicherseits
+  angegebene dringliche Behandlungsbedarf nicht beachtet, verliert die Verordnung ihre
+  Gültigkeit. Der dringliche Behandlungsbedarf kann nur von der Ärztin oder dem Arzt mit
+  erneuter Arztunterschrift und Datumsangabe aufgehoben werden, es gilt dann der
+  Behandlungsbeginn von 28 Kalendertagen."* Tüm satırlar 29.09.2026'da orijinale karşı okundu.
+- ⚠️ **İnce fark — "wortgleich" değil:** Anlage 3 lit. e geçersizlik sonucunu **açıkça yalnız
+  dringlich** için yazıyor; 28 günlük normal süre için yalnız „muss" diyor. 28 gün aşımında
+  geçersizliğin dayanağı **HeilM-RL § 15 Abs. 2**'dir. Sonuç aynı, ama itirazda atıf
+  HeilM-RL'ye yapılır. (`module/heilmittel-fristen.js:26-28` yorumu Anlage 3'ün § 15'i
+  "wortgleich" tekrarladığını söylüyor — tam doğru değil, davranışı etkilemez.)
+- **Geçerlilik:** 05.08.2025 (HeilM-RL) · 16.06.2025 (Anlage 3 Podologie)
+- **Kodda:** ✅ `module/heilmittel-fristen.js:41` `BEHANDLUNGSBEGINN_TAGE = { dringend: 14,
+  normal: 28 }` · `:52` `behandlungsbeginnFrist(ausstellungsdatum, istDringend)` (→
+  `prescriptions.gueltig_bis`, `dashboard.js:15834`) · `:80` `pruefeBehandlungsbeginn` (saf,
+  Europe/Berlin gün sayımı) · `module/frequenz-pruefung.js:361-374` `pruefeErsttermin` —
+  **yalnız podo, yalnız ilk vergeben Termin'de, `behandlungsbeginn` boşken** → blok
+  (`dashboard.js:5805-5808` Termin-Fenster, `:6776` KI-Serienbestätigung). Commit `dbd79f0`
+  (Reform S1.9). Diğer okuyucular (uyarı/gösterim): `module/verordnung-podo.js:615`,
+  `module/verordnung-pruefung.js:304`, `module/podologie-abrechnung.js:574,1036`,
+  `dashboard.js:7973,19659`. Test: `module/heilmittel-fristen.test.js`,
+  `module/frequenz-pruefung.test.js:317-419`.
+  - 📌 `pruefeErsttermin` `ownerId` yoksa (`:367`) sessizce `ok:true` döner — iki çağıran da
+    `getOwnerId()` veriyor, bugün zararsız (`unkritisch`); yeni çağıran eklenirse bakılmalı.
+  - 📌 Frist (gueltig_bis hesabı) tüm Fachbereich'lerde, **blok** yalnız podolojide —
+    Physio/Ergo/Logo'da blok, vertikal sıralama gereği bilinçli olarak ertelendi.
+- **Kapsam:** § 15 genel kısımdadır → **tüm Heilmittel-Bereiche**. Blok uygulaması bugün:
+  Podologie. Blankoverordnung için de aynı § 15 geçerlidir (yukarıdaki NOVENTI kuralının
+  bağlayıcı teyidi budur).
 
 ---
 
@@ -1422,7 +1514,7 @@
       V21 birkaç yerde „Bei Verordnungen durch Zahnärzte …" diyor ve Diagnosegruppe yerine
       **Indikationsgruppe** (ör. `CD2a`) istiyor. Hangi formun tarandığı ve OCR/maskenin
       bunu nasıl ayırt edeceği **incelenmedi**. Podoloji/Physio akışını bugün etkilemiyor.
-- [ ] 28 gün başlama süresi — HeilM-RL § 15'ten teyit (şu an kaynak NOVENTI = ticari yayın)
+- [x] ~~28 gün başlama süresi — HeilM-RL § 15'ten teyit~~ — **kapandı 29.09.2026** (`wissensbank`): § 15 Abs. 1-2 HeilM-RL `:677-682` orijinalden okundu, kural „Behandlungsbeginn-Frist" (Verordnung bölümü).
 - [ ] `blankoRules.js:124-132` — `ok !== true` iken bonuslar yine hesaplanıyor (`total_bonuses_eur`
       dolu dönüyor). Sessiz yanlış fatura riski.
 - [ ] VKZ değerlerinin `billing/dta/` ve `billing/codes/` içinde doğru uygulanması
