@@ -46,7 +46,7 @@ import {
 } from '../codes/legs.js';
 // § 302-Echtbetrieb, Schritt 1.7 — Betriebsart je (Inhaber × Datenannahmestelle).
 import { ladeBetriebsart, verordnungFestschreiben } from './betriebsart.js';
-import { offeneJeVerordnung, pruefeBestaetigung, offeneEinheitenAntwort, protokollZeilen } from '../utils/offene-einheiten.js';
+import { offeneJeVerordnung, pruefeBestaetigung, offeneEinheitenAntwort, protokollZeilen, gueltigBestaetigteIds } from '../utils/offene-einheiten.js';
 // § 302-Abrechnung — Verworfene Nummern festhalten (GoBD-Erklärbarkeit, Migration 0033).
 import { verworfeneNummerFesthalten } from './verworfen.js';
 // § 302-Echtbetrieb, Schritt 1.3 D — CMS EnvelopedData Verschlüsselung & Trust Anchors.
@@ -3176,7 +3176,33 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       .in('verordnung_id', verordnungIds);
     if (behsOffenErr) return res.status(500).json({ error: behsOffenErr.message });
     const offeneVord = offeneJeVerordnung(vords, behsOffen);
-    const offenPruefung = pruefeBestaetigung(offeneVord, req.body?.offeneEinheitenBestaetigt);
+    // Reform S2.3b: eine beim Bereit-Setzen erteilte Bestätigung gilt weiter,
+    // solange offen-Zahl unverändert und kein künftiger Termin an der
+    // Verordnung hängt. Nur für offene Verordnungen gefragt (nie leere Id-Liste).
+    let bereitGueltig = new Set();
+    if (offeneVord.length) {
+      const offenIds = offeneVord.map(o => o.id);
+      const { data: bereitZeilen, error: bereitErr } = await supabase
+        .from('prescription_validations')
+        .select('prescription_id, input_snapshot, created_at')
+        .eq('engine', 'abrechnung-freigabe')
+        .eq('result->>aktion', 'bereit')
+        .in('prescription_id', offenIds)
+        .order('created_at', { ascending: false });
+      if (bereitErr) return res.status(500).json({ error: bereitErr.message });
+      const { data: termine, error: termErr } = await supabase
+        .from('bookings')
+        .select('id, verordnung_id')
+        .in('verordnung_id', offenIds)
+        .or(`owner_id.eq.${tenantId},user_id.eq.${tenantId}`)
+        .gt('start_time', new Date().toISOString())
+        .not('status', 'in', '(cancelled,no_show)');
+      if (termErr) return res.status(500).json({ error: termErr.message });
+      bereitGueltig = gueltigBestaetigteIds(offeneVord, bereitZeilen, termine);
+    }
+    const ausdruecklich = Array.isArray(req.body?.offeneEinheitenBestaetigt) ? req.body.offeneEinheitenBestaetigt : [];
+    const offenPruefung = pruefeBestaetigung(
+      offeneVord, req.body?.offeneEinheitenBestaetigt === true ? true : [...ausdruecklich, ...bereitGueltig]);
     if (offenPruefung.fehlt.length) {
       const a428 = offeneEinheitenAntwort(offenPruefung.fehlt);
       return res.status(a428.status).json(a428.body);

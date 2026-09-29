@@ -72,3 +72,47 @@ export function protokollZeilen(bestaetigte, { abrechnungId, aktion, userId }) {
     validated_by:     userId,
   }));
 }
+
+/**
+ * Reform S2.3b: Eine beim Bereit-Setzen erteilte Bestätigung („Verordnung
+ * vorzeitig beenden") gilt weiter, solange sich nichts geändert hat: gleiche
+ * Zahl offener Einheiten wie im Protokoll UND kein künftiger, nicht
+ * stornierter Termin an der Verordnung. Sonst wird noch einmal gefragt.
+ * Fehlende/ungültige Angaben => false (im Zweifel fragen).
+ * @param {{offenJetzt:*, snapshotOffen:*, kuenftigeTermine:*}} p
+ * @returns {boolean}
+ */
+export function bestaetigungNochGueltig({ offenJetzt, snapshotOffen, kuenftigeTermine } = {}) {
+  if (offenJetzt == null || snapshotOffen == null || kuenftigeTermine == null) return false;
+  const j = Number(offenJetzt), s = Number(snapshotOffen), t = Number(kuenftigeTermine);
+  if (![j, s, t].every(Number.isFinite)) return false;
+  return j > 0 && j === s && t === 0;
+}
+
+/**
+ * Ids der offenen Verordnungen, deren Bereit-Bestätigung noch gilt.
+ * ⚠️ `ok:false` im Protokoll heißt hier „bestätigt" — nicht danach filtern.
+ * @param {Array<{id:string, offen:number}>} offene            offeneJeVerordnung
+ * @param {Array<{prescription_id:string, input_snapshot?:{offen?:number}, created_at?:string}>} bereitZeilen
+ *        prescription_validations (engine 'abrechnung-freigabe', result.aktion 'bereit')
+ * @param {Array<{verordnung_id:string}>} kuenftigeTermine  künftige, nicht stornierte Termine
+ * @returns {Set<string>}
+ */
+export function gueltigBestaetigteIds(offene, bereitZeilen, kuenftigeTermine) {
+  const neueste = new Map();
+  for (const z of bereitZeilen || []) {
+    const alt = neueste.get(z?.prescription_id);
+    if (!alt || String(z.created_at || '') > String(alt.created_at || '')) neueste.set(z?.prescription_id, z);
+  }
+  const termine = new Map();
+  for (const t of kuenftigeTermine || []) termine.set(t.verordnung_id, (termine.get(t.verordnung_id) || 0) + 1);
+  const out = new Set();
+  for (const o of offene || []) {
+    const z = neueste.get(o.id);
+    if (!z) continue;
+    if (bestaetigungNochGueltig({
+      offenJetzt: o.offen, snapshotOffen: z.input_snapshot?.offen, kuenftigeTermine: termine.get(o.id) || 0,
+    })) out.add(o.id);
+  }
+  return out;
+}

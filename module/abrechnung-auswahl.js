@@ -64,7 +64,7 @@ import { zeigeAbrechnungAnsicht } from './abrechnung-ansicht.js?v=20260909';
 import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
          frageBerichtFreigabe } from './abrechnung-freigabe.js?v=20260826';
 import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
-import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten } from './offene-einheiten.js?v=20260929a';
+import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten, gueltigBestaetigteIds } from './offene-einheiten.js?v=20260930a';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260920t';
@@ -609,6 +609,31 @@ export async function ladeAbrechnungAuswahl() {
     for (const b of allBeh || []) (behJeVord[b.verordnung_id] ||= []).push(b);
     const finde = await podoPositionsFinder(ctx.supabase, allBeh || []);
 
+    // Reform S2.3b: beim Bereit-Setzen bestätigte Teilabrechnung gilt weiter,
+    // wenn die offen-Zahl gleich blieb und kein künftiger Termin hängt. Fehler
+    // beim Lesen => leer => es wird wie bisher gefragt (im Zweifel fragen).
+    const offeneListe = podoBereit
+      .map(v => ({ id: v.id, offen: offeneEinheiten(v.behandlungseinheiten, (behJeVord[v.id] || []).length) }))
+      .filter(o => o.offen > 0);
+    let bereitOk = new Set();
+    if (offeneListe.length) {
+      const offenIds = offeneListe.map(o => o.id);
+      const [valRes, terRes] = await Promise.all([
+        ctx.supabase.from('prescription_validations')
+          .select('prescription_id, input_snapshot, created_at')
+          .eq('engine', 'abrechnung-freigabe')
+          .eq('result->>aktion', 'bereit')
+          .in('prescription_id', offenIds)
+          .order('created_at', { ascending: false }),
+        ctx.supabase.from('bookings')
+          .select('id, verordnung_id')
+          .in('verordnung_id', offenIds)
+          .gt('start_time', new Date().toISOString())
+          .not('status', 'in', '(cancelled,no_show)'),
+      ]);
+      if (!valRes.error && !terRes.error) bereitOk = gueltigBestaetigteIds(offeneListe, valRes.data, terRes.data);
+    }
+
     for (const v of podoBereit) {
       const behs = behJeVord[v.id] || [];
       const d = zuzahlungFuerPodoVerordnung(v, behs, finde);
@@ -627,6 +652,7 @@ export async function ladeAbrechnungAuswahl() {
         verordnet: Number(v.behandlungseinheiten) || 0,
         // Reform S2.3: nicht stornierte Behandlungen (behs) gegen verordnet.
         offen: offeneEinheiten(v.behandlungseinheiten, behs.length),
+        bereitBestaetigt: bereitOk.has(v.id),
         brutto: d.brutto,
         zuzahlung: d.gesamt,
         befreit: !!v.zuzahlung_befreit,

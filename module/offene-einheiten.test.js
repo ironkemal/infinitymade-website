@@ -47,3 +47,28 @@ test('frageOffeneEinheiten: nichts offen -> kein Dialog; Abbruch -> null; Ja -> 
   assert.deepEqual(await frageOffeneEinheiten([{ id: 'a', offen: 1 }, { id: 'b', offen: 0 }], ja), ['a']);
   assert.equal(await frageOffeneEinheiten([{ id: 'a', offen: 1 }], undefined), null);
 });
+
+import { bestaetigungNochGueltig, gueltigBestaetigteIds } from './offene-einheiten.js';
+
+test('S2.3b: bestaetigungNochGueltig', () => {
+  assert.equal(bestaetigungNochGueltig({ offenJetzt: 3, snapshotOffen: 3, kuenftigeTermine: 0 }), true);
+  assert.equal(bestaetigungNochGueltig({ offenJetzt: 3, snapshotOffen: 4, kuenftigeTermine: 0 }), false);
+  assert.equal(bestaetigungNochGueltig({ offenJetzt: 3, snapshotOffen: 3, kuenftigeTermine: 2 }), false);
+  assert.equal(bestaetigungNochGueltig({ offenJetzt: 3, snapshotOffen: undefined, kuenftigeTermine: 0 }), false);
+});
+
+test('S2.3b: gueltigBestaetigteIds + Vorauswahl + Dialog überspringt bestätigte', async () => {
+  const offene = [{ id: 'a', offen: 2 }, { id: 'b', offen: 2 }];
+  const zeilen = [
+    { prescription_id: 'a', input_snapshot: { offen: 2 }, created_at: '2026-09-01' },
+    { prescription_id: 'b', input_snapshot: { offen: 3 }, created_at: '2026-09-01' },
+  ];
+  const ids = gueltigBestaetigteIds(offene, zeilen, []);
+  assert.deepEqual([...ids], ['a']);
+  assert.equal(vorausgewaehltPodo({ offen: 2, bereitBestaetigt: true }), true);
+  assert.equal(vorausgewaehltPodo({ offen: 2, bereitBestaetigt: false }), false);
+  let gefragt = 0;
+  const r = await frageOffeneEinheiten([{ id: 'a', offen: 2, bereitBestaetigt: true }], async () => { gefragt++; return true; });
+  assert.deepEqual(r, []);
+  assert.equal(gefragt, 0);
+});

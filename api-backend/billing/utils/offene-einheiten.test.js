@@ -50,3 +50,29 @@ test('protokollZeilen: Muster abrechnung-freigabe', () => {
 test('ohne Feld anzahl_einheiten (z. B. Frontend-Wortschatz) -> nichts offen, kein Absturz', () => {
   assert.deepEqual(offeneJeVerordnung([{ id: 'a', behandlungseinheiten: 6 }], []), []);
 });
+
+import { bestaetigungNochGueltig, gueltigBestaetigteIds } from './offene-einheiten.js';
+
+test('bestaetigungNochGueltig: gleiche offen-Zahl, keine künftigen Termine', () => {
+  assert.equal(bestaetigungNochGueltig({ offenJetzt: 3, snapshotOffen: 3, kuenftigeTermine: 0 }), true);
+  assert.equal(bestaetigungNochGueltig({ offenJetzt: 3, snapshotOffen: 4, kuenftigeTermine: 0 }), false);
+  assert.equal(bestaetigungNochGueltig({ offenJetzt: 3, snapshotOffen: 3, kuenftigeTermine: 1 }), false);
+  assert.equal(bestaetigungNochGueltig({ offenJetzt: 3, snapshotOffen: null, kuenftigeTermine: 0 }), false);
+  assert.equal(bestaetigungNochGueltig({ offenJetzt: 3, snapshotOffen: 3 }), false);
+  assert.equal(bestaetigungNochGueltig({ offenJetzt: 0, snapshotOffen: 0, kuenftigeTermine: 0 }), false);
+  assert.equal(bestaetigungNochGueltig(), false);
+});
+
+test('gueltigBestaetigteIds: neueste Zeile zählt, Termine und Änderung entwerten', () => {
+  const offene = [{ id: 'a', offen: 2 }, { id: 'b', offen: 2 }, { id: 'c', offen: 2 }, { id: 'd', offen: 2 }];
+  const zeilen = [
+    { prescription_id: 'a', input_snapshot: { offen: 2 }, created_at: '2026-09-01' },
+    { prescription_id: 'b', input_snapshot: { offen: 2 }, created_at: '2026-09-01' },
+    { prescription_id: 'c', input_snapshot: { offen: 5 }, created_at: '2026-08-01' },
+    { prescription_id: 'c', input_snapshot: { offen: 2 }, created_at: '2026-09-02' },
+  ];
+  const ids = gueltigBestaetigteIds(offene, zeilen, [{ verordnung_id: 'b' }]);
+  assert.deepEqual([...ids].sort(), ['a', 'c']);
+  assert.equal(gueltigBestaetigteIds([], zeilen, []).size, 0);
+  assert.equal(gueltigBestaetigteIds(offene, null, null).size, 0);
+});
