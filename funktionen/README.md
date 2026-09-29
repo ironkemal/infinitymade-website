@@ -117,6 +117,18 @@ Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir");
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
 ### 28-29.09.2026 · Podoloji reform sprinti S1 — Termin ↔ Verordnung, Tagesbehandlung
+- S1.8 (72e56cb) — `module/podo-einheiten.js`: yeni `bindePodoSerie`, `bindePodoSerieVonRezept`,
+  `meldePodoSerienBindung`; `zeichnePodoEinheiten` yeni `aufSerie` enjeksiyonu; `ladeVerordnung`
+  select'ine `frequenz`, `hausbesuch`. Niye: podolojide seri düğmesi gizliydi; KI seri yolu podo
+  reçetesinde `prescription_sessions` üretiyordu (tuzak — podolojide seans tablosu yok). Nerede:
+  `linkBookingsToPrescriptionSessions` başı (karar `rx.therapie_bereich`'e göre) + manuel
+  `batch-create` yolu. Aşımda bağlama yapılmaz, fazla randevular bağsız kalır (`podoloji` +
+  `gkv-302`, Anlage 3 lit. f).
+  `module/termin-aktionen.js`: yeni `frequenzErkannt`, `normalisierePodoFrequenz`;
+  `uebernimmSerienfrequenzAusRx` + `setFreqValue` `dashboard.js`'ten buraya **taşındı** (kuşatma).
+  Niye: boş/tanınmayan podo frekansı sessizce haftalığa düşüyordu; "alle N Wochen"da eski hafta
+  günü kutuları işaretli kalıp batch-create'te fazla randevu üretiyordu (**Physio'yu da
+  etkileyen** hata). Nerede: `verteileOffeneSitzungen` (yalnız podo dalı), `openBookingFromRxPreset`.
 - S1.4 (45d91c3) — yeni `module/podo-behandlungen-oeffnen.js`: `oeffnePodoBehandlungen`
   `dashboard.js`'ten buraya **taşındı** (kuşatma; `dashboard.js`'te ince sarmalayıcı +
   `podoBehandlungenDeps()` enjeksiyonu). İkinci parametre `{ vordId, datum, mehrdeutigFragen }`
