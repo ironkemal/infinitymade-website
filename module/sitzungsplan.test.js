@@ -75,7 +75,7 @@ test('78040 schon abgerechnet — alle Sitzungen tragen 78030', () => {
   assert.equal(p.zeilen.length, 1);
   assert.equal(p.zeilen[0].titel, 'Sitzung 1–6');
   assert.deepEqual(p.zeilen[0].codes, ['78030']);
-  assert.match(p.hinweis, /2026-03-02/);
+  assert.match(p.hinweis, /02.03.2026/);
 });
 
 test('Behandlung an einem frueheren Tag — 78040 ist verbraucht, kein Nachholen', () => {

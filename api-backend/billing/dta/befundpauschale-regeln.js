@@ -95,5 +95,27 @@ export function befundpauschaleRegeln(sessions) {
     );
   }
 
+  // (d) 78040 nur EINMAL je Verordnung: an einem zweiten Behandlungstag ist sie
+  //     nicht mehr abrechenbar (Anlage 1a Teil 1 Nr. 2 + Teil 2 Ziff. 4.1:
+  //     „einmalig"). Hart — kein Rückschluss, sondern der Wortlaut. S1.12.
+  const tage78040 = tage.filter(tag => normPositionen(tag?.positionen).includes(EINGANGSBEFUNDUNG));
+  if (tage78040.length > 1) {
+    const daten = tage78040.map(tag => formatDatumKurz(tag?.datum)).join(' und ');
+    hart.push(
+      `78040 (Eingangsbefundung) mehrfach in einer Verordnung (${daten}) — nur einmalig abrechenbar.`
+    );
+  }
+
+  // (e) 78040 und 78030 am SELBEN Tag: die Eingangsbefundung ersetzt die
+  //     Befundung an diesem Tag (siehe `befundungFuerLeistung`). Hart. S1.12.
+  for (const tag of tage) {
+    const pos = normPositionen(tag?.positionen);
+    if (pos.includes(EINGANGSBEFUNDUNG) && pos.includes(BEFUNDUNG)) {
+      hart.push(
+        `78040 (Eingangsbefundung) und 78030 (Befundung) am ${formatDatumKurz(tag?.datum)} zusammen — nicht abrechenbar.`
+      );
+    }
+  }
+
   return { hart, uebersteuerbar };
 }

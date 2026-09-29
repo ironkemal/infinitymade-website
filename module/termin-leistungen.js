@@ -31,7 +31,7 @@
  * umgestellt haette, haette fuenfzehn Aufrufer gleichzeitig anfassen muessen.
  */
 
-import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260920s';
+import { befundungFuerLeistung } from './eingangsbefundung-regel.js?v=20260929';
 import { geplanteAlsBehandlungen, positionVon } from './podo-geplant.js?v=20260918';
 import { setzeDauer } from './termin-dauer.js?v=20260903b';
 
@@ -203,9 +203,15 @@ export function hpnrVonDienst(srv) {
  * @param {boolean} [opt.selbstzahler]
  * @param {?boolean} [opt.podologieVor2023]
  * @param {?Array<string>} [opt.diagnosegruppen] Katalogzeile der Hauptleistung
- * @returns {{zeilen:Array, hinweis:string, rueckfrage:?string, grund:string}}
- *   `zeilen` ist die neue Liste — mit, ohne oder mit ausgetauschter
- *   Vorschlagszeile. Von Hand gewaehlte Zeilen bleiben unangetastet.
+ * @returns {{zeilen:Array, hinweis:string, rueckfrage:?string, grund:string,
+ *   vorschlag:?{serviceId:string, code:string, angenommen:boolean}}}
+ *   `zeilen` ist die Liste OHNE Vorschlagszeile (S1.12, 29.09.2026): die
+ *   Befundpauschale ist ein VORSCHLAG neben der Liste, keine Zeile darin —
+ *   frueher wurde sie als `auto:true`-Zeile mitgespeichert, und jeder
+ *   Serientermin bekam 78030 (bei neuem Patienten sogar 78040). Der Vorschlag
+ *   (`vorschlag`) wird erst durch das Haekchen der Anwenderin zur Zeile
+ *   (Beschluss 05.09.2026: „vorgeschlagen, ungehakt"). `angenommen` = die
+ *   Position steht schon von Hand in der Liste.
  */
 export function mitBefundungsvorschlag({
   zeilen,
@@ -221,7 +227,7 @@ export function mitBefundungsvorschlag({
 
   const haupt = liste[0];
   const hauptDienst = (dienste || []).find(d => d && d.id === haupt?.serviceId);
-  if (!hauptDienst) return { zeilen: liste, hinweis: '', rueckfrage: null, grund: 'keine_leistung' };
+  if (!hauptDienst) return { zeilen: liste, hinweis: '', rueckfrage: null, grund: 'keine_leistung', vorschlag: null };
 
   const urteil = befundungFuerLeistung({
     hpnr: hpnrVonDienst(hauptDienst),
@@ -233,7 +239,7 @@ export function mitBefundungsvorschlag({
   });
 
   if (!urteil.code) {
-    return { zeilen: liste, hinweis: urteil.hinweis, rueckfrage: null, grund: urteil.grund };
+    return { zeilen: liste, hinweis: urteil.hinweis, rueckfrage: null, grund: urteil.grund, vorschlag: null };
   }
 
   // Steht die Position schon von Hand in der Liste, wird nichts doppelt gesetzt.
@@ -242,7 +248,12 @@ export function mitBefundungsvorschlag({
     return hpnrVonDienst(d) === urteil.code;
   });
   if (schonDrin) {
-    return { zeilen: liste, hinweis: '', rueckfrage: urteil.rueckfrage, grund: 'schon_gewaehlt' };
+    const schon = liste.find((z, i) => i > 0
+      && hpnrVonDienst((dienste || []).find(x => x && x.id === z.serviceId)) === urteil.code);
+    return {
+      zeilen: liste, hinweis: '', rueckfrage: urteil.rueckfrage, grund: 'schon_gewaehlt',
+      vorschlag: schon ? { serviceId: schon.serviceId, code: urteil.code, angenommen: true } : null,
+    };
   }
 
   const befundDienst = (dienste || []).find(d => hpnrVonDienst(d) === urteil.code);
@@ -253,11 +264,64 @@ export function mitBefundungsvorschlag({
              + 'bitte in den Einstellungen anlegen, sonst fehlt sie auf der Abrechnung.',
       rueckfrage: urteil.rueckfrage,
       grund: 'leistung_fehlt',
+      vorschlag: null,
     };
   }
 
-  liste.push({ serviceId: befundDienst.id, anzahl: 1, auto: true, grund: urteil.grund });
-  return { zeilen: liste, hinweis: urteil.hinweis, rueckfrage: urteil.rueckfrage, grund: urteil.grund };
+  return {
+    zeilen: liste, hinweis: urteil.hinweis, rueckfrage: urteil.rueckfrage, grund: urteil.grund,
+    vorschlag: { serviceId: befundDienst.id, code: urteil.code, angenommen: false },
+  };
+}
+
+/**
+ * Text neben dem Haekchen des Befundungsvorschlags.
+ *
+ * @param {string} code    `78030` oder `78040`
+ * @param {{serie?:boolean, minuten?:number}} [opt]
+ *   `serie`: die Maske legt mehrere Termine an. 78030 gilt dann nur, wenn die
+ *   Anwenderin es fuer ALLE Serientermine haekt; 78040 nie fuer mehr als den
+ *   ersten (`zeilenFuerTermin`).
+ */
+export function vorschlagText(code, { serie = false, minuten = 0 } = {}) {
+  const dauer = minuten > 0 ? ` (+${minuten} Min.)` : '';
+  if (code === '78040') {
+    return 'Vorschlag: Podologische Eingangsbefundung (78040) übernehmen'
+      + (serie ? ' — nur am ersten Serientermin' : '') + dauer;
+  }
+  return serie
+    ? `Befundung (${code}) in alle Serientermine übernehmen${dauer}`
+    : `Vorschlag: Befundung (${code}) übernehmen${dauer}`;
+}
+
+/**
+ * Welche Zeilen bekommt der Termin Nr. `index` einer Serie (0 = erster)?
+ *
+ *   - 78040 hoechstens EINMAL: nur der erste Termin (`index === 0`) darf sie
+ *     tragen, auch wenn die Anwenderin sie von Hand gewaehlt hat.
+ *     Anlage 1a Teil 1 Nr. 2 + Teil 2 Ziff. 4.1: einmalig.
+ *   - 78040 und 78030 nie am selben Termin: hat der Termin 78040, faellt 78030
+ *     weg (Regel im Backend: `befundpauschale-regeln.js`).
+ *
+ * @returns {Array} neue Liste, Eingabe bleibt unberuehrt
+ */
+export function zeilenFuerTermin(zeilen, index, dienste) {
+  const hpnr = z => hpnrVonDienst((dienste || []).find(d => d && d.id === z?.serviceId));
+  let liste = (zeilen || []).map(z => ({ ...z }));
+  if (index > 0) liste = liste.filter(z => hpnr(z) !== '78040');
+  if (liste.some(z => hpnr(z) === '78040')) liste = liste.filter(z => hpnr(z) !== '78030');
+  return liste;
+}
+
+/**
+ * Hat sich der Vorschlag geaendert oder ist er entfallen, verschwindet auch die
+ * dafuer gehaekte Zeile — sie stand nur wegen der alten Grundlage da (anderer
+ * Patient, Nagelleistung, Selbstzahler). Andere Handzeilen bleiben.
+ */
+export function raeumeAngenommenenVorschlag(zeilen, alt, neu) {
+  const liste = (zeilen || []).map(z => ({ ...z }));
+  if (!alt || (neu && neu.serviceId === alt.serviceId)) return liste;
+  return liste.filter((z, i) => i === 0 || z.serviceId !== alt.serviceId);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -274,6 +338,8 @@ let ctx = null;
 let _extra = [];
 /** Steht im Dauer-Feld gerade eine von hier gerechnete Kombi-Summe? */
 let _kombiDauerGesetzt = false;
+/** Aktueller Befundungsvorschlag (nur Anzeige, keine Zeile); `null` = keiner. */
+let _vorschlag = null;
 
 /** Alle Zeilen: Zeile 0 aus dem DOM, danach die Zusatzzeilen. */
 export function leseLeistungen() {
@@ -344,6 +410,7 @@ export async function ladeLeistungen(bookingId) {
 /** Beim Oeffnen der Maske: alles zurueck auf eine Zeile. */
 export function setzeLeistungenZurueck() {
   _extra = [];
+  _vorschlag = null;
   _kombiDauerGesetzt = false;
   const menge = document.getElementById('bkMenge');
   if (menge) menge.value = '1';
@@ -388,7 +455,10 @@ export async function speichereLeistungen(bookingIdOrIds) {
   const zeilen = leseLeistungen().filter(z => z.serviceId);
   if (!zeilen.length) return { ok: false, error: 'keine Leistung' };
 
-  const reihen = ids.flatMap(bookingId => zeilen.map((z, i) => ({
+  // Je Termin eigene Zeilen: 78040 nur am ersten Serientermin, nie mit 78030
+  // zusammen (zeilenFuerTermin, S1.12).
+  const dienste = ctx.getServices?.() || [];
+  const reihen = ids.flatMap((bookingId, idx) => zeilenFuerTermin(zeilen, idx, dienste).map((z, i) => ({
     booking_id: bookingId,
     service_id: z.serviceId,
     owner_id: ctx.getOwnerId(),
@@ -401,7 +471,7 @@ export async function speichereLeistungen(bookingIdOrIds) {
   if (error) return { ok: false, error: error.message };
 
   // Was der Anwender weggenommen hat, faellt jetzt weg — und nur das.
-  const bleiben = zeilen.map(z => `"${z.serviceId}"`).join(',');
+  const bleiben = [...new Set(reihen.map(r => r.service_id))].map(id => `"${id}"`).join(',');
   const { error: delErr } = await ctx.supabase.from('booking_leistungen')
     .delete().in('booking_id', ids).not('service_id', 'in', `(${bleiben})`);
   return delErr ? { ok: false, error: delErr.message } : { ok: true, error: null };
@@ -471,6 +541,47 @@ function zeichneZeilen() {
     reihe.append(sel, menge, weg);
     wrap.appendChild(reihe);
   });
+  zeichneVorschlag();
+}
+
+/** Legt die Maske gerade eine Serie an? (Toggle an, kein bestehender Termin.) */
+function serieAktiv() {
+  return !!document.getElementById('bkSeriesToggle')?.checked
+      && !document.getElementById('bk-id')?.value;
+}
+
+/**
+ * Der Befundungsvorschlag: ein ungehaktes Kaestchen UNTER der Liste. Erst das
+ * Haekchen macht daraus eine Zeile — und damit Dauer und Speicherung.
+ */
+function zeichneVorschlag() {
+  const anker = document.getElementById('bkLeistungHinweis') || document.getElementById('bkLeistungExtra');
+  if (!anker?.parentNode || typeof document.createElement !== 'function') return;
+  let el = document.getElementById('bkLeistungVorschlag');
+  if (!_vorschlag) { if (el) el.hidden = true; return; }
+  if (!el) {
+    el = document.createElement('label');
+    el.id = 'bkLeistungVorschlag';
+    el.style.cssText = 'display:flex;gap:8px;align-items:center;cursor:pointer;color:var(--text-main);font-size:.9rem;';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.addEventListener('change', () => {
+      if (!_vorschlag) return;
+      const id = _vorschlag.serviceId;
+      _extra = box.checked
+        ? fuegeZeileHinzu(leseLeistungen(), id).slice(1)
+        : _extra.filter(z => z.serviceId !== id);
+      zeichneZeilen();
+      aktualisiereDauer();
+    });
+    const text = document.createElement('span');
+    el.append(box, text);
+    anker.parentNode.insertBefore(el, anker);
+  }
+  const minuten = gesamtDauer([neueZeile(_vorschlag.serviceId)], ctx?.getServices?.() || []);
+  el.hidden = false;
+  el.querySelector('input').checked = _extra.some(z => z.serviceId === _vorschlag.serviceId);
+  el.querySelector('span').textContent = vorschlagText(_vorschlag.code, { serie: serieAktiv(), minuten });
 }
 
 function zeigeHinweis(text, rueckfrage = null) {
@@ -569,7 +680,9 @@ async function schlageBefundungVor() {
     behandlungen, datum, selbstzahler,
   });
 
-  _extra = ergebnis.zeilen.slice(1);
+  // Eine fuer den alten Vorschlag gehaekte Zeile faellt mit ihm weg.
+  _extra = raeumeAngenommenenVorschlag(ergebnis.zeilen, _vorschlag, ergebnis.vorschlag).slice(1);
+  _vorschlag = ergebnis.vorschlag;
   zeichneZeilen();
   aktualisiereDauer();
   zeigeHinweis(ergebnis.hinweis, ergebnis.rueckfrage);
@@ -615,6 +728,8 @@ export function mountTerminLeistungen(deps) {
   });
 
   document.getElementById('bkMenge')?.addEventListener('input', aktualisiereDauer);
+  // Der Vorschlagstext haengt davon ab, ob eine Serie angelegt wird.
+  document.getElementById('bkSeriesToggle')?.addEventListener('change', zeichneVorschlag);
 
   // Gruppentermine bleiben einzeilig — und das ist kein Versaeumnis.
   // Die Kind-Synchronisierung in dashboard.js schreibt ueber

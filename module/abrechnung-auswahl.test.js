@@ -316,3 +316,24 @@ test('imZeitraum: leer heisst alles, ohne Datum heisst raus', () => {
   // stillschweigend mitzunehmen waere das Falsche (gkv-302, Ops #265).
   assert.equal(imZeitraum(null, '2026-03-01', ''), false);
 });
+
+// ── S1.12: Spiegel der zwei neuen harten Sperren ────────────────────────────
+
+test('podoBefundOhneBehandlung: 78040 an zwei Tagen ist hart', () => {
+  const v = { diagnosegruppe: 'DF' };
+  const behs = [
+    { behandlungsdatum: '2026-09-01', hpnr_codes: ['78040', '78010'] },
+    { behandlungsdatum: '2026-09-08', hpnr_codes: ['78040', '78010'] },
+  ];
+  const r = podoBefundOhneBehandlung(v, behs);
+  assert.equal(r.hart.length, 1);
+  assert.match(r.hart[0], /mehrfach.*einmalig/);
+});
+
+test('podoBefundOhneBehandlung: 78040 und 78030 am selben Tag ist hart', () => {
+  const v = { diagnosegruppe: 'DF' };
+  const behs = [{ behandlungsdatum: '2026-09-01', hpnr_codes: ['78040', '78030', '78010'] }];
+  const r = podoBefundOhneBehandlung(v, behs);
+  assert.equal(r.hart.length, 1);
+  assert.match(r.hart[0], /zusammen/);
+});

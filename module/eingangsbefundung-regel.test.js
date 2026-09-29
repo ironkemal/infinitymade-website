@@ -143,7 +143,7 @@ test('laufende Serie → 78030, nicht mehr 78040', () => {
   });
   assert.equal(r.code, '78030');
   assert.equal(r.grund, 'nicht_erste_behandlung');
-  assert.match(r.hinweis, /2026-08-04/, 'die Meldung nennt den Tag, an dem der Anspruch verfiel');
+  assert.match(r.hinweis, /04.08.2026/, 'die Meldung nennt den Tag, an dem der Anspruch verfiel');
 });
 
 test('78040 schon abgerechnet → 78030 mit Datum in der Begruendung', () => {
@@ -154,7 +154,7 @@ test('78040 schon abgerechnet → 78030 mit Datum in der Begruendung', () => {
   });
   assert.equal(r.code, '78030');
   assert.equal(r.grund, 'eingangsbefundung_verbraucht');
-  assert.match(r.hinweis, /2026-03-02/);
+  assert.match(r.hinweis, /02.03.2026/);
 });
 
 test('Selbstzahler bekommt keine GKV-Position', () => {

@@ -168,30 +168,8 @@ test('HPNR kommt aus gkv_position_nr, sonst aus code', () => {
 
 // ── Befundungsvorschlag ──────────────────────────────────────────────────────
 
-test('neuer Patient + Behandlung → Eingangsbefundung kommt als zweite Zeile', () => {
-  const r = mitBefundungsvorschlag({
-    zeilen: [neueZeile('s-beh-gr')], dienste: DIENSTE, behandlungen: [], datum: '2026-09-03',
-  });
-  assert.equal(r.zeilen.length, 2);
-  assert.equal(r.zeilen[1].serviceId, 's-eing');
-  assert.equal(r.zeilen[1].auto, true);
-  assert.match(r.rueckfrage, /01\.11\.2023/, 'die offene Frage wird durchgereicht');
-});
-
-test('die vorgeschlagene Zeile verlaengert den Block', () => {
-  const r = mitBefundungsvorschlag({
-    zeilen: [neueZeile('s-beh-gr')], dienste: DIENSTE, behandlungen: [], datum: '2026-09-03',
-  });
-  assert.equal(gesamtDauer(r.zeilen, DIENSTE), 70, '50 Behandlung + 20 Eingangsbefundung');
-});
-
-test('laufende Serie → 78030 statt 78040', () => {
-  const r = mitBefundungsvorschlag({
-    zeilen: [neueZeile('s-beh-kl')], dienste: DIENSTE, datum: '2026-09-03',
-    behandlungen: [{ behandlungsdatum: '2026-08-04', hpnr_codes: ['78030', '78010'] }],
-  });
-  assert.equal(r.zeilen[1].serviceId, 's-bef');
-});
+// S1.12: Die Zeilen-Tests der Befundung (2. Zeile, Dauer, Wechsel) stehen jetzt in
+// termin-leistungen-s112.test.js — der Vorschlag ist keine Zeile mehr.
 
 test('Nagelspange bekommt keine Zeile, nur einen Hinweis', () => {
   // Beta-1, 31.08.2026: „beim Nagel gibt es das nicht."
@@ -201,28 +179,6 @@ test('Nagelspange bekommt keine Zeile, nur einen Hinweis', () => {
   assert.equal(r.zeilen.length, 1);
   assert.equal(r.grund, 'nagelzweig');
   assert.match(r.hinweis, /78110/);
-});
-
-test('ein neuer Vorschlag raeumt den alten weg — aber nie eine Handauswahl', () => {
-  // Erst neuer Patient (78040 vorgeschlagen), dann Wechsel auf Nagelspange.
-  const ersteRunde = mitBefundungsvorschlag({
-    zeilen: [neueZeile('s-beh-gr')], dienste: DIENSTE, behandlungen: [], datum: '2026-09-03',
-  });
-  assert.equal(ersteRunde.zeilen.length, 2);
-
-  const gewechselt = [{ ...ersteRunde.zeilen[0], serviceId: 's-nsp' }, ersteRunde.zeilen[1]];
-  const zweiteRunde = mitBefundungsvorschlag({
-    zeilen: gewechselt, dienste: DIENSTE, behandlungen: [], datum: '2026-09-03',
-  });
-  assert.equal(zweiteRunde.zeilen.length, 1, 'die automatische 78040 muss weg');
-
-  // Dieselbe Zeile von Hand gesetzt bleibt dagegen stehen.
-  const vonHand = [{ ...ersteRunde.zeilen[0], serviceId: 's-nsp' },
-                   { ...ersteRunde.zeilen[1], auto: false }];
-  const dritteRunde = mitBefundungsvorschlag({
-    zeilen: vonHand, dienste: DIENSTE, behandlungen: [], datum: '2026-09-03',
-  });
-  assert.equal(dritteRunde.zeilen.length, 2, 'was der Podologe selbst gewaehlt hat, bleibt');
 });
 
 test('schon von Hand gewaehlte Befundung wird nicht ein zweites Mal gesetzt', () => {

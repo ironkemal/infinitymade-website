@@ -114,3 +114,30 @@ test('Datum ohne ISO-Form wird trotzdem als Text im Grund angezeigt (kein Crash)
   assert.equal(r.hart.length, 1);
   assert.match(r.hart[0], /kaputt/);
 });
+
+// ── S1.12: 78040 nur einmal je Verordnung, nie mit 78030 am selben Tag ──────
+
+test('78040 an zwei Behandlungstagen → hart (nur einmalig)', () => {
+  const r = befundpauschaleRegeln([
+    { datum: '2026-09-01', positionen: ['78040', '78010'] },
+    { datum: '2026-09-08', positionen: ['78040', '78010'] },
+  ]);
+  assert.equal(r.hart.length, 1);
+  assert.match(r.hart[0], /78040.*mehrfach.*01\.09\..*08\.09\..*einmalig/);
+});
+
+test('78040 nur an einem Tag → keine Mehrfach-Sperre', () => {
+  const r = befundpauschaleRegeln([
+    { datum: '2026-09-01', positionen: ['78040', '78010'] },
+    { datum: '2026-09-08', positionen: ['78030', '78010'] },
+  ]);
+  assert.deepEqual(r, { hart: [], uebersteuerbar: [] });
+});
+
+test('78040 und 78030 am selben Tag → hart', () => {
+  const r = befundpauschaleRegeln([
+    { datum: '2026-09-01', positionen: ['78040', '78030', '78010'] },
+  ]);
+  assert.equal(r.hart.length, 1);
+  assert.match(r.hart[0], /78040.*78030.*01\.09\..*zusammen/);
+});

@@ -167,6 +167,19 @@ export function podoBefundOhneBehandlung(vord, behs = []) {
     uebersteuerbar.push('78040 (Eingangsbefundung) in einer Verordnung ohne Behandlung 78010/78020 — nicht abrechenbar.');
   }
 
+  // Wortgleich gespiegelt aus befundpauschale-regeln.js (d)+(e), S1.12:
+  // 78040 nur einmal je Verordnung, und nie am selben Tag mit 78030.
+  const tage78040 = tage.filter(tag => tag.positionen.includes('78040'));
+  if (tage78040.length > 1) {
+    const daten = tage78040.map(tag => _formatDatumKurz(tag.datum)).join(' und ');
+    hart.push(`78040 (Eingangsbefundung) mehrfach in einer Verordnung (${daten}) — nur einmalig abrechenbar.`);
+  }
+  for (const tag of tage) {
+    if (tag.positionen.includes('78040') && tag.positionen.includes('78030')) {
+      hart.push(`78040 (Eingangsbefundung) und 78030 (Befundung) am ${_formatDatumKurz(tag.datum)} zusammen — nicht abrechenbar.`);
+    }
+  }
+
   return { hart, uebersteuerbar };
 }
 

@@ -45,6 +45,12 @@ export const POD_EINGANGSBEFUNDUNG = '78040';
 /** HPNR der podologischen Befundung — an jedem ANDEREN Behandlungstag. */
 export const POD_BEFUNDPAUSCHALE = '78030';
 
+/** `YYYY-MM-DD` → `TT.MM.JJJJ`; alles andere unveraendert. */
+export function datumDe(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso ?? ''));
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : String(iso ?? '');
+}
+
 /**
  * Darf am `datum` noch 78040 abgerechnet werden?
  *
@@ -257,13 +263,22 @@ export function befundungFuerLeistung({
   const lage = darf78040(behandlungen, datum);
 
   if (!lage.erlaubt) {
+    // Woher stammt die Behandlung, die 78040 verbraucht? Ein GEPLANTER Termin
+    // (`geplant: true`, module/podo-geplant.js) ist noch nicht abgerechnet —
+    // „bereits abgerechnet" waere falsch (S1.12). Eingang ist der Tag der
+    // Behandlung; gleiche Tage mit anderer Quelle werden nicht verwechselt,
+    // weil nur eine Behandlung mit 78040 in Frage kommt.
+    const quelle = (behandlungen || []).find(b => b && !b.storniert_am
+      && b.behandlungsdatum === lage.schonAm
+      && (b.hpnr_codes || []).includes(POD_EINGANGSBEFUNDUNG));
+    const wie = quelle?.geplant ? 'bereits eingeplant' : 'bereits dokumentiert';
     return {
       code: POD_BEFUNDPAUSCHALE, automatisch: true,
       grund: lage.grund === 'schon_abgerechnet' ? 'eingangsbefundung_verbraucht'
                                                 : 'nicht_erste_behandlung',
       hinweis: lage.grund === 'schon_abgerechnet'
-        ? `Befundung (78030) — die Eingangsbefundung wurde am ${lage.schonAm} bereits abgerechnet.`
-        : `Befundung (78030) — die erste Behandlung war am ${lage.ersteAm}, die `
+        ? `Befundung (78030) — die Eingangsbefundung ist am ${datumDe(lage.schonAm)} ${wie}.`
+        : `Befundung (78030) — die erste Behandlung war am ${datumDe(lage.ersteAm)}, die `
           + 'Eingangsbefundung gehoert davor und kann nicht nachgeholt werden.',
       rueckfrage: null,
     };
