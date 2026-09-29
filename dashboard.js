@@ -4079,38 +4079,6 @@ async function openFahrtStartModal() {
   openModal('fahrtStartModal');
 }
 
-// ---- Named handlers (delegated event'lerden + inline onclick fallback'tan çağrılır) ----
-
-function openQuickVehicleModal() {
-  document.getElementById('qvKennzeichen').value = '';
-  document.getElementById('qvLabel').value = '';
-  document.getElementById('qvError').style.display = 'none';
-  openModal('quickVehicleModal');
-}
-
-async function saveQuickVehicleHandler() {
-  const kz = document.getElementById('qvKennzeichen').value.trim();
-  const lbl = document.getElementById('qvLabel').value.trim();
-  const err = document.getElementById('qvError');
-  err.style.display = 'none';
-  if (!kz) { err.textContent = 'Kennzeichen erforderlich.'; err.style.display = ''; return; }
-  const ownerId = getOwnerId();
-  const userId = currentSession.user.id;
-  const isOwner = currentProfile?.role === 'owner';
-  const { data, error } = await supabase.from('vehicles').insert({
-    owner_id: ownerId,
-    created_by: userId,
-    kind: isOwner ? 'gewerblich' : 'privat',
-    kennzeichen: kz,
-    label: lbl || null
-  }).select().single();
-  if (error) { err.textContent = error.message; err.style.display = ''; throw error; }
-  closeModal('quickVehicleModal');
-  await openFahrtStartModal();
-  document.getElementById('fsVehicleSelect').value = data.id;
-  showToast('Fahrzeug hinzugefügt ✓');
-}
-
 async function saveFahrtStartHandler() {
   const vehicleId = document.getElementById('fsVehicleSelect').value;
   const startKmRaw = document.getElementById('fsStartKm').value;
@@ -17456,9 +17424,7 @@ if (!window.__fbDelegatedBound) {
     if (id === 'bkActionHbCopyBtn')    { e.preventDefault(); return safe('Kopieren',             copyHausbesuchAddress); }
     // Fahrt Start modal
     if (id === 'fsSaveBtn')         { e.preventDefault(); return safe('Fahrt speichern', saveFahrtStartHandler); }
-    if (id === 'fsAddVehicleBtn')   { e.preventDefault(); return safe('Quick-Vehicle',  openQuickVehicleModal); }
-    // Quick vehicle modal
-    if (id === 'qvSaveBtn')         { e.preventDefault(); return safe('Fahrzeug speichern', saveQuickVehicleHandler); }
+    if (id === 'fsAddVehicleBtn')   { e.preventDefault(); return safe('Fahrzeug anlegen', () => openVehicleEditModal(null, { zurueckZuFahrtStart: true })); }
     // Fahrt End modal
     if (id === 'feSaveBtn')         { e.preventDefault(); return safe('Fahrt Ende speichern', saveFahrtEndHandler); }
   });
@@ -17475,15 +17441,7 @@ async function loadFahrtenbuchPanel() {
   // her binding'i try/catch içinde tut ve flag binding sonrasına koy.
   if (!panel.dataset.fbBound) {
     try {
-      panel.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => fbActivateTab(btn.dataset.fbTab));
-      });
-      document.getElementById('fbFahrtenRefresh')?.addEventListener('click', loadFbFahrten);
-      document.getElementById('fbFahrtenExportCsv')?.addEventListener('click', exportFbFahrtenCsv);
-      document.getElementById('fbVehicleAddBtn')?.addEventListener('click', () => openVehicleEditModal(null));
-      document.getElementById('vehEditSaveBtn')?.addEventListener('click', saveVehicleEdit);
-      document.getElementById('vehEditKind')?.addEventListener('change', updateVehEditKindHint);
-      document.getElementById('fbReportRefresh')?.addEventListener('click', loadFbReports);
+      // Klick-Bindings laufen ausschliesslich über die Delegation (__fbDelegatedBound)
 
       // Default filters — son 30 gün
       const today = new Date();
@@ -17775,6 +17733,7 @@ async function loadFbVehicles() {
   });
 }
 
+let _vehEditZurueck = false;
 function updateVehEditKindHint() {
   const kind = document.getElementById('vehEditKind').value;
   const hint = document.getElementById('vehEditKindHint');
@@ -17785,7 +17744,8 @@ function updateVehEditKindHint() {
   }
 }
 
-function openVehicleEditModal(v) {
+function openVehicleEditModal(v, opts) {
+  _vehEditZurueck = !!(opts && opts.zurueckZuFahrtStart);
   const modal = document.getElementById('vehicleEditModal');
   if (!modal) {
     console.error('[fahrtenbuch] vehicleEditModal element nicht gefunden im DOM');
@@ -17798,7 +17758,7 @@ function openVehicleEditModal(v) {
   setVal('vehEditKennzeichen', v?.kennzeichen || '');
   setVal('vehEditLabel', v?.label || '');
   const titleEl = document.getElementById('vehEditTitle');
-  if (titleEl) titleEl.textContent = v ? 'Fahrzeug bearbeiten' : 'Fahrzeug anlegen';
+  if (titleEl) titleEl.textContent = v ? 'Fahrzeug bearbeiten' : 'Neues Fahrzeug';
   const kindSel = document.getElementById('vehEditKind');
   if (kindSel) {
     kindSel.value = v?.kind || (isOwner ? 'gewerblich' : 'privat');
@@ -17816,6 +17776,13 @@ function openVehicleEditModal(v) {
 }
 
 async function saveVehicleEdit() {
+  const btn = document.getElementById('vehEditSaveBtn');
+  if (btn?.disabled) return;
+  if (btn) btn.disabled = true;
+  try { await saveVehicleEditCore(); } finally { if (btn) btn.disabled = false; }
+}
+
+async function saveVehicleEditCore() {
   const id = document.getElementById('vehEditId').value;
   const kennzeichen = document.getElementById('vehEditKennzeichen').value.trim();
   const label = document.getElementById('vehEditLabel').value.trim();
@@ -17829,24 +17796,35 @@ async function saveVehicleEdit() {
   const userId = currentSession.user.id;
   const payload = { kennzeichen, label: label || null, kind, is_default: isDefault };
 
-  let error;
+  let error, newId = null;
   if (id) {
     ({ error } = await supabase.from('vehicles').update(payload).eq('id', id));
   } else {
-    ({ error } = await supabase.from('vehicles').insert({ ...payload, owner_id: ownerId, created_by: userId }));
+    let row;
+    ({ data: row, error } = await supabase.from('vehicles').insert({ ...payload, owner_id: ownerId, created_by: userId }).select('id').single());
+    newId = row?.id || null;
   }
   if (error) { err.textContent = error.message; err.style.display = ''; return; }
 
   // is_default seçildiyse diğer aynı kind araçların default'unu kaldır
-  if (isDefault) {
+  const savedId = id || newId;
+  if (isDefault && savedId) {
     await supabase.from('vehicles').update({ is_default: false })
-      .eq('owner_id', ownerId).eq('kind', kind).neq('id', id || '00000000-0000-0000-0000-000000000000');
-    if (id) await supabase.from('vehicles').update({ is_default: true }).eq('id', id);
+      .eq('owner_id', ownerId).eq('kind', kind).neq('id', savedId);
+    await supabase.from('vehicles').update({ is_default: true }).eq('id', savedId);
   }
 
+  const zurueck = _vehEditZurueck && !id;
+  _vehEditZurueck = false;
   closeModal('vehicleEditModal');
   showToast('Gespeichert.');
-  loadFbVehicles();
+  if (zurueck) {
+    await openFahrtStartModal();
+    const sel = document.getElementById('fsVehicleSelect');
+    if (sel && newId) sel.value = newId;
+  } else {
+    loadFbVehicles();
+  }
 }
 
 // ---------- Berichte tab ----------
@@ -17920,26 +17898,6 @@ async function loadFbReports() {
   `).join('');
 }
 
-
-// ============================================================
-// Fahrtenbuch global namespace — inline onclick fallback (cache resilience)
-// HTML butonlarına onclick="window.__fb.fahrtStart()" yazılabilir; bu sayede
-// delegated handler bir sebepten ötürü kaçırsa bile flow çalışır.
-// ============================================================
-window.__fb = window.__fb || {};
-Object.assign(window.__fb, {
-  fahrtStart: () => openFahrtStartModal().catch(e => { console.error('[fb.fahrtStart]', e); showToast('Fahrt Starten: ' + (e?.message || e), 'error'); }),
-  saveFahrtStart: () => saveFahrtStartHandler().catch(e => { console.error('[fb.saveFahrtStart]', e); showToast('Speichern: ' + (e?.message || e), 'error'); }),
-  arrived: () => markArrivedHandler().catch(e => { console.error('[fb.arrived]', e); showToast('Angekommen: ' + (e?.message || e), 'error'); }),
-  fahrtEnd: () => { try { openFahrtEndModal(); } catch (e) { console.error('[fb.fahrtEnd]', e); showToast('Fahrt Beenden: ' + (e?.message || e), 'error'); } },
-  saveFahrtEnd: () => saveFahrtEndHandler().catch(e => { console.error('[fb.saveFahrtEnd]', e); showToast('End-KM: ' + (e?.message || e), 'error'); }),
-  copyAddr: () => copyHausbesuchAddress().catch(e => { console.error('[fb.copyAddr]', e); }),
-  addVehicle: () => { try { openVehicleEditModal(null); } catch (e) { console.error('[fb.addVehicle]', e); showToast('Fahrzeug: ' + (e?.message || e), 'error'); } },
-  saveVehicle: () => Promise.resolve(saveVehicleEdit()).catch(e => { console.error('[fb.saveVehicle]', e); showToast('Speichern: ' + (e?.message || e), 'error'); }),
-  quickAdd: () => { try { openQuickVehicleModal(); } catch (e) { console.error('[fb.quickAdd]', e); } },
-  saveQuick: () => saveQuickVehicleHandler().catch(e => { console.error('[fb.saveQuick]', e); showToast('Fahrzeug: ' + (e?.message || e), 'error'); }),
-});
-console.log('[fahrtenbuch] window.__fb ready', Object.keys(window.__fb));
 
 window.switchPanel = switchPanel;
 window.openVorlagenEdit = openVorlagenEdit;
