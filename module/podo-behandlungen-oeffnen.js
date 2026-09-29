@@ -98,14 +98,17 @@ export function terminInZukunft(datum, heute) {
  * @param {Function} deps.switchPanel
  */
 export async function oeffnePodoBehandlungen(leadId, opt = {}, deps = {}) {
-  const { vordId, datum, mehrdeutigFragen } = opt;
+  const { vordId, datum, mehrdeutigFragen, bookingId } = opt;
+  // S3.13: Hausbesuch — Buchungs-ID mitgeben, damit die Tagesbehandlung die Fahrt beenden kann.
+  // Ohne bookingId bleibt der Aufruf byteweise wie vorher.
+  const vorwahl = bookingId ? { datum, bookingId } : { datum };
   const { sb, ownerId, showToast, closeBkActionPanel, setPodVorwahl, switchPanel } = deps;
 
   if (!leadId) { showToast('Kein Patient zu dieser Verordnung gefunden.', 'warning'); return; }
 
   if (vordId) {
     closeBkActionPanel();
-    setPodVorwahl(vordId, { datum });
+    setPodVorwahl(vordId, vorwahl);
     await switchPanel('podologie-billing');
     return;
   }
@@ -126,13 +129,13 @@ export async function oeffnePodoBehandlungen(leadId, opt = {}, deps = {}) {
   }
   if (mehrdeutigFragen && vords.length >= 2) {
     closeBkActionPanel();
-    setPodVorwahl(null, { datum });
+    setPodVorwahl(null, vorwahl);
     showToast('Mehrere laufende Verordnungen — bitte die richtige auswählen.', 'info');
     await switchPanel('podologie-billing');
     return;
   }
   closeBkActionPanel();
-  setPodVorwahl(vords[0].id, { datum });
+  setPodVorwahl(vords[0].id, vorwahl);
   await switchPanel('podologie-billing');
 }
 
@@ -174,7 +177,8 @@ export async function terminStartenPodo(booking, deps) {
 
   return oeffnePodoBehandlungen(
     booking?.lead_id || null,
-    { vordId: booking?.verordnung_id || undefined, datum, mehrdeutigFragen: true },
+    { vordId: booking?.verordnung_id || undefined, datum, mehrdeutigFragen: true,
+      bookingId: booking?.hausbesuch ? booking.id : undefined },
     deps,
   );
 }

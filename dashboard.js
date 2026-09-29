@@ -34,8 +34,9 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260929a';
-import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20260929b';
+import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
+import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss } from './module/fahrt-beenden.js?v=20260929';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260926a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260905';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
@@ -4178,8 +4179,8 @@ async function markArrivedHandler() {
   showToast('✅ Angekommen — Termin kann gestartet werden.');
 }
 
-function openFahrtEndModal() {
-  const b = bkActionBookingCache;
+function openFahrtEndModal(opt) {
+  const b = fahrtEndOeffnen(opt, bkActionBookingCache); // opt = { booking, onFertig } aus der Tagesbehandlung (S3.13)
   if (!b) { showToast('Buchung nicht gefunden.', 'error'); return; }
   document.getElementById('feStartKm').value = b.start_km != null ? b.start_km : '';
   document.getElementById('feEndKm').value = '';
@@ -4207,7 +4208,7 @@ function updateEndKmPreview(value) {
 }
 
 async function saveFahrtEndHandler() {
-  const b = bkActionBookingCache;
+  const b = fahrtEndAktuell(bkActionBookingCache);
   const startKmInput = parseInt(document.getElementById('feStartKm').value, 10);
   const endKm = parseInt(document.getElementById('feEndKm').value, 10);
   const err = document.getElementById('feError');
@@ -4295,9 +4296,7 @@ async function saveFahrtEndHandler() {
   b.fahrt_ended_at = nowIso;
 
   closeModal('fahrtEndModal');
-  closeBkActionPanel();
-  showToast('🏁 Fahrt abgeschlossen — im Fahrtenbuch eingetragen.');
-  switchPanel('fahrtenbuch');
+  fahrtEndAbschluss({ closeBkActionPanel, showToast, switchPanel });
 }
 
 async function handleTerminStarten() {
@@ -19826,7 +19825,7 @@ function podoCtx() {
     getSessionUserId: () => currentSession?.user?.id || null,   // Ops #252: podologie_behandlungen.employee_id
     switchPanel,
     showToast,
-    showConfirmModal, showInputModal,   // showInputModal: Storno-Grund (module/podo-storno.js)
+    showConfirmModal, showInputModal, openFahrtEndModal,   // showInputModal: Storno-Grund (module/podo-storno.js) · openFahrtEndModal: S3.13
     displayName,
     displayNameWithBirth,
     patientMatchesQuery,

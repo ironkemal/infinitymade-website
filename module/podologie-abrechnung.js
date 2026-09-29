@@ -97,6 +97,7 @@ import { hausbesuchGesperrt, hausbesuchSpeicherFehler, HAUSBESUCH_HINWEIS } from
 // Reform S1.9 (29.09.2026): Behandlungsbeginn-Frist (§15 HeilM-RL) nicht mehr
 // zweimal von Hand nachrechnen (hier + vordAlerts unten) — ein Ort, eine Regel.
 import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20260929';
+import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20260929';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -436,7 +437,7 @@ function podVordBehandlungsposition(vord) {
 // (s. dort), damit ein späteres Neuladen (Speichern, Toggle) nicht am alten
 // Termin-Datum kleben bleibt. Eine neue Verordnungsauswahl per Klick löscht
 // es ebenfalls sofort (Klick-Handler unten).
-let _podState = { selectedVordId: null, verordnungen: [], verordnungenAbgerechnet: [], zeigeAbgerechnet: false, vorwahlDatum: null };
+let _podState = { selectedVordId: null, verordnungen: [], verordnungenAbgerechnet: [], zeigeAbgerechnet: false, vorwahlDatum: null, fahrtBookingId: null };
 
 function findVord(id) {
   return _podState.verordnungen.find(v => v.id === id)
@@ -454,6 +455,7 @@ const POD_ANLASS_DEFAULT = 'Podologische Komplexbehandlung';
 // etwas dazwischen, waren die Knöpfe sichtbar aber tot ("Status lässt sich nicht
 // klicken"). Am document ist er unabhängig davon, wie weit das Rendern kommt.
 document.addEventListener('click', (e) => {
+  if (e.target.closest?.('#podFahrtBeendenBtn')) return fahrtBeendenKlick(e);   // S3.13
   if (!e.target.closest?.('#podVordList')) return;
   const toggleBtn = e.target.closest('.pod-abgerechnet-toggle');
   if (toggleBtn) {
@@ -1100,8 +1102,34 @@ async function loadPodologieBilling() {
       ctx.showToast('Behandlung gespeichert ✓');
     }
 
-    loadPodologieBilling();
+    await loadPodologieBilling();
+    await zeigeFahrtHinweis();
   });
+}
+
+/** S3.13: Hausbesuch mit offener Fahrt — Knopf "Fahrt beenden" nach dem Speichern. */
+async function zeigeFahrtHinweis() {
+  const bookingId = _podState.fahrtBookingId;
+  if (!bookingId) return;
+  const { data } = await ctx.supabase.from('bookings').select('fahrt_status').eq('id', bookingId).maybeSingle();
+  const el = document.getElementById('podBillingContent');
+  if (!el || !zeigeFahrtBeenden({ bookingId, fahrt_status: data?.fahrt_status })) return;
+  el.insertAdjacentHTML('afterbegin', fahrtBeendenHinweisHtml());
+}
+
+// Vom Listen-Zuhörer oben aufgerufen (dort EIN document-Zuhörer, s. Test).
+async function fahrtBeendenKlick(e) {
+  const btn = e.target.closest?.('#podFahrtBeendenBtn');
+  if (!btn || !_podState.fahrtBookingId) return;
+  btn.disabled = true;
+  try {
+    const { data: booking } = await ctx.supabase.from('bookings').select('*').eq('id', _podState.fahrtBookingId).maybeSingle();
+    if (!booking) { ctx.showToast('Buchung nicht gefunden.', 'error'); return; }
+    ctx.openFahrtEndModal({ booking, onFertig: () => { _podState.fahrtBookingId = null; document.getElementById('podFahrtHinweis')?.remove(); } });
+  } catch (err) {
+    console.error('[pod-fahrt-beenden]', err);
+    ctx.showToast(err.message || 'Fahrt konnte nicht geöffnet werden', 'error');
+  } finally { btn.disabled = false; }
 }
 
 // ── Öffentliche Schnittstelle ──────────────────────────────────────────────
@@ -1118,12 +1146,13 @@ export async function mountPodologieAbrechnung(deps) {
  * Ersetzt den früheren Direktzugriff `_podState.selectedVordId = id` in dashboard.js.
  *
  * @param {string} id
- * @param {{ datum?: string }} [opts]  `datum` = Termin-Tag, `YYYY-MM-DD`
+ * @param {{ datum?: string, bookingId?: string }} [opts]  `bookingId` = Hausbesuch-Buchung (S3.13). `datum` = Termin-Tag, `YYYY-MM-DD`
  *   (Europe/Berlin, lokal gelesen — s. `alsISODatum()`). Ohne `datum`
  *   verhält sich der Aufruf wie vorher (Formular zeigt heute).
  */
-export function setPodVorwahl(id, { datum } = {}) {
+export function setPodVorwahl(id, { datum, bookingId } = {}) {
   _podState.selectedVordId = id;
+  _podState.fahrtBookingId = bookingId || null;   // S3.13, module/fahrt-beenden.js
   _podState.vorwahlDatum = datum || null;
 }
 

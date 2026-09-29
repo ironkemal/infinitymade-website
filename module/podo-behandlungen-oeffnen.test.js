@@ -217,3 +217,12 @@ test('"Leistungen des Tages"-Knopf (kein mehrdeutigFragen): ZWEI laufende Verord
   assert.deepEqual(calls.setPodVorwahl, [['vord-a', { datum: undefined }]]);
   assert.deepEqual(calls.showToast, []);
 });
+
+test('S3.13: Hausbesuch gibt bookingId an setPodVorwahl weiter, Nicht-Hausbesuch nicht', async () => {
+  const c1 = fakeDeps();
+  await terminStartenPodo({ lead_id: 'l', verordnung_id: 'v1', start_time: new Date().toISOString(), hausbesuch: true, id: 'bk1' }, c1.deps);
+  assert.equal(c1.calls.setPodVorwahl[0][1].bookingId, 'bk1');
+  const c2 = fakeDeps();
+  await terminStartenPodo({ lead_id: 'l', verordnung_id: 'v1', start_time: new Date().toISOString(), id: 'bk2' }, c2.deps);
+  assert.equal('bookingId' in c2.calls.setPodVorwahl[0][1], false);
+});
