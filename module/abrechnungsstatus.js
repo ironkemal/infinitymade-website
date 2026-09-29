@@ -42,6 +42,7 @@
  */
 
 import { emit } from './signal.js?v=20260813';
+import { bestaetigungsText } from './offene-einheiten.js?v=20260929a';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). Diese Datei spricht
 // weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
 // uebersetzt wird nur an den beiden Lesestellen unten.
@@ -457,6 +458,7 @@ export async function setzeStatus(verordnungId, ziel, opts = {}) {
       betrag: opts.betrag,
       datum: opts.datum,
       meldepflichtBestaetigt: !!opts.meldepflichtBestaetigt,
+      offeneEinheitenBestaetigt: opts.offeneEinheitenBestaetigt === true,
     }),
   });
 
@@ -467,6 +469,7 @@ export async function setzeStatus(verordnungId, ziel, opts = {}) {
     const e = new Error(json.error || 'Bestätigung erforderlich.');
     e.bestaetigungErforderlich = true;
     e.hinweis = json.hinweis;
+    e.offeneEinheiten = json.code === 'OFFENE_EINHEITEN' ? (json.offene || []) : null;
     throw e;
   }
   if (!res.ok) throw new Error(json.error || `Statuswechsel fehlgeschlagen (${res.status}).`);
@@ -601,12 +604,24 @@ export function oeffneStatusDialog(verordnung, opts = {}) {
   overlay.querySelector('#as-ok').addEventListener('click', async () => {
     fehlerEl.style.display = 'none';
     try {
-      await setzeStatus(verordnung.id, zielEl.value, {
+      const senden = (offenOk) => setzeStatus(verordnung.id, zielEl.value, {
         token:  opts.token,
         grund:  overlay.querySelector('#as-grund')?.value || '',
         betrag: overlay.querySelector('#as-betrag')?.value || undefined,
         meldepflichtBestaetigt: overlay.querySelector('#as-meldepflicht')?.checked === true,
+        offeneEinheitenBestaetigt: offenOk,
       });
+      try {
+        await senden(false);
+      } catch (err) {
+        // Reform S2.3: „Bereit" mit offenen Einheiten beendet die Verordnung.
+        // Der Server sagt, wie viele offen sind; erst nach Bestätigung erneut.
+        if (!err.offeneEinheiten?.length) throw err;
+        const ok = await frageBestaetigung(bestaetigungsText([{
+          patient: patientAnzeigename(verordnung) || '—', nummer: '', offen: err.offeneEinheiten[0].offen }]));
+        if (!ok) return;
+        await senden(true);
+      }
       schliessen();
       opts.onFertig?.();
     } catch (err) {
@@ -636,6 +651,30 @@ export async function oeffneStatusDialogFuer(verordnungId, { supabase, onFertig 
     return;
   }
   oeffneStatusDialog(ausTopf(vRoh), { token, onFertig });
+}
+
+/** Eigenes kleines Bestätigungsfenster (kein Zugriff auf showConfirmModal aus dashboard.js). */
+function frageBestaetigung({ title, message, confirmText, cancelText }) {
+  return new Promise(resolve => {
+    const o = document.createElement('div');
+    o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;'
+      + 'display:flex;align-items:center;justify-content:center;padding:16px;';
+    o.innerHTML = `
+      <div style="background:var(--bg-card-solid,#1f2937);color:var(--text-main,#e5e7eb);border:1px solid var(--border,#374151);
+                  border-radius:12px;padding:20px;max-width:460px;width:100%;font-size:14px;">
+        <h3 style="margin:0 0 10px;font-size:16px;">${escapeHtml(title)}</h3>
+        <p style="margin:0 0 16px;line-height:1.5;white-space:pre-wrap;">${escapeHtml(message)}</p>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button class="oe-nein btn-ghost">${escapeHtml(cancelText)}</button>
+          <button class="oe-ja btn-primary">${escapeHtml(confirmText)}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(o);
+    const zu = (v) => { o.remove(); resolve(v); };
+    o.querySelector('.oe-ja').addEventListener('click', () => zu(true));
+    o.querySelector('.oe-nein').addEventListener('click', () => zu(false));
+    o.addEventListener('click', e => { if (e.target === o) zu(false); });
+  });
 }
 
 function escapeHtml(s) {

@@ -31,6 +31,7 @@ import { createClient } from '@supabase/supabase-js';
 // statt `verordnungen.status`. Diese Datei spricht weiter podologisch
 // (UEBERGAENGE unten bleibt unangetastet) — uebersetzt wird nur am Rand.
 import { statusAusAbrechnungStatus, abrechnungStatusAusStatus } from '../utils/einreichbar.js';
+import { offeneJeVerordnung, pruefeBestaetigung, offeneEinheitenAntwort, protokollZeilen } from '../utils/offene-einheiten.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -149,7 +150,7 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
 
     const { data: vRoh, error: vErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel')
+      .select('id, owner_id, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel, anzahl_einheiten')
       .eq('id', req.params.id)
       .maybeSingle();
     if (vErr) return res.status(500).json({ error: vErr.message });
@@ -197,6 +198,7 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
     // `abrechnung_status` uebersetzt. Alle Feldnamen darunter (absetzung_*,
     // storno_*, abrechnung_id) heissen in `prescriptions` genauso.
     const patch = { status: ziel };
+    let offenBestaetigt = [];   // Reform S2.3
 
     // ── bereit zur Abrechnung ────────────────────────────────────────────
     // Ohne dokumentierte Behandlung entsteht in der DTA-Datei ein Beleg ohne
@@ -212,6 +214,17 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
         .is('storniert_am', null)
         .eq('verordnung_id', v.id)
         .eq('owner_id', tenantId);
+      // Reform S2.3: offene Einheiten -> Bereit beendet die Verordnung; nur mit
+      // ausdrücklicher Bestätigung (428), sonst kein Statuswechsel.
+      if (count) {
+        const offeneEine = offeneJeVerordnung([v], Array.from({ length: count }, () => ({ verordnung_id: v.id })));
+        const pruef = pruefeBestaetigung(offeneEine, req.body?.offeneEinheitenBestaetigt === true ? true : undefined);
+        if (pruef.fehlt.length) {
+          const a428 = offeneEinheitenAntwort(pruef.fehlt);
+          return res.status(a428.status).json(a428.body);
+        }
+        offenBestaetigt = pruef.bestaetigt;
+      }
       if (!count) {
         return res.status(422).json({
           error: 'Noch keine Behandlung dokumentiert — ohne Behandlung gibt es nichts abzurechnen.',
@@ -292,6 +305,12 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
       .from('prescriptions').update(dbPatch)
       .eq('id', v.id).eq('owner_id', tenantId).eq('therapie_bereich', 'podo');
     if (upErr) return res.status(500).json({ error: upErr.message });
+
+    if (offenBestaetigt.length) {
+      const { error: protErr } = await supabase.from('prescription_validations').insert(
+        protokollZeilen(offenBestaetigt, { aktion: 'bereit', userId: auth.user.id }));
+      if (protErr) console.error('[verordnung/abrechnungsstatus] Teilabrechnungs-Protokoll fehlgeschlagen', protErr);
+    }
 
     return res.json({ ok: true, status: ziel, label: LABEL[ziel], vorher: jetzt });
   } catch (e) {

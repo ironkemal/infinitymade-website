@@ -64,6 +64,7 @@ import { zeigeAbrechnungAnsicht } from './abrechnung-ansicht.js?v=20260909';
 import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
          frageBerichtFreigabe } from './abrechnung-freigabe.js?v=20260826';
 import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
+import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten } from './offene-einheiten.js?v=20260929a';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260920t';
@@ -369,6 +370,10 @@ export function baueGruppen(zeilen, kassenName = (ik) => ik) {
     }
     const g = map.get(key);
     g.zeilen.push(z);
+    // Reform S2.3: Podologie-Gruppen bleiben „eine Datei je Kasse" (Auswahl =
+    // ganze Gruppe) — ausser sie enthalten eine Verordnung mit offenen
+    // Einheiten. Dann wählt man je Verordnung, damit diese nicht mitrutscht.
+    if (g.bereich === 'podo' && Number(z.offen) > 0) g.granularitaet = 'rezept';
     g.brutto    = Math.round((g.brutto    + (Number(z.brutto)    || 0)) * 100) / 100;
     g.zuzahlung = Math.round((g.zuzahlung + (Number(z.zuzahlung) || 0)) * 100) / 100;
     g.soll      = kassenanteil(g.brutto, g.zuzahlung);
@@ -465,7 +470,8 @@ export function imZeitraum(datum, von, bis) {
 /**
  * @param {object} deps  aus dashboard.js: supabase, apiBase, getOwnerId,
  *   escapeHtml, showToast, aktiverStandort, kassenName, ladePositionen,
- *   positionOptionsHtml, savePosition, checkPlanActive, nachErstellung
+ *   positionOptionsHtml, savePosition, checkPlanActive, nachErstellung,
+ *   showConfirmModal (Reform S2.3, Dialog bei offenen Einheiten)
  */
 export function initAbrechnungAuswahl(deps) {
   ctx = deps;
@@ -619,6 +625,8 @@ export async function ladeAbrechnungAuswahl() {
         positionBekannt: !(d.unbekannt || []).length,
         einheiten: (d.zeilen || []).reduce((a, z) => a + z.anzahl, 0),
         verordnet: Number(v.behandlungseinheiten) || 0,
+        // Reform S2.3: nicht stornierte Behandlungen (behs) gegen verordnet.
+        offen: offeneEinheiten(v.behandlungseinheiten, behs.length),
         brutto: d.brutto,
         zuzahlung: d.gesamt,
         befreit: !!v.zuzahlung_befreit,
@@ -656,7 +664,7 @@ export async function ladeAbrechnungAuswahl() {
   for (const g of _st.gruppen) {
     if (g.ik === '__unknown__') continue;
     if (g.granularitaet === 'kasse') { _st.gewaehlt.add(g.key); }
-    else for (const z of g.zeilen) if (!z.blockiert) _st.gewaehlt.add(z.id);
+    else for (const z of g.zeilen) if (!z.blockiert && (z.bereich !== 'podo' || vorausgewaehltPodo(z))) _st.gewaehlt.add(z.id);
   }
 
   zeichne();
@@ -823,7 +831,7 @@ function kostentraegerFehltHtml(g) {
 function detailTabelleHtml(g) {
   const jeRezept = g.granularitaet === 'rezept';
   const positionen = ctx.positionen?.() || [];
-  const kannPicker = jeRezept && positionen.length > 0;
+  const kannPicker = jeRezept && g.bereich !== 'podo' && positionen.length > 0;
 
   return `
   <table style="width:100%;border-collapse:collapse;font-size:12px;">
@@ -844,6 +852,9 @@ function detailTabelleHtml(g) {
         const einheiten = z.verordnet && z.einheiten !== z.verordnet
           ? `<span title="erbracht / verordnet">${z.einheiten} / ${z.verordnet}</span>`
           : String(z.einheiten || z.verordnet || 0);
+        const offenTag = z.offen > 0
+          ? ` <span style="color:var(--accent);font-weight:600;" title="Noch nicht erbrachte Einheiten — Abrechnen beendet die Verordnung">${z.offen} offen</span>`
+          : '';
         const zuText = z.befreit
           ? '<span style="color:#15803d;font-weight:600;">befreit</span>'
           : (z.positionBekannt ? esc(fmtEur(z.zuzahlung)) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
@@ -860,7 +871,7 @@ function detailTabelleHtml(g) {
             <span class="ab-zeile-oeffnen" data-id="${esc(z.id)}" title="Alle abrechnungsrelevanten Felder ansehen"
               style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;">${esc(z.patient)}</span>${hinweiseHtml(z)}</td>
           <td style="padding:4px 6px;color:var(--text-muted);">${esc(z.mittel)}${picker}</td>
-          <td style="padding:4px 6px;color:var(--text-muted);">${einheiten}</td>
+          <td style="padding:4px 6px;color:var(--text-muted);">${einheiten}${offenTag}</td>
           <td style="padding:4px 6px;text-align:right;color:var(--text-muted);">${zuText}</td>
           <td style="padding:4px 6px;text-align:right;color:var(--text-main);">${esc(fmtEur(z.soll))}</td>
         </tr>
@@ -1183,7 +1194,7 @@ async function _erstelleGruppen(keys, knopf) {
   // fragen, nicht je Kasse — sonst klickt der Anwender denselben Dialog fünfmal.
   const offeneBerichte = [];
   for (const g of gruppen) {
-    if (g.granularitaet !== 'rezept') continue;
+    if (g.bereich === 'podo' || g.granularitaet !== 'rezept') continue;
     for (const z of g.zeilen) {
       if (!_st.gewaehlt.has(z.id)) continue;
       const rx = _st.rxRoh.get(z.id);
@@ -1194,6 +1205,13 @@ async function _erstelleGruppen(keys, knopf) {
   }
   const freigabe = await frageBerichtFreigabe(offeneBerichte);
   if (!freigabe) return;
+
+  // Reform S2.3: Verordnungen mit offenen Einheiten — EIN Dialog für alle.
+  // Abbruch heisst: nichts wird erzeugt.
+  const podoGewaehlt = gruppen.filter(g => g.bereich === 'podo')
+    .flatMap(g => g.granularitaet === 'kasse' ? g.zeilen : g.zeilen.filter(z => _st.gewaehlt.has(z.id)));
+  const offenBestaetigt = await frageOffeneEinheiten(podoGewaehlt, ctx.showConfirmModal);
+  if (!offenBestaetigt) return;
 
   _st.busy = true;
   _fehlerZeigen('');
@@ -1217,7 +1235,7 @@ async function _erstelleGruppen(keys, knopf) {
     zeilen.push(`<div style="padding:2px 0;color:var(--text-muted);">⏳ ${esc(g.name)} … (${i + 1}/${gruppen.length})</div>`);
     schreibe();
     try {
-      const json = await _sendeGruppe(g, freigabe);
+      const json = await _sendeGruppe(g, freigabe, offenBestaetigt);
       ok++;
       letzteDatei = json.dtaFilename || '';
       zeilen[zeilen.length - 1] = `<div style="padding:2px 0;color:#16a34a;">✓ ${esc(g.name)} — ${esc(json.sammelRechnungsnummer || json.rechnungsnummer || '')}
@@ -1263,7 +1281,7 @@ export function ansichtNachErstellung(ok, fehler) {
   return ok > 0 && !fehler ? 'bisherige' : null;
 }
 
-async function _sendeGruppe(g, freigabe) {
+async function _sendeGruppe(g, freigabe, offenBestaetigt = []) {
   const { data: { session } } = await ctx.supabase.auth.getSession();
   if (!session?.access_token) throw new Error('Nicht angemeldet');
 
@@ -1276,24 +1294,40 @@ async function _sendeGruppe(g, freigabe) {
     ? `${ctx.apiBase}/billing/abrechnung/create-podologie`
     : `${ctx.apiBase}/billing/abrechnung/create`;
 
-  const body = g.bereich === 'podo'
-    ? { kostentraegerIk: g.ik, verordnungIds: ids }
-    : {
-        ownerId: ctx.getOwnerId(),
-        kostentraegerIk: g.ik,
-        prescriptionIds: ids,
-        berichtIgnoriert: freigabe?.ids || [],
-        berichtGrund: freigabe?.grund || '',
-      };
+  let bestaetigt = [...offenBestaetigt];
+  // Zweiter Durchlauf nur, wenn der Server (z. B. wegen eines veralteten Tabs)
+  // offene Einheiten meldet, die hier nicht bestätigt wurden.
+  for (let versuch = 0; versuch < 2; versuch++) {
+    const body = g.bereich === 'podo'
+      ? { kostentraegerIk: g.ik, verordnungIds: ids, offeneEinheitenBestaetigt: bestaetigt }
+      : {
+          ownerId: ctx.getOwnerId(),
+          kostentraegerIk: g.ik,
+          prescriptionIds: ids,
+          berichtIgnoriert: freigabe?.ids || [],
+          berichtGrund: freigabe?.grund || '',
+        };
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-    body: JSON.stringify(body),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw fehlerMitGruenden(json, res.status);
-  return json;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify(body),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.status === 428 && json?.code === 'OFFENE_EINHEITEN' && versuch === 0) {
+      const zeilen = (json.offene || []).map(o => {
+        const z = g.zeilen.find(x => x.id === o.id) || {};
+        return { id: o.id, patient: z.patient, nummer: z.nummer, offen: o.offen };
+      });
+      const neu = await frageOffeneEinheiten(zeilen, ctx.showConfirmModal);
+      if (!neu) throw new Error('Nicht abgerechnet: offene Einheiten wurden nicht bestätigt.');
+      bestaetigt = [...new Set([...bestaetigt, ...neu])];
+      continue;
+    }
+    if (!res.ok) throw fehlerMitGruenden(json, res.status);
+    return json;
+  }
+  throw new Error('Offene Einheiten konnten nicht bestätigt werden.');
 }
 
 /**
@@ -1341,6 +1375,11 @@ async function _uebersteuere(btn) {
     return;
   }
   _fehlerZeigen('');
+  // Reform S2.3: auch der Übersteuern-Weg beendet eine Verordnung mit offenen
+  // Einheiten — dieselbe Bestätigung, dieselbe Protokollierung.
+  const fz = _st.fehlerhaft.find(f => f.zeile?.id === btn.dataset.id)?.zeile;
+  const offenBestaetigt = await frageOffeneEinheiten(fz ? [fz] : [], ctx.showConfirmModal);
+  if (!offenBestaetigt) return;
   btn.disabled = true;
   btn.textContent = 'Wird übernommen…';
   try {
@@ -1353,6 +1392,7 @@ async function _uebersteuere(btn) {
         verordnungIds: [btn.dataset.id],
         sperrenIgnoriert: [btn.dataset.id],
         sperrenGrund: grund,
+        offeneEinheitenBestaetigt: offenBestaetigt,
       }),
     });
     const json = await res.json().catch(() => ({}));

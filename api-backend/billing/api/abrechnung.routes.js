@@ -46,6 +46,7 @@ import {
 } from '../codes/legs.js';
 // § 302-Echtbetrieb, Schritt 1.7 — Betriebsart je (Inhaber × Datenannahmestelle).
 import { ladeBetriebsart, verordnungFestschreiben } from './betriebsart.js';
+import { offeneJeVerordnung, pruefeBestaetigung, offeneEinheitenAntwort, protokollZeilen } from '../utils/offene-einheiten.js';
 // § 302-Abrechnung — Verworfene Nummern festhalten (GoBD-Erklärbarkeit, Migration 0033).
 import { verworfeneNummerFesthalten } from './verworfen.js';
 // § 302-Echtbetrieb, Schritt 1.3 D — CMS EnvelopedData Verschlüsselung & Trust Anchors.
@@ -3163,6 +3164,24 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // `module/verordnung-topf.js` (`ausTopf`) im Frontend.
     const vords = vordsRoh.map(v => ({ ...v, status: statusAusAbrechnungStatus(v.abrechnung_status) }));
 
+    // ---- Reform S2.3: Teilabrechnung nur mit ausdrücklicher Bestätigung ----
+    // Wer eine Verordnung mit offenen Einheiten abrechnet, beendet sie — die
+    // Restmenge ist auf ihr nicht mehr erbring- oder abrechenbar. Deshalb 428,
+    // BEVOR irgendetwas erzeugt wird. Zähler: nicht stornierte Behandlungen.
+    const { data: behsOffen, error: behsOffenErr } = await supabase
+      .from('podologie_behandlungen')
+      .select('id, verordnung_id')
+      .is('storniert_am', null)
+      .eq('owner_id', tenantId)
+      .in('verordnung_id', verordnungIds);
+    if (behsOffenErr) return res.status(500).json({ error: behsOffenErr.message });
+    const offeneVord = offeneJeVerordnung(vords, behsOffen);
+    const offenPruefung = pruefeBestaetigung(offeneVord, req.body?.offeneEinheitenBestaetigt);
+    if (offenPruefung.fehlt.length) {
+      const a428 = offeneEinheitenAntwort(offenPruefung.fehlt);
+      return res.status(a428.status).json(a428.body);
+    }
+
     // ---- validate each verordnung ----
     for (const v of (vords || [])) {
       // §302 SGB V gilt nur für Leistungen zulasten der GKV. Privat-, Selbst-
@@ -3554,6 +3573,14 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
           ? 'Verordnungen konnten nicht als abgerechnet markiert werden: ' + updErr.message
           : 'Diese Verordnungen wurden soeben von einer anderen Anfrage abgerechnet. Aus dieser Anfrage wurde nichts eingereicht — bitte die Liste neu laden.',
       });
+    }
+
+    // Reform S2.3: die bewusste Teilabrechnung protokollieren — nur bei echter
+    // Festschreibung (eine Testdatei beendet die Verordnung nicht).
+    if (festschreiben && offenPruefung.bestaetigt.length) {
+      const { error: offProtErr } = await supabase.from('prescription_validations').insert(
+        protokollZeilen(offenPruefung.bestaetigt, { abrechnungId: ab.id, userId: u.user.id }));
+      if (offProtErr) console.error('[abrechnung-podo] Teilabrechnungs-Protokoll fehlgeschlagen', offProtErr);
     }
 
     // Belegnummer einfrieren — siehe /abrechnung/create, gleiche Begruendung.
