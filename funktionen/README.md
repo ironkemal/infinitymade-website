@@ -116,6 +116,33 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 28-29.09.2026 · Podoloji reform sprinti S1 — Termin ↔ Verordnung, Tagesbehandlung
+- `module/termin-verordnung.js` `waehleVerordnung` podo dalı (b41d31d) — niye: kartla
+  kaydedilen podoloji randevusu `bookings.verordnung_id` almıyordu. Nerede: Terminmodal kart
+  seçimi (`dashboard.js` `selectVerordnung`).
+- `module/termin-verordnung.js` `zeigeVerordnungenFuerTermin`, `resetVerordnungFelder`,
+  `verdrahteAbwahl`, `aktualisiereBindungBeimSpeichern` (2db4146) — niye: düzenleme penceresi
+  Verordnung kartlarını gizliyordu, UPDATE kolu bağlamıyor/çözmüyordu; `loadBkVerordnungen` ile
+  `openBookingModal`'ın **ortak** kart-yükleme yolu (ikinci bir yükleyici yazılmasın diye).
+  Nerede: `openBookingModal`, `loadBkVerordnungen`, `bkSaveBtn` UPDATE kolu.
+- Yeni `module/podo-behandlungsposition-regel.js` `behandlungspositionVorschlag` +
+  `podologie-abrechnung.js` `podVordBehandlungsposition`; `erstePositionAusItems` artık
+  `verordnung-pruefung.js`'ten export (65a1b9e) — niye: Tagesbehandlung reçetedeki tedaviyi
+  önseçmiyordu (a/b → 78010, c → 78010 öneri); export, 3. kopya yazılmasın diye. Nerede:
+  `loadPodologieBilling` Leistung kutuları.
+- Yeni `api-backend/billing/dta/befundpauschale-regeln.js` `befundpauschaleRegeln` + ön yüz
+  aynası `module/abrechnung-auswahl.js` `podoBefundOhneBehandlung` (0520c3f) — niye: 78030 aynı
+  gün tedavisiz = sert blok, 78040 reçetede hiç tedavi yoksa = atlanabilir blok (`gkv-302`).
+  Nerede: `create-podologie` sperren döngüsü; Neue Abrechnung listesi.
+  **BİLİNÇLİ AYNA** (backend/frontend ayrı deploy yüzeyi) — kopya adayı sayılmaz; biri
+  değişirse ikisi.
+- Yeni `module/podo-behandlungsdatum-vorwahl.js` `podBehandlungsdatumVorschlag`,
+  `setPodVorwahl(id, { datum })` genişledi (2d8aea5 + hotfix 94c753c) — niye: Tagesbehandlung
+  tarihi hep "heute" idi. Nerede: **henüz çağıran yok**; S1.4 "Termin Starten"
+  `setPodVorwahl(vordId, { datum: randevu günü })` ile bağlayacak.
+- `tools/check-syntax.sh` (pre-commit, 90c5652) — niye: 2d8aea5'teki template-literal backtick
+  hatası canlı dashboard'u boşalttı; `npm test` o modülü yükleyemiyor.
+
 ### 26.09.2026 · Ops #304 Nachtrag — iki ICD alanı, DG'ye tek yazan
 - **Yeni modül `module/icd-dg-verdrahtung.js`** (`verdrahteIcdDg`, `icdAufZweiFelder`,
   `icdKodesAusFeld`) — `dashboard.js` `_wireDgIcdPair` buraya taşındı (kuşatma). Niye: test

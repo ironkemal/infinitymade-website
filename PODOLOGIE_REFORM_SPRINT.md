@@ -39,7 +39,7 @@ dolanmaz, Kemal'e sorar.
 | Oturum | Konu | Karar gerekir mi | Durum |
 |---|---|---|---|
 | S0 | Ürün kararları (/konsey) + Beta-1 soruları | evet | ⏳ |
-| S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | ⏳ |
+| S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | 🟡 kısmen — bkz. S1 devir notu |
 | S2 | §302 durum semantiği | kısmen (gkv-302) | ⏳ |
 | S3 | Güvenilirlik ve veri doğruluğu | hayır | ⏳ |
 | S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | ⏳ |
@@ -78,16 +78,36 @@ S0 ile S1–S3 paralel yürüyebilir; S4 S0 bitmeden başlamaz.
 
 | # | İş | Nerede | Efor | Bitti ölçütü |
 |---|---|---|---|---|
-| 1.1 | Terminmodal'da reçete kartı seçilince podoloji reçetesini tanı, `_pendingRxSession = { prescriptionId, podoVordId }` kur; "Alle Sitzungen bereits vergeben" 0/3'te çıkmasın | `module/termin-verordnung.js:142` (`waehleVerordnung`), `dashboard.js:5114/5129` (`loadBkVerordnungen` select'ine `therapie_bereich`) | S | Kartla kaydedilen randevuda `bookings.verordnung_id` dolu; portalda "Termine (1)" |
-| 1.2 | Bağlamayı UPDATE koluna da taşı (mevcut randevuyu düzenleyip kart seçmek) | `dashboard.js:6064-6088` | S | Düzenlenen randevu bağlanıyor |
+| 1.1 ✅ `b41d31d` | Terminmodal'da reçete kartı seçilince podoloji reçetesini tanı, `_pendingRxSession = { prescriptionId, podoVordId }` kur; "Alle Sitzungen bereits vergeben" 0/3'te çıkmasın | `module/termin-verordnung.js:142` (`waehleVerordnung`), `dashboard.js:5114/5129` (`loadBkVerordnungen` select'ine `therapie_bereich`) | S | Kartla kaydedilen randevuda `bookings.verordnung_id` dolu; portalda "Termine (1)" |
+| 1.2 ✅ `2db4146` | Bağlamayı UPDATE koluna da taşı (mevcut randevuyu düzenleyip kart seçmek) | `dashboard.js:6064-6088` | S | Düzenlenen randevu bağlanıyor |
 | 1.3 | Aynı panelde "0/3" ile "keine aktive Verordnung hinterlegt" çelişkisini gider | Termin-Aktionen, `module/podo-einheiten.js` | S | Tek, tutarlı Verordnung bloğu |
 | 1.4 | Podolojide "Termin Starten" → `oeffnePodoBehandlungen(b.lead_id)`; `markPrescriptionSession` ve isimle hasta arama atlanır; Hausbesuch dalı da | `dashboard.js:4349-4417`, hedef `dashboard.js:6126` | S | Not kaybı yok, Tagesbehandlung o hastanın reçetesiyle açılır |
-| 1.5 | Tagesbehandlung'da reçetenin `heilmittel_position`'ı (78010/78020) her seansta önseçili; 78030/78040 kurala göre önerili | `module/podologie-abrechnung.js:314-320` | S | 2. seansta 78030 + 78010 hazır gelir |
-| 1.6 | Preflight: "78030/78040 var, 78010/78020 yok" = blok | `api-backend/billing/…/preflight.js` | S | Test ile kanıtlı (`node --test`) |
-| 1.7 | Tagesbehandlung tarihi randevudan gelsin (bugün sabit "heute") | `module/podologie-abrechnung.js` | M | Randevudan açılınca tarih = randevu tarihi |
+| 1.5 ✅ `65a1b9e` | Tagesbehandlung'da reçetenin `heilmittel_position`'ı (78010/78020) her seansta önseçili; 78030/78040 kurala göre önerili | `module/podologie-abrechnung.js:314-320` | S | 2. seansta 78030 + 78010 hazır gelir |
+| 1.6 ✅ `0520c3f` | Preflight: "78030/78040 var, 78010/78020 yok" = blok | `api-backend/billing/…/preflight.js` | S | Test ile kanıtlı (`node --test`) |
+| 1.7 🟡 modül `2d8aea5`+hotfix `94c753c`; çağıran 1.4'te | Tagesbehandlung tarihi randevudan gelsin (bugün sabit "heute") | `module/podologie-abrechnung.js` | M | Randevudan açılınca tarih = randevu tarihi |
 | 1.8 | Podolojide seri dağıtma kapalı (`module/podo-einheiten.js:320`) → açılabilir mi, 1.1'le aynı bağlama yolu | `module/termin-aktionen.js:467`, `module/podo-einheiten.js:320` | M | Kalan seanslar tek adımda dağıtılır ve bağlanır |
 
 Ajanlar: fonksiyon-ustasi (önce/sonra), gkv-302 (1.5/1.6), canli-test (sonra).
+
+### S1 devir notu (29.09.2026 — oturum burada temiz durdu)
+
+**Bitti ve push edildi:** 1.1 `b41d31d` · 1.2 `2db4146` · 1.5 `65a1b9e` · 1.6 `0520c3f` (+ `wissensbank/SPEC-RULES.md` kaydı) ·
+1.7 modül tarafı `2d8aea5` + hotfix `94c753c`. Ek: pre-commit sözdizimi kapısı `90c5652`.
+
+**Kalan, bu sırayla (hepsi `dashboard.js`'e dokunuyor → SIRAYLA, paralel değil):**
+1. **1.3** — panelde iki blok iki ayrı sorgudan: "Aktive Verordnungen 0/3" `dashboard.js:~3548` (sayaç `prescription_sessions`'tan, podolojide hep 0) vs "keine aktive Verordnung" `loadRxSessionsPanel` `dashboard.js:~6150` (yalnız `prescription_sessions.booking_id`'ye bakıyor, `bookings.verordnung_id`'yi okumuyor; `TERMIN_SELECT` `module/termin-laden.js:50` ve `dashboard.js:~1752` select'inde `verordnung_id` yok) + `ladeVerordnung` (`module/podo-einheiten.js:224`) `abrechnung_status IS NULL|bereit` filtresi. Üç ayrı "laufend" tanımı var (fonksiyon-ustasi). Önce `verordnung_id`'yi termin nesnesine ekle — 1.4 buna dayanıyor.
+2. **1.4** — `handleTerminStarten` `dashboard.js:~4355-4417`: podolojide `markPrescriptionSession` (fizyo defteri, not kayboluyor) ve `split('·')` isim araması yerine `oeffnePodoBehandlungen(b.lead_id)` (`dashboard.js:~6124`); `b.verordnung_id` varsa o reçete, **ve `setPodVorwahl(vordId, { datum: randevu günü })`** ile 1.7'yi tamamla. Karar (Kemal'e bildirildi): podolojide not sorusu kalkar, not Tagesbehandlung'un mevcut not alanına girer. Hausbesuch dalı dahil. Mantık modüle; `dashboard.js` taban 20602.
+3. **1.8** — seri dağıtma: `module/podo-einheiten.js:~321` butonu kapatıyor. ⚠ Tuzak: `linkBookingsToPrescriptionSessions` (`dashboard.js:~7269`, `gleicheSitzungenAb`) podoloji korumasız → podoloji reçetesinde `prescription_sessions` üretir. `dashboard.js:~6844`'te `therapie_bereich==='podo'` dalı açıp her booking için `bindeTermin`; backend'e route açma. `frequenz` `ladeVerordnung` select'ine eklenmeli. `podoloji` ajanı akışı denetlesin.
+
+**Canlı doğrulama:** 1.1/1.5/1.6 için hotfix sonrası tur başlatıldı (sonuç `canli-test/REGISTER.md`'de). 1.2 ve 1.7 henüz canlıda sınanmadı — 1.4 bitince birlikte sına.
+
+**Dersler / tuzaklar:**
+- 28.09 22:49–29.09 ~10:40: `2d8aea5` template literal içindeki HTML yorumunda backtick → canlı dashboard boş (beta dahil). Artık pre-commit `tools/check-syntax.sh` yakalar; yine de diff'te template literal içindeki `` ` `` karakterine bak.
+- `git push` öncesi `git fetch`: paralel oturum `main`'e yazıyor (28.09'da 30 commit geride kalındı).
+- `npm test` / kapılar `db/NUTZUNG.*`'ı yeniden üretebiliyor — madde commit'lerine karıştırma, oturum sonunda ayrı tazele.
+- Import `?v=` sürümü: `vercel.json` `max-age=0, must-revalidate` verdiği için eski modül servis edilmiyor; yine de dokunulan modülün `?v=`'sini artır.
+- 1.6(b) (yalnız 78040'lı reçete) kaynakta açık cümle yok — GKV-SV/ZFD teyidi gelince sert bloğa çevrilebilir.
+
 
 ---
 

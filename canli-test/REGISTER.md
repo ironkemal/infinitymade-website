@@ -218,6 +218,10 @@ listelenir (20.09.2026'dan beri; `podBehandlungenDerVerordnung()`).
 `bereit`). Kusur (a) Behandlungsdatum **gelecek tarih kabul ediyor** → `c4332d5` ile
 geri-soru eklendi, bu turda ayrıca sınanmadı. Kusur (b) "kayıtlı seanslar hiçbir yerde
 listelenmiyor" → **kapandı** (`1201618`, aşağıdaki Storno kaydına bak).
+**Son test:** 2026-09-28 (S1 doğrulama, `2d8aea5`) — TEST EDİLEMEDİ. Canlı `module/podologie-abrechnung.js`
+SyntaxError veriyor (`Unexpected identifier 'max'`, satır 783: `2d8aea5`'in template literal içindeki
+HTML yorumuna koyduğu backtick'ler dizgiyi erken kapatıyor). `dashboard.js:38` bu modülü statik
+import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) — P0, bütün hesaplar. S1.5 sınanamadı.
 
 ### Podologie Behandlungen — Abgerechnet-Gruppe (gesendete Verordnungen) — nav etiketi: `podologie-billing`
 
@@ -425,6 +429,10 @@ wählen." — 3,5 sn ekranda (ölçülen 452→3959 ms), modal açık kalıyor, 
 denemede de 400). Kalan zayıflık yalnız UX: toast sağ altta, modaldan uzak ve kısa; modal
 içinde kalıcı bir hata satırı yok → gözden kaçabilir (ilk turun kaçırma sebebi muhtemelen bu).
 Önem P1 → P3. Kanıt: `C:\tmp\pq\shots\kontrol\k1-toast.png`. (1) ve (3) bu turda sınanmadı.
+**Son test:** 2026-09-28 (S1 doğrulama, `2d8aea5`) — TEST EDİLEMEDİ. Canlı `module/podologie-abrechnung.js`
+SyntaxError veriyor (`Unexpected identifier 'max'`, satır 783: `2d8aea5`'in template literal içindeki
+HTML yorumuna koyduğu backtick'ler dizgiyi erken kapatıyor). `dashboard.js:38` bu modülü statik
+import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) — P0, bütün hesaplar. S1.1 sınanamadı.
 
 ### Termin-Aktionen (sağ panel) — nav etiketi: (Terminkalender içinden)
 
@@ -483,6 +491,10 @@ Sonrasında Verordnung "an die Kasse übermittelt, festgeschrieben" diyor — do
 sınanmadı — "Erstellen"e basmak yasaktı. Yani Zurück'ün kendisi sağlam; takılma, Erstellen
 sonrası durum yenilenmemesine bağlı olabilir (başarı toast'ı yok + liste yenilenmiyor maddesi
 açık kalır). Kanıt: `k2-bisherige.png`, `k2-zurueck1.png`, `k2-neue.png`, `k2-zurueck2.png`.
+**Son test:** 2026-09-28 (S1 doğrulama, `2d8aea5`) — TEST EDİLEMEDİ. Canlı `module/podologie-abrechnung.js`
+SyntaxError veriyor (`Unexpected identifier 'max'`, satır 783: `2d8aea5`'in template literal içindeki
+HTML yorumuna koyduğu backtick'ler dizgiyi erken kapatıyor). `dashboard.js:38` bu modülü statik
+import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) — P0, bütün hesaplar. S1.6 sınanamadı.
 
 ### Online-Buchung / Termin-Anfrage (hasta tarafı) — sayfa: `booking.html?u=`, `booking-request.html?business=`
 
