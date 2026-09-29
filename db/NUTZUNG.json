@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-09-22",
+ "erzeugt": "2026-09-29",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-09-22)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-21)",
+  "schema": "db/SCHEMA.sql (Stand 2026-09-29)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-29)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 94,
@@ -35,7 +35,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -57,7 +57,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -67,7 +66,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -95,7 +94,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -105,20 +103,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1689,
+     "start": 1772,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "openDasGuideModal",
      "file": "dashboard.js",
-     "start": 13066,
+     "start": 12928,
      "module": [
       "abrechnung",
       "anamnese",
@@ -140,7 +138,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -150,7 +147,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -158,7 +155,7 @@
     {
      "name": "downloadAbrechnungFile",
      "file": "module/abrechnung-detail.js",
-     "start": 702,
+     "start": 762,
      "module": [
       "abrechnung",
       "anamnese",
@@ -180,7 +177,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -190,8 +186,18 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "verarbeiteVerschluesselungsSchritt",
+     "file": "api-backend/billing/api/abrechnung.routes.js",
+     "start": 1358,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -236,7 +242,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -336,7 +341,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -346,7 +350,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -376,7 +380,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -434,7 +437,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -444,13 +446,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 459,
+     "start": 499,
      "module": [
       "abrechnung",
       "anamnese",
@@ -472,7 +474,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -482,7 +483,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -513,7 +514,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -566,7 +566,7 @@
     {
      "name": "init",
      "file": "dashboard.js",
-     "start": 16648,
+     "start": 16349,
      "module": [],
      "uiPfad": []
     },
@@ -633,7 +633,7 @@
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 15825,
+     "start": 15540,
      "module": [
       "abrechnung",
       "anamnese",
@@ -655,7 +655,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -665,13 +664,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAerzte",
      "file": "dashboard.js",
-     "start": 15394,
+     "start": 15248,
      "module": [
       "abrechnung",
       "anamnese",
@@ -693,7 +692,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -703,7 +701,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -711,7 +709,7 @@
     {
      "name": "deleteAerzte",
      "file": "dashboard.js",
-     "start": 15453,
+     "start": 15307,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -721,7 +719,7 @@
     {
      "name": "editAerzte",
      "file": "dashboard.js",
-     "start": 15462,
+     "start": 15316,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -767,7 +765,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -842,7 +839,7 @@
     {
      "name": "fillAnamneseForm",
      "file": "dashboard.js",
-     "start": 14874,
+     "start": 14728,
      "module": [
       "abrechnung",
       "anamnese",
@@ -864,7 +861,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -874,13 +870,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailAnamnese",
      "file": "dashboard.js",
-     "start": 8718,
+     "start": 8591,
      "module": [
       "abrechnung",
       "anamnese",
@@ -902,7 +898,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -912,13 +907,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3240,
+     "start": 3248,
      "module": [
       "abrechnung",
       "anamnese",
@@ -940,7 +935,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -950,20 +944,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "printAnamnese",
      "file": "dashboard.js",
-     "start": 14986,
+     "start": 14840,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "printAnamneseInline",
      "file": "dashboard.js",
-     "start": 14934,
+     "start": 14788,
      "module": [],
      "uiPfad": []
     }
@@ -972,7 +966,7 @@
     {
      "name": "saveAnamnese",
      "file": "dashboard.js",
-     "start": 15058,
+     "start": 14912,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1006,7 +1000,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -1070,7 +1063,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3575,
+     "start": 3584,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1135,7 +1128,7 @@
     {
      "name": "loadB2B",
      "file": "dashboard.js",
-     "start": 11533,
+     "start": 11409,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1158,47 +1151,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
-      "rechnungen",
-      "services",
-      "settings",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
-     ]
-    }
-   ],
-   "schreiber": [
-    {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 10658,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fbFahrtenExportCsv",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1209,6 +1161,45 @@
      ],
      "uiPfad": [
       "ortak yardımcı — 28 modülden çağrılıyor"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10534,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -1219,7 +1210,7 @@
     {
      "name": "renderB2B",
      "file": "dashboard.js",
-     "start": 11540,
+     "start": 11416,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1242,7 +1233,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1252,7 +1242,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -1285,7 +1275,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -1321,7 +1310,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8045,
+     "start": 7918,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1343,7 +1332,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1353,7 +1341,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -1366,7 +1354,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 7109,
+     "start": 7039,
      "module": [],
      "uiPfad": []
     }
@@ -1401,7 +1389,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -1458,7 +1445,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1468,7 +1454,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -1505,7 +1491,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1515,7 +1500,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -1546,7 +1531,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1556,7 +1540,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -1588,7 +1572,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -1646,7 +1629,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1656,13 +1638,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeLeistungen",
      "file": "module/termin-leistungen.js",
-     "start": 328,
+     "start": 409,
      "module": [],
      "uiPfad": []
     }
@@ -1671,7 +1653,7 @@
     {
      "name": "speichereLeistungen",
      "file": "module/termin-leistungen.js",
-     "start": 374,
+     "start": 465,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1705,7 +1687,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -1811,8 +1792,10 @@
     "api-backend/booking/from-request.test.js",
     "api/dsgvo.js",
     "module/booking-status-korrektur.test.js",
+    "module/podo-einheiten.test.js",
     "module/termin-dauer.test.js",
     "module/termin-nicht-erschienen.test.js",
+    "module/termin-verordnung.test.js",
     "module/warteliste-nachruecker.test.js",
     "onboarding.js"
    ],
@@ -1847,7 +1830,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1857,7 +1839,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -1885,7 +1867,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1895,13 +1876,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 3207,
+     "start": 3215,
      "module": [],
      "uiPfad": []
     },
@@ -1933,7 +1914,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1946,13 +1926,20 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 34 modülden çağrılıyor"
+      "ortak yardımcı — 33 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "fahrtBeendenKlick",
+     "file": "module/podologie-abrechnung.js",
+     "start": 1124,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1974,7 +1961,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -1984,13 +1970,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "frag",
      "file": "module/patientenkarte.js",
-     "start": 141,
+     "start": 142,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2012,7 +1998,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2022,13 +2007,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "frageNachrueckerAb",
      "file": "kalender.js",
-     "start": 484,
+     "start": 500,
      "module": [],
      "uiPfad": []
     },
@@ -2057,7 +2042,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2067,7 +2051,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2102,7 +2086,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2112,27 +2095,27 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1735,
+     "start": 1745,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2559,
+     "start": 2568,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initCalendar",
      "file": "kalender.js",
-     "start": 294,
+     "start": 300,
      "module": [],
      "uiPfad": []
     },
@@ -2161,7 +2144,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2171,7 +2153,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2199,7 +2181,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2209,7 +2190,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2237,7 +2218,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2247,7 +2227,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2278,7 +2258,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2291,7 +2270,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 34 modülden çağrılıyor"
+      "ortak yardımcı — 33 modülden çağrılıyor"
      ]
     },
     {
@@ -2319,7 +2298,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2329,7 +2307,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2357,7 +2335,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2367,13 +2344,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeVerlauf",
      "file": "module/patientenkarte.js",
-     "start": 140,
+     "start": 141,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2395,7 +2372,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2405,13 +2381,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1968,
+     "start": 1977,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2433,7 +2409,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2443,13 +2418,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 11221,
+     "start": 11097,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2471,7 +2446,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2481,13 +2455,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 7869,
+     "start": 7743,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2509,7 +2483,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2519,13 +2492,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1726,
+     "start": 1735,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2547,7 +2520,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2557,7 +2529,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2570,7 +2542,7 @@
     {
      "name": "loadUeberblickNoShows",
      "file": "dashboard.js",
-     "start": 19946,
+     "start": 19632,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2592,7 +2564,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2602,7 +2573,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2630,7 +2601,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2640,7 +2610,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2668,7 +2638,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2678,20 +2647,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "patientenBehandlungen",
      "file": "module/termin-leistungen.js",
-     "start": 504,
-     "module": [],
-     "uiPfad": []
-    },
-    {
-     "name": "podGeplanteHpnr",
-     "file": "module/podologie-abrechnung.js",
-     "start": 314,
+     "start": 661,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2713,7 +2675,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2723,7 +2684,44 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "podGeplanteHpnr",
+     "file": "module/podologie-abrechnung.js",
+     "start": 329,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2758,7 +2756,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2768,13 +2765,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2713,
+     "start": 2722,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2796,7 +2793,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2806,20 +2802,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1570,
+     "start": 1579,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1650,
+     "start": 1659,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2841,7 +2837,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2851,7 +2846,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2879,7 +2874,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2889,13 +2883,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverviewMonthly",
      "file": "dashboard.js",
-     "start": 14205,
+     "start": 14059,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2917,7 +2911,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2927,13 +2920,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverviewWeekly",
      "file": "dashboard.js",
-     "start": 14110,
+     "start": 13964,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2955,7 +2948,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -2965,7 +2957,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -2993,7 +2985,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3003,7 +2994,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -3016,7 +3007,7 @@
     {
      "name": "verdrahteAktionsPatientensuche",
      "file": "module/termin-aktionen.js",
-     "start": 85,
+     "start": 87,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3038,7 +3029,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3048,7 +3038,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -3057,6 +3047,80 @@
      "start": 145,
      "module": [],
      "uiPfad": []
+    },
+    {
+     "name": "zeigeFahrtHinweis",
+     "file": "module/podologie-abrechnung.js",
+     "start": 1114,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "zeigeVerordnungenFuerTermin",
+     "file": "module/termin-verordnung.js",
+     "start": 333,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ]
     }
    ],
    "schreiber": [
@@ -3085,7 +3149,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3095,7 +3158,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -3124,7 +3187,7 @@
     {
      "name": "doMoveBooking",
      "file": "dashboard.js",
-     "start": 5303,
+     "start": 5258,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3146,7 +3209,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3156,7 +3218,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -3165,7 +3227,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3848,
+     "start": 3837,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3187,7 +3249,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3197,7 +3258,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -3206,7 +3267,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4349,
+     "start": 4304,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3216,7 +3277,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4836,
+     "start": 4801,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3238,7 +3299,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3248,7 +3308,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -3267,7 +3327,7 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 4720,
+     "start": 4685,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3289,7 +3349,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3299,7 +3358,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -3330,7 +3389,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3340,7 +3398,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -3349,7 +3407,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 4211,
+     "start": 4168,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3369,7 +3427,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3240,
+     "start": 3248,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3391,7 +3449,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3401,7 +3458,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -3410,7 +3467,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4255,
+     "start": 4212,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3420,7 +3477,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4128,
+     "start": 4085,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3452,7 +3509,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3462,7 +3518,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -3482,6 +3538,7 @@
     "kalender.js",
     "module/behandlungsbestaetigung.js",
     "module/booking-status-korrektur.js",
+    "module/frequenz-pruefung.test.js",
     "module/fussbefund.js",
     "module/kalender-monat.js",
     "module/kalender-woche.js",
@@ -3499,6 +3556,7 @@
     "module/termin-leistungen.js",
     "module/termin-nicht-erschienen.js",
     "module/termin-patient-bezug.js",
+    "module/termin-verordnung.js",
     "module/verordnung-detail.js",
     "module/verordnung-termine.js",
     "module/warteliste-nachruecker.js"
@@ -3527,7 +3585,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -3568,7 +3625,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1735,
+     "start": 1745,
      "module": [],
      "uiPfad": []
     }
@@ -3577,7 +3634,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3599,7 +3656,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3609,7 +3665,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -3619,7 +3675,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 11281,
+     "start": 11157,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3641,7 +3697,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3651,7 +3706,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -3661,7 +3716,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 10024,
+     "start": 9900,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3683,7 +3738,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3693,7 +3747,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -3726,7 +3780,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -3759,7 +3812,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 16159,
+     "start": 15860,
      "module": [],
      "uiPfad": []
     },
@@ -3809,7 +3862,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3819,13 +3871,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3575,
+     "start": 3584,
      "module": [],
      "uiPfad": []
     }
@@ -3845,7 +3897,7 @@
     {
      "name": "deleteBusiness",
      "file": "dashboard.js",
-     "start": 16506,
+     "start": 16207,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3855,7 +3907,7 @@
     {
      "name": "ensureBusinessCoords",
      "file": "dashboard.js",
-     "start": 20191,
+     "start": 19876,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3877,7 +3929,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3887,7 +3938,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -3896,7 +3947,7 @@
     {
      "name": "toggleStandortDay",
      "file": "dashboard.js",
-     "start": 10000,
+     "start": 9876,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3918,7 +3969,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -3928,7 +3978,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -3937,7 +3987,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 16423,
+     "start": 16124,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3977,7 +4027,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -4015,7 +4064,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 10990,
+     "start": 10866,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4037,7 +4086,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4047,7 +4095,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -4055,7 +4103,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4077,7 +4125,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4087,7 +4134,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -4096,7 +4143,7 @@
     {
      "name": "loadIntegrations",
      "file": "kalender.js",
-     "start": 777,
+     "start": 793,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4106,7 +4153,7 @@
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 12094,
+     "start": 11970,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4128,7 +4175,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4138,7 +4184,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -4172,7 +4218,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -4260,7 +4305,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1735,
+     "start": 1745,
      "module": [],
      "uiPfad": []
     },
@@ -4289,7 +4334,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4299,7 +4343,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -4327,7 +4371,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4337,13 +4380,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 10117,
+     "start": 9993,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4365,7 +4408,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4375,7 +4417,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -4383,7 +4425,7 @@
     {
      "name": "saveSpecialDays",
      "file": "dashboard.js",
-     "start": 10222,
+     "start": 10098,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4417,7 +4459,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -4482,7 +4523,7 @@
     {
      "name": "loadDataSharing",
      "file": "dashboard.js",
-     "start": 16627,
+     "start": 16328,
      "module": [],
      "uiPfad": []
     }
@@ -4491,7 +4532,7 @@
     {
      "name": "saveDataSharing",
      "file": "dashboard.js",
-     "start": 16269,
+     "start": 15970,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4592,7 +4633,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4602,7 +4642,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -4630,7 +4670,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4640,7 +4679,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -4668,7 +4707,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4678,7 +4716,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -4721,7 +4759,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -4752,7 +4789,7 @@
     {
      "name": "loadVorlagenPanel",
      "file": "dashboard.js",
-     "start": 12357,
+     "start": 12233,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4774,7 +4811,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4785,13 +4821,13 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     },
     {
      "name": "openVorlagenEdit",
      "file": "dashboard.js",
-     "start": 12800,
+     "start": 12676,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4813,7 +4849,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4824,7 +4859,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     }
    ],
@@ -4832,7 +4867,7 @@
     {
      "name": "_enterAnsichtEditMode",
      "file": "dashboard.js",
-     "start": 12718,
+     "start": 12594,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4854,7 +4889,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4865,7 +4899,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -4874,7 +4908,7 @@
     {
      "name": "commit",
      "file": "dashboard.js",
-     "start": 12950,
+     "start": 12826,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4896,7 +4930,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4907,7 +4940,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -4916,7 +4949,7 @@
     {
      "name": "deleteVorlage",
      "file": "dashboard.js",
-     "start": 12918,
+     "start": 12794,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4938,7 +4971,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4949,7 +4981,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -4958,7 +4990,7 @@
     {
      "name": "duplicateVorlage",
      "file": "dashboard.js",
-     "start": 12927,
+     "start": 12803,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4980,7 +5012,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -4991,7 +5022,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5000,7 +5031,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5022,7 +5053,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5032,7 +5062,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -5043,7 +5073,7 @@
     {
      "name": "openVorlagenAnsicht",
      "file": "dashboard.js",
-     "start": 12628,
+     "start": 12504,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5065,7 +5095,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5076,7 +5105,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5085,7 +5114,7 @@
     {
      "name": "saveVorlage",
      "file": "dashboard.js",
-     "start": 12888,
+     "start": 12764,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5107,7 +5136,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5117,7 +5145,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert",
@@ -5127,7 +5155,7 @@
     {
      "name": "seedDefaultVorlagen",
      "file": "dashboard.js",
-     "start": 12986,
+     "start": 12850,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5149,7 +5177,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5159,16 +5186,16 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
      ]
     },
     {
-     "name": "seedMissingVorlagen",
-     "file": "dashboard.js",
-     "start": 12992,
+     "name": "seedeVorlagen",
+     "file": "module/vorlagen-seed.js",
+     "start": 25,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5190,7 +5217,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5201,7 +5227,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5210,7 +5236,7 @@
     {
      "name": "startVorlagenInlineRename",
      "file": "dashboard.js",
-     "start": 12943,
+     "start": 12819,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5232,7 +5258,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5243,7 +5268,7 @@
       "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5253,7 +5278,8 @@
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
     "api-backend/billing/api/ausfall.routes.js",
-    "dashboard.js"
+    "dashboard.js",
+    "module/vorlagen-seed.js"
    ],
    "module": [
     "abrechnung",
@@ -5276,7 +5302,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -5286,7 +5311,7 @@
     "verordnungen",
     "vorlagen"
    ],
-   "sqlTreffer": 2,
+   "sqlTreffer": 3,
    "codeStumm": false
   },
   {
@@ -5329,7 +5354,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5351,7 +5376,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5361,7 +5385,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5370,7 +5394,7 @@
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 8782,
+     "start": 8655,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5392,7 +5416,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5402,7 +5425,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5434,7 +5457,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -5463,9 +5485,9 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "verarbeiteVerschluesselungsSchritt",
+     "name": "berechneVerschluesselung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1221,
+     "start": 1227,
      "module": [],
      "uiPfad": []
     }
@@ -5499,7 +5521,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 16159,
+     "start": 15860,
      "module": [],
      "uiPfad": []
     },
@@ -5520,7 +5542,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 10794,
+     "start": 10670,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5542,7 +5564,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5552,13 +5573,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10325,
+     "start": 10201,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5580,7 +5601,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5590,7 +5610,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -5598,7 +5618,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5620,7 +5640,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5630,7 +5649,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -5640,7 +5659,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 10836,
+     "start": 10712,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5662,7 +5681,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5672,7 +5690,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -5682,7 +5700,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10689,
+     "start": 10565,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5704,7 +5722,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5714,7 +5731,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -5723,7 +5740,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 10937,
+     "start": 10813,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5745,7 +5762,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5755,7 +5771,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -5789,7 +5805,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -5820,7 +5835,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5842,7 +5857,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5852,13 +5866,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 10794,
+     "start": 10670,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5880,7 +5894,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5890,13 +5903,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 10836,
+     "start": 10712,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5918,7 +5931,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5928,13 +5940,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10689,
+     "start": 10565,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5956,7 +5968,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -5966,7 +5977,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -5996,7 +6007,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -6025,7 +6035,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 10903,
+     "start": 10779,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6047,7 +6057,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -6057,7 +6066,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -6065,7 +6074,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6087,7 +6096,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -6097,7 +6105,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -6107,7 +6115,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 10937,
+     "start": 10813,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6129,7 +6137,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -6139,7 +6146,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -6171,7 +6178,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -6224,7 +6230,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -6234,13 +6239,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingFromRxPreset",
      "file": "dashboard.js",
-     "start": 16945,
+     "start": 16637,
      "module": [],
      "uiPfad": []
     }
@@ -6249,7 +6254,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6271,7 +6276,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -6281,7 +6285,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -6291,7 +6295,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11373,
+     "start": 11249,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6313,7 +6317,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -6323,7 +6326,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -6380,7 +6383,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -6415,7 +6417,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1968,
+     "start": 1977,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6437,7 +6439,44 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "loadFbFahrten",
+     "file": "dashboard.js",
+     "start": 17485,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fahrtenbuch",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
       "rechnungen",
       "services",
       "settings",
@@ -6449,52 +6488,13 @@
      "uiPfad": [
       "ortak yardımcı — 28 modülden çağrılıyor"
      ]
-    },
-    {
-     "name": "loadFbFahrten",
-     "file": "dashboard.js",
-     "start": 17798,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "podologie-billing",
-      "qvSaveBtn",
-      "rechnungen",
-      "services",
-      "settings",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
-     ]
     }
    ],
    "schreiber": [
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4255,
+     "start": 4212,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6504,54 +6504,11 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4128,
+     "start": 4085,
      "module": [],
      "uiPfad": [],
      "ops": [
       "upsert"
-     ]
-    },
-    {
-     "name": "toLocal",
-     "file": "dashboard.js",
-     "start": 17883,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fahrtenbuch",
-      "fbFahrtenExportCsv",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "podologie-billing",
-      "qvSaveBtn",
-      "rechnungen",
-      "services",
-      "settings",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
-     ],
-     "ops": [
-      "delete",
-      "update"
      ]
     }
    ],
@@ -6580,7 +6537,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -6613,7 +6569,7 @@
     {
      "name": "loadFeedbacks",
      "file": "dashboard.js",
-     "start": 14379,
+     "start": 14233,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6636,7 +6592,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -6646,7 +6601,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     }
    ],
@@ -6677,7 +6632,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -6730,7 +6684,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6752,7 +6706,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -6762,13 +6715,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 10903,
+     "start": 10779,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6790,7 +6743,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -6800,13 +6752,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 10937,
+     "start": 10813,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6828,7 +6780,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -6838,7 +6789,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -6867,7 +6818,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -6990,10 +6940,12 @@
    "ungeklaert": false,
    "leser": [],
    "schreiber": [],
-   "dateien": [],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js"
+   ],
    "module": [],
    "sqlTreffer": 7,
-   "codeStumm": true
+   "codeStumm": false
   },
   {
    "name": "icd_sector_ranges",
@@ -7052,7 +7004,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1968,
+     "start": 1977,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7074,7 +7026,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7084,13 +7035,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailRechnungen",
      "file": "dashboard.js",
-     "start": 8842,
+     "start": 8715,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7112,7 +7063,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7122,13 +7072,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadRechnungen",
      "file": "dashboard.js",
-     "start": 14451,
+     "start": 14305,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7150,7 +7100,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7160,7 +7109,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -7190,7 +7139,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7200,7 +7148,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7231,7 +7179,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7241,7 +7188,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -7250,7 +7197,7 @@
     {
      "name": "saveInvoice",
      "file": "dashboard.js",
-     "start": 14623,
+     "start": 14477,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7287,7 +7234,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -7371,7 +7317,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7381,13 +7326,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "baueBegleitzettel",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 250,
+     "start": 254,
      "module": [],
      "uiPfad": []
     },
@@ -7415,7 +7360,7 @@
     {
      "name": "ladeKostentraegerNamen",
      "file": "dashboard.js",
-     "start": 17344,
+     "start": 17036,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7437,7 +7382,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7447,7 +7391,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -7487,7 +7431,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -7496,7 +7439,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 8,
+   "sqlTreffer": 10,
    "codeStumm": false
   },
   {
@@ -7540,7 +7483,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7550,7 +7492,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -7594,7 +7536,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -7603,7 +7544,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 6,
+   "sqlTreffer": 7,
    "codeStumm": false
   },
   {
@@ -7651,7 +7592,7 @@
     "module/krankenkasse-suche.test.js"
    ],
    "register": true,
-   "status": "aktiv (Referenz) — `ik_number` ist eine **Vorbelegung, nur wenn eindeutig**, keine Abrechnungswahrheit (Ops #301, Konsey 21.09.2026). Live 21.09.2026: 76 von 94 gefüllt, 18 NULL. Nach Migration `0041_krankenkassen_ik_nachtrag`: 74 gefüllt, 20 NULL — ⏳ **vorbereitet, noch nicht angewandt** (beim Anwenden diese Zeile auf ✅ mit Datum ändern).",
+   "status": "aktiv (Referenz) — `ik_number` ist eine **Vorbelegung, nur wenn eindeutig**, keine Abrechnungswahrheit (Ops #301, Konsey 21.09.2026). Live 21.09.2026: 76 von 94 gefüllt, 18 NULL. Migration `0041_krankenkassen_ik_nachtrag`: ✅ **Live seit 27.09.2026** (MCP, Freigabe Melih) — 74 gefüllt, 20 NULL, alle drei Selbstprüfungen bestanden, 0 Mock-IKs übrig.",
    "warum": "Die Kassenliste für das Auswahlfeld in der Oberfläche. 94 Zeilen (live 21.09.2026), gesetzt am 02.06.2026.",
    "seit": "**in keiner Migration** — direkt im SQL-Editor angelegt. Das ist der einzige Fall im Projekt, in dem sich das Entstehungsdatum aus der Datenbank nicht rekonstruieren lässt.",
    "ungeklaert": false,
@@ -7681,7 +7622,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7691,13 +7631,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadKkList",
      "file": "dashboard.js",
-     "start": 17229,
+     "start": 16921,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7719,7 +7659,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7729,13 +7668,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3575,
+     "start": 3584,
      "module": [],
      "uiPfad": []
     }
@@ -7768,7 +7707,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -7801,7 +7739,7 @@
     {
      "name": "altbestandAusLeads",
      "file": "module/verordnung-podo.js",
-     "start": 851,
+     "start": 883,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7823,7 +7761,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7833,7 +7770,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -7853,7 +7790,7 @@
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 15825,
+     "start": 15540,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7875,7 +7812,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7885,7 +7821,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -7913,7 +7849,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7923,13 +7858,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7951,7 +7886,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7961,13 +7895,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3848,
+     "start": 3837,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7989,7 +7923,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -7999,20 +7932,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4349,
+     "start": 4304,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 5047,
+     "start": 5015,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8034,7 +7967,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8044,13 +7976,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4836,
+     "start": 4801,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8072,7 +8004,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8082,13 +8013,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 3656,
+     "start": 3664,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8110,7 +8041,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8120,13 +8050,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 19142,
+     "start": 18827,
      "module": [],
      "uiPfad": []
     },
@@ -8155,7 +8085,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8165,13 +8094,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeAltbestand",
      "file": "module/podo-einheiten.js",
-     "start": 256,
+     "start": 427,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8193,7 +8122,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8203,7 +8131,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -8231,7 +8159,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8241,7 +8168,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -8269,7 +8196,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8279,13 +8205,50 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "ladePatientenCache",
+     "file": "module/rezept-patientenfeld.js",
+     "start": 33,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1968,
+     "start": 1977,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8307,7 +8270,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8317,13 +8279,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAnamnese",
      "file": "dashboard.js",
-     "start": 14724,
+     "start": 14578,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8345,7 +8307,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8355,13 +8316,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadB2C",
      "file": "dashboard.js",
-     "start": 11623,
+     "start": 11499,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8384,7 +8345,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8394,13 +8354,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 5057,
+     "start": 5025,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8422,7 +8382,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8432,13 +8391,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadInvPatients",
      "file": "dashboard.js",
-     "start": 14479,
+     "start": 14333,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8460,7 +8419,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8470,13 +8428,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 7869,
+     "start": 7743,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8498,7 +8456,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8508,13 +8465,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 13573,
+     "start": 13427,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8536,7 +8493,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8546,13 +8502,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 8782,
+     "start": 8655,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8574,7 +8530,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8584,13 +8539,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUeberblickBirthdays",
      "file": "dashboard.js",
-     "start": 19898,
+     "start": 19584,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8612,7 +8567,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8622,7 +8576,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -8650,7 +8604,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8660,7 +8613,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -8688,7 +8641,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8698,13 +8650,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3240,
+     "start": 3248,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8726,7 +8678,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8736,13 +8687,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 4959,
+     "start": 4924,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8764,7 +8715,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8774,7 +8724,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -8802,7 +8752,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8812,7 +8761,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -8840,7 +8789,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8850,45 +8798,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "openRezeptModal",
-     "file": "dashboard.js",
-     "start": 15890,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fbFahrtenExportCsv",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "podologie-billing",
-      "qvSaveBtn",
-      "rechnungen",
-      "services",
-      "settings",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -8901,7 +8811,7 @@
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 3947,
+     "start": 3936,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8923,7 +8833,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8933,27 +8842,27 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4255,
+     "start": 4212,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4128,
+     "start": 4085,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 17463,
+     "start": 17155,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8975,7 +8884,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -8985,7 +8893,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -9000,7 +8908,7 @@
     {
      "name": "beantworteAltbestand",
      "file": "module/verordnung-podo.js",
-     "start": 872,
+     "start": 904,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9022,7 +8930,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9032,7 +8939,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -9041,7 +8948,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4469,
+     "start": 4434,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9051,7 +8958,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 18855,
+     "start": 18542,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9061,7 +8968,7 @@
     {
      "name": "maybeOfferAppointmentConfirmEmail",
      "file": "dashboard.js",
-     "start": 7364,
+     "start": 7234,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9093,6 +9000,7 @@
     "module/rechnung-dmrz.js",
     "module/rechnung-editor.js",
     "module/rechnung-editor.test.js",
+    "module/rezept-patientenfeld.js",
     "module/termin-patient-bezug.js",
     "module/verordnung-patient-abgleich.js",
     "module/verordnung-podo.js",
@@ -9120,7 +9028,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -9180,7 +9087,7 @@
     {
      "name": "refreshMessreihen",
      "file": "dashboard.js",
-     "start": 8507,
+     "start": 8380,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9202,7 +9109,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9212,7 +9118,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -9221,7 +9127,7 @@
     {
      "name": "saveMessung",
      "file": "dashboard.js",
-     "start": 8631,
+     "start": 8504,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9243,7 +9149,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9253,7 +9158,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -9284,7 +9189,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -9315,7 +9219,7 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 931,
+     "start": 940,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9337,7 +9241,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9347,7 +9250,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -9398,7 +9301,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -9457,7 +9359,7 @@
     {
      "name": "frag",
      "file": "module/patientenkarte.js",
-     "start": 141,
+     "start": 142,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9479,7 +9381,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9489,7 +9390,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -9517,7 +9418,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9527,13 +9427,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeVerlauf",
      "file": "module/patientenkarte.js",
-     "start": 140,
+     "start": 141,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9555,7 +9455,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9565,7 +9464,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -9593,7 +9492,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9603,7 +9501,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -9631,7 +9529,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9641,7 +9538,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -9671,7 +9568,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9681,7 +9577,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -9712,7 +9608,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9722,7 +9617,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -9755,7 +9650,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -9790,7 +9684,7 @@
     {
      "name": "kopieOeffnen",
      "file": "module/patienten-einwilligung.js",
-     "start": 559,
+     "start": 562,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9812,7 +9706,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9822,13 +9715,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderEinwilligungListe",
      "file": "module/patienten-einwilligung.js",
-     "start": 445,
+     "start": 448,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9850,7 +9743,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9860,7 +9752,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -9868,7 +9760,7 @@
     {
      "name": "speichereEinwilligung",
      "file": "module/patienten-einwilligung.js",
-     "start": 295,
+     "start": 298,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9890,7 +9782,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9900,7 +9791,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -9909,7 +9800,7 @@
     {
      "name": "widerrufen",
      "file": "module/patienten-einwilligung.js",
-     "start": 535,
+     "start": 538,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9931,7 +9822,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -9941,7 +9831,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -9972,7 +9862,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -10003,7 +9892,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10025,7 +9914,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10035,13 +9923,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1968,
+     "start": 1977,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10063,7 +9951,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10073,13 +9960,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 13573,
+     "start": 13427,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10101,7 +9988,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10111,13 +9997,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailNotes",
      "file": "dashboard.js",
-     "start": 8693,
+     "start": 8566,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10139,7 +10025,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10149,13 +10034,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientNotes",
      "file": "dashboard.js",
-     "start": 13637,
+     "start": 13491,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10177,7 +10062,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10187,13 +10071,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3240,
+     "start": 3248,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10215,7 +10099,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10225,7 +10108,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -10254,7 +10137,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -10279,7 +10161,8 @@
     "api/dsgvo.js",
     "dashboard.js",
     "index.html",
-    "module/fussbefund.js"
+    "module/fussbefund.js",
+    "module/rezept-patientenfeld.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -10290,7 +10173,7 @@
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3575,
+     "start": 3584,
      "module": [],
      "uiPfad": []
     }
@@ -10374,7 +10257,7 @@
     {
      "name": "frag",
      "file": "module/patientenkarte.js",
-     "start": 141,
+     "start": 142,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10396,7 +10279,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10406,13 +10288,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeAbrechnungAuswahl",
      "file": "module/abrechnung-auswahl.js",
-     "start": 374,
+     "start": 496,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10434,7 +10316,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10444,7 +10325,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -10472,7 +10353,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10482,13 +10362,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeBehandlungen",
      "file": "module/podo-einheiten.js",
-     "start": 243,
+     "start": 414,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10510,7 +10390,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10520,13 +10399,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeVerlauf",
      "file": "module/patientenkarte.js",
-     "start": 140,
+     "start": 141,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10548,7 +10427,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10558,7 +10436,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -10586,7 +10464,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10596,7 +10473,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -10624,7 +10501,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10634,20 +10510,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "patientenBehandlungen",
      "file": "module/termin-leistungen.js",
-     "start": 504,
-     "module": [],
-     "uiPfad": []
-    },
-    {
-     "name": "podBehandlungenDerVerordnung",
-     "file": "module/podologie-abrechnung.js",
-     "start": 272,
+     "start": 661,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10669,7 +10538,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10679,13 +10547,50 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "podBehandlungenDerVerordnung",
+     "file": "module/podologie-abrechnung.js",
+     "start": 287,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "podoHistorie",
      "file": "module/verordnung-podo.js",
-     "start": 823,
+     "start": 855,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10707,7 +10612,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10717,13 +10621,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "podPatientBehandlungen",
      "file": "module/podologie-abrechnung.js",
-     "start": 222,
+     "start": 237,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10745,7 +10649,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10755,7 +10658,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -10809,7 +10712,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10819,7 +10721,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -10828,7 +10730,7 @@
     {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 459,
+     "start": 499,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10850,7 +10752,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -10860,7 +10761,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -10903,7 +10804,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -11052,7 +10952,7 @@
     {
      "name": "decorateBookingTitleWithSession",
      "file": "dashboard.js",
-     "start": 7259,
+     "start": 7129,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11074,7 +10974,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11084,7 +10983,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -11112,7 +11011,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11122,13 +11020,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadCalRpUnverga",
      "file": "dashboard.js",
-     "start": 3800,
+     "start": 3789,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11150,7 +11048,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11160,13 +11057,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6160,
+     "start": 6083,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11188,7 +11085,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11198,7 +11094,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -11226,7 +11122,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11236,13 +11131,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "pruefeFrequenz",
      "file": "module/frequenz-pruefung.js",
-     "start": 235,
+     "start": 263,
      "module": [],
      "uiPfad": []
     },
@@ -11263,7 +11158,7 @@
     {
      "name": "waehleVerordnungFuerPanel",
      "file": "module/termin-aktionen.js",
-     "start": 224,
+     "start": 226,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11285,7 +11180,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11295,7 +11189,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -11342,7 +11236,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11352,7 +11245,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -11361,7 +11254,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3848,
+     "start": 3837,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11383,7 +11276,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11393,7 +11285,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -11412,7 +11304,7 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7272,
+     "start": 7142,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -11433,7 +11325,7 @@
     {
      "name": "markPrescriptionSession",
      "file": "dashboard.js",
-     "start": 7239,
+     "start": 7109,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -11487,7 +11379,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -11518,6 +11409,7 @@
    "schreiber": [],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/verordnung-status.routes.js",
     "api-backend/server.js"
    ],
    "module": [],
@@ -11536,6 +11428,9 @@
     "api/dsgvo.js",
     "module/behandlungsbeginn.js",
     "module/behandlungsbeginn.test.js",
+    "module/podo-behandlungen-oeffnen.test.js",
+    "module/podo-einheiten.test.js",
+    "module/termin-verordnung.test.js",
     "module/verordnung-topf.js",
     "module/verordnung-topf.test.js",
     "tools/browser-probe/abrechnung-probe.html"
@@ -11571,7 +11466,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11581,13 +11475,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "bindePodoSerieVonRezept",
+     "file": "module/podo-einheiten.js",
+     "start": 312,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "datumKurz",
      "file": "module/podo-einheiten.js",
-     "start": 215,
+     "start": 376,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11609,7 +11510,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11619,13 +11519,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "esc",
      "file": "module/podo-einheiten.js",
-     "start": 211,
+     "start": 372,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11647,7 +11547,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11657,13 +11556,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "frag",
      "file": "module/patientenkarte.js",
-     "start": 141,
+     "start": 142,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11685,7 +11584,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11695,7 +11593,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -11723,7 +11621,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11733,13 +11630,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "heute",
      "file": "module/podo-einheiten.js",
-     "start": 214,
+     "start": 375,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11761,7 +11658,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11771,45 +11667,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "initBkCustomerAutocomplete",
-     "file": "dashboard.js",
-     "start": 5047,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fbFahrtenExportCsv",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "podologie-billing",
-      "qvSaveBtn",
-      "rechnungen",
-      "services",
-      "settings",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -11822,7 +11680,7 @@
     {
      "name": "ladeAbrechnungAuswahl",
      "file": "module/abrechnung-auswahl.js",
-     "start": 374,
+     "start": 496,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11844,7 +11702,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11854,7 +11711,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -11882,7 +11739,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11892,13 +11748,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeBehandlungen",
      "file": "module/podo-einheiten.js",
-     "start": 243,
+     "start": 414,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11920,7 +11776,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11930,13 +11785,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeVerlauf",
      "file": "module/patientenkarte.js",
-     "start": 140,
+     "start": 141,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11958,7 +11813,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -11968,13 +11822,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeVerordnung",
      "file": "module/podo-einheiten.js",
-     "start": 224,
+     "start": 385,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11996,7 +11850,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12006,7 +11859,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -12034,7 +11887,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12044,20 +11896,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7272,
+     "start": 7142,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadAnamneseRxContext",
      "file": "dashboard.js",
-     "start": 14819,
+     "start": 14673,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12079,7 +11931,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12089,58 +11940,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
-     ]
-    },
-    {
-     "name": "loadBkVerordnungen",
-     "file": "dashboard.js",
-     "start": 5114,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fbFahrtenExportCsv",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "podologie-billing",
-      "qvSaveBtn",
-      "rechnungen",
-      "services",
-      "settings",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadCalRpRezeptInfo",
      "file": "dashboard.js",
-     "start": 3763,
+     "start": 3752,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8045,
+     "start": 7918,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12162,7 +11975,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12172,13 +11984,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 19731,
+     "start": 19416,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12200,7 +12012,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12210,20 +12021,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPhysioRezKpis",
      "file": "dashboard.js",
-     "start": 2267,
+     "start": 2276,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6160,
+     "start": 6083,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12245,7 +12056,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12255,13 +12065,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUeberblickDeadlines",
      "file": "dashboard.js",
-     "start": 19833,
+     "start": 19518,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12283,7 +12093,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12293,13 +12102,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "oeffnePodoBehandlungen",
-     "file": "dashboard.js",
-     "start": 6127,
+     "file": "module/podo-behandlungen-oeffnen.js",
+     "start": 100,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12321,7 +12130,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12331,7 +12139,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -12344,7 +12152,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3240,
+     "start": 3248,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12366,7 +12174,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12376,7 +12183,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -12404,7 +12211,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12414,27 +12220,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "patientenBehandlungen",
      "file": "module/termin-leistungen.js",
-     "start": 504,
-     "module": [],
-     "uiPfad": []
-    },
-    {
-     "name": "pruefeAbrechnungssperre",
-     "file": "module/booking-status-korrektur.js",
-     "start": 46,
-     "module": [],
-     "uiPfad": []
-    },
-    {
-     "name": "showZaaErrors",
-     "file": "dashboard.js",
-     "start": 17463,
+     "start": 661,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12456,7 +12248,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12466,7 +12257,58 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "pruefeAbrechnungssperre",
+     "file": "module/booking-status-korrektur.js",
+     "start": 46,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "pruefeErsttermin",
+     "file": "module/frequenz-pruefung.js",
+     "start": 361,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "showZaaErrors",
+     "file": "dashboard.js",
+     "start": 17155,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -12494,7 +12336,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12504,13 +12345,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "therapeutName",
      "file": "dashboard.js",
-     "start": 7652,
+     "start": 7529,
      "module": [],
      "uiPfad": []
     },
@@ -12539,7 +12380,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12549,7 +12389,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -12562,7 +12402,7 @@
     {
      "name": "waehleVerordnungFuerPanel",
      "file": "module/termin-aktionen.js",
-     "start": 224,
+     "start": 226,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12584,7 +12424,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12594,7 +12433,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -12622,7 +12461,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12632,7 +12470,44 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "zeigeVerordnungenFuerTermin",
+     "file": "module/termin-verordnung.js",
+     "start": 333,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -12662,7 +12537,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12672,7 +12546,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -12691,7 +12565,7 @@
     {
      "name": "flipAbrechnungStatus",
      "file": "dashboard.js",
-     "start": 8362,
+     "start": 8235,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12713,7 +12587,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12723,7 +12596,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -12732,7 +12605,7 @@
     {
      "name": "kassiereZuzahlung",
      "file": "dashboard.js",
-     "start": 7034,
+     "start": 6964,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12754,7 +12627,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12764,7 +12636,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -12805,7 +12677,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12815,7 +12686,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -12824,7 +12695,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 7109,
+     "start": 7039,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -12834,7 +12705,7 @@
     {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 18307,
+     "start": 17994,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12857,7 +12728,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -12867,7 +12737,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -12895,7 +12765,10 @@
     "module/abrechnung-auswahl.js",
     "module/arzt-register.js",
     "module/booking-status-korrektur.js",
+    "module/frequenz-pruefung.js",
+    "module/frequenz-pruefung.test.js",
     "module/patientenkarte.js",
+    "module/podo-behandlungen-oeffnen.js",
     "module/podo-einheiten.js",
     "module/rechnung-ansicht.js",
     "module/rechnung-dmrz.js",
@@ -12906,6 +12779,7 @@
     "module/termin-aktionen.js",
     "module/termin-leistungen.js",
     "module/termin-panel.js",
+    "module/termin-verordnung.js",
     "module/verordnung-detail.js",
     "module/verordnung-einheiten.js",
     "module/verordnung-uebersicht.js",
@@ -12935,7 +12809,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -12990,7 +12863,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13000,7 +12872,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13013,7 +12885,7 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 3962,
+     "start": 3976,
      "module": [],
      "uiPfad": []
     },
@@ -13027,7 +12899,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4469,
+     "start": 4434,
      "module": [],
      "uiPfad": []
     },
@@ -13063,7 +12935,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13073,7 +12944,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13101,7 +12972,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13111,27 +12981,27 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 852,
+     "start": 861,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadAusfallConfig",
      "file": "kalender.js",
-     "start": 212,
+     "start": 218,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 10535,
+     "start": 10411,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13153,7 +13023,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13163,13 +13032,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 17738,
+     "start": 17433,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13192,7 +13061,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13202,13 +13070,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 17798,
+     "start": 17485,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13231,7 +13099,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13241,13 +13108,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 18120,
+     "start": 17827,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13270,7 +13137,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13280,13 +13146,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadHoursPanel",
      "file": "dashboard.js",
-     "start": 9915,
+     "start": 9791,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13308,7 +13174,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13318,13 +13183,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailAnamnese",
      "file": "dashboard.js",
-     "start": 8718,
+     "start": 8591,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13346,7 +13211,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13356,7 +13220,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13369,7 +13233,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10325,
+     "start": 10201,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13391,7 +13255,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13401,7 +13264,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13414,7 +13277,7 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 19972,
+     "start": 19658,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13436,7 +13299,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13446,27 +13308,27 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1689,
+     "start": 1772,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "nurInhaber",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1140,
+     "start": 1144,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 4502,
+     "start": 4467,
      "module": [],
      "uiPfad": []
     },
@@ -13495,7 +13357,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13505,7 +13366,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13518,7 +13379,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10689,
+     "start": 10565,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13540,7 +13401,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13550,7 +13410,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13563,7 +13423,7 @@
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 999,
+     "start": 1008,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13585,7 +13445,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13595,7 +13454,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13630,7 +13489,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13640,7 +13498,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13668,7 +13526,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13678,7 +13535,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13706,7 +13563,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13716,7 +13572,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13744,7 +13600,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13754,13 +13609,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "resolveAuth",
      "file": "api-backend/billing/api/verordnung-status.routes.js",
-     "start": 42,
+     "start": 44,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13782,7 +13637,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13792,7 +13646,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13820,7 +13674,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13830,7 +13683,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13858,7 +13711,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13868,7 +13720,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -13911,7 +13763,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -13921,13 +13772,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     },
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3575,
+     "start": 3584,
      "module": [],
      "uiPfad": []
     }
@@ -13986,7 +13837,7 @@
     {
      "name": "ensureBookingSlug",
      "file": "dashboard.js",
-     "start": 13323,
+     "start": 13177,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14008,7 +13859,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14018,7 +13868,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -14027,7 +13877,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 5604,
+     "start": 5559,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14037,7 +13887,7 @@
     {
      "name": "ensureCompanyCode",
      "file": "dashboard.js",
-     "start": 13306,
+     "start": 13160,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14059,7 +13909,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14069,7 +13918,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -14078,7 +13927,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14100,7 +13949,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14110,7 +13958,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -14129,7 +13977,7 @@
     {
      "name": "init",
      "file": "kalender.js",
-     "start": 155,
+     "start": 161,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14139,7 +13987,7 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 20703,
+     "start": 20388,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14162,7 +14010,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14172,7 +14019,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -14191,7 +14038,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 10990,
+     "start": 10866,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14213,7 +14060,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14223,7 +14069,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -14232,7 +14078,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 2330,
+     "start": 2339,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14262,7 +14108,7 @@
     {
      "name": "saveEmployee",
      "file": "dashboard.js",
-     "start": 13832,
+     "start": 13686,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14324,7 +14170,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14334,7 +14179,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -14399,7 +14244,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -14500,7 +14344,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14510,7 +14353,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -14550,7 +14393,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -14589,14 +14431,14 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4157,
+     "start": 4171,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "ausfallPriceEur",
      "file": "kalender.js",
-     "start": 231,
+     "start": 237,
      "module": [],
      "uiPfad": []
     },
@@ -14610,7 +14452,7 @@
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 3836,
+     "start": 3825,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14632,7 +14474,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14642,13 +14483,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14670,7 +14511,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14680,7 +14520,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -14693,14 +14533,14 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2559,
+     "start": 2568,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11373,
+     "start": 11249,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14722,7 +14562,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14732,7 +14571,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -14745,7 +14584,7 @@
     {
      "name": "loadServices",
      "file": "dashboard.js",
-     "start": 9280,
+     "start": 9156,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14767,7 +14606,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14777,13 +14615,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadServices",
      "file": "kalender.js",
-     "start": 658,
+     "start": 674,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14805,7 +14643,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14815,7 +14652,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -14843,7 +14680,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14853,7 +14689,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -14882,7 +14718,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14892,20 +14727,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     },
     {
      "name": "toRad",
      "file": "api-backend/server.js",
-     "start": 3575,
+     "start": 3584,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 5400,
+     "start": 5355,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14927,7 +14762,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14937,7 +14771,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -14945,7 +14779,7 @@
     {
      "name": "autoSeedGkvServices",
      "file": "dashboard.js",
-     "start": 9300,
+     "start": 9176,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14967,7 +14801,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -14977,7 +14810,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -14986,7 +14819,7 @@
     {
      "name": "ensureBlankoBonusServices",
      "file": "dashboard.js",
-     "start": 7461,
+     "start": 7335,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -14997,7 +14830,7 @@
     {
      "name": "migratePodologieLegacyServices",
      "file": "dashboard.js",
-     "start": 9496,
+     "start": 9372,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15019,7 +14852,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15029,7 +14861,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -15050,7 +14882,7 @@
     {
      "name": "renderServices",
      "file": "dashboard.js",
-     "start": 9683,
+     "start": 9559,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15072,7 +14904,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15082,7 +14913,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -15103,7 +14934,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 16423,
+     "start": 16124,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -15145,7 +14976,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -15220,7 +15050,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15230,7 +15059,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
@@ -15258,7 +15087,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15268,13 +15096,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 1389,
+     "start": 1398,
      "module": [],
      "uiPfad": []
     }
@@ -15305,7 +15133,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15315,7 +15142,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -15346,7 +15173,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15356,7 +15182,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -15390,7 +15216,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -15421,7 +15246,7 @@
     {
      "name": "ladeAbrechnungAuswahl",
      "file": "module/abrechnung-auswahl.js",
-     "start": 374,
+     "start": 496,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15443,7 +15268,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15453,13 +15277,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11373,
+     "start": 11249,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15481,7 +15305,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15491,7 +15314,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -15499,7 +15322,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15521,7 +15344,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15531,7 +15353,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -15541,7 +15363,7 @@
     {
      "name": "loadEmpCertificates",
      "file": "dashboard.js",
-     "start": 11459,
+     "start": 11335,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15563,7 +15385,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15573,7 +15394,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -15607,7 +15428,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -15649,14 +15469,14 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1735,
+     "start": 1745,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initCalendar",
      "file": "kalender.js",
-     "start": 294,
+     "start": 300,
      "module": [],
      "uiPfad": []
     },
@@ -15685,7 +15505,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15695,13 +15514,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 11221,
+     "start": 11097,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15723,7 +15542,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15733,13 +15551,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 10535,
+     "start": 10411,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15761,7 +15579,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15771,13 +15588,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 19972,
+     "start": 19658,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15799,7 +15616,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15809,13 +15625,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUrlaubListe",
      "file": "dashboard.js",
-     "start": 10639,
+     "start": 10515,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15837,7 +15653,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15847,7 +15662,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -15855,7 +15670,7 @@
     {
      "name": "deleteEmpTimeOff",
      "file": "dashboard.js",
-     "start": 10591,
+     "start": 10467,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15877,7 +15692,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15887,7 +15701,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -15896,7 +15710,7 @@
     {
      "name": "deleteUrlaub",
      "file": "dashboard.js",
-     "start": 10668,
+     "start": 10544,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15918,7 +15732,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15928,7 +15741,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -15937,7 +15750,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15959,7 +15772,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -15969,7 +15781,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -15979,7 +15791,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10325,
+     "start": 10201,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16001,7 +15813,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16011,7 +15822,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -16020,7 +15831,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 10990,
+     "start": 10866,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16042,7 +15853,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16052,7 +15862,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -16061,7 +15871,7 @@
     {
      "name": "saveUrlaub",
      "file": "dashboard.js",
-     "start": 10607,
+     "start": 10483,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -16096,7 +15906,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -16169,7 +15978,7 @@
     {
      "name": "loadPatientDetailUeberweisung",
      "file": "dashboard.js",
-     "start": 8820,
+     "start": 8693,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16191,7 +16000,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16201,7 +16009,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -16230,7 +16038,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -16281,14 +16088,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 16159,
+     "start": 15860,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "bootScheduleViewToggle",
      "file": "dashboard.js",
-     "start": 13979,
+     "start": 13833,
      "module": [],
      "uiPfad": []
     }
@@ -16297,7 +16104,7 @@
     {
      "name": "saveUserPref",
      "file": "dashboard.js",
-     "start": 14058,
+     "start": 13912,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16319,7 +16126,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16329,7 +16135,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -16338,7 +16144,7 @@
     {
      "name": "switchBusiness",
      "file": "dashboard.js",
-     "start": 16585,
+     "start": 16286,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -16372,7 +16178,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -16404,14 +16209,14 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 4056,
+     "start": 4045,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "q",
      "file": "dashboard.js",
-     "start": 17956,
+     "start": 17643,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16420,7 +16225,6 @@
       "bkActionFahrtStartBtn",
       "bkActionHbCopyBtn",
       "doctors",
-      "fahrtenbuch",
       "fbFahrtenExportCsv",
       "fbFahrtenRefresh",
       "fbReportRefresh",
@@ -16434,7 +16238,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16444,20 +16247,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4255,
+     "start": 4212,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4128,
+     "start": 4085,
      "module": [],
      "uiPfad": []
     }
@@ -16466,7 +16269,7 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 17982,
+     "start": 17669,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16489,7 +16292,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16499,26 +16301,16 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
      ]
     },
     {
-     "name": "saveQuickVehicleHandler",
+     "name": "saveVehicleEditCore",
      "file": "dashboard.js",
-     "start": 4105,
-     "module": [],
-     "uiPfad": [],
-     "ops": [
-      "insert"
-     ]
-    },
-    {
-     "name": "saveVehicleEdit",
-     "file": "dashboard.js",
-     "start": 18085,
+     "start": 17781,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -16552,7 +16344,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -16590,7 +16381,7 @@
     {
      "name": "reportSidebarVisibility",
      "file": "dashboard.js",
-     "start": 951,
+     "start": 960,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16612,7 +16403,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16622,7 +16412,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -16664,7 +16454,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -16697,7 +16486,7 @@
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 19020,
+     "start": 18705,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16719,7 +16508,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16730,7 +16518,7 @@
       "warteliste"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 28 modülden çağrılıyor"
      ]
     }
    ],
@@ -16738,7 +16526,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 19172,
+     "start": 18857,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -16774,7 +16562,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -16820,7 +16607,7 @@
     {
      "name": "getEmployeeWorkingHours",
      "file": "dashboard.js",
-     "start": 2479,
+     "start": 2488,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16842,7 +16629,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16852,13 +16638,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1735,
+     "start": 1745,
      "module": [],
      "uiPfad": []
     },
@@ -16872,7 +16658,7 @@
     {
      "name": "loadHours",
      "file": "kalender.js",
-     "start": 742,
+     "start": 758,
      "module": [],
      "uiPfad": []
     },
@@ -16901,7 +16687,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16911,20 +16696,20 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1570,
+     "start": 1579,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1650,
+     "start": 1659,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16946,7 +16731,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16956,13 +16740,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 10024,
+     "start": 9900,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16984,7 +16768,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -16994,13 +16777,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 10117,
+     "start": 9993,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17022,7 +16805,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -17032,7 +16814,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -17051,7 +16833,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10658,
+     "start": 10534,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17073,7 +16855,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -17083,7 +16864,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -17092,7 +16873,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 11281,
+     "start": 11157,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17114,7 +16895,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -17124,7 +16904,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -17162,7 +16942,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -17193,7 +16972,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 17463,
+     "start": 17155,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17215,7 +16994,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -17225,7 +17003,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -17255,7 +17033,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -17288,7 +17065,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8045,
+     "start": 7918,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17310,7 +17087,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -17320,13 +17096,13 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 3240,
+     "start": 3248,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17348,7 +17124,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -17358,7 +17133,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ]
     }
    ],
@@ -17388,7 +17163,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -17398,7 +17172,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -17408,7 +17182,7 @@
     {
      "name": "wireBefreiungCard",
      "file": "dashboard.js",
-     "start": 8434,
+     "start": 8307,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17430,7 +17204,6 @@
       "mahnwesen",
       "notizen",
       "podologie-billing",
-      "qvSaveBtn",
       "rechnungen",
       "services",
       "settings",
@@ -17440,7 +17213,7 @@
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 28 modülden çağrılıyor"
+      "ortak yardımcı — 27 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -17472,7 +17245,6 @@
     "mahnwesen",
     "notizen",
     "podologie-billing",
-    "qvSaveBtn",
     "rechnungen",
     "services",
     "settings",
@@ -17587,11 +17359,6 @@
    "name": "heilmittel_tarif",
    "sql": 4,
    "status": "**veraltet** (13.09.2026, O-96 — siehe `onprem/REGISTER.md`)"
-  },
-  {
-   "name": "icd10_titles",
-   "sql": 7,
-   "status": "aktiv (Referenz)"
   },
   {
    "name": "icd_sector_ranges",
