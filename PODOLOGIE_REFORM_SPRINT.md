@@ -106,6 +106,7 @@ Ajanlar: fonksiyon-ustasi (önce/sonra), gkv-302 (1.5/1.6), canli-test (sonra).
 - `git push` öncesi `git fetch`: paralel oturum `main`'e yazıyor (28.09'da 30 commit geride kalındı).
 - `npm test` / kapılar `db/NUTZUNG.*`'ı yeniden üretebiliyor — madde commit'lerine karıştırma, oturum sonunda ayrı tazele.
 - Import `?v=` sürümü: `vercel.json` `max-age=0, must-revalidate` verdiği için eski modül servis edilmiyor; yine de dokunulan modülün `?v=`'sini artır.
+- `erstePositionAusItems` hâlâ iki kopya: `module/verordnung-pruefung.js:361` (export'lu) + `module/verordnung-maske.js:339` (eski, export'suz). Birleştirme kararı Kemal'in (fonksiyon-ustasi).
 - 1.6(b) (yalnız 78040'lı reçete) kaynakta açık cümle yok — GKV-SV/ZFD teyidi gelince sert bloğa çevrilebilir.
 
 
