@@ -116,6 +116,25 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.09.2026 · Podoloji reform sprinti — tarih biçimleyici birleşimi, S2.3b onay geçerliliği
+- f30f407 — `module/datum.js` yeni `datumDe(wert, leer='')`. Niye: `eingangsbefundung-regel.js` ve
+  `fussbefund-archiv.js`'teki iki farklı davranışlı kopya tek yere indi (Kemal onayı). Saf
+  YYYY-MM-DD regex'le (saat dilimi kayması yok), zaman damgası `alsISODatum` ile yerel güne.
+  Nerede: `befundungFuerLeistung` (regel dosyası `datumDe`'yi re-export ediyor, eski importlar
+  kırılmıyor) ve `renderFussbefundArchiv` (`leer='—'`). 29.09 kaydındaki regel-içi `datumDe` artık
+  buraya taşındı.
+  - **Bilinçli dokunulmayan kopya adayları** (karar Kemal'in, INDEX'te aday olarak kalır):
+    `verordnung-aus-ocr` → `alsDeutschesDatum`, `verordnung-pruefung` / `heilmittel-fristen` →
+    `deDatum` ve benzerleri. Yeni tarih biçimleyici yazılmaz — `datumDe` kullanılır.
+- f8ea2aa — Reform S2.3b: `bestaetigungNochGueltig` + `gueltigBestaetigteIds`, ayna çifti
+  `api-backend/billing/utils/offene-einheiten.js` ↔ `module/offene-einheiten.js` (S2.3'ün devamı).
+  Niye: Bereit'te açık birimle onaylanan reçete Erstellen'de ikinci kez sorulmasın; offen sayısı
+  değiştiyse veya ileri tarihli Termin varsa onay düşer, yeniden sorulur. Nerede: sunucu kapısı
+  `abrechnung.routes.js` → `create-podologie`; istemci `module/abrechnung-auswahl.js` (ön seçim +
+  onay diyaloğundan hariç tutma). ⚠️ `prescription_validations`'ı **okuyan ilk yer** (önceden
+  yalnız yazılıyordu) — tablonun kolon/anlam değişikliği artık bu iki kapıyı da etkiler.
+  Ayna kuralı S2.3 ile aynı: sunucu otorite, ikisi birlikte değişir.
+
 ### 29.09.2026 · Podoloji reform sprinti S1.12 + S2 + S3 — Befundpauschale önerisi, Test dosyası, Abrechnung/Termin/Fahrtenbuch
 - S2.1 (13d4351) — `api-backend/billing/api/betriebsart.js` yeni `verordnungFestschreiben(betriebsart)`.
   Niye: §302 Test dosyası (Anhang 2 Kap. 9 §5, keine Zahlung) reçeteye `belegnummer` yazıp GoBD
