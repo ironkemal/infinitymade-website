@@ -407,6 +407,50 @@
   Podologie. Blankoverordnung için de aynı § 15 geçerlidir (yukarıdaki NOVENTI kuralının
   bağlayıcı teyidi budur).
 
+### Podologie: Arzt-Nr. oder Arztstempel/Unterschrift fehlt → Behandlung darf nicht beginnen; BSNR fehlt → übernehmbar, Warnung
+- **Kural:**
+  - **Arzt-Nr.** (Ziffer 5 a): fehlen Versichertenangaben, Kostenträger, *„Angaben zur
+    verordnenden Ärztin oder zum verordnenden Arzt (Arzt-Nr.) oder das Ausstellungsdatum"*,
+    *„kann die Behandlung nicht begonnen werden."* Korrektur *„ausschließlich arztseitig mit
+    erneuter Arztunterschrift und Datumsangabe"*; Muster 13E: *„eine nachträgliche Korrektur
+    nicht möglich, es ist eine neue Verordnung auszustellen"*; *„vor Einreichung"*.
+  - **Stempel + Unterschrift:** Die Behandlungsbeginn-Sperre dafür steht in **Ziffer 3**, nicht
+    in n): Behandlung *„kann jedoch begonnen werden, wenn"* u. a. *„Stempel und Unterschrift der
+    Ärztin oder des Arztes"* vorhanden sind. Ziffer 5 n) regelt die **Gültigkeit**: *„nur
+    gültig, wenn sie … unterschrieben und mit ihrem oder seinem Arztstempel versehen ist"*,
+    Korrektur *„ausschließlich ärztlicherseits"*, vor Einreichung. Stempel gehört dazu, nicht
+    nur die Unterschrift.
+  - **BSNR:** *„Für die Felder ‚Status' und ‚Betriebsstättennummer' sind nachträgliche
+    Korrekturen gemäß Ziffer 4 Absatz 2 möglich. Eine fehlende Betriebsstättennummer … kann vom
+    zugelassenen Leistungserbringer für die Abrechnung aus dem Stempel … übernommen werden."*
+    BSNR steht in der Beginn-Liste von a) **nicht** → kein Beginn-Hindernis.
+  - **TA-Feld LANR** (ZHE, S. 69): zwingend aus der Verordnung, *„Das Auffüllen des Feldes auf
+    9 Stellen ist unzulässig. Es sind nur die Ziffern 0 - 9 zu verwenden. Ist kein Wert
+    vorhanden, ist das Feld mit ‚999999999' zu übermitteln, sofern keine anderweitigen
+    Regelungen bestehen"*; Zahnarzt-Nr. bei zahnärztlicher VO. **BSNR** (ZHE, S. 68): ebenso
+    Ersatzwert 999999999. Eine LANR-Prüfziffernprüfung verlangt die TA nicht („Prüfziffer" =
+    0 Treffer im Volltext V21) → Prüfziffer-Fehler = Warnung.
+- ⚠️ **Çıkarım (norm değil):**
+  - „BSNR fehlt → **nur** Warnung": Ziffer 4 Abs. 2 heißt: Kasse *„setzt die Verordnung ab"*,
+    gibt einmalig Korrekturmöglichkeit, 3 Monate. Beginn-Hindernis yok, ama **Absetzung-Risiko
+    var** — uyarı „aus Arztstempel übernehmen" önerisiyle verilmeli, sessiz geçilmemeli.
+  - „Podo Anlage 3 a) ist eine *anderweitige Regelung* zum Ersatzwert": metin bunu söylemez.
+    Doğru okuma: a) Beginn'i engeller, TA-Feldregeli değiştirmez; pratikte Arzt-Nr.'siz bir
+    Podo-VO hiç tedavi edilmeyeceği için Ersatzwert'e gelinmemeli. Ersatzwert'in Podo'da
+    görünmesi = Urbeleg kontrolü uyarısı (bugünkü D:01003 davranışı).
+- **Kaynak:** Podologie Anlage 3 i.d.F. 16.06.2025
+  (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt`) Ziffer 3 (`:69-83`, S. 3) ·
+  Ziffer 5 a) (`:257-280`, S. 8; Korrekturzeitpunkt + BSNR `:284-308`, S. 9) ·
+  Ziffer 5 n) (`:618-626`, **S. 17** — ilk taslakta „S. 16" yanlıştı) · Ziffer 4 Abs. 2 (`:102-112`) ·
+  Anlage 1 TP5 V21 (Stand 15.01.2026) Kap. 5.5.3.3 SLLA B ZHE: BSNR S. 68
+  (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:3237-3250`), LANR S. 69 (`:3266-3295`)
+- **Geçerlilik:** 16.06.2025 (Podo Anlage 3) / 01.10.2025 (TA V21)
+- **Kodda:** açık — Reform **S3.7** (Formular-/„Bereit"-Sperre bei fehlender LANR oder
+  Stempel/Unterschrift; bugün `confirm()`-Override). DTA-Seite bereits TA-konform:
+  `api-backend/billing/dta/preflight.js:297-310` (Format = Fehler D:01001, Ersatzwert = Warnung
+  D:01003, Prüfziffer = Warnung). Zincir: `REGISTER.md` Z-18.
+- **Kapsam:** Beginn-Sperre Podologie (Anlage 3); TA-Feldregel alle Heilmittel
+
 ---
 
 ### Podologie: Hausbesuch (79933 / 79934) yalnız Verordnung'da „Ja" işaretliyse faturalanır
@@ -733,6 +777,50 @@
   speichern?") · `api-backend/billing/api/abrechnung.routes.js:537` `icd10Liste` ·
   `api-backend/billing/dta/preflight.js` V:01002 / V:01014.
 - **Kapsam:** tüm Heilmittel (DIA), Maske: Muster 13
+
+### Podologie: ICD-Endständigkeit ist kein §302-Datei-Abweisungsgrund — maßgeblich ist „therapierelevant"
+- **Kural:** DIA übernimmt *„immer der im Feld ‚Behandlungsrelevante Diagnose(n)' bzw.
+  ‚ICD-10-Code' eingetragene ICD-10-Code"* — so, wie er auf der Verordnung steht. Die TA prüft
+  in Prüfstufe 3 Schlüsselausprägungen *„im Hinblick auf das Schlüsselverzeichnis (Anlage 3)"*;
+  ICD ist dort kein Schlüssel. Eine Endständigkeitsanforderung steht in **keinem** der Texte
+  (Volltext-grep 29.09.2026: „endständig" = 0 Treffer in TA V21, Anlage 3 V21, HeilM-RL, Podo
+  Anlage 3, FAK; „ICD" = 0 Treffer in Anlage 3 V21). Maßstab für Podologie ist Anlage 3
+  Ziffer 5 k: therapierelevant = a) DFS oder diabetische Neuropathie, b) sensible/sensomotorische
+  Neuropathie bzw. Querschnittsyndrom, c) UI1/UI2 ausschließlich L60.0. Fehlt die Diagnose oder
+  ist sie *„erkennbar nicht therapierelevant"* → nur der Arzt, erneute Unterschrift + Datum,
+  **vor Einreichung**.
+- ⚠️ **Çıkarım (norm değil):** „nicht endständig → Warnung, kein harter Fehler" metnin
+  **sessizliğinden** çıkarılan ürün sonucudur. Ve yalnız Prüfstufe 1-3 (Datei-Abweisung) için
+  geçerli: Prüfstufe 4 *„kassenspezifisch"*, kassenübergreifend geregelt değil — tek bir kasa kendi
+  Fachverfahren'inde endständig olmayan kodu yine bemängeln edebilir. „Kein Abweisungsgrund" ≠
+  „keine Absetzung möglich".
+- ⚠️ **Düzeltme (29.09.2026, `wissensbank`):** İlk taslaktaki örnek `E11.7-` sorunluydu.
+  `E11.7-` başlığı *„Mit multiplen Komplikationen"* — ne DFS'yi ne diabetische Neuropathie'yi
+  **deklare eder**; Ziffer 5 k a) tam olarak bunu ister (*„zumindest entweder das Diabetische
+  Fußsyndrom oder eine diabetische Neuropathie deklariert"*). Yani `E11.7-` tek başına yalnız
+  „nicht endständig" değil, therapierelevanz'ı da koddan **okunamaz**. „Erkennbar nicht
+  therapierelevant" sayılıp sayılmadığı metinde açık değil — **ungeklärt, `gkv-302`'ye.**
+  Uyarı metni hekime „E11.74 / E11.75 gemeint?" sorusunu yönlendirmeli; Freitext'te DFS/Neuropathie
+  yazıyorsa FAK Nr. 28 (Auslegung, norm değil) Verordnung'u geçerli sayar.
+- **ICD-10-GM 2026 olguları** (`icd10gm2026syst_kodes.txt` Feld 2: T = terminal, N = nicht
+  terminal — `icd10gm2026syst_metadaten_liesmich.txt:144-146`): `E11.4-` N (`:2310`) ·
+  `E11.7-` N (`:2319`) · `E14.7-` N (`:2412`) · `E11.74` T (`:2322`) · `E11.75` T (`:2323`) ·
+  `E14.74` T (`:2415`) · `G62.9` T (`:3650`) · `L60.0` T (`:6260`).
+- **Kaynak:** Anlage 1 TP5 V21 (Stand 15.01.2026) Kap. 5.5.3.3 SLLA B, DIA, S. 72
+  (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:3492-3505`) · Kap. 6.3
+  Prüfstufe 3, S. 162 (`:7985-7994`) · Kap. 6.4 Prüfstufe 4 (`:7996-8003`) ·
+  Podologie Anlage 3 i.d.F. 16.06.2025 Ziffer 5 k (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:531-566`,
+  S. 15; Korrekturzeitpunkt `:575-577`, S. 16) · Ziffer 4 Abs. 4 (Arztkorrektur, `:122-131`) +
+  Abs. 5 (per Fax, `:137-140`), S. 3-4 · HeilM-RL 15.05.2025 (iK 05.08.2025) Anlage 3 Zeile k,
+  S. 58 (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:2374-2375`) ·
+  FAK Podologie 24.05.2023 Nr. 28 (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt:232-244`, Auslegung)
+- **Geçerlilik:** 01.10.2025 (TA V21) / 16.06.2025 (Podo Anlage 3) / ICD-10-GM 2026
+- **Kodda:** açık — Reform **S3.6**. Bugün `api-backend/billing/dta/preflight.js:99-102`
+  `isValidIcd10` yalnız Format-Regex; Endständigkeit hiçbir yerde bakılmıyor.
+  ⚠️ **Çelişki:** `PODOLOGIE_REFORM_SPRINT.md:155` S3.6 „seçimde ve preflight'ta **blok**" diyor;
+  bu kural „Warnung" diyor. Uygulamadan önce `gkv-302` ile netleştirilecek (Sahip: S3.6 sahibi).
+  Zincir: `REGISTER.md` Z-18.
+- **Kapsam:** Ziffer 5 k Podologie'ye özgü; DIA-Übernahmeregel ve Prüfstufe-Aussage tüm Heilmittel
 
 ### Versichertenstatus kaynağı Verordnung'dur, kart değil
 - **Kural:** SLLA'ya yazılan 5 haneli Versichertenstatus Verordnung'daki basımdan alınır;

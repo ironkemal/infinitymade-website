@@ -5,7 +5,7 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 29.09.2026 (**Z-17 açıldı** — Podologie Reform S1.12 + S2:
+> İlk kurulum: 05.09.2026 · Son güncelleme: 29.09.2026 (**Z-18 açıldı** — Reform S3.6/S3.7, ICD-Endständigkeit + Arzt-Nr./Unterschrift, 2 SPEC-RULES kaydı doğrulanıp düzeltildi. Önce **Z-17 açıldı** — Podologie Reform S1.12 + S2:
 > Hausbesuch „Ja", Abrechnung nach Beendigung / VKZ 02, Test vs. Erprobung, Datenaustausch-Status,
 > IK des LE. `SPEC-RULES.md`'de 1 kayıt düzeltildi (Teilabrechnung/VKZ 02), 1 kayıt netleşti (Testdatei).
 > `Richtlinien-Text_061120` artık teyitli: Anlage 1 V21 kapağı „Stand der Richtlinien: 20.11.2006".)
@@ -51,7 +51,7 @@
 | Kayıtlı kaynak belge (INDEX'te) | 39 (38 depoda + 1 depo dışı, W-06) |
 | Arşivdeki PDF | 49 (16'sının `.txt`'si yok — 5'i karantina, 11'i bilinçli kapsam dışı) |
 | Arşiv boyutu | ~44 MB (taşıma öncesi kaynak klasörlere göre: `Handbücher` 8,3 · `Podoloji` 9,0 · `verordnung rezept` 27 — üçü de bugün `wissensbank/` altında) |
-| Kaynak→kod zinciri kayıtlı | 17 (Z-01…Z-17) |
+| Kaynak→kod zinciri kayıtlı | 18 (Z-01…Z-18) |
 | Tam kimlik kartı yazılmış kaynak | 6 (**W-01** Kostenträgerdatei · **W-02** Anhang 1 Kap. 4 · **W-03** Anhang 2 Kap. 9 · **W-04** GGT Anlage 16 SECON · **W-05** GGT · **W-06** Microsoft C5 — ⛔ depo dışı) |
 | Depo **dışında** duran kayıtlı kaynak | 1 (W-06 — dağıtım kısıtlı, Drive'da) |
 | **Herkunft (indirme URL'i) kayıtlı** | **6 / 38** ← asıl boşluk, W-A01 |
@@ -565,6 +565,41 @@ tetikler mi — Anhang 2 § 6 sessiz, çıkarım: zweigleisig (§ 9 Abs. 2) → 
 arşivde yok — § 7 Abs. 1 „soweit in Verträgen nichts anderes" istisnası ve 78040 § 3a buna bağlı.
 **Bei neuer Anlage 3 Podologie:** lit. c/p/q neu lesen. **Bei neuem Korrekturverfahren-Stand:** Frage 1/2.
 **Bei Anlage 1 V22-Nachfolger (TA):** Kap. 3, Kap. 6, UNB S002, FKT-IK-Felder.
+
+### Z-18 · Podologie Reform S3.6 + S3.7 — ICD-Endständigkeit, Arzt-Nr./Stempel/Unterschrift, BSNR
+```
+wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt  (i.d.F. 16.06.2025)
+    Ziffer 3 (Z.69-83, S.3)         = Beginn nur mit Personalien, Diagnose, Heilmittel, Stempel+Unterschrift
+    Ziffer 4 Abs. 2 (Z.102-112)     = nachträgl. Korrektur: Absetzung + einmalig, 3 Monate
+    Ziffer 4 Abs. 4/5 (Z.122-140)   = Arztkorrektur mit Unterschrift+Datum / per Fax
+    Ziffer 5 a (Z.257-308, S.8-9)   = Arzt-Nr. fehlt → kein Beginn; BSNR aus Stempel, Korrektur nach Abr.
+    Ziffer 5 k (Z.531-577, S.15-16) = therapierelevant a/b/c; Korrektur nur Arzt, vor Einreichung
+    Ziffer 5 n (Z.618-626, S.17)    = ohne Unterschrift+Arztstempel ungültig
+wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt  (Stand 15.01.2026)
+    ZHE BSNR (Z.3237-3250, S.68) · ZHE LANR (Z.3266-3295, S.69) = 9 Ziffern, Ersatzwert 999999999
+    DIA (Z.3492-3505, S.72) · Kap. 6.3/6.4 (Z.7985-8003, S.162)
+wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt  Anlage 3 Zeile k (Z.2374-2375)
+wissensbank/gemeinsam/icd-10-gm/Klassifikationsdateien/icd10gm2026syst_kodes.txt  Feld 2 T/N
+    (Liesmich Z.144-146) — E11.7- N · E11.74/E11.75 T · G62.9 T · L60.0 T
+wissensbank/podologie/20230524_Podologie_FAK_bf.txt  Nr. 28 (Z.232-244) — Auslegung
+  → S3.6 Endständigkeit: Kodda AÇIK — heute api-backend/billing/dta/preflight.js:99-102
+       isValidIcd10 (nur Format) · Ziel laut Sprint: katalog-suche.js + preflight
+       ← icd10_titles / search_diagnosen() (DB, Z-08) müsste Feld 2 (T/N) tragen — db-ustasi fragen
+  → S3.7 LANR/Stempel/Unterschrift: Kodda AÇIK — Formular heute confirm()-Override;
+       DTA-Seite schon konform: preflight.js:297-310 (D:01001 Fehler, D:01003/Prüfziffer Warnung)
+  → SPEC-RULES.md „Podologie: ICD-Endständigkeit ist kein §302-Datei-Abweisungsgrund …"
+     · „Podologie: Arzt-Nr. oder Arztstempel/Unterschrift fehlt …"
+```
+📌 Kurallar `gkv-302` 29.09.2026; `wissensbank` aynı gün orijinale karşı doğruladı ve düzeltti
+(n) S. 16 değil S. 17; Unterschrift-Beginn-Sperre Ziffer 3'ten; E11.7- örneği therapierelevanz
+açısından şüpheli; „BSNR nur Warnung" ve „Anlage 3 a = anderweitige Regelung" çıkarım işaretlendi).
+⚠️ **offen — Sahip `builder` (Reform S3.6/S3.7):** kod satırları yok; uygulandıkça burası + SPEC-RULES
+`Kodda:` doldurulur.
+⚠️ **offen — Sahip `gkv-302`, S3.6 başlamadan önce:** Sprint tablosu (`PODOLOGIE_REFORM_SPRINT.md:155`)
+endständig olmayan ICD'de **blok** diyor, SPEC-RULES **Warnung** diyor — hangisi uygulanacak.
+Aynı turda: `E11.7-` gibi DFS/Neuropathie deklare etmeyen N-kod „erkennbar nicht therapierelevant" mi.
+**Bei neuer Anlage 3 Podologie:** Ziffer 3, 4, 5 a/k/n neu lesen. **Bei ICD-10-GM 2027 (01.01.2027):**
+T/N-Status der E1x.7-/E1x.4-Kodes neu prüfen (Z-08). **Bei TA-Nachfolger:** ZHE LANR/BSNR-Feldregel, Kap. 6.
 
 ---
 
