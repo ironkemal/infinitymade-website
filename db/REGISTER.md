@@ -657,6 +657,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Seit:** 11.06.2026 · `v29_dashboard_features_kat0`
 - **Status:** aktiv
 - **Wer:** Vorlagen-Modul im Dashboard; Backend rendert damit.
+- **Achtung:** `vorlage_type` ist per CHECK auf eine feste Liste begrenzt — ein neuer Typ im Code braucht IMMER eine Migration. **29.09.2026 · `0043_vorlagen_rechnung_ausfall`:** `rechnung_ausfall` ergänzt (8 → 9 Werte). Grund: `dashboard.js` seedete den Typ seit 12.08.2026, die CHECK-Verletzung verwarf aber den gesamten Seed-Insert (ein Insert für alle fehlenden Typen, Fehler ungeprüft) — seit dem 12.08. angelegte Konten bekamen GAR KEINE Vorlage, und `ausfall.routes.js` fand `rechnung_ausfall` nie. Der Seed liegt jetzt in `module/vorlagen-seed.js` und fügt Zeile für Zeile mit Fallback ein, damit ein einzelner ungültiger Typ nicht mehr alle anderen mitreißt.
 
 ### Erstbefüllung der Referenztabellen in der Box (O-38, 12.09.2026)
 

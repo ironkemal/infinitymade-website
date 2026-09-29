@@ -1,7 +1,12 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-27 — Nachtrag: 0040_kostentraeger_auswahl_view
+-- ERZEUGT AM:        2026-09-29 — Nachtrag: 0043_vorlagen_rechnung_ausfall
+--                    im SaaS angewendet (MCP). Fuer DIESE Datei eine NULL-
+--                    Aenderung: nur die CHECK-Constraint von document_vorlagen
+--                    neu angelegt (steht in SCHEMA.sql) — keine Policy,
+--                    Funktion, Trigger oder Index.
+--                    davor: 2026-09-27 — Nachtrag: 0040_kostentraeger_auswahl_view
 --                    (Ops #300) im SaaS angewendet und geprueft. Rechte-Eintrag
 --                    unten bei "kostentraeger_auswahl (Sicht)". 0039 (Ops #302)
 --                    ist reine Daten-UPSERT, betrifft diese Datei nicht. 0041

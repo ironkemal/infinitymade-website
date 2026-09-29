@@ -1,7 +1,15 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-27 — Nachtrag: 0039_seed_heilmittel_katalog_podo_
+-- ERZEUGT AM:        2026-09-29 — Nachtrag: 0043_vorlagen_rechnung_ausfall
+--                    (Reform S3.2) im SaaS angewendet (MCP) und geprueft:
+--                    document_vorlagen_vorlage_type_check live vorher 8 Werte,
+--                    nachher 9 (+ 'rechnung_ausfall'), convalidated=true.
+--                    Nur CHECK-Constraint neu angelegt — keine neue Tabelle/
+--                    Spalte/Policy/Index/Funktion/Trigger. Kommentar unten bei
+--                    document_vorlagen nachgezogen. 0041-Status hier NICHT neu
+--                    geprueft (siehe Notiz 27.09. unten).
+--                    davor: 2026-09-27 — Nachtrag: 0039_seed_heilmittel_katalog_podo_
 --                    komplex_suche + 0040_kostentraeger_auswahl_view (Ops #300/
 --                    #302) im SaaS angewendet und geprueft (kostentraeger_auswahl
 --                    893 Zeilen, Stichprobe 100167999 -> DAK-Gesundheit/
@@ -1563,7 +1571,9 @@ CREATE TABLE document_vorlagen (
 );
 --   CHECK vorlage_type IN (quittung_zuzahlung, rechnung_bg, rechnung_privat,
 --     rechnung_eigenanteil, rechnung_selbstzahler, rechnung_sonder,
---     rezeptvorderseite, rzg_quittung)
+--     rezeptvorderseite, rzg_quittung, rechnung_ausfall)
+--     (rechnung_ausfall seit 0043, 29.09.2026 — vorher verwarf die CHECK-
+--     Verletzung den ganzen Seed-Insert, siehe db/REGISTER.md)
 --   PK (id) · UNIQUE INDEX uniq_default_vorlage (owner_id, vorlage_type) WHERE is_default
 
 CREATE TABLE dta_schluessel (

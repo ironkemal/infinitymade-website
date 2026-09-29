@@ -1,3 +1,4 @@
+import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
 import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
 import { zeigePatientTermine } from './module/patient-termine.js?v=20260908';
@@ -12881,18 +12882,6 @@ function startVorlagenInlineRename(titleEl, vorlagenId, vorlagenList) {
   input.select();
 }
 
-const DEFAULT_VORLAGE_SEEDS = [
-  { name: 'Quittung Zuzahlung', vorlage_type: 'quittung_zuzahlung', is_default: true, content_json: { hinweis: 'Zuzahlung gemäß §32 Abs. 2 SGB V erhalten.', fusszeile: '' } },
-  { name: 'Rechnung BG', vorlage_type: 'rechnung_bg', is_default: true, content_json: { betreff: 'Rechnung für Berufsgenossenschaft', zahlungsziel_tage: '30', fusszeile: '' } },
-  { name: 'Rechnung Privat', vorlage_type: 'rechnung_privat', is_default: true, content_json: { betreff: 'Rechnung für physiotherapeutische Leistungen', zahlungsziel_tage: '14', fusszeile: '' } },
-  { name: 'Rechnung Eigenanteil', vorlage_type: 'rechnung_eigenanteil', is_default: true, content_json: { hinweis: 'Eigenanteil gemäß Heilmittelrichtlinien.', fusszeile: '' } },
-  { name: 'Ausfallrechnung', vorlage_type: 'rechnung_ausfall', is_default: true, content_json: { betreff: 'Ausfallrechnung', zahlungsziel_tage: '14', hinweis: '', fusszeile: '' } },
-  { name: 'Rechnung Selbstzahler', vorlage_type: 'rechnung_selbstzahler', is_default: true, content_json: { betreff: 'Selbstzahler-Rechnung', zahlungsziel_tage: '14', fusszeile: '' } },
-  { name: 'Rechnung Sonder', vorlage_type: 'rechnung_sonder', is_default: true, content_json: { betreff: 'Rechnung Sonderkostenträger', fusszeile: '' } },
-  { name: 'Rezeptvorderseite', vorlage_type: 'rezeptvorderseite', is_default: true, content_json: { praxis_zusatz: 'Physiotherapie & Manuelle Therapie', stempel_hinweis: 'Bitte Stempel beifügen' } },
-  { name: 'RZG-Quittung', vorlage_type: 'rzg_quittung', is_default: true, content_json: { unterschrift_label: 'Empfang bestätigt:', hinweis: '', fusszeile: '' } },
-];
-
 async function seedDefaultVorlagen() {
   const ownerId = getOwnerId();
   const rows = DEFAULT_VORLAGE_SEEDS.map(s => ({ ...s, owner_id: ownerId }));
@@ -12900,9 +12889,7 @@ async function seedDefaultVorlagen() {
 }
 
 async function seedMissingVorlagen(missingTypes) {
-  const ownerId = getOwnerId();
-  const rows = DEFAULT_VORLAGE_SEEDS.filter(s => missingTypes.includes(s.vorlage_type)).map(s => ({ ...s, owner_id: ownerId }));
-  if (rows.length > 0) await supabase.from('document_vorlagen').insert(rows);
+  await seedeVorlagen(supabase, fehlendeSeedZeilen(missingTypes, getOwnerId()), (t, e) => console.error('Vorlage nicht angelegt:', t, e));
 }
 
 document.getElementById('vorlagenSaveBtn')?.addEventListener('click', saveVorlage);
