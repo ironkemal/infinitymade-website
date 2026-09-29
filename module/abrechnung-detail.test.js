@@ -7,7 +7,7 @@
 // noch im Haus liegt — das waere eine erfundene Mahnung gegen die Kasse.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { zeitraumAusZeilen, faelligkeit, zeilenStatusInfo, leerHinweisText } from './abrechnung-detail.js';
+import { zeitraumAusZeilen, faelligkeit, zeilenStatusInfo, leerHinweisText, etikettFuer } from './abrechnung-detail.js';
 
 test('zeitraumAusZeilen: erstes und letztes Verordnungsdatum', () => {
   const z = zeitraumAusZeilen([
@@ -99,4 +99,37 @@ test('leerHinweisText: fehlendes oder ungültiges created_at macht keine histori
   const txtInvalid = leerHinweisText(ungueltigesDatum);
   assert.equal(txtInvalid, 'Für diese Datei sind keine Zeilen gespeichert. Laut Kopfsatz enthält sie 0 Beleg(e).');
   assert.doesNotMatch(txtInvalid, /09\.09\.2026/);
+});
+
+test('etikettFuer: ungesendete Echtdatei sagt "In Datei" und "Uebermittelt: noch nicht"', () => {
+  const e = etikettFuer({ status: 'erstellt', betriebsart: 'echt' });
+  assert.equal(e.geldLabel, 'In Datei');
+  assert.equal(e.datumLabel, 'Übermittelt');
+  assert.equal(e.datumNochNicht, true);
+  assert.equal(e.istTest, false);
+  assert.equal(e.zahlungKnoepfe, true);
+});
+
+test('etikettFuer: gesendete Datei behaelt "Eingereicht"', () => {
+  const e = etikettFuer({ status: 'gesendet', betriebsart: 'erprobung', zaa_uploaded_at: '2026-09-01' });
+  assert.equal(e.geldLabel, 'Eingereicht');
+  assert.equal(e.datumLabel, 'Eingereicht');
+  assert.equal(e.datumNochNicht, false);
+  assert.equal(e.zahlungKnoepfe, true);
+});
+
+test('etikettFuer: Testdatei (auch NULL) ist markiert, ohne Zahlungsknoepfe', () => {
+  for (const betriebsart of ['test', null, undefined, '']) {
+    const e = etikettFuer({ status: 'erstellt', betriebsart });
+    assert.equal(e.istTest, true);
+    assert.equal(e.geldLabel, 'In Datei (Test)');
+    assert.match(e.testHinweis, /löst keine Zahlung aus/);
+    assert.equal(e.zahlungKnoepfe, false);
+  }
+});
+
+test('etikettFuer: verworfen ist kein Test und ohne Zahlungsknoepfe', () => {
+  const e = etikettFuer({ status: 'verworfen', betriebsart: null });
+  assert.equal(e.istTest, false);
+  assert.equal(e.zahlungKnoepfe, false);
 });

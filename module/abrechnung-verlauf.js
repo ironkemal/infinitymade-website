@@ -189,7 +189,7 @@ export async function ladeAbrechnungVerlauf() {
 
   const [dateiRes, zeilenRes, zahlungRes] = await Promise.all([
     ctx.supabase.from('abrechnung')
-      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, encrypted_storage_path, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, paid_at, created_at')
+      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, encrypted_storage_path, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, paid_at, created_at, betriebsart')
       .eq('owner_id', ownerId)
       .order('created_at', { ascending: false })
       .limit(50),
@@ -255,6 +255,10 @@ function zeichneVerlauf() {
     const grundDiv = (verworfen && a.verwerfungsgrund)
       ? `<div style="white-space:normal;max-width:260px;font-size:11px;color:var(--text-muted);">${esc(a.verwerfungsgrund)}</div>`
       : '';
+    const b = String(a.betriebsart || '').trim();
+    const testBadge = (!verworfen && b !== 'erprobung' && b !== 'echt')
+      ? '<span title="Testdatei — wird nicht an die Kasse übermittelt, löst keine Zahlung aus" style="font-size:10px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 5px;margin-left:4px;">Test</span>'
+      : '';
     const sollZelle = verworfen
       ? `<td style="text-align:right;white-space:nowrap;color:var(--text-muted);">—</td>`
       : `<td style="text-align:right;white-space:nowrap;color:var(--text-main);">${esc(fmtEur(a.soll))}</td>`;
@@ -267,7 +271,7 @@ function zeichneVerlauf() {
     return `<tr class="ab-verlauf-row${gewaehlt ? ' ab-verlauf-gewaehlt' : ''}" data-id="${esc(a.id)}"
         style="cursor:pointer;border-left:3px solid ${info.farbe};${gewaehlt ? 'background:var(--bg-card);' : ''}${verworfen ? 'opacity:0.7;' : ''}"
         title="${esc(info.hilfe)}">
-      <td style="white-space:nowrap;"><code style="font-size:12px;color:var(--text-main);">${dateiCode}</code> ${signiert}${verschluesselt}${grundDiv}</td>
+      <td style="white-space:nowrap;"><code style="font-size:12px;color:var(--text-main);">${dateiCode}</code> ${signiert}${verschluesselt}${testBadge}${grundDiv}</td>
       <td style="color:var(--text-main);">${esc(a.kassenName)}</td>
       <td style="white-space:nowrap;">${datum}</td>
       <td style="text-align:center;color:var(--text-muted);">${a.prescription_count || 0}</td>

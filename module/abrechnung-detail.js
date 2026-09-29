@@ -117,6 +117,39 @@ export function leerHinweisText(ab, heute = new Date()) {
   return `Für diese Datei sind keine Zeilen gespeichert. Laut Kopfsatz enthält sie ${n} Beleg(e).`;
 }
 
+/**
+ * Ist die Datei nur eine Testdatei? Leer/unbekannt zaehlt als Test — dieselbe
+ * Regel wie `betriebsartAus` im Backend (Dateien von vor 0027 tragen NULL).
+ */
+export function istTestDatei(ab) {
+  if (!ab || istVerworfen(ab)) return false;
+  const b = String(ab.betriebsart || '').trim();
+  return b !== 'erprobung' && b !== 'echt';
+}
+
+/**
+ * Eine Stelle, ein Wortschatz: wie die Detailansicht Geldblock, Datum und
+ * Zahlungsknoepfe beschriftet. Vorher stand „Eingereicht: noch nicht" neben
+ * „Eingereicht 43,29 €" — und eine Testdatei sah wie eine echte Rechnung aus.
+ * @returns {{geldLabel:string, datumLabel:string, datumNochNicht:boolean,
+ *   testHinweis:string|null, istTest:boolean, zahlungKnoepfe:boolean}}
+ */
+export function etikettFuer(ab) {
+  const verworfen = istVerworfen(ab);
+  const istTest = istTestDatei(ab);
+  const gesendet = Boolean(ab?.zaa_uploaded_at)
+    || ['gesendet', 'accepted', 'rejected', 'paid'].includes(ab?.status);
+  const inDatei = !verworfen && !gesendet;
+  return {
+    geldLabel: istTest ? 'In Datei (Test)' : (inDatei ? 'In Datei' : 'Eingereicht'),
+    datumLabel: inDatei ? 'Übermittelt' : 'Eingereicht',
+    datumNochNicht: !gesendet,
+    testHinweis: istTest ? 'Testdatei – wird nicht an die Kasse übermittelt, löst keine Zahlung aus.' : null,
+    istTest,
+    zahlungKnoepfe: !verworfen && !istTest,
+  };
+}
+
 const ZEILEN_STATUS = {
   eingereicht:    { text: 'eingereicht',   farbe: 'var(--text-muted)' },
   akzeptiert:     { text: 'angenommen',    farbe: '#16a34a' },
@@ -219,11 +252,14 @@ function kopfHtml(ab, zeilen, geld) {
   const dat = (d) => d ? new Date(d).toLocaleDateString('de-DE') : '—';
   const status = aggregierterDateiStatus(ab);
   const f = istVerworfen(ab) ? null : faelligkeit(ab);
+  const et = etikettFuer(ab);
 
   const felder = [
     ['Rechnungsnummer', `<code style="font-size:12px;">${esc(ab.rechnungsnummer || '—')}</code>`],
     ['Erstellt', dat(ab.created_at)],
-    ['Eingereicht', ab.zaa_uploaded_at ? dat(ab.zaa_uploaded_at) : '<span style="color:var(--text-muted);">noch nicht</span>'],
+    et.istTest
+      ? ['Übermittlung', `<span style="color:var(--text-muted);font-size:12px;">${esc(et.testHinweis)}</span>`]
+      : [et.datumLabel, ab.zaa_uploaded_at ? dat(ab.zaa_uploaded_at) : '<span style="color:var(--text-muted);">noch nicht</span>'],
     ['Annahmestelle', `<span id="abDetailAnnahmestelle">${esc(ab.kostentraeger_ik || '—')}</span>`],
     ['Zeitraum', z.von ? `${dat(z.von)} – ${dat(z.bis)}` : '—'],
     ['Belege', String(zeilen.length || ab.prescription_count || 0)],
@@ -232,6 +268,7 @@ function kopfHtml(ab, zeilen, geld) {
   return `
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
     ${dateiStatusBadge(status)}
+    ${et.istTest ? '<span title="Testdatei — löst keine Zahlung aus" style="font-size:11px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 6px;">Test</span>' : ''}
     ${f ? `<span style="font-size:12px;color:${f.ueberfaellig ? '#ea580c' : 'var(--text-muted)'};"
        title="4 Wochen ab Eingang der vollständigen Unterlagen (Richtlinien-Text 20.11.2006 § 7 Abs. 2)">
        ${f.ueberfaellig ? `überfällig seit ${Math.abs(f.tageRest)} Tag${Math.abs(f.tageRest) === 1 ? '' : 'en'}` : `fällig in ${f.tageRest} Tag${f.tageRest === 1 ? '' : 'en'}`}
@@ -250,7 +287,7 @@ function geldHtml(geld, ab) {
   // Immer vierteilig, auch wenn drei davon 0 sind: „10 eingereicht, 1
   // abgesetzt, 9 bezahlt" muss als vier Zahlen ablesbar sein (Plan, Phase 4).
   const zahlen = [
-    ['Eingereicht', geld.eingereicht, 'var(--text-main)'],
+    [etikettFuer(ab).geldLabel, geld.eingereicht, 'var(--text-main)'],
     ['Abgesetzt',   geld.abgesetzt,   Number(geld.abgesetzt) > 0 ? '#be185d' : 'var(--text-muted)'],
     ['Bezahlt',     geld.bezahlt,     Number(geld.bezahlt)   > 0 ? '#16a34a' : 'var(--text-muted)'],
     ['Offen',       geld.offen,       Number(geld.offen) > 0.005 ? '#ea580c' : 'var(--text-muted)'],
@@ -266,7 +303,7 @@ function geldHtml(geld, ab) {
     </div>`).join('')}
     ${rekonstruiert ? `<div style="font-size:11px;color:#b45309;max-width:280px;">
       Beträge aus dem Kopfsatz — für diese Altdatei gibt es keine eingefrorenen Zeilenbeträge.</div>` : ''}
-    ${!verworfen ? '<button class="btn-ghost btn-sm" data-ab-akt="zahlung-erfassen" style="margin-left:auto;">💶 Zahlung erfassen</button>' : ''}
+    ${etikettFuer(ab).zahlungKnoepfe ? '<button class="btn-ghost btn-sm" data-ab-akt="zahlung-erfassen" style="margin-left:auto;">💶 Zahlung erfassen</button>' : ''}
   </div>`;
 }
 
@@ -469,7 +506,7 @@ function aktionenHtml(ab) {
     // Anbindung) darf nicht wie "alles in Ordnung" aussehen.
     k.push(`<span class="btn-ghost btn-sm" style="color:#ea580c;cursor:default;" title="${esc(ab.verschluesselung_hinweis || 'Verschlüsselung noch nicht durchgeführt.')}">⚠️ Nicht verschlüsselt</span>`);
   }
-  if (!istVerworfen(ab)) {
+  if (etikettFuer(ab).zahlungKnoepfe) {
     k.push(`<button class="btn-ghost btn-sm" data-ab-akt="zaa">📨 ZAA hochladen</button>`);
   }
   if (ab.status === 'rejected' || ab.status === 'accepted') {
