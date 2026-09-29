@@ -213,6 +213,9 @@ export function attachAutocomplete(inputEl, cfg) {
   }
 
   function closeDropdown() {
+    // Auch eine unterwegs befindliche Antwort verwerfen (Escape, minChars):
+    // sonst öffnet ihr spätes Eintreffen die Liste wieder.
+    requestSeq++;
     dropdown.innerHTML = '';
     activeIndex = -1; currentItems = [];
     dropdown.style.display = 'none';
@@ -253,6 +256,9 @@ export function attachAutocomplete(inputEl, cfg) {
     dropdown.innerHTML = '';
     activeIndex = -1;
     currentItems = items;
+    // Das Feld ist inzwischen verschwunden oder unsichtbar (Panelwechsel):
+    // nichts öffnen, das Body-Dropdown bliebe sonst verwaist stehen.
+    if (!inputEl.isConnected || inputEl.offsetParent === null) { dropdown.style.display = 'none'; return; }
     // Leere Liste heisst normalerweise "nichts gefunden", da genügt Zuklappen.
     // Wurde aber gefiltert (strict), muss dastehen WARUM — ein wortlos leeres
     // Dropdown liest sich wie ein kaputtes Suchfeld.
@@ -350,11 +356,15 @@ export function attachAutocomplete(inputEl, cfg) {
   });
 
   inputEl.addEventListener('keydown', e => {
+    // Escape bei offener Liste (auch nur mit Hinweiszeile) schliesst NUR die
+    // Liste — sonst schliesst der globale Modal-Handler die ganze Maske.
+    if (e.key === 'Escape' && dropdown.style.display === 'block') {
+      e.preventDefault(); e.stopPropagation(); closeDropdown(); return;
+    }
     if (!dropdown.querySelectorAll('.icd10-dropdown-item').length) return;
     if (e.key === 'ArrowDown')      { e.preventDefault(); setActive(Math.min(activeIndex + 1, currentItems.length - 1)); }
     else if (e.key === 'ArrowUp')   { e.preventDefault(); setActive(Math.max(activeIndex - 1, 0)); }
     else if (e.key === 'Enter')     { if (activeIndex >= 0 && currentItems[activeIndex]) { e.preventDefault(); selectItem(currentItems[activeIndex]); } }
-    else if (e.key === 'Escape')    { closeDropdown(); }
   });
   inputEl.addEventListener('blur', () => {
     markierungOffen = false;
@@ -365,7 +375,10 @@ export function attachAutocomplete(inputEl, cfg) {
     }, 150);
   });
   window.addEventListener('scroll', () => {
-    if (dropdown.style.display === 'block') positionDropdown();
+    if (dropdown.style.display !== 'block') return;
+    // Panel gewechselt, Feld nicht mehr sichtbar: Liste schliessen statt mitzuschieben.
+    if (!inputEl.isConnected || inputEl.offsetParent === null) { closeDropdown(); return; }
+    positionDropdown();
   }, true);
 }
 
