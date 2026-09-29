@@ -9334,7 +9334,7 @@ GKV_LEISTUNGSKATALOG.praxis = GKV_LEISTUNGSKATALOG.physiotherapy;
 // steigen z. B. zum 01.07.2026. Statt die Zahlen jedes Mal von Hand zu ändern
 // (und es zu vergessen) trägt jeder Eintrag seine Preisstaffel in `preise`;
 // hier wird beim Laden die heute gültige Stufe gesetzt.
-function applyGueltigePreise(stichtag = new Date().toISOString().slice(0, 10)) {
+function applyGueltigePreise(stichtag = toISODate(new Date())) {
   for (const entry of Object.values(GKV_LEISTUNGSKATALOG).flat()) {
     if (!entry.preise) continue;
     const gueltig = Object.keys(entry.preise).filter(ab => ab <= stichtag).sort().pop();
@@ -14627,7 +14627,7 @@ function syncAnamTextarea(containerId, otherInputId, textareaId) {
 
 function resetAnamneseForm() {
   currentAnamneseId = null;
-  document.getElementById('anamAufnahme').value = new Date().toISOString().substring(0, 10);
+  document.getElementById('anamAufnahme').value = toISODate(new Date());
   document.getElementById('anamBeschwerdeSeit').value = '';
   document.getElementById('anamSchmerzSkala').value = '0';
   document.getElementById('anamSkalaVal').textContent = '0';
@@ -14739,7 +14739,7 @@ async function fillAnamneseForm(patientId) {
     .maybeSingle();
   if (!data) { resetAnamneseForm(); return; }
   currentAnamneseId = data.id;
-  document.getElementById('anamAufnahme').value = data.aufnahmedatum || new Date().toISOString().substring(0, 10);
+  document.getElementById('anamAufnahme').value = data.aufnahmedatum || toISODate(new Date());
   document.getElementById('anamBeschwerdeSeit').value = data.beschwerde_seit || '';
   document.getElementById('anamSchmerzSkala').value = data.schmerz_skala != null ? String(data.schmerz_skala) : '0';
   document.getElementById('anamSkalaVal').textContent = data.schmerz_skala != null ? String(data.schmerz_skala) : '0';
@@ -15609,7 +15609,7 @@ async function openRezeptModal(phone, leadId) {
   const g = id => document.getElementById(id);
   g('rzPatientId').value = leadId || '';
   g('rzArztName').value = '';
-  g('rzAusstDate').value = new Date().toISOString().split('T')[0];
+  g('rzAusstDate').value = toISODate(new Date());
   g('rzLanr').value = '';
   g('rzBsnr').value = '';
   g('rzIcd').value = '';
@@ -19494,7 +19494,7 @@ async function openPatRxDetail(rxId, leadId) {
 async function loadUeberblick() {
   const ownerId = getOwnerId();
   const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = toISODate(today);
 
   // Refresh butonu
   document.getElementById('ueberblickRefreshBtn')?.addEventListener('click', loadUeberblick);
@@ -19856,8 +19856,8 @@ async function loadAnwesenheitSidePanel() {
     const now = new Date();
     const monday = new Date(now);
     monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
-    dateFrom.value = monday.toISOString().slice(0, 10);
-    dateTo.value   = now.toISOString().slice(0, 10);
+    dateFrom.value = toISODate(monday);
+    dateTo.value   = toISODate(now);
   }
 
   const loadBtn = document.getElementById('anwLoadBtn');
