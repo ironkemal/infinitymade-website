@@ -117,6 +117,20 @@ Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir");
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
 ### 28-29.09.2026 · Podoloji reform sprinti S1 — Termin ↔ Verordnung, Tagesbehandlung
+- S1.11 (24d751b) — yeni `module/termin-mail-angebot.js`: `mailAngebotZustand` (saf),
+  `istPodoOhneRechnung`, `oeffneMailAngebotModal`. `openMailOfferModal` `dashboard.js`'ten buraya
+  **taşındı** (kuşatma, -52 satır). `meldePodoSerienBindung` artık `_physioFlow.podo = true` koyuyor;
+  `proceedToRechnungForPhysio` podo'da erken çıkıyor. Niye: podo serisinden sonra, henüz tek seans
+  yokken fatura adımı açılıyordu (podoloji kararı). Nerede: `maybeOfferAppointmentConfirmEmail`.
+  Ayrıca `zeigeVerordnungenFuerTermin` artık `sb/ownerId/leadId`'yi `rendereVeroKarten`'a geçiyor —
+  maskedeki Verordnung sayacı podo'da 0/3 gösteriyordu (S1.3 podo dalı maskeye de bağlandı).
+- S1.10 (32f1a4d) — `module/termin-leistungen.js`: `speichereLeistungen` artık tek id YA DA dizi
+  alıyor; yeni `speichereLeistungenFuerErstellte(created, {showToast})`. Niye: seri randevuları
+  (`batch-create`, `batch-create-explicit`) `booking_leistungen` yazmıyordu, KI yolu süreyi
+  katalogdan alıyordu (canli-test P1: 65 dk yerine 35 dk). Nerede: `bkSaveBtn` manuel seri dalı,
+  `aiSuggestConfirm`; `aiPrefSubmit` ve onay payload'ı `duration: leseDauer()`. Backend
+  `ai-suggest-series` isteğe bağlı `duration` (1-480) alıyor, yeni route yok. Tekil ve seri
+  kayıt aynı yazıcıdan geçiyor — `booking_leistungen` için ikinci yazan yol açılmadı.
 - S1.9 (dbd79f0) — `module/heilmittel-fristen.js` yeni `pruefeBehandlungsbeginn` (saf; 28/14 gün,
   Berlin günü). `module/frequenz-pruefung.js` yeni `pruefeErsttermin` (yalnız podo, yalnız ilk
   randevu → BLOK); `bewerteAbstand` 4. parametre `pruefeUnterbrechung`; `pruefeFrequenz` podo'da
