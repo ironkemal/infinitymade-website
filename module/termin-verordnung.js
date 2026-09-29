@@ -74,8 +74,19 @@ function anlegenKnopf(onAnlegen, leer) {
 /**
  * Zeichnet die Liste der aktiven Verordnungen. Der Knopf zum Anlegen steht —
  * sofern `onAnlegen` gereicht wird — in BEIDEN Lagen: mit und ohne Verordnung.
+ *
+ * `sb`/`ownerId`/`leadId` (Reform S1.3, 29.09.2026): Podologie führt kein
+ * `prescription_sessions`-Hauptbuch (module/verordnung-topf.js,
+ * fuehrtSitzungsbuch) — der Zähler zeigte für sie IMMER „0/…", ganz gleich
+ * wie oft schon behandelt wurde (das Panel widersprach sich dabei selbst: die
+ * Karte „0/3" neben dem Hinweis „keine aktive Verordnung hinterlegt"). Die
+ * echte Zahl steht in `bookings.verordnung_id` und wird hier — wie in
+ * `verordnung-detail.js` (_terminePodo) — über `ladePodoTermine()` +
+ * `terminZaehler()` nachgezählt. Physio/Ergo/Logo bleiben unverändert: ohne
+ * `sb`/`ownerId` (Aufrufer reicht sie nicht) läuft nur der bisherige,
+ * synchrone Zweig.
  */
-export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, escapeHtml }) {
+export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, escapeHtml, sb = null, ownerId = null, leadId = null }) {
   if (!container) return;
   container.innerHTML = '';
 
@@ -91,7 +102,10 @@ export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, 
 
   rxs.forEach(rx => {
     const sessions = rx.prescription_sessions || [];
-    const done = sessions.filter(s => s.status === 'done' || s.status === 'completed').length;
+    const istPodo = rx.therapie_bereich === 'podo';
+    // Podologie: `sessions` ist strukturell leer (kein Hauptbuch) — der Platz
+    // wird unten asynchron nachgefüllt, statt hier fälschlich 0 zu behaupten.
+    const done = istPodo ? 0 : sessions.filter(s => s.status === 'done' || s.status === 'completed').length;
     const total = rx.anzahl_einheiten || sessions.length || 0;
     const issued = rx.ausstellungsdatum
       ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -113,6 +127,14 @@ export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, 
       <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(diag)} · ${escapeHtml(issued)}${freq}</div>`;
     card.addEventListener('click', () => onSelect(rx, sessions));
     container.appendChild(card);
+
+    if (istPodo && sb && ownerId && rx.id) {
+      ladePodoTermine(sb, { ownerId, vordId: rx.id, leadId }).then(({ vergeben }) => {
+        const { verordnet, belegt } = terminZaehler(ausTopf(rx), vergeben);
+        const badge = card.querySelector('[data-vero-zaehler]');
+        if (badge) badge.textContent = `${belegt}/${verordnet ?? total}`;
+      }).catch(e => console.error('[rendereVeroKarten] Podo-Zaehler:', e));
+    }
   });
 
   if (onAnlegen) container.appendChild(anlegenKnopf(onAnlegen, false));

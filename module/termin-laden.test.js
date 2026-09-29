@@ -42,3 +42,7 @@ test('die Sitzungsbeziehung bleibt erhalten', () => {
 test('no_show_session_links wird mitgeladen — sonst verschwindet die Rezeptinfo beim erneuten Oeffnen eines Ausfall-Termins', () => {
   assert.ok(oberflaeche(TERMIN_SELECT).includes('no_show_session_links'));
 });
+
+test('verordnung_id wird mitgeladen — sonst findet die Podologie-Verordnung im Termin-Aktionen-Panel keinen Anschluss', () => {
+  assert.ok(oberflaeche(TERMIN_SELECT).includes('verordnung_id'));
+});

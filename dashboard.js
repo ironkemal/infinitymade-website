@@ -71,7 +71,7 @@ import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20260918';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
-import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260929b';
+import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260929c';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
 import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20260906';
@@ -96,7 +96,7 @@ import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwe
 import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp, kostentraegerTyp } from './module/leistungen-liste.js?v=20260903';
 import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
-import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260916';
+import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260929';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
 import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
 import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
@@ -1749,7 +1749,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,dauer_quelle,no_show_session_links,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,dauer_quelle,no_show_session_links,verordnung_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -3309,7 +3309,7 @@ async function openBookingActionModal(booking, opts = {}) {
   // standardVerordnung() die neueste des Patienten. Sonst blieben Rezeptinfo
   // und Einheitenliste im Patientenmodus leer (Ops #308).
   const wunschRx = opts.rxId
-    || (booking ? rueckfahrkarteRxId(booking, ps) : await standardVerordnung(supabase, leadVorgabe.id))
+    || (booking ? (rueckfahrkarteRxId(booking, ps) || booking.verordnung_id) : await standardVerordnung(supabase, leadVorgabe.id))
     || null;
   const rxWahl = await waehleVerordnungFuerPanel({
     supabase, booking: booking || { lead_id: leadVorgabe.id },
@@ -3612,7 +3612,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     const veroCards = document.getElementById('bkVeroPanelCards');
     if (veroWrap && veroCards) {
       rendereVeroKarten({
-        container: veroCards, rxs: aktiveRxs, escapeHtml,
+        container: veroCards, rxs: aktiveRxs, escapeHtml, sb: supabase, ownerId, leadId,
         // Hier waehlt eine Karte, WELCHE Verordnung das Panel zeigt — sie fuellt
         // nicht die Terminmaske (das tut selectVerordnung in #bookingModal).
         onSelect: (gewaehlt) => openBookingActionModal(booking, { ...opts, rxId: gewaehlt.id }),
