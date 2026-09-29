@@ -75,12 +75,13 @@ test('das Geburtsdatum wird zurück nach ISO gedreht', () => {
   assert.notEqual(b.parsed.patient.geburtsdatum, '1975-08-03', 'nicht Monat/Tag vertauscht');
 });
 
-test('der Patientenblock ist vollständig', () => {
+test('der Patientenblock ist vollständig (mit Karten-IK, ohne Kostenträger-IK)', () => {
   const p = verordnungFuerBackend({ nutzlast: NUTZLAST, patientFelder: KOPF }).parsed.patient;
   assert.equal(p.name, 'Anna Bauer');
   assert.equal(p.versichertennummer, 'A123456789');
   assert.equal(p.krankenkasse, 'AOK Rheinland/Hamburg');
-  assert.equal(p.kostentraeger_ik, '104212505');
+  assert.equal(p.krankenkasse_ik, '104212505');
+  assert.equal('kostentraeger_ik' in p, false);
   assert.equal(p.street, 'Hauptstr. 5');
   assert.equal(p.plz, '53721');
   assert.equal(p.city, 'Siegburg');
@@ -133,7 +134,7 @@ test('Rundreise: OCR → Maske → zurück zum Server verliert nichts Wesentlich
   const gelesen = {
     patient: {
       first_name: 'Anna', last_name: 'Bauer', geburtsdatum: '1975-03-08',
-      versichertennummer: 'A123456789', krankenkasse: 'AOK', kostentraeger_ik: '104212505',
+      versichertennummer: 'A123456789', krankenkasse: 'AOK', krankenkasse_ik: '104212505',
       street: 'Hauptstr. 5', plz: '53721', city: 'Siegburg',
     },
     arzt: { name: 'Dr. Meier', ausstellungsdatum: '2026-09-01', lanr: '123456789', bsnr: '987654321' },
@@ -157,6 +158,8 @@ test('Rundreise: OCR → Maske → zurück zum Server verliert nichts Wesentlich
   assert.equal(zurueck.patient.geburtsdatum, gelesen.patient.geburtsdatum);
   assert.equal(zurueck.patient.plz, gelesen.patient.plz);
   assert.equal(zurueck.patient.city, gelesen.patient.city);
+  assert.equal(zurueck.patient.krankenkasse_ik, gelesen.patient.krankenkasse_ik);
+  assert.equal('kostentraeger_ik' in zurueck.patient, false);
   assert.equal(zurueck.arzt.ausstellungsdatum, gelesen.arzt.ausstellungsdatum);
   assert.equal(zurueck.rezept.icd10, gelesen.rezept.icd10);
   assert.equal(zurueck.rezept.anzahl_einheiten, gelesen.rezept.anzahl_einheiten);
@@ -198,3 +201,14 @@ test('ÄNDERN stürzt bei leerer Eingabe nicht ab', () => {
   assert.equal(b.patient_id, null);
   assert.equal(b.parsed.rezept.bericht_status, 'offen');
 });
+
+test('verordnungFuerBackend und verordnungFuerAendern liefern krankenkasse_ik und KEIN kostentraeger_ik im Patientenblock', () => {
+  const anlegen = verordnungFuerBackend({ nutzlast: NUTZLAST, patientFelder: KOPF });
+  assert.equal(anlegen.parsed.patient.krankenkasse_ik, '104212505');
+  assert.equal('kostentraeger_ik' in anlegen.parsed.patient, false);
+
+  const aendern = verordnungFuerAendern({ nutzlast: NUTZLAST, patientFelder: KOPF });
+  assert.equal(aendern.parsed.patient.krankenkasse_ik, '104212505');
+  assert.equal('kostentraeger_ik' in aendern.parsed.patient, false);
+});
+

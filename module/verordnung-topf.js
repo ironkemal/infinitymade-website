@@ -225,7 +225,7 @@ export function inTopf(v) {
                    'diagnosegruppe', 'leitsymptomatik', 'pat_leitsymptomatik',
                    'heilmittel_items', 'hausbesuch', 'wagner_grad',
                    'versichertennummer', 'behandlungsanlass', 'notizen',
-                   'rezeptart', 'kostentraeger_ik', 'zuzahlung_befreit',
+                   'rezeptart', 'kostentraeger_ik', 'krankenkasse_ik', 'zuzahlung_befreit',
                    // Nagelspange: behandelter Zehennagel, „U1 links" .. „U5
                    // rechts" (§ 3b Satz 5). Haelt die Behandlungsserie ueber
                    // mehrere Verordnungen zusammen; heisst beidseitig gleich.

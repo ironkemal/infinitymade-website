@@ -24,7 +24,7 @@
  */
 
 import { ladePodoTermine, terminZaehler, loeseTermin } from './verordnung-termine.js?v=20260908';
-import { ausTopf } from './verordnung-topf.js?v=20260920t';
+import { ausTopf } from './verordnung-topf.js?v=20260930c';
 
 // ── Frequenz ─────────────────────────────────────────────────────────────
 

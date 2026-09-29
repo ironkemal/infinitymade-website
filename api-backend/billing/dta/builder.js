@@ -79,6 +79,25 @@ const r2 = (v) => +Number(v).toFixed(2);
 // }
 // ---------------------------------------------------------------------------
 
+/**
+ * Karten-IK der Verordnung (`krankenkasseIk`) — Pflicht, 9 Ziffern.
+ * Kein Rückfall auf `kostentraegerIk`: beide sind verschiedene Mussfelder
+ * (Anlage 1 TP5 V21 §5.5.2 / §5.5.3.1). Die Routen prüfen das schon vor dem
+ * Bau mit Patientennamen (abrechnung.routes.js); dies hier ist das Netz darunter.
+ */
+function kartenIkPflicht(verordnung) {
+  const ik = String(verordnung?.krankenkasseIk ?? '').trim();
+  if (!/^\d{9}$/.test(ik)) {
+    const e = new Error(
+      'IK der Krankenkasse von der Versichertenkarte fehlt oder ist nicht 9-stellig ' +
+      '— in der Verordnung eintragen (Anlage 1 TP5 V21 §5.5.3.1).'
+    );
+    e.status = 422;
+    throw e;
+  }
+  return ik;
+}
+
 function calcAbrechnungsfallTotals(item) {
   const { sessions, verordnung } = item;
   const brutto = r2(sessions.reduce((a, s) => a + num(s.einzelbetrag) * num(s.anzahl || 1), 0));
@@ -119,9 +138,10 @@ function buildSLLAMessage({
       vkz,
       ikLeistungserbringer: absender.ik,
       ikKostentraeger:      verordnung.kostentraegerIk,
-      // Karten-IK fehlt (NULL), bis eine echte Kostenträgerdatei sie liefert —
-      // dann ist Kostenträger-IK die beste verfügbare Näherung, kein Bug (db-ustasi, 05.09.2026).
-      ikKrankenkasse:       verordnung.krankenkasseIk || verordnung.kostentraegerIk,
+      // Karten-IK und Kostenträger-IK sind zwei Felder (Anlage 1 TP5 V21 §5.5.3.1);
+      // der frühere Rückfall auf die Kostenträger-IK ist am 30.09.2026 entfernt
+      // (gkv-302): er schrieb bei Ersatzkassen die falsche IK in Mussfeld 5.
+      ikKrankenkasse:       kartenIkPflicht(verordnung),
       ikRechnungssteller:   rechnung.rechnungsstellerIk && rechnung.rechnungsstellerIk !== absender.ik
                               ? rechnung.rechnungsstellerIk : '',
     }),
@@ -278,10 +298,10 @@ function buildSLGAMessage({
       sammelrechnung,
       ikLeistungserbringer:     absender.ik,
       ikKostentraeger:          kostentraegerIk,
-      // Karten-IK fehlt (NULL), bis eine echte Kostenträgerdatei sie liefert —
-      // dann ist Kostenträger-IK die beste verfügbare Näherung, kein Bug (db-ustasi, 05.09.2026).
-      // In der Sammelrechnungs-SLGA bleibt das Feld leer (Kap. 5.5.2 S. 32).
-      ikKrankenkasse:           istSammel ? '' : (krankenkasseIk || kostentraegerIk),
+      // Kein Rückfall auf die Kostenträger-IK (gkv-302, 30.09.2026) — ein leeres
+      // Feld wirft in buildSLGA_FKT. In der Sammelrechnungs-SLGA bleibt es leer
+      // (Kap. 5.5.2 S. 32).
+      ikKrankenkasse:           istSammel ? '' : (krankenkasseIk || ''),
       ikAbsenderDatei:          absender.ik,
     }),
     ...buildSLGA_REC({
@@ -468,10 +488,8 @@ export function buildDtaFile({
   // sortiert das Eingabe-Array nicht um.
   const fallTotals = prescriptions.map(calcAbrechnungsfallTotals);
 
-  // Karten-IK der Zeile. Fehlt sie (NULL), ist die Kostenträger-IK die beste
-  // verfügbare Näherung (db-ustasi, 05.09.2026) — dieselbe Ersatzregel wie im
-  // FKT-Segment, damit Gruppierung und Segmentinhalt nicht auseinanderlaufen.
-  const kartenIkVon = (p) => p.verordnung.krankenkasseIk || p.verordnung.kostentraegerIk;
+  // Karten-IK der Zeile — Pflicht, kein Rückfall auf die Kostenträger-IK.
+  const kartenIkVon = (p) => kartenIkPflicht(p.verordnung);
 
   // Summen ueber eine Indexmenge — nie ueber die ganze Datei.
   //

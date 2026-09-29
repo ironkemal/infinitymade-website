@@ -35,7 +35,7 @@ try {
     !!wrap?.querySelector('#rzSaveBtn'), 'rzSaveBtn muss INNERHALB von #rzMaskeWrap stehen');
 
   // ── Umzug in die Seite und zurück ───────────────────────────────────────
-  const maske = await import('../../module/verordnung-maske.js?v=20260927');
+  const maske = await import('../../module/verordnung-maske.js?v=20260930b');
   const host = document.getElementById('seiten-host');
   host.appendChild(wrap);
   pruef('Umzug in die Seite', maske.istEingebettet());
@@ -110,7 +110,7 @@ try {
     unbekannt.gesetzt === 0 && unbekannt.ohneFeld.length === 1);
 
   // ── Der Prüfmotor liefert nur Feldnamen, die es hier gibt ───────────────
-  const { pruefeVerordnung } = await import('../../module/verordnung-pruefung.js?v=20260919');
+  const { pruefeVerordnung } = await import('../../module/verordnung-pruefung.js?v=20260930b');
   const leer = pruefeVerordnung({ rezeptart: 'gkv' }, { bereich: 'podologie', gruppen: {}, luecken: [] });
   const unbekannteFelder = [...new Set(leer.befunde
     .filter(b => b.schwere !== 'hinweis' && b.feld)

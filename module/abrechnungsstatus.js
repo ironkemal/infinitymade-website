@@ -46,7 +46,7 @@ import { bestaetigungsText } from './offene-einheiten.js?v=20260930a';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). Diese Datei spricht
 // weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
 // uebersetzt wird nur an den beiden Lesestellen unten.
-import { TOPF, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260920t';
+import { TOPF, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260930c';
 // O-01, 11.09.2026: import statt eigenem Literal — top-level await in
 // supabase-config.js haelt diese Datei an, bis /api/config zurueck ist.
 import { API_BASE } from '../supabase-config.js';

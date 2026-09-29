@@ -40,7 +40,7 @@ import { parseIcdList, dgsAcceptingIcd } from '../icd-dg-match.js?v=20260810e';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260929';
 import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20260930a';
 import { sitzungsplan } from './sitzungsplan.js?v=20260914';
-import { TOPF } from './verordnung-topf.js?v=20260920t';
+import { TOPF } from './verordnung-topf.js?v=20260930c';
 import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20260918';
 
 // [Q1] Heilmittelkatalog Podologische Therapie, Höchstmenge und orientierende

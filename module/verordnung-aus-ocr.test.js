@@ -11,7 +11,7 @@ const GELESEN = {
   patient: {
     first_name: 'Anna', last_name: 'Bauer', geburtsdatum: '1975-03-08',
     versichertennummer: 'a 123456789', krankenkasse: 'AOK Rheinland/Hamburg',
-    kostentraeger_ik: '104212505', versichertenstatus: '10000',
+    krankenkasse_ik: '104212505', versichertenstatus: '10000',
     street: 'Hauptstr. 5', plz: '53721', city: 'Siegburg',
   },
   arzt: { name: 'Dr. Meier', ausstellungsdatum: '2026-09-01', lanr: '123456789', bsnr: '987654321' },
@@ -52,6 +52,8 @@ test('die Verordnung kommt in den Spaltennamen der Tabelle an', () => {
   assert.equal(rx.ergaenzend_einheiten, 2, 'anzahl_ergaenzend → ergaenzend_einheiten');
   assert.equal(rx.anzahl_einheiten, 6);
   assert.equal(rx.frequenz, '1x wöchentlich');
+  assert.equal(rx.krankenkasse_ik, '104212505');
+  assert.equal(rx.kostentraeger_ik, undefined);
   assert.equal(rx.bericht_status, 'offen', 'ohne Angabe der Vorgabewert');
 });
 
@@ -225,3 +227,30 @@ test('halb gelesenes Datum ist schlimmer als gar keins', () => {
 test('Hin und zurueck ergibt wieder dasselbe', () => {
   assert.equal(alsIsoDatum(alsDeutschesDatum('1975-03-08')), '1975-03-08');
 });
+
+test('OCR ignoriert patient.kostentraeger_ik und verwendet ausschließlich patient.krankenkasse_ik', () => {
+  const ocrMitKt = {
+    patient: {
+      first_name: 'Max',
+      kostentraeger_ik: '104212505',
+    },
+  };
+  const voOhne = ocrAlsVerordnung(ocrMitKt);
+  assert.equal(voOhne.kostentraeger_ik, undefined);
+  assert.equal(voOhne.krankenkasse_ik, null);
+  const kopfOhne = ocrAlsPatientkopf(ocrMitKt);
+  assert.equal('rzPatKasseIk' in kopfOhne, false);
+
+  const ocrMitKarte = {
+    patient: {
+      first_name: 'Max',
+      krankenkasse_ik: '104212505',
+    },
+  };
+  const voMit = ocrAlsVerordnung(ocrMitKarte);
+  assert.equal(voMit.krankenkasse_ik, '104212505');
+  assert.equal(voMit.kostentraeger_ik, undefined);
+  const kopfMit = ocrAlsPatientkopf(ocrMitKarte);
+  assert.equal(kopfMit.rzPatKasseIk, '104212505');
+});
+

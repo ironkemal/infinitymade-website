@@ -1370,6 +1370,13 @@
   üzerinden) · şablon `api-backend/billing/pdf/begleitzettel.template.js`
 - **Kapsam:** tümü
 
+### Karten-IK ≠ Kostenträger-IK — ikisi ayrı Mussfeld, geri düşüş yok
+- **Kural:** SLLA-FKT ve Gesamt-SLGA-FKT'deki "IK der Krankenkasse" alanına KV-Karte/Verordnung'daki IK yazılır (Sammel-SLGA'da boş). "IK des Kostenträgers" alanına ise Kostenträgerdatei'de bu Karten-IK'nın işaret ettiği IK yazılır. Karten-IK yoksa dosya üretilmez.
+- **Kaynak:** Anlage 1 TP5 V21 §5.5.2 S.32, §5.5.3.1 (alan tipi NK, Pflicht Erläuterung'dan)
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** billing/dta/preflight.js V:01017 · builder.js kartenIkPflicht() · billing/utils/karten-ik.js · lib/rezept-felder.js kostentraegerIkAufloesen()
+- **Kapsam:** tümü (Physio/Ergo/Logo/Podo), GKV
+
 ### Sammel-Rechnungsnummer ..14, Einzel-Rechnungsnummer ..6, Zeichenvorrat
 - **Kural:** REC segmentinde Sammel-Rechnungsnummer en fazla **14**, Einzel-Rechnungsnummer
   en fazla **6** hanedir (`..n` = höchstmögliche Stellenbelegung), ikisi de AN/Muss.

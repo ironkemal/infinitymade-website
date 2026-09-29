@@ -147,11 +147,48 @@ export function ikAusEingabe(query) {
  * IK, an die abgerechnet wird: der Verweis der Karten-IK, sonst die eigene.
  * Wie `COALESCE(abrechnender_kt_ik, ik)` — nur zählt hier auch ein leerer String
  * als „fehlt" (`||` statt `??`): eine leere IK im Feld wäre schlechter als die
- * eigene. Das ist der Wert, den `rzPatKasseIk` speichert
- * (→ `prescriptions.kostentraeger_ik`).
+ * eigene.
+ *
+ * ⚠️ Das ist die Kostenträger-IK (`prescriptions.kostentraeger_ik`), NICHT das,
+ * was `rzPatKasseIk` speichert: das Feld trägt seit 30.09.2026 die Karten-IK
+ * (`prescriptions.krankenkasse_ik`, gkv-302, Anlage 1 TP5 V21 §5.5.2/§5.5.3.1).
+ * Die Kostenträger-IK leitet der Server beim Speichern daraus ab
+ * (`kostentraegerIkAufloesen`, api-backend/lib/rezept-felder.js); hier dient die
+ * Ableitung nur der Anzeige („Karte X → Kostenträger Y").
  */
 export function aufgeloesteIk(zeile) {
   return zeile.abrechnender_kt_ik || zeile.ik;
+}
+
+/**
+ * Karten-IK normalisieren: 9 Ziffern oder `null` (Leerraum/Punkte fallen weg,
+ * nichts wird aufgefüllt). Spiegel von `kartenIkNormalisieren()` in
+ * `api-backend/lib/rezept-felder.js` — der Server prüft beim Speichern
+ * ohnehin selbst (zwei Deploys, kein gemeinsamer Import).
+ */
+export function kartenIkNormalisieren(roh) {
+  const ziffern = String(roh ?? '').replace(/\D/g, '');
+  return /^\d{9}$/.test(ziffern) ? ziffern : null;
+}
+
+/**
+ * Ist die Verordnung kassenseitig „bereit"? Kostenträger UND Karten-IK (9 Ziffern)
+ * müssen da sein — sonst erscheint sie in der Liste als bereit und scheitert beim
+ * Erzeugen der Datei mit 422 (billing/utils/karten-ik.js, gkv-302 30.09.2026).
+ * @param {{kostentraeger_ik?: ?string, krankenkasse_ik?: ?string}} rx
+ */
+export function kasseAbrechnungsbereit(rx) {
+  return !!(rx?.kostentraeger_ik && kartenIkNormalisieren(rx.krankenkasse_ik));
+}
+
+/**
+ * Hinweise zum Karten-IK-Feld beim Speichern (leeres Array = in Ordnung).
+ * Kein Blocker: die OCR legt Verordnungen zuerst unvollständig an — aber erst
+ * mit Karten-IK kommt die Verordnung in eine Abrechnung.
+ */
+export function kartenIkHinweise(roh) {
+  if (!String(roh ?? '').trim()) return [HINWEISE.de.ikFehlt];
+  return kartenIkNormalisieren(roh) ? [] : [HINWEISE.de.ikFormat];
 }
 
 /**
@@ -248,38 +285,68 @@ export function ikAnzeige(k) {
 // Sprache kommt aus <html lang>, das dashboard.js beim Wechsel setzt.
 const HINWEISE = {
   de: {
+    // Karten-IK (30.09.2026, gkv-302): nur Deutsch — das Produkt ist deutschsprachig.
+    ikEintragen: 'IK von der Versichertenkarte eintragen (nicht die Kassen-IK aus der Suche).',
+    ikFehlt: 'IK der Krankenkasse von der Versichertenkarte fehlt — ohne sie kommt die Verordnung nicht in eine Abrechnung.',
+    ikFormat: 'IK der Krankenkasse muss genau 9 Ziffern haben.',
+    ikUnbekannt: 'Zu dieser IK wurde kein Kostenträger gefunden — bitte mit der Versichertenkarte abgleichen.',
+    kostentraeger: (karte, name, kt) => karte === kt ? `Kostenträger: ${name} (IK ${kt})` : `Karte ${karte} → Kostenträger ${name} (IK ${kt})`,
     aufgeloest: (karte, ik) => `Karte ${karte} → rechnet ab bei ${ik}`,
-    abweichend: (vorhanden, ik) => `Im Feld steht bereits ${vorhanden} — die Kasse rechnet ab bei ${ik}. Nicht überschrieben.`,
+    abweichend: (vorhanden, karte) => `Im Feld steht bereits ${vorhanden} — die gewählte Kasse hat die Karten-IK ${karte}. Nicht überschrieben.`,
   },
   en: {
     aufgeloest: (karte, ik) => `Card ${karte} → bills via ${ik}`,
-    abweichend: (vorhanden, ik) => `The field already contains ${vorhanden} — this fund bills via ${ik}. Not overwritten.`,
+    abweichend: (vorhanden, karte) => `The field already contains ${vorhanden} — the selected fund has card IK ${karte}. Not overwritten.`,
   },
   tr: {
     aufgeloest: (karte, ik) => `Kart ${karte} → ${ik} üzerinden faturalanır`,
-    abweichend: (vorhanden, ik) => `Alanda zaten ${vorhanden} var — bu kasa ${ik} üzerinden faturalanır. Üzerine yazılmadı.`,
+    abweichend: (vorhanden, karte) => `Alanda zaten ${vorhanden} var — seçilen kasanın kart IK'sı ${karte}. Üzerine yazılmadı.`,
   },
 };
 
 /**
  * Was unter dem IK-Feld stehen bleibt, nachdem eine Kasse gewählt wurde.
- *  - Feld war schon mit einer ANDEREN IK gefüllt (Handeingabe, OCR): sie wird nicht
- *    überschrieben, die Abweichung wird sichtbar (Konsey 21.09.2026).
- *  - Sonst, wenn die Karten-IK auf eine andere IK verweist: die Auflösung. Sonst
- *    steht im Feld eine IK, die der Anwender nicht getippt hat — er hielte sie
- *    für einen Tippfehler und schriebe sie zurück (podoloji).
+ * Das Feld trägt die KARTEN-IK (von der Versichertenkarte, gkv-302 30.09.2026):
+ *  - Treffer aus der IK-Suche: die getippte Karten-IK wird eingetragen. War das
+ *    Feld schon mit einer ANDEREN IK gefüllt (Handeingabe, OCR), bleibt sie
+ *    stehen und die Abweichung wird sichtbar (Konsey 21.09.2026). Sonst, wenn
+ *    die Karte auf einen anderen Kostenträger verweist: die Auflösung.
+ *  - Treffer aus der Namenssuche: `k.ik` ist die IK des Kostenträgers, NICHT die
+ *    der Karte — sie kommt deshalb nie ins Feld. Bleibt das Feld leer, steht der
+ *    Hinweis, die IK von der Karte einzutragen.
  */
 export function hinweisZeile(k, vorhandeneIk, sprache = 'de') {
-  if (!k || !k.ik) return '';
+  if (!k) return '';
   const T = HINWEISE[sprache] || HINWEISE.de;
   const vorhanden = String(vorhandeneIk || '').trim();
-  if (vorhanden && vorhanden !== k.ik) return T.abweichend(vorhanden, k.ik);
-  if (k.quelle === 'kostentraeger' && k.kartenIk && k.kartenIk !== k.ik) return T.aufgeloest(k.kartenIk, k.ik);
-  return '';
+  if (k.quelle === 'kostentraeger') {
+    if (!k.kartenIk) return '';
+    if (vorhanden && vorhanden !== k.kartenIk) return T.abweichend(vorhanden, k.kartenIk);
+    if (k.kartenIk !== k.ik) return T.aufgeloest(k.kartenIk, k.ik);
+    return '';
+  }
+  return vorhanden ? '' : (T.ikEintragen || HINWEISE.de.ikEintragen);
 }
 
-function zeigeIkHinweis(ikEl, k, vorher) {
-  if (!ikEl) return;
+/**
+ * Prüft die eingetragene Karten-IK gegen die Kostenträgerdatei (View
+ * `kostentraeger_auswahl`) und nennt den daraus abgeleiteten Kostenträger.
+ * Wirft nie. `status`: 'leer' | 'format' | 'unbekannt' | 'ok'.
+ */
+export async function kartenIkStatus(sb, roh) {
+  if (!String(roh ?? '').trim()) return { status: 'leer', text: '' };
+  const ik = kartenIkNormalisieren(roh);
+  if (!ik) return { status: 'format', text: HINWEISE.de.ikFormat };
+  const zeile = (await holeKostentraeger(sb, ik)).find(z => z.ik === ik);
+  if (!zeile) return { status: 'unbekannt', kartenIk: ik, text: HINWEISE.de.ikUnbekannt };
+  const kt = aufgeloesteIk(zeile);
+  return {
+    status: 'ok', kartenIk: ik, kostentraegerIk: kt,
+    text: HINWEISE.de.kostentraeger(ik, zeile.kurzname || zeile.name, kt),
+  };
+}
+
+function ikHinweisElement(ikEl) {
   let el = document.getElementById(ikEl.id + 'Hinweis');
   if (!el) {
     el = document.createElement('div');
@@ -288,7 +355,12 @@ function zeigeIkHinweis(ikEl, k, vorher) {
     el.style.cssText = 'font-size:11px;color:var(--text-muted);margin-top:2px;';
     ikEl.insertAdjacentElement('afterend', el);
   }
-  el.textContent = hinweisZeile(k, vorher, document.documentElement.lang || 'de');
+  return el;
+}
+
+function zeigeIkHinweis(ikEl, k, vorher) {
+  if (!ikEl) return;
+  ikHinweisElement(ikEl).textContent = hinweisZeile(k, vorher, document.documentElement.lang || 'de');
 }
 
 function loescheIkHinweis(ikEl) {
@@ -351,7 +423,7 @@ export function attachKrankenkasseSuche(inputEl, cfg = {}) {
 
     onSelect: k => {
       const vorher = ikEl ? ikEl.value : '';
-      if (ikEl && k.ik && !ikEl.value) ikEl.value = k.ik;
+      if (ikEl && k.quelle === 'kostentraeger' && k.kartenIk && !ikEl.value) { ikEl.value = k.kartenIk; }
       zeigeIkHinweis(ikEl, k, vorher);
       if (onSelect) onSelect(k);
     },
@@ -364,6 +436,14 @@ export function attachKrankenkasseSuche(inputEl, cfg = {}) {
     const weg = () => loescheIkHinweis(ikEl);
     inputEl.addEventListener('input', weg);
     ikEl.addEventListener('input', weg);
+    // Nach dem Tippen der Karten-IK: Format prüfen und den abgeleiteten
+    // Kostenträger zeigen. Veraltete Antworten (Feld inzwischen geändert) fallen weg.
+    ikEl.addEventListener('change', async () => {
+      const wert = ikEl.value;
+      const r = await kartenIkStatus(sb, wert);
+      if (ikEl.value !== wert) return;
+      ikHinweisElement(ikEl).textContent = r.text;
+    });
   }
 }
 

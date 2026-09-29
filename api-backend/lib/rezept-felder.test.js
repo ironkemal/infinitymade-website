@@ -1,7 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { heilmittelPositionAufloesen, kostentraegerIkAufloesen } from './rezept-felder.js';
+import {
+  heilmittelPositionAufloesen,
+  kostentraegerIkAufloesen,
+  kartenIkNormalisieren,
+} from './rezept-felder.js';
+
+// ── kartenIkNormalisieren ───────────────────────────────────────────────────
+
+test('kartenIkNormalisieren: Leerzeichen entfernen, 9 Ziffern prüfen', () => {
+  assert.equal(kartenIkNormalisieren('108 310 400'), '108310400');
+  assert.equal(kartenIkNormalisieren('12345'), null);
+  assert.equal(kartenIkNormalisieren(null), null);
+  assert.equal(kartenIkNormalisieren(undefined), null);
+  assert.equal(kartenIkNormalisieren('abc'), null);
+});
 
 // ── heilmittelPositionAufloesen ─────────────────────────────────────────────
 
@@ -41,35 +55,124 @@ test('explizite Position gewinnt gegen den Rate-Zweig', () => {
  */
 function makeSupabaseStub(kkRows = [], optionen = {}) {
   let abfrage;
+  function filterZeilen() {
+    assert.equal(abfrage.active, true, 'jede Abfrage muss auf aktive Sätze einschränken');
+    assert.equal(abfrage.echt, true, 'nur datensatz_status = echt');
+    assert.equal(abfrage.gkv, true, 'nur payer_type = gkv');
+    assert.ok(abfrage.heute, 'abgelaufene Sätze (valid_to < heute) müssen ausgeschlossen werden');
+    let zeilen = kkRows.filter(r => r.active !== false
+      && (r.datensatz_status ?? 'echt') === 'echt'
+      && (r.payer_type ?? 'gkv') === 'gkv'
+      && (!r.valid_to || r.valid_to >= abfrage.heute));
+    if (abfrage.eqIk !== null) zeilen = zeilen.filter(r => r.ik === abfrage.eqIk);
+    if (abfrage.ilike !== null) zeilen = zeilen.filter(r => (r.name || '').toLowerCase().includes(abfrage.ilike));
+    if (abfrage.in) zeilen = zeilen.filter(r => abfrage.in.includes(r.ik));
+    return zeilen.map(r => ({ ik: r.ik, abrechnender_kt_ik: r.abrechnender_kt_ik ?? null }));
+  }
+
   const api = {
     from(table) {
       assert.equal(table, 'kostentraeger');
-      abfrage = { ilike: null, in: null, active: null };
+      abfrage = { ilike: null, in: null, active: null, eqIk: null, echt: false, gkv: false, heute: null };
       return api;
     },
     select() { return api; },
     ilike(_col, val) { abfrage.ilike = String(val).replace(/%/g, '').toLowerCase(); return api; },
     in(col, liste) { assert.equal(col, 'ik'); abfrage.in = liste; return api; },
-    eq(col, val) { assert.equal(col, 'active'); assert.equal(val, true); abfrage.active = val; return api; },
+    eq(col, val) {
+      if (col === 'active') {
+        assert.equal(val, true);
+        abfrage.active = val;
+      } else if (col === 'ik') {
+        abfrage.eqIk = val;
+      } else if (col === 'datensatz_status') {
+        abfrage.echt = val === 'echt';
+      } else if (col === 'payer_type') {
+        abfrage.gkv = val === 'gkv';
+      }
+      return api;
+    },
+    or(filter) {
+      const m = /^valid_to\.is\.null,valid_to\.gte\.(\d{4}-\d{2}-\d{2})$/.exec(filter);
+      assert.ok(m, `unerwarteter or()-Filter: ${filter}`);
+      abfrage.heute = m[1];
+      return api;
+    },
+    maybeSingle() {
+      if (optionen.fehler) return Promise.resolve({ data: null, error: new Error('db down') });
+      const zeilen = filterZeilen();
+      return Promise.resolve({ data: zeilen[0] || null, error: null });
+    },
     then(resolve) {
       if (optionen.fehler) return resolve({ data: null, error: new Error('db down') });
-      assert.equal(abfrage.active, true, 'jede Abfrage muss auf aktive Sätze einschränken');
-      let zeilen = kkRows.filter(r => r.active !== false);
-      if (abfrage.ilike !== null) zeilen = zeilen.filter(r => r.name.toLowerCase().includes(abfrage.ilike));
-      if (abfrage.in) zeilen = zeilen.filter(r => abfrage.in.includes(r.ik));
-      return resolve({
-        data: zeilen.map(r => ({ ik: r.ik, abrechnender_kt_ik: r.abrechnender_kt_ik ?? null })),
-        error: null,
-      });
+      const zeilen = filterZeilen();
+      return resolve({ data: zeilen, error: null });
     },
   };
   return api;
 }
 
-test('ein mitgegebenes IK gewinnt immer — keine Suche', async () => {
-  const supabase = makeSupabaseStub([{ name: 'AOK', ik: '999999999' }]);
-  const ik = await kostentraegerIkAufloesen(supabase, { kostentraeger_ik: '104212505', krankenkasse: 'AOK' });
+test('patient.kostentraeger_ik wird ignoriert — stattdessen Namenssuche oder null', async () => {
+  const supabase = makeSupabaseStub([{ name: 'AOK Rheinland/Hamburg', ik: '104212505' }]);
+  // kostentraeger_ik gegeben, aber kein krankenkasse_ik: kostentraeger_ik wird ignoriert, Kassenname aufgelöst
+  const ik1 = await kostentraegerIkAufloesen(supabase, { kostentraeger_ik: '999999999', krankenkasse: 'AOK Rheinland/Hamburg' });
+  assert.equal(ik1, '104212505');
+
+  // Nur kostentraeger_ik ohne Kassenname und ohne krankenkasse_ik -> null
+  const ik2 = await kostentraegerIkAufloesen(supabase, { kostentraeger_ik: '999999999' });
+  assert.equal(ik2, null);
+});
+
+test('krankenkasse_ik gegeben: sucht mit ik = Karten-IK und liefert abrechnender_kt_ik (Ersatzkasse-Fall: Karte != Kostenträger)', async () => {
+  const supabase = makeSupabaseStub([
+    { name: 'Techniker Krankenkasse', ik: '101575519', abrechnender_kt_ik: '104212505' },
+    { name: 'Techniker Krankenkasse (Zentrale)', ik: '104212505' },
+  ]);
+  const ik = await kostentraegerIkAufloesen(supabase, {
+    krankenkasse_ik: '101575519',
+    kostentraeger_ik: '111111111', // wird ignoriert
+    krankenkasse: 'Techniker Krankenkasse',
+  });
   assert.equal(ik, '104212505');
+  assert.notEqual(ik, '101575519');
+});
+
+test('krankenkasse_ik gegeben: Verweiskette wird bis zum Endpunkt verfolgt', async () => {
+  const supabase = makeSupabaseStub([
+    { name: 'BIG direkt gesund (vorm. BKK Victoria D.A.S.)', ik: '109531476', abrechnender_kt_ik: '104229606' },
+    { name: 'BIG Zwischenstelle', ik: '104229606', abrechnender_kt_ik: '103501080' },
+    { name: 'BIG direkt gesund (Haupt IK)', ik: '103501080' },
+  ]);
+  const ik = await kostentraegerIkAufloesen(supabase, { krankenkasse_ik: '109531476' });
+  assert.equal(ik, '103501080');
+});
+
+test('Karten-IK nicht in kostentraeger -> null (kein Rückfall auf Namenssuche)', async () => {
+  const supabase = makeSupabaseStub([
+    { name: 'AOK Bayern', ik: '108310400' },
+  ]);
+  const ik = await kostentraegerIkAufloesen(supabase, {
+    krankenkasse_ik: '109999999',
+    krankenkasse: 'AOK Bayern',
+  });
+  assert.equal(ik, null);
+});
+
+test('ungültige Karten-IK ("12345", "abc") wird zu null normalisiert -> fällt auf Namenssuche zurück', async () => {
+  const supabase = makeSupabaseStub([
+    { name: 'AOK Rheinland/Hamburg', ik: '104212505' },
+  ]);
+  const ik1 = await kostentraegerIkAufloesen(supabase, {
+    krankenkasse_ik: '12345',
+    krankenkasse: 'AOK Rheinland/Hamburg',
+  });
+  assert.equal(ik1, '104212505');
+
+  const ik2 = await kostentraegerIkAufloesen(supabase, {
+    krankenkasse_ik: 'abc',
+    krankenkasse: 'AOK Rheinland/Hamburg',
+  });
+  assert.equal(ik2, '104212505');
 });
 
 test('ohne IK wird über den Kassennamen gesucht', async () => {
@@ -167,4 +270,24 @@ test('Datenbankfehler -> null, kein Wurf', async () => {
   const supabase = makeSupabaseStub([{ name: 'AOK', ik: '999999999' }], { fehler: true });
   const ik = await kostentraegerIkAufloesen(supabase, { krankenkasse: 'AOK' });
   assert.equal(ik, null);
+});
+
+test('Sätze, die die View kostentraeger_auswahl nicht anbietet, werden nie aufgelöst (abgelaufen, privat, Testsatz)', async () => {
+  const supabase = makeSupabaseStub([
+    { name: 'Alt', ik: '101111111', valid_to: '2020-01-01' },
+    { name: 'Privat', ik: '102222222', payer_type: 'pkv' },
+    { name: 'Test', ik: '103333333', datensatz_status: 'test' },
+    { name: 'Gueltig', ik: '104444444', valid_to: '2999-12-31' },
+  ]);
+  assert.equal(await kostentraegerIkAufloesen(supabase, { krankenkasse_ik: '101111111' }), null);
+  assert.equal(await kostentraegerIkAufloesen(supabase, { krankenkasse_ik: '102222222' }), null);
+  assert.equal(await kostentraegerIkAufloesen(supabase, { krankenkasse_ik: '103333333' }), null);
+  assert.equal(await kostentraegerIkAufloesen(supabase, { krankenkasse_ik: '104444444' }), '104444444');
+  // auch die Namenssuche und der Verweis-Sprung unterliegen denselben Filtern
+  assert.equal(await kostentraegerIkAufloesen(supabase, { krankenkasse: 'Alt' }), null);
+  const verweis = makeSupabaseStub([
+    { name: 'Karte', ik: '105555555', abrechnender_kt_ik: '101111111' },
+    { name: 'Ziel abgelaufen', ik: '101111111', valid_to: '2020-01-01' },
+  ]);
+  assert.equal(await kostentraegerIkAufloesen(verweis, { krankenkasse_ik: '105555555' }), null);
 });

@@ -389,14 +389,23 @@ test('podo-Zeile: icd10 kommt schon als Array (nach ausTopf), Position aus heilm
 // JEDE Zeile ein Ausrufezeichen. Ursache war nicht die Verordnung, sondern
 // diese Übersetzung: sie las drei Felder an der falschen Stelle.
 
-test('Kassen-IK: leeres krankenkasse_ik fällt auf kostentraeger_ik zurück', () => {
-  // `prescriptions.krankenkasse_ik` ist laut Spaltenkommentar in db/SCHEMA.sql
-  // „überall NULL", solange keine echte Kostenträgerdatei angebunden ist —
-  // ohne diesen Rückgriff meldet der Motor an jeder Zeile PFLICHT_KASSEIK.
+test('Kassen-IK: leeres krankenkasse_ik bleibt leer, KEIN Rückgriff auf kostentraeger_ik', () => {
+  // Seit 30.09.2026 (gkv-302): kein Rückgriff mehr auf kostentraeger_ik.
+  // Ohne Karten-IK (krankenkasse_ik) bleibt kasseIk leer und die Prüfung meldet PFLICHT_KASSEIK.
   const vo = voAusGespeicherterVerordnung({
     krankenkasse_ik: null, kostentraeger_ik: '108310400',
   });
-  assert.equal(vo.kasseIk, '108310400');
+  assert.equal(vo.kasseIk, '');
+  const ergebnis = pruefeVerordnung(saubereVo({ kasseIk: vo.kasseIk }), PODO, HEUTE);
+  assert.ok(codes(ergebnis).includes('PFLICHT_KASSEIK'),
+    'PFLICHT_KASSEIK muss gemeldet werden, wenn krankenkasse_ik fehlt');
+});
+
+test('Kassen-IK: voAusGespeicherterVerordnung übernimmt ausschließlich krankenkasse_ik und ignoriert kostentraeger_ik', () => {
+  const vo = voAusGespeicherterVerordnung({
+    krankenkasse_ik: '101575519', kostentraeger_ik: '999999999',
+  });
+  assert.equal(vo.kasseIk, '101575519');
 });
 
 test('Versichertennummer: steht sie am Patienten, gilt sie als erfasst', () => {

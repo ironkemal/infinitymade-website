@@ -122,7 +122,12 @@ export function ocrAlsVerordnung(parsed) {
     unterschrift_vorhanden: rezept.unterschrift_vorhanden ?? null,
     signature_confidence: rezept.signature_confidence || null,
 
-    kostentraeger_ik: patient.kostentraeger_ik || null,
+    // Was die KI auf Muster 13 gelesen hat, ist die KARTEN-IK („Kostenträgerkennung"
+    // der Versichertenkarte) — nicht der Kostenträger. Den leitet der Server beim
+    // Speichern daraus ab; ein `kostentraeger_ik` aus der KI wird nicht übernommen
+    // (gkv-302, 30.09.2026: bei Ersatzkassen ging die Karten-IK als falscher
+    // Kostenträger in die Datei).
+    krankenkasse_ik: patient.krankenkasse_ik || null,
   };
 }
 
@@ -133,8 +138,8 @@ export function ocrAlsVerordnung(parsed) {
  * Patienten aus der Akte, und beim Scannen gibt es den vielleicht noch gar
  * nicht. Was auf dem Papier steht, ist hier die einzige Quelle.
  *
- * `rzPatKasseIk` steht nur drin, wenn die Texterkennung das IK schon kennt —
- * sonst leitet es der Aufrufer aus der Kassenliste ab, wie bisher.
+ * `rzPatKasseIk` (die Karten-IK) steht nur drin, wenn die Texterkennung sie
+ * gelesen hat — sonst bleibt das Feld leer und die Praxis trägt sie von der Karte ein.
  *
  * @param {object} parsed
  * @returns {Object<string,string>}
@@ -151,7 +156,7 @@ export function ocrAlsPatientkopf(parsed) {
     rzPatStrasse: patient.street || '',
     rzPatOrt: [patient.plz, patient.city].filter(Boolean).join(' '),
   };
-  if (patient.kostentraeger_ik) kopf.rzPatKasseIk = patient.kostentraeger_ik;
+  if (patient.krankenkasse_ik) kopf.rzPatKasseIk = patient.krankenkasse_ik;
   return kopf;
 }
 

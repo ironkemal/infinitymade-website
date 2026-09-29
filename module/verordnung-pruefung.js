@@ -60,7 +60,7 @@ export const SCHWERE = { blocker: 'blocker', warnung: 'warnung', hinweis: 'hinwe
  */
 const PFLICHTFELDER = [
   { feld: 'versichertennummer', label: 'Versichertennummer', schwere: SCHWERE.blocker, nurGkv: true },
-  { feld: 'kasseIk',            label: 'Krankenkasse (IK)',  schwere: SCHWERE.blocker, nurGkv: true },
+  { feld: 'kasseIk',            label: 'IK der Krankenkasse (Karte)', schwere: SCHWERE.blocker, nurGkv: true },
   { feld: 'ausstellungsdatum',  label: 'Ausstellungsdatum',  schwere: SCHWERE.blocker },
   { feld: 'diagnosegruppe',     label: 'Diagnosegruppe',     schwere: SCHWERE.blocker },
   { feld: 'heilmittel',         label: 'Verordnetes Heilmittel', schwere: SCHWERE.blocker },
@@ -394,9 +394,9 @@ function heilmittelAusItems(items) {
  *
  * Feldnamen bewusst gegen `db/SCHEMA.sql` geprüft, nicht geraten — insbesondere
  * `heilmittel_position` (eine Spalte, siehe CLAUDE.md-Warnung, kein
- * Tabellenname). `krankenkasse_ik` und `kostentraeger_ik` sind zwar zwei
- * verschiedene Felder (Trennung 05.09.2026), für die PRÜFUNG zählt aber jede
- * bekannte Kassen-IK — Begründung unten am Feld.
+ * Tabellenname). `krankenkasse_ik` (Karten-IK) und `kostentraeger_ik` sind
+ * zwei verschiedene Felder; geprüft wird die Karten-IK, ohne Rückgriff auf
+ * den Kostenträger (30.09.2026) — Begründung unten am Feld.
  *
  * @param {object} row  Zeile aus `prescriptions` — physio roh, podo nach `ausTopf()`
  * @returns {object}  `vo` für `pruefeVerordnung()`
@@ -432,13 +432,12 @@ export function voAusGespeicherterVerordnung(row) {
     //     Die Muster-13-Maske schreibt die Nummer an den Patienten
     //     (`leads.versichertennummer`, siehe verordnungPatientenAbgleich) —
     //     dort steht sie, dort wird sie gelesen.
-    //   • `prescriptions.krankenkasse_ik` ist die Karten-IK und laut
-    //     Spaltenkommentar in db/SCHEMA.sql „überall NULL", bis eine echte
-    //     Kostenträgerdatei angebunden ist. Derselbe Rückgriff auf
-    //     `kostentraeger_ik` wie im DTA-Bau
-    //     (api-backend/billing/dta/builder.js:106,238,353).
+    //   • `prescriptions.krankenkasse_ik` ist die Karten-IK (Mussfeld in
+    //     SLGA/SLLA-FKT). Es gibt KEINEN Rückgriff auf `kostentraeger_ik` mehr
+    //     (gkv-302, 30.09.2026): der DTA-Bau lehnt eine Verordnung ohne Karten-IK
+    //     ab, also muss die Liste sie ebenfalls als fehlend zeigen.
     versichertennummer: row?.versichertennummer || row?.leads?.versichertennummer || '',
-    kasseIk:            row?.krankenkasse_ik || row?.kostentraeger_ik || '',
+    kasseIk:            row?.krankenkasse_ik || '',
     arztLanr:           row?.doctor_lanr || row?.aerzte?.lanr || '',
     arztBsnr:           row?.doctor_bsnr || row?.aerzte?.bsnr || '',
     rezeptart:          row?.rezeptart || '',

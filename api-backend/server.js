@@ -22,7 +22,7 @@ import rechnungZahlungRouter from './billing/api/rechnung-zahlung.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
 import setupRouter from './setup/router.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
-import { heilmittelPositionAufloesen, kostentraegerIkAufloesen } from './lib/rezept-felder.js';
+import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren } from './lib/rezept-felder.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
@@ -2678,6 +2678,9 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         signature_confidence: rezept.signature_confidence || null,
         doctor_lanr: arzt.lanr || null,
         doctor_bsnr: arzt.bsnr || null,
+        // Zwei getrennte IK (gkv-302, 30.09.2026): Karten-IK aus der Maske,
+        // Kostenträger-IK immer daraus abgeleitet (lib/rezept-felder.js).
+        krankenkasse_ik: kartenIkNormalisieren(patient.krankenkasse_ik),
         kostentraeger_ik: kostentraegerIk,
         gueltig_bis: validation.computed?.gueltig_bis || null,
         computed: validation.computed || null,
@@ -2879,6 +2882,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       signature_confidence: rezept.signature_confidence || null,
       doctor_lanr: arzt.lanr || null,
       doctor_bsnr: arzt.bsnr || null,
+      krankenkasse_ik: kartenIkNormalisieren(patient.krankenkasse_ik),
       kostentraeger_ik: kostentraegerIk,
       gueltig_bis: validation.computed?.gueltig_bis || null,
       computed: validation.computed || null,

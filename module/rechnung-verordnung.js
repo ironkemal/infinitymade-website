@@ -39,8 +39,8 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { ausTopf } from './verordnung-topf.js?v=20260920t';
-import { terminLeistungen } from './rechnung-editor.js?v=20260917';
+import { ausTopf } from './verordnung-topf.js?v=20260930c';
+import { terminLeistungen } from './rechnung-editor.js?v=20260930c';
 
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────
 let _liste = [];    // normalisierte Verordnungsliste aus verordnungenLaden

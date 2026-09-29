@@ -31,10 +31,10 @@
  * spaeter und mit Rueckfrage (module/verordnung-patient-abgleich.js).
  */
 
-import { fuelleMuster13, setzeScanHerkunft, setzePatientNeu } from './verordnung-maske.js?v=20260927';
+import { fuelleMuster13, setzeScanHerkunft, setzePatientNeu } from './verordnung-maske.js?v=20260930c';
 import {
   ocrAlsVerordnung, ocrAlsPatientkopf, ocrAlsPatientensuche, patientAbgleichAusOcr,
-} from './verordnung-aus-ocr.js?v=20260906';
+} from './verordnung-aus-ocr.js?v=20260930c';
 
 const g = (id) => document.getElementById(id);
 

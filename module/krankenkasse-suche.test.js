@@ -78,11 +78,15 @@ test('IK-Geschwisterfeld wird per Namenskonvention gesucht (<id>Ik), kein neuer 
     'dashboard.js darf nicht wachsen — die Verknüpfung muss hier im Modul über die ID-Konvention laufen.');
 });
 
-test('Autofill überschreibt nie einen vorhandenen Wert (OCR/Handkorrektur bleibt stehen)', () => {
-  const treffer = quelle.match(/onSelect:\s*k\s*=>\s*\{[\s\S]{0,200}?\}/);
+test('Autofill schreibt nur bei Kostenträger-Treffer die Karten-IK und überschreibt nie einen vorhandenen Wert', () => {
+  const treffer = quelle.match(/onSelect:\s*k\s*=>\s*\{[\s\S]{0,250}?\}/);
   assert.ok(treffer, 'onSelect-Handler nicht gefunden');
   assert.match(treffer[0], /!ikEl\.value/,
     'Ohne diese Bedingung würde jede Kassenauswahl eine bereits eingetragene IK stillschweigend ersetzen.');
+  assert.match(treffer[0], /k\.quelle\s*===\s*['"]kostentraeger['"]/,
+    'Nur Treffer aus der Kostenträger-Suche dürfen die IK setzen');
+  assert.match(treffer[0], /ikEl\.value\s*=\s*k\.kartenIk/,
+    'Es wird ausschließlich die Karten-IK ins Feld geschrieben');
 });
 
 // ── Ops #300: IK eintippen findet die Kasse (Konsey 21.09.2026, Lieferung 2) ──
@@ -349,23 +353,25 @@ test('hinweisZeile: „Karte X → rechnet ab bei Y" bleibt nach der Auswahl ste
   assert.equal(hinweisZeile(dak, '', undefined), de);
 });
 
-test('hinweisZeile: kein Hinweis, wenn Karte und Abrechnung dieselbe IK sind oder nichts Besonderes passiert', () => {
+test('hinweisZeile: kein Hinweis, wenn Karte und Abrechnung dieselbe IK sind oder Feld bereits gefüllt ist', () => {
   const hinweisZeile = fn('hinweisZeile');
   assert.equal(hinweisZeile({ quelle: 'kostentraeger', kartenIk: '105313145', ik: '105313145' }, '', 'de'), '');
-  assert.equal(hinweisZeile({ name: 'TK', ik: '101575519', anzahl: 3 }, '', 'de'), '', 'Namenstreffer, Feld war leer');
+  assert.equal(hinweisZeile({ name: 'TK', ik: '101575519', anzahl: 3 }, '101575519', 'de'), '', 'Namenstreffer, Feld war bereits gefüllt');
   assert.equal(hinweisZeile(null, '', 'de'), '');
-  assert.equal(hinweisZeile({ name: 'Y', ik: null }, '', 'de'), '');
+  assert.equal(hinweisZeile({ name: 'Y', ik: null }, '101575519', 'de'), '');
 });
 
 test('hinweisZeile: gefülltes Feld wird nicht überschrieben — die Abweichung wird sichtbar (Konsey)', () => {
   const hinweisZeile = fn('hinweisZeile');
   const dak = { quelle: 'kostentraeger', kartenIk: '100167999', ik: '105830016' };
   const s = hinweisZeile(dak, '101570104', 'de');           // z. B. von OCR gesetzt
-  assert.match(s, /101570104/); assert.match(s, /105830016/); assert.match(s, /nicht überschrieben/i);
-  assert.equal(hinweisZeile(dak, '105830016', 'de'), hinweisZeile(dak, '', 'de'),
-    'steht schon dieselbe IK im Feld, gibt es nichts zu warnen — nur die Auflösung');
-  assert.match(hinweisZeile({ name: 'TK', ik: '101575519' }, '999999999', 'de'), /999999999/,
-    'gilt auch für Treffer aus der Namenssuche');
+  assert.match(s, /101570104/);
+  assert.match(s, /100167999/);
+  assert.match(s, /nicht überschrieben/i);
+  assert.equal(hinweisZeile(dak, '100167999', 'de'), hinweisZeile(dak, '', 'de'),
+    'steht schon dieselbe Karten-IK im Feld, gibt es nichts zu warnen — nur die Auflösung');
+  assert.equal(hinweisZeile({ name: 'TK', ik: '101575519' }, '999999999', 'de'), '',
+    'Namenssuche überschreibt nicht und zeigt keinen abweichend-Hinweis, wenn Feld bereits gefüllt ist');
 });
 
 test('Anschluss: fetchItems ruft sucheKassenfeld, der Hinweis wird mit textContent gesetzt (kein innerHTML)', () => {
@@ -385,4 +391,95 @@ test('aufgeloesteIk: abrechnende IK, sonst die eigene', () => {
   assert.equal(aufgeloesteIk({ ik: '105830016' }), '105830016');
   // Leerer String zählt als „fehlt": eine leere IK im Feld wäre schlechter als die eigene.
   assert.equal(aufgeloesteIk({ ik: '105830016', abrechnender_kt_ik: '' }), '105830016');
+});
+
+// ── Neue Karten-IK-Funktionen (30.09.2026, gkv-302) ──────────────────────────
+
+test('kartenIkNormalisieren: Leerzeichen/Punkte entfernen, genau 9 Ziffern sonst null', () => {
+  const kartenIkNormalisieren = fn('kartenIkNormalisieren');
+  assert.equal(kartenIkNormalisieren('108 310 400'), '108310400');
+  assert.equal(kartenIkNormalisieren('108.310.400'), '108310400');
+  assert.equal(kartenIkNormalisieren('108310400'), '108310400');
+  assert.equal(kartenIkNormalisieren('12345'), null);
+  assert.equal(kartenIkNormalisieren(null), null);
+  assert.equal(kartenIkNormalisieren(undefined), null);
+  assert.equal(kartenIkNormalisieren(''), null);
+  assert.equal(kartenIkNormalisieren('1083104001'), null);
+});
+
+test('kartenIkHinweise: fehlt bei Leerwert, Formatfehler bei ungültiger Länge, leer bei gültiger IK', () => {
+  const kartenIkHinweise = fn('kartenIkHinweise');
+  assert.deepEqual(kartenIkHinweise(''),
+    ['IK der Krankenkasse von der Versichertenkarte fehlt — ohne sie kommt die Verordnung nicht in eine Abrechnung.']);
+  assert.deepEqual(kartenIkHinweise('   '),
+    ['IK der Krankenkasse von der Versichertenkarte fehlt — ohne sie kommt die Verordnung nicht in eine Abrechnung.']);
+  assert.deepEqual(kartenIkHinweise(null),
+    ['IK der Krankenkasse von der Versichertenkarte fehlt — ohne sie kommt die Verordnung nicht in eine Abrechnung.']);
+  assert.deepEqual(kartenIkHinweise('12345'),
+    ['IK der Krankenkasse muss genau 9 Ziffern haben.']);
+  assert.deepEqual(kartenIkHinweise('1083104001'),
+    ['IK der Krankenkasse muss genau 9 Ziffern haben.']);
+  assert.deepEqual(kartenIkHinweise('108310400'), []);
+  assert.deepEqual(kartenIkHinweise('108 310 400'), []);
+  assert.deepEqual(kartenIkHinweise('108.310.400'), []);
+});
+
+test('hinweisZeile: Namenssuche fordert bei leerem Feld zum Eintragen der Karten-IK auf, schweigt bei gefülltem Feld', () => {
+  const hinweisZeile = fn('hinweisZeile');
+  const treffer = { name: 'Techniker Krankenkasse', ik: '101575519', anzahl: 5 };
+  assert.equal(hinweisZeile(treffer, '', 'de'),
+    'IK von der Versichertenkarte eintragen (nicht die Kassen-IK aus der Suche).');
+  assert.equal(hinweisZeile(treffer, '   ', 'de'),
+    'IK von der Versichertenkarte eintragen (nicht die Kassen-IK aus der Suche).');
+  assert.equal(hinweisZeile(treffer, '101575519', 'de'), '');
+  assert.equal(hinweisZeile(treffer, '108310400', 'de'), '');
+});
+
+test('hinweisZeile: Kostenträger-Zweig nennt bei Abweichung die Karten-IK der gewählten Kasse', () => {
+  const hinweisZeile = fn('hinweisZeile');
+  const dak = { quelle: 'kostentraeger', kartenIk: '100167999', ik: '105830016' };
+  const h = hinweisZeile(dak, '108310400', 'de');
+  assert.match(h, /100167999/);
+  assert.match(h, /108310400/);
+  assert.match(h, /nicht überschrieben/i);
+});
+
+test('kartenIkStatus: leer, format, unbekannt und erfolgreiche Kostenträger-Auflösung', async () => {
+  const kartenIkStatus = fn('kartenIkStatus');
+  const sbLeer = sbDoppel({ view: [] });
+
+  // leer
+  assert.deepEqual(await kartenIkStatus(sbLeer, ''), { status: 'leer', text: '' });
+  assert.deepEqual(await kartenIkStatus(sbLeer, null), { status: 'leer', text: '' });
+  assert.deepEqual(await kartenIkStatus(sbLeer, '   '), { status: 'leer', text: '' });
+
+  // format
+  const rFormat = await kartenIkStatus(sbLeer, '12345');
+  assert.equal(rFormat.status, 'format');
+  assert.equal(rFormat.text, 'IK der Krankenkasse muss genau 9 Ziffern haben.');
+
+  // unbekannt
+  const rUnbekannt = await kartenIkStatus(sbLeer, '108310400');
+  assert.equal(rUnbekannt.status, 'unbekannt');
+  assert.equal(rUnbekannt.kartenIk, '108310400');
+  assert.equal(rUnbekannt.text, 'Zu dieser IK wurde kein Kostenträger gefunden — bitte mit der Versichertenkarte abgleichen.');
+
+  // ok (DAK-Beispiel: Karten-IK 100167999 -> Kostenträger 105830016)
+  const sbDak = sbDoppel({ view: ktZeilen });
+  const rOk = await kartenIkStatus(sbDak, '100167999');
+  assert.equal(rOk.status, 'ok');
+  assert.equal(rOk.kartenIk, '100167999');
+  assert.equal(rOk.kostentraegerIk, '105830016');
+  assert.match(rOk.text, /100167999/);
+  assert.match(rOk.text, /105830016/);
+  assert.match(rOk.text, /DAK/);
+});
+
+test('kasseAbrechnungsbereit: Kostenträger UND Karten-IK (9 Ziffern) nötig', () => {
+  const bereit = fn('kasseAbrechnungsbereit');
+  assert.equal(bereit({ kostentraeger_ik: '105830016', krankenkasse_ik: '100167999' }), true);
+  assert.equal(bereit({ kostentraeger_ik: '105830016', krankenkasse_ik: null }), false);
+  assert.equal(bereit({ kostentraeger_ik: '105830016', krankenkasse_ik: '12345' }), false);
+  assert.equal(bereit({ kostentraeger_ik: null, krankenkasse_ik: '100167999' }), false);
+  assert.equal(bereit(null), false);
 });

@@ -59,6 +59,7 @@
  */
 
 import { fmtEur } from './geld.js?v=20260909';
+import { kasseAbrechnungsbereit } from './krankenkasse-suche.js?v=20260930c';
 // Gleiche ?v-Zeichenfolge wie dashboard.js — sonst zweite Modulinstanz, `aktuell` spaltet sich.
 import { zeigeAbrechnungAnsicht } from './abrechnung-ansicht.js?v=20260909';
 import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
@@ -67,7 +68,7 @@ import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-re
 import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten, gueltigBestaetigteIds } from './offene-einheiten.js?v=20260930a';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';
-import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260920t';
+import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260930c';
 import { initDateieinheit, ladeDateieinheiten, dateieinheitBadge,
          auswahlHinweis } from './podologie-dateieinheit.js?v=20260907';
 
@@ -503,7 +504,7 @@ export async function ladeAbrechnungAuswahl() {
   const [physioRes, podoRes, certsRes] = await Promise.all([
     ctx.supabase.from('prescriptions')
       .select(`
-        id, patient_id, kostentraeger_ik, heilmittel, heilmittel_position, anzahl_einheiten,
+        id, patient_id, kostentraeger_ik, krankenkasse_ik, heilmittel, heilmittel_position, anzahl_einheiten,
         zuzahlung_eur, zuzahlung_befreit, ausstellungsdatum, icd10, is_blanko, is_lhb_bvb,
         bericht_angefordert, bericht_status, belegnummer,
         diagnosegruppe, frequenz, leitsymptomatik, arzt_id, doctor_lanr, doctor_bsnr,
@@ -562,7 +563,8 @@ export async function ladeAbrechnungAuswahl() {
     const zeile = {
       bereich: 'physio',
       id: rx.id,
-      ik: rx.kostentraeger_ik || '__unknown__',
+      // Ohne Karten-IK nicht auswählbar (sonst 422 beim Erzeugen) — gkv-302 30.09.2026.
+      ik: kasseAbrechnungsbereit(rx) ? rx.kostentraeger_ik : '__unknown__',
       nummer: rx.belegnummer || (lead.patientennummer != null ? String(lead.patientennummer) : rx.id.slice(0, 8)),
       patient: [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—',
       mittel: rx.heilmittel || '—',
@@ -592,7 +594,7 @@ export async function ladeAbrechnungAuswahl() {
   const podoRoh = (podoRes.data || []).map(ausTopf);
   const zuschnitt = standortZuschnitt(podoRoh, ctx.aktiverStandort?.());
   const podoAlle = zuschnitt.zeilen.filter(v =>
-    v.status === 'abrechenbar' && v.kostentraeger_ik && (v.rezeptart || 'kassen') === 'kassen');
+    v.status === 'abrechenbar' && kasseAbrechnungsbereit(v) && (v.rezeptart || 'kassen') === 'kassen');
   const podoBereit = podoAlle.filter(v => imZeitraum(v.ausstellungsdatum, _st.zeitraumVon, _st.zeitraumBis));
   ausgefiltert += podoAlle.length - podoBereit.length;
 
@@ -671,7 +673,7 @@ export async function ladeAbrechnungAuswahl() {
     }
   }
 
-  _st.gruppen = baueGruppen(zeilen, (ik) => ctx.kassenName?.(ik) || (ik === '__unknown__' ? '⚠ Kostenträger fehlt' : ik));
+  _st.gruppen = baueGruppen(zeilen, (ik) => ctx.kassenName?.(ik) || (ik === '__unknown__' ? '⚠ Kostenträger oder Karten-IK fehlt' : ik));
   _st.fehlerhaft = fehlerhaft;
   _st.ausgefiltert = ausgefiltert;
   _st.geladen = true;

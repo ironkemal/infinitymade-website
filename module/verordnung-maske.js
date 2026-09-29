@@ -41,9 +41,10 @@
  */
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260926a';
-import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260907';
+import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260930c';
+import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260930c';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
+import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20260930c';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -447,8 +448,9 @@ export function fuelleMuster13(rx, opt = {}) {
   setz('rzPodoAnlass', rx.behandlungsanlass || '');
   haken('rzUnterschrift', rx.unterschrift_vorhanden);
   // Die Kasse der Verordnung schlägt die aus der Akte: auf dem Papier steht,
-  // wer damals zuständig war.
-  if (rx.kostentraeger_ik) setz('rzPatKasseIk', rx.kostentraeger_ik);
+  // wer damals zuständig war. Das Feld trägt die KARTEN-IK (`krankenkasse_ik`),
+  // nie die daraus abgeleitete Kostenträger-IK (gkv-302, 30.09.2026).
+  if (rx.krankenkasse_ik) setz('rzPatKasseIk', rx.krankenkasse_ik);
   if (rx.versichertennummer) setz('rzPatVersNr', rx.versichertennummer);
 }
 
@@ -635,7 +637,9 @@ export function nutzlastAusMaske(v) {
     therapie_bereich: txt('rzTherapieBereich') || null,
     hinweise: txt('rzHinweise') || null,
     unterschrift_vorhanden: an('rzUnterschrift'),
-    kostentraeger_ik: txt('rzPatKasseIk') || null,
+    // Karten-IK: 9 Ziffern oder null. Die Kostenträger-IK leitet der Server daraus ab
+    // (api-backend/lib/rezept-felder.js) — sie wird hier nicht geschickt.
+    krankenkasse_ik: kartenIkNormalisieren(txt('rzPatKasseIk')),
     // Podologische Zusatzangaben (nagel/behandlungsanlass). Ausserhalb der
     // Podologie ein leeres Objekt — die Spalten bleiben unberuehrt. Bis zum
     // 06.09.2026 fuellte sie nur das getrennte Formular der Abrechnungsseite;

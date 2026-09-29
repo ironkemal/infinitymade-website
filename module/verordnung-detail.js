@@ -67,15 +67,15 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260929a';
+import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260930c';
 // Ops-Kart #269 (05.09.2026): dasselbe Urteil wie in den Listen/Karten
 // (module/verordnung-uebersicht.js), hier auf die eine geöffnete Zeile
 // angewandt — „gleiches Urteil, wo auch immer geklickt wird" (siehe
 // verordnung-pruefen-knopf.js). PHYSIO_ABGESCHLOSSEN/PODO_AKTIV von dort
 // übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
-import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260919';
+import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20260930c';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
-import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20260920t';
+import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20260930c';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
@@ -84,12 +84,12 @@ import { emit } from './signal.js?v=20260813';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
 // eine podologische Zeile in den Wortschatz, den `_felderPodo()` und die
 // restlichen Podologie-Funktionen dieser Datei schon immer erwartet haben.
-import { ausTopf } from './verordnung-topf.js?v=20260920t';
+import { ausTopf } from './verordnung-topf.js?v=20260930c';
 // Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
 // Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
-import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20260927';
-import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20260919';
+import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20260930c';
+import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20260930c';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
 
 /** Alles, was die Muster-13-Maske schreibt — plus Patient, Arzt und Nummer. */
@@ -529,6 +529,7 @@ function _felderPhysio(rx, esc) {
 
     ${_block('Kostenträger und Zuzahlung', [
       _feld('Krankenkasse', p.krankenkasse, esc),
+      _feld('IK der Krankenkasse (Karte)', rx.krankenkasse_ik, esc, { mono: true }),
       _feld('IK des Kostenträgers', rx.kostentraeger_ik, esc, { mono: true }),
       _feld('Versichertennummer', p.versichertennummer, esc, { mono: true }),
       _feld('Versichertenstatus', p.versichertenstatus, esc, { mono: true }),
@@ -643,6 +644,7 @@ function _felderPodo(v, esc) {
 
     ${_block('Kostenträger und Zuzahlung', [
       _feld('Krankenkasse', p.krankenkasse, esc),
+      _feld('IK der Krankenkasse (Karte)', v.krankenkasse_ik, esc, { mono: true }),
       _feld('IK des Kostenträgers', v.kostentraeger_ik, esc, { mono: true }),
       _feld('Versichertennummer', v.versichertennummer || p.versichertennummer, esc, { mono: true }),
       _feld('Versichertenstatus', p.versichertenstatus, esc, { mono: true }),

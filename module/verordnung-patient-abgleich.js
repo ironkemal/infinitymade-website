@@ -1,5 +1,5 @@
 import { emit } from './signal.js?v=20260813';
-import { versichertennummerAbweichung } from './verordnung-aus-ocr.js?v=20260906';
+import { versichertennummerAbweichung } from './verordnung-aus-ocr.js?v=20260930c';
 
 /**
  * verordnung-patient-abgleich.js — Patientenstammdaten nach manueller

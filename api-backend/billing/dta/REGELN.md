@@ -137,4 +137,8 @@ Gemäß § 3 Punkt 3 wurden folgende neue harte Regeln nach Freigabe durch `gkv-
   (Anlage 1 TP5 V21, Kap. 5.5.2 SLGA REC, S. 34 + Kap. 5.5.3.1 SLLA REC, S. 44). `kasse: 'datei'`, `schwere: 'hart'`.
 - **`F:03007` — Länge Einzelrechnungsnummer:** Höchstens 6 Stellen (`..6 AN M`, Anlage 1 TP5 V21,
   Kap. 5.5.3.1 SLLA REC, S. 44). Ein Längenverstoß führt in Prüfstufe 2 zur Abweisung der Datei (`kasse: 'datei'`, `schwere: 'hart'`).
+- **`V:01017` — Karten-IK Pflicht (30.09.2026):** Anlage 1 TP5 V21 §5.5.2 S. 32 („zwingend anzugeben,
+  außer es handelt sich um eine Sammelrechnung-SLGA … identisch mit SLLA.FKT") + §5.5.3.1. Feldart NK,
+  Pflicht aus der Erläuterung (nicht aus der Feldart). `kasse: 'unbekannt'` (Prüfstufe nicht belegt),
+  `schwere: 'hart'`. Kein Rückfall auf die Kostenträger-IK (vgl. `F:03006`/`F:03007` oben).
 

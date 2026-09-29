@@ -30,7 +30,7 @@
 
 'use strict';
 
-import { statusBadge } from './abrechnungsstatus.js?v=20260929a';
+import { statusBadge } from './abrechnungsstatus.js?v=20260930c';
 
 /**
  * @param {object} ctx  Alles, was die Tabelle von aussen braucht:

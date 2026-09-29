@@ -25,7 +25,7 @@
  * ein Test daneben und keine Browserprobe.
  */
 
-import { alsIsoDatum } from './verordnung-aus-ocr.js?v=20260906';
+import { alsIsoDatum } from './verordnung-aus-ocr.js?v=20260930c';
 
 const text = (w) => {
   const t = String(w ?? '').trim();
@@ -78,7 +78,8 @@ function geparstAusMaske({ nutzlast, patientFelder }) {
       versichertennummer: text(f.rzPatVersNr),
       versichertenstatus: text(f.rzPatStatus),
       krankenkasse: text(f.rzPatKasse),
-      kostentraeger_ik: text(f.rzPatKasseIk) || n.kostentraeger_ik || null,
+      // Karten-IK (nicht Kostenträger-IK): der Server leitet den Kostenträger daraus ab.
+      krankenkasse_ik: text(f.rzPatKasseIk) || n.krankenkasse_ik || null,
       street: text(f.rzPatStrasse),
       plz,
       city,

@@ -69,7 +69,8 @@ const validInput = {
     doctor: { lanr: '999999999', bsnr: '999999999' },
     verordnung: { ausstellungsdatum: '2026-05-02', icd10: 'M54.5', diagnosegruppe: 'WS2',
                   verordnungsart: '03', leitsymptomatik: '1010', therapiefrequenz: '3',
-                  zuzahlungskennzeichen: '3', kostentraegerIk: '108310400' },
+                  zuzahlungskennzeichen: '3', kostentraegerIk: '108310400',
+                  krankenkasseIk: '108310400' },
     tarif: { abrechnungscode: '22', tarifkennzeichen: '00501' },
     sessions: ['2026-05-05','2026-05-07','2026-05-12','2026-05-14','2026-05-19','2026-05-21']
       .map(d => ({ positionsnummer: '10210', datumLeistung: d, anzahl: 1, einzelbetrag: 22.50, zuzahlungProPos: 2.25 })),
@@ -171,6 +172,37 @@ test('catches invalid Verordnungsart', () => {
   const i = clone(validInput); i.prescriptions[0].verordnung.verordnungsart = '99';
   const r = preflight(i);
   assert.ok(hasErr(r, 'V:01004'));
+});
+
+test('catches missing krankenkasseIk (V:01017)', () => {
+  const i = clone(validInput);
+  delete i.prescriptions[0].verordnung.krankenkasseIk;
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'V:01017'));
+});
+
+test('catches empty krankenkasseIk (V:01017)', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.krankenkasseIk = '';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'V:01017'));
+});
+
+test('catches 8-digit krankenkasseIk (V:01017)', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.krankenkasseIk = '10831040';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'V:01017'));
+});
+
+test('allows valid 9-digit krankenkasseIk', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.krankenkasseIk = '108310400';
+  const r = preflight(i);
+  assert.equal(hasErr(r, 'V:01017'), false);
 });
 
 test('catches non-Heilmittel Abrechnungscode', () => {

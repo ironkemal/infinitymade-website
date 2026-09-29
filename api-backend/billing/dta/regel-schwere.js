@@ -120,6 +120,8 @@ export const REGEL_SCHWERE = Object.freeze({
   'V:01014': { schwere: 'hart', kasse: 'zeile', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.3, S. 72 (je Diagnose ein DIA)', hinweis: 'Weiterer ICD-10-Kode ungültig' },
   'V:01015': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.3, S. 72',    hinweis: 'Weder ICD noch Diagnosetext — leeres DIA-Muss-Segment (Schritt 1.8)' },
   'V:01016': { schwere: 'warnung', kasse: 'unbekannt', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.3 (DIA); SPEC-RULES Z-18', hinweis: 'ICD nicht endständig — kein Ablehnungsgrund, Korrektur nur durch den Arzt' },
+  // V:01017 — neue HARTE Regel vom 30.09.2026. Die nach REGELN.md § 3 Punkt 3 erforderliche Zustimmung von `gkv-302` liegt vor (Beleg dort, § 6).
+  'V:01017': { schwere: 'hart', kasse: 'unbekannt', quelle: "Anlage 1 TP5 V21, Kap. 5.5.2 S. 32 (SLGA-FKT) und 5.5.3.1 (SLLA-FKT); Feldart NK; Pflicht aus Erläuterung ('zwingend anzugeben')", hinweis: 'Karten-IK (IK der Krankenkasse von der Versichertenkarte) fehlt — kein Rückfall auf die Kostenträger-IK (gkv-302, 30.09.2026)' },
 
   // ── Leistungen (SLLA.EHE / SLLA.BES) ─────────────────────────────────────
   'S:01001': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.2 (EHE, 1..n)', hinweis: 'Abrechnungsfall ohne Leistung' },

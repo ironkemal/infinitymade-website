@@ -40,6 +40,7 @@ import {
 } from '../utils/einreichbar.js';
 import { zeilenAusDta } from '../utils/abrechnung-zeilen.js';
 import { ikFehltAntwort } from '../utils/ik-fehlt.js';
+import { kartenIkFehler } from '../utils/karten-ik.js';
 import {
   legsFuer, LEGS_BY_FACHBEREICH,
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
@@ -442,6 +443,9 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
       'Verordnung einem Patienten zuordnen — der Name für die Abrechnung wird immer aus der Patientenakte übernommen.');
     e.status = 422; throw e;
   }
+  // Karten-IK ist Mussfeld (SLGA/SLLA-FKT) — kein Rückfall auf kostentraeger_ik (gkv-302, 30.09.2026).
+  const kartenIkErr = kartenIkFehler(rx, np);
+  if (kartenIkErr) throw kartenIkErr;
   const abrechnungscode = abrechnungscodeFuer(sector);
 
   // Resolve Positionsnummer (template like 'X0501' or stored numeric).
@@ -580,8 +584,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
                                   || isUnter18(lead?.geburtsdatum, doneSessions[doneSessions.length - 1]?.done_at))
                                   ? '1' : '3',
       kostentraegerIk:          rx.kostentraeger_ik,
-      // Karten-IK ist bis zur echten Kostenträgerdatei meist NULL — builder.js
-      // faellt dann bewusst auf kostentraegerIk zurueck (db-ustasi, 05.09.2026).
+      // Karten-IK: Pflicht (oben geprüft), KEIN Rückfall auf kostentraegerIk.
       krankenkasseIk:           rx.krankenkasse_ik,
       berichtAngefordert:       rx.bericht_angefordert,
       berichtStatus:            rx.bericht_status,
@@ -2929,6 +2932,9 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
     );
     e.status = 422; throw e;
   }
+  // Karten-IK ist Mussfeld (SLGA/SLLA-FKT) — kein Rückfall auf kostentraeger_ik (gkv-302, 30.09.2026).
+  const kartenIkErr = kartenIkFehler(vord, np);
+  if (kartenIkErr) throw kartenIkErr;
 
   // ZL-Podologe. Abrechnungscode und Tarifkennzeichen kommen aus einem Stück,
   // damit sie nicht wieder auseinanderlaufen können.
@@ -3039,8 +3045,7 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
                                || isUnter18(lead?.geburtsdatum, letzteBehandlungsdatum))
                                ? '1' : '3',
       kostentraegerIk:       vord.kostentraeger_ik,
-      // Karten-IK ist bis zur echten Kostenträgerdatei meist NULL — builder.js
-      // faellt dann bewusst auf kostentraegerIk zurueck (db-ustasi, 05.09.2026).
+      // Karten-IK: Pflicht (oben geprüft), KEIN Rückfall auf kostentraegerIk.
       krankenkasseIk:        vord.krankenkasse_ik,
       berichtAngefordert:    false,
       berichtStatus:         null,

@@ -289,3 +289,73 @@ test('T7b: Rezepte derselben Karten-IK bleiben in Eingabereihenfolge in einer Gr
   assert.equal(r.totals.brutto, 150.00);
   assert.equal(r.messageCount, 5);   // 2 SLGA + 3 SLLA
 });
+
+// --- Karten-IK vs. Kostenträger-IK Pflicht & Trennung (gkv-302, 30.09.2026) ---
+
+test('krankenkasseIk fehlt -> buildDtaFile wirft 422 Error (/Versichertenkarte/), auch wenn kostentraegerIk gefüllt ist', () => {
+  const f = structuredClone(podoFixture);
+  f.prescriptions[0].verordnung.kostentraegerIk = '101000000';
+  f.prescriptions[0].verordnung.krankenkasseIk = '';
+
+  assert.throws(
+    () => buildDtaFile(f),
+    (err) => {
+      assert.equal(err.status, 422);
+      assert.match(err.message, /Versichertenkarte/);
+      return true;
+    }
+  );
+
+  const f2 = structuredClone(podoFixture);
+  f2.prescriptions[0].verordnung.kostentraegerIk = '101000000';
+  delete f2.prescriptions[0].verordnung.krankenkasseIk;
+
+  assert.throws(
+    () => buildDtaFile(f2),
+    (err) => {
+      assert.equal(err.status, 422);
+      assert.match(err.message, /Versichertenkarte/);
+      return true;
+    }
+  );
+});
+
+test('krankenkasseIk != kostentraegerIk: SLGA und SLLA FKT tragen Karten-IK und Kostenträger-IK in getrennten Feldern', () => {
+  const f = structuredClone(podoFixture);
+  const ktIk = '104212505';      // Kostenträger-IK
+  const kartenIk = '101575519';  // Karten-IK (weicht von Kostenträger-IK ab)
+  f.prescriptions[0].verordnung.kostentraegerIk = ktIk;
+  f.prescriptions[0].verordnung.krankenkasseIk = kartenIk;
+
+  const r = buildDtaFile(f);
+  const msgs = nachrichten(r.content);
+  const slga = msgs.find(m => m.art === 'SLGA');
+  const slla = msgs.find(m => m.art === 'SLLA');
+  assert.ok(slga, 'SLGA vorhanden');
+  assert.ok(slla, 'SLLA vorhanden');
+
+  // SLGA FKT: [FKT, vkz, sammel, ikLeistungserbringer, ikKostentraeger, ikKrankenkasse, ikAbsenderDatei]
+  const fktSlga = fktVon(slga);
+  assert.equal(fktSlga[4], ktIk, 'SLGA FKT Feld 4 ist Kostenträger-IK');
+  assert.equal(fktSlga[5], kartenIk, 'SLGA FKT Feld 5 ist Karten-IK');
+
+  // SLLA FKT: [FKT, vkz, freifeld, ikLeistungserbringer, ikKostentraeger, ikKrankenkasse, ikRechnungssteller]
+  const fktSlla = fktVon(slla);
+  assert.equal(fktSlla[4], ktIk, 'SLLA FKT Feld 4 ist Kostenträger-IK');
+  assert.equal(fktSlla[5], kartenIk, 'SLLA FKT Feld 5 ist Karten-IK');
+
+  // Segment-Text direkt verifizieren:
+  const slgaFktText = slga.segmente.find(s => s.startsWith('FKT+'));
+  assert.ok(slgaFktText, 'SLGA FKT-Segment gefunden');
+  assert.ok(
+    slgaFktText.includes(`+${ktIk}+${kartenIk}+`),
+    `SLGA FKT-Segment "${slgaFktText}" muss +${ktIk}+${kartenIk}+ enthalten`
+  );
+
+  const sllaFktText = slla.segmente.find(s => s.startsWith('FKT+'));
+  assert.ok(sllaFktText, 'SLLA FKT-Segment gefunden');
+  assert.ok(
+    sllaFktText.includes(`+${ktIk}+${kartenIk}`),
+    `SLLA FKT-Segment "${sllaFktText}" muss +${ktIk}+${kartenIk} enthalten`
+  );
+});
