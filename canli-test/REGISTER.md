@@ -222,6 +222,7 @@ listelenmiyor" → **kapandı** (`1201618`, aşağıdaki Storno kaydına bak).
 SyntaxError veriyor (`Unexpected identifier 'max'`, satır 783: `2d8aea5`'in template literal içindeki
 HTML yorumuna koyduğu backtick'ler dizgiyi erken kapatıyor). `dashboard.js:38` bu modülü statik
 import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) — P0, bütün hesaplar. S1.5 sınanamadı.
+**Son test:** 2026-09-29 (S1 regresyon, hotfix `94c753c`) — GEÇTİ (kısmi). P0 kapandı: dashboard taze yüklemede açılıyor, `Unexpected identifier` yok. QA tenant'ta aktif podo-Verordnung yok; "Abgerechnet (1)" grubundaki DF (a) Verordnung seçildi (form açık kaldı, bilgi şeridi var): 78010 önseçili ✓, 78030 işaretli ✓ (1 behandlung zaten dokümante → 78040 değil, doğru), `podBehDatum` = bugün ✓. KAYDEDİLMEDİ. İlk-gün 78040 dalı ve b)→78020 dalı veri olmadığı için sınanamadı.
 
 ### Podologie Behandlungen — Abgerechnet-Gruppe (gesendete Verordnungen) — nav etiketi: `podologie-billing`
 
@@ -433,6 +434,7 @@ içinde kalıcı bir hata satırı yok → gözden kaçabilir (ilk turun kaçır
 SyntaxError veriyor (`Unexpected identifier 'max'`, satır 783: `2d8aea5`'in template literal içindeki
 HTML yorumuna koyduğu backtick'ler dizgiyi erken kapatıyor). `dashboard.js:38` bu modülü statik
 import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) — P0, bütün hesaplar. S1.1 sınanamadı.
+**Son test:** 2026-09-29 (S1 regresyon, hotfix `94c753c`) — GEÇTİ. QA tenant, TEST-hasta, DF Verordnung kartı seçildi: "Alle Sitzungen bereits vergeben" YOK, "Noch 3 von 3 Einheiten offen." var. Kaydet → `POST bookings` 201 + `PATCH bookings?id=eq.ac98464a` gövdesi `{"verordnung_id":"796aae21…"}` 200. Sayfa yenilendikten sonra Verordnung portalında "Termine: 1 vergeben — 01.10.26 · 11:00" (madde (1) ve (3) kapandı). Test randevusu Bearbeiten → "Löschen" (= `absageTerminMitGrund`, status=cancelled, silme değil) → sebep seçilip iptal edildi, `PATCH /api/booking/ac98464a` 200. Yeni konsol hatası yok. Not: yan paneldeki buton "Löschen" etiketli ama işlevi Absagen; önceki "Absagen" beklenti metni buna göre okunmalı.
 
 ### Termin-Aktionen (sağ panel) — nav etiketi: (Terminkalender içinden)
 
@@ -495,6 +497,7 @@ açık kalır). Kanıt: `k2-bisherige.png`, `k2-zurueck1.png`, `k2-neue.png`, `k
 SyntaxError veriyor (`Unexpected identifier 'max'`, satır 783: `2d8aea5`'in template literal içindeki
 HTML yorumuna koyduğu backtick'ler dizgiyi erken kapatıyor). `dashboard.js:38` bu modülü statik
 import ettiği için tüm dashboard boş render ediyor (body boş, sidebar yok) — P0, bütün hesaplar. S1.6 sınanamadı.
+**Son test:** 2026-09-29 (S1 regresyon, hotfix `94c753c`) — SINANAMADI (veri yok). Panel açılıyor, "Neue Abrechnung" → "Keine abrechnungsbereiten Verordnungen."; tedavisiz 78030 günlü DF/NF/QF reçete QA tenant'ta yok, sperre metni gözlenemedi. Veri üretilmedi. "Erstellen"e basılmadı.
 
 ### Online-Buchung / Termin-Anfrage (hasta tarafı) — sayfa: `booking.html?u=`, `booking-request.html?business=`
 
