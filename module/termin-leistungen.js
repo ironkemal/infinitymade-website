@@ -352,7 +352,7 @@ export function setzeLeistungenZurueck() {
 }
 
 /**
- * Die Zeilen dieses Termins speichern.
+ * Die Zeilen eines oder mehrerer Termine speichern.
  *
  * Erst schreiben, dann aufraeumen — nicht umgekehrt. Bis zum 04.09.2026 stand
  * hier ein `delete` ueber den ganzen Termin und danach ein `insert`. Scheiterte
@@ -368,31 +368,62 @@ export function setzeLeistungenZurueck() {
  * und wird gleich darauf von trg_booking_hauptleistung aus Zeile 0
  * ueberschrieben — dasselbe Ergebnis, der Payload ist der Rueckfall.
  *
- * @param {string} bookingId
+ * Zweiter Aufrufer seit S1.10 (canli-test 29.09.2026, P1): eine KI-Serie oder
+ * ein manueller Serienbatch legt mehrere Termine in einem Rutsch an
+ * (`api-backend/server.js` `/booking/batch-create` bzw.
+ * `/booking/batch-create-explicit`) und schrieb dabei nie eine
+ * `booking_leistungen`-Zeile — nur der Einzelweg (`bkSaveBtn`) tat es. Bei
+ * einer ID bleibt das Verhalten exakt das alte; bei mehreren bekommt JEDER
+ * Termin dieselben Zeilen (dieselbe Kombination steckt hinter jedem Slot der
+ * Serie).
+ *
+ * @param {string|Array<string>} bookingIdOrIds
  * @returns {Promise<{ok:boolean, error:?string}>}
  */
-export async function speichereLeistungen(bookingId) {
-  if (!ctx || !bookingId) return { ok: false, error: 'kein Termin' };
+export async function speichereLeistungen(bookingIdOrIds) {
+  if (!ctx) return { ok: false, error: 'kein Termin' };
+  const ids = (Array.isArray(bookingIdOrIds) ? bookingIdOrIds : [bookingIdOrIds]).filter(Boolean);
+  if (!ids.length) return { ok: false, error: 'kein Termin' };
+
   const zeilen = leseLeistungen().filter(z => z.serviceId);
   if (!zeilen.length) return { ok: false, error: 'keine Leistung' };
 
-  const reihen = zeilen.map((z, i) => ({
+  const reihen = ids.flatMap(bookingId => zeilen.map((z, i) => ({
     booking_id: bookingId,
     service_id: z.serviceId,
     owner_id: ctx.getOwnerId(),
     anzahl: begrenzeAnzahl(z.anzahl),
     sort_order: i,
-  }));
+  })));
 
   const { error } = await ctx.supabase.from('booking_leistungen')
     .upsert(reihen, { onConflict: 'booking_id,service_id' });
   if (error) return { ok: false, error: error.message };
 
   // Was der Anwender weggenommen hat, faellt jetzt weg — und nur das.
-  const bleiben = reihen.map(r => `"${r.service_id}"`).join(',');
+  const bleiben = zeilen.map(z => `"${z.serviceId}"`).join(',');
   const { error: delErr } = await ctx.supabase.from('booking_leistungen')
-    .delete().eq('booking_id', bookingId).not('service_id', 'in', `(${bleiben})`);
+    .delete().in('booking_id', ids).not('service_id', 'in', `(${bleiben})`);
   return delErr ? { ok: false, error: delErr.message } : { ok: true, error: null };
+}
+
+/**
+ * `speichereLeistungen()` fuer eine ganze Liste frisch angelegter Termine
+ * (Serie/KI-Batch), inklusive der Fehlermeldung, die sonst an jeder
+ * Aufrufstelle einzeln stuende. Leere Liste ist kein Fehler, nur nichts zu tun
+ * — ein Serienbatch, bei dem jeder Slot in einen Konflikt lief, hat `created`
+ * leer und keine Leistungen zu schreiben.
+ *
+ * @param {Array<{id:string}>} created  Antwort von batch-create / batch-create-explicit
+ * @param {{showToast:?function}} [opt]
+ * @returns {Promise<{ok:boolean, error:?string}>}
+ */
+export async function speichereLeistungenFuerErstellte(created, { showToast } = {}) {
+  const ids = (created || []).map(c => c?.id).filter(Boolean);
+  if (!ids.length) return { ok: true, error: null };
+  const lg = await speichereLeistungen(ids);
+  if (!lg.ok) showToast?.(`Leistungen nicht gespeichert: ${lg.error}`, 'error');
+  return lg;
 }
 
 /** Zusatzzeilen zeichnen. Optionen werden aus `#bkService` geklont. */

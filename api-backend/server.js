@@ -1653,7 +1653,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       count: countRaw = 8, recurrence = 'weekly', intervalDays,
       startDate, weekdays,
       preferredTime, preferences = {},
-      userFeedback, previousSelected
+      userFeedback, previousSelected, duration
     } = req.body;
     const ownerId = req.auth.tenantId; // never trust body — always from JWT
     if (!ownerId || !serviceId || !countRaw) {
@@ -1674,6 +1674,16 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       if (active.length) dur = active[0];
     }
     if (!dur || dur <= 0) dur = 30;
+
+    // Mehrere Leistungen an einem Termin (Ops 235): das Frontend kennt die
+    // tatsaechliche Blocklaenge (Summe der Maskenzeilen), der Katalog nur die
+    // der Hauptleistung. Ohne diesen Override sucht die Slot-Suche unten mit
+    // der kuerzeren Katalogdauer frei, aber batch-create-explicit legt danach
+    // die laengere Summe an — der naechste Serientermin faellt in denselben
+    // Slot und die no_overlapping_bookings-Sperre wirft ihn als „uebersprungen"
+    // zurueck (canli-test 29.09.2026, P1, S1.10).
+    const reqDur = parseInt(duration, 10);
+    if (Number.isFinite(reqDur) && reqDur > 0 && reqDur <= 480) dur = reqDur;
 
     // 2) Resolve owner profile (sector) + customer
     const [{ data: ownerProfile }, { data: customer }] = await Promise.all([

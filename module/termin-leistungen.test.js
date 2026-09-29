@@ -8,6 +8,7 @@ import {
   neueZeile, gesamtDauer, begrenzeAnzahl, fuegeZeileHinzu, entferneZeile,
   setzeZeilenService, hpnrVonDienst, mitBefundungsvorschlag,
   STANDARD_DAUER_MIN, MAX_ANZAHL,
+  speichereLeistungen, speichereLeistungenFuerErstellte, mountTerminLeistungen,
 } from './termin-leistungen.js';
 
 // Ein kleiner Katalog, wie ihn `servicesCache` fuehrt.
@@ -263,4 +264,99 @@ test('alte Positionsnummer meldet sich, statt wortlos nichts zu tun', () => {
   assert.equal(r.zeilen.length, 1);
   assert.equal(r.grund, 'legacy_positionsnummer');
   assert.match(r.hinweis, /P01/);
+});
+
+// ── speichereLeistungen: ein Termin ODER eine Liste (S1.10) ─────────────────
+// Der canli-test-Fund vom 29.09.2026, P1: eine KI-Serie legte mehrere Termine
+// auf einmal an, aber nur der Einzelweg (`bkSaveBtn`) schrieb je Termin
+// `booking_leistungen`. Zeile 0 kommt weiterhin aus dem DOM (`#bkService` +
+// `#bkMenge`) — ein Fake-`document` steht hier fuer die Terminmaske.
+
+function fakeMaske({ serviceId = 's-beh-gr', menge = '1' } = {}) {
+  const els = {
+    bkService: { value: serviceId, addEventListener: () => {} },
+    bkMenge: { value: menge, addEventListener: () => {} },
+  };
+  globalThis.document = { getElementById: (id) => els[id] || null };
+  return els;
+}
+
+function fakeSupabase({ schreibFehler = null, loeschFehler = null } = {}) {
+  const upserts = [];
+  const loeschungen = [];
+  const kette = {
+    upsert: (zeilen, optionen) => { upserts.push({ zeilen, optionen }); return Promise.resolve({ error: schreibFehler }); },
+    delete: () => kette,
+    in: (spalte, werte) => { loeschungen.push({ spalte, werte }); return kette; },
+    not: (spalte, op, wert) => { loeschungen.push({ spalte, op, wert }); return Promise.resolve({ error: loeschFehler }); },
+  };
+  return { supabase: { from: () => kette }, upserts, loeschungen };
+}
+
+test('speichereLeistungen: eine einzelne ID — unveraendertes Verhalten', async () => {
+  fakeMaske({ serviceId: 's-beh-gr', menge: '1' });
+  const { supabase, upserts, loeschungen } = fakeSupabase();
+  mountTerminLeistungen({ supabase, getOwnerId: () => 'owner-1', getServices: () => DIENSTE });
+
+  const r = await speichereLeistungen('b-1');
+  assert.equal(r.ok, true);
+  assert.equal(upserts[0].zeilen.length, 1, 'eine Zeile fuer einen Termin');
+  assert.equal(upserts[0].zeilen[0].booking_id, 'b-1');
+  assert.equal(upserts[0].zeilen[0].service_id, 's-beh-gr');
+  assert.equal(upserts[0].optionen.onConflict, 'booking_id,service_id');
+  assert.deepEqual(loeschungen[0].werte, ['b-1']);
+});
+
+test('speichereLeistungen: eine Liste von IDs bekommt JEDER Termin dieselben Zeilen', async () => {
+  fakeMaske({ serviceId: 's-beh-gr', menge: '2' });
+  const { supabase, upserts, loeschungen } = fakeSupabase();
+  mountTerminLeistungen({ supabase, getOwnerId: () => 'owner-1', getServices: () => DIENSTE });
+
+  const r = await speichereLeistungen(['b-1', 'b-2', 'b-3']);
+  assert.equal(r.ok, true);
+  assert.equal(upserts[0].zeilen.length, 3, 'eine Zeile je Termin der Serie');
+  assert.deepEqual(upserts[0].zeilen.map(z => z.booking_id), ['b-1', 'b-2', 'b-3']);
+  assert.ok(upserts[0].zeilen.every(z => z.service_id === 's-beh-gr' && z.anzahl === 2),
+    'jeder Serientermin traegt dieselbe Kombination');
+  assert.deepEqual(loeschungen[0].werte, ['b-1', 'b-2', 'b-3']);
+});
+
+test('speichereLeistungen: leere Liste/kein Termin meldet Fehler statt zu schreiben', async () => {
+  fakeMaske();
+  const { supabase, upserts } = fakeSupabase();
+  mountTerminLeistungen({ supabase, getOwnerId: () => 'owner-1', getServices: () => DIENSTE });
+
+  assert.equal((await speichereLeistungen([])).ok, false);
+  assert.equal((await speichereLeistungen(null)).ok, false);
+  assert.equal((await speichereLeistungen([null, undefined])).ok, false);
+  assert.equal(upserts.length, 0, 'keine leere Liste schreiben');
+});
+
+test('speichereLeistungenFuerErstellte: filtert IDs aus `created` und meldet Fehler per Toast', async () => {
+  fakeMaske({ serviceId: 's-beh-gr', menge: '1' });
+  const { supabase, upserts } = fakeSupabase({ schreibFehler: { message: 'boom' } });
+  mountTerminLeistungen({ supabase, getOwnerId: () => 'owner-1', getServices: () => DIENSTE });
+
+  const toasts = [];
+  const r = await speichereLeistungenFuerErstellte(
+    [{ id: 'b-1' }, { id: null }, { id: 'b-2' }],
+    { showToast: (msg, typ) => toasts.push({ msg, typ }) },
+  );
+  assert.equal(r.ok, false);
+  assert.deepEqual(upserts[0].zeilen.map(z => z.booking_id), ['b-1', 'b-2'], 'null-IDs rausgefiltert');
+  assert.equal(toasts.length, 1);
+  assert.match(toasts[0].msg, /boom/);
+  assert.equal(toasts[0].typ, 'error');
+});
+
+test('speichereLeistungenFuerErstellte: leere `created`-Liste ist kein Fehler', async () => {
+  fakeMaske();
+  const { supabase, upserts } = fakeSupabase();
+  mountTerminLeistungen({ supabase, getOwnerId: () => 'owner-1', getServices: () => DIENSTE });
+
+  const toasts = [];
+  const r = await speichereLeistungenFuerErstellte([], { showToast: (msg) => toasts.push(msg) });
+  assert.equal(r.ok, true);
+  assert.equal(upserts.length, 0);
+  assert.equal(toasts.length, 0, 'nichts zu melden, wenn kein Termin entstanden ist');
 });

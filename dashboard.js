@@ -19,9 +19,7 @@ import { renderPatientenkarte } from './module/patientenkarte.js?v=20260920s';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
-// §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche
-// (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js —
-// die lokale Kopie hier ist mit dem alten Assistenten entfallen.
+// §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20260920s';
@@ -42,9 +40,7 @@ import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleic
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20260919';
-// Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht
-// in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte
-// Verordnung aufgeschlagen wird (module/verordnung-maske.js).
+// Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode }
   from './module/verordnung-maske.js?v=20260927';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260929';
@@ -77,10 +73,10 @@ import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=2026
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
 import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20260906';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
-import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260920s';
+import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen } from './module/termin-leistungen.js?v=20260929';
 import { zeichnePodoEinheiten, bindePodoAnTermin, befundDienstId, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20260929b';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
-import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20260929';
+import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20260929b';
 import { pruefeArbeitszeit } from './module/arbeitszeit-pruefung.js?v=20260928';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
@@ -5833,8 +5829,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
 
-  // Dauer-Feld ist frei editierbar (Beta-Feedback 03.09.2026) — sein Wert
-  // gewinnt, sonst der Katalogwert der Leistung.
+  // Dauer-Feld ist frei editierbar (Beta-Feedback 03.09.2026) — sein Wert gewinnt, sonst der Katalogwert der Leistung.
   let dur = leseDauer() || ownerServices.find(s => s.id === srvId)?.duration_minutes || STANDARD_DAUER_MIN;
 
   // Fahrtenbuch: Hausbesuch ise end_time = gidiş + seans + dönüş + 10 dk buffer
@@ -5876,9 +5871,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       weekdays: checked.length ? checked : [new Date(dateStr + 'T12:00:00Z').getDay()],
       count: count,
       customerName: cust,
-      // Ohne `leadId` legte die Serie jeden Termin ohne Patientenbezug an —
-      // der Fußbefund-Knopf blieb dann unsichtbar und der Terminzettel fand
-      // die Geschwistertermine nicht (17.08.2026).
+      // Ohne `leadId` legte die Serie jeden Termin ohne Patientenbezug an — der Fußbefund-Knopf blieb dann unsichtbar und der Terminzettel fand die Geschwistertermine nicht (17.08.2026).
       leadId: custId || null,
       customerPhone: phone || null,
       notes: notes || null,
@@ -5894,6 +5887,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     const data = await res.json();
     const created = data.created || [];
     const conflicts = data.conflicts || [];
+    // Ops 235 / S1.10: jeder Serientermin traegt dieselbe Leistungskombination.
+    await speichereLeistungenFuerErstellte(created, { showToast });
     closeModal('bookingModal');
     await refreshBookingViews();
 
@@ -6485,7 +6480,10 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
     startDate,
     weekdays,
     preferredTime,
-    preferences
+    preferences,
+    // Ops 235 / S1.10: Maske kann laenger sein als der Katalogwert — sonst
+    // sucht die Slot-Suche zu kurz frei und der naechste Serientermin faellt hinein.
+    duration: leseDauer() || ownerServices.find(s => s.id === srvId)?.duration_minutes
   };
 
   window._aiCtx = { payload, baseEmpId: empId };
@@ -6779,7 +6777,7 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
   const payload = {
     ownerId: getOwnerId(),
     serviceId: service?.id || document.getElementById('bkService').value,
-    duration: service?.duration,
+    duration: leseDauer() || service?.duration,
     slots: selected,
     customerName: cust,
     // Patientenbezug: Rezept-Weg über `_physioFlow`, sonst `custIdAtConfirm`.
@@ -6797,6 +6795,8 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
       body: JSON.stringify(payload)
     });
     const json = await res.json();
+    // Vor dem Schliessen: die Maske (#bkService/#bkLeistungExtra) steht noch.
+    await speichereLeistungenFuerErstellte(json.created, { showToast });
     closeModal('aiSuggestModal');
     closeModal('bookingModal');
     await refreshBookingViews();
