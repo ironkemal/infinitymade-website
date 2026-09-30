@@ -26,14 +26,22 @@ export function kennungAusSuche(search) {
   return { ownerId: null, kennung: kennung || null };
 }
 
-/** owner_id zur Kennung, oder null. `sb` = supabase-js-Client (anon). */
-export async function ladeOwnerId(sb, search) {
+/**
+ * Volle Aufloesung: { ownerId, employeeId, businessId, businessName } oder null.
+ * employeeId: Link zeigt auf einen Mitarbeiter-Account; businessId/businessName: Link
+ * ist der Slug eines Standorts (businesses). `sb` = supabase-js-Client (anon).
+ */
+export async function ladeKennung(sb, search) {
   const { ownerId, kennung } = kennungAusSuche(search);
-  if (ownerId) return ownerId;
+  if (ownerId) return { ownerId, employeeId: null, businessId: null, businessName: null };
   if (!kennung) return null;
   if (!/^[\w.-]+$/.test(kennung)) return null; // geht in einen PostgREST-Filter
   const spalten = 'id,role,owner_id';
-  const ausProfil = p => (p ? (p.role === 'employee' && p.owner_id ? p.owner_id : p.id) : null);
+  const ausProfil = p => (p ? {
+    ownerId: p.role === 'employee' && p.owner_id ? p.owner_id : p.id,
+    employeeId: p.role === 'employee' && p.owner_id ? p.id : null,
+    businessId: null, businessName: null,
+  } : null);
 
   if (UUID.test(kennung)) {
     const { data } = await sb.from('profiles_public').select(spalten).eq('id', kennung).maybeSingle();
@@ -41,11 +49,18 @@ export async function ladeOwnerId(sb, search) {
   }
   if (kennung.toUpperCase().startsWith('INF-')) {
     const { data: id } = await sb.rpc('find_owner_id_by_code', { p_code: kennung.toUpperCase() });
-    return id || null;
+    return id ? { ownerId: id, employeeId: null, businessId: null, businessName: null } : null;
   }
   const filter = `booking_slug.eq.${kennung},booking_slug.ilike.%booking.html?u=${kennung}`;
   const { data: prof } = await sb.from('profiles_public').select(spalten).or(filter).maybeSingle();
   if (prof) return ausProfil(prof);
-  const { data: biz } = await sb.from('businesses').select('owner_id').or(filter).maybeSingle();
-  return biz?.owner_id || null;
+  const { data: biz } = await sb.from('businesses').select('id,owner_id,business_name').or(filter).maybeSingle();
+  return biz?.owner_id
+    ? { ownerId: biz.owner_id, employeeId: null, businessId: biz.id, businessName: biz.business_name || null }
+    : null;
+}
+
+/** owner_id zur Kennung, oder null. `sb` = supabase-js-Client (anon). */
+export async function ladeOwnerId(sb, search) {
+  return (await ladeKennung(sb, search))?.ownerId || null;
 }

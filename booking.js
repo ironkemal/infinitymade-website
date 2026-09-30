@@ -1,13 +1,13 @@
-import { createClient } from './vendor/supabase-js.js?v=20260813';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from './supabase-config.js';
+import { API_BASE } from './supabase-config.js?v=20260701';
+import { getPublicClient } from './module/public-supabase.js?v=20261001z';
+import { ladeKennung } from './module/public-owner.js?v=20261001z';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = await getPublicClient();
 const API = API_BASE; // O-01, 11.09.2026
 
 const params = new URLSearchParams(location.search);
 // Zwei Linkschemata (Reform-Sprint S4): ?u=<slug> und ?business=<owner_id> — beide gueltig,
 // wie auf booking-request.html. owner_id ist eine UUID und geht durch den UUID-Zweig unten.
-const identifier = (params.get('u') || params.get('c') || params.get('business') || '').trim();
 // Nur filtern, wenn der Link ?s= ausdruecklich setzt. Der fruehere Standard 'erst' liess
 // jede Praxis ohne Leistung mit „erst" im Titel (z.B. jede neue Podologie-Praxis) mit
 // „Keine Dienstleistungen verfuegbar" dastehen (canli-test 28.09.2026).
@@ -61,54 +61,14 @@ function updateSidebar() {
 }
 
 async function init() {
-  console.log('[booking] identifier:', identifier);
-  if (!identifier) { showError('Ungültiger Buchungslink.'); return; }
-  const isUUID = s => s.length === 36 && s.includes('-');
-  let q = supabase.from('profiles_public').select('id,business_name,owner_first_name,owner_last_name,accepts_bookings,role,owner_id');
-  // Slug can be stored either as a bare slug ("kemal") or a full URL
-  // ("https://praxura.de/booking.html?u=kemal") — match both shapes.
-  let slug = identifier;
-  if (slug.toLowerCase().includes('booking.html?u=')) {
-    slug = slug.toLowerCase().split('booking.html?u=')[1].split(/[?#&]/)[0];
-  }
-
-  if (isUUID(slug)) {
-    q = q.eq('id', slug);
-  } else if (slug.toUpperCase().startsWith('INF-')) {
-    // company_code is no longer a public column (privacy); resolve it via a
-    // narrow RPC that only returns the owner id for a code the caller supplied.
-    const { data: ownerId } = await supabase.rpc('find_owner_id_by_code', { p_code: slug.toUpperCase() });
-    if (!ownerId) { showError('Unternehmen nicht gefunden.'); return; }
-    q = q.eq('id', ownerId);
-  } else {
-    // Match either the bare slug or the full URL containing it
-    q = q.or(`booking_slug.eq.${slug},booking_slug.ilike.%booking.html?u=${slug}`);
-  }
-  let { data: profile, error } = await q.maybeSingle();
-  if (error) console.error('[booking] supabase error:', error);
-
-  // Multi-business fallback: profile bulunamazsa businesses tablosunda slug ara
-  if (!profile && !isUUID(slug) && !slug.toUpperCase().startsWith('INF-')) {
-    const { data: biz } = await supabase
-      .from('businesses')
-      .select('id, owner_id, business_name')
-      .or(`booking_slug.eq.${slug},booking_slug.ilike.%booking.html?u=${slug}`)
-      .maybeSingle();
-    if (biz) {
-      state.businessId = biz.id;
-      state.companyName = biz.business_name;
-      // Owner profile bilgisini ayrıca çek (görüntü için)
-      const { data: ownerProfile } = await supabase
-        .from('profiles_public')
-        .select('id,business_name,owner_first_name,owner_last_name,accepts_bookings,role,owner_id')
-        .eq('id', biz.owner_id)
-        .maybeSingle();
-      profile = ownerProfile || { id: biz.owner_id, business_name: biz.business_name, role: 'owner', accepts_bookings: true };
-      // business_name override: business adı profile.business_name'ten önemli
-      profile.business_name = biz.business_name;
-    }
-  }
-
+  const kn = await ladeKennung(supabase, location.search);
+  if (!kn) { showError('Unternehmen nicht gefunden.'); return; }
+  if (kn.businessId) state.businessId = kn.businessId;
+  const { data: prof } = await supabase.from('profiles_public')
+    .select('id,business_name,owner_first_name,owner_last_name,accepts_bookings,role,owner_id')
+    .eq('id', kn.employeeId || kn.ownerId).maybeSingle();
+  const profile = prof || (kn.businessId ? { id: kn.ownerId, business_name: kn.businessName, role: 'owner', accepts_bookings: true } : null);
+  if (profile && kn.businessName) profile.business_name = kn.businessName;
   if (!profile) { showError('Unternehmen nicht gefunden.'); return; }
 
   const isEmployee = profile.role === 'employee' && profile.owner_id;

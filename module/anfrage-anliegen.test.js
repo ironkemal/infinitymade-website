@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, ANLIEGEN, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer, HEILMITTEL_WORTLAUT } from './anfrage-anliegen.js';
-import { slugAusKennung, kennungAusSuche, ladeOwnerId } from './public-owner.js';
+import { slugAusKennung, kennungAusSuche, ladeOwnerId, ladeKennung } from './public-owner.js';
 
 test('Anliegen nur fuer Podologie, drei Karten', () => {
   assert.equal(anliegenFuerBereich('podologie').length, 3);
@@ -114,4 +114,12 @@ test('behandlungsartFuer: freiwillig, nur gueltiger Wortlaut', () => {
   assert.equal(behandlungsartFuer('rezept', 'pkv', 'Hornhautabtragung'), null);
   assert.equal(behandlungsartFuer('nagelspange', 'gkv', null), 'Nagelspangenbehandlung');
   assert.equal(behandlungsartFuer('nagelspange', 'selbstzahler', null), null);
+});
+
+test('ladeKennung: Mitarbeiter-Link und Standort-Slug behalten employeeId / businessId (booking.js)', async () => {
+  assert.deepEqual(await ladeKennung(stub({ profiles_public: { id: 'e', role: 'employee', owner_id: 'o' } }), '?u=anna'),
+    { ownerId: 'o', employeeId: 'e', businessId: null, businessName: null });
+  assert.deepEqual(await ladeKennung(stub({ businesses: { id: 'b1', owner_id: 'ob', business_name: 'Filiale Nord' } }), '?u=filiale'),
+    { ownerId: 'ob', employeeId: null, businessId: 'b1', businessName: 'Filiale Nord' });
+  assert.equal(await ladeKennung(stub({}), '?business=keine-uuid'), null);
 });

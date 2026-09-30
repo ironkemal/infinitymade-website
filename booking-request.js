@@ -11,8 +11,8 @@
 // diese Datei GAR KEINEN Import und ein eigenes Literal; in der Kundenbox waere
 // das die Cloud-VPS statt der eigenen Box gewesen (G1).
 import { API_BASE } from './supabase-config.js?v=20260701';
-import { getPublicClient } from './module/public-supabase.js?v=20261001v';
-import { ladeOwnerId } from './module/public-owner.js?v=20261001u';
+import { getPublicClient } from './module/public-supabase.js?v=20261001z';
+import { ladeOwnerId } from './module/public-owner.js?v=20261001z';
 import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, findAnliegen, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer } from './module/anfrage-anliegen.js?v=20261001v';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
