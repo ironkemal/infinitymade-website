@@ -716,6 +716,8 @@ kapı unutmaz ama düşünmez.
 
 > **Nachtrag 28.09.2026 (bildirim, kod değişmedi):** SaaS Azure kaynağı işletme aboneliğine taşındı — Sweden Central, Standard (Global değil) deployment, `gpt-4.1-mini` 2025-04-14, otomatik sürüm yükseltme kapalı. VPS `.env.calendar`’da yalnız 4 `AZURE_OPENAI_*` **değeri** değişti, yeni env adı yok; boot’ta EU Data Boundary kontrolü `region=swedencentral` ile geçti. Kutuya etkisi yok (AI kutuda varsayılan kapalı, E kararı). **Faz 1.3 için yeni girdi:** Microsoft Modified Abuse Monitoring başvurusu “managed customer” şartı taşıyor ve **her praxis kendi adına** başvurmak zorunda — yani `AI_PROVIDER=azure` BYO-key seçeneğinde abuse-monitoring muafiyeti bizim tarafımızdan sağlanamaz, her müşteriye ayrı iş yükü. K4’ün IONOS varsayılanını güçlendirir; Azure seçeneği sihirbazda sunulacaksa bu şart ekranda yazılmalı. C5 (dipnot 6) ve §203 ticket’ları açık, sonuç gelince buraya.
 
+> **Nachtrag 29.09.2026:** Azure fiilen kapandı (Modified Abuse Monitoring reddi, `compliance/LEGAL_DECISIONS.md:270` vd.); aday sağlayıcı **STACKIT AI Model Serving** (EU01, C5 Typ 2, OpenAI-uyumlu). "Anahtar bizden" varyantının ön kontrolü → **O-134** (G2 vetosu yok, 10 şart), anahtar kaynağı/rotasyon → **O-135**, eksik `AI_MODEL_*` → **O-136**, limit/maliyet kapsamı → **O-137**. Bu maddenin kendi şartı hâlâ açık: `azureClient.js:38-40` üretimde anahtar yokken `throw` ediyor (29.09 tekrar okundu) — hangi sağlayıcı seçilirse seçilsin ilk iş bu.
+
 ### O-08 — Google Calendar / Gmail OAuth — bizim OAuth uygulamamız
 
 | Alan | İçerik |
@@ -3764,7 +3766,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Tip** | D |
 | **Kutuda ne olur** | Kapı `bis_version != en yüksek migration` deyip commit'i reddediyor (doğru davranış, O-90). Ama kuralın tanıdığı tek çıkış "taze kutu kur ve ölç" — index takası gibi sık ve ispatlanabilir sayaç-nötr değişikliklerde bu, her seferinde bir tam kurulum turu demek. Ucuz alternatif `SKIP_ZAEHLER_GATE=1`'dir ve **iz bırakmaz**: neden atlandığı hiçbir yerde yazmaz, bir sonraki sefer gerçekten sayacı değiştiren bir migration'da da refleksle kullanılır. Yani kaçış yolu, O-90'ın kapattığı deliği geri açar |
 | **Çözüm** | Kural 6'ya üçüncü hâl yazılsın: migration'da `-- ZAEHLER: unveraendert (<gerekçe>)` satırı varsa **ve** gerekçe on sayacın hiçbirine dokunmadığını gösteriyorsa (`storage.*`/`auth.*` yok; tablo/policy/fonksiyon/trigger yok; index değişimi net sıfır ve silinen index taze kutuda **gerçekten var**), `bis_version` ölçmeden yükseltilebilir; `zaehler`/`gemessen_am` olduğu gibi kalır. Karşılığında `SKIP_ZAEHLER_GATE` kullanımı sicile gerekçe yazmadan yasaklanır — iki yol yerine tek yol. İleri adım (Faz 2.4 adayı): kapı `ZAEHLER:` satırını makine-okunur hâle getirip `unveraendert` iddiasını en azından "DDL kelimeleri var mı" düzeyinde çapraz sorgulasın (Kural 6'nın kendi önerdiği yön) |
-| **Durum** | 🔴 **offen** — 0017 turunda bulundu. 0017 için verilen hüküm: `bis_version="0017"`, `zaehler`/`gemessen_am` dokunulmadı, `SKIP_ZAEHLER_GATE` kullanılmadı. Gerekçe dosyaya karşı doğrulandı: silinen index `0000_baseline.sql:7242`'de duruyor (yani taze kutuda mevcut, `DROP … IF EXISTS` gerçekten bir index düşürüyor), yenisi `IF NOT EXISTS` ile ekleniyor, `index` sayacı `SELECT count(*) FROM pg_indexes WHERE schemaname='public'` (`schema-zaehler.js:27`) → net 0. Diğer dokuz sayaç: tablo/policy/fonksiyon/trigger/extension/publication/storage/auth hiç geçmiyor. Kural metninin kendisi **henüz yazılmadı**, sahibi yok. 17.09.2026: **üçüncü ve dördüncü örnek** — 0018/0019, `bis_version` "0017"→"0019" olarak iki dosya birden atlanarak yükseltildi, `zaehler`/`gemessen_am` yine dokunulmadı. İkisi de yalnız kolon ekliyor (0019'daki `REFERENCES` dahil) — Postgres kolon eklemede otomatik index/trigger üretmez, FK'nin RI-trigger'ları `tgisinternal=true` olduğu için zaten `trigger` sayacının sorgusu (`schema-zaehler.js:23-26`, `NOT t.tgisinternal`) onları saymıyor — gerekçe koda karşı doğrulandı, sayaçlara gerçekten dokunmuyorlar. 18.09.2026: **beşinci örnek** — `0025_abrechnung_status_manuell.sql` (Ops #310), `prescriptions`'a iki nullable kolon, biri `REFERENCES auth.users(id) ON DELETE SET NULL`. Aynı hüküm: `bis_version` "0024"→"0025", `zaehler`/`gemessen_am` dokunulmadı, `SKIP_ZAEHLER_GATE` kullanılmadı. Bu kez `auth_trigger` sayacı ayrıca sorgulandı, çünkü `ON DELETE SET NULL`'ın RI-eylem trigger'ı **referans edilen** tabloda (yani `auth.users`'ta) yaratılır: o da `tgisinternal=true`'dur ve `schema-zaehler.js`'in `auth_trigger` sorgusundaki `NOT t.tgisinternal` süzgecinden geçmez. Fiziksel kanıt tahminden güçlü — `0000_baseline.sql`'de `auth.users(id)`'ye **44** FK var ve aynı taze kutuda ölçülen `auth_trigger` değeri **1** (yalnız `handle_new_user`); 45'inci FK bu sayıyı değiştiremez. Ayrıca `index` sayacı: Postgres FK için otomatik index yaratmaz (yalnız referans edilen taraftaki PK gerekir, o zaten var), `UNIQUE` yok → net 0. Kalıcı çözüm hâlâ yazılmadı; her yeni ADD-COLUMN turu aynı riski taşımaya devam ediyor. **22.09.2026 — onuncu örnek, ve bu kez fiziksel kanıtla:** `0042_abrechnung_verschluesselung` (Kemal önce `0039` yazdı, Melih'in paralel oturumda origin/main'e aynı gün landırdığı `0039_seed_heilmittel_katalog_podo_komplex_suche`/`0040_kostentraeger_auswahl_view`/`0041_krankenkassen_ik_nachtrag` ile çakışınca — yalnız Kemal'inki gerçek DDL taşıdığı için — `0042`'ye kaydırıldı, merge sırasında) `abrechnung`'a beş nullable kolon ekliyor (`encrypted_storage_path`, `encrypted_sha256`, `verschluesselt_am`, `verschluesselt_fuer_fingerprint`, `verschluesselung_hinweis`) + beş `COMMENT ON COLUMN`. Aynı hüküm: `bis_version` "0041"→"0042" (Melih'in kendi üç migrasyonu zaten counter-neutral olarak "0038"→"0041" yükseltmişti), `zaehler`/`gemessen_am` dokunulmadı, `SKIP_ZAEHLER_GATE` kullanılmadı. Bu turda gerekçe **tahmin edilmedi, ölçüldü** — canlıdan aynı gün yeniden üretilen `db/SCHEMA-RLS.sql` bir **NULL-değişiklik** (policy/fonksiyon/trigger/index yok, yalnız künye satırı), `db/SCHEMA.sql`'in gövde diff'i ise künye dışında tam **beş kolon satırı**. Yani "on sayacın hiçbirine dokunulmadı" iddiası dökümün kendisiyle doğrulanabilir hâlde. Bu örnek `0025`'ten de basit: **hiç FK yok** — `verschluesselt_fuer_fingerprint` fachlich `empfaenger_zertifikate.fingerprint_sha256`'ya bakıyor ama bilerek serbest `text` (sertifika rotasyonundan sonra tarihsel değer durmalı), dolayısıyla `tgisinternal` tartışmasına bile gerek kalmıyor. Türetme `erwartete-zaehler.json` → `_hinweis_0042`'de satır satır yazılı. ⚠️ **Onuncu örnekte kural hâlâ yazılı değil:** bu artık "sırası gelmedi" değil, **kalıcı bir sözlü gelenek** — her turda aynı türetme sıfırdan yapılıyor ve her turda doğru yapılacağına güveniliyor. Bir tur bunu atlayıp `SKIP_ZAEHLER_GATE=1` dediğinde fark edilmeyecek. Sahibi atanmalı: kural metni `db-ustasi` + ben, makine-okunur `ZAEHLER:` kapısı `builder` |
+| **Durum** | 🔴 **offen** — 0017 turunda bulundu. 0017 için verilen hüküm: `bis_version="0017"`, `zaehler`/`gemessen_am` dokunulmadı, `SKIP_ZAEHLER_GATE` kullanılmadı. Gerekçe dosyaya karşı doğrulandı: silinen index `0000_baseline.sql:7242`'de duruyor (yani taze kutuda mevcut, `DROP … IF EXISTS` gerçekten bir index düşürüyor), yenisi `IF NOT EXISTS` ile ekleniyor, `index` sayacı `SELECT count(*) FROM pg_indexes WHERE schemaname='public'` (`schema-zaehler.js:27`) → net 0. Diğer dokuz sayaç: tablo/policy/fonksiyon/trigger/extension/publication/storage/auth hiç geçmiyor. Kural metninin kendisi **henüz yazılmadı**, sahibi yok. 17.09.2026: **üçüncü ve dördüncü örnek** — 0018/0019, `bis_version` "0017"→"0019" olarak iki dosya birden atlanarak yükseltildi, `zaehler`/`gemessen_am` yine dokunulmadı. İkisi de yalnız kolon ekliyor (0019'daki `REFERENCES` dahil) — Postgres kolon eklemede otomatik index/trigger üretmez, FK'nin RI-trigger'ları `tgisinternal=true` olduğu için zaten `trigger` sayacının sorgusu (`schema-zaehler.js:23-26`, `NOT t.tgisinternal`) onları saymıyor — gerekçe koda karşı doğrulandı, sayaçlara gerçekten dokunmuyorlar. 18.09.2026: **beşinci örnek** — `0025_abrechnung_status_manuell.sql` (Ops #310), `prescriptions`'a iki nullable kolon, biri `REFERENCES auth.users(id) ON DELETE SET NULL`. Aynı hüküm: `bis_version` "0024"→"0025", `zaehler`/`gemessen_am` dokunulmadı, `SKIP_ZAEHLER_GATE` kullanılmadı. Bu kez `auth_trigger` sayacı ayrıca sorgulandı, çünkü `ON DELETE SET NULL`'ın RI-eylem trigger'ı **referans edilen** tabloda (yani `auth.users`'ta) yaratılır: o da `tgisinternal=true`'dur ve `schema-zaehler.js`'in `auth_trigger` sorgusundaki `NOT t.tgisinternal` süzgecinden geçmez. Fiziksel kanıt tahminden güçlü — `0000_baseline.sql`'de `auth.users(id)`'ye **44** FK var ve aynı taze kutuda ölçülen `auth_trigger` değeri **1** (yalnız `handle_new_user`); 45'inci FK bu sayıyı değiştiremez. Ayrıca `index` sayacı: Postgres FK için otomatik index yaratmaz (yalnız referans edilen taraftaki PK gerekir, o zaten var), `UNIQUE` yok → net 0. Kalıcı çözüm hâlâ yazılmadı; her yeni ADD-COLUMN turu aynı riski taşımaya devam ediyor. **22.09.2026 — onuncu örnek, ve bu kez fiziksel kanıtla:** `0042_abrechnung_verschluesselung` (Kemal önce `0039` yazdı, Melih'in paralel oturumda origin/main'e aynı gün landırdığı `0039_seed_heilmittel_katalog_podo_komplex_suche`/`0040_kostentraeger_auswahl_view`/`0041_krankenkassen_ik_nachtrag` ile çakışınca — yalnız Kemal'inki gerçek DDL taşıdığı için — `0042`'ye kaydırıldı, merge sırasında) `abrechnung`'a beş nullable kolon ekliyor (`encrypted_storage_path`, `encrypted_sha256`, `verschluesselt_am`, `verschluesselt_fuer_fingerprint`, `verschluesselung_hinweis`) + beş `COMMENT ON COLUMN`. Aynı hüküm: `bis_version` "0041"→"0042" (Melih'in kendi üç migrasyonu zaten counter-neutral olarak "0038"→"0041" yükseltmişti), `zaehler`/`gemessen_am` dokunulmadı, `SKIP_ZAEHLER_GATE` kullanılmadı. Bu turda gerekçe **tahmin edilmedi, ölçüldü** — canlıdan aynı gün yeniden üretilen `db/SCHEMA-RLS.sql` bir **NULL-değişiklik** (policy/fonksiyon/trigger/index yok, yalnız künye satırı), `db/SCHEMA.sql`'in gövde diff'i ise künye dışında tam **beş kolon satırı**. Yani "on sayacın hiçbirine dokunulmadı" iddiası dökümün kendisiyle doğrulanabilir hâlde. Bu örnek `0025`'ten de basit: **hiç FK yok** — `verschluesselt_fuer_fingerprint` fachlich `empfaenger_zertifikate.fingerprint_sha256`'ya bakıyor ama bilerek serbest `text` (sertifika rotasyonundan sonra tarihsel değer durmalı), dolayısıyla `tgisinternal` tartışmasına bile gerek kalmıyor. Türetme `erwartete-zaehler.json` → `_hinweis_0042`'de satır satır yazılı. ⚠️ **Onuncu örnekte kural hâlâ yazılı değil:** bu artık "sırası gelmedi" değil, **kalıcı bir sözlü gelenek** — her turda aynı türetme sıfırdan yapılıyor ve her turda doğru yapılacağına güveniliyor. Bir tur bunu atlayıp `SKIP_ZAEHLER_GATE=1` dediğinde fark edilmeyecek. Sahibi atanmalı: kural metni `db-ustasi` + ben, makine-okunur `ZAEHLER:` kapısı `builder`. **29.09.2026 düzeltme (S3.2 ön kontrolü, `0043_vorlagen_rechnung_ausfall`):** yukarıdaki "kural hâlâ yazılı değil" cümlesi 22.09'da zaten **yanlıştı** — `api-backend/db/migrations/README.md` Kural 6'da "Üçüncü yol — türetilmiş sayaç-nötrlüğü (21.09.2026, `db-ustasi`)" paragrafı var ve CHECK değişikliğini açıkça sayıyor. Yani maddenin **kural metni yarısı çözüldü**; açık kalan yalnız makine-okunur `ZAEHLER:` kapısı (`tools/check-onprem.sh:173-183` bugün yalnız `bis_version == en yüksek migration` eşitliğine bakıyor). `0043` (CHECK genişletme, DROP+ADD CONSTRAINT) bu yolun on birinci uygulaması — `_hinweis_0043` ile, ölçümsüz. Durum `offen` kalıyor, kapsam daraldı: yalnız kapı yarısı, sahibi `builder` |
 
 ---
 
@@ -4290,6 +4292,192 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 
 ---
 
+## 7T — Ön kontrol: STACKIT AI Model Serving, "anahtar bizden" modeli (29.09.2026)
+
+> **Soru (Kemal, 29.09.2026):** Praxura tek STACKIT hesabı açar, her praxis için ayrı
+> STACKIT projesi + proje-bazlı token üretir. Praxis STACKIT hesabı açmaz; istek
+> kutudan/app'ten doğrudan STACKIT'e gider (K6 metni korunur); faturayı praxise biz keseriz.
+> Token image'a/repo'ya/pakete gömülmez — kurulumda ve sonra lisans kanalıyla (imzalı lisans
+> dosyasının yanında, gecelik yenilemede) teslim edilir, rotasyon/iptal merkezden.
+> Bu, 12.09'da ⛔ düşen ve 28.09'da "şartlı mümkün" diye yeniden açılan **Seçenek B**'nin
+> STACKIT sürümü (`konsey/tutanak/2026-09-12-onprem-ai-modeli.md`,
+> `konsey/tutanak/2026-09-28-onprem-ai-secenek-b-yeniden.md`).
+>
+> **Doğrulanan kod durumu (29.09.2026):** `ai/llmClient.js` **yok** (`ls api-backend/ai/`);
+> `azureClient.js:38-40` üretimde anahtar yokken hâlâ `throw`; lisans mekanizması **yok**
+> (`grep -rln "lizenz\|license" api-backend` → yalnız `validators/standardRules.js`, alakasız);
+> `onprem/docker-compose.yml:470-472` yalnız `AI_PROVIDER/AI_ENDPOINT/AI_API_KEY` geçiriyor.
+>
+> **STACKIT tarafı (docs.stackit.cloud, 29.09.2026 okundu):** token proje başına, oluşturmada
+> TTL verilir (`validUntil`), `DELETE /v1/projects/{id}/regions/eu01/tokens/{tokenId}` ile tek
+> tek silinir, bir kez gösterilir. Rate limit'ler **model başına sabit fair-use** değerleri
+> (ör. Qwen3-VL 235B: 350.000 TPM / 30 RPM; Gemma 4 31B: 200.000 TPM / 80 RPM) —
+> **proje mi, token mı, organizasyon mu bazında sayıldığı yazılı değil**, müşterinin limiti
+> düşürebildiği yazılı değil, **harcama tavanı (spend cap) yazılı değil.**
+
+### O-134 — Yönetilen AI token'ı (STACKIT, anahtar bizden, lisans kanalıyla): G2 vetosu yok, ama model K4'ü açıyor ve teslim kanalı henüz yok 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Bizim STACKIT hesabımızdan üretilen, praxis başına ayrı projeye bağlı AI token'ının müşteri kutusunda çalışması |
+| **Nerede** | Henüz kod yok. Dokunacağı yerler: `api-backend/ai/azureClient.js` (→ `llmClient`, Faz 1.3) · lisans modülü (Faz 3.1/3.2, yazılmadı) · `onprem/install.sh` (aktivasyon) · `onprem/docker-compose.yml:470-472` |
+| **Tip** | **E** (bizim sırrımız müşteri sunucusunda) + **A** (kutu → STACKIT) + **F** (merkezde rotasyon + maliyet bekçisi) + **G** (merkezde provisioning) + **H** (AI yetkisi lisanstan) |
+| **Kutuda ne olur** | Token kutuda **okunabilir** — müşteri sunucunun sahibi, root'u var; dosya, env, DB fark etmez. Yani K5'in gerekçesi ("her sır okunabilir → sızar → faturası bize keser") **hâlâ doğru**; değişen, zararın sınırlandırılabilir olması: token tek praxise ve tek projeye bağlı, TTL'li, merkezden silinebilir. İnternet yoksa: token TTL'i dolana kadar AI çalışır (STACKIT'e çıkış zaten internet ister), sonra AI sessizce kapanır — uygulama açık kalmalı (O-07 şartı, bugün `azureClient.js:40` bunu bozuyor). Bizim sunucumuz kapalıysa: rotasyon durur, TTL içinde AI çalışmaya devam eder |
+| **Çözüm** | Aşağıdaki **hüküm + şartlar**. Playbook'ta bu iş için görev yok → **Faz 3.5 önerisi** ("yönetilen AI anahtarı: provisioning + lisans yükü + rotasyon + maliyet bekçisi") — Faz 3.1/3.2'ye bağımlı |
+| **Durum** | `offen` — **iki karar sahibinde:** (1) **Kemal K4'ü açıkça açar** (K4 = "müşterinin kendi hesabı/anahtarı"; bu model onu doğrudan tersine çeviriyor — konsey açamaz, ben açamam; açılırsa playbook §2'ye yazılır). (2) `legal-de`'nin 29.09 hükmü (`compliance/LEGAL_DECISIONS.md:348-349`): *on-prem'de "kein Reselling (Ziff. 20) und kein Key von uns — sonst Rolle + §393 zurück (K6)"* + 28.09 memosu F1 (Auftragsverarbeiter'in kendi C5'i). **Bu modelin bugünkü gerçek engeli benim vetom değil, bu ikisi** |
+
+**Hüküm — G2: veto YOK (şartlı).** G2'nin metni *image'a, repo'ya, kurulum paketine gömme*yi
+yasaklar. Token çalışma zamanında, kutuya özel, lisans kanalıyla gelir → metin ihlal edilmiyor.
+Bu 28.09'daki Azure-B hükmümle tutarlı (orada da veto vermedim). K5'in metni ("pakete
+gömülmez") da ihlal edilmiyor; K5'in **gerekçesi** ise ancak aşağıdaki şartlar sağlanırsa
+karşılanıyor. Şartlardan biri eksikse model G2/K5 ruhunu çiğner ve ⛔ geri gelir.
+
+**Şartlar (hepsi, uygulama öncesi):**
+
+1. **Token asla image/repo/paket/`.env.template`'e girmez; `.env`'e de yazılmaz.** `.env`
+   `docker inspect` ile düz okunur, `backup.sh` ile kopyalanır, elle düzenlenir, rotasyonu
+   container yeniden yaratmayı ister. Yer: lisans dosyasının yanındaki kalıcı volume'da ayrı
+   dosya (`0600`, yalnız `api` konteynerine mount), ya da lisans yükünün içinde. **DB'ye
+   yazılmaz** (DB dökümü yedeğe ve — Faz 2.5a — tanılama paketine gider).
+2. **Tanılama paketi (Faz 2.5a) bu dosyayı hariç tutar.** Paket bize gelir; içinde kendi
+   token'ımızı görmek zararsız görünür ama aynı paket müşterinin e-postasında durur.
+3. **Teslim yalnız lisans kanalıyla, iki anda:** (a) ilk aktivasyon cevabı (`install.sh`
+   token'ı **sormaz**, 28.09 şartı aynen), (b) gecelik `/license/renew` cevabı. **İstek
+   genişlemez** — G1: istek yalnız lisans-ID + sürüm taşır; token yalnız **cevapta**. Kullanım
+   sayısı/token tüketimi kutudan merkeze **raporlanmaz**; maliyet STACKIT'in proje bazlı
+   faturasından okunur (bunun proje bazlı ayrıştığı **doğrulanmadı** → O-137).
+4. **Token TTL'li üretilir ve üst üste binen rotasyonla yenilenir.** Öneri: TTL 14 gün,
+   her gece yeni token, eski token 48 saat sonra merkezden silinir. TTL, lisansın 30 günlük
+   penceresinden **kısa** tutulur: merkez ulaşılamasa bile sızan token en geç TTL sonunda
+   ölür. Sonuç: 14 günden uzun offline kalan kutuda AI kapanır — kabul edilebilir, çünkü
+   G5 yalnız görüntüleme + dışa aktarmayı korur, AI'yı değil.
+5. **Kill-switch ile birleşme (K9):** AI, K9 durum makinesinde zaten salt-okunur modda
+   kapanıyor (playbook Faz 3, "yeni randevu/abrechnung/AI kapalı"). Merkez aynı anda
+   (`valid_until` + 14 gün tolerans) o praxisin **bütün token'larını siler** ve yenileme
+   cevabına token koymaz. İki kilit: kutu yerelde lisans durumundan AI'yı kapatır (internet
+   yokken de çalışır), merkez STACKIT'te token'ı öldürür (kutu kurcalanmışsa da çalışır).
+   **Bilinçli maliyet penceresi:** uyarı + tolerans boyunca (en fazla ~44 gün) AI açık kalır,
+   ödenmemiş kullanımı biz öderiz — daha erken kesmek ticari karardır, K9'u değiştirmez.
+6. **Merkezdeki STACKIT hesap kimliği (service account / proje ve token üretme yetkisi)
+   yalnız merkezde yaşar** — lisans imzalama private key'iyle aynı sınıf (G2 ikinci cümlesi).
+   Kutuya giden tek şey tek-proje, TTL'li inference token'ı; proje/token **üretme** yetkisi
+   asla.
+7. **Merkez tarafı `api/`'ye yeni dosya olarak yazılamaz** (12/12, G8). Provisioning,
+   rotasyon ve maliyet bekçisi lisans sunucusunun evine gider; o ev henüz seçilmedi (Faz 3.1).
+8. **Maliyet tavanı merkezde kurulur** (O-137): STACKIT'te harcama tavanı ve ayarlanabilir
+   limit belgelenmediği için, 28.09'daki Azure şartının ("kaynak başına düşük TPM kotası")
+   karşılığı **yok**. Yerine: merkezde günlük iş, proje bazlı tüketimi okur, eşik aşılırsa
+   token'ı siler + Kemal'e bildirir. Bu doğrulanmadan model canlıya çıkmaz.
+9. **BYO her zaman öncelikli.** Müşteri kendi `AI_API_KEY`'ini girdiyse lisans token'ı
+   kullanılmaz (bize maliyet yok, K4 yolu açık kalır).
+10. **Ara çözüm YOK:** Faz 3.1/3.2 yazılmadan "ilk müşteriye token'ı elle `.env`'e
+    yapıştıralım" = **DUR** (şart 1, 3, 4, 5'in hepsini çiğner). Lisans kanalı yoksa ilk
+    müşteri ya AI'sız (E kararı) ya kendi hesabıyla (C, 14.09 kararı) başlar.
+
+**SaaS tarafı (`app.praxura.de`) — öneri: TEK token.** SaaS'ta çağrı zaten bizim VPS'imizden
+çıkıyor, anahtar hiçbir müşteri sunucusuna gitmiyor — G2/K5'in korktuğu senaryo yok. Praxis
+başına token SaaS'ta yalnız **sır yönetimi yükü** getirir (tenant başına şifreli sır, DB'de).
+Maliyet ayrımı zaten var: `ai_audit_log` owner başına token tutuyor (28.09 tutanağı,
+`fonksiyon-ustasi`). Praxis başına AI'yı kapatmak token'la değil yetki bayrağıyla yapılır
+(Faz 3.3 `entitlements`). **G7 korunur:** kod yolu aynı `llmClient`; değişen yalnız anahtarın
+kaynağı (SaaS: env · yönetilen kutu: lisans dosyası · BYO kutu: env) — O-135.
+SaaS için ayrı bir STACKIT projesi ("saas") yeterli; praxis başına proje gerekmez.
+
+### O-135 — Anahtar modül yüklenirken okunuyor: gecelik rotasyon restart ister; "anahtar kaynağı" soyutlaması Faz 1.3 planında yok 🟠 **geplant (Faz 1.3)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Bugünkü istemci anahtarı ve endpoint'i import anında sabitliyor; llmClient bu deseni kopyalarsa lisans kanalından gelen gecelik rotasyon ancak restart ile devreye girer |
+| **Nerede** | `api-backend/ai/azureClient.js:11-12` (`const ENDPOINT = process.env…`, `const API_KEY = process.env…` — modül seviyesinde) · 12.09 tutanağı "Uygulama" maddesi yalnız env adlarını sayıyor |
+| **Tip** | E + H |
+| **Kutuda ne olur** | Gece yeni token gelir, eski 48 saat sonra silinir; restart olmazsa (Watchtower yeni image yoksa restart yapmaz) 48. saatte AI sessizce 401 alır |
+| **Çözüm** | Faz 1.3'e gereksinim: (1) `getAiCredential()` — sıra: env `AI_API_KEY` (BYO/SaaS) → lisans token dosyası → yok = AI kapalı; (2) çağrı başına ya da dosya `mtime`'ı değiştiğinde okur, süresiz cache'lemez; (3) 401 gelirse bir kez dosyayı yeniden okuyup tekrar dener, yine 401 ise AI "kapalı" durumuna düşer, uygulama çökmez. Endpoint ve model adları da lisans yükünden gelebilmeli (sağlayıcıyı image çıkarmadan değiştirmek için); sağlayıcı-bazlı bölge kontrolü STACKIT için host'un `eu01` bölgesinde olmasını ister. **Yeni env var gerekmez**; STACKIT host'u koda sabit yazılmaz (tip C'den kaçınma: host lisans yükünden ya da `AI_ENDPOINT`'ten gelir) |
+| **Durum** | `geplant` (Faz 1.3) |
+
+### O-136 — `AI_MODEL_TEXT` / `AI_MODEL_VISION` kutu compose'unda ve `.env.template`'de yok 🟠 **geplant (Faz 1.3)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | 12.09 ve 28.09 kararlarının saydığı `AI_MODEL_*` değişkenleri kutuya geçirilmiyor |
+| **Nerede** | `onprem/docker-compose.yml:470-472` (yalnız üç `AI_*`) · `onprem/.env.template:223-225` |
+| **Tip** | E (env yüzeyi) — O-50'nin aynı sınıfı: değişken planda var, paketten düşmüş |
+| **Kutuda ne olur** | BYO müşteri model adını giremez; llmClient varsayılana düşer. Model adı sağlayıcıya özel (Azure deployment adı ≠ STACKIT model kimliği) — varsayılan yanlış modele gider ya da 404 alır |
+| **Çözüm** | llmClient yazıldığı commit'te compose + `.env.template`'e eklenir (Faz 1.3). Yönetilen modelde değerler lisans yükünden gelir; env boşsa lisans değeri kullanılır |
+| **Durum** | `geplant` (Faz 1.3) |
+
+### O-137 — STACKIT'te harcama tavanı ve limit kapsamı belgelenmemiş: "praxis başına ayrı limit, ayrı maliyet satırı" iddiası doğrulanmadı 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Modelin iki vaadi (ayrı rate limit, ayrı maliyet satırı) STACKIT belgelerinde yok |
+| **Nerede** | docs.stackit.cloud → AI Model Serving "Available shared models" (limitler model başına, kapsam yazılmamış) · FAQ (spend cap yok) · 29.09.2026 okundu |
+| **Tip** | F (merkezde maliyet bekçisi gerekecek) + G |
+| **Kutuda ne olur** | (a) Limit **organizasyon** bazındaysa tek praxisin yükü (ya da sızan bir token) bütün praxislerin **ve SaaS'ın** AI'sını 429'a düşürür. (b) Harcama tavanı yoksa sızan token'ın maliyeti yalnız bizim silme hızımızla sınırlı. (c) Maliyet proje bazında raporlanmıyorsa O-134 şart 3'ün "kullanım kutudan raporlanmaz" çözümü çöker — o zaman kutudan merkeze kullanım kanalı gerekir, bu da G1'e dokunur |
+| **Çözüm** | STACKIT'e yazılı soru (Kemal, 29.09 mailine ek): limit proje/token/org bazında mı · proje başına kota düşürülebiliyor mu · harcama tavanı/bütçe kesmesi var mı · maliyet proje bazında API ile okunabiliyor mu · organizasyon başına proje sınırı kaç. Cevaba göre merkezde günlük maliyet bekçisi (O-134 şart 8). **Ops kartı açılmalı** (Launch) — kart no. buraya yazılana kadar `offen` |
+| **Durum** | `offen` |
+
+---
+
+## 7U — Ön kontrol: `0044_leads_krankenkasse_ik` (Reform S3.8, 30.09.2026)
+
+Hüküm **GEÇER**, yeni madde açılmadı. Gerekçe tekrar araştırılmasın diye:
+
+- **Tip D**, tek nullable `text` kolon + CHECK + COMMENT. G1/G2/G3/G8'e dokunmuyor: Karten-IK
+  hasta verisidir ama `leads`'te, kutunun kendi Postgres'inde kalır; dış çağrı, sır, n8n, yeni
+  bulut zinciri yok. Sayaç-nötr (O-108'in on ikinci uygulaması, `_hinweis_0044`).
+- **SaaS sırası:** önce MCP ile kolon, **sonra** ön yüz push'u. Ters sıra = PostgREST
+  "column not found" → `leads` insert/update'in **tamamı** düşer, yalnız alan değil.
+  SaaS'ta runner koşmuyor (`DATABASE_URL` yok, `migrations/README.md:118`) — MCP'den sonra
+  runner'ın aynı dosyayı ikinci kez denemesi (ve `ADD CONSTRAINT`'in IF NOT EXISTS'siz
+  çakışması) riski yok.
+- **CHECK tuzağı:** 9 hane dışı her değer (boşluklu OCR çıktısı, `''`) `23514` ile **bütün
+  kaydı** reddeder. Üç yazma yolu (leadSaveBtn, Schnellerfassung, OCR abgleich) yazmadan önce
+  rakam dışını ayıklamalı, boşu `null` yapmalı, 9 hane değilse alanı göndermemeli.
+- **`:beta`/`:stable`:** additive, eski image kolonu bilmez, zararsız. Kutuda ön yüz ile
+  migration aynı image'da gelir; runner açılışta uygular, `pgrst_ddl_watch` (Supabase image'ının
+  event trigger'ı) PostgREST cache'ini tazeler. Migration düşerse kutu bakım moduna girer
+  (`server.js:4574`), yeni ön yüz kolonsuz DB'ye yazmaz.
+- **Kayıt disiplini (O-129/O-133):** MCP'den sonra aynı commit'te dosya başlığındaki
+  "SaaS: NOCH NICHT angewendet" → "SaaS: angewendet <tarih>, MCP", `_hinweis_0044`'teki
+  aynı cümle ve döküm künyesi. 0041 için `db-ustasi` 27.09 uygulamasını doğruladı; başlık satırı zaten
+  doğru (`0041_krankenkassen_ik_nachtrag.sql:43`), yanlış olan yalnız sprint notuydu.
+
+---
+
+## 7V — Ön kontrol: Kostenträgerdatei RSS izleyicisi + geçerlilik tarihli yükleme (30.09.2026)
+
+Oturum B sordu, kod yazılmadan önce. Neden: Q4/2026'da AOK/BKK/IKK dosyaları çeyrek
+başından yalnız 2-3 gün önce yayınlandı, Kemal elle takip edemiyor. İki ayrı öneri, iki madde:
+izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına dokunuyor.
+
+### O-138 — Kostenträgerdatei RSS izleyicisi: merkez tarafı, tip B+F, yalnız rapor 🟠 **geplant (hüküm GEÇER, KAYITLA)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | GitHub Actions'ta günlük iş: gkv-datenaustausch.de'nin "Kostenträgerdateien sonstige Leistungserbringer" RSS'i çekilir, entry ID'ler (doğrudan dosya linki) `tools/kostentraeger-annahmestellen-laden.mjs:48` `AUSGABEN` listesi + `wissensbank/REGISTER.md` W-01 ile karşılaştırılır. Yeni dosya varsa indirilir (sha256), `parser.js` + `datei-lesen.js` ile ayrıştırılır, fark kontrolleri Telegram'a gider. **Otomatik commit yok, otomatik DB yazımı yok** |
+| **Nerede** | Önerilen: ayrı `.github/workflows/kostentraeger-check.yml` (henüz yazılmadı). Emsal: `itsg-trust-anchor-check.yml` (ayrı feed = ayrı workflow) · `preise-check.yml` (O-34 şablon). İçe aktarılacak kod: `api-backend/billing/kostentraeger/parser.js` → `../dta/encoding.js` (hiç import'u yok) · `datei-lesen.js` → yalnız `node:fs`. **Zincirde tek bir npm paketi yok** (30.09.2026'da import satırları sayıldı) |
+| **Tip** | B (dış veriyi merkez çeker) + F (zamanlanmış iş, merkezde) |
+| **Kutuda ne olur** | **Hiçbir şey. Kutu gkv-datenaustausch.de'ye hiç çıkmaz.** İş image'a girmez, kutuya yeni kod/şema/env eklemez. Kutunun kazancı dolaylı: yeni dosya 2-3 gün önceden haber verilir, seed migration (`0045` sınıfı) çeyrek başından **önce** image'a girebilir. G1: hasta verisi yok (kamu dosyası). G2: tek sır Telegram token'ı, GitHub secret'ta duruyor, image'da değil. G3/G8: n8n yok, Vercel yok, runtime bulut zinciri yok, O-34'ün aynısı. **Veto yok** |
+| **Çözüm** | Hüküm **GEÇER, KAYITLA**, dört şartla: **(1)** Ayrı workflow, **tek job**, `permissions: contents: read`, **`npm ci` hiç koşmasın** (zincir yalnız yerel dosya + `node:fs`; bağımlılık kurmamak S-28/O-99 sınıfı riski kökten siler). DB secret'ı yok. **(2)** Telegram token'ı yalnız son `curl` adımının `env:`'inde durur; parse adımı token'ı görmez. Mesaj metni dosya olarak son adıma geçer. **(3)** RSS entry ID / dosya adı Telegram metnine ve shell'e **doğrulanmadan** girmesin: beklenen dosya adı kalıbı dışında kalan (ör. `^[A-Z]{2}[0-9A-Z]{6}_KE[0-9]\.txt$` benzeri, kesin kalıbı mevcut 11 dosya belirler) her giriş yalnız "tanımsız giriş" uyarısı üretir (O-99 yan bulgusu: dışarıdan gelen tarih doğrulanmadan koda enjekte ediliyordu). İndirme yalnız `https://www.gkv-datenaustausch.de/` önekli linklerden yapılır. **(4)** O-130 dersi: tek bir anormal kontrol (ör. U+FFFD) yalnız **o dosyanın** raporunu "incele" diye işaretlesin, diğer yeni dosyaların haberini yutmasın. Ayrıca RSS 3 gün üst üste inmezse "izleyici kör" uyarısı gelsin; sessiz ölüm burada da mümkün |
+| **Durum** | 🟠 **geplant**, uygulayan `builder`. Kapanış ölçütü: workflow indi ve ilk `workflow_dispatch` koşusunda Q4 dosyaları "zaten biliniyor" çıktı (commit no. ile `gelöst`) |
+
+### O-139 — `kostentraeger_annahmestellen` / `_anschriften`'e geçerlilik penceresi: kutuya iki adımda varır 🔴 **offen (konsey öncesi ön görüş)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Öneri: iki tabloya geçerlilik kolonları + okuyucu filtresi (`annahmestelle.js:71` `waehleAnnahmestelle`, ayrıca `ladePapierannahmestelle`). Böylece gelecek çeyreğin verisi önceden yüklenir, geçiş gece yarısı kendiliğinden olur. Bugün yükleme 01.x günü elle koşmak zorunda, kutu da seed gelene kadar eski alıcıda kalıyor |
+| **Nerede** | `db/SCHEMA.sql` `kostentraeger_annahmestellen` (UNIQUE `kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode, …`, **geçerlilik kolonu içermiyor**) · `kostentraeger_anschriften` · okuyucu `api-backend/billing/kostentraeger/annahmestelle.js:71` · yükleyici `tools/kostentraeger-annahmestellen-laden.mjs:48` (`AUSGABEN`; "neueste Ausgabe mit gültig-ab <= Stichtag" kuralı **zaten burada**, ama yalnız yükleme anında uygulanıyor) · seed üretici `tools/seed-generieren.mjs` |
+| **Tip** | D (şema), `:beta`/`:stable` dağıtım etkisiyle |
+| **Kutuda ne olur** | Doğru kurulursa en büyük kazanç **kutuda**: seed çeyrek başından haftalar önce image ile gelir, kutu 01.x gecesi kimse dokunmadan doğru alıcıya geçer (O-46: kutuda bunu fark edecek kimse yok). **Yanlış sırayla kurulursa** tehlike de kutuda: gelecek tarihli satırlar filtresi olmayan bir okuyucuya ulaşırsa (`:stable` hâlâ eski kodu çalıştırıyorsa) aynı IK için iki sürüm yan yana görünür. O zaman `waehleAnnahmestelle` ya belirsizlikte durur ya da **yeni alıcıyı erken** seçer. Yani filtreyi bilen kod bütün kanallarda canlı olmadan veri gelemez |
+| **Çözüm** | **Expand/contract, üç adım (G7, `SCHEMA-VERTEILUNG.md` disiplini).** **Adım 1 (migration A + kod, aynı image):** `gueltig_von date NULL`, `gueltig_bis date NULL` (adlandırma `heilmittel_tarif` ile aynı olsun, `valid_from/to` değil). NULL = sınırsız, yani mevcut satırların anlamı değişmez. UNIQUE'e `gueltig_von` eklenir. ⚠️ Eski UNIQUE'i düşürmek `ON CONFLICT (eski kolonlar)` kullanan her yazıcıyı kırar. Yazıcılar yalnız merkezde (yükleyici + seed üretici) ve uygulanmış seed'ler yeniden koşmaz; yine de yükleyici ile seed üretici **aynı commit'te** yeni anahtara çekilir. Okuyucu filtresi: `(gueltig_von IS NULL OR gueltig_von <= d) AND (gueltig_bis IS NULL OR gueltig_bis >= d)`, burada `d` **Berlin tarihidir** (`Intl`, UTC değil). Hangi tarih olduğu (dosya oluşturma günü mü, Leistungszeitraum mı) `gkv-302`'nin sorusu, konseyde sorulsun. **Adım 2:** Adım 1'in image'ı `promote-stable.yml` ile `:stable`'a geçene kadar **gelecek tarihli satır yüklenmez**, ne SaaS'a (`--write`) ne seed'e. Bunun mekanik kontrolü: seed üretici, `:stable` etiketinin commit'i filtreyi içermiyorsa gelecek `gueltig_von`'lu satır üretmeyi reddetsin. **Adım 3:** o andan sonra her çeyreğin seed'i önceden gelir; önceki sürümün satırları `gueltig_bis = yeni.gueltig_von - 1` ile kapatılır. Silinen IK'lar da böylece kendiliğinden düşer (yalnız `gueltig_von` tutmak bunu yapamazdı, silinen IK sonsuza kadar geçerli kalırdı). **O-128 şartı:** seed, süresi bir çeyrekten daha önce dolmuş satırları `DELETE` etsin ki tablo her çeyrek büyümesin. **Adım 1 ile Adım 3 aynı sürümde birleştirilmez** |
+| **Durum** | 🔴 **offen**, konsey kararı bekliyor (`db-ustasi` + `gkv-302` + `onprem`). Kapanış ölçütü: Adım 1 image'ı `:stable`'da ve önceden yüklenmiş ilk çeyrek kendiliğinden geçti |
+
+**O-118'e etkisi:** O-138 "hatırlatan" yarının dış yüzünü kapatır (yeni dosya çıktı haberi).
+İç yüzü hâlâ açık: dosya repoya girip seed yazılmazsa hiçbir şey bağırmıyor
+(`tools/check-onprem.sh`'da `kostentraeger` hâlâ 0 satır). O-118 durum değiştirmiyor, 🟡 kalıyor.
+
+---
+
 ## 8. Kapı — sayaçlar ve tabanlar
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı
@@ -4342,6 +4530,8 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > gösteriyordu, oysa dördü de kapanmıştı. **Kural değişti:** bundan sonra tablonun
 > kendisi güncellenir; tarihsel fark notları altında **kayıt olarak** durur
 > (silinmezler — "o gün neredeydik" sorusunun cevabı onlar).
+
+> **29.09.2026:** O-134…O-137 (§7T, STACKIT "anahtar bizden" ön kontrolü) eklendi → 21 + 18 + 22 + 63 + 13 = **137**, en yüksek numara **O-137**. Uyuşuyor. (Aşağıdaki "132" cümlesi 21.09 fotoğrafıdır; O-133 sonradan eklenmişti.)
 
 **Toplam 132 madde** (O-01 … O-132) — son üçü (**O-130…O-132**, §7S) 21.09.2026'da, §302 planının **Adım 1.3**'ünün (ITSG Trust-Anchor zinciri + `/upload-signed` şifrelemesi) **push'tan önce** yapılan denetiminden çıktı: biri merkezdeki besleme zincirinin 06.01.2027'de sessizce ölmesi (**O-130** — runtime'da düzeltilen hatanın ikizi CI'da duruyor), biri üretilen şifreli dosyanın hiçbir yerden ulaşılamaması (**O-131**), biri de alıcı sertifikasının kutuya hiç varmaması (**O-132**, O-116'nın çözülmeyen yarısı). Aynı tur **O-116**'yı 🟠 → 🟡 taşıdı. Ondan önceki dördü (**O-126…O-129**, §7R) 20.09.2026
 **gecesi**, §302 Faz 1'in ikinci yarısının (`0031`–`0037` + güvenlik düzeltmesi `0035`)
@@ -4422,8 +4612,8 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 19 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-106 · O-107 · O-108 · O-110 · O-113 · O-119 · O-123 · O-127 · O-128 · O-129 · **O-130** · **O-132** · **O-133** |
-| `geplant` | 16 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 |
+| `offen` | 21 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-106 · O-107 · O-108 · O-110 · O-113 · O-119 · O-123 · O-127 · O-128 · O-129 · O-130 · O-132 · O-133 · **O-134** · **O-137** |
+| `geplant` | 18 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · **O-135** · **O-136** |
 | 🟡 `kısmen gelöst` | 22 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · **O-116** · O-118 · O-120 · O-125 · O-126 |
 | `gelöst` | 63 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-109 · **O-114** · **O-117** · **O-122** · **O-124** · **O-131** |
 | `unkritisch` | 13 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 |
