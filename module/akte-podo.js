@@ -97,7 +97,7 @@ export function setzeAkteReiter(f, doc = document) {
   // (der Lader setzt nur `hidden`; `display:none !important` hält dagegen).
   for (const id of ['pdRezContent', 'pdRezLoading']) {
     const e = doc.getElementById(id);
-    if (!e?.style) continue;
+    if (typeof e?.style?.setProperty !== 'function') continue;
     if (f.isPodo) e.style.setProperty('display', 'none', 'important');
     else e.style.removeProperty('display');
   }
