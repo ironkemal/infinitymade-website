@@ -30,8 +30,8 @@
  *    (interdisziplinaer) regellos, die Automatik dort stumm.
  */
 
-import { parseIcdList, matchIcdToDg, soleIcdForDg, dgVorschlag, normDgCode } from '../icd-dg-match.js?v=20260925a';
-import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './diagnosegruppen-regeln.js?v=20260918';
+import { parseIcdList, matchIcdToDg, soleIcdForDg, dgVorschlag, normDgCode } from '../icd-dg-match.js?v=20261001a';
+import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './diagnosegruppen-regeln.js?v=20261001a';
 
 /**
  * Kodes aus einem ICD-Feld, auch leerzeichengetrennt („E11.74 L60.0").

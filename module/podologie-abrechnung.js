@@ -60,12 +60,12 @@
  * Aufruf.
  */
 
-import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20260810e';
-import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20260930x';
+import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001a';
+import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260930h';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260920s';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
-import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20260918';
+import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001a';
 import { leiteBehandlungsbeginnAb } from './behandlungsbeginn.js?v=20260920s';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20260901';
@@ -89,7 +89,7 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
 // Ermittlung wird NICHT geschrieben — die von `verordnung-pruefung.js`
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
-import { erstePositionAusItems } from './verordnung-pruefung.js?v=20260930c';
+import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001a';
 import { behandlungspositionVorschlag } from './podo-behandlungsposition-regel.js?v=20260928';
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
 // "heute" — s. `setPodVorwahl()` unten.

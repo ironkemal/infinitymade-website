@@ -446,3 +446,11 @@ test('voAusGespeicherterVerordnung Ergebnis ist motorkompatibel: fehlende Kasse 
   assert.ok(codes(e).includes('PFLICHT_KASSEIK'));
   assert.equal(e.ok, false);
 });
+
+// canli-test P2 30.09.2026 — gespeichertes „E11.7-" (Strich = nicht endständig) las die Liste als „kein Kode".
+test('ICD mit nachgestelltem Strich zählt als Kode (kein „ICD-10-Kode fehlt")', () => {
+  const r = pruefeVerordnung(saubereVo({ icd: 'E11.7-' }), PODO, HEUTE);
+  assert.ok(!codes(r).includes('PFLICHT_ICD'));
+  assert.ok(!codes(r).includes('ICD_FEHLT'));
+  assert.ok(r.geprueft.includes('ICD ⇄ Diagnosegruppe'), 'der Abgleich darf nicht stumm ausfallen');
+});

@@ -230,3 +230,15 @@ test('drei Kodes → nichts verschoben, Hinweis je Feld einen Code', async () =>
   assert.match(m.hinweis(), /^Mehr als zwei ICD-Codes: übertragen werden zwei/);
   assert.equal(m.f.rzDg.value, '');
 });
+
+// canli-test P1/P2 30.09.2026 — der Strich ist kein Kodebestandteil (gkv-302).
+import { icdKodesAusFeld as _kodes, icdAufZweiFelder as _zwei } from './icd-dg-verdrahtung.js';
+import { parseIcdList as _parse, normalizeIcd as _norm } from '../icd-dg-match.js';
+test('Strich am Kodeende fällt weg (normalizeIcd/parseIcdList/icdKodesAusFeld/icdAufZweiFelder)', () => {
+  assert.equal(_norm('e11.7-'), 'E11.7');
+  assert.deepEqual(_parse('E11.7-'), ['E11.7']);
+  assert.deepEqual(_parse('E11.7- – Diabetes, Typ 2'), ['E11.7']);
+  assert.deepEqual(_kodes('E11.7- L60.0'), ['E11.7', 'L60.0']);
+  const z = _zwei('E11.7- L60.0', '');
+  assert.equal(z.feld1, 'E11.7'); assert.equal(z.feld2, 'L60.0');
+});

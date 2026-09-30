@@ -34,7 +34,7 @@
 // Beide Werte gehören zusammen; wird einer geändert, muss der andere mit.
 export const BK_PANEL_OFFSET = '456px';
 
-import { fuelleMuster13 } from './verordnung-maske.js?v=20260930x';
+import { fuelleMuster13 } from './verordnung-maske.js?v=20261001a';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 import { sitzungenProWoche, verteileWochentage } from './frequenz-pruefung.js?v=20260929b';
 

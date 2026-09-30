@@ -144,6 +144,12 @@ En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
   Nerede: `attachDiagnoseSearch` içindeki `katalog:gespeichert` dinleyicisi; olayı `module/verordnung-maske.js`
   `rzIcd`/`rzIcd2` doldurulunca atar. `attachDiagnoseSearch`'in tek bağlandığı yer `DIAGNOSE_FIELDS`
   (`rzIcd`, `rzIcd2`, `rzDg`) — başka ICD giriş yolu yok, kapsama tam.
+- 30.09 (canli-test P1/P3) — ICD sondaki "-" kodun parçası değil (gkv-302). Yeni: `api-backend/billing/utils/icd-code.js`
+  → `icdOhneStrich` (tek ortak backend normalizer; frontend karşılığı `icd-dg-match.js` `normalizeIcd`), `icdAbfrageKodes`
+  (icd10_titles için k ve k- birlikte), `icdTerminalMap` (tiresiz anahtarlı harita, terminal=false kazanır). Nerede: preflight
+  `isValidIcd10`/V:01016, `builder.js` DIA listesi, `abrechnung.routes.js` mapper + terminal sorgusu. Ayrıca `katalog-suche.js`
+  → `setzeNichtEndstaendigHinweis` (hint DOM, eskiden `attachDiagnoseSearch` içinde kapalıydı) + `hinweisFuerGespeichertenKode`
+  (dinleyici bağlı olmasa da çalışır; `verordnung-maske.js` `fuelleMuster13` doğrudan çağırır — taze yüklemede focusin yoktu).
 
 ### 30.09.2026 · Reform S3.8a — Karten-IK ≠ Kostenträger-IK; yerel "bugün"
 - e665aca — Reform S3.8a (gkv-302, Anlage 1 TP5 V21 §5.5.2 / §5.5.3.1). Niye: Karten-IK (kartta

@@ -43,10 +43,10 @@
  * dieselbe Zusammenführung steht.
  */
 
-import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260930h';
+import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20261001a';
 import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260930h';
-import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260930x';
-import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20260930x';
+import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20261001a';
+import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20261001a';
 import { on } from './signal.js?v=20260813';
 
 const SPALTEN = 7;

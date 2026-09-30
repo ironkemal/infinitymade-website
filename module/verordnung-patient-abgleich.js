@@ -1,6 +1,6 @@
 import { emit } from './signal.js?v=20260813';
 import { versichertennummerAbweichung } from './verordnung-aus-ocr.js?v=20260930c';
-import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20260930e';
+import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20261001a';
 
 /**
  * verordnung-patient-abgleich.js — Patientenstammdaten nach manueller

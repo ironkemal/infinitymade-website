@@ -35,11 +35,14 @@ function _compileRe(pattern) {
 
 /**
  * Normalisiert einen ICD-10-Kode: Großbuchstaben, alle Leerzeichen entfernt.
+ * Ein nachgestellter Bindestrich (z. B. „E11.7-", nicht-terminale Katalogform)
+ * wird entfernt — der Strich ist kein Kodebestandteil (Binding ruling).
  * Die Sonderzeichen †, * und ! bleiben erhalten.
  */
 export function normalizeIcd(code) {
-  return String(code || '').replace(/\s+/g, '').toUpperCase();
+  return String(code || '').replace(/\s+/g, '').toUpperCase().replace(/\.?-+$/, '');
 }
+
 
 /**
  * Form eines ICD-10-GM-Kodes: Buchstabe, zwei Ziffern, optional Punkt mit ein

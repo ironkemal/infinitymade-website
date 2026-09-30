@@ -32,3 +32,16 @@ test('gespeicherter endständiger/unbekannter Kode, leeres Feld, Suchfehler -> k
   assert.equal(await gespeicherterKodeHinweis(sb, ''), '');
   assert.equal(await gespeicherterKodeHinweis(sbMit(null, { message: 'x' }), 'E11.7'), '');
 });
+
+// canli-test P3 30.09.2026 (2) — der Kode mit Strich ging roh an die RPC, die 0 Zeilen lieferte.
+test('gespeichertes „E11.7-": die RPC bekommt den Kode OHNE Strich und der Hinweis erscheint', async () => {
+  const gefragt = [];
+  const sb = { rpc: async (_n, p) => {
+    gefragt.push(p.p_q);
+    // wie die echte RPC: mit nachgestelltem Strich keine Treffer
+    return { data: /-$/.test(p.p_q) ? [] : [{ kind: 'icd', code: 'E11.7-', terminal: false }], error: null };
+  } };
+  assert.match(await gespeicherterKodeHinweis(sb, 'E11.7-'), /nicht endständig/);
+  assert.match(await gespeicherterKodeHinweis(sb, 'E11.7- – Diabetes'), /nicht endständig/);
+  assert.deepEqual(gefragt, ['E11.7', 'E11.7']);
+});

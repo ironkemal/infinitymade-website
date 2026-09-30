@@ -41,10 +41,11 @@
  */
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260930c';
+import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20261001a';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260930c';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
-import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20260930x';
+import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261001a';
+import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -441,7 +442,12 @@ export function fuelleMuster13(rx, opt = {}) {
   // (katalog-suche.js, S3.6) — kommt nach dem `input`-Ereignis, das ihn löscht.
   for (const feldId of ['rzIcd', 'rzIcd2']) {
     const el = g(feldId);
-    if (el && el.value.trim()) el.dispatchEvent(new Event('katalog:gespeichert'));
+    if (el && el.value.trim()) {
+      if (_bruecke?.supabase) {
+        const bereichFn = () => g('rzTherapieBereich')?.value || (_bruecke.bereich ? _bruecke.bereich() : null);
+        hinweisFuerGespeichertenKode(el, _bruecke.supabase, bereichFn);
+      }
+    }
   }
 
   if (alsVorlage) { tazeleIkHinweis(document.getElementById('rzPatKasseIk')); return; }
@@ -593,6 +599,8 @@ export function patientkopfAusMaske() {
 
 /**
  * Aus „E11.74 – Diabetes mellitus…" wird „E11.74".
+ * Ein nachgestellter Bindestrich („E11.7-") wird entfernt — der Strich ist kein
+ * Kodebestandteil (Binding ruling).
  *
  * Die Katalogsuche schreibt Kode UND Titel ins Feld (`katalog-suche.js`,
  * `toText`), die Spalte führt nur den Kode. Für `rzIcd` macht `saveRezept()`
@@ -605,7 +613,10 @@ export function patientkopfAusMaske() {
  */
 export function nurIcdKode(roh) {
   const t = String(roh ?? '').trim();
-  return t.includes(' – ') ? t.split(' – ')[0].trim() : t;
+  const k = t.includes(' – ') ? t.split(' – ')[0].trim() : t;
+  // Nur den Strich am Kodeende (vor Leerraum/Komma/Semikolon/Ende) entfernen;
+  // Leerzeichen und Trenner bleiben — `aufteilen()` verteilt „E11.74 L60.0" später.
+  return k.replace(/\.?(?<=\S)-+(?=[\s,;]|$)/g, '');
 }
 
 export function nutzlastAusMaske(v) {
@@ -617,7 +628,7 @@ export function nutzlastAusMaske(v) {
     patient_id: v.patientId,
     arzt_id: v.arztId,
     ausstellungsdatum: v.ausstDate,
-    icd10: v.icd10,
+    icd10: v.icd10 ? nurIcdKode(v.icd10) : null,
     // Zweite Diagnose (Muster 13 sagt „Diagnose(n)"). Die §302-Datei bekommt je
     // Kode ein eigenes DIA-Segment (`api-backend/billing/dta/builder.js`), und
     // `[icd10, icd10_2]` ist die Liste, aus der sie gebaut wird

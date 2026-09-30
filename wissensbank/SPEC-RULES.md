@@ -815,12 +815,26 @@
   S. 58 (`wissensbank/gemeinsam/heilmittel-richtlinie/HeilM-RL_2025-05-15_iK-2025-08-05.txt:2374-2375`) ·
   FAK Podologie 24.05.2023 Nr. 28 (`wissensbank/podologie/20230524_Podologie_FAK_bf.txt:232-244`, Auslegung)
 - **Geçerlilik:** 01.10.2025 (TA V21) / 16.06.2025 (Podo Anlage 3) / ICD-10-GM 2026
-- **Kodda:** açık — Reform **S3.6**. Bugün `api-backend/billing/dta/preflight.js:99-102`
-  `isValidIcd10` yalnız Format-Regex; Endständigkeit hiçbir yerde bakılmıyor.
-  ⚠️ **Çelişki:** `PODOLOGIE_REFORM_SPRINT.md:155` S3.6 „seçimde ve preflight'ta **blok**" diyor;
-  bu kural „Warnung" diyor. Uygulamadan önce `gkv-302` ile netleştirilecek (Sahip: S3.6 sahibi).
+- **Kodda:** Reform **S3.6** uygulandı — `api-backend/billing/dta/preflight.js:381-389` (V:01016 **uyarı**, tiresiz anahtar),
+  seçimde yalnız **Hinweis** (`katalog-suche.js` `nichtEndstaendigHinweis`). Format kuralı: aşağıdaki ICD-tire girdisi.
+  ✅ **Çelişki ÇÖZÜLDÜ 30.09.2026:** `PODOLOGIE_REFORM_SPRINT.md:155` S3.6 için **blok** diyordu; `gkv-302` kararı: **Warnung, blok değil** (V:01016). Blok yalnız V:01002 format hatasıdır ve tiresiz kod onu tetiklemez.
   Zincir: `REGISTER.md` Z-18.
 - **Kapsam:** Ziffer 5 k Podologie'ye özgü; DIA-Übernahmeregel ve Prüfstufe-Aussage tüm Heilmittel
+
+### ICD sondaki "-" kodun parçası değildir — kaydederken ve DTA'da tiresiz
+- **Kural:** ICD-10-GM katalogunda nicht endständige kodlar `E11.7-` gibi tireyle gösterilir; bu **tire kodun parçası DEĞİLDİR**.
+  Verordnung'a (`prescriptions.icd10` / `icd10_2`) ve DTA'ya (DIA segmenti) **tiresiz** yazılır: `E11.7-` → `E11.7`. Dreistellige Kategorie: `E11.-` → `E11` (Punkt + Strich, Feld 7).
+  Nicht endständig olması yalnız uyarıdır (V:01016) — asla format hatası (V:01002/V:01014). Katalogda arama için tireli form kalır (`icd10_titles.code`).
+- **Kaynak:** ICD-10-GM 2026 Metadaten `icd10gm2026syst_metadaten_liesmich.txt:152-153` (Feld 6/7, Schlüsselnummer ohne Strich) ·
+  `icd10gm2026syst_kodes.txt:2319` (`E11.7-` N) · Anlage 1 TP5 V21 Kap. 5.5.3.3 DIA, S. 72
+  (`wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115.txt:3478-3500`)
+- **Geçerlilik:** ICD-10-GM 2026 / TA V21 ab 01.10.2025
+- **Kodda:** kayıt: `icd-dg-match.js:40` `normalizeIcd` + `module/verordnung-maske.js` `nurIcdKode` (:615-621, `nutzlastAusMaske` :631) ·
+  DTA savunma katmanı (eski tireli satırlar için): `api-backend/billing/utils/icd-code.js` (`icdOhneStrich`, tek ortak normalizer),
+  `api-backend/billing/dta/preflight.js:99-104` `isValidIcd10` + `:381-389`, `api-backend/billing/dta/builder.js:237-242`,
+  `api-backend/billing/api/abrechnung.routes.js:541-547, 2451, 3045-3074, 3369-3371` (mapper) ve `:3458-3462` (terminal sorgusu: `k` ve `k-` birlikte sorgulanır,
+  harita tiresiz anahtarlı — yoksa V:01016 sessizce kaybolur).
+- **Kapsam:** tüm Fachbereich; bugün yalnız podolojide tetikleniyor (`strict` ICD seçici). DB'deki eski tireli satırlar taşınmadı — DTA katmanı karşılıyor.
 
 ### Versichertenstatus kaynağı Verordnung'dur, kart değil
 - **Kural:** SLLA'ya yazılan 5 haneli Versichertenstatus Verordnung'daki basımdan alınır;

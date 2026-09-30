@@ -410,12 +410,52 @@ export function nichtEndstaendigHinweis(item) {
  * leeres Feld → '' (kein Hinweis statt falschem Alarm).
  */
 export async function gespeicherterKodeHinweis(sb, feldwert, bereich = null) {
-  const roh = String(feldwert || '').trim().split(/[\s–]/)[0];
-  const norm = c => String(c || '').toUpperCase().replace(/[-!*]+$/, '');
+  const roh = String(feldwert || '').trim().split(/[\s–]/)[0].replace(/\.?-+$/, '');
+  const norm = c => String(c || '').toUpperCase().replace(/\.?[-!*]+$/, '');
   if (!roh || !sb) return '';
   const rows = await searchDiagnosen(sb, roh, { bereich, kind: 'icd', limit: 20 });
   const treffer = rows.find(it => it.kind !== 'dg' && norm(it.code) === norm(roh));
   return nichtEndstaendigHinweis(treffer);
+}
+
+/**
+ * Setzt oder leert den Hinweis für nicht endständige ICD-Kodes unter einem Eingabefeld.
+ */
+export function setzeNichtEndstaendigHinweis(inputEl, text) {
+  if (!inputEl) return null;
+  let hinweisEl = inputEl.nextElementSibling;
+  if (!hinweisEl || !hinweisEl.classList.contains('icd10-nicht-endstaendig')) {
+    if (!text) return null;
+    hinweisEl = document.createElement('div');
+    hinweisEl.className = 'icd10-nicht-endstaendig';
+    hinweisEl.setAttribute('role', 'status');
+    hinweisEl.style.cssText = 'font-size:12px;margin-top:4px;color:var(--text-muted);';
+    inputEl.insertAdjacentElement('afterend', hinweisEl);
+  }
+  if (!text) {
+    hinweisEl.style.display = 'none';
+  } else {
+    hinweisEl.textContent = text;
+    hinweisEl.style.display = '';
+  }
+  return hinweisEl;
+}
+
+/**
+ * Prüft und setzt den Hinweis für einen im Feld stehenden ICD-Kode (auch vor Fokus).
+ */
+export async function hinweisFuerGespeichertenKode(inputEl, sb, bereich = null) {
+  if (!inputEl || !sb) return;
+  const wert = inputEl.value;
+  const b = typeof bereich === 'function' ? bereich() : bereich;
+  const text = await gespeicherterKodeHinweis(sb, wert, b);
+  if (inputEl.value === wert) {
+    setzeNichtEndstaendigHinweis(inputEl, text);
+    if (!inputEl.dataset.icdHintInputWired) {
+      inputEl.dataset.icdHintInputWired = '1';
+      inputEl.addEventListener('input', () => setzeNichtEndstaendigHinweis(inputEl, ''));
+    }
+  }
 }
 
 export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
@@ -459,28 +499,17 @@ export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
 
   // Hinweis unter dem Feld, vom Modul selbst gezeichnet (kein Eingriff in
   // dashboard.js nötig). Verschwindet, sobald der Nutzer den Text ändert.
-  let hinweisEl = null;
-  const hinweisZeigen = (text) => {
-    if (!text) { if (hinweisEl) hinweisEl.style.display = 'none'; return; }
-    if (!hinweisEl) {
-      hinweisEl = document.createElement('div');
-      hinweisEl.className = 'icd10-nicht-endstaendig';
-      hinweisEl.setAttribute('role', 'status');
-      hinweisEl.style.cssText = 'font-size:12px;margin-top:4px;color:var(--text-muted);';
-      inputEl.insertAdjacentElement('afterend', hinweisEl);
-    }
-    hinweisEl.textContent = text;
-    hinweisEl.style.display = '';
-  };
-  inputEl.addEventListener('input', () => hinweisZeigen(''));
+  const hinweisZeigen = (text) => setzeNichtEndstaendigHinweis(inputEl, text);
+  if (!inputEl.dataset.icdHintInputWired) {
+    inputEl.dataset.icdHintInputWired = '1';
+    inputEl.addEventListener('input', () => hinweisZeigen(''));
+  }
   // Gespeicherter Kode (canli-test P3 30.09.2026): beim Wiederöffnen einer
   // Verordnung wird das Feld programmatisch gefüllt, `onSelect` läuft nie —
   // der 3.6-Hinweis fehlte dort. Die Maske meldet das Füllen mit diesem Ereignis.
   if (kind !== 'dg') {
     inputEl.addEventListener('katalog:gespeichert', async () => {
-      const wert = inputEl.value;
-      const text = await gespeicherterKodeHinweis(sb, wert, resolveBereich());
-      if (inputEl.value === wert) hinweisZeigen(text);
+      await hinweisFuerGespeichertenKode(inputEl, sb, resolveBereich);
     });
   }
 
