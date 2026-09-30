@@ -29,6 +29,7 @@ import {
   ladeAktuelle, ladeAlleAktuellen, ladeVersionen, speichereNeu, bestaetige, markiereGeprueft, ladeAltrisiken,
 } from './anamnese-daten.js?v=20261001r';
 import { rozetHtml } from './anamnese-rozet.js?v=20261001r';
+import { ladeWagnerRozet } from './podo-wagner.js?v=20261001z';
 
 let d = {};   // Abhängigkeiten aus dashboard.js
 let vorwahl = null;                 // Patient, den ein anderer Bildschirm vorwählt
@@ -561,6 +562,15 @@ export async function ladePatientenAnamnese(leadId) {
   if (host) host.innerHTML = '';
   if (!content) return;
   const fb = fachbereich(); const def = formular(fb);
+  // Wagner-Rozet (Konsey S0 2a): unabhängig davon, ob schon eine Anamnese existiert; eigener Platz im Host.
+  if (fb === 'podo' && host) {
+    ladeWagnerRozet(d.supabase, d.getOwnerId(), leadId, esc).then((html) => {
+      if (akteLead !== leadId || !html) return;
+      let w = host.querySelector('[data-wagner-host]');
+      if (!w) { w = document.createElement('span'); w.dataset.wagnerHost = '1'; host.prepend(w); }
+      w.innerHTML = html;
+    });
+  }
   const { rows, fehler } = await ladeAlleAktuellen(d.supabase, leadId);
   if (akteLead !== leadId) return;          // Modal wurde inzwischen für jemand anderen geöffnet
   if (loading) loading.hidden = true;
@@ -571,7 +581,7 @@ export async function ladePatientenAnamnese(leadId) {
     content.innerHTML = `<div class="pd-empty">Keine Anamnese ${esc(FACHBEREICH_LABEL[fb])} vorhanden.${andere.length ? ` Vorhanden ist eine Anamnese aus dem Fachbereich ${esc(andere.join(', '))}.` : ''}</div>`;
     return;
   }
-  if (fb === 'podo' && host) host.innerHTML = rozetHtml(row, esc);
+  if (fb === 'podo' && host) host.insertAdjacentHTML('beforeend', rozetHtml(row, esc));
 
   let ersteller = '';
   if (row.created_by) {

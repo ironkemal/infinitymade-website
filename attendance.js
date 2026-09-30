@@ -1,5 +1,6 @@
 import { createClient } from './vendor/supabase-js.js?v=20260814';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from '/supabase-config.js'; // O-01, 11.09.2026
+import { gpsSchalterLesen, standortFuerCheckin, GPS_HINWEIS } from './module/praxis-standort.js?v=20261001z';
 
 const BERLIN_TZ = 'Europe/Berlin';
 
@@ -34,6 +35,7 @@ const historyList = $('historyList');
 let currentUser = null;
 let selectedBizId = null;
 let todayRecord = null;
+let gpsPruefen = false;   // Owner-Schalter profiles.gps_checkin_pruefen (Standard aus): nur dann wird ein Standort erfragt
 
 // ---- Yardımcılar ----
 function formatTime(isoStr) {
@@ -218,18 +220,19 @@ function getLocation() {
 // ---- Check-in ----
 btnCheckIn.addEventListener('click', async () => {
   setLoading(btnCheckIn, spinIn, btnCheckInLabel, '↓ Einchecken', true);
-  gpsHintText.textContent = 'Standort wird ermittelt …';
-  gpsHint.className = 'att-gps-hint';
 
   try {
-    const { lat, lng } = await getLocation();
-    gpsHintText.textContent = 'Standort ermittelt ✓';
+    // Schalter aus → der Standort wird gar nicht erst erfragt. Schalter an, aber verweigert oder vom
+    // Browser gesperrt (Permissions-Policy) → Check-in geht ohne Koordinaten raus, Server schreibt NULL.
+    if (gpsPruefen) { gpsHintText.textContent = 'Standort wird ermittelt …'; gpsHint.className = 'att-gps-hint'; }
+    const { lat, lng, ohneStandort } = await standortFuerCheckin(gpsPruefen, getLocation);
+    if (gpsPruefen) gpsHintText.textContent = ohneStandort ? 'Standort nicht verfügbar – Check-in erfolgt ohne Standortprüfung.' : 'Standort ermittelt ✓';
 
     const headers = await authHeaders();
     const res = await fetch(`${API_BASE}/attendance/check-in`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ business_id: selectedBizId, lat, lng }),
+      body: JSON.stringify({ business_id: selectedBizId, ...(lat != null ? { lat, lng } : {}) }),
     });
 
     const data = await res.json();
@@ -239,7 +242,7 @@ btnCheckIn.addEventListener('click', async () => {
     } else if (!res.ok) {
       throw new Error(data.error || 'Check-in fehlgeschlagen');
     } else {
-      if (data.gps_checked && !data.check_in_valid) {
+      if (data.check_in_valid === false) {
         showMsg('⚠️ Check-in gespeichert, aber Standort außerhalb des Bereichs.', 'error');
       } else {
         showMsg('✓ Erfolgreich eingecheckt!', 'success');
@@ -302,6 +305,9 @@ async function init() {
   currentUser = session.user;
 
   try {
+    gpsPruefen = await gpsSchalterLesen(supabase, currentUser.id);
+    // Hinweistext VOR dem Check-in, nur bei aktivem Schalter; sonst bleibt der Hinweis ganz weg.
+    if (gpsPruefen) gpsHintText.textContent = GPS_HINWEIS; else gpsHint.style.display = 'none';
     // İşyerlerini yükle
     const businesses = await fetchBusinesses();
     if (businesses.length > 1) {

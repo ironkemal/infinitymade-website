@@ -92,6 +92,7 @@
 import { resolveSector } from '../nav-registry.js?v=20261001i';
 import { ladeAktuelle } from './anamnese-daten.js?v=20261001r';
 import { risikoKopie, risikoZeilen, befundRisikoHinweis } from './anamnese-formulare.js?v=20261001r';
+import { WAGNER_OPTIONEN, WAGNER_TEXT, wagnerWert } from './podo-wagner.js?v=20261001z';
 
 // ── Legende ────────────────────────────────────────────────────────────────
 
@@ -427,6 +428,10 @@ function schreibeBefundFelder(row) {
   const notiz = el('fbpNotiz');
   if (notiz) notiz.value = row?.notiz || b.bemerkungen || '';
 
+  // Wagner-Grad ist eine Spalte (pat_fussbefund.wagner_grad), kein Teil von `befund`; NULL = nicht erhoben.
+  const wagner = el('fbpWagner');
+  if (wagner) wagner.value = wagnerWert(row?.wagner_grad) === null ? '' : String(row.wagner_grad);
+
   // Tiefe Kopie: sonst zeigt die neue Karte auf die Markierungen der alten und
   // ein gelöschter Marker verschwände auch aus dem Befund des Vortermins.
   markierungen = Array.isArray(row?.markierungen)
@@ -501,7 +506,7 @@ async function ladePatientenkontext(leadId) {
     ctx.supabase
       .from('pat_fussbefund')
       .select('id, erstellt_am, created_at, befund, markierungen, notiz, lead_id, booking_id, ' +
-              'uebernommen_von, eintrag_id, version, ist_aktuell, serie_id, serie_farbe')
+              'uebernommen_von, eintrag_id, version, ist_aktuell, serie_id, serie_farbe, wagner_grad')
       .eq('owner_id', ctx.ownerId())
       .eq('lead_id', leadId)
       .order('erstellt_am', { ascending: false })
@@ -762,6 +767,7 @@ async function speichern() {
     befund:       collectBefund(),
     markierungen: markierungen,
     notiz:        el('fbpNotiz')?.value?.trim() || '',
+    wagner_grad:  wagnerWert(el('fbpWagner')?.value),   // NULL = nicht erhoben; Konsey S0 2a, einzige Eingabestelle
     booking_id:   bookingId,
   };
 
@@ -1304,6 +1310,13 @@ function kartenHtml(heute) {
             <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">Legende dieser Karte</div>
             <div id="fbpLegendeBox" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
           </div>
+        </div>
+
+        <div class="fbp-section">
+          <div class="fbp-section-title">Wagner-Grad (diabetisches Fußsyndrom)</div>
+          <select id="fbpWagner" class="input-control" style="${feldStil}max-width:320px;" title="Einzige Eingabestelle — wird in Akte und Tagesbehandlung nur angezeigt">
+            ${WAGNER_OPTIONEN.map(o => `<option value="${o.wert}">${o.label}${o.wert !== '' ? ' — ' + WAGNER_TEXT[o.wert] : ''}</option>`).join('')}
+          </select>
         </div>
 
         <div class="fbp-section">

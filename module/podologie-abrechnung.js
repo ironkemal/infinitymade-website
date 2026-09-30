@@ -107,8 +107,11 @@ import { FOLGE_FRAGE, fussbefundBoxHtml, ladeLetzterBefund, ladeTagesTermin, fol
   hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE } from './podo-tag-zusatz.js?v=20261001r';
 import { ladeAktuelle } from './anamnese-daten.js?v=20261001r';
 import { rozetHtml } from './anamnese-rozet.js?v=20261001r';
+// Konsey S0 2a/2b (30.09.2026): Wagner-Rozet (salt-okunur) + Therapiezeit bei c) Komplexbehandlung.
+import { ladeWagnerRozet } from './podo-wagner.js?v=20261001z';
+import { therapiezeitFehler, therapiezeitFuerSpeichern, positionAusTherapiezeit, therapiezeitWert } from './podo-therapiezeit-regel.js?v=20261001z';
 import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
-import { mountFussbefund } from './fussbefund.js?v=20261001r';
+import { mountFussbefund } from './fussbefund.js?v=20261001z';
 import { oeffneFolgetermin } from './termin-folge.js?v=20261001m';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
@@ -756,9 +759,11 @@ async function loadPodologieBilling() {
   // Anamnese-Hinweis (S4 P3) läuft parallel dazu — beide sind Leseabfragen auf den Patienten.
   // Die gültige Podo-Anamnese liefert dreierlei: „fehlt"-Notiz, Warn-Rozets im Kopf (legal-de: NUR hier
   // und im Aktenkopf) und den DF-ohne-Diabetes-Hinweis (kein Block). `fehler` → null = kein Hinweis.
-  const [letzterBefund, anamneseErg] = selectedVord?.lead_id
-    ? await Promise.all([ladeLetzterBefund(ctx.supabase, ctx.getOwnerId(), selectedVord.lead_id), ladeAktuelle(ctx.supabase, selectedVord.lead_id, 'podo')])
-    : [null, { row: null, fehler: true }];
+  const [letzterBefund, anamneseErg, wagnerHtml] = selectedVord?.lead_id
+    ? await Promise.all([ladeLetzterBefund(ctx.supabase, ctx.getOwnerId(), selectedVord.lead_id), ladeAktuelle(ctx.supabase, selectedVord.lead_id, 'podo'),
+        ladeWagnerRozet(ctx.supabase, ctx.getOwnerId(), selectedVord.lead_id, ctx.escapeHtml)])
+    : [null, { row: null, fehler: true }, ''];
+  const tagMassnahme = selectedVord ? podVordMassnahme(selectedVord) : '';   // 'c' → Therapiezeit-Feld (Konsey S0 2b)
   const anamneseRow = anamneseErg.row;
   const anamneseDa = anamneseErg.fehler ? null : !!anamneseRow;
   const diabetesNotiz = konsistenzHinweis({ dgWurzel: diagRoot, row: anamneseRow });
@@ -768,7 +773,7 @@ async function loadPodologieBilling() {
   } else {
     behandlungFormHtml = `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
-      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')} ${rozetHtml(anamneseRow, ctx.escapeHtml)}</h4>
+      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')} ${wagnerHtml}${rozetHtml(anamneseRow, ctx.escapeHtml)}</h4>
       ${abgerechnetHinweisHtml}
       ${fussbefundBoxHtml(letzterBefund, ctx.escapeHtml)}
       ${anamneseFehltNotizHtml(anamneseDa, ctx.escapeHtml)}
@@ -826,6 +831,11 @@ async function loadPodologieBilling() {
             }).join('')}
           </div>
         </div>
+        ${tagMassnahme === 'c' ? `<div id="podTherapiezeitWrap">
+          <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Therapiezeit (Minuten) <span style="color:#ef4444;">*</span></label>
+          <input type="number" id="podTherapiezeit" min="1" max="600" step="1" inputmode="numeric" style="width:140px;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+          <span id="podTherapiezeitHinweis" style="color:var(--text-muted);font-size:12px;margin-left:8px;">Komplexbehandlung: bis 20 Min. = 78010, über 20 Min. = 78020</span>
+        </div>` : ''}
         <!-- Lokalisation: seit dem 04.09.2026 steht der Nagel an der
              VERORDNUNG (§ 3b Satz 3-5) und wird hier nur noch angezeigt. Die
              Spalte podologie_behandlungen.lokalisation wird weiter
@@ -952,6 +962,19 @@ async function loadPodologieBilling() {
     }
   });
 
+  // Therapiezeit → Position (c): die Eingabe wählt 78010/78020 vor, die Prüfung beim Speichern bleibt maßgeblich.
+  document.getElementById('podTherapiezeit')?.addEventListener('input', (e) => {
+    const soll = positionAusTherapiezeit(e.target.value);
+    const hint = document.getElementById('podTherapiezeitHinweis');
+    if (hint) hint.textContent = soll ? `${therapiezeitWert(e.target.value)} Min. → ${soll}` : 'Komplexbehandlung: bis 20 Min. = 78010, über 20 Min. = 78020';
+    if (!soll) return;
+    document.querySelectorAll('.pod-hpnr-cb').forEach((cb) => {
+      if (cb.disabled) return;
+      if (cb.value === soll) cb.checked = true;
+      else if (cb.value === '78010' || cb.value === '78020') cb.checked = false;
+    });
+  });
+
   document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {
     const datum   = document.getElementById('podBehDatum').value;
     const checks  = [...document.querySelectorAll('.pod-hpnr-cb:checked')].map(cb => cb.value);
@@ -1009,6 +1032,9 @@ async function loadPodologieBilling() {
       err = `78020 ist nur bei verordneter Komplexbehandlung abrechenbar. Verordnet ist `
           + `„${POD_HEILMITTEL_KATALOG[podVordMassnahme(vord)].heilmittel}" — bitte 78010 zzgl. 78030 verwenden.`;
     else if (isUIx && !lokal) err = ctx.t('pod_lokalisation') + ' ist bei UI1/UI2 erforderlich.';
+    // Konsey S0 2b: bei c) Komplexbehandlung ist die Therapiezeit Pflicht, die Position folgt daraus (78010 ≤ 20 < 78020).
+    else if (therapiezeitFehler({ massnahme: podVordMassnahme(vord), checks, minuten: document.getElementById('podTherapiezeit')?.value }))
+      err = therapiezeitFehler({ massnahme: podVordMassnahme(vord), checks, minuten: document.getElementById('podTherapiezeit')?.value });
 
     if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
     errEl.style.display = 'none';
@@ -1132,6 +1158,7 @@ async function loadPodologieBilling() {
       diagnosegruppe: dRoot,
       lokalisation: lokal || null,
       notizen: notiz || null,
+      therapiezeit_min: therapiezeitFuerSpeichern(podVordMassnahme(vord), document.getElementById('podTherapiezeit')?.value),   // Konsey S0 2b; NULL außerhalb c)
       employee_id: ctx.getSessionUserId?.() || null,   // Ops #252 — wer hat behandelt
     });
     if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
