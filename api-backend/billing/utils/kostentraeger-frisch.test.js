@@ -159,3 +159,80 @@ test('6) Auflöser erhält kein krankenkasse (Name) Feld, nur krankenkasse_ik', 
   assert.equal(uebergebenesPatient.krankenkasse_ik, '108310400');
   assert.equal('krankenkasse' in uebergebenesPatient, false);
 });
+
+// ── gkv-302 Auflagen 1 + 3 (30.09.2026) ─────────────────────────────────────
+import {
+  kostentraegerIkZurueckschreiben,
+  kostentraegerGeaendertAntwort,
+} from './kostentraeger-frisch.js';
+
+test('Preflight: erste Zeile unauflösbar → Fehler je Zeile, spätere Zeilen frisch, aufgeloest enthält nur die aufgelösten', async () => {
+  const z1 = { id: 'a1', krankenkasse_ik: '101111111', kostentraeger_ik: '101111111' };
+  const z2 = { id: 'b2', krankenkasse_ik: '102222222', kostentraeger_ik: '100000000' };
+  const z3 = { id: 'c3', krankenkasse_ik: '103333333', kostentraeger_ik: '103333333' };
+  const auf = async (_s, { krankenkasse_ik }) => (krankenkasse_ik === '101111111' ? null : '109999999');
+  const r = await kostentraegerFrischAbleiten(null, [z1, z2, z3], { aufloeser: auf, preflight: true });
+  assert.equal(r.fehler.length, 1);
+  assert.equal(r.fehler[0].prescriptionId, 'a1');
+  assert.equal(r.fehler[0].severity, 'stop');
+  assert.equal(z2.kostentraeger_ik, '109999999');
+  assert.equal(z3.kostentraeger_ik, '109999999');
+  assert.deepEqual([...r.aufgeloest], ['b2', 'c3']);
+  assert.equal(z1.kostentraeger_ik, '101111111');
+});
+
+test('ohne Preflight-Flag wirft unauflösbare Zeile weiterhin 422', async () => {
+  const z = { id: 'a1', krankenkasse_ik: '101111111', kostentraeger_ik: '101111111' };
+  await assert.rejects(
+    kostentraegerFrischAbleiten(null, [z], { aufloeser: async () => null }),
+    e => e.status === 422 && e.code === KOSTENTRAEGER_NICHT_AUFLOESBAR_CODE);
+});
+
+function updateStub(log, { fehler = false } = {}) {
+  const q = { f: {} };
+  const api = {
+    from(t) { assert.equal(t, 'prescriptions'); q.f = {}; return api; },
+    update(v) { q.v = v; return api; },
+    eq(c, v) { q.f[c] = v; return api; },
+    is(c, v) { q.f[c] = v; return api; },
+    select() {
+      log.push({ v: q.v, f: { ...q.f } });
+      return Promise.resolve(fehler ? { data: null, error: new Error('x') } : { data: [{ id: q.f.id }], error: null });
+    },
+  };
+  return api;
+}
+
+test('Zurückschreiben: nur bereit + ohne Belegnummer; Update-Bedingung im WHERE', async () => {
+  const zeilen = [
+    { id: 'a', abrechnung_status: 'bereit', belegnummer: null },
+    { id: 'b', abrechnung_status: 'bereit', belegnummer: 'B-1' },
+    { id: 'c', abrechnung_status: 'gesendet', belegnummer: null },
+    { id: 'd', abrechnung_status: null, belegnummer: null },
+  ];
+  const warn = zeilen.map(z => ({ code: KOSTENTRAEGER_IK_NEU_CODE, prescriptionId: z.id, alt: '1', neu: '2' }));
+  const log = [];
+  const ids = await kostentraegerIkZurueckschreiben(updateStub(log), zeilen, warn, 'owner-1');
+  assert.deepEqual(ids, ['a']);
+  assert.equal(log.length, 1);
+  assert.deepEqual(log[0].v, { kostentraeger_ik: '2' });
+  assert.deepEqual(log[0].f, { id: 'a', owner_id: 'owner-1', abrechnung_status: 'bereit', belegnummer: null });
+});
+
+test('Zurückschreiben: DB-Fehler wird nicht geworfen, id nicht gemeldet', async () => {
+  const zeilen = [{ id: 'a', abrechnung_status: 'bereit', belegnummer: null }];
+  const warn = [{ code: KOSTENTRAEGER_IK_NEU_CODE, prescriptionId: 'a', alt: '1', neu: '2' }];
+  const orig = console.warn; console.warn = () => {};
+  try {
+    assert.deepEqual(await kostentraegerIkZurueckschreiben(updateStub([], { fehler: true }), zeilen, warn, 'o'), []);
+  } finally { console.warn = orig; }
+});
+
+test('409-Text: „neu laden" nur wenn zurückgeschrieben, sonst ehrlicher Hinweis', () => {
+  const ja = kostentraegerGeaendertAntwort('12345678xx', '1', '2', true);
+  const nein = kostentraegerGeaendertAntwort('12345678xx', '1', '2', false);
+  assert.equal(ja.code, 'KOSTENTRAEGER_GEAENDERT');
+  assert.match(ja.error, /Liste neu laden/);
+  assert.match(nein.error, /Neu-Laden allein hilft hier nicht/);
+  assert.doesNotMatch(nein.error, /Bitte Liste neu laden/);
+});

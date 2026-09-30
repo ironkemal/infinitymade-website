@@ -41,7 +41,7 @@ import {
 import { zeilenAusDta } from '../utils/abrechnung-zeilen.js';
 import { ikFehltAntwort } from '../utils/ik-fehlt.js';
 import { kartenIkFehler } from '../utils/karten-ik.js';
-import { kostentraegerFrischAbleiten } from '../utils/kostentraeger-frisch.js';
+import { kostentraegerFrischAbleiten, kostentraegerIkZurueckschreiben, kostentraegerGeaendertAntwort } from '../utils/kostentraeger-frisch.js';
 import {
   legsFuer, LEGS_BY_FACHBEREICH,
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
@@ -813,6 +813,9 @@ router.post('/abrechnung/create', async (req, res) => {
     // gkv-302, 30.09.2026 B1: Kostenträger-IK bei DTA-Erzeugung frisch aus Karten-IK ableiten
     const altKtMap = new Map(rxRows.map(r => [r.id, r.kostentraeger_ik]));
     const { warnungen: ktWarnungen } = await kostentraegerFrischAbleiten(supabase, rxRows);
+    // Auflage 1: frische IK zurückschreiben (nur 'bereit' + ohne Belegnummer),
+    // sonst bleibt die Arbeitsliste beim alten Wert und der 409 unauflösbar.
+    const ktZurueck = new Set(await kostentraegerIkZurueckschreiben(supabase, rxRows, ktWarnungen, tenantId));
 
     for (const r of rxRows) {
       // Seit der Zusammenlegung der Verordnungstöpfe (04.09.2026) stehen
@@ -828,10 +831,7 @@ router.post('/abrechnung/create', async (req, res) => {
       if (r.kostentraeger_ik !== kostentraegerIk) {
         const alt = altKtMap.get(r.id);
         if (alt && alt !== r.kostentraeger_ik) {
-          return res.status(409).json({
-            error: `Verordnung ${r.id.slice(0,8)}: Der Kostenträger hat sich geändert (gespeichert ${alt}, aktuell ${r.kostentraeger_ik}) — bitte Liste neu laden und die Verordnung erneut auswählen.`,
-            code: 'KOSTENTRAEGER_GEAENDERT',
-          });
+          return res.status(409).json(kostentraegerGeaendertAntwort(r.id, alt, r.kostentraeger_ik, ktZurueck.has(r.id)));
         }
         return res.status(400).json({ error: `Rezept ${r.id.slice(0,8)} gehört zu einer anderen Krankenkasse.` });
       }
@@ -2846,22 +2846,22 @@ router.post('/abrechnung/preflight', async (req, res) => {
     }
 
     // gkv-302, 30.09.2026 B1: Kostenträger-IK bei DTA-Erzeugung frisch aus Karten-IK ableiten
-    const mapFehler = [];
-    let ktWarnungen = [];
-    try {
-      const frisch = await kostentraegerFrischAbleiten(supabase, rxRows);
-      ktWarnungen = frisch.warnungen;
-    } catch (e) {
-      if (!e.status) throw e;
-      mapFehler.push({
-        ...(e.prescriptionId ? { prescriptionId: e.prescriptionId } : {}),
-        severity: 'stop',
-        code: e.code || 'KOSTENTRAEGER_NICHT_AUFLOESBAR',
-        text: e.message,
-      });
-    }
+    // Preflight: nicht auflösbare Zeilen werden je Zeile gemeldet (kein Abbruch
+    // bei der ersten), übrige Zeilen bleiben frisch abgeleitet.
+    const frisch = await kostentraegerFrischAbleiten(supabase, rxRows, { preflight: true });
+    const ktWarnungen = frisch.warnungen;
+    const mapFehler = [...frisch.fehler];
 
-    const firstRx = rxRows[0];
+    // Kasse/DAS-Auflösung an der ersten AUFGELÖSTEN Zeile ausrichten, nie an
+    // einer veralteten gespeicherten IK. Ist keine Zeile auflösbar, gibt es
+    // keinen Empfänger zu prüfen: nur die Fehler je Zeile zurückgeben.
+    const firstRx = rxRows.find(r => frisch.aufgeloest.has(r.id))
+      // Keine Zeile aufgelöst, aber auch keine unauflösbar (alle ohne Karten-IK):
+      // Mapper meldet KARTEN_IK_FEHLT je Zeile, Empfänger egal.
+      || (frisch.fehler.length ? null : rxRows[0]);
+    if (!firstRx) {
+      return res.json({ ok: true, results: null, mapFehler });
+    }
     const kostentraegerIk = firstRx.kostentraeger_ik;
 
     const { data: kk } = await supabase
@@ -3270,6 +3270,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // gkv-302, 30.09.2026 B1: Kostenträger-IK bei DTA-Erzeugung frisch aus Karten-IK ableiten
     const altKtMap = new Map((vords || []).map(v => [v.id, v.kostentraeger_ik]));
     const { warnungen: ktWarnungen } = await kostentraegerFrischAbleiten(supabase, vords);
+    const ktZurueck = new Set(await kostentraegerIkZurueckschreiben(supabase, vords, ktWarnungen, tenantId));
 
     // ---- validate each verordnung ----
     for (const v of (vords || [])) {
@@ -3286,10 +3287,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       if (v.kostentraeger_ik !== kostentraegerIk) {
         const alt = altKtMap.get(v.id);
         if (alt && alt !== v.kostentraeger_ik) {
-          return res.status(409).json({
-            error: `Verordnung ${v.id.slice(0,8)}: Der Kostenträger hat sich geändert (gespeichert ${alt}, aktuell ${v.kostentraeger_ik}) — bitte Liste neu laden und die Verordnung erneut auswählen.`,
-            code: 'KOSTENTRAEGER_GEAENDERT',
-          });
+          return res.status(409).json(kostentraegerGeaendertAntwort(v.id, alt, v.kostentraeger_ik, ktZurueck.has(v.id)));
         }
         return res.status(400).json({ error: `Verordnung ${v.id.slice(0,8)}: andere Krankenkasse.` });
       }

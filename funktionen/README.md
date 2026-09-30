@@ -116,6 +116,16 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.09.2026 · gkv-302 Auflagen zu B1 — Rückschreiben, valid_from, Preflight je Zeile
+- `kostentraegerIkZurueckschreiben(supabase, zeilen, warnungen, ownerId)` (`kostentraeger-frisch.js`). Niye: Arbeitsliste
+  (`abrechnung-auswahl.js`) gruppiert nach gespeicherter IK; ohne Rückschreiben hing eine Verordnung mit geändertem
+  Kostenträger für immer im 409 `KOSTENTRAEGER_GEAENDERT`. Schreibt nur `abrechnung_status='bereit'` + `belegnummer IS NULL`
+  (GoBD-Tor `prescriptions_festschreibung`), Bedingung zusätzlich im WHERE, best effort. Nerede: `/abrechnung/create` und
+  `/abrechnung/create-podologie`, direkt nach `kostentraegerFrischAbleiten`. ⚠ 8. `prescriptions`-Schreibweg (nur diese eine Spalte).
+- `kostentraegerGeaendertAntwort(id, alt, neu, zurueckgeschrieben)` — 409-Text; „Liste neu laden" nur wenn wirklich gespeichert.
+- `kostentraegerFrischAbleiten(..., {preflight:true})` liefert zusätzlich `fehler` (je Zeile, kein Abbruch) + `aufgeloest`;
+  `/abrechnung/preflight` richtet die Kasse/DAS-Auflösung an der ersten aufgelösten Zeile aus. `kostentraegerAbfrage` filtert jetzt auch `valid_from`.
+
 ### 30.09.2026 · gkv-302 B1 — Kostenträger-IK DTA anında taze; kayıtlı ICD'de S3.6 uyarısı
 - 79e1556 — yeni `api-backend/billing/utils/kostentraeger-frisch.js` → `kostentraegerFrischAbleiten(supabase, zeilen, {aufloeser})`.
   Niye: §302 dosyası üretilirken `prescriptions.kostentraeger_ik`'deki saklı değere güvenilmiyor; Karten-IK'dan

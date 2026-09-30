@@ -45,7 +45,7 @@ export function heilmittelPositionAufloesen(rezept) {
 /**
  * Alle Kostenträger-Abfragen dieser Datei mit denselben Filtern wie die View
  * `kostentraeger_auswahl` (db/SCHEMA.sql): echter Datensatz, aktiv, GKV, nicht
- * abgelaufen. Ohne das löste der Server auf einen Satz auf, den die Auswahl im
+ * abgelaufen, bereits gültig (valid_from, Berliner Datum). Ohne das löste der Server auf einen Satz auf, den die Auswahl im
  * Kassenfeld gar nicht anbietet (Testsatz, private Kasse, abgelaufene IK).
  * `heute` nur für Tests.
  */
@@ -56,7 +56,10 @@ function kostentraegerAbfrage(supabase, heute = new Intl.DateTimeFormat('en-CA',
     .eq('datensatz_status', 'echt')
     .eq('active', true)
     .eq('payer_type', 'gkv')
-    .or(`valid_to.is.null,valid_to.gte.${heute}`);
+    .or(`valid_to.is.null,valid_to.gte.${heute}`)
+    // gkv-302 30.09.2026: noch nicht gültige Sätze (valid_from in der Zukunft)
+    // sind ebenfalls keine Auswahl. Zwei .or() = UND (PostgREST).
+    .or(`valid_from.is.null,valid_from.lte.${heute}`);
 }
 
 /** Höchstzahl der Verweis-Sprünge `abrechnender_kt_ik` → `abrechnender_kt_ik` → … */

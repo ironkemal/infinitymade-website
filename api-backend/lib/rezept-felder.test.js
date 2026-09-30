@@ -59,11 +59,13 @@ function makeSupabaseStub(kkRows = [], optionen = {}) {
     assert.equal(abfrage.active, true, 'jede Abfrage muss auf aktive Sätze einschränken');
     assert.equal(abfrage.echt, true, 'nur datensatz_status = echt');
     assert.equal(abfrage.gkv, true, 'nur payer_type = gkv');
+    assert.ok(abfrage.heuteVon, 'valid_from-Filter fehlt');
     assert.ok(abfrage.heute, 'abgelaufene Sätze (valid_to < heute) müssen ausgeschlossen werden');
     let zeilen = kkRows.filter(r => r.active !== false
       && (r.datensatz_status ?? 'echt') === 'echt'
       && (r.payer_type ?? 'gkv') === 'gkv'
-      && (!r.valid_to || r.valid_to >= abfrage.heute));
+      && (!r.valid_to || r.valid_to >= abfrage.heute)
+      && (!r.valid_from || r.valid_from <= abfrage.heuteVon));
     if (abfrage.eqIk !== null) zeilen = zeilen.filter(r => r.ik === abfrage.eqIk);
     if (abfrage.ilike !== null) zeilen = zeilen.filter(r => (r.name || '').toLowerCase().includes(abfrage.ilike));
     if (abfrage.in) zeilen = zeilen.filter(r => abfrage.in.includes(r.ik));
@@ -73,7 +75,7 @@ function makeSupabaseStub(kkRows = [], optionen = {}) {
   const api = {
     from(table) {
       assert.equal(table, 'kostentraeger');
-      abfrage = { ilike: null, in: null, active: null, eqIk: null, echt: false, gkv: false, heute: null };
+      abfrage = { ilike: null, in: null, active: null, eqIk: null, echt: false, gkv: false, heute: null, heuteVon: null };
       return api;
     },
     select() { return api; },
@@ -94,8 +96,9 @@ function makeSupabaseStub(kkRows = [], optionen = {}) {
     },
     or(filter) {
       const m = /^valid_to\.is\.null,valid_to\.gte\.(\d{4}-\d{2}-\d{2})$/.exec(filter);
-      assert.ok(m, `unerwarteter or()-Filter: ${filter}`);
-      abfrage.heute = m[1];
+      const v = /^valid_from\.is\.null,valid_from\.lte\.(\d{4}-\d{2}-\d{2})$/.exec(filter);
+      assert.ok(m || v, `unerwarteter or()-Filter: ${filter}`);
+      if (m) abfrage.heute = m[1]; else abfrage.heuteVon = v[1];
       return api;
     },
     maybeSingle() {
@@ -290,4 +293,15 @@ test('Sätze, die die View kostentraeger_auswahl nicht anbietet, werden nie aufg
     { name: 'Ziel abgelaufen', ik: '101111111', valid_to: '2020-01-01' },
   ]);
   assert.equal(await kostentraegerIkAufloesen(verweis, { krankenkasse_ik: '105555555' }), null);
+});
+
+test('valid_from in der Zukunft: Satz wird nicht aufgelöst; valid_from in der Vergangenheit/leer schon', async () => {
+  const stub = makeSupabaseStub([
+    { name: 'Zukunft', ik: '101111111', valid_from: '2999-01-01' },
+    { name: 'Vergangen', ik: '102222222', valid_from: '2020-01-01' },
+    { name: 'Ohne', ik: '103333333' },
+  ]);
+  assert.equal(await kostentraegerIkAufloesen(stub, { krankenkasse_ik: '101111111' }), null);
+  assert.equal(await kostentraegerIkAufloesen(stub, { krankenkasse_ik: '102222222' }), '102222222');
+  assert.equal(await kostentraegerIkAufloesen(stub, { krankenkasse_ik: '103333333' }), '103333333');
 });

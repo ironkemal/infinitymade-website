@@ -1010,8 +1010,9 @@
   değiştirilmedi (değişiklikler 5.2/7.2/8.2/8.3), yani kural bugün de geçerli — ama geçerli
   sürüm (V09) arşivde YOK, indirilip INDEX'e kaydedilmeli.
 - **Geçerlilik:** yapı kuralı, sürümler arası değişmedi
-- **Kodda:** ❌ **uygulanmamış.** `krankenkassen.ik_number` tek bir metin alanı
-  (`db/SCHEMA.sql:1043`), `kostentraeger` ile FK bağı yok, VKG/Verknüpfungsart kavramı hiç yok.
+- **Kodda:** ✅ uygulandı (30.09.2026, gkv-302 B1) — `api-backend/billing/utils/kostentraeger-frisch.js`
+  (`kostentraegerFrischAbleiten`) + `api-backend/lib/rezept-felder.js` (`kostentraegerIkAufloesen`,
+  `abrechnender_kt_ik` zincirini takip eder).
 - **Kapsam:** tüm Leistungserbringergruppen
 
 ### Dosya ve Gesamtaufstellung granülaritesi
