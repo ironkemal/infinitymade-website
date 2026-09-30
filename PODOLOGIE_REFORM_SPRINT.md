@@ -42,7 +42,7 @@ dolanmaz, Kemal'e sorar.
 | S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | ✅ 1.1–1.11 (29.09) — canlı geçti, 1.9 QA'da veri yok (birim testleri); açık: 1.12 — bkz. S1 devir notu |
 | S2 | §302 durum semantiği | kısmen (gkv-302) | ✅ 2.1–2.4, 2.6, 2.7 (29.09) + 2.3b ✅ (30.09, `f8ea2aa`) — 2.5 bilerek yok; canlı GEÇTİ, bkz. S2/S3 devir notu (30.09) |
 | S3 | Güvenilirlik ve veri doğruluğu | hayır | ✅ 3.1–3.13 (3.12: kod adımı `e9d0286`, yıkıcı adım Kemal onayında) · 3.8a (`e665aca`, 30.09) — 3.8b ✅ (`8316fbe`, 0044 canlıda) · B1 ✅ (`79e1556`, `77c12bc`) · ICD „-" ✅ (`14171df`, `f6cd960`) · 3.12 ayrı iş (Kemal 30.09: „2'yi ayrı bir iş olarak bırak") · `datumDe` birleşti (`f30f407`) |
-| S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | 🟡 paket 1 `8716a3d` (menü, sağ panel, Folgetermin, önseçim sebebi) — kalan: Fußbefund gömme + kaydetme sonrası „Folgetermin?“ diyaloğu, Wagner (B şeması), hasta dosyası sekmeleri, Anamnese, terminoloji, Selbstzahler, Online-Anfrage |
+| S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | 🟡 paket 1 `8716a3d` (menü, sağ panel, Folgetermin, önseçim sebebi) · paket 2 `f14b2d8`+`b830cfb` (Fußbefund gömülü, kaydetme sonrası Folgetermin, terminoloji) — kalan: Wagner (B şeması), hasta dosyası sekmeleri, Anamnese, Selbstzahler, Online-Anfrage |
 | S5 | Mobil / tablet (yalnız CSS) | hayır | ⏳ |
 | S6 | Temizlik: yalnız Almanca, ölü kod, konsol | hayır | ⏳ |
 | S7 | Kapanış: tam regresyon turu + Ops kartlarını kapat | — | ⏳ |
