@@ -2542,7 +2542,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     if (!patientId && !patientIstNeu && dob && (fn || ln)) {
       const { data: matches } = await supabase
         .from('leads')
-        .select('id')
+        .select('id, krankenkasse_ik')
         .eq('owner_id', tenantId)
         .eq('geburtsdatum', dob)
         .ilike('first_name', fn || '%')
@@ -2557,6 +2557,10 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         if (patient.phone) patch.phone = patient.phone;
         if (patient.versichertennummer) patch.versichertennummer = patient.versichertennummer;
         if (patient.krankenkasse) patch.krankenkasse = patient.krankenkasse;
+        if (!matches[0].krankenkasse_ik) {
+          const ik = kartenIkNormalisieren(patient.krankenkasse_ik);
+          if (ik) patch.krankenkasse_ik = ik;
+        }
         // Fahrtenbuch: strukturlu adres backfill (yalnızca eksikse doldur — kullanıcı manuel düzeltiyorsa override yapma)
         if (patient.street) patch.street = patient.street;
         if (patient.plz) patch.plz = patient.plz;
@@ -2583,6 +2587,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
           geschlecht: normalisiereGeschlecht(patient.geschlecht),
           versichertennummer: patient.versichertennummer || null,
           krankenkasse: patient.krankenkasse || null,
+          krankenkasse_ik: kartenIkNormalisieren(patient.krankenkasse_ik),
           email: patient.email || null,
           phone: patient.phone || null,
           // Fahrtenbuch: strukturlu kolonlar (eski tek string yerine)

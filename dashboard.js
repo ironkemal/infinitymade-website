@@ -17,7 +17,8 @@ import { podoArztHinweise } from './module/podo-arztangaben.js?v=20260929r';
 import { zeigeTerminFehler as terminFehler, loescheTerminFehler, verdrahteTerminFehler } from './module/termin-fehler.js?v=20260929q';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
-import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit } from './module/krankenkasse-suche.js?v=20260930x';
+import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren } from './module/krankenkasse-suche.js?v=20260930x';
+import { attachLeadKartenIk } from './module/lead-karten-ik.js?v=20260930y';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20260930x';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
@@ -41,7 +42,7 @@ import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUpl
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss } from './module/fahrt-beenden.js?v=20260929b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20260930c';
-import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260930c';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20260930y';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20260930c';
@@ -8854,11 +8855,10 @@ async function openLeadModal(lead) {
     const kkInput = document.getElementById('lead-krankenkasse');
     if (kkInput) {
       kkInput.value = (lead?.krankenkasse || md.krankenkasse) || '';
-      attachKrankenkasseSuche(kkInput, { sb: supabase, ownerId: getOwnerId });
+      attachKrankenkasseSuche(kkInput, { sb: supabase, ownerId: getOwnerId }); attachLeadKartenIk(kkInput, lead?.krankenkasse_ik);
     }
     const kvnrEl = document.getElementById('lead-krankenkassennummer');
-    kvnrEl.value = (lead?.versichertennummer || md.krankenkassennummer) || '';
-    attachKvnrPruefung(kvnrEl);
+    kvnrEl.value = (lead?.versichertennummer || md.krankenkassennummer) || ''; attachKvnrPruefung(kvnrEl);
     document.getElementById('lead-versichertenstatus').value = (lead?.versichertenstatus || md.versichertenstatus) || '';
 
     if (!aerzteCache || aerzteCache.length === 0) {
@@ -9051,6 +9051,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     ...(isPraxisSector(sector) ? { hausbesuch } : {}),
     metadata,
     krankenkasse: document.getElementById('lead-krankenkasse').value || null,
+    krankenkasse_ik: kartenIkNormalisieren(document.getElementById('lead-krankenkasseIk')?.value), // Karten-IK; ungültig → null (CHECK)
     versichertennummer: versichertennummer,
     versichertenstatus: versichertenstatus,
     arzt_id: document.getElementById('lead-arzt')?.value || null,
@@ -15561,9 +15562,8 @@ async function fillRzPatientFromLead(leadId) {
   g('rzPatStatus').value = lead.versichertenstatus || '';
   const kasse = lead.krankenkasse || md.krankenkasse || '';
   g('rzPatKasse').value = kasse;
-  // Karten-IK NICHT aus der Kassenliste (dort steht die IK des Kostenträgers) —
-  // sie kommt von der Versichertenkarte und wird eingetragen (gkv-302, 30.09.2026).
-  g('rzPatKasseIk').value = '';
+  // Karten-IK aus der Akte (S3.8b), NICHT aus der Kassenliste (dort: Kostenträger-IK, gkv-302)
+  g('rzPatKasseIk').value = lead.krankenkasse_ik || '';
 
   // Hausbesuch + Arzt vom Patienten übernehmen (nur wenn Felder noch leer)
   if (leadHausbesuch(lead)) setM13Hausbesuch(true);
@@ -15804,7 +15804,7 @@ async function saveRezept() {
       if (patientId) await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
         ownerId, patientId, lead: rzPatientCache.find(l => l.id === patientId) || {},
         vorname: val('rzPatVorname'), nachname: val('rzPatName'),
-        versichertennummer: val('rzPatVersNr'), krankenkasse: val('rzPatKasse'),
+        versichertennummer: val('rzPatVersNr'), krankenkasse: val('rzPatKasse'), krankenkasseIk: val('rzPatKasseIk'),
         versichertenstatus: val('rzPatStatus'), strasse: val('rzPatStrasse'),
         ort: val('rzPatOrt'), geburtsdatum: val('rzPatGeb')
       });

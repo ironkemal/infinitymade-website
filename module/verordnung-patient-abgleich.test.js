@@ -104,6 +104,7 @@ test('andere Versichertennummer fragt nach und übernimmt Nummer samt Kasse', as
   assert.match(confirmCalls[0].title, /Versichertennummer/);
   assert.deepEqual(geschrieben, [{
     versichertennummer: 'B987654321', krankenkasse: 'TK', versichertenstatus: '10000',
+    krankenkasse_ik: null,
   }]);
 });
 
@@ -150,3 +151,76 @@ test('leeres Feld auf der Verordnung löst keine Rückfrage aus', async () => {
   assert.deepEqual(confirmCalls, []);
   assert.deepEqual(geschrieben, []);
 });
+
+// ── Reform S3.8b: krankenkasse_ik (Karten-IK) ──────────────────────────────
+
+test('Lead ohne IK + gültige IK -> patch enthält krankenkasse_ik', async () => {
+  const { supabase, showConfirmModal, geschrieben } = doppel();
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster' },
+    krankenkasseIk: '109519005',
+  });
+  assert.equal(geschrieben.length, 1);
+  assert.equal(geschrieben[0].krankenkasse_ik, '109519005');
+});
+
+test('Lead mit IK -> nicht überschrieben', async () => {
+  const { supabase, showConfirmModal, geschrieben } = doppel();
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster', krankenkasse_ik: '109519005' },
+    krankenkasseIk: '108018007',
+  });
+  assert.equal(geschrieben.length, 0);
+});
+
+test('ungültige IK ("12345") -> kein Feld', async () => {
+  const { supabase, showConfirmModal, geschrieben } = doppel();
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster' },
+    krankenkasseIk: '12345',
+  });
+  assert.equal(geschrieben.length, 0);
+});
+
+test('Kassenwechsel bestätigt mit neuer IK -> IK im Patch', async () => {
+  const { supabase, showConfirmModal, geschrieben, confirmCalls } = doppel({ confirmResult: true });
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster', versichertennummer: 'A123456789', krankenkasse: 'AOK', krankenkasse_ik: '109519005' },
+    versichertennummer: 'B987654321', krankenkasse: 'TK', krankenkasseIk: '108018007',
+  });
+  assert.equal(confirmCalls.length, 1);
+  assert.equal(geschrieben.length, 1);
+  assert.equal(geschrieben[0].versichertennummer, 'B987654321');
+  assert.equal(geschrieben[0].krankenkasse, 'TK');
+  assert.equal(geschrieben[0].krankenkasse_ik, '108018007');
+});
+
+test('Kassenwechsel bestätigt ohne IK -> krankenkasse_ik: null im Patch', async () => {
+  const { supabase, showConfirmModal, geschrieben, confirmCalls } = doppel({ confirmResult: true });
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster', versichertennummer: 'A123456789', krankenkasse: 'AOK', krankenkasse_ik: '109519005' },
+    versichertennummer: 'B987654321', krankenkasse: 'TK',
+  });
+  assert.equal(confirmCalls.length, 1);
+  assert.equal(geschrieben.length, 1);
+  assert.equal(geschrieben[0].versichertennummer, 'B987654321');
+  assert.equal(geschrieben[0].krankenkasse, 'TK');
+  assert.equal(geschrieben[0].krankenkasse_ik, null);
+});
+
+test('Kassenwechsel abgelehnt -> IK unverändert', async () => {
+  const { supabase, showConfirmModal, geschrieben, confirmCalls } = doppel({ confirmResult: false });
+  await verordnungPatientenAbgleich({ supabase, showConfirmModal }, {
+    ...basisFelder,
+    lead: { first_name: 'Anna', last_name: 'Muster', versichertennummer: 'A123456789', krankenkasse: 'AOK', krankenkasse_ik: '109519005' },
+    versichertennummer: 'B987654321', krankenkasse: 'TK', krankenkasseIk: '108018007',
+  });
+  assert.equal(confirmCalls.length, 1);
+  assert.deepEqual(geschrieben, []);
+});
+

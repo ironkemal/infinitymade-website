@@ -1,5 +1,6 @@
 import { emit } from './signal.js?v=20260813';
 import { versichertennummerAbweichung } from './verordnung-aus-ocr.js?v=20260930c';
+import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20260930e';
 
 /**
  * verordnung-patient-abgleich.js — Patientenstammdaten nach manueller
@@ -20,13 +21,15 @@ export async function verordnungPatientenAbgleich(ctx, felder) {
   const {
     ownerId, patientId, lead, vorname, nachname,
     versichertennummer, krankenkasse, versichertenstatus,
-    strasse, ort, geburtsdatum
+    strasse, ort, geburtsdatum, krankenkasseIk
   } = felder;
   if (!patientId) return;
 
   const patch = {};
+  const ik = kartenIkNormalisieren(krankenkasseIk);
   if (!lead.versichertennummer && versichertennummer) patch.versichertennummer = versichertennummer;
   if (!lead.krankenkasse && krankenkasse) patch.krankenkasse = krankenkasse;
+  if (!lead.krankenkasse_ik && ik) patch.krankenkasse_ik = ik;
   if (!lead.versichertenstatus && versichertenstatus) patch.versichertenstatus = versichertenstatus;
   if (!lead.street && strasse) patch.street = strasse;
   if (!lead.plz && !lead.city && ort) {
@@ -64,6 +67,9 @@ export async function verordnungPatientenAbgleich(ctx, felder) {
       patch.versichertennummer = nummerBefund.neu;
       if (krankenkasse) patch.krankenkasse = krankenkasse;
       if (versichertenstatus) patch.versichertenstatus = versichertenstatus;
+      patch.krankenkasse_ik = ik || null;
+    } else {
+      delete patch.krankenkasse_ik;
     }
   }
 

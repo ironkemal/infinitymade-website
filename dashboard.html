@@ -4371,6 +4371,14 @@
               <label class="form-label">Versichertenstatus</label>
               <input class="form-input" id="lead-versichertenstatus" type="text" placeholder="10000" maxlength="5" />
             </div>
+            <div class="form-group">
+              <label class="form-label">IK (Versichertenkarte)</label>
+              <!-- Karten-IK, 9 Ziffern (Reform S3.8b). Leer ist erlaubt (Privat/Selbstzahler).
+                   Format-Hinweis + Kostenträger: module/krankenkasse-suche.js (Geschwisterfeld
+                   <Kassenfeld>Ik), Laden/Leeren: module/lead-karten-ik.js -->
+              <input class="form-input" id="lead-krankenkasseIk" type="text" inputmode="numeric"
+                     autocomplete="off" maxlength="11" placeholder="9 Ziffern" />
+            </div>
           </div>
           <div class="form-row" id="lead-arzt-row" style="display:none;">
             <div class="form-group">
@@ -5698,7 +5706,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260930x"></script>
+  <script type="module" src="dashboard.js?v=20260930y"></script>
 </body>
 
 </html>
