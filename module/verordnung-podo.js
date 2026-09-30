@@ -42,6 +42,7 @@ import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20261001
 import { sitzungsplan } from './sitzungsplan.js?v=20261001e';
 import { TOPF } from './verordnung-topf.js?v=20260930c';
 import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20260918';
+import { heilmittelGegenLeitsymptomatik } from './verordnung-pruefung.js?v=20261001g';
 
 // [Q1] Heilmittelkatalog Podologische Therapie, Höchstmenge und orientierende
 // Menge je Diagnosegruppe stehen zentral in `verordnung-regeln.js` — dort
@@ -317,10 +318,12 @@ function leitsymptomatikAnwenden() {
 
   // Handeingabe gewinnt: nicht überschreiben, aber sagen, dass wir etwas
   // anderes abgeleitet hätten — sonst merkt niemand den Widerspruch.
+  // Reform (a) 30.09 / canli-test P2: dieselbe Regel wie die Verordnungsprüfung — 78010/„klein“
+  // passt zu a/b/c, gemeldet wird nur 78020 bei a/b oder eine andere Maßnahme (kein Textvergleich).
   if (!unser) {
-    return hm.value.trim() === text ? meldung : {
-      text: `Aus der Leitsymptomatik ${buchstabe}) folgt „${text}" — das Heilmittelfeld wurde von Hand geändert.`,
-    };
+    if (hm.value.trim() === text) return meldung;
+    const befund = heilmittelGegenLeitsymptomatik({ buchstabe, dg: root, steht: hm.value, position: $('rzHmPosition')?.value });
+    return befund ? { text: befund.text } : meldung;
   }
 
   // [gkv-302, 18.09.2026] a)/b) sind laut FAK Podologie Q25 IMMER 78010 —
