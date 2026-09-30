@@ -116,6 +116,29 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.09.2026 · Reform S3.8a — Karten-IK ≠ Kostenträger-IK; yerel "bugün"
+- e665aca — Reform S3.8a (gkv-302, Anlage 1 TP5 V21 §5.5.2 / §5.5.3.1). Niye: Karten-IK (kartta
+  basılı) `prescriptions.krankenkasse_ik`'ye yazılır; Kostenträger-IK **her zaman ondan türetilir**,
+  DTA'daki sessiz geri düşüş kaldırıldı. Yeni:
+  - `kartenIkNormalisieren` — **bilinçli ayna**: `module/krankenkasse-suche.js` ↔
+    `api-backend/lib/rezept-felder.js`. Sunucu karar verir, ikisi birlikte değişir.
+  - `kartenIkHinweise`, `kartenIkStatus`, `kasseAbrechnungsbereit` (`krankenkasse-suche.js`).
+  - `kostentraegerAbfrage` (`rezept-felder.js`) — `kostentraeger_auswahl` view'ının filtre aynası
+    (echt/active/gkv/valid_to). View'ın filtresi değişirse bu da değişir.
+  - `kartenIkPflicht` (`dta/builder.js`), yeni `api-backend/billing/utils/karten-ik.js` →
+    `kartenIkFehler`, `istKartenIk`; preflight kuralı `V:01017`.
+  - Nerede: Muster-13 maskesi, OCR, `/rezept/confirm`, DTA mapper'ları, §302 liste "bereit" rozeti
+    (`dashboard.js` + `abrechnung-auswahl.js`).
+  - ⛔ **İkinci IK çözümleyici yazılmaz.** Tek kaynak: `kostentraegerIkAufloesen` (sunucu, karar) /
+    `aufgeloesteIk` (istemci, yalnız gösterim).
+- d92e422 — `dashboard.js`'te 7 "bugün" varsayılanı `toISODate` (= `alsISODatum`) ile yerel güne.
+  Kural: "bugün" için `toISOString().slice(0,10)` yazılmaz (akşam saatinde ertesi güne kayar).
+  - **Kalan örnekler (30.09 sayımı, dokunulmadı — karar sahibi builder/Kemal):** `dashboard.js`
+    3 yer (biri dosya adı, zararsız); `module/` altında `abrechnung-detail`, `behandlungsbestaetigung`,
+    `rechnung-zahlungseingang`, `termin-leistungen`, `zuzahlung-befreiung`; ve **S3.8a'nın kendi
+    `kostentraegerAbfrage` varsayılan parametresi** (sunucu, UTC konteynerde gece 00–02 arası
+    `valid_to` filtresi bir gün geride kalır — küçük ama aynı kural).
+
 ### 30.09.2026 · Podoloji reform sprinti — tarih biçimleyici birleşimi, S2.3b onay geçerliliği
 - f30f407 — `module/datum.js` yeni `datumDe(wert, leer='')`. Niye: `eingangsbefundung-regel.js` ve
   `fussbefund-archiv.js`'teki iki farklı davranışlı kopya tek yere indi (Kemal onayı). Saf
