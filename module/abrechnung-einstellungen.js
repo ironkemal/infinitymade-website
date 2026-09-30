@@ -646,12 +646,19 @@ async function _loeseEmpfaengerNameAuf(supabase, ik) {
   if (!ik || !/^\d{9}$/.test(ik)) return null;
 
   try {
-    const { data: ann } = await supabase
+    // Gültigkeitsfenster (0046, O-139): nur die am heutigen Berliner Tag gültige
+    // Annahmestelle. NULL = offen. Heute sind alle Zeilen NULL — ändert nur künftig
+    // den angezeigten Namen (Oturum B, 01.10.2026).
+    const d = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+    // Fenster im Browser prüfen wie der Server (annahmestelle.js) — zwei .or() in
+    // einer PostgREST-Abfrage verlassen sich auf die Verknüpfung doppelter Parameter.
+    const { data: kandidaten } = await supabase
       .from('kostentraeger_annahmestellen')
-      .select('kostentraeger_ik')
+      .select('kostentraeger_ik, valid_from, valid_to')
       .eq('partner_ik', ik)
-      .limit(1)
-      .maybeSingle();
+      .limit(50);
+    const ann = (kandidaten || []).find(z =>
+      (!z.valid_from || z.valid_from <= d) && (!z.valid_to || z.valid_to >= d)) || null;
 
     if (ann?.kostentraeger_ik) {
       const { data: kt } = await supabase
