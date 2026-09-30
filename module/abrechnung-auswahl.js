@@ -59,7 +59,7 @@
  */
 
 import { fmtEur } from './geld.js?v=20260909';
-import { kasseAbrechnungsbereit } from './krankenkasse-suche.js?v=20260930c';
+import { kasseAbrechnungsbereit } from './krankenkasse-suche.js?v=20260930g';
 // Gleiche ?v-Zeichenfolge wie dashboard.js — sonst zweite Modulinstanz, `aktuell` spaltet sich.
 import { zeigeAbrechnungAnsicht } from './abrechnung-ansicht.js?v=20260909';
 import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
@@ -449,6 +449,7 @@ const _st = {
   zeitraumVon: '',
   zeitraumBis: '',
   ausgefiltert: 0,      // wie viele Zeilen der Zeitraum gerade wegnimmt
+  ohneKartenIk: 0,      // bereite Podo-Verordnungen ohne Karten-IK (fallen still aus der Liste)
   // Protokoll der letzten „Erstellen"-Aktion. Bleibt über einen Reload hinweg
   // stehen (siehe zeichne()) — ohne das verschwand eine Fehlermeldung, sobald
   // ladeAbrechnungAuswahl() nach dem Lauf automatisch neu zeichnete: das
@@ -597,6 +598,9 @@ export async function ladeAbrechnungAuswahl() {
     v.status === 'abrechenbar' && kasseAbrechnungsbereit(v) && (v.rezeptart || 'kassen') === 'kassen');
   const podoBereit = podoAlle.filter(v => imZeitraum(v.ausstellungsdatum, _st.zeitraumVon, _st.zeitraumBis));
   ausgefiltert += podoAlle.length - podoBereit.length;
+  // Bereit, aber ohne Karten-IK: die Liste lässt sie aus — der Hinweis sagt es (30.09.2026).
+  _st.ohneKartenIk = zuschnitt.zeilen.filter(v => v.status === 'abrechenbar' && (v.rezeptart || 'kassen') === 'kassen'
+    && v.kostentraeger_ik && !kasseAbrechnungsbereit(v) && imZeitraum(v.ausstellungsdatum, _st.zeitraumVon, _st.zeitraumBis)).length;
 
   if (podoBereit.length) {
     const { data: allBeh } = await ctx.supabase
@@ -755,7 +759,7 @@ function zeichne() {
       ${_st.ausgefiltert
         ? `Keine Verordnung im gewählten Abrechnungszeitraum (${_st.ausgefiltert} ausgeblendet).`
         : 'Keine abrechnungsbereiten Verordnungen.'}
-    </div>`;
+    </div>` + kartenIkHinweisHtml();
     _einstiegAktualisieren();
     return;
   }
@@ -784,11 +788,19 @@ function zeichne() {
     </div>
 
     ${fehlerhaftHtml()}
+    ${kartenIkHinweisHtml()}
     <div id="abAuswahlError" style="color:#ef4444;font-size:13px;margin-top:10px;display:none;"></div>
   `;
 
   _leisteAktualisieren();
   _einstiegAktualisieren();
+}
+
+/** Kurzer Hinweis unter der Liste: bereite Podo-Verordnungen ohne Karten-IK. */
+function kartenIkHinweisHtml() {
+  const n = _st.ohneKartenIk || 0;
+  if (!n) return '';
+  return `<div id="abKartenIkHinweis" style="font-size:12px;color:var(--text-muted);margin-top:10px;">${n} Verordnung${n > 1 ? 'en' : ''} ohne IK der Versichertenkarte — in der Verordnung eintragen.</div>`;
 }
 
 /** Abrechnungszeitraum — steht auch dann da, wenn er alles wegfiltert. Sonst

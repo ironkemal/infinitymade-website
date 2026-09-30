@@ -387,7 +387,8 @@ function loescheIkHinweis(ikEl) {
  * @param {Function} [cfg.onSelect] (kasse) => void — bekommt auch die IK-Nummer
  */
 export function attachKrankenkasseSuche(inputEl, cfg = {}) {
-  if (!inputEl) return;
+  // Idempotent: die eingebettete Maske ruft das bei jedem Öffnen (sonst stapeln sich die Listener).
+  if (!inputEl || inputEl.dataset.katalogWired === '1') return;
   const { sb, ownerId, onSelect = null } = cfg;
   const ikEl = inputEl.id ? document.getElementById(inputEl.id + 'Ik') : null;
 

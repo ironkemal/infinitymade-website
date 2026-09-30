@@ -44,7 +44,7 @@ import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260930c';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260930c';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
-import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20260930c';
+import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20260930g';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -196,6 +196,9 @@ export async function maskeEinbetten({ host, rx }) {
   // Patientencache kommt sonst nur aus openRezeptModal() — hier lief das nie,
   // die Suche blieb leer (Ops #302 QA-Nachtrag 27.09.2026).
   _bruecke?.ladePatienten?.();
+  // Kassensuche + Karten-IK-Hinweis (rzPatKasse) hing ebenfalls nur an openRezeptModal().
+  // Idempotent (katalogWired).
+  _bruecke?.verdrahteKasse?.();
 
   // Im Modal beendet „Abbrechen" die Eingabe. In der Seite gäbe es nichts zu
   // schliessen — der Knopf würde nur so aussehen, als täte er etwas.

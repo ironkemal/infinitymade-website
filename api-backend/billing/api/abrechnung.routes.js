@@ -1126,7 +1126,7 @@ router.post('/abrechnung/create', async (req, res) => {
     // wirft mit `e.status` (422 z.B. bei fehlendem Patientenbezug oder fehlender
     // Heilmittelposition) — bis 10.09.2026 stand hier hart `500`, das hat den
     // Status verschluckt und jeden fachlichen Fehler wie einen Serverfehler aussehen lassen.
-    return res.status(e.status || 500).json({ error: e.message || 'Server error' });
+    return res.status(e.status || 500).json({ error: e.message || 'Server error', ...(e.code ? { code: e.code } : {}) });
   }
 });
 
@@ -3676,7 +3676,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     });
   } catch (e) {
     console.error('[abrechnung/create-podologie]', e);
-    return res.status(e.status || 500).json({ error: e.message });
+    return res.status(e.status || 500).json({ error: e.message, ...(e.code ? { code: e.code } : {}) });
   }
 });
 
