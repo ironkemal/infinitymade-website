@@ -1,7 +1,13 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-29 — Nachtrag: 0043_vorlagen_rechnung_ausfall
+-- ERZEUGT AM:        2026-09-30 — Nachtrag: 0044_leads_krankenkasse_ik
+--                    im SaaS angewendet (MCP). Fuer DIESE Datei eine NULL-
+--                    Aenderung: +1 Spalte, +1 CHECK und zwei COMMENTs (stehen
+--                    in SCHEMA.sql) — keine Policy, Funktion, Trigger oder
+--                    Index. leads bleibt ueber die bestehenden Policies
+--                    abgedeckt (Spalte erbt sie).
+--                    davor: 2026-09-29 — Nachtrag: 0043_vorlagen_rechnung_ausfall
 --                    im SaaS angewendet (MCP). Fuer DIESE Datei eine NULL-
 --                    Aenderung: nur die CHECK-Constraint von document_vorlagen
 --                    neu angelegt (steht in SCHEMA.sql) — keine Policy,

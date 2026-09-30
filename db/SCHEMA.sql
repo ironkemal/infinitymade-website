@@ -1,7 +1,15 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-29 — Nachtrag: 0043_vorlagen_rechnung_ausfall
+-- ERZEUGT AM:        2026-09-30 — Nachtrag: 0044_leads_krankenkasse_ik
+--                    (Reform S3.8b) im SaaS angewendet (MCP, Freigabe Kemal)
+--                    und geprueft: leads.krankenkasse_ik text nullable
+--                    (attnum 58), CHECK leads_krankenkasse_ik_format
+--                    convalidated=true, COMMENT gesetzt; COMMENT an
+--                    prescriptions.krankenkasse_ik ersetzt (kein Rueckfall
+--                    mehr auf kostentraeger_ik). +1 Spalte, +1 CHECK — keine
+--                    neue Tabelle/Policy/Index/Funktion/Trigger.
+--                    davor: 2026-09-29 — Nachtrag: 0043_vorlagen_rechnung_ausfall
 --                    (Reform S3.2) im SaaS angewendet (MCP) und geprueft:
 --                    document_vorlagen_vorlage_type_check live vorher 8 Werte,
 --                    nachher 9 (+ 'rechnung_ausfall'), convalidated=true.
@@ -2148,8 +2156,10 @@ CREATE TABLE leads (
   ausfallvereinbarung_am date
   podologie_altbestand_vor_2023 boolean
   podologie_altbestand_beantwortet_am timestamptz
+  krankenkasse_ik text
 );
 --   CHECK geschlecht IN (m, f, d) · insurance_type IN (gkv, privat)
+--   CHECK krankenkasse_ik IS NULL ODER MATCHES ^[0-9]{9}$  (leads_krankenkasse_ik_format)
 --   ★ `geschlecht`: m = männlich, f = weiblich, d = divers (§ 22 Abs. 3 PStG),
 --      NULL = keine Angabe (der Normalfall). **Nicht `w`** — der CHECK weist es ab
 --      und der INSERT scheitert. Bis 16.08.2026 schrieben zwei Pfade genau das:
@@ -2186,6 +2196,12 @@ CREATE TABLE leads (
 --     WANN geantwortet wurde -- Beleg gegenueber der Kasse, kein fluechtiger
 --     Dialog. Schreibpunkt noch offen (Ops #244 UI-Teil steht aus); die
 --     Migration legt nur die Spalten an.
+--   ★ krankenkasse_ik (30.09.2026, Migration 0044, Reform S3.8b): Karten-IK
+--     des Patienten (Aufdruck der Versichertenkarte) — gleiche Bedeutung wie
+--     prescriptions.krankenkasse_ik, NICHT die Kostentraeger-IK. Vorbelegung
+--     fuer neue Verordnungen (beim Anlegen nach prescriptions kopiert,
+--     Momentaufnahme). Kein FK auf kostentraeger (Quartalsaustausch).
+--     NULL = nicht erfasst. Traegt denselben Hinweis als COMMENT in der DB.
 
 CREATE TABLE mahnungen (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -2701,16 +2717,18 @@ CREATE TABLE prescriptions (
 --     Erstbefundungs-Serie (78110/78100) ueber mehrere Verordnungen laeuft und
 --     allein vom Nagel zusammengehalten wird. Kein NOT NULL: eine Verordnung
 --     entsteht zuerst aus dem OCR-Lauf, der Nagel kommt danach.
---   ★ krankenkasse_ik (05.09.2026): IK der Krankenkasse von der KV-Karte des
---     Versicherten (§302 SGB V, Anlage 1 TP5 V21 § 5.5.3.1) — NICHT dasselbe
---     wie `kostentraeger_ik`. Letztere kommt aus dem Namensabgleich mit der
---     Kassenliste (FK auf `kostentraeger`), Erstere ist bis zur Integration
---     einer echten Kostenträgerdatei (VKG-Segment) NICHT ermittelbar und bleibt
---     überall NULL — der DTA-Bau fällt dann bewusst auf `kostentraeger_ik`
---     zurück (`api-backend/billing/dta/builder.js:106,238,353`). Kein FK,
---     bewusst keine Rückbefüllung: NULL bedeutet "Karten-IK nicht erfasst",
---     das ist ein abfragbarer Zustand und würde beim Kopieren von
---     `kostentraeger_ik` unsichtbar. Migration: prescriptions_krankenkasse_ik.
+--   ★ krankenkasse_ik (05.09.2026; Rolle geaendert 30.09.2026, Reform S3.8a,
+--     COMMENT ersetzt durch 0044): Karten-IK von der KV-Karte des Versicherten
+--     (§302 SGB V, Anlage 1 TP5 V21 § 5.5.3.1) — NICHT dasselbe wie
+--     `kostentraeger_ik`. Seit 30.09.2026 schreiben Maske, OCR und
+--     /rezept/confirm bzw. /rezept/save die Karten-IK (9 Ziffern normalisiert);
+--     `kostentraeger_ik` wird serverseitig IMMER daraus abgeleitet
+--     (kostentraegerIkAufloesen). Im DTA Mussfeld (V:01017) — der fruehere
+--     Rueckfall auf `kostentraeger_ik` ist entfernt, ohne Karten-IK lehnt der
+--     Bau mit KARTEN_IK_FEHLT ab. Kein FK, bewusst keine Rueckbefuellung:
+--     NULL = "Karten-IK noch nicht erfasst", Verordnung nicht
+--     abrechnungsbereit. Vorbelegung vom Patienten: leads.krankenkasse_ik.
+--     Migration: prescriptions_krankenkasse_ik (+ COMMENT 0044).
 --   FK patient_id -> leads(id) · arzt_id -> aerzte(id) · abrechnung_id -> abrechnung(id)
 --   FK kostentraeger_ik -> kostentraeger(ik)
 --   FK abrechnung_status_manuell_von -> auth.users(id) ON DELETE SET NULL · PK (id)
