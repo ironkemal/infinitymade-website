@@ -368,6 +368,26 @@ function loescheIkHinweis(ikEl) {
   if (el) el.textContent = '';
 }
 
+let _hinweisSb = null;
+
+/**
+ * Hinweis unter dem IK-Feld neu berechnen, nachdem ein Programm den Wert
+ * geschrieben hat (Maske füllen löst kein `input`/`change` aus — der Hinweis
+ * zum vorher getippten Wert blieb sonst stehen, canli-test 30.09.2026).
+ * Erst leeren, dann (falls Wert + Client bekannt) neu prüfen. Wirft nie.
+ */
+export async function tazeleIkHinweis(ikEl) {
+  if (!ikEl) return;
+  loescheIkHinweis(ikEl);
+  const wert = ikEl.value;
+  if (!String(wert ?? '').trim() || !_hinweisSb) return;
+  try {
+    const r = await kartenIkStatus(_hinweisSb, wert);
+    if (ikEl.value !== wert) return;
+    if (r.text) ikHinweisElement(ikEl).textContent = r.text;
+  } catch { /* Hinweis ist Zugabe */ }
+}
+
 /**
  * Hängt die Kassenauswahl an ein Textfeld.
  *
@@ -390,6 +410,7 @@ export function attachKrankenkasseSuche(inputEl, cfg = {}) {
   // Idempotent: die eingebettete Maske ruft das bei jedem Öffnen (sonst stapeln sich die Listener).
   if (!inputEl || inputEl.dataset.katalogWired === '1') return;
   const { sb, ownerId, onSelect = null } = cfg;
+  if (sb) _hinweisSb = sb;
   const ikEl = inputEl.id ? document.getElementById(inputEl.id + 'Ik') : null;
 
   // Das alte <datalist> würde sonst als zweites Menü danebenstehen.

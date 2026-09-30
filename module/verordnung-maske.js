@@ -44,7 +44,7 @@ import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260930c';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260930c';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
-import { kartenIkNormalisieren } from './krankenkasse-suche.js?v=20260930g';
+import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20260930i';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -438,7 +438,7 @@ export function fuelleMuster13(rx, opt = {}) {
     _icdEl.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  if (alsVorlage) return;
+  if (alsVorlage) { tazeleIkHinweis(document.getElementById('rzPatKasseIk')); return; }
 
   // Nur beim Bearbeiten: was zu DIESEM Papier gehört.
   setz('rzPatientId', rx.patient_id || '');
@@ -455,6 +455,7 @@ export function fuelleMuster13(rx, opt = {}) {
   // nie die daraus abgeleitete Kostenträger-IK (gkv-302, 30.09.2026).
   if (rx.krankenkasse_ik) setz('rzPatKasseIk', rx.krankenkasse_ik);
   if (rx.versichertennummer) setz('rzPatVersNr', rx.versichertennummer);
+  tazeleIkHinweis(document.getElementById('rzPatKasseIk'));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
