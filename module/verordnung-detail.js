@@ -67,13 +67,13 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261001e';
+import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261001g';
 // Ops-Kart #269 (05.09.2026): dasselbe Urteil wie in den Listen/Karten
 // (module/verordnung-uebersicht.js), hier auf die eine geöffnete Zeile
 // angewandt — „gleiches Urteil, wo auch immer geklickt wird" (siehe
 // verordnung-pruefen-knopf.js). PHYSIO_ABGESCHLOSSEN/PODO_AKTIV von dort
 // übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
-import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261001e';
+import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261001g';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
 import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261001e';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';

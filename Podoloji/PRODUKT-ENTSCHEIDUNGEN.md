@@ -408,3 +408,74 @@
 - **Etkilenen:** `module/abrechnung-auswahl.js` (Zeile `einheiten`, Render ~:879)
 - **Reduzierte Alternative verworfen:** „1 / 3 Einheiten · 2 offen" — Wort doppelt zur
   Spaltenüberschrift, kostet Breite.
+
+### Leitsymptomatik ⇄ Heilmittel: Maßnahme vergleichen, nicht Positionstext (Reform 6a, canli-test 30.09)
+- **Karar:** Die Prüfung `LS_HEILMITTEL_ABWEICHUNG` (`module/verordnung-pruefung.js:307-313`)
+  vergleicht die Leitsymptomatik mit der **Maßnahme**, nicht mit dem Klartext der Position:
+  (1) Heilmittelfeld = 78010 / „Podologische Behandlung (klein)" → **keine Meldung** (78010 ist die
+  Position für a, b UND c — Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 1-3 + Teil 2 Ziff. 1-3).
+  (2) 78020 / „(groß)" bei Leitsymptomatik a) oder b) → Warnung: „78020 „Behandlung groß" gehört nur
+  zur Komplexbehandlung (Leitsymptomatik c). Bei a) oder b) wird 78010 abgerechnet." — dieselbe
+  Regel, die beim Speichern der Tagesbehandlung schon sperrt (`podologie-abrechnung.js:975`).
+  (3) Heilmittelfeld nennt eine andere Maßnahme (z. B. a) + „Nagelbearbeitung") → Warnung bleibt,
+  neuer Text: „Leitsymptomatik a) passt zu „Hornhautabtragung" — auf der Verordnung steht
+  „Nagelbearbeitung". Bitte mit der verordnenden Praxis klären."
+  Zuordnung Maßnahme↔Position aus `POD_HEILMITTEL_KATALOG` (`podologie-abrechnung.js:157-176`),
+  keine zweite Tabelle.
+- **Neden:** Heute meldet jede korrekt erfasste Verordnung mit 78010 eine Abweichung („folgt
+  Hornhautabtragung"). Eine Warnung, die immer kommt, lernt die Podologin wegzuklicken — und
+  übersieht dann die echte.
+- **Tarih:** 2026-09-30
+- **Etkilenen:** `module/verordnung-pruefung.js` (Abschnitt 5), Verordnungsmaske / Prüfknopf
+- **Reddedilen alternatif:** Meldung ganz streichen — verworfen, Fall (2)/(3) sind echte Fehler.
+- **Offen (gkv-302):** Schwere von Fall (3) — reicht Warnung, oder ist eine abweichende
+  Maßnahme/Leitsymptomatik ein Absetzungsgrund (dann Blocker)?
+- **Annahme:** nicht mit einer Podologin validiert.
+
+### Tagesbehandlung ohne Behandlungsposition (Reform 6b, canli-test 30.09, QA `3e256b9a`)
+- **Karar:** Drei Teile.
+  (1) **Ursache beheben — Vorbelegung:** Bei DF/NF/QF wird 78010 immer vorbelegt, auch wenn die
+  Maßnahme unbekannt ist (Leitsymptomatik fehlt, keine `heilmittel_items`).
+  `podo-behandlungsposition-regel.js:39-43` gibt heute dann `''` zurück; 78010 ist aber für alle drei
+  Maßnahmen die zulässige Position, also auch bei unbekannter die sichere. Braucht die
+  Diagnosegruppe als Eingabe. UI1/UI2 unverändert (kein 78010).
+  (2) **Speichern ohne 78010/78020 (DF/NF/QF):** vorerst **Rückfrage, keine Sperre**
+  (`podologie-abrechnung.js:961` ff.): „Keine Behandlungsposition (78010/78020) gewählt — es wird
+  nur die Befundung dokumentiert. Ist das so gewollt?" Knöpfe „Ohne Behandlung speichern" /
+  „Zurück". Klinischer Grund: der Befund kann eine Behandlung verbieten (offene Wunde/Ulkus,
+  Infektion → an den Arzt verweisen); die Dokumentation dieses Tages muss möglich bleiben.
+  (3) **Fehlende Leitsymptomatik** bleibt bei der Erfassung Warnung (`verordnung-pruefung.js:290`,
+  Papierrezept, die Podologin kann es nicht selbst korrigieren); zusätzlich im Kopf der
+  Tagesbehandlung ein nicht sperrender Hinweis: „Auf der Verordnung fehlt die Leitsymptomatik —
+  bitte von der verordnenden Praxis ergänzen lassen, bevor abgerechnet wird."
+- **Neden:** Pozisyonsuz kayıt podologun iradesiyle değil, boş önseçimle oluştu. Önseçim düzelince
+  normal gün 0 ek tık; istisna (yalnız Befund) 1 ek tık, sessiz kalmaz.
+- **Tarih:** 2026-09-30
+- **Etkilenen:** `module/podo-behandlungsposition-regel.js`, `module/podologie-abrechnung.js`
+  (`podVordBehandlungsposition` :429, Speichern :923-980)
+- **Reddedilen alternatif:** Sofort harte Sperre — verworfen bis gkv-302 antwortet (s. u.), weil sie
+  den klinisch legitimen „nur Befund, nicht behandelt"-Tag unmöglich machen würde.
+- **Offen (gkv-302):** (a) Ist 78030 bzw. 78040 ohne 78010/78020 am selben Tag abrechenbar? (FAK Q6:
+  „78030 ist zu jeder der Abrechnungspositionen … abrechenbar" — deutet auf Nein.) Wenn Nein: bleibt
+  der Tag dokumentierbar, fällt aber aus der §302-Datei heraus — oder Sperre? (b) Gehört fehlende
+  Leitsymptomatik in die Server-Sperre `fehlendeVerordnungsangaben()`
+  (`verordnung-status.routes.js:118`)?
+- **Annahme:** nicht mit einer Podologin validiert.
+
+### Abrechnungsstatus-Dialog: kein „Bereit" ohne Behandlung (Reform 6c, canli-test 30.09)
+- **Karar:** Hat die Verordnung (Status `aktiv`) **keine** nicht-stornierte Behandlung:
+  „Bereit zur Abrechnung" bleibt in der Liste sichtbar, aber **deaktiviert** mit Etikett
+  „Bereit zur Abrechnung — erst nach der ersten Behandlung"; **keine Vorauswahl** — erste Option
+  „Bitte wählen …", „Übernehmen" deaktiviert bis zur Wahl. Hilfezeile: „Für diese Verordnung ist
+  noch keine Behandlung dokumentiert." Mit ≥ 1 Behandlung bleibt „Bereit" vorausgewählt
+  (Normalfall, unverändert). Zählung wie der Server (`verordnung-status.routes.js:210-218`,
+  `storniert_am IS NULL`), geladen in `oeffneStatusDialogFuer()` (`abrechnungsstatus.js:656-669`),
+  angewendet bei den Optionen (`:517-519`). Server-422 bleibt als Netz.
+- **Neden:** Heute führt der vorausgewählte Weg in eine Fehlermeldung (Klick → 422 → umwählen).
+  Wer eine Verordnung ohne Behandlung öffnet, will fast immer stornieren oder archivieren; beides
+  ist folgenreich und darf NICHT vorausgewählt sein — deshalb Platzhalter statt „Storniert".
+- **Tarih:** 2026-09-30
+- **Etkilenen:** `module/abrechnungsstatus.js` (`oeffneStatusDialog`, `oeffneStatusDialogFuer`)
+- **Reddedilen alternatif:** „Bereit" ausblenden — verworfen, die Podologin fragt sich dann, wo es
+  ist; deaktiviert + Grund erklärt sich selbst. „Storniert" vorwählen — verworfen (destruktiv).
+- **Annahme:** nicht mit einer Podologin validiert.

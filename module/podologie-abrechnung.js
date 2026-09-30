@@ -62,7 +62,7 @@
 
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
-import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261001e';
+import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261001g';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260920s';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001b';
@@ -83,14 +83,15 @@ import { darf78040, darf78100, darfErstbefundungNagel,
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
   from './verordnung-topf.js?v=20260930c';
-import { behandlungGesperrt, BEHANDLUNG_GESPERRT_TEXT } from './podo-arztangaben.js?v=20260929r';
+import { behandlungGesperrt } from './podo-arztangaben.js?v=20261001g';
 import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Reform-Sprint S1.5 (28.09.2026): Rezept-Position (78010/78020) für die
 // Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
 // Ermittlung wird NICHT geschrieben — die von `verordnung-pruefung.js`
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
-import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001e';
-import { behandlungspositionVorschlag } from './podo-behandlungsposition-regel.js?v=20260928';
+import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001g';
+import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
+import { behandlungspositionVorschlag, ohneBehandlungsposition, OHNE_BEHANDLUNG_FRAGE, leitsymptomatikNotiz } from './podo-behandlungsposition-regel.js?v=20261001g';
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
 // "heute" — s. `setPodVorwahl()` unten.
 import { podBehandlungsdatumVorschlag } from './podo-behandlungsdatum-vorwahl.js?v=20260928';
@@ -147,34 +148,8 @@ function podDiagRoot(diagCode) {
 // Leitsymptomatik und Heilmittel sind in der Richtlinie parallel buchstabiert:
 // a↔a, b↔b, c↔c.
 //
-// ⚠ Positionszuordnung — hier wird am häufigsten zu viel abgerechnet:
-// Hornhautabtragung ODER Nagelbearbeitung allein werden IMMER mit 78010 zzgl.
-// 78030 abgerechnet, auch bei mehr als 20 Minuten Therapiezeit
-// (FAK Podologie Q25). 78020 „Podologische Behandlung (groß)" ist
-// ausschließlich bei verordneter Komplexbehandlung mit Therapiezeit über
-// 20 Minuten abrechenbar — sonst Retaxation (~15 € je Sitzung).
-// Siehe wissensbank/SPEC-RULES.md und Podoloji/podologie-hpnr-reference.js.
-const POD_HEILMITTEL_KATALOG = {
-  a: {
-    heilmittel:      'Hornhautabtragung',
-    leitsymptomatik: 'Hyperkeratose (schmerzlos und schmerzhaft)',
-    hpnr:            '78010',
-    hpnrGross:       null,
-  },
-  b: {
-    heilmittel:      'Nagelbearbeitung',
-    leitsymptomatik: 'Pathologisches Nagelwachstum (Verdickung, Tendenz zum Einwachsen)',
-    hpnr:            '78010',
-    hpnrGross:       null,
-  },
-  c: {
-    heilmittel:      'Podologische Komplexbehandlung',
-    leitsymptomatik: 'Hyperkeratose und pathologisches Nagelwachstum',
-    hpnr:            '78010',
-    hpnrGross:       '78020',   // nur bei Therapiezeit > 20 Min
-  },
-};
-const POD_HEILMITTEL_DGS  = ['DF', 'NF', 'QF'];  // UI1/UI2 haben keinen a/b/c-Katalog
+// POD_HEILMITTEL_KATALOG / POD_HEILMITTEL_DGS: module/podo-heilmittel-katalog.js (ein Ort,
+// auch der Verordnungsprüfung zugänglich — verordnung-pruefung.js kann dieses Modul nicht importieren).
 
 /**
  * Darf für diesen Patienten heute noch die Eingangsbefundung (78040) gesetzt
@@ -429,7 +404,7 @@ function podVordMassnahme(vord) {
 function podVordBehandlungsposition(vord) {
   const massnahme = podVordMassnahme(vord);
   const roh = vord?.heilmittel_position || erstePositionAusItems(vord?.heilmittel_items);
-  return behandlungspositionVorschlag(massnahme, roh);
+  return behandlungspositionVorschlag(massnahme, roh, podDiagRoot(vord?.diagnosegruppe));
 }
 
 // `vorwahlDatum` kommt aus `setPodVorwahl(id, { datum })` (Sprung aus einem
@@ -763,6 +738,10 @@ async function loadPodologieBilling() {
               }).join('')}
         </div>`;
 
+  // Podoloji (b)3: fehlende Leitsymptomatik — Notiz, kein Blocker (Regel + Text: podo-behandlungsposition-regel.js).
+  const lsNotiz = selectedVord
+    ? leitsymptomatikNotiz({ dg: diagRoot, massnahme: podVordMassnahme(selectedVord), roh: selectedVord.leitsymptomatik, freitext: selectedVord.pat_leitsymptomatik })
+    : '';
   let behandlungFormHtml = '';
   if (!selectedVord) {
     behandlungFormHtml = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
@@ -771,6 +750,7 @@ async function loadPodologieBilling() {
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
       <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')}</h4>
       ${abgerechnetHinweisHtml}
+      ${lsNotiz ? `<div id="podLsFehltNotiz" style="font-size:12px;color:var(--warning-text,var(--text-muted));background:var(--warning-dim,var(--bg-card-solid));border:1px solid var(--warning,var(--border));border-radius:6px;padding:8px 10px;margin-bottom:12px;">${ctx.escapeHtml(lsNotiz)}</div>` : ''}
       <div style="display:grid;gap:12px;">
         <div>
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${ctx.t('pod_behandlungsdatum')}</label>
@@ -955,7 +935,7 @@ async function loadPodologieBilling() {
     const heuteStr = alsISODatum(new Date());
     let err = '';
     // Reform S3.7: ohne Arzt-Nr. oder Unterschrift/Stempel darf keine Behandlung beginnen (kein Override).
-    if (behandlungGesperrt(vord).gesperrt) err = BEHANDLUNG_GESPERRT_TEXT;
+    if (behandlungGesperrt(vord).gesperrt) err = behandlungGesperrt(vord).text;
     else if (!datum) err = 'Bitte ein Behandlungsdatum angeben.';
     else if (datum > heuteStr) err = 'Das Behandlungsdatum darf nicht in der Zukunft liegen.';
     else if (checks.length === 0) err = ctx.t('pod_kein_hpnr');
@@ -1036,6 +1016,15 @@ async function loadPodologieBilling() {
         errEl.style.display = 'block';
         return;
       }
+    }
+
+    // Podoloji (b)2: DF/NF/QF ohne 78010/78020 — nur Befundung? Rückfrage statt Sperre.
+    if (ohneBehandlungsposition(dRoot, checks)) {
+      const gewollt = await ctx.showConfirmModal({
+        title: 'Keine Behandlungsposition', message: OHNE_BEHANDLUNG_FRAGE,
+        confirmText: 'Ohne Behandlung speichern', cancelText: 'Zurück', variant: 'warning',
+      });
+      if (!gewollt) return;
     }
 
     // beginn_spaetestens check: warn if first treatment is after deadline.

@@ -13,12 +13,12 @@ import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezep
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
 import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
 import { emit, on } from './module/signal.js?v=20260813';
-import { podoArztHinweise } from './module/podo-arztangaben.js?v=20260929r'; import { aktualisiereArztSperreBanner, installiereArztSperreBanner } from './module/arztangaben-banner.js?v=20261001b';
+import { podoArztHinweise } from './module/podo-arztangaben.js?v=20261001g'; import { icdSpeicherHinweise } from './module/verordnung-speichern-hinweise.js?v=20261001g'; import { aktualisiereArztSperreBanner, installiereArztSperreBanner } from './module/arztangaben-banner.js?v=20261001g';
 import { zeigeTerminFehler as terminFehler, loescheTerminFehler, verdrahteTerminFehler } from './module/termin-fehler.js?v=20260929q';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren, tazeleIkHinweis } from './module/krankenkasse-suche.js?v=20261001b';
-import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261001b';
+import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261001g';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261001e';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
@@ -31,14 +31,14 @@ import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnun
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260929i';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20260930x';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
-import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261001b';
-import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261001e';
+import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261001g';
+import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261001g';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001e';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001g';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz, fahrtenbuchCsv, patientenverzeichnisCsv, csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS } from './module/fahrtenbuch-regeln.js?v=20261001c';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
@@ -15736,7 +15736,7 @@ async function saveRezept() {
 
     // Format-Fehler (nur wenn ausgefüllt)
     const arzt = podoArztHinweise({ bereich: val('rzTherapieBereich'), lanr: rzLanr, bsnr: rzBsnr, unterschrift: document.getElementById('rzUnterschrift').checked });
-    const formatErrors = [...arzt.hinweise, ...kartenIkHinweise(val('rzPatKasseIk'))];
+    const formatErrors = [...arzt.hinweise, ...kartenIkHinweise(val('rzPatKasseIk')), ...await icdSpeicherHinweise(supabase, { bereich: val('rzTherapieBereich'), icdFelder: [val('rzIcd'), val('rzIcd2')], dg: val('rzDg') })];
     if (rzLanr && !/^\d{9}$/.test(rzLanr)) formatErrors.push('LANR muss 9 Ziffern haben');
     if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
     if (icdMehrAlsEinKodeJeFeld(val('rzIcd'), val('rzIcd2'))) formatErrors.push(t('pod_icd_je_feld'));

@@ -496,6 +496,23 @@ export function bedarf(ziel) {
 }
 
 /**
+ * Podoloji (c), 30.09.2026: Der Server (verordnung-status.routes.js, Ziel „abrechenbar") weist
+ * eine Verordnung ohne dokumentierte Behandlung mit 422 ab — der Dialog darf „Bereit" dann nicht
+ * als Vorgabe anbieten. Gezählt wird wie am Server: `podologie_behandlungen` mit `storniert_am IS NULL`.
+ * `behandlungen === undefined` (Zahl unbekannt, z. B. Abfragefehler) → bisheriges Verhalten.
+ * Gilt nur, wo der Aufrufer die Zahl mitgibt — `oeffneStatusDialogFuer` liest ausschließlich
+ * podologische Verordnungen; Physio/Ergo/Logo (`prescriptions`-Sitzungen) sind nicht betroffen.
+ * @returns {{ohneBehandlung:boolean, gesperrt:string[]}}
+ */
+export function statusDialogVorgabe(aktuell, behandlungen) {
+  const ohne = (aktuell || 'aktiv') === 'aktiv' && behandlungen === 0;
+  return { ohneBehandlung: ohne, gesperrt: ohne ? ['abrechenbar'] : [] };
+}
+export const DIALOG_WAEHLEN = 'Bitte wählen …';
+export const DIALOG_BEREIT_GESPERRT = 'Bereit zur Abrechnung — erst nach der ersten Behandlung';
+export const DIALOG_KEINE_BEHANDLUNG = 'Für diese Verordnung ist noch keine Behandlung dokumentiert.';
+
+/**
  * Statusdialog öffnen.
  *
  * Bewusst ein eigenes Fenster statt eines <select> in der Zeile: „Teilabsetzung"
@@ -509,13 +526,17 @@ export function bedarf(ziel) {
 export function oeffneStatusDialog(verordnung, opts = {}) {
   const aktuell = verordnung.status || 'aktiv';
   const ziele = moeglicheZiele(aktuell);
+  const vorgabe = statusDialogVorgabe(aktuell, opts.behandlungen);
 
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;'
     + 'display:flex;align-items:center;justify-content:center;padding:16px;';
 
   const optionen = ziele.length
-    ? ziele.map(z => `<option value="${z.key}">${escapeHtml(z.label)}</option>`).join('')
+    ? (vorgabe.ohneBehandlung ? `<option value="" selected>${escapeHtml(DIALOG_WAEHLEN)}</option>` : '')
+      + ziele.map(z => vorgabe.gesperrt.includes(z.key)
+          ? `<option value="${z.key}" disabled>${escapeHtml(DIALOG_BEREIT_GESPERRT)}</option>`
+          : `<option value="${z.key}">${escapeHtml(z.label)}</option>`).join('')
     : '';
 
   overlay.innerHTML = `
@@ -589,7 +610,9 @@ export function oeffneStatusDialog(verordnung, opts = {}) {
     if (abgesetztHilfe) {
       abgesetztHilfe.style.display = ziel === 'abgesetzt' ? '' : 'none';
     }
-    overlay.querySelector('#as-hilfe').textContent = statusInfo(ziel).hilfe;
+    overlay.querySelector('#as-hilfe').textContent = ziel ? statusInfo(ziel).hilfe : (vorgabe.ohneBehandlung ? DIALOG_KEINE_BEHANDLUNG : '');
+    // Ohne Vorgabe (keine Behandlung) wird erst mit einer Auswahl übernommen.
+    overlay.querySelector('#as-ok').disabled = !ziel;
     const nachEinreichung = ['abgerechnet', 'teilabsetzung', 'abgesetzt'].includes(aktuell);
     if (ziel === 'storniert' && nachEinreichung) {
       meldung.style.display = '';
@@ -666,7 +689,18 @@ export async function oeffneStatusDialogFuer(verordnungId, { supabase, onFertig 
     alert('Verordnung konnte nicht geladen werden.');
     return;
   }
-  oeffneStatusDialog(ausTopf(vRoh), { token, onFertig, supabase });
+  // Dieselbe Zählung wie der Server (Ziel „abrechenbar"): stornierte Behandlungen zählen nicht.
+  // Fehler → undefined = unbekannt, der Dialog verhält sich dann wie bisher.
+  let behandlungen;
+  try {
+    const { count, error: zErr } = await supabase
+      .from('podologie_behandlungen')
+      .select('id', { count: 'exact', head: true })
+      .is('storniert_am', null)
+      .eq('verordnung_id', verordnungId);
+    if (!zErr && typeof count === 'number') behandlungen = count;
+  } catch (_) { /* unbekannt */ }
+  oeffneStatusDialog(ausTopf(vRoh), { token, onFertig, supabase, behandlungen });
 }
 
 /** Eigenes kleines Bestätigungsfenster (kein Zugriff auf showConfirmModal aus dashboard.js). */

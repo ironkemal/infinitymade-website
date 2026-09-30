@@ -50,6 +50,10 @@ export function pruefeLeadKartenIk(kasseEl) {
       }
     }
     if (fehlerEl) fehlerEl.textContent = fehler;
+    // Derselbe Formatsatz stand sonst zweimal da: attachKrankenkasseSuche schreibt ihn beim
+    // change ins Hinweis-Element, dieser Fehler-Text kommt beim Speichern dazu → Hinweis leeren.
+    const hinweisEl = document.getElementById(ikEl.id + 'Hinweis');
+    if (hinweisEl) hinweisEl.textContent = '';
     ikEl.setAttribute?.('aria-invalid', 'true');
     ikEl.focus?.();
 

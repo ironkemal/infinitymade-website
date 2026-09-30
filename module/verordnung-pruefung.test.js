@@ -518,3 +518,36 @@ test('gemischte Liste (E11.7 + L60.0): E11.7 warnt als nicht-endständig, L60.0 
   assert.equal(mismatch.text, 'L60.0 passt nicht zur Diagnosegruppe DF.');
 });
 
+
+// ── Podoloji (a) 30.09.2026: Heilmittel ⇄ Leitsymptomatik über die Position ─
+import { heilmittelGegenLeitsymptomatik as hgl } from './verordnung-pruefung.js';
+
+test('78010 / „klein“ ist bei a), b) und c) in Ordnung — kein Befund', () => {
+  for (const b of ['a', 'b', 'c']) {
+    assert.equal(hgl({ buchstabe: b, dg: 'DF', steht: '78010' }), null);
+    assert.equal(hgl({ buchstabe: b, dg: 'DF', steht: 'Podologische Behandlung (klein)' }), null);
+  }
+});
+test('78020 / „groß“ bei a) oder b) → Warnung, bei c) nichts', () => {
+  for (const b of ['a', 'b']) {
+    const r = hgl({ buchstabe: b, dg: 'DF', steht: 'Podologische Behandlung (groß)' });
+    assert.equal(r.code, 'LS_78020_NUR_KOMPLEX');
+    assert.match(r.text, /^78020 „Behandlung groß“ gehört nur zur Komplexbehandlung \(Leitsymptomatik c\)\. Bei a\) oder b\) wird 78010 abgerechnet\.$/);
+  }
+  assert.equal(hgl({ buchstabe: 'c', dg: 'DF', steht: '78020' }), null);
+  assert.equal(hgl({ buchstabe: 'a', dg: 'DF', steht: '', position: '78020' }).code, 'LS_78020_NUR_KOMPLEX');
+});
+test('andere Maßnahme als die zur Leitsymptomatik gehörende → Abweichung mit Klärungshinweis', () => {
+  const r = hgl({ buchstabe: 'a', dg: 'DF', steht: 'Nagelbearbeitung' });
+  assert.equal(r.code, 'LS_HEILMITTEL_ABWEICHUNG');
+  assert.match(r.text, /^Leitsymptomatik a\) passt zu „Hornhautabtragung“ — auf der Verordnung steht „Nagelbearbeitung“\. Im Einvernehmen mit der verordnenden Praxis korrigieren \(ohne neue Unterschrift\) und die Änderung auf der Rückseite vermerken\.$/);
+  assert.equal(hgl({ buchstabe: 'a', dg: 'DF', steht: 'Hornhautabtragung' }), null);
+  assert.equal(hgl({ buchstabe: 'a', dg: 'DF', steht: '' }), null);
+});
+test('Motor: a) + 78010 im Heilmittelfeld → kein Befund; a) + „groß“ → Warnung, kein Blocker', () => {
+  const ok = pruefeVerordnung(saubereVo({ leitsymptomatik: ['a'], heilmittel: '78010' }), PODO, HEUTE);
+  assert.ok(!codes(ok).includes('LS_HEILMITTEL_ABWEICHUNG') && !codes(ok).includes('LS_78020_NUR_KOMPLEX'));
+  const gross = pruefeVerordnung(saubereVo({ leitsymptomatik: ['a'], heilmittel: 'Behandlung groß' }), PODO, HEUTE);
+  assert.equal(gross.befunde.find(x => x.code === 'LS_78020_NUR_KOMPLEX').schwere, SCHWERE.warnung);
+  assert.equal(gross.ok, true);
+});

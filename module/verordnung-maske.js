@@ -46,7 +46,7 @@ import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-ba
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261001b';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
-import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261001b';
+import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261001g';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.

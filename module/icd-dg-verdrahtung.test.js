@@ -282,3 +282,27 @@ test('Formular-Warnzeile: gemischt (E11.7 in rzIcd, L60.0 in rzIcd2 bei DF) → 
   assert.match(h, /Der ICD benennt nicht .*: L60\.0 \(DF\)/);
 });
 
+
+// P3-4 (30.09.2026): Hinweis folgt der DG, auch bei Handwechsel bei gefülltem Feld.
+test('DG von Hand gewechselt → Hinweis wird mit der neuen Gruppe neu gerechnet', async () => {
+  const m = await maske({ dg: 'DF' });
+  await m.eingabe('rzIcd', 'E11.7');
+  assert.match(m.hinweis(), /E11\.7 ist nicht endständig — für DF passen/);
+  m.f.rzDg.value = 'NF'; m.f.rzDg.dispatchEvent(new Event('change')); await warteLange();
+  assert.equal(m.f.rzDg.value, 'NF');                       // Handeingabe bleibt
+  assert.doesNotMatch(m.hinweis(), /für DF passen/);         // alter Text weg
+  assert.match(m.hinweis(), /E11\.7 \(NF\)/);               // neuer Text mit NF
+  m.f.rzDg.value = 'DF'; m.f.rzDg.dispatchEvent(new Event('change')); await warteLange();
+  assert.equal(m.f.rzDg.value, 'DF');
+  assert.match(m.hinweis(), /für DF passen/);
+});
+
+test('DG-Wechsel bei gefülltem Feld: kein Ping-Pong, keine Rueckschreibung in ICD/DG', async () => {
+  const m = await maske();
+  await m.eingabe('rzIcd', 'E11.74');
+  assert.equal(m.f.rzDg.value, 'DF');
+  m.f.rzDg.value = 'NF'; m.f.rzDg.dispatchEvent(new Event('change')); await warteLange();
+  assert.equal(m.f.rzDg.value, 'NF');                       // eigener Vorschlag DF ersetzt die Handwahl nicht
+  assert.equal(m.f.rzIcd.value, 'E11.74');
+  assert.equal(m.f.rzDg.dataset.dgAuto, undefined);
+});

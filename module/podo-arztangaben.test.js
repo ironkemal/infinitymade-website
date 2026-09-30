@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { behandlungGesperrt, arztangabenLage, BEHANDLUNG_GESPERRT_TEXT } from './podo-arztangaben.js';
+import { behandlungGesperrt, arztangabenLage, sperreTextAusLage } from './podo-arztangaben.js';
 import { fehlendeArztangaben } from '../api-backend/billing/utils/arztangaben.js';
 
 const ok = { therapie_bereich: 'podo', doctor_lanr: '123456601', unterschrift_vorhanden: true };
@@ -12,7 +12,8 @@ test('LANR fehlt -> gesperrt mit Vertragstext', () => {
   for (const l of ['', null, undefined, ' ', '999999999']) {
     const r = behandlungGesperrt({ ...ok, doctor_lanr: l });
     assert.equal(r.gesperrt, true);
-    assert.equal(r.text, BEHANDLUNG_GESPERRT_TEXT);
+    assert.equal(r.text, sperreTextAusLage({ lanrFehlt: true, unterschriftFehlt: false }));
+    assert.match(r.text, /^Behandlung gesperrt: Arzt-Nr\. \(LANR\) fehlt/);
   }
 });
 test('Unterschrift fehlt -> gesperrt', () => {
@@ -36,7 +37,7 @@ test('arztangabenLage', () => {
   assert.deepEqual(arztangabenLage({}), { lanrFehlt: true, unterschriftFehlt: true });
 });
 
-import { podoArztHinweise, SPEICHERN_HINWEIS, BSNR_HINWEIS } from './podo-arztangaben.js';
+import { podoArztHinweise, BSNR_HINWEIS } from './podo-arztangaben.js';
 import { LANR_PRUEFZIFFER_HINWEIS } from './lanr-pruefung.js';
 
 test('podoArztHinweise: nicht podo -> leer', () => {
@@ -44,7 +45,7 @@ test('podoArztHinweise: nicht podo -> leer', () => {
 });
 test('podoArztHinweise: LANR + Unterschrift fehlen -> Satz, BSNR-Hinweis', () => {
   const r = podoArztHinweise({ bereich: 'podo', lanr: '', bsnr: '', unterschrift: false });
-  assert.equal(r.satz, SPEICHERN_HINWEIS);
+  assert.equal(r.satz, sperreTextAusLage({ lanrFehlt: true, unterschriftFehlt: true }));
   assert.deepEqual(r.hinweise, [BSNR_HINWEIS]);
 });
 test('podoArztHinweise: nur Pruefziffer falsch -> Warnung ohne Satz', () => {
@@ -54,4 +55,11 @@ test('podoArztHinweise: nur Pruefziffer falsch -> Warnung ohne Satz', () => {
 });
 test('podoArztHinweise: alles da -> nichts', () => {
   assert.deepEqual(podoArztHinweise({ bereich: 'podo', lanr: '123456601', bsnr: '123456789', unterschrift: true }), { hinweise: [], satz: '' });
+});
+test('Sperr-Text: ein Wortlaut fuer Banner, Speichern-Hinweis und Behandlung', () => {
+  const r = { ...ok, unterschrift_vorhanden: false };
+  const b = behandlungGesperrt(r).text;
+  assert.match(b, /Unterschrift\/Stempel des Arztes fehlt/);
+  assert.equal(podoArztHinweise({ bereich: 'podo', lanr: ok.doctor_lanr, bsnr: 'x', unterschrift: false }).satz, b);
+  assert.equal(sperreTextAusLage({ lanrFehlt: false, unterschriftFehlt: false }), '');
 });

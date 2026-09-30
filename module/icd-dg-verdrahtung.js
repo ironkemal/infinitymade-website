@@ -263,7 +263,10 @@ export function verdrahteIcdDg({ icdId, icd2Id = null, dgId, warnId = null, bere
     dgEl.addEventListener('change', () => {
       if (dgEl.dataset.autoSetting) return;
       delete dgEl.dataset.dgAuto;
-      if (!dgEl.value.trim()) onIcdChange(true);
+      // Leer → commit (eigenen Vorschlag neu bilden). Gefüllt → Hinweis mit der NEUEN Gruppe
+      // neu rechnen (P3-4): vorher blieb der Text der alten Gruppe stehen. `false` räumt nichts
+      // und überschreibt die Handeingabe nicht (dgAuto ist eben gelöscht).
+      onIcdChange(!dgEl.value.trim());
     });
 
     // Gegenrichtung DG → ICD: nur wo sich aus der Diagnosegruppe genau ein Kode

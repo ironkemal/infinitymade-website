@@ -29,15 +29,59 @@
  * `podVordMassnahme()`-Doku in `podologie-abrechnung.js`), wird die rohe
  * Rezeptposition übernommen, aber nur wenn sie 78010 oder 78020 ist; sonst
  * lieber keine Vorbelegung als eine falsche.
+ *
+ * Reform Podoloji (b), 30.09.2026: In DF/NF/QF ist die Behandlung Teil des Tages
+ * (Anlage 1a: Befundung ODER Behandlung, 78010 ist der Regelfall). Ist weder Maßnahme noch
+ * Rezeptposition bekannt, wird trotzdem 78010 vorbelegt — eine leere Vorbelegung ließ
+ * Tagesbehandlungen ohne Position durchrutschen (QA-Beispiel 3e256b9a). UI1/UI2 unverändert.
  */
+
+/** Diagnosegruppen mit a/b/c-Katalog (Spiegel von POD_HEILMITTEL_DGS, hier ohne Import-Kette). */
+const DGS_MIT_BEHANDLUNG = ['DF', 'NF', 'QF'];
 
 /**
  * @param {'a'|'b'|'c'|''} massnahme  aus `podVordMassnahme(vord)`
  * @param {string} [rohPosition]      `heilmittel_position || erstePositionAusItems(heilmittel_items)`
+ * @param {string} [dg]               Diagnosegruppe (Wurzel, z. B. 'DF'; 'DF-a' wird gelesen)
  * @returns {'78010'|'78020'|''}
  */
-export function behandlungspositionVorschlag(massnahme, rohPosition = '') {
+export function behandlungspositionVorschlag(massnahme, rohPosition = '', dg = '') {
   if (massnahme === 'a' || massnahme === 'b' || massnahme === 'c') return '78010';
   const roh = String(rohPosition || '').trim();
-  return (roh === '78010' || roh === '78020') ? roh : '';
+  if (roh === '78010' || roh === '78020') return roh;
+  const wurzel = String(dg || '').trim().toUpperCase().split(/[\s\-–]/)[0];
+  return DGS_MIT_BEHANDLUNG.includes(wurzel) ? '78010' : '';
+}
+
+/**
+ * Tagesbehandlung ohne Behandlungsposition (Reform Podoloji (b)2, 30.09.2026).
+ * In DF/NF/QF fehlt 78010/78020 → kein Fehler, aber eine Rückfrage: es wird dann nur die
+ * Befundung dokumentiert. UI1/UI2 (Nagelspange) kennen 78010/78020 nicht → nie fragen.
+ * @param {string} dg      Diagnosegruppe (Wurzel)
+ * @param {string[]} checks angekreuzte HPNR
+ */
+export function ohneBehandlungsposition(dg, checks) {
+  const wurzel = String(dg || '').trim().toUpperCase().split(/[\s\-–]/)[0];
+  if (!DGS_MIT_BEHANDLUNG.includes(wurzel)) return false;
+  const c = Array.isArray(checks) ? checks : [];
+  return c.length > 0 && !c.includes('78010') && !c.includes('78020');
+}
+
+export const OHNE_BEHANDLUNG_FRAGE =
+  'Keine Behandlungsposition (78010/78020) gewählt — es wird nur die Befundung dokumentiert. Ist das so gewollt?';
+
+export const LS_FEHLT_NOTIZ =
+  'Auf der Verordnung fehlt die Leitsymptomatik — im Einvernehmen mit der verordnenden Praxis ergänzen '
+  + '(ohne neue Unterschrift), sonst wird die Abrechnungsdatei abgewiesen.';
+
+/**
+ * Nicht blockierende Notiz am Kopf der Tagesbehandlung (Podoloji (b)3). Nur DF/NF/QF —
+ * bei UI1/UI2 leitet sich die Leitsymptomatik aus der Diagnosegruppe ab.
+ * @returns {string} Notiz oder ''
+ */
+export function leitsymptomatikNotiz({ dg, massnahme, roh, freitext } = {}) {
+  const wurzel = String(dg || '').trim().toUpperCase().split(/[\s\-–]/)[0];
+  if (!DGS_MIT_BEHANDLUNG.includes(wurzel)) return '';
+  if (massnahme || String(roh || '').trim() || String(freitext || '').trim()) return '';
+  return LS_FEHLT_NOTIZ;
 }

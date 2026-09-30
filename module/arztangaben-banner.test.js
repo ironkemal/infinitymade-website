@@ -6,12 +6,16 @@ import {
   installiereArztSperreBanner,
   BANNER_ID,
 } from './arztangaben-banner.js';
-import { SPEICHERN_HINWEIS } from './podo-arztangaben.js';
+import { sperreTextAusLage } from './podo-arztangaben.js';
+
+const BEIDE = sperreTextAusLage({ lanrFehlt: true, unterschriftFehlt: true });
+const NUR_LANR = sperreTextAusLage({ lanrFehlt: true, unterschriftFehlt: false });
+const NUR_UNTERSCHRIFT = sperreTextAusLage({ lanrFehlt: false, unterschriftFehlt: true });
 
 test('podo + leer -> Text', () => {
-  assert.equal(sperreBannerText({ bereich: 'podo', lanr: '', unterschrift: false }), SPEICHERN_HINWEIS);
-  assert.equal(sperreBannerText({ bereich: 'podo' }), SPEICHERN_HINWEIS);
-  assert.equal(sperreBannerText({ bereich: 'podo', lanr: null, unterschrift: null }), SPEICHERN_HINWEIS);
+  assert.equal(sperreBannerText({ bereich: 'podo', lanr: '', unterschrift: false }), BEIDE);
+  assert.equal(sperreBannerText({ bereich: 'podo' }), BEIDE);
+  assert.equal(sperreBannerText({ bereich: 'podo', lanr: null, unterschrift: null }), BEIDE);
 });
 
 test('podo + LANR 9-stellig + Unterschrift -> leer', () => {
@@ -27,13 +31,13 @@ test('physio -> leer', () => {
 });
 
 test('LANR 999999999 -> Text', () => {
-  assert.equal(sperreBannerText({ bereich: 'podo', lanr: '999999999', unterschrift: true }), SPEICHERN_HINWEIS);
-  assert.equal(sperreBannerText({ bereich: 'podo', lanr: ' 999999999 ', unterschrift: true }), SPEICHERN_HINWEIS);
+  assert.equal(sperreBannerText({ bereich: 'podo', lanr: '999999999', unterschrift: true }), NUR_LANR);
+  assert.equal(sperreBannerText({ bereich: 'podo', lanr: ' 999999999 ', unterschrift: true }), NUR_LANR);
 });
 
 test('Unterschrift fehlt -> Text', () => {
   for (const u of [false, null, undefined]) {
-    assert.equal(sperreBannerText({ bereich: 'podo', lanr: '123456789', unterschrift: u }), SPEICHERN_HINWEIS);
+    assert.equal(sperreBannerText({ bereich: 'podo', lanr: '123456789', unterschrift: u }), NUR_UNTERSCHRIFT);
   }
 });
 
@@ -81,4 +85,12 @@ test('aktualisiere mit unvollstaendigen DOM-Feldern tut nichts und wirft nicht',
 
 test('BANNER_ID Konstante ist rzSperreBanner', () => {
   assert.equal(BANNER_ID, 'rzSperreBanner');
+});
+
+test('Banner nennt, was fehlt (P3-2)', () => {
+  assert.match(NUR_LANR, /^Behandlung gesperrt: Arzt-Nr\. \(LANR\) fehlt/);
+  assert.doesNotMatch(NUR_LANR, /Unterschrift/);
+  assert.match(NUR_UNTERSCHRIFT, /^Behandlung gesperrt: Unterschrift\/Stempel des Arztes fehlt/);
+  assert.doesNotMatch(NUR_UNTERSCHRIFT, /LANR/);
+  assert.match(BEIDE, /LANR\) und Unterschrift\/Stempel fehlen/);
 });

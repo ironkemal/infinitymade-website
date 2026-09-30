@@ -43,6 +43,7 @@
 import { parseIcdList, matchIcdToDg, passendeUnterkodes } from '../icd-dg-match.js?v=20261001b';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260929';
 import { dgWurzel, bereichSchluessel } from './verordnung-regeln.js?v=20260918';
+import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
 
 /** Dringlichkeit der Meldung. `blocker` heisst: so geht die Verordnung nicht durch. */
 export const SCHWERE = { blocker: 'blocker', warnung: 'warnung', hinweis: 'hinweis' };
@@ -117,6 +118,34 @@ function leitsymptomatikListe(roh) {
   // 06.09.2026 drei solche Zeilen.
   s = s.replace(/^[a-z]{2}\d?[\s\-–—:.]+/, '');
   return ['a', 'b', 'c', 'd'].filter(l => s.includes(l));
+}
+
+/**
+ * Verordnetes Heilmittel gegen die angekreuzte Leitsymptomatik (Podoloji (a), 30.09.2026).
+ * Ein Vergleich von Klartext mit dem Katalogtext war falsch: 78010 „klein“ ist die Position von
+ * a), b) UND c); 78020 „groß“ gehört nur zu c). Zuordnung: `POD_HEILMITTEL_KATALOG` (Position je
+ * Maßnahme). Ohne Angabe im Feld keine Aussage. Reine Funktion, nur Warnungen.
+ *
+ * @param {{buchstabe:'a'|'b'|'c', dg:string, steht:string, position?:string}} p
+ * @returns {{code:string, text:string}|null}
+ */
+export function heilmittelGegenLeitsymptomatik({ buchstabe, dg, steht, position }) {
+  const katalog = POD_HEILMITTEL_KATALOG[buchstabe];
+  const text = String(steht || '').trim() || String(position || '').trim();
+  if (!katalog || !text) return null;
+  // 78010 / „klein“ ist die Position aller drei Maßnahmen → nichts zu melden.
+  if (/\b78010\b|klein/i.test(text)) return null;
+  // 78020 / „groß“: nur die Komplexbehandlung (c) hat eine große Position.
+  if (/\b78020\b|gro(ß|ss)/i.test(text)) {
+    if (katalog.hpnrGross || !POD_HEILMITTEL_DGS.includes(String(dg || '').toUpperCase())) return null;
+    return { code: 'LS_78020_NUR_KOMPLEX',
+      text: '78020 „Behandlung groß“ gehört nur zur Komplexbehandlung (Leitsymptomatik c). Bei a) oder b) wird 78010 abgerechnet.' };
+  }
+  const erwartet = katalog.heilmittel;
+  if (text.toLowerCase() === erwartet.toLowerCase()) return null;
+  return { code: 'LS_HEILMITTEL_ABWEICHUNG',
+    text: `Leitsymptomatik ${buchstabe}) passt zu „${erwartet}“ — auf der Verordnung steht „${text}“. `
+      + 'Im Einvernehmen mit der verordnenden Praxis korrigieren (ohne neue Unterschrift) und die Änderung auf der Rückseite vermerken.' };
 }
 
 /**
@@ -304,12 +333,10 @@ export function pruefeVerordnung(vo, regelsatz, opt = {}) {
       if (gewaehlt.includes('c')) buchstabe = 'c';
       else if (gewaehlt.length > 1 && katalog.c) buchstabe = 'c';
 
-      const erwartet = katalog[buchstabe];
       const steht = String(vo?.heilmittel || '').trim();
-      if (erwartet && steht && steht.toLowerCase() !== erwartet.toLowerCase()) {
-        melde(SCHWERE.warnung, 'LS_HEILMITTEL_ABWEICHUNG',
-          `Aus der Leitsymptomatik ${buchstabe}) folgt „${erwartet}" — im Heilmittelfeld steht „${steht}".`,
-          'heilmittel', profil?.quelle);
+      const heilmittelBefund = heilmittelGegenLeitsymptomatik({ buchstabe, dg, steht, position: vo?.heilmittelPosition });
+      if (heilmittelBefund) {
+        melde(SCHWERE.warnung, heilmittelBefund.code, heilmittelBefund.text, 'heilmittel', profil?.quelle);
       }
       if (gewaehlt.includes('c') && gewaehlt.length > 1) {
         melde(SCHWERE.hinweis, 'LS_REDUNDANT',

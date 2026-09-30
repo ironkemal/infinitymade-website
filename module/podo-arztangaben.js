@@ -20,13 +20,21 @@ import { lanrPruefzifferWarnung } from './lanr-pruefung.js?v=20260929r';
 
 export const LANR_ERSATZWERT = '999999999';
 
-export const BEHANDLUNG_GESPERRT_TEXT =
-  'Behandlung nicht möglich: Auf der Verordnung fehlen Arzt-Nr. oder Unterschrift/Stempel '
-  + '(Podologie-Vertrag Anlage 3). Bitte vom Arzt ergänzen lassen und in der Verordnung nachtragen.';
-
-export const SPEICHERN_HINWEIS =
-  'Ohne Arzt-Nr. und Unterschrift/Stempel darf die Behandlung nicht beginnen (Podologie-Vertrag Anlage 3). '
-  + 'Die Verordnung muss vom Arzt ergänzt werden.';
+/**
+ * Der EINE Sperr-Text (Reform P3-2, 30.09.2026): nennt, was auf der Verordnung fehlt.
+ * Banner, Speichern-Hinweis und Behandlungs-Sperre lesen alle hier; kein zweiter Wortlaut.
+ * @param {{lanrFehlt:boolean, unterschriftFehlt:boolean}} lage  aus arztangabenLage()
+ * @returns {string} '' wenn nichts fehlt
+ */
+export function sperreTextAusLage(lage) {
+  const { lanrFehlt, unterschriftFehlt } = lage || {};
+  if (!lanrFehlt && !unterschriftFehlt) return '';
+  const was = (lanrFehlt && unterschriftFehlt) ? 'Arzt-Nr. (LANR) und Unterschrift/Stempel fehlen'
+    : lanrFehlt ? 'Arzt-Nr. (LANR) fehlt'
+    : 'Unterschrift/Stempel des Arztes fehlt';
+  return `Behandlung gesperrt: ${was} (Podologie-Vertrag Anlage 3). `
+    + 'Bitte vom Arzt ergänzen lassen und in der Verordnung nachtragen.';
+}
 
 export const BSNR_HINWEIS = 'BSNR fehlt — kann vom Arztstempel übernommen werden.';
 
@@ -41,7 +49,7 @@ export function behandlungGesperrt(rx) {
   if (!rx || rx.therapie_bereich !== 'podo') return { gesperrt: false, text: '' };
   const a = arztangabenLage({ lanr: rx.doctor_lanr, unterschrift: rx.unterschrift_vorhanden });
   const gesperrt = a.lanrFehlt || a.unterschriftFehlt;
-  return { gesperrt, text: gesperrt ? BEHANDLUNG_GESPERRT_TEXT : '' };
+  return { gesperrt, text: sperreTextAusLage(a) };
 }
 
 /**
@@ -58,5 +66,5 @@ export function podoArztHinweise({ bereich, lanr, bsnr, unterschrift } = {}) {
   const pz = lanrPruefzifferWarnung(lanr);
   if (pz) hinweise.push(pz);
   if (!String(bsnr || '').trim()) hinweise.push(BSNR_HINWEIS);
-  return { hinweise, satz: (a.lanrFehlt || a.unterschriftFehlt) ? SPEICHERN_HINWEIS : '' };
+  return { hinweise, satz: sperreTextAusLage(a) };
 }

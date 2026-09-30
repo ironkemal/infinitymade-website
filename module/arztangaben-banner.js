@@ -10,7 +10,7 @@
  * (Bereich podo + arztangabenLage() meldet fehlende LANR oder Unterschrift).
  */
 
-import { arztangabenLage, SPEICHERN_HINWEIS } from './podo-arztangaben.js?v=20260929r';
+import { arztangabenLage, sperreTextAusLage } from './podo-arztangaben.js?v=20261001g';
 
 export const BANNER_ID = 'rzSperreBanner';
 
@@ -24,11 +24,7 @@ export const BANNER_ID = 'rzSperreBanner';
 export function sperreBannerText({ bereich, lanr, unterschrift } = {}) {
   const b = String(bereich || '').trim().toLowerCase();
   if (b !== 'podo') return '';
-  const lage = arztangabenLage({ lanr, unterschrift });
-  if (lage.lanrFehlt || lage.unterschriftFehlt) {
-    return SPEICHERN_HINWEIS;
-  }
-  return '';
+  return sperreTextAusLage(arztangabenLage({ lanr, unterschrift }));
 }
 
 /**
