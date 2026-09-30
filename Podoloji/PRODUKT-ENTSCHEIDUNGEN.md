@@ -479,3 +479,10 @@
 - **Reddedilen alternatif:** „Bereit" ausblenden — verworfen, die Podologin fragt sich dann, wo es
   ist; deaktiviert + Grund erklärt sich selbst. „Storniert" vorwählen — verworfen (destruktiv).
 - **Annahme:** nicht mit einer Podologin validiert.
+
+### S0-Konsey 30.09: Behandlungstag, Wagner, Vorbelegung, Menü
+- **Karar:** Kein neuer „Behandlung dokumentieren"-Bildschirm — Tagesbehandlung bleibt der einzige Speicherweg, mit einklappbarem Fußbefund-Abschnitt (Standard zu, „Befund unverändert / aktualisieren") und „Folgetermin?"-Dialog nach dem Speichern. Wagner wird im Fußbefund erfasst und als Rozet im Patientenkopf und in der Tagesbehandlung gezeigt (nur DF/E10/E11). Vorbelegung: Planung (Termin/Serie) Befund nur vorgeschlagen; Tagesbehandlung darf nach Regel ankreuzen, mit Begründungstext und Zeile „Verordnet: 78xxx". Menü: Gruppen „Heute · Termine · Patienten · Abrechnung · Praxis · Einstellungen".
+- **Neden:** zwei Speicherwege auf `podologie_behandlungen` würden auseinanderlaufen (muhalif, gkv-302); Wagner ist Fußzustand, nicht Rezept.
+- **Tarih:** 2026-09-30 · Tutanak: `konsey/tutanak/2026-09-30-podologie-s0-behandlungstag-menue.md`
+- **Beta-1'e bağlı:** Befund jede Sitzung? · Tablet oder Telefon beim Hausbesuch? · „Heute" als Startbildschirm? · Therapiezeit am Bildschirm?
+- **gkv-302 Antworten auf die offenen Punkte oben (6b):** 78030/78040 ohne 78010/78020 am selben Tag nicht abrechenbar — Tag bleibt dokumentiert, 78030 fällt aus der Datei; fehlende Leitsymptomatik = Bereit-Sperre (außer UI1/UI2), Praxis darf im Einvernehmen mit dem Arzt ohne neue Unterschrift ergänzen; Leitsymptomatik↔Maßnahme-Abweichung = Warnung. Server-Teil → Sitzung B.
