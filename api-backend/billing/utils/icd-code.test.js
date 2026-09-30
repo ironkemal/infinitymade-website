@@ -5,7 +5,22 @@ import {
   icdOhneStrich,
   icdAbfrageKodes,
   icdTerminalMap,
+  icdFuerDta,
 } from './icd-code.js';
+
+test('icdFuerDta: bereinigt ICD-10-Kodes für DTA (DIA-Segment)', () => {
+  assert.equal(icdFuerDta('M17.1R'), 'M17.1');
+  assert.equal(icdFuerDta('M17.1 G R'), 'M17.1');
+  assert.equal(icdFuerDta('M17.1RG'), 'M17.1');
+  assert.equal(icdFuerDta('E11.40†'), 'E11.40');
+  assert.equal(icdFuerDta('G63.2*'), 'G63.2');
+  assert.equal(icdFuerDta('U69.1!'), 'U69.1');
+  assert.equal(icdFuerDta('e11.7-'), 'E11.7');
+  assert.equal(icdFuerDta('E11.-'), 'E11');
+  assert.equal(icdFuerDta('M54.16'), 'M54.16');
+  assert.equal(icdFuerDta('M54.5X'), 'M54.5X');
+  assert.equal(icdFuerDta(''), '');
+});
 
 test('icdOhneStrich: entfernt nachgestellte Bindestriche und trimmt', () => {
   assert.equal(icdOhneStrich('E11.7-'), 'E11.7');
@@ -98,4 +113,13 @@ _test('dreistellige Kategorie: E11.- -> E11, Abfrage fragt auch E11.-; terminal 
   _assert.ok(_a(['E11.7']).includes('E11.7-') && !_a(['E11.7']).includes('E11.7.-'));
   _assert.equal(_m([{ code: 'E11.-', terminal: false }]).E11, false);
   _assert.equal(_m([{ code: 'X99', terminal: null }]).X99, null);
+});
+
+test('icdFuerDta: Kennzeichen/Strich hinter den Zusätzen (cold review 01.10.2026)', () => {
+  assert.equal(icdFuerDta('E11.40G†'), 'E11.40');
+  assert.equal(icdFuerDta('M17.1R†'), 'M17.1');
+  assert.equal(icdFuerDta('E11.7-G'), 'E11.7');
+  assert.equal(icdFuerDta('E11.7- G'), 'E11.7');
+  assert.equal(icdFuerDta('E11.-G'), 'E11');
+  assert.equal(icdFuerDta('L60.0R'), 'L60.0');
 });

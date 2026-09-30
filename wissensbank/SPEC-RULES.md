@@ -1831,6 +1831,39 @@
 - **Kodda:** `api-backend/billing/kostentraeger/parser.js` — ad üzerinden eşleştirme yapılmamalı
 - **Kapsam:** tüm Fachbereiche
 
+# Kostenträgerdatei — Stichtag (01.10.2026)
+
+### Annahmestelle-Stichtag = Rechnungsdatum = Übermittlungstag (Berlin), DTA ve Papier aynı
+- **Kural:** Datenannahmestelle **ve** Papierannahmestelle, Kostenträgerdatei'den dosyanın
+  **gönderildiği Berlin günü** (= Rechnungsdatum) ile çözülür; üretim günü veya Leistungsdatum
+  kullanılmaz. Leistungsabgabetag yalnız **Leistungserbringer-IK** için ölçüttür.
+  Çeyrek sınırında üretilip sonra gönderilen dosya yeniden çözülmeli / yeniden üretilmelidir.
+- **Kaynak:**
+  - Anlage 1 TP5 V21 kapak (`Anlage_1_TP5_V21_20260115.txt:21-23`): „die zum Zeitpunkt der
+    Datenübermittlung gültige(n) Version(en) anzuwenden" (TA sürümü için; tarih mantığı aynı)
+  - Anlage 1 TP5 V21 Kap. 8 (`:8037`): „Die Korrekturrechnungen sind nach der zum Zeitpunkt
+    der Übermittlung aktuell gültigen Technischen Anlage zu erstellen" → Korrektur (VKZ 02/03/04)
+    da gönderim günüyle çözülür
+  - Anhang 3 Anlage 1 TP5 V10 (Stand 14.04.2026, anzuwenden ab 01.02.2027) VDT
+    „Gültigkeitsdatum ab / bis" JJJJMMTT (`:706-708`) — satır bazlı geçerlilik penceresi.
+    ⚠️ Yürürlükteki V09 arşivde yok; aynı alan yapısı V09'a karşı doğrulanmadı.
+    Anhang 3'te açık bir „Stichtag = Übermittlungstag" cümlesi **bulunamadı** (grep: maßgeb/Stichtag).
+  - TP5 Infoschreiben BAHN-BKK (Dienstleisterwechsel 01.01.2026) `:13` „ab dem Rechnungsdatum
+    01.01.2026 an folgende Adresse" (Papier) · `:38-41` eski adrese geç ulaşan belge
+    „an den Rechnungssteller zurückgesandt" · `:32-36` yazılı Einspruch/Korrektur'da
+    „Abrechnungsdatum der Ursprungsrechnung maßgebend", ama Heilmittel (AC B)
+    Nachberechnungen yeni Dienstleister'e — **tek kasanın mektubu, genel kural değil**
+  - Richtlinien-Text (20.11.2006) § 5 Abs. 3 (`Richtlinien-Text_061120.txt:219-221`):
+    „das am Leistungsabgabetag gültige Institutionskennzeichen (IK) des Leistungserbringers"
+- **Geçerlilik:** V21 (01.10.2025–31.01.2027); V22/Anhang 3 V10 geçişinde yeniden kontrol
+- **Kodda:** `api-backend/lib/berlin-tag.js:14` `berlinHeute()` ·
+  `api-backend/billing/kostentraeger/annahmestelle.js:44` `giltAm()` (valid_from/valid_to, NULL=offen) ·
+  `:170` `ladeAnnahmestelle()` · `:296` `ladePapierannahmestelle()` ·
+  `api-backend/db/migrations/0046_kostentraeger_gueltigkeit_annahmestellen.sql` ·
+  ❌ View `kostentraeger_auswahl` henüz `valid_from`'a bakmıyor (01.10.2026, migration bekliyor) ·
+  ❌ gönderim anında yeniden çözme / çeyrek-uyarısı henüz yok (`/abrechnung/:id/empfaenger-pruefung` planlı)
+- **Kapsam:** tüm Fachbereiche · DTA + Papier (Begleitzettel/Urbelege) · VKZ 01/02/03/04/10
+
 ---
 
 ## Doğrulama kuyruğu

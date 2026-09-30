@@ -51,7 +51,7 @@ import {
   summenstatusFuer,
 } from '../codes/anlage3_v22.js';
 import { preflight as runPreflight, pruefeDatenstrom } from './preflight.js';
-import { icdOhneStrich } from '../utils/icd-code.js';
+import { icdFuerDta } from '../utils/icd-code.js';
 
 const num = (v) => Number(v) || 0;
 const r2 = (v) => +Number(v).toFixed(2);
@@ -235,10 +235,11 @@ function buildSLLAMessage({
   // Komma-Split ist Absicht und kein Rest: er faengt Altbestaende ein, die den
   // zusammengeklebten String noch mitbringen.
   // Bindestrich am Ende ("E11.7-") entfernen, damit das DIA-Segment nie einen Strich bekommt (gkv-302 30.09.2026, ICD-10-GM 2026 Metadaten Feld 7).
+  // Sonderzeichen (†*!) und Zusätze (GVZA, LRB) vor DTA-Übermittlung entfernen (gkv-302 01.10.2026, Anlage 1 TP5 V21 §5.5.3.3 DIA).
   const icdListe = (Array.isArray(verordnung.icd10Liste) && verordnung.icd10Liste.length
       ? verordnung.icd10Liste
       : String(verordnung.icd10 || '').split(','))
-    .map(s => icdOhneStrich(String(s ?? '').trim()))
+    .map(s => icdFuerDta(String(s ?? '').trim()))
     .filter(Boolean);
 
   if (icdListe.length === 0) {

@@ -46,6 +46,16 @@ test('ICD-10 M54.5 valid',             () => assert.equal(isValidIcd10('M54.5'),
 test('ICD-10 with modifier valid',     () => assert.equal(isValidIcd10('M54.5G'), true));
 test('ICD-10 bare letter invalid',     () => assert.equal(isValidIcd10('M'), false));
 test('ICD-10 with trailing dash E11.7- valid', () => assert.equal(isValidIcd10('E11.7-'), true));
+test('ICD-10 mit Seitenlokalisation B gültig', () => assert.equal(isValidIcd10('M17.1B'), true));
+test('ICD-10 mit Kreuz † gültig',              () => assert.equal(isValidIcd10('E11.40†'), true));
+test('ICD-10 mit Stern * gültig',              () => assert.equal(isValidIcd10('G63.2*'), true));
+test('ICD-10 mit Leerzeichen und G R gültig',  () => assert.equal(isValidIcd10('M54.5 G R'), true));
+test('ICD-10 mit kombiniertem RG gültig',      () => assert.equal(isValidIcd10('M54.5RG'), true));
+test('ICD-10 mit kombiniertem GL gültig',      () => assert.equal(isValidIcd10('M54.5GL'), true));
+test('ICD-10 M54.5X ungültig',                 () => assert.equal(isValidIcd10('M54.5X'), false));
+test('ICD-10 M54.5GG doppelte Sicherheit ungültig', () => assert.equal(isValidIcd10('M54.5GG'), false));
+test('ICD-10 M5 zu kurz ungültig',             () => assert.equal(isValidIcd10('M5'), false));
+test('ICD-10 M54.123 3 Nachkommastellen ungültig', () => assert.equal(isValidIcd10('M54.123'), false));
 
 test('Diagnosegruppe WS2 valid',       () => assert.equal(isValidDiagnosegruppe('WS2'), true));
 test('Diagnosegruppe EX2a valid',      () => assert.equal(isValidDiagnosegruppe('EX2a'), true));
@@ -594,3 +604,10 @@ test('E11.7- mit icdTerminal {"E11.7": false} -> genau eine V:01016 Warnung', ()
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);
+
+test('ICD-10 Kennzeichen/Strich hinter den Zusätzen gültig (cold review 01.10.2026)', () => {
+  for (const k of ['E11.40G†', 'M54.5G*', 'M17.1R†', 'E11.7-G', 'E11.7- G', 'E11.-G'])
+    assert.equal(isValidIcd10(k), true, k);
+  for (const k of ['E†11.40', 'E11.40††', 'M54.5-X', 'E11.4-0'])
+    assert.equal(isValidIcd10(k), false, k);
+});

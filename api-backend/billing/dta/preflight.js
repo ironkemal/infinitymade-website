@@ -23,7 +23,7 @@ import {
 } from '../codes/anlage3_v22.js';
 import { istGueltigerLegs, GUELTIGE_LEGS } from '../codes/legs.js';
 import { LEITSYMPTOMATIK_MUSTER } from './leitsymptomatik.js';
-import { icdOhneStrich } from '../utils/icd-code.js';
+import { icdFuerDta } from '../utils/icd-code.js';
 import { icdDgPreflightBefund } from '../../ai/validators/icdDgRules.js';
 import { getIcdDgRules } from '../../ai/validators/catalog.js';
 import { behandlungstageJeDatum, TAGESHOECHSTZAHL } from '../utils/behandlungstage.js';
@@ -99,11 +99,17 @@ export function isValidBsnr(bsnr) {
   return /^\d{9}$/.test(bsnr || '');
 }
 
-// ICD-10-GM: letter + 2 digits + optional .digit-or-letter + optional G/V/Z/A modifier.
-// Bindestrich am Ende ("E11.7-") vor der Prüfung entfernen (gkv-302 30.09.2026, ICD-10-GM 2026 Metadaten Feld 7).
+// ICD-10-GM: Buchstabe + 2 Ziffern + optional .1-2 Ziffern + optional Sonderzeichen (†*!) + Diagnosesicherheit (GVZA) / Seitenlokalisation (LRB).
+// B neu, †*! neu, Buchstaben nach dem Punkt nicht mehr erlaubt (Beleg: in icd10_titles hat kein Kode einen Buchstaben nach dem Punkt).
+// Vor der Prüfung: trim, Großbuchstaben, Leerzeichen weg, EIN †/*/! und ein Strich nur am Ende weg — gleiche Zerlegung wie icdFuerDta (gkv-302 01.10.2026).
 export function isValidIcd10(code) {
   if (!code) return false;
-  return /^[A-Z]\d{2}(\.[0-9A-Z]{1,2})?[GVZALR]?$/.test(icdOhneStrich(code));
+  // Dieselbe Zerlegung wie icdFuerDta: höchstens EIN †/*/! und ein Strich, beide nur am Ende
+  // (auch „E11.40G†", „E11.7-G"); was danach übrig ist, muss Kern + Zusätze sein.
+  const bereinigt = String(code).trim().toUpperCase().replace(/\s+/g, '')
+    .replace(/[†*!](?=[-GVZALRB]*$)/, '')
+    .replace(/\.?-+(?=[GVZALRB]{0,2}$)/, '');
+  return /^[A-Z]\d{2}(\.\d{1,2})?([GVZA]?[LRB]?|[LRB]?[GVZA]?)$/.test(bereinigt);
 }
 
 // Diagnosegruppe (Heilmittelkatalog): 2-4 chars (e.g. WS1, WS2, EX2a, PN, AT3).
@@ -384,7 +390,7 @@ export function preflight(input) {
     // Bindestrich-bereinigt prüfen und melden (gkv-302 30.09.2026).
     if (input.icdTerminal && typeof input.icdTerminal === 'object') {
       const kodes = [icdHaupt, ...(Array.isArray(v.icd10Liste) ? v.icd10Liste : [])]
-        .map(k => icdOhneStrich(k)).filter(Boolean);
+        .map(k => icdFuerDta(k)).filter(Boolean);   // Zusätze (†*!, GVZA, LRB) weg, sonst trifft der Katalog nicht (01.10.2026)
       [...new Set(kodes)].forEach(kode => {
         if (input.icdTerminal[kode] === false)
           W(warnings, 'V:01016', `${at}.verordnung.icd10`,
@@ -402,7 +408,8 @@ export function preflight(input) {
     // Regeln: ai/validators/diagnosegruppen.json (Spiegel der Tabelle diagnosegruppen).
     {
       const befund = icdDgPreflightBefund({
-        icd10: [icdHaupt, ...(Array.isArray(v.icd10Liste) ? v.icd10Liste : [])].filter(Boolean).join(','),
+        // Zusätze abstreifen wie im DIA-Segment (icdFuerDta), sonst meldet der Abgleich „M17.1R“ als fremd.
+        icd10: [icdHaupt, ...(Array.isArray(v.icd10Liste) ? v.icd10Liste : [])].map(k => icdFuerDta(k)).filter(Boolean).join(','),
         diagnosegruppe: v.diagnosegruppe,
         diagnosetext: v.diagnosetext,
       }, input.icdDgRegeln ?? getIcdDgRules());

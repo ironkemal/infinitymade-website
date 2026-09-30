@@ -116,6 +116,21 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 01.10.2026 · Oturum B — ICD DTA-Reinform, Stichtag-Prüfung Empfänger (Çeyrek geçişi)
+- `icdFuerDta(code)` (`api-backend/billing/utils/icd-code.js`). Niye: §302 DIA segmentine yalnız saf ICD-10-GM kodu
+  (`^[A-Z]\d{2}(\.\d{1,2})?$`) gitsin; `-`, `†*!`, G/V/Z/A, L/R/B ekleri soyulur (gkv-302 01.10.2026, Anlage 1 TP5 V21
+  §5.5.3.3, ICD-10-GM Feld 7). Nerede: `dta/builder.js` icdListe, `dta/preflight.js` (endständig + ICD↔DG), `api/abrechnung.routes.js`
+  (terminal lookup, podo UI1/UI2 L60.0 kilidi). `isValidIcd10` aynı zerlegung ile toleranslı (B ve †*! kabul). Frontend'de
+  `ICD_SHAPE` ayrı katman (ayna, `icdOhneStrich` ↔ `normalizeIcd` ailesi).
+- Yeni `api-backend/billing/kostentraeger/stichtag-pruefung.js`: `bewerteEmpfaengerWechsel` (saf), `pruefeEmpfaenger` (DB),
+  `quartalVon`, `berlinTagVon`, `anschriftGleich`. Niye: çeyrek geçişinde (30.09 üretilip 02.10 gönderilen dosya) DTA alıcısı /
+  Papierannahmestelle değiştiyse engel, çeyrek farkında uyarı; Stichtag = Übermittlungstag (gkv-302). Nerede: `abrechnung.routes.js`
+  `dta-bytes` (409 / uyarı header'ı), `upload-signed` (409 / `stichtagWarnung`), `mark-sent` (yalnız `stichtagWarnung`), yeni
+  `GET /abrechnung/:id/empfaenger-pruefung`. Routes'ta yeni `bereichFuerAbrechnung(supabase, abrechnung, {tenantId})` (Podologie:
+  abrechnung_zeile/`prescriptions.therapie_bereich='podo'`, yoksa owner `profiles.sector`).
+- **Kopya adayı (listelendi, birleştirilmedi — karar Kemal'in):** 🟡 `berlinTagVon` ↔ `api-backend/lib/berlin-tag.js` `berlinHeute`
+  (aynı aile; yukarıdaki 01.10 "Berlin günü tek kaynak" kaydındaki kopya listesine eklenir).
+
 ### 01.10.2026 · Oturum B — Berlin günü tek kaynak (O-139, Annahmestelle Stichtag)
 - `berlinHeute(jetzt?)`, `istStichtag(s)` (neu `api-backend/lib/berlin-tag.js` + test). Niye: Stichtag = Rechnungsdatum =
   Übermittlungstag; UTC `current_date` / `toISOString().slice(0,10)` 00:00–02:00 Berlin arası bir gün geride kalıyordu →

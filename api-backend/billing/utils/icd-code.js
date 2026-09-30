@@ -15,6 +15,31 @@ export function icdOhneStrich(code) {
 }
 
 /**
+ * Bereinigt einen ICD-10-Kode für die DTA-Übermittlung (DIA-Segment im §302-DTA).
+ *
+ * Im DIA-Segment steht der reine ICD-10-GM-Kode: ^[A-Z]\d{2}(\.\d{1,2})?$ (max. 6 Zeichen).
+ * Nachgestellte Bindestriche, Sonderzeichen (†, *, !) sowie Zusätze zur
+ * Diagnosesicherheit (G, V, Z, A) und Seitenlokalisation (L, R, B) werden entfernt.
+ * Passt der Kode nach Bereinigung nicht auf das Muster, wird der bereinigte Rest
+ * unverändert zurückgegeben, damit die Prüfung ihn ablehnt.
+ * Quelle: gkv-302, 01.10.2026, Anlage 1 TP5 V21 §5.5.3.3 DIA; ICD-10-GM 2026 Metadaten Feld 7.
+ *
+ * @param {?string} code
+ * @returns {string}
+ */
+export function icdFuerDta(code) {
+  // Reihenfolge der Zusätze ist in der Praxis beliebig („E11.40G†", „E11.7-G") —
+  // Kennzeichen und Strich werden deshalb nur am ENDE (vor/zwischen den Zusatzbuchstaben)
+  // entfernt, nie mitten im Kode (cold review 01.10.2026).
+  const rest = String(code ?? '').trim().toUpperCase()
+    .replace(/\s+/g, '')
+    .replace(/[†*!](?=[-GVZALRB]*$)/, '')
+    .replace(/\.?-+(?=[GVZALRB]{0,2}$)/, '');
+  const match = rest.match(/^([A-Z]\d{2}(?:\.\d{1,2})?)([GVZALRB]{1,2})?$/);
+  return match ? match[1] : rest;
+}
+
+/**
  * Erzeugt für die Datenbankabfrage (icd10_titles) sowohl die bindestrichfreie
  * als auch die mit Bindestrich versehene Katalogform je Kode.
  *

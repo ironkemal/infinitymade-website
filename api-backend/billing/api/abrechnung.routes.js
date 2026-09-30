@@ -25,6 +25,7 @@ import { podoPositionsnummer } from '../codes/podo_positionsnummer.js';
 import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
+import { pruefeEmpfaenger } from '../kostentraeger/stichtag-pruefung.js';
 import { parseZaaFile } from '../zaa/parser.js';
 import { logAccess } from '../../_lib/access-log.js';
 import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js';
@@ -55,7 +56,7 @@ import { verworfeneNummerFesthalten } from './verworfen.js';
 import { buildEncryptedFilename } from '../dta/filename.js';
 import { verschluesseleFuerEmpfaenger } from '../dta/verschluesselung.js';
 import { ladeItsgTrustAnchors, pruefeTrustAnchorFrische } from '../dta/itsg-trust-anchor.js';
-import { icdOhneStrich, icdAbfrageKodes, icdTerminalMap } from '../utils/icd-code.js';
+import { icdOhneStrich, icdFuerDta, icdAbfrageKodes, icdTerminalMap } from '../utils/icd-code.js';
 
 const router = express.Router();
 // ⚠️ Bewusst OHNE Absicherung auf fehlende Umgebungsvariablen: fehlen sie,
@@ -240,6 +241,74 @@ function legsFuerSector(sector) {
 // stillschweigend den falschen Katalogausschnitt und damit den falschen Preis.
 function abrechnungscodeFuer(sector) {
   return abrechnungscodeAusLegs(legsFuerSector(sector));
+}
+
+/**
+ * Ermittelt Fachbereich und Abrechnungscode für eine Abrechnung.
+ *
+ * Podologie hat eigene Annahmestellen-Ketten (71/72 -> 99 -> 00) und den
+ * Abrechnungscode 71. Sie wird über therapie_bereich = 'podo' an den Belegen
+ * (abrechnung_zeile / prescriptions) oder den Mandanten-Sektor erkannt
+ * (gespiegelt aus den create- und korrektur-Routen, Zeilen ~758, ~3181, ~3864).
+ *
+ * @param {object} supabase
+ * @param {object} abrechnung
+ * @param {object} [opts]
+ * @param {string} [opts.tenantId]
+ * @param {string} [opts.tenantSector]
+ * @returns {Promise<{ bereich: string, eigenerAbrechnungscode: string }>}
+ */
+export async function bereichFuerAbrechnung(supabase, abrechnung, { tenantId = null, tenantSector = null } = {}) {
+  // 1. Belege prüfen: abrechnung_zeile oder prescriptions
+  if (abrechnung?.id) {
+    const { data: zeile } = await supabase
+      .from('abrechnung_zeile')
+      .select('therapie_bereich')
+      .eq('abrechnung_id', abrechnung.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (zeile?.therapie_bereich === 'podo') {
+      return { bereich: 'podologie', eigenerAbrechnungscode: '71' };
+    }
+
+    if (!zeile) {
+      const { data: rx } = await supabase
+        .from('prescriptions')
+        .select('therapie_bereich')
+        .eq('abrechnung_id', abrechnung.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (rx?.therapie_bereich === 'podo') {
+        return { bereich: 'podologie', eigenerAbrechnungscode: '71' };
+      }
+    }
+  }
+
+  // 2. Tenant-Sektor aus Mandantenprofil
+  let sector = tenantSector;
+  if (!sector) {
+    const tid = tenantId || abrechnung?.owner_id;
+    if (tid) {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('sector')
+        .eq('id', tid)
+        .maybeSingle();
+      if (prof?.sector) sector = prof.sector;
+    }
+  }
+
+  sector = sector || 'physiotherapy';
+  if (sector === 'podologie') {
+    return { bereich: 'podologie', eigenerAbrechnungscode: '71' };
+  }
+
+  return {
+    bereich: sector,
+    eigenerAbrechnungscode: abrechnungscodeFuer(sector),
+  };
 }
 
 /**
@@ -1193,16 +1262,39 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
-      .select('id, owner_id, dateiname, storage_path')
+      .select('id, owner_id, dateiname, storage_path, kostentraeger_ik, empfaenger_ik, created_at')
       .eq('id', req.params.id)
       .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
     if (!ab.storage_path) return res.status(409).json({ error: 'Kein DTA-Inhalt vorhanden' });
 
+    // Stichtag-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
+    let stichtagPruefung = null;
+    try {
+      const { bereich, eigenerAbrechnungscode } = await bereichFuerAbrechnung(supabase, ab, { tenantId });
+      stichtagPruefung = await pruefeEmpfaenger(supabase, ab, { bereich, eigenerAbrechnungscode });
+    } catch (stichtagErr) {
+      console.error('[abrechnung/dta-bytes] Stichtag-Prüfung fehlgeschlagen (wird toleriert):', stichtagErr);
+    }
+
+    if (stichtagPruefung?.blockiert) {
+      const ersterBlock = stichtagPruefung.meldungen.find(m => m.stufe === 'block');
+      return res.status(409).json({
+        error: ersterBlock?.text || 'Abrechnung am heutigen Stichtag nicht übermittelbar.',
+        code: ersterBlock?.code || 'STICHTAG_BLOCKIERT',
+        meldungen: stichtagPruefung.meldungen,
+      });
+    }
+
     const { data: blob, error: dlErr } = await supabase.storage
       .from('abrechnungen').download(ab.storage_path);
     if (dlErr || !blob) return res.status(500).json({ error: 'Download fehlgeschlagen' });
+
+    const warnungen = (stichtagPruefung?.meldungen || []).filter(m => m.stufe === 'warnung');
+    if (warnungen.length > 0) {
+      res.setHeader('X-Praxura-Stichtag-Warnung', warnungen.map(w => w.code).join(', '));
+    }
 
     const buf = Buffer.from(await blob.arrayBuffer());
     return res.json({
@@ -1464,11 +1556,29 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
-      .select('id, owner_id, storage_path, empfaenger_ik')
+      .select('id, owner_id, storage_path, empfaenger_ik, kostentraeger_ik, created_at')
       .eq('id', req.params.id)
       .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
+
+    // Stichtag-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
+    let stichtagPruefung = null;
+    try {
+      const { bereich, eigenerAbrechnungscode } = await bereichFuerAbrechnung(supabase, ab, { tenantId });
+      stichtagPruefung = await pruefeEmpfaenger(supabase, ab, { bereich, eigenerAbrechnungscode });
+    } catch (stichtagErr) {
+      console.error('[abrechnung/upload-signed] Stichtag-Prüfung fehlgeschlagen (wird toleriert):', stichtagErr);
+    }
+
+    if (stichtagPruefung?.blockiert) {
+      const ersterBlock = stichtagPruefung.meldungen.find(m => m.stufe === 'block');
+      return res.status(409).json({
+        error: ersterBlock?.text || 'Abrechnung am heutigen Stichtag nicht übermittelbar.',
+        code: ersterBlock?.code || 'STICHTAG_BLOCKIERT',
+        meldungen: stichtagPruefung.meldungen,
+      });
+    }
 
     const basePath = ab.storage_path || `${tenantId}/${req.params.id}/payload`;
     const signedPath = basePath + '.p7m';
@@ -1554,6 +1664,7 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
       ok: true,
       signedPath,
       ...verschluesselungErgebnis,
+      ...(stichtagPruefung?.meldungen?.length ? { stichtagWarnung: stichtagPruefung.meldungen } : {}),
     });
   } catch (e) {
     console.error('[abrechnung/upload-signed]', e);
@@ -1739,6 +1850,56 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
   }
 });
 
+// Empfänger-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
+router.get('/abrechnung/:id/empfaenger-pruefung', async (req, res) => {
+  try {
+    const hdr = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    // Resolve tenant ID (employees map to their owner)
+    const { data: profile } = await supabase
+      .from('profiles').select('id, role, owner_id, sector').eq('id', u.user.id).single();
+    const tenantId = profile?.role === 'employee' && profile?.owner_id
+      ? profile.owner_id
+      : u.user.id;
+
+    const abrechnungId = req.params.id;
+
+    // Ownership check — fetch the record and verify it belongs to this tenant
+    const { data: ab, error: abErr } = await supabase
+      .from('abrechnung')
+      .select('id, owner_id, kostentraeger_ik, empfaenger_ik, created_at')
+      .eq('id', abrechnungId)
+      .maybeSingle();
+    if (abErr) return res.status(500).json({ error: abErr.message });
+    if (!ab || ab.owner_id !== tenantId) {
+      return res.status(403).json({ error: 'Nicht berechtigt' });
+    }
+
+    const { bereich, eigenerAbrechnungscode } = await bereichFuerAbrechnung(supabase, ab, {
+      tenantId,
+    });
+
+    const pruefung = await pruefeEmpfaenger(supabase, ab, {
+      bereich,
+      eigenerAbrechnungscode,
+    });
+
+    return res.json({
+      blockiert:     pruefung.blockiert,
+      meldungen:     pruefung.meldungen,
+      gespeichertIk: pruefung.gespeichertIk,
+      heuteIk:       pruefung.heuteIk,
+    });
+  } catch (e) {
+    console.error('[abrechnung/empfaenger-pruefung]', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // Manual status flip (after the therapist uploaded the .dta to the DAS portal).
 router.post('/abrechnung/:id/mark-sent', async (req, res) => {
   try {
@@ -1750,7 +1911,7 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
 
     // Resolve tenant ID (employees map to their owner)
     const { data: profile } = await supabase
-      .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
+      .from('profiles').select('id, role, owner_id, sector').eq('id', u.user.id).single();
     const tenantId = profile?.role === 'employee' && profile?.owner_id
       ? profile.owner_id
       : u.user.id;
@@ -1759,9 +1920,24 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
 
     // Ownership check — fetch the record and verify it belongs to this tenant
     const { data: abrech } = await supabase
-      .from('abrechnung').select('owner_id').eq('id', abrechnungId).maybeSingle();
+      .from('abrechnung')
+      .select('id, owner_id, kostentraeger_ik, empfaenger_ik, created_at')
+      .eq('id', abrechnungId)
+      .maybeSingle();
     if (!abrech || abrech.owner_id !== tenantId) {
       return res.status(403).json({ error: 'Nicht berechtigt' });
+    }
+
+    // Stichtag-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
+    // ⚠️ Versand ist schon passiert: NICHT blockieren, nur Warnungen/Meldungen in Antwort geben.
+    let stichtagPruefung = null;
+    try {
+      const { bereich, eigenerAbrechnungscode } = await bereichFuerAbrechnung(supabase, abrech, {
+        tenantId,
+      });
+      stichtagPruefung = await pruefeEmpfaenger(supabase, abrech, { bereich, eigenerAbrechnungscode });
+    } catch (stichtagErr) {
+      console.error('[abrechnung/mark-sent] Stichtag-Prüfung fehlgeschlagen (wird toleriert):', stichtagErr);
     }
 
     const { error } = await supabase
@@ -1769,7 +1945,10 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
       .update({ status: 'gesendet', zaa_uploaded_at: new Date().toISOString() })
       .eq('id', abrechnungId);
     if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ok: true });
+    return res.json({
+      ok: true,
+      ...(stichtagPruefung?.meldungen?.length ? { stichtagWarnung: stichtagPruefung.meldungen } : {}),
+    });
   } catch (e) {
     console.error('[abrechnung/mark-sent]', e);
     return res.status(500).json({ error: e.message });
@@ -3368,7 +3547,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       //    des frueheren Arrays — beide muessen geprueft werden.
       // Bindestrich am Ende entfernen (gkv-302 30.09.2026, ICD-10-GM 2026 Metadaten Feld 7).
       const kodes = [v.icd10, v.icd10_2].filter(Boolean).join(',')
-        .split(/[,;]/).map(s => icdOhneStrich(s.replace(/\s+/g, '')).toUpperCase()).filter(Boolean);
+        .split(/[,;]/).map(s => icdFuerDta(s)).filter(Boolean);   // „L60.0R" ist L60.0 (Zusätze weg, 01.10.2026)
       if (kodes.length > 0 && !kodes.includes('L60.0')) {
         zielListe.push(
           `Verordnung ${beleg} (${v.patient_name || '—'}): Diagnosegruppe ${dgRoot} lässt ` +
@@ -3453,7 +3632,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // Dateierzeugung NICHT verhindern: dann entfaellt lediglich der Hinweis.
     let icdTerminal;
     try {
-      const kodes = [...new Set(prescriptions.flatMap(p => p.verordnung?.icd10Liste || []).filter(Boolean))];
+      const kodes = [...new Set(prescriptions.flatMap(p => p.verordnung?.icd10Liste || []).map(k => icdFuerDta(k)).filter(Boolean))];
       if (kodes.length) {
         const queryCodes = icdAbfrageKodes(kodes);
         const { data: icdRows, error: icdErr } = await supabase
