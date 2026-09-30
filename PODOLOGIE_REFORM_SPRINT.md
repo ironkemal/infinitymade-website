@@ -40,8 +40,8 @@ dolanmaz, Kemal'e sorar.
 |---|---|---|---|
 | S0 | Ürün kararları (/konsey) + Beta-1 soruları | evet | ⏳ |
 | S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | ✅ 1.1–1.11 (29.09) — canlı geçti, 1.9 QA'da veri yok (birim testleri); açık: 1.12 — bkz. S1 devir notu |
-| S2 | §302 durum semantiği | kısmen (gkv-302) | ✅ 2.1–2.4, 2.6, 2.7 (29.09) — 2.5 bilerek yok; canlı: 2.1 geçti, diğerleri bkz. canli-test |
-| S3 | Güvenilirlik ve veri doğruluğu | hayır | ✅ 3.1–3.7, 3.9–3.11, 3.13 (29.09) — açık: 3.8, 3.12 (Kemal kararı) |
+| S2 | §302 durum semantiği | kısmen (gkv-302) | ✅ 2.1–2.4, 2.6, 2.7 (29.09) + 2.3b ✅ (30.09, `f8ea2aa`) — 2.5 bilerek yok; canlı GEÇTİ, bkz. S2/S3 devir notu (30.09) |
+| S3 | Güvenilirlik ve veri doğruluğu | hayır | ✅ 3.1–3.7, 3.9–3.11, 3.13, 3.8a (`e665aca`, 30.09) — 3.8b hazır/beklemede (0044 canlı onayı Kemal'de; yama `C:/tmp/praxura/s3-8b.patch`) · 3.12 ayrı iş (Kemal 30.09: „2'yi ayrı bir iş olarak bırak") · `datumDe` birleşti (`f30f407`) |
 | S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | ⏳ |
 | S5 | Mobil / tablet (yalnız CSS) | hayır | ⏳ |
 | S6 | Temizlik: yalnız Almanca, ölü kod, konsol | hayır | ⏳ |
@@ -138,7 +138,8 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 - canli-test yan bulguları (P2): Neue Verordnung'da öneri listesi açıkken Escape bütün maskeyi kapatıp veriyi siliyor (`dashboard.js:~1279`); Neue Abrechnung tablosunda "Einheiten 2 / 1" — 78030 seans sayılıyor (`abrechnung-auswahl.js:~843`). S3'e aday.
 - 2.3: onay metni gkv-302 onaylı; sunucu 428 `OFFENE_EINHEITEN`; onay `prescription_validations` (engine `abrechnung-freigabe`, yalnız Erprobung/Echt). Denetimde yakalandı: ajan olmayan kolon `prescriptions.behandlungseinheiten` kullanmıştı (doğrusu `anzahl_einheiten`; `behandlungseinheiten` yalnız `verordnung-topf.js` sınır adı) — PATCH route'u tümden 500'e düşürecekti.
 - 2.2: test dosyasında ödeme/ZAA düğmeleri gizli; ama Anleitung rehberindeki "gönderildi işaretle" (`dashboard.js:~13016`, mark-sent) test dosyasında hâlâ görünüyor — küçük boşluk.
-- **2.3b (açık, podoloji önerisi B, 29.09):** Bereit'te onaylanan açık birimli reçete §302 listesinde „N offen" etiketiyle **varsayılan seçili** gelsin, Erstellen'de ikinci onay çıkmasın; ancak onaydan sonra açık birim sayısı değiştiyse ya da reçeteye ileri tarihli Termin bağlıysa bir kez daha sorulsun. Şemasız yol: sunucu `prescription_validations` (`abrechnung-freigabe` / `OFFENE_EINHEITEN` / `result.aktion='bereit'`) kaydındaki `input_snapshot.offen`'a bakar. canli-test 29.09: Bereit yolu (428 + birebir metin + Abbrechen) GEÇTİ; podo listesi yalnız `bereit` gösterdiği için liste/Erstellen yolu yalnız Bereit sonrası erişilebilir — sınanmadı (QA reçetesi `ddf57e1b`, 1/3).
+- **2.3b ✅ `f8ea2aa` (30.09, canlı GEÇTİ) — podoloji önerisi B:** Bereit'te onaylanan açık birimli reçete §302 listesinde „N offen" etiketiyle **varsayılan seçili** gelsin, Erstellen'de ikinci onay çıkmasın; ancak onaydan sonra açık birim sayısı değiştiyse ya da reçeteye ileri tarihli Termin bağlıysa bir kez daha sorulsun. Şemasız yol: sunucu `prescription_validations` (`abrechnung-freigabe` / `OFFENE_EINHEITEN` / `result.aktion='bereit'`) kaydındaki `input_snapshot.offen`'a bakar. canli-test 29.09: Bereit yolu (428 + birebir metin + Abbrechen) GEÇTİ; podo listesi yalnız `bereit` gösterdiği için liste/Erstellen yolu yalnız Bereit sonrası erişilebilir — sınanmadı (QA reçetesi `ddf57e1b`, 1/3).
+- 2.3b sonrası 30.09 podoloji kararı (`f4d31dc`, `Podoloji/PRODUKT-ENTSCHEIDUNGEN.md`): Rückfrage'de gkv-302 metni aynen kalır, altına *sebep satırı* eklenir (ileri tarihli Termin / Freigabe'den beri değişen offen sayısı); §302 listesinde Einheiten hücresi „erbracht / verordnet · N offen" gösterir (HPNR pozisyon toplamı yerine; tutarlar/DTA dokunulmadı).
 - S2.2 canlı yan gözlemler (P2, gkv-302 teyidi): test dosyasında Beleg satırı „Rückmeldung: eingereicht" (`abrechnung_zeile.status`) üst blokla çelişiyor; test dosyasında „Offen 25,70 €"; „✍ Signieren" düğmesi test dosyasında görünüyor.
 - IK çözümlemesi üç kopya (physio `terapeut_zertifikat` upsert, podo, korrektur) — 2.7'de birleştirilmedi, karar Kemal'in.
 
@@ -156,7 +157,7 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 | 3.5 ✅ `a541ae3` | Hata kaydetme düğmesinin yanında (çakışma dahil); toast yalnız başarı. Tarayıcı `confirm()` → `showConfirmModal` | `dashboard.js:6066`, Verordnung formu | S |
 | 3.6 ✅ `5e764a8` (uyarı, blok değil — gkv-302) | Endständig olmayan ICD seçimde ve preflight'ta blok | `katalog-suche.js`, `preflight.js:99-101` | S |
 | 3.7 ✅ `22480aa` | LANR Prüfziffer formda uyarı; LANR/Unterschrift yoksa Behandlung/"Bereit" blok, BSNR yalnız uyarı | `arzt-register.js`, Verordnung formu, preflight 305-307 | S |
-| 3.8 | Kasse IK'sı Kostenträgerdatei'den, hastaya IK yazılsın; IK boşsa formda sert uyarı | `krankenkassen` dropdown ← `kostentraeger`, db-ustasi | M |
+| 3.8 | Kasse IK'sı Kostenträgerdatei'den, hastaya IK yazılsın; IK boşsa formda sert uyarı. **3.8a ✅ `e665aca`** (Karten-IK / Kostenträger-IK ayrımı, sessiz geri düşme yok; devamı `2cc414a`) · **3.8b ⏳** (`leads.krankenkasse_ik`, migration 0044 `1f11dc8` — SaaS'ta uygulanmadı, Kemal onayı bekliyor) | `krankenkassen` dropdown ← `kostentraeger`, db-ustasi | M |
 | 3.9 ✅ `0418566` | ICD öneri listesi panel değişince kapansın (`requestSeq++` in `closeDropdown`, `activeElement` kontrolü) | `katalog-suche.js:206/349` | S |
 | 3.10 ✅ `410cc6f` | `customer_name` = yalnız ad; kalender kartı `parseNameMitGeburt()`; `split('·')` 4 yer | `dashboard.js:2191-2204, 5105`, `module/termin-patient-bezug.js:42` | S–M |
 | 3.11 ✅ `7331d46` | 78030 süresi (`duration: null`) Folgetermin'e +30 dk eklemesin | `dashboard.js:9409` | S |
@@ -164,7 +165,7 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 | 3.12 | Açık metin PHI (guvenlik sicili S-34/S-35) — yön guvenlik + db-ustasi ile | `api-backend/server.js` /rezept/confirm, `leads` | M |
 
 **S3 notları (29.09 gece):**
-- **3.8 açık — Kemal kararı:** `leads`'te IK kolonu yok; en küçük çözüm yeni nullable `leads.krankenkasse_ik` (kart IK'sı, CHECK 9 hane) + formda `lead-krankenkasseIk` (otomatik doldurma `attachKrankenkasseSuche` ile hazır). **Önkoşul:** `0041_krankenkassen_ik_nachtrag` SaaS'a hâlâ uygulanmadı — canlı `krankenkassen.ik_number`'da 9 mock IK var, ada göre seçim bunları dolduruyor. Önce 0041 (onay + dry-run), sonra şema (onprem'e sor). 0041 konsey kararı (çok IK'lı kasa NULL) yeniden açılmaz.
+- **3.8 (30.09 düzeltmesi):** 29.09 notundaki „0041 SaaS'a uygulanmadı" **yanlıştı — 0041 SaaS'a 27.09'da zaten uygulanmıştı** (db-ustasi 30.09 doğruladı). 9 mock IK `krankenkassen`'de değil `kostentraeger`'de duruyor, `datensatz_status='mock_unbestaetigt'`; auswahl view'ı bunları filtreliyor. gkv-302 kararı: hastada **Karten-IK** tutulur, `kostentraeger_ik` bundan türetilir; V:01017 sert kural. 3.8a bunu koda döktü (`e665aca`); 3.8b = `leads.krankenkasse_ik` şeması (0044, `1f11dc8`) + formda `lead-krankenkasseIk` — 0044 canlıya Kemal onayıyla, sonra yama. 0041 konsey kararı (çok IK'lı kasa NULL) yeniden açılmaz.
 - **3.12 açık — guvenlik yönü:** `leads.*_enc` ve `prescriptions.ocr_raw_enc` var ama kullanılmıyor/yarım (db-ustasi 29.09 sayımı); eski satır temizliği yıkıcı, onay ister. `idx_leads_name_dob` arama düz metne dayanıyor.
 - 3.2: 0043 canlıda (29.09, MCP). 12.08 sonrası Vorlage'siz hesaplar panel açılışında kendiliğinden tamamlanır (seedMissingVorlagen).
 - 3.6: canlıda yalnız uyarı; sunucu `warnungen` dönüyor ama ön yüz (Erstellen protokolü) henüz göstermiyor. Açık gkv-302 sorusu: E11.7- („multiple Komplikationen") „erkennbar nicht therapierelevant" mı → therapierelevant bloku ayrı iş.
@@ -181,6 +182,23 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 **Sıradaki oturumun ilk işi:** canli-test ile 3.13 hotfix (Hausbesuch: Fahrt Starten → angekommen → Termin Starten → Tagesbehandlung → „Fahrt beenden") + 3.5/3.6/3.7/3.10 akışları. Sonra Kemal kararları: 3.8 (önce 0041'in SaaS'a uygulanması), 3.12 (guvenlik), 2.3b. S0 ayrı oturum; S4 S0 bitmeden başlamaz.
 
 **QA test verisi (29.09, silinmedi):** reçeteler `f77efc4c` (1/1, bereit, test dosyaları TSOL0002/0003), `ddf57e1b` (2/3, bereit, TSOL0004, Bereit onay logu `31efe963`), `796aae21` (DB'de kilitli, 1/3); hasta `1abd135e` (TEST-QA Spalten); araçlar `c79a59f1`, `8a674747`; randevu `7a6fc08b` (completed, Behandlung `81cd1398`, Fahrt `97206371` elle kapatıldı).
+
+### S2/S3 devir notu (30.09.2026)
+
+**Canlı GEÇTİ (canli-test 30.09):** 3.13 hotfix · 3.5 · 3.6 · 3.7 · 3.10 · 2.3b · 3.8a. Son turun (`2cc414a` Kassensuche eingebettete Maske P1 + `f4d31dc`) sonucu henüz beklemede — canli-test son tur: bkz. `canli-test/REGISTER.md`.
+
+**Commit'ler:** `f30f407` datumDe tek yerde · `f8ea2aa` 2.3b · `e665aca` 3.8a · `d92e422` + `6b853ea` lokal „heute" (UTC kayması, 00:00–02:00 Berlin) · `1f11dc8` 0044 · `2cc414a` · `f4d31dc`; docs `3f21914`, `9a614f8`, `67a4ef3`.
+
+**Açık işler:**
+1. **3.8b** — Kemal 0044'ü canlıya onaylar → yama (`C:/tmp/praxura/s3-8b.patch`) uygulanır; dokunulan dosyalardaki `?v` çakışmaları yeniden bump edilir (araya `d92e422`/`6b853ea`/`2cc414a` girdi).
+2. **B1 (gkv-302, gerçek gönderimden ÖNCE şart):** DTA üretim anında `kostentraeger_ik`'nın Karten-IK'dan yeniden türetilmesi.
+3. **OCR prompt'u IK okumuyor** — ayrı karar.
+4. **`abrechnender_kt_ik` tek kolon indirgemesi** — gkv-302 doğrulayamadı.
+5. **3.12** ayrı iş (Kemal 30.09: „2'yi ayrı bir iş olarak bırak").
+6. `module/abrechnung-detail.js:95` vade tarihi hâlâ UTC.
+7. `module/behandlungsbestaetigung.js` cache-bust zinciri yapılmadı.
+8. **canli-test P3'leri:** BSNR iki kez · Sperre yalnız kaydederken · ilk Fahrt satırında `lead_id` boş (Beenden'de dolar) · kayıtlı non-terminal ICD düzenlemede uyarı yok · yeni Verordnung listede hemen görünmüyor (tek gözlem).
+9. **Veri:** 30.09 öncesi mevcut reçetelerde Karten-IK NULL (test verisi; §302'den zaten bloklu — `KARTEN_IK_FEHLT`).
 
 ---
 
