@@ -8,7 +8,7 @@
  *    dieselbe Verordnung am selben Tag ein zweites Mal speichert, soll gefragt
  *    werden — nicht gesperrt: die Sperre im Preflight ist Sache des Servers.
  *  • „Bereit zur Abrechnung" setzt mindestens einen abrechenbaren
- *    Behandlungstag voraus: nicht storniert UND 78010/78020 (UI2: 78610) enthalten,
+ *    Behandlungstag voraus: nicht storniert UND 78010/78020 (UI1/UI2: 78610) enthalten,
  *    derselbe Kalendertag zählt einmal. Befundung allein (78030/78040), Kontrolle
  *    oder Zuschlag machen noch keine abrechenbare Behandlung.
  *
@@ -21,7 +21,7 @@
  */
 
 /** Die Positionen, die einen Behandlungstag abrechenbar machen. */
-// UI2: die Behandlung ist die Nagelkorrekturspange (78610; 78620 ist Zuschlag, keine Einheit — wie verordnung-uebersicht.js) — ohne sie könnte eine
+// UI1/UI2: die Behandlung ist die Nagelkorrekturspange (78610, bis 2x je Tag; 78620 ist Aufschlag, keine Einheit — gkv-302 30.09, Anlage 2 §2 c) — ohne sie könnte eine
 // UI2-Verordnung nie „Bereit" werden (Hauptkoordinator 30.09, Kontrolle nach S4-Paket 1).
 import { datumDe } from './datum.js?v=20260930f';
 

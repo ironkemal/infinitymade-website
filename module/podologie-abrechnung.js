@@ -990,7 +990,8 @@ async function loadPodologieBilling() {
               : icd10.some(c => String(c).trim().toUpperCase().startsWith('L60.0'))))
       err = 'UI1/UI2 erfordert ICD-10 L60.0.';
     else if (checks.includes('78040') && checks.includes('78030')) err = 'Eingangsbefundung (78040) und Befundung (78030) können nicht am gleichen Tag kombiniert werden.';
-    else if ((checks.includes('78610') || checks.includes('78620')) && dRoot !== 'UI2') err = 'Nagelspange (78610/78620) ist nur bei UI2 zulässig.';
+    // gkv-302 30.09: Nagelspange 78610/78620 gilt für UI1 UND UI2 (Anlage 2 §2 c, Anlage 1c II.2) — vorher war UI1 gesperrt, die einzige abrechenbare Behandlung dort also nicht speicherbar.
+    else if ((checks.includes('78610') || checks.includes('78620')) && !isUIx) err = 'Nagelspange (78610/78620) ist nur bei UI1/UI2 zulässig.';
     // 78020 „Behandlung groß" gilt nur für die Komplexbehandlung. Bei einzeln
     // verordneter Hornhautabtragung oder Nagelbearbeitung ist immer 78010 zzgl.
     // 78030 abzurechnen — auch über 20 Minuten (FAK Podologie Q25). Sonst wird
@@ -1093,7 +1094,8 @@ async function loadPodologieBilling() {
     // eine Behandlung abrechenbar (HeilM-RL § 12 Abs. 8) — Rueckfrage, KEINE Sperre
     // (die Preflight-Sperre ist Serversache). Frisch gelesen, nicht aus der
     // Anzeige: sie kann seit dem Rendern veraltet sein.
-    const schonDa = bestehenderBehandlungstag(await podBehandlungenDerVerordnung(_podState.selectedVordId), datum);
+    // 78610 darf zweimal je Tag abgegeben werden (Anlage 2 §2 c) — bei UI1/UI2 keine Rückfrage zum zweiten Tag.
+    const schonDa = isUIx ? null : bestehenderBehandlungstag(await podBehandlungenDerVerordnung(_podState.selectedVordId), datum);
     if (schonDa) {
       const trotzdem = await ctx.showConfirmModal({
         title: 'Zweiter Behandlungstag', message: zweiterBehandlungstagFrage(datum),
