@@ -33,3 +33,15 @@ test('ohne Patientenkennung werden keine Termine anderer Patienten geladen', asy
   assert.deepEqual(await ladePatientTermine(sb, { ownerId: 'praxis' }), []);
   assert.equal(requested, false);
 });
+
+test('Akte mit lead_id: Termine über lead_id, Telefon nur zusätzlich (canli-test P2 30.09)', async () => {
+  const seen = [];
+  const sb = createClient('https://test.invalid', 'test-key', { auth: { persistSession: false }, global: {
+    fetch: async url => { seen.push(new URL(url).searchParams); return new Response('[]'); },
+  } });
+  await ladePatientTermine(sb, { ownerId: 'praxis', lead: { id: 'L1', phone: '+49 1' } });
+  await ladePatientTermine(sb, { ownerId: 'praxis', lead: { id: 'L1' } });
+  assert.equal(seen[0].get('or'), '(lead_id.eq.L1,customer_phone.eq."+49 1")');
+  assert.equal(seen[1].get('lead_id'), 'eq.L1');
+  assert.match(patientTerminZeile({ status: 'completed' }, { fmtDate: String, fmtTime: String }), /Erledigt/);
+});

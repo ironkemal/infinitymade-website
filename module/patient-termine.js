@@ -8,13 +8,20 @@ export async function ladePatientTermine(sb, { ownerId, lead, patientName, mitAb
     .eq('owner_id', ownerId)
     .order('start_time', { ascending: false });
   if (!mitAbgesagten) query = query.neq('status', 'cancelled');
-  if (lead?.phone) query = query.eq('customer_phone', lead.phone);
+  // canli-test P2 30.09: zuerst über `lead_id` (die Akte gehört zu genau diesem Patienten);
+  // Telefon nur zusätzlich für Alttermine ohne `lead_id`. Vorher fehlten 14 von 16 Terminen.
+  const tel = String(lead?.phone || '').replace(/["\\]/g, '');
+  if (lead?.id && tel) query = query.or(`lead_id.eq.${lead.id},customer_phone.eq."${tel}"`);
+  else if (lead?.id) query = query.eq('lead_id', lead.id);
+  else if (tel) query = query.eq('customer_phone', tel);
   else if (patientName) query = query.eq('customer_name', patientName);
   else return [];
   const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }
+
+const STATUS_DE = { confirmed: 'Bestätigt', completed: 'Erledigt', pending: 'Offen', no_show: 'Nicht erschienen' };
 
 export function patientTerminZeile(b, { fmtDate, fmtTime }) {
   const datum = b.start_time ? `${fmtDate(b.start_time)} · ${fmtTime(b.start_time)}` : '—';
@@ -23,7 +30,7 @@ export function patientTerminZeile(b, { fmtDate, fmtTime }) {
   const klasse = b.status === 'confirmed' ? 'badge-green' : (abgesagt || b.status === 'no_show') ? 'badge-red' : 'badge-gray';
   return `<div class="pd-term-item">
     <div class="pd-term-row"><span class="pd-term-date">${escapeHtml(datum)}</span>
-      <span class="badge ${klasse}">${escapeHtml(abgesagt ? 'Abgesagt' : b.status || '—')}</span></div>
+      <span class="badge ${klasse}">${escapeHtml(abgesagt ? 'Abgesagt' : (STATUS_DE[b.status] || b.status || '—'))}</span></div>
     <div class="pd-term-service">${escapeHtml(b.services?.title || '—')} ${escapeHtml(b.services?.code || '')} ${escapeHtml(dauer)}</div>
     ${abgesagt ? `<div class="form-hint">${b.cancelled_at ? `Abgesagt am ${escapeHtml(fmtDate(b.cancelled_at))} · ` : ''}${escapeHtml(b.cancellation_reason || 'Kein Grund angegeben')}</div>` : ''}
   </div>`;
