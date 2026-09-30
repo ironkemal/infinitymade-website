@@ -28,7 +28,7 @@ import { alsDatetimeLocal } from './datum.js?v=20260930f';
 import { sollAbstand } from './frequenz-pruefung.js?v=20260929b';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 import { POD_EINGANGSBEFUNDUNG } from './eingangsbefundung-regel.js?v=20261001e';
-import { hpnrVonDienst, setzeLeistungen } from './termin-leistungen.js?v=20261001i';
+import { hpnrVonDienst, setzeLeistungen, schlageBefundungVor } from './termin-leistungen.js?v=20261001i';
 
 /** Ohne lesbare Frequenz: eine Woche — die Zeile, die die Serienplanung auch nimmt. */
 export const STANDARD_ABSTAND_TAGE = 7;
@@ -176,6 +176,9 @@ export async function oeffneFolgetermin(booking, deps) {
   const menge0 = document.getElementById('bkMenge');
   if (menge0) menge0.value = String(menge);
   setzeLeistungen(serviceIds.length ? serviceIds : [hauptId]);
+  // canli-test P2 30.09: der Befundungsvorschlag (78030, unangekreuzt) kam erst nach erneutem
+  // Kartenklick — nach dem Setzen der Leistungen einmal anstossen (wie termin-leistungen.js selbst, mit Verzug).
+  setTimeout(() => { schlageBefundungVor(); }, 80);
 
   toast?.(ausFrequenz
     ? `Folgetermin vorbelegt: ${abstandTage} Tage nach dem letzten Termin (Frequenz der Verordnung) — bitte prüfen und speichern.`

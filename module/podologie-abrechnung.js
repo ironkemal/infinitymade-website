@@ -797,7 +797,7 @@ async function loadPodologieBilling() {
               // Grund fuer jedes vorbelegte Haekchen (Konsey 30.09.2026, 2b).
               const grund = (autoChecked || geplant) && !hbGesperrt
                 ? tagesVorbelegungGrund({ code, isUI, eingang: eingangsLage, hausbesuch: isHausbesuch,
-                    geplant: geplanteHpnr.has(code), rezeptPosition })
+                    geplant: geplanteHpnr.has(code), rezeptPosition, rohPosition: selectedVord.heilmittel_position || erstePositionAusItems(selectedVord.heilmittel_items) })
                 : '';
               return `<label ${hbGesperrt ? 'title="' + ctx.escapeHtml(HAUSBESUCH_HINWEIS) + '"' : ''} style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:${hbGesperrt ? 'not-allowed' : 'pointer'};${hbGesperrt ? 'opacity:.5;' : ''}background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
                 <input type="checkbox" class="pod-hpnr-cb" value="${ctx.escapeHtml(code)}" ${hbGesperrt ? 'disabled' : (autoChecked || geplant)}> ${ctx.escapeHtml(code)} – ${ctx.escapeHtml(r.label)}${hbGesperrt ? '<span style="color:var(--text-muted);font-size:11px;"> — ' + ctx.escapeHtml(HAUSBESUCH_HINWEIS) + '</span>' : ''}${grund ? '<span class="pod-hpnr-grund" style="color:var(--text-muted);font-size:11px;"> — ' + ctx.escapeHtml(grund) + '</span>' : ''}

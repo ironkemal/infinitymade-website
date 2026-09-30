@@ -54,7 +54,7 @@ export function befundGrundText(grund) {
  * @returns {string} leer, wenn die Position nicht vorbelegt ist oder kein Grund bekannt
  */
 export function tagesVorbelegungGrund({
-  code, isUI, eingang, hausbesuch, geplant, rezeptPosition,
+  code, isUI, eingang, hausbesuch, geplant, rezeptPosition, rohPosition,
   POD_EINGANG = '78040', POD_BEFUND = '78030',
 }) {
   if (!isUI && code === POD_EINGANG && eingang?.erlaubt) {
@@ -70,7 +70,9 @@ export function tagesVorbelegungGrund({
     return 'nicht die erste Behandlung dieses Patienten — Befundung vor jeder Behandlung';
   }
   if (hausbesuch && code === '79933') return 'Hausbesuch laut Verordnung';
-  if (code && code === rezeptPosition) return 'Behandlungsposition laut Verordnung';
+  // canli-test P2 30.09: ohne Position auf der Verordnung kommt 78010 aus dem DF/NF/QF-Standard — dann nicht „laut Verordnung" sagen (die Zeile darüber sagt „keine Position").
+  if (code && code === rezeptPosition) return (rohPosition === undefined || String(rohPosition || '').trim())
+    ? 'Behandlungsposition laut Verordnung' : 'Standardposition (keine Position auf der Verordnung)';
   if (geplant) return 'im Termin dieses Tages geplant';
   return '';
 }

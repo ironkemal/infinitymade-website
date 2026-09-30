@@ -11502,7 +11502,7 @@ function renderB2C() {
       <td>${r.title || '—'}</td>
       <td>${r.email || '—'}</td>
       <td>${r.phone || '—'}</td>
-      <td><span class="badge ${leadStatusBadge(r.status)}">${r.status || '—'}</span></td>
+      <td><span class="badge ${({ won: 'badge-green', lost: 'badge-red', contacted: 'badge-blue', booked: 'badge-yellow' })[r.status] || 'badge-gray'}">${r.status || '—'}</span></td>
       <td><button class="btn-icon" data-b2c-id="${r.id}" data-action="mail">✉</button></td>
     </tr>`).join('');
   tbody.querySelectorAll('[data-action="mail"]').forEach(btn => {

@@ -54,3 +54,8 @@ test('„Verordnet: 78xxx": Rohwert sichtbar, Abweichung von der Vorbelegung ben
   assert.match(verordnetZeile('', ''), /keine Position/);
   assert.match(verordnetZeile(null, '78010'), /vorbelegt: 78010/);
 });
+
+test('78010 aus DG-Standard (keine Position auf der Verordnung) heisst nicht „laut Verordnung"', () => {
+  assert.equal(tagesVorbelegungGrund({ code: '78010', rezeptPosition: '78010', rohPosition: '' }), 'Standardposition (keine Position auf der Verordnung)');
+  assert.equal(tagesVorbelegungGrund({ code: '78010', rezeptPosition: '78010', rohPosition: '78010' }), 'Behandlungsposition laut Verordnung');
+});
