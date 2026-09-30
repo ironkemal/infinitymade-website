@@ -36,8 +36,10 @@
  * Tagesbehandlungen ohne Position durchrutschen (QA-Beispiel 3e256b9a). UI1/UI2 unverändert.
  */
 
-/** Diagnosegruppen mit a/b/c-Katalog (Spiegel von POD_HEILMITTEL_DGS, hier ohne Import-Kette). */
-const DGS_MIT_BEHANDLUNG = ['DF', 'NF', 'QF'];
+import { POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
+
+/** Diagnosegruppen mit a/b/c-Katalog — eine Tabelle, s. podo-heilmittel-katalog.js. */
+const DGS_MIT_BEHANDLUNG = POD_HEILMITTEL_DGS;
 
 /**
  * @param {'a'|'b'|'c'|''} massnahme  aus `podVordMassnahme(vord)`

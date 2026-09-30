@@ -116,6 +116,30 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.09.2026 · 047baab — Podoloji (a)/(b)/(c) + canli-test P3 (Sperrtext, ICD im Speichern-Dialog)
+- `sperreTextAusLage(lage)` (`podo-arztangaben.js`). Niye: LANR/Unterschrift-Sperre hatte drei Wortlaute
+  (Banner, Speichern-Dialog, Tagesbehandlung); jetzt ein Satz, der das Fehlende nennt (canli-test P3).
+  Nerede: `podoArztHinweise().satz` (saveRezept), `behandlungGesperrt().text` (Tagesbehandlung),
+  `arztangaben-banner.js` `sperreBannerText`. `SPEICHERN_HINWEIS` / `BEHANDLUNG_GESPERRT_TEXT` entfernt.
+- `icdSpeicherHinweise`, `icdHinweiseZusammen` (neu `module/verordnung-speichern-hinweise.js`). Niye: saveRezept-Bestätigung
+  soll nicht endständige ICD (z. B. E11.7) nennen, ohne dass `dashboard.js` wächst. Nerede: `dashboard.js` `saveRezept`
+  (formatErrors-Zeile). Kein zweiter Wortlaut: nutzt `gespeicherterKodeHinweis` (katalog-suche.js → `nichtEndstaendigHinweis`) + `pruefeVerordnung`.
+- `heilmittelGegenLeitsymptomatik` (`verordnung-pruefung.js`). Niye: 78010↔Leitsymptomatik wurde per Freitextvergleich
+  geprüft; jetzt positionsbasierte Regel (podoloji (a), Wortlaut gkv-302). Nerede: `pruefeVerordnung`.
+- `module/podo-heilmittel-katalog.js` (neu) — `POD_HEILMITTEL_KATALOG` / `POD_HEILMITTEL_DGS` aus `podologie-abrechnung.js`
+  hierher, weil jenes Modul im Rumpf einen DOM-Listener hat und nicht importierbar war. Eine Tabelle; Import in
+  `podologie-abrechnung.js` + `verordnung-pruefung.js`. Nicht verwechseln mit `POD_KATALOG` (verordnung-regeln.js).
+  - **Offener Rest:** `podo-behandlungsposition-regel.js` `DGS_MIT_BEHANDLUNG = ['DF','NF','QF']` ist laut eigenem
+    Kommentar ein Spiegel von `POD_HEILMITTEL_DGS` „ohne Import-Kette" — seit dieser Auslagerung wäre der Import
+    möglich. Klein, nicht gemeldet als Kopie-Karte; beim nächsten Anfassen importieren statt spiegeln.
+- `ohneBehandlungsposition`, `leitsymptomatikNotiz`, `OHNE_BEHANDLUNG_FRAGE`, `LS_FEHLT_NOTIZ`
+  (`podo-behandlungsposition-regel.js`). Niye: DF/NF/QF-Tagesbehandlung ohne 78010/78020 rutschte still durch
+  (podoloji (b)); jetzt Rückfrage beim Speichern + Notiz bei fehlender Leitsymptomatik. Nerede:
+  `podologie-abrechnung.js` Kaydet-Handler + Tagesbehandlung-Kopf. `behandlungspositionVorschlag(massnahme, roh, dg)`
+  — 3. Parameter DG → 78010-Vorbelegung bei DF/NF/QF.
+- `statusDialogVorgabe` (`abrechnungsstatus.js`). Niye: aktive podo-Verordnung mit 0 Behandlungen → „Bereit" disabled und
+  nicht vorgewählt, damit der Server-422 vorher sichtbar ist (podoloji (c)). Nerede: `oeffneStatusDialog` / `oeffneStatusDialogFuer`.
+
 ### 01.10.2026 · S3-Reste — ICD nicht endständig, Karten-IK-Prüfung, Sperre-Banner, Fahrt-lead_id
 - `passendeUnterkodes(code, rule)` (`icd-dg-match.js`). Niye: „E11.7 passt nicht zur Diagnosegruppe DF" war mechanisch wahr,
   aber irreführend (E11.74/E11.75 passen). Kinder eines nicht endständigen Kodes, die die DG-Regel annimmt → gelbe Warnung
