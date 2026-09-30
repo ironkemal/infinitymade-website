@@ -144,6 +144,9 @@ export function initKioskMode(deps = {}) {
   });
   $('kioskSetupSaveBtn')?.addEventListener('click', handleKioskPinSetup);
 
+  // Nach dem Neuladen eines Kiosk-Tabs: gesperrt zurück, ohne Formular — nur PIN.
+  if (merkerGesetzt()) kioskNachNeuladen();
+
   // PIN-Ziffern: automatisch weiterspringen
   PIN_INPUTS.forEach((id, idx, arr) => {
     const el = $(id);
@@ -268,6 +271,22 @@ function setzeKopf(titel, sub) {
 }
 
 /** Nach dem Einwilligungs-Ablauf: kein Formular, nur die Rückgabe-Bitte — Ausstieg bleibt die PIN. */
+function kioskNachNeuladen() {
+  const overlay = $('kioskOverlay');
+  if (!overlay) return;
+  _kioskActive = true;
+  const formContent = $('kioskFormContent');
+  if (formContent) formContent.innerHTML = '';
+  ['kioskStartBtn', 'kioskEinwilligungBtn'].forEach(id => { const b = $(id); if (b) b.style.display = 'none'; });
+  kioskSperre(true);
+  overlay.hidden = false;
+  document.body.style.overflow = 'hidden';
+  hintergrundInert(true);
+  zeigeDanke();
+  try { getBookingsChannel()?.unsubscribe(); } catch { /* egal */ }
+  showKioskPinModal();
+}
+
 function zeigeDanke() {
   const formContent = $('kioskFormContent');
   if (formContent && _kioskActive) {
@@ -281,6 +300,28 @@ function zeigeDanke() {
 // Kiosk-Fassung darüber schreiben (Art. 9 DSGVO, § 203 StGB). Deshalb für die Dauer
 // des Kiosks: Wähler und „Rezept hinzufügen" gesperrt UND unsichtbar.
 const KIOSK_GESPERRT = ['anamPatientSelect', 'anamRezeptBtn'];
+
+// guvenlik S-37/A-20 (30.09.2026): Der Kiosk ist eine Fehlbedien-Sperre, keine
+// Sicherheitsgrenze — aber zwei einfache Wege heraus dürfen nicht offen bleiben:
+//  · Neu laden (Tablet nach unten ziehen / F5) nahm das Overlay weg und zeigte das
+//    Dashboard mit der Sitzung der Therapeutin. Deshalb merkt sich der Tab den
+//    Kiosk (sessionStorage) und kehrt nach dem Laden gesperrt zurück — nur die
+//    PIN öffnet ihn wieder.
+//  · Tab-Taste: das Dashboard hinter dem Overlay wird `inert`.
+const KIOSK_MERKER = 'praxura.kiosk.aktiv';
+function merker(an) {
+  try { an ? sessionStorage.setItem(KIOSK_MERKER, '1') : sessionStorage.removeItem(KIOSK_MERKER); } catch { /* privat/blockiert: dann eben ohne */ }
+}
+function merkerGesetzt() {
+  try { return sessionStorage.getItem(KIOSK_MERKER) === '1'; } catch { return false; }
+}
+function hintergrundInert(an) {
+  const overlay = $('kioskOverlay');
+  document.querySelectorAll('body > header, .dashboard-layout').forEach(el => {
+    if (overlay && el.contains(overlay)) return;   // nie das Overlay selbst sperren
+    el.inert = an;
+  });
+}
 
 function kioskSperre(an) {
   for (const id of KIOSK_GESPERRT) {
@@ -323,6 +364,8 @@ function enterKioskMode(modus = 'anamnese') {
     _kioskActive = true;
     overlay.hidden = false;
     document.body.style.overflow = 'hidden';
+    merker(true);
+    hintergrundInert(true);
 
     // Terminhinweise anderer Patienten gehören nicht vor die Augen dieses
     // Patienten. Kanal abmelden, beim Verlassen wieder anmelden.
@@ -363,6 +406,8 @@ function exitKioskMode() {
     _kioskActive = false;
     if (overlay) overlay.hidden = true;
     document.body.style.overflow = '';
+    merker(false);
+    hintergrundInert(false);
 
     if (_fsHandler) {
       document.removeEventListener('fullscreenchange', _fsHandler);
