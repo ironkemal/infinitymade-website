@@ -1,7 +1,12 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-30 — Nachtrag: 0044_leads_krankenkasse_ik
+-- ERZEUGT AM:        2026-09-30 — Nachtrag (nur Kommentare, kein DDL, keine
+--                    Migration): Reform 3.12 / Commit e9d0286 — Feldver-
+--                    schluesselung aufgegeben. Kommentare bei `leads` und
+--                    `prescriptions` korrigiert: die *_enc-Spalten sind
+--                    ungenutzte Reste, KEINE Verschluesselungszusage.
+--                    davor: 2026-09-30 — Nachtrag: 0044_leads_krankenkasse_ik
 --                    (Reform S3.8b) im SaaS angewendet (MCP, Freigabe Kemal)
 --                    und geprueft: leads.krankenkasse_ik text nullable
 --                    (attnum 58), CHECK leads_krankenkasse_ik_format
@@ -2185,8 +2190,15 @@ CREATE TABLE leads (
 --     reviews_count stammen daher), heute die reale Patientenakte.
 --     anamnese, prescriptions, invoices, messreihen, pat_fussbefund,
 --     fahrten, ausfallrechnungen hängen alle hier dran.
---   ★ PII-Verschlüsselung: *_enc bytea + pii_encrypted-Flag
---     (api-backend/lib/phi-encrypt.js).
+--   ⚠️ KEINE Feldverschlüsselung (korrigiert 30.09.2026, Reform 3.12).
+--     Die Spalten first_name_enc, last_name_enc, phone_enc, geburtsdatum_enc,
+--     versichertennummer_enc, krankenkasse_enc, pii_encrypted und der Index
+--     idx_leads_pii_not_encrypted wurden NIE beschrieben (live 30.09.2026:
+--     0 Zeilen mit *_enc, 0 mit pii_encrypted=true). Identitätsfelder stehen
+--     im Klartext; Schutz = RLS + Verschlüsselung at rest. Der frühere
+--     Kommentar "★ PII-Verschlüsselung" versprach etwas, das es nie gab.
+--     Reste — vorgemerkt für Entfernung in zwei Schritten (erst leeren,
+--     dann DROP), nur mit Kemals Freigabe. Siehe db/REGISTER.md → leads.
 --   ★ podologie_altbestand_vor_2023 (17.09.2026, Ops #244): NULL = noch nicht
 --     gefragt/unbekannt, true/false = Patient hat vor dem 01.11.2023 erstmals
 --     podologische Behandlung begonnen (HPNR 78040, Aenderungsvereinbarung
@@ -2764,7 +2776,21 @@ CREATE TABLE prescriptions (
 --     `verordnungen.status` (Wertetabelle: aktiv=NULL, abrechenbar=bereit,
 --     abgerechnet=gesendet, abgesetzt=rejected, teilabsetzung/storniert/
 --     archiviert unverändert).
---   ★ PHI-Verschlüsselung: icd10_enc, ocr_raw_enc, phi_encrypted.
+--   ⚠️ KEINE Feldverschlüsselung mehr (korrigiert 30.09.2026, Reform 3.12,
+--     Commit e9d0286). Der Backend schreibt icd10_enc, ocr_raw_enc,
+--     phi_encrypted UND ocr_raw_response nicht mehr (ab Deploy von e9d0286).
+--     icd10/Klinikfelder bleiben Klartext (RLS + at rest); der rohe
+--     OCR-Payload wird nicht mehr abgelegt. Die Verschlüsselung war nie
+--     vollständig: jede Zeile mit Chiffrat hielt denselben Inhalt zusätzlich
+--     im Klartext (live 30.09.2026: 23 Zeilen phi_encrypted=true, alle mit
+--     Klartext-ocr_raw_response; 22 mit icd10_enc, alle mit icd10).
+--     Altbestand: 60 von 72 Zeilen tragen noch Klartext-ocr_raw_response,
+--     bis die Aufräum-Migration sie leert. Reste (icd10_enc, ocr_raw_enc,
+--     phi_encrypted, ocr_raw_response, idx_prescriptions_phi_not_encrypted)
+--     vorgemerkt für NULL + DROP in zwei Schritten, nur mit Kemals Freigabe.
+--     ⚠️ prescriptions_festschreibung() (0020) prüft new.icd10_enc — vor dem
+--     DROP muss die Funktion per CREATE OR REPLACE ohne diese Zeile ersetzt
+--     werden, sonst scheitert jedes UPDATE. Siehe db/REGISTER.md → prescriptions.
 --   TRIGGER fn_prescriptions_set_befreit() setzt zuzahlung_befreit automatisch.
 --   ⚠️ `verordnungsnummer` / `belegnummer`: fortlaufend je Patient
 --      (Trigger trg_prescriptions_verordnungsnummer), Belegnummer bei der
