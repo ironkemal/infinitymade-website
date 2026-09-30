@@ -958,34 +958,9 @@ async function loadVisibilityMatrix() {
   }
 }
 
-// Gerçek-görünürlük raporu: bu client'ta hangi modüller fiilen render edildi,
-// panel DOM'u mevcut mu. Admin panel bu rapora bakarak toggle ↔ gerçek durum
-// tutarlılığını gösterir (Verordnungen-kayboldu vakasının erken alarmı).
-async function reportSidebarVisibility(decisions, role) {
-  try {
-    const sector = resolveSector(getSector());
-    const marker = 'vis_report_' + sector + ':' + role;
-    const today = new Date().toISOString().slice(0, 10);
-    if (sessionStorage.getItem(marker) === today) return;
-    const nowIso = new Date().toISOString();
-    const rows = decisions.map(({ item, visible, reason }) => ({
-      sector,
-      role,
-      module_id: item.id,
-      rendered: visible,
-      dom_ok: !!document.getElementById('panel-' + item.id),
-      hidden_reason: visible ? null : reason,
-      reported_at: nowIso,
-      reported_by: currentSession?.user?.id || null,
-    }));
-    const { error } = await supabase.from('visibility_reports')
-      .upsert(rows, { onConflict: 'sector,role,module_id' });
-    if (error) console.warn('[visibility report]', error);
-    else sessionStorage.setItem(marker, today);
-  } catch (e) {
-    console.warn('[visibility report]', e);
-  }
-}
+// visibility_reports-Telemetrie entfernt (30.09.2026, db-ustasi W-07): das Upsert scheiterte seit
+// 14.07. an der Admin-SELECT-Policy (0 Zeilen, 403 bei jedem Panelwechsel); der globale PK
+// (sector, role, module_id) hätte ohnehin jede Praxis überschrieben. admin.js liest weiter (leer).
 
 // Sidebar item id'sini RBAC module key'ine eşle
 const SIDEBAR_TO_MODULE = {
@@ -1098,8 +1073,6 @@ async function renderSidebar() {
     nav.appendChild(groupEl);
   });
 
-  // Fire-and-forget: gerçek görünürlük telemetrisi (günde 1x per sector+role)
-  reportSidebarVisibility(decisions, role);
 }
 
 function buildBookingUrl(profile) {
