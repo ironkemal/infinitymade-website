@@ -13,7 +13,7 @@
 import { API_BASE, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { ladeOwnerId } from './module/public-owner.js?v=20261001s';
-import { anliegenFuerBereich, zahlungsartenFuer, adressePflicht, anliegenNotiz, findAnliegen } from './module/anfrage-anliegen.js?v=20261001s';
+import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, findAnliegen, WUNDE_HINWEIS } from './module/anfrage-anliegen.js?v=20261001t';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -40,7 +40,9 @@ const state = {
   patient: {},
   payment_type: null,
   anliegen: null,          // Podologie: Grund des Besuchs (module/anfrage-anliegen.js)
+  hausbesuch: false,       // Podologie: Zusatz-Schalter unter der Anliegen-Karte
   hausbesuch_adresse: '',
+  hb_auf_rezept: null,     // 'ja' | 'nein' | 'unklar' | null (freiwillige Frage)
   service_id: null,
   service: null,
   session_count: 1,
@@ -385,12 +387,42 @@ function zahlungKarten() {
 
 function waehleZahlung(art) {
   state.payment_type = art;
+  if (state.anliegenAktiv) aktualisiereHausbesuch();
   zahlungKarten().forEach(c => c.classList.toggle('selected', c.dataset.value === art));
   clearFieldError('paymentTypeError');
 }
 
+/** Hausbesuch-Zusatz: Adresse (Pflicht) und freiwillige Rezept-Frage ein-/ausblenden. */
+function aktualisiereHausbesuch() {
+  const an = state.hausbesuch;
+  const adr = document.getElementById('hbAdresseWrap');
+  if (adr) adr.hidden = !an;
+  const frage = document.getElementById('hbRezeptFrage');
+  const zeigeFrage = hausbesuchFrageNoetig(state.anliegen, state.payment_type, an);
+  if (frage) frage.hidden = !zeigeFrage;
+  // Nicht gestellte Antworten nie mitschicken.
+  if (!zeigeFrage) {
+    state.hb_auf_rezept = null;
+    document.querySelectorAll('#hbRezeptFrage .br-hb-antwort').forEach(b => b.classList.remove('selected'));
+  }
+  if (!an) {
+    state.hausbesuch_adresse = '';
+    const inp = document.getElementById('hbAdresse');
+    if (inp) inp.value = '';
+    clearFieldError('hbAdresseError');
+  }
+  document.querySelectorAll('#anliegenGrid input[data-hb]').forEach(c => { c.checked = an && c.dataset.hb === state.anliegen; });
+}
+
+function setzeHausbesuch(key, an) {
+  if (state.anliegen !== key) waehleAnliegen(key);
+  state.hausbesuch = an;
+  aktualisiereHausbesuch();
+}
+
 /** Anliegen gewaehlt -> nur passende Zahlungsarten zeigen; bleibt genau eine, wird sie gesetzt. */
 function waehleAnliegen(key) {
+  if (state.anliegen !== key) state.hausbesuch = false;
   state.anliegen = key;
   document.querySelectorAll('#anliegenGrid .br-select-card').forEach(c => c.classList.toggle('selected', c.dataset.anliegen === key));
   clearFieldError('anliegenError');
@@ -401,8 +433,7 @@ function waehleAnliegen(key) {
   // Ist die Zahlungsart durch das Anliegen eindeutig, entfaellt die Frage.
   const zahlungBlock = document.getElementById('zahlungBlock');
   if (zahlungBlock) zahlungBlock.hidden = erlaubt.length === 1;
-  const adr = document.getElementById('hbAdresseWrap');
-  if (adr) adr.hidden = !adressePflicht(key);
+  aktualisiereHausbesuch();
 }
 
 /** Podologie: Anliegen-Karten aufbauen. Andere Fachbereiche: Schritt bleibt wie bisher. */
@@ -412,15 +443,29 @@ function initAnliegen(bereich) {
   const grid = document.getElementById('anliegenGrid');
   grid.innerHTML = '';
   liste.forEach(a => {
+    const wrap = document.createElement('div');
+    wrap.className = 'br-anliegen-wrap';
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'br-select-card';
     btn.dataset.anliegen = a.key;
     btn.innerHTML = `<span class="card-title">${escHtml(a.titel)}</span><span class="card-desc">${escHtml(a.hinweis)}</span>`;
     btn.addEventListener('click', () => waehleAnliegen(a.key));
-    grid.appendChild(btn);
+    const hb = document.createElement('label');
+    hb.className = 'br-hb-switch';
+    hb.innerHTML = '<input type="checkbox" data-hb="' + escHtml(a.key) + '" /> <span>Ich brauche einen Hausbesuch</span>';
+    hb.querySelector('input').addEventListener('change', e => setzeHausbesuch(a.key, e.target.checked));
+    wrap.append(btn, hb);
+    grid.appendChild(wrap);
   });
   document.getElementById('hbAdresse').addEventListener('input', e => { state.hausbesuch_adresse = e.target.value; clearFieldError('hbAdresseError'); });
+  document.querySelectorAll('#hbRezeptFrage .br-hb-antwort').forEach(b => {
+    b.addEventListener('click', () => {
+      state.hb_auf_rezept = b.dataset.antwort;
+      document.querySelectorAll('#hbRezeptFrage .br-hb-antwort').forEach(x => x.classList.toggle('selected', x === b));
+    });
+  });
+  document.getElementById('wundeHinweis').textContent = WUNDE_HINWEIS;
   document.getElementById('anliegenBlock').hidden = false;
   document.getElementById('step1Titel').textContent = 'Was ist Ihr Anliegen?';
   document.getElementById('step1Desc').textContent = 'Wählen Sie den Grund Ihres Besuchs.';
@@ -442,7 +487,7 @@ function validateStep1() {
       showFieldError('anliegenError', 'Bitte Ihr Anliegen auswählen.');
       return false;
     }
-    if (adressePflicht(state.anliegen) && !state.hausbesuch_adresse.trim()) {
+    if (state.hausbesuch && !state.hausbesuch_adresse.trim()) {
       showFieldError('hbAdresseError', 'Bitte die Adresse für den Hausbesuch angeben.');
       return false;
     }
@@ -1060,7 +1105,7 @@ function buildSummary() {
 
   const data = [
     { label: 'Patient', value: state.isNewPatient ? (state.patient.vorname ? `${state.patient.vorname} ${state.patient.nachname}` : 'Neuer Patient') : (state.patient_display || 'Bestehender Patient') },
-    ...(state.anliegenAktiv && state.anliegen ? [{ label: 'Anliegen', value: findAnliegen(state.anliegen).titel }] : []),
+    ...(state.anliegenAktiv && state.anliegen ? [{ label: 'Anliegen', value: findAnliegen(state.anliegen).titel + (state.hausbesuch ? ' (Hausbesuch)' : '') }] : []),
     { label: 'Zahlungsart', value: payLabels[state.payment_type] || state.payment_type },
     { label: 'Leistung', value: state.service ? state.service.name : '–' },
     { label: 'Sitzungen', value: (state.payment_type === 'gkv' || state.payment_type === 'bg') ? (state.verordnung_sitzungen || state.bg_anzahl || '–') : state.session_count },
@@ -1143,7 +1188,7 @@ async function handleSubmit() {
     // common
     // Anliegen (Podologie) steht als erste Zeile in notizen — booking_requests hat
     // keine eigene Spalte; die Praxis sieht die Zeile im Anfragen-Detail.
-    notizen: state.anliegenAktiv ? anliegenNotiz(state.anliegen, state.hausbesuch_adresse, state.notizen) : (state.notizen || null),
+    notizen: state.anliegenAktiv ? anliegenNotiz(state.anliegen, { hausbesuch: state.hausbesuch, adresse: state.hausbesuch_adresse, hbAufRezept: state.hb_auf_rezept }, state.notizen) : (state.notizen || null),
     dsgvo_consent: true,
   };
 

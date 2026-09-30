@@ -2,22 +2,26 @@
 //
 // Warum: Reform-Sprint S4 („Online-Anfrage: Patient waehlt den Grund"). Ein
 // Podologie-Patient weiss nicht, was „GKV / PKV / BG" fuer seinen Besuch heisst;
-// er weiss, ob er ein Rezept hat, ob er zum ersten Mal kommt, ob er einen
-// Hausbesuch braucht. Aus dem Anliegen folgen die erlaubten Zahlungsarten
-// (Verordnung -> GKV/PKV/BG, Nagelspange/Fusspflege -> Selbstzahler) und ob eine
-// Adresse Pflicht ist (Hausbesuch).
+// er weiss, ob er ein Rezept hat und was er will. v2 (30.09.2026, Podologie-
+// Entscheidung „Online-Anfrage (S4)"): drei Karten (Rezept / Nagelspange / ohne
+// Rezept) bestimmen die erlaubten Zahlungsarten; Hausbesuch ist ein Schalter unter
+// der Karte (Adresse Pflicht, sobald an), keine eigene Karte.
 //
 // Wohin gespeichert: `booking_requests` hat keine Anliegen-Spalte. Ohne Schema-
 // aenderung geht der Grund als erste Zeile in `notizen` (max. 500 Zeichen, die
 // Praxis sieht sie im Anfragen-Detail). Reine Funktionen, kein DOM.
 
 export const ANLIEGEN = [
-  { key: 'verordnung', titel: 'Mit Verordnung', hinweis: 'Ich habe ein Rezept (Verordnung) vom Arzt', zahlung: ['gkv', 'pkv', 'bg'] },
-  { key: 'erst', titel: 'Erstbehandlung / Beratung', hinweis: 'Ich komme zum ersten Mal, ohne Rezept', zahlung: ['selbstzahler', 'pkv'] },
-  { key: 'hausbesuch', titel: 'Hausbesuch', hinweis: 'Die Behandlung soll bei mir zu Hause stattfinden', zahlung: ['gkv', 'pkv', 'selbstzahler', 'bg'], adressePflicht: true },
-  { key: 'nagelspange', titel: 'Nagelspange', hinweis: 'Spangenbehandlung bei eingewachsenem Nagel', zahlung: ['selbstzahler'] },
-  { key: 'fusspflege', titel: 'Medizinische Fußpflege (Selbstzahler)', hinweis: 'Ohne Rezept, ich zahle selbst', zahlung: ['selbstzahler'] },
+  { key: 'rezept', titel: 'Behandlung mit Rezept', hinweis: 'Rezept liegt vor oder wird vom Arzt noch ausgestellt — bitte zum Termin mitbringen', zahlung: ['gkv', 'pkv', 'bg'] },
+  { key: 'nagelspange', titel: 'Nagelspange', hinweis: 'Eingewachsener Nagel — mit oder ohne Rezept', zahlung: ['gkv', 'pkv', 'selbstzahler'] },
+  { key: 'ohne_rezept', titel: 'Ohne Rezept – Fußpflege / Beratung', hinweis: 'Ich zahle selbst oder bin privat versichert', zahlung: ['selbstzahler', 'pkv'] },
 ];
+
+/** Fester Hinweis ueber den Karten: Akutfaelle gehoeren nicht in eine Online-Anfrage. */
+export const WUNDE_HINWEIS = 'Offene Wunde, Rötung, Schwellung oder Fieber am Fuß? Bitte nicht online anfragen — rufen Sie uns an oder wenden Sie sich an Ihre Ärztin / Ihren Arzt.';
+
+/** Antworten der freiwilligen Frage „Hausbesuch auf dem Rezept angekreuzt?" -> Notiztext. */
+export const HB_REZEPT_ANTWORTEN = { ja: 'ja', nein: 'nein', unklar: 'unklar' };
 
 const ALLE_ZAHLUNG = ['gkv', 'pkv', 'selbstzahler', 'bg'];
 
@@ -35,23 +39,38 @@ export function zahlungsartenFuer(key) {
   return findAnliegen(key)?.zahlung || ALLE_ZAHLUNG;
 }
 
-export function adressePflicht(key) {
-  return findAnliegen(key)?.adressePflicht === true;
+/**
+ * Freiwillige Ein-Tap-Frage „Ist auf dem Rezept ‚Hausbesuch: Ja' angekreuzt?" —
+ * nur bei Hausbesuch UND (Rezept-Karte oder Zahlungsart GKV/PKV). Blockiert nie.
+ * `hausbesuch` ist optional (Standard: an), damit der Aufrufer die Bedingung
+ * getrennt pruefen kann.
+ */
+export function hausbesuchFrageNoetig(key, zahlungsart, hausbesuch = true) {
+  if (hausbesuch !== true) return false;
+  return key === 'rezept' || zahlungsart === 'gkv' || zahlungsart === 'pkv';
 }
 
 /**
- * notizen-Text: „Anliegen: Hausbesuch — Adresse: …" als erste Zeile, darunter die
- * freie Notiz des Patienten. Auf 500 Zeichen gekuerzt (Server-Grenze); die Kopfzeile
- * bleibt immer vollstaendig, gekuerzt wird der freie Text.
+ * notizen-Text: „Anliegen: <Titel>[ — Hausbesuch — Adresse: …][ — Hausbesuch auf
+ * Rezept: ja|nein|unklar]" als erste Zeile, darunter die freie Notiz. Auf `max`
+ * (Server-Grenze 500) gekuerzt; die Kopfzeile bleibt vollstaendig, gekuerzt wird
+ * der freie Text. Ist Hausbesuch aus, werden Adresse und Antwort nie geschrieben.
  */
-export function anliegenNotiz(key, adresse, frei, max = 500) {
+export function anliegenNotiz(key, opts, frei, max = 500) {
   const a = findAnliegen(key);
   const rest = String(frei || '').trim();
-  if (!a) return rest || null;
+  if (!a) return rest ? rest.slice(0, max) : null;
+  const { hausbesuch = false, adresse = '', hbAufRezept = null } = opts || {};
   let kopf = `Anliegen: ${a.titel}`;
-  const adr = String(adresse || '').replace(/\s+/g, ' ').trim();
-  if (a.adressePflicht && adr) kopf += ` — Adresse: ${adr}`;
-  kopf = kopf.slice(0, max);
-  if (!rest) return kopf;
-  return `${kopf}\n${rest}`.slice(0, max);
+  if (hausbesuch === true) {
+    kopf += ' — Hausbesuch';
+    const adr = String(adresse || '').replace(/\s+/g, ' ').trim();
+    if (adr) kopf += ` — Adresse: ${adr}`;
+    const antwort = HB_REZEPT_ANTWORTEN[hbAufRezept];
+    if (antwort) kopf += ` — Hausbesuch auf Rezept: ${antwort}`;
+  }
+  if (!rest) return kopf.slice(0, max);
+  // Kopfzeile nie kuerzen, solange sie passt; nur der freie Text weicht.
+  if (kopf.length >= max) return kopf.slice(0, max);
+  return `${kopf}\n${rest}`.slice(0, max).trimEnd();
 }

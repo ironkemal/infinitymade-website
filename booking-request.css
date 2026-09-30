@@ -1143,3 +1143,15 @@ html, body {
   position: sticky;
   top: 0;
 }
+
+/* ── Podologie-Anliegen: Hausbesuch-Schalter, Wunden-Hinweis, Rezept-Frage ── */
+.br-anliegen-wrap { display: flex; flex-direction: column; gap: 0.4rem; }
+.br-hb-switch { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; padding: 0.15rem 0.25rem; }
+.br-hb-switch input { width: 1.1rem; height: 1.1rem; accent-color: var(--accent); }
+.br-wunde-hinweis { margin: 0 0 1rem; padding: 0.7rem 0.9rem; border: 1px solid var(--border-hover); border-left: 4px solid var(--error); border-radius: var(--radius); background: var(--bg-warm); color: var(--text); font-size: 0.85rem; line-height: 1.4; }
+.br-hb-frage { margin-bottom: 1.25rem; }
+.br-hb-frage-text { margin: 0 0 0.5rem; font-size: 0.9rem; color: var(--text); }
+.br-hb-optional { color: var(--text-muted); font-size: 0.8rem; }
+.br-hb-antworten { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.br-hb-antwort { background: var(--card); border: 2px solid var(--border); border-radius: var(--radius); padding: 0.55rem 1rem; min-height: 44px; font: inherit; font-size: 0.9rem; cursor: pointer; color: var(--text); }
+.br-hb-antwort.selected { border-color: var(--accent); background: var(--accent-light); }

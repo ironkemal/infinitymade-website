@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="theme-color" content="#FFFEFB" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
-  <link rel="stylesheet" href="booking-request.css?v=20260904" />
+  <link rel="stylesheet" href="booking-request.css?v=20261001t" />
 </head>
 <body>
 
@@ -148,6 +148,7 @@
 
         <!-- Nur Podologie (booking-request.js initAnliegen): Grund des Besuchs zuerst -->
         <div id="anliegenBlock" hidden>
+          <p class="br-wunde-hinweis" id="wundeHinweis" role="note"></p>
           <div class="br-card-grid" id="anliegenGrid"></div>
           <span class="br-field-error" id="anliegenError" style="display:none; margin-bottom:0.5rem;"></span>
           <div class="br-form" id="hbAdresseWrap" hidden>
@@ -155,6 +156,14 @@
               <label for="hbAdresse">Adresse für den Hausbesuch <span class="req">*</span></label>
               <input type="text" id="hbAdresse" maxlength="200" placeholder="Straße, Hausnummer, PLZ Ort" autocomplete="street-address" />
               <span class="br-field-error" id="hbAdresseError" style="display:none;"></span>
+            </div>
+          </div>
+          <div class="br-hb-frage" id="hbRezeptFrage" hidden>
+            <p class="br-hb-frage-text">Ist auf dem Rezept „Hausbesuch: Ja“ angekreuzt? <span class="br-hb-optional">(freiwillig)</span></p>
+            <div class="br-hb-antworten">
+              <button type="button" class="br-hb-antwort" data-antwort="ja">Ja</button>
+              <button type="button" class="br-hb-antwort" data-antwort="nein">Nein</button>
+              <button type="button" class="br-hb-antwort" data-antwort="unklar">Weiß nicht</button>
             </div>
           </div>
         </div>
@@ -677,7 +686,7 @@
 
 </div><!-- /#app -->
 
-<script type="module" src="booking-request.js?v=20261001s"></script>
+<script type="module" src="booking-request.js?v=20261001t"></script>
 <script type="module">
   import { createClient } from './vendor/supabase-js.js?v=20260813';
   import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';

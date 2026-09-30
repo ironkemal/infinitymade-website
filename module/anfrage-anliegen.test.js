@@ -1,39 +1,64 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { anliegenFuerBereich, zahlungsartenFuer, adressePflicht, anliegenNotiz, ANLIEGEN } from './anfrage-anliegen.js';
+import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, ANLIEGEN, WUNDE_HINWEIS } from './anfrage-anliegen.js';
 import { slugAusKennung, kennungAusSuche, ladeOwnerId } from './public-owner.js';
 
-test('Anliegen nur fuer Podologie', () => {
-  assert.equal(anliegenFuerBereich('podologie').length, 5);
-  assert.equal(anliegenFuerBereich('Podologie').length, 5);
+test('Anliegen nur fuer Podologie, drei Karten', () => {
+  assert.equal(anliegenFuerBereich('podologie').length, 3);
+  assert.equal(anliegenFuerBereich('Podologie').length, 3);
   assert.deepEqual(anliegenFuerBereich('physiotherapie'), []);
   assert.deepEqual(anliegenFuerBereich(null), []);
+  assert.deepEqual(ANLIEGEN.map(a => a.key), ['rezept', 'nagelspange', 'ohne_rezept']);
 });
 
 test('Zahlungsarten je Anliegen', () => {
-  assert.deepEqual(zahlungsartenFuer('verordnung'), ['gkv', 'pkv', 'bg']);
-  assert.deepEqual(zahlungsartenFuer('nagelspange'), ['selbstzahler']);
-  assert.deepEqual(zahlungsartenFuer('fusspflege'), ['selbstzahler']);
-  assert.ok(!zahlungsartenFuer('erst').includes('gkv'));
+  assert.deepEqual(zahlungsartenFuer('rezept'), ['gkv', 'pkv', 'bg']);
+  assert.deepEqual(zahlungsartenFuer('nagelspange'), ['gkv', 'pkv', 'selbstzahler']);
+  assert.deepEqual(zahlungsartenFuer('ohne_rezept'), ['selbstzahler', 'pkv']);
+  assert.ok(zahlungsartenFuer('nagelspange').includes('gkv'));
+  assert.ok(!zahlungsartenFuer('ohne_rezept').includes('gkv'));
   assert.equal(zahlungsartenFuer(null).length, 4);
   assert.equal(zahlungsartenFuer('unbekannt').length, 4);
-  for (const a of ANLIEGEN) assert.ok(a.zahlung.length >= 1);
 });
 
-test('Adresse nur beim Hausbesuch Pflicht', () => {
-  assert.equal(adressePflicht('hausbesuch'), true);
-  assert.equal(adressePflicht('verordnung'), false);
+test('Wunden-Hinweis vorhanden', () => {
+  assert.match(WUNDE_HINWEIS, /Wunde/);
 });
 
-test('anliegenNotiz: Kopfzeile + freie Notiz, 500-Grenze', () => {
-  assert.equal(anliegenNotiz('hausbesuch', ' Weg 1,  53721 Siegburg ', 'Klingel defekt'),
-    'Anliegen: Hausbesuch — Adresse: Weg 1, 53721 Siegburg\nKlingel defekt');
-  assert.equal(anliegenNotiz('nagelspange', 'egal', ''), 'Anliegen: Nagelspange');
+test('hausbesuchFrageNoetig: nur bei Hausbesuch und Rezept/GKV/PKV', () => {
+  assert.equal(hausbesuchFrageNoetig('rezept', 'gkv'), true);
+  assert.equal(hausbesuchFrageNoetig('rezept', null), true);
+  assert.equal(hausbesuchFrageNoetig('nagelspange', 'gkv'), true);
+  assert.equal(hausbesuchFrageNoetig('nagelspange', 'pkv'), true);
+  assert.equal(hausbesuchFrageNoetig('nagelspange', 'selbstzahler'), false);
+  assert.equal(hausbesuchFrageNoetig('ohne_rezept', 'selbstzahler'), false);
+  assert.equal(hausbesuchFrageNoetig('ohne_rezept', 'pkv'), true);
+  assert.equal(hausbesuchFrageNoetig('rezept', 'gkv', false), false);
+});
+
+test('anliegenNotiz: Kopfzeile, Hausbesuch, Antwort, freie Notiz', () => {
+  assert.equal(anliegenNotiz('nagelspange', {}, ''), 'Anliegen: Nagelspange');
+  assert.equal(anliegenNotiz('rezept', { hausbesuch: true, adresse: ' Weg 1,  53721 Siegburg ', hbAufRezept: 'unklar' }, 'Klingel defekt'),
+    'Anliegen: Behandlung mit Rezept — Hausbesuch — Adresse: Weg 1, 53721 Siegburg — Hausbesuch auf Rezept: unklar\nKlingel defekt');
+  assert.equal(anliegenNotiz('rezept', { hausbesuch: true, adresse: 'X', hbAufRezept: 'ja' }, ''),
+    'Anliegen: Behandlung mit Rezept — Hausbesuch — Adresse: X — Hausbesuch auf Rezept: ja');
+  assert.ok(anliegenNotiz('rezept', { hausbesuch: true, adresse: 'X', hbAufRezept: 'nein' }, '').endsWith('auf Rezept: nein'));
+  assert.equal(anliegenNotiz('rezept', { hausbesuch: true, adresse: 'X' }, ''), 'Anliegen: Behandlung mit Rezept — Hausbesuch — Adresse: X');
   assert.equal(anliegenNotiz(null, null, ' Hallo '), 'Hallo');
   assert.equal(anliegenNotiz(null, null, ''), null);
-  const lang = anliegenNotiz('hausbesuch', 'X', 'a'.repeat(900));
+});
+
+test('anliegenNotiz: Hausbesuch aus -> Adresse und Antwort werden nicht geschrieben', () => {
+  const n = anliegenNotiz('rezept', { hausbesuch: false, adresse: 'Weg 1', hbAufRezept: 'ja' }, 'Hallo');
+  assert.equal(n, 'Anliegen: Behandlung mit Rezept\nHallo');
+  assert.ok(!n.includes('Weg 1') && !n.includes('Hausbesuch'));
+});
+
+test('anliegenNotiz: 500-Grenze kuerzt den freien Text, nie die Kopfzeile', () => {
+  const kopf = 'Anliegen: Behandlung mit Rezept — Hausbesuch — Adresse: X — Hausbesuch auf Rezept: unklar';
+  const lang = anliegenNotiz('rezept', { hausbesuch: true, adresse: 'X', hbAufRezept: 'unklar' }, 'a'.repeat(900));
   assert.equal(lang.length, 500);
-  assert.ok(lang.startsWith('Anliegen: Hausbesuch — Adresse: X\n'));
+  assert.ok(lang.startsWith(kopf + '\n'));
 });
 
 test('slugAusKennung / kennungAusSuche', () => {
