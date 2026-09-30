@@ -220,7 +220,7 @@ async function loadTeam() {
   const ownerId = profile.role === 'owner' ? session.user.id : profile.owner_id;
   
   try {
-    const res = await fetch(`${API_BASIS}/team?owner_id=${ownerId}`);
+    const res = await authFetch(`${API_BASIS}/team?owner_id=${ownerId}`);
     if (res.ok) {
       teamMembers = await res.json();
     } else {
@@ -333,7 +333,7 @@ async function initCalendar() {
     },
     events: async function(info, successCallback, failureCallback) {
       try {
-        let query = supabase.from('bookings').select('*, services(title), profiles!bookings_user_id_fkey(business_name)')
+        let query = supabase.from('bookings').select('*, services(title)')
           .neq('status', 'cancelled')
           .gte('start_time', info.startStr)
           .lte('start_time', info.endStr);
@@ -363,7 +363,7 @@ async function initCalendar() {
           events.push({
             id: b.id,
             resourceId: b.user_id,
-            title: `${b.services?.title || 'Termin'} - ${b.customer_name} (${b.profiles?.business_name || 'Mitarbeiter'})`,
+            title: `${b.services?.title || 'Termin'} - ${b.customer_name} (${teamMembers.find(t => t.id === b.user_id)?.business_name || 'Mitarbeiter'})`,
             start: b.start_time,
             end: b.end_time,
             backgroundColor: b.status === 'completed' ? '#16a34a' : b.status === 'cancelled' ? '#6b7280' : colors[staffIdx % colors.length],

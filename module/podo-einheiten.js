@@ -45,7 +45,7 @@
  * einmal je Kalenderjahr, Behandlungsbeginn-Frist).
  */
 
-import { sitzungsplan } from './sitzungsplan.js?v=20261001e';
+import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { positionVon } from './podo-geplant.js?v=20260918';
 import { istVergeben, ladePodoTermine, bindeTermin } from './verordnung-termine.js?v=20260908';
 import { zeigeSitzungenArbeit } from './termin-panel.js?v=20261001r';

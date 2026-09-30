@@ -78,7 +78,7 @@ import { darf78040, darf78100, darfErstbefundungNagel,
          POD_EINGANGSBEFUNDUNG, POD_BEFUNDPAUSCHALE,
          POD_ERSTBEFUNDUNG_GROSS, POD_ERSTBEFUNDUNGEN,
          nagelLabel }
-  from './eingangsbefundung-regel.js?v=20261001e';
+  from './eingangsbefundung-regel.js?v=20261003a';
 // Seit 04.09.2026 gibt es EINEN Verordnungstopf (`prescriptions`). Diese Datei
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
@@ -112,7 +112,7 @@ import { ladeWagnerRozet } from './podo-wagner.js?v=20261001z';
 import { therapiezeitFehler, therapiezeitFuerSpeichern, positionAusTherapiezeit, therapiezeitWert } from './podo-therapiezeit-regel.js?v=20261001z';
 import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
 import { mountFussbefund } from './fussbefund.js?v=20261001z';
-import { oeffneFolgetermin } from './termin-folge.js?v=20261001m';
+import { oeffneFolgetermin } from './termin-folge.js?v=20261003a';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 

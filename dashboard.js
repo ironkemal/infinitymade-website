@@ -38,23 +38,23 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261002b';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261003a';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz, fahrtenbuchCsv, patientenverzeichnisCsv, csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS } from './module/fahrtenbuch-regeln.js?v=20261001c';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
-import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261001j';
+import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261003a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261001b';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261001e';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261001f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode }
-  from './module/verordnung-maske.js?v=20261001e';
+  from './module/verordnung-maske.js?v=20261003a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260929';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261001e';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261001e';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261003a';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261003a';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20260909';
@@ -80,10 +80,10 @@ import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, 
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260930c';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
-import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261001e';
+import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261003a';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
-import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261001i';
-import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261001e';
+import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261003a';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261003a';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20260929b';
@@ -112,8 +112,8 @@ import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
-} from './module/termin-aktionen.js?v=20261001e';
-import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261001m'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
+} from './module/termin-aktionen.js?v=20261003a';
+import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261003a'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort, gpsAnzeige } from './module/praxis-standort.js?v=20261002a';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
@@ -349,399 +349,21 @@ const T = {
     kiosk_err_pin_wrong: 'Falsche PIN. Verbleibende Versuche:',
     kiosk_err_locked: 'Zu viele Fehlversuche. Gesperrt bis',
     kiosk_err_network: 'Keine Verbindung zum Server. Der Kiosk-Modus bleibt aus Sicherheitsgründen aktiv.',
-  },
-  en: {
-    logout: 'Sign out',
-    nav_overview: 'Dashboard', nav_ueberblick: 'Overview Hub', nav_calendar: 'Calendar', nav_kunden: 'Patients',
-    nav_services: 'Services', nav_hours: 'Availability',
-    nav_team: 'Team', nav_b2b: 'Referrers', nav_b2c: 'Email Marketing', nav_rechnungen: 'Invoices', nav_feedback: 'Feedback & Support', nav_vorlagen: 'Templates', nav_settings: 'Settings', vorlagen_disclaimer: 'Example preview — actual printouts may differ (bank details, logo and tax fields are filled in from your profile).',
-    overview_sub: 'Your daily overview',
-    welcome_text: 'Welcome',
-    kpi_plan: 'Plan', kpi_status: 'Status', kpi_today_bookings: 'Today', kpi_today_sub: 'Appointments', kpi_support: 'Support',
-    status_active: '✓ Active', status_inactive: '✗ Inactive',
-    today_bookings: "Today's Appointments", upcoming_empty: 'No appointments today.', features_title: "Plan contents",
-    calendar_sub: 'Manage & book appointments', btn_add_leave: 'Add time off', btn_copy_booking_link: 'Booking link', btn_add_booking: '+ Appointment', btn_cal_today: 'Today',
-    kunden_sub: 'Leads & customer info', leads_import: 'Import CSV', leads_add: '+ New lead',
-    apify_label: 'Google Maps Scraper:', apify_run: 'Search',
-    lf_all: 'All', lf_abrechenbar: 'Ready to bill', lf_abgerechnet: 'Billed', lf_teilabsetzung: 'Partial rejection', lf_abgesetzt: 'Rejected', lf_storniert: 'Cancelled',
-    lead_title: 'Name', lead_city: 'City', lead_phone: 'Phone', lead_rating: 'Rating', lead_standort: 'Practice',
-    lead_festnetz: 'Landline', lead_handy: 'Mobile', lead_geschlecht: 'Gender', lead_geburtsdatum: 'Date of birth', lead_patientennr: 'No.',
-    lead_status: 'Status', lead_notes: 'Notes', lead_email: 'Email', lead_website: 'Website',
-    lead_country_code: 'Country', lead_google_url: 'Google Maps URL', lead_category_name: 'Category',
-    leads_empty: 'No leads yet.', lead_modal_new: 'New lead', lead_modal_edit: 'Edit lead',
-    lead_save: 'Save', lead_cancel: 'Cancel', lead_delete: 'Delete', lead_confirm_delete: 'Delete this lead?',
-    services_sub: 'Manage your services',
-    lbl_add_service: 'New Service', lbl_srv_title: 'Name', lbl_srv_dur: 'Duration (min)',
-    lbl_srv_price: 'Price (€)', lbl_srv_emps: 'Employees', btn_srv_save: 'Save',
-    alert_service_delete: 'Delete this service?',
-    hours_sub: 'Working hours per employee', btn_save_hours: 'Save', hours_for: 'For:',
-    alert_hours_saved: 'Hours saved!',
-    team_sub: 'Manage your team', lbl_invite_code: 'Company Code',
-    sub_invite_code: 'Employees register with this code.',
-    btn_copy: 'Copy', btn_remove: 'Remove', tab_info: 'Info', lbl_google_cal: 'Google Calendar',
-    b2b_sub: 'Business contacts & AI assistant', b2b_add: '+ Contact',
-    b2b_company: 'Company', b2b_contact: 'Contact person', b2b_status: 'Status',
-    b2b_empty: 'No B2B contacts yet.', b2b_ai_title: 'AI Assistant', b2b_ai_welcome: 'Hi! I can help with B2B queries.',
-    set_profile: 'Profile', set_biz: 'Business name', set_lang: 'Language', set_save: 'Save',
-    set_account: 'Account', set_password: 'Password', set_new_pw: 'New password',
-    set_change: 'Change password', set_integrations: 'Integrations',
-    sub_portal: 'Manage subscription', sub_upgrade: 'Upgrade',
-    status_disconnected: 'Disconnected', status_connected: 'Connected',
-    btn_connect: 'Connect', btn_disconnect: 'Disconnect',
-    lbl_manual_title: 'New Appointment', lbl_manual_emp: 'Employee', lbl_manual_service: 'Service',
-    lbl_manual_start: 'From', lbl_manual_end: 'To', lbl_manual_cust: 'Customer name',
-    lbl_leave_title: 'Add time off', lbl_leave_emp: 'For whom?',
-    lbl_leave_start: 'Start', lbl_leave_end: 'End', lbl_leave_reason: 'Reason',
-    btn_leave_cancel: 'Cancel', btn_leave_save: 'Save',
-    lbl_other: 'Other',
-    saved: 'Saved.', pw_changed: 'Password changed.', err_generic: 'An error occurred.',
-    copied: 'Copied!', csv_imported: 'Imported: ', csv_error: 'CSV error: ',
-    apify_error: 'Apify error: ', apify_done: 'Imported: ', me: '(You)',
-    nav_doctors: 'Doctors', nav_notizen: 'Notes', nav_fahrtenbuch: 'Travel Log', nav_beispielmodus: 'Demo Mode', nav_anamnese: 'Intake',
-    doctors_sub: 'Referring doctors and their referrals', notizen_sub: 'Patient notes & reports', b2c_sub: 'Customer mailings & AI assistant',
-    beispielmodus_sub: 'Anatomy maps for patient consultations', anamnese_sub: 'Digital intake form',
-    lbl_doctor_notes: 'Doctor notes', lbl_therapist_notes: 'Therapist notes',
-    lbl_ai_summary: 'AI Report', lbl_send_patient: 'Send to patient',
-    lbl_select_patient: 'Select patient', lbl_notes_empty: 'No notes available.',
-    nav_abrechnung: '§302 Billing', abrechnung_sub: 'Prepare § 302 SGB V batch billing to health insurers',
-    nav_belegliste: 'Payment Journal',
-    nav_mahnwesen: 'Dunning',
-    nav_verordnungen: 'Prescriptions',
-    nav_statistik: 'Analytics',
-    nav_warteliste: 'Waiting List',
-    cal_emp_all: 'All',
-    nav_podologie_billing: 'Treatments',
-    podologie_billing_sub: 'Document daily treatments & keep prescriptions in view',
-    nav_fussstatus: 'Foot Findings',
-    fussstatus_sub: 'Digital foot analysis card — assessment per appointment',
-    pod_new_vord: 'New Prescription', pod_active_vord: 'Active Prescriptions',
-    pod_tagesbehandlung: 'Record Treatment', pod_patient: 'Patient',
-    pod_ausstelldatum: 'Issue Date', pod_diagnosegruppe: 'Diagnosis Group',
-    pod_einheiten: 'Treatment Units', pod_frequenz: 'Therapy Frequency',
-    pod_dringend: 'Urgent (14-day deadline)', pod_hausbesuch: 'Home Visit',
-    inv_art_label: 'Type of service', inv_art_med: 'Medical (therapeutic)', inv_art_kosm: 'Cosmetic',
-    pod_save: 'Save', pod_edit: 'Edit', pod_rechnung: 'Invoice', pod_edit_vord: 'Edit prescription', pod_update: 'Update', pod_cancel_edit: 'Cancel',
-    pod_no_vord: 'No active prescriptions.',
-    pod_behandlungsdatum: 'Treatment Date', pod_hpnr: 'HPNR Codes',
-    pod_lokalisation: 'Location (toe)', pod_notizen: 'Notes',
-    pod_save_behandlung: 'Save Treatment',
-    pod_warn_frist: 'Treatment deadline expired', pod_warn_expired: 'Prescription possibly invalid (>84 days)',
-    pod_kein_hpnr: 'Please select at least one HPNR code.',
-    pod_rezeptart: 'Prescription Type',
-    pod_gkv_angaben: 'Statutory insurance details (fund, diagnosis group, ICD) — only needed for GKV prescriptions',
-    pod_behandlungsanlass: 'Reason for treatment',
-    pod_behandlungsanlass_hint: 'Free text for the invoice — no code required.',
-    pod_beginn_hint: 'Must Start By',
-    pod_heilmittel_items: 'Prescribed Services',
-    pod_heilmittel_g: 'Prescribed remedy (Muster 13, field g)',
-    pod_hm_gross: 'Therapy time over 20 minutes → large treatment (78020)',
-    pod_icd10_label: 'ICD-10 Code',
-    pod_icd_mismatch: 'The ICD code does not state the diagnosis required for this diagnosis group',
-    pod_icd_hard: 'A correction is only permitted with a new physician signature and date and must be completed before submission for billing.',
-    pod_dg_nur_mit: 'only with {icd}',
-    pod_dg_passt_nicht: 'does not match {icd}',
-    pod_dg_kandidaten: 'Matching diagnosis groups:',
-    pod_icd_nach_feld2: '2nd code moved to ICD field 2',
-    pod_icd_je_feld: 'More than two ICD codes: two are transmitted (one per field) – please put further codes in the diagnosis text',
-    pod_l60_hint: 'L60.0 – please confirm the stage (use the physician\'s notation on the prescription):',
-    pod_l60_ui1: 'Unguis incarnatus – Stage 1 (UI1)',
-    pod_l60_ui2: 'Stage 2 or 3 (UI2)',
-    fuss_new: 'New Foot Status', fuss_history: 'History (last 10)',
-    fuss_patient: 'Patient', fuss_datum: 'Date', fuss_seite: 'Side',
-    fuss_wagner: 'Wagner Grade', fuss_befunde: 'Findings', fuss_notizen: 'Notes',
-    fuss_foto: 'Photos', fuss_save: 'Save', fuss_no_history: 'No entries yet.',
-    nav_anfragen: 'Appointment Requests',
-    anfragen_sub: 'Incoming patient requests',
-    anfragen_open: 'Open', anfragen_approved: 'Confirmed', anfragen_declined: 'Declined',
-    anfragen_annehmen: 'Approve', anfragen_ablehnen: 'Decline',
-    anfragen_empty: 'No requests.',
-    anfragen_auto_accept: 'Auto-accept',
-    anfragen_auto_accept_sub: 'Requests are confirmed immediately',
-    anfragen_auto_types: 'Auto-accept for:',
-    anfragen_gkv_warning: 'GKV and BG patients must be confirmed manually (prescription verification required).',
-    anfragen_decline_reason: 'Decline reason (optional)',
-    anfragen_confirm_approve: 'Confirm appointment',
-    anfragen_select_employee: 'Select therapist',
-    anfragen_detail_title: 'Request details',
-    anfragen_patient: 'Patient', anfragen_service: 'Service',
-    anfragen_date: 'Preferred date', anfragen_payment: 'Payment type',
-    anfragen_sessions: 'Sessions', anfragen_notizen: 'Notes',
-    anfragen_link_title: 'Booking link', anfragen_link_sub: 'Share this link with your patients',
-    anfragen_copy_link: 'Copy link',
-    anfragen_absage_senden: 'Send decline',
-    anfragen_nachricht: 'Message patient',
-    anfragen_nachricht_senden: 'Send message',
-    anfragen_nachricht_hint: 'Sent as an email. Replies land straight in your inbox.',
-    anfragen_nachricht_leer: 'Please enter a message.',
-    anfragen_nachricht_ok: 'Message sent ✓',
-    anfragen_alt_offen: 'Suggestions sent, awaiting reply',
-    anfragen_alt_anbieten: 'Offer alternative times',
-    anfragen_alt_hint: 'Pick up to three. The patient accepts one with a click in the email.',
-    anfragen_alt_leer: 'Nothing free with this therapist over the next few days.',
-    anfragen_alt_max: 'Offer at most three times.',
-    anfragen_alt_gesendet: 'Suggestions sent ✓',
-    anfragen_alt_keine_mail: 'Without the patient\'s email address no alternatives can be offered.',
-    move_banner: 'Click the target time, then confirm the preview.',
-    move_cancel: 'Cancel move',
-    move_conflict: 'There is already an appointment at that time. Please pick another slot.',
-    move_error: 'Could not move the appointment',
-    move_done: 'Appointment moved',
-    kass_title: 'Collect co-payment', kass_zahlart: 'How is it being paid?',
-    kass_bar: 'Cash', kass_ec: 'Debit card', kass_ueberweisung: 'Bank transfer', kass_sonstiges: 'Other', kass_paypal: 'PayPal',
-    kass_print: 'Print receipt', kass_cancel: 'Cancel',
-    kass_befreit: 'Exempt from co-payment', kass_offen: 'Co-payment open', kass_bezahlt: 'Co-payment paid', kass_btn: 'Collect',
-    kass_beleg: 'Receipt', kass_rechnung: 'Open invoice', stat_bezahlt: 'Paid', stat_offen: 'Outstanding', kass_undo: 'reverse',
-    kass_ok: 'Co-payment collected ✓', kass_storno_ok: 'Co-payment reversed ✓',
-    sitz_leer_kein_termin: 'No prescription linked.', sitz_leer_keine_vo: 'No active prescription on file for this patient.',
-    sitz_leer_fehler: 'Prescription could not be loaded.', sitz_leer_keine_sitzungen: 'No sessions recorded yet.',
-    sitz_leer_podo: 'Podiatry does not keep a unit ledger — the services performed are listed under treatments.',
-    kass_err_betrag: 'No co-payment amount set — please enter it on the prescription first.',
-    kass_err_bereits: 'This co-payment has already been collected.',
-    kass_err_beleg: 'Payment journal entry failed, nothing was booked:',
-    kass_storno_title: 'Reverse co-payment',
-    kass_storno_msg: 'The payment journal entry cannot be deleted. A counter-entry will be created.',
-    kass_storno_grund: 'Reason for reversal (optional)',
-    kass_storno_confirm: 'Reverse',
-    kass_storno_kein_beleg: 'There is no payment journal entry for this prescription (collected before August 2026). The note will be removed; the journal stays unchanged.',
-    kass_popup: 'A popup blocker prevented the print window from opening.',
-    kass_popup_gebucht: 'Booked — but the receipt could not be opened (popup blocker). Use “Open invoice” to retrieve it.',
-    af_keine_vereinbarung: 'No signed cancellation agreement is on file for this patient. Without one the claim is usually not enforceable.',
-    af_vereinbarung_seit: 'Cancellation agreement on file since',
-    af_trotzdem_erstellen: 'Create anyway',
-    af_gesperrt_titel: 'Cancellation invoice not possible',
-    // ── Kiosk / "hand the tablet to the patient" (council 2026-08-14) ──
-    kiosk_start_btn: 'Hand to patient',
-    kiosk_overlay_title: 'Medical history form',
-    kiosk_overlay_sub: 'Please fill in all fields',
-    kiosk_exit_btn: 'Exit (PIN)',
-    kiosk_pin_title: 'Enter PIN',
-    kiosk_pin_subtitle: 'Enter your 4-digit PIN to leave kiosk mode.',
-    kiosk_pin_cancel: 'Cancel',
-    kiosk_pin_confirm: 'Confirm',
-    kiosk_pin_forgot: 'Forgot PIN?',
-    kiosk_forgot_confirm: 'Without the PIN, kiosk mode will not be left. Your session will be ended and you will be signed out instead. Continue?',
-    kiosk_setup_title: 'Set a PIN',
-    kiosk_setup_sub: 'Choose a 4-digit PIN. Kiosk mode will not start without one.',
-    kiosk_setup_current_label: 'Current PIN',
-    kiosk_setup_pin_label: 'New PIN (4 digits)',
-    kiosk_setup_confirm_label: 'Repeat PIN',
-    kiosk_setup_save: 'Save',
-    kiosk_status_error: 'Cannot start kiosk mode — PIN status is unavailable.',
-    kiosk_err_pin_format: 'The PIN must be exactly 4 digits.',
-    kiosk_err_pin_mismatch: 'The PINs do not match.',
-    kiosk_err_pin_save: 'The PIN could not be saved.',
-    kiosk_err_pin_incomplete: 'Please enter all 4 digits.',
-    kiosk_err_pin_wrong: 'Wrong PIN. Attempts left:',
-    kiosk_err_locked: 'Too many failed attempts. Locked until',
-    kiosk_err_network: 'No connection to the server. Kiosk mode stays active for safety.',
-  },
-  tr: {
-    logout: 'Çıkış',
-    nav_overview: 'Dashboard', nav_ueberblick: 'Genel Bakış', nav_calendar: 'Takvim', nav_kunden: 'Hastalar',
-    nav_services: 'Hizmetler', nav_hours: 'Müsaitlik',
-    nav_team: 'Ekip', nav_b2b: 'Yönlendirenler', nav_b2c: 'E-posta', nav_rechnungen: 'Faturalar', nav_feedback: 'Geri Bildirim & Destek', nav_vorlagen: 'Şablonlar', nav_settings: 'Ayarlar', vorlagen_disclaimer: 'Örnek görünüm — gerçek çıktı farklı olabilir (banka bilgisi, logo ve vergi alanları profilinizden tamamlanır).',
-    overview_sub: 'Günlük genel bakışınız',
-    welcome_text: 'Hoşgeldin',
-    kpi_plan: 'Paket', kpi_status: 'Durum', kpi_today_bookings: 'Bugün', kpi_today_sub: 'Randevu', kpi_support: 'Destek',
-    status_active: '✓ Aktif', status_inactive: '✗ Pasif',
-    today_bookings: 'Bugünkü randevularınız', upcoming_empty: 'Bugün randevu yok.', features_title: 'Paket içeriği',
-    calendar_sub: 'Randevu yönetimi', btn_add_leave: 'İzin ekle', btn_copy_booking_link: 'Randevu bağlantısı', btn_add_booking: '+ Randevu', btn_cal_today: 'Bugün',
-    kunden_sub: 'Lead & müşteri bilgileri', leads_import: 'CSV içe aktar', leads_add: '+ Yeni Lead',
-    apify_label: 'Google Maps Scraper:', apify_run: 'Ara',
-    lf_all: 'Tümü', lf_abrechenbar: 'Faturaya hazır', lf_abgerechnet: 'Fatura edildi', lf_teilabsetzung: 'Kısmi kesinti', lf_abgesetzt: 'Kesinti', lf_storniert: 'İptal edildi',
-    lead_title: 'Ad', lead_city: 'Şehir', lead_phone: 'Telefon', lead_rating: 'Puan', lead_standort: 'Şube',
-    lead_festnetz: 'Sabit hat', lead_handy: 'Cep', lead_geschlecht: 'Cinsiyet', lead_geburtsdatum: 'Doğum tarihi', lead_patientennr: 'No.',
-    lead_status: 'Durum', lead_notes: 'Notlar', lead_email: 'E-posta', lead_website: 'Website',
-    lead_country_code: 'Ülke', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategori',
-    leads_empty: 'Henüz lead yok.', lead_modal_new: 'Yeni Lead', lead_modal_edit: 'Lead düzenle',
-    lead_save: 'Kaydet', lead_cancel: 'İptal', lead_delete: 'Sil', lead_confirm_delete: 'Bu lead silinsin mi?',
-    services_sub: 'Sunulan hizmetleri yönet',
-    lbl_add_service: 'Yeni Hizmet', lbl_srv_title: 'Ad', lbl_srv_dur: 'Süre (dk)',
-    lbl_srv_price: 'Fiyat (€)', lbl_srv_emps: 'Personel', btn_srv_save: 'Kaydet',
-    alert_service_delete: 'Bu hizmet silinsin mi?',
-    hours_sub: 'Personel başına çalışma saatleri', btn_save_hours: 'Kaydet', hours_for: 'Kimin için:',
-    alert_hours_saved: 'Saatler kaydedildi!',
-    team_sub: 'Ekibi yönet', lbl_invite_code: 'Şirket Kodu',
-    sub_invite_code: 'Çalışanlar bu kodla kayıt olabilir.',
-    btn_copy: 'Kopyala', btn_remove: 'Çıkar', tab_info: 'Bilgi', lbl_google_cal: 'Google Takvim',
-    b2b_sub: 'İş ortakları & KI asistan', b2b_add: '+ Kişi',
-    b2b_company: 'Şirket', b2b_contact: 'İlgili kişi', b2b_status: 'Durum',
-    b2b_empty: 'Henüz B2B kişisi yok.', b2b_ai_title: 'KI Asistan', b2b_ai_welcome: 'Merhaba! B2B sorularınızda yardımcı olabilirim.',
-    set_profile: 'Profil', set_biz: 'İşletme adı', set_lang: 'Dil', set_save: 'Kaydet',
-    set_account: 'Hesap', set_password: 'Şifre', set_new_pw: 'Yeni şifre',
-    set_change: 'Şifre değiştir', set_integrations: 'Entegrasyonlar',
-    sub_portal: 'Aboneliği yönet', sub_upgrade: 'Yükselt',
-    status_disconnected: 'Bağlı değil', status_connected: 'Bağlandı',
-    btn_connect: 'Bağlan', btn_disconnect: 'Bağlantıyı kes',
-    lbl_manual_title: 'Yeni Randevu', lbl_manual_emp: 'Personel', lbl_manual_service: 'Hizmet',
-    lbl_manual_start: 'Başlangıç', lbl_manual_end: 'Bitiş', lbl_manual_cust: 'Müşteri adı',
-    lbl_leave_title: 'İzin ekle', lbl_leave_emp: 'Kimin için?',
-    lbl_leave_start: 'Başlangıç', lbl_leave_end: 'Bitiş', lbl_leave_reason: 'Sebep',
-    btn_leave_cancel: 'İptal', btn_leave_save: 'Kaydet',
-    lbl_other: 'Diğer',
-    saved: 'Kaydedildi.', pw_changed: 'Şifre değiştirildi.', err_generic: 'Bir hata oluştu.',
-    copied: 'Kopyalandı!', csv_imported: 'İçe aktarıldı: ', csv_error: 'CSV hatası: ',
-    apify_error: 'Apify hatası: ', apify_done: 'İçe aktarıldı: ', me: '(Siz)',
-    nav_doctors: 'Doktorlar', nav_notizen: 'Notlar', nav_fahrtenbuch: 'Sürüş Defteri', nav_beispielmodus: 'Demo Modu', nav_anamnese: 'Anamnez',
-    doctors_sub: 'Sevk eden doktorlar ve yönlendirmeleri', notizen_sub: 'Hasta notları ve raporlar', b2c_sub: 'Müşteri maileri ve AI asistanı',
-    beispielmodus_sub: 'Hasta görüşmeleri için anatomi haritaları', anamnese_sub: 'Dijital anamnez formu',
-    lbl_doctor_notes: 'Doktor notları', lbl_therapist_notes: 'Terapist notları',
-    lbl_ai_summary: 'AI Raporu', lbl_send_patient: 'Hastaya gönder',
-    lbl_select_patient: 'Hasta seç', lbl_notes_empty: 'Not bulunmuyor.',
-    nav_abrechnung: '§302 Faturalama', abrechnung_sub: '§ 302 SGB V Krankenkasse toplu faturası hazırlama',
-    nav_belegliste: 'Ödeme Defteri',
-    nav_mahnwesen: 'Tahsilat',
-    nav_verordnungen: 'Reçeteler',
-    nav_statistik: 'Analizler',
-    nav_warteliste: 'Bekleme Listesi',
-    cal_emp_all: 'Tümü',
-    nav_podologie_billing: 'Tedaviler',
-    podologie_billing_sub: 'Günlük tedaviyi kaydet ve reçeteleri takip et',
-    nav_fussstatus: 'Ayak Muayenesi',
-    fussstatus_sub: 'Dijital ayak analiz kartı — Randevu başına bulgu',
-    pod_new_vord: 'Yeni Reçete', pod_active_vord: 'Aktif Reçeteler',
-    pod_tagesbehandlung: 'Tedavi Kaydet', pod_patient: 'Hasta',
-    pod_ausstelldatum: 'Düzenleme Tarihi', pod_diagnosegruppe: 'Tanı Grubu',
-    pod_einheiten: 'Tedavi Birimi', pod_frequenz: 'Terapi Sıklığı',
-    pod_dringend: 'Acil (14 gün)', pod_hausbesuch: 'Ev Ziyareti',
-    inv_art_label: 'Hizmet türü', inv_art_med: 'Tıbbi (tedavi)', inv_art_kosm: 'Kozmetik',
-    pod_save: 'Kaydet', pod_edit: 'Düzenle', pod_rechnung: 'Fatura', pod_edit_vord: 'Reçeteyi düzenle', pod_update: 'Güncelle', pod_cancel_edit: 'İptal',
-    pod_no_vord: 'Aktif reçete yok.',
-    pod_behandlungsdatum: 'Tedavi Tarihi', pod_hpnr: 'HPNR Kodları',
-    pod_lokalisation: 'Lokalizasyon (parmak)', pod_notizen: 'Notlar',
-    pod_save_behandlung: 'Tedaviyi Kaydet',
-    pod_warn_frist: 'Tedavi başlangıç süresi doldu', pod_warn_expired: 'Reçete geçersiz olabilir (>84 gün)',
-    pod_kein_hpnr: 'Lütfen en az bir HPNR kodu seçin.',
-    pod_rezeptart: 'Reçete Türü',
-    pod_gkv_angaben: 'GKV bilgileri (kasa, tanı grubu, ICD) — sadece kasa reçetesinde gerekli',
-    pod_behandlungsanlass: 'Tedavi gerekçesi',
-    pod_behandlungsanlass_hint: 'Fatura için serbest metin — kod gerekmiyor.',
-    pod_beginn_hint: 'En Geç Başlama',
-    pod_heilmittel_items: 'Reçete Edilen Hizmetler',
-    pod_heilmittel_g: 'Reçete edilen Heilmittel (Muster 13, alan g)',
-    pod_hm_gross: 'Tedavi süresi 20 dakikadan uzun → büyük tedavi (78020)',
-    pod_icd10_label: 'ICD-10 Kodu',
-    pod_icd_mismatch: 'ICD kodu, bu tanı grubunun gerektirdiği tanıyı belirtmiyor',
-    pod_icd_hard: 'Düzeltme yalnızca yeni hekim imzası ve tarihiyle yapılabilir; faturalandırma için gönderimden önce tamamlanmalıdır.',
-    pod_dg_nur_mit: 'yalnızca {icd} ile',
-    pod_dg_passt_nicht: '{icd} ile uyuşmuyor',
-    pod_dg_kandidaten: 'Uygun tanı grupları:',
-    pod_icd_nach_feld2: '2. kod ICD 2 alanına taşındı',
-    pod_icd_je_feld: 'İkiden fazla ICD kodu: iki kod iletilir (her alana bir) – diğerlerini lütfen tanı metnine yazın',
-    pod_l60_hint: 'L60.0 – lütfen evresi onaylayın (reçetedeki hekim kaydı geçerlidir):',
-    pod_l60_ui1: 'Unguis incarnatus – Evre 1 (UI1)',
-    pod_l60_ui2: 'Evre 2 veya 3 (UI2)',
-    fuss_new: 'Yeni Ayak Durumu', fuss_history: 'Geçmiş (son 10)',
-    fuss_patient: 'Hasta', fuss_datum: 'Tarih', fuss_seite: 'Taraf',
-    fuss_wagner: 'Wagner Derecesi', fuss_befunde: 'Bulgular', fuss_notizen: 'Notlar',
-    fuss_foto: 'Fotoğraflar', fuss_save: 'Kaydet', fuss_no_history: 'Henüz kayıt yok.',
-    nav_anfragen: 'Randevu Talepleri',
-    anfragen_sub: 'Gelen hasta talepleri',
-    anfragen_open: 'Açık', anfragen_approved: 'Onaylandı', anfragen_declined: 'Reddedildi',
-    anfragen_annehmen: 'Onayla', anfragen_ablehnen: 'Reddet',
-    anfragen_empty: 'Talep yok.',
-    anfragen_auto_accept: 'Otomatik onayla',
-    anfragen_auto_accept_sub: 'Talepler anında onaylanır',
-    anfragen_auto_types: 'Şunlar için otomatik onayla:',
-    anfragen_gkv_warning: 'GKV ve BG hastaları manuel onay gerektirir (reçete kontrolü şart).',
-    anfragen_decline_reason: 'Red gerekçesi (isteğe bağlı)',
-    anfragen_confirm_approve: 'Randevuyu onayla',
-    anfragen_select_employee: 'Terapist seç',
-    anfragen_detail_title: 'Talep detayları',
-    anfragen_patient: 'Hasta', anfragen_service: 'Hizmet',
-    anfragen_date: 'Tercih edilen tarih', anfragen_payment: 'Sigorta tipi',
-    anfragen_sessions: 'Seans', anfragen_notizen: 'Notlar',
-    anfragen_link_title: 'Rezervasyon linki', anfragen_link_sub: 'Bu linki hastalarınızla paylaşın',
-    anfragen_copy_link: 'Linki kopyala',
-    anfragen_absage_senden: 'Ret gönder',
-    anfragen_nachricht: 'Hastaya mesaj',
-    anfragen_nachricht_senden: 'Mesaj gönder',
-    anfragen_nachricht_hint: 'E-posta olarak gider. Yanıtlar doğrudan gelen kutunuza düşer.',
-    anfragen_nachricht_leer: 'Lütfen bir mesaj girin.',
-    anfragen_nachricht_ok: 'Mesaj gönderildi ✓',
-    anfragen_alt_offen: 'Öneriler gönderildi, yanıt bekleniyor',
-    anfragen_alt_anbieten: 'Alternatif saat öner',
-    anfragen_alt_hint: 'En fazla üç tane seçin. Hasta e-postadaki bağlantıyla birini kabul eder.',
-    anfragen_alt_leer: 'Önümüzdeki günlerde bu terapistte boş saat yok.',
-    anfragen_alt_max: 'En fazla üç saat önerin.',
-    anfragen_alt_gesendet: 'Öneriler gönderildi ✓',
-    anfragen_alt_keine_mail: 'Hastanın e-posta adresi olmadan alternatif saat önerilemez.',
-    move_banner: 'Hedef saati tıklayın, sonra önizlemeyi onaylayın.',
-    move_cancel: 'Taşımayı iptal et',
-    move_conflict: 'Bu saatte zaten bir randevu var. Lütfen başka bir saat seçin.',
-    move_error: 'Randevu taşınamadı',
-    move_done: 'Randevu taşındı',
-    kass_title: 'Katkı payını tahsil et', kass_zahlart: 'Ödeme nasıl yapılıyor?',
-    kass_bar: 'Nakit', kass_ec: 'Banka kartı', kass_ueberweisung: 'Havale', kass_sonstiges: 'Diğer', kass_paypal: 'PayPal',
-    kass_print: 'Makbuz yazdır', kass_cancel: 'İptal',
-    kass_befreit: 'Katkı payından muaf', kass_offen: 'Katkı payı açık', kass_bezahlt: 'Katkı payı ödendi', kass_btn: 'Tahsil et',
-    kass_beleg: 'Fiş', kass_rechnung: 'Faturayı aç', stat_bezahlt: 'Ödenen', stat_offen: 'Açık', kass_undo: 'iptal et',
-    kass_ok: 'Katkı payı tahsil edildi ✓', kass_storno_ok: 'Katkı payı iptal edildi ✓',
-    sitz_leer_kein_termin: 'Bağlı reçete yok.', sitz_leer_keine_vo: 'Bu hasta için kayıtlı aktif reçete yok.',
-    sitz_leer_fehler: 'Reçete yüklenemedi.', sitz_leer_keine_sitzungen: 'Henüz seans kaydı yok.',
-    sitz_leer_podo: 'Podoloji seans defteri tutmaz — verilen hizmetler Behandlungen altında.',
-    kass_err_betrag: 'Katkı payı tutarı girilmemiş — önce reçetede belirtin.',
-    kass_err_bereits: 'Bu katkı payı zaten tahsil edilmiş.',
-    kass_err_beleg: 'Ödeme defteri kaydı başarısız, hiçbir şey kaydedilmedi:',
-    kass_storno_title: 'Katkı payını iptal et',
-    kass_storno_msg: 'Ödeme defteri kaydı silinemez. Ters kayıt oluşturulacak.',
-    kass_storno_grund: 'İptal gerekçesi (isteğe bağlı)',
-    kass_storno_confirm: 'İptal et',
-    kass_storno_kein_beleg: 'Bu reçete için ödeme defteri kaydı yok (Ağustos 2026 öncesi tahsil edilmiş). Not geri alınır, ödeme defteri değişmez.',
-    kass_popup: 'Popup engelleyici yazdırma penceresini açmayı engelledi.',
-    kass_popup_gebucht: 'Kaydedildi — ancak makbuz açılamadı (popup engelleyici). „Faturayı aç“ ile tekrar deneyin.',
-    af_keine_vereinbarung: 'Bu hasta için imzalı randevu iptal sözleşmesi kayıtlı değil. Sözleşme olmadan alacak genelde tahsil edilemez.',
-    af_vereinbarung_seit: 'İptal sözleşmesi şu tarihten beri mevcut',
-    af_trotzdem_erstellen: 'Yine de oluştur',
-    af_gesperrt_titel: 'Ausfall faturası oluşturulamıyor',
-    // ── Kiosk / „Tableti hastaya uzat" (Konsey 2026-08-14) ──
-    kiosk_start_btn: 'Hastaya uzat',
-    kiosk_overlay_title: 'Anamnez formu',
-    kiosk_overlay_sub: 'Lütfen tüm alanları doldurun',
-    kiosk_exit_btn: 'Bitir (PIN)',
-    kiosk_pin_title: 'PIN girin',
-    kiosk_pin_subtitle: 'Kiosk modundan çıkmak için 4 haneli PIN kodunuzu girin.',
-    kiosk_pin_cancel: 'İptal',
-    kiosk_pin_confirm: 'Onayla',
-    kiosk_pin_forgot: 'PIN unuttunuz mu?',
-    kiosk_forgot_confirm: 'PIN olmadan kiosk modundan çıkılmaz. Bunun yerine oturum sonlandırılır ve çıkış yaparsınız. Devam edilsin mi?',
-    kiosk_setup_title: 'PIN belirle',
-    kiosk_setup_sub: '4 haneli bir PIN belirleyin. PIN olmadan kiosk modu başlamaz.',
-    kiosk_setup_current_label: 'Mevcut PIN',
-    kiosk_setup_pin_label: 'Yeni PIN (4 hane)',
-    kiosk_setup_confirm_label: 'PIN tekrar',
-    kiosk_setup_save: 'Kaydet',
-    kiosk_status_error: 'Kiosk modu başlatılamıyor — PIN durumu alınamadı.',
-    kiosk_err_pin_format: 'PIN tam olarak 4 haneli olmalı.',
-    kiosk_err_pin_mismatch: 'PIN kodları eşleşmiyor.',
-    kiosk_err_pin_save: 'PIN kaydedilemedi.',
-    kiosk_err_pin_incomplete: 'Lütfen 4 hanenin tamamını girin.',
-    kiosk_err_pin_wrong: 'Yanlış PIN. Kalan deneme:',
-    kiosk_err_locked: 'Çok fazla hatalı deneme. Şu saate kadar kilitli:',
-    kiosk_err_network: 'Sunucuya bağlanılamadı. Güvenlik gereği kiosk modu açık kalıyor.',
   }
 };
 
 const PLAN_FEATURES = {
   starter: {
     de: ['Online-Terminbuchung 24/7', 'Automatische Erinnerungen', 'Warteliste-Automation', 'Eigene Praxura Buchungsseite', 'DSGVO-konform'],
-    en: ['24/7 online appointment booking', 'Automatic reminders', 'Waitlist automation', 'Your own Praxura booking page', 'GDPR-compliant'],
-    tr: ['7/24 online randevu', 'Otomatik hatırlatmalar', 'Bekleme listesi otomasyonu', 'Kendi Praxura rezervasyon sayfanız', 'DSGVO uyumlu']
   },
   professional: {
     de: ['Alles aus Starter', 'Reaktivierungskampagne', 'Upsell-Vorschläge', 'Auslastungs-Dashboard', 'Mitarbeiter-Routing'],
-    en: ['Everything in Starter', 'Reactivation campaign', 'Upsell suggestions', 'Utilization dashboard', 'Staff routing'],
-    tr: ["Starter'daki her şey", 'Reaktivasyon kampanyası', 'Ek satış önerileri', 'Doluluk paneli', 'Personel yönlendirme']
   },
   klinik: {
     de: ['Alles aus Professional', 'Digitales Anamnese-Formular', 'Verpasster Anruf → Assistent', 'Medizinische Erinnerungen', 'Rezept-Workflow'],
-    en: ['Everything in Professional', 'Digital intake form', 'Missed call → Assistant', 'Medical reminders', 'Prescription workflow'],
-    tr: ["Professional'daki her şey", 'Dijital anamnez formu', 'Cevapsız çağrı → Asistan', 'Tıbbi hatırlatmalar', 'Reçete iş akışı']
   },
   mitarbeiter: {
     de: ['Online-Terminbuchung', 'Kalender-Synchronisation', 'Arbeitszeiten-Verwaltung', 'DSGVO-konform'],
-    en: ['Online booking', 'Calendar sync', 'Working hours management', 'GDPR-compliant'],
-    tr: ['Online randevu', 'Takvim senkronizasyonu', 'Çalışma saatleri yönetimi', 'DSGVO uyumlu']
   }
 };
 
@@ -796,28 +418,26 @@ const SECTOR_PANELS = Object.fromEntries(
 );
 
 const NAV_GROUPS = [
-  { id: 'uebersicht',    labelDe: 'Heute',         labelEn: 'Overview',      labelTr: 'Genel Bakış',
+  { id: 'uebersicht',    labelDe: 'Heute',        
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>' },
-  { id: 'termine',       labelDe: 'Termine',        labelEn: 'Appointments',  labelTr: 'Randevular',
+  { id: 'termine',       labelDe: 'Termine',       
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' },
-  { id: 'patienten',     labelDe: 'Patienten',      labelEn: 'Patients',      labelTr: 'Hastalar',
+  { id: 'patienten',     labelDe: 'Patienten',     
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
-  { id: 'abrechnung',    labelDe: 'Abrechnung',     labelEn: 'Billing',       labelTr: 'Faturalama',
+  { id: 'abrechnung',    labelDe: 'Abrechnung',    
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>' },
-  { id: 'team',          labelDe: 'Praxis',         labelEn: 'Team',          labelTr: 'Ekip',
+  { id: 'team',          labelDe: 'Praxis',        
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="7" r="4"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
-  { id: 'einstellungen', labelDe: 'Einstellungen',  labelEn: 'Settings',      labelTr: 'Ayarlar',
+  { id: 'einstellungen', labelDe: 'Einstellungen', 
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>' },
 ];
 
 const DAYS = {
   de: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
-  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-  tr: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt']
 };
 
 // Fest deutsch (28.08.2026). Alten Wert raeumen — sonst saesse dort fest, wer frueher EN/TR waehlte.
-let currentLang = 'de';
+const currentLang = 'de';
 try { localStorage.removeItem('infinity_lang'); } catch (_) { /* privater Modus */ }
 let currentProfile = null;
 let currentSession = null;
@@ -876,7 +496,7 @@ async function loadAusfallConfig() {
 }
 
 
-function t(key) { return (T[currentLang] || T.de)[key] || key; }
+function t(key) { return T.de[key] || key; }
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -905,10 +525,8 @@ function has302Access() {
 }
 
 function applyI18n() {
-  document.documentElement.lang = currentLang;
+  document.documentElement.lang = 'de';
   document.querySelectorAll('[data-i18n]').forEach(el => { const v = t(el.dataset.i18n); if (v) el.textContent = v; });
-  const ls = document.getElementById('langSelect');
-  if (ls) ls.value = currentLang;
 }
 
 // ===== RBAC permissions cache =====
@@ -1031,7 +649,7 @@ async function renderSidebar() {
 
     const hasActive = groupItems.some(i => i.id === activePanel);
     const isOpen = hasActive || openGroups.includes(group.id);
-    const label = currentLang === 'en' ? group.labelEn : currentLang === 'tr' ? group.labelTr : group.labelDe;
+    const label = group.labelDe;
 
     const groupEl = document.createElement('div');
     groupEl.className = 'nav-group' + (isOpen ? ' open' : '');
@@ -1221,14 +839,6 @@ document.getElementById('sidebarCollapseBtn')?.addEventListener('click', () => {
   if (collapsed && sidebar) sidebar.classList.add('collapsed');
   updateSidebarCollapseBtn(collapsed);
 })();
-// Umschalter entfernt (28.08.2026, deutsch-only). `?.` ist Pflicht — ohne Element warf die Zeile beim Modulladen.
-document.getElementById('langSelect')?.addEventListener('change', async (e) => {
-  currentLang = e.target.value;
-  localStorage.setItem('infinity_lang', currentLang);
-  applyI18n();
-  await renderSidebar();
-  await supabase.from('profiles').update({ language: currentLang }).eq('id', currentSession.user.id);
-});
 // Theme toggle (light/dark) — persisted in localStorage, applied pre-paint in <head>
 function applyTheme(theme) {
   const root = document.documentElement;
@@ -1378,7 +988,8 @@ async function renderOverview() {
   // Welcome banner
   const welcomeEl = document.getElementById('welcomeText');
   if (welcomeEl) {
-    const firstName = currentProfile.first_name || currentSession.user.user_metadata?.full_name || currentSession.user.email?.split('@')[0] || '';
+    const personName = [currentProfile.owner_first_name, currentProfile.owner_last_name].filter(Boolean).join(' ');
+    const firstName = personName || currentProfile.business_name || currentSession.user.user_metadata?.full_name || currentSession.user.email?.split('@')[0] || '';
     welcomeEl.innerHTML = `<span>${escapeHtml(firstName)}</span>`;
   }
 
@@ -4342,11 +3953,6 @@ async function handleTerminStarten() {
   }
 }
 
-async function triggerNoShowBot(booking) {
-  // TODO: WhatsApp no-show bot entegrasyonu
-  console.log('[NoShowBot] Triggered for booking:', booking.id, booking.customer_name);
-}
-
 function checkPlanActive() {
   const ps = currentProfile?.plan_status;
   if (ps === 'canceled' || ps === 'expired') {
@@ -4378,10 +3984,9 @@ async function handlePatientNichtErschienen() {
     // derselbe Weg, den auch kalender.js nimmt (module/termin-nicht-erschienen.js).
     const { freigegeben } = await markiereNichtErschienen({ supabase }, bkActionBookingCache, { grund: reason });
 
-    triggerNoShowBot(bkActionBookingCache);
     showToast(freigegeben
       ? `Patient nicht erschienen — ${freigegeben} Einheit(en) wieder frei.`
-      : 'Patient nicht erschienen — Bot wurde ausgelöst.');
+      : 'Patient nicht erschienen.');
 
     await kalenderNeuLaden({ calendar: window.calendar || calendar, activePanel, loadTodayBookings, renderCalendarView });
 
@@ -5168,8 +4773,7 @@ function updateMoveBanner() {
   if (!banner) return;
   banner.hidden = !moveBooking;
   if (!moveBooking) return;
-  const lang = document.getElementById('langSelect')?.value || 'de';
-  const tl = T[lang] || T.de;
+  const tl = T.de;
   const name = moveBooking.customer_name || moveBooking.services?.title || 'Termin';
   const textEl = document.getElementById('calMoveBannerText');
   if (textEl) textEl.textContent = `${name}: ${tl.move_banner}`;
@@ -5218,8 +4822,7 @@ function placeGhost(slotEl, empId, text, ev, slotPx = DV_SLOT_PX) {
 
 async function doMoveBooking(startStr, empId) {
   if (!moveBooking) return;
-  const lang = document.getElementById('langSelect')?.value || 'de';
-  const tl = T[lang] || T.de;
+  const tl = T.de;
   const s = new Date(startStr + ':00');
   const e = new Date(moveBooking.end_time);
   const oldS = new Date(moveBooking.start_time);
@@ -9736,7 +9339,7 @@ function renderHoursStandortDays() {
   const wrap = document.getElementById('hoursStandortDays');
   if (!wrap) return;
 
-  const dayLabels = DAYS[currentLang] || DAYS.de;
+  const dayLabels = DAYS.de;
   // Mevcut closed_days değerini bul (multi-biz "all" modunda kesişim göster)
   let closedSet = new Set();
   if (hoursStandortId === 'all') {
@@ -9795,7 +9398,7 @@ async function renderHoursGrid() {
     supabase.from('breaks').select('*').eq('user_id', hoursEmpId)
   ]);
   hoursBreaks = breaks || [];
-  const dayLabels = DAYS[currentLang] || DAYS.de;
+  const dayLabels = DAYS.de;
   const grid = document.getElementById('hoursGrid');
   grid.innerHTML = '';
   for (let i = 0; i < 7; i++) {
@@ -9901,13 +9504,11 @@ async function renderHoursMiniCal() {
   const today = new Date();
 
   document.getElementById('hoursCalTitle').textContent =
-    hoursCalDate.toLocaleString(currentLang === 'tr' ? 'tr-TR' : 'de-DE', { month: 'long', year: 'numeric' });
+    hoursCalDate.toLocaleString('de-DE', { month: 'long', year: 'numeric' });
 
   const grid = document.getElementById('hoursMiniCal');
   grid.innerHTML = '';
-  const wdays = currentLang === 'tr'
-    ? ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct']
-    : ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const wdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   wdays.forEach(d => {
     const el = document.createElement('div');
     el.className = 'cal-weekday';
@@ -11052,7 +10653,7 @@ async function loadEmpHours(empId) {
     supabase.from('breaks').select('*').eq('user_id', empId)
   ]);
   const empBreaks = breaks || [];
-  const dayLabels = DAYS[currentLang] || DAYS.de;
+  const dayLabels = DAYS.de;
   const grid = document.getElementById('empHoursGrid');
   if (!grid) return;
   grid.innerHTML = '';
@@ -11861,7 +11462,6 @@ const SECTOR_LABELS = {
 
 async function loadSettings() {
   document.getElementById('setBiz').value = currentProfile.business_name || '';
-  const langEl = document.getElementById('setLang'); if (langEl) langEl.value = currentLang;  // Feld entfernt 28.08.
   const sectorEl = document.getElementById('setSectorLabel');
   if (sectorEl) {
     const sector = getSector();
@@ -11922,7 +11522,7 @@ async function loadSettings() {
 };
   }
 
-  const features = (PLAN_FEATURES[currentProfile.plan] || PLAN_FEATURES.starter)[currentLang] || [];
+  const features = (PLAN_FEATURES[currentProfile.plan] || PLAN_FEATURES.starter).de || [];
   const sfList = document.getElementById('settingsFeatureList');
   if (sfList) sfList.innerHTML = features.map(f => `<li>${f}</li>`).join('');
 
@@ -12895,10 +12495,9 @@ wireAbrechnungSettings({ supabase, profile: () => currentProfile, ownerId: getOw
 document.getElementById('profileSaveBtn').addEventListener('click', async () => {
   const v = id => (document.getElementById(id)?.value || '').trim();
   const biz = v('setBiz');
-  const lang = document.getElementById('setLang')?.value || currentLang;
   const patch = {
     business_name: biz,
-    language: lang,
+    language: 'de',
     street: v('setStreet') || null,
     plz: v('setPlz') || null,
     city: v('setCity') || null,
@@ -12909,8 +12508,6 @@ document.getElementById('profileSaveBtn').addEventListener('click', async () => 
   const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   Object.assign(currentProfile, patch);
-  currentLang = lang;
-  localStorage.setItem('infinity_lang', lang);
   document.getElementById('bizName').textContent = biz;
   applyI18n();
   await renderSidebar();
@@ -13086,35 +12683,33 @@ function loadBeispielmodus_SVG() {
   if (!wrap) return;
   wrap.innerHTML = '';
 
-  const lang = currentLang || 'de';
-
   const REGIONS = {
-    head:        { de: 'Kopf',                en: 'Head',            tr: 'Baş',          desc: 'Schädel, Stirn, Schläfen, Hinterhaupt' },
-    neck:        { de: 'Hals / HWS',          en: 'Neck / Cervical', tr: 'Boyun',        desc: 'Halswirbelsäule C1–C7, Nackenmuskulatur' },
-    l_shoulder:  { de: 'Schulter (L)',         en: 'Shoulder (L)',    tr: 'Sol Omuz',     desc: 'Schultergelenk, Rotatorenmanschette, AC-Gelenk' },
-    r_shoulder:  { de: 'Schulter (R)',         en: 'Shoulder (R)',    tr: 'Sağ Omuz',     desc: 'Schultergelenk, Rotatorenmanschette, AC-Gelenk' },
-    chest:       { de: 'Brustkorb / BWS',     en: 'Chest / Thoracic',tr: 'Göğüs',        desc: 'BWS T1–T12, Rippen, Sternum, Pektoralmuskulatur' },
-    abdomen:     { de: 'Bauch / LWS',         en: 'Abdomen / Lumbar',tr: 'Karın / Bel',  desc: 'LWS L1–L5, Bauchmuskulatur, Beckenboden' },
-    l_upper_arm: { de: 'Oberarm (L)',          en: 'Upper Arm (L)',   tr: 'Sol Üst Kol',  desc: 'Bizeps, Trizeps, Humerus, Deltoideus' },
-    r_upper_arm: { de: 'Oberarm (R)',          en: 'Upper Arm (R)',   tr: 'Sağ Üst Kol',  desc: 'Bizeps, Trizeps, Humerus, Deltoideus' },
-    l_forearm:   { de: 'Unterarm (L)',         en: 'Forearm (L)',     tr: 'Sol Ön Kol',   desc: 'Radius, Ulna, Unterarmbeuger und -strecker' },
-    r_forearm:   { de: 'Unterarm (R)',         en: 'Forearm (R)',     tr: 'Sağ Ön Kol',   desc: 'Radius, Ulna, Unterarmbeuger und -strecker' },
-    l_hand:      { de: 'Hand (L)',             en: 'Hand (L)',        tr: 'Sol El',       desc: 'Handgelenk, Karpaltunnel, Finger, Daumen' },
-    r_hand:      { de: 'Hand (R)',             en: 'Hand (R)',        tr: 'Sağ El',       desc: 'Handgelenk, Karpaltunnel, Finger, Daumen' },
-    l_hip:       { de: 'Hüfte (L)',            en: 'Hip (L)',         tr: 'Sol Kalça',    desc: 'Hüftgelenk, Leistenregion, Iliosakralgelenk' },
-    r_hip:       { de: 'Hüfte (R)',            en: 'Hip (R)',         tr: 'Sağ Kalça',    desc: 'Hüftgelenk, Leistenregion, Iliosakralgelenk' },
-    upper_back:  { de: 'Oberer Rücken',        en: 'Upper Back',      tr: 'Üst Sırt',     desc: 'BWS, Trapezius, Rhomboiden, Schulterblatt' },
-    lower_back:  { de: 'Unterer Rücken',       en: 'Lower Back',      tr: 'Bel Sırtı',    desc: 'LWS, Erector Spinae, Quadratus Lumborum' },
-    l_glute:     { de: 'Gesäß (L)',            en: 'Glute (L)',       tr: 'Sol Kalça Kası',desc: 'Gluteus maximus/medius/minimus, Piriformis' },
-    r_glute:     { de: 'Gesäß (R)',            en: 'Glute (R)',       tr: 'Sağ Kalça Kası',desc: 'Gluteus maximus/medius/minimus, Piriformis' },
-    l_thigh:     { de: 'Oberschenkel (L)',     en: 'Thigh (L)',       tr: 'Sol Uyluk',    desc: 'Quadrizeps, Ischiokrurale Muskulatur, Femur' },
-    r_thigh:     { de: 'Oberschenkel (R)',     en: 'Thigh (R)',       tr: 'Sağ Uyluk',    desc: 'Quadrizeps, Ischiokrurale Muskulatur, Femur' },
-    l_knee:      { de: 'Knie (L)',             en: 'Knee (L)',        tr: 'Sol Diz',      desc: 'Kniegelenk, Meniskus, Kreuzband, Patella' },
-    r_knee:      { de: 'Knie (R)',             en: 'Knee (R)',        tr: 'Sağ Diz',      desc: 'Kniegelenk, Meniskus, Kreuzband, Patella' },
-    l_lower_leg: { de: 'Unterschenkel (L)',    en: 'Lower Leg (L)',   tr: 'Sol Alt Bacak',desc: 'Tibia, Fibula, Wadenmuskulatur, Achillessehne' },
-    r_lower_leg: { de: 'Unterschenkel (R)',    en: 'Lower Leg (R)',   tr: 'Sağ Alt Bacak',desc: 'Tibia, Fibula, Wadenmuskulatur, Achillessehne' },
-    l_foot:      { de: 'Fuß (L)',              en: 'Foot (L)',        tr: 'Sol Ayak',     desc: 'Sprunggelenk, Fußgewölbe, Zehen, Achillessehne' },
-    r_foot:      { de: 'Fuß (R)',              en: 'Foot (R)',        tr: 'Sağ Ayak',     desc: 'Sprunggelenk, Fußgewölbe, Zehen, Achillessehne' },
+    head:        { de: 'Kopf', desc: 'Schädel, Stirn, Schläfen, Hinterhaupt' },
+    neck:        { de: 'Hals / HWS', desc: 'Halswirbelsäule C1–C7, Nackenmuskulatur' },
+    l_shoulder:  { de: 'Schulter (L)', desc: 'Schultergelenk, Rotatorenmanschette, AC-Gelenk' },
+    r_shoulder:  { de: 'Schulter (R)', desc: 'Schultergelenk, Rotatorenmanschette, AC-Gelenk' },
+    chest:       { de: 'Brustkorb / BWS', desc: 'BWS T1–T12, Rippen, Sternum, Pektoralmuskulatur' },
+    abdomen:     { de: 'Bauch / LWS', desc: 'LWS L1–L5, Bauchmuskulatur, Beckenboden' },
+    l_upper_arm: { de: 'Oberarm (L)', desc: 'Bizeps, Trizeps, Humerus, Deltoideus' },
+    r_upper_arm: { de: 'Oberarm (R)', desc: 'Bizeps, Trizeps, Humerus, Deltoideus' },
+    l_forearm:   { de: 'Unterarm (L)', desc: 'Radius, Ulna, Unterarmbeuger und -strecker' },
+    r_forearm:   { de: 'Unterarm (R)', desc: 'Radius, Ulna, Unterarmbeuger und -strecker' },
+    l_hand:      { de: 'Hand (L)', desc: 'Handgelenk, Karpaltunnel, Finger, Daumen' },
+    r_hand:      { de: 'Hand (R)', desc: 'Handgelenk, Karpaltunnel, Finger, Daumen' },
+    l_hip:       { de: 'Hüfte (L)', desc: 'Hüftgelenk, Leistenregion, Iliosakralgelenk' },
+    r_hip:       { de: 'Hüfte (R)', desc: 'Hüftgelenk, Leistenregion, Iliosakralgelenk' },
+    upper_back:  { de: 'Oberer Rücken', desc: 'BWS, Trapezius, Rhomboiden, Schulterblatt' },
+    lower_back:  { de: 'Unterer Rücken', desc: 'LWS, Erector Spinae, Quadratus Lumborum' },
+    l_glute:     { de: 'Gesäß (L)', desc: 'Gluteus maximus/medius/minimus, Piriformis' },
+    r_glute:     { de: 'Gesäß (R)', desc: 'Gluteus maximus/medius/minimus, Piriformis' },
+    l_thigh:     { de: 'Oberschenkel (L)', desc: 'Quadrizeps, Ischiokrurale Muskulatur, Femur' },
+    r_thigh:     { de: 'Oberschenkel (R)', desc: 'Quadrizeps, Ischiokrurale Muskulatur, Femur' },
+    l_knee:      { de: 'Knie (L)', desc: 'Kniegelenk, Meniskus, Kreuzband, Patella' },
+    r_knee:      { de: 'Knie (R)', desc: 'Kniegelenk, Meniskus, Kreuzband, Patella' },
+    l_lower_leg: { de: 'Unterschenkel (L)', desc: 'Tibia, Fibula, Wadenmuskulatur, Achillessehne' },
+    r_lower_leg: { de: 'Unterschenkel (R)', desc: 'Tibia, Fibula, Wadenmuskulatur, Achillessehne' },
+    l_foot:      { de: 'Fuß (L)', desc: 'Sprunggelenk, Fußgewölbe, Zehen, Achillessehne' },
+    r_foot:      { de: 'Fuß (R)', desc: 'Sprunggelenk, Fußgewölbe, Zehen, Achillessehne' },
   };
 
   // viewBox "0 0 160 395" — screen-left = patient-right (anatomisch korrekt)
@@ -13196,7 +12791,7 @@ function loadBeispielmodus_SVG() {
     const infoTitle = document.getElementById('bodyInfoTitle');
     const infoText  = document.getElementById('bodyInfoText');
     if (r && infoTitle && infoText) {
-      infoTitle.textContent = r[lang] || r.de;
+      infoTitle.textContent = r.de;
       infoText.textContent  = r.desc;
     }
     svgWrap.querySelectorAll('.body-zone').forEach(g =>
@@ -13215,7 +12810,7 @@ function loadBeispielmodus_SVG() {
       g.setAttribute('role', 'button');
       g.setAttribute('tabindex', '0');
       const r = REGIONS[zone.id];
-      if (r) g.setAttribute('aria-label', r[lang] || r.de);
+      if (r) g.setAttribute('aria-label', r.de);
       g.appendChild(makeShape(zone));
       g.addEventListener('click', () => onZoneClick(zone.id));
       g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onZoneClick(zone.id); } });
@@ -19510,8 +19105,7 @@ async function loadAnfragen(status) {
 function renderAnfragenList(requests) {
   const list = document.getElementById('anfragenList');
   if (!list) return;
-  const lang = document.getElementById('langSelect')?.value || 'de';
-  const tl = T[lang] || T.de;
+  const tl = T.de;
 
   if (!requests.length) {
     list.innerHTML = `<p style="color:var(--text-sub);padding:24px;text-align:center">${tl.anfragen_empty}</p>`;
@@ -19572,8 +19166,7 @@ function updateAnfragenBadge(count) {
 function showAnfrageDetail(requestId) {
   const req = anfragenCurrentRequests.find(r => r.id === requestId);
   if (!req) return;
-  const lang = document.getElementById('langSelect')?.value || 'de';
-  const tl = T[lang] || T.de;
+  const tl = T.de;
   const pat = req.patients;
   // Siehe renderAnfragenList: diese Werte stammen aus dem oeffentlichen Formular.
   const patName = pat ? escapeHtml(`${pat.vorname} ${pat.nachname}`) : '—';
@@ -19643,8 +19236,7 @@ async function approveAnfrage(requestId) {
  * Der Patient antwortet per Reply direkt an die Praxis.
  */
 function nachrichtAnPatient(requestId) {
-  const lang = document.getElementById('langSelect')?.value || 'de';
-  const tl = T[lang] || T.de;
+  const tl = T.de;
   const ownerId = currentProfile?.id;
 
   showHtmlModal({
@@ -19708,8 +19300,7 @@ async function sucheAlternativTermine(req, empId, maxVorschlaege = 6, maxTage = 
 }
 
 async function declineAnfrage(requestId) {
-  const lang = document.getElementById('langSelect')?.value || 'de';
-  const tl = T[lang] || T.de;
+  const tl = T.de;
   const ownerId = currentProfile?.id;
   const req = anfragenCurrentRequests.find(r => r.id === requestId);
   const empId = req?.employee_id || ownerId;

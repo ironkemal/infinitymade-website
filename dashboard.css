@@ -8293,6 +8293,30 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
   #fbpSaveBtn { height: 44px !important; }
   #podSaveBehBtn { min-height: 44px; }
   .pod-vord-status { min-height: 44px; }
+
+  /* Termin-Aktionen · Rezeptinfo + Einheiten (S5-Nachtrag, 30.09.2026):
+     vorher 13–34 px hoch (canli-test 390/768; lokal nachgemessen). Die
+     Knöpfe tragen ihr Aussehen inline (padding/height) — min-height/min-width
+     gewinnen gegen height/width ohne !important. */
+  #bkRxNav button,                          /* ‹ › 18×18, „⧉ übernehmen" 94×17 */
+  #bkRxZuzahlungWarn button[data-zuzahl] {  /* Kassieren · € 🖨 · ✎ anpassen · Rechnung · Rückgängig */
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+  }
+  #bkRxNav button { flex-shrink: 0; white-space: nowrap; }
+  /* Kopfzeile darf umbrechen: mit 44-px-Knöpfen ragte der Status bei 360 px
+     9 px aus der Karte (overflow:hidden → abgeschnitten). */
+  #bkRxInfoCard > div:first-child { flex-wrap: wrap; gap: 4px 8px; }
+  #bkRxZuzahlungWarn { line-height: 1.4; }
+  #bkRxEuroBtn { min-width: 44px; min-height: 44px; }  /* inline 34×34 */
+  #bkRxSerieBtn,
+  #bkRxLeistungenBtn,
+  .bk-sitz-tab,
+  .pk-verlauf-zeile { min-height: 44px; }
 }
 
 @media (max-width: 768px) {

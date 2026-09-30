@@ -253,7 +253,7 @@ export function befundungFuerLeistung({
   if (podologieVor2023 === true) {
     return {
       code: POD_BEFUNDPAUSCHALE, automatisch: true, grund: 'kein_anspruch_altbestand',
-      hinweis: 'Befundung (78030) — die Eingangsbefundung entfaellt, weil der '
+      hinweis: 'Befundung (78030) — die Eingangsbefundung entfällt, weil der '
              + 'Patient bereits vor dem 01.11.2023 podologisch behandelt wurde.',
       rueckfrage: null,
     };
@@ -278,7 +278,7 @@ export function befundungFuerLeistung({
       hinweis: lage.grund === 'schon_abgerechnet'
         ? `Befundung (78030) — die Eingangsbefundung ist am ${datumDe(lage.schonAm)} ${wie}.`
         : `Befundung (78030) — die erste Behandlung war am ${datumDe(lage.ersteAm)}, die `
-          + 'Eingangsbefundung gehoert davor und kann nicht nachgeholt werden.',
+          + 'Eingangsbefundung gehört davor und kann nicht nachgeholt werden.',
       rueckfrage: null,
     };
   }
@@ -294,10 +294,10 @@ export function befundungFuerLeistung({
     grund: 'erstinanspruchnahme',
     hinweis: 'Eingangsbefundung (78040) — einmalig bei Erstinanspruchnahme, am '
            + 'selben Tag neben der Behandlung erlaubt. Die Befundung (78030) '
-           + 'entfaellt an diesem Tag.',
+           + 'entfällt an diesem Tag.',
     rueckfrage: offen
       ? 'War der Patient schon vor dem 01.11.2023 in podologischer Behandlung? '
-        + 'Dann entfaellt die Eingangsbefundung.'
+        + 'Dann entfällt die Eingangsbefundung.'
       : null,
   };
 }
