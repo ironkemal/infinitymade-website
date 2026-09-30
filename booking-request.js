@@ -1291,4 +1291,7 @@ function init() {
   showStep(currentLogicalStep());
 }
 
-document.addEventListener('DOMContentLoaded', init);
+// supabase-config.js hat ein Top-Level-await: dieses Modul laeuft ggf. erst NACH
+// DOMContentLoaded (canli-test P1 30.09) — daher readyState pruefen wie dashboard.js.
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();

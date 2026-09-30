@@ -662,13 +662,15 @@
 
 </div><!-- /#app -->
 
-<script type="module" src="booking-request.js?v=20261001e"></script>
+<script type="module" src="booking-request.js?v=20261001f"></script>
 <script type="module">
   import { createClient } from './vendor/supabase-js.js?v=20260813';
   import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
   import { attachDiagnoseSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
   const _sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  document.addEventListener('DOMContentLoaded', async () => {
+  // Top-Level-await in supabase-config.js: DOMContentLoaded kann schon vorbei sein.
+  const _nachDom = (fn) => document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', fn) : fn();
+  _nachDom(async () => {
     // Rank suggestions by the practice's Fachbereich, same as inside the
     // dashboard. Falls back to unranked search if the sector can't be read.
     let bereich = null;
