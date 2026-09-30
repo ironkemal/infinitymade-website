@@ -91,7 +91,7 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
 import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001g';
 import { tagesVorbelegungGrund, verordnetZeile } from './podo-vorbelegung-grund.js?v=20261001i';
-import { bestehenderBehandlungstag, zweiterBehandlungstagFrage } from './podo-behandlungstag-regel.js?v=20261001i';
+import { bestehenderBehandlungstag, zweiterBehandlungstagFrage, abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261001i';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
 import { behandlungspositionVorschlag, ohneBehandlungsposition, OHNE_BEHANDLUNG_FRAGE, leitsymptomatikNotiz } from './podo-behandlungsposition-regel.js?v=20261001g';
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
@@ -849,7 +849,7 @@ async function loadPodologieBilling() {
   }
 
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;">
 
       <!-- Links: Neue Verordnung + Liste -->
       <div>
@@ -1113,14 +1113,17 @@ async function loadPodologieBilling() {
     // Status machine: wenn alle Einheiten verbraucht → abrechenbar
     let alleVerbraucht = false;
     if (vord?.behandlungseinheiten) {
-      const { count } = await ctx.supabase
+      // canli-test P1 30.09 / gkv-302: verbraucht ist ein abrechenbarer Behandlungstag
+      // (78010/78020/78610, Tag einmal) — nicht jede Zeile; reine Befundtage zählen nicht.
+      const { data: tage } = await ctx.supabase
         .from('podologie_behandlungen')
-        .select('*', { count: 'exact', head: true })
+        .select('behandlungsdatum, hpnr_codes, storniert_am')
         // Stornierte Zeilen verbrauchen keine Einheit — sonst gälte eine
         // Verordnung als aufgebraucht, obwohl die Behandlung zurückgenommen
         // wurde (Migration 0026).
         .is('storniert_am', null)
         .eq('verordnung_id', _podState.selectedVordId);
+      const count = tage ? abrechenbareBehandlungstage(tage) : null;
       if (count != null && count >= vord.behandlungseinheiten) {
         alleVerbraucht = true;
         await ctx.supabase.from(TOPF)
