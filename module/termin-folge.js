@@ -113,7 +113,9 @@ export function folgeLeistungen(zeilen, hauptServiceId, dienste) {
  */
 export async function oeffneFolgetermin(booking, deps) {
   const { supabase, toast } = deps;
-  if (!booking?.id) { toast?.('Kein Termin ausgewählt.', 'warning'); return false; }
+  // Ohne `id` (Platzhalter aus der Tagesbehandlung, module/podo-tag-zusatz.js): nur Patient +
+  // Verordnung sind bekannt, Leistungen gibt es dann nicht zu lesen.
+  if (!booking?.id && !booking?.lead_id) { toast?.('Kein Termin ausgewählt.', 'warning'); return false; }
   if (!booking.lead_id) {
     toast?.('Für diesen Termin gibt es keine Patientenakte — Folgetermin nicht möglich.', 'warning');
     return false;
@@ -122,9 +124,11 @@ export async function oeffneFolgetermin(booking, deps) {
   // Verordnung und Leistungen des Ausgangstermins holen, BEVOR die Maske
   // aufgeht: die Frequenz bestimmt das Datum.
   const [{ data: leistungen }, { data: rx }] = await Promise.all([
-    supabase.from('booking_leistungen')
-      .select('service_id, anzahl, sort_order').eq('booking_id', booking.id)
-      .order('sort_order', { ascending: true }),
+    booking.id
+      ? supabase.from('booking_leistungen')
+        .select('service_id, anzahl, sort_order').eq('booking_id', booking.id)
+        .order('sort_order', { ascending: true })
+      : Promise.resolve({ data: [] }),
     booking.verordnung_id
       ? supabase.from('prescriptions')
         .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id),therapie_bereich')

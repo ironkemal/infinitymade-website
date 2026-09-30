@@ -33,12 +33,12 @@ import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } fr
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261001g';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261001i';
-import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261001m';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001i';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001m';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz, fahrtenbuchCsv, patientenverzeichnisCsv, csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS } from './module/fahrtenbuch-regeln.js?v=20261001c';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
@@ -111,7 +111,7 @@ import {
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
 } from './module/termin-aktionen.js?v=20261001e';
-import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261001i';
+import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261001m'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
@@ -154,19 +154,19 @@ const T = {
     today_bookings: 'Heutige Termine', upcoming_empty: 'Heute keine Termine.', features_title: 'Paketinhalt',
     calendar_sub: 'Termine verwalten & buchen',
     btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin', btn_copy_booking_link: 'Buchungslink', btn_cal_today: 'Heute',
-    kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Lead',
+    kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Patient',
     apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
     lf_all: 'Alle', lf_abrechenbar: 'Bereit zur Abrechnung', lf_abgerechnet: 'Abgerechnet', lf_teilabsetzung: 'Teilabsetzung', lf_abgesetzt: 'Absetzung', lf_storniert: 'Storniert',
     lead_title: 'Name', lead_city: 'Stadt', lead_phone: 'Telefon', lead_rating: 'Bewertung', lead_standort: 'Standort',
     lead_festnetz: 'Festnetz', lead_handy: 'Handy', lead_geschlecht: 'Geschlecht', lead_geburtsdatum: 'Geburtsdatum', lead_patientennr: 'Nr.',
     lead_status: 'Status', lead_notes: 'Notizen', lead_email: 'E-Mail', lead_website: 'Website',
     lead_country_code: 'Land', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategorie',
-    leads_empty: 'Noch keine Leads.', lead_modal_new: 'Neuer Lead', lead_modal_edit: 'Lead bearbeiten',
+    leads_empty: 'Noch keine Leads.', lead_modal_new: 'Neuer Patient', lead_modal_edit: 'Lead bearbeiten',
     lead_save: 'Speichern', lead_cancel: 'Abbrechen', lead_delete: 'Löschen', lead_confirm_delete: 'Lead wirklich löschen?',
     services_sub: 'Angebotene Leistungen verwalten',
-    lbl_add_service: 'Neue Dienstleistung', lbl_srv_title: 'Name', lbl_srv_dur: 'Dauer (Min)',
+    lbl_add_service: 'Neue Leistung', lbl_srv_title: 'Name', lbl_srv_dur: 'Dauer (Min)',
     lbl_srv_price: 'Preis (€)', lbl_srv_emps: 'Mitarbeiter', btn_srv_save: 'Speichern',
-    alert_service_delete: 'Dienstleistung wirklich löschen?',
+    alert_service_delete: 'Leistung wirklich löschen?',
     hours_sub: 'Öffnungszeiten je Mitarbeiter', btn_save_hours: 'Speichern', hours_for: 'Für:',
     alert_hours_saved: 'Arbeitszeiten gespeichert!',
     team_sub: 'Team verwalten', lbl_invite_code: 'Unternehmens-Code',
@@ -182,8 +182,8 @@ const T = {
     sub_portal: 'Abonnement verwalten', sub_upgrade: 'Upgrade',
     status_disconnected: 'Nicht verbunden', status_connected: 'Verbunden',
     btn_connect: 'Verbinden', btn_disconnect: 'Trennen',
-    lbl_manual_title: 'Neuer Termin', lbl_manual_emp: 'Mitarbeiter', lbl_manual_service: 'Dienstleistung',
-    lbl_manual_start: 'Von', lbl_manual_end: 'Bis', lbl_manual_cust: 'Kundenname',
+    lbl_manual_title: 'Neuer Termin', lbl_manual_emp: 'Mitarbeiter', lbl_manual_service: 'Leistung',
+    lbl_manual_start: 'Von', lbl_manual_end: 'Bis', lbl_manual_cust: 'Patient',
     lbl_leave_title: 'Abwesenheit eintragen', lbl_leave_emp: 'Für wen?',
     lbl_leave_start: 'Start', lbl_leave_end: 'Ende', lbl_leave_reason: 'Grund',
     btn_leave_cancel: 'Abbrechen', btn_leave_save: 'Speichern',
@@ -3038,7 +3038,7 @@ async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
     if (empSel) empSel.value = empId;
   }
 
-  // Dienstleistung automatisch anhand des Heilmittels wählen (Fallback: serviceId der Quellbuchung)
+  // Leistung automatisch anhand des Heilmittels wählen (Fallback: serviceId der Quellbuchung)
   const matchedSrvIds = [];
   for (const s of sessions) {
     matchedSrvIds.push(s.heilmittelName ? await findMatchingServiceId({ heilmittel: s.heilmittelName }) : null);
@@ -4913,7 +4913,7 @@ async function openBookingModal(b) {
   if (!b) { await prefillBookingModal(null); return; }
   const ownerId = getOwnerId();
   document.getElementById('bk-id').value = b.id || '';
-  document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
+  document.getElementById('bookingModalTitle').textContent = b.id ? 'Termin bearbeiten' : t('lbl_manual_title');
   // Show "Sitzung N/M" if this booking is linked to a prescription session
   if (b.id) decorateBookingTitleWithSession(b.id).catch(() => { });
   document.getElementById('bkWlMatchBtn').hidden = false;
@@ -5315,7 +5315,7 @@ async function populateSrvSelect(selectedId = null, employeeId = null) {
   const makeOption = s =>
     `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)}</option>`;
 
-  let html = '<option value="">— Dienstleistung wählen —</option>';
+  let html = '<option value="">— Leistung wählen —</option>';
   if (gkvSrvs.length) {
     html += `<optgroup label="⚕ GKV-Leistungen (§125 SGB V)">${gkvSrvs.map(makeOption).join('')}</optgroup>`;
   }
@@ -5682,7 +5682,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
 
   // Validation: Required fields
   if (!empId) { terminFehler('Bitte einen Mitarbeiter auswählen.'); return; }
-  if (!srvId) { terminFehler('Bitte eine Dienstleistung auswählen.'); return; }
+  if (!srvId) { terminFehler('Bitte eine Leistung auswählen.'); return; }
   if (!startV) { terminFehler('Bitte Datum und Uhrzeit auswählen.'); return; }
 
   // Qualifikation gating: sertifika kontrolü (sadece yeni termin)
@@ -6391,7 +6391,7 @@ document.getElementById('bkAiSuggestBtn').addEventListener('click', () => {
   const cust = document.getElementById('bkCustomer').value.trim();
 
   if (!empId) { showToast('Bitte zuerst einen Mitarbeiter auswählen.', 'error'); return; }
-  if (!srvId) { showToast('Bitte zuerst eine Dienstleistung auswählen.', 'error'); return; }
+  if (!srvId) { showToast('Bitte zuerst eine Leistung auswählen.', 'error'); return; }
   if (!custId || !cust) { showToast('Bitte zuerst einen Kunden auswählen.', 'error'); return; }
 
   // Open preferences modal
@@ -7123,7 +7123,7 @@ async function decorateBookingTitleWithSession(bookingId) {
   const total = sess.prescriptions?.anzahl_einheiten || '?';
   const hm = sess.prescriptions?.heilmittel ? ` · ${sess.prescriptions.heilmittel}` : '';
   const titleEl = document.getElementById('bookingModalTitle');
-  if (titleEl) titleEl.textContent = `${t('lbl_manual_title')} — Sitzung ${sess.session_number}/${total}${hm}`;
+  if (titleEl) titleEl.textContent = `${titleEl.textContent} — Sitzung ${sess.session_number}/${total}${hm}`;
 }
 
 async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
@@ -7345,7 +7345,7 @@ async function ensureBlankoBonusServices() {
         duration_minutes: def.duration,
         code: def.code,
         is_internal: true,
-        description: 'Automatisch erstellt für Blanko-Verordnungs-Abrechnung. Tarif in den Dienstleistungen anpassen.'
+        description: 'Automatisch erstellt für Blanko-Verordnungs-Abrechnung. Tarif in den Leistungen anpassen.'
       }).select('id, title, price, code, is_internal').maybeSingle();
       if (error) { console.warn('[ensureBlankoBonus]', error); continue; }
       if (inserted) {
@@ -7478,9 +7478,9 @@ document.getElementById('bkActionKorrekturBtn').addEventListener('click', async 
   }
 });
 
-// Aktionsleiste (Konsey 30.09.2026): „Verordnung", „Folgetermin", Menue „Weitere Aktionen" — module/termin-aktionsleiste.js.
-verdrahteAktionsleiste({ getBooking: () => bkActionBookingCache, getLeadId: () => bkActionLeadCache?.id || bkActionBookingCache?.lead_id || null, oeffneAnlegenWahl, toast: showToast,
-  folge: { supabase, ownerId: getOwnerId, prefillBookingModal, populateSrvSelect, updateBkDuration, selectVerordnung, zeigeVerordnungenFuerTermin, rendereVeroKarten, resetVerordnungFelder, oeffneAnlegenWahl, closeModal, escapeHtml, getServices: () => servicesCache } });
+// Aktionsleiste (Konsey 30.09.2026): „Verordnung", „Folgetermin", Menue „Weitere Aktionen" — module/termin-aktionsleiste.js. folgeDeps auch fuer die Tagesbehandlung (podoCtx).
+const folgeDeps = { supabase, ownerId: getOwnerId, prefillBookingModal, populateSrvSelect, updateBkDuration, selectVerordnung, zeigeVerordnungenFuerTermin, rendereVeroKarten, resetVerordnungFelder, oeffneAnlegenWahl, closeModal, escapeHtml, getServices: () => servicesCache };
+verdrahteAktionsleiste({ getBooking: () => bkActionBookingCache, getLeadId: () => bkActionLeadCache?.id || bkActionBookingCache?.lead_id || null, oeffneAnlegenWahl, toast: showToast, folge: folgeDeps });
 
 // Stift oben in der Terminkarte und „Verschieben" unten oeffnen dieselbe Maske (Kemal, 31.08.2026).
 ['bkActionEditBtn', 'bkDetailEditBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', () => {
@@ -9560,7 +9560,7 @@ function renderServices() {
     },
     onBearbeiten: (id) => openServiceEdit(id),
     onLoeschen: async (id) => {
-      const ok = await showConfirmModal({ title: 'Dienstleistung löschen', message: t('alert_service_delete'), confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
+      const ok = await showConfirmModal({ title: 'Leistung löschen', message: t('alert_service_delete'), confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
       if (!ok) return;
       await supabase.from('services').delete().eq('id', id);
       await loadServices();
@@ -9572,7 +9572,7 @@ function renderServices() {
 function resetServiceForm() {
   const form = document.getElementById('addServiceForm');
   form.dataset.mode = 'add';
-  document.getElementById('srvFormTitle').textContent = t('lbl_add_service') || 'Neue Dienstleistung';
+  document.getElementById('srvFormTitle').textContent = t('lbl_add_service') || 'Neue Leistung';
   document.getElementById('srvEditId').value = '';
   document.getElementById('srvTitle').value = '';
   document.getElementById('srvCode').value = '';
@@ -9602,7 +9602,7 @@ function openServiceEdit(id) {
   resetServiceForm();
   const form = document.getElementById('addServiceForm');
   form.dataset.mode = 'edit';
-  document.getElementById('srvFormTitle').textContent = 'Dienstleistung bearbeiten';
+  document.getElementById('srvFormTitle').textContent = 'Leistung bearbeiten';
   document.getElementById('srvEditId').value = s.id;
   document.getElementById('srvTitle').value = s.title;
   document.getElementById('srvCode').value = s.code || '';
@@ -10640,7 +10640,7 @@ const RBAC_MODULES = [
   { id: 'dashboard',     label: 'Übersicht' },
   { id: 'calendar',      label: 'Termine' },
   { id: 'customers',     label: 'Kunden' },
-  { id: 'services',      label: 'Dienstleistungen' },
+  { id: 'services',      label: 'Leistungen' },
   { id: 'hours',         label: 'Arbeitszeiten' },
   { id: 'team',          label: 'Personal' },
   { id: 'notes',         label: 'Notizen' },
@@ -11313,7 +11313,7 @@ async function loadEmpServices(empId) {
         }
       }
       updateCount();
-      showToast(toCheck ? 'Alle Dienstleistungen zugewiesen ✓' : 'Alle entfernt ✓');
+      showToast(toCheck ? 'Alle Leistungen zugewiesen ✓' : 'Alle entfernt ✓');
     });
   });
 }
@@ -11502,7 +11502,7 @@ function renderB2C() {
       <td>${r.title || '—'}</td>
       <td>${r.email || '—'}</td>
       <td>${r.phone || '—'}</td>
-      <td><span class="badge ${({ won: 'badge-green', lost: 'badge-red', contacted: 'badge-blue', booked: 'badge-yellow' })[r.status] || 'badge-gray'}">${r.status || '—'}</span></td>
+      <td><span class="badge ${({ won: 'badge-green', lost: 'badge-red', contacted: 'badge-blue', booked: 'badge-yellow' })[r.status] || 'badge-gray'}">${leadStatusLabel(r.status)}</span></td>
       <td><button class="btn-icon" data-b2c-id="${r.id}" data-action="mail">✉</button></td>
     </tr>`).join('');
   tbody.querySelectorAll('[data-action="mail"]').forEach(btn => {
@@ -15921,7 +15921,7 @@ async function bootBusinessSwitcher() {
 // ===== Settings > Datenfreigabe zwischen Standorten =====
 const DATA_SHARING_CATS = [
   { key: 'patients',   label: 'Patienten & Akten',        desc: 'Patientenliste, Notizen, Anamnese, Rezepte, Überweisungen, Warteliste' },
-  { key: 'services',   label: 'Dienstleistungen',          desc: 'Angebotene Leistungen und deren Mitarbeiter-Zuordnung' },
+  { key: 'services',   label: 'Leistungen',          desc: 'Angebotene Leistungen und deren Mitarbeiter-Zuordnung' },
   { key: 'activities', label: 'Aktivitäten',               desc: 'Der „Letzte Aktivitäten"-Verlauf in der Übersicht' },
   { key: 'finance',    label: 'Rechnungen',                desc: 'Patientenrechnungen aller Standorte' },
   { key: 'network',    label: 'Netzwerk (Ärzte & Praxen)', desc: 'Ärzteverzeichnis und B2B-Kontakte' }
@@ -16192,7 +16192,7 @@ function wireBusinessModal() {
 async function deleteBusiness(id) {
   const biz = myBusinesses.find(b => b.id === id);
   if (!biz) return;
-  const ok = await showConfirmModal({ title: 'Standort löschen', message: `"${biz.business_name}" wirklich löschen?\n\nAlle zugehörigen Daten (Termine, Dienstleistungen, Rechnungen) werden ebenfalls gelöscht.`, confirmText: 'Endgültig löschen', cancelText: 'Abbrechen', variant: 'danger' });
+  const ok = await showConfirmModal({ title: 'Standort löschen', message: `"${biz.business_name}" wirklich löschen?\n\nAlle zugehörigen Daten (Termine, Leistungen, Rechnungen) werden ebenfalls gelöscht.`, confirmText: 'Endgültig löschen', cancelText: 'Abbrechen', variant: 'danger' });
   if (!ok) return;
   const { error } = await supabase.from('businesses').delete().eq('id', id);
   if (error) { console.error('[biz-delete]', error); showToast(t('err_generic'), 'error'); return; }
@@ -16565,7 +16565,7 @@ const HM_ALIAS_GROUPS = [
   { keys: ['kg', 'krankengymnastik', 'physiotherapie', 'physio'],               title: ['krankengymnastik', 'physiotherapie', 'physio', 'kg'] },
 ];
 
-// Ordnet den Heilmittel-Text/-Code des Rezepts einer eigenen Dienstleistung zu.
+// Ordnet den Heilmittel-Text/-Code des Rezepts einer eigenen Leistung zu.
 // Gibt { service, score, reason } zurück oder null, wenn nichts sicher genug passt.
 // Reihenfolge: Positionsnummer (hart) → Kürzel-Code → Titel → Synonymgruppe.
 function scoreServiceForHeilmittel(heilmittelText, positionCode, services) {
@@ -16692,7 +16692,7 @@ async function openBookingFromRxPreset(preset) {
         srvSel.dispatchEvent(new Event('change'));
       }
     } else if (preset.heilmittel) {
-      showToast(`Keine Dienstleistung für „${preset.heilmittel}" gefunden — bitte oben manuell auswählen oder unter Dienstleistungen anlegen.`, 'error');
+      showToast(`Keine Leistung für „${preset.heilmittel}" gefunden — bitte oben manuell auswählen oder unter Leistungen anlegen.`, 'error');
       document.getElementById('bkService')?.focus();
     }
 
@@ -16730,7 +16730,7 @@ async function openBookingFromRxPreset(preset) {
       if (empId && srvId && custId) {
         document.getElementById('bkAiSuggestBtn')?.click();
       } else {
-        showToast('Bitte Mitarbeiter & ggf. Dienstleistung wählen, dann „KI-Vorschlag" klicken.', 'info');
+        showToast('Bitte Mitarbeiter & ggf. Leistung wählen, dann „KI-Vorschlag" klicken.', 'info');
       }
     }, 600);
   } catch (e) {
@@ -16925,7 +16925,7 @@ function populateKkDatalist() {
 }
 
 
-// --- Rezept-Bestätigung: Heilmittel → eigene Dienstleistung ------------------
+// --- Rezept-Bestätigung: Heilmittel → eigene Leistung ------------------
 
 // Lazy-load PHYSIO_POSITIONS from backend on first Abrechnung page open.
 async function loadPhysioPositions() {
@@ -19787,7 +19787,7 @@ function podoCtx() {
     GKV_LEISTUNGSKATALOG,
     frequenzOptionsHtml,
     loadKkList,
-    resolveArzt,
+    resolveArzt, folge: folgeDeps, fussbefund: fussbefundCtx,   // folge/fussbefund: Tagesbehandlung, Folgetermin-Frage + aufklappbarer Fussbefund (S4 P2)
     toastArztErgebnis,
     rechnungAusVerordnung,           // bleibt hier, schreibt in die inv*-Variablen
     leads:    () => leadsCache,      // Getter — siehe oben

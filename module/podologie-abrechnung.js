@@ -102,6 +102,10 @@ import { hausbesuchGesperrt, hausbesuchSpeicherFehler, HAUSBESUCH_HINWEIS } from
 // zweimal von Hand nachrechnen (hier + vordAlerts unten) — ein Ort, eine Regel.
 import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20260929';
 import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20261001b';
+// Reform S4 Paket 2 (Konsey 30.09.2026, 1a/1b): aufklappbarer Fußbefund + Folgetermin-Frage.
+import { FOLGE_FRAGE, fussbefundBoxHtml, ladeLetzterBefund, ladeTagesTermin, folgeAusgangstermin, frageFolgetermin } from './podo-tag-zusatz.js?v=20261001m';
+import { mountFussbefund } from './fussbefund.js?v=20261001m';
+import { oeffneFolgetermin } from './termin-folge.js?v=20261001m';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -415,7 +419,7 @@ function podVordBehandlungsposition(vord) {
 // (s. dort), damit ein späteres Neuladen (Speichern, Toggle) nicht am alten
 // Termin-Datum kleben bleibt. Eine neue Verordnungsauswahl per Klick löscht
 // es ebenfalls sofort (Klick-Handler unten).
-let _podState = { selectedVordId: null, verordnungen: [], verordnungenAbgerechnet: [], zeigeAbgerechnet: false, vorwahlDatum: null, fahrtBookingId: null };
+let _podState = { selectedVordId: null, verordnungen: [], verordnungenAbgerechnet: [], zeigeAbgerechnet: false, vorwahlDatum: null, fahrtBookingId: null, folgeOffen: null };
 
 function findVord(id) {
   return _podState.verordnungen.find(v => v.id === id)
@@ -744,6 +748,9 @@ async function loadPodologieBilling() {
   const lsNotiz = selectedVord
     ? leitsymptomatikNotiz({ dg: diagRoot, massnahme: podVordMassnahme(selectedVord), roh: selectedVord.leitsymptomatik, freitext: selectedVord.pat_leitsymptomatik })
     : '';
+  // Letzter Fußbefund für die Kopfzeile des aufklappbaren Abschnitts (Konsey S0, 1a).
+  const letzterBefund = selectedVord?.lead_id
+    ? await ladeLetzterBefund(ctx.supabase, ctx.getOwnerId(), selectedVord.lead_id) : null;
   let behandlungFormHtml = '';
   if (!selectedVord) {
     behandlungFormHtml = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
@@ -752,6 +759,7 @@ async function loadPodologieBilling() {
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
       <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')}</h4>
       ${abgerechnetHinweisHtml}
+      ${fussbefundBoxHtml(letzterBefund, ctx.escapeHtml)}
       ${lsNotiz ? `<div id="podLsFehltNotiz" style="font-size:12px;color:var(--warning-text,var(--text-muted));background:var(--warning-dim,var(--bg-card-solid));border:1px solid var(--warning,var(--border));border-radius:6px;padding:8px 10px;margin-bottom:12px;">${ctx.escapeHtml(lsNotiz)}</div>` : ''}
       <div style="display:grid;gap:12px;">
         <div>
@@ -907,6 +915,22 @@ async function loadPodologieBilling() {
       }
     });
   }
+
+  // Fußbefund-Abschnitt: die Karte wird erst beim ersten Aufklappen gebaut (sie lädt die Patientenliste).
+  // Sie speichert selbst nach pat_fussbefund — nichts davon geht in podologie_behandlungen.
+  document.getElementById('podFussbefundBox')?.addEventListener('toggle', async (e) => {
+    const host = document.getElementById('podFussbefundHost');
+    const vordF = findVord(_podState.selectedVordId);
+    if (!e.target.open || !host || host.dataset.gebaut === '1' || !vordF?.lead_id || !ctx.fussbefund) return;
+    host.dataset.gebaut = '1';
+    try {
+      await mountFussbefund(ctx.fussbefund(), { leadId: vordF.lead_id, bookingId: _podState.fahrtBookingId || undefined }, { wurzel: host });
+    } catch (err) {
+      console.error('[pod-fussbefund-eingebettet]', err);
+      host.dataset.gebaut = '';
+      ctx.showToast('Fußbefund konnte nicht geladen werden.', 'error');
+    }
+  });
 
   document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {
     const datum   = document.getElementById('podBehDatum').value;
@@ -1087,6 +1111,7 @@ async function loadPodologieBilling() {
     if (vord && beginn.beginn) vord.behandlungsstart = beginn.beginn;
 
     // Status machine: wenn alle Einheiten verbraucht → abrechenbar
+    let alleVerbraucht = false;
     if (vord?.behandlungseinheiten) {
       const { count } = await ctx.supabase
         .from('podologie_behandlungen')
@@ -1097,6 +1122,7 @@ async function loadPodologieBilling() {
         .is('storniert_am', null)
         .eq('verordnung_id', _podState.selectedVordId);
       if (count != null && count >= vord.behandlungseinheiten) {
+        alleVerbraucht = true;
         await ctx.supabase.from(TOPF)
           .update({ abrechnung_status: statusInTopf('abrechenbar') })
           // Nur aus 'aktiv' (= abrechnung_status IS NULL) heraus: sonst holt
@@ -1115,19 +1141,48 @@ async function loadPodologieBilling() {
       ctx.showToast('Behandlung gespeichert ✓');
     }
 
+    const bookingIdVorLaden = _podState.fahrtBookingId;
     await loadPodologieBilling();
-    await zeigeFahrtHinweis();
+    const fahrtOffen = await zeigeFahrtHinweis();
+    // Folgetermin-Frage (Konsey S0, 1b). Hausbesuch: ERST die Fahrt beenden, dann fragen —
+    // die Frage wartet dann auf `onFertig` in fahrtBeendenKlick.
+    if (!frageFolgetermin({ alleVerbraucht })) return;
+    if (fahrtOffen) _podState.folgeOffen = { vord, datum, bookingId: bookingIdVorLaden };
+    else await fragFolgetermin({ vord, datum, bookingId: bookingIdVorLaden });
   });
+}
+
+/**
+ * „Behandlung gespeichert. Folgetermin jetzt anlegen?" — öffnet bei „Ja" die vorhandene
+ * Terminmaske vorbelegt (module/termin-folge.js). Ausgangstermin: siehe `folgeAusgangstermin`.
+ */
+async function fragFolgetermin({ vord, datum, bookingId }) {
+  if (!ctx.folge || !vord?.lead_id) return;
+  const ja = await ctx.showConfirmModal({ ...FOLGE_FRAGE });
+  if (!ja) return;
+  try {
+    let buchung = null;
+    if (bookingId) {
+      ({ data: buchung } = await ctx.supabase.from('bookings').select('*').eq('id', bookingId).maybeSingle());
+    }
+    if (!buchung) buchung = await ladeTagesTermin(ctx.supabase, ctx.getOwnerId(), vord.id, datum);
+    const { booking } = folgeAusgangstermin({ buchung, vord, datum, name: patientAnzeigename(vord) || '' });
+    await oeffneFolgetermin(booking, { ...ctx.folge, toast: ctx.showToast });
+  } catch (err) {
+    console.error('[pod-folgetermin]', err);
+    ctx.showToast('Folgetermin konnte nicht vorbelegt werden.', 'error');
+  }
 }
 
 /** S3.13: Hausbesuch mit offener Fahrt — Knopf "Fahrt beenden" nach dem Speichern. */
 async function zeigeFahrtHinweis() {
   const bookingId = _podState.fahrtBookingId;
-  if (!bookingId) return;
+  if (!bookingId) return false;
   const { data } = await ctx.supabase.from('bookings').select('fahrt_status').eq('id', bookingId).maybeSingle();
   const el = document.getElementById('podBillingContent');
-  if (!el || !zeigeFahrtBeenden({ bookingId, fahrt_status: data?.fahrt_status })) return;
+  if (!el || !zeigeFahrtBeenden({ bookingId, fahrt_status: data?.fahrt_status })) return false;
   el.insertAdjacentHTML('afterbegin', fahrtBeendenHinweisHtml());
+  return true;
 }
 
 // Vom Listen-Zuhörer oben aufgerufen (dort EIN document-Zuhörer, s. Test).
@@ -1138,7 +1193,11 @@ async function fahrtBeendenKlick(e) {
   try {
     const { data: booking } = await ctx.supabase.from('bookings').select('*').eq('id', _podState.fahrtBookingId).maybeSingle();
     if (!booking) { ctx.showToast('Buchung nicht gefunden.', 'error'); return; }
-    ctx.openFahrtEndModal({ booking, onFertig: () => { _podState.fahrtBookingId = null; document.getElementById('podFahrtHinweis')?.remove(); } });
+    ctx.openFahrtEndModal({ booking, onFertig: () => {
+      _podState.fahrtBookingId = null; document.getElementById('podFahrtHinweis')?.remove();
+      const offen = _podState.folgeOffen; _podState.folgeOffen = null;   // Folgetermin-Frage nach Fahrt beenden
+      if (offen) fragFolgetermin(offen);
+    } });
   } catch (err) {
     console.error('[pod-fahrt-beenden]', err);
     ctx.showToast(err.message || 'Fahrt konnte nicht geöffnet werden', 'error');

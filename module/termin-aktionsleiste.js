@@ -20,7 +20,7 @@
  * (TERMIN_AKTIONEN).
  */
 
-import { oeffneFolgetermin } from './termin-folge.js?v=20261001i';
+import { oeffneFolgetermin } from './termin-folge.js?v=20261001m';
 
 /** Die sechs sichtbaren Handlungen — der Kapitest prüft genau diese Liste gegen dashboard.html. */
 export const SICHTBARE_AKTIONEN = [
@@ -127,5 +127,14 @@ export function verdrahteAktionsleiste(deps) {
   el('bkAktionsMenue')?.addEventListener('click', (e) => {
     if (e.target.closest('button')) setTimeout(schliesseMenue, 0);
   });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseMenue(); });
+  // Escape bei offenem Menü schliesst NUR das Menü, nicht das Seitenpanel (canli-test 30.09, P3).
+  // Capture-Phase + stopImmediatePropagation: der Escape-Zuhörer in dashboard.js (Panel schliessen)
+  // hängt am selben document, aber in der Bubble-Phase und kommt danach nicht mehr dran.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const menue = el('bkAktionsMenue');
+    if (!menue || menue.hidden) return;
+    schliesseMenue();
+    e.stopImmediatePropagation();
+  }, true);
 }

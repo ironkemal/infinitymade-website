@@ -169,6 +169,7 @@ let dokumentKlick = null;       // Zuhörer zum Schliessen des Patienten-Dropdow
 // selbst auf — der Preset wird deshalb hier hinterlegt und beim Aufbau
 // eingelöst, statt ein zweites Mal zu montieren.
 let ausstehenderPreset = null;
+let aktuelleWurzel = null;      // Container, in dem die Karte gerade steht (Panel oder Tagesbehandlung)
 
 function aktiveLegende() {
   return legende.find(e => e.id === aktiveLegendeId) || legende[0] || STANDARD_LEGENDE[0];
@@ -1398,16 +1399,28 @@ function verdrahte(wurzel) {
  *                         switchPanel(), closePanel()
  * @param {object} [preset] { leadId, bookingId } — Vorwahl aus dem Terminkalender.
  *                         Ohne Preset bleibt das Verhalten unverändert.
+ * @param {object} [optionen] { wurzel } — anderer Container statt #fussstatusContent
+ *                         (Tagesbehandlung, Reform S4 Paket 2). Die Karte hat feste ids
+ *                         und Modulzustand: es gibt sie nur EINMAL; der bisherige
+ *                         Container wird geleert, und im Panel bleibt #fussstatusContent
+ *                         leer, solange die Karte eingebettet steht. Der Patient steht
+ *                         dann fest, die Patientensuche ist ausgeblendet.
  */
-export async function mountFussbefund(deps, preset) {
+export async function mountFussbefund(deps, preset, optionen) {
   ctx = deps;
   // Sofort einlösen, nicht erst am Ende: `oeffneFussbefundFuerTermin` erkennt am
   // geleerten Feld, dass der Panelwechsel den Aufbau bereits angestossen hat.
   const vorwahl = preset || ausstehenderPreset;
   ausstehenderPreset = null;
 
-  const wurzel = el('fussstatusContent');
+  const eingebettet = !!optionen?.wurzel;
+  const wurzel = optionen?.wurzel || el('fussstatusContent');
   if (!wurzel) return;
+  // Feste ids: die Karte darf nur an EINER Stelle stehen.
+  for (const alt of [aktuelleWurzel, el('fussstatusContent')]) {
+    if (alt && alt !== wurzel && alt.isConnected) alt.innerHTML = '';
+  }
+  aktuelleWurzel = wurzel;
   wurzel.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade Fußbefund-Karte…</span>';
 
   const ownerId = ctx.ownerId();
@@ -1444,6 +1457,7 @@ export async function mountFussbefund(deps, preset) {
 
   wurzel.innerHTML = kartenHtml(isoDatum(new Date()));
   verdrahte(wurzel);
+  if (eingebettet && el('fbpPatientSearch')?.parentElement) el('fbpPatientSearch').parentElement.hidden = true;
   renderWerkzeugleiste();
   renderTerminAuswahl();
   syncDatumsfeld();
@@ -1487,6 +1501,19 @@ async function wendePresetAn(preset) {
   if (!preset.bookingId) return;
   const sel = el('fbpTermin');
   if (!sel) return;
+
+  // canli-test 30.09 (P3): aus dem Seitenbereich kam der Termin nicht vorgewählt an, ein
+  // künftiger Termin fehlte in der Liste. Der Termin, von dem der Sprung ausging, wird
+  // deshalb — falls die Patientenliste ihn nicht enthält — gezielt nachgeladen.
+  if (!termine.some(t => t.id === preset.bookingId)) {
+    const { data: nach } = await ctx.supabase.from('bookings')
+      .select('id, start_time, status, service:service_id(title)')
+      .eq('owner_id', ctx.ownerId()).eq('id', preset.bookingId).maybeSingle();
+    if (nach && nach.status !== 'cancelled') {
+      termine = sortiereTermine([...termine, nach]);
+      renderTerminAuswahl();
+    }
+  }
 
   // Abgesagte Termine stehen nicht in der Liste — dann bleibt die Vorauswahl
   // aus `patientGewaehlt()` stehen, statt ins Leere zu zeigen.

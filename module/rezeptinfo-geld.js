@@ -231,7 +231,7 @@ export function euroZustand(rx, stand, lead) {
     if (stand.unbekannt || !(stand.gesamt > 0)) {
       return { ton: 'unbekannt', text: '—', label: 'Rechnungsbetrag', aktion: 'keine',
                titel: 'Für die erbrachten Leistungen ist kein eigener Preis hinterlegt — '
-                    + 'Betrag lässt sich nicht berechnen. Preise stehen unter „Dienstleistungen".' };
+                    + 'Betrag lässt sich nicht berechnen. Preise stehen unter „Leistungen".' };
     }
     return { ton: 'offen', text: fmt(stand.gesamt), label: 'Rechnungsbetrag', aktion: 'rechnung',
              titel: `Privatrechnung über ${fmt(stand.gesamt)} vorbereiten`
