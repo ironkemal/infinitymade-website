@@ -86,3 +86,6 @@ onprem/backups/
 
 # Lokale Obsidian-Vault-Konfiguration fuer wissensbank/ (persoenlich, nicht teilen)
 wissensbank/.obsidian/
+
+# Kostentraegerdatei-Waechter (tools/kostentraeger-check.mjs) — lokale Ausgabe ohne --out=
+kostentraeger-check-out/

@@ -1,0 +1,79 @@
+name: Kostenträgerdatei-Wächter (RSS)
+
+# onprem/REGISTER.md O-138 — "Neue Kostenträgerdatei erscheint, niemand merkt es".
+# Anlass (30.09.2026): die Q4/2026-Dateien (AOK/BKK/IKK) kamen erst 2-3 Tage vor
+# Quartalsbeginn; von Hand nicht zu verfolgen.
+#
+# Läuft täglich (Minute bewusst nicht :00) und manuell per workflow_dispatch:
+#   1. Holt den RSS-Feed "Kostenträgerdateien sonstige Leistungserbringer" von
+#      gkv-datenaustausch.de.
+#   2. Vergleicht die Einträge mit den bekannten Ausgaben (AUSGABEN-Liste in
+#      tools/kostentraeger-annahmestellen-laden.mjs — als Text gelesen — plus die
+#      Dateinamen in wissensbank/gemeinsam/kostentraeger/).
+#   3. Jede NEUE Datei: laden, sha256, mit parser.js + datei-lesen.js prüfen und
+#      gegen die heute gültige Datei derselben Kassenart vergleichen (Zähler,
+#      neue/weggefallene IK, IK-Kette, Papierannahmestellen, U+FFFD, VKG >10 Felder).
+#   4. Telegram: je neuer Datei ein eigener Abschnitt; ein Fehler bei einer Datei
+#      unterdrückt die anderen nicht (O-130). Nichts Neues → keine Nachricht.
+#
+# NUR BERICHT: kein Commit, kein Push, kein Schreiben in die DB, keine KI.
+# Freigabe von Hand: Datei in die wissensbank, AUSGABEN ergänzen, laden (db-ustasi).
+#
+# "Wächter blind"-Regel (bewusst ohne Zustand): ist der RSS nicht abrufbar oder
+# enthält er keinen gültigen Eintrag, kommt JEDEN Tag eine Warnung, bis er wieder
+# läuft. Ein Zähler über actions/cache würde nur Komplexität und einen weiteren
+# Fehlerpfad bringen; eine tägliche Zeile Telegram ist billiger als ein stiller
+# Ausfall — und der Feed ist sonst verlässlich.
+#
+# onprem-Vorgaben (O-138, verbindlich):
+#   - EIN Job, permissions: contents: read, KEIN `npm ci` — die Importkette
+#     (parser.js → dta/encoding.js, datei-lesen.js → node:fs) hat kein npm-Paket.
+#   - TELEGRAM_* stehen ausschließlich im env-Block des letzten curl-Schritts;
+#     der Prüfschritt sieht sie nicht.
+#   - Nichts aus dem RSS gelangt in die Shell oder in ${{ }}: das Skript lässt nur
+#     Links mit Präfix https://www.gkv-datenaustausch.de/ und strengem Dateinamen-
+#     muster zu, schreibt die Nachrichten in Dateien; curl liest sie (--data-urlencode).
+# Emsal: preise-check.yml (O-34/O-99), itsg-trust-anchor-check.yml (O-116).
+
+on:
+  schedule:
+    - cron: '23 5 * * *'   # täglich 05:23 UTC (ca. 07:23 Sommerzeit / 06:23 Winterzeit Berlin)
+  workflow_dispatch: {}    # manueller Test-Trigger im Actions-Tab
+
+permissions:
+  contents: read
+
+jobs:
+  kostentraeger-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: RSS prüfen, neue Dateien laden und vergleichen
+        # Kein Secret in dieser Umgebung. Stürzt das Skript ab, schreibt es selbst
+        # eine Absturz-Nachricht (msg-01.txt) und beendet mit Exit 1 — der
+        # Telegram-Schritt läuft trotzdem (always()), der Job wird rot.
+        run: node tools/kostentraeger-check.mjs --out="$RUNNER_TEMP/kt"
+
+      - name: Telegram senden (falls Nachrichten vorliegen)
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          shopt -s nullglob
+          for f in "$RUNNER_TEMP"/kt/msg-*.txt; do
+            curl -sS --fail -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+              --data-urlencode "text@${f}"
+          done
