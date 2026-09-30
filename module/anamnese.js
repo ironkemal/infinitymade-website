@@ -585,8 +585,9 @@ export async function ladePatientenAnamnese(leadId) {
 
   let ersteller = '';
   if (row.created_by) {
-    const { data: c } = await d.supabase.from('profiles').select('first_name,last_name,business_name').eq('id', row.created_by).maybeSingle();
-    if (c) ersteller = [c.first_name, c.last_name].filter(Boolean).join(' ') || c.business_name || '';
+    // profiles hat keine first_name/last_name (Namen: owner_first_name/owner_last_name) — bis 30.09.2026 400 bei jedem Öffnen (canli-test).
+    const { data: c } = await d.supabase.from('profiles').select('owner_first_name,owner_last_name,business_name').eq('id', row.created_by).maybeSingle();
+    if (c) ersteller = [c.owner_first_name, c.owner_last_name].filter(Boolean).join(' ') || c.business_name || '';
   }
   const versionen = await ladeVersionen(d.supabase, leadId, fb);
   if (akteLead !== leadId) return;

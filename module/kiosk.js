@@ -276,6 +276,22 @@ function zeigeDanke() {
   }
 }
 
+// P0 canli-test 30.09.2026: Im Kiosk lag der Patientenwähler offen — wer das Tablet
+// hielt, konnte jeden Patienten der Praxis wählen, dessen Anamnese sehen und eine
+// Kiosk-Fassung darüber schreiben (Art. 9 DSGVO, § 203 StGB). Deshalb für die Dauer
+// des Kiosks: Wähler und „Rezept hinzufügen" gesperrt UND unsichtbar.
+const KIOSK_GESPERRT = ['anamPatientSelect', 'anamRezeptBtn'];
+
+function kioskSperre(an) {
+  for (const id of KIOSK_GESPERRT) {
+    const el = $(id);
+    if (!el) continue;
+    el.disabled = an;
+    const gruppe = el.closest('.form-group') || el;
+    gruppe.hidden = an;
+  }
+}
+
 function enterKioskMode(modus = 'anamnese') {
   const overlay = $('kioskOverlay');
   if (!overlay) return;
@@ -295,6 +311,7 @@ function enterKioskMode(modus = 'anamnese') {
       if (startBtn) startBtn.style.display = 'none';
       const ewBtn = $('kioskEinwilligungBtn');
       if (ewBtn) ewBtn.style.display = 'none';
+      kioskSperre(true);
       formContent.appendChild(anamPanel);
       anamPanel.classList.add('active');
     } else if (nurEinwilligung && formContent) {
@@ -341,6 +358,7 @@ function exitKioskMode() {
     const ewBtn = $('kioskEinwilligungBtn');
     if (ewBtn) ewBtn.style.display = '';
     setzeKopf(null);
+    kioskSperre(false);
   } finally {
     _kioskActive = false;
     if (overlay) overlay.hidden = true;
