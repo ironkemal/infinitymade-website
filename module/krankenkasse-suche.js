@@ -35,7 +35,7 @@
 
 'use strict';
 
-import { attachAutocomplete } from '../katalog-suche.js?v=20260929b';
+import { attachAutocomplete } from '../katalog-suche.js?v=20260930x';
 
 /** @type {{ownerId: string, kassen: Array, haeufig: Map}|null} */
 let cache = null;

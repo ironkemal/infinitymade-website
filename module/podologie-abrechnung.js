@@ -61,7 +61,7 @@
  */
 
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20260810e';
-import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20260929b';
+import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20260930x';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260930h';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260920s';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';

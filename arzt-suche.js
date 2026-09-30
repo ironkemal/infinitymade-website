@@ -29,7 +29,7 @@
 
 'use strict';
 
-import { attachAutocomplete } from './katalog-suche.js?v=20260929b';
+import { attachAutocomplete } from './katalog-suche.js?v=20260930x';
 
 function esc(str) {
   return String(str ?? '')

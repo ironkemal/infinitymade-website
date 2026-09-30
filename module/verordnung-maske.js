@@ -44,7 +44,7 @@ import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20260930c';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260930c';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
-import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20260930i';
+import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20260930x';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -436,6 +436,12 @@ export function fuelleMuster13(rx, opt = {}) {
   if (_icdEl && _icdEl.value.trim()) {
     _icdEl.dispatchEvent(new Event('input',  { bubbles: true }));
     _icdEl.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  // Gespeicherter nicht endständiger Kode: gleicher Hinweis wie bei der Auswahl
+  // (katalog-suche.js, S3.6) — kommt nach dem `input`-Ereignis, das ihn löscht.
+  for (const feldId of ['rzIcd', 'rzIcd2']) {
+    const el = g(feldId);
+    if (el && el.value.trim()) el.dispatchEvent(new Event('katalog:gespeichert'));
   }
 
   if (alsVorlage) { tazeleIkHinweis(document.getElementById('rzPatKasseIk')); return; }

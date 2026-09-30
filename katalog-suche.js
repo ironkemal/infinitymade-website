@@ -403,6 +403,21 @@ export function nichtEndstaendigHinweis(item) {
   return 'ICD-Code ist nicht endständig. Bitte mit der Verordnung vergleichen — Korrektur nur durch den Arzt (neue Unterschrift + Datum).';
 }
 
+/**
+ * Hinweis für einen bereits GESPEICHERTEN ICD-Kode (Feldwert wie „E11.7 – Titel“
+ * oder „E11.7“): schlägt den Kode im Katalog nach und liefert denselben Text wie
+ * bei der Auswahl, wenn er nicht endständig ist. Unbekannter Kode, Suchfehler,
+ * leeres Feld → '' (kein Hinweis statt falschem Alarm).
+ */
+export async function gespeicherterKodeHinweis(sb, feldwert, bereich = null) {
+  const roh = String(feldwert || '').trim().split(/[\s–]/)[0];
+  const norm = c => String(c || '').toUpperCase().replace(/[-!*]+$/, '');
+  if (!roh || !sb) return '';
+  const rows = await searchDiagnosen(sb, roh, { bereich, kind: 'icd', limit: 20 });
+  const treffer = rows.find(it => it.kind !== 'dg' && norm(it.code) === norm(roh));
+  return nichtEndstaendigHinweis(treffer);
+}
+
 export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
   if (!inputEl || !sb) return;
   // limit 50: "E" trifft in der Podologie allein 155 gültige ICD-Kodes. Mit 25
@@ -458,6 +473,16 @@ export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
     hinweisEl.style.display = '';
   };
   inputEl.addEventListener('input', () => hinweisZeigen(''));
+  // Gespeicherter Kode (canli-test P3 30.09.2026): beim Wiederöffnen einer
+  // Verordnung wird das Feld programmatisch gefüllt, `onSelect` läuft nie —
+  // der 3.6-Hinweis fehlte dort. Die Maske meldet das Füllen mit diesem Ereignis.
+  if (kind !== 'dg') {
+    inputEl.addEventListener('katalog:gespeichert', async () => {
+      const wert = inputEl.value;
+      const text = await gespeicherterKodeHinweis(sb, wert, resolveBereich());
+      if (inputEl.value === wert) hinweisZeigen(text);
+    });
+  }
 
   attachAutocomplete(inputEl, {
     ariaLabel: 'Diagnose-Vorschläge',

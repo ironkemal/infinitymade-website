@@ -32,7 +32,7 @@
 
 import { geschlechtLabel } from './geschlecht.js?v=20260816';
 import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260930h';
-import { mountBehandlungsbestaetigung } from './behandlungsbestaetigung.js?v=20260905a';
+import { mountBehandlungsbestaetigung } from './behandlungsbestaetigung.js?v=20260930x';
 import { leadGeburtsdatum, leadHausbesuch } from './lead-felder.js?v=20260929a';
 
 const DE = (iso) => {

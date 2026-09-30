@@ -93,7 +93,9 @@ export function faelligkeit(abrechnung, heute = new Date()) {
   if (!abrechnung?.zaa_uploaded_at) return null;
   const faellig = new Date(new Date(abrechnung.zaa_uploaded_at).getTime() + 28 * 864e5);
   return {
-    am: faellig.toISOString().slice(0, 10),
+    // Lokales Datum, nicht UTC: um 00:00–02:00 Berlin lag das Fälligkeitsdatum
+    // sonst einen Tag zu früh (wie d92e422/6b853ea, datum.js).
+    am: alsISODatum(faellig),
     tageRest: Math.ceil((faellig.getTime() - heute.getTime()) / 864e5),
     ueberfaellig: faellig.getTime() < heute.getTime(),
   };
