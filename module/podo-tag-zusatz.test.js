@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fussbefundKopf, fussbefundBoxHtml, folgeAusgangstermin, frageFolgetermin, ladeLetzterBefund, ladeTagesTermin, FOLGE_FRAGE } from './podo-tag-zusatz.js';
+import { fussbefundKopf, fussbefundBoxHtml, folgeAusgangstermin, frageFolgetermin, ladeLetzterBefund, ladeTagesTermin, FOLGE_FRAGE,
+  hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE, ANAMNESE_FEHLT_NOTIZ } from './podo-tag-zusatz.js';
 import { leadStatusLabel } from './lead-status.js';
 
 test('Kopfzeile: ohne Befund „Noch kein Fußbefund"', () => {
@@ -56,4 +57,35 @@ test('leadStatusLabel: Almanca etiket, bilinmeyen ham, boş —', () => {
   assert.equal(leadStatusLabel('lost'), 'Verloren');
   assert.equal(leadStatusLabel('weird'), 'weird');
   assert.equal(leadStatusLabel(null), '—');
+});
+
+// ── Anamnese-Hinweis (S4 P3, gkv-302 30.09.2026) ──
+const sbMit = (ergebnis) => ({ from(t) { assert.equal(t, 'anamnese'); return { select: () => ({ eq: (c, v) => { assert.equal(c, 'patient_id'); assert.equal(v, 'L1'); return { limit: async () => ergebnis }; } }) }; } });
+test('hatAnamnese: Treffer → true, leer → false, Fehler/kein Patient/kein Client → null (dann KEIN Hinweis)', async () => {
+  assert.equal(await hatAnamnese(sbMit({ data: [{ id: 'a' }], error: null }), 'L1'), true);
+  assert.equal(await hatAnamnese(sbMit({ data: [], error: null }), 'L1'), false);
+  assert.equal(await hatAnamnese(sbMit({ data: null, error: { message: 'x' } }), 'L1'), null);
+  assert.equal(await hatAnamnese({ from() { throw new Error('x'); } }, 'L1'), null);
+  assert.equal(await hatAnamnese(sbMit({ data: [], error: null }), null), null);
+  assert.equal(await hatAnamnese(null, 'L1'), null);
+});
+test('Notiz: nur bei false, mit Link „Anamnese erfassen"', () => {
+  assert.equal(anamneseFehltNotizHtml(true, s => s), '');
+  assert.equal(anamneseFehltNotizHtml(null, s => s), '');
+  const h = anamneseFehltNotizHtml(false, s => s);
+  assert.ok(h.includes(ANAMNESE_FEHLT_NOTIZ));
+  assert.match(h, /id="podAnamneseErfassenBtn"/);
+  assert.match(h, />Anamnese erfassen</);
+  assert.equal(ANAMNESE_FEHLT_NOTIZ, 'Für diese Patientin / diesen Patienten ist noch keine Anamnese erfasst.');
+});
+test('Rückfrage 78040: nur bei 78040 UND bestätigt fehlender Anamnese; Texte laut gkv-302', () => {
+  assert.equal(frageAnamnese78040({ checks: ['78040', '78010'], hatAnamnese: false }), true);
+  assert.equal(frageAnamnese78040({ checks: ['78040'], hatAnamnese: true }), false);
+  assert.equal(frageAnamnese78040({ checks: ['78040'], hatAnamnese: null }), false);
+  assert.equal(frageAnamnese78040({ checks: ['78010'], hatAnamnese: false }), false);
+  assert.equal(frageAnamnese78040({ checks: undefined, hatAnamnese: false }), false);
+  assert.equal(ANAMNESE_78040_FRAGE.title, 'Anamnese fehlt');
+  assert.equal(ANAMNESE_78040_FRAGE.message, 'Die Anamnese ist Leistungsinhalt der Eingangsbefundung (Anlage 1a Teil 2 Nr. 4.1). Wurde sie erhoben (auch auf Papier)?');
+  assert.equal(ANAMNESE_78040_FRAGE.confirmText, 'Anamnese erhoben — speichern');
+  assert.equal(ANAMNESE_78040_FRAGE.cancelText, 'Zurück');
 });

@@ -6049,6 +6049,13 @@ textarea {
   font-size: 14px;
 }
 
+/* Patientenakte Podologie (module/akte-podo.js, S4 P3): Kopf-Knöpfe und eingezogene Reiter als Abschnitte. */
+#pdKopfAktionen:not([hidden]) { display: inline-flex; gap: 6px; }
+.pd-abschnitt { border-bottom: 1px solid var(--border); }
+.pd-abschnitt > summary { cursor: pointer; padding: 10px 20px; font-size: 13px; font-weight: 600; color: var(--text-main); }
+/* „Verordnungen": Leer-Hinweis nur, solange die Übersicht keine Karten zeigt. */
+#pdVeroUebersicht:not([hidden]) ~ #pdRezLeer { display: none; }
+
 .pd-section {
   margin-bottom: 20px;
 }

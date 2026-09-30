@@ -103,7 +103,8 @@ import { hausbesuchGesperrt, hausbesuchSpeicherFehler, HAUSBESUCH_HINWEIS } from
 import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20260929';
 import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20261001b';
 // Reform S4 Paket 2 (Konsey 30.09.2026, 1a/1b): aufklappbarer Fußbefund + Folgetermin-Frage.
-import { FOLGE_FRAGE, fussbefundBoxHtml, ladeLetzterBefund, ladeTagesTermin, folgeAusgangstermin, frageFolgetermin } from './podo-tag-zusatz.js?v=20261001n';
+import { FOLGE_FRAGE, fussbefundBoxHtml, ladeLetzterBefund, ladeTagesTermin, folgeAusgangstermin, frageFolgetermin,
+  hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE } from './podo-tag-zusatz.js?v=20261001p';
 import { mountFussbefund } from './fussbefund.js?v=20261001m';
 import { oeffneFolgetermin } from './termin-folge.js?v=20261001m';
 
@@ -749,8 +750,10 @@ async function loadPodologieBilling() {
     ? leitsymptomatikNotiz({ dg: diagRoot, massnahme: podVordMassnahme(selectedVord), roh: selectedVord.leitsymptomatik, freitext: selectedVord.pat_leitsymptomatik })
     : '';
   // Letzter Fußbefund für die Kopfzeile des aufklappbaren Abschnitts (Konsey S0, 1a).
-  const letzterBefund = selectedVord?.lead_id
-    ? await ladeLetzterBefund(ctx.supabase, ctx.getOwnerId(), selectedVord.lead_id) : null;
+  // Anamnese-Hinweis (S4 P3) läuft parallel dazu — beide sind Leseabfragen auf den Patienten.
+  const [letzterBefund, anamneseDa] = selectedVord?.lead_id
+    ? await Promise.all([ladeLetzterBefund(ctx.supabase, ctx.getOwnerId(), selectedVord.lead_id), hatAnamnese(ctx.supabase, selectedVord.lead_id)])
+    : [null, null];
   let behandlungFormHtml = '';
   if (!selectedVord) {
     behandlungFormHtml = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
@@ -760,6 +763,7 @@ async function loadPodologieBilling() {
       <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')}</h4>
       ${abgerechnetHinweisHtml}
       ${fussbefundBoxHtml(letzterBefund, ctx.escapeHtml)}
+      ${anamneseFehltNotizHtml(anamneseDa, ctx.escapeHtml)}
       ${lsNotiz ? `<div id="podLsFehltNotiz" style="font-size:12px;color:var(--warning-text,var(--text-muted));background:var(--warning-dim,var(--bg-card-solid));border:1px solid var(--warning,var(--border));border-radius:6px;padding:8px 10px;margin-bottom:12px;">${ctx.escapeHtml(lsNotiz)}</div>` : ''}
       <div style="display:grid;gap:12px;">
         <div>
@@ -915,6 +919,13 @@ async function loadPodologieBilling() {
       }
     });
   }
+
+  // „Anamnese erfassen": öffnet den vorhandenen Anamnese-Bildschirm mit diesem Patienten (S4 P3).
+  document.getElementById('podAnamneseErfassenBtn')?.addEventListener('click', () => {
+    const vordA = findVord(_podState.selectedVordId);
+    if (ctx.oeffneAnamnese && vordA?.lead_id) ctx.oeffneAnamnese(vordA.lead_id);
+    else ctx.switchPanel('anamnese');
+  });
 
   // Fußbefund-Abschnitt: die Karte wird erst beim ersten Aufklappen gebaut (sie lädt die Patientenliste).
   // Sie speichert selbst nach pat_fussbefund — nichts davon geht in podologie_behandlungen.
@@ -1089,6 +1100,17 @@ async function loadPodologieBilling() {
         confirmText: 'Trotzdem speichern', cancelText: 'Zurück', variant: 'warning',
       });
       if (!trotzdem) return;
+    }
+
+    // Eingangsbefundung ohne Anamnese (gkv-302, 30.09.2026): Rückfrage, KEINE Sperre —
+    // sie darf auch auf Papier erhoben sein. Frisch gelesen (kann seit dem Rendern
+    // nachgetragen sein); nur bei 78040, sonst keine Abfrage. „Zurück" = nichts gespeichert.
+    if (checks.includes(POD_EINGANGSBEFUNDUNG) && vord?.lead_id) {
+      const hat = await hatAnamnese(ctx.supabase, vord.lead_id);
+      if (frageAnamnese78040({ checks, hatAnamnese: hat })) {
+        const erhoben = await ctx.showConfirmModal({ ...ANAMNESE_78040_FRAGE });
+        if (!erhoben) return;
+      }
     }
 
     const { error } = await ctx.supabase.from('podologie_behandlungen').insert({

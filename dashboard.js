@@ -38,7 +38,8 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001n';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001p';
+import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz, fahrtenbuchCsv, patientenverzeichnisCsv, csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS } from './module/fahrtenbuch-regeln.js?v=20261001c';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
@@ -7825,12 +7826,7 @@ async function openPatientDetailModal(lead) {
   const leadId = lead.id;
   const isPhysio = isPraxisSector(getSector());
   const isPodo = getSector() === 'podologie';
-  const rezTab = document.getElementById('pdTabRezepte');
-  if (rezTab) rezTab.style.display = isPhysio ? '' : 'none';
-  const messTab = document.getElementById('pdTabMessreihen');
-  if (messTab) messTab.style.display = isPhysio ? '' : 'none';
-  const fbTab = document.getElementById('pdTabFussbefund');
-  if (fbTab) fbTab.style.display = isPodo ? '' : 'none';
+  setzeAkteReiter({ isPhysio, isPodo });   // Reiter je Fachbereich: Podologie 6, sonst wie bisher (module/akte-podo.js)
 
   const messPanel = document.getElementById('pdPanelMessreihen');
   if (messPanel) {
@@ -8783,11 +8779,12 @@ document.querySelectorAll('.pd-tab').forEach(tab => {
     if (tab.dataset.tab === 'fussbefund' && pdCurrentLeadId) {
       zeigeFussbefundArchiv(pdCurrentLeadId);
     }
-    if (tab.dataset.tab === 'einwilligung' && pdCurrentLeadId) {
+    if ((tab.dataset.tab === 'einwilligung' || tab.dataset.tab === 'dokumente') && pdCurrentLeadId) {
       renderEinwilligungListe(document.getElementById('pdEinwilligungContent'), pdCurrentLeadId);
     }
   });
 });
+verdrahteAkteKopf({ ...folgeDeps, leadId: () => pdCurrentLeadId });   // „+ Termin" / „+ Verordnung" im Akte-Kopf (Podologie)
 
 document.querySelectorAll('.filter-btn[data-status]').forEach(btn => {
   if (btn.closest('#panel-kunden')) {
@@ -19787,7 +19784,7 @@ function podoCtx() {
     GKV_LEISTUNGSKATALOG,
     frequenzOptionsHtml,
     loadKkList,
-    resolveArzt, folge: folgeDeps, fussbefund: fussbefundCtx,   // folge/fussbefund: Tagesbehandlung, Folgetermin-Frage + aufklappbarer Fussbefund (S4 P2)
+    resolveArzt, folge: folgeDeps, fussbefund: fussbefundCtx, oeffneAnamnese: (id) => { prefillAnamnesePatientId = id; switchPanel('anamnese'); },   // folge/fussbefund: Tagesbehandlung, Folgetermin-Frage + aufklappbarer Fussbefund (S4 P2)
     toastArztErgebnis,
     rechnungAusVerordnung,           // bleibt hier, schreibt in die inv*-Variablen
     leads:    () => leadsCache,      // Getter — siehe oben

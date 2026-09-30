@@ -20,7 +20,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20261001i" />
+  <link rel="stylesheet" href="dashboard.css?v=20261001p" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -3991,7 +3991,14 @@
   <div class="modal-overlay" id="patientDetailModal" hidden>
     <div class="modal modal-xl">
       <div class="modal-header">
-        <span class="modal-title" id="pdModalTitle">Patientendetails</span>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0;">
+          <span class="modal-title" id="pdModalTitle">Patientendetails</span>
+          <!-- Nur Podologie (module/akte-podo.js gibt sie frei): die zwei häufigsten Wege aus der Akte heraus. -->
+          <span id="pdKopfAktionen" hidden>
+            <button type="button" class="btn-ghost btn-sm" id="pdKopfTerminBtn">+ Termin</button>
+            <button type="button" class="btn-ghost btn-sm" id="pdKopfVerordnungBtn">+ Verordnung</button>
+          </span>
+        </div>
         <button class="modal-close" data-modal="patientDetailModal">✕</button>
       </div>
       <div class="modal-body" style="padding:0;">
@@ -4010,9 +4017,13 @@
                ohne Liste und Kopie druckt die Praxis weiter Papier. -->
           <button class="pd-tab" data-tab="einwilligung">Einwilligungen</button>
           <button class="pd-tab" data-tab="ueberweisung">Überweisung</button>
+          <!-- Reihenfolge Podologie (module/akte-podo.js, S4 P3): Verlauf · Anamnese ·
+               Fußbefund · Verordnungen (= „rezepte") · Dokumente · Rechnungen. Für Physio
+               sind Fußbefund/Dokumente ausgeblendet, die Reihenfolge dort unverändert. -->
+          <button class="pd-tab" data-tab="fussbefund" id="pdTabFussbefund" style="display:none;">Fußbefund</button>
           <button class="pd-tab" data-tab="rezepte" id="pdTabRezepte" style="display:none;">Rezepte</button>
           <button class="pd-tab" data-tab="messreihen" id="pdTabMessreihen" style="display:none;">Messreihen</button>
-          <button class="pd-tab" data-tab="fussbefund" id="pdTabFussbefund" style="display:none;">Fußbefund</button>
+          <button class="pd-tab" data-tab="dokumente" id="pdTabDokumente" style="display:none;">Dokumente</button>
           <button class="pd-tab" data-tab="rechnungen">Rechnungen</button>
           <button class="pd-tab" data-tab="termine">Termine</button>
           <button class="pd-tab" data-tab="mail">Mail</button>
@@ -4024,6 +4035,9 @@
                  damit dashboard.js nicht wächst (Konsey 2026-08-13). -->
             <div id="pdBescheinigung" style="padding:14px 20px 0;"></div>
             <div id="pdVerlaufContent"></div>
+            <!-- Podologie: Notizen + Termine ziehen aus eigenen Reitern hierher (module/akte-podo.js). -->
+            <details id="pdVerlaufTermineBox" hidden class="pd-abschnitt"><summary>Termine</summary><div id="pdVerlaufTermineHost"></div></details>
+            <details id="pdVerlaufNotizenBox" hidden class="pd-abschnitt"><summary>Notizen</summary><div id="pdVerlaufNotizenHost"></div></details>
           </div>
           <div class="pd-panel" id="pdPanelNotes">
             <div class="pd-loading" id="pdNotesLoading">
@@ -4062,6 +4076,14 @@
               <div class="spinner-sm"></div>
             </div>
             <div id="pdRezContent"></div>
+            <!-- Podologie: Leer-Hinweis; blendet sich aus, sobald die Übersicht oben Karten zeigt (dashboard.css). -->
+            <div id="pdRezLeer" class="pd-empty" hidden>Keine laufende Verordnung. Über „+ Verordnung“ oben anlegen; frühere stehen im Verlauf.</div>
+          </div>
+          <div class="pd-panel" id="pdPanelDokumente">
+            <!-- Podologie: Einwilligungen, Überweisung und Mail-Historie in einem Reiter (module/akte-podo.js). -->
+            <details id="pdDokEinwilligungBox" hidden class="pd-abschnitt" open><summary>Einwilligungen</summary><div id="pdDokEinwilligungHost"></div></details>
+            <details id="pdDokUeberweisungBox" hidden class="pd-abschnitt" open><summary>Überweisung</summary><div id="pdDokUeberweisungHost"></div></details>
+            <details id="pdDokMailBox" hidden class="pd-abschnitt"><summary>Mail-Historie</summary><div id="pdDokMailHost"></div></details>
           </div>
           <div class="pd-panel" id="pdPanelMessreihen">
             <div class="mess-form-bar" id="messFormBar">
@@ -5698,7 +5720,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261001n"></script>
+  <script type="module" src="dashboard.js?v=20261001p"></script>
 </body>
 
 </html>

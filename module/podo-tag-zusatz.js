@@ -124,6 +124,62 @@ export async function ladeTagesTermin(sb, ownerId, vordId, datum) {
   } catch { return null; }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Anamnese-Hinweis (Reform S4, Paket 3 · gkv-302 30.09.2026)
+   Die Anamnese ist Leistungsinhalt der Eingangsbefundung 78040 (Anlage 1a
+   Teil 2 Nr. 4.1). Fehlt sie, gibt es zwei WEICHE Hinweise — beide sperren nichts,
+   der DTA-/Bereit-Pfad kennt keinen Block:
+     1. Notiz + Link in der Tagesbehandlung (immer, wenn keine Anamnese da ist);
+     2. Rückfrage beim Speichern, wenn 78040 angekreuzt ist.
+   Beide hängen an EINER Prüfung: `hatAnamnese`.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/** Die Eingangsbefundung — eine Konstante, damit Test und Aufrufer dasselbe meinen. */
+export const CODE_EINGANGSBEFUNDUNG = '78040';
+
+export const ANAMNESE_FEHLT_NOTIZ = 'Für diese Patientin / diesen Patienten ist noch keine Anamnese erfasst.';
+
+/** Rückfrage beim Speichern von 78040 ohne Anamnese (Text: gkv-302). */
+export const ANAMNESE_78040_FRAGE = {
+  title: 'Anamnese fehlt',
+  message: 'Die Anamnese ist Leistungsinhalt der Eingangsbefundung (Anlage 1a Teil 2 Nr. 4.1). Wurde sie erhoben (auch auf Papier)?',
+  confirmText: 'Anamnese erhoben — speichern',
+  cancelText: 'Zurück',
+  variant: 'warning',
+};
+
+/**
+ * Gibt es zu diesem Patienten mindestens einen Anamnese-Datensatz?
+ * `anamnese.patient_id` → `leads.id`. Bewusst OHNE `owner_id`-Filter, wie der
+ * Reiter „Anamnese" der Akte (RLS entscheidet; ein Filter könnte bei geteilten
+ * Standorten fälschlich „fehlt" melden).
+ *
+ * @returns {Promise<boolean|null>} `true`/`false`, oder `null` = nicht ermittelbar
+ *   (Fehler, kein Patient). Der Hinweis erscheint NUR bei `false`.
+ */
+export async function hatAnamnese(sb, leadId) {
+  if (!sb || !leadId) return null;
+  try {
+    const { data, error } = await sb.from('anamnese').select('id').eq('patient_id', leadId).limit(1);
+    if (error) return null;
+    return Array.isArray(data) && data.length > 0;
+  } catch { return null; }
+}
+
+/** Notiz mit Ein-Klick-Link; leerer String, wenn nichts zu sagen ist (Anamnese da oder unbekannt). */
+export function anamneseFehltNotizHtml(hat, esc) {
+  if (hat !== false) return '';
+  return `<div id="podAnamneseFehltNotiz" style="font-size:12px;color:var(--warning-text,var(--text-muted));background:var(--warning-dim,var(--bg-card-solid));border:1px solid var(--warning,var(--border));border-radius:6px;padding:8px 10px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;">
+        <span>${esc(ANAMNESE_FEHLT_NOTIZ)}</span>
+        <button type="button" id="podAnamneseErfassenBtn" class="btn-ghost" style="padding:3px 10px;font-size:12px;">Anamnese erfassen</button>
+      </div>`;
+}
+
+/** Fragt das Speichern von 78040 nach der Anamnese? Nur bei bestätigtem `false`. */
+export function frageAnamnese78040({ checks, hatAnamnese: hat }) {
+  return Array.isArray(checks) && checks.includes(CODE_EINGANGSBEFUNDUNG) && hat === false;
+}
+
 /**
  * Soll nach dem Speichern gefragt werden? Nicht, wenn die Verordnung mit
  * dieser Behandlung aufgebraucht ist — dann folgt eine neue Verordnung, kein
