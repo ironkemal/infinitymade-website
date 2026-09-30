@@ -116,6 +116,42 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.09.2026 · (push bekliyor: Anamnese-Migration) — Anamnese je Fachbereich, append-only, Risiko-Rozets
+Kemal kararı: Anamnese Fachbereich'e özgü (podo 20 alan — podoloji kararı; physio mevcut; ergo/logo taslak).
+Commit edilmedi; B'nin anamnese migration'ı (`ist_aktuell`, `fachbereich`, `version`, `felder` …) bekleniyor,
+commit'te harita tazelenecek.
+- `module/anamnese-formulare.js` (neu, saf): `FORMULARE` + `validiere`, `antwortAusForm`, `spaltenAusFelder`,
+  `anzeigeZeilen`, `baueInsert`, `bestaetigungsKopie`, `rozetsAusFelder`, `begrenzeRozets`, `konsistenzHinweis`,
+  `risikoKopie`, `vorschlaegeAusRisiken`, `kioskHinweis`, `risikoZeilen`, `befundRisikoHinweis`. Niye: dört form tek
+  tanım dosyasında; DOM/DB'siz test edilebilir. `spaltenAusFelder` sabit kolonları (Terminkarte, Druck) `felder`'den
+  besler — Terminkarte kendi renderer'ını (`termin-panel.js` `zeichneAnamnese`) bilerek korur.
+- `module/anamnese-daten.js` (neu): anamnese'ye TEK frontend erişimi — append-only INSERT (`speichereNeu`, `bestaetige`),
+  tek UPDATE `markiereGeprueft`, okuyucular `ist_aktuell`+`fachbereich` (`ladeAktuelle`, `ladeAlleAktuellen`,
+  `ladeVersionen`, `hatAktuelle`), `ladeAltrisiken` (eski `befund.risiken` → öneri).
+- `module/anamnese-rozet.js` (neu): `rozetHtml`. Niye: risk rozetleri yalnız Akte başlığı + Tagesbehandlung
+  (legal-de: Kalender/E-Mail/PDF/Abrechnung'da yok).
+- `module/anamnese.js` (kuşatma, dashboard.js −489): `loadAnamnese`, `fillAnamneseForm`, `saveAnamnese`,
+  `printAnamneseInline`, `bindAnamneseEvents`, `loadAnamneseRxContext`, `loadPatientDetailAnamnese` taşındı;
+  legacy `printAnamnese` silindi; yeni `initAnamnese`, `oeffneAnamneseFuer`.
+- Değişen: `kiosk.js` `handleKioskStart(modus)` („Nur Einwilligung" — aynı kiosk kabuğu, ikinci kabuk yok);
+  `patienten-einwilligung.js` `onClose` + z-index 99999; `fussbefund.js` risk bloğu salt-okunur (Anamnese lider kaynak,
+  `befund.risiken` = `risikoKopie` + `anamnese_id`); `podo-tag-zusatz.js` `hatAnamnese` → `ist_aktuell`+`fachbereich='podo'`.
+- **Kopya kontrolü (fonksiyon-ustasi 30.09, birleştirilmedi, karar Kemal'de):**
+  - **VERİ RİSKİ — `api-backend/server.js` `POST /api/rezept/save`**: anamnese'ye hâlâ eski kuralla yazıyor: `ist_aktuell`/`fachbereich`
+    filtresiz `.maybeSingle()` okuma, sonra **UPDATE** (mevcut satırı değiştirir) ya da `fachbereich`/`version`'sız INSERT.
+    Append-only kuralıyla çelişen ikinci yazma yolu. Frontend'de çağıranı bulunamadı (grep + harita `endpoints[]` boş) —
+    ölü olabilir; migration'dan önce karar: kaldır / `anamnese-daten` kuralına çek.
+  - `podo-tag-zusatz.js` `hatAnamnese` ↔ `anamnese-daten.js` `hatAktuelle(sb, leadId, 'podo')` — aynı sorgu, aynı `null`
+    anlamı. Küçük kopya; import edilebilir.
+  - `dashboard.js` Terminpanel doğrudan `from('anamnese')` okuyor (anamnese-daten dışı ikinci okuyucu, filtreler doğru).
+  - Kopya değil: `risikoZeilen` ↔ `fussbefund-archiv.js` `risiken` (biri Anamnese `felder`, öbürü Befund anlık kopyası
+    — iki farklı kaynak, kasıtlı). Ama eski 4 anahtarın etiketi üç yerde ayrı: `befundRisikoHinweis`
+    („Infektionskrankheiten"), `fussbefund-archiv.js` `RISIKO_LABEL` („Infektion"), `fussbefund.js` `kurzBefund`
+    („Allergie", infektion yok). Görsel drift, veri riski değil.
+  - `anzeigeZeilen` ↔ `patientenkarte.js`: patientenkarte anamnese satırı çizmiyor — aday düştü. Tek diğer çizici
+    `termin-panel.js` `zeichneAnamnese` (sabit kolonlar, yukarıda).
+  - Einwilligung: kiosk kabuğu tek (`kiosk.js` `enterKioskMode(modus)`), `openEinwilligungFlow` onun üstüne biniyor — kopya yok.
+
 ### 30.09.2026 · 047baab — Podoloji (a)/(b)/(c) + canli-test P3 (Sperrtext, ICD im Speichern-Dialog)
 - `sperreTextAusLage(lage)` (`podo-arztangaben.js`). Niye: LANR/Unterschrift-Sperre hatte drei Wortlaute
   (Banner, Speichern-Dialog, Tagesbehandlung); jetzt ein Satz, der das Fehlende nennt (canli-test P3).
