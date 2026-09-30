@@ -140,7 +140,7 @@ export function validateStandard(rezept) {
   // ICD <-> Diagnosegruppe-Prüfung (Podologie: DF/NF/QF/UI1/UI2)
   // Physio/Logo/Ergo haben keinen ICD-Pool => checkIcdDg gibt [] zurueck.
   const icdDgWarnings = checkIcdDg(
-    { icd10: rezept.icd10, diagnosegruppe: dg },
+    { icd10: rezept.icd10, diagnosegruppe: dg, diagnosetext: rezept.diagnose_freitext ?? rezept.diagnosetext },
     getIcdDgRules()
   );
   warnings.push(...icdDgWarnings);

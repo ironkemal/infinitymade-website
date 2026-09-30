@@ -123,3 +123,18 @@ Die richtige Antwort war nicht, sie nachzutragen, sondern die Abrufe **abzustell
 Verbleibende externe Abrufe im Anwendungskontext — Sentry-Loader, Cropper.js (cdnjs), Google Fonts — sind als Aufgaben erfasst; Stripe (`js.stripe.com`) bleibt aus PCI-DSS-Gründen bewusst extern.
 
 Alle Sub-Prozessoren sind im AVV (DPA.html) aufgeführt; Änderungen werden 30 Tage vor Inkrafttreten kommuniziert.
+
+### Textvorschlag (legal-de 30.09.2026) — Anwesenheitserfassung mit Standortabgleich
+
+> **Status: Vorschlag, noch nicht übernommen.** Wirksam erst, wenn die Funktion im Browser
+> freigeschaltet ist (`Permissions-Policy` für `/dashboard.html`/`/attendance.html`,
+> Sicherheitsregister A-19, Kemals Freigabe offen). Technik seit 30.09.2026 bereit
+> (Migration 0047, `api-backend/lib/gps-checkin.js`).
+
+„Anwesenheitserfassung: Standortabgleich zum Zeitpunkt des Check-ins; gespeichert wird
+ausschließlich das Ergebnis (innerhalb/außerhalb 150 m), keine Koordinaten. Funktion
+standardmäßig deaktiviert, Aktivierung durch den Auftraggeber."
+
+Ergänzend für die Verarbeitungsbeschreibung: ohne Standort (Funktion aus, Einwilligung im
+Gerät verweigert, keine Praxiskoordinate) wird der Check-in trotzdem erfasst und als
+„nicht geprüft" gekennzeichnet — die Zeiterfassung hängt nicht am Standort.

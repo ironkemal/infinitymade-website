@@ -165,7 +165,7 @@
       "orientierende_menge": null,
       "frequency_hint": null,
       "untergruppen": ["a", "b", "c"],
-      "enforcement": "warn",
+      "enforcement": "hard_before_dta",
       "note": "Nur Wagner-Stadium 0 verordnungsfähig (HeilM-RL § 27 Abs. 3). a/b/c ist Leitsymptomatik, keine eigene Diagnosegruppe — aus dem ICD nicht ableitbar.",
       "icd_accept": [
         { "re": "^E1[0-4]\\.7[45]$", "note": "Diabetisches Fußsyndrom (…74 nicht entgleist / …75 entgleist)" },
@@ -188,7 +188,7 @@
       "orientierende_menge": null,
       "frequency_hint": null,
       "untergruppen": null,
-      "enforcement": "warn",
+      "enforcement": "hard_before_dta",
       "note": "NICHT diabetisch (HeilM-RL § 27 Abs. 1 Nr. 2a). Diabetische Neuropathie gehört nach DF.",
       "icd_accept": [
         { "re": "^G60\\.", "note": "Hereditäre und idiopathische Neuropathie" },
@@ -216,7 +216,7 @@
       "orientierende_menge": null,
       "frequency_hint": null,
       "untergruppen": null,
-      "enforcement": "warn",
+      "enforcement": "hard_before_dta",
       "note": "HeilM-RL § 27 Abs. 1 Nr. 2b. G82.- ist erst fünfstellig abrechenbar.",
       "icd_accept": [
         { "re": "^G82\\.[0-5][0-3]$", "note": "Para-/Tetraparese und -plegie, fünfstellig (x0 akut komplett, x1 akut inkomplett, x2 chronisch komplett, x3 chronisch inkomplett)" },

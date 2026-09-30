@@ -15,7 +15,7 @@ async function test(name, fn) {
 // --------------------------------------------------------------------------
 // Supabase-Stub
 // --------------------------------------------------------------------------
-function makeStub(rows = []) {
+function makeStub(rows = [], { altNameKey = false } = {}) {
   const store = rows.map((r, i) => ({ id: r.id || `id-${i + 1}`, ...r }));
   let seq = store.length;
 
@@ -36,9 +36,12 @@ function makeStub(rows = []) {
       async single() {
         if (api._mode === 'insert') {
           const row = api._payload;
-          // Unique-Indizes aus v32 nachbilden.
+          // Unique-Indizes nachbilden: v32 (LANR / Name ohne LANR) und — mit
+          // altNameKey — der ältere aerzte_owner_id_arzt_name_key = UNIQUE
+          // (owner_id, arzt_name) OHNE LANR-Bezug, der live (30.09.2026) noch steht.
           const clash = store.find(r =>
             r.owner_id === row.owner_id && (
+              (altNameKey && r.arzt_name === row.arzt_name) ||
               (row.lanr && r.lanr === row.lanr) ||
               (!row.lanr && !r.lanr &&
                 String(r.arzt_name).toLowerCase() === String(row.arzt_name).toLowerCase())
@@ -218,6 +221,22 @@ await test('Wettlauf (unique violation) liefert den vorhandenen Datensatz', asyn
   assert.equal(r.id, 'race-1');
   assert.equal(r.created, false);
   assert.equal(db._store.length, 1, 'kein Doppelter trotz Wettlauf');
+});
+
+await test('[Alt-Index] bekannter Arzt MIT LANR, Maske speichert nur den Namen → vorhandener Datensatz statt 500', async () => {
+  const db = makeStub([{ id: 'mit-lanr', owner_id: OWNER, arzt_name: 'Dr. Meyer', lanr: '123456789' }], { altNameKey: true });
+  const r = await resolveOrCreateArzt(db, OWNER, { name: 'Dr. Meyer' });
+  assert.equal(r.id, 'mit-lanr');
+  assert.equal(r.created, false);
+  assert.equal(db._store.length, 1);
+});
+
+await test('[Alt-Index] neue LANR, Name gehört Arzt mit anderer LANR → Konflikt statt stiller Verknüpfung', async () => {
+  const db = makeStub([{ id: 'a', owner_id: OWNER, arzt_name: 'Dr. Meyer', lanr: '123456789' }], { altNameKey: true });
+  const r = await resolveOrCreateArzt(db, OWNER, { name: 'Dr. Meyer', lanr: '987654321' });
+  assert.equal(r.id, null);
+  assert.equal(r.konflikt, 'name_andere_lanr');
+  assert.equal(db._store.length, 1);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

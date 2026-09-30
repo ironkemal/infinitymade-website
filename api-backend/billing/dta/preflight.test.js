@@ -199,6 +199,47 @@ test('catches 8-digit krankenkasseIk (V:01017)', () => {
   assert.ok(hasErr(r, 'V:01017'));
 });
 
+// ── V:01018 ICD↔DG + S:01013 ein Behandlungstag je Tag (30.09.2026) ─────────
+const podoFall = (verordnung = {}, sessions) => {
+  const i = clone(validInput);
+  Object.assign(i.prescriptions[0].verordnung, { diagnosegruppe: 'DF', leitsymptomatik: '1000', ...verordnung });
+  i.prescriptions[0].sessions = (sessions || [['2026-05-05', '78010']])
+    .map(([d, p, a = 1]) => ({ positionsnummer: p, datumLeistung: d, anzahl: a, einzelbetrag: 40, zuzahlungProPos: 4 }));
+  return i;
+};
+const hasWarn = (r, code) => r.warnings.some(w => w.code === code);
+
+test('V:01018: DF + L60.0 ohne Diagnosetext → Fehler', () => {
+  const r = preflight(podoFall({ icd10: 'L60.0' }));
+  assert.ok(hasErr(r, 'V:01018'), JSON.stringify(r.errors));
+});
+test('V:01018: DF + L60.0 MIT Diagnosetext → nur Warnung', () => {
+  const r = preflight(podoFall({ icd10: 'L60.0', diagnosetext: 'Diabetisches Fußsyndrom Wagner 0' }));
+  assert.ok(!hasErr(r, 'V:01018'));
+  assert.ok(hasWarn(r, 'V:01018'));
+});
+test('V:01018: DF + E11.74 → kein Befund; unsicher (E11.72) → kein Fehler', () => {
+  assert.ok(!hasErr(preflight(podoFall({ icd10: 'E11.74' })), 'V:01018'));
+  assert.ok(!hasErr(preflight(podoFall({ icd10: 'E11.72' })), 'V:01018'));
+});
+test('V:01018: UI1 + M20.1 mit Diagnosetext → trotzdem Fehler (kein Freitext-Ausweg)', () => {
+  const r = preflight(podoFall({ diagnosegruppe: 'UI1', icd10: 'M20.1', diagnosetext: 'x' }, [['2026-05-05', '78610']]));
+  assert.ok(hasErr(r, 'V:01018'));
+});
+test('V:01018: Physio (WS2) unberührt', () => {
+  assert.ok(!hasErr(preflight(clone(validInput)), 'V:01018'));
+});
+test('S:01013: zwei 78010 am selben Tag → Fehler; 78010 + 78030 → ok', () => {
+  assert.ok(hasErr(preflight(podoFall({ icd10: 'E11.74' }, [['2026-05-05', '78010'], ['2026-05-05', '78010']])), 'S:01013'));
+  assert.ok(hasErr(preflight(podoFall({ icd10: 'E11.74' }, [['2026-05-05', '78010'], ['2026-05-05', '78020']])), 'S:01013'));
+  assert.ok(!hasErr(preflight(podoFall({ icd10: 'E11.74' }, [['2026-05-05', '78010'], ['2026-05-05', '78030']])), 'S:01013'));
+});
+test('S:01013: 78610 zweimal am Tag erlaubt, dreimal nicht', () => {
+  const ui = { diagnosegruppe: 'UI1', icd10: 'L60.0' };
+  assert.ok(!hasErr(preflight(podoFall(ui, [['2026-05-05', '78610', 2]])), 'S:01013'));
+  assert.ok(hasErr(preflight(podoFall(ui, [['2026-05-05', '78610', 2], ['2026-05-05', '78610']])), 'S:01013'));
+});
+
 test('allows valid 9-digit krankenkasseIk', () => {
   const i = clone(validInput);
   i.prescriptions[0].verordnung.krankenkasseIk = '108310400';

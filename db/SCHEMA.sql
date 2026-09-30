@@ -1,7 +1,18 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-30 — Nachtrag (nur Kommentare, kein DDL, keine
+-- ERZEUGT AM:        2026-09-30 — Nachtrag: 0047_anamnese_fachbereich_
+--                    versionierung im SaaS angewendet (MCP, Oturum C) und vorher
+--                    in einer ROLLBACK-Transaktion gegen die Live-DB getestet
+--                    (Versionierung, Kiosk ungeprueft, UPDATE-Sperre, ON DELETE
+--                    SET NULL). anamnese +9 Spalten (fachbereich, felder,
+--                    form_version, version, ist_aktuell, quelle, geprueft_am,
+--                    geprueft_von, uebernommen_von); podologie_behandlungen
+--                    +therapiezeit_min; pat_fussbefund +wagner_grad; profiles
+--                    +gps_checkin_pruefen; attendance.check_in_valid jetzt
+--                    NULLABLE; diagnosegruppen DF/NF/QF icd_enforcement =
+--                    hard_before_dta (Daten). Letzte Migration: 0047.
+--                    davor: 2026-09-30 — Nachtrag (nur Kommentare, kein DDL, keine
 --                    Migration): Reform 3.12 / Commit e9d0286 — Feldver-
 --                    schluesselung aufgegeben. Kommentare bei `leads` und
 --                    `prescriptions` korrigiert: die *_enc-Spalten sind
@@ -919,9 +930,25 @@ CREATE TABLE anamnese (
   created_by uuid
   updated_by uuid
   business_id uuid
+  fachbereich text NOT NULL DEFAULT 'physio'   -- 0047: Formular je Fachbereich
+  felder jsonb NOT NULL DEFAULT '{}'::jsonb    -- 0047: fachspezifische Antworten
+  form_version smallint NOT NULL DEFAULT 1     -- 0047: Version der Formdefinition (Frontend)
+  version integer NOT NULL DEFAULT 1           -- 0047: vergibt anamnese_versionieren()
+  ist_aktuell boolean NOT NULL DEFAULT true    -- 0047: vergibt anamnese_versionieren()
+  quelle text NOT NULL DEFAULT 'praxis'        -- 0047: praxis | kiosk
+  geprueft_am timestamptz                      -- 0047: kiosk = NULL bis Praxis prueft
+  geprueft_von uuid
+  uebernommen_von uuid                         -- 0047: Vorlage-Fassung (z. B. Kiosk -> Praxis)
 );
 --   CHECK beschwerde_verlauf IN (konstant, zunehmend, abnehmend, wechselnd)
 --   CHECK schmerz_skala BETWEEN 0 AND 10
+--   CHECK fachbereich IN (physio, podo, ergo, logo) · CHECK quelle IN (praxis, kiosk)
+--   FK geprueft_von -> auth.users(id) · FK uebernommen_von -> anamnese(id) ON DELETE SET NULL
+--   UNIQUE (owner_id, patient_id, fachbereich) WHERE ist_aktuell   (anamnese_aktuell_uidx)
+--   UNIQUE (owner_id, patient_id, fachbereich, version)            (anamnese_version_uidx)
+--   ★ APPEND-ONLY seit 0047 (§ 630f BGB): jede Speicherung = neue Zeile. UPDATE nur
+--     ist_aktuell true->false, geprueft_* NULL->Wert, uebernommen_von Wert->NULL
+--     (anamnese_unveraenderlich). DELETE erlaubt (DSGVO). Leser: .eq('ist_aktuell', true).
 --   FK patient_id -> leads(id)          ⚠️ zeigt auf leads, NICHT auf patients
 --   FK business_id -> businesses(id) ON DELETE CASCADE
 --   FK owner_id / created_by / updated_by -> auth.users(id)
@@ -946,7 +973,7 @@ CREATE TABLE attendance (
   date date NOT NULL
   check_in_at timestamptz
   check_out_at timestamptz
-  check_in_valid boolean NOT NULL DEFAULT false
+  check_in_valid boolean DEFAULT false          -- 0047: NULL = nicht geprueft (Schalter aus / kein Standort / keine Praxiskoordinate)
   status text NOT NULL DEFAULT 'present'::text
   note text
   created_at timestamptz NOT NULL DEFAULT now()
@@ -2301,6 +2328,7 @@ CREATE TABLE pat_fussbefund (
   ist_aktuell boolean NOT NULL DEFAULT true  -- gültige Fassung des Eintrags
   serie_id uuid NOT NULL                 -- Farbgruppe über Termine hinweg
   serie_farbe text                       -- deren Farbe, als KOPIE in der Zeile
+  wagner_grad smallint                   -- 0047: Wagner 0-5, NULL = nicht erhoben (CHECK)
 );
 --   FK lead_id -> leads(id) ON DELETE CASCADE · PK (id)
 --   FK booking_id -> bookings(id) ON DELETE SET NULL
@@ -2461,6 +2489,7 @@ CREATE TABLE podologie_behandlungen (
   storniert_am timestamptz
   storniert_von uuid
   storno_grund text
+  therapiezeit_min smallint        -- 0047: Minuten (78020 > 20), CHECK 1..600, nicht festgeschrieben
 );
 --   CHECK storniert_am IS NULL OR storno_grund nicht leer
 --   FK storniert_von -> profiles(id) ON DELETE SET NULL
@@ -2901,6 +2930,7 @@ CREATE TABLE profiles (
   fussbefund_legende jsonb NOT NULL DEFAULT '[]'::jsonb   -- Podologie-Legende
   selbstzahler_stufen jsonb NOT NULL DEFAULT '[]'::jsonb
   buchungskonten jsonb NOT NULL DEFAULT '[]'::jsonb       -- Kontenrahmen, siehe unten
+  gps_checkin_pruefen boolean NOT NULL DEFAULT false      -- 0047: Owner-Schalter GPS-Check-in (Standard aus)
 );
 --   CHECK plan IN (starter, professional, klinik, mitarbeiter, enterprise)
 --   CHECK plan_status IN (pending, trial, active, past_due, canceled, expired)

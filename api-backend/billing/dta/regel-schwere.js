@@ -122,6 +122,8 @@ export const REGEL_SCHWERE = Object.freeze({
   'V:01016': { schwere: 'warnung', kasse: 'unbekannt', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.3 (DIA); SPEC-RULES Z-18', hinweis: 'ICD nicht endständig — kein Ablehnungsgrund, Korrektur nur durch den Arzt' },
   // V:01017 — neue HARTE Regel vom 30.09.2026. Die nach REGELN.md § 3 Punkt 3 erforderliche Zustimmung von `gkv-302` liegt vor (Beleg dort, § 6).
   'V:01017': { schwere: 'hart', kasse: 'unbekannt', quelle: "Anlage 1 TP5 V21, Kap. 5.5.2 S. 32 (SLGA-FKT) und 5.5.3.1 (SLLA-FKT); Feldart NK; Pflicht aus Erläuterung ('zwingend anzugeben')", hinweis: 'Karten-IK (IK der Krankenkasse von der Versichertenkarte) fehlt — kein Rückfall auf die Kostenträger-IK (gkv-302, 30.09.2026)' },
+  // V:01018 / S:01013 — neue HARTE Regeln vom 30.09.2026, Zustimmung gkv-302 30.09.2026 (REGELN.md § 6).
+  'V:01018': { schwere: 'hart', kasse: 'zeile', quelle: 'Podologie Anlage 3 i.d.F. 16.06.2025 Ziffer 5 k; HeilM-RL § 27 Abs. 1; SPEC-RULES „Podologie DF/NF/QF: ICD-Satz ohne therapierelevanten Kode"', hinweis: 'ICD passt nicht zur DG (mismatch) ohne Diagnosetext — Prüfstufe-4-Absetzung; DF/NF/QF mit Diagnosetext nur Warnung' },
 
   // ── Leistungen (SLLA.EHE / SLLA.BES) ─────────────────────────────────────
   'S:01001': { schwere: 'hart', kasse: 'datei', quelle: 'Anlage 1 TP5 V21, Kap. 5.5.3.2 (EHE, 1..n)', hinweis: 'Abrechnungsfall ohne Leistung' },
@@ -136,6 +138,7 @@ export const REGEL_SCHWERE = Object.freeze({
   'S:01010': { schwere: 'hart', kasse: 'zeile', quelle: 'HeilM-RL (Behandlungsunterbrechung)',        hinweis: 'Unterbrechung > 14 Tage' },
   'S:01011': { schwere: 'hart', kasse: 'zeile', quelle: '§ 125 SGB V Verträge (MT/MLD/KGG)',          hinweis: 'Therapeut ohne erforderliche Qualifikation' },
   'S:01012': { schwere: 'hart', kasse: 'zeile', quelle: 'HeilM-RL (Gültigkeit 84 Tage)',              hinweis: 'Verordnung abgelaufen' },
+  'S:01013': { schwere: 'hart', kasse: 'zeile', quelle: 'HeilM-RL § 12 Abs. 8; Podologie Anlage 2 § 2 c (78610 bis 2× je Tag)', hinweis: 'Mehr als eine Behandlung (78010/78020) je Tag an derselben Verordnung' },
 
   // ── Tarif (SLLA.EHE, LEGS) ───────────────────────────────────────────────
   'T:01001': { schwere: 'hart', kasse: 'datei', quelle: 'Anhang 3 Anlage 1 TP5 § 8.14 (Abrechnungscode)', hinweis: 'Abrechnungscode unbekannt' },

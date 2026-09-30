@@ -33,6 +33,8 @@ import { createClient } from '@supabase/supabase-js';
 import { statusAusAbrechnungStatus, abrechnungStatusAusStatus } from '../utils/einreichbar.js';
 import { offeneJeVerordnung, pruefeBestaetigung, offeneEinheitenAntwort, protokollZeilen } from '../utils/offene-einheiten.js';
 import { fehlendeArztangaben } from '../utils/arztangaben.js';
+import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
+import { abrechenbareBehandlungstage } from '../utils/behandlungstage.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -121,6 +123,20 @@ function fehlendeVerordnungsangaben(v) {
   if (NAGEL_PFLICHT_DGS.includes(dgStamm(v.diagnosegruppe)) && !String(v.nagel || '').trim()) {
     fehlt.push('Bei UI 1 / UI 2 fehlt der behandelte Zehennagel (§ 3b Satz 5, Anlage 3 o2)');
   }
+  // Leitsymptomatik (gkv-302 30.09.2026): „0000" ohne Freitext weist die Annahme-
+  // stelle als ganze Datei ab (TA V21 Kap. 5.5.3.3, S. 71). Der Preflight fing das
+  // erst beim DTA-Bau ab (V:01006/V:01011) — hier schon beim Freigeben. UI1/UI2
+  // ausgenommen: dort folgt a/b aus der Diagnosegruppe (Anlage 3 l).
+  if (!NAGEL_PFLICHT_DGS.includes(dgStamm(v.diagnosegruppe))) {
+    const maske = leitsymptomatikAlsBitmaske(v.leitsymptomatik, {
+      diagnosegruppe: dgStamm(v.diagnosegruppe),
+      patientenText: v.pat_leitsymptomatik,
+    });
+    if (maske === '0000') {
+      fehlt.push('Leitsymptomatik fehlt — weder a/b/c angekreuzt noch patientenindividueller Text. '
+        + 'Im Einvernehmen mit der Ärztin/dem Arzt nachtragen (ohne neue Unterschrift zulässig).');
+    }
+  }
   return fehlt;
 }
 
@@ -152,7 +168,7 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
 
     const { data: vRoh, error: vErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel, anzahl_einheiten, doctor_lanr, unterschrift_vorhanden')
+      .select('id, owner_id, abrechnung_status, patient_name, abrechnung_id, rezeptart, therapie_bereich, diagnosegruppe, nagel, anzahl_einheiten, doctor_lanr, unterschrift_vorhanden, leitsymptomatik, pat_leitsymptomatik')
       .eq('id', req.params.id)
       .maybeSingle();
     if (vErr) return res.status(500).json({ error: vErr.message });
@@ -207,15 +223,21 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
     // eine einzige Position. Die Kasse setzt ihn ab, und die Absetzung kostet
     // mehr Zeit als die Sperre hier.
     if (ziel === 'abrechenbar') {
-      const { count } = await supabase
+      const { data: behRows, error: behErr } = await supabase
         .from('podologie_behandlungen')
-        .select('id', { count: 'exact', head: true })
+        .select('id, behandlungsdatum, hpnr_codes, storniert_am')
         // Eine stornierte Behandlung ist keine dokumentierte Behandlung
         // (Migration 0026) — sonst gaelte eine Verordnung als abrechenbar,
         // deren einzige Behandlung zurueckgenommen wurde.
         .is('storniert_am', null)
         .eq('verordnung_id', v.id)
         .eq('owner_id', tenantId);
+      if (behErr) return res.status(500).json({ error: behErr.message });
+      // Bis 30.09.2026 zählte jede nicht stornierte Zeile — auch ein Tag nur mit
+      // Befund (78030) oder Zuschlag (78620). Jetzt: abrechenbare Behandlungstage
+      // (78010/78020/78610, gleicher Tag einmal; gkv-302 30.09.2026), dieselbe
+      // Regel wie abrechenbareBehandlungstage() im Frontend.
+      const count = abrechenbareBehandlungstage(behRows || []);
       // Reform S2.3: offene Einheiten -> Bereit beendet die Verordnung; nur mit
       // ausdrücklicher Bestätigung (428), sonst kein Statuswechsel.
       if (count) {
@@ -229,7 +251,8 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
       }
       if (!count) {
         return res.status(422).json({
-          error: 'Noch keine Behandlung dokumentiert — ohne Behandlung gibt es nichts abzurechnen.',
+          error: 'Noch keine abrechenbare Behandlung dokumentiert (78010, 78020 oder 78610) — '
+            + 'ein Tag nur mit Befund oder Zuschlag reicht nicht.',
         });
       }
       if (v.rezeptart && v.rezeptart !== 'kassen') {

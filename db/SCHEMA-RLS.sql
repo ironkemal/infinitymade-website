@@ -1,7 +1,19 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-30 — Nachtrag: 0044_leads_krankenkasse_ik
+-- ERZEUGT AM:        2026-09-30 — Nachtrag: 0047_anamnese_fachbereich_
+--                    versionierung im SaaS angewendet (MCP, Oturum C).
+--                    +2 Funktionen (anamnese_versionieren, anamnese_
+--                    unveraenderlich, beide SET search_path, EXECUTE fuer
+--                    PUBLIC/anon/authenticated entzogen), +2 Trigger, +2
+--                    Indizes (anamnese_aktuell_uidx, anamnese_version_uidx).
+--                    Live nachgezaehlt 30.09.2026 nach 0047: 86 Funktionen,
+--                    83 Trigger (beide = Kopf + 2) · 176 Policies, 328 Indizes.
+--                    ⚠️ Policies/Indizes liegen je +1 ueber Kopf/Erwartung — die
+--                    Differenz stammt NICHT aus 0047 (keine Policy, genau 2
+--                    Indizes), sondern ist aeltere, undokumentierte Drift.
+--                    Offen fuer db-ustasi (welche Policy/welcher Index).
+--                    davor: 2026-09-30 — Nachtrag: 0044_leads_krankenkasse_ik
 --                    im SaaS angewendet (MCP). Fuer DIESE Datei eine NULL-
 --                    Aenderung: +1 Spalte, +1 CHECK und zwei COMMENTs (stehen
 --                    in SCHEMA.sql) — keine Policy, Funktion, Trigger oder
@@ -585,7 +597,8 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            175 RLS-Policies · 325 Indizes · 81 Trigger · 84 Funktionen
+-- UMFANG:            176 RLS-Policies · 328 Indizes · 83 Trigger · 86 Funktionen
+--                    (live 30.09.2026 nach 0047; vorher 175 · 325 · 81 · 84, s. Kopf)
 --                    (20.09.2026 live gezaehlt, Stand 0034. Die Herleitung aller
 --                     vier Deltas steht im Kopf; sie gehen restlos auf die neun
 --                     Migrationen auf.)
@@ -1224,7 +1237,7 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (84 eigene = alles in `public`, was keiner Extension gehört;
+-- 3. FUNKTIONEN (86 eigene = alles in `public`, was keiner Extension gehört;
 --    PostGIS-Funktionen sind deshalb ausgelassen)
 -- =====================================================================
 
@@ -1769,7 +1782,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (81, siehe UMFANG im Kopf)
+-- 4. TRIGGER (83, siehe UMFANG im Kopf)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -1831,6 +1844,16 @@ $function$;
 --                         → fn_patient_consents_immutable(): DELETE erst nach
 --                           10 Jahren (§630f Abs. 3 BGB), UPDATE nur auf
 --                           revoked_at/revoke_reason. Art. 7 Abs. 1 DSGVO.
+--   anamnese              anamnese_versionieren_trg      BEFORE INSERT   (0047)
+--                         → anamnese_versionieren(): Advisory-Xact-Lock je
+--                           (owner, patient, fachbereich), version = max+1, alte
+--                           Fassung ist_aktuell=false, created_*/updated_* setzen;
+--                           quelle='kiosk' → geprueft_* zwangsweise NULL, sonst
+--                           geprueft_am=now(), geprueft_von=coalesce(.., auth.uid())
+--                         anamnese_unveraenderlich_trg   BEFORE UPDATE   (0047, § 630f)
+--                         → anamnese_unveraenderlich(): erlaubt NUR ist_aktuell
+--                           true->false, geprueft_* NULL->Wert, uebernommen_von
+--                           Wert->NULL (ON DELETE SET NULL). DELETE frei (DSGVO).
 --   pat_fussbefund        pat_fussbefund_versionieren_trg BEFORE INSERT
 --                         → pat_fussbefund_versionieren(): vergibt eintrag_id,
 --                           serie_id, version und ist_aktuell und VERWIRFT, was
@@ -1936,6 +1959,8 @@ CREATE INDEX idx_ai_audit_task_created ON public.ai_audit_log USING btree (task,
 CREATE INDEX idx_ai_audit_tenant_created ON public.ai_audit_log USING btree (tenant_id, created_at DESC);
 CREATE INDEX idx_anamnese_business ON public.anamnese USING btree (business_id);
 CREATE INDEX idx_anamnese_patient ON public.anamnese USING btree (patient_id);
+CREATE UNIQUE INDEX anamnese_aktuell_uidx ON public.anamnese USING btree (owner_id, patient_id, fachbereich) WHERE ist_aktuell;   -- 0047
+CREATE UNIQUE INDEX anamnese_version_uidx ON public.anamnese USING btree (owner_id, patient_id, fachbereich, version);            -- 0047
 CREATE INDEX idx_attendance_business_date ON public.attendance USING btree (business_id, date DESC);
 CREATE INDEX idx_attendance_employee_date ON public.attendance USING btree (employee_id, date DESC);
 CREATE INDEX idx_attendance_owner_date ON public.attendance USING btree (owner_id, date DESC);

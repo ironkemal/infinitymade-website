@@ -24,6 +24,9 @@ import {
 import { istGueltigerLegs, GUELTIGE_LEGS } from '../codes/legs.js';
 import { LEITSYMPTOMATIK_MUSTER } from './leitsymptomatik.js';
 import { icdOhneStrich } from '../utils/icd-code.js';
+import { icdDgPreflightBefund } from '../../ai/validators/icdDgRules.js';
+import { getIcdDgRules } from '../../ai/validators/catalog.js';
+import { behandlungstageJeDatum, TAGESHOECHSTZAHL } from '../utils/behandlungstage.js';
 
 // ---------------------------------------------------------------------------
 // Atomic field validators
@@ -389,6 +392,32 @@ export function preflight(input) {
       });
     }
 
+    // ICD <-> Diagnosegruppe (gkv-302 30.09.2026, SPEC-RULES „Podologie DF/NF/QF:
+    // ICD-Satz ohne therapierelevanten Kode"). Bis heute prüfte der Preflight das
+    // GAR NICHT — auch UI1/UI2 (hard_before_dta) liefen serverseitig ungesperrt durch.
+    // Blocker nur bei Status `mismatch` in einer DG mit enforcement hard_before_dta
+    // (UI1/UI2, seit 0047 auch DF/NF/QF). DF/NF/QF mit Diagnosetext → Warnung
+    // (Freitext kann den ICD heilen, Software kann ihn nicht bewerten). Folge ohne
+    // Sperre: keine Dateiabweisung, sondern Prüfstufe-4-Absetzung der Verordnung.
+    // Regeln: ai/validators/diagnosegruppen.json (Spiegel der Tabelle diagnosegruppen).
+    {
+      const befund = icdDgPreflightBefund({
+        icd10: [icdHaupt, ...(Array.isArray(v.icd10Liste) ? v.icd10Liste : [])].filter(Boolean).join(','),
+        diagnosegruppe: v.diagnosegruppe,
+        diagnosetext: v.diagnosetext,
+      }, input.icdDgRegeln ?? getIcdDgRules());
+      if (befund?.art === 'fehler') {
+        E(errors, 'V:01018', `${at}.verordnung.icd10`,
+          `ICD-10 (${befund.kodes.join(', ')}) passt nicht zur Diagnosegruppe ${befund.dg} und es ist kein `
+          + 'Diagnosetext angegeben. Die Diagnose ist damit erkennbar nicht therapierelevant — '
+          + 'Korrektur nur durch den Arzt (neue Unterschrift + Datum) vor der Einreichung.');
+      } else if (befund?.art === 'warnung') {
+        W(warnings, 'V:01018', `${at}.verordnung.icd10`,
+          `ICD-10 (${befund.kodes.join(', ')}) passt nicht zur Diagnosegruppe ${befund.dg}; der `
+          + 'Diagnosetext wird übermittelt. Bitte gegen die Verordnung prüfen.');
+      }
+    }
+
     if (!isValidDiagnosegruppe(v.diagnosegruppe))
       E(errors, 'V:01003', `${at}.verordnung.diagnosegruppe`, `Diagnosegruppe "${v.diagnosegruppe}" ungültig`);
 
@@ -502,6 +531,19 @@ export function preflight(input) {
             }
           }
         }
+      }
+
+      // Je Tag nur EINE Behandlung (HeilM-RL § 12 Abs. 8; gkv-302 30.09.2026).
+      // 78610 Nagelkorrekturspange darf zweimal je Tag (Anlage 2 § 2 c). Bisher
+      // warnte nur das Frontend; hier wird die Datei nicht gebaut.
+      for (const { datum, gruppe, anzahl } of behandlungstageJeDatum(p.sessions, s => s.datumLeistung, s => s.positionsnummer, s => s.anzahl)) {
+        const max = TAGESHOECHSTZAHL[gruppe] ?? 1;
+        if (anzahl > max)
+          E(errors, 'S:01013', `${at}.sessions`,
+            gruppe === 'nagelspange'
+              ? `Am ${datum} ist die Nagelkorrekturspange (78610) ${anzahl}× erfasst — höchstens ${max}× je Tag (Anlage 2 § 2 c).`
+              : `Am ${datum} sind ${anzahl} Behandlungen (78010/78020) erfasst — je Tag ist nur eine abrechenbar `
+                + '(HeilM-RL § 12 Abs. 8). Doppelten Behandlungstag stornieren.');
       }
 
       let pBrutto = 0, pZu = 0;

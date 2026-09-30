@@ -38,6 +38,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join as pfadJoin } from 'node:path';
 import crypto from 'crypto';
 import { resolveOrCreateArzt } from './lib/arzt-registry.js';
+import { gpsCheckinErgebnisRein } from './lib/gps-checkin.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import { createSMTPTransport, getMailFrom } from './lib/mail.js';
 
@@ -2918,7 +2919,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
 
 app.post('/api/rezept/save', requireAuthAI, async (req, res) => {
   try {
-    const { patientId, arztName, arztNummer, diagnose, sitzungen, hausbesuch, befund, rezeptDatum } = req.body;
+    const { patientId, arztName, arztNummer, hausbesuch } = req.body;
     const ownerId = req.auth.tenantId; // never trust body — always from JWT
     if (!ownerId || !patientId || !arztName) {
       return res.status(400).json({ error: 'ownerId, patientId, arztName required' });
@@ -2945,42 +2946,13 @@ app.post('/api/rezept/save', requireAuthAI, async (req, res) => {
       hausbesuch: !!hausbesuch
     }).eq('id', patientId).eq('owner_id', ownerId);
 
-    const { data: existingAnam } = await supabase
-      .from('anamnese')
-      .select('id')
-      .eq('owner_id', ownerId)
-      .eq('patient_id', patientId)
-      .maybeSingle();
-
-    let existingNotizen = '';
-    if (existingAnam) {
-      const { data: anamData } = await supabase.from('anamnese').select('notizen').eq('id', existingAnam.id).single();
-      existingNotizen = anamData?.notizen || '';
-    }
-
-    const notizen = befund
-      ? (existingNotizen ? existingNotizen + '\n' : '') + 'Rezept ' + (rezeptDatum || new Date().toISOString().slice(0,10)) + ': ' + befund
-      : undefined;
-
-    const anamPayload = {
-      arzt_name: nameNorm,
-      arzt_nummer: arztNummer || null,
-      diagnose: diagnose || null,
-      rezept_sitzungen: sitzungen != null ? parseInt(sitzungen, 10) : null,
-      hausbesuch: !!hausbesuch
-    };
-    if (notizen !== undefined) anamPayload.notizen = notizen;
-
-    if (existingAnam) {
-      await supabase.from('anamnese').update(anamPayload).eq('id', existingAnam.id);
-    } else {
-      await supabase.from('anamnese').insert({
-        owner_id: ownerId,
-        patient_id: patientId,
-        ...anamPayload,
-        notizen: notizen || null
-      });
-    }
+    // Bis 30.09.2026 schrieb dieser Endpunkt zusätzlich Arzt/Diagnose/Sitzungen in
+    // `anamnese` (UPDATE der vorhandenen Zeile). Seit 0047 ist anamnese append-only
+    // je Fachbereich (§ 630f BGB) — ein UPDATE wird vom Trigger abgewiesen. Die Werte
+    // stehen ohnehin am richtigen Ort (Arzt: leads.arzt_id, Diagnose/Sitzungen:
+    // prescriptions). Der Endpunkt hat im Frontend keinen Aufrufer mehr
+    // (fonksiyon-ustasi 30.09.2026); ob er ganz entfällt, entscheidet Kemal.
+    // `diagnose`, `sitzungen`, `befund`, `rezeptDatum` im Body werden deshalb ignoriert.
 
     res.json({ success: true, arztId });
   } catch (err) {
@@ -3014,6 +2986,12 @@ app.post('/api/arzt/resolve', requireAuthAI, async (req, res) => {
       { businessId: business_id, quelle }
     );
 
+    if (!result.id && result.konflikt === 'name_andere_lanr') {
+      return res.status(409).json({
+        error: 'Ein Arzt mit diesem Namen ist bereits mit einer anderen LANR gespeichert. Bitte LANR prüfen oder den Namen unterscheiden (z. B. mit Ort).',
+        code: 'ARZT_NAME_ANDERE_LANR'
+      });
+    }
     if (!result.id) {
       return res.status(500).json({ error: 'Arzt konnte nicht angelegt werden' });
     }
@@ -3574,6 +3552,12 @@ function haversineMeters(lat1, lng1, lat2, lng2) {
 
 const CHECKIN_RADIUS_M = 150; // metre — GPS hatası için toleranslı
 
+// Ergebnis der Standortprüfung beim Check-in: true/false, oder null = nicht geprüft.
+// Die Regel selbst steht rein und getestet in lib/gps-checkin.js.
+function gpsCheckinErgebnis(opts) {
+  return gpsCheckinErgebnisRein({ ...opts, radiusM: CHECKIN_RADIUS_M, distanz: haversineMeters });
+}
+
 // Rate limiter — check-in/out: günde birkaç kez yapılır, sıkı tutmaya gerek yok
 const attendanceLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -3584,15 +3568,19 @@ const attendanceLimiter = rateLimit({
 });
 
 // POST /api/attendance/check-in
-// Body: { business_id, lat, lng }
+// Body: { business_id?, lat?, lng? }
+//
+// Zeiterfassung darf nie am Standort scheitern (legal-de 30.09.2026: Art. 6 Abs. 1
+// lit. f DSGVO trägt nur das Erforderliche — wer den Standort verweigert, muss
+// trotzdem einchecken können). Deshalb drei Ergebnisse in check_in_valid:
+//   true  = im 150-m-Umkreis · false = außerhalb
+//   null  = nicht geprüft (Owner-Schalter profiles.gps_checkin_pruefen aus — Standard —,
+//           kein Standort übermittelt, oder keine Praxiskoordinate hinterlegt)
+// Koordinaten werden weder gespeichert noch protokolliert, nur das Ergebnis.
 app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const { business_id, lat, lng } = req.body;
-
-    if (!business_id || lat == null || lng == null) {
-      return res.status(400).json({ error: 'business_id, lat, lng zorunlu' });
-    }
+    const { business_id = null, lat, lng } = req.body || {};
 
     // Çalışanın owner_id'sini bul
     const { data: profile, error: profErr } = await supabase
@@ -3605,21 +3593,36 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
     const ownerId = profile.role === 'owner' ? userId : profile.owner_id;
     if (!ownerId) return res.status(400).json({ error: 'Owner bulunamadı' });
 
-    // İşyeri koordinatlarını çek
-    const { data: biz, error: bizErr } = await supabase
-      .from('businesses')
-      .select('clinic_lat, clinic_lng, business_name')
-      .eq('id', business_id)
-      .eq('owner_id', ownerId)
-      .single();
-    if (bizErr || !biz) return res.status(404).json({ error: 'İşyeri bulunamadı' });
+    // Owner-Einstellungen + Praxiskoordinate der Einzelpraxis stehen in profiles
+    // (CLAUDE.md: Owner-Ebene nie in businesses).
+    const { data: ownerProf } = await supabase
+      .from('profiles')
+      .select('gps_checkin_pruefen, clinic_lat, clinic_lng')
+      .eq('id', ownerId)
+      .maybeSingle();
 
-    // GPS koordinatı saklanmaz — sadece mesafeyi hesapla ve boole olarak kaydet
-    let checkInValid = false;
-    if (biz.clinic_lat && biz.clinic_lng) {
-      const distanceM = haversineMeters(lat, lng, Number(biz.clinic_lat), Number(biz.clinic_lng));
-      checkInValid = distanceM <= CHECKIN_RADIUS_M;
+    // Standort: mit business_id der Standort dieses Betriebs, sonst die Praxis
+    // des Owners (Einzelpraxis hat keinen businesses-Eintrag).
+    let praxisLat = ownerProf?.clinic_lat ?? null;
+    let praxisLng = ownerProf?.clinic_lng ?? null;
+    if (business_id) {
+      const { data: biz, error: bizErr } = await supabase
+        .from('businesses')
+        .select('clinic_lat, clinic_lng')
+        .eq('id', business_id)
+        .eq('owner_id', ownerId)
+        .maybeSingle();
+      if (bizErr || !biz) return res.status(404).json({ error: 'İşyeri bulunamadı' });
+      if (biz.clinic_lat != null && biz.clinic_lng != null) {
+        praxisLat = biz.clinic_lat;
+        praxisLng = biz.clinic_lng;
+      }
     }
+
+    const checkInValid = gpsCheckinErgebnis({
+      pruefen: ownerProf?.gps_checkin_pruefen === true,
+      lat, lng, praxisLat, praxisLng,
+    });
 
     // Berlin'de bugünün tarihi
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(new Date());
@@ -3662,7 +3665,7 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
       .insert({
         employee_id: userId,
         owner_id: ownerId,
-        business_id,
+        business_id: business_id || null,
         date: today,
         check_in_at: nowTs,
         check_in_valid: checkInValid,
@@ -3681,7 +3684,7 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
       check_in_at: record.check_in_at,
       check_in_valid: record.check_in_valid,
       status: record.status,
-      gps_checked: !!(biz.clinic_lat && biz.clinic_lng),
+      gps_checked: checkInValid !== null,
     });
   } catch (err) {
     console.error('[attendance/check-in] unexpected:', err);

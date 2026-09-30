@@ -141,4 +141,13 @@ Gemäß § 3 Punkt 3 wurden folgende neue harte Regeln nach Freigabe durch `gkv-
   außer es handelt sich um eine Sammelrechnung-SLGA … identisch mit SLLA.FKT") + §5.5.3.1. Feldart NK,
   Pflicht aus der Erläuterung (nicht aus der Feldart). `kasse: 'unbekannt'` (Prüfstufe nicht belegt),
   `schwere: 'hart'`. Kein Rückfall auf die Kostenträger-IK (vgl. `F:03006`/`F:03007` oben).
+- **`V:01018` — ICD↔Diagnosegruppe (30.09.2026, Oturum C):** Zustimmung `gkv-302` 30.09.2026
+  (Devir A→B §2.1). Hart nur bei Status `mismatch` in einer DG mit `icd_enforcement =
+  'hard_before_dta'` (UI1/UI2; DF/NF/QF seit Migration 0047) **und** fehlendem Diagnosetext.
+  DF/NF/QF mit Diagnosetext → Warnung (FAK Podologie Nr. 28). `unsicher`/nicht endständig bleiben
+  Warnung. `kasse: 'zeile'` — kein Prüfstufe-1-3-Grund, Folge ist die Absetzung der Verordnung.
+- **`S:01013` — ein Behandlungstag je Tag (30.09.2026, Oturum C):** Zustimmung `gkv-302`
+  30.09.2026 (Devir §2.4). HeilM-RL § 12 Abs. 8: mehr als eine 78010/78020 je Kalendertag an
+  derselben Verordnung → keine Datei. 78610 bis 2× je Tag (Anlage 2 § 2 c), 78620 zählt nicht.
+  Regel: `billing/utils/behandlungstage.js`. `kasse: 'zeile'`.
 

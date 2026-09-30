@@ -218,7 +218,36 @@ export function soleIcdForDg(rule) {
  * @param {object} rulesByDg - Ausgabe von catalog.getIcdDgRules()
  * @returns {Array}
  */
-export function checkIcdDg({ icd10, diagnosegruppe }, rulesByDg) {
+/**
+ * Diagnosegruppen, in denen ein Diagnosetext (Freitext) einen unpassenden ICD-Satz
+ * "heilen" kann: der Blocker wird dann zur Warnung (gkv-302 30.09.2026, SPEC-RULES
+ * "Podologie DF/NF/QF: ICD-Satz ohne therapierelevanten Kode"; FAK Podologie Nr. 28).
+ * UI1/UI2 NICHT — dort gibt es keinen Freitext-Ausweg.
+ */
+export const DIAGNOSETEXT_HEILT = new Set(['DF', 'NF', 'QF']);
+
+/**
+ * Harte ICD<->DG-Pruefung fuer den DTA-Preflight. Liefert null (kein Befund) oder
+ * { art: 'fehler' | 'warnung', dg, kodes, hints }.
+ *   fehler  = enforcement hard_before_dta UND Status mismatch UND (kein Diagnosetext
+ *             oder DG ohne Freitext-Ausweg)
+ *   warnung = dasselbe, aber der Diagnosetext traegt die Verordnung (DF/NF/QF)
+ * `unsicher`, `ok`, `skip` und enforcement 'warn' → null (bleiben beim Validator).
+ */
+export function icdDgPreflightBefund({ icd10, diagnosegruppe, diagnosetext }, rulesByDg) {
+  if (!diagnosegruppe || !rulesByDg) return null;
+  const dgRoot = String(diagnosegruppe).replace(/-[abc]$/i, '');
+  const rule = rulesByDg[dgRoot];
+  if (!rule || (rule.enforcement ?? 'warn') !== 'hard_before_dta') return null;
+  const codes = parseIcdList(icd10);
+  const { status, hints } = matchIcdToDg(codes, rule);
+  if (status !== 'mismatch') return null;
+  const hatText = !!String(diagnosetext ?? '').trim();
+  const art = hatText && DIAGNOSETEXT_HEILT.has(dgRoot) ? 'warnung' : 'fehler';
+  return { art, dg: dgRoot, kodes: codes, hints };
+}
+
+export function checkIcdDg({ icd10, diagnosegruppe, diagnosetext }, rulesByDg) {
   if (!diagnosegruppe || !rulesByDg) return [];
 
   // Suffix -a/-b/-c abschneiden
@@ -240,7 +269,11 @@ export function checkIcdDg({ icd10, diagnosegruppe }, rulesByDg) {
   const betroffeneKodes = codes;
   const hintsText = hints.length > 0 ? ' (' + hints.join('; ') + ')' : '';
 
-  if (enforcement === 'hard_before_dta') {
+  // Diagnosetext vorhanden (DF/NF/QF): der Freitext kann den ICD heilen, die
+  // Software kann ihn nicht bewerten → nur Warnung, wie bei 'warn'.
+  const textHeilt = DIAGNOSETEXT_HEILT.has(dgRoot) && !!String(diagnosetext ?? '').trim();
+
+  if (enforcement === 'hard_before_dta' && !textHeilt) {
     return [{
       code: 'ICD_DG_MISMATCH_STRENG',
       msg: 'Code stimmt nicht mit der Diagnosegruppe überein. Diagnosegruppe: ' + dgRoot + '. ' +
@@ -254,7 +287,7 @@ export function checkIcdDg({ icd10, diagnosegruppe }, rulesByDg) {
     }];
   }
 
-  // enforcement === 'warn' (DF, NF, QF)
+  // enforcement === 'warn', oder hart mit heilendem Diagnosetext (DF/NF/QF)
   return [{
     code: 'ICD_DG_MISMATCH',
     msg: 'Code stimmt nicht mit der Diagnosegruppe überein. Diagnosegruppe: ' + dgRoot + '. ' +

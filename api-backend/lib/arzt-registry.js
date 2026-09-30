@@ -37,6 +37,11 @@ function cleanNummer(v) {
   return /^\d{9}$/.test(digits) ? digits : null;
 }
 
+/** ILIKE-Muster ohne Platzhalter: % und _ im Namen sind Zeichen, keine Joker. */
+function ilikeWoertlich(s) {
+  return String(s).replace(/[\\%_]/g, m => '\\' + m);
+}
+
 function clean(v) {
   const s = String(v ?? '').trim();
   return s || null;
@@ -50,7 +55,7 @@ function clean(v) {
  * @param {object}  input     { name, lanr, bsnr, adresse, telefon, fax, email,
  *                              fachrichtung, praxis_name, notizen }
  * @param {object} [opts]     { businessId, quelle }
- * @returns {Promise<{id: string|null, created: boolean, enriched: string[], matchedBy: 'lanr'|'name'|null}>}
+ * @returns {Promise<{id: string|null, created: boolean, enriched: string[], matchedBy: 'lanr'|'name'|null, konflikt?: 'name_andere_lanr'}>}
  */
 export async function resolveOrCreateArzt(supabase, ownerId, input = {}, opts = {}) {
   const empty = { id: null, created: false, enriched: [], matchedBy: null };
@@ -98,7 +103,7 @@ export async function resolveOrCreateArzt(supabase, ownerId, input = {}, opts = 
       .select('*')
       .eq('owner_id', ownerId)
       .is('lanr', null)
-      .ilike('arzt_name', name)
+      .ilike('arzt_name', ilikeWoertlich(name))
       .maybeSingle();
     if (data) { existing = data; matchedBy = 'name'; }
   }
@@ -160,9 +165,28 @@ export async function resolveOrCreateArzt(supabase, ownerId, input = {}, opts = 
   // andere Request war schneller. Treffer erneut lesen statt zu scheitern.
   if (error?.code === '23505') {
     let q = supabase.from('aerzte').select('id').eq('owner_id', ownerId);
-    q = lanr ? q.eq('lanr', lanr) : q.is('lanr', null).ilike('arzt_name', row.arzt_name);
+    q = lanr ? q.eq('lanr', lanr) : q.is('lanr', null).ilike('arzt_name', ilikeWoertlich(row.arzt_name));
     const { data: raced } = await q.maybeSingle();
     if (raced) return { id: raced.id, created: false, enriched: [], matchedBy: lanr ? 'lanr' : 'name' };
+
+    // Zweiter Unique-Index: aerzte_owner_id_arzt_name_key = UNIQUE (owner_id, arzt_name)
+    // gilt OHNE Rücksicht auf die LANR. Den Namen trägt also schon ein Datensatz MIT
+    // LANR. Bis 30.09.2026 endete das in "Arzt konnte nicht angelegt werden" (500),
+    // sobald die Maske einen bekannten Arzt ohne LANR speicherte.
+    const { data: gleicherName } = await supabase
+      .from('aerzte')
+      .select('id, lanr')
+      .eq('owner_id', ownerId)
+      .eq('arzt_name', row.arzt_name)
+      .maybeSingle();
+    if (gleicherName) {
+      // Ohne LANR ist "gleicher Name" das einzige Merkmal, und die DB lässt einen
+      // zweiten Datensatz dieses Namens ohnehin nicht zu → den vorhandenen nehmen.
+      if (!lanr) return { id: gleicherName.id, created: false, enriched: [], matchedBy: 'name' };
+      // Mit LANR, aber der Name gehört einem Arzt mit ANDERER LANR: nicht still
+      // verknüpfen (falscher Arzt auf der Abrechnung) — Konflikt melden.
+      return { ...empty, konflikt: 'name_andere_lanr' };
+    }
   }
 
   console.error('[arzt-registry] Anlegen fehlgeschlagen', error?.message);

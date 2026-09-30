@@ -438,20 +438,28 @@ test('podo: DF + E11.74, I10 => sauber (Nebendiagnose unschaedlich)', () => {
 
 // ── ICD-Matching: Warnung erwartet ──────────────────────────────────────────
 
-test('podo: NF + G63.2 => ICD_DG_MISMATCH Warnung (G63.2 gehoert zu DF)', () => {
+// Seit 0047 (30.09.2026) sind DF/NF/QF wie UI1/UI2 hard_before_dta: ohne
+// Diagnosetext STRENG (Blocker erst im DTA-Preflight, hier weiter nur Warnung),
+// mit Diagnosetext die weiche Warnung (Freitext kann den ICD heilen, gkv-302).
+test('podo: NF + G63.2 => ICD_DG_MISMATCH_STRENG ohne Diagnosetext (G63.2 gehoert zu DF)', () => {
   const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'NF', icd10: 'G63.2' });
-  const w = r.warnings.find(w => w.code === 'ICD_DG_MISMATCH');
-  assert.ok(w, 'ICD_DG_MISMATCH erwartet: ' + JSON.stringify(r.warnings));
-  // Kein Blocker
-  assert.equal(r.blockers.find(b => b.code === 'ICD_DG_MISMATCH'), undefined);
-  assert.equal(r.ok, true); // Nur Warnung, kein Blocker => ok
+  const w = r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG');
+  assert.ok(w, 'ICD_DG_MISMATCH_STRENG erwartet: ' + JSON.stringify(r.warnings));
+  assert.equal(r.blockers.find(b => b.code.startsWith('ICD_DG_MISMATCH')), undefined);
+  assert.equal(r.ok, true); // Speichern bleibt erlaubt
 });
 
-test('podo: QF + G82.60! => ICD_DG_MISMATCH Warnung (Ausrufezeichenkode ist excluded)', () => {
+test('podo: NF + G63.2 + Diagnosetext => weiche ICD_DG_MISMATCH Warnung', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'NF', icd10: 'G63.2', diagnose_freitext: 'Polyneuropathie unklarer Genese' });
+  assert.ok(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH'), JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG'), undefined);
+});
+
+test('podo: QF + G82.60! => ICD_DG_MISMATCH_STRENG (Ausrufezeichenkode ist excluded)', () => {
   const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'QF', icd10: 'G82.60!' });
-  const w = r.warnings.find(w => w.code === 'ICD_DG_MISMATCH');
-  assert.ok(w, 'ICD_DG_MISMATCH erwartet: ' + JSON.stringify(r.warnings));
-  assert.equal(r.blockers.find(b => b.code === 'ICD_DG_MISMATCH'), undefined);
+  const w = r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG');
+  assert.ok(w, 'ICD_DG_MISMATCH_STRENG erwartet: ' + JSON.stringify(r.warnings));
+  assert.equal(r.blockers.find(b => b.code.startsWith('ICD_DG_MISMATCH')), undefined);
 });
 
 test('podo: UI1 + M20.1 => ICD_DG_MISMATCH_STRENG, kein Blocker', () => {

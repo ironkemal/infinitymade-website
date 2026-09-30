@@ -821,6 +821,49 @@
   Zincir: `REGISTER.md` Z-18.
 - **Kapsam:** Ziffer 5 k Podologie'ye özgü; DIA-Übernahmeregel ve Prüfstufe-Aussage tüm Heilmittel
 
+### Podologie DF/NF/QF: ICD-Satz ohne therapierelevanten Kode (terminal, z. B. L60.0 + DF) = Blocker vor Bereit/DTA — nicht beim Speichern
+- **Kural:** Enthält der ICD-Satz einer DF/NF/QF-Verordnung **keinen** Kode, der die Indikation der
+  DG deklariert (Status `mismatch`, nicht `unsicher`), und ist **kein Diagnosetext/Freitext**
+  vorhanden, ist die Diagnose *„erkennbar nicht therapierelevant"* → Arztkorrektur (neue
+  Unterschrift + Datum) **vor Einreichung** Pflicht; eine Nachkorrektur nach Ziffer 4 Abs. 2 gibt
+  es für Ziffer 5 k nicht. → **Blocker** in Bereit + Server-Preflight; Speichern bleibt erlaubt
+  (Verordnung muss erfassbar sein, um die Korrektur beim Arzt anzustoßen), Behandlung: Warnung.
+  Mit Diagnosetext → nur Warnung + Bestätigung (FAK Nr. 28: Freitext kann einen unpassenden
+  ICD heilen; Software kann Freitext nicht bewerten). `unsicher` (E1x.72/73) und nicht endständige
+  Kodes (E11.7, S3.6/V:01016) bleiben Warnung. Mindestens ein passender Kode im Satz
+  (L60.0 + E11.74 bei DF) = `ok`, Zusatzkodes *„unschädlich"*.
+- **Kaynak:** Podologie Anlage 3 i.d.F. 16.06.2025 Ziffer 5 k a)/b) + Korrekturmöglichkeit +
+  Korrekturzeitpunkt (`wissensbank/podologie/20250617_Podologie_Anlage_3_Lesefassung.txt:531-577`,
+  S. 15-16) · HeilM-RL 15.05.2025 (iK 05.08.2025) § 27 Abs. 1 Nr. 1/2
+  (`…/HeilM-RL_2025-05-15_iK-2025-08-05.txt:1076-1091`) — ⚠️ Anlage 3 zitiert „§ 27 Absatz 1/2",
+  gemeint ist inhaltlich Abs. 1 Nr. 1/2 · FAK Podologie 24.05.2023 Nr. 28 (`…FAK_bf.txt:232-244`,
+  Auslegung) · Anlage 1 TP5 V21 Kap. 6.3/6.4 (`…Anlage_1_TP5_V21_20260115.txt:7985-8003`):
+  kein Prüfstufe-1-3-Abweisungsgrund, Folge ist Prüfstufe-4-Absetzung der Verordnung.
+- **Geçerlilik:** 16.06.2025 (Anlage 3) / 05.08.2025 (HeilM-RL) / 01.10.2025 (TA V21)
+- **Kodda (30.09.2026, Oturum C):** ✅ DB `diagnosegruppen.icd_enforcement` DF/NF/QF =
+  `hard_before_dta` (Migration `0047`) + Spiegel `api-backend/ai/validators/diagnosegruppen.json`.
+  ✅ Server-Preflight `V:01018` (`api-backend/billing/dta/preflight.js`, Regel
+  `icdDgPreflightBefund()` in `ai/validators/icdDgRules.js`): Fehler nur bei `mismatch` ohne
+  Diagnosetext; DF/NF/QF mit Diagnosetext → Warnung; UI1/UI2 ohne Freitext-Ausweg — damit ist
+  auch UI1/UI2 serverseitig erstmals gesperrt. ✅ Validator (`checkIcdDg`): Diagnosetext →
+  weiche Warnung. ⏳ Frontend `module/verordnung-pruefung.js:238-242` Diagnosetext-Ausnahme +
+  Bereit-Sperre: Oturum A.
+- **Kapsam:** Podologie DF/NF/QF (UI1/UI2: bereits `hard_before_dta`, dort kein Freitext-Ausweg)
+
+### Podologie: Leitsymptomatik ↔ Heilmittel-Abweichung = Warnung (Praxis korrigiert, ohne Arztunterschrift)
+- **Kural:** Passt das verordnete Heilmittel zur DG (Katalog: DF a→Hornhautabtragung, b→Nagelbearbeitung, c→Komplexbehandlung), aber nicht zur angekreuzten Leitsymptomatik, ist die Leitsymptomatik „erkennbar falsch" → Praxis korrigiert im Einvernehmen mit dem Arzt ohne neue Unterschrift, auch nachträglich (Ziffer 4 Abs. 2). Kein Blocker; Position (78010) und Preis unverändert. Fehlende Leitsymptomatik = Blocker vor Bereit/DTA (TA: „0000" ohne Freitext = Dateiabweisung), außer UI1/UI2 (a/b aus DG ableiten).
+- **Kaynak:** Podologie Anlage 3 i.d.F. 16.06.2025 Ziffer 5 g1 (:443-462) + l (:579-597) · HeilM-RL 15.05.2025 (iK 05.08.2025) Heilmittelkatalog DF (:3363-3381) + Anlage 3 Zeile l (:2376) · Anlage 1 TP5 V21 Kap. 5.5.3.3 S. 71 (:3412-3448) · Anlage 1a i.d.F. 17.06.2024 Z.198/280
+- **Geçerlilik:** 16.06.2025 / 05.08.2025 / 01.10.2025
+- **Kodda:** Preflight ✅ `api-backend/billing/dta/preflight.js` (V:01006/V:01011); Bereit-Sperre ✅ 30.09.2026 `fehlendeVerordnungsangaben()` in `api-backend/billing/api/verordnung-status.routes.js` (über `leitsymptomatikAlsBitmaske()`, UI1/UI2 ausgenommen); Leitsymptomatik↔Heilmittel-Warnung ✅ Frontend (`module/verordnung-pruefung.js` `heilmittelGegenLeitsymptomatik`, 047baab)
+- **Kapsam:** Podologie DF/NF/QF
+
+### Podologie: je Tag eine Behandlung; Nagelspange 78610 bis 2× je Tag
+- **Kural:** Je Verordnung und Kalendertag ist nur EINE Behandlung (78010/78020) abrechenbar (HeilM-RL § 12 Abs. 8). Nagelspange UI1/UI2 (VO ab 01.10.2025): Einheit = 78610, max. 2 je Tag; 78620 ist Aufschlag (max. 2 je Termin), keine Einheit. „Bereit" setzt ≥ 1 abrechenbaren Behandlungstag voraus (nicht storniert UND 78010/78020/78610, gleicher Tag einmal) — Befund (78030/78040) oder Zuschlag allein zählt nicht. Die alten Nagelspangen-Kodes (78210/78220/78230/78300/78400) richten sich nach dem **Verordnungsdatum ≤ 30.09.2025**, nicht nach dem Behandlungsdatum (Anlage 2 § 2 b / § 3 b gibt ihnen sogar Preise ab 01.07.2026).
+- **Kaynak:** HeilM-RL § 12 Abs. 8 · Podologie Anlage 2 § 2 b/c, § 3 b (gkv-302, 30.09.2026)
+- **Geçerlilik:** 01.10.2025
+- **Kodda:** ✅ 30.09.2026 Preflight `S:01013` + Bereit-Zählung, Regel `api-backend/billing/utils/behandlungstage.js` (Spiegel von `module/podo-behandlungstag-regel.js`). ⏳ Alt-Kodes: `api-backend/billing/codes/podologie_positions.js:41-49, 80-89` schließen noch per `ungueltig_ab` (Behandlungsdatum) — Umstellung auf Verordnungsdatum offen (niedrige Priorität). ⚠️ `billing/dta/befundpauschale-regeln.js` `TEDAVI_POSITIONEN` = 78010/78020 ohne 78610 — ob gewollt, klärt gkv-302.
+- **Kapsam:** Podologie
+
 ### ICD sondaki "-" kodun parçası değildir — kaydederken ve DTA'da tiresiz
 - **Kural:** ICD-10-GM katalogunda nicht endständige kodlar `E11.7-` gibi tireyle gösterilir; bu **tire kodun parçası DEĞİLDİR**.
   Verordnung'a (`prescriptions.icd10` / `icd10_2`) ve DTA'ya (DIA segmenti) **tiresiz** yazılır: `E11.7-` → `E11.7`. Dreistellige Kategorie: `E11.-` → `E11` (Punkt + Strich, Feld 7).

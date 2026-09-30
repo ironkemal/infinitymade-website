@@ -243,3 +243,15 @@ starten Anmeldung und Dashboard unverändert. Wiederholbare Anleitung:
 - Erkennung über Sentry + Server-Log-Anomalien (ab Go-Live)
 - Eskalationsweg: Erkennung → interne Bewertung (< 4 h) → Risikoeinstufung → bei Risiko für Betroffene: Meldung an Aufsichtsbehörde **innerhalb 72 h** + Information der Auftraggeber
 - Vorlagen siehe `compliance/DATAPANNE_RUNBOOK.md` ⏳ (vor Go-Live)
+
+---
+
+### Textvorschlag (legal-de 30.09.2026) — Standortabgleich beim Check-in
+
+> **Status: Vorschlag, noch nicht übernommen** (siehe VVT.md, gleicher Abschnitt).
+
+„Koordinaten werden nicht persistiert und nicht protokolliert."
+
+Technischer Beleg: `POST /api/attendance/check-in` (`api-backend/server.js`) berechnet nur
+die Entfernung und schreibt `attendance.check_in_valid` (true/false/NULL); Koordinaten
+stehen in keiner Tabelle und in keiner Log-Zeile (kein `console.*` mit lat/lng).
