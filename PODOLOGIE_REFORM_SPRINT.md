@@ -41,7 +41,7 @@ dolanmaz, Kemal'e sorar.
 | S0 | Ürün kararları (/konsey) + Beta-1 soruları | evet | ⏳ |
 | S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | ✅ 1.1–1.11 (29.09) — canlı geçti, 1.9 QA'da veri yok (birim testleri); açık: 1.12 — bkz. S1 devir notu |
 | S2 | §302 durum semantiği | kısmen (gkv-302) | ✅ 2.1–2.4, 2.6, 2.7 (29.09) + 2.3b ✅ (30.09, `f8ea2aa`) — 2.5 bilerek yok; canlı GEÇTİ, bkz. S2/S3 devir notu (30.09) |
-| S3 | Güvenilirlik ve veri doğruluğu | hayır | ✅ 3.1–3.7, 3.9–3.11, 3.13, 3.8a (`e665aca`, 30.09) — 3.8b hazır/beklemede (0044 canlı onayı Kemal'de; yama `C:/tmp/praxura/s3-8b.patch`) · 3.12 ayrı iş (Kemal 30.09: „2'yi ayrı bir iş olarak bırak") · `datumDe` birleşti (`f30f407`) |
+| S3 | Güvenilirlik ve veri doğruluğu | hayır | ✅ 3.1–3.7, 3.9–3.11, 3.13, 3.8a (`e665aca`, 30.09) — 3.8b ✅ (`8316fbe`, 0044 canlıda) · B1 ✅ (`79e1556`, `77c12bc`) · ICD „-" ✅ (`14171df`, `f6cd960`) · 3.12 ayrı iş (Kemal 30.09: „2'yi ayrı bir iş olarak bırak") · `datumDe` birleşti (`f30f407`) |
 | S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | ⏳ |
 | S5 | Mobil / tablet (yalnız CSS) | hayır | ⏳ |
 | S6 | Temizlik: yalnız Almanca, ölü kod, konsol | hayır | ⏳ |
@@ -157,7 +157,7 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 | 3.5 ✅ `a541ae3` | Hata kaydetme düğmesinin yanında (çakışma dahil); toast yalnız başarı. Tarayıcı `confirm()` → `showConfirmModal` | `dashboard.js:6066`, Verordnung formu | S |
 | 3.6 ✅ `5e764a8` (uyarı, blok değil — gkv-302) | Endständig olmayan ICD seçimde ve preflight'ta blok | `katalog-suche.js`, `preflight.js:99-101` | S |
 | 3.7 ✅ `22480aa` | LANR Prüfziffer formda uyarı; LANR/Unterschrift yoksa Behandlung/"Bereit" blok, BSNR yalnız uyarı | `arzt-register.js`, Verordnung formu, preflight 305-307 | S |
-| 3.8 | Kasse IK'sı Kostenträgerdatei'den, hastaya IK yazılsın; IK boşsa formda sert uyarı. **3.8a ✅ `e665aca`** (Karten-IK / Kostenträger-IK ayrımı, sessiz geri düşme yok; devamı `2cc414a`) · **3.8b ⏳** (`leads.krankenkasse_ik`, migration 0044 `1f11dc8` — SaaS'ta uygulanmadı, Kemal onayı bekliyor) | `krankenkassen` dropdown ← `kostentraeger`, db-ustasi | M |
+| 3.8 | Kasse IK'sı Kostenträgerdatei'den, hastaya IK yazılsın; IK boşsa formda sert uyarı. **3.8a ✅ `e665aca`** (Karten-IK / Kostenträger-IK ayrımı, sessiz geri düşme yok; devamı `2cc414a`) · **3.8b ✅ `8316fbe`** (`leads.krankenkasse_ik`, 0044 SaaS'a 30.09 uygulandı, Kemal onayı) | `krankenkassen` dropdown ← `kostentraeger`, db-ustasi | M |
 | 3.9 ✅ `0418566` | ICD öneri listesi panel değişince kapansın (`requestSeq++` in `closeDropdown`, `activeElement` kontrolü) | `katalog-suche.js:206/349` | S |
 | 3.10 ✅ `410cc6f` | `customer_name` = yalnız ad; kalender kartı `parseNameMitGeburt()`; `split('·')` 4 yer | `dashboard.js:2191-2204, 5105`, `module/termin-patient-bezug.js:42` | S–M |
 | 3.11 ✅ `7331d46` | 78030 süresi (`duration: null`) Folgetermin'e +30 dk eklemesin | `dashboard.js:9409` | S |
@@ -189,16 +189,23 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 
 **Commit'ler:** `f30f407` datumDe tek yerde · `f8ea2aa` 2.3b · `e665aca` 3.8a · `d92e422` + `6b853ea` lokal „heute" (UTC kayması, 00:00–02:00 Berlin) · `1f11dc8` 0044 · `2cc414a` · `f4d31dc`; docs `3f21914`, `9a614f8`, `67a4ef3`.
 
-**Açık işler:**
-1. **3.8b** — Kemal 0044'ü canlıya onaylar → yama (`C:/tmp/praxura/s3-8b.patch`) uygulanır; dokunulan dosyalardaki `?v` çakışmaları yeniden bump edilir (araya `d92e422`/`6b853ea`/`2cc414a` girdi).
-2. **B1 (gkv-302, gerçek gönderimden ÖNCE şart):** DTA üretim anında `kostentraeger_ik`'nın Karten-IK'dan yeniden türetilmesi.
-3. **OCR prompt'u IK okumuyor** — ayrı karar.
-4. **`abrechnender_kt_ik` tek kolon indirgemesi** — gkv-302 doğrulayamadı.
-5. **3.12** ayrı iş (Kemal 30.09: „2'yi ayrı bir iş olarak bırak").
-6. `module/abrechnung-detail.js:95` vade tarihi hâlâ UTC.
-7. `module/behandlungsbestaetigung.js` cache-bust zinciri yapılmadı.
-8. **canli-test P3'leri:** BSNR iki kez · Sperre yalnız kaydederken · ilk Fahrt satırında `lead_id` boş (Beenden'de dolar) · kayıtlı non-terminal ICD düzenlemede uyarı yok · yeni Verordnung listede hemen görünmüyor (tek gözlem).
-9. **Veri:** 30.09 öncesi mevcut reçetelerde Karten-IK NULL (test verisi; §302'den zaten bloklu — `KARTEN_IK_FEHLT`).
+**30.09 öğleden önce — kapananlar (hepsi canlıda, canli-test GEÇTİ):**
+- **3.8b ✅** `8316fbe` — 0044 SaaS'a uygulandı (Kemal onayı, MCP; döküm+kayıt `f64aa14`). Hasta formunda Karten-IK, yeni reçetede önseçim; hastaya Karten-IK yazılır, Kostenträger-IK asla.
+- **B1 ✅** `79e1556` + gkv-302 şartları `77c12bc` (taze IK yalnız `bereit` + `belegnummer IS NULL` satırlara geri yazılır → 409 çıkmazı kapandı; `valid_from` filtresi; preflight satır bazlı). Korrektur yolu bilerek dokunulmadı (orijinal Kostenträger).
+- **6/7/8 ✅** `a81660c` — vade tarihi lokal, cache-bust zinciri, BSNR tek kez, kayıtlı non-terminal ICD'de 3.6 uyarısı.
+- **ICD sondaki „-" ✅** `14171df` + `f6cd960` (canli-test P1/P2/P3/P3a, gkv-302 kuralı → `wissensbank/SPEC-RULES.md`): „E11.7-" tiresiz saklanır ve DIA'ya tiresiz gider; non-terminal yalnız V:01016 uyarısı. Canlı: `DIA+E11.7`, iki kod bölünmesi, terminal ICD dosyaya giriyor.
+
+**Açık işler (güncel):**
+1. **OCR prompt'u IK okumuyor** — ayrı karar.
+2. **`abrechnender_kt_ik` tek kolon indirgemesi** — gkv-302 doğrulayamadı.
+3. **3.12** ayrı iş (Kemal 30.09).
+4. **canli-test P3'leri (kalan):** Sperre yalnız kaydederken · ilk Fahrt satırında `lead_id` boş · yeni Verordnung listede hemen görünmüyor (tek gözlem) · geçersiz IK geçerli olanı sessizce null'a çeker · Kasse adı ile Karten-IK uyuşmazlığında uyarı yok.
+5. **Soru podoloji/gkv-302:** liste ipucu „E11.7 passt nicht zur Diagnosegruppe DF" — mekanik doğru, podolog için yanıltıcı olabilir („nicht endständig" daha iyi mi?).
+6. **B1 preflight (`77c12bc`) canlıda sınanamadı** — QA'da physio reçetesi yok.
+7. **gkv-302 yan bulgu:** `isValidIcd10` Seitenkennzeichen `B` ve `†*!` kabul etmiyor, frontend ICD_SHAPE ediyor — ayrı iş.
+8. **Anhang 03 V09** (bugün geçerli) arşivde yok → wissensbank indirmeli.
+9. `onprem/REGISTER.md`'ye 0044 notu (dosyada başka oturumun commit'lenmemiş değişikliği var — o bitince).
+10. **Veri:** 30.09 öncesi reçetelerde Karten-IK NULL (test verisi).
 
 ---
 
