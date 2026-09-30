@@ -91,6 +91,17 @@ export function setzeAkteReiter(f, doc = document) {
   const rez = doc.querySelector('.pd-tab[data-tab="rezepte"]');
   if (rez) rez.textContent = plan.rezepteText;
 
+  // canli-test P1 30.09: `isPhysio` ist in der Podologie ebenfalls wahr (PRAXIS_SECTORS),
+  // `loadPatientDetailRezepte` zeichnete deshalb die Physio-Liste unter die Karten —
+  // dieselben Verordnungen doppelt, mit §302-Knöpfen. In der Podologie bleibt sie weg
+  // (der Lader setzt nur `hidden`; `display:none !important` hält dagegen).
+  for (const id of ['pdRezContent', 'pdRezLoading']) {
+    const e = doc.getElementById(id);
+    if (!e?.style) continue;
+    if (f.isPodo) e.style.setProperty('display', 'none', 'important');
+    else e.style.removeProperty('display');
+  }
+
   if (!f.isPodo) return;
 
   // Panels einmalig umziehen. `pd-panel` → `pd-unter`: als Abschnitt gibt es kein
