@@ -4476,6 +4476,50 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 İç yüzü hâlâ açık: dosya repoya girip seed yazılmazsa hiçbir şey bağırmıyor
 (`tools/check-onprem.sh`'da `kostentraeger` hâlâ 0 satır). O-118 durum değiştirmiyor, 🟡 kalıyor.
 
+> **01.10.2026 gecesi (Oturum B) — Q4/2026 kutuya yazıldı: `0045_seed_kostentraeger_q4_2026.sql`
+> (henüz commit'lenmedi, bildirim üzerine kaydedildi).** O-139'un geçerlilik penceresi
+> henüz olmadığı için bu çeyrek geçişi **eski yoldan** yapıldı: 01.10'da SaaS'a
+> `laden.mjs --write` ile yüklendi, sonra canlıdan seed üretildi. İçerik: 18 `kostentraeger`
+> satırına `valid_to = 2026-09-30` (17 IKK Nordrhein + `108916709` AOK Bayern DLZ Schwandorf),
+> AOK Bayern Papierannahmestelle `108916709` → `108910008`; 0 yeni IK. Alt tablolar
+> 11.411 / 1.586 satır. Tek transaction, sonda `DO` öz-kontrolü (başarısızsa dosyanın tamamı
+> geri alınır).
+>
+> **onprem hükmü: GEÇER.** Tip B + D (veri, DDL yok). Kontrol edilenler:
+> - **Sıra dışı numara sorun değil.** `api-backend/db/migrate.js:103-121` (`planErstellen`)
+>   yüksek-su işareti değil **küme farkı** kullanıyor: defterde olmayan her dosya `offen`,
+>   `:50` dosya adına göre sıralı. Yani `0047`'yi almış bir kutu `0045`'i bir sonraki
+>   açılışta uygular; yeni kutu `0045`'i `0047`'den önce koşar. `pruefeVersionen` (`:83`)
+>   yalnız **çift** numarayı reddeder, boşluğu değil. `onprem/update.sh:611-612` de dosya adı
+>   kümesini defterle karşılaştırıyor → `0045`'i bekleyen olarak görür ve **migration öncesi
+>   yedeği alır.** Sayaç öz-kontrolü `max(version)` = `0047` alıyor (`migrate.js:205`),
+>   `bis_version` değişmez. İki dosya ortak nesneye dokunmuyor (`0047` başlığı `:11`), yani
+>   hangi sırayla koşsalar aynı sonuç
+> - **DELETE istisnası güvenli.** İki alt tablo uygulama kodunda **yalnız okunuyor**
+>   (`api-backend/billing/kostentraeger/annahmestelle.js:144, 266, 300`,
+>   `module/abrechnung-einstellungen.js:650` — hiçbirinde insert/update/delete yok). Kutuda
+>   müşterinin yazdığı bir satır olamaz, silinen her satır bizim eski seed'imizdir
+> - **SaaS/kutu tutarlılığı (G7):** veri SaaS'a yükleyiciyle, kutuya migration'la gidiyor;
+>   eşitlik üç tabloda `format('%L')` md5 ile kanıtlanmış (başlıkta). Başlıktaki
+>   `-- SaaS: NICHT angewandt` satırı O-129/O-133'ün istediği tek yazım yeri
+> - G1/G2/G3/G8: hiçbiri tetiklenmiyor (kamu verisi, sır yok, dış çağrı yok)
+>
+> **Şartlar (commit'e kadar):** (1) `api-backend/db/erwartete-zaehler.json`'daki
+> `_hinweis_0045` satırı (çalışma ağacında zaten var, commit'lenmemiş) **aynı commit'e**
+> girer. Bildirimdeki "json'a dokunulmadı" ifadesi yanlış; içerik doğru, yalnız bu satır
+> eklendi. (2) Bu migration'ı taşıyan sürüm **MINOR** olur, PATCH olamaz
+> (`RELEASE-STANDARD.md:90`). (3) `0045`, `0046`'dan (alt tablolara geçerlilik kolonu +
+> UNIQUE değişikliği) **önce ya da onunla aynı** image'a girer, numarası bir daha
+> değişmez. `0045`'in `ON CONFLICT` anahtarları ve mutlak satır sayısı kontrolleri bugünkü
+> UNIQUE'e bağlı; dosya sıralaması bunu zaten garanti ediyor, ama `0046` önce yayına
+> girerse garanti kalkar.
+>
+> **O-118/O-139 durumu değişmiyor.** O-118: besleme bu çeyrek de çalıştı, kapı hâlâ yok
+> (`grep -c kostentraeger tools/check-onprem.sh` → 0). O-139: bu tur elle yapılan geçişin
+> son örneği olmalı; `0046` bildirimi geldiğinde adlandırma (O-139 metni `gueltig_*`
+> öneriyor, `kostentraeger` ana tablosu `valid_from/valid_to` kullanıyor, bildirim de
+> `valid_*` diyor) ve "Adım 1 ile Adım 3 aynı sürümde birleşmez" şartı orada kontrol edilir.
+
 ### O-140 — Nominatim çağrısı: (a) CSP açma ve (b) sunucuya taşıma reddedildi, (c) çağrıyı kaldır + konumu cihazdan al 🟠 **geplant (hüküm: DUR a/b, GEÇER c)**
 
 | Alan | İçerik |

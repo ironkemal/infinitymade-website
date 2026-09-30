@@ -719,10 +719,18 @@ yeniden araştırılıyor demektir.
 - **Durum (30.09.2026):** 6 dosya ✅ **GEÇERLİ** (4'ü bugün son gün) · 4 yeni dosya ⏳ **GELECEK**
   (ab 01.10.2026) · `EK05Q426_KE0` ⛔ **DÜŞMÜŞ** — yürürlüğe girmeden yerini `KE1` (18.09.2026) aldı.
   **01.10.2026'dan:** 6 GEÇERLİ (#8-#11 + #4 + #5) · 5 DÜŞMÜŞ (#1 #2 #3 #6 #7 — silinmez, arşivde kalır)
+  ✅ **01.10.2026 ~01:10 Berlin: Q4 SaaS DB'ye yüklendi** (madde 9-11), kutu seed'i `0045`.
 - **Neyi besler:** Z-09 → `parser.js` (+ `parser.test.js`) → `tools/kostentraeger-annahmestellen-laden.mjs`
   → DB `kostentraeger` (1.052 satır) + DB `kostentraeger_annahmestellen` (11.409 satır
     — ⛔ Ersatzkassen tarafında **yanlış sürüm**, bkz. açık madde 6)
   ↔ DB `krankenkassen.ik_number` 76/94 (Ops #264). **06.09.2026'dan beri zincirin tamamı gerçek veriyle besleniyor.**
+  **01.10.2026'dan (Q4 yüklemesi):** #8 · #9 · #10 · #11 + #4 · #5 → `datei-lesen.js` (Latin-1/UTF-8 okuyucu)
+  → `parser.js` → `lade-plan.js` (Stichtag'a göre dosya seçimi; + `lade-plan.test.js`)
+  → `tools/kostentraeger-annahmestellen-laden.mjs --write` → SaaS DB `kostentraeger` (1.043 `echt`, 18'i
+  `valid_to 2026-09-30`) · `kostentraeger_annahmestellen` (11.411) · `kostentraeger_anschriften` (1.586)
+  → **kutu:** `api-backend/db/migrations/0045_seed_kostentraeger_q4_2026.sql` (O-38 / O-139; 0006/0007/0036/0037
+  SHA-kilitli, üstüne 0045 biner). ⚠️ Bir sonraki çeyrekte bu zincirin **iki** ucu tazelenir: SaaS yüklemesi
+  **ve** yeni bir seed migration'ı (0045 değiştirilmez).
 - **Tazelik kontrolü:** ⛔ otomatik yok. Elle: yukarıdaki sayfa açılır, oradaki satırların
   "gültig ab" tarihleri aşağıdaki tabloyla karşılaştırılır. **Kontrol günleri: 03.03 · 03.06 ·
   03.09 · 03.12** — Anhang 03 §2 (satır 185-187): *"Die Aktualisierung der Kostenträgerdatei
@@ -922,6 +930,9 @@ itirazında orijinaline başvurulacaksa dosyalar yayıncıdan yeniden indirilmel
    Schlüsselverzeichnis (Art der Datenlieferung, DFÜ-Protokoll) değişmiş olabilir. → arşiv
    sayfasından bir önceki sürüm indirilir, `gkv-302` teyit eder. **Bu madde açık kalan tek
    veri maddesidir.**
+   ↳ **01.10.2026:** bugün geçerli sürüm **Anhang 03 V09** — hâlâ arşivde yok, indirilecek (Q4 yüklemesi V10
+   yapı tarifine göre yapıldı; VKG alan sırası gerçek veride doğru çıktı). Sahip: `wissensbank` (indirme +
+   kayıt) · `gkv-302` (V09↔V10 Schlüssel farkı). Tarih: bir sonraki oturum; en geç V10 geçişi 01.02.2027.
 4. ✅ **KAPANDI 07.09.2026.** Dosya 7 parçaya bölündü (06.09.2026) ve ham tek parça
    `Krankenkassen IK nummern .md` silindi (07.09.2026). Kanıt: yukarıdaki bölme
    doğrulaması tablosu — MD5 birebir aynı. Detay: W-A08 (c).
@@ -957,21 +968,45 @@ itirazında orijinaline başvurulacaksa dosyalar yayıncıdan yeniden indirilmel
    Sahip: `db-ustasi` (yükleme) · tarih 01.10.2026 · ayrıntı yukarıda "Tazelik taraması 30.09.2026".
    ↳ **30.09.2026 ölçüm:** KE0↔KE1 farkı 7 satır, yalnız TK kod 30 + bir ASP metni — 20/71/72
    etkilenmiyor. Madde **Q4 dosyaları DB'ye yüklenene kadar** açık (sahip `db-ustasi`, 01.10.2026; önce madde 9).
+   ↳ **01.10.2026 ~01:10:** Q4 yüklendi (madde 9-11 kapanışına bak); `quelle = EK05Q226_KE0` satırı **0**,
+   vdek artık `EK05Q426_KE1`'den. Bu maddenin kapanışı `db-ustasi`'nin ZEITFEHLER kaydının kapanışına bağlı.
 7. ✅ **KAPANDI 30.09.2026 (indirme kısmı).** 4 dosya `curl` ile byte-exact indirildi; sha256 + parser
    sayımı + öncül farkı yukarıda (#8-#11). **Kalan:** DB yüklemesi → madde 6 + 9 + 10, `db-ustasi`, 01.10.2026.
 8. **`offen` — tazelik kontrolü hâlâ elle.** RSS var (yukarıda); otomatik kontrol kurulmadı. Sahip:
    `builder` + `onprem` onayı. Kurulana kadar kontrol günü 03.09 değil **çeyrek başına kadar haftalık**.
-9. ⛔ **`offen` — KODLAMA TUZAĞI, DB yüklemesinden ÖNCE kapanmalı** (30.09.2026). Yeni 4 dosya
+9. ✅ **KAPANDI 01.10.2026** (kod: commit `aaccead` 30.09.2026; canlı yükleme 01.10.2026 ~01:10 Berlin).
+   Yükleyici ve test artık `datei-lesen.js` → `dekodiereKostentraegerDatei()` ile okuyor: UTF-8 geçerliyse
+   UTF-8, UNB `UNOC:3` ise `latin1`, başka kodlamada hata fırlatır (`parser.test.js:276-280`). Test
+   (`parser.test.js:253`) **sayıyla değil U+FFFD ile** kontrol ediyor — sayım testinin kör noktası kapandı.
+   Canlı yüklemede U+FFFD **0**; umlaut örneği DB'de doğru (AOK Aschendorf-Hümmling · Göttingen · Münden).
+   Orijinal madde metni:
+   ~~**KODLAMA TUZAĞI, DB yüklemesinden ÖNCE kapanmalı** (30.09.2026).~~ Yeni 4 dosya
    ISO-8859-1; `tools/kostentraeger-annahmestellen-laden.mjs:111` ve `parser.test.js:238`
    `readFileSync(…, 'utf8')` ile okuyor. Ölçüldü: utf8 okununca kayıt/IK/VKG sayısı **aynı** çıkıyor
    (sayım testi yakalamaz!) ama isimlerde dosya başına 189–356 `U+FFFD` oluşuyor → DB'ye bozuk kasa adı
    gider. Öneri: UNB `UNOC:3` ise `latin1` oku (ya da `TextDecoder('utf-8',{fatal:true})` dene, düşerse
    latin1). Sahip: `builder` (kod) · `db-ustasi` (yükleme) · tarih **01.10.2026**.
-10. **`offen` — `parser.test.js` ve yükleyicinin `ECHT_DATEIEN` listesi hâlâ 05.09 partisini okuyor.**
+10. ✅ **KAPANDI 01.10.2026** (commit `aaccead`). `parser.test.js:21-22` `ECHT_DATEIEN` = #8 · #9 · #10 · #11 ·
+    #4 · #5 (düşmüş dosyalar yalnız U+FFFD taramasında, `:257`). Yükleyici artık sabit liste değil
+    **tarih güdümlü**: tüm dosyalar `gueltigAb` ile listeli (`kostentraeger-annahmestellen-laden.mjs:49-61`),
+    `lade-plan.js` Stichtag'a (varsayılan: bugün, Berlin) göre her Kassenart için geçerli olanı seçer — yani
+    madde 6'daki "gelecek sürüm erken yüklendi" hatası artık kapıyla önleniyor. 01.10.2026 koşusu Stichtag
+    2026-10-01 (`--stichtag` verilmeden) şunları seçti: AO05Q426_KE0 (186) · BK05Q426_KE0 (365) ·
+    IK05Q426_KE0 (207) · EK05Q426_KE1 (261) + BN050526_KE0 (37) · LK05Q226_KE0 (11) = 1.067 ✅ beklentiyle aynı.
+    Sonuç: `kostentraeger` 998 satır güncellendi, 18'ine `valid_to 2026-09-30` (17 IKK Nordrhein + `108916709`);
+    `kostentraeger_annahmestellen` 11.407 → **11.411** (+13 / −9); `kostentraeger_anschriften` 1.588 → **1.586**
+    (+1 / −3). Kontrol: `quelle = EK05Q226_KE0` 0 satır. Orijinal madde metni:
+    ~~`parser.test.js` ve yükleyicinin `ECHT_DATEIEN` listesi hâlâ 05.09 partisini okuyor.~~
     01.10.2026'dan geçerli küme #8 · #9 · #10 · #11 · #4 · #5 = **1.067 kayıt / 1.042 tekil IK /
     11.411 VKG** (30.09.2026, parser + latin1 ile sayıldı). Regresyon beklentisi bu olmalı; düşmüş
     dosyalar listeden çıkar (dosya arşivde kalır). Sahip: `builder` · 01.10.2026.
-11. **`offen` — AOK Bayern Annahmestelle değişimi Podologie'ye dokunuyor.** #1→#8: `108916709` (DLZ
+11. ✅ **KAPANDI 01.10.2026.** SaaS DB'de AOK Bayern Papierannahmestelle (VKG 09) artık `108910008` SCD
+    Ebermannsdorf; eski partner `108916709` için VKG satırı **0**, IK kaydı `valid_to 2026-09-30` ile duruyor
+    (silinmedi — eski Absetzung itirazı için). Kodlar 71 / 72 / 20 için VKG 03 çözümlemesi **tekil** (çift adres yok).
+    Kutu tarafı: `0045_seed_kostentraeger_q4_2026.sql` aynı durumu taşıyor (0006/0007/0036/0037 dokunulmadı).
+    Kalan tek iş kutunun migration'ı çalıştırması — sahibi `onprem` (O-38 / O-139), bu kartın maddesi değil.
+    Orijinal madde metni:
+    ~~**AOK Bayern Annahmestelle değişimi Podologie'ye dokunuyor.**~~ #1→#8: `108916709` (DLZ
     Schwandorf) kaldırıldı, VKG'leri (Verknüpfungsart 09, kodlar 20/61/62/66/67/68/71) `108910008` (SCD
     Ebermannsdorf, ab 01.10.2026) üstüne geçti. Verknüpfungsart 09 = Papierannahmestelle (0036 seed
     başlığı: Urbelege zarfı, `ladePapierannahmestelle()` → Begleitzettel adresi). Yani AOK Bayern
