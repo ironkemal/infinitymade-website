@@ -457,3 +457,25 @@ Yeni fonksiyon yok, silinen yok; davranış değişikliği.
   `datumTTMMJJJJ` + `podo-vorbelegung-grund.js` yerel `datumDe` ↔ `module/datum.js` `datumDe`;
   `abrechenbareBehandlungstage` ↔ `verordnung-uebersicht.js` `istBehandlungseinheit` — iki ayrı soru
   (kasıtlı), ama **78620** iki yerde zıt sınıflanıyor (burada Behandlung, orada Zuschlag) → gkv-302 sorusu.
+
+### 30.09.2026 · Podologie-Reform S4-2 (commit f14b2d8) — Fußbefund in der Tagesbehandlung, Folgetermin-Frage, Patientenpost-Status
+- `module/podo-tag-zusatz.js` (neu): `fussbefundKopf`, `fussbefundBoxHtml`, `ladeLetzterBefund`. Niye: Konsey S0
+  Beschluss 1a — aufklappbarer Fußbefund-Abschnitt in der Tagesbehandlung; zu nur „zuletzt am …", auf wird die
+  vorhandene Karte (`mountFussbefund`) eingesetzt, die selbst nach `pat_fussbefund` schreibt — kein zweiter
+  Schreibweg. Nerede: `podologie-abrechnung.js` `loadPodologieBilling`.
+- Ebenda `folgeAusgangstermin`, `ladeTagesTermin`, `frageFolgetermin`, `FOLGE_FRAGE` (+ `podologie-abrechnung.js`
+  `fragFolgetermin`, Verdrahtung). Niye: S0 Beschluss 1b — nach dem Speichern „Folgetermin jetzt anlegen?", legt
+  nichts an, öffnet die vorhandene Maske über `termin-folge.js` `oeffneFolgetermin`. Hausbesuch: erst Fahrt
+  beenden, dann fragen (`fahrtBeendenKlick` → `onFertig`).
+- `module/lead-status.js` (neu): `LEAD_STATUS_DE`, `leadStatusLabel`. Niye: canli-test 30.09 P3 — Patientenpost-Badge
+  zeigte Rohwert (`new`, `contacted`). Nerede: `dashboard.js` `renderB2C`. Unbekannte Werte bleiben roh.
+- Signaturänderungen: `mountFussbefund(deps, preset, { wurzel })` (eingebettete Wurzel; Karte bleibt ein Exemplar),
+  `oeffneFolgetermin` nimmt Ausgangstermin ohne `id` (dann keine Leistungen gelesen), `zeigeFahrtHinweis` → boolean.
+- **Kopya kontrolü (fonksiyon-ustasi 30.09, birleştirilmedi):** `ladeLetzterBefund` — kopya değil; diğer
+  `pat_fussbefund` okuyucuları (`fussbefund.js` `ladePatientenkontext`, `fussbefund-archiv.js`
+  `renderFussbefundArchiv`, `patientenkarte.js` `ladeVerlauf`) tam liste/zaman çizelgesi çekiyor, aynı
+  `ist_aktuell` kuralıyla; tek-tarih okuyucusu başka yok. `leadStatusLabel` — kopya değil, lead status için başka
+  etiket haritası yok (`b2bStatusBadge` ayrı tablo, `abrechnungsstatus.js` ayrı eksen). `ladeTagesTermin` ↔
+  `termin-laden.js` `ladeTerminVollstaendig` kopya değil (o id ile okur); ama **yakın aday:**
+  `podologie-abrechnung.js` `podGeplanteHpnr` aynı soruyu (Verordnung'un o günkü termini) soruyor ve günü
+  Berlin'e göre (`alsISODatum`) kesiyor, `ladeTagesTermin` tarayıcı yerel gece yarısıyla — iki gün sınırı kuralı.

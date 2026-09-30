@@ -112,14 +112,15 @@ export function folgeAusgangstermin({ buchung, vord, datum, name = '' }) {
 export async function ladeTagesTermin(sb, ownerId, vordId, datum) {
   if (!sb || !vordId || !datum) return null;
   try {
-    const von = new Date(`${datum}T00:00:00`);
-    const bis = new Date(von.getFullYear(), von.getMonth(), von.getDate() + 1);
+    // Tag in Berlin (alsISODatum) wie podGeplanteHpnr — nicht die Mitternacht des Browsers.
+    // Grob ±1 Tag laden, dann genau filtern.
+    const mitte = Date.parse(`${datum}T12:00:00Z`);
     const { data } = await sb.from('bookings').select('*')
       .eq('owner_id', ownerId).eq('verordnung_id', vordId)
       .neq('status', 'cancelled')
-      .gte('start_time', von.toISOString()).lt('start_time', bis.toISOString())
-      .order('start_time', { ascending: true }).limit(1);
-    return data?.[0] || null;
+      .gte('start_time', new Date(mitte - 36 * 3600e3).toISOString()).lt('start_time', new Date(mitte + 36 * 3600e3).toISOString())
+      .order('start_time', { ascending: true });
+    return (data || []).find(b => b.start_time && alsISODatum(new Date(b.start_time)) === datum) || null;
   } catch { return null; }
 }
 
