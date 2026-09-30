@@ -691,7 +691,7 @@
   import { createClient } from './vendor/supabase-js.js?v=20260813';
   import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
   import { attachDiagnoseSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
-  import { ladeOwnerId } from './module/public-owner.js?v=20261001s';
+  import { ladeOwnerId } from './module/public-owner.js?v=20261001u';
   const _sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   // Top-Level-await in supabase-config.js: DOMContentLoaded kann schon vorbei sein.
   const _nachDom = (fn) => document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', fn) : fn();

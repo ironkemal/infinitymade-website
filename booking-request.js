@@ -12,7 +12,7 @@
 // das die Cloud-VPS statt der eigenen Box gewesen (G1).
 import { API_BASE, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
-import { ladeOwnerId } from './module/public-owner.js?v=20261001s';
+import { ladeOwnerId } from './module/public-owner.js?v=20261001u';
 import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, findAnliegen, WUNDE_HINWEIS } from './module/anfrage-anliegen.js?v=20261001t';
 
 // ─── Constants ──────────────────────────────────────────────────────────────

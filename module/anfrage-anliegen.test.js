@@ -64,7 +64,9 @@ test('anliegenNotiz: 500-Grenze kuerzt den freien Text, nie die Kopfzeile', () =
 test('slugAusKennung / kennungAusSuche', () => {
   assert.equal(slugAusKennung('https://praxura.de/booking.html?u=kemal&x=1'), 'kemal');
   assert.equal(slugAusKennung(' kemal '), 'kemal');
-  assert.deepEqual(kennungAusSuche('?business=abc&u=x'), { ownerId: 'abc', kennung: null });
+  const id = 'c4fbded4-0000-4000-8000-000000000000';
+  assert.deepEqual(kennungAusSuche(`?business=${id}&u=x`), { ownerId: id, kennung: null });
+  assert.deepEqual(kennungAusSuche('?business=a,b&u=x'), { ownerId: null, kennung: null }); // kein UUID → ungültig
   assert.deepEqual(kennungAusSuche('?u=kemal'), { ownerId: null, kennung: 'kemal' });
   assert.deepEqual(kennungAusSuche('?c=INF-1'), { ownerId: null, kennung: 'INF-1' });
   assert.deepEqual(kennungAusSuche(''), { ownerId: null, kennung: null });
@@ -83,7 +85,7 @@ function stub(antworten, rpcAntwort) {
 
 test('ladeOwnerId: business direkt, Slug ueber Profil/Business, Mitarbeiter -> Owner', async () => {
   const sb = stub({});
-  assert.equal(await ladeOwnerId(sb, '?business=o1'), 'o1');
+  assert.equal(await ladeOwnerId(sb, '?business=c4fbded4-0000-4000-8000-000000000000'), 'c4fbded4-0000-4000-8000-000000000000');
   assert.equal(await ladeOwnerId(sb, ''), null);
   assert.equal(await ladeOwnerId(stub({ profiles_public: { id: 'p', role: 'owner' } }), '?u=kemal'), 'p');
   assert.equal(await ladeOwnerId(stub({ profiles_public: { id: 'e', role: 'employee', owner_id: 'o' } }), '?u=kemal'), 'o');

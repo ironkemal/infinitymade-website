@@ -20,7 +20,8 @@ export function slugAusKennung(s) {
 export function kennungAusSuche(search) {
   const p = new URLSearchParams(search || '');
   const business = (p.get('business') || '').trim();
-  if (business) return { ownerId: business, kennung: null };
+  // canli-test P2 30.09: kein UUID → ungültiger Link, statt den Assistenten ins Leere zu öffnen.
+  if (business) return UUID.test(business) ? { ownerId: business, kennung: null } : { ownerId: null, kennung: null };
   const kennung = slugAusKennung(p.get('u') || p.get('c') || '');
   return { ownerId: null, kennung: kennung || null };
 }
