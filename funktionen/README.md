@@ -116,6 +116,25 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 30.09.2026 · gkv-302 B1 — Kostenträger-IK DTA anında taze; kayıtlı ICD'de S3.6 uyarısı
+- 79e1556 — yeni `api-backend/billing/utils/kostentraeger-frisch.js` → `kostentraegerFrischAbleiten(supabase, zeilen, {aufloeser})`.
+  Niye: §302 dosyası üretilirken `prescriptions.kostentraeger_ik`'deki saklı değere güvenilmiyor; Karten-IK'dan
+  o anki Kostenträgerdatei'ye göre yeniden türetiliyor (birleşme / yeni `abrechnender_kt_ik` sonrası dosya eski
+  IK'ya gitmesin). Çözülemezse 422 `KOSTENTRAEGER_NICHT_AUFLOESBAR`, değiştiyse uyarı `KOSTENTRAEGER_IK_NEU`.
+  **Yeni çözümleyici değil** — S3.8a'nın tek kaynağı `kostentraegerIkAufloesen`'i sarar; isim geri düşüşü bilerek
+  kapalı (yalnız `krankenkasse_ik` geçer). Nerede: `abrechnung.routes.js` → `/abrechnung/create`,
+  `/abrechnung/preflight`, `/abrechnung/create-podologie`. Haritada `calledBy` boş görünür (route gövdeleri
+  anonim) — kullanım bu üç route'tur.
+  - **Açık not:** `/abrechnung/korrektur` bu yardımcıya bağlı **değil**; IK'yı orijinal dosyanın
+    `abrechnung.kostentraeger_ik`'sinden alıyor. Korrektur'un orijinal alıcıya gitmesi bilinçli olabilir — karar
+    gkv-302'nin. Taze türetme oraya da gerekirse ikinci kural yazılmaz, bu fonksiyon bağlanır.
+- 30.09 (canli-test P3) — `katalog-suche.js` → `gespeicherterKodeHinweis(sb, feldwert, bereich)`.
+  Niye: kayıtlı, endständig olmayan ICD reçete yeniden açıldığında da S3.6 uyarısını göstersin. Metni kendisi
+  üretmez, `nichtEndstaendigHinweis`'i yeniden kullanır; katalog araması `searchDiagnosen` üzerinden.
+  Nerede: `attachDiagnoseSearch` içindeki `katalog:gespeichert` dinleyicisi; olayı `module/verordnung-maske.js`
+  `rzIcd`/`rzIcd2` doldurulunca atar. `attachDiagnoseSearch`'in tek bağlandığı yer `DIAGNOSE_FIELDS`
+  (`rzIcd`, `rzIcd2`, `rzDg`) — başka ICD giriş yolu yok, kapsama tam.
+
 ### 30.09.2026 · Reform S3.8a — Karten-IK ≠ Kostenträger-IK; yerel "bugün"
 - e665aca — Reform S3.8a (gkv-302, Anlage 1 TP5 V21 §5.5.2 / §5.5.3.1). Niye: Karten-IK (kartta
   basılı) `prescriptions.krankenkasse_ik`'ye yazılır; Kostenträger-IK **her zaman ondan türetilir**,
