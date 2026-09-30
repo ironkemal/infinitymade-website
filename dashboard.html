@@ -20,7 +20,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20261001r" />
+  <link rel="stylesheet" href="dashboard.css?v=20261002s5" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -3864,7 +3864,10 @@
     .m13-diagrow{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; align-items:end; margin-top:4px; }
     .m13-dgrow{ display:grid; grid-template-columns:auto 140px auto 1fr auto; gap:10px 16px; align-items:end; margin-top:16px; }
     .m13-dgfield{ display:flex; flex-direction:column; }
-    .m13-lsboxes{ display:flex; align-items:center; gap:16px; }
+    /* flex-wrap (S5, 30.09.2026): in der Podologie beschriftet verordnung-podo.js die Kästchen
+       („a) Hornhautabtragung" …) — ohne Umbruch lief die Zeile schon am Desktop 66 px quer
+       (Modal 944/878 px), bei 375 px 171 px. */
+    .m13-lsboxes{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; }
 
     .m13-hmhead{ display:flex; justify-content:space-between; align-items:baseline; margin-top:22px; }
     .m13-beh{ font-size:12px; font-weight:600; color:#4a5568; text-align:right; }
@@ -3906,11 +3909,23 @@
        Tümü 1-kolona/kısma düşüren kurallar — eşiği yükseltmek yalnızca
        aralığı genişletiyor, taşma riski yok. */
     @media (max-width:768px){
-      .m13-top{ grid-template-columns:1fr; }
+      /* minmax(0,…): 1fr hieß min-content, der Bogen lief bei 375 px 47 px quer (S5, 30.09.2026) */
+      .m13-top{ grid-template-columns:minmax(0,1fr); }
       .m13-dgrow{ grid-template-columns:1fr 1fr; }
+      .m13-dgrow > .m13-lsboxes{ grid-column:1 / -1; }
       .m13-opts{ grid-template-columns:1fr; }
       .m13-bottom{ grid-template-columns:1fr; }
       .m13-picker select{ min-width:0; }
+    }
+    /* Telefon (S5, 30.09.2026): Die Dreier-Zeilen der Versichertenbox (IK/Vers.-Nr./Status,
+       BSNR/LANR/Datum) passen bei 375 px nicht nebeneinander — das Datumsfeld braucht allein
+       126 px. Zellen bekommen eine Mindestbreite, die Zeile bricht um. */
+    @media (max-width:480px){
+      .m13-sheet{ padding:14px 10px 16px; }
+      .m13-insrow{ flex-wrap:wrap; }
+      .m13-insrow > .m13-cell{ min-width:110px; }
+      .m13-insrow > .m13-cell:has(input[type=date]){ min-width:140px; }
+      .m13-cap{ overflow-wrap:anywhere; }
     }
   </style>
 
@@ -4016,7 +4031,7 @@
       </div>
       <div class="modal-body" style="padding:0;">
         <!-- Patient-Info: tüm bilgiler tek yerde özet -->
-        <div id="pdInfoBlock" style="padding:14px 20px;border-bottom:1px solid var(--border);background:#fafbfd;">
+        <div id="pdInfoBlock" style="padding:14px 20px;border-bottom:1px solid var(--border);">
           <div id="pdInfoGrid" style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:8px 20px;font-size:13px;"></div>
         </div>
         <div class="pd-tabs">

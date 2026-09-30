@@ -4935,11 +4935,14 @@ textarea {
     bottom: 0;
     z-index: 200;
     transform: translateX(-100%);
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+    /* S5 (30.09.2026): Schatten nur am offenen Menü. Geschlossen lag die Leiste bei
+       x -260…0, der Schatten (4 px + 24 px Unschärfe) fiel aber ~28 px in den Inhalt. */
+    box-shadow: none;
   }
 
   .sidebar.open {
     transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
   }
 
   /* Desktop-Collapse gilt mobil nicht: sonst öffnet der Hamburger eine 0px-Sidebar,
@@ -7669,7 +7672,11 @@ textarea:focus-visible,
     border-left: 0;
     box-shadow: 0 -2px 24px rgba(0,0,0,.45);
   }
-  #mainArea,
+  /* S5 (30.09.2026): vorher 0 — damit klebte JEDER Inhalt am rechten Rand (Karten,
+     Speichern-Knöpfe). Der Wert entspricht dem mobilen padding von .main-area;
+     !important bleibt nötig, weil dashboard.js beim Öffnen des Seitenbereichs
+     padding-right: 456px inline setzt (BK_PANEL_OFFSET). */
+  #mainArea { padding-right: 16px !important; }
   #calMainWrap { padding-right: 0 !important; }
 }
 
@@ -8221,3 +8228,139 @@ button.anam-rozet-ungeprueft { cursor: pointer; }
 button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(--text-muted); }
 /* „Ablauf abbrechen?" der Einwilligung (99999) und der PIN-Modal des Kiosk (100000) müssen die Rückfrage sehen können */
 #confirmModal { z-index: 100001; }
+
+/* ============================================================
+   S5 · Mobil / Tablet (Podologie-Reform, 30.09.2026) — nur Layout
+   Gemessen mit Playwright bei 360/375/390/768/1024/1280/1440 (archive/denetim/
+   mobile-audit/before|after/s5-*). Stufen der bestehenden Skala:
+   1024 (Tablet quer, Berührung) · 768 (Tablet hoch) · 480 (Telefon).
+   Mehrere Regeln brauchen !important, weil die Module ihr Layout als
+   style="" ins Markup schreiben (fussbefund.js, podologie-abrechnung.js)
+   — ohne JS-Änderung lässt sich ein Inline-Stil nur so überstimmen.
+   ============================================================ */
+
+/* Buchungskonten (module/buchungskonten.js): Zeile darf umbrechen. Das
+   Bezeichnungsfeld hatte min-width:auto (≈180 px Eigenbreite), dadurch lief
+   „×" bei jeder Breite unter ~900 px aus der Karte. Am Desktop passt die
+   Zeile weiter in eine Reihe (gemessen 1280 px: unverändert einzeilig). */
+#setKontenList > div { flex-wrap: wrap; }
+#setKontenList .konto-label { min-width: 120px; }
+#setKontenList .btn-danger { margin-left: auto; }
+
+/* Patientenakte: die Reiterleiste scrollt selbst, statt das ganze Modal
+   quer scrollen zu lassen (vorher 593 px Inhalt in 373 px). Am Desktop
+   passt die Leiste — overflow wirkt dort nicht. */
+.pd-tabs { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+.pd-tab { flex-shrink: 0; white-space: nowrap; }
+
+@media (max-width: 1024px) {
+  /* Tablet/Telefon: Schließen-Kreuz ≥44×44 (vorher 24×28). */
+  .modal-close,
+  #bkActionModal .modal-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Akte-Kopf „+ Termin" / „+ Verordnung": vorher 21 px hoch. */
+  #pdKopfAktionen { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+  #pdKopfAktionen[hidden] { display: none; }
+  #pdKopfAktionen .btn-sm { min-height: 44px; padding: 0 14px; font-size: 13px; }
+  .pd-tab { min-height: 44px; }
+
+  /* Termin-Aktionen: Ziele ≥44 px … */
+  #bkDetailEditBtn { min-height: 44px; padding: 0 12px !important; /* Inline padding 2px 8px */ }
+  #bkActPatSearch { min-height: 44px; }
+  #bkActionStartBtn,
+  #bkActionFahrtStartBtn,
+  #bkActionArrivedBtn,
+  #bkActionFahrtEndBtn { min-height: 44px; }
+  /* … und Abstand um die zerstörenden Knöpfe: „Nicht erschienen" lag 8 px
+     neben „Folgetermin"/„Verschieben"/„Weitere", „Absagen" 6 px über
+     „Termine drucken". Jetzt jeweils ≥16 px. */
+  #bkActionNoShowGroup { margin: 8px 0; }
+  .bk-akt-leiste:has(#bkActionFolgeBtn[hidden]) #bkActionNoShowGroup { margin-left: 8px; }
+  #bkActionDeleteBtn { margin-bottom: 10px; }
+
+  /* Buchungskonten: „×" (Konto entfernen) war 25×23. */
+  #setKontenList .btn-danger { min-width: 44px; min-height: 44px; justify-content: center; }
+
+  /* Behandlungen / Fußbefund: Speichern-Wege ≥44 px. fbp-Knöpfe haben
+     height:38px inline → !important. „Status" in der Verordnungsliste war 21 px. */
+  #fbpNewBtn,
+  #fbpSaveBtn { height: 44px !important; }
+  #podSaveBehBtn { min-height: 44px; }
+  .pod-vord-status { min-height: 44px; }
+}
+
+@media (max-width: 768px) {
+  /* Behandlungen (podologie-abrechnung.js): Verordnungsliste und
+     Tagesbehandlung untereinander statt 2×170 px; „Behandlung speichern"
+     lag bei 375 px bei x 225–407. Inline-Stil → !important. */
+  #podBillingContent > div[style*="grid-template-columns"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Tagesansicht-Karte: Uhrzeit (≈75 px) und Name in einer nowrap-Zeile
+     ließen dem Namen 47 px („Muster…"). Name bekommt die zweite Zeile.
+     Kurztermine (--compact, ≤20 min) bleiben einzeilig — dort fehlt die Höhe. */
+  .day-view-grid .dv-booking-block:not(.dv-booking-block--compact) { padding: 4px 6px; }
+  .day-view-grid .dv-booking-block:not(.dv-booking-block--compact) .dv-booking-name {
+    flex-wrap: wrap;
+    row-gap: 0 !important; /* inline gap:5px gilt sonst auch zwischen den Zeilen (+5 px, Untertitel abgeschnitten) */
+  }
+  .day-view-grid .dv-booking-block:not(.dv-booking-block--compact) .dv-booking-name > span:not(.dv-booking-time) {
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Fußbefund-Karte (module/fussbefund.js) richtet sich nach IHRER Breite, nicht
+   nach dem Bildschirm: dieselbe Karte steht allein im Panel (#fussstatusContent)
+   und eingebettet in der Tagesbehandlung (#podFussbefundHost, ~436 px auch am
+   Desktop). Vorher war 1fr = min-content (≈506 px): bei 375 px lag „Rechts"
+   bei x 419–484, eingebettet musste man bei 1024/1280 px quer scrollen. */
+#fussstatusContent,
+#podFussbefundHost { container: fbp / inline-size; }
+
+@container fbp (max-width: 900px) {
+  .fbp-card-container { grid-template-columns: minmax(0, 1fr); }
+}
+
+@container fbp (max-width: 560px) {
+  /* weniger Innenabstand, damit zwei Zehenreihen nebeneinander passen */
+  .fbp-paper-card { padding: 12px; gap: 14px; }
+  .fbp-section { padding: 10px; }
+
+  /* Fußdiagramme: Inline-Raster minmax(300px, 1fr) ist breiter als der Platz. */
+  .fbp-section > div[style*="minmax(300px"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Zehen & Nägel: Befund über die volle Breite, darunter Links | Rechts.
+     Die Kopfzeile behält „Links (Zehe 1–5)" / „Rechts (Zehe 1–5)" über den
+     Spalten. th-Breiten (150 px) stehen inline → !important. */
+  .fbp-grid-table:has(.fbp-toe-group),
+  .fbp-grid-table:has(.fbp-toe-group) thead,
+  .fbp-grid-table:has(.fbp-toe-group) tbody { display: block; }
+  .fbp-grid-table:has(.fbp-toe-group) tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+  .fbp-grid-table:has(.fbp-toe-group) th,
+  .fbp-grid-table:has(.fbp-toe-group) td {
+    width: auto !important;
+    padding: 6px 4px;
+    border-bottom: 0;
+  }
+  .fbp-grid-table:has(.fbp-toe-group) thead th:first-child { display: none; }
+  .fbp-grid-table:has(.fbp-toe-group) tbody td:first-child {
+    grid-column: 1 / -1;
+    padding-bottom: 0;
+    font-weight: 600;
+  }
+  .fbp-toe-group { gap: 2px; flex-wrap: wrap; }
+}
