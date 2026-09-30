@@ -17,6 +17,7 @@
 // ============================================================================
 
 import { defaultPositionForHeilmittel, resolvePositionsnummer } from '../billing/codes/physio_positions.js';
+import { berlinHeute, istStichtag } from './berlin-tag.js';
 
 /**
  * Heilmittel-Position auflösen. Bevorzugt eine vom Frontend mitgegebene
@@ -47,9 +48,10 @@ export function heilmittelPositionAufloesen(rezept) {
  * `kostentraeger_auswahl` (db/SCHEMA.sql): echter Datensatz, aktiv, GKV, nicht
  * abgelaufen, bereits gültig (valid_from, Berliner Datum). Ohne das löste der Server auf einen Satz auf, den die Auswahl im
  * Kassenfeld gar nicht anbietet (Testsatz, private Kasse, abgelaufene IK).
- * `heute` nur für Tests.
+ * `heute` = Stichtag (YYYY-MM-DD, Standard Berliner Tag; O-139 — dieselbe
+ * Stichtag-Regel wie ladeAnnahmestelle).
  */
-function kostentraegerAbfrage(supabase, heute = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date())) {
+function kostentraegerAbfrage(supabase, heute = berlinHeute()) {
   return supabase
     .from('kostentraeger')
     .select('ik, abrechnender_kt_ik')
@@ -81,10 +83,10 @@ const MAX_VERWEIS_SPRUENGE = 3;
  * @param {Array<{ik: string, abrechnender_kt_ik?: ?string}>} treffer
  * @returns {Promise<?Set<string>>}
  */
-async function kostentraegerEndzieleAufloesen(supabase, treffer) {
+async function kostentraegerEndzieleAufloesen(supabase, treffer, stichtag) {
   let ziele = new Set(treffer.map(t => t.abrechnender_kt_ik || t.ik));
   for (let sprung = 0; sprung <= MAX_VERWEIS_SPRUENGE; sprung++) {
-    const { data: zeilen, error } = await kostentraegerAbfrage(supabase)
+    const { data: zeilen, error } = await kostentraegerAbfrage(supabase, stichtag)
       .in('ik', [...ziele]);
     if (error) return null;
     const bekannt = new Map((zeilen || []).map(z => [z.ik, z.abrechnender_kt_ik || z.ik]));
@@ -135,23 +137,26 @@ export function kartenIkNormalisieren(roh) {
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {{krankenkasse_ik?: string, krankenkasse?: string}} patient
+ * @param {{stichtag?: string}} [opts]  YYYY-MM-DD; Standard: Berliner Tag
  * @returns {Promise<?string>}
  */
-export async function kostentraegerIkAufloesen(supabase, patient) {
+export async function kostentraegerIkAufloesen(supabase, patient, { stichtag } = {}) {
+  const heute = stichtag ?? berlinHeute();
+  if (!istStichtag(heute)) return null; // kein Raten bei kaputtem Stichtag
   const kartenIk = kartenIkNormalisieren(patient?.krankenkasse_ik);
   if (kartenIk) {
-    const { data: zeile, error } = await kostentraegerAbfrage(supabase)
+    const { data: zeile, error } = await kostentraegerAbfrage(supabase, heute)
       .eq('ik', kartenIk)
       .maybeSingle();
     if (error || !zeile) return null;
-    const ziele = await kostentraegerEndzieleAufloesen(supabase, [zeile]);
+    const ziele = await kostentraegerEndzieleAufloesen(supabase, [zeile], heute);
     return ziele?.size === 1 ? [...ziele][0] : null;
   }
   const name = String(patient?.krankenkasse ?? '').trim();
   if (!name) return null;
-  const { data: treffer, error } = await kostentraegerAbfrage(supabase)
+  const { data: treffer, error } = await kostentraegerAbfrage(supabase, heute)
     .ilike('name', `%${name}%`);
   if (error || !treffer?.length) return null;
-  const ziele = await kostentraegerEndzieleAufloesen(supabase, treffer);
+  const ziele = await kostentraegerEndzieleAufloesen(supabase, treffer, heute);
   return ziele?.size === 1 ? [...ziele][0] : null;
 }

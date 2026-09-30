@@ -29,9 +29,11 @@
 // Bir tablo daha eklemek için TABLES dizisine bir satır eklenir. Doğal anahtar
 // (conflictKeys) tablonun GERÇEK unique kısıtından alınır — uydurulmaz.
 
-import { Client } from 'pg';
+import { pathToFileURL } from 'node:url';
+// `pg` wird erst in main() geladen — so bleiben buildQuery/zukunftSperreSql ohne installiertes
+// pg importierbar (tools/seed-generieren.test.js).
 
-const TABLES = {
+export const TABLES = {
   kostentraeger: {
     columns: ['ik', 'name', 'das_ik', 'payer_type', 'region', 'active', 'valid_from',
       'valid_to', 'updated_at', 'kurzname', 'abrechnender_kt_ik', 'ist_abrechnender_kt',
@@ -50,14 +52,25 @@ const TABLES = {
     // §302'de doğrudan dosya reddi (Abweisung) demektir. Buraya eklendi.
     columns: ['kostentraeger_ik', 'verknuepfungsart', 'partner_ik', 'leistungserbringergruppe',
       'abrechnungscode', 'art_datenlieferung', 'uebermittlungsmedium', 'bundesland', 'quelle',
-      'quelle_stand'],
+      'quelle_stand', 'valid_from', 'valid_to'],
+    // O-139 (Migration 0046): valid_from/valid_to gehören zum Seed, aber ON CONFLICT DO UPDATE
+    // darf valid_from einer bestehenden Zeile NICHT überschreiben — sonst stünde eine heute
+    // gültige Zeile plötzlich mit dem valid_from der Seed-Quelle da (Empfänger weg).
+    // valid_to darf mit: der Seed trägt das Ende, das das Ladewerkzeug gesetzt hat.
+    keepOnConflict: ['valid_from'],
+    // Adim 2: keine Zeile mit valid_from in der Zukunft in eine Migration schreiben, solange
+    // :stable den filternden Leser nicht trägt (onprem O-139).
+    zukunftSperre: 'valid_from',
     conflictKeys: ['kostentraeger_ik', 'verknuepfungsart', 'partner_ik', 'abrechnungscode',
       'art_datenlieferung', 'uebermittlungsmedium', 'bundesland'],
     orderBy: 'kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode, art_datenlieferung, uebermittlungsmedium, bundesland',
   },
   kostentraeger_anschriften: {
-    columns: ['kostentraeger_ik', 'art', 'plz', 'ort', 'strasse', 'quelle', 'quelle_stand'],
+    columns: ['kostentraeger_ik', 'art', 'plz', 'ort', 'strasse', 'quelle', 'quelle_stand',
+      'valid_from', 'valid_to'],
     conflictKeys: ['kostentraeger_ik', 'art', 'plz', 'ort', 'strasse'],
+    keepOnConflict: ['valid_from'], // siehe kostentraeger_annahmestellen
+    zukunftSperre: 'valid_from',
     orderBy: 'kostentraeger_ik, art, plz, ort, strasse',
   },
   // heilmittel_tarif ABSICHTLICH entfernt (13.09.2026, O-96, db-ustasi-Review):
@@ -128,11 +141,16 @@ const TABLES = {
 
 const BATCH_SIZE = 500;
 
-function buildQuery(table, cfg) {
+/** SQL: Anzahl Zeilen mit Spalte > heute (Berlin) — nur für Tabellen mit zukunftSperre. */
+export function zukunftSperreSql(table, spalte) {
+  return `SELECT count(*)::int AS n FROM public.${table} WHERE ${spalte} > (now() AT TIME ZONE 'Europe/Berlin')::date`;
+}
+
+export function buildQuery(table, cfg) {
   const cols = cfg.columns.join(', ');
   const literalCols = cfg.columns.map(() => `%L`).join(',');
   const fmtArgs = cfg.columns.join(', ');
-  const updateCols = cfg.columns.filter((c) => !cfg.conflictKeys.includes(c));
+  const updateCols = cfg.columns.filter((c) => !cfg.conflictKeys.includes(c) && !(cfg.keepOnConflict || []).includes(c));
   const setClause = updateCols.map((c) => `${c}=EXCLUDED.${c}`).join(', ');
   const where = cfg.where ? `WHERE ${cfg.where}` : '';
 
@@ -162,9 +180,17 @@ async function main() {
   }
 
   const cfg = TABLES[tableName];
+  const { Client } = (await import('pg')).default ?? (await import('pg'));
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
+    if (cfg.zukunftSperre) {
+      const { rows: z } = await client.query(zukunftSperreSql(tableName, cfg.zukunftSperre));
+      if (z[0].n > 0) {
+        console.error(`${tableName}: ${z[0].n} Zeile(n) mit ${cfg.zukunftSperre} in der Zukunft — O-139 Adim 2: :stable filtreyi taşımadan önceden yükleme yok. Seed wird nicht erzeugt.`);
+        process.exit(4);
+      }
+    }
     const { rows } = await client.query(buildQuery(tableName, cfg));
     process.stdout.write(rows[0].sql_out + '\n');
     if (cfg.afterSql) process.stdout.write('\n' + cfg.afterSql + '\n');
@@ -173,7 +199,10 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Nur als Skript starten, nicht beim Import (Tests).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

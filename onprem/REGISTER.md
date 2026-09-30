@@ -4461,7 +4461,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Çözüm** | Hüküm **GEÇER, KAYITLA**, dört şartla: **(1)** Ayrı workflow, **tek job**, `permissions: contents: read`, **`npm ci` hiç koşmasın** (zincir yalnız yerel dosya + `node:fs`; bağımlılık kurmamak S-28/O-99 sınıfı riski kökten siler). DB secret'ı yok. **(2)** Telegram token'ı yalnız son `curl` adımının `env:`'inde durur; parse adımı token'ı görmez. Mesaj metni dosya olarak son adıma geçer. **(3)** RSS entry ID / dosya adı Telegram metnine ve shell'e **doğrulanmadan** girmesin: beklenen dosya adı kalıbı dışında kalan (ör. `^[A-Z]{2}[0-9A-Z]{6}_KE[0-9]\.txt$` benzeri, kesin kalıbı mevcut 11 dosya belirler) her giriş yalnız "tanımsız giriş" uyarısı üretir (O-99 yan bulgusu: dışarıdan gelen tarih doğrulanmadan koda enjekte ediliyordu). İndirme yalnız `https://www.gkv-datenaustausch.de/` önekli linklerden yapılır. **(4)** O-130 dersi: tek bir anormal kontrol (ör. U+FFFD) yalnız **o dosyanın** raporunu "incele" diye işaretlesin, diğer yeni dosyaların haberini yutmasın. Ayrıca RSS 3 gün üst üste inmezse "izleyici kör" uyarısı gelsin; sessiz ölüm burada da mümkün |
 | **Durum** | 🟠 **geplant**, uygulayan `builder`. Kapanış ölçütü: workflow indi ve ilk `workflow_dispatch` koşusunda Q4 dosyaları "zaten biliniyor" çıktı (commit no. ile `gelöst`) |
 
-### O-139 — `kostentraeger_annahmestellen` / `_anschriften`'e geçerlilik penceresi: kutuya iki adımda varır 🔴 **offen (konsey öncesi ön görüş)**
+### O-139 — `kostentraeger_annahmestellen` / `_anschriften`'e geçerlilik penceresi: kutuya iki adımda varır 🟠 **geplant — Adım 1 SaaS'ta uygulandı (01.10.2026), commit bekliyor; Adım 3 ayrı karar**
 
 | Alan | İçerik |
 |---|---|
@@ -4470,7 +4470,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | D (şema), `:beta`/`:stable` dağıtım etkisiyle |
 | **Kutuda ne olur** | Doğru kurulursa en büyük kazanç **kutuda**: seed çeyrek başından haftalar önce image ile gelir, kutu 01.x gecesi kimse dokunmadan doğru alıcıya geçer (O-46: kutuda bunu fark edecek kimse yok). **Yanlış sırayla kurulursa** tehlike de kutuda: gelecek tarihli satırlar filtresi olmayan bir okuyucuya ulaşırsa (`:stable` hâlâ eski kodu çalıştırıyorsa) aynı IK için iki sürüm yan yana görünür. O zaman `waehleAnnahmestelle` ya belirsizlikte durur ya da **yeni alıcıyı erken** seçer. Yani filtreyi bilen kod bütün kanallarda canlı olmadan veri gelemez |
 | **Çözüm** | **Expand/contract, üç adım (G7, `SCHEMA-VERTEILUNG.md` disiplini).** **Adım 1 (migration A + kod, aynı image):** `gueltig_von date NULL`, `gueltig_bis date NULL` (adlandırma `heilmittel_tarif` ile aynı olsun, `valid_from/to` değil). NULL = sınırsız, yani mevcut satırların anlamı değişmez. UNIQUE'e `gueltig_von` eklenir. ⚠️ Eski UNIQUE'i düşürmek `ON CONFLICT (eski kolonlar)` kullanan her yazıcıyı kırar. Yazıcılar yalnız merkezde (yükleyici + seed üretici) ve uygulanmış seed'ler yeniden koşmaz; yine de yükleyici ile seed üretici **aynı commit'te** yeni anahtara çekilir. Okuyucu filtresi: `(gueltig_von IS NULL OR gueltig_von <= d) AND (gueltig_bis IS NULL OR gueltig_bis >= d)`, burada `d` **Berlin tarihidir** (`Intl`, UTC değil). Hangi tarih olduğu (dosya oluşturma günü mü, Leistungszeitraum mı) `gkv-302`'nin sorusu, konseyde sorulsun. **Adım 2:** Adım 1'in image'ı `promote-stable.yml` ile `:stable`'a geçene kadar **gelecek tarihli satır yüklenmez**, ne SaaS'a (`--write`) ne seed'e. Bunun mekanik kontrolü: seed üretici, `:stable` etiketinin commit'i filtreyi içermiyorsa gelecek `gueltig_von`'lu satır üretmeyi reddetsin. **Adım 3:** o andan sonra her çeyreğin seed'i önceden gelir; önceki sürümün satırları `gueltig_bis = yeni.gueltig_von - 1` ile kapatılır. Silinen IK'lar da böylece kendiliğinden düşer (yalnız `gueltig_von` tutmak bunu yapamazdı, silinen IK sonsuza kadar geçerli kalırdı). **O-128 şartı:** seed, süresi bir çeyrekten daha önce dolmuş satırları `DELETE` etsin ki tablo her çeyrek büyümesin. **Adım 1 ile Adım 3 aynı sürümde birleştirilmez** |
-| **Durum** | 🔴 **offen**, konsey kararı bekliyor (`db-ustasi` + `gkv-302` + `onprem`). Kapanış ölçütü: Adım 1 image'ı `:stable`'da ve önceden yüklenmiş ilk çeyrek kendiliğinden geçti |
+| **Durum** | 🟠 **geplant.** Konsey 30.09.2026 (Kemal onayı). Adım 1 = `0046` + okuyucu, 01.10.2026'da SaaS'ta (aşağıdaki 01.10 notu). Kolon adları `valid_from/valid_to` oldu, UNIQUE değişmedi. Adım 2 kilidi yükleyicide ve seed üreticide. Adım 3 açık. Kapanış ölçütü: Adım 1 image'ı `:stable`'da ve önceden yüklenmiş ilk çeyrek kendiliğinden geçti |
 
 **O-118'e etkisi:** O-138 "hatırlatan" yarının dış yüzünü kapatır (yeni dosya çıktı haberi).
 İç yüzü hâlâ açık: dosya repoya girip seed yazılmazsa hiçbir şey bağırmıyor
@@ -4519,6 +4519,92 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 > son örneği olmalı; `0046` bildirimi geldiğinde adlandırma (O-139 metni `gueltig_*`
 > öneriyor, `kostentraeger` ana tablosu `valid_from/valid_to` kullanıyor, bildirim de
 > `valid_*` diyor) ve "Adım 1 ile Adım 3 aynı sürümde birleşmez" şartı orada kontrol edilir.
+
+> **01.10.2026 gecesi (Oturum B) — O-139 Adım 1: `0046_kostentraeger_gueltigkeit_annahmestellen.sql`
+> SaaS'a MCP ile uygulandı. Okuyucu, yükleyici ve seed kilidi aynı commit'te (henüz
+> commit'lenmedi, bildirim üzerine kaydedildi).**
+>
+> **Ne geldi (koda karşı doğrulandı):**
+> - Şema: iki tabloya `valid_from date NULL`, `valid_to date NULL`, iki sınır da dahil.
+>   DEFAULT/CHECK/FK yok, **UNIQUE değişmedi**, backfill yok. View `kostentraeger_auswahl`
+>   `CREATE OR REPLACE` ile yenilendi, kolon listesi aynı, `current_date` yerine
+>   `(now() AT TIME ZONE 'Europe/Berlin')::date`. Canlıda 893 → 876 satır: tam 17 süresi
+>   dolmuş IK (0045'in IKK Nordrhein kapanışları), yani view artık doğru sayıyor. Grants ve
+>   COMMENT `CREATE OR REPLACE` ile korunuyor, dosya bilerek onlara dokunmuyor
+> - Okuyucu: `annahmestelle.js:44` `giltAm()`. `ladeAnnahmestelle` (`:171-178`) ve
+>   `ladePapierannahmestelle` (`:297-304`, anschriften `:338`) valid_* kolonlarını seçip JS'te
+>   süzüyor. Stichtag varsayılanı `lib/berlin-tag.js` `berlinHeute()` (`Intl`, DST'ye
+>   dayanıklı). Bozuk Stichtag hata fırlatmıyor, `{ok:false}` dönüyor. `lib/rezept-felder.js:143`
+>   aynı kurala çekildi. Çağıranların hiçbiri (`abrechnung.routes.js:281, 643, 758, 2883,
+>   3181, 3897`, `server.js:2630, 2836`) bugün `stichtag` vermiyor, yani fiilen "Berlin bugünü"
+>   kullanılıyor. Rechnungsdatum mu, Übermittlungstag mı sorusu `gkv-302`'nin, burada değil
+> - Yükleyici: `tools/kostentraeger-annahmestellen-laden.mjs` artık **silmiyor**. Yeni anahtar
+>   INSERT edilir (`valid_from` = gültig-ab). Kalan anahtar UPDATE edilir (`valid_from`'a
+>   dokunulmaz). Düşen anahtara PATCH ile `valid_to` = gültig-ab − 1 yazılır. Geri dönen
+>   anahtarda `valid_to = NULL` olur. `--write` + gelecek Stichtag → exit 4 (Adım-2 kilidi,
+>   `adim2Sperre`)
+> - Seed üretici: `tools/seed-generieren.mjs` iki tabloya `valid_from/valid_to` ekledi.
+>   `keepOnConflict: ['valid_from']` kutudaki mevcut satırın başlangıcını ezmez.
+>   `zukunftSperre`: kaynakta `valid_from > Berlin bugünü` olan satır varsa exit 4, seed
+>   üretilmez
+>
+> **Adlandırma: `valid_*` kabul, O-139'daki `gueltig_*` önerisi geri çekildi.** Gerekçe
+> doğru: aynı zincirin ana tablosu `kostentraeger.valid_from/valid_to` kullanıyor, okuyucu ve
+> view aynı ifadeyi üç tabloda tekrarlıyor. Tek ad ailesi, `heilmittel_tarif` ile uyumdan
+> daha değerli (o tablo seed'den bilerek çıkarıldı, O-96, ortak kodu yok).
+>
+> **UNIQUE'in değişmemesi: kabul, ama Adım 3'ün tasarımını değiştiriyor.** O-139'un özgün
+> planı `gueltig_von`'u UNIQUE'e ekleyip aynı anahtarın iki sürümünü yan yana tutmaktı.
+> Seçilen model şu: "bir anahtar = en çok bir kesintisiz pencere; kapat, silme". Bu modelde
+> **önceden yükleme şunları taşıyabilir:** yeni anahtar (gelecek `valid_from`) ve düşen anahtar
+> (gelecek `valid_to`). **Taşıyamaz:** aynı anahtarın içeriği değişirse (ör.
+> `leistungserbringergruppe`, `quelle` ya da `anschriften`'te UNIQUE dışı bir kolon), UPDATE
+> bunu **hemen** yazar, çeyrek başını beklemez. Q4/2026'da böyle bir değişiklik yoktu
+> (AOK Bayern değişimi `partner_ik` üzerinden oldu, yani yeni anahtar). Adım 3 tasarlanırken
+> bu ya kabul edilir ya da yükleyici o durumda değişikliği ertelemeli. Migration dosyası bunu
+> zaten söylüyor ("Expand/Contract des Schluessels ... dann Adim 3, eigene Migration"). Yani
+> Adım 1'de UNIQUE'e dokunmamak doğru. Eski UNIQUE'i düşürme riski (`ON CONFLICT` kullanan
+> yazıcılar, 0045'in anahtarları) böylece hiç doğmadı.
+>
+> **Sıra ve dağıtım kontrolü:**
+> - Kutu: `0045` → `0046` dosya adı sırasıyla koşar (`migrate.js:103-121` küme farkı
+>   kullanıyor), `0047`'yi almış kutuda da. `0045` veri, `0046` DDL, ortak anahtar yok.
+>   0045'in DELETE'i 0046'dan önce koştuğu için kutuda ilk sürümde kapanmış satır hiç oluşmaz
+> - SaaS: `migrate.js` SaaS'ta koşmuyor (`migrations/README.md:118-133`). Yani dosya
+>   başlığındaki commit-öncesi değişiklik ("SaaS: angewandt") hiçbir checksum'ı kırmaz. Dosya
+>   henüz hiçbir image'da değil, kutu defterine ilk kez **son hâliyle** girecek
+> - Okuyucu ile veri aynı image'da gidiyor: kutuda `0046`'yı ya da ondan sonraki bir seed'i
+>   taşıyan her image filtreli okuyucuyu da taşır. Adım-2 kilidi bunun üstüne ikinci emniyet
+>   (geri alma senaryosu: eski image + yeni DB). ⚠️ Kilit yalnız **gelecek `valid_from`**'u
+>   tutuyor. Simetrik tehlike olan **geçmiş `valid_to`'lu kapanmış satır** kilide takılmıyor,
+>   filtresiz eski okuyucu kapanmış satırı da görür. Bugün sorun değil: SaaS'ta henüz kapanmış
+>   satır yok (0045 silme yoluyla geçti), kutuda da yok. Ama **SaaS'ta bu commit push edilip
+>   yeni backend ayağa kalkmadan `laden.mjs --write` koşulmamalı**. Şu an SaaS'ta 0046
+>   uygulanmış DB'ye karşı **eski** backend (filtresiz okuyucu) çalışıyor
+> - İkinci okuyucu: `module/abrechnung-einstellungen.js:650` (`_loeseEmpfaengerNameAuf`)
+>   `partner_ik`'ten ad çözüyor, valid_* süzmüyor. **unkritisch**: yalnız görüntülenen ad,
+>   kendi yorumu "kein Sperrgrund" diyor, `limit(1)`. Kapanmış bir satır en kötü ihtimalle
+>   eski kasanın adını gösterir, alıcıyı değiştirmez
+>
+> **O-128 şartı bilerek düştü:** "süresi bir çeyrekten önce dolmuş satırları DELETE et"
+> şartı DELETE'siz modelde uygulanmadı. Tablo yalnız düşen anahtar kadar büyüyor (Q4/2026:
+> 18 IK), yani yavaş. Açık bırakıldı, Adım 3 ile birlikte karar verilecek.
+>
+> **Şartlar (commit'e kadar):**
+> 1. `0046` dosyası çalışma ağacında **staged sürümünden farklı** (`git status` → `AM`):
+>    "SaaS: angewandt 01.10.2026" satırı stage'de değil. Commit öncesi yeniden `git add`
+> 2. `db/SCHEMA.sql` + `db/SCHEMA-RLS.sql` 0046 künyesiyle tazelenmiş ama **stage'de değil**
+>    (` M`). CLAUDE.md kuralı gereği aynı commit'e girmeli
+> 3. `erwartete-zaehler.json` `_hinweis_0046` kendi içinde çelişiyor: "bis_version ohne neue
+>    Messung hochgezogen" ile "bis_version bleibt 0047" aynı metinde. İkincisi doğru, birincisi
+>    `_hinweis_0044`'ten kopya kalmış. Silinmeli
+> 4. Sürüm: `0045` + `0046`'yı taşıyan sürüm **MINOR** olur (`RELEASE-STANDARD.md:90`, PATCH
+>    migration içeremez). `0045` önce girdi (`adb6f91`), `0046` onunla aynı ya da sonraki
+>    image'da. 01.10 notunun 3. şartı karşılandı
+> 5. **Adım 3 ayrı sürümde**, ancak Adım 1'in image'ı `promote-stable.yml` ile `:stable`'a
+>    geçtikten sonra (O-139 özgün metni, değişmedi)
+>
+> G1/G2/G3/G8: hiçbiri tetiklenmiyor (kamu verisi, sır yok, dış çağrı yok, yeni zincir yok).
 
 ### O-140 — Nominatim çağrısı: (a) CSP açma ve (b) sunucuya taşıma reddedildi, (c) çağrıyı kaldır + konumu cihazdan al 🟠 **geplant (hüküm: DUR a/b, GEÇER c)**
 

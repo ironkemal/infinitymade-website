@@ -1,7 +1,7 @@
 // Umschaltlogik Q3 -> Q4 (W-01 #10/#11): Datum entscheidet, nichts wird hart gelöscht.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { waehleAusgaben, planKostentraeger, planKind, besteJeIk, tagDavor, vdtZuIso, VKG_SCHLUESSEL } from './lade-plan.js';
+import { waehleAusgaben, planKostentraeger, planKind, besteJeIk, tagDavor, vdtZuIso, sollZeilen, adim2Sperre, VKG_SCHLUESSEL, ANS_SCHLUESSEL } from './lade-plan.js';
 
 const AUSGABEN = [
   { datei: 'AO05Q326_KE3.txt', gueltigAb: '2026-07-27' },
@@ -75,16 +75,86 @@ test('neue IK wird eingefügt, valid_from aus der Datei; bestehende bekommt kein
   assert.ok(!p.patches.some(x => 'valid_from' in x.patch));
 });
 
-test('planKind: Stichtagsstand — neu einfügen, veraltete Zeilen bekannter IK löschen, entfallene IK stehen lassen', () => {
-  const z = (ik, partner, id, quelle = 'AO05Q326_KE3.txt') => ({ id, kostentraeger_ik: ik, verknuepfungsart: '09', partner_ik: partner, abrechnungscode: '71', art_datenlieferung: '28', uebermittlungsmedium: '6', bundesland: '', leistungserbringergruppe: '', quelle, quelle_stand: '2026-07-27' });
-  const dbZeilen = [z('108310400', '108916709', 1), z('108310400', '108910008', 2, 'X'), z('108916709', '108916709', 3)];
-  const soll = new Map([[
-    VKG_SCHLUESSEL.map(f => ({ kostentraeger_ik: '108310400', verknuepfungsart: '09', partner_ik: '108910008', abrechnungscode: '71', art_datenlieferung: '28', uebermittlungsmedium: '6', bundesland: '' }[f])).join('|'),
-    { ...z('108310400', '108910008', undefined, 'AO05Q426_KE0.txt'), quelle_stand: '2026-10-01' },
-  ]]);
-  const p = planKind({ dbZeilen, soll, felder: VKG_SCHLUESSEL, vergleich: ['quelle', 'quelle_stand', 'leistungserbringergruppe'] });
-  assert.deepEqual(p.deletes.map(d => d.id), [1]); // alter Partner weg
-  assert.equal(p.updates.length, 1);              // Bestand bekommt neue Quelle
+const vkgDb = (ik, partner, id, extra = {}) => ({ id, kostentraeger_ik: ik, verknuepfungsart: '09', partner_ik: partner, abrechnungscode: '71', art_datenlieferung: '28', uebermittlungsmedium: '6', bundesland: '', leistungserbringergruppe: '', quelle: 'AO05Q326_KE3.txt', quelle_stand: '2026-07-27', valid_from: null, valid_to: null, ...extra });
+const vkgSoll = (ik, partner, extra = {}) => {
+  const z = { kostentraeger_ik: ik, verknuepfungsart: '09', partner_ik: partner, abrechnungscode: '71', art_datenlieferung: '28', uebermittlungsmedium: '6', bundesland: '', leistungserbringergruppe: '', quelle: 'AO05Q426_KE0.txt', quelle_stand: '2026-10-01', valid_from: '2026-10-01', ...extra };
+  return [VKG_SCHLUESSEL.map(f => z[f]).join('|'), z];
+};
+const VERGLEICH = ['quelle', 'quelle_stand', 'leistungserbringergruppe'];
+
+test('planKind Q3->Q4: veralteter Schlüssel wird NICHT gelöscht, sondern bekommt valid_to = Tag vor gültig-ab', () => {
+  const dbZeilen = [vkgDb('108310400', '108916709', 1), vkgDb('108310400', '108910008', 2, { quelle: 'X' }), vkgDb('108916709', '108916709', 3)];
+  const soll = new Map([vkgSoll('108310400', '108910008')]);
+  const p = planKind({ dbZeilen, soll, felder: VKG_SCHLUESSEL, vergleich: VERGLEICH });
+  assert.deepEqual(p.closes, [{ id: 1, valid_to: '2026-09-30' }]); // alter Partner
   assert.equal(p.inserts.length, 0);
-  assert.ok(!p.deletes.some(d => d.id === 3), 'Zeile der entfallenen IK bleibt (kein Leser erreicht sie, Historie)');
+  assert.equal(p.updates.length, 1); // Bestand bekommt neue Quelle
+  assert.ok(!p.closes.some(c => c.id === 3), 'Zeile der entfallenen IK bleibt unberührt');
+  assert.ok(!('deletes' in p), 'es gibt keinen DELETE-Pfad mehr');
+});
+
+test('planKind: valid_from geht NICHT in den Update-Payload (sonst heute ohne Empfänger)', () => {
+  const dbZeilen = [vkgDb('108310400', '108910008', 2, { quelle: 'X' })];
+  const soll = new Map([vkgSoll('108310400', '108910008')]);
+  const p = planKind({ dbZeilen, soll, felder: VKG_SCHLUESSEL, vergleich: VERGLEICH });
+  assert.equal(p.updates.length, 1);
+  assert.ok(!('valid_from' in p.updates[0]), 'valid_from nie im Update');
+  assert.ok(!('valid_to' in p.updates[0]), 'valid_to nur bei reopen');
+  assert.equal(p.updates[0].quelle_stand, '2026-10-01');
+});
+
+test('planKind: neuer Schlüssel wird mit valid_from = gültig-ab eingefügt (ohne valid_to)', () => {
+  const soll = new Map([vkgSoll('108310400', '108910008')]);
+  const p = planKind({ dbZeilen: [vkgDb('108310400', '108916709', 1)], soll, felder: VKG_SCHLUESSEL, vergleich: VERGLEICH });
+  assert.equal(p.inserts.length, 1);
+  assert.equal(p.inserts[0].valid_from, '2026-10-01');
+  assert.ok(!('valid_to' in p.inserts[0]));
+});
+
+test('planKind: geschlossener Schlüssel kehrt zurück -> valid_to = NULL, weiterhin ohne valid_from', () => {
+  const dbZeilen = [vkgDb('108310400', '108910008', 2, { valid_to: '2026-06-30' })];
+  const soll = new Map([vkgSoll('108310400', '108910008', { quelle: 'AO05Q326_KE3.txt', quelle_stand: '2026-07-27' })]);
+  const p = planKind({ dbZeilen, soll, felder: VKG_SCHLUESSEL, vergleich: VERGLEICH });
+  assert.equal(p.reopens.length, 1);
+  assert.equal(p.reopens[0].valid_to, null);
+  assert.ok(!('valid_from' in p.reopens[0]));
+  assert.equal(p.updates.length, 0);
+  assert.equal(p.closes.length, 0);
+});
+
+test('planKind: bereits früher geschlossene Zeile wird nicht verlängert oder erneut angefasst', () => {
+  const dbZeilen = [vkgDb('108310400', '108916709', 1, { valid_to: '2026-06-30' }), vkgDb('108310400', '108916710', 5, { valid_to: '2026-09-30' })];
+  const soll = new Map([vkgSoll('108310400', '108910008')]);
+  const p = planKind({ dbZeilen, soll, felder: VKG_SCHLUESSEL, vergleich: VERGLEICH });
+  assert.equal(p.closes.length, 0, 'valid_to <= neuer Endtag bleibt');
+});
+
+test('planKind: ein späteres valid_to (nach dem neuen Endtag) wird auf den Endtag gekürzt', () => {
+  const dbZeilen = [vkgDb('108310400', '108916709', 1, { valid_to: '2026-12-31' })];
+  const soll = new Map([vkgSoll('108310400', '108910008')]);
+  const p = planKind({ dbZeilen, soll, felder: VKG_SCHLUESSEL, vergleich: VERGLEICH });
+  assert.deepEqual(p.closes, [{ id: 1, valid_to: '2026-09-30' }]);
+});
+
+test('planKind: Anschriften laufen über denselben Pfad (ANS_SCHLUESSEL)', () => {
+  const ansDb = (id, plz, extra = {}) => ({ id, kostentraeger_ik: '108310400', art: '1', plz, ort: 'X', strasse: 'S', quelle: 'AO05Q326_KE3.txt', quelle_stand: '2026-07-27', valid_from: null, valid_to: null, ...extra });
+  const neu = { kostentraeger_ik: '108310400', art: '1', plz: '22222', ort: 'X', strasse: 'S', quelle: 'AO05Q426_KE0.txt', quelle_stand: '2026-10-01', valid_from: '2026-10-01' };
+  const soll = new Map([[ANS_SCHLUESSEL.map(f => neu[f]).join('|'), neu]]);
+  const p = planKind({ dbZeilen: [ansDb(1, '11111')], soll, felder: ANS_SCHLUESSEL, vergleich: ['quelle', 'quelle_stand'] });
+  assert.equal(p.inserts.length, 1);
+  assert.deepEqual(p.closes, [{ id: 1, valid_to: '2026-09-30' }]);
+});
+
+test('sollZeilen: Sollzeilen tragen valid_from = gültig-ab der Ausgabe (nur für INSERT)', () => {
+  const ausgabe = { datei: 'AO05Q426_KE0.txt', gueltigAb: '2026-10-01' };
+  const records = [{ ik: '111', datenannahmestellen: [{ verknuepfungsart: '03', partner_ik: '222', abrechnungscode: '71', art_datenlieferung: '07' }], anschriften: [{ art: '1', plz: '1', ort: 'o', strasse: 's' }] }];
+  const { vkg, ans } = sollZeilen([{ ausgabe, records }]);
+  assert.equal([...vkg.values()][0].valid_from, '2026-10-01');
+  assert.equal([...ans.values()][0].valid_from, '2026-10-01');
+});
+
+test('adim2Sperre: Stichtag nach heute wird verweigert, heute/Vergangenheit erlaubt', () => {
+  assert.match(adim2Sperre('2026-10-01', '2026-09-30'), /O-139 Adim 2/);
+  assert.equal(adim2Sperre('2026-09-30', '2026-09-30'), null);
+  assert.equal(adim2Sperre('2026-01-01', '2026-09-30'), null);
 });

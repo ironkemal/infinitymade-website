@@ -567,3 +567,99 @@ test('L4: die Adresse wird zur Partner-IK geholt, nicht zur Kostentraeger-IK', a
   assert.equal(adressAufruf.feld, 'kostentraeger_ik');
   assert.equal(adressAufruf.wert, '661430035', 'Abfrage muss mit partnerIk laufen, NICHT mit kostentraegerIk (100000001)');
 });
+
+// ── Gültigkeitsfenster + Stichtag (O-139, Migration 0046) ────────────────────
+
+import { ladeAnnahmestelle, giltAm } from './annahmestelle.js';
+
+const vkgRoh = (partner, opt = {}) => ({
+  kostentraeger_ik: '108310400', partner_ik: partner, verknuepfungsart: opt.va ?? '03',
+  abrechnungscode: opt.code ?? '71', art_datenlieferung: opt.adl ?? '07', bundesland: '',
+  quelle: 'AO05Q326_KE3.txt', valid_from: opt.von ?? null, valid_to: opt.bis ?? null,
+});
+const ktNamen = [
+  { ik: 'ALT000001', name: 'Alte Annahmestelle' },
+  { ik: 'NEU000001', name: 'Neue Annahmestelle' },
+];
+const OPT = { kostentraegerIk: '108310400', bereich: 'podologie', eigenerAbrechnungscode: '71' };
+
+test('giltAm: NULL = offen, Grenzen inklusive', () => {
+  assert.equal(giltAm({}, '2026-10-01'), true);
+  assert.equal(giltAm({ valid_from: null, valid_to: null }, '2026-10-01'), true);
+  assert.equal(giltAm({ valid_to: '2026-09-30' }, '2026-09-30'), true);
+  assert.equal(giltAm({ valid_to: '2026-09-30' }, '2026-10-01'), false);
+  assert.equal(giltAm({ valid_from: '2026-10-01' }, '2026-09-30'), false);
+  assert.equal(giltAm({ valid_from: '2026-10-01' }, '2026-10-01'), true);
+});
+
+test('ST1: Quartalswechsel — 30.09. alter Empfänger, 01.10. neuer (gleiche Zeilen in der DB)', async () => {
+  const annahmestellen = [
+    vkgRoh('ALT000001', { bis: '2026-09-30' }),
+    vkgRoh('NEU000001', { von: '2026-10-01' }),
+  ];
+  const supabase = erzeugeMockSupabase({ annahmestellen, kostentraeger: ktNamen });
+  const alt = await ladeAnnahmestelle(supabase, { ...OPT, stichtag: '2026-09-30' });
+  const neu = await ladeAnnahmestelle(supabase, { ...OPT, stichtag: '2026-10-01' });
+  assert.equal(alt.ok, true); assert.equal(alt.ik, 'ALT000001');
+  assert.equal(alt.treffer.kandidaten, 1, 'nur EIN Kandidat am Stichtag — kein Zufall mehr');
+  assert.equal(neu.ok, true); assert.equal(neu.ik, 'NEU000001');
+  assert.equal(neu.treffer.kandidaten, 1);
+});
+
+test('ST2: Zeilen ohne valid_from/valid_to (Bestand) gelten immer', async () => {
+  const supabase = erzeugeMockSupabase({ annahmestellen: [vkgRoh('ALT000001')], kostentraeger: ktNamen });
+  const r = await ladeAnnahmestelle(supabase, { ...OPT, stichtag: '2031-01-01' });
+  assert.equal(r.ok, true);
+  assert.equal(r.ik, 'ALT000001');
+});
+
+test('ST3: nur noch nicht gültige Zeile -> nicht auflösbar (kein Rückfall auf die Zukunft)', async () => {
+  const supabase = erzeugeMockSupabase({ annahmestellen: [vkgRoh('NEU000001', { von: '2026-10-01' })], kostentraeger: ktNamen });
+  const r = await ladeAnnahmestelle(supabase, { ...OPT, stichtag: '2026-09-30' });
+  assert.equal(r.ok, false);
+});
+
+test('ST4: ohne Stichtag gilt der Berliner Tag', async () => {
+  const supabase = erzeugeMockSupabase({
+    annahmestellen: [vkgRoh('ALT000001', { bis: '2000-01-01' }), vkgRoh('NEU000001', { von: '2000-01-02' })],
+    kostentraeger: ktNamen,
+  });
+  const r = await ladeAnnahmestelle(supabase, OPT);
+  assert.equal(r.ik, 'NEU000001');
+});
+
+test('ST5: kaputter Stichtag -> ok:false, kein DB-Zugriff', async () => {
+  const supabase = erzeugeMockSupabase({ annahmestellen: [vkgRoh('ALT000001')], kostentraeger: ktNamen });
+  const r = await ladeAnnahmestelle(supabase, { ...OPT, stichtag: 'gestern' });
+  assert.equal(r.ok, false);
+  assert.equal(supabase.aufrufe.length, 0);
+});
+
+test('ST6: Papierannahmestelle und ihre Anschrift folgen demselben Stichtag wie die DTA-Annahmestelle', async () => {
+  const annahmestellen = [
+    vkgRoh('ALT000001', { va: '09', adl: '28', bis: '2026-09-30' }),
+    vkgRoh('NEU000001', { va: '09', adl: '28', von: '2026-10-01' }),
+  ];
+  const anschriften = [
+    { kostentraeger_ik: 'ALT000001', art: '1', plz: '11111', ort: 'Altstadt', strasse: 'Alt 1', valid_to: '2026-09-30', valid_from: null },
+    { kostentraeger_ik: 'NEU000001', art: '1', plz: '22222', ort: 'Neustadt', strasse: 'Neu 2', valid_from: '2026-10-01', valid_to: null },
+  ];
+  const supabase = erzeugeMockSupabase({ annahmestellen, kostentraeger: ktNamen, anschriften });
+  const alt = await ladePapierannahmestelle(supabase, { ...OPT, stichtag: '2026-09-30' });
+  const neu = await ladePapierannahmestelle(supabase, { ...OPT, stichtag: '2026-10-01' });
+  assert.equal(alt.ik, 'ALT000001');
+  assert.deepEqual(alt.anschrift, { art: '1', plz: '11111', ort: 'Altstadt', strasse: 'Alt 1' });
+  assert.equal(neu.ik, 'NEU000001');
+  assert.deepEqual(neu.anschrift, { art: '1', plz: '22222', ort: 'Neustadt', strasse: 'Neu 2' });
+});
+
+test('ST7: Anschrift-Fenster wirkt einzeln — am 30.09. fällt die neue Hausanschrift weg, Postfach bleibt', async () => {
+  const annahmestellen = [vkgRoh('NEU000001', { va: '09', adl: '28' })];
+  const anschriften = [
+    { kostentraeger_ik: 'NEU000001', art: '1', plz: '22222', ort: 'Neustadt', strasse: 'Neu 2', valid_from: '2026-10-01', valid_to: null },
+    { kostentraeger_ik: 'NEU000001', art: '2', plz: '33333', ort: 'Postfach', strasse: '', valid_from: null, valid_to: null },
+  ];
+  const supabase = erzeugeMockSupabase({ annahmestellen, kostentraeger: ktNamen, anschriften });
+  const r = await ladePapierannahmestelle(supabase, { ...OPT, stichtag: '2026-09-30' });
+  assert.equal(r.anschrift.art, '2');
+});

@@ -1,7 +1,20 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-30 — Nachtrag: 0047_anamnese_fachbereich_
+-- ERZEUGT AM:        2026-10-01 — Nachtrag: 0046_kostentraeger_gueltigkeit_
+--                    annahmestellen im SaaS angewendet (MCP, O-139 Adim 1,
+--                    Freigabe Kemal 30.09.2026): kostentraeger_annahmestellen
+--                    und kostentraeger_anschriften je +valid_from/+valid_to
+--                    (date, nullable, NULL = offen, kein Backfill; UNIQUE
+--                    unveraendert). Sicht kostentraeger_auswahl ersetzt:
+--                    Stichtag = Berliner Tag statt current_date (UTC), EXISTS
+--                    nur ueber am Berliner Tag gueltige Annahmestellen. Live
+--                    nach 0046: 876 Zeilen (vorher 893 — die 17 am 30.09.2026
+--                    ausgelaufenen GKV-IK, die die UTC-Sicht bis 02:00 Berlin
+--                    noch zeigte). 0045 (Box-Seed Q4/2026) = reine Daten, im
+--                    SaaS nicht angewendet. Letzte Migration: 0047 (hoechste
+--                    Nummer; 0045/0046 nachgetragen).
+--                    davor: 2026-09-30 — Nachtrag: 0047_anamnese_fachbereich_
 --                    versionierung im SaaS angewendet (MCP, Oturum C) und vorher
 --                    in einer ROLLBACK-Transaktion gegen die Live-DB getestet
 --                    (Versionierung, Kiosk ungeprueft, UPDATE-Sperre, ON DELETE
@@ -2022,6 +2035,8 @@ CREATE TABLE kostentraeger_annahmestellen (
   quelle text
   quelle_stand date
   updated_at timestamptz DEFAULT now()
+  valid_from date                               -- 0046: erster gueltiger Tag (inkl.), NULL = offen
+  valid_to date                                 -- 0046: letzter gueltiger Tag (inkl.), NULL = offen
 );
 --   PK (id) · FK kostentraeger_ik -> kostentraeger(ik) ON DELETE CASCADE
 --   UNIQUE (kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode,
@@ -2086,6 +2101,8 @@ CREATE TABLE kostentraeger_anschriften (
   quelle text
   quelle_stand date
   updated_at timestamptz NOT NULL DEFAULT now()
+  valid_from date                               -- 0046: erster gueltiger Tag (inkl.), NULL = offen
+  valid_to date                                 -- 0046: letzter gueltiger Tag (inkl.), NULL = offen
 );
 --   CHECK art IN (1, 2, 3)
 --   FK kostentraeger_ik -> kostentraeger(ik) ON DELETE CASCADE
@@ -3436,12 +3453,19 @@ CREATE VIEW kostentraeger_auswahl WITH (security_invoker = true) AS
   WHERE kt.datensatz_status = 'echt'
     AND kt.active IS TRUE
     AND kt.payer_type = 'gkv'
-    AND (kt.valid_to IS NULL OR kt.valid_to >= current_date)
+    AND (kt.valid_to IS NULL
+         OR kt.valid_to >= (now() AT TIME ZONE 'Europe/Berlin')::date)
     AND (kt.abrechnender_kt_ik IS NOT NULL
          OR EXISTS (SELECT 1 FROM kostentraeger_annahmestellen ka
-                     WHERE ka.kostentraeger_ik = kt.ik));
+                     WHERE ka.kostentraeger_ik = kt.ik
+                       AND (ka.valid_from IS NULL OR ka.valid_from <= (now() AT TIME ZONE 'Europe/Berlin')::date)
+                       AND (ka.valid_to   IS NULL OR ka.valid_to   >= (now() AT TIME ZONE 'Europe/Berlin')::date)));
 --   Ops #300 — Auswahlsicht für die IK-Suche im Kassenfeld (0040_kostentraeger_auswahl_view.sql).
 --   security_invoker, REVOKE ALL inkl. service_role, GRANT SELECT nur authenticated (siehe SCHEMA-RLS.sql).
 --   ✅ Im SaaS angewendet 27.09.2026 (MCP), 893 Zeilen verifiziert.
+--   ✅ 01.10.2026 durch 0046 ersetzt (CREATE OR REPLACE, Spalten/Grants/COMMENT
+--      unveraendert): Berliner Tag statt current_date, nur gueltige Annahmestellen. 876 Zeilen.
+--   ⚠️ offen: kt.valid_from <= Stichtag fehlt noch (Backend kostentraegerAbfrage hat es) —
+--      eigene Migration, gkv-302/db-ustasi.
 
 -- geometry_columns, geography_columns → PostGIS-Systemviews, hier ausgelassen.

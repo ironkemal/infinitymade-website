@@ -305,3 +305,23 @@ test('valid_from in der Zukunft: Satz wird nicht aufgelöst; valid_from in der V
   assert.equal(await kostentraegerIkAufloesen(stub, { krankenkasse_ik: '102222222' }), '102222222');
   assert.equal(await kostentraegerIkAufloesen(stub, { krankenkasse_ik: '103333333' }), '103333333');
 });
+
+// ── Stichtag (O-139): dieselbe Tageslogik wie ladeAnnahmestelle ───────────────
+
+test('kostentraegerIkAufloesen: expliziter Stichtag steuert valid_from/valid_to (30.09. alt, 01.10. neu)', async () => {
+  const zeilen = [
+    { name: 'Alt-Kasse', ik: '111111111', valid_to: '2026-09-30' },
+    { name: 'Neu-Kasse', ik: '222222222', valid_from: '2026-10-01' },
+  ];
+  const patAlt = { krankenkasse_ik: '111111111' };
+  const patNeu = { krankenkasse_ik: '222222222' };
+  assert.equal(await kostentraegerIkAufloesen(makeSupabaseStub(zeilen), patAlt, { stichtag: '2026-09-30' }), '111111111');
+  assert.equal(await kostentraegerIkAufloesen(makeSupabaseStub(zeilen), patAlt, { stichtag: '2026-10-01' }), null);
+  assert.equal(await kostentraegerIkAufloesen(makeSupabaseStub(zeilen), patNeu, { stichtag: '2026-09-30' }), null);
+  assert.equal(await kostentraegerIkAufloesen(makeSupabaseStub(zeilen), patNeu, { stichtag: '2026-10-01' }), '222222222');
+});
+
+test('kostentraegerIkAufloesen: kaputter Stichtag -> null (kein Raten)', async () => {
+  const supabase = makeSupabaseStub([{ name: 'X', ik: '111111111' }]);
+  assert.equal(await kostentraegerIkAufloesen(supabase, { krankenkasse_ik: '111111111' }, { stichtag: '2026-13-40' }), null);
+});

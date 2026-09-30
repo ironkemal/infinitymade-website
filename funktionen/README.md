@@ -116,6 +116,24 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 01.10.2026 · Oturum B — Berlin günü tek kaynak (O-139, Annahmestelle Stichtag)
+- `berlinHeute(jetzt?)`, `istStichtag(s)` (neu `api-backend/lib/berlin-tag.js` + test). Niye: Stichtag = Rechnungsdatum =
+  Übermittlungstag; UTC `current_date` / `toISOString().slice(0,10)` 00:00–02:00 Berlin arası bir gün geride kalıyordu →
+  çeyrek geçişinde (01.10) dosya eski Annahmestelle'ye gidebilirdi. Nerede: `billing/kostentraeger/annahmestelle.js`
+  (valid_from/valid_to filtresi), `lib/rezept-felder.js`, `tools/kostentraeger-annahmestellen-laden.mjs`.
+  `tools/seed-generieren.mjs` aynı kuralı SQL'de uyguluyor (`zukunftSperreSql`: `(now() AT TIME ZONE 'Europe/Berlin')::date`,
+  Adım-2 kilidi: gelecek tarihli valid_from reddi) — JS yardımcısını import etmiyor, bilinçli.
+- **Kopya kontrolü (fonksiyon-ustasi 01.10, birleştirilmedi — karar kullanıcının):**
+  - 🟡 `tools/kostentraeger-check.mjs` stichtag varsayılanı `Intl.DateTimeFormat('en-CA', Europe/Berlin)` inline —
+    `berlinHeute()`'nin birebir kopyası, aynı Kostenträger alanında. En ucuz birleştirme adayı.
+  - 🟡 Frontend (backend modülünü import edemez, ayrı katman): `heilmittel-fristen.js` `berlinTag(datum)`;
+    inline `toLocaleDateString('sv-SE', Europe/Berlin)` → `podo-behandlungen-oeffnen.js` (2×), `podo-einheiten.js` `heute`,
+    `podo-geplant.js` `tag`, `termin-heute.js`. Aynı iş, beş yer; ortak yeri `module/datum.js` olurdu.
+  - 🔴 **Kural farkı:** `verordnung-pruefung.js` `heuteIso()` ve `module/datum.js` `alsISODatum()` Berlin değil
+    **tarayıcı yerel saati** kullanıyor. Almanya'daki cihazda aynı sonuç; farklı saat dilimli cihazda ayrışır.
+  - Kopya değil: `server.js` `berlinOffsetMin()` gün değil dakika-ofseti döndürür (slot hesabı);
+    `belegliste/helper.js`, `warteliste.routes.js` tarih+saat/hafta günü biçimliyor, başka iş.
+
 ### 30.09.2026 · Migration 0047 canlı (a990014), ön yüz push 30.09 akşam — Anamnese je Fachbereich, append-only, Risiko-Rozets
 Kemal kararı: Anamnese Fachbereich'e özgü (podo 20 alan — podoloji kararı; physio mevcut; ergo/logo taslak).
 Commit edilmedi; B'nin anamnese migration'ı (`ist_aktuell`, `fachbereich`, `version`, `felder` …) bekleniyor,

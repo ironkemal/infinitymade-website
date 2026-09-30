@@ -1,7 +1,15 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-30 — Nachtrag: 0047_anamnese_fachbereich_
+-- ERZEUGT AM:        2026-10-01 — Nachtrag: 0046_kostentraeger_gueltigkeit_
+--                    annahmestellen im SaaS angewendet (MCP). Fuer DIESE Datei
+--                    fast eine NULL-Aenderung: +4 nullable Spalten ohne
+--                    Constraint (kein Index/Trigger), Sicht kostentraeger_
+--                    auswahl per CREATE OR REPLACE ersetzt — Grants (nur
+--                    authenticated SELECT) und COMMENT live nachgeprueft
+--                    unveraendert. Keine Policy/Funktion/Trigger/Index.
+--                    0045 = reine Box-Daten, im SaaS nicht angewendet.
+--                    davor: 2026-09-30 — Nachtrag: 0047_anamnese_fachbereich_
 --                    versionierung im SaaS angewendet (MCP, Oturum C).
 --                    +2 Funktionen (anamnese_versionieren, anamnese_
 --                    unveraenderlich, beide SET search_path, EXECUTE fuer
@@ -991,6 +999,7 @@
 --   REVOKE ALL FROM PUBLIC, anon, authenticated, service_role; GRANT SELECT nur an
 --   authenticated. service_role bewusst ausgeschlossen (umgeht sonst die RLS von
 --   kostentraeger via die Sicht) — Details: db/REGISTER.md.
+--   01.10.2026 (0046): CREATE OR REPLACE — Grants bleiben erhalten (live geprueft).
 
 -- invoices
 --   owner_and_employee_invoices [ALL] owner + Team

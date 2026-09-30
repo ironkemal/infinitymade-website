@@ -7,12 +7,21 @@
 //    (lib/rezept-felder.js) und der View kostentraeger_auswahl datumsbewusst
 //    gefiltert → Enddaten dürfen VORAB geladen werden, der Wechsel passiert von
 //    selbst um Mitternacht.
-//  * `kostentraeger_annahmestellen` / `_anschriften` haben KEINE Gültigkeitsspalten
-//    und der Leser (ladeAnnahmestelle) filtert nicht nach Datum. Zwei Stände
-//    nebeneinander = zwei Empfänger, treffer[0] entscheidet zufällig. Diese
-//    Tabellen werden deshalb NUR auf den zum Stichtag gültigen Stand
-//    synchronisiert (einfügen + veraltete Zeilen bereits bekannter IKs löschen).
-//    Kein FK zeigt auf diese beiden Tabellen → Löschen ist FK-sicher.
+//  * `kostentraeger_annahmestellen` / `_anschriften` tragen seit Migration 0046
+//    (O-139) ebenfalls `valid_from` / `valid_to` (NULL = offen) und der Leser
+//    (ladeAnnahmestelle/ladePapierannahmestelle) filtert nach dem Stichtag.
+//    Der Sync-Plan (planKind) LÖSCHT deshalb nichts mehr:
+//      neuer Schlüssel          → einfügen mit valid_from = gültig-ab der Ausgabe
+//      Schlüssel bleibt         → Update OHNE valid_from (sonst stünde eine heute
+//                                 gültige Zeile plötzlich ohne Empfänger da)
+//      Schlüssel fällt weg      → valid_to = Tag vor gültig-ab der neuen Ausgabe
+//                                 (nur bei IKs, die in der neuen Ausgabe noch
+//                                 vorkommen; entfallene IKs bleiben unberührt)
+//      geschlossener Schlüssel kehrt zurück → valid_to = NULL
+//    Adim 2 (onprem O-139): solange das Image mit dem filternden Leser nicht auf
+//    :stable liegt, darf KEINE Zeile mit valid_from in der Zukunft entstehen —
+//    ein älterer Leser sähe beide Stände. `adim2Sperre()` verweigert das Schreiben
+//    mit einem Stichtag nach heute (Berlin).
 //  * `kostentraeger` selbst wird NIE gelöscht (prescriptions.kostentraeger_ik FK,
 //    ON DELETE CASCADE-Kinder). Wegfall = valid_to.
 
@@ -23,6 +32,21 @@ export function vdtZuIso(v) {
   if (!v) return null;
   const m = String(v).match(ZEICHEN_VDT);
   return m ? `${m[1]}-${m[2]}-${m[3]}` : null;
+}
+
+/**
+ * Adim-2-Sperre (onprem O-139): Schreiben mit einem Stichtag NACH dem Berliner
+ * Heute würde Zeilen mit valid_from in der Zukunft erzeugen. Solange nicht
+ * sicher ist, dass alle Kanäle (:stable) den filternden Leser haben, verboten.
+ * Wird entfernt, wenn Adim 3 beginnt (eigene Entscheidung, nicht dieselbe Version).
+ * @returns {string|null}  Fehlertext oder null
+ */
+export function adim2Sperre(stichtag, heute) {
+  if (stichtag > heute) {
+    return `Stichtag ${stichtag} liegt nach heute (${heute}): O-139 Adim 2: :stable filtreyi taşımadan önceden yükleme yok. ` +
+           'Vorschau ohne --write ist erlaubt.';
+  }
+  return null;
 }
 
 export function tagDavor(iso) {
@@ -207,6 +231,7 @@ export function sollZeilen(aktiv) {
           bundesland: ns(v.bundesland),
           quelle: ausgabe.datei,
           quelle_stand: ausgabe.gueltigAb,
+          valid_from: ausgabe.gueltigAb, // nur für INSERT — planKind nimmt es aus Updates heraus
         };
         const k = schluessel(z, VKG_SCHLUESSEL);
         if (!vkg.has(k)) vkg.set(k, z);
@@ -214,7 +239,7 @@ export function sollZeilen(aktiv) {
       for (const a of (r.anschriften || [])) {
         const art = String(a.art ?? '').trim();
         if (art !== '1' && art !== '2' && art !== '3') { ungueltigeAnschriften++; continue; }
-        const z = { kostentraeger_ik: r.ik, art, plz: ns(a.plz), ort: ns(a.ort), strasse: ns(a.strasse), quelle: ausgabe.datei, quelle_stand: ausgabe.gueltigAb };
+        const z = { kostentraeger_ik: r.ik, art, plz: ns(a.plz), ort: ns(a.ort), strasse: ns(a.strasse), quelle: ausgabe.datei, quelle_stand: ausgabe.gueltigAb, valid_from: ausgabe.gueltigAb };
         const k = schluessel(z, ANS_SCHLUESSEL);
         if (!ans.has(k)) ans.set(k, z);
       }
@@ -224,24 +249,44 @@ export function sollZeilen(aktiv) {
 }
 
 /**
- * Sync-Plan für eine Kindtabelle.
- *  - einfügen: Sollzeile fehlt in der DB
- *  - aktualisieren: Zeile da, aber quelle/quelle_stand (und bei VKG leistungserbringergruppe) weichen ab
- *  - löschen: DB-Zeile eines IK, der in den aktiven Dateien vorkommt, die aber nicht mehr Soll ist.
- *    Zeilen von IKs, die gar nicht mehr vorkommen (entfallene Kostenträger), bleiben stehen (Historie, kein Leser erreicht sie).
+ * Sync-Plan für eine Kindtabelle (Gültigkeitsfenster statt DELETE, O-139).
+ *  - inserts: Sollzeile fehlt in der DB → mit valid_from = gültig-ab der Ausgabe
+ *  - updates: Zeile da und offen, aber quelle/quelle_stand (bei VKG auch leistungserbringergruppe)
+ *             weichen ab → Payload OHNE valid_from und ohne valid_to
+ *  - reopens: Zeile da, aber geschlossen (valid_to gesetzt) und wieder Soll → valid_to = NULL
+ *             (Payload wie updates, plus valid_to: null; ohne valid_from)
+ *  - closes:  DB-Zeile eines IK, der in den aktiven Dateien vorkommt, die aber nicht mehr Soll ist
+ *             → { id, valid_to = Tag vor gültig-ab der neuen Ausgabe dieses IK }. Ein früheres
+ *             Ende (valid_to <= dieser Tag) bleibt stehen. Zeilen von IKs, die gar nicht mehr
+ *             vorkommen (entfallene Kostenträger), bleiben unberührt.
+ *
+ * Getrennte Listen, weil PostgREST-Bulk-Upserts einen einheitlichen Schlüsselsatz brauchen:
+ * ein fehlendes valid_to in einer gemischten Liste würde zu NULL aufgefüllt.
  */
 export function planKind({ dbZeilen, soll, felder, vergleich }) {
   const dbMap = new Map();
   for (const z of dbZeilen) dbMap.set(schluessel(z, felder), z);
-  const sollIk = new Set([...soll.values()].map(z => z.kostentraeger_ik));
-  const inserts = [], updates = [], deletes = [];
+  const sollIk = new Set();
+  const neueAusgabeJeIk = new Map(); // ik -> späteste gültig-ab unter den Sollzeilen
+  for (const z of soll.values()) {
+    sollIk.add(z.kostentraeger_ik);
+    const cur = neueAusgabeJeIk.get(z.kostentraeger_ik);
+    if (!cur || z.quelle_stand > cur) neueAusgabeJeIk.set(z.kostentraeger_ik, z.quelle_stand);
+  }
+  const ohneVonBis = (z) => { const { valid_from, valid_to, ...rest } = z; return rest; };
+  const inserts = [], updates = [], reopens = [], closes = [];
   for (const [k, z] of soll) {
     const ist = dbMap.get(k);
-    if (!ist) inserts.push(z);
-    else if (vergleich.some(f => String(ns(ist[f])) !== String(ns(z[f])))) updates.push(z);
+    if (!ist) { inserts.push(z); continue; }
+    const geschlossen = ist.valid_to !== null && ist.valid_to !== undefined;
+    if (geschlossen) reopens.push({ ...ohneVonBis(z), valid_to: null });
+    else if (vergleich.some(f => String(ns(ist[f])) !== String(ns(z[f])))) updates.push(ohneVonBis(z));
   }
   for (const [k, ist] of dbMap) {
-    if (!soll.has(k) && sollIk.has(ist.kostentraeger_ik)) deletes.push(ist);
+    if (soll.has(k) || !sollIk.has(ist.kostentraeger_ik)) continue;
+    const bis = tagDavor(neueAusgabeJeIk.get(ist.kostentraeger_ik));
+    if (ist.valid_to && ist.valid_to <= bis) continue; // früheres Ende nie verlängern
+    closes.push({ id: ist.id, valid_to: bis });
   }
-  return { inserts, updates, deletes };
+  return { inserts, updates, reopens, closes };
 }

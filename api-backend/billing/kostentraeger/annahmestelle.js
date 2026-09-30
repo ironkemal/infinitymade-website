@@ -17,6 +17,35 @@
 // Datei beim falschen Empfänger landet.
 
 import { waehlePostanschrift } from './parser.js';
+import { berlinHeute, istStichtag } from '../../lib/berlin-tag.js';
+
+// ---------------------------------------------------------------------------
+// Gültigkeitsfenster (O-139, Migration 0046)
+//
+// `kostentraeger_annahmestellen` und `kostentraeger_anschriften` tragen
+// `valid_from` / `valid_to` (date, NULL = offen, beide Grenzen INKLUSIVE —
+// dieselbe Lesart wie `kostentraeger.valid_from/valid_to`). Zwei Quartalsstände
+// dürfen so nebeneinander stehen, ohne dass der Leser einen zufälligen
+// Empfänger nimmt: erst der Stichtag entscheidet.
+//
+// STICHTAG (gkv-302, 30.09.2026): Rechnungsdatum der Sammelrechnung = Tag der
+// Übermittlung. DTA-Datei und Papier-Begleitzettel derselben Abrechnung
+// benutzen DENSELBEN Stichtag — sonst ginge die Datei an die neue und die
+// Urbelege an die alte Stelle. Standard = Berliner Kalendertag (nicht UTC).
+// Die Routen kennen das Rechnungsdatum bisher nicht vorab (`datum: now`), sie
+// übergeben nichts und bekommen den Standard.
+//
+// Gefiltert wird im Speicher (je Kostenträger ~20 Zeilen), nicht per
+// PostgREST-`or`: die Auswahllogik bleibt an einer testbaren Stelle, und ein
+// Stichtag-Fehler ist ein Rückgabewert statt eines Abfragefehlers.
+// ---------------------------------------------------------------------------
+
+/** Gilt die Zeile am Stichtag? NULL/undefined = offen. ISO-Strings vergleichen lexikografisch. */
+export function giltAm(zeile, stichtag) {
+  const von = zeile?.valid_from ?? null;
+  const bis = zeile?.valid_to ?? null;
+  return (von === null || String(von) <= stichtag) && (bis === null || String(bis) >= stichtag);
+}
 
 /** Die Kassenart steckt in den ersten zwei Zeichen des Quelldateinamens
  *  ('AO05Q326_KE3.txt' → 'AO'). null, wenn nicht ableitbar — nicht raten. */
@@ -135,18 +164,22 @@ export function waehleAnnahmestelle(zeilen, {
  * Breit lesen, im Speicher filtern — je Kostenträger sind es im Schnitt gut
  * zwanzig Zeilen, und die Auswahllogik bleibt so an EINER testbaren Stelle.
  *
+ * @param {string|null} [opts.stichtag]  YYYY-MM-DD (Rechnungsdatum/Übermittlungstag); Standard: Berliner Tag
  * @returns {{ ok: true, ik, name, treffer } | { ok: false, grund: string }}
  */
 export async function ladeAnnahmestelle(supabase, {
-  kostentraegerIk, bereich, eigenerAbrechnungscode, bundeslandVkg = null,
+  kostentraegerIk, bereich, eigenerAbrechnungscode, bundeslandVkg = null, stichtag = null,
 }) {
+  const tag = stichtag ?? berlinHeute();
+  if (!istStichtag(tag)) return { ok: false, grund: `Ungültiger Stichtag: ${stichtag}` };
+
   const { data: zeilen, error } = await supabase
     .from('kostentraeger_annahmestellen')
-    .select('partner_ik, verknuepfungsart, abrechnungscode, art_datenlieferung, bundesland, quelle')
+    .select('partner_ik, verknuepfungsart, abrechnungscode, art_datenlieferung, bundesland, quelle, valid_from, valid_to')
     .eq('kostentraeger_ik', kostentraegerIk);
   if (error) return { ok: false, grund: 'DB-Fehler: ' + error.message };
 
-  const treffer = waehleAnnahmestelle(zeilen, {
+  const treffer = waehleAnnahmestelle((zeilen || []).filter(z => giltAm(z, tag)), {
     ketten: abrechnungscodeKette(bereich, eigenerAbrechnungscode),
     bundeslandVkg,
   });
@@ -251,6 +284,7 @@ export function waehlePapierannahmestelle(zeilen, { ketten, bundeslandVkg = null
  * @param {string} opts.bereich
  * @param {string} [opts.eigenerAbrechnungscode]
  * @param {string|null} [opts.bundeslandVkg]
+ * @param {string|null} [opts.stichtag]  YYYY-MM-DD — derselbe wie bei ladeAnnahmestelle() derselben Abrechnung
  * @returns {Promise<{
  *   ok: true,
  *   ik: string,
@@ -260,15 +294,18 @@ export function waehlePapierannahmestelle(zeilen, { ketten, bundeslandVkg = null
  * } | { ok: false, grund: string }>}
  */
 export async function ladePapierannahmestelle(supabase, {
-  kostentraegerIk, bereich, eigenerAbrechnungscode, bundeslandVkg = null,
+  kostentraegerIk, bereich, eigenerAbrechnungscode, bundeslandVkg = null, stichtag = null,
 }) {
+  const tag = stichtag ?? berlinHeute();
+  if (!istStichtag(tag)) return { ok: false, grund: `Ungültiger Stichtag: ${stichtag}` };
+
   const { data: zeilen, error } = await supabase
     .from('kostentraeger_annahmestellen')
-    .select('partner_ik, verknuepfungsart, abrechnungscode, art_datenlieferung, bundesland')
+    .select('partner_ik, verknuepfungsart, abrechnungscode, art_datenlieferung, bundesland, valid_from, valid_to')
     .eq('kostentraeger_ik', kostentraegerIk);
   if (error) return { ok: false, grund: 'DB-Fehler: ' + error.message };
 
-  const treffer = waehlePapierannahmestelle(zeilen, {
+  const treffer = waehlePapierannahmestelle((zeilen || []).filter(z => giltAm(z, tag)), {
     ketten: abrechnungscodeKette(bereich, eigenerAbrechnungscode),
     bundeslandVkg,
   });
@@ -298,7 +335,7 @@ export async function ladePapierannahmestelle(supabase, {
   try {
     const { data: adressen, error: adrFehler } = await supabase
       .from('kostentraeger_anschriften')
-      .select('art, plz, ort, strasse')
+      .select('art, plz, ort, strasse, valid_from, valid_to')
       .eq('kostentraeger_ik', treffer.partnerIk);
     if (adrFehler) {
       console.warn(
@@ -306,7 +343,11 @@ export async function ladePapierannahmestelle(supabase, {
         + `(Migration 0032 eingespielt?): ${adrFehler.message}`
       );
     } else {
-      anschrift = waehlePostanschrift(adressen);
+      const gewaehlt = waehlePostanschrift((adressen || []).filter(a => giltAm(a, tag)));
+      // Nur die vier Adressfelder weitergeben — die Gültigkeitsgrenzen sind Filter, kein Adressbestandteil.
+      anschrift = gewaehlt
+        ? { art: gewaehlt.art, plz: gewaehlt.plz, ort: gewaehlt.ort, strasse: gewaehlt.strasse }
+        : null;
       if (!anschrift) {
         console.warn(
           `[annahmestelle] Zur Papierannahmestelle ${treffer.partnerIk} ist keine Anschrift `

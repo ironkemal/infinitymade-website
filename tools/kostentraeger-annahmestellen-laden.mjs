@@ -13,11 +13,19 @@
 //   · kostentraeger: Enddaten der KOMMENDEN Ausgabe (IKK Nordrhein 30.09., entfallene IK)
 //     werden schon heute gesetzt und wirken erst am Datum — kostentraegerAbfrage()
 //     filtert valid_to >= heute. Der übrige Stand kommt nur aus der heute gültigen Ausgabe.
-//   · Annahmestellen/Anschriften haben KEINE Gültigkeitsspalten und der Leser filtert
-//     nicht → zwei Stände nebeneinander = zufälliger Empfänger (AOK Bayern DLZ
-//     Schwandorf -> SCD Ebermannsdorf). Deshalb NUR Stichtagsstand; veraltete Zeilen
-//     bekannter IK werden gelöscht (kein FK zeigt auf diese Tabellen). Also: dieses
-//     Script AM 01.10.2026 (oder danach) laufen lassen; vorher ändert es dort nichts.
+//   · Annahmestellen/Anschriften tragen seit Migration 0046 (O-139) valid_from/valid_to
+//     (NULL = offen) und der Leser filtert nach dem Stichtag. Es wird NICHTS mehr gelöscht:
+//       neuer Schlüssel            → INSERT mit valid_from = gültig-ab der Ausgabe
+//       Schlüssel bleibt           → UPDATE ohne valid_from (sonst wäre die Zeile heute
+//                                    ohne Empfänger)
+//       Schlüssel fällt weg        → valid_to = Tag vor gültig-ab der neuen Ausgabe
+//       geschlossener kehrt zurück → valid_to = NULL
+//     Insert und Update laufen als getrennte Aufrufe (PostgREST verlangt einheitliche Spalten).
+//     ⚠️ Migration 0046 MUSS vor dem ersten Lauf auf der Ziel-DB angewendet sein, sonst
+//     scheitert schon das Lesen von valid_from.
+//   · Adim 2 (onprem O-139): --write mit einem Stichtag NACH heute (Berlin) wird verweigert —
+//     solange :stable den filternden Leser nicht trägt, dürfen keine Zeilen mit valid_from in
+//     der Zukunft entstehen (ein älterer Leser sähe beide Stände). Vorschau ohne --write bleibt.
 //
 // Nutzung:
 //   node tools/kostentraeger-annahmestellen-laden.mjs                        # nur anzeigen (DB nur LESEN)
@@ -31,11 +39,12 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { readFileSync } from 'node:fs';
+import { berlinHeute, istStichtag } from '../api-backend/lib/berlin-tag.js';
 import { parseKostentraegerDatei } from '../api-backend/billing/kostentraeger/parser.js';
 import { leseKostentraegerDatei } from '../api-backend/billing/kostentraeger/datei-lesen.js';
 import {
   waehleAusgaben, planKostentraeger, sollZeilen, planKind,
-  VKG_SCHLUESSEL, ANS_SCHLUESSEL,
+  VKG_SCHLUESSEL, ANS_SCHLUESSEL, adim2Sperre,
 } from '../api-backend/billing/kostentraeger/lade-plan.js';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -60,8 +69,6 @@ const AUSGABEN = [
   { datei: 'BN050526_KE0.txt', gueltigAb: '2026-05-01' },
   { datei: 'LK05Q226_KE0.txt', gueltigAb: '2025-08-26' },
 ];
-
-const berlinHeute = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date());
 
 function parseDatei(ausgabe) {
   return { ausgabe, records: parseKostentraegerDatei(leseKostentraegerDatei(join(ECHT_DIR, ausgabe.datei))) };
@@ -112,10 +119,11 @@ function restClient(env) {
       const res = await fetch(`${base}/${tabelle}?ik=eq.${encodeURIComponent(ik)}`, { method: 'PATCH', headers: { ...json, Prefer: 'return=minimal' }, body: JSON.stringify({ ...felder, updated_at: new Date().toISOString() }) });
       await pruefen(res, `PATCH ${tabelle} ${ik}`);
     },
-    async loeschen(tabelle, ids) {
+    // Gültigkeitsende setzen (kein DELETE mehr, O-139): gleicher Wert je Aufruf, IDs in Blöcken.
+    async schliessen(tabelle, ids, validTo) {
       for (let i = 0; i < ids.length; i += 100) {
-        const res = await fetch(`${base}/${tabelle}?id=in.(${ids.slice(i, i + 100).join(',')})`, { method: 'DELETE', headers: { ...kopf, Prefer: 'return=minimal' } });
-        await pruefen(res, `DELETE ${tabelle}`);
+        const res = await fetch(`${base}/${tabelle}?id=in.(${ids.slice(i, i + 100).join(',')})`, { method: 'PATCH', headers: { ...json, Prefer: 'return=minimal' }, body: JSON.stringify({ valid_to: validTo }) });
+        await pruefen(res, `valid_to ${tabelle}`);
       }
     },
   };
@@ -125,7 +133,9 @@ async function main() {
   const write = process.argv.includes('--write');
   const argSt = process.argv.find(a => a.startsWith('--stichtag='));
   const stichtag = argSt ? argSt.split('=')[1] : berlinHeute();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(stichtag)) { console.error('--stichtag=YYYY-MM-DD'); process.exit(1); }
+  if (!istStichtag(stichtag)) { console.error('--stichtag=YYYY-MM-DD (echtes Datum)'); process.exit(1); }
+  const sperre = write ? adim2Sperre(stichtag, berlinHeute()) : null;
+  if (sperre) { console.error(sperre); process.exit(4); }
 
   const { aktiv: aktivA, kommend: kommendA, ohneGueltige } = waehleAusgaben(AUSGABEN, stichtag);
   if (ohneGueltige.length) { console.error(`Keine zum ${stichtag} gültige Ausgabe für Kassenart ${ohneGueltige.join(', ')}`); process.exit(2); }
@@ -151,14 +161,14 @@ async function main() {
 
   // 2) VKG / Anschriften
   const { vkg, ans, ungueltigeAnschriften } = sollZeilen(aktiv);
-  const vkgDb = await db.alle('kostentraeger_annahmestellen', 'id,kostentraeger_ik,verknuepfungsart,partner_ik,leistungserbringergruppe,abrechnungscode,art_datenlieferung,uebermittlungsmedium,bundesland,quelle,quelle_stand', 'id.asc');
-  const ansDb = await db.alle('kostentraeger_anschriften', 'id,kostentraeger_ik,art,plz,ort,strasse,quelle,quelle_stand', 'id.asc');
+  const vkgDb = await db.alle('kostentraeger_annahmestellen', 'id,kostentraeger_ik,verknuepfungsart,partner_ik,leistungserbringergruppe,abrechnungscode,art_datenlieferung,uebermittlungsmedium,bundesland,quelle,quelle_stand,valid_from,valid_to', 'id.asc');
+  const ansDb = await db.alle('kostentraeger_anschriften', 'id,kostentraeger_ik,art,plz,ort,strasse,quelle,quelle_stand,valid_from,valid_to', 'id.asc');
   const vkgPlan = planKind({ dbZeilen: vkgDb, soll: vkg, felder: VKG_SCHLUESSEL, vergleich: ['quelle', 'quelle_stand', 'leistungserbringergruppe'] });
   const ansPlan = planKind({ dbZeilen: ansDb, soll: ans, felder: ANS_SCHLUESSEL, vergleich: ['quelle', 'quelle_stand'] });
   if (ungueltigeAnschriften) console.warn(`⚠️  ${ungueltigeAnschriften} ANS-Segmente mit art ausserhalb 1/2/3 ignoriert.`);
-  console.log(`kostentraeger_annahmestellen (DB ${vkgDb.length}, Soll ${vkg.size}): +${vkgPlan.inserts.length} neu, ~${vkgPlan.updates.length} aktualisiert, -${vkgPlan.deletes.length} veraltet`);
-  console.log(`kostentraeger_anschriften    (DB ${ansDb.length}, Soll ${ans.size}): +${ansPlan.inserts.length} neu, ~${ansPlan.updates.length} aktualisiert, -${ansPlan.deletes.length} veraltet`);
-  for (const z of vkgPlan.deletes.slice(0, 3)) console.log(`   löschen VKG ${z.kostentraeger_ik} ${z.verknuepfungsart} ${z.partner_ik} code ${z.abrechnungscode}`);
+  console.log(`kostentraeger_annahmestellen (DB ${vkgDb.length}, Soll ${vkg.size}): +${vkgPlan.inserts.length} neu, ~${vkgPlan.updates.length} aktualisiert, ${vkgPlan.reopens.length} wieder offen, ${vkgPlan.closes.length} beendet (valid_to, kein DELETE)`);
+  console.log(`kostentraeger_anschriften    (DB ${ansDb.length}, Soll ${ans.size}): +${ansPlan.inserts.length} neu, ~${ansPlan.updates.length} aktualisiert, ${ansPlan.reopens.length} wieder offen, ${ansPlan.closes.length} beendet (valid_to, kein DELETE)`);
+  for (const z of vkgPlan.closes.slice(0, 3)) console.log(`   beenden VKG id ${z.id} bis ${z.valid_to}`);
   for (const z of vkgPlan.inserts.slice(0, 3)) console.log(`   neu     VKG ${z.kostentraeger_ik} ${z.verknuepfungsart} ${z.partner_ik} code ${z.abrechnungscode}`);
   const umlaute = aktiv.flatMap(e => e.records).filter(r => /[äöüßÄÖÜ]/.test(r.name || '')).slice(0, 3);
   console.log('Namensprobe (Umlaute):', umlaute.map(r => `${r.ik} ${r.name}`).join(' | '));
@@ -174,11 +184,19 @@ async function main() {
     for (let p = queue.shift(); p; p = queue.shift()) { await db.patch('kostentraeger', p.ik, p.patch); n++; }
   }));
   console.log(`  kostentraeger: ${kt.inserts.length} eingefügt, ${n} geändert`);
-  // Erst neue/aktualisierte Zeilen, dann veraltete löschen: kurzzeitig zwei Stände ist besser als kurzzeitig keiner.
-  await db.upsert('kostentraeger_annahmestellen', [...vkgPlan.inserts, ...vkgPlan.updates], VKG_SCHLUESSEL.join(','));
-  await db.loeschen('kostentraeger_annahmestellen', vkgPlan.deletes.map(z => z.id));
-  await db.upsert('kostentraeger_anschriften', [...ansPlan.inserts, ...ansPlan.updates], ANS_SCHLUESSEL.join(','));
-  await db.loeschen('kostentraeger_anschriften', ansPlan.deletes.map(z => z.id));
+  // Erst neue/aktualisierte/wieder geöffnete Zeilen, dann veraltete beenden: kurzzeitig zwei Stände
+  // ist besser als kurzzeitig keiner. INSERT und UPDATE getrennt — die Payloads haben verschiedene
+  // Spalten (valid_from nur beim INSERT, valid_to nur beim Wiederöffnen).
+  const schreibeKind = async (tabelle, plan, schl) => {
+    if (plan.inserts.length) await db.insert(tabelle, plan.inserts);
+    if (plan.updates.length) await db.upsert(tabelle, plan.updates, schl.join(','));
+    if (plan.reopens.length) await db.upsert(tabelle, plan.reopens, schl.join(','));
+    const nachBis = new Map();
+    for (const c of plan.closes) nachBis.set(c.valid_to, [...(nachBis.get(c.valid_to) || []), c.id]);
+    for (const [bis, ids] of nachBis) await db.schliessen(tabelle, ids, bis);
+  };
+  await schreibeKind('kostentraeger_annahmestellen', vkgPlan, VKG_SCHLUESSEL);
+  await schreibeKind('kostentraeger_anschriften', ansPlan, ANS_SCHLUESSEL);
   console.log('Fertig.');
 }
 
