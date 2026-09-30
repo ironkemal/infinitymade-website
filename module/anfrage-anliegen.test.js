@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, ANLIEGEN, WUNDE_HINWEIS } from './anfrage-anliegen.js';
+import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, ANLIEGEN, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer, HEILMITTEL_WORTLAUT } from './anfrage-anliegen.js';
 import { slugAusKennung, kennungAusSuche, ladeOwnerId } from './public-owner.js';
 
 test('Anliegen nur fuer Podologie, drei Karten', () => {
@@ -93,4 +93,25 @@ test('ladeOwnerId: business direkt, Slug ueber Profil/Business, Mitarbeiter -> O
   assert.equal(await ladeOwnerId(stub({}), '?u=nix'), null);
   assert.equal(await ladeOwnerId(stub({}, 'oc'), '?u=inf-123'), 'oc');
   assert.equal(await ladeOwnerId(stub({ profiles_public: { id: 'p', role: 'owner' } }), '?u=a,b.eq.c)'), null);
+});
+
+test('Heilmittel-Frage: Wortlaut statt Positionsnummer, nur Podologie-Anliegen', () => {
+  assert.equal(HEILMITTEL_WORTLAUT.length, 4);
+  assert.ok(!HEILMITTEL_WORTLAUT.some(t => /\d{4,5}/.test(t)));
+  assert.equal(heilmittelFrage('rezept', 'gkv').typ, 'wahl');
+  assert.equal(heilmittelFrage('rezept', 'pkv'), null);
+  assert.equal(heilmittelFrage('nagelspange', 'gkv').typ, 'fest');
+  assert.equal(heilmittelFrage('nagelspange', 'pkv').typ, 'fest');
+  assert.equal(heilmittelFrage('nagelspange', 'selbstzahler'), null);
+  assert.equal(heilmittelFrage('ohne_rezept', 'selbstzahler'), null);
+  assert.equal(heilmittelFrage(null, 'gkv'), null);
+});
+
+test('behandlungsartFuer: freiwillig, nur gueltiger Wortlaut', () => {
+  assert.equal(behandlungsartFuer('rezept', 'gkv', null), null);
+  assert.equal(behandlungsartFuer('rezept', 'gkv', 'Hornhautabtragung'), 'Hornhautabtragung');
+  assert.equal(behandlungsartFuer('rezept', 'gkv', '78002'), null);
+  assert.equal(behandlungsartFuer('rezept', 'pkv', 'Hornhautabtragung'), null);
+  assert.equal(behandlungsartFuer('nagelspange', 'gkv', null), 'Nagelspangenbehandlung');
+  assert.equal(behandlungsartFuer('nagelspange', 'selbstzahler', null), null);
 });

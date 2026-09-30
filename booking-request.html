@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="theme-color" content="#FFFEFB" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
-  <link rel="stylesheet" href="booking-request.css?v=20261001t" />
+  <link rel="stylesheet" href="booking-request.css?v=20261001v" />
 </head>
 <body>
 
@@ -359,12 +359,17 @@
               </div>
             </div>
             <div class="br-form-row">
-              <div class="br-field">
+              <div class="br-field" id="gkvHeilmittelWrap">
                 <label for="gkvHeilmittel">Heilmittel / Behandlungsart <span class="req">*</span></label>
                 <select id="gkvHeilmittel">
                   <option value="">Bitte wählen…</option>
                 </select>
                 <span class="br-field-error" id="gkvHeilmittelError"></span>
+              </div>
+              <!-- Podologie (Anliegen aktiv): Rezept-Wortlaut statt Positionsnummer, freiwillig -->
+              <div class="br-field" id="gkvHeilmittelWahlWrap" hidden>
+                <label id="gkvHeilmittelWahlLabel">Was steht auf Ihrem Rezept unter „Heilmittel“? <span class="br-hb-optional">(freiwillig)</span></label>
+                <div class="br-hb-antworten" id="gkvHeilmittelWahl" role="group" aria-labelledby="gkvHeilmittelWahlLabel"></div>
               </div>
               <div class="br-field">
                 <label for="gkvAnzahl">Anzahl laut Verordnung <span class="req">*</span></label>
@@ -686,13 +691,14 @@
 
 </div><!-- /#app -->
 
-<script type="module" src="booking-request.js?v=20261001t"></script>
+<script type="module" src="booking-request.js?v=20261001v"></script>
 <script type="module">
-  import { createClient } from './vendor/supabase-js.js?v=20260813';
-  import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
+  import { getPublicClient } from './module/public-supabase.js?v=20261001v';
   import { attachDiagnoseSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
   import { ladeOwnerId } from './module/public-owner.js?v=20261001u';
-  const _sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  import { anliegenFuerBereich } from './module/anfrage-anliegen.js?v=20261001v';
+  // Ein gemeinsamer Client mit booking-request.js (sonst „Multiple GoTrueClient instances").
+  const _sb = await getPublicClient();
   // Top-Level-await in supabase-config.js: DOMContentLoaded kann schon vorbei sein.
   const _nachDom = (fn) => document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', fn) : fn();
   _nachDom(async () => {
@@ -718,8 +724,11 @@
     // Ist eine Diagnosegruppe gewählt, wird zusätzlich danach gefiltert — genau
     // wie in der Verordnung-Maske.
     const hmSel = document.getElementById('gkvHeilmittel');
+    // Podologie (Anliegen aktiv): der Patient waehlt nie eine Positionsnummer — Katalogliste
+    // wird gar nicht geladen, auch nicht als Fallback (Entscheidung 30.09.2026).
+    const anliegenAktiv = anliegenFuerBereich(bereich).length > 0;
     async function fillHeilmittel() {
-      if (!hmSel) return;
+      if (!hmSel || anliegenAktiv) return;
       const dg = (dgInput?.value || '').trim() || null;
       const bisher = hmSel.value;
       const rows = await searchHeilmittel(_sb, '', { bereich, diagnosegruppe: dg, limit: 200 });

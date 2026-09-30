@@ -10,10 +10,10 @@
 // dieselbe Garantie, die auch die anderen Frontend-Dateien nutzen. Vorher hatte
 // diese Datei GAR KEINEN Import und ein eigenes Literal; in der Kundenbox waere
 // das die Cloud-VPS statt der eigenen Box gewesen (G1).
-import { API_BASE, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
-import { createClient } from './vendor/supabase-js.js?v=20260813';
+import { API_BASE } from './supabase-config.js?v=20260701';
+import { getPublicClient } from './module/public-supabase.js?v=20261001v';
 import { ladeOwnerId } from './module/public-owner.js?v=20261001u';
-import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, findAnliegen, WUNDE_HINWEIS } from './module/anfrage-anliegen.js?v=20261001t';
+import { anliegenFuerBereich, zahlungsartenFuer, hausbesuchFrageNoetig, anliegenNotiz, findAnliegen, WUNDE_HINWEIS, heilmittelFrage, behandlungsartFuer } from './module/anfrage-anliegen.js?v=20261001v';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -56,6 +56,7 @@ const state = {
   icd10_diagnose: null,
   diagnosegruppe: null,
   behandlungsart: null,
+  heilmittel_wahl: null,   // Podologie: Rezept-Wortlaut (freiwillig), landet als Klartext in behandlungsart
   verordnung_sitzungen: null,
   frequenz: null,
   verordnung_typ: null,
@@ -942,6 +943,39 @@ async function loadKrankenkassen() {
   }
 }
 
+/** Klartext fuer `behandlungsart`: Podologie -> Rezept-Wortlaut/feste Zeile, sonst der Katalog-Wert. */
+function behandlungsartAktuell() {
+  if (state.anliegenAktiv) return behandlungsartFuer(state.anliegen, state.payment_type, state.heilmittel_wahl);
+  return state.behandlungsart;
+}
+
+/** Schritt 4: Katalog-Select (andere Fachbereiche) oder Rezept-Wortlaut-Optionen (Podologie). */
+function zeigeHeilmittelFrage() {
+  const selWrap = document.getElementById('gkvHeilmittelWrap');
+  const wahlWrap = document.getElementById('gkvHeilmittelWahlWrap');
+  if (!selWrap || !wahlWrap) return;
+  if (!state.anliegenAktiv) { selWrap.hidden = false; wahlWrap.hidden = true; return; }
+  selWrap.hidden = true;
+  const f = heilmittelFrage(state.anliegen, state.payment_type);
+  if (!f || f.typ !== 'wahl') { wahlWrap.hidden = true; state.heilmittel_wahl = null; return; }
+  const box = document.getElementById('gkvHeilmittelWahl');
+  if (!box.children.length) {
+    f.optionen.forEach(text => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'br-hb-antwort';
+      b.textContent = text;
+      b.addEventListener('click', () => {
+        // Zweiter Tap auf dieselbe Option nimmt die Wahl zurueck (freiwillig).
+        state.heilmittel_wahl = state.heilmittel_wahl === text ? null : text;
+        box.querySelectorAll('.br-hb-antwort').forEach(x => x.classList.toggle('selected', x.textContent === state.heilmittel_wahl));
+      });
+      box.appendChild(b);
+    });
+  }
+  wahlWrap.hidden = false;
+}
+
 function validateStep4() {
   let ok = true;
   clearAllErrors();
@@ -975,9 +1009,12 @@ function validateStep4() {
     state.icd10_diagnose = document.getElementById('gkvIcd10').value.trim() || null;
     state.diagnosegruppe = document.getElementById('gkvDiagnosegruppe').value.trim() || null;
 
-    const hm = document.getElementById('gkvHeilmittel').value;
-    if (!hm) { fieldError('gkvHeilmittel', 'gkvHeilmittelError', 'Bitte Heilmittel auswählen.'); ok = false; }
-    else state.behandlungsart = hm;
+    // Podologie (Anliegen aktiv): Rezept-Wortlaut, freiwillig — nie blockierend.
+    if (!state.anliegenAktiv) {
+      const hm = document.getElementById('gkvHeilmittel').value;
+      if (!hm) { fieldError('gkvHeilmittel', 'gkvHeilmittelError', 'Bitte Heilmittel auswählen.'); ok = false; }
+      else state.behandlungsart = hm;
+    }
 
     const anzahl = document.getElementById('gkvAnzahl').value;
     if (!anzahl || parseInt(anzahl, 10) < 1) { fieldError('gkvAnzahl', 'gkvAnzahlError', 'Bitte Anzahl eingeben.'); ok = false; }
@@ -1118,7 +1155,10 @@ function buildSummary() {
     data.push({ label: 'Krankenkasse', value: state.krankenkasse });
     if (state.arzt_name) data.push({ label: 'Verordnender Arzt', value: state.arzt_name });
     if (state.diagnosegruppe) data.push({ label: 'Diagnosegruppe', value: state.diagnosegruppe });
-    if (state.behandlungsart) data.push({ label: 'Heilmittel', value: state.behandlungsart });
+  }
+  if ((state.payment_type === 'gkv' && state.krankenkasse) || state.payment_type === 'pkv') {
+    const ba = behandlungsartAktuell();
+    if (ba) data.push({ label: 'Heilmittel', value: ba });
   }
   if (state.payment_type === 'bg' && state.bg_name) {
     data.push({ label: 'Berufsgenossenschaft', value: state.bg_name });
@@ -1171,7 +1211,7 @@ async function handleSubmit() {
     // BG-Block); der zweite Eintrag gewann und lieferte zufällig dasselbe Ergebnis.
     icd10_diagnose: state.icd10_diagnose || state.bg_diagnose,
     diagnosegruppe: state.diagnosegruppe,
-    behandlungsart: state.behandlungsart || state.bg_behandlungsart,
+    behandlungsart: behandlungsartAktuell() || state.bg_behandlungsart,
     verordnung_sitzungen: state.verordnung_sitzungen || state.bg_anzahl,
     frequenz: state.frequenz || state.bg_frequenz,
     verordnung_typ: state.verordnung_typ,
@@ -1313,6 +1353,7 @@ function onStepEnter(logicalStep) {
       break;
     case 4:
       showStep4Fields();
+      zeigeHeilmittelFrage();
       if (state.payment_type === 'gkv') loadKrankenkassen();
       break;
     case 6:
@@ -1375,7 +1416,7 @@ async function init() {
   // Zwei Linkschemata, beide gueltig: ?business=<owner_id> und ?u=<slug> (wie booking.html).
   let ownerId = null;
   try {
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = await getPublicClient();
     ownerId = await ladeOwnerId(sb, window.location.search);
     // Fachbereich der Praxis: Podologie bekommt die Anliegen-Auswahl.
     if (ownerId) {

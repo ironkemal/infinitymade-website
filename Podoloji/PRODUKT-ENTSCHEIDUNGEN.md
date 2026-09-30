@@ -555,3 +555,149 @@
   nicht' — wir besprechen das gemeinsam") und „weiß nicht" als Option. Eine im Kiosk ausgefüllte
   Anamnese gilt als „vom Patienten angegeben — ungeprüft" bis die Podologin mit 1 Tap bestätigt;
   Rozets erscheinen trotzdem sofort (lieber eine ungeprüfte Warnung als keine).
+
+---
+
+### Online-Anfrage (S4): Anliegen = „Rezept ja/nein" × „was", Hausbesuch als Zusatz, kein Wunden-Termin online
+- **Karar:** Die Anliegen-Liste von `module/anfrage-anliegen.js` (Stand 43b9655) wird umgebaut:
+  1. **Drei Karten statt fünf:** „Behandlung mit Rezept" (gkv, pkv, bg) · „Nagelspange"
+     (gkv, pkv, selbstzahler) · „Ohne Rezept – Fußpflege / Beratung" (selbstzahler, pkv).
+     „Erstbehandlung / Beratung" und „Medizinische Fußpflege (Selbstzahler)" werden zu der einen
+     Ohne-Rezept-Karte zusammengelegt.
+  2. **Hausbesuch ist keine Karte, sondern ein Zusatz-Schalter** („Ich brauche einen Hausbesuch")
+     unter jeder Karte; Adresse Pflicht, sobald er an ist. Zahlungsarten kommen weiter nur aus der
+     Karte.
+  3. **Nur bei Rezept (oder Nagelspange mit gkv/pkv) + Hausbesuch** eine freiwillige Ein-Tap-Frage
+     „Ist auf dem Rezept ‚Hausbesuch: Ja' angekreuzt?" — Ja / Nein / Weiß nicht, **nicht Pflicht,
+     blockiert nicht**, landet in `notizen`.
+  4. Rezept-Karte, Hinweis: „Rezept liegt vor oder wird vom Arzt noch ausgestellt — bitte zum
+     Termin mitbringen". Deckt Erst- und Folgeverordnung ab; **keine eigene „Folgetermin"-Karte.**
+  5. **Keine „Kontrolle / Wunde"-Karte.** Stattdessen fester Hinweis über den Karten: „Offene
+     Wunde, Rötung, Schwellung oder Fieber am Fuß? Bitte nicht online anfragen — rufen Sie uns an
+     oder wenden Sie sich an Ihre Ärztin / Ihren Arzt." Nagelspangen-Kontrollen laufen über die
+     Nagelspange-Karte.
+  6. **Leistungsliste (Schritt 2) wird vorerst NICHT nach Anliegen gefiltert.**
+- **Neden:**
+  - Die alte Liste mischte zwei Achsen: Zahlungsweg („Mit Verordnung") und Leistung
+    („Nagelspange", „Hausbesuch"). Dadurch gab es keinen Weg für die häufigen Kombinationen
+    „Nagelspange mit Rezept" (UI-Verordnung, GKV-Positionen 78100–78530 laut
+    `Podologie_Positionsnummern_2026_Filtered.csv`) und „Hausbesuch mit Rezept" — der Patient
+    musste eine falsche Karte wählen, und bei Nagelspange war GKV gar nicht wählbar.
+  - „Erstbehandlung" ist im Podologie-Alltag die *Erstbefundung unter Verordnung* — als Karte für
+    „ohne Rezept" führt der Begriff genau die Patienten in die Irre, um die es geht. Zwei
+    Ohne-Rezept-Karten ohne Unterschied im Ablauf zwingen zu einer Wahl, die keiner versteht.
+  - GKV bleibt bei „ohne Rezept" draußen: ohne Verordnung keine Kassenleistung. Wer das Rezept
+    „bald" hat, wählt die Rezept-Karte — der neue Hinweis sagt ihm das. Die Praxis prüft das
+    Rezept ohnehin beim Termin.
+  - Hausbesuch-Frage: Ob Hausbesuch auf dem Muster 13 angekreuzt ist, merkt die Podologin sonst
+    erst an der Haustür. Ein freiwilliger Tap spart einen Rückruf; Pflicht würde Patienten
+    blockieren, die das Rezept gerade nicht vor sich haben.
+  - Wunde online: Ein akutes Ulkus / Infekt beim Diabetiker gehört sofort in ärztliche Hände, nicht
+    in eine Anfrage, die ein bis zwei Tage auf Bestätigung wartet. Eine Karte dafür würde genau
+    diese Fälle einsammeln.
+  - Leistungsfilter: `services` hat nur Titel/Beschreibung/Dauer (`/services/public`), keine
+    Kategorie — Filtern ginge nur über neue Spalte oder Namensraten. Jede Anfrage wird von der
+    Praxis bestätigt; eine falsch gewählte Leistung korrigiert sie dort. Nutzen < Kosten.
+  - Grundsatz: Die Anfrage ist Selbstauskunft des Patienten, keine Abrechnungsprüfung. Filter
+    sollen Verwirrung verhindern, nicht Kassenregeln durchsetzen — lieber eine Option zu viel als
+    eine verlorene Anfrage.
+- **Tık:** Standardfall GKV mit Rezept: 1 Karte + 1 Zahlungsart = 2 Taps (unverändert).
+  Nagelspange mit Rezept: vorher unmöglich → 2 Taps. Hausbesuch mit Rezept: vorher 1 Karte + 1 aus
+  4 Zahlungsarten + Adresse → jetzt 1 Karte + Schalter + Adresse + 1 Zahlungsart + optional 1 Tap.
+  Ohne Rezept: 1 Karte + 1 von 2 Zahlungsarten.
+- **Tarih:** 2026-09-30
+- **Etkilenen:** `module/anfrage-anliegen.js` (+ `.test.js`), `booking-request.js`
+  (`waehleAnliegen`, `validateStep1`, Notiz-Aufruf), `booking-request.html` (Schalter, Hinweis,
+  Ja/Nein/Weiß-nicht). Kein Schema: alles weiter in `notizen`. Nur deutsche Texte.
+- **Reddedilen alternatif:** (a) Nagelspange-Karte mit Unterfrage „Rezept dafür?" — gleiche Wirkung
+  wie drei Zahlungsarten, ein Tap mehr. (b) Hausbesuch-Frage als Pflicht / GKV-Hausbesuch sperren,
+  wenn „Nein" — Abrechnungsregel gehört in `gkv-302`, und Privat-Hausbesuch als Selbstzahler bleibt
+  möglich. (c) „Folgetermin"-Karte — kein Unterschied im Ablauf; Neu-/Bestandspatient erkennt die
+  Praxis über die Telefon-Zuordnung. (d) Leistungsfilter per Namensvergleich — bricht bei jeder
+  Praxis mit eigenen Leistungsnamen.
+- **Test senaryosu:** Podologie-Praxis (QA-Tenant test2), Leistungen „Podologische Komplexbehandlung
+  (Kasse)", „Nagelspange Ross Fraser", „Fußpflege privat", „Hausbesuch".
+  (1) Rezept-Karte → nur GKV/PKV/BG sichtbar. (2) Nagelspange → GKV/PKV/Selbstzahler sichtbar.
+  (3) Ohne Rezept → Selbstzahler/PKV, kein GKV. (4) Rezept + Hausbesuch an, Adresse leer → Fehler;
+  Adresse + „Weiß nicht" → Notiz „Anliegen: Behandlung mit Rezept — Hausbesuch — Adresse: … —
+  Hausbesuch auf Rezept: unklar". (5) Hausbesuch aus → Adresse/Frage verschwinden und landen nicht
+  in der Notiz. (6) Wunden-Hinweis sichtbar ohne Scrollen auf 360 px.
+- **Annahme:** nicht mit einer Podologin validiert (Beta-1/Beta-2). Offen: Wie oft fragen
+  Angehörige/Pflegeheime für den Patienten an (Hausbesuch-Fall)? Reicht Freitext-Adresse dafür?
+- **gkv-302 offen:** Ist der GKV-Hausbesuch nur bei „Hausbesuch: Ja" auf der Verordnung
+  abrechenbar (Position steht nicht in der gefilterten Positions-CSV)? BG bei Nagelspange
+  sinnvoll? (Aktuell bewusst nicht angeboten.)
+
+---
+
+### Online-Anfrage: Patient wählt keine Positionsnummer — Heilmittel als Rezept-Wortlaut, optional (canli-test 30.09)
+- **Anlass (neue Tatsache):** canli-test 30.09 — das Pflichtfeld `gkvHeilmittel` im GKV-Rezeptblock
+  (`booking-request.html:363`, gefüllt über `searchHeilmittel` + `heilmittelOptionsHtml`,
+  Inline-Modul ab Zeile 720) zeigt dem Patienten die rohe HPNR-Liste inkl. 78620 „Aufschlag für
+  besonderen Aufwand", 78530 „Therapiebericht UI 2", 78030/78040 Befundung, 79933/79934 Hausbesuch.
+  Betrifft **nicht** die Leistungsliste (Schritt 2, `services`) — Punkt 6 der S4-Entscheidung
+  („Leistungsliste nicht nach Anliegen filtern") bleibt unverändert.
+- **Karar (nur Podologie; andere Fachbereiche unverändert, Vertikal-Reihenfolge):**
+  1. **Der Patient wählt nie eine Positionsnummer.** Für Podologie wird die HPNR-Liste im
+     GKV-Block nicht angezeigt — weder Haupt- noch Zusatzpositionen. Positionen vergibt die
+     Praxis beim Anlegen der Verordnung vom Original-Rezept.
+  2. **Ersatz:** „Was steht auf Ihrem Rezept unter *Heilmittel*?" — Karten/Radio in Worten, wie auf
+     Muster 13, **optional (nicht Pflicht, blockiert nie)**, gespeichert als Klartext in
+     `behandlungsart` (Spalte ist Text, Dashboard zeigt sie schon an, `dashboard.js:19648`):
+     | Anliegen | Angezeigt | Hinweis für die Praxis (nicht dem Patienten zeigen) |
+     |---|---|---|
+     | `rezept` | „Hornhautabtragung" · „Nagelbearbeitung" · „Podologische Komplexbehandlung (Hornhaut + Nägel)" · „Weiß ich nicht / Rezept liegt noch nicht vor" | ≈ 78001 / 78002 / 78003 (bzw. Fuß-Varianten 78004–78006, klein/groß 78010/78020 — entscheidet die Praxis) |
+     | `nagelspange` + gkv/pkv | **keine Frage** — fest „Nagelspangenbehandlung", nur als Zeile im Zusammenfassungs-Schritt | ≈ 78610 (+ ggf. 78620 — Praxis) |
+     | `nagelspange` + selbstzahler | kein GKV-Block → kein Feld | — |
+     | `ohne_rezept` | kein GKV-Block (GKV dort nicht wählbar) → kein Feld; Auswahl nur über die Leistungskarten der Praxis (`/services/public`), unverändert | — |
+  3. **Immer verborgen (Podologie, jede Anliegen-Karte), vollständig:** alle 68xxx und 88xxx
+     (Krankenhaus/Kurort) · 78004, 78005, 78006 (Ein-Fuß-Varianten) · 78010, 78020 (klein/groß —
+     Vergütungsstufe, keine Patientenentscheidung) · 78030, 78040 (Befundung) · 78100, 78110
+     (Nagelspange-Erstbefundung) · 78210, 78220, 78230, 78300, 78400 (Spangen-Arbeitsschritte) ·
+     78510, 78520, 78530 (Kontrolle/Abschluss/Therapiebericht) · 78620 (Aufschlag) · 79933, 79934
+     (Hausbesuch — kommt allein über den Hausbesuch-Schalter). Praktisch also: **keine** HPNR.
+  4. Auch der Fallback „ohne erkannten Fachbereich: alles" (Inline-Modul, Kommentar Z. 716–717) darf
+     in einer Podologie-Praxis nie greifen — ist `anliegenAktiv`, wird die Katalogliste gar nicht
+     geladen.
+  5. Neue Texte nur Deutsch (Entscheidung 28.09).
+- **Neden:**
+  - Ein Patient kennt keine Positionsnummern; Aufschläge, Berichte, Befundungen und Wegegeld sind
+    Abrechnungsbausteine, die die Praxis nach Befund setzt. Wählt der Patient sie, entsteht im
+    besten Fall Rauschen, im schlechtesten eine falsche Erwartung („Ich habe den Aufschlag
+    gebucht") und eine Rückfrage.
+  - Die Praxis bekommt das Original-Rezept zum Termin und legt die Verordnung ohnehin davon an
+    (Rezept-Scan). Was die Anfrage braucht, ist nur eine grobe Vorab-Info für Terminlänge/Planung —
+    die liefert der Wortlaut vom Rezept besser als eine Nummer.
+  - Pflichtfeld widerspricht der Rezept-Karte, deren Hinweis „wird vom Arzt noch ausgestellt"
+    ausdrücklich erlaubt — der Patient kann das Feld dann gar nicht wahrheitsgemäß füllen.
+  - Klartext statt HPNR-Mapping hält uns aus der Abrechnungsfrage heraus (welche HPNR welcher
+    Verordnungszeile entspricht, ist `gkv-302`-Gebiet) und braucht kein Schema.
+- **Tık:** heute: Select öffnen + durch 20–70 Einträge scrollen + wählen (2 Taps + Scroll, dazu
+  Pflicht) → `rezept`: 1 Tap oder 0 (optional); `nagelspange`: 0; `ohne_rezept`: 0 (Feld existiert
+  nicht). Eine Fehlerquelle weniger im Weiter-Knopf von Schritt 4.
+- **Tarih:** 2026-09-30
+- **Etkilenen:** `booking-request.html` (Feld `gkvHeilmittel` + Inline-Modul `fillHeilmittel`),
+  `booking-request.js` (`validateStep4` Z. 978–980: Pflichtprüfung für Podologie entfällt;
+  Zusammenfassung Z. 1121), ggf. Optionsliste als reine Konstante in `module/anfrage-anliegen.js`
+  (+ Test). `katalog-suche.js` bleibt unverändert. Kein Schema.
+- **Reddedilen alternatif:** (a) HPNR-Liste nur auf „Hauptleistungen" (78010/78020/78610) filtern —
+  weiterhin Nummern/Vergütungsbegriffe („klein/groß" versteht der Patient nicht, es hängt vom
+  Befund ab), und das Pflichtfeld bleibt. (b) Feld ganz streichen — verliert die einzige
+  Vorab-Info zur Terminlänge; der optionale Wortlaut kostet 0–1 Tap. (c) Filter in
+  `katalog-suche.js` per Positionsgruppe — ändert ein Modul, das das Dashboard teilt, für ein
+  Problem, das nur die öffentliche Seite hat.
+- **Test senaryosu (QA-Tenant test2, Podologie):** (1) Rezept-Karte + GKV → Unterschrift „Ja" →
+  Heilmittel-Frage zeigt genau 4 Wortlaut-Optionen, keine Nummer; ohne Auswahl „Weiter" möglich.
+  (2) „Nagelspangenbehandlung" + GKV → keine Heilmittel-Frage, Zusammenfassung zeigt
+  „Nagelspangenbehandlung", Anfrage-Detail im Dashboard zeigt `Behandlungsart: Nagelspangenbehandlung`.
+  (3) Ohne Rezept + Selbstzahler → nur Leistungskarten der Praxis, kein GKV-Block. (4) Rezept +
+  Hausbesuch an → nirgends 79933/79934 sichtbar. (5) Physio-Praxis → altes Verhalten
+  (Katalog-Select, Pflicht) unverändert. (6) Suche im DOM nach „786", „7803", „7993" auf der
+  Podologie-Anfrage → 0 Treffer.
+- **Annahme:** nicht mit einer Podologin validiert. Offen: Reicht der Rezept-Wortlaut zur
+  Terminplanung, oder möchte die Praxis bei der Rezept-Karte zusätzlich „Diabetischer Fuß ja/nein"
+  wissen (Terminlänge)? → Beta-1 fragen.
+- **gkv-302 offen:** Stehen auf dem Muster 13 für Podologie ab 2026 weiterhin die Maßnahmen
+  Hornhautabtragung / Nagelbearbeitung / Podologische Komplexbehandlung (bzw. Nagelspangenbehandlung
+  bei UI), oder schreibt der Arzt die Vergütungsstufe klein/groß (78010/78020)? Davon hängen nur die
+  vier Wortlaut-Optionen ab, nicht die Grundentscheidung.

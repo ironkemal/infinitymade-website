@@ -20,6 +20,19 @@ export const ANLIEGEN = [
 /** Fester Hinweis ueber den Karten: Akutfaelle gehoeren nicht in eine Online-Anfrage. */
 export const WUNDE_HINWEIS = 'Offene Wunde, Rötung, Schwellung oder Fieber am Fuß? Bitte nicht online anfragen — rufen Sie uns an oder wenden Sie sich an Ihre Ärztin / Ihren Arzt.';
 
+/**
+ * „Was steht auf Ihrem Rezept unter Heilmittel?" — Rezept-Wortlaut statt Positionsnummer
+ * (Entscheidung 30.09.2026). Der Patient waehlt nie eine HPNR; die Praxis vergibt sie
+ * beim Anlegen der Verordnung. Klartext wandert in `behandlungsart`. Freiwillig.
+ */
+export const HEILMITTEL_WORTLAUT = [
+  'Hornhautabtragung',
+  'Nagelbearbeitung',
+  'Podologische Komplexbehandlung (Hornhaut + Nägel)',
+  'Weiß ich nicht / nicht lesbar / Rezept liegt noch nicht vor',
+];
+export const NAGELSPANGE_TEXT = 'Nagelspangenbehandlung';
+
 /** Antworten der freiwilligen Frage „Hausbesuch auf dem Rezept angekreuzt?" -> Notiztext. */
 export const HB_REZEPT_ANTWORTEN = { ja: 'ja', nein: 'nein', unklar: 'unklar' };
 
@@ -37,6 +50,25 @@ export function findAnliegen(key) {
 /** Erlaubte Zahlungsarten; ohne Anliegen alle vier (bisheriges Verhalten). */
 export function zahlungsartenFuer(key) {
   return findAnliegen(key)?.zahlung || ALLE_ZAHLUNG;
+}
+
+/**
+ * Heilmittel-Frage im GKV-Block je Anliegen: 'wahl' (Ein-Tap-Optionen, freiwillig),
+ * 'fest' (keine Frage, feste Zeile in der Zusammenfassung) oder null (kein Feld).
+ * Nur fuer Podologie-Anliegen; ohne Anliegen null (dann gilt der Katalog-Select).
+ */
+export function heilmittelFrage(key, zahlungsart) {
+  if (key === 'rezept' && zahlungsart === 'gkv') return { typ: 'wahl', optionen: HEILMITTEL_WORTLAUT };
+  if (key === 'nagelspange' && (zahlungsart === 'gkv' || zahlungsart === 'pkv')) return { typ: 'fest', text: NAGELSPANGE_TEXT };
+  return null;
+}
+
+/** Klartext fuer `behandlungsart` (oder null): feste Zeile bzw. gueltige Wahl, sonst nichts. */
+export function behandlungsartFuer(key, zahlungsart, wahl) {
+  const f = heilmittelFrage(key, zahlungsart);
+  if (!f) return null;
+  if (f.typ === 'fest') return f.text;
+  return f.optionen.includes(wahl) ? wahl : null;
 }
 
 /**
