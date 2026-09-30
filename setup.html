@@ -160,27 +160,6 @@
       font-size: 0.88rem;
       cursor: pointer;
     }
-    .lang-switch {
-      display: inline-flex;
-      gap: 0.25rem;
-      padding: 0.25rem;
-      background: var(--bg-warm);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      margin-bottom: 1.4rem;
-    }
-    .lang-switch button {
-      border: none;
-      background: transparent;
-      padding: 0.35rem 0.85rem;
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      color: var(--ink-mute);
-      border-radius: 999px;
-      cursor: pointer;
-    }
-    .lang-switch button.active { background: var(--ink); color: var(--bg); }
     @media (max-width: 640px) {
       body { padding: 1.5rem 1rem; }
       .setup-card { padding: 2.2rem 1.6rem; }
@@ -192,12 +171,6 @@
 <body>
   <main class="setup-wrap">
     <span class="brand">Prax<em>ura</em></span>
-
-    <div class="lang-switch">
-      <button data-lang="de" class="active">DE</button>
-      <button data-lang="en">EN</button>
-      <button data-lang="tr">TR</button>
-    </div>
 
     <div class="setup-card">
 
@@ -333,6 +306,6 @@
     </div>
   </main>
 
-  <script type="module" src="setup.js?v=20260911"></script>
+  <script type="module" src="setup.js?v=20261001x"></script>
 </body>
 </html>

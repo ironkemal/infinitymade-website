@@ -63,97 +63,10 @@ const T = {
     closedSub: 'Diese Box hat bereits ein Inhaber-Konto. Die Ersteinrichtung läuft nur einmal.',
     closedLoginBtn: 'Zur Anmeldung',
   },
-  en: {
-    tokenStepLabel: 'Step 1 of 4', tokenTitle: 'Start setup',
-    tokenSub: 'The setup token was printed at the end of install.sh in the terminal.',
-    tokenLabel: 'Setup token', tokenSubmit: 'Continue',
-    tokenInvalid: 'Token not accepted. Please copy it from the install.sh terminal output.',
-    netzwerkfehler: 'Connection failed. Please try again.',
-
-    ownerStepLabel: 'Step 2 of 4', ownerTitle: 'Practice and account',
-    ownerSub: 'These details create the first owner account.',
-    lblBusinessName: 'Practice name', lblSector: 'Specialty', optSectorChoose: 'Please choose',
-    lblFirstName: 'First name (owner)', lblLastName: 'Last name (owner)',
-    lblEmail: 'Email (login)', lblPassword: 'Password', ownerSubmit: 'Create account',
-    ownerFehlgeschlagen: 'Account could not be created.',
-
-    smtpStepLabel: 'Step 3 of 4', smtpTitle: 'Check mail delivery',
-    smtpIntro: 'We are now checking whether the box can actually send mail.',
-    smtpChecking: 'Checking …',
-    smtpSkippedMsg: 'No SMTP configured — no invitation, password-reset, or appointment mails will be sent.',
-    smtpAckLabel: 'I understand that no mails will be sent, and want to continue anyway.',
-    weiter: 'Continue',
-    smtpSentMsg: (empf) => `Test mail sent to ${empf} — please check inbox and spam folder.`,
-    smtpArrivedQuestion: 'Did the test mail arrive (also check the spam folder)?',
-    smtpNotArrived: 'Not arrived', smtpArrived: 'Arrived',
-    smtpRetry: 'Try again', smtpErrorContinue: 'Continue anyway',
-    smtpConfirmedMsg: 'Mail delivery works.',
-    smtpFehlgeschlagen: 'Test mail could not be sent.',
-    smtpNichtAngekommenText: "The server accepted the mail, but it never arrived. Most common cause: the sender address does not belong to the mail server's own domain (SPF/DMARC) — check the sender address in .env (SMTP_FROM).",
-
-    doneStepLabel: 'Step 4 of 4',
-    pruefChecking: 'Running checks …',
-    pruefTitle: 'Finish setup', pruefIntro: 'A few quick checks before the box is done.',
-    pruefLabelSchema: 'Database structure', pruefLabelRls: 'Tenant isolation (RLS)', pruefLabelDek: 'Encryption',
-    pruefAckMsg: 'At least one check is red — the list below shows which.',
-    pruefAckLabel: 'I want to finish anyway.',
-    pruefAbschlussBtn: 'Finish setup',
-
-    doneTitle: 'Done',
-    doneText: 'The owner account has been created. You can sign in now.',
-    doneLoginBtn: 'Go to sign in',
-
-    closedTitle: 'Already set up',
-    closedSub: 'This box already has an owner account. Initial setup only runs once.',
-    closedLoginBtn: 'Go to sign in',
-  },
-  tr: {
-    tokenStepLabel: '1 / 4. adım', tokenTitle: 'Kuruluma başla',
-    tokenSub: 'Kurulum jetonu, install.sh çalıştırıldığında terminalde göründü.',
-    tokenLabel: 'Kurulum jetonu', tokenSubmit: 'İleri',
-    tokenInvalid: 'Jeton kabul edilmedi. Lütfen install.sh çıktısından kopyalayın.',
-    netzwerkfehler: 'Bağlantı başarısız oldu. Lütfen tekrar deneyin.',
-
-    ownerStepLabel: '2 / 4. adım', ownerTitle: 'Praxis ve hesap',
-    ownerSub: 'Bu bilgiler ilk sahip (owner) hesabını oluşturur.',
-    lblBusinessName: 'Praxis adı', lblSector: 'Alan (Fachbereich)', optSectorChoose: 'Seçiniz',
-    lblFirstName: 'Ad (sahip)', lblLastName: 'Soyad (sahip)',
-    lblEmail: 'E-posta (giriş)', lblPassword: 'Şifre', ownerSubmit: 'Hesap oluştur',
-    ownerFehlgeschlagen: 'Hesap oluşturulamadı.',
-
-    smtpStepLabel: '3 / 4. adım', smtpTitle: 'Mail gönderimini kontrol et',
-    smtpIntro: 'Şimdi kutunun gerçekten mail gönderip gönderemediğini kontrol ediyoruz.',
-    smtpChecking: 'Kontrol ediliyor …',
-    smtpSkippedMsg: 'SMTP kurulmadı — davet, şifre sıfırlama veya randevu maili gönderilmeyecek.',
-    smtpAckLabel: 'Hiçbir mail gönderilmeyeceğinin farkındayım ve yine de devam etmek istiyorum.',
-    weiter: 'İleri',
-    smtpSentMsg: (empf) => `${empf} adresine test maili gönderildi — lütfen gelen kutusunu ve spam klasörünü kontrol edin.`,
-    smtpArrivedQuestion: 'Test maili geldi mi (spam klasörünü de kontrol edin)?',
-    smtpNotArrived: 'Gelmedi', smtpArrived: 'Geldi',
-    smtpRetry: 'Tekrar dene', smtpErrorContinue: 'Yine de devam et',
-    smtpConfirmedMsg: 'Mail gönderimi çalışıyor.',
-    smtpFehlgeschlagen: 'Test maili gönderilemedi.',
-    smtpNichtAngekommenText: 'Mail sunucu tarafından kabul edildi ama ulaşmadı. En yaygın sebep: gönderen adresi mail sunucusunun kendi alan adına ait değil (SPF/DMARC) — .env içindeki gönderen adresini kontrol edin (SMTP_FROM).',
-
-    doneStepLabel: '4 / 4. adım',
-    pruefChecking: 'Kontroller yapılıyor …',
-    pruefTitle: 'Kurulumu tamamla', pruefIntro: 'Kutu bitmeden önce birkaç kısa kontrol.',
-    pruefLabelSchema: 'Veritabanı yapısı', pruefLabelRls: 'Kiracı ayrımı (RLS)', pruefLabelDek: 'Şifreleme',
-    pruefAckMsg: 'En az bir kontrol kırmızı — aşağıdaki liste hangisi olduğunu gösterir.',
-    pruefAckLabel: 'Yine de tamamlamak istiyorum.',
-    pruefAbschlussBtn: 'Kurulumu tamamla',
-
-    doneTitle: 'Tamamlandı',
-    doneText: 'Sahip hesabı oluşturuldu. Şimdi giriş yapabilirsiniz.',
-    doneLoginBtn: 'Girişe git',
-
-    closedTitle: 'Zaten kuruldu',
-    closedSub: 'Bu kutuda zaten bir sahip hesabı var. İlk kurulum yalnızca bir kez çalışır.',
-    closedLoginBtn: 'Girişe git',
-  },
 };
 
-let lang = localStorage.getItem('infinity_lang') || 'de';
+// Produkt ist nur Deutsch (Entscheidung 28.09.2026) — kein Sprachumschalter, kein infinity_lang.
+const lang = 'de';
 
 function applyLang() {
   const t = T[lang];
@@ -191,19 +104,8 @@ function applyLang() {
   setText('closedTitle', t.closedTitle); setText('closedSub', t.closedSub);
   setText('closedLoginBtn', t.closedLoginBtn);
 
-  document.querySelectorAll('.lang-switch button').forEach((b) => {
-    b.classList.toggle('active', b.dataset.lang === lang);
-  });
 }
 applyLang();
-
-document.querySelectorAll('.lang-switch button').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    lang = btn.dataset.lang;
-    localStorage.setItem('infinity_lang', lang);
-    applyLang();
-  });
-});
 
 const stepToken = document.getElementById('stepToken');
 const stepOwner = document.getElementById('stepOwner');

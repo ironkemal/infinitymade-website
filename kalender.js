@@ -59,29 +59,10 @@ const T = {
     lbl_manual_title: 'Neuer Termin', lbl_manual_emp: 'Mitarbeiter', lbl_manual_start: 'Von', lbl_manual_end: 'Bis', lbl_manual_cust: 'Kundenname', lbl_manual_phone: 'Telefon', btn_manual_cancel: 'Abbrechen', btn_manual_save: 'Termin eintragen',
     lbl_loading: 'LÄDT...', alert_hours_saved: 'Arbeitszeiten gespeichert!', alert_service_delete: 'Dienstleistung wirklich löschen?', status_connected: 'Verbunden', status_disconnected: 'Getrennt', btn_connect: 'Verbinden', btn_disconnect: 'Trennen', me: '(Sie)'
   },
-  tr: {
-    nav_calendar: 'Takvim', nav_team: 'Personel Yönetimi', nav_services: 'Hizmetler', nav_hours: 'Çalışma Saatlerim', nav_integrations: 'Entegrasyonlar', nav_dashboard: 'Ana Dashboard',
-    title_calendar: 'Takvim', sub_calendar: 'Randevu oluşturmak için takvim üzerinde bir saate tıklayın.', btn_add_leave: 'İzin (Tatil) Ekle',
-    title_team: 'Ekip Yönetimi', lbl_invite_code: 'Şirket Davet Kodunuz', sub_invite_code: 'Çalışanlarınız kayıt olurken bu kodu kullanabilir.', lbl_emp_list: 'Personelleriniz',
-    title_services: 'Hizmetler', lbl_add_service: 'Yeni Hizmet Ekle', lbl_srv_title: 'Hizmet Adı', lbl_srv_dur: 'Süre (Dakika)', lbl_srv_price: 'Fiyat', lbl_srv_emps: 'Hangi personeller verebilir?', btn_srv_save: 'Kaydet', lbl_srv_list: 'Kayıtlı Hizmetler',
-    title_hours: 'Çalışma Saatlerim', btn_save_hours: 'Kaydet', title_integrations: 'Entegrasyonlar', sub_google: 'Randevular senkronize edilir ve otomatik Meet linki oluşturulur.',
-    lbl_leave_title: 'İzin / Tatil (Beurlaubt) Ekle', lbl_leave_emp: 'Kimin İçin?', lbl_leave_start: 'Başlangıç', lbl_leave_end: 'Bitiş', lbl_leave_reason: 'Sebep (Örn: Tatil, Hastalık)', btn_leave_cancel: 'İptal', btn_leave_save: 'Kaydet',
-    lbl_manual_title: 'Yeni Randevu Ekle', lbl_manual_emp: 'Personel', lbl_manual_start: 'Başlangıç', lbl_manual_end: 'Bitiş', lbl_manual_cust: 'Müşteri Adı Soyadı', lbl_manual_phone: 'Telefon', btn_manual_cancel: 'İptal', btn_manual_save: 'Randevuyu Kaydet',
-    lbl_loading: 'YÜKLENİYOR...', alert_hours_saved: 'Saatler başarıyla kaydedildi!', alert_service_delete: 'Hizmeti silmek istediğinize emin misiniz?', status_connected: 'Bağlandı', status_disconnected: 'Bağlı Değil', btn_connect: 'Bağlan', btn_disconnect: 'Bağlantıyı Kes', me: '(Siz)'
-  },
-  en: {
-    nav_calendar: 'Calendar', nav_team: 'Team Management', nav_services: 'Services', nav_hours: 'Working Hours', nav_integrations: 'Integrations', nav_dashboard: 'Back to Dashboard',
-    title_calendar: 'Calendar', sub_calendar: 'Click on the calendar to create an appointment.', btn_add_leave: 'Add Leave (Time Off)',
-    title_team: 'Team', lbl_invite_code: 'Company Invite Code', sub_invite_code: 'Employees can use this code to join your company.', lbl_emp_list: 'Your Team Members',
-    title_services: 'Services', lbl_add_service: 'Add New Service', lbl_srv_title: 'Service Name', lbl_srv_dur: 'Duration (Mins)', lbl_srv_price: 'Price', lbl_srv_emps: 'Which employees provide this?', btn_srv_save: 'Save', lbl_srv_list: 'Saved Services',
-    title_hours: 'Working Hours', btn_save_hours: 'Save', title_integrations: 'Integrations', sub_google: 'Appointments are synced and Google Meet links are generated automatically.',
-    lbl_leave_title: 'Add Leave (Time Off)', lbl_leave_emp: 'For Whom?', lbl_leave_start: 'Start Date', lbl_leave_end: 'End Date', lbl_leave_reason: 'Reason (e.g. Holiday, Sick)', btn_leave_cancel: 'Cancel', btn_leave_save: 'Save',
-    lbl_manual_title: 'New Appointment', lbl_manual_emp: 'Employee', lbl_manual_start: 'Start', lbl_manual_end: 'End', lbl_manual_cust: 'Customer Name', lbl_manual_phone: 'Phone', btn_manual_cancel: 'Cancel', btn_manual_save: 'Save Appointment',
-    lbl_loading: 'LOADING...', alert_hours_saved: 'Working hours saved successfully!', alert_service_delete: 'Are you sure you want to delete this service?', status_connected: 'Connected', status_disconnected: 'Disconnected', btn_connect: 'Connect', btn_disconnect: 'Disconnect', me: '(You)'
-  }
 };
 
-let lang = localStorage.getItem('kalender_lang') || 'de';
+// Produkt ist nur Deutsch (Entscheidung 28.09.2026) — kein Sprachumschalter.
+const lang = 'de';
 
 function applyLang() {
   const t = T[lang];
@@ -94,22 +75,10 @@ function applyLang() {
     if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && el.placeholder) el.placeholder = t[key];
   }
 
-  document.querySelectorAll('.lang-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.lang === lang);
-  });
-  
   if (calendar) {
     calendar.setOption('locale', lang);
   }
 }
-
-document.querySelectorAll('.lang-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    lang = btn.dataset.lang;
-    localStorage.setItem('kalender_lang', lang);
-    applyLang();
-  });
-});
 
 function authFetch(url, options = {}) {
   return fetch(url, {
@@ -304,11 +273,11 @@ async function initCalendar() {
     initialView: window.innerWidth < 768 ? 'timeGridDay' : 'resourceTimeGridDay',
     headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,resourceTimeGridDay,timeGridDay' },
     buttonText: {
-      today:              lang === 'tr' ? 'Bugün'       : lang === 'de' ? 'Heute'     : 'Today',
-      month:              lang === 'tr' ? 'Ay'          : lang === 'de' ? 'Monat'     : 'Month',
-      week:               lang === 'tr' ? 'Hafta'       : lang === 'de' ? 'Woche'     : 'Week',
-      day:                lang === 'tr' ? 'Gün'         : lang === 'de' ? 'Tag'       : 'Day',
-      resourceTimeGridDay: lang === 'tr' ? 'Tüm Ekip'  : lang === 'de' ? 'Team-Tag'  : 'Team Day',
+      today:              'Heute',
+      month:              'Monat',
+      week:               'Woche',
+      day:                'Tag',
+      resourceTimeGridDay: 'Team-Tag',
     },
     locale: lang,
     resources: teamMembers.map(t => ({ id: t.id, title: t.business_name || t.email.split('@')[0] })),
