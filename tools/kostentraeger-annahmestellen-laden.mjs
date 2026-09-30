@@ -1,155 +1,70 @@
 #!/usr/bin/env node
-// Lädt die VKG-Verknüpfungen (Datenannahmestelle-Routing) aus den echten
-// Kostenträgerdateien in `kostentraeger_annahmestellen`.
+// Synchronisiert die Kostenträgerdateien (TP5) mit der DB — DATUMSGESTEUERT.
+//   kostentraeger                 Enddaten/Änderungen/neue IK (nie DELETE, FK prescriptions)
+//   kostentraeger_annahmestellen  VKG-Zeilen (Datenannahmestelle) — Sync auf den Stichtagsstand
+//   kostentraeger_anschriften     ANS-Zeilen — Sync auf den Stichtagsstand
 //
-// Warum das hier steht (06.09.2026, Ops #264): der erste Import lief per Hand
-// über einzelne SQL-Batches, nicht wiederholbar — beim nächsten Quartalswechsel
-// (neue Dateien unter wissensbank/gemeinsam/kostentraeger/, Kart W-01) wäre die
-// Arbeit sonst von vorn nötig. Dieses Script macht sie mit einem Aufruf erneut.
+// Warum das hier steht (06.09.2026, Ops #264): der erste Import lief per Hand,
+// nicht wiederholbar — dieses Script macht ihn mit einem Aufruf erneut.
+// 30.09.2026 (W-01 #9-#11): umgebaut für den Q4-Wechsel:
+//   · Dateien werden nach Zeichensatz gelesen (Q4 = ISO-8859-1, sonst U+FFFD in Namen)
+//   · "gültig" = Datum: je Kassenart zählt die zum STICHTAG gültige Ausgabe
+//     (Standard: heute, Berlin; --stichtag=YYYY-MM-DD zum Vorausrechnen)
+//   · kostentraeger: Enddaten der KOMMENDEN Ausgabe (IKK Nordrhein 30.09., entfallene IK)
+//     werden schon heute gesetzt und wirken erst am Datum — kostentraegerAbfrage()
+//     filtert valid_to >= heute. Der übrige Stand kommt nur aus der heute gültigen Ausgabe.
+//   · Annahmestellen/Anschriften haben KEINE Gültigkeitsspalten und der Leser filtert
+//     nicht → zwei Stände nebeneinander = zufälliger Empfänger (AOK Bayern DLZ
+//     Schwandorf -> SCD Ebermannsdorf). Deshalb NUR Stichtagsstand; veraltete Zeilen
+//     bekannter IK werden gelöscht (kein FK zeigt auf diese Tabellen). Also: dieses
+//     Script AM 01.10.2026 (oder danach) laufen lassen; vorher ändert es dort nichts.
 //
 // Nutzung:
-//   node tools/kostentraeger-annahmestellen-laden.mjs           # nur anzeigen
-//   node tools/kostentraeger-annahmestellen-laden.mjs --write   # tatsächlich laden
+//   node tools/kostentraeger-annahmestellen-laden.mjs                        # nur anzeigen (DB nur LESEN)
+//   node tools/kostentraeger-annahmestellen-laden.mjs --stichtag=2026-10-01  # Vorschau des Wechsels
+//   node tools/kostentraeger-annahmestellen-laden.mjs --write                # tatsächlich schreiben
 //
-// Lädt NICHT automatisch — bei neuen Dateien zuerst die Liste ECHT_DATEIEN und
-// die Stichtage (quelle_stand, von der Herausgeberseite / VDT-Segment) unten
-// von Hand aktualisieren.
-// ⚠️ `kostentraeger_annahmestellen` und `kostentraeger_anschriften` sind seit
-// 19./20.09.2026 NICHT mehr codeStumm: `ladeAnnahmestelle()` und
-// `ladePapierannahmestelle()` lesen sie im laufenden Produktivbetrieb.
-// Ein TRUNCATE im laufenden Betrieb würde parallele Abrechnungen unterbrechen
-// (412-Fehler beim Routing). Das Script nutzt daher idempotentes Upsert
-// (on_conflict / resolution=ignore-duplicates). Ein TRUNCATE darf — falls überhaupt
-// zur Bereinigung veralteter Quartalsstände nötig — nur in einem exklusiven
-// Wartungsfenster außerhalb des Abrechnungsbetriebs erfolgen.
+// Neue Lieferung: Datei in AUSGABEN eintragen (Dateiname + gültig-ab laut
+// wissensbank/REGISTER.md W-01), alte Zeile STEHEN LASSEN (Datei bleibt im Repo).
+// ⚠️ Die Tabellen werden im laufenden Abrechnungsbetrieb gelesen — kein TRUNCATE.
 
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { parseKostentraegerDatei } from '../api-backend/billing/kostentraeger/parser.js';
+import { leseKostentraegerDatei } from '../api-backend/billing/kostentraeger/datei-lesen.js';
+import {
+  waehleAusgaben, planKostentraeger, sollZeilen, planKind,
+  VKG_SCHLUESSEL, ANS_SCHLUESSEL,
+} from '../api-backend/billing/kostentraeger/lade-plan.js';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HIER, '..');
 const ECHT_DIR = join(REPO, 'wissensbank', 'gemeinsam', 'kostentraeger');
 
-// Gültig-ab je Kassenart-Datei — VDT-Segment / Herausgeberseite prüfen,
-// siehe wissensbank/REGISTER.md Kart W-01.
-//
-// ⛔ ZU LADEN IST DIE HEUTE GÜLTIGE AUSGABE, NICHT DIE NEUESTE.
-// Der Wert rechts ist ein "gültig ab"-Datum. Liegt es in der Zukunft, gehört
-// die Datei noch nicht in die DB — auch dann nicht, wenn sie die neuere ist.
-// Genau das ist am 06.09.2026 passiert: EK05Q426 (vdek, gültig ab 01.10.2026)
-// wurde geladen und EK05Q226 (gültig ab 01.04.2026, also die heute gültige)
-// weggelassen, begründet mit "Q4 ist der Nachfolger von Q2". Bei quartalsweise
-// datierten Stammdaten ist "das Neueste ist richtig" falsch: bis zum Stichtag
-// gilt die alte Ausgabe, und eine Datenannahmestelle aus der falschen Periode
-// heisst im §302 abgewiesene Datei. Nachgemessen wurde der Schaden dieses
-// Falls (Q2 vs. Q4 zeichenweise): Unterschied sind zwei Zeilen bei der TK
-// unter Abrechnungscode 30, unsere Codes 20/71/72 sind identisch — also heute
-// harmlos, aber der Denkfehler bleibt. Details: db/REGISTER.md ->
-// `kostentraeger_annahmestellen`, Abschnitt "ZEITFEHLER".
-//
-// Regel beim nächsten Quartalswechsel: erst am Stichtag umstellen, nicht
-// vorher. Das Script warnt unten von selbst, wenn ein Datum in der Zukunft
-// liegt oder zwei Dateien derselben Kassenart eingetragen sind.
-const ECHT_DATEIEN = {
-  'AO05Q326_KE3.txt': '2026-07-27',
-  'BK05Q326_KE1.txt': '2026-07-01',
-  'IK05Q326_KE1.txt': '2026-07-01',
-  'BN050526_KE0.txt': '2026-05-01',
-  'LK05Q226_KE0.txt': '2025-08-26',
-  // gkv-302 Entscheidung 2026-09-17 (Ops #292): EK05Q426 (gültig erst ab
-  // 01.10.2026) war live geladen, obwohl EK05Q226 die heute gültige Ausgabe
-  // ist. Am 01.10.2026 zurücktauschen — dann ist EK05Q426 die richtige.
-  'EK05Q226_KE0.txt': '2026-04-01',
-};
+// Gültig-ab je Datei (VDT-Segment / Herausgeberseite, wissensbank/REGISTER.md W-01).
+// Regel: heute gilt je Kassenart die NEUESTE Ausgabe mit gültig-ab <= Stichtag.
+// Nichts hier löschen, wenn eine Ausgabe fällt — das Datum regelt es.
+const AUSGABEN = [
+  { datei: 'AO05Q326_KE3.txt', gueltigAb: '2026-07-27' },
+  { datei: 'BK05Q326_KE1.txt', gueltigAb: '2026-07-01' },
+  { datei: 'IK05Q326_KE1.txt', gueltigAb: '2026-07-01' },
+  { datei: 'EK05Q226_KE0.txt', gueltigAb: '2026-04-01' },
+  // Q4/2026 (30.09.2026 byte-exakt vom Herausgeber, ISO-8859-1). EK05Q426_KE0 ist
+  // NIE gültig geworden (durch KE1 ersetzt) und steht bewusst nicht in der Liste.
+  { datei: 'AO05Q426_KE0.txt', gueltigAb: '2026-10-01' },
+  { datei: 'BK05Q426_KE0.txt', gueltigAb: '2026-10-01' },
+  { datei: 'IK05Q426_KE0.txt', gueltigAb: '2026-10-01' },
+  { datei: 'EK05Q426_KE1.txt', gueltigAb: '2026-10-01' },
+  // Unverändert gültig
+  { datei: 'BN050526_KE0.txt', gueltigAb: '2026-05-01' },
+  { datei: 'LK05Q226_KE0.txt', gueltigAb: '2025-08-26' },
+];
 
-const ns = (v) => (v === null || v === undefined ? '' : v);
+const berlinHeute = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date());
 
-// Zeitprüfung: warnt, bevor eine noch nicht gültige Ausgabe in die DB geht,
-// und wenn zwei Ausgaben derselben Kassenart gleichzeitig eingetragen sind
-// (die beiden Präfixzeichen des Dateinamens sind die Kassenart: AO/BK/IK/BN/LK/EK).
-function stichtageWarnen() {
-  const heute = new Date().toISOString().slice(0, 10);
-  let problem = false;
-
-  for (const [datei, stand] of Object.entries(ECHT_DATEIEN)) {
-    if (stand > heute) {
-      console.warn(`⛔ ${datei} ist erst ab ${stand} gültig (heute ${heute}).`);
-      console.warn('   Bis dahin gehört die vorherige Ausgabe derselben Kassenart in die DB.');
-      console.warn('   Siehe db/REGISTER.md -> kostentraeger_annahmestellen, Abschnitt ZEITFEHLER.');
-      problem = true;
-    }
-  }
-
-  const proKassenart = {};
-  for (const datei of Object.keys(ECHT_DATEIEN)) {
-    const art = datei.slice(0, 2);
-    (proKassenart[art] ||= []).push(datei);
-  }
-  for (const [art, dateien] of Object.entries(proKassenart)) {
-    if (dateien.length > 1) {
-      console.warn(`⚠️  Kassenart ${art}: ${dateien.length} Ausgaben gleichzeitig eingetragen (${dateien.join(', ')}).`);
-      console.warn('   Der UNIQUE-Schlüssel enthält partner_ik, die Stände kollidieren also nicht —');
-      console.warn('   sie stehen nebeneinander und die Routing-Abfrage bekommt zwei Antworten.');
-      console.warn('   Nur zulässig, wenn der Leser datumsbewusst filtert (quelle_stand <= current_date).');
-      problem = true;
-    }
-  }
-
-  if (!problem) console.log('Stichtagsprüfung: in Ordnung (alle Ausgaben heute gültig, eine je Kassenart).');
-  return problem;
-}
-
-function ladeDaten() {
-  const vkgRows = [];
-  const anschriftenRows = [];
-  let ungueltigeAnschriften = 0;
-  const proDatei = {};
-
-  for (const [datei, stand] of Object.entries(ECHT_DATEIEN)) {
-    const text = readFileSync(join(ECHT_DIR, datei), 'utf8');
-    const records = parseKostentraegerDatei(text);
-    let vkgCount = 0;
-    let anschriftenCount = 0;
-
-    for (const r of records) {
-      for (const v of r.datenannahmestellen) {
-        vkgRows.push({
-          kostentraeger_ik: r.ik,
-          verknuepfungsart: ns(v.verknuepfungsart),
-          partner_ik: ns(v.partner_ik),
-          leistungserbringergruppe: ns(v.leistungserbringergruppe),
-          abrechnungscode: ns(v.abrechnungscode),
-          art_datenlieferung: ns(v.art_datenlieferung),
-          uebermittlungsmedium: ns(v.uebermittlungsmedium),
-          bundesland: ns(v.bundesland),
-          quelle: datei,
-          quelle_stand: stand,
-        });
-        vkgCount++;
-      }
-      for (const a of (r.anschriften || [])) {
-        const art = String(a.art ?? '').trim();
-        if (art === '1' || art === '2' || art === '3') {
-          anschriftenRows.push({
-            kostentraeger_ik: r.ik,
-            art,
-            plz: ns(a.plz),
-            ort: ns(a.ort),
-            strasse: ns(a.strasse),
-            quelle: datei,
-            quelle_stand: stand,
-          });
-          anschriftenCount++;
-        } else {
-          ungueltigeAnschriften++;
-        }
-      }
-    }
-    proDatei[datei] = { vkg: vkgCount, anschriften: anschriftenCount };
-  }
-  return { vkgRows, anschriftenRows, ungueltigeAnschriften, proDatei };
+function parseDatei(ausgabe) {
+  return { ausgabe, records: parseKostentraegerDatei(leseKostentraegerDatei(join(ECHT_DIR, ausgabe.datei))) };
 }
 
 function envLesen() {
@@ -162,101 +77,109 @@ function envLesen() {
   return env;
 }
 
+function restClient(env) {
+  const base = `${env.SUPABASE_URL}/rest/v1`;
+  const kopf = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` };
+  const json = { ...kopf, 'Content-Type': 'application/json' };
+  const pruefen = async (res, was) => {
+    if (!res.ok) { console.error(`${was} fehlgeschlagen: ${res.status} ${(await res.text()).slice(0, 500)}`); process.exit(1); }
+  };
+  return {
+    async alle(tabelle, select, order) {
+      const out = [];
+      for (let o = 0; ; o += 1000) {
+        const res = await fetch(`${base}/${tabelle}?select=${select}&order=${order}&offset=${o}&limit=1000`, { headers: kopf });
+        await pruefen(res, `Lesen ${tabelle}`);
+        const j = await res.json();
+        out.push(...j);
+        if (j.length < 1000) break;
+      }
+      return out;
+    },
+    async insert(tabelle, zeilen) {
+      for (let i = 0; i < zeilen.length; i += 500) {
+        const res = await fetch(`${base}/${tabelle}`, { method: 'POST', headers: { ...json, Prefer: 'return=minimal' }, body: JSON.stringify(zeilen.slice(i, i + 500)) });
+        await pruefen(res, `INSERT ${tabelle} ${i}`);
+      }
+    },
+    async upsert(tabelle, zeilen, onConflict) {
+      for (let i = 0; i < zeilen.length; i += 500) {
+        const res = await fetch(`${base}/${tabelle}?on_conflict=${onConflict}`, { method: 'POST', headers: { ...json, Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(zeilen.slice(i, i + 500)) });
+        await pruefen(res, `UPSERT ${tabelle} ${i}`);
+      }
+    },
+    async patch(tabelle, ik, felder) {
+      const res = await fetch(`${base}/${tabelle}?ik=eq.${encodeURIComponent(ik)}`, { method: 'PATCH', headers: { ...json, Prefer: 'return=minimal' }, body: JSON.stringify({ ...felder, updated_at: new Date().toISOString() }) });
+      await pruefen(res, `PATCH ${tabelle} ${ik}`);
+    },
+    async loeschen(tabelle, ids) {
+      for (let i = 0; i < ids.length; i += 100) {
+        const res = await fetch(`${base}/${tabelle}?id=in.(${ids.slice(i, i + 100).join(',')})`, { method: 'DELETE', headers: { ...kopf, Prefer: 'return=minimal' } });
+        await pruefen(res, `DELETE ${tabelle}`);
+      }
+    },
+  };
+}
+
 async function main() {
   const write = process.argv.includes('--write');
-  const { vkgRows, anschriftenRows, ungueltigeAnschriften, proDatei } = ladeDaten();
+  const argSt = process.argv.find(a => a.startsWith('--stichtag='));
+  const stichtag = argSt ? argSt.split('=')[1] : berlinHeute();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(stichtag)) { console.error('--stichtag=YYYY-MM-DD'); process.exit(1); }
 
-  console.log('Geparste Datensaetze je Datei:');
-  for (const [datei, counts] of Object.entries(proDatei)) {
-    console.log(`  ${datei}: ${counts.vkg} VKG-Zeilen, ${counts.anschriften} Anschriften`);
-  }
-  console.log(`Gesamt: ${vkgRows.length} VKG-Zeilen und ${anschriftenRows.length} Anschriften aus ${Object.keys(ECHT_DATEIEN).length} Dateien geparst.`);
-  if (ungueltigeAnschriften > 0) {
-    console.warn(`⚠️  ${ungueltigeAnschriften} Anschrift-Segmente mit ungueltiger art (nicht in '1','2','3') ignoriert.`);
-  }
+  const { aktiv: aktivA, kommend: kommendA, ohneGueltige } = waehleAusgaben(AUSGABEN, stichtag);
+  if (ohneGueltige.length) { console.error(`Keine zum ${stichtag} gültige Ausgabe für Kassenart ${ohneGueltige.join(', ')}`); process.exit(2); }
+  const aktiv = aktivA.map(parseDatei);
+  const kommend = kommendA.map(parseDatei);
 
-  const zeitProblem = stichtageWarnen();
-  if (zeitProblem && write && !process.argv.includes('--trotzdem')) {
-    console.error('Abbruch: Stichtagsproblem (siehe oben). Bewusst trotzdem laden: --trotzdem');
-    process.exit(2);
-  }
-
-  if (!write) {
-    console.log('Nur-Anzeige-Modus. Zum Laden: --write');
-    return;
-  }
+  console.log(`Stichtag: ${stichtag}${argSt ? ' (vorgegeben)' : ' (heute, Berlin)'}`);
+  for (const e of aktiv) console.log(`  gültig  ${e.ausgabe.datei} (ab ${e.ausgabe.gueltigAb}): ${e.records.length} Datensätze`);
+  for (const e of kommend) console.log(`  kommend ${e.ausgabe.datei} (ab ${e.ausgabe.gueltigAb}): ${e.records.length} Datensätze — nur Enddaten`);
+  const ffd = [...aktiv, ...kommend].reduce((n, e) => n + e.records.filter(r => (r.name || '').includes('\uFFFD')).length, 0);
+  if (ffd) { console.error(`Abbruch: ${ffd} Namen mit U+FFFD (Kodierung).`); process.exit(3); }
 
   const env = envLesen();
-  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = env;
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    console.error('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY fehlen in api-backend/.env');
-    process.exit(1);
-  }
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) { console.error('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY fehlen in api-backend/.env'); process.exit(1); }
+  const db = restClient(env);
 
-  // TRUNCATE geht nur per SQL (Management API / MCP), nicht per REST.
-  // ⚠️ Achtung: kostentraeger_annahmestellen und kostentraeger_anschriften werden
-  // seit 19./20.09.2026 produktiv von ladeAnnahmestelle() / ladePapierannahmestelle()
-  // gelesen. Ein TRUNCATE im laufenden Betrieb wuerde Abrechnungen abbrechen lassen.
-  // Daher arbeitet dieses Script sicher per Upsert (on_conflict).
-  console.log('⚠️  Dieses Script LÄDT per Upsert (on_conflict) — kein TRUNCATE im laufenden Abrechnungsbetrieb.');
+  // 1) kostentraeger
+  const ktDb = await db.alle('kostentraeger', 'ik,name,kurzname,valid_from,valid_to,abrechnender_kt_ik,ist_abrechnender_kt,quelle,quelle_stand,datensatz_status', 'ik.asc');
+  const kt = planKostentraeger({ dbZeilen: ktDb, aktiv, kommend, stichtag });
+  const enddaten = kt.patches.filter(p => 'valid_to' in p.patch);
+  console.log(`\nkostentraeger (DB ${ktDb.length} Zeilen): ${kt.inserts.length} neue IK, ${kt.patches.length} Änderungen (davon Enddaten: ${enddaten.length}), ${kt.namensabweichungen} Namensabweichungen (Name wird nie überschrieben), 0 Löschungen (nie)`);
+  for (const p of enddaten.slice(0, 5)) console.log(`   Enddatum ${p.ik}: ${JSON.stringify(p.patch)}  [${p.grund}]`);
 
-  const BATCH = 500;
+  // 2) VKG / Anschriften
+  const { vkg, ans, ungueltigeAnschriften } = sollZeilen(aktiv);
+  const vkgDb = await db.alle('kostentraeger_annahmestellen', 'id,kostentraeger_ik,verknuepfungsart,partner_ik,leistungserbringergruppe,abrechnungscode,art_datenlieferung,uebermittlungsmedium,bundesland,quelle,quelle_stand', 'id.asc');
+  const ansDb = await db.alle('kostentraeger_anschriften', 'id,kostentraeger_ik,art,plz,ort,strasse,quelle,quelle_stand', 'id.asc');
+  const vkgPlan = planKind({ dbZeilen: vkgDb, soll: vkg, felder: VKG_SCHLUESSEL, vergleich: ['quelle', 'quelle_stand', 'leistungserbringergruppe'] });
+  const ansPlan = planKind({ dbZeilen: ansDb, soll: ans, felder: ANS_SCHLUESSEL, vergleich: ['quelle', 'quelle_stand'] });
+  if (ungueltigeAnschriften) console.warn(`⚠️  ${ungueltigeAnschriften} ANS-Segmente mit art ausserhalb 1/2/3 ignoriert.`);
+  console.log(`kostentraeger_annahmestellen (DB ${vkgDb.length}, Soll ${vkg.size}): +${vkgPlan.inserts.length} neu, ~${vkgPlan.updates.length} aktualisiert, -${vkgPlan.deletes.length} veraltet`);
+  console.log(`kostentraeger_anschriften    (DB ${ansDb.length}, Soll ${ans.size}): +${ansPlan.inserts.length} neu, ~${ansPlan.updates.length} aktualisiert, -${ansPlan.deletes.length} veraltet`);
+  for (const z of vkgPlan.deletes.slice(0, 3)) console.log(`   löschen VKG ${z.kostentraeger_ik} ${z.verknuepfungsart} ${z.partner_ik} code ${z.abrechnungscode}`);
+  for (const z of vkgPlan.inserts.slice(0, 3)) console.log(`   neu     VKG ${z.kostentraeger_ik} ${z.verknuepfungsart} ${z.partner_ik} code ${z.abrechnungscode}`);
+  const umlaute = aktiv.flatMap(e => e.records).filter(r => /[äöüßÄÖÜ]/.test(r.name || '')).slice(0, 3);
+  console.log('Namensprobe (Umlaute):', umlaute.map(r => `${r.ik} ${r.name}`).join(' | '));
 
-  // 1) VKG-Zeilen laden
-  console.log(`Lade ${vkgRows.length} VKG-Zeilen in kostentraeger_annahmestellen...`);
-  const onConflictVkg = 'kostentraeger_ik,verknuepfungsart,partner_ik,abrechnungscode,art_datenlieferung,uebermittlungsmedium,bundesland';
-  const endpointVkg = `${SUPABASE_URL}/rest/v1/kostentraeger_annahmestellen?on_conflict=${onConflictVkg}`;
+  if (!write) { console.log('\nNur-Anzeige-Modus (DB nur gelesen). Zum Schreiben: --write'); return; }
 
-  let insertedVkg = 0;
-  for (let i = 0; i < vkgRows.length; i += BATCH) {
-    const chunk = vkgRows.slice(i, i + BATCH);
-    const res = await fetch(endpointVkg, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=ignore-duplicates,return=minimal',
-      },
-      body: JSON.stringify(chunk),
-    });
-    if (!res.ok) {
-      const t = await res.text();
-      console.error(`VKG Batch ${i}-${i + chunk.length} fehlgeschlagen: ${res.status} ${t.slice(0, 500)}`);
-      process.exit(1);
-    }
-    insertedVkg += chunk.length;
-    console.log(`  VKG: ${insertedVkg}/${vkgRows.length}`);
-  }
-
-  // 2) Anschriften laden
-  console.log(`Lade ${anschriftenRows.length} Anschriften in kostentraeger_anschriften...`);
-  const onConflictAnschriften = 'kostentraeger_ik,art,plz,ort,strasse';
-  const endpointAnschriften = `${SUPABASE_URL}/rest/v1/kostentraeger_anschriften?on_conflict=${onConflictAnschriften}`;
-
-  let insertedAnschriften = 0;
-  for (let i = 0; i < anschriftenRows.length; i += BATCH) {
-    const chunk = anschriftenRows.slice(i, i + BATCH);
-    const res = await fetch(endpointAnschriften, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=ignore-duplicates,return=minimal',
-      },
-      body: JSON.stringify(chunk),
-    });
-    if (!res.ok) {
-      const t = await res.text();
-      console.error(`Anschriften Batch ${i}-${i + chunk.length} fehlgeschlagen: ${res.status} ${t.slice(0, 500)}`);
-      process.exit(1);
-    }
-    insertedAnschriften += chunk.length;
-    console.log(`  Anschriften: ${insertedAnschriften}/${anschriftenRows.length}`);
-  }
-
-  console.log(`Fertig: ${insertedVkg} VKG-Zeilen und ${insertedAnschriften} Anschriften geladen.`);
+  // Reihenfolge: erst Eltern (kostentraeger), dann Kinder
+  console.log('\nSchreibe …');
+  if (kt.inserts.length) await db.insert('kostentraeger', kt.inserts);
+  let n = 0;
+  const queue = [...kt.patches];
+  await Promise.all(Array.from({ length: 8 }, async () => {
+    for (let p = queue.shift(); p; p = queue.shift()) { await db.patch('kostentraeger', p.ik, p.patch); n++; }
+  }));
+  console.log(`  kostentraeger: ${kt.inserts.length} eingefügt, ${n} geändert`);
+  // Erst neue/aktualisierte Zeilen, dann veraltete löschen: kurzzeitig zwei Stände ist besser als kurzzeitig keiner.
+  await db.upsert('kostentraeger_annahmestellen', [...vkgPlan.inserts, ...vkgPlan.updates], VKG_SCHLUESSEL.join(','));
+  await db.loeschen('kostentraeger_annahmestellen', vkgPlan.deletes.map(z => z.id));
+  await db.upsert('kostentraeger_anschriften', [...ansPlan.inserts, ...ansPlan.updates], ANS_SCHLUESSEL.join(','));
+  await db.loeschen('kostentraeger_anschriften', ansPlan.deletes.map(z => z.id));
+  console.log('Fertig.');
 }
 
 main();

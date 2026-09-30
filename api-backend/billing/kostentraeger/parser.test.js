@@ -9,15 +9,17 @@ import {
   waehlePostanschrift,
 } from './parser.js';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { leseKostentraegerDatei, dekodiereKostentraegerDatei } from './datei-lesen.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ECHT_DIR = join(HIER, '..', '..', '..', 'wissensbank', 'gemeinsam', 'kostentraeger');
+// Die ab 01.10.2026 gültige Ausgabe (wissensbank W-01 #10). Ältere Dateien (Q3,
+// EK05Q226, EK05Q426_KE0) bleiben im Repo, sind aber nicht mehr das Regressionsmaß.
 const ECHT_DATEIEN = [
-  'AO05Q326_KE3.txt', 'BK05Q326_KE1.txt', 'IK05Q326_KE1.txt', 'BN050526_KE0.txt',
-  'LK05Q226_KE0.txt', 'EK05Q226_KE0.txt', 'EK05Q426_KE0.txt',
+  'AO05Q426_KE0.txt', 'BK05Q426_KE0.txt', 'IK05Q426_KE0.txt', 'EK05Q426_KE1.txt',
+  'BN050526_KE0.txt', 'LK05Q226_KE0.txt',
 ];
 
 let pass = 0, fail = 0;
@@ -225,28 +227,57 @@ test('waehlePostanschrift: leere Liste → null', () => {
 
 // ── Gegen die echte Kostenträgerdatei (Ops-Kart #264, wissensbank Kart W-01) ──
 //
-// 1.329 Datensätze / 1.043 eindeutige IK ist die von wissensbank per Websuche
-// gegen die Herausgeberseite verifizierte Zielzahl (IDK-Segmente gezaehlt,
-// UNZ-Summen gegengeprueft). Weicht diese Zahl ab, ist entweder eine der 7
-// Dateien beim naechsten Quartalswechsel unvollstaendig ersetzt worden, oder
-// der Parser hat sich veraendert — beides soll hier auffallen, nicht erst
-// beim DB-Import.
-test('echte Kostenträgerdatei (7 Kassenart-Dateien): 1.329 Datensätze / 1.043 eindeutige IK', () => {
-  let gesamt = 0;
+// 1.067 Datensätze / 1.042 eindeutige IK / 11.411 VKG ist der ab 01.10.2026
+// gültige Stand (wissensbank W-01 #10, mit dem Latin-1-Leser gezählt). Weicht die
+// Zahl ab, ist beim Quartalswechsel eine der Dateien unvollständig ersetzt worden
+// oder der Parser hat sich verändert — das soll HIER auffallen, nicht erst im DB-Import.
+test('echte Kostenträgerdatei (Stand ab 01.10.2026, 6 Dateien): 1.067 Datensätze / 1.042 eindeutige IK / 11.411 VKG', () => {
+  let gesamt = 0, vkg = 0;
   const iks = new Set();
   for (const datei of ECHT_DATEIEN) {
-    const text = readFileSync(join(ECHT_DIR, datei), 'utf8');
-    const records = parseKostentraegerDatei(text);
+    const records = parseKostentraegerDatei(leseKostentraegerDatei(join(ECHT_DIR, datei)));
     for (const r of records) {
       assert.match(r.ik, /^\d{9}$/, `${datei}: unplausible IK "${r.ik}"`);
       assert.ok(r.name, `${datei}: Datensatz ohne Name (IK ${r.ik})`);
       assert.ok(Array.isArray(r.anschriften), `${datei}: anschriften-Feld fehlt`);
       iks.add(r.ik);
+      vkg += r.datenannahmestellen.length;
     }
     gesamt += records.length;
   }
-  assert.equal(gesamt, 1329);
-  assert.equal(iks.size, 1043);
+  assert.equal(gesamt, 1067);
+  assert.equal(iks.size, 1042);
+  assert.equal(vkg, 11411);
+});
+
+// W-01 #9: die Q4-Dateien sind ISO-8859-1. Mit 'utf8' gelesen bleiben alle Zähler
+// gleich, aber jeder Umlaut im Kassennamen wird U+FFFD — der Zähltest oben sieht
+// das NICHT. Deshalb ein eigener Test auf die Namen (Kurz- UND Langname).
+test('kein U+FFFD in Kassennamen — weder Latin-1- (Q4) noch UTF-8-Dateien (Q3/Q2)', () => {
+  const alle = [...ECHT_DATEIEN, 'AO05Q326_KE3.txt', 'BK05Q326_KE1.txt', 'IK05Q326_KE1.txt', 'EK05Q226_KE0.txt'];
+  let umlautNamen = 0;
+  for (const datei of alle) {
+    const text = leseKostentraegerDatei(join(ECHT_DIR, datei));
+    assert.ok(!text.includes('\uFFFD'), `${datei}: U+FFFD im Text`);
+    for (const r of parseKostentraegerDatei(text)) {
+      const namen = [r.name, ...(r.namensteile || [])].join(' ');
+      assert.ok(!namen.includes('\uFFFD'), `${datei}: U+FFFD im Namen von IK ${r.ik}`);
+      if (/[äöüßÄÖÜ]/.test(namen)) umlautNamen++;
+    }
+  }
+  assert.ok(umlautNamen > 50, `zu wenige Umlaut-Namen (${umlautNamen}) — Dekodierung vermutlich falsch`);
+});
+
+test('Latin-1-Q4-Datei: Umlaute stimmen (CITY BKK/Ost KöRiA)', () => {
+  const r = parseKostentraegerDatei(leseKostentraegerDatei(join(ECHT_DIR, 'BK05Q426_KE0.txt')));
+  assert.equal(r.find(x => x.ik === '101592133').name, 'CITY BKK/Ost KöRiA');
+});
+
+test('dekodiereKostentraegerDatei: UTF-8 bleibt UTF-8, Latin-1 (UNOC:3) wird latin1, Rest wirft', () => {
+  const kopf = "UNA:+,? 'UNB+UNOC:3+1+2+260701:1230+1++X'";
+  assert.match(dekodiereKostentraegerDatei(Buffer.from(kopf + 'Müller', 'utf8')), /Müller$/);
+  assert.match(dekodiereKostentraegerDatei(Buffer.from(kopf + 'Müller', 'latin1')), /Müller$/);
+  assert.throws(() => dekodiereKostentraegerDatei(Buffer.from("UNA:+,? 'UNB+UNOA:1+1+2+260701:1230+1++X'M\xfcller", 'latin1')), /Kodierung/);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);
