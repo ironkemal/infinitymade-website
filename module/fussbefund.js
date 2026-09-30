@@ -90,6 +90,8 @@
  */
 
 import { resolveSector } from '../nav-registry.js?v=20261001i';
+import { ladeAktuelle } from './anamnese-daten.js?v=20261001r';
+import { risikoKopie, risikoZeilen, befundRisikoHinweis } from './anamnese-formulare.js?v=20261001r';
 
 // ── Legende ────────────────────────────────────────────────────────────────
 
@@ -169,6 +171,8 @@ let dokumentKlick = null;       // Zuhörer zum Schliessen des Patienten-Dropdow
 // selbst auf — der Preset wird deshalb hier hinterlegt und beim Aufbau
 // eingelöst, statt ein zweites Mal zu montieren.
 let ausstehenderPreset = null;
+let risikoRow = null;           // gültige Podo-Anamnese des gewählten Patienten (führende Quelle der Dauerrisiken)
+let befundRisikoAnzeige = null; // `befund.risiken` des gerade offenen Befunds (nur für den Erklärhinweis)
 let aktuelleWurzel = null;      // Container, in dem die Karte gerade steht (Panel oder Tagesbehandlung)
 
 function aktiveLegende() {
@@ -375,7 +379,6 @@ function renderWerkzeugleiste() {
 // ── Karte füllen / leeren ──────────────────────────────────────────────────
 
 const DEFORMITAETEN = ['senkfuss','spreizfuss','knickfuss_innen','knickfuss_aussen','hohlfuss','plattfuss','andere','fussschwellungen'];
-const RISIKEN       = ['diabetes','allergien','infektionskrankheiten','gerinnungshemmer'];
 const HAUT          = ['hornhaut','hallux_valgus','warzen','hautpilz'];
 const TOE_KEYS      = ['huehneraugen_auf','huehneraugen_zw','hammerzehen','nagelpilz','eingewachsen','zustand_naegel'];
 
@@ -399,8 +402,10 @@ function schreibeBefundFelder(row) {
   setCb('fbp_kramp_unter_l', kr.unterschenkel?.l);
   setCb('fbp_kramp_unter_r', kr.unterschenkel?.r);
 
-  const risk = b.risiken || {};
-  RISIKEN.forEach(k => setCb(`fbp_risk_${k}`, risk[k]));
+  // Risiken sind keine Eingabe mehr: der Block zeigt die Anamnese (renderRisikoBox);
+  // hier nur merken, was der geöffnete Befund als Kopie trägt.
+  befundRisikoAnzeige = b.risiken || null;
+  renderRisikoBox();
 
   const haut = b.haut || {};
   HAUT.forEach(k => setCb(`fbp_haut_${k}`, haut[k]));
@@ -447,8 +452,9 @@ function collectBefund() {
   const deformitaeten = {};
   DEFORMITAETEN.forEach(k => { deformitaeten[k] = paar('fbp_def', k); });
 
-  const risiken = {};
-  RISIKEN.forEach(k => { risiken[k] = getCb(`fbp_risk_${k}`); });
+  // Kopie der Dauerrisiken aus der GÜLTIGEN Anamnese, mit Herkunft (`anamnese_id`/`anamnese_version`).
+  // Der Befund bleibt ein vollständiger Schnappschuss; alte Befunde werden nie umgeschrieben.
+  const risiken = risikoKopie(risikoRow) || {};
 
   const haut = { freitext: el('fbpHautFreitext')?.value || '' };
   HAUT.forEach(k => { haut[k] = getCb(`fbp_haut_${k}`); });
@@ -644,6 +650,7 @@ function terminGewaehlt() {
 }
 
 async function patientGewaehlt(leadId) {
+  risikoRow = null;
   autofillStammdaten(leadId);
   currentId = null;
   currentEintragId = null;
@@ -658,6 +665,7 @@ async function patientGewaehlt(leadId) {
   if (sel) sel.innerHTML = '<option value="">Termine werden geladen…</option>';
 
   await ladePatientenkontext(leadId);
+  await ladeRisiko(leadId);
   renderTerminAuswahl();
 
   // Der zeitlich nächste Termin ist die Vorauswahl — das ist der Griff, den
@@ -673,6 +681,45 @@ async function patientGewaehlt(leadId) {
   }
 
   renderBefundListe();
+}
+
+// ── Risikoblock: Nur-Lese-Anzeige der Anamnese ─────────────────────────────
+
+/** Lädt die gültige Podo-Anamnese; bei Fehler bleibt der Block ehrlich leer („nicht ladbar"). */
+async function ladeRisiko(leadId) {
+  const { row, fehler } = await ladeAktuelle(ctx.supabase, leadId, 'podo');
+  risikoRow = fehler ? null : row;
+  renderRisikoBox(fehler);
+}
+
+function renderRisikoBox(fehler = false) {
+  const box = el('fbpRisikoBox');
+  if (!box) return;
+  const leadId = el('fbpPatient')?.value;
+  const row = risikoRow && risikoRow.patient_id === leadId ? risikoRow : null;
+  const stil = 'font-size:13px;color:var(--text-main);';
+  let html;
+  if (!leadId) {
+    html = `<div style="${stil}color:var(--text-muted);">Bitte zuerst einen Patienten wählen.</div>`;
+  } else if (fehler) {
+    html = `<div style="${stil}color:var(--text-muted);">Die Anamnese konnte nicht geladen werden.</div>`;
+  } else if (!row) {
+    html = `<div style="${stil}color:var(--text-muted);">Für diesen Patienten liegt noch keine Podologie-Anamnese vor.</div>
+      <button type="button" class="btn-ghost btn-sm" data-fbp-anamnese style="margin-top:6px;">Anamnese erfassen</button>`;
+  } else {
+    const zeilen = risikoZeilen(row);
+    const hinweis = befundRisikoHinweis(befundRisikoAnzeige, row);
+    html = `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:6px 14px;${stil}">
+        ${zeilen.map(z => `<div><span style="color:var(--text-muted);">${escapeHtml(z.label)}:</span> ${escapeHtml(z.text)}</div>`).join('') || '<div style="color:var(--text-muted);">Keine Risiken angegeben.</div>'}
+      </div>
+      ${row.geprueft_am ? '' : '<div style="font-size:12px;color:var(--warning-text,var(--text-muted));margin-top:6px;">Anamnese ungeprüft (vom Patienten angegeben).</div>'}
+      ${hinweis ? `<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">${escapeHtml(hinweis)}</div>` : ''}
+      <button type="button" class="btn-ghost btn-sm" data-fbp-anamnese style="margin-top:8px;">Anamnese ändern</button>`;
+  }
+  box.innerHTML = html;
+  box.querySelector('[data-fbp-anamnese]')?.addEventListener('click', () => {
+    if (leadId) ctx.oeffneAnamnese?.(leadId);
+  });
 }
 
 // ── Speichern ──────────────────────────────────────────────────────────────
@@ -706,6 +753,9 @@ async function speichern() {
 
   const btn = el('fbpSaveBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Speichert…'; }
+
+  // Frisch lesen: zwischen Öffnen und Speichern kann die Anamnese eine neue Version bekommen haben.
+  await ladeRisiko(patientId);
 
   const felder = {
     erstellt_am:  erstelltAm,
@@ -1196,12 +1246,8 @@ function kartenHtml(heute) {
 
         <div class="fbp-section">
           <div class="fbp-section-title">Risiken</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;font-size:13px;">
-            ${checkbox('fbp_risk_diabetes', 'Diabetes')}
-            ${checkbox('fbp_risk_allergien', 'Allergien')}
-            ${checkbox('fbp_risk_infektionskrankheiten', 'Infektionskrankheiten')}
-            ${checkbox('fbp_risk_gerinnungshemmer', 'Gerinnungshemmer')}
-          </div>
+          <!-- Nur lesend: die Dauerrisiken führt allein die Anamnese (Konsey/db-ustasi 30.09.2026). -->
+          <div id="fbpRisikoBox"></div>
         </div>
 
         <div class="fbp-section">

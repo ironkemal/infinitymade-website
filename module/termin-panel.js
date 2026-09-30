@@ -221,8 +221,11 @@ export function zeichneAnamnese(karte, inhalt, datumEl, daten) {
     daten.notizen ? `<div style="grid-column:1/-1;">${aRow('Notizen', daten.notizen)}</div>` : '',
   ].filter(Boolean).join('');
 
-  if (datumEl && daten.updated_at) {
-    datumEl.textContent = new Date(daten.updated_at)
+  // Append-only seit 30.09.2026: eine Speicherung ist eine neue Zeile, `updated_at` bleibt stehen —
+  // das Datum der gültigen Fassung ist ihr `created_at`.
+  const stand = daten.created_at || daten.updated_at;
+  if (datumEl && stand) {
+    datumEl.textContent = new Date(stand)
       .toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
   karte.hidden = false;

@@ -20,7 +20,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20261001p" />
+  <link rel="stylesheet" href="dashboard.css?v=20261001r" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -2094,6 +2094,9 @@
               <p class="panel-sub" data-i18n="anamnese_sub">Digitales Anamnese-Formular</p>
             </div>
             <div class="panel-actions">
+              <button class="btn-ghost" id="kioskEinwilligungBtn" type="button" title="Tablet an Patient übergeben — nur Einwilligungen unterschreiben">
+                Nur Einwilligung
+              </button>
               <button class="btn-primary" id="kioskStartBtn" data-i18n="kiosk_start_btn" title="Tablet an Patient übergeben">
                 An Patient übergeben
               </button>
@@ -2131,6 +2134,12 @@
             </div>
           </div>
 
+          <!-- Kopf: Fachbereich · Version · geprüft — gefüllt von module/anamnese.js -->
+          <div id="anamKopfBox" hidden style="margin-bottom:16px;"></div>
+
+          <!-- Physio: das bisherige Formular bleibt unverändert im Markup. Podologie / Ergo / Logo
+               zeichnet module/anamnese.js aus module/anamnese-formulare.js in #anamDynForm. -->
+          <div id="anamPhysioForm">
           <div class="card" style="margin-bottom:16px;">
             <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">Beschwerden — Haken setzen</h3>
             <div class="anam-grid" id="anamChkBeschwerden">
@@ -2357,6 +2366,8 @@
               <textarea class="form-textarea" id="anamNotizen" rows="3" placeholder="Interne Notizen…"></textarea>
             </div>
           </div>
+          </div><!-- /anamPhysioForm -->
+          <div id="anamDynForm" hidden></div>
 
           <div style="display:flex;gap:8px;margin-bottom:24px;">
             <button class="btn-primary" id="anamSaveBtn">Speichern</button>
@@ -3993,6 +4004,8 @@
       <div class="modal-header">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0;">
           <span class="modal-title" id="pdModalTitle">Patientendetails</span>
+          <!-- Nur Podologie: Warn-Rozets der gültigen Anamnese (module/anamnese.js). NICHT in Kalender/Mail/PDF/Abrechnung (legal-de 30.09.2026). -->
+          <span id="pdRozetHost"></span>
           <!-- Nur Podologie (module/akte-podo.js gibt sie frei): die zwei häufigsten Wege aus der Akte heraus. -->
           <span id="pdKopfAktionen" hidden>
             <button type="button" class="btn-ghost btn-sm" id="pdKopfTerminBtn">+ Termin</button>
@@ -5720,7 +5733,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261001p"></script>
+  <script type="module" src="dashboard.js?v=20261001r"></script>
 </body>
 
 </html>

@@ -33,12 +33,12 @@ import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } fr
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261001g';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261001i';
-import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261001m';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261001r';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001p';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001r';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz, fahrtenbuchCsv, patientenverzeichnisCsv, csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS } from './module/fahrtenbuch-regeln.js?v=20261001c';
@@ -74,8 +74,9 @@ import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261001e';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261001i';
-import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
+import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261001r';
+import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261001r';
+import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261001r'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260930c';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
@@ -122,7 +123,7 @@ import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from '.
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260929q';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261001r';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261001b';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -326,7 +327,7 @@ const T = {
     // ── Kiosk / „Tablet an Patient übergeben" (Konsey 2026-08-14) ──
     kiosk_start_btn: 'An Patient übergeben',
     kiosk_overlay_title: 'Anamnese-Formular',
-    kiosk_overlay_sub: 'Bitte füllen Sie alle Felder aus',
+    kiosk_overlay_sub: 'Bitte füllen Sie das Formular aus — bei Unsicherheit fragen Sie uns gern',
     kiosk_exit_btn: 'Beenden (PIN)',
     kiosk_pin_title: 'PIN eingeben',
     kiosk_pin_subtitle: 'Bitte geben Sie Ihre 4-stellige PIN ein, um den Kiosk-Modus zu beenden.',
@@ -846,7 +847,6 @@ let invVerordnungId = null;      // Podologie-Topf — Gegenstück zu invPrescri
 let invBehandlungIds = [];       // von der Brücke übergeben, nach dem Speichern verknüpft
 let invListCache = [];
 let prefillNotesPatientId = null;
-let prefillAnamnesePatientId = null;
 let bkActionBookingCache = null;
 // Der Patient zum offenen Termin. Gebraucht ausserhalb des Panelaufbaus,
 // z. B. fuer die Anrede auf dem Terminzettel.
@@ -3531,9 +3531,10 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
         .order('created_at', { ascending: false })
         .limit(5),
       supabase.from('anamnese')
-        .select('hauptbeschwerde,diagnose,schmerz_skala,schmerz_art,medikamente,allergien,vorerkrankungen,arzt_name,besondere_wuensche,notizen,updated_at')
+        .select('hauptbeschwerde,diagnose,schmerz_skala,schmerz_art,medikamente,allergien,vorerkrankungen,arzt_name,besondere_wuensche,notizen,created_at')
         .eq('patient_id', leadId)
-        .order('updated_at', { ascending: false })
+        .eq('ist_aktuell', true).eq('fachbereich', fachbereichAusSektor(getSector()))   // gültige Fassung des Fachbereichs (append-only, 30.09.2026)
+        .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
       supabase.from('patient_notes')
@@ -4334,8 +4335,7 @@ async function handleTerminStarten() {
   }
 
   if (sessionNum === 1) {
-    prefillAnamnesePatientId = leadId;
-    switchPanel('anamnese');
+    oeffneAnamneseFuer(leadId);
   } else {
     prefillNotesPatientId = leadId;
     switchPanel('notizen');
@@ -7808,7 +7808,7 @@ async function openPatientDetailModal(lead) {
   }
 
   loadPatientDetailNotes(leadId);
-  loadPatientDetailAnamnese(leadId);
+  ladePatientenAnamnese(leadId);
   loadPatientDetailUeberweisung(leadId);
   if (isPhysio) {
     loadPatientDetailRezepte(leadId);
@@ -8541,70 +8541,6 @@ async function loadPatientDetailNotes(leadId) {
   }
   if (!html) html = '<div class="pd-empty">Keine Notizen vorhanden.</div>';
   content.innerHTML = html;
-}
-
-async function loadPatientDetailAnamnese(leadId) {
-  const { data: anam } = await supabase.from('anamnese')
-    .select('*,created_by')
-    .eq('patient_id', leadId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const content = document.getElementById('pdAnamContent');
-  document.getElementById('pdAnamLoading').hidden = true;
-  if (!anam) {
-    content.innerHTML = '<div class="pd-empty">Keine Anamnese vorhanden.</div>';
-    return;
-  }
-
-  let creatorName = '';
-  if (anam.created_by) {
-    const { data: creator } = await supabase.from('profiles')
-      .select('first_name,last_name,business_name')
-      .eq('id', anam.created_by)
-      .maybeSingle();
-    if (creator) {
-      creatorName = [creator.first_name, creator.last_name].filter(Boolean).join(' ') || creator.business_name || '';
-    }
-  }
-
-  const fields = [
-    ['Hauptbeschwerde', anam.hauptbeschwerde],
-    ['Beschwerde seit', anam.beschwerde_seit],
-    ['Verlauf', anam.beschwerde_verlauf],
-    ['Schmerz-Skala (0–10)', anam.schmerz_skala != null ? String(anam.schmerz_skala) : ''],
-    ['Schmerzart', anam.schmerz_art],
-    ['Vorerkrankungen', anam.vorerkrankungen],
-    ['Operationen', anam.operationen],
-    ['Medikamente', anam.medikamente],
-    ['Allergien', anam.allergien],
-    ['Beruf', anam.beruf],
-    ['Sport / Bewegung', anam.sport],
-    ['Raucher', anam.raucher ? 'Ja' : 'Nein'],
-    ['Diagnose', anam.diagnose],
-    ['Arzt', anam.arzt_name],
-    ['Arzt-Nummer', anam.arzt_nummer],
-    ['Rezept-Sitzungen', anam.rezept_sitzungen != null ? String(anam.rezept_sitzungen) : ''],
-    ['Hausbesuch', anam.hausbesuch ? 'Ja' : 'Nein'],
-    ['Besondere Wünsche', anam.besondere_wuensche],
-    ['Notizen', anam.notizen],
-    ['Erstellt am', anam.created_at ? fmtDate(anam.created_at) : ''],
-    ['Erstellt von', creatorName],
-  ];
-  let html = '';
-  html += `<div style="margin-bottom:16px;"><button class="btn-primary" id="pdAnamViewBtn" data-lead-id="${leadId}">📄 Dokument anzeigen</button></div>`;
-  fields.forEach(([label, val]) => {
-    if (val) html += `<div class="pd-section"><div class="pd-section-title">${label}</div><div class="pd-text">${escapeHtml(String(val))}</div></div>`;
-  });
-  if (!html) html = '<div class="pd-empty">Anamnese vorhanden, aber keine Details.</div>';
-  content.innerHTML = html;
-
-  const btn = document.getElementById('pdAnamViewBtn');
-  if (btn) btn.addEventListener('click', () => {
-    closeModal('patientDetailModal');
-    prefillAnamnesePatientId = btn.dataset.leadId;
-    switchPanel('anamnese');
-  });
 }
 
 async function loadPatientDetailMails(leadId) {
@@ -14527,439 +14463,6 @@ async function saveInvoice() {
 }
 
 
-let anamnesePatientCache = [];
-let currentAnamneseId = null;
-let currentAnamnesePatientId = null;
-
-async function loadAnamnese() {
-  const ownerId = getOwnerId();
-  const { data } = await supabase.from('leads')
-    .select('id,first_name,last_name,title,phone,email,metadata,geschlecht')
-    .eq('owner_id', ownerId)
-    .order('first_name', { ascending: true });
-  anamnesePatientCache = data || [];
-  const sel = document.getElementById('anamPatientSelect');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">-- Patient auswählen --</option>' +
-    anamnesePatientCache.map(l => {
-      const name = displayNameWithBirth(l);
-      return `<option value="${l.id}">${escapeHtml(name)}</option>`;
-    }).join('');
-  if (prefillAnamnesePatientId) {
-    sel.value = prefillAnamnesePatientId;
-    await fillAnamneseForm(prefillAnamnesePatientId);
-    prefillAnamnesePatientId = null;
-  } else {
-    resetAnamneseForm();
-  }
-}
-
-function getAnamChecks(containerId) {
-  const wrap = document.getElementById(containerId);
-  if (!wrap) return [];
-  return Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
-}
-
-function setAnamChecks(containerId, dbString, otherInputId) {
-  const wrap = document.getElementById(containerId);
-  if (!wrap) return;
-  wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-  if (!dbString) { if (otherInputId) document.getElementById(otherInputId).value = ''; return; }
-  const items = dbString.split(',').map(s => s.trim()).filter(Boolean);
-  const known = Array.from(wrap.querySelectorAll('input[type="checkbox"]')).map(cb => cb.value);
-  const unmatched = [];
-  items.forEach(item => {
-    const cb = wrap.querySelector(`input[value="${item}"]`);
-    if (cb) cb.checked = true;
-    else unmatched.push(item);
-  });
-  if (otherInputId) document.getElementById(otherInputId).value = unmatched.join(', ');
-}
-
-function syncAnamTextarea(containerId, otherInputId, textareaId) {
-  const vals = getAnamChecks(containerId);
-  const other = document.getElementById(otherInputId)?.value.trim();
-  if (other) vals.push(other);
-  const ta = document.getElementById(textareaId);
-  if (ta) ta.value = vals.join(', ');
-}
-
-function resetAnamneseForm() {
-  currentAnamneseId = null;
-  document.getElementById('anamAufnahme').value = toISODate(new Date());
-  document.getElementById('anamBeschwerdeSeit').value = '';
-  document.getElementById('anamSchmerzSkala').value = '0';
-  document.getElementById('anamSkalaVal').textContent = '0';
-  document.getElementById('anamRaucher').checked = false;
-  document.getElementById('anamArztName').value = '';
-  document.getElementById('anamArztNummer').value = '';
-  document.getElementById('anamRezeptSitzungen').value = '';
-  document.getElementById('anamHausbesuch').checked = false;
-  document.getElementById('anamWuensche').value = '';
-  document.getElementById('anamNotizen').value = '';
-  document.getElementById('anamSaveBtn').textContent = 'Speichern';
-  document.getElementById('anamPrintBtn').hidden = true;
-
-  const clearAll = [
-    ['anamChkBeschwerden', 'anamBeschwerdenOther', 'anamHauptbeschwerde'],
-    ['anamChkVorerkrankungen', 'anamVorerkrankungenOther', 'anamVorerkrankungen'],
-    ['anamChkOperationen', 'anamOperationenOther', 'anamOperationen'],
-    ['anamChkMedikamente', 'anamMedikamenteOther', 'anamMedikamente'],
-    ['anamChkAllergien', 'anamAllergienOther', 'anamAllergien'],
-    ['anamChkBeruf', 'anamBerufOther', 'anamBeruf'],
-    ['anamChkSport', 'anamSportOther', 'anamSport'],
-    ['anamChkDiagnose', 'anamDiagnoseOther', 'anamDiagnose'],
-  ];
-  clearAll.forEach(([cId, oId, tId]) => {
-    const wrap = document.getElementById(cId);
-    if (wrap) wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    const other = document.getElementById(oId);
-    if (other) other.value = '';
-    const ta = document.getElementById(tId);
-    if (ta) ta.value = '';
-  });
-
-  const verlaufRadios = document.querySelectorAll('input[name="anamVerlauf"]');
-  verlaufRadios.forEach(r => r.checked = false);
-  const schmerzRadios = document.querySelectorAll('input[name="anamSchmerzArt"]');
-  schmerzRadios.forEach(r => r.checked = false);
-  document.getElementById('anamSchmerzArtOther').value = '';
-}
-
-async function loadAnamneseRxContext(patientId) {
-  const box = document.getElementById('anamRxContext');
-  if (!box) return;
-  if (!patientId || !isPraxisSector(getSector())) { box.style.display = 'none'; return; }
-
-  const { data: rx } = await supabase
-    .from('prescriptions')
-    .select('id, rezept_typ, status, heilmittel, icd10, diagnosegruppe, anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis, hausbesuch, is_dringend, prescription_sessions(status)')
-    .eq('patient_id', patientId)
-    .in('status', ['parsed', 'confirmed', 'in_therapy'])
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!rx) { box.style.display = 'none'; return; }
-
-  const typLabel = { standard: 'Standard', blanko: 'Blanko', lhb_bvb: 'LHB/BVB' }[rx.rezept_typ] || rx.rezept_typ;
-  const statusLabel = { parsed: 'Erfasst', confirmed: 'Bestätigt', in_therapy: 'In Therapie' }[rx.status] || rx.status;
-
-  let validColor = '#15803d', validNote = '';
-  if (rx.gueltig_bis) {
-    const today0 = new Date(); today0.setHours(0, 0, 0, 0);
-    const days = Math.round((new Date(rx.gueltig_bis) - today0) / 86400000);
-    if (days < 0) { validColor = '#ef4444'; validNote = ' · überfällig'; }
-    else if (days <= 3) { validColor = '#ef4444'; validNote = ` · in ${days}T`; }
-    else if (days <= 10) { validColor = '#f59e0b'; validNote = ` · in ${days}T`; }
-  }
-  const validStr = rx.gueltig_bis
-    ? `<span style="color:${validColor};font-weight:600;">Gültig bis ${new Date(rx.gueltig_bis).toLocaleDateString('de-DE')}${validNote}</span>`
-    : 'Gültig bis —';
-
-  const flags = [
-    rx.is_dringend ? '<span class="badge badge-red">Dringend</span>' : '',
-    rx.hausbesuch ? '<span class="badge badge-blue">Hausbesuch</span>' : ''
-  ].filter(Boolean).join(' ');
-
-  document.getElementById('anamRxBadges').innerHTML = `
-    <span class="badge badge-blue">${typLabel}</span>
-    <span class="badge badge-gray">${statusLabel}</span>
-    ${flags}
-  `;
-  document.getElementById('anamRxHeading').textContent =
-    `${rx.heilmittel || '—'}${rx.icd10 ? ' · ' + rx.icd10 : ''}${rx.diagnosegruppe ? ' · ' + rx.diagnosegruppe : ''}`;
-  document.getElementById('anamRxMeta').innerHTML =
-    `${validStr} · Frequenz: ${escapeHtml(rx.frequenz || '—')}`;
-
-  const total = rx.anzahl_einheiten || (rx.prescription_sessions || []).length || 0;
-  const done = (rx.prescription_sessions || []).filter(s => s.status === 'done').length;
-  const pct = total ? Math.round((done / total) * 100) : 0;
-  document.getElementById('anamRxProgressBar').style.width = pct + '%';
-  document.getElementById('anamRxProgressLabel').textContent = `${done}/${total}`;
-
-  box.style.display = '';
-}
-
-async function fillAnamneseForm(patientId) {
-  loadAnamneseRxContext(patientId).catch(() => { });
-  if (!aerzteCache || aerzteCache.length === 0) {
-    await loadAerzte();
-  }
-  if (!patientId) { resetAnamneseForm(); return; }
-  currentAnamnesePatientId = patientId;
-  const ownerId = getOwnerId();
-  const { data } = await supabase.from('anamnese')
-    .select('*')
-    .eq('owner_id', ownerId)
-    .eq('patient_id', patientId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (!data) { resetAnamneseForm(); return; }
-  currentAnamneseId = data.id;
-  document.getElementById('anamAufnahme').value = data.aufnahmedatum || toISODate(new Date());
-  document.getElementById('anamBeschwerdeSeit').value = data.beschwerde_seit || '';
-  document.getElementById('anamSchmerzSkala').value = data.schmerz_skala != null ? String(data.schmerz_skala) : '0';
-  document.getElementById('anamSkalaVal').textContent = data.schmerz_skala != null ? String(data.schmerz_skala) : '0';
-  document.getElementById('anamRaucher').checked = data.raucher === true;
-  document.getElementById('anamArztName').value = data.arzt_name || '';
-  document.getElementById('anamArztNummer').value = data.arzt_nummer || '';
-  document.getElementById('anamRezeptSitzungen').value = data.rezept_sitzungen != null ? String(data.rezept_sitzungen) : '';
-  document.getElementById('anamHausbesuch').checked = data.hausbesuch === true;
-  document.getElementById('anamWuensche').value = data.besondere_wuensche || '';
-  document.getElementById('anamNotizen').value = data.notizen || '';
-  document.getElementById('anamSaveBtn').textContent = 'Aktualisieren';
-  document.getElementById('anamPrintBtn').hidden = false;
-
-  setAnamChecks('anamChkBeschwerden', data.hauptbeschwerde, 'anamBeschwerdenOther');
-  syncAnamTextarea('anamChkBeschwerden', 'anamBeschwerdenOther', 'anamHauptbeschwerde');
-  setAnamChecks('anamChkVorerkrankungen', data.vorerkrankungen, 'anamVorerkrankungenOther');
-  syncAnamTextarea('anamChkVorerkrankungen', 'anamVorerkrankungenOther', 'anamVorerkrankungen');
-  setAnamChecks('anamChkOperationen', data.operationen, 'anamOperationenOther');
-  syncAnamTextarea('anamChkOperationen', 'anamOperationenOther', 'anamOperationen');
-  setAnamChecks('anamChkMedikamente', data.medikamente, 'anamMedikamenteOther');
-  syncAnamTextarea('anamChkMedikamente', 'anamMedikamenteOther', 'anamMedikamente');
-  setAnamChecks('anamChkAllergien', data.allergien, 'anamAllergienOther');
-  syncAnamTextarea('anamChkAllergien', 'anamAllergienOther', 'anamAllergien');
-  setAnamChecks('anamChkBeruf', data.beruf, 'anamBerufOther');
-  syncAnamTextarea('anamChkBeruf', 'anamBerufOther', 'anamBeruf');
-  setAnamChecks('anamChkSport', data.sport, 'anamSportOther');
-  syncAnamTextarea('anamChkSport', 'anamSportOther', 'anamSport');
-  setAnamChecks('anamChkDiagnose', data.diagnose, 'anamDiagnoseOther');
-  syncAnamTextarea('anamChkDiagnose', 'anamDiagnoseOther', 'anamDiagnose');
-
-  document.querySelectorAll('input[name="anamVerlauf"]').forEach(r => { r.checked = r.value === (data.beschwerde_verlauf || ''); });
-  document.querySelectorAll('input[name="anamSchmerzArt"]').forEach(r => { r.checked = r.value === (data.schmerz_art || ''); });
-  const schmerzAndere = document.querySelector('input[name="anamSchmerzArt"][value="andere"]');
-  if (schmerzAndere && !schmerzAndere.checked) {
-    const knownSchmerz = ['stechend', 'dumpf', 'brennend', 'ziehend', 'krampfartig', 'pulsierend'];
-    if (data.schmerz_art && !knownSchmerz.includes(data.schmerz_art)) {
-      document.getElementById('anamSchmerzArtOther').value = data.schmerz_art;
-      schmerzAndere.checked = true;
-    }
-  }
-}
-
-async function printAnamneseInline() {
-  const patientId = currentAnamnesePatientId;
-  if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
-
-  const ownerId = getOwnerId();
-  const { data: anamnese } = await supabase.from('anamnese')
-    .select('*').eq('owner_id', ownerId).eq('patient_id', patientId)
-    .order('created_at', { ascending: false }).limit(1).maybeSingle();
-  if (!anamnese) { showToast('Keine Anamnese für diesen Patienten gefunden.', 'error'); return; }
-
-  const patientName = document.querySelector('#anamPatientSelect option:checked')?.textContent || 'Unbekannt';
-  const arr = (v) => Array.isArray(v) ? (v.filter(Boolean).join(', ') || '—') : (v || '—');
-
-  document.getElementById('anamPrintBizName').textContent = currentProfile.business_name || '—';
-  const bm = [];
-  if (currentProfile.city) bm.push(currentProfile.city);
-  if (currentProfile.phone) bm.push('Tel: ' + currentProfile.phone);
-  document.getElementById('anamPrintBizMeta').textContent = bm.join(' · ');
-  document.getElementById('anamPrintDate').textContent = new Date(anamnese.aufnahmedatum || anamnese.created_at).toLocaleDateString('de-DE');
-  document.getElementById('anamPrintPatient').innerHTML = `<strong>${escapeHtml(patientName)}</strong>`;
-
-  const rows = [
-    ['Aufnahmedatum', anamnese.aufnahmedatum ? new Date(anamnese.aufnahmedatum).toLocaleDateString('de-DE') : '—'],
-    ['Beschwerde seit', anamnese.beschwerde_seit || '—'],
-    ['Hauptbeschwerden', arr(anamnese.hauptbeschwerde || anamnese.beschwerden)],
-    ['Schmerz-Skala (0–10)', anamnese.schmerz_skala != null ? String(anamnese.schmerz_skala) : '—'],
-    ['Schmerzart', arr(anamnese.schmerz_art)],
-    ['Vorerkrankungen', arr(anamnese.vorerkrankungen)],
-    ['Medikamente', arr(anamnese.medikamente)],
-    ['Allergien', arr(anamnese.allergien)],
-    ['Raucher', anamnese.raucher ? 'Ja' : 'Nein'],
-    ['Hausbesuch', anamnese.hausbesuch ? 'Ja' : 'Nein'],
-    ['Arzt', anamnese.arzt_name || '—'],
-    ['Arzt-Nummer', anamnese.arzt_nummer || '—'],
-    ['Verordnete Sitzungen', anamnese.rezept_sitzungen != null ? String(anamnese.rezept_sitzungen) : '—'],
-    ['Besondere Wünsche', anamnese.besondere_wuensche || '—']
-  ];
-  document.getElementById('anamPrintFields').innerHTML = rows.map(([k, v]) =>
-    `<div class="anamnese-print-row"><div class="anamnese-print-label">${k}</div><div class="anamnese-print-value">${escapeHtml(String(v))}</div></div>`
-  ).join('');
-
-  if (anamnese.notizen) {
-    document.getElementById('anamPrintNotesWrap').hidden = false;
-    document.getElementById('anamPrintNotes').textContent = anamnese.notizen;
-  } else {
-    document.getElementById('anamPrintNotesWrap').hidden = true;
-  }
-
-  printArea();
-}
-
-// Legacy popup printer (kept for compatibility but unwired)
-async function printAnamnese() {
-  const patientId = currentAnamnesePatientId;
-  if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
-
-  const ownerId = getOwnerId();
-  const { data: anamnese } = await supabase.from('anamnese')
-    .select('*')
-    .eq('owner_id', ownerId)
-    .eq('patient_id', patientId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!anamnese) { showToast('Keine Anamnese für diesen Patienten gefunden.', 'error'); return; }
-
-  const patientName = document.querySelector('#anamPatientSelect option:checked')?.textContent || 'Unbekannt';
-
-  const getArrayStr = (val) => {
-    if (!val) return '-';
-    if (Array.isArray(val)) return val.filter(v => v).join(', ') || '-';
-    return String(val);
-  };
-
-  const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Anamnese - ${patientName}</title>
-<style>
-  body{font-family:Arial,sans-serif;padding:30px;max-width:800px;margin:0 auto;font-size:14px}
-  h1{font-size:20px;border-bottom:2px solid #22c55e;padding-bottom:10px;margin-bottom:20px}
-  h2{font-size:16px;color:#22c55e;margin-top:20px}
-  .row{display:flex;gap:20px;margin:8px 0}
-  .label{font-weight:bold;min-width:160px}
-  .value{flex:1}
-  .section{background:#f9f9f9;padding:15px;margin:15px 0;border-radius:8px}
-</style></head><body>
-<h1>Anamnese - ${patientName}</h1>
-<div class="row"><span class="label">Aufnahmedatum:</span><span class="value">${anamnese.aufnahmedatum || '-'}</span></div>
-<div class="row"><span class="label">Beschwerden seit:</span><span class="value">${anamnese.beschwerde_seit || '-'}</span></div>
-<h2>Hauptbeschwerde</h2>
-<div class="section">${getArrayStr(anamnese.hauptbeschwerde)}</div>
-<h2>Schmerz</h2>
-<div class="row"><span class="label">Schmerz-Skala:</span><span class="value">${anamnese.schmerz_skala ?? '-'}/10</span></div>
-<div class="row"><span class="label">Schmerz-Art:</span><span class="value">${anamnese.schmerz_art || '-'}</span></div>
-<div class="row"><span class="label">Verlauf:</span><span class="value">${anamnese.beschwerde_verlauf || '-'}</span></div>
-<h2>Vorerkrankungen</h2>
-<div class="section">${getArrayStr(anamnese.vorerkrankungen)}</div>
-<h2>Medikamente</h2>
-<div class="section">${getArrayStr(anamnese.medikamente)}</div>
-<h2>Allergien</h2>
-<div class="section">${getArrayStr(anamnese.allergien)}</div>
-<h2>Operationen</h2>
-<div class="section">${getArrayStr(anamnese.operationen)}</div>
-<h2>Beruf / Sport</h2>
-<div class="row"><span class="label">Beruf:</span><span class="value">${getArrayStr(anamnese.beruf)}</span></div>
-<div class="row"><span class="label">Sport:</span><span class="value">${getArrayStr(anamnese.sport)}</span></div>
-<div class="row"><span class="label">Raucher:</span><span class="value">${anamnese.raucher ? 'Ja' : 'Nein'}</span></div>
-<h2>Arzt / Rezept</h2>
-<div class="row"><span class="label">Arzt:</span><span class="value">${anamnese.arzt_name || '-'}</span></div>
-<div class="row"><span class="label">Arzt-Nr.:</span><span class="value">${anamnese.arzt_nummer || '-'}</span></div>
-<div class="row"><span class="label">Rezept-Sitzungen:</span><span class="value">${anamnese.rezept_sitzungen || '-'}</span></div>
-<div class="row"><span class="label">Hausbesuch:</span><span class="value">${anamnese.hausbesuch ? 'Ja' : 'Nein'}</span></div>
-<h2>Besondere Wünsche</h2>
-<div class="section">${anamnese.besondere_wuensche || '-'}</div>
-<h2>Notizen</h2>
-<div class="section">${anamnese.notizen || '-'}</div>
-<script>window.onload=()=>{window.print();window.close();}<\/script>
-</body></html>`;
-
-  const win = window.open('', '_blank');
-  if (win) { win.document.write(html); win.document.close(); }
-  else showToast('Popup blocked! Bitte Popups erlauben.', 'error');
-}
-
-async function saveAnamnese() {
-  const patientId = document.getElementById('anamPatientSelect').value;
-  if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
-  const ownerId = getOwnerId();
-
-  const getRadio = (name) => { const r = document.querySelector(`input[name="${name}"]:checked`); return r ? r.value : null; };
-  let schmerzArt = getRadio('anamSchmerzArt');
-  if (schmerzArt === 'andere') schmerzArt = document.getElementById('anamSchmerzArtOther').value.trim() || null;
-
-  const payload = {
-    owner_id: ownerId,
-    patient_id: patientId,
-    aufnahmedatum: document.getElementById('anamAufnahme').value || null,
-    hauptbeschwerde: document.getElementById('anamHauptbeschwerde').value.trim() || null,
-    beschwerde_seit: document.getElementById('anamBeschwerdeSeit').value.trim() || null,
-    beschwerde_verlauf: getRadio('anamVerlauf'),
-    schmerz_skala: document.getElementById('anamSchmerzSkala').value !== '' ? parseInt(document.getElementById('anamSchmerzSkala').value, 10) : null,
-    schmerz_art: schmerzArt,
-    vorerkrankungen: document.getElementById('anamVorerkrankungen').value.trim() || null,
-    operationen: document.getElementById('anamOperationen').value.trim() || null,
-    medikamente: document.getElementById('anamMedikamente').value.trim() || null,
-    allergien: document.getElementById('anamAllergien').value.trim() || null,
-    beruf: document.getElementById('anamBeruf').value.trim() || null,
-    sport: document.getElementById('anamSport').value.trim() || null,
-    raucher: document.getElementById('anamRaucher').checked,
-    diagnose: document.getElementById('anamDiagnose').value.trim() || null,
-    arzt_name: document.getElementById('anamArztName').value.trim() || null,
-    arzt_nummer: document.getElementById('anamArztNummer').value.trim() || null,
-    rezept_sitzungen: document.getElementById('anamRezeptSitzungen').value !== '' ? parseInt(document.getElementById('anamRezeptSitzungen').value, 10) : null,
-    hausbesuch: document.getElementById('anamHausbesuch').checked,
-    besondere_wuensche: document.getElementById('anamWuensche').value.trim() || null,
-    notizen: document.getElementById('anamNotizen').value.trim() || null,
-  };
-  if (currentAnamneseId) {
-    const { error } = await supabase.from('anamnese').update(payload).eq('id', currentAnamneseId);
-    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
-    showToast('Anamnese aktualisiert.');
-    // Hausbesuch flow: termin gestartet (fahrt_return_pending) → fahrt beenden ekranını göster
-    if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') {
-      setTimeout(() => openBookingActionModal(bkActionBookingCache), 300);
-    }
-  } else {
-    const { data, error } = await supabase.from('anamnese').insert(payload).select();
-    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
-    if (data && data[0]) currentAnamneseId = data[0].id;
-    showToast('Anamnese gespeichert.');
-    // Hausbesuch flow: termin gestartet (fahrt_return_pending) → fahrt beenden ekranını göster
-    if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') {
-      setTimeout(() => openBookingActionModal(bkActionBookingCache), 300);
-    }
-  }
-  document.getElementById('anamPrintBtn').hidden = false;
-}
-
-function bindAnamneseEvents() {
-  const sel = document.getElementById('anamPatientSelect');
-  if (sel) sel.onchange = (e) => fillAnamneseForm(e.target.value);
-  const saveBtn = document.getElementById('anamSaveBtn');
-  if (saveBtn) saveBtn.onclick = saveAnamnese;
-  const printBtn = document.getElementById('anamPrintBtn');
-  if (printBtn) printBtn.onclick = printAnamneseInline;
-
-  // anamArztNummer ist mit "Telefon / Fax" beschriftet: bevorzugt die Telefon-
-  // nummer aus dem Register, LANR nur als Rückfall (so war es vorher immer).
-  // Ohne „+": die Anamnese hält fest, was der Patient erzählt hat. Ein hier
-  // angelegter Arzt hätte weder LANR noch BSNR — genau die Halbdatensätze, die
-  // das Register später an der falschen Stelle wiederfindet.
-  wireArztFeld({ name: 'anamArztName', tel: 'anamArztNummer', plus: false });
-
-  const slider = document.getElementById('anamSchmerzSkala');
-  const skalaVal = document.getElementById('anamSkalaVal');
-  if (slider && skalaVal) {
-    slider.oninput = () => { skalaVal.textContent = slider.value; };
-  }
-
-  const syncPairs = [
-    ['anamChkBeschwerden', 'anamBeschwerdenOther', 'anamHauptbeschwerde'],
-    ['anamChkVorerkrankungen', 'anamVorerkrankungenOther', 'anamVorerkrankungen'],
-    ['anamChkOperationen', 'anamOperationenOther', 'anamOperationen'],
-    ['anamChkMedikamente', 'anamMedikamenteOther', 'anamMedikamente'],
-    ['anamChkAllergien', 'anamAllergienOther', 'anamAllergien'],
-    ['anamChkBeruf', 'anamBerufOther', 'anamBeruf'],
-    ['anamChkSport', 'anamSportOther', 'anamSport'],
-    ['anamChkDiagnose', 'anamDiagnoseOther', 'anamDiagnose'],
-  ];
-  syncPairs.forEach(([cId, oId, tId]) => {
-    const wrap = document.getElementById(cId);
-    const other = document.getElementById(oId);
-    if (wrap) wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.onchange = () => syncAnamTextarea(cId, oId, tId);
-    });
-    if (other) other.oninput = () => syncAnamTextarea(cId, oId, tId);
-  });
-}
-
 function bindInvEvents() {
   document.getElementById('invNewBtn').onclick = () => openInvEditor(null);
   document.getElementById('invCancelBtn').onclick = () => closeInvEditor();
@@ -16368,6 +15871,12 @@ async function init() {
     await handleGmailCallback();
     console.log('[init] gmail ok');
     console.log('[init] invoices ok');
+    initAnamnese({
+      supabase, getOwnerId, getUserId: () => currentSession?.user?.id || null, getSector, getProfile: () => currentProfile,
+      showToast, displayNameWithBirth, loadAerzte, getAerzte: () => aerzteCache, wireArztFeld, isPraxisSector, printArea, closeModal, switchPanel,
+      // Hausbesuch: Termin gestartet (fahrt_return_pending) → Fahrt-beenden-Bildschirm zeigen
+      nachSpeichern: () => { if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'fahrt_return_pending') setTimeout(() => openBookingActionModal(bkActionBookingCache), 300); },
+    });
     bindAnamneseEvents();
     console.log('[init] anamnese ok');
     document.getElementById('aeAddBtn')?.addEventListener('click', addAerzte);
@@ -18597,6 +18106,7 @@ function initKioskModeWired() {
   mountKiosk({
     supabase, API, showToast, t,
     getBookingsChannel: () => window.__praxuraBookingsChannel || null,
+    openEinwilligung: openEinwilligungFlow,   // Kiosk „Nur Einwilligung"
   });
   // Einwilligungs-Ablauf (module/patienten-einwilligung.js). Baut sein Overlay
   // selbst, braucht von hier nur den Mandanten- und Sitzungskontext.
@@ -19721,6 +19231,7 @@ function fussbefundCtx() {
     leadBirthDate,
     patientMatchesQuery,
     sector: getSector, switchPanel, closePanel: closeBkActionPanel,
+    oeffneAnamnese: oeffneAnamneseFuer,   // Risikoblock: „Anamnese ändern"
   };
 }
 
@@ -19757,7 +19268,7 @@ function podoCtx() {
     GKV_LEISTUNGSKATALOG,
     frequenzOptionsHtml,
     loadKkList,
-    resolveArzt, folge: folgeDeps, fussbefund: fussbefundCtx, oeffneAnamnese: (id) => { prefillAnamnesePatientId = id; switchPanel('anamnese'); },   // folge/fussbefund: Tagesbehandlung, Folgetermin-Frage + aufklappbarer Fussbefund (S4 P2)
+    resolveArzt, folge: folgeDeps, fussbefund: fussbefundCtx, oeffneAnamnese: oeffneAnamneseFuer,   // folge/fussbefund: Tagesbehandlung, Folgetermin-Frage + aufklappbarer Fussbefund (S4 P2)
     toastArztErgebnis,
     rechnungAusVerordnung,           // bleibt hier, schreibt in die inv*-Variablen
     leads:    () => leadsCache,      // Getter — siehe oben

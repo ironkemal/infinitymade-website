@@ -85,10 +85,12 @@ function ensureRoot() {
   _root = document.createElement('div');
   _root.id = 'einwilligungOverlay';
   _root.hidden = true;
-  // z-index über dem Kiosk-Overlay (99999), unter dessen PIN-Modal (100000)
-  // liegt es bewusst NICHT: die Einwilligung darf den Kiosk-Ausstieg verdecken.
+  // z-index 99999 = gleich dem Kiosk-Overlay; es liegt darüber, weil `openEinwilligungFlow` den
+  // Knoten bei jedem Start ans Ende von <body> hängt (späterer Geschwisterknoten gewinnt).
+  // Das PIN-Modal des Kiosk (100000) liegt darüber. Vorher 99998: im Kiosk-Modus „Nur
+  // Einwilligung" verschwand der Ablauf hinter dem Kiosk-Overlay (30.09.2026).
   _root.style.cssText =
-    'position:fixed;inset:0;z-index:99998;background:var(--bg-main);'
+    'position:fixed;inset:0;z-index:99999;background:var(--bg-main);'
     + 'display:flex;flex-direction:column;overflow:auto;';
   document.body.appendChild(_root);
   return _root;
@@ -100,7 +102,7 @@ function ensureRoot() {
 
 /**
  * Startet den Einwilligungs-Ablauf für einen Patienten.
- * @param {object} opts { patientId, patient?, types? }
+ * @param {object} opts { patientId, patient?, types?, onClose? }  `onClose` läuft nach Fertig UND Abbrechen (Kiosk: Danke-Bildschirm)
  */
 export async function openEinwilligungFlow(opts = {}) {
   const { patientId } = opts;
@@ -125,17 +127,24 @@ export async function openEinwilligungFlow(opts = {}) {
     types: Array.isArray(opts.types) && opts.types.length ? opts.types : FLOW.slice(),
     optionen: [],
     gespeichert: [],
+    onClose: typeof opts.onClose === 'function' ? opts.onClose : null,
   };
 
-  ensureRoot().hidden = false;
+  const root = ensureRoot();
+  document.body.appendChild(root);   // ans Ende: über einem gleich hohen Kiosk-Overlay
+  root.hidden = false;
   document.body.style.overflow = 'hidden';
   renderStep();
 }
 
 function closeFlow() {
+  const danach = _state?.onClose;
   if (_root) { _root.hidden = true; _root.innerHTML = ''; }
-  document.body.style.overflow = '';
+  // Im Kiosk hält das Overlay den Scroll gesperrt — nur außerhalb freigeben.
+  const kiosk = document.getElementById('kioskOverlay');
+  document.body.style.overflow = kiosk && !kiosk.hidden ? 'hidden' : '';
   _state = null;
+  try { danach?.(); } catch (e) { console.error('[einwilligung] onClose', e); }
 }
 
 function ctxFor() {

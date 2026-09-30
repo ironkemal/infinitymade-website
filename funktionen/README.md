@@ -116,7 +116,7 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
-### 30.09.2026 · (push bekliyor: Anamnese-Migration) — Anamnese je Fachbereich, append-only, Risiko-Rozets
+### 30.09.2026 · Migration 0047 canlı (a990014), ön yüz push 30.09 akşam — Anamnese je Fachbereich, append-only, Risiko-Rozets
 Kemal kararı: Anamnese Fachbereich'e özgü (podo 20 alan — podoloji kararı; physio mevcut; ergo/logo taslak).
 Commit edilmedi; B'nin anamnese migration'ı (`ist_aktuell`, `fachbereich`, `version`, `felder` …) bekleniyor,
 commit'te harita tazelenecek.

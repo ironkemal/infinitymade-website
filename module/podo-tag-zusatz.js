@@ -149,10 +149,12 @@ export const ANAMNESE_78040_FRAGE = {
 };
 
 /**
- * Gibt es zu diesem Patienten mindestens einen Anamnese-Datensatz?
+ * Gibt es zu diesem Patienten eine GÜLTIGE Podologie-Anamnese?
  * `anamnese.patient_id` → `leads.id`. Bewusst OHNE `owner_id`-Filter, wie der
  * Reiter „Anamnese" der Akte (RLS entscheidet; ein Filter könnte bei geteilten
- * Standorten fälschlich „fehlt" melden).
+ * Standorten fälschlich „fehlt" melden). Seit 30.09.2026 (Anamnese je Fachbereich,
+ * append-only): nur die gültige Zeile (`ist_aktuell`) des Fachbereichs `podo` zählt —
+ * eine alte Physio-Anamnese ist keine Podologie-Anamnese.
  *
  * @returns {Promise<boolean|null>} `true`/`false`, oder `null` = nicht ermittelbar
  *   (Fehler, kein Patient). Der Hinweis erscheint NUR bei `false`.
@@ -160,7 +162,7 @@ export const ANAMNESE_78040_FRAGE = {
 export async function hatAnamnese(sb, leadId) {
   if (!sb || !leadId) return null;
   try {
-    const { data, error } = await sb.from('anamnese').select('id').eq('patient_id', leadId).limit(1);
+    const { data, error } = await sb.from('anamnese').select('id').eq('patient_id', leadId).eq('ist_aktuell', true).eq('fachbereich', 'podo').limit(1);
     if (error) return null;
     return Array.isArray(data) && data.length > 0;
   } catch { return null; }

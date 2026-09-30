@@ -104,8 +104,11 @@ import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fr
 import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20261001b';
 // Reform S4 Paket 2 (Konsey 30.09.2026, 1a/1b): aufklappbarer Fußbefund + Folgetermin-Frage.
 import { FOLGE_FRAGE, fussbefundBoxHtml, ladeLetzterBefund, ladeTagesTermin, folgeAusgangstermin, frageFolgetermin,
-  hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE } from './podo-tag-zusatz.js?v=20261001p';
-import { mountFussbefund } from './fussbefund.js?v=20261001m';
+  hatAnamnese, anamneseFehltNotizHtml, frageAnamnese78040, ANAMNESE_78040_FRAGE } from './podo-tag-zusatz.js?v=20261001r';
+import { ladeAktuelle } from './anamnese-daten.js?v=20261001r';
+import { rozetHtml } from './anamnese-rozet.js?v=20261001r';
+import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
+import { mountFussbefund } from './fussbefund.js?v=20261001r';
 import { oeffneFolgetermin } from './termin-folge.js?v=20261001m';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
@@ -751,19 +754,25 @@ async function loadPodologieBilling() {
     : '';
   // Letzter Fußbefund für die Kopfzeile des aufklappbaren Abschnitts (Konsey S0, 1a).
   // Anamnese-Hinweis (S4 P3) läuft parallel dazu — beide sind Leseabfragen auf den Patienten.
-  const [letzterBefund, anamneseDa] = selectedVord?.lead_id
-    ? await Promise.all([ladeLetzterBefund(ctx.supabase, ctx.getOwnerId(), selectedVord.lead_id), hatAnamnese(ctx.supabase, selectedVord.lead_id)])
-    : [null, null];
+  // Die gültige Podo-Anamnese liefert dreierlei: „fehlt"-Notiz, Warn-Rozets im Kopf (legal-de: NUR hier
+  // und im Aktenkopf) und den DF-ohne-Diabetes-Hinweis (kein Block). `fehler` → null = kein Hinweis.
+  const [letzterBefund, anamneseErg] = selectedVord?.lead_id
+    ? await Promise.all([ladeLetzterBefund(ctx.supabase, ctx.getOwnerId(), selectedVord.lead_id), ladeAktuelle(ctx.supabase, selectedVord.lead_id, 'podo')])
+    : [null, { row: null, fehler: true }];
+  const anamneseRow = anamneseErg.row;
+  const anamneseDa = anamneseErg.fehler ? null : !!anamneseRow;
+  const diabetesNotiz = konsistenzHinweis({ dgWurzel: diagRoot, row: anamneseRow });
   let behandlungFormHtml = '';
   if (!selectedVord) {
     behandlungFormHtml = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
   } else {
     behandlungFormHtml = `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
-      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')}</h4>
+      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')} ${rozetHtml(anamneseRow, ctx.escapeHtml)}</h4>
       ${abgerechnetHinweisHtml}
       ${fussbefundBoxHtml(letzterBefund, ctx.escapeHtml)}
       ${anamneseFehltNotizHtml(anamneseDa, ctx.escapeHtml)}
+      ${diabetesNotiz ? `<div id="podDiabetesKonfliktNotiz" style="font-size:12px;color:var(--warning-text,var(--text-muted));background:var(--warning-dim,var(--bg-card-solid));border:1px solid var(--warning,var(--border));border-radius:6px;padding:8px 10px;margin-bottom:12px;">${ctx.escapeHtml(diabetesNotiz)}</div>` : ''}
       ${lsNotiz ? `<div id="podLsFehltNotiz" style="font-size:12px;color:var(--warning-text,var(--text-muted));background:var(--warning-dim,var(--bg-card-solid));border:1px solid var(--warning,var(--border));border-radius:6px;padding:8px 10px;margin-bottom:12px;">${ctx.escapeHtml(lsNotiz)}</div>` : ''}
       <div style="display:grid;gap:12px;">
         <div>

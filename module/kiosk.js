@@ -32,6 +32,15 @@
  *  7. Es gab überhaupt keine Protokollierung. Laut `legal-de` war genau das der
  *     eigentliche Art.-32-Mangel: ein unbefugter Zugriff wäre nicht nachweisbar.
  *
+ * Was sich am 30.09.2026 geändert hat (Kemal-Entscheidung, Anamnese je Fachbereich)
+ * ───────────────────────────────────────────────────────────────────────────────
+ *  · Zweiter Knopf „Nur Einwilligung": dieselbe Kiosk-Hülle (Vollbild, PIN-Ausstieg,
+ *    Protokoll), aber statt der Anamnese läuft nur der Einwilligungs-Ablauf
+ *    (`openEinwilligung`). Der volle Kiosk mit Anamnese bleibt.
+ *  · Kiosk betreten/verlassen meldet `praxura:kiosk` — module/anamnese.js zeichnet
+ *    das Formular dann neu (nurPraxis-Felder weg, Hinweise, „weiß nicht") und speichert
+ *    mit `quelle='kiosk'` (ungeprüft bis die Praxis bestätigt).
+ *
  * ⚠ EHRLICHE GRENZE (Konsey, „Ödün verilenler"): Der Kiosk ist eine
  *   IRRTUMSSPERRE, keine Sicherheitsgrenze. Die Supabase-Sitzung der Therapeutin
  *   bleibt auf dem Gerät offen, gleicher Origin, gleiches Token. Wer entschlossen
@@ -46,6 +55,9 @@ let API = '';
 let showToast = (m) => console.log(m);
 let t = (k) => k;
 let getBookingsChannel = () => null;
+let openEinwilligung = null;      // (opts) => Promise — module/patienten-einwilligung.js
+let _startModus = 'anamnese';     // 'anamnese' | 'einwilligung' — überlebt die PIN-Einrichtung
+let _titelAlt = null;             // Kopfzeilentexte des Overlays, im Einwilligungs-Modus ersetzt
 
 let _kioskActive = false;
 let _fsHandler = null;
@@ -115,8 +127,10 @@ export function initKioskMode(deps = {}) {
   if (deps.showToast) showToast = deps.showToast;
   if (deps.t) t = deps.t;
   if (deps.getBookingsChannel) getBookingsChannel = deps.getBookingsChannel;
+  if (deps.openEinwilligung) openEinwilligung = deps.openEinwilligung;
 
-  $('kioskStartBtn')?.addEventListener('click', handleKioskStart);
+  $('kioskStartBtn')?.addEventListener('click', () => handleKioskStart('anamnese'));
+  $('kioskEinwilligungBtn')?.addEventListener('click', () => handleKioskStart('einwilligung'));
   $('kioskExitBtn')?.addEventListener('click', () => showKioskPinModal('exit'));
 
   $('kioskPinCancelBtn')?.addEventListener('click', hideKioskPinModal);
@@ -156,7 +170,12 @@ async function pinStatus() {
   return res.json();          // { pinSet, lockedUntil }
 }
 
-async function handleKioskStart() {
+async function handleKioskStart(modus = 'anamnese') {
+  if (modus === 'einwilligung' && !$('anamPatientSelect')?.value) {
+    showToast('Bitte zuerst einen Patienten auswählen.', 'error');
+    return;
+  }
+  _startModus = modus;
   let status;
   try {
     status = await pinStatus();
@@ -180,7 +199,7 @@ async function handleKioskStart() {
     return;                                    // PIN fehlt -> Kiosk startet NICHT
   }
 
-  enterKioskMode();
+  enterKioskMode(modus);
 }
 
 async function handleKioskPinSetup() {
@@ -208,7 +227,7 @@ async function handleKioskPinSetup() {
 
   const m = $('kioskPinSetupModal');
   if (m) m.hidden = true;
-  enterKioskMode();
+  enterKioskMode(_startModus);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -233,12 +252,38 @@ function onFullscreenChange() {
   }
 }
 
-function enterKioskMode() {
+/** Texte der Kopfzeile im Einwilligungs-Modus setzen / zurückstellen. */
+function setzeKopf(titel, sub) {
+  const t1 = document.querySelector('#kioskOverlay [data-i18n="kiosk_overlay_title"]');
+  const t2 = document.querySelector('#kioskOverlay [data-i18n="kiosk_overlay_sub"]');
+  if (titel != null) {
+    _titelAlt = { t1: t1?.textContent, t2: t2?.textContent };
+    if (t1) t1.textContent = titel;
+    if (t2) t2.textContent = sub || '';
+  } else if (_titelAlt) {
+    if (t1) t1.textContent = _titelAlt.t1;
+    if (t2) t2.textContent = _titelAlt.t2;
+    _titelAlt = null;
+  }
+}
+
+/** Nach dem Einwilligungs-Ablauf: kein Formular, nur die Rückgabe-Bitte — Ausstieg bleibt die PIN. */
+function zeigeDanke() {
+  const formContent = $('kioskFormContent');
+  if (formContent && _kioskActive) {
+    formContent.innerHTML = '<div style="text-align:center;padding:48px 16px;color:var(--text-main);font-size:22px;line-height:1.5;">'
+      + 'Vielen Dank.<br><span style="font-size:17px;color:var(--text-muted);">Bitte geben Sie das Tablet an das Praxisteam zurück.</span></div>';
+  }
+}
+
+function enterKioskMode(modus = 'anamnese') {
   const overlay = $('kioskOverlay');
   if (!overlay) return;
 
   const formContent = $('kioskFormContent');
-  const anamPanel = $('panel-anamnese');
+  const nurEinwilligung = modus === 'einwilligung';
+  const anamPanel = nurEinwilligung ? null : $('panel-anamnese');
+  const patientId = $('anamPatientSelect')?.value || null;   // vor dem Verschieben lesen
 
   // try/finally: wenn das Verschieben mittendrin scheitert, muss der Kiosk
   // trotzdem in einem definierten Zustand landen — sonst hängt das Panel
@@ -248,8 +293,14 @@ function enterKioskMode() {
       formContent.innerHTML = '';
       const startBtn = $('kioskStartBtn');
       if (startBtn) startBtn.style.display = 'none';
+      const ewBtn = $('kioskEinwilligungBtn');
+      if (ewBtn) ewBtn.style.display = 'none';
       formContent.appendChild(anamPanel);
       anamPanel.classList.add('active');
+    } else if (nurEinwilligung && formContent) {
+      formContent.innerHTML = '';
+      setzeKopf('Einwilligung', 'Bitte lesen und unterschreiben Sie auf dem Tablet');
+      ['kioskStartBtn', 'kioskEinwilligungBtn'].forEach(id => { const b = $(id); if (b) b.style.display = 'none'; });
     }
   } finally {
     _kioskActive = true;
@@ -264,7 +315,14 @@ function enterKioskMode() {
     document.addEventListener('fullscreenchange', _fsHandler);
 
     document.documentElement.requestFullscreen?.().catch(() => {});
-    auditKiosk('enter');
+    auditKiosk('enter');   // der Server kennt nur enter/exit/forgot_signout — der Modus wird (noch) nicht unterschieden
+    document.dispatchEvent(new CustomEvent('praxura:kiosk', { detail: { aktiv: true, modus } }));
+    if (nurEinwilligung && openEinwilligung && patientId) {
+      // Overlay der Einwilligung liegt über dem Kiosk (z-index 99999, später im DOM), unter dessen PIN-Modal.
+      openEinwilligung({ patientId, onClose: zeigeDanke }).catch(() => zeigeDanke());
+    } else if (nurEinwilligung) {
+      zeigeDanke();
+    }
   }
 }
 
@@ -280,6 +338,9 @@ function exitKioskMode() {
     }
     const startBtn = $('kioskStartBtn');
     if (startBtn) startBtn.style.display = '';
+    const ewBtn = $('kioskEinwilligungBtn');
+    if (ewBtn) ewBtn.style.display = '';
+    setzeKopf(null);
   } finally {
     _kioskActive = false;
     if (overlay) overlay.hidden = true;
@@ -294,6 +355,7 @@ function exitKioskMode() {
     try { getBookingsChannel()?.subscribe(); } catch { /* egal */ }
 
     auditKiosk('exit');
+    document.dispatchEvent(new CustomEvent('praxura:kiosk', { detail: { aktiv: false } }));
   }
 }
 

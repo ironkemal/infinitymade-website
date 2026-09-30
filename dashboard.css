@@ -8177,3 +8177,47 @@ textarea:focus-visible,
 .bk-akt-mehr[hidden] + .bk-akt-menue { display: none; }
 .bk-akt-menue .bk-akt-btn { justify-content: flex-start; padding-left: 12px; }
 .bk-akt-btn.bk-akt-blitz { outline: 2px solid var(--accent, #b1891b); outline-offset: 2px; }
+
+/* ── Anamnese je Fachbereich (30.09.2026): Formular, Kopfzeile, Rozets ─────────────
+   Nur Themenvariablen — kein festes Weiss/Grau (Dark-Theme). */
+.anam-entwurf {
+  margin-bottom: 12px; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  color: var(--warning-text, var(--text-main)); background: var(--warning-dim, var(--bg-card-solid));
+  border: 1px solid var(--warning, var(--border));
+}
+.anam-kopf {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px;
+  padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg-card-solid); color: var(--text-main); font-size: 13px;
+}
+.anam-kopf-aktionen { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.anam-dyn .anf-feld { margin-top: 14px; }
+.anam-dyn .anf-feld:first-child { margin-top: 0; }
+.anam-dyn .anf-unter { margin-left: 16px; padding-left: 12px; border-left: 2px solid var(--border); }
+.anam-dyn .anf-stern { color: var(--danger); font-weight: 700; }
+.anam-dyn .anf-hinweis { margin-top: 4px; font-size: 12px; color: var(--text-muted); }
+.anam-dyn .anf-vorschlag {
+  margin-top: 6px; padding: 6px 10px; border-radius: 6px; font-size: 12px;
+  background: var(--warning-dim, var(--bg-card-solid)); color: var(--text-main); border: 1px dashed var(--warning, var(--border));
+}
+.anam-dyn .anf-fehler { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--danger); }
+.anam-dyn .anam-radio-row label, .anam-dyn .anam-grid label { min-height: 36px; }
+#kioskOverlay .anam-dyn .anam-radio-row label, #kioskOverlay .anam-dyn .anam-grid label { min-height: 48px; font-size: 16px; }
+#kioskOverlay .anam-dyn .anam-radio-row input, #kioskOverlay .anam-dyn .anam-grid input { width: 22px; height: 22px; }
+#kioskOverlay .anam-dyn .anam-grid { grid-template-columns: 1fr; }
+.anam-rozets { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; vertical-align: middle; }
+.anam-rozet {
+  display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; line-height: 1.5;
+  border: 1px solid transparent; white-space: nowrap;
+}
+.anam-rozet--rot { color: var(--danger); background: var(--danger-dim, transparent); border-color: var(--danger); }
+.anam-rozet--orange { color: var(--warning-text, var(--warning)); background: var(--warning-dim, transparent); border-color: var(--warning); }
+.anam-rozet--mehr { color: var(--text-muted); background: var(--bg-card-solid); border-color: var(--border); }
+.anam-rozet-ungeprueft {
+  font-size: 11px; font-style: italic; color: var(--text-muted); background: none; border: 1px dashed var(--border);
+  border-radius: 999px; padding: 1px 8px; cursor: default;
+}
+button.anam-rozet-ungeprueft { cursor: pointer; }
+button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(--text-muted); }
+/* „Ablauf abbrechen?" der Einwilligung (99999) und der PIN-Modal des Kiosk (100000) müssen die Rückfrage sehen können */
+#confirmModal { z-index: 100001; }

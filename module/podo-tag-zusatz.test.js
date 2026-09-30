@@ -60,9 +60,17 @@ test('leadStatusLabel: Almanca etiket, bilinmeyen ham, boş —', () => {
 });
 
 // ── Anamnese-Hinweis (S4 P3, gkv-302 30.09.2026) ──
-const sbMit = (ergebnis) => ({ from(t) { assert.equal(t, 'anamnese'); return { select: () => ({ eq: (c, v) => { assert.equal(c, 'patient_id'); assert.equal(v, 'L1'); return { limit: async () => ergebnis }; } }) }; } });
+// Kette: select → eq(patient_id) → eq(ist_aktuell) → eq(fachbereich) → limit. Protokolliert die Filter.
+let gesehen = [];
+const sbMit = (ergebnis) => ({ from(t) {
+  assert.equal(t, 'anamnese'); gesehen = [];
+  const k = { select: () => k, eq: (c, v) => { gesehen.push([c, v]); return k; }, limit: async () => ergebnis };
+  return k;
+} });
 test('hatAnamnese: Treffer → true, leer → false, Fehler/kein Patient/kein Client → null (dann KEIN Hinweis)', async () => {
   assert.equal(await hatAnamnese(sbMit({ data: [{ id: 'a' }], error: null }), 'L1'), true);
+  // nur die gültige Podo-Fassung zählt (append-only, Anamnese je Fachbereich)
+  assert.deepEqual(gesehen, [['patient_id', 'L1'], ['ist_aktuell', true], ['fachbereich', 'podo']]);
   assert.equal(await hatAnamnese(sbMit({ data: [], error: null }), 'L1'), false);
   assert.equal(await hatAnamnese(sbMit({ data: null, error: { message: 'x' } }), 'L1'), null);
   assert.equal(await hatAnamnese({ from() { throw new Error('x'); } }, 'L1'), null);
