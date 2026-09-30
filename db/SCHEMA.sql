@@ -1,7 +1,11 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-10-01 — Nachtrag: 0046_kostentraeger_gueltigkeit_
+-- ERZEUGT AM:        2026-10-01 — Nachtrag: 0048_kostentraeger_auswahl_valid_
+--                    from im SaaS angewendet (MCP): Sicht prueft auch
+--                    kt.valid_from <= Berliner Tag. 876 Zeilen (unveraendert).
+--                    Letzte Migration: 0048.
+--                    davor: 2026-10-01 — Nachtrag: 0046_kostentraeger_gueltigkeit_
 --                    annahmestellen im SaaS angewendet (MCP, O-139 Adim 1,
 --                    Freigabe Kemal 30.09.2026): kostentraeger_annahmestellen
 --                    und kostentraeger_anschriften je +valid_from/+valid_to
@@ -3453,6 +3457,8 @@ CREATE VIEW kostentraeger_auswahl WITH (security_invoker = true) AS
   WHERE kt.datensatz_status = 'echt'
     AND kt.active IS TRUE
     AND kt.payer_type = 'gkv'
+    AND (kt.valid_from IS NULL
+         OR kt.valid_from <= (now() AT TIME ZONE 'Europe/Berlin')::date)
     AND (kt.valid_to IS NULL
          OR kt.valid_to >= (now() AT TIME ZONE 'Europe/Berlin')::date)
     AND (kt.abrechnender_kt_ik IS NOT NULL
@@ -3465,7 +3471,6 @@ CREATE VIEW kostentraeger_auswahl WITH (security_invoker = true) AS
 --   ✅ Im SaaS angewendet 27.09.2026 (MCP), 893 Zeilen verifiziert.
 --   ✅ 01.10.2026 durch 0046 ersetzt (CREATE OR REPLACE, Spalten/Grants/COMMENT
 --      unveraendert): Berliner Tag statt current_date, nur gueltige Annahmestellen. 876 Zeilen.
---   ⚠️ offen: kt.valid_from <= Stichtag fehlt noch (Backend kostentraegerAbfrage hat es) —
---      eigene Migration, gkv-302/db-ustasi.
+--   ✅ 01.10.2026 (0048): auch kt.valid_from <= Berliner Tag (wie Backend kostentraegerAbfrage). 876 Zeilen.
 
 -- geometry_columns, geography_columns → PostGIS-Systemviews, hier ausgelassen.

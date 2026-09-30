@@ -1,7 +1,10 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-10-01 — Nachtrag: 0046_kostentraeger_gueltigkeit_
+-- ERZEUGT AM:        2026-10-01 — Nachtrag: 0048 (Sicht kostentraeger_auswahl
+--                    per CREATE OR REPLACE, +valid_from-Filter). NULL-Aenderung
+--                    fuer diese Datei; Grants live geprueft unveraendert.
+--                    davor: 2026-10-01 — Nachtrag: 0046_kostentraeger_gueltigkeit_
 --                    annahmestellen im SaaS angewendet (MCP). Fuer DIESE Datei
 --                    fast eine NULL-Aenderung: +4 nullable Spalten ohne
 --                    Constraint (kein Index/Trigger), Sicht kostentraeger_
