@@ -3075,7 +3075,7 @@ Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
     document.getElementById('bkActionNoShowHint').hidden = !isOwn;
 
     const ausfallBtn = document.getElementById('bkActionAusfallBtn');
-    if (ausfallBtn) ausfallBtn.hidden = !ausfallBizForBooking(booking);
+    if (ausfallBtn) ausfallBtn.hidden = !(['no_show', 'cancelled'].includes(booking.status) && ausfallBizForBooking(booking));   // erst NACH No-Show/Absage — sonst verdrängte er „Nicht erschienen" (P1 canli-test 01.10.2026)
 
     const korrekturBtn = document.getElementById('bkActionKorrekturBtn');
     if (korrekturBtn) korrekturBtn.hidden = !(isOwn && booking.status === 'no_show');
