@@ -30,6 +30,7 @@
  * Software heraus, keine Speicherung des erzeugten PDFs (es ist jederzeit aus
  * `bookings` neu erzeugbar — GoBD/§147 AO betreffen dieses Dokument nicht).
  */
+import { alsISODatum } from './datum.js?v=20260930f';
 
 'use strict';
 
@@ -183,10 +184,10 @@ export function druckeBehandlungsbestaetigung({
  */
 export function mountBehandlungsbestaetigung(el, deps = {}) {
   if (!el) return;
-  const heute = new Date().toISOString().slice(0, 10);
+  const heute = alsISODatum(new Date());
   const vorMonat = new Date();
   vorMonat.setMonth(vorMonat.getMonth() - 3);
-  const startWert = vorMonat.toISOString().slice(0, 10);
+  const startWert = alsISODatum(vorMonat);
 
   el.innerHTML = `
     <button type="button" class="btn btn-secondary btn-sm" id="bbToggle" style="font-size:12px;">

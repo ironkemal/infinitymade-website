@@ -34,6 +34,7 @@
 import { befundungFuerLeistung, IST_BEFUNDUNG } from './eingangsbefundung-regel.js?v=20260930a';
 import { geplanteAlsBehandlungen, positionVon } from './podo-geplant.js?v=20260918';
 import { setzeDauer } from './termin-dauer.js?v=20260903b';
+import { alsISODatum } from './datum.js?v=20260930f';
 
 /** Fallback-Dauer, wenn eine Leistung keine `duration_minutes` fuehrt. */
 export const STANDARD_DAUER_MIN = 30;
@@ -685,7 +686,7 @@ async function patientenBehandlungen() {
 export async function schlageBefundungVor() {
   if (!ctx) return;
   const datum = (document.getElementById('bkStart')?.value || '').slice(0, 10)
-             || new Date().toISOString().slice(0, 10);
+             || alsISODatum(new Date());
   const behandlungen = await patientenBehandlungen();
   const selbstzahler = document.getElementById('bkIsSelbstzahler')?.value === '1';
 

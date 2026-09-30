@@ -47,6 +47,7 @@ import {
   AUSBUCHUNGSKONTO_STANDARD,
 } from './buchungskonten.js?v=20260909';
 import { frageZahlungsstatus } from './rechnung-zahlung.js?v=20260909';
+import { alsISODatum } from './datum.js?v=20260930f';
 
 /** Beträge werden in Cent verglichen — `numeric(10,2)` kennt keine Rundungsreste. */
 const cent = (v) => Math.round((Number(v) || 0) * 100);
@@ -334,7 +335,7 @@ export function oeffneZahlungseingang(opts) {
 
           <label style="display:block;">
             <div style="${label}">Zahlungsdatum</div>
-            <input id="_zeDatum" type="date" value="${new Date().toISOString().slice(0, 10)}" style="${feld}">
+            <input id="_zeDatum" type="date" value="${alsISODatum(new Date())}" style="${feld}">
           </label>
 
           <label style="display:block;">

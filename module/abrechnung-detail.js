@@ -47,6 +47,7 @@ import { fmtEur } from './geld.js?v=20260909';
 import { dateiStatusBadge, aggregierterDateiStatus, dateiStatusInfo, istVerworfen } from './abrechnung-status.js?v=20260920b';
 import { ladeDateieinheiten, dateieinheitVon } from './podologie-dateieinheit.js?v=20260907';
 import { on } from './signal.js?v=20260813';
+import { alsISODatum } from './datum.js?v=20260930f';
 
 let ctx = null;
 let _hoertZu = false;
@@ -640,7 +641,7 @@ async function _vkz01Ausnahme(btn, ab) {
  * (Trigger `fn_abrechnung_zahlung_status()` summiert serverseitig).
  */
 function _erfasseZahlung(ab, gruppen) {
-  const heute = new Date().toISOString().slice(0, 10);
+  const heute = alsISODatum(new Date());
   const rechnungsOptionen = gruppen.length > 1
     ? `<option value="">Ganze Datei</option>` + gruppen.map(g =>
         `<option value="${esc(g.einzel_rechnungsnummer)}">Gesamtrechnung ${esc(g.einzel_rechnungsnummer)}${g.karten_ik ? ' · ' + esc(g.karten_ik) : ''}</option>`).join('')

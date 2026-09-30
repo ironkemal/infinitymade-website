@@ -49,7 +49,7 @@ export function heilmittelPositionAufloesen(rezept) {
  * Kassenfeld gar nicht anbietet (Testsatz, private Kasse, abgelaufene IK).
  * `heute` nur für Tests.
  */
-function kostentraegerAbfrage(supabase, heute = new Date().toISOString().slice(0, 10)) {
+function kostentraegerAbfrage(supabase, heute = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date())) {
   return supabase
     .from('kostentraeger')
     .select('ik, abrechnender_kt_ik')
