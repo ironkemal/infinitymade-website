@@ -800,7 +800,7 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
 
 ## builder'a devredilenler
 
-**Açık devir: 4** (30.09.2026 S4-1 turu: P2 Demo-Modus · P2 Folgetermin Befund önerisi · P2 Tagesbehandlung gerekçe çelişkisi · P2 Patientenpost ReferenceError — aşağıda). Önceki: (30.09.2026 `047baab` turu: [P2] LS a)+78010 maske ipucu — `765c9ed` ile canlıda KAPANDI. 30.09.2026 `7459ba1` turu: P1 `booking-request.html` sihirbazı boş — `bd71bbf` ile canlı regresyonda KAPANDI. 30.09.2026 P1-Regression turu: signal.js P1’i `9d4b057` ile canlıda KAPANDI. 30.09.2026 S3-Reste turu: P1 signal.js iki örnek — aşağıda. 30.09.2026 öğleden sonra: aşağıdaki P1/P2/P3 + S3.8b P3a gözlemi `f6cd960`/`14171df` ile canlı regresyonda KAPANDI. Önceki: 30.09.2026 öğle: P1 non-terminal ICD „E11.7-“ §302 dosyasını blokluyor · P2 listede „ICD-10-Kode fehlt“ · P3 kayıtlı non-terminal ICD uyarısı yeniden açılışta çıkmıyor — aşağıda). 30.09 öğle: „eski Karten-IK ipucu“ P3'ü `50ef95e` ile canlı regresyonda KAPANDI. 30.09 sabah: „Kasse araması bağlanmıyor" P1'i `2cc414a` ile canlı regresyonda KAPANDI. Kapatılmış girişler geçmiş kaydı
+**Açık devir: 1** (P2 Demo-Modus — DB ayarı `module_visibility`, sınanmadı. S4-1’in diğer üç P2’si `5ca271c` ile canlı regresyonda KAPANDI, 2026-09-30). Önceki: (30.09.2026 `047baab` turu: [P2] LS a)+78010 maske ipucu — `765c9ed` ile canlıda KAPANDI. 30.09.2026 `7459ba1` turu: P1 `booking-request.html` sihirbazı boş — `bd71bbf` ile canlı regresyonda KAPANDI. 30.09.2026 P1-Regression turu: signal.js P1’i `9d4b057` ile canlıda KAPANDI. 30.09.2026 S3-Reste turu: P1 signal.js iki örnek — aşağıda. 30.09.2026 öğleden sonra: aşağıdaki P1/P2/P3 + S3.8b P3a gözlemi `f6cd960`/`14171df` ile canlı regresyonda KAPANDI. Önceki: 30.09.2026 öğle: P1 non-terminal ICD „E11.7-“ §302 dosyasını blokluyor · P2 listede „ICD-10-Kode fehlt“ · P3 kayıtlı non-terminal ICD uyarısı yeniden açılışta çıkmıyor — aşağıda). 30.09 öğle: „eski Karten-IK ipucu“ P3'ü `50ef95e` ile canlı regresyonda KAPANDI. 30.09 sabah: „Kasse araması bağlanmıyor" P1'i `2cc414a` ile canlı regresyonda KAPANDI. Kapatılmış girişler geçmiş kaydı
 olarak, aynı semptom üçüncü kez çıkarsa buraya bakılır).
 
 ### [P2] Podoloji menüsünde „Demo-Modus“ hâlâ görünüyor — `module_visibility` admin toggle’ı registry’deki `roles: []`’ı eziyor (2026-09-30, S4-1)
@@ -812,7 +812,7 @@ olarak, aynı semptom üçüncü kez çıkarsa buraya bakılır).
 **Şüpheli:** `module_visibility` verisi (podologie satırları silinmeli/false) veya `dashboard.js:1037-1039` mantığı; registry değişikliği tek başına yetmiyor
 **Katman:** 5 (görünüm) · **Etki:** podolog kaldırılması kararlaştırılmış bir modülü görüyor; admin panelinden de düzeltilebilir
 
-### [P2] Folgetermin maskesi Befund önerisini (78030 „Vorschlag … — Grund: …“) göstermiyor; aynı kart elle yeniden seçilince çıkıyor (2026-09-30, S4-1)
+### ~~[P2] Folgetermin maskesi Befund önerisini (78030 „Vorschlag … — Grund: …“) göstermiyor; aynı kart elle yeniden seçilince çıkıyor (2026-09-30, S4-1)~~ — KAPANDI (canlı regresyon 2026-09-30 12:46–12:52Z, `5ca271c`/`ebb9063`, `dashboard.js?v=20261001k`, QA test2, fetch-guard ile yazmasız; `396000d2`→`06dbeb5c` ve `e48f89a4`→`50139501` Folgetermin maskesinde ek tık olmadan „Vorschlag: Befundung (78030) übernehmen — Grund: Eingangsbefundung ist schon erfasst …“, işaretsiz; tarih +7 / +14 değişmedi)
 
 **Nerede:** Termin-Aktionen → Folgetermin → `#bookingModal`
 **Yeniden üretme:** 1. `396000d2` (30.09, Verordnung `06dbeb5c`, 78010 klein) panelini aç → 2. Folgetermin → 3. `#bkLeistungVorschlag` gizli → 4. aynı Verordnung kartına (`06dbeb5c`, zaten seçili) tekrar tıkla
@@ -821,7 +821,7 @@ olarak, aynı semptom üçüncü kez çıkarsa buraya bakılır).
 **Şüpheli:** `module/termin-folge.js:114-187` `oeffneFolgetermin` — `selectVerordnung` içindeki `schlageBefundungVor()` (`dashboard.js:3072`, await edilmiyor) sonucu, maske açılışında `module/termin-leistungen.js:785-790` MutationObserver’ın `setzeLeistungenZurueck()` (`_vorschlag = null`) çağrısıyla siliniyor olabilir (hipotez, doğrulanmadı); `setzeLeistungen` sonrası `schlageBefundungVor()` yeniden çağrılmıyor
 **Katman:** 3 (Termin/Leistung) · **Etki:** podolog en sık adımında 78030’u hatırlatılmıyor → Befundung eksik planlanır
 
-### [P2] Tagesbehandlung: 78010 gerekçesi „Behandlungsposition laut Verordnung“ diyor, hemen üstteki satır „keine Position auf der Verordnung erfasst — vorbelegt: 78010“ (2026-09-30, S4-1)
+### ~~[P2] Tagesbehandlung: 78010 gerekçesi „Behandlungsposition laut Verordnung“ diyor, hemen üstteki satır „keine Position auf der Verordnung erfasst — vorbelegt: 78010“ (2026-09-30, S4-1)~~ — KAPANDI (canlı regresyon 2026-09-30 12:46–12:52Z, `5ca271c`/`ebb9063`, `dashboard.js?v=20261001k`, QA test2, fetch-guard ile yazmasız; `50139501` 78010 yanında „— Standardposition (keine Position auf der Verordnung)“; zweiter-Behandlungstag Rückfrage hâlâ „am 30.09.2026“ (datum.js geçişi sağlam), Zurück → yazma yok)
 
 **Nerede:** `podologie-billing` → Verordnung `50139501` (heilmittel_position NULL, heilmittel „Podologische Komplexbehandlung“, DG DF)
 **Yeniden üretme:** Behandlungen → `50139501` seç → HPNR kutuları
@@ -829,7 +829,7 @@ olarak, aynı semptom üçüncü kez çıkarsa buraya bakılır).
 **Şüpheli:** `module/podo-vorbelegung-grund.js:73` (`code === rezeptPosition` → „laut Verordnung“); `rezeptPosition` `module/podologie-abrechnung.js:406-410` → `behandlungspositionVorschlag` DG yedeğinden (`module/podo-behandlungsposition-regel.js:55`) geliyor
 **Katman:** 4 (Belege) · **Etki:** yanlış kaynağı gösteren gerekçe; OCR yanlış okuma kontrolünün amacını bulandırıyor. Domain metni `podoloji`’ye
 
-### [P2] Patientenpost (`b2c`) tablosu hiç çizilmiyor — `ReferenceError: leadStatusBadge is not defined` (2026-09-30, S4-1 turu yan bulgu, eski)
+### ~~[P2] Patientenpost (`b2c`) tablosu hiç çizilmiyor — `ReferenceError: leadStatusBadge is not defined` (2026-09-30, S4-1 turu yan bulgu, eski)~~ — KAPANDI (canlı regresyon 2026-09-30 12:46–12:52Z, `5ca271c`/`ebb9063`, `dashboard.js?v=20261001k`, QA test2, fetch-guard ile yazmasız; Patientenpost 3 satır, `badge badge-gray`, konsolda `leadStatusBadge`/ReferenceError yok. P3 gözlem: rozet ham durum değerini „new“ gösteriyor (Almanca etiket yok))
 
 **Nerede:** sidebar Patienten → Patientenpost
 **Yeniden üretme:** panele geç → konsol
