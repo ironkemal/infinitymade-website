@@ -42,9 +42,9 @@ dolanmaz, Kemal'e sorar.
 | S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | ✅ 1.1–1.11 (29.09) — canlı geçti, 1.9 QA'da veri yok (birim testleri); açık: 1.12 — bkz. S1 devir notu |
 | S2 | §302 durum semantiği | kısmen (gkv-302) | ✅ 2.1–2.4, 2.6, 2.7 (29.09) + 2.3b ✅ (30.09, `f8ea2aa`) — 2.5 bilerek yok; canlı GEÇTİ, bkz. S2/S3 devir notu (30.09) |
 | S3 | Güvenilirlik ve veri doğruluğu | hayır | ✅ 3.1–3.13 (3.12: kod adımı `e9d0286`, yıkıcı adım Kemal onayında) · 3.8a (`e665aca`, 30.09) — 3.8b ✅ (`8316fbe`, 0044 canlıda) · B1 ✅ (`79e1556`, `77c12bc`) · ICD „-" ✅ (`14171df`, `f6cd960`) · 3.12 ayrı iş (Kemal 30.09: „2'yi ayrı bir iş olarak bırak") · `datumDe` birleşti (`f30f407`) |
-| S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | 🟡 paket 1 `8716a3d` (menü, sağ panel, Folgetermin, önseçim sebebi) · paket 2 `f14b2d8`+`b830cfb` (Fußbefund gömülü, kaydetme sonrası Folgetermin, terminoloji) — kalan: Wagner (B şeması), hasta dosyası sekmeleri, Anamnese, Selbstzahler, Online-Anfrage |
+| S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | 🟡 paket 1 `8716a3d` (menü, sağ panel, Folgetermin, önseçim sebebi) · paket 2 `f14b2d8`+`b830cfb` (Fußbefund gömülü, kaydetme sonrası Folgetermin, terminoloji) · paket 3 `6bf6ecc` (Akte 6 sekme) · Online-Anfrage `43b9655`…`0a0fa74` — kalan: Anamnese je Fachbereich (ön yüz hazır, C'nin migration'ını bekliyor), Wagner/Therapiezeit ön yüzü (C şeması), Selbstzahler |
 | S5 | Mobil / tablet (yalnız CSS) | hayır | ⏳ |
-| S6 | Temizlik: yalnız Almanca, ölü kod, konsol | hayır | ⏳ |
+| S6 | Temizlik: yalnız Almanca, ölü kod, konsol | hayır | 🟡 login/kalender/setup yalnız Almanca (`510adff`, `e2f9d7f`); konsol: loadActivityFeed (`3adda3a`), visibility_reports (`a992cf2`), Nominatim (`16c9138`) kapandı — kalan: dashboard.js en/tr sözlüğü, triggerNoShowBot, metinler, kalender.html 3 hata |
 | S7 | Kapanış: tam regresyon turu + Ops kartlarını kapat | — | ⏳ |
 
 S0 ile S1–S3 paralel yürüyebilir; S4 S0 bitmeden başlamaz.
@@ -221,6 +221,10 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 **B'ye devredilenler:** DF/NF/QF `icd_enforcement=hard_before_dta` migration + preflight ICD↔DG + `icdDgRules.js` Diagnosetext istisnası · `fehlendeVerordnungsangaben()` Leitsymptomatik (UI1/UI2 hariç) · Bereit sayımı yalnız 78010/78020/78610/78620 günleri · preflight aynı gün ikinci Behandlungstag · `pat_fussbefund.wagner_grad` · `podologie_behandlungen` Therapiezeit kolonu (c) · `POST /api/arzt/resolve` 500 · gkv-302'nin iki SPEC-RULES girdisi.
 
 **Açık (A):** liste „0 / 3“ sayacı (`podoZaehler`) ve `podologie-abrechnung.js` otomatik `abrechenbar` hâlâ satır sayıyor — tek sayım kuralı kararı · kalıcı „Termin löschen“ yok (bilinçli) · `tools/browser-probe/leistungen-probe.mjs` 2 kırmızı (bayat probe şüphesi, doğrulanmadı).
+
+### Devir notu (30.09.2026 gece, Oturum A kapanış)
+
+Tam devir: `C:/Users/Kemal Demir/Desktop/claude/praxura-devir/devam-A-sonraki.md` (bekleyen Anamnese ön yüzü ve push kontrol listesi, sıradaki işler, Kemal kararları). B/C'ye devredilenler: `C:/tmp/praxura/B-devir-A-30-09.md`; OTURUM C (`devam-C-30-09-aksam.md`) Anamnese migration'ı + §302 sunucu kuralları + GPS sunucu düzeltmeleri + arzt/resolve 500 üzerinde. Öne çıkan bulgular: UI1 Nagelspange kaydedilemiyordu (`f940a1a`), Krankenkasse UUID olarak gidiyordu (`e238a67`), GPS check-in Haziran'dan beri `Permissions-Policy` yüzünden hiç çalışmadı (A-19, Kemal onayı).
 
 ---
 
