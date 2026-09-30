@@ -20,7 +20,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260926" />
+  <link rel="stylesheet" href="dashboard.css?v=20261001i" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -4752,7 +4752,6 @@
                („Verlauf"), der auf dieselbe Akte zeigte; zwei Knöpfe mit
                demselben Ziel sind kein Angebot, sondern eine Frage. -->
           <div style="padding:10px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
-            <button id="bkOpenPatientBtn" class="btn-ghost btn-sm" type="button" style="font-size:12px;">Patientendaten →</button>
             <!-- Die No-Show-Warnung steht in der Patientenkarte, weil sie zum
                  Patienten gehört und nicht zum einzelnen Termin. Vorher stand
                  sie an einer ganz anderen Stelle im Panel. -->
@@ -4832,7 +4831,7 @@
             <div class="hb-info-label">Adresse</div>
             <div class="hb-info-addr-row">
               <div id="bkActionHbAddr" class="hb-info-value"></div>
-              <button type="button" id="bkActionHbCopyBtn" class="hb-copy-btn" title="Adresse kopieren"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Kopieren</button>
+              
               <span id="bkActionHbCopyOk" class="hb-copy-ok">✓</span>
             </div>
           </div>
@@ -4877,73 +4876,65 @@
           </div>
         </div>
 
-        <!-- „Folgetermin buchen" ist entfallen. Der Knopf öffnete die
-             Terminmaske eine Woche später — was er tat, stand nirgends, und
-             die beiden Wege daneben machen dasselbe besser: unvergebene
-             Einheiten aus „Aktive Verordnung" auf den Kalender ziehen, oder
-             „Serientermine verteilen" die ganze Verordnung auf einmal
-             vergeben lassen. -->
-
-        <!-- Fußbefund: nur Podologie, nur bei Termin mit Patientenakte.
-             Sichtbarkeit + Beschriftung setzt module/fussbefund.js. -->
-        <button class="btn-ghost" id="bkActionFussbefundBtn" type="button" hidden
-                style="width:100%;justify-content:center;font-size:13px;color:var(--text-main);margin-bottom:8px;">🦶 Fußbefund</button>
-
-        <!-- „Bearbeiten" und „Löschen" nannten ihr Ziel nicht. Bei einem
-             Patienten mit sechs Terminen sieht man dem Knopf nicht an, welchen
-             er trifft — deshalb steht der gewählte Termin darüber.
-             Gefüllt in module/termin-aktionen.js.
-
-             „Verschieben" stand hier als dritter Knopf und ist am 31.08.2026
-             entfallen: Verschieben geht seit dem Kontextmenü per Rechtsklick
-             direkt am Termin im Kalender — dort, wo man ihn ohnehin greift.
-             Zwei Wege für dieselbe Handlung sind einer zu viel. „Bearbeiten"
-             bleibt (Kemal, ausdrücklich). -->
+        <!-- Aktionsleiste (Konsey 30.09.2026, Podologie-Reform S4): hoechstens
+             SECHS sichtbare Handlungen. Der Statusknopf (Fahrt starten /
+             Angekommen / Termin starten / Fahrt beenden) steht oben in seiner
+             eigenen Gruppe und ist der eine Primaerknopf; darunter die fuenf,
+             die eine Podologin am Tag am haeufigsten braucht. Alles Seltene
+             und alles Zerstoerende steckt hinter „…" (#bkAktionsMenue).
+             „Folgetermin" war am 31.08.2026 entfallen, weil nirgends stand, was
+             er tat — jetzt oeffnet er die vorhandene Terminmaske mit demselben
+             Patienten, denselben Leistungen und derselben Verordnung
+             (module/termin-folge.js). Nur Podologie; sonst bleibt er zu.
+             „Verschieben" ist der frueher „Bearbeiten" genannte Knopf (dieselbe
+             Maske, dort steht auch „Termin verschieben").
+             Verdrahtung: module/termin-aktionsleiste.js. -->
         <div id="bkActionAuswahlZeile" hidden
              style="font-size:11px;color:var(--text-muted);margin-bottom:6px;text-align:center;"></div>
 
-        <div class="form-group" id="bkActionTerminButtons" style="display:flex;gap:8px;margin-bottom:8px;">
-          <button class="btn-ghost" id="bkActionEditBtn" style="flex:1;justify-content:center;font-size:13px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Bearbeiten
-          </button>
-          <button class="btn-danger" id="bkActionDeleteBtn" style="flex:1;justify-content:center;font-size:13px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Löschen
-          </button>
-        </div>
-
-        <div class="form-group" id="bkActionNoShowGroup" style="margin-bottom:0;">
-          <!-- Kein `disabled` mehr: der Countdown ("ab 3 Min. nach Terminbeginn") ist
-               entfallen, updateNoShowButton() schaltet den Knopf ohnehin immer frei.
-               Das Attribut blieb als Rest liegen und liess die Handlung aus dem
-               Kontextmenue wortlos ins Leere laufen, solange der Seitenbereich in
-               dieser Sitzung noch nie offen war. -->
-          <button class="btn-danger" id="bkActionNoShowBtn" style="width:100%;justify-content:center;">
-            <span>✕</span> Patient nicht erschienen
-          </button>
-          <div class="bk-action-hint" id="bkActionNoShowHint" hidden>Verfügbar ab 3 Min. nach Terminbeginn</div>
-          <button class="btn-secondary" id="bkActionAusfallBtn" type="button" style="width:100%;justify-content:center;margin-top:8px;" hidden>💶 Ausfallrechnung erstellen</button>
-          <!-- Ops #270 (Beta-2, 05.09.2026): Rückweg für einen falsch/vorschnell
-               gesetzten No-Show — z.B. der Patient ist doch noch gekommen. Nur bei
-               status='no_show' sichtbar (Vorwärtsrichtung deckt der Knopf oben ab,
-               der jederzeit erneut No-Show setzen kann). Ein Klick, keine Nachfrage
-               — siehe module/booking-status-korrektur.js. -->
-          <button class="btn-secondary" id="bkActionKorrekturBtn" type="button" style="width:100%;justify-content:center;margin-top:8px;" hidden>↺ Doch behandelt — Status korrigieren</button>
-        </div>
-
-        <!-- Terminzettel A5: alle kommenden Termine dieses Patienten zum
-             Mitgeben. Druckvorlage in module/termin-druck.js.
-
-             Der Knopf stand vorher oben zwischen „Fußbefund" und
-             „Verschieben / Bearbeiten / Löschen" und ging dort unter. Er
-             gehört zu den Terminen, also steht er jetzt direkt über der
-             Verordnungs-/Termineliste (Kemal, 17.08.2026).
-
-             Bewusst ÜBER `#bkRxSessionsPanel` und nicht darin: das Panel ist
-             ausgeblendet, solange keine Verordnung am Termin hängt — im Panel
-             wäre der Knopf beim Selbstzahler spurlos verschwunden. -->
-        <div id="bkActionTerminzettelWrap" style="margin-top:16px;border-top:2px solid var(--border);padding-top:14px;">
-          <button class="btn-ghost" id="bkActionTerminzettelBtn" type="button"
-                  style="width:100%;justify-content:center;font-size:13px;color:var(--text-main);">🖨 Termine drucken (A5)</button>
+        <div id="bkAktionsleiste" class="bk-akt-leiste">
+          <button class="btn-ghost bk-akt-btn" id="bkActionVeroBtn" type="button"
+                  title="Zur Verordnung dieses Patienten — oder eine neue erfassen">Verordnung</button>
+          <button class="btn-ghost bk-akt-btn" id="bkOpenPatientBtn" type="button"
+                  title="Patientenakte öffnen">Patientenakte</button>
+          <button class="btn-ghost bk-akt-btn" id="bkActionFolgeBtn" type="button" hidden
+                  title="Neuer Termin mit demselben Patienten, denselben Leistungen und derselben Verordnung">Folgetermin</button>
+          <button class="btn-ghost bk-akt-btn" id="bkActionEditBtn" type="button"
+                  title="Termin verschieben oder ändern">Verschieben</button>
+          <!-- Nach „Nicht erschienen" tritt Ausfallrechnung / „Doch behandelt"
+               an seine Stelle (Regel in dashboard.css: bk-akt-noshow). -->
+          <div class="bk-akt-noshow" id="bkActionNoShowGroup">
+            <!-- Kein `disabled` mehr: der Countdown ("ab 3 Min. nach Terminbeginn") ist
+                 entfallen, updateNoShowButton() schaltet den Knopf ohnehin immer frei. -->
+            <button class="btn-danger bk-akt-btn" id="bkActionNoShowBtn" type="button">Nicht erschienen</button>
+            <div class="bk-action-hint" id="bkActionNoShowHint" hidden>Verfügbar ab 3 Min. nach Terminbeginn</div>
+            <button class="btn-secondary bk-akt-btn" id="bkActionAusfallBtn" type="button" hidden>💶 Ausfallrechnung erstellen</button>
+            <!-- Ops #270 (Beta-2, 05.09.2026): Rückweg für einen falsch/vorschnell
+                 gesetzten No-Show — nur bei status='no_show' sichtbar, ein Klick,
+                 keine Nachfrage (module/booking-status-korrektur.js). -->
+            <button class="btn-secondary bk-akt-btn" id="bkActionKorrekturBtn" type="button" hidden>↺ Doch behandelt</button>
+          </div>
+          <button class="btn-ghost bk-akt-btn bk-akt-mehr" id="bkActionMehrBtn" type="button"
+                  aria-haspopup="true" aria-expanded="false" aria-controls="bkAktionsMenue"
+                  title="Weitere Aktionen">Weitere Aktionen …</button>
+          <!-- Weitere Aktionen. Steht im Fluss des Panels (kein schwebendes Menue):
+               das Panel scrollt, ein absolut positioniertes Menue wuerde am unteren
+               Rand abgeschnitten. „Absagen" = Termin absagen mit Grund (storniert,
+               Ausfallrechnung/Warteliste werden angeboten). Ein dauerhaftes Loeschen
+               gibt es bewusst NICHT (GoBD). -->
+          <div id="bkAktionsMenue" class="bk-akt-menue" role="menu" hidden>
+            <button class="btn-ghost bk-akt-btn" id="bkActionDeleteBtn" type="button" role="menuitem"
+                    title="Termin absagen (mit Grund) — der Termin bleibt als abgesagt gespeichert">Absagen</button>
+            <!-- Terminzettel A5: alle kommenden Termine dieses Patienten zum
+                 Mitgeben. Druckvorlage in module/termin-druck.js. -->
+            <button class="btn-ghost bk-akt-btn" id="bkActionTerminzettelBtn" type="button" role="menuitem">🖨 Termine drucken (A5)</button>
+            <!-- Adresse kopieren: nur bei Hausbesuch (das Menue blendet sie sonst aus).
+                 Die Klick-Verdrahtung haengt an der id (dashboard.js, Fahrtenbuch-Delegation). -->
+            <button type="button" id="bkActionHbCopyBtn" class="btn-ghost bk-akt-btn" role="menuitem" hidden>Adresse kopieren</button>
+            <!-- Fußbefund: nur Podologie, nur bei Termin mit Patientenakte.
+                 Sichtbarkeit + Beschriftung setzt module/fussbefund.js. -->
+            <button class="btn-ghost bk-akt-btn" id="bkActionFussbefundBtn" type="button" role="menuitem" hidden>🦶 Fußbefund</button>
+          </div>
         </div>
 
         <!-- Rezeptinfo und „Aktive Verordnung" stehen bewusst als Paar ganz
@@ -5707,7 +5698,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261001h"></script>
+  <script type="module" src="dashboard.js?v=20261001i"></script>
 </body>
 
 </html>

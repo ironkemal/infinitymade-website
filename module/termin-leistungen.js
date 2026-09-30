@@ -35,6 +35,7 @@ import { befundungFuerLeistung, IST_BEFUNDUNG } from './eingangsbefundung-regel.
 import { geplanteAlsBehandlungen, positionVon } from './podo-geplant.js?v=20260918';
 import { setzeDauer } from './termin-dauer.js?v=20260903b';
 import { alsISODatum } from './datum.js?v=20260930f';
+import { befundGrundText } from './podo-vorbelegung-grund.js?v=20261001i';
 
 /** Fallback-Dauer, wenn eine Leistung keine `duration_minutes` fuehrt. */
 export const STANDARD_DAUER_MIN = 30;
@@ -294,20 +295,24 @@ export function mitBefundungsvorschlag({
  * Text neben dem Haekchen des Befundungsvorschlags.
  *
  * @param {string} code    `78030` oder `78040`
- * @param {{serie?:boolean, minuten?:number}} [opt]
+ * @param {{serie?:boolean, minuten?:number, grund?:string}} [opt]
  *   `serie`: die Maske legt mehrere Termine an. 78030 gilt dann nur, wenn die
  *   Anwenderin es fuer ALLE Serientermine haekt; 78040 nie fuer mehr als den
  *   ersten (`zeilenFuerTermin`).
+ *   `grund`: Schluessel aus `befundungFuerLeistung()` — der Text sagt, WARUM
+ *   diese Befundung vorgeschlagen ist (Konsey 30.09.2026, 2b).
  */
-export function vorschlagText(code, { serie = false, minuten = 0 } = {}) {
+export function vorschlagText(code, { serie = false, minuten = 0, grund = '' } = {}) {
   const dauer = minuten > 0 ? ` (+${minuten} Min.)` : '';
+  const warum = befundGrundText(grund);
+  const zusatz = warum ? ` — Grund: ${warum}` : '';
   if (code === '78040') {
     return 'Vorschlag: Podologische Eingangsbefundung (78040) übernehmen'
-      + (serie ? ' — nur am ersten Serientermin' : '') + dauer;
+      + (serie ? ' — nur am ersten Serientermin' : '') + dauer + zusatz;
   }
-  return serie
+  return (serie
     ? `Befundung (${code}) in alle Serientermine übernehmen${dauer}`
-    : `Vorschlag: Befundung (${code}) übernehmen${dauer}`;
+    : `Vorschlag: Befundung (${code}) übernehmen${dauer}`) + zusatz;
 }
 
 /**
@@ -356,6 +361,8 @@ let _extra = [];
 let _kombiDauerGesetzt = false;
 /** Aktueller Befundungsvorschlag (nur Anzeige, keine Zeile); `null` = keiner. */
 let _vorschlag = null;
+/** Schluessel, WARUM der Vorschlag steht (`befundungFuerLeistung().grund`). */
+let _vorschlagGrund = '';
 
 /** Alle Zeilen: Zeile 0 aus dem DOM, danach die Zusatzzeilen. */
 export function leseLeistungen() {
@@ -597,7 +604,7 @@ function zeichneVorschlag() {
   const minuten = zeilenMinuten([neueZeile(_vorschlag.serviceId)], ctx?.getServices?.() || []);
   el.hidden = false;
   el.querySelector('input').checked = _extra.some(z => z.serviceId === _vorschlag.serviceId);
-  el.querySelector('span').textContent = vorschlagText(_vorschlag.code, { serie: serieAktiv(), minuten });
+  el.querySelector('span').textContent = vorschlagText(_vorschlag.code, { serie: serieAktiv(), minuten, grund: _vorschlagGrund });
 }
 
 function zeigeHinweis(text, rueckfrage = null) {
@@ -699,6 +706,7 @@ export async function schlageBefundungVor() {
   // Eine fuer den alten Vorschlag gehaekte Zeile faellt mit ihm weg.
   _extra = raeumeAngenommenenVorschlag(ergebnis.zeilen, _vorschlag, ergebnis.vorschlag).slice(1);
   _vorschlag = ergebnis.vorschlag;
+  _vorschlagGrund = ergebnis.grund || '';
   zeichneZeilen();
   aktualisiereDauer();
   zeigeHinweis(ergebnis.hinweis, ergebnis.rueckfrage);

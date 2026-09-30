@@ -48,7 +48,7 @@
 import { sitzungsplan } from './sitzungsplan.js?v=20261001e';
 import { positionVon } from './podo-geplant.js?v=20260918';
 import { istVergeben, ladePodoTermine, bindeTermin } from './verordnung-termine.js?v=20260908';
-import { zeigeSitzungenArbeit } from './termin-panel.js?v=20261001e';
+import { zeigeSitzungenArbeit } from './termin-panel.js?v=20261001i';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
 import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20260916';
 

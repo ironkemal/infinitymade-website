@@ -8125,3 +8125,48 @@ textarea:focus-visible,
   letter-spacing: .02em;
   text-transform: uppercase;
 }
+
+/* ============================================================
+   Termin-Aktionen — Aktionsleiste (Konsey 30.09.2026, Podologie-Reform S4)
+   Hoechstens sechs sichtbare Handlungen + „Weitere Aktionen …".
+   Zwei Spalten; jeder Knopf mindestens 44 px hoch (Hausbesuch: Tablet/Handy).
+   Farben nur ueber Theme-Variablen.
+   ============================================================ */
+.bk-akt-leiste {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.bk-akt-btn {
+  min-height: 44px;
+  width: 100%;
+  justify-content: center;
+  font-size: 13px;
+}
+.bk-akt-btn.btn-ghost { color: var(--text-main); }
+.bk-akt-btn[hidden] { display: none; }
+/* Nicht erschienen + Ausfallrechnung + „Doch behandelt": eine Zelle. */
+.bk-akt-noshow { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.bk-akt-noshow[hidden] { display: none; }
+/* Nach No-Show tritt der Ersatz an die Stelle von „Nicht erschienen" und nimmt die volle Breite. */
+.bk-akt-noshow:has(#bkActionKorrekturBtn:not([hidden])),
+.bk-akt-noshow:has(#bkActionAusfallBtn:not([hidden])) { grid-column: 1 / -1; }
+.bk-akt-noshow:has(#bkActionKorrekturBtn:not([hidden])) #bkActionNoShowBtn,
+.bk-akt-noshow:has(#bkActionAusfallBtn:not([hidden])) #bkActionNoShowBtn { display: none; }
+.bk-akt-mehr { grid-column: 1 / -1; min-height: 44px; color: var(--text-muted); }
+.bk-akt-mehr[aria-expanded="true"] { border-color: var(--border-strong); color: var(--text-main); }
+.bk-akt-menue {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card-solid);
+}
+.bk-akt-menue[hidden],
+.bk-akt-mehr[hidden] + .bk-akt-menue { display: none; }
+.bk-akt-menue .bk-akt-btn { justify-content: flex-start; padding-left: 12px; }
+.bk-akt-btn.bk-akt-blitz { outline: 2px solid var(--accent, #b1891b); outline-offset: 2px; }

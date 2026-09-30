@@ -62,7 +62,7 @@
 
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
-import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261001g';
+import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261001i';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260920s';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001b';
@@ -90,6 +90,8 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Ermittlung wird NICHT geschrieben — die von `verordnung-pruefung.js`
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
 import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001g';
+import { tagesVorbelegungGrund, verordnetZeile } from './podo-vorbelegung-grund.js?v=20261001i';
+import { bestehenderBehandlungstag, zweiterBehandlungstagFrage } from './podo-behandlungstag-regel.js?v=20261001i';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
 import { behandlungspositionVorschlag, ohneBehandlungsposition, OHNE_BEHANDLUNG_FRAGE, leitsymptomatikNotiz } from './podo-behandlungsposition-regel.js?v=20261001g';
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
@@ -773,6 +775,7 @@ async function loadPodologieBilling() {
         </div>
         <div>
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${ctx.t('pod_hpnr')}</label>
+          <div id="podVerordnetZeile" style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">${ctx.escapeHtml(verordnetZeile(selectedVord.heilmittel_position || erstePositionAusItems(selectedVord.heilmittel_items), rezeptPosition))}</div>
           <div id="podHpnrChecks" style="display:flex;flex-wrap:wrap;gap:8px;">
             ${hpnrRows.map(r => {
               const code = r.code;
@@ -791,8 +794,13 @@ async function loadPodologieBilling() {
                 && (geplanteHpnr.has(code) || code === rezeptPosition)) ? 'checked' : '';
               // 79933/79934 nur bei Hausbesuch=Ja auf der Verordnung (S2.6).
               const hbGesperrt = hausbesuchGesperrt(selectedVord, code);
+              // Grund fuer jedes vorbelegte Haekchen (Konsey 30.09.2026, 2b).
+              const grund = (autoChecked || geplant) && !hbGesperrt
+                ? tagesVorbelegungGrund({ code, isUI, eingang: eingangsLage, hausbesuch: isHausbesuch,
+                    geplant: geplanteHpnr.has(code), rezeptPosition })
+                : '';
               return `<label ${hbGesperrt ? 'title="' + ctx.escapeHtml(HAUSBESUCH_HINWEIS) + '"' : ''} style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:${hbGesperrt ? 'not-allowed' : 'pointer'};${hbGesperrt ? 'opacity:.5;' : ''}background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
-                <input type="checkbox" class="pod-hpnr-cb" value="${ctx.escapeHtml(code)}" ${hbGesperrt ? 'disabled' : (autoChecked || geplant)}> ${ctx.escapeHtml(code)} – ${ctx.escapeHtml(r.label)}${hbGesperrt ? '<span style="color:var(--text-muted);font-size:11px;"> — ' + ctx.escapeHtml(HAUSBESUCH_HINWEIS) + '</span>' : ''}
+                <input type="checkbox" class="pod-hpnr-cb" value="${ctx.escapeHtml(code)}" ${hbGesperrt ? 'disabled' : (autoChecked || geplant)}> ${ctx.escapeHtml(code)} – ${ctx.escapeHtml(r.label)}${hbGesperrt ? '<span style="color:var(--text-muted);font-size:11px;"> — ' + ctx.escapeHtml(HAUSBESUCH_HINWEIS) + '</span>' : ''}${grund ? '<span class="pod-hpnr-grund" style="color:var(--text-muted);font-size:11px;"> — ' + ctx.escapeHtml(grund) + '</span>' : ''}
               </label>`;
             }).join('')}
           </div>
@@ -1044,6 +1052,19 @@ async function loadPodologieBilling() {
         });
         if (!proceed) return;
       }
+    }
+
+    // Zweiter Behandlungstag am selben Datum (gkv-302, 30.09.2026): je Tag ist nur
+    // eine Behandlung abrechenbar (HeilM-RL § 12 Abs. 8) — Rueckfrage, KEINE Sperre
+    // (die Preflight-Sperre ist Serversache). Frisch gelesen, nicht aus der
+    // Anzeige: sie kann seit dem Rendern veraltet sein.
+    const schonDa = bestehenderBehandlungstag(await podBehandlungenDerVerordnung(_podState.selectedVordId), datum);
+    if (schonDa) {
+      const trotzdem = await ctx.showConfirmModal({
+        title: 'Zweiter Behandlungstag', message: zweiterBehandlungstagFrage(datum),
+        confirmText: 'Trotzdem speichern', cancelText: 'Zurück', variant: 'warning',
+      });
+      if (!trotzdem) return;
     }
 
     const { error } = await ctx.supabase.from('podologie_behandlungen').insert({

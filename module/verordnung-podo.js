@@ -1159,6 +1159,12 @@ export function mountVerordnungPodo(supabase, ctx = {}) {
     if (e.target.dataset.podSchreibt === '1') return;
     if (!e.target.value.trim()) setTimeout(lauf, 0);
   });
+  // canli-test P3 30.09: Hinweis Leitsymptomatik→Heilmittel nach Handwahl neu rechnen
+  // (nur `change`, eigene Schreibvorgänge ausgenommen → keine Schleife).
+  $('rzHm')?.addEventListener('change', (e) => {
+    if (e.target.dataset.podSchreibt === '1') return;
+    setTimeout(lauf, 0);
+  });
 
   // Der Fachbereich wird per Klick auf die Ankreuzfelder gesetzt
   // (`setM13Therapy`), nicht über ein change-Ereignis.

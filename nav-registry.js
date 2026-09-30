@@ -94,9 +94,10 @@ export const NAV_REGISTRY = {
     { id: 'anamnese',          key: 'nav_anamnese',          label: 'Anamnese',             roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'notizen',           key: 'nav_notizen',           label: 'Notizen',              roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'services',          key: 'nav_services',          label: 'Leistungen',           roles: ['owner', 'employee'], group: 'abrechnung' },
+    { id: 'fahrtenbuch',       key: 'nav_fahrtenbuch',       label: 'Fahrtenbuch',          roles: ['owner', 'employee'], group: 'team' },
     { id: 'hours',             key: 'nav_hours',             label: 'Verfügbarkeit',        roles: ['owner', 'employee'], group: 'team' },
     { id: 'team',              key: 'nav_team',              label: 'Team',                 roles: ['owner', 'employee'], group: 'team' },
-    { id: 'verordnungen',      key: 'nav_verordnungen',      label: 'Verordnungen',         roles: ['owner', 'employee'], group: 'abrechnung' },
+    { id: 'verordnungen',      key: 'nav_verordnungen',      label: 'Verordnungen',         roles: ['owner', 'employee'], group: 'patienten' },
     // Seit 09.09.2026 heisst dieser Bildschirm „Behandlungen" und traegt nur
     // noch Tagesbehandlung + Verordnungsliste. Der §302-Teil ist nach
     // `abrechnung` umgezogen — EIN Abrechnungsbildschirm fuer alle vier
@@ -107,13 +108,13 @@ export const NAV_REGISTRY = {
     // (Kemal, 08.09.2026; geprueft: kein Konto verliert eine genutzte Funktion).
     { id: 'abrechnung',        key: 'nav_abrechnung',        label: '§302-Abrechnung',      roles: ['owner'],             group: 'abrechnung' },
     { id: 'rechnungen',        key: 'nav_rechnungen',        label: 'Rechnungen',           roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'fussstatus',        key: 'nav_fussstatus',        label: 'Fußbefund',            roles: ['owner', 'employee'], group: 'abrechnung' },
+    { id: 'fussstatus',        key: 'nav_fussstatus',        label: 'Fußbefund',            roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'belegliste',        key: 'nav_belegliste',        label: 'Zahlungsjournal',      roles: ['owner'],             group: 'abrechnung' },
     { id: 'mahnwesen',         key: 'nav_mahnwesen',         label: 'Mahnwesen',            roles: ['owner'],             group: 'abrechnung' },
     { id: 'statistik',         key: 'nav_statistik',         label: 'Auswertungen',         roles: ['owner'],             group: 'abrechnung' },
-    { id: 'b2b',               key: 'nav_b2b',               label: 'Zuweiser',             roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'b2c',               key: 'nav_b2c',               label: 'Patientenpost',        roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'beispielmodus',     key: 'nav_beispielmodus',     label: 'Demo-Modus',           roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'b2b',               key: 'nav_b2b',               label: 'Zuweiser',             roles: ['owner', 'employee'], group: 'team' },
+    { id: 'b2c',               key: 'nav_b2c',               label: 'Patientenpost',        roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'beispielmodus',     key: 'nav_beispielmodus',     label: 'Demo-Modus',           roles: [], group: 'einstellungen' },
     { id: 'feedback',          key: 'nav_feedback',          label: 'Feedback & Support',      roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'vorlagen',          key: 'nav_vorlagen',          label: 'Vorlagen',             roles: ['owner'],             group: 'einstellungen' },
     { id: 'settings',          key: 'nav_settings',          label: 'Einstellungen',        roles: ['owner', 'employee'], group: 'einstellungen' }

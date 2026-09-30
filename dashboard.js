@@ -7,7 +7,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-
 import { initLeadSuche } from './module/lead-suche.js?v=20260913';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
-import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260926';
+import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261001i';
 import { attachPatientSearch } from './patient-suche.js?v=20260906';
 import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezept-patientenfeld.js?v=20260927';
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
@@ -32,17 +32,17 @@ import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnun
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20260930x';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261001g';
-import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261001g';
+import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261001i';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001g';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001i';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz, fahrtenbuchCsv, patientenverzeichnisCsv, csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS } from './module/fahrtenbuch-regeln.js?v=20261001c';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
-import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261001h';
+import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261001j';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261001b';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261001e';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
@@ -73,14 +73,14 @@ import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261001e';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261001e';
+import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261001i';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260930c';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
 import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261001e';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
-import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261001e';
+import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20261001i';
 import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261001e';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
@@ -111,6 +111,7 @@ import {
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
 } from './module/termin-aktionen.js?v=20261001e';
+import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261001i';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
@@ -793,7 +794,7 @@ const SECTOR_PANELS = Object.fromEntries(
 );
 
 const NAV_GROUPS = [
-  { id: 'uebersicht',    labelDe: 'Übersicht',     labelEn: 'Overview',      labelTr: 'Genel Bakış',
+  { id: 'uebersicht',    labelDe: 'Heute',         labelEn: 'Overview',      labelTr: 'Genel Bakış',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>' },
   { id: 'termine',       labelDe: 'Termine',        labelEn: 'Appointments',  labelTr: 'Randevular',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' },
@@ -801,7 +802,7 @@ const NAV_GROUPS = [
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
   { id: 'abrechnung',    labelDe: 'Abrechnung',     labelEn: 'Billing',       labelTr: 'Faturalama',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>' },
-  { id: 'team',          labelDe: 'Team',           labelEn: 'Team',          labelTr: 'Ekip',
+  { id: 'team',          labelDe: 'Praxis',         labelEn: 'Team',          labelTr: 'Ekip',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="7" r="4"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
   { id: 'einstellungen', labelDe: 'Einstellungen',  labelEn: 'Settings',      labelTr: 'Ayarlar',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>' },
@@ -1926,6 +1927,7 @@ async function refreshBookingViews() {
   if (activePanel === 'calendar') {
     try { await renderCalendarView(); } catch (e) {}
   }
+  if (bkActionBookingCache?.id && !document.getElementById('bkActionModal')?.hidden) emit('verordnungen:changed'); // offener Seitenbereich zeigt sonst die alte Uhrzeit
 }
 // Wer Termine schreibt, meldet `bookings:changed` — und muss nicht mehr wissen,
 // welche Ansicht gerade offen ist. Mehrfachmeldungen in einem Tick verdichtet
@@ -3254,7 +3256,7 @@ async function openBookingActionModal(booking, opts = {}) {
   // Der Seitenbereich geht auch aus dem Tagesplan auf, nicht nur aus dem
   // Kalender — die Patientensuche im Kopf muss dann trotzdem verdrahtet sein.
   if (!window._calRpInited) { window._calRpInited = true; initCalRightPanel(); }
-  setzeAktionsSichtbarkeit(!!booking);
+  setzeAktionsSichtbarkeit(!!booking, getSector() === 'podologie');
   bkActionBookingCache = booking || null;
   // Der Kassenstatus steht am Patienten, und der wird erst weiter unten geladen.
   // Die Geldzeile zeichnet deshalb zweimal: sofort (noch ohne Zahler) und
@@ -3719,10 +3721,6 @@ async function selectVerordnung(rx, sessions) {
   await waehleVerordnung(rx, sessions, { aufDienstleistung: uebernehmeDienstleistungAusRx, sb: supabase, ownerId: getOwnerId(), leadId });
   uebernimmSerienfrequenzAusRx(rx);
 }
-
-// uebernimmSerienfrequenzAusRx() + setFreqValue(): nach module/termin-aktionen.js
-// verschoben (S1.8, 29.09.2026, podoloji-Denetim) — dort auch der Fix für die
-// bei "alle N Wochen" stehenbleibenden Wochentag-Kästchen.
 
 // Die Verordnung enthaelt die Leistung bereits — die Praxis soll sie nicht ein
 // zweites Mal auswaehlen muessen (Beta-2, 12.08.2026). Das Feld wird deshalb
@@ -7414,12 +7412,8 @@ async function proceedToRechnungForPhysio({ patientId, patientName }) {
   }
 }
 
-// „Löschen" in der Terminmaske und „Absagen" im Seitenbereich sind derselbe
-// Vorgang — waren aber zwei Codewege mit je einer Lücke: hier kam die
-// Warteliste und die Ausfallrechnung fiel aus, dort genau umgekehrt. Welchen
-// Knopf jemand traf, entschied also über Geld. Seit 03.09.2026 gibt es einen
-// Weg. Die Maske kennt nur die ID, `absageTerminMitGrund` braucht den ganzen
-// Datensatz (hausbesuch, service_id, lead_id — siehe module/termin-laden.js).
+// „Löschen" in der Terminmaske = „Absagen" im Seitenbereich: EIN Weg (seit 03.09.2026; vorher
+// fehlte je Knopf Warteliste bzw. Ausfallrechnung). Die Maske kennt nur die ID (module/termin-laden.js).
 document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
   if (!id) return;
@@ -7484,8 +7478,11 @@ document.getElementById('bkActionKorrekturBtn').addEventListener('click', async 
   }
 });
 
-// Zwei Einstiege, ein Weg: der Stift oben in der Terminkarte und „Bearbeiten"
-// unten oeffnen dieselbe Maske (Kemal, 31.08.2026).
+// Aktionsleiste (Konsey 30.09.2026): „Verordnung", „Folgetermin", Menue „Weitere Aktionen" — module/termin-aktionsleiste.js.
+verdrahteAktionsleiste({ getBooking: () => bkActionBookingCache, getLeadId: () => bkActionLeadCache?.id || bkActionBookingCache?.lead_id || null, oeffneAnlegenWahl, toast: showToast,
+  folge: { supabase, ownerId: getOwnerId, prefillBookingModal, populateSrvSelect, updateBkDuration, selectVerordnung, zeigeVerordnungenFuerTermin, rendereVeroKarten, resetVerordnungFelder, oeffneAnlegenWahl, closeModal, escapeHtml, getServices: () => servicesCache } });
+
+// Stift oben in der Terminkarte und „Verschieben" unten oeffnen dieselbe Maske (Kemal, 31.08.2026).
 ['bkActionEditBtn', 'bkDetailEditBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', () => {
   if (!bkActionBookingCache) return;
   openBookingModal(bkActionBookingCache);

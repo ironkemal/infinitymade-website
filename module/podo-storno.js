@@ -29,7 +29,7 @@
 // RLS-Policy `owner_behandlungen` (USING owner_id = auth.uid()); Angestellte
 // haben auf dieser Tabelle nur SELECT. Ein Storno ist eine Belegentscheidung.
 
-import { MELDEPFLICHT_TEXT } from './abrechnungsstatus.js?v=20261001g';
+import { MELDEPFLICHT_TEXT } from './abrechnungsstatus.js?v=20261001i';
 
 /**
  * Podologischer Wortschatz-Status der ELTERN-Verordnung (siehe

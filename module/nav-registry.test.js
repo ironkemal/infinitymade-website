@@ -101,3 +101,30 @@ test('REGISTRY_VERSION ist weg und kommt nicht zurueck', () => {
   // Datei kann das strukturell nicht leisten. Siehe Kopf von nav-registry.js.
   assert.equal(registry.REGISTRY_VERSION, undefined);
 });
+
+test('Podologie-Menue (Konsey 30.09.2026): Fahrtenbuch da, Demo-Modus versteckt, nichts geloescht', () => {
+  const podo = NAV_REGISTRY.podologie;
+  const fahrten = podo.find(e => e.id === 'fahrtenbuch');
+  assert.ok(fahrten, 'Fahrtenbuch fehlt im Podologie-Menue');
+  assert.deepEqual(fahrten.roles, ['owner', 'employee']);
+  // Demo-Modus: nicht geloescht (module_visibility-Zeilen), nur ohne Rollen-Vorgabe.
+  assert.deepEqual(eintrag('podologie', 'beispielmodus').roles, []);
+  // Die anderen Fachbereiche behalten ihn.
+  assert.deepEqual(eintrag('physiotherapy', 'beispielmodus').roles, ['owner', 'employee']);
+  // Jedes Modul, das es vor der Umstellung gab, gibt es noch (ids sind der module_visibility-Schluessel).
+  const VOR_UMSTELLUNG = ['overview', 'ueberblick', 'calendar', 'anfragen', 'warteliste', 'kunden', 'anamnese', 'notizen',
+    'services', 'hours', 'team', 'verordnungen', 'podologie-billing', 'abrechnung', 'rechnungen', 'fussstatus', 'belegliste',
+    'mahnwesen', 'statistik', 'b2b', 'b2c', 'beispielmodus', 'feedback', 'vorlagen', 'settings'];
+  for (const id of VOR_UMSTELLUNG) assert.ok(eintrag('podologie', id), `podologie/${id} fehlt`);
+});
+
+test('Podologie-Menue: Verteilung nach Arbeitsablauf', () => {
+  const gruppe = (id) => eintrag('podologie', id).group;
+  assert.equal(gruppe('overview'), 'uebersicht');
+  for (const id of ['calendar', 'anfragen', 'warteliste']) assert.equal(gruppe(id), 'termine', id);
+  for (const id of ['kunden', 'anamnese', 'notizen', 'verordnungen', 'fussstatus', 'b2c']) assert.equal(gruppe(id), 'patienten', id);
+  for (const id of ['podologie-billing', 'abrechnung', 'rechnungen', 'belegliste', 'mahnwesen', 'statistik', 'services']) assert.equal(gruppe(id), 'abrechnung', id);
+  for (const id of ['hours', 'team', 'fahrtenbuch', 'b2b']) assert.equal(gruppe(id), 'team', id);
+  for (const id of ['vorlagen', 'settings', 'feedback']) assert.equal(gruppe(id), 'einstellungen', id);
+});
+

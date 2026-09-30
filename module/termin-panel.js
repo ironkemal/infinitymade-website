@@ -52,10 +52,10 @@ export const TERMIN_AKTIONEN = [
   'bkActionStartTerminGroup',  // „Termin Starten"
   'bkActionFahrtEndGroup',
   'bkActionDoneGroup',
-  'bkActionFussbefundBtn',
-  'bkActionTerminButtons',     // Bearbeiten / Löschen
-  'bkActionNoShowGroup',       // „Patient nicht erschienen" + Ausfallrechnung
-  'bkActionTerminzettelWrap',  // Termine drucken
+  'bkActionFolgeBtn',          // Folgetermin (nur Podologie: sonst von Anfang an zu)
+  'bkActionEditBtn',           // Verschieben (früher „Bearbeiten")
+  'bkActionNoShowGroup',       // „Nicht erschienen" + Ausfallrechnung / „Doch behandelt"
+  'bkActionMehrBtn',           // „Weitere Aktionen …" (Absagen, Terminzettel, Adresse, Fußbefund)
   'bkActionAuswahlZeile',
   'bkDetailEditBtn',           // der Stift oben in der Terminkarte
 ];
@@ -86,14 +86,18 @@ export const PANEL_BLOECKE = [
  * pauschal alles geöffnet, stünde jede Fahrtenbuch-Stufe gleichzeitig da.
  *
  * @param {boolean} hatTermin
+ * @param {boolean} [podologie]  false → „Folgetermin" bleibt zu (nur Podologie,
+ *   Konsey 30.09.2026). Ohne Angabe gilt true: Aufrufer ohne Fachrichtung
+ *   verhalten sich wie bisher.
  */
-export function setzeAktionsSichtbarkeit(hatTermin) {
+export function setzeAktionsSichtbarkeit(hatTermin, podologie = true) {
   for (const id of TERMIN_AKTIONEN) {
     const node = el(id);
     if (!node) continue;
+    if (id === 'bkActionFolgeBtn' && !podologie) { node.hidden = true; continue; }
     if (!hatTermin) {
       if (!node.hidden) { node.hidden = true; node.dataset.ohneTermin = '1'; }
-    } else if (node.dataset.ohneTermin === '1') {
+    } else if (node.dataset.ohneTermin === '1' || (id === 'bkActionFolgeBtn' && node.hidden)) {
       node.hidden = false;
       delete node.dataset.ohneTermin;
     }

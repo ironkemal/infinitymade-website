@@ -43,6 +43,7 @@
 
 import { emit } from './signal.js?v=20260813';
 import { bestaetigungsText } from './offene-einheiten.js?v=20261001e';
+import { abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261001i';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). Diese Datei spricht
 // weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
 // uebersetzt wird nur an den beiden Lesestellen unten.
@@ -498,7 +499,10 @@ export function bedarf(ziel) {
 /**
  * Podoloji (c), 30.09.2026: Der Server (verordnung-status.routes.js, Ziel „abrechenbar") weist
  * eine Verordnung ohne dokumentierte Behandlung mit 422 ab — der Dialog darf „Bereit" dann nicht
- * als Vorgabe anbieten. Gezählt wird wie am Server: `podologie_behandlungen` mit `storniert_am IS NULL`.
+ * als Vorgabe anbieten. `behandlungen` = Zahl ABRECHENBARER Behandlungstage
+ * (`abrechenbareBehandlungstage()`, podo-behandlungstag-regel.js: nicht storniert UND 78010/78020,
+ * ein Kalendertag einmal — gkv-302, 30.09.2026). Der Server zaehlt heute noch Zeilen mit
+ * `storniert_am IS NULL`; die Angleichung ist Sache von Oturum B.
  * `behandlungen === undefined` (Zahl unbekannt, z. B. Abfragefehler) → bisheriges Verhalten.
  * Gilt nur, wo der Aufrufer die Zahl mitgibt — `oeffneStatusDialogFuer` liest ausschließlich
  * podologische Verordnungen; Physio/Ergo/Logo (`prescriptions`-Sitzungen) sind nicht betroffen.
@@ -509,8 +513,8 @@ export function statusDialogVorgabe(aktuell, behandlungen) {
   return { ohneBehandlung: ohne, gesperrt: ohne ? ['abrechenbar'] : [] };
 }
 export const DIALOG_WAEHLEN = 'Bitte wählen …';
-export const DIALOG_BEREIT_GESPERRT = 'Bereit zur Abrechnung — erst nach der ersten Behandlung';
-export const DIALOG_KEINE_BEHANDLUNG = 'Für diese Verordnung ist noch keine Behandlung dokumentiert.';
+export const DIALOG_BEREIT_GESPERRT = 'Bereit zur Abrechnung — erst nach der ersten Behandlung (78010/78020)';
+export const DIALOG_KEINE_BEHANDLUNG = 'Für diese Verordnung ist noch keine abrechenbare Behandlung (78010/78020) dokumentiert.';
 
 /**
  * Statusdialog öffnen.
@@ -689,16 +693,17 @@ export async function oeffneStatusDialogFuer(verordnungId, { supabase, onFertig 
     alert('Verordnung konnte nicht geladen werden.');
     return;
   }
-  // Dieselbe Zählung wie der Server (Ziel „abrechenbar"): stornierte Behandlungen zählen nicht.
-  // Fehler → undefined = unbekannt, der Dialog verhält sich dann wie bisher.
+  // Abrechenbare Behandlungstage: nicht storniert UND 78010/78020, ein Tag einmal
+  // (podo-behandlungstag-regel.js). Fehler → undefined = unbekannt, der Dialog
+  // verhält sich dann wie bisher.
   let behandlungen;
   try {
-    const { count, error: zErr } = await supabase
+    const { data: zeilen, error: zErr } = await supabase
       .from('podologie_behandlungen')
-      .select('id', { count: 'exact', head: true })
+      .select('behandlungsdatum, hpnr_codes')
       .is('storniert_am', null)
       .eq('verordnung_id', verordnungId);
-    if (!zErr && typeof count === 'number') behandlungen = count;
+    if (!zErr && Array.isArray(zeilen)) behandlungen = abrechenbareBehandlungstage(zeilen);
   } catch (_) { /* unbekannt */ }
   oeffneStatusDialog(ausTopf(vRoh), { token, onFertig, supabase, behandlungen });
 }
