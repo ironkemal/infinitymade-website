@@ -142,10 +142,24 @@
       <section class="br-step" id="step-1">
         <div class="br-step-header">
           <span class="br-step-tag">Schritt 2 von 7</span>
-          <h2>Wie bezahlen Sie?</h2>
-          <p>Wählen Sie Ihre Zahlungsart aus.</p>
+          <h2 id="step1Titel">Wie bezahlen Sie?</h2>
+          <p id="step1Desc">Wählen Sie Ihre Zahlungsart aus.</p>
         </div>
 
+        <!-- Nur Podologie (booking-request.js initAnliegen): Grund des Besuchs zuerst -->
+        <div id="anliegenBlock" hidden>
+          <div class="br-card-grid" id="anliegenGrid"></div>
+          <span class="br-field-error" id="anliegenError" style="display:none; margin-bottom:0.5rem;"></span>
+          <div class="br-form" id="hbAdresseWrap" hidden>
+            <div class="br-field">
+              <label for="hbAdresse">Adresse für den Hausbesuch <span class="req">*</span></label>
+              <input type="text" id="hbAdresse" maxlength="200" placeholder="Straße, Hausnummer, PLZ Ort" autocomplete="street-address" />
+              <span class="br-field-error" id="hbAdresseError" style="display:none;"></span>
+            </div>
+          </div>
+        </div>
+
+        <div id="zahlungBlock">
         <div class="br-card-grid">
           <button class="br-select-card" data-value="gkv" id="pay-gkv">
             <span class="card-icon">🏥</span>
@@ -169,6 +183,7 @@
           </button>
         </div>
         <span class="br-field-error" id="paymentTypeError" style="display:none; margin-bottom:0.5rem;"></span>
+        </div>
 
         <div class="br-nav">
           <button class="btn-ghost" id="step1Back">← Zurück</button>
@@ -662,11 +677,12 @@
 
 </div><!-- /#app -->
 
-<script type="module" src="booking-request.js?v=20261001f"></script>
+<script type="module" src="booking-request.js?v=20261001s"></script>
 <script type="module">
   import { createClient } from './vendor/supabase-js.js?v=20260813';
   import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
   import { attachDiagnoseSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
+  import { ladeOwnerId } from './module/public-owner.js?v=20261001s';
   const _sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   // Top-Level-await in supabase-config.js: DOMContentLoaded kann schon vorbei sein.
   const _nachDom = (fn) => document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', fn) : fn();
@@ -674,7 +690,8 @@
     // Rank suggestions by the practice's Fachbereich, same as inside the
     // dashboard. Falls back to unranked search if the sector can't be read.
     let bereich = null;
-    const ownerId = new URLSearchParams(location.search).get('business');
+    // ?business=<owner_id> oder ?u=<slug> (ein Linkschema fuer beide Seiten)
+    const ownerId = await ladeOwnerId(_sb, location.search).catch(() => null);
     if (ownerId) {
       const { data } = await _sb.rpc('public_praxis_sector', { p_owner_id: ownerId });
       bereich = data || null;

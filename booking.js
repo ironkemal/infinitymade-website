@@ -5,8 +5,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = API_BASE; // O-01, 11.09.2026
 
 const params = new URLSearchParams(location.search);
-const identifier = (params.get('u') || params.get('c') || '').trim();
-const serviceFilter = (params.get('s') || 'erst').trim().toLowerCase();
+// Zwei Linkschemata (Reform-Sprint S4): ?u=<slug> und ?business=<owner_id> — beide gueltig,
+// wie auf booking-request.html. owner_id ist eine UUID und geht durch den UUID-Zweig unten.
+const identifier = (params.get('u') || params.get('c') || params.get('business') || '').trim();
+// Nur filtern, wenn der Link ?s= ausdruecklich setzt. Der fruehere Standard 'erst' liess
+// jede Praxis ohne Leistung mit „erst" im Titel (z.B. jede neue Podologie-Praxis) mit
+// „Keine Dienstleistungen verfuegbar" dastehen (canli-test 28.09.2026).
+const serviceFilter = (params.get('s') || '').trim().toLowerCase();
 
 const state = {
   ownerId: null, companyName: null,
@@ -209,9 +214,9 @@ async function loadServices(empId) {
     return;
   }
 
-  const filtered = serviceFilter
+  const filtered = (serviceFilter
     ? data.filter(d => d.services?.title?.toLowerCase().includes(serviceFilter))
-    : data;
+    : data).filter(d => d.services);
 
   if (!filtered.length) {
     document.getElementById('srvList').innerHTML = '<div class="slots-empty">Keine Dienstleistungen verfügbar.</div>';

@@ -10,7 +10,10 @@
 // dieselbe Garantie, die auch die anderen Frontend-Dateien nutzen. Vorher hatte
 // diese Datei GAR KEINEN Import und ein eigenes Literal; in der Kundenbox waere
 // das die Cloud-VPS statt der eigenen Box gewesen (G1).
-import { API_BASE } from './supabase-config.js?v=20260701';
+import { API_BASE, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
+import { createClient } from './vendor/supabase-js.js?v=20260813';
+import { ladeOwnerId } from './module/public-owner.js?v=20261001s';
+import { anliegenFuerBereich, zahlungsartenFuer, adressePflicht, anliegenNotiz, findAnliegen } from './module/anfrage-anliegen.js?v=20261001s';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -36,6 +39,8 @@ const state = {
   patient_id: null,
   patient: {},
   payment_type: null,
+  anliegen: null,          // Podologie: Grund des Besuchs (module/anfrage-anliegen.js)
+  hausbesuch_adresse: '',
   service_id: null,
   service: null,
   session_count: 1,
@@ -373,14 +378,58 @@ async function validateStep0() {
 
 // ─── Step 1: Zahlungsart ───────────────────────────────────────────────────
 
+/** Zahlungsart-Karten von Schritt 2 (die Anliegen-Karten haben data-anliegen, nicht data-value). */
+function zahlungKarten() {
+  return document.querySelectorAll('#step-1 .br-select-card[data-value]');
+}
+
+function waehleZahlung(art) {
+  state.payment_type = art;
+  zahlungKarten().forEach(c => c.classList.toggle('selected', c.dataset.value === art));
+  clearFieldError('paymentTypeError');
+}
+
+/** Anliegen gewaehlt -> nur passende Zahlungsarten zeigen; bleibt genau eine, wird sie gesetzt. */
+function waehleAnliegen(key) {
+  state.anliegen = key;
+  document.querySelectorAll('#anliegenGrid .br-select-card').forEach(c => c.classList.toggle('selected', c.dataset.anliegen === key));
+  clearFieldError('anliegenError');
+  const erlaubt = zahlungsartenFuer(key);
+  zahlungKarten().forEach(c => { c.hidden = !erlaubt.includes(c.dataset.value); });
+  if (state.payment_type && !erlaubt.includes(state.payment_type)) waehleZahlung(null);
+  if (erlaubt.length === 1) waehleZahlung(erlaubt[0]);
+  // Ist die Zahlungsart durch das Anliegen eindeutig, entfaellt die Frage.
+  const zahlungBlock = document.getElementById('zahlungBlock');
+  if (zahlungBlock) zahlungBlock.hidden = erlaubt.length === 1;
+  const adr = document.getElementById('hbAdresseWrap');
+  if (adr) adr.hidden = !adressePflicht(key);
+}
+
+/** Podologie: Anliegen-Karten aufbauen. Andere Fachbereiche: Schritt bleibt wie bisher. */
+function initAnliegen(bereich) {
+  const liste = anliegenFuerBereich(bereich);
+  if (!liste.length) return;
+  const grid = document.getElementById('anliegenGrid');
+  grid.innerHTML = '';
+  liste.forEach(a => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'br-select-card';
+    btn.dataset.anliegen = a.key;
+    btn.innerHTML = `<span class="card-title">${escHtml(a.titel)}</span><span class="card-desc">${escHtml(a.hinweis)}</span>`;
+    btn.addEventListener('click', () => waehleAnliegen(a.key));
+    grid.appendChild(btn);
+  });
+  document.getElementById('hbAdresse').addEventListener('input', e => { state.hausbesuch_adresse = e.target.value; clearFieldError('hbAdresseError'); });
+  document.getElementById('anliegenBlock').hidden = false;
+  document.getElementById('step1Titel').textContent = 'Was ist Ihr Anliegen?';
+  document.getElementById('step1Desc').textContent = 'Wählen Sie den Grund Ihres Besuchs.';
+  state.anliegenAktiv = true;
+}
+
 function initStep1() {
-  document.querySelectorAll('#step-1 .br-select-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('#step-1 .br-select-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      state.payment_type = card.dataset.value;
-      clearFieldError('paymentTypeError');
-    });
+  zahlungKarten().forEach(card => {
+    card.addEventListener('click', () => waehleZahlung(card.dataset.value));
   });
 
   document.getElementById('step1Back').addEventListener('click', prevStep);
@@ -388,6 +437,16 @@ function initStep1() {
 }
 
 function validateStep1() {
+  if (state.anliegenAktiv) {
+    if (!state.anliegen) {
+      showFieldError('anliegenError', 'Bitte Ihr Anliegen auswählen.');
+      return false;
+    }
+    if (adressePflicht(state.anliegen) && !state.hausbesuch_adresse.trim()) {
+      showFieldError('hbAdresseError', 'Bitte die Adresse für den Hausbesuch angeben.');
+      return false;
+    }
+  }
   if (!state.payment_type) {
     showFieldError('paymentTypeError', 'Bitte eine Zahlungsart auswählen.');
     document.getElementById('paymentTypeError').style.display = 'block';
@@ -1001,6 +1060,7 @@ function buildSummary() {
 
   const data = [
     { label: 'Patient', value: state.isNewPatient ? (state.patient.vorname ? `${state.patient.vorname} ${state.patient.nachname}` : 'Neuer Patient') : (state.patient_display || 'Bestehender Patient') },
+    ...(state.anliegenAktiv && state.anliegen ? [{ label: 'Anliegen', value: findAnliegen(state.anliegen).titel }] : []),
     { label: 'Zahlungsart', value: payLabels[state.payment_type] || state.payment_type },
     { label: 'Leistung', value: state.service ? state.service.name : '–' },
     { label: 'Sitzungen', value: (state.payment_type === 'gkv' || state.payment_type === 'bg') ? (state.verordnung_sitzungen || state.bg_anzahl || '–') : state.session_count },
@@ -1081,7 +1141,9 @@ async function handleSubmit() {
     unfalldatum: state.unfalldatum,
     durchgangsarzt: state.durchgangsarzt,
     // common
-    notizen: state.notizen || null,
+    // Anliegen (Podologie) steht als erste Zeile in notizen — booking_requests hat
+    // keine eigene Spalte; die Praxis sieht die Zeile im Anfragen-Detail.
+    notizen: state.anliegenAktiv ? anliegenNotiz(state.anliegen, state.hausbesuch_adresse, state.notizen) : (state.notizen || null),
     dsgvo_consent: true,
   };
 
@@ -1243,7 +1305,7 @@ function escHtml(str) {
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
-function init() {
+async function init() {
   const params = new URLSearchParams(window.location.search);
   const businessId = params.get('business');
   const cancelId = params.get('cancel');
@@ -1265,13 +1327,25 @@ function init() {
     return;
   }
 
-  // Missing business param
-  if (!businessId) {
+  // Zwei Linkschemata, beide gueltig: ?business=<owner_id> und ?u=<slug> (wie booking.html).
+  let ownerId = null;
+  try {
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    ownerId = await ladeOwnerId(sb, window.location.search);
+    // Fachbereich der Praxis: Podologie bekommt die Anliegen-Auswahl.
+    if (ownerId) {
+      const { data: bereich } = await sb.rpc('public_praxis_sector', { p_owner_id: ownerId });
+      state.bereich = bereich || null;
+    }
+  } catch (e) {
+    console.error('[booking-request] Praxis-Aufloesung:', e);
+  }
+  if (!ownerId) {
     document.getElementById('errorScreen').classList.add('active');
     return;
   }
 
-  state.owner_id = businessId;
+  state.owner_id = ownerId;
 
   // Show wizard
   show('progressBar');
@@ -1281,6 +1355,7 @@ function init() {
   // Init all steps
   initStep0();
   initStep1();
+  initAnliegen(state.bereich);
   initStep2();
   initStep3();
   initStep4();
