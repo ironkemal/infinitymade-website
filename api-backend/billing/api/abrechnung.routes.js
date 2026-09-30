@@ -41,6 +41,7 @@ import {
 import { zeilenAusDta } from '../utils/abrechnung-zeilen.js';
 import { ikFehltAntwort } from '../utils/ik-fehlt.js';
 import { kartenIkFehler } from '../utils/karten-ik.js';
+import { kostentraegerFrischAbleiten } from '../utils/kostentraeger-frisch.js';
 import {
   legsFuer, LEGS_BY_FACHBEREICH,
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
@@ -809,6 +810,10 @@ router.post('/abrechnung/create', async (req, res) => {
     if (!rxRows || rxRows.length !== prescriptionIds.length) {
       return res.status(400).json({ error: 'Einige Rezepte wurden nicht gefunden oder gehören nicht zu Ihnen.' });
     }
+    // gkv-302, 30.09.2026 B1: Kostenträger-IK bei DTA-Erzeugung frisch aus Karten-IK ableiten
+    const altKtMap = new Map(rxRows.map(r => [r.id, r.kostentraeger_ik]));
+    const { warnungen: ktWarnungen } = await kostentraegerFrischAbleiten(supabase, rxRows);
+
     for (const r of rxRows) {
       // Seit der Zusammenlegung der Verordnungstöpfe (04.09.2026) stehen
       // podologische Zeilen in derselben Tabelle. Dieser Weg baut mit
@@ -821,6 +826,13 @@ router.post('/abrechnung/create', async (req, res) => {
         });
       }
       if (r.kostentraeger_ik !== kostentraegerIk) {
+        const alt = altKtMap.get(r.id);
+        if (alt && alt !== r.kostentraeger_ik) {
+          return res.status(409).json({
+            error: `Verordnung ${r.id.slice(0,8)}: Der Kostenträger hat sich geändert (gespeichert ${alt}, aktuell ${r.kostentraeger_ik}) — bitte Liste neu laden und die Verordnung erneut auswählen.`,
+            code: 'KOSTENTRAEGER_GEAENDERT',
+          });
+        }
         return res.status(400).json({ error: `Rezept ${r.id.slice(0,8)} gehört zu einer anderen Krankenkasse.` });
       }
       if (r.abrechnung_status && r.abrechnung_status !== 'bereit') {
@@ -1106,7 +1118,12 @@ router.post('/abrechnung/create', async (req, res) => {
       userAgent: req.headers['user-agent'],
       method: 'POST', path: req.path, resource: 'abrechnung', resourceId: ab.id,
       action: 'create', statusCode: 200,
-      metadata: { kostentraegerIk, prescription_count: prescriptions.length, dateiname: dta.filename },
+      metadata: {
+        kostentraegerIk,
+        prescription_count: prescriptions.length,
+        dateiname: dta.filename,
+        kostentraeger_neu: ktWarnungen.length,
+      },
     });
 
     return res.json({
@@ -1119,6 +1136,7 @@ router.post('/abrechnung/create', async (req, res) => {
       storagePath: dtaPath,
       begleitzettelPath: upBeg.error ? null : begleitPath,
       zeilenGespeichert,
+      kostentraegerWarnungen: ktWarnungen,
     });
   } catch (e) {
     console.error('[abrechnung/create]', e);
@@ -2827,6 +2845,22 @@ router.post('/abrechnung/preflight', async (req, res) => {
       });
     }
 
+    // gkv-302, 30.09.2026 B1: Kostenträger-IK bei DTA-Erzeugung frisch aus Karten-IK ableiten
+    const mapFehler = [];
+    let ktWarnungen = [];
+    try {
+      const frisch = await kostentraegerFrischAbleiten(supabase, rxRows);
+      ktWarnungen = frisch.warnungen;
+    } catch (e) {
+      if (!e.status) throw e;
+      mapFehler.push({
+        ...(e.prescriptionId ? { prescriptionId: e.prescriptionId } : {}),
+        severity: 'stop',
+        code: e.code || 'KOSTENTRAEGER_NICHT_AUFLOESBAR',
+        text: e.message,
+      });
+    }
+
     const firstRx = rxRows[0];
     const kostentraegerIk = firstRx.kostentraeger_ik;
 
@@ -2861,8 +2895,8 @@ router.post('/abrechnung/preflight', async (req, res) => {
     // Werfer die ganze Anfrage in den generischen catch unten geschickt und den
     // spezifischen 422-Status verschluckt.
     const prescriptions = [];
-    const mapFehler = [];
     for (const r of rxRows) {
+      if (mapFehler.some(m => m.prescriptionId === r.id && m.severity === 'stop')) continue;
       try {
         prescriptions.push(mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tenantSector));
       } catch (e) {
@@ -2881,10 +2915,30 @@ router.post('/abrechnung/preflight', async (req, res) => {
         })
       : null;
 
+    if (results && Array.isArray(results.warnings)) {
+      for (const w of ktWarnungen) {
+        results.warnings.push({
+          code: w.code,
+          severity: 'warn',
+          where: `prescription[${w.prescriptionId}]`,
+          message: w.text,
+          text: w.text,
+        });
+      }
+    }
+    for (const w of ktWarnungen) {
+      mapFehler.push({
+        prescriptionId: w.prescriptionId,
+        severity: 'warn',
+        code: w.code,
+        text: w.text,
+      });
+    }
+
     return res.json({ ok: true, results, mapFehler });
   } catch (e) {
     console.error('[abrechnung/preflight]', e);
-    return res.status(e.status || 500).json({ error: e.message || 'Server error' });
+    return res.status(e.status || 500).json({ error: e.message || 'Server error', ...(e.code ? { code: e.code } : {}) });
   }
 });
 
@@ -3213,6 +3267,10 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       return res.status(a428.status).json(a428.body);
     }
 
+    // gkv-302, 30.09.2026 B1: Kostenträger-IK bei DTA-Erzeugung frisch aus Karten-IK ableiten
+    const altKtMap = new Map((vords || []).map(v => [v.id, v.kostentraeger_ik]));
+    const { warnungen: ktWarnungen } = await kostentraegerFrischAbleiten(supabase, vords);
+
     // ---- validate each verordnung ----
     for (const v of (vords || [])) {
       // §302 SGB V gilt nur für Leistungen zulasten der GKV. Privat-, Selbst-
@@ -3226,6 +3284,13 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         });
       }
       if (v.kostentraeger_ik !== kostentraegerIk) {
+        const alt = altKtMap.get(v.id);
+        if (alt && alt !== v.kostentraeger_ik) {
+          return res.status(409).json({
+            error: `Verordnung ${v.id.slice(0,8)}: Der Kostenträger hat sich geändert (gespeichert ${alt}, aktuell ${v.kostentraeger_ik}) — bitte Liste neu laden und die Verordnung erneut auswählen.`,
+            code: 'KOSTENTRAEGER_GEAENDERT',
+          });
+        }
         return res.status(400).json({ error: `Verordnung ${v.id.slice(0,8)}: andere Krankenkasse.` });
       }
       if (!v.arzt_id) {
@@ -3672,7 +3737,10 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       verordnungCount: verordnungIds.length,
       sessionCount: prescriptions.reduce((a, p) => a + p.sessions.length, 0),
       zeilenGespeichert,
-      warnungen: (dta.preflightWarnings || []).filter(w => w.code === 'V:01016'),
+      warnungen: [
+        ...(dta.preflightWarnings || []).filter(w => w.code === 'V:01016'),
+        ...ktWarnungen,
+      ],
     });
   } catch (e) {
     console.error('[abrechnung/create-podologie]', e);
