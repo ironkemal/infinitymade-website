@@ -38,7 +38,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261002a';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261002b';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz, fahrtenbuchCsv, patientenverzeichnisCsv, csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS } from './module/fahrtenbuch-regeln.js?v=20261001c';
@@ -75,7 +75,7 @@ import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzu
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261001e';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261001r';
-import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002c';
+import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
 import { initAnamnese, loadAnamnese, bindAnamneseEvents, ladePatientenAnamnese, oeffneAnamneseFuer } from './module/anamnese.js?v=20261002a'; import { fachbereichAusSektor } from './module/anamnese-formulare.js?v=20261001r';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260930c';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
@@ -15855,8 +15855,8 @@ async function init() {
     // Referenz global halten: der Kiosk-Modus meldet den Kanal ab, solange das
     // Tablet beim Patienten ist (module/kiosk.js) — sonst ploppt der Termin
     // eines ANDEREN Patienten vor dessen Augen auf.
-    const bkChannel = window.__praxuraBookingsChannel = supabase.channel('bookings-realtime');
-    bkChannel
+    // Als Fabrik: ein geschlossener supabase-js-v2-Kanal lässt sich nicht erneut joinen — der Kiosk baut beim Verlassen einen neuen.
+    const neuerBkKanal = window.__praxuraNeuerBookingsKanal = () => (window.__praxuraBookingsChannel = supabase.channel('bookings-realtime')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -15866,7 +15866,7 @@ async function init() {
         console.log('[realtime] booking change detected:', payload.eventType, payload.new?.id ?? payload.old?.id);
         emit('bookings:changed', { id: payload.new?.id ?? payload.old?.id, quelle: 'realtime' });
       })
-      .subscribe();
+      .subscribe()); neuerBkKanal();
 
     await handleGmailCallback();
     console.log('[init] gmail ok');
@@ -18105,7 +18105,7 @@ function initSchnellerfassung() {
 function initKioskModeWired() {
   mountKiosk({
     supabase, API, showToast, t,
-    getBookingsChannel: () => window.__praxuraBookingsChannel || null,
+    getBookingsChannel: () => window.__praxuraBookingsChannel || null, neuerBookingsKanal: () => window.__praxuraNeuerBookingsKanal?.(),
     openEinwilligung: openEinwilligungFlow,   // Kiosk „Nur Einwilligung"
   });
   // Einwilligungs-Ablauf (module/patienten-einwilligung.js). Baut sein Overlay

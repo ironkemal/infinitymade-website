@@ -1029,7 +1029,7 @@ async function loadPodologieBilling() {
     // die Differenz später zurückgefordert.
     else if (checks.includes('78020') && ['a', 'b'].includes(podVordMassnahme(vord)))
       err = `78020 ist nur bei verordneter Komplexbehandlung abrechenbar. Verordnet ist `
-          + `„${POD_HEILMITTEL_KATALOG[podVordMassnahme(vord)].heilmittel}" — bitte 78010 zzgl. 78030 verwenden.`;
+          + `„${POD_HEILMITTEL_KATALOG[podVordMassnahme(vord)].heilmittel}“ — bitte 78010 zzgl. 78030 verwenden.`;
     else if (isUIx && !lokal) err = ctx.t('pod_lokalisation') + ' ist bei UI1/UI2 erforderlich.';
     // Konsey S0 2b: bei c) Komplexbehandlung ist die Therapiezeit Pflicht, die Position folgt daraus (78010 ≤ 20 < 78020).
     else if (therapiezeitFehler({ massnahme: podVordMassnahme(vord), checks, minuten: document.getElementById('podTherapiezeit')?.value }))

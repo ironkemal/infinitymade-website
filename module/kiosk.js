@@ -55,6 +55,7 @@ let API = '';
 let showToast = (m) => console.log(m);
 let t = (k) => k;
 let getBookingsChannel = () => null;
+let neuerBookingsKanal = () => null;   // baut den Realtime-Kanal neu (dashboard.js)
 let openEinwilligung = null;      // (opts) => Promise — module/patienten-einwilligung.js
 let _startModus = 'anamnese';     // 'anamnese' | 'einwilligung' — überlebt die PIN-Einrichtung
 let _titelAlt = null;             // Kopfzeilentexte des Overlays, im Einwilligungs-Modus ersetzt
@@ -127,6 +128,7 @@ export function initKioskMode(deps = {}) {
   if (deps.showToast) showToast = deps.showToast;
   if (deps.t) t = deps.t;
   if (deps.getBookingsChannel) getBookingsChannel = deps.getBookingsChannel;
+  if (deps.neuerBookingsKanal) neuerBookingsKanal = deps.neuerBookingsKanal;
   if (deps.openEinwilligung) openEinwilligung = deps.openEinwilligung;
 
   $('kioskStartBtn')?.addEventListener('click', () => handleKioskStart('anamnese'));
@@ -317,7 +319,8 @@ function merkerGesetzt() {
 }
 function hintergrundInert(an) {
   const overlay = $('kioskOverlay');
-  document.querySelectorAll('body > header, .dashboard-layout').forEach(el => {
+  // Topbar steht unter #app (nicht body > header) — P1 canli-test 30.09.2026: Tab erreichte „Abmelden".
+  document.querySelectorAll('#app > header.topbar, .dashboard-layout').forEach(el => {
     if (overlay && el.contains(overlay)) return;   // nie das Overlay selbst sperren
     el.inert = an;
   });
@@ -416,7 +419,13 @@ function exitKioskMode() {
     }
     if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
 
-    try { getBookingsChannel()?.subscribe(); } catch { /* egal */ }
+    // Ein abgemeldeter supabase-js-v2-Kanal lässt sich nicht erneut joinen („tried to join
+    // multiple times") — alten entfernen, neuen bauen (P2 canli-test 30.09.2026).
+    try {
+      const alt = getBookingsChannel();
+      if (alt) supabase?.removeChannel?.(alt);
+      neuerBookingsKanal();
+    } catch { /* egal */ }
 
     auditKiosk('exit');
     document.dispatchEvent(new CustomEvent('praxura:kiosk', { detail: { aktiv: false } }));
