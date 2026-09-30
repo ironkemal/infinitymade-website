@@ -397,3 +397,15 @@ Yeni fonksiyon yok, silinen yok; davranış değişikliği.
 - **Açık kalan:** DG alanına ikinci yazan yol `module/verordnung-podo.js` `dgAuswahlEingrenzen` /
   `podRegelnLaden` — kopya kartı Melih'te, karar bekliyor. Bu değişiklik onu çözmedi, yalnız
   `schreibe()`'nin otomatiği kapatmasını engelledi.
+
+### 01.10.2026 · Reform 3.12 — PHI-Schattenspalten aus, Fahrtenbuch ohne Patientendaten
+- `module/fahrtenbuch-regeln.js` (neu): `fahrtReferenz` (P-XXXXXXXX aus `booking_id`, keine neue Spalte),
+  `fahrtZweckUndZiel`, `fahrtAnzeigeText` (maskiert lead_id-Zeilen + Altzeilen „Hausbesuch <Name>"),
+  `fahrtenbuchCsv` (11 Spalten, kein Name/Anschrift), `patientenverzeichnisCsv` (getrennter Export,
+  nur auf Anforderung des Finanzamts), `csvHerunterladen`. Niye: S-35, legal-de/OFD Frankfurt 19.01.2011.
+  Nerede: `dashboard.js` `saveFahrtEndHandler` (Upsert), `loadFbFahrten`, `openFbFahrtEditModal`,
+  `exportFbFahrtenCsv` + neuer `exportFbPatientenverzeichnisCsv` (Knopf `fbFahrtenExportVerz`).
+- Backend: `/rezept/confirm` + `PATCH /rezept/:id` schreiben `ocr_raw_response`/`ocr_raw_enc`/`icd10_enc`/
+  `phi_encrypted` nicht mehr; `encryptPHI`-Import + Start-Warnung aus `server.js` entfernt
+  (`lib/phi-encrypt.js` + Schlüssel-Selbsttest bleiben). Wächter: `api-backend/lib/phi-nicht-schreiben.test.js`.
+- `select('*')` auf `prescriptions` im Browser verengt: `rechnung-dmrz.js`, `dashboard.js` `handleSessionDrop`.

@@ -37,7 +37,6 @@ import { schemaZaehlerSetzen } from './setup/selbstpruefung.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, join as pfadJoin } from 'node:path';
 import crypto from 'crypto';
-import { encryptPHI, encryptionAvailable } from './lib/phi-encrypt.js';
 import { resolveOrCreateArzt } from './lib/arzt-registry.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import { createSMTPTransport, getMailFrom } from './lib/mail.js';
@@ -186,24 +185,10 @@ if (!GOOGLE_KONFIGURIERT) {
   console.warn('[google] GOOGLE_CLIENT_ID/SECRET/REDIRECT_URL nicht gesetzt — Kalender-Sync und Gmail-Versand sind deaktiviert. Alles Uebrige laeuft normal.');
 }
 
-// Verschluesselung der Patientenfelder — sagt Bescheid, wenn sie AUS ist.
-//
-// Anders als bei Google ist das Fehlen hier kein Komfortverlust, sondern ein
-// Schutzverlust: `encryptionAvailable()` gibt still `false` zurueck, `icd10_enc`
-// und `ocr_raw_enc` werden schlicht nicht geschrieben, und niemand erfaehrt es.
-// Eine Kundenbox stuende damit bei denselben Daten schwaecher da als die Cloud.
-//
-// Kein `process.exit`: eine Praxis, die morgens nicht arbeiten kann, ist
-// schlimmer als eine, die ein Feld unverschluesselt ablegt — aber lautlos darf
-// es nicht passieren. Die Zeile ist die Bruecke bis Phase 2.1c (install.sh
-// erzeugt den Schluessel) und 2.4b (`/status` zeigt ihn an).
-if (!process.env.DATA_ENCRYPTION_KEY) {
-  console.warn('[phi] DATA_ENCRYPTION_KEY nicht gesetzt — Patientenfelder (icd10_enc, ocr_raw_enc) werden NICHT verschluesselt gespeichert.');
-} else if (!/^[0-9a-fA-F]{64}$/.test(process.env.DATA_ENCRYPTION_KEY)) {
-  // Ein falsch langer Schluessel wirft erst beim ersten Schreibversuch, also
-  // mitten im Arbeitstag. Besser jetzt und deutlich.
-  console.warn('[phi] DATA_ENCRYPTION_KEY hat nicht 64 Hex-Zeichen — Verschluesselung wird beim ersten Schreibversuch fehlschlagen.');
-}
+// Feldverschluesselung der Patientendaten (icd10_enc / ocr_raw_enc) ist seit
+// 30.09.2026 aufgegeben (Reform 3.12): Identitaets-/Klinikfelder bleiben Klartext
+// (RLS + Verschluesselung at rest), der rohe OCR-Payload wird nicht mehr abgelegt.
+// lib/phi-encrypt.js und die Schluessel-Selbstpruefung bleiben unangetastet.
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false },
@@ -2691,17 +2676,10 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         computed: validation.computed || null,
         warnings: validation.warnings || null,
         blockers_overridden: proceed_anyway ? (validation.blockers || null) : null,
-        ocr_raw_response: parsed,
         confirmed_by: userId,
         confirmed_at: new Date().toISOString(),
         proceed_anyway: !!proceed_anyway,
         total_bonuses_eur: validation.computed?.total_bonuses_eur ?? null,
-        // DSGVO Art. 32 — encrypted PHI shadow columns (written when key is configured)
-        ...(encryptionAvailable() ? {
-          icd10_enc: encryptPHI(rezept.icd10 || null),
-          ocr_raw_enc: encryptPHI(parsed ? JSON.stringify(parsed) : null),
-          phi_encrypted: true
-        } : {})
       })
       .select('id')
       .single();
@@ -2895,11 +2873,6 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
       blockers_overridden: proceed_anyway ? (validation.blockers || null) : null,
       proceed_anyway: !!proceed_anyway,
       total_bonuses_eur: validation.computed?.total_bonuses_eur ?? null,
-      // DSGVO Art. 32 — encrypted PHI shadow column (written when key is configured)
-      ...(encryptionAvailable() ? {
-        icd10_enc: encryptPHI(rezept.icd10 || null),
-        phi_encrypted: true
-      } : {})
     };
 
     // `.select('id')` ist der Fehlernachweis (Requirement 2): ein UPDATE ohne

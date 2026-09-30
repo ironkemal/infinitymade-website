@@ -1932,13 +1932,14 @@
               </div>
               <button class="btn-ghost" id="fbFahrtenRefresh">Aktualisieren</button>
               <button class="btn-ghost" id="fbFahrtenExportCsv">CSV exportieren</button>
+              <button class="btn-ghost" id="fbFahrtenExportVerz" title="Enthält Patientennamen und Anschriften — wird nur auf Anforderung des Finanzamts herausgegeben.">Patientenverzeichnis exportieren</button>
             </div>
             <div class="table-wrap">
               <table class="table" id="fbFahrtenTable">
                 <thead>
                   <tr>
                     <th>Datum</th>
-                    <th>Patient</th>
+                    <th>Nr.</th>
                     <th>Fahrtzweck</th>
                     <th>Zielort</th>
                     <th>Therapeut</th>
@@ -5175,7 +5176,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">Fahrtzweck <span style="color:var(--text-muted);font-weight:400;">(Finanzamt)</span></label>
-          <input class="form-input" type="text" id="fbEditZweck" placeholder="z.B. Hausbesuch Max Müller" />
+          <input class="form-input" type="text" id="fbEditZweck" placeholder="z.B. Patientenbesuch" />
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <div class="form-group">
@@ -5184,7 +5185,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">Zielort</label>
-            <input class="form-input" type="text" id="fbEditZielort" placeholder="z.B. Musterstr. 1, 10115 Berlin" />
+            <input class="form-input" type="text" id="fbEditZielort" placeholder="z.B. Patientenbesuch (s. Verzeichnis Nr. P-1A2B3C4D)" />
           </div>
         </div>
         <div class="form-group">
@@ -5706,7 +5707,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261001b"></script>
+  <script type="module" src="dashboard.js?v=20261001c"></script>
 </body>
 
 </html>

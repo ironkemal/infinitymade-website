@@ -40,6 +40,7 @@ import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrec
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001b';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
+import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz, fahrtenbuchCsv, patientenverzeichnisCsv, csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS } from './module/fahrtenbuch-regeln.js?v=20261001c';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261001b';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261001b';
@@ -53,7 +54,7 @@ import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=2026092
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261001b';
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261001b';
-import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20260917';
+import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20260909';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260930f';
@@ -3839,7 +3840,7 @@ async function handleSessionDrop(sessionId, timeStr, empId) {
   try {
     const { data: sess, error: sessErr } = await supabase
       .from('prescription_sessions')
-      .select('*, prescriptions!prescription_id(*)')
+      .select('*, prescriptions!prescription_id(id,patient_id,hausbesuch,heilmittel,heilmittel_position)')
       .eq('id', sessionId)
       .single();
 
@@ -4235,25 +4236,20 @@ async function saveFahrtEndHandler() {
   let lead = null;
   if (b.lead_id) {
     const { data: l } = await supabase.from('leads')
-      .select('id,duration_min,first_name,last_name,title,street,plz,city')
+      .select('id,duration_min')
       .eq('id', b.lead_id).maybeSingle();
     if (l) lead = l;
   }
   if (!lead && b.customer_phone) {
     const { data: l } = await supabase.from('leads')
-      .select('id,duration_min,first_name,last_name,title,street,plz,city')
+      .select('id,duration_min')
       .eq('owner_id', b.owner_id).eq('phone', b.customer_phone).maybeSingle();
     if (l) lead = l;
   }
   const leadId = lead?.id || null;
   const leadDurationMin = lead?.duration_min || null;
-  const patientName = lead
-    ? ([lead.first_name, lead.last_name].filter(Boolean).join(' ') || b.customer_name || null)
-    : (b.customer_name || null);
-  const zweck = patientName ? `Hausbesuch ${patientName}` : 'Hausbesuch';
-  const zielort = lead
-    ? [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
-    : null;
+  // S-35: kein Patientenname/keine Anschrift im Fahrtenbuch (Verzeichnis-Nr. statt dessen)
+  const { zweck, zielort } = fahrtZweckUndZiel(b.id);
   const abfahrtsort = [
     currentProfile?.street,
     [currentProfile?.plz, currentProfile?.city].filter(Boolean).join(' ')
@@ -17403,6 +17399,7 @@ if (!window.__fbDelegatedBound) {
     if (id === 'vehEditSaveBtn')    { e.preventDefault(); return safe('saveVehicle',   saveVehicleEdit); }
     if (id === 'fbFahrtenRefresh')  { e.preventDefault(); return safe('refreshFahrten',loadFbFahrten); }
     if (id === 'fbFahrtenExportCsv'){ e.preventDefault(); return safe('exportCsv',     exportFbFahrtenCsv); }
+    if (id === 'fbFahrtenExportVerz'){ e.preventDefault(); return safe('exportVerz',    exportFbPatientenverzeichnisCsv); }
     if (id === 'fbReportRefresh')   { e.preventDefault(); return safe('refreshReport', loadFbReports); }
     if (t.dataset && t.dataset.fbTab) { e.preventDefault(); return safe('switchTab',   () => fbActivateTab(t.dataset.fbTab)); }
     // Therapist flow (bkActionModal)
@@ -17512,19 +17509,17 @@ async function loadFbFahrten() {
   tbody.innerHTML = data.map(f => {
     const dt = f.fahrt_started_at ? new Date(f.fahrt_started_at) : null;
     const dtStr = dt ? dt.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '—';
-    const patient = f.leads
-      ? ([f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ') || f.bookings?.customer_name || '—')
-      : (f.bookings?.customer_name || '—');
+    const ref = fahrtReferenz(f.booking_id) || '—';
     const therapist = userMap[f.user_id] || '—';
     const duration = (f.fahrt_started_at && f.fahrt_ended_at)
       ? Math.round((new Date(f.fahrt_ended_at) - new Date(f.fahrt_started_at)) / 60000) + ' min'
       : '—';
     const art = f.kind_snapshot === 'gewerblich' ? '🏢 Gewerblich' : (f.kind_snapshot === 'privat' ? '🚙 Privat' : '—');
-    const zweckDisplay = f.zweck || '—';
-    const zielDisplay = f.zielort || (f.leads ? [f.leads.street, [f.leads.plz, f.leads.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') : '') || '—';
+    const zweckDisplay = fahrtAnzeigeText(f).zweck || '—';
+    const zielDisplay = fahrtAnzeigeText(f).zielort || '—';
     return `<tr data-fahrt-id="${f.id}">
       <td>${dtStr}</td>
-      <td>${escapeHtml(patient)}</td>
+      <td>${escapeHtml(ref)}</td>
       <td title="${escapeHtml(zweckDisplay)}" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(zweckDisplay)}</td>
       <td title="${escapeHtml(zielDisplay)}" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(zielDisplay)}</td>
       <td>${escapeHtml(therapist)}</td>
@@ -17546,11 +17541,8 @@ async function loadFbFahrten() {
   // Cache for CSV export
   window._fbFahrtenCache = data.map(f => ({
     ...f,
-    _patient: f.leads
-      ? ([f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ') || f.bookings?.customer_name || '')
-      : (f.bookings?.customer_name || ''),
     _therapist: userMap[f.user_id] || '',
-    _zielort: f.zielort || (f.leads ? [f.leads.street, [f.leads.plz, f.leads.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') : '')
+    _zielort: fahrtAnzeigeText(f).zielort
   }));
 }
 
@@ -17562,9 +17554,9 @@ function openFbFahrtEditModal(f) {
   const toLocal = alsDatetimeLocal; // UTC → Ortszeit, wie beim Speichern unten (QA 26.09.2026, gleicher Fehler wie Termin-Dialog)
   document.getElementById('fbEditStartedAt').value = toLocal(f.fahrt_started_at);
   document.getElementById('fbEditEndedAt').value = toLocal(f.fahrt_ended_at);
-  document.getElementById('fbEditZweck').value = f.zweck || '';
   document.getElementById('fbEditAbfahrtsort').value = f.abfahrtsort || '';
-  document.getElementById('fbEditZielort').value = f._zielort || f.zielort || '';
+  document.getElementById('fbEditZielort').value = fahrtAnzeigeText(f).zielort;
+  document.getElementById('fbEditZweck').value = fahrtAnzeigeText(f).zweck;
   document.getElementById('fbEditNotes').value = f.notes || '';
   document.getElementById('fbEditError').style.display = 'none';
   openModal('fbFahrtEditModal');
@@ -17625,36 +17617,14 @@ document.getElementById('fbEditDeleteBtn').addEventListener('click', async () =>
 function exportFbFahrtenCsv() {
   const rows = window._fbFahrtenCache || [];
   if (!rows.length) { showToast('Keine Daten zum Exportieren.', 'error'); return; }
-  const header = ['Datum', 'Patient', 'Fahrtzweck', 'Abfahrtsort', 'Zielort', 'Therapeut', 'Kennzeichen', 'Art', 'Start-KM', 'End-KM', 'Strecke (km)', 'Dauer (min)', 'Notizen'];
-  const lines = [header.join(';')];
-  for (const f of rows) {
-    const dt = f.fahrt_started_at ? new Date(f.fahrt_started_at).toLocaleString('de-DE') : '';
-    const dur = (f.fahrt_started_at && f.fahrt_ended_at)
-      ? Math.round((new Date(f.fahrt_ended_at) - new Date(f.fahrt_started_at)) / 60000)
-      : '';
-    const q = s => `"${(s || '').replace(/"/g, '""')}"`;
-    lines.push([
-      dt,
-      q(f._patient),
-      q(f.zweck),
-      q(f.abfahrtsort),
-      q(f._zielort || f.zielort),
-      q(f._therapist),
-      f.kennzeichen_snapshot || '',
-      f.kind_snapshot || '',
-      f.start_km ?? '',
-      f.end_km ?? '',
-      f.distance_km ?? '',
-      dur,
-      q(f.notes)
-    ].join(';'));
-  }
-  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `fahrtenbuch_${new Date().toISOString().substring(0, 10)}.csv`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  csvHerunterladen(fahrtenbuchCsv(rows), `fahrtenbuch_${new Date().toISOString().substring(0, 10)}.csv`);
+}
+
+function exportFbPatientenverzeichnisCsv() {
+  const rows = window._fbFahrtenCache || [];
+  if (!rows.length) { showToast('Keine Daten zum Exportieren.', 'error'); return; }
+  csvHerunterladen(patientenverzeichnisCsv(rows), `patientenverzeichnis_${new Date().toISOString().substring(0, 10)}.csv`);
+  showToast(PATIENTENVERZEICHNIS_HINWEIS);
 }
 
 // ---------- Fahrzeuge tab ----------

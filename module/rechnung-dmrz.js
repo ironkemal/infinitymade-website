@@ -136,7 +136,7 @@ export async function downloadDmrzForInvoice(deps) {
       .eq('id', invoice.patient_id).maybeSingle();
 
     const { data: prescription, error: e2 } = await supabase.from('prescriptions')
-      .select('*').eq('id', invoice.prescription_id).maybeSingle();
+      .select('id,arzt_id,rezept_typ,ausstellungsdatum,behandlungsbeginn,icd10,diagnosegruppe,heilmittel,anzahl_einheiten,frequenz,hausbesuch,is_dringend').eq('id', invoice.prescription_id).maybeSingle();
     if (e2 || !prescription) {
       showToast('DMRZ-Export nicht möglich: Das verknüpfte Rezept wurde nicht gefunden.', 'error');
       return;
