@@ -433,3 +433,27 @@ Yeni fonksiyon yok, silinen yok; davranış değişikliği.
   `phi_encrypted` nicht mehr; `encryptPHI`-Import + Start-Warnung aus `server.js` entfernt
   (`lib/phi-encrypt.js` + Schlüssel-Selbsttest bleiben). Wächter: `api-backend/lib/phi-nicht-schreiben.test.js`.
 - `select('*')` auf `prescriptions` im Browser verengt: `rechnung-dmrz.js`, `dashboard.js` `handleSessionDrop`.
+
+### 30.09.2026 · Podologie-Reform S4-1 (commit 8716a3d) — Aktionsleiste, Folgetermin, Vorbelegungsgrund, Behandlungstag
+- `module/termin-aktionsleiste.js` (neu): `verdrahteAktionsleiste`, `verordnungsZiel`, `SICHTBARE_AKTIONEN`,
+  `MENUE_AKTIONEN`. Niye: Konsey S0 (30.09) — rechtes Terminpanel (`#bkActionModal`) höchstens 6 sichtbare
+  Knöpfe, Rest im Menü „Weitere Aktionen". Nerede: Verdrahtungsaufruf in `dashboard.js`.
+- `module/termin-folge.js` (neu): `folgeterminStart`, `folgeLeistungen`, `oeffneFolgetermin`, `alsLokalesDatetime`.
+  Niye: Folgetermin aus dem rechten Panel — füllt die bestehende Neuer-Termin-Maske (`prefillBookingModal`)
+  mit demselben Patienten/Hausbesuch/Verordnung/Leistungen, Datum aus der Verordnungsfrequenz
+  (`sollAbstand`). Keine zweite Maske.
+- `module/podo-vorbelegung-grund.js` (neu): `tagesVorbelegungGrund`, `befundGrundText`, `verordnetZeile`.
+  Niye: Konsey S0 Beschluss 2b — Grundtext zur Vor-/Vorschlagsbelegung + Zeile „Verordnet: 78xxx".
+  Keine neue Regel, nur Texte. Nerede: `podologie-abrechnung.js`, `termin-leistungen.js`.
+- `module/podo-behandlungstag-regel.js` (neu): `abrechenbareBehandlungstage`, `bestehenderBehandlungstag`,
+  `zweiterBehandlungstagFrage`, `datumTTMMJJJJ`, `ABRECHENBARE_BEHANDLUNG`. Niye: gkv-302 30.09
+  (HeilM-RL § 12 Abs. 8) — Rückfrage beim zweiten Eintrag am selben Tag (`podologie-abrechnung.js`
+  `loadPodologieBilling`) und „Bereit" nur mit ≥1 abrechenbarem Behandlungstag (`abrechnungsstatus.js`
+  `oeffneStatusDialogFuer`).
+- Signaturänderungen: `setzeAktionsSichtbarkeit(hatTermin, podologie)` (termin-panel.js),
+  `vorschlagText(code, {…, grund})` (termin-leistungen.js).
+- **Kopya adayları (fonksiyon-ustasi 30.09, karar Kemal'de, birleştirilmedi):**
+  `alsLokalesDatetime` ↔ `module/datum.js` `alsDatetimeLocal` (aynı çıktı);
+  `datumTTMMJJJJ` + `podo-vorbelegung-grund.js` yerel `datumDe` ↔ `module/datum.js` `datumDe`;
+  `abrechenbareBehandlungstage` ↔ `verordnung-uebersicht.js` `istBehandlungseinheit` — iki ayrı soru
+  (kasıtlı), ama **78620** iki yerde zıt sınıflanıyor (burada Behandlung, orada Zuschlag) → gkv-302 sorusu.

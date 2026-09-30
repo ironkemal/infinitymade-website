@@ -3,7 +3,7 @@
 > Üretim: 2026-09-30 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**2608 fonksiyon** · 300 dosya · 39 sidebar modülü
+**2604 fonksiyon** · 300 dosya · 39 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -416,4 +416,4 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `feld` — module/abrechnung-auswahl.js:968 · module/fussbefund.js:282 · module/rezeptinfo-geld.js:290
 - `zeileHtml` — module/abrechnung-detail.js:349 · module/fussbefund.js:1586 · module/verordnung-liste.js:161
 - `DE` — module/behandlungsbestaetigung.js:41 · module/patientenkarte.js:38 · module/verordnung-uebersicht.js:106
-- `zwei` — module/datum.js:37 · module/kalender-woche.js:52 · module/termin-folge.js:35
+- `oeffne` — module/kalender-kontextmenue.js:119 · module/leistungen-liste.js:190 · module/verordnung-liste.js:219

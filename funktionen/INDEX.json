@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-09-30",
  "dateien": 300,
- "funktionen": 2608,
+ "funktionen": 2604,
  "module": [
   "abrechnung",
   "anamnese",
@@ -62774,7 +62774,6 @@
    "calledBy": [
     "alsDatetimeLocal",
     "alsISODatum",
-    "alsLokalesDatetime",
     "renderWoche"
    ],
    "modules": [
@@ -62897,7 +62896,8 @@
    "calledBy": [
     "befundungFuerLeistung",
     "renderFussbefundArchiv",
-    "tagesVorbelegungGrund"
+    "tagesVorbelegungGrund",
+    "zweiterBehandlungstagFrage"
    ],
    "modules": [
     "abrechnung",
@@ -62952,6 +62952,7 @@
     "zwei"
    ],
    "calledBy": [
+    "folgeterminStart",
     "openBookingModal"
    ],
    "modules": [
@@ -71072,7 +71073,6 @@
    "calledBy": [
     "alsDatetimeLocal",
     "alsISODatum",
-    "alsLokalesDatetime",
     "renderWoche"
    ],
    "modules": [
@@ -80266,8 +80266,8 @@
    "name": "tagVon",
    "kind": "arrow",
    "file": "module/podo-behandlungstag-regel.js",
-   "start": 28,
-   "end": 33,
+   "start": 30,
+   "end": 35,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -80319,8 +80319,8 @@
    "name": "aktiv",
    "kind": "arrow",
    "file": "module/podo-behandlungstag-regel.js",
-   "start": 29,
-   "end": 33,
+   "start": 31,
+   "end": 35,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -80375,8 +80375,8 @@
    "name": "abrechenbareBehandlungstage",
    "kind": "function",
    "file": "module/podo-behandlungstag-regel.js",
-   "start": 36,
-   "end": 44,
+   "start": 38,
+   "end": 46,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -80430,8 +80430,8 @@
    "name": "bestehenderBehandlungstag",
    "kind": "function",
    "file": "module/podo-behandlungstag-regel.js",
-   "start": 53,
-   "end": 57,
+   "start": 55,
+   "end": 59,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -80482,63 +80482,11 @@
    ]
   },
   {
-   "name": "datumTTMMJJJJ",
-   "kind": "function",
-   "file": "module/podo-behandlungstag-regel.js",
-   "start": 60,
-   "end": 63,
-   "lines": 4,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [
-    "zweiterBehandlungstagFrage"
-   ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "podologie-billing",
-    "rechnungen",
-    "services",
-    "settings",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 28 modülden çağrılıyor"
-   ]
-  },
-  {
    "name": "zweiterBehandlungstagFrage",
    "kind": "function",
    "file": "module/podo-behandlungstag-regel.js",
-   "start": 66,
-   "end": 69,
+   "start": 63,
+   "end": 66,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -80547,7 +80495,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "datumTTMMJJJJ"
+    "datumDe"
    ],
    "calledBy": [
     "loadPodologieBilling"
@@ -82007,65 +81955,11 @@
    ]
   },
   {
-   "name": "datumDe",
-   "kind": "arrow",
-   "file": "module/podo-vorbelegung-grund.js",
-   "start": 18,
-   "end": 21,
-   "lines": 4,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [
-    "befundungFuerLeistung",
-    "renderFussbefundArchiv",
-    "tagesVorbelegungGrund"
-   ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "podologie-billing",
-    "rechnungen",
-    "services",
-    "settings",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 28 modülden çağrılıyor"
-   ]
-  },
-  {
    "name": "befundGrundText",
    "kind": "function",
    "file": "module/podo-vorbelegung-grund.js",
-   "start": 28,
-   "end": 41,
+   "start": 25,
+   "end": 38,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -82116,8 +82010,8 @@
    "name": "tagesVorbelegungGrund",
    "kind": "function",
    "file": "module/podo-vorbelegung-grund.js",
-   "start": 59,
-   "end": 79,
+   "start": 56,
+   "end": 76,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [],
@@ -82170,8 +82064,8 @@
    "name": "verordnetZeile",
    "kind": "function",
    "file": "module/podo-vorbelegung-grund.js",
-   "start": 90,
-   "end": 95,
+   "start": 87,
+   "end": 92,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -92709,123 +92603,11 @@
    "uiPfad": []
   },
   {
-   "name": "zwei",
-   "kind": "arrow",
-   "file": "module/termin-folge.js",
-   "start": 35,
-   "end": 40,
-   "lines": 6,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [
-    "alsLokalesDatetime"
-   ],
-   "calledBy": [
-    "alsDatetimeLocal",
-    "alsISODatum",
-    "alsLokalesDatetime",
-    "renderWoche"
-   ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "podologie-billing",
-    "rechnungen",
-    "services",
-    "settings",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 28 modülden çağrılıyor"
-   ]
-  },
-  {
-   "name": "alsLokalesDatetime",
-   "kind": "function",
-   "file": "module/termin-folge.js",
-   "start": 38,
-   "end": 40,
-   "lines": 3,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [
-    "zwei"
-   ],
-   "calledBy": [
-    "folgeterminStart",
-    "zwei"
-   ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "podologie-billing",
-    "rechnungen",
-    "services",
-    "settings",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 28 modülden çağrılıyor"
-   ]
-  },
-  {
    "name": "folgeterminStart",
    "kind": "function",
    "file": "module/termin-folge.js",
-   "start": 55,
-   "end": 66,
+   "start": 51,
+   "end": 62,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -92834,7 +92616,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "alsLokalesDatetime",
+    "alsDatetimeLocal",
     "round",
     "sollAbstand"
    ],
@@ -92849,8 +92631,8 @@
    "name": "folgeLeistungen",
    "kind": "function",
    "file": "module/termin-folge.js",
-   "start": 77,
-   "end": 92,
+   "start": 73,
+   "end": 88,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -92873,8 +92655,8 @@
    "name": "dienstVon",
    "kind": "arrow",
    "file": "module/termin-folge.js",
-   "start": 79,
-   "end": 87,
+   "start": 75,
+   "end": 83,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -92896,8 +92678,8 @@
    "name": "oeffneFolgetermin",
    "kind": "function",
    "file": "module/termin-folge.js",
-   "start": 118,
-   "end": 188,
+   "start": 114,
+   "end": 184,
    "lines": 71,
    "spiegelHinweis": null,
    "tables": [
@@ -92933,8 +92715,8 @@
    "name": "setze",
    "kind": "arrow",
    "file": "module/termin-folge.js",
-   "start": 147,
-   "end": 147,
+   "start": 143,
+   "end": 143,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -124466,15 +124248,6 @@
    "aynalar": []
   },
   {
-   "name": "zwei",
-   "orte": [
-    "module/datum.js:37",
-    "module/kalender-woche.js:52",
-    "module/termin-folge.js:35"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "oeffne",
    "orte": [
     "module/kalender-kontextmenue.js:119",
@@ -125027,10 +124800,10 @@
    "aynalar": []
   },
   {
-   "name": "datumDe",
+   "name": "zwei",
    "orte": [
-    "module/datum.js:77",
-    "module/podo-vorbelegung-grund.js:18"
+    "module/datum.js:37",
+    "module/kalender-woche.js:52"
    ],
    "aynalar": []
   },
@@ -125125,7 +124898,7 @@
   {
    "name": "setze",
    "orte": [
-    "module/termin-folge.js:147",
+    "module/termin-folge.js:143",
     "module/termin-heute.js:87"
    ],
    "aynalar": []

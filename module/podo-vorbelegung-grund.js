@@ -15,10 +15,7 @@
  * (Termin/Serie). Geprueft in podo-vorbelegung-grund.test.js.
  */
 
-const datumDe = (iso) => {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
-  return m ? `${m[3]}.${m[2]}.${m[1]}` : '';
-};
+import { datumDe } from './datum.js?v=20260930f';
 
 /**
  * Grund fuer den Befundungsvorschlag der Termin-/Serienmaske. `grund` ist der

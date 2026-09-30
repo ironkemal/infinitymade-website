@@ -24,6 +24,7 @@
  * Oben steht die Rechnung ohne DOM (testbar), unten die Verdrahtung.
  */
 
+import { alsDatetimeLocal } from './datum.js?v=20260930f';
 import { sollAbstand } from './frequenz-pruefung.js?v=20260929b';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 import { POD_EINGANGSBEFUNDUNG } from './eingangsbefundung-regel.js?v=20261001e';
@@ -32,12 +33,7 @@ import { hpnrVonDienst, setzeLeistungen } from './termin-leistungen.js?v=2026100
 /** Ohne lesbare Frequenz: eine Woche — die Zeile, die die Serienplanung auch nimmt. */
 export const STANDARD_ABSTAND_TAGE = 7;
 
-const zwei = (n) => String(n).padStart(2, '0');
 
-/** `YYYY-MM-DDTHH:mm` in Ortszeit — das Format von `<input type="datetime-local">`. */
-export function alsLokalesDatetime(d) {
-  return `${d.getFullYear()}-${zwei(d.getMonth() + 1)}-${zwei(d.getDate())}T${zwei(d.getHours())}:${zwei(d.getMinutes())}`;
-}
 
 /**
  * Früheste sinnvolle Startzeit des Folgetermins.
@@ -62,7 +58,7 @@ export function folgeterminStart(startZeit, frequenz, jetzt = new Date()) {
     ziel.setTime(new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate() + 1,
       basis.getHours(), basis.getMinutes()).getTime());
   }
-  return { start: alsLokalesDatetime(ziel), abstandTage, ausFrequenz: !!soll };
+  return { start: alsDatetimeLocal(ziel), abstandTage, ausFrequenz: !!soll };
 }
 
 /**

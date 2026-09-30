@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  abrechenbareBehandlungstage, bestehenderBehandlungstag, zweiterBehandlungstagFrage, datumTTMMJJJJ,
+  abrechenbareBehandlungstage, bestehenderBehandlungstag, zweiterBehandlungstagFrage,
 } from './podo-behandlungstag-regel.js';
 
 const b = (datum, codes, storniert_am = null) => ({ behandlungsdatum: datum, hpnr_codes: codes, storniert_am });
@@ -39,13 +39,13 @@ test('zweiter Tag: findet nicht stornierte Zeile am selben Datum, gleich welche 
 });
 
 test('zweiter Tag: Text nennt Datum, § 12 Abs. 8 und die Frage', () => {
-  assert.equal(datumTTMMJJJJ('2026-09-01'), '01.09.2026');
   assert.equal(zweiterBehandlungstagFrage('2026-09-01'),
     'Für diese Verordnung ist am 01.09.2026 bereits ein Behandlungstag erfasst. '
     + 'Je Tag ist nur eine Behandlung abrechenbar (HeilM-RL § 12 Abs. 8) — trotzdem speichern?');
 });
 
-test('UI2: Nagelspange 78610/78620 zählt als abrechenbarer Behandlungstag', () => {
+test('UI2: Nagelspange 78610 zählt als abrechenbarer Behandlungstag, Zuschlag 78620 allein nicht', () => {
   assert.equal(abrechenbareBehandlungstage([{ behandlungsdatum: '2026-09-30', hpnr_codes: ['78610'] }]), 1);
   assert.equal(abrechenbareBehandlungstage([{ behandlungsdatum: '2026-09-30', hpnr_codes: ['78030', '79933'] }]), 0);
+  assert.equal(abrechenbareBehandlungstage([{ behandlungsdatum: '2026-09-30', hpnr_codes: ['78620'] }]), 0);
 });

@@ -1,7 +1,7 @@
 // Folgetermin (Konsey 30.09.2026): Datum aus der Frequenz, Leistungen ohne Eingangsbefundung.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { folgeterminStart, folgeLeistungen, alsLokalesDatetime, STANDARD_ABSTAND_TAGE } from './termin-folge.js';
+import { folgeterminStart, folgeLeistungen, STANDARD_ABSTAND_TAGE } from './termin-folge.js';
 
 const lokal = (y, m, d, h = 9, min = 0) => new Date(y, m - 1, d, h, min);
 const JETZT = lokal(2026, 9, 30, 8, 0);
@@ -31,10 +31,6 @@ test('ohne lesbare Frequenz: eine Woche, nicht aus der Frequenz', () => {
 test('alter Ausgangstermin: Ergebnis liegt in der Zukunft (morgen, gleiche Uhrzeit)', () => {
   const r = folgeterminStart(lokal(2026, 8, 1, 14, 15), 'alle 4 Wochen', JETZT);
   assert.equal(r.start, '2026-10-01T14:15');
-});
-
-test('alsLokalesDatetime formatiert fuer <input type="datetime-local">', () => {
-  assert.equal(alsLokalesDatetime(lokal(2026, 3, 4, 7, 5)), '2026-03-04T07:05');
 });
 
 const dienste = [

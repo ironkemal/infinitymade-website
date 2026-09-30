@@ -8,7 +8,7 @@
  *    dieselbe Verordnung am selben Tag ein zweites Mal speichert, soll gefragt
  *    werden — nicht gesperrt: die Sperre im Preflight ist Sache des Servers.
  *  • „Bereit zur Abrechnung" setzt mindestens einen abrechenbaren
- *    Behandlungstag voraus: nicht storniert UND 78010/78020 (UI2: 78610/78620) enthalten,
+ *    Behandlungstag voraus: nicht storniert UND 78010/78020 (UI2: 78610) enthalten,
  *    derselbe Kalendertag zählt einmal. Befundung allein (78030/78040), Kontrolle
  *    oder Zuschlag machen noch keine abrechenbare Behandlung.
  *
@@ -21,9 +21,11 @@
  */
 
 /** Die Positionen, die einen Behandlungstag abrechenbar machen. */
-// UI2: die Behandlung ist die Nagelkorrekturspange (78610/78620) — ohne sie könnte eine
+// UI2: die Behandlung ist die Nagelkorrekturspange (78610; 78620 ist Zuschlag, keine Einheit — wie verordnung-uebersicht.js) — ohne sie könnte eine
 // UI2-Verordnung nie „Bereit" werden (Hauptkoordinator 30.09, Kontrolle nach S4-Paket 1).
-export const ABRECHENBARE_BEHANDLUNG = new Set(['78010', '78020', '78610', '78620']);
+import { datumDe } from './datum.js?v=20260930f';
+
+export const ABRECHENBARE_BEHANDLUNG = new Set(['78010', '78020', '78610']);
 
 const tagVon = (b) => String(b?.behandlungsdatum || '').slice(0, 10);
 const aktiv = (b) => !!b && !b.storniert_am;
@@ -56,14 +58,9 @@ export function bestehenderBehandlungstag(behandlungen, datum) {
   return (behandlungen || []).find(b => aktiv(b) && tagVon(b) === tag) || null;
 }
 
-/** Datum `YYYY-MM-DD` → `TT.MM.JJJJ`. */
-export function datumTTMMJJJJ(iso) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
-  return m ? `${m[3]}.${m[2]}.${m[1]}` : String(iso || '');
-}
 
 /** Frage des Bestätigungsdialogs bei einem zweiten Behandlungstag. */
 export function zweiterBehandlungstagFrage(datum) {
-  return `Für diese Verordnung ist am ${datumTTMMJJJJ(datum)} bereits ein Behandlungstag erfasst. `
+  return `Für diese Verordnung ist am ${datumDe(datum, String(datum || ''))} bereits ein Behandlungstag erfasst. `
     + 'Je Tag ist nur eine Behandlung abrechenbar (HeilM-RL § 12 Abs. 8) — trotzdem speichern?';
 }
