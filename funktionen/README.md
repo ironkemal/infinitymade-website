@@ -515,3 +515,33 @@ Yeni fonksiyon yok, silinen yok; davranış değişikliği.
   `termin-laden.js` `ladeTerminVollstaendig` kopya değil (o id ile okur); ama **yakın aday:**
   `podologie-abrechnung.js` `podGeplanteHpnr` aynı soruyu (Verordnung'un o günkü termini) soruyor ve günü
   Berlin'e göre (`alsISODatum`) kesiyor, `ladeTagesTermin` tarayıcı yerel gece yarısıyla — iki gün sınırı kuralı.
+
+### 30.09.2026 · Öffentliche Seiten + Anwesenheit (O-140) + S6 temizliği — builder bildirimi
+
+- `module/public-owner.js` (neu): `slugAusKennung`, `kennungAusSuche`, `ladeOwnerId`. Niye: booking.html `?u=` ve
+  booking-request.html `?business=` iki link şemasını tek yerde çözmek (Reform S4). Nerede: `booking-request.js` +
+  `booking-request.html` inline modül.
+- `module/anfrage-anliegen.js` (neu): `ANLIEGEN`, `zahlungsartenFuer`, `hausbesuchFrageNoetig`, `anliegenNotiz`,
+  `anliegenFuerBereich`, `findAnliegen`, `heilmittelFrage`, `behandlungsartFuer` + metin sabitleri. Niye: podoloji
+  Online-Anfrage kararları (Rezept / Nagelspange / ohne Rezept). Nerede: `booking-request.js`
+  (`aktualisiereHausbesuch`, `setzeHausbesuch`, `behandlungsartAktuell`, `zeigeHeilmittelFrage`). `adressePflicht` silindi.
+- `module/public-supabase.js` (neu): `getPublicClient`. Niye: canli-test P3 — iki `createClient` → „Multiple
+  GoTrueClient instances". Nerede: booking-request.js + inline modül.
+- `module/praxis-standort.js` (neu): `standortStatusText`, `mountPraxisStandort`. Niye: onprem O-140 — Nominatim
+  CSP'ye takılıyordu, `clinic_lat` boş kalıyordu; konum owner cihazından `businesses.clinic_lat/lng`'e. Nerede:
+  dashboard.js Anwesenheit yüklemesi. `ensureBusinessCoords` silindi.
+- Silinen: `reportSidebarVisibility` (visibility_reports, 14.07'den beri 403 — db-ustasi W-07); login/kalender/setup
+  EN/TR sözlükleri. Düzeltilen: `patient-termine.js` `ladePatientTermine` → lead_id; `akte-podo.js` fizyo Rezept
+  listesini podolojide gizler.
+- **Kopya kontrolü (fonksiyon-ustasi 30.09, birleştirilmedi — karar kullanıcının):**
+  - 🔴 **Aday:** `booking.js:8-100` kendi owner çözümlemesini taşıyor (slug/URL kırpma, UUID, `INF-` RPC,
+    `booking_slug` or-filtresi, businesses fallback) — `ladeOwnerId`'nin ikinci uygulaması. Kural farkı:
+    `booking.js` `?business=` değerini slug olarak da kabul ediyor, `kennungAusSuche` UUID değilse reddediyor;
+    `booking.js`'te PostgREST filtresine giden slug için `^[\w.-]+$` koruması yok. Fark: booking.js owner id'yi
+    değil tam profil + business bağlamını istiyor → birleşirse `ladeOwnerId` sonrası profil ayrıca okunur.
+  - 🟡 `booking.js:4` hâlâ kendi `createClient`'ını açıyor — tek istemci olduğu için uyarı üretmez, kopya değil.
+  - 🟡 **Yakın aday (farklı tablo):** `dashboard.js` `ensureClinicLocation` praxis konumunu `profiles.clinic_lat/lng`'e
+    (Fahrtenbuch geocode, adres üzerinden) yazıyor; `mountPraxisStandort` `businesses.clinic_lat/lng`'e (cihaz GPS).
+    Aynı kavram iki tabloda — db-ustasi'ye sorulmalı; tek-praxis owner'da `businesses` kaydı olmayabilir.
+  - `anfrage-anliegen.js` — kopya değil; Nagelspange kuralları dashboard/abrechnung'da HPNR/Befundpauschale düzeyinde,
+    hasta tarafı Anliegen sorusu başka yerde yok.
