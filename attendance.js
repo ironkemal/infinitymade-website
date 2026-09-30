@@ -1,6 +1,6 @@
 import { createClient } from './vendor/supabase-js.js?v=20260814';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from '/supabase-config.js'; // O-01, 11.09.2026
-import { gpsSchalterLesen, standortFuerCheckin, GPS_HINWEIS } from './module/praxis-standort.js?v=20261001z';
+import { gpsSchalterLesen, standortFuerCheckin, GPS_HINWEIS } from './module/praxis-standort.js?v=20261002a';
 
 const BERLIN_TZ = 'Europe/Berlin';
 

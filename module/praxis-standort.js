@@ -68,13 +68,17 @@ export function gpsAnzeige(r) {
 }
 
 /** Anzeigetext für den Zustand; rein, für Tests. */
-export function standortStatusText(biz) {
-  if (!biz) return 'Praxisstandort nicht eingerichtet — Check-ins werden ohne GPS-Prüfung gezählt.';
-  const lat = Number(biz.clinic_lat), lng = Number(biz.clinic_lng);
-  if (!biz.clinic_lat || !biz.clinic_lng || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+// `pruefen` = Owner-Schalter profiles.gps_checkin_pruefen. Ohne ihn behauptete der Text
+// „werden geprüft", obwohl die Prüfung aus war (P2 canli-test 30.09.2026).
+export function standortStatusText(biz, pruefen = false) {
+  const lat = Number(biz?.clinic_lat), lng = Number(biz?.clinic_lng);
+  if (!biz || !biz.clinic_lat || !biz.clinic_lng || !Number.isFinite(lat) || !Number.isFinite(lng)) {
     return 'Praxisstandort nicht eingerichtet — Check-ins werden ohne GPS-Prüfung gezählt.';
   }
-  return `Praxisstandort gesetzt (${lat.toFixed(5)}, ${lng.toFixed(5)}) — Check-ins werden im Umkreis von 150 m geprüft.`;
+  const ort = `Praxisstandort gesetzt (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+  return pruefen
+    ? `${ort} — Check-ins werden im Umkreis von 150 m geprüft.`
+    : `${ort} — GPS-Prüfung ist aus, Check-ins werden ohne Standort gezählt.`;
 }
 
 /**
@@ -111,7 +115,7 @@ export function mountPraxisStandort({ supabase, getBusiness, getOwnerId, toast }
   const zeichne = () => {
     const biz = getBusiness();
     const hatProfil = ort && ort.clinic_lat != null && ort.clinic_lng != null;
-    text.textContent = standortStatusText(hatProfil ? ort : biz);
+    text.textContent = standortStatusText(hatProfil ? ort : biz, ort?.gps_checkin_pruefen === true);
     haken.checked = ort?.gps_checkin_pruefen === true;
   };
 
@@ -132,6 +136,7 @@ export function mountPraxisStandort({ supabase, getBusiness, getOwnerId, toast }
     el.disabled = false;
     if (error) { el.checked = !an; toast?.('Einstellung konnte nicht gespeichert werden.', 'error'); return; }
     ort = { ...(ort || {}), gps_checkin_pruefen: an };
+    zeichne();
     toast?.(an ? 'GPS-Prüfung beim Einchecken ist aktiv.' : 'GPS-Prüfung beim Einchecken ist aus.', 'success');
   }
 

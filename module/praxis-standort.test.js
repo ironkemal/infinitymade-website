@@ -6,7 +6,10 @@ import { standortStatusText, gpsAnzeige, gpsSchalterLesen, standortFuerCheckin, 
 test('standortStatusText: fehlend, leer, gesetzt', () => {
   assert.match(standortStatusText(null), /nicht eingerichtet/);
   assert.match(standortStatusText({ id: 'b', clinic_lat: null, clinic_lng: null }), /nicht eingerichtet/);
-  assert.match(standortStatusText({ id: 'b', clinic_lat: 50.8, clinic_lng: 7.2 }), /gesetzt \(50\.80000, 7\.20000\).*150 m/);
+  assert.match(standortStatusText({ id: 'b', clinic_lat: 50.8, clinic_lng: 7.2 }, true), /gesetzt \(50\.80000, 7\.20000\).*150 m/);
+  // Schalter aus: kein „geprüft" behaupten (P2 canli-test 30.09.2026)
+  assert.match(standortStatusText({ id: 'b', clinic_lat: 50.8, clinic_lng: 7.2 }), /GPS-Prüfung ist aus/);
+  assert.doesNotMatch(standortStatusText({ id: 'b', clinic_lat: 50.8, clinic_lng: 7.2 }), /150 m/);
 });
 
 test('gpsAnzeige: true ✓, false ⚠, NULL nicht geprüft, ohne Check-in —', () => {

@@ -87,3 +87,32 @@ export function leitsymptomatikNotiz({ dg, massnahme, roh, freitext } = {}) {
   if (massnahme || String(roh || '').trim() || String(freitext || '').trim()) return '';
   return LS_FEHLT_NOTIZ;
 }
+
+/**
+ * Leitsymptomatik-Buchstabe (a/b/c) aus dem gespeicherten Rohwert.
+ *
+ * P1 canli-test 30.09.2026: Die Muster-13-Maske speichert die an4-Bitmaske
+ * („0010" = c, Reihenfolge a-b-c-patientenindividuell, `lsCollect()` in
+ * dashboard.js); gelesen wurden nur „c" und „DF-c". Folge: bei jeder in der
+ * Maske erfassten Verordnung fehlte das Therapiezeit-Feld (c) UND die
+ * 78020-Sperre für a)/b) fiel still aus.
+ *
+ * Mehrere Kreuze: enthält die Menge c, gilt c (Komplexbehandlung umfasst a+b);
+ * sonst nur bei genau einem Kreuz dessen Buchstabe, sonst '' (lieber keine
+ * Regel als eine geratene).
+ *
+ * @param {string} roh   `prescriptions.leitsymptomatik`
+ * @returns {'a'|'b'|'c'|''}
+ */
+export function massnahmeAusLeitsymptomatik(roh) {
+  const v = String(roh ?? '').trim().toLowerCase();
+  const dgs = POD_HEILMITTEL_DGS.map(d => d.toLowerCase()).join('|');
+  const direkt = (v.match(new RegExp(`^(?:(?:${dgs})-)?([abc])$`)) || [])[1];
+  if (direkt) return direkt;
+  if (/^[01]{4}$/.test(v)) {
+    const gesetzt = ['a', 'b', 'c'].filter((l, i) => v[i] === '1');
+    if (gesetzt.includes('c')) return 'c';
+    return gesetzt.length === 1 ? gesetzt[0] : '';
+  }
+  return '';
+}

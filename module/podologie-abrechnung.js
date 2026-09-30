@@ -93,7 +93,7 @@ import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001h';
 import { tagesVorbelegungGrund, verordnetZeile } from './podo-vorbelegung-grund.js?v=20261001i';
 import { bestehenderBehandlungstag, zweiterBehandlungstagFrage, abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261001i';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
-import { behandlungspositionVorschlag, ohneBehandlungsposition, OHNE_BEHANDLUNG_FRAGE, leitsymptomatikNotiz } from './podo-behandlungsposition-regel.js?v=20261001g';
+import { behandlungspositionVorschlag, ohneBehandlungsposition, OHNE_BEHANDLUNG_FRAGE, leitsymptomatikNotiz, massnahmeAusLeitsymptomatik } from './podo-behandlungsposition-regel.js?v=20261002a';
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
 // "heute" — s. `setPodVorwahl()` unten.
 import { podBehandlungsdatumVorschlag } from './podo-behandlungsdatum-vorwahl.js?v=20260928';
@@ -397,9 +397,8 @@ async function podErstbefundungSerieLage(vord, datum) {
  * 78020-Sperre still aus (Retaxationsrisiko, ~15 € je Sitzung).
  */
 function podVordMassnahme(vord) {
-  const roh = String(vord?.leitsymptomatik || '').trim().toLowerCase();
-  const _dgPrefix = POD_HEILMITTEL_DGS.map(d => d.toLowerCase()).join('|');
-  const direkt = (roh.match(new RegExp(`^(?:(?:${_dgPrefix})-)?([abc])$`)) || [])[1] || '';
+  // Liest „c", „DF-c" UND die an4-Bitmaske „0010" der Muster-13-Maske (P1 30.09.2026).
+  const direkt = massnahmeAusLeitsymptomatik(vord?.leitsymptomatik);
   if (POD_HEILMITTEL_KATALOG[direkt]) return direkt;
   const items = Array.isArray(vord?.heilmittel_items) ? vord.heilmittel_items : [];
   const ausItem = items.map(i => i?.massnahme).find(m => POD_HEILMITTEL_KATALOG[m]);

@@ -357,6 +357,7 @@ function enterKioskMode(modus = 'anamnese') {
       anamPanel.classList.add('active');
     } else if (nurEinwilligung && formContent) {
       formContent.innerHTML = '';
+      kioskSperre(true);   // P2 30.09.2026: auch hier — Tab + Pfeiltaste wechselte sonst den Patienten dahinter
       setzeKopf('Einwilligung', 'Bitte lesen und unterschreiben Sie auf dem Tablet');
       ['kioskStartBtn', 'kioskEinwilligungBtn'].forEach(id => { const b = $(id); if (b) b.style.display = 'none'; });
     }

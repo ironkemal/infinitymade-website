@@ -67,3 +67,18 @@ test('leitsymptomatikNotiz: nur DF/NF/QF ohne jede Leitsymptomatik', () => {
   assert.equal(leitsymptomatikNotiz({ dg: 'UI1' }), '');
   assert.equal(leitsymptomatikNotiz({ dg: 'UI2' }), '');
 });
+
+// P1 canli-test 30.09.2026: Maske speichert die an4-Bitmaske.
+import { massnahmeAusLeitsymptomatik as mls } from './podo-behandlungsposition-regel.js';
+test('massnahmeAusLeitsymptomatik: Buchstabe, DG-Präfix und an4-Bitmaske', () => {
+  assert.equal(mls('c'), 'c');
+  assert.equal(mls('DF-b'), 'b');
+  assert.equal(mls('0010'), 'c');
+  assert.equal(mls('1000'), 'a');
+  assert.equal(mls('0100'), 'b');
+  assert.equal(mls('1010'), 'c');   // c umfasst a+b
+  assert.equal(mls('1100'), '');    // zwei Kreuze ohne c: keine geratene Regel
+  assert.equal(mls('0001'), '');    // nur patientenindividuell
+  assert.equal(mls('0000'), '');
+  assert.equal(mls(''), '');
+});
