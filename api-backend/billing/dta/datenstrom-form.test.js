@@ -111,6 +111,16 @@ test('zwei ICD-Kodes ergeben zwei DIA-Segmente, nicht ein Feld mit Komma', () =>
   assert.ok(!r.content.includes('E11.40,I70.24'), 'ICD-Kodes stehen noch zusammengeklebt in einem Feld');
 });
 
+test('icd10Liste mit Strich ["E11.7-"] erzeugt ein DIA-Segment mit "E11.7" ohne Strich', () => {
+  const basis = structuredClone(podoFixture);
+  basis.prescriptions[0].verordnung.icd10Liste = ['E11.7-'];
+  const r = buildDtaFile(basis);
+  const dia = finde(r.content, 'DIA');
+  assert.equal(dia.length, 1);
+  assert.equal(dia[0], 'DIA+E11.7');
+  assert.ok(!r.content.includes('E11.7-'), 'Bindestrich darf im DIA-Segment nicht vorkommen');
+});
+
 test('ein einzelner icd10-String bleibt genau ein DIA (Rueckwaertskompatibilitaet)', () => {
   const r = buildDtaFile(structuredClone(podoFixture));
   assert.deepEqual(finde(r.content, 'DIA'), ['DIA+E11.40']);

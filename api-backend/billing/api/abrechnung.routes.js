@@ -55,6 +55,7 @@ import { verworfeneNummerFesthalten } from './verworfen.js';
 import { buildEncryptedFilename } from '../dta/filename.js';
 import { verschluesseleFuerEmpfaenger } from '../dta/verschluesselung.js';
 import { ladeItsgTrustAnchors, pruefeTrustAnchorFrische } from '../dta/itsg-trust-anchor.js';
+import { icdOhneStrich, icdAbfrageKodes, icdTerminalMap } from '../utils/icd-code.js';
 
 const router = express.Router();
 // ⚠️ Bewusst OHNE Absicherung auf fehlende Umgebungsvariablen: fehlen sie,
@@ -537,13 +538,13 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, sect
     },
     verordnung: {
       ausstellungsdatum:        rx.ausstellungsdatum,
-      icd10:                    rx.icd10 || '',
+      icd10:                    icdOhneStrich(rx.icd10),
       // Je Diagnose ein eigenes DIA-Segment (Anlage 1 TP5 V21, Kap. 5.5.3.3
       // S. 72). `prescriptions` fuehrt zwei ICD-Spalten; auch der
       // physiotherapeutische Weg kann beide tragen (Muster 13 laesst zwei
       // Diagnosen zu), deshalb steht die Liste hier genauso wie im
-      // podologischen Mapper.
-      icd10Liste:               [rx.icd10, rx.icd10_2].filter(Boolean),
+      // podologischen Mapper. Bindestrich am Ende entfernen (gkv-302 30.09.2026).
+      icd10Liste:               [rx.icd10, rx.icd10_2].map(icdOhneStrich).filter(Boolean),
       // Schritt 1.8 — Anlage 1 TP5 V21, Kap. 5.5.3.3 S. 72: "Ist im Feld
       // 'ICD-10-Code' kein ICD-10-Code eingetragen, ist der Diagnosetext
       // anzugeben." Bis zum 20.09.2026 fuellte diesen Wert NIEMAND
@@ -2447,7 +2448,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       ausstellungsdatum: rx.ausstellungsdatum,
       krankenkasse: rx.leads?.krankenkasse || '',
       arzt: rx.aerzte?.arzt_name || 'Hausarzt',
-      icd10: rx.icd10 || '',
+      icd10: icdOhneStrich(rx.icd10),
       heilmittel: rx.heilmittel || '',
       frequenz: rx.frequenz || '',
       // Eingefrorene Nummer hat Vorrang; ist noch keine vergeben (Rezept noch
@@ -3041,8 +3042,8 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
   // traegt genau einen Schluessel; die Annahmestelle liest den Rest als Teil
   // des Kodes und setzt ab. Richtig ist ein DIA-Segment je Diagnose
   // (Anlage 1 TP5 V21, Kap. 5.5.3.3 S. 72) — die Schleife dazu steht in
-  // `dta/builder.js`, hier wird nur noch die Liste gereicht.
-  const icd10Liste = [vord.icd10, vord.icd10_2].filter(Boolean);
+  // `dta/builder.js`, hier wird nur noch die Liste gereicht. Bindestrich am Ende entfernen (gkv-302 30.09.2026).
+  const icd10Liste = [vord.icd10, vord.icd10_2].map(icdOhneStrich).filter(Boolean);
 
   return {
     patient: {
@@ -3070,7 +3071,7 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
       ausstellungsdatum:     vord.ausstellungsdatum,
       // `icd10` bleibt der Hauptkode (so prueft ihn der Preflight, V:01002),
       // `icd10Liste` traegt alle Diagnosen fuer die DIA-Segmente.
-      icd10:                 vord.icd10 || '',
+      icd10:                 icdOhneStrich(vord.icd10),
       icd10Liste,
       // Schritt 1.8 — s. Physio-Mapper oben. Gerade in der Podologie ist der
       // Fall haeufig: auf Muster 13 ist der ICD-Kode keine Pflichtangabe, die
@@ -3365,8 +3366,9 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       //    (Anlage 3 k).
       //    `prescriptions` fuehrt zwei ICD-Spalten (icd10 + icd10_2) statt
       //    des frueheren Arrays — beide muessen geprueft werden.
+      // Bindestrich am Ende entfernen (gkv-302 30.09.2026, ICD-10-GM 2026 Metadaten Feld 7).
       const kodes = [v.icd10, v.icd10_2].filter(Boolean).join(',')
-        .split(/[,;]/).map(s => s.replace(/\s+/g, '').toUpperCase()).filter(Boolean);
+        .split(/[,;]/).map(s => icdOhneStrich(s.replace(/\s+/g, '')).toUpperCase()).filter(Boolean);
       if (kodes.length > 0 && !kodes.includes('L60.0')) {
         zielListe.push(
           `Verordnung ${beleg} (${v.patient_name || '—'}): Diagnosegruppe ${dgRoot} lässt ` +
@@ -3453,10 +3455,11 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     try {
       const kodes = [...new Set(prescriptions.flatMap(p => p.verordnung?.icd10Liste || []).filter(Boolean))];
       if (kodes.length) {
+        const queryCodes = icdAbfrageKodes(kodes);
         const { data: icdRows, error: icdErr } = await supabase
-          .from('icd10_titles').select('code, terminal').in('code', kodes);
+          .from('icd10_titles').select('code, terminal').in('code', queryCodes);
         if (icdErr) console.warn('[abrechnung-podo] icd10_titles terminal:', icdErr.message);
-        else icdTerminal = Object.fromEntries((icdRows || []).map(r => [r.code, r.terminal]));
+        else icdTerminal = icdTerminalMap(icdRows);
       }
     } catch (e) { console.warn('[abrechnung-podo] icd10_titles terminal:', e.message); }
 

@@ -23,6 +23,7 @@ import {
 } from '../codes/anlage3_v22.js';
 import { istGueltigerLegs, GUELTIGE_LEGS } from '../codes/legs.js';
 import { LEITSYMPTOMATIK_MUSTER } from './leitsymptomatik.js';
+import { icdOhneStrich } from '../utils/icd-code.js';
 
 // ---------------------------------------------------------------------------
 // Atomic field validators
@@ -96,9 +97,10 @@ export function isValidBsnr(bsnr) {
 }
 
 // ICD-10-GM: letter + 2 digits + optional .digit-or-letter + optional G/V/Z/A modifier.
+// Bindestrich am Ende ("E11.7-") vor der Prüfung entfernen (gkv-302 30.09.2026, ICD-10-GM 2026 Metadaten Feld 7).
 export function isValidIcd10(code) {
   if (!code) return false;
-  return /^[A-Z]\d{2}(\.[0-9A-Z]{1,2})?[GVZALR]?$/.test(code.trim());
+  return /^[A-Z]\d{2}(\.[0-9A-Z]{1,2})?[GVZALR]?$/.test(icdOhneStrich(code));
 }
 
 // Diagnosegruppe (Heilmittelkatalog): 2-4 chars (e.g. WS1, WS2, EX2a, PN, AT3).
@@ -376,9 +378,10 @@ export function preflight(input) {
     // Praxis den Kode nicht selbst: nur der Arzt, mit neuer Unterschrift + Datum
     // (Podo Anlage 3 Ziffer 4 Abs. 4/5, 5 k). Ohne `input.icdTerminal` entfaellt
     // die Pruefung vollstaendig (Fizyo-Pfad unveraendert).
+    // Bindestrich-bereinigt prüfen und melden (gkv-302 30.09.2026).
     if (input.icdTerminal && typeof input.icdTerminal === 'object') {
       const kodes = [icdHaupt, ...(Array.isArray(v.icd10Liste) ? v.icd10Liste : [])]
-        .map(k => String(k ?? '').trim()).filter(Boolean);
+        .map(k => icdOhneStrich(k)).filter(Boolean);
       [...new Set(kodes)].forEach(kode => {
         if (input.icdTerminal[kode] === false)
           W(warnings, 'V:01016', `${at}.verordnung.icd10`,

@@ -45,6 +45,7 @@ test('LANR too short rejected',           () => assert.equal(isValidLanr('12345'
 test('ICD-10 M54.5 valid',             () => assert.equal(isValidIcd10('M54.5'), true));
 test('ICD-10 with modifier valid',     () => assert.equal(isValidIcd10('M54.5G'), true));
 test('ICD-10 bare letter invalid',     () => assert.equal(isValidIcd10('M'), false));
+test('ICD-10 with trailing dash E11.7- valid', () => assert.equal(isValidIcd10('E11.7-'), true));
 
 test('Diagnosegruppe WS2 valid',       () => assert.equal(isValidDiagnosegruppe('WS2'), true));
 test('Diagnosegruppe EX2a valid',      () => assert.equal(isValidDiagnosegruppe('EX2a'), true));
@@ -356,6 +357,21 @@ test('nur zweites ICD-Feld gefuellt: kein V:01002 auf leerem icd10, Kode wird ge
   assert.ok(hasErr(r2, 'V:01014'), 'der einzige Kode wird geprueft');
 });
 
+test('E11.7- in icd10: kein V:01002 (Bindestrich ist nicht Teil des Kodes)', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.icd10 = 'E11.7-';
+  const r = preflight(i);
+  assert.equal(hasErr(r, 'V:01002'), false);
+});
+
+test('E11.7- in icd10Liste: kein V:01014', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.icd10 = 'M54.5';
+  i.prescriptions[0].verordnung.icd10Liste = ['M54.5', 'E11.7-'];
+  const r = preflight(i);
+  assert.equal(hasErr(r, 'V:01014'), false);
+});
+
 // ---------------------------------------------------------------------------
 // Schritt 1.9 (d) — Feldlängen. Alle Grenzen aus Anlage 1 TP5 V21,
 // Kap. 5.5.2 (SLGA.NAM) und 5.5.3.1 (SLLA.NAD).
@@ -520,6 +536,19 @@ test('icdTerminal true/leer/fehlend -> keine V:01016', () => {
   const b = clone(validInput); b.icdTerminal = {};
   assert.ok(!preflight(b).warnings.some(w => w.code === 'V:01016'));
   assert.ok(!preflight(clone(validInput)).warnings.some(w => w.code === 'V:01016'));
+});
+
+test('E11.7- mit icdTerminal {"E11.7": false} -> genau eine V:01016 Warnung', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.icd10 = 'E11.7-';
+  i.prescriptions[0].verordnung.icd10Liste = ['E11.7-'];
+  i.icdTerminal = { 'E11.7': false };
+  const r = preflight(i);
+  const w16 = r.warnings.filter(w => w.code === 'V:01016');
+  assert.equal(w16.length, 1);
+  assert.ok(w16[0].message.includes('"E11.7"'));
+  assert.ok(!w16[0].message.includes('E11.7-'));
+  assert.equal(hasErr(r, 'V:01002'), false);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);
