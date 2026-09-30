@@ -42,79 +42,10 @@ const T = {
     newpw_success: 'Passwort geändert. Sie werden weitergeleitet…',
     newpw_error: 'Fehler beim Ändern des Passworts. Bitte versuchen Sie es erneut.',
   },
-  en: {
-    title: 'Sign in',
-    sub: 'Welcome back. Enter your credentials.',
-    lbl_email: 'Email',
-    lbl_pass: 'Password',
-    submit: 'Sign in',
-    forgot: 'Forgot password?',
-    back: '← Back to home',
-    err_credentials: 'Invalid email or password.',
-    err_generic: 'Something went wrong. Please try again.',
-    loading: 'Loading…',
-    reg_text: 'No account yet?',
-    reg_btn: 'Get Started',
-    confirm_banner: 'Your email address has not been confirmed yet. Please click the link in the confirmation email.',
-    resend_btn: 'Resend confirmation email',
-    resend_sending: 'Sending…',
-    resend_success: 'Email sent. Please check your inbox (including spam).',
-    resend_error: 'Failed to send. Please try again.',
-    reset_sub: 'Enter your email address — we will send you a reset link.',
-    lbl_reset_email: 'Email',
-    reset_submit: 'Send link',
-    reset_back: '← Back to sign in',
-    reset_success: 'Email sent. Please check your inbox.',
-    reset_error: 'Failed to send. Please try again.',
-    newpw_title: 'New password',
-    newpw_sub: 'Choose a new password for your account.',
-    lbl_new_pw: 'New password',
-    lbl_new_pw2: 'Confirm password',
-    newpw_submit: 'Change password',
-    newpw_saving: 'Saving…',
-    newpw_mismatch: 'Passwords do not match.',
-    newpw_short: 'Password must be at least 8 characters.',
-    newpw_success: 'Password changed. Redirecting…',
-    newpw_error: 'Failed to change password. Please try again.',
-  },
-  tr: {
-    title: 'Giriş Yap',
-    sub: 'Tekrar hoş geldiniz. Bilgilerinizi girin.',
-    lbl_email: 'E-posta',
-    lbl_pass: 'Şifre',
-    submit: 'Giriş Yap',
-    forgot: 'Şifremi unuttum',
-    back: '← Anasayfaya dön',
-    err_credentials: 'E-posta veya şifre hatalı.',
-    err_generic: 'Bir hata oluştu. Lütfen tekrar deneyin.',
-    loading: 'Yükleniyor…',
-    reg_text: 'Henüz hesabın yok mu?',
-    reg_btn: 'Get Started',
-    confirm_banner: 'E-posta adresiniz henüz doğrulanmadı. Lütfen doğrulama e-postasındaki bağlantıya tıklayın.',
-    resend_btn: 'Doğrulama e-postasını yeniden gönder',
-    resend_sending: 'Gönderiliyor…',
-    resend_success: 'E-posta gönderildi. Gelen kutunuzu kontrol edin (spam dahil).',
-    resend_error: 'Gönderilemedi. Lütfen tekrar deneyin.',
-    reset_sub: 'E-posta adresinizi girin — size bir sıfırlama bağlantısı göndereceğiz.',
-    lbl_reset_email: 'E-posta',
-    reset_submit: 'Bağlantı gönder',
-    reset_back: '← Giriş sayfasına dön',
-    reset_success: 'E-posta gönderildi. Gelen kutunuzu kontrol edin.',
-    reset_error: 'Gönderilemedi. Lütfen tekrar deneyin.',
-    newpw_title: 'Yeni Şifre',
-    newpw_sub: 'Hesabınız için yeni bir şifre seçin.',
-    lbl_new_pw: 'Yeni şifre',
-    lbl_new_pw2: 'Şifreyi onayla',
-    newpw_submit: 'Şifreyi değiştir',
-    newpw_saving: 'Kaydediliyor…',
-    newpw_mismatch: 'Şifreler eşleşmiyor.',
-    newpw_short: 'Şifre en az 8 karakter olmalıdır.',
-    newpw_success: 'Şifre değiştirildi. Yönlendiriliyor…',
-    newpw_error: 'Şifre değiştirilemedi. Lütfen tekrar deneyin.',
-  }
 };
 
-let lang = localStorage.getItem('infinity_lang') || 'de';
+// Produkt ist nur Deutsch (Entscheidung 28.09.2026) — kein Sprachumschalter, kein infinity_lang.
+const lang = 'de';
 
 function applyLang() {
   const t = T[lang];
@@ -126,8 +57,7 @@ function applyLang() {
   document.getElementById('submitBtn').textContent = t.submit;
   document.getElementById('forgotLink').textContent = t.forgot;
   // In der Box entfernt (IST_KUTU, siehe unten) — ungeschützter Zugriff hier
-  // würfe sonst bei jedem weiteren applyLang()-Aufruf (Sprachumschalter) einen
-  // TypeError und bräche alles danach ab (O-68, onprem-Review 12.09.2026).
+  // würfe sonst einen TypeError und bräche alles danach ab (O-68, onprem-Review 12.09.2026).
   if (!IST_KUTU) {
     document.getElementById('backLink').textContent = t.back;
     document.getElementById('regText').textContent = t.reg_text;
@@ -147,9 +77,6 @@ function applyLang() {
   document.getElementById('lbl_new_pw').textContent = t.lbl_new_pw;
   document.getElementById('lbl_new_pw2').textContent = t.lbl_new_pw2;
   document.getElementById('newPwSubmitBtn').textContent = t.newpw_submit;
-  document.querySelectorAll('.lang-switch button').forEach(b => {
-    b.classList.toggle('active', b.dataset.lang === lang);
-  });
 }
 
 // ── View helpers ─────────────────────────────────────────────────────────────
@@ -181,14 +108,6 @@ function showPanelMsg(panelMsgId, text, type) {
 }
 
 let pendingResendEmail = '';
-
-document.querySelectorAll('.lang-switch button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    lang = btn.dataset.lang;
-    localStorage.setItem('infinity_lang', lang);
-    applyLang();
-  });
-});
 
 applyLang();
 

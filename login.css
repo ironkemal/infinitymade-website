@@ -79,34 +79,6 @@ body {
   margin-bottom: 24px;
 }
 
-.lang-switch {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 24px;
-  background: var(--bg-secondary);
-  padding: 4px;
-  border-radius: 8px;
-  width: fit-content;
-}
-
-.lang-switch button {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  border-radius: 6px;
-  font-family: inherit;
-  transition: all 0.2s;
-}
-
-.lang-switch button.active {
-  background: var(--bg-card);
-  color: var(--accent);
-}
-
 form { display: flex; flex-direction: column; gap: 6px; }
 
 label {
@@ -269,11 +241,6 @@ input:focus {
     justify-content: center;
     padding: 12px 20px;
     width: 100%;
-  }
-
-  .lang-switch button {
-    min-height: 44px;
-    padding: 8px 16px;
   }
 
   .register-block {

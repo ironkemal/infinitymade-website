@@ -57,31 +57,6 @@
       line-height: 1.5;
       margin-bottom: 2rem;
     }
-    .lang-switch {
-      display: inline-flex;
-      gap: 0.25rem;
-      padding: 0.25rem;
-      background: var(--bg-warm);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      margin-bottom: 2rem;
-    }
-    .lang-switch button {
-      border: none;
-      background: transparent;
-      padding: 0.35rem 0.85rem;
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      color: var(--ink-mute);
-      border-radius: 999px;
-      cursor: pointer;
-      transition: background 200ms ease, color 200ms ease;
-    }
-    .lang-switch button.active {
-      background: var(--ink);
-      color: var(--bg);
-    }
     form label {
       display: block;
       font-family: var(--mono);
@@ -220,10 +195,6 @@
         justify-content: center;
         width: 100%;
       }
-      .lang-switch button {
-        min-height: 44px;
-        padding: 0.6rem 1rem;
-      }
       input[type="text"],
       input[type="email"],
       input[type="password"],
@@ -342,12 +313,6 @@
       <h1 id="title">Anmelden</h1>
       <p class="sub" id="sub">Willkommen zurück. Geben Sie Ihre Zugangsdaten ein.</p>
 
-      <div class="lang-switch">
-        <button data-lang="de" class="active">DE</button>
-        <button data-lang="en">EN</button>
-        <button data-lang="tr">TR</button>
-      </div>
-
       <form id="loginForm">
         <label id="lbl_email">E-Mail</label>
         <input type="email" id="email" required autocomplete="email" />
@@ -433,7 +398,7 @@
     <p class="back-home" id="backHome"><a href="https://praxura.de" id="backLink">← Zurück zur Startseite</a></p>
   </main>
 
-  <script type="module" src="login.js?v=20260609"></script>
+  <script type="module" src="login.js?v=20261001t"></script>
   <script>
     document.querySelectorAll('.pw-toggle').forEach(function(btn) {
       btn.addEventListener('click', function() {
