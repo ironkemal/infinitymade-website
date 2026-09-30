@@ -64,3 +64,23 @@ export function fahrtEndAbschluss({ closeBkActionPanel, showToast, switchPanel }
   showToast('🏁 Fahrt abgeschlossen — im Fahrtenbuch eingetragen.');
   if (k) { if (k.onFertig) k.onFertig(); } else switchPanel('fahrtenbuch');
 }
+
+/**
+ * Patient (leads.id) zu einem Hausbesuch-Termin, damit schon die ERSTE
+ * `fahrten`-Zeile (beim Start der Fahrt) `lead_id` trägt — bisher wurde sie nur
+ * über die Telefonnummer gesucht und blieb ohne Nummer leer, bis erst
+ * „Beenden" sie füllte (canli-test 30.09.2026). Reihenfolge wie beim Beenden:
+ * `bookings.lead_id` (direkt), dann Telefon-Rückfall. Wirft nie, Ergebnis kann null sein.
+ * @param {object} sb  Supabase-Client
+ * @param {{lead_id?:?string, owner_id?:string, customer_phone?:?string}} b  Buchung
+ * @returns {Promise<string|null>}
+ */
+export async function leadIdFuerFahrt(sb, b) {
+  if (b?.lead_id) return b.lead_id;
+  if (!b?.customer_phone || !sb) return null;
+  try {
+    const { data } = await sb.from('leads').select('id')
+      .eq('owner_id', b.owner_id).eq('phone', b.customer_phone).maybeSingle();
+    return data?.id || null;
+  } catch { return null; }
+}

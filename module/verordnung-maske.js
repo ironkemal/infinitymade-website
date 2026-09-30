@@ -41,11 +41,12 @@
  */
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20261001a';
+import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20261001b';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260930c';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
-import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261001a';
+import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261001b';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
+import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261001b';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -450,7 +451,11 @@ export function fuelleMuster13(rx, opt = {}) {
     }
   }
 
-  if (alsVorlage) { tazeleIkHinweis(document.getElementById('rzPatKasseIk')); return; }
+  if (alsVorlage) {
+    tazeleIkHinweis(document.getElementById('rzPatKasseIk'));
+    aktualisiereArztSperreBanner();
+    return;
+  }
 
   // Nur beim Bearbeiten: was zu DIESEM Papier gehört.
   setz('rzPatientId', rx.patient_id || '');
@@ -468,6 +473,7 @@ export function fuelleMuster13(rx, opt = {}) {
   if (rx.krankenkasse_ik) setz('rzPatKasseIk', rx.krankenkasse_ik);
   if (rx.versichertennummer) setz('rzPatVersNr', rx.versichertennummer);
   tazeleIkHinweis(document.getElementById('rzPatKasseIk'));
+  aktualisiereArztSperreBanner();
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

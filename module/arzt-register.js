@@ -153,7 +153,7 @@ export function wireArztFeld(f) {
   const uebernehmen = (a) => {
     if (!a) return;
     if (nameEl && nameEl.value !== a.arzt_name) nameEl.value = a.arzt_name || nameEl.value;
-    if (lanrEl) lanrEl.value = a.lanr || '';
+    if (lanrEl) { lanrEl.value = a.lanr || ''; lanrEl.dispatchEvent(new Event('input', { bubbles: true })); }   // Programmatisch: Live-Hinweise (Behandlungssperre-Banner) müssen nachziehen
     if (bsnrEl) bsnrEl.value = a.bsnr || '';
     if (telEl)  telEl.value  = a.telefon || a.fax || a.lanr || '';
     if (idEl)   idEl.value   = a.id || '';

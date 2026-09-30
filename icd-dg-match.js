@@ -127,6 +127,42 @@ export function matchIcdToDg(codes, rule) {
 }
 
 /**
+ * Liefert die Kinder eines Kodes, die nach `rule` (icd_accept-Regexes,
+ * icd_exclude beachten, gleiche matchIcdToDg-Logik) als 'ok' gelten.
+ *
+ * Kinder-Erzeugung:
+ *  - 3-stellig ("E11"): "E11.0".."E11.9" und "E11.00".."E11.99"
+ *  - 4-stellig ("E11.7"): "E11.70".."E11.79"
+ *  - 5-stellig ("E11.74"): keine Kinder ([])
+ *  - Kodes mit Sonderzeichen (†*!) am Ende: keine Kinder ([])
+ *
+ * Sortiert, eindeutig.
+ *
+ * @param {string} code - ICD-Kode (z. B. "E11.7" oder "E11")
+ * @param {{ icd_accept: Array, icd_exclude?: Array, icd_auto_select?: Array, icd_accept_unsicher?: Array, icd_enforcement?: string }} rule
+ * @returns {string[]}
+ */
+export function passendeUnterkodes(code, rule) {
+  if (!code || !rule || !rule.icd_accept || !rule.icd_accept.length) return [];
+  const raw = normalizeIcd(code);
+  if (/[†*!]$/.test(raw)) return [];
+  const norm = raw.replace(/\.+$/, '');
+
+  const kinder = [];
+  if (/^[A-Z]\d{2}$/.test(norm)) {
+    for (let i = 0; i <= 9; i++) kinder.push(`${norm}.${i}`);
+    for (let i = 0; i <= 99; i++) kinder.push(`${norm}.${String(i).padStart(2, '0')}`);
+  } else if (/^[A-Z]\d{2}\.\d$/.test(norm)) {
+    for (let i = 0; i <= 9; i++) kinder.push(`${norm}${i}`);
+  } else {
+    return [];
+  }
+
+  const treffer = kinder.filter(kind => matchIcdToDg([kind], rule).status === 'ok');
+  return Array.from(new Set(treffer)).sort();
+}
+
+/**
  * Gibt alle Diagnosegruppen-Kuerzel zurueck, fuer die der Status 'ok' ist.
  */
 export function dgsAcceptingIcd(codes, rulesByDg) {

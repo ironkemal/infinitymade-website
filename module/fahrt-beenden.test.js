@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml, fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss } from './fahrt-beenden.js';
+import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml, fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './fahrt-beenden.js';
 
 test('Knopf nur mit Buchung und offener Fahrt', () => {
   assert.equal(zeigeFahrtBeenden({ bookingId: 'b1', fahrt_status: 'fahrt_return_pending' }), true);
@@ -44,4 +44,18 @@ test('erneutes Öffnen ohne Kontext löscht einen alten Kontext', () => {
   const cache = { id: 'c' };
   assert.equal(fahrtEndOeffnen(undefined, cache), cache);
   assert.equal(fahrtEndAktuell(cache), cache);
+});
+
+test('leadIdFuerFahrt: booking.lead_id zuerst, ohne Abfrage', async () => {
+  const sb = { from() { throw new Error('darf nicht abfragen'); } };
+  assert.equal(await leadIdFuerFahrt(sb, { lead_id: 'L1', customer_phone: '123' }), 'L1');
+});
+
+test('leadIdFuerFahrt: Telefon-Rückfall, ohne Treffer/Nummer/Fehler null', async () => {
+  const mk = (res, boom) => ({ from() { const q = { select: () => q, eq: () => q, maybeSingle: async () => { if (boom) throw new Error('x'); return res; } }; return q; } });
+  assert.equal(await leadIdFuerFahrt(mk({ data: { id: 'L2' } }), { owner_id: 'o', customer_phone: '123' }), 'L2');
+  assert.equal(await leadIdFuerFahrt(mk({ data: null }), { owner_id: 'o', customer_phone: '123' }), null);
+  assert.equal(await leadIdFuerFahrt(mk({ data: { id: 'L2' } }), { owner_id: 'o' }), null);
+  assert.equal(await leadIdFuerFahrt(mk(null, true), { owner_id: 'o', customer_phone: '123' }), null);
+  assert.equal(await leadIdFuerFahrt(null, null), null);
 });

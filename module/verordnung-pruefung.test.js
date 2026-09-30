@@ -453,4 +453,68 @@ test('ICD mit nachgestelltem Strich zählt als Kode (kein „ICD-10-Kode fehlt")
   assert.ok(!codes(r).includes('PFLICHT_ICD'));
   assert.ok(!codes(r).includes('ICD_FEHLT'));
   assert.ok(r.geprueft.includes('ICD ⇄ Diagnosegruppe'), 'der Abgleich darf nicht stumm ausfallen');
+  assert.ok(codes(r).includes('ICD_NICHT_ENDSTAENDIG'));
 });
+
+// ── Aufgabe W1: Nicht-endständiger ICD -> gelber Hinweis statt roter Mismatch ─
+
+test('E11.7 + DF: nicht-endständiger ICD meldet ICD_NICHT_ENDSTAENDIG als Warnung mit passenden Beispielen', () => {
+  const r = pruefeVerordnung(saubereVo({ icd: 'E11.7' }), PODO, HEUTE);
+  const b = r.befunde.find(x => x.code === 'ICD_NICHT_ENDSTAENDIG');
+  assert.ok(b, 'Befund ICD_NICHT_ENDSTAENDIG vorhanden');
+  assert.equal(b.schwere, SCHWERE.warnung);
+  assert.equal(b.text, 'E11.7 ist nicht endständig — für DF passen z. B. E11.74, E11.75');
+  assert.ok(!codes(r).includes('ICD_DG_MISMATCH'), 'kein ICD_DG_MISMATCH bei vorhandenen Unterkodes');
+  assert.equal(r.ok, true, 'Warnung blockiert nicht');
+});
+
+test('E11.7 bei hard_before_dta: trotzdem Warnung und kein Blocker', () => {
+  const HARD_PODO_ZEILEN = [
+    {
+      code: 'DF', label: 'Diabetisches Fußsyndrom', hoechstmenge: null,
+      icd_accept: [{ re: '^E1[0-4]\\.7[45]$' }, { re: '^E1[0-4]\\.4[01]$' }],
+      icd_exclude: [], icd_accept_unsicher: [], icd_enforcement: 'hard_before_dta',
+    },
+  ];
+  const HARD_PODO = regelnFuerBereich('podologie', HARD_PODO_ZEILEN);
+  const r = pruefeVerordnung(saubereVo({ icd: 'E11.7' }), HARD_PODO, HEUTE);
+  const b = r.befunde.find(x => x.code === 'ICD_NICHT_ENDSTAENDIG');
+  assert.ok(b);
+  assert.equal(b.schwere, SCHWERE.warnung, 'nie blocker, auch bei hard_before_dta');
+  assert.equal(r.ok, true, 'Verordnung ist ok (kein Blocker)');
+  assert.ok(!codes(r).includes('ICD_DG_MISMATCH'));
+});
+
+test('L60.0 in DF: echter Mismatch auf endständigem Kode bleibt unverändert', () => {
+  const r = pruefeVerordnung(saubereVo({ icd: 'L60.0' }), PODO, HEUTE);
+  const b = r.befunde.find(x => x.code === 'ICD_DG_MISMATCH');
+  assert.ok(b);
+  assert.equal(b.text, 'L60.0 passt nicht zur Diagnosegruppe DF.');
+  assert.ok(!codes(r).includes('ICD_NICHT_ENDSTAENDIG'));
+});
+
+test('E11 (3-stellig) in DF: nennt passende 4- und 5-stellige Kinder (max 4)', () => {
+  const r = pruefeVerordnung(saubereVo({ icd: 'E11' }), PODO, HEUTE);
+  const b = r.befunde.find(x => x.code === 'ICD_NICHT_ENDSTAENDIG');
+  assert.ok(b);
+  assert.equal(b.schwere, SCHWERE.warnung);
+  assert.equal(b.text, 'E11 ist nicht endständig — für DF passen z. B. E11.40, E11.41, E11.74, E11.75');
+});
+
+test('5-stelliger nicht-passender Kode hat keine Kinder -> bleibt ICD_DG_MISMATCH', () => {
+  const r = pruefeVerordnung(saubereVo({ icd: 'M20.10' }), PODO, HEUTE);
+  assert.ok(codes(r).includes('ICD_DG_MISMATCH'));
+  assert.ok(!codes(r).includes('ICD_NICHT_ENDSTAENDIG'));
+});
+
+test('gemischte Liste (E11.7 + L60.0): E11.7 warnt als nicht-endständig, L60.0 meldet Mismatch', () => {
+  const r = pruefeVerordnung(saubereVo({ icd: ['E11.7', 'L60.0'] }), PODO, HEUTE);
+  const nichtEnd = r.befunde.find(x => x.code === 'ICD_NICHT_ENDSTAENDIG');
+  const mismatch = r.befunde.find(x => x.code === 'ICD_DG_MISMATCH');
+  assert.ok(nichtEnd, 'ICD_NICHT_ENDSTAENDIG vorhanden');
+  assert.equal(nichtEnd.schwere, SCHWERE.warnung);
+  assert.equal(nichtEnd.text, 'E11.7 ist nicht endständig — für DF passen z. B. E11.74, E11.75');
+  assert.ok(mismatch, 'ICD_DG_MISMATCH vorhanden');
+  assert.equal(mismatch.text, 'L60.0 passt nicht zur Diagnosegruppe DF.');
+});
+

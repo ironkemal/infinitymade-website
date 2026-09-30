@@ -40,7 +40,7 @@
  *   (EU-MDR: keine klinische Bewertung).
  */
 
-import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001a';
+import { parseIcdList, matchIcdToDg, passendeUnterkodes } from '../icd-dg-match.js?v=20261001b';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260929';
 import { dgWurzel, bereichSchluessel } from './verordnung-regeln.js?v=20260903';
 
@@ -210,11 +210,37 @@ export function pruefeVerordnung(vo, regelsatz, opt = {}) {
     geprueft.push('ICD ⇄ Diagnosegruppe');
     const treffer = matchIcdToDg(icdCodes, regel);
     if (treffer.status === 'mismatch') {
-      const hart = regel.icd_enforcement === 'hard_before_dta';
-      let text = `${icdCodes.join(', ')} passt nicht zur Diagnosegruppe ${dg}.`;
-      if (treffer.hints.length) text += ` ${treffer.hints.join('; ')}`;
-      if (hart) text += ' Die Kasse setzt diese Kombination ab.';
-      melde(hart ? SCHWERE.blocker : SCHWERE.warnung, 'ICD_DG_MISMATCH', text, 'icd', profil?.quelle);
+      const verbleibend = icdCodes.filter(c => !treffer.excluded.includes(c));
+      const nichtEndstaendig = [];
+      const echteMismatches = [];
+
+      for (const code of verbleibend) {
+        const kinder = passendeUnterkodes(code, regel);
+        if (kinder.length > 0) {
+          nichtEndstaendig.push({ code, kinder });
+        } else {
+          echteMismatches.push(code);
+        }
+      }
+
+      if (nichtEndstaendig.length > 0) {
+        const saetze = nichtEndstaendig.map(
+          item => `${item.code} ist nicht endständig — für ${dg} passen z. B. ${item.kinder.slice(0, 4).join(', ')}`
+        );
+        melde(SCHWERE.warnung, 'ICD_NICHT_ENDSTAENDIG', saetze.join(' '), 'icd', profil?.quelle);
+      }
+
+      const fehlerKodes = (verbleibend.length === 0 && treffer.excluded.length > 0)
+        ? icdCodes
+        : echteMismatches;
+
+      if (fehlerKodes.length > 0) {
+        const hart = regel.icd_enforcement === 'hard_before_dta';
+        let text = `${fehlerKodes.join(', ')} passt nicht zur Diagnosegruppe ${dg}.`;
+        if (treffer.hints.length) text += ` ${treffer.hints.join('; ')}`;
+        if (hart) text += ' Die Kasse setzt diese Kombination ab.';
+        melde(hart ? SCHWERE.blocker : SCHWERE.warnung, 'ICD_DG_MISMATCH', text, 'icd', profil?.quelle);
+      }
     } else if (treffer.status === 'unsicher') {
       melde(SCHWERE.warnung, 'ICD_DG_UNSICHER',
         `${treffer.matched.join(', ')} ist für ${dg} nicht eindeutig. ${treffer.hints.join('; ')}`.trim(),

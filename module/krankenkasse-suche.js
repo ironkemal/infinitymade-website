@@ -283,7 +283,7 @@ export function ikAnzeige(k) {
 // Texte des Hinweises unter dem IK-Feld. Bewusst hier und nicht im Wörterbuch
 // von dashboard.js: das darf nicht wachsen (CLAUDE.md, Konsey 2026-08-13). Die
 // Sprache kommt aus <html lang>, das dashboard.js beim Wechsel setzt.
-const HINWEISE = {
+export const HINWEISE = {
   de: {
     // Karten-IK (30.09.2026, gkv-302): nur Deutsch — das Produkt ist deutschsprachig.
     ikEintragen: 'IK von der Versichertenkarte eintragen (nicht die Kassen-IK aus der Suche).',
@@ -342,33 +342,176 @@ export async function kartenIkStatus(sb, roh) {
   const kt = aufgeloesteIk(zeile);
   return {
     status: 'ok', kartenIk: ik, kostentraegerIk: kt,
+    kassenName: zeile.name, kurzName: zeile.kurzname,
     text: HINWEISE.de.kostentraeger(ik, zeile.kurzname || zeile.name, kt),
   };
 }
 
+const FUELLWOERTER = new Set(['gesundheit', 'krankenkasse', 'die', 'der', 'und', 'kk', 'gmbh', 'ev']);
+
+function kassenToken(str) {
+  if (!str) return [];
+  const norm = normalisiere(str);
+  if (!norm) return [];
+  return norm.split(' ')
+    .filter(t => t.length >= 2 && !FUELLWOERTER.has(t));
+}
+
+function tokensPassen(tokA, tokB) {
+  if (!tokA.length || !tokB.length) return false;
+  const setA = new Set(tokA);
+  const setB = new Set(tokB);
+  const [kuerzer, laenger] = setA.size <= setB.size ? [setA, setB] : [setB, setA];
+  if (kuerzer.size === 0) return false;
+  for (const t of kuerzer) {
+    if (!laenger.has(t)) return false;
+  }
+  return true;
+}
+
+/**
+ * Prüft, ob der im Kassenfeld eingetragene Name zur aufgelösten Karten-IK passt.
+ * Reine Funktion. Wirft nie.
+ * @param {object} p
+ * @param {?string} p.eingetragen
+ * @param {?string} p.kassenName
+ * @param {?string} p.kurzName
+ * @param {?string} p.kostentraegerIk
+ * @param {Array}  [p.kassenListe]
+ * @returns {{ passt: boolean|null, text: string }}
+ */
+export function kasseZuKartenIk({ eingetragen, kassenName, kurzName, kostentraegerIk, kassenListe }) {
+  if (!String(eingetragen ?? '').trim()) {
+    return { passt: null, text: '' };
+  }
+
+  const normEingetragen = normalisiere(eingetragen);
+
+  // (a) Kassenliste: Eintrag mit normalisiertem Namen == normalisiere(eingetragen) und ik === kostentraegerIk
+  if (Array.isArray(kassenListe) && kostentraegerIk) {
+    const treffer = kassenListe.find(k => normalisiere(k.name) === normEingetragen || (k.kurz && normalisiere(k.kurz) === normEingetragen));
+    if (treffer && treffer.ik === kostentraegerIk) {
+      return { passt: true, text: '' };
+    }
+  }
+
+  // (b) Namensvergleich: normalisierte Token (Fuellwoerter und < 2 Zeichen weglassen)
+  const tokEingetragen = kassenToken(eingetragen);
+  if (tokEingetragen.length > 0) {
+    if (kassenName && tokensPassen(tokEingetragen, kassenToken(kassenName))) {
+      return { passt: true, text: '' };
+    }
+    if (kurzName && tokensPassen(tokEingetragen, kassenToken(kurzName))) {
+      return { passt: true, text: '' };
+    }
+  }
+
+  const kasseBeschriftung = kurzName || kassenName || '';
+  const text = `Karten-IK gehört zu ${kasseBeschriftung}, eingetragen ist ${eingetragen}.`;
+  return { passt: false, text };
+}
+
 function ikHinweisElement(ikEl) {
   let el = document.getElementById(ikEl.id + 'Hinweis');
-  if (!el) {
+  if (!el && typeof document !== 'undefined') {
     el = document.createElement('div');
     el.id = ikEl.id + 'Hinweis';
     el.setAttribute('role', 'status');
     el.style.cssText = 'font-size:11px;color:var(--text-muted);margin-top:2px;';
-    ikEl.insertAdjacentElement('afterend', el);
+    ikEl.insertAdjacentElement?.('afterend', el);
+  }
+  return el;
+}
+
+function ikAbweichungElement(ikEl) {
+  let el = document.getElementById(ikEl.id + 'Abweichung');
+  if (!el && typeof document !== 'undefined') {
+    el = document.createElement('div');
+    el.id = ikEl.id + 'Abweichung';
+    el.setAttribute('role', 'status');
+    el.style.cssText = 'font-size:11px;color:var(--warning-text);margin-top:2px;';
+    const hinweis = ikHinweisElement(ikEl);
+    if (hinweis?.insertAdjacentElement) {
+      hinweis.insertAdjacentElement('afterend', el);
+    } else {
+      ikEl.insertAdjacentElement?.('afterend', el);
+    }
   }
   return el;
 }
 
 function zeigeIkHinweis(ikEl, k, vorher) {
   if (!ikEl) return;
-  ikHinweisElement(ikEl).textContent = hinweisZeile(k, vorher, document.documentElement.lang || 'de');
+  const el = ikHinweisElement(ikEl);
+  if (el) el.textContent = hinweisZeile(k, vorher, document.documentElement?.lang || 'de');
 }
 
 function loescheIkHinweis(ikEl) {
+  if (!ikEl) return;
   const el = document.getElementById(ikEl.id + 'Hinweis');
   if (el) el.textContent = '';
 }
 
+function loescheIkAbweichung(ikEl) {
+  if (!ikEl) return;
+  const el = document.getElementById(ikEl.id + 'Abweichung');
+  if (el) el.textContent = '';
+}
+
 let _hinweisSb = null;
+let _hinweisOwnerId = null;
+
+async function holeKassenListe(sb, ownerId) {
+  try {
+    const oid = typeof ownerId === 'function' ? ownerId() : ownerId;
+    if (!sb || !oid) return [];
+    const r = await ladeKassen(sb, oid);
+    return r?.kassen || [];
+  } catch {
+    return [];
+  }
+}
+
+async function aktualisiereAbweichung(ikEl, inputEl, sb, ownerId, bekanntesStatus = null) {
+  if (!ikEl) return;
+  const wert = ikEl.value;
+  const kassenWert = inputEl ? inputEl.value : '';
+
+  if (!String(wert ?? '').trim()) {
+    loescheIkAbweichung(ikEl);
+    return;
+  }
+
+  try {
+    const r = bekanntesStatus || (await kartenIkStatus(sb, wert));
+    if (ikEl.value !== wert || (inputEl && inputEl.value !== kassenWert)) return;
+
+    if (r.status !== 'ok') {
+      loescheIkAbweichung(ikEl);
+      return;
+    }
+
+    const kassenListe = await holeKassenListe(sb, ownerId);
+    if (ikEl.value !== wert || (inputEl && inputEl.value !== kassenWert)) return;
+
+    const abw = kasseZuKartenIk({
+      eingetragen: kassenWert,
+      kassenName: r.kassenName,
+      kurzName: r.kurzName,
+      kostentraegerIk: r.kostentraegerIk,
+      kassenListe,
+    });
+
+    if (abw.passt === false && abw.text) {
+      const el = ikAbweichungElement(ikEl);
+      if (el) el.textContent = abw.text;
+    } else {
+      loescheIkAbweichung(ikEl);
+    }
+  } catch {
+    loescheIkAbweichung(ikEl);
+  }
+}
 
 /**
  * Hinweis unter dem IK-Feld neu berechnen, nachdem ein Programm den Wert
@@ -379,12 +522,19 @@ let _hinweisSb = null;
 export async function tazeleIkHinweis(ikEl) {
   if (!ikEl) return;
   loescheIkHinweis(ikEl);
+  loescheIkAbweichung(ikEl);
   const wert = ikEl.value;
   if (!String(wert ?? '').trim() || !_hinweisSb) return;
   try {
     const r = await kartenIkStatus(_hinweisSb, wert);
     if (ikEl.value !== wert) return;
-    if (r.text) ikHinweisElement(ikEl).textContent = r.text;
+    if (r.text) {
+      const el = ikHinweisElement(ikEl);
+      if (el) el.textContent = r.text;
+    }
+    const kassenId = ikEl.id ? ikEl.id.replace(/Ik$/, '') : null;
+    const inputEl = kassenId ? document.getElementById(kassenId) : null;
+    await aktualisiereAbweichung(ikEl, inputEl, _hinweisSb, _hinweisOwnerId, r);
   } catch { /* Hinweis ist Zugabe */ }
 }
 
@@ -408,14 +558,15 @@ export async function tazeleIkHinweis(ikEl) {
  */
 export function attachKrankenkasseSuche(inputEl, cfg = {}) {
   // Idempotent: die eingebettete Maske ruft das bei jedem Öffnen (sonst stapeln sich die Listener).
-  if (!inputEl || inputEl.dataset.katalogWired === '1') return;
+  if (!inputEl || inputEl.dataset?.katalogWired === '1') return;
   const { sb, ownerId, onSelect = null } = cfg;
   if (sb) _hinweisSb = sb;
+  if (ownerId) _hinweisOwnerId = ownerId;
   const ikEl = inputEl.id ? document.getElementById(inputEl.id + 'Ik') : null;
 
   // Das alte <datalist> würde sonst als zweites Menü danebenstehen.
-  inputEl.removeAttribute('list');
-  inputEl.setAttribute('autocomplete', 'off');
+  inputEl.removeAttribute?.('list');
+  inputEl.setAttribute?.('autocomplete', 'off');
 
   attachAutocomplete(inputEl, {
     minChars: 0,          // leeres Feld zeigt die Kassen der Praxis — der Normalfall
@@ -447,6 +598,7 @@ export function attachKrankenkasseSuche(inputEl, cfg = {}) {
       const vorher = ikEl ? ikEl.value : '';
       if (ikEl && k.quelle === 'kostentraeger' && k.kartenIk && !ikEl.value) { ikEl.value = k.kartenIk; }
       zeigeIkHinweis(ikEl, k, vorher);
+      if (ikEl) aktualisiereAbweichung(ikEl, inputEl, sb, ownerId);
       if (onSelect) onSelect(k);
     },
   });
@@ -455,17 +607,43 @@ export function attachKrankenkasseSuche(inputEl, cfg = {}) {
   // ungültig. Die Auswahl selbst löst ebenfalls ein input-Ereignis aus — der
   // Hinweis wird danach in onSelect gesetzt, nicht davor gelöscht.
   if (ikEl) {
-    const weg = () => loescheIkHinweis(ikEl);
-    inputEl.addEventListener('input', weg);
-    ikEl.addEventListener('input', weg);
+    const weg = () => {
+      loescheIkHinweis(ikEl);
+      loescheIkAbweichung(ikEl);
+    };
+    inputEl.addEventListener?.('input', weg);   // neu berechnet bei change/blur/Auswahl (keine Abfrage je Tastendruck)
+    ikEl.addEventListener?.('input', async () => {
+      weg();
+      const wert = ikEl.value;
+      if (kartenIkNormalisieren(wert)) {
+        try {
+          const r = await kartenIkStatus(sb, wert);
+          if (ikEl.value !== wert) return;
+          if (r.text) {
+            const el = ikHinweisElement(ikEl);
+            if (el) el.textContent = r.text;
+          }
+          await aktualisiereAbweichung(ikEl, inputEl, sb, ownerId, r);
+        } catch {}
+      }
+    });
     // Nach dem Tippen der Karten-IK: Format prüfen und den abgeleiteten
     // Kostenträger zeigen. Veraltete Antworten (Feld inzwischen geändert) fallen weg.
-    ikEl.addEventListener('change', async () => {
+    ikEl.addEventListener?.('change', async () => {
       const wert = ikEl.value;
       const r = await kartenIkStatus(sb, wert);
       if (ikEl.value !== wert) return;
-      ikHinweisElement(ikEl).textContent = r.text;
+      const el = ikHinweisElement(ikEl);
+      if (el) el.textContent = r.text;
+      await aktualisiereAbweichung(ikEl, inputEl, sb, ownerId, r);
     });
+    const kassePruefen = () => {
+      if (kartenIkNormalisieren(ikEl.value)) {
+        aktualisiereAbweichung(ikEl, inputEl, sb, ownerId);
+      }
+    };
+    inputEl.addEventListener?.('change', kassePruefen);
+    inputEl.addEventListener?.('blur', kassePruefen);
   }
 }
 

@@ -242,3 +242,43 @@ test('Strich am Kodeende fällt weg (normalizeIcd/parseIcdList/icdKodesAusFeld/i
   const z = _zwei('E11.7- L60.0', '');
   assert.equal(z.feld1, 'E11.7'); assert.equal(z.feld2, 'L60.0');
 });
+
+// ── Aufgabe W1: Formular-Warnzeile bei nicht-endständigem ICD ───────────────
+
+test('Formular-Warnzeile: DF von Hand gewählt + E11.7 → weiche Warnung nicht endständig ohne Kasse setzt ab', async () => {
+  const m = await maske({ dg: 'DF' });
+  await m.eingabe('rzIcd', 'E11.7');
+  assert.equal(m.f.rzDg.value, 'DF');
+  assert.equal(m.hinweis(), 'E11.7 ist nicht endständig — für DF passen z. B. E11.74, E11.75');
+  assert.equal(m.f.rzIcdDgWarning.style.fontWeight, '', 'isHard = false (nicht fett)');
+});
+
+test('Formular-Warnzeile: DF + E11.7- (mit Bindestrich) → gleiche weiche Warnung', async () => {
+  const m = await maske({ dg: 'DF' });
+  await m.eingabe('rzIcd', 'E11.7-');
+  assert.equal(m.hinweis(), 'E11.7 ist nicht endständig — für DF passen z. B. E11.74, E11.75');
+  assert.equal(m.f.rzIcdDgWarning.style.fontWeight, '');
+});
+
+test('Formular-Warnzeile: DF + L60.0 (echter Mismatch) → bleibt roter/harter Standardtext', async () => {
+  const m = await maske({ dg: 'DF' });
+  await m.eingabe('rzIcd', 'L60.0');
+  assert.match(m.hinweis(), /^Der ICD benennt nicht .*: L60\.0 \(DF\)/);
+});
+
+test('Formular-Warnzeile: UI1 (harte Regel) + L60 (nicht endständig) → weiche Warnung, nie Blocker', async () => {
+  const m = await maske({ dg: 'UI1' });
+  await m.eingabe('rzIcd', 'L60');
+  assert.equal(m.hinweis(), 'L60 ist nicht endständig — für UI1 passen z. B. L60.0');
+  assert.equal(m.f.rzIcdDgWarning.style.fontWeight, '', 'trotz hard_before_dta weich (isHard=false)');
+});
+
+test('Formular-Warnzeile: gemischt (E11.7 in rzIcd, L60.0 in rzIcd2 bei DF) → zeigt beide Teile', async () => {
+  const m = await maske({ dg: 'DF' });
+  await m.eingabe('rzIcd', 'E11.7');
+  await m.eingabe('rzIcd2', 'L60.0');
+  const h = m.hinweis();
+  assert.match(h, /E11\.7 ist nicht endständig — für DF passen z\. B\. E11\.74, E11\.75/);
+  assert.match(h, /Der ICD benennt nicht .*: L60\.0 \(DF\)/);
+});
+

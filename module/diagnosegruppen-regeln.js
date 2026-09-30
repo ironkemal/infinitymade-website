@@ -25,7 +25,7 @@
  * verhält sich bei leerem Wert anders.
  */
 
-import { parseIcdList, matchIcdToDg, normDgCode } from '../icd-dg-match.js?v=20261001a';
+import { parseIcdList, matchIcdToDg, normDgCode } from '../icd-dg-match.js?v=20261001b';
 import { bereichSchluessel } from './verordnung-regeln.js?v=20260918';
 
 /** Wortgleiche Kopie aus dashboard.js — reiner Umzug, kein anderes Verhalten. */

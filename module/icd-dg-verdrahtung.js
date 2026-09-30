@@ -30,8 +30,8 @@
  *    (interdisziplinaer) regellos, die Automatik dort stumm.
  */
 
-import { parseIcdList, matchIcdToDg, soleIcdForDg, dgVorschlag, normDgCode } from '../icd-dg-match.js?v=20261001a';
-import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './diagnosegruppen-regeln.js?v=20261001a';
+import { parseIcdList, matchIcdToDg, soleIcdForDg, dgVorschlag, normDgCode, passendeUnterkodes } from '../icd-dg-match.js?v=20261001b';
+import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './diagnosegruppen-regeln.js?v=20261001b';
 
 /**
  * Kodes aus einem ICD-Feld, auch leerzeichengetrennt („E11.74 L60.0").
@@ -214,14 +214,42 @@ export function verdrahteIcdDg({ icdId, icd2Id = null, dgId, warnId = null, bere
     if (!rule || !rule.icd_accept || !rule.icd_accept.length) { zeige(warnEl, ''); return; }
     const result = matchIcdToDg(codes, rule);
     if (result.status !== 'mismatch') { zeige(warnEl, ''); return; }
-    const isHard = rule.icd_enforcement === 'hard_before_dta';
-    let msg = `${t('pod_icd_mismatch')}: ${codes.join(', ')} (${dgRoot})`;
-    if (result.hints.length > 0) msg += ` — ${result.hints.join('; ')}`;
-    // Welche Gruppe stattdessen passt — stand bis 26.09.2026 in einer zweiten,
-    // roten Zeile von module/verordnung-podo.js („Zulässig: …").
-    if (v.kandidaten.length) msg += ` · ${t('pod_dg_kandidaten')} ${v.kandidaten.join(', ')}`;
-    if (isHard) msg += ' ⚠ ' + t('pod_icd_hard');
-    zeige(warnEl, msg, isHard);
+
+    const verbleibend = codes.filter(c => !result.excluded.includes(c));
+    const nichtEndstaendig = [];
+    const echteMismatches = [];
+
+    for (const code of verbleibend) {
+      const kinder = passendeUnterkodes(code, rule);
+      if (kinder.length > 0) {
+        nichtEndstaendig.push({ code, kinder });
+      } else {
+        echteMismatches.push(code);
+      }
+    }
+
+    const teile = [];
+    if (nichtEndstaendig.length > 0) {
+      const saetze = nichtEndstaendig.map(
+        item => `${item.code} ist nicht endständig — für ${dgRoot} passen z. B. ${item.kinder.slice(0, 4).join(', ')}`
+      );
+      teile.push(saetze.join(' '));
+    }
+
+    const fehlerKodes = (verbleibend.length === 0 && result.excluded.length > 0)
+      ? codes
+      : echteMismatches;
+
+    const isHard = fehlerKodes.length > 0 && rule.icd_enforcement === 'hard_before_dta';
+    if (fehlerKodes.length > 0) {
+      let mismatchMsg = `${t('pod_icd_mismatch')}: ${fehlerKodes.join(', ')} (${dgRoot})`;
+      if (result.hints.length > 0) mismatchMsg += ` — ${result.hints.join('; ')}`;
+      if (v.kandidaten.length) mismatchMsg += ` · ${t('pod_dg_kandidaten')} ${v.kandidaten.join(', ')}`;
+      if (isHard) mismatchMsg += ' ⚠ ' + t('pod_icd_hard');
+      teile.push(mismatchMsg);
+    }
+
+    zeige(warnEl, teile.join(' · '), isHard);
   }
 
   // Übernimmt der Anwender einen Wert (Katalogauswahl oder Feld verlassen, beides

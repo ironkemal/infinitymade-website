@@ -116,6 +116,22 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 01.10.2026 · S3-Reste — ICD nicht endständig, Karten-IK-Prüfung, Sperre-Banner, Fahrt-lead_id
+- `passendeUnterkodes(code, rule)` (`icd-dg-match.js`). Niye: „E11.7 passt nicht zur Diagnosegruppe DF" war mechanisch wahr,
+  aber irreführend (E11.74/E11.75 passen). Kinder eines nicht endständigen Kodes, die die DG-Regel annimmt → gelbe Warnung
+  `ICD_NICHT_ENDSTAENDIG` (gkv-302: V:01016, kein Blocker) statt rotem Mismatch. Nerede: `verordnung-pruefung.js` (Liste/Knopf) +
+  `icd-dg-verdrahtung.js` (Formular-Warnzeile). `dgSperrenFuerIcd` unverändert.
+- `leadKartenIkFehler(wert)` / `pruefeLeadKartenIk(kasseEl)` (`lead-karten-ik.js`). Niye: ungültige Karten-IK wurde im Patientenformular
+  still zu null und überschrieb eine gültige. Nerede: Speichern-Handler `leadSaveBtn` in `dashboard.js` (Inline-Fehler + Abbruch).
+- `kasseZuKartenIk({...})` (`krankenkasse-suche.js`). Niye: Kassenname passte nicht zur Karten-IK (DAK-IK bei „AOK…"), kein Hinweis.
+  Amber-Warnung `#<ik-id>Abweichung`, kein Blocker; nutzt den vorhandenen Resolver `kartenIkStatus` (kein zweiter). Nerede: Patientenformular + Muster-13-Maske.
+- `sperreBannerText` / `aktualisiereArztSperreBanner` / `installiereArztSperreBanner` (neu `module/arztangaben-banner.js`). Niye: die
+  Behandlungssperre (LANR/Unterschrift, S3.7) erschien nur im Speichern-Dialog. Live-Banner `#rzSperreBanner` in der Maske (podo),
+  Speichern blockiert weiterhin nicht. Nerede: `dashboard.js` (Maske öffnen/Arzt-Vorbelegung), `verordnung-maske.js` `fuelleMuster13`; `arzt-register.js` sendet nach LANR-Übernahme `input`.
+- `leadIdFuerFahrt(sb, b)` (`fahrt-beenden.js`). Niye: erste `fahrten`-Zeile hatte `lead_id` nur über Telefon → leer bis „Beenden".
+  `bookings.lead_id` zuerst, dann Telefon. Nerede: Fahrtstart in `dashboard.js`.
+- Neue Verordnung → `emit('verordnungen:changed')` (statt nur bei `activePanel==='verordnungen'`): Liste/Akte zogen nicht nach.
+
 ### 30.09.2026 · gkv-302 Auflagen zu B1 — Rückschreiben, valid_from, Preflight je Zeile
 - `kostentraegerIkZurueckschreiben(supabase, zeilen, warnungen, ownerId)` (`kostentraeger-frisch.js`). Niye: Arbeitsliste
   (`abrechnung-auswahl.js`) gruppiert nach gespeicherter IK; ohne Rückschreiben hing eine Verordnung mit geändertem

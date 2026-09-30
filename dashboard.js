@@ -13,13 +13,13 @@ import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezep
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
 import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
 import { emit, on } from './module/signal.js?v=20260815';
-import { podoArztHinweise } from './module/podo-arztangaben.js?v=20260929r';
+import { podoArztHinweise } from './module/podo-arztangaben.js?v=20260929r'; import { aktualisiereArztSperreBanner, installiereArztSperreBanner } from './module/arztangaben-banner.js?v=20261001b';
 import { zeigeTerminFehler as terminFehler, loescheTerminFehler, verdrahteTerminFehler } from './module/termin-fehler.js?v=20260929q';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
-import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren, tazeleIkHinweis } from './module/krankenkasse-suche.js?v=20261001a';
-import { attachLeadKartenIk } from './module/lead-karten-ik.js?v=20260930y';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20261001a';
+import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren, tazeleIkHinweis } from './module/krankenkasse-suche.js?v=20261001b';
+import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261001b';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20261001b';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
@@ -27,32 +27,32 @@ import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freig
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
-import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261001a';
+import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261001b';
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260929i';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20260930x';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260930h';
-import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261001a';
+import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261001b';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260930h';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260909';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260930a';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001a';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261001b';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
-import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss } from './module/fahrt-beenden.js?v=20260929b';
-import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261001a';
-import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261001a';
+import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
+import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261001b';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261001b';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20260914';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
-import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261001a';
+import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261001b';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode }
-  from './module/verordnung-maske.js?v=20261001a';
+  from './module/verordnung-maske.js?v=20261001b';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260929';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261001a';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261001a';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261001b';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261001b';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20260917';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20260909';
@@ -72,15 +72,15 @@ import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260930h';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
-import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261001a';
+import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261001b';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld, setzeRezeptartInMaske, rezeptartAusMaske, zeigeVerordnungenFuerTermin, resetVerordnungFelder, verdrahteAbwahl, aktualisiereBindungBeimSpeichern } from './module/termin-verordnung.js?v=20260930c';
 import { passendeLeistungId } from './module/verordnung-leistung-match.js?v=20260918';
 import { oeffneAnlegenWahl, schliesseAnlegenWahl, verdrahteAnlegenWahl } from './module/verordnung-anlegen.js?v=20260906';
-import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261001a';
+import { uebernehmeRezeptInMaske, terminVorgabeAusMaske } from './module/rezept-in-maske.js?v=20261001b';
 import { verdrahteLhbNachweis, ladeLhbNachweisHoch } from './module/verordnung-nachweis.js?v=20260906';
 import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, speichereLeistungenFuerErstellte, leseLeistungen, schlageBefundungVor } from './module/termin-leistungen.js?v=20260930f';
-import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261001a';
+import { zeichnePodoEinheiten, bindePodoAnTermin, meldePodoSerienBindung } from './module/podo-einheiten.js?v=20261001b';
 import { oeffneMailAngebotModal, istPodoOhneRechnung } from './module/termin-mail-angebot.js?v=20260929a';
 import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, pruefeErsttermin } from './module/frequenz-pruefung.js?v=20260929b';
@@ -109,7 +109,7 @@ import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
-} from './module/termin-aktionen.js?v=20261001a';
+} from './module/termin-aktionen.js?v=20261001b';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
@@ -120,7 +120,7 @@ import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from '.
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260929q';
-import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261001a';
+import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261001b';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Einzige Quelle seit O-01 (11.09.2026, kommt aus /api/config via supabase-config.js).
@@ -4125,12 +4125,7 @@ async function saveFahrtStartHandler() {
     let kzSnap = null, kindSnap = null;
     const { data: veh } = await supabase.from('vehicles').select('kennzeichen,kind').eq('id', vehicleId).maybeSingle();
     if (veh) { kzSnap = veh.kennzeichen; kindSnap = veh.kind; }
-    let earlyLeadId = null;
-    if (b.customer_phone) {
-      const { data: lead } = await supabase.from('leads').select('id')
-        .eq('owner_id', b.owner_id).eq('phone', b.customer_phone).maybeSingle();
-      if (lead) earlyLeadId = lead.id;
-    }
+    const earlyLeadId = await leadIdFuerFahrt(supabase, b);   // booking.lead_id zuerst, dann Telefon
     await supabase.from('fahrten').upsert({
       owner_id: b.owner_id,
       user_id: currentSession.user.id,
@@ -9000,8 +8995,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     }
   }
 
-  let versichertennummer = null;
-  let versichertenstatus = null;
+  let versichertennummer = null, versichertenstatus = null;
   if (isPraxisSector(sector)) {
     versichertennummer = document.getElementById('lead-krankenkassennummer').value.trim() || null;
     if (versichertennummer) {
@@ -9033,6 +9027,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   const metadata = leadMetadataZusammenfuehren(altLead?.metadata, formMeta,
     isPraxisSector(sector) ? ['geburtsdatum', 'hausbesuch'] : ['geburtsdatum']);
 
+  if (!pruefeLeadKartenIk(document.getElementById('lead-krankenkasse'))) return;
   const payload = {
     owner_id: getOwnerId(),
     first_name: firstName,
@@ -15573,7 +15568,7 @@ async function fillRzPatientFromLead(leadId) {
         .select('arzt_name,lanr,bsnr').eq('id', lead.arzt_id).maybeSingle();
       if (arzt) {
         g('rzArztName').value = arzt.arzt_name || '';
-        if (!g('rzLanr').value) g('rzLanr').value = arzt.lanr || '';
+        if (!g('rzLanr').value) g('rzLanr').value = arzt.lanr || ''; aktualisiereArztSperreBanner();
         if (!g('rzBsnr').value) g('rzBsnr').value = arzt.bsnr || '';
       }
     } catch { /* ignore */ }
@@ -15633,7 +15628,7 @@ async function openRezeptModal(phone, leadId) {
   g('rzUnterschrift').checked = false;
   // Therapiebereich nach Praxis-Sektor vorbelegen (spart Klicks)
   const SECTOR_THERAPY = { physiotherapy:'physio', podologie:'podo', logopaedie:'stimme', ergotherapie:'ergo' };
-  setM13Therapy(SECTOR_THERAPY[getSector()] || '');
+  setM13Therapy(SECTOR_THERAPY[getSector()] || ''); aktualisiereArztSperreBanner();
   setM13Hausbesuch(false);
   const hint = g('rzPatientHint'); if (hint) hint.textContent = '';
   const search = g('rzPatientSearch'); if (search) search.value = '';
@@ -15836,7 +15831,7 @@ async function saveRezept() {
     if (typeof loadBkVerordnungen === 'function' && patId) {
       loadBkVerordnungen(patId);
     }
-    if (!editId && activePanel === 'verordnungen') loadVerordnungen();
+    if (!editId) emit('verordnungen:changed', { id: rx.id });   // Liste + Patientenakte ziehen über das Signal nach
   } catch (e) {
     console.error('[saveRezept]', e);
     showToast('Fehler: ' + (e.message || 'Unbekannt'), 'error');
@@ -16440,7 +16435,7 @@ async function init() {
     });
     // Arzt-Felder → gemeinsamer Picker (arzt-suche.js): Name ODER LANR tippen,
     // Auswahl füllt Name + LANR + BSNR zusammen.
-    wireArztFeld({ name: 'rzArztName',  lanr: 'rzLanr',  bsnr: 'rzBsnr'  });
+    wireArztFeld({ name: 'rzArztName',  lanr: 'rzLanr',  bsnr: 'rzBsnr'  }); installiereArztSperreBanner();
     // rzHm → rzHmPosition laeuft ueber attachHeilmittelSearch (HEILMITTEL_FIELDS,
     // dashboard.js oben) — der hier frueher vorhandene aiMatchHeilmittel-Listener
     // gewann per Race-Timing IMMER gegen dessen onSelect (dieser ist async,

@@ -483,3 +483,82 @@ test('kasseAbrechnungsbereit: Kostenträger UND Karten-IK (9 Ziffern) nötig', (
   assert.equal(bereit({ kostentraeger_ik: null, krankenkasse_ik: '100167999' }), false);
   assert.equal(bereit(null), false);
 });
+
+test('kartenIkStatus liefert kassenName und kurzName', async () => {
+  const kartenIkStatus = fn('kartenIkStatus');
+  const sbDak = sbDoppel({ view: ktZeilen });
+  const r = await kartenIkStatus(sbDak, '100167999');
+  assert.equal(r.status, 'ok');
+  assert.equal(r.kassenName, 'DAK-Gesundheit');
+  assert.equal(r.kurzName, 'DAK');
+});
+
+test('kasseZuKartenIk: Abweichungswarnung und Namensabgleich', () => {
+  const kasseZuKartenIk = fn('kasseZuKartenIk');
+
+  // leer -> null
+  assert.deepEqual(kasseZuKartenIk({ eingetragen: '', kassenName: 'DAK-Gesundheit' }), { passt: null, text: '' });
+  assert.deepEqual(kasseZuKartenIk({ eingetragen: null, kassenName: 'DAK-Gesundheit' }), { passt: null, text: '' });
+  assert.deepEqual(kasseZuKartenIk({ eingetragen: '   ', kassenName: 'DAK-Gesundheit' }), { passt: null, text: '' });
+
+  // DAK-Kostentraeger vs „AOK Rheinland/Hamburg" -> false + Text
+  const rAbw = kasseZuKartenIk({
+    eingetragen: 'AOK Rheinland/Hamburg',
+    kassenName: 'DAK-Gesundheit',
+    kurzName: 'DAK',
+    kostentraegerIk: '105830016',
+  });
+  assert.equal(rAbw.passt, false);
+  assert.equal(rAbw.text, 'Karten-IK gehört zu DAK, eingetragen ist AOK Rheinland/Hamburg.');
+
+  // „DAK-Gesundheit" vs DAK -> true
+  const rDak1 = kasseZuKartenIk({
+    eingetragen: 'DAK',
+    kassenName: 'DAK-Gesundheit',
+    kurzName: 'DAK',
+    kostentraegerIk: '105830016',
+  });
+  assert.equal(rDak1.passt, true);
+
+  const rDak2 = kasseZuKartenIk({
+    eingetragen: 'DAK-Gesundheit',
+    kassenName: 'DAK-Gesundheit',
+    kurzName: null,
+    kostentraegerIk: '105830016',
+  });
+  assert.equal(rDak2.passt, true);
+
+  // IK-Gleichheit-Pfad
+  const kassenListe = [
+    { name: 'Techniker Krankenkasse', kurz: 'TK', ik: '101575519' },
+    { name: 'AOK Rheinland/Hamburg', kurz: 'AOK RH', ik: '104212505' },
+  ];
+  const rIkMatch = kasseZuKartenIk({
+    eingetragen: 'AOK Rheinland/Hamburg',
+    kassenName: 'AOK Rheinland/Hamburg Pflege',
+    kurzName: null,
+    kostentraegerIk: '104212505',
+    kassenListe,
+  });
+  assert.equal(rIkMatch.passt, true);
+
+  // „AOK Bayern" vs „AOK Rheinland/Hamburg" -> false
+  const rAok = kasseZuKartenIk({
+    eingetragen: 'AOK Rheinland/Hamburg',
+    kassenName: 'AOK Bayern',
+    kurzName: 'AOK BY',
+    kostentraegerIk: '108310400',
+  });
+  assert.equal(rAok.passt, false);
+  assert.equal(rAok.text, 'Karten-IK gehört zu AOK BY, eingetragen ist AOK Rheinland/Hamburg.');
+
+  // Kuerzel „TK" gegen kurzName
+  const rTk = kasseZuKartenIk({
+    eingetragen: 'TK',
+    kassenName: 'Techniker Krankenkasse',
+    kurzName: 'TK',
+    kostentraegerIk: '101575519',
+  });
+  assert.equal(rTk.passt, true);
+});
+

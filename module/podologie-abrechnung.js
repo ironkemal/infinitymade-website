@@ -60,12 +60,12 @@
  * Aufruf.
  */
 
-import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001a';
+import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260930h';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260920s';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
-import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001a';
+import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001b';
 import { leiteBehandlungsbeginnAb } from './behandlungsbeginn.js?v=20260920s';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20260901';
@@ -89,7 +89,7 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
 // Ermittlung wird NICHT geschrieben — die von `verordnung-pruefung.js`
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
-import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001a';
+import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001b';
 import { behandlungspositionVorschlag } from './podo-behandlungsposition-regel.js?v=20260928';
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
 // "heute" — s. `setPodVorwahl()` unten.
@@ -98,7 +98,7 @@ import { hausbesuchGesperrt, hausbesuchSpeicherFehler, HAUSBESUCH_HINWEIS } from
 // Reform S1.9 (29.09.2026): Behandlungsbeginn-Frist (§15 HeilM-RL) nicht mehr
 // zweimal von Hand nachrechnen (hier + vordAlerts unten) — ein Ort, eine Regel.
 import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20260929';
-import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20260929b';
+import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20261001b';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
