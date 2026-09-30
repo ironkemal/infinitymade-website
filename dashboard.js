@@ -12,7 +12,7 @@ import { attachPatientSearch } from './patient-suche.js?v=20260906';
 import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezept-patientenfeld.js?v=20260927';
 import { heuteAktualisieren } from './module/termin-heute.js?v=20260906';
 import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
-import { emit, on } from './module/signal.js?v=20260815';
+import { emit, on } from './module/signal.js?v=20260813';
 import { podoArztHinweise } from './module/podo-arztangaben.js?v=20260929r'; import { aktualisiereArztSperreBanner, installiereArztSperreBanner } from './module/arztangaben-banner.js?v=20261001b';
 import { zeigeTerminFehler as terminFehler, loescheTerminFehler, verdrahteTerminFehler } from './module/termin-fehler.js?v=20260929q';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
