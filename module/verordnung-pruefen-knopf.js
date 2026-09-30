@@ -34,7 +34,7 @@
  * eine fehlerhafte Verordnung muss erfassbar bleiben.
  */
 
-import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20261001g';
+import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20261001h';
 import { markiereBefunde, loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
 
@@ -66,6 +66,7 @@ function lesenMuster13() {
     // sieht im Backend beide Kodes.
     icd:                [wert('rzIcd'), wert('rzIcd2')].filter(Boolean).join(', '),
     diagnosegruppe:     wert('rzDg'),
+    diagnosetext:       wert('rzDiagnoseText'),
     leitsymptomatik:    ls,
     // Kästchen d) trägt keinen Katalogbuchstaben, sondern Freitext. Ohne
     // dieses Feld meldete der Motor „Keine Leitsymptomatik angekreuzt", obwohl

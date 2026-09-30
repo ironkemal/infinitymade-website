@@ -89,7 +89,7 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
 // Ermittlung wird NICHT geschrieben — die von `verordnung-pruefung.js`
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
-import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001g';
+import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001h';
 import { tagesVorbelegungGrund, verordnetZeile } from './podo-vorbelegung-grund.js?v=20261001i';
 import { bestehenderBehandlungstag, zweiterBehandlungstagFrage, abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261001i';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';

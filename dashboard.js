@@ -47,7 +47,7 @@ import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUeb
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261001b';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261001e';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
-import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261001e';
+import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261001f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode }
   from './module/verordnung-maske.js?v=20261001e';

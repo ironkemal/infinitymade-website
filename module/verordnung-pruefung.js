@@ -48,6 +48,9 @@ import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-ka
 /** Dringlichkeit der Meldung. `blocker` heisst: so geht die Verordnung nicht durch. */
 export const SCHWERE = { blocker: 'blocker', warnung: 'warnung', hinweis: 'hinweis' };
 
+/** Diagnosegruppen, in denen ein Diagnosetext einen unpassenden ICD heilt (Spiegel: icdDgRules.js). */
+export const DIAGNOSETEXT_HEILT = new Set(['DF', 'NF', 'QF']);
+
 /**
  * Pflichtangaben der Heilmittelverordnung.
  *
@@ -152,7 +155,7 @@ export function heilmittelGegenLeitsymptomatik({ buchstabe, dg, steht, position 
  * Eine Verordnung prüfen.
  *
  * @param {object} vo  Normalisierte Verordnung:
- *   {bereich, icd, diagnosegruppe, leitsymptomatik, leitsymptomatikFreitext,
+ *   {bereich, icd, diagnosegruppe, diagnosetext, leitsymptomatik, leitsymptomatikFreitext,
  *    heilmittel, heilmittelPosition,
  *    anzahl, frequenz, ausstellungsdatum, behandlungsbeginn, dringend,
  *    versichertennummer, kasseIk, arztLanr, arztBsnr, rezeptart}
@@ -264,10 +267,17 @@ export function pruefeVerordnung(vo, regelsatz, opt = {}) {
         : echteMismatches;
 
       if (fehlerKodes.length > 0) {
-        const hart = regel.icd_enforcement === 'hard_before_dta';
+        // DF/NF/QF: ein Diagnosetext (Freitext) kann den unpassenden ICD heilen — die
+        // Software kann ihn nicht bewerten, also nur Warnung (gkv-302 30.09.2026, FAK
+        // Podologie Nr. 28). UI1/UI2 haben keinen Freitext-Ausweg. Server-Spiegel:
+        // DIAGNOSETEXT_HEILT in api-backend/ai/validators/icdDgRules.js (Preflight V:01018).
+        const textHeilt = DIAGNOSETEXT_HEILT.has(dg) && !leer(vo?.diagnosetext);
+        const hart = regel.icd_enforcement === 'hard_before_dta' && !textHeilt;
         let text = `${fehlerKodes.join(', ')} passt nicht zur Diagnosegruppe ${dg}.`;
         if (treffer.hints.length) text += ` ${treffer.hints.join('; ')}`;
-        if (hart) text += ' Die Kasse setzt diese Kombination ab.';
+        if (hart) text += ' Die Kasse setzt diese Kombination ab — Korrektur nur durch den Arzt (neue Unterschrift + Datum)'
+          + (DIAGNOSETEXT_HEILT.has(dg) ? ' oder ein Diagnosetext auf der Verordnung.' : '.');
+        else if (textHeilt) text += ' Ein Diagnosetext ist angegeben und wird übermittelt — bitte gegen die Verordnung prüfen.';
         melde(hart ? SCHWERE.blocker : SCHWERE.warnung, 'ICD_DG_MISMATCH', text, 'icd', profil?.quelle);
       }
     } else if (treffer.status === 'unsicher') {
@@ -463,6 +473,7 @@ export function voAusGespeicherterVerordnung(row) {
     bereich:            row?.therapie_bereich || '',
     icd,
     diagnosegruppe:     row?.diagnosegruppe || '',
+    diagnosetext:       row?.diagnose_freitext || '',
     // Reihenfolge umgedreht (06.09.2026): `pat_leitsymptomatik` ist FREITEXT.
     // Er lief vorher durch `leitsymptomatikListe()`, das darin nach den
     // Buchstaben a/b/c/d sucht — „Hyperkeratose und pathologisches

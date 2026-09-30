@@ -201,6 +201,30 @@ test('ein fachfremder Kode warnt — bei harter Regel blockiert er', () => {
   assert.equal(hart.ok, false);
 });
 
+test('DF hart (seit 0047): ohne Diagnosetext Blocker, mit Diagnosetext nur Warnung; UI1 bleibt hart', () => {
+  // Live seit 30.09.2026 ist DF/NF/QF hard_before_dta — die Fixture ist älter, deshalb hier gezielt umgestellt.
+  const hartZeilen = PODO_ZEILEN.map(z => (['DF', 'NF', 'QF'].includes(z.code) ? { ...z, icd_enforcement: 'hard_before_dta' } : z));
+  const satz = regelnFuerBereich('podologie', hartZeilen);
+  const ohne = pruefeVerordnung(saubereVo({ icd: 'L60.0' }), satz, HEUTE);
+  const b1 = ohne.befunde.find(x => x.code === 'ICD_DG_MISMATCH');
+  assert.equal(b1.schwere, SCHWERE.blocker);
+  assert.match(b1.text, /Diagnosetext/);
+
+  const mit = pruefeVerordnung(saubereVo({ icd: 'L60.0', diagnosetext: 'Diabetisches Fußsyndrom Wagner 0' }), satz, HEUTE);
+  const b2 = mit.befunde.find(x => x.code === 'ICD_DG_MISMATCH');
+  assert.equal(b2.schwere, SCHWERE.warnung);
+  assert.equal(mit.ok, true);
+
+  const ui = pruefeVerordnung(
+    saubereVo({ diagnosegruppe: 'UI1', icd: 'E11.74', diagnosetext: 'x', leitsymptomatik: ['a'], heilmittel: 'Nagelspangenbehandlung', anzahl: 8 }),
+    satz, HEUTE);
+  assert.equal(ui.befunde.find(x => x.code === 'ICD_DG_MISMATCH').schwere, SCHWERE.blocker);
+});
+
+test('voAusGespeicherterVerordnung reicht diagnose_freitext als diagnosetext durch', () => {
+  assert.equal(voAusGespeicherterVerordnung({ diagnose_freitext: 'Text' }).diagnosetext, 'Text');
+});
+
 test('eine unbekannte Diagnosegruppe des falschen Fachbereichs blockiert', () => {
   const e = pruefeVerordnung(saubereVo({ diagnosegruppe: 'WS2' }), PODO, HEUTE);
   assert.ok(codes(e).includes('DG_UNBEKANNT'));
