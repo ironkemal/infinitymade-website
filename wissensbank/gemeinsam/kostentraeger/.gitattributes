@@ -1,0 +1,3 @@
+# Q4/2026-Dateien ab 30.09.2026 byte-exakt vom Herausgeber (ISO-8859-1, CRLF).
+# Git darf Zeilenenden hier NICHT normalisieren, sonst stimmt sha256 (REGISTER W-01) nicht mehr.
+*.txt -text

@@ -224,7 +224,7 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 
 ## §302 TP5 — Kostenträgerdatei (VERİ, spec değil)
 
-### wissensbank/gemeinsam/kostentraeger/ — 7 dosya (Kostenträgerdatei)
+### wissensbank/gemeinsam/kostentraeger/ — 11 dosya (Kostenträgerdatei; 01.10.2026'dan 6'sı geçerli)
 - **Ne:** Kasa birliklerinin yayımladığı **gerçek Kostenträgerdatei verisi** — kurum kimlik
   kodları (IK), adresler, Datenannahmestelle bağlantıları (VKG) ve DFÜ parametreleri.
   Bir spec değil, spec'in (Anhang 03) tarif ettiği **veri dosyasının kendisi**.
@@ -234,6 +234,9 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   `FKT` · `VKG` (hangi IK hangi DAS'a bağlı) · `NAM` · `ANS` (adres) · `ASP` · `UEM` · `DFU`.
 - **Sürüm:** dosya başına ayrı — tek bir sürümü yok
 - **Anzuwenden ab:** 01.04.2026 – 01.10.2026 arası, dosya başına
+- **⚠️ Kodlama:** 05.09 partisi (7 dosya) UTF-8/LF kopyala-yapıştır; 30.09 partisi (4 dosya, Q4/2026)
+  yayıncının orijinali **ISO-8859-1/CRLF**, byte-exact. `Grep` ASCII IK aramasında fark etmez; metin
+  okurken/yüklerken `latin1` gerekir (REGISTER W-01 madde 9).
 - **Ne zaman lazım:** Bir Krankenkasse'nin IK numarası, hangi Datenannahmestelle'ye §302
   dosyası gönderileceği veya kasa adresi gerektiğinde lazımdır.
 - **⚠️ Okuma kuralı:** Bu dosyalar **okunmaz, sorgulanır.** Yedisi birden ~200k token.
@@ -250,8 +253,15 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   | `IK05Q326_KE1.txt` | Innungskrankenkassen | 207 | 475 | 01.07.2026 ✅ |
   | `BN050526_KE0.txt` | Knappschaft-Bahn-See | 37 | 6.183 | 01.05.2026 ✅ (aylık) |
   | `LK05Q226_KE0.txt` | SVLFG / Landwirtschaftliche KK | 11 | 27 | 01.04.2026 ✅ |
-  | `EK05Q226_KE0.txt` | vdek / Ersatzkassen | 261 | 724 | 01.04.2026 ✅ bugün geçerli |
-  | `EK05Q426_KE0.txt` | vdek / Ersatzkassen | 261 | 726 | **01.10.2026** ⏳ GELECEK |
+  | `EK05Q226_KE0.txt` | vdek / Ersatzkassen | 261 | 724 | 01.04.2026 — 30.09.2026 son gün |
+  | `EK05Q426_KE0.txt` | vdek / Ersatzkassen | 261 | 726 | ⛔ DÜŞMÜŞ — yürürlüğe girmeden KE1 ile değişti |
+  | `AO05Q426_KE0.txt` | AOK-Bundesverband | 186 | 764 | **01.10.2026** ⏳ (öncül `AO05Q326_KE3`) |
+  | `BK05Q426_KE0.txt` | Betriebskrankenkassen | 365 | 3.234 | **01.10.2026** ⏳ (öncülle içerik aynı) |
+  | `IK05Q426_KE0.txt` | Innungskrankenkassen | 207 | 477 | **01.10.2026** ⏳ |
+  | `EK05Q426_KE1.txt` | vdek / Ersatzkassen | 261 | 726 | **01.10.2026** ⏳ |
+
+  `AO05Q326_KE3` · `BK05Q326_KE1` · `IK05Q326_KE1` · `EK05Q226_KE0` → son geçerli gün **30.09.2026**.
+  Farklar ve sha256: REGISTER W-01 „30.09 partisi".
 
 - **⛔ `EK05Q426_KE0.txt` 01.10.2026'ya kadar koda/DB'ye girmemeliydi** — Q2 ile IK kümesi
   aynı (261 = 261) ama içerik farklı; erken yükleme o tarihe kadar **yanlış

@@ -5,7 +5,10 @@
 > biri diğerinin yerine geçmez.
 >
 > Sahibi: `wissensbank` ajanı · Elle bakımlı · Tetikleyici: **"bilgi bankası güncelle"**
-> İlk kurulum: 05.09.2026 · Son güncelleme: 29.09.2026 (**Z-18 açıldı** — Reform S3.6/S3.7, ICD-Endständigkeit + Arzt-Nr./Unterschrift, 2 SPEC-RULES kaydı doğrulanıp düzeltildi. Önce **Z-17 açıldı** — Podologie Reform S1.12 + S2:
+> İlk kurulum: 05.09.2026 · Son güncelleme: 30.09.2026 (**W-01: Q4/2026 Kostenträgerdateien indirildi** —
+> 4 dosya `curl` ile yayıncıdan byte-exact, sha256 kayıtlı, parser sayımı + öncül farkı ölçüldü;
+> düşenlerin bitiş tarihi 30.09.2026. DB'ye YÜKLENMEDİ. Yeni açık maddeler W-01 #9-#12.)
+> Önceki: 29.09.2026 (**Z-18 açıldı** — Reform S3.6/S3.7, ICD-Endständigkeit + Arzt-Nr./Unterschrift, 2 SPEC-RULES kaydı doğrulanıp düzeltildi. Önce **Z-17 açıldı** — Podologie Reform S1.12 + S2:
 > Hausbesuch „Ja", Abrechnung nach Beendigung / VKZ 02, Test vs. Erprobung, Datenaustausch-Status,
 > IK des LE. `SPEC-RULES.md`'de 1 kayıt düzeltildi (Teilabrechnung/VKZ 02), 1 kayıt netleşti (Testdatei).
 > `Richtlinien-Text_061120` artık teyitli: Anlage 1 V21 kapağı „Stand der Richtlinien: 20.11.2006".)
@@ -101,7 +104,7 @@ indir" değil, **zincirin tamamını yürümektir** (§2).
 
 | Tarih | Ne olur | Etkilenen zincir | Durum |
 |---|---|---|---|
-| **01.10.2026** | Kostenträgerdatei **Q4/2026** yürürlüğe girer. `EK05Q426KE0` (vdek) o gün GEÇERLİ olur, `EK05Q226KE0` DÜŞER. Diğer Kassenart'lar Q4 yayımlarsa onlar da o gün geçerlidir. ⛔ **Ayrıca:** DB'de bugün zaten Q4 yüklü (sürüm zamanlama hatası, W-01 madde 6) — bu tarih o maddeyi de kapatır | Z-09 → W-01 → `kostentraeger_annahmestellen` | ⏳ kayıtlı, **madde 6 buna bağlı** |
+| **01.10.2026** | Kostenträgerdatei **Q4/2026** yürürlüğe girer: `AO05Q426_KE0` · `BK05Q426_KE0` · `IK05Q426_KE0` · `EK05Q426_KE1` GEÇERLİ olur; `AO05Q326_KE3` · `BK05Q326_KE1` · `IK05Q326_KE1` · `EK05Q226_KE0` · `EK05Q426_KE0` DÜŞER (son gün 30.09.2026). `BN050526` + `LK05Q226` geçerli kalır. ✅ 4 dosya **30.09.2026'da indirildi** (byte-exact). ⛔ DB yüklemesi yapılmadı — `db-ustasi`; önce W-01 #9 (kodlama) | Z-09 → W-01 → `kostentraeger` + `kostentraeger_annahmestellen` | ⏳ dosyalar hazır, **DB yüklemesi açık** (madde 6, 9, 10) |
 | **her çeyrek başı** (01.01 / 01.04 / 01.07 / 01.10) | Kostenträgerdatei güncellenir; yayın **en geç çeyrek başından 4 hafta önce** (Anhang 03 §2, satır 185-187). Yani kontrol günü: **03.03 · 03.06 · 03.09 · 03.12** | Z-09 | 🔁 tekrar eden, **elle** — W-01'deki kontrol yordamı |
 | **01.01.2027** | HPNR-Verzeichnis 2026 penceresi kapanır, 2027 sürümü gelir | Z-05 → `podologie_positions.js`, `physio_positions.js` | ⏳ hazırlık yok |
 | **01.02.2027 öncesi** | Geçiş paketinin tam kapsamı **bilinmiyor**: Anlage 1 TP5 **V22** (21.05.2026) arşivde yok, `Anzuwenden ab` tarihi bizde yazılı değil. Aynı tarihteyse Anlage 3 V22 + Anhang 03 V10 ile **tek pakettir** | Z-01 · Z-02 · Z-09 | ⏳ **W-A09**, indirilmedi |
@@ -317,17 +320,26 @@ bağımsız doğrulama yapıldı):**
 FORMAT SPEC:
 wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414.pdf/.txt   (V10, ab 01.02.2027)
 
-VERİ (dış kaynaklı, resmî) — 7 ayrı dosya, her biri kendi sürümü:
+VERİ (dış kaynaklı, resmî) — 11 ayrı dosya, her biri kendi sürümü:
 wissensbank/gemeinsam/kostentraeger/{AO05Q326_KE3, BK05Q326_KE1, IK05Q326_KE1,
                                      BN050526_KE0, LK05Q226_KE0,
-                                     EK05Q226_KE0, EK05Q426_KE0}.txt
+                                     EK05Q226_KE0, EK05Q426_KE0}.txt      <- 05.09 kopyala-yapıştır, UTF-8/LF
   = 22.436 satır · 660.087 bayt · 1.329 KOTR kaydı · 1.043 tekil IK · 12.133 VKG satırı
+wissensbank/gemeinsam/kostentraeger/{AO05Q426_KE0, BK05Q426_KE0, IK05Q426_KE0,
+                                     EK05Q426_KE1}.txt                    <- 30.09 curl, byte-exact, ISO-8859-1/CRLF
+  01.10.2026'dan geçerli küme (bu 4 + BN050526 + LK05Q226) = 1.067 kayıt · 1.042 tekil IK · 11.411 VKG
   → api-backend/billing/kostentraeger/parser.js       ✅ gerçek dosyalara karşı koşuyor
   → api-backend/billing/kostentraeger/parser.test.js  ✅ 1.329 / 1.043 regresyon testi
   → tools/kostentraeger-annahmestellen-laden.mjs      (tekrarlanabilir yükleyici, --write)
   → DB kostentraeger                  1.052 satır (1.043 gerçek IK + 9 mock_unbestaetigt)
   → DB kostentraeger_annahmestellen  11.409 satır (6 dosyanın VKG'si — EK Q2 hariç)
   ↔ DB krankenkassen.ik_number (94 kasadan 76'sı dolu) — Ops kartı #264
+  → kutu (on-prem) seed zinciri, tools/seed-generieren.mjs ile üretilmiş (30.09.2026'da sicile eklendi):
+      api-backend/db/migrations/0006_seed_kostentraeger.sql
+      api-backend/db/migrations/0007_seed_kostentraeger_annahmestellen.sql   (vdek = EK05Q426_KE0 ⛔ düşmüş)
+      api-backend/db/migrations/0036_seed_kostentraeger_anschriften.sql      (ANS → ladePapierannahmestelle, Begleitzettel)
+      api-backend/db/migrations/0037_seed_kostentraeger_annahmestellen_quelle_stand.sql (vdek = EK05Q226_KE0 ⛔ 30.09 düşer)
+    Uygulanmış migration değiştirilmez → her çeyrek geçişi YENİ bir seed dosyası demektir (db-ustasi + onprem).
 ```
 ✅ **Zincir 06.09.2026'da uçtan uca kapandı** (commit `cceb528`). Parser artık mock'a
 değil gerçek veriye dayanıyor; VKG alan sırası Anhang 03 V10 §7.2'ye göre düzeltildi —
@@ -684,18 +696,29 @@ yeniden araştırılıyor demektir.
 
 ### W-01 · Kostenträgerdatei Sonstige Leistungserbringer (TP05) — IK/DAS yönlendirme verisi
 
-- **Dosya:** `wissensbank/gemeinsam/kostentraeger/` — **7 ayrı `.txt`**, yayıncının kendi
-  adlarıyla (`AO05Q326_KE3` · `BK05Q326_KE1` · `IK05Q326_KE1` · `BN050526_KE0` ·
-  `LK05Q226_KE0` · `EK05Q226_KE0` · `EK05Q426_KE0`) · 22.436 satır · 660.087 bayt · türev yok
+- **Dosya:** `wissensbank/gemeinsam/kostentraeger/` — **11 ayrı `.txt`**, yayıncının kendi
+  adlarıyla. 05.09 partisi: `AO05Q326_KE3` · `BK05Q326_KE1` · `IK05Q326_KE1` · `BN050526_KE0` ·
+  `LK05Q226_KE0` · `EK05Q226_KE0` · `EK05Q426_KE0` (22.436 satır · 660.087 bayt). 30.09 partisi:
+  `AO05Q426_KE0` · `BK05Q426_KE0` · `IK05Q426_KE0` · `EK05Q426_KE1` (byte-exact). Türev yok.
+  • ⚠️ **İki parti farklı kodlamada:** 05.09 = UTF-8 + LF (tarayıcıdan kopyala-yapıştır);
+  30.09 = **yayıncının orijinali, ISO-8859-1 + CRLF** (`UNB+UNOC:3` = Latin-1). Klasördeki
+  `.gitattributes` (`*.txt -text`) git'in CRLF'i LF'e çevirmesini engeller — yoksa sha256 tutmaz.
   • 06.09.2026'da bölündü; 07.09.2026'da ham tek parça `Krankenkassen IK nummern .md`
   **silindi** (W-A08 (c) — bölünme byte-exact doğrulandı, aşağıya bak)
 - **Herkunft:** https://www.gkv-datenaustausch.de/leistungserbringer/sonstige_leistungserbringer/kostentraegerdateien_sle/kostentraegerdateien.jsp
   (eski sürümler: `…/kostentraegerdateien_archiv.jsp`) — login/lisans yok, açık indirme
   · **İndirme:** 05.09.2026 · **İndiren:** Kemal (tarayıcıdan dosya indirilemedi, içerik kopyala-yapıştır ile alındı)
+  · **İndirme 2:** 30.09.2026 ~12:14 MESZ · **İndiren:** `wissensbank` ajanı, `curl -f` (engel yok, HTTP 200,
+  `Content-Length` = dosya boyu). Doğrudan dosya URL'i (RSS `<guid>`):
+  `https://www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/kostentraegerdateien_1/<DATEINAME>.<keN>`
+  (ör. `…/AO05Q426.ke0`). Sunucu `Last-Modified: Tue, 29 Sep 2026 23:05:26 GMT` — dört dosyada aynı:
+  sunucunun yeniden yayımlama zamanı, belge tarihi DEĞİL (belge tarihi UNB'de, tabloya bak)
 - **Yayıncı:** GKV-Spitzenverband / kasa birlikleri (AOK-BV · BKK · IKK · Knappschaft · SVLFG · vdek)
 - **Sürüm / Stand:** tek bir sürümü **yok** — 6 kasa birliğinin 7 ayrı dosyası, her birinin kendi tarihi (tablo aşağıda)
 - **Anzuwenden ab:** dosya başına ayrı · **Düşer:** her dosya kendi Kassenart'ının bir sonraki sürümüyle
-- **Durum:** 6 dosya ✅ **GEÇERLİ** · 1 dosya ⏳ **GELECEK** (vdek Q4/2026, ab 01.10.2026)
+- **Durum (30.09.2026):** 6 dosya ✅ **GEÇERLİ** (4'ü bugün son gün) · 4 yeni dosya ⏳ **GELECEK**
+  (ab 01.10.2026) · `EK05Q426_KE0` ⛔ **DÜŞMÜŞ** — yürürlüğe girmeden yerini `KE1` (18.09.2026) aldı.
+  **01.10.2026'dan:** 6 GEÇERLİ (#8-#11 + #4 + #5) · 5 DÜŞMÜŞ (#1 #2 #3 #6 #7 — silinmez, arşivde kalır)
 - **Neyi besler:** Z-09 → `parser.js` (+ `parser.test.js`) → `tools/kostentraeger-annahmestellen-laden.mjs`
   → DB `kostentraeger` (1.052 satır) + DB `kostentraeger_annahmestellen` (11.409 satır
     — ⛔ Ersatzkassen tarafında **yanlış sürüm**, bkz. açık madde 6)
@@ -710,7 +733,8 @@ yeniden araştırılıyor demektir.
 - **Yeniden dağıtım:** serbest — kullanıcı kararı 05.09.2026 (W-A07 altında): *"public kalsın
   sıkıntı yok, zaten public bilgiler bunlar."* Kasa IK'ları, adresleri ve DAS bağlantıları
   resmî ve kamuya açık veridir; hasta verisi yok (yalnız kurumsal Ansprechpartner adları var).
-- **Yedek:** ✅ git izliyor (ilk giriş `d4982fb` 05.09.2026, bölme `cceb528` 06.09.2026).
+- **Yedek:** ✅ git izliyor (ilk giriş `d4982fb` 05.09.2026, bölme `cceb528` 06.09.2026; Q4 partisi 30.09.2026).
+  30.09 partisi **sha256 ile orijinale karşı doğrulanabilir** (tabloda) — 05.09 partisi doğrulanamaz.
   `.gitignore` yalnız `*.pdf` kapatıyor, bu dosyalar metin. Silinen ham `.md`'nin içeriği
   git geçmişinde duruyor (`git show d4982fb:...`), ayrıca 7 parçanın toplamı birebir aynı.
   Yayın yüzeyi kapalı: `.vercelignore:79` → `wissensbank/` (satır no 09.09.2026 kök
@@ -734,9 +758,43 @@ uzantı **K**=Kostenträgerdatei · **E**=EDIFACT · **0-9**=Nachtrag.
 | 4 | `BN050526.KE0` | BN = Knappschaft-Bahn-See | 01.05.2026 (**aylık**, çeyrek değil) | 109905003 | 24.04.2026 14:45 | 37 | 6.183 | 10542–17012 | ✅ |
 | 5 | `LK05Q226.KE0` | LK = Landwirtschaftliche KK (SVLFG) | 01.04.2026 | 109908701 | 26.08.2025 10:30 | 11 | 27 | 17014–17131 | ✅ |
 | 6 | `EK05Q226.KE0` | EK = Ersatzkassen (vdek) | 01.04.2026 | 109979990 | 20.04.2026 18:46 | 261 | 724 | 17133–19785 | ✅ **bugün geçerli** |
-| 7 | `EK05Q426.KE0` | EK = Ersatzkassen (vdek) | **01.10.2026** | 109979990 | 14.08.2026 18:00 | 261 | 726 | 19787–22442 | ⏳ **GELECEK** |
+| 7 | `EK05Q426.KE0` | EK = Ersatzkassen (vdek) | **01.10.2026** | 109979990 | 14.08.2026 18:00 | 261 | 726 | 19787–22442 | ⛔ **DÜŞMÜŞ** — yürürlüğe girmeden KE1 ile değişti |
 
-**Toplam:** 1.329 KOTR kaydı · 1.043 tekil IK · 12.133 VKG · 1.916 ANS · 133 ASP · 104 DFU.
+**Toplam (05.09 partisi):** 1.329 KOTR kaydı · 1.043 tekil IK · 12.133 VKG · 1.916 ANS · 133 ASP · 104 DFU.
+
+**Düşme tarihleri (30.09.2026'da yazıldı):** #1 `AO05Q326_KE3` · #2 `BK05Q326_KE1` · #3 `IK05Q326_KE1` ·
+#6 `EK05Q226_KE0` → **son geçerli gün 30.09.2026**. #7 `EK05Q426_KE0` → hiç geçerli olmadı.
+#4 `BN050526` · #5 `LK05Q226` → açık uçlu (yayıncıda halef yok, 30.09.2026 kontrolü).
+
+#### 30.09 partisi — Q4/2026, yayıncıdan byte-exact (`curl`, YZ yok)
+
+| # | Dosya (bizde) | Yayıncı adı | gültig ab (RSS) | Absender-IK | Dateidatum (UNB) | Bayt | sha256 | Kayıt | Tekil IK | VKG | Öncül |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 8 | `AO05Q426_KE0.txt` | `AO05Q426.ke0` | **01.10.2026** | 109910000 | 01.07.2026 12:30 ⚠ | 68.030 | `fe62147e4601636015039e8892326e22cdcbfc8fb21dec555188b061a9d6212b` | 186 | 186 | 764 | #1 |
+| 9 | `BK05Q426_KE0.txt` | `BK05Q426.ke0` | **01.10.2026** | 104027544 | 16.09.2026 11:00 | 180.609 | `9a4dba6a9b3660267447ff6977bbca8f233af711a28699fc9eeb3e22062d3b22` | 365 | 365 | 3.234 | #2 |
+| 10 | `IK05Q426_KE0.txt` | `IK05Q426.ke0` | **01.10.2026** | 109900019 | 11.09.2026 11:14 | 66.944 | `0532a24de677e3ef9be5bf27057c75a97f6c43d300468057d54f72f2904b8dd6` | 207 | 207 | 477 | #3 |
+| 11 | `EK05Q426_KE1.txt` | `EK05Q426.ke1` | **01.10.2026** | 109979990 | 18.09.2026 12:00 | 74.189 | `9c03ce64afb96dbe83d2bc2b1d0703132228acc55975b4d0c898217e5f9df227` | 261 | 261 | 726 | #6 (+#7) |
+
+⚠ AOK #8'in UNB tarihi öncülü #1 ile **aynı** (`260701:1230`) — yalnız Dateinummer 00401→00402 ve ad
+değişmiş; yayıncı dosyayı Q3 zemininden türetmiş. "gültig ab" RSS'ten alındı (kural 6), UNB'den değil.
+
+**Doğrulama (30.09.2026, deterministik):** her dosyada UNZ sayacı = UNH = UNT = IDK = parser kaydı
+(186 · 365 · 207 · 261); parser VKG = ham `VKG+` segment sayısı; 9 haneli olmayan IK: 0.
+`parseKostentraegerDatei()` metni `latin1` ile alınca U+FFFD: 0, umlaut doğru (`TBK Thüringer BKK`).
+**Rastgele 8 VKG satırı** (dosya başına 2) parser çıktısından geri kurulup ham dosyadaki satıra karşı
+birebir bulundu. `parser.test.js` 19/19 geçti (ama yeni dosyaları henüz okumuyor — açık madde 10).
+
+**Öncüle göre fark** (satır bazında `diff`, yeni dosya UTF-8/LF'e çevrilerek; UNB/UNZ/UNT sayaçları hariç):
+
+| Geçiş | Kayıt | VKG | Fark | Bizim kodlar (20 · 71 · 72) |
+|---|---|---|---|---|
+| #1 → #8 AOK | 187 → 186 | 764 → 764 | IK `108916709` (AOK Bayern DLZ Schwandorf) **çıktı**; ona bağlı 9 VKG (Verknüpfungsart 09, Art der Datenlieferung 21/26/27/28) `108910008` (AOK Bayern **SCD Ebermannsdorf**, VDT artık 01.10.2026) üstüne taşındı. Etkilenen Kasse-kaydı: `108310400` AOK Bayern. 23/16 satır | ⚠ **71 ve 20 dahil** — madde 11 |
+| #2 → #9 BKK | 365 → 365 | 3.234 → 3.234 | **İçerik birebir aynı** — yalnız UNB tarihi/Dateinummer | — |
+| #3 → #10 IKK | 207 → 207 | 475 → 477 | +2 VKG `VKG+09+107436557+5++28++++30` (AZE Emmendingen, kod 30) — IKK Brandenburg u. Berlin Ost/West; **17 IKK Nordrhein IK'sına** `VDT+19950801+20260930` (bitiş) eklendi. 21/23 satır | kod yok (yalnız 30) — ama 17 IK 30.09.2026'da biter |
+| #7 → #11 vdek | 261 → 261 | 726 → 726 | TK `101575519` altında kod 30'lu 4 VKG'de Tarifkennzeichen **bir alan sağa** (`30+HHH` → `30++HHH`); 1 ASP metni `DAVASO GmbH` → `IQVIA HSS GmbH`. 7/7 satır | yok — madde 12 |
+| #6 → #11 vdek | 261 → 261 | 724 → 726 | yukarıdaki + #6↔#7 arasındaki bilinen 2 TK/kod-30 satırı. 10/13 satır | yok |
+
+**Podoloji'ye dokunan tek değişiklik AOK Bayern (#8).** BKK'da içerik hiç değişmedi.
 
 ⛔ **7. dosya bugün koda/DB'ye girmez.** vdek Q4 ile Q2 dosyasının IK kümesi **birebir aynı**
 (261 = 261) ama içerik farklı (724 ↔ 726 VKG satırı). Yani tek seferde ikisi de yüklenirse biri
@@ -747,6 +805,52 @@ Ayrıca **263 IK birden fazla dosyada geçiyor**; 261'i bu vdek Q2/Q4 çiftinden
 Kassenart'lar arası ortak Verband/DAS kayıtları (ör. BKK ∩ vdek = 16 IK). Yükleyicinin
 "son yazan kazanır" davranışı burada **yanlış** sonuç verir — birleştirme kuralı geçerlilik
 tarihine göre olmalı, dosya sırasına göre değil.
+
+#### Tazelik taraması 30.09.2026 (Q4/2026 geçişinden bir gün önce — yalnız gözlem, indirme/yükleme YAPILMADI)
+
+Kaynak: yayıncı sayfası + sayfanın kendi RSS'i (aşağıda), 30.09.2026 ~12:10 MESZ okundu.
+"gültig ab" ve yayın tarihi (RSS `pubDate`) yayıncıdan; dosya içi Dateidatum okunmadı (dosya indirilmedi).
+
+| Kassenart | Sayfada yayımlı | gültig ab | RSS pubDate | Bizde | Sonuç |
+|---|---|---|---|---|---|
+| AOK | `AO05Q326.ke3` | 27.07.2026 | 31.07.2026 | ✅ aynı | 30.09'da düşer |
+| AOK | `AO05Q426.ke0` | **01.10.2026** | 29.09.2026 | ⛔ yok | **indirilecek** |
+| BKK | `BK05Q326.ke1` | 01.07.2026 | 31.07.2026 | ✅ aynı | 30.09'da düşer |
+| BKK | `BK05Q426.ke0` | **01.10.2026** | 28.09.2026 | ⛔ yok | **indirilecek** |
+| IKK | `IK05Q326.ke1` | 01.07.2026 | 25.08.2026 | ✅ aynı | 30.09'da düşer |
+| IKK | `IK05Q426.ke0` | **01.10.2026** | 28.09.2026 | ⛔ yok | **indirilecek** |
+| Knappschaft | `BN050526.ke0` | 01.05.2026 | 27.04.2026 | ✅ aynı | yeni sürüm yok, geçerli kalır |
+| SVLFG | `LK05Q226.ke0` | 01.04.2026 | 22.04.2026 | ✅ aynı | yeni sürüm yok, geçerli kalır |
+| vdek | `EK05Q226.ke0` | 01.04.2026 | 21.04.2026 | ✅ aynı | 30.09'da düşer |
+| vdek | `EK05Q426.ke1` | **01.10.2026** | 18.09.2026 | ⚠ bizde **KE0** (Nachtrag 0) | **KE1 indirilecek** — KE0 artık sayfada yok, yerini KE1 aldı |
+
+✅ **Aynı gün:** 4 dosyanın dördü de 30.09.2026 ~12:14'te indirildi (#8-#11, yukarıdaki tablo).
+
+**01.10.2026 için gereken:** 4 dosya — `AO05Q426.ke0` · `BK05Q426.ke0` · `IK05Q426.ke0` ·
+`EK05Q426.ke1`. Yüklendikten sonra düşenler: `AO05Q326_KE3` · `BK05Q326_KE1` · `IK05Q326_KE1` ·
+`EK05Q226_KE0` · `EK05Q426_KE0` (arşivde kalır, silinmez). `BN050526` ve `LK05Q226` geçerli kalır.
+
+**Açık madde 6'ya etkisi:** "01.10.2026'da kendiliğinden çözülür" beklentisi **artık doğru değil** —
+DB'deki vdek satırları `EK05Q426_KE0`'dan, ama 01.10'dan itibaren geçerli yayın `KE1`. KE0↔KE1
+farkı ölçülmedi (dosya indirilmedi). Madde 01.10'da da açık kalır, ta ki KE1 yüklenip fark ölçülene kadar.
+↳ **Aynı gün ölçüldü:** KE0↔KE1 = 7 satır, hepsi TK kod 30 + bir ASP metni — 20/71/72 için karakter karakter aynı.
+
+**Takvim gözlemi:** AOK/BKK/IKK Q4 dosyaları çeyrek başından **2-3 gün önce** yayımlandı
+(Anhang 03 §2'nin "spätestens 4 Wochen vorher" beklentisinin tersine). Yani **03.09 kontrol günü
+bunları yakalayamazdı** — elle kontrol tarihi tek başına yetmez; çeyrek başına kadar izlenmeli.
+
+**Makine okunur kaynak (otomasyon için):**
+- **RSS 2.0 var:** `https://www.gkv-datenaustausch.de/leistungserbringer/sonstige_leistungserbringer/kostentraegerdateien_sle/rss_kostentraegerdateien_sonstige_leistungserbringer.xml`
+  — sayfadaki listenin birebir aynısı: her `<item>` = bir dosya, `<guid>`/`<link>` = doğrudan dosya
+  URL'i, `<description>` = "gültig ab dem TT.MM.JJJJ", `<pubDate>` = yayın zamanı. HTTP `ETag` +
+  `Last-Modified` başlıkları dönüyor (koşullu GET mümkün). Genel RSS listesi: `/rss_feeds/rssfeeds.jsp`.
+- **API / bildirim servisi / newsletter: yok** (sayfada görülmedi).
+- **URL'ler dosya bazında sabit ama sürüm bazında değişken:** `/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/kostentraegerdateien_1/<DATEINAME>.<keN>`.
+  Yeni çeyrek/Nachtrag = yeni ad = yeni URL; eskisi listeden düşer (`EK05Q426.ke0` örneği).
+  Yani "aynı URL'i yokla" yaklaşımı çalışmaz; **RSS'teki guid kümesini sicille karşılaştırmak** çalışır.
+- Otomasyon önerisi (uygulama `builder`/`onprem`'e ait, G8: yeni n8n workflow'u değil):
+  `.github/workflows/preise-check.yml` desenine bir adım — RSS'i çek, guid kümesi W-01 tablosundan
+  farklıysa Telegram. İndirme ve DB yükleme **elde kalır** (sürüm zamanlaması insan kararı, madde 6).
 
 #### Bütünlük doğrulaması (05.09.2026 — deterministik sayım, YZ kullanılmadı)
 
@@ -848,6 +952,36 @@ itirazında orijinaline başvurulacaksa dosyalar yayıncıdan yeniden indirilmel
    zaten doğru sürümdür; yalnız `EK05Q226`'nın uzak tutulması yeter. §1 takviminde kayıtlı.
    Ayrıntılı ölçüm ve DB tarafı: `db/REGISTER.md` → `kostentraeger_annahmestellen`,
    **ZEITFEHLER** bölümü (sahibi `db-ustasi`).
+   ↳ **30.09.2026 gözlemi:** vdek Q4 yayını artık `EK05Q426.ke1` (18.09.2026) — DB'deki KE0 da
+   geçersiz sürüm. 01.10'da kendiliğinden çözülmez; KE1 yüklenmeli + KE0↔KE1 farkı ölçülmeli.
+   Sahip: `db-ustasi` (yükleme) · tarih 01.10.2026 · ayrıntı yukarıda "Tazelik taraması 30.09.2026".
+   ↳ **30.09.2026 ölçüm:** KE0↔KE1 farkı 7 satır, yalnız TK kod 30 + bir ASP metni — 20/71/72
+   etkilenmiyor. Madde **Q4 dosyaları DB'ye yüklenene kadar** açık (sahip `db-ustasi`, 01.10.2026; önce madde 9).
+7. ✅ **KAPANDI 30.09.2026 (indirme kısmı).** 4 dosya `curl` ile byte-exact indirildi; sha256 + parser
+   sayımı + öncül farkı yukarıda (#8-#11). **Kalan:** DB yüklemesi → madde 6 + 9 + 10, `db-ustasi`, 01.10.2026.
+8. **`offen` — tazelik kontrolü hâlâ elle.** RSS var (yukarıda); otomatik kontrol kurulmadı. Sahip:
+   `builder` + `onprem` onayı. Kurulana kadar kontrol günü 03.09 değil **çeyrek başına kadar haftalık**.
+9. ⛔ **`offen` — KODLAMA TUZAĞI, DB yüklemesinden ÖNCE kapanmalı** (30.09.2026). Yeni 4 dosya
+   ISO-8859-1; `tools/kostentraeger-annahmestellen-laden.mjs:111` ve `parser.test.js:238`
+   `readFileSync(…, 'utf8')` ile okuyor. Ölçüldü: utf8 okununca kayıt/IK/VKG sayısı **aynı** çıkıyor
+   (sayım testi yakalamaz!) ama isimlerde dosya başına 189–356 `U+FFFD` oluşuyor → DB'ye bozuk kasa adı
+   gider. Öneri: UNB `UNOC:3` ise `latin1` oku (ya da `TextDecoder('utf-8',{fatal:true})` dene, düşerse
+   latin1). Sahip: `builder` (kod) · `db-ustasi` (yükleme) · tarih **01.10.2026**.
+10. **`offen` — `parser.test.js` ve yükleyicinin `ECHT_DATEIEN` listesi hâlâ 05.09 partisini okuyor.**
+    01.10.2026'dan geçerli küme #8 · #9 · #10 · #11 · #4 · #5 = **1.067 kayıt / 1.042 tekil IK /
+    11.411 VKG** (30.09.2026, parser + latin1 ile sayıldı). Regresyon beklentisi bu olmalı; düşmüş
+    dosyalar listeden çıkar (dosya arşivde kalır). Sahip: `builder` · 01.10.2026.
+11. **`offen` — AOK Bayern Annahmestelle değişimi Podologie'ye dokunuyor.** #1→#8: `108916709` (DLZ
+    Schwandorf) kaldırıldı, VKG'leri (Verknüpfungsart 09, kodlar 20/61/62/66/67/68/71) `108910008` (SCD
+    Ebermannsdorf, ab 01.10.2026) üstüne geçti. Verknüpfungsart 09 = Papierannahmestelle (0036 seed
+    başlığı: Urbelege zarfı, `ladePapierannahmestelle()` → Begleitzettel adresi). Yani AOK Bayern
+    Podologie Urbelege adresi 01.10'dan **Schwandorf → 92263 Ebermannsdorf, Untere Zell 7**. Kodda
+    `108916709` sabit atıf yok; yalnız seed'lerde (0006/0007/0036/0037) duruyor. Yorum/onay `gkv-302`,
+    yükleme + yeni seed `db-ustasi` (+ `onprem`). Tarih 01.10.2026.
+12. **`unkritisch` (bizim için) — vdek KE1'de VKG 11. alan.** TK kod 30 satırları `…+30++HHH`; Anhang 03
+    V10 §7.2 VKG'de 10 alan tanımlıyor, `parser.js` 11. alanı sessizce atar → `tarifkennzeichen` boş.
+    KE0'da `30+HHH` idi. Yalnız kod 30 (bizim değil). Kod 30 bir gün kullanılırsa yeniden açılır;
+    yayıncı hatası mı yeni konum mu sorusu `gkv-302`'nin.
 
 ---
 
