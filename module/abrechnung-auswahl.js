@@ -1036,7 +1036,7 @@ function fehlerhaftHtml() {
               style="font-size:12px;padding:6px 12px;white-space:nowrap;border:1px solid #ef4444;color:#ef4444;">Trotzdem übernehmen</button>
           </div>` : `
           <div style="font-size:12px;color:var(--text-muted);">
-            Nicht übersteuerbar — der Server lehnt eine Verordnung ohne dokumentierte Behandlung immer ab.
+            Nicht übersteuerbar — der Server lehnt diese Verordnung aus den oben genannten Gründen immer ab. Bitte zuerst korrigieren.
           </div>`}
         </div>`).join('')}
     </div>
