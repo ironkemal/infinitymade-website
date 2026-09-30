@@ -112,7 +112,7 @@ import {
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen, zeichneRezeptFortschritt, uebernimmSerienfrequenzAusRx, setFreqValue,
 } from './module/termin-aktionen.js?v=20261001e';
-import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261001m'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m';
+import { verdrahteAktionsleiste } from './module/termin-aktionsleiste.js?v=20261001m'; import { leadStatusLabel } from './module/lead-status.js?v=20261001m'; import { mountPraxisStandort } from './module/praxis-standort.js?v=20261001y';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { bindeSitzungenAnTermin } from './module/sitzung-bindung.js?v=20260916';
 import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from './module/serien-termine.js?v=20260916';
@@ -10346,9 +10346,9 @@ async function loadTeam() {
     showToast(t('copied'));
   };
 
-  // Anwesenheit yan panelini yükle + koordinat yoksa geocode et
+  // Anwesenheit yan panelini yükle; Praxisstandort per Gerät statt Nominatim (onprem O-140)
   loadAnwesenheitSidePanel();
-  ensureBusinessCoords();
+  mountPraxisStandort({ supabase, getBusiness: () => currentBusiness, toast: showToast });
 }
 
 function countWorkDays(fromStr, toStr) {
@@ -19801,37 +19801,6 @@ async function loadAnwesenheitSidePanel() {
   fetchAnwesenheitReport();
 }
 
-// Nominatim ile işyeri adresini koordinata çevir, businesses tablosuna kaydet
-async function ensureBusinessCoords() {
-  if (!currentBusiness?.id) return;
-  if (currentBusiness.clinic_lat && currentBusiness.clinic_lng) return;
-
-  const { street, house_number, zip, city, country } = currentBusiness;
-  if (!street || !city) return;
-
-  const address = [house_number, street, zip, city, country || 'DE'].filter(Boolean).join(' ');
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
-      { headers: { 'User-Agent': 'Praxura/1.0 (info@praxura.de)' } }
-    );
-    const data = await res.json();
-    if (!data.length) return;
-
-    const { lat, lon } = data[0];
-    await supabase
-      .from('businesses')
-      .update({ clinic_lat: parseFloat(lat), clinic_lng: parseFloat(lon) })
-      .eq('id', currentBusiness.id);
-
-    // Local state güncelle
-    currentBusiness.clinic_lat = parseFloat(lat);
-    currentBusiness.clinic_lng = parseFloat(lon);
-    console.log('[geocode] koordinat kaydedildi:', lat, lon, 'for', currentBusiness.business_name);
-  } catch (err) {
-    console.warn('[geocode] Nominatim hatası:', err);
-  }
-}
 
 async function fetchAnwesenheitReport() {
   const tableWrap = document.getElementById('anwTableWrap');
