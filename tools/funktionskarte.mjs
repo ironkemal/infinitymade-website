@@ -63,11 +63,15 @@ const rel = (p) => relative(ROOT, p).split(sep).join('/');
 // `const x = () =>` biçiminde. AST kullanmıyoruz (bağımlılık eklemek G8'e
 // yaklaşır ve gerek yok) — süslü parantez sayarak gövde sınırı bulunuyor.
 
+// Zincirli atama (01.10.2026): `const a = window.x = () => …` / `= function …` —
+// `a` fonksiyon sayılır (örnek: dashboard.js `neuerBkKanal`). Zincir yalnız noktalı
+// hedefleri (window.x, obj.y) yutar; `const a = b = …` gibi çıplak zincirler sayılmaz.
+const ZINCIR = String.raw`(?:[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+\s*=\s*)*`;
 const DEF_PATTERNS = [
   { re: /^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/, kind: 'function' },
-  { re: /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?function\s*\(/, kind: 'function-expr' },
-  { re: /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>/, kind: 'arrow' },
-  { re: /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?[A-Za-z_$][\w$]*\s*=>/, kind: 'arrow' },
+  { re: new RegExp(String.raw`^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*` + ZINCIR + String.raw`(?:async\s+)?function\s*\(`), kind: 'function-expr' },
+  { re: new RegExp(String.raw`^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*` + ZINCIR + String.raw`(?:async\s+)?\([^)]*\)\s*=>`), kind: 'arrow' },
+  { re: new RegExp(String.raw`^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*` + ZINCIR + String.raw`(?:async\s+)?[A-Za-z_$][\w$]*\s*=>`), kind: 'arrow' },
 ];
 
 /** Açılış satırından itibaren süslü parantez dengeleyerek gövde sonunu bulur. */

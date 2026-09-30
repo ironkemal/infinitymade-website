@@ -281,8 +281,8 @@ export function ikAnzeige(k) {
 }
 
 // Texte des Hinweises unter dem IK-Feld. Bewusst hier und nicht im Wörterbuch
-// von dashboard.js: das darf nicht wachsen (CLAUDE.md, Konsey 2026-08-13). Die
-// Sprache kommt aus <html lang>, das dashboard.js beim Wechsel setzt.
+// von dashboard.js: das darf nicht wachsen (CLAUDE.md, Konsey 2026-08-13).
+// Das Produkt ist nur Deutsch (Kemal 28.09.2026): en/tr entfernt, der Parameter `sprache` fällt auf `de` zurück.
 export const HINWEISE = {
   de: {
     // Karten-IK (30.09.2026, gkv-302): nur Deutsch — das Produkt ist deutschsprachig.
@@ -293,14 +293,6 @@ export const HINWEISE = {
     kostentraeger: (karte, name, kt) => karte === kt ? `Kostenträger: ${name} (IK ${kt})` : `Karte ${karte} → Kostenträger ${name} (IK ${kt})`,
     aufgeloest: (karte, ik) => `Karte ${karte} → rechnet ab bei ${ik}`,
     abweichend: (vorhanden, karte) => `Im Feld steht bereits ${vorhanden} — die gewählte Kasse hat die Karten-IK ${karte}. Nicht überschrieben.`,
-  },
-  en: {
-    aufgeloest: (karte, ik) => `Card ${karte} → bills via ${ik}`,
-    abweichend: (vorhanden, karte) => `The field already contains ${vorhanden} — the selected fund has card IK ${karte}. Not overwritten.`,
-  },
-  tr: {
-    aufgeloest: (karte, ik) => `Kart ${karte} → ${ik} üzerinden faturalanır`,
-    abweichend: (vorhanden, karte) => `Alanda zaten ${vorhanden} var — seçilen kasanın kart IK'sı ${karte}. Üzerine yazılmadı.`,
   },
 };
 

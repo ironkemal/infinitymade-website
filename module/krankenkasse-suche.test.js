@@ -340,16 +340,13 @@ test('ikAnzeige: Karte → abrechnende IK, sonst die IK der Zeile', () => {
   assert.equal(ikAnzeige({ name: 'Y', ik: null, anzahl: 0 }), '');
 });
 
-test('hinweisZeile: „Karte X → rechnet ab bei Y" bleibt nach der Auswahl stehen (de/en/tr)', () => {
+test('hinweisZeile: „Karte X → rechnet ab bei Y" bleibt nach der Auswahl stehen (nur Deutsch)', () => {
   const hinweisZeile = fn('hinweisZeile');
   const dak = { quelle: 'kostentraeger', kartenIk: '100167999', ik: '105830016' };
   const de = hinweisZeile(dak, '', 'de');
   assert.match(de, /100167999/); assert.match(de, /105830016/); assert.match(de, /rechnet ab/);
-  const en = hinweisZeile(dak, '', 'en');
-  const tr = hinweisZeile(dak, '', 'tr');
-  assert.notEqual(en, de); assert.notEqual(tr, de);
-  for (const s of [en, tr]) { assert.match(s, /100167999/); assert.match(s, /105830016/); }
-  assert.equal(hinweisZeile(dak, '', 'fr'), de, 'unbekannte Sprache fällt auf Deutsch zurück');
+  // en/tr entfernt (Produkt nur Deutsch, 28.09.2026): jede andere Sprache fällt auf Deutsch zurück
+  for (const sp of ['en', 'tr', 'fr']) assert.equal(hinweisZeile(dak, '', sp), de, `${sp} fällt auf Deutsch zurück`);
   assert.equal(hinweisZeile(dak, '', undefined), de);
 });
 

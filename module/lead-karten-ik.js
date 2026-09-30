@@ -11,7 +11,7 @@
  * Dieses Modul ergänzt nur, was dort fehlt: Wert laden, Validierung und die Kasse-ändert-sich-Regel.
  */
 
-import { kartenIkNormalisieren, HINWEISE } from './krankenkasse-suche.js?v=20261001b';
+import { kartenIkNormalisieren, HINWEISE } from './krankenkasse-suche.js?v=20261003e';
 
 /**
  * Reine Validierung: liefert Fehlertext oder '' wenn gültig oder leer.

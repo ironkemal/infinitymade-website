@@ -93,6 +93,7 @@ import { resolveSector } from '../nav-registry.js?v=20261001i';
 import { ladeAktuelle } from './anamnese-daten.js?v=20261001r';
 import { risikoKopie, risikoZeilen, befundRisikoHinweis } from './anamnese-formulare.js?v=20261001r';
 import { WAGNER_OPTIONEN, WAGNER_TEXT, wagnerWert } from './podo-wagner.js?v=20261001z';
+import { emit } from './signal.js?v=20260813';
 
 // ── Legende ────────────────────────────────────────────────────────────────
 
@@ -482,11 +483,10 @@ function collectBefund() {
 
 // ── Termine des Patienten ──────────────────────────────────────────────────
 
-/** Nächstgelegener Termin zuerst — der von heute ist fast immer der gemeinte. */
+/** Neuester Termin oben — wie die Terminlisten der Patientenakte (Podoloji-Reform S5, 01.10.2026).
+ *  Vorher „nächstgelegen zu jetzt": Vergangenheit und Zukunft wechselten sich ab, die Liste wirkte ungeordnet. */
 function sortiereTermine(liste) {
-  const jetzt = Date.now();
-  return [...liste].sort((a, b) =>
-    Math.abs(new Date(a.start_time) - jetzt) - Math.abs(new Date(b.start_time) - jetzt));
+  return [...liste].sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
 }
 
 async function ladePatientenkontext(leadId) {
@@ -815,6 +815,7 @@ async function speichern() {
       : 'Befund gespeichert ✓'
   );
   zeigeUebernahme(null);
+  emit('fussbefund:changed', { leadId: patientId, id: data.id });   // z. B. Wagner-Rozet der Tagesbehandlung
 
   // Kontext neu ziehen, damit „✓ Befund" am Termin steht und die Liste stimmt.
   await ladePatientenkontext(patientId);

@@ -21,6 +21,12 @@
 //     hochgezaehlt — niemals stillschweigend ueberschrieben. Alte
 //     Unterschriften bleiben ueber ihren Snapshot beweisbar.
 //
+// 01.10.2026 · v2 (Behandlungsvertrag + Datenschutz): nur Schreibweise —
+//     ASCII-Umlaute (ae/oe/ue/ss) durch echte Umlaute ersetzt, Inhalt unveraendert
+//     (legal-de 01.10.2026). Versionsnummer trotzdem hochgezaehlt, weil sich der
+//     eingefrorene Wortlaut (text_sha256) aendert. Alte Unterschriften bleiben ueber
+//     ihren Snapshot in patient_consents beweisbar; v1-Text steht dort, nicht hier.
+//
 // ⚠️  Die Formulierungen sind ein fachlich fundierter Entwurf, aber KEINE
 //     Rechtsberatung. Vor dem Go-Live durch `legal-de` gegenlesen lassen.
 // =====================================================================
@@ -30,8 +36,8 @@
 // {{datum}} {{ausfall_regel}} {{optionen}}
 
 const AUSFALL_FALLBACK =
-  'Die Praxis erhebt derzeit keine Ausfallgebuehr. Bitte sagen Sie Termine, die Sie nicht '
-  + 'wahrnehmen koennen, dennoch rechtzeitig ab — die Zeit wird sonst fuer andere Patientinnen '
+  'Die Praxis erhebt derzeit keine Ausfallgebühr. Bitte sagen Sie Termine, die Sie nicht '
+  + 'wahrnehmen können, dennoch rechtzeitig ab — die Zeit wird sonst für andere Patientinnen '
   + 'und Patienten blockiert.';
 
 /**
@@ -54,11 +60,11 @@ export function ausfallRegelText(profile) {
 
   const zusatz = (profile.ausfall_hinweis || '').trim();
   return (
-    `Termine, die Sie nicht wahrnehmen koennen, sagen Sie bitte spaetestens ${stunden} Stunden `
-    + `vor Behandlungsbeginn ab. Bei spaeterer Absage oder Nichterscheinen berechnet die Praxis `
+    `Termine, die Sie nicht wahrnehmen können, sagen Sie bitte spätestens ${stunden} Stunden `
+    + `vor Behandlungsbeginn ab. Bei späterer Absage oder Nichterscheinen berechnet die Praxis `
     + `ein Ausfallhonorar von ${hoehe}. Grundlage ist die vertragliche Vereinbarung zwischen `
     + `Ihnen und der Praxis; die Krankenkasse erstattet dieses Honorar nicht. Sagen Sie aus `
-    + `einem wichtigen Grund ab (z. B. akute Erkrankung, Unfall), entfaellt das Ausfallhonorar.`
+    + `einem wichtigen Grund ab (z. B. akute Erkrankung, Unfall), entfällt das Ausfallhonorar.`
     + (zusatz ? `\n${zusatz}` : '')
   );
 }
@@ -81,13 +87,13 @@ export const EINWILLIGUNG_TEXTE = {
   // des Behandlungsvertrags, KEINE datenschutzrechtliche Einwilligung.
   // -------------------------------------------------------------------
   behandlungsvertrag: {
-    version: 'behandlungsvertrag-v1-2026-08-14',
+    version: 'behandlungsvertrag-v2-2026-10-01',
     consentType: 'behandlungsvertrag',
     titel: 'Behandlungsvertrag und Ausfallregelung',
     kurzfassung: [
       'Sie beauftragen {{praxis_name}} mit Ihrer Behandlung.',
-      'Sie wurden ueber Ablauf, Nutzen und Risiken aufgeklaert und konnten Fragen stellen.',
-      'Sie koennen die Behandlung jederzeit abbrechen.',
+      'Sie wurden über Ablauf, Nutzen und Risiken aufgeklärt und konnten Fragen stellen.',
+      'Sie können die Behandlung jederzeit abbrechen.',
       'Termine bitte rechtzeitig absagen — sonst kann ein Ausfallhonorar anfallen.',
     ],
     absaetze: [
@@ -100,29 +106,29 @@ export const EINWILLIGUNG_TEXTE = {
           + 'Standard, nicht einen bestimmten Behandlungserfolg.',
       },
       {
-        ueberschrift: 'Aufklaerung und Einwilligung (§§ 630d, 630e BGB)',
+        ueberschrift: 'Aufklärung und Einwilligung (§§ 630d, 630e BGB)',
         text:
-          'Sie wurden muendlich und verstaendlich ueber Art, Umfang, Durchfuehrung, zu erwartende '
-          + 'Folgen und Risiken der vorgesehenen Massnahmen sowie ueber Alternativen aufgeklaert. '
+          'Sie wurden mündlich und verständlich über Art, Umfang, Durchführung, zu erwartende '
+          + 'Folgen und Risiken der vorgesehenen Maßnahmen sowie über Alternativen aufgeklärt. '
           + 'Sie hatten Gelegenheit, Fragen zu stellen, und hatten ausreichend Bedenkzeit. '
-          + 'Sie willigen in die besprochenen Behandlungsmassnahmen ein. Diese Einwilligung '
-          + 'koennen Sie jederzeit und ohne Angabe von Gruenden fuer die Zukunft widerrufen; '
+          + 'Sie willigen in die besprochenen Behandlungsmaßnahmen ein. Diese Einwilligung '
+          + 'können Sie jederzeit und ohne Angabe von Gründen für die Zukunft widerrufen; '
           + 'die Behandlung wird dann nicht fortgesetzt.',
       },
       {
         ueberschrift: 'Mitwirkung',
         text:
-          'Fuer eine sichere Behandlung ist die Praxis auf Ihre Angaben angewiesen. Bitte teilen '
+          'Für eine sichere Behandlung ist die Praxis auf Ihre Angaben angewiesen. Bitte teilen '
           + 'Sie Vorerkrankungen (insbesondere Diabetes mellitus, Durchblutungs- und '
-          + 'Sensibilitaetsstoerungen), Blutverduennung (z. B. Marcumar, DOAK), Allergien und '
-          + 'Infektionserkrankungen mit — auch dann, wenn sich waehrend der laufenden Behandlung '
-          + 'etwas aendert.',
+          + 'Sensibilitätsstörungen), Blutverdünnung (z. B. Marcumar, DOAK), Allergien und '
+          + 'Infektionserkrankungen mit — auch dann, wenn sich während der laufenden Behandlung '
+          + 'etwas ändert.',
       },
       {
         ueberschrift: 'Dokumentation',
         text:
-          'Die Praxis fuehrt eine Patientenakte (§ 630f BGB) und bewahrt sie zehn Jahre nach '
-          + 'Abschluss der Behandlung auf. Sie koennen jederzeit Einsicht nehmen und gegen '
+          'Die Praxis führt eine Patientenakte (§ 630f BGB) und bewahrt sie zehn Jahre nach '
+          + 'Abschluss der Behandlung auf. Sie können jederzeit Einsicht nehmen und gegen '
           + 'Kostenerstattung Kopien verlangen (§ 630g BGB).',
       },
       {
@@ -142,22 +148,22 @@ export const EINWILLIGUNG_TEXTE = {
   // einzeln waehlbar und standardmaessig AUS.
   // -------------------------------------------------------------------
   datenschutz: {
-    version: 'datenschutz-v1-2026-08-14',
+    version: 'datenschutz-v2-2026-10-01',
     consentType: 'datenschutz',
     titel: 'Datenschutz — Information und Einwilligung',
     kurzfassung: [
-      'Ihre Gesundheitsdaten werden nur fuer Ihre Behandlung und deren Abrechnung verarbeitet.',
-      'Ihre Behandlung haengt NICHT davon ab, ob Sie unten zustimmen — alles dort ist freiwillig.',
-      'Sie koennen Ihre Zustimmung jederzeit widerrufen, ohne Nachteile.',
-      'Sie haben Auskunfts-, Berichtigungs- und Loeschrechte.',
+      'Ihre Gesundheitsdaten werden nur für Ihre Behandlung und deren Abrechnung verarbeitet.',
+      'Ihre Behandlung hängt NICHT davon ab, ob Sie unten zustimmen — alles dort ist freiwillig.',
+      'Sie können Ihre Zustimmung jederzeit widerrufen, ohne Nachteile.',
+      'Sie haben Auskunfts-, Berichtigungs- und Löschrechte.',
     ],
     absaetze: [
       {
         ueberschrift: 'Verantwortliche Stelle',
         text:
-          'Verantwortlich fuer die Verarbeitung Ihrer Daten ist {{praxis_name}}, '
+          'Verantwortlich für die Verarbeitung Ihrer Daten ist {{praxis_name}}, '
           + '{{praxis_adresse}}. Die Praxis nutzt die Praxissoftware Praxura; deren Anbieter '
-          + 'verarbeitet Ihre Daten ausschliesslich weisungsgebunden als Auftragsverarbeiter '
+          + 'verarbeitet Ihre Daten außchliesslich weisungsgebunden als Auftragsverarbeiter '
           + '(Art. 28 DSGVO) auf Servern in Deutschland.',
       },
       {
@@ -165,23 +171,23 @@ export const EINWILLIGUNG_TEXTE = {
         text:
           'Ihre Gesundheitsdaten werden verarbeitet, um Sie zu behandeln, die Behandlung zu '
           + 'dokumentieren und abzurechnen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b und lit. c '
-          + 'i. V. m. Art. 9 Abs. 2 lit. h DSGVO sowie § 630f BGB. Hierfuer ist KEINE Einwilligung '
-          + 'erforderlich — die Behandlung ist von Ihrer Entscheidung auf dieser Seite unabhaengig.',
+          + 'i. V. m. Art. 9 Abs. 2 lit. h DSGVO sowie § 630f BGB. Hierfür ist KEINE Einwilligung '
+          + 'erforderlich — die Behandlung ist von Ihrer Entscheidung auf dieser Seite unabhängig.',
       },
       {
-        ueberschrift: 'Empfaenger',
+        ueberschrift: 'Empfänger',
         text:
           'Bei gesetzlich Versicherten werden Abrechnungsdaten nach § 302 SGB V an Ihre '
-          + 'Krankenkasse bzw. deren Abrechnungsstelle uebermittelt; dazu ist die Praxis '
-          + 'gesetzlich verpflichtet. Der verordnende Arzt erhaelt die nach der '
-          + 'Heilmittel-Richtlinie vorgesehenen Rueckmeldungen. Darueber hinaus werden Ihre '
+          + 'Krankenkasse bzw. deren Abrechnungsstelle übermittelt; dazu ist die Praxis '
+          + 'gesetzlich verpflichtet. Der verordnende Arzt erhält die nach der '
+          + 'Heilmittel-Richtlinie vorgesehenen Rückmeldungen. Darüber hinaus werden Ihre '
           + 'Daten nicht an Dritte weitergegeben.',
       },
       {
         ueberschrift: 'Speicherdauer',
         text:
           'Behandlungsunterlagen werden zehn Jahre nach Abschluss der Behandlung aufbewahrt '
-          + '(§ 630f Abs. 3 BGB); steuer- und handelsrechtliche Fristen bleiben unberuehrt. '
+          + '(§ 630f Abs. 3 BGB); steuer- und handelsrechtliche Fristen bleiben unberührt. '
           + 'Diese Einwilligung wird als Nachweis (Art. 7 Abs. 1 DSGVO) ebenso lange aufbewahrt.',
       },
       {
@@ -191,19 +197,19 @@ export const EINWILLIGUNG_TEXTE = {
       {
         ueberschrift: 'Widerruf (Art. 7 Abs. 3 DSGVO)',
         text:
-          'Sie koennen jede oben erteilte Einwilligung jederzeit mit Wirkung fuer die Zukunft '
-          + 'widerrufen — formlos, muendlich an der Rezeption, telefonisch oder schriftlich an '
-          + '{{praxis_name}}, {{praxis_adresse}}. Der Widerruf beruehrt die Rechtmaessigkeit der '
+          'Sie können jede oben erteilte Einwilligung jederzeit mit Wirkung für die Zukunft '
+          + 'widerrufen — formlos, mündlich an der Rezeption, telefonisch oder schriftlich an '
+          + '{{praxis_name}}, {{praxis_adresse}}. Der Widerruf berührt die Rechtmäßigkeit der '
           + 'bis dahin erfolgten Verarbeitung nicht. Ein Widerruf hat KEINE nachteiligen Folgen '
-          + 'fuer Ihre Behandlung.',
+          + 'für Ihre Behandlung.',
       },
       {
         ueberschrift: 'Ihre Rechte',
         text:
-          'Sie haben das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Loeschung '
+          'Sie haben das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung '
           + '(Art. 17, soweit keine gesetzliche Aufbewahrungspflicht entgegensteht), '
-          + 'Einschraenkung (Art. 18), Datenuebertragbarkeit (Art. 20) und Widerspruch (Art. 21) '
-          + 'DSGVO. Ausserdem koennen Sie sich bei der zustaendigen Datenschutz-Aufsichtsbehoerde '
+          + 'Einschränkung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21) '
+          + 'DSGVO. Außerdem können Sie sich bei der zuständigen Datenschutz-Aufsichtsbehörde '
           + 'beschweren (Art. 77 DSGVO).',
       },
     ],
@@ -217,8 +223,8 @@ export const EINWILLIGUNG_TEXTE = {
       },
       {
         key: 'arztkommunikation',
-        label: 'Therapieberichte an meinen behandelnden Arzt senden (Entbindung von der Schweigepflicht fuer diesen Zweck)',
-        text: 'Uebermittlung von Therapieberichten an den behandelnden Arzt',
+        label: 'Therapieberichte an meinen behandelnden Arzt senden (Entbindung von der Schweigepflicht für diesen Zweck)',
+        text: 'Übermittlung von Therapieberichten an den behandelnden Arzt',
       },
     ],
   },
@@ -230,7 +236,7 @@ export const EINWILLIGUNG_TEXTE = {
   selbstzahler: {
     version: 'selbstzahler-v1-2026-08-14',
     consentType: 'selbstzahler',
-    titel: 'Vereinbarung ueber Selbstzahlerleistungen',
+    titel: 'Vereinbarung über Selbstzahlerleistungen',
     kurzfassung: [
       'Diese Leistung zahlt die gesetzliche Krankenkasse nicht.',
       'Sie tragen die Kosten selbst.',
@@ -241,15 +247,15 @@ export const EINWILLIGUNG_TEXTE = {
         ueberschrift: 'Gegenstand',
         text:
           'Die nachfolgend besprochene Leistung ist keine Leistung der gesetzlichen '
-          + 'Krankenversicherung. Sie wird auf Ihren ausdruecklichen Wunsch erbracht und '
+          + 'Krankenversicherung. Sie wird auf Ihren ausdrücklichen Wunsch erbracht und '
           + 'privat in Rechnung gestellt (§ 3 Abs. 1 BMV-Ae analog, § 630c Abs. 3 BGB).',
       },
       {
-        ueberschrift: 'Wirtschaftliche Aufklaerung (§ 630c Abs. 3 BGB)',
+        ueberschrift: 'Wirtschaftliche Aufklärung (§ 630c Abs. 3 BGB)',
         text:
-          'Sie wurden vor Beginn der Behandlung darueber informiert, dass die Kosten '
-          + 'voraussichtlich nicht von einem Kostentraeger uebernommen werden, und ueber die '
-          + 'voraussichtliche Hoehe der Kosten in Textform unterrichtet.',
+          'Sie wurden vor Beginn der Behandlung darüber informiert, dass die Kosten '
+          + 'voraussichtlich nicht von einem Kostenträger übernommen werden, und über die '
+          + 'voraussichtliche Höhe der Kosten in Textform unterrichtet.',
       },
     ],
   },
@@ -261,23 +267,23 @@ export const EINWILLIGUNG_TEXTE = {
     kurzfassung: [
       'Fotos dienen der Verlaufskontrolle Ihres Befundes.',
       'Die Fotos bleiben in Ihrer Patientenakte.',
-      'Sie koennen jederzeit widerrufen.',
+      'Sie können jederzeit widerrufen.',
     ],
     absaetze: [
       {
         ueberschrift: 'Zweck',
         text:
           'Zur Dokumentation und Verlaufskontrolle des Befundes werden Fotoaufnahmen der '
-          + 'betroffenen Koerperregion angefertigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a '
+          + 'betroffenen Körperregion angefertigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a '
           + 'i. V. m. Art. 9 Abs. 2 lit. a DSGVO (Ihre Einwilligung).',
       },
       {
         ueberschrift: 'Verwendung',
         text:
-          'Die Aufnahmen werden ausschliesslich in Ihrer Patientenakte gespeichert. Eine '
-          + 'Veroeffentlichung, Weitergabe zu Werbe-, Schulungs- oder Forschungszwecken erfolgt '
-          + 'NICHT. Die Einwilligung ist jederzeit fuer die Zukunft widerrufbar; die Aufnahmen '
-          + 'werden dann geloescht, soweit keine Aufbewahrungspflicht entgegensteht.',
+          'Die Aufnahmen werden außchliesslich in Ihrer Patientenakte gespeichert. Eine '
+          + 'Veröffentlichung, Weitergabe zu Werbe-, Schulungs- oder Forschungszwecken erfolgt '
+          + 'NICHT. Die Einwilligung ist jederzeit für die Zukunft widerrufbar; die Aufnahmen '
+          + 'werden dann gelöscht, soweit keine Aufbewahrungspflicht entgegensteht.',
       },
     ],
   },

@@ -8317,6 +8317,9 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
   #bkRxLeistungenBtn,
   .bk-sitz-tab,
   .pk-verlauf-zeile { min-height: 44px; }
+
+  /* „＋ Verordnung anlegen" (module/termin-verordnung.js): Inline-Padding 7 px → ~30 px hoch. */
+  .bk-vero-anlegen { min-height: 44px; }
 }
 
 @media (max-width: 768px) {
@@ -8326,6 +8329,10 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
   #podBillingContent > div[style*="grid-template-columns"] {
     grid-template-columns: minmax(0, 1fr) !important;
   }
+  /* Tagesbehandlung zuerst: die Erfassung ist die Hauptaufgabe, die Verordnungsliste
+     (links im Markup) steht am Desktop schon links — auf dem Telefon kam sie vor dem
+     Formular und schob „Behandlung speichern" weit nach unten (S5, 01.10.2026). */
+  #podBillingContent > div[style*="grid-template-columns"] > #podBehPanel { order: -1; }
 
   /* Tagesansicht-Karte: Uhrzeit (≈75 px) und Name in einer nowrap-Zeile
      ließen dem Namen 47 px („Muster…"). Name bekommt die zweite Zeile.
@@ -8387,4 +8394,27 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
     font-weight: 600;
   }
   .fbp-toe-group { gap: 2px; flex-wrap: wrap; }
+}
+
+/* Fußbefund · Zehen & Nägel auf dem Telefon (S5, 01.10.2026): Zehenknöpfe 44 px
+   (Desktop 26 px bleibt). Zwei Füße passen bei 5×44 px nicht nebeneinander —
+   Links und Rechts stehen untereinander, jede Zeile trägt ihre eigene Beschriftung
+   (die Kopfzeile „Links | Rechts" entfällt, sie stünde nicht mehr über den Spalten). */
+@media (max-width: 480px) {
+  .fbp-toe-btn { width: 44px; height: 44px; font-size: 14px; }
+  .fbp-toe-group { gap: 4px; }
+  .fbp-grid-table:has(.fbp-toe-group) thead { display: none; }
+  .fbp-grid-table:has(.fbp-toe-group) tr { grid-template-columns: minmax(0, 1fr); }
+  .fbp-grid-table:has(.fbp-toe-group) tbody td:not(:first-child) { padding: 4px 4px 8px; }
+  .fbp-grid-table:has(.fbp-toe-group) tbody td:nth-child(2)::before,
+  .fbp-grid-table:has(.fbp-toe-group) tbody td:nth-child(3)::before {
+    display: block;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .fbp-grid-table:has(.fbp-toe-group) tbody td:nth-child(2)::before { content: 'Links'; }
+  .fbp-grid-table:has(.fbp-toe-group) tbody td:nth-child(3)::before { content: 'Rechts'; }
 }

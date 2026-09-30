@@ -262,7 +262,7 @@ window.updateFbNote = async function(id, notes) {
 
 // ─── Modul-Sichtbarkeit ───────────────────────────────────────────────
 // Kaynaklar: nav-registry.js (kodda ne VAR) + module_visibility (toggle'lar)
-// + visibility_reports (client'lar fiilen ne render etti).
+// (visibility_reports-Lesen entfernt 01.10.2026 — Tabelle wird gedroppt, Status-Spalten entfallen.)
 const VIS_SECTORS = [
   { id: 'physiotherapy', label: 'Physiotherapie (inkl. Logo/Ergo)' },
   { id: 'podologie',     label: 'Podologie' },
@@ -275,24 +275,11 @@ const VIS_GROUP_LABELS = {
 };
 let visActiveSector = 'physiotherapy';
 let visMatrixRows = [];   // module_visibility satırları (tüm sektörler)
-let visReports = [];      // visibility_reports satırları (tüm sektörler)
-
-function relTime(iso) {
-  if (!iso) return '';
-  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (mins < 60) return `vor ${mins} Min`;
-  if (mins < 60 * 24) return `vor ${Math.round(mins / 60)} Std`;
-  return `vor ${Math.round(mins / 1440)} Tagen`;
-}
 
 async function loadVisibility() {
-  const [mv, vr] = await Promise.all([
-    supabase.from('module_visibility').select('*'),
-    supabase.from('visibility_reports').select('*'),
-  ]);
+  const mv = await supabase.from('module_visibility').select('*');
   if (mv.error) { showToast('Fehler: ' + mv.error.message, 'error'); return; }
   visMatrixRows = mv.data || [];
-  visReports = vr.data || [];
 
   // Registry'de yeni eklenen ama DB'de henüz satırı olmayan kombinasyonları default'la ekle
   const known = new Set(visMatrixRows.map(r => `${r.module_id}|${r.sector}|${r.role}`));
@@ -339,20 +326,6 @@ function renderVisOrphans() {
   el.innerHTML = `<div class="vis-orphan-banner">⚠️ <b>Im Code verschwunden:</b> ${escapeHtml(list)} — diese Module haben noch Schalter in der Datenbank, existieren aber nicht mehr in nav-registry.js. Vermutlich versehentlich gelöscht!</div>`;
 }
 
-function visHealthHtml(sector, role, moduleId, enabled) {
-  const rep = visReports.find(r => r.sector === sector && r.role === role && r.module_id === moduleId);
-  if (!rep) return `<span class="vis-health"><span class="vis-dot dot-gray"></span>kein Bericht</span>`;
-  const when = relTime(rep.reported_at);
-  if (enabled) {
-    if (rep.rendered && rep.dom_ok) return `<span class="vis-health"><span class="vis-dot dot-green"></span>sichtbar · ${when}</span>`;
-    if (rep.rendered && !rep.dom_ok) return `<span class="vis-health bad"><span class="vis-dot dot-red"></span>Panel fehlt im Code! · ${when}</span>`;
-    if (['plan', 'rbac'].includes(rep.hidden_reason)) return `<span class="vis-health"><span class="vis-dot dot-amber"></span>durch ${rep.hidden_reason === 'plan' ? 'Plan' : 'RBAC'} verborgen · ${when}</span>`;
-    return `<span class="vis-health bad"><span class="vis-dot dot-red"></span>AN, aber nicht sichtbar! · ${when}</span>`;
-  }
-  if (rep.rendered) return `<span class="vis-health bad"><span class="vis-dot dot-red"></span>AUS, aber sichtbar! · ${when}</span>`;
-  return `<span class="vis-health"><span class="vis-dot dot-gray"></span>deaktiviert · ${when}</span>`;
-}
-
 function renderVisMatrix() {
   const sector = visActiveSector;
   const items = NAV_REGISTRY[sector] || [];
@@ -361,21 +334,21 @@ function renderVisMatrix() {
   let lastGroup = null;
   const bodyRows = items.map(item => {
     const groupHeader = item.group !== lastGroup
-      ? `<tr class="vis-group-row"><td colspan="5">${escapeHtml(VIS_GROUP_LABELS[item.group] || item.group)}</td></tr>` : '';
+      ? `<tr class="vis-group-row"><td colspan="3">${escapeHtml(VIS_GROUP_LABELS[item.group] || item.group)}</td></tr>` : '';
     lastGroup = item.group;
     const cells = ['owner', 'employee'].map(role => {
       const row = getRow(item.id, role);
       const enabled = row ? row.enabled : item.roles.includes(role);
       return `<td>
         <label class="vis-switch"><input type="checkbox" data-module="${item.id}" data-role="${role}" ${enabled ? 'checked' : ''}><span class="vis-slider"></span></label>
-      </td><td>${visHealthHtml(sector, role, item.id, enabled)}</td>`;
+      </td>`;
     }).join('');
     return groupHeader + `<tr><td><b>${escapeHtml(item.label)}</b><div class="td-muted" style="font-size:11px;">${escapeHtml(item.id)}</div></td>${cells}</tr>`;
   }).join('');
 
   document.getElementById('visMatrix').innerHTML = `
     <table class="data-table">
-      <thead><tr><th>Modul</th><th>Inhaber</th><th>Status (Inhaber)</th><th>Mitarbeiter</th><th>Status (Mitarbeiter)</th></tr></thead>
+      <thead><tr><th>Modul</th><th>Inhaber</th><th>Mitarbeiter</th></tr></thead>
       <tbody>${bodyRows}</tbody>
     </table>`;
 
@@ -394,11 +367,9 @@ async function saveVisToggle(sector, moduleId, role, enabled, cb) {
     showToast('Fehler beim Speichern: ' + error.message, 'error');
     return;
   }
-  // Yerel cache'i güncelle + eski client raporunu sil (yeni durum bir sonraki login'de raporlanır)
+  // Yerel cache'i güncelle
   const local = visMatrixRows.find(r => r.sector === sector && r.role === role && r.module_id === moduleId);
   if (local) local.enabled = enabled; else visMatrixRows.push({ module_id: moduleId, sector, role, enabled });
-  await supabase.from('visibility_reports').delete().match({ sector, role, module_id: moduleId });
-  visReports = visReports.filter(r => !(r.sector === sector && r.role === role && r.module_id === moduleId));
   renderVisMatrix();
   showToast(`${moduleId} (${role}) ${enabled ? 'aktiviert' : 'deaktiviert'}.`);
 }

@@ -44,7 +44,7 @@ import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20261003a';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260930c';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
-import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261001b';
+import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261001g';
 

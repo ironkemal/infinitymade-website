@@ -111,7 +111,8 @@ import { rozetHtml } from './anamnese-rozet.js?v=20261001r';
 import { ladeWagnerRozet } from './podo-wagner.js?v=20261001z';
 import { therapiezeitFehler, therapiezeitFuerSpeichern, positionAusTherapiezeit, therapiezeitWert } from './podo-therapiezeit-regel.js?v=20261001z';
 import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
-import { mountFussbefund } from './fussbefund.js?v=20261001z';
+import { mountFussbefund } from './fussbefund.js?v=20261003e';
+import { on } from './signal.js?v=20260813';
 import { oeffneFolgetermin } from './termin-folge.js?v=20261003a';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
@@ -772,7 +773,7 @@ async function loadPodologieBilling() {
   } else {
     behandlungFormHtml = `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
-      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')} ${wagnerHtml}${rozetHtml(anamneseRow, ctx.escapeHtml)}</h4>
+      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(patientAnzeigename(selectedVord) || '—')} <span id="podWagnerRozet">${wagnerHtml}</span>${rozetHtml(anamneseRow, ctx.escapeHtml)}</h4>
       ${abgerechnetHinweisHtml}
       ${fussbefundBoxHtml(letzterBefund, ctx.escapeHtml)}
       ${anamneseFehltNotizHtml(anamneseDa, ctx.escapeHtml)}
@@ -952,6 +953,7 @@ async function loadPodologieBilling() {
     const vordF = findVord(_podState.selectedVordId);
     if (!e.target.open || !host || host.dataset.gebaut === '1' || !vordF?.lead_id || !ctx.fussbefund) return;
     host.dataset.gebaut = '1';
+    wagnerNachziehenAnmelden();
     try {
       await mountFussbefund(ctx.fussbefund(), { leadId: vordF.lead_id, bookingId: _podState.fahrtBookingId || undefined }, { wurzel: host });
     } catch (err) {
@@ -1234,6 +1236,23 @@ async function fragFolgetermin({ vord, datum, bookingId }) {
     console.error('[pod-folgetermin]', err);
     ctx.showToast('Folgetermin konnte nicht vorbelegt werden.', 'error');
   }
+}
+
+// Wagner-Rozet im Kopf der Tagesbehandlung nachziehen, sobald die eingebettete Fußbefund-Karte
+// speichert (module/fussbefund.js meldet 'fussbefund:changed'). Vorher blieb der Kopf bis zum
+// Neuladen der Seite auf dem alten Grad (Podoloji-Reform S5, 01.10.2026). EIN Zuhörer je Seite.
+let _wagnerSignalAn = false;
+function wagnerNachziehenAnmelden() {
+  if (_wagnerSignalAn) return;
+  _wagnerSignalAn = true;
+  on('fussbefund:changed', async (d) => {
+    const vord = findVord(_podState.selectedVordId);
+    const ziel = document.getElementById('podWagnerRozet');
+    if (!ziel || !vord?.lead_id || (d?.leadId && d.leadId !== vord.lead_id)) return;
+    const html = await ladeWagnerRozet(ctx.supabase, ctx.getOwnerId(), vord.lead_id, ctx.escapeHtml);
+    const jetzt = document.getElementById('podWagnerRozet');
+    if (jetzt && findVord(_podState.selectedVordId)?.lead_id === vord.lead_id) jetzt.innerHTML = html;
+  });
 }
 
 /** S3.13: Hausbesuch mit offener Fahrt — Knopf "Fahrt beenden" nach dem Speichern. */

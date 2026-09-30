@@ -42,7 +42,7 @@
  * (`trg_patient_consents_immutable`) und Löschen 10 Jahre lang (§ 630f Abs. 3 BGB).
  */
 
-import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20260814';
+import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20261003e';
 
 const BUCKET = 'patient-documents';   // existiert bereits, keine neue Infrastruktur
 

@@ -17,8 +17,8 @@ import { podoArztHinweise } from './module/podo-arztangaben.js?v=20261001g'; imp
 import { zeigeTerminFehler as terminFehler, loescheTerminFehler, verdrahteTerminFehler } from './module/termin-fehler.js?v=20260929q';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
-import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren, tazeleIkHinweis } from './module/krankenkasse-suche.js?v=20261001b';
-import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261001g';
+import { attachKrankenkasseSuche, verwerfeKassenCache, kartenIkHinweise, kasseAbrechnungsbereit, kartenIkNormalisieren, tazeleIkHinweis } from './module/krankenkasse-suche.js?v=20261003e';
+import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.js?v=20261003e';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261001e';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
@@ -27,30 +27,30 @@ import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freig
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
-import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261003d';
+import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261003e';
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260929i';
 import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20260930x';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261001g';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
-import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261001z';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20261003e';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001e';
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20260920b';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261003c';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261003e';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz, fahrtenbuchCsv, patientenverzeichnisCsv, csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS } from './module/fahrtenbuch-regeln.js?v=20261001c';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261003a';
-import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261001b';
+import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261001e';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261001f';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
 import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode }
-  from './module/verordnung-maske.js?v=20261003a';
+  from './module/verordnung-maske.js?v=20261003e';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260929';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261003a';
@@ -123,7 +123,7 @@ import { serienDaten, serienAnzahl, serienKnopfText, anzahlHinweisText } from '.
 // von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
 // podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
 import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260930c';
-import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261001r';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20261003e';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20261001b';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -14750,7 +14750,7 @@ async function saveRezept() {
   // ist keine Zusicherung. Regeln: module/verordnung-maske.js.
   const _nein = pruefeAenderungErlaubt(); if (_nein) { showToast(_nein, 'error'); return; }
 
-  const btn = document.getElementById('rzSaveBtn'); btn.disabled = true;
+  const btn = document.getElementById('rzSaveBtn'); if (btn.dataset.laeuft) return; btn.dataset.laeuft = '1'; btn.disabled = true;   // Eintrittssperre: ein Klick = ein Lauf (Toast doppelt, 01.10.2026)
 
   try {
     // 1. Arzt ins Register übernehmen. Früher wurde hier nur gesucht — stand
@@ -14897,7 +14897,7 @@ async function saveRezept() {
     console.error('[saveRezept]', e);
     showToast('Fehler: ' + (e.message || 'Unbekannt'), 'error');
   } finally {
-    btn.disabled = false;
+    btn.disabled = false; delete btn.dataset.laeuft;
   }
 }
 
