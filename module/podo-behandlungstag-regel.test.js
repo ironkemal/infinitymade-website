@@ -49,3 +49,13 @@ test('UI2: Nagelspange 78610 zählt als abrechenbarer Behandlungstag, Zuschlag 7
   assert.equal(abrechenbareBehandlungstage([{ behandlungsdatum: '2026-09-30', hpnr_codes: ['78030', '79933'] }]), 0);
   assert.equal(abrechenbareBehandlungstage([{ behandlungsdatum: '2026-09-30', hpnr_codes: ['78620'] }]), 0);
 });
+
+import { zuVieleBehandlungenJeTag as zv } from './podo-behandlungstag-regel.js';
+test('zuVieleBehandlungenJeTag: Spiegel von S:01013', () => {
+  assert.deepEqual(zv([{ behandlungsdatum: '2026-09-01', hpnr_codes: ['78010'] }, { behandlungsdatum: '2026-09-01', hpnr_codes: ['78010'] }]),
+    [{ datum: '2026-09-01', gruppe: 'behandlung', anzahl: 2, max: 1 }]);
+  assert.equal(zv([{ behandlungsdatum: '2026-09-01', hpnr_codes: ['78010', '78030'] }]).length, 0);
+  assert.equal(zv([{ behandlungsdatum: '2026-09-01', hpnr_codes: ['78010'] }, { behandlungsdatum: '2026-09-01', hpnr_codes: ['78020'], storniert_am: 'x' }]).length, 0);
+  assert.equal(zv([{ behandlungsdatum: '2026-09-01', hpnr_codes: ['78610', '78610', '78620'] }]).length, 0);
+  assert.equal(zv([{ behandlungsdatum: '2026-09-01', hpnr_codes: ['78610', '78610'] }, { behandlungsdatum: '2026-09-01T12:00', hpnr_codes: ['78610'] }])[0].gruppe, 'nagelspange');
+});

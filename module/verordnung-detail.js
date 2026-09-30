@@ -67,7 +67,7 @@
  */
 
 import { belegnummerText } from './belegnummer.js?v=20260817';
-import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261001i';
+import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
 // Ops-Kart #269 (05.09.2026): dasselbe Urteil wie in den Listen/Karten
 // (module/verordnung-uebersicht.js), hier auf die eine geöffnete Zeile
 // angewandt — „gleiches Urteil, wo auch immer geklickt wird" (siehe

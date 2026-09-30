@@ -67,6 +67,8 @@ import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
 import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten, gueltigBestaetigteIds, grundDaten } from './offene-einheiten.js?v=20261001e';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
+import { zuVieleBehandlungenJeTag } from './podo-behandlungstag-regel.js?v=20261003a';
+import { datumDe } from './datum.js?v=20260930f';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260930c';
 import { initDateieinheit, ladeDateieinheiten, dateieinheitBadge,
@@ -680,6 +682,13 @@ export async function ladeAbrechnungAuswahl() {
       const befund = podoBefundOhneBehandlung(v, behs);
       const fehlerGruende = [...podoSperren(v, hpnrs), ...befund.uebersteuerbar];
       const strukturGruende = [...podoStrukturBlocker(v, hpnrs), ...befund.hart, ...podoHausbesuchSperren(v, behs)];
+      // S:01013 (Server-Preflight): mehr als eine Behandlung je Tag — ohne diesen Spiegel stand
+      // die Verordnung hier sauber und der Server lehnte die Datei beim Erstellen ab (P1 01.10.2026).
+      for (const t of zuVieleBehandlungenJeTag(behs)) {
+        strukturGruende.push(t.gruppe === 'nagelspange'
+          ? `Am ${datumDe(t.datum, t.datum)} ist die Nagelkorrekturspange (78610) ${t.anzahl}× erfasst — höchstens ${t.max}× je Tag. Überzählige Behandlung stornieren.`
+          : `Am ${datumDe(t.datum, t.datum)} sind ${t.anzahl} Behandlungen (78010/78020) erfasst — je Tag ist nur eine abrechenbar (HeilM-RL § 12 Abs. 8). Doppelten Behandlungstag stornieren.`);
+      }
       fehlerGruende.push(...strukturGruende);
       if (fehlerGruende.length) fehlerhaft.push({ bereich: 'podo', zeile, gruende: fehlerGruende, uebersteuerbar: !strukturGruende.length });
       else zeilen.push(zeile);

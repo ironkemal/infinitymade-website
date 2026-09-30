@@ -64,3 +64,31 @@ export function zweiterBehandlungstagFrage(datum) {
   return `Für diese Verordnung ist am ${datumDe(datum, String(datum || ''))} bereits ein Behandlungstag erfasst. `
     + 'Je Tag ist nur eine Behandlung abrechenbar (HeilM-RL § 12 Abs. 8) — trotzdem speichern?';
 }
+
+/**
+ * Tage, an denen eine Verordnung mehr Behandlungen trägt als abrechenbar.
+ * Spiegel von behandlungstageJeDatum/TAGESHOECHSTZAHL in
+ * api-backend/billing/utils/behandlungstage.js (Preflight S:01013) — INHALTLICH
+ * GLEICH halten. 78010 und 78020 sind zusammen „die" Behandlung (1 je Tag,
+ * HeilM-RL § 12 Abs. 8), 78610 bis 2× je Tag (Anlage 2 § 2 c), 78620 zählt nicht.
+ * Bis 01.10.2026 zeigte „Neue Abrechnung" solche Verordnungen als sauber, der
+ * Server lehnte die Datei beim Erstellen ab und eine Nummer war verbrannt (P1 canli-test).
+ * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>, storniert_am?:?string}>} behandlungen
+ * @returns {Array<{datum:string, gruppe:'behandlung'|'nagelspange', anzahl:number, max:number}>}
+ */
+export function zuVieleBehandlungenJeTag(behandlungen) {
+  const GRUPPE = { '78010': 'behandlung', '78020': 'behandlung', '78610': 'nagelspange' };
+  const MAX = { behandlung: 1, nagelspange: 2 };
+  const z = new Map();
+  for (const b of behandlungen || []) {
+    if (!aktiv(b) || !tagVon(b)) continue;
+    for (const c of Array.isArray(b.hpnr_codes) ? b.hpnr_codes : []) {
+      const g = GRUPPE[String(c).trim()];
+      if (!g) continue;
+      const k = tagVon(b) + '|' + g;
+      z.set(k, (z.get(k) || 0) + 1);
+    }
+  }
+  return [...z].map(([k, anzahl]) => { const [datum, gruppe] = k.split('|'); return { datum, gruppe, anzahl, max: MAX[gruppe] }; })
+    .filter(x => x.anzahl > x.max);
+}

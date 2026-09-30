@@ -44,7 +44,7 @@
  */
 
 import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20261001e';
-import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261001i';
+import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
 import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20261003a';
 import { maskeHeimschicken, istVeraendert } from './verordnung-maske.js?v=20261003a';
 import { on } from './signal.js?v=20260813';

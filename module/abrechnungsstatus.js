@@ -43,7 +43,7 @@
 
 import { emit } from './signal.js?v=20260813';
 import { bestaetigungsText } from './offene-einheiten.js?v=20261001e';
-import { abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261001i';
+import { abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261003a';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). Diese Datei spricht
 // weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
 // uebersetzt wird nur an den beiden Lesestellen unten.

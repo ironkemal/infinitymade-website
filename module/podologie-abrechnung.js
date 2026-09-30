@@ -62,7 +62,7 @@
 
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
-import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261001i';
+import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260920s';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001b';
@@ -91,7 +91,7 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
 import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001h';
 import { tagesVorbelegungGrund, verordnetZeile } from './podo-vorbelegung-grund.js?v=20261001i';
-import { bestehenderBehandlungstag, zweiterBehandlungstagFrage, abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261001i';
+import { bestehenderBehandlungstag, zweiterBehandlungstagFrage, abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261003a';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
 import { behandlungspositionVorschlag, ohneBehandlungsposition, OHNE_BEHANDLUNG_FRAGE, leitsymptomatikNotiz, massnahmeAusLeitsymptomatik } from './podo-behandlungsposition-regel.js?v=20261002a';
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
