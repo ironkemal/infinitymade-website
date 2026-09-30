@@ -486,3 +486,72 @@
 - **Tarih:** 2026-09-30 · Tutanak: `konsey/tutanak/2026-09-30-podologie-s0-behandlungstag-menue.md`
 - **Beta-1'e bağlı:** Befund jede Sitzung? · Tablet oder Telefon beim Hausbesuch? · „Heute" als Startbildschirm? · Therapiezeit am Bildschirm?
 - **gkv-302 Antworten auf die offenen Punkte oben (6b):** 78030/78040 ohne 78010/78020 am selben Tag nicht abrechenbar — Tag bleibt dokumentiert, 78030 fällt aus der Datei; fehlende Leitsymptomatik = Bereit-Sperre (außer UI1/UI2), Praxis darf im Einvernehmen mit dem Arzt ohne neue Unterschrift ergänzen; Leitsymptomatik↔Maßnahme-Abweichung = Warnung. Server-Teil → Sitzung B.
+
+### Podologie-Anamnese: eigenes Formular, 20 Felder, 3 Pflichtfelder, Risiko-Rozet statt Wiederholung
+- **Karar:** Die Anamnese wird je Fachbereich getrennt (Kemal, 30.09.2026). Für die Podologie gilt
+  diese Feldliste in 6 Gruppen:
+  **A Diabetes:** Diabetes mellitus (nein/Typ 1/Typ 2/andere, *Pflicht*) · Diabetes seit (Jahr) ·
+  Therapie (Diät/Tabletten/Insulin/GLP-1) · HbA1c % + Datum (nie Pflicht).
+  **B Fuß-Risiko:** Neuropathie bekannt · pAVK/Durchblutungsstörung · früheres Fußulkus (Seite) ·
+  Amputation (Seite + Höhe) · Niereninsuffizienz/Dialyse (+ Dialysetage) — alle mit „unbekannt";
+  bei Diabetes ≠ nein *Pflicht* (unbekannt zählt als Antwort).
+  **C Medikamente:** Gerinnungshemmung (nein/ASS-Clopidogrel/Phenprocoumon/DOAK/Heparin, *Pflicht*) ·
+  weitere relevante (Kortison/Immunsuppressiva/Chemotherapie/keine + Freitext).
+  **D Allergien & Hygiene:** Allergien (keine/Latex/Desinfektionsmittel/Pflaster-Kleber/
+  Lokalanästhetika/Metall-Nickel/Salicylsäure + Freitext, *Pflicht*, „keine" ist Antwort) ·
+  übertragbare Infektion (nein/MRSA/Hepatitis/HIV/andere).
+  **E Alltag:** Einschränkungen Selbstpflege/Mobilität (Mehrfach: keine/Sehen/Bücken/Gehhilfe/
+  Rollstuhl/Pflegedienst) · Rauchen (nein/ja/früher).
+  **F Ärzte & Anliegen:** Hausarzt (arzt-suche, vorbelegt mit verordnendem Arzt) · Diabetologe/
+  Fußambulanz (nur bei Diabetes) · Anliegen des Patienten (1 Zeile) · Bemerkungen.
+  Meta automatisch: Datum, erfasst von. Folgeverordnung: ein Knopf „Anamnese unverändert
+  bestätigt" (1 Tap), versioniert wie `pat_fussbefund` (§ 630f BGB).
+- **Warnungen (Patientenkopf + Tagesbehandlung, max. 3 sichtbar + „+n"):** rot — Gerinnungshemmung
+  (Phenprocoumon/DOAK/Heparin; ASS nur orange), Latex-/Desinfektions-/Pflaster-/Metallallergie,
+  Z. n. Ulkus, Amputation, Dialyse, pAVK. Orange — Neuropathie, Immunsuppression/Kortison,
+  Infektion als neutrales „Hygiene" (Diagnose nicht auf dem Bildschirm). Hinweis (kein Block):
+  Verordnung DG DF, Anamnese Diabetes „nein"/leer.
+- **Keine Doppelerfassung:** Der „Risiken"-Block im Fußbefund (`module/fussbefund.js:1197-1204`,
+  diabetes/allergien/infektionskrankheiten/gerinnungshemmer) wird zur Nur-Lese-Anzeige aus der
+  Anamnese. Schuhe/Einlagen bleiben im Fußbefund (Anlage 1a 4.1: „Prüfung der Verwendbarkeit
+  vorhandener Hilfsmittel" ist Befunderhebung, nicht Anamnese) — dort fehlt noch die Option
+  „diabetesadaptierte Fußbettung / orthopädische Maßschuhe". Sensibilität (Monofilament/
+  Stimmgabel) und Fußpulse sind gemessene Befunde → Fußbefund, nicht Anamnese.
+- **Wer füllt aus:** Selbst ausfüllbar (Name bekannt/einfach): Diabetes Typ + seit + Therapie,
+  Amputation, Dialyse, Gerinnungsmittel **per Präparatname**, Allergien, Rauchen, Hausarzt.
+  Mit Podologin: Neuropathie, pAVK, früheres Ulkus, HbA1c, Einschränkungen, Infektion. Bestätigt
+  den Beschluss vom 14.08.2026 (Anamnese mit Podologin); nur Vorbefüllung wäre denkbar.
+- **Tık:** Gesunder Nichtdiabetiker 3 Antworten + Speichern = 4 Taps. Typischer Diabetiker ~11.
+  Folgeverordnung ohne Änderung 1 Tap.
+- **Neden:** Anlage 1b/1c (Nagelspange, Erstbefundung) nennt als Anamnese-Inhalt Allergien,
+  Vorerkrankungen, körperliche Einschränkungen, Medikamente; Anlage 1a 4.1 (78040) verlangt die
+  „Erhebung der podologischen Anamnese" ohne Feldliste. Die Fuß-Risikofelder folgen der IWGDF-2023-
+  Risikostratifizierung (LOPS/pAVK + Ulkus/Amputation/terminale Niereninsuffizienz = Risiko 3).
+  Die fizyo-Felder (Schmerzskala, Sport, Beruf, OP-Liste Meniskus/Wirbelsäule) haben dort keinen Nutzen.
+- **Tarih:** 2026-09-30
+- **Etkilenen:** `dashboard.html` `#panel-anamnese`, `saveAnamnese` (`dashboard.js`), Tabelle
+  `anamnese`, `module/fussbefund.js` (Risiken-Block), Patientenkopf/Tagesbehandlung (Rozet).
+  Speichermodell (Kolonnen vs. jsonb je Fachbereich) entscheidet `db-ustasi`.
+- **Reddedilen alternatif:** „Alles nein"-Schnellknopf — verworfen, lädt zum Durchklicken ein genau
+  bei den Fragen, die eine Verletzung verhindern sollen. HbA1c als Pflicht — verworfen, viele
+  Patienten kennen den Wert nicht, Pflicht würde Fantasiewerte erzeugen.
+- **Annahme:** nicht mit einer Podologin validiert (Beta-1). Offen: Dialysetage für die
+  Terminplanung wirklich genutzt? Nickel/Metall bei Nagelspange klinisch relevant?
+- **Führende Quelle (Nachtrag 30.09., `db-ustasi`-Befund):** Dauerhafte Risiken (Diabetes,
+  Gerinnungshemmung, Allergien, Infektion, pAVK, Neuropathie, Ulkus/Amputation, Dialyse) führt
+  **allein die Anamnese**. Der Fußbefund fragt sie nicht mehr: der Risiken-Block zeigt den
+  aktuellen Anamnese-Stand nur lesend (+ Link „Anamnese ändern") und schreibt ihn beim Speichern
+  als **Kopie** in `befund.risiken` (mit Anamnese-Version) — der Befund bleibt ein vollständiger
+  Schnappschuss, alte Befunde werden nie umgeschrieben. Die Rozets (Patientenkopf,
+  Tagesbehandlung) lesen **nur** die gültige Anamnese-Fassung, nie `befund.risiken`.
+  Übergang: Hat ein Patient noch keine Podo-Anamnese, aber Fußbefunde mit `risiken`, werden diese
+  Werte beim ersten Öffnen der Anamnese **vorgeschlagen** (sichtbar markiert, Bestätigung nötig),
+  nicht still übernommen. Begründung: Risiko ist Patienteneigenschaft, Befund ist Zustand am Tag —
+  zwei Eingabestellen laufen auseinander, und ein veraltetes „Gerinnungshemmer: nein" im Befund
+  ist die gefährlichste Form davon.
+- **Kiosk (Kemal-Entscheidung 30.09.):** Kiosk mit voller Anamnese bleibt, die Podologin gibt ihn
+  nach Ermessen weiter; zusätzlich neuer Knopf „Nur Einwilligung" (nur Onam-Formulare). Im Kiosk
+  tragen die „mit Podologin"-Felder einen Hinweis („Wenn Sie unsicher sind, wählen Sie ‚weiß
+  nicht' — wir besprechen das gemeinsam") und „weiß nicht" als Option. Eine im Kiosk ausgefüllte
+  Anamnese gilt als „vom Patienten angegeben — ungeprüft" bis die Podologin mit 1 Tap bestätigt;
+  Rozets erscheinen trotzdem sofort (lieber eine ungeprüfte Warnung als keine).
