@@ -632,8 +632,8 @@ async function loadTeam() {
 
   list.innerHTML = '';
 
-  // "Kein Präferenz" first
-  const anyBtn = buildTeamButton(null, 'Kein Präferenz', true);
+  // "Keine Präferenz" first
+  const anyBtn = buildTeamButton(null, 'Keine Präferenz', true);
   anyBtn.classList.add('selected');
   list.appendChild(anyBtn);
 
@@ -924,7 +924,9 @@ async function loadKrankenkassen() {
     sel.innerHTML = '<option value="">Bitte wählen…</option>';
     list.forEach(kk => {
       const opt = document.createElement('option');
-      opt.value = kk.id || kk.name;
+      // canli-test P2 30.09: der Name, nicht die UUID — Zusammenfassung, Owner-Detail und die
+      // IK-Auflösung am Server (kostentraegerIkAufloesen, nach Name) lesen diesen Wert.
+      opt.value = kk.name || kk.bezeichnung || kk.id;
       opt.textContent = kk.name || kk.bezeichnung || kk.id;
       sel.appendChild(opt);
     });
@@ -1147,7 +1149,7 @@ function buildSummary() {
     { label: 'Leistung', value: state.service ? state.service.name : '–' },
     { label: 'Sitzungen', value: (state.payment_type === 'gkv' || state.payment_type === 'bg') ? (state.verordnung_sitzungen || state.bg_anzahl || '–') : state.session_count },
     { label: 'Wunschtermin', value: state.preferred_date ? `${formatDateDE(state.preferred_date)} um ${(state.preferred_time || '').substring(0, 5)} Uhr` : '–' },
-    { label: 'Therapeut', value: state.employee_id ? (teamMembers.find(m => (m.id || m.user_id) === state.employee_id) || {}).full_name || 'Gewählt' : 'Kein Präferenz' },
+    { label: 'Therapeut', value: state.employee_id ? (teamMembers.find(m => (m.id || m.user_id) === state.employee_id) || {}).full_name || 'Gewählt' : 'Keine Präferenz' },
   ];
 
   // Add payment-specific fields

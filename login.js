@@ -16,7 +16,7 @@ const T = {
     err_generic: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
     loading: 'Wird geladen…',
     reg_text: 'Noch kein Konto?',
-    reg_btn: 'Get Started',
+    reg_btn: 'Jetzt starten',
     // email not confirmed
     confirm_banner: 'Ihre E-Mail-Adresse wurde noch nicht bestätigt. Bitte klicken Sie den Link in der Bestätigungs-E-Mail.',
     resend_btn: 'Bestätigungsmail erneut senden',
