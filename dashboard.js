@@ -15866,7 +15866,7 @@ async function init() {
         console.log('[realtime] booking change detected:', payload.eventType, payload.new?.id ?? payload.old?.id);
         emit('bookings:changed', { id: payload.new?.id ?? payload.old?.id, quelle: 'realtime' });
       })
-      .subscribe()); neuerBkKanal();
+      .subscribe()); if (!(() => { try { return sessionStorage.getItem('praxura.kiosk.aktiv') === '1'; } catch { return false; } })()) neuerBkKanal();   // Kiosk nach F5: Kanal erst beim Verlassen (kiosk.js)
 
     await handleGmailCallback();
     console.log('[init] gmail ok');
