@@ -41,7 +41,7 @@ dolanmaz, Kemal'e sorar.
 | S0 | Ürün kararları (/konsey) + Beta-1 soruları | evet | ⏳ |
 | S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | ✅ 1.1–1.11 (29.09) — canlı geçti, 1.9 QA'da veri yok (birim testleri); açık: 1.12 — bkz. S1 devir notu |
 | S2 | §302 durum semantiği | kısmen (gkv-302) | ✅ 2.1–2.4, 2.6, 2.7 (29.09) + 2.3b ✅ (30.09, `f8ea2aa`) — 2.5 bilerek yok; canlı GEÇTİ, bkz. S2/S3 devir notu (30.09) |
-| S3 | Güvenilirlik ve veri doğruluğu | hayır | ✅ 3.1–3.7, 3.9–3.11, 3.13, 3.8a (`e665aca`, 30.09) — 3.8b ✅ (`8316fbe`, 0044 canlıda) · B1 ✅ (`79e1556`, `77c12bc`) · ICD „-" ✅ (`14171df`, `f6cd960`) · 3.12 ayrı iş (Kemal 30.09: „2'yi ayrı bir iş olarak bırak") · `datumDe` birleşti (`f30f407`) |
+| S3 | Güvenilirlik ve veri doğruluğu | hayır | ✅ 3.1–3.13 (3.12: kod adımı `e9d0286`, yıkıcı adım Kemal onayında) · 3.8a (`e665aca`, 30.09) — 3.8b ✅ (`8316fbe`, 0044 canlıda) · B1 ✅ (`79e1556`, `77c12bc`) · ICD „-" ✅ (`14171df`, `f6cd960`) · 3.12 ayrı iş (Kemal 30.09: „2'yi ayrı bir iş olarak bırak") · `datumDe` birleşti (`f30f407`) |
 | S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | ⏳ |
 | S5 | Mobil / tablet (yalnız CSS) | hayır | ⏳ |
 | S6 | Temizlik: yalnız Almanca, ölü kod, konsol | hayır | ⏳ |
@@ -195,17 +195,23 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 - **6/7/8 ✅** `a81660c` — vade tarihi lokal, cache-bust zinciri, BSNR tek kez, kayıtlı non-terminal ICD'de 3.6 uyarısı.
 - **ICD sondaki „-" ✅** `14171df` + `f6cd960` (canli-test P1/P2/P3/P3a, gkv-302 kuralı → `wissensbank/SPEC-RULES.md`): „E11.7-" tiresiz saklanır ve DIA'ya tiresiz gider; non-terminal yalnız V:01016 uyarısı. Canlı: `DIA+E11.7`, iki kod bölünmesi, terminal ICD dosyaya giriyor.
 
-**Açık işler (güncel):**
-1. **OCR prompt'u IK okumuyor** — ayrı karar.
-2. **`abrechnender_kt_ik` tek kolon indirgemesi** — gkv-302 doğrulayamadı.
-3. **3.12** ayrı iş (Kemal 30.09).
-4. **canli-test P3'leri (kalan):** Sperre yalnız kaydederken · ilk Fahrt satırında `lead_id` boş · yeni Verordnung listede hemen görünmüyor (tek gözlem) · geçersiz IK geçerli olanı sessizce null'a çeker · Kasse adı ile Karten-IK uyuşmazlığında uyarı yok.
-5. **Soru podoloji/gkv-302:** liste ipucu „E11.7 passt nicht zur Diagnosegruppe DF" — mekanik doğru, podolog için yanıltıcı olabilir („nicht endständig" daha iyi mi?).
-6. **B1 preflight (`77c12bc`) canlıda sınanamadı** — QA'da physio reçetesi yok.
-7. **gkv-302 yan bulgu:** `isValidIcd10` Seitenkennzeichen `B` ve `†*!` kabul etmiyor, frontend ICD_SHAPE ediyor — ayrı iş.
-8. **Anhang 03 V09** (bugün geçerli) arşivde yok → wissensbank indirmeli.
-9. `onprem/REGISTER.md`'ye 0044 notu (dosyada başka oturumun commit'lenmemiş değişikliği var — o bitince).
-10. **Veri:** 30.09 öncesi reçetelerde Karten-IK NULL (test verisi).
+**30.09 öğleden sonra — kapananlar (push edildi):**
+- **Liste ipucu + küçük açıklar ✅** `2e4275f` (canlı 5/6 GEÇTİ): non-terminal ICD amber „nicht endständig — für DF passen z. B. E11.74, E11.75"; hasta formunda geçersiz Karten-IK blok (sessiz null yok); Kasse↔Karten-IK uyuşmazlık uyarısı; Sperre-Banner canlı; ilk Fahrt satırında `lead_id`.
+- **signal.js iki örnek (P1) ✅** `9d4b057`: `dashboard.js` `signal.js?v=20260815`, modüller `?v=20260813` → iki modül örneği, olaylar dinleyicilere ulaşmıyordu (yeni Verordnung listede görünmüyordu). Canlı tekrar testi bekliyor.
+- **3.12 kod adımı ✅** `e9d0286` + belge düzeltmesi `a404284` (guvenlik şartı: ikisi birlikte): `/rezept/confirm` + PATCH artık `ocr_raw_response`/`ocr_raw_enc`/`icd10_enc`/`phi_encrypted` yazmıyor; `rechnung-dmrz.js` + `handleSessionDrop` dar select; **Fahrtenbuch (S-35, OFD Frankfurt 19.01.2011, legal-de):** zweck „Patientenbesuch", zielort „Patientenbesuch (s. Verzeichnis Nr. P-xxxxxxxx)", ayrı „Patientenverzeichnis" export, eski satırlar ekranda/CSV'de maskeli. Karar: alan şifrelemesi bırakıldı (kimlik/klinik alanlar düz + RLS + at-rest), ham OCR saklanmaz.
+- **Kostenträgerdatei Q4/2026:** 4 dosya indirildi `9c7b5c6` (byte-exakt, Latin-1), yükleyici tarih güdümlü + Latin-1 `aaccead`; gkv-302 + db-ustasi koşullu onay. **Canlı yükleme 01.10'da yapılacak** (aşağıda madde 1).
+
+**Açık işler (güncel, 30.09 akşam):**
+1. **01.10 — Kostenträger Q4 canlı yükleme (Kemal onayı):** `node tools/kostentraeger-annahmestellen-laden.mjs --write` (01.10 00:00 Berlin'den SONRA, `--stichtag` yok). Sonra kontrol: kod 71/72/20 VKG 03 için anahtar başına tek `partner_ik`; `partner_ik='108916709'` = 0 satır; `quelle='EK05Q226_KE0.txt'` = 0 satır. Yarıda kalırsa hemen yeniden koş (idempotent). Ardından `db/REGISTER.md` (kostentraeger/annahmestellen/auswahl girdileri) + `tabellenkarte.mjs`; kutu için seed migration **0045** (db-ustasi spesifikasyonu: canlıdan üret, `kostentraeger` DELETE yok, alt tablolar temp-table upsert + stale DELETE, self-check, SaaS'ta no-op) + onprem'e bildir. AOK Bayern Begleitzettel adresi Ebermannsdorf olmalı.
+2. **3.12 yıkıcı adım (Kemal onayı):** sıra — (a) `prescriptions_festschreibung()` CREATE OR REPLACE (`icd10_enc` referansı çıkar) → (b) NULL: `prescriptions.ocr_raw_response` (60+), `ocr_raw_enc`, `icd10_enc`, `phi_encrypted=false`; eski `fahrten.zweck/zielort` (önce Patientenverzeichnis'e yedek) → (c) `:stable` e9d0286'yı taşıdıktan sonra DROP: prescriptions 4 kolon + `idx_prescriptions_phi_not_encrypted`, leads 6 `*_enc` + `pii_encrypted` + `idx_leads_pii_not_encrypted`. Döküm + REGISTER + DSFA R12/TOM aynı iş.
+3. **Modül sürüm çiftleri (signal.js sınıfı):** 10 modül daha birden fazla `?v=` ile içe aktarılıyor (`supabase-config`, `nav-registry`, `supabase-js`, `datum`, `kalender-raster`, `sitzungsplan`, `verordnung-regeln`, `termin-nicht-erschienen`, `verordnung-aus-ocr`, `verordnung-an-backend`). Sayfa bazlı grafik + düzeltme + kalıcı test kapısı (builder'a verilecekti; 30.09'da izin kontrolü geçici hata verdi).
+4. **Kostenträger otomasyonu:** RSS (`…/rss_kostentraegerdateien_sonstige_leistungserbringer.xml`) → GitHub Actions (`preise-check.yml`'a adım) → indir + parse + test → Telegram özeti → Kemal onayı → yükleme. `kostentraeger_annahmestellen`/`_anschriften`'e `valid_from/valid_to` (şema, konsey) ki veri önceden yüklenip gece yarısı geçsin ve kutulara image ile önceden gitsin. onprem'e sor (zamanlanmış iş).
+5. **Fahrtenbuch değişiklik kaydı:** `fahrten` upsert/update/delete sessiz (legal-de: elektronik Fahrtenbuch değişiklikleri kaydetmeli). Karar gerekir.
+6. **canli-test P3:** Karten-IK hata cümlesi iki kez · Sperre-Banner hangi eksik olduğunu söylemiyor · kaydetme onay diyaloğu E11.7 uyarısını listelemiyor · ICD uyarısı DG seçilince yeniden hesaplanmıyor · `pdInfoBlock` maske üstüne biniyor (UI'dan erişilmez).
+7. **Soru gkv-302:** DF'de terminal ICD uyuşmazlığı (L60.0+DF) bugün amber (`icd_enforcement=warn`); kırmızı olmalı mı?
+8. **IKK Nordrhein:** 01.10'dan itibaren 6 IK'nın zinciri süresi dolan 104001441'e dayanıyor → çözümleme null (güvenli blok). Bugün 0 reçete; hasta çıkarsa IKK classic/DAS'a sor.
+9. **Diğer:** OCR IK okumuyor → barkod yolu çözecek (Kemal „başla" bekleniyor) · `abrechnender_kt_ik` tek kolon · gkv-302 yan bulgu `isValidIcd10` B/†*! · Anhang 03 V09 arşivde yok · `onprem/REGISTER.md` 0044 notu · 30.09 öncesi reçetelerde Karten-IK NULL · parser VKG >10 alan uyarısı · Steuerberater sorusu (adres de Verzeichnis'e mi).
+10. **QA test verisi (silinmedi):** Verordnung `50139501` (E11.7+DF), randevu `e48f89a4` (02.10 Hausbesuch), Fahrt `2ec11d8f` (canli-test kapatıyor), TSOL0002/0003/0006 test dosyaları, hasta `a8e9df53` (DAK, 100167999).
 
 ---
 
