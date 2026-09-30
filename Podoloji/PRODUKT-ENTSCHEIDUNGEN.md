@@ -371,3 +371,40 @@
 - **Etkilenen:** `module/verordnung-podo.js` (`podoFelderAktualisieren()`, neue `rezeptart()`-Hilfe),
   `module/verordnung-maske.js` (`fuelleMuster13()`, `maskeHeimschicken()`),
   `module/verordnung-pruefen-knopf.js` (toter Code entfernt, 28.09.2026)
+
+### §302 offene Einheiten — Grund der Rückfrage nennen (Reform S2.3b, canli-test 30.09 P2)
+- **Karar:** Der gkv-302-Text („Es sind noch N Einheit(en) offen …") bleibt unverändert. Darunter
+  kommt EINE Zusatzzeile, nur wenn ein Grund vorliegt — sowohl im Bereit-Dialog als auch in der
+  Erstellen-Rückfrage:
+  (a) künftiger Termin: „Für diese Verordnung ist noch ein Termin am TT.MM. geplant." / bei
+  mehreren: „Für diese Verordnung sind noch N Termine geplant (nächster am TT.MM.)." (Jahr nur,
+  wenn ≠ laufendes Jahr);
+  (b) nur Erstellen, offen-Zahl geändert: „Seit der Freigabe am TT.MM. hat sich die Zahl offener
+  Einheiten geändert (damals X, jetzt Y)." Bei mehreren Verordnungen im Sammeldialog wird der Grund
+  an die jeweilige Listenzeile gehängt („… : 1 offen · Termin am 14.10. geplant").
+- **Neden:** Ohne Grund wirkt die zweite Rückfrage wie ein Fehler („hab ich doch schon bestätigt").
+  Ein geplanter Termin heißt: die Patientin kommt wieder — genau die Information, mit der die
+  Podologin entscheidet, ob sie jetzt abrechnet oder wartet. Keine zusätzlichen Klicks.
+- **Tarih:** 2026-09-30
+- **Etkilenen:** `module/offene-einheiten.js` (`bestaetigungsText`), Bereit-Dialog (428-Pfad),
+  `module/abrechnung-auswahl.js`
+- **Reduzierte Alternative verworfen:** Knopf „Termin absagen" im Dialog — nützlich, aber teurer;
+  erst wenn die Beta-Praxis das tatsächlich vermisst. Handlungsaufforderung im Text („bitte
+  absagen") ebenfalls verworfen — manche wollen genau deshalb warten, der Text informiert nur.
+- **Annahme:** nicht mit einer Podologin validiert.
+
+### §302-Liste Einheiten-Spalte zeigt Behandlungen, nicht Positionen
+- **Karar:** Die Spalte „Einheiten" zeigt immer `erbracht / verordnet · N offen`, erbracht =
+  nicht stornierte Behandlungstage (dieselbe Zahl, aus der „offen" gerechnet wird), z. B.
+  „1 / 3 · 2 offen", bei vollständiger Verordnung „3 / 3". Die Positionsanzahl (78010, 78030,
+  79933 …) steht NICHT mehr in dieser Spalte — sie ist in „Mittel" bereits sichtbar. Tooltip:
+  „Behandlungen erbracht / verordnet".
+- **Neden:** „3 · 2 offen" liest die Podologin als „3 gemacht, trotzdem 2 offen?" — sie denkt in
+  Behandlungen der Verordnung (Muster 13 „Anzahl"), nicht in HPNR-Zeilen. Befundpauschale und
+  Hausbesuch sind keine Behandlungseinheit; eine Zahl, die sie mitzählt, ist klinisch falsch.
+  Heute rechnet `einheiten` HPNR-Anzahlen (`abrechnung-auswahl.js:653`), `offen` Behandlungstage
+  (`:656`) — zwei Basen in einer Zelle.
+- **Tarih:** 2026-09-30
+- **Etkilenen:** `module/abrechnung-auswahl.js` (Zeile `einheiten`, Render ~:879)
+- **Reduzierte Alternative verworfen:** „1 / 3 Einheiten · 2 offen" — Wort doppelt zur
+  Spaltenüberschrift, kostet Breite.

@@ -65,7 +65,7 @@ import { zeigeAbrechnungAnsicht } from './abrechnung-ansicht.js?v=20260909';
 import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
          frageBerichtFreigabe } from './abrechnung-freigabe.js?v=20260826';
 import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
-import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten, gueltigBestaetigteIds } from './offene-einheiten.js?v=20260930a';
+import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten, gueltigBestaetigteIds, grundDaten } from './offene-einheiten.js?v=20260930h';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260930c';
@@ -622,6 +622,7 @@ export async function ladeAbrechnungAuswahl() {
       .map(v => ({ id: v.id, offen: offeneEinheiten(v.behandlungseinheiten, (behJeVord[v.id] || []).length) }))
       .filter(o => o.offen > 0);
     let bereitOk = new Set();
+    let gruende = new Map();
     if (offeneListe.length) {
       const offenIds = offeneListe.map(o => o.id);
       const [valRes, terRes] = await Promise.all([
@@ -632,12 +633,15 @@ export async function ladeAbrechnungAuswahl() {
           .in('prescription_id', offenIds)
           .order('created_at', { ascending: false }),
         ctx.supabase.from('bookings')
-          .select('id, verordnung_id')
+          .select('id, verordnung_id, start_time')
           .in('verordnung_id', offenIds)
           .gt('start_time', new Date().toISOString())
           .not('status', 'in', '(cancelled,no_show)'),
       ]);
-      if (!valRes.error && !terRes.error) bereitOk = gueltigBestaetigteIds(offeneListe, valRes.data, terRes.data);
+      if (!valRes.error && !terRes.error) {
+        bereitOk = gueltigBestaetigteIds(offeneListe, valRes.data, terRes.data);
+        gruende = grundDaten(offeneListe, valRes.data, terRes.data);
+      }
     }
 
     for (const v of podoBereit) {
@@ -645,6 +649,7 @@ export async function ladeAbrechnungAuswahl() {
       const d = zuzahlungFuerPodoVerordnung(v, behs, finde);
       const hpnrs = behs.flatMap(b => (b.hpnr_codes || []).map(c => String(c).trim()));
       _st.rxRoh.set(v.id, v);
+      const g = gruende.get(v.id) || {};
       const zeile = {
         bereich: 'podo',
         id: v.id,
@@ -656,9 +661,13 @@ export async function ladeAbrechnungAuswahl() {
         positionBekannt: !(d.unbekannt || []).length,
         einheiten: (d.zeilen || []).reduce((a, z) => a + z.anzahl, 0),
         verordnet: Number(v.behandlungseinheiten) || 0,
+        erbracht: behs.length,
         // Reform S2.3: nicht stornierte Behandlungen (behs) gegen verordnet.
         offen: offeneEinheiten(v.behandlungseinheiten, behs.length),
         bereitBestaetigt: bereitOk.has(v.id),
+        termine: g.termine,
+        freigabeAm: g.freigabeAm,
+        freigabeOffen: g.freigabeOffen,
         brutto: d.brutto,
         zuzahlung: d.gesamt,
         befreit: !!v.zuzahlung_befreit,
@@ -669,10 +678,10 @@ export async function ladeAbrechnungAuswahl() {
       zeile.soll = kassenanteil(zeile.brutto, zeile.zuzahlung);
 
       const befund = podoBefundOhneBehandlung(v, behs);
-      const gruende = [...podoSperren(v, hpnrs), ...befund.uebersteuerbar];
+      const fehlerGruende = [...podoSperren(v, hpnrs), ...befund.uebersteuerbar];
       const strukturGruende = [...podoStrukturBlocker(v, hpnrs), ...befund.hart, ...podoHausbesuchSperren(v, behs)];
-      gruende.push(...strukturGruende);
-      if (gruende.length) fehlerhaft.push({ bereich: 'podo', zeile, gruende, uebersteuerbar: !strukturGruende.length });
+      fehlerGruende.push(...strukturGruende);
+      if (fehlerGruende.length) fehlerhaft.push({ bereich: 'podo', zeile, gruende: fehlerGruende, uebersteuerbar: !strukturGruende.length });
       else zeilen.push(zeile);
     }
   }
@@ -889,12 +898,23 @@ function detailTabelleHtml(g) {
     <tbody>
       ${g.zeilen.map(z => {
         const an = jeRezept ? _st.gewaehlt.has(z.id) : _st.gewaehlt.has(g.key);
-        const einheiten = z.verordnet && z.einheiten !== z.verordnet
-          ? `<span title="erbracht / verordnet">${z.einheiten} / ${z.verordnet}</span>`
-          : String(z.einheiten || z.verordnet || 0);
-        const offenTag = z.offen > 0
-          ? ` <span style="color:var(--accent);font-weight:600;" title="Noch nicht erbrachte Einheiten — Abrechnen beendet die Verordnung">${z.offen} offen</span>`
-          : '';
+        let einheitenHtml;
+        let tdTitle = '';
+        if (z.bereich === 'podo') {
+          tdTitle = ' title="Behandlungen erbracht / verordnet"';
+          const basis = z.verordnet ? `${z.erbracht} / ${z.verordnet}` : String(z.erbracht ?? 0);
+          einheitenHtml = z.offen > 0
+            ? `${basis} · <span style="color:var(--accent);font-weight:600;" title="Noch nicht erbrachte Einheiten — Abrechnen beendet die Verordnung">${z.offen} offen</span>`
+            : basis;
+        } else {
+          const einheiten = z.verordnet && z.einheiten !== z.verordnet
+            ? `<span title="erbracht / verordnet">${z.einheiten} / ${z.verordnet}</span>`
+            : String(z.einheiten || z.verordnet || 0);
+          const offenTag = z.offen > 0
+            ? ` <span style="color:var(--accent);font-weight:600;" title="Noch nicht erbrachte Einheiten — Abrechnen beendet die Verordnung">${z.offen} offen</span>`
+            : '';
+          einheitenHtml = `${einheiten}${offenTag}`;
+        }
         const zuText = z.befreit
           ? '<span style="color:#15803d;font-weight:600;">befreit</span>'
           : (z.positionBekannt ? esc(fmtEur(z.zuzahlung)) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
@@ -911,7 +931,7 @@ function detailTabelleHtml(g) {
             <span class="ab-zeile-oeffnen" data-id="${esc(z.id)}" title="Alle abrechnungsrelevanten Felder ansehen"
               style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;">${esc(z.patient)}</span>${hinweiseHtml(z)}</td>
           <td style="padding:4px 6px;color:var(--text-muted);">${esc(z.mittel)}${picker}</td>
-          <td style="padding:4px 6px;color:var(--text-muted);">${einheiten}${offenTag}</td>
+          <td style="padding:4px 6px;color:var(--text-muted);"${tdTitle}>${einheitenHtml}</td>
           <td style="padding:4px 6px;text-align:right;color:var(--text-muted);">${zuText}</td>
           <td style="padding:4px 6px;text-align:right;color:var(--text-main);">${esc(fmtEur(z.soll))}</td>
         </tr>
@@ -1357,7 +1377,7 @@ async function _sendeGruppe(g, freigabe, offenBestaetigt = []) {
     if (res.status === 428 && json?.code === 'OFFENE_EINHEITEN' && versuch === 0) {
       const zeilen = (json.offene || []).map(o => {
         const z = g.zeilen.find(x => x.id === o.id) || {};
-        return { id: o.id, patient: z.patient, nummer: z.nummer, offen: o.offen };
+        return { id: o.id, patient: z.patient, nummer: z.nummer, offen: o.offen, termine: z.termine, freigabeAm: z.freigabeAm, freigabeOffen: z.freigabeOffen };
       });
       const neu = await frageOffeneEinheiten(zeilen, ctx.showConfirmModal);
       if (!neu) throw new Error('Nicht abgerechnet: offene Einheiten wurden nicht bestätigt.');

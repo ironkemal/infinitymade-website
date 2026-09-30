@@ -42,7 +42,7 @@
  */
 
 import { emit } from './signal.js?v=20260813';
-import { bestaetigungsText } from './offene-einheiten.js?v=20260930a';
+import { bestaetigungsText } from './offene-einheiten.js?v=20260930h';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). Diese Datei spricht
 // weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
 // uebersetzt wird nur an den beiden Lesestellen unten.
@@ -617,8 +617,24 @@ export function oeffneStatusDialog(verordnung, opts = {}) {
         // Reform S2.3: „Bereit" mit offenen Einheiten beendet die Verordnung.
         // Der Server sagt, wie viele offen sind; erst nach Bestätigung erneut.
         if (!err.offeneEinheiten?.length) throw err;
+        let termine = [];
+        if (opts.supabase) {
+          try {
+            const { data: rows, error: terErr } = await opts.supabase
+              .from('bookings')
+              .select('start_time')
+              .eq('verordnung_id', verordnung.id)
+              .gt('start_time', new Date().toISOString())
+              .not('status', 'in', '(cancelled,no_show)');
+            if (!terErr && Array.isArray(rows)) {
+              termine = rows.map(r => r.start_time);
+            }
+          } catch (_) {
+            termine = [];
+          }
+        }
         const ok = await frageBestaetigung(bestaetigungsText([{
-          patient: patientAnzeigename(verordnung) || '—', nummer: '', offen: err.offeneEinheiten[0].offen }]));
+          patient: patientAnzeigename(verordnung) || '—', nummer: '', offen: err.offeneEinheiten[0].offen, termine }]));
         if (!ok) return;
         await senden(true);
       }
@@ -650,7 +666,7 @@ export async function oeffneStatusDialogFuer(verordnungId, { supabase, onFertig 
     alert('Verordnung konnte nicht geladen werden.');
     return;
   }
-  oeffneStatusDialog(ausTopf(vRoh), { token, onFertig });
+  oeffneStatusDialog(ausTopf(vRoh), { token, onFertig, supabase });
 }
 
 /** Eigenes kleines Bestätigungsfenster (kein Zugriff auf showConfirmModal aus dashboard.js). */

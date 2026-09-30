@@ -13,6 +13,8 @@
  * Termine (`terminZaehler`) und HPNR-Summen sind KEIN Ersatz dafür.
  */
 
+import { alsISODatum } from './datum.js?v=20260930a';
+
 /**
  * @param {?number|string} verordnet  `prescriptions.behandlungseinheiten`
  * @param {number} erbracht           Anzahl nicht stornierter Behandlungen
@@ -41,7 +43,85 @@ export function vorausgewaehltPodo(zeile) {
 export function offeneAuswahl(zeilen) {
   return (zeilen || [])
     .filter(z => Number(z?.offen) > 0 && z?.bereitBestaetigt !== true)
-    .map(z => ({ id: z.id, patient: z.patient || '—', nummer: z.nummer || '', offen: Number(z.offen) }));
+    .map(z => ({
+      id: z.id, patient: z.patient || '—', nummer: z.nummer || '', offen: Number(z.offen),
+      ...(z.termine !== undefined && { termine: z.termine }),
+      ...(z.freigabeAm !== undefined && { freigabeAm: z.freigabeAm, freigabeOffen: z.freigabeOffen }),
+    }));
+}
+
+/**
+ * Datum ohne Jahr, wenn es das laufende ist: „14.10." — sonst „14.10.2027".
+ * @param {Date|string|number} wert  ISO-Zeitpunkt/Kalendertag
+ * @param {Date} [heute]
+ * @returns {string} '' bei ungültigem Wert
+ */
+export function datumKurz(wert, heute = new Date()) {
+  const iso = typeof wert === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(wert) ? wert : alsISODatum(wert);
+  if (!iso) return '';
+  const [j, m, t] = iso.split('-');
+  return j === String(heute.getFullYear()) ? `${t}.${m}.` : `${t}.${m}.${j}`;
+}
+
+/**
+ * Grund der Rückfrage (Reform S2.3b, Beschluss 30.09.2026). Ergänzt den
+ * freigegebenen Text, ersetzt ihn nie. Leer, wenn es keinen Grund gibt.
+ * @param {{termine?:Array, freigabeAm?:*, freigabeOffen?:*, offen?:number}} e
+ *   termine: künftige, nicht stornierte Termine (Zeitpunkte, beliebige Reihenfolge)
+ *   freigabeAm/freigabeOffen: Bereit-Protokoll (Datum, damals offen) — nur gesetzt,
+ *   wenn sich die Zahl seither geändert hat
+ * @returns {{zeilen:string[], kurz:string}} zeilen = ganze Sätze (Einzeldialog),
+ *   kurz = Anhängsel für eine Listenzeile („ · Termin am 14.10. geplant"), sonst ''
+ */
+export function rueckfrageGrund(e, heute = new Date()) {
+  const zeilen = [];
+  const kurz = [];
+  const ts = (Array.isArray(e?.termine) ? e.termine : [])
+    .map(t => new Date(t)).filter(d => !Number.isNaN(d.getTime())).sort((a, b) => a - b);
+  if (ts.length === 1) {
+    const d = datumKurz(ts[0], heute);
+    zeilen.push(`Für diese Verordnung ist noch ein Termin am ${d} geplant.`);
+    kurz.push(`Termin am ${d} geplant`);
+  } else if (ts.length > 1) {
+    const d = datumKurz(ts[0], heute);
+    zeilen.push(`Für diese Verordnung sind noch ${ts.length} Termine geplant (nächster am ${d}).`);
+    kurz.push(`${ts.length} Termine geplant (nächster am ${d})`);
+  }
+  const am = e?.freigabeAm ? datumKurz(e.freigabeAm, heute) : '';
+  if (am && e.freigabeOffen != null && Number.isFinite(Number(e.freigabeOffen))
+      && Number.isFinite(Number(e.offen)) && Number(e.freigabeOffen) !== Number(e.offen)) {
+    zeilen.push(`Seit der Freigabe am ${am} hat sich die Zahl offener Einheiten geändert (damals ${Number(e.freigabeOffen)}, jetzt ${Number(e.offen)}).`);
+    kurz.push(`seit Freigabe geändert (damals ${Number(e.freigabeOffen)})`);
+  }
+  return { zeilen, kurz: kurz.length ? ' · ' + kurz.join(' · ') : '' };
+}
+
+/**
+ * Gründe je Verordnung aus den bereits geladenen Zeilen (reine Aufbereitung).
+ * @param {Array<{id:string, offen:number}>} offene
+ * @param {Array<{prescription_id:string, input_snapshot?:{offen?:number}, created_at?:string}>} bereitZeilen
+ * @param {Array<{verordnung_id:string, start_time:string}>} kuenftigeTermine
+ * @returns {Map<string,{termine:string[], freigabeAm?:string, freigabeOffen?:number}>}
+ */
+export function grundDaten(offene, bereitZeilen, kuenftigeTermine) {
+  const neueste = new Map();
+  for (const z of bereitZeilen || []) {
+    const alt = neueste.get(z?.prescription_id);
+    if (!alt || String(z.created_at || '') > String(alt.created_at || '')) neueste.set(z?.prescription_id, z);
+  }
+  const out = new Map();
+  for (const o of offene || []) {
+    const termine = (kuenftigeTermine || []).filter(t => t.verordnung_id === o.id && t.start_time).map(t => t.start_time);
+    const z = neueste.get(o.id);
+    const damals = z?.input_snapshot?.offen;
+    const d = { termine };
+    if (z && damals != null && Number(damals) !== Number(o.offen)) {
+      d.freigabeAm = z.created_at;
+      d.freigabeOffen = Number(damals);
+    }
+    out.set(o.id, d);
+  }
+  return out;
 }
 
 /**
@@ -50,11 +130,12 @@ export function offeneAuswahl(zeilen) {
  * @param {Array<{patient:string, nummer:string, offen:number}>} eintraege
  * @returns {{title:string, message:string, confirmText:string, cancelText:string}}
  */
-export function bestaetigungsText(eintraege) {
+export function bestaetigungsText(eintraege, heute = new Date()) {
   const liste = eintraege || [];
   const einzeln = liste.length <= 1;
   const kopf = einzeln ? '' : liste.map(e =>
-    `${e.patient} · ${e.nummer}: ${e.offen} offen`).join('\n') + '\n\n';
+    `${e.patient} · ${e.nummer}: ${e.offen} offen${rueckfrageGrund(e, heute).kurz}`).join('\n') + '\n\n';
+  const grund = einzeln && liste[0] ? rueckfrageGrund(liste[0], heute).zeilen : [];
   const koerper = einzeln
     ? `Es sind noch ${liste[0]?.offen ?? 0} Einheit(en) offen. `
     : 'Es sind noch Einheiten offen. ';
@@ -63,7 +144,8 @@ export function bestaetigungsText(eintraege) {
     message: kopf + koerper
       + 'Mit der Abrechnung wird die Verordnung beendet – die offenen Einheiten können auf dieser Verordnung nicht mehr erbracht oder abgerechnet werden. '
       + 'Bitte das Datum des Behandlungsabbruchs auf der Rückseite der Verordnung vermerken.'
-      + '\n\nBereits erbrachte, aber noch nicht dokumentierte Einheiten bitte vorher nachtragen.',
+      + '\n\nBereits erbrachte, aber noch nicht dokumentierte Einheiten bitte vorher nachtragen.'
+      + (grund.length ? '\n\n' + grund.join('\n') : ''),
     confirmText: 'Trotzdem abrechnen',
     cancelText: 'Abbrechen',
   };

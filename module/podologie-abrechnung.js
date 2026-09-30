@@ -62,7 +62,7 @@
 
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20260810e';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20260929b';
-import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260930c';
+import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260930h';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260920s';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20260918';
@@ -71,7 +71,7 @@ import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=2026
 import { alsISODatum } from './datum.js?v=20260901';
 import { positionVon } from './podo-geplant.js?v=20260918';
 // Storno statt Löschen (Entscheidung K3, § 630f Abs. 1 S. 2 BGB) — siehe dort.
-import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20260930c';
+import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20260930h';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
 // dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
 import { darf78040, darf78100, darfErstbefundungNagel,

@@ -72,3 +72,46 @@ test('S2.3b: gueltigBestaetigteIds + Vorauswahl + Dialog überspringt bestätigt
   assert.deepEqual(r, []);
   assert.equal(gefragt, 0);
 });
+
+import { datumKurz, rueckfrageGrund, grundDaten } from './offene-einheiten.js';
+
+const HEUTE = new Date(2026, 8, 30);
+
+test('datumKurz: Jahr nur, wenn nicht das laufende', () => {
+  assert.equal(datumKurz(new Date(2026, 9, 14, 10, 0), HEUTE), '14.10.');
+  assert.equal(datumKurz('2027-01-05', HEUTE), '05.01.2027');
+  assert.equal(datumKurz('', HEUTE), '');
+});
+
+test('rueckfrageGrund: ein Termin, mehrere Termine, geänderte Zahl, kein Grund', () => {
+  assert.deepEqual(rueckfrageGrund({ termine: [new Date(2026, 9, 14, 9)] }, HEUTE),
+    { zeilen: ['Für diese Verordnung ist noch ein Termin am 14.10. geplant.'], kurz: ' · Termin am 14.10. geplant' });
+  const m = rueckfrageGrund({ termine: [new Date(2027, 0, 3), new Date(2026, 9, 20)] }, HEUTE);
+  assert.equal(m.zeilen[0], 'Für diese Verordnung sind noch 2 Termine geplant (nächster am 20.10.).');
+  const z = rueckfrageGrund({ offen: 1, freigabeAm: new Date(2026, 8, 2, 12), freigabeOffen: 2 }, HEUTE);
+  assert.equal(z.zeilen[0], 'Seit der Freigabe am 02.09. hat sich die Zahl offener Einheiten geändert (damals 2, jetzt 1).');
+  assert.deepEqual(rueckfrageGrund({ offen: 2 }, HEUTE), { zeilen: [], kurz: '' });
+  assert.deepEqual(rueckfrageGrund({ offen: 2, freigabeAm: new Date(2026, 8, 2), freigabeOffen: 2 }, HEUTE).zeilen, []);
+});
+
+test('bestaetigungsText: Grund unter dem Haupttext bzw. an der Listenzeile', () => {
+  const ein = bestaetigungsText([{ patient: 'X', nummer: '7', offen: 2, termine: [new Date(2026, 9, 14, 9)] }], HEUTE);
+  assert.ok(ein.message.startsWith('Es sind noch 2 Einheit(en) offen. '));
+  assert.ok(ein.message.endsWith('nachtragen.\n\nFür diese Verordnung ist noch ein Termin am 14.10. geplant.'));
+  const viele = bestaetigungsText([
+    { patient: 'A', nummer: '1', offen: 2, termine: [new Date(2026, 9, 14, 9)] },
+    { patient: 'B', nummer: '2', offen: 5 }], HEUTE);
+  assert.ok(viele.message.startsWith('A · 1: 2 offen · Termin am 14.10. geplant\nB · 2: 5 offen\n\n'));
+  assert.ok(!viele.message.includes('Für diese Verordnung'));
+});
+
+test('grundDaten: Termine je Verordnung, Freigabe nur bei geänderter Zahl (neuester Eintrag)', () => {
+  const m = grundDaten(
+    [{ id: 'a', offen: 1 }, { id: 'b', offen: 2 }],
+    [{ prescription_id: 'a', input_snapshot: { offen: 3 }, created_at: '2026-09-01T10:00:00Z' },
+     { prescription_id: 'a', input_snapshot: { offen: 2 }, created_at: '2026-09-05T10:00:00Z' },
+     { prescription_id: 'b', input_snapshot: { offen: 2 }, created_at: '2026-09-05T10:00:00Z' }],
+    [{ verordnung_id: 'a', start_time: '2026-10-14T08:00:00Z' }]);
+  assert.deepEqual(m.get('a'), { termine: ['2026-10-14T08:00:00Z'], freigabeAm: '2026-09-05T10:00:00Z', freigabeOffen: 2 });
+  assert.deepEqual(m.get('b'), { termine: [] });
+});
