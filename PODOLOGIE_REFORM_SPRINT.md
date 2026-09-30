@@ -38,11 +38,11 @@ dolanmaz, Kemal'e sorar.
 
 | Oturum | Konu | Karar gerekir mi | Durum |
 |---|---|---|---|
-| S0 | Ürün kararları (/konsey) + Beta-1 soruları | evet | ⏳ |
+| S0 | Ürün kararları (/konsey) + Beta-1 soruları | evet | ✅ konsey 30.09 (`ed12a9a`, tutanak `konsey/tutanak/2026-09-30-podologie-s0-behandlungstag-menue.md`) — Beta-1 soruları kurucuda açık |
 | S1 | Randevu → reçete → tedavi zinciri (P0) | hayır | ✅ 1.1–1.11 (29.09) — canlı geçti, 1.9 QA'da veri yok (birim testleri); açık: 1.12 — bkz. S1 devir notu |
 | S2 | §302 durum semantiği | kısmen (gkv-302) | ✅ 2.1–2.4, 2.6, 2.7 (29.09) + 2.3b ✅ (30.09, `f8ea2aa`) — 2.5 bilerek yok; canlı GEÇTİ, bkz. S2/S3 devir notu (30.09) |
 | S3 | Güvenilirlik ve veri doğruluğu | hayır | ✅ 3.1–3.13 (3.12: kod adımı `e9d0286`, yıkıcı adım Kemal onayında) · 3.8a (`e665aca`, 30.09) — 3.8b ✅ (`8316fbe`, 0044 canlıda) · B1 ✅ (`79e1556`, `77c12bc`) · ICD „-" ✅ (`14171df`, `f6cd960`) · 3.12 ayrı iş (Kemal 30.09: „2'yi ayrı bir iş olarak bırak") · `datumDe` birleşti (`f30f407`) |
-| S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | ⏳ |
+| S4 | Arayüz reformu (menü, sağ panel, dosya, anamnez, Fußbefund) | S0'a bağlı | 🟡 paket 1 `8716a3d` (menü, sağ panel, Folgetermin, önseçim sebebi) — kalan: Fußbefund gömme + kaydetme sonrası „Folgetermin?“ diyaloğu, Wagner (B şeması), hasta dosyası sekmeleri, Anamnese, terminoloji, Selbstzahler, Online-Anfrage |
 | S5 | Mobil / tablet (yalnız CSS) | hayır | ⏳ |
 | S6 | Temizlik: yalnız Almanca, ölü kod, konsol | hayır | ⏳ |
 | S7 | Kapanış: tam regresyon turu + Ops kartlarını kapat | — | ⏳ |
@@ -213,6 +213,14 @@ Ajanlar: gkv-302 (her madde), db-ustasi (2.1 durum kolonları), onprem (2.1 şem
 8. **IKK Nordrhein:** 01.10'dan itibaren 6 IK'nın zinciri süresi dolan 104001441'e dayanıyor → çözümleme null (güvenli blok). Bugün 0 reçete; hasta çıkarsa IKK classic/DAS'a sor.
 9. **Diğer:** OCR IK okumuyor → barkod yolu çözecek (Kemal „başla" bekleniyor) · `abrechnender_kt_ik` tek kolon · gkv-302 yan bulgu `isValidIcd10` B/†*! · Anhang 03 V09 arşivde yok · `onprem/REGISTER.md` 0044 notu · 30.09 öncesi reçetelerde Karten-IK NULL · parser VKG >10 alan uyarısı · Steuerberater sorusu (adres de Verzeichnis'e mi).
 10. **QA test verisi (silinmedi):** Verordnung `50139501` (E11.7+DF), randevu `e48f89a4` (02.10 Hausbesuch), Fahrt `2ec11d8f` (kapatıldı), Verordnung `f0a303e6`, `6bd45d0e`, Behandlung `3e256b9a` (pozisyonsuz — temizlik listesi), TSOL0002/0003/0006 test dosyaları, hasta `a8e9df53` (DAK, 100167999).
+
+### Devir notu (30.09.2026 akşam, Oturum A)
+
+**Kapananlar:** `bd71bbf` Termin-Anfrage boş sayfa (P1) · `047baab`+`765c9ed` madde 6 (a)(b)(c) + 6b P3'ler · madde 7 cevaplandı (gkv-302: DF/NF/QF uyumsuz ICD = Bereit/DTA öncesi blok, Diagnosetext istisnası — sunucu+migration B'de) · S0 konsey `ed12a9a` · S4 paket 1 `8716a3d`.
+
+**B'ye devredilenler:** DF/NF/QF `icd_enforcement=hard_before_dta` migration + preflight ICD↔DG + `icdDgRules.js` Diagnosetext istisnası · `fehlendeVerordnungsangaben()` Leitsymptomatik (UI1/UI2 hariç) · Bereit sayımı yalnız 78010/78020/78610/78620 günleri · preflight aynı gün ikinci Behandlungstag · `pat_fussbefund.wagner_grad` · `podologie_behandlungen` Therapiezeit kolonu (c) · `POST /api/arzt/resolve` 500 · gkv-302'nin iki SPEC-RULES girdisi.
+
+**Açık (A):** liste „0 / 3“ sayacı (`podoZaehler`) ve `podologie-abrechnung.js` otomatik `abrechenbar` hâlâ satır sayıyor — tek sayım kuralı kararı · kalıcı „Termin löschen“ yok (bilinçli) · `tools/browser-probe/leistungen-probe.mjs` 2 kırmızı (bayat probe şüphesi, doğrulanmadı).
 
 ---
 
