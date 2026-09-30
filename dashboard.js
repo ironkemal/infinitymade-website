@@ -2101,7 +2101,7 @@ async function loadActivityFeed() {
         text = `Rechnung <strong>${escapeHtml(item.invoice_number)}</strong> (${escapeHtml(formattedAmount)}) für ${escapeHtml(item.name)} bezahlt.`;
       } else if (item.type === 'fahrt') {
         icon = '🚗';
-        text = `Fahrt gebucht (${escapeHtml(item.distance_km)} km).`;
+        text = `Fahrt gebucht (${escapeHtml(String(item.distance_km))} km).`;
       } else if (item.type === 'lead') {
         icon = '👤';
         text = `${escapeHtml(item.name)} neu als Patient:in registriert.`;
@@ -20085,8 +20085,8 @@ function renderAnfragenList(requests) {
 
     const actions = req.status === 'pending' ? `
       <div class="anfragen-card-actions">
-        <button class="btn-sm btn-success" onclick="approveAnfrage('${req.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ${tl.anfragen_annehmen}</button>
-        <button class="btn-sm btn-danger" onclick="declineAnfrage('${req.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ${tl.anfragen_ablehnen}</button>
+        <button class="btn-sm btn-success" onclick="event.stopPropagation();approveAnfrage('${req.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ${tl.anfragen_annehmen}</button>
+        <button class="btn-sm btn-danger" onclick="event.stopPropagation();declineAnfrage('${req.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ${tl.anfragen_ablehnen}</button>
       </div>` : '';
 
     return `<div class="anfragen-card" onclick="showAnfrageDetail('${req.id}')">
