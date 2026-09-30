@@ -28,7 +28,7 @@
  * Quelle der Feldnamen: `db/SCHEMA.sql` → `pat_fussbefund`. Nicht geraten.
  */
 
-import { datumDe } from './datum.js?v=20260930a';
+import { datumDe } from './datum.js?v=20260930f';
 
 /** Risiken, die für einen Podologen den Blick auf den Fuß ändern. */
 const RISIKO_LABEL = {

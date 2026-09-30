@@ -38,8 +38,8 @@
 
 import { parseIcdList, dgsAcceptingIcd } from '../icd-dg-match.js?v=20261001b';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260929';
-import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20260930a';
-import { sitzungsplan } from './sitzungsplan.js?v=20260914';
+import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20261001e';
+import { sitzungsplan } from './sitzungsplan.js?v=20261001e';
 import { TOPF } from './verordnung-topf.js?v=20260930c';
 import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20260918';
 

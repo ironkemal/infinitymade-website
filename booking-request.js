@@ -10,7 +10,7 @@
 // dieselbe Garantie, die auch die anderen Frontend-Dateien nutzen. Vorher hatte
 // diese Datei GAR KEINEN Import und ein eigenes Literal; in der Kundenbox waere
 // das die Cloud-VPS statt der eigenen Box gewesen (G1).
-import { API_BASE } from './supabase-config.js';
+import { API_BASE } from './supabase-config.js?v=20260701';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 

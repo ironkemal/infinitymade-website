@@ -31,7 +31,7 @@
  * umgestellt haette, haette fuenfzehn Aufrufer gleichzeitig anfassen muessen.
  */
 
-import { befundungFuerLeistung, IST_BEFUNDUNG } from './eingangsbefundung-regel.js?v=20260930a';
+import { befundungFuerLeistung, IST_BEFUNDUNG } from './eingangsbefundung-regel.js?v=20261001e';
 import { geplanteAlsBehandlungen, positionVon } from './podo-geplant.js?v=20260918';
 import { setzeDauer } from './termin-dauer.js?v=20260903b';
 import { alsISODatum } from './datum.js?v=20260930f';

@@ -68,7 +68,7 @@
 'use strict';
 
 import { belegnummerRosette, belegnummerText } from './belegnummer.js?v=20260817';
-import { bereichFarbe, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20260930h';
+import { bereichFarbe, bereichBadge, BITTE_PRUEFEN_FARBE } from './abrechnungsstatus.js?v=20261001e';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). `ausTopf()` übersetzt
 // eine Zeile davon in genau den podologischen Wortschatz, den `ausPodo()`
 // unten schon immer erwartet hat (lead_id, behandlungseinheiten,
@@ -81,8 +81,8 @@ import { ausTopf, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR } from './verordnung
 // der Eingabemaske (`verordnung-pruefen-knopf.js`) — `voAusGespeicherterVerordnung`
 // ist der fehlende Weg, dieselbe Prüfung auch auf eine gespeicherte Zeile
 // anzuwenden, ohne einen zweiten Motor zu schreiben.
-import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261001b';
-import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20260905';
+import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261001e';
+import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
 import { on } from './signal.js?v=20260813';
 
 /** Physio-Sitzungen mit diesem Status gelten als erbracht. */

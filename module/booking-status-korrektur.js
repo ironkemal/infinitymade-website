@@ -1,5 +1,5 @@
 import { emit } from './signal.js?v=20260813';
-import { rebindeNoShowSitzungen } from './termin-nicht-erschienen.js?v=20260914';
+import { rebindeNoShowSitzungen } from './termin-nicht-erschienen.js?v=20260916b';
 
 /**
  * booking-status-korrektur.js — nachträgliche bookings.status-Korrektur

@@ -42,7 +42,7 @@
 
 import { parseIcdList, matchIcdToDg, passendeUnterkodes } from '../icd-dg-match.js?v=20261001b';
 import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260929';
-import { dgWurzel, bereichSchluessel } from './verordnung-regeln.js?v=20260903';
+import { dgWurzel, bereichSchluessel } from './verordnung-regeln.js?v=20260918';
 
 /** Dringlichkeit der Meldung. `blocker` heisst: so geht die Verordnung nicht durch. */
 export const SCHWERE = { blocker: 'blocker', warnung: 'warnung', hinweis: 'hinweis' };

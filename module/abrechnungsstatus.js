@@ -42,7 +42,7 @@
  */
 
 import { emit } from './signal.js?v=20260813';
-import { bestaetigungsText } from './offene-einheiten.js?v=20260930h';
+import { bestaetigungsText } from './offene-einheiten.js?v=20261001e';
 // Seit 04.09.2026 EIN Verordnungstopf (`prescriptions`). Diese Datei spricht
 // weiter podologisch (STATUS/UEBERGAENGE oben bleiben unangetastet) —
 // uebersetzt wird nur an den beiden Lesestellen unten.

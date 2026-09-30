@@ -33,8 +33,8 @@
  * nicht (Konsey 2026-08-13).
  */
 
-import { WV_SLOT_PX } from './kalender-raster.js?v=20260822';
-import { alsISODatum } from './datum.js?v=20260831';
+import { WV_SLOT_PX } from './kalender-raster.js?v=20260830';
+import { alsISODatum } from './datum.js?v=20260930f';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { mitDeckkraft } from './kalender-farben.js?v=20260914';
 import { ladeAbwesenheiten, istAbwesend, abwesendeMitarbeiterIds, abwesenheitsGrund } from './abwesenheit.js?v=20260918';

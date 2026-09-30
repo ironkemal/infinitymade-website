@@ -62,23 +62,23 @@
 
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
-import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20260930h';
+import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261001e';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260920s';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001b';
 import { leiteBehandlungsbeginnAb } from './behandlungsbeginn.js?v=20260920s';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
-import { alsISODatum } from './datum.js?v=20260901';
+import { alsISODatum } from './datum.js?v=20260930f';
 import { positionVon } from './podo-geplant.js?v=20260918';
 // Storno statt Löschen (Entscheidung K3, § 630f Abs. 1 S. 2 BGB) — siehe dort.
-import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20260930h';
+import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20261001e';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
 // dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
 import { darf78040, darf78100, darfErstbefundungNagel,
          POD_EINGANGSBEFUNDUNG, POD_BEFUNDPAUSCHALE,
          POD_ERSTBEFUNDUNG_GROSS, POD_ERSTBEFUNDUNGEN,
          nagelLabel }
-  from './eingangsbefundung-regel.js?v=20260930a';
+  from './eingangsbefundung-regel.js?v=20261001e';
 // Seit 04.09.2026 gibt es EINEN Verordnungstopf (`prescriptions`). Diese Datei
 // behaelt ihren podologischen Wortschatz; uebersetzt wird an der Grenze.
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, PODO_ABGERECHNET_OR, ausTopf, inTopf, statusInTopf, patientAnzeigename }
@@ -89,7 +89,7 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
 // Ermittlung wird NICHT geschrieben — die von `verordnung-pruefung.js`
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
-import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001b';
+import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001e';
 import { behandlungspositionVorschlag } from './podo-behandlungsposition-regel.js?v=20260928';
 // Reform-Sprint S1.7 (28.09.2026): Vorwahl-Datum aus dem Termin, statt immer
 // "heute" — s. `setPodVorwahl()` unten.

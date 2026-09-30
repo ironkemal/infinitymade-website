@@ -65,7 +65,7 @@ import { zeigeAbrechnungAnsicht } from './abrechnung-ansicht.js?v=20260909';
 import { checkPrescriptionCompliance, istHarterRiegel, istBerichtOffen,
          frageBerichtFreigabe } from './abrechnung-freigabe.js?v=20260826';
 import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
-import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten, gueltigBestaetigteIds, grundDaten } from './offene-einheiten.js?v=20260930h';
+import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten, gueltigBestaetigteIds, grundDaten } from './offene-einheiten.js?v=20261001e';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260930c';
