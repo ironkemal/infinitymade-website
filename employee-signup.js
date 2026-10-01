@@ -297,6 +297,11 @@ $('signupForm').addEventListener('submit', async (e) => {
       throw new Error('Die Bestätigungs-E-Mail konnte nicht zugestellt werden. Bitte prüfen Sie die E-Mail-Adresse auf Tippfehler — sie muss zu einem erreichbaren Postfach gehören.');
     }
     if (authErr) throw authErr;
+    // Adresse schon registriert: Supabase antwortet aus Schutz vor Konto-Ausspähung
+    // mit Erfolg, legt aber nichts an und sendet keine Mail (identities = []).
+    if (authData?.user && Array.isArray(authData.user.identities) && authData.user.identities.length === 0) {
+      throw new Error('Für diese E-Mail-Adresse besteht bereits ein Konto. Bitte verwenden Sie eine andere E-Mail-Adresse oder melden Sie sich mit dem bestehenden Konto an.');
+    }
 
     // resend() as fallback — 60s cooldown prevents double-send if signUp already sent
     await supabase.auth.resend({
