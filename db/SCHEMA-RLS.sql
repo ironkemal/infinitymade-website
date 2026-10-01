@@ -1,7 +1,12 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-10-01 — Nachtrag: 0051 (Reform 3.12 c): −2 Indizes
+-- ERZEUGT AM:        2026-10-01 — Nachtrag: 0052 fahrten_aenderungen: +1 Policy
+--                    (fahrten_aenderungen_select), +1 Funktion
+--                    (fahrten_aenderung_protokollieren, SECURITY DEFINER,
+--                    EXECUTE fuer PUBLIC/anon/authenticated entzogen), +1 Trigger,
+--                    +2 Indizes (PK + fahrten_aenderungen_owner_fahrt_idx).
+--                    davor: 2026-10-01 — Nachtrag: 0051 (Reform 3.12 c): −2 Indizes
 --                    (idx_leads_pii_not_encrypted, idx_prescriptions_phi_not_
 --                    encrypted). Keine Policy/Funktion/Trigger betroffen.
 --                    davor: 2026-10-01 — Nachtrag: 0049 prescriptions_festschreibung()
@@ -976,6 +981,10 @@
 --   fahrten update policy [UPDATE] user_id = auth.uid() OR owner_id = auth.uid()
 --   fahrten delete policy [DELETE] owner_id = auth.uid()
 
+-- fahrten_aenderungen                                       (01.10.2026, 0052)
+--   fahrten_aenderungen_select [SELECT] owner_id = auth.uid() OR fahrer_id = auth.uid()
+--   Keine Schreib-Policy; REVOKE ALL + GRANT SELECT TO authenticated.
+
 -- feedbacks
 --   feedbacks_select/insert/update_own — auth.uid() = user_id
 
@@ -1777,6 +1786,10 @@ $function$;
 -- --- Benachrichtigung ---------------------------------------------------
 -- notify_feedback_telegram() -> trigger    pg_net -> Telegram
 -- notify_new_referral_draft() -> trigger
+-- fahrten_aenderung_protokollieren() -> trigger  (01.10.2026, 0052) SECURITY DEFINER,
+--   search_path=public; AFTER UPDATE OR DELETE auf fahrten: protokolliert UPDATE
+--   nur bei OLD.fahrt_ended_at IS NOT NULL und geaendertem Finanzamt-Feld, DELETE
+--   immer. EXECUTE fuer PUBLIC/anon/authenticated entzogen.
 
 
 -- --- Admin-Auswertung ---------------------------------------------------
@@ -1937,6 +1950,7 @@ $function$;
 --                           beim UPDATE bleiben Fehlerstatus, Freitexte und
 --                           partner_name offen, beendet_am/antwort_auf/
 --                           uebertragungsweg lassen sich genau einmal ergaenzen.
+--   fahrten               trg_fahrten_aenderung_protokollieren  AFTER UPDATE OR DELETE  (0052)
 --   feedbacks             trg_feedback_telegram          AFTER INSERT
 --   referral_drafts       trigger_notify_new_referral_draft AFTER INSERT
 --
@@ -2046,6 +2060,7 @@ CREATE INDEX idx_employee_services_employee ON public.employee_services USING bt
 CREATE INDEX idx_employee_services_service ON public.employee_services USING btree (service_id);
 CREATE INDEX idx_fahrten_business ON public.fahrten USING btree (business_id);
 CREATE INDEX idx_fahrten_owner_user ON public.fahrten USING btree (owner_id, user_id, fahrt_started_at DESC);
+CREATE INDEX fahrten_aenderungen_owner_fahrt_idx ON public.fahrten_aenderungen USING btree (owner_id, fahrt_id);   -- 0052
 CREATE INDEX idx_feedbacks_business ON public.feedbacks USING btree (business_id);
 CREATE INDEX idx_feedbacks_owner ON public.feedbacks USING btree (owner_id);
 CREATE INDEX idx_group_scopes_group ON public.group_scopes USING btree (group_id);

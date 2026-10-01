@@ -113,6 +113,9 @@ const USER_TABLES = [
   { table: 'chatbot_usage',                filter: 'owner_id'  },
   { table: 'vehicles',                     filter: 'owner_id'  },
   { table: 'fahrten',                      filter: 'owner_id'  },
+  // 0052 (01.10.2026): Fahrtenbuch-Änderungsprotokoll — Auskunft ja, Löschung NEIN:
+  // steuerliche Aufbewahrung (§147 AO, BMF 18.11.2009), Art. 17 Abs. 3 lit. b DSGVO.
+  { table: 'fahrten_aenderungen',          filter: 'owner_id'  },
   { table: 'aerzte',                       filter: 'owner_id'  },
   { table: 'ueberweisungen',               filter: 'owner_id'  },
   { table: 'referral_drafts',              filter: 'owner_id'  },

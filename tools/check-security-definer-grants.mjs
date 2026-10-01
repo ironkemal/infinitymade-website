@@ -26,6 +26,10 @@ export const PROTECTED = [
   'set_next_mahnung_nr',
   'set_next_ausfallrechnung_nr',
   'audit_write_log',
+  // 0052 (01.10.2026): Fahrtenbuch-Aenderungsprotokoll — Trigger-Funktion, schreibt
+  // in die append-only Tabelle fahrten_aenderungen. Per RPC aufrufbar waere sie ein
+  // Weg, Protokolleintraege zu faelschen; drei REVOKEs in der Migration.
+  'fahrten_aenderung_protokollieren',
 ];
 
 // Bewusst fuer anon/authenticated geoeffnete RPC-Funktionen.

@@ -930,6 +930,13 @@ Heilmittel-Richtlinie …).
 - **✅ Altzeilen neutralisiert 01.10.2026 (`0050_phi_reste_leeren`, Freigabe Kemal):** alle Zeilen mit `lead_id` oder `zweck` „Hausbesuch …" auf `Patientenbesuch` / `Patientenbesuch (s. Verzeichnis Nr. P-XXXXXXXX)` gebracht (Referenz wie `fahrtReferenz()`); live 8/8 neutral. Name/Anschrift nur noch über `lead_id` im Patientenverzeichnis.
 - **Achtung — keine Patientendaten mehr in `zweck`/`zielort` (seit 30.09.2026, Reform 3.12, Commit `e9d0286`, S-35):** neue Fahrten schreiben `Patientenbesuch (s. Verzeichnis Nr. P-…)` + Referenz; der CSV-Export ist ohne Name/Anschrift, das Patientenverzeichnis wird getrennt exportiert (`module/fahrtenbuch-regeln.js`). **Altzeilen** (live 30.09.2026: 7 von 8 mit `zweck`/`zielort` gefüllt) können noch Namen/Anschrift im alten Format tragen — auf der Aufräum-Liste unter `prescriptions`, Umschreiben braucht eigenes OK.
 
+### `fahrten_aenderungen`
+- **Warum:** Fahrtenbuch-Änderungsprotokoll (BMF-Schreiben 18.11.2009): nachträgliche Änderungen abgeschlossener Fahrten und jede Löschung bleiben mit altem (und neuem) Wert, Benutzer und Zeitpunkt nachvollziehbar. Append-only, nur per Trigger beschrieben; ohne FK, damit die Spur Fahrt und Benutzerkonto überlebt.
+- **Seit:** 01.10.2026 · `0052_fahrten_aenderungsprotokoll` (legal-de + db-ustasi + onprem, SaaS per MCP)
+- **Status:** aktiv
+- **Wer:** schreibt nur `fahrten_aenderung_protokollieren()` (Trigger `trg_fahrten_aenderung_protokollieren` auf `fahrten`); lesen: noch kein Frontend — CSV-Spalte „geändert" + separates Änderungsprotokoll-CSV ist Oturum-A-Arbeit (legal-de: Finanzamt-Ausdruck muss Änderungen zeigen).
+- **Achtung:** offene Fahrten (Start → Ankunft → Ende) erzeugen KEINE Einträge — erst Änderungen nach `fahrt_ended_at`. `alt`/`neu` ohne `lead_id`. Aufbewahrung wie Fahrtenbuch (§147 AO; legal-de: 8 Jahre annehmen, mit Steuerberater klären) → in `api/dsgvo.js` Auskunft, NICHT Löschung. Restrisiko DB-Owner/service_role akzeptiert.
+
 ### `vehicles`
 - **Warum:** Fahrzeugstamm zum Fahrtenbuch; Kilometerstände und Kennzeichen gehören nicht an die einzelne Fahrt.
 - **Seit:** 22.05.2026 · `v21_fahrtenbuch`

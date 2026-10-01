@@ -1,7 +1,10 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-10-01 — Nachtrag: 0051_phi_spalten_entfernen (Reform
+-- ERZEUGT AM:        2026-10-01 — Nachtrag: 0052_fahrten_aenderungsprotokoll im
+--                    SaaS angewendet (MCP): +1 Tabelle fahrten_aenderungen
+--                    (append-only, BMF 18.11.2009). Letzte Migration: 0052.
+--                    davor: 2026-10-01 — Nachtrag: 0051_phi_spalten_entfernen (Reform
 --                    3.12 c) im SaaS angewendet (MCP, Freigabe Kemal):
 --                    prescriptions −4 Spalten (ocr_raw_response, ocr_raw_enc,
 --                    icd10_enc, phi_encrypted), leads −7 Spalten (*_enc,
@@ -1759,6 +1762,26 @@ CREATE TABLE fahrten (
 --   ✅ 01.10.2026 (0050): Altzeilen mit Patientenname/-anschrift in zweck/zielort
 --     auf das neutrale Format von module/fahrtenbuch-regeln.js gebracht
 --     ("Patientenbesuch (s. Verzeichnis Nr. P-XXXXXXXX)"); live 8/8 neutral.
+
+CREATE TABLE fahrten_aenderungen (
+  id bigint NOT NULL GENERATED ALWAYS AS IDENTITY
+  fahrt_id uuid NOT NULL
+  owner_id uuid NOT NULL
+  business_id uuid
+  fahrer_id uuid
+  op text NOT NULL
+  alt jsonb NOT NULL
+  neu jsonb
+  geaendert_von uuid
+  geaendert_am timestamptz NOT NULL DEFAULT now()
+);
+--   PK (id) · CHECK op IN ('UPDATE','DELETE') · KEIN FK (Spur ueberlebt Fahrt + Konto)
+--   Seit 01.10.2026 · 0052_fahrten_aenderungsprotokoll (BMF 18.11.2009, legal-de)
+--   Append-only: geschrieben NUR von trg_fahrten_aenderung_protokollieren
+--   (UPDATE an abgeschlossenen Fahrten mit geaendertem Finanzamt-Feld, jede
+--   Loeschung inkl. CASCADE). alt/neu = Finanzamt-Felder, OHNE lead_id.
+--   Grants: nur SELECT fuer authenticated; RLS owner_id/fahrer_id = auth.uid().
+--   Aufbewahrung wie Fahrtenbuch — nicht in dsgvo.js DELETE_TABLES.
 
 CREATE TABLE feedbacks (
   id uuid NOT NULL DEFAULT gen_random_uuid()
