@@ -17,7 +17,7 @@
  * nirgends sonst (Kalender, Mail, PDF, Abrechnung).
  */
 
-import { datumDe } from './datum.js?v=20260930f';
+import { datumDe } from './datum.js?v=20261001a';
 
 /** Kurzbeschreibung nach Wagner — nur als Tooltip; die Stufe selbst ist die Aussage. */
 export const WAGNER_TEXT = {

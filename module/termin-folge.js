@@ -24,7 +24,7 @@
  * Oben steht die Rechnung ohne DOM (testbar), unten die Verdrahtung.
  */
 
-import { alsDatetimeLocal } from './datum.js?v=20260930f';
+import { alsDatetimeLocal } from './datum.js?v=20261001a';
 import { sollAbstand } from './frequenz-pruefung.js?v=20260929b';
 import { parseNameMitGeburt } from './termin-patient-bezug.js?v=20260817';
 import { POD_EINGANGSBEFUNDUNG } from './eingangsbefundung-regel.js?v=20261003a';

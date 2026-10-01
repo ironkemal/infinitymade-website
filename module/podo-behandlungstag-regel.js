@@ -23,7 +23,7 @@
 /** Die Positionen, die einen Behandlungstag abrechenbar machen. */
 // UI1/UI2: die Behandlung ist die Nagelkorrekturspange (78610, bis 2x je Tag; 78620 ist Aufschlag, keine Einheit — gkv-302 30.09, Anlage 2 §2 c) — ohne sie könnte eine
 // UI2-Verordnung nie „Bereit" werden (Hauptkoordinator 30.09, Kontrolle nach S4-Paket 1).
-import { datumDe } from './datum.js?v=20260930f';
+import { datumDe } from './datum.js?v=20261001a';
 
 export const ABRECHENBARE_BEHANDLUNG = new Set(['78010', '78020', '78610']);
 

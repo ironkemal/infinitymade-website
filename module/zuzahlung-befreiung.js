@@ -44,7 +44,7 @@
  * das Nullsetzen des Betrags für die Rezepte, die der Trigger tatsächlich als
  * befreit markiert hat.
  */
-import { alsISODatum } from './datum.js?v=20260930f';
+import { alsISODatum } from './datum.js?v=20261001a';
 
 const HEUTE = () => alsISODatum(new Date());
 

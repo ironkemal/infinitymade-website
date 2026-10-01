@@ -68,7 +68,7 @@ import { zuzahlungFuerRezept, zuzahlungFuerPodoVerordnung } from './zuzahlung-re
 import { offeneEinheiten, vorausgewaehltPodo, frageOffeneEinheiten, gueltigBestaetigteIds, grundDaten } from './offene-einheiten.js?v=20261001e';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuVieleBehandlungenJeTag } from './podo-behandlungstag-regel.js?v=20261003a';
-import { datumDe } from './datum.js?v=20260930f';
+import { datumDe } from './datum.js?v=20261001a';
 import { standortZuschnitt } from './standort-zuschnitt.js?v=20260828';
 import { TOPF, PODO_SELECT, PODO_ARBEITSLISTE_OR, ausTopf, patientAnzeigename } from './verordnung-topf.js?v=20260930c';
 import { initDateieinheit, ladeDateieinheiten, dateieinheitBadge,

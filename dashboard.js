@@ -98,7 +98,7 @@ import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=202
 import { renderWoche } from './module/kalender-woche.js?v=20261001e';
 import { renderMonat } from './module/kalender-monat.js?v=20261001e';
 import { verdrahteHeuteButton } from './module/kalender-heute.js?v=20260905b';
-import { alsISODatum as toISODate, alsDatetimeLocal } from './module/datum.js?v=20260930f';
+import { alsISODatum as toISODate, alsDatetimeLocal, zeitpunktAusFeld } from './module/datum.js?v=20261001a';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260914';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ladeAbwesenheiten, istAbwesend, abwesenheitsGrund } from './module/abwesenheit.js?v=20260918';
@@ -16640,16 +16640,16 @@ document.getElementById('fbEditSaveBtn').addEventListener('click', async () => {
   const errEl = document.getElementById('fbEditError');
   errEl.style.display = 'none';
   if (!id) return;
-
-  const startedAtVal = document.getElementById('fbEditStartedAt').value;
-  const endedAtVal = document.getElementById('fbEditEndedAt').value;
+  const orig = (window._fbFahrtenCache || []).find(r => r.id === id) || {}; // unberührte Zeitfelder behalten ihre Sekunden
+  const startedAtVal = zeitpunktAusFeld(document.getElementById('fbEditStartedAt').value, orig.fahrt_started_at);
+  const endedAtVal = zeitpunktAusFeld(document.getElementById('fbEditEndedAt').value, orig.fahrt_ended_at);
 
   const payload = {
     kennzeichen_snapshot: document.getElementById('fbEditKennzeichen').value.trim() || null,
     start_km: Number.isFinite(startKm) ? startKm : null,
     end_km: Number.isFinite(endKm) ? endKm : null,
-    fahrt_started_at: startedAtVal ? new Date(startedAtVal).toISOString() : null,
-    fahrt_ended_at: endedAtVal ? new Date(endedAtVal).toISOString() : null,
+    fahrt_started_at: startedAtVal,
+    fahrt_ended_at: endedAtVal,
     zweck: document.getElementById('fbEditZweck').value.trim() || null,
     abfahrtsort: document.getElementById('fbEditAbfahrtsort').value.trim() || null,
     zielort: document.getElementById('fbEditZielort').value.trim() || null,

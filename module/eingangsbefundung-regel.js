@@ -47,7 +47,7 @@ export const POD_BEFUNDPAUSCHALE = '78030';
 
 // `datumDe` lebt in datum.js (eine Fassung im Baum); hier nur weiter ausgefuehrt,
 // damit bestehende Importe dieses Moduls nicht brechen.
-import { datumDe } from './datum.js?v=20260930f';
+import { datumDe } from './datum.js?v=20261001a';
 export { datumDe };
 
 /**

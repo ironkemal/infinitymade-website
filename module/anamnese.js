@@ -20,7 +20,7 @@
  *   Laden/Speichern hier fehl. Siehe anamnese-daten.js.
  */
 
-import { alsISODatum, datumDe } from './datum.js?v=20260930f';
+import { alsISODatum, datumDe } from './datum.js?v=20261001a';
 import {
   formular, fachbereichAusSektor, FACHBEREICH_LABEL, ENTWURF_HINWEIS, istSichtbar, istPflicht,
   validiere, antwortAusForm, anzeigeZeilen, baueInsert, vorschlaegeAusRisiken, kioskHinweis, kioskOptionLabel,

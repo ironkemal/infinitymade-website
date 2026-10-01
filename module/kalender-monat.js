@@ -23,7 +23,7 @@
  */
 
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
-import { alsISODatum } from './datum.js?v=20260930f';
+import { alsISODatum } from './datum.js?v=20261001a';
 import { ladeAbwesenheiten, abwesendeMitarbeiterIds } from './abwesenheit.js?v=20260918';
 
 const MONATE_DE = [

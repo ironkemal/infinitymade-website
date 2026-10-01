@@ -13,7 +13,7 @@
  * Termine (`terminZaehler`) und HPNR-Summen sind KEIN Ersatz dafür.
  */
 
-import { alsISODatum } from './datum.js?v=20260930f';
+import { alsISODatum } from './datum.js?v=20261001a';
 
 /**
  * @param {?number|string} verordnet  `prescriptions.behandlungseinheiten`

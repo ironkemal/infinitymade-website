@@ -30,7 +30,7 @@
  * Software heraus, keine Speicherung des erzeugten PDFs (es ist jederzeit aus
  * `bookings` neu erzeugbar — GoBD/§147 AO betreffen dieses Dokument nicht).
  */
-import { alsISODatum } from './datum.js?v=20260930f';
+import { alsISODatum } from './datum.js?v=20261001a';
 
 'use strict';
 

@@ -105,3 +105,12 @@ test('datumDe: leer/ungueltig gibt `leer` (Standard \'\', frei waehlbar)', async
     assert.equal(datumDe(v, '—'), '—');
   }
 });
+
+test('zeitpunktAusFeld: unberührtes Feld behält Sekunden, geändertes wird neu gelesen', async () => {
+  const { zeitpunktAusFeld, alsDatetimeLocal } = await import('./datum.js');
+  const orig = '2026-09-30T11:03:22.693+00:00';
+  assert.equal(zeitpunktAusFeld(alsDatetimeLocal(orig), orig), orig);
+  assert.equal(zeitpunktAusFeld('2026-09-30T08:00', orig), new Date('2026-09-30T08:00').toISOString());
+  assert.equal(zeitpunktAusFeld('2026-09-30T08:00', null), new Date('2026-09-30T08:00').toISOString());
+  assert.equal(zeitpunktAusFeld('', orig), null);
+});

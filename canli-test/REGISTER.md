@@ -566,6 +566,27 @@ başlık `Referenz;Datum;Patientenname;Anschrift`, 5 satır, referanslar Fahrten
 modalı: Zweck „Patientenbesuch", Zielort „Patientenbesuch (s. Verzeichnis Nr. P-396000D2)", ad/adres yok;
 Abbrechen ile kapatıldı (yazma yok). Not: düzenleme modalında „Speichern" eski satırın DB'deki ham
 metnini maskeli metinle ezer — istenen yön, bu turda sınanmadı. Konsol: yalnız bilinen gürültü.
+**Beklenen ek (BMF 18.11.2009, `0641c1a`, 01.10.2026):** Fahrtenbuch CSV artık **12** sütun — son sütun
+`geändert`: her satırda „nein" ya da „ja (s. Änderungsprotokoll)" (boş = protokol okunamadı → hata). Ayrı
+„Änderungsprotokoll exportieren" → `Geändert am;Geändert von;Vorgang;Fahrt vom;Kennzeichen;lfd. Nr./Referenz;Feld;alter Wert;neuer Wert`,
+kaynak `fahrten_aenderungen` (append-only, trigger, migration 0052), değişen alan başına bir satır, „Geändert von" ad
+(UUID değil), Notiz içeriği dışa verilmez. Tarih filtresi (Von/Bis/Therapeut) **Fahrt tarihine** (`alt.fahrt_started_at`,
+UTC sınırları — liste ile aynı) uygulanır, değişiklik tarihine değil. Boş protokolde yalnız başlık iner + bilgi toast'u
+„Im gewählten Zeitraum wurden keine Fahrten nachträglich geändert oder gelöscht."
+**Bağımlı ek:** `module/fahrtenbuch-export.js` (yükleme/indirme) · ✏️ „Fahrt bearbeiten" (her Speichern protokole düşer)
+**Son test:** 2026-10-01 (`0641c1a`, canlı `dashboard.js?v=20261003h` = yerel, `module/fahrtenbuch-export.js?v=20261001a` 200;
+QA test2, `-s=praxura-qa`, ~11:50–12:05 Berlin; CSV'ler `createObjectURL` yakalanarak + Playwright indirmesiyle okundu, sonra
+silindi) — **GEÇTİ, bir yeni [P2]**. (1) CSV: başlık 12 sütun, son `geändert`; 5/5 satır „nein" (değişiklik öncesi),
+`fahrten_aenderungen` GET 200; hasta adı/adresi yok. (2) Protokol (önce): yalnız başlık + toast ✓, GET 200. Gerçek değişiklik:
+`2ec11d8f` (P-E48F89A4, abgeschlossen) ✏️ → End-KM 30024→30025 → Speichern → „Fahrt aktualisiert." → **sayfa yenilendi** →
+CSV: o satır „ja (s. Änderungsprotokoll)", diğer 4 „nein" ✓. Protokol 4 satır, hepsi „Geändert von" = `TEST-Inhaber QA` (ad ✓),
+Vorgang „Änderung", Fahrt vom 30.9.2026, Kennzeichen, P-E48F89A4: „Km-Stand Ende" 30024→30025 ✓, „gefahrene km" 4→5 ✓,
+**ama ayrıca „Beginn" 13:03→13:03 ve „Ende" 13:22→13:22** — kullanıcının dokunmadığı hayalet değişiklik (bkz. [P2] devir).
+Filtre: 01.09–29.09 → 0 satır + toast ✓; 01.10–31.10 (değişiklik günü, fahrt günü değil) → 0 satır ✓; 30.09–30.09 → 4 satır ✓.
+`profiles` isteği yok (ad satır önbelleğinden). (3) Patientenverzeichnis: iner, başlık `Referenz;Datum;Patientenname;Anschrift`,
+5 satır, toast „…nur auf Anforderung des Finanzamts herausgegeben." ✓. Konsol: 0 hata, yalnız bilinen gürültü (6, 4).
+Test verisi: `2ec11d8f` End-KM artık 30025, başlangıç/bitiş saniyeleri 00'a indi (silme yok).
+P3 not (eski): „Fahrt vom"/„Datum" `30.9.2026` (sıfır doldurmasız), „Geändert am" `01.10.2026, 11:54` — iki biçim yan yana.
 
 ### Fußbefund — nav etiketi: `fussstatus`
 
@@ -931,7 +952,18 @@ düzeltildi + yerel kanıt var, **canlıda henüz doğrulanmadı** (bir sonraki 
 
 ## builder'a devredilenler
 
-**Açık devir: 3** (2026-10-01 ~11:30 Berlin, `96afd7d`+`e510310` turu: [P1] Permissions-Policy geolocation SaaS'ta KAPANDI (on-prem `Caddyfile:44` kalıntısı not edildi); Empfänger-Prüfung GEÇTİ; yeni [P2] imzada yanlış dosya → ham forge İngilizce metni — aşağıda; açık: [P1] Rechnungsdatum/UNB UTC, [P2] Demo-Modus. Önceki: §302 Erstellen gerçek testi 2026-10-01 01:37 Berlin: [P2] übersteuerbar-değil alt metni KAPANDI (`4979370`); yeni [P1] Rechnungsdatum/UNB UTC — aşağıda; açık: [P1] Permissions-Policy geolocation, [P2] Demo-Modus (`7fbf1e7` canlıya inmedi, regresyon yapılamadı). Önceki: S7 P1 regresyonu 2026-10-01 00:48–00:55 Berlin, `3069dcc`: [P1] S:01013 ön-izleme KAPANDI; yeni [P2] übersteuerbar-değil alt metni sabit — aşağıda; açık: [P1] Permissions-Policy geolocation, [P2] Demo-Modus. Önceki: S7 kapanış turu 2026-10-01 00:14–00:40 Berlin, `e38bcbe`: [P1] Ausfall/„Nicht erschienen“ KAPANDI; yeni [P1] §302 ön-izlemesi S:01013'ü göstermiyor — aşağıda; açık kalanlar: [P1] Permissions-Policy geolocation, [P2] Demo-Modus (bu turda da sidebar'da görünür).)
+**Açık devir: 4** (2026-10-01 ~12:05 Berlin, `0641c1a` Fahrtenbuch-Export turu: GEÇTİ, yeni [P2] Fahrt bearbeiten saniye kaybı → hayalet protokol satırları — aşağıda. Önceki: 2026-10-01 ~11:30 Berlin, `96afd7d`+`e510310` turu: [P1] Permissions-Policy geolocation SaaS'ta KAPANDI (on-prem `Caddyfile:44` kalıntısı not edildi); Empfänger-Prüfung GEÇTİ; yeni [P2] imzada yanlış dosya → ham forge İngilizce metni — aşağıda; açık: [P1] Rechnungsdatum/UNB UTC, [P2] Demo-Modus. Önceki: §302 Erstellen gerçek testi 2026-10-01 01:37 Berlin: [P2] übersteuerbar-değil alt metni KAPANDI (`4979370`); yeni [P1] Rechnungsdatum/UNB UTC — aşağıda; açık: [P1] Permissions-Policy geolocation, [P2] Demo-Modus (`7fbf1e7` canlıya inmedi, regresyon yapılamadı). Önceki: S7 P1 regresyonu 2026-10-01 00:48–00:55 Berlin, `3069dcc`: [P1] S:01013 ön-izleme KAPANDI; yeni [P2] übersteuerbar-değil alt metni sabit — aşağıda; açık: [P1] Permissions-Policy geolocation, [P2] Demo-Modus. Önceki: S7 kapanış turu 2026-10-01 00:14–00:40 Berlin, `e38bcbe`: [P1] Ausfall/„Nicht erschienen“ KAPANDI; yeni [P1] §302 ön-izlemesi S:01013'ü göstermiyor — aşağıda; açık kalanlar: [P1] Permissions-Policy geolocation, [P2] Demo-Modus (bu turda da sidebar'da görünür).)
+
+### [P2] „Fahrt bearbeiten" → Speichern saniyeleri siliyor — Änderungsprotokoll'e kullanıcının dokunmadığı „Beginn"/„Ende" satırları düşüyor (eski değer = yeni değer) (2026-10-01, `0641c1a` turu, eski kök)
+
+**Nerede:** `fahrtenbuch` → Fahrten → ✏️ → „Fahrt bearbeiten" → Speichern; görünür olduğu yer „Änderungsprotokoll exportieren"
+**Yeniden üretme:** 1. GPS akışıyla kaydedilmiş (saniyeli) bir abgeschlossen Fahrt'ı ✏️ ile aç 2. yalnız End-KM'yi +1 yap 3. Speichern 4. Protokolü indir
+→ Beklenen: tek „Km-Stand Ende" (+ türetilmiş „gefahrene km") satırı; zaman damgaları değişmez
+→ Gerçekleşen: ek „Beginn 30.09.2026, 13:03 → 30.09.2026, 13:03" ve „Ende 13:22 → 13:22" satırları; DB'de `fahrt_started_at` 11:03:22.693Z → 11:03:00Z, `fahrt_ended_at` 11:22:05.117Z → 11:22:00Z (canlı, `2ec11d8f`)
+**Kanıt:** protokol CSV 4 satır (2 hayalet) · `_fbFahrtenCache` kaydetme sonrası `…T11:03:00+00:00` · konsol temiz
+**Şüpheli:** `dashboard.js:16626-16627` (`alsDatetimeLocal` → `module/datum.js:98-103` yalnız HH:MM üretiyor) + `dashboard.js:16650-16651` payload zaman alanlarını **her zaman** gönderiyor. Öneri: input değeri `alsDatetimeLocal(orijinal)` ile aynıysa alanı payload'a koyma (aynı mantık diğer alanlara da uygulanabilir). Karşılaştırma `module/fahrtenbuch-regeln.js:263-265` JSON eşitliği — orada maskelemek yanlış olur, kayıt gerçekten değişiyor.
+**Katman:** 4'e yakın (Fahrtenbuch = Finanzamt kaydı; para/§302 değil → P2. Finanzamt'a „açıklanamayan değişiklik" gösterdiği için builder P1'e yükseltebilir)
+**Etki:** her düzeltme kaydında GPS saniyeleri sessizce kayboluyor ve Finanzamt çıktısında anlamsız değişiklik satırları çıkıyor — Betriebsprüfung'da şüphe uyandırır.
 
 ### [P2] §302 Signieren: yanlış/bozuk .p12 seçilince ham, İngilizce forge hatası gösteriliyor — „Too few bytes to read ASN.1 value.“ (2026-10-01, `e510310` turu, eski)
 

@@ -47,7 +47,7 @@ import {
   AUSBUCHUNGSKONTO_STANDARD,
 } from './buchungskonten.js?v=20260909';
 import { frageZahlungsstatus } from './rechnung-zahlung.js?v=20260909';
-import { alsISODatum } from './datum.js?v=20260930f';
+import { alsISODatum } from './datum.js?v=20261001a';
 
 /** Beträge werden in Cent verglichen — `numeric(10,2)` kennt keine Rundungsreste. */
 const cent = (v) => Math.round((Number(v) || 0) * 100);

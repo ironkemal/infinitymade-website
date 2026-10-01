@@ -101,3 +101,19 @@ export function alsDatetimeLocal(d) {
   const x = d instanceof Date ? d : new Date(d);
   return `${tag}T${zwei(x.getHours())}:${zwei(x.getMinutes())}`;
 }
+
+/**
+ * Gegenstück zu `alsDatetimeLocal` beim Speichern: steht im Feld noch, was
+ * aus `original` erzeugt wurde, kommt `original` unverändert zurück. Sonst
+ * kappt jedes Speichern die Sekunden — im Fahrtenbuch erzeugte das Scheinzeilen
+ * „Beginn/Ende" im Änderungsprotokoll fürs Finanzamt (canli-test 01.10.2026).
+ *
+ * @param {string} feldwert `YYYY-MM-DDTHH:MM` aus <input type="datetime-local">
+ * @param {string|null|undefined} original gespeicherter Zeitpunkt
+ * @returns {string|null} ISO-Zeitpunkt oder null bei leerem Feld
+ */
+export function zeitpunktAusFeld(feldwert, original) {
+  if (!feldwert) return null;
+  if (original && alsDatetimeLocal(original) === feldwert) return original;
+  return new Date(feldwert).toISOString();
+}

@@ -34,7 +34,7 @@
  */
 
 import { WV_SLOT_PX } from './kalender-raster.js?v=20260830';
-import { alsISODatum } from './datum.js?v=20260930f';
+import { alsISODatum } from './datum.js?v=20261001a';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { mitDeckkraft } from './kalender-farben.js?v=20260914';
 import { ladeAbwesenheiten, istAbwesend, abwesendeMitarbeiterIds, abwesenheitsGrund } from './abwesenheit.js?v=20260918';

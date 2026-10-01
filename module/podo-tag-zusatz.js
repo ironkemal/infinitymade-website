@@ -20,7 +20,7 @@
  * podologie-abrechnung.js (Aufruf) und dashboard.js (Abhängigkeiten).
  */
 
-import { datumDe, alsISODatum } from './datum.js?v=20260930f';
+import { datumDe, alsISODatum } from './datum.js?v=20261001a';
 
 /** Text der Rückfrage nach dem Speichern (Konsey S0, 1b). */
 export const FOLGE_FRAGE = {

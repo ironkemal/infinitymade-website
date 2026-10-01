@@ -68,7 +68,7 @@ import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001b';
 import { leiteBehandlungsbeginnAb } from './behandlungsbeginn.js?v=20260920s';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
-import { alsISODatum } from './datum.js?v=20260930f';
+import { alsISODatum } from './datum.js?v=20261001a';
 import { positionVon } from './podo-geplant.js?v=20260918';
 // Storno statt Löschen (Entscheidung K3, § 630f Abs. 1 S. 2 BGB) — siehe dort.
 import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20261001e';

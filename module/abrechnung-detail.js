@@ -48,7 +48,7 @@ import { fmtEur } from './geld.js?v=20260909';
 import { dateiStatusBadge, aggregierterDateiStatus, dateiStatusInfo, istVerworfen } from './abrechnung-status.js?v=20260920b';
 import { ladeDateieinheiten, dateieinheitVon } from './podologie-dateieinheit.js?v=20260907';
 import { on } from './signal.js?v=20260813';
-import { alsISODatum } from './datum.js?v=20260930f';
+import { alsISODatum } from './datum.js?v=20261001a';
 
 let ctx = null;
 let _hoertZu = false;
