@@ -773,6 +773,17 @@ kapı unutmaz ama düşünmez.
 | **Çözüm** | Önce **kaynak kurtarma** (canlı projeden `functions download`, repoya al) → sonra **Faz 1.5** (Express `routes/fahrtenbuch.js`). Anahtar sahipliği §9-A8'e bağlı; öneri (a): müşterinin kendi ücretsiz ORS anahtarı, sihirbaza adım. Mevcut disiplin korunur: ORS'a hasta adı/ID gitmez, yalnız koordinat (`archive/Fahrtenbuch.md:123`) |
 | **Durum** | 🟡 **kaynak kurtarıldı (04.09.2026)** — Faz 1.5 artık başlayabilir |
 
+> **01.10.2026 — kolon silme iki adımı uçtan uca işletildi (Reform 3.12).**
+> Adım a/b: `e9d0286` (kod PHI-Spalten'e yazmayı bıraktı) + `0049`/`0050` (Festschreibung
+> `icd10_enc`'siz, PHI kalıntıları boşaltıldı). Adım c: `0051_phi_spalten_entfernen.sql`
+> (commit `33ae965`) sütunları düşürdü; dosyada `-- zweistufig:` gerekçesi var, kapı onu
+> istedi. Önkoşul: kurulu müşteri kutusu yok (Kemal teyit etti, 01.10.2026) + SaaS image
+> >= `e9d0286`. Kontroller: bağımlı view/fonksiyon 0, kalan sütun/index 0, eingereichte
+> Verordnung UPDATE'i kilit trigger'ından geçti (rollback testi). ⚠️ 0049-0051'i taşıyan
+> ilk sürüm **MINOR** olmalı; `:stable`'a terfide kutu yoksa sorun yok, kutu varsa önce
+> kutunun image'ı >= `e9d0286` olmalı (yoksa eski kod düşmüş sütuna yazar, 42703).
+> `:beta` ve `:stable` aynı anda canlı olduğundan, kutu çıktıktan sonra bu desen şarttır.
+
 > **04.09.2026 — yapılan (ana bağlam):**
 > Üç fonksiyonun kaynağı canlı Supabase projesinden **geri çekildi** ve depoya yazıldı:
 > `supabase/functions/{fahrtenbuch-geocode,fahrtenbuch-route,fahrtenbuch-matrix}/index.ts`
