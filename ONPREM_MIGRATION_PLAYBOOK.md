@@ -219,7 +219,7 @@ Görevler:
 - [ ] 2.4 **Healthcheck:** `GET /health` (DB, auth, realtime, disk doluluk) + kurulum/update sonrası self-check; panelde durum sayfası.
 - [ ] 2.5 **Tanılama paketi:** panelde buton → PII içermeyen log/config özeti (`docker logs` son N satır PII-mask'ten geçirilmiş, sürümler, healthcheck çıktısı) tek arşiv dosyası olarak indirilir (K10).
 - [ ] 2.6 **Telemetri:** Sentry opt-in (sihirbazda kapalı-varsayılan onay kutusu); kapalıysa lokal `error_logs` tablosuna yaz.
-- [ ] 2.7 Auth e-postaları: self-hosted GoTrue'nun SMTP ayarları sihirbazdaki SMTP'den beslensin (tek ayar iki işi görür).
+- [ ] 2.7 ~~Auth e-postaları: GoTrue SMTP sihirbazdan~~ → **01.10.2026 (O-142): auth mailsiz.** Çalışan hesabı owner panelinden Einrichtungscode ile (`api-backend/routes/mitarbeiter-zugang.js`, SaaS'ta canlı); kutuda GoTrue SMTP_* ve MAILER_URLPATHS_* düşer, install.sh SMTP sorusu kalkar; owner kurtarma = `onprem/reset-owner-passwort.sh` (O-107, henüz yok). SMTP yalnız hasta/termin maili için, opsiyonel, teknisyen bağlar.
 - [x] **2.8 TAMAM (11.09.2026)** — ayrı bir on-prem build'e gerek kalmadı: `server.js` artık Google anahtarları yoksa **uyarı verip devam ediyor** (`GOOGLE_KONFIGURIERT`), ilgili iki uç 503 + açık mesaj dönüyor. Önceki hâl `process.exit(1)` idi ve kutuyu sonsuz PM2 döngüsünde bırakıyordu — Temmuz PoC'sinde `dummy GOOGLE_*` ile geçiştirilmişti, 11.09'da gerçek kutuda patladı ve düzeltildi. Sicil: O-47.
 
 **Kabul kriterleri:**
