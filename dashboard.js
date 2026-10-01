@@ -42,7 +42,8 @@ import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261003e';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
-import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz, fahrtenbuchCsv, patientenverzeichnisCsv, csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS } from './module/fahrtenbuch-regeln.js?v=20261001c';
+import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz } from './module/fahrtenbuch-regeln.js?v=20261001d';
+import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261001a';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
 import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261003a';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e';
@@ -16466,8 +16467,10 @@ if (!window.__fbDelegatedBound) {
     if (id === 'fbVehicleAddBtn')   { e.preventDefault(); return safe('openVehicle',   () => openVehicleEditModal(null)); }
     if (id === 'vehEditSaveBtn')    { e.preventDefault(); return safe('saveVehicle',   saveVehicleEdit); }
     if (id === 'fbFahrtenRefresh')  { e.preventDefault(); return safe('refreshFahrten',loadFbFahrten); }
-    if (id === 'fbFahrtenExportCsv'){ e.preventDefault(); return safe('exportCsv',     exportFbFahrtenCsv); }
-    if (id === 'fbFahrtenExportVerz'){ e.preventDefault(); return safe('exportVerz',    exportFbPatientenverzeichnisCsv); }
+    const fbExport = () => ({ supabase, ownerId: getOwnerId(), rows: window._fbFahrtenCache || [], toast: showToast });
+    if (id === 'fbFahrtenExportCsv'){ e.preventDefault(); return safe('exportCsv',     () => exportFahrtenbuchCsv(fbExport())); }
+    if (id === 'fbFahrtenExportProt'){ e.preventDefault(); return safe('exportProtokoll', () => exportAenderungsprotokollCsv({ ...fbExport(), filter: { von: document.getElementById('fbFahrtenFrom').value, bis: document.getElementById('fbFahrtenTo').value, fahrer: document.getElementById('fbFahrtenUser')?.value || '' } })); }
+    if (id === 'fbFahrtenExportVerz'){ e.preventDefault(); return safe('exportVerz',    () => exportPatientenverzeichnisCsv(fbExport())); }
     if (id === 'fbReportRefresh')   { e.preventDefault(); return safe('refreshReport', loadFbReports); }
     if (t.dataset && t.dataset.fbTab) { e.preventDefault(); return safe('switchTab',   () => fbActivateTab(t.dataset.fbTab)); }
     // Therapist flow (bkActionModal)
@@ -16681,19 +16684,6 @@ document.getElementById('fbEditDeleteBtn').addEventListener('click', async () =>
   showToast('Fahrt-Eintrag gelöscht.');
   loadFbFahrten();
 });
-
-function exportFbFahrtenCsv() {
-  const rows = window._fbFahrtenCache || [];
-  if (!rows.length) { showToast('Keine Daten zum Exportieren.', 'error'); return; }
-  csvHerunterladen(fahrtenbuchCsv(rows), `fahrtenbuch_${new Date().toISOString().substring(0, 10)}.csv`);
-}
-
-function exportFbPatientenverzeichnisCsv() {
-  const rows = window._fbFahrtenCache || [];
-  if (!rows.length) { showToast('Keine Daten zum Exportieren.', 'error'); return; }
-  csvHerunterladen(patientenverzeichnisCsv(rows), `patientenverzeichnis_${new Date().toISOString().substring(0, 10)}.csv`);
-  showToast(PATIENTENVERZEICHNIS_HINWEIS);
-}
 
 // ---------- Fahrzeuge tab ----------
 async function loadFbVehicles() {

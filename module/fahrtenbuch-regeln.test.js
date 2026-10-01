@@ -6,6 +6,8 @@ import {
   fahrtReferenz,
   fahrtZweckUndZiel,
   fahrtenbuchCsv,
+  aenderungsprotokollCsv,
+  GEAENDERT_JA,
   patientenverzeichnisCsv
 } from './fahrtenbuch-regeln.js';
 
@@ -49,13 +51,13 @@ test('fahrtZweckUndZiel: ohne Referenz Rückfall auf schlichten Zweck', () => {
 });
 
 test('fahrtenbuchCsv: Kopfzeile exakt, leeres Array liefert nur Kopfzeile', () => {
-  const kopf = 'lfd. Nr./Referenz;Datum;Kennzeichen;Fahrer;Km-Stand Beginn;Km-Stand Ende;gefahrene km;Abfahrtsort;Reiseziel;Reisezweck;Fahrtart';
+  const kopf = 'lfd. Nr./Referenz;Datum;Kennzeichen;Fahrer;Km-Stand Beginn;Km-Stand Ende;gefahrene km;Abfahrtsort;Reiseziel;Reisezweck;Fahrtart;geändert';
   assert.equal(fahrtenbuchCsv([]), kopf);
   assert.equal(fahrtenbuchCsv(null), kopf);
-  assert.equal(fahrtenbuchCsv().split(';').length, 11);
+  assert.equal(fahrtenbuchCsv().split(';').length, 12);
 });
 
-test('fahrtenbuchCsv: 11 Spalten je Zeile, Km-Werte ungequotet', () => {
+test('fahrtenbuchCsv: 12 Spalten je Zeile, Km-Werte ungequotet', () => {
   const row = {
     booking_id: 'a1b2c3d4-0000-0000-0000-000000000000',
     lead_id: 'l1',
@@ -72,7 +74,7 @@ test('fahrtenbuchCsv: 11 Spalten je Zeile, Km-Werte ungequotet', () => {
   const lines = csv.split('\n');
   assert.equal(lines.length, 2);
   const cols = lines[1].split(';');
-  assert.equal(cols.length, 11);
+  assert.equal(cols.length, 12);
   assert.equal(cols[0], '"P-A1B2C3D4"');
   assert.equal(cols[2], '"B-XY 1234"');
   assert.equal(cols[3], '"Dr. Schmidt"');
@@ -146,7 +148,7 @@ test('fahrtenbuchCsv: Fahrtart-Mapping und leere Km-Felder', () => {
     distance_km: ''
   };
   const csvPrivat = fahrtenbuchCsv([rowPrivat]);
-  assert.match(csvPrivat, /"Privat"$/);
+  assert.match(csvPrivat, /"Privat";""$/);
   assert.match(csvPrivat, /;;;;/); // 3 leere Km-Felder ungequotet
 });
 
@@ -275,4 +277,50 @@ test('fahrtAnzeigeText maskiert lead_id-Zeilen und Altzeilen "Hausbesuch <Name>"
   const b = fahrtAnzeigeText({ booking_id: id, lead_id: null, zweck: 'Hausbesuch Erika', zielort: 'Weg 2' });
   assert.equal(/Erika|Weg/.test(b.zweck + b.zielort), false);
   assert.deepEqual(fahrtAnzeigeText({ booking_id: id, zweck: 'Fortbildung', zielort: 'Köln' }), { zweck: 'Fortbildung', zielort: 'Köln' });
+});
+
+test('fahrtenbuchCsv: Spalte „geändert" — ja/nein mit Protokoll, leer ohne', () => {
+  const rows = [
+    { id: 'f1', fahrt_started_at: '2026-09-30T08:00:00Z' },
+    { id: 'f2', fahrt_started_at: '2026-09-30T09:00:00Z' }
+  ];
+  const letzte = (csv) => csv.split('\n').slice(1).map(l => l.split(';').at(-1));
+  assert.deepEqual(letzte(fahrtenbuchCsv(rows, [{ fahrt_id: 'f2' }])), ['"nein"', '"' + GEAENDERT_JA + '"']);
+  assert.deepEqual(letzte(fahrtenbuchCsv(rows, [])), ['"nein"', '"nein"']);
+  assert.deepEqual(letzte(fahrtenbuchCsv(rows)), ['""', '""']);
+});
+
+test('aenderungsprotokollCsv: Kopfzeile, eine Zeile je geändertem Feld, Namen und Referenz', () => {
+  const alt = { fahrt_started_at: '2026-09-30T08:00:00Z', fahrt_ended_at: '2026-09-30T08:30:00Z',
+    start_km: 100, end_km: 120, distance_km: 20, kennzeichen_snapshot: 'SU-AB 1', user_id: 'u1',
+    zweck: 'Patientenbesuch', zielort: 'Patientenbesuch', notes: 'geheim' };
+  const neu = { ...alt, end_km: 125, distance_km: 25, notes: 'noch geheimer' };
+  const csv = aenderungsprotokollCsv([
+    { fahrt_id: 'f1', op: 'UPDATE', alt, neu, geaendert_von: 'u9', geaendert_am: '2026-10-01T10:05:00Z' }
+  ], { namen: { u9: 'Inhaberin' }, referenzen: { f1: 'a1b2c3d4-0000-0000-0000-000000000000' } });
+  const lines = csv.split('\n');
+  assert.equal(lines[0], 'Geändert am;Geändert von;Vorgang;Fahrt vom;Kennzeichen;lfd. Nr./Referenz;Feld;alter Wert;neuer Wert');
+  assert.equal(lines.length, 4);
+  const z = lines[1].split(';');
+  assert.equal(z[0], '"01.10.2026, 12:05"');
+  assert.equal(z[1], '"Inhaberin"');
+  assert.equal(z[2], '"Änderung"');
+  assert.equal(z[3], '"30.9.2026"');
+  assert.equal(z[5], '"P-A1B2C3D4"');
+  assert.deepEqual(z.slice(6), ['"Km-Stand Ende"', '"120"', '"125"']);
+  assert.deepEqual(lines[2].split(';').slice(6), ['"gefahrene km"', '"20"', '"25"']);
+  assert.deepEqual(lines[3].split(';').slice(6), ['"Notiz"', '"[Inhalt nicht exportiert]"', '"[Inhalt nicht exportiert]"']);
+  assert.doesNotMatch(csv, /geheim/);
+});
+
+test('aenderungsprotokollCsv: Löschung listet belegte Felder, maskiert Altzeilen, unbekannter Benutzer', () => {
+  const alt = { fahrt_started_at: '2026-09-30T08:00:00Z', kennzeichen_snapshot: 'SU-AB 1', vehicle_id: 'v1v1v1v1-x',
+    zweck: 'Hausbesuch Max Muster', zielort: 'Musterstr. 1, 12345 Berlin', start_km: null };
+  const csv = aenderungsprotokollCsv([
+    { fahrt_id: 'f9', op: 'DELETE', alt, neu: null, geaendert_von: null, geaendert_am: '2026-10-01T10:00:00Z' }
+  ]);
+  assert.doesNotMatch(csv, /Muster|Berlin|v1v1/);
+  const felder = csv.split('\n').slice(1).map(l => l.split(';'));
+  assert.ok(felder.every(f => f[1] === '"System"' && f[2] === '"Löschung"' && f[8] === '""'));
+  assert.deepEqual(felder.map(f => f[6]), ['"Beginn"', '"Kennzeichen"', '"Reiseziel"', '"Reisezweck"']);
 });

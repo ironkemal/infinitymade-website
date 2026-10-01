@@ -151,18 +151,28 @@ function ermittleAnschrift(leads) {
 // ── Exporte Fahrtenbuch & Verzeichnis ────────────────────────────────────────
 
 const KOPFZEILE_FAHRTENBUCH =
-  'lfd. Nr./Referenz;Datum;Kennzeichen;Fahrer;Km-Stand Beginn;Km-Stand Ende;gefahrene km;Abfahrtsort;Reiseziel;Reisezweck;Fahrtart';
+  'lfd. Nr./Referenz;Datum;Kennzeichen;Fahrer;Km-Stand Beginn;Km-Stand Ende;gefahrene km;Abfahrtsort;Reiseziel;Reisezweck;Fahrtart;geändert';
+
+export const GEAENDERT_JA = 'ja (s. Änderungsprotokoll)';
 
 /**
  * Erstellt den Fahrtenbuch-CSV-Export (OHNE BOM, Zeilentrenner '\n', Trenner ';').
  * Enthält grundsätzlich KEINE Patientennamen und KEINE Anschriften.
  * Bei Zeilen mit `lead_id` werden Zweck und Zielort stets anonymisiert generiert.
+ * Spalte „geändert" (BMF 18.11.2009, legal-de 01.10.2026): nachträglich geänderte
+ * Fahrten müssen in der Finanzamt-Ausgabe erkennbar sein; Details stehen im
+ * Änderungsprotokoll (`aenderungsprotokollCsv`). Ohne `aenderungen` bleibt die
+ * Spalte leer statt fälschlich „nein" zu behaupten.
  * @param {Array<object>} rows
+ * @param {Array<{fahrt_id:string}>} [aenderungen] Zeilen aus fahrten_aenderungen
  * @returns {string}
  */
-export function fahrtenbuchCsv(rows) {
+export function fahrtenbuchCsv(rows, aenderungen) {
   const list = Array.isArray(rows) ? rows : [];
   const lines = [KOPFZEILE_FAHRTENBUCH];
+  const geaendert = Array.isArray(aenderungen)
+    ? new Set(aenderungen.map(a => a && a.fahrt_id).filter(Boolean))
+    : null;
 
   for (const row of list) {
     if (!row) continue;
@@ -196,11 +206,117 @@ export function fahrtenbuchCsv(rows) {
       csvZelle(row.abfahrtsort || ''),
       csvZelle(zielort),
       csvZelle(zweck),
-      csvZelle(fahrtart)
+      csvZelle(fahrtart),
+      csvZelle(geaendert ? (geaendert.has(row.id) ? GEAENDERT_JA : 'nein') : '')
     ].join(';'));
   }
 
   return lines.join('\n');
+}
+
+const KOPFZEILE_AENDERUNGSPROTOKOLL =
+  'Geändert am;Geändert von;Vorgang;Fahrt vom;Kennzeichen;lfd. Nr./Referenz;Feld;alter Wert;neuer Wert';
+
+// Reihenfolge = Spaltenfolge des Fahrtenbuchs; Felder wie im Trigger
+// fahrten_aenderung_protokollieren (Migration 0052).
+const PROTOKOLL_FELDER = [
+  ['fahrt_started_at', 'Beginn'],
+  ['fahrt_arrived_at', 'Ankunft'],
+  ['fahrt_ended_at', 'Ende'],
+  ['kennzeichen_snapshot', 'Kennzeichen'],
+  ['vehicle_id', 'Fahrzeug'],
+  ['user_id', 'Fahrer'],
+  ['start_km', 'Km-Stand Beginn'],
+  ['end_km', 'Km-Stand Ende'],
+  ['distance_km', 'gefahrene km'],
+  ['abfahrtsort', 'Abfahrtsort'],
+  ['zielort', 'Reiseziel'],
+  ['zweck', 'Reisezweck'],
+  ['notes', 'Notiz']
+];
+const ZEIT_FELDER = new Set(['fahrt_started_at', 'fahrt_arrived_at', 'fahrt_ended_at']);
+
+/**
+ * Erstellt das Änderungsprotokoll des Fahrtenbuchs als CSV (OHNE BOM) — eine
+ * Zeile je geändertem Feld, bei Löschungen je belegtem Feld (neuer Wert leer).
+ * Patientenschutz wie im Fahrtenbuch: Altzeilen „Hausbesuch <Name>" werden
+ * maskiert, Notizen werden nie im Klartext ausgegeben.
+ * @param {Array<object>} aenderungen Zeilen aus fahrten_aenderungen
+ * @param {{namen?:Object<string,string>, referenzen?:Object<string,string>}} [opts]
+ *   namen: userId → Anzeigename · referenzen: fahrt_id → booking_id
+ * @returns {string}
+ */
+export function aenderungsprotokollCsv(aenderungen, opts = {}) {
+  const namen = opts.namen || {};
+  const referenzen = opts.referenzen || {};
+  const list = (Array.isArray(aenderungen) ? aenderungen : [])
+    .filter(Boolean)
+    .slice()
+    .sort((a, b) => String(a.geaendert_am || '').localeCompare(String(b.geaendert_am || '')));
+  const lines = [KOPFZEILE_AENDERUNGSPROTOKOLL];
+  const person = (id) => (id ? (namen[id] || 'Benutzer ' + String(id).slice(0, 8)) : 'System');
+
+  for (const a of list) {
+    const loeschung = a.op === 'DELETE';
+    const alt = maskiereProtokollWerte(a.alt || {});
+    const neu = loeschung ? {} : maskiereProtokollWerte(a.neu || {});
+    const geaenderteFelder = PROTOKOLL_FELDER.filter(([k]) => loeschung
+      ? !leer(alt[k])
+      : JSON.stringify(alt[k] ?? null) !== JSON.stringify(neu[k] ?? null));
+    const kennzeichenGeaendert = geaenderteFelder.some(([k]) => k === 'kennzeichen_snapshot');
+
+    const kopf = [
+      csvZelle(formatiereZeitpunkt(a.geaendert_am)),
+      csvZelle(person(a.geaendert_von)),
+      csvZelle(loeschung ? 'Löschung' : 'Änderung'),
+      csvZelle(formatiereDatum(alt.fahrt_started_at)),
+      csvZelle(alt.kennzeichen_snapshot || ''),
+      csvZelle(fahrtReferenz(referenzen[a.fahrt_id]))
+    ];
+    for (const [k, label] of geaenderteFelder) {
+      // Fahrzeug-ID nur, wenn das Kennzeichen sie nicht schon zeigt
+      if (k === 'vehicle_id' && (loeschung || kennzeichenGeaendert)) continue;
+      const wert = (v) => protokollWert(k, v, person);
+      lines.push([...kopf, csvZelle(label), csvZelle(wert(alt[k])), csvZelle(loeschung ? '' : wert(neu[k]))].join(';'));
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function leer(v) {
+  return v === null || v === undefined || v === '';
+}
+
+function maskiereProtokollWerte(werte) {
+  if (/^Hausbesuch\b/i.test(String(werte.zweck || ''))) {
+    return { ...werte, zweck: FAHRT_ZWECK, zielort: FAHRT_ZWECK };
+  }
+  return werte;
+}
+
+function protokollWert(feld, v, person) {
+  if (leer(v)) return '';
+  if (ZEIT_FELDER.has(feld)) return formatiereZeitpunkt(v);
+  if (feld === 'user_id') return person(v);
+  if (feld === 'vehicle_id') return 'Fahrzeug ' + String(v).slice(0, 8);
+  if (feld === 'notes') return '[Inhalt nicht exportiert]';
+  return String(v);
+}
+
+/**
+ * Formatiert einen Zeitpunkt als TT.MM.JJJJ HH:MM (Europe/Berlin). Leer wenn ungültig.
+ * @param {*} val
+ * @returns {string}
+ */
+function formatiereZeitpunkt(val) {
+  if (!val) return '';
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleString('de-DE', {
+    timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
 }
 
 const KOPFZEILE_PATIENTENVERZEICHNIS = 'Referenz;Datum;Patientenname;Anschrift';
