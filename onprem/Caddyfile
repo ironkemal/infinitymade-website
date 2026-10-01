@@ -37,11 +37,7 @@
 		X-Frame-Options "SAMEORIGIN"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
-		# camera=(self): ohne das bricht Rezept-Scan per Webcam lautlos (getUserMedia
-		# → NotAllowedError, kein Fallback ausgelöst, weil isSecureContext hier true
-		# ist). serial=(self): fuer eGK-Kartenleser per Web Serial API vorgesehen,
-		# noch ungenutzt — bewusst explizit statt implizitem Default (O-109).
-		Permissions-Policy "camera=(self), microphone=(), geolocation=(), serial=(self)"
+		# Permissions-Policy steht unten in zwei Matchern (A-19).
 		# Nur bei echtem Zertifikat sinnvoll (HSTS_MAX_AGE=0 bei "internal"/
 		# selbstsigniert lassen — sonst sperrt der Browser den Host fest auf
 		# HTTPS, und der Rückweg liegt beim Kunden, nicht bei uns. O-52).
@@ -49,6 +45,21 @@
 		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' {$SUPABASE_PUBLIC_URL} {$SUPABASE_PUBLIC_WSS}; frame-src 'none'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self';"
 		-Server
 	}
+
+	# A-19: geolocation=(self) nur für die zwei Seiten, die den Standort lesen
+	# (Praxisstandort in dashboard.html, GPS-Check-in in attendance.html) —
+	# Spiegel von vercel.json. Der allgemeine Wert schliesst die beiden Pfade
+	# ausdrücklich aus: zwei `header`-Direktiven auf dasselbe Feld würden von
+	# Caddy nach Matcher-Spezifität sortiert, und die spätere überschriebe die
+	# frühere — mit disjunkten Matchern gibt es genau einen Wert pro Antwort.
+	# camera=(self): ohne das bricht Rezept-Scan per Webcam lautlos (getUserMedia
+	# → NotAllowedError, kein Fallback ausgelöst, weil isSecureContext hier true
+	# ist). serial=(self): fuer eGK-Kartenleser per Web Serial API vorgesehen,
+	# noch ungenutzt — bewusst explizit statt implizitem Default (O-109).
+	@geo path /dashboard.html /attendance.html
+	@nogeo not path /dashboard.html /attendance.html
+	header @geo Permissions-Policy "camera=(self), microphone=(), geolocation=(self), serial=(self)"
+	header @nogeo Permissions-Policy "camera=(self), microphone=(), geolocation=(), serial=(self)"
 
 	# ── Backend (Express) ───────────────────────────────────────────────────
 	handle /api/* {
