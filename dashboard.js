@@ -1,3 +1,4 @@
+import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe } from './module/mitarbeiter-zugang.js?v=20261003n';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
 import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
@@ -9785,6 +9786,7 @@ async function loadTeam() {
         <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}">${shortLink}</a>
         <button class="btn-icon emp-copy-link" type="button" data-link="${bookingLink}" title="${t('anfragen_copy_link')}" aria-label="${t('anfragen_copy_link')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
       </div>
+      ${einrichtungscodeKnopfHtml(m, isOwner)}
       <div class="emp-urlaub-toggle" data-emp-id="${m.id}" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;cursor:pointer;border-top:1px solid var(--border);color:var(--text-muted);font-size:12px;">
         <span>🌴 Urlaub / Abwesenheit</span>
         <span class="emp-urlaub-chevron" style="transition:transform 0.2s;">›</span>
@@ -9815,6 +9817,7 @@ async function loadTeam() {
   list.querySelectorAll('.emp-link-row a, .emp-link-row button').forEach(el => {
     el.addEventListener('click', (e) => e.stopPropagation());
   });
+  verdrahteEinrichtungscodeKnoepfe(list, { getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, confirm: showConfirmModal, toast: showToast });
 
   // Faz 3: Aktif business'a atanmamış owner employee'leri listele
   await renderOtherStandortEmps();
@@ -9870,20 +9873,6 @@ async function loadTeam() {
   });
 
   if (!isOwner) return;
-
-  // Owner-only: invite code + registration link
-  const code = currentProfile.company_code || '—';
-  document.getElementById('inviteCode').textContent = code;
-  const inviteUrl = code === '—' ? '—' : `${location.origin}/employee-signup.html?code=${encodeURIComponent(code)}`;
-  document.getElementById('inviteLink').textContent = inviteUrl;
-  document.getElementById('copyInviteBtn').onclick = () => {
-    navigator.clipboard.writeText(code);
-    showToast(t('copied'));
-  };
-  document.getElementById('copyInviteLinkBtn').onclick = () => {
-    navigator.clipboard.writeText(inviteUrl);
-    showToast(t('copied'));
-  };
 
   // Anwesenheit yan panelini yükle; Praxisstandort per Gerät statt Nominatim (onprem O-140)
   loadAnwesenheitSidePanel();
@@ -13150,13 +13139,6 @@ async function handleGmailCallback() {
   switchPanel('b2b');
 }
 
-function generatePassword(len = 12) {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-  let pw = '';
-  for (let i = 0; i < len; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
-  return pw;
-}
-
 function openAddEmployeeModal() {
   document.getElementById('ae-first-name').value = '';
   document.getElementById('ae-last-name').value = '';
@@ -13175,104 +13157,27 @@ async function saveEmployee() {
   const firstName = document.getElementById('ae-first-name').value.trim();
   const lastName = document.getElementById('ae-last-name').value.trim();
   const email = document.getElementById('ae-email').value.trim();
-  const phone = document.getElementById('ae-phone').value.trim();
-
-  if (!firstName || !lastName || !email) {
-    showToast('Bitte füllen Sie alle Pflichtfelder aus.', 'error');
-    return;
-  }
-
-  const password = generatePassword(12);
-  const ownerId = getOwnerId();
-  const { count } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('owner_id', ownerId).eq('role','employee');
+  if (!firstName || !lastName || !email) { showToast('Bitte füllen Sie alle Pflichtfelder aus.', 'error'); return; }
+  const { count } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('owner_id', getOwnerId()).eq('role','employee');
   const lim = employeeLimit();
   if (Number.isFinite(lim) && (count ?? 0) >= lim) { showToast(`Plan-Limit erreicht: max. ${lim} Mitarbeiter im ${(currentProfile?.plan||'starter')}-Paket. Bitte upgraden.`, 'error'); return; }
-  const businessName = firstName + ' ' + lastName;
-
-  const { data: { session: oldSession } } = await supabase.auth.getSession();
-
   const btn = document.getElementById('aeSaveBtn');
   btn.disabled = true;
   btn.textContent = 'Wird erstellt...';
-
   try {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) throw ((error.status === 504 || error.code === 'request_timeout' || /deadline|timeout|gateway/i.test(error.message || '')) ? new Error('Die Bestätigungs-E-Mail konnte gerade nicht versendet werden. Bitte versuchen Sie es in einigen Minuten erneut; bleibt der Fehler, wenden Sie sich an kontakt@praxura.de.') : error); if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw new Error('Für diese E-Mail-Adresse besteht bereits ein Konto. Bitte eine andere E-Mail-Adresse verwenden.');
-
-    if (data.session && oldSession && data.session.user.id !== oldSession.user.id) {
-      await supabase.auth.setSession({
-        access_token: oldSession.access_token,
-        refresh_token: oldSession.refresh_token
-      });
-    }
-
-    const newUserId = data.user.id;
-    const ownerSlug = cleanBookingSlug(currentProfile.business_name) || currentProfile.company_code?.toLowerCase() || cleanBookingSlug(ownerId);
-    const empSlug = cleanBookingSlug(businessName);
-    const slug = ownerSlug + '-' + empSlug;
-    const booking_url = window.location.origin + '/booking.html?u=' + slug;
-
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: newUserId,
-      email: email,
-      business_name: businessName,
-      phone: phone || null,
-      owner_id: ownerId,
-      role: 'employee',
-      is_active: true,
-      language: currentLang,
-      plan: currentProfile.plan || 'starter',
-      sector: currentProfile.sector || 'default',
-      booking_slug: booking_url
-    });
-    if (profileError) throw profileError;
-
-    showAddEmployeeResult(email, password);
+    const token = (await supabase.auth.getSession()).data.session?.access_token;
+    const r = await mitarbeiterAnlegen({ vorname: firstName, nachname: lastName, email, telefon: document.getElementById('ae-phone')?.value.trim() || null }, { token });
+    closeModal('addEmployeeModal');
     await loadTeam();
+    await zeigeEinrichtungscode(r.einrichtungscode, r.gueltig_bis, firstName + ' ' + lastName);
   } catch (e) {
     showToast('Fehler: ' + e.message, 'error');
-    btn.disabled = false;
-    btn.textContent = 'Speichern';
   }
+  btn.disabled = false;
+  btn.textContent = 'Speichern';
 }
 
-function showAddEmployeeResult(email, password) {
-  document.getElementById('addEmpFormStep').hidden = true;
-  document.getElementById('addEmpResultStep').hidden = false;
-  document.getElementById('aeSaveBtn').hidden = true;
-  document.getElementById('aeCancelBtn').textContent = 'Schliessen';
-  document.getElementById('ae-res-email').textContent = email;
-  document.getElementById('ae-res-password').textContent = password;
-
-  const loginUrl = `${location.origin}/login.html`; document.getElementById('ae-res-link').textContent = loginUrl; // O-69: statt fester SaaS-Adresse
-  const shareText = encodeURIComponent(
-    'Hallo! Dein Praxura Zugang:' +
-    '\nE-Mail: ' + email +
-    '\nPasswort: ' + password +
-    '\nLogin: ' + loginUrl
-  );
-  document.getElementById('aeShareWaBtn').href = 'https://wa.me/?text=' + shareText;
-
-  document.getElementById('aeCopyEmailBtn').onclick = () => {
-    navigator.clipboard.writeText(email);
-    showToast('E-Mail kopiert');
-  };
-  document.getElementById('aeCopyPwBtn').onclick = () => {
-    navigator.clipboard.writeText(password);
-    showToast('Passwort kopiert');
-  };
-  document.getElementById('aeCopyLinkBtn').onclick = () => {
-    navigator.clipboard.writeText(loginUrl);
-    showToast('Link kopiert');
-  };
-}
-
-document.getElementById('teamAddBtn').addEventListener('click', () => {
-  const code = currentProfile?.company_code;
-  if (!code) { showToast('Kein Unternehmens-Code verfügbar', 'error'); return; }
-  const inviteUrl = `${location.origin}/employee-signup.html?code=${encodeURIComponent(code)}`;
-  window.open(inviteUrl, '_blank');
-});
+document.getElementById('teamAddBtn').addEventListener('click', openAddEmployeeModal);
 document.getElementById('aeSaveBtn').addEventListener('click', saveEmployee);
 
 // ===== Übersicht view modes (Enterprise: daily/weekly/monthly) =====

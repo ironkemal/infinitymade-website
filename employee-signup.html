@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="googlebot" content="noindex, nofollow" />
-  <title>Mitarbeiter Registrierung — Praxura</title>
+  <title>Mitarbeiterkonto — Praxura</title>
   <!-- Sentry error tracking -->
   <script src="/sentry-init.js?v=20260917"></script>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -423,101 +423,17 @@
     <a href="/" class="brand">Prax<em>ura</em></a>
 
     <div class="login-card">
-      <h1 id="title">Mitarbeiter Konto</h1>
-      <p class="sub" id="sub">Erstellen Sie Ihr Konto in 3 Schritten.</p>
+      <h1 id="title">Mitarbeiterkonto</h1>
+      <p class="sub" id="sub">Mitarbeiterkonten werden jetzt direkt von Ihrer Praxisleitung angelegt. Sie erhalten von ihr einen Einrichtungscode und melden sich damit unter „Erstanmeldung mit Einrichtungscode" an.</p>
 
-      <div class="progress-bar">
-        <div class="progress-step current" id="p1"></div>
-        <div class="progress-step" id="p2"></div>
-        <div class="progress-step" id="p3"></div>
+      <a href="/login.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none;margin-top:1.2rem;">Zur Anmeldung</a>
+
+      <div class="links" style="margin-top:20px; text-align:center; font-size:0.85rem; color:var(--ink-mute);">
+        <a href="/impressum.html" style="color:inherit; text-decoration:underline;">Impressum</a> · 
+        <a href="/datenschutz.html" style="color:inherit; text-decoration:underline;">Datenschutz</a> · 
+        <a href="/datenschutz.html#cookie-einstellungen" style="color:inherit; text-decoration:underline;">Cookie-Einstellungen</a>
       </div>
-
-      <form id="signupForm" novalidate>
-
-        <!-- STEP 1: Persönliche Daten -->
-        <div class="step active" data-step="1">
-          <div class="step-title">Persönliche Daten</div>
-          <div class="step-sub">Geben Sie Ihre Kontaktinformationen ein.</div>
-
-          <label>Anrede</label>
-          <select id="anrede" class="form-select">
-            <option value="">— Bitte wählen —</option>
-            <option value="Frau">Frau</option>
-            <option value="Herr">Herr</option>
-            <option value="Divers">Divers</option>
-          </select>
-          <div class="field-error" id="err-anrede">Bitte wählen Sie eine Anrede.</div>
-
-          <label>Vorname</label>
-          <input type="text" id="vorname" placeholder="Ihr Vorname" />
-          <div class="field-error" id="err-vorname">Bitte geben Sie Ihren Vornamen ein.</div>
-
-          <label>Nachname</label>
-          <input type="text" id="nachname" placeholder="Ihr Nachname" />
-          <div class="field-error" id="err-nachname">Bitte geben Sie Ihren Nachnamen ein.</div>
-
-          <label>E-Mail</label>
-          <input type="email" id="email" autocomplete="email" placeholder="ihre@email.de" />
-          <div class="field-error" id="err-email">Bitte geben Sie eine gültige E-Mail-Adresse ein.</div>
-
-          <label>Passwort</label>
-          <input type="password" id="password" placeholder="Mindestens 8 Zeichen" />
-          <div class="field-error" id="err-password">Das Passwort muss mindestens 8 Zeichen lang sein.</div>
-
-          <label>Passwort wiederholen</label>
-          <input type="password" id="password2" placeholder="Passwort bestätigen" />
-          <div class="field-error" id="err-password2">Die Passwörter stimmen nicht überein.</div>
-
-          <input type="hidden" id="company_code" />
-
-          <div class="step-actions">
-            <button type="button" class="btn-primary" id="btnStep1" style="margin-left:auto;">Weiter</button>
-          </div>
-        </div>
-
-        <!-- STEP 2: Arbeitszeiten -->
-        <div class="step" data-step="2">
-          <div class="step-title">Arbeitszeiten</div>
-          <div class="step-sub">Legen Sie fest, an welchen Tagen und zu welchen Zeiten Kunden Sie buchen können.</div>
-
-          <div id="workingHoursList"></div>
-          <div class="field-error" id="err-wh">Bitte aktivieren Sie mindestens einen Tag mit gültigen Zeiten.</div>
-
-          <div class="step-actions">
-            <button type="button" class="btn-secondary" id="backStep2">Zurück</button>
-            <button type="button" class="btn-primary" id="btnStep2">Weiter</button>
-          </div>
-        </div>
-
-        <!-- STEP 3: Bestätigung -->
-        <div class="step" data-step="3">
-          <div class="step-title">Zusammenfassung</div>
-          <div class="step-sub">Überprüfen Sie Ihre Angaben und erstellen Sie Ihr Konto.</div>
-
-          <div class="company-badge" id="companyBadge">Unternehmens-Code: <span id="badgeCode">—</span></div>
-
-          <div class="summary-row"><span class="summary-label">Name</span><span class="summary-value" id="sumName">—</span></div>
-          <div class="summary-row"><span class="summary-label">E-Mail</span><span class="summary-value" id="sumEmail">—</span></div>
-          <div class="summary-row"><span class="summary-label">Arbeitstage</span><span class="summary-value" id="sumDays">—</span></div>
-
-          <div class="step-actions">
-            <button type="button" class="btn-secondary" id="backStep3">Zurück</button>
-            <button type="submit" class="btn-primary" id="submitBtn">Konto erstellen</button>
-          </div>
-        </div>
-
-        <div id="message" class="msg"></div>
-
-        <div class="links" style="margin-top:20px; text-align:center; font-size:0.85rem; color:var(--ink-mute);">
-          <a href="/login.html">Ich habe bereits ein Konto</a><br /><br />
-          <a href="/impressum.html" style="color:inherit; text-decoration:underline;">Impressum</a> · 
-          <a href="/datenschutz.html" style="color:inherit; text-decoration:underline;">Datenschutz</a> · 
-          <a href="/datenschutz.html#cookie-einstellungen" style="color:inherit; text-decoration:underline;">Cookie-Einstellungen</a>
-        </div>
-      </form>
     </div>
   </main>
-
-  <script type="module" src="employee-signup.js?v=20261001c"></script>
 </body>
 </html>

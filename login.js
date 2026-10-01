@@ -1,5 +1,5 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, IST_KUTU } from './supabase-config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, IST_KUTU, API_BASE } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -84,12 +84,14 @@ const loginForm     = document.getElementById('loginForm');
 const registerBlock = document.querySelector('.register-block');
 const resetPanel    = document.getElementById('resetPanel');
 const newPwPanel    = document.getElementById('newPwPanel');
+const erstPanel     = document.getElementById('erstPanel');
 
 function showView(view) {
   loginForm.style.display     = view === 'login'  ? '' : 'none';
   registerBlock.style.display = view === 'login'  ? '' : 'none';
   resetPanel.style.display    = view === 'reset'  ? '' : 'none';
   newPwPanel.style.display    = view === 'newpw'  ? '' : 'none';
+  erstPanel.style.display     = view === 'erst'   ? '' : 'none';
 }
 
 function showMsg(text, type) {
@@ -212,10 +214,8 @@ document.getElementById('resendBtn').addEventListener('click', async () => {
 // ── Forgot password: show panel ───────────────────────────────────────────────
 document.getElementById('forgotLink').addEventListener('click', (e) => {
   e.preventDefault();
-  // Pre-fill with whatever email the user typed in the login form
-  const loginEmail = document.getElementById('email').value.trim();
-  if (loginEmail) document.getElementById('resetEmail').value = loginEmail;
-  showView('reset');
+  // Kein Mailversand mehr: Hinweis statt resetPasswordForEmail
+  showMsg('Mitarbeiter: Bitte lassen Sie sich von Ihrer Praxisleitung einen neuen Einrichtungscode geben. Praxisinhaber: Bitte wenden Sie sich an kontakt@praxura.de.', 'error');
 });
 
 document.getElementById('resetBackLink').addEventListener('click', (e) => {
@@ -267,5 +267,48 @@ document.getElementById('newPwSubmitBtn').addEventListener('click', async () => 
   } else {
     showPanelMsg('newPwMsg', t.newpw_success, 'success');
     setTimeout(() => { window.location.href = 'dashboard.html'; }, 1800);
+  }
+});
+
+// ── Erstanmeldung mit Einrichtungscode ────────────────────────────────────────
+document.getElementById('erstLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  clearMsg();
+  const loginEmail = document.getElementById('email').value.trim();
+  if (loginEmail) document.getElementById('erstEmail').value = loginEmail;
+  showView('erst');
+});
+document.getElementById('erstBackLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  showView('login');
+});
+document.getElementById('erstSubmitBtn').addEventListener('click', async () => {
+  const email = document.getElementById('erstEmail').value.trim();
+  const code = document.getElementById('erstCode').value.trim();
+  const pw = document.getElementById('erstPw').value;
+  const pw2 = document.getElementById('erstPw2').value;
+  const btn = document.getElementById('erstSubmitBtn');
+  if (!email || !code) { showPanelMsg('erstMsg', 'Bitte E-Mail-Adresse und Einrichtungscode eingeben.', 'error'); return; }
+  if (pw.length < 12) { showPanelMsg('erstMsg', 'Das Passwort muss mindestens 12 Zeichen lang sein.', 'error'); return; }
+  if (pw !== pw2) { showPanelMsg('erstMsg', 'Die Passwörter stimmen nicht überein.', 'error'); return; }
+  btn.disabled = true;
+  try {
+    const res = await fetch(API_BASE + '/team/erstanmeldung', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code, passwort: pw }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { showPanelMsg('erstMsg', data.error || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.', 'error'); return; }
+    document.getElementById('erstPw').value = '';
+    document.getElementById('erstPw2').value = '';
+    document.getElementById('erstCode').value = '';
+    document.getElementById('email').value = email;
+    showView('login');
+    showMsg('Passwort gesetzt. Sie können sich jetzt anmelden.', 'success');
+  } catch (err) {
+    showPanelMsg('erstMsg', 'Verbindung zum Server fehlgeschlagen. Bitte versuchen Sie es erneut.', 'error');
+  } finally {
+    btn.disabled = false;
   }
 });

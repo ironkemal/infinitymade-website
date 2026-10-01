@@ -21,6 +21,7 @@ import zuzahlungRouter from './billing/api/zuzahlung.routes.js';
 import rechnungZahlungRouter from './billing/api/rechnung-zahlung.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
 import setupRouter from './setup/router.js';
+import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren } from './lib/rezept-felder.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
@@ -522,6 +523,9 @@ app.use('/api/billing', rechnungZahlungRouter);
 
 // Warteliste (Bekleme Listesi) routes.
 app.use('/api/warteliste', wartelisteRouter);
+
+// Mitarbeiter-Zugang (Erstanmeldung mit Einrichtungscode).
+app.use('/api', mitarbeiterZugangRouter);
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
