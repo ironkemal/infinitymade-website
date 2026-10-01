@@ -13197,7 +13197,7 @@ async function saveEmployee() {
 
   try {
     const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) throw ((error.status === 504 || error.code === 'request_timeout' || /deadline|timeout|gateway/i.test(error.message || '')) ? new Error('Die Bestätigungs-E-Mail konnte nicht zugestellt werden. Bitte prüfen Sie die E-Mail-Adresse auf Tippfehler.') : error); if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw new Error('Für diese E-Mail-Adresse besteht bereits ein Konto. Bitte eine andere E-Mail-Adresse verwenden.');
+    if (error) throw ((error.status === 504 || error.code === 'request_timeout' || /deadline|timeout|gateway/i.test(error.message || '')) ? new Error('Die Bestätigungs-E-Mail konnte gerade nicht versendet werden. Bitte versuchen Sie es in einigen Minuten erneut; bleibt der Fehler, wenden Sie sich an kontakt@praxura.de.') : error); if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw new Error('Für diese E-Mail-Adresse besteht bereits ein Konto. Bitte eine andere E-Mail-Adresse verwenden.');
 
     if (data.session && oldSession && data.session.user.id !== oldSession.user.id) {
       await supabase.auth.setSession({

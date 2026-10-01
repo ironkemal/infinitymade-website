@@ -292,9 +292,9 @@ $('signupForm').addEventListener('submit', async (e) => {
       }
     });
     // Zeitüberschreitung beim Versand der Bestätigungsmail (504 / request_timeout):
-    // tritt auf, wenn die Adresse nicht zustellbar ist — Konto wird dann nicht angelegt.
+    // (SMTP-Versand haengt, 01.10.2026) — Konto wird dann nicht angelegt.
     if (authErr && (authErr.status === 504 || authErr.code === 'request_timeout' || /deadline|timeout|gateway/i.test(authErr.message || ''))) {
-      throw new Error('Die Bestätigungs-E-Mail konnte nicht zugestellt werden. Bitte prüfen Sie die E-Mail-Adresse auf Tippfehler — sie muss zu einem erreichbaren Postfach gehören.');
+      throw new Error('Die Bestätigungs-E-Mail konnte gerade nicht versendet werden. Bitte versuchen Sie es in einigen Minuten erneut; bleibt der Fehler, wenden Sie sich an kontakt@praxura.de.');
     }
     if (authErr) throw authErr;
     // Adresse schon registriert: Supabase antwortet aus Schutz vor Konto-Ausspähung
