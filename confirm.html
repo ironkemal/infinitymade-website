@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
@@ -98,6 +98,25 @@
     @media (max-width: 640px) {
       .card { padding: 2.2rem 1.6rem; }
     }
+    .nf-links {
+      margin-top: 2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.4rem;
+      justify-content: center;
+    }
+    .nf-links a {
+      color: var(--ink-quiet);
+      text-decoration: none;
+      transition: color 200ms var(--ease-out);
+    }
+    .nf-links a:hover { color: var(--bronze); }
   </style>
 </head>
 <body>
@@ -109,6 +128,10 @@
       <p class="sub" id="sub">Bitte warten Sie einen Moment.</p>
       <div id="actions" style="display:none;"></div>
     </div>
+    <nav class="nf-links">
+      <a href="/impressum.html">Impressum</a>
+      <a href="/datenschutz.html">Datenschutz</a>
+    </nav>
   </div>
 
   <script type="module">

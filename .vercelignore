@@ -65,6 +65,8 @@ module/globals.d.ts
 # Tote Sicherungskopien und Altbestand aus der Studio-Zeit
 *.bak
 index-old.html
+# Tote Komponenten-Testseite, Titel noch "InfinityMade" (01.10.2026)
+blog/component-lab.html
 
 # Einrichtungsassistent (Faz 2.2) — existiert nur in der On-Prem-Kundenbox
 # (onprem/frontend.Dockerfile). Auf SaaS gibt es keinen SETUP_TOKEN-Ablauf
