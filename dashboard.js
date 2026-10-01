@@ -13197,7 +13197,7 @@ async function saveEmployee() {
 
   try {
     const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) throw error;
+    if (error) throw ((error.status === 504 || error.code === 'request_timeout' || /deadline|timeout|gateway/i.test(error.message || '')) ? new Error('Die Bestätigungs-E-Mail konnte nicht zugestellt werden. Bitte prüfen Sie die E-Mail-Adresse auf Tippfehler.') : error);
 
     if (data.session && oldSession && data.session.user.id !== oldSession.user.id) {
       await supabase.auth.setSession({

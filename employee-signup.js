@@ -291,6 +291,11 @@ $('signupForm').addEventListener('submit', async (e) => {
         emailRedirectTo: window.location.origin + '/confirm.html',
       }
     });
+    // Zeitüberschreitung beim Versand der Bestätigungsmail (504 / request_timeout):
+    // tritt auf, wenn die Adresse nicht zustellbar ist — Konto wird dann nicht angelegt.
+    if (authErr && (authErr.status === 504 || authErr.code === 'request_timeout' || /deadline|timeout|gateway/i.test(authErr.message || ''))) {
+      throw new Error('Die Bestätigungs-E-Mail konnte nicht zugestellt werden. Bitte prüfen Sie die E-Mail-Adresse auf Tippfehler — sie muss zu einem erreichbaren Postfach gehören.');
+    }
     if (authErr) throw authErr;
 
     // resend() as fallback — 60s cooldown prevents double-send if signUp already sent
