@@ -14,7 +14,13 @@ legal/
 # Gefunden vom onprem-Agenten, 20.09.2026.
 gitignore/
 .agents/
-.claude/
+# .claude/: yalnız ekip ajanları + /konsey paylaşılır (01.10.2026, Melih takip etsin diye).
+# Ajanların kayıtları (guvenlik/, mentor/ REGISTER) ayrı ve gitignore'lu kalır.
+.claude/*
+!.claude/agents/
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/konsey/
 .mcp.json
 .roo/
 skills-lock.json
