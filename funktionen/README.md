@@ -116,6 +116,16 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 01.10.2026 · Oturum B — Fahrtenbuch Änderungsprotokoll (0052), Berlin-Tag Backend-Kopien kapandı
+- DB fonksiyonu `fahrten_aenderung_protokollieren()` (migration 0052, trigger `trg_fahrten_aenderung_protokollieren`
+  AFTER UPDATE OR DELETE on `fahrten`). Niye: BMF 18.11.2009 — elektronik Fahrtenbuch'ta sonradan değişiklik/silme görünür
+  kaydedilmeli (legal-de); tamamlanmış yolculukta Finanzamt alanı değişince veya silinince eski/yeni değer append-only
+  `fahrten_aenderungen`'e. Nerede: yalnız DB; okuyan frontend henüz yok (Oturum A: CSV "geändert" sütunu + Änderungsprotokoll export).
+  Harita kapsamı dışı (DB fonksiyonu, `SCHEMA-RLS.sql`'de).
+- Refactor: `stichtag-pruefung.js` `berlinTagVon` ve `tools/kostentraeger-check.mjs` artık `api-backend/lib/berlin-tag.js`
+  `berlinHeute()` kullanıyor — aşağıdaki Berlin-günü kopya listesinden iki backend kopyası (🟡 `berlinTagVon`, 🟡 `kostentraeger-check`)
+  kapandı. Frontend kopyaları duruyor (Oturum A bölgesi).
+
 ### 01.10.2026 · Oturum B — ICD DTA-Reinform, Stichtag-Prüfung Empfänger (Çeyrek geçişi)
 - `icdFuerDta(code)` (`api-backend/billing/utils/icd-code.js`). Niye: §302 DIA segmentine yalnız saf ICD-10-GM kodu
   (`^[A-Z]\d{2}(\.\d{1,2})?$`) gitsin; `-`, `†*!`, G/V/Z/A, L/R/B ekleri soyulur (gkv-302 01.10.2026, Anlage 1 TP5 V21
