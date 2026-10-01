@@ -305,7 +305,7 @@ test('aenderungsprotokollCsv: Kopfzeile, eine Zeile je geändertem Feld, Namen u
   assert.equal(z[0], '"01.10.2026, 12:05"');
   assert.equal(z[1], '"Inhaberin"');
   assert.equal(z[2], '"Änderung"');
-  assert.equal(z[3], '"30.9.2026"');
+  assert.equal(z[3], '"30.09.2026"');
   assert.equal(z[5], '"P-A1B2C3D4"');
   assert.deepEqual(z.slice(6), ['"Km-Stand Ende"', '"120"', '"125"']);
   assert.deepEqual(lines[2].split(';').slice(6), ['"gefahrene km"', '"20"', '"25"']);
@@ -323,4 +323,10 @@ test('aenderungsprotokollCsv: Löschung listet belegte Felder, maskiert Altzeile
   const felder = csv.split('\n').slice(1).map(l => l.split(';'));
   assert.ok(felder.every(f => f[1] === '"System"' && f[2] === '"Löschung"' && f[8] === '""'));
   assert.deepEqual(felder.map(f => f[6]), ['"Beginn"', '"Kennzeichen"', '"Reiseziel"', '"Reisezweck"']);
+});
+
+test('Datum: TT.MM.JJJJ in Berliner Zeit (spaete UTC-Stunde = naechster Tag)', () => {
+  const csv = fahrtenbuchCsv([{ fahrt_started_at: '2026-09-30T22:30:00Z' }, { fahrt_started_at: '2026-03-05T08:00:00Z' }]);
+  const daten = csv.split('\n').slice(1).map(l => l.split(';')[1]);
+  assert.deepEqual(daten, ['"01.10.2026"', '"05.03.2026"']);
 });

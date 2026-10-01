@@ -103,7 +103,8 @@ function kmZelle(val) {
 }
 
 /**
- * Formatiert Datum nach de-DE (TT.MM.JJJJ). Leer wenn fehlt oder ungültig.
+ * Formatiert Datum nach de-DE (TT.MM.JJJJ, Europe/Berlin — gleiche Form wie
+ * „Geändert am" im Änderungsprotokoll). Leer wenn fehlt oder ungültig.
  * @param {*} val
  * @returns {string}
  */
@@ -111,7 +112,7 @@ function formatiereDatum(val) {
   if (!val) return '';
   const d = new Date(val);
   if (isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('de-DE');
+  return d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 /**

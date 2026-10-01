@@ -14,7 +14,7 @@
 import {
   fahrtenbuchCsv, aenderungsprotokollCsv, patientenverzeichnisCsv,
   csvHerunterladen, PATIENTENVERZEICHNIS_HINWEIS
-} from './fahrtenbuch-regeln.js?v=20261001d';
+} from './fahrtenbuch-regeln.js?v=20261001e';
 
 const SEITE = 1000; // PostgREST liefert höchstens 1000 Zeilen je Anfrage
 
