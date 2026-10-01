@@ -1,7 +1,10 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-10-01 — Nachtrag: 0049 prescriptions_festschreibung()
+-- ERZEUGT AM:        2026-10-01 — Nachtrag: 0051 (Reform 3.12 c): −2 Indizes
+--                    (idx_leads_pii_not_encrypted, idx_prescriptions_phi_not_
+--                    encrypted). Keine Policy/Funktion/Trigger betroffen.
+--                    davor: 2026-10-01 — Nachtrag: 0049 prescriptions_festschreibung()
 --                    per CREATE OR REPLACE ohne den icd10_enc-Vergleich (Reform
 --                    3.12 a); 0050 reine Daten. Keine neue Policy/Funktion/
 --                    Trigger/Index.
@@ -2090,7 +2093,6 @@ CREATE INDEX idx_leads_name_dob ON public.leads USING btree (owner_id, lower(COA
 CREATE INDEX idx_leads_owner ON public.leads USING btree (owner_id, created_at DESC);
 CREATE INDEX idx_leads_owner_status ON public.leads USING btree (owner_id, status);
 CREATE INDEX idx_leads_phone_norm ON public.leads USING btree (phone_normalized) WHERE (phone_normalized IS NOT NULL);
-CREATE INDEX idx_leads_pii_not_encrypted ON public.leads USING btree (owner_id) WHERE (pii_encrypted = false);
 CREATE INDEX idx_leads_status ON public.leads USING btree (status);
 CREATE INDEX idx_mahnungen_owner_status ON public.mahnungen USING btree (owner_id, status, sent_at DESC);
 CREATE INDEX idx_mahnungen_prescription ON public.mahnungen USING btree (prescription_id);
@@ -2145,7 +2147,6 @@ CREATE INDEX idx_prescriptions_billing_ready ON public.prescriptions USING btree
 CREATE INDEX idx_prescriptions_business ON public.prescriptions USING btree (business_id);
 CREATE INDEX idx_prescriptions_owner_status ON public.prescriptions USING btree (owner_id, status, created_at DESC);
 CREATE INDEX idx_prescriptions_patient ON public.prescriptions USING btree (patient_id, created_at DESC);
-CREATE INDEX idx_prescriptions_phi_not_encrypted ON public.prescriptions USING btree (owner_id) WHERE (phi_encrypted = false);
 CREATE INDEX prescriptions_zuzahlung_offen ON public.prescriptions USING btree (patient_id) WHERE ((zuzahlung_kassiert_am IS NULL) AND (COALESCE(zuzahlung_befreit, false) = false));
 -- ⚠️ Anderer Index als die Zeile darüber, trotz fast gleichem Namen:
 --    dieser hier ist für die Monatsübersicht (statistik.routes.js).

@@ -1,7 +1,12 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-10-01 — Nachtrag: 0049 + 0050 (Reform 3.12 a/b) im SaaS
+-- ERZEUGT AM:        2026-10-01 — Nachtrag: 0051_phi_spalten_entfernen (Reform
+--                    3.12 c) im SaaS angewendet (MCP, Freigabe Kemal):
+--                    prescriptions −4 Spalten (ocr_raw_response, ocr_raw_enc,
+--                    icd10_enc, phi_encrypted), leads −7 Spalten (*_enc,
+--                    pii_encrypted), −2 Indizes. Letzte Migration: 0051.
+--                    davor: 2026-10-01 — Nachtrag: 0049 + 0050 (Reform 3.12 a/b) im SaaS
 --                    angewendet (MCP, Freigabe Kemal): Festschreibungs-Trigger
 --                    ohne icd10_enc; PHI-Reste in prescriptions geleert,
 --                    Fahrtenbuch-Altzeilen neutralisiert. Kein Spalten-DDL.
@@ -2207,13 +2212,6 @@ CREATE TABLE leads (
   business_id uuid
   insurance_type text
   versichertenstatus text
-  first_name_enc bytea
-  last_name_enc bytea
-  phone_enc bytea
-  geburtsdatum_enc bytea
-  versichertennummer_enc bytea
-  krankenkasse_enc bytea
-  pii_encrypted boolean NOT NULL DEFAULT false
   ausfallvereinbarung_am date
   podologie_altbestand_vor_2023 boolean
   podologie_altbestand_beantwortet_am timestamptz
@@ -2253,6 +2251,8 @@ CREATE TABLE leads (
 --     0 Zeilen mit *_enc, 0 mit pii_encrypted=true). Identitätsfelder stehen
 --     im Klartext; Schutz = RLS + Verschlüsselung at rest. Der frühere
 --     Kommentar "★ PII-Verschlüsselung" versprach etwas, das es nie gab.
+--     ✅ 01.10.2026 (0051, Freigabe Kemal): die sieben Spalten und der Index
+--     sind entfernt.
 --     Reste — vorgemerkt für Entfernung in zwei Schritten (erst leeren,
 --     dann DROP), nur mit Kemals Freigabe. Siehe db/REGISTER.md → leads.
 --   ★ podologie_altbestand_vor_2023 (17.09.2026, Ops #244): NULL = noch nicht
@@ -2699,7 +2699,6 @@ CREATE TABLE prescriptions (
   computed jsonb
   warnings jsonb
   blockers_overridden jsonb
-  ocr_raw_response jsonb
   ocr_confidence numeric(3,2)
   confirmed_by uuid
   confirmed_at timestamptz
@@ -2740,9 +2739,6 @@ CREATE TABLE prescriptions (
   ergaenzendes_heilmittel text
   therapie_bereich text
   hinweise text
-  icd10_enc bytea
-  ocr_raw_enc bytea
-  phi_encrypted boolean NOT NULL DEFAULT false
   icd10_2 text
   zuzahlung_kassiert_am timestamptz
   zuzahlung_kassiert_von uuid
@@ -2845,8 +2841,8 @@ CREATE TABLE prescriptions (
 --     ✅ 01.10.2026 (Freigabe Kemal): 0049 hat prescriptions_festschreibung()
 --     ohne icd10_enc ersetzt; 0050 hat ocr_raw_response/ocr_raw_enc/icd10_enc
 --     geleert und phi_encrypted=false gesetzt (vorher 60/23/22/23 Zeilen,
---     danach 0). Die Spalten selbst + idx_prescriptions_phi_not_encrypted
---     stehen noch — DROP folgt als eigene Migration (Kural 4, onprem).
+--     danach 0). 0051 hat die vier Spalten + idx_prescriptions_phi_not_encrypted
+--     entfernt (Kural 4 Schritt 2; onprem-Freigabe, keine Kundenbox).
 --     Siehe db/REGISTER.md → prescriptions.
 --   TRIGGER fn_prescriptions_set_befreit() setzt zuzahlung_befreit automatisch.
 --   ⚠️ `verordnungsnummer` / `belegnummer`: fortlaufend je Patient
