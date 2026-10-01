@@ -318,6 +318,7 @@ bağımsız doğrulama yapıldı):**
 ### Z-09 · Kostenträgerdatei / IK  → tam kart **W-01**
 ```
 FORMAT SPEC:
+wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V09_20260414.pdf/.txt   (V09, GEÇERLİ ab 01.06.2026 — kapaktan)
 wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414.pdf/.txt   (V10, ab 01.02.2027)
 
 VERİ (dış kaynaklı, resmî) — 11 ayrı dosya, her biri kendi sürümü:
@@ -357,8 +358,8 @@ yanlıştır. → W-01 açık madde 6.
 
 **Format uyumu doğrulandı (05.09.2026):** dosyaların mesaj kimliği `KOTR:02:001:KV`,
 Anhang 03 V10 satır 634'ün beklediği değerin aynısı. Yani V10 spec'i bu dosyaları okumak
-için yapı olarak kullanılabilir. ⚠ Ama V10 **01.02.2027'de** yürürlüğe giriyor; bugün
-geçerli olan (bir önceki) Anhang 03 sürümü arşivde **yok** → W-01 açık maddesi.
+için yapı olarak kullanılabilir. V10 **01.02.2027'de** yürürlüğe giriyor; bugün
+geçerli V09 01.10.2026'da indirildi (aşağıda W-01 #3 ✅).
 
 **Buluş notu (05.09.2026) — kapandı, tarihsel kayıt olarak duruyor:** o gün
 `kostentraeger/Krankenkassen IK nummern .md` diye tek parça duran dosyanın aslında markdown
@@ -630,6 +631,7 @@ yeniden araştırılıyor demektir.
 | `wissensbank/gemeinsam/302-tp5/Anlage_1_TP5_V21_20260115` | V21 | 01.10.2025 | ✅ GEÇERLİ | Z-01 | ⬜ |
 | `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V21_20250919` | V21 | 01.10.2025 | ✅ GEÇERLİ | Z-02 | ⬜ |
 | `wissensbank/gemeinsam/302-tp5/Anlage_3_TP5_V22_20260218` | V22 | 01.02.2027 | ⏳ GELECEK | Z-02 | ⬜ |
+| `wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V09_20260414` | V09 | **01.06.2026** (kapaktan) | ✅ GEÇERLİ (01.02.2027'de V10 devralır → V09 DÜŞER) | Z-09 | ⬜ |
 | `wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414` | V10 | 01.02.2027 | ⏳ GELECEK | Z-09 | ⬜ |
 | `wissensbank/gemeinsam/302-tp5/Anhang_01_…_Kapitel_4_Datenuebermittlung_20170831` | — (Stand 31.08.2017) | 01.09.2017 | ✅ GEÇERLİ | Z-01 dalı | **✅ kart W-02** |
 | `wissensbank/gemeinsam/302-tp5/Anhang_02_…_Kapitel_9_Pruefverfahren_20031110` | — (Stand 10.11.2003) | belirtilmemiş | ✅ GEÇERLİ | Z-01 dalı | **✅ kart W-03** |
@@ -924,15 +926,14 @@ itirazında orijinaline başvurulacaksa dosyalar yayıncıdan yeniden indirilmel
    ↳ **Kalan (küçük, `offen`):** `KOSTENTRAEGER_MOCK` sabiti kodda duruyor ve
    `routeToDatenannahmestelle()` hâlâ onu okuyor. Zincirin gerçek halkası DB; kod bir gün
    DB'ye geçmelidir. → Ops #264 altında, `builder`.
-3. **`offen` — bugün geçerli Anhang 03 sürümü arşivde yok.** Elimizdeki V10 01.02.2027'de
-   yürürlüğe giriyor. Mesaj kimliği aynı olduğu için yapı riski düşük (ve VKG alan sırası
-   artık gerçek veriyle doğrulandı, yani V10 bu dosyaları doğru tarif ediyor), ama
-   Schlüsselverzeichnis (Art der Datenlieferung, DFÜ-Protokoll) değişmiş olabilir. → arşiv
-   sayfasından bir önceki sürüm indirilir, `gkv-302` teyit eder. **Bu madde açık kalan tek
-   veri maddesidir.**
-   ↳ **01.10.2026:** bugün geçerli sürüm **Anhang 03 V09** — hâlâ arşivde yok, indirilecek (Q4 yüklemesi V10
-   yapı tarifine göre yapıldı; VKG alan sırası gerçek veride doğru çıktı). Sahip: `wissensbank` (indirme +
-   kayıt) · `gkv-302` (V09↔V10 Schlüssel farkı). Tarih: bir sonraki oturum; en geç V10 geçişi 01.02.2027.
+3. ✅ **KAPANDI 01.10.2026 (indirme).** **Anhang 03 V09** indirildi: `wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V09_20260414.pdf/.txt`.
+   Herkunft: https://www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhang_03_Anlage_1_TP5_V09_20260414.pdf
+   (yayıncı sayfasında "aktuell" bölümünde, etiket "Anlage 1 - Anhang 3 Version 09 vom 14.04.2026", 352 KB) · curl -f, byte-exact ·
+   sha256 `127444448df4f2c85d01f0def9f85b38eb0a8536229e1c8f339130ab57fc255e` · Kapak: Stand 14.04.2026 · Version 09 · **Anzuwenden ab 01.06.2026**
+   (Änderungshistorie: "Inkrafttreten Version 09 auf 01.06.2026 vorgezogen"). Yayın: git'te PDF ignore'lu (`.gitignore *.pdf`), .txt izleniyor;
+   Yeniden dağıtım: GKV-SV kamu spec'i, serbest. V09↔V10 (yalnız metinde görülen, YZ çevirisi yok): gövde aynı, §7.2 VKG/Stichtag-Gültigkeit
+   alan sırasında metin farkı görülmedi (yalnız sayfa-düzeni farkı); tek içerik farkı §8.14 Abrechnungscode: V10'da Haushaltshilfe
+   Gruppenschlüssel `C0` eklenmiş (V09'da yok). Kesin karar `gkv-302`. V10 kaydı: Durum GELECEK, 01.02.2027.
 4. ✅ **KAPANDI 07.09.2026.** Dosya 7 parçaya bölündü (06.09.2026) ve ham tek parça
    `Krankenkassen IK nummern .md` silindi (07.09.2026). Kanıt: yukarıdaki bölme
    doğrulaması tablosu — MD5 birebir aynı. Detay: W-A08 (c).

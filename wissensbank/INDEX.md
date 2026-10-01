@@ -78,6 +78,7 @@ Bilinmeyen bir alana **"belirtilmemiş" yaz, tahmin etme.**
 | **Anlage 1 TP5** — ana teknik spesifikasyon | **V21** | 01.10.2025 | ✅ **GEÇERLİ** (V20 31.12.2025'te düştü) |
 | **Anlage 3 TP5** — Schlüsselverzeichnisse | **V21** | 01.10.2025 | ✅ **GEÇERLİ** |
 | Anlage 3 TP5 | V22 | **01.02.2027** | ⏳ Gelecek — henüz uygulama |
+| Anhang 03 Anlage 1 TP5 — Kostenträgerdatei | **V09** | 01.06.2026 | ✅ **GEÇERLİ** (V10 01.02.2027'de devralır) |
 | Anhang 03 Anlage 1 TP5 — Kostenträgerdatei | V10 | **01.02.2027** | ⏳ Gelecek |
 | Anhang 01 Anlage 1 TP5 — Kap. 4 Datenübermittlung | — (Stand 31.08.2017) | 01.09.2017 | ✅ **GEÇERLİ** — halefi yok |
 | Anhang 02 Anlage 1 TP5 — Kap. 9 Prüfverfahren | — (Stand 10.11.2003) | belirtilmemiş | ✅ **GEÇERLİ** — halefi yok |
@@ -164,6 +165,9 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
   - 8.3 Positionsnummer für Produktbesonderheiten von Hilfsmitteln
   - 8.5 Länderkennzeichen
   - 8.6 Schlüssel Mengeneinheiten
+
+### wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V09_20260414.txt
+- **Ne:** V10 ile aynı belge, bugün GEÇERLİ sürüm (Stand 14.04.2026, Version 09, Anzuwenden ab 01.06.2026). Bölüm haritası V10 ile aynı (1535 satır; V10 1547). Tek içerik farkı §8.14 (V10'da Haushaltshilfe `C0`). Kayıt: REGISTER.md W-01 #3.
 
 ### wissensbank/gemeinsam/302-tp5/Anhang_03_Anlage_1_TP5_V10_20260414.txt
 - **Ne:** § 302 Abs. 2 SGB V uyarınca „Sonstigen Leistungserbringern“ ile Hebammen ve Entbindungspflegern (§ 301a SGB V) faturalandırma usulünün form ve içeriğine ilişkin rehberlerin Technische Anlage 1, Kapitel 10 "Kostenträgerdatei" düzenlemesini içeren Anhang 3 belgesidir.
