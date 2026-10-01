@@ -14,13 +14,6 @@
 import { berlinHeute, istStichtag } from '../../lib/berlin-tag.js';
 import { ladeAnnahmestelle, ladePapierannahmestelle } from './annahmestelle.js';
 
-const BERLIN_TAG_FORMAT = new Intl.DateTimeFormat('en-CA', {
-  timeZone: 'Europe/Berlin',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-});
-
 /**
  * Wandelt ein Date-Objekt oder einen Timestamp-String in den Berliner Kalendertag 'YYYY-MM-DD'.
  *
@@ -34,7 +27,7 @@ export function berlinTagVon(dateOderString) {
   }
   const d = dateOderString instanceof Date ? dateOderString : new Date(dateOderString);
   if (Number.isNaN(d.getTime())) return null;
-  return BERLIN_TAG_FORMAT.format(d);
+  return berlinHeute(d);   // eine Stelle für den Berliner Tag (lib/berlin-tag.js)
 }
 
 /**

@@ -28,6 +28,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { leseKostentraegerDatei } from '../api-backend/billing/kostentraeger/datei-lesen.js';
 import { parseKostentraegerDatei } from '../api-backend/billing/kostentraeger/parser.js';
+import { berlinHeute } from '../api-backend/lib/berlin-tag.js';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HIER, '..');
@@ -181,7 +182,7 @@ async function holen(url, { text = false } = {}) {
 }
 
 export async function lauf({ out, vergiss = [], rssDatei = null, heute = null, ladeText = null, wbNamen = null } = {}) {
-  const stichtag = heute || new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date());
+  const stichtag = heute || berlinHeute();
   const { ausgaben, bekannt } = bekannteAusgaben({
     ladeText: ladeText ?? readFileSync(LADER, 'utf8'),
     wbNamen: wbNamen ?? readdirSync(WB_DIR).filter(n => DATEINAME_RE.test(n)),
