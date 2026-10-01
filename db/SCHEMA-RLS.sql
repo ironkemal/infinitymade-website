@@ -1,7 +1,11 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-10-01 — Nachtrag: 0048 (Sicht kostentraeger_auswahl
+-- ERZEUGT AM:        2026-10-01 — Nachtrag: 0049 prescriptions_festschreibung()
+--                    per CREATE OR REPLACE ohne den icd10_enc-Vergleich (Reform
+--                    3.12 a); 0050 reine Daten. Keine neue Policy/Funktion/
+--                    Trigger/Index.
+--                    davor: 2026-10-01 — Nachtrag: 0048 (Sicht kostentraeger_auswahl
 --                    per CREATE OR REPLACE, +valid_from-Filter). NULL-Aenderung
 --                    fuer diese Datei; Grants live geprueft unveraendert.
 --                    davor: 2026-10-01 — Nachtrag: 0046_kostentraeger_gueltigkeit_
@@ -1524,7 +1528,8 @@ $function$;
 --     in einer 500. In USER_TABLES (Auskunft) bleibt die Tabelle.
 --   SECURITY INVOKER, SET search_path = public.
 
--- prescriptions_festschreibung() -> trigger  (seit 17.09.2026, Ops #167)
+-- prescriptions_festschreibung() -> trigger  (seit 17.09.2026, Ops #167;
+--   01.10.2026 per 0049 ohne icd10_enc-Vergleich ersetzt, Reform 3.12)
 --   GoBD/§302-Festschreibung fuer `prescriptions` — schliesst die Luecke, die
 --   `verordnung_festschreibung()` hinterlassen hat (siehe oben), UND schuetzt
 --   erstmals auch Physio/Ergo/Logo (hatte nie einen Schutz). Tor: solange

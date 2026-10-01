@@ -1,7 +1,12 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-10-01 — Nachtrag: 0048_kostentraeger_auswahl_valid_
+-- ERZEUGT AM:        2026-10-01 — Nachtrag: 0049 + 0050 (Reform 3.12 a/b) im SaaS
+--                    angewendet (MCP, Freigabe Kemal): Festschreibungs-Trigger
+--                    ohne icd10_enc; PHI-Reste in prescriptions geleert,
+--                    Fahrtenbuch-Altzeilen neutralisiert. Kein Spalten-DDL.
+--                    Letzte Migration: 0050.
+--                    davor: 2026-10-01 — Nachtrag: 0048_kostentraeger_auswahl_valid_
 --                    from im SaaS angewendet (MCP): Sicht prueft auch
 --                    kt.valid_from <= Berliner Tag. 876 Zeilen (unveraendert).
 --                    Letzte Migration: 0048.
@@ -1746,6 +1751,9 @@ CREATE TABLE fahrten (
 --   FK booking_id -> bookings(id) ON DELETE CASCADE
 --   PK (id) · UNIQUE (booking_id) — genau eine Fahrt je Termin
 --   Finanzamt-Felder: zweck, abfahrtsort, zielort.
+--   ✅ 01.10.2026 (0050): Altzeilen mit Patientenname/-anschrift in zweck/zielort
+--     auf das neutrale Format von module/fahrtenbuch-regeln.js gebracht
+--     ("Patientenbesuch (s. Verzeichnis Nr. P-XXXXXXXX)"); live 8/8 neutral.
 
 CREATE TABLE feedbacks (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -2834,13 +2842,12 @@ CREATE TABLE prescriptions (
 --     vollständig: jede Zeile mit Chiffrat hielt denselben Inhalt zusätzlich
 --     im Klartext (live 30.09.2026: 23 Zeilen phi_encrypted=true, alle mit
 --     Klartext-ocr_raw_response; 22 mit icd10_enc, alle mit icd10).
---     Altbestand: 60 von 72 Zeilen tragen noch Klartext-ocr_raw_response,
---     bis die Aufräum-Migration sie leert. Reste (icd10_enc, ocr_raw_enc,
---     phi_encrypted, ocr_raw_response, idx_prescriptions_phi_not_encrypted)
---     vorgemerkt für NULL + DROP in zwei Schritten, nur mit Kemals Freigabe.
---     ⚠️ prescriptions_festschreibung() (0020) prüft new.icd10_enc — vor dem
---     DROP muss die Funktion per CREATE OR REPLACE ohne diese Zeile ersetzt
---     werden, sonst scheitert jedes UPDATE. Siehe db/REGISTER.md → prescriptions.
+--     ✅ 01.10.2026 (Freigabe Kemal): 0049 hat prescriptions_festschreibung()
+--     ohne icd10_enc ersetzt; 0050 hat ocr_raw_response/ocr_raw_enc/icd10_enc
+--     geleert und phi_encrypted=false gesetzt (vorher 60/23/22/23 Zeilen,
+--     danach 0). Die Spalten selbst + idx_prescriptions_phi_not_encrypted
+--     stehen noch — DROP folgt als eigene Migration (Kural 4, onprem).
+--     Siehe db/REGISTER.md → prescriptions.
 --   TRIGGER fn_prescriptions_set_befreit() setzt zuzahlung_befreit automatisch.
 --   ⚠️ `verordnungsnummer` / `belegnummer`: fortlaufend je Patient
 --      (Trigger trg_prescriptions_verordnungsnummer), Belegnummer bei der
