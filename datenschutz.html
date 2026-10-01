@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Datenschutzerklärung — Praxura</title>
-  <meta name="description" content="Datenschutzerklärung für Praxura (ein Produkt der InfinityMade) gemäß DSGVO — wie wir Ihre Daten verarbeiten, schützen und welche Rechte Sie haben." />
+  <meta name="description" content="Datenschutzerklärung für Praxura (Inhaber: Yavuz Kemal Demir) gemäß DSGVO — wie wir Ihre Daten verarbeiten, schützen und welche Rechte Sie haben." />
   <meta name="robots" content="noindex, follow" />
   <link rel="canonical" href="https://praxura.de/datenschutz.html" />
 
@@ -14,13 +14,14 @@
   <meta name="theme-color" content="#F8F3E8" />
 
   <link rel="stylesheet" href="fonts/system-fonts.css" />
-  <link rel="stylesheet" href="assets/system.css?v=20260524" />
+  <link rel="stylesheet" href="assets/system.css?v=20261001" />
 
   <style>
     .ds-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1.4rem 0 1.4rem; }
     .ds-card { padding: 1.2rem 1.3rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-card); }
     .ds-card h3 { font-family: var(--sans); font-weight: 600; font-size: 0.95rem; margin: 0 0 0.35rem; color: var(--ink); }
     .ds-card p { font-size: 0.86rem; line-height: 1.5; color: var(--ink-mute); margin: 0; }
+    .ds-card p + p { margin-top: 0.5rem; }
     .ds-card a { color: var(--bronze); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
     .ds-note { padding: 1rem 1.2rem; background: var(--bg-warm); border: 1px solid var(--line); border-radius: 12px; font-size: 0.92rem; margin: 1rem 0 1.4rem; }
     .ds-note strong { color: var(--ink); }
@@ -52,9 +53,10 @@
   <h2>1. Verantwortlicher</h2>
   <p>
     Yavuz Kemal Demir<br />
-    InfinityMade<br />
+    Praxura (Einzelunternehmen)<br />
     Industriestraße 33<br />
     53721 Siegburg<br />
+    Deutschland<br />
     E-Mail: <a href="mailto:kontakt@praxura.de">kontakt@praxura.de</a><br />
     Telefon: +49 152 28033834
   </p>
@@ -90,6 +92,13 @@
     Wenn Sie uns per Kontaktformular, E-Mail oder Telefon kontaktieren, werden Ihre Angaben zur Bearbeitung Ihrer Anfrage und für mögliche Anschlussfragen gespeichert. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragsanbahnung) bzw. Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse). Daten werden gelöscht, sobald die Anfrage erledigt ist und keine gesetzliche Aufbewahrung entgegensteht.
   </p>
 
+  <div class="ds-card" id="support-chatbot" style="margin: 1.4rem 0;">
+    <h3>Support-Chatbot (KI-Assistent)</h3>
+    <p>Auf unserer Startseite bieten wir einen interaktiven Support-Chatbot zur Beantwortung von Fragen zu unseren Funktionen, Preisen und der Systemeinrichtung an. Wenn Sie den Chatbot nutzen, werden Ihre eingegebene Nachricht, der Zeitpunkt der Anfrage sowie der bisherige Gesprächsverlauf zur Generierung der Antwort verarbeitet. Die Verarbeitung erfolgt über eine gesicherte Schnittstelle auf unseren Servern bei der <strong>Hetzner Online GmbH</strong> in einem deutschen Rechenzentrum. Zur Erzeugung der Antwort wird Ihre Nachricht an den KI-Dienst Microsoft Azure OpenAI Service (Microsoft Ireland Operations Ltd.) weitergeleitet; geben Sie bitte keine Gesundheits- oder Patientendaten in den Chat ein.</p>
+    <p><strong>Rechtsgrundlage:</strong> Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse an einer effizienten, schnellen und automatisierten Beantwortung von Interessentenfragen) sowie Art. 6 Abs. 1 lit. b DSGVO (bei vertraglichen oder vorvertraglichen Anfragen).</p>
+    <p><strong>Speicherdauer:</strong> Die Chatverläufe werden nur so lange gespeichert, wie es für die Beantwortung erforderlich ist.</p>
+  </div>
+
   <h2>6. Eingesetzte Dienste</h2>
   <p>Wir nutzen folgende Drittanbieter-Dienste, mit denen Auftragsverarbeitungsverträge (AVV) abgeschlossen wurden:</p>
   <div class="ds-grid">
@@ -111,7 +120,7 @@
     </div>
     <div class="ds-card">
       <h3>Fehler- und Stabilitäts-Monitoring (Sentry)</h3>
-      <p>Zur Erkennung und Behebung technischer Fehler setzen wir Sentry (Functional Software, Inc., 132 Hawthorne St, San Francisco, CA 94107, USA) ein. Dabei werden technische Fehlerdaten (z. B. Fehlermeldung, Browsertyp, Zeitpunkt) verarbeitet. Personenbezogene Daten werden vor der Übertragung weitestgehend automatisiert entfernt (PII-Scrubbing). Rechtsgrundlage ist unser berechtigtes Interesse an einem stabilen und sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO). Mit dem Anbieter besteht ein Auftragsverarbeitungsvertrag; Übermittlungen in die USA erfolgen auf Grundlage der EU-Standardvertragsklauseln.</p>
+      <p>Zur Erkennung und Behebung technischer Fehler setzen wir Sentry (Functional Software, Inc., 132 Hawthorne St, San Francisco, CA 94107, USA) ein. Die Einbindung erfolgt über ein europäisches CDN (js-de.sentry-cdn.com). Es werden ausschließlich technische Fehlerdaten verarbeitet; IP-Adressen und Nutzereingaben werden nicht erfasst (sendDefaultPii: false) und sensible Datenmuster (z. B. KVNR, IBAN, Diagnoseschlüssel) vor der Übermittlung automatisiert unkenntlich gemacht. Rechtsgrundlage ist unser berechtigtes Interesse an der technischen Stabilität und Sicherheit unseres Dienstes (Art. 6 Abs. 1 lit. f DSGVO). Mit dem Anbieter besteht ein Auftragsverarbeitungsvertrag (AVV) auf Basis der EU-Standardvertragsklauseln.</p>
     </div>
     <div class="ds-card">
       <h3>Microsoft Azure (AI Foundry)</h3>
@@ -176,12 +185,12 @@
 
   <h2>9. Datenschutzbeauftragter</h2>
   <p>
-    Gemäß unserer Prüfung nach Art. 37 DSGVO besteht für InfinityMade (Einzelunternehmen, Betaphase) derzeit keine gesetzliche Pflicht zur Bestellung eines Datenschutzbeauftragten.
+    Gemäß unserer Prüfung nach Art. 37 DSGVO besteht für Praxura (Inhaber: Yavuz Kemal Demir, Einzelunternehmer) derzeit keine gesetzliche Pflicht zur Bestellung eines Datenschutzbeauftragten.
   </p>
   <p>
     Für alle Fragen zum Datenschutz wenden Sie sich direkt an den Verantwortlichen:<br />
     <strong>Yavuz Kemal Demir</strong><br />
-    E-Mail: <a href="mailto:info@praxura.de">info@praxura.de</a>
+    E-Mail: <a href="mailto:kontakt@praxura.de">kontakt@praxura.de</a>
   </p>
 
   <h2>10. SSL-Verschlüsselung</h2>
@@ -190,29 +199,23 @@
   <h2>11. Änderungen dieser Datenschutzerklärung</h2>
   <p>Wir behalten uns vor, diese Erklärung anzupassen, falls sich rechtliche Rahmenbedingungen oder unsere Datenverarbeitung ändern. Die jeweils aktuelle Version finden Sie auf dieser Seite.</p>
 
-  <div class="doc-meta">Stand: Mai 2026 · InfinityMade · Siegburg, NRW</div>
+  <div class="doc-meta">Stand: Oktober 2026 · Yavuz Kemal Demir · Siegburg, NRW</div>
 </main>
 
 <footer>
   <div class="footer-grid">
     <div>
       <div class="footer-brand">Prax<em>ura</em></div>
-      <div class="footer-tagline">KI-Studio aus Siegburg. Wir bauen Software, die Zeit zurückgibt — für Heilmittel-Praxen und KMU in Deutschland.</div>
-    </div>
-    <div class="footer-col">
-      <h4>InfinityMade</h4>
-      <ul>
-        <li><a href="/#services">Leistungen</a></li>
-        <li><a href="/#projekte">Projekte</a></li>
-        <li><a href="/#prozess">Prozess</a></li>
-        <li><a href="/#kontakt">Analysegespräch</a></li>
-      </ul>
+      <div class="footer-tagline">Software, die Zeit zurückgibt — speziell für Heilmittel-Praxen in Deutschland.</div>
     </div>
     <div class="footer-col">
       <h4>Produkte</h4>
       <ul>
         <li><a href="/praxis.html">Praxura</a></li>
+        <li><a href="/heilmittelabrechnung-software.html">§ 302-Abrechnung</a></li>
+        <li><a href="/ti-anbindung-heilmittel.html">TI-Anbindung</a></li>
         <li><a href="/blog/">Insights</a></li>
+        <li><a href="/#kontakt">Analysegespräch</a></li>
         <li><a href="/login.html">Login</a></li>
       </ul>
     </div>
@@ -228,11 +231,12 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 InfinityMade · Made in NRW</span>
+    <span>© 2026 Yavuz Kemal Demir · Made in NRW</span>
     <span>Siegburg · Köln · Bonn</span>
   </div>
 </footer>
 
 <script src="assets/system.js?v=20260524"></script>
+<script src="/cookie-consent.js?v=20260829"></script>
 </body>
 </html>

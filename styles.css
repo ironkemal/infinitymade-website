@@ -1224,6 +1224,12 @@ footer {
   margin-bottom: 64px;
 }
 
+@media (min-width: 769px) {
+  .footer-grid:has(> :nth-child(3):last-child) {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+}
+
 .footer-brand {}
 
 .footer-brand .logo {

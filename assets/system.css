@@ -324,6 +324,11 @@ footer {
   gap: 3rem;
   margin-bottom: 3rem;
 }
+@media (min-width: 1001px) {
+  .footer-grid:has(> :nth-child(3):last-child) {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+}
 .footer-brand {
   font-family: var(--serif);
   font-size: 1.4rem;

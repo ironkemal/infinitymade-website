@@ -719,6 +719,9 @@ footer {
 .nav-cta-circle { display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 999px; background: rgba(255, 255, 255, 0.15); color: var(--bg); font-size: 0.7rem; margin-left: 0.45rem; transition: background 200ms var(--ease-out); }
 @media (hover: hover) and (pointer: fine) { .nav-cta:hover .nav-cta-circle { background: rgba(255, 255, 255, 0.22); } }
 .footer-grid { display: grid; grid-template-columns: 1.7fr 1fr 1fr 1fr; gap: 2.5rem; max-width: 1120px; margin: 0 auto; padding: 0 2rem; }
+@media (min-width: 761px) {
+  .footer-grid:has(> :nth-child(3):last-child) { grid-template-columns: 1.7fr 1fr 1fr; }
+}
 .footer-tagline { color: var(--ink-soft); opacity: 0.85; font-size: 0.92rem; line-height: 1.6; margin-top: 0.9rem; max-width: 22rem; }
 .footer-col h4 { font-family: var(--mono); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-5); margin: 0 0 1rem; }
 .footer-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.55rem; }
