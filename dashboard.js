@@ -29,7 +29,8 @@ import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261003e';
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260929i';
-import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20260930x';
+import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261003g';
+import { empfaengerVorabPruefen, pruefeAntwort } from './module/abrechnung-empfaenger.js?v=20261003g';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261001g';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
@@ -12461,8 +12462,7 @@ document.getElementById('dgMarkSentBtn')?.addEventListener('click', async () => 
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + s.access_token },
     });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+    pruefeAntwort(res, await res.json().catch(() => ({})), showToast);
     showToast('Status: gesendet. Warten Sie auf die ZAA-Antwort.');
     await loadAbrechnung();
     _dgRender(3);
@@ -16326,11 +16326,9 @@ async function runSignAbrechnung() {
     const { data: { session: s } } = await supabase.auth.getSession();
     if (!s?.access_token) throw new Error('Nicht angemeldet');
 
-    const dtaRes = await fetch(`${API}/billing/abrechnung/${abrechnungId}/dta-bytes`, {
-      headers: { 'Authorization': 'Bearer ' + s.access_token },
-    });
-    const dtaJson = await dtaRes.json();
-    if (!dtaRes.ok) throw new Error(dtaJson.error || ('HTTP ' + dtaRes.status));
+    await empfaengerVorabPruefen({ apiBase: API, token: s.access_token, abrechnungId, showToast }); // Empfänger am Übermittlungstag (37b8f51)
+    const dtaRes = await fetch(`${API}/billing/abrechnung/${abrechnungId}/dta-bytes`, { headers: { 'Authorization': 'Bearer ' + s.access_token } });
+    const dtaJson = pruefeAntwort(dtaRes, await dtaRes.json().catch(() => ({})), null);
 
     stat.textContent = 'Lade Krypto-Bibliothek…';
     const forge = await loadForge();
@@ -16402,8 +16400,7 @@ async function runSignAbrechnung() {
         certSerial,
       }),
     });
-    const upJson = await upRes.json();
-    if (!upRes.ok) throw new Error(upJson.error || ('HTTP ' + upRes.status));
+    const upJson = pruefeAntwort(upRes, await upRes.json().catch(() => ({})), showToast);
 
     // O-131 (22.09.2026): Toast spiegelt jetzt das echte Verschlüsselungsergebnis,
     // statt immer pauschal zum .p7m-Upload aufzufordern.

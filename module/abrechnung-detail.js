@@ -43,6 +43,7 @@
  * ZAA-Datei selbst trägt nie einen Betrag, nur den Fehlergrund.
  */
 
+import { empfaengerVorabPruefen } from './abrechnung-empfaenger.js?v=20261003g';
 import { fmtEur } from './geld.js?v=20260909';
 import { dateiStatusBadge, aggregierterDateiStatus, dateiStatusInfo, istVerworfen } from './abrechnung-status.js?v=20260920b';
 import { ladeDateieinheiten, dateieinheitVon } from './podologie-dateieinheit.js?v=20260907';
@@ -796,9 +797,18 @@ export async function downloadAbrechnungFile(path, abrechnungId, kind, downloadN
  *
  * @param {object|null} ab  `_dasGuideState.abrechnung`
  */
-export function dasGuideVersandKlick(ab) {
+export async function dasGuideVersandKlick(ab) {
   if (!ab) return;
-  if (ab.encrypted_storage_path) return downloadAbrechnungFile(ab.encrypted_storage_path, ab.id, 'dta', ab.dateiname);
+  if (ab.encrypted_storage_path) {
+    // Empfänger am Übermittlungstag prüfen (37b8f51): Block → kein Download, Warnung → Hinweis.
+    try {
+      const { data: { session } } = await ctx.supabase.auth.getSession();
+      if (session?.access_token) await empfaengerVorabPruefen({ apiBase: ctx.apiBase, token: session.access_token, abrechnungId: ab.id, showToast: ctx.showToast });
+    } catch (e) {
+      return ctx.showToast?.(e.message, 'error');
+    }
+    return downloadAbrechnungFile(ab.encrypted_storage_path, ab.id, 'dta', ab.dateiname);
+  }
   if (ab.signed_storage_path) {
     return ctx.showToast?.(ab.verschluesselung_hinweis
       || 'Verschlüsselung noch nicht abgeschlossen — die Datei ist signiert, aber noch nicht für den Versand verschlüsselt.', 'error');
