@@ -29,6 +29,7 @@
 | 2026-08-29 | **Umami einwilligungspflichtig — Schranke BLEİBT, yanlış olan metindi. Ayrıca Widerruf eksikti ve eklendi.** | § 25 Abs. 1 TDDDG **teknoloji-nötrdür**: yalnız çerez saklamayı değil, uç cihazda zaten kayıtlı bilgiye **erişimi** de kapsar. Umami script'i `screen`, `navigator.language`, `document.referrer` alanlarını aktif okur → Zugriff (EDSA Leitlinien 2/2023 v2.0, 07.10.2024). DSK'nın daha yumuşak çizgisi de kurtarmıyor: onun istisnası **sunucu tarafında pasif** okumadır, JS ile aktif Auslesen değil — iki görüş burada aynı sonuca varıyor. § 25 Abs. 2 Nr. 2 uymuyor (reichweitenmessung sayfanın sunulması için zorunlu değil; Almanya'da CNIL benzeri bir ölçüm istisnası yok — yasa koyucu tartıştı, koymadı). **Kritik nokta:** § 25 kişisel veri işlenip işlenmediğinden **bağımsız** işler → `datenschutz.html:146`'daki „keine Einwilligung erforderlich, **da** keine personenbezogenen Daten" cümlesi bir *non sequitur*; DSGVO gerekçesiyle TDDDG yükümlülüğü savuşturulamaz. Metnin asıl hatası buydu, eskimişliği değil. **Bağımsız ve daha ağır bulgu:** Widerruf **hiç yoktu** — bir kez `accepted` yazıldıktan sonra banner bir daha görünmüyor ve hiçbir yerde ayar bağlantısı yoktu → Art. 7 Abs. 3 S. 4 DSGVO („so einfach wie die Erteilung") ihlali; geçerli bir rıza rejiminin zorunlu parçası eksikti. **Uygulandı 29.08.2026:** banner'daki „Keine personenbezogenen Daten" beyanı kaldırıldı (Umami IP+UA+günlük salt'tan `session_id` üretir → ErwG 26 anlamında **pseudonym**, anonym değil; yanıltıcı beyana dayanan rıza Art. 4 Nr. 11 uyarınca angreifbar) · Datenschutz linki eklendi · Widerruf üç yoldan erişilebilir (`#cookie-einstellungen` ankası, `[data-cookie-einstellungen]` özniteliği, global fonksiyon) · rıza **12 ay** sonra yeniden sorulur · zaman damgasız eski rızalar **devralınmaz** (yanıltıcı metin altında verildiler) · iki düğme eşit genişlikte. `datenschutz.html:121` ve `:146` `legal-de` taslağıyla yeniden yazıldı, `UMAMI_SETUP.md` başına düzeltme notu kondu. Bauart-Test: `module/cookie-consent.test.js` (11 test; kapı kaldırılınca 9'u kırmızıya döner — gegenprobe yapıldı). **SEO-ROI sorusunun doğru aracı Umami değil:** Google Search Console + Bing Webmaster Tools, **DNS-TXT** doğrulamasıyla — sitede tek satır kod yok, Endeinrichtung'a erişim yok, § 25 hiç doğmuyor, €0 ve G8'e uygun. Umami consent'lilerde kalır; mutlak sayı vermez, göreli trend için kullanılır. | Uygulandı — GSC/Bing kurulumu açık | Digital Omnibus (Art. 88a/88b DSGVO-E, öneri 19.11.2025) yürürlüğe girip Reichweitenmessung istisnası getirirse; Umami sunucu konfigürasyonunun hash+salt rotasyonu doğrulanamazsa (o zaman `datenschutz.html:122` lafzı düzeltilir) |
 | 2026-09-17 | **`prescriptions_festschreibung()` trigger'ı (Ops #167): NULL-istisnası SADECE `patient_name`/`versichertennummer`/`patient_id` için — `icd10`/`icd10_2`/`diagnosegruppe`/Heilmittel-/Betragsfelder istisnasız kilitli kalır** | `fn_abrechnung_zeile_festschreibung()` deseni tekrarlanır: kimlik alanları NULL'a çekilebilir, değiştirilemez; tanı/Heilmittel-içerik alanları §302 Anlage-1-TP5 Pflichtangabe'dir, `invoices`'taki hatanın (Personenfeld nullen = Pflichtangabe'yi yok etme) tersten tekrarını önlemek için içerik kilitli kalmalı. **Ayrıca tespit edildi, ayrı kart açıldı:** `prescriptions` bugün `api/dsgvo.js` `DELETE_TABLES`'ta (hard DELETE), `ANONYMIZE_TABLES`'ta değil — BEFORE-UPDATE trigger'ı DELETE'i bloklamaz, dolayısıyla trigger Löschungskette'yi kırmaz, ama billed (`belegnummer` dolu) Verordnung'lar bugün retention'sız komple silinebiliyor; bu `db/SCHEMA-RLS.sql:904-914`'te zaten "OFFENE LUECKE" olarak işaretli ve ayrı bir gkv-302+legal-de kararı gerektiriyor. → `compliance/legal-reviews/2026-09-17-prescriptions-festschreibung-dsgvo.md` | Trigger tasarım kararı kapalı / dsgvo.js-taşıma kararı **açık** (ayrı kart) | dsgvo.js `prescriptions`'ı ANONYMIZE_TABLES'a taşıma kararı verildiğinde bu kayıt güncellenir |
 | 2026-09-21 | **Klass-68 Softwarehersteller-IK bei der ARGE·IK wird beantragt — drei Auflagen, kein Freibrief** | § 293 SGB V regelt das IK als **Kennzeichen**, nicht als Statusnachweis; Klassifikation 68 ("Softwarehersteller im Sozialversicherungswesen für zertifikatsbasierte Testverfahren") ist **nicht** Klassifikation 66 (§ 302 Abs. 2 SGB V, Leistungserbringer-IK) — die beantragte IK trägt keine Abrechnungsbefugnis. Zweck: Praxura (Kleingewerbe, keine Rechtsformvoraussetzung) kann damit selbst am Softwarehersteller-Test nach Anhang 2 Kap. 9 (Schritt 2.2, optional) teilnehmen, **ohne** eine Praxis-IK zu benötigen — das **Erprobungsverfahren** (Schritt 2.3, zwingend) läuft unverändert unter der IK/dem Zertifikat der jeweiligen Praxis. Drei Auflagen (`legal-de`, 21.09.2026): (1) die IK wird **niemals** als Absender-/Rechenzentrums-IK in einer echten Abrechnungsdatei verwendet — als Korkuluk im Code umgesetzt: `api-backend/billing/dta/software-hersteller-ik.js` (`SOFTWARE_HERSTELLER_IK`, heute `null`) + `assertNichtSoftwareHerstellerIkAlsAbsender()` in `builder.js`, wirft sobald `kind==='echt'` UND Absender-IK == der konfigurierten IK ist; (2) der Antrag läuft auf "InfinityMade, Inh. Yavuz Kemal Demir", nicht auf die Privatperson; (3) keine öffentliche Formulierung à la "wir sind bei der ARGE·IK registriert" — Standardtext, falls je gebraucht: *"Softwarehersteller-IK (Klassifikation 68) — ausschließlich für das zertifikatsbasierte Testverfahren nach Anhang 2 zur Anlage 1 (TP5). Die Abrechnung nach § 302 SGB V erfolgt durch die Praxis unter ihrem eigenen IK."* → `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 2.0 | **Kapalı — Antrag offen** (kostenlos, schriftlich bei der ARGE·IK: dguv.de/arge-ik/downloads/ → „Erfassungsbeleg IK", info@arge-ik.de; Bearbeitungsdauer nicht angegeben) | Die IK wird real in einer `kind==='echt'`-Datei als Absender-IK verwendet · eine öffentliche Formulierung suggeriert Abrechnungsbefugnis · die Sperre in `software-hersteller-ik.js` wird entfernt/umgangen |
+| 2026-09-29 | **KI-Rezept-OCR über STACKIT AI Model Serving (statt Azure): 🔧 KOŞULLU freigabefähig — kein Veto. §203 durch NB Ziff. 18 getragen, §393 für den KI-Anteil erfüllt (C5 Typ 2), vor Aktivierung 6 Pflichtpunkte (alle 🟢 €0).** · **Nachtrag (2) gleicher Tag: Geschäftsmodell B′ (ein Praxura-Konto, je Praxis eigenes STACKIT-Projekt/Key, Daten direkt Box/App → STACKIT) — legal-de-Veto vom 12.09.2026 gegen „B" für diese Variante in 🔧 KOŞULLU umgewandelt; Reselling R als Alternative geprüft.** | Details, Quellen, offene Fragen und Mail an STACKIT: Abschnitt „2026-09-29 — KI-Rezept-OCR über STACKIT" + „Nachtrag (2)" am Ende dieser Datei. | **Ruht — STACKIT hat am 01.10.2026 abgelehnt (Nachtrag 3)** · vorher: wartet auf STACKIT-Antwort (inkl. Ziff. 13.2-Freigabe) + Doku-Updates; `onprem`-G2- und `guvenlik`-Veto zu B sind NICHT von legal-de aufhebbar → Konsey** | STACKIT-Antwort widerspricht „kein Inhalt in Logs/keine menschliche Prüfung" · STACKIT ändert NB Ziff. 18 (Änderungsmitteilung Ziff. 19.2, 8 Wochen) · AI Model Serving fällt aus dem C5-Typ-2-Scope · STACKIT verweigert Per-Praxis-Projekte nach Ziff. 13.2 · Request-Daten laufen doch über Praxura-Server |
 
 ---
 
@@ -61,6 +62,13 @@ sadece durum değişirse veya yeni bir bulgu bunları ağırlaştırırsa değin
 - `prescriptions`'ın `api/dsgvo.js`'te hard-DELETE yerine billed satırlar için ANONYMIZE_TABLES'a
   taşınması gerekip gerekmediği — gkv-302 + legal-de birlikte → `db/SCHEMA-RLS.sql:904-914`,
   `compliance/legal-reviews/2026-09-17-prescriptions-festschreibung-dsgvo.md`
+- **(29.09.2026, neu)** Praxuras eigene AVV (`compliance/AVV.md` §5.2, `dpa.html` §8) enthält
+  **keine § 203-Abs.-3/4-StGB-Verpflichtung Praxuras selbst** und keine Weitergabepflicht an
+  Unterauftragnehmer — unabhängig von STACKIT, betrifft das ganze SaaS. Textvorschlag im
+  Abschnitt 2026-09-29 unten.
+- **(29.09.2026, neu)** `compliance/VVT.md:64` und `AVV.md:161` behaupten für Azure einen
+  „Zero-Data-Retention-Vertrag" — der wurde nie erteilt (Modified Abuse Monitoring abgelehnt).
+  Überzogene Zusicherung → beim STACKIT-Update mit korrigieren.
 
 ## 2026-08-27 — Beta-Kunden-Klarnamen im öffentlichen Repository
 
@@ -258,3 +266,230 @@ Bildschirm ist; erster Kunde mit mehreren Standorten (die Standorttrennung ist k
 RLS-Zusicherung). Beide Auslöser identisch mit den Einträgen vom 03.09.2026 und
 28.08.2026. Zusätzlich: sobald `patient_notes` eine Verfasserspalte und Versionierung
 bekommt, wird das Schreibrecht ohne neue Grundsatzentscheidung nachgezogen.
+
+## 2026-09-29 — KI-Rezept-OCR über STACKIT AI Model Serving (Ersatz für Azure)
+
+**Anlass.** Azure praktisch zu: „Modified Abuse Monitoring" abgelehnt (nur Kunden mit
+Microsoft Account Team); Microsofts §203-Zusatzvereinbarung setzt laut innFactory genau
+diese Freigabe voraus. IONOS nur C5 Typ 1 + §203 unbeantwortet (Antwort 15.09.2026).
+SaaS-KI ist aus; Beta-1 wurde am 18.09.2026 „KI aus bis C5 Typ 2" gesagt.
+Anbieter: Schwarz Digits Cloud GmbH & Co. KG, Am Campus 1, 74177 Bad Friedrichshall,
+HRA 741347 (NB Ziff. 2.1). Modelle Region EU01 (DE), OpenAI-kompatibel.
+
+**Rollen.** SaaS: Praxura = Auftragsverarbeiter der Praxis, STACKIT = Unterauftrags-
+verarbeiter Praxuras und „weitere mitwirkende Person" (§ 203 Abs. 4 S. 2 Nr. 2 StGB).
+On-Prem BYO-Key: Praxis ↔ STACKIT direkt, Praxura **ohne Rolle** (K6 gewahrt, solange der
+Aufruf direkt Box → STACKIT läuft und der Key in der Box liegt).
+
+**Primärquellen (gelesen 29.09.2026).**
+- § 393 SGB V, gesetze-im-internet.de: Abs. 1 (Leistungserbringer „sowie ihre jeweiligen
+  Auftragsdatenverarbeiter"), Abs. 2 (Inland/EU + Niederlassung im Inland), Abs. 3 Nr. 2/3
+  (C5-Testat der datenverarbeitenden Stelle + „korrespondierende Kriterien für Kunden"),
+  Abs. 4 S. 2 (ab 01.07.2025 Typ 2), S. 3 (neu in Verkehr gebrachte Systeme: 18 Monate Typ 1
+  genügt), S. 4/5 (vergleichbarer Standard, RVO BMG).
+- § 203 Abs. 3, Abs. 4 S. 2 Nr. 1/2 StGB, gesetze-im-internet.de — **keine Formvorschrift,
+  keine Belehrungspflicht** im StGB. Textform + Belehrung über strafrechtliche Folgen sind
+  nur berufsrechtlich für bestimmte Berufe angeordnet (§ 43e Abs. 3 BRAO wörtlich geprüft;
+  vergleichbar § 62a StBerG — nicht separat geprüft). Für Heilmittelerbringer existiert
+  keine entsprechende Berufsnorm → Belehrung = Best Practice.
+- STACKIT Nutzungsbedingungen v1.3.2, gültig ab 04.05.2026 (lokal `C:/tmp/stackit_nb.txt`):
+  Ziff. 1.2 (nur Unternehmer § 14 BGB), 4.7 (Subunternehmer zulässig), 17.3/17.4
+  (Konzernklausel Schwarz Gruppe = D. Schwarz Beteiligungs-KG, gilt für Ziff. 17), **18**
+  (Verschwiegenheit über Inhaltsdaten mit Bezug auf § 203, Mitarbeiter + Subunternehmer-
+  kette, Need-to-know), 19.2 (einseitige Änderung mit 8 Wochen Vorlauf, Schweigen =
+  Zustimmung), 20 (Reselling). **Kein** Hinweis auf AVV/DPA in den NB.
+- stackit.com/en/why-stackit/benefits/certificates: C5 Typ 2, AI Model Serving in der
+  Produktliste (Hauptkontext verifiziert).
+- docs.stackit.cloud AI Model Serving FAQ: „We do not store any customer data from the
+  requests"; nichts zu Logs/Metadaten/menschlicher Prüfung.
+- stackit.com/en/learn/knowledge/cloud-act: Selbstaussage „not subject" — keine
+  unabhängige Prüfung.
+- **Nicht lesbar (PDF-Binär, Werkzeuggrenze):** Leistungsschein AI Model Serving
+  (V1.3, gültig ab 18.09.2025) und Servicebeschreibung v1.4. **Sekundärquelle** (neuost.ai,
+  ex gewusst-ki.de) behauptet aus dem Leistungsschein: E-Mail-Adressen und User-IDs 30 Tage
+  in Logdateien — **nicht verifiziert**, in der Mail abgefragt.
+
+**Bewertung pro Frage.**
+1. **§ 203 — 🟢 trägt.** Ziff. 18 ist eine Verpflichtung zur Geheimhaltung i. S. d. § 203
+   Abs. 4 S. 2 StGB, inkl. Kette. Einbeziehung per Click-Through wirksam (B2B, § 310 Abs. 1
+   BGB — § 305 Abs. 2 gilt nicht), Textform (§ 126b BGB) durch abrufbares/speicherbares
+   Dokument (Ziff. 1.3) erfüllt, obwohl das StGB sie nicht einmal verlangt. Fehlende
+   Strafbarkeitsbelehrung ist für Heilmittelerbringer **kein Mangel**; wir holen sie trotzdem
+   kostenlos nach (Absatz in der Mail = dokumentierte Belehrung in Textform). Restrisiko:
+   Ziff. 19.2 — STACKIT kann Ziff. 18 mit 8 Wochen Vorlauf ändern → Änderungsmails lesen.
+   **Eigentliche Lücke liegt bei uns:** Praxuras AVV/DPA verpflichtet Praxura selbst nicht
+   nach § 203 und regelt die Weitergabe an Subunternehmer nicht (siehe offene Punkte).
+2. **AVV/DPA — 🟡 offen.** In NB kein AVV-Verweis; Standard-DPA von STACKIT im Portal
+   üblich, aber **nicht verifiziert**; Subunternehmerliste nicht gefunden. Schwarz-Gruppe:
+   Konzernspitze deutsch (NB 17.4, D. Schwarz Beteiligungs-KG, Neckarsulm) — kein US-Mutter-
+   konzern. Die Gruppe hat allerdings US-Töchter (Lidl US); CLOUD-Act-Restexposition über
+   Konzernkontrolle gilt als gering, ist aber nur durch STACKIT-Selbstaussage belegt → in
+   Mail bestätigen lassen. Blocker bis DPA + Subunternehmerliste vorliegen.
+3. **§ 393 — (a) SaaS 🟡 / (b) On-Prem 🟢.**
+   (a) KI-Anteil: datenverarbeitende Stelle für den Modellaufruf ist STACKIT → C5 Typ 2,
+   Inland-Niederlassung, Region DE = Abs. 2/3 für dieses Glied erfüllt. **Aber:** Praxura
+   ist nach Abs. 1 selbst „Auftragsdatenverarbeiter" mit eigenem Cloud-System (Hetzner-VPS
+   als Proxy, Supabase) und hat **kein eigenes C5**. Diese Lücke ist **nicht neu** — sie
+   besteht für das gesamte SaaS seit 01.07.2025 und ist der Grund des On-Prem-Pivots
+   (Eintrag 2026-07-06, Playbook K1). Die KI-Aktivierung **erweitert sie nicht**
+   (derselbe Backend-/DB-Pfad trägt die Patientendaten ohnehin), sie **schließt sie aber
+   auch nicht**. Folge: Gegenüber Beta-1 darf **nicht** „Praxura ist C5-testiert" gesagt
+   werden, nur „der KI-Anbieter hat C5 Typ 2".
+   (b) Praxis ↔ STACKIT direkt: Abs. 1 Leistungserbringer nutzt Cloud, STACKIT erfüllt
+   Abs. 2/3. Praxis muss die „korrespondierenden Kriterien für Kunden" (Abs. 3 Nr. 3) selbst
+   umsetzen → wir liefern eine Einseiter-Checkliste. **Kein Reselling** (Ziff. 20) und kein
+   Key „von uns" — sonst Rolle + § 393 zurück (K6). *(→ durch Nachtrag (2) für die Variante
+   B′ präzisiert: Rolle kommt zurück, § 393-C5-Pflicht Praxuras nach heutiger Auslegung
+   nicht.)*
+4. **„Nicht gespeichert" — 🟡.** Lücken: technische Logs (Inhalt bei Fehlern/Debug?),
+   Metadaten, 30-Tage-Log-Behauptung, Abuse/Content-Filter, menschliche Prüfung, vorgelagerte
+   WAF/CDN/DDoS-Dienstleister im Requestpfad (US-Anbieter?), Support-Zugriff, C5-Scope-
+   Zeitraum, Prüfbericht mit Kundenkriterien. → Mail (Text in der Übergabe vom 29.09.2026).
+5. **Sonstiges.** Keine Patienteneinwilligung nötig (Art. 9 Abs. 2 lit. h, § 22 BDSG;
+   Auftragsverarbeitung; § 203 Abs. 3 S. 2 soweit erforderlich — nur Rezeptbild, nichts
+   Zusätzliches senden). DSFA **aktualisieren**, nicht neu (DSFA.md:121 nennt Anbieter-
+   wechsel selbst als Trigger). AI Act: kein Hochrisiko (Anhang III nicht einschlägig),
+   Art. 50 Abs. 2 greift für reine Feldextraktion voraussichtlich nicht (Ausnahme
+   unterstützende Funktion/keine wesentliche Veränderung — nicht abschließend geprüft);
+   Art. 4 KI-Kompetenz (seit 02.02.2025) + UI-Hinweis „KI-Vorschlag, bitte prüfen" als
+   billiger Nachweis. MDR-Frage bleibt eigener offener Punkt (unverändert durch
+   Anbieterwechsel).
+
+**Vor Aktivierung zwingend (alle 🟢 €0, Eigenarbeit):**
+1. STACKIT-DPA im Portal abschließen/ablegen + Subunternehmerliste erhalten.
+2. Schriftliche STACKIT-Antwort auf die Log/Abuse/Human-Review/WAF-Fragen; Ergebnis hier
+   nachtragen. Solange „Inhalte können in Logs landen" nicht ausgeschlossen ist → nicht
+   aktivieren.
+3. § 203-Klausel in Praxuras AVV (`compliance/AVV.md` §5.2 + `dpa.html`) ergänzen.
+4. Subunternehmerliste AVV §6 / `dpa.html` / `datenschutz.html:117-118` Azure → STACKIT;
+   ZDR-Behauptung für Azure streichen; jede Beta-Praxis mit unterschriebenem AVV 30 Tage
+   vorher informieren (AVV §5.4 Widerspruchsrecht).
+5. VVT V-3 Empfänger/Drittland (VVT.md:63-65, :106), TOM.md:76, DSFA.md:27/R10 anpassen;
+   Region jetzt „Deutschland (EU01)" statt „Sweden Central" — Patienten-Infotext der
+   Einwilligung (Eintrag 2026-08-14 lit. c) entsprechend neue Textversion.
+6. Beta-1 ehrlich informieren: KI-Anbieter mit C5 Typ 2 in DE, nicht „Praxura C5".
+
+**Nice-to-have:** Einseiter „§ 393-Kundenkriterien" für On-Prem-Praxen; Kalender-Erinnerung
+C5-Testat-Erneuerung (Typ-2-Berichte jährlich); UI-Hinweis „KI-Vorschlag"; optional 1 h
+Anwalt (~€150–300, 🟢/🟡) nur zur Frage „§ 203-Kette SaaS ohne eigenes C5".
+
+**Neubewertung ausgelöst durch:** STACKIT-Antwort mit Inhaltslogging oder menschlicher
+Prüfung · Änderung NB Ziff. 18 · AI Model Serving nicht (mehr) im C5-Typ-2-Scope ·
+Reselling-/„Key von uns"-Modell · Modellwechsel auf Nicht-EU01-Region · RVO nach § 393
+Abs. 4 S. 5.
+
+### Nachtrag (2), 29.09.2026 — Geschäftsmodell: ein Praxura-Konto, Projekt/Key je Praxis (B′) vs. STACKIT-Reselling (R)
+
+**Vom Nutzer festgelegtes Modell B′.** Ein STACKIT-Konto von InfinityMade; je Praxis ein
+eigenes STACKIT-Projekt mit projektgebundenem Token (eigenes Rate-Limit, eigene Kosten-
+zeile, einzeln widerrufbar). Die Praxis eröffnet **kein** STACKIT-Konto. Request-Daten
+laufen **direkt** Box/App → STACKIT-API, nie über Praxura-Server. Praxura rechnet mit
+Marge gegenüber der Praxis ab.
+
+**Wiedereröffnung — neue Tatsachen gegenüber 12.09.2026** (`konsey/tutanak/2026-09-12-onprem-ai-modeli.md`,
+„B (anahtar bizden) ölü"): (i) der KI-Dienst selbst liegt im C5-Typ-2-Scope (damals IONOS
+Typ 1 / Azure unbekannt); (ii) § 203-Klausel Ziff. 18 liegt vor; (iii) die Architektur ist
+neu präzisiert: Praxura betreibt **kein** eigenes System im Datenpfad.
+
+**1. Rolle in B′ — Auftragsverarbeiter, obwohl Praxura die Daten nie sieht.**
+Vertragspartner und damit Weisungsgeber STACKITs ist InfinityMade (NB Ziff. 2.1, 4.5),
+nicht die Praxis. Für die Praxis verarbeitet damit STACKIT *über uns*: Praxura ist
+Auftragsverarbeiter (Art. 28 DSGVO, „Hauptauftragnehmer" ohne eigene Verarbeitungs-
+handlung), STACKIT Unterauftragsverarbeiter (Art. 28 Abs. 2, 4). Das ist die Rolle, die
+der On-Prem-Pivot vermeiden wollte — sie kommt für den KI-Ausschnitt **zurück**, aber
+ohne Datenzugriff, also mit geringem tatsächlichem Risiko. § 203: Praxis verpflichtet
+Praxura (Abs. 4 S. 2 Nr. 1), Praxura hat STACKIT verpflichtet (Nr. 2 — NB Ziff. 18,
+gegenüber InfinityMade als Kunde).
+
+**2. § 393 in B′ — keine eigene C5-Pflicht Praxuras nach Wortlaut, aber nicht
+behördlich bestätigt.** § 393 Abs. 3 Nr. 2 knüpft das Testat an die „im Rahmen des
+Cloud-Computing-Dienstes eingesetzten Cloud-Systeme". In B′ ist das **ausschließlich**
+STACKIT AI Model Serving — C5 Typ 2. Praxura setzt kein Cloud-System ein (keine
+Verarbeitung, kein Proxy, keine Speicherung; Projektanlage und Abrechnung sind keine
+Verarbeitung von Gesundheitsdaten). Mein Veto vom 12.09. („Vertrag über uns → § 393
+kommt zu uns zurück") stützte sich darauf, dass das **eingesetzte System** nicht testiert
+war und dass wir als Direktanbieter der Leistung gelten — ersteres ist entfallen,
+letzteres führt nach Wortlaut nur dann zur Testatpflicht, wenn wir ein eigenes Cloud-
+System einsetzen. **Veto für B′ daher aufgehoben → 🔧 KOŞULLU.** Restunsicherheit: Die
+Literatur (activeMind, Rödl) ordnet die Pflicht „dem, der die Leistung dem
+Leistungserbringer direkt erbringt" zu — dort ging es um SaaS-Anbieter mit eigenem
+System; unser Fall (reiner Vertragsmittler ohne System) ist nirgends behandelt. →
+kurzes schriftliches Anwaltsvotum vor erstem bezahltem Rollout. Zusätzlich gilt für
+Praxura als STACKIT-Kunde § 393 Abs. 3 Nr. 3: die **„korrespondierenden Kriterien für
+Kunden"** aus STACKITs C5-Bericht (z. B. Key-/IAM-Verwaltung) muss **Praxura** umsetzen →
+Prüfbericht anfordern.
+
+**Neuer Blocker, gefunden in NB Ziff. 13.2 (wörtlich gelesen):** Der Kunde darf die
+Services nicht „von Dritten nutzen lassen oder sie Dritten zugänglich machen", **erlaubt**
+ist aber, sie „als Grundlage für eigene Produkte zu verwenden (z.B. Software as a Service
+Dienste) und diese wiederum Endkunden des Kunden anzubieten"; Handeln der Endkunden wird
+Praxura zugerechnet. Dazu Ziff. 9.4: Zugangsdaten nicht an unberechtigte Dritte. Ein Key,
+der nur von Praxura-Software für die OCR-Funktion benutzt wird, ist vertretbar „eigenes
+Produkt"; ein Key, den die Praxis aus der `.env` lesen und frei verwenden kann, ist
+faktisch „Überlassung". → **schriftliche Freigabe STACKITs für „Projekt/Token je
+Endkunde, eingebettet in unsere Software"** einholen (Frage 10 der Mail). Ohne sie: R.
+
+**3. Model R (Reselling, Ziff. 20, vollständig gelesen).** Vertragspartner für das
+Abonnement ist der Reselling-Partner (20.1), aber die NB gelten zwischen STACKIT und
+Endkunde (20.3) → Ziff. 18 und DPA gelten **direkt** für die Praxis; Praxura =
+Vertriebspartner mit Abrechnung (20.3 b) und **First-Level-Support** (20.3 c). Folgen:
+- Die Praxis bleibt STACKIT-**Kunde** und muss sich im Portal **registrieren** (Ziff. 2.1
+  zwingend; 2.2 erlaubt Einladungslink) inkl. Adresse, Rechnungsdaten und **USt-IdNr** —
+  praktische Hürde: viele Heilmittelpraxen sind nach § 4 Nr. 14 UStG steuerfrei und haben
+  keine USt-IdNr (ob Steuernummer genügt, unbekannt → Frage 12). **Der Wunsch „Praxis
+  registriert sich nicht" ist mit R nicht erfüllbar**, nur auf einen Einladungslink
+  reduzierbar.
+- Rolle: Praxura bleibt aus Art. 28/§ 393 heraus, **solange** Support ohne Inhaltszugriff
+  läuft und Praxura das Praxis-Konto nicht administriert. Ziff. 20.4 erlaubt STACKIT,
+  „vertrauliche Informationen" des Kunden mit dem Reseller zu teilen — Inhaltsdaten
+  (Ziff. 18) dürfen davon nicht erfasst sein → Frage 11.
+- Partnerprogramm-Voraussetzungen (Mindestumsatz, Zertifizierung, Rechtsform):
+  **nicht verifiziert** → Frage 13. Für einen Einzelunternehmer ungewiss.
+
+**4. Empfehlung: B′ (mit Auflagen); R nur als Rückfallebene** — B′ erfüllt das Geschäfts-
+modell, die Rolle ist beherrschbar (AVV-Vorlage existiert, kein Datenzugriff), R
+verfehlt das Kernziel (Praxis muss sich registrieren) und hängt an unbekannten
+Partnerbedingungen.
+**Auflagen für B′ (vor erstem bezahltem Rollout):**
+1. STACKIT schriftlich: Per-Praxis-Projekte/-Token in unserer Software sind nach
+   Ziff. 13.2 zulässig (🟢 €0).
+2. Datenpfad bleibt direkt Box/App → STACKIT; **nichts** (Inhalt, Antwort, Logs mit
+   Inhalt) läuft über Praxura-Systeme — sonst setzt Praxura ein eigenes Cloud-System ein
+   und § 393 kommt voll zurück. Für SaaS (app.praxura.de) gilt das **nicht**, siehe unten.
+3. AVV Praxis ↔ Praxura als „KI-Zusatzmodul" inkl. § 203-Klausel (Text in der Übergabe
+   vom 29.09.) und STACKIT als Unterauftragsverarbeiter; STACKIT-DPA ↔ InfinityMade im
+   Portal; Weiterreichung der Pflichten Art. 28 Abs. 4 (🟢 €0).
+4. C5-Prüfbericht mit Kundenkriterien anfordern und selbst umsetzen (🟢 €0, ~0,5–1 Tag).
+5. Pro Projekt Quota/Kostenlimit (Zurechnung Ziff. 13.2 letzter Satz: Missbrauch des Keys
+   durch die Praxis geht auf unsere Rechnung).
+6. Anwaltsvotum, eine Frage: „Ist ein Vertragsmittler ohne eigenes System
+   ‚datenverarbeitende Stelle' i. S. d. § 393 Abs. 3 Nr. 2 SGB V?" — ca. 1–2 h,
+   **€300–600, 🟡**.
+7. **Nicht von legal-de entscheidbar:** `onprem`-Veto G2 und `guvenlik`-Veto (Klartext-Key
+   in der Box) aus dem 12.09.-Konsey stehen weiter; Projekt-Scope + Quota + Einzel-
+   widerruf mindern das Schadensbild (Key-Leck = Kosten, kein Datenzugriff, da STACKIT
+   nichts speichert) → **Konsey muss B′ neu verhandeln.**
+
+**SaaS-Variante (app.praxura.de).** Browser → STACKIT direkt mit Praxis-Key: nein (Key im
+Browser = Überlassung Ziff. 9.4/13.2 + Sicherheit). Also Aufruf über das Praxura-Backend
+= klassisches „eigenes SaaS-Produkt" (Ziff. 13.2 ausdrücklich erlaubt), Praxura
+Auftragsverarbeiter wie bisher, § 393-Lücke Praxuras eigenes System **wie bisher** (nicht
+neu, nicht durch KI vergrößert). Per-Praxis-Projekte sind dort nur Kosten-/Limit-
+Trennung, rechtlich egal.
+
+**Kosten gesamt:** Vertrags-/Doku-Arbeit 🟢 €0 (~1–2 Tage Eigenarbeit); Anwaltsvotum 🟡
+€300–600 einmalig; STACKIT-Nutzung tokenbasiert, bei heutigem Volumen vernachlässigbar.
+
+**Neubewertung ausgelöst durch:** STACKIT lehnt Per-Praxis-Projekte nach Ziff. 13.2 ab
+(→ R prüfen) · Anwalt verneint die Auslegung zu § 393 Abs. 3 Nr. 2 · ein Praxura-System
+tritt in den Datenpfad · Behörden-/GKV-Äußerung zur Testatpflicht von Vermittlern.
+
+### Nachtrag (3), 01.10.2026 — STACKIT hat abgelehnt
+
+STACKIT hat sowohl den Startup-Vertrag als auch das reguläre Kundenkonto **nicht
+freigegeben** (Grund nicht mitgeteilt, nicht nachgefragt). Die obige Bewertung bleibt als
+Prüfstand erhalten, ist aber **gegenstandslos, solange kein Konto besteht**; Modell B′ ruht.
+Produktiv bleibt Azure (Sweden Central). Web- und Rechtstexte nennen STACKIT nirgends —
+keine Korrektur nötig. **Unabhängig von STACKIT weiter offen:** die zwei Punkte oben unter
+„Offene Punkte" vom 29.09.2026 (§ 203-Verpflichtung in Praxuras eigener AVV; überzogene
+Azure-„Zero-Data-Retention"-Aussage in `VVT.md`/`AVV.md`).
