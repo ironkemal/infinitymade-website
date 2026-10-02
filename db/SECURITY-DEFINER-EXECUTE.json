@@ -1,0 +1,17 @@
+{
+  "_zweck": "guvenlik S-04b: GEMESSENE Referenz, welche SECURITY-DEFINER-Funktionen (ohne Triggerfunktionen) in public fuer anon/authenticated ausfuehrbar sind. Das S-04-Tor prueft Migrationstext; diese Datei prueft das ERGEBNIS. tools/check-definer-referenz.test.js schlaegt fehl, sobald hier ein Name steht, der nicht begruendet ist. Bei jedem 'schema güncelle' neu messen (Abfrage unten, MCP) und diese Datei ersetzen.",
+  "_abfrage": "select p.proname, pg_get_function_identity_arguments(p.oid) args, has_function_privilege('anon', p.oid, 'EXECUTE') anon, has_function_privilege('authenticated', p.oid, 'EXECUTE') auth from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prosecdef and p.prokind='f' and (has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE')) and p.prorettype <> 'trigger'::regtype order by 1;",
+  "gemessen_am": "2026-10-02",
+  "bis_migration": "0056",
+  "funktionen": [
+    { "name": "auth_tenant_id", "args": "", "anon": true, "authenticated": true },
+    { "name": "find_owner_id_by_code", "args": "p_code text", "anon": false, "authenticated": true },
+    { "name": "is_admin", "args": "", "anon": true, "authenticated": true },
+    { "name": "public_praxis_sector", "args": "p_owner_id uuid", "anon": true, "authenticated": true },
+    { "name": "search_diagnosen", "args": "p_q text, p_bereich text, p_kind text, p_limit integer", "anon": true, "authenticated": true },
+    { "name": "search_heilmittel", "args": "p_q text, p_bereich text, p_diagnosegruppe text, p_datum date, p_limit integer", "anon": true, "authenticated": true },
+    { "name": "st_estimatedextent", "args": "text, text, text, boolean", "anon": true, "authenticated": true },
+    { "name": "st_estimatedextent", "args": "text, text, text", "anon": true, "authenticated": true },
+    { "name": "st_estimatedextent", "args": "text, text", "anon": true, "authenticated": true }
+  ]
+}
