@@ -230,6 +230,10 @@ jobs:
               echo "-- Zeilen-Bauer, die auch db/migrations/0012_seed_heilmittel_katalog.sql"
               echo "-- geschrieben hat."
               echo "-- ZAEHLER: unveraendert (reine Daten-UPSERT, public — migrations/README.md Kural 6)"
+              # O-129/O-156: SaaS-Statuszeile — dieser Weg laeuft ohne Git-Hook,
+              # deshalb hier fest. Box-only wie 0036/0037: im SaaS liest resolvePreis()
+              # den Katalog direkt aus dem Code.
+              echo "-- SaaS: nicht angewandt (box-only): Seed fuer heilmittel_katalog der Box, SaaS liest Preise aus dem Code (O-95)"
               echo ""
               cat _preise-artefakt/preise-seed.sql
               echo "DO \$\$ DECLARE n int; BEGIN"

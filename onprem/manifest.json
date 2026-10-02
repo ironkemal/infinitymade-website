@@ -2,7 +2,7 @@
   "surum": "0.2.0",
   "dateien": [
     { "yol": "docker-compose.yml", "sha256": "88a1c832121acd44ce4c442a4f5a093c29d354db0294012abfa064ae1ebc86f8" },
-    { "yol": ".env.template", "sha256": "e3cc62a67608537ab7fb7af6b8c889eb093d6365581508a7b62fb70740882b5d" },
+    { "yol": ".env.template", "sha256": "0f6baac7b4c9e17f1445b76e7e9a7c77e03c5963844e4e5006795155543e1046" },
     { "yol": "install.sh", "sha256": "dd91b40048e28103f60fd519d9f1d6b291158ea2506e0d833eb5b5fcc0f63922" },
     { "yol": "update.sh", "sha256": "f33a1d13cf73c1886511718c974bdbeba61e705c52ed5802572faf5ddaf93291" },
     { "yol": "lib-health.sh", "sha256": "ac3df970f980f9810db85e9b8daf78f1b63d7cc287c73b83a5ae77eeeb37b819" },

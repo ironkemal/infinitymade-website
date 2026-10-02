@@ -72,10 +72,15 @@ Tek bağımlılık: K3 (kutu testi) hepsi bittikten sonra.
 | `module/**` (yeni modüller), `api-backend/ai/**` (02.10'dan beri — M4), `spike/ki-maske/`, `api-backend/billing/**`, `booking*.html/.js`, `setup.html` (Branding adımı + metin düzeltmesi dahil), `kalender*`, `vercel.json` | **M** |
 | `dashboard.js`, `dashboard.html`, `api-backend/server.js`, `db/*` dökümleri | **ORTAK** — küçük, bölge-sınırlı değişiklik; yeni kod `module/`'e; aynı fonksiyona iki hat dokunmaz |
 
-3. **Migration numarası çakışması** (en tehlikeli nokta): migration yazmadan hemen önce `git pull`,
-   sıradaki numarayı al (bugün son: `0052`), dosyayı yaz ve **hemen ayrı bir commit olarak push et**
-   ("numarayı rezerve et"), sonra canlıya uygula + döküm tazele. Aynı numarayı iki hat alırsa
-   sonra push eden yeniden numaralar (uygulanmamışsa).
+3. **Migration numarası çakışması** (en tehlikeli nokta) — *02.10.2026 değişti (onprem O-129):*
+   ~~önce dosyayı push edip numarayı rezerve et~~ **YAPILMAZ.** Uygulanmamış bir `.sql` `main`'e
+   girerse `:beta` kutusu onu SaaS'tan önce uygular ve SHA'sını kilitler; dosyanın `-- SaaS:` satırı
+   sonradan değişemez. Sıra: `git pull` → dosyayı yaz (sıradaki numara) → MCP ile canlıya uygula →
+   ilk 40 satıra `-- SaaS: angewandt TT.MM.JJJJ` → döküm tazele → commit → `git pull --rebase` →
+   numara bu arada alınmışsa `git mv` ile kaydır + `--amend` → push. (SaaS'ta runner koşmuyor;
+   uygulanmış ama push edilmemiş dosyanın adını değiştirmek hiçbir şeyi kırmaz.) Kapı:
+   `tools/check-onprem.sh` satırsız yeni migration'ı reddeder; `SKIP_SAAS_ZEILE_GATE` rezervasyon
+   için kullanılmaz.
 4. **K1 profiles kilidi (S-39)** yalnız `owner_id`, `role`, `plan`, `plan_status`, `stripe_*` kolonlarını kilitler.
    M2'nin Branding alanları owner tarafından yazılabilir kalmalı — M2 yeni kolonları `profiles`'a
    eklerse K1 sonrası test eder.

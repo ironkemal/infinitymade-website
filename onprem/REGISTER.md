@@ -652,7 +652,7 @@ kapı unutmaz ama düşünmez.
 >
 > **12.09.2026 — kapandı.** Yukarıya bak.
 
-### O-03 — `app.praxura.de` uygulama kodunda sabit (pazarlama sayfaları hariç)
+### O-03 — `app.praxura.de` uygulama kodunda sabit (pazarlama sayfaları hariç) ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -661,7 +661,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | C |
 | **Kutuda ne olur** | Üç ayrı kırılma: (1) `dashboard.js:14322`/`:23339` müşterinin çalışanına ve hastasına **bizim** domain'imize giden link üretir — o link müşterinin kutusundaki hesabı tanımaz; (2) `employee-signup.js:288/297` auth doğrulama mailini `app.praxura.de/confirm.html`'e yönlendirir, kutudaki GoTrue oraya redirect edemez → çalışan kaydı ölür; (3) `server.js:3974` hastaya giden randevu onay linki bizim domain'e gider → hasta bizim sunucumuza tıklar |
 | **Çözüm** | Üçe ayır: **origin türetilebilenler** (`dashboard.js:1090` `:17232` `:17282` zaten `window.location.origin` + fallback deseninde — fallback'i kaldırmak yeter) · **backend'in bilmesi gerekenler** → `PUBLIC_BASE_URL` env var'ı (sihirbaz doldurur) · **CORS listesi** (`server.js:48`) → env'den beslenen liste. **Faz 1.1 + Faz 2.2** |
-| **Durum** | `geplant` (Faz 1.1 / 2.2) — kapı tabanı: **19** |
+| **Durum** | `gelöst` (`56cb6a7`, K2.8 / O-150). Kapı `app_host` 19→15→**7** ve kapsamı artık `api-backend/routes/` + `module/`'ü de sayıyor (`tools/check-onprem.sh:79-80`). Kalan 7 satırın 7'si de zararsız (`git grep --cached`, 02.10.2026): `admin-login.js:12` (admin paneli merkezde, kutuda yok) · `server.js:61` (CORS listesi; kutuda aynı-origin, O-105) · `dashboard.js:704` `:14899` `:14949` (`window.location.origin ||` fallback'i — tarayıcıda origin hep dolu) · `module/mitarbeiter-zugang.js:191` (yalnız `window` yoksa) · `module/subscription-ui.js:8` (yorum) — Önceki: `geplant` (Faz 1.1 / 2.2) — kapı tabanı: **19** |
 
 ### O-04 — Pazarlama sayfalarındaki `app.praxura.de` ve `analytics.infinitymade.de`
 
@@ -740,7 +740,7 @@ kapı unutmaz ama düşünmez.
 | **Çözüm** | Nav-registry'ye ikinci bir görünürlük sistemi eklenmedi (konsey/onprem/fonksiyon-ustasi üçü de: özel durum için ikinci liste = altı ay sonra "hangi liste doğru" sorunu). Bunun yerine mevcut `IST_KUTU`/`istKutu` sinyali (zaten vardı: `supabase-config.js:24` frontend, `server.js:416` backend, `login.js:200`'de aynı `.remove()` deseni) kullanıldı: `module/lead-suche.js` içinde `IST_KUTU` ise dört düğüm (`.apify-bar` b2b'de · `#panel-doctors .tabs` · `#arztTabSuche`) DOM'dan sökülüyor, listener'lar hiç bağlanmıyor. "Ärzte → Register" alt-sekmesi (manuel Zuweiser-Arzt kaydı, `module/arzt-register.js`, Apify'dan bağımsız) kutuda tam işlevsel kalıyor. Backend: `server.js:675` aynı `SUPABASE_PUBLIC_URL` sinyaliyle (`istKutu`'nun kaynağı) 404 dönüyor |
 | **Durum** | ✅ **gelöst (12.09.2026)** — `node --check` ile syntax doğrulandı, `dashboard.js` 21249→21014 satıra indi (baseline'ı büyütmedi, aksine sıkıştırdı). Gerçek tarayıcıda IST_KUTU=true görünüm testi henüz YAPILMADI (sıradaki onprem-review turunda doğrulanmalı) |
 
-### O-09 (b) — B2B_AGENT_URL (n8n mail-agent) — Zuweiser panelinin AI-mail özelliği
+### O-09 (b) — B2B_AGENT_URL (n8n mail-agent) — Zuweiser panelinin AI-mail özelliği ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -749,7 +749,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | A + G (n8n) |
 | **Kutuda ne olur** | Kutu hâlâ POST atıyor — `dashboard.js:12004`'teki istek Authorization başlığı olmadan müşterinin gerçek Zuweiser CRM verisini (≤30 kişi + praxis kimliği) bizim n8n webhook'umuza gönderiyor. On-prem'in vaat ettiği "hasta/praxis verisi bize hiç akmaz" garantisinin **tersi** — G1 sınıfı bir risk, Apify'dan (token/maliyet sorunu) daha ciddi (veri sorunu) |
 | **Çözüm** | Kullanıcı talimatıyla (12.09.2026) bu turda **ertelendi** — n8n'e dokunan hiçbir iş bu oturumda yapılmıyor. Ucuz bir ara-adım biliniyor ve uygulanmadı: aynı `IST_KUTU` deseniyle `dashboard.html`'deki `.ai-chat-card` girişini de kutudan kaldırmak (SaaS'a dokunmadan, n8n workflow'una dokunmadan, sadece kutunun UI'ının POST atma yolunu kapatarak) — bu yapılırsa O-09(b) tek adımda kapanır |
-| **Durum** | `offen` — n8n kararı netleşene kadar bilinçli olarak beklemede (bkz. §"Sıradaki iş"). Register'daki ilk O-09 maddesi bunu Apify ile aynı kalemde saymıştı, bu yanlıştı — ikisi bağımsız özellikler, ayrı satırlarda takip edilmeli |
+| **Durum** | `gelöst` (kutu tarafı, `a4634f7`, K2.9): `module/lead-suche.js` kutu dalında „KI Mail-Assistent" kartını `.remove()` ile **siler** (gizlemez) — kutuda Zuweiser verisini n8n webhook'una POST'layan tetik kalmadı, G1/G3 temiz. SaaS'taki n8n bağı merkez işi; `n8n_host` sayacında duruyor, Faz 1.2 ile gider — Önceki: `offen` — n8n kararı netleşene kadar bilinçli olarak beklemede (bkz. §"Sıradaki iş"). Register'daki ilk O-09 maddesi bunu Apify ile aynı kalemde saymıştı, bu yanlıştı — ikisi bağımsız özellikler, ayrı satırlarda takip edilmeli |
 
 ### O-10 — Stripe API çağrısı backend'de (checkout session okuma)
 
@@ -771,7 +771,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | A |
 | **Kutuda ne olur** | İki katmanlı sorun. (1) Kutuda `functions.invoke` boşa gider — self-host Supabase'e Deno runtime koymuyoruz (Faz 1.5 kararı) → Hausbesuch mesafe hesabı sessizce ölür, Fahrtenbuch km'siz kalır. (2) Daha ciddisi: **taşınacak kaynak kod elimizde yok.** Playbook D1 "Kaynak: `supabase/functions/`" diyor; bu bilgi **eskimiş/yanlış**. Fonksiyonlar canlı projeden indirilmeden Faz 1.5'e başlanamaz. Üçüncüsü: ORS free tier'da DSGVO Art. 28 AVV yok (`archive/Fahrtenbuch.md:131`) ve giden koordinat hasta ev adresinden türüyor |
 | **Çözüm** | Önce **kaynak kurtarma** (canlı projeden `functions download`, repoya al) → sonra **Faz 1.5** (Express `routes/fahrtenbuch.js`). Anahtar sahipliği §9-A8'e bağlı; öneri (a): müşterinin kendi ücretsiz ORS anahtarı, sihirbaza adım. Mevcut disiplin korunur: ORS'a hasta adı/ID gitmez, yalnız koordinat (`archive/Fahrtenbuch.md:123`) |
-| **Durum** | 🟡 **kaynak kurtarıldı (04.09.2026)** — Faz 1.5 artık başlayabilir |
+| **Durum** | 🟡 kısmen, **kutu tarafı güvenli** (`a4634f7`, K2.9 / K-5): `module/hausbesuch-route.js` kutuda `#bkHbBerechnenBtn`'ı açıklama metniyle değiştiriyor. Edge Function'a giden tek yol o düğme: `invokeFahrtenbuchFn` çağrıları (`dashboard.js:5141` `:5171` `:5177`) yalnız `:5149`'daki tek dinleyiciden ve `ensureClinicLocation()`'dan (o da yalnız bu dinleyiciden) geliyor — düğme yoksa yol ölü. Elle km girişi duruyor. Kalıcı çözüm (Express proxy) hâlâ Faz 1.5 — Önceki: 🟡 **kaynak kurtarıldı (04.09.2026)** — Faz 1.5 artık başlayabilir |
 
 > **01.10.2026 — kolon silme iki adımı uçtan uca işletildi (Reform 3.12).**
 > Adım a/b: `e9d0286` (kod PHI-Spalten'e yazmayı bıraktı) + `0049`/`0050` (Festschreibung
@@ -2921,7 +2921,7 @@ de eklenebilir (taze kutuda `bookings` boş, orada ölçmek daha az müdahaleci)
 | **Çözüm** | `chmod 700 "$STAND_DIR"` → `chmod -R go-rwx "$STAND_DIR"`, her `update.sh` çalışmasında (yani periyodik olarak, mevcut kutularda da) tüm alt ağacı geriye dönük düzeltiyor |
 | **Durum** | ✅ **gelöst (14.09.2026)**, `bash -n` ile doğrulandı |
 
-### O-107 — Owner şifresi unutulursa kutuda **geri dönüş yolu yok**: SMTP opsiyonel, sihirbaz tek kullanımlık, `--neu` veritabanını siliyor
+### O-107 — Owner şifresi unutulursa kutuda **geri dönüş yolu yok**: SMTP opsiyonel, sihirbaz tek kullanımlık, `--neu` veritabanını siliyor ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -2930,7 +2930,7 @@ de eklenebilir (taze kutuda `bookings` boş, orada ölçmek daha az müdahaleci)
 | **Tip** | **G** (merkez mi kutu mu: hesap kurtarma yeteneği kutuda kalmalı, bugün hiçbir tarafta yok). Bizim anahtarımız ya da yetkimiz işin içinde olmadığı için E/H değil |
 | **Kutuda ne olur** | SMTP kurulmamış bir kutuda owner şifresini unuttuğu an: (1) `resetPasswordForEmail` çağrısı GoTrue'da mail gönderemez — kullanıcı arayüzde „mail gönderildi" benzeri bir cevap görür, mail hiç çıkmaz (yine sessiz arıza sınıfı); (2) `DISABLE_SIGNUP=true` (`onprem/.env.template:191`) olduğu için yeni hesap açılamaz; (3) kurulum sihirbazı kapalı, jeton tüketilmiş; (4) **biz giremeyiz — K10 bunu bilinçli olarak yasaklıyor**, yani „destek hattını arar, biz resetleriz" diye bir yol yok ve olmayacak. Geriye tek görünür seçenek `install.sh --neu` kalır ve **o veritabanını siler** (`install.sh:111-122`, `:210-216`). Yani bugün kutunun sahibi için „şifremi unuttum" ile „bütün hasta verimi kaybettim" arasında tek bir yanlış komut var. ⚠️ Bunu ağırlaştıran ikinci bulgu: `install.sh:353`, SMTP'yi atlayan müşteriye „sonradan **`bash install.sh --neu`** ile ya da elle .env'de ekleyebilirsin" diyor — yıkıcı olanı **önce** sayıyor. Silme öncesinde `LÖSCHEN` yazdıran onay var, yani sessiz değil; ama „mail kurayım" diye yola çıkan bir insanı, üstelik tam da paniklediği anda, veri silen komuta yönlendiren bir metin yanlıştır. SMTP kurulu kutularda maddenin ilk yarısı çalışır — ama O-51 ayakta olduğu sürece kurtarma maili de SPF/DMARC yüzünden spam'e düşebilir, yani kanal „var" ile „güvenilir" arasında |
 | **Çözüm** | **Faz 2.1c — `onprem/reset-owner-passwort.sh`** (host betiği ailesi: install · update · backup · restore'un yanı). Müşteri **kendi** sunucusunda, **kendi** root'uyla çalıştırır; biz ne çalıştırırız ne erişiriz → K10 bozulmaz. Tasarım sınırları: (1) **CLI, rota değil** — aşağıdaki kırmızı çizgi; (2) uygulama `docker compose exec -T api node setup/reset-owner-passwort.mjs` ile, O-82'nin `update-alarm-mail.mjs` deseninin aynısı, `api` sağlıksızsa aynı maddedeki `docker compose run --rm --no-deps --pull never api …` yedeği (`--pull never` şart: internetsiz kutu) ; (3) **şifre argv'ye düşmez** — `read -r -s` ile sorulur (backup.sh'ın parmak izi kuralıyla aynı gerekçe: argv host'ta `ps`'te ve shell history'de görünür); (4) hedef hesap `praxura_setup.owner_user_id`'den çözülür — `/test-smtp`'nin zaten kullandığı zincir — yani betik „istediğin kullanıcının şifresini değiştir" aracına dönüşmez, yalnız owner'ı kurtarır; (5) `auth.admin.updateUserById()` kullanılır, `auth.users`'a elle bcrypt **yazılmaz** (GoTrue'nun kendi invariant'ları ve oturum iptali korunur); (6) iz bırakır: `.praxura-stand/` altına zaman damgası + „owner şifresi elle sıfırlandı" satırı, şifre yazılmadan (dizin rejimi O-100/O-104 ile zaten `go-rwx`). **Ek, aynı görevde:** `install.sh:353` cümlesi ters çevrilir — doğru yol („elle `.env` + `docker compose up -d auth api`, HER İKİ konteyner") önce ve tek başına; `--neu` o satırda **hiç anılmaz**. Üçüncü parça belge: kurulum el kitabına „şifre kurtarma" maddesi (`RELEASE-STANDARD.md` destek bölümü) — aracın var olduğunu bilmeyen müşteri için araç yoktur |
-| **Durum** | `geplant (KHS K2.4)` — 02.10.2026 sahibi atandı. Tasarım bu maddenin Çözüm hücresindeki gibi kalır (hedef `praxura_setup.owner_user_id`, `docker compose exec -T api node setup/…mjs`, şifre argv'ye düşmez); ek: `auth_sitzungen_beenden(owner_id)` çağrılır (`0055`, EXECUTE yalnız service_role), `plan_status='deleted'` hesapta reddeder, betik `BUNDLE_DATEILER` + Dockerfile COPY'ye girer (O-149). Önceki not: `offen` — **01.10.2026: O-142 ile öncelik yükseldi, mail kanalı hiç olmayacağı için betik her kutuda tek kurtarma yolu (Faz 2.1c şart).** 14.09.2026'da açıldı, henüz uygulanmadı. Karar kullanıcıda (Faz 2.1c'ye alınsın mı, hangi turda) |
+| **Durum** | `gelöst` (`e4c7703`; paket listesi `acc51d5`). `onprem/reset-owner-passwort.sh:36/:43` `read -r -s` (argv'ye düşmez) → `api-backend/setup/owner-passwort-reset.mjs:43-45` hedef yalnız `praxura_setup.owner_user_id`, `:50` `plan_status='deleted'` reddi, ardından `auth_sitzungen_beenden`. HTTP ucu yok (hüküm 2 korundu). **Kutuda ölçüldü (WSL, 02.10.2026):** eski şifre `invalid_credentials`, yeni şifre token alıyor, eski refresh token `refresh_token_not_found`, şifre log'da yok. Belge: `onprem/KURULUM.md` (K2.12) — Önceki: `geplant (KHS K2.4)` — 02.10.2026 sahibi atandı. Tasarım bu maddenin Çözüm hücresindeki gibi kalır (hedef `praxura_setup.owner_user_id`, `docker compose exec -T api node setup/…mjs`, şifre argv'ye düşmez); ek: `auth_sitzungen_beenden(owner_id)` çağrılır (`0055`, EXECUTE yalnız service_role), `plan_status='deleted'` hesapta reddeder, betik `BUNDLE_DATEILER` + Dockerfile COPY'ye girer (O-149). Önceki not: `offen` — **01.10.2026: O-142 ile öncelik yükseldi, mail kanalı hiç olmayacağı için betik her kutuda tek kurtarma yolu (Faz 2.1c şart).** 14.09.2026'da açıldı, henüz uygulanmadı. Karar kullanıcıda (Faz 2.1c'ye alınsın mı, hangi turda) |
 
 > **Üç hüküm, 14.09.2026 (`onprem`):**
 >
@@ -4030,7 +4030,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Çözüm** | Migration **henüz uygulanmadı**, yani dosya hâlâ düzeltilebilir ("uygulanmış dosya değiştirilmez" kuralı daha devreye girmedi). İstenen: `owner_id uuid REFERENCES public.profiles(id) **ON DELETE SET NULL**` (NOT NULL kalkar). Gerekçe kolonun kendi yorumunda zaten yazılı — `owner_id` burada **bilgi**, kimlik değil; sayacın kimliği IK çiftidir. Ek olarak `api/dsgvo.js`'e tek satır gerekçe: `datenaustausch_zaehler` **bilinçli olarak silinmiyor** (kişisel veri taşımıyor — iki IK + iki tamsayı; orada zaten aynı mantıkla duran GoBD blokları var). ⚠️ `0029` içinde düzeltilmezse **ikinci bir migration** gerekir ve o `DROP CONSTRAINT` içerir — yani `-- ZWEISTUFIG:` disiplinine girer; şimdi düzeltmek on kat ucuz |
 | **Durum** | ✅ **gelöst (20.09.2026)** — şart **uygulamadan önce** ve istenenden iyi karşılandı: `0029:74` `owner_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL` (NOT NULL kalktı), **artı** üç RPC'nin üçünde de `owner_id = coalesce(datenaustausch_zaehler.owner_id, excluded.owner_id)` (`:120` `:157` `:189`) — öksüz kalan satır bir sonraki kullanımda kendini onarıyor. `api/dsgvo.js` tarafındaki gerekçe satırı da yazıldı. İkinci migration gerekmedi, `-- ZWEISTUFIG:` disiplinine hiç girilmedi |
 
-### O-123 — `datenaustausch_zaehler_vorstellen()` var ama **ulaşılabilir değil**: üç anın üçünde de çağıracak kimse yok 🔴 **offen**
+### O-123 — `datenaustausch_zaehler_vorstellen()` var ama **ulaşılabilir değil**: üç anın üçünde de çağıracak kimse yok 🟡 **kısmen (02.10.2026, (a) `6a5cd1f`)**
 
 | Alan | İçerik |
 |---|---|
@@ -4039,7 +4039,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Tip** | D (+G) |
 | **Kutuda ne olur** | Fonksiyonun gerektiği **üç an** var ve üçü de yakın: **(1) SaaS'ın kendisi.** `0029` bilinçli olarak backfill yapmıyor ("ein automatischer Backfill waere geraten, nicht gewusst") — yani migration uygulandığı anda canlı sayaç **0**'dan başlıyor, oysa `abrechnung` tablosunda eski `COUNT(*)` mantığıyla verilmiş numaralar duruyor. Bugün zararsız (henüz hiçbir dosya bir DAS'a gitmedi, `kind` hâlâ `test`), ama **ilk `erprobung` dosyasından önce** bu adım atılmazsa O-115'in tarif ettiği hasar kutuda değil **SaaS'ta** olur. **(2) SaaS → kutu göçü.** **(3) `restore.sh`.** İkisinde de sayaç geriye gider ve düzeltecek çağrı yok |
 | **Çözüm** | Üç parça, üçü de ucuz: **(a)** `onprem/restore.sh`'a **görünür** bir adım: geri yükleme bittikten sonra mevcut `letzte_referenz`/`letzte_transfernummer` değerlerini ekrana bas, "yedek alındıktan sonra gönderim yapıldı mı? yapıldıysa şu komutla ileri al" satırıyla birlikte (script'in DB erişimi `supabase_admin`, GRANT'a takılmaz). **(b)** Göç runbook'u yazıldığında (Faz 5.1) aynı adım oraya da — bu madde o runbook'un kontrol listesine giren ilk satırdır. **(c) Ekran şartı — O-115'teki hâlinden yumuşatıldı, gerekçesiyle:** owner'ın sayacı **çevirmesi** gerekmiyor, çünkü çevirmenin gerektiği iki an (göç, restore) **script'in elinde**, owner'ın değil. Gereken şey **görünürlük**: Faz 3 durum ekranında (O-116/O-117/O-120'nin buluştuğu ekran) "son verilen Datenaustauschreferenz: N, Stand …" satırı dursun. Owner sayıyı **görebilirse** kasa "bereits eingereicht" dediğinde telefonda söyleyebilir; göremezse kutuda teşhis imkânsızdır (O-46: biz bakamıyoruz). Değiştirme eylemi script'lerde kalır — owner'ın elinde yalnız-ileri bile olsa bir numara kolu, yanlış kullanıldığında sessizce 99999'a sıçratır ve geri dönüşü yoktur |
-| **Durum** | `geplant (KHS K2.10)` — 02.10.2026: (a) bu sprintte. `restore.sh` sonunda `datenaustausch_zaehler`'ın `absender_ik, empfaenger_ik, letzte_referenz, letzte_transfernummer, aktualisiert_am` satırlarını gösterir + "son gönderilen referanstan küçükse `datenaustausch_zaehler_vorstellen()`" talimatı (psql, db konteyneri içinden; RPC değil). (b)/(c) değişmedi. Önceki not: 🔴 offen — (a) `restore.sh` adımı **plan Faz 2.2'den (Testverfahren) önce**, çünkü ilk gerçek numara orada verilir. (b) Faz 5.1'e bağlı. (c) Faz 3 ekranına bağlı. ⚠️ **Ayrı bir iş maddesi açılmasına gerek yok** — bu madde o iştir; sahibi `onprem`, uygulaması `builder`. ⚠️ **20.09.2026 gecesi yeniden ölçüldü, hiçbiri değişmedi ve bir tanesi keskinleşti:** `grep -rn "vorstellen" --include=*.js --include=*.sh` → ürün kodunda **0 çağıran**; `grep -c "zaehler\|referenz" onprem/restore.sh` → **0**. Üstelik `0035` fonksiyonu artık `anon`/`authenticated`'dan da revoke etti (doğru karar, S-24 sınıfı açık kapatıldı) — yani `service_role` dışında **hiç kimse** çağıramaz. `0035`'in kendi başlığı bu durumu "von Hand bzw. vom Migrationslauf benutzt" diye tarif ediyor, ama **öyle bir el yolu da migration yolu da bugün yok**: fonksiyon var, kapısı yok. Sayaç `0029` ile canlıda **0'dan** başladı ve backfill bilinçli yapılmadı, yani bu kol **ilk `erprobung` dosyasından önce** gerekli olacak |
+| **Durum** | 🟡 kısmen — **(a) yapıldı** (`6a5cd1f`): `onprem/restore.sh:524` geri yüklemeden sonra `datenaustausch_zaehler`'ı (`owner_id` dahil) gösterir, `:533` `datenaustausch_zaehler_vorstellen(...)` komutunu psql/`supabase_admin` ile verir (RPC değil, GRANT'a takılmaz). (b) göç runbook'u Faz 5.1, (c) durum ekranı Faz 3 — değişmedi. ⚠️ Restore'un bu kolu kutuda **çalıştırılmadı**, yalnız backup tarafı ölçüldü — Önceki: `geplant (KHS K2.10)` — 02.10.2026: (a) bu sprintte. `restore.sh` sonunda `datenaustausch_zaehler`'ın `absender_ik, empfaenger_ik, letzte_referenz, letzte_transfernummer, aktualisiert_am` satırlarını gösterir + "son gönderilen referanstan küçükse `datenaustausch_zaehler_vorstellen()`" talimatı (psql, db konteyneri içinden; RPC değil). (b)/(c) değişmedi. Önceki not: 🔴 offen — (a) `restore.sh` adımı **plan Faz 2.2'den (Testverfahren) önce**, çünkü ilk gerçek numara orada verilir. (b) Faz 5.1'e bağlı. (c) Faz 3 ekranına bağlı. ⚠️ **Ayrı bir iş maddesi açılmasına gerek yok** — bu madde o iştir; sahibi `onprem`, uygulaması `builder`. ⚠️ **20.09.2026 gecesi yeniden ölçüldü, hiçbiri değişmedi ve bir tanesi keskinleşti:** `grep -rn "vorstellen" --include=*.js --include=*.sh` → ürün kodunda **0 çağıran**; `grep -c "zaehler\|referenz" onprem/restore.sh` → **0**. Üstelik `0035` fonksiyonu artık `anon`/`authenticated`'dan da revoke etti (doğru karar, S-24 sınıfı açık kapatıldı) — yani `service_role` dışında **hiç kimse** çağıramaz. `0035`'in kendi başlığı bu durumu "von Hand bzw. vom Migrationslauf benutzt" diye tarif ediyor, ama **öyle bir el yolu da migration yolu da bugün yok**: fonksiyon var, kapısı yok. Sayaç `0029` ile canlıda **0'dan** başladı ve backfill bilinçli yapılmadı, yani bu kol **ilk `erprobung` dosyasından önce** gerekli olacak |
 
 ### O-124 — Sayaç dosya üretilmeden **önce** tüketiliyor: reddedilen her deneme bir referans numarası yakıyor ✅ **gelöst (20.09.2026, `0033` + `f2b5325`)**
 
@@ -4162,7 +4162,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Çözüm** | Üç adım, üçü de bugün acil değil ama sıralı: **(a) Ölç.** Bir sonraki temiz WSL kutusu kurulumunda `migrate.js`'in dosya başına süresini yazdır; `0007`+`0037`+`0013`'ün toplamı bilinmeden büyüklük tartışılamaz (sicil kuralı 4). **(b) Karar noktasını şimdiden tanımla:** seed zinciri şu eşiği geçtiğinde baseline tazelenir ve seed geçmişi `0000_baseline.sql`'e katlanır — eşik `onprem/SCHEMA-VERTEILUNG.md`'ye yazılsın (belge zaten baseline kararının sahibi). **(c)** Katlama **yalnız** kurulu kutu kalmadığında ya da tüm kutular baseline'ın üstünde bir sürümdeyken yapılabilir — bugün kurulu kutu **yok**, yani bu işin en ucuz anı yaklaşıyor, ve o an kaçarsa bir daha gelmez |
 | **Durum** | 🔴 **offen** — (a) bir sonraki kutu kurulumunda, (b) `SCHEMA-VERTEILUNG.md`'ye, (c) Faz 2.x. Bugün hiçbir şeyi bloklamıyor; kaydedilme sebebi tam olarak **bloklamadan büyümesi** |
 
-### O-129 — "Bu migration SaaS'a uygulandı mı" satırı **10 dosyanın 10'unda da yok** — 14.09'da konan disiplin iki dosya sonra sustu 🔴 **offen**
+### O-129 — "Bu migration SaaS'a uygulandı mı" satırı **10 dosyanın 10'unda da yok** — 14.09'da konan disiplin iki dosya sonra sustu ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -4171,7 +4171,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Tip** | D |
 | **Kutuda ne olur** | Kutuda hiçbir şey; hasar **merkez ile kutu arasındaki hesabın kaybolmasıdır**. Altı ay sonra "SaaS'ta `betriebsart_empfaenger` var mı" sorusunun cevabı yine canlıya bakmak olur, ve bakmayan biri `0031`'i ikinci kez uygular ya da hiç uygulamaz. `0015` dersinin aynısı: **kayıt tutulmayan uygulama, uygulanmamış sayılır.** Bu turun kendi ironisi kayda değer — `0035` başlığı "iki hafta sonra sessizce geri açılan kural, kural değildir" diye yazıyor; aynı gün, aynı klasörde, 14.09'un kuralı tam olarak bunu yapmış durumda |
 | **Çözüm** | ⚠️ Bu **mekanik**, yani bana değil **kapıya** ait (§7). Önerilen kural, tek satırlık `grep`: *`api-backend/db/migrations/` altına staged yeni bir `.sql` girdiyse, dosya başlığında ya `-- SaaS: uygulandı …` ya da `-- SaaS: uygulanmaz — <gerekçe>` satırı bulunmalı; ikisi de yoksa commit reddedilir.* Kapı hangi düğmeye basıldığını göremez (uzak MCP, repoda iz yok) ama **kararın yazılmış olmasını** zorlayabilir — ve zaten eksik olan karar değil, yazısıdır. Geriye dönük: `0026`–`0035`'in başlıklarına satır **elle** eklenir. ⚠️ Uygulanmış bir dosyanın **yorumunu** değiştirmek bile SHA-256'yı bozar, yani bu düzeltme yalnız **henüz hiçbir kutuya gitmemiş** dosyalar için yapılabilir — `0026`–`0035` bugün o durumda, **ilk kutu kurulduktan sonra değil**. Kapının kendisi `builder`'ın işi; taban ve metin burada |
-| **Durum** | `geplant (KHS K2.10)` — 02.10.2026 kapı biçimi belirlendi: yeni eklenen (`--diff-filter=A`) migration dosyasının ilk 40 satırında tam bir satır `^-- SaaS: (angewandt|angewendet) [0-9]{2}\.[0-9]{2}\.[0-9]{4}` **ya da** `^-- SaaS: nicht angewandt \(box-only\): .+`. ⛔ `ausstehend` kabul edilmez: uygulanmış dosya değiştirilemez (runner SHA-256), satır commit anında son hâlinde olmalı. 11 eski dosya (`0030`–`0038`, `0044`, `0047`) **elle düzeltilmez** — yerel test kutusu onları uygulamış durumda; SaaS durumları `erwartete-zaehler.json` `_hinweis_*` satırlarında kayıtlı. Önceki not: 🔴 offen — geriye dönük düzeltmenin penceresi **ilk kutu kurulumuna kadar** açık. Kapı kuralı O-125'in kapı yarısıyla **aynı commit'te** yazılabilir |
+| **Durum** | `gelöst` (insan yolu, `6a5cd1f`): `tools/check-onprem.sh` yeni eklenen (`--diff-filter=A`) migration'ın ilk 40 satırında `-- SaaS: angewandt TT.MM.JJJJ` ya da `-- SaaS: nicht angewandt (box-only): …` ister, `ausstehend` yok, kaçış `SKIP_SAAS_ZEILE_GATE=1`. ⚠️ **İki açık uç:** (1) CI fiyat botu kapıyı hiç görmüyor ve ürettiği seed migration'da satır yok → **O-156**; (2) sprint §2 madde 3'ün "numarayı rezerve et = dosyayı uygulamadan önce push et" kuralıyla çelişki → çözüm §7X — Önceki: `geplant (KHS K2.10)` — 02.10.2026 kapı biçimi belirlendi: yeni eklenen (`--diff-filter=A`) migration dosyasının ilk 40 satırında tam bir satır `^-- SaaS: (angewandt|angewendet) [0-9]{2}\.[0-9]{2}\.[0-9]{4}` **ya da** `^-- SaaS: nicht angewandt \(box-only\): .+`. ⛔ `ausstehend` kabul edilmez: uygulanmış dosya değiştirilemez (runner SHA-256), satır commit anında son hâlinde olmalı. 11 eski dosya (`0030`–`0038`, `0044`, `0047`) **elle düzeltilmez** — yerel test kutusu onları uygulamış durumda; SaaS durumları `erwartete-zaehler.json` `_hinweis_*` satırlarında kayıtlı. Önceki not: 🔴 offen — geriye dönük düzeltmenin penceresi **ilk kutu kurulumuna kadar** açık. Kapı kuralı O-125'in kapı yarısıyla **aynı commit'te** yazılabilir |
 
 ### Bu turda durumu değişen yedi eski madde
 
@@ -4405,7 +4405,7 @@ SaaS için ayrı bir STACKIT projesi ("saas") yeterli; praxis başına proje ger
 | **Çözüm** | Faz 1.3'e gereksinim: (1) `getAiCredential()` — sıra: env `AI_API_KEY` (BYO/SaaS) → lisans token dosyası → yok = AI kapalı; (2) çağrı başına ya da dosya `mtime`'ı değiştiğinde okur, süresiz cache'lemez; (3) 401 gelirse bir kez dosyayı yeniden okuyup tekrar dener, yine 401 ise AI "kapalı" durumuna düşer, uygulama çökmez. Endpoint ve model adları da lisans yükünden gelebilmeli (sağlayıcıyı image çıkarmadan değiştirmek için); sağlayıcı-bazlı bölge kontrolü STACKIT için host'un `eu01` bölgesinde olmasını ister. **Yeni env var gerekmez**; STACKIT host'u koda sabit yazılmaz (tip C'den kaçınma: host lisans yükünden ya da `AI_ENDPOINT`'ten gelir) |
 | **Durum** | `geplant` (Faz 1.3) |
 
-### O-136 — `AI_MODEL_TEXT` / `AI_MODEL_VISION` kutu compose'unda ve `.env.template`'de yok 🟠 **geplant (Faz 1.3)**
+### O-136 — `AI_MODEL_TEXT` / `AI_MODEL_VISION` kutu compose'unda ve `.env.template`'de yok ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -4414,7 +4414,7 @@ SaaS için ayrı bir STACKIT projesi ("saas") yeterli; praxis başına proje ger
 | **Tip** | E (env yüzeyi) — O-50'nin aynı sınıfı: değişken planda var, paketten düşmüş |
 | **Kutuda ne olur** | BYO müşteri model adını giremez; llmClient varsayılana düşer. Model adı sağlayıcıya özel (Azure deployment adı ≠ STACKIT model kimliği) — varsayılan yanlış modele gider ya da 404 alır |
 | **Çözüm** | llmClient yazıldığı commit'te compose + `.env.template`'e eklenir (Faz 1.3). Yönetilen modelde değerler lisans yükünden gelir; env boşsa lisans değeri kullanılır |
-| **Durum** | `geplant` (Faz 1.3) |
+| **Durum** | `gelöst` (`67dbe9d`, K2.7): `onprem/docker-compose.yml:477-478` + `onprem/.env.template:216-217`. Kodun bu adları okuması O-151/M4.1'de — Önceki: `geplant` (Faz 1.3) |
 
 ### O-137 — STACKIT'te harcama tavanı ve limit kapsamı belgelenmemiş: "praxis başına ayrı limit, ayrı maliyet satırı" iddiası doğrulanmadı 🔴 **offen**
 
@@ -4639,7 +4639,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Çözüm** | `Caddyfile`: global `header {}` bloğundan Permissions-Policy çıkarıldı, iki ayrık matcher (`@geo path /dashboard.html /attendance.html` · `@nogeo not path …`) ile her yanıtta tek değer. Gözden geçirme (onprem, 01.10): sözdizimi geçerli; `header` direktifi Caddy'nin direktif sırasında `handle`'dan önce gelir, `-`/`defer` olmadığı için anında yazılır ve `file_server`/`reverse_proxy` yanıtlarının hepsine biner. `/api/*` ve Kong yanıtlarının `@nogeo` alması zararsız — Permissions-Policy yalnız belge (HTML) yanıtında etkilidir; Express (`api-backend/server.js:84-90`) bu alanı yazmıyor, çift değer oluşmaz. Path matcher query string'e bakmaz (`?v=…` sorun değil). Uzantısız `/dashboard` kutuda zaten servis edilmiyor (`file_server`, `try_files` yok → 404) ve kodda o yola giden link yok (`login.js:138`, `onboarding.js:104`, `confirm.html:216` hepsi `.html`). Kalan bilinçli fark: kutuda `serial=(self)`, SaaS'ta yok — O-110'a ait, bu maddeye değil |
 | **Durum** | 🟠 **geplant** — commit bekliyor (Caddyfile + bu sicil aynı commit'te). **Doğrulama borcu (O-109'unkiyle birlikte kapanır):** çalışan kutuda (1) `curl -skI https://<host>/dashboard.html` → `geolocation=(self)`, (2) `/login.html` → `geolocation=()`, (3) `caddy validate` temiz. Üçü görülünce `gelöst` |
 
-### O-142 — Hesap/giriş işleri MAİLSİZ (kullanıcı kararı 01.10.2026): O-66'nın "install.sh SMTP sorar" ve playbook 2.7'nin "GoTrue SMTP sihirbazdan" kararları **devralındı** 🟠 **geplant (Faz 2.1c + Faz 2.2 + SaaS çalışan-akışı)**
+### O-142 — Hesap/giriş işleri MAİLSİZ (kullanıcı kararı 01.10.2026): O-66'nın "install.sh SMTP sorar" ve playbook 2.7'nin "GoTrue SMTP sihirbazdan" kararları **devralındı** 🟡 **kısmen (02.10.2026, kutu tarafı `67dbe9d`)**
 
 | Alan | İçerik |
 |---|---|
@@ -4648,7 +4648,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | G (+ E: kutuda müşteri SMTP sırrı kalmaz) |
 | **Kutuda ne olur** | (1) **Veto yok:** G1 nötr (daha az dış çağrı), G2 nötr (anahtar yok), G3/G8 nötr (yeni zincir yok). G7 şartı: aynı çalışan-açma/şifre-sıfırlama kodu SaaS'ta da çalışmalı — iki ayrı akış (mailli SaaS / mailsiz kutu) fork olur. (2) **GoTrue ayarı:** `ENABLE_EMAIL_AUTOCONFIRM` **dokunulmaz, `false` kalır** — `admin.createUser`+`email_confirm:true` autoconfirm'e bakmaz; `true` yapmak "kayıt olan herkes onaylı" demektir ve `DISABLE_SIGNUP=true` zaten tek kapıdır. `GOTRUE_EXTERNAL_EMAIL_ENABLED` (`ENABLE_EMAIL_SIGNUP`) **`true` kalır** — kapatmak e-posta+şifre girişini de öldürür. `DISABLE_SIGNUP=true` kalır. (3) **SMTP env'leri GoTrue'dan düşer:** `docker-compose.yml:178-190` `GOTRUE_SMTP_*` + `MAILER_URLPATHS_*` bloğu kutuda gereksiz; `install.sh` adım 11 (`:344-380`) ve `.env.template` §4 SMTP satırları **auth** için silinir. SMTP yalnız `api` için (hasta/termin maili, `SMTP_FROM`, O-51) kalır ve **kurulumda sorulmaz** — teknisyen sonradan arayüzden bağlar. (4) **Sessiz tuzak:** GoTrue mail yolunu hâlâ çağıran her yer (`resetPasswordForEmail` `login.js:316`, `generateLink`) kutuda mail beklenip gelmeyen sessiz arıza üretir — kutuda bu düğmeler **gizlenmeli/değiştirilmeli** (O-58'in `.remove()` deseni ama `applyLang` tuzağına (O-68) düşmeden) |
 | **Çözüm** | **Owner şifre kurtarma — mevcut mekanizma YOK, O-107 zaten bunu açık işaretlemişti** (`router.js:77` sihirbaz tek kullanımlık, `/owner` 410; `install.sh` reset komutu yok; `--neu` DB siler). Karar mailsiz olunca O-107 **zorunluya döner**: `onprem/reset-owner-passwort.sh` (host CLI, `read -r -s`, hedef `praxura_setup.owner_user_id`, `auth.admin.updateUserById`, iz `.praxura-stand/`) — **Faz 2.1c, ertelenemez**. ⛔ HTTP/`SETUP_TOKEN` ucu olarak çözülmez (O-107 hüküm 2: kalıcı ağ yüzeyi + aynı kod SaaS'ta). SaaS'ta owner şifre kurtarma = bizim destek (`admin.updateUserById`, merkez yetkisi, K10 ihlali değil çünkü SaaS bizim). **Çalışan akışı:** `POST` owner-yetkili uç (owner JWT zorunlu, hedef `profiles.owner_id = çağıran`), `admin.createUser`+`email_confirm:true`, `app_metadata`/profil bayrağı `must_change_password=true`, ilk girişte zorunlu değişim ekranı; sıfırlama aynı uç ailesinden `admin.updateUserById`. Yeri `api-backend/server.js` (G8: Vercel/n8n değil). O-56 (`emailRedirectTo` kutuda kırık) ve O-69 (davet ekranı SaaS adresi gösteriyor) **bu karar ile yapısal olarak kapanır** (davet maili yok, link yok) |
-| **Durum** | `geplant` — kod yok. Sicil güncellemeleri: O-66 → "devralındı O-142" notu, O-51 → kapsam daraldı notu (aşağıda), O-107 → "zorunlu, öncelik yükseldi". İlk müşteri kutusundan önce **Faz 2.1c reset betiği** şart; çalışan-açma ucu SaaS'ta da test edilmeli (G7). ⚠️ SaaS onboarding'in (`server.js:3195`) 504'lü `generateLink` mail yolu ayrı bir SaaS arızası, bu kararın kapsamı değil — mailsiz çalışan akışı ona dokunmaz |
+| **Durum** | 🟡 kısmen — kutu tarafı yapıldı (`67dbe9d`, K2.5): `install.sh` SMTP adımı kalktı, GoTrue `SMTP_*`/`MAILER_URLPATHS_*` compose'dan çıktı (`onprem/docker-compose.yml:186-192` gerekçe yorumu), `ENABLE_EMAIL_AUTOCONFIRM=false` kaldı (`.env.template:184`), `api` SMTP'si opsiyonel ve sorulmuyor (`docker-compose.yml:457-464`), `login.js` „Passwort vergessen" kutu dalında reset betiğini anıyor. Owner kurtarma O-107 ile kapandı. **Kalan:** `setup.html` Schritt 3 (SMTP testi) — Hat M, M2.5; backend `/test-smtp` SMTP yokken düzgün cevap veriyor, yani kırık değil, gereksiz bir adım — Önceki: `geplant` — kod yok. Sicil güncellemeleri: O-66 → "devralındı O-142" notu, O-51 → kapsam daraldı notu (aşağıda), O-107 → "zorunlu, öncelik yükseldi". İlk müşteri kutusundan önce **Faz 2.1c reset betiği** şart; çalışan-açma ucu SaaS'ta da test edilmeli (G7). ⚠️ SaaS onboarding'in (`server.js:3195`) 504'lü `generateLink` mail yolu ayrı bir SaaS arızası, bu kararın kapsamı değil — mailsiz çalışan akışı ona dokunmaz |
 
 ---
 
@@ -4663,7 +4663,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Çözüm** | Tek adımlı DROP için `-- zweistufig:` gerekçe satırı **yeterli** (emsal `0051`): adım 1 = `01c57cf` (01.10.2026, yazma/okuma kesildi), adım 2 = bu migration. Gerekçe satırı bir satırın **başında** `-- zweistufig:` ile durmalı (`tools/check-onprem.sh:133`; emsal gibi 1. satıra koymak okunurluk için önerilir). Policy DROP'ları kapıyı tetiklemez (regex yalnız `DROP COLUMN|TABLE` ve `RENAME`). Sayaç: `bis_version 0053`, public_tablo 84→83, rls_policy 162→157, fonksiyon 78→79, trigger 80→81, index 305→305 (pending PK −1, `profiles_company_code_upper_key` +1); `profiles_company_code_key` UNIQUE yerinde kalıyor, sayım değişmez. ⚠️ Migration başlığındaki `ZAEHLER: … index +1` **yanlış** — net 0; düzeltilmeli (dosya henüz uygulanmamış sayılır mı: SaaS'ta MCP ile uygulandı, kutularda hiç koşmadı → yorum düzeltmesi SHA'yı değiştirir; SaaS defterinde SHA kayıtlıysa yorum düzeltmesi yapılmaz, doğru rakam `_hinweis_0053`'te durur). |
 | **Durum** | `gelöst` — hüküm GEÇER, KAYITLA. Açık kalan tek bağ: K2.3 yazılırken plan/plan_status **sunucu tarafında** (`setup/router.js`) yazılacak. Yan bulgu (onprem kapsamı dışı, iki dağıtımda aynı): `dashboard.js:10510` "Mitarbeiter entfernen" başka kullanıcının satırını client'tan güncelliyor — RLS (`auth.uid()=id`) zaten 0 satır döndürüyordu, 0053 öncesi de sessiz no-op'tu; düğme iki dağıtımda da çalışmıyor → backend ucu gerekir (builder/guvenlik). |
 
-### O-144 — `0054`/`0055`/`0056` (KHS K1, 02.10.2026): mandant sınırı, çalışan erişimi sertleştirme, DB temizliği — `auth.sessions`'a dokunan DEFINER fonksiyon kutuda doğrulanmadı 🟠 **geplant (hüküm GEÇER, KAYITLA — kutu ölçümü Y2/K2.1'den önce)**
+### O-144 — `0054`/`0055`/`0056` (KHS K1, 02.10.2026): mandant sınırı, çalışan erişimi sertleştirme, DB temizliği — `auth.sessions`'a dokunan DEFINER fonksiyon kutuda doğrulanmadı 🟡 **kısmen (02.10.2026, (a)+(c) kutuda ölçüldü, (b) açık)**
 
 | Alan | İçerik |
 |---|---|
@@ -4672,7 +4672,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | D (şema) + H (çalışan limiti `mitarbeiter_zuordnen`'e parametreyle gidiyor, kaynak `PLAN_EMPLOYEE_LIMITS`) |
 | **Kutuda ne olur** | (1) **`auth.sessions` hakkı — kâğıt üstünde sorun yok:** kutuda migration'ları `migrate.js` `supabase_admin` (süper kullanıcı) ile koşturuyor → DEFINER fonksiyonun sahibi `supabase_admin` olur, `auth.sessions`'ta DELETE hakkı RLS/GRANT'tan bağımsız vardır. SaaS'ta sahip `postgres` (MCP) ve orada çalıştığı bildirildi. Yani iki dağıtımda **sahip farklı, sonuç aynı** olmalı — ama bu **ölçülmedi**. `auth.sessions` GoTrue'nun kendi şeması; tablo adı/kolonu (`user_id`) GoTrue sürümüne bağlı, kutunun `v2.189.0`'ında aynı olmalı (refresh_tokens→sessions CASCADE dahil) — yine ölçülmedi. (2) **`ban_duration`:** GoTrue admin API'sinde 2022'den beri var; `v2.189.0` destekler. Ölçülmedi ama risk düşük. (3) **`time_offs` Public read kalkması:** kutuda anonim okuyan yol yok — public slot hesabı backend'den service_role ile okuyor (`server.js:931`, `:1756`), RLS'ten etkilenmez. İki dağıtımda aynı. (4) **0056:** `"fußstatus"` kutuda baseline'dan geliyor, DROP gerçek iş yapar; `visibility_reports` kutuda hiç yok, `IF EXISTS` sessiz geçer; mock `kostentraeger` DELETE kutuda FK'si olmayan satırları siler (idempotent) — ama kutuda bu satırlara bağlı test faturası varsa DELETE FK'ye takılır ve runner **durur**. Kutu yok (`:stable` basılmadı) → bugün takılacak kutu yok. GoBD trigger'ı dosyada kapatılmıyor, doğru. (5) **Sayaç:** `bis_version 0056`, zaehler 82/155/82/82/303 — dört migration (0053-0056) **hesapla** çıkarıldı, son fiziksel ölçüm 17.09. Ara toplamlar tutarlı (0053→83/157/79/81/305, 0054→policy 156, fonk 80, trig 82; 0055→fonk 82; 0056→82/155/303). |
 | **Çözüm** | Yeni Y2/K2.1 kutu ölçümünde (WSL test kutusu, `install.sh` sıfırdan) şu üçü **ayrıca** koşturulur: (a) `SELECT public.auth_sitzungen_beenden('<test-çalışan-uuid>')` → >0 döner, sonra o çalışanın refresh token'ı reddedilir; (b) `POST /team/mitarbeiter/:id/entfernen` → GoTrue 200, ardından girişte `user banned`; (c) runner'ın `0053-0056`'yı hatasız geçmesi ve selbstcheck sayaçlarının `erwartete-zaehler.json` ile birebir tutması (tutmazsa `gemessen_am` güncellenir, rakam düzeltilir). `:stable` basılmadan önce yapılır; kutu yokken başka iş gerekmiyor. `0056`'nın `-- zweistufig:` gerekçesi yeterli (O-143 emsali, `:stable` hiç basılmadı). |
-| **Durum** | `geplant` (KHS K2.11 kutu ölçümü — 02.10.2026: ölçüm K2.11 WSL kurulum testinde koşar; (c) `0053`–`0057`'yi kapsar. `erwartete-zaehler.json` `bis_version=0057`, `_hinweis_0057` var, ama `gemessen_am=2026-09-17` — `0038`–`0057` arası hep nachgerechnet; bu test fiziksel ölçümdür, tutarsa `gemessen_am` tazelenir). Önceki: (Y2/K2.1 kutu ölçümü). O-143'teki yan bulgu ("Mitarbeiter entfernen" client'tan no-op) bu turda backend ucuyla (`mitarbeiter-zugang.js:318`) kapandı. ⚠️ Bildirimde geçen `api/dsgvo.js` hâlâ Vercel'de — O-16 değişmedi, `geplant` (Faz 1.1, K1.4 oturumu); `"fußstatus"`'un oradan çıkarılması (`3fecef1`) O-16'nın kapsamını daraltır, çözmez. Yeni kapı `tools/check-secrets.sh` (`onprem/supabase-docker/` hariç) — kutuya etkisi yok, G2'yi destekliyor; hariç tutma doğru (upstream vendor kopyası, örnek anahtarları zaten upstream'in demo değerleri). |
+| **Durum** | 🟡 kısmen — WSL test kutusunda (02.10.2026, `install.sh` sıfırdan, `:beta`/`acc51d5`, 8/8 healthy) ölçüldü: **(a) ✅** `auth_sitzungen_beenden` 2 oturumlu kullanıcıda `2` döndü, refresh reddedildi — `supabase_admin` sahipliği + GoTrue `v2.189.0` `auth.sessions` şeması tuttu. **(c) ✅** runner `0000`–`0057` (58 dosya) temiz, sihirbaz `/verify` schema/rls/şifreleme yeşil → `erwartete-zaehler.json` `gemessen_am` 2026-10-02 (`ebe318c`). **(b) ❌ ölçülmedi:** `POST /team/mitarbeiter/:id/entfernen` → `ban_duration` → girişte `user banned`. `:stable` terfisinden önce koşulmalı — Önceki: `geplant` (KHS K2.11 kutu ölçümü — 02.10.2026: ölçüm K2.11 WSL kurulum testinde koşar; (c) `0053`–`0057`'yi kapsar. `erwartete-zaehler.json` `bis_version=0057`, `_hinweis_0057` var, ama `gemessen_am=2026-09-17` — `0038`–`0057` arası hep nachgerechnet; bu test fiziksel ölçümdür, tutarsa `gemessen_am` tazelenir). Önceki: (Y2/K2.1 kutu ölçümü). O-143'teki yan bulgu ("Mitarbeiter entfernen" client'tan no-op) bu turda backend ucuyla (`mitarbeiter-zugang.js:318`) kapandı. ⚠️ Bildirimde geçen `api/dsgvo.js` hâlâ Vercel'de — O-16 değişmedi, `geplant` (Faz 1.1, K1.4 oturumu); `"fußstatus"`'un oradan çıkarılması (`3fecef1`) O-16'nın kapsamını daraltır, çözmez. Yeni kapı `tools/check-secrets.sh` (`onprem/supabase-docker/` hariç) — kutuya etkisi yok, G2'yi destekliyor; hariç tutma doğru (upstream vendor kopyası, örnek anahtarları zaten upstream'in demo değerleri). |
 
 
 ### O-145 — Gece 03:00 hesap temizliği kutuda her gece hata loglar (RPC kutuda yok)
@@ -4703,7 +4703,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 
 > 01.10.2026 denetiminde Y1–Y7 diye adlanan yedi bulgu sprint planına (`KUTU_HAZIRLIK_SPRINT.md` §3 K2) girdi ama sicile hiç yazılmamıştı. O-143…O-146 başka işlere verildiği için **Y1=O-147 … Y7=O-153** olarak numaralandı. O-154/O-155 bu ön kontrolde çıktı. GHCR ölçümü bu turda yapıldı (anonim token, 02.10.2026).
 
-### O-147 (Y1) — Kurulum sihirbazı owner'ı `starter` + `pending` doğuruyor: §302 menüsü kutuda görünmüyor 🟠 **geplant (KHS K2.3)**
+### O-147 (Y1) — Kurulum sihirbazı owner'ı `starter` + `pending` doğuruyor: §302 menüsü kutuda görünmüyor ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -4712,9 +4712,9 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | H (yetki) |
 | **Kutuda ne olur** | Kurulumdan çıkan owner, Stripe'ı olmayan bir kutuda hiç yükseltilemeyen `starter/pending` hesapla kalır; Professional'a bağlı modüller (§302) görünmez. K-2 kararıyla çelişir |
 | **Çözüm** | KHS K2.3: aynı service_role `update`'ine `plan`/`plan_status` girer, değer **tek sabitten** gelir. Sabitin yeri `api-backend/lib/dagitim.js` (`istKutu()`'nun yanı — kutuya özgü her karar tek dosyada; Faz 3.3 `entitlements` helper'ı (O-31) buradan devralır). `0053`'ün kilit trigger'ı service_role'ü serbest bırakıyor (O-143 (3)) — tarayıcıdan yazılırsa 42501 doğru davranıştır |
-| **Durum** | `geplant (KHS K2.3)` |
+| **Durum** | `gelöst` (`d807c3e`): `api-backend/lib/dagitim.js:10` `KUTU_OWNER_PLAN` (professional/active), `setup/router.js:224` service_role update'inde. Kutuda ölçüldü: owner `professional/active` — Önceki: `geplant (KHS K2.3)` |
 
-### O-148 (Y2) — GHCR'de `:stable` yok, `.env.template` ise `:stable` istiyor: taze kurulum adım 13'te düşüyor 🟠 **geplant (KHS K2.1)**
+### O-148 (Y2) — GHCR'de `:stable` yok, `.env.template` ise `:stable` istiyor: taze kurulum adım 13'te düşüyor ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -4723,9 +4723,9 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | F (dağıtım kanalı) |
 | **Kutuda ne olur** | `docker compose pull` 404 → kurulum adım 13'te durur; kutu hiç kalkmaz |
 | **Çözüm** | KHS K2.1: `install.sh` kanal sorar (varsayılan beta, K-1), seçimi `.env`'e yazar. ⚠️ Şablonun varsayılanı **`:stable` kalır** — şablonu `:beta`'ya çevirmek, `update.sh`'ın .env birleştirmesinde (`update.sh:509-528`: müşteri değeri = taban ise bizimki uygulanır) her `:stable` kutuyu sessizce beta kanalına taşır. Kanal geçişi yalnız yukarı serbest: beta→stable, `:stable` kutunun sürümünden eskiyse runner `downgrade` ile durur (`api-backend/db/migrate.js:244-257`); `update.sh`'ın geri alması aynı `.env`'i geri yüklediği için kutu ayağa kalkmaz → kılavuza (O-152) yazılır |
-| **Durum** | `geplant (KHS K2.1)` |
+| **Durum** | `gelöst` (`67dbe9d` + `3684ef8` VERSION 0.2.0): `install.sh` adım 11 kanal sorar (beta varsayılan), `:383` `docker manifest inspect` ön kontrolü, `:stable` yoksa beta'ya düşme sorusu; şablon `:stable` kaldı (`.env.template:46/:52`). Kutuda ölçüldü: 17/17 adım `:beta`. ⚠️ Küçük artık: `.env.template:38-39` yorumu hâlâ kanalların "nicht gebaut" olduğunu söylüyor — bayat, bir sonraki şablon dokunuşunda düzeltilir (davranışa etkisi yok) — Önceki: `geplant (KHS K2.1)` |
 
-### O-149 (Y3) — `manifest.json` bayat; ilk `update.sh` koşusu "Sapma" ile kalıcı durur. Paket listesi üç yerde elle tutuluyor 🟠 **geplant (KHS K2.2)**
+### O-149 (Y3) — `manifest.json` bayat; ilk `update.sh` koşusu "Sapma" ile kalıcı durur. Paket listesi üç yerde elle tutuluyor ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -4734,9 +4734,9 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | F |
 | **Kutuda ne olur** | git'ten kurulan kutuda disk = yeni dosya, taban = eski manifest hash'i → ilk gece `update.sh:418-433` "elle değiştirilmiş" sanar, `konflikt` yazar, `exit 1`. Her gece aynı → kutu güncelleme almaz. Listeler ayrışırsa: yeni dosya manifest'te olup Dockerfile'da yoksa `update.sh` onu sessizce atlar (`[ -f "$kaynak" ]`); bind-mount ise Docker'ın açtığı boş dizine düşer (O-72 dersi) |
 | **Çözüm** | KHS K2.2: manifest yeniden üretilir + kapı. Kapı tek liste kaynağına (`BUNDLE_DATEILER`) bakar: `node tools/onprem-manifest.mjs --check` içeriği **index'ten** (`git show :onprem/<yol>`) hash'ler, diskten değil (kısmi stage + CRLF tuzağı); üretici de aynı yerden okur. `--check` ayrıca her `BUNDLE_DATEILER` girdisinin Dockerfile COPY satırlarında geçtiğini doğrular. Workflow tetik boşluğu kapı sayesinde dolaylı kapanır: paket dosyası değişince manifest de değişmek zorunda, manifest tetik listesinde |
-| **Durum** | `geplant (KHS K2.2)` |
+| **Durum** | `gelöst` (`c880ad1` + `acc51d5`): `node tools/onprem-manifest.mjs --check` index'ten hash'liyor ve **dört** elle listeyi bağlıyor — manifest SHA · Dockerfile COPY · workflow `paths` · smoke test `BUNDLE_DATEIEN` (dördüncü liste ön kontrolümde yoktu; `e4c7703`'ten sonra API image'ı üç push kırmızı kaldı, `acc51d5` kapıya ekledi). 02.10.2026: `--check` → "17 dosya tutarlı". Kutuda `update.sh` iki koşu `ok`, konflikt yok — Önceki: `geplant (KHS K2.2)` |
 
-### O-150 (Y4) — `app.praxura.de` uygulama kodunda hâlâ sabit; kapı `api-backend/routes/` ve `module/`'ü saymıyor 🟠 **geplant (KHS K2.8, O-03'ün devamı)**
+### O-150 (Y4) — `app.praxura.de` uygulama kodunda hâlâ sabit; kapı `api-backend/routes/` ve `module/`'ü saymıyor ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -4745,9 +4745,9 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | C |
 | **Kutuda ne olur** | Kutudan çıkan iptal/kabul linki hastayı SaaS'a götürür (orada kayıt yok → hata); istek kimliği + jeton bizim sunucumuzun loguna düşer (G1'in ruhuna aykırı) |
 | **Çözüm** | KHS K2.8. Backend tek kaynak: `lib/dagitim.js` içinde `appBaseUrl()` = `SITE_URL` → yoksa `APP_BASE_URL` → yoksa `https://app.praxura.de` (SaaS VPS'te ikisi de yok, davranış değişmez — G7). Kutuda `SITE_URL` zaten `api`'ye geçiyor (`onprem/docker-compose.yml:430`). ⛔ İsteğin `Origin`/`Host` başlığından kurulmaz: mail linki başlıkla zehirlenir (host-header injection). Frontend: `window.location.origin`. Kapı listesine `api-backend/routes/` + `module/` girer, taban aynı commit'te yeniden ölçülür ve gerekçesi `tools/.onprem-baseline`'a yazılır |
-| **Durum** | `geplant (KHS K2.8)` |
+| **Durum** | `gelöst` (`56cb6a7`): `lib/dagitim.js:17` `appBaseUrl()` = `SITE_URL` → `APP_BASE_URL` → SaaS (istek başlığından değil — host-header injection kapalı); `server.js` 9 satır + `routes/mitarbeiter-zugang.js:191`; `dashboard.js` Termin-Anfrage linki `location.origin`. Kapı listesi `routes/` + `module/`'ü sayıyor, `employee-signup.js` çıktı, taban 15→7 (`tools/.onprem-baseline`). O-03 bununla kapandı. Hasta linkinin LAN dışından açılamaması ayrı: O-155 — Önceki: `geplant (KHS K2.8)` |
 
-### O-151 (Y5) — Kutu compose'u `AI_*` geçiriyor, kod `AZURE_OPENAI_*` okuyor: teknisyen anahtar girse de KI açılmaz 🟠 **geplant (KHS K2.7 env adları + M4.1 kod)**
+### O-151 (Y5) — Kutu compose'u `AI_*` geçiriyor, kod `AZURE_OPENAI_*` okuyor: teknisyen anahtar girse de KI açılmaz 🟡 **kısmen (02.10.2026, env sözleşmesi `67dbe9d`)**
 
 | Alan | İçerik |
 |---|---|
@@ -4756,9 +4756,9 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | E (BYO-key, K4) |
 | **Kutuda ne olur** | `.env`'e anahtar yazılsa bile kod boş okur; Rezept-Scan sessizce kapalı ya da ham hata (`azureClient.js:41`) |
 | **Çözüm** | Sözleşme adları (K2.7): `AI_MODE` (kutuda varsayılan `aus`) · `AI_PROVIDER` · `AI_ENDPOINT` · `AI_API_KEY` · `AI_MODEL_TEXT` · `AI_MODEL_VISION`. Okuma + `AZURE_*` geri düşüşü M4.1'de (SaaS VPS bugün `AZURE_*` ile çalışıyor). Kutu compose'una `AZURE_*` **girmez** — tek ad kümesi. O-135/O-136 bununla kapanır |
-| **Durum** | `geplant (KHS K2.7 + M4.1)` |
+| **Durum** | 🟡 kısmen — compose/şablon yarısı yapıldı (`67dbe9d`, K2.7): `AI_MODE` (`${AI_MODE:-aus}`), `AI_MODEL_TEXT`, `AI_MODEL_VISION` (`docker-compose.yml:473-478`), şablonda `AI_MODE=aus`. **Kalan:** kodun bu adları okuması + `AZURE_*` geri düşüşü — M4.1 (Hat M). O zamana kadar kutuda KI kapalı; bu doğru varsayılan — Önceki: `geplant (KHS K2.7 + M4.1)` |
 
-### O-152 (Y6) — Kurulum kılavuzu yok 🟠 **geplant (KHS K2.12)**
+### O-152 (Y6) — Kurulum kılavuzu yok ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -4767,9 +4767,9 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | G |
 | **Kutuda ne olur** | Kurulum yalnız Kemal'in kafasındaki sırayla yapılabilir; kök sertifika, hosts/DNS, yedek hedefi ve owner şifre kurtarma her kurulumda yeniden keşfedilir |
 | **Çözüm** | KHS K2.12. Dil: **Almanca** (ürün yalnız Almanca kararı; okuru sonunda praxis/teknisyen). İçerik: sprint tablosu + O-148'in kanal kuralı + O-154'ün yedek-hedef işareti + Windows yolu (K2.11) + O-107 betiği |
-| **Durum** | `geplant (KHS K2.12)` |
+| **Durum** | `gelöst` (`f033be0`): `onprem/KURULUM.md` (Almanca, 250 satır) — Linux + Windows, `home.arpa` + FRITZ!Box rebind, cihaz başına kök sertifika, kurulum jetonu, kanal kuralı (yalnız ileri), yedek hedefi + işaret (O-154), owner şifre sıfırlama (O-107), şifreleme tavsiyesi (K-6). ⚠️ Kurulum adımı `main`'den klonluyor → O-157 — Önceki: `geplant (KHS K2.12)` |
 
-### O-153 (Y7) — `caddy_data` (yerel kök CA) yedeğe girmiyor 🟠 **geplant (KHS K2.10)**
+### O-153 (Y7) — `caddy_data` (yerel kök CA) yedeğe girmiyor ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -4778,9 +4778,9 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | F (yedek) |
 | **Kutuda ne olur** | Disk/WSL kaybından sonra geri yükleme veriyi getirir ama Caddy yeni bir kök CA üretir → praksisteki her PC/tablet sertifikayı yeniden içe aktarana kadar tarayıcı uyarısı |
 | **Çözüm** | KHS K2.10: `backup.sh`, `docker compose cp caddy:/data/caddy/pki <tmp>` ile **yalnız PKI'yi** alır (volume adı compose proje adına bağlı — sabit volume adı yazılmaz). İçinde özel anahtar var → yedek dizininin `0700`'ü yeterli, künyeye parmak izi. `restore.sh` caddy durmuşken geri koyar |
-| **Durum** | `geplant (KHS K2.10)` |
+| **Durum** | `gelöst` (`6a5cd1f`): `backup.sh:170-174` `docker compose cp caddy:/data/caddy/pki` → `caddy-pki.tar.gz`; `restore.sh:486-496` geri koyar + caddy restart, eski yedekte dosya yoksa dokunmaz. Kutuda ölçüldü: yedekte `caddy-pki.tar.gz` var. ⚠️ Restore kolu kutuda çalıştırılmadı — Önceki: `geplant (KHS K2.10)` |
 
-### O-154 — Yedek hedefi bağlı değilse `backup.sh` yedeği sessizce **aynı diske** yazıyor 🔴 **offen (K2.10'a bağlanması önerildi)**
+### O-154 — Yedek hedefi bağlı değilse `backup.sh` yedeği sessizce **aynı diske** yazıyor ✅ **gelöst (02.10.2026, KHS K2)**
 
 | Alan | İçerik |
 |---|---|
@@ -4789,7 +4789,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | F |
 | **Kutuda ne olur** | NAS düşmüşken ya da USB disk takılı değilken yedek "harici hedefe başarıyla" yazılır ama kutunun kendi diskindedir; disk ölünce yedek de ölür. Windows'ta (K2.11) daha olası: WSL çıkarılabilir USB diski kendiliğinden bağlamaz, `/mnt/e` boş bir dizin olabilir |
 | **Çözüm** | İşaret dosyası: `install.sh` adım 12 hedefe `.praxura-backup-ziel` yazar; `backup.sh` dosyayı görmezse yazmaz, `fehler` + O-82 bildirim kanalıyla durur. `mountpoint` yerine işaret, çünkü hedef bir bağlama noktasının alt dizini olabilir |
-| **Durum** | `offen` — önerilen sahip: KHS K2.10 (aynı dosya, aynı tur) |
+| **Durum** | `gelöst` (`6a5cd1f`): `backup.sh:109` dış hedefte `.praxura-backup-ziel` yoksa `mkdir`'den (`:113`) **önce** `fehler` + çıkış; `install.sh` adım 12 işareti yazar; Windows betiği adım 11 aynı komutu tarif ediyor. Kutuda ölçüldü: işaret yokken `rc=1`, dizin yaratılmadı — Önceki: `offen` — önerilen sahip: KHS K2.10 (aynı dosya, aynı tur) |
 
 ### O-155 — Hastaya giden linkler LAN'daki kutuya dışarıdan ulaşamaz 🔴 **offen (ürün kararı)**
 
@@ -4801,6 +4801,74 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Kutuda ne olur** | O-150 düzeltilince link doğru host'a (`SITE_URL`) gider ama hasta evinden `praxis.home.arpa`'ya ulaşamaz → link açılmaz. Düzeltmeden önce SaaS'a gidiyor (O-150) |
 | **Çözüm** | Kemal kararı: (a) kutuda bu maillerde link olmaz, metin "bitte Praxis anrufen" der; (b) özellik `IST_KUTU`'da gizlenir; (c) müşteri gerçek alan adı + port yönlendirme kurar (kılavuzda isteğe bağlı yol). Merkezden proxy **yok** (G1/K6). K3 testinden önce seçilmeli, yoksa test senaryosunda kırık link çıkar |
 | **Durum** | `offen` — karar bekliyor |
+
+---
+
+## 7X — KHS K2 kapanışı: sonra-bildir turu (02.10.2026)
+
+> Commit'ler (hepsi `main`, push'lu): `18ad39a` (ön kontrol) · `c880ad1` K2.2 · `d807c3e` K2.3 · `e4c7703` K2.4 · `67dbe9d` K2.5+K2.7+K2.1 kanal · `6d50e3d` K2.6 · `56cb6a7` K2.8 · `a4634f7` K2.9 · `6a5cd1f` K2.10 · `acc51d5` CI düzeltmesi · `ebe318c` K2.11 · `f033be0` K2.12 · `3684ef8` VERSION 0.2.0.
+>
+> **Kapanan (12):** O-03 · O-09 · O-107 · O-129 · O-136 · O-147 · O-148 · O-149 · O-150 · O-152 · O-153 · O-154. **Kısmen (4):** O-123 (restore kolu) · O-142 (setup.html M2.5) · O-144 ((b) ölçülmedi) · O-151 (kod M4.1). O-11 kutuda güvenli, kalıcı çözüm Faz 1.5. Kanıtlar her maddenin Durum hücresinin başında.
+>
+> **guvenlik S-21 (K2.6, `6d50e3d`)** — onprem açısından: rol başına şifre (`onprem/volumes/db/praxura-rollen.sql` → `99a-…`, `docker-compose.yml:109/:129/:218`, `${X:-${POSTGRES_PASSWORD}}` geri düşüşü eski `.env` için), `restore.sh:416` 99a'yı yeniden uygular. Kutuda ölçüldü: her rol kendi şifresiyle bağlanıyor, `POSTGRES_PASSWORD` ve yanlış şifre **ağ üzerinden** reddediliyor (127.0.0.1 upstream `pg_hba` trust — konteyner içi test yanıltıcıdır, ölçüm ağdan yapılmalı). Sicil maddesi açılmadı: kendi sicili guvenlik'te; buradaki tek bağ O-157'nin geri-düşüş tehlikesi.
+>
+> **Ders:** O-149'un "üç elle liste" sayımı eksikti — dördüncüsü smoke test'in `BUNDLE_DATEIEN`'iydi ve üç push boyunca API image'ını kırmızıda tuttu. Elle tutulan liste sayılırken CI'ın kendi listeleri de sayılır.
+
+### Migration numarası rezervasyonu ↔ O-129 kapısı — çelişkinin çözümü
+
+`KUTU_HAZIRLIK_SPRINT.md:76-79` "numarayı rezerve et = dosyayı uygulamadan **önce** ayrı commit'le push et" diyor; O-129 kapısı satırın commit anında **son hâlinde** olmasını istiyor. İkisi birlikte yaşayamaz ve **kapı haklı**: uygulanmamış bir `.sql` `main`'e girdiği anda CI onu `:beta` image'ına koyar, `:beta` kutusu SaaS'tan **önce** uygular (O-121'in ters hâli) ve dosya sonra düzeltilirse SHA değişir, kutu açılmaz. Rezervasyonu `.sql` olarak yapmak (boş/yer tutucu dosya) daha kötü: runner onu uygular ve SHA'sını kilitler (`migrate.js:34` her `NNNN_*.sql`'i alır).
+
+**Tavsiye — rezervasyonu kaldır, çakışmayı push anında çöz:** çakışmanın maliyeti sanıldığından düşük, çünkü SaaS'ta runner koşmuyor (`praxura_migrations` defteri SaaS'ta dosya adı tutmuyor) — yani SaaS'a MCP ile uygulanmış ama henüz push edilmemiş bir dosyanın **numarası değiştirilebilir**, hiçbir yerde kırılmaz. Sıra:
+
+1. `git pull` → sıradaki numara → dosyayı yaz
+2. MCP ile SaaS'a uygula → başlığa `-- SaaS: angewandt TT.MM.JJJJ` → döküm tazele → commit
+3. `git pull --rebase`; numara bu arada alındıysa `git mv` ile bir sonrakine kaydır (içerik değişmez, yalnız ad), `--amend`, push
+4. İki dosya **aynı nesneye** dokunuyorsa (sıra anlamlıysa) ikinci gelen kendi dosyasını yeniden okur — bu insan kararıdır, kapı değil
+
+Sprint §2 madde 3 bu dört adımla değiştirilir (`builder`/Kemal; belge işi). Kapıya dokunulmaz. `SKIP_SAAS_ZEILE_GATE=1` **rezervasyon için kullanılmaz** — kaçış, box-only satırın yazılamadığı gerçek istisnalar içindir. CI fiyat botu aynı "en büyük + 1" mantığını rebase döngüsüyle zaten uyguluyor (`preise-check.yml:210-218`), yani bot bu sırayla uyumlu — ama satır eksik: O-156.
+
+### O-156 — CI fiyat botunun ürettiği seed migration'da `-- SaaS:` satırı yok; bot kapıyı hiç görmüyor 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `preise-check.yml` fiyat turunda `db/migrations/NNNN_seed_heilmittel_katalog_preisrunde_*.sql` yazıp push ediyor; CI checkout'unda hook yok, O-129 kapısı koşmuyor ve başlıkta satır yok |
+| **Nerede** | `.github/workflows/preise-check.yml:216-218` (numara + dosya adı) · `:225-232` (başlık `echo`'ları — `SaaS:` geçmiyor; `grep -n "SaaS:" .github/workflows/preise-check.yml` → 0) · aynı dosya `:306` bu migration'ın SaaS'a **uygulanmadığını** kendisi söylüyor |
+| **Tip** | D |
+| **Kutuda ne olur** | Kutuda hiçbir şey (dosya doğru uygulanır). Hasar O-129'un aynısı: ilk otomatik fiyat turunda zincire satırsız bir dosya girer, ve bot dosyası değiştirilemez (SHA) — "SaaS'a uygulandı mı" sorusunun cevabı yine kayıtsız kalır. Kural insanlar için konup bot için açık kaldı |
+| **Çözüm** | Tek `echo` satırı, bot için **sabit cevap**: `-- SaaS: nicht angewandt (box-only): Preisquelle der SaaS-Abrechnung sind die Codedateien; heilmittel_katalog-Anzeige nur per sync_heilmittel_katalog.js von Hand`. Sahibi: `builder`, KHS K2 artığı (bir satır, `:226` civarı). Bir sonraki fiyat turundan (çeyrek başı, 01.01.2027 öncesi) önce şart |
+| **Durum** | `offen` — sahibi önerildi (builder, KHS K2 artığı), atanmadı |
+
+### O-157 — Kurulum paketi `main`'den klonlanıyor, kanalın sürümünden değil: `:stable` kutu ileri sürümün compose'uyla kalkar 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Hem Windows betiği hem Linux kılavuzu `onprem/`'u `git clone --branch main` ile alıyor; image ise seçilen kanaldan (`:beta`/`:stable`) geliyor. Dosya seti ile image farklı sürümlerden |
+| **Nerede** | `onprem/windows/praxura-installieren.ps1:44` (`$Zweig = 'main'`) ve adım 5 (`git clone --depth 1 … --branch $Zweig`) · `onprem/KURULUM.md:33-35` · `update.sh:157-170` paketi **image'tan** çıkarıyor (doğru kaynak) · etiketler var: `git tag` → `v0.1.0`, `v0.2.0` |
+| **Tip** | F (dağıtım kanalı) |
+| **Kutuda ne olur** | Bugün zararsız (`:stable` yok, `:beta` ≈ `main`). `:stable` terfi ettikten sonra `main` ilerlediğinde: `:stable` seçen yeni kutu, **ileri** sürümün compose/install.sh'ıyla kurulur; ilk gece `update.sh` image'taki (eski) paketi diske yazar — yani dosyalar **geriye** gider. O-148'de "kanal yalnız ileri" dedik; burada kurulumun kendisi bir geri adım üretiyor. Somut örnek sınıfı: ileri compose `99a-praxura-rollen.sql` ile rol şifrelerini ayırır (K2.6), geri giden compose bu env'leri tanımıyorsa servisler `POSTGRES_PASSWORD` ile bağlanmayı dener → DB rolü artık farklı şifrede → `rest`/`auth`/`storage` düşer. (0.2.0'dan sonraki her sürüm geri düşüşü taşıdığı için bu belirli örnek ileride kendini korur; sınıf korumaz) |
+| **Çözüm** | Paket, image ile **aynı sürümden** alınır. En ucuzu: kanal sorusu klondan önce sorulur, `docker manifest inspect` ile kanalın `org.opencontainers.image.version` etiketi okunur, `--branch v<sürüm>` klonlanır (etiketler zaten basılıyor). Daha sağlamı: klon hiç yapılmaz, `install.sh`'ın kendisi image'tan alınır (`docker create` + `docker cp /app/onprem-bundle`, `update.sh:157`'nin aynısı) — tek kaynak image olur. Sahibi: Faz 2.1c/KHS K3 öncesi, `:stable` ilk terfisinden **önce** |
+| **Durum** | `offen` — `:stable` terfisi bu maddeye bağlı |
+
+### O-158 — WSL'de disk-yeri kapıları kör: `df` sanal diski ölçüyor, `C:` dolarken hiçbir betik durmuyor 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kutunun üç disk kontrolü dağıtımın içinden `df` okuyor; WSL'de bu, `ext4.vhdx`'in sanal boyutudur (varsayılan üst sınır ~1 TB), gerçek `C:` boşluğu değil. vhdx büyür ama kendiliğinden küçülmez |
+| **Nerede** | `onprem/backup.sh:136` · `onprem/update.sh:118` · `onprem/install.sh:137` · Windows ön kontrolü yalnız kurulum anında: `praxura-installieren.ps1` adım 1 (`Get-PSDrive C`, ≥50 GB) · vhdx yeri `C:\ProgramData\Praxura\wsl` |
+| **Tip** | F |
+| **Kutuda ne olur** | `BACKUP_ZIEL` boşsa (betik "başlangıçta boş bırakılabilir" diyor) her gece yedek **aynı vhdx'e** yazılır, vhdx büyür; `backup.sh` "yer var" sanar. `C:` dolduğunda vhdx yazamaz → Postgres yazma hatası/bozulma riski **ve** Windows'un kendisi (praksis PC'si) bozulur. Linux sunucuda O-88'in disk kapısı bunu yakalıyordu; Windows'ta yakalamıyor |
+| **Çözüm** | (1) Windows tarafında gecelik bir Windows görevi ya da Autostart görevinin içinde `C:` boşluğu `C:\ProgramData\Praxura\` altına bir dosyaya yazılır, `backup.sh`/`update.sh` o dosyayı `/mnt/c/...` üzerinden okuyup eşik altında durur (`fehler` + O-82 kanalı). (2) Kurulumda `wsl --manage Praxura --set-sparse true` (WSL 2.x; boşalan alan geri verilir). (3) Windows kurulumunda `BACKUP_ZIEL` boş bırakmak **önerilmez** — betik metni "leer lassen geht auch" yerine harici hedef ister. Sahibi: KHS K3 (Windows kutusu ilk müşteriye gitmeden önce) |
+| **Durum** | `offen` — sahibi önerildi (KHS K3), atanmadı |
+
+### K2.11 WSL testinde ölçülmeyen, ilk müşteri Windows kutusundan önce ölçülmesi gerekenler
+
+Madde açılmadı (ölçüm listesi; sonuç olumsuzsa madde olur). Kemal'in yönetici koşusunda:
+
+1. **Oturumsuz açılış:** yeniden başlat, **kimse oturum açmadan** tabletten `:443` → 200? Görev `Password` logon'da `wsl.exe`'yi session 0'dan başlatıyor; bu, WSL'in kullanıcıya bağlı olduğu için en kırılgan adım. Microsoft hesabı + yalnız PIN kullanan PC'de (Windows Home'da yaygın) parola girilemez → `ONLOGON`'a düşer → Windows Update gece yeniden başlatınca kutu **sabaha kadar kapalı**, 01:00 yedek ve 02:00 güncelleme kaçar. Ölçülecek: Windows Update yeniden başlatmasından sonra kutu kendiliğinden kalkıyor mu.
+2. **Kurulumu yapan hesap = kutunun sahibi hesap:** `.wslconfig` (`%UserProfile%`), dağıtım kaydı ve Autostart görevi yöneticiyi çalıştıran kullanıcıya yazılıyor. Teknisyen kendi yönetici hesabıyla yükseltirse kutu **teknisyenin** profiline kurulur. Test aynı kullanıcıyla yapıldı. Kılavuza tek cümle: "Betik, PC'nin günlük kullanıcısı olan hesapta sağ-tık → yönetici olarak çalıştırılır."
+3. **Uyku sonrası saat kayması:** WSL VM'i host uykusundan sonra saati geride tutabilir (JWT `exp`, TLS, yedek damgası). Standby kapalı olduğu için olasılık düşük; ölçüm: hazırda bekletme→uyanma sonrası `wsl -d Praxura date` ↔ Windows saati.
+4. **Dinlenmede şifreleme:** vhdx (hasta verisi) `C:`'de; Windows **Home**'da BitLocker yok (yalnız TPM+Microsoft hesabı şartlı "Geräteverschlüsselung"), USB yedek diskinde drvfs üzerinden `chmod 700` etkisiz (NTFS). K-6 tavsiyesi Home PC'de uygulanamayabilir — `legal-de`/`guvenlik`'e gider, bu sicilin vetosu değil (G1 ihlali yok: veri dışarı çıkmıyor).
+5. **(b) O-144:** çalışan çıkarma → `user banned`.
 
 ---
 
@@ -4848,7 +4916,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 
 ---
 
-## 9. Durum özeti (son sayım: 21.09.2026)
+## 9. Durum özeti (son sayım: 02.10.2026, KHS K2 kapanışı)
 
 > ⚠️ **Bu tablo 12.09.2026 akşamı madde madde yeniden sayıldı.** Önceki hâli
 > 04.09.2026 fotoğrafıydı ve altına "fark" notları yığılıyordu — dokuz tur sonra o
@@ -4938,11 +5006,13 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 17 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-134 · O-137 · O-146 · **O-154** · **O-155** |
-| `geplant` | 32 | O-03 · O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-107 · O-121 · O-123 · O-129 · O-135 · O-136 · O-138 · O-139 · O-141 · O-142 · O-144 · O-145 · **O-147** · **O-148** · **O-149** · **O-150** · **O-151** · **O-152** · **O-153** |
-| 🟡 `kısmen gelöst` | 22 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · **O-116** · O-118 · O-120 · O-125 · O-126 |
-| `gelöst` | 71 | O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-109 · **O-114** · **O-117** · **O-122** · **O-124** · **O-131** · **O-143** · **O-06** · **O-105** · **O-106** · **O-130** · **O-133** · **O-140** |
+| `offen` | 19 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-134 · O-137 · O-146 · O-155 · **O-156** · **O-157** · **O-158** |
+| `geplant` | 18 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 |
+| 🟡 `kısmen gelöst` | 25 | O-01 · O-02 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · O-116 · O-118 · O-120 · O-125 · O-126 · **O-123** · **O-142** · **O-144** · **O-151** |
+| `gelöst` | 83 | O-06 · O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-105 · O-106 · O-109 · O-114 · O-117 · O-122 · O-124 · O-130 · O-131 · O-133 · O-140 · O-143 · **O-03** · **O-09** · **O-107** · **O-129** · **O-136** · **O-147** · **O-148** · **O-149** · **O-150** · **O-152** · **O-153** · **O-154** |
 | `unkritisch` | 13 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 |
+
+> ✅ **02.10.2026 akşamı (KHS K2 kapanışı) — yeniden toplandı:** 19 + 18 + 25 + 83 + 13 = **158**, en yüksek madde numarası **O-158**. Uyuşuyor. 12 madde kapandı, 4'ü 🟡'ye geçti (O-123/O-142/O-144/O-151), üç yeni madde `offen` (O-156 bot satırı · O-157 paket kaynağı · O-158 WSL disk kapısı). Detay §7X.
 
 > ✅ **20.09.2026 gecesi — toplam satır satır toplandı (12.09'un dersi uygulandı):**
 > 16 + 17 + 21 + 62 + 13 = **129**, ve en yüksek madde numarası **O-129**. Uyuşuyor.
