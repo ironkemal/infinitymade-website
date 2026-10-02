@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuth } from '../ai/auth.js';
 import { logAccess } from '../_lib/access-log.js';
+import { appBaseUrl as kutuAppBaseUrl } from '../lib/dagitim.js';
 import {
   generateSetupCode,
   formatSetupCode,
@@ -188,7 +189,7 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
         throw zErr;
       }
 
-      const appBaseUrl = process.env.APP_BASE_URL || 'https://app.praxura.de';
+      const appBaseUrl = kutuAppBaseUrl(); // SITE_URL (Box) → APP_BASE_URL → SaaS-Adresse — O-150
       const ownerSlug = cleanSlug(callerProfile.business_name) || callerProfile.company_code?.toLowerCase() || cleanSlug(ownerId);
       const empSlug = cleanSlug(fullName);
       const bookingSlug = `${appBaseUrl}/booking.html?u=${ownerSlug}-${empSlug}`;

@@ -19234,7 +19234,7 @@ function initAnfragenPanel() {
   const ownerId = currentProfile?.id;
   if (ownerId) {
     const linkInput = document.getElementById('bookingRequestLinkInput');
-    const link = `https://app.praxura.de/booking-request.html?business=${ownerId}`;
+    const link = `${window.location.origin}/booking-request.html?business=${ownerId}`;
     if (linkInput) linkInput.value = link;
     document.getElementById('copyBookingLinkBtn')?.addEventListener('click', () => {
       navigator.clipboard.writeText(link).then(() => showToast('Link kopiert!', 'success'));

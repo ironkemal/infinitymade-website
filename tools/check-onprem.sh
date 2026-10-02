@@ -72,8 +72,12 @@ n8n_host=$(zaehle "n8n\.infinitymade\.de" '*.js' '*.html' '*.mjs')
 
 # 2) app.praxura.de — yalnız UYGULAMA yüzeyi. Pazarlama sayfaları hariç: onlar
 #    on-prem paketine zaten girmiyor (playbook Faz 2.0), oradaki mutlak link doğru.
+#    KHS K2.8 (O-150, 02.10.2026): api-backend/routes/ + module/ dazu — dort
+#    stand die Mitarbeiter-Buchungslink-Adresse unbemerkt (Y4). Server baut
+#    Links ueber lib/dagitim.js appBaseUrl(), Browser ueber location.origin.
+#    (employee-signup.js raus: archiviert seit ecbf871.)
 app_host=$(zaehle "app\.praxura\.de" dashboard.js dashboard.html \
-  employee-signup.js admin-login.js api-backend/server.js)
+  admin-login.js api-backend/server.js api-backend/routes/ module/)
 
 # 3) Vercel serverless limiti 12/12 DOLU. Bir tane daha = deploy patlar (+ G8).
 vercel_fn=$(git ls-files 'api/*' | grep '\.js$' | grep -v '^api/_lib/' | wc -l | tr -d ' ')

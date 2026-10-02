@@ -23,7 +23,7 @@ import wartelisteRouter from './billing/api/warteliste.routes.js';
 import setupRouter from './setup/router.js';
 import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import dsgvoRouter from './routes/dsgvo.js';
-import { istKutu } from './lib/dagitim.js';
+import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren } from './lib/rezept-felder.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
@@ -572,7 +572,7 @@ app.get('/api/calendar/google-callback', async (req, res) => {
 
   const verified = verifyOAuthState(rawState);
   if (!verified) {
-    return res.redirect('https://app.praxura.de/dashboard.html?error=oauth_state_invalid');
+    return res.redirect(`${appBaseUrl()}/dashboard.html?error=oauth_state_invalid`);
   }
   const { userId, flowType } = verified;
 
@@ -594,7 +594,7 @@ app.get('/api/calendar/google-callback', async (req, res) => {
       }
 
       const emailEnc = encodeURIComponent(uinfo.email);
-      return res.redirect(`https://app.praxura.de/dashboard.html?gmail_ok=1&gmail_email=${emailEnc}#b2b`);
+      return res.redirect(`${appBaseUrl()}/dashboard.html?gmail_ok=1&gmail_email=${emailEnc}#b2b`);
     }
 
     const { error } = await supabase
@@ -609,10 +609,10 @@ app.get('/api/calendar/google-callback', async (req, res) => {
       
     if (error) throw error;
     
-    res.redirect('https://app.praxura.de/dashboard.html#calendar?success=google_connected');
+    res.redirect(`${appBaseUrl()}/dashboard.html#calendar?success=google_connected`);
   } catch (error) {
     console.error('OAuth callback error:', error);
-    res.redirect('https://app.praxura.de/dashboard.html#calendar?error=google_failed');
+    res.redirect(`${appBaseUrl()}/dashboard.html#calendar?error=google_failed`);
   }
 });
 
@@ -3208,7 +3208,7 @@ app.post('/api/admin/recover-checkout', async (req, res) => {
     // Send confirmation email
     await supabase.auth.admin.generateLink({
       type: 'signup', email: pending.email,
-      options: { redirectTo: 'https://app.praxura.de/login.html?verified=1' },
+      options: { redirectTo: `${appBaseUrl()}/login.html?verified=1` },
     });
 
     const od = pending.onboarding_data || {};
@@ -4078,7 +4078,7 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
             replyTo: ownerProfile.email || undefined,
             to: pat.email,
             subject: `Ihr Termin wurde bestätigt – ${ownerProfile.business_name || 'Praxura'}`,
-            html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${pat.vorname},</p><p>Ihr Termin wurde automatisch bestätigt${preferred_date ? ` für den <strong>${new Date(preferred_date).toLocaleDateString('de-DE')}</strong>` : ''}${preferred_time ? ` um <strong>${preferred_time} Uhr</strong>` : ''}.</p><p>Wir freuen uns auf Ihren Besuch.</p><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="https://app.praxura.de/booking-request.html?cancel=${encodeURIComponent(request.id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+            html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${pat.vorname},</p><p>Ihr Termin wurde automatisch bestätigt${preferred_date ? ` für den <strong>${new Date(preferred_date).toLocaleDateString('de-DE')}</strong>` : ''}${preferred_time ? ` um <strong>${preferred_time} Uhr</strong>` : ''}.</p><p>Wir freuen uns auf Ihren Besuch.</p><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="${appBaseUrl()}/booking-request.html?cancel=${encodeURIComponent(request.id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
           }).catch(e => console.error('[booking-request] auto-approve email', e.message));
         }
         return res.json({ id: request.id, status: 'auto_approved' });
@@ -4098,7 +4098,7 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
         from: getMailFrom(),
         to: ownerProfile.email,
         subject: `Neue Terminanfrage von ${pName}`,
-        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2>Neue Terminanfrage</h2><p><strong>Patient:</strong> ${pName}</p><p><strong>Kassentyp:</strong> ${payment_type.toUpperCase()}</p>${preferred_date ? `<p><strong>Wunschtermin:</strong> ${new Date(preferred_date).toLocaleDateString('de-DE')}${preferred_time ? ' um ' + preferred_time + ' Uhr' : ''}</p>` : ''}${notizen ? `<p><strong>Notiz:</strong> ${notizen}</p>` : ''}<p><a href="https://app.praxura.de/dashboard.html#anfragen" style="background:#b1891b;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:12px">Zur Praxura → Termin-Anfragen</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2>Neue Terminanfrage</h2><p><strong>Patient:</strong> ${pName}</p><p><strong>Kassentyp:</strong> ${payment_type.toUpperCase()}</p>${preferred_date ? `<p><strong>Wunschtermin:</strong> ${new Date(preferred_date).toLocaleDateString('de-DE')}${preferred_time ? ' um ' + preferred_time + ' Uhr' : ''}</p>` : ''}${notizen ? `<p><strong>Notiz:</strong> ${notizen}</p>` : ''}<p><a href="${appBaseUrl()}/dashboard.html#anfragen" style="background:#b1891b;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:12px">Zur Praxura → Termin-Anfragen</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
       }).catch(e => console.error('[booking-request] notify email', e.message));
     }
 
@@ -4271,7 +4271,7 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: `Ihr Termin wurde bestätigt – ${ownerP?.business_name || 'Praxura'}`,
-        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${bookReq.patients.vorname},</p><p>Ihr Termin wurde bestätigt.</p><div style="background:#f9f6f0;border-radius:8px;padding:16px;margin:16px 0"><p style="margin:4px 0"><strong>Praxis:</strong> ${ownerP?.business_name || 'Praxura'}</p>${anfrage.preferred_date ? `<p style="margin:4px 0"><strong>Datum:</strong> ${new Date(anfrage.preferred_date).toLocaleDateString('de-DE')}</p>` : ''}${anfrage.preferred_time ? `<p style="margin:4px 0"><strong>Uhrzeit:</strong> ${anfrage.preferred_time} Uhr</p>` : ''}${empName ? `<p style="margin:4px 0"><strong>Therapeut:</strong> ${empName}</p>` : ''}</div><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="https://app.praxura.de/booking-request.html?cancel=${encodeURIComponent(request_id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${bookReq.patients.vorname},</p><p>Ihr Termin wurde bestätigt.</p><div style="background:#f9f6f0;border-radius:8px;padding:16px;margin:16px 0"><p style="margin:4px 0"><strong>Praxis:</strong> ${ownerP?.business_name || 'Praxura'}</p>${anfrage.preferred_date ? `<p style="margin:4px 0"><strong>Datum:</strong> ${new Date(anfrage.preferred_date).toLocaleDateString('de-DE')}</p>` : ''}${anfrage.preferred_time ? `<p style="margin:4px 0"><strong>Uhrzeit:</strong> ${anfrage.preferred_time} Uhr</p>` : ''}${empName ? `<p style="margin:4px 0"><strong>Therapeut:</strong> ${empName}</p>` : ''}</div><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="${appBaseUrl()}/booking-request.html?cancel=${encodeURIComponent(request_id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
       }).catch(e => console.error('[booking-request/approve] email', e.message));
     }
 
@@ -4401,7 +4401,7 @@ app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimi
         .select('business_name, email').eq('id', owner_id).maybeSingle();
       const zeilen = gespeichert.map((a, i) => {
         const token = alternativToken(request_id, bookReq.patient_id, i, angebotenAt);
-        const link = `https://app.praxura.de/booking-request.html?accept=${encodeURIComponent(request_id)}&slot=${i}&token=${token}`;
+        const link = `${appBaseUrl()}/booking-request.html?accept=${encodeURIComponent(request_id)}&slot=${i}&token=${token}`;
         const datum = new Date(`${a.date}T12:00:00`).toLocaleDateString('de-DE', {
           weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
         });
