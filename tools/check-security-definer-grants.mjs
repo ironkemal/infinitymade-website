@@ -30,6 +30,9 @@ export const PROTECTED = [
   // in die append-only Tabelle fahrten_aenderungen. Per RPC aufrufbar waere sie ein
   // Weg, Protokolleintraege zu faelschen; drei REVOKEs in der Migration.
   'fahrten_aenderung_protokollieren',
+  // 0054 (02.10.2026, guvenlik S-18): Mandanten-Pruefung prescriptions <-> Patient/Arzt.
+  // DEFINER, damit sie nicht an der RLS des Aufrufers haengt; drei REVOKEs.
+  'prescriptions_mandant_pruefen',
 ];
 
 // Bewusst fuer anon/authenticated geoeffnete RPC-Funktionen.
