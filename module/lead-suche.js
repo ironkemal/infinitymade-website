@@ -23,6 +23,11 @@ export function initLeadSuche(ctx) {
     document.querySelector('#b2bMainContent .apify-bar')?.remove();
     document.querySelector('#panel-doctors .tabs')?.remove();
     document.getElementById('arztTabSuche')?.remove();
+    // KHS K2.9 / O-09 (b): „KI Mail-Assistent" im B2B-Panel geht direkt an
+    // unseren n8n-Webhook (dashboard.js B2B_AGENT_URL) — in der Box ein Weg
+    // nach draussen (G1) und ohnehin tot. Der B2C-Assistent bleibt (Express-
+    // KI-Router, in der Box AI_MODE=aus → deutsche 503-Meldung, M4).
+    document.querySelector('#b2bMainContent .ai-chat-card')?.remove();
     return { loadDoctors: () => {} };
   }
 

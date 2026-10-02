@@ -6,7 +6,8 @@ import { storniereTermin } from './module/termin-storno.js?v=20260908';
 import { zeigePatientTermine } from './module/patient-termine.js?v=20260908';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
-import { initLeadSuche } from './module/lead-suche.js?v=20260913';
+import { initLeadSuche } from './module/lead-suche.js?v=20261002';
+import './module/hausbesuch-route.js?v=20261002';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261001i';
@@ -5099,7 +5100,6 @@ document.getElementById('bkHbSaveAddrBtn')?.addEventListener('click', async () =
 
 document.getElementById('bkHausbesuch')?.addEventListener('change', refreshBkHausbesuchPanel);
 document.getElementById('bkService')?.addEventListener('change', refreshBkHausbesuchPanel);
-
 async function invokeFahrtenbuchFn(name, body) {
   const { data, error } = await supabase.functions.invoke(name, { body });
   if (error) {
