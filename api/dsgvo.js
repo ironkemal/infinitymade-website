@@ -138,7 +138,6 @@ const USER_TABLES = [
   // Verordnungstöpfe: die podologischen Zeilen leben jetzt in `prescriptions`
   // (oben bereits gelistet), die alte Tabelle wurde gedroppt.
   { table: 'podologie_behandlungen',       filter: 'owner_id'  },
-  { table: 'fußstatus',                    filter: 'owner_id'  },
   { table: 'pat_fussbefund',               filter: 'owner_id'  },
   { table: 'messreihen',                   filter: 'owner_id'  },
   { table: 'patients',                     filter: 'owner_id'  },
@@ -267,7 +266,7 @@ const ANONYMIZE_TABLES = [
 //      am Ende dieser Kette für jede echte Praxis fehlgeschlagen. Der Endpunkt
 //      meldete trotzdem `success: true`. Das ist der ernsteste Teil des Befunds.
 const DELETE_TABLES = [
-  // Patientennahe Fachdaten zuerst: `fußstatus`, `messreihen` und
+  // Patientennahe Fachdaten zuerst: `messreihen` und
   // `booking_requests` zeigen mit NO ACTION auf `profiles` und blockieren
   // sonst das Löschen des Profils.
   //
@@ -281,7 +280,7 @@ const DELETE_TABLES = [
   //    BEFORE-DELETE-Trigger dort bedingungslos (§ 630f Abs. 1 S. 2 BGB),
   //    der DELETE hier würde also jede Kontolöschung in eine 500 kippen.
   'prescription_documents', 'mahnungen', 'ausfallrechnungen',
-  'messreihen', 'pat_fussbefund', 'fußstatus',
+  'messreihen', 'pat_fussbefund',  // fußstatus gedroppt 0056
   'warteliste', 'booking_requests',
 
   'consent_log', 'ai_audit_log', 'chatbot_usage', 'feedbacks', 'email_logs',
