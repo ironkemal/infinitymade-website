@@ -32,6 +32,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createSMTPTransport, getMailFrom } from '../lib/mail.js';
 import { schemaZaehlerLesen } from './selbstpruefung.js';
 import { rlsNegativTest, verschluesselungsTest } from './pruefungen.js';
+import { KUTU_OWNER_PLAN } from '../lib/dagitim.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -206,10 +207,11 @@ router.post('/owner', async (req, res) => {
   }
   const ownerId = newUser.user.id;
 
-  // 2. handle_new_user hat bereits (id, email) geschrieben, role='owner' und
-  // plan_status='pending' kommen aus den Spaltendefaults (db/migrations/
-  // 0000_baseline.sql) — hier fehlen nur die Angaben, die NUR der Mensch
-  // kennt. company_code entsteht separat und automatisch beim ersten
+  // 2. handle_new_user hat bereits (id, email) geschrieben, role='owner'
+  // kommt aus dem Spaltendefault (db/migrations/0000_baseline.sql). plan/
+  // plan_status setzen wir hier selbst (KUTU_OWNER_PLAN, O-147) — der Default
+  // starter/pending versteckte das §302-Menue. Sonst fehlen nur die Angaben,
+  // die NUR der Mensch kennt. company_code entsteht separat und automatisch beim ersten
   // Dashboard-Aufruf (dashboard.js: ensureCompanyCode()) — nicht hier
   // nachbauen, sonst zwei Quellen für dasselbe Format.
   const { error: profileErr } = await supabase
@@ -219,6 +221,7 @@ router.post('/owner', async (req, res) => {
       owner_first_name: owner_first_name || null,
       owner_last_name: owner_last_name || null,
       sector,
+      ...KUTU_OWNER_PLAN, // professional/active statt starter/pending — O-147
     })
     .eq('id', ownerId);
   if (profileErr) {
