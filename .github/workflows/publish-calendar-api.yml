@@ -256,7 +256,7 @@ jobs:
       - name: Smoke test — onprem-Bundle ist im Image
         run: |
           set -e
-          BUNDLE_DATEIEN="docker-compose.yml .env.template install.sh update.sh lib-health.sh backup.sh restore.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql"
+          BUNDLE_DATEIEN="docker-compose.yml .env.template install.sh update.sh lib-health.sh backup.sh restore.sh reset-owner-passwort.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql volumes/db/praxura-rollen.sql"
           bundle_anzahl=$(echo $BUNDLE_DATEIEN | wc -w)
 
           docker create --name bundle-check calendar-api:smoke >/dev/null
@@ -273,7 +273,7 @@ jobs:
           done
           echo "✓ ${bundle_anzahl}/${bundle_anzahl} Bundle-Dateien im Image vorhanden"
 
-          # (b) manifest.json listet genau die 13 ANDEREN Dateien — beide Richtungen.
+          # (b) manifest.json listet genau die ANDEREN Dateien — beide Richtungen.
           for datei in $BUNDLE_DATEIEN; do
             [ "$datei" = "manifest.json" ] && continue
             if ! grep -q "\"$datei\"" /tmp/bundle/manifest.json; then

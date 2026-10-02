@@ -72,7 +72,8 @@ const durakSet = args.includes('--durak');
 //       duruyordu — Y3).
 //   (2) Her BUNDLE dosyası api-backend/Dockerfile'ın `COPY --from=onprem`
 //       satırlarında geçiyor (paket image'a girmezse kutuya hiç varmaz).
-//   (3) Her BUNDLE dosyası publish-calendar-api.yml `paths:` tetiğinde
+//   (3) Her BUNDLE dosyası publish-calendar-api.yml `paths:` tetiğinde ve
+//       Smoke-Test'in BUNDLE_DATEIEN listesinde
 //       (değişince image yeniden basılmazsa kutu eski pakette kalır — O-57 dersi).
 // Paket listesi bugün bu üç yerde elle tutuluyor; kapı onları birbirine bağlar.
 if (args.includes('--check')) {
@@ -126,6 +127,17 @@ if (args.includes('--check')) {
     if (!pathMuster.some((rx) => rx.test(`onprem/${rel}`))) {
       hatalar.push(`${rel}: publish-calendar-api.yml 'paths:' tetiğinde yok`);
     }
+  }
+
+  // (4) CI-Smoke-Test-Liste (BUNDLE_DATEIEN=…) — vierte Handliste; fehlte
+  // sie, brach der Smoke-Test nach e4c7703 drei Pushes lang (02.10.2026).
+  const smoke = workflow.match(/BUNDLE_DATEIEN="([^"]+)"/);
+  const smokeSet = new Set(smoke ? smoke[1].trim().split(/\s+/) : []);
+  for (const rel of BUNDLE_DATEILER) {
+    if (!smokeSet.has(rel)) hatalar.push(`${rel}: publish-calendar-api.yml Smoke-Test BUNDLE_DATEIEN listesinde yok`);
+  }
+  for (const rel of smokeSet) {
+    if (rel !== 'manifest.json' && !BUNDLE_DATEILER.includes(rel)) hatalar.push(`${rel}: Smoke-Test listesinde ama BUNDLE_DATEILER'de yok`);
   }
 
   if (hatalar.length) {
