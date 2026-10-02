@@ -21,7 +21,7 @@ export function hausbesuchRouteAusblenden(doc = globalThis.document) {
   if (!btn) return false;
   const hinweis = doc.createElement('span');
   hinweis.style.cssText = 'font-size:12px;color:var(--text-muted);';
-  hinweis.textContent = 'Automatische Entfernungsberechnung ist in der Praxis-Box nicht verfügbar — Strecke bitte im Fahrtenbuch von Hand eintragen.';
+  hinweis.textContent = 'Automatische Entfernungsberechnung ist in der Praxis-Box nicht verfügbar — der Termin wird ohne Fahrtzeit geblockt (bei Bedarf Dauer erhöhen), die Strecke bitte im Fahrtenbuch von Hand eintragen.';
   btn.replaceWith(hinweis);
   return true;
 }

@@ -7,7 +7,7 @@ import { zeigePatientTermine } from './module/patient-termine.js?v=20260908';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261002';
-import './module/hausbesuch-route.js?v=20261002';
+import './module/hausbesuch-route.js?v=20261002a';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261001i';
@@ -5374,8 +5374,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     const selLead = getSelectedBkLead();
     if (!selLead) { terminFehler('Bitte zuerst den Patienten auswählen.'); return; }
     if (!selLead.street || !selLead.plz || !selLead.city) { terminFehler('Hausbesuch: Patientenadresse fehlt — Patient bearbeiten.'); return; }
-    if (selLead.duration_min == null) { terminFehler('Bitte zuerst "Entfernung berechnen" klicken.'); return; }
-    totalBlockMin = Number(selLead.duration_min) * 2 + dur + HAUSBESUCH_BUFFER_MIN;
+    if (selLead.duration_min == null && !IST_KUTU) { terminFehler('Bitte zuerst "Entfernung berechnen" klicken.'); return; }
+    totalBlockMin = Number(selLead.duration_min || 0) * 2 + dur + HAUSBESUCH_BUFFER_MIN; // Box: keine Routenberechnung (K-5) → ohne Fahrtzeit, canli-test 02.10.
   }
 
   const startIso = new Date(startV).toISOString();
