@@ -42,6 +42,7 @@ const BUNDLE_DATEILER = [
   'lib-health.sh',
   'backup.sh',
   'restore.sh',
+  'reset-owner-passwort.sh',
   'volumes/api/kong.yml',
   'volumes/api/kong-entrypoint.sh',
   'volumes/db/_supabase.sql',

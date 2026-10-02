@@ -16,6 +16,7 @@ on:
       - 'onprem/lib-health.sh'
       - 'onprem/backup.sh'
       - 'onprem/restore.sh'
+      - 'onprem/reset-owner-passwort.sh'
       - 'onprem/manifest.json'
       - 'onprem/volumes/api/kong.yml'
       - 'onprem/volumes/api/kong-entrypoint.sh'

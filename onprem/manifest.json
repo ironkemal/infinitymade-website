@@ -8,6 +8,7 @@
     { "yol": "lib-health.sh", "sha256": "ac3df970f980f9810db85e9b8daf78f1b63d7cc287c73b83a5ae77eeeb37b819" },
     { "yol": "backup.sh", "sha256": "e304114618762329aea85fc463deb6ce5b40247d247e91b22bd2c04e938017ac" },
     { "yol": "restore.sh", "sha256": "b01a495df36f5601fce6d26a79e37095ed6fac82036394e1164df69416af050b" },
+    { "yol": "reset-owner-passwort.sh", "sha256": "96ea06998dc4d0cc78bbad103b6617808bd8cb564c6aab6f537fcf86daeec782" },
     { "yol": "volumes/api/kong.yml", "sha256": "ffa5733a1ef043f4d62cc6b957d8591343886293645cfe16a200d7a1e89a73e8" },
     { "yol": "volumes/api/kong-entrypoint.sh", "sha256": "399394576635f7477dfee32e870f509567fc496f0dc86a5a6611f58d1099031f" },
     { "yol": "volumes/db/_supabase.sql", "sha256": "9dce462adc04137d6afabcf28efa60a6c355270a4b32d7af58891ac4eb964c5f" },
