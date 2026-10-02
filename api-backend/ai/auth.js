@@ -12,11 +12,23 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
+// ?token= nur dort, wo der Browser per window.location weitergeleitet wird und
+// keinen Authorization-Header setzen kann (OAuth-Start). Überall sonst würde ein
+// Token in der URL in Logs, Verlauf und Referer landen (guvenlik S-38, 02.10.2026).
+// Die zwei Rechnungs-GETs in billing/api/abrechnung.routes.js prüfen selbst.
+const QUERY_TOKEN_PFADE = new Set(['/api/gmail/connect', '/api/calendar/google-auth']);
+
+export function queryTokenErlaubt(req) {
+  return req.method === 'GET' && QUERY_TOKEN_PFADE.has(req.path);
+}
+
 export async function requireAuth(req, res, next) {
   try {
     const hdr = req.headers.authorization || '';
-    // Also accept ?token= query param for browser-redirect OAuth flows (gmail/connect, calendar/google-auth)
-    const token = (hdr.startsWith('Bearer ') ? hdr.slice(7) : null) || req.query.token || null;
+    let token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token && req.query?.token && queryTokenErlaubt(req)) {
+      token = String(req.query.token);  // Referrer-Policy: no-referrer setzt server.js global
+    }
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
 
     const { data, error } = await supabase.auth.getUser(token);

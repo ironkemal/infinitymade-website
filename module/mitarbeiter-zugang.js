@@ -123,6 +123,39 @@ export async function neuerEinrichtungscode(mitarbeiterId, options = {}) {
 }
 
 /**
+ * Entfernt bzw. sperrt einen bestehenden Mitarbeiter
+ * (Backend-Aufruf POST /api/team/mitarbeiter/:id/entfernen).
+ *
+ * @param {string} mitarbeiterId
+ * @param {object|string} [options] { token, apiBase, fetchImpl } oder token
+ * @returns {Promise<{ ok: boolean, bereits_entfernt?: boolean }>}
+ */
+export async function mitarbeiterEntfernen(mitarbeiterId, options = {}) {
+  if (!mitarbeiterId) {
+    throw new Error('Mitarbeiter-ID fehlt.');
+  }
+
+  const { token, apiBase, fetchImpl } = resolveOptions(options);
+  if (!token) {
+    throw new Error('Keine aktive Sitzung gefunden. Bitte erneut anmelden.');
+  }
+
+  const res = await fetchImpl(`${apiBase}/team/mitarbeiter/${encodeURIComponent(mitarbeiterId)}/entfernen`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || 'Mitarbeiter konnte nicht entfernt werden.');
+  }
+  return data;
+}
+
+/**
  * Zeigt ein Modal mit dem Einrichtungscode, Kopierknopf und Erläuterung an.
  * Nutzt ausschließlich CSS-Variablen.
  *

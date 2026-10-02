@@ -1,7 +1,10 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-10-02 — Nachtrag: 0054 (guvenlik S-07/S-18): employee_services
+-- ERZEUGT AM:        2026-10-02 — Nachtrag: 0055 (guvenlik S-38): +2 Funktionen
+--                    auth_sitzungen_beenden, mitarbeiter_zuordnen (DEFINER, nur
+--                    service_role). Keine Policy/Trigger/Index.
+--                    davor: 2026-10-02 — Nachtrag: 0054 (guvenlik S-07/S-18): employee_services
 --                    + time_offs Mandantengrenze (−3 Policies +2), +1 Funktion
 --                    prescriptions_mandant_pruefen (DEFINER) +1 Trigger.
 --                    davor: 2026-10-02 — Nachtrag: 0053 (guvenlik S-39): profiles −3 Policies
@@ -1799,6 +1802,12 @@ $function$;
 -- sync_profiles_clinic_location() -> trigger  dito für die Praxisadresse
 
 -- --- Rechte ---------------------------------------------------------------
+-- auth_sitzungen_beenden(uuid) -> integer  (02.10.2026, 0055, S-38) SECURITY DEFINER,
+--   search_path=public,auth; löscht auth.sessions eines Nutzers (refresh_tokens
+--   per CASCADE). Nur service_role (routes/mitarbeiter-zugang.js).
+-- mitarbeiter_zuordnen(uuid, uuid, integer) -> void  (02.10.2026, 0055, S-38) SECURITY
+--   DEFINER; pg_advisory_xact_lock('mitarbeiter_'||owner), zählt aktive Mitarbeiter,
+--   wirft PLAN_LIMIT, setzt owner_id/role nur bei owner_id IS NULL. Nur service_role.
 -- prescriptions_mandant_pruefen() -> trigger  (02.10.2026, 0054, S-18) SECURITY DEFINER,
 --   search_path=public; patient_id (leads) und arzt_id (aerzte) müssen zu
 --   NEW.owner_id gehören, sonst 42501. NULL erlaubt. Drei REVOKEs.

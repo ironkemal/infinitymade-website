@@ -6,6 +6,7 @@ import {
   isValidCodeFormat,
   mitarbeiterAnlegen,
   neuerEinrichtungscode,
+  mitarbeiterEntfernen,
   zeigeEinrichtungscode,
 } from './mitarbeiter-zugang.js';
 
@@ -159,6 +160,47 @@ test('neuerEinrichtungscode: throws backend error on failure', async () => {
       fetchImpl: mockFetch,
     }),
     /Mitarbeiter nicht gefunden\./
+  );
+});
+
+test('mitarbeiterEntfernen: calls POST /team/mitarbeiter/:id/entfernen with correct URL, method, and bearer header', async () => {
+  let calledUrl = '';
+  let calledOptions = {};
+
+  const mockFetch = async (url, options) => {
+    calledUrl = url;
+    calledOptions = options;
+    return {
+      ok: true,
+      json: async () => ({ ok: true }),
+    };
+  };
+
+  const result = await mitarbeiterEntfernen('emp_789', {
+    token: 'jwt-owner',
+    apiBase: 'https://api.test',
+    fetchImpl: mockFetch,
+  });
+
+  assert.equal(calledUrl, 'https://api.test/team/mitarbeiter/emp_789/entfernen');
+  assert.equal(calledOptions.method, 'POST');
+  assert.equal(calledOptions.headers['Authorization'], 'Bearer jwt-owner');
+  assert.deepEqual(result, { ok: true });
+});
+
+test('mitarbeiterEntfernen: throws backend error on failure', async () => {
+  const mockFetch = async () => ({
+    ok: false,
+    json: async () => ({ error: 'Mitarbeiter konnte nicht gesperrt werden' }),
+  });
+
+  await assert.rejects(
+    () => mitarbeiterEntfernen('emp_999', {
+      token: 'jwt-owner',
+      apiBase: 'https://api.test',
+      fetchImpl: mockFetch,
+    }),
+    /Mitarbeiter konnte nicht gesperrt werden/
   );
 });
 

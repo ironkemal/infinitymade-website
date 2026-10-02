@@ -1,4 +1,4 @@
-import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe } from './module/mitarbeiter-zugang.js?v=20261003n';
+import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261002a';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
 import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
 import { storniereTermin } from './module/termin-storno.js?v=20260908';
@@ -9702,7 +9702,7 @@ async function loadTeam() {
   const { data: rows, error: tErr } = await supabase
     .from('profiles')
     .select('id, email, business_name, role, booking_slug, avatar_url, anrede, owner_id')
-    .or(`id.eq.${ownerId},owner_id.eq.${ownerId}`)
+    .or(`id.eq.${ownerId},owner_id.eq.${ownerId}`).not('is_active', 'is', false)
     .order('role', { ascending: true })  // owner first, then employees
     .order('created_at', { ascending: true });
 
@@ -10507,7 +10507,7 @@ function openEmpDetail(empId) {
   document.getElementById('empRemoveBtn').onclick = async () => {
     const okRemove = await showConfirmModal({ title: t('btn_remove'), message: t('btn_remove') + '?', confirmText: t('btn_remove'), cancelText: 'Abbrechen', variant: 'danger' });
     if (!okRemove) return;
-    await supabase.from('profiles').update({ owner_id: null, role: 'owner' }).eq('id', m.id);
+    try { await mitarbeiterEntfernen(m.id, { token: (await supabase.auth.getSession()).data.session?.access_token }); } catch (e) { showToast(e.message, 'error'); return; }
     await loadTeam();
     document.getElementById('teamListView').hidden = false;
     document.getElementById('teamDetailView').hidden = true;
@@ -13158,7 +13158,7 @@ async function saveEmployee() {
   const lastName = document.getElementById('ae-last-name').value.trim();
   const email = document.getElementById('ae-email').value.trim();
   if (!firstName || !lastName || !email) { showToast('Bitte füllen Sie alle Pflichtfelder aus.', 'error'); return; }
-  const { count } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('owner_id', getOwnerId()).eq('role','employee');
+  const { count } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('owner_id', getOwnerId()).eq('role','employee').not('is_active', 'is', false);
   const lim = employeeLimit();
   if (Number.isFinite(lim) && (count ?? 0) >= lim) { showToast(`Plan-Limit erreicht: max. ${lim} Mitarbeiter im ${(currentProfile?.plan||'starter')}-Paket. Bitte upgraden.`, 'error'); return; }
   const btn = document.getElementById('aeSaveBtn');

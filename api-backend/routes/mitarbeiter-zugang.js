@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import rateLimit from 'express-rate-limit';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuth } from '../ai/auth.js';
+import { logAccess } from '../_lib/access-log.js';
 import {
   generateSetupCode,
   formatSetupCode,
@@ -118,7 +119,8 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
       .from('profiles')
       .select('id', { count: 'exact', head: true })
       .eq('owner_id', ownerId)
-      .eq('role', 'employee');
+      .eq('role', 'employee')
+      .not('is_active', 'is', false);
 
     if (countErr) {
       return res.status(500).json({ error: 'Mitarbeiteranzahl konnte nicht ermittelt werden.' });
@@ -166,6 +168,26 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
 
     // 6. Profil & Zuordnungen vervollständigen (bei Fehlschlag wird das Auth-Konto bereinigt)
     try {
+      const { error: zErr } = await supabase.rpc('mitarbeiter_zuordnen', {
+        p_owner: ownerId,
+        p_mitarbeiter: newUserId,
+        p_limit: Number.isFinite(lim) ? lim : null,
+      });
+
+      if (zErr) {
+        if (String(zErr.message).includes('PLAN_LIMIT')) {
+          try {
+            await supabase.auth.admin.deleteUser(newUserId);
+          } catch (delErr) {
+            console.error('[mitarbeiter-zugang] deleteUser Rollback fehlgeschlagen:', delErr.message);
+          }
+          return res.status(409).json({
+            error: `Plan-Limit erreicht: max. ${lim} Mitarbeiter im ${(callerProfile.plan || 'starter')}-Paket. Bitte upgraden.`
+          });
+        }
+        throw zErr;
+      }
+
       const appBaseUrl = process.env.APP_BASE_URL || 'https://app.praxura.de';
       const ownerSlug = cleanSlug(callerProfile.business_name) || callerProfile.company_code?.toLowerCase() || cleanSlug(ownerId);
       const empSlug = cleanSlug(fullName);
@@ -175,8 +197,6 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
       const { error: pErr } = await supabase
         .from('profiles')
         .update({
-          role: 'employee',
-          owner_id: ownerId,
           business_name: fullName,
           anrede: anrede,
           phone: telefon,
@@ -251,12 +271,17 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
       }
 
       // Audit-Log
-      console.info('[mitarbeiter-zugang]', JSON.stringify({
-        aktion: 'mitarbeiter_angelegt',
-        owner_id: ownerId,
-        ziel_id: newUserId,
-        ts: new Date().toISOString()
-      }));
+      logAccess(supabase, {
+        userId: ownerId,
+        ownerId,
+        method: 'POST',
+        path: req.path,
+        resource: 'mitarbeiter',
+        resourceId: newUserId,
+        action: 'angelegt',
+        statusCode: 200,
+        ip: req.ip,
+      });
 
       return res.status(200).json({
         id: newUserId,
@@ -285,6 +310,108 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
   }
 });
 
+// ── POST /team/mitarbeiter/:id/entfernen ──────────────────────────────────────
+// Mitarbeiter entfernen: Das Auth-Konto wird für 100 Jahre gesperrt (ban_duration)
+// und aktive Sitzungen werden beendet, aber der Datensatz bleibt in profiles erhalten.
+// So bleiben historische Behandlungs- und Abrechnungsdaten (GoBD) dem Mitarbeiter
+// zugeordnet. is_active = false gibt den Platz im Kontingent frei.
+router.post('/team/mitarbeiter/:id/entfernen', requireAuth, resetCodeLimiter, async (req, res) => {
+  const ownerId = req.auth.userId;
+  const targetId = req.params.id;
+
+  try {
+    // 1. Aufrufer muss owner sein
+    const { data: callerProfile } = await supabase
+      .from('profiles')
+      .select('id, role')
+      .eq('id', ownerId)
+      .maybeSingle();
+
+    if (!callerProfile || callerProfile.role !== 'owner') {
+      return res.status(403).json({ error: 'Nur Praxisinhaber dürfen Mitarbeiter entfernen.' });
+    }
+
+    // 2. Ziel-Mitarbeiter prüfen (owner_id muss = caller AND role = 'employee', sonst 404)
+    const { data: targetProfile, error: tErr } = await supabase
+      .from('profiles')
+      .select('id, owner_id, role, is_active')
+      .eq('id', targetId)
+      .eq('owner_id', ownerId)
+      .eq('role', 'employee')
+      .maybeSingle();
+
+    if (tErr || !targetProfile) {
+      logAccess(supabase, {
+        userId: ownerId,
+        ownerId,
+        method: 'POST',
+        path: req.path,
+        resource: 'mitarbeiter',
+        resourceId: targetId,
+        action: 'entfernt',
+        statusCode: 404,
+        ip: req.ip,
+        metadata: { grund: 'nicht_gefunden' },
+      });
+      return res.status(404).json({ error: 'Mitarbeiter nicht gefunden.' });
+    }
+
+    if (targetProfile.is_active === false) {
+      return res.status(200).json({ ok: true, bereits_entfernt: true });
+    }
+
+    // 3. Auth-Konto sperren und Einrichtungscode entwerten
+    const { error: banErr } = await supabase.auth.admin.updateUserById(targetId, {
+      ban_duration: '876000h',
+      app_metadata: {
+        einrichtung_hash: null,
+        einrichtung_bis: null,
+      },
+    });
+
+    if (banErr) {
+      console.error('[mitarbeiter-zugang] Mitarbeiter sperren fehlgeschlagen:', banErr.message);
+      return res.status(500).json({ error: 'Mitarbeiter konnte nicht gesperrt werden' });
+    }
+
+    // 4. Aktive Sitzungen beenden (Fehler nur loggen)
+    const { error: sErr } = await supabase.rpc('auth_sitzungen_beenden', { p_user: targetId });
+    if (sErr) {
+      console.error('[mitarbeiter-zugang] Sitzungen nicht beendet:', sErr.message);
+    }
+
+    // 5. Profil deaktivieren (owner_id und role bleiben wegen GoBD unverändert)
+    const { error: upErr } = await supabase
+      .from('profiles')
+      .update({ is_active: false })
+      .eq('id', targetId);
+
+    if (upErr) {
+      console.error('[mitarbeiter-zugang] Deaktivierung in profiles fehlgeschlagen:', upErr.message);
+      return res.status(500).json({ error: 'Mitarbeiter konnte nicht deaktiviert werden' });
+    }
+
+    // 6. Audit-Log & Antwort
+    logAccess(supabase, {
+      userId: ownerId,
+      ownerId,
+      method: 'POST',
+      path: req.path,
+      resource: 'mitarbeiter',
+      resourceId: targetId,
+      action: 'entfernt',
+      statusCode: 200,
+      ip: req.ip,
+    });
+
+    return res.status(200).json({ ok: true });
+
+  } catch (err) {
+    console.error('[mitarbeiter-zugang] Unerwarteter Fehler beim Entfernen des Mitarbeiters:', err);
+    return res.status(500).json({ error: 'Interner Serverfehler' });
+  }
+});
+
 // ── b) POST /team/mitarbeiter/:id/einrichtungscode ───────────────────────────
 router.post('/team/mitarbeiter/:id/einrichtungscode', requireAuth, resetCodeLimiter, async (req, res) => {
   const ownerId = req.auth.userId;
@@ -309,16 +436,22 @@ router.post('/team/mitarbeiter/:id/einrichtungscode', requireAuth, resetCodeLimi
       .eq('id', targetId)
       .eq('owner_id', ownerId)
       .eq('role', 'employee')
+      .not('is_active', 'is', false)
       .maybeSingle();
 
     if (tErr || !targetProfile) {
-      console.info('[mitarbeiter-zugang]', JSON.stringify({
-        aktion: 'einrichtungscode_erneuert_fehlschlag',
-        grund: 'nicht_gefunden',
-        owner_id: ownerId,
-        ziel_id: targetId,
-        ts: new Date().toISOString()
-      }));
+      logAccess(supabase, {
+        userId: ownerId,
+        ownerId,
+        method: 'POST',
+        path: req.path,
+        resource: 'mitarbeiter',
+        resourceId: targetId,
+        action: 'einrichtungscode_neu',
+        statusCode: 404,
+        ip: req.ip,
+        metadata: { grund: 'nicht_gefunden' },
+      });
       return res.status(404).json({ error: 'Mitarbeiter nicht gefunden.' });
     }
 
@@ -345,13 +478,23 @@ router.post('/team/mitarbeiter/:id/einrichtungscode', requireAuth, resetCodeLimi
       });
     }
 
+    const { error: sErr } = await supabase.rpc('auth_sitzungen_beenden', { p_user: targetId });
+    if (sErr) {
+      console.error('[mitarbeiter-zugang] Sitzungen nicht beendet:', sErr.message);
+    }
+
     // Audit-Log
-    console.info('[mitarbeiter-zugang]', JSON.stringify({
-      aktion: 'einrichtungscode_erneuert',
-      owner_id: ownerId,
-      ziel_id: targetId,
-      ts: new Date().toISOString()
-    }));
+    logAccess(supabase, {
+      userId: ownerId,
+      ownerId,
+      method: 'POST',
+      path: req.path,
+      resource: 'mitarbeiter',
+      resourceId: targetId,
+      action: 'einrichtungscode_neu',
+      statusCode: 200,
+      ip: req.ip,
+    });
 
     return res.status(200).json({
       einrichtungscode: formattedCode,
@@ -367,11 +510,17 @@ router.post('/team/mitarbeiter/:id/einrichtungscode', requireAuth, resetCodeLimi
 // ── c) POST /team/erstanmeldung ──────────────────────────────────────────────
 router.post('/team/erstanmeldung', erstanmeldungLimiter, async (req, res) => {
   const genericFail = () => {
-    console.info('[mitarbeiter-zugang]', JSON.stringify({
-      aktion: 'erstanmeldung_fehlschlag',
+    logAccess(supabase, {
+      userId: null,
+      ownerId: null,
+      method: 'POST',
+      path: req.path,
+      resource: 'mitarbeiter',
+      resourceId: null,
+      action: 'erstanmeldung_fehlschlag',
+      statusCode: 400,
       ip: req.ip,
-      ts: new Date().toISOString()
-    }));
+    });
     return res.status(400).json({
       error: 'E-Mail-Adresse oder Einrichtungscode ungültig oder abgelaufen.'
     });
@@ -449,12 +598,17 @@ router.post('/team/erstanmeldung', erstanmeldungLimiter, async (req, res) => {
     }
 
     // Audit-Log
-    console.info('[mitarbeiter-zugang]', JSON.stringify({
-      aktion: 'erstanmeldung_erfolgreich',
-      owner_id: profile.owner_id,
-      ziel_id: profile.id,
-      ts: new Date().toISOString()
-    }));
+    logAccess(supabase, {
+      userId: profile.id,
+      ownerId: profile.owner_id,
+      method: 'POST',
+      path: req.path,
+      resource: 'mitarbeiter',
+      resourceId: profile.id,
+      action: 'erstanmeldung',
+      statusCode: 200,
+      ip: req.ip,
+    });
 
     return res.status(200).json({ ok: true });
 

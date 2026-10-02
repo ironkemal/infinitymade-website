@@ -1,7 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-10-02 — Nachtrag: 0054 (nur Policies/Trigger, keine
+-- ERZEUGT AM:        2026-10-02 — Nachtrag: 0055 profiles_public ohne entfernte
+--                    Mitarbeiter (is_active = false). Letzte Migration: 0055.
+--                    davor: 2026-10-02 — Nachtrag: 0054 (nur Policies/Trigger, keine
 --                    Tabellen-/Spaltenänderung). Letzte Migration: 0054.
 --                    davor: 2026-10-02 — Nachtrag: 0053_profiles_privilegierte_spalten im
 --                    SaaS angewendet (MCP): −1 Tabelle pending_employee_registrations
@@ -3459,8 +3461,10 @@ CREATE TABLE zuzahlung_korrekturen (
 CREATE VIEW profiles_public AS
   SELECT id, business_name, owner_first_name, owner_last_name,
          accepts_bookings, role, owner_id, booking_slug, avatar_url, anrede
-  FROM profiles;
+  FROM profiles
+  WHERE NOT (role = 'employee' AND is_active IS FALSE);   -- 0055: entfernte Mitarbeiter weg
 --   Öffentliche Buchungsseite. Sensible Spalten wurden 2026-06-03 bewusst entfernt.
+--   security_invoker = true.
 
 CREATE VIEW fahrten_monthly_summary AS
   SELECT owner_id, user_id, vehicle_id, kennzeichen_snapshot, kind_snapshot,
