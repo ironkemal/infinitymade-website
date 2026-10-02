@@ -60,6 +60,83 @@ const args = process.argv.slice(2);
 const durakSifirla = args.includes('--durak-sifirla');
 const durakSet = args.includes('--durak');
 
+// ── --check (KHS K2.2, onprem/REGISTER.md O-149) ────────────────────────────
+// Commit kapısı (tools/check-onprem.sh çağırır). Üç şeyi STAGED içerikten
+// ölçer — diskten değil: commit'e giren şey index'tir, diskteki yarım bir
+// düzenleme kapıyı yanıltmasın.
+//   (1) manifest.json'daki her sha256 == `git show :onprem/<yol>`'un sha256'sı
+//       ve manifest'in dosya listesi == BUNDLE_DATEILER (01.10 ölçümü: compose
+//       + update.sh hash'leri bayattı, update.sh her kutuda "konflikt" ile
+//       duruyordu — Y3).
+//   (2) Her BUNDLE dosyası api-backend/Dockerfile'ın `COPY --from=onprem`
+//       satırlarında geçiyor (paket image'a girmezse kutuya hiç varmaz).
+//   (3) Her BUNDLE dosyası publish-calendar-api.yml `paths:` tetiğinde
+//       (değişince image yeniden basılmazsa kutu eski pakette kalır — O-57 dersi).
+// Paket listesi bugün bu üç yerde elle tutuluyor; kapı onları birbirine bağlar.
+if (args.includes('--check')) {
+  const { execFileSync } = await import('node:child_process');
+  const staged = (rel) => {
+    try {
+      return execFileSync('git', ['show', `:${rel}`], { cwd: REPO_ROOT, maxBuffer: 64 * 1024 * 1024 });
+    } catch {
+      return null;
+    }
+  };
+  const hatalar = [];
+  const manifestBuf = staged('onprem/manifest.json');
+  if (!manifestBuf) {
+    console.error('✗ onprem/manifest.json index\'te yok');
+    process.exit(1);
+  }
+  let staged_manifest;
+  try {
+    staged_manifest = JSON.parse(manifestBuf.toString('utf8'));
+  } catch (e) {
+    console.error(`✗ onprem/manifest.json geçerli JSON değil: ${e.message}`);
+    process.exit(1);
+  }
+  const imManifest = new Map((staged_manifest.dateien || []).map((d) => [d.yol, d.sha256]));
+  for (const rel of BUNDLE_DATEILER) {
+    const buf = staged(`onprem/${rel}`);
+    if (!buf) { hatalar.push(`${rel}: index'te yok`); continue; }
+    const ist = createHash('sha256').update(buf).digest('hex');
+    if (!imManifest.has(rel)) hatalar.push(`${rel}: manifest.json'da yok`);
+    else if (imManifest.get(rel) !== ist) hatalar.push(`${rel}: manifest ${imManifest.get(rel).slice(0, 12)}… ≠ staged ${ist.slice(0, 12)}…`);
+  }
+  for (const yol of imManifest.keys()) {
+    if (!BUNDLE_DATEILER.includes(yol)) hatalar.push(`${yol}: manifest.json'da ama BUNDLE_DATEILER'de yok`);
+  }
+
+  const dockerfile = (staged('api-backend/Dockerfile') || Buffer.from('')).toString('utf8');
+  const copyTokens = new Set(
+    dockerfile.split('\n')
+      .filter((z) => /^\s*COPY\s+--from=onprem\s/.test(z))
+      .flatMap((z) => z.trim().split(/\s+/).slice(2, -1)),
+  );
+  for (const rel of BUNDLE_DATEILER) {
+    if (!copyTokens.has(rel)) hatalar.push(`${rel}: api-backend/Dockerfile'da 'COPY --from=onprem' satırında yok`);
+  }
+
+  const workflow = (staged('.github/workflows/publish-calendar-api.yml') || Buffer.from('')).toString('utf8');
+  const pathMuster = [...workflow.matchAll(/^\s*-\s*'(onprem\/[^']+)'/gm)].map((m) =>
+    new RegExp('^' + m[1].replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*') + '$'));
+  for (const rel of BUNDLE_DATEILER) {
+    if (!pathMuster.some((rx) => rx.test(`onprem/${rel}`))) {
+      hatalar.push(`${rel}: publish-calendar-api.yml 'paths:' tetiğinde yok`);
+    }
+  }
+
+  if (hatalar.length) {
+    console.error('✗ onprem paketi tutarsız (O-149):');
+    for (const h of hatalar) console.error(`    ${h}`);
+    console.error('  Düzelt: node tools/onprem-manifest.mjs && git add onprem/manifest.json');
+    console.error('  (yeni paket dosyası ise Dockerfile COPY + workflow paths + BUNDLE_DATEILER üçüne de ekle)');
+    process.exit(1);
+  }
+  console.log(`✓ onprem paketi tutarlı — ${BUNDLE_DATEILER.length} dosya (manifest · Dockerfile · workflow)`);
+  process.exit(0);
+}
+
 let vorher = { durak: false, elle_adim: [], not_url: '' };
 if (existsSync(MANIFEST_PATH)) {
   try {

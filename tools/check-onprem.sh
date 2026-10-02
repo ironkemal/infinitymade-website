@@ -244,6 +244,25 @@ if [ -n "$compose_icerik_o72" ]; then
   done
 fi
 
+# --- O-149 kapısı (KHS K2.2): manifest SHA = staged paket dosyası -------------
+#
+# 01.10.2026 ölçümü: manifest.json'daki compose + update.sh hash'leri bayattı —
+# kutuda update.sh her gece "müşteri elle değiştirmiş" sanıp duruyordu (Y3).
+# O-72 yalnız "mount kaynağı listede mi"ye bakıyordu, hash'in DOĞRULUĞUNA değil.
+# Ayrıca paket listesi üç yerde elle tutuluyor (onprem-manifest.mjs ·
+# api-backend/Dockerfile COPY · publish-calendar-api.yml paths) — kontrol üçünü
+# birbirine bağlar. Yalnız ilgili dosya staged ise koşar (node gerekir).
+o149_ihlal=""
+if git diff --cached --name-only | grep -qE '^(onprem/|VERSION$|api-backend/Dockerfile$|\.github/workflows/publish-calendar-api\.yml$|tools/onprem-manifest\.mjs$)'; then
+  if command -v node >/dev/null 2>&1; then
+    if ! o149_cikti="$(node tools/onprem-manifest.mjs --check 2>&1)"; then
+      o149_ihlal="$o149_cikti"
+    fi
+  else
+    echo "  [warn] node yok — O-149 manifest kapısı atlandı" >&2
+  fi
+fi
+
 # --- O-25/R12 kapıları: sürüm numarası tekilliği + MAJOR/durak + manifest.surum eşitliği ---
 #
 # X.Y.Z (kök VERSION) tek kaynak (R1/R7): api+frontend image'ları ve
@@ -340,6 +359,14 @@ if [ -n "$o72_ihlal" ]; then
       güncellenmezse, dosya hiçbir kutuya asla ulaşmaz — Docker o yolda
       sessizce boş bir DİZİN yaratır (O-49'un webhooks.sql dersinin aynısı).
       Çıkış: 'node tools/onprem-manifest.mjs' çalıştırıp aynı commit'e ekle.
+"
+fi
+
+if [ -n "$o149_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ onprem paketi — manifest/Dockerfile/workflow tutarsız (O-149):
+$o149_ihlal
+      Bayat manifest = kutuda update.sh her gece 'konflikt' ile durur.
 "
 fi
 

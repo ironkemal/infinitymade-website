@@ -14,6 +14,8 @@ on:
       - 'onprem/install.sh'
       - 'onprem/update.sh'
       - 'onprem/lib-health.sh'
+      - 'onprem/backup.sh'
+      - 'onprem/restore.sh'
       - 'onprem/manifest.json'
       - 'onprem/volumes/api/kong.yml'
       - 'onprem/volumes/api/kong-entrypoint.sh'
