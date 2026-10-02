@@ -930,8 +930,9 @@ function bindPlan() {
             btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
             return;
           }
+          // `plan` setzt der Stripe-Webhook (service_role) — der Client darf es seit
+          // Migration 0053 nicht mehr (guvenlik S-39).
           await supabase.from('profiles').update({
-            plan: planSlug,
             billing_interval: currentInterval,
           }).eq('id', userId);
           window.location.href = data.url;

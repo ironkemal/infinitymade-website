@@ -4652,6 +4652,19 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 
 ---
 
+### O-143 — `0053` profiles kilit-trigger'ı `current_user` rol adına dayanıyor + `pending_employee_registrations` tek adımda DROP 🟢 **gelöst (hüküm 02.10.2026, commit 0053 ile)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | guvenlik S-39 (K1.1): `profiles` ayrıcalıklı kolonları (owner_id, role, plan*, stripe_*, is_active …) yalnız `current_user IN ('authenticated','anon')` iken kilitleyen SECURITY INVOKER trigger; aynı migration'da eski mailli self-signup tablosu `pending_employee_registrations` DROP. |
+| **Nerede** | `api-backend/db/migrations/0053_profiles_privilegierte_spalten.sql` · tablo kaynağı `0000_baseline.sql:4161` (yani kutu paketinde VAR) · kutu rolleri `onprem/docker-compose.yml:215` (PostgREST `authenticator`) ve `:219` (`PGRST_DB_ANON_ROLE: anon`) · kutu backend'i `onprem/docker-compose.yml:418` (`SUPABASE_SERVICE_ROLE_KEY`) · kurulum sihirbazı `api-backend/setup/router.js:37-41` (service-role istemcisi), `:199` (`auth.admin.createUser`), `:216` (profiles update) |
+| **Tip** | D (şema) + H (plan/plan_status yazım yolu) |
+| **Kutuda ne olur** | (1) **Rol adları aynı:** kutu upstream Supabase imajlarını kullanıyor; PostgREST `authenticator` ile bağlanıp JWT `role` claim'ine göre `SET ROLE anon/authenticated/service_role` yapar, GoTrue `authenticated` token'ı basar — SaaS ile birebir. Trigger iki dağıtımda aynı davranır (G7 ✅). (2) **Serbest kalan yollar:** backend (`api` konteyneri service_role JWT → `current_user=service_role`), `migrate.js` (DATABASE_URL, süper kullanıcı), `handle_new_user` (SECURITY DEFINER → `current_user` = fonksiyon sahibi). (3) **Kurulum sihirbazı engellenmez:** `setup/router.js` service_role ile yazıyor; K2.3'teki `plan='professional', plan_status='active'` de **aynı service_role update'ine** eklenirse geçer. ⚠️ Tarayıcıdan (sihirbaz HTML'i, dashboard) yazılırsa 42501 ile reddedilir — doğru davranış bu, kaçış açılmaz. (4) **DROP:** kutu tabloyu baseline'dan alıyor; eski image'larda tek okuyucu `confirm.html` `.maybeSingle()` + `if(!pending) return` → sessiz. `:stable` hiç basılmadı (sprint Y2/K2.1), müşteri kutusu yok → tabloyu arayan çalışır image yok. |
+| **Çözüm** | Tek adımlı DROP için `-- zweistufig:` gerekçe satırı **yeterli** (emsal `0051`): adım 1 = `01c57cf` (01.10.2026, yazma/okuma kesildi), adım 2 = bu migration. Gerekçe satırı bir satırın **başında** `-- zweistufig:` ile durmalı (`tools/check-onprem.sh:133`; emsal gibi 1. satıra koymak okunurluk için önerilir). Policy DROP'ları kapıyı tetiklemez (regex yalnız `DROP COLUMN|TABLE` ve `RENAME`). Sayaç: `bis_version 0053`, public_tablo 84→83, rls_policy 162→157, fonksiyon 78→79, trigger 80→81, index 305→305 (pending PK −1, `profiles_company_code_upper_key` +1); `profiles_company_code_key` UNIQUE yerinde kalıyor, sayım değişmez. ⚠️ Migration başlığındaki `ZAEHLER: … index +1` **yanlış** — net 0; düzeltilmeli (dosya henüz uygulanmamış sayılır mı: SaaS'ta MCP ile uygulandı, kutularda hiç koşmadı → yorum düzeltmesi SHA'yı değiştirir; SaaS defterinde SHA kayıtlıysa yorum düzeltmesi yapılmaz, doğru rakam `_hinweis_0053`'te durur). |
+| **Durum** | `gelöst` — hüküm GEÇER, KAYITLA. Açık kalan tek bağ: K2.3 yazılırken plan/plan_status **sunucu tarafında** (`setup/router.js`) yazılacak. Yan bulgu (onprem kapsamı dışı, iki dağıtımda aynı): `dashboard.js:10510` "Mitarbeiter entfernen" başka kullanıcının satırını client'tan güncelliyor — RLS (`auth.uid()=id`) zaten 0 satır döndürüyordu, 0053 öncesi de sessiz no-op'tu; düğme iki dağıtımda da çalışmıyor → backend ucu gerekir (builder/guvenlik). |
+
+---
+
 ## 8. Kapı — sayaçlar ve tabanlar
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı

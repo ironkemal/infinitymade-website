@@ -57,8 +57,19 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Achtung:** Tote Spalten aus abgeschalteten Strängen liegen noch drin (`whatsapp_*`, `system_prompt`, `faq`, `message_templates`, `has_dta_pro`, `dta_pro_subscription_item_id`) — nicht als Vorlage nehmen. `sector` erlaubt noch `barber`/`beauty`/… aus der KMU-Zeit.
 - **`selbstzahler_stufen jsonb NOT NULL DEFAULT '[]'`** — seit 06.09.2026, Ops #266 (Beta-2, 05.09.2026). Die vom Inhaber **selbst benannten** Selbstzahler-Preisstufen, `[{id,name,betrag_eur}]`, hoechstens sechs. Warum hier und nicht in `services.price_config`: dessen Schluessel sind Minutenzahlen, und die Speicherschleife in `dashboard.js` laeuft ueber das DOM — ein Schluessel `sb1` wuerde beim naechsten Speichern der Leistung **stillschweigend geloescht**. Warum nicht in `businesses`: Einzelpraxen haben dort keine Zeile. Direkte Vorbilder in derselben Tabelle: `fussbefund_legende` (benannte Liste als jsonb) und `ausfall_amount_eur` (Betrag auf Inhaber-Ebene).
   **Eine Versionierung der Stufen wurde bewusst NICHT gebaut** — bitte auch spaeter nicht nachruesten. In `invoices.line_items` wandert immer nur die **Zahl**, nie eine Referenz auf die Stufe; sonst wuerde eine Preisaenderung heute den Betrag einer zwei Jahre alten Rechnung ruecklaeufig veraendern. Die Stufe ist ein Eingabehelfer, kein Datensatz. Der „zuletzt bei diesem Patienten berechnete Betrag" wird aus demselben Grund **aus `invoices` abgeleitet** (`ladeLetztePreise()` in `module/selbstzahler-stufen.js`) und nirgends zusaetzlich gespeichert.
-  Kein Personenbezug (Preisliste der Praxis, kein Patientenmerkmal) — deshalb keine Aenderung an `api/dsgvo.js` noetig; `profiles` steht dort ohnehin schon in `USER_TABLES`. RLS unveraendert: `Users manage own profile` deckt die Spalte mit ab.
+  Kein Personenbezug (Preisliste der Praxis, kein Patientenmerkmal) — deshalb keine Aenderung an `api/dsgvo.js` noetig; `profiles` steht dort ohnehin schon in `USER_TABLES`. RLS unveraendert: die eigene Zeile ist per UPDATE-Policy schreibbar (seit 0053: `profiles_update_own`; damals noch `Users manage own profile`).
 - **`gps_checkin_pruefen boolean NOT NULL DEFAULT false`** — seit 30.09.2026 · `0047` (legal-de + guvenlik A-19). Owner-Schalter: beim Check-in einmalig prüfen, ob der Mitarbeiter im 150-m-Umkreis der Praxis ist; gespeichert wird nur das Ergebnis (`attendance.check_in_valid`), nie Koordinaten. Standard **aus** (Aktivierung durch den Auftraggeber). Owner-Ebene, deshalb hier und nicht in `businesses`. Schalter im Frontend bei Oturum A.
+- **⛔ Privilegierte Spalten nur serverseitig (seit 02.10.2026 · `0053_profiles_privilegierte_spalten`, guvenlik S-39, kritisch):**
+  - **Warum:** Die Policies `Users manage own profile` [ALL] und `Users can update own profile` [UPDATE] liessen jede angemeldete Person die **eigene** Zeile ohne Spaltengrenze aendern. `auth_tenant_id()` = `COALESCE(owner_id, id)` liest genau diese Zeile, und alle Team-Policies sowie `api-backend/ai/auth.js` bestimmen den Mandanten daraus. Ein einziger PATCH `{owner_id: <fremde Praxis>, role: 'employee'}` haette Zugriff auf fremde Patienten, Verordnungen und Termine gegeben. Nebenbei waren `plan`/`plan_status`/`trial_ends_at` selbst verlaengerbar.
+  - **Was:** Trigger `profiles_privilegierte_spalten_schuetzen` (BEFORE INSERT OR UPDATE, Funktion gleichen Namens). Greift nur bei `current_user IN ('authenticated','anon')` — also PostgREST aus dem Browser. Gesperrt bei UPDATE: `owner_id, role, plan, plan_status, trial_ends_at, current_period_end, stripe_customer_id, stripe_subscription_id, stripe_price_id, is_active, activated_at, deletion_scheduled_at, dta_pro_subscription_item_id`. `company_code` nur **einmal** setzbar (vorher NULL) und nur in Grossbuchstaben. INSERT vom Client immer abgelehnt (Profil entsteht ausschliesslich in `handle_new_user()`). Fehlercode jeweils `42501`.
+  - **Wer darf weiterhin:** `service_role` (Backend, Stripe-Webhook, `routes/mitarbeiter-zugang.js`, `api/dsgvo.js`) und SECURITY-DEFINER-Funktionen (`handle_new_user`, `delete_expired_accounts`) — sie laufen nicht als `authenticated`/`anon`.
+  - **Policies danach:** genau eine Schreib-Policy `profiles_update_own` (UPDATE, USING + WITH CHECK `auth.uid() = id`). Die drei alten (`Users manage own profile`, `Users can update own profile`, `Users can insert own profile`) sind weg → **kein INSERT und kein DELETE mehr vom Client** (der Weg „eigene Zeile loeschen, neu anlegen“ ist zu). SELECT-Policies (`Profiles tenant read`, `Public booking lookup profiles`) unveraendert.
+  - **Index:** `profiles_company_code_upper_key` = UNIQUE (`upper(company_code)`) WHERE NOT NULL — weil `find_owner_id_by_code()` mit `upper()` vergleicht. Der alte `profiles_company_code_key` (case-sensitiv) besteht daneben weiter. Live 02.10.: 0 Dubletten, 0 Kleinbuchstaben-Codes.
+  - **Achtung:**
+    - ⚠️ Die Trigger-Funktion **muss SECURITY INVOKER bleiben.** Mit DEFINER waere `current_user` immer der Funktionsinhaber und die Sperre wirkungslos — beim naechsten `CREATE OR REPLACE` nicht „aus Gewohnheit“ auf DEFINER stellen.
+    - Eine neue Spalte, die Rechte, Mandant oder Abrechnung steuert, gehoert **in die Sperrliste dieser Funktion** (neue Migration, die Funktion ersetzt). Sonst ist sie vom Browser aus frei schreibbar.
+    - Client-Code darf diese Spalten nicht mehr schreiben: `onboarding.js` setzt `plan` seit 0053 nicht mehr (kommt vom Webhook). **Offen:** „Mitarbeiter entfernen“ (`dashboard.js`, `update({owner_id: null, role: 'owner'})` auf fremder Zeile) war schon vorher per RLS ein stiller No-op und braucht eine Backend-Route.
+  - **Live geprueft 02.10.2026 (Koordinator):** authenticated → `owner_id`/`plan`/`trial_ends_at`/`company_code`-Aenderung 42501 · eigener `business_name` OK · fremde Zeile 0 · DELETE 0 · INSERT 42501 · service_role schreibt `plan`.
 
 
 ### `businesses`
@@ -72,7 +83,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Warum:** Ein Angestellter kann an mehreren Standorten arbeiten. Die Zuordnung passt weder in `profiles` (1:n) noch in `businesses`.
 - **Seit:** spätestens 22.05.2026 · `v25_rbac_employee_groups`
 - **Status:** aktiv
-- **Wer:** Team-Verwaltung (`renderEmpStandortList`, `saveEmpPermissions`), Buchungsseite, `confirm.html`.
+- **Wer:** Team-Verwaltung (`renderEmpStandortList`, `saveEmpPermissions`), Buchungsseite, `api-backend/routes/mitarbeiter-zugang.js` (Einrichtungscode, seit 01.10.2026; vorher `confirm.html`).
 
 ### `employee_groups`
 - **Warum:** Rollen oberhalb von „Inhaber/Angestellter" — Rezeption, Therapeut, Leitung. Wird beim Anlegen eines Standorts automatisch vorbefüllt.
@@ -105,11 +116,14 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Wer:** `api/onboarding/pending.js`, Stripe-Checkout und -Webhook.
 - **Achtung:** `password_secret_id` zeigt in den Supabase **Vault**. Das ist heute die **einzige** Vault-Nutzung im Projekt; Zugriff ausschließlich über `pending_signup_store/consume/delete`.
 
-### `pending_employee_registrations`
-- **Warum:** Dasselbe für Angestellte: der Inhaber gibt einen 6-stelligen `company_code` heraus, der Angestellte registriert sich, der Inhaber bestätigt. Zwischen Registrierung und Bestätigung liegt der Datensatz hier.
-- **Seit:** 08.06.2026 · `create_pending_employee_registrations`
-- **Status:** aktiv
-- **Wer:** `employee-signup.js`, `confirm.html`.
+### `pending_employee_registrations` — GEDROPPT 02.10.2026
+- **Warum es sie gab:** Mail-basierter Self-Signup fuer Angestellte: der Inhaber gab einen 6-stelligen `company_code` heraus, der Angestellte registrierte sich per E-Mail, zwischen Registrierung und Bestaetigungsklick lagen seine Angaben hier.
+- **Seit:** 08.06.2026 · `create_pending_employee_registrations` — **entfernt:** 02.10.2026 · `0053_profiles_privilegierte_spalten`
+- **Status:** entfernt
+- **Wer:** bis 01.10.2026 `employee-signup.js` (schrieb) und `confirm.html` (las, wendete `role`/`owner_id`/`plan` auf das Profil an, loeschte).
+- **Warum sie weg ist:** Der Ablauf wurde am 01.10.2026 (`01c57cf`) durch den Einrichtungscode ersetzt (`api-backend/routes/mitarbeiter-zugang.js`, service_role, ohne Bestaetigungsmail). Zweistufig: Schritt 1 `01c57cf` legte Schreib- und Lesepfad still, Schritt 2 ist der Drop in 0053 (alte `:beta`-Images lesen per `maybeSingle()` und steigen still aus, onprem O-143). Zusaetzlich war die Tabelle eine offene Tuer: anon durfte mit `WITH CHECK (true)` einfuegen (S-38 Auflage 8), und `confirm.html` schrieb genau die Spalten, die 0053 in `profiles` sperrt.
+- **Vier-Quellen-Pruefung (db-ustasi, 02.10.2026):** Code nur `confirm.html` (im selben Commit entfernt) + totes `employee-signup.js` · keine Funktion, kein View, kein FK · nicht in `api/dsgvo.js` · live **0 Zeilen**.
+- **Achtung:** Nicht wieder anlegen. Neue Angestellte entstehen ausschliesslich ueber den Einrichtungscode, serverseitig.
 
 ### `user_preferences`
 - **Warum:** Pro Nutzer merkbare Oberflächen-Zustände (gewählter Standort, Kalenderansicht, Mitarbeiterfilter) gehören nicht in `profiles` — das ist die fachliche Stammdatentabelle.

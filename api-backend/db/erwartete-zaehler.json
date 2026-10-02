@@ -23,13 +23,14 @@
   "_hinweis_0049_0050": "0049_prescriptions_festschreibung_ohne_icd10_enc (CREATE OR REPLACE einer BESTEHENDEN Funktion, gleicher Trigger) und 0050_phi_reste_leeren (reine Daten-UPDATEs prescriptions/fahrten + DO-Selbstpruefung) — Reform 3.12 a/b, 01.10.2026. Keine neue Funktion/Trigger/Index/Policy/Tabelle -> COUNTER-NEUTRAL, zaehler/gemessen_am unveraendert. ✅ Am 01.10.2026 auf die Live-Datenbank (SaaS) angewandt (MCP, Freigabe Kemal).",
   "_hinweis_0051": "0051_phi_spalten_entfernen (Reform 3.12 c, 01.10.2026): DROP von 4 Spalten an prescriptions und 7 an leads (zaehlt kein Zaehler) und von 2 Indizes aus 0000_baseline (idx_prescriptions_phi_not_encrypted, idx_leads_pii_not_encrypted) -> index 305->303, alle anderen Zaehler unveraendert. NACHGERECHNET, nicht gemessen — gemessen_am bleibt. ✅ Am 01.10.2026 auf die Live-Datenbank (SaaS) angewandt (MCP, Freigabe Kemal).",
   "_hinweis_0052": "0052_fahrten_aenderungsprotokoll (01.10.2026): +1 Tabelle (fahrten_aenderungen, RLS an), +1 Policy (fahrten_aenderungen_select), +1 Funktion (fahrten_aenderung_protokollieren, SECURITY DEFINER, alle drei REVOKEs), +1 Trigger (trg_fahrten_aenderung_protokollieren, AFTER UPDATE OR DELETE = eine Zeile), +2 Index (PK + fahrten_aenderungen_owner_fahrt_idx). Kein FK. Rechnerisch: public_tablo 83->84, rls_policy 161->162, fonksiyon 77->78, trigger 79->80, index 303->305. NACHGERECHNET, nicht gemessen. ✅ Am 01.10.2026 auf die Live-Datenbank (SaaS) angewandt (MCP).",
-  "bis_version": "0052",
+  "_hinweis_0053": "0053_profiles_privilegierte_spalten (guvenlik S-39, 02.10.2026): DROP TABLE pending_employee_registrations (-1 Tabelle, -3 Policies, -1 Index = PK), profiles: 3 Policies weg + 1 neu (profiles_update_own), +1 Funktion (profiles_privilegierte_spalten_schuetzen, SECURITY INVOKER, alle drei REVOKEs), +1 Trigger, +1 Index (profiles_company_code_upper_key, partiell). Rechnerisch: public_tablo 84->83, rls_policy 162->157, fonksiyon 78->79, trigger 80->81, index 305->305. NACHGERECHNET, nicht gemessen (onprem O-143 bestaetigt). ✅ Am 02.10.2026 auf die Live-Datenbank (SaaS) angewandt (MCP).",
+  "bis_version": "0053",
   "gemessen_am": "2026-09-17",
   "zaehler": {
-    "public_tablo": 84,
-    "rls_policy": 162,
-    "fonksiyon": 78,
-    "trigger": 80,
+    "public_tablo": 83,
+    "rls_policy": 157,
+    "fonksiyon": 79,
+    "trigger": 81,
     "index": 305,
     "rls_kapali_tablolar": [
       "spatial_ref_sys"

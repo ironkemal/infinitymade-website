@@ -1,7 +1,13 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-10-01 — Nachtrag: 0052 fahrten_aenderungen: +1 Policy
+-- ERZEUGT AM:        2026-10-02 — Nachtrag: 0053 (guvenlik S-39): profiles −3 Policies
+--                    ("Users manage own profile", "Users can update own profile",
+--                    "Users can insert own profile") +1 (profiles_update_own, mit
+--                    WITH CHECK); pending_employee_registrations samt 3 Policies
+--                    gedroppt; +1 Funktion profiles_privilegierte_spalten_schuetzen
+--                    (INVOKER) +1 Trigger; +1 Index profiles_company_code_upper_key.
+--                    davor: 2026-10-01 — Nachtrag: 0052 fahrten_aenderungen: +1 Policy
 --                    (fahrten_aenderungen_select), +1 Funktion
 --                    (fahrten_aenderung_protokollieren, SECURITY DEFINER,
 --                    EXECUTE fuer PUBLIC/anon/authenticated entzogen), +1 Trigger,
@@ -747,7 +753,7 @@
 --      heilmittel_position · heilmittel_tarif
 --      ⚠️ kostentraeger und kostentraeger_annahmestellen sind NICHT für anon
 --        offen, sondern nur für authenticated — siehe Abschnitt 2.
---    anon darf INSERT: demo_bookings · pending_employee_registrations
+--    anon darf INSERT: demo_bookings  (pending_employee_registrations: gedroppt 0053)
 
 
 -- =====================================================================
@@ -1088,9 +1094,7 @@
 -- patients
 --   owner sees own patients [ALL] owner + Team
 
--- pending_employee_registrations
---   anon_insert_pending_employee [INSERT] CHECK (true)
---   user_select/delete_own_pending_employee — email = eigene auth.users-Mail
+-- pending_employee_registrations — gedroppt 02.10.2026 (0053)
 
 -- podologie_behandlungen
 --   owner_behandlungen [ALL] USING (owner_id = auth.uid())
@@ -1137,7 +1141,14 @@
 --     id = auth.uid() OR owner_id = auth.uid() OR id = auth_tenant_id() OR owner_id = auth_tenant_id()
 --   Public booking lookup profiles [SELECT]
 --     auth.uid() IS NULL AND booking_slug IS NOT NULL AND accepts_bookings = true
---   Users can insert/update own profile — auth.uid() = id
+--   profiles_update_own [UPDATE] USING + WITH CHECK auth.uid() = id   (0053)
+--   ⚠️ Kein INSERT/DELETE vom Client (Profil entsteht in handle_new_user,
+--     Löschung über api/dsgvo.js). Spaltensperre per Trigger
+--     profiles_privilegierte_spalten_schuetzen (0053, guvenlik S-39): für
+--     authenticated/anon gesperrt sind owner_id, role, plan, plan_status,
+--     trial_ends_at, current_period_end, stripe_*, is_active, activated_at,
+--     deletion_scheduled_at, dta_pro_subscription_item_id; company_code nur
+--     einmal und nur GROSS. service_role/SECURITY DEFINER bleiben frei.
 
 -- rechnung_zahlungen
 --   Rechnungszahlungen select scoping [SELECT]
@@ -1782,6 +1793,13 @@ $function$;
 -- sync_leads_location() -> trigger            lat/lng -> geography(Point)
 -- sync_profiles_clinic_location() -> trigger  dito für die Praxisadresse
 
+-- --- Rechte ---------------------------------------------------------------
+-- profiles_privilegierte_spalten_schuetzen() -> trigger  (02.10.2026, 0053) SECURITY
+--   INVOKER (mit DEFINER waere current_user immer der Inhaber und die Sperre tot),
+--   search_path=public; BEFORE INSERT OR UPDATE auf profiles. Nur wenn
+--   current_user = authenticated/anon: INSERT immer 42501, UPDATE der
+--   privilegierten Spalten 42501. EXECUTE fuer PUBLIC/anon/authenticated entzogen.
+
 
 -- --- Benachrichtigung ---------------------------------------------------
 -- notify_feedback_telegram() -> trigger    pg_net -> Telegram
@@ -1872,6 +1890,7 @@ $function$;
 --    + trg_verordnungen_festschreibung; beide sind mit der Tabelle verschwunden)
 --                         trg_sync_leads_location        BEFORE INSERT/UPDATE OF lat, lng
 --   profiles              trg_sync_profiles_clinic_location BEFORE INSERT/UPDATE OF clinic_lat, clinic_lng
+--                         profiles_privilegierte_spalten_schuetzen BEFORE INSERT/UPDATE  (0053)
 --   businesses            trg_seed_default_groups        AFTER INSERT
 --   patient_consents      trg_patient_consents_immutable BEFORE UPDATE/DELETE
 --                         → fn_patient_consents_immutable(): DELETE erst nach

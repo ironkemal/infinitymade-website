@@ -1,7 +1,11 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-10-01 — Nachtrag: 0052_fahrten_aenderungsprotokoll im
+-- ERZEUGT AM:        2026-10-02 — Nachtrag: 0053_profiles_privilegierte_spalten im
+--                    SaaS angewendet (MCP): −1 Tabelle pending_employee_registrations
+--                    (alter Mail-Self-Signup), +1 Index profiles_company_code_upper_key.
+--                    Letzte Migration: 0053.
+--                    davor: 2026-10-01 — Nachtrag: 0052_fahrten_aenderungsprotokoll im
 --                    SaaS angewendet (MCP): +1 Tabelle fahrten_aenderungen
 --                    (append-only, BMF 18.11.2009). Letzte Migration: 0052.
 --                    davor: 2026-10-01 — Nachtrag: 0051_phi_spalten_entfernen (Reform
@@ -2500,16 +2504,8 @@ CREATE TABLE patients (
 --      (booking_requests.patient_id zeigt hierher). Beide Töpfe bestehen
 --      bewusst nebeneinander; Zusammenlegen bricht laufende Flows.
 
-CREATE TABLE pending_employee_registrations (
-  email text NOT NULL
-  owner_id uuid
-  anrede text
-  full_name text
-  working_hours jsonb
-  created_at timestamptz DEFAULT now()
-  expires_at timestamptz DEFAULT (now() + interval '24 hours')
-);
---   PK (email) · anon darf INSERT (Mitarbeiter-Registrierung).
+-- pending_employee_registrations — GEDROPPT 02.10.2026 (0053, guvenlik S-39/S-38):
+--   alter Mail-Self-Signup, seit 01.10.2026 durch den Einrichtungscode ersetzt.
 
 CREATE TABLE pending_signups (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -2991,7 +2987,7 @@ CREATE TABLE profiles (
 --     ⚠️ Die Nicht-Praxis-Sektoren stammen aus der alten KMU-Ausrichtung und
 --        werden im Onboarding nicht mehr angeboten. Constraint noch nicht bereinigt.
 --   FK id -> auth.users(id) ON DELETE CASCADE · owner_id -> profiles(id)
---   PK (id) · UNIQUE (booking_slug) · UNIQUE (company_code)
+--   PK (id) · UNIQUE (booking_slug) · UNIQUE (company_code) · UNIQUE (upper(company_code)) WHERE NOT NULL (0053)
 --   ★ Zentrale Tenant-Tabelle. Owner-Einstellungen gehören HIERHER, nicht nach
 --     businesses (Einzelstandort-Owner haben dort keinen Datensatz).
 --   ⚠️ has_dta_pro / dta_pro_subscription_item_id sind tote Spalten

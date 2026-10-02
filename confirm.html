@@ -158,73 +158,9 @@
       sub.textContent = msg;
       actions.style.display = 'block';
       actions.innerHTML = `
-        <a href="/employee-signup.html" class="btn">Erneut registrieren</a>
+        <a href="/onboarding.html" class="btn">Erneut registrieren</a>
         <a href="/login.html" class="btn-ghost">Zur Anmeldung</a>
       `;
-    }
-
-    async function applyPendingEmployeeData(session) {
-      const email = session.user.email;
-      const userId = session.user.id;
-
-      const { data: pending } = await supabase
-        .from('pending_employee_registrations')
-        .select('*')
-        .eq('email', email)
-        .maybeSingle();
-
-      if (!pending) return; // no pending employee data — regular password reset or similar
-
-      // Update profile
-      await supabase.from('profiles').update({
-        role: 'employee',
-        owner_id: pending.owner_id,
-        business_name: pending.full_name,
-        anrede: pending.anrede,
-        plan: 'mitarbeiter',
-        billing: null,
-        plan_status: 'active',
-      }).eq('id', userId);
-
-      // Insert working hours
-      const whRows = (pending.working_hours || []).map(h => ({
-        user_id: userId,
-        day_of_week: h.day_of_week,
-        start_time: h.start_time,
-        end_time: h.end_time,
-        is_active: h.is_active,
-      }));
-      if (whRows.length) {
-        await supabase.from('working_hours').insert(whRows);
-      }
-
-      // Assign to owner's default business
-      try {
-        const { data: defaultBiz } = await supabase
-          .from('businesses')
-          .select('id')
-          .eq('owner_id', pending.owner_id)
-          .eq('is_default', true)
-          .maybeSingle();
-        if (defaultBiz?.id) {
-          const { data: mitGroup } = await supabase
-            .from('employee_groups')
-            .select('id')
-            .eq('business_id', defaultBiz.id)
-            .eq('name', 'Mitarbeiter')
-            .maybeSingle();
-          await supabase.from('employee_business_assignments').upsert({
-            employee_id: userId,
-            business_id: defaultBiz.id,
-            group_id: mitGroup?.id || null,
-          }, { onConflict: 'employee_id,business_id' });
-        }
-      } catch {
-        // Non-fatal: profile is set up correctly, business assignment can be retried
-      }
-
-      // Clean up pending record
-      await supabase.from('pending_employee_registrations').delete().eq('email', email);
     }
 
     async function run() {
@@ -259,8 +195,6 @@
         showError('Bestätigung nicht erfolgreich. Bitte versuchen Sie es erneut.');
         return;
       }
-
-      await applyPendingEmployeeData(session);
 
       showSuccess('Ihr Konto ist jetzt aktiv. Sie werden zum Dashboard weitergeleitet…');
       actions.style.display = 'block';
