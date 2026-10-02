@@ -8,6 +8,19 @@ import { TABELLEN, KATEGORIEN } from './klassifikation.js';
 
 const PAGE_SIZE = 1000;
 
+// Zugangsgeheimnisse gehören nicht in eine Datei, die in Downloads/Mail/Cloud landet
+// (guvenlik S-42: profiles.b2b_gmail_refresh_token, calendar_integrations.*_token).
+// Die Auskunft sagt nur, DASS ein Wert gespeichert ist.
+const GEHEIM = /(^|_)(access_token|refresh_token|token|secret|password|passwort|pin_hash|code_hash)$/i;
+export function geheimnisseAusblenden(row) {
+  if (!row || typeof row !== 'object') return row;
+  const out = {};
+  for (const [k, v] of Object.entries(row)) {
+    out[k] = GEHEIM.test(k) && v != null ? '[gespeichert — aus Sicherheitsgründen nicht exportiert]' : v;
+  }
+  return out;
+}
+
 /**
  * Liest eine Tabelle seitenweise in 1000er-Bloecken.
  */
@@ -50,7 +63,7 @@ async function ladeTabelle(supabase, table, select, filterCol, filterVal) {
     }));
   }
 
-  return allRows;
+  return allRows.map(geheimnisseAusblenden);
 }
 
 /**

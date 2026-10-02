@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-02",
  "dateien": 326,
- "funktionen": 2794,
+ "funktionen": 2796,
  "module": [
   "abrechnung",
   "anamnese",
@@ -1129,6 +1129,7 @@
    "calledBy": [
     "accessLogger",
     "createDsgvoRouter",
+    "db",
     "genericFail",
     "kioskAudit",
     "noopMiddleware"
@@ -14311,12 +14312,31 @@
    "uiPfad": []
   },
   {
+   "name": "geheimnisseAusblenden",
+   "kind": "function",
+   "file": "api-backend/dsgvo/export.js",
+   "start": 15,
+   "end": 22,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "ladeTabelle",
    "kind": "function",
    "file": "api-backend/dsgvo/export.js",
-   "start": 14,
-   "end": 46,
-   "lines": 33,
+   "start": 27,
+   "end": 67,
+   "lines": 41,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -14335,9 +14355,9 @@
    "name": "exportErstellen",
    "kind": "function",
    "file": "api-backend/dsgvo/export.js",
-   "start": 60,
-   "end": 141,
-   "lines": 82,
+   "start": 81,
+   "end": 163,
+   "lines": 83,
    "spiegelHinweis": null,
    "tables": [
     "aufbewahrung_sperre"
@@ -14351,6 +14371,7 @@
    ],
    "calledBy": [
     "createDsgvoRouter",
+    "db",
     "noopMiddleware"
    ],
    "modules": [],
@@ -14375,6 +14396,7 @@
    ],
    "calledBy": [
     "createDsgvoRouter",
+    "db",
     "noopMiddleware"
    ],
    "modules": [],
@@ -14386,8 +14408,8 @@
    "kind": "function",
    "file": "api-backend/dsgvo/loeschen.js",
    "start": 59,
-   "end": 607,
-   "lines": 549,
+   "end": 626,
+   "lines": 568,
    "spiegelHinweis": null,
    "tables": [
     "profiles",
@@ -14436,6 +14458,7 @@
    ],
    "calledBy": [
     "createDsgvoRouter",
+    "db",
     "noopMiddleware"
    ],
    "modules": [],
@@ -14446,8 +14469,8 @@
    "name": "pruefeRelation",
    "kind": "function",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 148,
-   "end": 168,
+   "start": 152,
+   "end": 172,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [],
@@ -14467,8 +14490,8 @@
    "name": "hatZeilenIn",
    "kind": "function",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 211,
-   "end": 218,
+   "start": 216,
+   "end": 223,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -14488,8 +14511,8 @@
    "name": "bezug",
    "kind": "arrow",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 290,
-   "end": 295,
+   "start": 295,
+   "end": 300,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -14509,8 +14532,8 @@
    "name": "pruefe",
    "kind": "arrow",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 339,
-   "end": 339,
+   "start": 346,
+   "end": 346,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -14530,8 +14553,8 @@
    "name": "bereinigeStorage",
    "kind": "function",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 612,
-   "end": 669,
+   "start": 631,
+   "end": 688,
    "lines": 58,
    "spiegelHinweis": null,
    "tables": [],
@@ -14553,8 +14576,8 @@
    "name": "listRekursiv",
    "kind": "function",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 634,
-   "end": 649,
+   "start": 653,
+   "end": 668,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -15720,8 +15743,8 @@
    "kind": "function",
    "file": "api-backend/routes/dsgvo.js",
    "start": 18,
-   "end": 240,
-   "lines": 223,
+   "end": 248,
+   "lines": 231,
    "spiegelHinweis": null,
    "tables": [
     "data_access_log"
@@ -15732,12 +15755,15 @@
    "storage": [],
    "calls": [
     "antworttextFallB",
+    "db",
     "exportErstellen",
     "json",
     "kontoLoeschen",
-    "logAccess"
+    "logAccess",
+    "setzen"
    ],
    "calledBy": [
+    "db",
     "noopMiddleware"
    ],
    "modules": [],
@@ -15745,12 +15771,12 @@
    "uiPfad": []
   },
   {
-   "name": "noopMiddleware",
+   "name": "db",
    "kind": "arrow",
    "file": "api-backend/routes/dsgvo.js",
-   "start": 29,
-   "end": 243,
-   "lines": 215,
+   "start": 23,
+   "end": 251,
+   "lines": 229,
    "spiegelHinweis": null,
    "tables": [
     "data_access_log"
@@ -15765,7 +15791,41 @@
     "exportErstellen",
     "json",
     "kontoLoeschen",
-    "logAccess"
+    "logAccess",
+    "setzen"
+   ],
+   "calledBy": [
+    "createDsgvoRouter",
+    "noopMiddleware"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "noopMiddleware",
+   "kind": "arrow",
+   "file": "api-backend/routes/dsgvo.js",
+   "start": 29,
+   "end": 251,
+   "lines": 223,
+   "spiegelHinweis": null,
+   "tables": [
+    "data_access_log"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "antworttextFallB",
+    "createDsgvoRouter",
+    "db",
+    "exportErstellen",
+    "json",
+    "kontoLoeschen",
+    "logAccess",
+    "setzen"
    ],
    "calledBy": [],
    "modules": [],
@@ -16888,8 +16948,11 @@
    "calls": [],
    "calledBy": [
     "anfrageKorrekturenPruefen",
+    "createDsgvoRouter",
+    "db",
     "fuelleBelegPositionen",
-    "mountPraxisStandort"
+    "mountPraxisStandort",
+    "noopMiddleware"
    ],
    "modules": [
     "abrechnung",
@@ -17559,6 +17622,7 @@
     "chat",
     "createCalendarEvent",
     "createDsgvoRouter",
+    "db",
     "declineAnfrage",
     "empfaengerVorabPruefen",
     "exportAbrufen",
@@ -94554,8 +94618,11 @@
    ],
    "calledBy": [
     "anfrageKorrekturenPruefen",
+    "createDsgvoRouter",
+    "db",
     "fuelleBelegPositionen",
-    "mountPraxisStandort"
+    "mountPraxisStandort",
+    "noopMiddleware"
    ],
    "modules": [
     "abrechnung",
@@ -95979,8 +96046,11 @@
    "calls": [],
    "calledBy": [
     "anfrageKorrekturenPruefen",
+    "createDsgvoRouter",
+    "db",
     "fuelleBelegPositionen",
-    "mountPraxisStandort"
+    "mountPraxisStandort",
+    "noopMiddleware"
    ],
    "modules": [
     "abrechnung",
@@ -131737,8 +131807,8 @@
        "name": "kontoLoeschen",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 59,
-       "end": 607,
-       "lines": 549,
+       "end": 626,
+       "lines": 568,
        "writes": [
         "bookings:delete"
        ],
@@ -132244,8 +132314,8 @@
        "name": "kontoLoeschen",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 59,
-       "end": 607,
-       "lines": 549,
+       "end": 626,
+       "lines": 568,
        "writes": [
         "profiles:update"
        ],
@@ -132906,8 +132976,8 @@
        "name": "kontoLoeschen",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 59,
-       "end": 607,
-       "lines": 549,
+       "end": 626,
+       "lines": 568,
        "writes": [
         "prescriptions:delete"
        ],
@@ -133233,8 +133303,8 @@
        "name": "kontoLoeschen",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 59,
-       "end": 607,
-       "lines": 549,
+       "end": 626,
+       "lines": 568,
        "writes": [
         "leads:delete",
         "leads:update"
@@ -134130,8 +134200,8 @@
        "name": "kontoLoeschen",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 59,
-       "end": 607,
-       "lines": 549,
+       "end": 626,
+       "lines": 568,
        "writes": [
         "employee_services:delete"
        ],
@@ -134752,8 +134822,8 @@
        "name": "kontoLoeschen",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 59,
-       "end": 607,
-       "lines": 549,
+       "end": 626,
+       "lines": 568,
        "writes": [
         "employee_business_assignments:delete"
        ],
@@ -134958,8 +135028,8 @@
        "name": "kontoLoeschen",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 59,
-       "end": 607,
-       "lines": 549,
+       "end": 626,
+       "lines": 568,
        "writes": [
         "employee_scope_overrides:delete"
        ],
@@ -135493,8 +135563,8 @@
        "name": "kontoLoeschen",
        "file": "api-backend/dsgvo/loeschen.js",
        "start": 59,
-       "end": 607,
-       "lines": 549,
+       "end": 626,
+       "lines": 568,
        "writes": [
         "prescription_documents:delete"
        ],

@@ -22,7 +22,7 @@
 
 | Aşama | Hat | Konu | Durum | Commit'ler / not |
 |---|---|---|---|---|
-| K1 | Kemal | Güvenlik + DB temizliği + DSGVO Express'e | 🟡 K1.1·1.2·1.3·1.5·1.6·1.7 ✅, K1.8 cevaplar ✅ — **kaldığın yer: K1.4**, sonra K1.8 kodu (S-31) | 0053–0056 · ecbf871 7d75f09 ae999fa 16a7aef fdf25dd 9a0e18f 1f2ecb1 3fecef1 975dd2a 6141be8 bb65f0b · devir: fortschritte/2026-10-02.md |
+| K1 | Kemal | Güvenlik + DB temizliği + DSGVO Express'e | ✅ 02.10.2026 — K1.1–K1.8 (K1.8 S-31 kodu → M1.16, Hat M) | 0053–0057 · ecbf871 7d75f09 ae999fa 16a7aef fdf25dd 9a0e18f 1f2ecb1 3fecef1 975dd2a 6141be8 bb65f0b 94bac87 2804b99 59c3ea1 · fortschritte/2026-10-02.md |
 | K2 | Kemal | Kutu kurulumu: Linux + Windows, güncelleme, kılavuz (KI katmanı → M4) | ⬜ | |
 | K3 | Kemal | Kutu testi (§7) — EN SON, bütün aşamalar ✅ olunca | ⬜ | |
 | M1 | Melih | Podoloji + §302 küçük düzeltmeler, Zuzahlungsforderung, honeypot | ⬜ | |

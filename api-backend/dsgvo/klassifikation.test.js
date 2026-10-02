@@ -96,3 +96,12 @@ test('DSGVO Drift-Test: LEAD_BEZUEGE deckt alle Fremdschluessel auf leads in SCH
     );
   }
 });
+
+test('Export blendet Zugangsgeheimnisse aus (guvenlik S-42)', async () => {
+  const { geheimnisseAusblenden } = await import('./export.js');
+  const r = geheimnisseAusblenden({ id: 1, refresh_token: 'x', access_token: 'y', b2b_gmail_refresh_token: 'z', provider: 'google', token_expires_at: '2026', leer_token: null });
+  assert.equal(r.provider, 'google');
+  assert.equal(r.token_expires_at, '2026');
+  assert.equal(r.leer_token, null);
+  for (const k of ['refresh_token', 'access_token', 'b2b_gmail_refresh_token']) assert.match(r[k], /nicht exportiert/);
+});
