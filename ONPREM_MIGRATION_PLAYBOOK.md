@@ -354,6 +354,8 @@ Görevler:
 | 5 — Migration | ⬜ başlamadı | | |
 | 6 — Go-live | ⬜ başlamadı | | |
 
+> ⚠️ **02.10.2026 (onprem ajanı):** Faz 1 ve Faz 2 satırları 11.09.2026 fotoğrafıdır, bayattır. Koda karşı doğrulanan kapanışlar: **1.1** (`api/dsgvo.js` → Express, O-16, `59c3ea1`) · **2.1b** Caddy/TLS (§7F) · **2.1c** `install.sh` (§7G) · **2.2** kurulum sihirbazı (§7H). Güncel madde durumu: `onprem/REGISTER.md` §9 · güncel iş sırası: `KUTU_HAZIRLIK_SPRINT.md` §0/§3 (K2). Bu tablo faz bitince yeniden yazılır, madde madde değil.
+
 G8 kuralı (buluta yeni zincir yok) yürürlük tarihi: ✅ **2026-09-04** — kural Temmuz'dan
 beri yazılıydı ama tutmuyordu (`module/` altına dört yeni dosya backend adresini koda
 gömdü). O tarihte **kapıya bağlandı**: `tools/check-onprem.sh` yedi sayaç tutuyor,
