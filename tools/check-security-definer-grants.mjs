@@ -33,6 +33,11 @@ export const PROTECTED = [
   // 0054 (02.10.2026, guvenlik S-18): Mandanten-Pruefung prescriptions <-> Patient/Arzt.
   // DEFINER, damit sie nicht an der RLS des Aufrufers haengt; drei REVOKEs.
   'prescriptions_mandant_pruefen',
+  // 0055 (02.10.2026, guvenlik S-38): Sitzungen fremder Nutzer loeschen bzw.
+  // Konten einem Inhaber zuordnen — per RPC fuer authenticated waere beides
+  // Konto-Uebernahme. Nur service_role.
+  'auth_sitzungen_beenden',
+  'mitarbeiter_zuordnen',
 ];
 
 // Bewusst fuer anon/authenticated geoeffnete RPC-Funktionen.

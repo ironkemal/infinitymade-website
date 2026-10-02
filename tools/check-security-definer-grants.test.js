@@ -199,7 +199,7 @@ test('8. pruefeDateien ueberspringt 0000_baseline.sql', () => {
   assert.deepEqual(bulgular, []);
 });
 
-test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (14) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
+test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (16) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
   // AUSNAHMEN: genau 5 oeffentliche RPCs
   assert.equal(AUSNAHMEN.length, 5);
   const erwarteteAusnahmen = [
@@ -215,8 +215,8 @@ test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (14) und BEKANNTE_ALTLASTEN (6
     assert.ok(typeof eintrag.grund === 'string' && eintrag.grund.length > 10, 'Begruendung fehlt fuer Ausnahme: ' + name);
   }
 
-  // PROTECTED: 8 urspruengliche + 4 Trigger-Funktionen aus 0003 und 0021 + 0052 + 0054 = 14
-  assert.equal(PROTECTED.length, 14);
+  // PROTECTED: 8 urspruengliche + 4 Trigger-Funktionen aus 0003 und 0021 + 0052 + 0054 + 0055 (2) = 16
+  assert.equal(PROTECTED.length, 16);
   const erwarteteProtected = [
     'get_gmail_token',
     'set_gmail_token',
@@ -232,6 +232,8 @@ test('9. Listenstruktur: AUSNAHMEN (5), PROTECTED (14) und BEKANNTE_ALTLASTEN (6
     'audit_write_log',
     'fahrten_aenderung_protokollieren',
     'prescriptions_mandant_pruefen',
+    'auth_sitzungen_beenden',
+    'mitarbeiter_zuordnen',
   ];
   for (const name of erwarteteProtected) {
     assert.ok(PROTECTED.includes(name), 'PROTECTED fehlt: ' + name);
