@@ -1,7 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-10-02 — Nachtrag: 0053_profiles_privilegierte_spalten im
+-- ERZEUGT AM:        2026-10-02 — Nachtrag: 0054 (nur Policies/Trigger, keine
+--                    Tabellen-/Spaltenänderung). Letzte Migration: 0054.
+--                    davor: 2026-10-02 — Nachtrag: 0053_profiles_privilegierte_spalten im
 --                    SaaS angewendet (MCP): −1 Tabelle pending_employee_registrations
 --                    (alter Mail-Self-Signup), +1 Index profiles_company_code_upper_key.
 --                    Letzte Migration: 0053.

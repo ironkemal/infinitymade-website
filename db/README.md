@@ -177,11 +177,11 @@ nichts Neues erfinden.
 **RLS ist auf allen Tabellen aktiv** außer `spatial_ref_sys` (PostGIS-System, unkritisch).
 
 Bewusst öffentlich lesbar (Buchungsseite): `services`, `working_hours`,
-`time_offs`, `employee_services`, `custom_days`, sowie `profiles`/`businesses`
+`employee_services`, `custom_days`, sowie `profiles`/`businesses`
 nur bei gesetztem `booking_slug` und `auth.uid() IS NULL`.
 
 Bekannte Schwachstellen, dokumentiert statt stillschweigend gepatcht:
-- `employee_services` und `time_offs`: jeder eingeloggte Nutzer darf schreiben (`auth.role() = 'authenticated'`), mandantenübergreifend.
+- ~~`employee_services` und `time_offs`: jeder eingeloggte Nutzer darf schreiben, mandantenübergreifend.~~ **Geschlossen 02.10.2026** (`0054`, S-07): beide nur noch innerhalb des eigenen Mandanten; `time_offs` ist seitdem auch **nicht mehr öffentlich lesbar**. Details: `db/REGISTER.md`.
 - Fünf Tabellen ohne Team-Zugriff (nur Inhaber sieht sie): `verordnungen`, `podologie_behandlungen`, `fußstatus`, `patient_notes`, `warteliste`. Ob angestellte Therapeuten das sehen sollen, ist eine offene **Produktfrage** — nicht nebenbei „korrigieren".
 
 ---

@@ -1,7 +1,10 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-10-02 — Nachtrag: 0053 (guvenlik S-39): profiles −3 Policies
+-- ERZEUGT AM:        2026-10-02 — Nachtrag: 0054 (guvenlik S-07/S-18): employee_services
+--                    + time_offs Mandantengrenze (−3 Policies +2), +1 Funktion
+--                    prescriptions_mandant_pruefen (DEFINER) +1 Trigger.
+--                    davor: 2026-10-02 — Nachtrag: 0053 (guvenlik S-39): profiles −3 Policies
 --                    ("Users manage own profile", "Users can update own profile",
 --                    "Users can insert own profile") +1 (profiles_update_own, mit
 --                    WITH CHECK); pending_employee_registrations samt 3 Policies
@@ -976,10 +979,10 @@
 --   eso_owner_or_self [ALL] employee_id = auth.uid() OR Business gehört mir
 
 -- employee_services
---   Authenticated operations employee services [ALL] USING/CHECK (auth.role() = 'authenticated')
---   Public read employee services [SELECT] USING (true)
---   ⚠️ Jeder eingeloggte Nutzer darf schreiben — mandantenübergreifend offen.
---      Bekannte Schwachstelle, Tabelle enthält nur Zuordnungs-IDs.
+--   employee_services_mandant [ALL] TO authenticated (0054, S-07)
+--     USING/CHECK: Mitarbeiter (COALESCE(owner_id,id)) UND Leistung
+--     (COALESCE(services.owner_id, user_id)) gehören zu auth_tenant_id()
+--   Public read employee services [SELECT] USING (true) — bleibt, booking.js liest anonym
 
 -- fahrten
 --   fahrten select policy [SELECT] owner_id = auth.uid() OR user_id = auth.uid()
@@ -1179,9 +1182,11 @@
 --     auth.uid() = owner_id OR auth.uid() = profile_id OR Team
 
 -- time_offs
---   Authenticated operations time offs [ALL] USING/CHECK (auth.role() = 'authenticated')
---   Public read time offs [SELECT] USING (true)
---   ⚠️ Wie employee_services: jeder Eingeloggte darf schreiben.
+--   time_offs_mandant [ALL] TO authenticated (0054, S-07)
+--     USING: Mitarbeiter gehört zu auth_tenant_id(); CHECK zusätzlich
+--     owner_id IS NULL OR owner_id = auth_tenant_id()
+--   (Public read entfernt 0054 — reason/note können Gesundheitsangaben sein;
+--    anonym liest niemand, server.js mit service_role)
 
 -- trip_history / trip_plans
 --   Users manage own history/plans [ALL] USING (auth.uid() = user_id)
@@ -1794,6 +1799,9 @@ $function$;
 -- sync_profiles_clinic_location() -> trigger  dito für die Praxisadresse
 
 -- --- Rechte ---------------------------------------------------------------
+-- prescriptions_mandant_pruefen() -> trigger  (02.10.2026, 0054, S-18) SECURITY DEFINER,
+--   search_path=public; patient_id (leads) und arzt_id (aerzte) müssen zu
+--   NEW.owner_id gehören, sonst 42501. NULL erlaubt. Drei REVOKEs.
 -- profiles_privilegierte_spalten_schuetzen() -> trigger  (02.10.2026, 0053) SECURITY
 --   INVOKER (mit DEFINER waere current_user immer der Inhaber und die Sperre tot),
 --   search_path=public; BEFORE INSERT OR UPDATE auf profiles. Nur wenn
@@ -1874,6 +1882,7 @@ $function$;
 --                         trg_leads_patientennummer      BEFORE INSERT (Nummernvergabe)
 --                         trg_audit_write_leads          AFTER INSERT/UPDATE/DELETE
 --   prescriptions         trg_prescriptions_verordnungsnummer BEFORE INSERT/UPDATE OF patient_id
+--                         prescriptions_mandant_pruefen BEFORE INSERT/UPDATE OF owner_id, patient_id, arzt_id  (0054)
 --                         trg_prescriptions_festschreibung BEFORE UPDATE
 --                           → prescriptions_festschreibung(): GoBD-Sperre ab gesetzter
 --                           belegnummer, siehe Funktionsabschnitt (seit 17.09.2026, Ops #167).
