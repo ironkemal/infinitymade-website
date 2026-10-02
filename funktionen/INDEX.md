@@ -1,9 +1,9 @@
 # Funktionskarte
 
-> Üretim: 2026-10-01 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-10-02 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**2789 fonksiyon** · 322 dosya · 40 sidebar modülü
+**2776 fonksiyon** · 321 dosya · 40 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -78,7 +78,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `handleSave()` — [onboarding.js:457](onboarding.js#L457-L503) · 47 satır · profiles:update
 - `bindOwner()` — [onboarding.js:516](onboarding.js#L516-L542) · 27 satır · profiles:update
 - `bindHours()` — [onboarding.js:813](onboarding.js#L813-L858) · 46 satır · profiles:update
-- `bindPlan()` — [onboarding.js:870](onboarding.js#L870-L1015) · 146 satır · profiles:update
+- `bindPlan()` — [onboarding.js:870](onboarding.js#L870-L1016) · 147 satır · profiles:update
 
 **Yol 4 — `initAnfragenPanel()`** · Ekran: ortak yardımcı — 30 modülden çağrılıyor
 - `initAnfragenPanel()` — [dashboard.js:19279](dashboard.js#L19279-L19336) · 58 satır · profiles:update
@@ -387,7 +387,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `r2` — api-backend/billing/api/abrechnung.routes.js:2005 · api-backend/billing/api/statistik.routes.js:176 · api-backend/billing/api/zuzahlung.routes.js:45 · api-backend/billing/dta/builder.js:57 · api-backend/billing/preise/resolver.js:42 · api-backend/billing/utils/abrechnung-zeilen.js:36 · api-backend/billing/zuzahlung/calculator.js:14 · api-backend/billing/zuzahlung/korrektur.js:16 · module/abrechnung-verlauf.js:128 · module/zuzahlung-rechnen.js:42
 - `fmtDate` — api-backend/billing/dta/encoding.js:80 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:29 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:976 · ops/app.js:84
 - `render` — calendar-widget.js:127 · dashboard.js:12837 · dashboard.js:18194 · ops/board.js:206 · ops/decisions.js:14 · ops/files.js:52 · ops/finance.js:959 · ops/meetings.js:23 · ops/wissen.js:66 · patient-suche.js:116
-- `$` — attendance.js:10 · employee-signup.js:10 · module/anamnese.js:42 · module/kiosk.js:72 · module/rechnung-zahlungseingang.js:376 · module/verordnung-podo.js:83 · module/verordnung-pruefen-knopf.js:41 · module/zuzahlung-korrektur.js:206 · ops/app.js:48
+- `$` — attendance.js:10 · module/anamnese.js:42 · module/kiosk.js:72 · module/rechnung-zahlungseingang.js:376 · module/verordnung-podo.js:83 · module/verordnung-pruefen-knopf.js:41 · module/zuzahlung-korrektur.js:206 · ops/app.js:48
 - `init` — attendance.js:299 · booking-request.js:1396 · booking.js:63 · cookie-consent.js:139 · dashboard.js:15308 · kalender.js:130 · onboarding.js:77 · setup.js:127
 - `schliessen` — cookie-consent.js:76 · module/abrechnung-freigabe.js:165 · module/abrechnungsstatus.js:596 · module/arzt-register.js:276 · module/rechnung-zahlungseingang.js:432 · module/verordnung-feldmarker.js:240 · module/zuzahlung-befreiung.js:151 · module/zuzahlung-korrektur.js:209
 - `g` — dashboard.js:14334 · dashboard.js:14347 · dashboard.js:14501 · dashboard.js:14571 · module/rezept-in-maske.js:39 · module/verordnung-anlegen.js:28 · module/verordnung-maske.js:369 · module/verordnung-nachweis.js:28
@@ -401,7 +401,6 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `zeichne` — module/abrechnung-auswahl.js:763 · module/abrechnungsstatus.js:609 · module/patienten-einwilligung.js:489 · module/praxis-standort.js:115 · module/rezeptinfo-geld.js:355
 - `el` — module/arzt-register.js:251 · module/fussbefund.js:214 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:629
 - `zeile` — module/rechnung-druck.js:31 · module/verordnung-detail.js:273 · module/verordnung-detail.js:400 · module/verordnung-detail.js:457 · module/verordnung-pruefen-knopf.js:115
-- `showMsg` — admin-login.js:15 · attendance.js:69 · employee-signup.js:130 · login.js:97
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/preflight.js:157
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
 - `loadServices` — booking-request.js:528 · booking.js:164 · dashboard.js:8654 · kalender.js:643
@@ -411,6 +410,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `v` — dashboard.js:12486 · dashboard.js:12508 · dashboard.js:12528 · dashboard.js:15094
 - `zeigeFehler` — module/abrechnung-detail.js:565 · module/abrechnung-detail.js:607 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208
 - `load` — ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
+- `showMsg` — admin-login.js:15 · attendance.js:69 · login.js:97
 - `isAdmin` — admin-login.js:18 · api/_lib/auth.js:90 · login.js:129
 - `showToast` — admin.js:22 · dashboard.js:924 · module/kiosk.js:55
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rezept-in-maske.js:218

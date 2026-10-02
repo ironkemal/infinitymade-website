@@ -60,10 +60,8 @@ export const AUSNAHMEN = [
     name: 'find_owner_id_by_code',
     grund: 'Oeffentliche Buchungsseite booking.js:75 loest Slug zu owner_id auf; anon-Zugriff zwingend notwendig.',
   },
-  {
-    name: 'get_my_permissions',
-    grund: 'Liest Berechtigungen des angemeldeten Benutzers in dashboard.js:907; authenticated zwingend notwendig.',
-  },
+  // get_my_permissions entfernt 02.10.2026: live prosecdef=false (INVOKER) —
+  // keine DEFINER-Ausnahme mehr noetig (guvenlik, db/SECURITY-DEFINER-EXECUTE.json).
 ];
 
 // Historische Migrationen, die ihren REVOKE erst in einer spaeteren Migration

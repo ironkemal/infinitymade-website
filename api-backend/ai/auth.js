@@ -38,11 +38,17 @@ export async function requireAuth(req, res, next) {
 
     const { data: profile, error: pErr } = await supabase
       .from('profiles')
-      .select('id, role, owner_id')
+      .select('id, role, owner_id, is_active')
       .eq('id', userId)
       .single();
 
     if (pErr || !profile) return res.status(403).json({ error: 'Profile not found' });
+    // Entfernte Mitarbeiter (POST /team/mitarbeiter/:id/entfernen): das Access-Token
+    // bleibt bis zum Ablauf gültig — hier sofort abweisen (guvenlik S-38, 02.10.2026).
+    // Nur employee: is_active=false bei Inhabern setzt der Stripe-Webhook bei Kündigung.
+    if (profile.role === 'employee' && profile.is_active === false) {
+      return res.status(403).json({ error: 'Zugang deaktiviert' });
+    }
 
     const tenantId = profile.role === 'employee' && profile.owner_id
       ? profile.owner_id

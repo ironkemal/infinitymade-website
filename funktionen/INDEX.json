@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-01",
- "dateien": 322,
- "funktionen": 2789,
+ "erzeugt": "2026-10-02",
+ "dateien": 321,
+ "funktionen": 2776,
  "module": [
   "abrechnung",
   "anamnese",
@@ -1126,6 +1126,7 @@
    ],
    "calledBy": [
     "accessLogger",
+    "genericFail",
     "kioskAudit"
    ],
    "modules": [],
@@ -1198,12 +1199,33 @@
    "uiPfad": []
   },
   {
+   "name": "queryTokenErlaubt",
+   "kind": "function",
+   "file": "api-backend/ai/auth.js",
+   "start": 21,
+   "end": 23,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "requireAuth"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "requireAuth",
    "kind": "function",
    "file": "api-backend/ai/auth.js",
-   "start": 15,
-   "end": 45,
-   "lines": 31,
+   "start": 25,
+   "end": 57,
+   "lines": 33,
    "spiegelHinweis": null,
    "tables": [
     "profiles"
@@ -1213,7 +1235,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "json"
+    "json",
+    "queryTokenErlaubt"
    ],
    "calledBy": [],
    "modules": [],
@@ -15567,8 +15590,8 @@
    "name": "cleanSlug",
    "kind": "function",
    "file": "api-backend/routes/mitarbeiter-zugang.js",
-   "start": 31,
-   "end": 38,
+   "start": 32,
+   "end": 39,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -15586,9 +15609,9 @@
    "name": "genericFail",
    "kind": "arrow",
    "file": "api-backend/routes/mitarbeiter-zugang.js",
-   "start": 369,
-   "end": 378,
-   "lines": 10,
+   "start": 512,
+   "end": 527,
+   "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -15596,7 +15619,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "json"
+    "json",
+    "logAccess"
    ],
    "calledBy": [],
    "modules": [],
@@ -17217,6 +17241,7 @@
     "mandantUndAbrechnung",
     "maybeOfferAppointmentConfirmEmail",
     "mitarbeiterAnlegen",
+    "mitarbeiterEntfernen",
     "nachrichtAnPatient",
     "neuerEinrichtungscode",
     "nurInhaber",
@@ -18090,8 +18115,8 @@
    "name": "handleExport",
    "kind": "function",
    "file": "api/dsgvo.js",
-   "start": 182,
-   "end": 230,
+   "start": 181,
+   "end": 229,
    "lines": 49,
    "spiegelHinweis": null,
    "tables": [],
@@ -18113,8 +18138,8 @@
    "name": "handleDelete",
    "kind": "function",
    "file": "api/dsgvo.js",
-   "start": 421,
-   "end": 557,
+   "start": 420,
+   "end": 556,
    "lines": 137,
    "spiegelHinweis": null,
    "tables": [],
@@ -35082,6 +35107,7 @@
     "loadVorlagenPanel",
     "makeShape",
     "markActiveShape",
+    "mitarbeiterEntfernen",
     "onZoneClick",
     "openB2BModal",
     "openBookingModal",
@@ -35657,6 +35683,7 @@
     "loadEmpServices",
     "loadEmpUrlaubSection",
     "loadTeam",
+    "mitarbeiterEntfernen",
     "renderEmpAvatar",
     "showConfirmModal",
     "showToast",
@@ -48152,332 +48179,6 @@
    "uiPfad": [
     "ortak yardımcı — 30 modülden çağrılıyor"
    ]
-  },
-  {
-   "name": "$",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 10,
-   "end": 10,
-   "lines": 1,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "showStep",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 11,
-   "end": 21,
-   "lines": 11,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [
-    "init",
-    "nextStep",
-    "prevStep"
-   ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "showFieldErr",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 22,
-   "end": 28,
-   "lines": 7,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [
-    "clearStep1Errors",
-    "validateStep1"
-   ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "clearStep1Errors",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 29,
-   "end": 31,
-   "lines": 3,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [
-    "showFieldErr"
-   ],
-   "calledBy": [
-    "validateStep1"
-   ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "isValidEmail",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 32,
-   "end": 32,
-   "lines": 1,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [
-    "validateStep1"
-   ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "renderWorkingHours",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 35,
-   "end": 76,
-   "lines": 42,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [
-    "initWorkingHours"
-   ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "initWorkingHours",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 79,
-   "end": 92,
-   "lines": 14,
-   "spiegelHinweis": null,
-   "tables": [
-    "working_hours"
-   ],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [
-    "renderWorkingHours"
-   ],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "collectWorkingHours",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 94,
-   "end": 101,
-   "lines": 8,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [
-    "updateSummary",
-    "validateStep2"
-   ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "showMsg",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 130,
-   "end": 133,
-   "lines": 4,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [
-    "init"
-   ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "validateStep1",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 136,
-   "end": 153,
-   "lines": 18,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [
-    "clearStep1Errors",
-    "isValidEmail",
-    "showFieldErr"
-   ],
-   "calledBy": [
-    "validateCurrentStep"
-   ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "fetchOwnerHoursMap",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 156,
-   "end": 166,
-   "lines": 11,
-   "spiegelHinweis": null,
-   "tables": [
-    "working_hours"
-   ],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "isOwnerDayOpen",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 168,
-   "end": 173,
-   "lines": 6,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [
-    "validateStep2"
-   ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "validateStep2",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 175,
-   "end": 206,
-   "lines": 32,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [
-    "collectWorkingHours",
-    "isOwnerDayOpen"
-   ],
-   "calledBy": [
-    "validateCurrentStep"
-   ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "updateSummary",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 209,
-   "end": 216,
-   "lines": 8,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [
-    "collectWorkingHours"
-   ],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
-   "name": "handleEnter",
-   "kind": "function",
-   "file": "employee-signup.js",
-   "start": 235,
-   "end": 237,
-   "lines": 3,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
   },
   {
    "name": "_compileRe",
@@ -84087,6 +83788,7 @@
    "calls": [],
    "calledBy": [
     "mitarbeiterAnlegen",
+    "mitarbeiterEntfernen",
     "neuerEinrichtungscode"
    ],
    "modules": [
@@ -84206,11 +83908,68 @@
    ]
   },
   {
+   "name": "mitarbeiterEntfernen",
+   "kind": "function",
+   "file": "module/mitarbeiter-zugang.js",
+   "start": 133,
+   "end": 156,
+   "lines": 24,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "json",
+    "resolveOptions"
+   ],
+   "calledBy": [
+    "fmt",
+    "openEmpDetail"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "zeigeEinrichtungscode",
    "kind": "function",
    "file": "module/mitarbeiter-zugang.js",
-   "start": 134,
-   "end": 215,
+   "start": 167,
+   "end": 248,
    "lines": 82,
    "spiegelHinweis": null,
    "tables": [],
@@ -84266,8 +84025,8 @@
    "name": "closeHandler",
    "kind": "arrow",
    "file": "module/mitarbeiter-zugang.js",
-   "start": 193,
-   "end": 196,
+   "start": 226,
+   "end": 229,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -84287,8 +84046,8 @@
    "name": "einrichtungscodeKnopfHtml",
    "kind": "function",
    "file": "module/mitarbeiter-zugang.js",
-   "start": 221,
-   "end": 224,
+   "start": 254,
+   "end": 257,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -84340,8 +84099,8 @@
    "name": "verdrahteEinrichtungscodeKnoepfe",
    "kind": "function",
    "file": "module/mitarbeiter-zugang.js",
-   "start": 231,
-   "end": 255,
+   "start": 264,
+   "end": 288,
    "lines": 25,
    "spiegelHinweis": null,
    "tables": [],
@@ -122138,8 +121897,8 @@
    "kind": "function",
    "file": "onboarding.js",
    "start": 870,
-   "end": 1015,
-   "lines": 146,
+   "end": 1016,
+   "lines": 147,
    "spiegelHinweis": null,
    "tables": [
     "profiles"
@@ -122168,8 +121927,8 @@
    "name": "logout",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 1018,
-   "end": 1021,
+   "start": 1019,
+   "end": 1022,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -122187,8 +121946,8 @@
    "name": "showError",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 1023,
-   "end": 1028,
+   "start": 1024,
+   "end": 1029,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -122217,8 +121976,8 @@
    "name": "escapeAttr",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 1030,
-   "end": 1032,
+   "start": 1031,
+   "end": 1033,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -132162,8 +131921,8 @@
        "name": "bindPlan",
        "file": "onboarding.js",
        "start": 870,
-       "end": 1015,
-       "lines": 146,
+       "end": 1016,
+       "lines": 147,
        "writes": [
         "profiles:update"
        ],
@@ -135226,7 +134985,6 @@
    "name": "$",
    "orte": [
     "attendance.js:10",
-    "employee-signup.js:10",
     "module/anamnese.js:42",
     "module/kiosk.js:72",
     "module/rechnung-zahlungseingang.js:376",
@@ -135396,16 +135154,6 @@
    "aynalar": []
   },
   {
-   "name": "showMsg",
-   "orte": [
-    "admin-login.js:15",
-    "attendance.js:69",
-    "employee-signup.js:130",
-    "login.js:97"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "parseDate",
    "orte": [
     "api-backend/ai/validators/blankoRules.js:23",
@@ -135492,6 +135240,15 @@
     "ops/decisions.js:7",
     "ops/meetings.js:7",
     "ops/wissen.js:49"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "showMsg",
+   "orte": [
+    "admin-login.js:15",
+    "attendance.js:69",
+    "login.js:97"
    ],
    "aynalar": []
   },
@@ -135990,30 +135747,6 @@
    "aynalar": []
   },
   {
-   "name": "showStep",
-   "orte": [
-    "booking-request.js:249",
-    "employee-signup.js:11"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "validateStep1",
-   "orte": [
-    "booking-request.js:485",
-    "employee-signup.js:136"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "validateStep2",
-   "orte": [
-    "booking-request.js:604",
-    "employee-signup.js:175"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "escHtml",
    "orte": [
     "booking-request.js:1384",
@@ -136025,7 +135758,7 @@
    "name": "showError",
    "orte": [
     "booking.js:28",
-    "onboarding.js:1023"
+    "onboarding.js:1024"
    ],
    "aynalar": []
   },
@@ -136177,7 +135910,7 @@
    "name": "escapeAttr",
    "orte": [
     "module/abrechnungsstatus.js:739",
-    "onboarding.js:1030"
+    "onboarding.js:1031"
    ],
    "aynalar": []
   },

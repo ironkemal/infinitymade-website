@@ -22,7 +22,7 @@
 
 | Aşama | Hat | Konu | Durum | Commit'ler / not |
 |---|---|---|---|---|
-| K1 | Kemal | Güvenlik + DB temizliği + DSGVO Express'e | ⬜ | |
+| K1 | Kemal | Güvenlik + DB temizliği + DSGVO Express'e | 🟡 K1.1·1.2·1.3·1.5·1.6·1.7 ✅, K1.8 cevaplar ✅ — **kaldığın yer: K1.4**, sonra K1.8 kodu (S-31) | 0053–0056 · ecbf871 7d75f09 ae999fa 16a7aef fdf25dd 9a0e18f 1f2ecb1 3fecef1 975dd2a 6141be8 bb65f0b · devir: fortschritte/2026-10-02.md |
 | K2 | Kemal | Kutu kurulumu: Linux + Windows, güncelleme, kılavuz (KI katmanı → M4) | ⬜ | |
 | K3 | Kemal | Kutu testi (§7) — EN SON, bütün aşamalar ✅ olunca | ⬜ | |
 | M1 | Melih | Podoloji + §302 küçük düzeltmeler, Zuzahlungsforderung, honeypot | ⬜ | |
@@ -259,6 +259,17 @@ Hat K, aşama K1'i uygula: K1.1'den K1.8'e sırayla. Önce git pull --rebase.
 Her şema/tablo işinden önce db-ustasi'na, güvenlik kararından önce guvenlik'e, hukuki sorudan önce legal-de'ye sor.
 Ağır kod işini agy worker'larına (builder protokolü) ver, soğuk ikinci worker'la denetlet, diff'i kendin oku.
 Alt parça bitince commit+push. Bağlam dolarsa alt parça sınırında dur ve §6'ya göre devir yap.
+Aşama bitince §6 adımlarını uygula ve bana K2 prompt'unu ver.
+```
+
+**K1 devam (02.10.2026 devri — kaldığın yer: K1.4):**
+```
+KUTU_HAZIRLIK_SPRINT.md'yi oku (§1, §2, §6). Hat K, aşama K1 devam: kaldığın yer K1.4, sonra K1.8'in kod kısmı. Önce git pull --rebase.
+K1.1-K1.3, K1.5-K1.7 bitti (fortschritte/2026-10-02.md, §0). K1.4 için önce compliance/LEGAL_DECISIONS.md'nin 2026-10-02 bölümünü oku — legal-de silme yerine kilit modelini verdi (Behandlungsdoku 10 J., fatura 8 J., leads minimize, Storage satır kuralına göre, "teilweise gelöscht" yanıtı, data_access_log Auskunft'ta, SaaS'ta AVV maddesi + zorunlu export).
+api/dsgvo.js (566 satır) api-backend'e Express route olarak taşınır, Vercel fonksiyonu silinir, dashboard.js'teki 5 çağrı (1032/1041/1969/12558/12613/18220) API_BASE'e döner — dashboard.js büyümez; export linki ?token= ile çalışıyorsa ai/auth.js queryTokenErlaubt allowlist'ine yalnız GET /api/dsgvo export eklenir (guvenlik'e sor).
+Şema (gesperrt_bis vb.) öncesi db-ustasi, kilit/purge yolu için guvenlik, kutu için onprem (O-16). GoBD kilidi ve patient_consents RESTRICT'e dokunulmaz.
+K1.8 kodu: S-31 (.dta imzadan sonra sil, .p7m 8 yıl) — billing Hat M alanında; dokunmadan önce dosya sahipliğine bak, gerekirse Melih'e not bırak.
+Ağır kodu agy worker'larına ver, soğuk ikinci worker'la denetlet, diff'i kendin oku. Alt parça bitince commit+push.
 Aşama bitince §6 adımlarını uygula ve bana K2 prompt'unu ver.
 ```
 

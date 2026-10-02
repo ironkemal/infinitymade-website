@@ -116,6 +116,29 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 02.10.2026 · KHS K1 — Mitarbeiter entfernen backend'e, query-token daraltıldı, DB koruma trigger'ları, sır kapısı
+- `mitarbeiterEntfernen(id, options)` (`module/mitarbeiter-zugang.js`). Niye: "Mitarbeiter entfernen" düğmesi tarayıcıdan
+  başka kullanıcının `profiles` satırını yazıyordu — RLS yüzünden hiç çalışmadı, 0053'ten beri zaten yasak. Nerede:
+  `dashboard.js` `empRemoveBtn` onclick (`openEmpDetail`) → backend `POST /team/mitarbeiter/:id/entfernen`
+  (`api-backend/routes/mitarbeiter-zugang.js`, `is_active=false`; commit fdf25dd). Çalışan kaldırmanın tek yazma yolu bu —
+  ikinci yol haritada yok (grep `is_active: false` / `owner_id: null`: yalnız bu route + Stripe webhook'un ayrı işi).
+  ⚠️ Harita `endpoints[]` bu çağrıyı yakalamıyor (şablon yol), `calledBy`'daki `fmt` gürültü.
+- `queryTokenErlaubt(req)` (`api-backend/ai/auth.js`). Niye: `requireAuth` `?token=`'ı her route'ta kabul ediyordu — token
+  URL'de log/Referer'a düşer (guvenlik S-38). Nerede: yalnız `requireAuth` içinde; izinli iki yol `GET /api/gmail/connect`,
+  `GET /api/calendar/google-auth` (tarayıcı yönlendirmesi, header taşıyamaz).
+- DB fonksiyonları (harita kapsamı dışı, `SCHEMA-RLS.sql`'de): RPC `auth_sitzungen_beenden`, `mitarbeiter_zuordnen` (0055);
+  trigger fonksiyonları `profiles_privilegierte_spalten_schuetzen` (0053 — rol/owner_id/plan kolonlarını istemciden korur),
+  `prescriptions_mandant_pruefen` (0054 — mandant sınırı).
+- `tools/check-secrets.mjs` (`pruefeText`, `ladeAllowlist`, `pruefeDatei`, `scanneStaged`, `scanneAlle`, CLI): pre-commit
+  sır tarama kapısı (S-05). `tools/check-definer-referenz.test.js`: SECURITY DEFINER referans testi (S-04b).
+  ⚠️ `tools/` haritanın `SCAN_ROOTS`'unda değil — bu dosyalar `INDEX.json`'da görünmez (bilinen kapsam sınırı, diğer kapılar gibi).
+- Silinen: `confirm.html` `applyPendingEmployeeData` (inline), `employee-signup.js` → `archive/kod/`,
+  `api/admin/data.js` `type=bookings` dalı. Haritada artık yoklar (doğrulandı).
+- **Açık not (bilinçli bırakıldı, karar bekliyor):** pasif çalışanları (`is_active=false`) süzmeyen okuyucular —
+  `module/anfrage-bearbeiten.js` (çalışan seçimi), `dashboard.js` Fahrtenbuch çalışan listesi, `dashboard.js` Urlaub
+  çalışan listesi. Fahrtenbuch'ta geçmiş kayıtların sahibi görünsün diye doğru olabilir; Anfrage/Urlaub'da pasif çalışana
+  atama yapılabiliyor olması muhtemelen değil. Aynı kural ("aktif çalışanlar") üç yerde ayrı sorgu — kural farkı adayı.
+
 ### 01.10.2026 · Oturum B — Fahrtenbuch Änderungsprotokoll (0052), Berlin-Tag Backend-Kopien kapandı
 - DB fonksiyonu `fahrten_aenderung_protokollieren()` (migration 0052, trigger `trg_fahrten_aenderung_protokollieren`
   AFTER UPDATE OR DELETE on `fahrten`). Niye: BMF 18.11.2009 — elektronik Fahrtenbuch'ta sonradan değişiklik/silme görünür
