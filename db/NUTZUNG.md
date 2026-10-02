@@ -3,11 +3,11 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-10-02 · 94 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-10-02), funktionen/INDEX.json (erzeugt 2026-10-01)
+**Erzeugt:** 2026-10-02 · 92 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-10-02), funktionen/INDEX.json (erzeugt 2026-10-02)
 
 ## Kayıt durumu
 
-- Register kaydı olan: **94/94**
+- Register kaydı olan: **92/92**
 
 ## Kodda hiç çağrılmayan tablolar
 
@@ -21,7 +21,6 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `applications` | 2 | fremd |
 | `datenaustausch_zaehler` | 3 | aktiv — ✅ **am 20.09.2026 live angewandt** (MCP, zusammen mit 0026–0034). Die Tabelle ist noch leer: die erste Zeile entsteht, sobald die erste Datei unter dem neuen Verfahren erzeugt wird. Ein rückwirkender Backfill aus dem Bestand wurde bewusst **nicht** gemacht — die Altzeilen tragen keinen `empfaenger_ik`, eine je Paar aufgebaute Folge wäre geraten, nicht gewusst. Wer den Zähler vor dem ersten Lauf setzen will, nimmt `datenaustausch_zaehler_vorstellen()`. |
 | `dta_schluessel` | 4 | Referenz, im Code ungenutzt |
-| `fußstatus` | 3 | veraltet |
 | `heilmittel_catalog` | 2 | veraltet |
 | `heilmittel_position` | 5 | veraltet |
 | `heilmittel_tarif` | 4 | **veraltet** (13.09.2026, O-96 — siehe `onprem/REGISTER.md`) |
@@ -33,11 +32,10 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `trip_history` | 1 | fremd |
 | `trip_plans` | 1 | fremd |
 | `user_credits` | 2 | fremd |
-| `visibility_reports` | 2 | stillgelegt (30.09.2026) — Dashboard schreibt nicht mehr (Konsole bereinigt, Commit a992cf2/792429c). Tabelle und Altdaten (0 Zeilen seit 14.07.) bleiben; Löschung nur nach Vier-Quellen-Prüfung und Rückfrage bei Kemal, zweistufig: erst `admin.js:278/291/400` bereinigen, dann `NNNN_drop_visibility_reports.sql`. `is_admin()` wird dabei NICHT entzogen. |
 
 ## DSGVO-Abdeckung (`api/dsgvo.js`)
 
-Auskunft (Art. 15): **60** · Löschung (Art. 17): **49** · anonymisiert statt gelöscht: **2**
+Auskunft (Art. 15): **59** · Löschung (Art. 17): **48** · anonymisiert statt gelöscht: **2**
 
 ⚠️ Personenbezug (FK auf `leads`/`profiles`/`auth.users`) aber **nicht** in der Auskunftsliste:
 
@@ -67,7 +65,7 @@ Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
 | `calendar_integrations` | 3 | 2 | 4 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 | `invoices` | 3 | 5 | 5 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 | `podologie_behandlungen` | 3 | 14 | 14 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
-| `working_hours` | 3 | 11 | 7 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
+| `working_hours` | 3 | 9 | 7 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 | `anamnese` | 2 | 4 | 3 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 | `b2b_contacts` | 2 | 1 | 2 | abrechnung, anamnese, b2b, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
 | `betriebsart_empfaenger` | 2 | 2 | 2 | abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen |
@@ -507,11 +505,6 @@ Warum: Rückmeldung aus dem Produkt heraus. Ein Trigger schickt jeden neuen Eint
 
 **Module:** abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, feedback, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen
 
-### `fußstatus`
-
-11 Spalten · Status: veraltet
-Warum: Der **alte** Fußbefund aus dem ersten Podologie-Wurf.
-
 ### `group_scopes`
 
 4 Spalten · Status: aktiv
@@ -943,11 +936,6 @@ Warum: Fahrzeugstamm zum Fahrtenbuch; Kilometerstände und Kennzeichen gehören 
 
 **Module:** abrechnung, anamnese, bkActionArrivedBtn, bkActionFahrtEndBtn, bkActionFahrtStartBtn, bkActionHbCopyBtn, doctors, fahrtenbuch, fbFahrtenExportCsv, fbFahrtenExportProt, fbFahrtenExportVerz, fbFahrtenRefresh, fbReportRefresh, fbVehicleAddBtn, feSaveBtn, fsAddVehicleBtn, fsSaveBtn, fussstatus, hours, kunden, mahnwesen, notizen, podologie-billing, rechnungen, services, settings, team, ueberblick, vehEditSaveBtn, verordnungen
 
-### `visibility_reports`
-
-8 Spalten · Status: stillgelegt (30.09.2026) — Dashboard schreibt nicht mehr (Konsole bereinigt, Commit a992cf2/792429c). Tabelle und Altdaten (0 Zeilen seit 14.07.) bleiben; Löschung nur nach Vier-Quellen-Prüfung und Rückfrage bei Kemal, zweistufig: erst `admin.js:278/291/400` bereinigen, dann `NNNN_drop_visibility_reports.sql`. `is_admin()` wird dabei NICHT entzogen.
-Warum: Telemetrie zur Modulmatrix: welcher Kunde sieht tatsächlich welche Module. Ohne diese Rückmeldung wäre die Matrix eine Behauptung.
-
 ### `warteliste`
 
 14 Spalten · Status: aktiv
@@ -968,7 +956,7 @@ Warum: Regelarbeitszeit je Mitarbeiter und Standort — die Grundlage jeder Slot
 
 **Schreibt (3):** `bindHours()` [delete/insert] — onboarding.js:813 · `fmt()` [upsert] — dashboard.js:10018 · `loadEmpHours()` [upsert] — dashboard.js:10641
 
-**Liest (11):** `fetchOwnerHoursMap()`, `getAvailableSlots()`, `getEmployeeWorkingHours()`, `horizonDays()`, `initWorkingHours()`, `loadHours()`, `renderBookingCalendar()`, `renderGaps()`, `renderGapsForDate()`, `renderHoursGrid()`, `renderHoursMiniCal()`
+**Liest (9):** `getAvailableSlots()`, `getEmployeeWorkingHours()`, `horizonDays()`, `loadHours()`, `renderBookingCalendar()`, `renderGaps()`, `renderGapsForDate()`, `renderHoursGrid()`, `renderHoursMiniCal()`
 
 **Dateien:** `api-backend/routes/mitarbeiter-zugang.js`, `api-backend/server.js`, `api/stripe/webhook.js`, `booking.js`, `dashboard.js`, `kalender.js`, `onboarding.js`
 

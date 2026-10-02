@@ -2,10 +2,10 @@
  "erzeugt": "2026-10-02",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-10-02)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-01)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-02)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 94,
+ "anzahl": 92,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -7339,30 +7339,6 @@
    "codeStumm": false
   },
   {
-   "name": "fußstatus",
-   "spalten": 11,
-   "fkRaus": [
-    "leads"
-   ],
-   "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
-   "dsgvoAnonymisiert": false,
-   "erwaehnt": [
-    "api/dsgvo.js"
-   ],
-   "register": true,
-   "status": "veraltet",
-   "warum": "Der **alte** Fußbefund aus dem ersten Podologie-Wurf.",
-   "seit": "13.06.2026 · `create_fussestatus`",
-   "ungeklaert": false,
-   "leser": [],
-   "schreiber": [],
-   "dateien": [],
-   "module": [],
-   "sqlTreffer": 3,
-   "codeStumm": true
-  },
-  {
    "name": "group_scopes",
    "spalten": 4,
    "fkRaus": [],
@@ -10598,7 +10574,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 12,
+   "sqlTreffer": 11,
    "codeStumm": false
   },
   {
@@ -14850,7 +14826,7 @@
     {
      "name": "requireAuth",
      "file": "api-backend/ai/auth.js",
-     "start": 15,
+     "start": 25,
      "module": [],
      "uiPfad": []
     },
@@ -17933,26 +17909,6 @@
    "codeStumm": false
   },
   {
-   "name": "visibility_reports",
-   "spalten": 8,
-   "fkRaus": [],
-   "dsgvoAuskunft": false,
-   "dsgvoLoeschung": false,
-   "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
-   "register": true,
-   "status": "stillgelegt (30.09.2026) — Dashboard schreibt nicht mehr (Konsole bereinigt, Commit a992cf2/792429c). Tabelle und Altdaten (0 Zeilen seit 14.07.) bleiben; Löschung nur nach Vier-Quellen-Prüfung und Rückfrage bei Kemal, zweistufig: erst `admin.js:278/291/400` bereinigen, dann `NNNN_drop_visibility_reports.sql`. `is_admin()` wird dabei NICHT entzogen.",
-   "warum": "Telemetrie zur Modulmatrix: welcher Kunde sieht tatsächlich welche Module. Ohne diese Rückmeldung wäre die Matrix eine Behauptung.",
-   "seit": "14.07.2026 · `module_visibility_matrix`",
-   "ungeklaert": false,
-   "leser": [],
-   "schreiber": [],
-   "dateien": [],
-   "module": [],
-   "sqlTreffer": 2,
-   "codeStumm": true
-  },
-  {
    "name": "warteliste",
    "spalten": 14,
    "fkRaus": [],
@@ -18083,13 +18039,6 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "fetchOwnerHoursMap",
-     "file": "employee-signup.js",
-     "start": 156,
-     "module": [],
-     "uiPfad": []
-    },
-    {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
      "start": 738,
@@ -18139,13 +18088,6 @@
      "name": "horizonDays",
      "file": "api-backend/server.js",
      "start": 1735,
-     "module": [],
-     "uiPfad": []
-    },
-    {
-     "name": "initWorkingHours",
-     "file": "employee-signup.js",
-     "start": 79,
      "module": [],
      "uiPfad": []
     },
@@ -18862,11 +18804,6 @@
    "status": "Referenz, im Code ungenutzt"
   },
   {
-   "name": "fußstatus",
-   "sql": 3,
-   "status": "veraltet"
-  },
-  {
    "name": "heilmittel_catalog",
    "sql": 2,
    "status": "veraltet"
@@ -18920,11 +18857,6 @@
    "name": "user_credits",
    "sql": 2,
    "status": "fremd"
-  },
-  {
-   "name": "visibility_reports",
-   "sql": 2,
-   "status": "stillgelegt (30.09.2026) — Dashboard schreibt nicht mehr (Konsole bereinigt, Commit a992cf2/792429c). Tabelle und Altdaten (0 Zeilen seit 14.07.) bleiben; Löschung nur nach Vier-Quellen-Prüfung und Rückfrage bei Kemal, zweistufig: erst `admin.js:278/291/400` bereinigen, dann `NNNN_drop_visibility_reports.sql`. `is_admin()` wird dabei NICHT entzogen."
   }
  ],
  "dsgvo": {
@@ -18959,7 +18891,6 @@
    "fahrten",
    "fahrten_aenderungen",
    "feedbacks",
-   "fußstatus",
    "invoices",
    "leads",
    "mahnungen",
@@ -19015,7 +18946,6 @@
    "employee_services",
    "fahrten",
    "feedbacks",
-   "fußstatus",
    "kiosk_pins",
    "leads",
    "mahnungen",

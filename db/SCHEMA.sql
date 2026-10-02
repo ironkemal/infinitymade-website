@@ -1,7 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-10-02 — Nachtrag: 0055 profiles_public ohne entfernte
+-- ERZEUGT AM:        2026-10-02 — Nachtrag: 0056: −2 Tabellen ("fußstatus",
+--                    visibility_reports), aerzte −1 Unique. Letzte Migration: 0056.
+--                    davor: 2026-10-02 — Nachtrag: 0055 profiles_public ohne entfernte
 --                    Mitarbeiter (is_active = false). Letzte Migration: 0055.
 --                    davor: 2026-10-02 — Nachtrag: 0054 (nur Policies/Trigger, keine
 --                    Tabellen-/Spaltenänderung). Letzte Migration: 0054.
@@ -914,7 +916,7 @@ CREATE TABLE aerzte (
 );
 --   FK business_id -> businesses(id) ON DELETE CASCADE
 --   FK owner_id -> auth.users(id)
---   PK (id) · UNIQUE (owner_id, arzt_name)
+--   PK (id) · (UNIQUE (owner_id, arzt_name) entfernt 0056)
 --   UNIQUE INDEX uq_aerzte_owner_lanr (owner_id, lanr) WHERE lanr IS NOT NULL
 --   UNIQUE INDEX uq_aerzte_owner_name_no_lanr (owner_id, lower(trim(arzt_name))) WHERE lanr IS NULL
 
@@ -1810,23 +1812,7 @@ CREATE TABLE feedbacks (
 --   CHECK priority IN (low, medium, high, critical) · PK (id)
 --   TRIGGER notify_feedback_telegram() AFTER INSERT (pg_net -> Telegram)
 
-CREATE TABLE "fußstatus" (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid
-  patient_name text
-  aufnahmedatum date NOT NULL DEFAULT CURRENT_DATE
-  wagner_grad smallint
-  seite text
-  befunde jsonb
-  foto_urls text[]
-  notizen text
-  created_at timestamptz DEFAULT now()
-  patient_id uuid
-);
---   CHECK seite IN (links, rechts, beide) · wagner_grad BETWEEN 0 AND 5
---   FK patient_id -> leads(id) ON DELETE SET NULL · PK (id)
---   ⚠️ Tabellenname enthält ein Umlaut-ß — in SQL immer "fußstatus" quoten.
---   ⚠️ Nicht verwechseln mit pat_fussbefund (neuere Podologie-Befundtabelle).
+-- "fußstatus" — GEDROPPT 02.10.2026 (0056, KHS K1.6).
 
 CREATE TABLE group_scopes (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -3298,17 +3284,7 @@ CREATE TABLE vehicles (
 -- wieder eröffnet — vor jeder neuen Tabelle mit "Verordnung" im Namen erst
 -- `db-ustasi` fragen und diesen Absatz zeigen.
 
-CREATE TABLE visibility_reports (
-  sector text NOT NULL
-  role text NOT NULL
-  module_id text NOT NULL
-  rendered boolean NOT NULL
-  dom_ok boolean NOT NULL
-  hidden_reason text
-  reported_at timestamptz NOT NULL DEFAULT now()
-  reported_by uuid
-);
---   PK (sector, role, module_id) — Telemetrie zur Modulsichtbarkeit.
+-- visibility_reports — GEDROPPT 02.10.2026 (0056, KHS K1.6).
 
 CREATE TABLE warteliste (
   id uuid NOT NULL DEFAULT gen_random_uuid()

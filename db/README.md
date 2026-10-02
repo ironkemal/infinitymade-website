@@ -182,7 +182,7 @@ nur bei gesetztem `booking_slug` und `auth.uid() IS NULL`.
 
 Bekannte Schwachstellen, dokumentiert statt stillschweigend gepatcht:
 - ~~`employee_services` und `time_offs`: jeder eingeloggte Nutzer darf schreiben, mandantenübergreifend.~~ **Geschlossen 02.10.2026** (`0054`, S-07): beide nur noch innerhalb des eigenen Mandanten; `time_offs` ist seitdem auch **nicht mehr öffentlich lesbar**. Details: `db/REGISTER.md`.
-- Fünf Tabellen ohne Team-Zugriff (nur Inhaber sieht sie): `verordnungen`, `podologie_behandlungen`, `fußstatus`, `patient_notes`, `warteliste`. Ob angestellte Therapeuten das sehen sollen, ist eine offene **Produktfrage** — nicht nebenbei „korrigieren".
+- ⚠️ **Veraltet (Stand 02.10.2026 nicht neu geprüft):** "Fünf Tabellen ohne Team-Zugriff: `verordnungen`, `podologie_behandlungen`, `fußstatus`, `patient_notes`, `warteliste`". `verordnungen` (04.09.) und `fußstatus` (02.10.) sind gedroppt; für `patient_notes`/`warteliste` gilt seit 17.09.2026 Teamzugriff laut `db/REGISTER.md` (`0022`). Massgeblich ist der jeweilige REGISTER-Eintrag. Ob angestellte Therapeuten das sehen sollen, ist eine offene **Produktfrage** — nicht nebenbei „korrigieren".
 
 ---
 
@@ -195,7 +195,7 @@ Bekannte Schwachstellen, dokumentiert statt stillschweigend gepatcht:
 | `heilmittel_katalog` / `heilmittel_catalog` | K = aktiv, c = alt |
 | `terapeut_zertifikat` | §302-Signaturzertifikat (türkische Schreibweise) |
 | `therapist_certificates` | MT/MLD/KGG-Qualifikationen |
-| `fußstatus` | alter Fußbefund — in SQL **immer quoten**: `"fußstatus"` |
+| `fußstatus` | **gedroppt 02.10.2026** (`0056`). Das Panel heisst weiter `fussstatus` und liest `pat_fussbefund` — ein Treffer auf „fussstatus“ ist kein Hinweis auf eine Tabelle |
 | `pat_fussbefund` | aktueller Podologie-Fußbefund |
 | `referral_drafts.seans_sayisi` / `tedavi_turu` | Sitzungsanzahl / Behandlungsart (türkisch) |
 

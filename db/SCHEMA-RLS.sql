@@ -1,7 +1,9 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-10-02 — Nachtrag: 0055 (guvenlik S-38): +2 Funktionen
+-- ERZEUGT AM:        2026-10-02 — Nachtrag: 0056: −2 Policies (fußstatus,
+--                    visibility_reports) mit ihren Tabellen.
+--                    davor: 2026-10-02 — Nachtrag: 0055 (guvenlik S-38): +2 Funktionen
 --                    auth_sitzungen_beenden, mitarbeiter_zuordnen (DEFINER, nur
 --                    service_role). Keine Policy/Trigger/Index.
 --                    davor: 2026-10-02 — Nachtrag: 0054 (guvenlik S-07/S-18): employee_services
@@ -1000,14 +1002,7 @@
 -- feedbacks
 --   feedbacks_select/insert/update_own — auth.uid() = user_id
 
--- fußstatus
---   owner_fußstatus [ALL] USING (owner_id = auth.uid())   ohne Team-Zugriff
---   → bleibt so, BEWUSST (17.09.2026, Ops #253): die Tabelle ist veraltet,
---     niemand liest oder schreibt sie mehr, sie steht nur noch in der
---     Loeschreihenfolge (api/dsgvo.js:136,271), damit Altbestaende
---     mitverschwinden. Der Menuepunkt „Fußbefund" (Panel-Id `fussstatus`)
---     liest `pat_fussbefund` — reine Namensverwechslung. Naechster Schritt ist
---     Altbestand zaehlen und droppen, keine Policy.
+-- fußstatus — gedroppt 02.10.2026 (0056)
 
 -- group_scopes
 --   group_scopes_via_group [ALL] über employee_groups -> businesses -> owner + Team
@@ -1220,10 +1215,7 @@
 -- Wer das fuer die Podologie wieder einschraenken will, braucht eine neue,
 -- eigene Policy — nicht eine neue Tabelle.
 
--- visibility_reports
---   vr_admin_read [SELECT] is_admin() · vr_admin_delete [DELETE] is_admin()
---   vr_insert_authenticated [INSERT] CHECK (true)
---   vr_update_authenticated [UPDATE] USING/CHECK (true)
+-- visibility_reports — gedroppt 02.10.2026 (0056)
 
 -- warteliste
 --   Owner zugriff auf warteliste [ALL] USING (owner_id = auth.uid())
