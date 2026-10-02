@@ -3839,25 +3839,11 @@ app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
   }, 60_000); // Her dakika kontrol et
 })();
 
-// ---- Gece 03:00 hesap temizliği ----
-// delete_expired_accounts(): deletion_scheduled_at süresi dolmuş canceled/expired hesapları
-// anonimleştirir + tenant verisini siler (RPC idempotent — PM2 cluster'da çift tetiklenme zararsız).
-(function scheduleAccountCleanup() {
-  setInterval(async () => {
-    try {
-      const now = new Date();
-      const berlinH = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, hour: 'numeric', hour12: false }).format(now), 10);
-      const berlinM = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, minute: 'numeric' }).format(now), 10);
-      if (berlinH !== 3 || berlinM !== 0) return;
-
-      const { error } = await supabase.rpc('delete_expired_accounts');
-      if (error) console.error('[account cleanup]', error);
-      else console.log('[account cleanup] delete_expired_accounts executed');
-    } catch (err) {
-      console.error('[account cleanup] unexpected:', err);
-    }
-  }, 60_000);
-})();
+// ---- Gece 03:00 hesap temizliği — ABGESCHALTET (KHS K1.4, 02.10.2026) ----
+// delete_expired_accounts() lief seit Juli nie durch und hätte repariert Behandlungsdoku
+// gelöscht (guvenlik S-41); Migration 0057 droppt sie. Nachfolger: dieselbe JS-Kette wie
+// POST /api/dsgvo/loeschen (dsgvo/loeschen.js), nur SaaS, mit Claim gegen die zwei
+// PM2-Instanzen (onprem O-145) — erst nach legal-de-Antwort zur Pflicht-Herausgabe.
 
 // ============================================================================
 // BOOKING REQUEST ENDPOINTS — Termin-Anfragen

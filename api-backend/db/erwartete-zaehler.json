@@ -27,14 +27,15 @@
   "_hinweis_0054": "0054_mandantengrenze_team_und_verordnung (guvenlik S-07/S-18, 02.10.2026): employee_services 1 Policy ersetzt (Authenticated operations -> employee_services_mandant), time_offs 2 Policies weg (Authenticated operations, Public read) + 1 neu (time_offs_mandant), +1 Funktion (prescriptions_mandant_pruefen, SECURITY DEFINER, alle drei REVOKEs), +1 Trigger (BEFORE INSERT OR UPDATE OF owner_id, patient_id, arzt_id auf prescriptions). Kein Index. Rechnerisch: rls_policy 157->156, fonksiyon 79->80, trigger 81->82. NACHGERECHNET, nicht gemessen. ✅ Am 02.10.2026 auf die Live-Datenbank (SaaS) angewandt (MCP).",
   "_hinweis_0055": "0055_mitarbeiter_zugang_haertung (guvenlik S-38, 02.10.2026): +2 Funktionen (auth_sitzungen_beenden, mitarbeiter_zuordnen — beide SECURITY DEFINER, drei REVOKEs, EXECUTE nur service_role), CREATE OR REPLACE VIEW profiles_public (gleiche Spalten, zusaetzlich WHERE ohne inaktive Mitarbeiter; Sicht = counter-neutral wie _hinweis_0040). Rechnerisch: fonksiyon 80->82. NACHGERECHNET, nicht gemessen. ✅ Am 02.10.2026 auf die Live-Datenbank (SaaS) angewandt (MCP).",
   "_hinweis_0056": "0056_db_aufraeumen (KHS K1.6, 02.10.2026): DROP \"fußstatus\" (-1 Tabelle, -1 Policy owner_fußstatus, -1 Index PK), DROP visibility_reports (nur SaaS, in der Box nicht vorhanden -> neutral), DROP CONSTRAINT aerzte_owner_id_arzt_name_key (-1 Index), DELETE Mock-Kostentraeger (Daten, neutral). Rechnerisch: public_tablo 83->82, rls_policy 156->155, index 305->303. NACHGERECHNET, nicht gemessen. ✅ Am 02.10.2026 auf die Live-Datenbank (SaaS) angewandt (MCP).",
-  "bis_version": "0056",
+  "_hinweis_0057": "0057_aufbewahrung_sperre (KHS K1.4, 02.10.2026): +1 Tabelle (aufbewahrung_sperre, RLS an OHNE Policy wie nummernkreise -> rls_policy unveraendert), +2 Index (PK + UNIQUE NULLS NOT DISTINCT aufbewahrung_sperre_eindeutig), profiles_plan_status_check ersetzt (CHECK, kein Zaehler), DROP FUNCTION delete_expired_accounts (in der Box seit 0000_baseline nie vorhanden -> fonksiyon unveraendert). FKs legen keinen Index an (_hinweis_0025). Rechnerisch: public_tablo 82->83, index 303->305. NACHGERECHNET, nicht gemessen.",
+  "bis_version": "0057",
   "gemessen_am": "2026-09-17",
   "zaehler": {
-    "public_tablo": 82,
+    "public_tablo": 83,
     "rls_policy": 155,
     "fonksiyon": 82,
     "trigger": 82,
-    "index": 303,
+    "index": 305,
     "rls_kapali_tablolar": [
       "spatial_ref_sys"
     ],

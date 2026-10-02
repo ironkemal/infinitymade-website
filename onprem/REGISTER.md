@@ -888,7 +888,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | G (+ D bağı) |
 | **Kutuda ne olur** | Bugünkü hâliyle iki kere kırılır: (1) Vercel yok → 404; (2) daha kötüsü, merkezde kalırsa **merkez müşterinin hasta verisini okuyor** demektir → G1/K6 ihlali, geçişin amacı boşa. Ayrıca kod service-role anahtarıyla çalışıyor, o anahtar kutuda müşterinin olmalı |
 | **Çözüm** | **Faz 1.1** — Express'e taşınır, kutuda kutunun kendi DB'sine bakar. ⚠️ Taşırken iki bilinen kilit korunur (dosya başındaki 28.08.2026 notu): GoBD `invoice_festschreibung()` triggeri ve `patient_consents` RESTRICT. Bunlar hata değil hukuki kilit — "on-prem'de kolaylaştıralım" denmez. Ayrıca `USER_TABLES` listesi Faz 5.1 export kapsamıyla çapraz doğrulanacak (playbook zaten istiyor) |
-| **Durum** | `geplant` (Faz 1.1) |
+| **Durum** | 🔧 **in Arbeit (KHS K1.4, 02.10.2026)** — `geplant` (Faz 1.1) → Express-Route `api-backend/routes/dsgvo.js` + `dsgvo/klassifikation.js`, Vercel `api/dsgvo.js` wird gelöscht (vercel_fn 12→11, Kapı sıkışır). Recht: `compliance/LEGAL_DECISIONS.md` „2026-10-02" §4. **Ön kontrol hükmü: GEÇER, KAYITLA** — şartlar: (1) Box-Erkennung = `process.env.SUPABASE_PUBLIC_URL` (aynı sinyal `server.js:411` `/api/config istKutu` ve `server.js:681` Apify) — tek helper'a alınmalı, üçüncü kopya açılmaz; (2) Export (Art. 15) iki dağıtımda; Konto-Löschung Fall B yalnız SaaS, kutuda 404 (K9/G5: lisans sonu ≠ silme); (3) Stripe çağrısı yalnız Fall B içinde → kutuya hiç ulaşmaz; SaaS'ta `STRIPE_SECRET_KEY` VPS'te yoksa **sessizce atlanmaz, hata** (abonelik silinen hesaba fatura kesmeye devam ederdi) — VPS env'i deploy öncesi doğrulanır (§8 drift kuralı); (4) klassifikation.js kutuda olmayan 11 tabloyu (`0000_baseline.sql:21-28`; bugün dsgvo.js `email_logs`/`b2b_contacts` okuyor, taslak `pending_signups` ekliyor) `nur_saas` işaretler — yoksa kutuda export 500 döner; (5) gece temizliği çift PM2 instance'ta (`Dockerfile:85` `-i 2`) koşar → JS zinciri satır-claim/advisory-lock ile tek sefer çalışmalı; (6) RPC `delete_expired_accounts` DROP'u iki adımda (önce kod RPC'yi çağırmayı bırakır, sonraki sürüm DROP) — O-145. Takip: O-145 (kutu cron'u), O-146 (data_access_log rotasyonu) |
 
 ### O-17 — Stripe + onboarding + contact + demo-booking merkezde kalır
 
@@ -4674,6 +4674,29 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Çözüm** | Yeni Y2/K2.1 kutu ölçümünde (WSL test kutusu, `install.sh` sıfırdan) şu üçü **ayrıca** koşturulur: (a) `SELECT public.auth_sitzungen_beenden('<test-çalışan-uuid>')` → >0 döner, sonra o çalışanın refresh token'ı reddedilir; (b) `POST /team/mitarbeiter/:id/entfernen` → GoTrue 200, ardından girişte `user banned`; (c) runner'ın `0053-0056`'yı hatasız geçmesi ve selbstcheck sayaçlarının `erwartete-zaehler.json` ile birebir tutması (tutmazsa `gemessen_am` güncellenir, rakam düzeltilir). `:stable` basılmadan önce yapılır; kutu yokken başka iş gerekmiyor. `0056`'nın `-- zweistufig:` gerekçesi yeterli (O-143 emsali, `:stable` hiç basılmadı). |
 | **Durum** | `geplant` (Y2/K2.1 kutu ölçümü). O-143'teki yan bulgu ("Mitarbeiter entfernen" client'tan no-op) bu turda backend ucuyla (`mitarbeiter-zugang.js:318`) kapandı. ⚠️ Bildirimde geçen `api/dsgvo.js` hâlâ Vercel'de — O-16 değişmedi, `geplant` (Faz 1.1, K1.4 oturumu); `"fußstatus"`'un oradan çıkarılması (`3fecef1`) O-16'nın kapsamını daraltır, çözmez. Yeni kapı `tools/check-secrets.sh` (`onprem/supabase-docker/` hariç) — kutuya etkisi yok, G2'yi destekliyor; hariç tutma doğru (upstream vendor kopyası, örnek anahtarları zaten upstream'in demo değerleri). |
 
+
+### O-145 — Gece 03:00 hesap temizliği kutuda her gece hata loglar (RPC kutuda yok)
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `scheduleAccountCleanup` (`api-backend/server.js:3843-3860`) her iki dağıtımda koşuyor ve `supabase.rpc('delete_expired_accounts')` çağırıyor; fonksiyon kutu baseline'ında bilinçli olarak düşürülmüş (`0000_baseline.sql:12461`) |
+| **Nerede** | `api-backend/server.js:3853` · `api-backend/db/migrations/0000_baseline.sql:12461` |
+| **Tip** | F (zamanlanmış iş) + G (merkez işi: Fall B = SaaS sözleşme sonu) |
+| **Kutuda ne olur** | Her gece 03:00'te PM2'nin iki instance'ı da "function not found" loglar; veri kaybı yok (try/catch). Asıl risk ileriye dönük: cron JS silme zincirine çevrildiğinde kutuda da koşarsa, kutuda `deletion_scheduled_at` dolu bir satır bulursa **müşterinin kendi kutusunda hasta verisi siler** — K9/G5 (lisans sonu salt-okunur, silme değil) ihlali |
+| **Çözüm** | KHS K1.4 — cron, O-16 ile aynı box sinyaliyle (`SUPABASE_PUBLIC_URL`) **yalnız SaaS'ta** kurulur; kutuda hiç zamanlanmaz. RPC DROP'u iki adımda: K1.4 sürümünde kod RPC çağrısını bırakır, DROP bir sonraki migration'da (`:stable` image hâlâ eski kodu koşar, `-- zweistufig:` satırı) |
+| **Durum** | `geplant` (KHS K1.4) |
+
+### O-146 — `data_access_log` 12 aylık rotasyonu zamanlanmış iş olarak yok
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `compliance/LEGAL_DECISIONS.md` „2026-10-02" §4'ün öngördüğü 12 aylık rotasyon için job yok; K1.4'te bilinçli olarak yapılmıyor (yalnız export'a dahil ediliyor) |
+| **Nerede** | yok (yazılmadı) — tablo: `db/SCHEMA.sql` `data_access_log` |
+| **Tip** | F (zamanlanmış iş) |
+| **Kutuda ne olur** | Bugün: tablo iki dağıtımda da süresiz büyür, saklama süresi hukuki metinle uyuşmaz. Kurulduğunda: kutuda da koşmalı (Praxis = Verantwortlicher, kendi logu) — **O-145'in tersine SaaS-only değil.** Desen: `server.js:3845` `setInterval` + Berlin saati (Faz 2.4a node-cron ile aynı yer), çift-instance'ta idempotent `DELETE … WHERE created_at < now() - interval '12 months'` olduğu için kilit gerekmez. pg_cron **kullanılmaz** (kutuda garantisi yok) |
+| **Çözüm** | Sahibi atanmadı — KHS sonrası ayrı adım ya da Ops kartı (Teknik). Atanana kadar `offen` ve her raporda tekrar gösterilir |
+| **Durum** | `offen` |
+
 ---
 
 ## 8. Kapı — sayaçlar ve tabanlar
@@ -4810,8 +4833,8 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 21 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-106 · O-107 · O-108 · O-110 · O-113 · O-119 · O-123 · O-127 · O-128 · O-129 · O-130 · O-132 · O-133 · **O-134** · **O-137** |
-| `geplant` | 24 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-136 · **O-138** · **O-139** · **O-140** · **O-141** · **O-142** · **O-144** |
+| `offen` | 22 | O-18 · O-23 · O-32 · O-46 · O-75 · O-105 · O-106 · O-107 · O-108 · O-110 · O-113 · O-119 · O-123 · O-127 · O-128 · O-129 · O-130 · O-132 · O-133 · **O-134** · **O-137** · **O-146** |
+| `geplant` | 25 | O-03 · O-06 · O-07 · O-08 · O-10 · O-13 · O-16 (in Arbeit K1.4) · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-136 · **O-138** · **O-139** · **O-140** · **O-141** · **O-142** · **O-144** · **O-145** |
 | 🟡 `kısmen gelöst` | 22 | O-01 · O-02 · O-09 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · **O-116** · O-118 · O-120 · O-125 · O-126 |
 | `gelöst` | 64 | O-15 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-109 · **O-114** · **O-117** · **O-122** · **O-124** · **O-131** · **O-143** |
 | `unkritisch` | 13 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 |
