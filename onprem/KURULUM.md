@@ -69,6 +69,12 @@ Protokoll: `C:\ProgramData\Praxura\windows-einrichtung.log`.
 
 **Laptop:** dauerhaft am Netzteil lassen. Mit Akku greifen Windows-Sparregeln.
 
+**Eigenes Windows-Konto für die Box:** Wer an diesem PC mit dem einrichtenden
+Konto angemeldet ist, kommt mit `wsl -d Praxura` ohne Passwort an alle
+Schlüssel der Box. Den Box-PC deshalb mit einem **eigenen, nicht geteilten**
+Windows-Konto betreiben; Mitarbeitende arbeiten im Browser, nicht an diesem
+Konto.
+
 ---
 
 ## 2. Die Fragen von `install.sh`
@@ -205,6 +211,14 @@ nicht ausgeführt (ohne Sicherung kein Update).
 **Empfehlung:** Box-Platte und Sicherungsplatte verschlüsseln (Windows:
 BitLocker; Linux: LUKS bei der Installation). Für den Betrieb der Box und die
 Patientendaten auf ihr ist die Praxis verantwortlich, nicht Praxura.
+
+⚠️ **Die Sicherungsplatte ist so schutzwürdig wie die Box selbst.** Sie enthält
+neben den Patientendaten auch den **privaten Schlüssel der Box-Zertifizierungs-
+stelle**. Weil jedes Praxisgerät dieser Stelle vertraut, könnte jemand mit der
+Platte (und Zugang zum Praxisnetz) gefälschte Zertifikate für beliebige
+Webseiten ausstellen. Platte verschlüsseln, verschlossen aufbewahren, nicht
+verleihen. Geht sie verloren: Wurzelzertifikat auf allen Geräten entfernen und
+die Box neu einrichten.
 
 **Wiederherstellen:**
 ```bash
