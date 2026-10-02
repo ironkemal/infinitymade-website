@@ -59,7 +59,8 @@ WORKDIR /srv/www
 COPY login.html login.js ./
 COPY dashboard.html dashboard.css dashboard.js ./
 COPY kalender.html kalender.js ./
-COPY employee-signup.html employee-signup.js ./
+COPY employee-signup.html ./
+# employee-signup.js seit ecbf871 (KHS K1.1) archiviert — die Seite ist nur noch ein Hinweis auf den Einrichtungscode.
 # GoTrue leitet nach E-Mail-Bestätigung hierher (employee-signup.js:
 # emailRedirectTo — seit O-56 window.location.origin, kein fester SaaS-Pfad mehr).
 COPY confirm.html ./

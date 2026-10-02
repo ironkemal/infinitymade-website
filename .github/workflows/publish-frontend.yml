@@ -16,7 +16,6 @@ on:
       - 'kalender.html'
       - 'kalender.js'
       - 'employee-signup.html'
-      - 'employee-signup.js'
       - 'confirm.html'
       - 'attendance.html'
       - 'attendance.js'
