@@ -199,11 +199,7 @@ export default async function handler(req, res) {
     });
   }
 
-  if (type === 'bookings') {
-    const { data, status } = await adminFetch('/bookings?status=neq.cancelled&select=*,profiles!bookings_owner_id_fkey(business_name,email)&order=start_time.desc&limit=100');
-    if (!data) return json(res, status || 500, { error: 'DB error' });
-    return json(res, 200, { items: data });
-  }
-
+  // type=bookings entfernt 02.10.2026 (Ops #319, KHS K1.5): lieferte 100 Termine
+  // aller Praxen mit Patientenbezug an das Admin-Panel, das sie nie anzeigte.
   return json(res, 400, { error: 'Unknown type' });
 }
