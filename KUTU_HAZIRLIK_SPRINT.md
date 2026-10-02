@@ -151,6 +151,7 @@ Sicil: `onprem/REGISTER.md` §9 tablosu + playbook §10 aynı turda düzeltilir 
 | M1.13 | **Berlin-günü kopyaları** (K-13): frontend'deki 5 kopya (`heuteIso()`/`alsISODatum()` vb.) tek modüle; `fonksiyon-ustasi` listesi | fortschritte 01.10 |
 | M1.14 | Demo-Modus Zygote: `legal-de`'ye kullanım/telif şartı (K-16) → gerekiyorsa gizle | |
 | M1.15 | `.p7m` dosya adı: kod yorumu bilinçli diyor (`filename.js:80-87`) — `gkv-302` tek cümle teyit, sonra wissensbank Z-12 kapanır | WB-Z12 |
+| M1.16 | **S-31 dosya yaşam döngüsü** (K1.8'den Melih'e devredildi, 02.10 — kod tamamen `billing/api/abrechnung.routes.js` + imza arayüzünde): hukuk kararı `compliance/LEGAL_DECISIONS.md` „2026-10-02" §3 tablosu. (a) imza başarılı → imzasız `.dta` silinir, SHA-256 `abrechnung`'da kalır; **dikkat:** `/upload-signed` tekrarlanabilir ve `/dta-bytes` (~Z.1291) `.dta`'yı indirir — yeniden imza için içerik `.p7m`'den (detached:false, `dashboard.js:16289`) çıkarılmalı ya da silme yalnız `gesendet`'te yapılmalı; `storage_path` kolonu ve `module/abrechnung-detail.js` indirme düğmeleri buna göre. (b) `.dta.enc.p7m` → DAS kabul/Quittung sonrası silinir (M1.9 ile aynı olay). (c) yeniden üretilen/storno taslak `.dta` hemen silinir. (d) `.p7m` 8 yıl kalır (K1.4 kilit modelinde `beleg`). guvenlik S-31 V7 buna göre güncellenir | legal-de 02.10, guvenlik S-31 |
 
 ### M2 · Reçete türleri + fatura + Branding  (~4–5 gün)
 

@@ -1,7 +1,12 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-10-02 — Nachtrag: 0056: −2 Policies (fußstatus,
+-- ERZEUGT AM:        2026-10-02 — Nachtrag: 0057_aufbewahrung_sperre (KHS K1.4):
+--                    Policies ±0 (aufbewahrung_sperre: RLS an, KEINE Policy, REVOKE
+--                    ALL von anon/authenticated), Indizes +2 (PK + Unique, beide
+--                    constraint-erzeugt), Funktionen −1 (delete_expired_accounts
+--                    gedroppt), Trigger ±0. Letzte Migration: 0057.
+--                    davor: 2026-10-02 — Nachtrag: 0056: −2 Policies (fußstatus,
 --                    visibility_reports) mit ihren Tabellen.
 --                    davor: 2026-10-02 — Nachtrag: 0055 (guvenlik S-38): +2 Funktionen
 --                    auth_sitzungen_beenden, mitarbeiter_zuordnen (DEFINER, nur
@@ -218,7 +223,8 @@
 --                    set_next_beleg_nr, set_next_mahnung_nr,
 --                    set_next_ausfallrechnung_nr, vergebe_patientennummer,
 --                    vergebe_verordnungsnummer_rx) — und
---                    (b) delete_expired_accounts(). Das war der einzige ECHTE
+--                    (b) delete_expired_accounts() [seit 0057, 02.10.2026,
+--                    GEDROPPT — Absatz ist Historie]. Das war der einzige ECHTE
 --                    Fund: SECURITY DEFINER, argumentlos, schreibend, und ueber
 --                    PUBLIC OHNE LOGIN per POST /rest/v1/rpc/ ausloesbar. Sie
 --                    anonymisiert Profile (Name/Adresse/IBAN/IK/Steuernummer).
@@ -844,6 +850,14 @@
 --   employee_update_own [UPDATE] USING/CHECK (auth.uid() = employee_id)
 --   owner_update_team   [UPDATE] USING (auth.uid() = owner_id)
 
+-- aufbewahrung_sperre                                         (02.10.2026, 0057)
+--   KEINE Policy — Absicht, Bauart wie praxura_migrations/praxura_setup:
+--   RLS an, keine Policy, anon/authenticated REVOKE ALL. Nur service_role.
+--   Grund: der Sperrvermerk steuert, was nach einer Kontolöschung stehen
+--   bleibt — kein Client darf ihn setzen, verlängern oder entfernen.
+--   Live geprüft 02.10.2026: Grants nur postgres + service_role.
+--   Geschrieben (künftig) ausschliesslich von api-backend/dsgvo/loeschen.js.
+
 -- ausfallrechnungen
 --   ausfallrechnungen_select [SELECT] owner + Team
 --   ausfallrechnungen_insert [INSERT] CHECK (auth.uid() = owner_id)
@@ -1379,8 +1393,15 @@ $function$;
 --   Einziger verbliebene Vault-Anwendungsfall: das temporäre Onboarding-Passwort.
 -- handle_new_user() -> trigger                                                     [SEC DEF]
 --   Legt beim Signup den profiles-Datensatz an (auth.users-Trigger).
--- delete_expired_accounts() -> void                                                [SEC DEF]
---   Löscht (genauer: anonymisiert) Konten nach Ablauf von deletion_scheduled_at:
+-- delete_expired_accounts() -> void                                   ⛔ GEDROPPT 0057
+--   ⛔ Seit 02.10.2026 (0057_aufbewahrung_sperre) nicht mehr vorhanden; der Cron
+--   in api-backend/server.js ruft sie nicht mehr auf. Lief seit Juli 2026 nie
+--   durch: setzte plan_status='deleted' (vom CHECK bis 0057 verboten) und
+--   loeschte aus prescription_sessions.owner_id (Spalte existiert nicht) — jeder
+--   Lauf zurueckgerollt, 2 faellige Testkonten blieben liegen. Repariert haette
+--   sie Behandlungsdoku (prescriptions, leads) geloescht. Nachfolger: JS-
+--   Loeschkette mit Sperrvermerk (aufbewahrung_sperre). Text darunter = Historie.
+--   Löschte (genauer: anonymisierte) Konten nach Ablauf von deletion_scheduled_at:
 --   business_name/Name -> '[gelöscht]', Adresse/Telefon/IBAN/BIC/IK/Steuernummer
 --   -> NULL. Greift nur bei plan_status in ('canceled','expired').
 --   ⚠️ Bis 0024 (17.09.2026, Ops #297) trug sie `=X/postgres` in proacl — also

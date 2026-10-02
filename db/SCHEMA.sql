@@ -1,7 +1,11 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-10-02 — Nachtrag: 0056: −2 Tabellen ("fußstatus",
+-- ERZEUGT AM:        2026-10-02 — Nachtrag: 0057_aufbewahrung_sperre (KHS K1.4, MCP):
+--                    +1 Tabelle aufbewahrung_sperre (8 Spalten, Sperrvermerk statt
+--                    Löschung); profiles_plan_status_check + 'deleted'.
+--                    Letzte Migration: 0057.
+--                    davor: 2026-10-02 — Nachtrag: 0056: −2 Tabellen ("fußstatus",
 --                    visibility_reports), aerzte −1 Unique. Letzte Migration: 0056.
 --                    davor: 2026-10-02 — Nachtrag: 0055 profiles_public ohne entfernte
 --                    Mitarbeiter (is_active = false). Letzte Migration: 0055.
@@ -1023,6 +1027,23 @@ CREATE TABLE attendance (
 --   FK employee_id / owner_id -> profiles(id) ON DELETE CASCADE
 --   FK business_id -> businesses(id) ON DELETE SET NULL
 --   PK (id) · UNIQUE (employee_id, date)
+
+CREATE TABLE aufbewahrung_sperre (                          -- 0057, 02.10.2026
+  id uuid NOT NULL DEFAULT gen_random_uuid()
+  owner_id uuid NOT NULL
+  patient_id uuid                                           -- NULL = ganzes Konto (Fall B)
+  kategorie text NOT NULL
+  gesperrt_am timestamptz NOT NULL DEFAULT now()
+  gesperrt_bis date NOT NULL                                -- "frühestens" (§ 147 Abs. 3 S. 5 AO)
+  grundlage text NOT NULL                                   -- Fundstelle
+  vorgang_id uuid                                           -- Löschvorgang, der die Sperre gesetzt hat
+);
+--   CHECK kategorie IN (behandlung, einwilligung, beleg, grundaufzeichnung, geschaeftsbrief)
+--   FK owner_id -> profiles(id) ON DELETE RESTRICT
+--   FK patient_id -> leads(id) ON DELETE RESTRICT
+--   PK (id) · UNIQUE NULLS NOT DISTINCT (owner_id, patient_id, kategorie)
+--   RLS an, KEINE Policy, anon/authenticated REVOKE ALL — nur service_role.
+--   Sperrvermerk Art. 17 Abs. 3 lit. b / Art. 18 DSGVO (LEGAL_DECISIONS 2026-10-02 §4).
 
 CREATE TABLE ausfallrechnungen (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -2966,7 +2987,8 @@ CREATE TABLE profiles (
   gps_checkin_pruefen boolean NOT NULL DEFAULT false      -- 0047: Owner-Schalter GPS-Check-in (Standard aus)
 );
 --   CHECK plan IN (starter, professional, klinik, mitarbeiter, enterprise)
---   CHECK plan_status IN (pending, trial, active, past_due, canceled, expired)
+--   CHECK plan_status IN (pending, trial, active, past_due, canceled, expired, deleted)
+--         'deleted' seit 0057 (02.10.2026): gelöschtes Konto mit Sperrbestand
 --   CHECK role IN (owner, employee) · billing IN (monthly, annual)
 --   CHECK billing_interval IN (month, year) OR NULL
 --   CHECK anrede IN (Herr, Frau, Divers)

@@ -3,11 +3,11 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-10-02 · 92 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-10-02), funktionen/INDEX.json (erzeugt 2026-10-02)
+**Erzeugt:** 2026-10-02 · 93 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-10-02), funktionen/INDEX.json (erzeugt 2026-10-02)
 
 ## Kayıt durumu
 
-- Register kaydı olan: **92/92**
+- Register kaydı olan: **93/93**
 
 ## Kodda hiç çağrılmayan tablolar
 
@@ -19,6 +19,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 |---|---|---|
 | `accommodations` | 2 | fremd |
 | `applications` | 2 | fremd |
+| `aufbewahrung_sperre` | 3 | aktiv (Tabelle live, noch leer — der Schreiber entsteht in K1.4) |
 | `datenaustausch_zaehler` | 3 | aktiv — ✅ **am 20.09.2026 live angewandt** (MCP, zusammen mit 0026–0034). Die Tabelle ist noch leer: die erste Zeile entsteht, sobald die erste Datei unter dem neuen Verfahren erzeugt wird. Ein rückwirkender Backfill aus dem Bestand wurde bewusst **nicht** gemacht — die Altzeilen tragen keinen `empfaenger_ik`, eine je Paar aufgebaute Folge wäre geraten, nicht gewusst. Wer den Zähler vor dem ersten Lauf setzen will, nimmt `datenaustausch_zaehler_vorstellen()`. |
 | `dta_schluessel` | 4 | Referenz, im Code ungenutzt |
 | `heilmittel_catalog` | 2 | veraltet |
@@ -26,7 +27,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 | `heilmittel_tarif` | 4 | **veraltet** (13.09.2026, O-96 — siehe `onprem/REGISTER.md`) |
 | `icd_sector_ranges` | 3 | aktiv (Referenz) |
 | `nummernkreise` | 6 | aktiv |
-| `praxura_migrations` | 5 | aktiv |
+| `praxura_migrations` | 6 | aktiv |
 | `referral_drafts` | 9 | verdächtig |
 | `spatial_ref_sys` | 1 | System |
 | `trip_history` | 1 | fremd |
@@ -39,7 +40,7 @@ Auskunft (Art. 15): **59** · Löschung (Art. 17): **48** · anonymisiert statt 
 
 ⚠️ Personenbezug (FK auf `leads`/`profiles`/`auth.users`) aber **nicht** in der Auskunftsliste:
 
-`accommodations`, `admin_users`, `applications`, `booking_status_korrekturen`, `datenaustausch_zaehler`, `praxura_setup`
+`accommodations`, `admin_users`, `applications`, `aufbewahrung_sperre`, `booking_status_korrekturen`, `datenaustausch_zaehler`, `praxura_setup`
 
 Prüfen, nicht blind nachtragen: manche davon sind Konfigurations- oder
 Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
@@ -182,6 +183,11 @@ Warum: Kommen/Gehen der Mitarbeiter (Arbeitszeiterfassung), getrennt von der Sol
 **Liest (1):** `fetchHistory()`
 
 **Dateien:** `api-backend/server.js`, `attendance.js`
+
+### `aufbewahrung_sperre`
+
+8 Spalten · Status: aktiv (Tabelle live, noch leer — der Schreiber entsteht in K1.4)
+Warum: Sperrvermerk für die DSGVO-Löschung. Bei Kontolöschung (Fall B, SaaS) und später beim Löschantrag eines Patienten (Fall A) darf aufbewahrungspflichtiges Material nicht gelöscht werden (Art. 17 Abs. 3 lit. b DSGVO; § 630f Abs. 3 BGB, § 147 AO, § 14b UStG) — es wird **gesperrt** statt gelöscht. Die Tabelle hält fest, **was** gesperrt ist (Kategorie), **für wen** (ganzes Konto oder ein Patient), **seit wann, bis wann frühestens und warum** (Fundstelle). Ohne sie gäbe es keinen Nachweis der Einschränkung, keinen Antworttext „gesperrt bis …“ und später keinen engen Purge-Weg („DELETE nur wenn `gesperrt_bis` < heute“). Eigene Tabelle statt Spalten an `profiles`/`leads`, weil jede Kategorie eine eigene Frist hat (8 J. Belege, 10 J. Behandlung/Grundaufzeichnungen, 6 J. Geschäftsbriefe) und Fall A Patienten-Granularität braucht.
 
 ### `ausfallrechnungen`
 
