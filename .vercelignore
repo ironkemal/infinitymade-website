@@ -117,3 +117,6 @@ assets/img/fn/_raw/
 # Medien-Rohmaterial aus der Videoproduktion + Markenquelldateien — 09.09.2026
 # nach archive/medya/ verschoben (demo rezept/, voice demo/, Logo/, demo slayt/),
 # oben durch archive/ bereits ausgeschlossen
+
+# Spike-/Messmaterial (02.10.2026) — nie zur Laufzeit geladen
+spike/

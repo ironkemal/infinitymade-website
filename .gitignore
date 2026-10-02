@@ -95,3 +95,6 @@ wissensbank/.obsidian/
 
 # Kostentraegerdatei-Waechter (tools/kostentraeger-check.mjs) — lokale Ausgabe ohne --out=
 kostentraeger-check-out/
+
+# KI-Masken-Spike (02.10.2026): Messausgabe, wird bei jedem Lauf neu geschrieben
+spike/ki-maske/ergebnis-ist.json
