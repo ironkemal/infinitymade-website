@@ -27,9 +27,13 @@
 | 2026-09-12 | **ICD-10-GM (Band 1, Systematik) ticari on-prem Docker image'ına gömülebilir** | § 5 Abs. 2 UrhG "anderes amtliches Werk" — BfArM Downloadbedingungen (Stand 01.08.2025) § 1 Nr. 3/4 yeniden dağıtımı, ticari kullanım dahil, açıkça öngörüyor; telif ücreti/izin yok. Şartlar: Quellenangabe (§ 63 UrhG — image + Dashboard'a atıf metni) ve Änderungsverbot (§ 62 — kod başlıkları aynen). Band 2 (Alphabetisches Verzeichnis) **kapsam dışı** — Zi'nin ayrı hakları var. `wissensbank/REGISTER.md` W-A07 (ICD-10-GM kısmı) → `api-backend/db/migrations/0013_seed_icd10_titles.sql` | **Kapalı — atıf metni de eklendi (12.09.2026, O-78):** `onprem/NOTICE-QUELLEN.txt`, BfArM'ın kendi Anhang metni birebir | Band 2/Alphabet'in de dağıtılması istenirse; BfArM koşullarının değişmesi |
 | 2026-09-12 | **Kostenträgerdatei (GKV-Spitzenverband) ve Anlage 2 §125 SGB V Physiotherapie-Vergütung ticari on-prem image'ına gömülebilir** | Kostenträgerdatei: **Werkschutz yok** (IK/Kasse/DAS-Zuordnung = Tatsachen, § 2 Abs. 2 UrhG Schöpfungshöhe yok; Dizilim normatif dayatılmış → § 4 Abs. 2 Datenbankwerk de değil). Taşıyan gerekçe **bestimmungsgemäße Nutzung**: dosya yalnız §302-Verfahren'in Datenannahmestelle-yönlendirmesi için yayımlanıyor, Anhang 03 zaten yazılım üreticileri için bir format-spec. Anlage 2 §125: GKV-SV + Leistungserbringer-Spitzenorganisationen arası normsetzender Vertrag, § 5 Abs. 2 UrhG kapsamında ICD-10-GM'den zayıf değil; ayrıca Positionsnummer/Preis tablosunun kendisi Schöpfungshöhe taşımıyor. → `onprem/NOTICE-QUELLEN.txt` bölüm 2+3, `api-backend/db/migrations/0006/0007/0008_seed_*.sql` | Uygulanıyor (Risikoakzeptanz, bkz. aşağıdaki tablo — §§ 87a ff. UrhG sui-generis Datenbankherstellerrecht sorusu EuGH'de karara bağlanmamış) | EuGH'nin § 5 UrhG'nin §§ 87a ff.'e analog uygulanabilirliğine karar vermesi; GKV-Spitzenverband'ın kendi sitesinde açık bir yasak/lisans yayımlaması |
 | 2026-08-29 | **Umami einwilligungspflichtig — Schranke BLEİBT, yanlış olan metindi. Ayrıca Widerruf eksikti ve eklendi.** | § 25 Abs. 1 TDDDG **teknoloji-nötrdür**: yalnız çerez saklamayı değil, uç cihazda zaten kayıtlı bilgiye **erişimi** de kapsar. Umami script'i `screen`, `navigator.language`, `document.referrer` alanlarını aktif okur → Zugriff (EDSA Leitlinien 2/2023 v2.0, 07.10.2024). DSK'nın daha yumuşak çizgisi de kurtarmıyor: onun istisnası **sunucu tarafında pasif** okumadır, JS ile aktif Auslesen değil — iki görüş burada aynı sonuca varıyor. § 25 Abs. 2 Nr. 2 uymuyor (reichweitenmessung sayfanın sunulması için zorunlu değil; Almanya'da CNIL benzeri bir ölçüm istisnası yok — yasa koyucu tartıştı, koymadı). **Kritik nokta:** § 25 kişisel veri işlenip işlenmediğinden **bağımsız** işler → `datenschutz.html:146`'daki „keine Einwilligung erforderlich, **da** keine personenbezogenen Daten" cümlesi bir *non sequitur*; DSGVO gerekçesiyle TDDDG yükümlülüğü savuşturulamaz. Metnin asıl hatası buydu, eskimişliği değil. **Bağımsız ve daha ağır bulgu:** Widerruf **hiç yoktu** — bir kez `accepted` yazıldıktan sonra banner bir daha görünmüyor ve hiçbir yerde ayar bağlantısı yoktu → Art. 7 Abs. 3 S. 4 DSGVO („so einfach wie die Erteilung") ihlali; geçerli bir rıza rejiminin zorunlu parçası eksikti. **Uygulandı 29.08.2026:** banner'daki „Keine personenbezogenen Daten" beyanı kaldırıldı (Umami IP+UA+günlük salt'tan `session_id` üretir → ErwG 26 anlamında **pseudonym**, anonym değil; yanıltıcı beyana dayanan rıza Art. 4 Nr. 11 uyarınca angreifbar) · Datenschutz linki eklendi · Widerruf üç yoldan erişilebilir (`#cookie-einstellungen` ankası, `[data-cookie-einstellungen]` özniteliği, global fonksiyon) · rıza **12 ay** sonra yeniden sorulur · zaman damgasız eski rızalar **devralınmaz** (yanıltıcı metin altında verildiler) · iki düğme eşit genişlikte. `datenschutz.html:121` ve `:146` `legal-de` taslağıyla yeniden yazıldı, `UMAMI_SETUP.md` başına düzeltme notu kondu. Bauart-Test: `module/cookie-consent.test.js` (11 test; kapı kaldırılınca 9'u kırmızıya döner — gegenprobe yapıldı). **SEO-ROI sorusunun doğru aracı Umami değil:** Google Search Console + Bing Webmaster Tools, **DNS-TXT** doğrulamasıyla — sitede tek satır kod yok, Endeinrichtung'a erişim yok, § 25 hiç doğmuyor, €0 ve G8'e uygun. Umami consent'lilerde kalır; mutlak sayı vermez, göreli trend için kullanılır. | Uygulandı — GSC/Bing kurulumu açık | Digital Omnibus (Art. 88a/88b DSGVO-E, öneri 19.11.2025) yürürlüğe girip Reichweitenmessung istisnası getirirse; Umami sunucu konfigürasyonunun hash+salt rotasyonu doğrulanamazsa (o zaman `datenschutz.html:122` lafzı düzeltilir) |
-| 2026-09-17 | **`prescriptions_festschreibung()` trigger'ı (Ops #167): NULL-istisnası SADECE `patient_name`/`versichertennummer`/`patient_id` için — `icd10`/`icd10_2`/`diagnosegruppe`/Heilmittel-/Betragsfelder istisnasız kilitli kalır** | `fn_abrechnung_zeile_festschreibung()` deseni tekrarlanır: kimlik alanları NULL'a çekilebilir, değiştirilemez; tanı/Heilmittel-içerik alanları §302 Anlage-1-TP5 Pflichtangabe'dir, `invoices`'taki hatanın (Personenfeld nullen = Pflichtangabe'yi yok etme) tersten tekrarını önlemek için içerik kilitli kalmalı. **Ayrıca tespit edildi, ayrı kart açıldı:** `prescriptions` bugün `api/dsgvo.js` `DELETE_TABLES`'ta (hard DELETE), `ANONYMIZE_TABLES`'ta değil — BEFORE-UPDATE trigger'ı DELETE'i bloklamaz, dolayısıyla trigger Löschungskette'yi kırmaz, ama billed (`belegnummer` dolu) Verordnung'lar bugün retention'sız komple silinebiliyor; bu `db/SCHEMA-RLS.sql:904-914`'te zaten "OFFENE LUECKE" olarak işaretli ve ayrı bir gkv-302+legal-de kararı gerektiriyor. → `compliance/legal-reviews/2026-09-17-prescriptions-festschreibung-dsgvo.md` | Trigger tasarım kararı kapalı / dsgvo.js-taşıma kararı **açık** (ayrı kart) | dsgvo.js `prescriptions`'ı ANONYMIZE_TABLES'a taşıma kararı verildiğinde bu kayıt güncellenir |
+| 2026-09-17 | **`prescriptions_festschreibung()` trigger'ı (Ops #167): NULL-istisnası SADECE `patient_name`/`versichertennummer`/`patient_id` için — `icd10`/`icd10_2`/`diagnosegruppe`/Heilmittel-/Betragsfelder istisnasız kilitli kalır** | `fn_abrechnung_zeile_festschreibung()` deseni tekrarlanır: kimlik alanları NULL'a çekilebilir, değiştirilemez; tanı/Heilmittel-içerik alanları §302 Anlage-1-TP5 Pflichtangabe'dir, `invoices`'taki hatanın (Personenfeld nullen = Pflichtangabe'yi yok etme) tersten tekrarını önlemek için içerik kilitli kalmalı. **Ayrıca tespit edildi, ayrı kart açıldı:** `prescriptions` bugün `api/dsgvo.js` `DELETE_TABLES`'ta (hard DELETE), `ANONYMIZE_TABLES`'ta değil — BEFORE-UPDATE trigger'ı DELETE'i bloklamaz, dolayısıyla trigger Löschungskette'yi kırmaz, ama billed (`belegnummer` dolu) Verordnung'lar bugün retention'sız komple silinebiliyor; bu `db/SCHEMA-RLS.sql:904-914`'te zaten "OFFENE LUECKE" olarak işaretli ve ayrı bir gkv-302+legal-de kararı gerektiriyor. → `compliance/legal-reviews/2026-09-17-prescriptions-festschreibung-dsgvo.md` | Trigger tasarım kararı kapalı / dsgvo.js-taşıma kararı **açık** (ayrı kart) — ⚠️ legal tarafı 02.10.2026 K1.4 kaydıyla cevaplandı (behandelte/abgerechnete VO = Behandlungsdoku, silinmez, gesperrt) | dsgvo.js `prescriptions`'ı ANONYMIZE_TABLES'a taşıma kararı verildiğinde bu kayıt güncellenir |
 | 2026-09-21 | **Klass-68 Softwarehersteller-IK bei der ARGE·IK wird beantragt — drei Auflagen, kein Freibrief** | § 293 SGB V regelt das IK als **Kennzeichen**, nicht als Statusnachweis; Klassifikation 68 ("Softwarehersteller im Sozialversicherungswesen für zertifikatsbasierte Testverfahren") ist **nicht** Klassifikation 66 (§ 302 Abs. 2 SGB V, Leistungserbringer-IK) — die beantragte IK trägt keine Abrechnungsbefugnis. Zweck: Praxura (Kleingewerbe, keine Rechtsformvoraussetzung) kann damit selbst am Softwarehersteller-Test nach Anhang 2 Kap. 9 (Schritt 2.2, optional) teilnehmen, **ohne** eine Praxis-IK zu benötigen — das **Erprobungsverfahren** (Schritt 2.3, zwingend) läuft unverändert unter der IK/dem Zertifikat der jeweiligen Praxis. Drei Auflagen (`legal-de`, 21.09.2026): (1) die IK wird **niemals** als Absender-/Rechenzentrums-IK in einer echten Abrechnungsdatei verwendet — als Korkuluk im Code umgesetzt: `api-backend/billing/dta/software-hersteller-ik.js` (`SOFTWARE_HERSTELLER_IK`, heute `null`) + `assertNichtSoftwareHerstellerIkAlsAbsender()` in `builder.js`, wirft sobald `kind==='echt'` UND Absender-IK == der konfigurierten IK ist; (2) der Antrag läuft auf "InfinityMade, Inh. Yavuz Kemal Demir", nicht auf die Privatperson; (3) keine öffentliche Formulierung à la "wir sind bei der ARGE·IK registriert" — Standardtext, falls je gebraucht: *"Softwarehersteller-IK (Klassifikation 68) — ausschließlich für das zertifikatsbasierte Testverfahren nach Anhang 2 zur Anlage 1 (TP5). Die Abrechnung nach § 302 SGB V erfolgt durch die Praxis unter ihrem eigenen IK."* → `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 2.0 | **Kapalı — Antrag offen** (kostenlos, schriftlich bei der ARGE·IK: dguv.de/arge-ik/downloads/ → „Erfassungsbeleg IK", info@arge-ik.de; Bearbeitungsdauer nicht angegeben) | Die IK wird real in einer `kind==='echt'`-Datei als Absender-IK verwendet · eine öffentliche Formulierung suggeriert Abrechnungsbefugnis · die Sperre in `software-hersteller-ik.js` wird entfernt/umgangen |
 | 2026-09-29 | **KI-Rezept-OCR über STACKIT AI Model Serving (statt Azure): 🔧 KOŞULLU freigabefähig — kein Veto. §203 durch NB Ziff. 18 getragen, §393 für den KI-Anteil erfüllt (C5 Typ 2), vor Aktivierung 6 Pflichtpunkte (alle 🟢 €0).** · **Nachtrag (2) gleicher Tag: Geschäftsmodell B′ (ein Praxura-Konto, je Praxis eigenes STACKIT-Projekt/Key, Daten direkt Box/App → STACKIT) — legal-de-Veto vom 12.09.2026 gegen „B" für diese Variante in 🔧 KOŞULLU umgewandelt; Reselling R als Alternative geprüft.** | Details, Quellen, offene Fragen und Mail an STACKIT: Abschnitt „2026-09-29 — KI-Rezept-OCR über STACKIT" + „Nachtrag (2)" am Ende dieser Datei. | **Ruht — STACKIT hat am 01.10.2026 abgelehnt (Nachtrag 3)** · vorher: wartet auf STACKIT-Antwort (inkl. Ziff. 13.2-Freigabe) + Doku-Updates; `onprem`-G2- und `guvenlik`-Veto zu B sind NICHT von legal-de aufhebbar → Konsey** | STACKIT-Antwort widerspricht „kein Inhalt in Logs/keine menschliche Prüfung" · STACKIT ändert NB Ziff. 18 (Änderungsmitteilung Ziff. 19.2, 8 Wochen) · AI Model Serving fällt aus dem C5-Typ-2-Scope · STACKIT verweigert Per-Praxis-Projekte nach Ziff. 13.2 · Request-Daten laufen doch über Praxura-Server |
+| 2026-10-02 | **K1.8 / K-12 — Zwei-Faktor-Authentifizierung ist gesetzlich NICHT vorgeschrieben. Box: kein 2FA (K-12 bestätigt). SaaS: kein Gesetzesverstoß, aber eigene Zusage in TOM/DSFA muss vor ersten realen Patientendaten im SaaS entweder eingelöst oder korrigiert werden.** | Keine Norm nennt MFA: Art. 32 DSGVO ist risikobasiert (Stand der Technik, kein Maßnahmenkatalog); § 203 StGB regelt das Offenbaren, keine Technik; **§ 390 SGB V** (Wortlaut gelesen 02.10.2026) bindet nur „die an der vertragsärztlichen und vertragszahnärztlichen Versorgung teilnehmenden Leistungserbringer" (Richtlinie der KBV/KZBV) → **Heilmittelerbringer sind nicht Adressat**; BSI-Grundschutz unverbindlich, BSI TR-03161 gilt nur für DiGA/DiPA. Box: LAN-only, Praxis = Verantwortliche, Praxura ohne Rolle → Art. 32 trifft allein die Praxis. SaaS (Praxura = Auftragsverarbeiter): **Selbstbindung** — `compliance/TOM.md:24` sagt „Zwei-Faktor-Authentifizierung (TOTP) verpflichtend für Praxisinhaber-Konten ab Go-Live", `compliance/DSFA.md:52` R4 (Kontoübernahme, Score 16) „P0 vor Go-Live (MFA-Pflicht)". TOM ist AVV-Anlage (Art. 28 Abs. 3 lit. c) = vertragliche Zusage; eine Zusage, die das Produkt nicht einlöst, ist derselbe Mangel wie das TOM-Audit-Log am 03.09.2026. Details: Abschnitt „2026-10-02" unten. | Kapalı — Doku-Korrektur TOM.md:24 + DSFA R4 offen (Kemal, 🟢 €0, ~30 min) | Erste reale Patientendaten im SaaS (dann: Supabase-TOTP für Owner, 🟢 €0, ~1 Tag, läuft auch im self-hosted GoTrue — G8-neutral) · Box wird aus dem Internet erreichbar gemacht · Aufsichtsbehörde/DSK veröffentlicht MFA-Erwartung für Gesundheitsdaten-Software · § 390 SGB V o. ä. Norm wird auf Heilmittelerbringer erstreckt |
+| 2026-10-02 | **K1.8 / K-6 — Festplattenverschlüsselung der Box ist NICHT Praxuras Rechtspflicht, sondern die der Praxis. Im Kurulum-Kılavuzu nur Empfehlungssatz.** | Art. 24, 32 DSGVO adressieren Verantwortliche/Auftragsverarbeiter; Hersteller ist kein Normadressat (Art. 25 Abs. 1 = Verantwortlicher; ErwG 78 S. 4 „ermutigt" Hersteller nur). In der Box verarbeitet Praxura nichts (K-6, Playbook K6/K10) → Praxis trägt Art. 32 und § 203 StGB allein. Produktseitig heute keine Pflicht (Softwaremiete: Mangelfreiheit, keine Verschlüsselungszusage). **Künftige Herstellerpflicht, nicht Disk-spezifisch:** CRA (EU) 2024/2847 Anhang I Teil I Nr. 2 lit. e (Vertraulichkeit gespeicherter Daten, „z. B. durch Verschlüsselung relevanter Daten im Ruhezustand") ab **11.12.2027** — erfüllbar durch App-seitige Verschlüsselung relevanter Daten (`api-backend/lib/phi-encrypt.js`), Vollverschlüsselung nicht zwingend; Prüfung im CRA-Paket, nicht jetzt. Empfehlungssatz (Almanca) im Abschnitt unten. | Kapalı | CRA-Vorbereitung (spätestens Mitte 2027) · Praxura übernimmt Betrieb/Fernwartung der Box (K10 bricht) · Praxura liefert eigene Hardware aus |
+| 2026-10-02 | **K1.8 / S-31 — Klartext der §302-Datei NICHT ersatzlos löschen. Aufbewahrungsobjekt = signierte `.p7m` (SignedData, enthält Nutzdaten lesbar), 8 Jahre. Unsignierte `.dta` nach erfolgreicher Signatur löschen; verschlüsseltes `.enc.p7m` nach Annahme/Quittung löschen; SHA-256 aller Stufen bleibt.** | Das verschlüsselte Artefakt (EnvelopedData an das Zertifikat der Datenannahmestelle) kann die Praxis **nie wieder öffnen** → als einzige Kopie verstößt es gegen § 147 Abs. 2 Nr. 2 AO (jederzeit verfügbar, unverzüglich lesbar, maschinell auswertbar) und § 147 Abs. 6 AO (Datenzugriff); GoBD verlangen bei Kryptografie die Verfügbarkeit in entschlüsselter Form (genaue Rz. nicht verifiziert). Die Signatur läuft mit `detached: false` (`dashboard.js:16289`) → die `.p7m` enthält die vollständige Nutzdatei **plus** Signatur der Praxis = bester Nachweis, was eingereicht wurde; die unsignierte `.dta` ist danach inhaltsgleiches Duplikat. Frist: Abrechnung an die Kasse = Rechnung/Buchungsbeleg → **8 Jahre** ab Ende des Kalenderjahres der Einreichung (§ 147 Abs. 1 Nr. 4, Abs. 3 S. 1, Abs. 4 AO i. d. F. BEG IV; § 14b Abs. 1 UStG ebenso 8 J.); TP5-Übermittlungsdokumentation (≥ 2 J., Anlage 1 TP5 Kap. 3(2)) ist damit mit abgedeckt. Nie übermittelte Entwürfe (storniert/neu erzeugt) sind kein Beleg → sofort löschbar. **Korrigiert `guvenlik` S-31 Vorgabe V7** („nur das verschlüsselte Artefakt behalten") — dessen Vorbehalt war genau diese Frage. Gilt SaaS und Box gleich (Box: Pflicht der Praxis, Code-Default identisch). | Kapalı — Code (V7 umbauen) + Bucket-Lebenszyklus offen | Spezifikation verlangt Aufbewahrung des verschlüsselten Artefakts · Signatur wird auf `detached: true` umgestellt (dann bleibt die `.dta` Aufbewahrungsobjekt) · Steuerberater stuft die Sammelabrechnung als Aufzeichnung (10 J.) ein |
+| 2026-10-02 | **K1.4 / S-10 / S-32 — Löschung↔Aufbewahrung: Kemals Modell (aufbewahrungspflichtiges sperren, Rest löschen, „teilweise gelöscht … gesperrt bis <Datum>") ist RICHTIG — mit drei Korrekturen: (1) SaaS: vorher Pflicht-Export + AVV-Klausel als Weisung, (2) mehrere heute gelöschte Tabellen sind Behandlungsdoku und müssen in den Sperrbestand, (3) Fristen je Kategorie, nicht pauschal 10 J.** | Box/Patientenantrag (Praxis = Verantwortliche): Art. 17 Abs. 3 lit. b DSGVO → Löschung entfällt, Ersatz Einschränkung (Art. 18-Logik; § 35 Abs. 3 BDSG nur für satzungs-/vertragliche Fristen). SaaS-Kontoende (Praxura = Auftragsverarbeiter): Art. 28 Abs. 3 lit. g → Löschen **oder** Rückgabe „nach Wahl des Verantwortlichen"; die Aufbewahrungspflicht trifft die Praxis, nicht uns (Eintrag 08.09.2026) → gesperrte Verwahrung bei uns braucht eine **Weisung** = AVV-Klausel. Fristen: Behandlungsdoku/Einwilligungen **10 J.** (§ 630f Abs. 3 BGB, ab Behandlungsabschluss); Rechnungen/Abrechnungsdateien **8 J.** (§ 147 Abs. 1 Nr. 4, Abs. 3 AO, § 14b UStG, BEG IV, gilt für alle am 01.01.2025 noch laufenden Fristen); Grundaufzeichnungen/Zahlungen/Kassen-Belegliste/Fahrtenbuch **10 J.** (§ 147 Abs. 1 Nr. 1 AO); Beginn jeweils 31.12. (§ 147 Abs. 4 AO), Ende „frühestens" wegen Ablaufhemmung § 147 Abs. 3 S. 5 AO. Storage folgt der Zeile, zu der die Datei gehört. `data_access_log`: nicht im Art.-17-Lauf, 12 Monate rollierend; DSGVO-Vorgangseinträge 3 J.; gehört in die Art.-15-Auskunft (EuGH C-579/21 v. 22.06.2023). Details, Tabelle, „gesperrt"-Definition und Texte: Abschnitt „2026-10-02" unten. Schließt den offenen Punkt `prescriptions` (Eintrag 17.09.2026) auf der Rechtsseite. | Kapalı (Rechtsfrage) — Umsetzung K1.4 offen; Purge bei Fristablauf (frühestens 31.12.2034) später mit `guvenlik` | Erster realer Löschantrag · Steuerberater widerspricht einer Kategorie (Fahrtenbuch, `abrechnung_zahlung`) · Gesetzgeber ändert § 630f Abs. 3 BGB oder § 147 Abs. 3 AO · Praxis verlangt Herausgabe + Volllöschung vor Fristablauf (→ Purge-Pfad nach Export nötig) |
 
 ---
 
@@ -59,9 +63,11 @@ sadece durum değişirse veya yeni bir bulgu bunları ağırlaştırırsa değin
 - MDR eşiği: mevcut KI özellikleri (rezept-validate, rezept-ocr) klinik karar desteği sayılır mı
 - Onam şablonunda `praxis_kontakt` + `datenschutzbeauftragter` alanları praxis'ten beslenmiyor
   (Art. 13 Abs. 1 lit. a/b) → `compliance/legal-reviews/2026-08-14-einwilligungstexte-wortlaut.md`
-- `prescriptions`'ın `api/dsgvo.js`'te hard-DELETE yerine billed satırlar için ANONYMIZE_TABLES'a
-  taşınması gerekip gerekmediği — gkv-302 + legal-de birlikte → `db/SCHEMA-RLS.sql:904-914`,
-  `compliance/legal-reviews/2026-09-17-prescriptions-festschreibung-dsgvo.md`
+- ~~`prescriptions`'ın `api/dsgvo.js`'te hard-DELETE yerine billed satırlar için ANONYMIZE_TABLES'a
+  taşınması gerekip gerekmediği~~ → **Rechtsseite entschieden 02.10.2026 (K1.4):** behandelte oder
+  abgerechnete Verordnungen sind Behandlungsdokumentation (§ 630f Abs. 3 BGB, 10 J.) → weder
+  löschen noch anonymisieren, sondern **sperren**; unbehandelte/abgelehnte Verordnungen löschen.
+  Technische Ausgestaltung (Feldkatalog) bleibt bei `gkv-302` + `db-ustasi`.
 - **(29.09.2026, neu)** Praxuras eigene AVV (`compliance/AVV.md` §5.2, `dpa.html` §8) enthält
   **keine § 203-Abs.-3/4-StGB-Verpflichtung Praxuras selbst** und keine Weitergabepflicht an
   Unterauftragnehmer — unabhängig von STACKIT, betrifft das ganze SaaS. Textvorschlag im
@@ -69,6 +75,9 @@ sadece durum değişirse veya yeni bir bulgu bunları ağırlaştırırsa değin
 - **(29.09.2026, neu)** `compliance/VVT.md:64` und `AVV.md:161` behaupten für Azure einen
   „Zero-Data-Retention-Vertrag" — der wurde nie erteilt (Modified Abuse Monitoring abgelehnt).
   Überzogene Zusicherung → beim STACKIT-Update mit korrigieren.
+- **(02.10.2026, neu)** `compliance/TOM.md:24` + `DSFA.md:52/85` versprechen MFA-Pflicht ab
+  Go-Live, die laut K-12 nicht gebaut wird → Text auf „SaaS: vor ersten realen Patientendaten;
+  Box: Verantwortung der Praxis" ändern, R4 neu bewerten (siehe Abschnitt 2026-10-02).
 
 ## 2026-08-27 — Beta-Kunden-Klarnamen im öffentlichen Repository
 
@@ -493,3 +502,157 @@ Produktiv bleibt Azure (Sweden Central). Web- und Rechtstexte nennen STACKIT nir
 keine Korrektur nötig. **Unabhängig von STACKIT weiter offen:** die zwei Punkte oben unter
 „Offene Punkte" vom 29.09.2026 (§ 203-Verpflichtung in Praxuras eigener AVV; überzogene
 Azure-„Zero-Data-Retention"-Aussage in `VVT.md`/`AVV.md`).
+
+## 2026-10-02 — Kutu-Hazırlık-Sprint K1.8 (2FA · Disk · S-31) und K1.4 (Löschung↔Aufbewahrung)
+
+Anlass: `KUTU_HAZIRLIK_SPRINT.md` K1.8 und K1.4. Kurzfassungen in der Tabelle oben (vier
+Zeilen vom 02.10.2026). Hier nur, was die Umsetzung braucht. Reale Patientendaten gibt es
+nicht (K-14) — keine Altlast, alles wirkt nach vorn.
+
+### 1. 2FA (K-12) — Was konkret zu tun ist
+
+- **Box:** nichts. Kein 2FA, Kurulum-Kılavuzu erwähnt es nicht als Pflicht.
+- **SaaS:** zwei billige Wege, einer muss vor ersten realen Patientendaten im SaaS gewählt sein:
+  (a) Supabase-Auth-TOTP für `role='owner'` erzwingen (🟢 €0, ~1 Tag, kein neuer Dienst,
+  GoTrue self-hosted kann es auch → G8-neutral); oder (b) `TOM.md:24` und `DSFA.md:52/85`
+  ehrlich umschreiben: „MFA nicht umgesetzt; Ausgleich: Rate-Limit auf Login, Mindestlänge
+  Passwort, Sitzungsablauf; Restrisiko R4 bewusst getragen bis <Auslöser>". Heute **(b)**,
+  weil SaaS keine realen Patientendaten trägt und die Box das Zielprodukt ist.
+- Kein Anwalt nötig.
+
+### 2. Festplattenverschlüsselung (K-6) — Empfehlungssatz für `onprem/KURULUM.md`
+
+> **Datensicherheit des Rechners.** Für die Sicherheit des Rechners, auf dem Praxura läuft,
+> ist Ihre Praxis als Verantwortliche verantwortlich (Art. 32 DSGVO). Wir empfehlen dringend,
+> die Festplatte vollständig zu verschlüsseln (Windows: BitLocker bzw. Geräteverschlüsselung,
+> Linux: LUKS) und Sicherungskopien nur verschlüsselt abzulegen – sonst sind die
+> Patientendaten bei Diebstahl oder Verlust des Geräts oder der Sicherungsplatte lesbar.
+
+(Hinweis für den Kılavuz-Autor: Windows 11 **Home** hat kein volles BitLocker, nur
+„Geräteverschlüsselung" auf geeigneter Hardware — deshalb „bzw.".)
+
+### 3. S-31 — Lebenszyklus der Dateien im Bucket `abrechnungen`
+
+| Stufe | Datei | Was passiert | Wann |
+|---|---|---|---|
+| Entwurf | `.dta` (unsigniert) | löschen, wenn neu erzeugt/storniert (kein Beleg) | sofort |
+| signiert | `.p7m` (SignedData, Inhalt eingebettet) | **behalten — Aufbewahrungsobjekt** | 8 J. ab 31.12. des Einreichungsjahres |
+| signiert | `.dta` daneben | löschen (inhaltsgleich in `.p7m`), SHA-256 in `abrechnung` | nach erfolgreicher Signatur |
+| verschlüsselt | `.dta.enc.p7m` | löschen, SHA-256 + Übermittlungsprotokoll bleiben | nach Annahme/Quittung der DAS |
+
+Für `guvenlik`: V7 wird so umgebaut; der Rest von S-31 (V1–V6, V8) bleibt. Der Klartext im
+Bucket ist damit befristet statt unbefristet — das schließt S-31 (b).
+
+### 4. K1.4 — Löschung↔Aufbewahrung
+
+**Zwei verschiedene Fälle — nicht vermischen:**
+
+| Fall | Wer ist Verantwortlicher | Norm für „nicht löschen" |
+|---|---|---|
+| A. Patient verlangt Löschung bei seiner Praxis (Box **und** SaaS) | Praxis | Art. 17 Abs. 3 lit. b DSGVO → Einschränkung statt Löschung |
+| B. Praxis löscht ihr Praxura-Konto (nur SaaS, = Vertragsende) | Praxis für Patientendaten (wir: Art. 28 Abs. 3 lit. g); **wir** für Inhaber-/B2B-Daten | Patientendaten: nur auf Weisung der Praxis → AVV-Klausel; unsere eigenen Rechnungen an die Praxis: unsere § 147 AO / § 14b UStG-Pflicht (8 J.) |
+
+**AVV-Klausel (Almanca, für `compliance/AVV.md` / `dpa.html`, Abschnitt Vertragsende) — macht
+das Sperren in Fall B zur Weisung der Praxis:**
+
+> Nach Beendigung des Vertrags werden personenbezogene Daten, für die den Auftraggeber
+> gesetzliche Aufbewahrungspflichten treffen (insbesondere § 630f Abs. 3 BGB, § 147 AO,
+> § 14b UStG), auf Weisung des Auftraggebers bis zum Ablauf der jeweiligen Frist gesperrt
+> verwahrt und anschließend gelöscht. Vor der Sperrung erhält der Auftraggeber eine
+> vollständige Kopie in einem gängigen, maschinell auswertbaren Format. Der Auftraggeber
+> kann jederzeit die erneute Herausgabe oder – nach Herausgabe – die vollständige Löschung
+> verlangen.
+
+**Fristen (Fristbeginn immer 31.12. des maßgeblichen Jahres; Ende „frühestens", weil die
+Ablaufhemmung nach § 147 Abs. 3 S. 5 AO Sache der Praxis ist):**
+
+| Kategorie | Tabellen / Storage | Frist | Fundstelle | Maßgebliches Jahr |
+|---|---|---|---|---|
+| Behandlungsdokumentation | `podologie_behandlungen`, `anamnese`, `pat_fussbefund`, `messreihen`, `patient_notes`, behandelte/abgerechnete `prescriptions` + `prescription_sessions` + `prescription_documents`; Storage: Rezept-Scans (`prescriptions`) behandelter VO, `patient-documents` mit Behandlungsbezug | 10 J. | § 630f Abs. 3 BGB | letzte Behandlung des Patienten |
+| Einwilligungen | `patient_consents` | 10 J. | § 630f Abs. 3 BGB, Art. 7 Abs. 1 DSGVO (Eintrag 14.08.2026) | letzte Behandlung |
+| Rechnungen / Buchungsbelege | `invoices`, `ausfallrechnungen`, `abrechnung`, `abrechnung_zeile`, `abrechnung_uebermittlung`; Storage: Rechnungs-/Beleg-PDFs in versandter Form, signierte `.p7m` | 8 J. | § 147 Abs. 1 Nr. 4, Abs. 3 S. 1 AO; § 14b Abs. 1 UStG (je i. d. F. BEG IV) | Ausstellung/Einreichung |
+| Grundaufzeichnungen | `rechnung_zahlungen`, `abrechnung_zahlung`, `belegliste`, `zuzahlung_korrekturen`, `fahrten` **+** `fahrten_aenderungen` (Fahrtenbuch, konservativ) | 10 J. | § 147 Abs. 1 Nr. 1, Abs. 3 AO | letzte Eintragung |
+| Patienten-Stammsatz | `leads` — **nur** auf das reduziert, was die gesperrten Unterlagen zuordenbar hält (Name, Geburtsdatum, Versichertennummer, Anschrift soweit in Rechnung/Abrechnung); Telefon, E-Mail, Notizen, Tags u. ä. löschen | wie längste abhängige Kategorie | Art. 5 Abs. 1 lit. c, e DSGVO | — |
+| alles andere | `bookings`, `warteliste`, `booking_requests`, `email_logs`, `mahnungen`, Kalender-/Stammdaten usw.; Scans unbehandelter/abgelehnter VO | sofort löschen | Art. 17 Abs. 1 | — |
+
+**Korrekturen am heutigen `api/dsgvo.js`:**
+1. `anamnese`, `pat_fussbefund`, `messreihen`, `patient_notes`, `prescription_documents`,
+   `prescription_sessions`, `prescriptions` (behandelt/abgerechnet) stehen in `DELETE_TABLES`
+   (`api/dsgvo.js:283-289`) — das sind Behandlungsdokumentation → in den Sperrbestand.
+   Löschen wäre Verstoß gegen § 630f Abs. 3 BGB der Praxis (für uns: Weisungsverstoß), und
+   das schwerere Risiko als Überaufbewahrung (Beweislastumkehr § 630h Abs. 3 BGB).
+   Tabellenzuordnung im Detail mit `db-ustasi` bestätigen.
+2. `fahrten` wird gelöscht, `fahrten_aenderungen` bleibt — ein Änderungsprotokoll ohne
+   Fahrtenbuch ist sinnlos. Beide zusammen in den Sperrbestand.
+3. `leads` nicht löschen, solange abhängige gesperrte Unterlagen existieren — auf den
+   Minimalsatz reduzieren (siehe Tabelle).
+4. Antwort: ein Ergebnis, bei dem **nur** der Sperrbestand stehen bleibt, ist ein
+   **Erfolg** („teilweise gelöscht", 200 + Liste + Daten), kein 500. 500 bleibt für
+   unerwartete Reste (das ehrliche Verhalten vom 28.08.2026 bleibt erhalten).
+5. Storage (S-32): je Bucket `list` + `remove` im Mandantenordner, **ausgenommen** Objekte
+   des Sperrbestands. Dafür muss jede Datei ihrer Zeile zuordenbar sein (Pfad mit ID
+   oder Pfad-Spalte) — wo nicht, `db-ustasi` fragen.
+6. Eine einzige Klassifizierungsquelle (Tabelle → Kategorie → Frist → Fundstelle), aus der
+   Löschkette, Antworttext und Auskunft lesen — damit die Liste nicht dreimal driftet.
+7. Fall B / Stripe: `api/dsgvo.js:460-467` löscht den Stripe-Customer. **Vorher prüfen**
+   (Kemal, 15 min im Stripe-Dashboard), ob Praxuras eigene Rechnungen an die Praxis danach
+   abrufbar bleiben; wenn nicht, Rechnungs-PDFs vorher exportieren oder den
+   Customer-Delete streichen — das sind **unsere** Buchungsbelege (8 J.).
+
+**„Gesperrt" heißt technisch (Art. 18-Logik, Art. 4 Nr. 3 DSGVO):**
+1. Kennzeichen je Datensatz bzw. je Patient: `gesperrt_am`, `gesperrt_bis`, Grundlage
+   (Fundstelle). Ob Spalte oder eigene Tabelle: `db-ustasi`.
+2. Aus **allen** operativen Wegen ausgeblendet: Listen, Suche, Kalender, Warteliste,
+   Erinnerungen/Mails, KI, Statistik, Abrechnungsvorschläge, Exporte für andere Zwecke.
+3. Keine Änderung (die bestehenden GoBD-/§ 630f-Trigger leisten das schon — **nicht
+   anfassen**).
+4. Lesen nur über einen ausdrücklichen Weg mit Zweckangabe (Betriebsprüfung, Haftungsfall,
+   Auskunft) und Protokolleintrag; in Fall B nur auf Anforderung der Praxis über Support.
+5. Art.-15-Auskunft enthält gesperrte Daten weiterhin (mit Sperrvermerk).
+6. Bei Fristablauf: Löschung je Datensatz. Dafür braucht es später einen engen Purge-Weg
+   („DELETE nur wenn `gesperrt_bis` < heute") — berührt die GoBD-Sperre, daher **mit
+   `guvenlik`** und erst bei Bedarf: frühester denkbarer Ablauf ist der 31.12.2034
+   (8 J. für Belege aus 2026). Nicht Teil von K1.4. Zeitgesteuerte Jobs in der Box →
+   vorher `onprem`.
+
+**Antworttexte (Almanca):**
+
+*Fall B — Konto gelöscht (SaaS, an die Praxis):*
+> Ihr Konto wurde gelöscht – mit einer Ausnahme: Für die folgenden Unterlagen bestehen für
+> Ihre Praxis gesetzliche Aufbewahrungspflichten. Wir verwahren sie in Ihrem Auftrag
+> gesperrt (kein Zugriff, keine weitere Verarbeitung) und löschen sie nach Fristablauf
+> automatisch:
+> • Behandlungsdokumentation, Verordnungen und Einwilligungen (§ 630f Abs. 3 BGB) – gesperrt bis frühestens 31.12.JJJJ
+> • Rechnungen und Abrechnungsdateien (§ 147 Abs. 1 Nr. 4 AO, § 14b UStG) – gesperrt bis frühestens 31.12.JJJJ
+> • Zahlungsaufzeichnungen und Fahrtenbuch (§ 147 Abs. 1 Nr. 1 AO) – gesperrt bis frühestens 31.12.JJJJ
+> Eine vollständige Kopie dieser Unterlagen haben Sie vor der Löschung erhalten. Auf
+> Anforderung (z. B. bei einer Betriebsprüfung) stellen wir sie erneut bereit oder löschen
+> sie nach Herausgabe vollständig.
+
+*Fall A — Patient (die Praxis antwortet, Art. 12 Abs. 4 DSGVO):*
+> Ihre Daten wurden gelöscht, soweit keine gesetzliche Aufbewahrungspflicht besteht. Ihre
+> Behandlungsdokumentation müssen wir nach § 630f Abs. 3 BGB zehn Jahre nach Abschluss der
+> Behandlung aufbewahren, Rechnungen nach § 147 AO acht Jahre. Diese Daten sind bis dahin
+> gesperrt und werden ausschließlich zur Erfüllung dieser Pflichten verwendet; danach
+> werden sie gelöscht.
+
+**`data_access_log`:**
+- **Nicht** Teil des Art.-17-Laufs: es ist Nachweis nach Art. 5 Abs. 2 / Art. 32 und
+  dient selbst der Löschkette (Sperre gegen Doppelantrag, `api/dsgvo.js:436-441`).
+- Eigene Frist, keine gesetzliche: **Zugriffsprotokolle 12 Monate rollierend**, dann löschen
+  (Art. 5 Abs. 1 lit. e; Wert praxisüblich, nicht normiert). **Einträge zu DSGVO-Vorgängen**
+  (`dsgvo_deletion`, `dsgvo_export`) **3 Jahre** ab Jahresende (Regelverjährung §§ 195, 199
+  BGB — Nachweis, dass der Antrag bearbeitet wurde); Inhalt minimal, keine Patientendaten
+  in `metadata`.
+- In die **Art.-15-Auskunft aufnehmen** (heute bewusst ausgelassen, `api/dsgvo.js:172-174`):
+  Protokolldaten über Zugriffe auf die eigenen Daten gehören dazu (EuGH C-579/21,
+  *Pankki S*, 22.06.2023) — Datum, Aktion, Ressourcentyp; Identität einzelner Mitarbeiter
+  nur, wenn zur Rechtswahrnehmung nötig.
+- Rollierende Löschung ist ein zeitgesteuerter Job → in der Box vorher `onprem`.
+
+**Kosten:** alles 🟢 €0 (Eigenarbeit; K1.4-Code ~1–2 Tage, Doku ~1 h). Kein Anwalt nötig.
+Optional eine Frage an den Steuerberater (im Rahmen der ohnehin offenen Kassenbuch-Frage vom
+17.09.2026, kein Zusatzhonorar zu erwarten): „Fahrtenbuch und Zahlungseingänge zur
+GKV-Sammelabrechnung — 8 oder 10 Jahre?"
+
+**Neubewertung ausgelöst durch:** siehe Tabellenzeilen oben.
