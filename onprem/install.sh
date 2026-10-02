@@ -274,6 +274,12 @@ DATA_ENCRYPTION_KEY="$(openssl rand -hex 32)"
 # Wert, der erst NACH "docker compose up" entsteht, kommt nie an (Gegenlesen
 # 11.09.2026 — ursprünglich stand das im letzten Schritt und war wirkungslos).
 SETUP_TOKEN="$(openssl rand -hex 24)"
+# S-21 (KHS K2.6): eine Rolle je Dienst, ein Passwort je Rolle — wer den
+# rest/auth/storage-Container uebernimmt, kennt damit NICHT das Superuser-
+# Passwort (volumes/db/praxura-rollen.sql, laeuft nach 99-roles.sql).
+PG_AUTHENTICATOR_PASSWORD="$(openssl rand -hex 24)"
+PG_AUTH_ADMIN_PASSWORD="$(openssl rand -hex 24)"
+PG_STORAGE_ADMIN_PASSWORD="$(openssl rand -hex 24)"
 
 set_env POSTGRES_PASSWORD "$POSTGRES_PASSWORD"
 set_env JWT_SECRET "$JWT_SECRET"
@@ -283,7 +289,10 @@ set_env S3_PROTOCOL_ACCESS_KEY_ID "$S3_KEY_ID"
 set_env S3_PROTOCOL_ACCESS_KEY_SECRET "$S3_KEY_SECRET"
 set_env DATA_ENCRYPTION_KEY "$DATA_ENCRYPTION_KEY"
 set_env SETUP_TOKEN "$SETUP_TOKEN"
-ok "acht Geheimnisse erzeugt (Werte NICHT geloggt)"
+set_env PG_AUTHENTICATOR_PASSWORD "$PG_AUTHENTICATOR_PASSWORD"
+set_env PG_AUTH_ADMIN_PASSWORD "$PG_AUTH_ADMIN_PASSWORD"
+set_env PG_STORAGE_ADMIN_PASSWORD "$PG_STORAGE_ADMIN_PASSWORD"
+ok "elf Geheimnisse erzeugt (Werte NICHT geloggt)"
 
 # ── Schritt 7 — ANON_KEY / SERVICE_ROLE_KEY aus JWT_SECRET ableiten (O-60) ───
 log "[7/17] ANON_KEY / SERVICE_ROLE_KEY aus JWT_SECRET ableiten"
@@ -317,7 +326,7 @@ ok "leer gelassen (SUPABASE_PUBLIC_URL = SITE_URL, ein Origin)"
 
 # ── Schritt 9 — Pflichtfeld-Tor (O-53) ───────────────────────────────────────
 log "[9/17] Pflichtfelder prüfen, bevor irgendetwas startet"
-for key in SUPABASE_PUBLIC_URL ANON_KEY SERVICE_ROLE_KEY JWT_SECRET POSTGRES_PASSWORD DATA_ENCRYPTION_KEY SETUP_TOKEN; do
+for key in SUPABASE_PUBLIC_URL ANON_KEY SERVICE_ROLE_KEY JWT_SECRET POSTGRES_PASSWORD DATA_ENCRYPTION_KEY SETUP_TOKEN PG_AUTHENTICATOR_PASSWORD PG_AUTH_ADMIN_PASSWORD PG_STORAGE_ADMIN_PASSWORD; do
   wert="$(env_get "$key")"
   [ -n "$wert" ] || fail "Pflichtfeld leer: ${key}" "leer" "erzeugter Wert" "Skript erneut mit --neu starten — dies deutet auf einen Fehler in Schritt 6/7 hin."
 done

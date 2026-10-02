@@ -51,6 +51,7 @@ const BUNDLE_DATEILER = [
   'volumes/db/realtime.sql',
   'volumes/db/roles.sql',
   'volumes/db/webhooks.sql',
+  'volumes/db/praxura-rollen.sql',
 ];
 
 function sha256(pfad) {

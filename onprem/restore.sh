@@ -410,6 +410,13 @@ if ! docker compose exec -T db psql -U supabase_admin -d "$DB_NAME" -f /docker-e
   warn "99-roles.sql yeniden uygulanamadı — roller yedekteki eski parolada kalmış olabilir, PostgREST/Auth giriş yapamayabilir. Elle: docker compose exec -T db psql -U supabase_admin -d \"$DB_NAME\" -f /docker-entrypoint-initdb.d/init-scripts/99-roles.sql"
   ROLLER_JWT_SORUNLU=1
 fi
+# S-21 (KHS K2.6): eigene Passwoerter je Dienstrolle — NACH 99-roles.sql,
+# sonst setzt jenes sie wieder auf POSTGRES_PASSWORD zurueck und rest/auth/
+# storage (die mit PG_*_PASSWORD verbinden) kommen nicht mehr in die DB.
+if ! docker compose exec -T db psql -U supabase_admin -d "$DB_NAME" -f /docker-entrypoint-initdb.d/init-scripts/99a-praxura-rollen.sql >>"$LOG_FILE" 2>&1; then
+  warn "99a-praxura-rollen.sql yeniden uygulanamadı — rest/auth/storage DB'ye bağlanamayabilir. Elle: docker compose exec -T db psql -U supabase_admin -d \"$DB_NAME\" -f /docker-entrypoint-initdb.d/init-scripts/99a-praxura-rollen.sql"
+  ROLLER_JWT_SORUNLU=1
+fi
 if ! docker compose exec -T db psql -U supabase_admin -d "$DB_NAME" -f /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql >>"$LOG_FILE" 2>&1; then
   warn "99-jwt.sql yeniden uygulanamadı — DB dump'ta JWT ayarı HİÇ yoktu (pg_dump --create almaz), yani bu adım atlanınca ESKİ/yanlış bir JWT kalabilir. PostgREST/Auth tüm istekleri reddedebilir. Elle: docker compose exec -T db psql -U supabase_admin -d \"$DB_NAME\" -f /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql"
   ROLLER_JWT_SORUNLU=1

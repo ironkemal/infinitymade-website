@@ -1,13 +1,13 @@
 {
   "surum": "0.1.0",
   "dateien": [
-    { "yol": "docker-compose.yml", "sha256": "e283899e62e8d586055fbe60ee54bcea1c2247f1fbd6078a8978e449ee932c7a" },
-    { "yol": ".env.template", "sha256": "6e4b929c6b8aa64e5997f876af80fb0d8da3490e3858a1a14741756ba9ee92e1" },
-    { "yol": "install.sh", "sha256": "2939f048c86695c2ee24c9424185996903f86124aca04d963f9ad6915ab5a8cb" },
+    { "yol": "docker-compose.yml", "sha256": "88a1c832121acd44ce4c442a4f5a093c29d354db0294012abfa064ae1ebc86f8" },
+    { "yol": ".env.template", "sha256": "e3cc62a67608537ab7fb7af6b8c889eb093d6365581508a7b62fb70740882b5d" },
+    { "yol": "install.sh", "sha256": "9117298cff4653db82e719b9734dbc0c853334a8724a1801864041f842ade022" },
     { "yol": "update.sh", "sha256": "f33a1d13cf73c1886511718c974bdbeba61e705c52ed5802572faf5ddaf93291" },
     { "yol": "lib-health.sh", "sha256": "ac3df970f980f9810db85e9b8daf78f1b63d7cc287c73b83a5ae77eeeb37b819" },
     { "yol": "backup.sh", "sha256": "e304114618762329aea85fc463deb6ce5b40247d247e91b22bd2c04e938017ac" },
-    { "yol": "restore.sh", "sha256": "b01a495df36f5601fce6d26a79e37095ed6fac82036394e1164df69416af050b" },
+    { "yol": "restore.sh", "sha256": "1579b563d7f94b7639080220cc8f08116aadf48d300d52e249ddc3f8adb7245b" },
     { "yol": "reset-owner-passwort.sh", "sha256": "96ea06998dc4d0cc78bbad103b6617808bd8cb564c6aab6f537fcf86daeec782" },
     { "yol": "volumes/api/kong.yml", "sha256": "ffa5733a1ef043f4d62cc6b957d8591343886293645cfe16a200d7a1e89a73e8" },
     { "yol": "volumes/api/kong-entrypoint.sh", "sha256": "399394576635f7477dfee32e870f509567fc496f0dc86a5a6611f58d1099031f" },
@@ -16,7 +16,8 @@
     { "yol": "volumes/db/no-pg-net.sql", "sha256": "c2ced14252d8aab3011549fb83612c7c366f440cb5ed2d7516cd6c4f9952a4eb" },
     { "yol": "volumes/db/realtime.sql", "sha256": "7e9e442e7fc4dae05544c07b67bede37a00d84644304dfce4d937134cb4c8f88" },
     { "yol": "volumes/db/roles.sql", "sha256": "3ad717b225daa38aa982da26750f35641eb404e1eb5e69a763c22236ab96c1b2" },
-    { "yol": "volumes/db/webhooks.sql", "sha256": "b584aaaa0c393f27218f81e01e76e1d07d42f947083249adcd6097ad471cde62" }
+    { "yol": "volumes/db/webhooks.sql", "sha256": "b584aaaa0c393f27218f81e01e76e1d07d42f947083249adcd6097ad471cde62" },
+    { "yol": "volumes/db/praxura-rollen.sql", "sha256": "3445644a850cfa3a13a2b19417f42a69225a2d32c25632d0f6974f3756e461a1" }
   ],
   "durak": false,
   "elle_adim": [],

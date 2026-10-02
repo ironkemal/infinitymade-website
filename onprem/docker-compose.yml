@@ -104,6 +104,9 @@ services:
       - ./volumes/db/no-pg-net.sql:/docker-entrypoint-initdb.d/init-scripts/98a-no-pg-net.sql:Z
       - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
       - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+      # S-21 / KHS K2.6: eigenes Passwort je Dienstrolle — laeuft NACH
+      # 99-roles.sql (Upstream, ein Passwort fuer alle) und ueberschreibt es.
+      - ./volumes/db/praxura-rollen.sql:/docker-entrypoint-initdb.d/init-scripts/99a-praxura-rollen.sql:Z
       - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
       # ACHTUNG: Bind-Mount, kein benanntes Volume. `docker compose down -v`
       # loescht die Kundendaten NICHT — was in der Produktion richtig ist, im
@@ -121,6 +124,11 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       PGPASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Gelesen von 99a-praxura-rollen.sql (Erststart + restore.sh). Rueckfall
+      # auf POSTGRES_PASSWORD, damit eine aeltere .env nichts bricht.
+      PG_AUTHENTICATOR_PASSWORD: ${PG_AUTHENTICATOR_PASSWORD:-${POSTGRES_PASSWORD}}
+      PG_AUTH_ADMIN_PASSWORD: ${PG_AUTH_ADMIN_PASSWORD:-${POSTGRES_PASSWORD}}
+      PG_STORAGE_ADMIN_PASSWORD: ${PG_STORAGE_ADMIN_PASSWORD:-${POSTGRES_PASSWORD}}
       PGDATABASE: ${POSTGRES_DB}
       POSTGRES_DB: ${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
@@ -155,7 +163,7 @@ services:
       API_EXTERNAL_URL: ${API_EXTERNAL_URL}
 
       GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${PG_AUTH_ADMIN_PASSWORD:-${POSTGRES_PASSWORD}}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
 
       GOTRUE_SITE_URL: ${SITE_URL}
       GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS}
@@ -207,7 +215,7 @@ services:
       timeout: 5s
       retries: 3
     environment:
-      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      PGRST_DB_URI: postgres://authenticator:${PG_AUTHENTICATOR_PASSWORD:-${POSTGRES_PASSWORD}}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
       PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
       PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
@@ -290,7 +298,7 @@ services:
       SERVICE_KEY: ${SERVICE_ROLE_KEY}
       POSTGREST_URL: http://rest:3000
       AUTH_JWT_SECRET: ${JWT_SECRET}
-      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      DATABASE_URL: postgres://supabase_storage_admin:${PG_STORAGE_ADMIN_PASSWORD:-${POSTGRES_PASSWORD}}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       STORAGE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
       REQUEST_ALLOW_X_FORWARDED_PATH: "true"
       FILE_SIZE_LIMIT: 52428800
