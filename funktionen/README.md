@@ -116,6 +116,28 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 02.10.2026 · KHS K2 — kutu adresi/plan tek kaynak, owner şifre sıfırlama, kutuda olmayan düğmeler gizlendi
+- `appBaseUrl()` (`api-backend/lib/dagitim.js`). Niye: kutuda sunucunun ürettiği linkler (mail, OAuth redirect)
+  app.praxura.de'ye gitmesin (O-150/Y4); `SITE_URL → APP_BASE_URL → SaaS` sırası, **istek başlığından kurulmaz**
+  (host-header injection). Nerede: `server.js` OAuth redirect'leri, `verified=1` redirectTo, Termin-Anfrage mail linkleri;
+  `routes/mitarbeiter-zugang.js` (yerel `APP_BASE_URL` kopyası buna bağlandı). Backend'de başka kopya kalmadı (grep doğrulandı).
+  ⚠️ Haritada `calledBy: []` — çağrılar anonim route handler'larında; ölü kod değil.
+- `KUTU_OWNER_PLAN` (sabit, aynı dosya). Niye: kutu owner'ı professional/active doğsun (K-2, O-147); lisansa
+  bağlanınca değişecek tek yer. Nerede: `setup/router.js` `/owner`.
+- `api-backend/setup/owner-passwort-reset.mjs` (CLI; `stdinZeile`, `ende`). Niye: kutu mailsiz, owner şifresini root
+  host'tan sıfırlar (O-107). Yalnız `onprem/reset-owner-passwort.sh` çağırır. `createClient` kalıbı `setup/router.js`'ten
+  bilerek kopyalandı (iki kullanım, fabrika açılmadı).
+- `hausbesuchRouteAusblenden()` (`module/hausbesuch-route.js`). Niye: kutuda Edge Function yok, "Entfernung berechnen"
+  düğmesi kaldırılır (K-5, O-11). Yan etkili import (`IST_KUTU`'yu kendisi okur) — `dashboard.js`'te tek import satırı,
+  bu yüzden haritada `calledBy: []`.
+- Yeni fonksiyon olmayan kutu dalları: `module/lead-suche.js` B2B "KI Mail-Assistent" kartı `.remove()` (O-09b);
+  `login.js` forgotLink metni `IST_KUTU` dalı.
+- `tools/onprem-manifest.mjs --check` (O-149). Niye: paket listesi 4 yerde elle (BUNDLE_DATEILER, Dockerfile COPY,
+  workflow paths, smoke test BUNDLE_DATEIEN) — kapı bağlar. Nerede: `tools/check-onprem.sh`.
+  ⚠️ `tools/` haritanın kapsamı dışında.
+- `onprem/windows/praxura-installieren.ps1` iç yardımcıları (Log/Ok/Warn/Fehler/Frage/InWsl/BoxEnv/DistroVorhanden):
+  yalnız o betikte yaşar; harita `.ps1` taramıyor.
+
 ### 02.10.2026 · KHS K1 — Mitarbeiter entfernen backend'e, query-token daraltıldı, DB koruma trigger'ları, sır kapısı
 - `mitarbeiterEntfernen(id, options)` (`module/mitarbeiter-zugang.js`). Niye: "Mitarbeiter entfernen" düğmesi tarayıcıdan
   başka kullanıcının `profiles` satırını yazıyordu — RLS yüzünden hiç çalışmadı, 0053'ten beri zaten yasak. Nerede:
