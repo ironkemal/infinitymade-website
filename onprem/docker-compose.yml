@@ -175,19 +175,14 @@ services:
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
       GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM}
 
-      # SMTP ist der des KUNDEN (K1: die Box telefoniert nicht zu uns).
-      # Fehlt er, kommen keine Einladungs- und Reset-Mails an — der
-      # Einrichtungsassistent muss das pruefen.
-      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
-      GOTRUE_SMTP_HOST: ${SMTP_HOST}
-      GOTRUE_SMTP_PORT: ${SMTP_PORT}
-      GOTRUE_SMTP_USER: ${SMTP_USER}
-      GOTRUE_SMTP_PASS: ${SMTP_PASS}
-      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
-      GOTRUE_MAILER_URLPATHS_INVITE: ${MAILER_URLPATHS_INVITE}
-      GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${MAILER_URLPATHS_CONFIRMATION}
-      GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY}
-      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE}
+      # Kein SMTP fuer GoTrue (O-142, Entscheidung 01.10.2026 — KHS K2.5):
+      # Konten entstehen in der Box OHNE Mail. Inhaber: Einrichtungsassistent
+      # (admin.createUser, email_confirm:true); Mitarbeiter: Einrichtungscode
+      # vom Inhaber; vergessenes Inhaber-Passwort: reset-owner-passwort.sh am
+      # Server (O-107). Einladung/Bestaetigung/Reset-Mails gibt es hier nicht —
+      # deshalb auch keine MAILER_URLPATHS_*. Fruehere .env-Zeilen (SMTP_ADMIN_
+      # EMAIL, SMTP_SENDER_NAME, MAILER_URLPATHS_*) bleiben beim Kunden stehen
+      # und werden schlicht nicht mehr gelesen.
 
       # Telefon-Anmeldung gibt es im Produkt nicht (Twilio wurde 05/2026
       # eingestellt). Hart aus, nicht ueber .env steuerbar.
@@ -446,30 +441,33 @@ services:
       # geht der Schluessel verloren, sind die verschluesselten Felder weg.
       DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY}
 
-      # Derselbe Mailserver, den auch GoTrue benutzt. Zwei getrennte Absender:
-      # GoTrue verschickt Einladung und Passwort-Reset, Express verschickt
-      # Terminbestaetigung, Termin-Anfrage und Mahnung. Fehlt SMTP hier, laufen
-      # die Express-Mails in ein stilles `if (SMTP_HOST)` — die Anmeldemails
-      # kommen weiterhin an, also sieht es fuer den Kunden aus, als funktioniere
-      # der Mailversand. Beides gehoert gesetzt oder beides nicht.
+      # OPTIONALER Mailserver des Kunden — NUR fuer Express-Mails an Patienten
+      # (Terminbestaetigung, Termin-Anfrage, Mahnung). Seit O-142 (01.10.2026)
+      # fragt install.sh NICHT mehr danach; Konten/Anmeldung brauchen keine
+      # Mail. Leer = diese Mails entfallen still (`if (SMTP_HOST)`). Wer sie
+      # will: Werte in .env eintragen + 'docker compose up -d api'.
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
-      # Seit O-66 (11.09.2026) GESETZT statt fest im Code: install.sh fragt
-      # SMTP_FROM zusammen mit den uebrigen SMTP-Werten ab und schreibt es
-      # nach `.env` — api-backend/lib/mail.js liest es, mit dem alten SaaS-
-      # Fallback (`noreply@praxura.de`) nur falls die Variable fehlt. Auf
-      # SaaS bleibt sie immer leer (VPS-.env.calendar kennt sie nicht), das
-      # Verhalten dort ist also byte-gleich zu vorher.
+      # Absender auf der EIGENEN Domain des Kunden (SPF/DMARC, O-51). Leer =
+      # alter SaaS-Fallback `noreply@praxura.de` (api-backend/lib/mail.js) —
+      # auf SaaS ist das byte-gleich zu vorher.
       SMTP_FROM: ${SMTP_FROM:-}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-}
 
-      # Der Kunde bringt seinen eigenen Schluessel mit (K4 BYO-Key). Fehlt er,
-      # muss die Anwendung starten und nur die KI-Funktion still bleiben.
+      # KI — Vertrag mit M4 (KHS K2.7/M4.1, onprem O-151). Der Kunde bringt
+      # seinen eigenen Schluessel mit (K4 BYO-Key); kein zentraler Vermittler
+      # (K6). AI_MODE=aus ist der Box-Default: Anwendung startet vollstaendig,
+      # KI-Funktionen antworten 503 mit deutscher Meldung (K-3). Diese Namen
+      # und NUR diese — der Code liest sie ab M4.1 (bis dahin AZURE_*-Rueck-
+      # fall nur auf SaaS). Kein Schluessel im Image oder in der Vorlage (G2).
+      AI_MODE: ${AI_MODE:-aus}
       AI_PROVIDER: ${AI_PROVIDER:-}
       AI_ENDPOINT: ${AI_ENDPOINT:-}
       AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL_TEXT: ${AI_MODEL_TEXT:-}
+      AI_MODEL_VISION: ${AI_MODEL_VISION:-}
 
       # Einmal-Jeton fuer den Einrichtungsassistenten (Faz 2.2, O-62). Von
       # install.sh VOR "docker compose up" erzeugt und geschrieben — ein

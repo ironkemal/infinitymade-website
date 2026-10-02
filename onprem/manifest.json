@@ -1,9 +1,9 @@
 {
   "surum": "0.1.0",
   "dateien": [
-    { "yol": "docker-compose.yml", "sha256": "7471651433b29182b8681801008319c4a4c958d5e4638592c2b858a979f2de93" },
-    { "yol": ".env.template", "sha256": "64d5e11e5b18f8ef2486db3671a11a8a3d0894b9c63403608c3d3e0e41dad4ed" },
-    { "yol": "install.sh", "sha256": "6a8af5a887c0cff19649b01556cf8b7a7a349ffb683b9559a047013f00f6338f" },
+    { "yol": "docker-compose.yml", "sha256": "e283899e62e8d586055fbe60ee54bcea1c2247f1fbd6078a8978e449ee932c7a" },
+    { "yol": ".env.template", "sha256": "6e4b929c6b8aa64e5997f876af80fb0d8da3490e3858a1a14741756ba9ee92e1" },
+    { "yol": "install.sh", "sha256": "2939f048c86695c2ee24c9424185996903f86124aca04d963f9ad6915ab5a8cb" },
     { "yol": "update.sh", "sha256": "f33a1d13cf73c1886511718c974bdbeba61e705c52ed5802572faf5ddaf93291" },
     { "yol": "lib-health.sh", "sha256": "ac3df970f980f9810db85e9b8daf78f1b63d7cc287c73b83a5ae77eeeb37b819" },
     { "yol": "backup.sh", "sha256": "e304114618762329aea85fc463deb6ce5b40247d247e91b22bd2c04e938017ac" },

@@ -215,7 +215,11 @@ document.getElementById('resendBtn').addEventListener('click', async () => {
 document.getElementById('forgotLink').addEventListener('click', (e) => {
   e.preventDefault();
   // Kein Mailversand mehr: Hinweis statt resetPasswordForEmail
-  showMsg('Mitarbeiter: Bitte lassen Sie sich von Ihrer Praxisleitung einen neuen Einrichtungscode geben. Praxisinhaber: Bitte wenden Sie sich an kontakt@praxura.de.', 'error');
+  // Box (O-142): kein Mailversand, kein Support-Postfach — der Inhaber setzt
+  // sein Passwort am Server mit reset-owner-passwort.sh zurueck (O-107).
+  showMsg(IST_KUTU
+    ? 'Mitarbeiter: Bitte lassen Sie sich von Ihrer Praxisleitung einen neuen Einrichtungscode geben. Praxisinhaber: Passwort am Server mit „sudo bash reset-owner-passwort.sh“ neu setzen (siehe Installationsanleitung).'
+    : 'Mitarbeiter: Bitte lassen Sie sich von Ihrer Praxisleitung einen neuen Einrichtungscode geben. Praxisinhaber: Bitte wenden Sie sich an kontakt@praxura.de.', 'error');
 });
 
 document.getElementById('resetBackLink').addEventListener('click', (e) => {

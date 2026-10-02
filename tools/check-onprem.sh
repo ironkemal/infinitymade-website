@@ -469,7 +469,7 @@ kontrol cdn_host    "$cdn_host"    "Yeni CDN bağımlılığı. Yerelleştirme k
 kontrol onprem_image "$onprem_image" "Kutuya yeni bir konteyner girdi. Güncelleme yolu olmayan her bileşen borçtur (O-45)." \
                                    "Çıkış: gerçekten gerekli mi? Gerekliyse onprem/NOTICE.md'ye lisans satırı ekle (O-42)."
 kontrol absender_fest "$absender_fest" "Koda gömülü yeni gönderen adresi. Kutuda o mail müşterinin sunucusundan çıkar ve DMARC yüzünden spam'e düşer (O-51)." \
-                                   "Çıkış: adresi .env'den oku (SMTP_ADMIN_EMAIL), altı çağrıyı tek yardımcıya bağla."
+                                   "Çıkış: adresi .env'den oku (SMTP_FROM, lib/mail.js getMailFrom), altı çağrıyı tek yardımcıya bağla."
 kontrol csp_host    "$csp_host"    "vercel.json'ın CSP'sine yeni bir bulut adresi eklendi. Kutuya kopyalanırsa (O-52) tarayıcı onu ENGELLEMEZ." \
                                    "Çıkış: gerçekten SaaS'a mı özel? Öyleyse kabul; onprem/Caddyfile'a asla kopyalama."
 

@@ -5,7 +5,7 @@
 #
 #  Erzeugt: 11.09.2026 · Design gesperrt in onprem/REGISTER.md §7G (Konsultation
 #  mit dem onprem-Agenten, 16-Schritt-Tabelle, zwei Gegenlesen-Runden — O-63/
-#  O-64/O-65) und §7H/O-66 (SMTP-Schritt, Entscheidung Kemal 11.09.2026: SMTP
+#  O-64/O-65) und §7H/O-66 (SMTP-Schritt — seit 02.10.2026 ersetzt, s. u.; damals: SMTP
 #  wird HIER gefragt, nicht im Assistenten — GoTrue liest seine Umgebung nur
 #  beim Start, ein Browser-Formular käme dort nie an). NICHT ohne erneute
 #  Konsultation umbauen — jede Zeile hier hat einen Grund, der dort steht.
@@ -16,17 +16,21 @@
 #  richtet zusätzlich `praxura-backup.timer` ein (backup.sh, geteilte Routine
 #  mit update.sh — onprem/REGISTER.md O-26).
 #
+#  02.10.2026 (KHS K2.1/K2.5): Schritt 11 fragt den Update-Kanal (beta/stable,
+#  O-148) statt SMTP — seit O-142 (01.10.2026) entstehen Konten ohne Mail,
+#  die Box braucht keinen Mailserver mehr (optional nur fuer Patientenmails,
+#  von Hand in .env, siehe .env.template §4).
+#
 #  Was dieses Skript TUT: Hardware/Software prüfen, .env erzeugen, Geheimnisse
 #  AUF DIESEM SERVER würfeln (G2 — keins davon kommt von uns oder geht an uns),
 #  ANON_KEY/SERVICE_ROLE_KEY aus JWT_SECRET ableiten (O-60 — NICHT würfeln),
-#  optional SMTP abfragen (O-66), Yedekleme-Ziel abfragen (O-26), die Box
+#  Update-Kanal abfragen (O-148), Yedekleme-Ziel abfragen (O-26), die Box
 #  hochfahren, mit dem abgeleiteten Schlüssel wirklich testen, die nächtliche
 #  Selbst-Aktualisierung UND die nächtliche Yedekleme einrichten.
 #
-#  Was dieses Skript NICHT TUT: kein Owner-Konto, kein Praxisname, keine
-#  SMTP-*Testmail* (die schickt der Assistent — er hat einen Empfänger,
-#  dieses Skript noch keinen). Sobald im Browser der erste Bildschirm des
-#  Assistenten (Phase 2.2) erscheint, ist die Aufgabe dieses Skripts erledigt.
+#  Was dieses Skript NICHT TUT: kein Owner-Konto, kein Praxisname. Sobald im
+#  Browser der erste Bildschirm des Assistenten (Phase 2.2) erscheint, ist die
+#  Aufgabe dieses Skripts erledigt.
 #
 #  Fehlermodell (K10 — wir kommen nicht in die Box): jeder Schritt meldet
 #  [ok]/[fehler]; ein Fehler nennt GEFUNDEN · ERWARTET · WAS TUN und STOPPT.
@@ -85,7 +89,7 @@ env_get() {
 log "Praxura On-Premise — Einrichtung $(date '+%Y-%m-%d %H:%M:%S')"
 log ""
 
-# Das Skript fragt mehrfach interaktiv (Adresse, TLS-Modus, SMTP, ggf. --neu-
+# Das Skript fragt mehrfach interaktiv (Adresse, TLS-Modus, Kanal, ggf. --neu-
 # Bestätigung, ggf. Docker-Installation). Aus einer Pipe heraus gestartet
 # (z. B. "curl … | sudo bash") liest `read` dann vom Installationsskript
 # selbst statt von einer Person — das Fehlermodell (K10: klare Meldung statt
@@ -341,44 +345,49 @@ else
   log "      einstufen (letzter Schritt zeigt, wo es liegt), sonst zeigt der Browser eine Warnung."
 fi
 
-# ── Schritt 11 — SMTP (O-66) ─────────────────────────────────────────────────
-log "[11/17] SMTP (Einladungen, Passwort-Reset, Termin-Mails)"
-log "  Ohne SMTP startet die Box trotzdem — aber niemand bekommt eine Mail:"
-log "  keine Mitarbeiter-Einladung, kein Passwort-Reset, keine Terminbestätigung."
-log "  Der Assistent (Schritt 2.2) kann eine Testmail schicken, aber SMTP nicht"
-log "  EINRICHTEN — GoTrue liest seine Mail-Konfiguration nur beim Start."
-read -r -p "  SMTP jetzt einrichten? [J/n] " smtp_antwort
-if [ "$smtp_antwort" = "n" ] || [ "$smtp_antwort" = "N" ]; then
-  set_env SMTP_HOST ""
-  warn "SMTP übersprungen — kann später mit 'bash install.sh --neu' oder von Hand in .env + 'docker compose up -d auth api' nachgeholt werden (BEIDE Container, sonst liest nur einer die neue Adresse)."
-else
-  read -r -p "  SMTP-Host (z. B. smtp.strato.de): " smtp_host
-  [ -n "$smtp_host" ] || fail "Kein SMTP-Host" "leer" "ein Hostname" "Erneut ausführen und Host eintragen, oder [n] für 'ohne SMTP'."
-  read -r -p "  SMTP-Port [587]: " smtp_port
-  smtp_port="${smtp_port:-587}"
-  read -r -p "  SMTP-Benutzername: " smtp_user
-  read -r -s -p "  SMTP-Passwort: " smtp_pass
-  echo
-  read -r -p "  Absenderadresse (z. B. praxis@ihre-domain.de): " smtp_from
-  [ -n "$smtp_from" ] || fail "Keine Absenderadresse" "leer" "eine E-Mail-Adresse auf Ihrer eigenen Domain" "Erneut ausführen — ohne eigene Domain weist SPF/DMARC die Mails beim Empfänger ab (Register O-51)."
-
-  # Erreichbarkeitstest — NICHT fail(): ein falscher Port/Firewall-Regel ist
-  # kein Grund, die ganze Einrichtung abzubrechen, nur ein fruehes Warnsignal.
-  if command -v timeout >/dev/null 2>&1 && ! timeout 5 bash -c ">/dev/tcp/${smtp_host}/${smtp_port}" 2>/dev/null; then
-    warn "SMTP-Server unter ${smtp_host}:${smtp_port} antwortet nicht — Firewall oder falscher Port? Wird trotzdem gespeichert, der Assistent kann später erneut testen."
+# ── Schritt 11 — Update-Kanal (KHS K2.1, onprem O-148) ───────────────────────
+# Ersetzt den früheren SMTP-Schritt (O-66) — seit O-142 (01.10.2026) braucht
+# die Box keinen Mailserver mehr, Konten entstehen ohne Mail.
+#
+# ⚠️ Die Vorlage (.env.template) behält ':stable' als Wert — der Kanal wird
+# NUR hier in die .env geschrieben. Stünde ':beta' in der Vorlage, würde
+# update.sh's .env-Zusammenführung (J4) jede ':stable'-Box beim nächsten
+# Update still auf beta umstellen (onprem-Vorprüfung 02.10.2026).
+# Kanalwechsel später = nur VORWÄRTS sinnvoll: beta→stable, solange stable
+# älter ist, hält der Migrations-Runner mit 'downgrade' an (migrate.js).
+log "[11/17] Update-Kanal"
+log "  beta   = jede veröffentlichte Version (Test-/Pilotbox, Entscheidung K-1)"
+log "  stable = nur Versionen, die vorher 72 Stunden auf einer Testbox liefen"
+read -r -p "  Kanal [beta/stable] (Enter = beta): " kanal
+kanal="${kanal:-beta}"
+case "$kanal" in
+  beta|stable) : ;;
+  *) fail "Unbekannter Kanal" "'$kanal'" "beta oder stable" "Erneut ausführen und 'beta' oder 'stable' eintippen." ;;
+esac
+api_img="$(env_get PRAXURA_API_IMAGE)"
+fe_img="$(env_get PRAXURA_FRONTEND_IMAGE)"
+api_img="${api_img%:*}:${kanal}"
+fe_img="${fe_img%:*}:${kanal}"
+# Vorab prüfen, ob es den Kanal in der Registry überhaupt gibt — sonst
+# scheiterte das erst in Schritt 13, nach allen Fragen (Y2: ':stable' wurde
+# bis 0.2.0 nie veröffentlicht). Ohne Netz kein Abbruch, nur eine Warnung.
+if ! docker manifest inspect "$api_img" >/dev/null 2>&1; then
+  if [ "$kanal" = "stable" ]; then
+    warn "Kanal 'stable' ist (noch) nicht veröffentlicht: $api_img"
+    read -r -p "  Stattdessen 'beta' verwenden? [J/n] " auf_beta
+    if [ "$auf_beta" = "n" ] || [ "$auf_beta" = "N" ]; then
+      fail "Kanal 'stable' nicht verfügbar" "$api_img nicht in der Registry" "ein veröffentlichter Kanal"         "Mit Kanal 'beta' installieren — ':stable' entsteht erst nach 72 h Testbetrieb (RELEASE-STANDARD.md §6.3)."
+    fi
+    kanal="beta"
+    api_img="${api_img%:*}:beta"
+    fe_img="${fe_img%:*}:beta"
+  else
+    warn "Registry nicht erreichbar oder Image fehlt ($api_img) — Schritt 13 versucht es trotzdem."
   fi
-
-  set_env SMTP_HOST "$smtp_host"
-  set_env SMTP_PORT "$smtp_port"
-  set_env SMTP_USER "$smtp_user"
-  set_env SMTP_PASS "$smtp_pass"
-  # Zwei Ziele, EINE Eingabe: GoTrue braucht SMTP_ADMIN_EMAIL, die eigene
-  # Absenderlogik (api-backend/lib/mail.js, O-51) SMTP_FROM — beide sollen
-  # dieselbe Adresse sein, sonst wirkt die Herkunft der Mails uneinheitlich.
-  set_env SMTP_ADMIN_EMAIL "$smtp_from"
-  set_env SMTP_FROM "$smtp_from"
-  ok "SMTP gespeichert (${smtp_host}:${smtp_port}) — Testmail folgt im Assistenten"
 fi
+set_env PRAXURA_API_IMAGE "$api_img"
+set_env PRAXURA_FRONTEND_IMAGE "$fe_img"
+ok "Kanal: ${kanal} ($api_img)"
 
 # ── Schritt 12 — Yedekleme hedefi (O-26) ─────────────────────────────────────
 # ⚠️ Bilinçli olarak burada soruluyor, ertelenmiyor (onprem, O-26 tasarım
@@ -405,8 +414,8 @@ fi
 log "[13/17] Container-Images holen und starten"
 if ! docker compose pull 2>&1 | tee -a "$LOG_FILE"; then
   fail "Images konnten nicht geholt werden" "docker compose pull ist fehlgeschlagen" \
-    "PRAXURA_API_IMAGE / PRAXURA_FRONTEND_IMAGE als ':stable' erreichbar" \
-    "Bekannte Lücke (Register O-25): der Veröffentlichungsweg baut heute nur ':latest' und einen Kurz-SHA-Tag, ':stable' existiert noch nicht überall. Support kontaktieren — NICHT an Ihrer Verbindung liegend."
+    "${api_img} und ${fe_img} erreichbar (ghcr.io, ohne Anmeldung)" \
+    "Internetverbindung des Servers prüfen ('curl -I https://ghcr.io'). Ist der Kanal 'stable' noch nie veröffentlicht worden: 'bash install.sh --neu' und Kanal 'beta' wählen."
 fi
 if ! docker compose up -d 2>&1 | tee -a "$LOG_FILE"; then
   log "  Letzte Zeilen von 'api' (haeufigste Ursache — Migrationskette):"
@@ -416,7 +425,7 @@ if ! docker compose up -d 2>&1 | tee -a "$LOG_FILE"; then
 fi
 ok "Container gestartet"
 
-# ── Schritt 12 — Gesundheitsprüfung ──────────────────────────────────────────
+# ── Schritt 14 — Gesundheitsprüfung ──────────────────────────────────────────
 log "[14/17] Warten, bis alle Dienste gesund sind (bis zu 3 Minuten)"
 # Geteilte Prüfung mit update.sh (O-45 (b), §7J J5 Schritt 9) — EIN Ort,
 # damit die beiden nie auseinanderdriften (O-63 ist genau das einmal passiert).
@@ -425,7 +434,7 @@ source "$SCRIPT_DIR/lib-health.sh"
 warte_auf_gesundheit 180 || fail "Nicht alle Container wurden gesund" "nicht alle Container 'running'+'healthy' nach 3 Minuten" "8 Container, alle 'running' + 'healthy'" \
   "'docker compose ps --all' und 'docker compose logs' auf dem Server prüfen — wir kommen nicht in die Box (K10)."
 
-# ── Schritt 14 — Schlüsselbeweis (O-60) ──────────────────────────────────────
+# ── Schritt 15 — Schlüsselbeweis (O-60) ──────────────────────────────────────
 log "[15/17] Abgeleiteten Schlüssel wirklich testen"
 # --resolve: SITE_URL loest sich auf DIESEM Server selbst noch nirgends auf
 # (der hosts-/DNS-Hinweis kommt erst im letzten Schritt) — ohne diesen Zwang
@@ -486,7 +495,7 @@ if [ "$mit_service_key" != "200" ]; then
 fi
 ok "SERVICE_ROLE_KEY akzeptiert (200)"
 
-# ── Schritt 15 — Selbst-Update einrichten (O-45 (b), §7J) ───────────────────
+# ── Schritt 16 — Selbst-Update einrichten (O-45 (b), §7J) ───────────────────
 # update.sh + lib-health.sh liegen bereits in diesem Verzeichnis (Teil des
 # ausgecheckten onprem/-Baums, wie install.sh selbst — J10 in §7J: das Bundle
 # ersetzt diesen Weg NICHT, das ist eine offene, spätere Entscheidung).
