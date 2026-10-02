@@ -24,3 +24,15 @@ export function istStichtag(s) {
   const d = new Date(`${s}T00:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
 }
+
+/**
+ * Berechnet das Jahresende in 'jahre' Jahren (YYYY-12-31) basierend auf dem Berliner Jahr.
+ * @param {number} jahre
+ * @param {Date} [jetzt]
+ * @returns {string} 'YYYY-12-31'
+ */
+export function jahresendePlus(jahre, jetzt = new Date()) {
+  const jahr = parseInt(berlinHeute(jetzt).slice(0, 4), 10) + jahre;
+  return `${jahr}-12-31`;
+}
+

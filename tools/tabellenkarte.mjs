@@ -20,6 +20,7 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = process.cwd();
 const CHECK = process.argv.includes('--check');
@@ -128,22 +129,18 @@ for (const f of dateien) {
 }
 
 // ── 3b. DSGVO kapsamı — hasta/inhaber verisi taşıyan her tablo burada olmalı ──
-// `api/dsgvo.js` Auskunft (Art. 15) ve Löschung (Art. 17) için tablo listelerini
+// `api-backend/dsgvo/klassifikation.js` (02.10.2026, eskiden `api/dsgvo.js`) Auskunft/Löschung için tablo listelerini
 // elle tutar. Yeni tablo açılıp buraya yazılmazsa DSGVO cevabı EKSİK çıkar —
 // 2026-08-28'de tam olarak bu oldu. Bu yüzden kapının bir parçası.
-const dsgvoPfad = join(ROOT, 'api/dsgvo.js');
+const dsgvoPfad = join(ROOT, 'api-backend/dsgvo/klassifikation.js');
 const dsgvo = { auskunft: new Set(), loeschung: new Set(), anonymisiert: new Set(), vorhanden: existsSync(dsgvoPfad) };
 if (dsgvo.vorhanden) {
-  const txt = readFileSync(dsgvoPfad, 'utf8');
-  for (const m of txt.matchAll(/\{\s*table:\s*['"]([a-zA-Z0-9_ßäöü]+)['"]/g)) dsgvo.auskunft.add(m[1]);
-  // Listeler dosyada `const X_TABLES = [ ... ];` biçiminde duruyor.
-  const liste = (konstante, ziel) => {
-    const m = txt.match(new RegExp(`const\\s+${konstante}\\s*=\\s*\\[([\\s\\S]*?)\\n\\];`));
-    if (!m) return;
-    for (const x of m[1].matchAll(/['"]([a-zA-Z0-9_ßäöü]+)['"]/g)) if (tabellen.has(x[1])) ziel.add(x[1]);
-  };
-  liste('DELETE_TABLES', dsgvo.loeschung);
-  liste('ANONYMIZE_TABLES', dsgvo.anonymisiert);
+  const { TABELLEN } = await import(pathToFileURL(dsgvoPfad).href);
+  for (const t of TABELLEN) {
+    if (t.export !== null) dsgvo.auskunft.add(t.table);
+    if (t.kategorie === 'loeschen') dsgvo.loeschung.add(t.table);
+    if (t.kategorie === 'stamm_minimiert' || t.kategorie === 'konto') dsgvo.anonymisiert.add(t.table);
+  }
 }
 
 // ── 4. SQL tarafı: trigger/RPC/policy içinde geçen tablolar ────────────────
@@ -264,7 +261,7 @@ md.push('| Tabelle | SQL-Treffer | Register-Status |');
 md.push('|---|---|---|');
 for (const t of stumm) md.push(`| \`${t.name}\` | ${t.sql} | ${t.status || '—'} |`);
 md.push('');
-md.push('## DSGVO-Abdeckung (`api/dsgvo.js`)');
+md.push('## DSGVO-Abdeckung (`api-backend/dsgvo/klassifikation.js`)');
 md.push('');
 md.push(`Auskunft (Art. 15): **${dsgvo.auskunft.size}** · Löschung (Art. 17): **${dsgvo.loeschung.size}** · anonymisiert statt gelöscht: **${dsgvo.anonymisiert.size}**`);
 md.push('');

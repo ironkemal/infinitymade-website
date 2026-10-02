@@ -22,7 +22,8 @@
     "api-backend/_lib/access-log.js",
     "api-backend/billing/api/upload-signed-verschluesselung.test.js",
     "api-backend/billing/api/verworfen.test.js",
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "module/nav-registry.test.js",
     "nav-registry.js"
    ],
@@ -35,7 +36,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -120,7 +121,7 @@
     {
      "name": "openDasGuideModal",
      "file": "dashboard.js",
-     "start": 12411,
+     "start": 12406,
      "module": [
       "abrechnung",
       "anamnese",
@@ -278,7 +279,8 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api-backend/billing/api/uebermittlung.test.js",
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv, aber **noch nicht angeschlossen** — ✅ Migration am 20.09.2026 live angewandt (MCP); der Versandweg selbst entsteht erst in Faz 2, die Tabelle ist deshalb leer. Die Tabelle und ihre Schreibfunktion existieren vorab, damit niemand die Dokumentation später rückwirkend erfinden muss.",
@@ -318,7 +320,8 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -416,10 +419,11 @@
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
-   "dsgvoAnonymisiert": true,
+   "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -562,7 +566,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "fremd",
    "warum": "Fremdprojekt (Unterkünfte). Nie Teil von Praxura.",
@@ -584,7 +590,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Trennt das interne Admin-Panel (`admin.praxura.de`) von den Kundenrollen. Ein Kunde soll nie durch Setzen eines Feldes in `profiles` Admin werden können.",
@@ -594,7 +602,7 @@
     {
      "name": "init",
      "file": "dashboard.js",
-     "start": 15308,
+     "start": 15217,
      "module": [],
      "uiPfad": []
     },
@@ -622,7 +630,7 @@
     {
      "name": "neuerBkKanal",
      "file": "dashboard.js",
-     "start": 15360,
+     "start": 15269,
      "module": [],
      "uiPfad": []
     }
@@ -647,10 +655,11 @@
     "auth.users"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -668,7 +677,7 @@
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 14500,
+     "start": 14409,
      "module": [
       "abrechnung",
       "anamnese",
@@ -707,7 +716,7 @@
     {
      "name": "loadAerzte",
      "file": "dashboard.js",
-     "start": 14208,
+     "start": 14117,
      "module": [
       "abrechnung",
       "anamnese",
@@ -748,7 +757,7 @@
     {
      "name": "deleteAerzte",
      "file": "dashboard.js",
-     "start": 14267,
+     "start": 14176,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -758,7 +767,7 @@
     {
      "name": "editAerzte",
      "file": "dashboard.js",
-     "start": 14276,
+     "start": 14185,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -827,7 +836,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -864,10 +874,11 @@
     "businesses"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "dashboard.html",
     "index.html",
     "module/akte-podo.js",
@@ -966,7 +977,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2840,
+     "start": 2835,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1176,7 +1187,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "fremd",
    "warum": "Fremdprojekt (Bewerbungen). Nie Teil von Praxura.",
@@ -1199,7 +1212,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -1231,21 +1245,45 @@
     "profiles",
     "leads"
    ],
-   "dsgvoAuskunft": false,
+   "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv (Tabelle live, noch leer — der Schreiber entsteht in K1.4)",
    "warum": "Sperrvermerk für die DSGVO-Löschung. Bei Kontolöschung (Fall B, SaaS) und später beim Löschantrag eines Patienten (Fall A) darf aufbewahrungspflichtiges Material nicht gelöscht werden (Art. 17 Abs. 3 lit. b DSGVO; § 630f Abs. 3 BGB, § 147 AO, § 14b UStG) — es wird **gesperrt** statt gelöscht. Die Tabelle hält fest, **was** gesperrt ist (Kategorie), **für wen** (ganzes Konto oder ein Patient), **seit wann, bis wann frühestens und warum** (Fundstelle). Ohne sie gäbe es keinen Nachweis der Einschränkung, keinen Antworttext „gesperrt bis …“ und später keinen engen Purge-Weg („DELETE nur wenn `gesperrt_bis` < heute“). Eigene Tabelle statt Spalten an `profiles`/`leads`, weil jede Kategorie eine eigene Frist hat (8 J. Belege, 10 J. Behandlung/Grundaufzeichnungen, 6 J. Geschäftsbriefe) und Fall A Patienten-Granularität braucht.",
    "seit": "02.10.2026 · `0057_aufbewahrung_sperre`",
    "ungeklaert": false,
-   "leser": [],
-   "schreiber": [],
-   "dateien": [],
+   "leser": [
+    {
+     "name": "exportErstellen",
+     "file": "api-backend/dsgvo/export.js",
+     "start": 60,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "upsert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/dsgvo/export.js",
+    "api-backend/dsgvo/loeschen.js"
+   ],
    "module": [],
    "sqlTreffer": 3,
-   "codeStumm": true
+   "codeStumm": false
   },
   {
    "name": "ausfallrechnungen",
@@ -1255,10 +1293,11 @@
     "leads"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -1284,7 +1323,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv (Randmodul)",
@@ -1295,7 +1335,7 @@
     {
      "name": "loadB2B",
      "file": "dashboard.js",
-     "start": 10893,
+     "start": 10888,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1337,7 +1377,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1381,7 +1421,7 @@
     {
      "name": "renderB2B",
      "file": "dashboard.js",
-     "start": 10900,
+     "start": 10895,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1473,7 +1513,8 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "module/nav-registry.test.js",
     "nav-registry.js"
    ],
@@ -1486,7 +1527,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 7479,
+     "start": 7474,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1532,7 +1573,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 6606,
+     "start": 6601,
      "module": [],
      "uiPfad": []
     }
@@ -1592,7 +1633,8 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api-backend/billing/api/betriebsart.test.js",
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv — ✅ **am 20.09.2026 live angewandt** (MCP). Die Tabelle ist leer, und das ist der Normalzustand: eine Zeile entsteht erst, wenn für eine bestimmte Datenannahmestelle vom Vorgabewert abgewichen wird.",
@@ -1783,7 +1825,7 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
     "module/termin-dauer.test.js"
    ],
    "register": true,
@@ -1941,7 +1983,8 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api-backend/booking/cancel-request.test.js",
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "onboarding.js"
    ],
    "register": true,
@@ -1978,10 +2021,13 @@
     "bookings",
     "auth.users"
    ],
-   "dsgvoAuskunft": false,
+   "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Beta-2 (05.09.2026, Ops #270): der Status eines vergangenen Termins (v.a. `no_show`) muss nachträglich korrigierbar sein — z.B. wenn der Patient doch noch behandelt wurde und nachträglich unterschreibt. Freie Korrektur ist erlaubt, aber niemals stillschweigend: diese Tabelle hält je Änderung fest, wer wann von welchem zu welchem Status gewechselt hat und warum. Gleicher Grund wie bei `zuzahlung_korrekturen` — eine Spalte an `bookings` hätte bei der zweiten Korrektur die erste Begründung überschrieben.",
@@ -2022,7 +2068,7 @@
     "api-backend/billing/statistik/therapeuten.test.js",
     "api-backend/booking/cancel-request.test.js",
     "api-backend/booking/from-request.test.js",
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
     "module/booking-status-korrektur.test.js",
     "module/podo-einheiten.test.js",
     "module/termin-dauer.test.js",
@@ -2118,7 +2164,7 @@
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 2807,
+     "start": 2802,
      "module": [],
      "uiPfad": []
     },
@@ -2177,7 +2223,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2340,7 +2386,7 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 738,
+     "start": 741,
      "module": [],
      "uiPfad": []
     },
@@ -2386,14 +2432,14 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1735,
+     "start": 1738,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2160,
+     "start": 2155,
      "module": [],
      "uiPfad": []
     },
@@ -2764,7 +2810,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1569,
+     "start": 1564,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2803,7 +2849,7 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 10581,
+     "start": 10576,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2842,7 +2888,7 @@
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 7309,
+     "start": 7304,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2881,7 +2927,7 @@
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1326,
+     "start": 1321,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2927,7 +2973,7 @@
     {
      "name": "loadUeberblickNoShows",
      "file": "dashboard.js",
-     "start": 18558,
+     "start": 18467,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3207,7 +3253,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2314,
+     "start": 2309,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3246,14 +3292,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1170,
+     "start": 1165,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1250,
+     "start": 1245,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3331,7 +3377,7 @@
     {
      "name": "renderOverviewMonthly",
      "file": "dashboard.js",
-     "start": 13452,
+     "start": 13361,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3370,7 +3416,7 @@
     {
      "name": "renderOverviewWeekly",
      "file": "dashboard.js",
-     "start": 13357,
+     "start": 13266,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3682,7 +3728,7 @@
     {
      "name": "doMoveBooking",
      "file": "dashboard.js",
-     "start": 4826,
+     "start": 4821,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3724,7 +3770,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3426,
+     "start": 3421,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3766,7 +3812,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 3879,
+     "start": 3874,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3776,7 +3822,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4370,
+     "start": 4365,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3816,6 +3862,16 @@
      ]
     },
     {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
      "name": "korrigiereNoShow",
      "file": "module/booking-status-korrektur.js",
      "start": 68,
@@ -3828,7 +3884,7 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 4254,
+     "start": 4249,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3912,7 +3968,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 3748,
+     "start": 3743,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3932,7 +3988,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2840,
+     "start": 2835,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3974,7 +4030,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3792,
+     "start": 3787,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3984,7 +4040,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3670,
+     "start": 3665,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4041,6 +4097,7 @@
     "api-backend/billing/statistik/therapeuten.js",
     "api-backend/booking/cancel-request.js",
     "api-backend/booking/from-request.js",
+    "api-backend/dsgvo/loeschen.js",
     "api-backend/server.js",
     "api/admin/data.js",
     "booking.js",
@@ -4122,7 +4179,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -4133,14 +4191,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 738,
+     "start": 741,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1735,
+     "start": 1738,
      "module": [],
      "uiPfad": []
     }
@@ -4149,7 +4207,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4192,7 +4250,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 10641,
+     "start": 10636,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4235,7 +4293,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 9398,
+     "start": 9393,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4321,10 +4379,10 @@
     "profiles"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -4335,7 +4393,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 14819,
+     "start": 14728,
      "module": [],
      "uiPfad": []
     },
@@ -4349,7 +4407,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 738,
+     "start": 741,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
      "module": [],
      "uiPfad": []
     },
@@ -4415,7 +4480,7 @@
     {
      "name": "deleteBusiness",
      "file": "dashboard.js",
-     "start": 15166,
+     "start": 15075,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4509,7 +4574,7 @@
     {
      "name": "toggleStandortDay",
      "file": "dashboard.js",
-     "start": 9374,
+     "start": 9369,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4551,7 +4616,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 15083,
+     "start": 14992,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4562,6 +4627,7 @@
    ],
    "dateien": [
     "api-backend/billing/api/ausfall.routes.js",
+    "api-backend/dsgvo/loeschen.js",
     "api-backend/routes/mitarbeiter-zugang.js",
     "api-backend/server.js",
     "api/stripe/webhook.js",
@@ -4614,7 +4680,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -4625,14 +4692,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 738,
+     "start": 741,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 10350,
+     "start": 10345,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4673,7 +4740,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4725,7 +4792,7 @@
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 11454,
+     "start": 11449,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4813,7 +4880,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "verdächtig",
@@ -4836,10 +4904,10 @@
     "profiles"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -4863,7 +4931,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -4874,14 +4943,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 738,
+     "start": 741,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1735,
+     "start": 1738,
      "module": [],
      "uiPfad": []
     },
@@ -4966,7 +5035,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 9491,
+     "start": 9486,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5007,7 +5076,7 @@
     {
      "name": "saveSpecialDays",
      "file": "dashboard.js",
-     "start": 9594,
+     "start": 9589,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5058,16 +5127,35 @@
    "name": "data_access_log",
    "spalten": 15,
    "fkRaus": [],
-   "dsgvoAuskunft": false,
+   "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/export.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/routes/dsgvo.test.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Zugriffsprotokoll nach DSGVO Art. 32 — wer hat wann welche Patientendaten angefasst. Aufbewahrung 12 Monate.",
    "seit": "22.05.2026 · `v26_data_access_log` (DB-Schreibtrigger nachgezogen: 17.09.2026 · `0021_audit_write_trigger`, Ops #254)",
    "ungeklaert": false,
-   "leser": [],
+   "leser": [
+    {
+     "name": "createDsgvoRouter",
+     "file": "api-backend/routes/dsgvo.js",
+     "start": 18,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "noopMiddleware",
+     "file": "api-backend/routes/dsgvo.js",
+     "start": 29,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
    "schreiber": [
     {
      "name": "logAccess",
@@ -5082,7 +5170,7 @@
    ],
    "dateien": [
     "api-backend/_lib/access-log.js",
-    "api/dsgvo.js"
+    "api-backend/routes/dsgvo.js"
    ],
    "module": [],
    "sqlTreffer": 10,
@@ -5096,7 +5184,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -5107,7 +5196,7 @@
     {
      "name": "loadDataSharing",
      "file": "dashboard.js",
-     "start": 15287,
+     "start": 15196,
      "module": [],
      "uiPfad": []
     }
@@ -5116,7 +5205,7 @@
     {
      "name": "saveDataSharing",
      "file": "dashboard.js",
-     "start": 14929,
+     "start": 14838,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5140,7 +5229,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv — ✅ **am 20.09.2026 live angewandt** (MCP, zusammen mit 0026–0034). Die Tabelle ist noch leer: die erste Zeile entsteht, sobald die erste Datei unter dem neuen Verfahren erzeugt wird. Ein rückwirkender Backfill aus dem Bestand wurde bewusst **nicht** gemacht — die Altzeilen tragen keinen `empfaenger_ik`, eine je Paar aufgebaute Folge wäre geraten, nicht gewusst. Wer den Zähler vor dem ersten Lauf setzen will, nimmt `datenaustausch_zaehler_vorstellen()`.",
    "warum": "Die zwei dauerhaften Zähler des §302-Datenaustauschs. Bis zum 20.09.2026 rechneten alle drei Erzeugungsrouten `COUNT(*) + 1` über `abrechnung` — je `owner_id`, mit `created_at >= 1. Januar`. Daran war dreierlei falsch: die **Datenaustauschreferenz** (UNB 0020) läuft laut Anlage 1 TP5 V21 Kap. 5.4/7.2 je **Paar (Absender-IK, Empfänger-IK)** fort, nicht je Konto; ein Neustart ist nur beim Überlauf von 99999 erlaubt, nicht jedes Jahr; und ein `COUNT(*)` gibt eine gelöschte Nummer wieder her und kollidiert bei zwei gleichzeitigen Einreichungen. Belegter Schaden: die Reihenfolge im Korrekturverfahren bricht — eine Korrektur, die vor ihrer Erstrechnung verarbeitet wird, weist die Kasse ab (Kap. 7.2), und der Fehler ist von außen kaum zu erkennen. Rechtlich (`legal-de`, 20.09.2026) ist eine doppelte Einreichung eine **Fehlfunktion**, kein Anwenderfehler — über AGB § 9(2) haften wir dafür. Die **Transfernummer** ist ausdrücklich etwas anderes („keinen Bezug zur lfd. Nr. des Vorlaufsatzes\", Anhang 1 § 4.3) und wurde bis dahin per Modulo aus genau dieser Nummer abgeleitet.",
@@ -5160,7 +5251,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Demo-Termine von der Marketing-Seite. Die dürfen die echte Terminverwaltung nicht anfassen.",
@@ -5183,6 +5276,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
     "api-backend/sync_heilmittel_katalog.js",
     "tools/seed-generieren.mjs"
    ],
@@ -5370,7 +5464,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -5381,7 +5476,7 @@
     {
      "name": "loadVorlagenPanel",
      "file": "dashboard.js",
-     "start": 11716,
+     "start": 11711,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5421,7 +5516,7 @@
     {
      "name": "openVorlagenEdit",
      "file": "dashboard.js",
-     "start": 12159,
+     "start": 12154,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5463,7 +5558,7 @@
     {
      "name": "_enterAnsichtEditMode",
      "file": "dashboard.js",
-     "start": 12077,
+     "start": 12072,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5506,7 +5601,7 @@
     {
      "name": "commit",
      "file": "dashboard.js",
-     "start": 12309,
+     "start": 12304,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5549,7 +5644,7 @@
     {
      "name": "deleteVorlage",
      "file": "dashboard.js",
-     "start": 12277,
+     "start": 12272,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5592,7 +5687,7 @@
     {
      "name": "duplicateVorlage",
      "file": "dashboard.js",
-     "start": 12286,
+     "start": 12281,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5635,7 +5730,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5679,7 +5774,7 @@
     {
      "name": "openVorlagenAnsicht",
      "file": "dashboard.js",
-     "start": 11987,
+     "start": 11982,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5722,7 +5817,7 @@
     {
      "name": "saveVorlage",
      "file": "dashboard.js",
-     "start": 12247,
+     "start": 12242,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5765,7 +5860,7 @@
     {
      "name": "seedDefaultVorlagen",
      "file": "dashboard.js",
-     "start": 12333,
+     "start": 12328,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5850,7 +5945,7 @@
     {
      "name": "startVorlagenInlineRename",
      "file": "dashboard.js",
-     "start": 12302,
+     "start": 12297,
      "module": [
       "abrechnung",
       "anamnese",
@@ -5939,7 +6034,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "Referenz, im Code ungenutzt",
    "warum": "Schlüsselverzeichnisse aus Anlage 3 TP5 (Kennzeichen, Gruppen, Codes) als Datenbestand.",
@@ -5960,7 +6057,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -5972,7 +6070,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6014,7 +6112,7 @@
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 8152,
+     "start": 8147,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6100,7 +6198,8 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api-backend/billing/api/upload-signed-verschluesselung.test.js"
+    "api-backend/billing/api/upload-signed-verschluesselung.test.js",
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv (Referenz) — Migration vorbereitet, Tabelle initial leer. Befüllung erfolgt manuell über das Admin-CLI-Werkzeug `tools/empfaenger-zertifikat-laden.mjs`.",
@@ -6134,7 +6233,7 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -6145,14 +6244,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 14819,
+     "start": 14728,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 738,
+     "start": 741,
      "module": [],
      "uiPfad": []
     },
@@ -6166,7 +6265,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 10154,
+     "start": 10149,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6205,7 +6304,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 9697,
+     "start": 9692,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6246,7 +6345,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6287,9 +6386,19 @@
      ]
     },
     {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 10196,
+     "start": 10191,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6332,7 +6441,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10049,
+     "start": 10044,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6374,7 +6483,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 10297,
+     "start": 10292,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6415,6 +6524,7 @@
     }
    ],
    "dateien": [
+    "api-backend/dsgvo/loeschen.js",
     "api-backend/routes/mitarbeiter-zugang.js",
     "api-backend/server.js",
     "booking.js",
@@ -6462,7 +6572,7 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -6473,7 +6583,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6512,7 +6622,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 10154,
+     "start": 10149,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6551,7 +6661,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 10196,
+     "start": 10191,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6590,7 +6700,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10049,
+     "start": 10044,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6627,8 +6737,20 @@
      ]
     }
    ],
-   "schreiber": [],
+   "schreiber": [
+    {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    }
+   ],
    "dateien": [
+    "api-backend/dsgvo/loeschen.js",
     "api-backend/routes/mitarbeiter-zugang.js",
     "dashboard.js"
    ],
@@ -6671,9 +6793,11 @@
    "spalten": 5,
    "fkRaus": [],
    "dsgvoAuskunft": false,
-   "dsgvoLoeschung": false,
+   "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Ausnahme für eine einzelne Person, ohne dafür eine neue Gruppe zu erfinden („die eine Rezeptionskraft darf zusätzlich Rechnungen sehen\").",
@@ -6683,7 +6807,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 10263,
+     "start": 10258,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6724,7 +6848,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6765,9 +6889,19 @@
      ]
     },
     {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 10297,
+     "start": 10292,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6809,6 +6943,7 @@
     }
    ],
    "dateien": [
+    "api-backend/dsgvo/loeschen.js",
     "dashboard.js"
    ],
    "module": [
@@ -6853,7 +6988,7 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -6903,7 +7038,7 @@
     {
      "name": "openBookingFromRxPreset",
      "file": "dashboard.js",
-     "start": 15602,
+     "start": 15511,
      "module": [],
      "uiPfad": []
     }
@@ -6912,7 +7047,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -6953,9 +7088,19 @@
      ]
     },
     {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 10733,
+     "start": 10728,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7017,6 +7162,7 @@
     }
    ],
    "dateien": [
+    "api-backend/dsgvo/loeschen.js",
     "api-backend/server.js",
     "api/stripe/webhook.js",
     "booking.js",
@@ -7065,10 +7211,11 @@
     "bookings"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "dashboard.html",
     "demo-dashboard.html"
    ],
@@ -7081,7 +7228,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1569,
+     "start": 1564,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7120,7 +7267,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 16450,
+     "start": 16359,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7162,7 +7309,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3792,
+     "start": 3787,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7172,7 +7319,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3670,
+     "start": 3665,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7226,7 +7373,8 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -7272,7 +7420,8 @@
    "erwaehnt": [
     "admin.html",
     "admin.js",
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -7283,7 +7432,7 @@
     {
      "name": "loadFeedbacks",
      "file": "dashboard.js",
-     "start": 13626,
+     "start": 13535,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7366,9 +7515,11 @@
    "spalten": 4,
    "fkRaus": [],
    "dsgvoAuskunft": false,
-   "dsgvoLoeschung": false,
+   "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Was eine Gruppe darf. Trennt die Rechtematrix von der Gruppendefinition, damit Rechte änderbar sind ohne Gruppen anzufassen.",
@@ -7378,7 +7529,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7417,7 +7568,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 10263,
+     "start": 10258,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7456,7 +7607,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 10297,
+     "start": 10292,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7493,8 +7644,20 @@
      ]
     }
    ],
-   "schreiber": [],
+   "schreiber": [
+    {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    }
+   ],
    "dateien": [
+    "api-backend/dsgvo/loeschen.js",
     "dashboard.js"
    ],
    "module": [
@@ -7538,7 +7701,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "veraltet",
    "warum": "Erster Podologie-Katalog (nur HPNR 78xxx), aus der Zeit vor der Vereinheitlichung.",
@@ -7558,7 +7723,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv (Referenz)",
    "warum": "Der **aktive**, vereinheitlichte und zeitversionierte Heilmittelkatalog aller vier Fachbereiche. Löste die beiden Vorgänger ab, weil abgelöste Positionen sonst als unbegrenzt gültig erschienen.",
@@ -7592,7 +7759,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "veraltet",
    "warum": "§302-Abrechnungspositionen mit Preisen und Zuzahlung, Physio-Seed aus der A2-Phase.",
@@ -7614,7 +7783,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "**veraltet** (13.09.2026, O-96 — siehe `onprem/REGISTER.md`)",
    "warum": "Preise je Bundesland × Kostenträger × Stichtag — die Tarifseite zum Katalog, aus der A2-Phase. 928 Zeilen. Die Annahme dahinter (Physio-Preise unterscheiden sich regional und je Kasse) hat sich als falsch erwiesen.",
@@ -7634,7 +7805,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv (Referenz)",
    "warum": "ICD-10-GM 2026, 16.905 Kodes. Der Anwender soll suchen können, ohne den Code zu kennen.",
@@ -7656,7 +7829,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv (Referenz)",
    "warum": "Welcher ICD-Bereich zu welchem Fachbereich gehört. Grundlage des `strict`-Filters, der fachfremde Diagnosen ganz aus der Auswahl nimmt.",
@@ -7678,9 +7853,10 @@
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
-   "dsgvoAnonymisiert": true,
+   "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "index.html"
    ],
    "register": true,
@@ -7706,7 +7882,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1569,
+     "start": 1564,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7745,7 +7921,7 @@
     {
      "name": "loadPatientDetailRechnungen",
      "file": "dashboard.js",
-     "start": 8212,
+     "start": 8207,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7784,7 +7960,7 @@
     {
      "name": "loadRechnungen",
      "file": "dashboard.js",
-     "start": 13698,
+     "start": 13607,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7909,7 +8085,7 @@
     {
      "name": "saveInvoice",
      "file": "dashboard.js",
-     "start": 13870,
+     "start": 13779,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7967,7 +8143,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -7996,6 +8173,7 @@
     "api-backend/billing/kostentraeger/annahmestelle.test.js",
     "api-backend/billing/kostentraeger/parser.test.js",
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
+    "api-backend/dsgvo/klassifikation.js",
     "api-backend/lib/rezept-felder.test.js",
     "module/krankenkasse-suche.js",
     "module/krankenkasse-suche.test.js",
@@ -8071,7 +8249,7 @@
     {
      "name": "ladeKostentraegerNamen",
      "file": "dashboard.js",
-     "start": 16001,
+     "start": 15910,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8167,6 +8345,7 @@
    "erwaehnt": [
     "api-backend/billing/kostentraeger/annahmestelle.test.js",
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
+    "api-backend/dsgvo/klassifikation.js",
     "tools/kostentraeger-annahmestellen-laden.mjs",
     "tools/seed-generieren.test.js"
    ],
@@ -8281,6 +8460,7 @@
    "erwaehnt": [
     "api-backend/billing/kostentraeger/annahmestelle.test.js",
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
+    "api-backend/dsgvo/klassifikation.js",
     "tools/kostentraeger-annahmestellen-laden.mjs",
     "tools/seed-generieren.test.js"
    ],
@@ -8314,6 +8494,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
     "module/krankenkasse-suche.test.js",
     "tools/seed-generieren.test.js"
    ],
@@ -8365,7 +8546,7 @@
     {
      "name": "loadKkList",
      "file": "dashboard.js",
-     "start": 15886,
+     "start": 15795,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8450,10 +8631,10 @@
     "aerzte"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
-   "dsgvoAnonymisiert": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": true,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -8517,7 +8698,7 @@
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 14500,
+     "start": 14409,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8595,7 +8776,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8634,7 +8815,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3426,
+     "start": 3421,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8673,14 +8854,14 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 3879,
+     "start": 3874,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 4584,
+     "start": 4579,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8719,7 +8900,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4370,
+     "start": 4365,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8758,7 +8939,7 @@
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 3257,
+     "start": 3252,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8797,7 +8978,7 @@
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 17753,
+     "start": 17662,
      "module": [],
      "uiPfad": []
     },
@@ -9006,7 +9187,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1569,
+     "start": 1564,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9084,7 +9265,7 @@
     {
      "name": "loadB2C",
      "file": "dashboard.js",
-     "start": 10983,
+     "start": 10978,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9124,7 +9305,7 @@
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 4594,
+     "start": 4589,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9163,7 +9344,7 @@
     {
      "name": "loadInvPatients",
      "file": "dashboard.js",
-     "start": 13726,
+     "start": 13635,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9202,7 +9383,7 @@
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 7309,
+     "start": 7304,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9241,7 +9422,7 @@
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 12904,
+     "start": 12813,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9280,7 +9461,7 @@
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 8152,
+     "start": 8147,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9319,7 +9500,7 @@
     {
      "name": "loadUeberblickBirthdays",
      "file": "dashboard.js",
-     "start": 18510,
+     "start": 18419,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9436,7 +9617,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2840,
+     "start": 2835,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9475,7 +9656,7 @@
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 4493,
+     "start": 4488,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9592,14 +9773,14 @@
     {
      "name": "pruefeLeadId",
      "file": "api-backend/server.js",
-     "start": 1383,
+     "start": 1386,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 3525,
+     "start": 3520,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9638,14 +9819,14 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3792,
+     "start": 3787,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 16120,
+     "start": 16029,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9735,7 +9916,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4003,
+     "start": 3998,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9745,7 +9926,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 17467,
+     "start": 17376,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9753,9 +9934,20 @@
      ]
     },
     {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete",
+      "update"
+     ]
+    },
+    {
      "name": "maybeOfferAppointmentConfirmEmail",
      "file": "dashboard.js",
-     "start": 6801,
+     "start": 6796,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -9775,6 +9967,7 @@
    ],
    "dateien": [
     "api-backend/billing/api/statistik.routes.js",
+    "api-backend/dsgvo/loeschen.js",
     "api-backend/server.js",
     "dashboard.js",
     "module/anamnese.js",
@@ -9837,10 +10030,11 @@
     "ausfallrechnungen"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -9862,10 +10056,11 @@
    "spalten": 12,
    "fkRaus": [],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "dashboard.html",
     "module/akte-podo.js",
     "module/akte-podo.test.js"
@@ -9880,7 +10075,7 @@
     {
      "name": "refreshMessreihen",
      "file": "dashboard.js",
-     "start": 7941,
+     "start": 7936,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9922,7 +10117,7 @@
     {
      "name": "saveMessung",
      "file": "dashboard.js",
-     "start": 8065,
+     "start": 8060,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10007,6 +10202,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
     "komponenten.html"
    ],
    "register": true,
@@ -10018,7 +10214,7 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 565,
+     "start": 566,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10122,10 +10318,10 @@
     "profiles"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -10148,10 +10344,11 @@
     "pat_fussbefund"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -10612,7 +10809,8 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -10827,10 +11025,11 @@
    "spalten": 10,
    "fkRaus": [],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -10839,48 +11038,9 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "fmt",
-     "file": "dashboard.js",
-     "start": 10018,
-     "module": [
-      "abrechnung",
-      "anamnese",
-      "bkActionArrivedBtn",
-      "bkActionFahrtEndBtn",
-      "bkActionFahrtStartBtn",
-      "bkActionHbCopyBtn",
-      "doctors",
-      "fbFahrtenExportCsv",
-      "fbFahrtenExportProt",
-      "fbFahrtenExportVerz",
-      "fbFahrtenRefresh",
-      "fbReportRefresh",
-      "fbVehicleAddBtn",
-      "feSaveBtn",
-      "fsAddVehicleBtn",
-      "fsSaveBtn",
-      "fussstatus",
-      "hours",
-      "kunden",
-      "mahnwesen",
-      "notizen",
-      "podologie-billing",
-      "rechnungen",
-      "services",
-      "settings",
-      "team",
-      "ueberblick",
-      "vehEditSaveBtn",
-      "verordnungen"
-     ],
-     "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
-     ]
-    },
-    {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1569,
+     "start": 1564,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10919,7 +11079,7 @@
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 12904,
+     "start": 12813,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10958,7 +11118,7 @@
     {
      "name": "loadPatientDetailNotes",
      "file": "dashboard.js",
-     "start": 8127,
+     "start": 8122,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10997,7 +11157,7 @@
     {
      "name": "loadPatientNotes",
      "file": "dashboard.js",
-     "start": 12968,
+     "start": 12877,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11036,7 +11196,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2840,
+     "start": 2835,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11073,7 +11233,51 @@
      ]
     }
    ],
-   "schreiber": [],
+   "schreiber": [
+    {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10013,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "bkActionArrivedBtn",
+      "bkActionFahrtEndBtn",
+      "bkActionFahrtStartBtn",
+      "bkActionHbCopyBtn",
+      "doctors",
+      "fbFahrtenExportCsv",
+      "fbFahrtenExportProt",
+      "fbFahrtenExportVerz",
+      "fbFahrtenRefresh",
+      "fbReportRefresh",
+      "fbVehicleAddBtn",
+      "feSaveBtn",
+      "fsAddVehicleBtn",
+      "fsSaveBtn",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "mahnwesen",
+      "notizen",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "settings",
+      "team",
+      "ueberblick",
+      "vehEditSaveBtn",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 29 modülden çağrılıyor"
+     ],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    }
+   ],
    "dateien": [
     "dashboard.js"
    ],
@@ -11121,7 +11325,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "dashboard.js",
     "index.html",
     "module/fussbefund.js",
@@ -11146,17 +11351,28 @@
    "spalten": 6,
    "fkRaus": [],
    "dsgvoAuskunft": false,
-   "dsgvoLoeschung": false,
+   "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Zwischen „Formular ausgefüllt\" und „bezahlt\" existiert der Account noch nicht. Die Anmeldedaten müssen solange irgendwo liegen — inklusive Passwort, und das darf nicht im Klartext stehen.",
    "seit": "12.05.2026 · `create_pending_signups`",
    "ungeklaert": false,
-   "leser": [],
+   "leser": [
+    {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
    "schreiber": [],
    "dateien": [
+    "api-backend/dsgvo/loeschen.js",
     "api-backend/server.js",
     "api/stripe/create-checkout-session.js",
     "api/stripe/webhook.js"
@@ -11177,7 +11393,8 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "module/behandlungsbeginn.test.js"
    ],
    "register": true,
@@ -11822,7 +12039,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Das Buch der Schemakette — eine Zeile je angewandter Migrationsdatei. Bis",
@@ -11841,10 +12060,12 @@
    "fkRaus": [
     "auth.users"
    ],
-   "dsgvoAuskunft": false,
+   "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "aktiv in der Box — **im SaaS bewusst inert** (siehe Achtung)",
    "warum": "Der Einrichtungsassistent der Kundenbox (On-Premise Faz 2.2) braucht eine",
@@ -11861,7 +12082,7 @@
     {
      "name": "kutuInEinrichtung",
      "file": "api-backend/server.js",
-     "start": 459,
+     "start": 461,
      "module": [],
      "uiPfad": []
     },
@@ -11900,10 +12121,10 @@
     "prescriptions"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -11912,6 +12133,16 @@
    "ungeklaert": false,
    "leser": [],
    "schreiber": [
+    {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
     {
      "name": "ladeLhbNachweisHoch",
      "file": "module/verordnung-nachweis.js",
@@ -11924,6 +12155,7 @@
     }
    ],
    "dateien": [
+    "api-backend/dsgvo/loeschen.js",
     "module/verordnung-nachweis.js"
    ],
    "module": [],
@@ -11935,10 +12167,11 @@
    "spalten": 9,
    "fkRaus": [],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "module/booking-status-korrektur.test.js",
     "module/sitzung-bindung.test.js",
     "module/termin-nicht-erschienen.test.js"
@@ -11952,7 +12185,7 @@
     {
      "name": "decorateBookingTitleWithSession",
      "file": "dashboard.js",
-     "start": 6696,
+     "start": 6691,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12030,7 +12263,7 @@
     {
      "name": "loadCalRpUnverga",
      "file": "dashboard.js",
-     "start": 3378,
+     "start": 3373,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12069,7 +12302,7 @@
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 5650,
+     "start": 5645,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12268,7 +12501,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3426,
+     "start": 3421,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12320,7 +12553,7 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 6709,
+     "start": 6704,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -12341,7 +12574,7 @@
     {
      "name": "markPrescriptionSession",
      "file": "dashboard.js",
-     "start": 6676,
+     "start": 6671,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -12413,10 +12646,10 @@
    "spalten": 13,
    "fkRaus": [],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -12510,13 +12743,13 @@
    "spalten": 81,
    "fkRaus": [],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api-backend/billing/dta/preflight.js",
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
     "api-backend/billing/utils/kostentraeger-frisch.test.js",
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
     "module/behandlungsbeginn.js",
     "module/behandlungsbeginn.test.js",
     "module/podo-behandlungen-oeffnen.test.js",
@@ -13103,21 +13336,21 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 6709,
+     "start": 6704,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadCalRpRezeptInfo",
      "file": "dashboard.js",
-     "start": 3341,
+     "start": 3336,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 7479,
+     "start": 7474,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13156,7 +13389,7 @@
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 18342,
+     "start": 18251,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13195,14 +13428,14 @@
     {
      "name": "loadPhysioRezKpis",
      "file": "dashboard.js",
-     "start": 1868,
+     "start": 1863,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 5650,
+     "start": 5645,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13241,7 +13474,7 @@
     {
      "name": "loadUeberblickDeadlines",
      "file": "dashboard.js",
-     "start": 18444,
+     "start": 18353,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13365,7 +13598,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2840,
+     "start": 2835,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13496,7 +13729,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 16120,
+     "start": 16029,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13574,7 +13807,7 @@
     {
      "name": "therapeutName",
      "file": "dashboard.js",
-     "start": 7095,
+     "start": 7090,
      "module": [],
      "uiPfad": []
     },
@@ -13837,7 +14070,7 @@
     {
      "name": "flipAbrechnungStatus",
      "file": "dashboard.js",
-     "start": 7796,
+     "start": 7791,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13879,7 +14112,7 @@
     {
      "name": "kassiereZuzahlung",
      "file": "dashboard.js",
-     "start": 6531,
+     "start": 6526,
      "module": [
       "abrechnung",
       "anamnese",
@@ -13916,6 +14149,16 @@
      ],
      "ops": [
       "update"
+     ]
+    },
+    {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
      ]
     },
     {
@@ -13983,7 +14226,7 @@
     {
      "name": "storniereZuzahlung",
      "file": "dashboard.js",
-     "start": 6606,
+     "start": 6601,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -13993,7 +14236,7 @@
     {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 16919,
+     "start": 16828,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14051,6 +14294,7 @@
     "api-backend/billing/api/verordnung-status.routes.js",
     "api-backend/billing/api/zuzahlung.routes.js",
     "api-backend/billing/utils/kostentraeger-frisch.js",
+    "api-backend/dsgvo/loeschen.js",
     "api-backend/server.js",
     "dashboard.js",
     "module/abrechnung-auswahl.js",
@@ -14124,10 +14368,11 @@
    ],
    "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
-   "dsgvoAnonymisiert": false,
+   "dsgvoAnonymisiert": true,
    "erwaehnt": [
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
-    "api-backend/billing/statistik/therapeuten.test.js"
+    "api-backend/billing/statistik/therapeuten.test.js",
+    "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -14191,14 +14436,14 @@
     {
      "name": "gehoertZurPraxis",
      "file": "api-backend/server.js",
-     "start": 3965,
+     "start": 3954,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 738,
+     "start": 741,
      "module": [],
      "uiPfad": []
     },
@@ -14212,7 +14457,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4003,
+     "start": 3998,
      "module": [],
      "uiPfad": []
     },
@@ -14393,7 +14638,7 @@
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 488,
+     "start": 489,
      "module": [],
      "uiPfad": []
     },
@@ -14407,7 +14652,7 @@
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 9895,
+     "start": 9890,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14446,7 +14691,7 @@
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 16398,
+     "start": 16307,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14486,7 +14731,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 16450,
+     "start": 16359,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14526,7 +14771,7 @@
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 16752,
+     "start": 16661,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14566,7 +14811,7 @@
     {
      "name": "loadHoursPanel",
      "file": "dashboard.js",
-     "start": 9289,
+     "start": 9284,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14612,7 +14857,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 9697,
+     "start": 9692,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14658,7 +14903,7 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 18584,
+     "start": 18493,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14711,7 +14956,7 @@
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 4036,
+     "start": 4031,
      "module": [],
      "uiPfad": []
     },
@@ -14764,7 +15009,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10049,
+     "start": 10044,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14810,7 +15055,7 @@
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 608,
+     "start": 609,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15136,7 +15381,7 @@
     {
      "name": "saveEmployee",
      "file": "dashboard.js",
-     "start": 13156,
+     "start": 13065,
      "module": [],
      "uiPfad": []
     },
@@ -15242,7 +15487,7 @@
     {
      "name": "ensureBookingSlug",
      "file": "dashboard.js",
-     "start": 12656,
+     "start": 12565,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15284,7 +15529,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 5126,
+     "start": 5121,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -15294,7 +15539,7 @@
     {
      "name": "ensureCompanyCode",
      "file": "dashboard.js",
-     "start": 12639,
+     "start": 12548,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15336,7 +15581,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15398,7 +15643,7 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 19279,
+     "start": 19188,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15434,6 +15679,16 @@
      "uiPfad": [
       "ortak yardımcı — 30 modülden çağrılıyor"
      ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "kontoLoeschen",
+     "file": "api-backend/dsgvo/loeschen.js",
+     "start": 59,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -15493,7 +15748,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 10350,
+     "start": 10345,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15535,7 +15790,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 1931,
+     "start": 1926,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -15730,6 +15985,7 @@
     "api-backend/billing/api/warteliste.routes.js",
     "api-backend/billing/api/zuzahlung.routes.js",
     "api-backend/billing/statistik/therapeuten.js",
+    "api-backend/dsgvo/loeschen.js",
     "api-backend/fix_db.js",
     "api-backend/routes/mitarbeiter-zugang.js",
     "api-backend/server.js",
@@ -15737,7 +15993,6 @@
     "api-backend/setup/router.js",
     "api-backend/test_schema.js",
     "api/admin/data.js",
-    "api/dsgvo.js",
     "api/onboarding/check-email.js",
     "api/stripe/create-checkout-session.js",
     "api/stripe/portal-session.js",
@@ -15805,7 +16060,8 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -15829,7 +16085,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "verdächtig",
@@ -15847,10 +16104,13 @@
    "name": "scraper_data",
    "spalten": 14,
    "fkRaus": [],
-   "dsgvoAuskunft": false,
-   "dsgvoLoeschung": false,
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
+   ],
    "register": true,
    "status": "aktiv (Randmodul)",
    "warum": "Ergebnisse der Apify-Suche (Google-Maps-Praxen) als Akquiseliste — die Zulieferung für `b2b_contacts`.",
@@ -15955,7 +16215,8 @@
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
     "api-backend/booking/from-request.test.js",
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "booking.js",
     "dashboard.html",
     "index-old.html",
@@ -15973,7 +16234,7 @@
     {
      "name": "anfrageKorrekturenPruefen",
      "file": "api-backend/server.js",
-     "start": 4160,
+     "start": 4149,
      "module": [],
      "uiPfad": []
     },
@@ -15994,7 +16255,7 @@
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 3414,
+     "start": 3409,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16033,7 +16294,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16072,21 +16333,21 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 738,
+     "start": 741,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2160,
+     "start": 2155,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 10733,
+     "start": 10728,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16132,7 +16393,7 @@
     {
      "name": "loadServices",
      "file": "dashboard.js",
-     "start": 8654,
+     "start": 8649,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16289,7 +16550,7 @@
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 4922,
+     "start": 4917,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16330,7 +16591,7 @@
     {
      "name": "autoSeedGkvServices",
      "file": "dashboard.js",
-     "start": 8674,
+     "start": 8669,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16372,7 +16633,7 @@
     {
      "name": "ensureBlankoBonusServices",
      "file": "dashboard.js",
-     "start": 6902,
+     "start": 6897,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -16383,7 +16644,7 @@
     {
      "name": "migratePodologieLegacyServices",
      "file": "dashboard.js",
-     "start": 8870,
+     "start": 8865,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16437,7 +16698,7 @@
     {
      "name": "renderServices",
      "file": "dashboard.js",
-     "start": 9057,
+     "start": 9052,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16491,7 +16752,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 15083,
+     "start": 14992,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -16553,7 +16814,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "System",
    "warum": "Systemtabelle der PostGIS-Erweiterung (Koordinatensysteme). Kam mit `enable_postgis` für die Geocodierung im Fahrtenbuch.",
@@ -16576,7 +16839,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -16665,7 +16929,7 @@
     {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 988,
+     "start": 989,
      "module": [],
      "uiPfad": []
     }
@@ -16804,7 +17068,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -16854,7 +17119,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 10733,
+     "start": 10728,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16895,7 +17160,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16938,7 +17203,7 @@
     {
      "name": "loadEmpCertificates",
      "file": "dashboard.js",
-     "start": 10819,
+     "start": 10814,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17028,7 +17293,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "module/abwesenheit.test.js",
     "tools/browser-probe/render-probe.html"
    ],
@@ -17041,14 +17307,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 738,
+     "start": 741,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1735,
+     "start": 1738,
      "module": [],
      "uiPfad": []
     },
@@ -17101,7 +17367,7 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 10581,
+     "start": 10576,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17140,7 +17406,7 @@
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 9895,
+     "start": 9890,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17179,7 +17445,7 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 18584,
+     "start": 18493,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17218,7 +17484,7 @@
     {
      "name": "loadUrlaubListe",
      "file": "dashboard.js",
-     "start": 9999,
+     "start": 9994,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17259,7 +17525,7 @@
     {
      "name": "deleteEmpTimeOff",
      "file": "dashboard.js",
-     "start": 9951,
+     "start": 9946,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17301,7 +17567,7 @@
     {
      "name": "deleteUrlaub",
      "file": "dashboard.js",
-     "start": 10028,
+     "start": 10023,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17343,7 +17609,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17386,7 +17652,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 9697,
+     "start": 9692,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17428,7 +17694,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 10350,
+     "start": 10345,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17470,7 +17736,7 @@
     {
      "name": "saveUrlaub",
      "file": "dashboard.js",
-     "start": 9967,
+     "start": 9962,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -17525,7 +17791,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "fremd",
    "warum": "Fremdprojekt, Gegenstück zu `trip_plans`.",
@@ -17545,7 +17813,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "fremd",
    "warum": "Fremdprojekt (Reiseplanung). Nicht mit dem Fahrtenbuch (`fahrten`) verwechseln — das ist unseres.",
@@ -17565,10 +17835,11 @@
     "leads"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -17579,7 +17850,7 @@
     {
      "name": "loadPatientDetailUeberweisung",
      "file": "dashboard.js",
-     "start": 8190,
+     "start": 8185,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17661,7 +17932,9 @@
    "dsgvoAuskunft": false,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js"
+   ],
    "register": true,
    "status": "fremd",
    "warum": "Fremdprojekt (Guthabenmodell). Praxura rechnet über Stripe ab, nicht über Credits.",
@@ -17682,7 +17955,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -17693,14 +17967,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 14819,
+     "start": 14728,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "bootScheduleViewToggle",
      "file": "dashboard.js",
-     "start": 13226,
+     "start": 13135,
      "module": [],
      "uiPfad": []
     }
@@ -17709,7 +17983,7 @@
     {
      "name": "saveUserPref",
      "file": "dashboard.js",
-     "start": 13305,
+     "start": 13214,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17751,7 +18025,7 @@
     {
      "name": "switchBusiness",
      "file": "dashboard.js",
-     "start": 15245,
+     "start": 15154,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -17803,10 +18077,11 @@
    "spalten": 11,
    "fkRaus": [],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "dashboard.html"
    ],
    "register": true,
@@ -17818,21 +18093,21 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 3630,
+     "start": 3625,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3792,
+     "start": 3787,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3670,
+     "start": 3665,
      "module": [],
      "uiPfad": []
     }
@@ -17841,7 +18116,7 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 16594,
+     "start": 16503,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17884,7 +18159,7 @@
     {
      "name": "saveVehicleEditCore",
      "file": "dashboard.js",
-     "start": 16706,
+     "start": 16615,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -17939,7 +18214,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js",
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js",
     "module/nav-registry.test.js",
     "nav-registry.js",
     "onboarding.js"
@@ -17953,7 +18229,7 @@
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 17631,
+     "start": 17540,
      "module": [
       "abrechnung",
       "anamnese",
@@ -17995,7 +18271,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 17783,
+     "start": 17692,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -18053,7 +18329,8 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -18064,14 +18341,14 @@
     {
      "name": "getAvailableSlots",
      "file": "api-backend/server.js",
-     "start": 738,
+     "start": 741,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "getEmployeeWorkingHours",
      "file": "dashboard.js",
-     "start": 2080,
+     "start": 2075,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18110,7 +18387,7 @@
     {
      "name": "horizonDays",
      "file": "api-backend/server.js",
-     "start": 1735,
+     "start": 1738,
      "module": [],
      "uiPfad": []
     },
@@ -18163,14 +18440,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1170,
+     "start": 1165,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1250,
+     "start": 1245,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18209,7 +18486,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 9398,
+     "start": 9393,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18248,7 +18525,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 9491,
+     "start": 9486,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18300,7 +18577,7 @@
     {
      "name": "fmt",
      "file": "dashboard.js",
-     "start": 10018,
+     "start": 10013,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18342,7 +18619,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 10641,
+     "start": 10636,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18431,10 +18708,13 @@
    "fkRaus": [
     "abrechnung"
    ],
-   "dsgvoAuskunft": false,
+   "dsgvoAuskunft": true,
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
-   "erwaehnt": [],
+   "erwaehnt": [
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
+   ],
    "register": true,
    "status": "aktiv",
    "warum": "Absetzungen und Fehlermeldungen der Kasse aus der ZAA-Rückmeldung, samt Übersetzung und Lösungshinweis. Roh sind die Codes für einen Therapeuten unlesbar.",
@@ -18444,7 +18724,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 16120,
+     "start": 16029,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18527,10 +18807,11 @@
     "leads"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -18541,7 +18822,7 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 7479,
+     "start": 7474,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18580,7 +18861,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2840,
+     "start": 2835,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18664,7 +18945,7 @@
     {
      "name": "wireBefreiungCard",
      "file": "dashboard.js",
-     "start": 7868,
+     "start": 7863,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18752,10 +19033,11 @@
     "auth.users"
    ],
    "dsgvoAuskunft": true,
-   "dsgvoLoeschung": true,
+   "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -18785,7 +19067,8 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
-    "api/dsgvo.js"
+    "api-backend/dsgvo/klassifikation.js",
+    "api-backend/dsgvo/loeschen.js"
    ],
    "register": true,
    "status": "aktiv",
@@ -18815,11 +19098,6 @@
    "name": "applications",
    "sql": 2,
    "status": "fremd"
-  },
-  {
-   "name": "aufbewahrung_sperre",
-   "sql": 3,
-   "status": "aktiv (Tabelle live, noch leer — der Schreiber entsteht in K1.4)"
   },
   {
    "name": "datenaustausch_zaehler",
@@ -18897,12 +19175,14 @@
    "ai_audit_log",
    "anamnese",
    "attendance",
+   "aufbewahrung_sperre",
    "ausfallrechnungen",
    "b2b_contacts",
    "belegliste",
    "betriebsart_empfaenger",
    "booking_leistungen",
    "booking_requests",
+   "booking_status_korrekturen",
    "bookings",
    "breaks",
    "businesses",
@@ -18910,6 +19190,7 @@
    "chatbot_usage",
    "consent_log",
    "custom_days",
+   "data_access_log",
    "data_sharing_settings",
    "document_vorlagen",
    "email_logs",
@@ -18929,6 +19210,7 @@
    "patient_notes",
    "patients",
    "podologie_behandlungen",
+   "praxura_setup",
    "prescription_documents",
    "prescription_sessions",
    "prescription_validations",
@@ -18936,6 +19218,7 @@
    "profiles",
    "rechnung_zahlungen",
    "referral_drafts",
+   "scraper_data",
    "services",
    "terapeut_zertifikat",
    "therapist_certificates",
@@ -18945,72 +19228,54 @@
    "vehicles",
    "warteliste",
    "working_hours",
+   "zaa_fehler",
    "zuzahlung_befreiung",
    "zuzahlung_guthaben",
    "zuzahlung_korrekturen"
   ],
   "loeschung": [
-   "aerzte",
    "ai_audit_log",
-   "anamnese",
    "attendance",
-   "ausfallrechnungen",
    "b2b_contacts",
    "betriebsart_empfaenger",
    "booking_leistungen",
    "booking_requests",
    "bookings",
    "breaks",
-   "businesses",
    "calendar_integrations",
    "chatbot_usage",
-   "consent_log",
    "custom_days",
    "data_sharing_settings",
    "document_vorlagen",
    "email_logs",
    "employee_business_assignments",
    "employee_groups",
+   "employee_scope_overrides",
    "employee_services",
-   "fahrten",
    "feedbacks",
+   "group_scopes",
    "kiosk_pins",
-   "leads",
-   "mahnungen",
-   "messreihen",
-   "nummernkreise",
-   "pat_fussbefund",
-   "patient_notes",
    "patients",
-   "prescription_documents",
-   "prescription_sessions",
-   "prescription_validations",
-   "prescriptions",
+   "pending_signups",
    "referral_drafts",
+   "scraper_data",
    "services",
    "terapeut_zertifikat",
    "therapist_certificates",
    "time_offs",
-   "ueberweisungen",
    "user_preferences",
-   "vehicles",
    "warteliste",
-   "working_hours",
-   "zuzahlung_befreiung",
-   "zuzahlung_guthaben"
+   "working_hours"
   ],
   "anonymisiert": [
-   "abrechnung_zeile",
-   "invoices"
+   "leads",
+   "profiles"
   ],
   "verdaechtigeLuecke": [
    "accommodations",
    "admin_users",
    "applications",
-   "aufbewahrung_sperre",
-   "booking_status_korrekturen",
-   "datenaustausch_zaehler",
-   "praxura_setup"
+   "datenaustausch_zaehler"
   ]
  }
 }

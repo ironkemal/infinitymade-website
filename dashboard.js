@@ -1,3 +1,4 @@
+import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
 import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261002a';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
 import { aktiveSitzungszeilen } from './module/sitzung-aktiv.js?v=20260914';
@@ -1027,19 +1028,13 @@ async function renderOverview() {
         <div style="margin-top:14px;padding:12px 14px;border-radius:8px;background:rgba(220,53,53,0.10);border:1px solid rgba(220,53,53,0.35);font-size:13px;line-height:1.6;color:var(--text-main);">
           <strong>⚠ Konto deaktiviert</strong><br>
           Ihre Daten werden am <strong>${formatted}</strong> (in ${daysLeft} Tag${daysLeft === 1 ? '' : 'en'}) unwiderruflich gelöscht.<br>
-          <span style="color:var(--text-muted);">Buchhaltungsbelege bleiben gem. §257 HGB 10 Jahre erhalten.</span><br>
+          <span style="color:var(--text-muted);">Unterlagen mit gesetzlicher Aufbewahrungspflicht – Behandlungsdokumentation 10 Jahre (§ 630f BGB), Rechnungen 8 Jahre, Zahlungsaufzeichnungen 10 Jahre (§ 147 AO) – bleiben bis Fristablauf gesperrt erhalten.</span><br>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-            <a href="/api/dsgvo?action=export&token=" id="deletionExportLink" class="btn-ghost" style="font-size:12px;padding:5px 10px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
+            <a href="#" data-dsgvo-export id="deletionExportLink" class="btn-ghost" style="font-size:12px;padding:5px 10px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
               ⬇ Daten exportieren
             </a>
           </div>
         </div>`;
-      // Attach access token to export link
-      (async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        const link = document.getElementById('deletionExportLink');
-        if (link && session?.access_token) link.href = `/api/dsgvo?action=export&token=${encodeURIComponent(session.access_token)}`;
-      })();
       el.hidden = false;
     }
   })();
@@ -1962,11 +1957,11 @@ async function openStripePortal() {
 
       <p style="font-size: 0.92rem; color: var(--text-muted, #7A6F61); line-height: 1.6; margin-bottom: 1.5rem;">
         Nach der Kündigung haben Sie noch <strong style="color: var(--text-main, #1A1611);">30 Tage</strong> Zugriff auf Ihre Daten.
-        Danach werden alle Praxisdaten und Patientendaten unwiderruflich gelöscht.
-        Buchhaltungsbelege bleiben gemäß §257 HGB für 10 Jahre erhalten.
+        Danach werden Ihre Daten gelöscht, soweit keine Aufbewahrungspflicht besteht.
+        Unterlagen mit gesetzlicher Aufbewahrungspflicht – Behandlungsdokumentation 10 Jahre (§ 630f BGB), Rechnungen 8 Jahre, Zahlungsaufzeichnungen 10 Jahre (§ 147 AO) – bleiben bis Fristablauf gesperrt erhalten.
       </p>
 
-      <a href="/api/dsgvo?action=export" download style="
+      <a href="#" data-dsgvo-export style="
         display: inline-flex; align-items: center; gap: 0.4rem;
         font-family: var(--mono, monospace); font-size: 0.75rem;
         letter-spacing: 0.06em; text-transform: uppercase;
@@ -12547,94 +12542,8 @@ document.getElementById('pwChangeBtn').addEventListener('click', async () => {
 
 wireAboButtons({ istKutu: IST_KUTU, portalRedirect: _doStripePortalRedirect });
 
-// DSGVO Art. 15 — Export
-document.getElementById('dsgvoExportBtn')?.addEventListener('click', async () => {
-  const btn = document.getElementById('dsgvoExportBtn');
-  btn.disabled = true;
-  const originalText = btn.textContent;
-  btn.textContent = 'Wird vorbereitet...';
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch('/api/dsgvo?action=export', {
-      headers: { 'Authorization': `Bearer ${session.access_token}` },
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      showToast('Export fehlgeschlagen: ' + (err.error || res.status), 'error');
-      return;
-    }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `praxura-daten-${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    showToast('Export heruntergeladen ✓');
-  } catch (err) {
-    showToast('Fehler: ' + err.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = originalText;
-  }
-});
-
-// DSGVO Art. 17 — Delete (mit doppelter Bestätigung)
-document.getElementById('dsgvoDeleteBtn')?.addEventListener('click', async () => {
-  const confirm1 = await showConfirmModal({
-    title: 'Konto löschen',
-    message: 'Sind Sie sicher? Alle Ihre Daten werden gelöscht.\n\nAbrechnungsdaten bleiben aus gesetzlicher Pflicht 10 Jahre anonymisiert gespeichert.\n\nDiese Aktion ist NICHT rückgängig zu machen.',
-    confirmText: 'Weiter',
-    cancelText: 'Abbrechen',
-    variant: 'danger'
-  });
-  if (!confirm1) return;
-
-  const typed = await showInputModal({
-    title: 'Löschen bestätigen',
-    message: 'Tippen Sie LÖSCHEN (Großbuchstaben) um zu bestätigen:',
-    placeholder: 'LÖSCHEN',
-    confirmText: 'Endgültig löschen',
-    cancelText: 'Abbrechen',
-    variant: 'danger'
-  });
-  if (typed !== 'LÖSCHEN') {
-    showToast('Abgebrochen — Bestätigung stimmte nicht überein.', 'error');
-    return;
-  }
-
-  const btn = document.getElementById('dsgvoDeleteBtn');
-  btn.disabled = true;
-  btn.textContent = 'Wird gelöscht...';
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch('/api/dsgvo?action=delete', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ confirm: 'LÖSCHEN' }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      showToast('Löschung fehlgeschlagen: ' + (data.error || res.status), 'error');
-      btn.disabled = false;
-      btn.textContent = '🗑️ Konto & Daten löschen';
-      return;
-    }
-    showToast('Ihr Konto wurde gelöscht. Sie werden jetzt abgemeldet.');
-    await new Promise(r => setTimeout(r, 1500));
-    await supabase.auth.signOut();
-    window.location.href = '/';
-  } catch (err) {
-    showToast('Fehler: ' + err.message, 'error');
-    btn.disabled = false;
-    btn.textContent = '🗑️ Konto & Daten löschen';
-  }
-});
+// DSGVO Art. 15/17 — Export & Kontolöschung via module/dsgvo-client.js
+dsgvoVerdrahten({ apiBase: API, getToken: async () => (await supabase.auth.getSession()).data.session?.access_token, showToast, showConfirmModal, showInputModal, signOut: () => supabase.auth.signOut(), istKutu: IST_KUTU });
 
 async function ensureCompanyCode() {
   if (currentProfile.role !== 'owner' || currentProfile.company_code) return;
@@ -18217,7 +18126,7 @@ function showPlanWall(lastPlan) {
         </p>
         ` : ''}
         <div style="margin-bottom: 1.75rem;">
-          <a href="/api/dsgvo?action=export" download style="
+          <a href="#" data-dsgvo-export style="
             display: inline-flex; align-items: center; gap: 0.4rem;
             font-family: var(--mono, monospace); font-size: 0.74rem;
             letter-spacing: 0.06em; text-transform: uppercase;

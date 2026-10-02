@@ -22,6 +22,8 @@ import rechnungZahlungRouter from './billing/api/rechnung-zahlung.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
 import setupRouter from './setup/router.js';
 import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
+import dsgvoRouter from './routes/dsgvo.js';
+import { istKutu } from './lib/dagitim.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren } from './lib/rezept-felder.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
@@ -408,7 +410,7 @@ app.get('/api/config', (req, res) => {
     // verbraucht/geloescht, SUPABASE_PUBLIC_URL bleibt die ganze Lebenszeit
     // der Box gesetzt — ohne sie startet die Box gar nicht (O-58 a,
     // onprem-Review 12.09.2026).
-    istKutu: !!process.env.SUPABASE_PUBLIC_URL,
+    istKutu: istKutu(),
     // telemetryEnabled (Ops #166, O-06, onprem-Review 17.09.2026): auf der
     // Box standardmaessig AUS (G4 — kein Telemetrie-Opt-out noetig, weil es
     // nie an ist). Setup-Wizard-Opt-in kommt in Faz 2.6, noch nicht gebaut —
@@ -526,6 +528,7 @@ app.use('/api/warteliste', wartelisteRouter);
 
 // Mitarbeiter-Zugang (Erstanmeldung mit Einrichtungscode).
 app.use('/api', mitarbeiterZugangRouter);
+app.use('/api', dsgvoRouter);
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
@@ -679,7 +682,7 @@ app.post('/api/apify/search', requireAuthAI, async (req, res) => {
   // O-09 (onprem/REGISTER.md): eigene B2B-Lead-Akquise, nicht die Praxis des
   // Kunden — auf der Box nie erreichbar (gleiches Signal wie /api/config
   // istKutu). Frontend entfernt den Button ohnehin (module/lead-suche.js).
-  if (process.env.SUPABASE_PUBLIC_URL) return res.status(404).json({ error: 'Not found' });
+  if (istKutu()) return res.status(404).json({ error: 'Not found' });
   req.body.userId = req.auth.userId; // pin to authenticated user — no body spoofing
   const { query, limit, userId } = req.body;
   if (!query || !userId) return res.status(400).json({ error: 'Missing params' });

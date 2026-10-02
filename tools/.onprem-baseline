@@ -28,7 +28,7 @@ n8n_host=8
 app_host=15
 
 # Vercel serverless limiti. 12 = TAVAN, artış deploy'u patlatır.
-vercel_fn=12
+vercel_fn=11
 
 # Üçüncü-parti <script src>. Bugün yalnız Sentry loader. Faz 2.6 koşullu yapacak.
 ext_script=0

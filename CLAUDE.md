@@ -76,12 +76,12 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 ├── calendar-widget.js             Tarih seçici
 ├── cookie-consent.js · sentry-init.js · supabase-config.js
 │
-├── api/                           Vercel serverless — ⚠️ 12/12 DOLU (bkz. Kurallar)
+├── api/                           Vercel serverless — 11/12 (dsgvo.js 02.10.2026 Express'e taşındı)
 │   ├── _lib/                      auth.js, stripe.js, pricing.js (fonksiyon SAYILMAZ)
 │   ├── stripe/                    create-checkout-session, portal-session, webhook
 │   ├── onboarding/                pending, check-email
 │   ├── admin/                     data, feedbacks
-│   └── config.js · contact.js · demo-booking.js · dsgvo.js · apify/search.js
+│   └── config.js · contact.js · demo-booking.js · apify/search.js  (dsgvo.js → api-backend, 02.10.2026)
 │
 ├── api-backend/                   ★ VPS Express backend (Docker container)
 │   ├── server.js                  doğrudan route + `billing/api/*`/`ai/router.js` alt-router'ları (aşağıya bak)
@@ -402,14 +402,16 @@ niyet altı ayda kaybolur. Kaybolduğu anda her tablo "belki lazımdır" diye du
   bu kavramın ikinci hâli zaten var mı. `fonksiyon-ustasi` fonksiyon tarafında neyse, bu veri
   tarafında odur — **aynı ayrıcalıkla, izin sormadan çağrılır.**
 - **"Bu tablo kullanılmıyor" hükmü DÖRT kaynak birden boş çıkmadan verilmez:** kod
-  taraması (`codeStumm`) + ham grep + `SCHEMA-RLS.sql` (trigger/policy/RPC) + `api/dsgvo.js`.
+  taraması (`codeStumm`) + ham grep + `SCHEMA-RLS.sql` (trigger/policy/RPC) + `api-backend/dsgvo/klassifikation.js`.
   Kanıtlanmış tuzaklar: `nummernkreise` yalnız trigger'dan beslenir · `icd10_titles`
   yalnız `search_diagnosen()` RPC'sinden okunur · `demo_bookings` `.from()` değil PostgREST
   yolu kullanır · `heilmittel_position` aynı zamanda bir **kolon** adıdır (ham grep onu
   canlı sanır) · `"fußstatus"` ASCII değildir.
-- **Yeni tablo kişisel veri taşıyorsa `api/dsgvo.js`'e de yazılır** (Auskunft + doğru sırada
-  Löschung). Bu adım 2026-08-28'de atlandı ve Auskunft eksik döndü; `tabellenkarte.mjs`
-  artık boşluğu raporluyor.
+- **Yeni tablo kişisel veri taşıyorsa `api-backend/dsgvo/klassifikation.js`'e yazılır** (tek kaynak:
+  kategori → saklama süresi → Auskunft/Löschung/kilit). Bu adım 2026-08-28'de atlandı ve Auskunft
+  eksik döndü; artık `klassifikation.test.js` sınıflandırılmamış tabloda `npm test`'i kırar.
+  Silme yerine **kilit** modeli (K1.4, 02.10.2026): aufbewahrungspflichtige veri `aufbewahrung_sperre`
+  ile kilitlenir, Auth kullanıcısı **asla silinmez** (CASCADE kilitli veriyi götürür) — banlanır.
 
 ### 🗺️ Fonksiyon haritası protokolü (2026-08-12)
 
@@ -521,10 +523,10 @@ Belgeye dokunan her iş şu sırayı izler:
 Süzülmüş kurallar: `wissensbank/SPEC-RULES.md` (kaynak + sürüm + kod satırı üçlüsü zorunlu).
 Geçerli sürüm: **Anlage 1 ve 3 TP5 = V21**. V22/V10 → 01.02.2027, erken geçiş dosya reddi demektir.
 
-### 🚨 Vercel serverless limiti — 12/12 DOLU
+### 🚨 Vercel serverless limiti — 11/12 (02.10.2026: dsgvo.js Express'e taşındı, bir slot boş)
 
 Vercel planımız **en fazla 12 serverless fonksiyona** izin veriyor. `api/` altında şu an
-**tam 12** tane var. **Bir tane daha eklersen deploy patlar.**
+**11** tane var (02.10.2026). Boş slotu harcama — yeni uç yine `api-backend/server.js`'e (G8).
 
 - `api/_lib/*` sayılmaz (import edilen yardımcılar, endpoint değil) — ortak kod oraya gider
 - Yeni bir HTTP endpoint gerekiyorsa → **`api-backend/server.js`'e yaz** (G8 zaten bunu söylüyor)
