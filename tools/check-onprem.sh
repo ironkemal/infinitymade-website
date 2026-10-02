@@ -248,6 +248,24 @@ if [ -n "$compose_icerik_o72" ]; then
   done
 fi
 
+# --- O-129 kapısı (KHS K2.10): yeni migration "SaaS'a uygulandı mı" satırı ----
+#
+# 14.09'da konan disiplin ("dosyanın başında SaaS durumu") iki dosya sonra
+# sustu; 0030-0047 arasında 11 dosyada eksik/çelişkili (O-129/O-133). Yalnız
+# YENİ eklenen dosyalar (--diff-filter=A) — eskiler değiştirilemez (runner
+# SHA-256 tutar). Satır commit anında SON hâlinde olmalı: sonradan
+# düzeltmek dosyanın SHA'sını değiştirir ve onu uygulamış :beta kutusu açılmaz.
+# Bu yüzden "ausstehend" KABUL EDİLMEZ — önce canlıya uygula, sonra commit'le.
+saas_ihlal=""
+if [ "$SKIP_SAAS_ZEILE_GATE" != "1" ]; then
+  for yeni_mig in $(git diff --cached --name-only --diff-filter=A -- 'api-backend/db/migrations/*.sql'); do
+    if ! git show ":$yeni_mig" 2>/dev/null | head -40 \
+      | grep -qE '^-- SaaS: (angewandt|angewendet) [0-9]{2}\.[0-9]{2}\.[0-9]{4}|^-- SaaS: nicht angewandt \(box-only\): .+'; then
+      saas_ihlal="${saas_ihlal:+$saas_ihlal }$(basename "$yeni_mig")"
+    fi
+  done
+fi
+
 # --- O-149 kapısı (KHS K2.2): manifest SHA = staged paket dosyası -------------
 #
 # 01.10.2026 ölçümü: manifest.json'daki compose + update.sh hash'leri bayattı —
@@ -363,6 +381,18 @@ if [ -n "$o72_ihlal" ]; then
       güncellenmezse, dosya hiçbir kutuya asla ulaşmaz — Docker o yolda
       sessizce boş bir DİZİN yaratır (O-49'un webhooks.sql dersinin aynısı).
       Çıkış: 'node tools/onprem-manifest.mjs' çalıştırıp aynı commit'e ekle.
+"
+fi
+
+if [ -n "$saas_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ yeni migration'da SaaS durum satırı yok (O-129): $saas_ihlal
+      İlk 40 satırdan birinde şunlardan biri olmalı:
+        -- SaaS: angewandt TT.MM.JJJJ
+        -- SaaS: nicht angewandt (box-only): <gerekçe>
+      'ausstehend' yok: satır sonradan değişirse dosyanın SHA'sı değişir ve
+      onu uygulamış :beta kutusu açılmaz. Önce canlıya uygula, sonra commit.
+      Bilinçli istisna: SKIP_SAAS_ZEILE_GATE=1 git commit ...
 "
 fi
 

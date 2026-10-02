@@ -410,7 +410,14 @@ log "  ettiğiniz) bir NAS/SMB/NFS dizini."
 read -r -p "  Yedek hedefi (boş = kutu içi, aksi hâlde mount edilmiş bir dizin yolu, ör. /mnt/yedek): " backup_ziel
 if [ -n "$backup_ziel" ]; then
   if [ ! -d "$backup_ziel" ]; then
-    warn "Girilen yol bir dizin olarak bulunamadı: $backup_ziel — yine de kaydediliyor, ama 'bash backup.sh --sebep manuel' ilk yedekte hata verecektir. Mount'un kalıcı olduğundan (fstab/otomatik bağlama) emin ol."
+    warn "Girilen yol bir dizin olarak bulunamadı: $backup_ziel — yine de kaydediliyor, ama 'bash backup.sh --sebep manuel' ilk yedekte hata verecektir. Mount'un kalıcı olduğundan (fstab/otomatik bağlama) emin ol. Bağladıktan sonra bir kez: sudo touch '$backup_ziel/.praxura-backup-ziel'"
+  else
+    # O-154: Markierung "dieses Ziel ist eingebunden" — backup.sh schreibt nur
+    # dorthin, wo sie liegt. Ist die Platte spaeter nicht eingesteckt, fehlt
+    # sie (leerer Einhaengepunkt) und die Sicherung bricht laut ab, statt
+    # still auf die Box-Platte zu schreiben.
+    touch "$backup_ziel/.praxura-backup-ziel" 2>/dev/null \
+      || warn "Markierungsdatei konnte nicht geschrieben werden ($backup_ziel) — ist das Ziel beschreibbar?"
   fi
   set_env BACKUP_ZIEL "$backup_ziel"
   ok "Yedek hedefi: $backup_ziel (kutu dışı)"

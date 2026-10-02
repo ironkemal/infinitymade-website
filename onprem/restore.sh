@@ -478,6 +478,24 @@ else
   warn "Yedekte storage.tar.gz yok — storage (reçete görüntüleri vb.) DEĞİŞTİRİLMEDİ, mevcut hâliyle kalıyor."
 fi
 
+# ── 7b) Caddy-Wurzel-CA (O-153, KHS K2.10) ──────────────────────────────────
+# Gleiche CA wie vor dem Ausfall → Praxisrechner/Tablets, die sie schon als
+# vertrauenswuerdig importiert haben, sehen KEINE Zertifikatswarnung. Ohne
+# diesen Schritt haette eine neu aufgesetzte Box eine neue CA erzeugt.
+CADDY_PKI_NEU=0
+if [ -f "$YEDEK_DIR/caddy-pki.tar.gz" ]; then
+  TMP_PKI="$(mktemp -d)"
+  if tar -xzf "$YEDEK_DIR/caddy-pki.tar.gz" -C "$TMP_PKI" 2>>"$LOG_FILE"      && docker compose cp "$TMP_PKI/caddy-pki/." caddy:/data/caddy/pki >>"$LOG_FILE" 2>&1; then
+    ok "Caddy-Wurzel-CA wiederhergestellt"
+    CADDY_PKI_NEU=1
+  else
+    warn "Caddy-Wurzel-CA konnte nicht zurückgespielt werden (caddy aus?) — Geräte sehen ggf. eine Zertifikatswarnung, bis die neue CA importiert ist."
+  fi
+  rm -rf "$TMP_PKI"
+else
+  log "  (Yedekte caddy-pki.tar.gz yok — 0.2.0 öncesi yedek ya da Let's-Encrypt kutusu; CA dokunulmadı.)"
+fi
+
 # ── 8) Servisleri geri aç — migration self-healing burada normal şekilde çalışır ─
 log "Servisler yeniden başlatılıyor..."
 docker compose up -d api auth rest realtime storage >>"$LOG_FILE" 2>&1
@@ -493,6 +511,29 @@ else
 fi
 SATIR_SAYISI="$(docker compose exec -T db psql -U postgres -d "$DB_NAME" -tAc "SELECT count(*) FROM praxura_migrations;" 2>>"$LOG_FILE" | tr -d '[:space:]')"
 ok "praxura_migrations: ${SATIR_SAYISI:-?} satır"
+if [ "$CADDY_PKI_NEU" -eq 1 ]; then
+  docker compose restart caddy >>"$LOG_FILE" 2>&1 && ok "caddy mit wiederhergestellter CA neu gestartet"     || warn "caddy-Neustart fehlgeschlagen — 'docker compose restart caddy' von Hand."
+fi
+
+# ── 9) §302-Referenzzähler (O-123, KHS K2.10) ───────────────────────────────
+# Die Datenaustauschreferenz MUSS je Absender→Empfänger streng steigen — die
+# Annahmestelle weist eine schon benutzte Nummer ab. Ein Backup von gestern
+# kennt die Dateien von heute nicht: der Zähler steht nach dem Restore ggf.
+# HINTER dem zuletzt wirklich gesendeten Stand. Hier sichtbar machen (die
+# Box kann nicht wissen, was zuletzt gesendet wurde — das weiss die Praxis).
+ZAEHLER="$(docker compose exec -T db psql -U supabase_admin -d "$DB_NAME" -tA -F ' · ' -c "SELECT owner_id, absender_ik, empfaenger_ik, letzte_referenz, letzte_transfernummer, to_char(aktualisiert_am,'DD.MM.YYYY HH24:MI') FROM datenaustausch_zaehler ORDER BY aktualisiert_am DESC;" 2>>"$LOG_FILE" || true)"
+if [ -n "$ZAEHLER" ]; then
+  log ""
+  log "  §302-Referenzzähler nach dem Restore (Owner · Absender-IK · Empfänger-IK · letzte Referenz · letzte Transfernummer · Stand):"
+  printf '%s\n' "$ZAEHLER" | while IFS= read -r z; do log "    $z"; done
+  log "  ⚠️  Wurden NACH dem Zeitpunkt dieses Backups (${M_TAKEN_AT:-?}) noch Abrechnungsdateien"
+  log "      verschickt, steht der Zähler zu niedrig. Höchste tatsächlich gesendete Nummer aus"
+  log "      dem Versandprotokoll/der Annahmestelle nehmen und vorstellen:"
+  log "        docker compose exec -T db psql -U supabase_admin -d $DB_NAME -c \\"
+  log "          \"SELECT datenaustausch_zaehler_vorstellen('<owner-uuid>','<absender-ik>','<empfaenger-ik>', <referenz>, <transfernummer>);\""
+else
+  log "  §302-Referenzzähler: noch keine Einträge (keine Abrechnung versendet) — nichts zu prüfen."
+fi
 
 log ""
 log "Not: '_supabase' veritabanı (analytics/realtime tenant metriği) bu yedeğin"

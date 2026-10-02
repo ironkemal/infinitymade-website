@@ -101,6 +101,15 @@ else
   warn "BACKUP_ZIEL boş — yedek KUTU İÇİNDE kalıyor, disk arızasında veritabanıyla BİRLİKTE kaybolur (RELEASE-STANDARD.md §6.6). .env'de BACKUP_ZIEL'i mount edilmiş bir dizine ayarla, sonra kutuyu yeniden başlat."
 fi
 
+# O-154 (KHS K2.10, 02.10.2026): ein externes Ziel (USB-Platte, NAS) wird NIE
+# selbst angelegt. Vorher machte 'mkdir -p' aus einem nicht eingesteckten
+# Laufwerk still einen leeren Ordner auf DERSELBEN Platte wie die Datenbank —
+# die Sicherung "lief", schuetzte aber vor nichts. install.sh (Schritt 12)
+# legt die Markierungsdatei an; fehlt sie, ist das Ziel nicht eingebunden.
+if [ "$ZIEL_DISI" = true ] && [ ! -f "$HEDEF_DIR/.praxura-backup-ziel" ]; then
+  fehler "Yedek hedefi bağlı değil" "$HEDEF_DIR/.praxura-backup-ziel yok" "bağlı (mount edilmiş) hedef + işaret dosyası"     "Harici disk/NAS takılı ve bağlı mı? Bağlıysa ve hedef yeni ise bir kez: sudo touch '$HEDEF_DIR/.praxura-backup-ziel' — yedek BİLEREK kutunun kendi diskine yazılmadı."
+  exit 1
+fi
 if ! mkdir -p "$HEDEF_DIR" 2>>"$LOG_FILE"; then
   fehler "Yedek hedefi oluşturulamadı/erişilemedi" "$HEDEF_DIR" "yazılabilir bir dizin" \
     "BACKUP_ZIEL doğru mu, mount edilmiş mi (NAS/SMB/NFS ise bağlı olduğundan emin ol) kontrol et."
@@ -151,6 +160,20 @@ fi
 sema_versiyonu_oku() {
   docker compose exec -T db psql -U postgres -d "$DB_NAME" -tAc "SELECT COALESCE(MAX(version), 'none') FROM praxura_migrations;" 2>>"$LOG_FILE" | tr -d '[:space:]' || true
 }
+
+# ── 1b) Caddy-Zertifizierungsstelle (O-153, KHS K2.10) ─────────────────────
+# Bei TLS "internal" stellt Caddy eine eigene Wurzel-CA aus, die JEDER
+# Praxisrechner/jedes Tablet einmalig als vertrauenswuerdig importiert hat.
+# Liegt sie nur im Docker-Volume, entsteht nach einem Neuaufsetzen eine NEUE
+# CA — und auf allen Geraeten erscheint wieder die Zertifikatswarnung. Nur
+# pki/ (nicht das ganze /data): Volume-Name haengt am Compose-Projektnamen.
+if docker compose cp caddy:/data/caddy/pki "$TMP_DIR/caddy-pki" >>"$LOG_FILE" 2>&1; then
+  tar -czf "$TMP_DIR/caddy-pki.tar.gz" -C "$TMP_DIR" caddy-pki 2>>"$LOG_FILE" && rm -rf "$TMP_DIR/caddy-pki"
+  ok "Caddy-Wurzel-CA gesichert"
+else
+  rm -rf "$TMP_DIR/caddy-pki"
+  warn "Caddy-PKI konnte nicht kopiert werden (Let's-Encrypt-Box oder caddy aus) — übersprungen."
+fi
 
 # ── 2) Veritabanı dump'ı ────────────────────────────────────────────────────
 # ⚠️ onprem-Gegenlesen (13.09.2026, O-26 bildirim turu): `server.js`'in her
