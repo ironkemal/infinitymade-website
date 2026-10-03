@@ -49,16 +49,16 @@ class Feld extends EventTarget {
 const warte = () => new Promise(r => setTimeout(r, 0));
 
 /** Frische Maske je Test; `d.dg` usw. sind die Felder. */
-async function maske({ dg = '', bereich = 'podo' } = {}) {
+async function maske({ dg = '', bereich = 'podo', tFn = t } = {}) {
   const f = { rzIcd: new Feld('rzIcd'), rzIcd2: new Feld('rzIcd2'), rzDg: new Feld('rzDg'), rzIcdDgWarning: new Feld('rzIcdDgWarning'),
               rzTherapieBereich: new Feld('rzTherapieBereich') };
   f.rzDg.value = dg;
   f.rzTherapieBereich.value = bereich;
-  globalThis.document = { getElementById: id => f[id] || null };
+  globalThis.document = { getElementById: id => f[id] || null, documentElement: globalThis.document?.documentElement || { lang: 'de' } };
   // wie dashboard.js `_verdrahteIcdPaar`: Bereich der Maske, sonst der des Mandanten
   const mandant = 'praxis';
   verdrahteIcdDg({ icdId: 'rzIcd', icd2Id: 'rzIcd2', dgId: 'rzDg', warnId: 'rzIcdDgWarning',
-                   bereich: () => f.rzTherapieBereich.value || mandant, supabase, t });
+                   bereich: () => f.rzTherapieBereich.value || mandant, supabase, t: tFn });
   const tippe = async (feld, v) => { f[feld].value = v; f[feld].dispatchEvent(new Event('input')); await warte(); };
   const verlasse = async (feld) => { f[feld].dispatchEvent(new Event('change')); await warteLange(); };
   const eingabe = async (feld, v) => { await tippe(feld, v); await verlasse(feld); };
@@ -105,7 +105,7 @@ test('a) leere DG, E11.74 → DF als Vorschlag', async () => {
   await m.eingabe('rzIcd', 'E11.74');
   assert.equal(m.f.rzDg.value, 'DF');
   assert.equal(m.f.rzDg.dataset.dgAuto, 'DF');
-  assert.equal(m.hinweis(), '');
+  assert.equal(m.hinweis(), 'aus ICD — mit Verordnung abgleichen');
 });
 
 test('b) geladene NF bleibt, Warnung nennt die passende Gruppe', async () => {
@@ -159,7 +159,7 @@ test('d) E11.74, L60.0 in einem Feld → aufgeteilt, keine DG, Kandidaten', asyn
   assert.equal(m.f.rzIcd.value, 'E11.74');
   assert.equal(m.f.rzIcd2.value, 'L60.0');
   assert.equal(m.f.rzDg.value, '');
-  assert.equal(m.hinweis(), '2. Code nach ICD 2 übernommen · Passende Diagnosegruppen: DF, UI1, UI2');
+  assert.equal(m.hinweis(), '2. Code nach ICD 2 übernommen · Keine eindeutige DG ableitbar — mit Verordnung abgleichen · Passende Diagnosegruppen: DF, UI1, UI2');
 });
 
 test('d2) E11.74 → DF, dann L60.0 im zweiten Feld → DF zurückgenommen', async () => {
@@ -169,7 +169,7 @@ test('d2) E11.74 → DF, dann L60.0 im zweiten Feld → DF zurückgenommen', asy
   await m.eingabe('rzIcd2', 'L60.0');
   assert.equal(m.f.rzDg.value, '');
   assert.equal(m.f.rzDg.dataset.dgAuto, undefined);
-  assert.equal(m.hinweis(), 'Passende Diagnosegruppen: DF, UI1, UI2');
+  assert.equal(m.hinweis(), 'Keine eindeutige DG ableitbar — mit Verordnung abgleichen · Passende Diagnosegruppen: DF, UI1, UI2');
 });
 
 test('d2) E11.74 → DF, dann „, L60.0" ergänzt → DF zurückgenommen', async () => {
@@ -198,13 +198,14 @@ test('f) E11.72 → kein DF (nur „unsicher")', async () => {
   const m = await maske();
   await m.eingabe('rzIcd', 'E11.72');
   assert.equal(m.f.rzDg.value, '');
+  assert.equal(m.hinweis(), 'Keine eindeutige DG ableitbar — mit Verordnung abgleichen');
 });
 
 test('L60.0 allein → keine DG, Kandidaten UI1, UI2', async () => {
   const m = await maske();
   await m.eingabe('rzIcd', 'L60.0');
   assert.equal(m.f.rzDg.value, '');
-  assert.equal(m.hinweis(), 'Passende Diagnosegruppen: UI1, UI2');
+  assert.equal(m.hinweis(), 'Keine eindeutige DG ableitbar — mit Verordnung abgleichen · Passende Diagnosegruppen: UI1, UI2');
 });
 
 test('Klick ins DG-Feld (input ohne change) schaltet die Automatik nicht ab', async () => {
@@ -305,4 +306,85 @@ test('DG-Wechsel bei gefülltem Feld: kein Ping-Pong, keine Rueckschreibung in I
   assert.equal(m.f.rzDg.value, 'NF');                       // eigener Vorschlag DF ersetzt die Handwahl nicht
   assert.equal(m.f.rzIcd.value, 'E11.74');
   assert.equal(m.f.rzDg.dataset.dgAuto, undefined);
+});
+
+test('PE005: Manuelle Bestätigung desselben DG-Wertes entfernt Provenienz und Label', async () => {
+  const m = await maske();
+  await m.eingabe('rzIcd', 'E11.74');
+  assert.equal(m.f.rzDg.value, 'DF');
+  assert.equal(m.hinweis(), 'aus ICD — mit Verordnung abgleichen');
+  m.f.rzDg.dispatchEvent(new Event('change'));
+  await warteLange();
+  assert.equal(m.f.rzDg.value, 'DF');
+  assert.equal(m.f.rzDg.dataset.dgAuto, undefined);
+  assert.equal(m.hinweis(), '');
+});
+
+test('PE005: Geladene passende DG erhält niemals das Vorschlagslabel', async () => {
+  const m = await maske({ dg: 'DF' });
+  await m.eingabe('rzIcd', 'E11.74');
+  assert.equal(m.f.rzDg.value, 'DF');
+  assert.equal(m.f.rzDg.dataset.dgAuto, undefined);
+  assert.equal(m.hinweis(), '');
+});
+
+test('PE005: Klick (input ohne change) erhält das Vorschlagslabel', async () => {
+  const m = await maske();
+  await m.eingabe('rzIcd', 'E11.74');
+  assert.equal(m.hinweis(), 'aus ICD — mit Verordnung abgleichen');
+  m.f.rzDg.dispatchEvent(new Event('input'));
+  await warte();
+  assert.equal(m.hinweis(), 'aus ICD — mit Verordnung abgleichen');
+});
+
+test('PE005: ICD geleert räumt Label und Vorschlag ab, Handeingabe bleibt', async () => {
+  const m = await maske();
+  await m.eingabe('rzIcd', 'E11.74');
+  assert.equal(m.f.rzDg.value, 'DF');
+  assert.equal(m.hinweis(), 'aus ICD — mit Verordnung abgleichen');
+  await m.eingabe('rzIcd', '');
+  assert.equal(m.f.rzDg.value, '');
+  assert.equal(m.hinweis(), '');
+
+  const m2 = await maske({ dg: 'NF' });
+  await m2.eingabe('rzIcd', 'E11.74');
+  await m2.eingabe('rzIcd', '');
+  assert.equal(m2.f.rzDg.value, 'NF');
+  assert.equal(m2.hinweis(), '');
+});
+
+test('PE005: Bereichswechsel zieht Vorschlag zurück ohne verwaistes Label', async () => {
+  const m = await maske({ bereich: 'podo' });
+  await m.eingabe('rzIcd', 'E11.74');
+  assert.equal(m.f.rzDg.value, 'DF');
+  assert.equal(m.hinweis(), 'aus ICD — mit Verordnung abgleichen');
+  m.f.rzTherapieBereich.value = 'physio';
+  await m.verlasse('rzIcd');
+  assert.equal(m.f.rzDg.value, '');
+  assert.equal(m.hinweis(), '');
+});
+
+test('PE005: L4-Unsicherheit bei Z99.9 (unbekannt) ohne ungültige ICD-Behauptung', async () => {
+  const m = await maske();
+  await m.eingabe('rzIcd', 'Z99.9');
+  assert.equal(m.f.rzDg.value, '');
+  assert.equal(m.hinweis(), 'Keine eindeutige DG ableitbar — mit Verordnung abgleichen');
+});
+
+test('PE005: Locale Fallback en bei keyecho t und doc lang en', async () => {
+  globalThis.document.documentElement = { lang: 'en' };
+  const m = await maske({ tFn: k => k });
+  await m.eingabe('rzIcd', 'E11.74');
+  assert.equal(m.f.rzDg.value, 'DF');
+  assert.equal(m.hinweis(), 'from ICD — compare with prescription');
+  globalThis.document.documentElement = { lang: 'de' };
+});
+
+test('PE005: Locale Fallback tr bei keyecho t und doc lang tr', async () => {
+  globalThis.document.documentElement = { lang: 'tr' };
+  const m = await maske({ tFn: k => k });
+  await m.eingabe('rzIcd', 'Z99.9');
+  assert.equal(m.f.rzDg.value, '');
+  assert.equal(m.hinweis(), 'Tek bir tanı grubu çıkarılamıyor — reçeteyle karşılaştırın');
+  globalThis.document.documentElement = { lang: 'de' };
 });

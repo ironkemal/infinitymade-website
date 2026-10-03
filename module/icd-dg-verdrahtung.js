@@ -93,6 +93,21 @@ export function icdMehrAlsEinKodeJeFeld(roh1, roh2) {
  * @param {object} o.supabase
  * @param {(k:string)=>string} o.t - i18n aus dashboard.js
  */
+const I18N = {
+  de: {
+    pod_dg_aus_icd: 'aus ICD — mit Verordnung abgleichen',
+    pod_dg_unklar: 'Keine eindeutige DG ableitbar — mit Verordnung abgleichen',
+  },
+  en: {
+    pod_dg_aus_icd: 'from ICD — compare with prescription',
+    pod_dg_unklar: 'No unique diagnosis group derivable — compare with prescription',
+  },
+  tr: {
+    pod_dg_aus_icd: 'ICD’den öneri — reçeteyle karşılaştırın',
+    pod_dg_unklar: 'Tek bir tanı grubu çıkarılamıyor — reçeteyle karşılaştırın',
+  },
+};
+
 export function verdrahteIcdDg({ icdId, icd2Id = null, dgId, warnId = null, bereich, supabase, t }) {
   const icdEl  = document.getElementById(icdId);
   const icd2El = icd2Id ? document.getElementById(icd2Id) : null;
@@ -100,8 +115,17 @@ export function verdrahteIcdDg({ icdId, icd2Id = null, dgId, warnId = null, bere
   if (!icdEl || icdEl.dataset.dgIcdWired) return;
   icdEl.dataset.dgIcdWired = '1';
 
+  function tr(k) {
+    const s = typeof t === 'function' ? t(k) : '';
+    if (s && s !== k) return s;
+    const lang = (typeof document !== 'undefined' && document.documentElement?.lang?.slice(0, 2)?.toLowerCase()) || 'de';
+    const dict = I18N[lang] || I18N.de;
+    return dict[k] || I18N.de[k] || k;
+  }
+
   // Meldung zum Aufteilen — lebt bis zur naechsten Aenderung am ICD.
   let feldHinweis = '';
+  let icdChangeSeq = 0;
 
   const bereichJetzt = () => (typeof bereich === 'function' ? bereich() : bereich);
   async function regelnLaden() {
@@ -158,6 +182,7 @@ export function verdrahteIcdDg({ icdId, icd2Id = null, dgId, warnId = null, bere
   }
 
   async function onIcdChange(commit) {
+    const seq     = ++icdChangeSeq;
     const codes   = alleKodes();
     const warnEl  = warnId ? document.getElementById(warnId) : null;
 
@@ -173,6 +198,7 @@ export function verdrahteIcdDg({ icdId, icd2Id = null, dgId, warnId = null, bere
     // icd_accept-Regeln heute leer (bewusst, s. module/diagnosegruppen-regeln.js)
     // — macht den Ablauf dort automatisch wirkungslos, kein gesondertes Gate nötig.
     const rules = await regelnLaden();
+    if (seq !== icdChangeSeq) return;
     if (!Object.keys(rules).length) {
       // Bereich ohne ICD-Regeln (z. B. von Podologie auf Physio umgekreuzt):
       // der eigene Vorschlag hat keine Grundlage mehr.
@@ -204,16 +230,21 @@ export function verdrahteIcdDg({ icdId, icd2Id = null, dgId, warnId = null, bere
 
     // Warnhinweis
     if (!warnEl || !dgEl) return;
+    const autoLabel = (dgEl.value && dgEl.value === dgEl.dataset.dgAuto)
+      ? tr('pod_dg_aus_icd')
+      : '';
     const dgRoot = normDgCode(dgEl.value);
     if (!dgRoot) {
       // Noch keine Gruppe gewaehlt: die passenden benennen statt schweigen.
-      zeige(warnEl, v.kandidaten.length > 1 ? `${t('pod_dg_kandidaten')} ${v.kandidaten.join(', ')}` : '');
+      const unklar = tr('pod_dg_unklar');
+      const kand = v.kandidaten.length ? `${t('pod_dg_kandidaten')} ${v.kandidaten.join(', ')}` : '';
+      zeige(warnEl, [unklar, kand].filter(Boolean).join(' · '));
       return;
     }
     const rule = rules[dgRoot];
-    if (!rule || !rule.icd_accept || !rule.icd_accept.length) { zeige(warnEl, ''); return; }
+    if (!rule || !rule.icd_accept || !rule.icd_accept.length) { zeige(warnEl, autoLabel); return; }
     const result = matchIcdToDg(codes, rule);
-    if (result.status !== 'mismatch') { zeige(warnEl, ''); return; }
+    if (result.status !== 'mismatch') { zeige(warnEl, autoLabel); return; }
 
     const verbleibend = codes.filter(c => !result.excluded.includes(c));
     const nichtEndstaendig = [];
@@ -249,7 +280,7 @@ export function verdrahteIcdDg({ icdId, icd2Id = null, dgId, warnId = null, bere
       teile.push(mismatchMsg);
     }
 
-    zeige(warnEl, teile.join(' · '), isHard);
+    zeige(warnEl, [autoLabel, teile.join(' · ')].filter(Boolean).join(' · '), isHard);
   }
 
   // Übernimmt der Anwender einen Wert (Katalogauswahl oder Feld verlassen, beides
