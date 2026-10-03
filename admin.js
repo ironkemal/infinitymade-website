@@ -1,6 +1,6 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { NAV_REGISTRY } from './nav-registry.js?v=20261001i';
+import { NAV_REGISTRY } from './nav-registry.js?v=20261003m16';
 
 // Isolated storage key — admin session lives ONLY on admin.infinitymade.de,
 // never shared with tenant app. Must match admin-login.js.

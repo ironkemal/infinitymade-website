@@ -102,15 +102,16 @@ test('REGISTRY_VERSION ist weg und kommt nicht zurueck', () => {
   assert.equal(registry.REGISTRY_VERSION, undefined);
 });
 
-test('Podologie-Menue (Konsey 30.09.2026): Fahrtenbuch da, Demo-Modus versteckt, nichts geloescht', () => {
+test('Podologie-Menue: Fahrtenbuch da, Demo-Modus verfuegbar fuer owner/employee (Demo K16), nichts geloescht', () => {
   const podo = NAV_REGISTRY.podologie;
   const fahrten = podo.find(e => e.id === 'fahrtenbuch');
   assert.ok(fahrten, 'Fahrtenbuch fehlt im Podologie-Menue');
   assert.deepEqual(fahrten.roles, ['owner', 'employee']);
-  // Demo-Modus: nicht geloescht (module_visibility-Zeilen), nur ohne Rollen-Vorgabe.
-  assert.deepEqual(eintrag('podologie', 'beispielmodus').roles, []);
-  // Die anderen Fachbereiche behalten ihn.
+  // Demo K16: Alle Fachbereiche duerfen Demo-Modus nutzen (default roles owner/employee).
+  assert.deepEqual(eintrag('podologie', 'beispielmodus').roles, ['owner', 'employee']);
+  // Die anderen Fachbereiche behalten ihn ebenfalls.
   assert.deepEqual(eintrag('physiotherapy', 'beispielmodus').roles, ['owner', 'employee']);
+  assert.deepEqual(eintrag('praxis', 'beispielmodus').roles, ['owner', 'employee']);
   // Jedes Modul, das es vor der Umstellung gab, gibt es noch (ids sind der module_visibility-Schluessel).
   const VOR_UMSTELLUNG = ['overview', 'ueberblick', 'calendar', 'anfragen', 'warteliste', 'kunden', 'anamnese', 'notizen',
     'services', 'hours', 'team', 'verordnungen', 'podologie-billing', 'abrechnung', 'rechnungen', 'fussstatus', 'belegliste',
@@ -128,3 +129,17 @@ test('Podologie-Menue: Verteilung nach Arbeitsablauf', () => {
   for (const id of ['vorlagen', 'settings', 'feedback']) assert.equal(gruppe(id), 'einstellungen', id);
 });
 
+test('Demo-Modus: Rollen konsistent ueber alle Sektoren und Aliase hinweg', () => {
+  for (const sector of ['default', 'physiotherapy', 'podologie', 'praxis']) {
+    const item = eintrag(sector, 'beispielmodus');
+    if (item) {
+      assert.deepEqual(item.roles, ['owner', 'employee'], `${sector}: beispielmodus roles`);
+    }
+  }
+  // Aliases erben ebenfalls physiotherapy mit beispielmodus
+  for (const alias of ['logopaedie', 'ergotherapie']) {
+    const targetSector = resolveSector(alias);
+    const item = eintrag(targetSector, 'beispielmodus');
+    assert.deepEqual(item.roles, ['owner', 'employee'], `${alias} -> ${targetSector}: beispielmodus roles`);
+  }
+});

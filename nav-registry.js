@@ -114,7 +114,7 @@ export const NAV_REGISTRY = {
     { id: 'statistik',         key: 'nav_statistik',         label: 'Auswertungen',         roles: ['owner'],             group: 'abrechnung' },
     { id: 'b2b',               key: 'nav_b2b',               label: 'Zuweiser',             roles: ['owner', 'employee'], group: 'team' },
     { id: 'b2c',               key: 'nav_b2c',               label: 'Patientenpost',        roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'beispielmodus',     key: 'nav_beispielmodus',     label: 'Demo-Modus',           roles: [], group: 'einstellungen' },
+    { id: 'beispielmodus',     key: 'nav_beispielmodus',     label: 'Demo-Modus',           roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'feedback',          key: 'nav_feedback',          label: 'Feedback & Support',      roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'vorlagen',          key: 'nav_vorlagen',          label: 'Vorlagen',             roles: ['owner'],             group: 'einstellungen' },
     { id: 'settings',          key: 'nav_settings',          label: 'Einstellungen',        roles: ['owner', 'employee'], group: 'einstellungen' }

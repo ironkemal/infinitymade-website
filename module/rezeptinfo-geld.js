@@ -279,7 +279,7 @@ const TON_FARBE = {
 export function rendereGeldzeile(el, { rx, stand, lead, aufEuro }) {
   if (!el) return;
   const zz = euroZustand(rx, stand, lead);
-  const st = verordnungStatusInfo('physio', rx?.abrechnung_status || rx?.status);
+  const st = verordnungStatusInfo('physio', rx?.status);
   const aktiv = zz.aktion !== 'keine';
 
   // Beim Privatpatienten sind Summe und Forderung dieselbe Zahl — sie zweimal

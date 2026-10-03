@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   findePosition, ermittleGeldstand, euroZustand, zahlerTyp, preisAusLeistung,
+  rendereGeldzeile,
 } from './rezeptinfo-geld.js';
 
 const KATALOG = [
@@ -169,4 +170,74 @@ test('ohne eigene Preise bleibt der Privat-Knopf ohne Handlung', () => {
 
 test('gar keine Verordnung ergibt keine Handlung statt eines Absturzes', () => {
   assert.equal(euroZustand(null, null).aktion, 'keine');
+});
+
+// ── Renderer: Klinische Statusachse vs. Abrechnungsachse ────────────────────
+
+function erstelleMockElement() {
+  return {
+    innerHTML: '',
+    querySelector(selector) {
+      if (selector === '#bkRxEuroBtn') {
+        return { disabled: false, onclick: null };
+      }
+      return null;
+    },
+  };
+}
+
+test('rendereGeldzeile: status billed mit abrechnung_status gesendet zeigt Abgerechnet', () => {
+  const el = erstelleMockElement();
+  const rx = { status: 'billed', abrechnung_status: 'gesendet', anzahl_einheiten: 6 };
+  const stand = ermittleGeldstand({ rx, erbracht: 6, zahler: 'gkv', position: POS });
+
+  rendereGeldzeile(el, { rx, stand });
+
+  assert.ok(el.innerHTML.includes('Abgerechnet'), 'klinischer Status "Abgerechnet" wird angezeigt');
+  assert.ok(!el.innerHTML.includes('gesendet'), 'Abrechnungsstatus darf nicht in den klinischen Badge rutschen');
+  assert.ok(!el.innerHTML.includes('In Behandlung'), 'darf nie als in_therapy/unbekannt interpretiert werden');
+  assert.ok(el.innerHTML.includes('#7c3aed'), 'Farbe von Abgerechnet (#7c3aed)');
+  // Abrechnungs-/Geldberechnung bleibt unberührt
+  assert.equal(stand.gesamt, 28);
+  assert.equal(stand.brutto, 180);
+});
+
+test('rendereGeldzeile: status billed mit abrechnung_status in_abrechnung zeigt Abgerechnet', () => {
+  const el = erstelleMockElement();
+  const rx = { status: 'billed', abrechnung_status: 'in_abrechnung', anzahl_einheiten: 6 };
+  const stand = ermittleGeldstand({ rx, erbracht: 6, zahler: 'gkv', position: POS });
+
+  rendereGeldzeile(el, { rx, stand });
+
+  assert.ok(el.innerHTML.includes('Abgerechnet'), 'klinischer Status "Abgerechnet" wird angezeigt');
+  assert.ok(!el.innerHTML.includes('in_abrechnung'), 'abrechnung_status wird nicht im Badge angezeigt');
+  assert.ok(!el.innerHTML.includes('In Behandlung'));
+  assert.equal(stand.gesamt, 28);
+});
+
+test('rendereGeldzeile: echtes klinisches rejected bleibt Abgelehnt', () => {
+  const el = erstelleMockElement();
+  const rx = { status: 'rejected', abrechnung_status: 'gesendet', anzahl_einheiten: 6 };
+  const stand = ermittleGeldstand({ rx, erbracht: 6, zahler: 'gkv', position: POS });
+
+  rendereGeldzeile(el, { rx, stand });
+
+  assert.ok(el.innerHTML.includes('Abgelehnt'), 'klinischer Status "Abgelehnt" bleibt erhalten');
+  assert.ok(!el.innerHTML.includes('Abgerechnet'));
+  assert.ok(!el.innerHTML.includes('gesendet'));
+  assert.ok(el.innerHTML.includes('#a21caf'), 'Farbe von Abgelehnt (#a21caf)');
+  assert.equal(stand.gesamt, 28);
+});
+
+test('rendereGeldzeile: fehlender klinischer Status wird nicht aus Abrechnung erraten', () => {
+  const el = erstelleMockElement();
+  const rx = { abrechnung_status: 'in_abrechnung', anzahl_einheiten: 6 };
+  const stand = ermittleGeldstand({ rx, erbracht: 6, zahler: 'gkv', position: POS });
+
+  rendereGeldzeile(el, { rx, stand });
+
+  // Da rx.status fehlt (undefined), darf kein Status-Badge mit "in_abrechnung" geraten werden
+  assert.ok(!el.innerHTML.includes('in_abrechnung'), 'Abrechnungsstatus wird nicht als klinischer Status angezeigt');
+  assert.ok(!el.innerHTML.includes('>Status<'), 'Status-Feld bleibt leer bzw. wird nicht gerendert');
+  assert.equal(stand.gesamt, 28);
 });

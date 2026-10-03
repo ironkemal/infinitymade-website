@@ -89,7 +89,7 @@
  * sonst Vorbefund übernehmen) macht weiterhin nur `terminGewaehlt()`.
  */
 
-import { resolveSector } from '../nav-registry.js?v=20261001i';
+import { resolveSector } from '../nav-registry.js?v=20261003m16';
 import { ladeAktuelle } from './anamnese-daten.js?v=20261001r';
 import { risikoKopie, risikoZeilen, befundRisikoHinweis } from './anamnese-formulare.js?v=20261001r';
 import { WAGNER_OPTIONEN, WAGNER_TEXT, wagnerWert } from './podo-wagner.js?v=20261001z';
