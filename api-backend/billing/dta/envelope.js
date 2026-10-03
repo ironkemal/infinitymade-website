@@ -2,6 +2,15 @@
 // Charset UNOC:3 (Latin-1), mandatory for §302.
 
 import { buildSegment } from './encoding.js';
+import { berlinHeute, istStichtag } from '../../lib/berlin-tag.js';
+
+const BERLIN_TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Europe/Berlin',
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+});
 
 // UNB — interchange header.
 //   S001 = ['UNOC', '3']
@@ -21,18 +30,36 @@ export function buildUNB({
   anwendungsreferenz,
   testIndikator = '2',
 }) {
-  const dt = erstellungsdatum instanceof Date ? erstellungsdatum : new Date(erstellungsdatum);
-  const yyyy = String(dt.getUTCFullYear());
-  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(dt.getUTCDate()).padStart(2, '0');
-  const hh = String(dt.getUTCHours()).padStart(2, '0');
-  const mi = String(dt.getUTCMinutes()).padStart(2, '0');
+  let datumStr;
+  let zeitStr;
+
+  if (!erstellungsdatum) {
+    throw new Error(`invalid erstellungsdatum: "${erstellungsdatum}"`);
+  }
+
+  if (typeof erstellungsdatum === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(erstellungsdatum)) {
+    if (!istStichtag(erstellungsdatum)) {
+      throw new Error(`invalid erstellungsdatum: "${erstellungsdatum}"`);
+    }
+    datumStr = erstellungsdatum.replace(/-/g, '');
+    zeitStr = '0000';
+  } else {
+    const dt = erstellungsdatum instanceof Date ? erstellungsdatum : new Date(erstellungsdatum);
+    if (Number.isNaN(dt.getTime())) {
+      throw new Error(`invalid erstellungsdatum: "${erstellungsdatum}"`);
+    }
+    datumStr = berlinHeute(dt).replace(/-/g, '');
+    const parts = Object.fromEntries(
+      BERLIN_TIME_FORMAT.formatToParts(dt).map(p => [p.type, p.value])
+    );
+    zeitStr = `${parts.hour}${parts.minute}`;
+  }
 
   return buildSegment('UNB', [
     ['UNOC', '3'],
     absenderIk,
     empfaengerIk,
-    [`${yyyy}${mm}${dd}`, `${hh}${mi}`],
+    [datumStr, zeitStr],
     String(datennummer).padStart(5, '0'),
     leistungsbereich,
     anwendungsreferenz || '',

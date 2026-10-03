@@ -21,6 +21,8 @@
 // Teil dieser Datei — VERSCHLÜSSELUNGSART/ELEKTRONISCHE_UNTERSCHRIFT stehen
 // deshalb fest auf "00"/"00" (keine).
 
+import { berlinHeute, istStichtag } from '../../lib/berlin-tag.js';
+
 const ISO_8859_1_KENNUNG = 'I1';
 
 // --- Feld-Helfer ------------------------------------------------------------
@@ -50,23 +52,38 @@ function an(value, len) {
 
 const leer = (len) => ' '.repeat(len);
 
-// DATUM_ERSTELLUNG braucht "JJJJMMTThhmmss" (14-stellig) — dieselbe UTC-
-// Konvention wie `encoding.js#fmtDate`, nur mit Uhrzeit. Bewusst NICHT in
-// encoding.js verschoben: dort wird nur YYYYMMDD gebraucht, ein zusätzlicher
-// Export dort hätte keinen zweiten Aufrufer und würde die bestehenden Tests
-// dieser Datei unnötig berühren.
+const BERLIN_TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Europe/Berlin',
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+});
+
+// DATUM_ERSTELLUNG braucht "JJJJMMTThhmmss" (14-stellig) in Berliner Zeit
+// (DST-sicher, hourCycle h23). Echte Kalendertage (YYYY-MM-DD) behalten ihren
+// Tag und werden auf Berliner Mitternacht (00:00:00) gesetzt, statt durch UTC-
+// Konvertierung auf 01:00/02:00 zu springen. Nicht existente Kalendertage
+// werden abgewiesen.
 function fmtDateTime14(d) {
+  if (!d) {
+    throw new Error(`invalid erstellungsdatum: "${d}"`);
+  }
+  if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    if (!istStichtag(d)) {
+      throw new Error(`invalid erstellungsdatum: "${d}"`);
+    }
+    return `${d.replace(/-/g, '')}000000`;
+  }
   const dt = d instanceof Date ? d : new Date(d);
   if (Number.isNaN(dt.getTime())) {
     throw new Error(`invalid erstellungsdatum: "${d}"`);
   }
-  const y  = dt.getUTCFullYear();
-  const mo = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const da = String(dt.getUTCDate()).padStart(2, '0');
-  const h  = String(dt.getUTCHours()).padStart(2, '0');
-  const mi = String(dt.getUTCMinutes()).padStart(2, '0');
-  const se = String(dt.getUTCSeconds()).padStart(2, '0');
-  return `${y}${mo}${da}${h}${mi}${se}`;
+  const ymd = berlinHeute(dt).replace(/-/g, '');
+  const parts = Object.fromEntries(
+    BERLIN_TIME_FORMAT.formatToParts(dt).map(p => [p.type, p.value])
+  );
+  return `${ymd}${parts.hour}${parts.minute}${parts.second}`;
 }
 
 /**

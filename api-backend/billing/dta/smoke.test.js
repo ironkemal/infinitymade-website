@@ -37,7 +37,7 @@ test('UNB carries UNOC:3 + B + testindikator', () => {
     anwendungsreferenz: 'SL345678S05',
     testIndikator: '2',
   });
-  assert.ok(unb.startsWith('UNB+UNOC:3+123456789+987654321+20260518:0830+00007+B+SL345678S05+2'), unb);
+  assert.ok(unb.startsWith('UNB+UNOC:3+123456789+987654321+20260518:1030+00007+B+SL345678S05+2'), unb);
 });
 test('UNH SLLA:21:0:0', () => {
   assert.equal(buildUNH({ nachrichtenreferenz: 2, nachrichtenart: 'SLLA' }),

@@ -99,9 +99,9 @@ test('DATEINAME entspricht exakt dem logischen Dateinamen der Nutzdatei', () => 
   assert.equal(feld(satz, 105, 115), 'SL345678S05');
 });
 
-test('DATUM_ERSTELLUNG: YYYYMMDDhhmmss aus erstellungsdatum (UTC)', () => {
+test('DATUM_ERSTELLUNG: YYYYMMDDhhmmss aus erstellungsdatum (Europe/Berlin)', () => {
   const satz = buildAuftragsdatei({ ...BASIS, erstellungsdatum: '2026-05-18T08:30:15Z' });
-  assert.equal(feld(satz, 116, 129), '20260518083015');
+  assert.equal(feld(satz, 116, 129), '20260518103015');
 });
 
 test('DATUM_ÜBERTRAGUNG_* Felder sind Nullen (noch nicht übermittelt — Kapsam dışı)', () => {

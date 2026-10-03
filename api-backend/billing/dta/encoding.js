@@ -4,6 +4,8 @@
 // diese Trennzeichen fest; sie werden NICHT per UNA-Segment angekuendigt
 // (siehe UNA_HEADER am Dateiende).
 
+import { berlinHeute, istStichtag } from '../../lib/berlin-tag.js';
+
 export const EDIFACT = Object.freeze({
   COMPONENT_SEP: ':',   // sub-element separator
   ELEMENT_SEP:   '+',   // element separator
@@ -77,14 +79,17 @@ export function fmtAmount(eur, decimals = 2) {
 }
 
 // Dates in §302 are mostly YYYYMMDD, no separator.
+// Genuine YYYY-MM-DD calendar strings remain unchanged day; timestamps and Date
+// objects are formatted according to Europe/Berlin (DST-safe). Nonexistent
+// dateonly values are rejected instead of normalized.
 export function fmtDate(d) {
   if (!d) return '';
+  if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    return istStichtag(d) ? d.replace(/-/g, '') : '';
+  }
   const dt = d instanceof Date ? d : new Date(d);
   if (Number.isNaN(dt.getTime())) return '';
-  const y = dt.getUTCFullYear();
-  const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(dt.getUTCDate()).padStart(2, '0');
-  return `${y}${m}${day}`;
+  return berlinHeute(dt).replace(/-/g, '');
 }
 
 // Build a single segment line.
