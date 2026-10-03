@@ -1,3 +1,4 @@
+import { createPendingGuard } from './module/rechnung-speichern.js?v=20261004m111';
 import { dsgvoVerdrahten } from './module/dsgvo-client.js?v=20261002';
 import { mitarbeiterAnlegen, zeigeEinrichtungscode, einrichtungscodeKnopfHtml, verdrahteEinrichtungscodeKnoepfe, mitarbeiterEntfernen } from './module/mitarbeiter-zugang.js?v=20261002a';
 import { DEFAULT_VORLAGE_SEEDS, fehlendeSeedZeilen, seedeVorlagen } from './module/vorlagen-seed.js?v=20260929';
@@ -13742,108 +13743,107 @@ async function openInvEditor(invoiceId) {
     document.getElementById('invPatientSelect').focus();
   }
 }
-
 function closeInvEditor() {
   zeigeRechnungsModus('liste');
 }
-
+const invoiceSaveGuard = createPendingGuard(() => document.getElementById('invSaveBtn'), (err) => {
+    console.error('[invoice save]', err);
+    showToast('Fehler beim Speichern: ' + (err?.message || err), 'error');
+});
 async function saveInvoice() {
-  const patientSel = document.getElementById('invPatientSelect');
-  const patientId = patientSel.value;
-  if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
-  if (invLines.length === 0) { showToast('Bitte fügen Sie mindestens eine Leistung hinzu.', 'error'); return; }
-  // Collapse duplicates so the printed invoice and the DB row stay tidy
-  invLines = aggregateInvLines(invLines);
-  renderInvLines(); calcInvTotals();
-  const subtotal = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
-  const enforceNoZuzahlung = invPatientInsuranceType === 'privat';
-  const eigenPct = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invEigenPct').value) || 0);
-  const eigenEur = subtotal * (eigenPct / 100);
-  const kasse = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invKasse').value) || 0);
-  const total = enforceNoZuzahlung ? subtotal : (eigenEur + kasse);
-  const ownerId = getOwnerId();
-  const patientName = patientSel.options[patientSel.selectedIndex].text;
-  // Nummer NICHT hier vergeben: das macht der Trigger set_invoice_nummer()
-  // lückenlos je Inhaber (db/README.md Falle 6). Bis 16.08.2026 zählte diese
-  // Funktion selbst hoch und vergab bei jedem Speichern eine neue Nummer.
-  const steuerStatus = steuerStatusVon(currentProfile);
-  const st = berechneSteuer(invLines, steuerStatus);
-  const zeitraum = leistungszeitraum(invLines);
-  const payload = {
-    owner_id: ownerId,
-    patient_id: patientId,
-    patient_name: patientName,
-    line_items: invLines,
-    subtotal,
-    eigenanteil_pct: eigenPct,
-    eigenanteil_eur: eigenEur,
-    kassenzuzahlung: kasse,
-    total_patient: total,
-    status: 'draft',
-    prescription_id: invPrescriptionId || verordnungAuswahl().prescriptionId || null,
-    verordnung_id: invVerordnungId || null,
-    notes: [document.getElementById('invNotes').value || null, verordnungAuswahl().notizZeile].filter(Boolean).join('\n') || null,
-    invoice_type: invPatientInsuranceType || null,
-    // Steuer: eingefroren, nicht zur Druckzeit aus dem Profil gelesen —
-    // sonst druckt dieselbe Rechnung nach einer Einstellungsänderung anders
-    // (§ 146 Abs. 4 AO). Begründung in module/rechnung-steuer.js.
-    steuer_status: steuerStatus,
-    tax_summary: st.tax_summary,
-    netto_gesamt: st.netto,
-    steuer_gesamt: st.steuer,
-    brutto_gesamt: st.brutto,
-    steuerhinweis_text: steuerhinweisText(currentProfile, st.tax_summary),
-    steuernummer_snapshot: currentProfile.steuernummer || null,
-    ust_id_snapshot: currentProfile.ust_id || null,
-    leistung_von: zeitraum.von,
-    leistung_bis: zeitraum.bis,
-  };
-  // Eine offene Rechnung wird fortgeschrieben, nicht neu angelegt: sonst steht
-  // dieselbe Leistung zweimal mit zwei Nummern in der Tabelle (§ 14c UStG,
-  // sobald USt ausgewiesen wird). Festgeschriebene Rechnungen sperrt der
-  // Trigger invoice_festschreibung() ohnehin.
-  const bearbeitet = window._currentInvoiceId;
-  const { data: inserted, error } = bearbeitet
-    ? await supabase.from('invoices').update(payload).eq('id', bearbeitet).select('id, invoice_number').maybeSingle()
-    : await supabase.from('invoices').insert(payload).select('id, invoice_number').maybeSingle();
-  if (error) { console.error('[invoice save]', error); showToast('Fehler beim Speichern: ' + error.message, 'error'); return; }
-  const invoiceNumber = inserted?.invoice_number || '';
-  showToast('Rechnung ' + invoiceNumber + (bearbeitet ? ' aktualisiert.' : ' erstellt.'));
-  document.getElementById('invPrintBtn').disabled = false;
-  const dmrzBtn = document.getElementById('invDmrzBtn');
-  if (dmrzBtn) dmrzBtn.disabled = false;
-  window._currentInvoiceId = inserted?.id || null;
-
-  // Erst nach erfolgreichem Speichern markieren: schlägt das Speichern fehl,
-  // darf keine Sitzung als abgerechnet gelten.
-  if (inserted?.id && invBehandlungIds.length) {
-    await behandlungenVerknuepfen(supabase, { invoiceId: inserted.id, behandlungIds: invBehandlungIds });
-    invBehandlungIds = [];
-  }
-
-  // Zahlungsart abfragen (Ops #271, 08.09.2026) — Verzweigung nach
-  // Rezeptbezug liegt in module/rechnung-zahlungseingang.js.
-  if (inserted?.id) {
-    await zahlungsartNachRechnungAbfragen({
-      invoiceId: inserted.id,
-      hatRezeptbezug: !!(invPrescriptionId || invVerordnungId),
-      prescriptionId: invPrescriptionId || null,
-      patientId, patientName,
-      supabase, apiBasis: API, profile: currentProfile, showToast,
-      kassiere: kassiereZuzahlung,
-      token: async () => (await supabase.auth.getSession()).data.session?.access_token,
-    });
-  }
-
-  await loadRechnungen();
-  // Editor schließt nach dem Speichern — vorher blieb er offen und wirkte,
-  // als wäre nichts passiert (Ops-Meldung, 09.09.2026). Erst NACH loadRechnungen(),
-  // damit openInvView() die Rechnung in invListCache findet.
-  if (inserted?.id) await openInvView(inserted.id);
-  else zeigeRechnungsModus('liste');
+  return await invoiceSaveGuard.call(this, async () => {
+    const patientSel = document.getElementById('invPatientSelect');
+    const patientId = patientSel.value;
+    if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
+    if (invLines.length === 0) { showToast('Bitte fügen Sie mindestens eine Leistung hinzu.', 'error'); return; }
+    // Collapse duplicates so the printed invoice and the DB row stay tidy
+    invLines = aggregateInvLines(invLines);
+    renderInvLines(); calcInvTotals();
+    const subtotal = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
+    const enforceNoZuzahlung = invPatientInsuranceType === 'privat';
+    const eigenPct = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invEigenPct').value) || 0);
+    const eigenEur = subtotal * (eigenPct / 100);
+    const kasse = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invKasse').value) || 0);
+    const total = enforceNoZuzahlung ? subtotal : (eigenEur + kasse);
+    const ownerId = getOwnerId();
+    const patientName = patientSel.options[patientSel.selectedIndex].text;
+    // Nummer NICHT hier vergeben: das macht der Trigger set_invoice_nummer()
+    // lückenlos je Inhaber (db/README.md Falle 6). Bis 16.08.2026 zählte diese
+    // Funktion selbst hoch und vergab bei jedem Speichern eine neue Nummer.
+    const steuerStatus = steuerStatusVon(currentProfile);
+    const st = berechneSteuer(invLines, steuerStatus);
+    const zeitraum = leistungszeitraum(invLines);
+    const payload = {
+      owner_id: ownerId,
+      patient_id: patientId,
+      patient_name: patientName,
+      line_items: invLines,
+      subtotal,
+      eigenanteil_pct: eigenPct,
+      eigenanteil_eur: eigenEur,
+      kassenzuzahlung: kasse,
+      total_patient: total,
+      status: 'draft',
+      prescription_id: invPrescriptionId || verordnungAuswahl().prescriptionId || null,
+      verordnung_id: invVerordnungId || null,
+      notes: [document.getElementById('invNotes').value || null, verordnungAuswahl().notizZeile].filter(Boolean).join('\n') || null,
+      invoice_type: invPatientInsuranceType || null,
+      // Steuer: eingefroren, nicht zur Druckzeit aus dem Profil gelesen —
+      // sonst druckt dieselbe Rechnung nach einer Einstellungsänderung anders
+      // (§ 146 Abs. 4 AO). Begründung in module/rechnung-steuer.js.
+      steuer_status: steuerStatus,
+      tax_summary: st.tax_summary,
+      netto_gesamt: st.netto,
+      steuer_gesamt: st.steuer,
+      brutto_gesamt: st.brutto,
+      steuerhinweis_text: steuerhinweisText(currentProfile, st.tax_summary),
+      steuernummer_snapshot: currentProfile.steuernummer || null,
+      ust_id_snapshot: currentProfile.ust_id || null,
+      leistung_von: zeitraum.von,
+      leistung_bis: zeitraum.bis,
+    };
+    // Eine offene Rechnung wird fortgeschrieben, nicht neu angelegt: sonst steht
+    // dieselbe Leistung zweimal mit zwei Nummern in der Tabelle (§ 14c UStG,
+    // sobald USt ausgewiesen wird). Festgeschriebene Rechnungen sperrt der
+    // Trigger invoice_festschreibung() ohnehin.
+    const bearbeitet = window._currentInvoiceId;
+    const { data: inserted, error } = bearbeitet
+      ? await supabase.from('invoices').update(payload).eq('id', bearbeitet).select('id, invoice_number').maybeSingle()
+      : await supabase.from('invoices').insert(payload).select('id, invoice_number').maybeSingle();
+    if (error) { console.error('[invoice save]', error); showToast('Fehler beim Speichern: ' + error.message, 'error'); return; }
+    const invoiceNumber = inserted?.invoice_number || '';
+    showToast('Rechnung ' + invoiceNumber + (bearbeitet ? ' aktualisiert.' : ' erstellt.'));
+    document.getElementById('invPrintBtn').disabled = false;
+    const dmrzBtn = document.getElementById('invDmrzBtn');
+    if (dmrzBtn) dmrzBtn.disabled = false;
+    window._currentInvoiceId = inserted?.id || null;
+    // Erst nach erfolgreichem Speichern markieren: schlägt das Speichern fehl,
+    // darf keine Sitzung als abgerechnet gelten.
+    if (inserted?.id && invBehandlungIds.length) {
+      await behandlungenVerknuepfen(supabase, { invoiceId: inserted.id, behandlungIds: invBehandlungIds });
+      invBehandlungIds = [];
+    }
+    // Zahlungsart abfragen (Ops #271, 08.09.2026) — Verzweigung nach
+    // Rezeptbezug liegt in module/rechnung-zahlungseingang.js.
+    if (inserted?.id) {
+      await zahlungsartNachRechnungAbfragen({
+        invoiceId: inserted.id,
+        hatRezeptbezug: !!(invPrescriptionId || invVerordnungId),
+        prescriptionId: invPrescriptionId || null,
+        patientId, patientName,
+        supabase, apiBasis: API, profile: currentProfile, showToast,
+        kassiere: kassiereZuzahlung,
+        token: async () => (await supabase.auth.getSession()).data.session?.access_token,
+      });
+    }
+    await loadRechnungen();
+    // Editor schließt nach dem Speichern — vorher blieb er offen und wirkte,
+    // als wäre nichts passiert (Ops-Meldung, 09.09.2026). Erst NACH loadRechnungen(),
+    // damit openInvView() die Rechnung in invListCache findet.
+    if (inserted?.id) await openInvView(inserted.id);
+    else zeigeRechnungsModus('liste');
+  });
 }
-
-
 function bindInvEvents() {
   document.getElementById('invNewBtn').onclick = () => openInvEditor(null);
   document.getElementById('invCancelBtn').onclick = () => closeInvEditor();
