@@ -1,7 +1,16 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-10-02 — Nachtrag: 0057_aufbewahrung_sperre (KHS K1.4, MCP):
+-- ERZEUGT AM:        2026-10-03 — gezielt live introspektierter Nachtrag 0058:
+--                    abrechnung +3 nullable Spalten ohne Default/Backfill,
+--                    +3 CHECK, +1 FK (RESTRICT), +1 partieller Unique-Index,
+--                    +1 Funktion/+1 Benutzertrigger; Policies unveraendert.
+--                    Letzte Migration: 0058_abrechnung_zuzahlungsforderung
+--                    (Supabase-Version 20261003081335, MCP angewendet).
+--                    Kein Voll-Refresh: nur betroffene Objekte neu gelesen.
+--                    Schon vor 0058 veraltete Kopfzaehler unten durch echte
+--                    Live-Zaehler ersetzt; alte fehlende Koerper bleiben offen.
+--                    davor: 2026-10-02 — Nachtrag: 0057_aufbewahrung_sperre (KHS K1.4, MCP):
 --                    +1 Tabelle aufbewahrung_sperre (8 Spalten, Sperrvermerk statt
 --                    Löschung); profiles_plan_status_check + 'deleted'.
 --                    Letzte Migration: 0057.
@@ -491,8 +500,18 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            93 Tabellen · 1367 Spalten · 175 RLS-Policies
---                    325 Indizes · 81 Trigger · 84 Funktionen · 4 Views
+-- UMFANG:            93 Public-Basistabellen · 1349 Basistabellen-Spalten
+--                    37 View-Spalten separat · 166 Public-RLS-Policies
+--                    328 Public-Indizes · 87 nichtinterne Public-Trigger
+--                    91 Public-Funktionen ohne Extension-Objekte
+--                    (live 03.10.2026 nach 0058; information_schema fuer
+--                     Tabellen/Spalten, pg_policies/pg_indexes, pg_proc ohne
+--                     pg_depend.deptype='e', pg_trigger ohne tgisinternal).
+--                    Vor 0058 live: 93 / 1346 / 37 / 166 / 327 / 86 / 90.
+--                    Alte Kopfwerte 1367 Spalten/175 Policies/325 Indizes/
+--                    81 Trigger/84 Funktionen waren schon vorher veraltet;
+--                    Spaltenzahl nach Basistabellen und Views nun getrennt.
+--                    Historische Zaehlerbegruendung (keine aktuelle Messung):
 --                    (20.09.2026 live gezaehlt, Stand 0034. Die vier neuen
 --                     Tabellen sind datenaustausch_zaehler (0029),
 --                     betriebsart_empfaenger (0031), kostentraeger_anschriften
@@ -667,6 +686,9 @@ CREATE TABLE abrechnung (
   verschluesselt_am timestamptz
   verschluesselt_fuer_fingerprint text
   verschluesselung_hinweis text
+  verarbeitungskennzeichen text
+  zuzahlungsforderung_ursprung_id uuid
+  zuzahlungsforderung_daten jsonb
 );
 --   CHECK status IN (erstellt, heruntergeladen, gesendet, accepted, rejected, paid, verworfen)
 --   CHECK betriebsart IS NULL OR betriebsart IN (test, erprobung, echt)
@@ -674,6 +696,25 @@ CREATE TABLE abrechnung (
 --   FK kostentraeger_ik -> kostentraeger(ik)
 --   FK owner_id -> auth.users(id) ON DELETE CASCADE
 --   PK (id)
+--   0058 (03.10.2026) — live pg_get_constraintdef, alle drei Spalten NULLABLE:
+--   abrechnung_verarbeitungskennzeichen_check:
+--     CHECK ((verarbeitungskennzeichen = ANY (ARRAY['01'::text, '02'::text, '03'::text, '04'::text])))
+--   abrechnung_zuzahlungsforderung_ursprung_check:
+--     CHECK (((NOT (verarbeitungskennzeichen IS DISTINCT FROM '03'::text)) = (zuzahlungsforderung_ursprung_id IS NOT NULL)))
+--   abrechnung_zuzahlungsforderung_daten_check:
+--     CHECK (((NOT (verarbeitungskennzeichen IS DISTINCT FROM '03'::text)) = (zuzahlungsforderung_daten IS NOT NULL)))
+--   abrechnung_zuzahlungsforderung_ursprung_fk:
+--     FOREIGN KEY (zuzahlungsforderung_ursprung_id) REFERENCES abrechnung_zeile(id) ON DELETE RESTRICT
+--   UNIQUE zuzahlungsforderung_ursprung_id WHERE verarbeitungskennzeichen='03':
+--     genau eine Forderung je Originalzeile, auch wenn status='verworfen'.
+--   Kein Default/Backfill: NULL-VKZ bedeutet historisch unbekannt, nicht '01'.
+--   JSON friert Grund, Positionen und persoenlich zugeordnete Nachweispruefung
+--   ein. Nur Backendrollen duerfen VKZ03 schreiben; Ursprung/JSON/Identitaet
+--   unveraenderlich, DELETE gesperrt. Historische business_id=NULL bleibt NULL.
+--   Unvollstaendige Reservierung: CAS verworfen -> erstellt auf derselben id.
+--   Immutable abrechnung_zeile zur Forderung verhindert Ruecksetzen nach Erfolg.
+--   VKZ03 total_eur/netto_eur bezeichnen die neue Forderung, nicht das alte
+--   Behandlungsbrutto; zuzahlung_total/zeile.zuzahlung_eur sind dabei 0.
 --   ★ 20.09.2026 (§302-Echtbetrieb, Faz 1) — zehn Spalten dazu, drei Gruppen:
 --     (a) auftragsdatei_path/_size (0027): die Auftragsdatei (348-Byte-Auftrags-
 --         satz, GGT Anlage 2) wurde seit 17.09. erzeugt und WEGGEWORFEN. Sie

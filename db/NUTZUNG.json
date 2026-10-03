@@ -1,15 +1,15 @@
 {
- "erzeugt": "2026-10-02",
+ "erzeugt": "2026-10-03",
  "quellen": {
-  "schema": "db/SCHEMA.sql (Stand 2026-10-02)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-02)",
+  "schema": "db/SCHEMA.sql (Stand 2026-10-03)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-10-03)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 93,
  "tabellen": [
   {
    "name": "abrechnung",
-   "spalten": 37,
+   "spalten": 40,
    "fkRaus": [
     "businesses",
     "kostentraeger",
@@ -22,6 +22,7 @@
     "api-backend/_lib/access-log.js",
     "api-backend/billing/api/upload-signed-verschluesselung.test.js",
     "api-backend/billing/api/verworfen.test.js",
+    "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
     "module/nav-registry.test.js",
@@ -114,7 +115,7 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1973,
+     "start": 1974,
      "module": [],
      "uiPfad": []
     },
@@ -160,6 +161,17 @@
    ],
    "schreiber": [
     {
+     "name": "createZuzahlungsforderungRouter",
+     "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+     "start": 121,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    },
+    {
      "name": "downloadAbrechnungFile",
      "file": "module/abrechnung-detail.js",
      "start": 766,
@@ -204,7 +216,7 @@
     {
      "name": "verarbeiteVerschluesselungsSchritt",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1472,
+     "start": 1473,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -226,6 +238,7 @@
     "api-backend/billing/api/abrechnung.routes.js",
     "api-backend/billing/api/statistik.routes.js",
     "api-backend/billing/api/verworfen.js",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js",
     "dashboard.js",
     "module/abrechnung-detail.js",
     "module/abrechnung-verlauf.js"
@@ -261,7 +274,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 16,
+   "sqlTreffer": 19,
    "codeStumm": false
   },
   {
@@ -421,6 +434,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js"
@@ -434,7 +448,7 @@
     {
      "name": "bereichFuerAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 261,
+     "start": 262,
      "module": [],
      "uiPfad": []
     },
@@ -517,9 +531,21 @@
      ]
     }
    ],
-   "schreiber": [],
+   "schreiber": [
+    {
+     "name": "createZuzahlungsforderungRouter",
+     "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+     "start": 121,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js",
     "module/abrechnung-verlauf.js",
     "module/podologie-abrechnung.js"
    ],
@@ -554,7 +580,7 @@
     "vehEditSaveBtn",
     "verordnungen"
    ],
-   "sqlTreffer": 13,
+   "sqlTreffer": 16,
    "codeStumm": false
   },
   {
@@ -977,7 +1003,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2835,
+     "start": 2836,
      "module": [
       "abrechnung",
       "anamnese",
@@ -1260,7 +1286,7 @@
     {
      "name": "exportErstellen",
      "file": "api-backend/dsgvo/export.js",
-     "start": 60,
+     "start": 81,
      "module": [],
      "uiPfad": []
     }
@@ -1513,6 +1539,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js",
     "module/nav-registry.test.js",
@@ -1524,6 +1551,13 @@
    "seit": "spätestens 08.06.2026 · `security_hardening_handles_bookings_search_path`",
    "ungeklaert": false,
    "leser": [
+    {
+     "name": "createZuzahlungsforderungRouter",
+     "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+     "start": 121,
+     "module": [],
+     "uiPfad": []
+    },
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
@@ -1585,6 +1619,7 @@
     "api-backend/billing/api/mahnwesen.routes.js",
     "api-backend/billing/api/statistik.routes.js",
     "api-backend/billing/api/zuzahlung.routes.js",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js",
     "dashboard.js"
    ],
    "module": [
@@ -2164,7 +2199,7 @@
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 2802,
+     "start": 2803,
      "module": [],
      "uiPfad": []
     },
@@ -2292,10 +2327,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -2439,7 +2475,7 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2155,
+     "start": 2156,
      "module": [],
      "uiPfad": []
     },
@@ -2801,16 +2837,17 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1564,
+     "start": 1565,
      "module": [
       "abrechnung",
       "anamnese",
@@ -2927,7 +2964,7 @@
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1321,
+     "start": 1322,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3253,7 +3290,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2309,
+     "start": 2310,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3292,14 +3329,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1165,
+     "start": 1166,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1245,
+     "start": 1246,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3728,7 +3765,7 @@
     {
      "name": "doMoveBooking",
      "file": "dashboard.js",
-     "start": 4821,
+     "start": 4822,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3770,7 +3807,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3421,
+     "start": 3422,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3812,7 +3849,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 3874,
+     "start": 3875,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3822,7 +3859,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4365,
+     "start": 4366,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3884,7 +3921,7 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 4249,
+     "start": 4250,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3968,7 +4005,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 3743,
+     "start": 3744,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3988,7 +4025,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2835,
+     "start": 2836,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4030,7 +4067,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3787,
+     "start": 3788,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4040,7 +4077,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3665,
+     "start": 3666,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5149,6 +5186,13 @@
      "uiPfad": []
     },
     {
+     "name": "db",
+     "file": "api-backend/routes/dsgvo.js",
+     "start": 23,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "noopMiddleware",
      "file": "api-backend/routes/dsgvo.js",
      "start": 29,
@@ -6210,7 +6254,7 @@
     {
      "name": "berechneVerschluesselung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1341,
+     "start": 1342,
      "module": [],
      "uiPfad": []
     }
@@ -7228,7 +7272,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1564,
+     "start": 1565,
      "module": [
       "abrechnung",
       "anamnese",
@@ -7309,7 +7353,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3787,
+     "start": 3788,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7319,7 +7363,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3665,
+     "start": 3666,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -7760,6 +7804,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
@@ -7882,7 +7927,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1564,
+     "start": 1565,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8168,6 +8213,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/billing/dta/preflight.js",
     "api-backend/billing/dta/preflight.test.js",
     "api-backend/billing/kostentraeger/annahmestelle.test.js",
@@ -8228,7 +8274,14 @@
     {
      "name": "baueBegleitzettel",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 326,
+     "start": 327,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "createZuzahlungsforderungRouter",
+     "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+     "start": 121,
      "module": [],
      "uiPfad": []
     },
@@ -8296,6 +8349,7 @@
    "schreiber": [],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js",
     "api-backend/billing/kostentraeger/annahmestelle.js",
     "api-backend/lib/rezept-felder.js",
     "dashboard.js",
@@ -8815,7 +8869,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3421,
+     "start": 3422,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8854,14 +8908,14 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 3874,
+     "start": 3875,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 4579,
+     "start": 4580,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8900,7 +8954,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4365,
+     "start": 4366,
      "module": [
       "abrechnung",
       "anamnese",
@@ -8939,7 +8993,7 @@
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 3252,
+     "start": 3253,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9187,7 +9241,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1564,
+     "start": 1565,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9305,7 +9359,7 @@
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 4589,
+     "start": 4590,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9617,7 +9671,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2835,
+     "start": 2836,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9656,7 +9710,7 @@
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 4488,
+     "start": 4489,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9780,7 +9834,7 @@
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 3520,
+     "start": 3521,
      "module": [
       "abrechnung",
       "anamnese",
@@ -9819,7 +9873,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3787,
+     "start": 3788,
      "module": [],
      "uiPfad": []
     },
@@ -9916,7 +9970,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 3998,
+     "start": 3999,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -10033,6 +10087,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js"
    ],
@@ -10041,14 +10096,23 @@
    "warum": "Mahnstufen zu offenen Rechnungen, mit eigenem Nummernkreis.",
    "seit": "25.05.2026 · `v28_mahnwesen`",
    "ungeklaert": false,
-   "leser": [],
+   "leser": [
+    {
+     "name": "createZuzahlungsforderungRouter",
+     "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+     "start": 121,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
    "schreiber": [],
    "dateien": [
     "api-backend/billing/api/mahnwesen.routes.js",
-    "api-backend/billing/api/statistik.routes.js"
+    "api-backend/billing/api/statistik.routes.js",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js"
    ],
    "module": [],
-   "sqlTreffer": 5,
+   "sqlTreffer": 6,
    "codeStumm": false
   },
   {
@@ -10214,7 +10278,7 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 566,
+     "start": 567,
      "module": [
       "abrechnung",
       "anamnese",
@@ -10389,10 +10453,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -10545,10 +10610,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -10792,7 +10858,8 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "sqlTreffer": 11,
    "codeStumm": false
@@ -11040,7 +11107,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1564,
+     "start": 1565,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11196,7 +11263,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2835,
+     "start": 2836,
      "module": [
       "abrechnung",
       "anamnese",
@@ -11436,10 +11503,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -11592,10 +11660,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -12027,7 +12096,8 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "sqlTreffer": 18,
    "codeStumm": false
@@ -12075,7 +12145,7 @@
     {
      "name": "istAbgeschlossen",
      "file": "api-backend/setup/router.js",
-     "start": 77,
+     "start": 78,
      "module": [],
      "uiPfad": []
     },
@@ -12089,7 +12159,7 @@
     {
      "name": "ownerAngelegt",
      "file": "api-backend/setup/router.js",
-     "start": 68,
+     "start": 69,
      "module": [],
      "uiPfad": []
     }
@@ -12098,7 +12168,7 @@
     {
      "name": "billigePruefungenLaufen",
      "file": "api-backend/setup/router.js",
-     "start": 122,
+     "start": 123,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -12108,6 +12178,7 @@
    ],
    "dateien": [
     "api-backend/server.js",
+    "api-backend/setup/owner-passwort-reset.mjs",
     "api-backend/setup/router.js"
    ],
    "module": [],
@@ -12124,6 +12195,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/dsgvo/klassifikation.js"
    ],
    "register": true,
@@ -12131,7 +12203,15 @@
    "warum": "Nachweise und Anhänge zu einer Verordnung — Befreiungsausweis, LHB-Genehmigung, korrigierte Verordnung, Therapiebericht. Als Spalten in `prescriptions` wären es beliebig viele.",
    "seit": "25.07.2026 · `create_prescription_documents`",
    "ungeklaert": false,
-   "leser": [],
+   "leser": [
+    {
+     "name": "createZuzahlungsforderungRouter",
+     "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+     "start": 121,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
    "schreiber": [
     {
      "name": "kontoLoeschen",
@@ -12155,11 +12235,12 @@
     }
    ],
    "dateien": [
+    "api-backend/billing/api/zuzahlungsforderung.routes.js",
     "api-backend/dsgvo/loeschen.js",
     "module/verordnung-nachweis.js"
    ],
    "module": [],
-   "sqlTreffer": 5,
+   "sqlTreffer": 6,
    "codeStumm": false
   },
   {
@@ -12263,7 +12344,7 @@
     {
      "name": "loadCalRpUnverga",
      "file": "dashboard.js",
-     "start": 3373,
+     "start": 3374,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12501,7 +12582,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3421,
+     "start": 3422,
      "module": [
       "abrechnung",
       "anamnese",
@@ -12746,6 +12827,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/billing/dta/preflight.js",
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
     "api-backend/billing/utils/kostentraeger-frisch.test.js",
@@ -12808,7 +12890,7 @@
     {
      "name": "bereichFuerAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 261,
+     "start": 262,
      "module": [],
      "uiPfad": []
     },
@@ -12816,6 +12898,13 @@
      "name": "bindePodoSerieVonRezept",
      "file": "module/podo-einheiten.js",
      "start": 312,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "createZuzahlungsforderungRouter",
+     "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+     "start": 121,
      "module": [],
      "uiPfad": []
     },
@@ -12930,10 +13019,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -13210,10 +13300,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -13343,7 +13434,7 @@
     {
      "name": "loadCalRpRezeptInfo",
      "file": "dashboard.js",
-     "start": 3336,
+     "start": 3337,
      "module": [],
      "uiPfad": []
     },
@@ -13428,7 +13519,7 @@
     {
      "name": "loadPhysioRezKpis",
      "file": "dashboard.js",
-     "start": 1863,
+     "start": 1864,
      "module": [],
      "uiPfad": []
     },
@@ -13598,7 +13689,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2835,
+     "start": 2836,
      "module": [
       "abrechnung",
       "anamnese",
@@ -14293,6 +14384,7 @@
     "api-backend/billing/api/statistik.routes.js",
     "api-backend/billing/api/verordnung-status.routes.js",
     "api-backend/billing/api/zuzahlung.routes.js",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js",
     "api-backend/billing/utils/kostentraeger-frisch.js",
     "api-backend/dsgvo/loeschen.js",
     "api-backend/server.js",
@@ -14355,9 +14447,10 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
-   "sqlTreffer": 42,
+   "sqlTreffer": 43,
    "codeStumm": false
   },
   {
@@ -14370,6 +14463,7 @@
    "dsgvoLoeschung": false,
    "dsgvoAnonymisiert": true,
    "erwaehnt": [
+    "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/billing/kostentraeger/stichtag-pruefung.test.js",
     "api-backend/billing/statistik/therapeuten.test.js",
     "api-backend/dsgvo/klassifikation.js"
@@ -14422,7 +14516,14 @@
     {
      "name": "bereichFuerAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 261,
+     "start": 262,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "createZuzahlungsforderungRouter",
+     "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+     "start": 121,
      "module": [],
      "uiPfad": []
     },
@@ -14457,7 +14558,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 3998,
+     "start": 3999,
      "module": [],
      "uiPfad": []
     },
@@ -14638,7 +14739,7 @@
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 489,
+     "start": 490,
      "module": [],
      "uiPfad": []
     },
@@ -14942,21 +15043,21 @@
     {
      "name": "mandantUndAbrechnung",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1973,
+     "start": 1974,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "nurInhaber",
      "file": "api-backend/billing/api/abrechnung.routes.js",
-     "start": 1235,
+     "start": 1236,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 4031,
+     "start": 4032,
      "module": [],
      "uiPfad": []
     },
@@ -14993,10 +15094,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -15055,7 +15157,7 @@
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 609,
+     "start": 610,
      "module": [
       "abrechnung",
       "anamnese",
@@ -15131,10 +15233,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -15170,10 +15273,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -15209,10 +15313,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -15248,10 +15353,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -15287,10 +15393,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -15326,10 +15433,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -15365,10 +15473,11 @@
       "team",
       "ueberblick",
       "vehEditSaveBtn",
-      "verordnungen"
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 29 modülden çağrılıyor"
+      "ortak yardımcı — 30 modülden çağrılıyor"
      ]
     },
     {
@@ -15790,7 +15899,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 1926,
+     "start": 1927,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -15984,11 +16093,13 @@
     "api-backend/billing/api/verordnung-status.routes.js",
     "api-backend/billing/api/warteliste.routes.js",
     "api-backend/billing/api/zuzahlung.routes.js",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js",
     "api-backend/billing/statistik/therapeuten.js",
     "api-backend/dsgvo/loeschen.js",
     "api-backend/fix_db.js",
     "api-backend/routes/mitarbeiter-zugang.js",
     "api-backend/server.js",
+    "api-backend/setup/owner-passwort-reset.mjs",
     "api-backend/setup/pruefungen.js",
     "api-backend/setup/router.js",
     "api-backend/test_schema.js",
@@ -16043,7 +16154,8 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "sqlTreffer": 53,
    "codeStumm": false
@@ -16120,7 +16232,7 @@
     {
      "name": "loadDoctors",
      "file": "module/lead-suche.js",
-     "start": 141,
+     "start": 146,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16255,7 +16367,7 @@
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 3409,
+     "start": 3410,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16340,7 +16452,7 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2155,
+     "start": 2156,
      "module": [],
      "uiPfad": []
     },
@@ -16550,7 +16662,7 @@
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 4917,
+     "start": 4918,
      "module": [
       "abrechnung",
       "anamnese",
@@ -16839,6 +16951,7 @@
    "dsgvoLoeschung": true,
    "dsgvoAnonymisiert": false,
    "erwaehnt": [
+    "api-backend/billing/api/zuzahlungsforderung.routes.test.js",
     "api-backend/dsgvo/klassifikation.js",
     "api-backend/dsgvo/loeschen.js"
    ],
@@ -16848,6 +16961,13 @@
    "seit": "spätestens 18.05.2026 · `v11_billing_a2_tables`",
    "ungeklaert": false,
    "leser": [
+    {
+     "name": "createZuzahlungsforderungRouter",
+     "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+     "start": 121,
+     "module": [],
+     "uiPfad": []
+    },
     {
      "name": "ikVorbelegen",
      "file": "module/verordnung-podo.js",
@@ -16929,7 +17049,7 @@
     {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 989,
+     "start": 990,
      "module": [],
      "uiPfad": []
     }
@@ -17022,6 +17142,7 @@
    ],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js",
     "dashboard.js",
     "module/abrechnung-einstellungen.js",
     "module/verordnung-podo.js"
@@ -18093,21 +18214,21 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 3625,
+     "start": 3626,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 3787,
+     "start": 3788,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 3665,
+     "start": 3666,
      "module": [],
      "uiPfad": []
     }
@@ -18348,7 +18469,7 @@
     {
      "name": "getEmployeeWorkingHours",
      "file": "dashboard.js",
-     "start": 2075,
+     "start": 2076,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18440,14 +18561,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1165,
+     "start": 1166,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1245,
+     "start": 1246,
      "module": [
       "abrechnung",
       "anamnese",
@@ -18861,7 +18982,7 @@
     {
      "name": "openBookingActionModal",
      "file": "dashboard.js",
-     "start": 2835,
+     "start": 2836,
      "module": [
       "abrechnung",
       "anamnese",

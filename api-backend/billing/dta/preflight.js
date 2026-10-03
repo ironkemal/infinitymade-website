@@ -27,6 +27,8 @@ import { icdFuerDta } from '../utils/icd-code.js';
 import { icdDgPreflightBefund } from '../../ai/validators/icdDgRules.js';
 import { getIcdDgRules } from '../../ai/validators/catalog.js';
 import { behandlungstageJeDatum, TAGESHOECHSTZAHL } from '../utils/behandlungstage.js';
+import { calcSessionZuzahlung } from '../zuzahlung/calculator.js';
+import { isValidTwoDecimalPrecision } from './builder.js';
 
 // ---------------------------------------------------------------------------
 // Atomic field validators
@@ -223,6 +225,8 @@ export function preflight(input) {
   if (input.rechnung?.datum && !rechnungsDatum)
     E(errors, 'F:03005', 'rechnung.datum', 'Rechnungsdatum nicht parsebar');
 
+  const vkz = input.vkz || '01';
+  const isVkz03 = vkz === '03';
   if (input.vkz && !VERARBEITUNGSKENNZEICHEN[input.vkz])
     E(errors, 'F:04001', 'vkz', `VKZ "${input.vkz}" unbekannt`);
 
@@ -268,7 +272,7 @@ export function preflight(input) {
 
   // -------- per-prescription --------
   const seenBelegnummern = new Set();
-  let totalBrutto = 0, totalZuzahlung = 0;
+  let totalBrutto = 0, totalZuzahlung = 0, totalServiceBrutto = 0;
 
   input.prescriptions.forEach((p, i) => {
     const at = `prescription[${i}]`;
@@ -431,8 +435,12 @@ export function preflight(input) {
     if (!VERORDNUNGSART_HEILMITTEL[v.verordnungsart])
       E(errors, 'V:01004', `${at}.verordnung.verordnungsart`, `Verordnungsart "${v.verordnungsart}" nicht 03/04/05`);
 
-    if (!ZUZAHLUNGSKENNZEICHEN[v.zuzahlungskennzeichen])
+    if (!ZUZAHLUNGSKENNZEICHEN[v.zuzahlungskennzeichen]) {
       E(errors, 'V:01005', `${at}.verordnung.zuzahlungskennzeichen`, `Zuzahlungskennzeichen "${v.zuzahlungskennzeichen}" ungültig`);
+    } else if (isVkz03 && (v.zuzahlungskennzeichen === '0' || v.zuzahlungskennzeichen === '3' || !['1', '2', '5'].includes(v.zuzahlungskennzeichen))) {
+      E(errors, 'V:01005', `${at}.verordnung.zuzahlungskennzeichen`,
+        `Zuzahlungskennzeichen "${v.zuzahlungskennzeichen}" ist für VKZ 03 unzulässig (erlaubt sind nur 1, 2 oder 5) — Anlage 1 TP5 V21 Kap. 7.4.2`);
+    }
 
     if (!v.leitsymptomatik)
       E(errors, 'V:01006', `${at}.verordnung.leitsymptomatik`, 'Leitsymptomatik fehlt');
@@ -516,6 +524,51 @@ export function preflight(input) {
         `Zulässig: ${GUELTIGE_LEGS.join(', ')}`);
     }
 
+    // Ursprüngliche Rechnungsinformation (URI) für Korrekturverfahren (VKZ 03)
+    if (isVkz03) {
+      if (!p.urspruenglich) {
+        E(errors, 'P:01006', `${at}.urspruenglich`,
+          `Ursprüngliche Rechnungsinformation (URI) fehlt für Korrekturverfahren (VKZ 03) — Anlage 1 TP5 V21 § 5.5.3.1`);
+      } else {
+        const u = p.urspruenglich;
+        const origIk = String(u.ikLeistungserbringer ?? u.origIkLeistungserbringer ?? '').trim();
+        if (!origIk) {
+          E(errors, 'F:01001', `${at}.urspruenglich.ikLeistungserbringer`, 'Ursprüngliche Absender-IK fehlt');
+        } else if (!/^\d{9}$/.test(origIk)) {
+          E(errors, 'F:01002', `${at}.urspruenglich.ikLeistungserbringer`, `Ursprüngliche Absender-IK "${origIk}" ungültig (9 Stellen erwartet)`);
+        } else if (!isValidIkChecksum(origIk)) {
+          E(errors, 'F:01003', `${at}.urspruenglich.ikLeistungserbringer`, `Ursprüngliche Absender-IK "${origIk}" Prüfziffer ungültig`);
+        }
+
+        const origSammel = String(u.sammelRechnungsnummer ?? u.origSammelRechnungsnummer ?? '').trim();
+        if (!origSammel) {
+          E(errors, 'F:03001', `${at}.urspruenglich.sammelRechnungsnummer`, 'Ursprüngliche Sammelrechnungsnummer fehlt');
+        } else if (origSammel.length > 14) {
+          E(errors, 'F:03002', `${at}.urspruenglich.sammelRechnungsnummer`, `Ursprüngliche Sammelrechnungsnummer > 14 Zeichen (${origSammel.length})`);
+        } else if (!/^[A-Za-z0-9]+([-/][A-Za-z0-9]+)*$/.test(origSammel)) {
+          E(errors, 'F:03006', `${at}.urspruenglich.sammelRechnungsnummer`, `Ursprüngliche Sammelrechnungsnummer "${origSammel}" enthält unzulässige Zeichen`);
+        }
+
+        const origDatum = parseDate(u.rechnungsdatum ?? u.origRechnungsdatum);
+        if (!origDatum) {
+          E(errors, 'F:03005', `${at}.urspruenglich.rechnungsdatum`, 'Ursprüngliches Rechnungsdatum fehlt oder ungültig');
+        }
+
+        const origEinzel = u.einzelRechnungsnummer ?? u.origEinzelRechnungsnummer;
+        if (origEinzel != null && String(origEinzel).trim().length > 6) {
+          E(errors, 'F:03007', `${at}.urspruenglich.einzelRechnungsnummer`, `Ursprüngliche Einzelrechnungsnummer > 6 Zeichen`);
+        }
+
+        const origBeleg = String(u.belegnummer ?? u.origBelegnummer ?? '').trim();
+        if (!origBeleg) {
+          E(errors, 'P:01006', `${at}.urspruenglich.belegnummer`, 'Ursprüngliche Belegnummer fehlt');
+        } else if (!isValidBelegnummer(origBeleg)) {
+          E(errors, 'P:01009', `${at}.urspruenglich.belegnummer`,
+            `Ursprüngliche Belegnummer "${origBeleg}" ungültig (höchstens 10 Stellen, alphanumerisch)`);
+        }
+      }
+    }
+
     // Sessions
     if (!Array.isArray(p.sessions) || p.sessions.length === 0) {
       E(errors, 'S:01001', `${at}.sessions`, 'Mindestens eine Leistung erforderlich');
@@ -585,31 +638,159 @@ export function preflight(input) {
           E(errors, 'S:01011', `${sat}.therapist`, `Der Therapeut für die Sitzung am ${s.datumLeistung} (ID: ${s.therapistId || 'unbekannt'}) besitzt nicht das benötigte Zertifikat '${s.requiredCert}'.`);
         }
 
-        const betrag = Number(s.einzelbetrag);
-        if (!Number.isFinite(betrag) || betrag <= 0)
-          E(errors, 'S:01007', `${sat}.einzelbetrag`, `Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet)`);
-        if (betrag > 9999.99)
-          W(warnings, 'S:01008', `${sat}.einzelbetrag`, 'Einzelbetrag > 9.999,99 € — auffällig hoch');
+        if (isVkz03) {
+          // 0. position_frei
+          let isPositionFrei = false;
+          if (s.position_frei !== undefined && s.position_frei !== null) {
+            if (typeof s.position_frei !== 'boolean') {
+              E(errors, 'S:01007', `${sat}.position_frei`,
+                `VKZ 03: position_frei muss boolesch (true/false) sein, erhalten: "${s.position_frei}"`);
+            } else {
+              isPositionFrei = s.position_frei === true;
+            }
+          }
 
-        const anzahl = Number(s.anzahl || 1);
-        pBrutto += betrag * anzahl;
-        if (v.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig
-          const zu = Number(s.zuzahlungProPos != null ? s.zuzahlungProPos : betrag * 0.10);
-          pZu += zu * anzahl;
+          // 1. anzahl validation
+          let anzahl = 1;
+          if (s.anzahl !== undefined && s.anzahl !== null) {
+            if (typeof s.anzahl !== 'number' && typeof s.anzahl !== 'string') {
+              E(errors, 'S:01007', `${sat}.anzahl`, `Anzahl "${s.anzahl}" ungültig (nur Zahl oder String zulässig)`);
+            } else if (typeof s.anzahl === 'string' && s.anzahl.trim() === '') {
+              E(errors, 'S:01007', `${sat}.anzahl`, `Anzahl "${s.anzahl}" ungültig (> 0 erwartet)`);
+            } else {
+              const anzahlStr = typeof s.anzahl === 'string' ? s.anzahl.trim().replace(',', '.') : String(s.anzahl);
+              const n = Number(anzahlStr);
+              if (!Number.isFinite(n) || n <= 0) {
+                E(errors, 'S:01007', `${sat}.anzahl`, `Anzahl "${s.anzahl}" ungültig (> 0 erwartet)`);
+              } else if (!isValidTwoDecimalPrecision(s.anzahl, n)) {
+                E(errors, 'S:01007', `${sat}.anzahl`,
+                  `Anzahl "${s.anzahl}" hat unzulässige Nachkommastellen (maximal 2 Dezimalstellen zulässig für EHE)`);
+              } else {
+                anzahl = Math.round((n + Number.EPSILON) * 100) / 100;
+              }
+            }
+          }
+
+          // 2. einzelbetrag validation
+          let betrag = 0;
+          if (s.einzelbetrag === undefined || s.einzelbetrag === null) {
+            E(errors, 'S:01007', `${sat}.einzelbetrag`, 'Einzelbetrag fehlt');
+          } else if (typeof s.einzelbetrag !== 'number' && typeof s.einzelbetrag !== 'string') {
+            E(errors, 'S:01007', `${sat}.einzelbetrag`, `Einzelbetrag "${s.einzelbetrag}" ungültig (nur Zahl oder String zulässig)`);
+          } else if (typeof s.einzelbetrag === 'string' && s.einzelbetrag.trim() === '') {
+            E(errors, 'S:01007', `${sat}.einzelbetrag`, `Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet)`);
+          } else {
+            const betragStr = typeof s.einzelbetrag === 'string' ? s.einzelbetrag.trim().replace(',', '.') : String(s.einzelbetrag);
+            const n = Number(betragStr);
+            if (!Number.isFinite(n) || n <= 0) {
+              E(errors, 'S:01007', `${sat}.einzelbetrag`, `Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet)`);
+            } else if (!isValidTwoDecimalPrecision(s.einzelbetrag, n)) {
+              E(errors, 'S:01007', `${sat}.einzelbetrag`,
+                `Einzelbetrag "${s.einzelbetrag}" hat unzulässige Nachkommastellen (maximal 2 Dezimalstellen zulässig für EHE)`);
+            } else {
+              betrag = Math.round((n + Number.EPSILON) * 100) / 100;
+              if (betrag > 9999.99)
+                W(warnings, 'S:01008', `${sat}.einzelbetrag`, 'Einzelbetrag > 9.999,99 € — auffällig hoch');
+            }
+          }
+
+          pBrutto += betrag * anzahl;
+
+          // 3. Forderungs-Zuzahlung validation
+          let numZu = 0;
+          if (isPositionFrei) {
+            if (s.zuzahlungProPos !== undefined && s.zuzahlungProPos !== null) {
+              if (typeof s.zuzahlungProPos !== 'number' && typeof s.zuzahlungProPos !== 'string') {
+                E(errors, 'S:01007', `${sat}.zuzahlungProPos`,
+                  `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" ungültig (nur Zahl oder String zulässig)`);
+              } else if (typeof s.zuzahlungProPos === 'string' && s.zuzahlungProPos.trim() === '') {
+                E(errors, 'S:01007', `${sat}.zuzahlungProPos`,
+                  `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" ungültig`);
+              } else {
+                const zuStr = typeof s.zuzahlungProPos === 'string' ? s.zuzahlungProPos.trim().replace(',', '.') : String(s.zuzahlungProPos);
+                const nZu = Number(zuStr);
+                if (!Number.isFinite(nZu)) {
+                  E(errors, 'S:01007', `${sat}.zuzahlungProPos`,
+                    `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" ungültig`);
+                } else if (!isValidTwoDecimalPrecision(s.zuzahlungProPos, nZu)) {
+                  E(errors, 'S:01007', `${sat}.zuzahlungProPos`,
+                    `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" hat unzulässige Nachkommastellen`);
+                } else if (Math.round((nZu + Number.EPSILON) * 100) / 100 !== 0) {
+                  E(errors, 'S:01007', `${sat}.zuzahlungProPos`,
+                    `VKZ 03: Widersprüchliche Angaben — position_frei ist true, aber Forderungs-Zuzahlung ist > 0`);
+                } else {
+                  numZu = 0;
+                }
+              }
+            } else {
+              numZu = 0;
+            }
+          } else {
+            if (s.zuzahlungProPos === undefined || s.zuzahlungProPos === null) {
+              E(errors, 'S:01007', `${sat}.zuzahlungProPos`,
+                `VKZ 03: Explizite Forderungs-Zuzahlung für Position ${s.positionsnummer || 'unbekannt'} fehlt (kein 10%-Fallback)`);
+            } else if (typeof s.zuzahlungProPos !== 'number' && typeof s.zuzahlungProPos !== 'string') {
+              E(errors, 'S:01007', `${sat}.zuzahlungProPos`,
+                `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" ungültig (nur Zahl oder String zulässig)`);
+            } else if (typeof s.zuzahlungProPos === 'string' && s.zuzahlungProPos.trim() === '') {
+              E(errors, 'S:01007', `${sat}.zuzahlungProPos`,
+                `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" ungültig (Wert zwischen 0 und Einzelbetrag ${betrag} € erwartet)`);
+            } else {
+              const zuStr = typeof s.zuzahlungProPos === 'string' ? s.zuzahlungProPos.trim().replace(',', '.') : String(s.zuzahlungProPos);
+              const nZu = Number(zuStr);
+              if (!Number.isFinite(nZu) || nZu < 0 || nZu > betrag + 0.0001) {
+                E(errors, 'S:01007', `${sat}.zuzahlungProPos`,
+                  `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" ungültig (Wert zwischen 0 und Einzelbetrag ${betrag} € erwartet)`);
+              } else if (!isValidTwoDecimalPrecision(s.zuzahlungProPos, nZu)) {
+                E(errors, 'S:01007', `${sat}.zuzahlungProPos`,
+                  `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" hat unzulässige Nachkommastellen`);
+              } else {
+                numZu = Math.round((nZu + Number.EPSILON) * 100) / 100;
+              }
+            }
+          }
+
+          pZu += numZu * anzahl;
+        } else {
+          // --- Non-VKZ 03 (VKZ 01 / 02 / 04 intact - exact HEAD original) ---
+          const betrag = Number(s.einzelbetrag);
+          if (!Number.isFinite(betrag) || betrag <= 0)
+            E(errors, 'S:01007', `${sat}.einzelbetrag`, `Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet)`);
+          if (betrag > 9999.99)
+            W(warnings, 'S:01008', `${sat}.einzelbetrag`, 'Einzelbetrag > 9.999,99 € — auffällig hoch');
+
+          const anzahl = Number(s.anzahl || 1);
+          pBrutto += betrag * anzahl;
+
+          if (v.zuzahlungskennzeichen === '3') { // O-101: '3' = zuzahlungspflichtig
+            const zu = Number(s.zuzahlungProPos != null ? s.zuzahlungProPos : betrag * 0.10);
+            pZu += zu * anzahl;
+          }
         }
       });
 
-      // Zuzahlung-Plausibilität: prozZuzahlung ≈ 10% Brutto (± 1ct pro Position toleriert)
-      if (v.zuzahlungskennzeichen === '3') {
-        const expected = pBrutto * 0.10;
-        const tolerance = 0.01 * p.sessions.length;
-        if (Math.abs(pZu - expected) > tolerance + 0.005)
-          W(warnings, 'S:01009', `${at}.sessions`,
-            `Zuzahlung-Summe ${pZu.toFixed(2)} € weicht von 10% Brutto (${expected.toFixed(2)} €) ab`);
+      if (isVkz03) {
+        const r2 = (x) => Math.round((+x + Number.EPSILON) * 100) / 100;
+        const pProzZu = r2(pZu);
+        const pPauschZu = Math.max(0, Math.min(10.00, r2(pBrutto - pProzZu)));
+        const pGesZu = r2(pProzZu + pPauschZu);
+        if (pGesZu <= 0) {
+          E(errors, 'S:01007', `${at}.zuzahlung`,
+            'VKZ 03: Zuzahlungsforderung ergibt 0,00 € — Nullforderungen sind unzulässig (GZF muss > 0 sein)');
+        }
+        totalServiceBrutto += pBrutto;
+        totalZuzahlung += pGesZu;
+      } else {
+        if (v.zuzahlungskennzeichen === '3') {
+          const expected = pBrutto * 0.10;
+          const tolerance = 0.01 * p.sessions.length;
+          if (Math.abs(pZu - expected) > tolerance + 0.005)
+            W(warnings, 'S:01009', `${at}.sessions`,
+              `Zuzahlung-Summe ${pZu.toFixed(2)} € weicht von 10% Brutto (${expected.toFixed(2)} €) ab`);
+        }
+        totalBrutto += pBrutto;
+        totalZuzahlung += Math.min(pBrutto, pZu + 10); // 10€ Pauschal-Cap
       }
-
-      totalBrutto += pBrutto;
-      totalZuzahlung += Math.min(pBrutto, pZu + 10);  // 10€ Pauschal-Cap
     }
   });
 
@@ -620,7 +801,8 @@ export function preflight(input) {
     totals: {
       brutto: +totalBrutto.toFixed(2),
       zuzahlung: +totalZuzahlung.toFixed(2),
-      netto: +(totalBrutto - totalZuzahlung).toFixed(2),
+      netto: +(isVkz03 ? totalZuzahlung : (totalBrutto - totalZuzahlung)).toFixed(2),
+      ...(isVkz03 ? { serviceBrutto: +totalServiceBrutto.toFixed(2) } : {}),
     },
   };
 }

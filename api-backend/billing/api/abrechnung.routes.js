@@ -57,6 +57,7 @@ import { buildEncryptedFilename } from '../dta/filename.js';
 import { verschluesseleFuerEmpfaenger } from '../dta/verschluesselung.js';
 import { ladeItsgTrustAnchors, pruefeTrustAnchorFrische } from '../dta/itsg-trust-anchor.js';
 import { icdOhneStrich, icdFuerDta, icdAbfrageKodes, icdTerminalMap } from '../utils/icd-code.js';
+import { mountZuzahlungsforderungRoutes } from './zuzahlungsforderung.routes.js';
 
 const router = express.Router();
 // ⚠️ Bewusst OHNE Absicherung auf fehlende Umgebungsvariablen: fehlen sie,
@@ -4490,6 +4491,23 @@ router.patch('/abrechnung/zeile/:id/absetzung', async (req, res) => {
     console.error('[abrechnung/zeile/absetzung]', e);
     return res.status(e.status || 500).json({ error: e.message });
   }
+});
+
+// § 302 SGB V — Zuzahlungsforderung (VKZ 03) Route (M1.1 / Ops #320)
+mountZuzahlungsforderungRoutes(router, {
+  supabase,
+  vergebeNummern,
+  speichereAuftragsdatei,
+  baueBegleitzettel,
+  rechnungsartFuer,
+  ladeBetriebsart,
+  ladeAnnahmestelle,
+  annahmestelleFehlt,
+  buildDtaFile,
+  logAccess,
+  bereichFuerAbrechnung,
+  isoWeek,
+  buildSammelRechnungsnummer,
 });
 
 export default router;

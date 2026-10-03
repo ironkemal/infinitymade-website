@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-02",
- "dateien": 328,
- "funktionen": 2800,
+ "erzeugt": "2026-10-03",
+ "dateien": 330,
+ "funktionen": 2817,
  "module": [
   "abrechnung",
   "anamnese",
@@ -1129,6 +1129,7 @@
    "calledBy": [
     "accessLogger",
     "createDsgvoRouter",
+    "createZuzahlungsforderungRouter",
     "db",
     "genericFail",
     "kioskAudit",
@@ -1954,6 +1955,7 @@
    "calledBy": [
     "E",
     "W",
+    "buildSLLAMessage",
     "isUnder18",
     "preflight",
     "validateBlanko",
@@ -2664,6 +2666,7 @@
    "calledBy": [
     "E",
     "W",
+    "buildSLLAMessage",
     "isUnder18",
     "preflight",
     "validateBlanko",
@@ -2774,6 +2777,7 @@
    "calledBy": [
     "E",
     "W",
+    "buildSLLAMessage",
     "isUnder18",
     "preflight",
     "validateBlanko",
@@ -2997,8 +3001,8 @@
    "name": "sha256Hex",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 81,
-   "end": 83,
+   "start": 82,
+   "end": 84,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3009,6 +3013,8 @@
    "calls": [],
    "calledBy": [
     "berechneVerschluesselung",
+    "createZuzahlungsforderungRouter",
+    "parseOriginalDtaMessage",
     "speichereAuftragsdatei",
     "speichereEinwilligung"
    ],
@@ -3052,8 +3058,8 @@
    "name": "rechnungsartFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 104,
-   "end": 115,
+   "start": 105,
+   "end": 116,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -3062,7 +3068,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -3071,8 +3079,8 @@
    "name": "vergebeNummern",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 125,
-   "end": 140,
+   "start": 126,
+   "end": 141,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -3085,6 +3093,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "createZuzahlungsforderungRouter",
     "ladeBetriebsart"
    ],
    "modules": [],
@@ -3095,8 +3104,8 @@
    "name": "speichereAuftragsdatei",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 151,
-   "end": 168,
+   "start": 152,
+   "end": 169,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [
@@ -3111,7 +3120,9 @@
    "calls": [
     "sha256Hex"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -3120,8 +3131,8 @@
    "name": "isoWeek",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 170,
-   "end": 177,
+   "start": 171,
+   "end": 178,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -3130,7 +3141,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -3139,8 +3152,8 @@
    "name": "buildSammelRechnungsnummer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 179,
-   "end": 181,
+   "start": 180,
+   "end": 182,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3149,7 +3162,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -3158,8 +3173,8 @@
    "name": "nameParts",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 183,
-   "end": 185,
+   "start": 184,
+   "end": 186,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3180,8 +3195,8 @@
    "name": "frequenzToDigit",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 196,
-   "end": 210,
+   "start": 197,
+   "end": 211,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -3202,8 +3217,8 @@
    "name": "legsFuerSector",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 234,
-   "end": 237,
+   "start": 235,
+   "end": 238,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -3227,8 +3242,8 @@
    "name": "abrechnungscodeFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 242,
-   "end": 244,
+   "start": 243,
+   "end": 245,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3252,8 +3267,8 @@
    "name": "bereichFuerAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 261,
-   "end": 312,
+   "start": 262,
+   "end": 313,
    "lines": 52,
    "spiegelHinweis": null,
    "tables": [
@@ -3268,7 +3283,9 @@
    "calls": [
     "abrechnungscodeFuer"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -3277,8 +3294,8 @@
    "name": "baueBegleitzettel",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 326,
-   "end": 399,
+   "start": 327,
+   "end": 400,
    "lines": 74,
    "spiegelHinweis": null,
    "tables": [
@@ -3295,7 +3312,9 @@
     "set",
     "waehlePostanschrift"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -3304,8 +3323,8 @@
    "name": "papierFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 346,
-   "end": 370,
+   "start": 347,
+   "end": 371,
    "lines": 25,
    "spiegelHinweis": null,
    "tables": [],
@@ -3329,8 +3348,8 @@
    "name": "bereichTexte",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 408,
-   "end": 410,
+   "start": 409,
+   "end": 411,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3348,8 +3367,8 @@
    "name": "buildBankverbindung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 414,
-   "end": 421,
+   "start": 415,
+   "end": 422,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -3367,8 +3386,8 @@
    "name": "fehlendePflichtangaben",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 425,
-   "end": 430,
+   "start": 426,
+   "end": 431,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -3422,8 +3441,8 @@
    "name": "pflichtangabenHinweisHtml",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 445,
-   "end": 470,
+   "start": 446,
+   "end": 471,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -3441,8 +3460,8 @@
    "name": "buildBelegnummer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 486,
-   "end": 492,
+   "start": 487,
+   "end": 493,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -3463,8 +3482,8 @@
    "name": "mapPrescriptionToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 498,
-   "end": 670,
+   "start": 499,
+   "end": 671,
    "lines": 173,
    "spiegelHinweis": null,
    "tables": [],
@@ -3498,8 +3517,8 @@
    "name": "nurInhaber",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1235,
-   "end": 1254,
+   "start": 1236,
+   "end": 1255,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [
@@ -3521,8 +3540,8 @@
    "name": "berechneVerschluesselung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1341,
-   "end": 1455,
+   "start": 1342,
+   "end": 1456,
    "lines": 115,
    "spiegelHinweis": null,
    "tables": [
@@ -3550,8 +3569,8 @@
    "name": "verarbeiteVerschluesselungsSchritt",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1472,
-   "end": 1519,
+   "start": 1473,
+   "end": 1520,
    "lines": 48,
    "spiegelHinweis": null,
    "tables": [
@@ -3575,8 +3594,8 @@
    "name": "mandantUndAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1973,
-   "end": 1993,
+   "start": 1974,
+   "end": 1994,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [
@@ -3599,8 +3618,8 @@
    "name": "geldstand",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2004,
-   "end": 2025,
+   "start": 2005,
+   "end": 2026,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -3621,8 +3640,8 @@
    "name": "r2",
    "kind": "arrow",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2005,
-   "end": 2024,
+   "start": 2006,
+   "end": 2025,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -3634,6 +3653,8 @@
     "round"
    ],
    "calledBy": [
+    "E",
+    "W",
     "berechneZuzahlungAusPosten",
     "betraegeFuerVerordnung",
     "betragFuerEinheiten",
@@ -3646,6 +3667,8 @@
     "guthabenAus",
     "kartenIkVon",
     "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
     "reichereAn",
     "resolvePositionZuzahlung",
     "resolvePreis",
@@ -3683,19 +3706,20 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
    "name": "mapVerordnungToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 3149,
-   "end": 3293,
+   "start": 3150,
+   "end": 3294,
    "lines": 145,
    "spiegelHinweis": null,
    "tables": [],
@@ -3775,11 +3799,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -3883,7 +3908,9 @@
     "betriebsartAus",
     "vergebeNummern"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -3957,11 +3984,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -4038,11 +4066,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -4137,11 +4166,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -4161,6 +4191,8 @@
     "round"
    ],
    "calledBy": [
+    "E",
+    "W",
     "berechneZuzahlungAusPosten",
     "betraegeFuerVerordnung",
     "betragFuerEinheiten",
@@ -4173,6 +4205,8 @@
     "guthabenAus",
     "kartenIkVon",
     "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
     "reichereAn",
     "resolvePositionZuzahlung",
     "resolvePreis",
@@ -4210,11 +4244,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -4331,11 +4366,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -4478,11 +4514,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -4525,6 +4562,8 @@
     "round"
    ],
    "calledBy": [
+    "E",
+    "W",
     "berechneZuzahlungAusPosten",
     "betraegeFuerVerordnung",
     "betragFuerEinheiten",
@@ -4537,6 +4576,8 @@
     "guthabenAus",
     "kartenIkVon",
     "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
     "reichereAn",
     "resolvePositionZuzahlung",
     "resolvePreis",
@@ -4574,11 +4615,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -4631,11 +4673,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -4708,6 +4751,213 @@
    "uiPfad": []
   },
   {
+   "name": "sha256Hex",
+   "kind": "function",
+   "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+   "start": 29,
+   "end": 31,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "berechneVerschluesselung",
+    "createZuzahlungsforderungRouter",
+    "parseOriginalDtaMessage",
+    "speichereAuftragsdatei",
+    "speichereEinwilligung"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "matchesFrozenIntent",
+   "kind": "function",
+   "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+   "start": 52,
+   "end": 68,
+   "lines": 17,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "humanProof"
+   ],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "humanProof",
+   "kind": "arrow",
+   "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+   "start": 63,
+   "end": 70,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "isSnapshotContentValid"
+   ],
+   "calledBy": [
+    "matchesFrozenIntent"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "isSnapshotContentValid",
+   "kind": "function",
+   "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+   "start": 70,
+   "end": 100,
+   "lines": 31,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "round"
+   ],
+   "calledBy": [
+    "createZuzahlungsforderungRouter",
+    "humanProof"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "createZuzahlungsforderungRouter",
+   "kind": "function",
+   "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+   "start": 121,
+   "end": 1400,
+   "lines": 1280,
+   "spiegelHinweis": null,
+   "tables": [
+    "profiles",
+    "abrechnung_zeile",
+    "abrechnung",
+    "belegliste",
+    "prescriptions",
+    "mahnungen",
+    "prescription_documents",
+    "terapeut_zertifikat",
+    "abrechnungen",
+    "kostentraeger"
+   ],
+   "rpcs": [],
+   "writes": [
+    "abrechnung:update",
+    "abrechnung:insert",
+    "abrechnung_zeile:insert"
+   ],
+   "endpoints": [],
+   "storage": [
+    "abrechnungen"
+   ],
+   "calls": [
+    "baueBegleitzettel",
+    "bereichFuerAbrechnung",
+    "berlinHeute",
+    "buildDtaFile",
+    "buildSammelRechnungsnummer",
+    "isSnapshotContentValid",
+    "isoWeek",
+    "istStichtag",
+    "istZuzahlungBezahlt",
+    "json",
+    "ladeBetriebsart",
+    "logAccess",
+    "matchesFrozenIntent",
+    "parseOriginalDtaMessage",
+    "rechnungsartFuer",
+    "round",
+    "saldoJeRezept",
+    "sha256Hex",
+    "speichereAuftragsdatei",
+    "vergebeNummern"
+   ],
+   "calledBy": [
+    "mountZuzahlungsforderungRoutes"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "mountZuzahlungsforderungRoutes",
+   "kind": "function",
+   "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+   "start": 1405,
+   "end": 1408,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "createZuzahlungsforderungRouter"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "pruefeAusfallFrist",
    "kind": "function",
    "file": "api-backend/billing/ausfall/frist.js",
@@ -4773,7 +5023,9 @@
    ],
    "calledBy": [
     "ablehnen",
-    "pruefeAusfallFrist"
+    "parseOriginalDtaMessage",
+    "pruefeAusfallFrist",
+    "validateCommonProof"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -5782,18 +6034,16 @@
    "name": "num",
    "kind": "arrow",
    "file": "api-backend/billing/dta/builder.js",
-   "start": 56,
-   "end": 100,
-   "lines": 45,
+   "start": 61,
+   "end": 67,
+   "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [
-    "kartenIkPflicht"
-   ],
+   "calls": [],
    "calledBy": [
     "calcAbrechnungsfallTotals",
     "r2",
@@ -5829,30 +6079,31 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
    "name": "r2",
    "kind": "arrow",
    "file": "api-backend/billing/dta/builder.js",
-   "start": 57,
-   "end": 100,
-   "lines": 44,
+   "start": 62,
+   "end": 67,
+   "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [
-    "kartenIkPflicht"
-   ],
+   "calls": [],
    "calledBy": [
+    "E",
+    "W",
     "berechneZuzahlungAusPosten",
     "betraegeFuerVerordnung",
     "betragFuerEinheiten",
@@ -5865,6 +6116,8 @@
     "guthabenAus",
     "kartenIkVon",
     "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
     "reichereAn",
     "resolvePositionZuzahlung",
     "resolvePreis",
@@ -5902,20 +6155,21 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
-   "name": "kartenIkPflicht",
-   "kind": "function",
+   "name": "parseDate",
+   "kind": "arrow",
    "file": "api-backend/billing/dta/builder.js",
-   "start": 89,
-   "end": 100,
-   "lines": 12,
+   "start": 63,
+   "end": 67,
+   "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -5924,11 +6178,14 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "buildDtaFile",
+    "E",
+    "W",
     "buildSLLAMessage",
-    "kartenIkVon",
-    "num",
-    "r2"
+    "isUnder18",
+    "preflight",
+    "validateBlanko",
+    "validateLhbBvb",
+    "validateStandard"
    ],
    "modules": [
     "abrechnung",
@@ -5959,20 +6216,128 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
+  },
+  {
+   "name": "kartenIkPflicht",
+   "kind": "function",
+   "file": "api-backend/billing/dta/builder.js",
+   "start": 99,
+   "end": 110,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "buildDtaFile",
+    "buildSLLAMessage",
+    "kartenIkVon"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "isValidTwoDecimalPrecision",
+   "kind": "function",
+   "file": "api-backend/billing/dta/builder.js",
+   "start": 112,
+   "end": 125,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "round"
+   ],
+   "calledBy": [
+    "E",
+    "W",
+    "parseVkz03Session",
+    "preflight"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 30 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "parseVkz03Session",
+   "kind": "function",
+   "file": "api-backend/billing/dta/builder.js",
+   "start": 127,
+   "end": 298,
+   "lines": 172,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "isValidTwoDecimalPrecision",
+    "r2"
+   ],
+   "calledBy": [
+    "buildSLLAMessage",
+    "calcAbrechnungsfallTotals"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "calcAbrechnungsfallTotals",
    "kind": "function",
    "file": "api-backend/billing/dta/builder.js",
-   "start": 102,
-   "end": 124,
-   "lines": 23,
+   "start": 300,
+   "end": 370,
+   "lines": 71,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -5982,9 +6347,11 @@
    "calls": [
     "calcSessionZuzahlung",
     "num",
+    "parseVkz03Session",
     "r2"
    ],
    "calledBy": [
+    "buildDtaFile",
     "buildSLLAMessage"
    ],
    "modules": [],
@@ -5995,9 +6362,9 @@
    "name": "buildSLLAMessage",
    "kind": "function",
    "file": "api-backend/billing/dta/builder.js",
-   "start": 126,
-   "end": 289,
-   "lines": 164,
+   "start": 372,
+   "end": 612,
+   "lines": 241,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -6023,7 +6390,11 @@
     "buildUNT",
     "calcAbrechnungsfallTotals",
     "icdFuerDta",
-    "kartenIkPflicht"
+    "isValidBelegnummer",
+    "isValidIkChecksum",
+    "kartenIkPflicht",
+    "parseDate",
+    "parseVkz03Session"
    ],
    "calledBy": [
     "buildDtaFile"
@@ -6036,8 +6407,8 @@
    "name": "buildSLGAMessage",
    "kind": "function",
    "file": "api-backend/billing/dta/builder.js",
-   "start": 291,
-   "end": 347,
+   "start": 614,
+   "end": 670,
    "lines": 57,
    "spiegelHinweis": null,
    "tables": [],
@@ -6066,9 +6437,9 @@
    "name": "buildDtaFile",
    "kind": "function",
    "file": "api-backend/billing/dta/builder.js",
-   "start": 349,
-   "end": 708,
-   "lines": 360,
+   "start": 672,
+   "end": 1053,
+   "lines": 382,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -6084,6 +6455,7 @@
     "buildSLLAMessage",
     "buildUNB",
     "buildUNZ",
+    "calcAbrechnungsfallTotals",
     "isPhysioAbrechnungscode",
     "kartenIkPflicht",
     "kartenIkVon",
@@ -6097,7 +6469,9 @@
     "validateVerordnungsart",
     "validateZuzahlungskennzeichen"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -6106,9 +6480,9 @@
    "name": "kartenIkVon",
    "kind": "arrow",
    "file": "api-backend/billing/dta/builder.js",
-   "start": 495,
-   "end": 530,
-   "lines": 36,
+   "start": 829,
+   "end": 873,
+   "lines": 45,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -6133,9 +6507,9 @@
    "name": "summenFuer",
    "kind": "function",
    "file": "api-backend/billing/dta/builder.js",
-   "start": 504,
-   "end": 530,
-   "lines": 27,
+   "start": 838,
+   "end": 873,
+   "lines": 36,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -6788,8 +7162,8 @@
    "name": "isValidIkChecksum",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 41,
-   "end": 50,
+   "start": 43,
+   "end": 52,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -6801,6 +7175,7 @@
    "calledBy": [
     "E",
     "W",
+    "buildSLLAMessage",
     "preflight"
    ],
    "modules": [
@@ -6844,8 +7219,8 @@
    "name": "ikKlassifikation",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 52,
-   "end": 59,
+   "start": 54,
+   "end": 61,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -6900,8 +7275,8 @@
    "name": "isValidKvnr",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 64,
-   "end": 66,
+   "start": 66,
+   "end": 68,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -6956,8 +7331,8 @@
    "name": "isValidVersichertenstatus",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 69,
-   "end": 71,
+   "start": 71,
+   "end": 73,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -7012,8 +7387,8 @@
    "name": "isValidLanr",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 83,
-   "end": 95,
+   "start": 85,
+   "end": 97,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -7069,8 +7444,8 @@
    "name": "isValidBsnr",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 98,
-   "end": 100,
+   "start": 100,
+   "end": 102,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -7125,8 +7500,8 @@
    "name": "isValidIcd10",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 105,
-   "end": 113,
+   "start": 107,
+   "end": 115,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -7181,8 +7556,8 @@
    "name": "isValidDiagnosegruppe",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 116,
-   "end": 118,
+   "start": 118,
+   "end": 120,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -7237,8 +7612,8 @@
    "name": "isValidTarifkennzeichen",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 121,
-   "end": 124,
+   "start": 123,
+   "end": 126,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -7293,8 +7668,8 @@
    "name": "isValidPositionsnummer",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 126,
-   "end": 128,
+   "start": 128,
+   "end": 130,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -7349,8 +7724,8 @@
    "name": "isValidPlz",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 131,
-   "end": 133,
+   "start": 133,
+   "end": 135,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -7405,8 +7780,8 @@
    "name": "isValidBelegnummer",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 149,
-   "end": 154,
+   "start": 151,
+   "end": 156,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -7418,6 +7793,7 @@
    "calledBy": [
     "E",
     "W",
+    "buildSLLAMessage",
     "preflight"
    ],
    "modules": [
@@ -7461,8 +7837,8 @@
    "name": "parseDate",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 157,
-   "end": 161,
+   "start": 159,
+   "end": 163,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -7474,6 +7850,7 @@
    "calledBy": [
     "E",
     "W",
+    "buildSLLAMessage",
     "isUnder18",
     "preflight",
     "validateBlanko",
@@ -7521,9 +7898,9 @@
    "name": "E",
    "kind": "arrow",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 167,
-   "end": 626,
-   "lines": 460,
+   "start": 169,
+   "end": 808,
+   "lines": 640,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -7548,13 +7925,16 @@
     "isValidPlz",
     "isValidPositionsnummer",
     "isValidTarifkennzeichen",
+    "isValidTwoDecimalPrecision",
     "isValidVersichertenstatus",
     "istGueltigerLegs",
     "json",
     "laenge",
     "parseDate",
     "preflight",
-    "pruefeLaenge"
+    "pruefeLaenge",
+    "r2",
+    "round"
    ],
    "calledBy": [
     "W",
@@ -7562,7 +7942,8 @@
     "getVorlagenSampleHtml",
     "laenge",
     "preflight",
-    "pruefeLaenge"
+    "pruefeLaenge",
+    "r2"
    ],
    "modules": [
     "abrechnung",
@@ -7605,9 +7986,9 @@
    "name": "W",
    "kind": "arrow",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 168,
-   "end": 626,
-   "lines": 459,
+   "start": 170,
+   "end": 808,
+   "lines": 639,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -7632,13 +8013,16 @@
     "isValidPlz",
     "isValidPositionsnummer",
     "isValidTarifkennzeichen",
+    "isValidTwoDecimalPrecision",
     "isValidVersichertenstatus",
     "istGueltigerLegs",
     "json",
     "laenge",
     "parseDate",
     "preflight",
-    "pruefeLaenge"
+    "pruefeLaenge",
+    "r2",
+    "round"
    ],
    "calledBy": [
     "E",
@@ -7685,9 +8069,9 @@
    "name": "preflight",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 174,
-   "end": 626,
-   "lines": 453,
+   "start": 176,
+   "end": 808,
+   "lines": 633,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -7713,12 +8097,15 @@
     "isValidPlz",
     "isValidPositionsnummer",
     "isValidTarifkennzeichen",
+    "isValidTwoDecimalPrecision",
     "isValidVersichertenstatus",
     "istGueltigerLegs",
     "json",
     "laenge",
     "parseDate",
-    "pruefeLaenge"
+    "pruefeLaenge",
+    "r2",
+    "round"
    ],
    "calledBy": [
     "E",
@@ -7766,8 +8153,8 @@
    "name": "laenge",
    "kind": "arrow",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 247,
-   "end": 255,
+   "start": 251,
+   "end": 259,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -7825,8 +8212,8 @@
    "name": "pruefeLaenge",
    "kind": "arrow",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 248,
-   "end": 255,
+   "start": 252,
+   "end": 259,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -7881,11 +8268,90 @@
    ]
   },
   {
+   "name": "r2",
+   "kind": "arrow",
+   "file": "api-backend/billing/dta/preflight.js",
+   "start": 773,
+   "end": 780,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "E",
+    "round"
+   ],
+   "calledBy": [
+    "E",
+    "W",
+    "berechneZuzahlungAusPosten",
+    "betraegeFuerVerordnung",
+    "betragFuerEinheiten",
+    "buildDtaFile",
+    "calcAbrechnungsfallTotals",
+    "calcAbrechnungsfallZuzahlung",
+    "calcSessionZuzahlung",
+    "folgenDerKorrektur",
+    "geldstand",
+    "guthabenAus",
+    "kartenIkVon",
+    "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
+    "reichereAn",
+    "resolvePositionZuzahlung",
+    "resolvePreis",
+    "summenFuer",
+    "verrechnungsBetrag",
+    "versucheBereich",
+    "zuzahlungFuerPodoVerordnung"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 30 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "segmenteTrennen",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 648,
-   "end": 656,
+   "start": 830,
+   "end": 838,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -7895,6 +8361,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "parseOriginalDtaMessage",
     "pruefeDatenstrom",
     "splitSegments"
    ],
@@ -7906,8 +8373,8 @@
    "name": "felderTrennen",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 679,
-   "end": 691,
+   "start": 861,
+   "end": 873,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -7918,6 +8385,7 @@
    "calls": [],
    "calledBy": [
     "parseEdifactFehl",
+    "parseOriginalDtaMessage",
     "pruefeDatenstrom"
    ],
    "modules": [],
@@ -7928,8 +8396,8 @@
    "name": "pruefeDatenstrom",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 701,
-   "end": 777,
+   "start": 883,
+   "end": 959,
    "lines": 77,
    "spiegelHinweis": null,
    "tables": [],
@@ -7942,7 +8410,8 @@
     "segmenteTrennen"
    ],
    "calledBy": [
-    "buildDtaFile"
+    "buildDtaFile",
+    "parseOriginalDtaMessage"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -7952,8 +8421,8 @@
    "name": "assertPreflight",
    "kind": "function",
    "file": "api-backend/billing/dta/preflight.js",
-   "start": 780,
-   "end": 790,
+   "start": 962,
+   "end": 972,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -8660,6 +9129,211 @@
    "storage": [],
    "calls": [],
    "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "sha256Hex",
+   "kind": "function",
+   "file": "api-backend/billing/dta/zuzahlungsforderung-ursprung.js",
+   "start": 73,
+   "end": 75,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "berechneVerschluesselung",
+    "createZuzahlungsforderungRouter",
+    "parseOriginalDtaMessage",
+    "speichereAuftragsdatei",
+    "speichereEinwilligung"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "komponentenTrennen",
+   "kind": "function",
+   "file": "api-backend/billing/dta/zuzahlungsforderung-ursprung.js",
+   "start": 84,
+   "end": 104,
+   "lines": 21,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "parseOriginalDtaMessage"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "unescapeEdifact",
+   "kind": "function",
+   "file": "api-backend/billing/dta/zuzahlungsforderung-ursprung.js",
+   "start": 113,
+   "end": 128,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "parseOriginalDtaMessage"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "parseGermanAmount",
+   "kind": "function",
+   "file": "api-backend/billing/dta/zuzahlungsforderung-ursprung.js",
+   "start": 137,
+   "end": 154,
+   "lines": 18,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "round"
+   ],
+   "calledBy": [
+    "parseOriginalDtaMessage"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "toIsoDate",
+   "kind": "function",
+   "file": "api-backend/billing/dta/zuzahlungsforderung-ursprung.js",
+   "start": 163,
+   "end": 177,
+   "lines": 15,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istStichtag"
+   ],
+   "calledBy": [
+    "parseOriginalDtaMessage"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "parseOriginalDtaMessage",
+   "kind": "function",
+   "file": "api-backend/billing/dta/zuzahlungsforderung-ursprung.js",
+   "start": 197,
+   "end": 1736,
+   "lines": 1540,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "berlinHeute",
+    "felderTrennen",
+    "istStichtag",
+    "komponentenTrennen",
+    "parseGermanAmount",
+    "pruefeDatenstrom",
+    "round",
+    "segmenteTrennen",
+    "sha256Hex",
+    "toIsoDate",
+    "unescapeEdifact",
+    "validateCommonProof",
+    "zulassen"
+   ],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "validateCommonProof",
+   "kind": "function",
+   "file": "api-backend/billing/dta/zuzahlungsforderung-ursprung.js",
+   "start": 1128,
+   "end": 1413,
+   "lines": 286,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "berlinHeute",
+    "istStichtag",
+    "zulassen"
+   ],
+   "calledBy": [
+    "parseOriginalDtaMessage"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -12290,6 +12964,8 @@
     "round"
    ],
    "calledBy": [
+    "E",
+    "W",
     "berechneZuzahlungAusPosten",
     "betraegeFuerVerordnung",
     "betragFuerEinheiten",
@@ -12302,6 +12978,8 @@
     "guthabenAus",
     "kartenIkVon",
     "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
     "reichereAn",
     "resolvePositionZuzahlung",
     "resolvePreis",
@@ -12339,11 +13017,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -12415,6 +13094,8 @@
     "round"
    ],
    "calledBy": [
+    "E",
+    "W",
     "berechneZuzahlungAusPosten",
     "betraegeFuerVerordnung",
     "betragFuerEinheiten",
@@ -12427,6 +13108,8 @@
     "guthabenAus",
     "kartenIkVon",
     "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
     "reichereAn",
     "resolvePositionZuzahlung",
     "resolvePreis",
@@ -12464,11 +13147,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -13581,7 +14265,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -13603,6 +14289,7 @@
     "set"
    ],
    "calledBy": [
+    "createZuzahlungsforderungRouter",
     "saldoFuerRezept"
    ],
    "modules": [],
@@ -13626,6 +14313,8 @@
     "round"
    ],
    "calledBy": [
+    "E",
+    "W",
     "berechneZuzahlungAusPosten",
     "betraegeFuerVerordnung",
     "betragFuerEinheiten",
@@ -13638,6 +14327,8 @@
     "guthabenAus",
     "kartenIkVon",
     "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
     "reichereAn",
     "resolvePositionZuzahlung",
     "resolvePreis",
@@ -13675,11 +14366,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -13814,6 +14506,8 @@
     "round"
    ],
    "calledBy": [
+    "E",
+    "W",
     "berechneZuzahlungAusPosten",
     "betraegeFuerVerordnung",
     "betragFuerEinheiten",
@@ -13826,6 +14520,8 @@
     "guthabenAus",
     "kartenIkVon",
     "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
     "reichereAn",
     "resolvePositionZuzahlung",
     "resolvePreis",
@@ -13863,11 +14559,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -13917,11 +14614,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -14767,12 +15465,15 @@
    "calls": [],
    "calledBy": [
     "berlinTagVon",
+    "createZuzahlungsforderungRouter",
     "jahresendePlus",
     "kostentraegerAbfrage",
     "kostentraegerIkAufloesen",
     "ladeAnnahmestelle",
     "ladePapierannahmestelle",
-    "pruefeEmpfaenger"
+    "parseOriginalDtaMessage",
+    "pruefeEmpfaenger",
+    "validateCommonProof"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -14793,10 +15494,14 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "createZuzahlungsforderungRouter",
     "kostentraegerIkAufloesen",
     "ladeAnnahmestelle",
     "ladePapierannahmestelle",
-    "pruefeEmpfaenger"
+    "parseOriginalDtaMessage",
+    "pruefeEmpfaenger",
+    "toIsoDate",
+    "validateCommonProof"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -17679,6 +18384,7 @@
     "chat",
     "createCalendarEvent",
     "createDsgvoRouter",
+    "createZuzahlungsforderungRouter",
     "db",
     "declineAnfrage",
     "empfaengerVorabPruefen",
@@ -18063,11 +18769,14 @@
     "json"
    ],
    "calledBy": [
+    "E",
+    "W",
     "_resizeVorlagenIframe",
     "auswahlStand",
     "baueGruppen",
     "cent",
     "computeRxDeadlineAlerts",
+    "createZuzahlungsforderungRouter",
     "daysBetween",
     "enumerateDay",
     "euro",
@@ -18082,6 +18791,8 @@
     "goToStep",
     "hexToHSL",
     "hslToHex",
+    "isSnapshotContentValid",
+    "isValidTwoDecimalPrecision",
     "k",
     "kalendertage",
     "karteHtml",
@@ -18101,7 +18812,10 @@
     "normalisiereStufen",
     "openBookingModal",
     "openFile",
+    "parseGermanAmount",
+    "parseOriginalDtaMessage",
     "patientTerminZeile",
+    "preflight",
     "pushSlot",
     "r2",
     "reichereAn",
@@ -18162,11 +18876,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 31 modülden çağrılıyor"
+    "ortak yardımcı — 32 modülden çağrılıyor"
    ]
   },
   {
@@ -38281,7 +38996,8 @@
     "getVorlagenSampleHtml",
     "laenge",
     "preflight",
-    "pruefeLaenge"
+    "pruefeLaenge",
+    "r2"
    ],
    "modules": [
     "abrechnung",
@@ -58136,11 +58852,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -58279,6 +58996,8 @@
     "set"
    ],
    "calledBy": [
+    "E",
+    "W",
     "berechneZuzahlungAusPosten",
     "betraegeFuerVerordnung",
     "betragFuerEinheiten",
@@ -58291,6 +59010,8 @@
     "guthabenAus",
     "kartenIkVon",
     "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
     "reichereAn",
     "resolvePositionZuzahlung",
     "resolvePreis",
@@ -58328,11 +59049,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -70725,6 +71447,8 @@
    "calls": [],
    "calledBy": [
     "berechneVerschluesselung",
+    "createZuzahlungsforderungRouter",
+    "parseOriginalDtaMessage",
     "speichereAuftragsdatei",
     "speichereEinwilligung"
    ],
@@ -87812,11 +88536,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -87871,11 +88596,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -118701,11 +119427,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -121533,6 +122260,8 @@
     "round"
    ],
    "calledBy": [
+    "E",
+    "W",
     "berechneZuzahlungAusPosten",
     "betraegeFuerVerordnung",
     "betragFuerEinheiten",
@@ -121545,6 +122274,8 @@
     "guthabenAus",
     "kartenIkVon",
     "leistungenAusSessions",
+    "parseVkz03Session",
+    "preflight",
     "reichereAn",
     "resolvePositionZuzahlung",
     "resolvePreis",
@@ -121582,11 +122313,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -121938,11 +122670,12 @@
     "team",
     "ueberblick",
     "vehEditSaveBtn",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
+    "ortak yardımcı — 30 modülden çağrılıyor"
    ]
   },
   {
@@ -134120,7 +134853,7 @@
   },
   {
    "tabelle": "abrechnung",
-   "anzahl": 3,
+   "anzahl": 4,
    "pfade": [
     {
      "leitfunktion": "verarbeiteVerschluesselungsSchritt",
@@ -134128,8 +134861,8 @@
       {
        "name": "verarbeiteVerschluesselungsSchritt",
        "file": "api-backend/billing/api/abrechnung.routes.js",
-       "start": 1472,
-       "end": 1519,
+       "start": 1473,
+       "end": 1520,
        "lines": 48,
        "writes": [
         "abrechnung:update"
@@ -134149,6 +134882,24 @@
        "end": 178,
        "lines": 53,
        "writes": [
+        "abrechnung:insert"
+       ],
+       "modules": [],
+       "uiPfad": []
+      }
+     ]
+    },
+    {
+     "leitfunktion": "createZuzahlungsforderungRouter",
+     "funktionen": [
+      {
+       "name": "createZuzahlungsforderungRouter",
+       "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+       "start": 121,
+       "end": 1400,
+       "lines": 1280,
+       "writes": [
+        "abrechnung:update",
         "abrechnung:insert"
        ],
        "modules": [],
@@ -136188,10 +136939,11 @@
   {
    "name": "r2",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:2005",
+    "api-backend/billing/api/abrechnung.routes.js:2006",
     "api-backend/billing/api/statistik.routes.js:176",
     "api-backend/billing/api/zuzahlung.routes.js:45",
-    "api-backend/billing/dta/builder.js:57",
+    "api-backend/billing/dta/builder.js:62",
+    "api-backend/billing/dta/preflight.js:773",
     "api-backend/billing/preise/resolver.js:42",
     "api-backend/billing/utils/abrechnung-zeilen.js:36",
     "api-backend/billing/zuzahlung/calculator.js:14",
@@ -136351,6 +137103,17 @@
    "aynalar": []
   },
   {
+   "name": "parseDate",
+   "orte": [
+    "api-backend/ai/validators/blankoRules.js:23",
+    "api-backend/ai/validators/lhbBvbRules.js:19",
+    "api-backend/ai/validators/standardRules.js:35",
+    "api-backend/billing/dta/builder.js:63",
+    "api-backend/billing/dta/preflight.js:159"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "leer",
    "orte": [
     "api-backend/billing/dta/auftragsdatei.js:51",
@@ -136406,12 +137169,12 @@
    "aynalar": []
   },
   {
-   "name": "parseDate",
+   "name": "sha256Hex",
    "orte": [
-    "api-backend/ai/validators/blankoRules.js:23",
-    "api-backend/ai/validators/lhbBvbRules.js:19",
-    "api-backend/ai/validators/standardRules.js:35",
-    "api-backend/billing/dta/preflight.js:157"
+    "api-backend/billing/api/abrechnung.routes.js:82",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js:29",
+    "api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73",
+    "module/einwilligung-texte.js:360"
    ],
    "aynalar": []
   },
@@ -136755,17 +137518,9 @@
    "aynalar": []
   },
   {
-   "name": "sha256Hex",
-   "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:81",
-    "module/einwilligung-texte.js:360"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "fehlendePflichtangaben",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:425",
+    "api-backend/billing/api/abrechnung.routes.js:426",
     "module/beleg-druck.js:55"
    ],
    "aynalar": [
@@ -136799,7 +137554,7 @@
   {
    "name": "num",
    "orte": [
-    "api-backend/billing/dta/builder.js:56",
+    "api-backend/billing/dta/builder.js:61",
     "module/abrechnung-verlauf.js:72"
    ],
    "aynalar": []
@@ -136807,7 +137562,7 @@
   {
    "name": "isValidLanr",
    "orte": [
-    "api-backend/billing/dta/preflight.js:83",
+    "api-backend/billing/dta/preflight.js:85",
     "module/lanr-pruefung.js:16"
    ],
    "aynalar": []
@@ -136815,7 +137570,7 @@
   {
    "name": "E",
    "orte": [
-    "api-backend/billing/dta/preflight.js:167",
+    "api-backend/billing/dta/preflight.js:169",
     "dashboard.js:11836"
    ],
    "aynalar": []

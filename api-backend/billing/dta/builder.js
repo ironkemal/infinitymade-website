@@ -50,11 +50,21 @@ import {
   isPhysioAbrechnungscode,
   summenstatusFuer,
 } from '../codes/anlage3_v22.js';
-import { preflight as runPreflight, pruefeDatenstrom } from './preflight.js';
+import {
+  preflight as runPreflight,
+  pruefeDatenstrom,
+  isValidBelegnummer,
+  isValidIkChecksum,
+} from './preflight.js';
 import { icdFuerDta } from '../utils/icd-code.js';
 
 const num = (v) => Number(v) || 0;
 const r2 = (v) => +Number(v).toFixed(2);
+const parseDate = (v) => {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
 
 // ---------------------------------------------------------------------------
 // Input shape (per prescription):
@@ -99,28 +109,264 @@ function kartenIkPflicht(verordnung) {
   return ik;
 }
 
-function calcAbrechnungsfallTotals(item) {
-  const { sessions, verordnung } = item;
-  const brutto = r2(sessions.reduce((a, s) => a + num(s.einzelbetrag) * num(s.anzahl || 1), 0));
+export function isValidTwoDecimalPrecision(raw, num) {
+  if (Math.abs(num - Math.round(num * 100) / 100) > 1e-6) {
+    return false;
+  }
+  if (typeof raw === 'string') {
+    const parts = raw.trim().split(/[.,]/);
+    if (parts.length === 2 && parts[1].length > 2) {
+      if (/[1-9]/.test(parts[1].slice(2))) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+export function parseVkz03Session(s, index = 0) {
+  const posLabel = s?.positionsnummer || index;
+
+  // 0. position_frei validation
+  if (s?.position_frei !== undefined && s?.position_frei !== null) {
+    if (typeof s.position_frei !== 'boolean') {
+      const e = new Error(
+        `VKZ 03: position_frei für Position ${posLabel} muss boolesch (true/false) sein, erhalten: "${s.position_frei}".`
+      );
+      e.status = 422;
+      throw e;
+    }
+  }
+  const isPositionFrei = s?.position_frei === true;
+
+  // 1. Anzahl (Menge)
+  let anzahl = 1;
+  if (s?.anzahl !== undefined && s?.anzahl !== null) {
+    if (typeof s.anzahl !== 'number' && typeof s.anzahl !== 'string') {
+      const e = new Error(`VKZ 03: Anzahl "${s.anzahl}" ungültig (nur Zahl oder String zulässig, Position ${posLabel}).`);
+      e.status = 422;
+      throw e;
+    }
+    if (typeof s.anzahl === 'string' && s.anzahl.trim() === '') {
+      const e = new Error(`VKZ 03: Anzahl "${s.anzahl}" ungültig (> 0 erwartet, Position ${posLabel}).`);
+      e.status = 422;
+      throw e;
+    }
+    const anzahlStr = typeof s.anzahl === 'string' ? s.anzahl.trim().replace(',', '.') : String(s.anzahl);
+    const n = Number(anzahlStr);
+    if (!Number.isFinite(n) || n <= 0) {
+      const e = new Error(`VKZ 03: Anzahl "${s.anzahl}" ungültig (> 0 erwartet, Position ${posLabel}).`);
+      e.status = 422;
+      throw e;
+    }
+    if (!isValidTwoDecimalPrecision(s.anzahl, n)) {
+      const e = new Error(
+        `VKZ 03: Anzahl "${s.anzahl}" hat unzulässige Nachkommastellen ` +
+        `(maximal 2 Dezimalstellen zulässig für EHE, Position ${posLabel}).`
+      );
+      e.status = 422;
+      throw e;
+    }
+    anzahl = r2(n);
+  }
+
+  // 2. Einzelbetrag
+  if (s?.einzelbetrag === undefined || s?.einzelbetrag === null) {
+    const e = new Error(`VKZ 03: Einzelbetrag fehlt (Position ${posLabel}).`);
+    e.status = 422;
+    throw e;
+  }
+  if (typeof s.einzelbetrag !== 'number' && typeof s.einzelbetrag !== 'string') {
+    const e = new Error(
+      `VKZ 03: Einzelbetrag "${s.einzelbetrag}" ungültig (nur Zahl oder String zulässig, Position ${posLabel}).`
+    );
+    e.status = 422;
+    throw e;
+  }
+  if (typeof s.einzelbetrag === 'string' && s.einzelbetrag.trim() === '') {
+    const e = new Error(`VKZ 03: Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet, Position ${posLabel}).`);
+    e.status = 422;
+    throw e;
+  }
+  const betragStr = typeof s.einzelbetrag === 'string' ? s.einzelbetrag.trim().replace(',', '.') : String(s.einzelbetrag);
+  const nBetrag = Number(betragStr);
+  if (!Number.isFinite(nBetrag) || nBetrag <= 0) {
+    const e = new Error(`VKZ 03: Einzelbetrag "${s.einzelbetrag}" ungültig (> 0 erwartet, Position ${posLabel}).`);
+    e.status = 422;
+    throw e;
+  }
+  if (!isValidTwoDecimalPrecision(s.einzelbetrag, nBetrag)) {
+    const e = new Error(
+      `VKZ 03: Einzelbetrag "${s.einzelbetrag}" hat unzulässige Nachkommastellen ` +
+      `(maximal 2 Dezimalstellen zulässig für EHE, Position ${posLabel}).`
+    );
+    e.status = 422;
+    throw e;
+  }
+  const einzelbetrag = r2(nBetrag);
+
+  // 3. Forderungs-Zuzahlung
+  let numZu = 0;
+  if (isPositionFrei) {
+    if (s?.zuzahlungProPos !== undefined && s?.zuzahlungProPos !== null) {
+      if (typeof s.zuzahlungProPos !== 'number' && typeof s.zuzahlungProPos !== 'string') {
+        const e = new Error(
+          `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig (nur Zahl oder String zulässig).`
+        );
+        e.status = 422;
+        throw e;
+      }
+      if (typeof s.zuzahlungProPos === 'string' && s.zuzahlungProPos.trim() === '') {
+        const e = new Error(
+          `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig.`
+        );
+        e.status = 422;
+        throw e;
+      }
+      const zuStr = typeof s.zuzahlungProPos === 'string' ? s.zuzahlungProPos.trim().replace(',', '.') : String(s.zuzahlungProPos);
+      const nZu = Number(zuStr);
+      if (!Number.isFinite(nZu)) {
+        const e = new Error(
+          `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig.`
+        );
+        e.status = 422;
+        throw e;
+      }
+      if (!isValidTwoDecimalPrecision(s.zuzahlungProPos, nZu)) {
+        const e = new Error(
+          `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} hat unzulässige Nachkommastellen ` +
+          `(maximal 2 Dezimalstellen zulässig für EHE).`
+        );
+        e.status = 422;
+        throw e;
+      }
+      if (r2(nZu) !== 0) {
+        const e = new Error(
+          `VKZ 03: Widersprüchliche Angaben für Position ${posLabel} — position_frei ist true, aber Forderungs-Zuzahlung ist ${nZu} € (> 0).`
+        );
+        e.status = 422;
+        throw e;
+      }
+    }
+    numZu = 0;
+  } else {
+    if (s?.zuzahlungProPos === undefined || s?.zuzahlungProPos === null) {
+      const e = new Error(
+        `VKZ 03: Explizite Forderungs-Zuzahlung für Position ${posLabel} fehlt. ` +
+        'Bei Zuzahlungsforderungen ist die Forderungs-Zuzahlung je Position zwingend anzugeben (kein 10%-Fallback).'
+      );
+      e.status = 422;
+      throw e;
+    }
+    if (typeof s.zuzahlungProPos !== 'number' && typeof s.zuzahlungProPos !== 'string') {
+      const e = new Error(
+        `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig (nur Zahl oder String zulässig).`
+      );
+      e.status = 422;
+      throw e;
+    }
+    if (typeof s.zuzahlungProPos === 'string' && s.zuzahlungProPos.trim() === '') {
+      const e = new Error(
+        `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig ` +
+        `(erwartet: finite Zahl in [0, Einzelbetrag ${einzelbetrag} €]).`
+      );
+      e.status = 422;
+      throw e;
+    }
+    const zuStr = typeof s.zuzahlungProPos === 'string' ? s.zuzahlungProPos.trim().replace(',', '.') : String(s.zuzahlungProPos);
+    const nZu = Number(zuStr);
+    if (!Number.isFinite(nZu) || nZu < 0 || r2(nZu) > r2(einzelbetrag)) {
+      const e = new Error(
+        `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} ungültig ` +
+        `(erwartet: finite Zahl in [0, Einzelbetrag ${einzelbetrag} €]).`
+      );
+      e.status = 422;
+      throw e;
+    }
+    if (!isValidTwoDecimalPrecision(s.zuzahlungProPos, nZu)) {
+      const e = new Error(
+        `VKZ 03: Forderungs-Zuzahlung "${s.zuzahlungProPos}" für Position ${posLabel} hat unzulässige Nachkommastellen ` +
+        `(maximal 2 Dezimalstellen zulässig für EHE).`
+      );
+      e.status = 422;
+      throw e;
+    }
+    numZu = r2(nZu);
+  }
+
+  return { anzahl, einzelbetrag, numZu, isPositionFrei };
+}
+
+export function calcAbrechnungsfallTotals(item, vkz = '01') {
+  const effectiveVkz = vkz || item?.vkz || '01';
+  const { sessions = [], verordnung = {} } = item || {};
   let prozZuzahlung = 0, pauschZuzahlung = 0;
+
+  if (effectiveVkz === '03') {
+    const kz = String(verordnung.zuzahlungskennzeichen ?? '').trim();
+    if (kz === '0' || kz === '3' || !['1', '2', '5'].includes(kz)) {
+      const e = new Error(
+        `Zuzahlungskennzeichen "${kz}" ist für VKZ 03 (Zuzahlungsforderung) unzulässig. ` +
+        'Erlaubt sind Kennzeichen 1 (Befreiung), 2 (Zahlungsunwillig trotz Mahnung) oder 5 (Jahreswechsel) — Anlage 1 TP5 V21 Kap. 7.4.2.'
+      );
+      e.status = 422;
+      throw e;
+    }
+
+    let serviceBrutto = 0;
+    prozZuzahlung = r2(sessions.reduce((a, s, i) => {
+      const parsed = parseVkz03Session(s, i);
+      serviceBrutto += parsed.einzelbetrag * parsed.anzahl;
+
+      const sessionZu = calcSessionZuzahlung({
+        preis_eur: parsed.einzelbetrag,
+        zuzahlung_eur_position: parsed.numZu,
+        position_frei: parsed.isPositionFrei,
+      });
+
+      return a + sessionZu * parsed.anzahl;
+    }, 0));
+    serviceBrutto = r2(serviceBrutto);
+
+    pauschZuzahlung = Math.min(10.00, r2(serviceBrutto - prozZuzahlung));
+    if (pauschZuzahlung < 0) pauschZuzahlung = 0;
+    pauschZuzahlung = r2(pauschZuzahlung);
+
+    const gesZuzahlung = r2(prozZuzahlung + pauschZuzahlung);
+
+    if (gesZuzahlung <= 0) {
+      const e = new Error(
+        'VKZ 03: Zuzahlungsforderung ergibt 0,00 € — Nullforderungen sind unzulässig (GZF muss > 0 sein).'
+      );
+      e.status = 422;
+      throw e;
+    }
+
+    return {
+      brutto: 0.00,
+      serviceBrutto,
+      prozZuzahlung,
+      pauschZuzahlung,
+      gesZuzahlung,
+      netto: gesZuzahlung,
+    };
+  }
+
+  // --- Non-VKZ 03 (exact HEAD original) ---
+  const serviceBrutto = r2(sessions.reduce((a, s) => a + num(s.einzelbetrag) * num(s.anzahl || 1), 0));
+
   if (verordnung.zuzahlungskennzeichen === '3') {   // O-101: '3' = zuzahlungspflichtig
-    // Zweite Zuzahlungsformel entfernt (Aufgabe 2): hier stand
-    // `s.zuzahlungProPos || s.einzelbetrag * 0.10`. Bei einer Zuzahlung von
-    // GENAU 0 € — also einer zuzahlungsfreien Position — ist 0 falsy, dadurch
-    // kippte die Rechnung in den 10-%-Zweig und meldete der Kasse eine
-    // Zuzahlung, die es nicht gibt. Die Regel steht jetzt nur noch in
-    // zuzahlung/calculator.js.
     prozZuzahlung = r2(sessions.reduce(
       (a, s) => a + calcSessionZuzahlung({
         preis_eur: num(s.einzelbetrag),
         zuzahlung_eur_position: s.zuzahlungProPos,
       }) * num(s.anzahl || 1), 0));
-    pauschZuzahlung = Math.min(10.00, r2(brutto - prozZuzahlung));
+    pauschZuzahlung = Math.min(10.00, r2(serviceBrutto - prozZuzahlung));
     if (pauschZuzahlung < 0) pauschZuzahlung = 0;
   }
   const gesZuzahlung = r2(prozZuzahlung + pauschZuzahlung);
-  const netto = r2(brutto - gesZuzahlung);
-  return { brutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto };
+  const netto = r2(serviceBrutto - gesZuzahlung);
+  return { brutto: serviceBrutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung, netto };
 }
 
 function buildSLLAMessage({
@@ -132,7 +378,7 @@ function buildSLLAMessage({
   nachrichtenreferenz,
 }) {
   const { patient, doctor, verordnung, tarif, sessions, urspruenglich } = prescription;
-  const totals = calcAbrechnungsfallTotals(prescription);
+  const totals = calcAbrechnungsfallTotals(prescription, vkz);
 
   const lines = [
     ...buildSLLA_FKT({
@@ -161,9 +407,74 @@ function buildSLLAMessage({
     }),
   ];
 
-  if (vkz !== '01' && urspruenglich) {
+  if (vkz === '03') {
+    if (!urspruenglich) {
+      const e = new Error(
+        'Ursprüngliche Rechnungsinformation (URI) fehlt für Korrekturverfahren (VKZ 03) ' +
+        '— Anlage 1 TP5 V21 § 5.5.3.1.'
+      );
+      e.status = 422;
+      throw e;
+    }
+    const origIk = String(urspruenglich.ikLeistungserbringer ?? urspruenglich.origIkLeistungserbringer ?? '').trim();
+    if (!/^\d{9}$/.test(origIk)) {
+      const e = new Error(
+        `URI: Ursprüngliche Absender-IK "${origIk}" ungültig (9 Stellen erwartet) — Anlage 1 TP5 V21 § 5.5.3.1.`
+      );
+      e.status = 422;
+      throw e;
+    }
+    if (!isValidIkChecksum(origIk)) {
+      const e = new Error(
+        `URI: Ursprüngliche Absender-IK "${origIk}" Prüfziffer ungültig — Anlage 1 TP5 V21 § 5.5.3.1.`
+      );
+      e.status = 422;
+      throw e;
+    }
+    const origSammel = String(urspruenglich.sammelRechnungsnummer ?? urspruenglich.origSammelRechnungsnummer ?? '').trim();
+    if (!origSammel) {
+      const e = new Error('URI: Ursprüngliche Sammelrechnungsnummer fehlt — Anlage 1 TP5 V21 § 5.5.3.1.');
+      e.status = 422;
+      throw e;
+    }
+    if (origSammel.length > 14) {
+      const e = new Error(`URI: Ursprüngliche Sammelrechnungsnummer > 14 Zeichen (${origSammel.length}) — Anlage 1 TP5 V21 § 5.5.3.1.`);
+      e.status = 422;
+      throw e;
+    }
+    if (!/^[A-Za-z0-9]+([-/][A-Za-z0-9]+)*$/.test(origSammel)) {
+      const e = new Error(`URI: Ursprüngliche Sammelrechnungsnummer "${origSammel}" enthält unzulässige Zeichen — Anlage 1 TP5 V21 § 5.5.3.1.`);
+      e.status = 422;
+      throw e;
+    }
+    const origDatum = parseDate(urspruenglich.rechnungsdatum ?? urspruenglich.origRechnungsdatum);
+    if (!origDatum) {
+      const e = new Error('URI: Ursprüngliches Rechnungsdatum fehlt oder ungültig — Anlage 1 TP5 V21 § 5.5.3.1.');
+      e.status = 422;
+      throw e;
+    }
+    const origBeleg = String(urspruenglich.belegnummer ?? urspruenglich.origBelegnummer ?? '').trim();
+    if (!origBeleg) {
+      const e = new Error('URI: Ursprüngliche Belegnummer fehlt — Anlage 1 TP5 V21 § 5.5.3.1.');
+      e.status = 422;
+      throw e;
+    }
+    if (!isValidBelegnummer(origBeleg)) {
+      const e = new Error(`URI: Ursprüngliche Belegnummer "${origBeleg}" ungültig — Anlage 1 TP5 V21 § 5.5.3.1.`);
+      e.status = 422;
+      throw e;
+    }
+
     lines.push(...buildSLLA_URI({
-      origIkLeistungserbringer: urspruenglich.ikLeistungserbringer,
+      origIkLeistungserbringer:  origIk,
+      origSammelRechnungsnummer: origSammel,
+      origEinzelRechnungsnummer: urspruenglich.einzelRechnungsnummer ?? urspruenglich.origEinzelRechnungsnummer ?? '0',
+      origRechnungsdatum:        origDatum,
+      origBelegnummer:           origBeleg,
+    }));
+  } else if (vkz !== '01' && urspruenglich) {
+    lines.push(...buildSLLA_URI({
+      origIkLeistungserbringer:  urspruenglich.ikLeistungserbringer,
       origSammelRechnungsnummer: urspruenglich.sammelRechnungsnummer,
       origEinzelRechnungsnummer: urspruenglich.einzelRechnungsnummer || '0',
       origRechnungsdatum:        urspruenglich.rechnungsdatum,
@@ -188,15 +499,27 @@ function buildSLLAMessage({
     lines.push(...buildSLLA_EVO({ evoId: verordnung.evoId }));
   }
 
-  for (const s of sessions) {
+  for (let sIndex = 0; sIndex < sessions.length; sIndex++) {
+    const s = sessions[sIndex];
+    let anzahl = s.anzahl || 1;
+    let einzelbetrag = s.einzelbetrag;
+    let zuzahlung = s.zuzahlungProPos != null ? s.zuzahlungProPos : '';
+
+    if (vkz === '03') {
+      const parsed = parseVkz03Session(s, sIndex);
+      anzahl = parsed.anzahl;
+      einzelbetrag = parsed.einzelbetrag;
+      zuzahlung = parsed.numZu;
+    }
+
     lines.push(...buildSLLA_EHE({
       abrechnungscode:  tarif.abrechnungscode || '22',
       tarifkennzeichen: tarif.tarifkennzeichen,
       positionsnummer:  s.positionsnummer,
-      anzahl:           s.anzahl || 1,
-      einzelbetrag:     s.einzelbetrag,
+      anzahl,
+      einzelbetrag,
       datumLeistung:    s.datumLeistung,
-      zuzahlung:        s.zuzahlungProPos != null ? s.zuzahlungProPos : '',
+      zuzahlung,
       kilometer:        s.kilometer != null ? s.kilometer : '',
     }));
     if (s.text)    lines.push(...buildSLLA_TXT({ text: s.text }));
@@ -329,8 +652,8 @@ function buildSLGAMessage({
   }
   lines.push(...buildSLGA_GES(gesRows.map(r => ({
     status:          r.status,
-    rechnungsbetrag: r.netto,            // Gesamtrechnungsbetrag = Brutto - Zuzahlung
-    brutto:          r.brutto,
+    rechnungsbetrag: vkz === '03' ? r.gesZuzahlung : r.netto,
+    brutto:          vkz === '03' ? 0 : r.brutto,
     zuzahlung:       r.gesZuzahlung,
   }))));
 
@@ -409,6 +732,17 @@ export function buildDtaFile({
     }
     validateVerordnungsart(p.verordnung.verordnungsart);
     validateZuzahlungskennzeichen(p.verordnung.zuzahlungskennzeichen);
+    if (vkz === '03') {
+      const kz = String(p.verordnung.zuzahlungskennzeichen ?? '').trim();
+      if (kz === '0' || kz === '3' || !['1', '2', '5'].includes(kz)) {
+        const e = new Error(
+          `prescription[${i}].verordnung.zuzahlungskennzeichen "${kz}" ist für VKZ 03 unzulässig ` +
+          '(erlaubt sind nur 1, 2 oder 5) — Anlage 1 TP5 V21 Kap. 7.4.2.'
+        );
+        e.status = 422;
+        throw e;
+      }
+    }
     const ac = p.tarif?.abrechnungscode || '22';
     if (!isPhysioAbrechnungscode(ac)) {
       throw new Error(`prescription[${i}].tarif.abrechnungscode "${ac}" is not a Heilmittel code (Leistungsbereich B)`);
@@ -489,7 +823,7 @@ export function buildDtaFile({
   // DB-Zeilen ueber den Index zusammen (abrechnung.routes.js, Belegnummer
   // einfrieren). Die Gruppierung unten arbeitet deshalb mit Indizes und
   // sortiert das Eingabe-Array nicht um.
-  const fallTotals = prescriptions.map(calcAbrechnungsfallTotals);
+  const fallTotals = prescriptions.map(p => calcAbrechnungsfallTotals(p, vkz));
 
   // Karten-IK der Zeile — Pflicht, kein Rückfall auf die Kostenträger-IK.
   const kartenIkVon = (p) => kartenIkPflicht(p.verordnung);
@@ -503,28 +837,37 @@ export function buildDtaFile({
   // die teurere Sorte Fehler.
   function summenFuer(indizes) {
     const perStatus = new Map();
-    let brutto = 0, gesZ = 0;
+    let brutto = 0, gesZ = 0, serviceBruttoTotal = 0;
     for (const i of indizes) {
       const t = fallTotals[i];
       brutto += t.brutto;
       gesZ   += t.gesZuzahlung;
+      serviceBruttoTotal += (t.serviceBrutto ?? t.brutto);
       // Nicht die erste Stelle des Versichertenstatus, sondern der daraus
       // abgeleitete Summenstatus (11/31/51/99) — § 8.1.6. Die alte Fassung
       // schrieb '01'/'03'/'05' in die GES-Zeile, Werte ohne Schluessel.
       const vs = summenstatusFuer(prescriptions[i].patient.versichertenstatus || '1');
-      const cur = perStatus.get(vs) || { brutto: 0, gesZuzahlung: 0, netto: 0 };
+      const cur = perStatus.get(vs) || { brutto: 0, gesZuzahlung: 0, netto: 0, serviceBrutto: 0 };
       cur.brutto       += t.brutto;
       cur.gesZuzahlung += t.gesZuzahlung;
       cur.netto        += t.netto;
+      cur.serviceBrutto += (t.serviceBrutto ?? t.brutto);
       perStatus.set(vs, cur);
     }
+    const isVkz03 = vkz === '03';
     return {
-      gesamt: { brutto: r2(brutto), gesZuzahlung: r2(gesZ), netto: r2(brutto - gesZ) },
+      gesamt: {
+        brutto:       r2(brutto),
+        gesZuzahlung: r2(gesZ),
+        netto:        r2(isVkz03 ? gesZ : (brutto - gesZ)),
+        ...(isVkz03 ? { serviceBrutto: r2(serviceBruttoTotal) } : {}),
+      },
       perStatus: [...perStatus.entries()].map(([status, t]) => ({
         status,
         brutto:       r2(t.brutto),
         gesZuzahlung: r2(t.gesZuzahlung),
         netto:        r2(t.netto),
+        ...(isVkz03 ? { serviceBrutto: r2(t.serviceBrutto) } : {}),
       })),
     };
   }
@@ -635,10 +978,12 @@ export function buildDtaFile({
   // Dateisumme — geht in KEIN GES-Segment, sondern nur in die
   // `abrechnung`-Zeile und den Begleitzettel. Aus den gerundeten
   // Gruppensummen gebildet, damit Datei- und Gruppenebene zusammenpassen.
+  const isVkz03 = vkz === '03';
   const gesamt = {
     brutto:       r2(gruppen.reduce((a, g) => a + g.totals.brutto, 0)),
     gesZuzahlung: r2(gruppen.reduce((a, g) => a + g.totals.gesZuzahlung, 0)),
     netto:        r2(gruppen.reduce((a, g) => a + g.totals.netto, 0)),
+    ...(isVkz03 ? { serviceBrutto: r2(gruppen.reduce((a, g) => a + (g.totals.serviceBrutto ?? g.totals.brutto), 0)) } : {}),
   };
 
   // UNB / UNZ wrap
