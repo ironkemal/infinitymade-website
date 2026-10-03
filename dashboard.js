@@ -16151,11 +16151,10 @@ async function runSignAbrechnung() {
     stat.textContent = 'Entschlüssele Zertifikat…';
     const p12Ab = await file.arrayBuffer();
     const p12BinStr = _u8ToBinStr(new Uint8Array(p12Ab));
-    const p12Asn1 = forge.asn1.fromDer(p12BinStr);
     let p12;
-    try { p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, false, pin); }
+    try { p12 = forge.pkcs12.pkcs12FromAsn1(forge.asn1.fromDer(p12BinStr), false, pin); }
     catch (e) {
-      throw new Error('Zertifikat konnte nicht entschlüsselt werden (falsche PIN?).');
+      throw new Error('Ungültige .p12-Datei oder falsche PIN. Bitte Zertifikatsdatei und PIN prüfen.');
     }
 
     const keyBagSets = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag });
