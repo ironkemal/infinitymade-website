@@ -25,7 +25,7 @@
 | K1 | Kemal | Güvenlik + DB temizliği + DSGVO Express'e | ✅ 02.10.2026 — K1.1–K1.8 (K1.8 S-31 kodu → M1.16, Hat M) | 0053–0057 · ecbf871 7d75f09 ae999fa 16a7aef fdf25dd 9a0e18f 1f2ecb1 3fecef1 975dd2a 6141be8 bb65f0b 94bac87 2804b99 59c3ea1 · fortschritte/2026-10-02.md |
 | K2 | Kemal | Kutu kurulumu: Linux + Windows, güncelleme, kılavuz (KI katmanı → M4) | ✅ 02.10.2026 — K2.1–K2.12, sürüm 0.2.0. ⚠️ Windows adım 7–10 (autostart/firewall/sertifika/powercfg) + LAN/tablet + O-144(b) yönetici ile Kemal'de, K3'ten önce | 18ad39a c880ad1 d807c3e e4c7703 67dbe9d 6d50e3d 56cb6a7 a4634f7 6a5cd1f acc51d5 ebe318c f033be0 3684ef8 · fortschritte/2026-10-02.md |
 | K3 | Kemal | Kutu testi (§7) — EN SON, bütün aşamalar ✅ olunca | ⬜ | |
-| M1 | Melih | Podoloji + §302 küçük düzeltmeler, Zuzahlungsforderung, honeypot | 🟨 | M1.1 Code+kaltePrüfung grün (39Route/77Core/114SQL), 0058 SaaS angewandt, 0.3.0; Commit/Push vorbereitet, danach M1.2. Gesamt-M1 und Live-UI-Abnahme offen; fortschritte/2026-10-03.md |
+| M1 | Melih | Podoloji + §302 küçük düzeltmeler, Zuzahlungsforderung, honeypot | 🟨 | M1.1 Code geprüft+gepusht 0260612 (0.3.0,0058SaaS); M1.2 bestehenderStorno20Tests+LiveRLSbestätigt, LiveUIoffen; nächsterCode M1.3. GesamtM1offen; fortschritte/2026-10-03.md |
 | M2 | Melih | Reçete türleri (Privat/Selbstzahler/BG) + fatura + Branding sayfası | ⬜ | |
 | M3 | Melih | Yerel PDF417 barkod okuma | ⬜ | |
 | M4 | Melih | KI katmanı: merkezi maskeleme + sağlayıcı/env katmanı (eski K2.7, M1.10, M3.6 dahil) | ⬜ | ölçüm 02.10: `spike/ki-maske/` |
