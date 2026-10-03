@@ -51,6 +51,13 @@ export const TABELLEN = [
     anmerkung: 'Behandlungsdokumentation, Trigger blockt DELETE bedingungslos',
   },
   {
+    table: 'podologie_empfangsnachweise',
+    kategorie: 'behandlung',
+    export: { filter: 'owner_id' },
+    mitarbeiterFilter: 'geprueft_von',
+    anmerkung: 'Podologischer Empfangsnachweis (Papierbeleg-Prüfung § 302 SGB V), append-only',
+  },
+  {
     table: 'anamnese',
     kategorie: 'behandlung',
     export: { filter: 'owner_id' },

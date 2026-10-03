@@ -35,6 +35,7 @@ import { offeneJeVerordnung, pruefeBestaetigung, offeneEinheitenAntwort, protoko
 import { fehlendeArztangaben } from '../utils/arztangaben.js';
 import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
 import { abrechenbareBehandlungstage } from '../utils/behandlungstage.js';
+import { pruefePodologieEmpfangsnachweise } from '../utils/podo-empfangsnachweis.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -258,6 +259,20 @@ router.patch('/verordnung/:id/abrechnungsstatus', async (req, res) => {
       if (v.rezeptart && v.rezeptart !== 'kassen') {
         return res.status(422).json({
           error: `Rezeptart „${v.rezeptart}" wird nicht über §302 abgerechnet. Diese Verordnung läuft über die Privatrechnung.`,
+        });
+      }
+
+      // M1.9: Vor Bereitstellung prüfen, ob alle 78040-Empfangsnachweise vorliegen und bestätigt sind
+      const nachweisGate = await pruefePodologieEmpfangsnachweise({
+        supabase,
+        tenantId,
+        verordnungId: v.id,
+        behandlungen: behRows || [],
+      });
+      if (!nachweisGate.ok) {
+        return res.status(nachweisGate.status).json({
+          error: nachweisGate.error,
+          fehlendeBehandlungIds: nachweisGate.fehlendeBehandlungIds,
         });
       }
     }

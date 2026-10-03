@@ -72,6 +72,7 @@ import { alsISODatum } from './datum.js?v=20261001a';
 import { positionVon } from './podo-geplant.js?v=20260918';
 // Storno statt Löschen (Entscheidung K3, § 630f Abs. 1 S. 2 BGB) — siehe dort.
 import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20261001e';
+import { renderEmpfangsnachweisHost, mountEmpfangsnachweise } from './podo-empfangsnachweis.js?v=20261003m19';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
 // dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
 import { darf78040, darf78100, darfErstbefundungNagel,
@@ -736,6 +737,7 @@ async function loadPodologieBilling() {
                     <div style="font-size:11px;color:var(--text-muted);word-break:break-word;${storniert ? 'text-decoration:line-through;' : ''}">${ctx.escapeHtml(codes.join(' · ') || '—')}</div>
                     ${b.lokalisation ? `<div style="font-size:11px;color:var(--text-muted);${storniert ? 'text-decoration:line-through;' : ''}">${ctx.escapeHtml(b.lokalisation)}</div>` : ''}
                     ${storniert ? `<div style="font-size:11px;color:#f59e0b;">Storniert am ${ctx.escapeHtml(new Date(b.storniert_am).toLocaleDateString('de-DE'))} — ${ctx.escapeHtml(b.storno_grund || 'ohne Grund')}</div>` : ''}
+                    ${renderEmpfangsnachweisHost(b, ctx)}
                   </div>
                   <div style="display:flex;align-items:flex-start;gap:8px;white-space:nowrap;">
                     ${b.invoice_id && !storniert
@@ -902,6 +904,8 @@ async function loadPodologieBilling() {
       </div>
 
     </div>`;
+
+  mountEmpfangsnachweise(el, dokumentiert, ctx);
 
   // ---- Event Listeners ----
 

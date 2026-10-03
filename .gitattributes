@@ -23,6 +23,10 @@
 *.yml   text
 *.yaml  text
 
+# Structural snapshots preserve catalog definition bytes, including existing CRLF bodies.
+db/SCHEMA.sql -text
+db/SCHEMA-RLS.sql -text whitespace=cr-at-eol,-blank-at-eol
+
 # Binär — Git darf hier nichts umschreiben
 *.png   binary
 *.jpg   binary

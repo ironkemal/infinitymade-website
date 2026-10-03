@@ -59,6 +59,8 @@ import { ladeItsgTrustAnchors, pruefeTrustAnchorFrische } from '../dta/itsg-trus
 import { pruefeEmpfaengerZertifikat } from '../dta/empfaenger-zertifikat-pruefung.js';
 import { icdOhneStrich, icdFuerDta, icdAbfrageKodes, icdTerminalMap } from '../utils/icd-code.js';
 import { mountZuzahlungsforderungRoutes } from './zuzahlungsforderung.routes.js';
+import { pruefePodologieEmpfangsnachweise } from '../utils/podo-empfangsnachweis.js';
+import { mountPodoEmpfangsnachweisRoutes } from './podo-empfangsnachweis.routes.js';
 
 const router = express.Router();
 // ⚠️ Bewusst OHNE Absicherung auf fehlende Umgebungsvariablen: fehlen sie,
@@ -3636,16 +3638,27 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // `module/verordnung-topf.js` (`ausTopf`) im Frontend.
     const vords = vordsRoh.map(v => ({ ...v, status: statusAusAbrechnungStatus(v.abrechnung_status) }));
 
+    // §302 SGB V gilt nur für Leistungen zulasten der GKV. Frühzeitige Prüfung
+    // vor dem Empfangsnachweis-Gate verhindert unberechtigte Nachweis-Abfragen für Privatbelege.
+    for (const v of (vords || [])) {
+      if (v.rezeptart && v.rezeptart !== 'kassen') {
+        return res.status(422).json({
+          error: `Verordnung ${v.id.slice(0,8)} (${v.patient_name}): Rezeptart „${v.rezeptart}" ist nicht GKV-abrechenbar und kann nicht per §302 eingereicht werden.`
+        });
+      }
+    }
+
     // ---- Reform S2.3: Teilabrechnung nur mit ausdrücklicher Bestätigung ----
     // Wer eine Verordnung mit offenen Einheiten abrechnet, beendet sie — die
     // Restmenge ist auf ihr nicht mehr erbring- oder abrechenbar. Deshalb 428,
     // BEVOR irgendetwas erzeugt wird. Zähler: nicht stornierte Behandlungen.
     const { data: behsOffen, error: behsOffenErr } = await supabase
       .from('podologie_behandlungen')
-      .select('id, verordnung_id')
+      .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
       .is('storniert_am', null)
       .eq('owner_id', tenantId)
-      .in('verordnung_id', verordnungIds);
+      .in('verordnung_id', verordnungIds)
+      .order('behandlungsdatum', { ascending: true });
     if (behsOffenErr) return res.status(500).json({ error: behsOffenErr.message });
     const offeneVord = offeneJeVerordnung(vords, behsOffen);
     // Reform S2.3b: eine beim Bereit-Setzen erteilte Bestätigung gilt weiter,
@@ -3680,6 +3693,21 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       return res.status(a428.status).json(a428.body);
     }
 
+    // M1.9: Empfangsnachweise für alle relevanten Behandlungen vor Kostenträger-Rückschreibung und Abrechnung prüfen
+    const nachweisGate = await pruefePodologieEmpfangsnachweise({
+      supabase,
+      tenantId,
+      behandlungen: behsOffen || [],
+      therapieBereich: 'podo',
+      rezeptart: 'kassen',
+    });
+    if (!nachweisGate.ok) {
+      return res.status(nachweisGate.status).json({
+        error: nachweisGate.error,
+        fehlendeBehandlungIds: nachweisGate.fehlendeBehandlungIds,
+      });
+    }
+
     // gkv-302, 30.09.2026 B1: Kostenträger-IK bei DTA-Erzeugung frisch aus Karten-IK ableiten
     const altKtMap = new Map((vords || []).map(v => [v.id, v.kostentraeger_ik]));
     const { warnungen: ktWarnungen } = await kostentraegerFrischAbleiten(supabase, vords);
@@ -3687,16 +3715,6 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
 
     // ---- validate each verordnung ----
     for (const v of (vords || [])) {
-      // §302 SGB V gilt nur für Leistungen zulasten der GKV. Privat-, Selbst-
-      // zahler- und BG-Verordnungen haben weder Kostenträger noch Diagnose-
-      // gruppe nach HeilM-RL und dürfen nie in eine DTA-Datei geraten. Bisher
-      // hing das allein am kostentraeger_ik-Vergleich unten — das war Zufall,
-      // keine Zusicherung (Konsey 2026-08-10).
-      if (v.rezeptart && v.rezeptart !== 'kassen') {
-        return res.status(422).json({
-          error: `Verordnung ${v.id.slice(0,8)} (${v.patient_name}): Rezeptart „${v.rezeptart}" ist nicht GKV-abrechenbar und kann nicht per §302 eingereicht werden.`
-        });
-      }
       if (v.kostentraeger_ik !== kostentraegerIk) {
         const alt = altKtMap.get(v.id);
         if (alt && alt !== v.kostentraeger_ik) {
@@ -3729,17 +3747,9 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     }
 
     // ---- fetch behandlungen ----
-    const { data: allBeh } = await supabase
-      .from('podologie_behandlungen')
-      .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
-      .eq('owner_id', tenantId)
-      // ⛔ Stornierte Behandlungen gehoeren NICHT in die §302-Datei. Seit
-      // Migration 0026 wird nicht mehr geloescht, sondern storniert — ohne
-      // diesen Filter ginge eine zurueckgenommene Behandlung als erbrachte
-      // Leistung an die Kasse (§ 630f Abs. 1 S. 2 BGB / Abrechnungsbetrug).
-      .is('storniert_am', null)
-      .in('verordnung_id', verordnungIds)
-      .order('behandlungsdatum', { ascending: true });
+    // Exakt derselbe geprüfte Datensatz aus behsOffen (bereits nach behandlungsdatum sortiert);
+    // keine Neuabfrage, um unüberprüfte Zeilen oder Race-Conditions auszuschließen.
+    const allBeh = behsOffen || [];
 
     // Group by verordnung_id
     const behByVord = {};
@@ -4339,13 +4349,40 @@ router.post('/abrechnung/korrektur', async (req, res) => {
 
     let behByVord = {};
     if (istPodo) {
-      const { data: behs } = await supabase
+      // §302 SGB V gilt nur für Leistungen zulasten der GKV. Privatverordnungen abweisen
+      for (const rx of (rxRows || [])) {
+        if (rx.rezeptart && rx.rezeptart !== 'kassen') {
+          return res.status(422).json({
+            error: `Verordnung ${rx.id.slice(0, 8)} (${rx.patient_name || 'Patient'}): Rezeptart „${rx.rezeptart}" ist nicht GKV-abrechenbar und kann nicht per §302 eingereicht werden.`,
+          });
+        }
+      }
+
+      const { data: behs, error: behsErr } = await supabase
         .from('podologie_behandlungen')
         .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
         // ⛔ Wie im create-Weg: stornierte Behandlungen gehoeren auch in eine
         // KORREKTURrechnung nicht hinein (Migration 0026).
         .is('storniert_am', null)
-        .eq('owner_id', tenantId).in('verordnung_id', rxIds);
+        .eq('owner_id', tenantId).in('verordnung_id', rxIds)
+        .order('behandlungsdatum', { ascending: true });
+      if (behsErr) return res.status(500).json({ error: behsErr.message });
+
+      // M1.9: Empfangsnachweise für alle Behandlungen der Korrekturrechnung vor Nummerierung und Dateierzeugung prüfen
+      const nachweisGate = await pruefePodologieEmpfangsnachweise({
+        supabase,
+        tenantId,
+        behandlungen: behs || [],
+        therapieBereich: 'podo',
+        rezeptart: 'kassen',
+      });
+      if (!nachweisGate.ok) {
+        return res.status(nachweisGate.status).json({
+          error: nachweisGate.error,
+          fehlendeBehandlungIds: nachweisGate.fehlendeBehandlungIds,
+        });
+      }
+
       for (const b of behs || []) (behByVord[b.verordnung_id] ||= []).push(b);
     }
 
@@ -4741,5 +4778,8 @@ mountZuzahlungsforderungRoutes(router, {
   isoWeek,
   buildSammelRechnungsnummer,
 });
+
+// § 302 SGB V — Podologie Empfangsnachweis (M1.9)
+mountPodoEmpfangsnachweisRoutes(router, { supabase });
 
 export default router;

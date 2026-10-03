@@ -4872,6 +4872,14 @@ Madde açılmadı (ölçüm listesi; sonuç olumsuzsa madde olur). Kemal'in yön
 
 ---
 
+## 7Y — M1.9: Papier-Empfangsnachweis 78040 (03.10.2026)
+
+Die additive Migration `0059_podologie_empfangsnachweise` nutzt die bestehende Schema-Verteilung O-39/Faz 1.7 (Typ D). Sie speichert unveränderliche Vollständigkeits-Prüfvermerke zum originalen Papiernachweis für HPNR 78040; sie ersetzt weder Patientenunterschrift noch technische DAS-Quittung. Kein neuer externer Dienst und keine neuen On-prem-Umgebungsvariablen; Auslieferung erfolgt über die bestehende Image-/Migrationskette.
+
+Root hat den Übergang 0058→0059 auf einer frischen isolierten lokalen Box physisch gemessen: 84 Tabellen, 156 Policies, 85 eigene Funktionen, 84 Trigger und 309 Indizes; zusätzlich 1 Authtrigger, 5 Buckets, 1 Publication-Mitglied und 8 Extensions. Manifest-Zähler gelten bis0059; RLS bleibt nur für `spatial_ref_sys` deaktiviert. SaaS-Anwendung ist tatsächlich `20261003193551`; die vollständigen SaaS-Dumps haben einen anderen Bestand und werden nicht als Box-Sollwerte verwendet.
+
+Lokale Produktversion `0.4.0` (MINOR wegen neuer Tabelle); Bundle-Manifest wird mit dem vorhandenen Erzeuger synchronisiert. Gesamttests 1574 Frontend/730 Backend/98 Tools bestanden. Kundenbox-Auslieferung, Live-UI-Abnahme und 72 Stunden Betrieb für `:stable` sind damit nicht nachgewiesen.
+
 ## 8. Kapı — sayaçlar ve tabanlar
 
 > Kapı: `tools/check-onprem.sh`, `.githooks/pre-commit`'e bağlı

@@ -42,7 +42,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261003m16';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261003m19';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20260929b';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz } from './module/fahrtenbuch-regeln.js?v=20261001e';
@@ -18619,7 +18619,7 @@ function dmrzCtx() {
 
 function podoCtx() {
   return {
-    supabase, apiBase: API, aktiverStandort: () => (dataSharing.patients || !currentBusiness?.id) ? null : currentBusiness.id,
+    supabase, apiBase: API, getProfile: () => currentProfile, aktiverStandort: () => (dataSharing.patients || !currentBusiness?.id) ? null : currentBusiness.id,
     t,
     escapeHtml,
     getOwnerId,                      // als Funktion, nicht aufgerufen

@@ -199,7 +199,7 @@ test('8. pruefeDateien ueberspringt 0000_baseline.sql', () => {
   assert.deepEqual(bulgular, []);
 });
 
-test('9. Listenstruktur: AUSNAHMEN (4), PROTECTED (16) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
+test('9. Listenstruktur: AUSNAHMEN (4), PROTECTED (17) und BEKANNTE_ALTLASTEN (6) mit Begruendung', () => {
   // AUSNAHMEN: genau 4 oeffentliche RPCs (get_my_permissions ist seit langem INVOKER)
   assert.equal(AUSNAHMEN.length, 4);
   const erwarteteAusnahmen = [
@@ -214,8 +214,8 @@ test('9. Listenstruktur: AUSNAHMEN (4), PROTECTED (16) und BEKANNTE_ALTLASTEN (6
     assert.ok(typeof eintrag.grund === 'string' && eintrag.grund.length > 10, 'Begruendung fehlt fuer Ausnahme: ' + name);
   }
 
-  // PROTECTED: 8 urspruengliche + 4 Trigger-Funktionen aus 0003 und 0021 + 0052 + 0054 + 0055 (2) = 16
-  assert.equal(PROTECTED.length, 16);
+  // PROTECTED: 8 urspruengliche + 4 Trigger-Funktionen aus 0003 und 0021 + 0052 + 0054 + 0055 (2) + 0059 = 17
+  assert.equal(PROTECTED.length, 17);
   const erwarteteProtected = [
     'get_gmail_token',
     'set_gmail_token',
@@ -233,6 +233,7 @@ test('9. Listenstruktur: AUSNAHMEN (4), PROTECTED (16) und BEKANNTE_ALTLASTEN (6
     'prescriptions_mandant_pruefen',
     'auth_sitzungen_beenden',
     'mitarbeiter_zuordnen',
+    'podologie_empfangsnachweis_append',
   ];
   for (const name of erwarteteProtected) {
     assert.ok(PROTECTED.includes(name), 'PROTECTED fehlt: ' + name);
@@ -493,4 +494,3 @@ REVOKE EXECUTE ON FUNCTION naechste_nummer(uuid) FROM authenticated;
   const bulgular = pruefeDatei('api-backend/db/migrations/9999_unpraefixiert_vollstaendig.sql', sql);
   assert.deepEqual(bulgular, []);
 });
-

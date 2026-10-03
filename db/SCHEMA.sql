@@ -1,3543 +1,3733 @@
--- =====================================================================
--- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
--- =====================================================================
--- ERZEUGT AM:        2026-10-03 — gezielt live introspektierter Nachtrag 0058:
---                    abrechnung +3 nullable Spalten ohne Default/Backfill,
---                    +3 CHECK, +1 FK (RESTRICT), +1 partieller Unique-Index,
---                    +1 Funktion/+1 Benutzertrigger; Policies unveraendert.
---                    Letzte Migration: 0058_abrechnung_zuzahlungsforderung
---                    (Supabase-Version 20261003081335, MCP angewendet).
---                    Kein Voll-Refresh: nur betroffene Objekte neu gelesen.
---                    Schon vor 0058 veraltete Kopfzaehler unten durch echte
---                    Live-Zaehler ersetzt; alte fehlende Koerper bleiben offen.
---                    davor: 2026-10-02 — Nachtrag: 0057_aufbewahrung_sperre (KHS K1.4, MCP):
---                    +1 Tabelle aufbewahrung_sperre (8 Spalten, Sperrvermerk statt
---                    Löschung); profiles_plan_status_check + 'deleted'.
---                    Letzte Migration: 0057.
---                    davor: 2026-10-02 — Nachtrag: 0056: −2 Tabellen ("fußstatus",
---                    visibility_reports), aerzte −1 Unique. Letzte Migration: 0056.
---                    davor: 2026-10-02 — Nachtrag: 0055 profiles_public ohne entfernte
---                    Mitarbeiter (is_active = false). Letzte Migration: 0055.
---                    davor: 2026-10-02 — Nachtrag: 0054 (nur Policies/Trigger, keine
---                    Tabellen-/Spaltenänderung). Letzte Migration: 0054.
---                    davor: 2026-10-02 — Nachtrag: 0053_profiles_privilegierte_spalten im
---                    SaaS angewendet (MCP): −1 Tabelle pending_employee_registrations
---                    (alter Mail-Self-Signup), +1 Index profiles_company_code_upper_key.
---                    Letzte Migration: 0053.
---                    davor: 2026-10-01 — Nachtrag: 0052_fahrten_aenderungsprotokoll im
---                    SaaS angewendet (MCP): +1 Tabelle fahrten_aenderungen
---                    (append-only, BMF 18.11.2009). Letzte Migration: 0052.
---                    davor: 2026-10-01 — Nachtrag: 0051_phi_spalten_entfernen (Reform
---                    3.12 c) im SaaS angewendet (MCP, Freigabe Kemal):
---                    prescriptions −4 Spalten (ocr_raw_response, ocr_raw_enc,
---                    icd10_enc, phi_encrypted), leads −7 Spalten (*_enc,
---                    pii_encrypted), −2 Indizes. Letzte Migration: 0051.
---                    davor: 2026-10-01 — Nachtrag: 0049 + 0050 (Reform 3.12 a/b) im SaaS
---                    angewendet (MCP, Freigabe Kemal): Festschreibungs-Trigger
---                    ohne icd10_enc; PHI-Reste in prescriptions geleert,
---                    Fahrtenbuch-Altzeilen neutralisiert. Kein Spalten-DDL.
---                    Letzte Migration: 0050.
---                    davor: 2026-10-01 — Nachtrag: 0048_kostentraeger_auswahl_valid_
---                    from im SaaS angewendet (MCP): Sicht prueft auch
---                    kt.valid_from <= Berliner Tag. 876 Zeilen (unveraendert).
---                    Letzte Migration: 0048.
---                    davor: 2026-10-01 — Nachtrag: 0046_kostentraeger_gueltigkeit_
---                    annahmestellen im SaaS angewendet (MCP, O-139 Adim 1,
---                    Freigabe Kemal 30.09.2026): kostentraeger_annahmestellen
---                    und kostentraeger_anschriften je +valid_from/+valid_to
---                    (date, nullable, NULL = offen, kein Backfill; UNIQUE
---                    unveraendert). Sicht kostentraeger_auswahl ersetzt:
---                    Stichtag = Berliner Tag statt current_date (UTC), EXISTS
---                    nur ueber am Berliner Tag gueltige Annahmestellen. Live
---                    nach 0046: 876 Zeilen (vorher 893 — die 17 am 30.09.2026
---                    ausgelaufenen GKV-IK, die die UTC-Sicht bis 02:00 Berlin
---                    noch zeigte). 0045 (Box-Seed Q4/2026) = reine Daten, im
---                    SaaS nicht angewendet. Letzte Migration: 0047 (hoechste
---                    Nummer; 0045/0046 nachgetragen).
---                    davor: 2026-09-30 — Nachtrag: 0047_anamnese_fachbereich_
---                    versionierung im SaaS angewendet (MCP, Oturum C) und vorher
---                    in einer ROLLBACK-Transaktion gegen die Live-DB getestet
---                    (Versionierung, Kiosk ungeprueft, UPDATE-Sperre, ON DELETE
---                    SET NULL). anamnese +9 Spalten (fachbereich, felder,
---                    form_version, version, ist_aktuell, quelle, geprueft_am,
---                    geprueft_von, uebernommen_von); podologie_behandlungen
---                    +therapiezeit_min; pat_fussbefund +wagner_grad; profiles
---                    +gps_checkin_pruefen; attendance.check_in_valid jetzt
---                    NULLABLE; diagnosegruppen DF/NF/QF icd_enforcement =
---                    hard_before_dta (Daten). Letzte Migration: 0047.
---                    davor: 2026-09-30 — Nachtrag (nur Kommentare, kein DDL, keine
---                    Migration): Reform 3.12 / Commit e9d0286 — Feldver-
---                    schluesselung aufgegeben. Kommentare bei `leads` und
---                    `prescriptions` korrigiert: die *_enc-Spalten sind
---                    ungenutzte Reste, KEINE Verschluesselungszusage.
---                    davor: 2026-09-30 — Nachtrag: 0044_leads_krankenkasse_ik
---                    (Reform S3.8b) im SaaS angewendet (MCP, Freigabe Kemal)
---                    und geprueft: leads.krankenkasse_ik text nullable
---                    (attnum 58), CHECK leads_krankenkasse_ik_format
---                    convalidated=true, COMMENT gesetzt; COMMENT an
---                    prescriptions.krankenkasse_ik ersetzt (kein Rueckfall
---                    mehr auf kostentraeger_ik). +1 Spalte, +1 CHECK — keine
---                    neue Tabelle/Policy/Index/Funktion/Trigger.
---                    davor: 2026-09-29 — Nachtrag: 0043_vorlagen_rechnung_ausfall
---                    (Reform S3.2) im SaaS angewendet (MCP) und geprueft:
---                    document_vorlagen_vorlage_type_check live vorher 8 Werte,
---                    nachher 9 (+ 'rechnung_ausfall'), convalidated=true.
---                    Nur CHECK-Constraint neu angelegt — keine neue Tabelle/
---                    Spalte/Policy/Index/Funktion/Trigger. Kommentar unten bei
---                    document_vorlagen nachgezogen. 0041-Status hier NICHT neu
---                    geprueft (siehe Notiz 27.09. unten).
---                    davor: 2026-09-27 — Nachtrag: 0039_seed_heilmittel_katalog_podo_
---                    komplex_suche + 0040_kostentraeger_auswahl_view (Ops #300/
---                    #302) im SaaS angewendet und geprueft (kostentraeger_auswahl
---                    893 Zeilen, Stichprobe 100167999 -> DAK-Gesundheit/
---                    105830016; 78010/78020 kategorie='Podologische Komplex-
---                    behandlung' in beiden Preisfenstern). Sicht unten unter
---                    "2. VIEWS" ergaenzt. 0039 ist reine Daten-UPSERT (kein DDL),
---                    daher sonst kein Eintrag hier. 0041_krankenkassen_ik_
---                    nachtrag (Ops #301) ist WEITERHIN NICHT angewendet (braucht
---                    eigenes OK/Dry-Run, siehe CLAUDE.md) — fehlt hier zu Recht.
---                    Vorherige Notiz (22.09.2026, ERZEUGT AM 0042_abrechnung_
---                    verschluesselung): Kollision 0038 mit Kemals Datei fuehrte
---                    zur Umnummerierung 0038->0042 fuer Kemals Datei; Melihs
---                    Kette blieb bei 0039-0041.
---                    +5 Spalten an `abrechnung` (encrypted_storage_path,
---                    encrypted_sha256, verschluesselt_am,
---                    verschluesselt_fuer_fingerprint, verschluesselung_hinweis)
---                    — Persistenz des CMS-EnvelopedData-Verschluesselungs-
---                    ergebnisses, das bis dahin nur im HTTP-Response von
---                    /upload-signed stand und nach einem Reload verloren war.
---                    Keine neue Tabelle, keine neue Policy, kein neuer
---                    Index/Trigger/Funktion.
---                    ✅ Im SaaS angewendet 22.09.2026 (MCP).
---                    davor: 2026-09-20/21 — 0036 bis 0038 (§302-Echtbetrieb,
---                    ITSG-Anbindung). Diese drei Migrationen wurden bereits in
---                    den Tabellenkoerper dieser Datei uebernommen (u. a.
---                    `empfaenger_zertifikate`, siehe unten), nur der Kopf-
---                    zeiger oben blieb bei 0035 stehen, bis er hier nachgezogen
---                    wurde:
---                      0036_seed_kostentraeger_anschriften
---                        Reine Daten-Migration (1588 Adresszeilen), keine
---                        Struktur betroffen.
---                      0037_seed_kostentraeger_annahmestellen_quelle_stand
---                        Reine Daten-Migration, keine Struktur betroffen.
---                      0038_empfaenger_zertifikate
---                        +1 Tabelle, +1 Policy (nur SELECT), +1 Index (PK).
---                    ✅ Alle drei im SaaS angewendet 20./21.09.2026 (MCP).
---                    davor: 2026-09-20 — 0035_datenaustausch_zaehler_rpc_revoke
---                    (Sicherheitskorrektur zu 0029, am selben Tag. Fuer DIESE
---                    Datei eine NULL-Aenderung: keine Tabelle, keine Spalte,
---                    kein Constraint, kein Index — ausschliesslich EXECUTE-ACLs
---                    auf sechs Funktionen. Der Eintrag steht hier trotzdem,
---                    damit beide Dumps dieselbe Migrationskette fuehren.
---                    Kurz: die drei SECURITY-DEFINER-Zaehlerfunktionen aus 0029
---                    waren fuer anon und authenticated per RPC aufrufbar, weil
---                    Supabase jeder NEUEN Funktion in `public` explizites
---                    EXECUTE an beide Rollen gibt (ALTER DEFAULT PRIVILEGES) und
---                    ein REVOKE FROM PUBLIC das nicht wegnimmt. Vollstaendige
---                    Begruendung, Messwerte und der zurueckgerollte Live-Nachweis
---                    stehen im Kopf von db/SCHEMA-RLS.sql — dort gehoeren sie
---                    hin, weil es um Funktionsrechte geht.
---                    ✅ Im SaaS angewendet 20.09.2026 (MCP).
---                    davor: 2026-09-20 — 0026 bis 0034 (§302-Echtbetrieb, Faz 1)
---                    (ABRECHNUNG_ECHTBETRIEB_PLAN.md. NEUN Migrationen in EINEM
---                    Zug am 20.09.2026 live angewendet (MCP), in der Reihenfolge
---                    0026 -> 0034, jede einzeln bestaetigt:
---                      0026_podologie_behandlungen_storno
---                        +3 Spalten (storniert_am/_von, storno_grund), +1 CHECK,
---                        +2 Funktionen, +2 Trigger. Die Behandlungsdokumentation
---                        ist ab jetzt UNVERAENDERLICH und NICHT LOESCHBAR
---                        (§ 630f Abs. 1 S. 2 BGB, Entscheidung K3 von legal-de) —
---                        Korrektur = Storno mit Grund + neue Zeile.
---                        ⚠️ Vorbedingung war, `podologie_behandlungen` aus
---                        DELETE_TABLES in api/dsgvo.js zu nehmen; beim Anwenden
---                        war das bereits erledigt (nachgeprueft — sonst waere ab
---                        diesem Moment jede Kontoloeschung in eine 500 gelaufen).
---                      0027_abrechnung_auftragsdatei_und_hashes
---                        +6 Spalten an `abrechnung` (auftragsdatei_path/_size,
---                        dta_sha256, auftragsdatei_sha256, signed_sha256,
---                        betriebsart), +1 CHECK. Counter-neutral.
---                      0028_terapeut_zertifikat_betriebsart
---                        +5 Spalten, +2 CHECK. Der zweite CHECK ist der Riegel:
---                        betriebsart='echt' nur mit Zulassungsnachweis.
---                      0029_datenaustausch_zaehler
---                        +1 Tabelle, +3 Funktionen, +1 Index (PK), +3 Spalten an
---                        `abrechnung`. RLS an, bewusst OHNE Policy (wie
---                        `nummernkreise`).
---                      0030_abrechnungen_bucket_pkcs7
---                        UPDATE auf eine BESTEHENDE storage.buckets-Zeile:
---                        PKCS#7-MIME-Typen erlaubt, Groessengrenze 10 -> 20 MB.
---                        Bucket-Zahl bleibt 5, live gegengeprueft.
---                      0031_betriebsart_je_empfaenger
---                        +1 Tabelle, +1 Policy, +1 Index (zusammengesetzter PK).
---                      0032_kostentraeger_anschriften
---                        +1 Tabelle, +1 Policy, +2 Indizes (PK + UNIQUE).
---                      0033_abrechnung_verworfen
---                        abrechnung_status_check neu gefasst (Wert 'verworfen'
---                        ergaenzt), +1 Spalte verwerfungsgrund. Counter-neutral.
---                      0034_abrechnung_uebermittlung
---                        +1 Tabelle, +1 Policy (nur SELECT), +3 Indizes,
---                        +1 Funktion, +1 Trigger.
---                      0038_empfaenger_zertifikate
---                        +1 Tabelle, +1 Policy (nur SELECT), +1 Index (PK).
---                    Summe gegen die Live-DB GEZAEHLT, nicht fortgeschrieben:
---                    Tabellen 89 -> 93 · Policies 172 -> 175 · Indizes 318 -> 325 ·
---                    Trigger 78 -> 81 · Funktionen 78 -> 84. Alle fuenf Deltas
---                    gehen restlos auf die neun Migrationen auf.
---                    ✅ Im SaaS angewendet 20.09.2026 (MCP).
---                    davor: 2026-09-18 — 0025_abrechnung_status_manuell
---                    (Ops-Karte #310. +2 Spalten an `prescriptions`
---                    (abrechnung_status_manuell_am/_von), keine neue Tabelle,
---                    kein neuer Index, kein neuer Trigger. Live nachgezaehlt
---                    (18.09.2026, MCP): 89 Tabellen · 1269 Spalten ·
---                    172 RLS-Policies — unveraendert bis auf die zwei Spalten.
---                    ✅ Im SaaS angewendet 18.09.2026 (MCP).
---                    davor: 2026-09-17 — 0024_revoke_unused_function_grants
---                    (Ops-Karte #297. Fuer DIESE Datei eine Null-Aenderung:
---                    keine Tabelle, keine Spalte, kein Constraint, kein Index —
---                    die Migration entzieht ausschliesslich EXECUTE-Rechte auf
---                    Funktionen. Tabellen-/Spaltenzahl unveraendert.
---                    Der Eintrag steht hier trotzdem, damit beide Dumps
---                    dieselbe Migrationskette fuehren und niemand aus
---                    "SCHEMA.sql ist bei 0023" schliesst, die Box sei es auch.
---                    Die inhaltliche Begruendung (PUBLIC statt anon war das
---                    eigentliche Loch; auth_tenant_id()/is_admin() sind
---                    RLS-Helfer und wurden BEWUSST nicht angefasst) steht
---                    vollstaendig im Kopf von db/SCHEMA-RLS.sql — dort gehoert
---                    sie hin, weil es um Funktionsrechte geht.
---                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
---                    davor: 2026-09-17 — 0023_aerzte_ausfall_team_insert
---                    (Ops-Karte #299, Folge der service_role-Pruefung S-30.
---                    Entscheidung Kemal vom 17.09.2026: statt die beiden
---                    betroffenen Routen auf 403 zu setzen, wird RLS an das
---                    tatsaechliche und gewollte Verhalten angeglichen — ueber
---                    den Service-Role-Client schrieben Angestellte laengst,
---                    nur stand es nirgends.
---                    KEINE neue Tabelle, KEINE neue Spalte, KEIN neuer Index,
---                    KEIN neuer Trigger — die Migration legt ausschliesslich
---                    DREI RLS-POLICIES an: Team-INSERT/UPDATE auf `aerzte`
---                    sowie Team-INSERT auf `ausfallrechnungen`. Details, die
---                    bewussten Grenzen (kein DELETE auf `aerzte`, kein UPDATE
---                    auf `ausfallrechnungen`) und die zwoelf zurueckgerollten
---                    Live-Proben stehen in db/SCHEMA-RLS.sql; fuer DIESE Datei
---                    aendert sich nur die Policy-Zahl im UMFANG: 169 -> 172.
---                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
---                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
---                    davor: 2026-09-17 — 0022_team_zugriff_warteliste_patient_notes
---                    (Ops-Karte #253, Entscheidung `legal-de` vom 17.09.2026 in
---                    compliance/LEGAL_DECISIONS.md. KEINE neue Tabelle, KEINE
---                    neue Spalte, KEIN neuer Index, KEIN neuer Trigger — die
---                    Migration legt ausschliesslich VIER RLS-POLICIES an:
---                    Team-SELECT auf `patient_notes` sowie Team-SELECT/INSERT/
---                    UPDATE auf `warteliste`. Details, Grenzen und die zwoelf
---                    zurueckgerollten Live-Proben stehen in db/SCHEMA-RLS.sql;
---                    fuer DIESE Datei aendert sich nur die Policy-Zahl im
---                    UMFANG: 165 -> 169.
---                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
---                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
---                    davor: 2026-09-17 — 0021_audit_write_trigger
---                    (Ops-Karte #254, Sicherheitsregister A-18. Schreibzugriffe
---                    auf `leads`, `prescriptions` und `podologie_behandlungen`
---                    waren nicht nachweisbar — die drei hatten KEINEN
---                    Audit-Trigger (guvenlik, gegen information_schema.triggers
---                    belegt). Protokolliert wurde nur, was der Express-Backend
---                    sieht; was der Browser per PostgREST direkt schreibt (der
---                    Normalfall im Dashboard), lief an jedem Protokoll vorbei.
---                    NEUE FUNKTION `audit_write_log()` [SECURITY DEFINER] +
---                    DREI NEUE TRIGGER (AFTER INSERT/UPDATE/DELETE) schreiben
---                    ab jetzt nach `data_access_log`. KEINE neue Tabelle,
---                    KEINE neue Spalte, KEINE neue Policy.
---                    ⚠️ Das Protokoll fuehrt nur SPALTENNAMEN, nie Werte —
---                    sonst waere es eine zweite Patientenakte ohne
---                    Loeschkonzept (Befund R12). Lesezugriffe bleiben bewusst
---                    unprotokolliert. Details bei `data_access_log` unten und
---                    in db/SCHEMA-RLS.sql.
---                    Live geprueft (MCP, 17.09.2026, vollstaendig
---                    zurueckgerollte Proben): direktes INSERT als
---                    `authenticated` scheitert weiter (42501), Schreiben als
---                    `authenticated` wird protokolliert, Zusammenspiel mit der
---                    Festschreibung aus 0020 stimmt, und ein sabotiertes
---                    Audit-INSERT blockiert den eigentlichen Schreibvorgang
---                    nicht.
---                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
---                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
---                    davor: 2026-09-17 — 0020_prescriptions_festschreibung
---                    (Ops-Karte #167. GoBD-/§302-Festschreibung fuer
---                    `prescriptions` — die einzige §302-Tabelle ohne diesen
---                    Schutz (db/SCHEMA-RLS.sql, vormals als "OFFENE LUECKE"
---                    markiert). NEUE FUNKTION `prescriptions_festschreibung()`
---                    + NEUER TRIGGER `trg_prescriptions_festschreibung` (BEFORE
---                    UPDATE). Kolonlisten-Entscheidung: db-ustasi (Schema) +
---                    gkv-302 (Abrechnungsrelevanz) + legal-de (Anonymisierungs-
---                    Ausnahme), Konsultation 17.09.2026. Tor wie beim alten
---                    Vorbild (`verordnung_festschreibung()`, verwaist):
---                    `OLD.belegnummer IS NULL` laesst jede Aenderung durch.
---                    Details bei `prescriptions` unten und in db/SCHEMA-RLS.sql.
---                    Live getestet (Kemal, 17.09.2026): offenes Feld (status)
---                    ging durch, gesperrtes Feld (kostentraeger_ik) warf den
---                    Fehler, patient_name→NULL-Anonymisierung ging durch.
---                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
---                    ✅ Im SaaS angewendet 17.09.2026 (MCP).
---                    davor: 2026-09-17 — 0018_leads_podologie_altbestand +
---                    0019_podologie_behandlungen_employee_id
---                    (db-ustasi-Rehberlik zu Ops #244 + #252, Migrationen von
---                    Kemal geschrieben und per MCP angewendet.)
---                    ZWEI NEUE SPALTEN, keine Tabelle/Policy/Trigger/Index:
---                    `leads.podologie_altbestand_vor_2023` (boolean) +
---                    `leads.podologie_altbestand_beantwortet_am` (timestamptz) —
---                    haelt die HPNR-78040-Altbestandsfrage (01.11.2023) dauerhaft
---                    fest statt nur in einer modulscope JS-Variable
---                    (module/verordnung-podo.js `_altbestand`). Patientenbezogen,
---                    deshalb an `leads`, nicht an `prescriptions`.
---                    `podologie_behandlungen.employee_id` (uuid, FK profiles(id)
---                    ON DELETE SET NULL) — wer die Behandlung durchgefuehrt hat;
---                    fehlte komplett und blockierte den geplanten Team-
---                    Schreibausbau (Sicherheitsagent-Fund). Beide Migrationen
---                    legen nur Spalten an, das Befuellen aus dem UI/Session-
---                    Kontext steht noch aus (Ops #244, #252 bleiben offen).
---                    Details bei `leads` bzw. `podologie_behandlungen` unten.
---                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
---                    ✅ Im SaaS angewendet 17.09.2026 (MCP, db-ustasi-Gegenlesen
---                    bestanden: keine RLS/Trigger-Beruehrung, additive Spalten).
---                    davor: 2026-09-14 — 0016_no_show_session_links
---                    (Ops-Karte a8186cb8. EINE NEUE SPALTE:
---                    `bookings.no_show_session_links` — Rueckfahrkarte fuer die
---                    Einheiten, die ein „Patient nicht erschienen" jetzt wieder
---                    freigibt. Gegenstueck zu cancelled_session_links (#192),
---                    aber vom Anwendungscode geschrieben, weil jene Spalte dem
---                    Trigger gehoert. Keine Tabelle/Policy/Trigger/Index —
---                    erwartete-zaehler.json unveraendert ausser bis_version.
---                    Details bei `bookings` unten.
---                    ⚠️ Per Hand nachgezogen, kein voller Neu-Dump.
---                    ✅ Im SaaS angewendet 14.09.2026 (MCP, db-ustasi-Gegenlesen
---                    bestanden: Trigger/Index/RLS sauber, Backfill 2 Buchungen +
---                    2 Sitzungszeilen, 0 'done' beruehrt).
---                    davor: 2026-09-11 — 0005_praxura_setup
---                    (On-Premise Faz 2.2, Einrichtungsassistent.)
---                    EINE NEUE TABELLE: `praxura_setup` — genau EINE Zeile je
---                    Installation, die eine einzige Frage beantwortet: ist der
---                    von install.sh erzeugte SETUP_TOKEN schon gegen den ersten
---                    Owner eingetauscht worden? Sie steht unten direkt nach
---                    `praxura_migrations`, ihrer naechsten Verwandten: kein
---                    Produktdatensatz, sondern ein Buch ueber den Zustand der
---                    Box — und bekommt deshalb dieselbe Behandlung (RLS an,
---                    KEINE Policy, anon/authenticated ohne Rechte).
---                    ⚠️ Im SaaS ist die Tabelle vorhanden, wird aber NIE
---                    benutzt: das Tor ist die Umgebungsvariable SETUP_TOKEN
---                    (hier nie gesetzt), nicht diese Tabelle. Sie steht
---                    trotzdem hier, weil ein Schema-Unterschied zwischen Box
---                    und Produktion teurer ist als eine inerte Zeile
---                    (onprem/SCHEMA-VERTEILUNG.md §5.2, „Fork yok“).
---                    Mitgeliefert: 1 Index (pkey), 0 Policies, 0 Trigger.
---                    Warum sie noetig war: db/REGISTER.md.
---                    Per Hand nachgezogen, kein voller Neu-Dump.
---                    davor: 2026-09-11 — 0004_ausfallrechnungen_rechnung_nr_unique
---                    (db-ustasi-Fund beim Abnahmetest von 0003: ausfallrechnungen
---                    hatte nie UNIQUE (owner_id, rechnung_nr) — anders als
---                    belegliste/mahnungen. Vor 0003 hätte der MAX+1-Wettlauf zwei
---                    gleiche Rechnungsnummern still durchgelassen (§14 UStG).
---                    0003 hat den Wettlauf schon beseitigt, 0004 schließt die
---                    zweite, unabhängige Verteidigungslinie per Index. Details
---                    bei `ausfallrechnungen` unten.
---                    davor: 2026-09-10 — praxura_migrations_buch_anlegen
---                    (On-Premise: die Schemakette wurde in Betrieb genommen.)
---                    EINE NEUE TABELLE: `praxura_migrations` — das Buch der
---                    Schemakette, eine Zeile je angewandter Migrationsdatei.
---                    Sie steht unten alphabetisch zwischen
---                    `podologie_behandlungen` und `prescription_documents`.
---                    Erzeugt wird sie NICHT von einer Migrationsdatei, sondern
---                    vom Runner selbst (api-backend/db/migrate.js,
---                    CREATE TABLE IF NOT EXISTS) — sie ist die Voraussetzung
---                    der Kette, nicht deren Inhalt.
---                    RLS an, KEINE Policy, anon/authenticated ohne Rechte:
---                    der Schemastand ist keine oeffentliche Information.
---                    In der Produktion steht `0000` als *angewandt*;
---                    ausgefuehrt wurde die Baseline hier nie — das SaaS ist
---                    bereits auf diesem Stand. Warum das alles: db/REGISTER.md
---                    und onprem/SCHEMA-VERTEILUNG.md.
---                    Per Hand nachgezogen, kein voller Neu-Dump.
---                    davor: 2026-09-09 — 20260909185713_abrechnung_zeile_und_zahlung
---                    (Ops #283 / §302-Bildschirm, Katman 2/4 Geld/§302).
---                    ZWEI NEUE TABELLEN: `abrechnung_zeile` (was in EINER
---                    Datei tatsaechlich an die Kasse ging — eingefroren) und
---                    `abrechnung_zahlung` (Geldeingang je Sammelabrechnung,
---                    tranchenweise). Beide stehen unten alphabetisch direkt
---                    nach `abrechnung`. Warum sie noetig waren: `db/REGISTER.md`.
---                    Mitgeliefert: 4 Policies, 3 Funktionen, 3 Trigger,
---                    8 Indizes (davon 2 aus PK/UNIQUE) — alles in
---                    `db/SCHEMA-RLS.sql`.
---                    Eine Zeile ist bereits drin: der Rekonstruktionslauf der
---                    Migration hat die bestehenden Abrechnungsdateien aus
---                    `prescriptions.abrechnung_id` nachgezogen und mit
---                    `herkunft = 'rekonstruiert'` markiert. Diese Zeilen sind
---                    NICHT der Einreichungsstand, sondern der heutige Zustand
---                    der lebenden Verordnung — deshalb nimmt der CHECK
---                    `abrechnung_zeile_absetzung_betrag` bei ihnen eine
---                    Absetzung > netto_eur hin.
---                    Per Hand nachgezogen, kein voller Neu-Dump.
---                    davor: 2026-09-09, 20260909170546_zahlungsart_automatik
---                    (Ops #271, Katman 1/4 Geld/§302). Anlass war ein
---                    Produktionsfehler: PostgREST meldete „Could not find the
---                    function public.rechnung_zahlung_buchen(… p_zahlart …) in
---                    the schema cache" und JEDE Rechnungserstellung mit
---                    Zahlungsart-Dialog brach ab.
---                    Ursache: der Ops-#271-Code war ueber main deployed
---                    (Commits 64a05fa/352ac20) und rief die Funktion bereits mit
---                    12 Parametern auf — die zugehoerige SQL
---                    (sql-melih/2026-09-08-zahlungsart-automatik.sql) war aber
---                    nie ausgefuehrt worden. Live lag noch die 11-Parameter-
---                    Fassung ohne p_zahlart. Nachgeholt am 09.09.2026, diesmal
---                    ueber apply_migration statt SQL-Editor — deshalb steht sie
---                    unten unter "LETZTE MIGRATION".
---                    Inhalt: 'paypal' in belegliste_zahlart_check und
---                    prescriptions_zuzahlung_zahlart_check ergaenzt; die alte
---                    11-Parameter-Funktion GEDROPPT (CREATE OR REPLACE haette
---                    eine zweite Ueberladung erzeugt statt sie zu ersetzen) und
---                    durch die 12-Parameter-Fassung ersetzt: p_zahlart ist
---                    Pflicht, ein Beleg entsteht bei JEDER Zahlart statt nur bei
---                    Bar, und zuzahlung_zahlart bekommt den echten Wert statt
---                    des alten COALESCE(…,'ueberweisung')-Fallbacks.
---                    KEINE neue Tabelle/Spalte/Policy/Index/Trigger — UMFANG
---                    unveraendert.
---                    Per Hand nachgezogen, kein voller Neu-Dump.
---                    davor: 2026-09-08 (ZWEI Skripte, die am
---                    Migrationsregister VORBEI direkt im Supabase-SQL-Editor
---                    gefahren wurden — deshalb stehen sie unten NICHT unter
---                    "LETZTE MIGRATION", obwohl sie live sind:
---                      · 07.09.2026 sql-melih/2026-09-07-rechnung-zahlungen.sql
---                        → neue Tabelle `rechnung_zahlungen` (Zahlungs-Ledger
---                        zu Privatrechnungen), profiles.buchungskonten,
---                        invoices.storno_grund/storno_am, belegliste.invoice_id,
---                        belegliste_type_check um 'rechnung' erweitert,
---                        Funktion rechnung_zahlung_buchen().
---                      · 08.09.2026 sql-codex/2026-09-08-192-termin-soft-delete.sql
---                        → bookings.cancelled_at/cancelled_session_links und
---                        drei codex_192_*-Trigger. Absage ist ab jetzt ein
---                        Soft-Delete; Termine werden nicht mehr geloescht.
---                    Per Hand nachgezogen, kein voller Neu-Dump.
---                    ⚠️ Diese ZWEI stehen weiterhin in KEINER Migrationszeile —
---                       der SQL-Editor traegt in schema_migrations nichts ein.
---                       Wer nur das Register liest, haelt sie fuer ausstehend.
---                       Sie sind es nicht, gegen die Live-DB geprueft.
---                       (Bis 09.09. stand hier „das Register endet weiterhin am
---                       05.09.2026" — das gilt seit zahlungsart_automatik nicht
---                       mehr, das Register endet jetzt am 09.09.2026.)
---                    davor: 2026-09-06, kostentraeger_echtdaten_struktur,
---                    Ops #264 — die ECHTE TP5-Kostentraegerdatei ist geladen.
---                    `kostentraeger` +6 Spalten, neue Tabelle
---                    `kostentraeger_annahmestellen`. Der Dump lief dieser
---                    Migration einen halben Tag hinterher: er behauptete noch
---                    "Mock-Daten, ITSG-Zugang steht aus", waehrend live schon
---                    1043 echte Kassen-IKs standen. Genau die Sorte Fehler,
---                    vor der der Kopf von db/README.md warnt — wer den Dump
---                    liest, glaubt ihm.
---                    Per Hand nachgezogen, kein voller Neu-Dump.)
---                    davor: 2026-09-06, profiles.selbstzahler_stufen,
---                    Ops #266 — benannte Selbstzahler-Preisstufen des Owners.
---                    Im selben Zug korrigiert: der ⏳-Block bei `services` behauptete,
---                    kostentraeger_typ sei noch nicht ausgefuehrt — die Spalte ist
---                    seit dem 03.09.2026 live und in 172 von 181 Zeilen gepflegt.
---                    Per Hand nachgezogen, kein voller Neu-Dump.)
---                    davor: 2026-09-05, neue Tabelle
---                    booking_status_korrekturen, Ops #270 — append-only
---                    Korrekturhistorie fuer nachtraegliche bookings.status-
---                    Aenderungen, gleiches GoBD-Muster wie zuzahlung_korrekturen.
---                    Per Hand nachgezogen, kein voller Neu-Dump.)
---                    davor: 2026-09-05, prescriptions.krankenkasse_ik,
---                    FKT-Segment-Fix — Karten-IK der Krankenkasse getrennt von
---                    kostentraeger_ik gespeichert, siehe Spaltenkommentar unten)
---                    davor: 2026-09-04, prescriptions.nagel,
---                    Ops-Aufgabe 245) — Zusammenlegung der zwei Verordnungstöpfe:
---                    prescriptions (+11 Spalten aus `verordnungen`) wird der
---                    EINE Topf für Physio/Ergo/Logo UND Podologie. Details,
---                    Begründung und Spaltenübersetzung: module/verordnung-topf.js
---                    (Faz 1-3 dieser Datei: SCHEMA per Hand nachgezogen, KEIN
---                    voller Neu-Dump aller 80 Tabellen — "schema aktualisieren"
---                    für einen vollen Refresh steht noch aus)
---                    Faz 5 (04.09.2026, auf Nutzerwunsch vorgezogen aus der
---                    90-Tage-Frist): `verordnungen` GEDROPPT. Siehe Eintrag
---                    an der Stelle, wo die Tabelle frueher im Dump stand
---                    (nach `vehicles`, vor `visibility_reports`).
--- LETZTE MIGRATION:  20260909185713_abrechnung_zeile_und_zahlung (09.09.2026)
---                    davor: 20260909170546_zahlungsart_automatik (09.09.2026)
---                    davor: 20260905224013_kostentraeger_echtdaten_struktur (06.09.2026)
---                    davor: 20260905223001_profiles_selbstzahler_stufen
---                    davor: 20260905193701_booking_status_korrekturen
---                    davor: 20260905125546_prescriptions_krankenkasse_ik
---                    davor: verordnungstopf_faz5c_naechste_verordnungsnummer_fix
---                    davor: verordnungstopf_faz5b_verordnungen_droppen
---                    davor: 20260904085612_prescriptions_nagel_lokalisation
---                    davor: 20260903202143_verordnungstopf_faz3_fk_auf_prescriptions_umhaengen
---                    davor: 20260903202025_verordnungstopf_faz2_vier_zeilen_kopieren
---                    davor: 20260903201633_verordnungstopf_faz1_prescriptions_spalten
---                    davor: 20260903205029_bookings_dauer_quelle
---                    davor: 20260903170448_booking_leistungen
---                    davor: 20260903165452_verordnungen_podologie_behandlungen_team_select
---                    davor: 20260903132042_verordnungen_gobd_festschreibung
---                    davor: 20260903075503_pruefe_booking_verordnung_owner_execute_revoke
---                    davor: 20260903074810_bookings_verordnung_id_podologie_termin_bindung
---                    davor: 20260901094002_zuzahlung_korrektur_business_id_trigger
---                    davor: 20260901093344_zuzahlung_korrektur_search_path_haerten
---                    davor: 20260901093310_zuzahlung_korrektur
---                    (Zeitstempel stammen aus supabase_migrations.schema_migrations.
---                     Die Dateien im Repo heissen 20260831120000_zuzahlung_korrektur.sql,
---                     20260901093500_zuzahlung_korrektur_search_path_haerten.sql und
---                     20260901094500_zuzahlung_korrektur_business_id_trigger.sql —
---                     die DB ist die Wahrheit, die Dateinamen sind nur Ablage.)
---                    davor: pat_fussbefund_versionierung_und_serie
---                    davor: business_services_droppen_spiegeltabelle
---                    davor: prescription_sessions_booking_unique
---                    davor: leads_geschlecht_kodierung_dokumentieren
---                    davor: invoice_nummer_backfill_altbestand
---                    davor: invoices_ust_nummernkreis_gobd
---                    davor: invoices_verordnung_id
---                    davor: 20260815233848_verordnungsnummer_belegnummer
---                    davor: 20260815085338_leads_patientennummer
---                    davor: 20260814200147_leads_handy_getrennt
---                    davor: 20260814101707_patient_consents
---                    davor: 20260814101624_kiosk_pin_hardening
---                    davor: 20260814083941_fussbefund_termin_legende
---                    davor: 20260814082430_verordnungen_abrechnungsstatus_absetzung
---                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
---                     im SQL-Editor gelaufen — steht deshalb in KEINER
---                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            93 Public-Basistabellen · 1349 Basistabellen-Spalten
---                    37 View-Spalten separat · 166 Public-RLS-Policies
---                    328 Public-Indizes · 87 nichtinterne Public-Trigger
---                    91 Public-Funktionen ohne Extension-Objekte
---                    (live 03.10.2026 nach 0058; information_schema fuer
---                     Tabellen/Spalten, pg_policies/pg_indexes, pg_proc ohne
---                     pg_depend.deptype='e', pg_trigger ohne tgisinternal).
---                    Vor 0058 live: 93 / 1346 / 37 / 166 / 327 / 86 / 90.
---                    Alte Kopfwerte 1367 Spalten/175 Policies/325 Indizes/
---                    81 Trigger/84 Funktionen waren schon vorher veraltet;
---                    Spaltenzahl nach Basistabellen und Views nun getrennt.
---                    Historische Zaehlerbegruendung (keine aktuelle Messung):
---                    (20.09.2026 live gezaehlt, Stand 0034. Die vier neuen
---                     Tabellen sind datenaustausch_zaehler (0029),
---                     betriebsart_empfaenger (0031), kostentraeger_anschriften
---                     (0032) und abrechnung_uebermittlung (0034).
---                     ⚠️ Spalten: nach Bauplan bringen die neun Migrationen +65
---                     (abrechnung +10, podologie_behandlungen +3,
---                     terapeut_zertifikat +5, dazu 6+7+9+25 in den vier neuen
---                     Tabellen). 1300 + 65 waeren 1365, gezaehlt wurden 1367 —
---                     der Rest von 2 stammt aus dem ALTEN Wert, nicht aus diesen
---                     Migrationen. Gegenprobe: der RUMPF dieser Datei war
---                     richtig (abrechnung 22 + 10 = 32 live,
---                     podologie_behandlungen 12 + 3 = 15 live,
---                     terapeut_zertifikat 10 + 5 = 15 live). Gleiche Klasse wie
---                     die am 17.09. nachgezogenen Abweichungen: die Kopfzahl
---                     war fortgeschrieben statt gezaehlt.)
---                    davor: 89 · 1300 · 172 · 318 · 78 · 78 · 4
---                    (17.09.2026 live gezaehlt, Stand 0023_aerzte_ausfall_team_
---                     insert: Policies 169 -> 172, drei neue Team-Policies
---                     (zwei auf `aerzte`, eine auf `ausfallrechnungen`).
---                     Tabellen, Spalten, Indizes, Trigger, Funktionen und Views
---                     unveraendert.)
---                    davor: 89 · 1300 · 169 · 318 · 78 · 78 · 4
---                    (17.09.2026 live gezaehlt, Stand 0022_team_zugriff_
---                     warteliste_patient_notes: Policies 165 -> 169, vier neue
---                     Team-Policies (siehe Kopf und db/SCHEMA-RLS.sql).
---                     Bei der Gelegenheit drei Zahlen nachgezogen, die seit dem
---                     11.09. hier stehengeblieben waren, obwohl der RUMPF
---                     dieser Datei sie laengst enthaelt — gegen die Live-DB
---                     gezaehlt, nicht fortgeschrieben:
---                       Spalten   1296 -> 1300  (0018/0019/0020; Zaehlweise wie
---                                 unten: 1267 auf 89 Tabellen + 33 auf 4 Views)
---                       Trigger     74 -> 78    (0020 + die drei aus 0021)
---                       Funktionen  76 -> 78    (0020 + 0021)
---                     db/SCHEMA-RLS.sql hatte Trigger und Funktionen schon
---                     richtig; die Abweichung war nur in dieser Zeile.
---                     Tabellen, Views und Indizes unveraendert.)
---                    davor: 89 · 1296 · 165 · 318 · 74 · 76 · 4
---                    (11.09.2026 live gezaehlt. Die Deltas gegen die 09.09.-Zeile
---                     darunter gehen restlos auf drei Schritte auf:
---                       Tabellen  87 -> 89  praxura_migrations (10.09., vom Runner
---                                           selbst angelegt) + praxura_setup (0005)
---                       Spalten 1283 -> 1296  +6 (praxura_migrations) +7 (praxura_setup)
---                                           = 1263 auf 89 Tabellen + 33 auf 4 Views
---                       Indizes  315 -> 318  +1 pkey praxura_migrations
---                                           +1 UNIQUE aus 0004 +1 pkey praxura_setup
---                     Policies, Trigger, Funktionen und Views unveraendert — beide
---                     neuen Tabellen haben bewusst KEINE Policy und KEINEN Trigger.
---                     ⚠️ Die 10.09.-Aktualisierung hatte die Tabellen-/Spaltenzahl
---                     nicht nachgezogen, nur die Indexzahl in SCHEMA-RLS.sql —
---                     deshalb springt die Zeile hier um zwei Tabellen.)
---                    (09.09.2026, abrechnung_zeile_und_zahlung: live gezaehlt.
---                     Alle sechs Deltas gehen restlos auf die eine Migration
---                     auf: +2 Tabellen, +39 Spalten (27 + 12), +4 Policies,
---                     +8 Indizes, +3 Trigger, +3 Funktionen. Views unveraendert.
---                     ⚠️ Zaehlweise der Spalten, damit die naechste Pruefung
---                     nicht wieder stutzt: gezaehlt werden die Spalten von
---                     TABELLEN UND VIEWS (ohne abgefallene). 1283 = 1250 auf
---                     87 Tabellen + 33 auf 4 Views. Wer nur Tabellen zaehlt,
---                     bekommt 1250 und haelt den Kopf faelschlich fuer falsch.
---                     Die alten 1244 gingen nach derselben Regel auf: 1211 + 33.)
---                    (09.09.2026, zahlungsart_automatik: UNVERAENDERT. zahlungsart_automatik ersetzte
---                     nur eine Funktion — Drop der 11-Parameter-Fassung plus
---                     Create der 12-Parameter-Fassung, netto 0 — und tauschte
---                     zwei CHECK-Constraints. Live gegengezaehlt: Tabellen 85,
---                     Policies 161, Indizes 307, Trigger 71, Views 4. Alle fuenf
---                     unveraendert, deshalb bleiben die Zahlen oben stehen.)
---                    (08.09.2026: live nach der dokumentierten Zaehlweise
---                     nachgezaehlt. Alle sechs Deltas gehen restlos auf die
---                     zwei SQL-Editor-Skripte auf — zum ersten Mal seit
---                     Wochen bleibt kein unerklaerter Rest:
---                       Tabellen  84 -> 85   +1  rechnung_zahlungen
---                       Spalten 1226 ->1244  +18 12 rechnung_zahlungen
---                                                + profiles.buchungskonten
---                                                + invoices.storno_grund/_am
---                                                + belegliste.invoice_id
---                                                + bookings.cancelled_at/
---                                                  cancelled_session_links
---                       Policies 159 -> 161  +2  rechnung_zahlungen select/insert
---                       Indizes  301 -> 307  +6  4 rechnung_zahlungen (inkl. pkey)
---                                                + idx_belegliste_invoice
---                                                + codex_192_prescription_sessions_booking_idx
---                       Trigger   66 -> 71   +5  2 rechnung_zahlungen + 3 codex_192
---                       Funktionen 67 -> 73  +6  3 rechnung_zahlungen + 3 codex_192
---                     Dass die Rechnung diesmal ohne Rest aufgeht, ist selbst
---                     der Befund: es gibt keine weitere unbemerkte Aenderung
---                     an der Live-DB.)
---                    (06.09.2026: +1 Tabelle (kostentraeger_annahmestellen),
---                     +1 Policy, +5 Indizes durch kostentraeger_echtdaten_struktur.
---                     Indizes: 296 + 5 = 301, live nachgezaehlt — die am
---                     05.09. als „nicht aufgeklärt“ notierte Differenz war
---                     also der alte Wert 301, der schon stimmte.
---                     Spalten live 1226; erwartet waren 1207 + 6 + 12 = 1225,
---                     die Differenz von 1 stammt aus dem alten Wert, nicht
---                     aus dieser Migration.)
---                    (05.09.2026: gegen die Live-DB nach der dokumentierten
---                     Zählweise nachgezählt (inkl. der neuen Tabelle). Die
---                     Spaltenzahl stand vorher auf 1231 — Differenz nicht
---                     aufgeklärt, evtl. war der alte Wert bereits ungenau;
---                     kein Hinweis auf einen zwischenzeitlichen Spalten-Drop.
---                     Tabellenzahl war vorher ebenfalls "83" eingetragen,
---                     obwohl booking_status_korrekturen neu dazukam — der
---                     alte Wert war also schon vor dieser Migration zu hoch.)
---                    (03.09.2026 abends: die Spaltenzahl stand auf 1219 und war
---                     um 12 zu niedrig — gegen die Live-DB nach der dokumentierten
---                     Zählweise nachgezählt, nicht fortgeschrieben.)
---                    (03.09.2026: die Triggerzahl stand hier auf 60 und war
---                     seit zwei Migrationen zu niedrig — gegen die Live-DB
---                     nachgezählt, nicht fortgeschrieben.)
--- ZÄHLWEISE:         Tabellen = BASE TABLE in `public` · Spalten =
---                    information_schema.columns in `public` (Views
---                    eingeschlossen) · Funktionen und Indizes OHNE die
---                    von Erweiterungen (postgis/pg_net) mitgebrachten ·
---                    Trigger ohne interne (FK-)Trigger.
---                    Am 28.08.2026 festgehalten, weil die Kopfzeilen
---                    dieser Datei und von SCHEMA-RLS.sql sich vorher bei
---                    Triggern und Funktionen widersprachen.
--- QUELLE:            Direkt aus der Live-DB introspiziert (kein Handentwurf)
+-- ============================================================================
+-- SCHEMA.sql — Database Structural Schema Definition
+-- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
--- ⚠️  DIES IST EINE MOMENTAUFNAHME, KEINE LIVE-VERBINDUNG.
---     Nach jeder Migration neu erzeugen — sonst schreibt jemand SQL
---     gegen ein Schema, das es nicht mehr gibt.
---     Regel + Ablauf: db/README.md
+-- ENVIRONMENT:        saas njvuclullotbksskpwgk
+-- LAST MIGRATION:     20261003193551 podologie_empfangsnachweise_0059
+-- EXPORTED AT:        2026-10-03T19:36:25.349Z
+-- ERZEUGT AM:         2026-10-03
+-- POSTGRESQL VERSION: 17.6
 --
--- Diese Datei ist ZUM LESEN gedacht (Kontext für Menschen und KI),
--- nicht zum Ausführen. Sie enthält keine Daten, nur Struktur.
--- RLS-Policies, Funktionen und Trigger: db/SCHEMA-RLS.sql
--- =====================================================================
--- =====================================================================
+-- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
+--   public_tables:       94
+--   table_columns:       1362
+--   view_columns:        37
+--   matview_columns:     0
+--   rls_policies:        167
+--   functions:           93
+--   triggers:            88
+--   indexes:             331
+--   auth_triggers:       1
+--   publication_tables:  8
+--   extensions:          9
+--   rls_disabled_tables: 1
+--
+-- CAUTION / HINWEIS:
+-- This document is a deterministic structural documentation snapshot.
+-- It is NOT guaranteed to be standalone restore-executable in one single pass
+-- due to circular dependencies, catalog constraints, and external state.
+-- ============================================================================
+-- ----------------------------------------------------------------------------
+-- EXTENSIONS INVENTORY
+-- ----------------------------------------------------------------------------
+-- Extension: btree_gist (version: 1.7, schema: public)
+-- Extension: pg_net (version: 0.20.0, schema: extensions)
+-- Extension: pg_stat_statements (version: 1.11, schema: extensions)
+-- Extension: pg_trgm (version: 1.6, schema: public)
+-- Extension: pgcrypto (version: 1.3, schema: extensions)
+-- Extension: plpgsql (version: 1.0, schema: pg_catalog)
+-- Extension: postgis (version: 3.3.7, schema: public)
+-- Extension: supabase_vault (version: 0.3.1, schema: vault)
+-- Extension: uuid-ossp (version: 1.1, schema: extensions)
 
+-- ----------------------------------------------------------------------------
+-- ENUMS
+-- ----------------------------------------------------------------------------
+-- (no enums defined)
 
--- =====================================================================
--- 1. TABELLEN
--- =====================================================================
--- RLS ist auf ALLEN Tabellen aktiv, mit einer Ausnahme:
---   spatial_ref_sys  (PostGIS-Systemtabelle, unkritisch)
+-- ----------------------------------------------------------------------------
+-- DOMAINS
+-- ----------------------------------------------------------------------------
+-- (no domains defined)
 
-CREATE TABLE abrechnung (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  kostentraeger_ik text NOT NULL
-  dateiname text
-  rechnungsnummer text
-  total_eur numeric(10,2) DEFAULT 0
-  zuzahlung_total numeric(10,2) DEFAULT 0
-  status text NOT NULL DEFAULT 'erstellt'::text
-  dta_file_size integer
-  dta_segment_count integer
-  prescription_count integer DEFAULT 0
-  rejected_count integer DEFAULT 0
-  storage_path text
-  begleitzettel_path text
-  zaa_uploaded_at timestamptz
-  paid_at timestamptz
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  signed_storage_path text
-  signed_at timestamptz
-  signed_by_cert_thumbprint text
-  business_id uuid
-  auftragsdatei_path text
-  auftragsdatei_size integer
-  dta_sha256 text
-  auftragsdatei_sha256 text
-  signed_sha256 text
-  betriebsart text
-  datenaustauschreferenz integer
-  transfernummer integer
-  empfaenger_ik text
-  verwerfungsgrund text
-  encrypted_storage_path text
-  encrypted_sha256 text
-  verschluesselt_am timestamptz
-  verschluesselt_fuer_fingerprint text
-  verschluesselung_hinweis text
-  verarbeitungskennzeichen text
-  zuzahlungsforderung_ursprung_id uuid
+-- ----------------------------------------------------------------------------
+-- COMPOSITE TYPES
+-- ----------------------------------------------------------------------------
+-- [EXTENSION OWNED] Type public.geometry_dump (owned by extension)
+
+-- [EXTENSION OWNED] Type public.valid_detail (owned by extension)
+
+-- ----------------------------------------------------------------------------
+-- SEQUENCES
+-- ----------------------------------------------------------------------------
+-- Sequence public.chatbot_usage_id_seq (identity-owned for public.chatbot_usage.id, AS bigint, START WITH 1, INCREMENT BY 1, MINVALUE 1, MAXVALUE 9223372036854775807, CACHE 1, NO CYCLE)
+
+CREATE SEQUENCE public.data_access_log_id_seq
+  AS bigint
+  START WITH 1
+  INCREMENT BY 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  CACHE 1
+  NO CYCLE;
+ALTER SEQUENCE public.data_access_log_id_seq OWNED BY public.data_access_log.id;
+ALTER SEQUENCE public.data_access_log_id_seq OWNER TO postgres;
+
+CREATE SEQUENCE public.dta_schluessel_id_seq
+  AS bigint
+  START WITH 1
+  INCREMENT BY 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  CACHE 1
+  NO CYCLE;
+ALTER SEQUENCE public.dta_schluessel_id_seq OWNED BY public.dta_schluessel.id;
+ALTER SEQUENCE public.dta_schluessel_id_seq OWNER TO postgres;
+
+-- Sequence public.fahrten_aenderungen_id_seq (identity-owned for public.fahrten_aenderungen.id, AS bigint, START WITH 1, INCREMENT BY 1, MINVALUE 1, MAXVALUE 9223372036854775807, CACHE 1, NO CYCLE)
+
+CREATE SEQUENCE public.heilmittel_tarif_id_seq
+  AS bigint
+  START WITH 1
+  INCREMENT BY 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  CACHE 1
+  NO CYCLE;
+ALTER SEQUENCE public.heilmittel_tarif_id_seq OWNED BY public.heilmittel_tarif.id;
+ALTER SEQUENCE public.heilmittel_tarif_id_seq OWNER TO postgres;
+
+-- Sequence public.kostentraeger_annahmestellen_id_seq (identity-owned for public.kostentraeger_annahmestellen.id, AS bigint, START WITH 1, INCREMENT BY 1, MINVALUE 1, MAXVALUE 9223372036854775807, CACHE 1, NO CYCLE)
+
+-- Sequence public.kostentraeger_anschriften_id_seq (identity-owned for public.kostentraeger_anschriften.id, AS bigint, START WITH 1, INCREMENT BY 1, MINVALUE 1, MAXVALUE 9223372036854775807, CACHE 1, NO CYCLE)
+
+-- Sequence public.podologie_empfangsnachweise_event_seq_seq (identity-owned for public.podologie_empfangsnachweise.event_seq, AS bigint, START WITH 1, INCREMENT BY 1, MINVALUE 1, MAXVALUE 9223372036854775807, CACHE 1, NO CYCLE)
+
+-- Sequence public.prescription_documents_id_seq (identity-owned for public.prescription_documents.id, AS bigint, START WITH 1, INCREMENT BY 1, MINVALUE 1, MAXVALUE 9223372036854775807, CACHE 1, NO CYCLE)
+
+CREATE SEQUENCE public.zaa_fehler_id_seq
+  AS bigint
+  START WITH 1
+  INCREMENT BY 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  CACHE 1
+  NO CYCLE;
+ALTER SEQUENCE public.zaa_fehler_id_seq OWNED BY public.zaa_fehler.id;
+ALTER SEQUENCE public.zaa_fehler_id_seq OWNER TO postgres;
+
+CREATE SEQUENCE public.zuzahlung_befreiung_id_seq
+  AS bigint
+  START WITH 1
+  INCREMENT BY 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  CACHE 1
+  NO CYCLE;
+ALTER SEQUENCE public.zuzahlung_befreiung_id_seq OWNED BY public.zuzahlung_befreiung.id;
+ALTER SEQUENCE public.zuzahlung_befreiung_id_seq OWNER TO postgres;
+
+-- ----------------------------------------------------------------------------
+-- TABLES & CONSTRAINTS
+-- ----------------------------------------------------------------------------
+CREATE TABLE public.abrechnung (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  kostentraeger_ik text NOT NULL,
+  dateiname text,
+  rechnungsnummer text,
+  total_eur numeric(10,2) DEFAULT 0,
+  zuzahlung_total numeric(10,2) DEFAULT 0,
+  status text DEFAULT 'erstellt'::text NOT NULL,
+  dta_file_size integer,
+  dta_segment_count integer,
+  prescription_count integer DEFAULT 0,
+  rejected_count integer DEFAULT 0,
+  storage_path text,
+  begleitzettel_path text,
+  zaa_uploaded_at timestamp with time zone,
+  paid_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  signed_storage_path text,
+  signed_at timestamp with time zone,
+  signed_by_cert_thumbprint text,
+  business_id uuid,
+  auftragsdatei_path text,
+  auftragsdatei_size integer,
+  dta_sha256 text,
+  auftragsdatei_sha256 text,
+  signed_sha256 text,
+  betriebsart text,
+  datenaustauschreferenz integer,
+  transfernummer integer,
+  empfaenger_ik text,
+  verwerfungsgrund text,
+  encrypted_storage_path text,
+  encrypted_sha256 text,
+  verschluesselt_am timestamp with time zone,
+  verschluesselt_fuer_fingerprint text,
+  verschluesselung_hinweis text,
+  verarbeitungskennzeichen text,
+  zuzahlungsforderung_ursprung_id uuid,
   zuzahlungsforderung_daten jsonb
 );
---   CHECK status IN (erstellt, heruntergeladen, gesendet, accepted, rejected, paid, verworfen)
---   CHECK betriebsart IS NULL OR betriebsart IN (test, erprobung, echt)
---   FK business_id -> businesses(id) ON DELETE CASCADE
+--   FK business_id -> businesses(id)
 --   FK kostentraeger_ik -> kostentraeger(ik)
---   FK owner_id -> auth.users(id) ON DELETE CASCADE
---   PK (id)
---   0058 (03.10.2026) — live pg_get_constraintdef, alle drei Spalten NULLABLE:
---   abrechnung_verarbeitungskennzeichen_check:
---     CHECK ((verarbeitungskennzeichen = ANY (ARRAY['01'::text, '02'::text, '03'::text, '04'::text])))
---   abrechnung_zuzahlungsforderung_ursprung_check:
---     CHECK (((NOT (verarbeitungskennzeichen IS DISTINCT FROM '03'::text)) = (zuzahlungsforderung_ursprung_id IS NOT NULL)))
---   abrechnung_zuzahlungsforderung_daten_check:
---     CHECK (((NOT (verarbeitungskennzeichen IS DISTINCT FROM '03'::text)) = (zuzahlungsforderung_daten IS NOT NULL)))
---   abrechnung_zuzahlungsforderung_ursprung_fk:
---     FOREIGN KEY (zuzahlungsforderung_ursprung_id) REFERENCES abrechnung_zeile(id) ON DELETE RESTRICT
---   UNIQUE zuzahlungsforderung_ursprung_id WHERE verarbeitungskennzeichen='03':
---     genau eine Forderung je Originalzeile, auch wenn status='verworfen'.
---   Kein Default/Backfill: NULL-VKZ bedeutet historisch unbekannt, nicht '01'.
---   JSON friert Grund, Positionen und persoenlich zugeordnete Nachweispruefung
---   ein. Nur Backendrollen duerfen VKZ03 schreiben; Ursprung/JSON/Identitaet
---   unveraenderlich, DELETE gesperrt. Historische business_id=NULL bleibt NULL.
---   Unvollstaendige Reservierung: CAS verworfen -> erstellt auf derselben id.
---   Immutable abrechnung_zeile zur Forderung verhindert Ruecksetzen nach Erfolg.
---   VKZ03 total_eur/netto_eur bezeichnen die neue Forderung, nicht das alte
---   Behandlungsbrutto; zuzahlung_total/zeile.zuzahlung_eur sind dabei 0.
---   ★ 20.09.2026 (§302-Echtbetrieb, Faz 1) — zehn Spalten dazu, drei Gruppen:
---     (a) auftragsdatei_path/_size (0027): die Auftragsdatei (348-Byte-Auftrags-
---         satz, GGT Anlage 2) wurde seit 17.09. erzeugt und WEGGEWORFEN. Sie
---         geht nur PAARWEISE mit der .dta raus — fehlt sie, lehnt die
---         Annahmestelle ab, ohne den Inhalt zu lesen (Anhang 2 Kap. 9 § 3.1).
---     (b) dta_sha256 / auftragsdatei_sha256 / signed_sha256 (0027): eine Summe
---         JE STUFE, weil Signatur (und spaeter Verschluesselung) die Bytes
---         aendern. Beantwortet "war das diese Datei?" — der Storage-Pfad kann
---         ueberschrieben sein, alle Uploads laufen mit upsert:true.
---     (c) betriebsart, datenaustauschreferenz, transfernummer, empfaenger_ik
---         (0027/0029): WELCHE Nummern diese Datei getragen hat und an WEN sie
---         ging. Nicht neu berechnen — sie sind bei der Kasse hinterlegt.
---         Der Zaehler laeuft je Paar (Absender-IK, Empfaenger-IK), siehe
---         datenaustausch_zaehler.
---   ★ verwerfungsgrund + Status 'verworfen' (0033): vergebeNummern() zieht die
---     Nummern VOR dem Bauen der Datei — scheitert danach der Preflight, sind sie
---     verbraucht. Die Reihenfolge bleibt absichtlich so (sonst waeren die Regeln
---     F:03001-F:03004 geblendet, die genau diese Nummer pruefen). Die Spezifikation
---     verlangt "fortlaufend", nicht "lueckenlos" — GoBD verlangt aber, dass jede
---     Luecke ERKLAERBAR ist. Genau das steht hier drin, PHI-frei.
---   ★ 22.09.2026 (0042, O-131) — fuenf Spalten fuer die CMS-EnvelopedData-
---     Verschluesselung, im selben Muster wie die signed_*-Gruppe:
---     encrypted_storage_path/encrypted_sha256 (Pfad+Summe der verschluesselten
---     Datei, Pendant zu signed_storage_path/signed_sha256), verschluesselt_am
---     (Pendant zu signed_at), verschluesselt_fuer_fingerprint (Fingerprint des
---     zum Verschluesselungszeitpunkt genutzten Empfaengerzertifikats aus
---     empfaenger_zertifikate.fingerprint_sha256 — Annahmestellen rotieren ihre
---     Zertifikate), verschluesselung_hinweis (Klartext-Status/Fehlermeldung
---     fuer die UI, NULL bei Erfolg). Bindende Schreibregel: alle fuenf werden
---     bei JEDEM Lauf von upload-signed als EINE Gruppe neu gesetzt — ein
---     Fehlschlag setzt die ersten vier auf NULL zurueck, sonst bliebe nach
---     erneuter Signierung eine verschluesselte Datei eines FRUEHEREN Laufs
---     faelschlich als aktuell stehen.
-
--- 20.09.2026 (0034) — gesetzliche Uebermittlungsdokumentation. NICHT mit
--- `abrechnung` verwechseln: dort steht die Datei, hier steht jeder TRANSPORT
--- dieser Datei. Eigene Tabelle aus zwei zwingenden Gruenden: (1) 1:n — eine
--- Abrechnung kann mehrfach uebertragen werden, und Quittungen (CONTRL, APERAK)
--- treffen zeitversetzt als Antwort ein (`antwort_auf`); (2) `abrechnung` ist
--- festgeschrieben, Transportfelder dort nachzupflegen wuerde den Trigger
--- verletzen. Angelegt VOR dem Versandschritt (Faz 2), weil sich eine gesetzliche
--- Transportdokumentation nicht rueckwirkend erzeugen laesst.
-CREATE TABLE abrechnung_uebermittlung (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  business_id uuid
-  abrechnung_id uuid
-  antwort_auf uuid
-  richtung text NOT NULL
-  physikalischer_dateiname text NOT NULL
-  erstellt_am timestamptz NOT NULL
-  laufende_nummer integer
-  transfernummer integer
-  partner_ik text NOT NULL
-  partner_name text
-  begonnen_am timestamptz NOT NULL DEFAULT now()
-  beendet_am timestamptz
-  dateigroesse_bytes bigint
-  verarbeitungshinweise text
-  verarbeitungskennzeichen text
-  fehlerstatus text NOT NULL DEFAULT 'offen'::text
-  fehlertext text
-  uebertragungsweg text
-  sha256 text
-  betriebsart text
-  absender_ik text
-  created_by uuid
-  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
-);
---   CHECK richtung IN (senden, empfangen)
---   CHECK fehlerstatus IN (offen, ok, fehler, abgebrochen)
---   CHECK betriebsart IS NULL OR betriebsart IN (test, erprobung, echt)
---   CHECK uebertragungsweg IS NULL OR uebertragungsweg IN (portal, dfue, mail, datentraeger, papier)
---   FK owner_id      -> profiles(id)                ON DELETE RESTRICT
---   FK business_id   -> businesses(id)              ON DELETE SET NULL
---   FK abrechnung_id -> abrechnung(id)              ON DELETE RESTRICT
---   FK antwort_auf   -> abrechnung_uebermittlung(id) ON DELETE SET NULL
---   FK created_by    -> auth.users(id)              ON DELETE SET NULL
---   PK (id)
---   Fundstelle: Anlage 1 TP5 Kap. 3(2) ("ueber den Datenaustausch ist eine
---   Dokumentation zu fuehren … mindestens 2 Jahre aufzubewahren") und Anhang 1
---   § 4.5(2), der die Pflichtfelder einzeln aufzaehlt — sie stehen 1:1 oben.
---   ⚠️ FESTGESCHRIEBEN. trg_abrechnung_uebermittlung_festschreibung blockt
---     DELETE ganz. Beim UPDATE sind drei Gruppen zu unterscheiden:
---       gesperrt      id, richtung, physikalischer_dateiname, erstellt_am,
---                     laufende_nummer, transfernummer, partner_ik, absender_ik,
---                     begonnen_am, dateigroesse_bytes, sha256, betriebsart,
---                     owner_id, abrechnung_id, created_at
---       einmalig      beendet_am, antwort_auf, uebertragungsweg (NULL -> Wert)
---       frei          verarbeitungskennzeichen, fehlerstatus, fehlertext,
---                     partner_name, verarbeitungshinweise
---     business_id und created_by stehen ABSICHTLICH in keiner Liste: beide
---     haengen an ON DELETE SET NULL, und PG fuehrt SET NULL als UPDATE aus —
---     waeren sie gesperrt, liesse sich weder ein Standort noch ein Konto
---     loeschen. Dieselbe Falle wie bei podologie_behandlungen.
---   ⛔ PHI-VERBOT. Kein Patientenname, keine Versichertennummer, kein
---     Geburtsdatum, keine Diagnose. Die zwei Risikostellen sind die Freitexte
---     `verarbeitungshinweise` und `fehlertext`: wer spaeter ZAA- oder
---     Annahmestellen-Rueckmeldungen hineinkopiert, maskiert sie VORHER.
-
--- 09.09.2026 — die Geschichtsachse zu `abrechnung`. Was in EINER Datei
--- tatsaechlich an die Kasse ging, eingefroren. Vorher wurde die Zeilenliste aus
--- `prescriptions.abrechnung_id` abgeleitet; sobald ein abgesetztes Rezept
--- korrigiert und neu eingereicht wurde, wanderte die id mit und die Zeile
--- verschwand aus der alten Datei. Warum das noetig war: db/REGISTER.md.
-CREATE TABLE abrechnung_zeile (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  abrechnung_id uuid NOT NULL
-  owner_id uuid NOT NULL
-  business_id uuid
-  prescription_id uuid
-  kostentraeger_ik text NOT NULL
-  karten_ik text
-  einzel_rechnungsnummer text NOT NULL
-  sort_order smallint NOT NULL DEFAULT 0
-  belegnummer text
-  patient_name text
-  versichertennummer text
-  verordnungsdatum date
-  therapie_bereich text
-  heilmittel_position text
-  anzahl_einheiten integer
-  leistungen jsonb NOT NULL DEFAULT '[]'::jsonb
-  brutto_eur numeric(10,2) NOT NULL DEFAULT 0
-  zuzahlung_eur numeric(10,2) NOT NULL DEFAULT 0
-  netto_eur numeric(10,2) NOT NULL DEFAULT 0
-  status text NOT NULL DEFAULT 'eingereicht'::text
-  absetzung_eur numeric(10,2) NOT NULL DEFAULT 0
-  absetzung_grund text
-  absetzung_am date
-  herkunft text NOT NULL DEFAULT 'einreichung'::text
-  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
-  updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
-);
---   CHECK status IN (eingereicht, akzeptiert, abgesetzt, teilabgesetzt, nachgereicht)
---   CHECK herkunft IN (einreichung, rekonstruiert)
---   CHECK absetzung_eur >= 0 AND (herkunft = 'rekonstruiert' OR absetzung_eur <= netto_eur)
---   CHECK absetzung_eur = 0 OR btrim(COALESCE(absetzung_grund,'')) <> ''
---   FK abrechnung_id   -> abrechnung(id)    ON DELETE RESTRICT
---   FK owner_id        -> profiles(id)      ON DELETE RESTRICT
---   FK business_id     -> businesses(id)    ON DELETE SET NULL
---   FK prescription_id -> prescriptions(id) ON DELETE SET NULL
---   PK (id)
---   UNIQUE (abrechnung_id, prescription_id) WHERE prescription_id IS NOT NULL
---   ⚠️ FESTGESCHRIEBEN (GoBD, § 302 SGB V). trg_abrechnung_zeile_festschreibung
---     blockt DELETE ganz und jede Aenderung an Identitaet und Betrag. Offen
---     bleiben nur: status, absetzung_* und das NULLEN (nicht Aendern) von
---     patient_name/versichertennummer — das ist die DSGVO-Ausnahme, siehe
---     ANONYMIZE_TABLES in api/dsgvo.js. Bei `invoices` fehlt genau diese
---     Ausnahme und haelt dort die ganze Loeschkette an.
---   ⚠️ Es gibt KEINE UPDATE-Policy. Status, Absetzung und Anonymisierung
---     schreibt nur das Backend/der DSGVO-Endpunkt mit service_role.
---   ⚠️ prescription_id ist ON DELETE SET NULL — mit RESTRICT wuerde die
---     DSGVO-Loeschkette bei `prescriptions` haengenbleiben.
---   ⚠️ herkunft = 'rekonstruiert' heisst: NICHT der Einreichungsstand, sondern
---     der heutige Zustand der lebenden Verordnung, beim Anlegen der Tabelle
---     einmalig nachgezogen. Nur diese Zeilen duerfen absetzung_eur > netto_eur
---     tragen.
---   ⚠️ NICHT `abrechnung_position` nennen: „Position" heisst in diesem Code die
---     Positionsnummer (HPNR) — heilmittel_position, gkv_position_nr.
---   Kein Eintrag in DELETE_TABLES (api/dsgvo.js) — § 302/§ 304 SGB V, gleiche
---   Kategorie wie `abrechnung`.
-
--- 09.09.2026 — Geldeingang je Sammelabrechnung, tranchenweise. Bis dahin gab es
--- nur `abrechnung.paid_at` und status='paid'; beide hat nie jemand geschrieben.
-CREATE TABLE abrechnung_zahlung (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  abrechnung_id uuid NOT NULL
-  owner_id uuid NOT NULL
-  business_id uuid
-  einzel_rechnungsnummer text
-  art text NOT NULL DEFAULT 'zahlung'::text
-  betrag_eur numeric(10,2) NOT NULL
-  datum date NOT NULL
-  zahlungsavis text
-  notiz text
-  created_by uuid
-  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
-);
---   CHECK art IN (zahlung, ruecklastschrift, abschreibung, korrektur)
---   CHECK betrag_eur <> 0
---   CHECK art = 'zahlung' OR length(btrim(COALESCE(notiz,''))) >= 3
---   FK abrechnung_id -> abrechnung(id)  ON DELETE RESTRICT
---   FK owner_id      -> profiles(id)    ON DELETE RESTRICT
---   FK business_id   -> businesses(id)  ON DELETE SET NULL
---   FK created_by    -> auth.users(id)  ON DELETE SET NULL
---   PK (id)
---   ⚠️ UNVERAENDERLICH. trg_prevent_abrechnung_zahlung_mod weist JEDES UPDATE
---     und DELETE ab (§ 146 Abs. 4 AO). Korrektur = neue Zeile mit
---     art = 'korrektur' und NEGATIVEM betrag_eur. Dritte Tabelle dieser Familie
---     nach `belegliste` und `zuzahlung_korrekturen`.
---   ⚠️ created_by ist ON DELETE SET NULL — mit CASCADE wuerde das Loeschen eines
---     Mitarbeiterkontos eine GoBD-Zeile mitnehmen, was der Trigger ohnehin
---     verbietet; die Loeschung wuerde also schlicht scheitern.
---   ⚠️ KEIN Beleg in `belegliste`: Kassengeld ist eine Bankbewegung, kein
---     Kassenbuchvorgang, und statistik.routes.js summiert die Belegliste
---     ungefiltert in die Umsatzreihe — ein Beleg hier zaehlt doppelt.
---   ⚠️ Eine Absetzung ist KEINE Zahlung. Sie steht auf abrechnung_zeile
---     (absetzung_eur) und kommt aus dem Absetzungsschreiben, nie aus der
---     ZAA-Datei — die kennt laut Anlage 1 TP5 V21 keine Betraege.
---   Setzt ueber trg_abrechnung_zahlung_status den Kopfsatz `abrechnung.status`
---   auf 'paid'/'accepted' und schreibt paid_at. Kein Eintrag in DELETE_TABLES.
-
-CREATE TABLE accommodations (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  user_id uuid
-  name text NOT NULL
-  address text
-  location geography(Point,4326)
-  is_active boolean DEFAULT true
-  created_at timestamptz DEFAULT now()
-);
---   FK user_id -> profiles(id) ON DELETE CASCADE
---   PK (id)
---   ⚠️ Fremdkörper: stammt aus einem alten Reise-/Trip-Projekt, nicht Praxura.
-
-CREATE TABLE admin_users (
-  user_id uuid NOT NULL
-  created_at timestamptz NOT NULL DEFAULT now()
-  notes text
-);
---   FK user_id -> auth.users(id) ON DELETE CASCADE
---   PK (user_id)
---   Wird von is_admin() gelesen.
-
-CREATE TABLE aerzte (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  arzt_name text NOT NULL
-  arzt_nummer text
-  fachrichtung text
-  telefon text
-  adresse text
-  created_at timestamptz DEFAULT now()
-  lanr text
-  bsnr text
-  business_id uuid
-  praxis_name text
-  fax text
-  email text
-  notizen text
-  quelle text
-  updated_at timestamptz DEFAULT now()
-);
---   FK business_id -> businesses(id) ON DELETE CASCADE
 --   FK owner_id -> auth.users(id)
---   PK (id) · (UNIQUE (owner_id, arzt_name) entfernt 0056)
---   UNIQUE INDEX uq_aerzte_owner_lanr (owner_id, lanr) WHERE lanr IS NOT NULL
---   UNIQUE INDEX uq_aerzte_owner_name_no_lanr (owner_id, lower(trim(arzt_name))) WHERE lanr IS NULL
+--   FK zuzahlungsforderung_ursprung_id -> abrechnung_zeile(id)
+ALTER TABLE ONLY public.abrechnung OWNER TO postgres;
+COMMENT ON COLUMN public.abrechnung.auftragsdatei_path IS 'Storage-Pfad der Auftragsdatei (Auftragssatz 348 Byte, GGT Anlage 2). Liegt neben der .dta — die beiden gehen nur PAARWEISE raus (Anhang 2 Kap. 9 § 3.1, Pruefstufe 1).';
+COMMENT ON COLUMN public.abrechnung.auftragsdatei_size IS 'Byte-Laenge der Auftragsdatei. Heute immer 348; als Spalte gefuehrt, damit ein Formatfehler auffaellt, ohne die Datei zu laden.';
+COMMENT ON COLUMN public.abrechnung.dta_sha256 IS 'SHA-256 der unsignierten Nutzdatendatei, hex. Beweismittel: welche Bytes wurden erzeugt (guvenlik Ö1). Kein Personenbezug.';
+COMMENT ON COLUMN public.abrechnung.auftragsdatei_sha256 IS 'SHA-256 der Auftragsdatei, hex.';
+COMMENT ON COLUMN public.abrechnung.signed_sha256 IS 'SHA-256 des signierten PKCS#7-Payloads (.p7m), hex. Wird beim Upload der Browser-Signatur gesetzt.';
+COMMENT ON COLUMN public.abrechnung.betriebsart IS 'Betriebsart, mit der DIESE Datei erzeugt wurde: test | erprobung | echt. Kopie aus terapeut_zertifikat.betriebsart zum Erzeugungszeitpunkt — die Einstellung kann sich spaeter aendern, die Datei nicht. NULL = vor Einfuehrung erzeugt (faktisch test).';
+COMMENT ON COLUMN public.abrechnung.datenaustauschreferenz IS 'Der 5-stellige UNB-0020-Wert DIESER Datei, wie vergeben. Nicht neu berechnen — er ist bei der Kasse hinterlegt.';
+COMMENT ON COLUMN public.abrechnung.transfernummer IS 'Die 0..999-Transfernummer DIESER Datei (Stellen 6-8 des physikalischen Dateinamens; Wertebereich aus GGT Anlage 2, Feld TRANSFER_NUMMER: ab 999 wieder auf 0). Ein wiederholter Sendeversuch nimmt dieselbe Nummer (Anhang 1 § 4.3).';
+COMMENT ON COLUMN public.abrechnung.empfaenger_ik IS 'IK der Datenannahmestelle, an die diese Datei geht. Bisher nur fluechtig in der Route bekannt; der Zaehler laeuft je (Absender-IK, Empfaenger-IK) und ohne diese Spalte ist im Nachhinein nicht mehr feststellbar, welche Folge die Datei fortgeschrieben hat.';
+COMMENT ON COLUMN public.abrechnung.verwerfungsgrund IS 'Fehlercode bzw. gekürzte, PHI-freie Begründung, weshalb dieser Abrechnungsversuch nach Vergabe von Datenaustauschreferenz und Transfernummer verworfen wurde. Erklärt Lücken im Nummernkreis (GoBD).';
+COMMENT ON COLUMN public.abrechnung.encrypted_storage_path IS 'Storage-Pfad der CMS-EnvelopedData-Datei (.dta.enc.p7m). NULL = noch nicht verschlüsselt oder letzter Versuch fehlgeschlagen.';
+COMMENT ON COLUMN public.abrechnung.encrypted_sha256 IS 'SHA-256 der verschlüsselten Datei (verschluesselte Bytes, nicht die Signatur). Analog zu signed_sha256/dta_sha256.';
+COMMENT ON COLUMN public.abrechnung.verschluesselt_am IS 'Zeitstempel des letzten erfolgreichen Verschlüsselungslaufs. Analog zu signed_at.';
+COMMENT ON COLUMN public.abrechnung.verschluesselt_fuer_fingerprint IS 'SHA-256-Fingerprint des Empfängerzertifikats (empfaenger_zertifikate.fingerprint_sha256), mit dem diese Datei verschlüsselt wurde — nötig, um nach einer Zertifikatsrotation zu erkennen, mit welchem Schlüssel eine ältere Datei verschlüsselt ist.';
+COMMENT ON COLUMN public.abrechnung.verschluesselung_hinweis IS 'Klartext-Status/Fehlermeldung des letzten Verschlüsselungsversuchs für die UI (NULL bei Erfolg). Darf laut Ö5 keine Patientendaten enthalten.';
 
-CREATE TABLE ai_audit_log (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  tenant_id uuid NOT NULL
-  user_id uuid
-  task text NOT NULL
-  model text
-  deployment text
-  prompt_tokens integer
-  completion_tokens integer
-  total_tokens integer
-  latency_ms integer
-  status text NOT NULL
-  error text
-  dry_run boolean DEFAULT false
-  request_hash text
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT abrechnung_betriebsart_chk CHECK (betriebsart IS NULL OR (betriebsart = ANY (ARRAY['test'::text, 'erprobung'::text, 'echt'::text])));
+
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT abrechnung_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT abrechnung_kostentraeger_ik_fkey FOREIGN KEY (kostentraeger_ik) REFERENCES kostentraeger(ik);
+
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT abrechnung_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT abrechnung_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT abrechnung_status_check CHECK (status = ANY (ARRAY['erstellt'::text, 'heruntergeladen'::text, 'gesendet'::text, 'accepted'::text, 'rejected'::text, 'paid'::text, 'verworfen'::text]));
+
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT abrechnung_verarbeitungskennzeichen_check CHECK (verarbeitungskennzeichen = ANY (ARRAY['01'::text, '02'::text, '03'::text, '04'::text]));
+
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT abrechnung_zuzahlungsforderung_daten_check CHECK ((NOT verarbeitungskennzeichen IS DISTINCT FROM '03'::text) = (zuzahlungsforderung_daten IS NOT NULL));
+
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT abrechnung_zuzahlungsforderung_ursprung_check CHECK ((NOT verarbeitungskennzeichen IS DISTINCT FROM '03'::text) = (zuzahlungsforderung_ursprung_id IS NOT NULL));
+
+ALTER TABLE ONLY public.abrechnung
+  ADD CONSTRAINT abrechnung_zuzahlungsforderung_ursprung_fk FOREIGN KEY (zuzahlungsforderung_ursprung_id) REFERENCES abrechnung_zeile(id) ON DELETE RESTRICT;
+
+CREATE TABLE public.abrechnung_uebermittlung (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  abrechnung_id uuid,
+  antwort_auf uuid,
+  richtung text NOT NULL,
+  physikalischer_dateiname text NOT NULL,
+  erstellt_am timestamp with time zone NOT NULL,
+  laufende_nummer integer,
+  transfernummer integer,
+  partner_ik text NOT NULL,
+  partner_name text,
+  begonnen_am timestamp with time zone DEFAULT now() NOT NULL,
+  beendet_am timestamp with time zone,
+  dateigroesse_bytes bigint,
+  verarbeitungshinweise text,
+  verarbeitungskennzeichen text,
+  fehlerstatus text DEFAULT 'offen'::text NOT NULL,
+  fehlertext text,
+  uebertragungsweg text,
+  sha256 text,
+  betriebsart text,
+  absender_ik text,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
---   FK tenant_id -> auth.users(id) ON DELETE CASCADE
---   FK user_id -> auth.users(id) ON DELETE SET NULL
---   PK (id)
+--   FK abrechnung_id -> abrechnung(id)
+--   FK antwort_auf -> abrechnung_uebermittlung(id)
+--   FK business_id -> businesses(id)
+--   FK created_by -> auth.users(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.abrechnung_uebermittlung OWNER TO postgres;
+COMMENT ON TABLE public.abrechnung_uebermittlung IS 'Gesetzliche Uebermittlungsdokumentation des Datenaustauschs gemaess § 302 SGB V, Anlage 1 TP5 Kap. 3(2) und Anhang 1 § 4.5(2). Mindestens 2 Jahre Aufbewahrungspflicht. Striktes PHI-Verbot.';
 
-CREATE TABLE anamnese (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  patient_id uuid NOT NULL
-  aufnahmedatum date DEFAULT CURRENT_DATE
-  hauptbeschwerde text
-  beschwerde_seit text
-  beschwerde_verlauf text
-  schmerz_skala smallint
-  schmerz_art text
-  vorerkrankungen text
-  operationen text
-  medikamente text
-  allergien text
-  beruf text
-  sport text
-  raucher boolean
-  diagnose text
-  arzt_name text
-  arzt_nummer text
-  rezept_sitzungen smallint
-  hausbesuch boolean DEFAULT false
-  besondere_wuensche text
-  notizen text
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  created_by uuid
-  updated_by uuid
-  business_id uuid
-  fachbereich text NOT NULL DEFAULT 'physio'   -- 0047: Formular je Fachbereich
-  felder jsonb NOT NULL DEFAULT '{}'::jsonb    -- 0047: fachspezifische Antworten
-  form_version smallint NOT NULL DEFAULT 1     -- 0047: Version der Formdefinition (Frontend)
-  version integer NOT NULL DEFAULT 1           -- 0047: vergibt anamnese_versionieren()
-  ist_aktuell boolean NOT NULL DEFAULT true    -- 0047: vergibt anamnese_versionieren()
-  quelle text NOT NULL DEFAULT 'praxis'        -- 0047: praxis | kiosk
-  geprueft_am timestamptz                      -- 0047: kiosk = NULL bis Praxis prueft
-  geprueft_von uuid
-  uebernommen_von uuid                         -- 0047: Vorlage-Fassung (z. B. Kiosk -> Praxis)
+ALTER TABLE ONLY public.abrechnung_uebermittlung
+  ADD CONSTRAINT abr_uebermittlung_betriebsart_chk CHECK (betriebsart IS NULL OR (betriebsart = ANY (ARRAY['test'::text, 'erprobung'::text, 'echt'::text])));
+
+ALTER TABLE ONLY public.abrechnung_uebermittlung
+  ADD CONSTRAINT abr_uebermittlung_fehlerstatus_chk CHECK (fehlerstatus = ANY (ARRAY['offen'::text, 'ok'::text, 'fehler'::text, 'abgebrochen'::text]));
+
+ALTER TABLE ONLY public.abrechnung_uebermittlung
+  ADD CONSTRAINT abr_uebermittlung_richtung_chk CHECK (richtung = ANY (ARRAY['senden'::text, 'empfangen'::text]));
+
+ALTER TABLE ONLY public.abrechnung_uebermittlung
+  ADD CONSTRAINT abr_uebermittlung_weg_chk CHECK (uebertragungsweg IS NULL OR (uebertragungsweg = ANY (ARRAY['portal'::text, 'dfue'::text, 'mail'::text, 'datentraeger'::text, 'papier'::text])));
+
+ALTER TABLE ONLY public.abrechnung_uebermittlung
+  ADD CONSTRAINT abrechnung_uebermittlung_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.abrechnung_uebermittlung
+  ADD CONSTRAINT abrechnung_uebermittlung_antwort_auf_fkey FOREIGN KEY (antwort_auf) REFERENCES abrechnung_uebermittlung(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.abrechnung_uebermittlung
+  ADD CONSTRAINT abrechnung_uebermittlung_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.abrechnung_uebermittlung
+  ADD CONSTRAINT abrechnung_uebermittlung_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.abrechnung_uebermittlung
+  ADD CONSTRAINT abrechnung_uebermittlung_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.abrechnung_uebermittlung
+  ADD CONSTRAINT abrechnung_uebermittlung_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.abrechnung_zahlung (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  abrechnung_id uuid NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  einzel_rechnungsnummer text,
+  art text DEFAULT 'zahlung'::text NOT NULL,
+  betrag_eur numeric(10,2) NOT NULL,
+  datum date NOT NULL,
+  zahlungsavis text,
+  notiz text,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
---   CHECK beschwerde_verlauf IN (konstant, zunehmend, abnehmend, wechselnd)
---   CHECK schmerz_skala BETWEEN 0 AND 10
---   CHECK fachbereich IN (physio, podo, ergo, logo) · CHECK quelle IN (praxis, kiosk)
---   FK geprueft_von -> auth.users(id) · FK uebernommen_von -> anamnese(id) ON DELETE SET NULL
---   UNIQUE (owner_id, patient_id, fachbereich) WHERE ist_aktuell   (anamnese_aktuell_uidx)
---   UNIQUE (owner_id, patient_id, fachbereich, version)            (anamnese_version_uidx)
---   ★ APPEND-ONLY seit 0047 (§ 630f BGB): jede Speicherung = neue Zeile. UPDATE nur
---     ist_aktuell true->false, geprueft_* NULL->Wert, uebernommen_von Wert->NULL
---     (anamnese_unveraenderlich). DELETE erlaubt (DSGVO). Leser: .eq('ist_aktuell', true).
---   FK patient_id -> leads(id)          ⚠️ zeigt auf leads, NICHT auf patients
---   FK business_id -> businesses(id) ON DELETE CASCADE
---   FK owner_id / created_by / updated_by -> auth.users(id)
---   PK (id)
+--   FK abrechnung_id -> abrechnung(id)
+--   FK business_id -> businesses(id)
+--   FK created_by -> auth.users(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.abrechnung_zahlung OWNER TO postgres;
 
-CREATE TABLE applications (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  user_id uuid
-  job_text text NOT NULL
-  cv_text text NOT NULL
-  anschreiben text NOT NULL
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.abrechnung_zahlung
+  ADD CONSTRAINT abrechnung_zahlung_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.abrechnung_zahlung
+  ADD CONSTRAINT abrechnung_zahlung_art_check CHECK (art = ANY (ARRAY['zahlung'::text, 'ruecklastschrift'::text, 'abschreibung'::text, 'korrektur'::text]));
+
+ALTER TABLE ONLY public.abrechnung_zahlung
+  ADD CONSTRAINT abrechnung_zahlung_betrag_check CHECK (betrag_eur <> 0::numeric);
+
+ALTER TABLE ONLY public.abrechnung_zahlung
+  ADD CONSTRAINT abrechnung_zahlung_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.abrechnung_zahlung
+  ADD CONSTRAINT abrechnung_zahlung_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.abrechnung_zahlung
+  ADD CONSTRAINT abrechnung_zahlung_grund_check CHECK (art = 'zahlung'::text OR length(btrim(COALESCE(notiz, ''::text))) >= 3);
+
+ALTER TABLE ONLY public.abrechnung_zahlung
+  ADD CONSTRAINT abrechnung_zahlung_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.abrechnung_zahlung
+  ADD CONSTRAINT abrechnung_zahlung_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.abrechnung_zeile (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  abrechnung_id uuid NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  prescription_id uuid,
+  kostentraeger_ik text NOT NULL,
+  karten_ik text,
+  einzel_rechnungsnummer text NOT NULL,
+  sort_order smallint DEFAULT 0 NOT NULL,
+  belegnummer text,
+  patient_name text,
+  versichertennummer text,
+  verordnungsdatum date,
+  therapie_bereich text,
+  heilmittel_position text,
+  anzahl_einheiten integer,
+  leistungen jsonb DEFAULT '[]'::jsonb NOT NULL,
+  brutto_eur numeric(10,2) DEFAULT 0 NOT NULL,
+  zuzahlung_eur numeric(10,2) DEFAULT 0 NOT NULL,
+  netto_eur numeric(10,2) DEFAULT 0 NOT NULL,
+  status text DEFAULT 'eingereicht'::text NOT NULL,
+  absetzung_eur numeric(10,2) DEFAULT 0 NOT NULL,
+  absetzung_grund text,
+  absetzung_am date,
+  herkunft text DEFAULT 'einreichung'::text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
---   FK user_id -> auth.users(id) ON DELETE CASCADE · PK (id)
---   ⚠️ Fremdkörper aus einem alten Bewerbungs-Projekt, nicht Praxura.
+--   FK abrechnung_id -> abrechnung(id)
+--   FK business_id -> businesses(id)
+--   FK owner_id -> profiles(id)
+--   FK prescription_id -> prescriptions(id)
+ALTER TABLE ONLY public.abrechnung_zeile OWNER TO postgres;
 
-CREATE TABLE attendance (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  employee_id uuid NOT NULL
-  owner_id uuid NOT NULL
-  business_id uuid
-  date date NOT NULL
-  check_in_at timestamptz
-  check_out_at timestamptz
-  check_in_valid boolean DEFAULT false          -- 0047: NULL = nicht geprueft (Schalter aus / kein Standort / keine Praxiskoordinate)
-  status text NOT NULL DEFAULT 'present'::text
-  note text
-  created_at timestamptz NOT NULL DEFAULT now()
-  updated_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.abrechnung_zeile
+  ADD CONSTRAINT abrechnung_zeile_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.abrechnung_zeile
+  ADD CONSTRAINT abrechnung_zeile_absetzung_betrag CHECK (absetzung_eur >= 0::numeric AND (herkunft = 'rekonstruiert'::text OR absetzung_eur <= netto_eur));
+
+ALTER TABLE ONLY public.abrechnung_zeile
+  ADD CONSTRAINT abrechnung_zeile_absetzung_grund CHECK (absetzung_eur = 0::numeric OR btrim(COALESCE(absetzung_grund, ''::text)) <> ''::text);
+
+ALTER TABLE ONLY public.abrechnung_zeile
+  ADD CONSTRAINT abrechnung_zeile_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.abrechnung_zeile
+  ADD CONSTRAINT abrechnung_zeile_herkunft_check CHECK (herkunft = ANY (ARRAY['einreichung'::text, 'rekonstruiert'::text]));
+
+ALTER TABLE ONLY public.abrechnung_zeile
+  ADD CONSTRAINT abrechnung_zeile_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.abrechnung_zeile
+  ADD CONSTRAINT abrechnung_zeile_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.abrechnung_zeile
+  ADD CONSTRAINT abrechnung_zeile_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.abrechnung_zeile
+  ADD CONSTRAINT abrechnung_zeile_status_check CHECK (status = ANY (ARRAY['eingereicht'::text, 'akzeptiert'::text, 'abgesetzt'::text, 'teilabgesetzt'::text, 'nachgereicht'::text]));
+
+CREATE TABLE public.accommodations (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid,
+  name text NOT NULL,
+  address text,
+  location geography(Point,4326),
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now()
 );
---   CHECK status IN (present, late, incomplete, absent)
---   FK employee_id / owner_id -> profiles(id) ON DELETE CASCADE
---   FK business_id -> businesses(id) ON DELETE SET NULL
---   PK (id) · UNIQUE (employee_id, date)
+--   FK user_id -> profiles(id)
+ALTER TABLE ONLY public.accommodations OWNER TO postgres;
 
-CREATE TABLE aufbewahrung_sperre (                          -- 0057, 02.10.2026
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  patient_id uuid                                           -- NULL = ganzes Konto (Fall B)
-  kategorie text NOT NULL
-  gesperrt_am timestamptz NOT NULL DEFAULT now()
-  gesperrt_bis date NOT NULL                                -- "frühestens" (§ 147 Abs. 3 S. 5 AO)
-  grundlage text NOT NULL                                   -- Fundstelle
-  vorgang_id uuid                                           -- Löschvorgang, der die Sperre gesetzt hat
-);
---   CHECK kategorie IN (behandlung, einwilligung, beleg, grundaufzeichnung, geschaeftsbrief)
---   FK owner_id -> profiles(id) ON DELETE RESTRICT
---   FK patient_id -> leads(id) ON DELETE RESTRICT
---   PK (id) · UNIQUE NULLS NOT DISTINCT (owner_id, patient_id, kategorie)
---   RLS an, KEINE Policy, anon/authenticated REVOKE ALL — nur service_role.
---   Sperrvermerk Art. 17 Abs. 3 lit. b / Art. 18 DSGVO (LEGAL_DECISIONS 2026-10-02 §4).
+ALTER TABLE ONLY public.accommodations
+  ADD CONSTRAINT accommodations_pkey PRIMARY KEY (id);
 
-CREATE TABLE ausfallrechnungen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  business_id uuid
-  booking_id uuid
-  patient_id uuid
-  rechnung_nr bigint NOT NULL
-  reason text NOT NULL DEFAULT 'no_show'::text
-  amount_eur numeric(10,2) NOT NULL
-  leistung_datum timestamptz
-  service_name text
-  status text NOT NULL DEFAULT 'offen'::text
+ALTER TABLE ONLY public.accommodations
+  ADD CONSTRAINT accommodations_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+CREATE TABLE public.admin_users (
+  user_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
   notes text
-  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
-  created_by uuid
-  bezahlt_at timestamptz
 );
---   CHECK amount_eur > 0 · reason IN (no_show, late_cancel)
---   CHECK status IN (offen, bezahlt, storniert, abgeschrieben)
---   FK booking_id -> bookings(id) ON DELETE SET NULL
---   FK patient_id -> leads(id) ON DELETE SET NULL
---   PK (id) · UNIQUE (owner_id, rechnung_nr) [0004, 11.09.2026]
---   rechnung_nr via TRIGGER set_next_ausfallrechnung_nr() -> naechste_nummer(owner, 'ausfallrechnung', 0) [0003]
+--   FK user_id -> auth.users(id)
+ALTER TABLE ONLY public.admin_users OWNER TO postgres;
 
-CREATE TABLE b2b_contacts (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  company_name text NOT NULL
-  contact_name text
-  phone text
-  email text
-  website text
-  status text NOT NULL DEFAULT 'prospect'::text
-  notes text
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  source text
-  name text
-  category text
-  city text
+ALTER TABLE ONLY public.admin_users
+  ADD CONSTRAINT admin_users_pkey PRIMARY KEY (user_id);
+
+ALTER TABLE ONLY public.admin_users
+  ADD CONSTRAINT admin_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+CREATE TABLE public.aerzte (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  arzt_name text NOT NULL,
+  arzt_nummer text,
+  fachrichtung text,
+  telefon text,
+  adresse text,
+  created_at timestamp with time zone DEFAULT now(),
+  lanr text,
+  bsnr text,
+  business_id uuid,
+  praxis_name text,
+  fax text,
+  email text,
+  notizen text,
+  quelle text,
+  updated_at timestamp with time zone DEFAULT now()
+);
+--   FK business_id -> businesses(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.aerzte OWNER TO postgres;
+COMMENT ON TABLE public.aerzte IS 'Ärzte-Register je Inhaber (owner_id). Wird beim Erfassen einer Verordnung automatisch befüllt: LANR-Treffer -> vorhandenen Datensatz anreichern, sonst neu anlegen. Grundlage der Arzt-Auswertung (welcher Arzt überweist wie viel).';
+COMMENT ON COLUMN public.aerzte.arzt_nummer IS 'VERALTET (2026-08-10). War doppelt belegt (Telefon in der Maske, LANR-Fallback in der DTA-Erzeugung). Daten nach telefon/praxis_name/lanr migriert. Nicht mehr lesen oder schreiben — Ersatz: lanr, bsnr, telefon, praxis_name.';
+COMMENT ON COLUMN public.aerzte.lanr IS 'Lebenslange Arztnummer, 9-stellig. Stabiler Identitätsschlüssel: bleibt bei Namensänderung (Heirat) und Praxiswechsel gleich. Primäres Matching-Kriterium.';
+COMMENT ON COLUMN public.aerzte.bsnr IS 'Betriebsstättennummer, 9-stellig. Ortsgebunden — ändert sich beim Praxiswechsel des Arztes. NICHT als Identitätsschlüssel verwenden.';
+COMMENT ON COLUMN public.aerzte.business_id IS 'Standort, an dem der Arzt zuerst erfasst wurde. Rein informativ — das Register ist owner-weit und wird NICHT nach business_id gefiltert.';
+COMMENT ON COLUMN public.aerzte.quelle IS 'Herkunft: ocr (KI-Rezeptscan), rezept (manuelle Rezepterfassung), verordnung (Podologie), manuell (Ärzte-Verwaltung), import.';
+
+ALTER TABLE ONLY public.aerzte
+  ADD CONSTRAINT aerzte_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.aerzte
+  ADD CONSTRAINT aerzte_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.aerzte
+  ADD CONSTRAINT aerzte_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.ai_audit_log (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  tenant_id uuid NOT NULL,
+  user_id uuid,
+  task text NOT NULL,
+  model text,
+  deployment text,
+  prompt_tokens integer,
+  completion_tokens integer,
+  total_tokens integer,
+  latency_ms integer,
+  status text NOT NULL,
+  error text,
+  dry_run boolean DEFAULT false,
+  request_hash text,
+  created_at timestamp with time zone DEFAULT now()
+);
+--   FK tenant_id -> auth.users(id)
+--   FK user_id -> auth.users(id)
+ALTER TABLE ONLY public.ai_audit_log OWNER TO postgres;
+
+ALTER TABLE ONLY public.ai_audit_log
+  ADD CONSTRAINT ai_audit_log_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.ai_audit_log
+  ADD CONSTRAINT ai_audit_log_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.ai_audit_log
+  ADD CONSTRAINT ai_audit_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+CREATE TABLE public.anamnese (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  patient_id uuid NOT NULL,
+  aufnahmedatum date DEFAULT CURRENT_DATE,
+  hauptbeschwerde text,
+  beschwerde_seit text,
+  beschwerde_verlauf text,
+  schmerz_skala smallint,
+  schmerz_art text,
+  vorerkrankungen text,
+  operationen text,
+  medikamente text,
+  allergien text,
+  beruf text,
+  sport text,
+  raucher boolean,
+  diagnose text,
+  arzt_name text,
+  arzt_nummer text,
+  rezept_sitzungen smallint,
+  hausbesuch boolean DEFAULT false,
+  besondere_wuensche text,
+  notizen text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  created_by uuid,
+  updated_by uuid,
+  business_id uuid,
+  fachbereich text DEFAULT 'physio'::text NOT NULL,
+  felder jsonb DEFAULT '{}'::jsonb NOT NULL,
+  form_version smallint DEFAULT 1 NOT NULL,
+  version integer DEFAULT 1 NOT NULL,
+  ist_aktuell boolean DEFAULT true NOT NULL,
+  quelle text DEFAULT 'praxis'::text NOT NULL,
+  geprueft_am timestamp with time zone,
+  geprueft_von uuid,
+  uebernommen_von uuid
+);
+--   FK business_id -> businesses(id)
+--   FK created_by -> auth.users(id)
+--   FK geprueft_von -> auth.users(id)
+--   FK owner_id -> auth.users(id)
+--   FK patient_id -> leads(id)
+--   FK uebernommen_von -> anamnese(id)
+--   FK updated_by -> auth.users(id)
+ALTER TABLE ONLY public.anamnese OWNER TO postgres;
+COMMENT ON COLUMN public.anamnese.fachbereich IS 'Formular je Fachbereich (physio|podo|ergo|logo). Alt-Zeilen vor 0047 = physio.';
+COMMENT ON COLUMN public.anamnese.felder IS 'Fachspezifische Antworten; Schluessel definiert module/anamnese-formulare.js je form_version.';
+COMMENT ON COLUMN public.anamnese.ist_aktuell IS 'Vergibt anamnese_versionieren(). Leser brauchen .eq(''ist_aktuell'', true).';
+COMMENT ON COLUMN public.anamnese.quelle IS 'praxis = von der Praxis erfasst (geprueft beim Speichern); kiosk = Selbstauskunft, ungeprueft bis geprueft_am.';
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_beschwerde_verlauf_check CHECK (beschwerde_verlauf = ANY (ARRAY['konstant'::text, 'zunehmend'::text, 'abnehmend'::text, 'wechselnd'::text]));
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_fachbereich_check CHECK (fachbereich = ANY (ARRAY['physio'::text, 'podo'::text, 'ergo'::text, 'logo'::text]));
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_geprueft_von_fkey FOREIGN KEY (geprueft_von) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id);
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_quelle_check CHECK (quelle = ANY (ARRAY['praxis'::text, 'kiosk'::text]));
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_schmerz_skala_check CHECK (schmerz_skala >= 0 AND schmerz_skala <= 10);
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_uebernommen_von_fkey FOREIGN KEY (uebernommen_von) REFERENCES anamnese(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.anamnese
+  ADD CONSTRAINT anamnese_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES auth.users(id);
+
+CREATE TABLE public.applications (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid,
+  job_text text NOT NULL,
+  cv_text text NOT NULL,
+  anschreiben text NOT NULL,
+  created_at timestamp with time zone DEFAULT now()
+);
+--   FK user_id -> auth.users(id)
+ALTER TABLE ONLY public.applications OWNER TO postgres;
+
+ALTER TABLE ONLY public.applications
+  ADD CONSTRAINT applications_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.applications
+  ADD CONSTRAINT applications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+CREATE TABLE public.attendance (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  employee_id uuid NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  date date NOT NULL,
+  check_in_at timestamp with time zone,
+  check_out_at timestamp with time zone,
+  check_in_valid boolean DEFAULT false,
+  status text DEFAULT 'present'::text NOT NULL,
+  note text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK business_id -> businesses(id)
+--   FK employee_id -> profiles(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.attendance OWNER TO postgres;
+COMMENT ON COLUMN public.attendance.check_in_valid IS 'true = im 150-m-Umkreis, false = ausserhalb, NULL = nicht geprueft (Schalter aus, kein Standort, keine Praxiskoordinate).';
+
+ALTER TABLE ONLY public.attendance
+  ADD CONSTRAINT attendance_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.attendance
+  ADD CONSTRAINT attendance_employee_id_date_key UNIQUE (employee_id, date);
+
+ALTER TABLE ONLY public.attendance
+  ADD CONSTRAINT attendance_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.attendance
+  ADD CONSTRAINT attendance_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.attendance
+  ADD CONSTRAINT attendance_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.attendance
+  ADD CONSTRAINT attendance_status_check CHECK (status = ANY (ARRAY['present'::text, 'late'::text, 'incomplete'::text, 'absent'::text]));
+
+CREATE TABLE public.aufbewahrung_sperre (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  patient_id uuid,
+  kategorie text NOT NULL,
+  gesperrt_am timestamp with time zone DEFAULT now() NOT NULL,
+  gesperrt_bis date NOT NULL,
+  grundlage text NOT NULL,
+  vorgang_id uuid
+);
+--   FK owner_id -> profiles(id)
+--   FK patient_id -> leads(id)
+ALTER TABLE ONLY public.aufbewahrung_sperre OWNER TO postgres;
+COMMENT ON TABLE public.aufbewahrung_sperre IS 'Sperrvermerk Art. 17 Abs. 3 lit. b / Art. 18 DSGVO: aufbewahrungspflichtige Unterlagen bleiben gesperrt bis gesperrt_bis (frühestens). patient_id NULL = ganzes Konto (Fall B). Nur service_role. KHS K1.4, 02.10.2026.';
+
+ALTER TABLE ONLY public.aufbewahrung_sperre
+  ADD CONSTRAINT aufbewahrung_sperre_eindeutig UNIQUE NULLS NOT DISTINCT (owner_id, patient_id, kategorie);
+
+ALTER TABLE ONLY public.aufbewahrung_sperre
+  ADD CONSTRAINT aufbewahrung_sperre_kategorie_check CHECK (kategorie = ANY (ARRAY['behandlung'::text, 'einwilligung'::text, 'beleg'::text, 'grundaufzeichnung'::text, 'geschaeftsbrief'::text]));
+
+ALTER TABLE ONLY public.aufbewahrung_sperre
+  ADD CONSTRAINT aufbewahrung_sperre_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.aufbewahrung_sperre
+  ADD CONSTRAINT aufbewahrung_sperre_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.aufbewahrung_sperre
+  ADD CONSTRAINT aufbewahrung_sperre_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.ausfallrechnungen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  booking_id uuid,
+  patient_id uuid,
+  rechnung_nr bigint NOT NULL,
+  reason text DEFAULT 'no_show'::text NOT NULL,
+  amount_eur numeric(10,2) NOT NULL,
+  leistung_datum timestamp with time zone,
+  service_name text,
+  status text DEFAULT 'offen'::text NOT NULL,
+  notes text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  created_by uuid,
+  bezahlt_at timestamp with time zone
+);
+--   FK booking_id -> bookings(id)
+--   FK business_id -> businesses(id)
+--   FK owner_id -> auth.users(id)
+--   FK patient_id -> leads(id)
+ALTER TABLE ONLY public.ausfallrechnungen OWNER TO postgres;
+COMMENT ON TABLE public.ausfallrechnungen IS 'Private Ausfallhonorar-Rechnungen (Schadensersatz, umsatzsteuerfrei) für No-Shows und kurzfristige Absagen. Nicht GKV-relevant.';
+
+ALTER TABLE ONLY public.ausfallrechnungen
+  ADD CONSTRAINT ausfallrechnungen_amount_check CHECK (amount_eur > 0::numeric);
+
+ALTER TABLE ONLY public.ausfallrechnungen
+  ADD CONSTRAINT ausfallrechnungen_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.ausfallrechnungen
+  ADD CONSTRAINT ausfallrechnungen_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.ausfallrechnungen
+  ADD CONSTRAINT ausfallrechnungen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.ausfallrechnungen
+  ADD CONSTRAINT ausfallrechnungen_owner_id_rechnung_nr_key UNIQUE (owner_id, rechnung_nr);
+
+ALTER TABLE ONLY public.ausfallrechnungen
+  ADD CONSTRAINT ausfallrechnungen_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.ausfallrechnungen
+  ADD CONSTRAINT ausfallrechnungen_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.ausfallrechnungen
+  ADD CONSTRAINT ausfallrechnungen_reason_check CHECK (reason = ANY (ARRAY['no_show'::text, 'late_cancel'::text]));
+
+ALTER TABLE ONLY public.ausfallrechnungen
+  ADD CONSTRAINT ausfallrechnungen_status_check CHECK (status = ANY (ARRAY['offen'::text, 'bezahlt'::text, 'storniert'::text, 'abgeschrieben'::text]));
+
+CREATE TABLE public.b2b_contacts (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  company_name text NOT NULL,
+  contact_name text,
+  phone text,
+  email text,
+  website text,
+  status text DEFAULT 'prospect'::text NOT NULL,
+  notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  source text,
+  name text,
+  category text,
+  city text,
   business_id uuid
 );
---   CHECK status IN (prospect, contacted, partner, inactive)
---   PK (id)
+--   FK business_id -> businesses(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.b2b_contacts OWNER TO postgres;
 
-CREATE TABLE belegliste (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  beleg_nr bigint NOT NULL
-  type text NOT NULL
-  amount_eur numeric(10,2) NOT NULL
-  patient_id uuid
-  prescription_id uuid
-  abrechnung_id uuid
-  reference_text text
-  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
-  created_by uuid
-  storno_reason text
-  zahlart text
+ALTER TABLE ONLY public.b2b_contacts
+  ADD CONSTRAINT b2b_contacts_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.b2b_contacts
+  ADD CONSTRAINT b2b_contacts_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.b2b_contacts
+  ADD CONSTRAINT b2b_contacts_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.b2b_contacts
+  ADD CONSTRAINT b2b_contacts_status_check CHECK (status = ANY (ARRAY['prospect'::text, 'contacted'::text, 'partner'::text, 'inactive'::text]));
+
+CREATE TABLE public.belegliste (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  beleg_nr bigint NOT NULL,
+  type text NOT NULL,
+  amount_eur numeric(10,2) NOT NULL,
+  patient_id uuid,
+  prescription_id uuid,
+  abrechnung_id uuid,
+  reference_text text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  created_by uuid,
+  storno_reason text,
+  zahlart text,
   invoice_id uuid
 );
---   CHECK belegliste_type_check: type IN (zuzahlung, barverkauf, storno, ausfall, rechnung)
---      ⚠️ 'rechnung' kam am 07.09.2026 dazu (Privatrechnung bar kassiert). Der
---      type beschreibt den GESCHAEFTSVORFALL, nicht den Erfassungsweg:
---      Rechnung MIT Rezeptbezug -> type='zuzahlung' und BEIDE Referenzen setzen;
---      Rechnung OHNE Rezeptbezug -> type='rechnung'. Daran haengt das Mahnwesen.
---   CHECK belegliste_zahlart_check: zahlart IS NULL OR zahlart IN
---      (bar, ec, ueberweisung, sonstiges, paypal) — NULL = Altbeleg vor v32.
---      ⚠️ 'paypal' kam am 09.09.2026 dazu (Ops #271). Seit derselben Migration
---      schreibt rechnung_zahlung_buchen() bei JEDER Zahlart eine Beleg-Zeile,
---      nicht mehr nur bei Bar — `belegliste` ist ein Belegjournal, keine reine
---      Bar-Kassenbuch-Tabelle. Das Bar-Kassenbuch (§ 146 AO Kassensturz-
---      faehigkeit) wird daraus ueber den Filter zahlart='bar' hergestellt
---      (dashboard.html #blFilterZahlart), nicht ueber die Tabelle selbst.
---   FK owner_id -> profiles(id) ON DELETE RESTRICT
---   FK patient_id -> leads(id) · prescription_id -> prescriptions(id) · abrechnung_id -> abrechnung(id)
---   FK invoice_id -> invoices(id) ON DELETE RESTRICT
---   invoice_id (07.09.2026): bei type IN ('rechnung','storno') die bar bezahlte
---      Privatrechnung bzw. deren Gegenbuchung. Die Storno-Zeile braucht die
---      Referenz ebenso, sonst ist der Kassenbuch-Saldo je Rechnung nicht
---      rechenbar. Bewusst KEIN CHECK darauf. Bank/EC erzeugen keine
---      Beleglisten-Zeile, Ausbuchungen nie (kein Geldfluss).
---   PK (id) · UNIQUE (owner_id, beleg_nr)
---   ⚠️ GoBD: TRIGGER prevent_belegliste_mod() blockt UPDATE und DELETE.
---      Korrektur nur durch neuen Beleg mit type='storno'.
+--   FK abrechnung_id -> abrechnung(id)
+--   FK created_by -> auth.users(id)
+--   FK invoice_id -> invoices(id)
+--   FK owner_id -> profiles(id)
+--   FK patient_id -> leads(id)
+--   FK prescription_id -> prescriptions(id)
+ALTER TABLE ONLY public.belegliste OWNER TO postgres;
+COMMENT ON COLUMN public.belegliste.zahlart IS 'Zahlungsart des Belegs: bar | ec | ueberweisung | sonstiges. NULL = Altbeleg vor v32.';
+COMMENT ON COLUMN public.belegliste.invoice_id IS 'Bei type IN (''rechnung'',''storno''): die bar bezahlte Privatrechnung bzw. deren Gegenbuchung. Die Storno-Zeile braucht die Referenz ebenso, sonst ist der Kassenbuch-Saldo je Rechnung nicht rechenbar (Muster: prescription_id in saldoJeRezept). Bewusst KEIN CHECK darauf. Bank/EC erzeugen keine Beleglisten-Zeile, Ausbuchungen nie (kein Geldfluss).';
 
--- 20.09.2026 (0031) — Betriebsart je Paar (Praxis-Inhaber × Datenannahmestelle).
--- Der Vorgabewert steht in terapeut_zertifikat.betriebsart; DIESE Tabelle ist
--- die Ausnahme. Grund (gkv-302): Erprobung und Zulassung zum Echtverfahren
--- laufen zwischen Absender und Empfaenger, ein praxisweites Einzel-Flag ist in
--- BEIDE Richtungen still falsch — zu frueh echt heisst Echtdatei an eine
--- Annahmestelle ohne Zulassung, zu spaet echt heisst Testdatei an eine mit
--- Zulassung, und die "loest keine Zahlungen aus": das Geld bleibt einfach aus,
--- ohne Fehlermeldung.
-CREATE TABLE betriebsart_empfaenger (
-  owner_id uuid NOT NULL
-  empfaenger_ik text NOT NULL
-  betriebsart text NOT NULL DEFAULT 'test'::text
-  zulassung_referenz text
-  zulassung_datum date
-  updated_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_invoice_id_fkey FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_owner_id_beleg_nr_key UNIQUE (owner_id, beleg_nr);
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_type_check CHECK (type = ANY (ARRAY['zuzahlung'::text, 'barverkauf'::text, 'storno'::text, 'ausfall'::text, 'rechnung'::text]));
+
+ALTER TABLE ONLY public.belegliste
+  ADD CONSTRAINT belegliste_zahlart_check CHECK (zahlart IS NULL OR (zahlart = ANY (ARRAY['bar'::text, 'ec'::text, 'ueberweisung'::text, 'sonstiges'::text, 'paypal'::text])));
+
+CREATE TABLE public.betriebsart_empfaenger (
+  owner_id uuid NOT NULL,
+  empfaenger_ik text NOT NULL,
+  betriebsart text DEFAULT 'test'::text NOT NULL,
+  zulassung_referenz text,
+  zulassung_datum date,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
   updated_by uuid
 );
---   CHECK betriebsart IN (test, erprobung, echt)
---   CHECK betriebsart <> 'echt' OR (zulassung_referenz nicht leer AND zulassung_datum IS NOT NULL)
---   FK owner_id   -> auth.users(id)  ON DELETE CASCADE
---   FK updated_by -> profiles(id)    ON DELETE SET NULL
---   PK (owner_id, empfaenger_ik)
---   ★ betriebsart steuert den UNB-Testindikator (0/1/2) UND den ersten
---     Buchstaben des physikalischen Dateinamens (T/T/E).
---   ⚠️ In der ERPROBUNG bleibt der Dateiname "T", obwohl echte Daten rausgehen.
---     Das ist gegenintuitiv und jemand wird es "korrigieren" wollen — nicht tun.
+--   FK owner_id -> auth.users(id)
+--   FK updated_by -> profiles(id)
+ALTER TABLE ONLY public.betriebsart_empfaenger OWNER TO postgres;
+COMMENT ON TABLE public.betriebsart_empfaenger IS 'Ausnahmen der §302-Betriebsart je Paar (Praxis-Inhaber × Datenannahmestelle). Anlage 1 TP5 V21 Kap. 2 (1)(2), Kap. 3 (1) + Kap. 8, Anhang 2 zur Anlage 1 Kap. 9 § 1/§ 5/§ 6. Ohne Zeile gilt der Vorgabewert aus terapeut_zertifikat.';
+COMMENT ON COLUMN public.betriebsart_empfaenger.empfaenger_ik IS 'Institutionskennzeichen der Datenannahmestelle (Empfaenger der Abrechnungsdatei).';
+COMMENT ON COLUMN public.betriebsart_empfaenger.betriebsart IS 'test | erprobung | echt — steuert UNB-Testindikator (0/1/2) und Dateinamen (T/T/E) fuer diese Datenannahmestelle. Ueberschreibt terapeut_zertifikat.betriebsart.';
+COMMENT ON COLUMN public.betriebsart_empfaenger.zulassung_referenz IS 'Aktenzeichen/Referenz der Zulassung zum Echtverfahren fuer diese Datenannahmestelle. Erteilt die KRANKENKASSE, nicht die Datenannahmestelle. Pflicht bei betriebsart echt.';
+COMMENT ON COLUMN public.betriebsart_empfaenger.zulassung_datum IS 'Datum der schriftlichen Zulassung zum Echtverfahren fuer diese Datenannahmestelle.';
 
-CREATE TABLE booking_leistungen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  booking_id uuid NOT NULL
-  service_id uuid NOT NULL
-  owner_id uuid NOT NULL
-  anzahl smallint NOT NULL DEFAULT 1
-  sort_order smallint NOT NULL DEFAULT 0
-  created_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.betriebsart_empfaenger
+  ADD CONSTRAINT betriebsart_empfaenger_betriebsart_chk CHECK (betriebsart = ANY (ARRAY['test'::text, 'erprobung'::text, 'echt'::text]));
+
+ALTER TABLE ONLY public.betriebsart_empfaenger
+  ADD CONSTRAINT betriebsart_empfaenger_echt_braucht_zulassung_chk CHECK (betriebsart <> 'echt'::text OR btrim(COALESCE(zulassung_referenz, ''::text)) <> ''::text AND zulassung_datum IS NOT NULL);
+
+ALTER TABLE ONLY public.betriebsart_empfaenger
+  ADD CONSTRAINT betriebsart_empfaenger_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.betriebsart_empfaenger
+  ADD CONSTRAINT betriebsart_empfaenger_pkey PRIMARY KEY (owner_id, empfaenger_ik);
+
+ALTER TABLE ONLY public.betriebsart_empfaenger
+  ADD CONSTRAINT betriebsart_empfaenger_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES profiles(id) ON DELETE SET NULL;
+
+CREATE TABLE public.booking_leistungen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  booking_id uuid NOT NULL,
+  service_id uuid NOT NULL,
+  owner_id uuid NOT NULL,
+  anzahl smallint DEFAULT 1 NOT NULL,
+  sort_order smallint DEFAULT 0 NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
 );
---   CHECK anzahl BETWEEN 1 AND 20
---   FK booking_id -> bookings(id) ON DELETE CASCADE
---   FK service_id -> services(id) ON DELETE RESTRICT
---   FK owner_id   -> profiles(id)
---   PK (id) · UNIQUE (booking_id, service_id)
---   INDEX idx_booking_leistungen_booking (booking_id, sort_order) · _service (service_id)
---   TRIGGER: trg_booking_leistung_owner (Mandantenriegel)
---            trg_booking_hauptleistung  (spiegelt Zeile 0 nach bookings.service_id)
---   ★ Die Leistungen EINES Termins (seit 03.09.2026, Ops-Karte 235).
---     In der Podologie ist die Kombination der Normalfall — „Behandlung +
---     Eingangsbefundung" —, und `bookings.service_id` konnte genau eine
---     halten. Der Kalenderblock war deshalb systematisch zu kurz und die
---     zweite Leistung fiel aus der Abrechnung.
---     ⚠️ `bookings.service_id` ist ab jetzt ABGELEITET: der Trigger setzt
---        sie auf die Zeile mit sort_order 0. NICHT von Hand schreiben —
---        sonst gibt es zwei Wahrheiten. Sie bleibt, weil sieben Leser
---        daran haengen (Kalenderfarbe, ausfallSuggestedAmount(),
---        warteliste.routes.js, booking/from-request.js, rechnung-editor.js,
---        abrechnung.routes.js, idx_bookings_service).
---     ⚠️ KEIN zweiter Schreibweg in die Abrechnung: die Zeilen werden ueber
---        `services.gkv_position_nr` (= HPNR) in der Abrechnungsmaske nur
---        VORANGEKREUZT. Der einzige INSERT in `podologie_behandlungen`
---        bleibt der dortige — nur so laufen alle Sperren mit.
---     ⚠️ Gruppentermine: die Kind-Synchronisierung in dashboard.js laeuft
---        ueber `.eq(group_parent_id, …)` und kopiert diese Zeilen NICHT
---        mit. Wer hier schreibt, muss die Kinder mitnehmen.
---     ⚠️ ON DELETE RESTRICT auf service_id ist Absicht: eine geloeschte
---        Leistung darf keine Terminhistorie zerreissen.
+--   FK booking_id -> bookings(id)
+--   FK owner_id -> profiles(id)
+--   FK service_id -> services(id)
+ALTER TABLE ONLY public.booking_leistungen OWNER TO postgres;
+COMMENT ON TABLE public.booking_leistungen IS 'Leistungen eines Termins. Zeile mit sort_order 0 ist die Hauptleistung und wird per Trigger nach bookings.service_id gespiegelt. Ops-Karte 235.';
 
-CREATE TABLE booking_requests (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  patient_id uuid
-  employee_id uuid
-  service_id uuid
-  payment_type text NOT NULL
-  preferred_date date
-  preferred_time time
-  session_count integer DEFAULT 1
-  krankenkasse text
-  arzt_name text
-  verordnung_datum date
-  icd10_diagnose text
-  behandlungsart text
-  verordnung_sitzungen integer
-  frequenz text
-  verordnung_typ text
-  doppelbehandlung boolean DEFAULT false
-  pkv_versicherung text
-  arzt_ueberweisung boolean DEFAULT false
-  arzt_ueberweisung_name text
-  bg_aktenzeichen text
-  bg_name text
-  unfalldatum date
-  durchgangsarzt text
-  notizen text
-  status text DEFAULT 'pending'::text
-  auto_approved boolean DEFAULT false
-  booking_id uuid
-  dsgvo_consent boolean NOT NULL DEFAULT false
-  consent_at timestamptz
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  diagnosegruppe text
-  alternativ_termine jsonb
-  alternativ_angeboten_at timestamptz
+ALTER TABLE ONLY public.booking_leistungen
+  ADD CONSTRAINT booking_leistungen_anzahl_check CHECK (anzahl >= 1 AND anzahl <= 20);
+
+ALTER TABLE ONLY public.booking_leistungen
+  ADD CONSTRAINT booking_leistungen_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.booking_leistungen
+  ADD CONSTRAINT booking_leistungen_booking_id_service_id_key UNIQUE (booking_id, service_id);
+
+ALTER TABLE ONLY public.booking_leistungen
+  ADD CONSTRAINT booking_leistungen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id);
+
+ALTER TABLE ONLY public.booking_leistungen
+  ADD CONSTRAINT booking_leistungen_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.booking_leistungen
+  ADD CONSTRAINT booking_leistungen_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE RESTRICT;
+
+CREATE TABLE public.booking_requests (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  patient_id uuid,
+  employee_id uuid,
+  service_id uuid,
+  payment_type text NOT NULL,
+  preferred_date date,
+  preferred_time time without time zone,
+  session_count integer DEFAULT 1,
+  krankenkasse text,
+  arzt_name text,
+  verordnung_datum date,
+  icd10_diagnose text,
+  behandlungsart text,
+  verordnung_sitzungen integer,
+  frequenz text,
+  verordnung_typ text,
+  doppelbehandlung boolean DEFAULT false,
+  pkv_versicherung text,
+  arzt_ueberweisung boolean DEFAULT false,
+  arzt_ueberweisung_name text,
+  bg_aktenzeichen text,
+  bg_name text,
+  unfalldatum date,
+  durchgangsarzt text,
+  notizen text,
+  status text DEFAULT 'pending'::text,
+  auto_approved boolean DEFAULT false,
+  booking_id uuid,
+  dsgvo_consent boolean DEFAULT false NOT NULL,
+  consent_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  diagnosegruppe text,
+  alternativ_termine jsonb,
+  alternativ_angeboten_at timestamp with time zone,
   booking_ids jsonb
 );
---   CHECK payment_type IN (gkv, pkv, selbstzahler, bg)
---   CHECK status IN (pending, approved, declined, cancelled)
---   CHECK verordnung_typ IN (erst, folge) · char_length(notizen) <= 500
---   FK patient_id -> patients(id)   ⚠️ zeigt auf patients, NICHT auf leads
---   FK employee_id / owner_id -> profiles(id) · service_id -> services(id)
---   PK (id)
+--   FK employee_id -> profiles(id)
+--   FK owner_id -> profiles(id)
+--   FK patient_id -> patients(id)
+--   FK service_id -> services(id)
+ALTER TABLE ONLY public.booking_requests OWNER TO postgres;
+COMMENT ON COLUMN public.booking_requests.diagnosegruppe IS 'Diagnosegruppe aus dem Heilmittelkatalog (z. B. WS2, EX3, SP6), vom Patienten aus dem Rezept übernommen. Optional.';
+COMMENT ON COLUMN public.booking_requests.alternativ_termine IS 'Der Praxis angebotene Ersatztermine: [{date,time,employee_id}]. Der Patient nimmt einen davon per Link aus der E-Mail an.';
+COMMENT ON COLUMN public.booking_requests.alternativ_angeboten_at IS 'Wann das Gegenangebot verschickt wurde. NULL = kein Gegenangebot offen. Geht auch in das HMAC der Annehmen-Links ein, damit ein zweites Angebot die Links des ersten entwertet.';
+COMMENT ON COLUMN public.booking_requests.booking_ids IS 'Alle aus dieser Anfrage entstandenen Termine (auch die Folgetermine einer Serie). Wird beim Stornieren gebraucht.';
 
-CREATE TABLE bookings (
-  id uuid NOT NULL DEFAULT uuid_generate_v4()
-  user_id uuid NOT NULL
-  service_id uuid
-  start_time timestamptz NOT NULL
-  end_time timestamptz
-  customer_name text NOT NULL
-  customer_email text
-  customer_phone text
-  status text DEFAULT 'confirmed'::text
-  meeting_link text
-  created_at timestamptz DEFAULT now()
-  owner_id uuid
-  customer_phone_normalized text
-  hausbesuch boolean DEFAULT false
-  notes text
-  fahrt_status text
-  vehicle_id uuid
-  start_km integer
-  end_km integer
-  fahrt_started_at timestamptz
-  fahrt_arrived_at timestamptz
-  fahrt_ended_at timestamptz
-  business_id uuid
-  is_group boolean DEFAULT false
-  group_capacity integer DEFAULT 1
-  group_parent_id uuid
-  lead_id uuid
-  no_show boolean NOT NULL DEFAULT false
-  no_show_noted_at timestamptz
-  cancellation_reason text
-  rezeptart text
-  payment_method text
-  verordnung_id uuid
-  dauer_quelle text
-  cancelled_at timestamptz
-  cancelled_session_links jsonb NOT NULL DEFAULT '[]'::jsonb
-  no_show_session_links jsonb NOT NULL DEFAULT '[]'::jsonb
+ALTER TABLE ONLY public.booking_requests
+  ADD CONSTRAINT booking_requests_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id);
+
+ALTER TABLE ONLY public.booking_requests
+  ADD CONSTRAINT booking_requests_notizen_check CHECK (char_length(notizen) <= 500);
+
+ALTER TABLE ONLY public.booking_requests
+  ADD CONSTRAINT booking_requests_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.booking_requests
+  ADD CONSTRAINT booking_requests_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES patients(id);
+
+ALTER TABLE ONLY public.booking_requests
+  ADD CONSTRAINT booking_requests_payment_type_check CHECK (payment_type = ANY (ARRAY['gkv'::text, 'pkv'::text, 'selbstzahler'::text, 'bg'::text]));
+
+ALTER TABLE ONLY public.booking_requests
+  ADD CONSTRAINT booking_requests_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.booking_requests
+  ADD CONSTRAINT booking_requests_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.booking_requests
+  ADD CONSTRAINT booking_requests_status_check CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'declined'::text, 'cancelled'::text]));
+
+ALTER TABLE ONLY public.booking_requests
+  ADD CONSTRAINT booking_requests_verordnung_typ_check CHECK (verordnung_typ = ANY (ARRAY['erst'::text, 'folge'::text]));
+
+CREATE TABLE public.booking_status_korrekturen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  booking_id uuid NOT NULL,
+  alter_status text NOT NULL,
+  neuer_status text NOT NULL,
+  grund text NOT NULL,
+  geaendert_von uuid,
+  geaendert_am timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
---   CHECK status IN (confirmed, cancelled, completed, pending, no_show)
---   CHECK dauer_quelle IS NULL OR IN (vorschlag, manuell, serie)
---   CHECK fahrt_status IN (fahrt_started, fahrt_arrived, fahrt_return_pending, fahrt_completed)
---   FK group_parent_id -> bookings(id) ON DELETE CASCADE (Gruppentermine)
---   FK lead_id -> leads(id) · vehicle_id -> vehicles(id) · service_id -> services(id)
---   FK verordnung_id -> prescriptions(id) ON DELETE SET NULL   (Podologie, 03.09.2026;
---      Ziel seit 04.09.2026 prescriptions — vorher eigene Tabelle `verordnungen`, ids unveraendert)
---   PK (id)
---   ★ EXCLUDE no_overlapping_bookings USING gist
---       (user_id WITH =, tstzrange(start_time, end_time, '[)') WITH &&)
---       WHERE status='confirmed' AND group_parent_id IS NULL
---     → Doppelbuchung ist auf DB-Ebene unmöglich. Nicht im Code nachbauen.
---   ★ In der Realtime-Publication (Übersicht aktualisiert sich ohne Reload).
---   ★ dauer_quelle — woher stammt die Dauer? (seit 03.09.2026)
---     NULL = nicht erfasst (Altbestand + alle Backend-Wege) · 'vorschlag' =
---     Vorschlag unverändert übernommen · 'manuell' = von Hand eingetippt ·
---     'serie' = aus einem Batch-Lauf.
---     ⚠️ Nur 'manuell' darf in gelernteDauer() (module/termin-dauer.js).
---        end_time - start_time ist als Lernquelle ZIRKULÄR: Termine werden nie
---        von Hand geschlossen, end_time ist immer genau der Wert, der beim
---        Anlegen im Dauer-Feld stand. Ein falscher Vorschlag bestätigt sich
---        sonst selbst.
---     ⚠️ NULL ist nicht 'vorschlag'. Sechs Wege schreiben in bookings; nur die
---        Terminmaske kennt die Spalte. Wer den Unterschied einebnet, verliert
---        genau die Information, wegen der die Spalte existiert.
---   TRIGGER: fn_check_booking_closed_day() · Telefon-Normalisierung · business_id-Default
---            · pruefe_booking_verordnung_owner() (Owner-Riegel, siehe unten)
---            · codex_192_booking_before_write / _after_cancel (Absage, siehe unten)
---   ★ ABSAGE IST EIN SOFT-DELETE (#192, 08.09.2026) — Termine werden nicht mehr
---     geloescht, sondern auf status='cancelled' gesetzt. Drei Trigger halten das
---     zusammen; Details und Rechte in db/SCHEMA-RLS.sql, Skript in
---     sql-codex/2026-09-08-192-termin-soft-delete.sql.
---     Kein neues Statusmodell: status='cancelled' + cancellation_reason bleiben
---     massgeblich, cancelled_at/cancelled_session_links sind reine Historie.
---   ★ cancelled_at — Zeitpunkt der Absage AB #192. Bei vorher abgesagten
---     Terminen NULL (bewusst kein erfundener historischer Zeitstempel).
---     Wird ausschliesslich vom Trigger gesetzt; ein vom Client mitgeschickter
---     Wert wird ueberschrieben.
---   ★ cancelled_session_links — jsonb-Array der geplanten prescription_sessions,
---     die bei der Absage wieder freigegeben wurden:
---       [{session_id, prescription_id, session_number, heilmittel_index}, …]
---     ⚠️ KEIN Sitzungszaehler und keine Quelle fuer Abrechnung. Nur das
---        Gedaechtnis, welche Einheit vorher an diesem Termin hing — die
---        Wahrheit steht weiterhin in prescription_sessions. Wird angehaengt
---        (||), nie ueberschrieben.
---   ⚠️ Was die Trigger BLOCKEN (alle ERRCODE 23514, also fachlicher Abbruch):
---        · Reaktivieren einer Absage (cancelled -> irgendetwas anderes)
---        · Absagen aus status completed/no_show heraus oder mit no_show=true
---        · Absagen, solange eine Fahrt laeuft (fahrten.fahrt_ended_at IS NULL)
---        · Absagen, wenn schon Sitzungen auf done/no_show stehen
---        · Anlegen/Aktivieren eines Teilnehmers unter einem abgesagten oder
---          fremden Gruppentermin
---   ⚠️ Gruppentermin: die Absage des Elterntermins sagt per AFTER-Trigger alle
---      Teilnehmer mit ab und reicht cancellation_reason durch. Die FK
---      group_parent_id -> bookings(id) ON DELETE CASCADE existiert weiter, greift
---      im Normalbetrieb aber nicht mehr — frueher verschwanden die Teilnehmer
---      beim Loeschen des Elterntermins mitsamt Historie.
---   ⚠️ prescription_sessions.booking_id wird bei der Absage auf NULL gesetzt
---      (Einheit ist wieder buchbar) — genau das, was frueher ON DELETE SET NULL
---      beim Loeschen tat. Die alte Zuordnung ueberlebt in
---      cancelled_session_links.
---   ★ no_show_session_links — dasselbe fuer „Patient nicht erschienen"
---     (Migration 0016, 14.09.2026, Ops-Karte a8186cb8). Gleiche Form:
---       [{session_id, prescription_id, session_number, heilmittel_index}, …]
---     Seitdem gibt auch das no_show die Einheit frei (booking_id NULL,
---     status zurueck auf 'planned') — sie wurde nicht erbracht und gehoert in
---     den Topf zurueck. Die Spur des Ausfalls steht am TERMIN (status='no_show',
---     no_show, no_show_noted_at, cancellation_reason), nicht an der
---     Sitzungszeile.
---     ⚠️ Anders als cancelled_session_links vom ANWENDUNGSCODE geschrieben
---        (module/termin-nicht-erschienen.js), nicht vom Trigger: die
---        #192-Trigger setzen bei jedem UPDATE NEW.cancelled_session_links :=
---        OLD.… zurueck, jene Spalte ist fuer den Client unbeschreibbar. Der
---        Trigger wurde bewusst nicht umgebaut (er haelt die Absage-Invarianten).
---     ⚠️ KEIN Sitzungszaehler. Zweck ist der Rueckweg: korrigiereNoShow()
---        („Patient war doch da") findet die freigegebene Zeile nur hierueber.
---   ★ verordnung_id — PODOLOGIE-Zweig. Bindet den Termin an die podologische
---     Verordnung (seit 03.09.2026). Zeigt seit 04.09.2026 auf `prescriptions`
---     (Zusammenlegung der Verordnungstöpfe) — vorher eine eigene Tabelle
---     `verordnungen`, ids der migrierten Zeilen unveraendert.
---     ⚠️ Trotzdem gehoert hier NIE die id einer Physio/Ergo/Logo-Zeile hinein,
---        auch wenn dieselbe Tabelle jetzt beide traegt: Physio/Ergo/Logo
---        verknuepfen weiterhin ueber `prescription_sessions.booking_id`, weil
---        es dort ein Einheiten-Hauptbuch gibt und die Frage „welche der 18
---        Einheiten hat dieser Termin erfuellt?" an `bookings` gar nicht
---        ausdrueckbar waere. `pruefe_booking_verordnung_owner()` prueft nur
---        den Mandanten, nicht den Fachbereich — Anwendungscode muss
---        `therapie_bereich='podo'` selbst sicherstellen (siehe
---        module/verordnung-topf.js, module/verordnung-uebersicht.js).
---        Begruendung ausfuehrlich in db/REGISTER.md.
---     ⚠️ SET NULL ist Pflicht: api/dsgvo.js loescht `prescriptions` in der
---        Loeschkette; mit RESTRICT braeche sie.
---     ⚠️ Owner-Riegel noetig, weil ein Fremdschluessel KEINE RLS prueft:
---        trg_booking_verordnung_owner (Funktion pruefe_booking_verordnung_owner,
---        seit 04.09.2026 gegen `prescriptions.owner_id`) vergleicht mit
---        bookings.owner_id. Ohne ihn liesse sich die id einer fremden
---        Verordnung in einen eigenen Termin schreiben.
---     ⚠️ Sichtbarkeits-/Schreibasymmetrie AUFGELÖST (04.09.2026, Nutzerentscheidung):
---        vorher hatte `verordnungen` eine eigene, strengere RLS-Policy
---        (nur Owner darf schreiben). Seit der Zusammenlegung gilt fuer
---        podologische Zeilen dieselbe Policy wie fuer Physio/Ergo/Logo
---        (`prescriptions_owner_all` — Owner UND zugeordnete Angestellte
---        duerfen schreiben). Bewusst gewaehlt: die podologischen Angestellten
---        sollen ihre Alltagsarbeit (Verordnung anlegen/bearbeiten) behalten.
+--   FK booking_id -> bookings(id)
+--   FK geaendert_von -> auth.users(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.booking_status_korrekturen OWNER TO postgres;
 
-CREATE TABLE booking_status_korrekturen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  business_id uuid
-  booking_id uuid NOT NULL
-  alter_status text NOT NULL
-  neuer_status text NOT NULL
-  grund text NOT NULL
-  geaendert_von uuid
-  geaendert_am timestamptz NOT NULL DEFAULT timezone('utc', now())
+ALTER TABLE ONLY public.booking_status_korrekturen
+  ADD CONSTRAINT booking_status_korrekturen_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.booking_status_korrekturen
+  ADD CONSTRAINT booking_status_korrekturen_geaendert_von_fkey FOREIGN KEY (geaendert_von) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.booking_status_korrekturen
+  ADD CONSTRAINT booking_status_korrekturen_grund_check CHECK (length(btrim(grund)) >= 3);
+
+ALTER TABLE ONLY public.booking_status_korrekturen
+  ADD CONSTRAINT booking_status_korrekturen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.booking_status_korrekturen
+  ADD CONSTRAINT booking_status_korrekturen_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.bookings (
+  id uuid DEFAULT uuid_generate_v4() NOT NULL,
+  user_id uuid NOT NULL,
+  service_id uuid,
+  start_time timestamp with time zone NOT NULL,
+  end_time timestamp with time zone,
+  customer_name text NOT NULL,
+  customer_email text,
+  customer_phone text,
+  status text DEFAULT 'confirmed'::text,
+  meeting_link text,
+  created_at timestamp with time zone DEFAULT now(),
+  owner_id uuid,
+  customer_phone_normalized text,
+  hausbesuch boolean DEFAULT false,
+  notes text,
+  fahrt_status text,
+  vehicle_id uuid,
+  start_km integer,
+  end_km integer,
+  fahrt_started_at timestamp with time zone,
+  fahrt_arrived_at timestamp with time zone,
+  fahrt_ended_at timestamp with time zone,
+  business_id uuid,
+  is_group boolean DEFAULT false,
+  group_capacity integer DEFAULT 1,
+  group_parent_id uuid,
+  lead_id uuid,
+  no_show boolean DEFAULT false NOT NULL,
+  no_show_noted_at timestamp with time zone,
+  cancellation_reason text,
+  rezeptart text,
+  payment_method text,
+  verordnung_id uuid,
+  dauer_quelle text,
+  cancelled_at timestamp with time zone,
+  cancelled_session_links jsonb DEFAULT '[]'::jsonb NOT NULL,
+  no_show_session_links jsonb DEFAULT '[]'::jsonb NOT NULL
 );
---   Ops #270 (Beta-2, 05.09.2026) — Migration 20260905193701_booking_status_korrekturen.
---   Append-only Korrekturhistorie fuer nachtraegliche `bookings.status`-Aenderungen
---   (z.B. no_show -> completed, weil der Patient doch noch behandelt wurde).
---   CHECK length(btrim(grund)) >= 3
---   FK owner_id -> profiles(id) ON DELETE RESTRICT
---   FK booking_id -> bookings(id) ON DELETE CASCADE
---   FK geaendert_von -> auth.users(id) ON DELETE SET NULL
---   PK (id) · INDEX idx_booking_status_korrekturen_booking_id (booking_id)
---   ⚠️ UNVERAENDERLICH (GoBD): TRIGGER trg_prevent_booking_status_korrekturen_mod
---     blockt jedes UPDATE und DELETE, und es gibt bewusst KEINE UPDATE/DELETE-Policy —
---     gleiches Muster wie `zuzahlung_korrekturen`. Eine falsche Korrektur wird durch
---     eine NEUE Korrektur richtiggestellt, nicht durch eine Aenderung.
---   TRIGGER trg_set_business_id — wie ueberall seit 01.09.2026.
---   `alter_status`/`neuer_status` sind bewusst reines `text` ohne eigenes CHECK: die
---   gueltigen Werte leben allein in `bookings.status`, ein zweites CHECK muesste bei
---   jeder Erweiterung dort mitgepflegt werden.
+--   FK business_id -> businesses(id)
+--   FK group_parent_id -> bookings(id)
+--   FK lead_id -> leads(id)
+--   FK owner_id -> auth.users(id)
+--   FK service_id -> services(id)
+--   FK user_id -> auth.users(id)
+--   FK vehicle_id -> vehicles(id)
+--   FK verordnung_id -> prescriptions(id)
+ALTER TABLE ONLY public.bookings OWNER TO postgres;
+COMMENT ON TABLE public.bookings IS 'RLS: user_id (employee self-access) + owner_id (owner and team access) policies both active.';
+COMMENT ON COLUMN public.bookings.verordnung_id IS 'Podologie-Topf: zu welcher `verordnungen`-Zeile gehoert dieser Termin. NIEMALS eine prescriptions.id — der Physio-Topf verknuepft ueber prescription_sessions.booking_id.';
+COMMENT ON COLUMN public.bookings.dauer_quelle IS 'Herkunft der Termindauer. NULL = nicht erfasst (Altbestand, Backend-Wege). ''vorschlag'' = Vorschlag unveraendert uebernommen. ''manuell'' = im Dauer-Feld von Hand eingetippt/geaendert — NUR diese Zeilen speisen gelernteDauer() in module/termin-dauer.js. ''serie'' = aus einem Serien-/Batch-Lauf uebernommen, zaehlt nicht als Beleg.';
+COMMENT ON COLUMN public.bookings.cancelled_at IS 'Zeitpunkt der Absage ab #192; bei vorher bereits abgesagten Terminen unbekannt (NULL).';
+COMMENT ON COLUMN public.bookings.cancelled_session_links IS 'Historische Zuordnung geplanter Sitzungen, die bei Absage wieder freigegeben wurden. Kein Sitzungszähler.';
+COMMENT ON COLUMN public.bookings.no_show_session_links IS 'Rückfahrkarte: geplante prescription_sessions, die beim no_show freigegeben wurden. Kein Sitzungszähler. Gegenstück zu cancelled_session_links (#192), aber vom Anwendungscode geschrieben.';
 
-CREATE TABLE breaks (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  user_id uuid NOT NULL
-  day_of_week integer NOT NULL
-  start_time text NOT NULL
-  end_time text NOT NULL
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_dauer_quelle_check CHECK (dauer_quelle IS NULL OR (dauer_quelle = ANY (ARRAY['vorschlag'::text, 'manuell'::text, 'serie'::text])));
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_fahrt_status_check CHECK (fahrt_status = ANY (ARRAY['fahrt_started'::text, 'fahrt_arrived'::text, 'fahrt_return_pending'::text, 'fahrt_completed'::text]));
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_group_parent_id_fkey FOREIGN KEY (group_parent_id) REFERENCES bookings(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id);
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_status_check CHECK (status = ANY (ARRAY['confirmed'::text, 'cancelled'::text, 'completed'::text, 'pending'::text, 'no_show'::text]));
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT bookings_verordnung_id_fkey FOREIGN KEY (verordnung_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.bookings
+  ADD CONSTRAINT no_overlapping_bookings EXCLUDE USING gist (user_id WITH =, tstzrange(start_time, end_time, '[)'::text) WITH &&) WHERE (status = 'confirmed'::text AND group_parent_id IS NULL);
+
+CREATE TABLE public.breaks (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid NOT NULL,
+  day_of_week integer NOT NULL,
+  start_time text NOT NULL,
+  end_time text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
   business_id uuid
 );
---   CHECK day_of_week BETWEEN 0 AND 6 · FK user_id -> profiles(id) · PK (id)
---   ⚠️ start_time/end_time sind text, nicht time (im Gegensatz zu working_hours).
+--   FK business_id -> businesses(id)
+--   FK user_id -> profiles(id)
+ALTER TABLE ONLY public.breaks OWNER TO postgres;
 
--- CREATE TABLE business_services — am 28.08.2026 gedroppt.
---   Spiegel von `services`, den niemand las. Kein Fremdschlüssel zeigte
---   darauf, keine View hing daran, und weil die Policies `auth.uid() =
---   business_id` prüften, während in der Spalte eine `businesses.id`
---   stand, war keine ihrer 26 Zeilen für die jeweilige Praxis sichtbar.
---   Inhalt vor dem DROP außerhalb des Repos gesichert (Ops-Drive,
---   infra/db-sicherung/). Beschluss: konsey/tutanak/2026-08-28-business-services.md
---   Dieser Hinweis steht hier, damit niemand die Tabelle aus altem Code
---   oder aus onprem/schema/live_schema_2026-07-06.sql zurückschließt.
+ALTER TABLE ONLY public.breaks
+  ADD CONSTRAINT breaks_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
 
-CREATE TABLE businesses (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  business_name text NOT NULL
-  sector text
-  street text
-  house_number text
-  zip text
-  city text
-  country text DEFAULT 'DE'::text
-  phone text
-  email text
-  booking_slug text
-  is_default boolean DEFAULT false
-  ik_number text
-  clinic_lat numeric
-  clinic_lng numeric
-  clinic_geocoded_at timestamptz
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  closed_days integer[] DEFAULT ARRAY[]::integer[]
-  ausfall_enabled boolean NOT NULL DEFAULT false
-  ausfall_mode text NOT NULL DEFAULT 'fixed'::text
-  ausfall_amount_eur numeric(10,2)
-  ausfall_percent numeric(5,2)
-  ausfall_cutoff_hours integer NOT NULL DEFAULT 24
+ALTER TABLE ONLY public.breaks
+  ADD CONSTRAINT breaks_day_of_week_check CHECK (day_of_week >= 0 AND day_of_week <= 6);
+
+ALTER TABLE ONLY public.breaks
+  ADD CONSTRAINT breaks_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.breaks
+  ADD CONSTRAINT breaks_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+CREATE TABLE public.businesses (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_name text NOT NULL,
+  sector text,
+  street text,
+  house_number text,
+  zip text,
+  city text,
+  country text DEFAULT 'DE'::text,
+  phone text,
+  email text,
+  booking_slug text,
+  is_default boolean DEFAULT false,
+  ik_number text,
+  clinic_lat numeric,
+  clinic_lng numeric,
+  clinic_geocoded_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  closed_days integer[] DEFAULT ARRAY[]::integer[],
+  ausfall_enabled boolean DEFAULT false NOT NULL,
+  ausfall_mode text DEFAULT 'fixed'::text NOT NULL,
+  ausfall_amount_eur numeric(10,2),
+  ausfall_percent numeric(5,2),
+  ausfall_cutoff_hours integer DEFAULT 24 NOT NULL,
   ausfall_hinweis text
 );
---   CHECK ausfall_mode IN (fixed, percent)
---   FK owner_id -> profiles(id) ON DELETE CASCADE
---   PK (id) · UNIQUE (booking_slug)
---   UNIQUE INDEX uniq_businesses_default_per_owner (owner_id) WHERE is_default
---   TRIGGER seed_default_groups_for_business() AFTER INSERT
---   ⚠️ Einzelstandort-Owner haben KEINEN businesses-Datensatz.
---      Owner-Einstellungen gehören nach `profiles` — siehe ausfall_* dort.
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.businesses OWNER TO postgres;
+COMMENT ON COLUMN public.businesses.closed_days IS 'Haftanın kapalı günleri. JS getDay() konvansiyonu: 0=Pazar, 1=Pzt, ..., 6=Cumartesi. Boş array = her gün açık.';
+COMMENT ON COLUMN public.businesses.ausfall_enabled IS 'Ausfallgebühr aktiv: bei No-Show/kurzfristiger Absage kann eine private Ausfallrechnung erstellt werden';
+COMMENT ON COLUMN public.businesses.ausfall_cutoff_hours IS 'Absagefrist in Stunden — spätere Absagen gelten als Ausfall';
+COMMENT ON COLUMN public.businesses.ausfall_hinweis IS 'Eigener Hinweistext auf der Ausfallrechnung (z.B. Verweis auf die Ausfallvereinbarung)';
 
-CREATE TABLE calendar_integrations (
-  id uuid NOT NULL DEFAULT uuid_generate_v4()
-  user_id uuid NOT NULL
-  provider text NOT NULL
-  access_token text
-  refresh_token text
-  calendar_id text
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.businesses
+  ADD CONSTRAINT businesses_ausfall_mode_check CHECK (ausfall_mode = ANY (ARRAY['fixed'::text, 'percent'::text]));
+
+ALTER TABLE ONLY public.businesses
+  ADD CONSTRAINT businesses_booking_slug_key UNIQUE (booking_slug);
+
+ALTER TABLE ONLY public.businesses
+  ADD CONSTRAINT businesses_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.businesses
+  ADD CONSTRAINT businesses_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.calendar_integrations (
+  id uuid DEFAULT uuid_generate_v4() NOT NULL,
+  user_id uuid NOT NULL,
+  provider text NOT NULL,
+  access_token text,
+  refresh_token text,
+  calendar_id text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
   business_id uuid
 );
---   CHECK provider IN (google, apple) · PK (id) · UNIQUE (user_id, provider)
+--   FK business_id -> businesses(id)
+--   FK user_id -> auth.users(id)
+ALTER TABLE ONLY public.calendar_integrations OWNER TO postgres;
 
-CREATE TABLE chatbot_usage (
-  id bigint NOT NULL
-  created_at timestamptz NOT NULL DEFAULT now()
-  owner_id uuid
-  origin text
-  session_id text
-  model text
-  deployment text
-  prompt_tokens integer
-  completion_tokens integer
-  total_tokens integer
-  cost_eur numeric(10,6)
-  off_topic boolean
-  status text
-  error text
+ALTER TABLE ONLY public.calendar_integrations
+  ADD CONSTRAINT calendar_integrations_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.calendar_integrations
+  ADD CONSTRAINT calendar_integrations_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.calendar_integrations
+  ADD CONSTRAINT calendar_integrations_provider_check CHECK (provider = ANY (ARRAY['google'::text, 'apple'::text]));
+
+ALTER TABLE ONLY public.calendar_integrations
+  ADD CONSTRAINT calendar_integrations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.calendar_integrations
+  ADD CONSTRAINT calendar_integrations_user_id_provider_key UNIQUE (user_id, provider);
+
+CREATE TABLE public.chatbot_usage (
+  id bigint GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1) NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  owner_id uuid,
+  origin text,
+  session_id text,
+  model text,
+  deployment text,
+  prompt_tokens integer,
+  completion_tokens integer,
+  total_tokens integer,
+  cost_eur numeric(10,6),
+  off_topic boolean,
+  status text,
+  error text,
   business_id uuid
 );
---   PK (id)
+--   FK business_id -> businesses(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.chatbot_usage OWNER TO postgres;
 
-CREATE TABLE consent_log (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  user_id uuid
-  pending_id uuid
-  consent_type text NOT NULL
-  version text NOT NULL
-  ip_address inet
-  user_agent text
-  accepted_at timestamptz NOT NULL DEFAULT now()
-  created_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.chatbot_usage
+  ADD CONSTRAINT chatbot_usage_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.chatbot_usage
+  ADD CONSTRAINT chatbot_usage_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.chatbot_usage
+  ADD CONSTRAINT chatbot_usage_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.consent_log (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid,
+  pending_id uuid,
+  consent_type text NOT NULL,
+  version text NOT NULL,
+  ip_address inet,
+  user_agent text,
+  accepted_at timestamp with time zone DEFAULT now() NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
 );
---   FK user_id -> profiles(id) ON DELETE SET NULL · PK (id)
---   DSGVO-Nachweis für AVV/AGB-Zustimmung.
+--   FK user_id -> profiles(id)
+ALTER TABLE ONLY public.consent_log OWNER TO postgres;
+COMMENT ON TABLE public.consent_log IS 'DSGVO/TTDSG consent audit trail. Required to prove pre-processing consent (AVV/AGB/Datenschutz).';
 
-CREATE TABLE custom_days (
-  id uuid NOT NULL DEFAULT uuid_generate_v4()
-  owner_id uuid
-  date date NOT NULL
-  type text NOT NULL
-  note text
-  created_at timestamptz DEFAULT now()
-  start_time time
-  end_time time
+ALTER TABLE ONLY public.consent_log
+  ADD CONSTRAINT consent_log_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.consent_log
+  ADD CONSTRAINT consent_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE SET NULL;
+
+CREATE TABLE public.custom_days (
+  id uuid DEFAULT uuid_generate_v4() NOT NULL,
+  owner_id uuid,
+  date date NOT NULL,
+  type text NOT NULL,
+  note text,
+  created_at timestamp with time zone DEFAULT now(),
+  start_time time without time zone,
+  end_time time without time zone,
   business_id uuid
 );
---   CHECK type IN (closed, holiday, special)
---   PK (id) · UNIQUE (owner_id, date)
---   ⚠️ Policy custom_days_public_read erlaubt SELECT für alle (Booking-Seite).
+--   FK business_id -> businesses(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.custom_days OWNER TO postgres;
 
-CREATE TABLE data_access_log (
-  id bigint NOT NULL DEFAULT nextval('data_access_log_id_seq')
-  occurred_at timestamptz NOT NULL DEFAULT now()
-  user_id uuid
-  owner_id uuid
-  business_id uuid
-  ip inet
-  user_agent text
-  method text NOT NULL
-  path text NOT NULL
-  resource text
-  resource_id text
-  action text
-  status_code integer
-  duration_ms integer
+ALTER TABLE ONLY public.custom_days
+  ADD CONSTRAINT custom_days_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.custom_days
+  ADD CONSTRAINT custom_days_owner_id_date_key UNIQUE (owner_id, date);
+
+ALTER TABLE ONLY public.custom_days
+  ADD CONSTRAINT custom_days_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.custom_days
+  ADD CONSTRAINT custom_days_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.custom_days
+  ADD CONSTRAINT custom_days_type_check CHECK (type = ANY (ARRAY['closed'::text, 'holiday'::text, 'special'::text]));
+
+CREATE TABLE public.data_access_log (
+  id bigint DEFAULT nextval('data_access_log_id_seq'::regclass) NOT NULL,
+  occurred_at timestamp with time zone DEFAULT now() NOT NULL,
+  user_id uuid,
+  owner_id uuid,
+  business_id uuid,
+  ip inet,
+  user_agent text,
+  method text NOT NULL,
+  path text NOT NULL,
+  resource text,
+  resource_id text,
+  action text,
+  status_code integer,
+  duration_ms integer,
   metadata jsonb
 );
---   PK (id) — DSGVO-Zugriffsprotokoll (Art. 32), Aufbewahrung 12 Monate.
---   Zwei Schreiber, sonst keiner:
---     · api-backend/_lib/access-log.js (service_role) — HTTP-Ebene, method =
---       GET/POST/... , path = echter Request-Pfad.
---     · audit_write_log() (SECURITY-DEFINER-Trigger, seit 17.09.2026, Ops #254)
---       — DB-Ebene, method = 'DB', path = 'db://<tabelle>', action = INSERT/
---       UPDATE/DELETE. Haengt an leads, prescriptions, podologie_behandlungen.
---       Faengt die Schreibvorgaenge, die der Browser per PostgREST am Backend
---       vorbei macht.
---   ⚠️ `metadata` fuehrt bei den DB-Zeilen NUR Spaltennamen
---      (`{"geaenderte_spalten": [...]}`), NIE Werte. Wer hier alte/neue Werte
---      ergaenzt, baut eine zweite Patientenakte, die in keiner Loeschkette
---      haengt (Befund R12). Nicht tun.
---   ⚠️ Nur eine SELECT-Policy, mit Absicht — kein Client darf hier einfuegen
---      oder aendern. Siehe db/SCHEMA-RLS.sql.
+ALTER TABLE ONLY public.data_access_log OWNER TO postgres;
+COMMENT ON TABLE public.data_access_log IS 'DSGVO Art. 32 access audit trail. 12 month retention.';
 
-CREATE TABLE data_sharing_settings (
-  owner_id uuid NOT NULL
-  patients boolean NOT NULL DEFAULT false
-  services boolean NOT NULL DEFAULT false
-  activities boolean NOT NULL DEFAULT false
-  finance boolean NOT NULL DEFAULT false
-  appointments boolean NOT NULL DEFAULT false
-  network boolean NOT NULL DEFAULT false
-  updated_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.data_access_log
+  ADD CONSTRAINT data_access_log_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.data_sharing_settings (
+  owner_id uuid NOT NULL,
+  patients boolean DEFAULT false NOT NULL,
+  services boolean DEFAULT false NOT NULL,
+  activities boolean DEFAULT false NOT NULL,
+  finance boolean DEFAULT false NOT NULL,
+  appointments boolean DEFAULT false NOT NULL,
+  network boolean DEFAULT false NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
---   PK (owner_id) — steuert den bizScope-Helper (Datenteilung zwischen Standorten).
---   Termine sind bewusst NICHT teilbar.
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.data_sharing_settings OWNER TO postgres;
+COMMENT ON TABLE public.data_sharing_settings IS 'Per-owner toggle: which data categories are shared across all Standorte (true) vs separate per business (false). Missing row = all false (separate).';
 
--- 20.09.2026 (0029) — die zwei dauerhaften §302-Zaehler. Vorher rechneten alle
--- drei Erzeugungsrouten `(weekCount || 0) + 1` aus einem COUNT(*) auf
--- `abrechnung`: falscher Geltungsbereich (je owner_id statt je IK-Paar),
--- jaehrlicher Neustart am 1. Januar, und zwei gleichzeitige Einreichungen
--- bekamen dieselbe Nummer. Belegter Schaden: die Reihenfolge im
--- Korrekturverfahren bricht, die Kasse weist ab (Kap. 7.2), und von aussen ist
--- der Fehler kaum zu sehen.
-CREATE TABLE datenaustausch_zaehler (
-  absender_ik text NOT NULL
-  empfaenger_ik text NOT NULL
-  owner_id uuid
-  letzte_referenz bigint NOT NULL DEFAULT 0
-  letzte_transfernummer integer NOT NULL DEFAULT 0
-  aktualisiert_am timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.data_sharing_settings
+  ADD CONSTRAINT data_sharing_settings_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.data_sharing_settings
+  ADD CONSTRAINT data_sharing_settings_pkey PRIMARY KEY (owner_id);
+
+CREATE TABLE public.datenaustausch_zaehler (
+  absender_ik text NOT NULL,
+  empfaenger_ik text NOT NULL,
+  owner_id uuid,
+  letzte_referenz bigint DEFAULT 0 NOT NULL,
+  letzte_transfernummer integer DEFAULT 0 NOT NULL,
+  aktualisiert_am timestamp with time zone DEFAULT now() NOT NULL
 );
---   FK owner_id -> profiles(id) ON DELETE SET NULL
---   PK (absender_ik, empfaenger_ik)
---   ⛔ RLS ist AN, aber es gibt BEWUSST KEINE POLICY — genau wie `nummernkreise`.
---     Kein Client, kein PostgREST. Angefasst wird die Tabelle ausschliesslich
---     ueber die drei SECURITY-DEFINER-Funktionen
---     naechste_datenaustauschreferenz(), naechste_transfernummer() und
---     datenaustausch_zaehler_vorstellen() (db/SCHEMA-RLS.sql).
---     Wer hier eine fehlende Policy "repariert", oeffnet einen Nummernkreis,
---     aus dem ueber buildSammelRechnungsnummer() auch Rechnungsnummern entstehen.
---   ★ letzte_referenz ist monoton, OHNE Jahresruecksetzung und ohne Obergrenze.
---     Der 5-stellige UNB-0020-Wert entsteht erst bei der Ausgabe
---     (((n-1) mod 99999) + 1) — so laeuft das SPEZIFIKATIONSFELD bei 99999 ueber,
---     die HISTORIE aber nicht.
---   ★ letzte_transfernummer ist ein EIGENER Zaehler, 0..999 im Kreis
---     (GGT Anlage 2, Feld TRANSFER_NUMMER: "ab '999' wieder auf '0'") und hat
---     ausdruecklich KEINEN Bezug zur Datenaustauschreferenz (Anhang 1 § 4.3).
---     Deshalb steht die vergebene Nummer auf `abrechnung`: ein zweiter
---     Sendeversuch derselben Datei nimmt dieselbe Nummer.
---   ⚠️ owner_id ist Herkunftsvermerk, NICHT Teil des Schluessels — fortlaufend
---     ist die Folge je IK-Paar, nicht je Konto.
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.datenaustausch_zaehler OWNER TO postgres;
+COMMENT ON TABLE public.datenaustausch_zaehler IS 'Dauerhafte §302-Zaehler je Paar (Absender-IK, Empfaenger-IK). Wird ausschliesslich ueber die drei SECURITY-DEFINER-Funktionen unten angefasst — kein Client, kein PostgREST.';
+COMMENT ON COLUMN public.datenaustausch_zaehler.owner_id IS 'Herkunftsvermerk, nicht Teil des Schluessels: fortlaufend ist die Folge je IK-Paar, nicht je Konto. Fällt das Profil weg, bleibt der Zählerstand per ON DELETE SET NULL stehen (die Folge an der IK darf nie zurueckgehen).';
+COMMENT ON COLUMN public.datenaustausch_zaehler.letzte_referenz IS 'Monoton, ohne Jahresruecksetzung, ohne Obergrenze. Der 5-stellige UNB-Wert entsteht daraus erst bei der Ausgabe (((n-1) %% 99999) + 1) — so ueberlaeuft das SPEZIFIKATIONSFELD bei 99999, die HISTORIE aber nicht.';
+COMMENT ON COLUMN public.datenaustausch_zaehler.letzte_transfernummer IS 'Eigener Zaehler, 0..999 im Kreis (GGT Anlage 2, Feld TRANSFER_NUMMER: ab 999 wieder auf 0). Ausdruecklich ohne Bezug zur Datenaustauschreferenz (Anhang 1 § 4.3).';
 
-CREATE TABLE demo_bookings (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  name text NOT NULL
-  email text NOT NULL
-  company text
-  message text
-  booking_date date NOT NULL
-  booking_time text NOT NULL
-  created_at timestamptz DEFAULT now()
-  status text NOT NULL DEFAULT 'confirmed'::text
-  reschedule_token uuid NOT NULL DEFAULT gen_random_uuid()
+ALTER TABLE ONLY public.datenaustausch_zaehler
+  ADD CONSTRAINT datenaustausch_zaehler_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.datenaustausch_zaehler
+  ADD CONSTRAINT datenaustausch_zaehler_pkey PRIMARY KEY (absender_ik, empfaenger_ik);
+
+CREATE TABLE public.demo_bookings (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  name text NOT NULL,
+  email text NOT NULL,
+  company text,
+  message text,
+  booking_date date NOT NULL,
+  booking_time text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  status text DEFAULT 'confirmed'::text NOT NULL,
+  reschedule_token uuid DEFAULT gen_random_uuid() NOT NULL,
   google_event_id text
 );
---   PK (id)
---   UNIQUE INDEX demo_bookings_slot_unique (booking_date, booking_time) WHERE status='confirmed'
---   UNIQUE INDEX demo_bookings_token_unique (reschedule_token)
---   anon darf INSERT (Demo-Formular auf der Marketing-Seite).
+ALTER TABLE ONLY public.demo_bookings OWNER TO postgres;
 
-CREATE TABLE diagnosegruppen (
-  code text NOT NULL
-  label text NOT NULL
-  untergruppen text[]
-  icd10_codes text[]
-  icd10_pflicht text
-  befundung_erlaubt boolean DEFAULT true
-  nagelspange_erlaubt boolean DEFAULT false
-  lokalisation_pflicht boolean DEFAULT false
-  bereich text
-  indikation text
-  leitsymptomatik text
-  hoechstmenge integer
-  icd_ranges text[]
-  sort integer DEFAULT 0
-  aktiv boolean DEFAULT true
-  icd_accept jsonb NOT NULL DEFAULT '[]'::jsonb
-  icd_exclude jsonb NOT NULL DEFAULT '[]'::jsonb
-  icd_auto_select jsonb NOT NULL DEFAULT '[]'::jsonb
-  icd_accept_unsicher jsonb NOT NULL DEFAULT '[]'::jsonb
-  icd_enforcement text NOT NULL DEFAULT 'warn'::text
+ALTER TABLE ONLY public.demo_bookings
+  ADD CONSTRAINT demo_bookings_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.diagnosegruppen (
+  code text NOT NULL,
+  label text NOT NULL,
+  untergruppen text[],
+  icd10_codes text[],
+  icd10_pflicht text,
+  befundung_erlaubt boolean DEFAULT true,
+  nagelspange_erlaubt boolean DEFAULT false,
+  lokalisation_pflicht boolean DEFAULT false,
+  bereich text,
+  indikation text,
+  leitsymptomatik text,
+  hoechstmenge integer,
+  icd_ranges text[],
+  sort integer DEFAULT 0,
+  aktiv boolean DEFAULT true,
+  icd_accept jsonb DEFAULT '[]'::jsonb NOT NULL,
+  icd_exclude jsonb DEFAULT '[]'::jsonb NOT NULL,
+  icd_auto_select jsonb DEFAULT '[]'::jsonb NOT NULL,
+  icd_accept_unsicher jsonb DEFAULT '[]'::jsonb NOT NULL,
+  icd_enforcement text DEFAULT 'warn'::text NOT NULL
 );
---   PK (code) · GIN-Trigram-Indizes auf code und label
---   Referenztabelle: SELECT für anon + authenticated.
---   icd_accept/exclude/auto_select steuern die ICD-Regeln je Diagnosegruppe.
+ALTER TABLE ONLY public.diagnosegruppen OWNER TO postgres;
 
-CREATE TABLE document_vorlagen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  business_id uuid
-  vorlage_type text NOT NULL
-  name text NOT NULL
-  is_default boolean NOT NULL DEFAULT false
-  content_json jsonb NOT NULL DEFAULT '{}'::jsonb
-  created_at timestamptz NOT NULL DEFAULT now()
-  updated_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.diagnosegruppen
+  ADD CONSTRAINT diagnosegruppen_pkey PRIMARY KEY (code);
+
+CREATE TABLE public.document_vorlagen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  vorlage_type text NOT NULL,
+  name text NOT NULL,
+  is_default boolean DEFAULT false NOT NULL,
+  content_json jsonb DEFAULT '{}'::jsonb NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
---   CHECK vorlage_type IN (quittung_zuzahlung, rechnung_bg, rechnung_privat,
---     rechnung_eigenanteil, rechnung_selbstzahler, rechnung_sonder,
---     rezeptvorderseite, rzg_quittung, rechnung_ausfall)
---     (rechnung_ausfall seit 0043, 29.09.2026 — vorher verwarf die CHECK-
---     Verletzung den ganzen Seed-Insert, siehe db/REGISTER.md)
---   PK (id) · UNIQUE INDEX uniq_default_vorlage (owner_id, vorlage_type) WHERE is_default
+--   FK business_id -> businesses(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.document_vorlagen OWNER TO postgres;
 
-CREATE TABLE dta_schluessel (
-  id bigint NOT NULL DEFAULT nextval('dta_schluessel_id_seq')
-  schluessel_typ text NOT NULL
-  code text NOT NULL
-  label text NOT NULL
-  leistungsbereich text
-  notes text
-  source_version text NOT NULL DEFAULT 'Anlage 3 V22'::text
-  valid_from date
-  active boolean DEFAULT true
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.document_vorlagen
+  ADD CONSTRAINT document_vorlagen_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.document_vorlagen
+  ADD CONSTRAINT document_vorlagen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.document_vorlagen
+  ADD CONSTRAINT document_vorlagen_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.document_vorlagen
+  ADD CONSTRAINT document_vorlagen_vorlage_type_check CHECK (vorlage_type = ANY (ARRAY['quittung_zuzahlung'::text, 'rechnung_bg'::text, 'rechnung_privat'::text, 'rechnung_eigenanteil'::text, 'rechnung_selbstzahler'::text, 'rechnung_sonder'::text, 'rezeptvorderseite'::text, 'rzg_quittung'::text, 'rechnung_ausfall'::text]));
+
+CREATE TABLE public.dta_schluessel (
+  id bigint DEFAULT nextval('dta_schluessel_id_seq'::regclass) NOT NULL,
+  schluessel_typ text NOT NULL,
+  code text NOT NULL,
+  label text NOT NULL,
+  leistungsbereich text,
+  notes text,
+  source_version text DEFAULT 'Anlage 3 V22'::text NOT NULL,
+  valid_from date,
+  active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now()
 );
---   PK (id) · UNIQUE (schluessel_typ, code, source_version)
---   §302-Schlüsselverzeichnisse (Anlage 3).
+ALTER TABLE ONLY public.dta_schluessel OWNER TO postgres;
 
--- 21.09.2026 (0038) — Öffentliche X.509-Verschlüsselungszertifikate der
--- Annahmestellen (ITSG/GKV) zur Erzeugung von CMS EnvelopedData (§302 SECON).
--- Globale Referenztabelle wie `kostentraeger_anschriften`; Befüllung nur per Admin-Ladescript.
-CREATE TABLE empfaenger_zertifikate (
-  ik text NOT NULL
-  zertifikat_der bytea NOT NULL
-  fingerprint_sha256 text NOT NULL
-  gueltig_von date NOT NULL
-  gueltig_bis date NOT NULL
-  quelle text NOT NULL
-  quelle_datum date NOT NULL
-  onaylayan text NOT NULL
-  hochgeladen_am timestamptz NOT NULL DEFAULT now()
-);
---   PK (ik)
---   ★ Öffentliche Schlüssel für CMS EnvelopedData Verschlüsselung (GGT Anlage 16).
---   ★ Befüllung per tools/empfaenger-zertifikat-laden.mjs (mit Fingerprint-Prüfung).
+ALTER TABLE ONLY public.dta_schluessel
+  ADD CONSTRAINT dta_schluessel_pkey PRIMARY KEY (id);
 
-CREATE TABLE email_logs (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  contact_id uuid
-  to_email text NOT NULL
-  to_name text
-  subject text NOT NULL
-  body text NOT NULL
-  status text NOT NULL DEFAULT 'sent'::text
-  gmail_thread_id text
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.dta_schluessel
+  ADD CONSTRAINT dta_schluessel_schluessel_typ_code_source_version_key UNIQUE (schluessel_typ, code, source_version);
+
+CREATE TABLE public.email_logs (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  contact_id uuid,
+  to_email text NOT NULL,
+  to_name text,
+  subject text NOT NULL,
+  body text NOT NULL,
+  status text DEFAULT 'sent'::text NOT NULL,
+  gmail_thread_id text,
+  created_at timestamp with time zone DEFAULT now(),
   business_id uuid
 );
---   CHECK status IN (draft, sent, failed) · FK contact_id -> b2b_contacts(id) · PK (id)
+--   FK business_id -> businesses(id)
+--   FK contact_id -> b2b_contacts(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.email_logs OWNER TO postgres;
 
-CREATE TABLE employee_business_assignments (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  employee_id uuid NOT NULL
-  business_id uuid NOT NULL
-  group_id uuid
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.email_logs
+  ADD CONSTRAINT email_logs_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.email_logs
+  ADD CONSTRAINT email_logs_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES b2b_contacts(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.email_logs
+  ADD CONSTRAINT email_logs_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.email_logs
+  ADD CONSTRAINT email_logs_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.email_logs
+  ADD CONSTRAINT email_logs_status_check CHECK (status = ANY (ARRAY['draft'::text, 'sent'::text, 'failed'::text]));
+
+CREATE TABLE public.empfaenger_zertifikate (
+  ik text NOT NULL,
+  zertifikat_der bytea NOT NULL,
+  fingerprint_sha256 text NOT NULL,
+  gueltig_von date NOT NULL,
+  gueltig_bis date NOT NULL,
+  quelle text NOT NULL,
+  quelle_datum date NOT NULL,
+  onaylayan text NOT NULL,
+  hochgeladen_am timestamp with time zone DEFAULT now() NOT NULL
 );
---   FK employee_id -> profiles(id) · business_id -> businesses(id) · group_id -> employee_groups(id)
---   PK (id) · UNIQUE (employee_id, business_id)
+ALTER TABLE ONLY public.empfaenger_zertifikate OWNER TO postgres;
+COMMENT ON TABLE public.empfaenger_zertifikate IS 'Öffentliche X.509-Verschlüsselungszertifikate der Annahmestellen (ITSG/GKV) zur Erzeugung von CMS EnvelopedData (§302 SECON). Globale Referenztabelle wie kostentraeger_anschriften; Befüllung nur per Admin-Ladescript.';
+COMMENT ON COLUMN public.empfaenger_zertifikate.ik IS 'Institutionskennzeichen (IK) der Datenannahmestelle (9-stellig).';
+COMMENT ON COLUMN public.empfaenger_zertifikate.zertifikat_der IS 'Vollständiges X.509v3-Zertifikat in binärer DER-Kodierung.';
+COMMENT ON COLUMN public.empfaenger_zertifikate.fingerprint_sha256 IS 'SHA-256-Fingerprint des DER-Zertifikats (hexadezimal, mit ITSG-Veröffentlichung abgeglichen).';
+COMMENT ON COLUMN public.empfaenger_zertifikate.gueltig_von IS 'Gültigkeitsbeginn des Zertifikats (notBefore).';
+COMMENT ON COLUMN public.empfaenger_zertifikate.gueltig_bis IS 'Gültigkeitsende des Zertifikats (notAfter).';
+COMMENT ON COLUMN public.empfaenger_zertifikate.quelle IS 'Herkunftsnachweis (z. B. ITSG Trust Center Annahmeliste annahme-rsa4096.key).';
+COMMENT ON COLUMN public.empfaenger_zertifikate.quelle_datum IS 'Datum des Abgleichs bzw. der Veröffentlichung der Quelle.';
+COMMENT ON COLUMN public.empfaenger_zertifikate.onaylayan IS 'Signaturprüfer / Administrator-Pseudonym (CLAUDE.md: keine Personennamen, nur Rollen-/Kürzel).';
+COMMENT ON COLUMN public.empfaenger_zertifikate.hochgeladen_am IS 'Zeitstempel des Datenbank-Imports.';
 
-CREATE TABLE employee_groups (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  business_id uuid NOT NULL
-  name text NOT NULL
-  is_default boolean DEFAULT false
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.empfaenger_zertifikate
+  ADD CONSTRAINT empfaenger_zertifikate_pkey PRIMARY KEY (ik);
+
+CREATE TABLE public.employee_business_assignments (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  employee_id uuid NOT NULL,
+  business_id uuid NOT NULL,
+  group_id uuid,
+  created_at timestamp with time zone DEFAULT now()
 );
---   PK (id) · UNIQUE (business_id, name)
+--   FK business_id -> businesses(id)
+--   FK employee_id -> profiles(id)
+--   FK group_id -> employee_groups(id)
+ALTER TABLE ONLY public.employee_business_assignments OWNER TO postgres;
 
-CREATE TABLE employee_scope_overrides (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  employee_id uuid NOT NULL
-  business_id uuid NOT NULL
-  module text NOT NULL
+ALTER TABLE ONLY public.employee_business_assignments
+  ADD CONSTRAINT employee_business_assignments_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.employee_business_assignments
+  ADD CONSTRAINT employee_business_assignments_employee_id_business_id_key UNIQUE (employee_id, business_id);
+
+ALTER TABLE ONLY public.employee_business_assignments
+  ADD CONSTRAINT employee_business_assignments_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.employee_business_assignments
+  ADD CONSTRAINT employee_business_assignments_group_id_fkey FOREIGN KEY (group_id) REFERENCES employee_groups(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.employee_business_assignments
+  ADD CONSTRAINT employee_business_assignments_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.employee_groups (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  business_id uuid NOT NULL,
+  name text NOT NULL,
+  is_default boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now()
+);
+--   FK business_id -> businesses(id)
+ALTER TABLE ONLY public.employee_groups OWNER TO postgres;
+
+ALTER TABLE ONLY public.employee_groups
+  ADD CONSTRAINT employee_groups_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.employee_groups
+  ADD CONSTRAINT employee_groups_business_id_name_key UNIQUE (business_id, name);
+
+ALTER TABLE ONLY public.employee_groups
+  ADD CONSTRAINT employee_groups_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.employee_scope_overrides (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  employee_id uuid NOT NULL,
+  business_id uuid NOT NULL,
+  module text NOT NULL,
   has_access boolean NOT NULL
 );
---   PK (id) · UNIQUE (employee_id, business_id, module)
---   Individuelle Rechte schlagen Gruppenrechte — siehe get_my_permissions().
+--   FK business_id -> businesses(id)
+--   FK employee_id -> profiles(id)
+ALTER TABLE ONLY public.employee_scope_overrides OWNER TO postgres;
 
-CREATE TABLE employee_services (
-  id uuid NOT NULL DEFAULT uuid_generate_v4()
-  employee_id uuid NOT NULL
-  service_id uuid NOT NULL
+ALTER TABLE ONLY public.employee_scope_overrides
+  ADD CONSTRAINT employee_scope_overrides_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.employee_scope_overrides
+  ADD CONSTRAINT employee_scope_overrides_employee_id_business_id_module_key UNIQUE (employee_id, business_id, module);
+
+ALTER TABLE ONLY public.employee_scope_overrides
+  ADD CONSTRAINT employee_scope_overrides_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.employee_scope_overrides
+  ADD CONSTRAINT employee_scope_overrides_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.employee_services (
+  id uuid DEFAULT uuid_generate_v4() NOT NULL,
+  employee_id uuid NOT NULL,
+  service_id uuid NOT NULL,
   business_id uuid
 );
---   PK (id) · UNIQUE (employee_id, service_id)
---   ⚠️ Policy "Public read employee services" erlaubt SELECT für alle.
+--   FK business_id -> businesses(id)
+--   FK employee_id -> auth.users(id)
+--   FK service_id -> services(id)
+ALTER TABLE ONLY public.employee_services OWNER TO postgres;
 
-CREATE TABLE fahrten (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  user_id uuid NOT NULL
-  booking_id uuid NOT NULL
-  lead_id uuid
-  vehicle_id uuid
-  kennzeichen_snapshot text
-  kind_snapshot text
-  start_km integer
-  end_km integer
-  distance_km integer DEFAULT (CASE WHEN end_km IS NOT NULL AND end_km >= start_km
-                                    THEN end_km - start_km ELSE NULL END)
-  estimated_duration_min integer
-  fahrt_started_at timestamptz NOT NULL DEFAULT now()
-  fahrt_arrived_at timestamptz
-  fahrt_ended_at timestamptz
-  notes text
-  created_at timestamptz DEFAULT now()
-  business_id uuid
-  zweck text
-  abfahrtsort text
+ALTER TABLE ONLY public.employee_services
+  ADD CONSTRAINT employee_services_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.employee_services
+  ADD CONSTRAINT employee_services_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.employee_services
+  ADD CONSTRAINT employee_services_employee_id_service_id_key UNIQUE (employee_id, service_id);
+
+ALTER TABLE ONLY public.employee_services
+  ADD CONSTRAINT employee_services_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.employee_services
+  ADD CONSTRAINT employee_services_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE;
+
+CREATE TABLE public.fahrten (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  booking_id uuid NOT NULL,
+  lead_id uuid,
+  vehicle_id uuid,
+  kennzeichen_snapshot text,
+  kind_snapshot text,
+  start_km integer,
+  end_km integer,
+  distance_km integer GENERATED ALWAYS AS (
+CASE
+    WHEN ((end_km IS NOT NULL) AND (end_km >= start_km)) THEN (end_km - start_km)
+    ELSE NULL::integer
+END) STORED,
+  estimated_duration_min integer,
+  fahrt_started_at timestamp with time zone DEFAULT now() NOT NULL,
+  fahrt_arrived_at timestamp with time zone,
+  fahrt_ended_at timestamp with time zone,
+  notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  business_id uuid,
+  zweck text,
+  abfahrtsort text,
   zielort text
 );
---   FK booking_id -> bookings(id) ON DELETE CASCADE
---   PK (id) · UNIQUE (booking_id) — genau eine Fahrt je Termin
---   Finanzamt-Felder: zweck, abfahrtsort, zielort.
---   ✅ 01.10.2026 (0050): Altzeilen mit Patientenname/-anschrift in zweck/zielort
---     auf das neutrale Format von module/fahrtenbuch-regeln.js gebracht
---     ("Patientenbesuch (s. Verzeichnis Nr. P-XXXXXXXX)"); live 8/8 neutral.
+--   FK booking_id -> bookings(id)
+--   FK business_id -> businesses(id)
+--   FK lead_id -> leads(id)
+--   FK user_id -> auth.users(id)
+--   FK vehicle_id -> vehicles(id)
+ALTER TABLE ONLY public.fahrten OWNER TO postgres;
 
-CREATE TABLE fahrten_aenderungen (
-  id bigint NOT NULL GENERATED ALWAYS AS IDENTITY
-  fahrt_id uuid NOT NULL
-  owner_id uuid NOT NULL
+ALTER TABLE ONLY public.fahrten
+  ADD CONSTRAINT fahrten_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.fahrten
+  ADD CONSTRAINT fahrten_booking_id_key UNIQUE (booking_id);
+
+ALTER TABLE ONLY public.fahrten
+  ADD CONSTRAINT fahrten_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.fahrten
+  ADD CONSTRAINT fahrten_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.fahrten
+  ADD CONSTRAINT fahrten_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.fahrten
+  ADD CONSTRAINT fahrten_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.fahrten
+  ADD CONSTRAINT fahrten_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL;
+
+CREATE TABLE public.fahrten_aenderungen (
+  id bigint GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1) NOT NULL,
+  fahrt_id uuid NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  fahrer_id uuid,
+  op text NOT NULL,
+  alt jsonb NOT NULL,
+  neu jsonb,
+  geaendert_von uuid,
+  geaendert_am timestamp with time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE ONLY public.fahrten_aenderungen OWNER TO postgres;
+COMMENT ON TABLE public.fahrten_aenderungen IS 'Fahrtenbuch-Änderungsprotokoll (BMF 18.11.2009): nachträgliche Änderungen abgeschlossener Fahrten und jede Löschung mit altem/neuem Wert, Benutzer, Zeit. Append-only, nur per Trigger beschrieben; ohne FK, damit die Spur Fahrt und Konto überlebt.';
+
+ALTER TABLE ONLY public.fahrten_aenderungen
+  ADD CONSTRAINT fahrten_aenderungen_op_check CHECK (op = ANY (ARRAY['UPDATE'::text, 'DELETE'::text]));
+
+ALTER TABLE ONLY public.fahrten_aenderungen
+  ADD CONSTRAINT fahrten_aenderungen_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.feedbacks (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid,
+  owner_id uuid,
+  type text DEFAULT 'feedback'::text NOT NULL,
+  title text NOT NULL,
+  description text,
+  status text DEFAULT 'open'::text NOT NULL,
+  priority text DEFAULT 'medium'::text NOT NULL,
+  admin_notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
   business_id uuid
-  fahrer_id uuid
-  op text NOT NULL
-  alt jsonb NOT NULL
-  neu jsonb
-  geaendert_von uuid
-  geaendert_am timestamptz NOT NULL DEFAULT now()
 );
---   PK (id) · CHECK op IN ('UPDATE','DELETE') · KEIN FK (Spur ueberlebt Fahrt + Konto)
---   Seit 01.10.2026 · 0052_fahrten_aenderungsprotokoll (BMF 18.11.2009, legal-de)
---   Append-only: geschrieben NUR von trg_fahrten_aenderung_protokollieren
---   (UPDATE an abgeschlossenen Fahrten mit geaendertem Finanzamt-Feld, jede
---   Loeschung inkl. CASCADE). alt/neu = Finanzamt-Felder, OHNE lead_id.
---   Grants: nur SELECT fuer authenticated; RLS owner_id/fahrer_id = auth.uid().
---   Aufbewahrung wie Fahrtenbuch — nicht in dsgvo.js DELETE_TABLES.
+--   FK business_id -> businesses(id)
+--   FK owner_id -> profiles(id)
+--   FK user_id -> auth.users(id)
+ALTER TABLE ONLY public.feedbacks OWNER TO postgres;
 
-CREATE TABLE feedbacks (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  user_id uuid
-  owner_id uuid
-  type text NOT NULL DEFAULT 'feedback'::text
-  title text NOT NULL
-  description text
-  status text NOT NULL DEFAULT 'open'::text
-  priority text NOT NULL DEFAULT 'medium'::text
-  admin_notes text
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  business_id uuid
+ALTER TABLE ONLY public.feedbacks
+  ADD CONSTRAINT feedbacks_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.feedbacks
+  ADD CONSTRAINT feedbacks_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.feedbacks
+  ADD CONSTRAINT feedbacks_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.feedbacks
+  ADD CONSTRAINT feedbacks_priority_check CHECK (priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'critical'::text]));
+
+ALTER TABLE ONLY public.feedbacks
+  ADD CONSTRAINT feedbacks_status_check CHECK (status = ANY (ARRAY['open'::text, 'in_progress'::text, 'resolved'::text, 'closed'::text]));
+
+ALTER TABLE ONLY public.feedbacks
+  ADD CONSTRAINT feedbacks_type_check CHECK (type = ANY (ARRAY['bug'::text, 'feature_request'::text, 'feedback'::text, 'support'::text]));
+
+ALTER TABLE ONLY public.feedbacks
+  ADD CONSTRAINT feedbacks_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+CREATE TABLE public.group_scopes (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  group_id uuid NOT NULL,
+  module text NOT NULL,
+  has_access boolean DEFAULT true NOT NULL
 );
---   CHECK type IN (bug, feature_request, feedback, support)
---   CHECK status IN (open, in_progress, resolved, closed)
---   CHECK priority IN (low, medium, high, critical) · PK (id)
---   TRIGGER notify_feedback_telegram() AFTER INSERT (pg_net -> Telegram)
+--   FK group_id -> employee_groups(id)
+ALTER TABLE ONLY public.group_scopes OWNER TO postgres;
 
--- "fußstatus" — GEDROPPT 02.10.2026 (0056, KHS K1.6).
+ALTER TABLE ONLY public.group_scopes
+  ADD CONSTRAINT group_scopes_group_id_fkey FOREIGN KEY (group_id) REFERENCES employee_groups(id) ON DELETE CASCADE;
 
-CREATE TABLE group_scopes (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  group_id uuid NOT NULL
-  module text NOT NULL
-  has_access boolean NOT NULL DEFAULT true
+ALTER TABLE ONLY public.group_scopes
+  ADD CONSTRAINT group_scopes_group_id_module_key UNIQUE (group_id, module);
+
+ALTER TABLE ONLY public.group_scopes
+  ADD CONSTRAINT group_scopes_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.heilmittel_catalog (
+  hpnr text NOT NULL,
+  leistung text NOT NULL,
+  leistungsart text,
+  heilmittelbereich text DEFAULT 'Podologie'::text NOT NULL,
+  grundlage text,
+  verguetung_gkv numeric(8,2),
+  gueltig_ab date NOT NULL,
+  gueltig_bis date DEFAULT '9999-12-31'::date NOT NULL,
+  aktiv boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now()
 );
---   PK (id) · UNIQUE (group_id, module)
+ALTER TABLE ONLY public.heilmittel_catalog OWNER TO postgres;
+COMMENT ON TABLE public.heilmittel_catalog IS 'VERALTET / UNBENUTZT (Stand 2026-07-26). Enthält abgelöste Ross-Fraser-Positionen als unbegrenzt gültig. Auswahlquelle ist heilmittel_katalog.';
 
-CREATE TABLE heilmittel_catalog (
-  hpnr text NOT NULL
-  leistung text NOT NULL
-  leistungsart text
-  heilmittelbereich text NOT NULL DEFAULT 'Podologie'::text
-  grundlage text
-  verguetung_gkv numeric(8,2)
-  gueltig_ab date NOT NULL
-  gueltig_bis date NOT NULL DEFAULT '9999-12-31'::date
-  aktiv boolean DEFAULT true
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.heilmittel_catalog
+  ADD CONSTRAINT heilmittel_catalog_pkey PRIMARY KEY (hpnr);
+
+CREATE TABLE public.heilmittel_katalog (
+  code text NOT NULL,
+  bereich text NOT NULL,
+  label text NOT NULL,
+  kuerzel text,
+  kategorie text,
+  diagnosegruppen text[],
+  preis_eur numeric(10,2),
+  zuzahlung_eur numeric(10,2),
+  dauer text,
+  gueltig_ab date DEFAULT '1900-01-01'::date NOT NULL,
+  gueltig_bis date DEFAULT '9999-12-31'::date NOT NULL,
+  deprecated boolean DEFAULT false NOT NULL,
+  ungueltig_ab date,
+  ersetzt_durch text,
+  max_pro_tag integer,
+  max_pro_termin integer,
+  notiz text,
+  gruppe boolean DEFAULT false NOT NULL,
+  telemed boolean DEFAULT false NOT NULL,
+  sort integer DEFAULT 0 NOT NULL
 );
---   PK (hpnr) — Podologie-HPNR (78xxx).
---   ⚠️ DREI ähnliche Heilmittel-Tabellen, nicht verwechseln:
---      heilmittel_catalog  (alt, Podologie-HPNR)
---      heilmittel_katalog  (★ aktiv, vereinheitlicht, von search_heilmittel() genutzt)
---      heilmittel_position (§302-Abrechnungspositionen, Preise/Zuzahlung)
+ALTER TABLE ONLY public.heilmittel_katalog OWNER TO postgres;
+COMMENT ON TABLE public.heilmittel_katalog IS 'Generiert aus api-backend/billing/codes/*.js via sync_heilmittel_katalog.js. Nicht von Hand bearbeiten — Änderungen gehen in die Codedateien.';
 
-CREATE TABLE heilmittel_katalog (
-  code text NOT NULL
-  bereich text NOT NULL
-  label text NOT NULL
-  kuerzel text
-  kategorie text
-  diagnosegruppen text[]
-  preis_eur numeric(10,2)
-  zuzahlung_eur numeric(10,2)
-  dauer text
-  gueltig_ab date NOT NULL DEFAULT '1900-01-01'::date
-  gueltig_bis date NOT NULL DEFAULT '9999-12-31'::date
-  deprecated boolean NOT NULL DEFAULT false
-  ungueltig_ab date
-  ersetzt_durch text
-  max_pro_tag integer
-  max_pro_termin integer
-  notiz text
-  gruppe boolean NOT NULL DEFAULT false
-  telemed boolean NOT NULL DEFAULT false
-  sort integer NOT NULL DEFAULT 0
+ALTER TABLE ONLY public.heilmittel_katalog
+  ADD CONSTRAINT heilmittel_katalog_pkey PRIMARY KEY (bereich, code, gueltig_ab);
+
+CREATE TABLE public.heilmittel_position (
+  positionsnummer text NOT NULL,
+  template_x text NOT NULL,
+  abrechnungscode text NOT NULL,
+  heilmittel_bereich text NOT NULL,
+  bezeichnung text NOT NULL,
+  kategorie text,
+  preis_eur numeric(8,2) NOT NULL,
+  zuzahlung_eur numeric(8,2),
+  zuzahlung_pflicht boolean GENERATED ALWAYS AS ((zuzahlung_eur IS NOT NULL)) STORED,
+  behandlungsdauer text,
+  is_gruppe boolean DEFAULT false,
+  is_telemed boolean DEFAULT false,
+  is_hausbesuch boolean DEFAULT false,
+  notes text,
+  source_vertrag text NOT NULL,
+  gueltig_ab date NOT NULL,
+  gueltig_bis date,
+  active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now()
 );
---   PK (bereich, code, gueltig_ab) — zeitversioniert!
---   ★ Aktive Katalogtabelle. Wird von search_heilmittel() gelesen.
+ALTER TABLE ONLY public.heilmittel_position OWNER TO postgres;
+COMMENT ON TABLE public.heilmittel_position IS 'VERALTET / UNBENUTZT (Stand 2026-07-26). Auswahlquelle ist heilmittel_katalog.';
 
-CREATE TABLE heilmittel_position (
-  positionsnummer text NOT NULL
-  template_x text NOT NULL
-  abrechnungscode text NOT NULL
-  heilmittel_bereich text NOT NULL
-  bezeichnung text NOT NULL
-  kategorie text
-  preis_eur numeric(8,2) NOT NULL
-  zuzahlung_eur numeric(8,2)
-  zuzahlung_pflicht boolean DEFAULT (zuzahlung_eur IS NOT NULL)
-  behandlungsdauer text
-  is_gruppe boolean DEFAULT false
-  is_telemed boolean DEFAULT false
-  is_hausbesuch boolean DEFAULT false
-  notes text
-  source_vertrag text NOT NULL
-  gueltig_ab date NOT NULL
-  gueltig_bis date
-  active boolean DEFAULT true
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.heilmittel_position
+  ADD CONSTRAINT heilmittel_position_pkey PRIMARY KEY (positionsnummer);
+
+CREATE TABLE public.heilmittel_tarif (
+  id bigint DEFAULT nextval('heilmittel_tarif_id_seq'::regclass) NOT NULL,
+  bundesland text NOT NULL,
+  kostentraeger_ik text,
+  position_nr text NOT NULL,
+  heilmittel_code text,
+  preis_eur numeric(10,2) NOT NULL,
+  zuzahlung_pflicht boolean DEFAULT true,
+  gueltig_ab date NOT NULL,
+  gueltig_bis date,
+  created_at timestamp with time zone DEFAULT now()
 );
---   PK (positionsnummer) — §302-Positionsnummern.
+--   FK kostentraeger_ik -> kostentraeger(ik)
+ALTER TABLE ONLY public.heilmittel_tarif OWNER TO postgres;
 
-CREATE TABLE heilmittel_tarif (
-  id bigint NOT NULL DEFAULT nextval('heilmittel_tarif_id_seq')
-  bundesland text NOT NULL
-  kostentraeger_ik text
-  position_nr text NOT NULL
-  heilmittel_code text
-  preis_eur numeric(10,2) NOT NULL
-  zuzahlung_pflicht boolean DEFAULT true
-  gueltig_ab date NOT NULL
-  gueltig_bis date
-  created_at timestamptz DEFAULT now()
-);
---   FK kostentraeger_ik -> kostentraeger(ik) ON DELETE CASCADE · PK (id)
---   Preise je Bundesland/Kasse.
+ALTER TABLE ONLY public.heilmittel_tarif
+  ADD CONSTRAINT heilmittel_tarif_kostentraeger_ik_fkey FOREIGN KEY (kostentraeger_ik) REFERENCES kostentraeger(ik) ON DELETE CASCADE;
 
-CREATE TABLE icd10_titles (
-  code text NOT NULL
-  titel text NOT NULL
-  kapitel smallint
-  ebene smallint
-  terminal boolean
-  code_plain text
-  gruppe text
-);
---   PK (code) · Trigram- und text_pattern_ops-Indizes auf code, code_plain, titel
---   code_plain = code ohne Punkt (für Präfixsuche). Von search_diagnosen() genutzt.
+ALTER TABLE ONLY public.heilmittel_tarif
+  ADD CONSTRAINT heilmittel_tarif_pkey PRIMARY KEY (id);
 
-CREATE TABLE icd_sector_ranges (
-  bereich text NOT NULL
-  gte text NOT NULL
-  lt text NOT NULL
-  label text
+CREATE TABLE public.icd_sector_ranges (
+  bereich text NOT NULL,
+  gte text NOT NULL,
+  lt text NOT NULL,
+  label text,
   sort integer DEFAULT 0
 );
---   PK (bereich, gte, lt)
---   ★ Fachbereichsfilter: für alle vier Bereiche gefüllt. search_diagnosen()
---     setzt darüber in_sector. Der strict-Modus im Frontend wirft fachfremde
---     Codes ganz raus — aktuell nur in der Podologie aktiv.
+ALTER TABLE ONLY public.icd_sector_ranges OWNER TO postgres;
 
-CREATE TABLE invoices (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  patient_id uuid
-  patient_name text NOT NULL
-  line_items jsonb NOT NULL DEFAULT '[]'::jsonb
-  subtotal numeric(10,2)
-  eigenanteil_pct numeric(5,2) DEFAULT 0
-  eigenanteil_eur numeric(10,2) DEFAULT 0
-  kassenzuzahlung numeric(10,2) DEFAULT 0
-  total_patient numeric(10,2)
-  status text DEFAULT 'draft'::text
-  invoice_number text
-  issued_at date DEFAULT CURRENT_DATE
-  notes text
-  created_at timestamptz DEFAULT now()
-  prescription_id uuid
-  business_id uuid
-  payment_status text DEFAULT 'pending'::text
-  payment_method text
-  paid_at timestamptz
-  lead_id uuid
-  invoice_type text
-  verordnung_id uuid
-  steuer_status text
-  tax_summary jsonb NOT NULL DEFAULT '[]'::jsonb
-  netto_gesamt numeric(10,2)
-  steuer_gesamt numeric(10,2)
-  brutto_gesamt numeric(10,2)
-  steuerhinweis_text text
-  steuernummer_snapshot text
-  ust_id_snapshot text
-  leistung_von date
-  leistung_bis date
-  rechnung_nr bigint
-  storno_grund text
+ALTER TABLE ONLY public.icd_sector_ranges
+  ADD CONSTRAINT icd_sector_ranges_pkey PRIMARY KEY (bereich, gte, lt);
+
+CREATE TABLE public.icd10_titles (
+  code text NOT NULL,
+  titel text NOT NULL,
+  kapitel smallint,
+  ebene smallint,
+  terminal boolean,
+  code_plain text,
+  gruppe text
+);
+ALTER TABLE ONLY public.icd10_titles OWNER TO postgres;
+
+ALTER TABLE ONLY public.icd10_titles
+  ADD CONSTRAINT icd10_titles_pkey PRIMARY KEY (code);
+
+CREATE TABLE public.invoices (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  patient_id uuid,
+  patient_name text NOT NULL,
+  line_items jsonb DEFAULT '[]'::jsonb NOT NULL,
+  subtotal numeric(10,2),
+  eigenanteil_pct numeric(5,2) DEFAULT 0,
+  eigenanteil_eur numeric(10,2) DEFAULT 0,
+  kassenzuzahlung numeric(10,2) DEFAULT 0,
+  total_patient numeric(10,2),
+  status text DEFAULT 'draft'::text,
+  invoice_number text,
+  issued_at date DEFAULT CURRENT_DATE,
+  notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  prescription_id uuid,
+  business_id uuid,
+  payment_status text DEFAULT 'pending'::text,
+  payment_method text,
+  paid_at timestamp with time zone,
+  lead_id uuid,
+  invoice_type text,
+  verordnung_id uuid,
+  steuer_status text,
+  tax_summary jsonb DEFAULT '[]'::jsonb NOT NULL,
+  netto_gesamt numeric(10,2),
+  steuer_gesamt numeric(10,2),
+  brutto_gesamt numeric(10,2),
+  steuerhinweis_text text,
+  steuernummer_snapshot text,
+  ust_id_snapshot text,
+  leistung_von date,
+  leistung_bis date,
+  rechnung_nr bigint,
+  storno_grund text,
   storno_am date
 );
---   CHECK status IN (draft, sent, paid, cancelled)
---   CHECK payment_status IN (pending, paid, partial)
---   CHECK payment_method IN (bar, karte, lastschrift, ueberweisung, sonstiges)
---   CHECK invoice_type IN (gkv, privat, selbstzahler)
---   CHECK steuer_status IN (regel, kleinunternehmer)
---   CHECK invoices_ein_verordnungsbezug: prescription_id IS NULL OR verordnung_id IS NULL
---      (seit 04.09.2026 zeigen BEIDE Spalten auf prescriptions — die Tabelle
---      heisst nur noch verschieden, der CHECK besteht unveraendert fort)
---   FK patient_id -> leads(id) · lead_id -> leads(id) · prescription_id -> prescriptions(id)
---   FK verordnung_id -> prescriptions(id) ON DELETE SET NULL
---   PK (id) · UNIQUE (owner_id, invoice_number)
---   ★ ZWEI Verordnungsbezüge, weil es zwei Verordnungstöpfe gibt (Falle 2):
---      prescription_id → Physio/Ergo/Logo · verordnung_id → Podologie.
---      Höchstens einer ist gesetzt. Nicht zusammenlegen.
---   ★ USt: der Steuersatz sitzt PRO ZEILE in line_items
---      ({title, quantity, unit_price(brutto), ust_satz, ust_grund, leistungsdatum}),
---      weil § 14 Abs. 4 Nr. 7 UStG das nach Steuersätzen aufgeschlüsselte Entgelt
---      verlangt und eine Sitzung medizinische und kosmetische Positionen mischen
---      kann. `tax_summary` ist die eingefrorene Gruppensumme dazu.
---      Rechenlogik: module/rechnung-steuer.js (+ .test.js).
---   ⚠️ steuerhinweis_text / steuernummer_snapshot / ust_id_snapshot sind
---      SNAPSHOTS aus profiles zum Zeitpunkt der Rechnungsstellung. Beim Druck
---      NICHT wieder aus profiles lesen — sonst druckt dieselbe Rechnung nach
---      einer Einstellungsänderung anders (§ 146 Abs. 4 AO, GoBD Rz. 107 ff.).
---   ⚠️ GoBD: TRIGGER invoice_festschreibung() sperrt ab status <> 'draft' alle
---      inhaltlichen Felder. Offen bleiben status, payment_*, paid_at, notes
---      (daran hängt der Kassieren-Ablauf). Korrektur = Storno + Neuausstellung.
---   ⚠️ rechnung_nr/invoice_number kommen vom TRIGGER set_invoice_nummer(), das
---      Frontend zählt NICHT mehr selbst hoch. Einmal vergeben, nie geändert
---      (§ 14 Abs. 4 Nr. 4 UStG).
---   ★ payment_status ist seit 07.09.2026 nur noch CACHE. Der wirklich beglichene
---      Betrag ist sum(rechnung_zahlungen.betrag_eur) zu dieser invoice_id — die
---      Storno-Zeilen zaehlen negativ mit. Wer den Offenbetrag aus payment_status
---      ableitet statt aus dem Ledger, rechnet Teilzahlungen falsch.
---      Geschrieben wird ausschliesslich ueber rechnung_zahlung_buchen(); die
---      Funktion setzt payment_status im selben Schritt mit.
---   ★ storno_grund / storno_am (07.09.2026) — Gegenbuchung einer bereits
---      festgeschriebenen Rechnung. Ersetzt KEINE Korrektur am Original: das
---      bleibt unveraendert stehen (GoBD), der Storno ist ein eigener Vorgang.
+--   FK business_id -> businesses(id)
+--   FK lead_id -> leads(id)
+--   FK owner_id -> auth.users(id)
+--   FK patient_id -> leads(id)
+--   FK prescription_id -> prescriptions(id)
+--   FK verordnung_id -> prescriptions(id)
+ALTER TABLE ONLY public.invoices OWNER TO postgres;
+COMMENT ON COLUMN public.invoices.prescription_id IS 'Linked Muster-13/Blanko prescription (multi-prescription patients). Set automatically when invoice is created from a physio workflow.';
+COMMENT ON COLUMN public.invoices.invoice_type IS 'gkv = GKV Abrechnung (fixed tariff + Zuzahlung), privat = Privatrechnung (practice prices, no Zuzahlung)';
+COMMENT ON COLUMN public.invoices.verordnung_id IS 'Podologie-Verordnung (verordnungen.id). Gegenstueck zu prescription_id fuer den Physio/Ergo/Logo-Topf. Es ist immer hoechstens eines von beiden gesetzt.';
+COMMENT ON COLUMN public.invoices.tax_summary IS 'Eingefrorene Aufschluesselung je Steuersatz/Befreiung (§ 14 Abs. 4 Nr. 7 UStG): [{satz, grund, netto, steuer, brutto}].';
+COMMENT ON COLUMN public.invoices.steuerhinweis_text IS 'Wortlaut des gedruckten Steuerhinweises, eingefroren. Nicht zur Druckzeit aus profiles lesen — sonst druckt dieselbe Rechnung in zwei Jahren anders (GoBD Rz. 107 ff., § 146 Abs. 4 AO).';
+COMMENT ON COLUMN public.invoices.steuernummer_snapshot IS 'Steuernummer der Praxis zum Zeitpunkt der Rechnungsstellung (Snapshot, § 14 Abs. 4 Nr. 2 UStG).';
 
-CREATE TABLE kostentraeger (
-  ik text NOT NULL
-  name text NOT NULL
-  das_ik text
-  payer_type text
-  region text
-  active boolean DEFAULT true
-  valid_from date
-  valid_to date
-  updated_at timestamptz DEFAULT now()
-  kurzname text
-  abrechnender_kt_ik text
-  ist_abrechnender_kt boolean DEFAULT false
-  quelle text
-  quelle_stand date
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_ein_verordnungsbezug CHECK (prescription_id IS NULL OR verordnung_id IS NULL);
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_invoice_type_check CHECK (invoice_type IS NULL OR (invoice_type = ANY (ARRAY['gkv'::text, 'privat'::text, 'selbstzahler'::text])));
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_owner_invoice_number_unique UNIQUE (owner_id, invoice_number);
+COMMENT ON CONSTRAINT invoices_owner_invoice_number_unique ON public.invoices IS 'Prevents duplicate invoice numbers per tenant (GoBD sequential uniqueness); NULL invoice_number allowed for drafts (Postgres treats NULLs as distinct).';
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id);
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_payment_method_check CHECK (payment_method = ANY (ARRAY['bar'::text, 'karte'::text, 'lastschrift'::text, 'ueberweisung'::text, 'sonstiges'::text]));
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_payment_status_check CHECK (payment_status = ANY (ARRAY['pending'::text, 'paid'::text, 'partial'::text]));
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_status_check CHECK (status = ANY (ARRAY['draft'::text, 'sent'::text, 'paid'::text, 'cancelled'::text]));
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_steuer_status_check CHECK (steuer_status IS NULL OR (steuer_status = ANY (ARRAY['regel'::text, 'kleinunternehmer'::text])));
+
+ALTER TABLE ONLY public.invoices
+  ADD CONSTRAINT invoices_verordnung_id_fkey FOREIGN KEY (verordnung_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+CREATE TABLE public.kiosk_pins (
+  user_id uuid NOT NULL,
+  pin_hash text NOT NULL,
+  failed_attempts integer DEFAULT 0 NOT NULL,
+  locked_until timestamp with time zone,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK user_id -> profiles(id)
+ALTER TABLE ONLY public.kiosk_pins OWNER TO postgres;
+COMMENT ON TABLE public.kiosk_pins IS 'Kiosk-PIN als scrypt-Hash (Node crypto.scrypt, keine externe Abhaengigkeit). Kein RLS-Policy = kein Zugriff fuer anon/authenticated; Pruefung laeuft ausschliesslich ueber api-backend POST /api/kiosk/pin/verify.';
+
+ALTER TABLE ONLY public.kiosk_pins
+  ADD CONSTRAINT kiosk_pins_pkey PRIMARY KEY (user_id);
+
+ALTER TABLE ONLY public.kiosk_pins
+  ADD CONSTRAINT kiosk_pins_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+CREATE TABLE public.kostentraeger (
+  ik text NOT NULL,
+  name text NOT NULL,
+  das_ik text,
+  payer_type text,
+  region text,
+  active boolean DEFAULT true,
+  valid_from date,
+  valid_to date,
+  updated_at timestamp with time zone DEFAULT now(),
+  kurzname text,
+  abrechnender_kt_ik text,
+  ist_abrechnender_kt boolean DEFAULT false,
+  quelle text,
+  quelle_stand date,
   datensatz_status text DEFAULT 'echt'::text
 );
---   CHECK payer_type IN (gkv, sonst, privat) · PK (ik)
---   CHECK datensatz_status IN (echt, mock_unbestaetigt)
---   ✅ Seit 06.09.2026 ECHTDATEN (Migration kostentraeger_echtdaten_struktur,
---      Ops #264). Hier stand bis dahin „Aktuell Mock-Daten, ITSG-Zugang steht
---      aus“ — das war ab dem 05.09.2026 falsch.
---      Live gezählt am 06.09.2026: 1052 Zeilen = 1043 `echt` + 9
---      `mock_unbestaetigt`. Die 1043 stammen aus 6 Dateien der TP5-Kosten-
---      trägerdatei (wissensbank/gemeinsam/kostentraeger/*.txt, Parser
---      api-backend/billing/kostentraeger/parser.js).
---
---   ⚠️ das_ik ist VERALTET — nicht mehr lesen.
---      Eine einzige DAS-IK pro Kostenträger ist fachlich falsch: die
---      Datenannahmestelle hängt von Abrechnungscode UND Bundesland ab.
---      Richtige Quelle: `kostentraeger_annahmestellen`.
---      Die Spalte ist nur noch in 16 Zeilen gefüllt, und das sind GENAU die
---      16 IKs des alten `v14_kostentraeger_mock_seed`. Sie ist also kein
---      „zu 98 % unfertiger Backfill“, sondern ein Rest, der stehenblieb.
---      ⛔ api-backend/billing/api/abrechnung.routes.js:1999 und :2203 lesen
---         sie noch (`kk.das_ik || kostentraegerIk`) — offener Punkt, siehe
---         db/REGISTER.md → `kostentraeger`.
---
---   Aufbau der n:1-Beziehung (VKG-Verknüpfungsart 01):
---      ist_abrechnender_kt = true  → diese IK rechnet selbst ab (302 Zeilen)
---      abrechnender_kt_ik  = <IK>  → Mitglieds-/Karten-IK, abgerechnet wird
---                                    bei dieser anderen IK (741 Zeilen)
---      Die beiden Mengen sind disjunkt und decken alle 1043 echten Zeilen ab
---      (live geprüft: „weder noch“ = 0). Beispiel: 100167999 DAK-Gesundheit
---      (Karten-IK) → 105830016 DAK-Gesundheit (abrechnend).
---
---   quelle / quelle_stand / datensatz_status = Herkunftsnachweis je Zeile:
---      Dateiname · Gültigkeitsstand der Datei · echt|mock_unbestaetigt.
---      Damit ist beim nächsten Quartals-Update sichtbar, welche Zeilen aus
---      welcher Lieferung stammen — und welche noch aus dem Mock übrig sind.
+ALTER TABLE ONLY public.kostentraeger OWNER TO postgres;
+COMMENT ON COLUMN public.kostentraeger.das_ik IS 'VERALTET - nicht mehr lesen. Eine einzelne DAS-IK ist fachlich falsch: die Datenannahmestelle haengt von Abrechnungscode UND Bundesland ab. Quelle ist kostentraeger_annahmestellen.';
+COMMENT ON COLUMN public.kostentraeger.abrechnender_kt_ik IS 'VKG-Verknuepfungsart 01: IK der Versichertenkarte -> abrechnender Kostentraeger. NULL = dieser IK rechnet selbst ab.';
 
-CREATE TABLE kostentraeger_annahmestellen (
-  id bigint NOT NULL GENERATED ALWAYS AS IDENTITY
-  kostentraeger_ik text NOT NULL
-  verknuepfungsart text NOT NULL
-  partner_ik text NOT NULL
-  leistungserbringergruppe text NOT NULL DEFAULT ''::text
-  abrechnungscode text NOT NULL DEFAULT ''::text
-  art_datenlieferung text NOT NULL DEFAULT ''::text
-  uebermittlungsmedium text NOT NULL DEFAULT ''::text
-  bundesland text NOT NULL DEFAULT ''::text
-  quelle text
-  quelle_stand date
-  updated_at timestamptz DEFAULT now()
-  valid_from date                               -- 0046: erster gueltiger Tag (inkl.), NULL = offen
-  valid_to date                                 -- 0046: letzter gueltiger Tag (inkl.), NULL = offen
+ALTER TABLE ONLY public.kostentraeger
+  ADD CONSTRAINT kostentraeger_datensatz_status_check CHECK (datensatz_status = ANY (ARRAY['echt'::text, 'mock_unbestaetigt'::text]));
+
+ALTER TABLE ONLY public.kostentraeger
+  ADD CONSTRAINT kostentraeger_payer_type_check CHECK (payer_type = ANY (ARRAY['gkv'::text, 'sonst'::text, 'privat'::text]));
+
+ALTER TABLE ONLY public.kostentraeger
+  ADD CONSTRAINT kostentraeger_pkey PRIMARY KEY (ik);
+
+CREATE TABLE public.kostentraeger_annahmestellen (
+  id bigint GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1) NOT NULL,
+  kostentraeger_ik text NOT NULL,
+  verknuepfungsart text NOT NULL,
+  partner_ik text NOT NULL,
+  leistungserbringergruppe text DEFAULT ''::text NOT NULL,
+  abrechnungscode text DEFAULT ''::text NOT NULL,
+  art_datenlieferung text DEFAULT ''::text NOT NULL,
+  uebermittlungsmedium text DEFAULT ''::text NOT NULL,
+  bundesland text DEFAULT ''::text NOT NULL,
+  quelle text,
+  quelle_stand date,
+  updated_at timestamp with time zone DEFAULT now(),
+  valid_from date,
+  valid_to date
 );
---   PK (id) · FK kostentraeger_ik -> kostentraeger(ik) ON DELETE CASCADE
---   UNIQUE (kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode,
---           art_datenlieferung, uebermittlungsmedium, bundesland)
---   Seit 06.09.2026 · Migration kostentraeger_echtdaten_struktur (Ops #264)
---
---   Die VKG-Segmente der TP5-Kostenträgerdatei. Beantwortet die einzige Frage,
---   die beim §302-Versand wirklich zählt: **wohin schicke ich diese Datei?**
---   Der Schlüssel dazu ist vierteilig —
---       (kostentraeger_ik, abrechnungscode, art_datenlieferung, bundesland)
---   und genau deshalb reicht die alte Einzelspalte kostentraeger.das_ik nicht.
---
---   verknuepfungsart (Anhang 3 Anlage 1 TP5, Abschnitt 5):
---      01 = Verweis auf den abrechnenden Kostenträger
---      02 = Datenannahmestelle OHNE Entschlüsselungsbefugnis
---      03 = Datenannahmestelle MIT Entschlüsselungsbefugnis
---      09 = Papierannahmestelle
---   abrechnungscode (Anhang 3 Anlage 1 TP5 §8.14) — für uns:
---      71 = Podologen · 72 = Med. Fußpfleger · 20 = Gruppenschlüssel
---      Heilmittelerbringer (21-29) · 00 = Sammelschlüssel · 99 = Sonderschlüssel
---   art_datenlieferung: nur 07 und 30 gelten für die elektronische Abrechnung
---      (Abschnitt 5.2). 21/24/26/28/29 gehören zu Papierannahmestellen.
---
---   ✅ VOLLSTÄNDIG GELADEN (live gezählt 20.09.2026): 11407 Zeilen aus 6 von 6
---      Quelldateien. Jede Datei trägt jetzt genau so viele Zeilen, wie der
---      Rohtext VKG-Segmente hat:
---          AO05Q326_KE3   764 · BK05Q326_KE1  3234 · BN050526_KE0  6183
---          EK05Q226_KE0   724 · IK05Q326_KE1   475 · LK05Q226_KE0    27
---      ⚠️ Hier stand bis zum 20.09.2026 der Stand vom 06.09. ("2800 Zeilen,
---      nur 4 von 6 Dateien, 110 von 302 Kostenträgern ohne Datenannahmestelle,
---      darunter TK/BARMER/DAK"). Das war überholt und damit die gefährliche
---      Sorte falsch: wer es liest, hält einen gelösten Blocker für offen.
---      Live gegengeprüft am 20.09.2026: TK (101575519) hat 25,
---      BARMER (104940005) 49, DAK-Gesundheit (105830016) 18 Zeilen mit
---      Verknüpfungsart 02/03 — der DTA-Empfänger löst für alle drei auf.
---      Ebenfalls korrigiert: geladen ist jetzt EK05Q2 26 (gültig ab
---      01.04.2026, also die HEUTE gültige Ausgabe), nicht mehr das zu früh
---      eingespielte EK05Q426. Der Stichtagsfehler ist damit weg, und das
---      Ladescript warnt von selbst, wenn ein "gültig ab" in der Zukunft liegt.
---   ⏳ OFFEN bleibt ein kleinerer Rest: 82 der 302 abrechnenden Kostenträger
---      haben weiterhin keine eigene Zeile mit Verknüpfungsart 02/03 (vorher
---      110). Das ist kein Ladefehler mehr, sondern die Datenlage — für diese
---      Kostenträger führt der Weg über die Verweiskette (Verknüpfungsart 01)
---      bzw. den abrechnenden Kostenträger. Die Fallback-Kette entscheidet
---      `gkv-302`, siehe db/REGISTER.md.
+--   FK kostentraeger_ik -> kostentraeger(ik)
+ALTER TABLE ONLY public.kostentraeger_annahmestellen OWNER TO postgres;
+COMMENT ON TABLE public.kostentraeger_annahmestellen IS 'VKG-Segmente der TP5-Kostentraegerdatei. Aufloesung "wohin sende ich die 302-Datei" = (kostentraeger_ik, abrechnungscode, art_datenlieferung, bundesland).';
+COMMENT ON COLUMN public.kostentraeger_annahmestellen.verknuepfungsart IS '01=Verweis auf abrechnenden Kostentraeger · 02=DAS ohne Entschluesselungsbefugnis · 03=DAS mit Entschluesselungsbefugnis · 09=Papierannahmestelle (Anhang 3 Anlage 1 TP5, Abschnitt 5)';
+COMMENT ON COLUMN public.kostentraeger_annahmestellen.abrechnungscode IS 'Schluessel Abrechnungscode, Anhang 3 Anlage 1 TP5 §8.14. Fuer uns: 71=Podologen · 72=Med. Fusspfleger · 20=Gruppenschluessel Heilmittelerbringer (21-29) · 00=Sammelschluessel · 99=Sonderschluessel.';
+COMMENT ON COLUMN public.kostentraeger_annahmestellen.art_datenlieferung IS 'Nur 07 oder 30 sind fuer elektronische Abrechnung gueltig (Abschnitt 5.2). 21/24/26/28/29 gehoeren zu Papierannahmestellen.';
+COMMENT ON COLUMN public.kostentraeger_annahmestellen.valid_from IS 'Erster Tag, an dem diese VKG-Zeile gilt (inklusive). NULL = von Anfang an. Wird beim Nachladen NIE ueberschrieben (sonst stuende eine heute gueltige Zeile ohne Empfaenger da).';
+COMMENT ON COLUMN public.kostentraeger_annahmestellen.valid_to IS 'Letzter Tag, an dem diese VKG-Zeile gilt (inklusive). NULL = offen. Faellt der Schluessel im neuen Kostentraegerdatei-Stand weg: gueltigAb der neuen Ausgabe minus 1 Tag. Kehrt er zurueck: wieder NULL.';
 
--- 20.09.2026 (0032) — Postanschriften aus dem ANS-Segment der
--- Kostentraegerdatei. Eine §302-Abrechnung besteht aus sechs Teilen, darunter
--- die Urbelege im ORIGINAL — und die gehen per Post an die Papierannahmestelle
--- (Verknuepfungsart 09), nicht an die Datenannahmestelle (02/03). Der
--- Begleitzettel trug bisher keine Empfaengeradresse, weil sie nirgends stand.
--- Kindtabelle und keine flachen Spalten an `kostentraeger`: das ANS-Segment ist
--- wie VKG wiederholbar (Haus, Postfach und Grosskunde koennen nebeneinander
--- stehen). Eine Einzelspalte waere exakt der Fehler von `kostentraeger.das_ik`.
-CREATE TABLE kostentraeger_anschriften (
-  id bigint NOT NULL GENERATED ALWAYS AS IDENTITY
-  kostentraeger_ik text NOT NULL
-  art text NOT NULL
-  plz text NOT NULL DEFAULT ''::text
-  ort text NOT NULL DEFAULT ''::text
-  strasse text NOT NULL DEFAULT ''::text
-  quelle text
-  quelle_stand date
-  updated_at timestamptz NOT NULL DEFAULT now()
-  valid_from date                               -- 0046: erster gueltiger Tag (inkl.), NULL = offen
-  valid_to date                                 -- 0046: letzter gueltiger Tag (inkl.), NULL = offen
+ALTER TABLE ONLY public.kostentraeger_annahmestellen
+  ADD CONSTRAINT kostentraeger_annahmestellen_kostentraeger_ik_fkey FOREIGN KEY (kostentraeger_ik) REFERENCES kostentraeger(ik) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.kostentraeger_annahmestellen
+  ADD CONSTRAINT kostentraeger_annahmestellen_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.kostentraeger_annahmestellen
+  ADD CONSTRAINT kostentraeger_annahmestellen_uniq UNIQUE (kostentraeger_ik, verknuepfungsart, partner_ik, abrechnungscode, art_datenlieferung, uebermittlungsmedium, bundesland);
+
+CREATE TABLE public.kostentraeger_anschriften (
+  id bigint GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1) NOT NULL,
+  kostentraeger_ik text NOT NULL,
+  art text NOT NULL,
+  plz text DEFAULT ''::text NOT NULL,
+  ort text DEFAULT ''::text NOT NULL,
+  strasse text DEFAULT ''::text NOT NULL,
+  quelle text,
+  quelle_stand date,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  valid_from date,
+  valid_to date
 );
---   CHECK art IN (1, 2, 3)
---   FK kostentraeger_ik -> kostentraeger(ik) ON DELETE CASCADE
---   PK (id) · UNIQUE (kostentraeger_ik, art, plz, ort, strasse)
---   ★ art nach Anhang 03 zu Anlage 1 TP5 V10 § 7: '1' Hausanschrift,
---     '2' Postfach, '3' Grosskunde.
---   ★ ALLE ANS-Zeilen werden unveraendert gespeichert. Die Vorzugsreihenfolge
---     1 > 2 > 3 wird beim LESEN angewandt (waehlePostanschrift() in
---     billing/kostentraeger/parser.js) und bewusst NICHT in die Daten
---     eingebrannt — sonst geht Information verloren.
+--   FK kostentraeger_ik -> kostentraeger(ik)
+ALTER TABLE ONLY public.kostentraeger_anschriften OWNER TO postgres;
+COMMENT ON TABLE public.kostentraeger_anschriften IS 'Postanschriften der Kostentraeger und Papierannahmestellen aus dem ANS-Segment der Kostentraegerdatei (Anhang 03 V10 § 7, Richtlinien § 2(1)/§ 4). Kindtabelle, da wie VKG wiederholbar (Haus, Postfach, Grosskunde). Auswahl erfolgt leseseitig via waehlePostanschrift().';
+COMMENT ON COLUMN public.kostentraeger_anschriften.kostentraeger_ik IS 'Institutionskennzeichen des Kostentraegers bzw. der Papierannahmestelle (Fremdschluessel auf kostentraeger.ik).';
+COMMENT ON COLUMN public.kostentraeger_anschriften.art IS 'Art der Anschrift gemaess Anhang 03 V10 § 7: ''1'' = Hausanschrift, ''2'' = Postfach, ''3'' = Grosskunde.';
+COMMENT ON COLUMN public.kostentraeger_anschriften.quelle IS 'Dateiname der Kostentraegerdatei, aus der dieser Datensatz stammt (z. B. AO05Q326_KE3.txt).';
+COMMENT ON COLUMN public.kostentraeger_anschriften.quelle_stand IS 'Gueltigkeitsstichtag der Quelldatei gemaess Herausgeber / VDT-Segment.';
+COMMENT ON COLUMN public.kostentraeger_anschriften.valid_from IS 'Erster Tag, an dem diese ANS-Zeile gilt (inklusive). NULL = von Anfang an.';
+COMMENT ON COLUMN public.kostentraeger_anschriften.valid_to IS 'Letzter Tag, an dem diese ANS-Zeile gilt (inklusive). NULL = offen.';
 
-CREATE TABLE krankenkassen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  name text NOT NULL
-  abbreviation text
-  type text DEFAULT 'gesetzlich'::text
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.kostentraeger_anschriften
+  ADD CONSTRAINT kostentraeger_anschriften_art_chk CHECK (art = ANY (ARRAY['1'::text, '2'::text, '3'::text]));
+
+ALTER TABLE ONLY public.kostentraeger_anschriften
+  ADD CONSTRAINT kostentraeger_anschriften_kostentraeger_ik_fkey FOREIGN KEY (kostentraeger_ik) REFERENCES kostentraeger(ik) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.kostentraeger_anschriften
+  ADD CONSTRAINT kostentraeger_anschriften_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.kostentraeger_anschriften
+  ADD CONSTRAINT kostentraeger_anschriften_uniq UNIQUE (kostentraeger_ik, art, plz, ort, strasse);
+
+CREATE TABLE public.krankenkassen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  name text NOT NULL,
+  abbreviation text,
+  type text DEFAULT 'gesetzlich'::text,
+  created_at timestamp with time zone DEFAULT now(),
   ik_number text
 );
---   PK (id) — 94 Zeilen (live 21.09.2026). Quelle für das UI-Dropdown.
---   ⚠️ ik_number ist eine VORBELEGUNG, nur wenn die Kasse genau EINEN Kostenträger hat
---      (Ops #301, Konsey 21.09.2026). Live 21.09.2026: 76 von 94 gefüllt, davon 9 IKs,
---      die in der Kostenträgerdatei nicht existieren (alter Mock-Seed) — die Migration
---      0041_krankenkassen_ik_nachtrag räumt sie auf (vorbereitet, noch nicht angewandt).
---      Kassen mit mehreren echten IKs (AOK BW: 14 gleichrangige Bezirks-IKs) bleiben NULL:
---      die richtige IK hängt an der Versichertenkarte, nicht an der Kasse.
---      Details und Begründung: db/REGISTER.md, Eintrag `krankenkassen`.
---   ⚠️ loadKkList() (dashboard.js) füttert das Feld podNewKk → prescriptions.kostentraeger_ik
---      → DTA „IK des Kostenträgers": eine geratene IK bedeutet Dateiabweisung/Fehlleitung.
---   ⚠️ Nicht dasselbe wie `kostentraeger` (das ist die §302-Seite).
+ALTER TABLE ONLY public.krankenkassen OWNER TO postgres;
 
-CREATE TABLE kiosk_pins (
-  user_id uuid NOT NULL
-  pin_hash text NOT NULL
-  failed_attempts integer NOT NULL DEFAULT 0
-  locked_until timestamptz
-  updated_at timestamptz NOT NULL DEFAULT now()
-  created_at timestamptz NOT NULL DEFAULT now()
-);
---   PK (user_id) · FK user_id -> profiles(id) ON DELETE CASCADE
---   Kiosk-PIN als scrypt-Hash (Node crypto.scrypt, keine externe Abhängigkeit).
---   ⚠️ RLS aktiv, aber BEWUSST OHNE POLICY + REVOKE ALL FROM anon, authenticated
---     → nur service_role kommt ran. Ein 4-stelliger PIN wäre im Client in
---     Millisekunden durchprobiert (10.000 Kandidaten); der Hash darf den Server
---     nie verlassen. Prüfung ausschließlich über POST /api/kiosk/pin/verify.
---   Ersetzt die gelöschte Klartext-Spalte `profiles.tablet_kiosk_pin`
---   (Konsey 2026-08-14, Art. 32 Abs. 1 TOM).
+ALTER TABLE ONLY public.krankenkassen
+  ADD CONSTRAINT krankenkassen_pkey PRIMARY KEY (id);
 
-CREATE TABLE leads (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  title text NOT NULL
-  total_score numeric
-  reviews_count integer
-  street text
-  city text
-  state text
-  country_code text
-  website text
-  phone text
-  categories text[]
-  category_name text
-  google_url text
-  email text
-  status text DEFAULT 'new'::text
-  notes text
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  phone_normalized text
-  handy text
-  handy_normalized text
-  patientennummer integer
-  first_name text
-  last_name text
-  metadata jsonb DEFAULT '{}'::jsonb
-  hausbesuch boolean DEFAULT false
-  besondere_wuensche text
-  arzt_id uuid
-  geschlecht text                       -- m | f | d  (NULL = keine Angabe); NIE 'w'
-  geburtsdatum date
-  versichertennummer text
-  krankenkasse text
-  plz text
-  location geography(Point,4326)
-  distance_km numeric(6,2)
-  duration_min integer
-  route_calculated_at timestamptz
-  lat numeric(9,6)
-  lng numeric(9,6)
-  business_id uuid
-  insurance_type text
-  versichertenstatus text
-  ausfallvereinbarung_am date
-  podologie_altbestand_vor_2023 boolean
-  podologie_altbestand_beantwortet_am timestamptz
+CREATE TABLE public.leads (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  title text NOT NULL,
+  total_score numeric,
+  reviews_count integer,
+  street text,
+  city text,
+  state text,
+  country_code text,
+  website text,
+  phone text,
+  categories text[],
+  category_name text,
+  google_url text,
+  email text,
+  status text DEFAULT 'new'::text,
+  notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  phone_normalized text,
+  first_name text,
+  last_name text,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  hausbesuch boolean DEFAULT false,
+  besondere_wuensche text,
+  arzt_id uuid,
+  geschlecht text,
+  geburtsdatum date,
+  versichertennummer text,
+  krankenkasse text,
+  plz text,
+  location geography(Point,4326),
+  distance_km numeric(6,2),
+  duration_min integer,
+  route_calculated_at timestamp with time zone,
+  lat numeric(9,6),
+  lng numeric(9,6),
+  business_id uuid,
+  insurance_type text,
+  versichertenstatus text,
+  ausfallvereinbarung_am date,
+  handy text,
+  handy_normalized text,
+  patientennummer integer,
+  podologie_altbestand_vor_2023 boolean,
+  podologie_altbestand_beantwortet_am timestamp with time zone,
   krankenkasse_ik text
 );
---   CHECK geschlecht IN (m, f, d) · insurance_type IN (gkv, privat)
---   CHECK krankenkasse_ik IS NULL ODER MATCHES ^[0-9]{9}$  (leads_krankenkasse_ik_format)
---   ★ `geschlecht`: m = männlich, f = weiblich, d = divers (§ 22 Abs. 3 PStG),
---      NULL = keine Angabe (der Normalfall). **Nicht `w`** — der CHECK weist es ab
---      und der INSERT scheitert. Bis 16.08.2026 schrieben zwei Pfade genau das:
---      die Schnellanlage ausgeschrieben („weiblich“) und die Rezept-OCR „w“.
---      Schreibpfade gehen jetzt durch module/geschlecht.js bzw.
---      api-backend/lib/geschlecht.js. Die Spalte trägt denselben Hinweis als
---      COMMENT in der DB.
---   CHECK status IN (new, contacted, booked, won, lost)
---   FK arzt_id -> aerzte(id) · PK (id)
---   ⚠️ `status` ist der ALTE CRM-Trichter und wird im Praxisablauf seit dem
---      14.08.2026 weder gesetzt noch angezeigt. Nur die alten B2B/B2C-Panels
---      lesen ihn noch (dashboard.html:988, :1079). Der Status, der zählt,
---      steht an der Verordnung (prescriptions.abrechnung_status, podologisch
---      übersetzt über module/verordnung-topf.js).
---   ⚠️ `phone` = Festnetz/Hauptnummer — der Buchungsabgleich hängt an
---      phone_normalized. `handy` ist die Zweitnummer (seit 14.08.2026).
---   ⚠️ `patientennummer` vergibt der Trigger vergebe_patientennummer() BEFORE
---      INSERT — je owner_id fortlaufend ab 1, mit Advisory Lock gegen doppelte
---      Vergabe bei gleichzeitigem Anlegen. NICHT im Client setzen.
---      UNIQUE (owner_id, patientennummer)
---   ★ DIES IST DIE HAUPT-PATIENTENTABELLE, trotz des Namens "leads".
---     Historisch als Akquise-Tabelle entstanden (title, google_url,
---     reviews_count stammen daher), heute die reale Patientenakte.
---     anamnese, prescriptions, invoices, messreihen, pat_fussbefund,
---     fahrten, ausfallrechnungen hängen alle hier dran.
---   ⚠️ KEINE Feldverschlüsselung (korrigiert 30.09.2026, Reform 3.12).
---     Die Spalten first_name_enc, last_name_enc, phone_enc, geburtsdatum_enc,
---     versichertennummer_enc, krankenkasse_enc, pii_encrypted und der Index
---     idx_leads_pii_not_encrypted wurden NIE beschrieben (live 30.09.2026:
---     0 Zeilen mit *_enc, 0 mit pii_encrypted=true). Identitätsfelder stehen
---     im Klartext; Schutz = RLS + Verschlüsselung at rest. Der frühere
---     Kommentar "★ PII-Verschlüsselung" versprach etwas, das es nie gab.
---     ✅ 01.10.2026 (0051, Freigabe Kemal): die sieben Spalten und der Index
---     sind entfernt.
---     Reste — vorgemerkt für Entfernung in zwei Schritten (erst leeren,
---     dann DROP), nur mit Kemals Freigabe. Siehe db/REGISTER.md → leads.
---   ★ podologie_altbestand_vor_2023 (17.09.2026, Ops #244): NULL = noch nicht
---     gefragt/unbekannt, true/false = Patient hat vor dem 01.11.2023 erstmals
---     podologische Behandlung begonnen (HPNR 78040, Aenderungsvereinbarung
---     20.10.2023 -- kein Anspruch, wenn true). Patientenbezogen, nicht
---     verordnungsbezogen (wissensbank/SPEC-RULES.md:139-168), deshalb hier und
---     nicht an prescriptions. podologie_altbestand_beantwortet_am haelt fest,
---     WANN geantwortet wurde -- Beleg gegenueber der Kasse, kein fluechtiger
---     Dialog. Schreibpunkt noch offen (Ops #244 UI-Teil steht aus); die
---     Migration legt nur die Spalten an.
---   ★ krankenkasse_ik (30.09.2026, Migration 0044, Reform S3.8b): Karten-IK
---     des Patienten (Aufdruck der Versichertenkarte) — gleiche Bedeutung wie
---     prescriptions.krankenkasse_ik, NICHT die Kostentraeger-IK. Vorbelegung
---     fuer neue Verordnungen (beim Anlegen nach prescriptions kopiert,
---     Momentaufnahme). Kein FK auf kostentraeger (Quartalsaustausch).
---     NULL = nicht erfasst. Traegt denselben Hinweis als COMMENT in der DB.
+--   FK arzt_id -> aerzte(id)
+--   FK business_id -> businesses(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.leads OWNER TO postgres;
+COMMENT ON COLUMN public.leads.phone IS 'Festnetz / Hauptnummer. Buchungsabgleich laeuft ueber phone_normalized.';
+COMMENT ON COLUMN public.leads.geschlecht IS 'Geschlecht des Patienten. Erlaubt: m = maennlich, f = weiblich, d = divers (§22 Abs.3 PStG). NULL = keine Angabe und der Normalfall. ACHTUNG: NICHT "w" fuer weiblich — der CHECK leads_geschlecht_check laesst nur m/f/d durch. Schreibpfade normalisieren ueber module/geschlecht.js (Frontend) bzw. api-backend/lib/geschlecht.js (Backend).';
+COMMENT ON COLUMN public.leads.insurance_type IS 'gkv = gesetzlich versichert (fixed tariff prices), privat = privatversichert (practice-set prices)';
+COMMENT ON COLUMN public.leads.ausfallvereinbarung_am IS 'Datum, an dem der Patient die Ausfallvereinbarung unterschrieben hat. NULL = liegt nicht vor bzw. nicht erfasst; die Ausfallrechnung wird dann nur mit Warnhinweis erstellt.';
+COMMENT ON COLUMN public.leads.handy IS 'Mobilnummer. Zweitnummer neben phone, seit 14.08.2026 getrennt gefuehrt.';
+COMMENT ON COLUMN public.leads.patientennummer IS 'Fortlaufende Nummer je Praxis, ab 1. Vergabe durch Trigger vergebe_patientennummer().';
+COMMENT ON COLUMN public.leads.podologie_altbestand_vor_2023 IS 'NULL = noch nicht gefragt/unbekannt. true/false = Patient hat vor dem 01.11.2023 erstmals podologische Behandlung begonnen (HPNR 78040 Aenderungsvereinbarung 20.10.2023). Ops #244.';
+COMMENT ON COLUMN public.leads.podologie_altbestand_beantwortet_am IS 'Wann die Altbestand-Frage beantwortet wurde — dient als Beleg gegenueber der Kasse, ein fluechtiger Dialog reicht laut SPEC-RULES.md nicht. Ops #244.';
+COMMENT ON COLUMN public.leads.krankenkasse_ik IS 'IK der Krankenkasse von der Versichertenkarte des Patienten (Karten-IK, §302 Anlage 1 TP5 V21 § 5.5.3.1). Gleiche Bedeutung wie prescriptions.krankenkasse_ik, NICHT die Kostentraeger-IK. Vorbelegung fuer neue Verordnungen. NULL = nicht erfasst.';
 
-CREATE TABLE mahnungen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  prescription_id uuid
+ALTER TABLE ONLY public.leads
+  ADD CONSTRAINT leads_arzt_id_fkey FOREIGN KEY (arzt_id) REFERENCES aerzte(id);
+
+ALTER TABLE ONLY public.leads
+  ADD CONSTRAINT leads_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.leads
+  ADD CONSTRAINT leads_geschlecht_check CHECK (geschlecht = ANY (ARRAY['m'::text, 'f'::text, 'd'::text]));
+
+ALTER TABLE ONLY public.leads
+  ADD CONSTRAINT leads_insurance_type_check CHECK (insurance_type = ANY (ARRAY['gkv'::text, 'privat'::text]));
+
+ALTER TABLE ONLY public.leads
+  ADD CONSTRAINT leads_krankenkasse_ik_format CHECK (krankenkasse_ik IS NULL OR krankenkasse_ik ~ '^[0-9]{9}$'::text);
+
+ALTER TABLE ONLY public.leads
+  ADD CONSTRAINT leads_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.leads
+  ADD CONSTRAINT leads_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.leads
+  ADD CONSTRAINT leads_status_check CHECK (status = ANY (ARRAY['new'::text, 'contacted'::text, 'booked'::text, 'won'::text, 'lost'::text]));
+
+CREATE TABLE public.mahnungen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  prescription_id uuid,
+  patient_id uuid,
+  mahnung_nr bigint NOT NULL,
+  level smallint NOT NULL,
+  amount_eur numeric(10,2) NOT NULL,
+  original_faelligkeit date NOT NULL,
+  neue_faelligkeit date NOT NULL,
+  sent_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  status text DEFAULT 'offen'::text NOT NULL,
+  notes text,
   ausfallrechnung_id uuid
-  patient_id uuid
-  mahnung_nr bigint NOT NULL
-  level smallint NOT NULL
-  amount_eur numeric(10,2) NOT NULL
-  original_faelligkeit date NOT NULL
-  neue_faelligkeit date NOT NULL
-  sent_at timestamptz DEFAULT timezone('utc', now())
-  status text NOT NULL DEFAULT 'offen'::text
-  notes text
 );
---   CHECK level BETWEEN 1 AND 3 · status IN (offen, bezahlt, abgeschrieben)
---   PK (id) · UNIQUE (owner_id, mahnung_nr) · nr via TRIGGER
---   FK ausfallrechnung_id -> ausfallrechnungen(id) ON DELETE CASCADE
---   CHECK mahnungen_genau_eine_quelle:
---        num_nonnulls(prescription_id, ausfallrechnung_id) = 1
---      Eine Mahnung hängt an GENAU EINER Quelle — Rezept (offene Zuzahlung)
---      ODER Ausfallrechnung. Deshalb ist prescription_id nicht mehr NOT NULL.
+--   FK ausfallrechnung_id -> ausfallrechnungen(id)
+--   FK owner_id -> profiles(id)
+--   FK patient_id -> leads(id)
+--   FK prescription_id -> prescriptions(id)
+ALTER TABLE ONLY public.mahnungen OWNER TO postgres;
+COMMENT ON COLUMN public.mahnungen.ausfallrechnung_id IS 'Gemahnte Ausfallrechnung. Genau eines von prescription_id / ausfallrechnung_id ist gesetzt (CHECK mahnungen_genau_eine_quelle).';
 
-CREATE TABLE messreihen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  lead_id uuid NOT NULL
-  prescription_id uuid
-  typ text NOT NULL
-  koerperteil text
-  wert numeric(6,2) NOT NULL
-  einheit text NOT NULL DEFAULT 'Punkte'::text
-  gemessen_am timestamptz NOT NULL DEFAULT now()
-  notiz text
-  erfasst_von uuid
-  created_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.mahnungen
+  ADD CONSTRAINT mahnungen_ausfallrechnung_id_fkey FOREIGN KEY (ausfallrechnung_id) REFERENCES ausfallrechnungen(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.mahnungen
+  ADD CONSTRAINT mahnungen_genau_eine_quelle CHECK (num_nonnulls(prescription_id, ausfallrechnung_id) = 1);
+
+ALTER TABLE ONLY public.mahnungen
+  ADD CONSTRAINT mahnungen_level_check CHECK (level >= 1 AND level <= 3);
+
+ALTER TABLE ONLY public.mahnungen
+  ADD CONSTRAINT mahnungen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.mahnungen
+  ADD CONSTRAINT mahnungen_owner_id_mahnung_nr_key UNIQUE (owner_id, mahnung_nr);
+
+ALTER TABLE ONLY public.mahnungen
+  ADD CONSTRAINT mahnungen_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.mahnungen
+  ADD CONSTRAINT mahnungen_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.mahnungen
+  ADD CONSTRAINT mahnungen_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.mahnungen
+  ADD CONSTRAINT mahnungen_status_check CHECK (status = ANY (ARRAY['offen'::text, 'bezahlt'::text, 'abgeschrieben'::text]));
+
+CREATE TABLE public.messreihen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  lead_id uuid NOT NULL,
+  prescription_id uuid,
+  typ text NOT NULL,
+  koerperteil text,
+  wert numeric(6,2) NOT NULL,
+  einheit text DEFAULT 'Punkte'::text NOT NULL,
+  gemessen_am timestamp with time zone DEFAULT now() NOT NULL,
+  notiz text,
+  erfasst_von uuid,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
 );
---   CHECK typ IN (VAS, ROM, kraft, custom) · PK (id)
---   Verlaufsmessung für Blankoverordnung.
+--   FK erfasst_von -> profiles(id)
+--   FK lead_id -> leads(id)
+--   FK owner_id -> profiles(id)
+--   FK prescription_id -> prescriptions(id)
+ALTER TABLE ONLY public.messreihen OWNER TO postgres;
 
-CREATE TABLE module_visibility (
-  module_id text NOT NULL
-  sector text NOT NULL
-  role text NOT NULL
-  enabled boolean NOT NULL DEFAULT true
-  updated_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.messreihen
+  ADD CONSTRAINT messreihen_erfasst_von_fkey FOREIGN KEY (erfasst_von) REFERENCES profiles(id);
+
+ALTER TABLE ONLY public.messreihen
+  ADD CONSTRAINT messreihen_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.messreihen
+  ADD CONSTRAINT messreihen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.messreihen
+  ADD CONSTRAINT messreihen_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.messreihen
+  ADD CONSTRAINT messreihen_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.messreihen
+  ADD CONSTRAINT messreihen_typ_check CHECK (typ = ANY (ARRAY['VAS'::text, 'ROM'::text, 'kraft'::text, 'custom'::text]));
+
+CREATE TABLE public.module_visibility (
+  module_id text NOT NULL,
+  sector text NOT NULL,
+  role text NOT NULL,
+  enabled boolean DEFAULT true NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
   updated_by uuid
 );
---   CHECK role IN (owner, employee) · PK (module_id, sector, role)
---   Gegenstück zu nav-registry.js. Schreiben nur is_admin().
+ALTER TABLE ONLY public.module_visibility OWNER TO postgres;
 
-CREATE TABLE nummernkreise (
-  owner_id uuid NOT NULL
-  kreis text NOT NULL
-  jahr int NOT NULL
-  last_nr bigint NOT NULL DEFAULT 0
+ALTER TABLE ONLY public.module_visibility
+  ADD CONSTRAINT module_visibility_pkey PRIMARY KEY (module_id, sector, role);
+
+ALTER TABLE ONLY public.module_visibility
+  ADD CONSTRAINT module_visibility_role_check CHECK (role = ANY (ARRAY['owner'::text, 'employee'::text]));
+
+CREATE TABLE public.nummernkreise (
+  owner_id uuid NOT NULL,
+  kreis text NOT NULL,
+  jahr integer NOT NULL,
+  last_nr bigint DEFAULT 0 NOT NULL
 );
---   FK owner_id -> profiles(id) ON DELETE CASCADE
---   PK (owner_id, kreis, jahr)
---   ★ Zählerzeile für lückenlose Rechnungsnummern. Vergabe ausschliesslich über
---     naechste_nummer(owner, kreis, jahr) — INSERT .. ON CONFLICT DO UPDATE ..
---     RETURNING sperrt die Zeile, zwei gleichzeitige Speicherungen bekommen
---     verschiedene Nummern (Konsey 2026-08-12 Kova 2).
---   ⚠️ RLS aktiv, absichtlich OHNE Policy: kein Client fasst den Zähler direkt
---     an, die Funktion läuft als SECURITY DEFINER.
---   Kreis heute: 'rechnung' (invoices). Die älteren Nummernkreise
---     (beleg_nr, mahnung_nr, ausfallrechnung_nr) zählen weiterhin per MAX+1
---     in ihren eigenen Triggern — bewusst nicht mitmigriert.
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.nummernkreise OWNER TO postgres;
 
-CREATE TABLE pat_fussbefund (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  lead_id uuid NOT NULL
-  erstellt_am timestamptz NOT NULL DEFAULT now()
-  befund jsonb NOT NULL DEFAULT '{}'::jsonb
-  markierungen jsonb NOT NULL DEFAULT '[]'::jsonb
-  notiz text
-  erfasst_von uuid
-  created_at timestamptz NOT NULL DEFAULT now()
-  booking_id uuid                        -- Termin, zu dem der Befund gehört
-  uebernommen_von uuid                   -- Herkunft der Übernahme (nur Doku)
-  eintrag_id uuid NOT NULL               -- Korrekturkette: Versionen DESSELBEN Befunds
-  version integer NOT NULL DEFAULT 1     -- Nummer im Eintrag — vergibt der Trigger
-  ist_aktuell boolean NOT NULL DEFAULT true  -- gültige Fassung des Eintrags
-  serie_id uuid NOT NULL                 -- Farbgruppe über Termine hinweg
-  serie_farbe text                       -- deren Farbe, als KOPIE in der Zeile
-  wagner_grad smallint                   -- 0047: Wagner 0-5, NULL = nicht erhoben (CHECK)
+ALTER TABLE ONLY public.nummernkreise
+  ADD CONSTRAINT nummernkreise_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.nummernkreise
+  ADD CONSTRAINT nummernkreise_pkey PRIMARY KEY (owner_id, kreis, jahr);
+
+CREATE TABLE public.pat_fussbefund (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  lead_id uuid NOT NULL,
+  erstellt_am timestamp with time zone DEFAULT now() NOT NULL,
+  befund jsonb DEFAULT '{}'::jsonb NOT NULL,
+  markierungen jsonb DEFAULT '[]'::jsonb NOT NULL,
+  notiz text,
+  erfasst_von uuid,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  booking_id uuid,
+  uebernommen_von uuid,
+  eintrag_id uuid NOT NULL,
+  version integer DEFAULT 1 NOT NULL,
+  ist_aktuell boolean DEFAULT true NOT NULL,
+  serie_id uuid NOT NULL,
+  serie_farbe text,
+  wagner_grad smallint
 );
---   FK lead_id -> leads(id) ON DELETE CASCADE · PK (id)
---   FK booking_id -> bookings(id) ON DELETE SET NULL
---   FK uebernommen_von -> pat_fussbefund(id) ON DELETE SET NULL
---   ★ UNIQUE (booking_id) WHERE booking_id IS NOT NULL AND ist_aktuell
---     → ein Termin trägt höchstens einen GÜLTIGEN Befund; dessen Vorversionen
---       dürfen daneben stehen.
---   ★ UNIQUE (eintrag_id) WHERE ist_aktuell · UNIQUE (eintrag_id, version)
---     → genau eine gültige Fassung je Eintrag, Nummern lückenlos eindeutig.
---       Gilt auch für Befunde OHNE Termin, die vorher gar nicht geschützt waren.
---   ★ Aktueller Podologie-Fußbefund (markierungen = Punkte auf der Fußgrafik).
---   ★ Jede Zeile ist ein VOLLSTÄNDIGER Schnappschuss. Ein Folgebefund wird als
---     Kopie des vorherigen angelegt (neue Zeile), nie als Verweis — sonst
---     änderte sich die Dokumentation eines vergangenen Termins rückwirkend.
---     `uebernommen_von` hält nur fest, wovon kopiert wurde.
---   ★ ZWEI ACHSEN, nicht verwechseln (30.08.2026):
---       eintrag_id  DERSELBE Befund, nochmal gespeichert. Statt UPDATE entsteht
---                   eine neue Zeile, version + 1, die alte wird ist_aktuell=false
---                   und bleibt lesbar. Vorher überschrieb das Modul — der Stand
---                   von letzter Woche war weg (§ 630f BGB: der ursprüngliche
---                   Inhalt muss erkennbar bleiben).
---       serie_id    Farbgruppe über Termine hinweg — was der Podologe als „ein
---                   Fußbefund und seine Fortschreibungen" sieht. Wird bei der
---                   Übernahme geerbt; ohne Übernahme beginnt eine neue Serie.
---     Ein Schlüssel für beides ginge nicht: eine spätere Sitzung setzte sonst
---     die Dokumentation des vergangenen Termins auf ist_aktuell=false, und
---     dieser Termin hätte gar keinen gültigen Befund mehr.
---   ⚠ version/ist_aktuell vergibt pat_fussbefund_versionieren_trg, NICHT der
---     Client — was der schickt, wird verworfen. „Alte Zeile abwählen + neue
---     einfügen" ist im Client nicht atomar; ein abgebrochener INSERT ließe den
---     Eintrag ohne gültige Fassung zurück.
---   ⚠ serie_farbe ist eine KOPIE (wie markierungen die Legende kopieren) und
---     NICHT aus LEGENDE_FARBEN: dort bedeutet Blau „Hyperkeratose".
---   ⚠ Lesende Abfragen brauchen `.eq('ist_aktuell', true)`, sonst erscheint
---     jede Korrektur als eigener Befund (Archiv, Patientenkarte, Terminknopf).
---   ⚠️ markierungen speichern symbol/color/label als KOPIE der Legende
---     (profiles.fussbefund_legende). Umbenennen der Legende deutet alte
---     Befunde deshalb nicht um.
+--   FK booking_id -> bookings(id)
+--   FK lead_id -> leads(id)
+--   FK uebernommen_von -> pat_fussbefund(id)
+ALTER TABLE ONLY public.pat_fussbefund OWNER TO postgres;
+COMMENT ON COLUMN public.pat_fussbefund.booking_id IS 'Termin, zu dem dieser Befund gehört. NULL = ohne Termin erfasst.';
+COMMENT ON COLUMN public.pat_fussbefund.uebernommen_von IS 'Befund, aus dem dieser als Kopie hervorgegangen ist (nur Herkunft, keine Bindung).';
+COMMENT ON COLUMN public.pat_fussbefund.eintrag_id IS 'Korrekturkette: alle Versionen DESSELBEN Befunds. Erste Version traegt die eigene id.';
+COMMENT ON COLUMN public.pat_fussbefund.version IS 'Laufende Nummer innerhalb des Eintrags. Wird vom Trigger vergeben, nie vom Client.';
+COMMENT ON COLUMN public.pat_fussbefund.ist_aktuell IS 'Juengste Version des Eintrags. Genau eine je eintrag_id.';
+COMMENT ON COLUMN public.pat_fussbefund.serie_id IS 'Farbgruppe ueber Termine hinweg. Wird bei der Uebernahme geerbt.';
+COMMENT ON COLUMN public.pat_fussbefund.serie_farbe IS 'Farbe der Serie als KOPIE in der Zeile — wie markierungen die Legende kopieren.';
+COMMENT ON COLUMN public.pat_fussbefund.wagner_grad IS 'Wagner-Grad 0-5 (diabetisches Fusssyndrom). NULL = nicht erhoben.';
 
-CREATE TABLE patient_consents (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  business_id uuid
-  patient_id uuid NOT NULL
-  consent_type text NOT NULL
-  text_version text NOT NULL
-  text_sha256 text NOT NULL
-  text_snapshot text NOT NULL
-  signature_path text
-  signed_name text
-  consented_at timestamptz NOT NULL DEFAULT now()
-  captured_by_user_id uuid
-  device_label text
-  revoked_at timestamptz
-  revoke_reason text
-  created_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.pat_fussbefund
+  ADD CONSTRAINT pat_fussbefund_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.pat_fussbefund
+  ADD CONSTRAINT pat_fussbefund_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.pat_fussbefund
+  ADD CONSTRAINT pat_fussbefund_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.pat_fussbefund
+  ADD CONSTRAINT pat_fussbefund_uebernommen_von_fkey FOREIGN KEY (uebernommen_von) REFERENCES pat_fussbefund(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.pat_fussbefund
+  ADD CONSTRAINT pat_fussbefund_wagner_grad_check CHECK (wagner_grad IS NULL OR wagner_grad >= 0 AND wagner_grad <= 5);
+
+CREATE TABLE public.patient_consents (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  patient_id uuid NOT NULL,
+  consent_type text NOT NULL,
+  text_version text NOT NULL,
+  text_sha256 text NOT NULL,
+  text_snapshot text NOT NULL,
+  signature_path text,
+  signed_name text,
+  consented_at timestamp with time zone DEFAULT now() NOT NULL,
+  captured_by_user_id uuid,
+  device_label text,
+  revoked_at timestamp with time zone,
+  revoke_reason text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
 );
---   CHECK consent_type IN (behandlungsvertrag, datenschutz, selbstzahler, foto)
---   CHECK text_sha256 ~ '^[0-9a-f]{64}$'
---   PK (id) · FK owner_id -> profiles(id) ON DELETE RESTRICT
---   FK patient_id -> leads(id) ON DELETE RESTRICT   ⚠️ zeigt auf leads
---   FK business_id -> businesses(id) ON DELETE SET NULL
---   FK captured_by_user_id -> profiles(id) ON DELETE SET NULL
---   INDEX (patient_id, consented_at DESC) · (owner_id, consented_at DESC)
---         · (patient_id, consent_type, consented_at DESC)
---   Digitale Patienten-Einwilligung, einfache elektronische Signatur
---   (Konsey 2026-08-14 · compliance/LEGAL_DECISIONS.md).
---   ⚠️ NICHT mit `consent_log` verwechseln — das ist die B2B-Seite
---     (Praxisinhaber, AVV/AGB). Andere betroffene Person, andere Löschfrist.
---   ⚠️ BEWUSST OHNE ip_address: auf dem Praxis-Tablet ist die IP der
---     Praxis-Router → Beweiswert null → Art. 5 Abs. 1 lit. c. Das Muster aus
---     `consent_log.ip_address` wird hier absichtlich NICHT übernommen.
---   ⚠️ text_snapshot hält den VOLLEN unterschriebenen Text (Art. 7 Abs. 1
---     Nachweispflicht) — ein Häkchen genügt nicht. Änderungen an der Vorlage
---     dürfen den Nachweis nicht berühren.
---   ⚠️ Zwei Texte = zwei Zeilen (behandlungsvertrag §630d BGB / datenschutz
---     Art. 7 DSGVO). Zusammenlegen verboten — Koppelungsverbot.
---   ⚠️ Widerruf LÖSCHT nicht, er markiert (revoked_at/revoke_reason).
---   ⚠️ ON DELETE RESTRICT auf owner_id und patient_id: solange eine
---     Einwilligung existiert, sind Patient und Inhaber nicht löschbar
---     (§630f Abs. 3 BGB, 10 Jahre). Beim Bau eines Lösch-/Offboarding-Flows
---     einplanen — Trigger fn_patient_consents_immutable blockt zusätzlich.
+--   FK business_id -> businesses(id)
+--   FK captured_by_user_id -> profiles(id)
+--   FK owner_id -> profiles(id)
+--   FK patient_id -> leads(id)
+ALTER TABLE ONLY public.patient_consents OWNER TO postgres;
+COMMENT ON TABLE public.patient_consents IS 'Digitale Patienten-Einwilligungen (einfache elektronische Signatur). Aufbewahrung 10 Jahre (§630f Abs. 3 BGB). Bewusst OHNE ip_address. Nicht mit consent_log verwechseln — das ist die B2B-Seite (Praxisinhaber).';
+COMMENT ON COLUMN public.patient_consents.text_snapshot IS 'Vollstaendiger unterschriebener Text zum Zeitpunkt der Unterschrift. Unveraenderlich — Aenderungen an der Vorlage duerfen den Nachweis nicht beruehren.';
 
-CREATE TABLE patient_notes (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  lead_id uuid NOT NULL
-  doctor_notes text
-  therapist_notes text
-  ai_summary text
-  status text DEFAULT 'draft'::text
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.patient_consents
+  ADD CONSTRAINT patient_consents_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.patient_consents
+  ADD CONSTRAINT patient_consents_captured_by_user_id_fkey FOREIGN KEY (captured_by_user_id) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.patient_consents
+  ADD CONSTRAINT patient_consents_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.patient_consents
+  ADD CONSTRAINT patient_consents_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.patient_consents
+  ADD CONSTRAINT patient_consents_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.patient_consents
+  ADD CONSTRAINT patient_consents_sha_chk CHECK (text_sha256 ~ '^[0-9a-f]{64}$'::text);
+
+ALTER TABLE ONLY public.patient_consents
+  ADD CONSTRAINT patient_consents_type_chk CHECK (consent_type = ANY (ARRAY['behandlungsvertrag'::text, 'datenschutz'::text, 'selbstzahler'::text, 'foto'::text]));
+
+CREATE TABLE public.patient_notes (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  lead_id uuid NOT NULL,
+  doctor_notes text,
+  therapist_notes text,
+  ai_summary text,
+  status text DEFAULT 'draft'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
   business_id uuid
 );
---   PK (id) · UNIQUE (owner_id, lead_id)
---   ⚠️ Genau EINE Zeile je Patient (das UNIQUE oben) — gespeichert wird per
---     `.maybeSingle()` + UPDATE, also IN PLACE ueberschrieben. Deshalb darf das
---     Team seit 17.09.2026 zwar LESEN, aber nicht schreiben: ohne
---     Verfasserspalte und Versionierung wuerde jeder Kollege die Notiz des
---     Inhabers spurlos ersetzen (§ 630f Abs. 1 S. 2 BGB). db/SCHEMA-RLS.sql.
+--   FK business_id -> businesses(id)
+--   FK lead_id -> leads(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.patient_notes OWNER TO postgres;
 
-CREATE TABLE patients (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  vorname text NOT NULL
-  nachname text NOT NULL
-  geburtsdatum date NOT NULL
-  email text
-  telefon text
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.patient_notes
+  ADD CONSTRAINT patient_notes_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.patient_notes
+  ADD CONSTRAINT patient_notes_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.patient_notes
+  ADD CONSTRAINT patient_notes_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.patient_notes
+  ADD CONSTRAINT patient_notes_owner_id_lead_id_key UNIQUE (owner_id, lead_id);
+
+ALTER TABLE ONLY public.patient_notes
+  ADD CONSTRAINT patient_notes_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.patients (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  vorname text NOT NULL,
+  nachname text NOT NULL,
+  geburtsdatum date NOT NULL,
+  email text,
+  telefon text,
+  created_at timestamp with time zone DEFAULT now()
 );
---   FK owner_id -> profiles(id) ON DELETE CASCADE
---   PK (id) · UNIQUE (owner_id, nachname, geburtsdatum)
---   ⚠️ NICHT die Hauptpatiententabelle — das ist `leads`.
---      `patients` wird nur vom Termin-Anfrage-Flow benutzt
---      (booking_requests.patient_id zeigt hierher). Beide Töpfe bestehen
---      bewusst nebeneinander; Zusammenlegen bricht laufende Flows.
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.patients OWNER TO postgres;
 
--- pending_employee_registrations — GEDROPPT 02.10.2026 (0053, guvenlik S-39/S-38):
---   alter Mail-Self-Signup, seit 01.10.2026 durch den Einrichtungscode ersetzt.
+ALTER TABLE ONLY public.patients
+  ADD CONSTRAINT patients_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
 
-CREATE TABLE pending_signups (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  email text NOT NULL
-  onboarding_data jsonb NOT NULL DEFAULT '{}'::jsonb
-  stripe_checkout_session_id text
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.patients
+  ADD CONSTRAINT patients_owner_id_nachname_geburtsdatum_key UNIQUE (owner_id, nachname, geburtsdatum);
+
+ALTER TABLE ONLY public.patients
+  ADD CONSTRAINT patients_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.pending_signups (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  email text NOT NULL,
+  onboarding_data jsonb DEFAULT '{}'::jsonb NOT NULL,
+  stripe_checkout_session_id text,
+  created_at timestamp with time zone DEFAULT now(),
   password_secret_id uuid
 );
---   PK (id) · UNIQUE (email)
---   ★ password_secret_id zeigt in den Supabase Vault — der einzige verbliebene
---     Vault-Anwendungsfall. Zugriff nur über pending_signup_store/consume/delete.
---   ⚠️ Neue Onboarding-Felder landen als JSON in onboarding_data; das Schreiben
---      in echte Spalten passiert später im Webhook.
+ALTER TABLE ONLY public.pending_signups OWNER TO postgres;
 
-CREATE TABLE podologie_behandlungen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid
-  verordnung_id uuid
-  behandlungsdatum date NOT NULL
-  hpnr_codes text[]
-  diagnosegruppe text
-  lokalisation text
-  notizen text
-  betrag_gkv numeric(8,2)
-  created_at timestamptz DEFAULT now()
-  invoice_id uuid
-  employee_id uuid
-  storniert_am timestamptz
-  storniert_von uuid
-  storno_grund text
-  therapiezeit_min smallint        -- 0047: Minuten (78020 > 20), CHECK 1..600, nicht festgeschrieben
+ALTER TABLE ONLY public.pending_signups
+  ADD CONSTRAINT pending_signups_email_key UNIQUE (email);
+
+ALTER TABLE ONLY public.pending_signups
+  ADD CONSTRAINT pending_signups_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.podologie_behandlungen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid,
+  verordnung_id uuid,
+  behandlungsdatum date NOT NULL,
+  hpnr_codes text[],
+  diagnosegruppe text,
+  lokalisation text,
+  notizen text,
+  betrag_gkv numeric(8,2),
+  created_at timestamp with time zone DEFAULT now(),
+  invoice_id uuid,
+  employee_id uuid,
+  storniert_am timestamp with time zone,
+  storniert_von uuid,
+  storno_grund text,
+  therapiezeit_min smallint
 );
---   CHECK storniert_am IS NULL OR storno_grund nicht leer
---   FK storniert_von -> profiles(id) ON DELETE SET NULL
---   FK verordnung_id -> prescriptions(id) ON DELETE SET NULL · PK (id)
---      (Ziel seit 04.09.2026 prescriptions, ids der migrierten Zeilen unveraendert)
---   FK invoice_id -> invoices(id) ON DELETE SET NULL
---   FK employee_id -> profiles(id) ON DELETE SET NULL
---   ★ Podologie-Behandlungstopf (Gegenstück zu prescription_sessions).
---   ★ invoice_id ist gesetzt, sobald die Sitzung auf einer Rechnung steht.
---     Ohne dieses Feld war „ist diese Behandlung schon abgerechnet?" nicht
---     beantwortbar und dieselbe Sitzung konnte zweimal berechnet werden.
---   ★ employee_id (17.09.2026, Ops #252, Sicherheitsagent-Fund): wer die
---     Behandlung durchgefuehrt hat. NULL bei Altbestand-Zeilen und wenn der
---     Owner selbst behandelt hat (Owner ist kein employee). Einziger
---     Schreibpunkt: module/podologie-abrechnung.js:773 (INSERT) -- das
---     tatsaechliche Befuellen aus dem eingeloggten Nutzer steht noch aus,
---     die Migration legt nur die Spalte an. Bis dahin bleibt die Spalte NULL
---     und blockiert den geplanten Team-Schreibausbau nicht.
---   ⚠️ FESTGESCHRIEBEN seit 20.09.2026 (0026, Entscheidung K3 von legal-de).
---     trg_podologie_behandlungen_kein_delete blockt DELETE BEDINGUNGSLOS,
---     trg_podologie_behandlungen_festschreibung blockt jede Aenderung an
---     behandlungsdatum, hpnr_codes, diagnosegruppe, lokalisation, notizen,
---     betrag_gkv, owner_id und created_at. Eine falsch erfasste Behandlung wird
---     STORNIERT (storniert_am + storno_grund + storniert_von) und daneben neu
---     erfasst; die stornierte Zeile bleibt lesbar und zaehlt nicht mehr.
---     Grundlage: § 630f Abs. 1 S. 2 BGB (Aenderung muss den urspruenglichen
---     Inhalt erkennbar lassen — die Frist beginnt mit der AUFZEICHNUNG, nicht
---     mit der Abrechnung) und BGH VI ZR 84/19 (Dokumentation ohne sichtbare
---     Aenderungshistorie hat keinen Beweiswert). ⛔ Kein Kulanzfenster.
---   ★ Eine Stornierung laesst sich NICHT zuruecknehmen — sonst waere sie eine
---     Notiz und kein Beleg.
---   ★ verordnung_id und employee_id duerfen auf NULL gehen, aber nicht auf einen
---     ANDEREN Wert: beide FKs stehen auf ON DELETE SET NULL, und PG fuehrt das
---     als UPDATE aus. Waeren sie hart gesperrt, liesse sich keine Verordnung und
---     kein Mitarbeiterkonto mehr loeschen. invoice_id bleibt ganz offen (die
---     Rechnungsbruecke setzt sie).
---   ⛔ DESHALB steht diese Tabelle seit 20.09.2026 NICHT MEHR in DELETE_TABLES
---     von api/dsgvo.js — sonst endet jede Kontoloeschung in einer 500. Fuer die
---     Auskunft (USER_TABLES) bleibt sie drin. Der offene Rest ist ein
---     Auslagerungspaket nach GoBD Rz. 142 ff., gemeinsam mit belegliste,
---     invoices, abrechnung und patient_consents.
+--   FK employee_id -> profiles(id)
+--   FK invoice_id -> invoices(id)
+--   FK owner_id -> profiles(id)
+--   FK storniert_von -> profiles(id)
+--   FK verordnung_id -> prescriptions(id)
+ALTER TABLE ONLY public.podologie_behandlungen OWNER TO postgres;
+COMMENT ON COLUMN public.podologie_behandlungen.invoice_id IS 'Gesetzt, sobald die Sitzung auf einer Rechnung steht. Verhindert Doppelabrechnung und traegt die Vorauswahl der Bruecke.';
+COMMENT ON COLUMN public.podologie_behandlungen.employee_id IS 'Wer die Behandlung durchgefuehrt hat. NULL bei Altbestand oder wenn der Owner selbst behandelt hat. Ops #252.';
+COMMENT ON COLUMN public.podologie_behandlungen.storniert_am IS 'Zeitpunkt der Stornierung. NULL = wirksame Behandlung. Gesetzt statt geloescht (§ 630f Abs. 1 S. 2 BGB): die Zeile bleibt lesbar, zaehlt aber nicht mehr — weder fuer die Einmaligkeitssperre noch fuer die §302-Datei.';
+COMMENT ON COLUMN public.podologie_behandlungen.storniert_von IS 'Wer storniert hat. ON DELETE SET NULL, damit das Loeschen eines Mitarbeiterkontos nicht an dieser Zeile haengenbleibt.';
+COMMENT ON COLUMN public.podologie_behandlungen.storno_grund IS 'Warum storniert wurde. Pflichtangabe — das "warum/wann erkennbar" ist der eigentliche Inhalt von § 630f Abs. 1 S. 2 BGB, ohne Grund ist die Stornierung dokumentarisch wertlos.';
+COMMENT ON COLUMN public.podologie_behandlungen.therapiezeit_min IS 'Dokumentierte Therapiezeit in Minuten (78020 Komplexbehandlung: > 20). NULL = nicht erfasst.';
 
-CREATE TABLE praxura_migrations (
-  version text NOT NULL
-  name text NOT NULL
-  checksum text NOT NULL
-  applied_at timestamptz NOT NULL DEFAULT now()
-  duration_ms integer
+ALTER TABLE ONLY public.podologie_behandlungen
+  ADD CONSTRAINT podologie_behandlungen_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.podologie_behandlungen
+  ADD CONSTRAINT podologie_behandlungen_invoice_id_fkey FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.podologie_behandlungen
+  ADD CONSTRAINT podologie_behandlungen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id);
+
+ALTER TABLE ONLY public.podologie_behandlungen
+  ADD CONSTRAINT podologie_behandlungen_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.podologie_behandlungen
+  ADD CONSTRAINT podologie_behandlungen_storniert_von_fkey FOREIGN KEY (storniert_von) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.podologie_behandlungen
+  ADD CONSTRAINT podologie_behandlungen_storno_grund_chk CHECK (storniert_am IS NULL OR btrim(COALESCE(storno_grund, ''::text)) <> ''::text);
+
+ALTER TABLE ONLY public.podologie_behandlungen
+  ADD CONSTRAINT podologie_behandlungen_therapiezeit_check CHECK (therapiezeit_min IS NULL OR therapiezeit_min >= 1 AND therapiezeit_min <= 600);
+
+ALTER TABLE ONLY public.podologie_behandlungen
+  ADD CONSTRAINT podologie_behandlungen_verordnung_id_fkey FOREIGN KEY (verordnung_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+CREATE TABLE public.podologie_empfangsnachweise (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  event_seq bigint GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1) NOT NULL,
+  owner_id uuid NOT NULL,
+  behandlung_id uuid NOT NULL,
+  behandlungsdatum date NOT NULL,
+  hpnr_code text NOT NULL,
+  therapeuteninitialen text,
+  status text NOT NULL,
+  geprueft_von uuid NOT NULL,
+  geprueft_am timestamp with time zone NOT NULL,
+  dokument_id bigint,
+  grund text,
+  vorgaenger_id uuid
+);
+--   FK behandlung_id -> podologie_behandlungen(id)
+--   FK vorgaenger_id -> podologie_empfangsnachweise(id)
+ALTER TABLE ONLY public.podologie_empfangsnachweise OWNER TO postgres;
+
+ALTER TABLE ONLY public.podologie_empfangsnachweise
+  ADD CONSTRAINT podologie_empfangsnachweise_behandlung_id_fkey FOREIGN KEY (behandlung_id) REFERENCES podologie_behandlungen(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.podologie_empfangsnachweise
+  ADD CONSTRAINT podologie_empfangsnachweise_event_seq_key UNIQUE (event_seq);
+
+ALTER TABLE ONLY public.podologie_empfangsnachweise
+  ADD CONSTRAINT podologie_empfangsnachweise_hpnr_code_check CHECK (hpnr_code = '78040'::text);
+
+ALTER TABLE ONLY public.podologie_empfangsnachweise
+  ADD CONSTRAINT podologie_empfangsnachweise_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.podologie_empfangsnachweise
+  ADD CONSTRAINT podologie_empfangsnachweise_status_check CHECK (status = ANY (ARRAY['bestaetigt'::text, 'widerrufen'::text]));
+
+ALTER TABLE ONLY public.podologie_empfangsnachweise
+  ADD CONSTRAINT podologie_empfangsnachweise_vorgaenger_id_fkey FOREIGN KEY (vorgaenger_id) REFERENCES podologie_empfangsnachweise(id) ON DELETE RESTRICT;
+
+CREATE TABLE public.praxura_migrations (
+  version text NOT NULL,
+  name text NOT NULL,
+  checksum text NOT NULL,
+  applied_at timestamp with time zone DEFAULT now() NOT NULL,
+  duration_ms integer,
   app_version text
 );
---   PK (version)
---   ★ Das Buch der Schemakette: eine Zeile je angewandter Migrationsdatei.
---     Geschrieben AUSSCHLIESSLICH von api-backend/db/migrate.js beim Start von
---     server.js, vor app.listen(). Kein Frontend, kein PostgREST.
---   ★ Wird NICHT von einer Migrationsdatei erzeugt, sondern vom Runner selbst
---     (CREATE TABLE IF NOT EXISTS). Sie ist die Voraussetzung der Kette, nicht
---     deren Inhalt — deshalb steht sie nicht in db/migrations/.
---   ⚠️ NICHT supabase_migrations.schema_migrations. Das gehoert Supabase und
---      fuehrt eine andere Liste; beide existieren nebeneinander, kein Abgleich.
---   ⚠️ RLS an, KEINE Policy, anon/authenticated ohne Rechte — der Schemastand
---      ist keine oeffentliche Information (sonst ueber PostgREST lesbar, sobald
---      die Default-Grants greifen).
---   ⚠️ In der Produktion steht 0000 als *angewandt*, ausgefuehrt wurde die
---      Baseline hier nie: das SaaS ist bereits auf diesem Stand. Die Datei
---      laeuft nur in neuen Kundenboxen.
+ALTER TABLE ONLY public.praxura_migrations OWNER TO postgres;
+COMMENT ON TABLE public.praxura_migrations IS 'Buch der Schemakette. Geschrieben von api-backend/db/migrate.js. Eine Zeile = eine angewandte Migrationsdatei. Entwurf: onprem/SCHEMA-VERTEILUNG.md 4.5. Nicht verwechseln mit supabase_migrations.schema_migrations.';
 
-CREATE TABLE praxura_setup (
-  id smallint NOT NULL DEFAULT 1
-  angelegt_am timestamptz NOT NULL DEFAULT now()
-  token_sha256 text
-  verbraucht_am timestamptz
-  owner_user_id uuid
-  abgeschlossen_am timestamptz
-  schritte jsonb NOT NULL DEFAULT '{}'::jsonb
+ALTER TABLE ONLY public.praxura_migrations
+  ADD CONSTRAINT praxura_migrations_pkey PRIMARY KEY (version);
+
+CREATE TABLE public.praxura_setup (
+  id smallint DEFAULT 1 NOT NULL,
+  angelegt_am timestamp with time zone DEFAULT now() NOT NULL,
+  token_sha256 text,
+  verbraucht_am timestamp with time zone,
+  owner_user_id uuid,
+  abgeschlossen_am timestamp with time zone,
+  schritte jsonb DEFAULT '{}'::jsonb NOT NULL
 );
---   PK (id) — CHECK (id = 1): genau EINE Zeile, je Installation.
---   FK owner_user_id -> auth.users(id) ON DELETE SET NULL
---   CHECK praxura_setup_verbrauch_vollstaendig:
---     entweder alles leer, oder verbraucht_am UND token_sha256 gesetzt.
---   CHECK praxura_setup_abschluss_nach_verbrauch:
---     abgeschlossen_am nur, wenn verbraucht_am steht (Schritt 8 nach Schritt 5).
---   ★ Das Zeichen des Einrichtungsassistenten (On-Premise Faz 2.2): ist der von
---     install.sh erzeugte SETUP_TOKEN schon gegen den ersten Owner eingetauscht?
---     Die .env kann der Assistent nicht aendern — der Container liest seine
---     Umgebung nur beim Start —, also braucht es ein dauerhaftes Zeichen in der DB.
---   ★ Verbrauch = EIN bedingtes UPDATE:
---       UPDATE praxura_setup SET verbraucht_am = now(), token_sha256 = $1,
---              owner_user_id = $2
---        WHERE id = 1 AND verbraucht_am IS NULL RETURNING id;
---     Keine Zeile zurueck = war schon verbraucht. Kein SELECT-dann-UPDATE.
---   ⚠️ Der Klartext-Token steht NIE hier, nur sein SHA-256 — und erst beim
---      Verbrauch. Geprueft wird gegen die Umgebungsvariable (zeitkonstant).
---   ⚠️ Das Tor ist SETUP_TOKEN, NICHT diese Tabelle. Ist die Variable leer (SaaS),
---      werden die /setup-Routen gar nicht registriert. „Gibt es schon einen Owner?“
---      wird NICHT gezaehlt — Produktionsverhalten an einen Datenbestand zu haengen
---      ist die Tuer, die irgendwann im falschen Moment aufgeht.
---   ⚠️ RLS an, KEINE Policy, anon/authenticated ohne Rechte — wie
---      praxura_migrations. owner_user_id = NULL heisst NICHT „unverbraucht“
---      (Konto kann geloescht sein); das sagt allein verbraucht_am.
---   ⚠️ schritte: nur Zustand der Assistenten-Schritte. Keine Geheimnisse, keine
---      Zugangsdaten, keine Patientendaten — die Zeile wird im Support gelesen.
+--   FK owner_user_id -> auth.users(id)
+ALTER TABLE ONLY public.praxura_setup OWNER TO postgres;
+COMMENT ON TABLE public.praxura_setup IS 'Eine Zeile je Box: ist der SETUP_TOKEN aus install.sh schon gegen den ersten Owner eingetauscht worden? Kein Produktdatensatz. Im SaaS vorhanden, aber unberuehrt (Tor ist die Umgebungsvariable SETUP_TOKEN, nicht diese Tabelle). Seit 0005 (11.09.2026), Faz 2.2.';
+COMMENT ON COLUMN public.praxura_setup.token_sha256 IS 'SHA-256 des verbrauchten Tokens, hex. Nie der Klartext. Erst beim Verbrauch gesetzt.';
+COMMENT ON COLUMN public.praxura_setup.verbraucht_am IS 'Gesetzt beim Anlegen des ersten Owners (Schritt 5), per UPDATE … WHERE verbraucht_am IS NULL.';
+COMMENT ON COLUMN public.praxura_setup.owner_user_id IS 'auth.users.id des angelegten Inhabers. NULL heisst nicht "unverbraucht" (FK ON DELETE SET NULL).';
+COMMENT ON COLUMN public.praxura_setup.abgeschlossen_am IS 'Ende des Assistenten (Schritt 8). verbraucht_am gesetzt + abgeschlossen_am NULL = Assistent unfertig.';
+COMMENT ON COLUMN public.praxura_setup.schritte IS 'Nur Zustand der Assistenten-Schritte. KEINE Geheimnisse, keine Patientendaten.';
 
-CREATE TABLE prescription_documents (
-  id bigint NOT NULL
-  owner_id uuid NOT NULL
-  business_id uuid
-  prescription_id uuid NOT NULL
-  patient_id uuid
-  art text NOT NULL DEFAULT 'sonstiges'::text
-  storage_path text NOT NULL
-  dateiname text
-  mime_type text
-  groesse_bytes integer
-  notiz text
-  uploaded_by uuid
-  created_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.praxura_setup
+  ADD CONSTRAINT praxura_setup_abschluss_nach_verbrauch CHECK (abgeschlossen_am IS NULL OR verbraucht_am IS NOT NULL);
+
+ALTER TABLE ONLY public.praxura_setup
+  ADD CONSTRAINT praxura_setup_id_check CHECK (id = 1);
+
+ALTER TABLE ONLY public.praxura_setup
+  ADD CONSTRAINT praxura_setup_owner_user_id_fkey FOREIGN KEY (owner_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.praxura_setup
+  ADD CONSTRAINT praxura_setup_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.praxura_setup
+  ADD CONSTRAINT praxura_setup_verbrauch_vollstaendig CHECK (verbraucht_am IS NULL AND token_sha256 IS NULL AND owner_user_id IS NULL OR verbraucht_am IS NOT NULL AND token_sha256 IS NOT NULL);
+
+CREATE TABLE public.prescription_documents (
+  id bigint GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1) NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  prescription_id uuid NOT NULL,
+  patient_id uuid,
+  art text DEFAULT 'sonstiges'::text NOT NULL,
+  storage_path text NOT NULL,
+  dateiname text,
+  mime_type text,
+  groesse_bytes integer,
+  notiz text,
+  uploaded_by uuid,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
 );
---   CHECK art IN (befreiungsausweis, lhb_genehmigung, korrigierte_verordnung,
---                 therapiebericht, sonstiges)
---   FK prescription_id -> prescriptions(id) ON DELETE CASCADE · PK (id)
+--   FK owner_id -> auth.users(id)
+--   FK prescription_id -> prescriptions(id)
+--   FK uploaded_by -> auth.users(id)
+ALTER TABLE ONLY public.prescription_documents OWNER TO postgres;
+COMMENT ON TABLE public.prescription_documents IS 'Nachweise/Anhänge zu einer Verordnung (Befreiungsausweis, LHB-Genehmigung, korrigierte Verordnung, Therapiebericht)';
 
-CREATE TABLE prescription_sessions (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  prescription_id uuid NOT NULL
-  booking_id uuid
-  session_number integer NOT NULL
-  status text NOT NULL DEFAULT 'planned'::text
-  done_at timestamptz
-  created_at timestamptz DEFAULT now()
-  notes text
+ALTER TABLE ONLY public.prescription_documents
+  ADD CONSTRAINT prescription_documents_art_check CHECK (art = ANY (ARRAY['befreiungsausweis'::text, 'lhb_genehmigung'::text, 'korrigierte_verordnung'::text, 'therapiebericht'::text, 'sonstiges'::text]));
+
+ALTER TABLE ONLY public.prescription_documents
+  ADD CONSTRAINT prescription_documents_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.prescription_documents
+  ADD CONSTRAINT prescription_documents_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.prescription_documents
+  ADD CONSTRAINT prescription_documents_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.prescription_documents
+  ADD CONSTRAINT prescription_documents_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+CREATE TABLE public.prescription_sessions (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  prescription_id uuid NOT NULL,
+  booking_id uuid,
+  session_number integer NOT NULL,
+  status text DEFAULT 'planned'::text NOT NULL,
+  done_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  notes text,
   heilmittel_index integer DEFAULT 0
 );
---   CHECK status IN (planned, done, cancelled, no_show)
---   PK (id) · UNIQUE (prescription_id, session_number)
---   UNIQUE (prescription_id, booking_id, COALESCE(heilmittel_index, 0)) WHERE
---     booking_id IS NOT NULL — ein Termin hat je Verordnung UND Heilmittel genau
---     eine Sitzungszeile (seit 0017, 16.09.2026 — davor ohne heilmittel_index,
---     das verbot den Kombi-Termin mit). Leere Zeilen (booking_id NULL) sind
---     Absicht und bleiben mehrfach erlaubt: sie warten auf Termine.
+--   FK booking_id -> bookings(id)
+--   FK prescription_id -> prescriptions(id)
+ALTER TABLE ONLY public.prescription_sessions OWNER TO postgres;
+COMMENT ON COLUMN public.prescription_sessions.notes IS 'Per-session therapist notes entered when marking session done';
 
-CREATE TABLE prescription_validations (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  prescription_id uuid NOT NULL
-  engine text NOT NULL
-  input_snapshot jsonb NOT NULL
-  result jsonb NOT NULL
-  ok boolean NOT NULL
-  warnings_count integer DEFAULT 0
-  blockers_count integer DEFAULT 0
-  proceeded_anyway boolean DEFAULT false
-  validated_by uuid
-  created_at timestamptz DEFAULT now()
-  overridden_rules text[]
+ALTER TABLE ONLY public.prescription_sessions
+  ADD CONSTRAINT prescription_sessions_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.prescription_sessions
+  ADD CONSTRAINT prescription_sessions_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.prescription_sessions
+  ADD CONSTRAINT prescription_sessions_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.prescription_sessions
+  ADD CONSTRAINT prescription_sessions_prescription_id_session_number_key UNIQUE (prescription_id, session_number);
+
+ALTER TABLE ONLY public.prescription_sessions
+  ADD CONSTRAINT prescription_sessions_status_check CHECK (status = ANY (ARRAY['planned'::text, 'done'::text, 'cancelled'::text, 'no_show'::text]));
+
+CREATE TABLE public.prescription_validations (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  prescription_id uuid NOT NULL,
+  engine text NOT NULL,
+  input_snapshot jsonb NOT NULL,
+  result jsonb NOT NULL,
+  ok boolean NOT NULL,
+  warnings_count integer DEFAULT 0,
+  blockers_count integer DEFAULT 0,
+  proceeded_anyway boolean DEFAULT false,
+  validated_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  overridden_rules text[],
   proceed_reason text
 );
---   PK (id) — Audit-Trail der Rezeptprüfung inkl. bewusster Übersteuerungen.
+--   FK prescription_id -> prescriptions(id)
+--   FK validated_by -> auth.users(id)
+ALTER TABLE ONLY public.prescription_validations OWNER TO postgres;
+COMMENT ON COLUMN public.prescription_validations.overridden_rules IS 'Array of rule codes (e.g. OVER_HOECHSTMENGE) that were active when therapist clicked proceed_anyway.';
+COMMENT ON COLUMN public.prescription_validations.proceed_reason IS 'Free-text reason supplied by therapist when overriding validation warnings. Required for DSGVO audit trail.';
 
-CREATE TABLE prescriptions (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  patient_id uuid
-  arzt_id uuid
-  image_storage_path text
-  image_uploaded_at timestamptz
-  status text NOT NULL DEFAULT 'parsed'::text
-  rezept_typ text NOT NULL DEFAULT 'standard'::text
-  icd10 text
-  diagnosegruppe text
-  heilmittel text
-  heilmittel_feld_text text
-  anzahl_einheiten integer
-  frequenz text
-  ausstellungsdatum date
-  behandlungsbeginn date
-  is_dringend boolean DEFAULT false
-  hausbesuch boolean DEFAULT false
-  gueltig_bis date
-  computed jsonb
-  warnings jsonb
-  blockers_overridden jsonb
-  ocr_confidence numeric(3,2)
-  confirmed_by uuid
-  confirmed_at timestamptz
-  proceed_anyway boolean DEFAULT false
-  dmrz_exported_at timestamptz
-  total_bonuses_eur numeric(8,2)
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  heilmittel_position text
-  zuzahlung_eur numeric(10,2)
-  zuzahlung_befreit boolean DEFAULT false
-  is_blanko boolean DEFAULT false
-  is_lhb_bvb boolean DEFAULT false
-  doctor_lanr text
-  doctor_bsnr text
-  kostentraeger_ik text
-  abrechnung_id uuid
-  abrechnung_status text
-  business_id uuid
-  bericht_angefordert boolean NOT NULL DEFAULT false
-  bericht_status text NOT NULL DEFAULT 'offen'::text
-  leitsymptomatik text
-  unterschrift_vorhanden boolean
-  signature_confidence text
-  deadline_reminders jsonb DEFAULT '{}'::jsonb
-  heilmittel_typ_blanko text
-  vorrangig_einheiten integer
-  ergaenzend_einheiten integer
-  heilmittel_items jsonb DEFAULT '[]'::jsonb
-  evo_task_id text
-  evo_access_code text
-  quelle text DEFAULT 'papier'::text
-  fhir_raw jsonb
-  verordnungsnummer integer
-  belegnummer text
-  pat_leitsymptomatik text
-  diagnose_freitext text
-  ergaenzendes_heilmittel text
-  therapie_bereich text
-  hinweise text
-  icd10_2 text
-  zuzahlung_kassiert_am timestamptz
-  zuzahlung_kassiert_von uuid
-  zuzahlung_kassiert_eur numeric(10,2)
-  zuzahlung_zahlart text
-  patient_name text
-  wagner_grad smallint
-  versichertennummer text
-  behandlungsanlass text
-  absetzung_betrag numeric(10,2)
-  absetzung_grund text
-  absetzung_am date
-  storno_grund text
-  storno_am date
-  rezeptart text
-  nagel text
-  krankenkasse_ik text
-  abrechnung_status_manuell_am timestamptz
+ALTER TABLE ONLY public.prescription_validations
+  ADD CONSTRAINT prescription_validations_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.prescription_validations
+  ADD CONSTRAINT prescription_validations_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.prescription_validations
+  ADD CONSTRAINT prescription_validations_validated_by_fkey FOREIGN KEY (validated_by) REFERENCES auth.users(id);
+
+CREATE TABLE public.prescriptions (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  patient_id uuid,
+  arzt_id uuid,
+  image_storage_path text,
+  image_uploaded_at timestamp with time zone,
+  status text DEFAULT 'parsed'::text NOT NULL,
+  rezept_typ text DEFAULT 'standard'::text NOT NULL,
+  icd10 text,
+  diagnosegruppe text,
+  heilmittel text,
+  heilmittel_feld_text text,
+  anzahl_einheiten integer,
+  frequenz text,
+  ausstellungsdatum date,
+  behandlungsbeginn date,
+  is_dringend boolean DEFAULT false,
+  hausbesuch boolean DEFAULT false,
+  gueltig_bis date,
+  computed jsonb,
+  warnings jsonb,
+  blockers_overridden jsonb,
+  ocr_confidence numeric(3,2),
+  confirmed_by uuid,
+  confirmed_at timestamp with time zone,
+  proceed_anyway boolean DEFAULT false,
+  dmrz_exported_at timestamp with time zone,
+  total_bonuses_eur numeric(8,2),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  heilmittel_position text,
+  zuzahlung_eur numeric(10,2),
+  zuzahlung_befreit boolean DEFAULT false,
+  is_blanko boolean DEFAULT false,
+  is_lhb_bvb boolean DEFAULT false,
+  doctor_lanr text,
+  doctor_bsnr text,
+  kostentraeger_ik text,
+  abrechnung_id uuid,
+  abrechnung_status text,
+  business_id uuid,
+  bericht_angefordert boolean DEFAULT false NOT NULL,
+  bericht_status text DEFAULT 'offen'::text NOT NULL,
+  leitsymptomatik text,
+  unterschrift_vorhanden boolean,
+  signature_confidence text,
+  deadline_reminders jsonb DEFAULT '{}'::jsonb,
+  heilmittel_typ_blanko text,
+  vorrangig_einheiten integer,
+  ergaenzend_einheiten integer,
+  heilmittel_items jsonb DEFAULT '[]'::jsonb,
+  evo_task_id text,
+  evo_access_code text,
+  quelle text DEFAULT 'papier'::text,
+  fhir_raw jsonb,
+  pat_leitsymptomatik text,
+  diagnose_freitext text,
+  ergaenzendes_heilmittel text,
+  therapie_bereich text,
+  hinweise text,
+  icd10_2 text,
+  zuzahlung_kassiert_am timestamp with time zone,
+  zuzahlung_kassiert_von uuid,
+  zuzahlung_kassiert_eur numeric(10,2),
+  zuzahlung_zahlart text,
+  verordnungsnummer integer,
+  belegnummer text,
+  patient_name text,
+  wagner_grad smallint,
+  versichertennummer text,
+  behandlungsanlass text,
+  absetzung_betrag numeric(10,2),
+  absetzung_grund text,
+  absetzung_am date,
+  storno_grund text,
+  storno_am date,
+  rezeptart text,
+  notizen text,
+  nagel text,
+  krankenkasse_ik text,
+  abrechnung_status_manuell_am timestamp with time zone,
   abrechnung_status_manuell_von uuid
 );
---   CHECK zuzahlung_zahlart IS NULL ODER IN (bar, ec, ueberweisung, sonstiges, paypal)
---      ('paypal' seit 09.09.2026, Ops #271 — sonst koennte eine per PayPal
---       bezahlte rezeptgebundene Rechnung den Kassiervermerk nicht setzen:
---       rechnung_zahlung_buchen() Schritt 7 schreibt p_zahlart hier hinein.)
---   CHECK krankenkasse_ik IS NULL ODER MATCHES ^[0-9]{9}$
---   CHECK status IN (parsed, confirmed, in_therapy, completed, billed, cancelled)
---   CHECK rezept_typ IN (standard, blanko, lhb_bvb, kassen, privat)
---   CHECK abrechnung_status IN (bereit, in_abrechnung, gesendet, accepted, rejected, paid,
---                               teilabsetzung, storniert, archiviert)
---   CHECK bericht_status IN (offen, in_arbeit, erledigt)
---   CHECK quelle IN (papier, ocr, evo) · signature_confidence IN (high, medium, low)
---   CHECK wagner_grad IS NULL ODER BETWEEN 0 AND 5
---   CHECK rezeptart IS NULL ODER IN (kassen, privat, selbstzahler)
---   CHECK absetzung_betrag IS NULL ODER (> 0 AND abrechnung_status IN (teilabsetzung, rejected))
---   CHECK abrechnung_status <> 'teilabsetzung' ODER absetzung_betrag IS NOT NULL
---   CHECK nagel IS NULL ODER IN (U1..U5 links, U1..U5 rechts)  — zehn Werte
---   ★ nagel (04.09.2026): behandelter Zehennagel einer Nagelspangen-Verordnung.
---     Schreibweise aus § 3b Satz 5 der Aenderungsvereinbarung vom 16.06.2025
---     ("U1 links" .. "U5 rechts"). Nur bei diagnosegruppe UI1/UI2 gefuellt.
---     Er steht hier und nicht an `podologie_behandlungen`, weil eine Verordnung
---     sich laut § 3b Satz 3-4 auf GENAU EINEN Zehennagel bezieht — und weil die
---     Erstbefundungs-Serie (78110/78100) ueber mehrere Verordnungen laeuft und
---     allein vom Nagel zusammengehalten wird. Kein NOT NULL: eine Verordnung
---     entsteht zuerst aus dem OCR-Lauf, der Nagel kommt danach.
---   ★ krankenkasse_ik (05.09.2026; Rolle geaendert 30.09.2026, Reform S3.8a,
---     COMMENT ersetzt durch 0044): Karten-IK von der KV-Karte des Versicherten
---     (§302 SGB V, Anlage 1 TP5 V21 § 5.5.3.1) — NICHT dasselbe wie
---     `kostentraeger_ik`. Seit 30.09.2026 schreiben Maske, OCR und
---     /rezept/confirm bzw. /rezept/save die Karten-IK (9 Ziffern normalisiert);
---     `kostentraeger_ik` wird serverseitig IMMER daraus abgeleitet
---     (kostentraegerIkAufloesen). Im DTA Mussfeld (V:01017) — der fruehere
---     Rueckfall auf `kostentraeger_ik` ist entfernt, ohne Karten-IK lehnt der
---     Bau mit KARTEN_IK_FEHLT ab. Kein FK, bewusst keine Rueckbefuellung:
---     NULL = "Karten-IK noch nicht erfasst", Verordnung nicht
---     abrechnungsbereit. Vorbelegung vom Patienten: leads.krankenkasse_ik.
---     Migration: prescriptions_krankenkasse_ik (+ COMMENT 0044).
---   FK patient_id -> leads(id) · arzt_id -> aerzte(id) · abrechnung_id -> abrechnung(id)
+--   FK abrechnung_id -> abrechnung(id)
+--   FK abrechnung_status_manuell_von -> auth.users(id)
+--   FK arzt_id -> aerzte(id)
+--   FK business_id -> businesses(id)
+--   FK confirmed_by -> auth.users(id)
 --   FK kostentraeger_ik -> kostentraeger(ik)
---   FK abrechnung_status_manuell_von -> auth.users(id) ON DELETE SET NULL · PK (id)
---   ★ abrechnung_status_manuell_am/_von (18.09.2026, Ops #310, Migration 0025):
---     Beta-1 wollte die automatische "bereit zur Abrechnung"-Markierung als
---     reinen Reminder, ueberschreibbar ohne dass die Automatik sie beim naechsten
---     Durchlauf still zuruecksetzt. Gesetzt einzig von der gated Route
---     `PATCH /billing/verordnung/:id/abrechnungsstatus` (jeder erfolgreiche
---     Wechsel stempelt); `module/podologie-abrechnung.js` und
---     `module/sitzungsfortschritt.js` pruefen beide `IS NULL` auf diese Spalte,
---     bevor sie `abrechnung_status` automatisch auf 'bereit' heben. Bewusst
---     NICHT in `prescriptions_festschreibung()` (0020) gesperrt — bleibt nach
---     der Belegnummer aenderbar, wie `abrechnung_status` selbst.
---   ★ SEIT 04.09.2026: EIN Verordnungstopf für ALLE Fachbereiche
---     (Physio/Ergo/Logo UND Podologie, `therapie_bereich` unterscheidet).
---     Die alte, separate `verordnungen`-Tabelle (Podologie-Topf) ist an diesem
---     Tag aufgegangen: ihre 4 Zeilen wurden mit UNVERÄNDERTEN ids hierher
---     kopiert, alle Fremdschlüssel (podologie_behandlungen, bookings, invoices,
---     zuzahlung_guthaben, zuzahlung_korrekturen) zeigen seither hierher.
---     `verordnungen` selbst wurde am 04.09.2026 GEDROPPT (Nutzerentscheidung,
---     vorgezogen aus der ursprünglich geplanten 90-Tage-Frist) — nicht mehr in
---     der DB, nicht mehr in api/dsgvo.js gelistet. Historischer Rest-Hinweis
---     an der Stelle, wo die Tabelle früher stand: siehe unten im Dump.
---     Grund der Wahl (statt umgekehrt: prescriptions → verordnungen migrieren):
---     9 statt 47 Spalten, 7 statt 242 Zeilen, 72 statt 168 Codestellen. Details
---     und Spaltenübersetzung: module/verordnung-topf.js.
---     Neun Spalten kamen dabei aus `verordnungen` dazu (patient_name,
---     wagner_grad, versichertennummer, behandlungsanlass, absetzung_*,
---     storno_*, rezeptart). `rezeptart` bewusst NICHT mit `rezept_typ` gefaltet
---     — unterschiedliche Achsen (Zahler vs. Formtyp), siehe module/
---     verordnung-topf.js Kopf. `status` (oben) bleibt die Bearbeitungsachse;
---     `abrechnung_status` ist das Podologie-Gegenstück zum alten
---     `verordnungen.status` (Wertetabelle: aktiv=NULL, abrechenbar=bereit,
---     abgerechnet=gesendet, abgesetzt=rejected, teilabsetzung/storniert/
---     archiviert unverändert).
---   ⚠️ KEINE Feldverschlüsselung mehr (korrigiert 30.09.2026, Reform 3.12,
---     Commit e9d0286). Der Backend schreibt icd10_enc, ocr_raw_enc,
---     phi_encrypted UND ocr_raw_response nicht mehr (ab Deploy von e9d0286).
---     icd10/Klinikfelder bleiben Klartext (RLS + at rest); der rohe
---     OCR-Payload wird nicht mehr abgelegt. Die Verschlüsselung war nie
---     vollständig: jede Zeile mit Chiffrat hielt denselben Inhalt zusätzlich
---     im Klartext (live 30.09.2026: 23 Zeilen phi_encrypted=true, alle mit
---     Klartext-ocr_raw_response; 22 mit icd10_enc, alle mit icd10).
---     ✅ 01.10.2026 (Freigabe Kemal): 0049 hat prescriptions_festschreibung()
---     ohne icd10_enc ersetzt; 0050 hat ocr_raw_response/ocr_raw_enc/icd10_enc
---     geleert und phi_encrypted=false gesetzt (vorher 60/23/22/23 Zeilen,
---     danach 0). 0051 hat die vier Spalten + idx_prescriptions_phi_not_encrypted
---     entfernt (Kural 4 Schritt 2; onprem-Freigabe, keine Kundenbox).
---     Siehe db/REGISTER.md → prescriptions.
---   TRIGGER fn_prescriptions_set_befreit() setzt zuzahlung_befreit automatisch.
---   ⚠️ `verordnungsnummer` / `belegnummer`: fortlaufend je Patient
---      (Trigger trg_prescriptions_verordnungsnummer), Belegnummer bei der
---      DTA-Erzeugung eingefroren.
---   ★ GoBD-Festschreibung (17.09.2026, Ops #167, 0020_prescriptions_
---     festschreibung): TRIGGER trg_prescriptions_festschreibung (BEFORE UPDATE)
---     -> prescriptions_festschreibung(). Tor: solange OLD.belegnummer NULL ist,
---     frei editierbar (Entwurf). Danach gesperrt: owner_id/business_id/
---     created_at (Mandantenschutz) + Abrechnungsinhalt aller Fachbereiche
---     (belegnummer, ausstellungsdatum, diagnosegruppe, icd10, icd10_2,
---     icd10_enc, leitsymptomatik, pat_leitsymptomatik, is_dringend, hausbesuch,
---     frequenz, rezeptart, zuzahlung_befreit, zuzahlung_eur, kostentraeger_ik,
---     arzt_id, wagner_grad, nagel, krankenkasse_ik, behandlungsanlass,
---     heilmittel, heilmittel_position, anzahl_einheiten, doctor_lanr,
---     doctor_bsnr, rezept_typ, is_blanko, is_lhb_bvb, behandlungsbeginn,
---     gueltig_bis). Anonymisierungs-Ausnahme (legal-de): patient_name,
---     versichertennummer, patient_id duerfen NUR auf NULL gesetzt werden.
---     Bewusst OFFEN (Post-Belegnummer-Folgeprozesse): abrechnung_status,
---     absetzung_*, storno_*, zuzahlung_kassiert_*, zuzahlung_zahlart,
---     bericht_*, deadline_reminders, dmrz_exported_at, status, confirmed_*.
---     KEIN DELETE-Schutz (anders als abrechnung_zeile) — liefe gegen den
---     heutigen Hard-Delete-Weg in api/dsgvo.js DELETE_TABLES. Offene
---     Retention-Folgefrage (gesendete Verordnungen ohne Aufbewahrungsfrist)
---     separat an gkv-302+legal-de geflaggt, nicht Teil dieser Migration.
+--   FK owner_id -> auth.users(id)
+--   FK patient_id -> leads(id)
+--   FK zuzahlung_kassiert_von -> auth.users(id)
+ALTER TABLE ONLY public.prescriptions OWNER TO postgres;
+COMMENT ON COLUMN public.prescriptions.abrechnung_status IS 'Abrechnungsachse. Schluessel zur alten verordnungen.status: aktiv=NULL, abrechenbar=bereit, abgerechnet=gesendet, abgesetzt=rejected; teilabsetzung/storniert/archiviert unveraendert.';
+COMMENT ON COLUMN public.prescriptions.leitsymptomatik IS '§302 Heilmittel Leitsymptomatik: 4-char a/b/c/d (each 0|1), e.g. 1010; 0000 requires free-text patientenLeitsymptomatik';
+COMMENT ON COLUMN public.prescriptions.diagnose_freitext IS 'Muster 13: Freitext-Diagnose neben ICD-10 (z. B. "Unguis incarnatus rechts")';
+COMMENT ON COLUMN public.prescriptions.ergaenzendes_heilmittel IS 'Muster 13: Ergänzendes Heilmittel (Freitext)';
+COMMENT ON COLUMN public.prescriptions.therapie_bereich IS 'Muster 13: angekreuzter Therapiebereich (physio|podo|stimme|ergo|ernaehrung)';
+COMMENT ON COLUMN public.prescriptions.hinweise IS 'Muster 13: ggf. Therapieziele / weitere med. Befunde und Hinweise';
+COMMENT ON COLUMN public.prescriptions.icd10_2 IS 'Zweiter behandlungsrelevanter ICD-10-Code (Muster 13, 2. Diagnose)';
+COMMENT ON COLUMN public.prescriptions.zuzahlung_kassiert_am IS 'Zeitpunkt der Vereinnahmung der gesetzlichen Zuzahlung. NULL = offen. Einmal je Verordnung (nicht je Sitzung).';
+COMMENT ON COLUMN public.prescriptions.zuzahlung_zahlart IS 'Zahlungsart, mit der die Zuzahlung kassiert wurde. Gehört zu zuzahlung_kassiert_am/_von.';
+COMMENT ON COLUMN public.prescriptions.patient_name IS 'Freitextname vom Anlagezeitpunkt (aus verordnungen uebernommen 09.2026). NICHT fuer die Abrechnung verwenden — der Name kommt immer aus leads.';
+COMMENT ON COLUMN public.prescriptions.rezeptart IS 'Zahlerachse: kassen|privat|selbstzahler. NICHT mit rezept_typ verwechseln — das ist die Formachse (standard|blanko|lhb_bvb).';
+COMMENT ON COLUMN public.prescriptions.notizen IS 'Interne Notiz der Praxis. Gegenstueck: hinweise = Therapieziel vom Arzt (aus dem gescannten Muster 13).';
+COMMENT ON COLUMN public.prescriptions.nagel IS 'Nagelspange: behandelter Zehennagel dieser Verordnung, Schreibweise nach § 3b Satz 5 Aenderungsvereinbarung 16.06.2025 ("U1 links" .. "U5 rechts"). Nur bei diagnosegruppe UI1/UI2 gefuellt. Haelt die Behandlungsserie ueber mehrere Verordnungen zusammen (§ 3b lit. a).';
+COMMENT ON COLUMN public.prescriptions.krankenkasse_ik IS 'IK der Krankenkasse von der Versichertenkarte (Karten-IK, §302 Anlage 1 TP5 V21 § 5.5.3.1), 9 Ziffern. NICHT die Kostentraeger-IK: kostentraeger_ik wird serverseitig immer aus diesem Wert abgeleitet (Kostentraegerdatei). Im DTA Mussfeld (V:01017) - kein Rueckfall auf kostentraeger_ik, ohne Karten-IK lehnt der Bau ab (KARTEN_IK_FEHLT). NULL = noch nicht erfasst, Verordnung nicht abrechnungsbereit.';
 
-CREATE TABLE profiles (
-  id uuid NOT NULL                      -- = auth.users.id
-  email text
-  business_name text
-  plan text DEFAULT 'starter'::text
-  billing text DEFAULT 'monthly'::text
-  airtable_link text
-  whatsapp_number text
-  language text DEFAULT 'de'::text
-  created_at timestamptz DEFAULT now()
-  activated_at timestamptz DEFAULT now()
-  is_active boolean DEFAULT true
-  sector text
-  city text
-  country text DEFAULT 'DE'::text
-  booking_slug text
-  whatsapp_phone_number_id text
-  whatsapp_waba_id text
-  whatsapp_access_token_secret_id uuid
-  working_hours jsonb DEFAULT '{}'::jsonb
-  faq jsonb DEFAULT '[]'::jsonb
-  message_templates jsonb DEFAULT '{}'::jsonb
-  system_prompt text
-  onboarding_step text DEFAULT 'account'::text
-  updated_at timestamptz DEFAULT now()
-  plan_status text NOT NULL DEFAULT 'pending'::text
-  trial_ends_at timestamptz
-  stripe_customer_id text
-  stripe_subscription_id text
-  stripe_price_id text
-  billing_interval text
-  current_period_end timestamptz
-  role text DEFAULT 'owner'::text
-  company_code text
-  owner_id uuid                          -- Mitarbeiter -> Inhaber
-  b2b_sender_name text
-  b2b_setup_done boolean DEFAULT false
-  b2b_from_email text
-  b2b_gmail_refresh_token text
-  street text
-  zip text
-  house_number text
-  owner_first_name text
-  owner_last_name text
-  accepts_bookings boolean DEFAULT true
-  avatar_url text
-  anrede text
-  ik_number text
-  plz text
-  phone text
-  iban text
-  bic text
-  bank_name text
-  steuernummer text
-  ust_id text
-  tax_exempt_note text
-  has_dta_pro boolean NOT NULL DEFAULT false
-  dta_pro_subscription_item_id text
-  clinic_location geography(Point,4326)
-  clinic_geocoded_at timestamptz
-  clinic_lat numeric(9,6)
-  clinic_lng numeric(9,6)
-  avv_accepted_at timestamptz
-  agb_accepted_at timestamptz
-  deletion_scheduled_at timestamptz
-  deletion_consent_at timestamptz
-  deletion_consent_ip text
-  tablet_kiosk_pin_set boolean NOT NULL DEFAULT false
-  praxis_logo_url text
-  invoice_footer_text text
-  urlaub_jahrestage integer DEFAULT 30
-  booking_auto_approve boolean DEFAULT false
-  booking_auto_approve_types text[] DEFAULT '{}'::text[]
-  booking_request_link_enabled boolean DEFAULT true
-  kim_adresse text
-  telematik_id text
-  ausfall_enabled boolean NOT NULL DEFAULT false
-  ausfall_mode text NOT NULL DEFAULT 'fixed'::text
-  ausfall_amount_eur numeric(10,2)
-  ausfall_percent numeric(5,2)
-  ausfall_cutoff_hours integer NOT NULL DEFAULT 24
-  ausfall_hinweis text
-  fussbefund_legende jsonb NOT NULL DEFAULT '[]'::jsonb   -- Podologie-Legende
-  selbstzahler_stufen jsonb NOT NULL DEFAULT '[]'::jsonb
-  buchungskonten jsonb NOT NULL DEFAULT '[]'::jsonb       -- Kontenrahmen, siehe unten
-  gps_checkin_pruefen boolean NOT NULL DEFAULT false      -- 0047: Owner-Schalter GPS-Check-in (Standard aus)
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_abrechnung_status_check CHECK (abrechnung_status IS NULL OR (abrechnung_status = ANY (ARRAY['bereit'::text, 'in_abrechnung'::text, 'gesendet'::text, 'accepted'::text, 'rejected'::text, 'paid'::text, 'teilabsetzung'::text, 'storniert'::text, 'archiviert'::text])));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_abrechnung_status_manuell_von_fkey FOREIGN KEY (abrechnung_status_manuell_von) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_absetzung_betrag_check CHECK (absetzung_betrag IS NULL OR absetzung_betrag > 0::numeric AND (abrechnung_status = ANY (ARRAY['teilabsetzung'::text, 'rejected'::text])));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_arzt_id_fkey FOREIGN KEY (arzt_id) REFERENCES aerzte(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_bericht_status_check CHECK (bericht_status = ANY (ARRAY['offen'::text, 'in_arbeit'::text, 'erledigt'::text]));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_confirmed_by_fkey FOREIGN KEY (confirmed_by) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_kostentraeger_ik_fkey FOREIGN KEY (kostentraeger_ik) REFERENCES kostentraeger(ik);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_krankenkasse_ik_format CHECK (krankenkasse_ik IS NULL OR krankenkasse_ik ~ '^[0-9]{9}$'::text);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_nagel_check CHECK (nagel IS NULL OR (nagel = ANY (ARRAY['U1 links'::text, 'U2 links'::text, 'U3 links'::text, 'U4 links'::text, 'U5 links'::text, 'U1 rechts'::text, 'U2 rechts'::text, 'U3 rechts'::text, 'U4 rechts'::text, 'U5 rechts'::text])));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_quelle_check CHECK (quelle = ANY (ARRAY['papier'::text, 'ocr'::text, 'evo'::text]));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_rezept_typ_check CHECK (rezept_typ = ANY (ARRAY['standard'::text, 'blanko'::text, 'lhb_bvb'::text, 'kassen'::text, 'privat'::text]));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_rezeptart_check CHECK (rezeptart IS NULL OR (rezeptart = ANY (ARRAY['kassen'::text, 'privat'::text, 'selbstzahler'::text])));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_signature_confidence_check CHECK (signature_confidence = ANY (ARRAY['high'::text, 'medium'::text, 'low'::text]));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_status_check CHECK (status = ANY (ARRAY['parsed'::text, 'confirmed'::text, 'in_therapy'::text, 'completed'::text, 'billed'::text, 'cancelled'::text]));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_teilabsetzung_braucht_betrag CHECK (abrechnung_status IS DISTINCT FROM 'teilabsetzung'::text OR absetzung_betrag IS NOT NULL);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_wagner_grad_check CHECK (wagner_grad IS NULL OR wagner_grad >= 0 AND wagner_grad <= 5);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_zuzahlung_kassiert_von_fkey FOREIGN KEY (zuzahlung_kassiert_von) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_zuzahlung_zahlart_check CHECK (zuzahlung_zahlart IS NULL OR (zuzahlung_zahlart = ANY (ARRAY['bar'::text, 'ec'::text, 'ueberweisung'::text, 'sonstiges'::text, 'paypal'::text])));
+
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  email text,
+  business_name text,
+  plan text DEFAULT 'starter'::text,
+  billing text DEFAULT 'monthly'::text,
+  airtable_link text,
+  whatsapp_number text,
+  language text DEFAULT 'de'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  activated_at timestamp with time zone DEFAULT now(),
+  is_active boolean DEFAULT true,
+  sector text,
+  city text,
+  country text DEFAULT 'DE'::text,
+  booking_slug text,
+  whatsapp_phone_number_id text,
+  whatsapp_waba_id text,
+  whatsapp_access_token_secret_id uuid,
+  working_hours jsonb DEFAULT '{}'::jsonb,
+  faq jsonb DEFAULT '[]'::jsonb,
+  message_templates jsonb DEFAULT '{}'::jsonb,
+  system_prompt text,
+  onboarding_step text DEFAULT 'account'::text,
+  updated_at timestamp with time zone DEFAULT now(),
+  plan_status text DEFAULT 'pending'::text NOT NULL,
+  trial_ends_at timestamp with time zone,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  stripe_price_id text,
+  billing_interval text,
+  current_period_end timestamp with time zone,
+  role text DEFAULT 'owner'::text,
+  company_code text,
+  owner_id uuid,
+  b2b_sender_name text,
+  b2b_setup_done boolean DEFAULT false,
+  b2b_from_email text,
+  b2b_gmail_refresh_token text,
+  street text,
+  zip text,
+  house_number text,
+  owner_first_name text,
+  owner_last_name text,
+  accepts_bookings boolean DEFAULT true,
+  avatar_url text,
+  anrede text,
+  ik_number text,
+  plz text,
+  phone text,
+  iban text,
+  bic text,
+  bank_name text,
+  steuernummer text,
+  ust_id text,
+  tax_exempt_note text,
+  has_dta_pro boolean DEFAULT false NOT NULL,
+  dta_pro_subscription_item_id text,
+  clinic_location geography(Point,4326),
+  clinic_geocoded_at timestamp with time zone,
+  clinic_lat numeric(9,6),
+  clinic_lng numeric(9,6),
+  avv_accepted_at timestamp with time zone,
+  agb_accepted_at timestamp with time zone,
+  deletion_scheduled_at timestamp with time zone,
+  deletion_consent_at timestamp with time zone,
+  deletion_consent_ip text,
+  praxis_logo_url text,
+  invoice_footer_text text,
+  urlaub_jahrestage integer DEFAULT 30,
+  booking_auto_approve boolean DEFAULT false,
+  booking_auto_approve_types text[] DEFAULT '{}'::text[],
+  booking_request_link_enabled boolean DEFAULT true,
+  kim_adresse text,
+  telematik_id text,
+  ausfall_enabled boolean DEFAULT false NOT NULL,
+  ausfall_mode text DEFAULT 'fixed'::text NOT NULL,
+  ausfall_amount_eur numeric(10,2),
+  ausfall_percent numeric(5,2),
+  ausfall_cutoff_hours integer DEFAULT 24 NOT NULL,
+  ausfall_hinweis text,
+  fussbefund_legende jsonb DEFAULT '[]'::jsonb NOT NULL,
+  tablet_kiosk_pin_set boolean DEFAULT false NOT NULL,
+  selbstzahler_stufen jsonb DEFAULT '[]'::jsonb NOT NULL,
+  buchungskonten jsonb DEFAULT '[]'::jsonb NOT NULL,
+  gps_checkin_pruefen boolean DEFAULT false NOT NULL
 );
---   CHECK plan IN (starter, professional, klinik, mitarbeiter, enterprise)
---   CHECK plan_status IN (pending, trial, active, past_due, canceled, expired, deleted)
---         'deleted' seit 0057 (02.10.2026): gelöschtes Konto mit Sperrbestand
---   CHECK role IN (owner, employee) · billing IN (monthly, annual)
---   CHECK billing_interval IN (month, year) OR NULL
---   CHECK anrede IN (Herr, Frau, Divers)
---   CHECK onboarding_step IN (account, business, billing, owner, services,
---                             hours, whatsapp, templates, plan, done)
---   CHECK sector IN (barber, beauty, nails, tattoo, spa, gym, massage,
---                    physiotherapy, praxis, other, podologie, logopaedie, ergotherapie)
---     ⚠️ Die Nicht-Praxis-Sektoren stammen aus der alten KMU-Ausrichtung und
---        werden im Onboarding nicht mehr angeboten. Constraint noch nicht bereinigt.
---   FK id -> auth.users(id) ON DELETE CASCADE · owner_id -> profiles(id)
---   PK (id) · UNIQUE (booking_slug) · UNIQUE (company_code) · UNIQUE (upper(company_code)) WHERE NOT NULL (0053)
---   ★ Zentrale Tenant-Tabelle. Owner-Einstellungen gehören HIERHER, nicht nach
---     businesses (Einzelstandort-Owner haben dort keinen Datensatz).
---   ⚠️ has_dta_pro / dta_pro_subscription_item_id sind tote Spalten
---      (Add-on 2026-06-08 abgeschafft, §302 ist in Professional enthalten).
---   ⚠️ whatsapp_* und system_prompt/faq/message_templates sind tot
---      (WhatsApp-Strang 2026-05-20 eingestellt).
---   ★ buchungskonten (07.09.2026) — owner-gepflegter Kontenrahmen:
---      [{code, label, aktiv}]. Form und Normalisierung in module/buchungskonten.js.
---      Leer = Modul-Standard (1000 Kasse, 1100 Postbank, 1200 Bank, 1210 Bank 2,
---      8700 Erloesschmaelerung, 4900 Teilabsetzung).
---      ⚠️ Gebuchte Zeilen referenzieren NICHT hierher — rechnung_zahlungen
---         speichert gegenkonto_code UND gegenkonto_label als Snapshot
---         (GoBD Rz. 107). Umbenennen eines Kontos aendert alte Buchungen nicht,
---         und genau das ist gewollt.
+--   FK id -> auth.users(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.profiles OWNER TO postgres;
+COMMENT ON COLUMN public.profiles.plan IS 'Subscription plan: starter | professional | klinik | enterprise (multi-business)';
+COMMENT ON COLUMN public.profiles.booking_slug IS 'DEPRECATED 2026-05-22: moved to businesses.booking_slug. Kept for migration grace period.';
+COMMENT ON COLUMN public.profiles.ik_number IS 'Institutionskennzeichen (9-stellig, ARGE-IK) — für §302 SGB V Abrechnung über DMRZ';
+COMMENT ON COLUMN public.profiles.tax_exempt_note IS 'e.g. "Gemäß §4 Nr. 14 UStG umsatzsteuerfrei" for physio practices.';
+COMMENT ON COLUMN public.profiles.fussbefund_legende IS 'Praxiseigene Legende der Fußgrafik: [{id,symbol,color,label}]. Leer = Standard.';
+COMMENT ON COLUMN public.profiles.tablet_kiosk_pin_set IS 'Kiosk-PIN hinterlegt? Wird ausschliesslich vom Backend (service_role) gepflegt.';
+COMMENT ON COLUMN public.profiles.selbstzahler_stufen IS 'Ops #266: benannte Selbstzahler-Preisstufen des Owners, [{id,name,betrag_eur}]. Eingabehelfer bei der Rechnungserfassung — der berechnete Betrag wird in invoices.line_items festgeschrieben, nicht die Stufe.';
+COMMENT ON COLUMN public.profiles.buchungskonten IS 'Owner-gepflegter Kontenrahmen: [{code,label,aktiv}] — Form und Normalisierung in module/buchungskonten.js. Leer = Modul-Standard (1000 Kasse, 1100 Postbank, 1200 Bank, 1210 Bank 2, 8700 Erloesschmaelerung, 4900 Teilabsetzung). Gebuchte Zeilen referenzieren NICHT hierher, sie speichern code+label als Snapshot (GoBD Rz. 107).';
+COMMENT ON COLUMN public.profiles.gps_checkin_pruefen IS 'Owner-Einstellung: beim Check-in einmalig pruefen, ob der Mitarbeiter im 150-m-Umkreis der Praxis ist. Gespeichert wird nur das Ergebnis, nie Koordinaten. Standard aus.';
 
-CREATE TABLE rechnung_zahlungen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  invoice_id uuid NOT NULL
-  art text NOT NULL
-  betrag_eur numeric(10,2) NOT NULL
-  zahlungsdatum date NOT NULL DEFAULT CURRENT_DATE
-  gegenkonto_code text NOT NULL
-  gegenkonto_label text NOT NULL
-  storniert_zeile_id uuid
-  bemerkung text
-  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_anrede_check CHECK (anrede = ANY (ARRAY['Herr'::text, 'Frau'::text, 'Divers'::text]));
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_ausfall_mode_check CHECK (ausfall_mode = ANY (ARRAY['fixed'::text, 'percent'::text]));
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_billing_check CHECK (billing = ANY (ARRAY['monthly'::text, 'annual'::text]));
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_billing_interval_check CHECK ((billing_interval = ANY (ARRAY['month'::text, 'year'::text])) OR billing_interval IS NULL);
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_booking_slug_unique UNIQUE (booking_slug);
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_company_code_key UNIQUE (company_code);
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_onboarding_step_check CHECK (onboarding_step = ANY (ARRAY['account'::text, 'business'::text, 'billing'::text, 'owner'::text, 'services'::text, 'hours'::text, 'whatsapp'::text, 'templates'::text, 'plan'::text, 'done'::text]));
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id);
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_plan_check CHECK (plan = ANY (ARRAY['starter'::text, 'professional'::text, 'klinik'::text, 'mitarbeiter'::text, 'enterprise'::text]));
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_plan_status_check CHECK (plan_status = ANY (ARRAY['pending'::text, 'trial'::text, 'active'::text, 'past_due'::text, 'canceled'::text, 'expired'::text, 'deleted'::text]));
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_role_check CHECK (role = ANY (ARRAY['owner'::text, 'employee'::text]));
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_sector_check CHECK (sector IS NULL OR (sector = ANY (ARRAY['barber'::text, 'beauty'::text, 'nails'::text, 'tattoo'::text, 'spa'::text, 'gym'::text, 'massage'::text, 'physiotherapy'::text, 'praxis'::text, 'other'::text, 'podologie'::text, 'logopaedie'::text, 'ergotherapie'::text])));
+
+CREATE TABLE public.rechnung_zahlungen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  invoice_id uuid NOT NULL,
+  art text NOT NULL,
+  betrag_eur numeric(10,2) NOT NULL,
+  zahlungsdatum date DEFAULT CURRENT_DATE NOT NULL,
+  gegenkonto_code text NOT NULL,
+  gegenkonto_label text NOT NULL,
+  storniert_zeile_id uuid,
+  bemerkung text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   created_by uuid
 );
---   CHECK rechnung_zahlungen_art_check: art IN (zahlung, ausbuchung, storno)
---   CHECK rechnung_zahlungen_storno_bezug: (art = 'storno') = (storniert_zeile_id IS NOT NULL)
---   CHECK rechnung_zahlungen_vorzeichen: art='storno' -> betrag_eur < 0,
---      sonst betrag_eur > 0. Null ist nie erlaubt.
---   FK owner_id -> profiles(id) ON DELETE RESTRICT
---   FK invoice_id -> invoices(id) ON DELETE RESTRICT
---   FK storniert_zeile_id -> rechnung_zahlungen(id)   (Selbstbezug)
---   FK created_by -> profiles(id) ON DELETE SET NULL
---   PK (id) · UNIQUE (storniert_zeile_id) WHERE NOT NULL  → jede Zeile
---      genau einmal stornierbar
---   ★ Append-only Zahlungshistorie zu invoices (Privatrechnung), 07.09.2026.
---     Der beglichene Betrag ist sum(betrag_eur), NICHT invoices.payment_status —
---     der ist nur Cache.
---   ⚠️ GoBD: TRIGGER prevent_rechnung_zahlungen_mod() blockt UPDATE und DELETE.
---      Korrektur nur durch neue Zeile mit art='storno' und negativem Betrag.
---   ⚠️ gegenkonto_code/_label sind SNAPSHOTS aus profiles.buchungskonten zum
---      Buchungszeitpunkt (GoBD Rz. 107). Beim Anzeigen NICHT wieder aus dem
---      Kontenrahmen nachschlagen — sonst aendert eine Umbenennung rueckwirkend
---      alte Buchungen.
---   ⚠️ Owner-Riegel noetig, weil ein FK KEINE RLS prueft:
---      trg_pruefe_rechnung_zahlung_owner (SECURITY DEFINER) haelt owner_id der
---      Zeile gegen invoices.owner_id.
---   ★ Geschrieben wird ueber public.rechnung_zahlung_buchen(...) — eine
---     Transaktion, die je nach Restbetrag zusaetzlich eine Ausbuchungszeile
---     anlegt, bei Barzahlung die Beleglisten-Zeile (belegliste.invoice_id)
---     erzeugt, ggf. prescriptions fortschreibt und invoices.payment_status
---     nachzieht. Nicht von Hand INSERTen.
+--   FK created_by -> profiles(id)
+--   FK invoice_id -> invoices(id)
+--   FK owner_id -> profiles(id)
+--   FK storniert_zeile_id -> rechnung_zahlungen(id)
+ALTER TABLE ONLY public.rechnung_zahlungen OWNER TO postgres;
+COMMENT ON TABLE public.rechnung_zahlungen IS 'Append-only Zahlungshistorie zu invoices (Privatrechnung). Der beglichene Betrag ist sum(betrag_eur), nicht invoices.payment_status - der ist nur Cache. UPDATE/DELETE per Trigger gesperrt (GoBD).';
 
-CREATE TABLE referral_drafts (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  lead_id uuid
-  raw_ai_data jsonb NOT NULL DEFAULT '{}'::jsonb
-  patient_vorname text
-  patient_nachname text
-  patient_geburtsdatum date
-  seans_sayisi integer
-  tedavi_turu text
-  hausbesuch boolean DEFAULT false
-  diagnose text
-  arzt_name text
-  image_url text
-  is_confirmed boolean DEFAULT false
-  status text DEFAULT 'pending'::text
-  confirmed_at timestamptz
-  confirmed_by uuid
-  booking_series_id uuid
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.rechnung_zahlungen
+  ADD CONSTRAINT rechnung_zahlungen_art_check CHECK (art = ANY (ARRAY['zahlung'::text, 'ausbuchung'::text, 'storno'::text]));
+
+ALTER TABLE ONLY public.rechnung_zahlungen
+  ADD CONSTRAINT rechnung_zahlungen_created_by_fkey FOREIGN KEY (created_by) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.rechnung_zahlungen
+  ADD CONSTRAINT rechnung_zahlungen_invoice_id_fkey FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.rechnung_zahlungen
+  ADD CONSTRAINT rechnung_zahlungen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.rechnung_zahlungen
+  ADD CONSTRAINT rechnung_zahlungen_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.rechnung_zahlungen
+  ADD CONSTRAINT rechnung_zahlungen_storniert_zeile_id_fkey FOREIGN KEY (storniert_zeile_id) REFERENCES rechnung_zahlungen(id);
+
+ALTER TABLE ONLY public.rechnung_zahlungen
+  ADD CONSTRAINT rechnung_zahlungen_storno_bezug CHECK ((art = 'storno'::text) = (storniert_zeile_id IS NOT NULL));
+
+ALTER TABLE ONLY public.rechnung_zahlungen
+  ADD CONSTRAINT rechnung_zahlungen_vorzeichen CHECK (art = 'storno'::text AND betrag_eur < 0::numeric OR art <> 'storno'::text AND betrag_eur > 0::numeric);
+
+CREATE TABLE public.referral_drafts (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  lead_id uuid,
+  raw_ai_data jsonb DEFAULT '{}'::jsonb NOT NULL,
+  patient_vorname text,
+  patient_nachname text,
+  patient_geburtsdatum date,
+  seans_sayisi integer,
+  tedavi_turu text,
+  hausbesuch boolean DEFAULT false,
+  diagnose text,
+  arzt_name text,
+  image_url text,
+  is_confirmed boolean DEFAULT false,
+  status text DEFAULT 'pending'::text,
+  confirmed_at timestamp with time zone,
+  confirmed_by uuid,
+  booking_series_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
   business_id uuid
 );
---   CHECK status IN (pending, approved, rejected) · PK (id)
---   ⚠️ Zwei Spalten tragen noch türkische Namen: seans_sayisi (Sitzungsanzahl),
---      tedavi_turu (Behandlungsart).
+--   FK business_id -> businesses(id)
+--   FK confirmed_by -> auth.users(id)
+--   FK lead_id -> leads(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.referral_drafts OWNER TO postgres;
 
-CREATE TABLE scraper_data (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  name text
-  company_name text
-  category text
-  city text
-  phone text
-  email text
-  website text
-  notes text
-  status text NOT NULL DEFAULT 'new'::text
-  created_at timestamptz NOT NULL DEFAULT now()
-  updated_at timestamptz NOT NULL DEFAULT now()
+ALTER TABLE ONLY public.referral_drafts
+  ADD CONSTRAINT referral_drafts_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.referral_drafts
+  ADD CONSTRAINT referral_drafts_confirmed_by_fkey FOREIGN KEY (confirmed_by) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.referral_drafts
+  ADD CONSTRAINT referral_drafts_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id);
+
+ALTER TABLE ONLY public.referral_drafts
+  ADD CONSTRAINT referral_drafts_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.referral_drafts
+  ADD CONSTRAINT referral_drafts_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.referral_drafts
+  ADD CONSTRAINT referral_drafts_status_check CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text]));
+
+CREATE TABLE public.scraper_data (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  name text,
+  company_name text,
+  category text,
+  city text,
+  phone text,
+  email text,
+  website text,
+  notes text,
+  status text DEFAULT 'new'::text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
   business_id uuid
 );
---   PK (id) — Apify-Suchergebnisse (B2B-Akquise).
+--   FK business_id -> businesses(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.scraper_data OWNER TO postgres;
 
-CREATE TABLE services (
-  id uuid NOT NULL DEFAULT uuid_generate_v4()
-  user_id uuid
-  title text NOT NULL
-  duration_minutes integer
-  price text
-  description text
-  is_online_meeting boolean DEFAULT false
-  created_at timestamptz DEFAULT now()
-  color text DEFAULT '#22c55e'::text
-  owner_id uuid
-  price_config jsonb
-  code text
-  is_internal boolean DEFAULT false
-  business_id uuid
-  is_group boolean DEFAULT false
-  group_capacity integer DEFAULT 5
-  required_certificate text
-  gkv_position_nr text
+ALTER TABLE ONLY public.scraper_data
+  ADD CONSTRAINT scraper_data_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.scraper_data
+  ADD CONSTRAINT scraper_data_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.scraper_data
+  ADD CONSTRAINT scraper_data_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.services (
+  id uuid DEFAULT uuid_generate_v4() NOT NULL,
+  user_id uuid,
+  title text NOT NULL,
+  duration_minutes integer,
+  price text,
+  description text,
+  is_online_meeting boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  color text DEFAULT '#22c55e'::text,
+  owner_id uuid,
+  price_config jsonb,
+  code text,
+  is_internal boolean DEFAULT false,
+  business_id uuid,
+  is_group boolean DEFAULT false,
+  group_capacity integer DEFAULT 5,
+  required_certificate text,
+  gkv_position_nr text,
   kostentraeger_typ text
 );
---   CHECK required_certificate IN (MT, MLD, KGG) · CHECK kostentraeger_typ IN
---     (gkv, privat, selbstzahler, bg) · PK (id)
---   ★ Die Leistungstabelle. Bis 28.08.2026 gab es daneben `business_services`;
---     jene Spiegeltabelle ist gedroppt, `services` ist seither die einzige.
---   ⚠️ Policy "Public read services" erlaubt SELECT für alle (Booking-Seite).
---   ⚠️ price ist text, nicht numeric. Struktur steckt in price_config jsonb.
---   ✅ kostentraeger_typ ist seit dem 03.09.2026 live (06.09.2026 gegen die
---     Datenbank nachgezaehlt: 172 von 181 Zeilen gepflegt). Hier stand bis
---     dahin „⏳ AUSSTEHEND — die Spalte gibt es wirklich noch nicht"; das war
---     falsch und haette jemanden dazu bringen koennen, einen zweiten Weg fuer
---     dieselbe Unterscheidung aufzumachen. NULL bleibt erlaubt: gelesen wird
---     ueber kostentraegerTyp() in module/leistungen-liste.js, das bei NULL auf
---     die alte implizite Regel zurueckfaellt (gkv_position_nr gesetzt = GKV).
+--   FK business_id -> businesses(id)
+--   FK owner_id -> auth.users(id)
+--   FK user_id -> auth.users(id)
+ALTER TABLE ONLY public.services OWNER TO postgres;
+COMMENT ON COLUMN public.services.is_internal IS 'Internal admin-only services (e.g. Blanko PD, Mehraufwand). Hidden from customer-facing pickers; visible in Dienstleistungen for tariff editing.';
+COMMENT ON COLUMN public.services.gkv_position_nr IS 'Positionsnummer aus §125 SGB V Bundesvertrag (z.B. X0501=KG, X1201=MT). Links to heilmittel_tarif.';
 
-CREATE TABLE spatial_ref_sys (
-  srid integer NOT NULL
-  auth_name varchar(256)
-  auth_srid integer
-  srtext varchar(2048)
-  proj4text varchar(2048)
+ALTER TABLE ONLY public.services
+  ADD CONSTRAINT services_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.services
+  ADD CONSTRAINT services_kostentraeger_typ_check CHECK (kostentraeger_typ IS NULL OR (kostentraeger_typ = ANY (ARRAY['gkv'::text, 'privat'::text, 'selbstzahler'::text, 'bg'::text])));
+
+ALTER TABLE ONLY public.services
+  ADD CONSTRAINT services_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.services
+  ADD CONSTRAINT services_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.services
+  ADD CONSTRAINT services_required_certificate_check CHECK (required_certificate = ANY (ARRAY['MT'::text, 'MLD'::text, 'KGG'::text]));
+
+ALTER TABLE ONLY public.services
+  ADD CONSTRAINT services_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id);
+
+/* [EXTENSION OWNED - NON-EXECUTABLE]
+CREATE TABLE public.spatial_ref_sys (
+  srid integer NOT NULL,
+  auth_name character varying(256),
+  auth_srid integer,
+  srtext character varying(2048),
+  proj4text character varying(2048)
 );
---   PostGIS-Systemtabelle. Einzige Tabelle OHNE RLS — unkritisch.
+ALTER TABLE ONLY public.spatial_ref_sys OWNER TO supabase_admin;
 
-CREATE TABLE terapeut_zertifikat (
-  owner_id uuid NOT NULL
-  ik_nummer text NOT NULL
-  cert_subject text
-  cert_valid_from date
-  cert_valid_to date
-  cert_thumbprint text
-  cert_serial text
-  uploaded_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  business_id uuid
-  betriebsart text NOT NULL DEFAULT 'test'::text
-  betriebsart_geaendert_am timestamptz
-  betriebsart_geaendert_von uuid
-  zulassung_referenz text
+ALTER TABLE ONLY public.spatial_ref_sys
+  ADD CONSTRAINT spatial_ref_sys_pkey PRIMARY KEY (srid);
+
+ALTER TABLE ONLY public.spatial_ref_sys
+  ADD CONSTRAINT spatial_ref_sys_srid_check CHECK (srid > 0 AND srid <= 998999);
+
+*/
+
+CREATE TABLE public.terapeut_zertifikat (
+  owner_id uuid NOT NULL,
+  ik_nummer text NOT NULL,
+  cert_subject text,
+  cert_valid_from date,
+  cert_valid_to date,
+  cert_thumbprint text,
+  cert_serial text,
+  uploaded_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  business_id uuid,
+  betriebsart text DEFAULT 'test'::text NOT NULL,
+  betriebsart_geaendert_am timestamp with time zone,
+  betriebsart_geaendert_von uuid,
+  zulassung_referenz text,
   zulassung_datum date
 );
---   CHECK betriebsart IN (test, erprobung, echt)
---   CHECK betriebsart <> 'echt' OR (zulassung_referenz nicht leer AND zulassung_datum IS NOT NULL)
---   FK betriebsart_geaendert_von -> profiles(id) ON DELETE SET NULL
---   PK (owner_id) — §302-Signaturzertifikat (PKCS#7, Browser-Signatur).
---   ★ betriebsart (20.09.2026, 0028): test | erprobung | echt — der VORGABEWERT
---     der Praxis. Die Ausnahme je Datenannahmestelle steht in
---     betriebsart_empfaenger. Hier, weil die Tabelle bereits owner_id (PK) UND
---     ik_nummer traegt, also genau das Paar, unter dem eine Praxis einreicht.
---   ⛔ KEINE Umgebungsvariable (onprem O-117): im SaaS wuerde sie ALLE Praxen
---     gleichzeitig umstellen, auch die ohne Zulassung; in der Kundenbox muesste
---     der Kunde .env bearbeiten und den Container neu erzeugen — er tut es
---     nicht, und wir kommen nicht hinein. Der Schalter muss dort liegen, wo der
---     Inhaber drankommt.
---   ⚠️ Der zweite CHECK ist der eigentliche Riegel: ohne zulassung_referenz UND
---     zulassung_datum ist betriebsart='echt' gar nicht speicherbar. Die Pruefung
---     steht in der DB und nicht (nur) in der Route, weil `abrechnung` auch vom
---     Frontend ueber PostgREST geschrieben wird — eine Regel in einer von drei
---     Routen ist keine Regel. Die Zulassung erteilt die KRANKENKASSE, nicht die
---     Datenannahmestelle.
---   ⚠️ Name ist türkisch ("terapeut"), nicht "therapeut". Nicht verwechseln
---      mit therapist_certificates (das sind MT/MLD/KGG-Qualifikationen).
+--   FK betriebsart_geaendert_von -> profiles(id)
+--   FK business_id -> businesses(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.terapeut_zertifikat OWNER TO postgres;
+COMMENT ON COLUMN public.terapeut_zertifikat.betriebsart IS 'test | erprobung | echt — steuert UNB-Testindikator (0/1/2) und den ersten Buchstaben des physikalischen Dateinamens (T/T/E). Vorgabe test. Umgestellt wird ausschliesslich vom Inhaber ueber die Oberflaeche, nie per Umgebungsvariable (onprem O-117).';
+COMMENT ON COLUMN public.terapeut_zertifikat.zulassung_referenz IS 'Aktenzeichen/Referenz der Zulassung zum Echtverfahren. Erteilt die KRANKENKASSE, nicht die Datenannahmestelle. Pflicht, bevor betriebsart auf echt gehen darf.';
+COMMENT ON COLUMN public.terapeut_zertifikat.zulassung_datum IS 'Datum der schriftlichen Zulassung zum Echtverfahren.';
 
-CREATE TABLE therapist_certificates (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  profile_id uuid NOT NULL
-  certificate text NOT NULL
-  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+ALTER TABLE ONLY public.terapeut_zertifikat
+  ADD CONSTRAINT terapeut_zertifikat_betriebsart_chk CHECK (betriebsart = ANY (ARRAY['test'::text, 'erprobung'::text, 'echt'::text]));
+
+ALTER TABLE ONLY public.terapeut_zertifikat
+  ADD CONSTRAINT terapeut_zertifikat_betriebsart_geaendert_von_fkey FOREIGN KEY (betriebsart_geaendert_von) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.terapeut_zertifikat
+  ADD CONSTRAINT terapeut_zertifikat_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.terapeut_zertifikat
+  ADD CONSTRAINT terapeut_zertifikat_echt_braucht_zulassung_chk CHECK (betriebsart <> 'echt'::text OR btrim(COALESCE(zulassung_referenz, ''::text)) <> ''::text AND zulassung_datum IS NOT NULL);
+
+ALTER TABLE ONLY public.terapeut_zertifikat
+  ADD CONSTRAINT terapeut_zertifikat_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.terapeut_zertifikat
+  ADD CONSTRAINT terapeut_zertifikat_pkey PRIMARY KEY (owner_id);
+
+CREATE TABLE public.therapist_certificates (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  profile_id uuid NOT NULL,
+  certificate text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
---   CHECK certificate IN (MT, MLD, KGG)
---   PK (id) · UNIQUE (profile_id, certificate)
+--   FK owner_id -> profiles(id)
+--   FK profile_id -> profiles(id)
+ALTER TABLE ONLY public.therapist_certificates OWNER TO postgres;
 
-CREATE TABLE time_offs (
-  id uuid NOT NULL DEFAULT uuid_generate_v4()
-  employee_id uuid NOT NULL
-  start_date timestamptz NOT NULL
-  end_date timestamptz NOT NULL
-  reason text
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.therapist_certificates
+  ADD CONSTRAINT therapist_certificates_certificate_check CHECK (certificate = ANY (ARRAY['MT'::text, 'MLD'::text, 'KGG'::text]));
+
+ALTER TABLE ONLY public.therapist_certificates
+  ADD CONSTRAINT therapist_certificates_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.therapist_certificates
+  ADD CONSTRAINT therapist_certificates_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.therapist_certificates
+  ADD CONSTRAINT therapist_certificates_profile_id_certificate_key UNIQUE (profile_id, certificate);
+
+ALTER TABLE ONLY public.therapist_certificates
+  ADD CONSTRAINT therapist_certificates_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+CREATE TABLE public.time_offs (
+  id uuid DEFAULT uuid_generate_v4() NOT NULL,
+  employee_id uuid NOT NULL,
+  start_date timestamp with time zone NOT NULL,
+  end_date timestamp with time zone NOT NULL,
+  reason text,
+  created_at timestamp with time zone DEFAULT now(),
+  business_id uuid,
+  type text DEFAULT 'urlaub'::text,
+  owner_id uuid,
+  note text,
+  approved_by uuid,
+  approved_at timestamp with time zone
+);
+--   FK approved_by -> profiles(id)
+--   FK business_id -> businesses(id)
+--   FK employee_id -> profiles(id)
+--   FK owner_id -> profiles(id)
+ALTER TABLE ONLY public.time_offs OWNER TO postgres;
+
+ALTER TABLE ONLY public.time_offs
+  ADD CONSTRAINT time_offs_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.time_offs
+  ADD CONSTRAINT time_offs_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.time_offs
+  ADD CONSTRAINT time_offs_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.time_offs
+  ADD CONSTRAINT time_offs_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.time_offs
+  ADD CONSTRAINT time_offs_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.time_offs
+  ADD CONSTRAINT time_offs_type_check CHECK (type = ANY (ARRAY['urlaub'::text, 'krank'::text, 'frei'::text, 'elternzeit'::text]));
+
+CREATE TABLE public.trip_history (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid,
+  plan_id uuid,
+  started_at timestamp with time zone,
+  completed_at timestamp with time zone,
+  stops_visited integer DEFAULT 0,
+  total_stops integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now()
+);
+--   FK plan_id -> trip_plans(id)
+--   FK user_id -> auth.users(id)
+ALTER TABLE ONLY public.trip_history OWNER TO postgres;
+
+ALTER TABLE ONLY public.trip_history
+  ADD CONSTRAINT trip_history_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.trip_history
+  ADD CONSTRAINT trip_history_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES trip_plans(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.trip_history
+  ADD CONSTRAINT trip_history_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+CREATE TABLE public.trip_plans (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid,
+  accommodation_id uuid,
+  title text,
+  city text,
+  country text,
+  duration_hours numeric,
+  transport_mode text,
+  status text DEFAULT 'draft'::text,
+  plan_data jsonb,
+  total_cost_min numeric,
+  total_cost_max numeric,
+  currency text DEFAULT 'EUR'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now()
+);
+--   FK accommodation_id -> accommodations(id)
+--   FK user_id -> profiles(id)
+ALTER TABLE ONLY public.trip_plans OWNER TO postgres;
+
+ALTER TABLE ONLY public.trip_plans
+  ADD CONSTRAINT trip_plans_accommodation_id_fkey FOREIGN KEY (accommodation_id) REFERENCES accommodations(id);
+
+ALTER TABLE ONLY public.trip_plans
+  ADD CONSTRAINT trip_plans_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.trip_plans
+  ADD CONSTRAINT trip_plans_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+CREATE TABLE public.ueberweisungen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  lead_id uuid NOT NULL,
+  image_url text,
+  arzt_name text,
+  notiz text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
   business_id uuid
-  type text DEFAULT 'urlaub'::text
-  owner_id uuid
-  note text
-  approved_by uuid
-  approved_at timestamptz
 );
---   CHECK type IN (urlaub, krank, frei, elternzeit)
---   FK employee_id -> profiles(id) ON DELETE CASCADE · PK (id)
---   ⚠️ Policy "Public read time offs" erlaubt SELECT für alle.
+--   FK business_id -> businesses(id)
+--   FK lead_id -> leads(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.ueberweisungen OWNER TO postgres;
 
-CREATE TABLE trip_history (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  user_id uuid
-  plan_id uuid
-  started_at timestamptz
-  completed_at timestamptz
-  stops_visited integer DEFAULT 0
-  total_stops integer DEFAULT 0
-  created_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.ueberweisungen
+  ADD CONSTRAINT ueberweisungen_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.ueberweisungen
+  ADD CONSTRAINT ueberweisungen_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id);
+
+ALTER TABLE ONLY public.ueberweisungen
+  ADD CONSTRAINT ueberweisungen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.ueberweisungen
+  ADD CONSTRAINT ueberweisungen_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.user_credits (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid,
+  credits integer DEFAULT 2 NOT NULL,
+  is_unlimited boolean DEFAULT false NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now()
 );
---   PK (id) · ⚠️ Fremdkörper aus dem alten Reise-Projekt, nicht Praxura.
+--   FK user_id -> auth.users(id)
+ALTER TABLE ONLY public.user_credits OWNER TO postgres;
 
-CREATE TABLE trip_plans (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  user_id uuid
-  accommodation_id uuid
-  title text
-  city text
-  country text
-  duration_hours numeric
-  transport_mode text
-  status text DEFAULT 'draft'::text
-  plan_data jsonb
-  total_cost_min numeric
-  total_cost_max numeric
-  currency text DEFAULT 'EUR'::text
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.user_credits
+  ADD CONSTRAINT user_credits_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.user_credits
+  ADD CONSTRAINT user_credits_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.user_credits
+  ADD CONSTRAINT user_credits_user_id_key UNIQUE (user_id);
+
+CREATE TABLE public.user_preferences (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  user_id uuid NOT NULL,
+  preference_key text NOT NULL,
+  preference_value text,
+  updated_at timestamp with time zone DEFAULT now()
 );
---   PK (id) · ⚠️ Fremdkörper aus dem alten Reise-Projekt, nicht Praxura.
+--   FK user_id -> profiles(id)
+ALTER TABLE ONLY public.user_preferences OWNER TO postgres;
+COMMENT ON TABLE public.user_preferences IS 'Per-user UI prefs. Keys: selected_business (UUID), calendar_view (daily|weekly|monthly), employee_filter (UUID|all)';
 
-CREATE TABLE ueberweisungen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  lead_id uuid NOT NULL
-  image_url text
-  arzt_name text
+ALTER TABLE ONLY public.user_preferences
+  ADD CONSTRAINT user_preferences_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.user_preferences
+  ADD CONSTRAINT user_preferences_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.user_preferences
+  ADD CONSTRAINT user_preferences_user_id_preference_key_key UNIQUE (user_id, preference_key);
+
+CREATE TABLE public.vehicles (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  created_by uuid NOT NULL,
+  kind text NOT NULL,
+  kennzeichen text NOT NULL,
+  label text,
+  is_default boolean DEFAULT false,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  business_id uuid
+);
+--   FK business_id -> businesses(id)
+--   FK created_by -> auth.users(id)
+--   FK owner_id -> auth.users(id)
+ALTER TABLE ONLY public.vehicles OWNER TO postgres;
+
+ALTER TABLE ONLY public.vehicles
+  ADD CONSTRAINT vehicles_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.vehicles
+  ADD CONSTRAINT vehicles_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.vehicles
+  ADD CONSTRAINT vehicles_kind_check CHECK (kind = ANY (ARRAY['privat'::text, 'gewerblich'::text]));
+
+ALTER TABLE ONLY public.vehicles
+  ADD CONSTRAINT vehicles_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.vehicles
+  ADD CONSTRAINT vehicles_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.warteliste (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  lead_id uuid,
+  service_id uuid,
+  preferred_days jsonb DEFAULT '[]'::jsonb,
+  preferred_time_from time without time zone,
+  preferred_time_to time without time zone,
+  notes text,
+  priority smallint DEFAULT 1,
+  status text DEFAULT 'waiting'::text NOT NULL,
+  matched_booking_id uuid,
+  notified_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK lead_id -> leads(id)
+--   FK matched_booking_id -> bookings(id)
+--   FK owner_id -> auth.users(id)
+--   FK service_id -> services(id)
+ALTER TABLE ONLY public.warteliste OWNER TO postgres;
+
+ALTER TABLE ONLY public.warteliste
+  ADD CONSTRAINT warteliste_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.warteliste
+  ADD CONSTRAINT warteliste_matched_booking_id_fkey FOREIGN KEY (matched_booking_id) REFERENCES bookings(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.warteliste
+  ADD CONSTRAINT warteliste_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.warteliste
+  ADD CONSTRAINT warteliste_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.warteliste
+  ADD CONSTRAINT warteliste_priority_check CHECK (priority >= 1 AND priority <= 3);
+
+ALTER TABLE ONLY public.warteliste
+  ADD CONSTRAINT warteliste_service_id_fkey FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.warteliste
+  ADD CONSTRAINT warteliste_status_check CHECK (status = ANY (ARRAY['waiting'::text, 'matched'::text, 'cancelled'::text]));
+
+CREATE TABLE public.working_hours (
+  id uuid DEFAULT uuid_generate_v4() NOT NULL,
+  user_id uuid NOT NULL,
+  day_of_week integer NOT NULL,
+  start_time time without time zone NOT NULL,
+  end_time time without time zone NOT NULL,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  owner_id uuid,
+  business_id uuid
+);
+--   FK business_id -> businesses(id)
+--   FK owner_id -> auth.users(id)
+--   FK user_id -> auth.users(id)
+ALTER TABLE ONLY public.working_hours OWNER TO postgres;
+
+ALTER TABLE ONLY public.working_hours
+  ADD CONSTRAINT working_hours_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.working_hours
+  ADD CONSTRAINT working_hours_day_of_week_check CHECK (day_of_week >= 0 AND day_of_week <= 6);
+
+ALTER TABLE ONLY public.working_hours
+  ADD CONSTRAINT working_hours_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
+
+ALTER TABLE ONLY public.working_hours
+  ADD CONSTRAINT working_hours_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.working_hours
+  ADD CONSTRAINT working_hours_user_id_day_of_week_key UNIQUE (user_id, day_of_week);
+
+ALTER TABLE ONLY public.working_hours
+  ADD CONSTRAINT working_hours_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id);
+
+CREATE TABLE public.zaa_fehler (
+  id bigint DEFAULT nextval('zaa_fehler_id_seq'::regclass) NOT NULL,
+  abrechnung_id uuid NOT NULL,
+  prescription_id uuid,
+  fehler_code text NOT NULL,
+  fehler_text text,
+  uebersetzung text,
+  loesung_hint text,
+  status text DEFAULT 'offen'::text NOT NULL,
+  resolved_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now()
+);
+--   FK abrechnung_id -> abrechnung(id)
+--   FK prescription_id -> prescriptions(id)
+ALTER TABLE ONLY public.zaa_fehler OWNER TO postgres;
+
+ALTER TABLE ONLY public.zaa_fehler
+  ADD CONSTRAINT zaa_fehler_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.zaa_fehler
+  ADD CONSTRAINT zaa_fehler_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.zaa_fehler
+  ADD CONSTRAINT zaa_fehler_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.zaa_fehler
+  ADD CONSTRAINT zaa_fehler_status_check CHECK (status = ANY (ARRAY['offen'::text, 'in_bearbeitung'::text, 'behoben'::text, 'ignoriert'::text]));
+
+CREATE TABLE public.zuzahlung_befreiung (
+  id bigint DEFAULT nextval('zuzahlung_befreiung_id_seq'::regclass) NOT NULL,
+  owner_id uuid NOT NULL,
+  patient_id uuid NOT NULL,
+  jahr integer NOT NULL,
+  befreit_ab date NOT NULL,
+  befreit_bis date,
+  beleg_url text,
+  created_at timestamp with time zone DEFAULT now(),
+  business_id uuid,
+  nachweis_art text DEFAULT 'bescheinigung'::text,
   notiz text
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  business_id uuid
 );
---   FK lead_id -> leads(id) · PK (id)
+--   FK business_id -> businesses(id)
+--   FK owner_id -> auth.users(id)
+--   FK patient_id -> leads(id)
+ALTER TABLE ONLY public.zuzahlung_befreiung OWNER TO postgres;
 
-CREATE TABLE user_credits (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  user_id uuid
-  credits integer NOT NULL DEFAULT 2
-  is_unlimited boolean NOT NULL DEFAULT false
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.zuzahlung_befreiung
+  ADD CONSTRAINT zuzahlung_befreiung_business_id_fkey FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.zuzahlung_befreiung
+  ADD CONSTRAINT zuzahlung_befreiung_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.zuzahlung_befreiung
+  ADD CONSTRAINT zuzahlung_befreiung_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.zuzahlung_befreiung
+  ADD CONSTRAINT zuzahlung_befreiung_patient_id_jahr_key UNIQUE (patient_id, jahr);
+
+ALTER TABLE ONLY public.zuzahlung_befreiung
+  ADD CONSTRAINT zuzahlung_befreiung_pkey PRIMARY KEY (id);
+
+CREATE TABLE public.zuzahlung_guthaben (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  patient_id uuid NOT NULL,
+  quelle_prescription_id uuid,
+  quelle_verordnung_id uuid,
+  betrag_eur numeric(10,2) NOT NULL,
+  rest_eur numeric(10,2) NOT NULL,
+  status text DEFAULT 'offen'::text NOT NULL,
+  notiz text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  created_by uuid,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
---   PK (id) · UNIQUE (user_id) · ⚠️ Fremdkörper aus einem alten Projekt.
+--   FK created_by -> auth.users(id)
+--   FK owner_id -> profiles(id)
+--   FK patient_id -> leads(id)
+--   FK quelle_prescription_id -> prescriptions(id)
+--   FK quelle_verordnung_id -> prescriptions(id)
+ALTER TABLE ONLY public.zuzahlung_guthaben OWNER TO postgres;
+COMMENT ON TABLE public.zuzahlung_guthaben IS 'Zuviel gezahlte Zuzahlung, die auf eine spaetere Verordnung angerechnet wird. Entsteht, wenn das Soll nach einer Korrektur unter den bereits kassierten Betrag faellt.';
 
-CREATE TABLE user_preferences (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  user_id uuid NOT NULL
-  preference_key text NOT NULL
-  preference_value text
-  updated_at timestamptz DEFAULT now()
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_betrag_eur_check CHECK (betrag_eur > 0::numeric);
+
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_ein_bezug CHECK (NOT (quelle_prescription_id IS NOT NULL AND quelle_verordnung_id IS NOT NULL));
+
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_quelle_prescription_id_fkey FOREIGN KEY (quelle_prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_quelle_verordnung_id_fkey FOREIGN KEY (quelle_verordnung_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_rest_eur_check CHECK (rest_eur >= 0::numeric);
+
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_rest_hoechstens_betrag CHECK (rest_eur <= betrag_eur);
+
+ALTER TABLE ONLY public.zuzahlung_guthaben
+  ADD CONSTRAINT zuzahlung_guthaben_status_check CHECK (status = ANY (ARRAY['offen'::text, 'teilweise_verrechnet'::text, 'verrechnet'::text, 'ausgezahlt'::text, 'verfallen'::text]));
+
+CREATE TABLE public.zuzahlung_korrekturen (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  business_id uuid,
+  patient_id uuid,
+  prescription_id uuid,
+  verordnung_id uuid,
+  alt_betrag_eur numeric(10,2),
+  neu_betrag_eur numeric(10,2) NOT NULL,
+  alt_einheiten integer,
+  neu_einheiten integer,
+  grund_code text NOT NULL,
+  grund text NOT NULL,
+  guthaben_id uuid,
+  erfasst_von uuid,
+  erfasst_am timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
---   PK (id) · UNIQUE (user_id, preference_key)
+--   FK erfasst_von -> auth.users(id)
+--   FK guthaben_id -> zuzahlung_guthaben(id)
+--   FK owner_id -> profiles(id)
+--   FK patient_id -> leads(id)
+--   FK prescription_id -> prescriptions(id)
+--   FK verordnung_id -> prescriptions(id)
+ALTER TABLE ONLY public.zuzahlung_korrekturen OWNER TO postgres;
+COMMENT ON TABLE public.zuzahlung_korrekturen IS 'GoBD-Protokoll jeder Aenderung am geforderten Zuzahlungsbetrag: wer, wann, alter Wert, neuer Wert, Grund. Append-only. Der GUELTIGE Betrag steht weiterhin in prescriptions.zuzahlung_eur — diese Tabelle ist das Gedaechtnis, nicht die Wahrheit.';
 
-CREATE TABLE vehicles (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  created_by uuid NOT NULL
-  kind text NOT NULL
-  kennzeichen text NOT NULL
-  label text
-  is_default boolean DEFAULT false
-  is_active boolean DEFAULT true
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-  business_id uuid
-);
---   CHECK kind IN (privat, gewerblich) · PK (id)
---   RLS: private Fahrzeuge sieht nur, wer sie angelegt hat.
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_ein_bezug CHECK (NOT (prescription_id IS NOT NULL AND verordnung_id IS NOT NULL));
 
--- ★★★ `verordnungen` — GEDROPPT 04.09.2026, nicht wieder anlegen. ★★★
--- War der Podologie-Verordnungstopf, bis er in `prescriptions`
--- (therapie_bereich='podo') aufging (Kemal, 04.09.2026: "tek tablo olması
--- şart"). Erst 3 Tage stillgelegt (ids unverändert übernommen, FKs
--- umgehängt), dann auf Nutzerwunsch sofort gedroppt statt der ursprünglich
--- vorgesehenen 90-Tage-Frist. Die 4 historischen Zeilen liegen NICHT im
--- Repo (DSGVO) — lokale Sicherung ausserhalb der DB, ausserhalb des Repos.
--- `api/dsgvo.js` wurde entsprechend bereinigt (Tabelle nicht mehr gelistet).
--- Spaltenübersetzung + volle Begründung: `module/verordnung-topf.js`.
--- Für JEDE künftige Podologie- (oder sonstige Verordnungs-)Frage gilt: die
--- EINE Tabelle ist `prescriptions`. Kein zweiter Verordnungstopf wird
--- wieder eröffnet — vor jeder neuen Tabelle mit "Verordnung" im Namen erst
--- `db-ustasi` fragen und diesen Absatz zeigen.
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_erfasst_von_fkey FOREIGN KEY (erfasst_von) REFERENCES auth.users(id) ON DELETE SET NULL;
 
--- visibility_reports — GEDROPPT 02.10.2026 (0056, KHS K1.6).
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_grund_check CHECK (length(btrim(grund)) >= 3);
 
-CREATE TABLE warteliste (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  lead_id uuid
-  service_id uuid
-  preferred_days jsonb DEFAULT '[]'::jsonb
-  preferred_time_from time
-  preferred_time_to time
-  notes text
-  priority smallint DEFAULT 1
-  status text NOT NULL DEFAULT 'waiting'::text
-  matched_booking_id uuid
-  notified_at timestamptz
-  created_at timestamptz NOT NULL DEFAULT now()
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
---   CHECK priority BETWEEN 1 AND 3 · status IN (waiting, matched, cancelled)
---   PK (id)
---   ⚠️ Stornieren heisst `status = 'cancelled'`, NICHT loeschen: das Team darf
---     seit 17.09.2026 lesen, anlegen und aendern, aber DELETE bleibt beim
---     Inhaber (Art. 5 Abs. 1 lit. d). Gilt auch fuer die Route
---     DELETE /api/warteliste/:id, die mit service_role laeuft und RLS nicht
---     sieht — die Rollenpruefung steht dort im Code. db/SCHEMA-RLS.sql.
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_grund_code_check CHECK (grund_code = ANY (ARRAY['abbruch'::text, 'korrektur_soll'::text, 'guthaben_verrechnung'::text, 'befreiung_nachgereicht'::text, 'sonstiges'::text]));
 
-CREATE TABLE working_hours (
-  id uuid NOT NULL DEFAULT uuid_generate_v4()
-  user_id uuid NOT NULL
-  day_of_week integer NOT NULL
-  start_time time NOT NULL
-  end_time time NOT NULL
-  is_active boolean DEFAULT true
-  created_at timestamptz DEFAULT now()
-  owner_id uuid
-  business_id uuid
-);
---   CHECK day_of_week BETWEEN 0 AND 6
---   PK (id) · UNIQUE (user_id, day_of_week)
---   ⚠️ Policy "Public read working hours" erlaubt SELECT für alle (Booking-Seite).
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_guthaben_id_fkey FOREIGN KEY (guthaben_id) REFERENCES zuzahlung_guthaben(id) ON DELETE SET NULL;
 
-CREATE TABLE zaa_fehler (
-  id bigint NOT NULL DEFAULT nextval('zaa_fehler_id_seq')
-  abrechnung_id uuid NOT NULL
-  prescription_id uuid
-  fehler_code text NOT NULL
-  fehler_text text
-  uebersetzung text
-  loesung_hint text
-  status text NOT NULL DEFAULT 'offen'::text
-  resolved_at timestamptz
-  created_at timestamptz DEFAULT now()
-);
---   CHECK status IN (offen, in_bearbeitung, behoben, ignoriert)
---   FK abrechnung_id -> abrechnung(id) ON DELETE CASCADE · PK (id)
---   Kassenrückmeldungen (Absetzungen) aus der ZAA-Datei.
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_neu_betrag_eur_check CHECK (neu_betrag_eur >= 0::numeric);
 
-CREATE TABLE zuzahlung_befreiung (
-  id bigint NOT NULL DEFAULT nextval('zuzahlung_befreiung_id_seq')
-  owner_id uuid NOT NULL
-  patient_id uuid NOT NULL
-  jahr integer NOT NULL
-  befreit_ab date NOT NULL
-  befreit_bis date
-  beleg_url text
-  created_at timestamptz DEFAULT now()
-  business_id uuid
-  nachweis_art text DEFAULT 'bescheinigung'::text
-  notiz text
-);
---   FK patient_id -> leads(id) ON DELETE CASCADE
---   PK (id) · UNIQUE (patient_id, jahr)
---   TRIGGER fn_befreiung_backfill_prescriptions() aktualisiert bestehende Rezepte.
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_neu_einheiten_check CHECK (neu_einheiten IS NULL OR neu_einheiten >= 0);
 
-CREATE TABLE zuzahlung_guthaben (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  business_id uuid
-  patient_id uuid NOT NULL
-  quelle_prescription_id uuid
-  quelle_verordnung_id uuid
-  betrag_eur numeric(10,2) NOT NULL
-  rest_eur numeric(10,2) NOT NULL
-  status text NOT NULL DEFAULT 'offen'::text
-  notiz text
-  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
-  created_by uuid
-  updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
-);
---   CHECK betrag_eur > 0 · rest_eur >= 0 · rest_eur <= betrag_eur
---   CHECK status IN (offen, teilweise_verrechnet, verrechnet, ausgezahlt, verfallen)
---   CHECK NOT (quelle_prescription_id IS NOT NULL AND quelle_verordnung_id IS NOT NULL)
---        Seit 04.09.2026 zeigen BEIDE Spalten auf prescriptions (EIN Topf) —
---        der CHECK besteht unveraendert fort, nur die Namen sind jetzt gleich-bedeutend.
---   FK owner_id -> profiles(id) ON DELETE RESTRICT
---   FK patient_id -> leads(id) ON DELETE CASCADE
---   FK quelle_prescription_id -> prescriptions(id) ON DELETE SET NULL
---   FK quelle_verordnung_id -> prescriptions(id) ON DELETE SET NULL
---   FK created_by -> auth.users(id) ON DELETE SET NULL
---   PK (id)
---   TRIGGER trg_zuzahlung_guthaben_status leitet status aus rest_eur ab. Was der
---     Client in status schickt, wird ueberschrieben — ausser 'ausgezahlt' und
---     'verfallen', das sind Endzustaende.
---   TRIGGER trg_set_business_id (BEFORE INSERT, set_business_id_default()) —
---     nachgezogen 01.09.2026. Greift nur, wenn business_id noch NULL ist; ein
---     von der Route explizit mitgegebener Wert bleibt unberuehrt.
---   Zuviel kassierte Zuzahlung als Patientenguthaben. Warum: db/REGISTER.md
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE RESTRICT;
 
-CREATE TABLE zuzahlung_korrekturen (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  owner_id uuid NOT NULL
-  business_id uuid
-  patient_id uuid
-  prescription_id uuid
-  verordnung_id uuid
-  alt_betrag_eur numeric(10,2)
-  neu_betrag_eur numeric(10,2) NOT NULL
-  alt_einheiten integer
-  neu_einheiten integer
-  grund_code text NOT NULL
-  grund text NOT NULL
-  guthaben_id uuid
-  erfasst_von uuid
-  erfasst_am timestamptz NOT NULL DEFAULT timezone('utc', now())
-);
---   CHECK grund_code IN (abbruch, korrektur_soll, guthaben_verrechnung,
---                        befreiung_nachgereicht, sonstiges)
---   CHECK length(btrim(grund)) >= 3 · neu_betrag_eur >= 0
---   CHECK neu_einheiten IS NULL OR neu_einheiten >= 0
---   CHECK NOT (prescription_id IS NOT NULL AND verordnung_id IS NOT NULL)
---        (seit 04.09.2026 zeigen beide Spalten auf prescriptions, CHECK bleibt)
---   FK owner_id -> profiles(id) ON DELETE RESTRICT
---   FK patient_id -> leads(id) ON DELETE SET NULL
---   FK prescription_id -> prescriptions(id) ON DELETE SET NULL
---   FK verordnung_id -> prescriptions(id) ON DELETE SET NULL
---   FK guthaben_id -> zuzahlung_guthaben(id) ON DELETE SET NULL
---   FK erfasst_von -> auth.users(id) ON DELETE SET NULL
---   PK (id)
---   ⚠️ UNVERAENDERLICH (GoBD): TRIGGER trg_prevent_zuzahlung_korrekturen_mod
---     blockt jedes UPDATE und DELETE, und es gibt bewusst KEINE UPDATE/DELETE-Policy.
---     Eine falsche Korrektur wird durch eine NEUE Korrektur richtiggestellt — genau
---     wie bei belegliste. Kein UPDATE in den Code schreiben, er bekommt eine Exception.
---   TRIGGER trg_set_business_id — wie zuzahlung_guthaben, nachgezogen 01.09.2026.
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES leads(id) ON DELETE SET NULL;
 
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_pkey PRIMARY KEY (id);
 
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_prescription_id_fkey FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
 
--- =====================================================================
--- 2. VIEWS
--- =====================================================================
+ALTER TABLE ONLY public.zuzahlung_korrekturen
+  ADD CONSTRAINT zuzahlung_korrekturen_verordnung_id_fkey FOREIGN KEY (verordnung_id) REFERENCES prescriptions(id) ON DELETE SET NULL;
 
-CREATE VIEW profiles_public AS
-  SELECT id, business_name, owner_first_name, owner_last_name,
-         accepts_bookings, role, owner_id, booking_slug, avatar_url, anrede
-  FROM profiles
-  WHERE NOT (role = 'employee' AND is_active IS FALSE);   -- 0055: entfernte Mitarbeiter weg
---   Öffentliche Buchungsseite. Sensible Spalten wurden 2026-06-03 bewusst entfernt.
---   security_invoker = true.
-
-CREATE VIEW fahrten_monthly_summary AS
-  SELECT owner_id, user_id, vehicle_id, kennzeichen_snapshot, kind_snapshot,
-         date_trunc('month', fahrt_started_at) AS month,
-         count(*) AS trips,
-         sum(COALESCE(distance_km, 0)) AS total_km,
-         sum(CASE WHEN fahrt_ended_at IS NOT NULL AND fahrt_started_at IS NOT NULL
-                  THEN EXTRACT(epoch FROM fahrt_ended_at - fahrt_started_at) / 60
-                  ELSE 0 END)::integer AS total_minutes
-  FROM fahrten f
+-- ----------------------------------------------------------------------------
+-- VIEWS
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE VIEW public.fahrten_monthly_summary WITH (security_invoker=on) AS
+SELECT owner_id,
+    user_id,
+    vehicle_id,
+    kennzeichen_snapshot,
+    kind_snapshot,
+    date_trunc('month'::text, fahrt_started_at) AS month,
+    count(*) AS trips,
+    sum(COALESCE(distance_km, 0)) AS total_km,
+    sum(
+        CASE
+            WHEN fahrt_ended_at IS NOT NULL AND fahrt_started_at IS NOT NULL THEN EXTRACT(epoch FROM fahrt_ended_at - fahrt_started_at) / 60::numeric
+            ELSE 0::numeric
+        END)::integer AS total_minutes
+   FROM fahrten f
   WHERE end_km IS NOT NULL
-  GROUP BY owner_id, user_id, vehicle_id, kennzeichen_snapshot, kind_snapshot,
-           date_trunc('month', fahrt_started_at);
+  GROUP BY owner_id, user_id, vehicle_id, kennzeichen_snapshot, kind_snapshot, (date_trunc('month'::text, fahrt_started_at));
+ALTER VIEW public.fahrten_monthly_summary OWNER TO postgres;
 
-CREATE VIEW kostentraeger_auswahl WITH (security_invoker = true) AS
-  SELECT kt.ik, kt.name, kt.kurzname, kt.abrechnender_kt_ik
-  FROM kostentraeger kt
-  WHERE kt.datensatz_status = 'echt'
-    AND kt.active IS TRUE
-    AND kt.payer_type = 'gkv'
-    AND (kt.valid_from IS NULL
-         OR kt.valid_from <= (now() AT TIME ZONE 'Europe/Berlin')::date)
-    AND (kt.valid_to IS NULL
-         OR kt.valid_to >= (now() AT TIME ZONE 'Europe/Berlin')::date)
-    AND (kt.abrechnender_kt_ik IS NOT NULL
-         OR EXISTS (SELECT 1 FROM kostentraeger_annahmestellen ka
-                     WHERE ka.kostentraeger_ik = kt.ik
-                       AND (ka.valid_from IS NULL OR ka.valid_from <= (now() AT TIME ZONE 'Europe/Berlin')::date)
-                       AND (ka.valid_to   IS NULL OR ka.valid_to   >= (now() AT TIME ZONE 'Europe/Berlin')::date)));
---   Ops #300 — Auswahlsicht für die IK-Suche im Kassenfeld (0040_kostentraeger_auswahl_view.sql).
---   security_invoker, REVOKE ALL inkl. service_role, GRANT SELECT nur authenticated (siehe SCHEMA-RLS.sql).
---   ✅ Im SaaS angewendet 27.09.2026 (MCP), 893 Zeilen verifiziert.
---   ✅ 01.10.2026 durch 0046 ersetzt (CREATE OR REPLACE, Spalten/Grants/COMMENT
---      unveraendert): Berliner Tag statt current_date, nur gueltige Annahmestellen. 876 Zeilen.
---   ✅ 01.10.2026 (0048): auch kt.valid_from <= Berliner Tag (wie Backend kostentraegerAbfrage). 876 Zeilen.
+-- [EXTENSION OWNED] View public.geography_columns (owned by extension)
 
--- geometry_columns, geography_columns → PostGIS-Systemviews, hier ausgelassen.
+-- [EXTENSION OWNED] View public.geometry_columns (owned by extension)
+
+CREATE OR REPLACE VIEW public.kostentraeger_auswahl WITH (security_invoker=true) AS
+SELECT ik,
+    name,
+    kurzname,
+    abrechnender_kt_ik
+   FROM kostentraeger kt
+  WHERE datensatz_status = 'echt'::text AND active IS TRUE AND payer_type = 'gkv'::text AND (valid_from IS NULL OR valid_from <= (now() AT TIME ZONE 'Europe/Berlin'::text)::date) AND (valid_to IS NULL OR valid_to >= (now() AT TIME ZONE 'Europe/Berlin'::text)::date) AND (abrechnender_kt_ik IS NOT NULL OR (EXISTS ( SELECT 1
+           FROM kostentraeger_annahmestellen ka
+          WHERE ka.kostentraeger_ik = kt.ik AND (ka.valid_from IS NULL OR ka.valid_from <= (now() AT TIME ZONE 'Europe/Berlin'::text)::date) AND (ka.valid_to IS NULL OR ka.valid_to >= (now() AT TIME ZONE 'Europe/Berlin'::text)::date))));
+ALTER VIEW public.kostentraeger_auswahl OWNER TO postgres;
+COMMENT ON VIEW public.kostentraeger_auswahl IS 'Auswahlsicht fuer die IK-Suche im Kassenfeld (Ops #300): nur echte, aktive, heute gueltige GKV-Kostentraeger mit mindestens einem VKG -- ohne Rechenzentren und Abrechnungsstellen. ik = Karten-IK (was auf Muster 13 steht), abrechnender_kt_ik = IK, bei der abgerechnet wird (NULL = die Zeile rechnet selbst ab). security_invoker: erbt die RLS von kostentraeger, nur authenticated.';
+
+CREATE OR REPLACE VIEW public.profiles_public WITH (security_invoker=true) AS
+SELECT id,
+    business_name,
+    owner_first_name,
+    owner_last_name,
+    accepts_bookings,
+    role,
+    owner_id,
+    booking_slug,
+    avatar_url,
+    anrede
+   FROM profiles
+  WHERE NOT (role = 'employee'::text AND is_active IS FALSE);
+ALTER VIEW public.profiles_public OWNER TO postgres;
+
+-- ----------------------------------------------------------------------------
+-- MATERIALIZED VIEWS
+-- ----------------------------------------------------------------------------
+-- (no materialized views defined)

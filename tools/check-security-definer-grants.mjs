@@ -38,6 +38,8 @@ export const PROTECTED = [
   // Konto-Uebernahme. Nur service_role.
   'auth_sitzungen_beenden',
   'mitarbeiter_zuordnen',
+  // 0059: Owner-Papierprüfvermerke mit serverseitigem Mandantenargument; nur service_role.
+  'podologie_empfangsnachweis_append',
 ];
 
 // Bewusst fuer anon/authenticated geoeffnete RPC-Funktionen.

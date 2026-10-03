@@ -6,8 +6,8 @@
 
 | Datei | Inhalt | Beantwortet |
 |---|---|---|
-| `SCHEMA.sql` | 80 Tabellen, alle Spalten, Constraints, Views | **was** |
-| `SCHEMA-RLS.sql` | 152 RLS-Policies, 60 Funktionen, 57 Trigger, 286 Indizes | **wer darf** |
+| `SCHEMA.sql` | 94 Tabellen, alle Spalten, Constraints, Views | **was** |
+| `SCHEMA-RLS.sql` | 167 RLS-Policies, 93 eigene Funktionen, 88 Trigger, 331 Indizes | **wer darf** |
 | `REGISTER.md` | warum jede Tabelle angelegt wurde, seit wann, ob noch gebraucht | **warum** |
 | `NUTZUNG.json` / `.md` | wer liest und schreibt (erzeugt: `node tools/tabellenkarte.mjs`) | **wer nutzt** |
 | `README.md` | dieses Dokument — Orientierung + Auffrischungsregel | |
@@ -15,7 +15,7 @@
 > **Neue Tabelle → Eintrag in `REGISTER.md`, im selben Commit.** Der pre-commit-Hook
 > (`tools/check-tabellen-register.sh`) bricht sonst ab. Gepflegt vom Agenten `db-ustasi`.
 
-**Stand:** 2026-08-28 · letzte Migration `business_services_droppen_spiegeltabelle`
+**Stand:** 2026-10-03 · letzte SaaS-Migration `20261003193551 podologie_empfangsnachweise_0059`; vollständiger Metadatenexport mit `tools/schema-export-katalog.sql` und `tools/schema-dokumente.mjs`.
 (davor `prescription_sessions_booking_unique`,
 `leads_geschlecht_kodierung_dokumentieren`, `invoice_nummer_backfill_altbestand`)
 (davor `invoices_ust_nummernkreis_gobd`, `invoices_verordnung_id` — Rechnungskette Faz 3;
