@@ -43,7 +43,7 @@
  * ZAA-Datei selbst trägt nie einen Betrag, nur den Fehlergrund.
  */
 
-import { empfaengerVorabPruefen } from './abrechnung-empfaenger.js?v=20261003g';
+import { empfaengerVorabPruefen } from './abrechnung-empfaenger.js?v=20261003m15';
 import { fmtEur } from './geld.js?v=20260909';
 import { dateiStatusBadge, aggregierterDateiStatus, dateiStatusInfo, istVerworfen } from './abrechnung-status.js?v=20260920b';
 import { ladeDateieinheiten, dateieinheitVon } from './podologie-dateieinheit.js?v=20260907';

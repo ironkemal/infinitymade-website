@@ -32,8 +32,8 @@ import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261003e';
 import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260929i';
-import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261003g';
-import { empfaengerVorabPruefen, pruefeAntwort } from './module/abrechnung-empfaenger.js?v=20261003g';
+import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261003m15';
+import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261003m15';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261001g';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
@@ -909,6 +909,7 @@ function closeBkActionPanel() {
 
 function closeModal(id) {
   if (id === 'bkActionModal') { closeBkActionPanel(); return; }
+  if (id === 'dasGuideModal') onDasGuideModalClosed();
   const el = document.getElementById(id);
   if (el) el.hidden = true;
   if (id === 'aiSuggestModal') {
@@ -1056,29 +1057,7 @@ async function renderOverview() {
   document.getElementById('pastdue-fix-btn')?.addEventListener('click', _doStripePortalRedirect);
 
   // B: Certificate expiry warning
-  (async function renderCertExpiryBanner() {
-    if (currentProfile.role !== 'owner') return;
-    const ownerId = currentProfile.id;
-    const { data: cert } = await supabase
-      .from('terapeut_zertifikat')
-      .select('cert_valid_to')
-      .eq('owner_id', ownerId)
-      .maybeSingle();
-    if (!cert?.cert_valid_to) return;
-    const validTo = new Date(cert.cert_valid_to);
-    const daysLeft = Math.ceil((validTo - Date.now()) / 86400000);
-    if (daysLeft > 30) return;
-    const el = document.getElementById('cert-expiry-banner');
-    if (!el) return;
-    const formatted = validTo.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
-    const color = daysLeft <= 0 ? '#dc2626' : '#b1891b';
-    el.innerHTML = `
-      <div style="margin:8px 0;padding:12px 14px;border-radius:8px;background:rgba(177,137,27,0.10);border:1px solid rgba(177,137,27,0.35);font-size:13px;line-height:1.5;color:var(--text-main);">
-        <strong style="color:${color};">⚠ ITSG-Zertifikat</strong> — läuft ${daysLeft <= 0 ? `<strong>abgelaufen (${formatted})</strong>` : `am <strong>${formatted}</strong> ab (${daysLeft} Tag${daysLeft === 1 ? '' : 'e'})`}.
-        Bitte frühzeitig über Ihre KV/ITSG erneuern.
-      </div>`;
-    el.hidden = false;
-  })();
+  renderOwnerCertExpiryBanner({ currentProfile, supabase });
 
   // C: §302 profile completeness warning
   (async function renderIkMissingBanner() {
@@ -12404,26 +12383,18 @@ function _dgRender(currentStep) {
 }
 
 async function openDasGuideModal(abrechnungId, forceStep) {
-  if (!abrechnungId) return;
-  _dasGuideState.abrechnungId = abrechnungId;
-
-  const { data: ab } = await supabase
-    .from('abrechnung')
-    .select('id, dateiname, status, storage_path, signed_storage_path, signed_at, encrypted_storage_path, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, kostentraeger_ik, prescription_count')
-    .eq('id', abrechnungId)
-    .maybeSingle();
-  _dasGuideState.abrechnung = ab;
-
-  const header = document.getElementById('dasGuideHeader');
-  if (header) {
-    const ik = ab?.kostentraeger_ik || '—';
-    const kk = _abState.kkMap.get(ik)?.name || ik;
-    header.innerHTML = `<strong>${escapeHtml(ab?.dateiname || abrechnungId)}</strong> · ${escapeHtml(kk)} · ${ab?.prescription_count || 0} Rezepte`;
-  }
-
-  const step = forceStep || _dgStatusToStep(ab);
-  _dgRender(step);
-  openModal('dasGuideModal');
+  return openDasGuideModalController({
+    abrechnungId,
+    forceStep,
+    supabase,
+    apiBase: API,
+    state: _dasGuideState,
+    kkMap: _abState.kkMap,
+    escapeHtml,
+    dgStatusToStep: _dgStatusToStep,
+    dgRender: _dgRender,
+    openModal,
+  });
 }
 
 document.getElementById('dgSignBtn')?.addEventListener('click', () => {

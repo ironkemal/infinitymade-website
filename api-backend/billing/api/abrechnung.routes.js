@@ -11,7 +11,7 @@
 // Faz A2: DTA oluşturulur, browser-side PKCS#7 imzalama dashboard signModal ile yapılır (sprint-6-complete).
 
 import express from 'express';
-import { createHash } from 'node:crypto';
+import { createHash, X509Certificate } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
 import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
@@ -56,6 +56,7 @@ import { verworfeneNummerFesthalten } from './verworfen.js';
 import { buildEncryptedFilename } from '../dta/filename.js';
 import { verschluesseleFuerEmpfaenger } from '../dta/verschluesselung.js';
 import { ladeItsgTrustAnchors, pruefeTrustAnchorFrische } from '../dta/itsg-trust-anchor.js';
+import { pruefeEmpfaengerZertifikat } from '../dta/empfaenger-zertifikat-pruefung.js';
 import { icdOhneStrich, icdFuerDta, icdAbfrageKodes, icdTerminalMap } from '../utils/icd-code.js';
 import { mountZuzahlungsforderungRoutes } from './zuzahlungsforderung.routes.js';
 
@@ -1851,42 +1852,267 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
   }
 });
 
-// Empfänger-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
-router.get('/abrechnung/:id/empfaenger-pruefung', async (req, res) => {
+/**
+ * Ermittelt den Zertifikatsprüfstatus für das gespeicherte Empfänger-IK (ab.empfaenger_ik)
+ * nach den 5 V4-Kriterien (GGT Anlage 16 / SECON).
+ */
+export async function ermittleEmpfaengerZertifikatStatus({
+  empfaengerIk,
+  db = supabase,
+  ladeAnchors = ladeItsgTrustAnchors,
+  pruefeFrische = pruefeTrustAnchorFrische,
+  pruefeZertifikat = pruefeEmpfaengerZertifikat,
+  jetzt = new Date(),
+} = {}) {
+  const pruefzeit = jetzt instanceof Date ? jetzt : new Date(jetzt);
+  const geprueftAm = !isNaN(pruefzeit.getTime()) ? pruefzeit.toISOString() : new Date().toISOString();
+
+  if (!empfaengerIk) {
+    return {
+      status: 'fehlend',
+      ik: null,
+      subject: null,
+      validTo: null,
+      fingerprintSha256: null,
+      geprueftAm,
+      hinweis: 'Es fehlt eine Datenannahmestellen-Zuordnung (empfaenger_ik) auf der Abrechnung.',
+    };
+  }
+
+  const { data: empfZert, error: certErr } = await db
+    .from('empfaenger_zertifikate')
+    .select('zertifikat_der, fingerprint_sha256')
+    .eq('ik', empfaengerIk)
+    .maybeSingle();
+
+  if (certErr) {
+    return {
+      status: 'nicht_pruefbar',
+      ik: empfaengerIk,
+      subject: null,
+      validTo: null,
+      fingerprintSha256: null,
+      geprueftAm,
+      hinweis: 'Fehler beim Laden des Empfängerzertifikats aus der Datenbank.',
+    };
+  }
+
+  if (!empfZert || !empfZert.zertifikat_der) {
+    return {
+      status: 'fehlend',
+      ik: empfaengerIk,
+      subject: null,
+      validTo: null,
+      fingerprintSha256: null,
+      geprueftAm,
+      hinweis: `Für die zuständige Datenannahmestelle (IK ${empfaengerIk}) liegt noch kein Verschlüsselungszertifikat vor.`,
+    };
+  }
+
+  const rawDer = empfZert.zertifikat_der;
+  let derBuffer = null;
+  let malformedHex = false;
+
+  if (Buffer.isBuffer(rawDer)) {
+    derBuffer = rawDer;
+  } else if (rawDer instanceof Uint8Array) {
+    derBuffer = Buffer.from(rawDer);
+  } else if (typeof rawDer === 'string') {
+    const hex = rawDer.startsWith('\\x') || rawDer.startsWith('\\X')
+      ? rawDer.slice(2)
+      : rawDer;
+    if (hex.length % 2 !== 0 || !/^[0-9a-fA-F]*$/.test(hex)) {
+      malformedHex = true;
+    } else {
+      derBuffer = Buffer.from(hex, 'hex');
+    }
+  } else {
+    malformedHex = true;
+  }
+
+  if (malformedHex || !derBuffer || derBuffer.length === 0) {
+    return {
+      status: 'ungueltig',
+      ik: empfaengerIk,
+      subject: null,
+      validTo: null,
+      fingerprintSha256: null,
+      geprueftAm,
+      hinweis: 'Empfängerzertifikat in der Datenbank ist beschädigt (ungültige Hex-Kodierung oder leerer Puffer).',
+    };
+  }
+
+  const actualFingerprintHex = sha256Hex(derBuffer).toLowerCase();
+
+  let x509Cert = null;
+  let parsedSubject = null;
+  let parsedValidTo = null;
   try {
-    const hdr = req.headers.authorization || '';
+    x509Cert = new X509Certificate(derBuffer);
+    parsedSubject = x509Cert.subject || null;
+    const vt = new Date(x509Cert.validTo);
+    parsedValidTo = !isNaN(vt.getTime()) ? vt.toISOString() : (x509Cert.validTo || null);
+  } catch {
+    return {
+      status: 'ungueltig',
+      ik: empfaengerIk,
+      subject: null,
+      validTo: null,
+      fingerprintSha256: actualFingerprintHex,
+      geprueftAm,
+      hinweis: 'Empfängerzertifikat ist kein gültiges X.509-Zertifikat.',
+    };
+  }
+
+  // Fingerprint-Abgleich mit gespeichertem Wert (falls vorhanden)
+  const storedFp = empfZert.fingerprint_sha256;
+  if (storedFp && typeof storedFp === 'string' && storedFp.trim().length > 0) {
+    const normStored = storedFp.replace(/[:\s-]/g, '').toLowerCase();
+    const normActual = actualFingerprintHex.replace(/[:\s-]/g, '').toLowerCase();
+    if (normStored !== normActual) {
+      return {
+        status: 'ungueltig',
+        ik: empfaengerIk,
+        subject: parsedSubject,
+        validTo: parsedValidTo,
+        fingerprintSha256: actualFingerprintHex,
+        geprueftAm,
+        hinweis: 'Fingerprint-Abweichung: Das Zertifikat stimmt nicht mit dem in der Datenbank hinterlegten Fingerprint überein.',
+      };
+    }
+  }
+
+  // Vertrauensanker laden und auf Frische prüfen
+  let trustAnchors = [];
+  let trustAnchorWarnung = null;
+  try {
+    const { anchors, meta } = ladeAnchors();
+    if (!anchors || !Array.isArray(anchors) || anchors.length === 0 || !meta) {
+      throw new Error('ITSG-Trust-Anchor-Liste ist leer oder nicht vorhanden.');
+    }
+    const frische = pruefeFrische({ meta, jetzt: pruefzeit });
+    if (frische?.warnung) {
+      trustAnchorWarnung = frische.warnung;
+    }
+    trustAnchors = anchors;
+  } catch (anchorErr) {
+    let hinweis = 'ITSG-Trust-Anchor-Liste ist nicht verfügbar oder fehlerhaft konfiguriert.';
+    const msg = anchorErr.message || '';
+    if (msg.startsWith('ITSG-Trust-Anchor-Store ist vollständig abgelaufen (')) {
+      hinweis = 'ITSG-Trust-Anchor-Store ist vollständig abgelaufen. Bitte Trust-Anchor-Liste aktualisieren.';
+    }
+    return {
+      status: 'nicht_pruefbar',
+      ik: empfaengerIk,
+      subject: parsedSubject,
+      validTo: parsedValidTo,
+      fingerprintSha256: actualFingerprintHex,
+      geprueftAm,
+      hinweis,
+    };
+  }
+
+  // 5 V4-Kriterien über pruefeEmpfaengerZertifikat prüfen (skipAnchorCheck: false erzwungen)
+  try {
+    pruefeZertifikat({
+      zertifikatDer: derBuffer,
+      erwarteteIk: empfaengerIk,
+      itsgAnkerZertifikate: trustAnchors,
+      skipAnchorCheck: false,
+      jetzt: pruefzeit,
+    });
+  } catch (certCheckErr) {
+    let hinweis = 'Zertifikatsprüfung fehlgeschlagen.';
+    const msg = certCheckErr.message || '';
+    if (msg.includes('abgelaufen') || msg.includes('noch nicht gültig')) {
+      hinweis = 'Zertifikatsprüfung fehlgeschlagen: Das Zertifikat ist abgelaufen oder noch nicht gültig.';
+    } else if (msg.includes('KeyUsage')) {
+      hinweis = 'Zertifikatsprüfung fehlgeschlagen: Ungültige KeyUsage (keyEncipherment fehlt).';
+    } else if (msg.includes('IK stimmt nicht mit erwarteter IK')) {
+      hinweis = 'Zertifikatsprüfung fehlgeschlagen: IK stimmt nicht mit erwarteter IK überein.';
+    } else if (msg.includes('RSA-Schlüssellänge unzureichend')) {
+      hinweis = 'Zertifikatsprüfung fehlgeschlagen: RSA-Schlüssellänge unzureichend.';
+    } else if (msg.includes('unsupported key type')) {
+      hinweis = 'Zertifikatsprüfung fehlgeschlagen: Nicht unterstützter Schlüsseltyp (unsupported key type).';
+    } else if (msg.includes('failed trusted chain') || msg.includes('ITSG-Trust-Anchor zurückgeführt')) {
+      hinweis = 'Zertifikatsprüfung fehlgeschlagen: Zertifikat konnte auf keinen der übergebenen ITSG-Trust-Anchor zurückgeführt werden (failed trusted chain).';
+    }
+
+    return {
+      status: 'ungueltig',
+      ik: empfaengerIk,
+      subject: parsedSubject,
+      validTo: parsedValidTo,
+      fingerprintSha256: actualFingerprintHex,
+      geprueftAm,
+      hinweis,
+    };
+  }
+
+  return {
+    status: 'geprueft',
+    ik: empfaengerIk,
+    subject: parsedSubject,
+    validTo: parsedValidTo,
+    fingerprintSha256: actualFingerprintHex,
+    geprueftAm,
+    hinweis: trustAnchorWarnung || null,
+  };
+}
+
+export async function handleEmpfaengerPruefung(req, res, {
+  db = supabase,
+  auth = supabase.auth,
+  ladeAnchors = ladeItsgTrustAnchors,
+  pruefeFrische = pruefeTrustAnchorFrische,
+  pruefeZertifikat = pruefeEmpfaengerZertifikat,
+  bereichFn = bereichFuerAbrechnung,
+  pruefeEmpfaengerFn = pruefeEmpfaenger,
+  jetzt = new Date(),
+} = {}) {
+  try {
+    const hdr = req.headers?.authorization || '';
     const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
-    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    const { data: u, error: uErr } = await auth.getUser(token);
     if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
 
     // Resolve tenant ID (employees map to their owner)
-    const { data: profile } = await supabase
+    const { data: profile } = await db
       .from('profiles').select('id, role, owner_id, sector').eq('id', u.user.id).single();
     const tenantId = profile?.role === 'employee' && profile?.owner_id
       ? profile.owner_id
       : u.user.id;
 
-    const abrechnungId = req.params.id;
+    const abrechnungId = req.params?.id;
 
     // Ownership check — fetch the record and verify it belongs to this tenant
-    const { data: ab, error: abErr } = await supabase
+    const { data: ab, error: abErr } = await db
       .from('abrechnung')
       .select('id, owner_id, kostentraeger_ik, empfaenger_ik, created_at')
       .eq('id', abrechnungId)
       .maybeSingle();
-    if (abErr) return res.status(500).json({ error: abErr.message });
+    if (abErr) return res.status(500).json({ error: 'Datenbankfehler beim Laden der Abrechnung.' });
     if (!ab || ab.owner_id !== tenantId) {
       return res.status(403).json({ error: 'Nicht berechtigt' });
     }
 
-    const { bereich, eigenerAbrechnungscode } = await bereichFuerAbrechnung(supabase, ab, {
+    const { bereich, eigenerAbrechnungscode } = await bereichFn(db, ab, {
       tenantId,
     });
 
-    const pruefung = await pruefeEmpfaenger(supabase, ab, {
+    const pruefung = await pruefeEmpfaengerFn(db, ab, {
       bereich,
       eigenerAbrechnungscode,
+    });
+
+    const empfCert = await ermittleEmpfaengerZertifikatStatus({
+      empfaengerIk: ab.empfaenger_ik,
+      db,
+      ladeAnchors,
+      pruefeFrische,
+      pruefeZertifikat,
+      jetzt,
     });
 
     return res.json({
@@ -1894,11 +2120,17 @@ router.get('/abrechnung/:id/empfaenger-pruefung', async (req, res) => {
       meldungen:     pruefung.meldungen,
       gespeichertIk: pruefung.gespeichertIk,
       heuteIk:       pruefung.heuteIk,
+      empfCert,
     });
   } catch (e) {
     console.error('[abrechnung/empfaenger-pruefung]', e);
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: 'Interner Serverfehler bei der Empfängerprüfung.' });
   }
+}
+
+// Empfänger-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
+router.get('/abrechnung/:id/empfaenger-pruefung', async (req, res) => {
+  return handleEmpfaengerPruefung(req, res);
 });
 
 // Manual status flip (after the therapist uploaded the .dta to the DAS portal).
