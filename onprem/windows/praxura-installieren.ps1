@@ -80,13 +80,15 @@ function Frage([string]$text, [bool]$standardJa = $true) {
 #  waere das Ergebnis ein Array aus Textzeilen + Code und jeder "-ne 0"-Test falsch.
 function InWsl([string]$befehl) {
   $env:WSL_UTF8 = '1'
-  & wsl.exe -d $Distro -u root -- bash -lc $befehl | Out-Host
+  & wsl.exe -d $Distro -u root --exec bash -lc $befehl | Out-Host
   return $LASTEXITCODE
 }
 #  Einen Wert aus der .env der Box lesen (Text-Rueckgabe, kein Exit-Code).
+#  --exec statt --: sonst laeuft der Aufruf durch die Linux-Shell, die das awk-$1
+#  als leere Variable ersetzt (Admin-Lauf 04.10.2026: Abbruch nach Schritt 6).
 function BoxEnv([string]$schluessel) {
   $env:WSL_UTF8 = '1'
-  $w = & wsl.exe -d $Distro -u root -- awk -F= -v k=$schluessel '$1==k{sub(/^[^=]*=/,x); print; exit}' "$BoxPfad/.env" 2>$null
+  $w = & wsl.exe -d $Distro -u root --exec awk -F= -v k=$schluessel '$1==k{sub(/^[^=]*=/,x); print; exit}' "$BoxPfad/.env" 2>$null
   return ([string]($w | Select-Object -First 1)).Trim()
 }
 function DistroVorhanden {
