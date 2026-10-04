@@ -4791,7 +4791,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Çözüm** | İşaret dosyası: `install.sh` adım 12 hedefe `.praxura-backup-ziel` yazar; `backup.sh` dosyayı görmezse yazmaz, `fehler` + O-82 bildirim kanalıyla durur. `mountpoint` yerine işaret, çünkü hedef bir bağlama noktasının alt dizini olabilir |
 | **Durum** | `gelöst` (`6a5cd1f`): `backup.sh:109` dış hedefte `.praxura-backup-ziel` yoksa `mkdir`'den (`:113`) **önce** `fehler` + çıkış; `install.sh` adım 12 işareti yazar; Windows betiği adım 11 aynı komutu tarif ediyor. Kutuda ölçüldü: işaret yokken `rc=1`, dizin yaratılmadı — Önceki: `offen` — önerilen sahip: KHS K2.10 (aynı dosya, aynı tur) |
 
-### O-155 — Hastaya giden linkler LAN'daki kutuya dışarıdan ulaşamaz 🔴 **offen (ürün kararı)**
+### O-155 — Hastaya giden linkler LAN'daki kutuya dışarıdan ulaşamaz 🟡 **geplant (K2b, kısmi — 05.10.2026)**
 
 | Alan | İçerik |
 |---|---|
@@ -4800,7 +4800,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | G |
 | **Kutuda ne olur** | O-150 düzeltilince link doğru host'a (`SITE_URL`) gider ama hasta evinden `praxis.home.arpa`'ya ulaşamaz → link açılmaz. Düzeltmeden önce SaaS'a gidiyor (O-150) |
 | **Çözüm** | Kemal kararı: (a) kutuda bu maillerde link olmaz, metin "bitte Praxis anrufen" der; (b) özellik `IST_KUTU`'da gizlenir; (c) müşteri gerçek alan adı + port yönlendirme kurar (kılavuzda isteğe bağlı yol). Merkezden proxy **yok** (G1/K6). K3 testinden önce seçilmeli, yoksa test senaryosunda kırık link çıkar |
-| **Durum** | `offen` — karar bekliyor |
+| **Durum** | `geplant` (KHS K2b, K-18, 05.10.2026) — **yalnız yarısı çözülüyor, bkz. §7Z.** Gerçek ad (`praxis-XXXX.praxura.de`) host sorununu kapatır: link doğru ada gider, praksis içinde, praksis VPN'inde ve Hetzner varyantında açılır. **Ama hasta praksisin VPN'inde değil:** LAN/PC kutusunda ad iç IP'yi gösterir, hasta evden linki yine açamaz. Kalan kısım: kutu internetten erişilebilir değilse hasta maillerinde link yerine "bitte Praxis anrufen" metni (seçenek a/b, bayrak env'den — iki dağıtımda tek kod). Sahibi: K2b.10, karar Kemal. Merkezden proxy hâlâ **yok** (G1/K6) — Önceki: `offen` |
 
 ---
 
@@ -4924,7 +4924,7 @@ Lokale Produktversion `0.4.0` (MINOR wegen neuer Tabelle); Bundle-Manifest wird 
 
 ---
 
-## 9. Durum özeti (son sayım: 02.10.2026, KHS K2 kapanışı)
+## 9. Durum özeti (son sayım: 05.10.2026, K-18 / K2b)
 
 > ⚠️ **Bu tablo 12.09.2026 akşamı madde madde yeniden sayıldı.** Önceki hâli
 > 04.09.2026 fotoğrafıydı ve altına "fark" notları yığılıyordu — dokuz tur sonra o
@@ -5014,11 +5014,13 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 19 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-134 · O-137 · O-146 · O-155 · **O-156** · **O-157** · **O-158** |
-| `geplant` | 18 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 |
+| `offen` | 18 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-134 · O-137 · O-146 · O-156 · O-157 · O-158 |
+| `geplant` | 25 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 · **O-155** (K2b, kısmi) · **O-159** · **O-161** · **O-162** · **O-163** · **O-164** · **O-165** |
 | 🟡 `kısmen gelöst` | 25 | O-01 · O-02 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · O-116 · O-118 · O-120 · O-125 · O-126 · **O-123** · **O-142** · **O-144** · **O-151** |
-| `gelöst` | 83 | O-06 · O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-105 · O-106 · O-109 · O-114 · O-117 · O-122 · O-124 · O-130 · O-131 · O-133 · O-140 · O-143 · **O-03** · **O-09** · **O-107** · **O-129** · **O-136** · **O-147** · **O-148** · **O-149** · **O-150** · **O-152** · **O-153** · **O-154** |
+| `gelöst` | 84 | O-06 · O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-105 · O-106 · O-109 · O-114 · O-117 · O-122 · O-124 · O-130 · O-131 · O-133 · O-140 · O-143 · **O-03** · **O-09** · **O-107** · **O-129** · **O-136** · **O-147** · **O-148** · **O-149** · **O-150** · **O-152** · **O-153** · **O-154** · **O-160** |
 | `unkritisch` | 13 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 |
+
+> ✅ **05.10.2026 (K-18 / K2b) — yeniden toplandı:** 18 + 25 + 25 + 84 + 13 = **165**, en yüksek madde numarası **O-165**. Uyuşuyor. O-159 (`geplant`) ve O-160 (`gelöst`) tabloya hiç girmemişti, eklendi. O-155 `offen`→`geplant` (K2b; yalnız yarısı — hasta linki LAN kutusunda hâlâ açılmaz). Yeni: O-161…O-165 (K-18'in açtığı merkez zinciri, internetsiz ad çözümü, Windows hairpin, şifresiz autostart, playbook sapması). Detay §7Z.
 
 > ✅ **02.10.2026 akşamı (KHS K2 kapanışı) — yeniden toplandı:** 19 + 18 + 25 + 83 + 13 = **158**, en yüksek madde numarası **O-158**. Uyuşuyor. 12 madde kapandı, 4'ü 🟡'ye geçti (O-123/O-142/O-144/O-151), üç yeni madde `offen` (O-156 bot satırı · O-157 paket kaynağı · O-158 WSL disk kapısı). Detay §7X.
 
@@ -5262,3 +5264,70 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 | **Kutuda ne olur** | 0062 öncesi: kutuda ZAA geri bildirimi ve artefakt yayını her seferinde `42501` ile düşerdi; SaaS'ta hiç görünmezdi çünkü orada sahip `postgres`. 0062 sonrası: tarayıcı rolleri (authenticated/anon) bloklanır, sahip rolünün adı ne olursa olsun DEFINER yolu geçer — iki dağıtımda aynı davranış. Yan düzeltmeler aynı commit'te: 0060/0061'de `BEGIN/COMMIT` yok (runner zaten transaction açıyor; iç COMMIT atomikliği kırardı), üç dosyada `-- SaaS:` satırı var, `erwartete-zaehler.json` `bis_version` 0062 → 86/157/95/87/313 (önceki beklenti 84/156/85/84/309 + yerel ölçülen delta +2/+1/+10/+3/+4; yerel taban `spatial_ref_sys` yüzünden kutudan −1 tablo/−1 index, bu yüzden mutlak değil delta taşındı) |
 | **Çözüm** | Kod: `5f8739a` (0062). **Kural (sınıf için):** trigger/policy'de sahip rolü **adıyla** beyaz listeye alınmaz (`postgres`/`supabase_admin` dağıtıma göre değişir); bloklanacak tarayıcı rolleri adıyla kara listeye alınır (0053 deseni). Kapı adayı: yukarıdaki grep `tools/check-onprem.sh`'a mekanik kural olarak girebilir (`builder`, düşük öncelik). **Açık kalan iki doğrulama** — sahibi KHS M1 §6 kutu kabulü: (1) taze gerçek kutuda kurulum sonrası Selbstcheck (sayaçlar delta ile türetildi, kutuda ölçülmedi); (2) kutuda ZAA yüklemesi VKZ-03 başlıklı bir Abrechnung'a karşı uçtan uca (42501 gerçekten gitti mi) |
 | **Durum** | `gelöst` (kod, `5f8739a`) · iki kutu doğrulaması M1 §6 kabulüne bağlı; o kabulde biri kırmızıysa bu madde yeniden açılır |
+
+---
+
+## 7Z — K-18 kutu erişim modeli: konsey + 05.10 Kemal kararı (05.10.2026)
+
+> Kaynak: `KUTU_HAZIRLIK_SPRINT.md` K-18 + aşama K2b (`ebd0e50`) · `konsey/tutanak/2026-10-04-kutu-erisim-modeli.md` (`9517917`, 05.10 eki dahil). Konsey varsayılanı A idi (praksisin kendi Hetzner hesabı); Kemal 05.10'da bunu **her ortamda tek yöntem** olarak değiştirdi: kurulum kodu → `praxis-XXXX.praxura.de` → LE DNS-01 (kutu başına `acme-dns` delegasyonu) → ad kutunun **iç** IP'sini gösterir. Uzaktan erişim praksisin kendi VPN'i, Hetzner yalnız bir barındırma yeri. **Tünel/relay yok** — bu sicilin G8/G1 itirazı karara girdi (B seçeneği: dış erişim bizim VPS'imize bağlanırdı, hasta trafiği şifreli de olsa bizden geçerdi; Cloudflare Tunnel TLS'i kendinde açtığı için doğrudan G1 ihlali).
+>
+> Ölçümler (04.10, Kemal, Windows test kutusu): Telekom Speedport Smart 2 iç IP gösteren genel adı engellemiyor (`192-168-2-111.sslip.io`). Kurulum betiği adım 1–11 yönetici olarak geçti (`1127a3d`, `4b9a554`). Bu PC kendi LAN IP'sine bağlanamıyor (mirrored WSL), hosts'a `127.0.0.1` gerekti. Boş Windows şifresinde autostart yalnız oturum açınca.
+>
+> **Bu modelle kapanan:** S-43 (iç CA'nın özel anahtarı yedekteydi; CA kalkınca yedekte yalnız tek alt adın LE anahtarı kalır) — kapanış `guvenlik` sicilinde, K2b.4. **Değişmeyen:** O-157 (paket kaynağı) erişim modelinden bağımsız, `:stable` terfisinden önce yine çözülmeli.
+>
+> **Bu sicilin K2b.2/K2b.3 öncesi ön kontrol hakkı:** merkezdeki iki yeni servis (ad servisi + acme-dns) yazılmadan önce bu sicile gelinir (koordinatör 05.10'da teyit etti). Aşağıdaki O-161 o ön kontrolün çerçevesidir.
+
+### O-161 — Kutu, sertifikası ve adresi için merkeze bağlanıyor: ad servisi + `acme-dns` yeni bir dış zincir 🟡 **geplant (K2b.2/K2b.3/K2b.6)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | K-18 ile kutu üç iş için merkezdeki servislere çıkar: (1) kurulumda kurulum kodu → alt ad + kısıtlı kimlik, (2) 60–90 günde bir LE DNS-01 için kendi `_acme-challenge` TXT kaydını `acme-dns`'e yazar, (3) iç IP değişince kendi A kaydını günceller (K2b.6, zamanlanmış iş). Kod henüz yok |
+| **Nerede** | Planlı: merkezde ayrı klasör (`merkez/`, `api-backend/`'e değil — kutu da `api-backend` koşturuyor) · kutuda Caddy `caddy-dns/acmedns` modülü (K2b.4) + IP güncelleme işi (K2b.6) |
+| **Tip** | A (runtime dış çağrı) + F (IP güncelleme zamanlanmış iş) + G (merkez tarafı servis) |
+| **Kutuda ne olur** | Taşınan veri yalnız alt ad, TXT doğrulama dizgisi, iç IP. Hasta verisi yok, G1 temiz (lisans yenileme ile aynı sınıf). **Merkez kapalıyken:** ad çözümü sürer (kayıtlar DNS sağlayıcısında durur, bizim VPS'te değil — K2b.2'de bu şart). Sertifika ≤90 gün geçerli kalır, yenileme tekrar dener. IP değişirse adres merkez dönene kadar kırık kalır. **Biz tamamen ortadan kalkarsak:** ≤90 günde her kutunun sertifikası düşer, alt adlar da bizim zone'da. Bu K9'un ruhuna değiyor (veriye erişim rehin olmamalı) |
+| **Çözüm** | K2b.2/K2b.3/K2b.6. Şartlar: (a) merkez adresleri kutuda **env'den** (`ACME_DNS_URL` vb.), koda sabit `praxura.de` girmez — kapı sayacına takılır (tip C) · (b) `praxura.de` zone anahtarı kutuya **asla** (G2) — kutu başına yalnız kendi TXT/A kaydını yazabilen kimlik; bu kimlik kutuda sır sayılır, `.env`/volume'da durur, yedeğe girer, image'a girmez · (c) DNS kayıtları bizim VPS'te değil, DNS sağlayıcısında (VPS çökmesi = adres çökmesi olmasın; O-159 dersi) · (d) **çıkış yolu** kılavuzda (K2b.8): praksis kendi alan adını ve kendi DNS-01 sağlayıcısını girebilir, son çare `tls internal`. Çıkış yolu yazılmadan K3'e çıkılmaz |
+| **Durum** | `geplant` — K2b.2/K2b.3 kodu yazılmadan önce bu sicilde ön kontrol |
+
+### O-162 — İnternet kesilince praksis içinde ad çözülmeyebilir: kutu LAN'da ayakta, cihazlar adresi bulamıyor 🟡 **geplant (K2b.9)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `praxis-XXXX.praxura.de` genel DNS'te durur. Cihaz adı router üzerinden internetten çözer. İnternet kesilince TTL dolduğunda çözüm durur |
+| **Nerede** | K-18 modelinin kendisi · ölçüm görevi `KUTU_HAZIRLIK_SPRINT.md` K2b.9 |
+| **Tip** | G (kutu internete bağımlı hale gelir) |
+| **Kutuda ne olur** | Eski modelde (router DNS / hosts) kutu internetsiz çalışırdı. Yeni modelde internet kesintisi → TTL + cihaz önbelleği dolunca tablet/telefon "adres bulunamadı" der, kutu ayakta olsa bile praksis hasta dosyasını açamaz. Ölçülmedi |
+| **Çözüm** | K2b.9 ölçümü: Speedport + FRITZ!Box'ta internet kesikken önbellek ne kadar dayanıyor. Gerekirse: uzun TTL (iç IP nadiren değişir) + router'da yerel kayıt imkânı olan yerde aynı adın yerel kaydı (FRITZ!Box yapabilir, Speedport yapamaz) + kılavuzda acil yol (kutu PC'sinde `localhost`) |
+| **Durum** | `geplant` (K2b.9) |
+
+### O-163 — Windows kutusu: PC kendi LAN IP'sine bağlanamıyor (mirrored WSL), hosts'ta `127.0.0.1` gerekiyor 🟡 **geplant (K2b.5)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Mirrored ağ modunda Windows host kendi LAN IP'sine giden bağlantıyı WSL'deki Caddy'ye ulaştırmıyor. Ad iç IP'yi gösterdiğinde kutu PC'sinin kendisi adresi açamıyor |
+| **Nerede** | `onprem/windows/praxura-installieren.ps1` (adım 9 bugün hosts + kök sertifika yazıyor; K2b.5'te sertifika kısmı kalkar) |
+| **Tip** | G (Windows'a özgü dağıtım farkı) |
+| **Kutuda ne olur** | Einzelplatz kurulumda (tek PC) kullanıcı kutuyu tam o PC'den açmaya çalışır ve açamaz. Diğer cihazlar sorunsuz. Gerçek sertifika ada bağlı olduğu için hosts'ta `127.0.0.1 praxis-XXXX.praxura.de` sertifikayı bozmaz — geçici çözüm kalıcı çözüme dönüşebilir |
+| **Çözüm** | K2b.5: başlatıcı kendi adını hosts'a `127.0.0.1` olarak yazar (bugünkü adım 9'un sertifikasız hali), alternatif olarak WSL hairpin ayarı denenir. IP değişikliğinden etkilenmez (O-161 (3) yalnız DNS'i günceller) |
+| **Durum** | `geplant` (K2b.5) |
+
+### O-164 — Boş Windows şifresinde kutu açılışta değil, yalnız oturum açınca kalkıyor 🟡 **geplant (K2b.8)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Autostart görevi şifresiz hesapta "oturum açmadan çalıştır" kipine geçemiyor. Fallback (oturum açınca başlat) 04.10'da çalıştı |
+| **Nerede** | `onprem/windows/praxura-installieren.ps1` (Autostart adımı) |
+| **Tip** | F (zamanlanmış iş/başlatma) |
+| **Kutuda ne olur** | PC açılır ama kimse oturum açmazsa kutu yok. Tabletler randevu ekranını açamaz, gece `backup.sh`/`update.sh` koşmaz (O-158 ile birlikte Windows kutusunun ikinci gece-işi körlüğü) |
+| **Çözüm** | K2b.8 kılavuzu: Box-PC hesabına Windows şifresi konur (yoksa sınır açık yazılır: "kutu yalnız oturum açıkken çalışır"). Betik şifresiz hesabı saptayıp uyarı basar. Kod gerekmeden kapanabilir |
+| **Durum** | `geplant` (K2b.8) |
+
+### O-165 — Playbook K-18 ile çelişiyor: K1 (iki SKU) düştü, §393 cümlesi ve K12 sponsorlu Hetzner dönemi yeniden yazılmalı 🟡 **geplant (K2b.10)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kurucu kararı 04.10.2026: SaaS satılmaz. Playbook hâlâ eski durumu yazıyor: (1) K1 "iki SKU", (2) satır 28 "§393 uygulanmaz", ama Hetzner varyantında veri praksisin **bulut** sunucusunda durur ve §393 praksis için tetiklenebilir, (3) K12 aşama 2: sponsorlu Hetzner instance'ları **bizim** hesabımızda olursa hasta verisi bizim bulut sözleşmemizde durur — bu Auftragsverarbeiter + §393'e geri giriş, yani K6'nın kapattığı kapı |
+| **Nerede** | `ONPREM_MIGRATION_PLAYBOOK.md:28` · `:42` (K1) · `:53` (K12) |
+| **Tip** | G (merkez/kutu sınırı) — playbook sapması |
+| **Kutuda ne olur** | Kod etkisi yok. Belge etkisi var: playbook'u okuyan biri SaaS'ın yaşadığını ve Hetzner kutusunun §393 dışı olduğunu sanır. K12-2 olduğu gibi uygulanırsa beta kutuları G1 çizgisini bizim hesabımızda aşar |
+| **Çözüm** | K2b.10: playbook düzeltmesi + `legal-de` notu (Hetzner C5 Typ-2'nin Cloud Server'ı kapsayıp kapsamadığı K2b.9'da ölçülür; K12 sponsorlu dönemde sunucu ya praksisin hesabında olur ve biz yalnız ödemeyi üstleniriz, ya AVV). Kilitli kararlar bu sicilde açılmaz — K1 kurucu kararıyla zaten düştü, K12 için karar Kemal'in |
+| **Durum** | `geplant` (K2b.10) |
