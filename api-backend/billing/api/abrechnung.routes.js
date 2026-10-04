@@ -11,7 +11,7 @@
 // Faz A2: DTA oluşturulur, browser-side PKCS#7 imzalama dashboard signModal ile yapılır (sprint-6-complete).
 
 import express from 'express';
-import { ladeDtaOriginalbytes } from '../dta/signed-original.js';
+import { ladeDtaOriginalbytes, pruefeSignedDta } from '../dta/signed-original.js';
 import { createHash, X509Certificate } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
@@ -1560,11 +1560,13 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
-      .select('id, owner_id, storage_path, empfaenger_ik, kostentraeger_ik, created_at')
+      .select('id, owner_id, storage_path, empfaenger_ik, kostentraeger_ik, created_at, dta_sha256')
       .eq('id', req.params.id)
       .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
+
+    await pruefeSignedDta({ signedBytes, expectedDtaSha256: ab.dta_sha256 });
 
     // Stichtag-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
     let stichtagPruefung = null;
@@ -1672,7 +1674,7 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
     });
   } catch (e) {
     console.error('[abrechnung/upload-signed]', e);
-    return res.status(500).json({ error: e.message });
+    return res.status(e.status || 500).json({ error: e.message, ...(e.code ? { code: e.code } : {}) });
   }
 });
 
