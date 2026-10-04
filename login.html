@@ -234,8 +234,8 @@
     .btn-resend:hover { background: var(--bronze); color: var(--bg); }
     .btn-resend:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Reset + new-pw panels share form label/input styles from parent */
-    #resetPanel label, #newPwPanel label {
+    /* Reset + new-pw + Erstanmeldung panels share form label/input styles from parent */
+    #resetPanel label, #newPwPanel label, #erstPanel label {
       display: block;
       font-family: var(--mono);
       font-size: 0.7rem;
@@ -244,8 +244,8 @@
       color: var(--ink-mute);
       margin: 1.1rem 0 0.5rem;
     }
-    #resetPanel label:first-of-type, #newPwPanel label:first-of-type { margin-top: 0; }
-    #resetPanel input, #newPwPanel input {
+    #resetPanel label:first-of-type, #newPwPanel label:first-of-type, #erstPanel label:first-of-type { margin-top: 0; }
+    #resetPanel input, #newPwPanel input, #erstPanel input {
       width: 100%;
       padding: 0.9rem 1.1rem;
       border: 1px solid rgba(26,22,17,0.18);
@@ -256,13 +256,13 @@
       background: var(--bg-warm);
       transition: border-color 200ms, background 200ms, box-shadow 200ms;
     }
-    #resetPanel input:focus, #newPwPanel input:focus {
+    #resetPanel input:focus, #newPwPanel input:focus, #erstPanel input:focus {
       outline: none;
       border-color: var(--bronze);
       background: #fff;
       box-shadow: 0 0 0 3px rgba(107,85,56,0.12);
     }
-    #newPwPanel h2 {
+    #newPwPanel h2, #erstPanel h2 {
       font-family: var(--serif);
       font-weight: 400;
       font-size: 1.7rem;
@@ -418,7 +418,7 @@
     <p class="back-home" id="backHome"><a href="https://praxura.de" id="backLink">← Zurück zur Startseite</a></p>
   </main>
 
-  <script type="module" src="login.js?v=20261003o"></script>
+  <script type="module" src="login.js?v=20261005a"></script>
   <script>
     document.querySelectorAll('.pw-toggle').forEach(function(btn) {
       btn.addEventListener('click', function() {

@@ -92,6 +92,9 @@ function showView(view) {
   resetPanel.style.display    = view === 'reset'  ? '' : 'none';
   newPwPanel.style.display    = view === 'newpw'  ? '' : 'none';
   erstPanel.style.display     = view === 'erst'   ? '' : 'none';
+  // Erstanmeldung bringt eigene Überschrift mit — "Anmelden" darüber wäre doppelt
+  document.getElementById('title').style.display = view === 'erst' ? 'none' : '';
+  document.getElementById('sub').style.display   = view === 'erst' ? 'none' : '';
 }
 
 function showMsg(text, type) {
