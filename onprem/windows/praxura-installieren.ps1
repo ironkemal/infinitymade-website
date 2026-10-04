@@ -78,9 +78,13 @@ function Frage([string]$text, [bool]$standardJa = $true) {
 # Befehl in der Praxura-Umgebung als root; Ausgabe UTF-8 (wsl.exe schreibt sonst UTF-16).
 #  Ausgabe geht an den Bildschirm (Out-Host), NICHT in den Rueckgabewert — sonst
 #  waere das Ergebnis ein Array aus Textzeilen + Code und jeder "-ne 0"-Test falsch.
+#  Befehl als Base64: PowerShell 5.1 maskiert innere "..." fuer wsl.exe nicht, und
+#  "wsl --" schickt alles zusaetzlich durch eine Shell, die $ ersetzt (04.10.2026).
+#  Base64 enthaelt weder Anfuehrungszeichen noch $ noch Leerzeichen.
 function InWsl([string]$befehl) {
   $env:WSL_UTF8 = '1'
-  & wsl.exe -d $Distro -u root --exec bash -lc $befehl | Out-Host
+  $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($befehl))
+  & wsl.exe -d $Distro -u root --exec bash -lc "source <(echo $b64 | base64 -d)" | Out-Host
   return $LASTEXITCODE
 }
 #  Einen Wert aus der .env der Box lesen (Text-Rueckgabe, kein Exit-Code).
