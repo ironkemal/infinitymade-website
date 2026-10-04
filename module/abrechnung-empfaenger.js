@@ -328,7 +328,7 @@ export async function openDasGuideModalController({
   try {
     const { data, error } = await supabase
       .from('abrechnung')
-      .select('id, dateiname, status, storage_path, signed_storage_path, signed_at, encrypted_storage_path, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, kostentraeger_ik, empfaenger_ik, prescription_count')
+      .select('id, dateiname, status, storage_path, signed_storage_path, signed_sha256, signed_at, encrypted_storage_path, encrypted_sha256, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, kostentraeger_ik, empfaenger_ik, prescription_count')
       .eq('id', abrechnungId)
       .maybeSingle();
     if (error) throw error;

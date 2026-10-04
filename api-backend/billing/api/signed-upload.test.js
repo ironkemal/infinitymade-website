@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import crypto from 'node:crypto';
 import forge from 'node-forge';
 import { pruefeSignedDta } from '../dta/signed-original.js';
+import { ABRECHNUNG_VERSION_FELDER, pruefeEntwurfsVersion, aktualisiereArtefaktVersion, artefaktVersuchPfad } from './artefakt-version.js';
 
 // Read actual abrechnung.routes.js via new URL
 const routeUrl = new URL('./abrechnung.routes.js', import.meta.url);
@@ -181,7 +182,7 @@ function createHarness(options = {}) {
     pruefeCalls: [],
   };
 
-  const syntheticHeaderRow = options.abrechnungRow !== undefined
+  const headerOverrides = options.abrechnungRow !== undefined
     ? options.abrechnungRow
     : {
         id: 'synthetic-ab-001',
@@ -192,6 +193,8 @@ function createHarness(options = {}) {
         created_at: new Date().toISOString(),
         dta_sha256: options.expectedDtaSha256 !== undefined ? options.expectedDtaSha256 : expectedDtaSha256,
       };
+
+  const syntheticHeaderRow = { ...Object.fromEntries(ABRECHNUNG_VERSION_FELDER.split(',').map(k => [k, null])), updated_at: '2026-10-04T10:00:00.123456Z', status: 'erstellt', ...headerOverrides };
 
   const supabaseMock = {
     from: (table) => ({
@@ -245,6 +248,7 @@ function createHarness(options = {}) {
   };
 
   const sandbox = {
+    ABRECHNUNG_VERSION_FELDER, pruefeEntwurfsVersion, aktualisiereArtefaktVersion, artefaktVersuchPfad,
     Buffer,
     console: {
       log: () => {},

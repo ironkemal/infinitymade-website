@@ -32,9 +32,9 @@ import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freig
 import { fmtEur } from './module/geld.js?v=20260909';
 import { zeigeAbrechnungAnsicht, wireAbrechnungAnsicht, aktuelleAbrechnungAnsicht } from './module/abrechnung-ansicht.js?v=20260909';
 import { initAbrechnungAuswahl, ladeAbrechnungAuswahl } from './module/abrechnung-auswahl.js?v=20261003e';
-import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20260929i';
-import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261003m15';
-import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261003m15';
+import { initAbrechnungVerlauf, ladeAbrechnungVerlauf } from './module/abrechnung-verlauf.js?v=20261004m116';
+import { initAbrechnungDetail, downloadAbrechnungFile, dasGuideVersandKlick } from './module/abrechnung-detail.js?v=20261004m116';
+import { empfaengerVorabPruefen, pruefeAntwort, renderOwnerCertExpiryBanner, openDasGuideModalController, onDasGuideModalClosed } from './module/abrechnung-empfaenger.js?v=20261004m116';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20261001e';
 import { verdrahteIcdDg, icdMehrAlsEinKodeJeFeld } from './module/icd-dg-verdrahtung.js?v=20261003m18';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20261003c';
@@ -12408,7 +12408,6 @@ document.getElementById('dgSignBtn')?.addEventListener('click', () => {
 
 // Logik in module/abrechnung-detail.js (dasGuideVersandKlick) — Platzgrund, s. dort.
 document.getElementById('dgDownloadBtn')?.addEventListener('click', () => dasGuideVersandKlick(_dasGuideState.abrechnung));
-
 document.getElementById('dgMarkSentBtn')?.addEventListener('click', async () => {
   const id = _dasGuideState.abrechnungId;
   if (!id) return;
@@ -12417,7 +12416,8 @@ document.getElementById('dgMarkSentBtn')?.addEventListener('click', async () => 
     if (!s?.access_token) throw new Error('Nicht angemeldet');
     const res = await fetch(`${API}/billing/abrechnung/${id}/mark-sent`, {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + s.access_token },
+      headers: { 'Authorization': 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.fromEntries(['signed_storage_path', 'signed_sha256', 'encrypted_storage_path', 'encrypted_sha256'].map(k => [k, _dasGuideState.abrechnung?.[k]]))),
     });
     pruefeAntwort(res, await res.json().catch(() => ({})), showToast);
     showToast('Status: gesendet. Warten Sie auf die ZAA-Antwort.');

@@ -12,14 +12,49 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ||
 
 const { verarbeiteVerschluesselungsSchritt } = await import('./abrechnung.routes.js');
 
+const ABRECHNUNG_VERSION_FELDER =
+  'id,owner_id,updated_at,status,storage_path,dta_sha256,signed_storage_path,signed_sha256,signed_at,signed_by_cert_thumbprint,encrypted_storage_path,encrypted_sha256,verschluesselt_am,verschluesselt_fuer_fingerprint,verschluesselung_hinweis,zaa_uploaded_at,paid_at,auftragsdatei_path,begleitzettel_path';
+
+const DUMMY_SIGNED_BYTES = Buffer.from('30820100synthetic-signed-pkcs7-payload', 'utf8');
+
+function createVorherSnapshot({
+  abrechnungId,
+  basePath,
+  signedBytes = DUMMY_SIGNED_BYTES,
+  overrides = {},
+}) {
+  const ownerId = basePath.split('/')[0];
+  const snapshot = {};
+  for (const feld of ABRECHNUNG_VERSION_FELDER.split(',')) {
+    snapshot[feld] = null;
+  }
+  return {
+    ...snapshot,
+    id: abrechnungId,
+    owner_id: ownerId,
+    updated_at: '2026-09-22T10:00:00.123456Z',
+    status: 'erstellt',
+    signed_storage_path: `${basePath}.p7m`,
+    signed_sha256: crypto.createHash('sha256').update(signedBytes).digest('hex'),
+    ...overrides,
+  };
+}
+
 function createMockDb({
   certRow = null,
   certError = null,
   storageError = null,
   onStorageUpload = null,
   onAbrechnungUpdate = null,
+  abrechnungRow = null,
+  abrechnungError = null,
 } = {}) {
+  let currentAbrechnung = abrechnungRow ? { ...abrechnungRow } : null;
+
   return {
+    _getCurrentAbrechnung() {
+      return currentAbrechnung;
+    },
     from(table) {
       if (table === 'empfaenger_zertifikate') {
         return {
@@ -40,16 +75,52 @@ function createMockDb({
         };
       }
       if (table === 'abrechnung') {
-        // O-131 (22.09.2026): verarbeiteVerschluesselungsSchritt() schreibt
-        // nach JEDEM Lauf die fünf Verschlüsselungsspalten als eine Gruppe.
         return {
           update(patch) {
-            return {
+            const filters = {};
+            const builder = {
               eq(col, val) {
-                if (onAbrechnungUpdate) onAbrechnungUpdate({ patch, col, val });
-                return Promise.resolve({ error: null });
+                filters[col] = val;
+                if (col === 'id' && onAbrechnungUpdate) {
+                  onAbrechnungUpdate({ patch, col, val });
+                }
+                return builder;
+              },
+              is(col, val) {
+                filters[col] = val;
+                return builder;
+              },
+              select(cols) {
+                return builder;
+              },
+              then(resolve) {
+                if (abrechnungError) {
+                  return resolve({ data: null, error: abrechnungError });
+                }
+
+                if (currentAbrechnung) {
+                  for (const [col, val] of Object.entries(filters)) {
+                    if (currentAbrechnung[col] !== val) {
+                      return resolve({ data: [], error: null });
+                    }
+                  }
+                  currentAbrechnung = {
+                    ...currentAbrechnung,
+                    ...patch,
+                    updated_at: '2026-09-22T10:00:01.000000Z',
+                  };
+                  return resolve({ data: [currentAbrechnung], error: null });
+                }
+
+                const row = {
+                  ...filters,
+                  ...patch,
+                  updated_at: '2026-09-22T10:00:01.000000Z',
+                };
+                return resolve({ data: [row], error: null });
               },
             };
+            return builder;
           },
         };
       }
@@ -70,10 +141,14 @@ function createMockDb({
   };
 }
 
-const DUMMY_SIGNED_BYTES = Buffer.from('30820100synthetic-signed-pkcs7-payload', 'utf8');
-
 test('Schritt 1.3 D: empfaenger_ik fehlt -> überspringen mit erklärendem Hinweis', async () => {
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-1',
+    basePath: 'tenant1/test-ab-1/payload',
+  });
+
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-1',
     empfaengerIk: null,
     basePath: 'tenant1/test-ab-1/payload',
@@ -86,7 +161,13 @@ test('Schritt 1.3 D: empfaenger_ik fehlt -> überspringen mit erklärendem Hinwe
 });
 
 test('Fall A: Kein Empfängerzertifikat in empfaenger_zertifikate hinterlegt -> verschluesselt: false mit Inhaber-Hinweis', async () => {
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-2',
+    basePath: 'tenant1/test-ab-2/payload',
+  });
+
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-2',
     empfaengerIk: '108310400',
     basePath: 'tenant1/test-ab-2/payload',
@@ -100,7 +181,13 @@ test('Fall A: Kein Empfängerzertifikat in empfaenger_zertifikate hinterlegt -> 
 });
 
 test('Fall A (Variante): DB-Fehler bei Zertifikatsabfrage -> verschluesselt: false mit Fehlermeldung', async () => {
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-2b',
+    basePath: 'tenant1/test-ab-2b/payload',
+  });
+
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-2b',
     empfaengerIk: '108310400',
     basePath: 'tenant1/test-ab-2b/payload',
@@ -113,7 +200,13 @@ test('Fall A (Variante): DB-Fehler bei Zertifikatsabfrage -> verschluesselt: fal
 });
 
 test('Fall B: Zertifikat vorhanden, aber Trust-Anchors leer -> verschluesselt: false mit Trust-Anchor-Meldung', async () => {
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-3',
+    basePath: 'tenant1/test-ab-3/payload',
+  });
+
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-3',
     empfaengerIk: '108310400',
     basePath: 'tenant1/test-ab-3/payload',
@@ -127,7 +220,13 @@ test('Fall B: Zertifikat vorhanden, aber Trust-Anchors leer -> verschluesselt: f
 });
 
 test('Fall B: Zertifikat vorhanden, aber Trust-Anchor abgelaufen (pruefeFrische wirft) -> verschluesselt: false', async () => {
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-4',
+    basePath: 'tenant1/test-ab-4/payload',
+  });
+
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-4',
     empfaengerIk: '108310400',
     basePath: 'tenant1/test-ab-4/payload',
@@ -142,7 +241,13 @@ test('Fall B: Zertifikat vorhanden, aber Trust-Anchor abgelaufen (pruefeFrische 
 });
 
 test('Fall C (Fehlschlag): Krypto-/V4-Fehler in verschluesseleFuerEmpfaenger -> verschluesselt: false mit Fehlermeldung', async () => {
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-5',
+    basePath: 'tenant1/test-ab-5/payload',
+  });
+
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-5',
     empfaengerIk: '108310400',
     basePath: 'tenant1/test-ab-5/payload',
@@ -158,7 +263,13 @@ test('Fall C (Fehlschlag): Krypto-/V4-Fehler in verschluesseleFuerEmpfaenger -> 
 });
 
 test('Fall C (Fehlschlag): Storage-Upload schlägt fehl -> verschluesselt: false mit Hinweis auf Storage-Fehler', async () => {
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-6',
+    basePath: 'tenant1/test-ab-6/payload',
+  });
+
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-6',
     empfaengerIk: '108310400',
     basePath: 'tenant1/test-ab-6/payload',
@@ -184,17 +295,18 @@ test('Fall C (Erfolg): Voller Erfolg -> verschluesselt: true, encryptedPath und 
   const syntheticEncrypted = Buffer.from('synthetic-cms-enveloped-data-payload');
   const expectedSha256 = crypto.createHash('sha256').update(syntheticEncrypted).digest('hex');
 
-  // basePath entspricht hier bewusst dem echten storage_path-Format
-  // (`${dta.filename}.dta`, siehe abrechnung.routes.js dtaPath) — nicht einem
-  // Stamm ohne ".dta". Vor O-131 verschleierte ein basePath ohne ".dta" genau
-  // die Dateinamenskollision mit dem unverschlüsselten signedPath
-  // (`${basePath}.p7m`), die mit einem realistischen basePath aufgetreten wäre.
   const basePath = '123e4567/test-ab-7/ESOL0001.dta';
   const signedPath = `${basePath}.p7m`;
 
   let persistedPatch = null;
 
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-7',
+    basePath,
+  });
+
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-7',
     empfaengerIk: '108310400',
     basePath,
@@ -224,21 +336,15 @@ test('Fall C (Erfolg): Voller Erfolg -> verschluesselt: true, encryptedPath und 
   });
 
   assert.equal(res.verschluesselt, true);
-  assert.equal(res.encryptedPath, '123e4567/test-ab-7/ESOL0001.dta.enc.p7m');
-  // O-131: encryptedPath darf niemals mit dem unverschlüsselten signedPath
-  // zusammenfallen — sonst überschreibt der upsert-Upload der verschlüsselten
-  // Datei stillschweigend die signierte.
+  assert.match(res.encryptedPath, /^123e4567\/test-ab-7\/versuche\/[0-9a-f-]+\/payload\.dta\.enc\.p7m$/);
   assert.notEqual(res.encryptedPath, signedPath);
   assert.equal(res.encryptedSha256, expectedSha256);
-  assert.equal(uploadedPath, '123e4567/test-ab-7/ESOL0001.dta.enc.p7m');
+  assert.equal(uploadedPath, res.encryptedPath);
   assert.deepEqual(uploadedBytes, syntheticEncrypted);
   assert.equal(uploadedOpts.contentType, 'application/pkcs7-mime');
-  assert.equal(uploadedOpts.upsert, true);
+  assert.equal(uploadedOpts.upsert, false);
 
-  // O-131 (db-ustasi 22.09.2026): Erfolg schreibt alle fünf Spalten als eine
-  // Gruppe; empfaengerFingerprint ist ein interner Übergabewert für die
-  // Persistenz, kein Teil des öffentlichen Rückgabewerts.
-  assert.equal(persistedPatch.encrypted_storage_path, '123e4567/test-ab-7/ESOL0001.dta.enc.p7m');
+  assert.equal(persistedPatch.encrypted_storage_path, res.encryptedPath);
   assert.equal(persistedPatch.encrypted_sha256, expectedSha256);
   assert.ok(persistedPatch.verschluesselt_am);
   assert.equal(persistedPatch.verschluesselt_fuer_fingerprint, 'aa:bb:cc');
@@ -249,7 +355,13 @@ test('Fall C (Erfolg): Voller Erfolg -> verschluesselt: true, encryptedPath und 
 test('O-131: Fehlschlag löscht alte Verschlüsselungsspalten (kein Stand von einem früheren erfolgreichen Lauf bleibt stehen)', async () => {
   let persistedPatch = null;
 
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-8',
+    basePath: 'tenant1/test-ab-8/ESOL0002.dta',
+  });
+
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-8',
     empfaengerIk: '108310400',
     basePath: 'tenant1/test-ab-8/ESOL0002.dta',
@@ -272,38 +384,26 @@ test('O-131: Fehlschlag löscht alte Verschlüsselungsspalten (kein Stand von ei
 });
 
 test('O-131-Nachaudit: Verschlüsselung erfolgreich, aber DB-Persistenz schlägt fehl -> Response behauptet NICHT verschluesselt:true', async () => {
-  const dbMitKaputterPersistenz = {
-    from(table) {
-      if (table === 'empfaenger_zertifikate') {
-        return {
-          select() {
-            return { eq() { return { async maybeSingle() { return { data: { zertifikat_der: '\\x308201', fingerprint_sha256: 'aa:bb' }, error: null }; } }; } };
-          },
-        };
-      }
-      if (table === 'abrechnung') {
-        return { update() { return { eq() { return Promise.resolve({ error: new Error('Postgres connection lost during persist') }); } }; } };
-      }
-      throw new Error(`Unerwartete Tabelle: ${table}`);
-    },
-    storage: { from() { return { async upload() { return { error: null }; } }; } },
-  };
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-9',
+    basePath: 'tenant1/test-ab-9/ESOL0003.dta',
+  });
 
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-9',
     empfaengerIk: '108310400',
     basePath: 'tenant1/test-ab-9/ESOL0003.dta',
     signedBytes: DUMMY_SIGNED_BYTES,
-    db: dbMitKaputterPersistenz,
+    db: createMockDb({
+      certRow: { zertifikat_der: '\\x308201', fingerprint_sha256: 'aa:bb' },
+      abrechnungError: new Error('Postgres connection lost during persist'),
+    }),
     ladeAnchors: () => ({ anchors: [Buffer.from('3082', 'hex')], meta: { zertifikate: [{ notAfter: '2030-01-01' }] } }),
     pruefeFrische: () => ({ ok: true, warnung: null }),
     verschluessele: () => Buffer.from('synthetic-enveloped-bytes'),
   });
 
-  // Die Verschlüsselung selbst war erfolgreich, aber weil der DB-Schreibversuch
-  // scheiterte, MUSS der Response verschluesselt:false melden — sonst denkt das
-  // Frontend, die Datei sei da, obwohl in der DB nichts davon steht (O-131-Nachaudit,
-  // unabhängige Kaltprüfung 22.09.2026, Befund 3.2.2).
   assert.equal(res.verschluesselt, false);
   assert.match(res.verschluesselungHinweis, /nicht gespeichert werden/);
 });
@@ -313,7 +413,12 @@ test('Bytea-Konvertierung: Unterstützt Hex mit \\x, Hex ohne \\x und Buffer', a
 
   for (const variant of [`\\x${rawBytes.toString('hex')}`, rawBytes.toString('hex'), rawBytes]) {
     let capturedDer = null;
+    const vorher = createVorherSnapshot({
+      abrechnungId: 'test-bytea',
+      basePath: 't/ab/payload',
+    });
     await verarbeiteVerschluesselungsSchritt({
+      vorher,
       abrechnungId: 'test-bytea',
       empfaengerIk: '108310400',
       basePath: 't/ab/payload',
@@ -338,7 +443,12 @@ test('Äußerer try/catch: Unerwartete Exception wird gefangen und führt nie zu
     },
   };
 
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-outer-err',
+    basePath: 't/ab/payload',
+  });
   const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
     abrechnungId: 'test-ab-outer-err',
     empfaengerIk: '108310400',
     basePath: 't/ab/payload',
@@ -348,4 +458,95 @@ test('Äußerer try/catch: Unerwartete Exception wird gefangen und führt nie zu
 
   assert.equal(res.verschluesselt, false);
   assert.equal(res.verschluesselungHinweis, 'Unerwarteter Fehler bei der Verschlüsselung.');
+});
+
+test('Versionskonflikt: Veralteter Snapshot vs. neuerer DB-Stand führt zu 409 und keinem NULL-Reset', async () => {
+  const basePath = 'tenant1/test-ab-conflict/ESOL0001.dta';
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-conflict',
+    basePath,
+    updated_at: '2026-09-22T10:00:00.123456Z',
+  });
+
+  const neuererDbStand = {
+    ...vorher,
+    updated_at: '2026-09-22T10:05:00.000000Z',
+  };
+
+  const mockDb = createMockDb({
+    abrechnungRow: neuererDbStand,
+    certRow: { zertifikat_der: '\\x308201', fingerprint_sha256: 'aa:bb:cc' },
+  });
+
+  await assert.rejects(
+    async () => {
+      await verarbeiteVerschluesselungsSchritt({
+        vorher,
+        abrechnungId: 'test-ab-conflict',
+        empfaengerIk: '108310400',
+        basePath,
+        signedBytes: DUMMY_SIGNED_BYTES,
+        db: mockDb,
+        ladeAnchors: () => ({ anchors: [Buffer.from('3082', 'hex')], meta: { zertifikate: [{ notAfter: '2030-01-01' }] } }),
+        pruefeFrische: () => ({ ok: true, warnung: null }),
+        verschluessele: () => Buffer.from('synthetic-enveloped-bytes'),
+      });
+    },
+    (err) => {
+      assert.equal(err.status || err.statusCode, 409);
+      assert.equal(err.code, 'ABRECHNUNG_VERSION_CONFLICT');
+      return true;
+    }
+  );
+
+  const unveranderterDbStand = mockDb._getCurrentAbrechnung();
+  assert.equal(unveranderterDbStand.updated_at, '2026-09-22T10:05:00.000000Z');
+  assert.equal(unveranderterDbStand.signed_storage_path, vorher.signed_storage_path);
+  assert.equal(unveranderterDbStand.signed_sha256, vorher.signed_sha256);
+});
+
+test('Versionskonflikt: Falsche signedBytes führen zu 409 vor Zertifikatsabfrage oder Storage-Upload', async () => {
+  let certAbfrageAufgerufen = false;
+  let storageUploadAufgerufen = false;
+
+  const vorher = createVorherSnapshot({
+    abrechnungId: 'test-ab-wrong-bytes',
+    basePath: 'tenant1/test-ab-wrong-bytes/payload',
+  });
+
+  const abweichendeBytes = Buffer.from('manipulated-or-wrong-signed-bytes');
+
+  const mockDb = createMockDb({
+    certRow: { zertifikat_der: '\\x308201' },
+    onStorageUpload: () => { storageUploadAufgerufen = true; },
+  });
+
+  const originalFrom = mockDb.from.bind(mockDb);
+  mockDb.from = (table) => {
+    if (table === 'empfaenger_zertifikate') {
+      certAbfrageAufgerufen = true;
+    }
+    return originalFrom(table);
+  };
+
+  await assert.rejects(
+    async () => {
+      await verarbeiteVerschluesselungsSchritt({
+        vorher,
+        abrechnungId: 'test-ab-wrong-bytes',
+        empfaengerIk: '108310400',
+        basePath: 'tenant1/test-ab-wrong-bytes/payload',
+        signedBytes: abweichendeBytes,
+        db: mockDb,
+      });
+    },
+    (err) => {
+      assert.equal(err.status || err.statusCode, 409);
+      assert.equal(err.code, 'ABRECHNUNG_VERSION_CONFLICT');
+      return true;
+    }
+  );
+
+  assert.equal(certAbfrageAufgerufen, false);
+  assert.equal(storageUploadAufgerufen, false);
 });

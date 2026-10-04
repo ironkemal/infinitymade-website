@@ -189,7 +189,7 @@ export async function ladeAbrechnungVerlauf() {
 
   const [dateiRes, zeilenRes, zahlungRes] = await Promise.all([
     ctx.supabase.from('abrechnung')
-      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, encrypted_storage_path, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, paid_at, created_at, betriebsart')
+      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_sha256, signed_at, encrypted_storage_path, encrypted_sha256, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, paid_at, created_at, betriebsart')
       .eq('owner_id', ownerId)
       .order('created_at', { ascending: false })
       .limit(50),

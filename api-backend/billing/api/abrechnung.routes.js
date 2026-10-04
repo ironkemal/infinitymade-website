@@ -12,6 +12,7 @@
 
 import express from 'express';
 import { ladeDtaOriginalbytes, pruefeSignedDta } from '../dta/signed-original.js';
+import { ABRECHNUNG_VERSION_FELDER, pruefeEntwurfsVersion, aktualisiereArtefaktVersion, artefaktVersuchPfad } from './artefakt-version.js';
 import { createHash, X509Certificate } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
@@ -1343,6 +1344,7 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
  * @returns {Promise<{ verschluesselt: boolean, verschluesselungHinweis?: string, encryptedPath?: string, encryptedSha256?: string, empfaengerFingerprint?: string }>}
  */
 async function berechneVerschluesselung({
+  vorher,
   abrechnungId,
   empfaengerIk,
   basePath,
@@ -1428,11 +1430,15 @@ async function berechneVerschluesselung({
       };
     }
 
-    // Storage-Upload in denselben Bucket 'abrechnungen'
-    const encryptedPath = buildEncryptedFilename(basePath);
+    // Eindeutiger Versuchspfad im Bucket 'abrechnungen' (kein Überschreiben, upsert: false)
+    const encryptedPath = artefaktVersuchPfad({
+      ownerId: vorher.owner_id,
+      abrechnungId,
+      kind: 'encrypted',
+    });
     const encUp = await db.storage.from('abrechnungen').upload(encryptedPath, encryptedBytes, {
       contentType: 'application/pkcs7-mime',
-      upsert: true,
+      upsert: false,
     });
 
     if (encUp.error) {
@@ -1460,20 +1466,18 @@ async function berechneVerschluesselung({
 
 /**
  * Schritt 1.3 D — Führt berechneVerschluesselung() aus und schreibt das Ergebnis
- * IMMER als vollständige Gruppe von fünf Spalten auf `abrechnung` zurück (O-131,
- * db-ustasi 22.09.2026).
+ * atomar per CAS (aktualisiereArtefaktVersion) als vollständige Gruppe von fünf
+ * Spalten auf `abrechnung` zurück (O-131).
  *
- * ⚠️ Bindend: /upload-signed ist wiederholbar (Storage-Upload läuft mit
- * upsert:true). Bei jedem Lauf werden ALLE fünf Spalten neu gesetzt — Erfolg
- * füllt sie, jeder Fehlschlag setzt sie auf NULL zurück (mit Hinweistext).
- * Sonst bliebe nach einer erneuten Signierung mit fehlgeschlagener Ver-
- * schlüsselung die verschlüsselte Datei des VORHERIGEN Laufs fälschlich als
- * aktuell gültig stehen, obwohl encrypted_sha256 nicht mehr zur neuen
- * signed_sha256 passt.
+ * Jeder Verschlüsselungsversuch erhält einen eindeutigen Pfad (upsert: false).
+ * Stale Vorversionen lösen einen 409-Konflikt aus; kein Id-only-Fallback.
+ * Bei jedem Lauf werden ALLE fünf Spalten neu gesetzt — Erfolg füllt sie,
+ * jeder Fehlschlag setzt sie auf NULL zurück (mit Hinweistext).
  *
- * @returns {Promise<{ verschluesselt: boolean, verschluesselungHinweis?: string, encryptedPath?: string, encryptedSha256?: string }>}
+ * @returns {Promise<{ verschluesselt: boolean, verschluesselungHinweis?: string, encryptedPath?: string, encryptedSha256?: string, version?: object }>}
  */
 export async function verarbeiteVerschluesselungsSchritt({
+  vorher,
   abrechnungId,
   empfaengerIk,
   basePath,
@@ -1483,34 +1487,59 @@ export async function verarbeiteVerschluesselungsSchritt({
   pruefeFrische = pruefeTrustAnchorFrische,
   verschluessele = verschluesseleFuerEmpfaenger,
 }) {
-  const ergebnis = await berechneVerschluesselung({
-    abrechnungId, empfaengerIk, basePath, signedBytes, db, ladeAnchors, pruefeFrische, verschluessele,
-  });
+  pruefeEntwurfsVersion(vorher);
 
-  let persistFehler = null;
+  let signedSha256Matches = false;
   try {
-    const { error: persistErr } = await db.from('abrechnung').update({
-      encrypted_storage_path:          ergebnis.verschluesselt ? ergebnis.encryptedPath : null,
-      encrypted_sha256:                ergebnis.verschluesselt ? ergebnis.encryptedSha256 : null,
-      verschluesselt_am:               ergebnis.verschluesselt ? new Date().toISOString() : null,
-      verschluesselt_fuer_fingerprint: ergebnis.verschluesselt ? (ergebnis.empfaengerFingerprint || null) : null,
-      verschluesselung_hinweis:        ergebnis.verschluesselt ? null : (ergebnis.verschluesselungHinweis || null),
-    }).eq('id', abrechnungId);
-    if (persistErr) persistFehler = persistErr.message;
-  } catch (err) {
-    persistFehler = err.message;
+    signedSha256Matches = sha256Hex(signedBytes) === vorher.signed_sha256;
+  } catch {
+    signedSha256Matches = false;
   }
+
+  if (
+    vorher.id !== abrechnungId ||
+    !vorher.signed_storage_path ||
+    !vorher.signed_sha256 ||
+    !signedSha256Matches
+  ) {
+    const error = new Error('Konflikt bei der Abrechnungsversion.');
+    error.status = 409;
+    error.statusCode = 409;
+    error.code = 'ABRECHNUNG_VERSION_CONFLICT';
+    throw error;
+  }
+
+  const ergebnis = await berechneVerschluesselung({
+    vorher,
+    abrechnungId,
+    empfaengerIk,
+    basePath,
+    signedBytes,
+    db,
+    ladeAnchors,
+    pruefeFrische,
+    verschluessele,
+  });
 
   // empfaengerFingerprint ist nur fuer die Persistenz gedacht, nicht Teil des HTTP-Response-Vertrags.
   const { empfaengerFingerprint, ...oeffentlichesErgebnis } = ergebnis;
 
-  if (persistFehler) {
-    console.error(`[abrechnung/upload-signed] Verschlüsselungsstatus konnte nicht gespeichert werden (Abrechnung ${abrechnungId}):`, persistFehler);
-    // O-131-Nachaudit (22.09.2026): Wenn der Verschlüsselungserfolg NICHT in
-    // die DB geschrieben werden konnte, darf der HTTP-Response trotzdem nicht
-    // "verschluesselt: true" behaupten — sonst meldet das Frontend dem Nutzer
-    // Erfolg, obwohl nach dem naechsten Reload keine verschluesselte Datei
-    // mehr auffindbar ist (DB-Stand und Response-Stand wären widersprüchlich).
+  const patch = {
+    encrypted_storage_path:          ergebnis.verschluesselt ? ergebnis.encryptedPath : null,
+    encrypted_sha256:                ergebnis.verschluesselt ? ergebnis.encryptedSha256 : null,
+    verschluesselt_am:               ergebnis.verschluesselt ? new Date().toISOString() : null,
+    verschluesselt_fuer_fingerprint: ergebnis.verschluesselt ? (ergebnis.empfaengerFingerprint || null) : null,
+    verschluesselung_hinweis:        ergebnis.verschluesselt ? null : (ergebnis.verschluesselungHinweis || null),
+  };
+
+  let version;
+  try {
+    version = await aktualisiereArtefaktVersion({ db, vorher, patch });
+  } catch (err) {
+    if (err?.status === 409 || err?.statusCode === 409) {
+      throw err;
+    }
+    console.error(`[abrechnung/upload-signed] Verschlüsselungsstatus konnte nicht gespeichert werden (Abrechnung ${abrechnungId}):`, err.message);
     return {
       verschluesselt: false,
       verschluesselungHinweis: ergebnis.verschluesselt
@@ -1519,7 +1548,10 @@ export async function verarbeiteVerschluesselungsSchritt({
     };
   }
 
-  return oeffentlichesErgebnis;
+  return {
+    ...oeffentlichesErgebnis,
+    version,
+  };
 }
 
 // Receive browser-signed PKCS#7 payload and store as .p7m next to the .dta.
@@ -1560,11 +1592,13 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
-      .select('id, owner_id, storage_path, empfaenger_ik, kostentraeger_ik, created_at, dta_sha256')
+      .select(ABRECHNUNG_VERSION_FELDER + ',empfaenger_ik,kostentraeger_ik,created_at')
       .eq('id', req.params.id)
       .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
+
+    pruefeEntwurfsVersion(ab);
 
     await pruefeSignedDta({ signedBytes, expectedDtaSha256: ab.dta_sha256 });
 
@@ -1587,31 +1621,35 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
     }
 
     const basePath = ab.storage_path || `${tenantId}/${req.params.id}/payload`;
-    const signedPath = basePath + '.p7m';
+    // Eindeutiger Versuchspfad für jeden Signaturversuch; kein Überschreiben (upsert: false)
+    const signedPath = artefaktVersuchPfad({
+      ownerId: tenantId,
+      abrechnungId: ab.id,
+      kind: 'signed',
+    });
     const up = await supabase.storage.from('abrechnungen').upload(signedPath, signedBytes, {
       contentType: 'application/pkcs7-mime',
-      upsert: true,
+      upsert: false,
     });
     if (up.error) return res.status(500).json({ error: 'Upload fehlgeschlagen: ' + up.error.message });
 
-    await supabase.from('abrechnung').update({
-      signed_storage_path:        signedPath,
-      signed_at:                  new Date().toISOString(),
-      signed_by_cert_thumbprint:  certThumbprint || null,
-      signed_sha256:              sha256Hex(signedBytes),   // Ö1
-      // O-131-Nachaudit (22.09.2026, unabhängige Kaltprüfung): die fünf
-      // Verschlüsselungsspalten hier VORSORGLICH auf NULL setzen, nicht erst
-      // in verarbeiteVerschluesselungsSchritt() weiter unten. Zwischen diesem
-      // Update und dem der Verschlüsselung liegen weitere await-Aufrufe
-      // (terapeut_zertifikat) — stürzt der Prozess dazwischen ab, blieben
-      // sonst encrypted_* eines FRÜHEREN Laufs stehen, obwohl signed_sha256
-      // bereits die NEUE Signatur trägt (Fehlpaarung).
-      encrypted_storage_path:          null,
-      encrypted_sha256:                null,
-      verschluesselt_am:               null,
-      verschluesselt_fuer_fingerprint: null,
-      verschluesselung_hinweis:        null,
-    }).eq('id', req.params.id);
+    // Atomares CAS-Update auf die Abrechnungsversion: Signaturfelder setzen und Verschlüsselungsspalten zurücksetzen.
+    // Bei CAS-Konflikt (409) wird die signierte Datei im Storage nicht gelöscht (Orphan-Retention für Audit-Sicherheit).
+    const signierteVersion = await aktualisiereArtefaktVersion({
+      db: supabase,
+      vorher: ab,
+      patch: {
+        signed_storage_path:        signedPath,
+        signed_at:                  new Date().toISOString(),
+        signed_by_cert_thumbprint:  certThumbprint || null,
+        signed_sha256:              sha256Hex(signedBytes),   // Ö1
+        encrypted_storage_path:          null,
+        encrypted_sha256:                null,
+        verschluesselt_am:               null,
+        verschluesselt_fuer_fingerprint: null,
+        verschluesselung_hinweis:        null,
+      },
+    });
 
     // Persist cert metadata for the therapist (private key never sees the server).
     //
@@ -1648,8 +1686,8 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
     }
 
     // Schritt 1.3 D — Verschlüsselung (CMS EnvelopedData nach SECON / GGT Anlage 16)
-    // ⚠️ Äußerer try/catch: NIEMALS den HTTP-Status auf 500 umschlagen, wenn bei der
-    //    Verschlüsselung etwas schiefgeht — der Signatur-Upload ist der primäre Zweck.
+    // ⚠️ Verschlüsselungsaufruf erfordert verpflichtend den Snapshot signierteVersion.
+    //    Tritt hierbei ein 409-Versionskonflikt auf, muss dieser zum äußeren Catch rethrown werden.
     let verschluesselungErgebnis;
     try {
       verschluesselungErgebnis = await verarbeiteVerschluesselungsSchritt({
@@ -1657,8 +1695,12 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
         empfaengerIk: ab.empfaenger_ik,
         basePath,
         signedBytes,
+        vorher: signierteVersion,
       });
     } catch (outerErr) {
+      if (outerErr?.status === 409 || outerErr?.statusCode === 409 || outerErr?.code === 'ABRECHNUNG_VERSION_CONFLICT') {
+        throw outerErr;
+      }
       console.error(`[abrechnung/upload-signed] Unerwarteter Fehler bei der Verschlüsselung (Abrechnung ${req.params.id}):`, outerErr.message);
       verschluesselungErgebnis = {
         verschluesselt: false,
@@ -1666,10 +1708,13 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
       };
     }
 
+    // Vollständige Abrechnungs-Versionszeile nicht im öffentlichen HTTP-Response exponieren
+    const { version: _entfernteVersion, ...oeffentlicheVerschluesselung } = verschluesselungErgebnis || {};
+
     return res.json({
       ok: true,
       signedPath,
-      ...verschluesselungErgebnis,
+      ...oeffentlicheVerschluesselung,
       ...(stichtagPruefung?.meldungen?.length ? { stichtagWarnung: stichtagPruefung.meldungen } : {}),
     });
   } catch (e) {
@@ -2155,15 +2200,51 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
 
     const abrechnungId = req.params.id;
 
-    // Ownership check — fetch the record and verify it belongs to this tenant
+    // Mandantenprüfung und Abruf des vollständigen Versionssnapshots inkl. Empfängerfeldern
     const { data: abrech } = await supabase
       .from('abrechnung')
-      .select('id, owner_id, kostentraeger_ik, empfaenger_ik, created_at')
+      .select(ABRECHNUNG_VERSION_FELDER + ',empfaenger_ik,kostentraeger_ik,created_at')
       .eq('id', abrechnungId)
       .maybeSingle();
     if (!abrech || abrech.owner_id !== tenantId) {
       return res.status(403).json({ error: 'Nicht berechtigt' });
     }
+
+    // Validierung: Body muss exakt die vier Artefakt-Felder des aktuellen DB-Stands übergeben
+    const {
+      signed_storage_path,
+      signed_sha256,
+      encrypted_storage_path,
+      encrypted_sha256,
+    } = req.body || {};
+
+    const reqFelderGueltig =
+      typeof signed_storage_path === 'string' && signed_storage_path.trim() !== '' &&
+      typeof signed_sha256 === 'string' && signed_sha256.trim() !== '' &&
+      typeof encrypted_storage_path === 'string' && encrypted_storage_path.trim() !== '' &&
+      typeof encrypted_sha256 === 'string' && encrypted_sha256.trim() !== '';
+
+    const dbFelderGueltig =
+      typeof abrech.signed_storage_path === 'string' && abrech.signed_storage_path.trim() !== '' &&
+      typeof abrech.signed_sha256 === 'string' && abrech.signed_sha256.trim() !== '' &&
+      typeof abrech.encrypted_storage_path === 'string' && abrech.encrypted_storage_path.trim() !== '' &&
+      typeof abrech.encrypted_sha256 === 'string' && abrech.encrypted_sha256.trim() !== '';
+
+    const felderStimmenUeberein =
+      signed_storage_path === abrech.signed_storage_path &&
+      signed_sha256 === abrech.signed_sha256 &&
+      encrypted_storage_path === abrech.encrypted_storage_path &&
+      encrypted_sha256 === abrech.encrypted_sha256;
+
+    if (!reqFelderGueltig || !dbFelderGueltig || !felderStimmenUeberein) {
+      return res.status(409).json({
+        error: 'Die Abrechnungsversion ist veraltet oder stimmt nicht überein. Bitte laden Sie die Seite neu.',
+        code: 'ABRECHNUNG_VERSION_CONFLICT',
+      });
+    }
+
+    // Validiere Entwurfsversion vor CAS-Update (verhindert Downgrade terminaler Statuswerte wie gesendet/bezahlt)
+    pruefeEntwurfsVersion(abrech);
 
     // Stichtag-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
     // ⚠️ Versand ist schon passiert: NICHT blockieren, nur Warnungen/Meldungen in Antwort geben.
@@ -2177,18 +2258,23 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
       console.error('[abrechnung/mark-sent] Stichtag-Prüfung fehlgeschlagen (wird toleriert):', stichtagErr);
     }
 
-    const { error } = await supabase
-      .from('abrechnung')
-      .update({ status: 'gesendet', zaa_uploaded_at: new Date().toISOString() })
-      .eq('id', abrechnungId);
-    if (error) return res.status(500).json({ error: error.message });
+    // Atomares CAS-Update auf status 'gesendet'; kein blinder id-only Fallback bei Race Conditions
+    await aktualisiereArtefaktVersion({
+      db: supabase,
+      vorher: abrech,
+      patch: {
+        status: 'gesendet',
+        zaa_uploaded_at: new Date().toISOString(),
+      },
+    });
+
     return res.json({
       ok: true,
       ...(stichtagPruefung?.meldungen?.length ? { stichtagWarnung: stichtagPruefung.meldungen } : {}),
     });
   } catch (e) {
     console.error('[abrechnung/mark-sent]', e);
-    return res.status(500).json({ error: e.message });
+    return res.status(e.status || 500).json({ error: e.message, ...(e.code ? { code: e.code } : {}) });
   }
 });
 

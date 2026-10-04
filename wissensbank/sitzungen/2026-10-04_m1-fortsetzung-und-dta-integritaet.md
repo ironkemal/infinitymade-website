@@ -56,3 +56,9 @@ Funktionskarte frisch: 2875 erfasste Einträge / 338 Dateien. Syntax und Diffpr�
 5. **Live-Abnahme:** Öffentliche Backend-GETs lieferten zuletzt HTML statt erwarteten API-JSON. Verifizierter SSH-/QA-Zugang fehlt. §6 und M1-Gesamtabschluss bleiben offen.
 
 Aufbewahrungsentscheidung ist in `compliance/LEGAL_DECISIONS.md`, Abschnitt „2026-10-02“, §3 dokumentiert. Maßgebliche externe Unterlagen mit Original/Abschnitt/Fassung stehen in [[REGISTER]], [[INDEX]] und [[SPEC-RULES]]. Diese Sitzungsnotiz erweitert keinen Rechts- oder Abrechnungsvertrag.
+
+## Freigegebene Fortsetzung: parallele Artefaktwechsel
+
+Punkt 2 lokal umgesetzt: vollständige versionsgebundene CAS-Writes, eindeutige Uploadpfade ohne Überschreiben und Versandbindung an angezeigte Pfad-/Hashfelder. Schema laut DB-Agent ausreichend. 2488 lokale Tests erfolgreich; unabhängiges Gemini-Review PASS_STATIC. Kein Live- oder vollständiger Archivnachweis.
+
+Bestehende historische E-Testdateien laut Nutzer außerhalb Arbeitsumfang. Punkt 3 autorisiert, eigener Teil noch offen: fehlgeschlagene unveröffentlichte unsigned Versuche sicher bereinigen. Punkt 4 DAS, Punkt 5 Infrastruktur (Nutzer/Kemal) und Punkt 6 spätere Live-QA bleiben offen. Signed-/Encrypted-Historie wird nicht gelöscht. Details: Tagesjournal M1.16-B2.
