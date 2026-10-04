@@ -13,7 +13,8 @@
 import express from 'express';
 import { ladeDtaOriginalbytes, pruefeSignedDta } from '../dta/signed-original.js';
 import { ABRECHNUNG_VERSION_FELDER, pruefeEntwurfsVersion, aktualisiereArtefaktVersion, artefaktVersuchPfad } from './artefakt-version.js';
-import { createHash, X509Certificate } from 'node:crypto';
+import { createHash, X509Certificate, randomUUID } from 'node:crypto';
+import { bereinigeUnveroeffentlichtenEntwurf } from './entwurf-bereinigung.js';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
 import { leitsymptomatikAlsBitmaske } from '../dta/leitsymptomatik.js';
@@ -154,7 +155,7 @@ async function vergebeNummern({ ownerId, absenderIk, empfaengerIk }) {
 //
 // Zeichensatz: ISO 8859-1 (latin1), genau wie die Nutzdatei. `utf8` wuerde
 // Umlaute zweibytig schreiben und die feste Satzlaenge von 348 Byte brechen.
-async function speichereAuftragsdatei({ dta, verzeichnis }) {
+async function speichereAuftragsdatei({ dta, verzeichnis, upsert = true }) {
   if (!dta?.auftragsdatei) return { pfad: null, groesse: null, sha256: null, fehler: 'nicht erzeugt' };
   const puffer = Buffer.from(dta.auftragsdatei, 'latin1');
   // Namensgebung: gleicher Stamm wie die Nutzdatei, andere Endung. So liegen
@@ -162,7 +163,7 @@ async function speichereAuftragsdatei({ dta, verzeichnis }) {
   // Namen ablesbar — nicht nur in der Datenbankzeile.
   const pfad = `${verzeichnis}/${dta.filename}.auf`;
   const up = await supabase.storage.from('abrechnungen').upload(pfad, puffer, {
-    contentType: 'application/octet-stream', upsert: true,
+    contentType: 'application/octet-stream', upsert,
   });
   if (up.error) {
     // Kein `return res.status(500)` von hier aus: der Aufrufer entscheidet, ob
@@ -4033,7 +4034,18 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     totalZu     = +totalZu.toFixed(2);
 
     // ---- insert abrechnung row ----
-    const { data: ab, error: abErr } = await supabase
+    let ab;
+    let auftrag;
+    let dtaPath;
+    let begleitPath;
+    let upBeg;
+    let festschreiben;
+    let uebernommen;
+    let anspruchUnklar = false;
+    let publicationStarted = false;
+    let datePath;
+
+    const { data: abData, error: abErr } = await supabase
       .from('abrechnung').insert({
         owner_id:           tenantId,
         kostentraeger_ik:   kostentraegerIk,
@@ -4049,151 +4061,237 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         transfernummer:         dta.transfernummer,
         empfaenger_ik:          dasIk,
         betriebsart,
-      }).select('id, business_id').single();
-    if (abErr) return res.status(500).json({ error: 'abrechnung insert: ' + abErr.message });
+      }).select(`${ABRECHNUNG_VERSION_FELDER},business_id`).single();
+    if (abErr || !abData) return res.status(500).json({ error: 'abrechnung insert: ' + (abErr?.message || 'Keine Daten') });
+    ab = abData;
+    pruefeEntwurfsVersion(ab);
 
-    // ---- Nachweis der bewussten Übersteuerung (GoBD) ----
-    // Gleiche Ablage wie die Therapiebericht-Übersteuerung im Physio/Ergo/
-    // Logo-Zweig (oben, /abrechnung/create) — ein Prüfpfad für alle
-    // Übersteuerungen, die tatsächlich zu einer Abrechnung geführt haben.
-    if (uebersteuerteSperren.length) {
-      const { error: protErr } = await supabase.from('prescription_validations').insert(
-        uebersteuerteSperren.map(uv => ({
-          prescription_id:  uv.id,
-          engine:           'abrechnung-podo-sperre',
-          input_snapshot:   { regeln: uv.regeln },
-          result:           { abrechnung_id: ab.id, kostentraeger_ik: kostentraegerIk },
-          ok:               false,
-          warnings_count:   0,
-          blockers_count:   uv.regeln.length,
-          proceeded_anyway: true,
-          overridden_rules: uv.regeln,
-          proceed_reason:   (typeof sperrenGrund === 'string' && sperrenGrund.trim())
-                              ? sperrenGrund.trim().slice(0, 500)
-                              : 'Ohne Angabe übersteuert',
-          validated_by:     u.user.id,
-        }))
-      );
-      if (protErr) console.error('[abrechnung-podo] Übersteuerungs-Protokoll fehlgeschlagen', protErr);
-    }
+    const erfolgreichePfade = [];
+    const versuchUuid = randomUUID();
+    datePath = `${year}/${String(now.getMonth()+1).padStart(2,'0')}`;
+    const verzeichnis = `${tenantId}/${datePath}/${ab.id}/${versuchUuid}`;
 
-    // ---- upload DTA ----
-    const datePath = `${year}/${String(now.getMonth()+1).padStart(2,'0')}`;
-    const dtaPath  = `${tenantId}/${datePath}/${ab.id}/${dta.filename}.dta`;
-    const dtaBuffer = Buffer.from(dta.content, 'latin1');
-    const upDta = await supabase.storage.from('abrechnungen').upload(dtaPath, dtaBuffer, {
-      contentType: 'application/octet-stream', upsert: true,
-    });
-    if (upDta.error) {
-      await supabase.from('abrechnung').delete().eq('id', ab.id);
-      return res.status(500).json({ error: 'Storage upload: ' + upDta.error.message });
-    }
-
-    // Schritt 1.1 — Auftragsdatei paarweise daneben (Anhang 2 Kap. 9 § 3.1).
-    const auftrag = await speichereAuftragsdatei({
-      dta, verzeichnis: `${tenantId}/${datePath}/${ab.id}`,
-    });
-
-    // ---- Begleitzettel (Anlage 4 §302 SGB V, Urbeleg-Postversand) ----
-    //
-    // Fehlte hier komplett (05.09.2026 entdeckt, beim FKT-Fix) — dieser Zweig
-    // lud nur die .dta hoch. Zusammen mit dem fehlenden storage_path unten
-    // bedeutete das: kein Download-, kein Signieren-, kein Begleitzettel-Knopf
-    // in der Abrechnungsliste (dashboard.js ~19788-19791 haengt an genau
-    // diesen beiden Spalten). Der Physio/Ergo/Logo-Zweig (oben, /abrechnung/
-    // create) macht das schon richtig — hier derselbe Aufbau, `brutto` kommt
-    // aber aus `prescriptions[i].sessions` statt aus resolvePreis(), weil die
-    // Summen fuer die Gesamtbetraege oben (totalBrutto/totalZu) ohnehin schon
-    // genau so berechnet wurden — zweimal rechnen haette auseinanderlaufen koennen.
-    const belege = vords.map((v, i) => {
-      const np = nameParts(v.leads);
-      const brutto = prescriptions[i].sessions
-        .reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0)
-        .toFixed(2);
-      return {
-        belegnummer:        prescriptions[i].patient.belegnummer,
-        patient_nachname:   np.nachname,
-        patient_vorname:    np.vorname,
-        verordnungsdatum:   v.ausstellungsdatum,
-        brutto,
-      };
-    });
-
-    const begleitHtml = await baueBegleitzettel({
-      dta, belege, kk, kostentraegerIk, now,
-      praxis: {
-        name:     profile.business_name || 'Praxis',
-        strasse:  [profile.street, profile.house_number].filter(Boolean).join(' '),
-        plz_ort:  [profile.zip, profile.city].filter(Boolean).join(' ').trim(),
-        telefon:  profile.phone || '',
-        ik:       cert.ik_nummer,
-      },
-      sammelRechnungsnummer,
-      bereich:                'podologie',
-      eigenerAbrechnungscode: '71',
-    });
-
-    const begleitPath = `${tenantId}/${datePath}/${ab.id}/begleitzettel.html`;
-    const upBeg = await supabase.storage.from('abrechnungen').upload(begleitPath, Buffer.from(begleitHtml, 'utf8'), {
-      contentType: 'text/html; charset=utf-8', upsert: true,
-    });
-    if (upBeg.error) console.warn('[abrechnung-podo] begleitzettel upload failed:', upBeg.error.message);
-
-    await supabase.from('abrechnung').update({
-      storage_path:       dtaPath,
-      begleitzettel_path: upBeg.error ? null : begleitPath,
-      auftragsdatei_path:   auftrag.pfad,
-      auftragsdatei_size:   auftrag.groesse,
-      auftragsdatei_sha256: auftrag.sha256,
-      dta_sha256:           sha256Hex(dtaBuffer),   // Ö1
-    }).eq('id', ab.id);
-
-    // ---- mark verordnungen as abgerechnet ----
-    // abrechnung_id ist die Ruecktrasse: ohne sie laesst sich eine spaetere
-    // Kassenrueckmeldung (ZAA) nicht der Verordnung zuordnen und die Absetzung
-    // bliebe unsichtbar.
-    //
-    // Bedingt, nicht blind: der Statusfilter macht das Setzen zum atomaren
-    // Anspruch. Laufen zwei Anfragen gleichzeitig (Doppelklick, haengende
-    // Leitung, Wiederholung), gewinnt genau eine — die zweite bekommt weniger
-    // Zeilen zurueck als sie angefordert hat und raeumt ihre eigene Abrechnung
-    // wieder ab. Eine reine Vorabpruefung reichte dafuer nicht: beide Anfragen
-    // lesen den alten Zustand, bevor eine von beiden schreibt.
-    // Reform S2.1: eine TESTdatei loest keine Zahlung aus (Anhang 2 Kap. 9 § 5)
-    // und darf die Verordnung nicht festschreiben — sie bleibt `bereit` und ist
-    // erneut testbar. Die abrechnung/abrechnung_zeile-Zeilen entstehen weiter.
-    const festschreiben = verordnungFestschreiben(betriebsart);
-    const { data: uebernommen, error: updErr } = festschreiben
-      ? await supabase.from('prescriptions')
-      .update({ abrechnung_status: abrechnungStatusAusStatus('abgerechnet'), abrechnung_id: ab.id })
-      .in('id', verordnungIds)
-      .eq('therapie_bereich', 'podo')
-      .or(einreichbarFilterAbrechnungStatus())
-      .select('id')
-      : { data: verordnungIds.map(id => ({ id })), error: null };
-    if (updErr || (uebernommen || []).length !== verordnungIds.length) {
-      // Zuerst die Zeilen zurueckdrehen, die WIR uns geholt haben. Eine
-      // Verordnung, die 'abgerechnet' heisst, ohne dass eine Datei existiert,
-      // faellt aus der Arbeitsliste und das Geld wird nie geholt — genau der
-      // stille Einnahmeverlust, vor dem verordnung-status.routes.js warnt.
-      const vorher = new Map((vords || []).map(v => [v.id, v]));
-      for (const row of (uebernommen || [])) {
-        const v = vorher.get(row.id);
-        const { error: rbErr } = await supabase.from('prescriptions')
-          .update({
-            abrechnung_status: abrechnungStatusAusStatus(v ? v.status : 'abrechenbar'),
-            abrechnung_id:     v ? (v.abrechnung_id ?? null) : null,
-          })
-          .eq('id', row.id);
-        if (rbErr) console.error('[abrechnung-podo] Ruecknahme fehlgeschlagen:', row.id, rbErr.message);
+    try {
+      // ---- Nachweis der bewussten Übersteuerung (GoBD) ----
+      // Gleiche Ablage wie die Therapiebericht-Übersteuerung im Physio/Ergo/
+      // Logo-Zweig (oben, /abrechnung/create) — ein Prüfpfad für alle
+      // Übersteuerungen, die tatsächlich zu einer Abrechnung geführt haben.
+      if (uebersteuerteSperren.length) {
+        const { error: protErr } = await supabase.from('prescription_validations').insert(
+          uebersteuerteSperren.map(uv => ({
+            prescription_id:  uv.id,
+            engine:           'abrechnung-podo-sperre',
+            input_snapshot:   { regeln: uv.regeln },
+            result:           { abrechnung_id: ab.id, kostentraeger_ik: kostentraegerIk },
+            ok:               false,
+            warnings_count:   0,
+            blockers_count:   uv.regeln.length,
+            proceeded_anyway: true,
+            overridden_rules: uv.regeln,
+            proceed_reason:   (typeof sperrenGrund === 'string' && sperrenGrund.trim())
+                                ? sperrenGrund.trim().slice(0, 500)
+                                : 'Ohne Angabe übersteuert',
+            validated_by:     u.user.id,
+          }))
+        );
+        if (protErr) console.error('[abrechnung-podo] Übersteuerungs-Protokoll fehlgeschlagen', protErr);
       }
-      // Danach die eigene Spur — die Datei ist noch von niemandem referenziert.
-      await supabase.storage.from('abrechnungen').remove([dtaPath]);
-      await supabase.from('abrechnung').delete().eq('id', ab.id);
-      return res.status(409).json({
-        error: updErr
-          ? 'Verordnungen konnten nicht als abgerechnet markiert werden: ' + updErr.message
-          : 'Diese Verordnungen wurden soeben von einer anderen Anfrage abgerechnet. Aus dieser Anfrage wurde nichts eingereicht — bitte die Liste neu laden.',
+
+      // ---- upload DTA (upsert: false) ----
+      dtaPath  = `${verzeichnis}/${dta.filename}.dta`;
+      const dtaBuffer = Buffer.from(dta.content, 'latin1');
+      const upDta = await supabase.storage.from('abrechnungen').upload(dtaPath, dtaBuffer, {
+        contentType: 'application/octet-stream', upsert: false,
+      });
+      if (upDta.error) {
+        const err = new Error('Storage upload: ' + upDta.error.message);
+        err.status = 500;
+        err.statusCode = 500;
+        err.grund = 'STORAGE_UPLOAD_FEHLER';
+        throw err;
+      }
+      erfolgreichePfade.push(dtaPath);
+
+      // Schritt 1.1 — Auftragsdatei paarweise daneben (Anhang 2 Kap. 9 § 3.1).
+      auftrag = await speichereAuftragsdatei({
+        dta, verzeichnis, upsert: false,
+      });
+      if (auftrag?.pfad) {
+        erfolgreichePfade.push(auftrag.pfad);
+      }
+
+      // ---- Begleitzettel (Anlage 4 §302 SGB V, Urbeleg-Postversand) ----
+      const belege = vords.map((v, i) => {
+        const np = nameParts(v.leads);
+        const brutto = prescriptions[i].sessions
+          .reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0)
+          .toFixed(2);
+        return {
+          belegnummer:        prescriptions[i].patient.belegnummer,
+          patient_nachname:   np.nachname,
+          patient_vorname:    np.vorname,
+          verordnungsdatum:   v.ausstellungsdatum,
+          brutto,
+        };
+      });
+
+      const begleitHtml = await baueBegleitzettel({
+        dta, belege, kk, kostentraegerIk, now,
+        praxis: {
+          name:     profile.business_name || 'Praxis',
+          strasse:  [profile.street, profile.house_number].filter(Boolean).join(' '),
+          plz_ort:  [profile.zip, profile.city].filter(Boolean).join(' ').trim(),
+          telefon:  profile.phone || '',
+          ik:       cert.ik_nummer,
+        },
+        sammelRechnungsnummer,
+        bereich:                'podologie',
+        eigenerAbrechnungscode: '71',
+      });
+
+      begleitPath = `${verzeichnis}/begleitzettel.html`;
+      upBeg = await supabase.storage.from('abrechnungen').upload(begleitPath, Buffer.from(begleitHtml, 'utf8'), {
+        contentType: 'text/html; charset=utf-8', upsert: false,
+      });
+      if (upBeg.error) {
+        console.warn('[abrechnung-podo] begleitzettel upload failed:', upBeg.error.message);
+      } else {
+        erfolgreichePfade.push(begleitPath);
+      }
+
+      // ---- mark verordnungen as abgerechnet ----
+      festschreiben = verordnungFestschreiben(betriebsart);
+      let updErr = null;
+      if (festschreiben) {
+        anspruchUnklar = true;
+        const resClaim = await supabase.from('prescriptions')
+          .update({ abrechnung_status: abrechnungStatusAusStatus('abgerechnet'), abrechnung_id: ab.id })
+          .in('id', verordnungIds)
+          .eq('therapie_bereich', 'podo')
+          .or(einreichbarFilterAbrechnungStatus())
+          .select('id');
+        uebernommen = resClaim.data;
+        updErr = resClaim.error;
+        anspruchUnklar = Boolean(updErr) || !Array.isArray(uebernommen);
+      } else {
+        uebernommen = verordnungIds.map(id => ({ id }));
+      }
+
+      if (updErr || !uebernommen || uebernommen.length !== verordnungIds.length) {
+        const claimErr = new Error(
+          updErr
+            ? 'Verordnungen konnten nicht als abgerechnet markiert werden: ' + updErr.message
+            : 'Diese Verordnungen wurden soeben von einer anderen Anfrage abgerechnet. Der Entwurf wurde verworfen und nicht eingereicht — bitte die Liste neu laden.'
+        );
+        claimErr.status = 409;
+        claimErr.statusCode = 409;
+        claimErr.code = 'VERORDNUNG_ANSPRUCH_KONFLIKT';
+        claimErr.grund = 'VERORDNUNG_ANSPRUCH_KONFLIKT';
+        claimErr.safeGermanMessage =
+          'Diese Verordnungen wurden soeben von einer anderen Anfrage abgerechnet. Der Entwurf wurde verworfen und nicht eingereicht — bitte die Liste neu laden.';
+        throw claimErr;
+      }
+
+      // ---- Header-Metadaten atomar publizieren via CAS (NUR NACH erfolgreichem Anspruch) ----
+      const patch = {
+        storage_path:       dtaPath,
+        begleitzettel_path: (upBeg && !upBeg.error) ? begleitPath : null,
+        auftragsdatei_path:   auftrag?.pfad || null,
+        auftragsdatei_size:   auftrag?.groesse || null,
+        auftragsdatei_sha256: auftrag?.sha256 || null,
+        dta_sha256:           sha256Hex(dtaBuffer),
+      };
+
+      publicationStarted = true;
+      const publiziert = await aktualisiereArtefaktVersion({
+        db: supabase,
+        vorher: ab,
+        patch,
+      });
+      ab = { ...ab, ...publiziert };
+    } catch (err) {
+      // 1. Zuerst nur die Verordnungen zurücknehmen, die dieser Versuch geholt hat
+      let rollbackFehlgeschlagen = anspruchUnklar || publicationStarted;
+      if (!publicationStarted && festschreiben && Array.isArray(uebernommen) && uebernommen.length > 0) {
+        const vorherMap = new Map((vords || []).map(v => [v.id, v]));
+        for (const row of uebernommen) {
+          const v = vorherMap.get(row.id);
+          try {
+            const { error: rbErr } = await supabase.from('prescriptions')
+              .update({
+                abrechnung_status: abrechnungStatusAusStatus(v ? v.status : 'abrechenbar'),
+                abrechnung_id:     v ? (v.abrechnung_id ?? null) : null,
+              })
+              .eq('id', row.id)
+              .eq('abrechnung_id', ab.id);
+            if (rbErr) {
+              rollbackFehlgeschlagen = true;
+              console.error('[abrechnung-podo] Ruecknahme fehlgeschlagen:', row.id, rbErr.message);
+            }
+          } catch (rbCatchErr) {
+            rollbackFehlgeschlagen = true;
+            console.error('[abrechnung-podo] Ruecknahme Exception:', row.id, rbCatchErr.message);
+          }
+        }
+      }
+
+      // 2. Unveröffentlichten Entwurf bereinigen: Wenn ein Rollback fehlschlug, nur pfade: [] übergeben (Dateien behalten)
+      let cleanupErr = null;
+      let cleanupRes = null;
+      if (ab) {
+        try {
+          cleanupRes = await bereinigeUnveroeffentlichtenEntwurf({
+            db: supabase,
+            vorher: ab,
+            pfade: rollbackFehlgeschlagen ? [] : erfolgreichePfade,
+            verzeichnis,
+            grund: (typeof err.grund === 'string' && /^[A-Z0-9_]{1,64}$/.test(err.grund))
+              ? err.grund
+              : 'ERSTELLUNG_KONFLIKT',
+          });
+        } catch (cErr) {
+          cleanupErr = cErr;
+          console.error('[abrechnung-podo] Bereinigung fehlgeschlagen:', cErr.message);
+        }
+      }
+
+      // CAS-Verlust bei Bereinigung: Niemals behaupten, der Entwurf sei verworfen oder Dateien gelöscht
+      if (cleanupErr && (cleanupErr.status === 409 || cleanupErr.statusCode === 409 || cleanupErr.code === 'ENTWURF_BEREINIGUNG_KONFLIKT' || cleanupErr.code === 'ABRECHNUNG_VERSION_CONFLICT')) {
+        return res.status(409).json({
+          error: 'Abrechnung wurde zwischenzeitlich geändert. Keine Dateien gelöscht. Bitte Liste neu laden.',
+        });
+      }
+
+      // 500er-Fehler bei Bereinigung: Ebenfalls keinen verworfen-Erfolg vortäuschen, sicher 500 zurückgeben
+      if (cleanupErr) {
+        return res.status(500).json({
+          error: 'Fehler bei der Bereinigung der Abrechnung. Bitte prüfen Sie den Status in der Abrechnungsliste.',
+        });
+      }
+
+      if (publicationStarted) return res.status(err.status || 500).json({
+        error: 'Status der Abrechnung unklar. Verordnungen und Dateien wurden beibehalten. Bitte den Status prüfen, bevor Sie erneut abrechnen.',
+      });
+
+      // Ursprünglicher Statuscode
+      const statusCode = err.status || err.statusCode || (err.code === 'VERORDNUNG_ANSPRUCH_KONFLIKT' ? 409 : 500);
+
+      if (statusCode === 409) {
+        // Bei Storage-Fehler oder unvollständigem Rollback (Dateien einbehalten): Keine erfolgreiche Löschung behaupten
+        if (!cleanupRes?.bereinigt || rollbackFehlgeschlagen) {
+          return res.status(409).json({
+            error: 'Diese Verordnungen wurden soeben von einer anderen Anfrage abgerechnet. Der Entwurf wurde als verworfen markiert; erzeugte Dateien wurden einbehalten. Bitte die Liste neu laden.',
+          });
+        }
+        // Regulärer 409-Anspruchskonflikt mit erfolgreicher Bereinigung
+        return res.status(409).json({
+          error: 'Diese Verordnungen wurden soeben von einer anderen Anfrage abgerechnet. Der Entwurf wurde verworfen und nicht eingereicht — bitte die Liste neu laden.',
+        });
+      }
+
+      // Sonstige Fehler (z. B. 500 bei Upload-Fehler)
+      return res.status(statusCode).json({
+        error: err.message || 'Fehler bei der Abrechnungserstellung.',
       });
     }
 

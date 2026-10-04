@@ -200,6 +200,220 @@ function validateSelectedColumns(table, cols) {
 /**
  * Erzeugt einen konfigurierbaren Supabase-Mock für Route-Tests mit vollständiger Chainability.
  */
+function decorateClient(origClient, state, opts) {
+  if (state.recording === undefined) {
+    state.recording = true;
+    state.events = [];
+    state.storageRemovals = [];
+  }
+  let clock = 1;
+  const getNextTimestamp = () => `2026-10-04T12:00:00.${String(clock++).padStart(6, '0')}+00:00`;
+  function normalizeClaim(row) {
+    if (!row) return null;
+    if (opts.normalizeSnapshot === false) return structuredClone(row);
+    const norm = {
+      id: row.id || 'claim-uuid-999',
+      owner_id: row.owner_id || (opts.testData ? opts.testData.ownerId : null),
+      business_id: row.business_id || null,
+      zuzahlungsforderung_ursprung_id: row.zuzahlungsforderung_ursprung_id !== undefined ? row.zuzahlungsforderung_ursprung_id : (opts.testData?.sourceZeile?.id || opts.testData?.zeileId || null),
+      zuzahlungsforderung_daten: row.zuzahlungsforderung_daten || null,
+      verarbeitungskennzeichen: row.verarbeitungskennzeichen || '03',
+      ...structuredClone(row)
+    };
+    const coreFields = [
+      'id', 'owner_id', 'status', 'updated_at',
+      'dateiname', 'rechnungsnummer', 'total_eur', 'zuzahlung_total',
+      'dta_file_size', 'dta_segment_count', 'prescription_count',
+      'rejected_count', 'datenaustauschreferenz', 'transfernummer', 'empfaenger_ik',
+      'kostentraeger_ik', 'betriebsart', 'storage_path', 'dta_sha256',
+      'begleitzettel_path', 'auftragsdatei_path', 'auftragsdatei_size', 'auftragsdatei_sha256',
+      'verwerfungsgrund', 'signed_storage_path', 'signed_sha256', 'signed_at',
+      'signed_by_cert_thumbprint', 'encrypted_storage_path', 'encrypted_sha256',
+      'verschluesselt_am', 'verschluesselt_fuer_fingerprint', 'verschluesselung_hinweis',
+      'zaa_uploaded_at', 'paid_at'
+    ];
+    for (const f of coreFields) {
+      if (norm[f] === undefined) norm[f] = null;
+    }
+    if (opts.existingClaimRow && row.id === opts.existingClaimRow.id) {
+       if (norm.datenaustauschreferenz === null) norm.datenaustauschreferenz = opts.existingClaimRow.datenaustauschreferenz ?? 25;
+       if (norm.transfernummer === null) norm.transfernummer = opts.existingClaimRow.transfernummer ?? 25;
+       if (norm.rechnungsnummer === null) norm.rechnungsnummer = opts.existingClaimRow.rechnungsnummer ?? 'R2026-W40-025';
+    }
+    if (!norm.updated_at) norm.updated_at = getNextTimestamp();
+    return norm;
+  }
+
+  if (opts.existingClaimRow) {
+    state.currentClaim = normalizeClaim(opts.existingClaimRow);
+  }
+
+  const origFrom = origClient.from.bind(origClient);
+  origClient.from = (table) => {
+    const origTable = origFrom(table);
+
+    if (table === 'abrechnung_zeile') {
+       const origInsert = origTable.insert.bind(origTable);
+       origTable.insert = (payload) => {
+         if (opts.lineInsertError) {
+           state.insertCalls.push({ table, payload });
+           return {
+             select() { return this; },
+             then(resolve) { resolve({ data: null, error: opts.lineInsertError }); },
+             async single() { return { data: null, error: opts.lineInsertError }; }
+           };
+         }
+         return origInsert(payload);
+       };
+       return origTable;
+    }
+
+    if (table !== 'abrechnung') return origTable;
+
+    return {
+      select(cols) {
+        const origQuery = origTable.select(cols);
+        const filters = {};
+        const query = {
+          eq(c, v) { filters[c] = v; origQuery.eq(c, v); return query; },
+          is(c, v) { filters[c] = v; return query; },
+          async maybeSingle() {
+            if (state.currentClaim && (!filters.id || filters.id === state.currentClaim.id)) {
+                for (const k of Object.keys(filters)) {
+                    if (filters[k] === null && state.currentClaim[k] !== null) return { data: null, error: null };
+                    if (filters[k] !== null && state.currentClaim[k] !== filters[k]) return { data: null, error: null };
+                }
+                return { data: structuredClone(state.currentClaim), error: null };
+            }
+            return origQuery.maybeSingle();
+          },
+          async single() {
+            const res = await query.maybeSingle();
+            if (!res.data) return { data: null, error: { code: 'PGRST116' } };
+            return res;
+          },
+          then(resolve) {
+            query.maybeSingle().then(res => {
+                resolve({ data: res.data ? [res.data] : [], error: null });
+            });
+          }
+        };
+        return query;
+      },
+      insert(payload) {
+        const origInsert = origTable.insert(payload);
+        return {
+          select(cols) {
+            return {
+              async single() {
+                const res = await origInsert.select(cols).single();
+                if (res.error) return res;
+                state.currentClaim = normalizeClaim(res.data);
+                if (state.currentClaim) state.currentClaim.status = payload.status || 'erstellt';
+                if (state.currentClaim && !state.currentClaim.updated_at) state.currentClaim.updated_at = getNextTimestamp();
+                return { data: structuredClone(state.currentClaim), error: null };
+              },
+              then(resolve) { this.single().then(resolve); }
+            };
+          },
+          then(resolve) { this.select().single().then(resolve); }
+        };
+      },
+      update(payload) {
+        const origUpdate = origTable.update(payload);
+        const updateFilters = state.updateFilters[state.updateFilters.length - 1];
+
+        let onceApplied = false;
+        const query = {
+          eq(c, v) { origUpdate.eq(c, v); return query; },
+          is(c, v) { updateFilters[c] = v; return query; },
+          select(cols) {
+            return {
+               async maybeSingle() { return query.executeOnce(); },
+               async single() {
+                 const r = await query.executeOnce();
+                 if (!r.data) return { data: null, error: { code: 'PGRST116' } };
+                 return r;
+               },
+               then(resolve) {
+                 query.executeOnce().then(res => resolve(res.error ? res : { data: res.data ? [res.data] : [], error: null }));
+               }
+            };
+          },
+          then(resolve) {
+            query.executeOnce().then(res => resolve(res));
+          },
+          async executeOnce() {
+            if (onceApplied) return { data: structuredClone(state.currentClaim), error: null };
+            onceApplied = true;
+
+            if (opts.beforeUpdate) {
+               const hookRes = await opts.beforeUpdate({ payload, filters: updateFilters, state });
+               if (hookRes && hookRes.error) return hookRes;
+            }
+
+            if (state.currentClaim) {
+                let match = true;
+                for (const k of Object.keys(updateFilters)) {
+                    if (updateFilters[k] === null) {
+                        if (state.currentClaim[k] !== null) match = false;
+                    } else {
+                        if (state.currentClaim[k] !== updateFilters[k]) match = false;
+                    }
+                }
+                if (!match) return { data: null, error: null };
+
+                if (!opts.casWinner && payload.status === 'erstellt' && state.currentClaim.status === 'verworfen') {
+                    return { data: null, error: null };
+                }
+
+                Object.assign(state.currentClaim, payload);
+                state.currentClaim.updated_at = getNextTimestamp();
+                if (state.recording) {
+                    state.events.push({ type: 'update', payload: structuredClone(payload) });
+                }
+                return { data: structuredClone(state.currentClaim), error: null };
+            }
+            return origUpdate.select().maybeSingle();
+          }
+        };
+        return query;
+      }
+    };
+  };
+
+  const origStorageFrom = origClient.storage.from.bind(origClient.storage);
+  origClient.storage.from = (bucket) => {
+     const origBucket = origStorageFrom(bucket);
+     return {
+       ...origBucket,
+       async upload(path, buffer, uploadOpts) {
+         if (opts.uploadBegleitError && path.endsWith('.html')) {
+             return { data: null, error: opts.uploadBegleitError };
+         }
+         const isDtaOrSuffixless = path.endsWith('.dta') || /ESOL0\d{3}$/.test(path) || /TSOL0\d{3}$/.test(path);
+         if (opts.uploadDtaError && isDtaOrSuffixless) {
+             return { data: null, error: opts.uploadDtaError };
+         }
+         if (state.recording) {
+            state.storageUploads.push({ path, length: buffer.length, opts: uploadOpts });
+         }
+         return { data: { path }, error: null };
+       },
+       async remove(paths) {
+         if (state.recording) {
+             if (!state.storageRemovals) state.storageRemovals = [];
+             state.storageRemovals.push(paths);
+             state.events.push({ type: 'storage_remove', paths });
+         }
+         if (opts.storageRemoveError) return { data: null, error: opts.storageRemoveError };
+         return { data: paths.map(p => ({ name: p })), error: null };
+       }
+     };
+  };
+
+  return origClient;
+}
 function erstelleSupabaseMock({
   testData,
   role = 'owner',
@@ -219,13 +433,22 @@ function erstelleSupabaseMock({
   uploadDtaError = null,
   existingSnapshotLine = null,
   docRowOverride = undefined,
+  beforeUpdate = null,
+  lineInsertError = null,
+  uploadBegleitError = null,
+  storageRemoveError = null,
+  normalizeSnapshot = true,
 } = {}) {
   const state = {
     insertCalls: [],
     updateCalls: [],
     storageUploads: [],
+    storageRemovals: [],
     downloads: [],
     updateFilters: [],
+    events: [],
+    currentClaim: null,
+    recording: true,
   };
 
   const client = {
@@ -514,7 +737,7 @@ function erstelleSupabaseMock({
     },
   };
 
-  return { client, state };
+  return { client: decorateClient(client, state, { insertReservationError, casWinner, existingClaimRow, beforeUpdate, lineInsertError, uploadBegleitError, storageRemoveError, uploadDtaError, testData, normalizeSnapshot }), state };
 }
 
 function erstelleMockDeps(supabaseMock, { speichereAuftragError = null } = {}) {
@@ -1011,8 +1234,8 @@ test('9. Fehler beim Erstellen der Artefakte bewahrt Reservierung und markiert s
   const verworfenUpdate = mock.state.updateCalls.find(u => u.payload.status === 'verworfen');
   assert.ok(verworfenUpdate, 'Abrechnungskopf muss auf status=verworfen gesetzt werden');
   assert.match(verworfenUpdate.payload.verwerfungsgrund, /CREATION_FAILED/);
-  assert.equal(verworfenUpdate.payload.datenaustauschreferenz, 25);
-  assert.equal(verworfenUpdate.payload.transfernummer, 25);
+  assert.equal(mock.state.currentClaim.datenaustauschreferenz, 25);
+  assert.equal(mock.state.currentClaim.transfernummer, 25);
 });
 
 test('10. Keine Mutation oder Umhängung der Ursprungszeile', async () => {
@@ -2251,4 +2474,217 @@ test('40. VKZ03 verwendet kryptografisch geprüfte eingebettete Originaldaten oh
   assert.equal(mock3.state.insertCalls.length, 0);
   assert.equal(mock3.state.updateCalls.length, 0);
   assert.equal(mock3.state.storageUploads.length, 0);
+});
+
+
+test('41 Fehlgeschlagener Auftrag löscht nur DTA nach Status-Verwerfung und behält Nummern', async () => {
+  const testData = erstelleTestDta();
+  const mock = erstelleSupabaseMock({ testData });
+  const deps = erstelleMockDeps(mock, { speichereAuftragError: new Error('Auftrag fehlgeschlagen') });
+  const res = await callPostRoute(createZuzahlungsforderungRouter(deps), { body: claimRequest(testData) });
+  assert.strictEqual(res.status, 500);
+  const updateIdx = mock.state.events.findIndex(e => e.type === 'update' && e.payload?.status === 'verworfen');
+  const removeIdx = mock.state.events.findIndex(e => e.type === 'storage_remove');
+  assert.ok(updateIdx !== -1 && removeIdx !== -1 && updateIdx < removeIdx);
+  assert.deepStrictEqual(mock.state.storageRemovals.flat(), [mock.state.storageUploads[0].path]);
+  assert.strictEqual(mock.state.currentClaim.status, 'verworfen');
+  assert.strictEqual(mock.state.currentClaim.datenaustauschreferenz, 25);
+  assert.ok(mock.state.currentClaim.id);
+});
+
+test('42 Begleitzettel-Fehler entfernt nur eigene Versuchs-Dateien mit upsert false', async () => {
+  const testData = erstelleTestDta();
+  const mock = erstelleSupabaseMock({ testData, uploadBegleitError: new Error('Begleit fehlgeschlagen') });
+  const deps = erstelleMockDeps(mock);
+  const origSave = deps.speichereAuftragsdatei;
+  deps.speichereAuftragsdatei = async (args) => {
+    assert.strictEqual(args.upsert, false);
+    return origSave(args);
+  };
+  const res = await callPostRoute(createZuzahlungsforderungRouter(deps), { body: claimRequest(testData) });
+  assert.strictEqual(res.status, 500);
+  const removed = mock.state.storageRemovals.flat();
+  assert.strictEqual(removed.length, 2);
+  assert.ok(removed.every(p => p.includes('/versuche/') && !p.includes('signed') && !p.includes('saved')));
+  assert.ok(mock.state.storageUploads.every(u => u.opts?.upsert === false));
+  assert.strictEqual(mock.state.currentClaim.status, 'verworfen');
+});
+
+test('43 Nummern-CAS 500 Retry erfolgreich mit Beibehaltung, bei Dauerfehler erstellt', async () => {
+  const testData = erstelleTestDta();
+  let numCalls = 0;
+  const mockA = erstelleSupabaseMock({
+    testData,
+    uploadDtaError: new Error('DTA Abbruch'),
+    beforeUpdate: async ({ payload }) => {
+      if (payload.datenaustauschreferenz !== undefined && !payload.storage_path && payload.status === undefined) {
+        if (numCalls++ === 0) return { error: { code: '500', message: 'synthetic' } };
+      }
+    }
+  });
+  const resA = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mockA)), { body: claimRequest(testData) });
+  assert.strictEqual(resA.status, 500);
+  assert.ok(numCalls >= 2);
+  assert.strictEqual(mockA.state.currentClaim.datenaustauschreferenz, 25);
+  assert.strictEqual(mockA.state.currentClaim.status, 'verworfen');
+  assert.strictEqual(mockA.state.storageRemovals.length, 0);
+
+  const testDataB = erstelleTestDta();
+  const mockB = erstelleSupabaseMock({
+    testData: testDataB,
+    beforeUpdate: async ({ payload }) => {
+      if (payload.datenaustauschreferenz !== undefined && !payload.storage_path && payload.status === undefined) {
+        return { error: { code: '500', message: 'synthetic' } };
+      }
+    }
+  });
+  const resB = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mockB)), { body: claimRequest(testDataB) });
+  assert.strictEqual(resB.status, 500);
+  assert.strictEqual(mockB.state.currentClaim.status, 'erstellt');
+  assert.strictEqual(mockB.state.storageRemovals.length, 0);
+});
+
+test('44 Finaler Publish-CAS Race 409 behält accepted Status ohne Löschung', async () => {
+  const testData = erstelleTestDta();
+  const mock = erstelleSupabaseMock({
+    testData,
+    beforeUpdate: async ({ payload, state }) => {
+      if (payload.storage_path) {
+        state.currentClaim.status = 'accepted';
+        state.currentClaim.updated_at = new Date(Date.now() + 5000).toISOString();
+      }
+    }
+  });
+  const res = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mock)), { body: claimRequest(testData) });
+  assert.strictEqual(res.status, 409);
+  assert.strictEqual(mock.state.currentClaim.status, 'accepted');
+  assert.ok(mock.state.storageUploads.length > 0);
+  assert.ok(mock.state.storageUploads.every(u => u.opts?.upsert === false));
+  assert.strictEqual(mock.state.storageRemovals.length, 0);
+});
+
+test('45 Zeileninsert-Fehler nach Publish verwirft ohne Löschung, Race behält accepted', async () => {
+  const testData = erstelleTestDta();
+  const mockA = erstelleSupabaseMock({ testData, lineInsertError: new Error('Zeilenfehler') });
+  const resA = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mockA)), { body: claimRequest(testData) });
+  assert.strictEqual(resA.status, 500);
+  assert.strictEqual(mockA.state.currentClaim.status, 'verworfen');
+  assert.ok(mockA.state.storageUploads.length >= 2);
+  assert.strictEqual(mockA.state.storageRemovals.length, 0);
+
+  const testDataB = erstelleTestDta();
+  const mockB = erstelleSupabaseMock({
+    testData: testDataB,
+    lineInsertError: new Error('Zeilenfehler'),
+    beforeUpdate: async ({ payload, state }) => {
+      if (payload.status === 'verworfen') {
+        state.currentClaim.status = 'accepted';
+        state.currentClaim.updated_at = new Date(Date.now() + 5000).toISOString();
+      }
+    }
+  });
+  const resB = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mockB)), { body: claimRequest(testDataB) });
+  assert.strictEqual(resB.status, 500);
+  assert.strictEqual(mockB.state.currentClaim.status, 'accepted');
+  assert.strictEqual(mockB.state.storageRemovals.length, 0);
+});
+
+test('46 Resume-Marker blockieren Wiederaufnahme mit 409 ohne Storage-Aktionen', async () => {
+  const testData = erstelleTestDta();
+  const markerCases = [
+    { signed_storage_path: 's/a.dta', signed_sha256: 'c'.repeat(64), signed_at: '2026-09-01T10:00:00Z' },
+    { encrypted_storage_path: 'e/a.enc', encrypted_sha256: 'd'.repeat(64), verschluesselt_am: '2026-09-01T10:00:00Z' },
+    { zaa_uploaded_at: '2026-09-01T10:00:00Z' },
+    { paid_at: '2026-09-01T10:00:00Z' }
+  ];
+  for (const markers of markerCases) {
+    const { existingClaimRow } = completedClaimFixture(testData);
+    existingClaimRow.status = 'verworfen';
+    Object.assign(existingClaimRow, markers);
+    const mock = erstelleSupabaseMock({ testData, existingClaimRow });
+    const res = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mock)), { body: claimRequest(testData) });
+    assert.strictEqual(res.status, 409);
+    assert.strictEqual(mock.state.storageUploads.length, 0);
+    assert.strictEqual(mock.state.storageRemovals.length, 0);
+  }
+});
+
+test('47 Wiederaufnahme verworfener Forderung behält Altdaten, nutzt neue Pfade und Nummer 24', async () => {
+  const testData = erstelleTestDta();
+  const { existingClaimRow } = completedClaimFixture(testData);
+  existingClaimRow.status = 'verworfen';
+  const mock = erstelleSupabaseMock({ testData, existingClaimRow });
+  const deps = erstelleMockDeps(mock);
+  deps.vergebeNummern = () => assert.fail('Keine Neuvergabe bei Wiederaufnahme');
+  const res = await callPostRoute(createZuzahlungsforderungRouter(deps), { body: claimRequest(testData) });
+  assert.ok(res.status === 200 || res.status === 201);
+  const removed = mock.state.storageRemovals.flat();
+  assert.ok(!removed.includes(existingClaimRow.storage_path));
+  assert.ok(!removed.includes(existingClaimRow.auftragsdatei_path));
+  assert.ok(mock.state.storageUploads.length > 0);
+  assert.ok(mock.state.storageUploads[0].path.includes('/versuche/'));
+  assert.strictEqual(mock.state.currentClaim.datenaustauschreferenz, 24);
+});
+
+test('48 Fehlende Normalisierung bei Neuanlage bricht vor Storage mit Fehler 500 ab', async () => {
+  const testData = erstelleTestDta();
+  const mock = erstelleSupabaseMock({ testData, normalizeSnapshot: false });
+  const res = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mock)), { body: claimRequest(testData) });
+  assert.strictEqual(res.status, 500);
+  assert.strictEqual(mock.state.storageUploads.length, 0);
+  assert.strictEqual(mock.state.storageRemovals.length, 0);
+});
+
+test('49 CAS-Race während Bereinigung nach Auftragsfehler verhindert Löschung', async () => {
+  const testData = erstelleTestDta();
+  const mock = erstelleSupabaseMock({
+    testData,
+    beforeUpdate: async ({ payload, state }) => {
+      if (payload.status === 'verworfen') {
+        state.currentClaim.status = 'accepted';
+        state.currentClaim.updated_at = new Date(Date.now() + 5000).toISOString();
+      }
+    }
+  });
+  const deps = erstelleMockDeps(mock, { speichereAuftragError: new Error('Auftrag Plattenfehler') });
+  const res = await callPostRoute(createZuzahlungsforderungRouter(deps), { body: claimRequest(testData) });
+  assert.strictEqual(res.status, 500);
+  assert.strictEqual(mock.state.currentClaim.status, 'accepted');
+  assert.strictEqual(mock.state.storageRemovals.length, 0);
+});
+
+test('50 Wiederaufnahme prüft Mikrosekunden und NULL-Filter, DTA-Fehler verwirft ohne Löschung', async () => {
+  const testData = erstelleTestDta();
+  const exactMicroseconds = '2026-09-01T12:00:00.123456Z';
+  const { existingClaimRow } = completedClaimFixture(testData);
+  existingClaimRow.status = 'verworfen';
+  existingClaimRow.updated_at = exactMicroseconds;
+  existingClaimRow.signed_storage_path = null;
+  existingClaimRow.encrypted_storage_path = null;
+  const mock = erstelleSupabaseMock({
+    testData,
+    existingClaimRow,
+    uploadDtaError: new Error('DTA Netzwerkabbruch')
+  });
+  const res = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mock)), { body: claimRequest(testData) });
+  assert.strictEqual(res.status, 500);
+  assert.strictEqual(mock.state.updateFilters[0].updated_at, exactMicroseconds);
+  assert.strictEqual(mock.state.updateFilters[0].signed_storage_path, null);
+  assert.strictEqual(mock.state.updateFilters[0].encrypted_storage_path, null);
+  assert.strictEqual(mock.state.currentClaim.status, 'verworfen');
+  assert.strictEqual(mock.state.storageRemovals.length, 0);
+});
+
+test('51 Fehler beim Storage-Löschen belässt Header als verworfen und liefert 500', async () => {
+  const testData = erstelleTestDta();
+  const mock = erstelleSupabaseMock({
+    testData,
+    uploadBegleitError: new Error('Begleit Upload fehlgeschlagen'),
+    storageRemoveError: new Error('Storage Löschen fehlgeschlagen')
+  });
+  const res = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mock)), { body: claimRequest(testData) });
+  assert.strictEqual(res.status, 500);
+  assert.notStrictEqual(res.status, 200);
+  assert.strictEqual(mock.state.currentClaim.status, 'verworfen');
+  assert.ok(mock.state.storageRemovals.length > 0);
 });

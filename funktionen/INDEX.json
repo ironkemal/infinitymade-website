@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-04",
- "dateien": 339,
- "funktionen": 2881,
+ "dateien": 340,
+ "funktionen": 2883,
  "module": [
   "abrechnung",
   "anamnese",
@@ -3004,8 +3004,8 @@
    "name": "sha256Hex",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 87,
-   "end": 89,
+   "start": 88,
+   "end": 90,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3063,8 +3063,8 @@
    "name": "rechnungsartFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 110,
-   "end": 121,
+   "start": 111,
+   "end": 122,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -3084,8 +3084,8 @@
    "name": "vergebeNummern",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 131,
-   "end": 146,
+   "start": 132,
+   "end": 147,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -3109,8 +3109,8 @@
    "name": "speichereAuftragsdatei",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 157,
-   "end": 174,
+   "start": 158,
+   "end": 175,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [
@@ -3136,8 +3136,8 @@
    "name": "isoWeek",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 176,
-   "end": 183,
+   "start": 177,
+   "end": 184,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -3157,8 +3157,8 @@
    "name": "buildSammelRechnungsnummer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 185,
-   "end": 187,
+   "start": 186,
+   "end": 188,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3178,8 +3178,8 @@
    "name": "nameParts",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 189,
-   "end": 191,
+   "start": 190,
+   "end": 192,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3200,8 +3200,8 @@
    "name": "frequenzToDigit",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 202,
-   "end": 216,
+   "start": 203,
+   "end": 217,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -3222,8 +3222,8 @@
    "name": "legsFuerSector",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 240,
-   "end": 243,
+   "start": 241,
+   "end": 244,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -3247,8 +3247,8 @@
    "name": "abrechnungscodeFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 248,
-   "end": 250,
+   "start": 249,
+   "end": 251,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3272,8 +3272,8 @@
    "name": "bereichFuerAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 267,
-   "end": 318,
+   "start": 268,
+   "end": 319,
    "lines": 52,
    "spiegelHinweis": null,
    "tables": [
@@ -3299,8 +3299,8 @@
    "name": "baueBegleitzettel",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 332,
-   "end": 405,
+   "start": 333,
+   "end": 406,
    "lines": 74,
    "spiegelHinweis": null,
    "tables": [
@@ -3328,8 +3328,8 @@
    "name": "papierFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 352,
-   "end": 376,
+   "start": 353,
+   "end": 377,
    "lines": 25,
    "spiegelHinweis": null,
    "tables": [],
@@ -3353,8 +3353,8 @@
    "name": "bereichTexte",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 414,
-   "end": 416,
+   "start": 415,
+   "end": 417,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3372,8 +3372,8 @@
    "name": "buildBankverbindung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 420,
-   "end": 427,
+   "start": 421,
+   "end": 428,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -3391,8 +3391,8 @@
    "name": "fehlendePflichtangaben",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 431,
-   "end": 436,
+   "start": 432,
+   "end": 437,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -3446,8 +3446,8 @@
    "name": "pflichtangabenHinweisHtml",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 451,
-   "end": 476,
+   "start": 452,
+   "end": 477,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -3465,8 +3465,8 @@
    "name": "buildBelegnummer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 492,
-   "end": 498,
+   "start": 493,
+   "end": 499,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -3487,8 +3487,8 @@
    "name": "mapPrescriptionToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 504,
-   "end": 676,
+   "start": 505,
+   "end": 677,
    "lines": 173,
    "spiegelHinweis": null,
    "tables": [],
@@ -3522,8 +3522,8 @@
    "name": "nurInhaber",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1241,
-   "end": 1260,
+   "start": 1242,
+   "end": 1261,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [
@@ -3545,8 +3545,8 @@
    "name": "berechneVerschluesselung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1346,
-   "end": 1465,
+   "start": 1347,
+   "end": 1466,
    "lines": 120,
    "spiegelHinweis": null,
    "tables": [
@@ -3574,8 +3574,8 @@
    "name": "verarbeiteVerschluesselungsSchritt",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1479,
-   "end": 1555,
+   "start": 1480,
+   "end": 1556,
    "lines": 77,
    "spiegelHinweis": null,
    "tables": [],
@@ -3598,8 +3598,8 @@
    "name": "ermittleEmpfaengerZertifikatStatus",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1908,
-   "end": 2110,
+   "start": 1909,
+   "end": 2111,
    "lines": 203,
    "spiegelHinweis": null,
    "tables": [
@@ -3623,8 +3623,8 @@
    "name": "handleEmpfaengerPruefung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2112,
-   "end": 2178,
+   "start": 2113,
+   "end": 2179,
    "lines": 67,
    "spiegelHinweis": null,
    "tables": [
@@ -3649,8 +3649,8 @@
    "name": "mandantUndAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2296,
-   "end": 2316,
+   "start": 2297,
+   "end": 2317,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [
@@ -3673,8 +3673,8 @@
    "name": "geldstand",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2327,
-   "end": 2348,
+   "start": 2328,
+   "end": 2349,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -3695,8 +3695,8 @@
    "name": "r2",
    "kind": "arrow",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2328,
-   "end": 2347,
+   "start": 2329,
+   "end": 2348,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -3773,8 +3773,8 @@
    "name": "mapVerordnungToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 3472,
-   "end": 3616,
+   "start": 3473,
+   "end": 3617,
    "lines": 145,
    "spiegelHinweis": null,
    "tables": [],
@@ -3865,6 +3865,8 @@
    ],
    "calledBy": [
     "aktualisiereArtefaktVersion",
+    "bereinigeUnveroeffentlichtenEntwurf",
+    "createZuzahlungsforderungRouter",
     "verarbeiteVerschluesselungsSchritt"
    ],
    "modules": [],
@@ -3894,6 +3896,8 @@
     "pruefeEntwurfsVersion"
    ],
    "calledBy": [
+    "bereinigeUnveroeffentlichtenEntwurf",
+    "createZuzahlungsforderungRouter",
     "verarbeiteVerschluesselungsSchritt"
    ],
    "modules": [],
@@ -3917,7 +3921,8 @@
     "istSicher"
    ],
    "calledBy": [
-    "berechneVerschluesselung"
+    "berechneVerschluesselung",
+    "createZuzahlungsforderungRouter"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -4126,6 +4131,56 @@
    "storage": [],
    "calls": [],
    "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "createBereinigungKonfliktError",
+   "kind": "function",
+   "file": "api-backend/billing/api/entwurf-bereinigung.js",
+   "start": 28,
+   "end": 34,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "bereinigeUnveroeffentlichtenEntwurf"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "bereinigeUnveroeffentlichtenEntwurf",
+   "kind": "function",
+   "file": "api-backend/billing/api/entwurf-bereinigung.js",
+   "start": 58,
+   "end": 202,
+   "lines": 145,
+   "spiegelHinweis": null,
+   "tables": [
+    "abrechnungen"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [
+    "abrechnungen"
+   ],
+   "calls": [
+    "aktualisiereArtefaktVersion",
+    "createBereinigungKonfliktError",
+    "pruefeEntwurfsVersion"
+   ],
+   "calledBy": [
+    "createZuzahlungsforderungRouter"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -5104,8 +5159,8 @@
    "name": "sha256Hex",
    "kind": "function",
    "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
-   "start": 30,
-   "end": 32,
+   "start": 38,
+   "end": 40,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -5163,8 +5218,8 @@
    "name": "matchesFrozenIntent",
    "kind": "function",
    "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
-   "start": 53,
-   "end": 69,
+   "start": 61,
+   "end": 77,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -5186,8 +5241,8 @@
    "name": "humanProof",
    "kind": "arrow",
    "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
-   "start": 64,
-   "end": 71,
+   "start": 72,
+   "end": 79,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -5209,8 +5264,8 @@
    "name": "isSnapshotContentValid",
    "kind": "function",
    "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
-   "start": 71,
-   "end": 101,
+   "start": 79,
+   "end": 109,
    "lines": 31,
    "spiegelHinweis": null,
    "tables": [],
@@ -5233,9 +5288,9 @@
    "name": "createZuzahlungsforderungRouter",
    "kind": "function",
    "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
-   "start": 122,
-   "end": 1385,
-   "lines": 1264,
+   "start": 130,
+   "end": 1560,
+   "lines": 1431,
    "spiegelHinweis": null,
    "tables": [
     "profiles",
@@ -5260,8 +5315,11 @@
     "abrechnungen"
    ],
    "calls": [
+    "aktualisiereArtefaktVersion",
+    "artefaktVersuchPfad",
     "baueBegleitzettel",
     "bereichFuerAbrechnung",
+    "bereinigeUnveroeffentlichtenEntwurf",
     "berlinHeute",
     "buildDtaFile",
     "buildSammelRechnungsnummer",
@@ -5275,6 +5333,7 @@
     "logAccess",
     "matchesFrozenIntent",
     "parseOriginalDtaMessage",
+    "pruefeEntwurfsVersion",
     "rechnungsartFuer",
     "round",
     "saldoJeRezept",
@@ -5293,8 +5352,8 @@
    "name": "mountZuzahlungsforderungRoutes",
    "kind": "function",
    "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
-   "start": 1390,
-   "end": 1393,
+   "start": 1565,
+   "end": 1568,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -137440,10 +137499,10 @@
   },
   {
    "tabelle": "abrechnung",
-   "anzahl": 4,
+   "anzahl": 3,
    "pfade": [
     {
-     "leitfunktion": "aktualisiereArtefaktVersion",
+     "leitfunktion": "createZuzahlungsforderungRouter",
      "funktionen": [
       {
        "name": "aktualisiereArtefaktVersion",
@@ -137453,6 +137512,19 @@
        "lines": 96,
        "writes": [
         "abrechnung:update"
+       ],
+       "modules": [],
+       "uiPfad": []
+      },
+      {
+       "name": "createZuzahlungsforderungRouter",
+       "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
+       "start": 130,
+       "end": 1560,
+       "lines": 1431,
+       "writes": [
+        "abrechnung:update",
+        "abrechnung:insert"
        ],
        "modules": [],
        "uiPfad": []
@@ -137469,24 +137541,6 @@
        "end": 178,
        "lines": 53,
        "writes": [
-        "abrechnung:insert"
-       ],
-       "modules": [],
-       "uiPfad": []
-      }
-     ]
-    },
-    {
-     "leitfunktion": "createZuzahlungsforderungRouter",
-     "funktionen": [
-      {
-       "name": "createZuzahlungsforderungRouter",
-       "file": "api-backend/billing/api/zuzahlungsforderung.routes.js",
-       "start": 122,
-       "end": 1385,
-       "lines": 1264,
-       "writes": [
-        "abrechnung:update",
         "abrechnung:insert"
        ],
        "modules": [],
@@ -139526,7 +139580,7 @@
   {
    "name": "r2",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:2328",
+    "api-backend/billing/api/abrechnung.routes.js:2329",
     "api-backend/billing/api/statistik.routes.js:176",
     "api-backend/billing/api/zuzahlung.routes.js:45",
     "api-backend/billing/dta/builder.js:62",
@@ -139759,8 +139813,8 @@
   {
    "name": "sha256Hex",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:87",
-    "api-backend/billing/api/zuzahlungsforderung.routes.js:30",
+    "api-backend/billing/api/abrechnung.routes.js:88",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js:38",
     "api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73",
     "module/einwilligung-texte.js:360"
    ],
@@ -140108,7 +140162,7 @@
   {
    "name": "fehlendePflichtangaben",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:431",
+    "api-backend/billing/api/abrechnung.routes.js:432",
     "module/beleg-druck.js:55"
    ],
    "aynalar": [

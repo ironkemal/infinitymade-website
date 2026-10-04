@@ -23,9 +23,17 @@ import express from 'express';
 import { ladeDtaOriginalbytes } from '../dta/signed-original.js';
 import { isDeepStrictEqual } from 'node:util';
 import { createHash } from 'node:crypto';
+import { dirname } from 'node:path';
 import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
 import { parseOriginalDtaMessage } from '../dta/zuzahlungsforderung-ursprung.js';
 import { berlinHeute, istStichtag } from '../../lib/berlin-tag.js';
+import {
+  ABRECHNUNG_VERSION_FELDER,
+  aktualisiereArtefaktVersion,
+  pruefeEntwurfsVersion,
+  artefaktVersuchPfad,
+} from './artefakt-version.js';
+import { bereinigeUnveroeffentlichtenEntwurf } from './entwurf-bereinigung.js';
 
 function sha256Hex(buf) {
   return createHash('sha256').update(buf).digest('hex');
@@ -144,6 +152,11 @@ export function createZuzahlungsforderungRouter(deps) {
 
   router.post('/abrechnung/zuzahlungsforderung', async (req, res) => {
     let claimAbrechnungId = null;
+    let claimVersion = null;
+    let ownAttemptDir = null;
+    const uploadedPaths = [];
+    let isPublished = false;
+    let numbersPersisted = false;
     let datennummer = null;
     let transfernummer = null;
     let sammelRechnungsnummer = null;
@@ -312,8 +325,8 @@ export function createZuzahlungsforderungRouter(deps) {
       const { data: existing, error: existErr } = await supabase
         .from('abrechnung')
         .select(`
-          id, owner_id, status, storage_path, dta_sha256,
-          begleitzettel_path, auftragsdatei_path, auftragsdatei_size, auftragsdatei_sha256,
+          ${ABRECHNUNG_VERSION_FELDER},
+          auftragsdatei_size, auftragsdatei_sha256,
           datenaustauschreferenz, transfernummer, rechnungsnummer, verarbeitungskennzeichen,
           zuzahlungsforderung_daten, total_eur, zuzahlung_total
         `)
@@ -1015,33 +1028,96 @@ export function createZuzahlungsforderungRouter(deps) {
 
       // Erst nach sämtlichen Prüfungen eine Reservierung atomar übernehmen/anlegen.
       if (existing) {
-          const { data: casData, error: casErr } = await supabase
-            .from('abrechnung')
-            .update({
-              status: 'erstellt',
-              verwerfungsgrund: null,
-              updated_at: new Date().toISOString(),
-              zuzahlungsforderung_daten: frozenIntent,
-            })
-            .eq('id', existing.id)
-            .eq('owner_id', tenantId)
-            .eq('status', 'verworfen')
-            .select('id, status, datenaustauschreferenz, transfernummer, rechnungsnummer');
+        try {
+          pruefeEntwurfsVersion({ ...existing, status: 'erstellt' });
+        } catch {
+          return res.status(409).json({
+            error: 'Kollision bei der Validierung des Entwurfssnapshots.',
+            code: 'CLAIM_RESUME_CONFLICT',
+          });
+        }
 
-          if (casErr || !casData || casData.length === 0) {
-            return res.status(409).json({
-              error: 'Kollision: Die Reservierung wird bereits von einem anderen Vorgang bearbeitet.',
-              code: 'CLAIM_RESUME_CONFLICT',
-            });
-          }
-          const casRow = casData[0];
-          claimAbrechnungId = casRow.id;
+        const signedEncTransportNull =
+          existing.status === 'verworfen' &&
+          existing.signed_storage_path === null &&
+          existing.signed_sha256 === null &&
+          existing.signed_at === null &&
+          existing.signed_by_cert_thumbprint === null &&
+          existing.encrypted_storage_path === null &&
+          existing.encrypted_sha256 === null &&
+          existing.verschluesselt_am === null &&
+          existing.verschluesselt_fuer_fingerprint === null &&
+          existing.verschluesselung_hinweis === null &&
+          existing.zaa_uploaded_at === null &&
+          existing.paid_at === null;
 
-          if (Number.isInteger(casRow.datenaustauschreferenz) && Number.isInteger(casRow.transfernummer) && casRow.rechnungsnummer) {
-            existingReferenz = casRow.datenaustauschreferenz;
-            existingTransfer = casRow.transfernummer;
-            existingSammelNummer = casRow.rechnungsnummer;
+        if (!signedEncTransportNull) {
+          return res.status(409).json({
+            error: 'Kollision: Bestehende Abrechnung befindet sich nicht in einem wiederaufnehmbaren Zustand.',
+            code: 'CLAIM_RESUME_CONFLICT',
+          });
+        }
+
+        let resumeQuery = supabase
+          .from('abrechnung')
+          .update({
+            status: 'erstellt',
+            verwerfungsgrund: null,
+            zuzahlungsforderung_daten: frozenIntent,
+            storage_path: null,
+            dta_sha256: null,
+            auftragsdatei_path: null,
+            auftragsdatei_size: null,
+            auftragsdatei_sha256: null,
+            begleitzettel_path: null,
+          })
+          .eq('id', existing.id)
+          .eq('owner_id', tenantId);
+
+        for (const feld of ABRECHNUNG_VERSION_FELDER.split(',')) {
+          if (feld === 'id' || feld === 'owner_id') continue;
+          const val = existing[feld];
+          if (val === null) {
+            resumeQuery = resumeQuery.is(feld, null);
+          } else {
+            resumeQuery = resumeQuery.eq(feld, val);
           }
+        }
+
+        const { data: casData, error: casErr } = await resumeQuery.select(
+          `${ABRECHNUNG_VERSION_FELDER},datenaustauschreferenz,transfernummer,rechnungsnummer`
+        );
+
+        if (casErr || !casData || casData.length !== 1) {
+          return res.status(409).json({
+            error: 'Kollision: Die Reservierung wird bereits von einem anderen Vorgang bearbeitet.',
+            code: 'CLAIM_RESUME_CONFLICT',
+          });
+        }
+        const casRow = casData[0];
+
+        let snapValid = false;
+        try {
+          snapValid = pruefeEntwurfsVersion(casRow);
+        } catch {
+          snapValid = false;
+        }
+
+        if (!snapValid || casRow.id !== existing.id || casRow.owner_id !== tenantId || casRow.status !== 'erstellt') {
+          return res.status(409).json({
+            error: 'Kollision bei der Validierung des übernommenen Entwurfssnapshots.',
+            code: 'CLAIM_RESUME_CONFLICT',
+          });
+        }
+
+        claimAbrechnungId = casRow.id;
+        claimVersion = casRow;
+
+        if (Number.isInteger(casRow.datenaustauschreferenz) && Number.isInteger(casRow.transfernummer) && casRow.rechnungsnummer) {
+          existingReferenz = casRow.datenaustauschreferenz;
+          existingTransfer = casRow.transfernummer;
+          existingSammelNummer = casRow.rechnungsnummer;
+        }
       } else {
         const reservationPayload = {
           owner_id: tenantId,
@@ -1057,7 +1133,7 @@ export function createZuzahlungsforderungRouter(deps) {
         const { data: reservedHeader, error: reserveErr } = await supabase
           .from('abrechnung')
           .insert(reservationPayload)
-          .select()
+          .select(ABRECHNUNG_VERSION_FELDER)
           .single();
 
         if (reserveErr) {
@@ -1078,8 +1154,27 @@ export function createZuzahlungsforderungRouter(deps) {
             code: 'RESERVATION_FAILED',
           });
         }
+
+        try {
+          pruefeEntwurfsVersion(reservedHeader);
+        } catch {
+          return res.status(500).json({
+            error: 'Reservierter Abrechnungskopf unvollständig oder ungültig.',
+            code: 'RESERVATION_INVALID',
+          });
+        }
+
         claimAbrechnungId = reservedHeader.id;
+        claimVersion = reservedHeader;
       }
+
+      ownAttemptDir = dirname(
+        artefaktVersuchPfad({
+          ownerId: tenantId,
+          abrechnungId: claimAbrechnungId,
+          kind: 'unsigned',
+        })
+      );
 
 
       // 12. Nummernvergabe
@@ -1104,10 +1199,16 @@ export function createZuzahlungsforderungRouter(deps) {
         sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
       }
 
-      const { data: numberRows, error: numberErr } = await supabase.from('abrechnung')
-        .update({ datenaustauschreferenz: datennummer, transfernummer, rechnungsnummer: sammelRechnungsnummer })
-        .eq('owner_id', tenantId).eq('id', claimAbrechnungId).eq('status', 'erstellt').select('id');
-      if (numberErr || !numberRows?.length) throw new Error('Vergebene Nummern konnten nicht gesichert werden.');
+      claimVersion = await aktualisiereArtefaktVersion({
+        db: supabase,
+        vorher: claimVersion,
+        patch: {
+          datenaustauschreferenz: datennummer,
+          transfernummer,
+          rechnungsnummer: sammelRechnungsnummer,
+        },
+      });
+      numbersPersisted = true;
 
       // 13. DTA-Datei (VKZ 03) über den echten Builder generieren
       const praxisIk = certRow?.ik_nummer || profile.ik_number;
@@ -1153,74 +1254,109 @@ export function createZuzahlungsforderungRouter(deps) {
       }
 
       // 14. Artefakte im Storage speichern
-      const datePath = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const dtaPath = `${tenantId}/${datePath}/${claimAbrechnungId}/${dta.filename}`;
-      const begleitPath = `${tenantId}/${datePath}/${claimAbrechnungId}/begleitzettel.html`;
+      const isTraversing =
+        typeof dta?.filename !== 'string' ||
+        !dta.filename ||
+        dta.filename === '.' ||
+        dta.filename === '..' ||
+        dta.filename.includes('/') ||
+        dta.filename.includes('\\') ||
+        dta.filename.includes('..') ||
+        dta.filename.includes('%');
+
+      const hasForbiddenSubstring =
+        typeof dta?.filename === 'string' &&
+        (dta.filename.toLowerCase().includes('.p7m') || dta.filename.toLowerCase().includes('.enc'));
+
+      const isSuffixlessEsolTsol =
+        typeof dta?.filename === 'string' && /^(?:ESOL|TSOL)0\d{3}$/i.test(dta.filename);
+
+      const isGenericDta =
+        typeof dta?.filename === 'string' && /^[a-zA-Z0-9_-]+\.dta$/i.test(dta.filename);
+
+      if (isTraversing || hasForbiddenSubstring || (!isSuffixlessEsolTsol && !isGenericDta)) {
+        const fnErr = new Error('Ungültiger DTA-Dateiname.');
+        fnErr.status = 422;
+        fnErr.code = 'INVALID_DTA_FILENAME';
+        throw fnErr;
+      }
+
+      const dtaPath = `${ownAttemptDir}/${dta.filename}`;
+      const begleitPath = `${ownAttemptDir}/begleitzettel.html`;
 
       let dtaSha256 = undefined;
       let auftrag = null;
 
       // DTA-Datei hochladen
-        const dtaBuffer = Buffer.from(dta.content, 'latin1');
-        const upDta = await supabase.storage.from('abrechnungen').upload(dtaPath, dtaBuffer, {
-          contentType: 'application/octet-stream',
-          upsert: true,
-        });
-        if (upDta.error) throw new Error('DTA-Upload fehlgeschlagen: ' + upDta.error.message);
+      const dtaBuffer = Buffer.from(dta.content, 'latin1');
+      const upDta = await supabase.storage.from('abrechnungen').upload(dtaPath, dtaBuffer, {
+        contentType: 'application/octet-stream',
+        upsert: false,
+      });
+      if (upDta.error || !upDta.data) {
+        throw new Error('DTA-Upload fehlgeschlagen: ' + (upDta.error?.message || 'Keine Upload-Daten zurückgegeben'));
+      }
+      uploadedPaths.push(dtaPath);
 
-        dtaSha256 = sha256Hex(dtaBuffer);
+      dtaSha256 = sha256Hex(dtaBuffer);
 
-        // Auftragsdatei hochladen
-        auftrag = await speichereAuftragsdatei({
-          dta,
-          verzeichnis: `${tenantId}/${datePath}/${claimAbrechnungId}`,
-        });
-        if (!auftrag || auftrag.fehler || !auftrag.pfad || typeof auftrag.groesse !== 'number' || !auftrag.sha256) {
-          throw new Error('Auftragsdatei-Speicherung fehlgeschlagen: ' + (auftrag?.fehler || 'Unvollständige Auftragsdatei-Rückgabe'));
-        }
+      // Auftragsdatei hochladen
+      auftrag = await speichereAuftragsdatei({
+        dta,
+        verzeichnis: ownAttemptDir,
+        upsert: false,
+      });
+      if (!auftrag || auftrag.fehler || !auftrag.pfad || typeof auftrag.groesse !== 'number' || !auftrag.sha256) {
+        throw new Error('Auftragsdatei-Speicherung fehlgeschlagen: ' + (auftrag?.fehler || 'Unvollständige Auftragsdatei-Rückgabe'));
+      }
+      uploadedPaths.push(auftrag.pfad);
 
-        // Begleitzettel bauen und hochladen
-        const np = {
-          nachname: dtaPrescription.patient?.nachname || sourceZeile.patient_name || '',
-          vorname: dtaPrescription.patient?.vorname || '',
-        };
+      // Begleitzettel bauen und hochladen
+      const np = {
+        nachname: dtaPrescription.patient?.nachname || sourceZeile.patient_name || '',
+        vorname: dtaPrescription.patient?.vorname || '',
+      };
 
-        const begleitHtml = await baueBegleitzettel({
-          dta,
-          belege: [{
-            _i: 0,
-            belegnummer: sourceZeile.belegnummer,
-            patient_nachname: np.nachname,
-            patient_vorname: np.vorname,
-            versichertennummer: sourceZeile.versichertennummer,
-            verordnungsdatum: dtaPrescription.verordnung?.ausstellungsdatum || sourceZeile.verordnungsdatum,
-            brutto: claimAmount.toFixed(2),
-          }],
-          kk,
-          kostentraegerIk: sourceHeader.kostentraeger_ik,
-          now,
-          praxis: {
-            name: profile.business_name || 'Praxis',
-            strasse: [profile.street, profile.house_number].filter(Boolean).join(' '),
-            plz_ort: [profile.zip, profile.city].filter(Boolean).join(' ').trim(),
-            telefon: profile.phone || '',
-            ik: certRow?.ik_nummer || profile.ik_number,
-          },
-          sammelRechnungsnummer,
-          bereich,
-          eigenerAbrechnungscode,
-        });
+      const begleitHtml = await baueBegleitzettel({
+        dta,
+        belege: [{
+          _i: 0,
+          belegnummer: sourceZeile.belegnummer,
+          patient_nachname: np.nachname,
+          patient_vorname: np.vorname,
+          versichertennummer: sourceZeile.versichertennummer,
+          verordnungsdatum: dtaPrescription.verordnung?.ausstellungsdatum || sourceZeile.verordnungsdatum,
+          brutto: claimAmount.toFixed(2),
+        }],
+        kk,
+        kostentraegerIk: sourceHeader.kostentraeger_ik,
+        now,
+        praxis: {
+          name: profile.business_name || 'Praxis',
+          strasse: [profile.street, profile.house_number].filter(Boolean).join(' '),
+          plz_ort: [profile.zip, profile.city].filter(Boolean).join(' ').trim(),
+          telefon: profile.phone || '',
+          ik: certRow?.ik_nummer || profile.ik_number,
+        },
+        sammelRechnungsnummer,
+        bereich,
+        eigenerAbrechnungscode,
+      });
 
-        const upBeg = await supabase.storage.from('abrechnungen').upload(begleitPath, Buffer.from(begleitHtml, 'utf8'), {
-          contentType: 'text/html; charset=utf-8',
-          upsert: true,
-        });
-        if (upBeg.error) throw new Error('Begleitzettel-Upload fehlgeschlagen: ' + upBeg.error.message);
+      const upBeg = await supabase.storage.from('abrechnungen').upload(begleitPath, Buffer.from(begleitHtml, 'utf8'), {
+        contentType: 'text/html; charset=utf-8',
+        upsert: false,
+      });
+      if (upBeg.error || !upBeg.data) {
+        throw new Error('Begleitzettel-Upload fehlgeschlagen: ' + (upBeg.error?.message || 'Keine Upload-Daten zurückgegeben'));
+      }
+      uploadedPaths.push(begleitPath);
 
       // 15. Exact saved artifacts + consumed numbers MUST persist before line
-      const { data: hdrData, error: hdrErr } = await supabase
-        .from('abrechnung')
-        .update({
+      claimVersion = await aktualisiereArtefaktVersion({
+        db: supabase,
+        vorher: claimVersion,
+        patch: {
           dateiname: dta.filename,
           rechnungsnummer: sammelRechnungsnummer,
           total_eur: claimAmount,
@@ -1241,18 +1377,9 @@ export function createZuzahlungsforderungRouter(deps) {
           auftragsdatei_path: auftrag.pfad,
           auftragsdatei_size: auftrag.groesse,
           auftragsdatei_sha256: auftrag.sha256,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('owner_id', tenantId)
-        .eq('id', claimAbrechnungId)
-        .select('id');
-
-      if (hdrErr) {
-        throw new Error('Fehler beim Aktualisieren des Abrechnungskopfs: ' + hdrErr.message);
-      }
-      if (!hdrData || hdrData.length === 0) {
-        throw new Error('Fehler beim Aktualisieren des Abrechnungskopfs: Datensatz nicht gefunden oder bereits geändert.');
-      }
+        },
+      });
+      isPublished = true;
 
       // 16. Unveränderliche Abrechnungszeile anlegen (wenn nicht bereits vorhanden)
 
@@ -1340,25 +1467,73 @@ export function createZuzahlungsforderungRouter(deps) {
       });
 
     } catch (err) {
-      if (claimAbrechnungId && tenantId) {
-        const { error: updErr } = await supabase
-          .from('abrechnung')
-          .update({
-            status: 'verworfen',
-            verwerfungsgrund: `Fehler bei Erstellung der Zuzahlungsforderung: [${err.code || 'CREATION_FAILED'}]`,
-            datenaustauschreferenz: Number.isInteger(datennummer) ? datennummer : undefined,
-            transfernummer: Number.isInteger(transfernummer) ? transfernummer : undefined,
-            rechnungsnummer: sammelRechnungsnummer || undefined,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('owner_id', tenantId)
-          .eq('id', claimAbrechnungId);
+      const isVersionConflict =
+        err?.status === 409 ||
+        err?.statusCode === 409 ||
+        err?.code === 'ABRECHNUNG_VERSION_CONFLICT';
 
-        if (updErr) {
-          console.error('[zuzahlungsforderung] Fehler beim Markieren auf verworfen:', {
-            code: updErr.code,
-            abrechnungId: claimAbrechnungId,
-          });
+      if (claimAbrechnungId && tenantId && claimVersion && !isVersionConflict) {
+        if (isPublished) {
+          try {
+            await aktualisiereArtefaktVersion({
+              db: supabase,
+              vorher: claimVersion,
+              patch: {
+                status: 'verworfen',
+                verwerfungsgrund: 'Fehler bei Erstellung der Zuzahlungsforderung: [CREATION_FAILED]',
+              },
+            });
+          } catch (postPubErr) {
+            console.warn('[zuzahlungsforderung] Post-publication CAS verworfen fehlgeschlagen:', {
+              code: postPubErr.code || 'POST_PUB_CAS_FAILED',
+              abrechnungId: claimAbrechnungId,
+            });
+          }
+        } else {
+          let canCleanup = true;
+          if (!numbersPersisted && Number.isInteger(datennummer) && Number.isInteger(transfernummer) && sammelRechnungsnummer) {
+            canCleanup = false;
+            try {
+              claimVersion = await aktualisiereArtefaktVersion({
+                db: supabase,
+                vorher: claimVersion,
+                patch: {
+                  datenaustauschreferenz: datennummer,
+                  transfernummer,
+                  rechnungsnummer: sammelRechnungsnummer,
+                },
+              });
+              canCleanup = true;
+            } catch {
+              console.warn('[zuzahlungsforderung] Nummern-Audit Sicherung fehlgeschlagen:', {
+                code: 'NUMBERN_AUDIT_FAILED',
+                abrechnungId: claimAbrechnungId,
+              });
+            }
+          }
+
+          if (canCleanup) {
+            try {
+              const cleanupRes = await bereinigeUnveroeffentlichtenEntwurf({
+                db: supabase,
+                vorher: claimVersion,
+                pfade: uploadedPaths,
+                verzeichnis: ownAttemptDir,
+                grund: 'CREATION_FAILED',
+              });
+              if (cleanupRes && cleanupRes.bereinigt === false) {
+                console.warn('[zuzahlungsforderung] Unvollständige Artefakt-Bereinigung:', {
+                  code: 'CLEANUP_ARTIFACTS_NOT_REMOVED',
+                  abrechnungId: claimAbrechnungId,
+                });
+              }
+            } catch (cleanupErr) {
+              console.warn('[zuzahlungsforderung] Bereinigung fehlgeschlagen:', {
+                code: cleanupErr.code || 'CLEANUP_FAILED',
+                abrechnungId: claimAbrechnungId,
+              });
+            }
+          }
         }
       }
 

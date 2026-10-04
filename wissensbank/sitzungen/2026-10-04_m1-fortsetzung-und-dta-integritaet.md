@@ -43,15 +43,15 @@ M1.10 ist laut Sprint nach M4.4 verschoben. Frühere M1.1–M1.9-Arbeiten sind i
 
 ## Prüfstand
 
-Letzte vollständige Suite für `6073aa4`: **2465 Tests erfolgreich**, 1586 Frontend / 781 Backend / 98 Tools. Log bei Erstellung: `/tmp/praxura-m116b-all-tests.log` (temporär, kein dauerhafter Beleg). Dauerhafte Tests liegen im Repository, darunter `api-backend/billing/dta/signed-original.test.js` und `api-backend/billing/api/signed-upload.test.js`.
+Letzte vollständige Suite einschließlich der lokal umgesetzten Bereinigung: **2521 Tests erfolgreich**, 1586 Frontend / 837 Backend / 98 Tools. Log bei Erstellung: `/tmp/praxura-m116-cas/point3-all-tests.log` (temporär, kein dauerhafter Beleg). Dauerhafte Tests liegen im Repository, darunter `api-backend/billing/dta/signed-original.test.js` und `api-backend/billing/api/signed-upload.test.js`.
 
-Funktionskarte frisch: 2875 erfasste Einträge / 338 Dateien. Syntax und Diffprüfung erfolgreich. Kaltes Gemini-Review Upload-Guard: `40e0fb5d-355f-485d-9b5f-f17967882b30`, PASS im begrenzten Umfang. Kaltes Review Originalfallback: `3afb1658-b25e-4aaa-87d8-ba0a29094477`, PASS_STATIC. Reale Kundendaten und Schlüssel wurden nicht verwendet. Push ist kein Nachweis eines Live-Deployments.
+Funktionskarte frisch: 2883 erfasste Einträge / 340 Dateien. Syntax und Diffprüfung erfolgreich. Kaltes Gemini-Review Upload-Guard: `40e0fb5d-355f-485d-9b5f-f17967882b30`, PASS im begrenzten Umfang. Kaltes Review Originalfallback: `3afb1658-b25e-4aaa-87d8-ba0a29094477`, PASS_STATIC. Reale Kundendaten und Schlüssel wurden nicht verwendet. Push ist kein Nachweis eines Live-Deployments.
 
 ## Offene Grenzen und nächster sicherer Schritt
 
-1. **Historische Signaturen:** DSGVO-Referenzsammlung schützt aktuelle Pfade. Nach Versionswechsel wären frühere eindeutige Signed-Pfade unreferenziert und würden von Accountlöschung erfasst. Vor Versionierung dauerhaft geschützte Historie und Aufbewahrungsentscheidung mit Hat K abstimmen. `api-backend/dsgvo/klassifikation.js` und `loeschen.js` gehören dessen Bereich. Keine stille Änderung oder Veröffentlichung ungeschützter Versionen.
-2. **Parallelzugriffe:** Signaturupload verwendet noch mutable Pfade und `upsert:true`; Headerupdates sind nicht vollständig versionsgebunden. Gemeinsamer CAS-/Transaktionsvertrag für Signieren, Verschlüsseln, Versand und Cleanup fehlt. Vorablesen allein verhindert keine Race Condition.
-3. **Entwürfe:** Geprüfte Billingrouten enthalten keinen allgemeinen Regenerierungs-/Stornoendpoint. Create/Korrektur erzeugen neue Header; pauschal alte Originaldateien zu löschen könnte VKZ03 beschädigen. Vor Cleanup atomare Status-, Referenz- und Veröffentlichungsabsicherung nachweisen.
+1. **Historische Signaturen:** Bestehende historische E-Testdateien sind laut Nutzer außerhalb dieses Arbeitsumfangs. Versionsschutz ersetzt jedoch keinen Nachweis vollständiger zukünftiger Archivaufbewahrung: DSGVO-Referenzsammlung schützt bisher aktuelle Pfade, ältere einzigartige Signed-Pfade benötigen weiterhin abgestimmten Schutz. `api-backend/dsgvo/klassifikation.js` und `loeschen.js` gehören Hat K; hier nicht geändert.
+2. **Parallelzugriffe:** Lokal mit `11ab4b2` abgesichert: eindeutige immutable Uploadpfade und vollständiger Snapshot-CAS für Signatur, Verschlüsselung und Versand. Bereinigung verwendet denselben Versionsvertrag. Das schützt kooperative Schreiber; direkte Fremdschreiber und eine DB/Storage-Gesamttransaktion sind dadurch nicht nachgewiesen.
+3. **Entwürfe:** Eigene fehlgeschlagene unveröffentlichte unsigned Versuche in Podologie und VKZ03 lokal bereinigt: erst vollständiger CAS auf verworfen, dann maximal drei explizite Versuchspfade entfernen. Header und Nummern bleiben. Unklare Claims/Publikation, verlorener CAS oder Rücknahmefehler behalten Dateien. Allgemeine historische Regenerierungs-/Stornobereinigung und veröffentlichte Duplikate sind nicht abgedeckt.
 4. **DAS-Annahme:** `gesendet`, fehlerlos gelesene ZAA und M1.9-Papierempfang ersetzen keine authentische positive DAS-Quittung zur konkreten Transportversion. Deshalb keine verschlüsselte Datei gelöscht.
 5. **Live-Abnahme:** Öffentliche Backend-GETs lieferten zuletzt HTML statt erwarteten API-JSON. Verifizierter SSH-/QA-Zugang fehlt. §6 und M1-Gesamtabschluss bleiben offen.
 
@@ -61,4 +61,11 @@ Aufbewahrungsentscheidung ist in `compliance/LEGAL_DECISIONS.md`, Abschnitt „2
 
 Punkt 2 lokal umgesetzt: vollständige versionsgebundene CAS-Writes, eindeutige Uploadpfade ohne Überschreiben und Versandbindung an angezeigte Pfad-/Hashfelder. Schema laut DB-Agent ausreichend. 2488 lokale Tests erfolgreich; unabhängiges Gemini-Review PASS_STATIC. Kein Live- oder vollständiger Archivnachweis.
 
-Bestehende historische E-Testdateien laut Nutzer außerhalb Arbeitsumfang. Punkt 3 autorisiert, eigener Teil noch offen: fehlgeschlagene unveröffentlichte unsigned Versuche sicher bereinigen. Punkt 4 DAS, Punkt 5 Infrastruktur (Nutzer/Kemal) und Punkt 6 spätere Live-QA bleiben offen. Signed-/Encrypted-Historie wird nicht gelöscht. Details: Tagesjournal M1.16-B2.
+Bestehende historische E-Testdateien laut Nutzer außerhalb Arbeitsumfang. Punkt 3 autorisiert und lokal umgesetzt im oben genannten begrenzten Umfang: fehlgeschlagene unveröffentlichte unsigned Versuche. Abschließende kalte Prüfungen Podologie/VKZ03 bestanden. Punkt 4 DAS, Punkt 5 Infrastruktur (Nutzer/Kemal) und Punkt 6 spätere Live-QA bleiben offen. Signed-/Encrypted-Historie wird nicht gelöscht. Details: Tagesjournal M1.16-B2.
+
+
+## Entwurfsbereinigung: geprüfter Entwicklungsstand
+
+Gemeinsamer Helper verwirft eigenen unveröffentlichten Header per vollständigem CAS, bevor maximal drei explizite unsigned Versuchspfade gelöscht werden. Header/Nummern bleiben. Podologie veröffentlicht erst nach Rezeptclaim; fremde Rücknahme und unklare Publikation sind abgesichert. VKZ03 verwendet neue Versuchspfade, gebundene Wiederaufnahme und Nummern-Audit-Retry. Unklare Ergebnisse behalten Dateien, nach begonnener Publikation auch Rezeptzuordnungen.
+
+22 neue Helper-/Podologie-Tests und 11 neue VKZ03-Tests; gesamte Suite 2521 erfolgreich. Kalte Podologie-Prüfung `a62caf6a` plus Nachtrag `95b17dfa`, kalte VKZ03-Prüfung `cbada276`: PASS_STATIC. Root las Diff und Tests; DB-Vertrag und Security lokal geprüft. Kein Live-Nachweis. Allgemeine historische/publizierte Duplikatbereinigung und zukünftige Signed-Aufbewahrung sind nicht abgedeckt. Details einschließlich verworfener Providerantworten: Tagesjournal M1.16-B3.
