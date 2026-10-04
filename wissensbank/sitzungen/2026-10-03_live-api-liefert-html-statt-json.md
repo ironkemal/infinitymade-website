@@ -3,7 +3,7 @@ titel: Live-API liefert HTML statt JSON (n8n antwortet statt calendar-api)
 typ: sitzung
 angelegt: 2026-10-03
 tags: [sitzung, live, vps, traefik, calendar-api, n8n, blocker, betrieb]
-status: OFFEN — Ursache nicht bestätigt, Server-Zugang fehlt
+status: GELÖST — 04.10.2026 ~21:40 UTC, Ursache: VPS-Platte 100 % voll (Backup-Cron)
 ---
 
 # Live-API liefert HTML statt JSON
@@ -111,6 +111,34 @@ Ursache bisher **nur aus Repo-Dateien abgeleitet**, nicht am Server gemessen.
 ## Nachtrag
 
 04.10.2026: laut `fortschritte/2026-10-04.md:8` GET `/api/krankenkassen` und GET `/health` HTTP 200 `text/html`; HEAD `/api/krankenkassen` HTTP 404. Unterschiedliche Methoden getrennt bewerten. Keine bestätigte Ursache, keine Serverreparatur und keine erneute Live-Prüfung beim Dokumentieren dieses Nachtrags. Nutzer/Kemal übernehmen Infrastrukturprüfung; Ergebnis anschließend hier ergänzen.
+
+**04.10.2026 ~21:40 UTC — GELÖST (Kemal + Claude, Server lesend und schreibend geprüft).**
+
+*Ursache (gemessen, nicht mehr Hypothese):* Die Root-Platte des Betriebs-VPS war **zu 100 % voll** (38/38 GB).
+Der nächtliche Host-Cron (Backup-Skript, 02:00 UTC) kopierte jede Nacht das komplette n8n-Datenverzeichnis
+inklusive `binaryData/` (2,4 GB, wächst täglich ~100 MB) und behielt 8 Tage → ~20 GB. Der Lauf am
+**03.10. 02:00** füllte die letzte Lücke; das `calendar-api`-Log endet um 02:01. Danach konnte Docker im
+Container nicht einmal den Healthcheck ausführen (`OCI runtime exec failed … no space left on device`,
+FailingStreak 2558) → Status `unhealthy` → Traefik nimmt ungesunde Container aus dem Routing → `/api/*`
+fiel auf den n8n-Router (nur `Host`) → n8n-HTML bzw. 404. Watchtower, mail-db und uptime-kuma waren aus
+demselben Grund `unhealthy`.
+
+*Nicht* die Ursache: Code/Image `0260612` (startet lokal sauber), Migration 0058/0059 (auf SaaS läuft der
+Runner nicht, `praxura_migrations` hat nur 0000/0005), Traefik-Labels (Repo-Regel korrekt, Container wurde
+ohne Label-Änderung wieder geroutet).
+
+*Behebung:* systemd-Journal geleert, ungenutzte Images entfernt (1,3 GB), der abgebrochene Backup-Ordner vom
+03.10. und die drei ältesten (25.–27.09.) gelöscht → 11 GB frei. `calendar-api` wurde **ohne Neustart** von
+selbst wieder `healthy`. Nachweis: `GET /api/krankenkassen` → `200 application/json`.
+
+*Dauerhaft (gegen Wiederholung):* Backup-Skript neu (alte Fassung als `.bak-20261004` auf dem Host):
+`binaryData/` und n8n-Eventlogs ausgeschlossen, Aufbewahrung 5 statt 8 Tage, alte Stände werden **vor**
+dem neuen Lauf gelöscht, bei ≥ 85 % Plattenbelegung wird das Backup übersprungen und eine Warnung
+geloggt. Probelauf: 147 MB statt 2,5 GB, Platte 61 % (pendelt sich nach Auslaufen der alten Stände bei
+~40 % ein). Journal dauerhaft auf 300 MB begrenzt. Details/Befehle: `INFRASTRUCTURE.md` (nicht im Repo).
+
+*Offen:* Kein Alarm bei voller Platte (uptime-kuma selbst `unhealthy`) → Ops-Dashboard, Kategorie Teknik.
+Live-Abnahme M1 (§6) und Prüfung der laufenden Backend-Revision gegen `main` jetzt wieder möglich.
 
 ## Verweise
 

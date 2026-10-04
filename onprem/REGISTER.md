@@ -5240,3 +5240,14 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 - **D1** (edge function kaynağı `supabase/functions/`'ta) → `widerlegt`, bkz. O-11.
 - **Faz 1.4** (CDN bağımlılıklarını lokale al) → faz açılmadan tamamlandı, bkz. O-36.
 - **§9-A4** (Vault self-host'ta çalışır mı) → PoC 0.2'de çalıştığı doğrulandı (playbook §10'da kayıtlı).
+
+### O-159 — SaaS VPS disk doldu (03-04.10.2026): yedek betiği n8n binaryData'yı 8 gün tutuyordu, alarm yok 🟡 **geplant (Ops kartı)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Host cron `praxura-backup.sh` `/opt/n8n/n8n_data`'yı (binaryData 2,4 GB dahil) 8 gün tutup 20 GB üretti → disk %100 → calendar-api healthcheck "no space left" → Traefik `/api/*`'i n8n'e düşürdü, API HTML döndü. Repo dışı host düzeltmesi 04.10.2026 (betik yeniden yazıldı: binaryData hariç, 5 gün, eski önce silinir, disk >=%85 ise yedek atlanır; journald 300M). Kaynak: `wissensbank/sitzungen/2026-10-03_live-api-liefert-html-statt-json.md` |
+| **Nerede** | SaaS VPS host (repo dışı, `/usr/local/bin/praxura-backup.sh`); kutu tarafı: `onprem/backup.sh:136-141` |
+| **Tip** | F (zamanlanmış iş) |
+| **Kutuda ne olur** | `backup.sh` yer kontrolünü zaten yapıyor (`df` + 2x(DB+storage) eşiği, `:136-141`) ve BACKUP_ZIEL ayrı mount — o yönden ders uygulanmış. Açık kalan: yedek dışı doluluk (Postgres/log/image) için kutuda sürekli alarm yok; O-158 (WSL'de `df` sanal diski ölçer) bu kapıyı Windows kurulumunda zaten körleştiriyor. Bkz. O-94 (kontroller kurulumdan sonra koşmuyor) — kutu panelinde disk doluluğu eşiği (>=%85 uyarı) orada eklenmeli |
+| **Çözüm** | SaaS: Ops kartı „VPS: Alarm bei voller Platte + uptime-kuma reparieren" (Teknik, hoch, Kemal, 04.10.2026 açıldı) · Kutu: Faz 2.4 (O-94 kapsamına disk doluluğu eklenir) |
+| **Durum** | `geplant` — Ops kartı 04.10.2026 açıldı (yukarıda); kart kapanınca `gelöst` · host düzeltmesi repo'da yok → `tools/check-vps-drift.sh` kapsamı dışı (yalnız compose'a bakar) |
