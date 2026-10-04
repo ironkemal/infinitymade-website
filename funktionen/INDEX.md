@@ -3,7 +3,7 @@
 > Üretim: 2026-10-04 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**2868 fonksiyon** · 337 dosya · 41 sidebar modülü
+**2875 fonksiyon** · 338 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -223,7 +223,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `verworfeneNummerFesthalten()` — [api-backend/billing/api/verworfen.js:126](api-backend/billing/api/verworfen.js#L126-L178) · 53 satır · abrechnung:insert
 
 **Yol 3 — `createZuzahlungsforderungRouter()`** · Ekran: _UI yolu çözülemedi_
-- `createZuzahlungsforderungRouter()` — [api-backend/billing/api/zuzahlungsforderung.routes.js:121](api-backend/billing/api/zuzahlungsforderung.routes.js#L121-L1400) · 1280 satır · abrechnung:update, abrechnung:insert
+- `createZuzahlungsforderungRouter()` — [api-backend/billing/api/zuzahlungsforderung.routes.js:122](api-backend/billing/api/zuzahlungsforderung.routes.js#L122-L1385) · 1264 satır · abrechnung:update, abrechnung:insert
 
 **Yol 4 — `downloadAbrechnungFile()`** · Ekran: ortak yardımcı — 29 modülden çağrılıyor
 - `downloadAbrechnungFile()` — [module/abrechnung-detail.js:766](module/abrechnung-detail.js#L766-L784) · 19 satır · abrechnung:update
@@ -448,7 +448,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `zeichne` — module/abrechnung-auswahl.js:763 · module/abrechnungsstatus.js:609 · module/patienten-einwilligung.js:489 · module/praxis-standort.js:115 · module/rezeptinfo-geld.js:355
 - `el` — module/arzt-register.js:251 · module/fussbefund.js:214 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:629
 - `zeile` — module/rechnung-druck.js:31 · module/verordnung-detail.js:273 · module/verordnung-detail.js:400 · module/verordnung-detail.js:457 · module/verordnung-pruefen-knopf.js:115
-- `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:85 · api-backend/billing/api/zuzahlungsforderung.routes.js:29 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73 · module/einwilligung-texte.js:360
+- `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:86 · api-backend/billing/api/zuzahlungsforderung.routes.js:30 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73 · module/einwilligung-texte.js:360
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
 - `loadServices` — booking-request.js:528 · booking.js:164 · dashboard.js:8629 · kalender.js:643
 - `speichern` — cookie-consent.js:69 · module/arzt-register.js:292 · module/fussbefund.js:732 · module/verordnung-detail.js:824

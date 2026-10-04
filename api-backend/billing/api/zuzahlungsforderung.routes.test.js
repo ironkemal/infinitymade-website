@@ -3,6 +3,7 @@
 // Ausführen: node --test api-backend/billing/api/zuzahlungsforderung.routes.test.js
 
 import { test } from 'node:test';
+import forge from 'node-forge';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { buildDtaFile } from '../dta/builder.js';
@@ -2152,4 +2153,102 @@ test('39. Ein Cent Builder-Abweichung darf keine Forderung oder Artefakte veröf
   assert.equal(mock.state.storageUploads.length, 0);
   assert.equal(mock.state.insertCalls.filter(c => c.table === 'abrechnung_zeile').length, 0);
   assert.equal(mock.state.updateCalls.at(-1).payload.status, 'verworfen');
+});
+
+test('40. VKZ03 verwendet kryptografisch geprüfte eingebettete Originaldaten ohne unsigned Datei', async () => {
+  const keys = forge.pki.rsa.generateKeyPair({ bits: 2048 });
+  const cert = forge.pki.createCertificate();
+  cert.publicKey = keys.publicKey;
+  cert.serialNumber = '01';
+  cert.validity.notBefore = new Date('2020-01-01T00:00:00Z');
+  cert.validity.notAfter = new Date('2040-01-01T00:00:00Z');
+  const attrs = [{ name: 'commonName', value: 'Synthetic signer' }];
+  cert.setSubject(attrs); cert.setIssuer(attrs);
+  cert.sign(keys.privateKey, forge.md.sha256.create());
+
+  const baseData = erstelleTestDta({ claim20: true });
+  const p7 = forge.pkcs7.createSignedData();
+  p7.content = forge.util.createBuffer(baseData.buf.toString('binary'));
+  p7.addCertificate(cert);
+  p7.addSigner({
+    key: keys.privateKey, certificate: cert, digestAlgorithm: forge.pki.oids.sha256,
+    authenticatedAttributes: [
+      { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
+      { type: forge.pki.oids.messageDigest },
+    ],
+  });
+  p7.sign({ detached: false });
+  const signedDERBuffer = Buffer.from(forge.asn1.toDer(p7.toAsn1()).getBytes(), 'binary');
+
+  const expectedSignedPath = `${baseData.ownerId}/synthetic/source.p7m`;
+  const makeTestData = (override = {}) => {
+    const td = structuredClone(baseData);
+    td.buf = Buffer.from(baseData.buf);
+    td.sourceHeader.storage_path = null;
+    td.sourceHeader.signed_storage_path = expectedSignedPath;
+    td.sourceHeader.signed_sha256 = sha256Hex(signedDERBuffer);
+    Object.assign(td.sourceHeader, override);
+    return td;
+  };
+
+  const setupMock = (td, derBytes) => {
+    const mock = erstelleSupabaseMock({ testData: td });
+    const originalFrom = mock.client.storage.from.bind(mock.client.storage);
+    mock.client.storage.from = (bucket) => {
+      const api = originalFrom(bucket);
+      return {
+        ...api,
+        async download(path) {
+          mock.state.downloads.push(path);
+          if (path !== expectedSignedPath) throw new Error(`Unexpected download path: ${path}`);
+          return { data: new Blob([derBytes]), error: null };
+        },
+      };
+    };
+    return mock;
+  };
+
+  const reqBody = {
+    zeileId: baseData.zeileId, grund: '2', bestaetigt: true, nachweisDatum: '2026-09-01',
+    mahnungId: baseData.mahnungId, nachweisPruefung: validProof2,
+  };
+
+  // Fall 1: Gültige Signatur ohne unsigned Datei -> 200
+  const td1 = makeTestData();
+  const mock1 = setupMock(td1, signedDERBuffer);
+  const res1 = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mock1)), { body: reqBody });
+  assert.equal(res1.status, 200);
+  assert.equal(res1.body.ok, true);
+  assert.equal(res1.body.total_eur, 20.00);
+  assert.equal(res1.body.zuzahlung_total, 0);
+  assert.deepEqual(mock1.state.downloads, [expectedSignedPath]);
+  const reservierung = mock1.state.insertCalls.find((i) => i.table === 'abrechnung');
+  assert.ok(reservierung, 'abrechnung-Reservierung muss erfolgen');
+  const zeilenInsert = mock1.state.insertCalls.find((i) => i.table === 'abrechnung_zeile');
+  assert.ok(zeilenInsert, 'abrechnung_zeile muss eingefügt werden');
+  assert.equal(zeilenInsert.payload.brutto_eur, 20.00);
+  assert.equal(zeilenInsert.payload.netto_eur, 20.00);
+  assert.equal(zeilenInsert.payload.zuzahlung_eur, 0);
+  assert.ok(mock1.state.updateFilters.every((filter) => filter.id !== td1.sourceHeader.id), 'Ursprungskopf darf nicht aktualisiert werden');
+  assert.equal(td1.sourceHeader.storage_path, null);
+
+  // Fall 2: Signatur manipuliert (letztes Byte) + signed_sha256 angepasst -> 422
+  const tamperedDER = Buffer.from(signedDERBuffer);
+  tamperedDER[tamperedDER.length - 1] ^= 0xff;
+  const td2 = makeTestData({ signed_sha256: sha256Hex(tamperedDER) });
+  const mock2 = setupMock(td2, tamperedDER);
+  const res2 = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mock2)), { body: reqBody });
+  assert.equal(res2.status, 422);
+  assert.equal(mock2.state.insertCalls.length, 0);
+  assert.equal(mock2.state.updateCalls.length, 0);
+  assert.equal(mock2.state.storageUploads.length, 0);
+
+  // Fall 3: Gültiges DER aber signed_sha256 stimmt nicht -> 409
+  const td3 = makeTestData({ signed_sha256: sha256Hex(Buffer.from('mismatch')) });
+  const mock3 = setupMock(td3, signedDERBuffer);
+  const res3 = await callPostRoute(createZuzahlungsforderungRouter(erstelleMockDeps(mock3)), { body: reqBody });
+  assert.equal(res3.status, 409);
+  assert.equal(mock3.state.insertCalls.length, 0);
+  assert.equal(mock3.state.updateCalls.length, 0);
+  assert.equal(mock3.state.storageUploads.length, 0);
 });

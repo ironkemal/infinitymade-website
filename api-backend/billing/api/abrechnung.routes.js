@@ -11,6 +11,7 @@
 // Faz A2: DTA oluşturulur, browser-side PKCS#7 imzalama dashboard signModal ile yapılır (sprint-6-complete).
 
 import express from 'express';
+import { ladeDtaOriginalbytes } from '../dta/signed-original.js';
 import { createHash, X509Certificate } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
@@ -1266,12 +1267,11 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
-      .select('id, owner_id, dateiname, storage_path, kostentraeger_ik, empfaenger_ik, created_at')
+      .select('id, owner_id, dateiname, storage_path, kostentraeger_ik, empfaenger_ik, created_at, signed_storage_path, signed_sha256, dta_sha256')
       .eq('id', req.params.id)
       .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
-    if (!ab.storage_path) return res.status(409).json({ error: 'Kein DTA-Inhalt vorhanden' });
 
     // Stichtag-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
     let stichtagPruefung = null;
@@ -1291,16 +1291,13 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
       });
     }
 
-    const { data: blob, error: dlErr } = await supabase.storage
-      .from('abrechnungen').download(ab.storage_path);
-    if (dlErr || !blob) return res.status(500).json({ error: 'Download fehlgeschlagen' });
+    const buf = await ladeDtaOriginalbytes({ db: supabase, abrechnung: ab });
 
     const warnungen = (stichtagPruefung?.meldungen || []).filter(m => m.stufe === 'warnung');
     if (warnungen.length > 0) {
       res.setHeader('X-Praxura-Stichtag-Warnung', warnungen.map(w => w.code).join(', '));
     }
 
-    const buf = Buffer.from(await blob.arrayBuffer());
     return res.json({
       ok: true,
       dateiname: ab.dateiname,
@@ -1308,7 +1305,10 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
     });
   } catch (e) {
     console.error('[abrechnung/dta-bytes]', e);
-    return res.status(500).json({ error: e.message });
+    return res.status(e.status || 500).json({
+      error: e.message || 'Download fehlgeschlagen',
+      ...(e.code ? { code: e.code } : {}),
+    });
   }
 });
 

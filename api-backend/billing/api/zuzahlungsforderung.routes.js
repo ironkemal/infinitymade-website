@@ -20,6 +20,7 @@
 //   }
 
 import express from 'express';
+import { ladeDtaOriginalbytes } from '../dta/signed-original.js';
 import { isDeepStrictEqual } from 'node:util';
 import { createHash } from 'node:crypto';
 import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
@@ -234,7 +235,7 @@ export function createZuzahlungsforderungRouter(deps) {
           abrechnung:abrechnung_id (
             id, owner_id, business_id, rechnungsnummer,
             empfaenger_ik, kostentraeger_ik,
-            verarbeitungskennzeichen, status, storage_path, dta_sha256
+            verarbeitungskennzeichen, status, storage_path, dta_sha256, signed_storage_path, signed_sha256
           )
         `)
         .eq('id', zeileId)
@@ -840,28 +841,12 @@ export function createZuzahlungsforderungRouter(deps) {
       }
 
       // 9. Ursprungs-DTA herunterladen und parsen
-      const storagePath = sourceHeader.storage_path;
-      if (!storagePath) {
-        return res.status(422).json({
-          error: 'Die Ursprungsrechnung hat keinen hinterlegten Speicherpfad (storage_path).',
-          code: 'NO_STORAGE_PATH',
-        });
-      }
-
-      const { data: blob, error: dlErr } = await supabase.storage
-        .from('abrechnungen')
-        .download(storagePath);
-
-      if (dlErr || !blob) {
-        return res.status(500).json({
-          error: 'Fehler beim Herunterladen der Ursprungs-DTA-Datei.',
-        });
-      }
-
-      const rawBuffer = Buffer.from(await blob.arrayBuffer());
-
       let parseResult = null;
       try {
+        const rawBuffer = await ladeDtaOriginalbytes({
+          db: supabase,
+          abrechnung: sourceHeader,
+        });
         parseResult = parseOriginalDtaMessage({
           dtaContent: rawBuffer,
           expectedSha256: sourceHeader.dta_sha256,
