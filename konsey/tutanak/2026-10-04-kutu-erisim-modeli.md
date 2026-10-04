@@ -105,3 +105,28 @@ günler sürebilir). Kurulum ekran paylaşımıyla, mevcut `install.sh` (Weg A) 
   Etrafından dolaşma yolu A.
 - legal-de ⛔ ve guvenlik ⛔ Cloudflare/ngrok (TLS'i üçüncü taraf açar, PHI düz metin, ABD).
   Etrafından dolaşma yolu A ya da C.
+
+---
+
+## Ek — 05.10.2026, Kemal kararı (yukarıdaki KARAR'ı değiştirir)
+
+Kemal üç gerçek senaryoyu getirdi: (1) sunucusu yok, (2) sunucusu var — praksiste fiziksel ya da Hetzner
+gibi barındırılmış, (3) sunucu almak istemiyor, kendi cihazında (laptop, genelde tek kişilik praksis).
+Hepsine **tek yöntem** istedi; uzaktan erişimi biz üstlenmiyoruz, isteyen praksis VPN ile yapar.
+
+**Geçerli karar (KUTU_HAZIRLIK_SPRINT.md K-18):**
+- Her kurulum aynı: kurulum kodu → `praxis-XXXX.praxura.de` + Let's Encrypt (DNS-01, kutu başına
+  `acme-dns` delegasyonu). Ad kutunun iç IP'sini gösterir. Bu yukarıdaki **C seçeneğinin her ortama
+  genellenmiş hâlidir**; konseyde legal-de ✅ ve onprem "çelişki yok" vermişti, yeniden toplanmadı.
+- Uzaktan erişim praksisin kendi VPN'i (FRITZ!Box WireGuard). Kurulumu biz ekran paylaşımıyla
+  yapabiliriz (K10). Praksisin kendi Hetzner hesabında koşan kutu ise doğrudan her yerden açılır.
+  Bu, A seçeneğinin yöntemin bir barındırma yeri olarak kalmasıdır; varsayılan değildir.
+- B (tünel) ve Cloudflare/ngrok yasakları aynen geçerli.
+- Ölçüm (04.10, Kemal'in Telekom Speedport Smart 2'si): iç IP gösteren genel ad
+  (`192-168-2-111.sslip.io`) router DNS'inden geçiyor, yani rebind engeli yok. FRITZ!Box'ta tek ayar
+  gerekir (ölçülmedi, belgelenmiş davranış).
+- Pazar notu: praksiste sunucu Almanya'da alışıldık; uzaktan erişimi orada da genelde IT firması
+  kurar → biz de kurulum hizmeti olarak sunarız. Beta görüşmeleri Kemal tarafından yapıldı, ayrıca
+  sorulmayacak.
+- Uygulama: KUTU_HAZIRLIK_SPRINT.md §3 **K2b** (K2b.1–K2b.10). Yukarıdaki "Uygulama — builder'a"
+  listesinin yerini alır.

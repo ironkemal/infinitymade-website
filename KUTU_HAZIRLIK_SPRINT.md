@@ -24,6 +24,7 @@
 |---|---|---|---|---|
 | K1 | Kemal | Güvenlik + DB temizliği + DSGVO Express'e | ✅ 02.10.2026 — K1.1–K1.8 (K1.8 S-31 kodu → M1.16, Hat M) | 0053–0057 · ecbf871 7d75f09 ae999fa 16a7aef fdf25dd 9a0e18f 1f2ecb1 3fecef1 975dd2a 6141be8 bb65f0b 94bac87 2804b99 59c3ea1 · fortschritte/2026-10-02.md |
 | K2 | Kemal | Kutu kurulumu: Linux + Windows, güncelleme, kılavuz (KI katmanı → M4) | ✅ 02.10.2026 — K2.1–K2.12, sürüm 0.2.0. ⚠️ Windows adım 7–10 (autostart/firewall/sertifika/powercfg) + LAN/tablet + O-144(b) yönetici ile Kemal'de, K3'ten önce | 18ad39a c880ad1 d807c3e e4c7703 67dbe9d 6d50e3d 56cb6a7 a4634f7 6a5cd1f acc51d5 ebe318c f033be0 3684ef8 · fortschritte/2026-10-02.md |
+| K2b | Kemal | **Kutu adresi + gerçek sertifika (K-18, 05.10 yeni):** kurulum kodu → `praxis-XXXX.praxura.de`, Let's Encrypt DNS-01, iç CA kalkar, uzaktan erişim = praksisin VPN'i | ⬜ | Windows yönetici testi 04.10: adım 1–11 ✅ (iki betik düzeltmesi 1127a3d 4b9a554); tablet/telefon testi K2b'ye bağlandı · konsey/tutanak/2026-10-04-kutu-erisim-modeli.md |
 | K3 | Kemal | Kutu testi (§7) — EN SON, bütün aşamalar ✅ olunca | ⬜ | |
 | M1 | Melih | Podoloji + §302 küçük düzeltmeler, Zuzahlungsforderung, honeypot | 🟨 | M1.1 gepusht0260612/0058SaaS; M1.2 vorhandenerStorno20Tests+RLS, UIoffen; M1.3 gepushtf85d02c; M1.4 gepusht71636f0/P12Fehler grün; M1.5 gepusht87fe36f (2294 Tests); M1.6 gepusht699d6c7 (2299 Tests); M1.7 gepusht8a53a93; M1.8 gepushta3cd294 (2307 Tests); M1.9 gepusht5201256+SaaS0059/20261003193551 geprüft (2402Tests), vollständigeDumps/REGISTER94/94, VERSION0.4.0; LiveAbnahmeoffen. LiveAPI-Routing/SSH-Zugang ungeklärt. M1.11 gepusht4efd97e/Doppelspeichern lokal abgesichert (8VMTests, Karte2855/335), Originalfreeze nichtlive reproduziert; M1.12 gepusht64dc485/Honeypot+Praxisbezug lokal geprüft(2428Tests), Karte2863/336; M1.13 gepusht4bb380d/Berlinmodule-DST lokal geprüft(2432Tests), Karte2869/337; M1.14 gepushtc5d1e19/Zygote expliziterLink/lokaleBrowserprobe+Cold+2432Tests; M1.15 gepusht3327559/Transportname bestätigt/WB-Z12Teilbefund geklärt, LiveHTTPHeadernichtbelegt; M1.16-A gepusht41639fc/Originalbyte-Fallback geprüft; M1.16-B1 Uploadintegrität lokal geprüft(2465Tests+Cold, Karte2875/338), keineLöschung; M1.16offen: historischeAufbewahrung/Hat-K-Abstimmung+authentischeDASQuittung fehlen; GesamtM1offen; fortschritte/2026-10-04.md; M1.16-B2 gepusht11ab4b2/CAS+immutableUploads; B3 eigeneunveröffentlichteEntwurfsversuchePodo/VKZ03 lokalbereinigt2521Tests+ColdPASS, Karte2883/340; Nutzer autorisiertPunkte2+3, historischeE-Testdateien außerhalbUmfang; allgemeinehistorische/publizierteBereinigung+zukünftigeSignedAufbewahrung undPunkte4–6/§6 offen ; Übergabe05.10: fortschritte/2026-10-05_M1_CLAUDE_HANDOFF.md, 05.10 (Hat M, Claude): Migrationen0060 Artefakt-Registry/0061 ZAA atomar/0062 VKZ03-Trigger rollenunabhängig SaaS20261004223447–223523 angewandt, lokal 0000–0062 Kette+Zähler gemessen (86/157/95/87/313); ZAA-Route 422-Guard+atomar, DSGVO-Freeze/Registry-Schutz; OFFEN: Upload-Pfad-Integration (reserve/publish/readback), Versionsliste/Downloads, Bestands-Backfill, Probe78040, Browser/Live-Abnahme, vollständiger Schema-Export (Dumps teilaktualisiert); DASbweiteroffen |
 | M2 | Melih | Reçete türleri (Privat/Selbstzahler/BG) + fatura + Branding sayfası | ⬜ | |
@@ -31,7 +32,7 @@
 | M4 | Melih | KI katmanı: merkezi maskeleme + sağlayıcı/env katmanı (eski K2.7, M1.10, M3.6 dahil) | ⬜ | ölçüm 02.10: `spike/ki-maske/` |
 | ORG | Kemal | Organizasyon listesi (§5) — kod değil, her an yapılabilir | ⬜ | |
 
-Sıra: K1 → K2 ve M1 → M2 → M3 → M4 kendi içinde sırayla. **İki hat birbirini beklemez.**
+Sıra: K1 → K2 → K2b ve M1 → M2 → M3 → M4 kendi içinde sırayla. **İki hat birbirini beklemez.**
 Tek bağımlılık: K3 (kutu testi) hepsi bittikten sonra.
 
 ---
@@ -56,6 +57,7 @@ Tek bağımlılık: K3 (kutu testi) hepsi bittikten sonra.
 | K-14 | **Gerçek hasta/müşteri verisi yok.** Test ve beta verisi, beta hesapları dahil, migration'larda korunmaz; silinebilir. |
 | K-15 | Bot koruması: Google captcha YOK (G8). Hız sınırı + görünmez honeypot alanı. |
 | K-16 | Demo-Modus her alanda kalabilir; Zygote kullanım/telif şartı `legal-de`'ye sorulur (M1). |
+| K-18 | *(05.10.2026)* **Satılan tek ürün kutu (SaaS satılmaz). Kutuya erişim her yerde TEK yöntemle:** kurulumda yalnız **kurulum kodu** sorulur → kutu `praxis-XXXX.praxura.de` adını ve **gerçek Let's Encrypt sertifikasını** (DNS-01, kutu başına kısıtlı `acme-dns` delegasyonu) kendisi alır → praksisteki her cihaz adresi açar, **hiçbir cihaza sertifika yüklenmez**. Ad, kutunun iç IP'sini gösterir (Speedport 04.10'da ölçüldü: engellemiyor; FRITZ!Box'ta tek "DNS-Rebind-Schutz" ayarı). **Uzaktan erişim bizim işimiz değil:** praksisin kendi VPN'i (FRITZ!Box WireGuard; kurulumu biz ekran paylaşımıyla yapabiliriz, K10'a uygun). Kutu nerede koşarsa koşsun aynı kurulum: laptop/PC (Einzelplatz — kapalıyken kutu yok), praksis sunucusu, mini-PC, praksisin **kendi** Hetzner Cloud hesabı (orada her yerden VPN'siz). **Tünel/relay YOK** (onprem G8/G1 vetosu), Cloudflare/ngrok YOK (legal-de + guvenlik). Caddy iç CA'sı kalkar → S-43 kapanır. Gerekçe: 04.10 Windows yönetici testi — iç CA her cihaza sertifika yükletiyordu (iPhone'da ek gizli anahtar), Speedport'ta router DNS kaydı imkânsızdı. Tutanak: `konsey/tutanak/2026-10-04-kutu-erisim-modeli.md` (+ 05.10 Kemal eki) |
 | K-17 | *(02.10.2026)* **KI'ya giden her çağrı tek kapıdan geçer ve kapı maskeler** (M4, Melih). Yeni bir KI özelliği = yeni task + alan şeması; maskeleme kendiliğinden gelir. Maskeleme **ek korumadır, hukuki dayanak değildir**: Azure EU + AVV kalır, müşteriye "pseudonymisiert" denir, "anonymisiert" denmez (`legal-de`). Merkezi tek anahtar/relay bu sprintte **yok** (playbook K6 kilitli; açılacaksa ayrı `/konsey`). |
 
 ---
@@ -129,6 +131,24 @@ Sicil işleri: `guvenlik/REGISTER.md` (S-39 yeni kayıt, kapananlar §4'e; S-03/
 
 Sicil: `onprem/REGISTER.md` §9 tablosu + playbook §10 aynı turda düzeltilir (onprem ajanı söyledi: O-105/106/130/133/06/140 kapalı ama tabloda açık).
 
+### K2b · Kutu adresi + gerçek sertifika (K-18)  (~3–5 gün) — *05.10.2026 yeni*
+
+Bütün adımlardan önce `onprem` (merkezde yeni servis, sabit adres, env, zamanlanmış iş = onun alanı) ve
+kutuyu internete açan her şeyde `guvenlik`. Yeni klasörler **aynı commit'te `.vercelignore`'a**.
+
+| # | İş | Bitti sayılır |
+|---|---|---|
+| K2b.1 | **Deneme önce (kod yazmadan):** Windows test kutusunda elle `praxis-test.praxura.de` A kaydı → 192.168.2.111 + elle DNS-01 sertifikası. Telefon/tablet hiçbir şey yüklemeden açar. Test kutusu şu an `kemal.speedport.ip`'de (`.env.vor-speedport` yedeği) | Kemal telefonda kilitli sayfa görüyor, sertifika uyarısı yok |
+| K2b.2 | **Merkez: ad servisi** — kurulum kodu (K-11'e kadar elle verilir) → sıradaki alt ad + `praxura.de` DNS'inde A kaydı + kutuya yalnız kendi kaydını güncelleyebileceği kimlik. Önce: `praxura.de` DNS'i hangi sağlayıcıda, API'si var mı. Kod ayrı klasörde (ör. `merkez/`), `api-backend/`'e değil (kutu da `api-backend` koşturuyor) | kod verilir → ad + kayıt oluşur; geçersiz/kullanılmış kod reddedilir |
+| K2b.3 | **Merkez: `acme-dns`** (açık kaynak) VPS'te; kutu başına yalnız kendi `_acme-challenge` TXT'sini yazabilen kimlik (praxura.de zone anahtarı kutuya ASLA — G2). Alt ad başına **CAA `accounturi`** (RFC 8657) + CT izleme; DNS/registrar hesabında 2FA (guvenlik) | kutu sertifika alıp yeniliyor; başka kutunun adına sertifika alınamıyor (test) |
+| K2b.4 | **Kutu: Caddy DNS-01** — `caddy-dns/acmedns` modüllü kendi Caddy image'ımız (GHCR, kanal sistemiyle); `tls internal` + kök sertifika dağıtımı kalkar; yedekte artık yalnız tek alt adın LE anahtarı (**S-43 kapanır**) | `CADDY_TLS_ARG` / iç CA kodda yok; restore sonrası sertifika geçerli |
+| K2b.5 | **`install.sh` + Windows başlatıcısı sadeleşir:** adres/TLS soruları yerine **kurulum kodu**; `praxura-installieren.ps1` adım 9 (kök sertifika içe aktarma + hosts) kalkar — Windows'ta kendi LAN IP'sine bağlanamama (04.10 ölçümü: 127.0.0.1 hosts gerekiyordu) için çözüm `onprem` ile | kurulum yalnız kod (+ kanal, yedek) soruyor |
+| K2b.6 | **IP değişince** kutu kendi A kaydını günceller (K2b.2 kimliğiyle, zamanlanmış iş; `onprem`'e) | DHCP IP değişti → ≤15 dk içinde adres yine çalışıyor |
+| K2b.7 | **İnternete açık kutu (Hetzner varyantı) asgari paketi** (`guvenlik` 04.10): kurulum bitince `/api/setup/*` kapanır + `SETUP_TOKEN` silinir · `/auth/v1/admin|signup` dışarıya kapalı · Caddy IP rate limit + `/auth/v1/token` brute-force freni · Hetzner firewall yalnız 80/443, SSH yalnız praksisin anahtarıyla · unattended-upgrades. ⚠️ **TOTP:** guvenlik internete açık kutu için zorunlu diyor, K-12 "2FA yok" diyor → **Kemal kararı** (K2b başında sorulur) | guvenlik teyidi |
+| K2b.8 | **Kılavuz `onprem/KURULUM.md` yeniden:** tek akış (kod → adres) · nerede koşar (Einzelplatz sınırları açık yazılır; Box-PC hesabına Windows şifresi — yoksa autostart yalnız oturumla, 04.10 ölçümü) · FRITZ!Box rebind sayfası (resimli) · uzaktan erişim sayfası (FRITZ!Box WireGuard + QR) · Hetzner Cloud yolu + §393 Kundenkriterien tek sayfası (`legal-de`) | Kemal kılavuzla tek başına kurabiliyor |
+| K2b.9 | **Ölçümler:** FRITZ!Box rebind (Speedport ✅ 04.10) · internet kesilince LAN'da adres çözümü (DNS önbelleği) — gerekirse kutunun kendi DNS'i/yedek yolu · Hetzner C5 Typ-2 testatının Cloud Server ürününü kapsadığı (`legal-de`) | sonuçlar `onprem/REGISTER.md`'de |
+| K2b.10 | **Siciller + belgeler:** `onprem/REGISTER.md` (yeni O-kayıtları; **O-155 çözülür**: adres gerçek ad → mail linkleri LAN'da/VPN'de/Hetzner'de çalışır), `guvenlik/REGISTER.md` (S-43 kapanış, yeni S-kayıtları) · playbook: **K1 "iki SKU" düştü** (SaaS satılmaz), satır 28 "§393 uygulanmaz" → Hetzner varyantında §393 praksiste tetiklenir, K12 sponsorlu dönemde AVV notu (`legal-de`) | siciller güncel |
+
 ### K3 · Kutu testi — en son (§7)
 
 ### ORG · Kemal'in kod dışı listesi → §5
@@ -136,6 +156,21 @@ Sicil: `onprem/REGISTER.md` §9 tablosu + playbook §10 aynı turda düzeltilir 
 ---
 
 ## 4. Hat M — Melih (kod; ne yapılacağı belli işler)
+
+> **⚠️ 05.10.2026 — Melih için: K-18 (kutuya erişim modeli) Hat M'yi neredeyse etkilemiyor.**
+> Bütün yeni iş Hat K'de (K2b): merkezde ad servisi + `acme-dns`, Caddy image, `install.sh`, kılavuz.
+> Hat M'ye dokunan yalnız şunlar:
+> - **M1, M2, M4: değişiklik yok.** M2.5'teki kurulum sihirbazı (`setup.html` Branding adımı) aynen kalır —
+>   yeni "kurulum kodu" sorusu `install.sh`'ta, `setup.html`'de değil.
+> - **M3.1 (kamera):** "kutuda `tls internal` var" cümlesi eskidi. K2b'den sonra kutuda **gerçek sertifika**
+>   olacak; kamera (`getUserMedia`) tablette sertifika yüklemeden çalışacak. K2b bitmeden kutuda kamera
+>   test edeceksen: Windows test kutusu + kök sertifikası yüklü cihaz (ya da SaaS'ta test et).
+> - **M2 prompt'undaki eski migration talimatı düzeltildi** (§6): numara artık **rezerve edilmez**, §2 madde 3
+>   geçerli (önce canlıya uygula + `-- SaaS:` satırı, sonra commit). Eski prompt'u kopyaladıysan bunu kullan.
+> - **Dosya sahipliği:** yeni merkez servisi klasörü (ör. `merkez/`) ve Caddy image'ı **K**'nin.
+>   `server.js`'e bu iş için dokunulmaz.
+> - **Satış tarafı bilgisi:** SaaS (`app.praxura.de`) satılmayacak, ürün yalnız kutu (Kemal, 04.10). SaaS
+>   bugün yalnız test/beta ortamı olarak yaşıyor — SaaS'a özel yeni iş açma.
 
 ### M1 · Podoloji + §302 düzeltmeleri  (~2–3 gün)
 
@@ -177,7 +212,7 @@ Konsey 28.09 kararı (`konsey/KARARLAR.md`) ve Ops #321–329. Bu sprintte **yal
 
 | # | İş |
 |---|---|
-| M3.1 | `zxing` (WASM/JS) **`vendor/`'e yerel** (CDN yasak — `vendor/README.md` üretim kuralı) + Bild/PDF yükleme + kamera (`getUserMedia`, HTTPS gerekir — kutuda `tls internal` var) (#326) |
+| M3.1 | `zxing` (WASM/JS) **`vendor/`'e yerel** (CDN yasak — `vendor/README.md` üretim kuralı) + Bild/PDF yükleme + kamera (`getUserMedia`, HTTPS gerekir — K2b'den sonra kutuda gerçek Let's Encrypt sertifikası, öncesinde `tls internal` + kök sertifikası yüklü cihaz; bkz. §4 başı 05.10 notu) (#326) |
 | M3.2 | `module/rezept-barcode.js`: Muster-13 PDF417 ayrıştırıcı, KBV BFB V4.80 (#323) — `wissensbank` belgesi önce |
 | M3.3 | Onay maskesi: faturaya giren 5 alan + "Papier handschriftlich geändert?" kutusu (#324) |
 | M3.4 | Podoloji Heilmittel serbest metni → HPNR 78xxx deterministik eşleme (`api-backend/lib/rezept-felder.js` `heilmittelPositionAufloesen`) (#325) |
@@ -287,7 +322,17 @@ K2.11 (Windows kurulumu) için önce onprem ile tasarımı yaz, sonra uygula. Te
 Aşama bitince §6 adımlarını uygula; kalan aşama yoksa bana K3 (kutu testi) prompt'unu ver, varsa hangi aşamaların beklendiğini söyle.
 ```
 
-**K3 başlat (yalnız §0'da K1, K2, M1, M2, M3, M4 hepsi ✅ ise):**
+**K2b başlat:**
+```
+KUTU_HAZIRLIK_SPRINT.md'yi oku (§1 özellikle K-18, §2, §6) ve konsey/tutanak/2026-10-04-kutu-erisim-modeli.md'yi (05.10 eki dahil).
+Hat K, aşama K2b'yi uygula (K2b.1 → K2b.10). Önce git pull --rebase.
+İlk iş: bana K2b.7'deki TOTP sorusunu sor (K-12 ile çelişki) ve K2b.1 denemesini yap — kod yazmadan, Windows test kutusunda elle gerçek ad + DNS-01 sertifikası; ben telefonda açayım.
+onprem bu aşamanın bekçisi (merkez servisi, acme-dns, Caddy image, env, zamanlanmış iş): her adımdan önce sor, sonra bildir. Kutuyu internete açan her şeyde guvenlik. Yeni klasör → aynı commit'te .vercelignore.
+Ağır kodu agy worker'larına ver, soğuk ikinci worker'la denetlet, diff'i kendin oku. Alt parça bitince commit+push.
+Aşama bitince §6 adımlarını uygula; kalan aşama yoksa K3 prompt'unu ver, varsa hangilerinin beklendiğini söyle.
+```
+
+**K3 başlat (yalnız §0'da K1, K2, K2b, M1, M2, M3, M4 hepsi ✅ ise):**
 ```
 KUTU_HAZIRLIK_SPRINT.md §7 kutu testini yürüt. Önce §0'daki bütün aşamaların ✅ olduğunu doğrula; değilse dur ve söyle.
 onprem/KURULUM.md'yi izleyerek bana adım adım kurulum yaptır (Linux test sunucusu + Windows laptop), her senaryoyu canli-test ajanı ile birlikte işaretle.
@@ -308,7 +353,7 @@ Aşama bitince §6 adımlarını uygula ve bana M2 prompt'unu ver.
 ```
 KUTU_HAZIRLIK_SPRINT.md'yi oku (§1, §2, §6). Hat M, aşama M2'yi uygula (M2.1 → M2.8). Önce git pull --rebase.
 M2.2 (BG) için önce gkv-302 + legal-de + podoloji'den gereksinimleri topla, Podoloji/PRODUKT-ENTSCHEIDUNGEN.md'ye yaz, sonra uygula.
-Yeni kolon/tablo öncesi db-ustasi; migration numarası için §2 madde 3 (önce rezerve et, ayrı push).
+Yeni kolon/tablo öncesi db-ustasi; migration için §2 madde 3 (rezerve ETME — önce canlıya uygula + "-- SaaS:" satırı, sonra commit).
 Aşama bitince §6 adımlarını uygula ve bana M3 prompt'unu ver.
 ```
 
@@ -335,11 +380,11 @@ Aşama bitince §6 adımlarını uygula; Hat M bitti — §0'ı güncelle ve K3'
 
 ## 7. Kutu testi — kabul senaryoları (K3)
 
-İki ortam: **(L)** ayrı Hetzner test sunucusu, **(W)** Windows laptop (WSL2). Her senaryo ikisinde de.
+İki ortam: **(L)** ayrı Hetzner test sunucusu (= "praksisin kendi Hetzner hesabı" varyantı), **(W)** Windows laptop (WSL2). Her senaryo ikisinde de.
 
-1. Kılavuzla sıfırdan kurulum (`:beta`), kurulum sihirbazı, Branding adımı (atla + sonra doldur), "%X tamamlandı" halkası
-2. Owner girişi · çalışan açma (Einrichtungscode, mailsiz) · çalışan girişi · owner şifre sıfırlama betiği
-3. İkinci cihazdan (tablet) LAN üzerinden giriş, kök sertifika uyarısız
+1. Kılavuzla sıfırdan kurulum (`:beta`) **yalnız kurulum koduyla** (K-18), kurulum sihirbazı, Branding adımı (atla + sonra doldur), "%X tamamlandı" halkası
+2. Owner girişi · çalışan açma (Einrichtungscode, mailsiz) · çalışan girişi · **çalışan kaldırılınca girişi reddedilir** · owner şifre sıfırlama betiği
+3. İkinci cihazdan (tablet + telefon) `praxis-XXXX.praxura.de` ile giriş, **hiçbir cihaza sertifika yüklemeden**, uyarısız · (W) Speedport ve FRITZ!Box (rebind ayarıyla) · (W) VPN üzerinden dışarıdan · (L) mobil veriyle doğrudan
 4. Hasta + anamnez + Einwilligung (kiosk) · randevu (tekli/seri) · online randevu + Termin-Anfrage formu
 5. **GKV** reçetesi: elle + **barkod** (foto/PDF/kamera) → Tagesbehandlung, Fußbefund → §302 dosyası (test), Zuzahlung, Zuzahlungsforderung
 6. **Privat** ve **Selbstzahler**: reçete/tedavi → fatura (logo, banka, kaşe ile) → ödeme kaydı
@@ -348,7 +393,7 @@ Aşama bitince §6 adımlarını uygula; Hat M bitti — §0'ı güncelle ve K3'
 9. Fahrtenbuch (mesafe hesabı gizli), Kassenbuch, DSGVO export + silme
 10. Rezept-Scan KI'sız: düzgün Almanca mesaj · (opsiyonel ikinci tur: Kemal'in kendi test anahtarıyla — mail taslağı + seri planlama; giden istekte gerçek hasta/terapist adı yok, cevapta geri çevrilmiş, şüpheli metinde ekran sorusu çıkıyor)
 11. Yedek al → başka klasöre/makineye `restore.sh` → veriler + sayaç doğru
-12. `update.sh` iki kez (konflikt yok), yeniden başlatma sonrası kutu kendiliğinden kalkar
+12. `update.sh` iki kez (konflikt yok), yeniden başlatma sonrası kutu kendiliğinden kalkar · sertifika yenileme (zorlanmış) · kutunun IP'si değişince adres ≤15 dk içinde yine çalışır
 13. Ölçülecekler: O-141 iki `curl -I`, O-109 kamera, O-128 migration süreleri, O-55, O-140 check-in
 
 72 saat sorunsuz çalışma → `:stable` basılır (K-1). Onaydan sonra Ops'taki launch kartlarına geçilir.
