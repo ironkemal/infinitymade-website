@@ -15944,7 +15944,7 @@ async function runZaaUpload() {
 
     out.innerHTML = renderZaaUploadResult(json, { escapeHtml });
 
-    showToast(json.errorCount ? `${json.errorCount} Fehler importiert.` : 'Abrechnung akzeptiert.');
+    showToast(`${json.errorCount} Fehler importiert.`);
     btn.disabled = false;
     btn.textContent = 'Schließen';
     btn.onclick = () => { closeModal('zaaModal'); loadAbrechnung(); btn.onclick = runZaaUpload; };
@@ -15970,7 +15970,7 @@ async function showZaaErrors(abrechnungId) {
   document.getElementById('zaaErr').textContent = '';
   const out = document.getElementById('zaaResult');
   if (!data?.length) {
-    out.innerHTML = `<div style="padding:10px;background:var(--success-dim);border:1px solid var(--success);border-radius:6px;color:var(--success);">Keine Fehler — alles abgenommen.</div>`;
+    out.innerHTML = `<div style="padding:10px;background:var(--success-dim);border:1px solid var(--success);border-radius:6px;color:var(--success);">Keine ZAA-Fehler erfasst (keine Annahmebestätigung).</div>`;
   } else {
     out.innerHTML = `<table class="data-table"><thead><tr><th>Code</th><th>Status</th><th>Fehler</th><th>Lösung</th><th>Aktion</th></tr></thead><tbody>
       ${data.map(e => {

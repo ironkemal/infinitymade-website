@@ -28,8 +28,9 @@ import { podoPositionsnummer } from '../codes/podo_positionsnummer.js';
 import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
+import { berlinHeute } from '../../lib/berlin-tag.js';
+import { zaaRueckmeldungAnwenden } from '../zaa/anwenden.js';
 import { pruefeEmpfaenger } from '../kostentraeger/stichtag-pruefung.js';
-import { parseZaaFile } from '../zaa/parser.js';
 import { logAccess } from '../../_lib/access-log.js';
 import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js';
 import { renderRechnung } from '../pdf/rechnung.template.js';
@@ -1747,155 +1748,17 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
-      .select('id, owner_id')
+      .select('id, owner_id, updated_at')
       .eq('id', req.params.id)
       .single();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
 
-    // Alle Zeilen dieser Abrechnung, um belegnummer → id zu mappen.
-    // Die Zuordnung laeuft ueber die eingefrorene `belegnummer` der Zeile.
-    // Der UUID-Anfang bleibt als zweiter Schluessel bestehen: Dateien, die vor
-    // der Umstellung auf <Patientennummer>-<Verordnungsnummer> rausgingen,
-    // tragen ihn noch, und eine Kassenrueckmeldung kann Monate spaeter kommen.
-    // Faende sie ihren Beleg nicht, bliebe die Absetzung unsichtbar — kein
-    // Fehler auf dem Bildschirm, nur fehlendes Geld.
-    //
-    // Seit 04.09.2026 EIN Verordnungstopf: eine Sammelabrechnung kann Physio-
-    // UND Podologie-Zeilen tragen, aber beide stehen jetzt in `prescriptions`.
-    // Seit 09.09.2026 laufen sie hier auch durch DENSELBEN Zweig — der
-    // `therapie_bereich` wird beim Verarbeiten der Rueckmeldung nicht mehr
-    // gebraucht, weil beide gleich behandelt werden (siehe unten).
-    const { data: rxRows } = await supabase
-      .from('prescriptions')
-      .select('id, belegnummer')
-      .eq('abrechnung_id', req.params.id);
-    const belegToRxId = new Map();
-    for (const r of (rxRows || [])) {
-      if (r.belegnummer) belegToRxId.set(r.belegnummer, r.id);
-      belegToRxId.set(r.id.slice(0, 10), r.id);
-    }
-
-    const parsed = parseZaaFile(buf);
-
-    // Wipe stale errors for this abrechnung (re-upload semantics).
-    await supabase.from('zaa_fehler').delete().eq('abrechnung_id', req.params.id);
-
-    let nichtZugeordnet = 0;
-    const inserts = parsed.errors.map(e => {
-      const rxId = e.belegnummer ? (belegToRxId.get(e.belegnummer) || null) : null;
-      if (e.belegnummer && !rxId) nichtZugeordnet++;
-      return {
-        abrechnung_id:   req.params.id,
-        prescription_id: rxId,
-        fehler_code:     e.code,
-        fehler_text:     e.text || null,
-        uebersetzung:    e.uebersetzung || null,
-        loesung_hint:    e.loesung || null,
-        status:          'offen',
-      };
+    const erg = await zaaRueckmeldungAnwenden({
+      db: supabase, tenantId, abrechnungId: req.params.id, ab, buf, filename,
+      abgesetztStatus: abrechnungStatusAusStatus('abgesetzt'), heute: berlinHeute(),
     });
-
-    if (inserts.length) {
-      const { error: insErr } = await supabase.from('zaa_fehler').insert(inserts);
-      if (insErr) return res.status(500).json({ error: 'zaa_fehler insert failed: ' + insErr.message });
-    }
-
-    // ⛔ EINE Regel für beide Zweige: 'abgesetzt' mit Grund und Datum an der
-    // Verordnung. Kein stiller Rücksprung.
-    //
-    // Bis zum 09.09.2026 ging das abgesetzte PHYSIO-Rezept hier still zurück
-    // auf `bereit` und landete damit in der nächsten ERSTrechnung (VKZ 01) —
-    // für die Kasse derselbe Beleg zum zweiten Mal, also Doppelabrechnung.
-    // Anlage 1 TP5 V21 Kap. 7.4.3, Korrekturverfahren Nr. 3 (13.02.2025):
-    // „In diesen Fällen muss die Korrektur gegen die Rechnungskürzung immer
-    //  zwingend mit dem VKZ 4 eingereicht werden."
-    // Die Podologie machte es schon immer richtig; jetzt beide gleich. Der
-    // Weg zurück ist eine BEWUSSTE Handlung: POST /abrechnung/korrektur
-    // (VKZ 04 + URI), oder — für die zwei VKZ-01-Ausnahmen Nr. 21/22 — der
-    // Statusdialog an der Verordnung.
-    //
-    // Warum 'abgesetzt' und nicht 'teilabsetzung': die ZAA-Datei nennt Fehler
-    // je Beleg, keine Betraege und keine Positionen. Ob die Kasse gekuerzt oder
-    // ganz abgesetzt hat, steht erst im Zahlungsavis. Ein automatisch geratenes
-    // 'teilabsetzung' waere eine erfundene Zahl in der Buchhaltung.
-    const vordGrund = new Map();
-    for (const e of parsed.errors) {
-      if (!e.belegnummer) continue;
-      const vId = belegToRxId.get(e.belegnummer);
-      if (!vId) continue;
-      const txt = [e.code, e.uebersetzung || e.text].filter(Boolean).join(' — ');
-      vordGrund.set(vId, [...(vordGrund.get(vId) || []), txt]);
-    }
-
-    const newStatus = inserts.length ? 'rejected' : 'accepted';
-    await supabase.from('abrechnung').update({
-      status:          newStatus,
-      rejected_count:  vordGrund.size,
-      zaa_uploaded_at: new Date().toISOString(),
-    }).eq('id', req.params.id);
-
-    const heute = new Date().toISOString().slice(0, 10);
-    for (const [vId, gruende] of vordGrund) {
-      await supabase.from('prescriptions').update({
-        abrechnung_status: abrechnungStatusAusStatus('abgesetzt'),
-        absetzung_grund:   gruende.join('\n').slice(0, 2000),
-        absetzung_am:      heute,
-      }).eq('id', vId).eq('owner_id', tenantId);
-    }
-
-    // ── Rueckmeldeachse der eingefrorenen Zeilen (abrechnung_zeile) ─────────
-    //
-    // ⚠️ Nur `status` und `absetzung_grund`/`absetzung_am`. KEIN Betrag: die
-    // ZAA-Datei traegt keine. In Anlage 1 TP5 V21 kommen `Zahlungsavis`,
-    // `Absetzung` und `Buchung` kein einziges Mal vor — Pruefstufe 4 ist
-    // kassenspezifisch, es gibt keinen Standard. Der Absetzungsbetrag wird von
-    // Hand aus dem Absetzungsschreiben erfasst (Phase 4).
-    //
-    // ⚠️ Die uebrigen Zeilen werden NUR dann `akzeptiert`, wenn die Datei ganz
-    // sauber zurueckkam. Kommt sie mit Fehlern, ist heute nicht unterscheidbar,
-    // ob die DATEI abgewiesen wurde (Pruefstufe 1-3, dann wurde kein einziger
-    // Beleg inhaltlich geprueft) oder einzelne BELEGE abgesetzt (Pruefstufe 4).
-    // Die Rosette dafuer steht (`abgewiesen` in module/abrechnung-status.js),
-    // der Datenbankwert fehlt noch — bis dahin bleiben sie auf `eingereicht`;
-    // raten waere hier eine erfundene Zusage in der Buchhaltung.
-    //
-    // Dieselbe Gruendekarte wie oben: seit die beiden Zweige gleich behandelt
-    // werden, gibt es nur noch EINE.
-    let zeilenAktualisiert = 0;
-    for (const [rId, gruende] of vordGrund) {
-      const { error: zuErr, count } = await supabase.from('abrechnung_zeile')
-        .update({
-          status:           'abgesetzt',
-          absetzung_grund:  gruende.join('\n').slice(0, 2000),
-          absetzung_am:     heute,
-        }, { count: 'exact' })
-        .eq('abrechnung_id', req.params.id)
-        .eq('prescription_id', rId);
-      if (zuErr) console.error('[abrechnung/upload-zaa] Zeile abgesetzt fehlgeschlagen', rId, zuErr);
-      else zeilenAktualisiert += count || 0;
-    }
-
-    if (!inserts.length) {
-      const { error: okErr, count } = await supabase.from('abrechnung_zeile')
-        .update({ status: 'akzeptiert' }, { count: 'exact' })
-        .eq('abrechnung_id', req.params.id)
-        .eq('status', 'eingereicht');
-      if (okErr) console.error('[abrechnung/upload-zaa] Zeilen akzeptiert fehlgeschlagen', okErr);
-      else zeilenAktualisiert += count || 0;
-    }
-
-    return res.json({
-      ok: true,
-      format: parsed.format,
-      errorCount: inserts.length,
-      status: newStatus,
-      errors: parsed.errors,
-      verordnungenAbgesetzt: vordGrund.size,
-      nichtZugeordnet,
-      zeilenAktualisiert,
-      filename: filename || null,
-    });
+    return res.status(erg.status).json(erg.body);
   } catch (e) {
     console.error('[abrechnung/upload-zaa]', e);
     return res.status(500).json({ error: e.message });

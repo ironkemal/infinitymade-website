@@ -10,7 +10,7 @@ steht in keinem Schema und lässt sich aus keinem Code herauslesen. Wenn es nich
 aufgeschrieben wird, ist es in sechs Monaten weg, und dann steht jemand vor einer
 Tabelle und fragt „brauchen wir die noch?" — ohne Antwort.
 
-**Stand:** 2026-10-03 · 94/94 Tabellen erfasst · Projekt `njvuclullotbksskpwgk`
+**Stand:** 2026-10-05 · 96/96 Tabellen erfasst · Projekt `njvuclullotbksskpwgk`
 (das Ops-Dashboard liegt in einem **anderen** Projekt, `farkaejociddtgqkusvm`, und ist
 hier **nicht** erfasst).
 
@@ -864,6 +864,22 @@ Heilmittel-Richtlinie …).
 - **Achtung — Sicherheitskorken (Fingerprint-Prüfung):** Das Ladescript berechnet den SHA-256-Fingerprint der Zertifikats-DER-Bytes eigenständig und bricht sofort ab, wenn er nicht exakt mit dem vom Admin übergebenen `--fingerprint` (aus der ITSG-Veröffentlichung) übereinstimmt. Kein automatischer Download ohne menschlichen Abgleich.
 - **Achtung — RLS:** Authentifizierte Nutzer haben ausschließlich Leserechte (`FOR SELECT`). INSERT und UPDATE sind für alle Rollen außer `service_role` gesperrt.
 - **Nicht in `api/dsgvo.js`:** Referenzdaten ohne `owner_id` und ohne Personenbezug (wie `kostentraeger_anschriften` und `kostentraeger_annahmestellen`).
+
+### `abrechnung_artefakt_freeze`
+- **Warum:** Marker, den der DSGVO-Löschlauf (`api-backend/dsgvo/loeschen.js`) zu Beginn setzt: ab dann entstehen für den Owner keine NEUEN Registry-Reservierungen mehr; bereits laufende Uploads dürfen abgeschlossen werden. Verhindert, dass während der Kontolöschung noch neue Dateien im Bucket `abrechnungen` entstehen.
+- **Seit:** 05.10.2026 · `0060_abrechnung_artefakt_version` · SaaS `20261004223447`
+- **Status:** aktiv
+- **Wer:** nur die SECURITY-DEFINER-RPCs `artefakt_owner_freeze` / `artefakt_owner_unfreeze` (service_role); Client hat keinen Zugriff.
+- **Achtung:** Bricht der Löschlauf nach dem Freeze ab, bleibt der Owner gesperrt, bis `artefakt_owner_unfreeze` läuft. Enthält nur `owner_id` + Zeitstempel, keine Inhaltsdaten.
+- **Quelle:** `KUTU_HAZIRLIK_SPRINT.md` M1.16; `konsey/tutanak/2026-10-05-m1-artefakt-archiv.md`.
+
+### `abrechnung_artefakt_version`
+- **Warum:** Registry aller Dateien im Bucket `abrechnungen` (DTA, Auftragsdatei, Begleitzettel, Signatur, verschlüsselte Datei): unveränderlicher Pfad/Owner/Abrechnung/SHA-256/Art/Rolle und Lebenszyklus reserved → published → retire_pending → retired. Schützt Dateien vor Löschung durch Orphan-Bereinigung und DSGVO-Löschlauf; ersetzt NICHT die Rechnungs-Zustandsmaschine (Header-CAS bleibt in `abrechnung`).
+- **Seit:** 05.10.2026 · `0060_abrechnung_artefakt_version` · SaaS `20261004223447`
+- **Status:** aktiv, noch ohne Schreiber im JS-Code (Upload-Integration offen); Bestandsdateien (21 Header) nicht registriert → `legacy`-Backfill offen. Bis dahin bleiben unbekannte historische Bucketobjekte im Löschlauf konservativ erhalten.
+- **Wer:** RPCs `artefakt_reserve`, `artefakt_upload_done`, `artefakt_publish`, `artefakt_retire_claim`, `artefakt_retire_done` (service_role); Lesen: Owner-RLS; `api-backend/dsgvo/loeschen.js` liest paginiert (Schutzabfrage, fail-closed).
+- **Achtung:** Zeilen werden nie gelöscht (Trigger auch gegen TRUNCATE); verschlüsselte und signierte Dateien sind nie ausmusterbar; unsignierte DTA nur vor Versand und nach veröffentlichter Signatur; laufende Reservierungen werden nie per Timeout verworfen. `service_role` hat keine DML-Rechte, nur die RPCs schreiben.
+- **Quelle:** `KUTU_HAZIRLIK_SPRINT.md` M1.16; `konsey/tutanak/2026-10-05-m1-artefakt-archiv.md`; kalter db-ustasi-Review 05.10.2026.
 
 ### `abrechnung_uebermittlung`
 - **Warum:** Anlage 1 TP5 Kap. 3(2) schreibt vor: *„Über den Datenaustausch ist eine Dokumentation zu führen … mindestens **2 Jahre** aufzubewahren … **alle Schritte von der Initiierung bis ggf. zur Quittierung**."* Anhang 1 § 4.5(2) zählt zehn Mindestfelder auf (physikalischer Dateiname, Erstellungsdatum, lfd. Nr., Kommunikationspartner, Beginn/Ende, Dateigröße, Verarbeitungshinweise, Senden/Empfangen, Verarbeitungskennzeichen, Fehlerstatus). **Diese Dokumentation lässt sich nicht nachträglich erzeugen** — deshalb entsteht die Tabelle, bevor der Versandschritt gebaut wird, und nicht danach.

@@ -58,6 +58,7 @@ function createMockSupabase(handlers = {}) {
     },
     rpc: async (fnName, params) => {
       calls.rpcCalls.push({ fnName, params });
+      if (fnName === 'artefakt_owner_freeze') return { data: true, error: null };
       return { data: null, error: null };
     },
     storage: {
@@ -94,6 +95,7 @@ function createMockSupabase(handlers = {}) {
         limit: (_n) => query,
         order: () => query,
         range: async () => {
+          if (tableName === 'abrechnung_artefakt_version') return { data: [], error: null, count: 0 };
           if (handlers[tableName]?.select) {
             const res = await handlers[tableName].select(filters);
             return { data: res, error: null };

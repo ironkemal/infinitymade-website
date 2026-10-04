@@ -3,24 +3,27 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261003193551 podologie_empfangsnachweise_0059
+-- LAST MIGRATION:     20261004223523 vkz03_trigger_rollenunabhaengig_0062
 -- EXPORTED AT:        2026-10-03T19:36:25.349Z
--- ERZEUGT AM:         2026-10-03
+-- ERZEUGT AM:         2026-10-03 (Teilaktualisierung 2026-10-05)
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       94
---   table_columns:       1362
+--   public_tables:       96
+--   table_columns:       1380
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        167
---   functions:           93
---   triggers:            88
---   indexes:             331
+--   rls_policies:        168
+--   functions:           103
+--   triggers:            91
+--   indexes:             335
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
 --   rls_disabled_tables: 1
+--
+-- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0062 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
+-- vollstaendiger Metadatenexport (tools/schema-export-katalog.sql + schema-dokumente.mjs) steht aus.
 --
 -- CAUTION / HINWEIS:
 -- This document is a deterministic structural documentation snapshot.
@@ -84,6 +87,10 @@
 -- ROW LEVEL SECURITY (RLS) STATUS
 -- ----------------------------------------------------------------------------
 ALTER TABLE public.abrechnung ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.abrechnung_artefakt_freeze ENABLE ROW LEVEL SECURITY;
+-- FORCE ROW LEVEL SECURITY: false
+ALTER TABLE public.abrechnung_artefakt_version ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
 ALTER TABLE public.abrechnung_uebermittlung ENABLE ROW LEVEL SECURITY;
 -- FORCE ROW LEVEL SECURITY: false
@@ -274,6 +281,11 @@ ALTER TABLE public.zuzahlung_korrekturen ENABLE ROW LEVEL SECURITY;
 -- ----------------------------------------------------------------------------
 -- ROW LEVEL SECURITY POLICIES
 -- ----------------------------------------------------------------------------
+CREATE POLICY artefakt_version_owner_select ON public.abrechnung_artefakt_version
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING ((owner_id = ( SELECT auth.uid() AS uid)));
 CREATE POLICY abrechnung_owner_all ON public.abrechnung
   AS PERMISSIVE
   FOR ALL
@@ -1712,6 +1724,333 @@ END;
 $function$
 ;
 ALTER FUNCTION public.anamnese_versionieren() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.artefakt_owner_freeze(p_owner uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+BEGIN
+  PERFORM 1 FROM public.profiles WHERE id = p_owner FOR NO KEY UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'artefakt_owner_freeze: Owner unbekannt'; END IF;
+  INSERT INTO public.abrechnung_artefakt_freeze (owner_id) VALUES (p_owner) ON CONFLICT DO NOTHING;
+  RETURN true;
+END $function$
+
+;
+ALTER FUNCTION public.artefakt_owner_freeze(uuid) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.artefakt_owner_unfreeze(p_owner uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+BEGIN
+  PERFORM 1 FROM public.profiles WHERE id = p_owner FOR NO KEY UPDATE;
+  DELETE FROM public.abrechnung_artefakt_freeze WHERE owner_id = p_owner;
+  RETURN true;
+END $function$
+
+;
+ALTER FUNCTION public.artefakt_owner_unfreeze(uuid) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.artefakt_publish(p_owner uuid, p_id uuid, p_expected_updated_at text, p_patch jsonb)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_reg public.abrechnung_artefakt_version%ROWTYPE;
+  k text;
+  v_allowed text[] := ARRAY['status','storage_path','dta_sha256','signed_storage_path','signed_sha256',
+    'signed_at','signed_by_cert_thumbprint','encrypted_storage_path','encrypted_sha256','verschluesselt_am',
+    'verschluesselt_fuer_fingerprint','verschluesselung_hinweis','auftragsdatei_path','auftragsdatei_sha256',
+    'begleitzettel_path'];
+  v_hdr public.abrechnung%ROWTYPE;
+  v_new public.abrechnung%ROWTYPE;
+  v_pfad text; v_hash text; v_hashfeld boolean;
+BEGIN
+  PERFORM 1 FROM public.profiles WHERE id = p_owner AND is_active IS TRUE FOR NO KEY UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'artefakt_publish: Owner nicht aktiv'; END IF;
+  SELECT * INTO v_reg FROM public.abrechnung_artefakt_version
+   WHERE id = p_id AND owner_id = p_owner;
+  IF NOT FOUND THEN RAISE EXCEPTION 'artefakt_publish: unbekannte Version'; END IF;
+  SELECT * INTO v_hdr FROM public.abrechnung
+   WHERE id = v_reg.abrechnung_id AND owner_id = p_owner FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'artefakt_publish: Abrechnung fehlt'; END IF;
+  SELECT * INTO v_reg FROM public.abrechnung_artefakt_version WHERE id = p_id FOR UPDATE;
+  IF v_reg.state <> 'reserved' OR v_reg.upload_state <> 'uploaded' THEN
+    RAISE EXCEPTION 'artefakt_publish: Version nicht publizierbar (state=%, upload=%)', v_reg.state, v_reg.upload_state;
+  END IF;
+  IF v_hdr.updated_at IS DISTINCT FROM p_expected_updated_at::timestamptz THEN
+    RETURN false;
+  END IF;
+  FOR k IN SELECT jsonb_object_keys(p_patch) LOOP
+    IF NOT (k = ANY (v_allowed)) THEN RAISE EXCEPTION 'artefakt_publish: Patchfeld % nicht erlaubt', k; END IF;
+  END LOOP;
+  v_new := jsonb_populate_record(v_hdr, p_patch);
+  -- Patch muss die zur Rolle gehoerende Header-Spalte auf genau diese Registry-Zeile setzen.
+  v_pfad := CASE v_reg.role WHEN 'dta' THEN v_new.storage_path WHEN 'auftrag' THEN v_new.auftragsdatei_path
+    WHEN 'begleit' THEN v_new.begleitzettel_path WHEN 'signed' THEN v_new.signed_storage_path
+    ELSE v_new.encrypted_storage_path END;
+  v_hash := CASE v_reg.role WHEN 'dta' THEN v_new.dta_sha256 WHEN 'auftrag' THEN v_new.auftragsdatei_sha256
+    WHEN 'signed' THEN v_new.signed_sha256 WHEN 'encrypted' THEN v_new.encrypted_sha256 ELSE NULL END;
+  v_hashfeld := v_reg.role <> 'begleit';
+  IF v_pfad IS DISTINCT FROM v_reg.storage_path THEN
+    RAISE EXCEPTION 'artefakt_publish: Patch zeigt nicht auf die Registry-Version';
+  END IF;
+  IF v_hashfeld AND v_hash IS DISTINCT FROM v_reg.sha256 THEN
+    RAISE EXCEPTION 'artefakt_publish: Hash passt nicht zur Registry-Version';
+  END IF;
+  -- Alle anderen Pfadfelder im Ergebnis muessen unveraendert oder published-registriert sein.
+  IF v_hdr.status IN ('gesendet','accepted','rejected','paid')
+     AND (v_new.storage_path IS DISTINCT FROM v_hdr.storage_path
+          OR v_new.auftragsdatei_path IS DISTINCT FROM v_hdr.auftragsdatei_path
+          OR v_new.begleitzettel_path IS DISTINCT FROM v_hdr.begleitzettel_path
+          OR v_new.encrypted_storage_path IS DISTINCT FROM v_hdr.encrypted_storage_path) THEN
+    RAISE EXCEPTION 'artefakt_publish: Pfadaenderung nach Versand nicht erlaubt';
+  END IF;
+  IF EXISTS (SELECT 1 FROM unnest(ARRAY[v_new.storage_path, v_new.auftragsdatei_path, v_new.begleitzettel_path,
+        v_new.signed_storage_path, v_new.encrypted_storage_path]) pf
+      WHERE pf IS NOT NULL AND pf <> v_reg.storage_path
+        AND pf NOT IN (v_hdr.storage_path, v_hdr.auftragsdatei_path, v_hdr.begleitzettel_path,
+                       v_hdr.signed_storage_path, v_hdr.encrypted_storage_path)
+        AND NOT EXISTS (SELECT 1 FROM public.abrechnung_artefakt_version r
+              WHERE r.storage_path = pf AND r.owner_id = p_owner AND r.abrechnung_id = v_reg.abrechnung_id
+                AND r.state = 'published')) THEN
+    RAISE EXCEPTION 'artefakt_publish: unregistrierter Pfad im Patch';
+  END IF;
+  UPDATE public.abrechnung SET
+    status = v_new.status, storage_path = v_new.storage_path, dta_sha256 = v_new.dta_sha256,
+    signed_storage_path = v_new.signed_storage_path, signed_sha256 = v_new.signed_sha256,
+    signed_at = v_new.signed_at, signed_by_cert_thumbprint = v_new.signed_by_cert_thumbprint,
+    encrypted_storage_path = v_new.encrypted_storage_path, encrypted_sha256 = v_new.encrypted_sha256,
+    verschluesselt_am = v_new.verschluesselt_am,
+    verschluesselt_fuer_fingerprint = v_new.verschluesselt_fuer_fingerprint,
+    verschluesselung_hinweis = v_new.verschluesselung_hinweis,
+    auftragsdatei_path = v_new.auftragsdatei_path, auftragsdatei_sha256 = v_new.auftragsdatei_sha256,
+    begleitzettel_path = v_new.begleitzettel_path
+   WHERE id = v_hdr.id;
+  UPDATE public.abrechnung_artefakt_version
+     SET state = 'published', published_at = now() WHERE id = p_id;
+  RETURN true;
+END $function$
+
+;
+ALTER FUNCTION public.artefakt_publish(uuid, uuid, text, jsonb) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.artefakt_reserve(p_owner uuid, p_abrechnung uuid, p_path text, p_kind text, p_role text, p_sha256 text)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE v_id uuid;
+BEGIN
+  PERFORM 1 FROM public.profiles WHERE id = p_owner AND is_active IS TRUE FOR NO KEY UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'artefakt_reserve: Owner nicht aktiv'; END IF;
+  IF EXISTS (SELECT 1 FROM public.abrechnung_artefakt_freeze WHERE owner_id = p_owner) THEN
+    RAISE EXCEPTION 'artefakt_reserve: Owner eingefroren';
+  END IF;
+  PERFORM 1 FROM public.abrechnung WHERE id = p_abrechnung AND owner_id = p_owner FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'artefakt_reserve: Abrechnung gehoert nicht zum Owner'; END IF;
+  INSERT INTO public.abrechnung_artefakt_version
+    (owner_id, abrechnung_id, storage_path, kind, role, sha256)
+  VALUES (p_owner, p_abrechnung, p_path, p_kind, p_role, p_sha256)
+  RETURNING id INTO v_id;
+  RETURN v_id;
+END $function$
+
+;
+ALTER FUNCTION public.artefakt_reserve(uuid, uuid, text, text, text, text) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.artefakt_retire_claim(p_owner uuid, p_id uuid)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_reg public.abrechnung_artefakt_version%ROWTYPE;
+  v_hdr public.abrechnung%ROWTYPE;
+  v_aid uuid; v_tok uuid;
+BEGIN
+  PERFORM 1 FROM public.profiles WHERE id = p_owner FOR NO KEY UPDATE;
+  SELECT abrechnung_id INTO v_aid FROM public.abrechnung_artefakt_version WHERE id = p_id AND owner_id = p_owner;
+  IF NOT FOUND THEN RAISE EXCEPTION 'artefakt_retire_claim: unbekannte Version'; END IF;
+  SELECT * INTO v_hdr FROM public.abrechnung WHERE id = v_aid AND owner_id = p_owner FOR UPDATE;
+  SELECT * INTO v_reg FROM public.abrechnung_artefakt_version WHERE id = p_id FOR UPDATE;
+  IF v_reg.state = 'retired' THEN RETURN NULL; END IF;
+  IF v_reg.state = 'retire_pending' THEN RETURN v_reg.claim_token; END IF;
+  IF v_reg.role = 'encrypted' THEN RAISE EXCEPTION 'artefakt_retire_claim: verschluesselte Dateien bleiben erhalten'; END IF;
+  IF v_reg.state = 'reserved' AND v_reg.upload_state <> 'upload_failed' THEN
+    RAISE EXCEPTION 'artefakt_retire_claim: Upload laeuft oder wartet auf Publish';
+  END IF;
+  IF v_reg.role = 'signed' AND NOT (v_reg.state = 'reserved' AND v_reg.upload_state = 'upload_failed') THEN
+    RAISE EXCEPTION 'artefakt_retire_claim: Signaturhistorie bleibt erhalten';
+  END IF;
+  IF v_reg.state = 'published' AND v_hdr.status NOT IN ('erstellt','verworfen') THEN
+    RAISE EXCEPTION 'artefakt_retire_claim: nach Versand nicht erlaubt (Aufbewahrung)';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.aufbewahrung_sperre WHERE owner_id = p_owner AND kategorie = 'beleg') THEN
+    RAISE EXCEPTION 'artefakt_retire_claim: Aufbewahrungssperre aktiv';
+  END IF;
+  IF v_reg.role = 'dta' AND v_reg.state = 'published' AND NOT EXISTS (
+       SELECT 1 FROM public.abrechnung_artefakt_version s
+        WHERE s.abrechnung_id = v_reg.abrechnung_id AND s.role = 'signed' AND s.state = 'published'
+          AND s.storage_path = v_hdr.signed_storage_path) THEN
+    RAISE EXCEPTION 'artefakt_retire_claim: keine veroeffentlichte Signatur';
+  END IF;
+  IF v_reg.storage_path IN (COALESCE(v_hdr.storage_path,''), COALESCE(v_hdr.signed_storage_path,''),
+       COALESCE(v_hdr.encrypted_storage_path,''), COALESCE(v_hdr.auftragsdatei_path,''),
+       COALESCE(v_hdr.begleitzettel_path,'')) THEN
+    RAISE EXCEPTION 'artefakt_retire_claim: Pfad noch referenziert';
+  END IF;
+  v_tok := gen_random_uuid();
+  UPDATE public.abrechnung_artefakt_version
+     SET state = 'retire_pending', claim_token = v_tok, claim_error = NULL WHERE id = p_id;
+  RETURN v_tok;
+END $function$
+
+;
+ALTER FUNCTION public.artefakt_retire_claim(uuid, uuid) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.artefakt_retire_done(p_owner uuid, p_id uuid, p_token uuid, p_error text DEFAULT NULL::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+BEGIN
+  PERFORM 1 FROM public.profiles WHERE id = p_owner FOR NO KEY UPDATE;
+  IF p_error IS NOT NULL THEN
+    UPDATE public.abrechnung_artefakt_version SET claim_error = left(p_error, 500)
+     WHERE id = p_id AND owner_id = p_owner AND state = 'retire_pending' AND claim_token = p_token;
+    RETURN false;
+  END IF;
+  UPDATE public.abrechnung_artefakt_version SET state = 'retired', retired_at = now()
+   WHERE id = p_id AND owner_id = p_owner AND state = 'retire_pending' AND claim_token = p_token;
+  RETURN FOUND;
+END $function$
+
+;
+ALTER FUNCTION public.artefakt_retire_done(uuid, uuid, uuid, text) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.artefakt_upload_done(p_owner uuid, p_id uuid, p_ok boolean)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+BEGIN
+  PERFORM 1 FROM public.profiles WHERE id = p_owner FOR NO KEY UPDATE;
+  UPDATE public.abrechnung_artefakt_version
+     SET upload_state = CASE WHEN p_ok THEN 'uploaded' ELSE 'upload_failed' END
+   WHERE id = p_id AND owner_id = p_owner AND state = 'reserved' AND upload_state = 'pending';
+  RETURN FOUND;
+END $function$
+
+;
+ALTER FUNCTION public.artefakt_upload_done(uuid, uuid, boolean) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.artefakt_version_guard()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN
+  IF NEW.id <> OLD.id OR NEW.owner_id <> OLD.owner_id
+     OR NEW.abrechnung_id <> OLD.abrechnung_id OR NEW.storage_path <> OLD.storage_path
+     OR NEW.kind <> OLD.kind OR NEW.role <> OLD.role OR NEW.sha256 IS DISTINCT FROM OLD.sha256 OR NEW.legacy <> OLD.legacy
+     OR NEW.created_at <> OLD.created_at THEN
+    RAISE EXCEPTION 'artefakt_version: Identitaetsfelder sind unveraenderlich';
+  END IF;
+  IF NEW.state <> OLD.state AND NOT (
+       (OLD.state = 'reserved'       AND NEW.state IN ('published','retire_pending')) OR
+       (OLD.state = 'published'      AND NEW.state = 'retire_pending') OR
+       (OLD.state = 'retire_pending' AND NEW.state = 'retired')) THEN
+    RAISE EXCEPTION 'artefakt_version: Uebergang % -> % nicht erlaubt', OLD.state, NEW.state;
+  END IF;
+  IF NEW.upload_state <> OLD.upload_state AND OLD.upload_state <> 'pending' THEN
+    RAISE EXCEPTION 'artefakt_version: upload_state ist nach Abschluss endgueltig';
+  END IF;
+  IF NEW.state = 'published' AND NEW.upload_state <> 'uploaded' THEN
+    RAISE EXCEPTION 'artefakt_version: published nur nach erfolgreichem Upload';
+  END IF;
+  NEW.updated_at := now();
+  RETURN NEW;
+END $function$
+
+;
+ALTER FUNCTION public.artefakt_version_guard() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.artefakt_version_no_delete()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN
+  RAISE EXCEPTION 'artefakt_version: Zeilen werden nie geloescht (retire statt delete)';
+END $function$
+
+;
+ALTER FUNCTION public.artefakt_version_no_delete() OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.zaa_fehler_anwenden(p_owner uuid, p_abrechnung uuid, p_expected_updated_at text, p_fehler jsonb, p_gruende jsonb, p_vord_status text, p_datum date)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_hdr public.abrechnung%ROWTYPE;
+  g jsonb;
+  v_zeilen int := 0;
+  n int;
+BEGIN
+  IF jsonb_typeof(p_fehler) <> 'array' OR jsonb_array_length(p_fehler) = 0 THEN
+    RAISE EXCEPTION 'zaa_fehler_anwenden: leere Fehlerliste';
+  END IF;
+  IF jsonb_typeof(p_gruende) <> 'array' THEN
+    RAISE EXCEPTION 'zaa_fehler_anwenden: gruende muss Array sein';
+  END IF;
+  PERFORM 1 FROM public.profiles WHERE id = p_owner AND is_active IS TRUE FOR NO KEY UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'zaa_fehler_anwenden: Owner nicht aktiv'; END IF;
+  SELECT * INTO v_hdr FROM public.abrechnung WHERE id = p_abrechnung AND owner_id = p_owner FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'zaa_fehler_anwenden: Abrechnung nicht gefunden'; END IF;
+  IF v_hdr.updated_at IS DISTINCT FROM p_expected_updated_at::timestamptz THEN
+    RETURN jsonb_build_object('konflikt', true);
+  END IF;
+
+  DELETE FROM public.zaa_fehler WHERE abrechnung_id = p_abrechnung;
+  INSERT INTO public.zaa_fehler (abrechnung_id, prescription_id, fehler_code, fehler_text, uebersetzung, loesung_hint, status)
+  SELECT p_abrechnung, NULLIF(e->>'prescription_id','')::uuid, e->>'fehler_code', e->>'fehler_text',
+         e->>'uebersetzung', e->>'loesung_hint', 'offen'
+    FROM jsonb_array_elements(p_fehler) e;
+
+  UPDATE public.abrechnung
+     SET status = 'rejected', rejected_count = jsonb_array_length(p_gruende), zaa_uploaded_at = now()
+   WHERE id = p_abrechnung;
+
+  FOR g IN SELECT * FROM jsonb_array_elements(p_gruende) LOOP
+    UPDATE public.prescriptions
+       SET abrechnung_status = p_vord_status, absetzung_grund = left(g->>'grund', 2000), absetzung_am = p_datum
+     WHERE id = (g->>'prescription_id')::uuid AND owner_id = p_owner;
+    UPDATE public.abrechnung_zeile
+       SET status = 'abgesetzt', absetzung_grund = left(g->>'grund', 2000), absetzung_am = p_datum
+     WHERE abrechnung_id = p_abrechnung AND prescription_id = (g->>'prescription_id')::uuid;
+    GET DIAGNOSTICS n = ROW_COUNT;
+    v_zeilen := v_zeilen + n;
+  END LOOP;
+
+  RETURN jsonb_build_object('konflikt', false, 'zeilen', v_zeilen, 'fehler', jsonb_array_length(p_fehler));
+END $function$
+
+;
+ALTER FUNCTION public.zaa_fehler_anwenden(uuid, uuid, text, jsonb, jsonb, text, date) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.audit_write_log()
  RETURNS trigger
@@ -3414,7 +3753,7 @@ BEGIN
   IF (TG_OP = 'DELETE' AND OLD.verarbeitungskennzeichen = '03')
      OR (TG_OP = 'UPDATE' AND (OLD.verarbeitungskennzeichen = '03' OR NEW.verarbeitungskennzeichen = '03'))
      OR (TG_OP = 'INSERT' AND NEW.verarbeitungskennzeichen = '03') THEN
-    IF current_user NOT IN ('service_role', 'postgres') THEN
+    IF current_user IN ('authenticated', 'anon') THEN
       RAISE EXCEPTION 'VKZ03 operations require backend execution'
         USING ERRCODE = '42501';
     END IF;
@@ -4827,6 +5166,9 @@ CREATE TRIGGER trg_set_business_id BEFORE INSERT ON aerzte FOR EACH ROW EXECUTE 
 CREATE TRIGGER anamnese_unveraenderlich_trg BEFORE UPDATE ON anamnese FOR EACH ROW EXECUTE FUNCTION anamnese_unveraenderlich();
 
 CREATE TRIGGER anamnese_versionieren_trg BEFORE INSERT ON anamnese FOR EACH ROW EXECUTE FUNCTION anamnese_versionieren();
+CREATE TRIGGER artefakt_version_guard_trg BEFORE UPDATE ON abrechnung_artefakt_version FOR EACH ROW EXECUTE FUNCTION artefakt_version_guard();
+CREATE TRIGGER artefakt_version_no_delete_trg BEFORE DELETE ON abrechnung_artefakt_version FOR EACH ROW EXECUTE FUNCTION artefakt_version_no_delete();
+CREATE TRIGGER artefakt_version_no_truncate_trg BEFORE TRUNCATE ON abrechnung_artefakt_version FOR EACH STATEMENT EXECUTE FUNCTION artefakt_version_no_delete();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON anamnese FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
@@ -4996,6 +5338,13 @@ CREATE INDEX idx_abrechnung_kostentraeger ON abrechnung USING btree (kostentraeg
 
 CREATE INDEX idx_abrechnung_owner_status ON abrechnung USING btree (owner_id, status, created_at DESC);
 
+-- Index abrechnung_artefakt_freeze_pkey ON public.abrechnung_artefakt_freeze is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX abrechnung_artefakt_freeze_pkey ON abrechnung_artefakt_freeze USING btree (owner_id);
+-- Index abrechnung_artefakt_version_pkey ON public.abrechnung_artefakt_version is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX abrechnung_artefakt_version_pkey ON abrechnung_artefakt_version USING btree (id);
+-- Index artefakt_pfad_eindeutig ON public.abrechnung_artefakt_version is enforced by constraint
+-- DDL: CREATE UNIQUE INDEX artefakt_pfad_eindeutig ON abrechnung_artefakt_version USING btree (storage_path);
+CREATE INDEX artefakt_version_abrechnung_idx ON abrechnung_artefakt_version USING btree (owner_id, abrechnung_id, state);
 CREATE INDEX abr_uebermittlung_abrechnung_idx ON abrechnung_uebermittlung USING btree (abrechnung_id) WHERE abrechnung_id IS NOT NULL;
 
 CREATE INDEX abr_uebermittlung_owner_zeit_idx ON abrechnung_uebermittlung USING btree (owner_id, begonnen_am DESC);

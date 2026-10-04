@@ -146,6 +146,18 @@ export const TABELLEN = [
     anmerkung: 'GKV-Sammelabrechnung Kopfsatz (§ 302 SGB V)',
   },
   {
+    table: 'abrechnung_artefakt_version',
+    kategorie: 'artefakt_lebenszyklus',
+    export: { filter: 'owner_id' },
+    anmerkung: '§ 302 DTA-Artefaktversionen (unsigned/signed/encrypted); individueller Lebenszyklus pro Registry-Eintrag, keine pauschale 8-Jahre-Frist, Prüfung/Retention per Version',
+  },
+  {
+    table: 'abrechnung_artefakt_freeze',
+    kategorie: 'behalten_ohne_person',
+    export: { filter: 'owner_id' },
+    anmerkung: 'Freeze-Marker des Loeschlaufs (nur owner_id + Zeitstempel), keine Inhaltsdaten',
+  },
+  {
     table: 'abrechnung_zeile',
     kategorie: 'beleg',
     export: { filter: 'owner_id' },

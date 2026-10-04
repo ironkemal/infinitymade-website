@@ -61,6 +61,107 @@ export async function kontoLoeschen(supabase, { ownerId, ownerEmail, vorgangId, 
   const unerwartet = [];
   const gesperrt = [];
 
+  // ── 0. K4 Artefakt-Schutz: Freeze RPC & Registry Preflight ──────────────────
+  try {
+    const { data: freezeData, error: freezeErr } = await supabase.rpc('artefakt_owner_freeze', {
+      p_owner: ownerId,
+    });
+    if (freezeErr || freezeData !== true) {
+      unerwartet.push('artefakt:owner_freeze');
+      log.push({
+        step: 'artefakt:owner_freeze',
+        ok: false,
+        error: freezeErr ? freezeErr.message : (freezeData === false ? 'freeze returned false' : 'freeze returned non-true'),
+      });
+      return {
+        status: 'fehler',
+        gesperrt: [],
+        unerwartet: ['artefakt:owner_freeze'],
+        log,
+      };
+    }
+    log.push({ step: 'artefakt:owner_freeze', ok: true });
+  } catch (err) {
+    unerwartet.push('artefakt:owner_freeze');
+    log.push({ step: 'artefakt:owner_freeze', ok: false, error: err.message });
+    return {
+      status: 'fehler',
+      gesperrt: [],
+      unerwartet: ['artefakt:owner_freeze'],
+      log,
+    };
+  }
+
+  const nonRetiredProtectedPaths = new Set();
+  try {
+    const allowedStates = new Set(['reserved', 'published', 'retire_pending', 'retired']);
+    let offset = 0;
+    let expectedCount = null;
+    let fetchedCount = 0;
+
+    while (true) {
+      const { data: rows, error: regErr, count } = await supabase
+        .from('abrechnung_artefakt_version')
+        .select('storage_path,state', { count: 'exact' })
+        .eq('owner_id', ownerId)
+        .order('id')
+        .range(offset, offset + 999);
+
+      if (regErr) {
+        throw new Error(`registry query error: ${regErr.message}`);
+      }
+      if (!Array.isArray(rows)) {
+        throw new Error('registry data must be an array');
+      }
+      if (typeof count !== 'number' || !Number.isInteger(count) || count < 0) {
+        throw new Error(`invalid count: ${count}`);
+      }
+      if (expectedCount === null) {
+        expectedCount = count;
+      } else if (expectedCount !== count) {
+        throw new Error(`unstable count: expected ${expectedCount}, got ${count}`);
+      }
+
+      for (const row of rows) {
+        if (!row || typeof row.storage_path !== 'string' || !row.storage_path.startsWith(`${ownerId}/`)) {
+          throw new Error(`malformed or unowned storage_path: ${row?.storage_path}`);
+        }
+        if (!row.state || !allowedStates.has(row.state)) {
+          throw new Error(`malformed state: ${row?.state}`);
+        }
+        if (row.state !== 'retired') {
+          nonRetiredProtectedPaths.add(row.storage_path);
+        }
+      }
+
+      fetchedCount += rows.length;
+      if (rows.length === 0 || fetchedCount >= expectedCount) {
+        break;
+      }
+      offset += 1000;
+    }
+
+    if (fetchedCount !== expectedCount) {
+      throw new Error(`count mismatch: expected ${expectedCount}, fetched ${fetchedCount}`);
+    }
+
+    log.push({
+      step: 'artefakt:registry_check',
+      ok: true,
+      count: expectedCount,
+      protectedCount: nonRetiredProtectedPaths.size,
+    });
+  } catch (err) {
+    unerwartet.push('artefakt:registry_check');
+    log.push({ step: 'artefakt:registry_check', ok: false, error: err.message });
+    return {
+      status: 'fehler',
+      gesperrt: [],
+      unerwartet: ['artefakt:registry_check'],
+      log,
+    };
+  }
+
   // ── 1. Stripe zuerst ────────────────────────────────────────────────────────
   // profiles lesen: stripe_subscription_id pruefen
   let stripeSubId = null;
@@ -516,7 +617,7 @@ export async function kontoLoeschen(supabase, { ownerId, ownerEmail, vorgangId, 
   }
 
   // ── 7. Storage bereinigen ───────────────────────────────────────────────────
-  await bereinigeStorage(supabase, ownerId, unerwartet, log);
+  await bereinigeStorage(supabase, ownerId, unerwartet, log, nonRetiredProtectedPaths);
 
   // ── 8. Konten sperren statt loeschen (guvenlik S-40) ─────────────────────────
   // Auth-User-DELETE wuerde per CASCADE den gesetzlichen Sperrbestand vernichten!
@@ -628,9 +729,23 @@ export async function kontoLoeschen(supabase, { ownerId, ownerEmail, vorgangId, 
 /**
  * Raeumt Storage-Objekte fuer einen geloeschten Mandanten auf.
  */
-async function bereinigeStorage(supabase, ownerId, unerwartet, log) {
+export async function bereinigeStorage(supabase, ownerId, unerwartet, log, nonRetiredProtectedPaths = new Set()) {
   for (const b of BUCKETS) {
     try {
+      if (b.bucket === 'abrechnungen') {
+        log.push({
+          step: `storage:${b.bucket}`,
+          ok: true,
+          geloescht: 0,
+          retainedCount: nonRetiredProtectedPaths ? nonRetiredProtectedPaths.size : 0,
+          nonRetiredCount: nonRetiredProtectedPaths ? nonRetiredProtectedPaths.size : 0,
+          policy: 'unknown_historical_retained',
+          historicalPolicy: 'unknown_historical_retained',
+          anmerkung: 'abrechnungen bucket: list/remove bypassed; unknown historical files without registry and non-retired artifacts retained',
+        });
+        continue;
+      }
+
       const behaltenePfade = new Set();
 
       for (const [tabelle, spalte] of b.pfadQuellen) {

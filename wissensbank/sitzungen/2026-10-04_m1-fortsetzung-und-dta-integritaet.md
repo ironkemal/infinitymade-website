@@ -69,3 +69,7 @@ Bestehende historische E-Testdateien laut Nutzer außerhalb Arbeitsumfang. Punkt
 Gemeinsamer Helper verwirft eigenen unveröffentlichten Header per vollständigem CAS, bevor maximal drei explizite unsigned Versuchspfade gelöscht werden. Header/Nummern bleiben. Podologie veröffentlicht erst nach Rezeptclaim; fremde Rücknahme und unklare Publikation sind abgesichert. VKZ03 verwendet neue Versuchspfade, gebundene Wiederaufnahme und Nummern-Audit-Retry. Unklare Ergebnisse behalten Dateien, nach begonnener Publikation auch Rezeptzuordnungen.
 
 22 neue Helper-/Podologie-Tests und 11 neue VKZ03-Tests; gesamte Suite 2521 erfolgreich. Kalte Podologie-Prüfung `a62caf6a` plus Nachtrag `95b17dfa`, kalte VKZ03-Prüfung `cbada276`: PASS_STATIC. Root las Diff und Tests; DB-Vertrag und Security lokal geprüft. Kein Live-Nachweis. Allgemeine historische/publizierte Duplikatbereinigung und zukünftige Signed-Aufbewahrung sind nicht abgedeckt. Details einschließlich verworfener Providerantworten: Tagesjournal M1.16-B3.
+
+## 05.10.2026 — Übergabe an Claude Code
+
+Nutzer stoppt diese Umsetzung zur Übergabe. Auftrag und genaue offenen Teile: `fortschritte/2026-10-05_M1_CLAUDE_HANDOFF.md`. Neue ZAA-/DSGVO-Änderungen lokal und unabgenommen; gezielte Root-Prüfung 25/26 Node-Testfälle bestanden, ZAA noch rot. Registry-Migration nicht auf SaaS angewandt, Gemini-SQL-Entwurf mit ERROR nur in /tmp. Browser-Proben nicht grün. Keine neuen eigenen Commits oder Pushes. DAS-Löschung M1.16(b) bleibt offen.

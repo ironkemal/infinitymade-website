@@ -40,6 +40,14 @@ export const PROTECTED = [
   'mitarbeiter_zuordnen',
   // 0059: Owner-Papierprüfvermerke mit serverseitigem Mandantenargument; nur service_role.
   'podologie_empfangsnachweis_append',
+  'artefakt_reserve',
+  'artefakt_upload_done',
+  'artefakt_publish',
+  'artefakt_retire_claim',
+  'artefakt_retire_done',
+  'artefakt_owner_freeze',
+  'artefakt_owner_unfreeze',
+  'zaa_fehler_anwenden',
 ];
 
 // Bewusst fuer anon/authenticated geoeffnete RPC-Funktionen.

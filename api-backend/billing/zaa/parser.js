@@ -29,40 +29,89 @@ function splitSegments(content) {
     .filter(Boolean);
 }
 
+const CODE_REGEX = /^\d{1,3}$/;
+
+function hasTerminalApostrophe(str) {
+  const trimmed = String(str || '').trim();
+  if (!trimmed.endsWith("'")) return false;
+  let qCount = 0;
+  for (let i = trimmed.length - 2; i >= 0 && trimmed[i] === '?'; i--) {
+    qCount++;
+  }
+  return qCount % 2 === 0;
+}
+
 function parseEdifactFehl(content) {
   const errs = [];
   const segs = splitSegments(content);
   let hasFehl = false;
+  let hasEdifact = false;
+  let isMalformed = false;
   // Track current belegnummer from INV segments so FEHL without explicit belegnummer
   // can be associated with the most recent prescription context.
   let currentBeleg = null;
 
   for (const raw of segs) {
+    if (/\n\s*(?:FEHL|FEH|ERR|INV|UNB|UNH|UNT|UNZ)\+/i.test(raw)) {
+      isMalformed = true;
+    }
     // Entwertungsfest (`?+` in einem Freitext ist KEIN Feldtrenner) — die
     // zweite Haelfte des Fundes von `d8249d6`, der nur die Segmentebene
     // geheilt hatte. Ein falsch zerlegtes FEHL setzt die Absetzung auf den
     // falschen Beleg.
     const fields = felderTrennen(raw);
     const tag = (fields[0] || '').trim().toUpperCase();
-    if (tag === 'INV' && fields.length > 1) {
-      // Belegnummer is the 4th sub-element of INV per Anlage 1 V21;
-      // but in response files it's typically field index 3 or 4 — try both.
-      currentBeleg = (fields[3] || fields[4] || '').trim() || currentBeleg;
+    if (tag === 'UNB' || tag === 'UNH' || tag === 'UNT' || tag === 'UNZ') {
+      hasEdifact = true;
+    } else if (tag === 'INV') {
+      hasEdifact = true;
+      if (fields.length > 1) {
+        // Belegnummer is the 4th sub-element of INV per Anlage 1 V21;
+        // but in response files it's typically field index 3 or 4 — try both.
+        currentBeleg = (fields[3] || fields[4] || '').trim() || currentBeleg;
+      }
     } else if (tag === 'FEHL' || tag === 'FEH') {
       hasFehl = true;
+      hasEdifact = true;
+      // Minimum explicit code + belegslot: fields.length must be >= 3
+      if (fields.length < 3) {
+        isMalformed = true;
+        continue;
+      }
       const code  = (fields[1] || '').trim();
       const beleg = (fields[2] || '').trim() || currentBeleg;
       const text  = (fields.slice(3).join(' ').trim()) || '';
-      if (code) errs.push({ code, belegnummer: beleg || null, text });
+      if (!CODE_REGEX.test(code)) {
+        isMalformed = true;
+      } else {
+        errs.push({ code, belegnummer: beleg || null, text });
+      }
     } else if (tag === 'ERR') {
       hasFehl = true;
+      hasEdifact = true;
+      // Minimum explicit code + textslot: fields.length must be >= 3
+      if (fields.length < 3) {
+        isMalformed = true;
+        continue;
+      }
       // alternative variant: ERR+code+text
       const code = (fields[1] || '').trim();
       const text = (fields.slice(2).join(' ').trim()) || '';
-      if (code) errs.push({ code, belegnummer: currentBeleg, text });
+      if (!CODE_REGEX.test(code)) {
+        isMalformed = true;
+      } else {
+        errs.push({ code, belegnummer: currentBeleg, text });
+      }
     }
   }
-  return hasFehl ? errs : null;
+
+  if (hasEdifact || hasFehl) {
+    if (!hasTerminalApostrophe(content)) {
+      isMalformed = true;
+    }
+  }
+
+  return { hasFehl, hasEdifact, isMalformed, errs };
 }
 
 const PLAIN_PATTERNS = [
@@ -80,13 +129,16 @@ const PLAIN_PATTERNS = [
 
 function parsePlainText(content) {
   const errs = [];
+  let isMalformed = false;
   const lines = content.split(/\n+/);
   for (const lineRaw of lines) {
     const line = lineRaw.trim();
     if (!line || line.length < 4) continue;
+    let matched = false;
     for (const re of PLAIN_PATTERNS) {
       const m = line.match(re);
       if (m) {
+        matched = true;
         const isFirstPattern = re === PLAIN_PATTERNS[0] || re === PLAIN_PATTERNS[2];
         const code  = isFirstPattern ? m[1] : m[2];
         const beleg = isFirstPattern ? m[2] : m[1];
@@ -95,8 +147,17 @@ function parsePlainText(content) {
         break;
       }
     }
+    if (!matched) {
+      // Heuristic: check if line is a malformed candidate error record without
+      // matching report headings (e.g. 'Bericht ZAA', 'Fehlerbericht', 'Code Beleg Text').
+      if (/^Fehler[:\s]/i.test(line) ||
+          /^Code[:\s]+(?:\d|Beleg[:\s]*\d)/i.test(line) ||
+          /^[A-Za-z0-9\-]{1,20}\s+\d+/.test(line)) {
+        isMalformed = true;
+      }
+    }
   }
-  return errs;
+  return { errs, isMalformed };
 }
 
 /**
@@ -104,21 +165,55 @@ function parsePlainText(content) {
  * German translation + fix hint via the error-translations dictionary.
  *
  * @param {string|Buffer} input  Raw file content (latin1 string or Buffer).
- * @returns {{ format: 'edifact'|'plain'|'empty', errors: Array<{code,belegnummer,text,uebersetzung,loesung}> }}
+ * @returns {{ valid: boolean, reason: null|'empty'|'unknown'|'invalid', format: 'edifact'|'plain'|'empty', errors: Array<{code,belegnummer,text,uebersetzung,loesung}> }}
  */
 export function parseZaaFile(input) {
-  const content = Buffer.isBuffer(input) ? input.toString('latin1') : String(input || '');
-
-  let format = 'empty';
-  let rows = parseEdifactFehl(content);
-  if (rows && rows.length) {
-    format = 'edifact';
-  } else {
-    rows = parsePlainText(content);
-    if (rows.length) format = 'plain';
+  if (input === null || input === undefined) {
+    return { valid: false, reason: 'empty', format: 'empty', errors: [] };
   }
 
-  const enriched = (rows || []).map(r => {
+  if (typeof input !== 'string' && !Buffer.isBuffer(input)) {
+    return { valid: false, reason: 'invalid', format: 'empty', errors: [] };
+  }
+
+  const content = Buffer.isBuffer(input) ? input.toString('latin1') : input;
+
+  if (content.trim().length === 0) {
+    return { valid: false, reason: 'empty', format: 'empty', errors: [] };
+  }
+
+  let format = 'empty';
+  let rows = [];
+
+  const ediResult = parseEdifactFehl(content);
+  if (ediResult.isMalformed) {
+    // Recognized malformed EDIFACT error segments must not fall back to plain text.
+    return { valid: false, reason: 'invalid', format: 'empty', errors: [] };
+  }
+
+  if (ediResult.hasFehl && ediResult.errs.length > 0) {
+    format = 'edifact';
+    rows = ediResult.errs;
+  } else if (ediResult.hasEdifact) {
+    // Recognized EDIFACT envelope/structural tags with no errors reject without plain fallback.
+    return { valid: false, reason: 'unknown', format: 'empty', errors: [] };
+  } else {
+    const plainResult = parsePlainText(content);
+    if (plainResult.isMalformed) {
+      return { valid: false, reason: 'invalid', format: 'empty', errors: [] };
+    }
+    if (plainResult.errs.length > 0) {
+      format = 'plain';
+      rows = plainResult.errs;
+    }
+  }
+
+  if (!rows || rows.length === 0) {
+    // Zero recognized errors NEVER implies authentic DAS acceptance.
+    return { valid: false, reason: 'unknown', format: 'empty', errors: [] };
+  }
+
+  const enriched = rows.map(r => {
     const tr = translateZaaCode(r.code);
     return {
       code:         r.code,
@@ -129,5 +224,5 @@ export function parseZaaFile(input) {
     };
   });
 
-  return { format, errors: enriched };
+  return { valid: true, reason: null, format, errors: enriched };
 }

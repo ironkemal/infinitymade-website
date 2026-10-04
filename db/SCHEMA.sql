@@ -3,24 +3,27 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261003193551 podologie_empfangsnachweise_0059
+-- LAST MIGRATION:     20261004223523 vkz03_trigger_rollenunabhaengig_0062
 -- EXPORTED AT:        2026-10-03T19:36:25.349Z
--- ERZEUGT AM:         2026-10-03
+-- ERZEUGT AM:         2026-10-03 (Teilaktualisierung 2026-10-05)
 -- POSTGRESQL VERSION: 17.6
 --
 -- COUNTS SUMMARY (SCOPE: schema-zaehler.js):
---   public_tables:       94
---   table_columns:       1362
+--   public_tables:       96
+--   table_columns:       1380
 --   view_columns:        37
 --   matview_columns:     0
---   rls_policies:        167
---   functions:           93
---   triggers:            88
---   indexes:             331
+--   rls_policies:        168
+--   functions:           103
+--   triggers:            91
+--   indexes:             335
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
 --   rls_disabled_tables: 1
+--
+-- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0062 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
+-- vollstaendiger Metadatenexport (tools/schema-export-katalog.sql + schema-dokumente.mjs) steht aus.
 --
 -- CAUTION / HINWEIS:
 -- This document is a deterministic structural documentation snapshot.
@@ -222,6 +225,82 @@ ALTER TABLE ONLY public.abrechnung
 
 ALTER TABLE ONLY public.abrechnung
   ADD CONSTRAINT abrechnung_zuzahlungsforderung_ursprung_fk FOREIGN KEY (zuzahlungsforderung_ursprung_id) REFERENCES abrechnung_zeile(id) ON DELETE RESTRICT;
+
+CREATE TABLE public.abrechnung_artefakt_freeze (
+  owner_id uuid NOT NULL,
+  frozen_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK owner_id -> users(id)
+ALTER TABLE ONLY public.abrechnung_artefakt_freeze OWNER TO postgres;
+COMMENT ON TABLE public.abrechnung_artefakt_freeze IS 'Owner-Freeze (DSGVO-Loeschlauf): keine neuen Reservierungen';
+
+ALTER TABLE ONLY public.abrechnung_artefakt_freeze
+  ADD CONSTRAINT abrechnung_artefakt_freeze_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.abrechnung_artefakt_freeze
+  ADD CONSTRAINT abrechnung_artefakt_freeze_pkey PRIMARY KEY (owner_id);
+
+CREATE TABLE public.abrechnung_artefakt_version (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  owner_id uuid NOT NULL,
+  abrechnung_id uuid NOT NULL,
+  storage_path text NOT NULL,
+  kind text NOT NULL,
+  role text NOT NULL,
+  sha256 text,
+  legacy boolean DEFAULT false NOT NULL,
+  state text DEFAULT 'reserved'::text NOT NULL,
+  upload_state text DEFAULT 'pending'::text NOT NULL,
+  claim_token uuid,
+  claim_error text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  published_at timestamp with time zone,
+  retired_at timestamp with time zone,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+--   FK abrechnung_id -> abrechnung(id)
+--   FK owner_id -> users(id)
+ALTER TABLE ONLY public.abrechnung_artefakt_version OWNER TO postgres;
+COMMENT ON TABLE public.abrechnung_artefakt_version IS 'Registry aller Dateien im Bucket abrechnungen (M1.16); schuetzt Dateien vor Loeschung, ersetzt keine Rechnungs-Zustandsmaschine';
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT abrechnung_artefakt_version_abrechnung_id_fkey FOREIGN KEY (abrechnung_id) REFERENCES abrechnung(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT abrechnung_artefakt_version_kind_check CHECK (kind = ANY (ARRAY['unsigned'::text, 'signed'::text, 'encrypted'::text]));
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT abrechnung_artefakt_version_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT abrechnung_artefakt_version_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT abrechnung_artefakt_version_role_check CHECK (role = ANY (ARRAY['dta'::text, 'auftrag'::text, 'begleit'::text, 'signed'::text, 'encrypted'::text]));
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT abrechnung_artefakt_version_sha256_check CHECK (sha256 ~ '^[0-9a-f]{64}$'::text);
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT abrechnung_artefakt_version_state_check CHECK (state = ANY (ARRAY['reserved'::text, 'published'::text, 'retire_pending'::text, 'retired'::text]));
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT abrechnung_artefakt_version_upload_state_check CHECK (upload_state = ANY (ARRAY['pending'::text, 'uploaded'::text, 'upload_failed'::text]));
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT artefakt_hash_pflicht CHECK (legacy OR sha256 IS NOT NULL);
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT artefakt_pfad_eindeutig UNIQUE (storage_path);
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT artefakt_pfad_owner CHECK (storage_path ~~ (owner_id::text || '/%'::text));
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT artefakt_pfad_sauber CHECK (storage_path !~ '(^|/)\.\.(/|$)'::text AND storage_path !~ '//'::text);
+
+ALTER TABLE ONLY public.abrechnung_artefakt_version
+  ADD CONSTRAINT artefakt_rolle_kind CHECK (role = ANY (ARRAY['dta'::text, 'auftrag'::text, 'begleit'::text]) AND kind = 'unsigned'::text OR role = 'signed'::text AND kind = 'signed'::text OR role = 'encrypted'::text AND kind = 'encrypted'::text);
 
 CREATE TABLE public.abrechnung_uebermittlung (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
