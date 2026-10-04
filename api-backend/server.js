@@ -14,6 +14,7 @@ import billingAbrechnungRouter from './billing/api/abrechnung.routes.js';
 import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
 import { createBookingsFromRequestFactory } from './booking/from-request.js';
 import { cancelRequestBookings } from './booking/cancel-request.js';
+import { checkHoneypot, validateService, validateOwnerProfile, validateTherapist, validateLead, validatePatient } from './booking/public-guards.js';
 import billingAusfallRouter from './billing/api/ausfall.routes.js';
 import billingStatistikRouter from './billing/api/statistik.routes.js';
 import verordnungStatusRouter from './billing/api/verordnung-status.routes.js';
@@ -1023,7 +1024,8 @@ app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
 });
 
 app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
-  const { userId, serviceId, date, time, customerName, customerEmail, customerPhone, businessId, leadId } = req.body;
+  if (checkHoneypot(req, res)) return;
+  const { userId, serviceId, date, time, customerName, customerEmail, customerPhone, businessId, leadId } = req.body || {};
   
   try {
     // Reject past dates and enforce minimum 30-min lead time
@@ -1036,8 +1038,19 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
       if (slotMins <= nowMins + 30) return res.status(400).json({ error: 'Bitte wählen Sie einen Termin mindestens 30 Minuten in der Zukunft.' });
     }
 
-    const { data: service } = await supabase.from('services').select('*').eq('id', serviceId).single();
-    if (!service) return res.status(400).json({ error: 'Service not found' });
+    const serviceRes = await validateService(supabase, serviceId);
+    if (!serviceRes.ok) return res.status(serviceRes.status).json({ error: serviceRes.error });
+    const service = serviceRes.service;
+    const canonicalOwnerId = serviceRes.canonicalOwnerId;
+
+    const ownerRes = await validateOwnerProfile(supabase, canonicalOwnerId);
+    if (!ownerRes.ok) return res.status(ownerRes.status).json({ error: ownerRes.error });
+
+    const therapistRes = await validateTherapist(supabase, userId, canonicalOwnerId);
+    if (!therapistRes.ok) return res.status(therapistRes.status).json({ error: therapistRes.error });
+
+    const leadRes = await validateLead(supabase, leadId, canonicalOwnerId);
+    if (!leadRes.ok) return res.status(leadRes.status).json({ error: leadRes.error });
 
     // Closed-day and slot validation
     const slotValidation = await getAvailableSlots(
@@ -1063,8 +1076,8 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
     const start_time = berlinLocalToUTC(date, time);
     const end_time = new Date(start_time.getTime() + service.duration_minutes * 60000);
 
-    const owner_id = req.auth.tenantId; // always from JWT — never trust body
-    const resolvedOwnerId = req.auth.tenantId;
+    const owner_id = canonicalOwnerId;
+    const resolvedOwnerId = canonicalOwnerId;
 
     // businessId verilmiş ve gerçekten bu owner'a aitse onu kullan, aksi halde trigger fallback
     let resolvedBusinessId = null;
@@ -1305,7 +1318,7 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
 
     // DSGVO audit — anonymous booking creates a patient record on owner's behalf
     logAccess(supabase, {
-      ownerId: userId, ip: req.ip, userAgent: req.headers['user-agent'],
+      ownerId: resolvedOwnerId, ip: req.ip, userAgent: req.headers['user-agent'],
       method: 'POST', path: req.path, resource: 'booking', resourceId: booking.id,
       action: 'create', statusCode: 200,
       metadata: { source: 'public_booking_page', service_id: service?.id },
@@ -3969,6 +3982,7 @@ const createBookingsFromRequest = createBookingsFromRequestFactory({
 
 // POST /api/booking-request/create — public (service_role handles auth)
 app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) => {
+  if (checkHoneypot(req, res)) return;
   try {
     const {
       owner_id, patient_id, patient,
@@ -3988,13 +4002,25 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
       return res.status(400).json({ error: 'Ungültiger Zahlungstyp' });
     }
 
-    const { data: ownerProfile, error: ownerErr } = await supabase
-      .from('profiles').select('id, email, business_name').eq('id', owner_id).maybeSingle();
-    if (ownerErr || !ownerProfile) return res.status(400).json({ error: 'Ungültige Praxis' });
+    const ownerRes = await validateOwnerProfile(supabase, owner_id);
+    if (!ownerRes.ok) return res.status(ownerRes.status).json({ error: ownerRes.error });
+    const ownerProfile = ownerRes.profile;
+
+    if (service_id) {
+      const sRes = await validateService(supabase, service_id, owner_id);
+      if (!sRes.ok) return res.status(sRes.status).json({ error: sRes.error });
+    }
+
+    if (employee_id) {
+      const eRes = await validateTherapist(supabase, employee_id, owner_id);
+      if (!eRes.ok) return res.status(eRes.status).json({ error: eRes.error });
+    }
 
     let resolvedPatientId = patient_id || null;
-
-    if (!resolvedPatientId && patient) {
+    if (resolvedPatientId) {
+      const pRes = await validatePatient(supabase, resolvedPatientId, owner_id);
+      if (!pRes.ok) return res.status(pRes.status).json({ error: pRes.error });
+    } else if (patient) {
       const { vorname, nachname, geburtsdatum, email: patEmail, telefon } = patient;
       if (!vorname || !nachname || !geburtsdatum) return res.status(400).json({ error: 'Patientendaten unvollständig' });
       const { data: newPat, error: patErr } = await supabase

@@ -68,8 +68,8 @@
       ══════════════════════════════════════════════════ -->
       <div id="successScreen">
         <span class="br-result-icon">✅</span>
-        <h2 class="br-result-title">Ihre Anfrage wurde erfolgreich gesendet!</h2>
-        <p class="br-result-body">Die Praxis wird sich baldmöglichst mit Ihnen in Verbindung setzen.</p>
+        <h2 class="br-result-title" id="successTitle">Ihre Anfrage wurde erfolgreich gesendet!</h2>
+        <p class="br-result-body" id="successBody">Die Praxis wird sich baldmöglichst mit Ihnen in Verbindung setzen.</p>
         <div id="successEmailNote" class="br-result-email-note" hidden>
           <span>📧</span>
           <span>Sie erhalten eine Bestätigung an <strong id="successEmailAddr"></strong></span>
@@ -673,6 +673,7 @@
 
         <div class="br-nav">
           <button class="btn-ghost" id="step6Back">← Zurück</button>
+          <div style="position:absolute;left:-10000px;" aria-hidden="true"><label for="requestWebsite">Website</label><input type="text" id="requestWebsite" name="website" tabindex="-1" autocomplete="off"></div>
           <button class="btn-primary" id="submitBtn">
             <span id="submitLabel">Anfrage senden</span>
             <div class="spinner" id="submitSpinner" style="display:none;"></div>
@@ -692,7 +693,7 @@
 
 </div><!-- /#app -->
 
-<script type="module" src="booking-request.js?v=20261001w"></script>
+<script type="module" src="booking-request.js?v=20261004m112"></script>
 <script type="module">
   import { getPublicClient } from './module/public-supabase.js?v=20261001z';
   import { attachDiagnoseSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';

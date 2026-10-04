@@ -454,11 +454,23 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
         time: state.selectedTime,
         customerName: document.getElementById('custName').value,
         customerEmail: document.getElementById('custEmail').value,
-        customerPhone: document.getElementById('custPhone').value
+        customerPhone: document.getElementById('custPhone').value,
+        website: document.getElementById('bookingWebsite')?.value || ''
       })
     });
     if (!res.ok) throw new Error('Buchung fehlgeschlagen');
-    goStep('success');
+    const data = await res.json();
+    if (data?.booking?.id) {
+      document.querySelector('.success-title').textContent = 'Termin bestätigt!';
+      document.querySelector('.success-sub').textContent = 'Wir freuen uns auf Sie. Eine Bestätigung wird in Kürze gesendet.';
+      goStep('success');
+    } else {
+      const title = document.querySelector('.success-title');
+      const sub = document.querySelector('.success-sub');
+      if (title) title.textContent = 'Anfrage verarbeitet';
+      if (sub) sub.textContent = 'Vielen Dank.';
+      goStep('success');
+    }
   } catch (err) {
     alert('Fehler: ' + err.message);
     btn.disabled = false; btn.textContent = 'Termin verbindlich buchen';

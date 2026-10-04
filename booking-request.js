@@ -1232,11 +1232,12 @@ async function handleSubmit() {
     // keine eigene Spalte; die Praxis sieht die Zeile im Anfragen-Detail.
     notizen: state.anliegenAktiv ? anliegenNotiz(state.anliegen, { hausbesuch: state.hausbesuch, adresse: state.hausbesuch_adresse, hbAufRezept: state.hb_auf_rezept }, state.notizen) : (state.notizen || null),
     dsgvo_consent: true,
+    website: document.getElementById('requestWebsite')?.value || '',
   };
 
   try {
-    await apiFetch('/booking-request/create', { method: 'POST', body: JSON.stringify(payload) });
-    showSuccessScreen();
+    const result = await apiFetch('/booking-request/create', { method: 'POST', body: JSON.stringify(payload) });
+    showSuccessScreen(!result?.id);
   } catch (err) {
     submitError.textContent = `Fehler beim Senden: ${err.message}. Bitte erneut versuchen.`;
     submitError.style.display = 'block';
@@ -1245,7 +1246,7 @@ async function handleSubmit() {
   }
 }
 
-function showSuccessScreen() {
+function showSuccessScreen(neutral = false) {
   hide('step-6');
   document.querySelectorAll('.br-step').forEach(s => s.classList.remove('active'));
   hide('progressBar');
@@ -1253,9 +1254,22 @@ function showSuccessScreen() {
   const successScreen = document.getElementById('successScreen');
   successScreen.classList.add('active');
 
+  const titleEl = document.getElementById('successTitle') || document.querySelector('.br-result-title');
+  const bodyEl = document.getElementById('successBody') || document.querySelector('.br-result-body');
+  const emailNote = document.getElementById('successEmailNote');
+  if (emailNote) hide(emailNote);
+
+  if (neutral) {
+    if (titleEl) titleEl.textContent = 'Anfrage verarbeitet';
+    if (bodyEl) bodyEl.textContent = 'Vielen Dank.';
+    if (emailNote) hide(emailNote);
+    return;
+  }
+
+  if (titleEl) titleEl.textContent = 'Ihre Anfrage wurde erfolgreich gesendet!';
+  if (bodyEl) bodyEl.textContent = 'Die Praxis wird sich baldmöglichst mit Ihnen in Verbindung setzen.';
   const email = state.isNewPatient ? state.patient.email : null;
   if (email) {
-    const emailNote = document.getElementById('successEmailNote');
     document.getElementById('successEmailAddr').textContent = email;
     show(emailNote);
   }
