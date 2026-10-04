@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-04",
- "dateien": 336,
- "funktionen": 2863,
+ "dateien": 337,
+ "funktionen": 2869,
  "module": [
   "abrechnung",
   "anamnese",
@@ -30936,7 +30936,6 @@
    ],
    "calledBy": [
     "datumKurz",
-    "esc",
     "heute",
     "loadRxSessionsPanel",
     "terminStartenPodo"
@@ -70074,6 +70073,394 @@
    ]
   },
   {
+   "name": "isValidGregorian",
+   "kind": "function",
+   "file": "module/berlin-datum.js",
+   "start": 17,
+   "end": 27,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "alsBerlinDatum",
+    "berlinTagesgrenzen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "createUTCDate",
+   "kind": "function",
+   "file": "module/berlin-datum.js",
+   "start": 29,
+   "end": 34,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "findBerlinMidnightUTC"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "formatInstantBerlin",
+   "kind": "function",
+   "file": "module/berlin-datum.js",
+   "start": 36,
+   "end": 48,
+   "lines": 13,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "alsBerlinDatum"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "alsBerlinDatum",
+   "kind": "function",
+   "file": "module/berlin-datum.js",
+   "start": 56,
+   "end": 105,
+   "lines": 50,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "formatInstantBerlin",
+    "isValidGregorian"
+   ],
+   "calledBy": [
+    "berlinTag",
+    "geplanteAlsBehandlungen",
+    "heute",
+    "nurZiffern",
+    "tagesgrenzen",
+    "terminDatum",
+    "terminStartenPodo"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "getNextDay",
+   "kind": "function",
+   "file": "module/berlin-datum.js",
+   "start": 107,
+   "end": 117,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "berlinTagesgrenzen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "findBerlinMidnightUTC",
+   "kind": "function",
+   "file": "module/berlin-datum.js",
+   "start": 119,
+   "end": 143,
+   "lines": 25,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "createUTCDate"
+   ],
+   "calledBy": [
+    "berlinTagesgrenzen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "berlinTagesgrenzen",
+   "kind": "function",
+   "file": "module/berlin-datum.js",
+   "start": 149,
+   "end": 168,
+   "lines": 20,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "findBerlinMidnightUTC",
+    "getNextDay",
+    "isValidGregorian"
+   ],
+   "calledBy": [
+    "nurZiffern",
+    "tagesgrenzen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
    "name": "pruefeAbrechnungssperre",
    "kind": "function",
    "file": "module/booking-status-korrektur.js",
@@ -78487,16 +78874,18 @@
    "name": "berlinTag",
    "kind": "function",
    "file": "module/heilmittel-fristen.js",
-   "start": 95,
+   "start": 97,
    "end": 100,
-   "lines": 6,
+   "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "alsBerlinDatum"
+   ],
    "calledBy": [
     "pruefeBehandlungsbeginn"
    ],
@@ -90295,8 +90684,8 @@
    "name": "terminDatum",
    "kind": "function",
    "file": "module/podo-behandlungen-oeffnen.js",
-   "start": 54,
-   "end": 57,
+   "start": 56,
+   "end": 59,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -90304,7 +90693,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "alsBerlinDatum"
+   ],
    "calledBy": [
     "terminStartenPodo"
    ],
@@ -90316,8 +90707,8 @@
    "name": "terminInZukunft",
    "kind": "function",
    "file": "module/podo-behandlungen-oeffnen.js",
-   "start": 67,
-   "end": 69,
+   "start": 69,
+   "end": 71,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -90337,8 +90728,8 @@
    "name": "oeffnePodoBehandlungen",
    "kind": "function",
    "file": "module/podo-behandlungen-oeffnen.js",
-   "start": 100,
-   "end": 140,
+   "start": 102,
+   "end": 142,
    "lines": 41,
    "spiegelHinweis": null,
    "tables": [
@@ -90356,7 +90747,6 @@
    ],
    "calledBy": [
     "datumKurz",
-    "esc",
     "heute",
     "loadRxSessionsPanel",
     "terminStartenPodo"
@@ -90401,8 +90791,8 @@
    "name": "terminStartenPodo",
    "kind": "function",
    "file": "module/podo-behandlungen-oeffnen.js",
-   "start": 162,
-   "end": 184,
+   "start": 164,
+   "end": 186,
    "lines": 23,
    "spiegelHinweis": null,
    "tables": [],
@@ -90411,6 +90801,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "alsBerlinDatum",
     "oeffnePodoBehandlungen",
     "showConfirmModal",
     "terminDatum",
@@ -90763,7 +91154,6 @@
     "abrechenbareBehandlungstage",
     "bestehenderBehandlungstag",
     "datumKurz",
-    "esc",
     "heute",
     "zuVieleBehandlungenJeTag"
    ],
@@ -91452,21 +91842,15 @@
    "kind": "arrow",
    "file": "module/podo-einheiten.js",
    "start": 372,
-   "end": 411,
-   "lines": 40,
+   "end": 375,
+   "lines": 4,
    "spiegelHinweis": null,
-   "tables": [
-    "prescriptions"
-   ],
+   "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [
-    "aktiv",
-    "ladeVerordnung",
-    "oeffnePodoBehandlungen"
-   ],
+   "calls": [],
    "calledBy": [
     "$",
     "$$",
@@ -91625,8 +92009,8 @@
    "name": "heute",
    "kind": "arrow",
    "file": "module/podo-einheiten.js",
-   "start": 375,
-   "end": 411,
+   "start": 377,
+   "end": 413,
    "lines": 37,
    "spiegelHinweis": null,
    "tables": [
@@ -91638,6 +92022,7 @@
    "storage": [],
    "calls": [
     "aktiv",
+    "alsBerlinDatum",
     "ladeVerordnung",
     "oeffnePodoBehandlungen"
    ],
@@ -91691,8 +92076,8 @@
    "name": "datumKurz",
    "kind": "arrow",
    "file": "module/podo-einheiten.js",
-   "start": 376,
-   "end": 411,
+   "start": 378,
+   "end": 413,
    "lines": 36,
    "spiegelHinweis": null,
    "tables": [
@@ -91751,8 +92136,8 @@
    "name": "ladeVerordnung",
    "kind": "function",
    "file": "module/podo-einheiten.js",
-   "start": 385,
-   "end": 411,
+   "start": 387,
+   "end": 413,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -91765,7 +92150,6 @@
    "calls": [],
    "calledBy": [
     "datumKurz",
-    "esc",
     "heute",
     "zeichnePodoEinheiten"
    ],
@@ -91809,8 +92193,8 @@
    "name": "ladeBehandlungen",
    "kind": "function",
    "file": "module/podo-einheiten.js",
-   "start": 414,
-   "end": 425,
+   "start": 416,
+   "end": 427,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [
@@ -91865,8 +92249,8 @@
    "name": "ladeAltbestand",
    "kind": "function",
    "file": "module/podo-einheiten.js",
-   "start": 427,
-   "end": 432,
+   "start": 429,
+   "end": 434,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [
@@ -91920,8 +92304,8 @@
    "name": "zeichnePodoEinheiten",
    "kind": "function",
    "file": "module/podo-einheiten.js",
-   "start": 457,
-   "end": 571,
+   "start": 459,
+   "end": 573,
    "lines": 115,
    "spiegelHinweis": null,
    "tables": [],
@@ -93126,8 +93510,7 @@
     "befundDienstId",
     "geplanteAlsBehandlungen",
     "hpnrVonDienst",
-    "podGeplanteHpnr",
-    "tag"
+    "podGeplanteHpnr"
    ],
    "modules": [
     "abrechnung",
@@ -93169,9 +93552,9 @@
    "name": "geplanteAlsBehandlungen",
    "kind": "function",
    "file": "module/podo-geplant.js",
-   "start": 56,
-   "end": 70,
-   "lines": 15,
+   "start": 58,
+   "end": 73,
+   "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -93179,69 +93562,12 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "istVergeben",
-    "positionVon",
-    "tag"
-   ],
-   "calledBy": [
-    "patientenBehandlungen"
-   ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportProt",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "podologie-billing",
-    "rechnungen",
-    "services",
-    "settings",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
-   ]
-  },
-  {
-   "name": "tag",
-   "kind": "arrow",
-   "file": "module/podo-geplant.js",
-   "start": 57,
-   "end": 68,
-   "lines": 12,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [
+    "alsBerlinDatum",
     "istVergeben",
     "positionVon"
    ],
    "calledBy": [
-    "buildDmrzXml",
-    "geplanteAlsBehandlungen"
+    "patientenBehandlungen"
    ],
    "modules": [
     "abrechnung",
@@ -98440,41 +98766,9 @@
     "buildDmrzXml",
     "tag"
    ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportProt",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "podologie-billing",
-    "rechnungen",
-    "services",
-    "settings",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
-   ]
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "buildDmrzXml",
@@ -98517,44 +98811,11 @@
     "xmlEscape"
    ],
    "calledBy": [
-    "buildDmrzXml",
-    "geplanteAlsBehandlungen"
+    "buildDmrzXml"
    ],
-   "modules": [
-    "abrechnung",
-    "anamnese",
-    "bkActionArrivedBtn",
-    "bkActionFahrtEndBtn",
-    "bkActionFahrtStartBtn",
-    "bkActionHbCopyBtn",
-    "doctors",
-    "fbFahrtenExportCsv",
-    "fbFahrtenExportProt",
-    "fbFahrtenExportVerz",
-    "fbFahrtenRefresh",
-    "fbReportRefresh",
-    "fbVehicleAddBtn",
-    "feSaveBtn",
-    "fsAddVehicleBtn",
-    "fsSaveBtn",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "mahnwesen",
-    "notizen",
-    "podologie-billing",
-    "rechnungen",
-    "services",
-    "settings",
-    "team",
-    "ueberblick",
-    "vehEditSaveBtn",
-    "verordnungen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 29 modülden çağrılıyor"
-   ]
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "downloadDmrzForInvoice",
@@ -106674,8 +106935,8 @@
    "kind": "arrow",
    "file": "module/termin-heute.js",
    "start": 37,
-   "end": 191,
-   "lines": 155,
+   "end": 192,
+   "lines": 156,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -106685,7 +106946,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "alsBerlinDatum",
     "baueHeuteIndex",
+    "berlinTagesgrenzen",
     "heuteAktualisieren",
     "heuteHinweis",
     "heuteRang",
@@ -106857,16 +107120,19 @@
    "name": "tagesgrenzen",
    "kind": "function",
    "file": "module/termin-heute.js",
-   "start": 57,
-   "end": 64,
-   "lines": 8,
+   "start": 59,
+   "end": 63,
+   "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "alsBerlinDatum",
+    "berlinTagesgrenzen"
+   ],
    "calledBy": [
     "heuteAktualisieren",
     "nurZiffern"
@@ -106911,8 +107177,8 @@
    "name": "baueHeuteIndex",
    "kind": "function",
    "file": "module/termin-heute.js",
-   "start": 76,
-   "end": 122,
+   "start": 75,
+   "end": 121,
    "lines": 47,
    "spiegelHinweis": null,
    "tables": [],
@@ -106972,8 +107238,8 @@
    "name": "naeher",
    "kind": "arrow",
    "file": "module/termin-heute.js",
-   "start": 84,
-   "end": 90,
+   "start": 83,
+   "end": 89,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -107029,8 +107295,8 @@
    "name": "setze",
    "kind": "arrow",
    "file": "module/termin-heute.js",
-   "start": 87,
-   "end": 90,
+   "start": 86,
+   "end": 89,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -107092,8 +107358,8 @@
    "name": "terminZuLead",
    "kind": "function",
    "file": "module/termin-heute.js",
-   "start": 128,
-   "end": 140,
+   "start": 127,
+   "end": 139,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -107150,9 +107416,9 @@
    "name": "heuteAktualisieren",
    "kind": "function",
    "file": "module/termin-heute.js",
-   "start": 154,
-   "end": 169,
-   "lines": 16,
+   "start": 153,
+   "end": 170,
+   "lines": 18,
    "spiegelHinweis": null,
    "tables": [
     "bookings"
@@ -107209,8 +107475,8 @@
    "name": "heuteRang",
    "kind": "function",
    "file": "module/termin-heute.js",
-   "start": 172,
-   "end": 174,
+   "start": 173,
+   "end": 175,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -107264,8 +107530,8 @@
    "name": "heuteHinweis",
    "kind": "function",
    "file": "module/termin-heute.js",
-   "start": 177,
-   "end": 180,
+   "start": 178,
+   "end": 181,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -107320,8 +107586,8 @@
    "name": "heuteZuruecksetzen",
    "kind": "function",
    "file": "module/termin-heute.js",
-   "start": 190,
-   "end": 190,
+   "start": 191,
+   "end": 191,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -120344,7 +120610,6 @@
     "geplanteAlsBehandlungen",
     "pruefeFrequenz",
     "stift",
-    "tag",
     "zeile"
    ],
    "modules": [
@@ -139402,7 +139667,7 @@
    "orte": [
     "module/fahrtenbuch-export.js:67",
     "module/patienten-einwilligung.js:62",
-    "module/podo-einheiten.js:375"
+    "module/podo-einheiten.js:377"
    ],
    "aynalar": []
   },
@@ -139826,7 +140091,7 @@
    "name": "oeffnePodoBehandlungen",
    "orte": [
     "dashboard.js:5603",
-    "module/podo-behandlungen-oeffnen.js:100"
+    "module/podo-behandlungen-oeffnen.js:102"
    ],
    "aynalar": []
   },
@@ -139986,7 +140251,7 @@
    "name": "datumKurz",
    "orte": [
     "module/offene-einheiten.js:59",
-    "module/podo-einheiten.js:376"
+    "module/podo-einheiten.js:378"
    ],
    "aynalar": []
   },
@@ -140023,14 +140288,6 @@
    "aynalar": []
   },
   {
-   "name": "tag",
-   "orte": [
-    "module/podo-geplant.js:57",
-    "module/rechnung-dmrz.js:38"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "eur",
    "orte": [
     "module/rechnung-zahlungseingang.js:169",
@@ -140042,7 +140299,7 @@
    "name": "setze",
    "orte": [
     "module/termin-folge.js:147",
-    "module/termin-heute.js:87"
+    "module/termin-heute.js:86"
    ],
    "aynalar": []
   },

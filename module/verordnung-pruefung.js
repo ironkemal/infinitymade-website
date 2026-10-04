@@ -41,7 +41,7 @@
  */
 
 import { parseIcdList, matchIcdToDg, passendeUnterkodes } from '../icd-dg-match.js?v=20261001b';
-import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260929';
+import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20261004m113';
 import { dgWurzel, bereichSchluessel } from './verordnung-regeln.js?v=20260918';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
 

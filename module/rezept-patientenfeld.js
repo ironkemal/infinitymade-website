@@ -16,7 +16,7 @@
  */
 
 import { attachPatientSearch } from '../patient-suche.js?v=20260906';
-import { heuteRang, heuteHinweis } from './termin-heute.js?v=20260906';
+import { heuteRang, heuteHinweis } from './termin-heute.js?v=20261004m113';
 
 /**
  * Lädt die Patientenliste (Datenquelle des Feldes). Ruft KEIN `refresh()` —

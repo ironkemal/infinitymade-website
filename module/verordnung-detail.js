@@ -73,9 +73,9 @@ import { statusBadgeGross, bereichBadge, BITTE_PRUEFEN_FARBE, oeffneStatusDialog
 // angewandt — „gleiches Urteil, wo auch immer geklickt wird" (siehe
 // verordnung-pruefen-knopf.js). PHYSIO_ABGESCHLOSSEN/PODO_AKTIV von dort
 // übernommen statt einer dritten eigenen „ist das noch aktiv"-Liste.
-import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261001h';
+import { pruefeVerordnung, zaehleBefunde, voAusGespeicherterVerordnung } from './verordnung-pruefung.js?v=20261004m113';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
-import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261001e';
+import { PHYSIO_ABGESCHLOSSEN, PODO_AKTIV } from './verordnung-uebersicht.js?v=20261004m113';
 import { podoPositionsFinder } from './podologie-positionen.js?v=20260902';
 import { zuzahlungFuerPodoVerordnung } from './zuzahlung-rechnen.js?v=20260920s';
 import { einheitenAenderungErlaubt, pruefeNeueMenge, speichereEinheiten } from './verordnung-einheiten.js?v=20260902';
@@ -88,8 +88,8 @@ import { ausTopf } from './verordnung-topf.js?v=20260930c';
 // Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
 // Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
-import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261003e';
-import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261001f';
+import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261004m113';
+import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261004m113';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
 
 /** Alles, was die Muster-13-Maske schreibt — plus Patient, Arzt und Nummer. */

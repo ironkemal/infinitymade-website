@@ -69,7 +69,7 @@ import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=202
 import { leiteBehandlungsbeginnAb } from './behandlungsbeginn.js?v=20260920s';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 import { alsISODatum } from './datum.js?v=20261001a';
-import { positionVon } from './podo-geplant.js?v=20260918';
+import { positionVon } from './podo-geplant.js?v=20261004m113';
 // Storno statt Löschen (Entscheidung K3, § 630f Abs. 1 S. 2 BGB) — siehe dort.
 import { darfStornieren, behandlungStornieren } from './podo-storno.js?v=20261001e';
 import { renderEmpfangsnachweisHost, mountEmpfangsnachweise } from './podo-empfangsnachweis.js?v=20261003m19';
@@ -90,7 +90,7 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
 // Ermittlung wird NICHT geschrieben — die von `verordnung-pruefung.js`
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
-import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261001h';
+import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261004m113';
 import { tagesVorbelegungGrund, verordnetZeile } from './podo-vorbelegung-grund.js?v=20261001i';
 import { bestehenderBehandlungstag, zweiterBehandlungstagFrage, abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261003a';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
@@ -101,7 +101,7 @@ import { podBehandlungsdatumVorschlag } from './podo-behandlungsdatum-vorwahl.js
 import { hausbesuchGesperrt, hausbesuchSpeicherFehler, HAUSBESUCH_HINWEIS } from './podo-hausbesuch.js?v=20260929a';
 // Reform S1.9 (29.09.2026): Behandlungsbeginn-Frist (§15 HeilM-RL) nicht mehr
 // zweimal von Hand nachrechnen (hier + vordAlerts unten) — ein Ort, eine Regel.
-import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20260929';
+import { behandlungsbeginnFrist, pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20261004m113';
 import { zeigeFahrtBeenden, fahrtBeendenHinweisHtml } from './fahrt-beenden.js?v=20261001b';
 // Reform S4 Paket 2 (Konsey 30.09.2026, 1a/1b): aufklappbarer Fußbefund + Folgetermin-Frage.
 import { FOLGE_FRAGE, fussbefundBoxHtml, ladeLetzterBefund, ladeTagesTermin, folgeAusgangstermin, frageFolgetermin,
@@ -114,7 +114,7 @@ import { therapiezeitFehler, therapiezeitFuerSpeichern, positionAusTherapiezeit,
 import { konsistenzHinweis } from './anamnese-formulare.js?v=20261001r';
 import { mountFussbefund } from './fussbefund.js?v=20261003m16';
 import { on } from './signal.js?v=20260813';
-import { oeffneFolgetermin } from './termin-folge.js?v=20261003a';
+import { oeffneFolgetermin } from './termin-folge.js?v=20261004m113';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 

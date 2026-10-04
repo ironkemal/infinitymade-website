@@ -53,18 +53,21 @@ export function positionVon(dienst) {
  *        seine eigene Befundzeile darf sich nicht selbst sperren
  * @returns {Array<{behandlungsdatum:string, hpnr_codes:string[], geplant:true}>}
  */
+import { alsBerlinDatum } from './berlin-datum.js';
+
 export function geplanteAlsBehandlungen(termine, { ohneId = '' } = {}) {
-  const tag = (iso) => new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
   const heraus = [];
   for (const b of termine || []) {
     if (!b || !b.start_time || !istVergeben(b)) continue;
     if (ohneId && b.id === ohneId) continue;
+    const behandlungsdatum = alsBerlinDatum(b.start_time);
+    if (!behandlungsdatum) continue;
     const quellen = b.booking_leistungen?.length ? b.booking_leistungen : [{ services: b.services }];
     const codes = quellen
       .map(z => positionVon(z?.services))
       .filter(c => /^78\d{3}$/.test(c));
     if (!codes.length) continue;
-    heraus.push({ behandlungsdatum: tag(b.start_time), hpnr_codes: [...new Set(codes)], geplant: true });
+    heraus.push({ behandlungsdatum, hpnr_codes: [...new Set(codes)], geplant: true });
   }
   return heraus;
 }

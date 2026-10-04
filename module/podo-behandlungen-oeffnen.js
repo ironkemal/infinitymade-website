@@ -51,9 +51,11 @@ export function terminIstPodo(booking, sector) {
  * @param {{start_time?:string|null}} booking
  * @returns {string|undefined} `YYYY-MM-DD`, oder `undefined` ohne `start_time`
  */
+import { alsBerlinDatum } from './berlin-datum.js';
+
 export function terminDatum(booking) {
   if (!booking?.start_time) return undefined;
-  return new Date(booking.start_time).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  return alsBerlinDatum(booking.start_time) || undefined;
 }
 
 /**
@@ -161,7 +163,7 @@ export async function oeffnePodoBehandlungen(leadId, opt = {}, deps = {}) {
  */
 export async function terminStartenPodo(booking, deps) {
   let datum = terminDatum(booking);
-  const heute = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  const heute = alsBerlinDatum(new Date());
 
   if (terminInZukunft(datum, heute)) {
     const [j, m, t] = datum.split('-');

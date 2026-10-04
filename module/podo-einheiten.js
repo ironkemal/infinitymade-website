@@ -46,9 +46,9 @@
  */
 
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
-import { positionVon } from './podo-geplant.js?v=20260918';
+import { positionVon } from './podo-geplant.js?v=20261004m113';
 import { istVergeben, ladePodoTermine, bindeTermin } from './verordnung-termine.js?v=20260908';
-import { zeigeSitzungenArbeit } from './termin-panel.js?v=20261001r';
+import { zeigeSitzungenArbeit } from './termin-panel.js?v=20261004m113';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './sitzungen-ansicht.js?v=20260919';
 import { serienAnzahl, serienKnopfText } from './serien-termine.js?v=20260916';
 
@@ -372,7 +372,9 @@ export async function meldePodoSerienBindung(sb, { ownerId, prescriptionId, crea
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const heute = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });   // YYYY-MM-DD
+import { alsBerlinDatum } from './berlin-datum.js';
+
+const heute = () => alsBerlinDatum(new Date());   // YYYY-MM-DD
 const datumKurz = (iso) => (iso
   ? new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
   : '—');

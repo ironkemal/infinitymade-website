@@ -92,11 +92,11 @@ export function pruefeBehandlungsbeginn({ ersterTermin, ausstellungsdatum, istDr
 }
 
 /** Kalendertag in Europe/Berlin als "YYYY-MM-DD", oder null bei ungültiger Eingabe. */
+import { alsBerlinDatum } from './berlin-datum.js';
+
 function berlinTag(datum) {
   if (!datum) return null;
-  const d = datum instanceof Date ? datum : new Date(datum);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  return alsBerlinDatum(datum) || null;
 }
 
 function deDatum(isoTag) {

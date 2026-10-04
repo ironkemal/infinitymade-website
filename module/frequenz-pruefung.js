@@ -60,7 +60,7 @@
  */
 
 import { ladePodoTermine, istVergeben } from './verordnung-termine.js?v=20260908';
-import { pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20260929';
+import { pruefeBehandlungsbeginn } from './heilmittel-fristen.js?v=20261004m113';
 
 export const TOLERANZ_WERKTAGE = 2;
 export const UNTERBRECHUNG_TAGE = 12 * 7;   // keine Quelle — Physio-Grenze laut HeilM-RL §16 Abs.4 S.1 sind 14 Tage (wissensbank Z-16), Anpassung ist eigene Aufgabe

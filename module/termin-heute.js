@@ -54,13 +54,12 @@ export function uhrzeitBerlin(startTime) {
  * ⛔ Nicht `toISOString().slice(0,10)` — das rutscht abends auf den Folgetag.
  * Dasselbe Muster steht in `loadScheduleBookings()` (dashboard.js:1732).
  */
+import { alsBerlinDatum, berlinTagesgrenzen } from './berlin-datum.js';
+
 export function tagesgrenzen(jetzt = new Date()) {
-  const tag = jetzt.toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
-  return {
-    tag,
-    von: new Date(`${tag}T00:00:00`).toISOString(),
-    bis: new Date(`${tag}T23:59:59`).toISOString(),
-  };
+  const tag = alsBerlinDatum(jetzt);
+  if (!tag) return null;
+  return berlinTagesgrenzen(tag);
 }
 
 /**
@@ -153,12 +152,14 @@ let _index = baueHeuteIndex([]);
  */
 export async function heuteAktualisieren(supabase, ownerId, jetzt = new Date()) {
   if (!supabase || !ownerId) return _index;
-  const { von, bis } = tagesgrenzen(jetzt);
+  const grenzen = tagesgrenzen(jetzt);
+  if (!grenzen) return _index;
+  const { von, bisExklusiv } = grenzen;
   try {
     const { data, error } = await supabase.from('bookings')
       .select('id,lead_id,customer_name,customer_phone_normalized,start_time,status,no_show')
       .eq('owner_id', ownerId)
-      .gte('start_time', von).lte('start_time', bis)
+      .gte('start_time', von).lt('start_time', bisExklusiv)
       .neq('status', 'cancelled');
     if (error) throw error;
     _index = baueHeuteIndex(data || [], jetzt);

@@ -20,7 +20,7 @@
  * (TERMIN_AKTIONEN).
  */
 
-import { oeffneFolgetermin } from './termin-folge.js?v=20261003a';
+import { oeffneFolgetermin } from './termin-folge.js?v=20261004m113';
 
 /** Die sechs sichtbaren Handlungen — der Kapitest prüft genau diese Liste gegen dashboard.html. */
 export const SICHTBARE_AKTIONEN = [
