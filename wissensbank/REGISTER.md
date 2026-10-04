@@ -404,35 +404,18 @@ Verordnung — UI2 dörttür, sekiz değil".
 
 ---
 
-### Z-12 · Şifreleme / imzalama profili (SECON) — ⏳ **kod tarafı henüz yok**
-```
-wissensbank/gemeinsam/302-tp5/GGT.pdf/.txt                              (Fassung ab 01.09.2026)
-  → § 5.1  sıra: önce imzala, sonra alıcının açık anahtarıyla şifrele
-  → § 5.2  → GGT Anlage 16
-wissensbank/gemeinsam/302-tp5/GGT_Anlage_16_Security_Schnittstelle_SECON.pdf/.txt
-    (Stand 02.09.2025 · Gültig ab 01.01.2026 · 94 s.)
-  → api-backend/billing/dta/filename.js:80  buildEncryptedFilename()   ⛔ ÇELİŞKİ (aşağıda)
-  → api-backend/billing/api/abrechnung.routes.js   (SignedData OID · cert_valid_to)
-  → DB terapeut_zertifikat (cert_subject/thumbprint/serial/valid_from/valid_to — yalnız metadata)
-  → ⛔ EnvelopedData üreten kod              YOK — zincirin eksik halkası, plan Adım 1.3
-  → ⛔ Alıcı açık anahtarı (annahme-rsa4096.key) çeken/pinleyen yol   YOK — plan O-116
-```
-📌 **Bu zincir 21.09.2026'da açıldı**, `ABRECHNUNG_ECHTBETRIEB_PLAN.md` Adım 1.3'ün „bu belge
-olmadan başlanmaz" kaydı üzerine. Belge indirildi, **kod tarafı bilinçli olarak boş** — bu bir
-hata değil durum tespiti.
+### Z-12 · Şifreleme / imzalama profili (SECON) — 🟨 Transportdateiname geklärt, Gesamtfreigabe offen
 
-⛔ **Belgenin hemen doğurduğu bir çelişki var (`gkv-302` + `builder` karar vermeli):**
-`filename.js:80` şifreli dosyaya `.dta.p7m` uzantısı veriyor; Anlage 16 § 3.2.3.1 ise
-*„Eine verschlüsselte Nachricht als PKCS#7-Datenobjekt wird in einer Datei abgelegt, die
-**keine Dateiendung** aufweist. Physikalisch handelt es sich um eine Binärdatei"* diyor.
-Aynı belgenin Abkürzungsverzeichnis'i `.p7m`'i „PKCS#7 **MIME**-Nachricht" uzantısı olarak
-tanımlıyor — yani `.p7m` bu profilin dosya adı değil, e-posta dünyasının adı. Bugün zararsız
-(canlı gönderim yok), ama **1.3 yazılmadan önce kapanmalı**; sonradan kapatılırsa üretilmiş
-dosya adları da değişir.
+Quellenkette seit 21.09.2026: `gemeinsam/302-tp5/GGT.txt` (Fassung ab 01.09.2026), §5.1 Imzala-sonra-şifrele / §5.2 Zertifikatsprüfung → GGT Anlage 16 SECON → `api-backend/billing/api/abrechnung.routes.js` (Signatur/Verschlüsselung) → `terapeut_zertifikat` (nur Zertifikatsmetadaten, kein privater Schlüssel). Eröffnung: `ABRECHNUNG_ECHTBETRIEB_PLAN.md`, Schritt 1.3.
 
-⚠️ Sayılar YZ ile okunmadı: OID'ler, anahtar uzunlukları ve alan adları
-`GGT_Anlage_16_…SECON.txt` § 2.1.3 / 2.1.4 / 2.2.4 / 3.2.2 satırlarından birebir alındı
-(bkz. `INDEX.md` anahtar bölümler listesi).
+**M1.15, 04.10.2026 — begrenzter Teilbefund:** Der am 21.09. gemeldete Dateinamenkonflikt ist aufgeklärt. Transportname und interner Storage-Pfad erfüllen unterschiedliche Zwecke.
+
+- **Primärquelle:** `gemeinsam/302-tp5/Anhang_01_Anlage_1_TP5_Kapitel_4_Datenuebermittlung_20170831.txt`, §4.3, Z.140–151, Stand 31.08.2017 / gültig ab 01.09.2017: achtstelliger physikalischer Name `ESOL0nnn` bzw. `TSOL0nnn`.
+- **Primärquelle:** `gemeinsam/302-tp5/GGT_Anlage_16_Security_Schnittstelle_SECON.txt`, §3.2.3, Z.1245–1252, Stand 02.09.2025 / gültig ab 01.01.2026: verschlüsselte Nutzdaten werden ohne Dateisuffix versendet. GKV-Spezialist vor Abschluss konsultiert; Root las beide Originaltextstellen.
+- **Code:** `api-backend/billing/dta/filename.js:80–100`, `buildEncryptedFilename()`, erzeugt bewusst `*.dta.enc.p7m` als internen Storage-Pfad. Dieser unterscheidet sich von der unverschlüsselten Signatur und verhindert deren Überschreibung; er ist nicht der Transportdateiname.
+- **Download:** `module/abrechnung-detail.js:770–810`, `downloadAbrechnungFile()` / `dasGuideVersandKlick()`, übergibt `ab.dateiname` als Storage-Downloadoption, etwa `ESOL0001` ohne Endung. Die verschlüsselte Datei wird verwendet; eine nur signierte Datei ist kein Ersatz.
+- **Lokaler Nachweis:** `/tmp/praxura-m115-download-probe.mjs` führt tatsächlichen DAS-Handler und installierten Storage-SDK 2.112.3 aus. Die erzeugten Download-URLs enthalten `download=ESOL0001` bzw. `TSOL0001`; synthetische Antworten, kein Netzwerk-/DB-Zugriff. Kein tatsächlicher Live-HTTP-Content-Disposition-Nachweis.
+- **Grenze:** Nur der Dateinamen-Teilbefund ist geschlossen. Daraus folgen weder vollständige SECON-Konformität, Echtversandfreigabe noch verifizierte DAS-Annahme. Historische Aussagen „EnvelopedData/Empfängerschlüssel fehlen“ aus dem Eröffnungsstand 21.09. sind keine aktuelle Codeprüfung; aktueller Implementierungsstand ist gesondert zu verifizieren.
 
 ---
 
