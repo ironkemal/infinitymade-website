@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-05",
  "dateien": 346,
- "funktionen": 2915,
+ "funktionen": 2916,
  "module": [
   "abrechnung",
   "anamnese",
@@ -4324,6 +4324,7 @@
     "erzeugeRegistryFake",
     "init",
     "kontoLoeschen",
+    "kontoLoeschenIntern",
     "ladeKennung",
     "loadModulePermissions",
     "registriereVeroeffentlicht",
@@ -16627,7 +16628,35 @@
    "kind": "function",
    "file": "api-backend/dsgvo/loeschen.js",
    "start": 59,
-   "end": 727,
+   "end": 73,
+   "lines": 15,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [
+    "artefakt_owner_unfreeze"
+   ],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "kontoLoeschenIntern",
+    "rpc"
+   ],
+   "calledBy": [
+    "createDsgvoRouter",
+    "db",
+    "noopMiddleware"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "kontoLoeschenIntern",
+   "kind": "function",
+   "file": "api-backend/dsgvo/loeschen.js",
+   "start": 75,
+   "end": 743,
    "lines": 669,
    "spiegelHinweis": null,
    "tables": [
@@ -16679,9 +16708,7 @@
     "rpc"
    ],
    "calledBy": [
-    "createDsgvoRouter",
-    "db",
-    "noopMiddleware"
+    "kontoLoeschen"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -16691,8 +16718,8 @@
    "name": "pruefeRelation",
    "kind": "function",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 253,
-   "end": 273,
+   "start": 269,
+   "end": 289,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [],
@@ -16702,7 +16729,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "kontoLoeschen"
+    "kontoLoeschenIntern"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -16712,8 +16739,8 @@
    "name": "hatZeilenIn",
    "kind": "function",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 317,
-   "end": 324,
+   "start": 333,
+   "end": 340,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -16723,7 +16750,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "kontoLoeschen"
+    "kontoLoeschenIntern"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -16733,8 +16760,8 @@
    "name": "bezug",
    "kind": "arrow",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 396,
-   "end": 401,
+   "start": 412,
+   "end": 417,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -16744,7 +16771,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "kontoLoeschen"
+    "kontoLoeschenIntern"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -16754,8 +16781,8 @@
    "name": "pruefe",
    "kind": "arrow",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 447,
-   "end": 447,
+   "start": 463,
+   "end": 463,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -16765,7 +16792,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "kontoLoeschen"
+    "kontoLoeschenIntern"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -16775,8 +16802,8 @@
    "name": "bereinigeStorage",
    "kind": "function",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 732,
-   "end": 803,
+   "start": 748,
+   "end": 819,
    "lines": 72,
    "spiegelHinweis": null,
    "tables": [],
@@ -16788,7 +16815,7 @@
     "listRekursiv"
    ],
    "calledBy": [
-    "kontoLoeschen"
+    "kontoLoeschenIntern"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -16798,8 +16825,8 @@
    "name": "listRekursiv",
    "kind": "function",
    "file": "api-backend/dsgvo/loeschen.js",
-   "start": 768,
-   "end": 783,
+   "start": 784,
+   "end": 799,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -17122,7 +17149,7 @@
     "berlinHeute"
    ],
    "calledBy": [
-    "kontoLoeschen"
+    "kontoLoeschenIntern"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -125418,8 +125445,8 @@
    "kind": "function",
    "file": "module/zuzahlung-befreiung.js",
    "start": 292,
-   "end": 302,
-   "lines": 11,
+   "end": 303,
+   "lines": 12,
    "spiegelHinweis": null,
    "tables": [
     "prescriptions"
@@ -125474,8 +125501,8 @@
    "name": "esc",
    "kind": "function",
    "file": "module/zuzahlung-befreiung.js",
-   "start": 304,
-   "end": 308,
+   "start": 305,
+   "end": 309,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -136642,13 +136669,13 @@
      ]
     },
     {
-     "leitfunktion": "kontoLoeschen",
+     "leitfunktion": "kontoLoeschenIntern",
      "funktionen": [
       {
-       "name": "kontoLoeschen",
+       "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 59,
-       "end": 727,
+       "start": 75,
+       "end": 743,
        "lines": 669,
        "writes": [
         "bookings:delete"
@@ -137149,13 +137176,13 @@
    "anzahl": 10,
    "pfade": [
     {
-     "leitfunktion": "kontoLoeschen",
+     "leitfunktion": "kontoLoeschenIntern",
      "funktionen": [
       {
-       "name": "kontoLoeschen",
+       "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 59,
-       "end": 727,
+       "start": 75,
+       "end": 743,
        "lines": 669,
        "writes": [
         "profiles:update"
@@ -137811,13 +137838,13 @@
      ]
     },
     {
-     "leitfunktion": "kontoLoeschen",
+     "leitfunktion": "kontoLoeschenIntern",
      "funktionen": [
       {
-       "name": "kontoLoeschen",
+       "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 59,
-       "end": 727,
+       "start": 75,
+       "end": 743,
        "lines": 669,
        "writes": [
         "prescriptions:delete"
@@ -138089,8 +138116,8 @@
        "name": "betragNullsetzen",
        "file": "module/zuzahlung-befreiung.js",
        "start": 292,
-       "end": 302,
-       "lines": 11,
+       "end": 303,
+       "lines": 12,
        "writes": [
         "prescriptions:update"
        ],
@@ -138138,13 +138165,13 @@
    "anzahl": 6,
    "pfade": [
     {
-     "leitfunktion": "kontoLoeschen",
+     "leitfunktion": "kontoLoeschenIntern",
      "funktionen": [
       {
-       "name": "kontoLoeschen",
+       "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 59,
-       "end": 727,
+       "start": 75,
+       "end": 743,
        "lines": 669,
        "writes": [
         "leads:delete",
@@ -139048,13 +139075,13 @@
    "anzahl": 3,
    "pfade": [
     {
-     "leitfunktion": "kontoLoeschen",
+     "leitfunktion": "kontoLoeschenIntern",
      "funktionen": [
       {
-       "name": "kontoLoeschen",
+       "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 59,
-       "end": 727,
+       "start": 75,
+       "end": 743,
        "lines": 669,
        "writes": [
         "employee_services:delete"
@@ -139670,13 +139697,13 @@
    "anzahl": 2,
    "pfade": [
     {
-     "leitfunktion": "kontoLoeschen",
+     "leitfunktion": "kontoLoeschenIntern",
      "funktionen": [
       {
-       "name": "kontoLoeschen",
+       "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 59,
-       "end": 727,
+       "start": 75,
+       "end": 743,
        "lines": 669,
        "writes": [
         "employee_business_assignments:delete"
@@ -139876,13 +139903,13 @@
    "anzahl": 2,
    "pfade": [
     {
-     "leitfunktion": "kontoLoeschen",
+     "leitfunktion": "kontoLoeschenIntern",
      "funktionen": [
       {
-       "name": "kontoLoeschen",
+       "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 59,
-       "end": 727,
+       "start": 75,
+       "end": 743,
        "lines": 669,
        "writes": [
         "employee_scope_overrides:delete"
@@ -140411,13 +140438,13 @@
    "anzahl": 2,
    "pfade": [
     {
-     "leitfunktion": "kontoLoeschen",
+     "leitfunktion": "kontoLoeschenIntern",
      "funktionen": [
       {
-       "name": "kontoLoeschen",
+       "name": "kontoLoeschenIntern",
        "file": "api-backend/dsgvo/loeschen.js",
-       "start": 59,
-       "end": 727,
+       "start": 75,
+       "end": 743,
        "lines": 669,
        "writes": [
         "prescription_documents:delete"
@@ -140937,7 +140964,7 @@
     "module/rechnung-zahlungseingang.js:165",
     "module/verordnung-feldmarker.js:80",
     "module/verordnung-uebersicht.js:112",
-    "module/zuzahlung-befreiung.js:304",
+    "module/zuzahlung-befreiung.js:305",
     "module/zuzahlung-korrektur.js:60",
     "ops/app.js:51"
    ],
