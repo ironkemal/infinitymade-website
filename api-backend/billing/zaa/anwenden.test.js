@@ -58,6 +58,17 @@ test('Fehlertexte mit Umlauten (Live-QA C-6)', async () => {
   assert.match(r.body.error, /Rückmeldung wurde nicht verarbeitet, es wurde nichts verändert/);
 });
 
+test('Uebersetzung identisch mit Dateitext wird nicht doppelt gespeichert/ausgegeben (Live-QA C-3)', async () => {
+  const { db, calls } = mockDb();
+  const buf = Buffer.from("UNB+UNOC:3+A+B+250519:1200+1'UNH+1+SLLA:21:0:0'FEHL+101+1-1+Positionsnummer unbekannt'UNT+3+1'UNZ+1+1'");
+  const r = await zaaRueckmeldungAnwenden({ ...basis, db, buf });
+  assert.equal(r.status, 200);
+  const e = r.body.errors[0];
+  if (e.uebersetzung !== null) assert.notEqual(String(e.uebersetzung).toLowerCase(), String(e.text).toLowerCase());
+  const gesendet = calls.rpc[0].args.p_fehler[0];
+  assert.ok(gesendet.uebersetzung === null || gesendet.uebersetzung.toLowerCase() !== (gesendet.fehler_text || '').toLowerCase());
+});
+
 test('Versionskonflikt: 409 unveraendert', async () => {
   const { db } = mockDb({ rpcResult: { data: { konflikt: true }, error: null } });
   const r = await zaaRueckmeldungAnwenden({ ...basis, db, buf: gueltig });

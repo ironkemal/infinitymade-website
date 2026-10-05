@@ -49,7 +49,7 @@ import { dateiStatusBadge, aggregierterDateiStatus, dateiStatusInfo, istVerworfe
 import { ladeDateieinheiten, dateieinheitVon } from './podologie-dateieinheit.js?v=20260907';
 import { on } from './signal.js?v=20260813';
 import { alsISODatum } from './datum.js?v=20261001a';
-import { zeigeDateiversionen } from './abrechnung-artefakte.js?v=20261005b';
+import { zeigeDateiversionen } from './abrechnung-artefakte.js?v=20261005c';
 
 let ctx = null;
 let _hoertZu = false;

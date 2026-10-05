@@ -10,6 +10,13 @@
 // `zaa_fehler_anwenden` (Migration 0061), gebunden an die gelesene Header-Version.
 import { parseZaaFile } from './parser.js';
 
+// „Uebersetzung" nur, wenn sie dem Anwender etwas Neues sagt: ist sie identisch mit dem Dateitext (z. B. gleiche
+// Woerterbuch-Formulierung), bleibt sie leer und die Oberflaeche zeigt den Text nicht doppelt (Live-QA 3. Lauf, C-3).
+function istEchteUebersetzung(e) {
+  const u = String(e?.uebersetzung || '').trim();
+  return u !== '' && u.toLowerCase() !== String(e?.text || '').trim().toLowerCase();
+}
+
 export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, buf, filename, abgesetztStatus, heute }) {
   const { data: rxRows } = await db
     .from('prescriptions')
@@ -42,7 +49,7 @@ export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, 
       prescription_id: rxId,
       fehler_code:     e.code,
       fehler_text:     e.text || null,
-      uebersetzung:    e.uebersetzung || null,
+      uebersetzung:    istEchteUebersetzung(e) ? e.uebersetzung : null,
       loesung_hint:    e.loesung || null,
     };
   });
@@ -85,7 +92,7 @@ export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, 
     format: parsed.format,
     errorCount: fehler.length,
     status: 'rejected',
-    errors: parsed.errors,
+    errors: parsed.errors.map(e => ({ ...e, uebersetzung: istEchteUebersetzung(e) ? e.uebersetzung : null })),
     verordnungenAbgesetzt: vordGrund.size,
     nichtZugeordnet,
     zeilenAktualisiert: anw.zeilen || 0,

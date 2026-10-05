@@ -92,7 +92,9 @@ export async function zeigeDateiversionen(ctx, ab) {
   try {
     const liste = await ladeListe(ctx, ab.id);
     ctx.showHtmlModal({
-      title: 'Dateiversionen',
+      // Der Dateiname allein ist nicht eindeutig: der Zaehler laeuft je Datenannahmestelle (mehrere „TSOL0001"
+      // moeglich). Rechnungsnummer und Kostentraeger-IK machen die Datei im Titel unverwechselbar (Live-QA 3. Lauf, C-1).
+      title: ['Dateiversionen', ab.dateiname, ab.rechnungsnummer, ab.kostentraeger_ik ? `IK ${ab.kostentraeger_ik}` : null].filter(Boolean).join(' · '),
       html: `<div id="abArtefakteBody">${dateiversionenHtml(liste)}</div>`,
       afterRender: () => {
         const body = document.getElementById('abArtefakteBody');
