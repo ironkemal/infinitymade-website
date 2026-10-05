@@ -3,7 +3,7 @@
 -- PURPOSE: Catalog definitions for enums, domains, composites, sequences, tables, constraints, and views.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261005154202 abrechnung_clientrechte_0064
+-- LAST MIGRATION:     20261005154848 abrechnung_nebentabellen_clientsperre_0065
 -- EXPORTED AT:        2026-10-03T19:36:25.349Z
 -- ERZEUGT AM:         2026-10-03 (Teilaktualisierung 2026-10-05)
 -- POSTGRESQL VERSION: 17.6
@@ -22,7 +22,7 @@
 --   extensions:          9
 --   rls_disabled_tables: 1
 --
--- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0064 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
+-- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0065 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
 -- vollstaendiger Metadatenexport (tools/schema-export-katalog.sql + schema-dokumente.mjs) steht aus.
 --
 -- CAUTION / HINWEIS:

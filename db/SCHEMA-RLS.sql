@@ -3,7 +3,7 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261005154202 abrechnung_clientrechte_0064
+-- LAST MIGRATION:     20261005154848 abrechnung_nebentabellen_clientsperre_0065
 -- EXPORTED AT:        2026-10-03T19:36:25.349Z
 -- ERZEUGT AM:         2026-10-03 (Teilaktualisierung 2026-10-05)
 -- POSTGRESQL VERSION: 17.6
@@ -14,15 +14,15 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        168
---   functions:           105
---   triggers:            92
+--   functions:           106
+--   triggers:            95
 --   indexes:             335
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
 --   rls_disabled_tables: 1
 --
--- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0064 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
+-- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0065 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
 -- vollstaendiger Metadatenexport (tools/schema-export-katalog.sql + schema-dokumente.mjs) steht aus.
 --
 -- CAUTION / HINWEIS:
@@ -4992,6 +4992,21 @@ $function$
 ;
 ALTER FUNCTION public.set_warteliste_updated_at() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.sperre_clientschreibzugriff()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN
+  IF current_user IN ('authenticated', 'anon') THEN
+    RAISE EXCEPTION '%: % nur ueber das Backend', TG_TABLE_NAME, TG_OP USING ERRCODE = '42501';
+  END IF;
+  RETURN COALESCE(NEW, OLD);
+END $function$
+
+;
+ALTER FUNCTION public.sperre_clientschreibzugriff() OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.sync_booking_hauptleistung()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5227,6 +5242,9 @@ ALTER FUNCTION public.whoami() OWNER TO postgres;
 -- ----------------------------------------------------------------------------
 CREATE TRIGGER abrechnung_updated_at BEFORE UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION trg_billing_updated_at();
 CREATE TRIGGER trg_a_abrechnung_clientrechte BEFORE INSERT OR DELETE OR UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION pruefe_abrechnung_clientrechte();
+CREATE TRIGGER trg_a_abrechnung_zeile_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON abrechnung_zeile FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
+CREATE TRIGGER trg_a_abrechnung_zahlung_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON abrechnung_zahlung FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
+CREATE TRIGGER trg_a_zaa_fehler_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON zaa_fehler FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON abrechnung FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
