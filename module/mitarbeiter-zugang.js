@@ -253,7 +253,7 @@ export function zeigeEinrichtungscode(code, gueltigBis, name = '') {
  */
 export function einrichtungscodeKnopfHtml(m, istOwner) {
   if (!istOwner || !m || m.role !== 'employee') return '';
-  return `<button class="btn-ghost emp-neuer-code" type="button" data-emp-id="${m.id}" data-emp-name="${String(m.business_name || '').replace(/"/g, '&quot;')}" style="width:100%;font-size:12px;padding:6px;border-top:1px solid var(--border);">Neuer Einrichtungscode</button>`;
+  return `<button class="btn-ghost emp-neuer-code" type="button" data-emp-id="${m.id}" data-emp-name="${String(m.business_name || '').replace(/"/g, '&quot;')}" style="width:100%;font-size:12px;padding:6px;border-top:1px solid var(--border);">Passwort zurücksetzen (neuer Code)</button>`;
 }
 
 /**
@@ -268,7 +268,7 @@ export function verdrahteEinrichtungscodeKnoepfe(liste, { getToken, confirm, toa
       e.preventDefault();
       const name = btn.dataset.empName || '';
       const ok = await confirm({
-        title: 'Neuer Einrichtungscode',
+        title: 'Passwort zurücksetzen',
         message: `Für ${name || 'diese Person'} wird ein neuer Einrichtungscode erzeugt. Das bisherige Passwort wird ungültig; die Person muss sich über „Erstanmeldung mit Einrichtungscode" ein neues Passwort vergeben.`,
         confirmText: 'Code erzeugen',
       });
