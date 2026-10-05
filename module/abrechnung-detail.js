@@ -550,7 +550,8 @@ function _verdrahteAktionen(ab, gruppen = []) {
         // den Umschlag holt, hat noch nichts eingereicht.
         case 'auftrag':    return downloadAbrechnungFile(ab.auftragsdatei_path, null, 'begleit');
         case 'begleit':    return downloadAbrechnungFile(ab.begleitzettel_path, null, 'begleit');
-        case 'signieren':  return ctx.aktionen?.signieren?.(ab.id, ab.dateiname);
+        // Dateinamen sind je Datenannahmestelle nicht eindeutig (mehrere TSOL0003): Rechnungsnummer im Titel (Live-QA 05.10.2026).
+        case 'signieren':  return ctx.aktionen?.signieren?.(ab.id, [ab.dateiname, ab.rechnungsnummer].filter(Boolean).join(' \u00b7 '));
         case 'zaa':        return ctx.aktionen?.zaaHochladen?.(ab.id, ab.dateiname);
         case 'fehler':     return ctx.aktionen?.zaaFehler?.(ab.id);
         case 'anleitung':  return ctx.aktionen?.anleitung?.(ab.id);
