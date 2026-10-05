@@ -1668,6 +1668,16 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
 
+    // Verstaendliche Meldung statt „Konflikt bei der Abrechnungsversion", wenn die Abrechnung schon
+    // einen Endstatus hat (Live-QA 05.10.2026): Signieren ist nur im Entwurf moeglich.
+    if (!['erstellt', 'heruntergeladen'].includes(ab.status)) {
+      const wort = { gesendet: 'gesendet', accepted: 'angenommen', rejected: 'abgelehnt (ZAA-Rückmeldung liegt vor)', paid: 'bezahlt', verworfen: 'verworfen' }[ab.status] || ab.status;
+      return res.status(409).json({
+        error: `Diese Abrechnung ist ${wort} und kann nicht mehr signiert werden. Bitte eine neue Abrechnung erstellen.`,
+        code: 'ABRECHNUNG_STATUS_GESPERRT',
+      });
+    }
+
     pruefeEntwurfsVersion(ab);
 
     await pruefeSignedDta({ signedBytes, expectedDtaSha256: ab.dta_sha256 });

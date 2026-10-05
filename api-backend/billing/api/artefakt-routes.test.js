@@ -381,6 +381,8 @@ describe('Abrechnung Artefakt Routes CAS & Lifecycle', () => {
       const { req, res } = createReqRes({ body: validUploadBody });
       await handlers['/abrechnung/:id/upload-signed'](req, res);
       assert.equal(res.statusCode, 409);
+      assert.equal(res.body.code, 'ABRECHNUNG_STATUS_GESPERRT', 'verstaendliche Statusmeldung statt generischem Versionskonflikt');
+      assert.match(res.body.error, /kann nicht mehr signiert werden/);
       assert.equal(fakeDb.getStorageUploads().length, 0);
     }
   });
