@@ -374,6 +374,20 @@ describe('Abrechnung Artefakt Routes CAS & Lifecycle', () => {
     assert.equal('unsignierteDtaEntfernt' in res.body, false);
   });
 
+  it('(2d) veraltete Ansicht: expectedUpdatedAt weicht ab -> 409, nichts hochgeladen; passende Version -> 200', async () => {
+    const fakeDb = createFakeDb(makeInitialRow());
+    const handlers = setupVm(fakeDb);
+    const alt = createReqRes({ body: { ...validUploadBody, expectedUpdatedAt: '2026-01-01T00:00:00.000000Z' } });
+    await handlers['/abrechnung/:id/upload-signed'](alt.req, alt.res);
+    assert.equal(alt.res.statusCode, 409);
+    assert.equal(alt.res.body.code, 'ABRECHNUNG_VERSION_CONFLICT');
+    assert.match(alt.res.body.error, /neu laden/);
+    assert.equal(fakeDb.getStorageUploads().length, 0);
+    const ok = createReqRes({ body: { ...validUploadBody, expectedUpdatedAt: fakeDb.getCurrentRow().updated_at } });
+    await handlers['/abrechnung/:id/upload-signed'](ok.req, ok.res);
+    assert.equal(ok.res.statusCode, 200);
+  });
+
   it('(3) upload terminal accepted/gesendet/paid/verworfen 409 zero Storage writes', async () => {
     for (const status of ['accepted', 'rejected', 'gesendet', 'paid', 'bezahlt', 'verworfen']) {
       const fakeDb = createFakeDb(makeInitialRow({ status }));

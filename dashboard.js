@@ -16141,7 +16141,7 @@ async function runSignAbrechnung() {
         certSubject: subjectAttrs,
         certValidTo: notAfter,
         certThumbprint,
-        certSerial,
+        certSerial, expectedUpdatedAt: dtaJson.version,
       }),
     });
     const upJson = pruefeAntwort(upRes, await upRes.json().catch(() => ({})), showToast);

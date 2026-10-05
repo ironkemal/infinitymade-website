@@ -1281,7 +1281,7 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
-      .select('id, owner_id, status, dateiname, storage_path, kostentraeger_ik, empfaenger_ik, created_at, signed_storage_path, signed_sha256, dta_sha256')
+      .select('id, owner_id, status, updated_at, dateiname, storage_path, kostentraeger_ik, empfaenger_ik, created_at, signed_storage_path, signed_sha256, dta_sha256')
       .eq('id', req.params.id)
       .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
@@ -1320,6 +1320,7 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
     return res.json({
       ok: true,
       dateiname: ab.dateiname,
+      version: ab.updated_at,   // Stand der Abrechnung beim Laden — upload-signed lehnt eine veraltete Ansicht mit 409 ab
       contentBase64: buf.toString('base64'),
     });
   } catch (e) {
@@ -1689,6 +1690,17 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
       return res.status(409).json({
         error: `Diese Abrechnung ist ${wort} und kann nicht mehr signiert werden. Bitte eine neue Abrechnung erstellen.`,
         code: 'ABRECHNUNG_STATUS_GESPERRT',
+      });
+    }
+
+    // Veraltete Ansicht (z. B. zweiter Tab, in dem schon signiert wurde): die Abrechnung hat sich seit dem Laden der DTA
+    // geaendert -> 409 mit verstaendlicher Meldung, bevor irgendetwas hochgeladen wird. Fehlt die Angabe (aeltere Clients),
+    // gilt weiter nur die Versionspruefung innerhalb der Anfrage.
+    const erwartet = req.body?.expectedUpdatedAt;
+    if (typeof erwartet === 'string' && erwartet !== '' && erwartet !== ab.updated_at) {
+      return res.status(409).json({
+        error: 'Die Abrechnung wurde in der Zwischenzeit geändert (z. B. in einem anderen Tab oder Fenster). Bitte die Seite neu laden und erneut signieren.',
+        code: 'ABRECHNUNG_VERSION_CONFLICT',
       });
     }
 
