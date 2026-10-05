@@ -37,6 +37,7 @@
 | 2026-10-02 | **K1.4 Nachtrag — Fall B: automatischer Lauf bei Fristablauf (Rest löschen + Pflichtbestand sperren) ist auch OHNE nachgewiesenen Export zulässig, wenn die AVV ihn als Standardweisung festlegt. `mahnungen` → Sperrbestand, 6 J.** | Art. 28 Abs. 3 lit. g DSGVO: Löschen/Rückgabe nach Wahl des Verantwortlichen, die AVV darf eine Standardregel setzen; Rückgabe = Bereitstellung zum Abruf. Bedingungen: (a) die Klausel in Abschnitt „2026-10-02" §4 Satz 2 wird ersetzt durch: *„Vor der Sperrung wird dem Auftraggeber für 30 Tage eine vollständige Kopie in einem gängigen, maschinell auswertbaren Format zum Abruf bereitgestellt; nach Ablauf dieser Frist werden nicht aufbewahrungspflichtige Daten gelöscht. Die Herausgabe gesperrter Daten kann der Auftraggeber bis zum Fristablauf jederzeit verlangen."* — dazu im Antworttext Fall B „haben Sie vor der Löschung erhalten" → „wurde Ihnen vor der Löschung zum Abruf bereitgestellt"; (b) Hinweis per Kündigungsmail + Erinnerung ~7 Tage vor dem Termin; (c) der Sperrbestand bleibt herausgebbar. „Kein Auto-Lauf, unbegrenzt gesperrt" nur als Übergang ohne reale Kunden (K-14), auf Dauer gegen Art. 5 Abs. 1 lit. e. 24-h-Pflicht-Export im manuellen Weg = interne Absicherung, keine Rechtspflicht. `mahnungen`: § 257 HGB nicht anwendbar (keine Kaufleute), aber § 147 Abs. 1 Nr. 3, Abs. 3 S. 1, Abs. 4 AO (Geschäftsbrief, 6 J. ab 31.12. des Versandjahres) → aus „sofort löschen" in den Sperrbestand. Dashboard-Satz statt „§ 257 HGB 10 Jahre": *„Unterlagen mit gesetzlicher Aufbewahrungspflicht – Behandlungsdokumentation 10 Jahre (§ 630f BGB), Rechnungen 8 Jahre, Zahlungsaufzeichnungen 10 Jahre (§ 147 AO) – bleiben bis Fristablauf gesperrt erhalten."* | Kapalı — AVV-/dpa.html-Text + Cron-Neubau vor dem ersten realen Kunden offen (🟢 €0) | Erster realer Kunde vor Neubau des Crons · Mahngebühren werden als Erlös gebucht (dann Buchungsbeleg, 8 J.) · Steuerberater widerspricht |
 | 2026-10-05 | **Online-Terminanfrage für die Box (Y3): zulässig; TI wird nicht umgangen. Praxura = Auftragsverarbeiter NUR für Portal + Chiffrat-Postfach; die Box selbst bleibt rollenlos (K6 unberührt).** | Heutiges SaaS-Modell (Patient gibt Verordnungsangaben selbst ein) ist zulässig: Art. 9 Abs. 2 lit. h DSGVO + § 22 Abs. 1 Nr. 1 lit. b BDSG (Anbahnung Behandlungsvertrag), Einwilligung als Rückfall. Y3 (Browser verschlüsselt mit Praxis-Schlüssel, wir sehen nur Chiffrat): Inhalt für uns ohne Schlüssel voraussichtlich kein Personenbezug (EuGH C-413/23 P, nicht erneut verifiziert), aber Metadaten (IP + Praxis + Zeit) = Art.-9-nah (C-582/14, C-184/20, C-21/23) → schmale **Portal-AVV** mit § 203-Abs.-3/4-Schweigepflichtklausel. TI: keine Pflicht für Patient→Praxis-Kommunikation (§ 360 Abs. 7/8/9 SGB V verifiziert: eVO-Pflicht Ärzte 01.01.2027, TI-Anbindung Heilmittelerbringer 01.10.2027, Token Papier/elektronisch). Bedingungen: Hosting Hetzner DE (nicht Vercel), SRI + Schlüssel-Fingerprint in der Box, IP ≤ 7 Tage gekürzt, Postfach-Löschung bei Abholung/max. 14 Tage, Foto optional + eigene Einwilligung + EXIF-Strip im Browser, Löschung bei Ablehnung. Box im eigenen Hetzner der Praxis kann die Seite selbst ausliefern (dann keine Rolle). Gleiche AVV-Logik für einen zentralen KI-Relay (maskierter Text bleibt personenbezogen, legal-de 02.10) → `/konsey` (KUTU_HAZIRLIK_SPRINT §3b). | Bewertung — Umsetzung offen (Konsey) | Anwalt (1–2 h): Metadaten unter § 393 SGB V? · eVO-Token über diesen Kanal → Zuweisungs-/Makelverbot? · Portal-AVV ausreichend oder „Transportdienst“ vertretbar? |
 | 2026-10-05 | **B6 — Proprietäre `LICENSE` (Alle Rechte vorbehalten) für Repo + Box; Drittkomponenten ausgenommen; THIRD-PARTY-NOTICES vor erster Box-Auslieferung. FullCalendar-Premium mit NonCommercial-Schlüssel kommerziell genutzt → am selben Tag auf Standard-Bundle (MIT) umgestellt.** | Inhaber-Vermerk „Yavuz Kemal Demir, Inhaber der ausschließlichen Nutzungsrechte“ (nicht „Urheber“, § 29 UrhG; Grundlage Rechteübertragung 06.08.2026 — Abdeckung künftiger Beiträge Melihs von Kemal zu prüfen). §§ 69d/69e UrhG ausdrücklich unberührt (§ 69g Abs. 2). GitHub-ToS-Rechte (Ansehen/Forken) solange Repo public nicht abbedingbar. Box: Datei im Image + `install.sh`-Hinweis; Clickwrap erst mit K-11-Nutzungsvertrag. esbuild `--legal-comments=none` entfernte MIT/BSD-Hinweise aus `vendor/` → `eof` bzw. NOTICES. FullCalendar: `kalender.html` nutzte `resourceTimeGridDay` mit `CC-Attribution-NonCommercial-NoDerivatives` → Premium-Bundle durch `fullcalendar@6.1.11` Standard ersetzt (sha256 jsDelivr = unpkg), Ansicht „Team-Tag“ entfällt. | Kapalı (Text + FullCalendar) — LICENSE/NOTICES-Dateien offen (K2b.16) | Beteiligungsvertrag/UG überträgt Rechte · Repo-Split (public Teil eigene LICENSE) · Images werden selbst gebündelt statt vom Kunden gezogen (GPL-Quellangebot) |
+| 2026-10-05 | **K-20 — KI über EIN Praxura-Azure-Konto + kurzlebige Entra-Token (Box → Azure direkt, kein Relay): legal-de-Veto vom 05.10.2026 („zentraler KI-Relay") für diese Variante AUFGEHOBEN → 🔧 KOŞULLU.** | Kein Praxura-System im Inhaltspfad → Einwand „Relay = Cloud-System i. S. d. § 393 Abs. 3 Nr. 2 SGB V" entfällt nach Wortlaut; Rolle Praxura = Auftragsverarbeiter (KI-Ausschnitt, opt-in), Microsoft = Unterauftragsverarbeiter; nur pseudonymisierte Strukturfelder, kein Freitext → § 203 „Offenbaren" weitgehend ausgeschlossen, Abuse Monitoring für diese Datenklasse tragbar. 7 Auflagen, 2 Anwaltsfragen, 3 Microsoft-Anfragen: Abschnitt „Nachtrag (4)" unten. | 🔧 Koşullu — v1 klein (fester Deckel, kein Stripe/Kredit, Beta gratis, opt-in, Betas starten mit KI aus); zuerst Serienplanung + Heilmittel-Normalisierung, Mail-Entwürfe erst nach Anwaltsantwort | Anwalt verneint Frage 1 oder 2 · Microsoft bestätigt C5-Scope/Bridge Letter nicht · Product Terms verbieten Token an Endkunden · Freitext/Namen/Geburtsdatum gelangen in den Prompt · ein Praxura-Server tritt in den Inhaltspfad · zustandsbehaftete Azure-Features werden aktiviert |
 
 ---
 
@@ -505,6 +506,112 @@ Produktiv bleibt Azure (Sweden Central). Web- und Rechtstexte nennen STACKIT nir
 keine Korrektur nötig. **Unabhängig von STACKIT weiter offen:** die zwei Punkte oben unter
 „Offene Punkte" vom 29.09.2026 (§ 203-Verpflichtung in Praxuras eigener AVV; überzogene
 Azure-„Zero-Data-Retention"-Aussage in `VVT.md`/`AVV.md`).
+
+### Nachtrag (4), 05.10.2026 — Azure Token-Modell (K-20)
+
+**Anlass / neue Tatsachen.** Der Konsey vom 05.10.2026 (`konsey/tutanak/2026-10-05-merkezi-praxura-servisi.md`,
+KARARLAR Z. 11) hat den zentralen KI-Relay mit legal-de-Veto abgelehnt; der dort gewiesene
+Ausweg („Schlüssel je Praxis") ist faktisch gescheitert (STACKIT 01.10.2026 abgelehnt,
+eigenes Azure-Konto je Praxis unrealistisch). Neues Modell, rechtlich = B′ (Nachtrag 2) mit
+Azure statt STACKIT: EIN Azure-OpenAI-Ressource im Praxura-Abo (Sweden Central, Standard,
+gpt-4.1-mini); Backend stellt nur ein ~1-h-Entra-Token aus (Prüfung: Praxis aktiv, Kontingent);
+die Box ruft Azure **direkt**; Backend erhält nur Zählwerte (Datum, Aufgabe, Token in/out).
+Kein Inhalt über Praxura-Server. KI-Aufgaben nur Text: Serienplanung, Heilmittel-
+Normalisierung, Terminbestätigungs-/Patienten-/Arzt-Mail-Entwurf. Rezeptfoto-OCR entfällt.
+Konsey-Entscheidung: `konsey/tutanak/2026-10-05-ki-tek-hesap-jeton.md`.
+
+**Bewertung.**
+1. **Rolle — Auftragsverarbeiter (nur KI-Modul, opt-in), Microsoft Unterauftragsverarbeiter.**
+   Praxura ist Vertragspartner/Weisungsgeber Microsofts; Datenzugriff fehlt, die Rolle bleibt
+   (wie B′ Nr. 1). Praxen ohne aktiviertes Modul: Box bleibt rollenlos (K6).
+2. **§ 393 SGB V — Einwand „Cloud-System" entfällt nach Wortlaut.** Eingesetztes Cloud-System
+   ist allein Azure OpenAI; Token-Ausgabe/Kontingent/Zählung ist keine Verarbeitung von
+   Gesundheits-/Sozialdaten. Restlücken: C5-Bericht 04/2025–03/2026, Azure OpenAI Fußnote 6
+   (nur 01.04.–31.12.2025), Foundry-Zeile ganzer Zeitraum (Zuordnung = Schluss, nicht
+   bestätigt); Berichtszeitraum endete 31.03.2026 → Bridge Letter. Abs. 3 Nr. 3:
+   Kundenkriterien (CUEC) setzt **Praxura** um.
+3. **Art. 9 / § 203 / Abuse Monitoring.** Pseudonymisierte Strukturfelder bleiben aus Sicht
+   von Praxis/Praxura personenbezogen (Art. 9-Kontext); für Microsoft ohne Zuordnungsschlüssel
+   ggf. nicht (EuGH C-413/23 P, relativer Ansatz) → AVV bleibt nötig, Risiko deutlich gesenkt.
+   § 203: ohne Namen/Geburtsdatum/Kennnummern/Freitext und ohne Zuordnungsmöglichkeit beim
+   Empfänger liegt nach h. M. kein „Offenbaren" vor (nicht gesichert → Anwaltsfrage 2).
+   Abuse Monitoring (Learn „Data, privacy, and security", Stand 18.05.2026: Speicherung nur
+   markierter Prompts in der Ressourcen-Geografie, menschliche Prüfung durch EWR-Mitarbeiter,
+   SAW + JIT) ist für diese Datenklasse **tragbar** — dokumentierte Risikoakzeptanz.
+   Rest: Box-IP + Terminzeit; ohne Praxiskalender kein vernünftiges Mittel zur Re-Identifikation.
+4. **Veto-Gründe 05.10.:** Klartext beim Relay — entfällt · § 393 Cloud-System — entfällt
+   (Wortlaut, Anwalt bestätigt) · AV-Rolle — bleibt, akzeptiert · Abuse Monitoring/§ 203 —
+   weitgehend entfallen (Datenklasse) · guvenlik Freitext-Leck 13 % — entfällt (kein Freitext;
+   guvenlik hat sein Veto für dieses Modell selbst aufgehoben, Register S-45) · K6 — gewahrt.
+   **→ Veto aufgehoben, 🔧 KOŞULLU.**
+
+**Auflagen (vor erster Aktivierung bei einer Praxis).**
+1. Maskierung in der Box (M4) per **Allowlist, fail-closed**: nur freigegebene Strukturfelder;
+   Freitext in diesem Modus technisch ausgeschlossen; Namen nur als Platzhalter (`{NAME}`),
+   Alter statt Geburtsdatum, IK/LANR/Adresse/Versichertennummer/PLZ nie; Tests; Protokoll nur
+   über die **Form** des Requests, nie den Inhalt.
+2. Azure-Ressource: nur stateless `chat/completions`; **aus**: Stored Completions, Responses
+   API mit `store`, Assistants/Threads, Files, Batch, Fine-Tuning (sonst Mandantenleck über
+   gemeinsame Ressource). Deployment **Standard Sweden Central** (nicht Global/DataZone).
+   Token: eigene RBAC-Rolle nur mit Inferenz-Datenaktion, eine Deployment, TTL ≤ 1 h.
+3. Microsoft schriftlich: C5-Scope + Bridge Letter (s. u.); Professional Secrecy Amendment
+   beantragt — bei Ablehnung Risikoakzeptanz hier nachtragen.
+4. Dokumente (s. u.) vor Aktivierung fertig.
+5. Schriftliches Anwaltsvotum (2 Fragen) vor erstem bezahlten Einsatz; Mail-Entwürfe erst
+   nach Antwort (Konsey).
+6. Microsoft Product Terms prüfen: Token-Ausgabe an Endkunden-Box = „Customer Solution"
+   oder unzulässige Überlassung? Kontingent zusätzlich auf Azure-Seite begrenzen
+   (Missbrauch innerhalb der Token-Laufzeit geht auf Praxuras Rechnung).
+7. AI Act / MDR: UI-Hinweis „KI-Entwurf — bitte vor Versand prüfen", Mensch prüft vor
+   Versand; Serienplanung setzt nur die ärztlich verordnete Frequenz um — schlägt sie je eine
+   Therapiefrequenz vor, MDR-Neubewertung.
+
+**Anwaltsfragen (ORG-Briefing, ca. 1–2 h, €300–600 🟡).**
+1. „Ist ein Softwareanbieter, der als Vertragspartner von Microsoft lediglich kurzlebige
+   Zugriffstoken ausstellt und selbst keine Inhaltsdaten verarbeitet, ‚datenverarbeitende
+   Stelle' bzw. Einsetzender eines Cloud-Systems i. S. d. § 393 Abs. 3 Nr. 2 SGB V — und
+   genügt Microsofts C5-Bericht (Azure OpenAI Fn. 6 / Foundry) samt Bridge Letter für
+   Verarbeitungen ab 01.01.2026?"
+2. „Liegt ein ‚Offenbaren' i. S. d. § 203 StGB vor, wenn ausschließlich pseudonymisierte
+   Strukturfelder ohne Namen, Geburtsdatum, Kennnummern und Freitext an Microsoft gehen, das
+   keinen Zuordnungsschlüssel besitzt, aber markierte Prompts durch EWR-Mitarbeiter prüfen
+   lassen kann?"
+
+**Microsoft-Anfragen (Support-Ticket, 🟢 €0).**
+- C5: Bestätigung, dass gpt-4.1-mini Standard in Sweden Central im Scope „Microsoft Foundry /
+  Azure Direct Models" liegt, und Bridge Letter für die Zeit nach 31.03.2026.
+- Professional Secrecy Amendment (Deutschland) / Zusatzvereinbarung für Berufsgeheimnisträger
+  zur MCA — inkl. Frage, ob sie Modified Abuse Monitoring voraussetzt.
+- Product Terms: Zulässigkeit, Endkunden-Installationen per kurzlebigem Entra-Token auf die
+  eigene Ressource zugreifen zu lassen („Customer Solution").
+
+**Dokumente (nur vermerkt — Texte in VVT/AVV jetzt NICHT ändern).**
+- Portal-AVV: Anlage „KI-Zusatzmodul" (Gegenstand = Allowlist-Felder, Microsoft Ireland als
+  Unterauftragsverarbeiter, Art. 28 Abs. 4 Weitergabe, Art. 33-Meldekette, § 203-Abs.-3/4-
+  Klausel Praxuras selbst).
+- Art. 13-Baustein für die Patienteninformation der Praxis (Empfänger Microsoft, EU/Schweden,
+  pseudonymisiert).
+- VVT (neue/angepasste Tätigkeit KI-Modul), DSFA-Aktualisierung (Risiko gesenkt), TOM
+  (Token-/RBAC-Maßnahmen, CUEC).
+- „Zero-Data-Retention"-Behauptung in `VVT.md`/`AVV.md` streichen (offener Punkt 29.09.2026).
+- TIA kurz: Microsoft-US-Mutter, DPF + SCC im Microsoft-DPA, pseudonymisierte Daten.
+
+**Marketing-/Vertragssprache.**
+Zulässig: „Optionales KI-Modul, standardmäßig deaktiviert" · „Übertragen werden nur
+pseudonymisierte Strukturdaten — keine Namen, kein Geburtsdatum, keine Adresse, keine
+Versicherten- oder IK-Nummer, kein Freitext" · „Die Inhalte laufen nicht über Server von
+Praxura" · „Verarbeitung bei Microsoft Azure in Schweden (EU), Unterauftragsverarbeiter gemäß
+AVV" · „KI-Entwurf — vor dem Versand prüfen" · „Der KI-Dienst ist vom Anbieter nach BSI C5
+testiert" (**erst nach** Microsoft-Bestätigung).
+Unzulässig: „anonymisiert" · „Keine Patientendaten verlassen die Praxis" (bei aktivem Modul
+falsch; „100 % lokal"-Aussagen der Box mit „ohne optionales KI-Modul" einschränken) ·
+„Praxura ist C5-zertifiziert" · „Zero Data Retention" / „keine Speicherung" / „Microsoft
+sieht nichts" · „DSGVO-konform garantiert" · „KI prüft die Verordnung".
+
+**Kosten.** Eigenarbeit 🟢 €0 (~2–3 Tage) · Anwalt 🟡 €300–600 einmalig · Azure tokenbasiert,
+beim heutigen Volumen vernachlässigbar.
+
+**Neubewertung ausgelöst durch:** siehe Tabellenzeile K-20.
 
 ## 2026-10-02 — Kutu-Hazırlık-Sprint K1.8 (2FA · Disk · S-31) und K1.4 (Löschung↔Aufbewahrung)
 

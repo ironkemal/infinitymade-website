@@ -4326,7 +4326,7 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 > **proje mi, token mı, organizasyon mu bazında sayıldığı yazılı değil**, müşterinin limiti
 > düşürebildiği yazılı değil, **harcama tavanı (spend cap) yazılı değil.**
 
-### O-134 — Yönetilen AI token'ı (STACKIT, anahtar bizden, lisans kanalıyla): G2 vetosu yok, ama model K4'ü açıyor ve teslim kanalı henüz yok 🔴 **offen**
+### O-134 — Yönetilen AI token'ı (STACKIT, anahtar bizden, lisans kanalıyla): G2 vetosu yok, ama model K4'ü açıyor ve teslim kanalı henüz yok ⚪ **widerlegt (05.10.2026, K-20 → O-169)**
 
 | Alan | İçerik |
 |---|---|
@@ -4335,13 +4335,15 @@ doğrulandı: `dateien-sha.json` ve `env.taban.template` yalnız o zaman yazıld
 | **Tip** | **E** (bizim sırrımız müşteri sunucusunda) + **A** (kutu → STACKIT) + **F** (merkezde rotasyon + maliyet bekçisi) + **G** (merkezde provisioning) + **H** (AI yetkisi lisanstan) |
 | **Kutuda ne olur** | Token kutuda **okunabilir** — müşteri sunucunun sahibi, root'u var; dosya, env, DB fark etmez. Yani K5'in gerekçesi ("her sır okunabilir → sızar → faturası bize keser") **hâlâ doğru**; değişen, zararın sınırlandırılabilir olması: token tek praxise ve tek projeye bağlı, TTL'li, merkezden silinebilir. İnternet yoksa: token TTL'i dolana kadar AI çalışır (STACKIT'e çıkış zaten internet ister), sonra AI sessizce kapanır — uygulama açık kalmalı (O-07 şartı, bugün `azureClient.js:40` bunu bozuyor). Bizim sunucumuz kapalıysa: rotasyon durur, TTL içinde AI çalışmaya devam eder |
 | **Çözüm** | Aşağıdaki **hüküm + şartlar**. Playbook'ta bu iş için görev yok → **Faz 3.5 önerisi** ("yönetilen AI anahtarı: provisioning + lisans yükü + rotasyon + maliyet bekçisi") — Faz 3.1/3.2'ye bağımlı |
-| **Durum** | `offen` — **iki karar sahibinde:** (1) **Kemal K4'ü açıkça açar** (K4 = "müşterinin kendi hesabı/anahtarı"; bu model onu doğrudan tersine çeviriyor — konsey açamaz, ben açamam; açılırsa playbook §2'ye yazılır). (2) `legal-de`'nin 29.09 hükmü (`compliance/LEGAL_DECISIONS.md:348-349`): *on-prem'de "kein Reselling (Ziff. 20) und kein Key von uns — sonst Rolle + §393 zurück (K6)"* + 28.09 memosu F1 (Auftragsverarbeiter'in kendi C5'i). **Bu modelin bugünkü gerçek engeli benim vetom değil, bu ikisi** |
+| **Durum** | `offen` — **iki karar sahibinde:** (1) **Kemal K4'ü açıkça açar** (K4 = "müşterinin kendi hesabı/anahtarı"; bu model onu doğrudan tersine çeviriyor — konsey açamaz, ben açamam; açılırsa playbook §2'ye yazılır). (2) `legal-de`'nin 29.09 hükmü (`compliance/LEGAL_DECISIONS.md:348-349`): *on-prem'de "kein Reselling (Ziff. 20) und kein Key von uns — sonst Rolle + §393 zurück (K6)"* + 28.09 memosu F1 (Auftragsverarbeiter'in kendi C5'i). **Bu modelin bugünkü gerçek engeli benim vetom değil, bu ikisi** — **05.10.2026: `widerlegt`.** Öncül düştü: STACKIT hesap açmadı (01.10), model yerine K-20 geldi (tek Praxura Azure kaynağı + kısa ömürlü Entra jetonu, O-169). Engel (1) kalktı: Kemal K4'ü K-20 ile değiştirdi. Engel (2) (legal-de, rol/§393) jeton modeliyle **kalkmadı** — O-169'da açılış sırasına bağlandı. Şartlar silinmedi, O-169'a devredildi (aşağıdaki sapma notu) — Önceki: `offen` |
 
 **Hüküm — G2: veto YOK (şartlı).** G2'nin metni *image'a, repo'ya, kurulum paketine gömme*yi
 yasaklar. Token çalışma zamanında, kutuya özel, lisans kanalıyla gelir → metin ihlal edilmiyor.
 Bu 28.09'daki Azure-B hükmümle tutarlı (orada da veto vermedim). K5'in metni ("pakete
 gömülmez") da ihlal edilmiyor; K5'in **gerekçesi** ise ancak aşağıdaki şartlar sağlanırsa
 karşılanıyor. Şartlardan biri eksikse model G2/K5 ruhunu çiğner ve ⛔ geri gelir.
+
+> **05.10.2026 sapma notu (K-20, O-169):** Bu şartların K-20'ye devri: **1–2** (token diske/yedeğe/tanılama paketine girmez) jeton **yalnız bellekte** tutulduğu için kendiliğinden karşılanıyor; kalıcı sır artık yalnız kutu kimliği (Ed25519 özel anahtarı) — aynı yer kuralı onun için geçerli. **3'ten bilinçli sapma:** "kullanım kutudan merkeze raporlanmaz" STACKIT'in proje bazlı faturasına dayanıyordu; tek Azure kaynağında praksis başına ayrım yok. K-20'de kutu jeton isteğine **toplu** kullanım ekler (görev adı + token in/out, son jetondan beri; tek tek çağrı zamanı yok, hasta verisi yok) — ama bu **yalnız bilgi**: sınır merkezin **verdiği jeton sayısına** dayanır, kutunun beyanına değil (kurcalanmış kutu eksik bildirir). G1 temiz kalır: istek kutu kimliği + sürüm + toplu sayaç taşır. **4** (TTL/rotasyon) 60–90 dk Entra ömrüyle değişti. **5–7, 9–10** aynen geçerli. **8** (maliyet tavanı) Azure'da TPM + budget alert ile karşılanıyor (O-137).
 
 **Şartlar (hepsi, uygulama öncesi):**
 
@@ -4416,7 +4418,7 @@ SaaS için ayrı bir STACKIT projesi ("saas") yeterli; praxis başına proje ger
 | **Çözüm** | llmClient yazıldığı commit'te compose + `.env.template`'e eklenir (Faz 1.3). Yönetilen modelde değerler lisans yükünden gelir; env boşsa lisans değeri kullanılır |
 | **Durum** | `gelöst` (`67dbe9d`, K2.7): `onprem/docker-compose.yml:477-478` + `onprem/.env.template:216-217`. Kodun bu adları okuması O-151/M4.1'de — Önceki: `geplant` (Faz 1.3) |
 
-### O-137 — STACKIT'te harcama tavanı ve limit kapsamı belgelenmemiş: "praxis başına ayrı limit, ayrı maliyet satırı" iddiası doğrulanmadı 🔴 **offen**
+### O-137 — STACKIT'te harcama tavanı ve limit kapsamı belgelenmemiş: "praxis başına ayrı limit, ayrı maliyet satırı" iddiası doğrulanmadı ⚪ **widerlegt (05.10.2026, STACKIT düştü)**
 
 | Alan | İçerik |
 |---|---|
@@ -4425,7 +4427,7 @@ SaaS için ayrı bir STACKIT projesi ("saas") yeterli; praxis başına proje ger
 | **Tip** | F (merkezde maliyet bekçisi gerekecek) + G |
 | **Kutuda ne olur** | (a) Limit **organizasyon** bazındaysa tek praxisin yükü (ya da sızan bir token) bütün praxislerin **ve SaaS'ın** AI'sını 429'a düşürür. (b) Harcama tavanı yoksa sızan token'ın maliyeti yalnız bizim silme hızımızla sınırlı. (c) Maliyet proje bazında raporlanmıyorsa O-134 şart 3'ün "kullanım kutudan raporlanmaz" çözümü çöker — o zaman kutudan merkeze kullanım kanalı gerekir, bu da G1'e dokunur |
 | **Çözüm** | STACKIT'e yazılı soru (Kemal, 29.09 mailine ek): limit proje/token/org bazında mı · proje başına kota düşürülebiliyor mu · harcama tavanı/bütçe kesmesi var mı · maliyet proje bazında API ile okunabiliyor mu · organizasyon başına proje sınırı kaç. Cevaba göre merkezde günlük maliyet bekçisi (O-134 şart 8). **Ops kartı açılmalı** (Launch) — kart no. buraya yazılana kadar `offen` |
-| **Durum** | `offen` |
+| **Durum** | `widerlegt` (05.10.2026) — soru STACKIT'e özeldi; STACKIT hesap açmadı (01.10), K-20 ile sağlayıcı Azure. Azure karşılığı O-169'da: tek deployment'ın **TPM kotası** = en kötü saatlik maliyetin üst sınırı (Azure'da sert harcama tavanı yok) + budget alert → merkezde otomatik jeton kesme. (c) maddesinin korktuğu "kutudan merkeze kullanım kanalı" K-20'de açıldı, G1 sınırıyla (O-134 sapma notu) — Önceki: `offen` |
 
 ---
 
@@ -5025,11 +5027,14 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 20 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-134 · O-137 · O-146 · O-156 · O-158 · **O-166** · **O-167** · **O-168** |
-| `geplant` | 26 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 · **O-155** (K2b, kısmi) · **O-159** · **O-161** · **O-162** · **O-163** · **O-164** · **O-165** · **O-157** (K2b.14) |
+| `offen` | 17 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-146 · O-156 · O-158 · **O-166** · **O-168** |
+| `geplant` | 27 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 · **O-155** (K2b, kısmi) · **O-159** · **O-161** · **O-162** · **O-163** · **O-164** · **O-165** · **O-157** (K2b.14) · **O-169** (K-20) |
 | 🟡 `kısmen gelöst` | 25 | O-01 · O-02 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · O-116 · O-118 · O-120 · O-125 · O-126 · **O-123** · **O-142** · **O-144** · **O-151** |
 | `gelöst` | 84 | O-06 · O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-105 · O-106 · O-109 · O-114 · O-117 · O-122 · O-124 · O-130 · O-131 · O-133 · O-140 · O-143 · **O-03** · **O-09** · **O-107** · **O-129** · **O-136** · **O-147** · **O-148** · **O-149** · **O-150** · **O-152** · **O-153** · **O-154** · **O-160** |
 | `unkritisch` | 13 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 |
+| `widerlegt` | 3 | **O-134** · **O-137** · **O-167** (05.10.2026, K-20) |
+
+> ✅ **05.10.2026 akşam (K-20) — yeniden toplandı:** 17 + 27 + 25 + 84 + 13 + 3 = **169**, en yüksek madde numarası **O-169**. Uyuşuyor. O-134/O-137/O-167 `offen`→`widerlegt` (STACKIT düştü, relay reddedildi; şartlar O-169'a devredildi). Yeni: O-169 (§7AC, dosya sonu). O-161'e tek kutu kimliği bağı eklendi.
 
 > ✅ **05.10.2026 öğle (K-19 / K2b.15) — yeniden toplandı:** 20 + 26 + 25 + 84 + 13 = **168**, en yüksek madde numarası **O-168**. Uyuşuyor. O-157 `offen`→`geplant` (K2b.14). Yeni: O-166/O-167/O-168 (§3b merkezi servis, konsey turu — dosya sonundaki §7AA). O-22/O-155/O-165 durum notu: §7AB.
 
@@ -5299,7 +5304,7 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 | **Tip** | A (runtime dış çağrı) + F (IP güncelleme zamanlanmış iş) + G (merkez tarafı servis) |
 | **Kutuda ne olur** | Taşınan veri yalnız alt ad, TXT doğrulama dizgisi, iç IP. Hasta verisi yok, G1 temiz (lisans yenileme ile aynı sınıf). **Merkez kapalıyken:** ad çözümü sürer (kayıtlar DNS sağlayıcısında durur, bizim VPS'te değil — K2b.2'de bu şart). Sertifika ≤90 gün geçerli kalır, yenileme tekrar dener. IP değişirse adres merkez dönene kadar kırık kalır. **Biz tamamen ortadan kalkarsak:** ≤90 günde her kutunun sertifikası düşer, alt adlar da bizim zone'da. Bu K9'un ruhuna değiyor (veriye erişim rehin olmamalı) |
 | **Çözüm** | K2b.2/K2b.3/K2b.6. Şartlar: (a) merkez adresleri kutuda **env'den** (`ACME_DNS_URL` vb.), koda sabit `praxura.de` girmez — kapı sayacına takılır (tip C) · (b) `praxura.de` zone anahtarı kutuya **asla** (G2) — kutu başına yalnız kendi TXT/A kaydını yazabilen kimlik; bu kimlik kutuda sır sayılır, `.env`/volume'da durur, yedeğe girer, image'a girmez · (c) DNS kayıtları bizim VPS'te değil, DNS sağlayıcısında (VPS çökmesi = adres çökmesi olmasın; O-159 dersi) · (d) **çıkış yolu** kılavuzda (K2b.8): praksis kendi alan adını ve kendi DNS-01 sağlayıcısını girebilir, son çare `tls internal`. Çıkış yolu yazılmadan K3'e çıkılmaz |
-| **Durum** | `geplant` — K2b.2/K2b.3 kodu yazılmadan önce bu sicilde ön kontrol |
+| **Durum** | `geplant` — K2b.2/K2b.3 kodu yazılmadan önce bu sicilde ön kontrol. **05.10.2026 (K-20) bağı:** kutu kimliği **tek**: K-18 kurulumunda kutuda üretilen Ed25519 anahtar çifti; merkez yalnız açık anahtarı tutar. Ad servisi (A kaydı), Y3 postakutusu çekme (O-166) ve KI jetonu (O-169) **aynı kimliği** kullanır — üç ayrı kutu kimliği icat edilmez. acme-dns'in kendi TXT kimliği teknik zorunluluksa ayrı kalabilir, ama kayıt ve iptal aynı kutu kaydına bağlanır (kutu iptal = hepsi birden kapanır) |
 
 ### O-162 — İnternet kesilince praksis içinde ad çözülmeyebilir: kutu LAN'da ayakta, cihazlar adresi bulamıyor 🟡 **geplant (K2b.9)**
 
@@ -5362,7 +5367,7 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 | **Çözüm** | Şartlar: URL env'den (tip C yok) · varsayılan KAPALI bayrak · degrade yolu K3'ten önce yazılı · merkez n8n VPS'inde DEĞİL (O-159, 2vCPU/3.7GB swapsız) — `merkez/` ayrı küçük VPS'te ad servisi ile birlikte · n8n workflow'u olarak yazılmaz (G3/G8) · teslimde silme + IP ≤7 gün kodda zorlanır |
 | **Durum** | `offen` — Kemal kararı + K2b görev no. bekliyor |
 
-### O-167 — KI relay: maskeli metin merkeze, bizim Azure anahtarı ile 🔴 **offen — kilitli K6'yı açar, kullanıcıya çıkarıldı**
+### O-167 — KI relay: maskeli metin merkeze, bizim Azure anahtarı ile ⚪ **widerlegt (05.10.2026 — konsey reddetti, yerine K-20 / O-169)**
 
 | Alan | İçerik |
 |---|---|
@@ -5370,7 +5375,7 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 | **Tip** | A + E + G |
 | **Kutuda ne olur** | G2 açısından iyi (bizim anahtar kutuya girmez). Ama maskeli metin pseudonim kişisel veri: K6 + 09-28 konsey "merkezi gateway kapalı" kararlarını açar; bu sicil açamaz. Maskelemenin kaçırdığı her alan doğrudan G1 ihlali olur. Merkez düşerse/biz kalkarsak: KI ölür → BYO-key (O-151 env sözleşmesi) ya da KI kapalı yoluna düşmeli |
 | **Çözüm** | Sprintte değil. Açılırsa: llmClient'ta ikinci sağlayıcı (aynı kod, env seçer), BYO-key yolu silinmez. Karar Kemal'in |
-| **Durum** | `offen` |
+| **Durum** | `widerlegt` (05.10.2026) — konsey relay'i reddetti (legal-de ⛔: maskeli metni merkezde açık okuruz → Art. 9 AV + §393 "Cloud-System"; guvenlik: serbest metinde %13 sızıntı). Yerine K-20: içerik merkezden **hiç geçmez**, merkez yalnız jeton + sayaç verir (O-169). Yeniden açılma koşulu konsey kaydında (avukat "stateless relay Cloud-System değil" + relay'e yalnız A sınıfı alanlar) — Önceki: `offen` |
 
 ### O-168 — Hausbesuch km için ORS relay 🟡 **offen — öneri: relay yok**
 
@@ -5381,3 +5386,23 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 | **Kutuda ne olur** | B koordinatı hasta ev adresinden türer → G1 konusu, O-11'deki AVV sorunu bize taşınır. Kazanç küçük |
 | **Çözüm** | O-11 öneri (a): praksisin kendi ücretsiz ORS anahtarı (kutudan doğrudan, bizden geçmez) + yoksa elle km. Relay yazılmaz |
 | **Durum** | `offen` — Faz 1.5 / O-11'e bağlı |
+
+---
+
+## 7AC — K-20 (05.10.2026, konsey + Kemal): KI = tek Praxura Azure kaynağı + kısa ömürlü Entra jetonu
+
+> Kaynak: konsey 05.10.2026 + Kemal onayı (K-20; tutanak ve KHS görev numaraları koordinatörde). Bu bölüm yalnız sicil tarafını tutar.
+> **Değişen kilitli karar:** K4 (müşterinin kendi IONOS hesabı) → K-20. `direkt` (BYO) yolu **silinmez**, istisna olarak kalır. **K6 açılmadı:** jeton modeli proxy değildir — içerik merkezden geçmez (playbook §2'ye not düşüldü).
+> **Değişmeyen:** 28.09 B kararının hukuki ön şartları (Microsoft yazılı cevapları, Modified Abuse Monitoring, avukat, AVV/Sub-AV/DSFA). Jeton anahtarın **güvenliğini** çözer, **rolü** (Microsoft bizim alt işleyicimiz, biz AI için Auftragsverarbeiter) değiştirmez. Bu yüzden serbest metne en yakın görevler (mail taslakları) avukat cevabından sonra açılır.
+> **Onprem hükmü:** GEÇER, KAYITLA — G1/G2/G3/G8'de veto yok, aşağıdaki şartlarla.
+
+### O-169 — KI jeton modu: kutu, merkezden aldığı 60–90 dk'lık Entra jetonuyla tek Praxura Azure kaynağına doğrudan gider 🟡 **geplant (K-20; Faz 3.5 + Faz 1.3/O-135 + M4.1)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `AI_MODE=jeton`: kutu, kutu kimliğiyle imzalı istekle merkezden kısa ömürlü Entra access token alır ve Azure OpenAI'ya (Sweden Central, Standard) **doğrudan** gider; içerik merkezden geçmez, merkez yalnız jeton + sayaç tutar. Sözleşme: `AI_MODE=aus\|direkt\|jeton` (kutuda varsayılan `aus`) |
+| **Nerede** | Henüz kod yok. Dokunacağı yerler: `api-backend/ai/azureClient.js:11-16` (endpoint/anahtar modül seviyesinde sabitleniyor → O-135 `getAiCredential()`) · `:38-40` (üretimde anahtar yokken `throw` — O-07/O-151) · `:46-63` (bölge kontrolü → tam host izin listesi) · `:127` (`'api-key'` başlığı → jeton modunda `Authorization: Bearer`) · merkezde `merkez/` jeton ucu (ileride Faz 3.1 lisans sunucusunun ucu) · kutu kimliği K-18 kurulumunda (O-161) |
+| **Tip** | **A** (kutu → Azure) + **E** (merkezde SP sırrı; kutuda kutu kimliği) + **F** (merkezde budget alert + gece karşılaştırması) + **G** (merkez tarafı jeton ucu) + **H** (KI yetkisi = kutu başına aylık sınır) |
+| **Kutuda ne olur** | **Normal:** jeton bellekte; ömrü dolunca ya da restart'ta yenisi alınır. **İnternet yok:** Azure'a zaten çıkılamaz → KI düğmeleri pasif, kutunun geri kalanı çalışır. **Merkez kapalı:** eldeki jetonun ömrü kadar (≤90 dk) KI çalışır, sonra pasif. **Sınır doldu / kutu iptal / lisans salt-okunur (K9):** merkez jeton vermez → ≤90 dk'da KI pasif. **429 (TPM):** istek kuyruğa, kullanıcıya açık mesaj. Entra jetonu süresi dolmadan **geri çekilemez** (doğrulanmalı) → sızan jetonun zarar penceresi ömrü kadar, maliyeti TPM ile sınırlı. ⚠️ Bugün `azureClient.js:38-40` jeton/anahtar yokken üretimde `throw` ediyor → düzeltilmeden jeton modu kutuyu bozar |
+| **Çözüm** | **Şartlar (K-20'nin uygulama kapısı):** (1) **Jeton yalnız süreç belleğinde** — disk, `.env`, DB, yedek ve tanılama paketine girmez. (2) **Kutu kimliği = K-18'in tek Ed25519 çifti** (O-161); özel anahtar kalıcı volume'da ayrı dosya, `0600`, yalnız `api`'ye mount; `.env`/DB/tanılama paketine girmez. Merkez yalnız açık anahtarı tutar; istek imzalı + zaman damgalı. (3) **Endpoint TAM host adıyla, image'daki izin listesine karşı denetlenir** (joker yok) — jeton cevabı endpoint taşısa bile; ele geçirilmiş merkez maskeli metni başka hosta yönlendiremez. Merkez URL'si env'den (tip C yok). (4) **Kutular için ayrı service principal**, rolü yalnız o tek Azure OpenAI kaynağında **özel rol** (yalnız chat/completions data action); SaaS VPS'teki mevcut KI ayrı kimlik. (5) **`store:false`**; Responses/Assistants/Files/Batch/stored completions kullanılmaz, kaynakta stateful özellikler kapalı. Paylaşılan kaynakta bir kutunun başka praksisin saklanmış içeriğini okuması (mandant sınırı) böyle kapanır. (6) **Sınır merkezin verdiği jeton sayısına dayanır**; kutunun bildirdiği toplu kullanım (görev + token in/out, jeton isteğine eklenir, hasta verisi yok) yalnız bilgi. v1: kutu başına sabit aylık sınır, Stripe/kredi yok, beta süresince ücretsiz. (7) **TPM düşük + budget alert → merkezde otomatik jeton kesme**; gece Azure toplamı ile verilen jeton/bildirilen kullanım karşılaştırılır. (8) SP sırrı yalnız merkezde (G2 ikinci cümlesi); kutu Entra'ya hiç çıkmaz. (9) Jeton ucu `merkez/` VPS'inde — SaaS VPS'te değil (O-159), Vercel `api/`'de değil (G8), n8n'de değil (G3). (10) `direkt` (BYO) önceliklidir ve silinmez. (11) Açılış sırası: series-scheduler + rezept-normalize önce; mail taslakları (appointment-confirm, b2c, b2b) avukat cevabından sonra. Betalar kutuya `AI_MODE=aus` ile geçer. **Görev:** Faz 3.5 (yönetilen AI: jeton ucu + sınır + bekçi) · Faz 1.3 / O-135 (anahtar kaynağı soyutlaması) · M4.1 (`AI_*` okuma + `throw` kaldırma). **KHS:** 3b.4 (merkez jeton ucu, Hat K) · M4.11 (kutu jeton modu, Hat M) · K2b.17 (tek kutu kimliği, Hat K) · §5 ORG (avukat, Microsoft, Azure kurulumu, belgeler); tutanak `konsey/tutanak/2026-10-05-ki-tek-hesap-jeton.md` |
+| **Durum** | `geplant` (K-20, 05.10.2026). Uygulama öncesi Microsoft belgesinden doğrulanacak: Entra jeton ömrü ve erken iptal edilemezliği · özel rolün yalnız chat/completions'a kısıtlanabildiği · diagnostic loglarda çağıran kimliğinin görünüp görünmediği |
