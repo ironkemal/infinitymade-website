@@ -56,7 +56,23 @@ export function antworttextFallB(gesperrt = []) {
  * @param {string} [params.stripeKey]
  * @returns {Promise<{ status: 'geloescht'|'teilweise_geloescht'|'fehler', gesperrt: Array<object>, unerwartet: string[], log: Array<object>, stripe_fehler?: boolean }>}
  */
-export async function kontoLoeschen(supabase, { ownerId, ownerEmail, vorgangId, stripeKey }) {
+export async function kontoLoeschen(supabase, args) {
+  const erg = await kontoLoeschenIntern(supabase, args);
+  // Der Freeze (keine NEUEN Abrechnungsdateien) gilt nur fuer einen laufenden Loeschlauf. Brach er VOR jeder
+  // Loeschung ab (status 'fehler'), wird der Owner wieder freigegeben — sonst bliebe ein aktives Konto dauerhaft gesperrt.
+  // Bei 'geloescht'/'teilweise_geloescht' bleibt der Freeze bewusst bestehen (Konto ist gesperrt/ausgelaufen).
+  try {
+    if (erg?.status === 'fehler' && Array.isArray(erg.log) && erg.log.some(l => l?.step === 'artefakt:owner_freeze' && l.ok === true)) {
+      const { data, error } = await supabase.rpc('artefakt_owner_unfreeze', { p_owner: args.ownerId });
+      erg.log.push({ step: 'artefakt:owner_unfreeze', ok: !error && data === true });
+    }
+  } catch (e) {
+    erg?.log?.push({ step: 'artefakt:owner_unfreeze', ok: false, error: e?.message });
+  }
+  return erg;
+}
+
+async function kontoLoeschenIntern(supabase, { ownerId, ownerEmail, vorgangId, stripeKey }) {
   const log = [];
   const unerwartet = [];
   const gesperrt = [];

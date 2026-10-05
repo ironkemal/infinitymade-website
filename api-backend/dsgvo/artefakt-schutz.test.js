@@ -190,6 +190,24 @@ describe('DSGVO K4 Artefakt-Schutz', () => {
       assert.equal(calls.stripeReads.length, 0);
     });
 
+    it('gibt den Owner nach einem Abbruch VOR jeder Loeschung wieder frei (artefakt_owner_unfreeze)', async () => {
+      const ownerId = 'own-unfreeze';
+      const { client, calls } = buildSupabaseMock({ registryThrows: true });
+      const res = await kontoLoeschen(client, { ownerId, ownerEmail: 'test@example.com' });
+      assert.equal(res.status, 'fehler');
+      const fns = calls.rpc.map(r => r.fn);
+      assert.ok(fns.includes('artefakt_owner_freeze'));
+      assert.ok(fns.includes('artefakt_owner_unfreeze'), 'Unfreeze muss nach dem Abbruch laufen');
+      assert.equal(calls.rpc.find(r => r.fn === 'artefakt_owner_unfreeze').args.p_owner, ownerId);
+    });
+
+    it('kein Unfreeze, wenn der Freeze selbst scheitert (nichts eingefroren)', async () => {
+      const { client, calls } = buildSupabaseMock({ freezeResult: { data: false, error: null } });
+      const res = await kontoLoeschen(client, { ownerId: 'own-nofreeze', ownerEmail: 'test@example.com' });
+      assert.equal(res.status, 'fehler');
+      assert.ok(!calls.rpc.some(r => r.fn === 'artefakt_owner_unfreeze'));
+    });
+
     it('aborts when registry query throws exception', async () => {
       const ownerId = 'own-reg-throw';
       const { client, calls } = buildSupabaseMock({
@@ -395,14 +413,15 @@ describe('DSGVO K4 Artefakt-Schutz', () => {
         }],
       });
 
-      await kontoLoeschen(client, {
+      const erg = await kontoLoeschen(client, {
         ownerId,
         ownerEmail: 'praxis@example.com',
         vorgangId: 'v-pos-1',
         stripeKey: null,
       });
 
-      assert.equal(calls.rpc.length, 1);
+      // Freeze kommt zuerst; nur bei einem Abbruch VOR jeder Loeschung ('fehler') folgt die Freigabe.
+      assert.equal(calls.rpc.length, erg.status === 'fehler' ? 2 : 1);
       assert.equal(calls.rpc[0].fn, 'artefakt_owner_freeze');
       assert.deepEqual(calls.rpc[0].args, { p_owner: ownerId });
 
