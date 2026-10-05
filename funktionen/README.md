@@ -116,6 +116,14 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 05.10.2026 · Kutu-Uyum K2b.15 (b54cb42)
+- `schliesse(filter, label)` + `tick()` — `api-backend/server.js` `scheduleAttendanceAutoClose` iç fonksiyonları.
+  `schliesse`: attendance present→incomplete, filtre parametreli; `tick`: dakikada bir, gün değişince önceki günleri,
+  23:55'te bugünü kapatır. Niye: kutu PC'si gece kapalıysa 23:55 işi kaçıyordu + PM2 `-i 2` işi iki kez koşuyordu
+  (artık yalnız `NODE_APP_INSTANCE` 0). Nerede: yalnız bu zamanlanmış iş.
+- `kalender.js` `initCalendar`: FullCalendar resources/`resourceTimeGridDay` kaldırıldı (Premium lisans yok → MIT Standard).
+  Olaylardaki `resourceId` zararsız extendedProps olarak kaldı — kopya/ölü alan sayma.
+
 ### 02.10.2026 · KHS K2 — kutu adresi/plan tek kaynak, owner şifre sıfırlama, kutuda olmayan düğmeler gizlendi
 - `appBaseUrl()` (`api-backend/lib/dagitim.js`). Niye: kutuda sunucunun ürettiği linkler (mail, OAuth redirect)
   app.praxura.de'ye gitmesin (O-150/Y4); `SITE_URL → APP_BASE_URL → SaaS` sırası, **istek başlığından kurulmaz**

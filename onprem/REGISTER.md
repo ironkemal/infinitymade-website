@@ -962,7 +962,7 @@ kapı unutmaz ama düşünmez.
 | **Tip** | F |
 | **Kutuda ne olur** | **Çalışır** — zamanlayıcı Express sürecinin içinde, image ile birlikte kutuya gider, dışarıya hiç çıkmaz, pg_cron gerektirmez. Tek not: saat dilimi `BUSINESS_TZ` (Europe/Berlin) sabit; Almanya dışında müşteri düşünülüyorsa env'e alınmalı — bugün alan Almanya olduğu için sorun değil |
 | **Çözüm** | `unkritisch` — desen doğru ve playbook Faz 2.4a'nın istediği şeyin (node-cron) elle yazılmış hâli. **Yeni periyodik iş çıktığında şablon budur**, pg_cron'a gidilmez |
-| **Durum** | `unkritisch` (desen doğru) |
+| **Durum** | `unkritisch` (desen doğru) — **05.10.2026 (`b54cb42`, K2b.15/D3-5):** yer artık `server.js:3833-3874`. İki gerçek kusur kapandı: (1) PM2 `-i 2` işi iki kez koşuyordu → yalnız `NODE_APP_INSTANCE` 0 (değişken yoksa tek süreç, koşar); (2) kutu PC'si 23:55'te kapalıysa iş hiç koşmuyordu → açılıştan 30 sn sonra ve her gün değişiminde `date < bugün` + `status='present'` + check-out yok satırlar da `incomplete`. Güncelleme idempotent, kilit gerekmez. Bilinen etki: ilk deploy'da geçmişte açık kalmış bütün `present` satırlar bir kez topluca kapanır (SaaS'ta da) — istenen davranış. Desen hâlâ şablon; O-146 aynı iki kuralı (tek instance + açılışta telafi) almalı |
 
 ### O-23 — `delete_expired_accounts()` — playbook D5 **çürütüldü**, ama on-prem'de yeni bir risk açıyor
 
@@ -4800,7 +4800,7 @@ izleyici (O-138) ve şema (O-139). İkisi de O-118'in açık kalan yarısına do
 | **Tip** | G |
 | **Kutuda ne olur** | O-150 düzeltilince link doğru host'a (`SITE_URL`) gider ama hasta evinden `praxis.home.arpa`'ya ulaşamaz → link açılmaz. Düzeltmeden önce SaaS'a gidiyor (O-150) |
 | **Çözüm** | Kemal kararı: (a) kutuda bu maillerde link olmaz, metin "bitte Praxis anrufen" der; (b) özellik `IST_KUTU`'da gizlenir; (c) müşteri gerçek alan adı + port yönlendirme kurar (kılavuzda isteğe bağlı yol). Merkezden proxy **yok** (G1/K6). K3 testinden önce seçilmeli, yoksa test senaryosunda kırık link çıkar |
-| **Durum** | `geplant` (KHS K2b, K-18, 05.10.2026) — **yalnız yarısı çözülüyor, bkz. §7Z.** Gerçek ad (`praxis-XXXX.praxura.de`) host sorununu kapatır: link doğru ada gider, praksis içinde, praksis VPN'inde ve Hetzner varyantında açılır. **Ama hasta praksisin VPN'inde değil:** LAN/PC kutusunda ad iç IP'yi gösterir, hasta evden linki yine açamaz. Kalan kısım: kutu internetten erişilebilir değilse hasta maillerinde link yerine "bitte Praxis anrufen" metni (seçenek a/b, bayrak env'den — iki dağıtımda tek kod). Sahibi: K2b.10, karar Kemal. Merkezden proxy hâlâ **yok** (G1/K6) — Önceki: `offen` |
+| **Durum** | `geplant` (KHS K2b, K-18, 05.10.2026) — **yalnız yarısı çözülüyor, bkz. §7Z.** Gerçek ad (`praxis-XXXX.praxura.de`) host sorununu kapatır: link doğru ada gider, praksis içinde, praksis VPN'inde ve Hetzner varyantında açılır. **Ama hasta praksisin VPN'inde değil:** LAN/PC kutusunda ad iç IP'yi gösterir, hasta evden linki yine açamaz. Kalan kısım: kutu internetten erişilebilir değilse hasta maillerinde link yerine "bitte Praxis anrufen" metni (seçenek a/b, bayrak env'den — iki dağıtımda tek kod). Sahibi: K2b.10, karar Kemal. Merkezden proxy hâlâ **yok** (G1/K6) — Önceki: `offen`. **05.10 öğle (K-19 j):** online randevuda Y1 (yok) ve Y2 (mail ile talep) **düştü**; yön Y3 (hasta formu tarayıcıda praksisin anahtarıyla şifrelenir, bizde yalnız chiffrat postakutusu, kutu çeker) → `/konsey` §3b, bkz. O-166 (O-167 KI relay, O-168 km). Konsey kararına kadar kutuda hasta maillerinde link yerine "Mail vorbereiten" (mailto, K2b.15 ⬜) |
 
 ---
 
@@ -4838,7 +4838,7 @@ Sprint §2 madde 3 bu dört adımla değiştirilir (`builder`/Kemal; belge işi)
 | **Çözüm** | Tek `echo` satırı, bot için **sabit cevap**: `-- SaaS: nicht angewandt (box-only): Preisquelle der SaaS-Abrechnung sind die Codedateien; heilmittel_katalog-Anzeige nur per sync_heilmittel_katalog.js von Hand`. Sahibi: `builder`, KHS K2 artığı (bir satır, `:226` civarı). Bir sonraki fiyat turundan (çeyrek başı, 01.01.2027 öncesi) önce şart |
 | **Durum** | `offen` — sahibi önerildi (builder, KHS K2 artığı), atanmadı |
 
-### O-157 — Kurulum paketi `main`'den klonlanıyor, kanalın sürümünden değil: `:stable` kutu ileri sürümün compose'uyla kalkar 🔴 **offen**
+### O-157 — Kurulum paketi `main`'den klonlanıyor, kanalın sürümünden değil: `:stable` kutu ileri sürümün compose'uyla kalkar 🟡 **geplant (K2b.14)**
 
 | Alan | İçerik |
 |---|---|
@@ -4847,7 +4847,7 @@ Sprint §2 madde 3 bu dört adımla değiştirilir (`builder`/Kemal; belge işi)
 | **Tip** | F (dağıtım kanalı) |
 | **Kutuda ne olur** | Bugün zararsız (`:stable` yok, `:beta` ≈ `main`). `:stable` terfi ettikten sonra `main` ilerlediğinde: `:stable` seçen yeni kutu, **ileri** sürümün compose/install.sh'ıyla kurulur; ilk gece `update.sh` image'taki (eski) paketi diske yazar — yani dosyalar **geriye** gider. O-148'de "kanal yalnız ileri" dedik; burada kurulumun kendisi bir geri adım üretiyor. Somut örnek sınıfı: ileri compose `99a-praxura-rollen.sql` ile rol şifrelerini ayırır (K2.6), geri giden compose bu env'leri tanımıyorsa servisler `POSTGRES_PASSWORD` ile bağlanmayı dener → DB rolü artık farklı şifrede → `rest`/`auth`/`storage` düşer. (0.2.0'dan sonraki her sürüm geri düşüşü taşıdığı için bu belirli örnek ileride kendini korur; sınıf korumaz) |
 | **Çözüm** | Paket, image ile **aynı sürümden** alınır. En ucuzu: kanal sorusu klondan önce sorulur, `docker manifest inspect` ile kanalın `org.opencontainers.image.version` etiketi okunur, `--branch v<sürüm>` klonlanır (etiketler zaten basılıyor). Daha sağlamı: klon hiç yapılmaz, `install.sh`'ın kendisi image'tan alınır (`docker create` + `docker cp /app/onprem-bundle`, `update.sh:157`'nin aynısı) — tek kaynak image olur. Sahibi: Faz 2.1c/KHS K3 öncesi, `:stable` ilk terfisinden **önce** |
-| **Durum** | `offen` — `:stable` terfisi bu maddeye bağlı |
+| **Durum** | `geplant` (K2b.14, 05.10.2026) — indirme sayfasının başlatıcıları (`install.ps1`/`install.sh`, praxura.de'de statik) **yayınlanmış sürüm paketini** indirir, `main`'i değil. Kabul ölçütüm: paket ile image aynı sürüm etiketinden (tercihen paket image'ın içinden ya da `v<sürüm>` etiketli sürüm varlığından); `irm … \| iex` satırı yalnız başlatıcıyı çeker, başlatıcının kendisi sürümü sabitler. Statik dosya → yeni Vercel fonksiyonu yok (G8 temiz). `:stable` terfisi hâlâ bu maddeye bağlı — Önceki: `offen` |
 
 ### O-158 — WSL'de disk-yeri kapıları kör: `df` sanal diski ölçüyor, `C:` dolarken hiçbir betik durmuyor 🔴 **offen**
 
@@ -4879,6 +4879,17 @@ Die additive Migration `0059_podologie_empfangsnachweise` nutzt die bestehende S
 Root hat den Übergang 0058→0059 auf einer frischen isolierten lokalen Box physisch gemessen: 84 Tabellen, 156 Policies, 85 eigene Funktionen, 84 Trigger und 309 Indizes; zusätzlich 1 Authtrigger, 5 Buckets, 1 Publication-Mitglied und 8 Extensions. Manifest-Zähler gelten bis0059; RLS bleibt nur für `spatial_ref_sys` deaktiviert. SaaS-Anwendung ist tatsächlich `20261003193551`; die vollständigen SaaS-Dumps haben einen anderen Bestand und werden nicht als Box-Sollwerte verwendet.
 
 Lokale Produktversion `0.4.0` (MINOR wegen neuer Tabelle); Bundle-Manifest wird mit dem vorhandenen Erzeuger synchronisiert. Gesamttests 1574 Frontend/730 Backend/98 Tools bestanden. Kundenbox-Auslieferung, Live-UI-Abnahme und 72 Stunden Betrieb für `:stable` sind damit nicht nachgewiesen.
+
+## 7AB — K-19 / K2b.15 sonra-bildir (05.10.2026 öğle, `b54cb42` kod · `26662ae` plan)
+
+> Koda karşı bakıldı, kapı `tools/check-onprem.sh` exit 0, tabanlar değişmedi (`n8n_host=8`, `app_host=7`).
+>
+> - **`supabase-config.js:22` API_BASE yedeği** — `/api/config` düşerse mutlak SaaS adresi yalnız `hostname === 'app.praxura.de'`'de, başka her yerde `/api`. Tip C, doğru yön: kutuda token artık hiçbir koşulda SaaS'a gitmez (G1). Sabit host satırı zaten tabanda sayılıydı (O-01 notu), yeni satır yok. Yan etki: Vercel preview / `localhost` da `/api`'ye düşer — ikisi de `/api/config`'i sunuyor, yedek yalnız o da düşerse devreye girer; kabul.
+> - **IST_KUTU koşulları (`dashboard.js`)** — Bezahlwand, `checkPlanActive`, past_due bandı, admin linki, Google Takvim kartı kutuda gizli. Tip H + G. Kutuda bugün **hiç** plan/yetki kapısı kalmadı; bu bilinçli (K-19 f: çalışan sınırı da kalkıyor, lisans K-11 gelince tek `entitlements` noktasına bağlanır — Faz 3.3). Görüş, veto değil: lisans bağlanırken bu `!IST_KUTU` dalları aynı helper'a toplanmalı, yoksa iki yetki gerçeği olur. Google: backend rotaları (`/calendar/google-*`) kutuda duruyor, yalnız UI gizli — redirect kutu başına kaydedilemediği için çağrılamaz, zararsız.
+> - **Belegliste/CSV `new URL(…, location.origin)`** — göreli `/api`'de `ERR_INVALID_URL` kapandı. Kapı bu sınıfı saymıyor; `new URL(\`${API}…` deseni başka yerde çıkarsa aynı düzeltme.
+> - **FullCalendar Premium → Standard MIT 6.1.11** — Premium NonCommercial anahtarla ticari müşteri kutusuna dağıtılıyordu; kalktı. K8/n8n'in kuzeni bir dağıtım-lisans riski bu commit'le kapandı. THIRD-PARTY-NOTICES satırı K2b.16 / O-42. Vendor dosyası image'a `frontend.Dockerfile` COPY ile giriyor, ayrı iş yok.
+
+> **§3b merkezi servis** (Y3 postakutusu · KI relay · km) bu notta madde açmıyor — konsey turunda O-166/O-167/O-168 olarak açıldı (§7AA-Konsey, dosya sonu).
 
 ## 8. Kapı — sayaçlar ve tabanlar
 
@@ -5014,11 +5025,13 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 18 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-134 · O-137 · O-146 · O-156 · O-157 · O-158 |
-| `geplant` | 25 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 · **O-155** (K2b, kısmi) · **O-159** · **O-161** · **O-162** · **O-163** · **O-164** · **O-165** |
+| `offen` | 20 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-134 · O-137 · O-146 · O-156 · O-158 · **O-166** · **O-167** · **O-168** |
+| `geplant` | 26 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 · **O-155** (K2b, kısmi) · **O-159** · **O-161** · **O-162** · **O-163** · **O-164** · **O-165** · **O-157** (K2b.14) |
 | 🟡 `kısmen gelöst` | 25 | O-01 · O-02 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · O-116 · O-118 · O-120 · O-125 · O-126 · **O-123** · **O-142** · **O-144** · **O-151** |
 | `gelöst` | 84 | O-06 · O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-105 · O-106 · O-109 · O-114 · O-117 · O-122 · O-124 · O-130 · O-131 · O-133 · O-140 · O-143 · **O-03** · **O-09** · **O-107** · **O-129** · **O-136** · **O-147** · **O-148** · **O-149** · **O-150** · **O-152** · **O-153** · **O-154** · **O-160** |
 | `unkritisch` | 13 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 |
+
+> ✅ **05.10.2026 öğle (K-19 / K2b.15) — yeniden toplandı:** 20 + 26 + 25 + 84 + 13 = **168**, en yüksek madde numarası **O-168**. Uyuşuyor. O-157 `offen`→`geplant` (K2b.14). Yeni: O-166/O-167/O-168 (§3b merkezi servis, konsey turu — dosya sonundaki §7AA). O-22/O-155/O-165 durum notu: §7AB.
 
 > ✅ **05.10.2026 (K-18 / K2b) — yeniden toplandı:** 18 + 25 + 25 + 84 + 13 = **165**, en yüksek madde numarası **O-165**. Uyuşuyor. O-159 (`geplant`) ve O-160 (`gelöst`) tabloya hiç girmemişti, eklendi. O-155 `offen`→`geplant` (K2b; yalnız yarısı — hasta linki LAN kutusunda hâlâ açılmaz). Yeni: O-161…O-165 (K-18'in açtığı merkez zinciri, internetsiz ad çözümü, Windows hairpin, şifresiz autostart, playbook sapması). Detay §7Z.
 
@@ -5330,4 +5343,41 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 | **Tip** | G (merkez/kutu sınırı) — playbook sapması |
 | **Kutuda ne olur** | Kod etkisi yok. Belge etkisi var: playbook'u okuyan biri SaaS'ın yaşadığını ve Hetzner kutusunun §393 dışı olduğunu sanır. K12-2 olduğu gibi uygulanırsa beta kutuları G1 çizgisini bizim hesabımızda aşar |
 | **Çözüm** | K2b.10: playbook düzeltmesi + `legal-de` notu (Hetzner C5 Typ-2'nin Cloud Server'ı kapsayıp kapsamadığı K2b.9'da ölçülür; K12 sponsorlu dönemde sunucu ya praksisin hesabında olur ve biz yalnız ödemeyi üstleniriz, ya AVV). Kilitli kararlar bu sicilde açılmaz — K1 kurucu kararıyla zaten düştü, K12 için karar Kemal'in |
-| **Durum** | `geplant` (K2b.10) |
+| **Durum** | `geplant` (K2b.10) — **05.10 öğle, K-19 (k)(l) = C7 kararı:** beta kutuları praksisin **kendi** Hetzner hesabında ya da kendi PC'sinde; bizim hesapta sponsorlu instance yok. (3) numaralı G1 riski bununla karar düzeyinde kapandı. `app.praxura.de` depo bölme günü kapanır (sprint sonu, Kemal'in kendi kutu testinden sonra, betalardan önce). Kalan iş yalnız belge: playbook K1/K12/satır 28 metni (K2b.10). ⚠️ Bölme günü notu: `supabase-config.js:22`'deki SaaS yedeği ve `api/config.js` o gün ölü koda döner — silinirken `tools/.onprem-baseline` `n8n_host`/`app_host` tabanları birlikte düşer |
+
+---
+
+## 7AA — Konsey 05.10.2026: merkezi "Praxura servisi" (online termin postakutusu · KI relay · km) — onprem görüşü
+
+> Kaynak: konsey turu 05.10.2026 (K-19 / K2b.11-16 adayları). Bu bölüm yalnız sicil tarafını tutar; karar tutanakta.
+
+### O-166 — Online termin + reçete ön elemesi için merkezde şifreli postakutusu 🟡 **offen (karar bekliyor)**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Hasta formu + isteğe bağlı reçete fotoğrafı tarayıcıda praksisin açık anahtarıyla şifrelenir, merkezde yalnız chiffrat durur, kutu çeker (yalnız giden bağlantı) |
+| **Nerede** | Planlı: `merkez/` + kutuda çekme işi (tip F) · O-155'in kalan yarısını kapatır |
+| **Tip** | A + F + G |
+| **Kutuda ne olur** | Chiffrat + metadata (praksis kimliği, zaman, IP) bizden geçer → **G1'in bilinçli istisnası**, Kemal kararıyla kayda geçmeli (legal-de: dar AV, Portal-AVV). Asıl açık: formu sunan JS'i biz sunuyoruz; JS değişirse şifreleme öncesi düz metin alınabilir — SRI + parmak izi bunu azaltır, sıfırlamaz. Merkez düşerse: yeni talep gelmez, kutu içi her şey çalışır. Biz kalkarsak: özellik ölür → O-155 bayrağıyla "bitte Praxis anrufen" metnine düşmeli |
+| **Çözüm** | Şartlar: URL env'den (tip C yok) · varsayılan KAPALI bayrak · degrade yolu K3'ten önce yazılı · merkez n8n VPS'inde DEĞİL (O-159, 2vCPU/3.7GB swapsız) — `merkez/` ayrı küçük VPS'te ad servisi ile birlikte · n8n workflow'u olarak yazılmaz (G3/G8) · teslimde silme + IP ≤7 gün kodda zorlanır |
+| **Durum** | `offen` — Kemal kararı + K2b görev no. bekliyor |
+
+### O-167 — KI relay: maskeli metin merkeze, bizim Azure anahtarı ile 🔴 **offen — kilitli K6'yı açar, kullanıcıya çıkarıldı**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kutuda M4 maskeleme → maskeli metin merkeze → Azure → cevap kutuda geri çevrilir. Reçete görüntüsü hariç |
+| **Tip** | A + E + G |
+| **Kutuda ne olur** | G2 açısından iyi (bizim anahtar kutuya girmez). Ama maskeli metin pseudonim kişisel veri: K6 + 09-28 konsey "merkezi gateway kapalı" kararlarını açar; bu sicil açamaz. Maskelemenin kaçırdığı her alan doğrudan G1 ihlali olur. Merkez düşerse/biz kalkarsak: KI ölür → BYO-key (O-151 env sözleşmesi) ya da KI kapalı yoluna düşmeli |
+| **Çözüm** | Sprintte değil. Açılırsa: llmClient'ta ikinci sağlayıcı (aynı kod, env seçer), BYO-key yolu silinmez. Karar Kemal'in |
+| **Durum** | `offen` |
+
+### O-168 — Hausbesuch km için ORS relay 🟡 **offen — öneri: relay yok**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Kutu A→B koordinatını merkeze sorar, ORS anahtarı merkezde |
+| **Tip** | A + G |
+| **Kutuda ne olur** | B koordinatı hasta ev adresinden türer → G1 konusu, O-11'deki AVV sorunu bize taşınır. Kazanç küçük |
+| **Çözüm** | O-11 öneri (a): praksisin kendi ücretsiz ORS anahtarı (kutudan doğrudan, bizden geçmez) + yoksa elle km. Relay yazılmaz |
+| **Durum** | `offen` — Faz 1.5 / O-11'e bağlı |
