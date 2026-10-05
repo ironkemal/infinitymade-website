@@ -8418,3 +8418,32 @@ button.anam-rozet-ungeprueft:hover { color: var(--text-main); border-color: var(
   .fbp-grid-table:has(.fbp-toe-group) tbody td:nth-child(2)::before { content: 'Links'; }
   .fbp-grid-table:has(.fbp-toe-group) tbody td:nth-child(3)::before { content: 'Rechts'; }
 }
+
+/* §302 „Bisherige Abrechnungen" (module/abrechnung-verlauf.js) richtet sich nach
+   der Breite SEINER Tabelle, nicht nach dem Bildschirm (Live-QA 05.10.2026):
+   Die 7 Spalten brauchen mindestens 832 px (nowrap-Köpfe in Grossbuchstaben,
+   Datei-Code + ✍/🔒/Test in einer Zeile, „AOK Rheinland/Hamburg" unteilbar).
+   Bei 829 px Fenster (Sidebar als Overlay) blieben 737 px, bei 1025–~1180 px
+   (Sidebar sichtbar) noch weniger — „Status" lag ausserhalb und war nur per
+   unsichtbarem Quer-Scrollen erreichbar. Eine Viewport-Regel trifft das nicht,
+   weil die Sidebar (offen / eingeklappt / Overlay) die Breite verschiebt. */
+.table-wrap:has(#abVerlaufKopf) { container: ab-verlauf / inline-size; }
+
+@container ab-verlauf (max-width: 860px) {
+  /* Werte wie die Telefon-Tabelle (@media max-width 768px: 12 px Schrift),
+     Innenabstand 6 px — mit 8 px fehlten bei 1025 px noch 24 px. */
+  #abVerlaufKopf th,
+  #abVerlaufTbody td { padding-left: 6px; padding-right: 6px; }
+  #abVerlaufTbody td { font-size: 12px; }
+  /* Die Grossbuchstaben-Köpfe („KASSENANTEIL", „KRANKENKASSE") bestimmen drei
+     Spaltenbreiten; ohne Laufweite sinkt die Tabellen-Mindestbreite 662 → 645 px
+     (gemessen: „Rheinland/Hamburg" bleibt ab ~1030 px ganz, nur 1025–1030 px
+     mit Sidebar trennt im Wort). */
+  #abVerlaufKopf th { letter-spacing: 0; }
+  /* Datei-Code auf eigener Zeile, Signatur-/Schloss-Symbol + „Test" darunter */
+  #abVerlaufTbody td:first-child > code { display: block; }
+  /* Lange Kassennamen dürfen notfalls im Wort umbrechen (sonst setzt das längste
+     Wort, z. B. „Betriebskrankenkasse", die Mindestbreite). Wo der Browser
+     deutsche Silbentrennung hat (dashboard.html lang="de"), mit Trennstrich. */
+  #abVerlaufTbody td:nth-child(2) { overflow-wrap: anywhere; -webkit-hyphens: auto; hyphens: auto; }
+}

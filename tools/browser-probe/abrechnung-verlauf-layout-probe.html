@@ -1,0 +1,96 @@
+<!doctype html>
+<!-- Nur zum Messen. Baut das Dashboard-Gerippe (#app > .dashboard-layout >
+     .sidebar + .main-area) und die Ansicht „Bisherige Abrechnungen" aus
+     dashboard.html (panel-abrechnung, data-ab-ansicht="bisherige") nach und
+     laesst module/abrechnung-verlauf.js die Liste mit erfundenen Daten zeichnen.
+     Frage: passt die Tabelle in die Karte, oder wird die Status-Spalte
+     abgeschnitten (Live-QA 05.10.2026, ~829 px)? -->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../../dashboard.css">
+  <title>Abrechnung-Verlauf-Layout-Probe</title>
+</head>
+<body>
+  <div id="app">
+    <div class="dashboard-layout">
+      <aside class="sidebar" id="sidebar"><nav></nav></aside>
+      <main class="main-area" id="mainArea">
+        <section class="panel active" id="panel-abrechnung">
+          <!-- Gerippe aus dashboard.html (data-ab-ansicht="bisherige"), inline-Stile 1:1 -->
+          <div data-ab-ansicht="bisherige">
+            <button class="btn-ghost" style="margin-bottom:12px;font-size:13px;">‹ Zurück</button>
+            <div class="card">
+              <h3 style="font-size:16px;font-weight:600;margin-bottom:4px;">Bisherige Abrechnungen</h3>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+                Offen zuerst. Spaltenüberschrift anklicken, um nach dieser Spalte zu sortieren.
+              </p>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead id="abVerlaufKopf">
+                    <tr>
+                      <th data-sort="datei"  style="cursor:pointer;white-space:nowrap;">Datei <span class="sort-icon"></span></th>
+                      <th data-sort="kasse"  style="cursor:pointer;">Krankenkasse <span class="sort-icon"></span></th>
+                      <th data-sort="datum"  style="cursor:pointer;white-space:nowrap;">Erstellt <span class="sort-icon"></span></th>
+                      <th data-sort="belege" style="cursor:pointer;text-align:center;">Belege <span class="sort-icon"></span></th>
+                      <th data-sort="soll"   style="cursor:pointer;text-align:right;">Kassenanteil <span class="sort-icon"></span></th>
+                      <th data-sort="offen"  style="cursor:pointer;text-align:right;">Offen <span class="sort-icon"></span></th>
+                      <th data-sort="status" style="cursor:pointer;">Status <span class="sort-icon"></span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="abVerlaufTbody" style="transition:opacity .15s ease;"></tbody>
+                </table>
+              </div>
+              <div id="abVerlaufEmpty" class="table-empty" hidden>Noch keine Abrechnungen erstellt.</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initAbrechnungVerlauf, ladeAbrechnungVerlauf }
+      from '../../module/abrechnung-verlauf.js?v=20261004m116';
+
+    // Erfundene Dateien — realistische Breiten: 8-stelliger physischer
+    // Dateiname, Signatur-/Schloss-Symbol, Test-Etikett, lange Kassennamen.
+    const DATEIEN = [
+      { id: 'a1', kostentraeger_ik: '109519005', dateiname: 'TSOL0012', status: 'heruntergeladen',
+        total_eur: 1234.56, zuzahlung_total: 120, prescription_count: 14, created_at: '2026-10-01T09:00:00Z',
+        signed_storage_path: 'x', signed_at: '2026-10-01T09:01:00Z', encrypted_storage_path: 'y', betriebsart: 'test' },
+      { id: 'a2', kostentraeger_ik: '101575519', dateiname: 'TSOL0011', status: 'gesendet',
+        total_eur: 389.4, zuzahlung_total: 40, prescription_count: 5, created_at: '2026-09-20T09:00:00Z',
+        signed_storage_path: 'x', betriebsart: 'erprobung', zaa_uploaded_at: '2026-08-01T00:00:00Z' },
+      { id: 'a3', kostentraeger_ik: '104940005', dateiname: 'ESOL0010', status: 'rejected',
+        rejected_count: 2, total_eur: 12890.1, zuzahlung_total: 900, prescription_count: 31, created_at: '2026-09-10T09:00:00Z',
+        betriebsart: 'echt' },
+      { id: 'a4', kostentraeger_ik: '108310400', rechnungsnummer: 'RE-2026-00009', status: 'verworfen',
+        verwerfungsgrund: 'Vorprüfung: Kostenträger-IK fehlt in der Kostenträgerdatei.', created_at: '2026-09-01T09:00:00Z' },
+    ];
+    const KASSEN = {
+      '109519005': 'AOK Rheinland/Hamburg – Die Gesundheitskasse',
+      '101575519': 'Techniker Krankenkasse',
+      '104940005': 'BARMER',
+      '108310400': 'DAK-Gesundheit',
+    };
+    const antwort = (table) => ({ data: table === 'abrechnung' ? DATEIEN : [], error: null });
+    const kette = (table) => {
+      const p = Promise.resolve(antwort(table));
+      const k = { select: () => k, eq: () => k, order: () => k, limit: () => k,
+                  then: (a, b) => p.then(a, b) };
+      return k;
+    };
+
+    initAbrechnungVerlauf({
+      supabase: { from: kette },
+      getOwnerId: () => 'probe-owner',
+      escapeHtml: (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])),
+      kassenName: (ik) => KASSEN[ik],
+    });
+    await ladeAbrechnungVerlauf();
+    document.title = 'fertig';
+  </script>
+</body>
+</html>
