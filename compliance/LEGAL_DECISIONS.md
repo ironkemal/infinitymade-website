@@ -766,3 +766,33 @@ Optional eine Frage an den Steuerberater (im Rahmen der ohnehin offenen Kassenbu
 GKV-Sammelabrechnung — 8 oder 10 Jahre?"
 
 **Neubewertung ausgelöst durch:** siehe Tabellenzeilen oben.
+
+---
+
+## 2026-10-05 · KHS M2 — BG, Praxisstempel, Praxis-Datenschutztext, Rechnungsangaben (legal-de, Sitzung Hat M)
+
+> Einschätzung, keine Rechtsberatung. Kein Veto. Kosten 0 € (Eigenarbeit); Anwalt nur für die zwei Fragen aus Nachtrag (4).
+> Geprüft (Primärtext): § 201 SGB VII, § 100 SGB X, § 14 UStG, §§ 33/34a UStDV. EuGH C-413/23 P über Sekundärquellen.
+
+### F1 — BG / Arbeitsunfall (Podologie)
+- Kein DGUV-Vertrag für Podologie gefunden (Sekundärquelle + DGUV-Vergütungsseite, Negativbefund — **nicht verifiziert**); UV-Träger zahlt nach **Kostenzusage im Einzelfall**. Keine Abrechnung über § 302/DTA. Rechnungsempfänger = UV-Träger.
+- Praxura baut **keine Unfallmeldung** (Arbeitgeber/Arzt-Sache; § 201 SGB VII gilt nicht für Heilmittelerbringer).
+- Offenbarung an UV-Träger: Art. 9 Abs. 2 lit. h DSGVO + § 22 BDSG; **§ 203 StGB** braucht eigene Befugnis → **ausdrückliches, dokumentiertes Einverständnis** (§ 100 Abs. 1 SGB X). Wortlaut: „Ich bin damit einverstanden, dass die Praxis die für die Abrechnung erforderlichen Angaben zu meiner Behandlung (Name, Geburtsdatum, Unfalltag, Behandlungsdaten und -leistungen) an den zuständigen Unfallversicherungsträger übermittelt und diesem auf Anforderung die zur Prüfung erforderlichen Auskünfte erteilt (§ 100 SGB X). Ohne dieses Einverständnis kann die Behandlung nur privat abgerechnet werden."
+- Einschränkungen: **keine** Diagnose/Befunde/Fotos auf der BG-Rechnung (außer Träger fordert im Einzelfall), **keine** festen BG-Preise, Patientenanschrift standardmäßig aus, ohne Kostenzusage nur Warnung (warnen, nicht blockieren). Produktentscheidung: `Podoloji/PRODUKT-ENTSCHEIDUNGEN.md` PE-006 B.
+- Abweichung legal-de ↔ podoloji (Kostenzusage/Unfalltag Pflicht vs. weich) entschieden in PE-006: Pflicht erst beim Rechnungserstellen für UV-Träger + Unfalltag; Kostenzusage + Einverständnis = Warnung.
+
+### F4 — Digitaler Praxisstempel
+- Rechtlich **optional** (weder UStG noch GoBD verlangen ihn; Name/Anschrift als **Text**). Gefahr: Stempel mit eingescannter Unterschrift → UI-Hinweis „Bitte laden Sie einen Stempel ohne Unterschrift hoch. Eine eingescannte Unterschrift ersetzt keine Unterschrift und erhöht das Missbrauchsrisiko."
+- Privater Speicherort (nicht `avatars`), beim Erzeugen des Belegs **eingebettet** (GoBD: alte Rechnungen bleiben reproduzierbar). Logo darf öffentlich bleiben. Technik: `guvenlik/REGISTER.md` S-47-Bedingungen / PE-006.
+
+### F6 — Praxis-Datenschutztext für Patienten (`module/einwilligung-texte.js`, v2 `datenschutz-v2-2026-10-01`)
+- Fehler heute: „Server in Deutschland" für die Box falsch; „nicht an Dritte weitergegeben" falsch bei KI/BG/Abrechnungsstelle/Steuerberater; Microsoft fehlt als Empfänger bei aktivem KI-Modul (EuGH C-413/23 P: Empfänger sind aus Sicht des Verantwortlichen zu nennen, auch bei Pseudonymisierung); Tippfehler „außchliesslich"; DSB-Kontakt und „Pflicht zur Bereitstellung" (Art. 13 Abs. 2 lit. e) fehlen.
+- Wortlaut-Bausteine je Konfiguration (Box / SaaS / KI aktiv / BG) — Entwurf in der Sitzung von legal-de, Umsetzung M2.8 mit **neuer `version`** (Hash = Nachweis). Vorläufig bis Anwaltsantwort (Nachtrag 4, Auflage 5): **keine Mail-Entwürfe** im KI-Baustein, **kein C5-Satz**, § 203-Halbsatz im SaaS-Absatz nur wenn die Klausel in Praxuras AVV steht, verboten: „anonymisiert", „keine Patientendaten verlassen die Praxis", „keine Speicherung", „Zero Data Retention". `{{saas_hosting_satz}}` offen (aus AVV/Unterauftragsverarbeiter-Liste, „Server in Deutschland" für Supabase nicht geprüft).
+- Bestandspatienten v2: bei späterer KI-Aktivierung Aushang genügt (Rechtsgrundlage nicht Einwilligung).
+
+### F7 — Angaben auf Rechnungen (Grundlage Fortschrittsring M2.6)
+- **Pflicht:** Praxisname + vollständige Anschrift · Inhabername (bürgerlich, Einzelpraxis) · Steuernummer **oder** USt-IdNr. · Steuerstatus **gewählt** (nie automatisch, Konsey 10.08.) · Hinweistext zur Steuerbefreiung (`tax_exempt_note`, § 4 Nr. 14 lit. a UStG bzw. § 19 UStG).
+- **Soll (Ring „empfohlen", blockiert nie):** IBAN/BIC/Bankname · Zahlungsziel · Telefon/E-Mail · IK (**bei BG-Rechnung Pflicht**). „Podologin/Podologe" nie als Vorbelegung (geschützte Berufsbezeichnung, PodG).
+- **Optional:** Logo, Stempel, Fußzeile. **Nicht im Ring:** E-Rechnung/XRechnung/ZUGFeRD.
+- Von der Software selbst erzeugt (Tests, nicht Ring): Rechnungsnummer, Ausstellungs-/Leistungsdatum, Menge/Art, Entgelt nach Steuersatz, Empfänger.
+- Rechnungstexte einmal vom Steuerberater der Pilotpraxis gegenlesen lassen (~0,5 h, Praxis).

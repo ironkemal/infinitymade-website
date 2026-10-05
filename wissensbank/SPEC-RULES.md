@@ -1917,3 +1917,12 @@
 - [ ] `sync_heilmittel_katalog.js` ICD alan indekslerinin 28 alanlık yapıya uyumu
 - [ ] Zuzahlung hesabının Anlage 1 V21 bölüm 7 ile uyumu
 - [ ] Kostenträgerdatei/IK eşleme kuralları (Anhang 03 — dikkat: geçerli sürüm V10 değil, 01.02.2027'ye kadar önceki sürüm)
+
+---
+
+## BG / Arbeitsunfall — Abgrenzung zu §302 (Ergänzung 05.10.2026, KHS M2)
+
+- **Belegt:** BG-Behandlungen laufen nicht über §302/DTA. Unfallkennzeichen `1` („Arbeitsunfall / Wegeunfall / Berufskrankheit", Anlage 3 TP5 V21 §8.1.2) wird nicht verwendet. Das Muster-13-Kreuz „Unfallfolgen/BVG" ist ein GKV-Feld und **kein** BG-Fall (Podologie Anlage 3 Lesefassung 16.06.2025).
+- **Belegt (Analogie Physio/Ergo, nicht Podologie):** DGUV-Verordnung F 2400 hat Kopffeld „Unfallversicherungsträger" und „Unfalltag und ggf. Aktenzeichen"; DGUV-Rechnung: Rechnungsnummer, IK (sonst IBAN).
+- **Nicht verifiziert (nichts als Pflichtfeld bauen):** DGUV-Vertrag/Gebührenverzeichnis für Podologie (Negativbefund: DGUV-Vergütungsseite nennt keine Podologie; FAQ Vertragswesen: ohne Vertrag Empfehlung Vergütung nach vdek-Verträgen, nicht verbindlich) · UV-Verordnungsformular Podologie · D-Arzt-Pflicht/Fristen/Preise für Podologie · elektronischer UV-Rechnungsweg.
+- Produktfolgen: `Podoloji/PRODUKT-ENTSCHEIDUNGEN.md` PE-006 B. Quelle DGUV Handlungsanleitung Heilmittel (Jan. 2026) noch **nicht** in `wissensbank/` registriert → `wissensbank`-Agent.

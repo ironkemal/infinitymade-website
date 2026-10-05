@@ -701,3 +701,43 @@
   Hornhautabtragung / Nagelbearbeitung / Podologische Komplexbehandlung (bzw. Nagelspangenbehandlung
   bei UI), oder schreibt der Arzt die Vergütungsstufe klein/groß (78010/78020)? Davon hängen nur die
   vier Wortlaut-Optionen ab, nicht die Grundentscheidung.
+
+---
+
+## PE-006 — Rezeptart-Umschalter, BG-Scope, Anzeigename 78020 (KHS M2, 05.10.2026)
+
+> Quelle: Fachklärung F1/F2/F3/F5 durch `gkv-302`, `podoloji`, `legal-de`, `db-ustasi`, `guvenlik`
+> (Sitzung Hat M, 05.10.2026). Sprint K-8/K-10: BG ist Pflicht, Umfang bestimmt die Recherche.
+> **Belegt** = in Fachquelle gelesen; **nicht verifiziert** = bewusst nicht gebaut.
+
+### A. Umschalter (M2.1) — bestätigt die Entscheidungen vom 10.08. und 28.09.
+- Segmentleiste **ganz oben** in der Muster-13-Maske: Kasse (GKV) · Privat (PKV/Beihilfe) · Selbstzahler · BG / Unfallkasse.
+- **Ein** Schreibwert für Kasse: `kassen` (`gkv` wird gemappt). Leser bleiben tolerant, NULL gilt als Kasse. Neue Verordnungen schreiben `kassen` ausdrücklich. Kein Backfill der Altzeilen (der Trigger `prescriptions_festschreibung` würfe bei NULL→`kassen` mit `belegnummer` eine Exception).
+- Bei nicht-Kasse: GKV-Block **eingeklappt, nicht versteckt**; leere Diagnosegruppe → `NULL` (nie `''`); eingetragene Werte werden beim Umschalten **nicht gelöscht**; Wagner/Fußbefund immer sichtbar; `behandlungsanlass` nur bei nicht-Kasse. Zurück auf Kasse: Block klappt auf, DG/Kasse/Versichertennr. Pflicht.
+- **Vorauswahl einseitig:** `leads.insurance_type='privat'` → Privat vorgewählt, sonst Kasse. Selbstzahler und BG werden **nie** vorgewählt (BG hängt am Unfall, nicht am Patienten). Weicht die Wahl ab: Hinweiszeile, kein Block.
+- **Sperre:** Umschalter gesperrt, wenn `belegnummer` gesetzt ist (gleiche Bedingung wie Trigger 0020) **oder** eine nicht stornierte Rechnung zur Verordnung existiert (Doppelabrechnungsschutz). Serverseitig in `PATCH /rezept/:id` erzwungen. Beim Wechsel weg von Kasse wird `abrechnung_status='bereit'` zurückgesetzt.
+- Backend: `POST /rezept/confirm` und `PATCH /rezept/:id` schreiben `rezeptart` heute **nicht** → beide Routen werden erweitert.
+- Kein CHECK „Kasse ⇒ Diagnosegruppe" in M2 (Blanko/LHB-Frage an `gkv-302` offen, kein Nutzen ohne explizites `kassen`).
+- Der Guard `rezeptart && rezeptart !== 'kassen'` in `abrechnung.routes.js` (`:3731`, `:4546`), `verordnung-status.routes.js:259`, `podo-empfangsnachweis.js:79` bleibt (bestätigt); Test ergänzen. Physio-Pfad `/abrechnung/create` hat keinen Guard (vertagt, Ops-Eintrag).
+
+### B. BG-Scope M2 (M2.2) — Minimalumfang
+**Belegt:** BG läuft **nicht** über §302 (Unfallkennzeichen `1` nie im DTA, SPEC-RULES ~Z.1286). Rechnungsempfänger ist der UV-Träger. Für Podologie wurde **kein DGUV-Vertrag** gefunden (Negativbefund, nicht verifiziert); Behandlung nur mit Kostenzusage im Einzelfall, Preis orientiert sich üblicherweise an GKV/vdek, nicht verbindlich.
+**Felder (Block erscheint nur bei BG), Spalten auf `prescriptions`:**
+| Feld | Regel |
+|---|---|
+| UV-Träger Name + Anschrift (`bg_traeger_name`, `bg_traeger_anschrift`) | **Pflicht beim Erstellen der BG-Rechnung** (nicht beim Speichern der Verordnung) |
+| Unfalltag (`bg_unfalltag`) | **Pflicht beim Erstellen der BG-Rechnung** |
+| Aktenzeichen UV-Träger (`bg_aktenzeichen`) | optional, Freitext, **kein** Format erfunden |
+| Kostenzusage Datum/Zeichen (`bg_kostenzusage_datum`, `bg_kostenzusage_zeichen`) | **Warnung** vor erster Behandlung/Rechnung (warnen, nicht blockieren) |
+| Einverständnis zur Übermittlung an UV-Träger (`bg_einverstaendnis_am`) | **Warnung**, wenn leer (§ 203 StGB / § 100 SGB X, Wortlaut s. LEGAL_DECISIONS) |
+**Rechnung:** eigener Zahlertyp `bg` (heute fällt BG in `rechnung-bruecke.js` auf `zahlertyp 'privat'` → Rechnung ginge an den Patienten; **falsch**), Empfänger = UV-Träger, Preis manuell (keine festen BG-Preise), Praxis-IK bzw. IBAN auf der Rechnung. Keine Zuzahlung.
+**Nicht gebaut (nicht verifiziert / bewusst vertagt):** Diagnose/ICD/Wagner/Befund auf der BG-Rechnung · feste BG-Preise/Positionsnummern · Unfallmeldung · UV-Formular für Podologie · Durchgangsarzt-Bericht-Nr. · Fristen/Gültigkeit · Arbeitgeber/Unfallort · IK des UV-Trägers · E-Rechnung.
+**Sperre/Festschreibung:** Trigger 0020 greift nur ab `belegnummer`; BG/Privat bekommen nie eine → Sperre hängt am Backend-Check „nicht stornierte Rechnung vorhanden" (A). Die BG-Spalten werden **nicht** in `prescriptions_festschreibung` und **nicht** in die Browser-Sperre 0066 aufgenommen (Maske schreibt ausschließlich über das Backend; Aufnahme in den Trigger wäre wirkungslos und verlangt Ausgangstext live via `pg_get_functiondef`, siehe 0049). Begründung im `db/REGISTER.md`.
+**Offen:** DGUV-Podologie-Negativbefund + Rechnungsformat/Aktenzeichen bei einer BG verifizieren (Beta-1 fragen, ob BG-Fälle überhaupt vorkommen — Annahme: selten).
+
+### C. Anzeigename 78020/78010 (M2.7)
+- **Katalog-`label` bleibt amtlich** („Podologische Behandlung (groß)", Anlage 2) — `podologie_positions.js:32`, Katalog-Sync, Seeds, DTA unberührt (`buildSLLA_EHE` nutzt den Namen nicht).
+- **Bildschirm kurz:** „Behandlung groß (> 20 Min.)" / „Behandlung klein (≤ 20 Min.)", HPNR daneben. Das Wort „Komplexbehandlung" ist für 78020 **tabu** (Ops #303, SPEC-RULES ~Z.166).
+- **GKV-Beleg und DTA:** unverändert Katalogname. **Privat/Selbstzahler/BG-Rechnung:** „Podologische Behandlung (Hornhaut und Nägel), Therapiezeit über 20 Minuten" (patientenverständlich; PKV-HPNR-Frage vertagt).
+- Matching darf nicht am Anzeigetext hängen (`verordnung-leistung-match.js:34`, Regex `verordnung-pruefung.js:141` erkennt „groß") — vor Umsetzung prüfen. Anzeigeänderung nur UI-seitig (Standardkatalog-Titel, i18n); bestehende `services.title` der Praxen werden nicht still umbenannt.
+- **Annahme, nicht mit Podologin validiert:** was #209 genau meint (Kalender/Auswahl/Rechnung) ist nie erfasst → **Beta-1 fragen**.
