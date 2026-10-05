@@ -101,3 +101,7 @@ spike/ki-maske/ergebnis-ist.json
 # Codex-Spiegel der Agents (wie .claude/ und .agents/ — interne Prozessbeschreibungen,
 # Supabase-MCP-Config). 28.09.2026
 .codex/
+
+# Merkez-Namensdienst: lokale SQLite (Box-Name <-> Praxis, B2B-Daten) — nie ins Repo (onprem O-161, 05.10.2026)
+merkez/*.sqlite
+merkez/*.sqlite-*

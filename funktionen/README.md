@@ -116,6 +116,18 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 05.10.2026 · K2b.17 Kutu-Identität (Ed25519) + K2b.2 Merkez-Namensdienst (07fab61)
+- `api-backend/merkez-istemci/` — `signatur.js` (`signiereAnfrage`, `pruefeSignatur`, `boxIdAusPublicKey`), `kimlik.js`
+  (`erzeugeKimlik`, `ladeKimlik`, `speichereAd`), `merkez-fetch.js` (`merkezFetch`), `kayit.js` (CLI). Niye: her kutu→merkez
+  çağrısı için TEK kutu kimliği (Ed25519) — K-18 isim servisi, sonra Y3 3b.1 ve KI-token 3b.4/M4.11. Sözleşme KHS M4.11'de:
+  **yeniden uygulanmaz**, kutu→merkez imzası hep buradan. Nerede: ilk `kayit.js` (kutu kurulumu; `install.sh` bağlantısı K2b.5),
+  `merkez/` doğrulama için `signatur.js`'i import ediyor (iki tarafta ikinci imza kodu yok).
+- `merkez/` — `server.js`, `db.js`, `namen.js` (`zufallsName`, `nameErlaubt`), `cloudflare.js`, `acmedns.js`, `ip.js`, `admin.js`.
+  Niye: K2b.2 merkezî isim servisi (kod → okunur rastgele ad, Cloudflare A/CNAME/CAA, IP güncelleme) + acme-dns istemcisi.
+  **Yalnız merkezde koşar, kutuya girmez.** Nerede: henüz deploy edilmedi (VPS kararı K3 öncesi). `calledBy: []` ölü kod değil.
+- `mitarbeiter-zugang-code.js`: ikinci biçim `FORMAT_KUTU` (Crockford + kontrol karakteri, `istKutuCodeGueltig`) — ikinci
+  hash/verify yazılmadı, mevcut modül genişletildi (fonksiyon-ustasi 05.10 tavsiyesi). Kopya değil, parametreli katman.
+
 ### 05.10.2026 · Kutu-Uyum K2b.15 (b54cb42)
 - `schliesse(filter, label)` + `tick()` — `api-backend/server.js` `scheduleAttendanceAutoClose` iç fonksiyonları.
   `schliesse`: attendance present→incomplete, filtre parametreli; `tick`: dakikada bir, gün değişince önceki günleri,
