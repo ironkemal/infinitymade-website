@@ -3,7 +3,7 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261005154848 abrechnung_nebentabellen_clientsperre_0065
+-- LAST MIGRATION:     20261005194119 prescriptions_clientrechte_0066
 -- EXPORTED AT:        2026-10-03T19:36:25.349Z
 -- ERZEUGT AM:         2026-10-03 (Teilaktualisierung 2026-10-05)
 -- POSTGRESQL VERSION: 17.6
@@ -14,15 +14,15 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        168
---   functions:           106
---   triggers:            95
+--   functions:           107
+--   triggers:            96
 --   indexes:             335
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
 --   rls_disabled_tables: 1
 --
--- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0065 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
+-- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0066 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
 -- vollstaendiger Metadatenexport (tools/schema-export-katalog.sql + schema-dokumente.mjs) steht aus.
 --
 -- CAUTION / HINWEIS:
@@ -3764,6 +3764,65 @@ $function$
 ;
 ALTER FUNCTION public.profiles_privilegierte_spalten_schuetzen() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.pruefe_prescriptions_clientrechte()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_browser boolean := current_user IN ('authenticated', 'anon');
+  v_alt_gesperrt boolean;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.abrechnung_id IS NOT NULL OR OLD.belegnummer IS NOT NULL
+       OR (OLD.abrechnung_status IS NOT NULL AND OLD.abrechnung_status <> 'bereit') THEN
+      RAISE EXCEPTION 'prescriptions: abgerechnete Verordnungen koennen nicht geloescht werden (GoBD)' USING ERRCODE = '42501';
+    END IF;
+    RETURN OLD;
+  END IF;
+  IF NOT v_browser THEN RETURN NEW; END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.abrechnung_id IS NOT NULL OR NEW.belegnummer IS NOT NULL OR NEW.absetzung_betrag IS NOT NULL
+       OR NEW.absetzung_grund IS NOT NULL OR NEW.absetzung_am IS NOT NULL OR NEW.storno_grund IS NOT NULL
+       OR NEW.storno_am IS NOT NULL OR NEW.zuzahlung_kassiert_eur IS NOT NULL
+       OR NEW.status = 'billed'
+       OR (NEW.abrechnung_status IS NOT NULL AND NEW.abrechnung_status <> 'bereit') THEN
+      RAISE EXCEPTION 'prescriptions: Abrechnungsfelder nur ueber das Backend' USING ERRCODE = '42501';
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  -- UPDATE durch den Browser
+  IF NEW.abrechnung_id IS DISTINCT FROM OLD.abrechnung_id
+     OR NEW.belegnummer IS DISTINCT FROM OLD.belegnummer
+     OR NEW.absetzung_betrag IS DISTINCT FROM OLD.absetzung_betrag
+     OR NEW.absetzung_grund IS DISTINCT FROM OLD.absetzung_grund
+     OR NEW.absetzung_am IS DISTINCT FROM OLD.absetzung_am
+     OR NEW.storno_grund IS DISTINCT FROM OLD.storno_grund
+     OR NEW.storno_am IS DISTINCT FROM OLD.storno_am
+     OR NEW.zuzahlung_kassiert_eur IS DISTINCT FROM OLD.zuzahlung_kassiert_eur
+     OR NEW.owner_id IS DISTINCT FROM OLD.owner_id
+     OR NEW.business_id IS DISTINCT FROM OLD.business_id THEN
+    RAISE EXCEPTION 'prescriptions: Abrechnungs-, Storno- und Mandantenfelder nur ueber das Backend' USING ERRCODE = '42501';
+  END IF;
+  IF NEW.status IS DISTINCT FROM OLD.status AND (NEW.status = 'billed' OR OLD.status = 'billed') THEN
+    RAISE EXCEPTION 'prescriptions: Status billed nur ueber das Backend' USING ERRCODE = '42501';
+  END IF;
+  IF NEW.abrechnung_status IS DISTINCT FROM OLD.abrechnung_status THEN
+    v_alt_gesperrt := OLD.abrechnung_id IS NOT NULL OR OLD.belegnummer IS NOT NULL
+      OR (OLD.abrechnung_status IS NOT NULL AND OLD.abrechnung_status <> 'bereit');
+    IF v_alt_gesperrt
+       OR (NEW.abrechnung_status IS NOT NULL AND NEW.abrechnung_status <> 'bereit') THEN
+      RAISE EXCEPTION 'prescriptions: Abrechnungsstatus % -> % nur ueber das Backend', OLD.abrechnung_status, NEW.abrechnung_status USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  RETURN NEW;
+END $function$
+
+;
+ALTER FUNCTION public.pruefe_prescriptions_clientrechte() OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.pruefe_abrechnung_clientrechte()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5242,6 +5301,7 @@ ALTER FUNCTION public.whoami() OWNER TO postgres;
 -- ----------------------------------------------------------------------------
 CREATE TRIGGER abrechnung_updated_at BEFORE UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION trg_billing_updated_at();
 CREATE TRIGGER trg_a_abrechnung_clientrechte BEFORE INSERT OR DELETE OR UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION pruefe_abrechnung_clientrechte();
+CREATE TRIGGER trg_a_prescriptions_clientrechte BEFORE INSERT OR DELETE OR UPDATE ON prescriptions FOR EACH ROW EXECUTE FUNCTION pruefe_prescriptions_clientrechte();
 CREATE TRIGGER trg_a_abrechnung_zeile_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON abrechnung_zeile FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
 CREATE TRIGGER trg_a_abrechnung_zahlung_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON abrechnung_zahlung FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();
 CREATE TRIGGER trg_a_zaa_fehler_clientsperre BEFORE INSERT OR DELETE OR UPDATE ON zaa_fehler FOR EACH ROW EXECUTE FUNCTION sperre_clientschreibzugriff();

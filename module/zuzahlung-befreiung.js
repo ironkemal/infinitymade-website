@@ -297,6 +297,7 @@ async function betragNullsetzen(supabase, patientId, ownerId) {
     .eq('owner_id', ownerId)
     .eq('zuzahlung_befreit', true)
     .is('abrechnung_id', null)
+    .is('belegnummer', null)   // festgeschriebene Zeilen (Belegnummer vergeben) nie anfassen — sonst scheitert das ganze Bulk-UPDATE
     .gt('zuzahlung_eur', 0);
   if (error) console.warn('[befreiung] Betrag konnte nicht genullt werden:', error.message);
 }
