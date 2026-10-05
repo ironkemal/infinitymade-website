@@ -1051,7 +1051,7 @@ async function renderOverview() {
   if (params.get('welcome') === '1') {
     history.replaceState({}, '', location.pathname);
     document.getElementById('welcome-banner').hidden = false;
-  } else if (status === 'past_due') {
+  } else if (status === 'past_due' && !IST_KUTU) { // Box: kein Abo/Stripe (KUTU_DEVIR C3)
     document.getElementById('pastdue-banner').hidden = false;
   }
 
@@ -3934,7 +3934,7 @@ async function handleTerminStarten() {
 
 function checkPlanActive() {
   const ps = currentProfile?.plan_status;
-  if (ps === 'canceled' || ps === 'expired') {
+  if ((ps === 'canceled' || ps === 'expired') && !IST_KUTU) { // Box: Lizenz statt Abo (C3)
     showConfirmModal({
       title: 'Konto nicht aktiv',
       message: `Ihr Plan ist ${ps === 'canceled' ? 'gekündigt' : 'abgelaufen'}. Neue Buchungen, Patienten und Abrechnungen sind gesperrt.\n\nBitte erneuern Sie Ihr Abonnement unter Einstellungen › Abonnement.`,
@@ -11460,7 +11460,7 @@ async function loadSettings() {
   const { data: integ } = await supabase.from('calendar_integrations')
     .select('*').eq('user_id', currentSession.user.id).eq('provider', 'google').maybeSingle();
   const calStatus = document.getElementById('googleCalStatus');
-  const calBtn = document.getElementById('googleCalBtn');
+  const calBtn = document.getElementById('googleCalBtn'); if (calBtn?.closest('.settings-section')) calBtn.closest('.settings-section').hidden = IST_KUTU; // Box: kein Google-Sync, Redirect je Box nicht registrierbar (KUTU_DEVIR C3)
   if (integ?.access_token) {
     calStatus.textContent = t('status_connected');
     calStatus.className = 'integration-status connected';
@@ -15258,7 +15258,7 @@ async function init() {
     // Diagnose-Felder verdrahten sich beim Fokus selbst — siehe DIAGNOSE_FIELDS.
     await loadAerzte();
     const adminLink = document.getElementById('topbarAdminLink');
-    if (adminLink && currentSession?.user?.id) {
+    if (adminLink && currentSession?.user?.id && !IST_KUTU) { // Box: kein admin.praxura.de (C3)
       const { data: adminRow } = await supabase
         .from('admin_users')
         .select('user_id')
@@ -16689,7 +16689,7 @@ async function loadBelegliste() {
   const token = session?.access_token || '';
 
   // Use the Express backend endpoint to fetch and filter Belege
-  const url = new URL(`${API}/billing/belegliste`);
+  const url = new URL(`${API}/billing/belegliste`, location.origin); // Box: API="/api" (relativ)
   if (type !== 'all') url.searchParams.append('type', type);
   if (zahlart !== 'all') url.searchParams.append('zahlart', zahlart);
   if (from) url.searchParams.append('from', from);
@@ -16832,7 +16832,7 @@ function initBeleglisteUI() {
     const token = session?.access_token || '';
 
     // Directly trigger a browser download for the CSV file
-    const url = new URL(`${API}/billing/belegliste/export`);
+    const url = new URL(`${API}/billing/belegliste/export`, location.origin); // Box: API="/api"
     url.searchParams.append('token', token);
     if (type !== 'all') url.searchParams.append('type', type);
     // Ohne das exportierte man mehr, als auf dem Schirm stand (§146 AO) —
@@ -17747,7 +17747,7 @@ function initDruckeinstellungen() {
 
     // Plan enforcement — canceled/expired accounts see a reactivation wall
     const ps = currentProfile.plan_status;
-    if (ps === 'canceled' || ps === 'expired') {
+    if ((ps === 'canceled' || ps === 'expired') && !IST_KUTU) { // Box: nie Bezahlwand (C3)
       showPlanWall(currentProfile.plan || 'starter');
       return;
     }

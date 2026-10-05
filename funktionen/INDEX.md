@@ -3,7 +3,7 @@
 > Üretim: 2026-10-05 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**2911 fonksiyon** · 346 dosya · 41 sidebar modülü
+**2913 fonksiyon** · 346 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -459,7 +459,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `isAdmin` — admin-login.js:18 · api/_lib/auth.js:90 · login.js:132
 - `showToast` — admin.js:22 · dashboard.js:928 · module/kiosk.js:55
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rezept-in-maske.js:218
-- `setzen` — api-backend/server.js:4179 · module/praxis-standort.js:143 · module/rechnung-druck.js:110
+- `setzen` — api-backend/server.js:4194 · module/praxis-standort.js:143 · module/rechnung-druck.js:110
 - `loadTeam` — booking-request.js:622 · dashboard.js:9672 · kalender.js:219
 - `initCalendar` — booking-request.js:671 · dashboard.js:2136 · kalender.js:269
 - `t` — dashboard.js:505 · module/anamnese.js:381 · module/kiosk.js:56

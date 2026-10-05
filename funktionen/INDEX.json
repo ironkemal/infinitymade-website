@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-05",
  "dateien": 346,
- "funktionen": 2911,
+ "funktionen": 2913,
  "module": [
   "abrechnung",
   "anamnese",
@@ -19164,11 +19164,93 @@
    "uiPfad": []
   },
   {
+   "name": "schliesse",
+   "kind": "function",
+   "file": "api-backend/server.js",
+   "start": 3843,
+   "end": 3853,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [
+    "attendance"
+   ],
+   "rpcs": [],
+   "writes": [
+    "attendance:update"
+   ],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "oeffne",
+    "tick",
+    "verdrahteKontextmenue"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "tick",
+   "kind": "function",
+   "file": "api-backend/server.js",
+   "start": 3855,
+   "end": 3869,
+   "lines": 15,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "schliesse"
+   ],
+   "calledBy": [
+    "startClock"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "gehoertZurPraxis",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 3969,
-   "end": 3975,
+   "start": 3984,
+   "end": 3990,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [
@@ -19188,8 +19270,8 @@
    "name": "anfrageKorrekturenPruefen",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 4177,
-   "end": 4231,
+   "start": 4192,
+   "end": 4246,
    "lines": 55,
    "spiegelHinweis": null,
    "tables": [
@@ -19211,8 +19293,8 @@
    "name": "setzen",
    "kind": "arrow",
    "file": "api-backend/server.js",
-   "start": 4179,
-   "end": 4179,
+   "start": 4194,
+   "end": 4194,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -19269,8 +19351,8 @@
    "name": "alternativToken",
    "kind": "function",
    "file": "api-backend/server.js",
-   "start": 4378,
-   "end": 4381,
+   "start": 4393,
+   "end": 4396,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -81196,6 +81278,7 @@
    "calls": [],
    "calledBy": [
     "oeffne",
+    "tick",
     "verdrahteKontextmenue"
    ],
    "modules": [
@@ -141196,7 +141279,7 @@
   {
    "name": "setzen",
    "orte": [
-    "api-backend/server.js:4179",
+    "api-backend/server.js:4194",
     "module/praxis-standort.js:143",
     "module/rechnung-druck.js:110"
    ],
@@ -141618,6 +141701,22 @@
    "orte": [
     "api-backend/server.js:258",
     "api/demo-booking.js:98"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "schliesse",
+   "orte": [
+    "api-backend/server.js:3843",
+    "module/kalender-kontextmenue.js:91"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "tick",
+   "orte": [
+    "api-backend/server.js:3855",
+    "dashboard.js:13517"
    ],
    "aynalar": []
   },

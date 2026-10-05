@@ -3832,29 +3832,44 @@ app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
 
 // ---- Gece 23:55 auto-close (node-cron alternatifi — setInterval ile basit yaklaşım) ----
 // Her dakika çalışır; 23:55 Berlin saatinde check-out yapılmamış kayıtları "incomplete" kapatır.
+// 05.10.2026 (Kutu, KUTU_DEVIR D3-5): (a) PM2 `-i 2` iki kopya çalıştırıyordu → yalnız
+// NODE_APP_INSTANCE 0 (PM2 yoksa değişken yok → tek süreç, çalışır). (b) Kutu PC'si 23:55'te
+// kapalı/uykudaysa iş hiç koşmuyordu → gün değişince (açılışta dahil) önceki günlerin
+// açık kayıtları da kapatılır. Güncelleme idempotent (yalnız status='present').
 (function scheduleAttendanceAutoClose() {
-  setInterval(async () => {
+  if (process.env.NODE_APP_INSTANCE && process.env.NODE_APP_INSTANCE !== '0') return;
+  let nachgeholtFuer = null; // Berlin-Tag, für den vergangene Tage zuletzt geschlossen wurden
+
+  async function schliesse(filter, label) {
+    const { error } = await filter(supabase
+      .from('attendance')
+      .update({ status: 'incomplete' })
+      .not('check_in_at', 'is', null)
+      .is('check_out_at', null)
+      .eq('status', 'present'));
+    if (error) { console.error('[attendance auto-close]', label, error); return false; }
+    console.log(`[attendance auto-close] ${label} incomplete records closed`);
+    return true;
+  }
+
+  async function tick() {
     try {
       const now = new Date();
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(now);
+      if (nachgeholtFuer !== today) {
+        if (await schliesse(q => q.lt('date', today), `vor ${today}`)) nachgeholtFuer = today;
+      }
       const berlinH = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, hour: 'numeric', hour12: false }).format(now), 10);
       const berlinM = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, minute: 'numeric' }).format(now), 10);
       if (berlinH !== 23 || berlinM !== 55) return;
-
-      const today = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(now);
-      const { error } = await supabase
-        .from('attendance')
-        .update({ status: 'incomplete' })
-        .eq('date', today)
-        .not('check_in_at', 'is', null)
-        .is('check_out_at', null)
-        .eq('status', 'present');
-
-      if (error) console.error('[attendance auto-close]', error);
-      else console.log(`[attendance auto-close] ${today} incomplete records closed`);
+      await schliesse(q => q.eq('date', today), today);
     } catch (err) {
       console.error('[attendance auto-close] unexpected:', err);
     }
-  }, 60_000); // Her dakika kontrol et
+  }
+
+  setTimeout(tick, 30_000); // Açılışta kaçırılan günler (DB hazır olsun diye kısa gecikme)
+  setInterval(tick, 60_000); // Her dakika kontrol et
 })();
 
 // ---- Gece 03:00 hesap temizliği — ABGESCHALTET (KHS K1.4, 02.10.2026) ----

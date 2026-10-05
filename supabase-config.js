@@ -15,7 +15,11 @@ export const SUPABASE_ANON_KEY = _cfg.supabaseAnonKey || '';
 // von api/config.js weiterhin den absoluten Wert; die Box liefert '/api'
 // (relativ, siehe api-backend/server.js). Fällt /api/config ganz aus, bleibt
 // das heutige SaaS-Verhalten unverändert.
-export const API_BASE = _cfg.apiBase || 'https://n8n.infinitymade.de/api';
+// 05.10.2026 (KUTU_DEVIR D3-8): der absolute Rückfall gilt NUR auf app.praxura.de.
+// Überall sonst (Box) bleibt es bei '/api' der eigenen Box — sonst ginge bei
+// einem /api/config-Ausfall das Login-Token an den SaaS-Server (G1).
+export const API_BASE = _cfg.apiBase
+  || (globalThis.location?.hostname === 'app.praxura.de' ? 'https://n8n.infinitymade.de/api' : '/api');
 
 // Kutu-Bayrağı (O-58 a, 12.09.2026): SaaS'ta hep false (api/config.js sabit
 // döner), kutuda `SUPABASE_PUBLIC_URL` doluysa true. Yalnız SaaS-only

@@ -269,18 +269,18 @@ let manualSelectedDate = null;
 async function initCalendar() {
   const calendarEl = document.getElementById('fullcalendar');
   calendar = new FullCalendar.Calendar(calendarEl, {
-    schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
-    initialView: window.innerWidth < 768 ? 'timeGridDay' : 'resourceTimeGridDay',
-    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,resourceTimeGridDay,timeGridDay' },
+    // 05.10.2026: Standard-Bundle (MIT) statt Premium/Scheduler — der
+    // NonCommercial-Lizenzschluessel deckte keine kommerzielle Nutzung
+    // (legal-de 05.10). Damit entfaellt die Ressourcen-Ansicht "Team-Tag".
+    initialView: window.innerWidth < 768 ? 'timeGridDay' : 'timeGridWeek',
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
     buttonText: {
       today:              'Heute',
       month:              'Monat',
       week:               'Woche',
       day:                'Tag',
-      resourceTimeGridDay: 'Team-Tag',
     },
     locale: lang,
-    resources: teamMembers.map(t => ({ id: t.id, title: t.business_name || t.email.split('@')[0] })),
     allDaySlot: true,
     slotMinTime: '06:00:00',
     slotMaxTime: '23:00:00',
