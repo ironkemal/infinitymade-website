@@ -118,3 +118,28 @@ export async function veroeffentliche({ db, ownerId, registryId, vorher, patch }
     throw fehler(409, 'ABRECHNUNG_VERSION_CONFLICT', 'Konflikt bei der Abrechnungsversion.');
   }
 }
+
+/**
+ * Meldet bereits veroeffentlichte Erzeugungsdateien (DTA, Auftragsdatei, Begleitzettel) an die Registry
+ * (artefakt_registriere_veroeffentlicht, Migration 0063). Wirft NIE: die Abrechnung ist zu diesem
+ * Zeitpunkt schon erzeugt und der Header zeigt auf die Dateien; ein Fehler hier darf sie nicht
+ * zuruecknehmen — die Dateien bleiben im Bucket erhalten (der Loeschlauf behaelt unbekannte Dateien).
+ *
+ * @param {Array<{pfad:string, role:'dta'|'auftrag'|'begleit', sha256:string}>} dateien  leere/fehlende Pfade werden ignoriert
+ * @returns {Promise<{ok:boolean, angelegt?:number}>}
+ */
+export async function registriereVeroeffentlicht({ db, ownerId, abrechnungId, dateien }) {
+  const items = (dateien || [])
+    .filter((d) => d && typeof d.pfad === 'string' && d.pfad)
+    .map((d) => ({ path: d.pfad, kind: 'unsigned', role: d.role, sha256: d.sha256 }));
+  if (!items.length) return { ok: true, angelegt: 0 };
+  try {
+    const n = await rpc(db, 'artefakt_registriere_veroeffentlicht', {
+      p_owner: ownerId, p_abrechnung: abrechnungId, p_items: items, p_legacy: false,
+    });
+    return { ok: true, angelegt: typeof n === 'number' ? n : 0 };
+  } catch (e) {
+    console.error(`[artefakt-registry] Nachregistrierung fehlgeschlagen (Abrechnung ${abrechnungId}):`, e.message);
+    return { ok: false };
+  }
+}

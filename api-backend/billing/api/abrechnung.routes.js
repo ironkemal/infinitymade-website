@@ -29,8 +29,9 @@ import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_pos
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
 import { berlinHeute } from '../../lib/berlin-tag.js';
-import { reserviereUndLadeHoch, veroeffentliche } from './artefakt-registry.js';
+import { reserviereUndLadeHoch, veroeffentliche, registriereVeroeffentlicht } from './artefakt-registry.js';
 import { listeArtefaktVersionen, ladeArtefaktVersion } from './artefakt-historie.js';
+import { entferneUnsignierteDta } from './artefakt-ausmustern.js';
 import { zaaRueckmeldungAnwenden } from '../zaa/anwenden.js';
 import { pruefeEmpfaenger } from '../kostentraeger/stichtag-pruefung.js';
 import { logAccess } from '../../_lib/access-log.js';
@@ -1154,6 +1155,14 @@ router.post('/abrechnung/create', async (req, res) => {
       auftragsdatei_sha256: auftrag.sha256,
       dta_sha256:           sha256Hex(dtaBuffer),   // Ö1
     }).eq('id', ab.id);
+    await registriereVeroeffentlicht({
+      db: supabase, ownerId: tenantId, abrechnungId: ab.id,
+      dateien: [
+        { pfad: dtaPath, role: 'dta', sha256: sha256Hex(dtaBuffer) },
+        { pfad: auftrag.pfad, role: 'auftrag', sha256: auftrag.sha256 },
+        { pfad: upBeg.error ? null : begleitPath, role: 'begleit', sha256: sha256Hex(Buffer.from(begleitHtml, 'utf8')) },
+      ],
+    });
 
     const { error: upRxErr } = await supabase.from('prescriptions').update({
       abrechnung_id:     ab.id,
@@ -1242,6 +1251,12 @@ router.post('/abrechnung/create', async (req, res) => {
  *    Angestellter darf dieselben Behandlungen längst sehen. Deshalb 403 mit
  *    verständlichem Text statt eines stillen Filters.
  */
+// M1.16(a): Entfernen der unsignierten DTA nach veroeffentlichter Signatur. Standardmaessig AUS;
+// wird erst nach der Live-Abnahme per Umgebungsvariable ARTEFAKT_DTA_ENTFERNEN=1 aktiviert.
+function dtaEntfernungAktiv() {
+  return process.env.ARTEFAKT_DTA_ENTFERNEN === '1';
+}
+
 async function nurInhaber(req, res) {
   const hdr = req.headers.authorization || '';
   const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
@@ -1780,12 +1795,25 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
       };
     }
 
+    // M1.16(a): unsignierte DTA ausmustern (nur wenn aktiviert; fail-closed, wirft nie).
+    let dtaEntfernung = null;
+    if (dtaEntfernungAktiv()) {
+      dtaEntfernung = await entferneUnsignierteDta({
+        db: supabase,
+        ownerId: tenantId,
+        abrechnungId: ab.id,
+        ladeHeader: async () => (await supabase.from('abrechnung').select(ABRECHNUNG_VERSION_FELDER)
+          .eq('id', ab.id).eq('owner_id', tenantId).maybeSingle()).data,
+      });
+    }
+
     // Vollständige Abrechnungs-Versionszeile nicht im öffentlichen HTTP-Response exponieren
     const { version: _entfernteVersion, ...oeffentlicheVerschluesselung } = verschluesselungErgebnis || {};
 
     return res.json({
       ok: true,
       signedPath,
+      ...(dtaEntfernung ? { unsignierteDtaEntfernt: dtaEntfernung.entfernt === true } : {}),
       ...oeffentlicheVerschluesselung,
       ...(stichtagPruefung?.meldungen?.length ? { stichtagWarnung: stichtagPruefung.meldungen } : {}),
     });
@@ -2240,7 +2268,7 @@ async function mandantUndAbrechnung(req, res) {
 
   const { data: ab } = await supabase
     .from('abrechnung')
-    .select('id, owner_id, business_id, kostentraeger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, encrypted_storage_path, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, paid_at, created_at, betriebsart')
+    .select('id, owner_id, business_id, kostentraeger_ik, empfaenger_ik, dateiname, rechnungsnummer, verwerfungsgrund, total_eur, zuzahlung_total, prescription_count, rejected_count, status, storage_path, auftragsdatei_path, begleitzettel_path, signed_storage_path, signed_at, encrypted_storage_path, verschluesselt_am, verschluesselung_hinweis, zaa_uploaded_at, paid_at, created_at, betriebsart')
     .eq('id', req.params.id)
     .maybeSingle();
   if (!ab) { res.status(404).json({ error: 'Abrechnung nicht gefunden' }); return null; }
@@ -4142,6 +4170,14 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
         patch,
       });
       ab = { ...ab, ...publiziert };
+      await registriereVeroeffentlicht({
+        db: supabase, ownerId: tenantId, abrechnungId: ab.id,
+        dateien: [
+          { pfad: dtaPath, role: 'dta', sha256: sha256Hex(dtaBuffer) },
+          { pfad: auftrag?.pfad, role: 'auftrag', sha256: auftrag?.sha256 },
+          { pfad: (upBeg && !upBeg.error) ? begleitPath : null, role: 'begleit', sha256: sha256Hex(Buffer.from(begleitHtml, 'utf8')) },
+        ],
+      });
     } catch (err) {
       // 1. Zuerst nur die Verordnungen zurücknehmen, die dieser Versuch geholt hat
       let rollbackFehlgeschlagen = anspruchUnklar || publicationStarted;
@@ -4663,6 +4699,14 @@ router.post('/abrechnung/korrektur', async (req, res) => {
       auftragsdatei_sha256: auftrag.sha256,
       dta_sha256:           sha256Hex(dtaBuffer),   // Ö1
     }).eq('id', ab.id);
+    await registriereVeroeffentlicht({
+      db: supabase, ownerId: tenantId, abrechnungId: ab.id,
+      dateien: [
+        { pfad: dtaPath, role: 'dta', sha256: sha256Hex(dtaBuffer) },
+        { pfad: auftrag.pfad, role: 'auftrag', sha256: auftrag.sha256 },
+        { pfad: upBeg.error ? null : begleitPath, role: 'begleit', sha256: sha256Hex(Buffer.from(begleitHtml, 'utf8')) },
+      ],
+    });
 
     // ---- Arbeitsachse umhängen ----
     // `prescriptions.abrechnung_id` heisst „in welcher Datei liegt die Zeile

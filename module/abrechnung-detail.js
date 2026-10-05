@@ -525,7 +525,12 @@ function aktionenHtml(ab) {
   // stattdessen im Korrektur-Panel: korrekturHtml()/vkz01AusnahmeHtml() oben,
   // sichtbar am Kopf des Inhalts, nicht in dieser Aktionsleiste.
   // Verworfene Abrechnungen bieten kein ZAA-Hochladen an, da mangels Dateierzeugung nichts eingereicht wurde.
-  return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+  // Ohne Datenannahmestelle (empfaenger_ik) laesst sich weder pruefen noch verschluesseln —
+  // das darf nicht erst beim Klick auffallen (Live-QA 05.10.2026, Befund 5).
+  const empfaengerHinweis = (!ab.empfaenger_ik && ab.status !== 'verworfen')
+    ? `<div style="margin-top:12px;font-size:12px;color:var(--text-muted);">Hinweis: Dieser Abrechnung ist keine Datenannahmestelle zugeordnet (empfaenger_ik fehlt). Ohne sie kann die Datei nicht für den Versand verschlüsselt werden.</div>`
+    : '';
+  return `${empfaengerHinweis}<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
     ${k.join('')}
   </div>`;
 }

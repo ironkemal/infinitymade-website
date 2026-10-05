@@ -30,8 +30,11 @@ function validateSha256Hex(hash, fieldName) {
   if (typeof hash !== 'string' || !SHA256_HEX_REGEX.test(hash)) {
     const isDta = fieldName === 'dta_sha256' || fieldName.toLowerCase().includes('dta');
     const code = isDta ? 'DTA_HASH_REQUIRED' : 'SIGNED_HASH_REQUIRED';
+    // Die Meldung landet unveraendert im Dialog des Inhabers — deshalb verstaendliches Deutsch, kein Feldname.
     throw new DtaVerificationError(
-      `Ungültiger SHA-256-Hashwert für ${fieldName}`,
+      isDta
+        ? 'Für diese ältere Abrechnung liegt kein Prüfwert (SHA-256) der Originaldatei vor. Sie kann deshalb nicht signiert werden — bitte die Abrechnung neu erstellen.'
+        : 'Für die signierte Datei liegt kein gültiger Prüfwert (SHA-256) vor. Bitte die Abrechnung neu signieren oder neu erstellen.',
       422,
       code
     );

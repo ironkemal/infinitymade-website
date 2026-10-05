@@ -259,6 +259,8 @@ function setupVm(fakeDb, extraInjections = {}) {
     artefaktVersuchPfad,
     reserviereUndLadeHoch,
     veroeffentliche,
+    entferneUnsignierteDta: async () => ({ entfernt: false }),
+    dtaEntfernungAktiv: () => false,
     pruefeSignedDta,
     supabase: fakeDb.db,
     nurInhaber: async req => ({ tenantId: req.user?.id || 'owner-tenant-1' }),
@@ -343,6 +345,33 @@ describe('Abrechnung Artefakt Routes CAS & Lifecycle', () => {
     assert.equal(fakeDb.getCurrentRow().datenaustauschreferenz, 17);
     assert.equal(fakeDb.getCurrentRow().transfernummer, 7);
     assert.equal(fakeDb.getCurrentRow().rechnungsnummer, 'SYNTHETIC-17');
+  });
+
+  it('(2b) M1.16a Flag AN: nach Signatur wird die DTA-Ausmusterung genau einmal mit Owner/Abrechnung angestossen', async () => {
+    const fakeDb = createFakeDb(makeInitialRow());
+    const aufrufe = [];
+    const handlers = setupVm(fakeDb, {
+      dtaEntfernungAktiv: () => true,
+      entferneUnsignierteDta: async (a) => { aufrufe.push({ ownerId: a.ownerId, abrechnungId: a.abrechnungId, header: await a.ladeHeader() }); return { entfernt: true }; },
+    });
+    const { req, res } = createReqRes({ body: validUploadBody });
+    await handlers['/abrechnung/:id/upload-signed'](req, res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.unsignierteDtaEntfernt, true);
+    assert.equal(aufrufe.length, 1);
+    assert.equal(aufrufe[0].ownerId, 'owner-tenant-1');
+    assert.equal(aufrufe[0].header.signed_storage_path, res.body.signedPath);
+  });
+
+  it('(2c) Flag AUS (Standard): keine Ausmusterung, kein Feld in der Antwort', async () => {
+    const fakeDb = createFakeDb(makeInitialRow());
+    let aufgerufen = false;
+    const handlers = setupVm(fakeDb, { entferneUnsignierteDta: async () => { aufgerufen = true; return { entfernt: true }; } });
+    const { req, res } = createReqRes({ body: validUploadBody });
+    await handlers['/abrechnung/:id/upload-signed'](req, res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(aufgerufen, false);
+    assert.equal('unsignierteDtaEntfernt' in res.body, false);
   });
 
   it('(3) upload terminal accepted/gesendet/paid/verworfen 409 zero Storage writes', async () => {

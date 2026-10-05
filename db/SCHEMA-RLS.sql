@@ -3,7 +3,7 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261004223523 vkz03_trigger_rollenunabhaengig_0062
+-- LAST MIGRATION:     20261005102742 artefakt_registriere_veroeffentlicht_0063
 -- EXPORTED AT:        2026-10-03T19:36:25.349Z
 -- ERZEUGT AM:         2026-10-03 (Teilaktualisierung 2026-10-05)
 -- POSTGRESQL VERSION: 17.6
@@ -14,7 +14,7 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        168
---   functions:           103
+--   functions:           104
 --   triggers:            91
 --   indexes:             335
 --   auth_triggers:       1
@@ -22,7 +22,7 @@
 --   extensions:          9
 --   rls_disabled_tables: 1
 --
--- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0062 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
+-- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0063 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
 -- vollstaendiger Metadatenexport (tools/schema-export-katalog.sql + schema-dokumente.mjs) steht aus.
 --
 -- CAUTION / HINWEIS:
@@ -1841,6 +1841,59 @@ END $function$
 
 ;
 ALTER FUNCTION public.artefakt_publish(uuid, uuid, text, jsonb) OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION public.artefakt_registriere_veroeffentlicht(p_owner uuid, p_abrechnung uuid, p_items jsonb, p_legacy boolean DEFAULT false)
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_hdr public.abrechnung%ROWTYPE;
+  it jsonb;
+  v_path text; v_kind text; v_role text; v_sha text;
+  v_hpfad text; v_hhash text; v_n integer := 0; v_ex public.abrechnung_artefakt_version%ROWTYPE;
+BEGIN
+  IF jsonb_typeof(p_items) <> 'array' THEN RAISE EXCEPTION 'artefakt_registriere: items muss Array sein'; END IF;
+  PERFORM 1 FROM public.profiles WHERE id = p_owner FOR NO KEY UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'artefakt_registriere: Owner unbekannt'; END IF;
+  SELECT * INTO v_hdr FROM public.abrechnung WHERE id = p_abrechnung AND owner_id = p_owner FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'artefakt_registriere: Abrechnung nicht gefunden'; END IF;
+  FOR it IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_path := it->>'path'; v_kind := it->>'kind'; v_role := it->>'role'; v_sha := NULLIF(it->>'sha256','');
+    v_hpfad := CASE v_role WHEN 'dta' THEN v_hdr.storage_path WHEN 'auftrag' THEN v_hdr.auftragsdatei_path
+      WHEN 'begleit' THEN v_hdr.begleitzettel_path WHEN 'signed' THEN v_hdr.signed_storage_path
+      WHEN 'encrypted' THEN v_hdr.encrypted_storage_path END;
+    v_hhash := CASE v_role WHEN 'dta' THEN v_hdr.dta_sha256 WHEN 'auftrag' THEN v_hdr.auftragsdatei_sha256
+      WHEN 'signed' THEN v_hdr.signed_sha256 WHEN 'encrypted' THEN v_hdr.encrypted_sha256 ELSE NULL END;
+    IF v_path IS NULL OR v_path IS DISTINCT FROM v_hpfad THEN
+      RAISE EXCEPTION 'artefakt_registriere: Pfad entspricht nicht der Header-Spalte der Rolle %', v_role;
+    END IF;
+    IF v_hhash IS NOT NULL AND v_sha IS NOT NULL AND v_hhash IS DISTINCT FROM v_sha THEN
+      RAISE EXCEPTION 'artefakt_registriere: Hash passt nicht zum Header (Rolle %)', v_role;
+    END IF;
+    IF v_sha IS NULL THEN v_sha := v_hhash; END IF;
+    IF v_sha IS NULL AND NOT p_legacy THEN
+      RAISE EXCEPTION 'artefakt_registriere: Hash fehlt (Rolle %)', v_role;
+    END IF;
+    SELECT * INTO v_ex FROM public.abrechnung_artefakt_version WHERE storage_path = v_path FOR UPDATE;
+    IF FOUND THEN
+      IF v_ex.owner_id <> p_owner OR v_ex.abrechnung_id <> p_abrechnung OR v_ex.role <> v_role THEN
+        RAISE EXCEPTION 'artefakt_registriere: Pfad bereits anders registriert';
+      END IF;
+      CONTINUE;
+    END IF;
+    INSERT INTO public.abrechnung_artefakt_version
+      (owner_id, abrechnung_id, storage_path, kind, role, sha256, legacy, state, upload_state, published_at)
+    VALUES (p_owner, p_abrechnung, v_path, v_kind, v_role, v_sha, p_legacy OR v_sha IS NULL,
+            'published', 'uploaded', now());
+    v_n := v_n + 1;
+  END LOOP;
+  RETURN v_n;
+END $function$
+
+;
+ALTER FUNCTION public.artefakt_registriere_veroeffentlicht(uuid, uuid, jsonb, boolean) OWNER TO postgres;
 
 CREATE OR REPLACE FUNCTION public.artefakt_reserve(p_owner uuid, p_abrechnung uuid, p_path text, p_kind text, p_role text, p_sha256 text)
  RETURNS uuid

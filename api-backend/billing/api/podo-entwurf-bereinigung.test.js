@@ -484,6 +484,7 @@ function buildTestContext(supabase, overrides = {}) {
     pruefeEntwurfsVersion,
     aktualisiereArtefaktVersion,
     bereinigeUnveroeffentlichtenEntwurf,
+    registriereVeroeffentlicht: async (a) => { (supabase.registrierungen ||= []).push(a); return { ok: true, angelegt: a.dateien.length }; },
     speichereAuftragsdatei,
     baueBegleitzettel,
     ...overrides,
@@ -528,6 +529,10 @@ test('happyfullpublicationONLYafterclaims, filesupsertfalse unique', async () =>
   assert.ok(result.ab.dta_sha256, 'dta_sha256 muss publiziert sein');
 
   assert.equal(supabase.storageUploads.length, 3, 'Genau 3 Dateien muessen hochgeladen werden');
+  // M1.16: nach der Veroeffentlichung werden genau die drei Dateien der Registry gemeldet.
+  assert.equal(supabase.registrierungen?.length, 1, 'Nachregistrierung genau einmal');
+  assert.deepEqual(supabase.registrierungen[0].dateien.map(d => d.role).sort(), ['auftrag', 'begleit', 'dta']);
+  assert.ok(supabase.registrierungen[0].dateien.every(d => typeof d.pfad === 'string' && d.pfad.length > 0));
   for (const up of supabase.storageUploads) {
     assert.equal(up.opts.upsert, false, 'Jeder Upload muss strikt mit upsert: false erfolgen');
   }
@@ -571,6 +576,7 @@ test('2parallelcreate sameprescriptions onepub success other409discard and clean
     assert.ok(supabase.storageFiles.has(f), `Datei des erfolgreichen Gewinners darf nicht geloescht werden: ${f}`);
   }
   assert.equal(supabase.storageFiles.size, 3, 'Nur die 3 Dateien des fehlgeschlagenen Versuchs wurden geloescht, Gewinnerdateien bleiben erhalten');
+  assert.equal(supabase.registrierungen?.length, 1, 'nur der Gewinner wird registriert, der verworfene Versuch nie');
 });
 
 test('partialclaim rollback only owned .eq(abrechnung_id), foreign transferredrownotreset', async () => {

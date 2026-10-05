@@ -48,6 +48,7 @@ export const PROTECTED = [
   'artefakt_owner_freeze',
   'artefakt_owner_unfreeze',
   'zaa_fehler_anwenden',
+  'artefakt_registriere_veroeffentlicht',
 ];
 
 // Bewusst fuer anon/authenticated geoeffnete RPC-Funktionen.

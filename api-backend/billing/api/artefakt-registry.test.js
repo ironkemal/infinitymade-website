@@ -75,3 +75,27 @@ test('Fremd-Owner: reserve verweigert, kein Upload', async () => {
 test('ohne rpc-Client: fail-closed 503', async () => {
   await assert.rejects(reserviereUndLadeHoch(args({ storage: {} })), e => e.status === 503);
 });
+
+import { registriereVeroeffentlicht } from './artefakt-registry.js';
+
+test('Nachregistrierung: leere/fehlende Pfade werden ignoriert, kein RPC ohne Dateien', async () => {
+  const calls = [];
+  const db = { rpc: async (n, a) => { calls.push([n, a]); return { data: 2, error: null }; } };
+  const r0 = await registriereVeroeffentlicht({ db, ownerId: 'o1', abrechnungId: 'ab1', dateien: [{ pfad: null, role: 'auftrag', sha256: 'x' }] });
+  assert.deepEqual(r0, { ok: true, angelegt: 0 });
+  assert.equal(calls.length, 0);
+  const r = await registriereVeroeffentlicht({ db, ownerId: 'o1', abrechnungId: 'ab1', dateien: [
+    { pfad: 'o1/a/d.dta', role: 'dta', sha256: 'aa' }, { pfad: '', role: 'auftrag', sha256: 'bb' }, { pfad: 'o1/a/b.html', role: 'begleit', sha256: 'cc' }] });
+  assert.equal(r.ok, true);
+  assert.equal(calls[0][0], 'artefakt_registriere_veroeffentlicht');
+  assert.deepEqual(calls[0][1].p_items.map(i => i.role), ['dta', 'begleit']);
+  assert.equal(calls[0][1].p_legacy, false);
+  assert.ok(calls[0][1].p_items.every(i => i.kind === 'unsigned'));
+});
+
+test('Nachregistrierung wirft NIE: RPC-Fehler und fehlender Client geben ok:false', async () => {
+  const dateien = [{ pfad: 'o1/a/d.dta', role: 'dta', sha256: 'aa' }];
+  assert.deepEqual(await registriereVeroeffentlicht({ db: { rpc: async () => ({ data: null, error: { message: 'x' } }) }, ownerId: 'o1', abrechnungId: 'a', dateien }), { ok: false });
+  assert.deepEqual(await registriereVeroeffentlicht({ db: {}, ownerId: 'o1', abrechnungId: 'a', dateien }), { ok: false });
+  assert.deepEqual(await registriereVeroeffentlicht({ db: { rpc: async () => { throw new Error('netz'); } }, ownerId: 'o1', abrechnungId: 'a', dateien }), { ok: false });
+});

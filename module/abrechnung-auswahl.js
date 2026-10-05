@@ -452,6 +452,7 @@ const _st = {
   zeitraumBis: '',
   ausgefiltert: 0,      // wie viele Zeilen der Zeitraum gerade wegnimmt
   ohneKartenIk: 0,      // bereite Podo-Verordnungen ohne Karten-IK (fallen still aus der Liste)
+  ohneKartenIkNamen: [],
   // Protokoll der letzten „Erstellen"-Aktion. Bleibt über einen Reload hinweg
   // stehen (siehe zeichne()) — ohne das verschwand eine Fehlermeldung, sobald
   // ladeAbrechnungAuswahl() nach dem Lauf automatisch neu zeichnete: das
@@ -601,8 +602,11 @@ export async function ladeAbrechnungAuswahl() {
   const podoBereit = podoAlle.filter(v => imZeitraum(v.ausstellungsdatum, _st.zeitraumVon, _st.zeitraumBis));
   ausgefiltert += podoAlle.length - podoBereit.length;
   // Bereit, aber ohne Karten-IK: die Liste lässt sie aus — der Hinweis sagt es (30.09.2026).
-  _st.ohneKartenIk = zuschnitt.zeilen.filter(v => v.status === 'abrechenbar' && (v.rezeptart || 'kassen') === 'kassen'
-    && v.kostentraeger_ik && !kasseAbrechnungsbereit(v) && imZeitraum(v.ausstellungsdatum, _st.zeitraumVon, _st.zeitraumBis)).length;
+  const ohneKartenIk = zuschnitt.zeilen.filter(v => v.status === 'abrechenbar' && (v.rezeptart || 'kassen') === 'kassen'
+    && v.kostentraeger_ik && !kasseAbrechnungsbereit(v) && imZeitraum(v.ausstellungsdatum, _st.zeitraumVon, _st.zeitraumBis));
+  _st.ohneKartenIk = ohneKartenIk.length;
+  // Welche? Der Hinweis nennt die Patienten, damit niemand die Verordnungen suchen muss.
+  _st.ohneKartenIkNamen = ohneKartenIk.map(v => patientAnzeigename(v) || '—');
 
   if (podoBereit.length) {
     const { data: allBeh } = await ctx.supabase
@@ -818,7 +822,9 @@ function zeichne() {
 function kartenIkHinweisHtml() {
   const n = _st.ohneKartenIk || 0;
   if (!n) return '';
-  return `<div id="abKartenIkHinweis" style="font-size:12px;color:var(--text-muted);margin-top:10px;">${n} Verordnung${n > 1 ? 'en' : ''} ohne IK der Versichertenkarte — in der Verordnung eintragen.</div>`;
+  const namen = (_st.ohneKartenIkNamen || []).slice(0, 6).map(x => esc(x)).join(', ');
+  const mehr = (_st.ohneKartenIkNamen || []).length > 6 ? ' …' : '';
+  return `<div id="abKartenIkHinweis" style="font-size:12px;color:var(--text-muted);margin-top:10px;">${n} Verordnung${n > 1 ? 'en stehen' : ' steht'} auf „Bereit“, ${n > 1 ? 'erscheinen' : 'erscheint'} aber nicht in der Liste, weil das IK der Versichertenkarte fehlt${namen ? ` (${namen}${mehr})` : ''} — bitte in der Verordnung eintragen.</div>`;
 }
 
 /** Abrechnungszeitraum — steht auch dann da, wenn er alles wegfiltert. Sonst

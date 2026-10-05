@@ -260,6 +260,7 @@ function createHarness(options = {}) {
   const sandbox = {
     ABRECHNUNG_VERSION_FELDER, pruefeEntwurfsVersion, aktualisiereArtefaktVersion, artefaktVersuchPfad,
     reserviereUndLadeHoch, veroeffentliche,
+    entferneUnsignierteDta: async () => ({ entfernt: false }), dtaEntfernungAktiv: () => false,
     Buffer,
     console: {
       log: () => {},
