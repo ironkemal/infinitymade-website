@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-05",
  "dateien": 346,
- "funktionen": 2913,
+ "funktionen": 2915,
  "module": [
   "abrechnung",
   "anamnese",
@@ -3567,8 +3567,8 @@
    "name": "berechneVerschluesselung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1394,
-   "end": 1523,
+   "start": 1414,
+   "end": 1543,
    "lines": 130,
    "spiegelHinweis": null,
    "tables": [
@@ -3593,8 +3593,8 @@
    "name": "verarbeiteVerschluesselungsSchritt",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1537,
-   "end": 1625,
+   "start": 1557,
+   "end": 1645,
    "lines": 89,
    "spiegelHinweis": null,
    "tables": [
@@ -3620,8 +3620,8 @@
    "name": "ermittleEmpfaengerZertifikatStatus",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1871,
-   "end": 2073,
+   "start": 1901,
+   "end": 2103,
    "lines": 203,
    "spiegelHinweis": null,
    "tables": [
@@ -3645,8 +3645,8 @@
    "name": "handleEmpfaengerPruefung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2075,
-   "end": 2141,
+   "start": 2105,
+   "end": 2171,
    "lines": 67,
    "spiegelHinweis": null,
    "tables": [
@@ -3671,8 +3671,8 @@
    "name": "mandantUndAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2259,
-   "end": 2279,
+   "start": 2289,
+   "end": 2309,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [
@@ -3695,8 +3695,8 @@
    "name": "geldstand",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2290,
-   "end": 2311,
+   "start": 2320,
+   "end": 2341,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -3717,8 +3717,8 @@
    "name": "r2",
    "kind": "arrow",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2291,
-   "end": 2310,
+   "start": 2321,
+   "end": 2340,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -3795,8 +3795,8 @@
    "name": "mapVerordnungToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 3435,
-   "end": 3579,
+   "start": 3465,
+   "end": 3609,
    "lines": 145,
    "spiegelHinweis": null,
    "tables": [],
@@ -3870,7 +3870,8 @@
     "rpcSicher"
    ],
    "calledBy": [
-    "entferneUnsignierteDta"
+    "entferneUnsignierteDta",
+    "wiederholeAusmusterung"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -3891,7 +3892,8 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "entferneUnsignierteDta"
+    "entferneUnsignierteDta",
+    "wiederholeAusmusterung"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -3916,6 +3918,30 @@
     "aktualisiereArtefaktVersion",
     "einzeln",
     "ladeHeader",
+    "musterAus"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "wiederholeAusmusterung",
+   "kind": "function",
+   "file": "api-backend/billing/api/artefakt-ausmustern.js",
+   "start": 89,
+   "end": 100,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [
+    "abrechnung_artefakt_version"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "einzeln",
     "musterAus"
    ],
    "calledBy": [],
@@ -15390,11 +15416,32 @@
    "uiPfad": []
   },
   {
+   "name": "istEchteUebersetzung",
+   "kind": "function",
+   "file": "api-backend/billing/zaa/anwenden.js",
+   "start": 15,
+   "end": 18,
+   "lines": 4,
+   "spiegelHinweis": "identisch mit dem Dateitext (z",
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "zaaRueckmeldungAnwenden"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "zaaRueckmeldungAnwenden",
    "kind": "function",
    "file": "api-backend/billing/zaa/anwenden.js",
-   "start": 13,
-   "end": 94,
+   "start": 20,
+   "end": 101,
    "lines": 82,
    "spiegelHinweis": null,
    "tables": [
@@ -15407,6 +15454,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "istEchteUebersetzung",
     "parseZaaFile",
     "rpc",
     "set"
@@ -47419,7 +47467,7 @@
    "rpcs": [],
    "writes": [],
    "endpoints": [
-    "${API}/billing/abrechnung/${abrechnungId}/dta-bytes",
+    "${API}/billing/abrechnung/${abrechnungId}/dta-bytes?zweck=signieren",
     "${API}/billing/abrechnung/${abrechnungId}/upload-signed"
    ],
    "storage": [],
@@ -54589,8 +54637,8 @@
    "kind": "function",
    "file": "module/abrechnung-artefakte.js",
    "start": 91,
-   "end": 114,
-   "lines": 24,
+   "end": 116,
+   "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -140919,7 +140967,7 @@
   {
    "name": "r2",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:2291",
+    "api-backend/billing/api/abrechnung.routes.js:2321",
     "api-backend/billing/api/statistik.routes.js:176",
     "api-backend/billing/api/zuzahlung.routes.js:45",
     "api-backend/billing/dta/builder.js:62",
@@ -142145,6 +142193,13 @@
    "start": 55,
    "end": 60,
    "hinweis": "Identisch mit `fehlendePflichtangaben()` im Backend — beim Ändern beide"
+  },
+  {
+   "name": "istEchteUebersetzung",
+   "file": "api-backend/billing/zaa/anwenden.js",
+   "start": 15,
+   "end": 18,
+   "hinweis": "identisch mit dem Dateitext (z"
   },
   {
    "name": "kartenIkNormalisieren",

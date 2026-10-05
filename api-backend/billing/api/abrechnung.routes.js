@@ -31,7 +31,7 @@ import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '
 import { berlinHeute } from '../../lib/berlin-tag.js';
 import { reserviereUndLadeHoch, veroeffentliche, registriereVeroeffentlicht } from './artefakt-registry.js';
 import { listeArtefaktVersionen, ladeArtefaktVersion } from './artefakt-historie.js';
-import { entferneUnsignierteDta } from './artefakt-ausmustern.js';
+import { entferneUnsignierteDta, wiederholeAusmusterung } from './artefakt-ausmustern.js';
 import { zaaRueckmeldungAnwenden } from '../zaa/anwenden.js';
 import { pruefeEmpfaenger } from '../kostentraeger/stichtag-pruefung.js';
 import { logAccess } from '../../_lib/access-log.js';
@@ -1287,11 +1287,16 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
-      .select('id, owner_id, dateiname, storage_path, kostentraeger_ik, empfaenger_ik, created_at, signed_storage_path, signed_sha256, dta_sha256')
+      .select('id, owner_id, status, dateiname, storage_path, kostentraeger_ik, empfaenger_ik, created_at, signed_storage_path, signed_sha256, dta_sha256')
       .eq('id', req.params.id)
       .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
+
+    // Zum Signieren: Endstatus FRUEH melden (vor Zertifikatswahl und PIN), nicht erst beim Hochladen.
+    if (req.query?.zweck === 'signieren' && !['erstellt', 'heruntergeladen'].includes(ab.status)) {
+      return res.status(409).json({ error: 'Diese Abrechnung hat bereits den Status „' + ab.status + '“ und kann nicht mehr signiert werden. Bitte eine neue Abrechnung erstellen.', code: 'ABRECHNUNG_STATUS_GESPERRT' });
+    }
 
     // Stichtag-Prüfung am Übermittlungstag (§ 302, Quartalswechsel)
     let stichtagPruefung = null;
@@ -1342,6 +1347,21 @@ router.get('/abrechnung/:id/artefakte', async (req, res) => {
   } catch (e) {
     console.error('[abrechnung/artefakte]', e);
     return res.status(e.status || 500).json({ error: e.message || 'Fehler', ...(e.code ? { code: e.code } : {}) });
+  }
+});
+
+// M1.16(a): gescheiterte Ausmusterung der unsignierten DTA wiederholen (nur bereits beanspruchte Versionen).
+router.post('/abrechnung/:id/artefakte/:versionId/ausmustern-wiederholen', async (req, res) => {
+  try {
+    const wer = await nurInhaber(req, res);
+    if (!wer) return;
+    const erg = await wiederholeAusmusterung({ db: supabase, ownerId: wer.tenantId, abrechnungId: req.params.id, versionId: req.params.versionId });
+    if (erg.ok) return res.json({ ok: true });
+    const status = erg.grund === 'nicht_gefunden' ? 404 : (erg.grund === 'nicht_wiederholbar' ? 409 : 500);
+    return res.status(status).json({ error: status === 404 ? 'Dateiversion nicht gefunden' : (status === 409 ? 'Diese Version ist nicht zur Wiederholung vorgesehen.' : 'Ausmusterung konnte nicht abgeschlossen werden. Sie bleibt vorgemerkt und kann erneut versucht werden.') });
+  } catch (e) {
+    console.error('[abrechnung/artefakte/ausmustern-wiederholen]', e);
+    return res.status(500).json({ error: 'Fehler' });
   }
 });
 

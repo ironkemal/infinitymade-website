@@ -16072,7 +16072,7 @@ async function runSignAbrechnung() {
     if (!s?.access_token) throw new Error('Nicht angemeldet');
 
     await empfaengerVorabPruefen({ apiBase: API, token: s.access_token, abrechnungId, showToast }); // Empfänger am Übermittlungstag (37b8f51)
-    const dtaRes = await fetch(`${API}/billing/abrechnung/${abrechnungId}/dta-bytes`, { headers: { 'Authorization': 'Bearer ' + s.access_token } });
+    const dtaRes = await fetch(`${API}/billing/abrechnung/${abrechnungId}/dta-bytes?zweck=signieren`, { headers: { 'Authorization': 'Bearer ' + s.access_token } });
     const dtaJson = pruefeAntwort(dtaRes, await dtaRes.json().catch(() => ({})), null);
 
     stat.textContent = 'Lade Krypto-Bibliothek…';

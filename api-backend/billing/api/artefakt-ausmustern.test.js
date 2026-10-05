@@ -89,3 +89,36 @@ test('musterAus: bereits ausgemustert (Claim liefert NULL) ist ok ohne remove', 
   const db = { rpc: async () => ({ data: null, error: null }), storage: { from: () => ({ remove: async () => { throw new Error('darf nicht'); } }) } };
   assert.deepEqual(await musterAus({ db, ownerId: O, registryId: 'r', pfad: 'p' }), { ok: true, bereitsAusgemustert: true });
 });
+
+import { wiederholeAusmusterung } from './artefakt-ausmustern.js';
+
+function dbWdh(row, { removeErr = null } = {}) {
+  const log = [];
+  return { log, db: {
+    from() { const b = { select() { return b; }, eq() { return b; }, async maybeSingle() { return { data: row, error: null }; } }; return b; },
+    async rpc(n) { log.push(n); return n === 'artefakt_retire_claim' ? { data: 'tok', error: null } : { data: true, error: null }; },
+    storage: { from: () => ({ async remove(p) { log.push(['remove', p]); return removeErr ? { error: { message: removeErr } } : { data: p, error: null }; } }) },
+  } };
+}
+
+test('Wiederholung: retire_pending-DTA wird erneut entfernt (Claim -> remove -> Abschluss)', async () => {
+  const t = dbWdh({ id: 'rd', state: 'retire_pending', role: 'dta', storage_path: 'o1/ab1/d.dta' });
+  assert.deepEqual(await wiederholeAusmusterung({ db: t.db, ownerId: O, abrechnungId: A, versionId: 'rd' }), { ok: true });
+  assert.deepEqual(t.log.filter(l => Array.isArray(l)), [['remove', ['o1/ab1/d.dta']]]);
+});
+
+test('Wiederholung loest NIE eine neue Ausmusterung aus: published/signed/encrypted/retired -> nicht_wiederholbar, kein remove', async () => {
+  for (const row of [{ state: 'published', role: 'dta' }, { state: 'retire_pending', role: 'signed' }, { state: 'retire_pending', role: 'encrypted' }, { state: 'retired', role: 'dta' }]) {
+    const t = dbWdh({ id: 'x', storage_path: 'o1/p', ...row });
+    const r = await wiederholeAusmusterung({ db: t.db, ownerId: O, abrechnungId: A, versionId: 'x' });
+    assert.equal(r.ok, false);
+    assert.equal(r.grund, 'nicht_wiederholbar');
+    assert.equal(t.log.length, 0);
+  }
+});
+
+test('Wiederholung: unbekannte Version -> nicht_gefunden; remove-Fehler -> ok:false', async () => {
+  assert.equal((await wiederholeAusmusterung({ db: dbWdh(null).db, ownerId: O, abrechnungId: A, versionId: 'x' })).grund, 'nicht_gefunden');
+  const t = dbWdh({ id: 'rd', state: 'retire_pending', role: 'dta', storage_path: 'o1/ab1/d.dta' }, { removeErr: 'down' });
+  assert.equal((await wiederholeAusmusterung({ db: t.db, ownerId: O, abrechnungId: A, versionId: 'rd' })).ok, false);
+});

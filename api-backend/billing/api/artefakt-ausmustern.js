@@ -80,3 +80,21 @@ export async function entferneUnsignierteDta({ db, ownerId, abrechnungId, ladeHe
     return { entfernt: false, grund: e?.status === 409 ? 'konflikt' : 'fehler' };
   }
 }
+
+/**
+ * Wiederholt eine gescheiterte Ausmusterung. NUR fuer bereits beanspruchte (retire_pending) unsignierte
+ * DTA-Versionen derselben Abrechnung — es wird nie eine neue Ausmusterung ausgeloest.
+ * @returns {Promise<{ok:boolean, grund?:string}>}  wirft nie
+ */
+export async function wiederholeAusmusterung({ db, ownerId, abrechnungId, versionId }) {
+  try {
+    const r = await einzeln(db.from('abrechnung_artefakt_version').select('id,state,role,storage_path')
+      .eq('id', versionId).eq('owner_id', ownerId).eq('abrechnung_id', abrechnungId).maybeSingle());
+    if (r.fehler || !r.data) return { ok: false, grund: 'nicht_gefunden' };
+    if (r.data.role !== 'dta' || r.data.state !== 'retire_pending') return { ok: false, grund: 'nicht_wiederholbar' };
+    const erg = await musterAus({ db, ownerId, registryId: r.data.id, pfad: r.data.storage_path });
+    return erg.ok ? { ok: true } : { ok: false, grund: erg.grund || 'fehler' };
+  } catch {
+    return { ok: false, grund: 'fehler' };
+  }
+}
