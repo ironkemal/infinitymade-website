@@ -37,10 +37,14 @@ p('„✕" nimmt sie wieder weg', await zeilen() === 0, `${await zeilen()}`);
 console.log('\n══ BEFUNDUNG SETZT SICH VON SELBST');
 await page.selectOption('#bkService', 's-beh-gr');
 await page.waitForTimeout(250);
+// S1.12 (29.09.2026): der Vorschlag steht UNGEHAKT daneben — erst das Haekchen macht ihn zur Zeile.
+p('Vorschlag steht ungehakt daneben', !(await page.isChecked('#bkLeistungVorschlag input')));
+await page.check('#bkLeistungVorschlag input');
+await page.waitForTimeout(100);
 const nachWahl = await page.evaluate(() => window.__probe.leseLeistungen());
 p('neuer Patient bekommt eine zweite Zeile', nachWahl.length === 2, `${nachWahl.length} Zeilen`);
 p('und zwar die Eingangsbefundung', nachWahl[1]?.serviceId === 's-eing', String(nachWahl[1]?.serviceId));
-p('sie ist als Vorschlag markiert', nachWahl[1]?.auto === true);
+p('erst das Haekchen macht sie zur Zeile', nachWahl[1]?.auto === false);
 p('die Rueckfrage nach 01.11.2023 steht da', /01\.11\.2023/.test(await hinweis()));
 
 console.log('\n══ DAUER');
@@ -85,6 +89,8 @@ await page.evaluate(() => { document.getElementById('bookingModal').hidden = fal
 await page.waitForTimeout(100);
 await page.selectOption('#bkService', 's-beh-gr');
 await page.waitForTimeout(300);
+await page.check('#bkLeistungVorschlag input');   // seit S1.12 ungehakt — erst das Haekchen macht die Zeile
+await page.waitForTimeout(100);
 p('frische Maske, Vorschlag steht wieder', await zeilen() === 1, `${await zeilen()}`);
 await page.click('#bkLeistungAdd');
 p('„+" legt daneben eine leere Zeile an', await zeilen() === 2, `${await zeilen()}`);
@@ -109,6 +115,8 @@ await page.evaluate(() => { document.getElementById('bookingModal').hidden = fal
 await page.waitForTimeout(100);
 await page.selectOption('#bkService', 's-beh-gr');
 await page.waitForTimeout(300);
+await page.check('#bkLeistungVorschlag input');
+await page.waitForTimeout(100);
 p('Ausgangslage: GKV-Vorschlag steht', (await page.evaluate(() => window.__probe.leseLeistungen()))[1]?.serviceId === 's-eing');
 
 // dashboard.html ersetzt den Knopf bei jedem prefill durch einen Klon. Wer

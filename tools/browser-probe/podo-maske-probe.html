@@ -107,7 +107,9 @@ try {
 
   // ── Dropdown: Katalogzeilen vor der HPNR-Liste ──────────────────────────
   await setzeBereich('podo', 'DF');
-  // Das Modal ist hier verborgen, focus() bliebe wirkungslos — das Ereignis direkt senden.
+  // Seit 0418566 (29.09.2026) oeffnet katalog-suche.js keine Liste an einem unsichtbaren Feld — Modal sichtbar machen.
+  $('rezeptModal').hidden = false;
+  // focus() bleibt hier ohne Tastatur wirkungslos — das Ereignis direkt senden.
   $('rzHm').dispatchEvent(new Event('focus'));
   await warte(400);
   const zeilen = [...document.querySelectorAll('.icd10-dropdown-item')].map(e => e.textContent.replace(/\s+/g, ' ').trim());

@@ -41,7 +41,7 @@ try {
   // d2) dann L60.0 im zweiten Feld → DF zurückgenommen, Kandidaten
   await tippe(p, 'rzIcd2', 'L60.0');
   pruef('d2) + L60.0 im zweiten Feld → DG leer', await wert(p, 'rzDg') === '', await wert(p, 'rzDg'));
-  pruef('d2) Hinweis nennt DF, UI1, UI2', (await hinweis(p)) === 'Passende Diagnosegruppen: DF, UI1, UI2', await hinweis(p));
+  pruef('d2) Hinweis nennt DF, UI1, UI2', (await hinweis(p)) === 'Keine eindeutige DG ableitbar — mit Verordnung abgleichen · Passende Diagnosegruppen: DF, UI1, UI2', await hinweis(p));
   pruef('kein zweiter DG-Hinweis aus verordnung-podo.js', !/Zulässige Diagnosegruppen|passt nicht zum eingegebenen/.test(await podoBox(p)));
 
   // Zweiten Kode löschen → DF kommt zurück
@@ -55,7 +55,7 @@ try {
   pruef('d) „E11.74, L60.0" → Feld 1 = E11.74', await wert(p, 'rzIcd') === 'E11.74', await wert(p, 'rzIcd'));
   pruef('d) … Feld 2 = L60.0', await wert(p, 'rzIcd2') === 'L60.0', await wert(p, 'rzIcd2'));
   pruef('d) … DG leer', await wert(p, 'rzDg') === '', await wert(p, 'rzDg'));
-  pruef('d) … Hinweis', /^2\. Code nach ICD 2 übernommen · Passende Diagnosegruppen: DF, UI1, UI2$/.test(await hinweis(p)), await hinweis(p));
+  pruef('d) … Hinweis', /^2\. Code nach ICD 2 übernommen · Keine eindeutige DG ableitbar — mit Verordnung abgleichen · Passende Diagnosegruppen: DF, UI1, UI2$/.test(await hinweis(p)), await hinweis(p));
   await p.close();
 
   // d2 in einem Feld ergänzt
@@ -91,7 +91,7 @@ try {
   await tippe(p, 'rzIcd', 'E11.72');
   pruef('f) E11.72 → kein DF', await wert(p, 'rzDg') === '', await wert(p, 'rzDg'));
   await tippe(p, 'rzIcd', 'L60.0');
-  pruef('L60.0 allein → Hinweis UI1, UI2', (await hinweis(p)) === 'Passende Diagnosegruppen: UI1, UI2', await hinweis(p));
+  pruef('L60.0 allein → Hinweis UI1, UI2', (await hinweis(p)) === 'Keine eindeutige DG ableitbar — mit Verordnung abgleichen · Passende Diagnosegruppen: UI1, UI2', await hinweis(p));
   await p.close();
 } catch (e) {
   pruef('Probe lief durch', false, e.message);
