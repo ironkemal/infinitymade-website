@@ -3,7 +3,7 @@
 -- PURPOSE: Catalog definitions for RLS flags, policies, functions, procedures, triggers, indexes, and ACLs.
 --
 -- ENVIRONMENT:        saas njvuclullotbksskpwgk
--- LAST MIGRATION:     20261005102742 artefakt_registriere_veroeffentlicht_0063
+-- LAST MIGRATION:     20261005154202 abrechnung_clientrechte_0064
 -- EXPORTED AT:        2026-10-03T19:36:25.349Z
 -- ERZEUGT AM:         2026-10-03 (Teilaktualisierung 2026-10-05)
 -- POSTGRESQL VERSION: 17.6
@@ -14,15 +14,15 @@
 --   view_columns:        37
 --   matview_columns:     0
 --   rls_policies:        168
---   functions:           104
---   triggers:            91
+--   functions:           105
+--   triggers:            92
 --   indexes:             335
 --   auth_triggers:       1
 --   publication_tables:  8
 --   extensions:          9
 --   rls_disabled_tables: 1
 --
--- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0063 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
+-- TEILAKTUALISIERUNG 05.10.2026: Migrationen 0060-0064 handgepflegt aus den angewandten Definitionen (ACL-Zeilen der neuen Objekte noch nicht im Export);
 -- vollstaendiger Metadatenexport (tools/schema-export-katalog.sql + schema-dokumente.mjs) steht aus.
 --
 -- CAUTION / HINWEIS:
@@ -3764,6 +3764,33 @@ $function$
 ;
 ALTER FUNCTION public.profiles_privilegierte_spalten_schuetzen() OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION public.pruefe_abrechnung_clientrechte()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+BEGIN
+  IF current_user NOT IN ('authenticated', 'anon') THEN
+    RETURN COALESCE(NEW, OLD);   -- Backend (service_role/postgres/supabase_admin): unveraendert
+  END IF;
+  IF TG_OP IN ('INSERT', 'DELETE') THEN
+    RAISE EXCEPTION 'abrechnung: % nur ueber das Backend' , TG_OP USING ERRCODE = '42501';
+  END IF;
+  -- UPDATE: alles ausser status/updated_at muss unveraendert bleiben ...
+  IF (to_jsonb(NEW) - 'status' - 'updated_at') IS DISTINCT FROM (to_jsonb(OLD) - 'status' - 'updated_at') THEN
+    RAISE EXCEPTION 'abrechnung: Datei-, Hash- und Kopffelder nur ueber das Backend' USING ERRCODE = '42501';
+  END IF;
+  -- ... und der Status darf nur von erstellt auf heruntergeladen springen.
+  IF NEW.status IS DISTINCT FROM OLD.status
+     AND NOT (OLD.status = 'erstellt' AND NEW.status = 'heruntergeladen') THEN
+    RAISE EXCEPTION 'abrechnung: Statuswechsel % -> % nur ueber das Backend', OLD.status, NEW.status USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $function$
+
+;
+ALTER FUNCTION public.pruefe_abrechnung_clientrechte() OWNER TO postgres;
+
 CREATE OR REPLACE FUNCTION public.pruefe_abrechnung_zuzahlungsforderung()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5199,6 +5226,7 @@ ALTER FUNCTION public.whoami() OWNER TO postgres;
 -- TRIGGERS
 -- ----------------------------------------------------------------------------
 CREATE TRIGGER abrechnung_updated_at BEFORE UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION trg_billing_updated_at();
+CREATE TRIGGER trg_a_abrechnung_clientrechte BEFORE INSERT OR DELETE OR UPDATE ON abrechnung FOR EACH ROW EXECUTE FUNCTION pruefe_abrechnung_clientrechte();
 
 CREATE TRIGGER trg_set_business_id BEFORE INSERT ON abrechnung FOR EACH ROW EXECUTE FUNCTION set_business_id_default();
 
