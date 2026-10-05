@@ -16735,7 +16735,7 @@ async function loadBelegliste() {
         <td style="color:${color};font-weight:600;text-align:right;">${fmtEur(r.amount_eur)}</td>
         <td style="color:var(--text-main);">${escapeHtml(r.reference_text || '')}</td>
         <td style="color:var(--text-muted);font-size:12px;">${escapeHtml(r.storno_reason || (r.type === 'storno' ? '—' : ''))}</td>
-        <td style="color:var(--text-muted);">System</td>
+        <td style="color:var(--text-muted);">${r.created_by ? (r.created_by === currentSession?.user?.id ? 'Sie' : 'Benutzer ' + String(r.created_by).slice(0, 8)) : 'System'}</td>
         <td>${stornoBtn}</td>
       `;
       tbody.appendChild(tr);
