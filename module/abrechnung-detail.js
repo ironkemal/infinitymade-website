@@ -49,6 +49,7 @@ import { dateiStatusBadge, aggregierterDateiStatus, dateiStatusInfo, istVerworfe
 import { ladeDateieinheiten, dateieinheitVon } from './podologie-dateieinheit.js?v=20260907';
 import { on } from './signal.js?v=20260813';
 import { alsISODatum } from './datum.js?v=20261001a';
+import { zeigeDateiversionen } from './abrechnung-artefakte.js?v=20261005a';
 
 let ctx = null;
 let _hoertZu = false;
@@ -516,6 +517,7 @@ function aktionenHtml(ab) {
   if (ab.status === 'rejected' || ab.status === 'accepted') {
     k.push(`<button class="btn-ghost btn-sm" data-ab-akt="fehler">🔍 ZAA-Fehler</button>`);
   }
+  if (ab.storage_path || ab.signed_storage_path) k.push(`<button class="btn-ghost btn-sm" data-ab-akt="versionen">Dateiversionen</button>`);
   k.push(`<button class="btn-ghost btn-sm" data-ab-akt="anleitung">Anleitung</button>`);
 
   // ⚠️ „Korrigieren & erneut vorbereiten" fehlt hier absichtlich — der alte,
@@ -545,6 +547,7 @@ function _verdrahteAktionen(ab, gruppen = []) {
         case 'zaa':        return ctx.aktionen?.zaaHochladen?.(ab.id, ab.dateiname);
         case 'fehler':     return ctx.aktionen?.zaaFehler?.(ab.id);
         case 'anleitung':  return ctx.aktionen?.anleitung?.(ab.id);
+        case 'versionen':  return zeigeDateiversionen(ctx, ab);
         case 'korrektur':  return _erstelleKorrektur(btn, ab);
         case 'vkz01-ausnahme':    return _vkz01Ausnahme(btn, ab);
         case 'zahlung-erfassen':  return _erfasseZahlung(ab, gruppen);

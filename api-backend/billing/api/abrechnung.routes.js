@@ -30,6 +30,7 @@ import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
 import { berlinHeute } from '../../lib/berlin-tag.js';
 import { reserviereUndLadeHoch, veroeffentliche } from './artefakt-registry.js';
+import { listeArtefaktVersionen, ladeArtefaktVersion } from './artefakt-historie.js';
 import { zaaRueckmeldungAnwenden } from '../zaa/anwenden.js';
 import { pruefeEmpfaenger } from '../kostentraeger/stichtag-pruefung.js';
 import { logAccess } from '../../_lib/access-log.js';
@@ -1313,6 +1314,35 @@ router.get('/abrechnung/:id/dta-bytes', async (req, res) => {
       error: e.message || 'Download fehlgeschlagen',
       ...(e.code ? { code: e.code } : {}),
     });
+  }
+});
+
+// M1.16: Versionshistorie der Abrechnungsdateien (nur Registry-IDs, keine Pfade).
+router.get('/abrechnung/:id/artefakte', async (req, res) => {
+  try {
+    const wer = await nurInhaber(req, res);
+    if (!wer) return;
+    const erg = await listeArtefaktVersionen({ db: supabase, ownerId: wer.tenantId, abrechnungId: req.params.id });
+    return res.json({ ok: true, ...erg });
+  } catch (e) {
+    console.error('[abrechnung/artefakte]', e);
+    return res.status(e.status || 500).json({ error: e.message || 'Fehler', ...(e.code ? { code: e.code } : {}) });
+  }
+});
+
+// M1.16: versionsgebundener, geschuetzter Download (Owner + Registry-Lebenszyklus + Hashpruefung).
+router.get('/abrechnung/:id/artefakte/:versionId/download', async (req, res) => {
+  try {
+    const wer = await nurInhaber(req, res);
+    if (!wer) return;
+    const f = await ladeArtefaktVersion({ db: supabase, ownerId: wer.tenantId, abrechnungId: req.params.id, versionId: req.params.versionId });
+    res.setHeader('Content-Type', f.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${f.dateiname}"`);
+    res.setHeader('Cache-Control', 'no-store');
+    return res.send(f.bytes);
+  } catch (e) {
+    console.error('[abrechnung/artefakte/download]', e);
+    return res.status(e.status || 500).json({ error: e.message || 'Download fehlgeschlagen', ...(e.code ? { code: e.code } : {}) });
   }
 });
 
