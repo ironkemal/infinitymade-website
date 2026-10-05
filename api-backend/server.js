@@ -80,6 +80,8 @@ app.use(cors({
     callback(new Error('CORS: origin not allowed'));
   },
   credentials: true,
+  // Dateiversionen-Download: der Browser soll den vom Server gesetzten Dateinamen lesen koennen.
+  exposedHeaders: ['Content-Disposition'],
 }));
 app.disable('x-powered-by');
 // Baseline security headers (dependency-free — helmet not installed). Traefik

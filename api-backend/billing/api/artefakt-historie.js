@@ -9,6 +9,20 @@ const HEADER_PFADE = ['storage_path', 'auftragsdatei_path', 'begleitzettel_path'
 const ROLLEN_TEXT = { dta: 'DTA (unsigniert)', auftrag: 'Auftragsdatei', begleit: 'Begleitzettel', signed: 'Signierte Datei', encrypted: 'Verschlüsselte Datei' };
 const SIEBEN_TAGE_MS = 7 * 24 * 3600 * 1000;
 
+/** Lokaler Download-Name je Rolle — unterscheidbar und verstaendlich (Live-QA C-2). */
+export function dateinameFuer(role, dateiname) {
+  const basis = String(dateiname || 'abrechnung').replace(/[^A-Za-z0-9._-]/g, '_') || 'abrechnung';
+  switch (role) {
+    case 'dta':       return `${basis}.dta`;
+    case 'auftrag':   return `${basis}.auf`;
+    case 'begleit':   return `Begleitzettel_${basis}.html`;
+    case 'signed':    return `${basis}.p7m`;
+    // SECON § 3.2.3.1: die verschluesselte Nutzdatei traegt keine Dateiendung — der physische Name ist `dateiname`.
+    case 'encrypted': return basis;
+    default:          return basis;
+  }
+}
+
 function fehler(status, code, message) {
   const e = new Error(message);
   e.status = status; e.statusCode = status; e.code = code;
@@ -43,6 +57,7 @@ export async function listeArtefaktVersionen({ db, ownerId, abrechnungId, jetzt 
         id: r.id,
         rolle: r.role,
         bezeichnung: ROLLEN_TEXT[r.role] || r.role,
+        dateiname: dateinameFuer(r.role, hdr.dateiname),
         status: r.state,
         aktuell: aktuell.has(r.storage_path),
         erstelltAm: r.created_at,
@@ -80,12 +95,10 @@ export async function ladeArtefaktVersion({ db, ownerId, abrechnungId, versionId
   if (reg.sha256 && createHash('sha256').update(bytes).digest('hex') !== reg.sha256) {
     throw fehler(500, 'HASH_ABWEICHUNG', 'Die gespeicherte Datei stimmt nicht mehr mit ihrem Prüfwert überein. Bitte nicht verwenden.');
   }
-  const basis = String(hdr.dateiname || 'abrechnung').replace(/[^A-Za-z0-9._-]/g, '_');
-  const endung = { dta: '', auftrag: '.auf', begleit: '.html', signed: '.p7m', encrypted: '.enc.p7m' }[reg.role] ?? '';
   return {
     bytes,
     role: reg.role,
-    dateiname: `${basis}${endung}`,
+    dateiname: dateinameFuer(reg.role, hdr.dateiname),
     contentType: reg.role === 'begleit' ? 'text/html; charset=utf-8' : 'application/octet-stream',
   };
 }

@@ -28,15 +28,22 @@ test('zeitraumAusZeilen: fehlende Daten werden ausgelassen, nicht ersetzt', () =
 
 test('faelligkeit: Einreichung + 28 Tage', () => {
   const heute = new Date('2026-09-09T12:00:00Z');
-  const f = faelligkeit({ zaa_uploaded_at: '2026-09-01T08:00:00Z' }, heute);
+  const f = faelligkeit({ zaa_uploaded_at: '2026-09-01T08:00:00Z', betriebsart: 'echt', status: 'gesendet' }, heute);
   assert.equal(f.am, '2026-09-29');
   assert.equal(f.ueberfaellig, false);
   assert.equal(f.tageRest, 20);
 });
 
+test('faelligkeit: Testdatei, abgelehnte und verworfene Datei haben keine Zahlungsfrist (Live-QA C-6)', () => {
+  const heute = new Date('2026-09-09T12:00:00Z');
+  assert.equal(faelligkeit({ zaa_uploaded_at: '2026-09-01T08:00:00Z', betriebsart: 'test', status: 'rejected' }, heute), null);
+  assert.equal(faelligkeit({ zaa_uploaded_at: '2026-09-01T08:00:00Z', betriebsart: 'echt', status: 'rejected' }, heute), null);
+  assert.equal(faelligkeit({ zaa_uploaded_at: '2026-09-01T08:00:00Z', betriebsart: 'echt', status: 'verworfen' }, heute), null);
+});
+
 test('faelligkeit: ueberfaellig wird als solches gemeldet', () => {
   const heute = new Date('2026-09-09T12:00:00Z');
-  const f = faelligkeit({ zaa_uploaded_at: '2026-07-01T08:00:00Z' }, heute);
+  const f = faelligkeit({ zaa_uploaded_at: '2026-07-01T08:00:00Z', betriebsart: 'echt', status: 'gesendet' }, heute);
   assert.equal(f.ueberfaellig, true);
   assert.ok(f.tageRest < 0);
 });

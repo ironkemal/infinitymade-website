@@ -26,9 +26,9 @@ export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, 
   const parsed = parseZaaFile(buf);
   if (!parsed.valid || !Array.isArray(parsed.errors) || parsed.errors.length === 0) {
     const grund = parsed.reason === 'empty' ? 'leer'
-      : parsed.reason === 'invalid' ? 'strukturell ungueltig' : 'nicht erkennbar';
+      : parsed.reason === 'invalid' ? 'strukturell ungültig' : 'nicht erkennbar';
     return { status: 422, body: {
-      error: `ZAA-Datei ${grund}: Die Rueckmeldung wurde nicht verarbeitet, es wurde nichts veraendert.`,
+      error: `ZAA-Datei ${grund}: Die Rückmeldung wurde nicht verarbeitet, es wurde nichts verändert.`,
       reason: parsed.reason || 'unknown',
       unveraendert: true,
     } };
@@ -72,11 +72,11 @@ export async function zaaRueckmeldungAnwenden({ db, tenantId, abrechnungId, ab, 
   });
   if (anwErr) {
     console.error('[abrechnung/upload-zaa] zaa_fehler_anwenden', anwErr);
-    return { status: 500, body: { error: 'ZAA-Rueckmeldung konnte nicht gespeichert werden.' } };
+    return { status: 500, body: { error: 'ZAA-Rückmeldung konnte nicht gespeichert werden.' } };
   }
   if (!anw || anw.konflikt) {
     return { status: 409, body: {
-      error: 'Die Abrechnung wurde zwischenzeitlich geaendert. Bitte Ansicht aktualisieren und die ZAA-Datei erneut hochladen.',
+      error: 'Die Abrechnung wurde zwischenzeitlich geändert. Bitte Ansicht aktualisieren und die ZAA-Datei erneut hochladen.',
       unveraendert: true,
     } };
   }

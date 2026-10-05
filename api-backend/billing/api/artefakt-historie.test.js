@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { listeArtefaktVersionen, ladeArtefaktVersion } from './artefakt-historie.js';
+import { listeArtefaktVersionen, ladeArtefaktVersion, dateinameFuer } from './artefakt-historie.js';
 
 const sha = b => createHash('sha256').update(b).digest('hex');
 const O = 'o1', A = 'ab1';
@@ -51,6 +51,22 @@ test('Liste: nach Einreichung 8 Jahre ab Einreichung, keine Wiedervorlage', asyn
 test('Fremder Owner: 403, unbekannte Abrechnung: 404', async () => {
   await assert.rejects(listeArtefaktVersionen({ db: db({ header: hdr({ owner_id: 'o2' }), rows: [] }), ownerId: O, abrechnungId: A }), e => e.status === 403);
   await assert.rejects(listeArtefaktVersionen({ db: db({ header: null, rows: [] }), ownerId: O, abrechnungId: A }), e => e.status === 404);
+});
+
+test('Dateinamen je Rolle: unterscheidbar, SECON-konform (verschluesselt ohne Endung), sicher', () => {
+  assert.equal(dateinameFuer('dta', 'TSOL0004'), 'TSOL0004.dta');
+  assert.equal(dateinameFuer('auftrag', 'TSOL0004'), 'TSOL0004.auf');
+  assert.equal(dateinameFuer('begleit', 'TSOL0004'), 'Begleitzettel_TSOL0004.html');
+  assert.equal(dateinameFuer('signed', 'TSOL0004'), 'TSOL0004.p7m');
+  assert.equal(dateinameFuer('encrypted', 'TSOL0004'), 'TSOL0004');
+  assert.equal(dateinameFuer('dta', '../../etc/passwd\n'), '.._.._etc_passwd_.dta');
+  assert.equal(dateinameFuer('signed', null), 'abrechnung.p7m');
+});
+
+test('Liste enthaelt den Dateinamen je Version', async () => {
+  const d = db({ header: hdr({ dateiname: 'TSOL0004' }), rows: [reg(), reg({ id: 'r2', role: 'begleit', kind: 'unsigned', storage_path: 'o1/ab1/b' })] });
+  const erg = await listeArtefaktVersionen({ db: d, ownerId: O, abrechnungId: A });
+  assert.deepEqual(erg.versionen.map(v => v.dateiname).sort(), ['Begleitzettel_TSOL0004.html', 'TSOL0004.p7m']);
 });
 
 test('Download: published mit passendem Hash liefert Bytes und sicheren Dateinamen', async () => {

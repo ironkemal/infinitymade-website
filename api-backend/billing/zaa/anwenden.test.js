@@ -52,6 +52,12 @@ test('gueltige Fehlerliste: genau ein atomarer RPC mit Version, nie accepted', a
   assert.equal(calls.mutationen, 0, 'alle Mutationen nur innerhalb der RPC');
 });
 
+test('Fehlertexte mit Umlauten (Live-QA C-6)', async () => {
+  const { db } = mockDb();
+  const r = await zaaRueckmeldungAnwenden({ ...basis, db, buf: Buffer.from('Hallo Welt') });
+  assert.match(r.body.error, /Rückmeldung wurde nicht verarbeitet, es wurde nichts verändert/);
+});
+
 test('Versionskonflikt: 409 unveraendert', async () => {
   const { db } = mockDb({ rpcResult: { data: { konflikt: true }, error: null } });
   const r = await zaaRueckmeldungAnwenden({ ...basis, db, buf: gueltig });

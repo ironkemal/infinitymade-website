@@ -28,21 +28,25 @@ function datum(iso) {
   } catch { return '—'; }
 }
 
-/** Reines Rendering — testbar ohne DOM. */
+/** Reines Rendering — testbar ohne DOM. Karten statt Tabelle: kein seitliches Scrollen im schmalen Modal (Live-QA C-7). */
 export function dateiversionenHtml(liste) {
   const v = liste?.versionen || [];
   if (!v.length) {
     return `<p style="color:var(--text-muted);font-size:13px;">Für diese Abrechnung sind noch keine Dateiversionen in der Registry erfasst (ältere Abrechnungen werden nachträglich aufgenommen).</p>`;
   }
-  const zeilen = v.map((r) => `
-    <tr>
-      <td>${esc(r.bezeichnung)}${r.aktuell ? ' <span style="font-size:11px;color:var(--success);">· aktuell</span>' : ''}</td>
-      <td>${esc(STATUS_TEXT[r.status] || r.status)}</td>
-      <td>${esc(datum(r.erstelltAm))}</td>
-      <td style="font-size:12px;color:var(--text-muted);">${esc(r.pruefung)}${r.aufbewahrung ? '<br>' + esc(r.aufbewahrung) : ''}${r.wiedervorlage ? '<br><strong style="color:var(--warning, var(--text-main));">Wiedervorlage: seit über 7 Tagen nicht eingereicht</strong>' : ''}</td>
-      <td>${r.herunterladbar ? `<button class="btn-ghost btn-sm" data-artefakt-dl="${esc(r.id)}">Herunterladen</button>` : '—'}</td>
-    </tr>`).join('');
-  return `<table class="data-table" style="width:100%;"><thead><tr><th>Datei</th><th>Status</th><th>Erstellt</th><th>Prüfung / Aufbewahrung</th><th></th></tr></thead><tbody>${zeilen}</tbody></table>
+  const karten = v.map((r) => `
+    <div style="padding:10px 0;border-top:1px solid var(--border);">
+      <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;">
+        <strong style="font-size:13px;color:var(--text-main);">${esc(r.bezeichnung)}</strong>
+        ${r.aktuell ? '<span style="font-size:11px;color:var(--success);">· aktuell</span>' : ''}
+        <span style="font-size:12px;color:var(--text-muted);">${esc(STATUS_TEXT[r.status] || r.status)} · ${esc(datum(r.erstelltAm))}</span>
+      </div>
+      ${r.dateiname ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px;word-break:break-all;">${esc(r.dateiname)}</div>` : ''}
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${esc(r.pruefung)}${r.aufbewahrung ? ' · ' + esc(r.aufbewahrung) : ''}</div>
+      ${r.wiedervorlage ? '<div style="font-size:12px;margin-top:2px;"><strong style="color:var(--warning, var(--text-main));">Wiedervorlage: seit über 7 Tagen nicht eingereicht</strong></div>' : ''}
+      ${r.herunterladbar ? `<div style="margin-top:6px;"><button class="btn-ghost btn-sm" data-artefakt-dl="${esc(r.id)}" data-artefakt-name="${esc(r.dateiname || '')}">Herunterladen</button></div>` : ''}
+    </div>`).join('');
+  return `<div>${karten}</div>
     <p style="margin-top:10px;font-size:12px;color:var(--text-muted);">Dateien werden nie automatisch gelöscht. Aufbewahrung (8 Jahre) beginnt mit der dokumentierten Einreichung.</p>`;
 }
 
@@ -61,7 +65,7 @@ async function ladeListe(ctx, abrechnungId) {
   return json;
 }
 
-async function lade(ctx, abrechnungId, versionId) {
+async function lade(ctx, abrechnungId, versionId, fallbackName) {
   const res = await fetch(`${ctx.apiBase}/billing/abrechnung/${encodeURIComponent(abrechnungId)}/artefakte/${encodeURIComponent(versionId)}/download`, {
     headers: { Authorization: 'Bearer ' + await token(ctx) },
   });
@@ -71,7 +75,8 @@ async function lade(ctx, abrechnungId, versionId) {
   }
   const blob = await res.blob();
   const dispo = res.headers.get('Content-Disposition') || '';
-  const name = (dispo.match(/filename="([^"]+)"/) || [])[1] || 'abrechnung';
+  // Header nur lesbar, wenn der Server ihn per CORS freigibt; sonst der Name aus der Versionsliste.
+  const name = (dispo.match(/filename="([^"]+)"/) || [])[1] || fallbackName || 'abrechnung';
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = name;
@@ -95,7 +100,7 @@ export async function zeigeDateiversionen(ctx, ab) {
         body.querySelectorAll('[data-artefakt-dl]').forEach((btn) => {
           btn.addEventListener('click', async () => {
             btn.disabled = true;
-            try { await lade(ctx, ab.id, btn.dataset.artefaktDl); }
+            try { await lade(ctx, ab.id, btn.dataset.artefaktDl, btn.dataset.artefaktName); }
             catch (e) { ctx.showToast?.('Download fehlgeschlagen: ' + e.message, 'error'); }
             finally { btn.disabled = false; }
           });

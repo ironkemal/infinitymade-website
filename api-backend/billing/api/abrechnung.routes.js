@@ -1840,7 +1840,8 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
       : u.user.id;
 
     const { contentBase64, filename } = req.body || {};
-    if (!contentBase64) return res.status(400).json({ error: 'contentBase64 required' });
+    // Eine LEERE Datei ("") ist keine fehlende Angabe: sie geht an den Parser und wird dort als leer abgelehnt (422).
+    if (typeof contentBase64 !== 'string') return res.status(400).json({ error: 'contentBase64 required' });
     const buf = Buffer.from(contentBase64, 'base64');
     if (buf.length > 5 * 1024 * 1024) return res.status(413).json({ error: 'ZAA-Datei zu groß (>5 MB)' });
 

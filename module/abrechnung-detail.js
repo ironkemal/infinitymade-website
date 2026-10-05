@@ -49,7 +49,7 @@ import { dateiStatusBadge, aggregierterDateiStatus, dateiStatusInfo, istVerworfe
 import { ladeDateieinheiten, dateieinheitVon } from './podologie-dateieinheit.js?v=20260907';
 import { on } from './signal.js?v=20260813';
 import { alsISODatum } from './datum.js?v=20261001a';
-import { zeigeDateiversionen } from './abrechnung-artefakte.js?v=20261005a';
+import { zeigeDateiversionen } from './abrechnung-artefakte.js?v=20261005b';
 
 let ctx = null;
 let _hoertZu = false;
@@ -93,6 +93,8 @@ export function zeitraumAusZeilen(zeilen) {
  */
 export function faelligkeit(abrechnung, heute = new Date()) {
   if (!abrechnung?.zaa_uploaded_at) return null;
+  // Keine Zahlungsfrist bei Testdateien, abgelehnten und verworfenen Dateien — dort wird nichts bezahlt (Live-QA C-6).
+  if (istTestDatei(abrechnung) || abrechnung.status === 'rejected' || istVerworfen(abrechnung)) return null;
   const faellig = new Date(new Date(abrechnung.zaa_uploaded_at).getTime() + 28 * 864e5);
   return {
     // Lokales Datum, nicht UTC: um 00:00–02:00 Berlin lag das Fälligkeitsdatum
