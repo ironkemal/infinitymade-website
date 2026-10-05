@@ -356,7 +356,7 @@ Aşama bitince §6 adımlarını uygula; kalan aşama yoksa bana K3 (kutu testi)
 **K2b başlat:**
 ```
 KUTU_HAZIRLIK_SPRINT.md'yi oku (§1 özellikle K-18, §2, §6) ve konsey/tutanak/2026-10-04-kutu-erisim-modeli.md'yi (05.10 eki dahil).
-Hat K, aşama K2b'yi uygula (K2b.1 → K2b.10). Önce git pull --rebase.
+Hat K, aşama K2b'yi uygula (K2b.1 → K2b.17; K2b.13 ✅, K2b.15 kısmen ✅; K2b.17 tek kutu kimliği = K-20 — K2b.2 ad servisi kimliğiyle AYNI anahtar, üç kimlik icat etme). Önce git pull --rebase.
 İlk iş: bana K2b.7'deki TOTP sorusunu sor (K-12 ile çelişki) ve K2b.1 denemesini yap — kod yazmadan, Windows test kutusunda elle gerçek ad + DNS-01 sertifikası; ben telefonda açayım.
 onprem bu aşamanın bekçisi (merkez servisi, acme-dns, Caddy image, env, zamanlanmış iş): her adımdan önce sor, sonra bildir. Kutuyu internete açan her şeyde guvenlik. Yeni klasör → aynı commit'te .vercelignore.
 Ağır kodu agy worker'larına ver, soğuk ikinci worker'la denetlet, diff'i kendin oku. Alt parça bitince commit+push.
