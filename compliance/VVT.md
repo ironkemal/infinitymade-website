@@ -27,7 +27,7 @@ InfinityMade tritt **doppelt** in Erscheinung:
 | **Rechtsgrundlage** | Art. 6 Abs. 1 lit. b DSGVO (Vertrag); lit. f (berechtigtes Interesse — Produktstats) |
 | **Datenkategorien** | Name, E-Mail, Telefon, Geschäftsname, Adresse, Sektor, IK-Nummer, Stripe-Kunden-ID, IP, Login-Zeitstempel |
 | **Betroffene** | Geschäftsinhaber, Mitarbeiter mit eigenem Login |
-| **Empfänger** | Stripe Payments Europe (EU, AVV), Vercel (DPF-zertifiziert, EU-Region), Supabase Frankfurt |
+| **Empfänger** | Stripe Payments Europe (EU, AVV), Vercel (DPF-zertifiziert, EU-Region), Supabase Frankfurt; DNS-Hosting: Cloudflare (nur DNS, kein Proxy) — Zuordnung Box-Subdomain ↔ Praxis (K-18, ab K2b.2) |
 | **Drittland-Übermittlung** | Stripe verarbeitet primär in EU; Sub-Prozessoren in USA über SCC |
 | **Speicherdauer** | Vertragslaufzeit + 10 Jahre (§ 147 AO Buchhaltungspflicht) |
 | **Löschkonzept** | Nach Vertragsende: Stammdaten anonymisiert; Buchhaltungsrelevante Daten 10 Jahre archiviert |

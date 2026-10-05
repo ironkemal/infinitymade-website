@@ -80,7 +80,7 @@ günler sürebilir). Kurulum ekran paylaşımıyla, mevcut `install.sh` (Weg A) 
       `CADDY_TLS_ARG`=ACME e-postası; telefondan mobil veriyle giriş — K2
 - [ ] guvenlik asgari paketi (ilk müşteriden önce): kurulum bitince `/api/setup/*` kapanır ve
       `SETUP_TOKEN` silinir; `/auth/v1/admin|signup` dışarıya kapalı; Caddy rate limit + `/token`
-      brute-force freni; TOTP zorunlu; Hetzner firewall yalnız 80/443, SSH yalnız praksisin
+      brute-force freni; ~~TOTP zorunlu~~ (**05.10.2026 Kemal: TOTP yok** — K-12/K-19 i, KHS K2b.7); Hetzner firewall yalnız 80/443, SSH yalnız praksisin
       anahtarıyla; unattended-upgrades — K3
 - [ ] Alt ad başına CAA `accounturi` + CT izleme; DNS hesabında 2FA — K2
 - [ ] KURULUM.md'ye "Weg 0 — Hetzner Cloud (empfohlen)" + müşteri ön kontrol listesi (hesap
