@@ -123,3 +123,6 @@ spike/
 # Codex-Spiegel der Agents + lose Prompt-Ablage — kein Web-Asset (28.09.2026)
 .codex/
 Claude outputs/
+
+# Merkez-Namensdienst (K2b.2, 05.10.2026) — Zentrale, nie Web-Asset, nie Box-Image
+merkez/

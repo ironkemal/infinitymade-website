@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-05",
- "dateien": 346,
- "funktionen": 2916,
+ "dateien": 350,
+ "funktionen": 2945,
  "module": [
   "abrechnung",
   "anamnese",
@@ -3016,6 +3016,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "baueSignaturString",
     "createZuzahlungsforderungRouter",
     "ermittleEmpfaengerZertifikatStatus",
     "parseOriginalDtaMessage",
@@ -4258,6 +4259,7 @@
     "rpc"
    ],
    "calledBy": [
+    "baueSignaturString",
     "createZuzahlungsforderungRouter",
     "ermittleEmpfaengerZertifikatStatus",
     "parseOriginalDtaMessage",
@@ -5820,6 +5822,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "baueSignaturString",
     "createZuzahlungsforderungRouter",
     "ermittleEmpfaengerZertifikatStatus",
     "parseOriginalDtaMessage",
@@ -10375,6 +10378,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "baueSignaturString",
     "createZuzahlungsforderungRouter",
     "ermittleEmpfaengerZertifikatStatus",
     "parseOriginalDtaMessage",
@@ -17717,6 +17721,750 @@
    "uiPfad": []
   },
   {
+   "name": "acmednsVerzeichnis",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kayit.js",
+   "start": 18,
+   "end": 20,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "kayitAusfuehren"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "schreibeAcmedns",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kayit.js",
+   "start": 24,
+   "end": 30,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "kayitAusfuehren"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "kayitAusfuehren",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kayit.js",
+   "start": 35,
+   "end": 80,
+   "lines": 46,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "acmednsVerzeichnis",
+    "erzeugeKimlik",
+    "fehlerText",
+    "kimlikVerzeichnis",
+    "ladeKimlik",
+    "merkezFetch",
+    "schreibeAcmedns",
+    "speichereAd",
+    "uebernehmeNeueKimlik"
+   ],
+   "calledBy": [
+    "main"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "fehlerText",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kayit.js",
+   "start": 82,
+   "end": 91,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "fehlerMitGruenden",
+    "kayitAusfuehren"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "args",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kayit.js",
+   "start": 93,
+   "end": 106,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "main"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "main",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kayit.js",
+   "start": 108,
+   "end": 127,
+   "lines": 20,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "args",
+    "close",
+    "frage",
+    "kayitAusfuehren"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "frage",
+   "kind": "arrow",
+   "file": "api-backend/merkez-istemci/kayit.js",
+   "start": 111,
+   "end": 111,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "aufEuro",
+    "frageOffeneEinheiten",
+    "main",
+    "verdrahteGeldzeile"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "kimlikVerzeichnis",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kimlik.js",
+   "start": 9,
+   "end": 11,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "erzeugeKimlik",
+    "kayitAusfuehren",
+    "ladeKimlik",
+    "speichereAd",
+    "uebernehmeNeueKimlik"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "schreibeNeu",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kimlik.js",
+   "start": 13,
+   "end": 20,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "boxIdAusPublicKey"
+   ],
+   "calledBy": [
+    "erzeugeKimlik"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "erzeugeKimlik",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kimlik.js",
+   "start": 32,
+   "end": 48,
+   "lines": 17,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "kimlikVerzeichnis",
+    "ladeKimlik",
+    "schreibeNeu"
+   ],
+   "calledBy": [
+    "kayitAusfuehren"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "uebernehmeNeueKimlik",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kimlik.js",
+   "start": 51,
+   "end": 55,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "kimlikVerzeichnis"
+   ],
+   "calledBy": [
+    "kayitAusfuehren"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "ladeKimlik",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kimlik.js",
+   "start": 58,
+   "end": 75,
+   "lines": 18,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "boxIdAusPublicKey",
+    "kimlikVerzeichnis",
+    "publicKeyAlsBase64url"
+   ],
+   "calledBy": [
+    "erzeugeKimlik",
+    "kayitAusfuehren",
+    "merkezFetch",
+    "speichereAd"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "speichereAd",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kimlik.js",
+   "start": 78,
+   "end": 83,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "kimlikVerzeichnis",
+    "ladeKimlik"
+   ],
+   "calledBy": [
+    "kayitAusfuehren"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "basisUrl",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/merkez-fetch.js",
+   "start": 6,
+   "end": 14,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "merkezFetch"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "merkezFetch",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/merkez-fetch.js",
+   "start": 22,
+   "end": 43,
+   "lines": 22,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "basisUrl",
+    "json",
+    "ladeKimlik",
+    "signiereAnfrage"
+   ],
+   "calledBy": [
+    "kayitAusfuehren"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "sha256Hex",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 22,
+   "end": 27,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "baueSignaturString",
+    "createZuzahlungsforderungRouter",
+    "ermittleEmpfaengerZertifikatStatus",
+    "parseOriginalDtaMessage",
+    "reserviereUndLadeHoch",
+    "speichereAuftragsdatei",
+    "speichereEinwilligung",
+    "verarbeiteVerschluesselungsSchritt"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "neueNonce",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 29,
+   "end": 31,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "signiereAnfrage"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "publicKeyLesen",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 37,
+   "end": 50,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "boxIdAusPublicKey",
+    "pruefeSignatur",
+    "publicKeyAlsBase64url"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "publicKeyAlsBase64url",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 52,
+   "end": 54,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "publicKeyLesen"
+   ],
+   "calledBy": [
+    "ladeKimlik"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "boxIdAusPublicKey",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 57,
+   "end": 60,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "publicKeyLesen"
+   ],
+   "calledBy": [
+    "ladeKimlik",
+    "pruefeSignatur",
+    "schreibeNeu"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "baueSignaturString",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 62,
+   "end": 64,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "sha256Hex"
+   ],
+   "calledBy": [
+    "pruefeSignatur",
+    "signiereAnfrage"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "zerlegeUrl",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 70,
+   "end": 81,
+   "lines": 12,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "signiereAnfrage"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "signiereAnfrage",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 89,
+   "end": 104,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "baueSignaturString",
+    "neueNonce",
+    "zerlegeUrl"
+   ],
+   "calledBy": [
+    "merkezFetch"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "leseSignaturKopf",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 107,
+   "end": 116,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "h"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "h",
+   "kind": "arrow",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 108,
+   "end": 115,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "faelligkeit",
+    "leseSignaturKopf",
+    "sitzungsplanAktualisieren"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "pruefeSignatur",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/signatur.js",
+   "start": 134,
+   "end": 150,
+   "lines": 17,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "baueSignaturString",
+    "boxIdAusPublicKey",
+    "publicKeyLesen"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "vortag",
    "kind": "function",
    "file": "api-backend/preise_autoupdate.mjs",
@@ -18182,12 +18930,12 @@
    "uiPfad": []
   },
   {
-   "name": "generateSetupCode",
+   "name": "kutuPruefzeichen",
    "kind": "function",
    "file": "api-backend/routes/mitarbeiter-zugang-code.js",
-   "start": 13,
-   "end": 21,
-   "lines": 9,
+   "start": 16,
+   "end": 22,
+   "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18195,6 +18943,75 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
+   "calledBy": [
+    "generateKutuCode",
+    "istKutuCodeGueltig"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "generateKutuCode",
+   "kind": "function",
+   "file": "api-backend/routes/mitarbeiter-zugang-code.js",
+   "start": 24,
+   "end": 29,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "kutuPruefzeichen"
+   ],
+   "calledBy": [
+    "generateSetupCode"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "istKutuCodeGueltig",
+   "kind": "function",
+   "file": "api-backend/routes/mitarbeiter-zugang-code.js",
+   "start": 37,
+   "end": 42,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "kutuPruefzeichen",
+    "normalizeCode"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "generateSetupCode",
+   "kind": "function",
+   "file": "api-backend/routes/mitarbeiter-zugang-code.js",
+   "start": 51,
+   "end": 60,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "generateKutuCode"
+   ],
    "calledBy": [],
    "modules": [],
    "gemeinsam": false,
@@ -18204,9 +19021,9 @@
    "name": "formatSetupCode",
    "kind": "function",
    "file": "api-backend/routes/mitarbeiter-zugang-code.js",
-   "start": 29,
-   "end": 35,
-   "lines": 7,
+   "start": 68,
+   "end": 77,
+   "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18225,9 +19042,9 @@
    "name": "normalizeCode",
    "kind": "function",
    "file": "api-backend/routes/mitarbeiter-zugang-code.js",
-   "start": 43,
-   "end": 46,
-   "lines": 4,
+   "start": 85,
+   "end": 91,
+   "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18239,7 +19056,8 @@
     "formatCode",
     "formatSetupCode",
     "hashCode",
-    "isValidCodeFormat"
+    "isValidCodeFormat",
+    "istKutuCodeGueltig"
    ],
    "modules": [
     "abrechnung",
@@ -18281,8 +19099,8 @@
    "name": "hashCode",
    "kind": "function",
    "file": "api-backend/routes/mitarbeiter-zugang-code.js",
-   "start": 54,
-   "end": 57,
+   "start": 99,
+   "end": 102,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -18304,8 +19122,8 @@
    "name": "verifyCode",
    "kind": "function",
    "file": "api-backend/routes/mitarbeiter-zugang-code.js",
-   "start": 66,
-   "end": 76,
+   "start": 111,
+   "end": 121,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -18325,8 +19143,8 @@
    "name": "isCodeExpired",
    "kind": "function",
    "file": "api-backend/routes/mitarbeiter-zugang-code.js",
-   "start": 85,
-   "end": 91,
+   "start": 130,
+   "end": 136,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -18344,8 +19162,8 @@
    "name": "calculateExpiryDate",
    "kind": "function",
    "file": "api-backend/routes/mitarbeiter-zugang-code.js",
-   "start": 100,
-   "end": 104,
+   "start": 145,
+   "end": 149,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -20141,6 +20959,7 @@
     "machtWiederWartend",
     "mandantUndAbrechnung",
     "maybeOfferAppointmentConfirmEmail",
+    "merkezFetch",
     "mitarbeiterAnlegen",
     "mitarbeiterEntfernen",
     "mountEmpfangsnachweis",
@@ -41738,6 +42557,7 @@
     "kopieOeffnen",
     "loadAusfallrechnungen",
     "loadMahnwesen",
+    "main",
     "offerAusfallrechnung",
     "pick"
    ],
@@ -55224,7 +56044,8 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "fehlerMitGruenden"
+    "fehlerMitGruenden",
+    "kayitAusfuehren"
    ],
    "modules": [
     "abrechnung",
@@ -74416,6 +75237,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "baueSignaturString",
     "createZuzahlungsforderungRouter",
     "ermittleEmpfaengerZertifikatStatus",
     "parseOriginalDtaMessage",
@@ -88184,7 +89006,8 @@
     "formatCode",
     "formatSetupCode",
     "hashCode",
-    "isValidCodeFormat"
+    "isValidCodeFormat",
+    "istKutuCodeGueltig"
    ],
    "modules": [
     "abrechnung",
@@ -89075,6 +89898,7 @@
    "storage": [],
    "calls": [
     "bestaetigungsText",
+    "frage",
     "offeneAuswahl"
    ],
    "calledBy": [
@@ -104712,6 +105536,7 @@
     "aufEuro",
     "ermittleGeldstand",
     "findePosition",
+    "frage",
     "ladePodoPositionen",
     "ladePrivatSumme",
     "rechnungAusVerordnung",
@@ -104841,6 +105666,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "frage",
     "rechnungAusVerordnung"
    ],
    "calledBy": [
@@ -120406,6 +121232,7 @@
    "calls": [],
    "calledBy": [
     "faelligkeit",
+    "leseSignaturKopf",
     "sitzungsplanAktualisieren"
    ],
    "modules": [
@@ -135910,6 +136737,7 @@
     "kopieOeffnen",
     "loadAusfallrechnungen",
     "loadMahnwesen",
+    "main",
     "offerAusfallrechnung",
     "pick"
    ],
@@ -141151,6 +141979,18 @@
    "aynalar": []
   },
   {
+   "name": "sha256Hex",
+   "orte": [
+    "api-backend/billing/api/abrechnung.routes.js:92",
+    "api-backend/billing/api/artefakt-registry.js:23",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js:38",
+    "api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73",
+    "api-backend/merkez-istemci/signatur.js:22",
+    "module/einwilligung-texte.js:360"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "mockResponse",
    "orte": [
     "api-backend/ai/tasks/appointment-confirm-draft.js:56",
@@ -141173,17 +142013,6 @@
    "aynalar": []
   },
   {
-   "name": "sha256Hex",
-   "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:92",
-    "api-backend/billing/api/artefakt-registry.js:23",
-    "api-backend/billing/api/zuzahlungsforderung.routes.js:38",
-    "api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73",
-    "module/einwilligung-texte.js:360"
-   ],
-   "aynalar": []
-  },
-  {
    "name": "leer",
    "orte": [
     "api-backend/billing/dta/auftragsdatei.js:53",
@@ -141191,6 +142020,17 @@
     "module/fussbefund-archiv.js:199",
     "module/sitzungsplan.js:114",
     "module/verordnung-pruefung.js:97"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "main",
+   "orte": [
+    "api-backend/check_diagnosegruppen_icd.js:94",
+    "api-backend/merkez-istemci/kayit.js:108",
+    "api-backend/preise_autoupdate.mjs:194",
+    "api-backend/preise_pruefen.mjs:240",
+    "api-backend/sync_heilmittel_katalog.js:151"
    ],
    "aynalar": []
   },
@@ -141235,16 +142075,6 @@
     "module/verordnung-detail.js:400",
     "module/verordnung-detail.js:457",
     "module/verordnung-pruefen-knopf.js:115"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "main",
-   "orte": [
-    "api-backend/check_diagnosegruppen_icd.js:94",
-    "api-backend/preise_autoupdate.mjs:194",
-    "api-backend/preise_pruefen.mjs:240",
-    "api-backend/sync_heilmittel_katalog.js:151"
    ],
    "aynalar": []
   },
@@ -141759,6 +142589,22 @@
    ]
   },
   {
+   "name": "fehlerText",
+   "orte": [
+    "api-backend/merkez-istemci/kayit.js:82",
+    "module/abrechnung-auswahl.js:334"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "h",
+   "orte": [
+    "api-backend/merkez-istemci/signatur.js:108",
+    "module/verordnung-podo.js:933"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "val",
    "orte": [
     "api-backend/preise_pruefen.mjs:111",
@@ -141769,7 +142615,7 @@
   {
    "name": "normalizeCode",
    "orte": [
-    "api-backend/routes/mitarbeiter-zugang-code.js:43",
+    "api-backend/routes/mitarbeiter-zugang-code.js:85",
     "module/mitarbeiter-zugang.js:12"
    ],
    "aynalar": []

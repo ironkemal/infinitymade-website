@@ -22,6 +22,8 @@ COPY booking ./booking
 COPY lib ./lib
 COPY setup ./setup
 COPY routes ./routes
+# Kutu-Kimlik + Merkez-Client (K2b.17): kayit.js und die signierten Anfragen laufen im api-Image.
+COPY merkez-istemci ./merkez-istemci
 COPY dsgvo ./dsgvo
 # db/ = Migrations-Runner + die SQL-Kette. Fehlt sie hier, startet server.js zwar,
 # aber das Schema der Kundenbox bleibt stehen — und zwar lautlos.
