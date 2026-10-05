@@ -8,7 +8,7 @@
 | | |
 |---|---|
 | **Version** | 1.0 (Entwurf) |
-| **Stand** | 2026-06-08 |
+| **Stand** | 2026-10-05 |
 | **Bezug** | VVT.md, DSFA.md, TOM.md |
 
 ---
@@ -158,7 +158,7 @@ Folgende Unterauftragsverarbeiter sind zum Zeitpunkt des Vertragsschlusses im Ei
 |---|---|---|---|---|
 | **Supabase Inc.** | Datenbank (PostgreSQL), Authentifizierung, Dateispeicher | EU (Frankfurt, AWS eu-central-1) | nein | — |
 | **Hetzner Online GmbH** | VPS-Hosting für Backend-API und n8n-Workflows | DE (Falkenstein) — ISO 27001 | nein | — |
-| **Microsoft Azure (OpenAI)** | KI-gestützte OCR/Strukturierung von Verordnungen | EU (Sweden Central) — Zero-Data-Retention | nein | — |
+| **Microsoft Azure (OpenAI)** | KI-gestützte OCR/Strukturierung von Verordnungen | EU (Sweden Central) — Verarbeitung bei Microsoft Azure in Schweden (EU) | nein | — |
 | **Stripe Payments Europe Ltd.** | Zahlungsabwicklung (Abrechnungsdaten des Auftraggebers, keine Patientendaten) | EU (Irland) | (USA, Sub-Prozessoren) | EU-SCC + DPF |
 | **Vercel Inc.** | Frontend-Hosting (statische Dateien, keine Patientendaten) | EU-Edge + USA | (USA) | DPF-zertifiziert |
 | **Google LLC** | OAuth-Authentifizierung + Google Calendar (nur bei opt-in durch Auftraggeber) | USA | ja | Google Workspace DPA + EU-SCC |
@@ -186,18 +186,20 @@ Wesentliche Maßnahmen im Überblick:
 
 ## § 8 Löschung nach Vertragsende
 
-Nach Beendigung der Hauptvertragsbeziehung hat der Auftragnehmer — nach Wahl des Auftraggebers — alle personenbezogenen Daten des Auftraggebers entweder **zurückzugeben** (Export via Dashboard in maschinenlesbarem Format, CSV/JSON) oder **zu löschen**, soweit keine gesetzliche Pflicht zur Aufbewahrung besteht.
+Nach Beendigung der Hauptvertragsbeziehung hat der Auftragnehmer — nach Wahl des Auftraggebers — alle personenbezogenen Daten des Auftraggebers entweder **zurückzugeben** (Export via Dashboard in maschinenlesbarem Format, CSV/JSON) oder **zu löschen**, soweit nicht nachstehend unter „Aufbewahrungspflichten und Sperrung" etwas anderes bestimmt ist.
 
 Die Löschung ist nach folgendem Zeitplan durchzuführen:
 
 | Datenkategorie | Löschfrist nach Vertragsende |
 |---|---|
-| Patientenstammdaten | Unverzüglich auf Anfrage; spätestens 30 Tage nach Vertragsende |
-| Gesundheitsdaten / Verordnungen | Gemäß Weisung des Auftraggebers; max. gesetzliche Aufbewahrungsfrist Heilberufe (10 Jahre) |
+| Patientenstammdaten | Unverzüglich, spätestens 30 Tage nach Vertragsende; soweit zur Zuordnung gesperrter Unterlagen erforderlich, auf diese Angaben beschränkt und mit ihnen gesperrt |
+| Behandlungsdokumentation / Verordnungen | Gesperrt bis Ablauf der Aufbewahrungsfrist (10 Jahre, § 630f Abs. 3 BGB), danach Löschung; frühere Löschung auf Weisung des Auftraggebers |
 | EDIFACT-Rohdateien | 90 Tage nach DMRZ-Bestätigung |
 | Mitarbeiterdaten des Auftraggebers | 30 Tage nach Vertragsende |
 | Server-Logs mit Personenbezug | 14 Tage (automatisch durch Logrotate) |
-| Rechnungs-/Abrechnungsunterlagen | 10 Jahre (§ 147 AO, § 14 UStG) |
+| Rechnungs-/Abrechnungsunterlagen | Gesperrt bis Ablauf der Aufbewahrungsfrist (Belege 8 Jahre, § 147 AO, § 14b UStG; Grundaufzeichnungen 10 Jahre), danach Löschung |
+
+**Aufbewahrungspflichten und Sperrung.** Nach Beendigung des Vertrags werden personenbezogene Daten, für die den Auftraggeber gesetzliche Aufbewahrungspflichten treffen (insbesondere § 630f Abs. 3 BGB, § 147 AO, § 14b UStG), auf Weisung des Auftraggebers bis zum Ablauf der jeweiligen Frist gesperrt verwahrt und anschließend gelöscht. Vor der Sperrung erhält der Auftraggeber eine vollständige Kopie in einem gängigen, maschinell auswertbaren Format. Der Auftraggeber kann jederzeit die erneute Herausgabe oder – nach Herausgabe – die vollständige Löschung verlangen.
 
 Die Vernichtung ist dem Auftraggeber schriftlich zu bestätigen. Unterauftragsverarbeiter werden zur entsprechenden Löschung innerhalb der gleichen Frist verpflichtet.
 
@@ -249,4 +251,4 @@ Unterschrift: ___________________________________
 
 ---
 
-*ENTWURF — rechtliche Prüfung erforderlich | Stand: 2026-06-08 | Version 1.0*
+*ENTWURF — rechtliche Prüfung erforderlich | Stand: 2026-10-05 | Version 1.0*

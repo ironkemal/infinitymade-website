@@ -61,7 +61,7 @@ InfinityMade tritt **doppelt** in Erscheinung:
 | **Datenkategorien** | ICD-10-Diagnose, Diagnosetext, Diagnosegruppe, Heilmittel-Positionsnummern, Verordnungsart, Leitsymptomatik, Therapiefrequenz, Behandlungssitzungen mit Datum |
 | **Betroffene** | Patient*innen |
 | **Zugriff innerhalb der Praxis** | Inhaber*in vollständig; angestellte Therapeut*innen derselben Praxis **lesend** auf Verordnungen und Behandlungsdokumentation, im Umfang der Behandlungsdurchführung (Art. 9 Abs. 3 DSGVO — Personal unter Geheimhaltungspflicht; § 203 Abs. 1 Nr. 1 und Abs. 3 StGB). Technisch über RLS erzwungen, nicht über die Oberfläche. Entscheidung 03.09.2026, siehe LEGAL_DECISIONS.md. **Ergänzung 17.09.2026:** ebenfalls **lesend** freigegeben sind die Patientennotizen (`patient_notes`) — Schreiben bleibt beim Inhaber, solange die Tabelle keine Verfasserspalte und keine Versionierung führt (§ 630f Abs. 1 S. 2 BGB); die Warteliste (`warteliste`, Terminorganisation) ist für Angestellte **lesend und schreibend** freigegeben, **ohne Löschrecht** (Art. 5 Abs. 1 lit. d — Stornieren über `status`). Entscheidung 17.09.2026, siehe LEGAL_DECISIONS.md |
-| **Empfänger** | Microsoft Azure OpenAI (Region Sweden Central, EU) — nur für OCR/Strukturierung mit Zero-Data-Retention-Vertrag; Datenannahmestelle (DMRZ o.ä.) als gesetzlich vorgesehener Empfänger |
+| **Empfänger** | Microsoft Azure OpenAI (Region Sweden Central, EU) — nur für OCR/Strukturierung; Verarbeitung bei Microsoft Azure in Schweden (EU), Unterauftragsverarbeiter gemäß AVV; Datenannahmestelle (DMRZ o.ä.) als gesetzlich vorgesehener Empfänger |
 | **Drittland-Übermittlung** | Keine (Azure Sweden Central = EU) |
 | **Speicherdauer** | Behandlung + 10 Jahre (Heilberufe-Aufbewahrung); EDIFACT-Rohfiles 90 Tage nach Annahme-Bestätigung durch DMRZ, dann automatisch gelöscht |
 | **TOM-Verweis** | siehe TOM.md §3, §5, §7 |
@@ -103,7 +103,7 @@ InfinityMade tritt **doppelt** in Erscheinung:
 | Anbieter | Zweck | Sitz / Region | AVV vorhanden | Drittland |
 |---|---|---|---|---|
 | Supabase Inc. | Datenbank, Auth, Storage | EU (Frankfurt) | ✅ | nein |
-| Microsoft Azure | OCR, KI-Strukturierung Verordnungen | EU (Sweden Central) | ✅ + ZDR | nein |
+| Microsoft Azure | OCR, KI-Strukturierung Verordnungen | EU (Sweden Central) | ✅ (EU-Region, Unterauftragsverarbeiter gemäß AVV) | nein |
 | Hetzner Online GmbH | VPS für Calendar-API & n8n | DE (Falkenstein) — ISO 27001 | ✅ | nein |
 | Vercel Inc. | Frontend-Hosting | EU + DPF-zertifiziert | ✅ | (USA via DPF) |
 | Stripe Payments Europe | Zahlungsabwicklung | EU (Irland) | ✅ | (USA via SCC + DPF) |

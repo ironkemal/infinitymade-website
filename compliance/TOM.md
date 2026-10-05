@@ -7,7 +7,7 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
 | | |
 |---|---|
 | Anbieter | InfinityMade |
-| Stand | 2026-08-14, Version 1.2 |
+| Stand | 2026-10-05, Version 1.3 |
 | Geltungsbereich | Alle Verarbeitungen gemäß VVT.md |
 
 ---
@@ -20,11 +20,11 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
 - Keine eigenen Server, kein physischer Zutritt durch InfinityMade-Mitarbeiter
 
 ### 1.2 Zugangskontrolle (Systemzugang)
-- E-Mail/Passwort + Supabase Auth (Argon2id-Hash, mindestens 8 Zeichen)
-- **Zwei-Faktor-Authentifizierung (TOTP)** verpflichtend für Praxisinhaber-Konten ab Go-Live ⏳
+- E-Mail/Passwort + Supabase Auth (Passwort-Hash mit bcrypt; Mindestlänge des Passworts wird bei Einrichtung und Änderung geprüft)
+- **Zwei-Faktor-Authentifizierung:** nicht umgesetzt und rechtlich nicht vorgeschrieben (Entscheidung K-12, 02.10.2026). Ausgleich: Mindestlänge des Passworts (siehe oben) und Rate Limiting auf Login (siehe unten). In der On-Premise-Box gibt es keine Zwei-Faktor-Authentifizierung; die Absicherung des Rechners und der Zugänge liegt dort bei der Praxis als Verantwortliche (Art. 32 DSGVO). Für das SaaS wird vor den ersten realen Patientendaten neu bewertet (siehe DSFA R4).
 - SSH-Zugang zum VPS: nur Public-Key-Auth, root-Login deaktiviert, Port abweichend von 22, `fail2ban` aktiv
 - Service-Role-Keys nur serverseitig (Vercel/VPS Env Vars), niemals im Browser
-- Brute-Force-Schutz auf `/login`, `/booking/*`, `/verify-code` (Rate Limiting)
+- Brute-Force-Schutz: Begrenzung der Anmeldeversuche durch den Authentifizierungsdienst (Supabase Auth); Rate Limiting auf `/booking/*`, `/verify-code`
 
 ### 1.3 Zugriffskontrolle (Datenzugriff)
 - **PostgreSQL Row Level Security (RLS)** auf jeder Tabelle mit Patientendaten

@@ -7,7 +7,7 @@ Eine DSFA ist erforderlich, weil InfinityMade besondere Kategorien personenbezog
 | | |
 |---|---|
 | Verantwortlicher | InfinityMade |
-| Stand | 2026-08-14, Version 1.1 |
+| Stand | 2026-10-05, Version 1.2 |
 | Bezug | VVT.md Verarbeitung 2 + 3 + 5 |
 
 ---
@@ -48,8 +48,8 @@ Eine SaaS-Plattform für Praxen (Physiotherapie, Heilmittelerbringer) zur:
 |----|--------|-----|-----|----|----|
 | R1 | RLS-Bypass — Praxis A sieht Daten Praxis B | 2 | 5 | 10 | **mitigiert** |
 | R2 | Service-Role-Key kompromittiert | 2 | 5 | 10 | mitigiert |
-| R3 | OCR-Daten an externe KI mit Re-Identifizierungs-Risiko | 3 | 4 | 12 | **mitigiert (PII-Masking + ZDR)** |
-| R4 | Account-Übernahme Praxisinhaber (kein MFA) | 4 | 4 | 16 | **offen → P0 vor Go-Live (MFA-Pflicht)** |
+| R3 | OCR-Daten an externe KI mit Re-Identifizierungs-Risiko | 3 | 4 | 12 | **teilweise mitigiert (PII-Masking; Verarbeitung in EU-Region Sweden Central, Unterauftragsverarbeiter gemäß AVV)** |
+| R4 | Account-Übernahme Praxisinhaber (kein MFA) | 4 | 4 | 16 | **offen — MFA nicht umgesetzt und rechtlich nicht vorgeschrieben (K-12, 02.10.2026); Ausgleich: Rate Limiting auf Login, Mindestlänge Passwort; Neubewertung vor ersten realen Patientendaten im SaaS** |
 | R5 | Doppelbuchung führt zu falschem Abrechnungsdatum | 1 | 2 | 2 | mitigiert (EXCLUDE GIST Constraint) |
 | R6 | Backup-Verlust / Wiederherstellbarkeit nicht getestet | 2 | 4 | 8 | **offen → P1 (Drill vor Go-Live)** |
 | R7 | Datenpanne ohne 72h-Meldung | 3 | 5 | 15 | **offen → P0 (Runbook)** |
@@ -82,7 +82,7 @@ Standorttrennung ist keine RLS-Zusicherung, siehe TOM.md §1.3), oder wenn die R
 
 ### Maßnahmen zu offenen Risiken
 
-- **R4 / MFA-Pflicht**: Supabase `enrollMfa` Flow erzwingen für Owner-Konten ab Go-Live. Implementierung als P0 in TODO.md §2.
+- **R4 / MFA**: Eine MFA-Pflicht ist nicht umgesetzt und rechtlich nicht vorgeschrieben (K-12, 02.10.2026). Ausgleich: Rate Limiting auf Login, Mindestlänge Passwort. Das SaaS trägt derzeit keine realen Patientendaten; vor den ersten realen Patientendaten im SaaS wird das Restrisiko neu bewertet (Optionen: TOTP für Owner-Konten oder bewusst getragenes Restrisiko). In der On-Premise-Box gibt es keine Zwei-Faktor-Authentifizierung; die Absicherung der Zugänge liegt dort bei der Praxis.
 - **R6 / Backup-Drill**: 1× vollständiger Restore-Test vor Go-Live, Protokoll in `compliance/BACKUP_DRILL_LOG.md`.
 - **R7 / Datenpannen-Runbook**: Erstellung `compliance/DATAPANNE_RUNBOOK.md` mit Eskalations-Flowchart, Meldetemplate Aufsichtsbehörde, Kommunikationsvorlage Auftraggeber.
 - **R9 / Log-Filter**: Custom Logger der bekannte PII-Felder (KVNR-Regex, ICD-10) durch `[REDACTED]` ersetzt — bereits in `api-backend/_log.js` einplanen.
