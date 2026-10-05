@@ -781,11 +781,16 @@ export async function downloadAbrechnungFile(path, abrechnungId, kind, downloadN
     if (error) throw error;
     window.open(data.signedUrl, '_blank');
     if (abrechnungId && kind === 'dta') {
-      await ctx.supabase.from('abrechnung')
+      const { error: stErr } = await ctx.supabase.from('abrechnung')
         .update({ status: 'heruntergeladen' })
         .eq('id', abrechnungId)
         .eq('status', 'erstellt');
+      // Der Statuswechsel ist Komfort, kein Muss: schlaegt er fehl (z. B. Zuzahlungsforderung VKZ 03 ist nur ueber das
+      // Backend aenderbar), bleibt der Download gueltig — aber nicht mehr still.
+      if (stErr) console.warn('[abrechnung/download] Statuswechsel nicht gespeichert:', stErr.message);
       await ctx.nachDownload?.();
+      // Offenes Detail neu laden, sonst steht dort weiter „noch nicht heruntergeladen" (Live-QA 05.10.2026).
+      if (!stErr && _offeneId === abrechnungId) await zeigeAbrechnungDetail(abrechnungId);
     }
   } catch (e) {
     console.error('[abrechnung/download]', e);
