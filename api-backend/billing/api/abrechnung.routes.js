@@ -31,7 +31,7 @@ import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '
 import { berlinHeute } from '../../lib/berlin-tag.js';
 import { reserviereUndLadeHoch, veroeffentliche, registriereVeroeffentlicht } from './artefakt-registry.js';
 import { listeArtefaktVersionen, ladeArtefaktVersion } from './artefakt-historie.js';
-import { entferneUnsignierteDta, wiederholeAusmusterung } from './artefakt-ausmustern.js';
+import { entferneUnsignierteDta, wiederholeAusmusterung, dtaEntfernungAktiv } from './artefakt-ausmustern.js';
 import { zaaRueckmeldungAnwenden } from '../zaa/anwenden.js';
 import { pruefeEmpfaenger } from '../kostentraeger/stichtag-pruefung.js';
 import { logAccess } from '../../_lib/access-log.js';
@@ -1251,12 +1251,6 @@ router.post('/abrechnung/create', async (req, res) => {
  *    Angestellter darf dieselben Behandlungen längst sehen. Deshalb 403 mit
  *    verständlichem Text statt eines stillen Filters.
  */
-// M1.16(a): Entfernen der unsignierten DTA nach veroeffentlichter Signatur. Standardmaessig AUS;
-// wird erst nach der Live-Abnahme per Umgebungsvariable ARTEFAKT_DTA_ENTFERNEN=1 aktiviert.
-function dtaEntfernungAktiv() {
-  return process.env.ARTEFAKT_DTA_ENTFERNEN === '1';
-}
-
 async function nurInhaber(req, res) {
   const hdr = req.headers.authorization || '';
   const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
@@ -1682,7 +1676,7 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
-      .select(ABRECHNUNG_VERSION_FELDER + ',empfaenger_ik,kostentraeger_ik,created_at')
+      .select(ABRECHNUNG_VERSION_FELDER + ',empfaenger_ik,kostentraeger_ik,created_at,betriebsart')
       .eq('id', req.params.id)
       .maybeSingle();
     if (error || !ab) return res.status(404).json({ error: 'Abrechnung nicht gefunden' });
@@ -1827,7 +1821,7 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
 
     // M1.16(a): unsignierte DTA ausmustern (nur wenn aktiviert; fail-closed, wirft nie).
     let dtaEntfernung = null;
-    if (dtaEntfernungAktiv()) {
+    if (dtaEntfernungAktiv(ab)) {
       dtaEntfernung = await entferneUnsignierteDta({
         db: supabase,
         ownerId: tenantId,

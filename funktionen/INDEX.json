@@ -3522,30 +3522,11 @@
    "uiPfad": []
   },
   {
-   "name": "dtaEntfernungAktiv",
-   "kind": "function",
-   "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1256,
-   "end": 1258,
-   "lines": 3,
-   "spiegelHinweis": null,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
-  },
-  {
    "name": "nurInhaber",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1260,
-   "end": 1279,
+   "start": 1254,
+   "end": 1273,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [
@@ -3567,8 +3548,8 @@
    "name": "berechneVerschluesselung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1414,
-   "end": 1543,
+   "start": 1408,
+   "end": 1537,
    "lines": 130,
    "spiegelHinweis": null,
    "tables": [
@@ -3593,8 +3574,8 @@
    "name": "verarbeiteVerschluesselungsSchritt",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1557,
-   "end": 1645,
+   "start": 1551,
+   "end": 1639,
    "lines": 89,
    "spiegelHinweis": null,
    "tables": [
@@ -3620,8 +3601,8 @@
    "name": "ermittleEmpfaengerZertifikatStatus",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1901,
-   "end": 2103,
+   "start": 1895,
+   "end": 2097,
    "lines": 203,
    "spiegelHinweis": null,
    "tables": [
@@ -3645,8 +3626,8 @@
    "name": "handleEmpfaengerPruefung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2105,
-   "end": 2171,
+   "start": 2099,
+   "end": 2165,
    "lines": 67,
    "spiegelHinweis": null,
    "tables": [
@@ -3671,8 +3652,8 @@
    "name": "mandantUndAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2289,
-   "end": 2309,
+   "start": 2283,
+   "end": 2303,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [
@@ -3695,8 +3676,8 @@
    "name": "geldstand",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2320,
-   "end": 2341,
+   "start": 2314,
+   "end": 2335,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -3717,8 +3698,8 @@
    "name": "r2",
    "kind": "arrow",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2321,
-   "end": 2340,
+   "start": 2315,
+   "end": 2334,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -3795,8 +3776,8 @@
    "name": "mapVerordnungToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 3465,
-   "end": 3609,
+   "start": 3459,
+   "end": 3603,
    "lines": 145,
    "spiegelHinweis": null,
    "tables": [],
@@ -3944,6 +3925,25 @@
     "einzeln",
     "musterAus"
    ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "dtaEntfernungAktiv",
+   "kind": "function",
+   "file": "api-backend/billing/api/artefakt-ausmustern.js",
+   "start": 107,
+   "end": 113,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
    "calledBy": [],
    "modules": [],
    "gemeinsam": false,
@@ -57929,6 +57929,7 @@
     "_erfasseZahlung",
     "_erstelleKorrektur",
     "_vkz01Ausnahme",
+    "downloadAbrechnungFile",
     "initAbrechnungDetail"
    ],
    "modules": [
@@ -59020,8 +59021,8 @@
    "kind": "function",
    "file": "module/abrechnung-detail.js",
    "start": 776,
-   "end": 794,
-   "lines": 19,
+   "end": 799,
+   "lines": 24,
    "spiegelHinweis": null,
    "tables": [
     "abrechnungen",
@@ -59035,7 +59036,9 @@
    "storage": [
     "abrechnungen"
    ],
-   "calls": [],
+   "calls": [
+    "zeigeAbrechnungDetail"
+   ],
    "calledBy": [
     "_verdrahteAktionen",
     "dasGuideVersandKlick"
@@ -59080,8 +59083,8 @@
    "name": "dasGuideVersandKlick",
    "kind": "function",
    "file": "module/abrechnung-detail.js",
-   "start": 810,
-   "end": 827,
+   "start": 815,
+   "end": 832,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [],
@@ -138968,8 +138971,8 @@
        "name": "downloadAbrechnungFile",
        "file": "module/abrechnung-detail.js",
        "start": 776,
-       "end": 794,
-       "lines": 19,
+       "end": 799,
+       "lines": 24,
        "writes": [
         "abrechnung:update"
        ],
@@ -140994,7 +140997,7 @@
   {
    "name": "r2",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:2321",
+    "api-backend/billing/api/abrechnung.routes.js:2315",
     "api-backend/billing/api/statistik.routes.js:176",
     "api-backend/billing/api/zuzahlung.routes.js:45",
     "api-backend/billing/dta/builder.js:62",

@@ -122,3 +122,15 @@ test('Wiederholung: unbekannte Version -> nicht_gefunden; remove-Fehler -> ok:fa
   const t = dbWdh({ id: 'rd', state: 'retire_pending', role: 'dta', storage_path: 'o1/ab1/d.dta' }, { removeErr: 'down' });
   assert.equal((await wiederholeAusmusterung({ db: t.db, ownerId: O, abrechnungId: A, versionId: 'rd' })).ok, false);
 });
+
+import { dtaEntfernungAktiv } from './artefakt-ausmustern.js';
+
+test('dtaEntfernungAktiv: Testdatei AN, Echt/Erprobung AUS, Flag 1 erzwingt AN, Flag 0 erzwingt AUS', () => {
+  assert.equal(dtaEntfernungAktiv({ betriebsart: 'test' }, {}), true);
+  assert.equal(dtaEntfernungAktiv({ betriebsart: null }, {}), true);
+  assert.equal(dtaEntfernungAktiv({}, {}), true);
+  assert.equal(dtaEntfernungAktiv({ betriebsart: 'echt' }, {}), false);
+  assert.equal(dtaEntfernungAktiv({ betriebsart: 'erprobung' }, {}), false);
+  assert.equal(dtaEntfernungAktiv({ betriebsart: 'echt' }, { ARTEFAKT_DTA_ENTFERNEN: '1' }), true);
+  assert.equal(dtaEntfernungAktiv({ betriebsart: 'test' }, { ARTEFAKT_DTA_ENTFERNEN: '0' }), false);
+});

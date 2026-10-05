@@ -98,3 +98,16 @@ export async function wiederholeAusmusterung({ db, ownerId, abrechnungId, versio
     return { ok: false, grund: 'fehler' };
   }
 }
+
+/**
+ * Wann die unsignierte DTA nach der Signatur entfernt wird (Rechtsentscheidung 02.10.2026).
+ * Standard: AN fuer Testdateien (Betriebsart test/leer — dort liegen keine Echtdaten); fuer Echt-/Erprobungsdateien nur mit
+ * ARTEFAKT_DTA_ENTFERNEN=1. ARTEFAKT_DTA_ENTFERNEN=0 schaltet es komplett ab.
+ */
+export function dtaEntfernungAktiv(ab, env = process.env) {
+  const flag = env.ARTEFAKT_DTA_ENTFERNEN;
+  if (flag === '0') return false;
+  if (flag === '1') return true;
+  const b = String(ab?.betriebsart || '').trim();
+  return b !== 'erprobung' && b !== 'echt';
+}
