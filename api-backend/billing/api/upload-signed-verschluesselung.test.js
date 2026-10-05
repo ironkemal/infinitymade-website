@@ -15,6 +15,8 @@ const { verarbeiteVerschluesselungsSchritt } = await import('./abrechnung.routes
 const ABRECHNUNG_VERSION_FELDER =
   'id,owner_id,updated_at,status,storage_path,dta_sha256,signed_storage_path,signed_sha256,signed_at,signed_by_cert_thumbprint,encrypted_storage_path,encrypted_sha256,verschluesselt_am,verschluesselt_fuer_fingerprint,verschluesselung_hinweis,zaa_uploaded_at,paid_at,auftragsdatei_path,begleitzettel_path';
 
+import { erzeugeRegistryFake, blobAusUploads } from './artefakt-registry-fake.js';
+
 const DUMMY_SIGNED_BYTES = Buffer.from('30820100synthetic-signed-pkcs7-payload', 'utf8');
 
 function createVorherSnapshot({
@@ -50,8 +52,16 @@ function createMockDb({
   abrechnungError = null,
 } = {}) {
   let currentAbrechnung = abrechnungRow ? { ...abrechnungRow } : null;
+  const uploads = [];
+  const registry = erzeugeRegistryFake({
+    getRow: () => currentAbrechnung,
+    setRow: (r) => { currentAbrechnung = r; },
+    bumpUpdatedAt: () => '2026-09-22T10:00:01.000000Z',
+    hooks: { lenient: true, get failPublish() { return !!abrechnungError; } },
+  });
 
   return {
+    rpc: (name, args) => registry.rpc(name, args),
     _getCurrentAbrechnung() {
       return currentAbrechnung;
     },
@@ -76,6 +86,10 @@ function createMockDb({
       }
       if (table === 'abrechnung') {
         return {
+          select() {
+            const b = { eq() { return b; }, async maybeSingle() { return { data: currentAbrechnung, error: null }; } };
+            return b;
+          },
           update(patch) {
             const filters = {};
             const builder = {
@@ -133,8 +147,10 @@ function createMockDb({
           async upload(path, bytes, opts) {
             if (onStorageUpload) onStorageUpload({ path, bytes, opts });
             if (storageError) return { error: storageError };
+            uploads.push({ path, bytes });
             return { error: null };
           },
+          ...blobAusUploads(uploads),
         };
       },
     },
@@ -305,13 +321,7 @@ test('Fall C (Erfolg): Voller Erfolg -> verschluesselt: true, encryptedPath und 
     basePath,
   });
 
-  const res = await verarbeiteVerschluesselungsSchritt({
-    vorher,
-    abrechnungId: 'test-ab-7',
-    empfaengerIk: '108310400',
-    basePath,
-    signedBytes: DUMMY_SIGNED_BYTES,
-    db: createMockDb({
+  const mockDb = createMockDb({
       certRow: { zertifikat_der: '\\x308201', fingerprint_sha256: 'aa:bb:cc' },
       onStorageUpload: ({ path, bytes, opts }) => {
         uploadedPath = path;
@@ -323,7 +333,14 @@ test('Fall C (Erfolg): Voller Erfolg -> verschluesselt: true, encryptedPath und 
         assert.equal(col, 'id');
         assert.equal(val, 'test-ab-7');
       },
-    }),
+  });
+  const res = await verarbeiteVerschluesselungsSchritt({
+    vorher,
+    abrechnungId: 'test-ab-7',
+    empfaengerIk: '108310400',
+    basePath,
+    signedBytes: DUMMY_SIGNED_BYTES,
+    db: mockDb,
     ladeAnchors: () => ({ anchors: [Buffer.from('3082', 'hex')], meta: { zertifikate: [{ notAfter: '2030-01-01' }] } }),
     pruefeFrische: () => ({ ok: true, warnung: null }),
     verschluessele: ({ signedBytes, empfaengerZertifikatDer, erwarteteIk, itsgAnkerZertifikate }) => {
@@ -344,6 +361,7 @@ test('Fall C (Erfolg): Voller Erfolg -> verschluesselt: true, encryptedPath und 
   assert.equal(uploadedOpts.contentType, 'application/pkcs7-mime');
   assert.equal(uploadedOpts.upsert, false);
 
+  persistedPatch = mockDb._getCurrentAbrechnung();
   assert.equal(persistedPatch.encrypted_storage_path, res.encryptedPath);
   assert.equal(persistedPatch.encrypted_sha256, expectedSha256);
   assert.ok(persistedPatch.verschluesselt_am);

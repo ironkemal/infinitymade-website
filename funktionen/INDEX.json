@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-04",
- "dateien": 341,
- "funktionen": 2885,
+ "erzeugt": "2026-10-05",
+ "dateien": 343,
+ "funktionen": 2893,
  "module": [
   "abrechnung",
   "anamnese",
@@ -992,6 +992,7 @@
     "escapeHtml"
    ],
    "calledBy": [
+    "erzeugeRegistryFake",
     "renderVisMatrix"
    ],
    "modules": [],
@@ -3004,8 +3005,8 @@
    "name": "sha256Hex",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 89,
-   "end": 91,
+   "start": 90,
+   "end": 92,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3015,10 +3016,10 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "berechneVerschluesselung",
     "createZuzahlungsforderungRouter",
     "ermittleEmpfaengerZertifikatStatus",
     "parseOriginalDtaMessage",
+    "reserviereUndLadeHoch",
     "speichereAuftragsdatei",
     "speichereEinwilligung",
     "verarbeiteVerschluesselungsSchritt"
@@ -3063,8 +3064,8 @@
    "name": "rechnungsartFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 112,
-   "end": 123,
+   "start": 113,
+   "end": 124,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [],
@@ -3084,8 +3085,8 @@
    "name": "vergebeNummern",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 133,
-   "end": 148,
+   "start": 134,
+   "end": 149,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -3096,7 +3097,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "rpc"
+   ],
    "calledBy": [
     "createZuzahlungsforderungRouter",
     "ladeBetriebsart"
@@ -3109,8 +3112,8 @@
    "name": "speichereAuftragsdatei",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 159,
-   "end": 176,
+   "start": 160,
+   "end": 177,
    "lines": 18,
    "spiegelHinweis": null,
    "tables": [
@@ -3136,8 +3139,8 @@
    "name": "isoWeek",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 178,
-   "end": 185,
+   "start": 179,
+   "end": 186,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -3157,8 +3160,8 @@
    "name": "buildSammelRechnungsnummer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 187,
-   "end": 189,
+   "start": 188,
+   "end": 190,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3178,8 +3181,8 @@
    "name": "nameParts",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 191,
-   "end": 193,
+   "start": 192,
+   "end": 194,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3200,8 +3203,8 @@
    "name": "frequenzToDigit",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 204,
-   "end": 218,
+   "start": 205,
+   "end": 219,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -3222,8 +3225,8 @@
    "name": "legsFuerSector",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 242,
-   "end": 245,
+   "start": 243,
+   "end": 246,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -3247,8 +3250,8 @@
    "name": "abrechnungscodeFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 250,
-   "end": 252,
+   "start": 251,
+   "end": 253,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3272,8 +3275,8 @@
    "name": "bereichFuerAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 269,
-   "end": 320,
+   "start": 270,
+   "end": 321,
    "lines": 52,
    "spiegelHinweis": null,
    "tables": [
@@ -3299,8 +3302,8 @@
    "name": "baueBegleitzettel",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 334,
-   "end": 407,
+   "start": 335,
+   "end": 408,
    "lines": 74,
    "spiegelHinweis": null,
    "tables": [
@@ -3328,8 +3331,8 @@
    "name": "papierFuer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 354,
-   "end": 378,
+   "start": 355,
+   "end": 379,
    "lines": 25,
    "spiegelHinweis": null,
    "tables": [],
@@ -3353,8 +3356,8 @@
    "name": "bereichTexte",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 416,
-   "end": 418,
+   "start": 417,
+   "end": 419,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -3372,8 +3375,8 @@
    "name": "buildBankverbindung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 422,
-   "end": 429,
+   "start": 423,
+   "end": 430,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -3391,8 +3394,8 @@
    "name": "fehlendePflichtangaben",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 433,
-   "end": 438,
+   "start": 434,
+   "end": 439,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -3446,8 +3449,8 @@
    "name": "pflichtangabenHinweisHtml",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 453,
-   "end": 478,
+   "start": 454,
+   "end": 479,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -3465,8 +3468,8 @@
    "name": "buildBelegnummer",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 494,
-   "end": 500,
+   "start": 495,
+   "end": 501,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -3487,8 +3490,8 @@
    "name": "mapPrescriptionToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 506,
-   "end": 678,
+   "start": 507,
+   "end": 679,
    "lines": 173,
    "spiegelHinweis": null,
    "tables": [],
@@ -3522,8 +3525,8 @@
    "name": "nurInhaber",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1243,
-   "end": 1262,
+   "start": 1244,
+   "end": 1263,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [
@@ -3545,23 +3548,20 @@
    "name": "berechneVerschluesselung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1348,
-   "end": 1467,
-   "lines": 120,
+   "start": 1349,
+   "end": 1478,
+   "lines": 130,
    "spiegelHinweis": null,
    "tables": [
-    "empfaenger_zertifikate",
-    "abrechnungen"
+    "empfaenger_zertifikate"
    ],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
-   "storage": [
-    "abrechnungen"
-   ],
+   "storage": [],
    "calls": [
     "artefaktVersuchPfad",
-    "sha256Hex"
+    "reserviereUndLadeHoch"
    ],
    "calledBy": [
     "verarbeiteVerschluesselungsSchritt"
@@ -3574,11 +3574,13 @@
    "name": "verarbeiteVerschluesselungsSchritt",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1481,
-   "end": 1557,
-   "lines": 77,
+   "start": 1492,
+   "end": 1580,
+   "lines": 89,
    "spiegelHinweis": null,
-   "tables": [],
+   "tables": [
+    "abrechnung"
+   ],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
@@ -3587,7 +3589,8 @@
     "aktualisiereArtefaktVersion",
     "berechneVerschluesselung",
     "pruefeEntwurfsVersion",
-    "sha256Hex"
+    "sha256Hex",
+    "veroeffentliche"
    ],
    "calledBy": [],
    "modules": [],
@@ -3598,8 +3601,8 @@
    "name": "ermittleEmpfaengerZertifikatStatus",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1772,
-   "end": 1974,
+   "start": 1812,
+   "end": 2014,
    "lines": 203,
    "spiegelHinweis": null,
    "tables": [
@@ -3623,8 +3626,8 @@
    "name": "handleEmpfaengerPruefung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 1976,
-   "end": 2042,
+   "start": 2016,
+   "end": 2082,
    "lines": 67,
    "spiegelHinweis": null,
    "tables": [
@@ -3649,8 +3652,8 @@
    "name": "mandantUndAbrechnung",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2160,
-   "end": 2180,
+   "start": 2200,
+   "end": 2220,
    "lines": 21,
    "spiegelHinweis": null,
    "tables": [
@@ -3673,8 +3676,8 @@
    "name": "geldstand",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2191,
-   "end": 2212,
+   "start": 2231,
+   "end": 2252,
    "lines": 22,
    "spiegelHinweis": null,
    "tables": [],
@@ -3695,8 +3698,8 @@
    "name": "r2",
    "kind": "arrow",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 2192,
-   "end": 2211,
+   "start": 2232,
+   "end": 2251,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -3773,8 +3776,8 @@
    "name": "mapVerordnungToDtaShape",
    "kind": "function",
    "file": "api-backend/billing/api/abrechnung.routes.js",
-   "start": 3336,
-   "end": 3480,
+   "start": 3376,
+   "end": 3520,
    "lines": 145,
    "spiegelHinweis": null,
    "tables": [],
@@ -3800,6 +3803,316 @@
     "verordnungsartFuer"
    ],
    "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "erzeugeRegistryFake",
+   "kind": "function",
+   "file": "api-backend/billing/api/artefakt-registry-fake.js",
+   "start": 10,
+   "end": 50,
+   "lines": 41,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "getRow",
+    "rpc",
+    "set"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "blobAusUploads",
+   "kind": "function",
+   "file": "api-backend/billing/api/artefakt-registry-fake.js",
+   "start": 52,
+   "end": 60,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "sha",
+   "kind": "arrow",
+   "file": "api-backend/billing/api/artefakt-registry-fake.js",
+   "start": 62,
+   "end": 63,
+   "lines": 2,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "fehler",
+   "kind": "function",
+   "file": "api-backend/billing/api/artefakt-registry.js",
+   "start": 15,
+   "end": 21,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "reserviereUndLadeHoch",
+    "rpc",
+    "sha256Hex",
+    "veroeffentliche"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 34 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "sha256Hex",
+   "kind": "arrow",
+   "file": "api-backend/billing/api/artefakt-registry.js",
+   "start": 23,
+   "end": 39,
+   "lines": 17,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fehler",
+    "rpc"
+   ],
+   "calledBy": [
+    "createZuzahlungsforderungRouter",
+    "ermittleEmpfaengerZertifikatStatus",
+    "parseOriginalDtaMessage",
+    "reserviereUndLadeHoch",
+    "speichereAuftragsdatei",
+    "speichereEinwilligung",
+    "verarbeiteVerschluesselungsSchritt"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 29 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "rpc",
+   "kind": "function",
+   "file": "api-backend/billing/api/artefakt-registry.js",
+   "start": 25,
+   "end": 39,
+   "lines": 15,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fehler"
+   ],
+   "calledBy": [
+    "bootBusinessSwitcher",
+    "createPodoEmpfangsnachweisRouter",
+    "erzeugeRegistryFake",
+    "init",
+    "kontoLoeschen",
+    "ladeKennung",
+    "loadModulePermissions",
+    "reserviereUndLadeHoch",
+    "searchDiagnosen",
+    "searchHeilmittel",
+    "sha256Hex",
+    "vergebeNummern",
+    "veroeffentliche",
+    "zaaRueckmeldungAnwenden"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 34 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "reserviereUndLadeHoch",
+   "kind": "function",
+   "file": "api-backend/billing/api/artefakt-registry.js",
+   "start": 57,
+   "end": 103,
+   "lines": 47,
+   "spiegelHinweis": null,
+   "tables": [
+    "abrechnungen"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [
+    "abrechnungen"
+   ],
+   "calls": [
+    "fehler",
+    "rpc",
+    "sha256Hex"
+   ],
+   "calledBy": [
+    "berechneVerschluesselung"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "veroeffentliche",
+   "kind": "function",
+   "file": "api-backend/billing/api/artefakt-registry.js",
+   "start": 110,
+   "end": 120,
+   "lines": 11,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fehler",
+    "rpc"
+   ],
+   "calledBy": [
+    "verarbeiteVerschluesselungsSchritt"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -4386,7 +4699,8 @@
    "calls": [
     "enthaeltHpnr78040",
     "json",
-    "resolveAuth"
+    "resolveAuth",
+    "rpc"
    ],
    "calledBy": [
     "mountPodoEmpfangsnachweisRoutes"
@@ -5170,10 +5484,10 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "berechneVerschluesselung",
     "createZuzahlungsforderungRouter",
     "ermittleEmpfaengerZertifikatStatus",
     "parseOriginalDtaMessage",
+    "reserviereUndLadeHoch",
     "speichereAuftragsdatei",
     "speichereEinwilligung",
     "verarbeiteVerschluesselungsSchritt"
@@ -9725,10 +10039,10 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "berechneVerschluesselung",
     "createZuzahlungsforderungRouter",
     "ermittleEmpfaengerZertifikatStatus",
     "parseOriginalDtaMessage",
+    "reserviereUndLadeHoch",
     "speichereAuftragsdatei",
     "speichereEinwilligung",
     "verarbeiteVerschluesselungsSchritt"
@@ -14783,6 +15097,7 @@
    "storage": [],
    "calls": [
     "parseZaaFile",
+    "rpc",
     "set"
    ],
    "calledBy": [],
@@ -16001,7 +16316,8 @@
     "hatZeilenIn",
     "jahresendePlus",
     "pruefe",
-    "pruefeRelation"
+    "pruefeRelation",
+    "rpc"
    ],
    "calledBy": [
     "createDsgvoRouter",
@@ -23245,6 +23561,7 @@
     "initStep6",
     "ladeOwnerId",
     "rebuildStepSequence",
+    "rpc",
     "show",
     "showStep"
    ],
@@ -25210,7 +25527,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "rpc"
+   ],
    "calledBy": [
     "renderSidebar"
    ],
@@ -39322,6 +39641,7 @@
     "createOAuthState",
     "dgOptionenSperren",
     "emit",
+    "erzeugeRegistryFake",
     "farbwahlFuer",
     "fasseOeffnungszeiten",
     "feedbackWindow",
@@ -45099,6 +45419,7 @@
     "renderBizSwitcher",
     "renderBusinessesSection",
     "renderDataSharingSection",
+    "rpc",
     "wireBizSwitcherEvents"
    ],
    "calledBy": [
@@ -51370,7 +51691,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "normalizeBereich"
+    "normalizeBereich",
+    "rpc"
    ],
    "calledBy": [
     "attachDiagnoseSearch",
@@ -51434,7 +51756,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "normalizeBereich"
+    "normalizeBereich",
+    "rpc"
    ],
    "calledBy": [
     "attachHeilmittelSearch",
@@ -73079,10 +73402,10 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "berechneVerschluesselung",
     "createZuzahlungsforderungRouter",
     "ermittleEmpfaengerZertifikatStatus",
     "parseOriginalDtaMessage",
+    "reserviereUndLadeHoch",
     "speichereAuftragsdatei",
     "speichereEinwilligung",
     "verarbeiteVerschluesselungsSchritt"
@@ -98257,7 +98580,8 @@
    "storage": [],
    "calls": [
     "ausProfil",
-    "kennungAusSuche"
+    "kennungAusSuche",
+    "rpc"
    ],
    "calledBy": [
     "init",
@@ -139633,7 +139957,7 @@
   {
    "name": "r2",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:2192",
+    "api-backend/billing/api/abrechnung.routes.js:2232",
     "api-backend/billing/api/statistik.routes.js:176",
     "api-backend/billing/api/zuzahlung.routes.js:45",
     "api-backend/billing/dta/builder.js:62",
@@ -139809,6 +140133,17 @@
    "aynalar": []
   },
   {
+   "name": "sha256Hex",
+   "orte": [
+    "api-backend/billing/api/abrechnung.routes.js:90",
+    "api-backend/billing/api/artefakt-registry.js:23",
+    "api-backend/billing/api/zuzahlungsforderung.routes.js:38",
+    "api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73",
+    "module/einwilligung-texte.js:360"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "leer",
    "orte": [
     "api-backend/billing/dta/auftragsdatei.js:53",
@@ -139860,16 +140195,6 @@
     "module/verordnung-detail.js:400",
     "module/verordnung-detail.js:457",
     "module/verordnung-pruefen-knopf.js:115"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "sha256Hex",
-   "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:89",
-    "api-backend/billing/api/zuzahlungsforderung.routes.js:38",
-    "api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73",
-    "module/einwilligung-texte.js:360"
    ],
    "aynalar": []
   },
@@ -140215,7 +140540,7 @@
   {
    "name": "fehlendePflichtangaben",
    "orte": [
-    "api-backend/billing/api/abrechnung.routes.js:433",
+    "api-backend/billing/api/abrechnung.routes.js:434",
     "module/beleg-druck.js:55"
    ],
    "aynalar": [

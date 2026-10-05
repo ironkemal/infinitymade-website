@@ -29,6 +29,7 @@ import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_pos
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
 import { berlinHeute } from '../../lib/berlin-tag.js';
+import { reserviereUndLadeHoch, veroeffentliche } from './artefakt-registry.js';
 import { zaaRueckmeldungAnwenden } from '../zaa/anwenden.js';
 import { pruefeEmpfaenger } from '../kostentraeger/stichtag-pruefung.js';
 import { logAccess } from '../../_lib/access-log.js';
@@ -1438,23 +1439,33 @@ async function berechneVerschluesselung({
       abrechnungId,
       kind: 'encrypted',
     });
-    const encUp = await db.storage.from('abrechnungen').upload(encryptedPath, encryptedBytes, {
-      contentType: 'application/pkcs7-mime',
-      upsert: false,
-    });
-
-    if (encUp.error) {
-      console.error(`[abrechnung/upload-signed] Storage-Upload für verschlüsselte Datei fehlgeschlagen (Abrechnung ${abrechnungId}):`, encUp.error.message);
+    // M1.16: verschluesselte Datei ueber die Registry (reserve -> upload -> Readback);
+    // das Veroeffentlichen erfolgt zusammen mit dem Header-Patch im Aufrufer.
+    let reg;
+    try {
+      reg = await reserviereUndLadeHoch({
+        db,
+        ownerId: vorher.owner_id,
+        abrechnungId,
+        pfad: encryptedPath,
+        kind: 'encrypted',
+        role: 'encrypted',
+        bytes: encryptedBytes,
+        contentType: 'application/pkcs7-mime',
+      });
+    } catch (regErr) {
+      console.error(`[abrechnung/upload-signed] Speichern der verschlüsselten Datei fehlgeschlagen (Abrechnung ${abrechnungId}):`, regErr.message);
       return {
         verschluesselt: false,
-        verschluesselungHinweis: 'Verschlüsselung erfolgreich, Speichern fehlgeschlagen: ' + encUp.error.message,
+        verschluesselungHinweis: 'Verschlüsselung erfolgreich, Speichern fehlgeschlagen: ' + String(regErr.message).replace(/^Upload fehlgeschlagen: /, ''),
       };
     }
 
     return {
       verschluesselt: true,
       encryptedPath,
-      encryptedSha256: sha256Hex(encryptedBytes),
+      encryptedSha256: reg.sha256,
+      registryId: reg.registryId,
       empfaengerFingerprint: empfZert.fingerprint_sha256 || null,
     };
   } catch (outerErr) {
@@ -1523,8 +1534,8 @@ export async function verarbeiteVerschluesselungsSchritt({
     verschluessele,
   });
 
-  // empfaengerFingerprint ist nur fuer die Persistenz gedacht, nicht Teil des HTTP-Response-Vertrags.
-  const { empfaengerFingerprint, ...oeffentlichesErgebnis } = ergebnis;
+  // empfaengerFingerprint und registryId sind nur fuer die Persistenz gedacht, nicht Teil des HTTP-Response-Vertrags.
+  const { empfaengerFingerprint, registryId, ...oeffentlichesErgebnis } = ergebnis;
 
   const patch = {
     encrypted_storage_path:          ergebnis.verschluesselt ? ergebnis.encryptedPath : null,
@@ -1536,7 +1547,19 @@ export async function verarbeiteVerschluesselungsSchritt({
 
   let version;
   try {
-    version = await aktualisiereArtefaktVersion({ db, vorher, patch });
+    if (ergebnis.verschluesselt && registryId) {
+      await veroeffentliche({ db, ownerId: vorher.owner_id, registryId, vorher, patch });
+      const { data: neu, error: neuErr } = await db
+        .from('abrechnung')
+        .select(ABRECHNUNG_VERSION_FELDER)
+        .eq('id', abrechnungId)
+        .eq('owner_id', vorher.owner_id)
+        .maybeSingle();
+      if (neuErr || !neu) throw new Error('Stand nach Veröffentlichung nicht lesbar');
+      version = neu;
+    } else {
+      version = await aktualisiereArtefaktVersion({ db, vorher, patch });
+    }
   } catch (err) {
     if (err?.status === 409 || err?.statusCode === 409) {
       throw err;
@@ -1629,16 +1652,24 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
       abrechnungId: ab.id,
       kind: 'signed',
     });
-    const up = await supabase.storage.from('abrechnungen').upload(signedPath, signedBytes, {
-      contentType: 'application/pkcs7-mime',
-      upsert: false,
-    });
-    if (up.error) return res.status(500).json({ error: 'Upload fehlgeschlagen: ' + up.error.message });
-
-    // Atomares CAS-Update auf die Abrechnungsversion: Signaturfelder setzen und Verschlüsselungsspalten zurücksetzen.
-    // Bei CAS-Konflikt (409) wird die signierte Datei im Storage nicht gelöscht (Orphan-Retention für Audit-Sicherheit).
-    const signierteVersion = await aktualisiereArtefaktVersion({
+    // M1.16: Registry-Zeile VOR dem Upload, Upload (upsert: false), Readback mit
+    // Signatur-/Hashpruefung, dann Registry + Header atomar unter CAS veroeffentlichen.
+    // Bei Versionskonflikt (409) bleibt die signierte Datei geschuetzt im Storage (nie loeschen).
+    const { registryId } = await reserviereUndLadeHoch({
       db: supabase,
+      ownerId: tenantId,
+      abrechnungId: ab.id,
+      pfad: signedPath,
+      kind: 'signed',
+      role: 'signed',
+      bytes: signedBytes,
+      contentType: 'application/pkcs7-mime',
+      pruefeReadback: (zurueck) => pruefeSignedDta({ signedBytes: zurueck, expectedDtaSha256: ab.dta_sha256 }),
+    });
+    await veroeffentliche({
+      db: supabase,
+      ownerId: tenantId,
+      registryId,
       vorher: ab,
       patch: {
         signed_storage_path:        signedPath,
@@ -1652,6 +1683,15 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
         verschluesselung_hinweis:        null,
       },
     });
+    const { data: signierteVersion, error: versionErr } = await supabase
+      .from('abrechnung')
+      .select(ABRECHNUNG_VERSION_FELDER)
+      .eq('id', ab.id)
+      .eq('owner_id', tenantId)
+      .maybeSingle();
+    if (versionErr || !signierteVersion) {
+      return res.status(500).json({ error: 'Signatur gespeichert, aber der aktuelle Stand konnte nicht gelesen werden. Bitte Seite neu laden.' });
+    }
 
     // Persist cert metadata for the therapist (private key never sees the server).
     //

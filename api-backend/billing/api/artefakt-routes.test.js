@@ -12,6 +12,8 @@ import {
   artefaktVersuchPfad,
 } from './artefakt-version.js';
 import { pruefeSignedDta } from '../dta/signed-original.js';
+import { reserviereUndLadeHoch, veroeffentliche } from './artefakt-registry.js';
+import { erzeugeRegistryFake, blobAusUploads } from './artefakt-registry-fake.js';
 
 // --- Synthetic RSA2048 + CMS Generator (No Live / CA Trust Claim) ---
 const { privateKey: privPem, publicKey: pubPem } = crypto.generateKeyPairSync('rsa', {
@@ -103,7 +105,15 @@ function createFakeDb(initialRow) {
   let failDbUpdate = false;
   let beforeUpdateHook = null;
 
+  const registry = erzeugeRegistryFake({
+    getRow: () => currentRow,
+    setRow: r => { currentRow = r; },
+    bumpUpdatedAt: () => { microCounter++; return `2026-10-04T10:00:00.${microCounter}Z`; },
+    hooks: { get failPublish() { return failDbUpdate; } },
+  });
+
   const db = {
+    rpc: (name, args) => registry.rpc(name, args),
     auth: {
       async getUser(token) {
         if (!token || token === 'invalid') return { data: null, error: { message: 'invalid' } };
@@ -117,6 +127,7 @@ function createFakeDb(initialRow) {
             storageUploads.push({ bucket, path, bytes, options });
             return { data: { path }, error: null };
           },
+          ...blobAusUploads(storageUploads),
         };
       },
     },
@@ -246,6 +257,8 @@ function setupVm(fakeDb, extraInjections = {}) {
     pruefeEntwurfsVersion,
     aktualisiereArtefaktVersion,
     artefaktVersuchPfad,
+    reserviereUndLadeHoch,
+    veroeffentliche,
     pruefeSignedDta,
     supabase: fakeDb.db,
     nurInhaber: async req => ({ tenantId: req.user?.id || 'owner-tenant-1' }),
@@ -353,7 +366,7 @@ describe('Abrechnung Artefakt Routes CAS & Lifecycle', () => {
 
     const { req, res } = createReqRes({ body: validUploadBody });
     await handlers['/abrechnung/:id/upload-signed'](req, res);
-    assert.equal(res.statusCode, 500);
+    assert.equal(res.statusCode, 503);
     assert.equal(fakeDb.getStorageUploads().length, 1);
     assert.equal(encInvoked, false);
   });

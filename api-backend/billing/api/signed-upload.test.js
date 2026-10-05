@@ -6,6 +6,8 @@ import crypto from 'node:crypto';
 import forge from 'node-forge';
 import { pruefeSignedDta } from '../dta/signed-original.js';
 import { ABRECHNUNG_VERSION_FELDER, pruefeEntwurfsVersion, aktualisiereArtefaktVersion, artefaktVersuchPfad } from './artefakt-version.js';
+import { reserviereUndLadeHoch, veroeffentliche } from './artefakt-registry.js';
+import { erzeugeRegistryFake, blobAusUploads } from './artefakt-registry-fake.js';
 
 // Read actual abrechnung.routes.js via new URL
 const routeUrl = new URL('./abrechnung.routes.js', import.meta.url);
@@ -196,7 +198,14 @@ function createHarness(options = {}) {
 
   const syntheticHeaderRow = { ...Object.fromEntries(ABRECHNUNG_VERSION_FELDER.split(',').map(k => [k, null])), updated_at: '2026-10-04T10:00:00.123456Z', status: 'erstellt', ...headerOverrides };
 
+  let headerRow = syntheticHeaderRow;
+  const registry = erzeugeRegistryFake({
+    getRow: () => headerRow,
+    setRow: (r) => { headerRow = r; },
+    bumpUpdatedAt: () => '2026-10-04T10:00:00.999999Z',
+  });
   const supabaseMock = {
+    rpc: (name, args) => registry.rpc(name, args),
     from: (table) => ({
       select: (fields) => {
         tracker.selectCalls.push({ table, fields });
@@ -231,6 +240,7 @@ function createHarness(options = {}) {
           }
           return { data: { path }, error: null };
         },
+        ...blobAusUploads(tracker.storageUploadCalls),
       }),
     },
   };
@@ -249,6 +259,7 @@ function createHarness(options = {}) {
 
   const sandbox = {
     ABRECHNUNG_VERSION_FELDER, pruefeEntwurfsVersion, aktualisiereArtefaktVersion, artefaktVersuchPfad,
+    reserviereUndLadeHoch, veroeffentliche,
     Buffer,
     console: {
       log: () => {},
