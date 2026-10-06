@@ -582,6 +582,51 @@ if [ -n "$eksik_mount" ]; then
 fi
 ok "İki kapı da geçti (compose geçerli, bind-mount kaynakları yerinde)"
 
+# ── Schritt 7c — IP-Abgleich der Box (K2b.6, O-161 L10) ────────────────────
+# Frische lib-ip.sh erst hier sourcen (wurde in Schritt 7 geschrieben).
+# onprem-Bedingung 6: Wird das Update danach zurückgerollt, bleiben die systemd-Units
+# und volumes/ip/modus bestehen — harmlos, die Unit ruft nur ip-melden.sh auf,
+# und der Snapshot stellt die alten Skripte wieder her.
+log "[7c] IP-Abgleich der Box (K2b.6, L10)"
+# shellcheck source=./lib-ip.sh
+source "$SCRIPT_DIR/lib-ip.sh"
+
+# Zweistufiges Tor (onprem-Bedingung 5 — Reihenfolge so beibehalten):
+# 1. MERKEZ_URL in .env gesetzt?
+merkez_url="$(env_wert MERKEZ_URL)"
+if [ -z "$merkez_url" ]; then
+  log "  MERKEZ_URL leer — Namensdienst nicht aktiv, Schritt 7c übersprungen."
+else
+  # 2. Box bei Merkez registriert? (onprem-Bedingung 4: altes Image ohne kayit gilt als nicht registriert)
+  durum_json="$(docker compose --profile kurulum run --rm --no-deps --pull never kayit --durum --json 2>>"$LOG_FILE" || true)"
+  if ! printf '%s' "$durum_json" | grep -qE '"registriert"[[:space:]]*:[[:space:]]*true'; then
+    log "  Box nicht registriert — IP-Abgleich übersprungen."
+  else
+    # 3. Registriert: wenn volumes/ip/modus fehlt -> anlegen (existierende Datei nie anfassen)
+    if [ ! -f "$SCRIPT_DIR/volumes/ip/modus" ]; then
+      u_rc=0
+      u_modus="$(ip_modus_yaz "$SCRIPT_DIR/volumes/ip" "$(lan_ip_ermitteln)")" || u_rc=$?
+      if [ "$u_rc" -eq 1 ]; then
+        warn "Keine Netzwerkadresse — IP-Modus wird beim nächsten Update festgelegt"
+      elif [ "$u_rc" -ne 0 ]; then
+        warn "IP-Modus konnte nicht festgelegt werden (Fehlercode $u_rc) — Schreibrechte auf volumes/ip prüfen"
+      fi
+    fi
+
+    # 4. Timer idempotent einrichten (0 ok, 1/3/4 warn, 2 still)
+    u_timer_rc=0
+    ip_timer_kur "$SCRIPT_DIR" || u_timer_rc=$?
+    case "$u_timer_rc" in
+      0) ok "praxura-ip.timer aktiv (alle 2 Min, Start 1 Min nach Boot)" ;;
+      1) warn "systemctl nicht gefunden — praxura-ip.timer NICHT eingerichtet. IP-Meldung per Cron einrichten." ;;
+      2) : ;; # kein Namensdienst — still
+      3) warn "nicht als root ausgeführt — praxura-ip.timer nicht eingerichtet" ;;
+      4) warn "praxura-ip.timer konnte nicht eingerichtet werden (systemd) — Einzelheiten: systemctl status praxura-ip.timer" ;;
+      *) warn "praxura-ip.timer konnte nicht eingerichtet werden (Fehlercode $u_timer_rc)" ;;
+    esac
+  fi
+fi
+
 # ── Schritt 8 — Migration-öncesi yedek (O-26, backup.sh çağrısı) ───────────
 # "Migration çalışmadan önce kutu yedeği alır; yedek alınamıyorsa migration
 # ÇALIŞMAZ." Migration'lar `api` konteyneri başlarken (server.js app.listen()'

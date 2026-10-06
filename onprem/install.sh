@@ -635,17 +635,10 @@ if [ "$KAYIT_MODUS" = "code" ]; then
     set_env SUPABASE_PUBLIC_URL "$SITE_URL"
     ok "Box erfolgreich registriert: ${SITE_URL}"
 
-    # Modus einmalig bei der Einrichtung festlegen (K2b.6 / L1, L5)
-    mkdir -p "$SCRIPT_DIR/volumes/ip"
-    chmod 0755 "$SCRIPT_DIR/volumes/ip"
-    printf '%s\n' "$ip_modus" > "$SCRIPT_DIR/volumes/ip/modus.tmp"
-    chmod 0644 "$SCRIPT_DIR/volumes/ip/modus.tmp"
-    mv -f "$SCRIPT_DIR/volumes/ip/modus.tmp" "$SCRIPT_DIR/volumes/ip/modus"
-    if [ "$ip_modus" = "lan" ]; then
-      printf '%s\n' "$LAN_IP" > "$SCRIPT_DIR/volumes/ip/lan-ip.tmp"
-      chmod 0644 "$SCRIPT_DIR/volumes/ip/lan-ip.tmp"
-      mv -f "$SCRIPT_DIR/volumes/ip/lan-ip.tmp" "$SCRIPT_DIR/volumes/ip/lan-ip"
-    fi
+    # Modus einmalig bei der Einrichtung festlegen (K2b.6 / L1, L5, L10)
+    ip_modus_yaz "$SCRIPT_DIR/volumes/ip" "$LAN_IP" >/dev/null || fail "IP-Modus konnte nicht geschrieben werden" \
+      "Schreibfehler in $SCRIPT_DIR/volumes/ip" "volumes/ip beschreibbar" \
+      "Schreibrechte auf volumes/ip prüfen."
   fi
 fi
 
@@ -653,20 +646,14 @@ fi
 mkdir -p "$SCRIPT_DIR/volumes/ip"
 chmod 0755 "$SCRIPT_DIR/volumes/ip"
 
-# Im Weg 'vorhanden' (falls Datei fehlt): Modus ebenfalls festlegen (L1)
+# Im Weg 'vorhanden' (falls Datei fehlt): Modus ebenfalls festlegen (L1, L10)
 if [ "$KAYIT_MODUS" = "vorhanden" ] && [ ! -f "$SCRIPT_DIR/volumes/ip/modus" ]; then
-  v_lan_ip="$(lan_ip_ermitteln)"
-  v_modus="internet"
-  if [ -n "$v_lan_ip" ] && ist_rfc1918 "$v_lan_ip"; then
-    v_modus="lan"
-  fi
-  printf '%s\n' "$v_modus" > "$SCRIPT_DIR/volumes/ip/modus.tmp"
-  chmod 0644 "$SCRIPT_DIR/volumes/ip/modus.tmp"
-  mv -f "$SCRIPT_DIR/volumes/ip/modus.tmp" "$SCRIPT_DIR/volumes/ip/modus"
-  if [ "$v_modus" = "lan" ]; then
-    printf '%s\n' "$v_lan_ip" > "$SCRIPT_DIR/volumes/ip/lan-ip.tmp"
-    chmod 0644 "$SCRIPT_DIR/volumes/ip/lan-ip.tmp"
-    mv -f "$SCRIPT_DIR/volumes/ip/lan-ip.tmp" "$SCRIPT_DIR/volumes/ip/lan-ip"
+  v_rc=0
+  v_modus="$(ip_modus_yaz "$SCRIPT_DIR/volumes/ip" "$(lan_ip_ermitteln)")" || v_rc=$?
+  if [ "$v_rc" -eq 1 ]; then
+    warn "Keine Netzwerkadresse — IP-Modus wird beim nächsten Update festgelegt"
+  elif [ "$v_rc" -ne 0 ]; then
+    warn "IP-Modus konnte nicht festgelegt werden (Fehlercode $v_rc) — Schreibrechte auf volumes/ip prüfen"
   fi
 fi
 
@@ -898,46 +885,16 @@ else
 fi
 
 # ── IP-Timer (K2b.6, O-161 / L7, L10) ───────────────────────────────────────
-# In Funktion gekapselt, damit update.sh dies später idempotent aufrufen kann.
-ip_timer_einrichten() {
-  # Nur einrichten, wenn volumes/ip/modus existiert (L10)
-  [ -f "$SCRIPT_DIR/volumes/ip/modus" ] || return 0
-
-  chmod +x "$SCRIPT_DIR/ip-melden.sh" "$SCRIPT_DIR/lib-ip.sh" 2>/dev/null || true
-
-  if command -v systemctl >/dev/null 2>&1; then
-    cat > /etc/systemd/system/praxura-ip.service <<EOF
-[Unit]
-Description=Praxura On-Premise — LAN-IP ermitteln und bereitstellen (K2b.6, O-161)
-After=network.target
-
-[Service]
-Type=oneshot
-WorkingDirectory=${SCRIPT_DIR}
-ExecStart=/bin/bash ${SCRIPT_DIR}/ip-melden.sh
-EOF
-
-    cat > /etc/systemd/system/praxura-ip.timer <<EOF
-[Unit]
-Description=Praxura On-Premise — periodische LAN-IP-Prüfung (Timer)
-
-[Timer]
-OnBootSec=1min
-OnUnitActiveSec=2min
-AccuracySec=15s
-
-[Install]
-WantedBy=timers.target
-EOF
-
-    systemctl daemon-reload
-    systemctl enable --now praxura-ip.timer >/dev/null 2>&1
-    ok "praxura-ip.timer aktiv (alle 2 Min, Start 1 Min nach Boot)"
-  else
-    warn "systemctl nicht gefunden — praxura-ip.timer NICHT eingerichtet. IP-Meldung per Cron einrichten."
-  fi
-}
-ip_timer_einrichten
+timer_rc=0
+ip_timer_kur "$SCRIPT_DIR" || timer_rc=$?
+case "$timer_rc" in
+  0) ok "praxura-ip.timer aktiv (alle 2 Min, Start 1 Min nach Boot)" ;;
+  1) warn "systemctl nicht gefunden — praxura-ip.timer NICHT eingerichtet. IP-Meldung per Cron einrichten." ;;
+  2) : ;; # kein Namensdienst — still
+  3) warn "nicht als root ausgeführt — praxura-ip.timer nicht eingerichtet" ;;
+  4) warn "praxura-ip.timer konnte nicht eingerichtet werden (systemd) — Einzelheiten: systemctl status praxura-ip.timer" ;;
+  *) warn "praxura-ip.timer konnte nicht eingerichtet werden (Fehlercode $timer_rc)" ;;
+esac
 
 # ── Schritt 17 — Ausgabe ──────────────────────────────────────────────────────
 # Die Route zu einer beliebigen oeffentlichen Adresse zeigt zuverlaessiger
