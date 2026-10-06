@@ -42,7 +42,8 @@
  * (`trg_patient_consents_immutable`) und Löschen 10 Jahre lang (§ 630f Abs. 3 BGB).
  */
 
-import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20261003e';
+import { EINWILLIGUNG_TEXTE, renderEinwilligungText, sha256Hex } from './einwilligung-texte.js?v=20261006a';
+import { IST_KUTU } from '../supabase-config.js';
 
 const BUCKET = 'patient-documents';   // existiert bereits, keine neue Infrastruktur
 
@@ -162,6 +163,10 @@ function ctxFor() {
     datum: heute(),
     profile: p,
     optionen: _state.optionen,
+    // Praxura-Box in der Praxis oder SaaS — bestimmt den Satz zur Praxissoftware (legal-de F6, M2.8).
+    betrieb: IST_KUTU ? 'kutu' : 'saas',
+    // KI-Absatz erst, wenn das KI-Modul pro Praxis einschaltbar ist (K-20, M4.11) — bis dahin nie.
+    kiAktiv: false,
   };
 }
 

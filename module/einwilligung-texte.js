@@ -148,7 +148,7 @@ export const EINWILLIGUNG_TEXTE = {
   // einzeln waehlbar und standardmaessig AUS.
   // -------------------------------------------------------------------
   datenschutz: {
-    version: 'datenschutz-v2-2026-10-01',
+    version: 'datenschutz-v3-2026-10-06',
     consentType: 'datenschutz',
     titel: 'Datenschutz — Information und Einwilligung',
     kurzfassung: [
@@ -160,11 +160,12 @@ export const EINWILLIGUNG_TEXTE = {
     absaetze: [
       {
         ueberschrift: 'Verantwortliche Stelle',
-        text:
-          'Verantwortlich für die Verarbeitung Ihrer Daten ist {{praxis_name}}, '
-          + '{{praxis_adresse}}. Die Praxis nutzt die Praxissoftware Praxura; deren Anbieter '
-          + 'verarbeitet Ihre Daten außchliesslich weisungsgebunden als Auftragsverarbeiter '
-          + '(Art. 28 DSGVO) auf Servern in Deutschland.',
+        text: 'Verantwortlich für die Verarbeitung Ihrer Daten ist {{praxis_name}}, {{praxis_adresse}}.{{dsb_satz}}',
+      },
+      {
+        // Je nach Betrieb (Box in der Praxis / SaaS) — legal-de 05.10.2026: „Server in Deutschland" war für die Box falsch.
+        ueberschrift: 'Praxissoftware',
+        text: '{{software_satz}}',
       },
       {
         ueberschrift: 'Zweck und Rechtsgrundlage der Behandlungsdaten',
@@ -179,9 +180,39 @@ export const EINWILLIGUNG_TEXTE = {
         text:
           'Bei gesetzlich Versicherten werden Abrechnungsdaten nach § 302 SGB V an Ihre '
           + 'Krankenkasse bzw. deren Abrechnungsstelle übermittelt; dazu ist die Praxis '
-          + 'gesetzlich verpflichtet. Der verordnende Arzt erhält die nach der '
-          + 'Heilmittel-Richtlinie vorgesehenen Rückmeldungen. Darüber hinaus werden Ihre '
-          + 'Daten nicht an Dritte weitergegeben.',
+          + 'gesetzlich verpflichtet. Bei einem Arbeits- oder Wegeunfall erhält der zuständige '
+          + 'Unfallversicherungsträger (Berufsgenossenschaft/Unfallkasse) die für die Abrechnung '
+          + 'erforderlichen Angaben. Der verordnende Arzt erhält die nach der '
+          + 'Heilmittel-Richtlinie vorgesehenen Rückmeldungen. Rechnungs- und Buchungsdaten '
+          + '(ohne Behandlungsinhalte) erhält, soweit beauftragt, unser Steuerberater. '
+          + 'Andere Empfänger gibt es nur, wenn Sie eingewilligt haben oder ein Gesetz es vorschreibt.',
+      },
+      {
+        // Nur bei aktivem KI-Modul (K-20, Opt-in). Wortlaut legal-de 05.10.2026; vorläufig bis zur
+        // Anwaltsantwort (LEGAL_DECISIONS Nachtrag 4): keine Mail-Entwürfe, kein C5-Satz.
+        ueberschrift: 'Optionale KI-Unterstützung',
+        nur: 'ki',
+        text:
+          'Für einzelne Planungsaufgaben (z. B. Terminserien entsprechend Ihrer Verordnung) nutzt die '
+          + 'Praxis einen KI-Dienst von Microsoft (Microsoft Ireland Operations Ltd., Dublin). '
+          + 'Übermittelt werden nur pseudonymisierte Strukturangaben: keine Namen, kein Geburtsdatum, '
+          + 'keine Anschrift, keine Versicherten- oder IK-Nummer und kein Freitext. Die Verarbeitung '
+          + 'erfolgt in einem Rechenzentrum in Schweden (EU). Microsoft ist Unterauftragsverarbeiter '
+          + 'des Softwareanbieters und an einen Auftragsverarbeitungsvertrag gebunden. Zum Schutz vor '
+          + 'Missbrauch kann Microsoft auffällige Anfragen speichern und durch Mitarbeiter im '
+          + 'Europäischen Wirtschaftsraum prüfen lassen. Eine Übermittlung in Länder außerhalb der EU '
+          + 'ist nicht vorgesehen. Weil Microsoft zu einem Konzern mit Sitz in den USA gehört, sind '
+          + 'Zugriffe nach US-Recht nicht völlig auszuschließen. Microsoft ist nach dem EU-US Data '
+          + 'Privacy Framework zertifiziert (Angemessenheitsbeschluss der EU-Kommission vom 10.07.2023), '
+          + 'zusätzlich gelten EU-Standardvertragsklauseln. Rechtsgrundlage ist Art. 9 Abs. 2 lit. h '
+          + 'DSGVO; jedes Ergebnis wird vor der Verwendung von der Praxis geprüft.',
+      },
+      {
+        ueberschrift: 'Pflicht zur Bereitstellung',
+        text:
+          'Die Angaben zu Ihrer Person, zur Verordnung und zum Kostenträger brauchen wir für '
+          + 'Behandlung und Abrechnung. Ohne sie können wir nicht über Ihre Krankenkasse bzw. den '
+          + 'Unfallversicherungsträger abrechnen.',
       },
       {
         ueberschrift: 'Speicherdauer',
@@ -261,7 +292,7 @@ export const EINWILLIGUNG_TEXTE = {
   },
 
   foto: {
-    version: 'foto-v1-2026-08-14',
+    version: 'foto-v2-2026-10-06',
     consentType: 'foto',
     titel: 'Einwilligung in die Fotodokumentation',
     kurzfassung: [
@@ -280,7 +311,7 @@ export const EINWILLIGUNG_TEXTE = {
       {
         ueberschrift: 'Verwendung',
         text:
-          'Die Aufnahmen werden außchliesslich in Ihrer Patientenakte gespeichert. Eine '
+          'Die Aufnahmen werden ausschließlich in Ihrer Patientenakte gespeichert. Eine '
           + 'Veröffentlichung, Weitergabe zu Werbe-, Schulungs- oder Forschungszwecken erfolgt '
           + 'NICHT. Die Einwilligung ist jederzeit für die Zukunft widerrufbar; die Aufnahmen '
           + 'werden dann gelöscht, soweit keine Aufbewahrungspflicht entgegensteht.',
@@ -293,11 +324,30 @@ export const EINWILLIGUNG_TEXTE = {
 // Rendering + Nachweis
 // =====================================================================
 
+// Platzhalter, die leer bleiben dürfen (bedingte Sätze) — alle anderen zeigen ein leeres Feld als [key].
+const OPTIONALE_PLATZHALTER = new Set(['dsb_satz']);
+
 function ersetze(str, ctx) {
   return String(str).replace(/\{\{(\w+)\}\}/g, (_, key) => {
     const v = ctx[key];
-    return (v === undefined || v === null || v === '') ? `[${key}]` : String(v);
+    if (v === undefined || v === null || v === '') return OPTIONALE_PLATZHALTER.has(key) ? '' : `[${key}]`;
+    return String(v);
   });
+}
+
+/**
+ * Satz zur Praxissoftware je Betrieb (legal-de F6, 05.10.2026).
+ * `kutu` = Praxura-Box in der Praxis (Praxis ist allein verantwortlich, der Hersteller hat keine Rolle);
+ * alles andere = SaaS (Praxura als Auftragsverarbeiter). Bewusst OHNE § 203-Halbsatz (erst, wenn die
+ * Klausel in Praxuras eigener AVV steht) und OHNE Hosting-Ort (`Server in Deutschland` ist nicht geprüft).
+ */
+function softwareSatz(betrieb) {
+  if (betrieb === 'kutu') {
+    return 'Die Praxis nutzt die Praxissoftware Praxura, die auf einem Rechner in den Räumen der Praxis betrieben wird. '
+      + 'Ihre Daten werden dort gespeichert; der Softwarehersteller hat darauf keinen Zugriff.';
+  }
+  return 'Die Praxis nutzt die Praxissoftware Praxura. Deren Anbieter, InfinityMade (Siegburg), verarbeitet Ihre Daten '
+    + 'ausschließlich nach Weisung der Praxis als Auftragsverarbeiter (Art. 28 DSGVO).';
 }
 
 /**
@@ -319,7 +369,9 @@ function optionenText(def, gewaehlt) {
  *
  * @param {string} type  Schluessel aus EINWILLIGUNG_TEXTE
  * @param {object} ctx   { praxis_name, praxis_adresse, patient_name,
- *                         patient_geburtsdatum, datum, profile, optionen: string[] }
+ *                         patient_geburtsdatum, datum, profile, optionen: string[],
+ *                         betrieb?: 'kutu'|'saas' (Standard saas), kiAktiv?: boolean (Standard false),
+ *                         dsb_kontakt?: string }
  * @returns {{ version:string, titel:string, text:string, def:object }}
  */
 export function renderEinwilligungText(type, ctx = {}) {
@@ -330,6 +382,8 @@ export function renderEinwilligungText(type, ctx = {}) {
     ...ctx,
     ausfall_regel: ctx.ausfall_regel || ausfallRegelText(ctx.profile),
     optionen: optionenText(def, ctx.optionen),
+    software_satz: softwareSatz(ctx.betrieb),
+    dsb_satz: ctx.dsb_kontakt ? ` Unsere Datenschutzbeauftragte bzw. unseren Datenschutzbeauftragten erreichen Sie unter ${ctx.dsb_kontakt}.` : '',
   };
 
   const kopf = [
@@ -341,6 +395,7 @@ export function renderEinwilligungText(type, ctx = {}) {
   ].join('\n');
 
   const koerper = def.absaetze
+    .filter(a => a.nur !== 'ki' || ctx.kiAktiv === true)
     .map(a => `${a.ueberschrift}\n${ersetze(a.text, vollCtx)}`)
     .join('\n\n');
 
