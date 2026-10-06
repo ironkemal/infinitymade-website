@@ -24,6 +24,8 @@
  */
 
 import { bgEmpfaengerBlock, bgAusZeile } from './bg-angaben.js?v=20261006b';
+import { brandingAus } from './branding.js?v=20261006e';
+import { ladeStempelDataUrl } from './stempel.js?v=20261006e';
 
 let d = null;
 
@@ -156,7 +158,7 @@ export async function openInvView(invoiceId) {
   // Praxis logo (Madde 8)
   const invvLogo = document.getElementById('invvLogoImg');
   if (invvLogo) {
-    const logoUrl = currentProfile.praxis_logo_url || '';
+    const logoUrl = brandingAus(currentProfile).logoUrl;   // nur https (S-49)
     if (logoUrl) { invvLogo.src = logoUrl; invvLogo.hidden = false; }
     else invvLogo.hidden = true;
   }
@@ -169,6 +171,16 @@ export async function openInvView(invoiceId) {
   if (currentProfile.email) bizMeta.push(currentProfile.email);
   if (currentProfile.ik_number) bizMeta.push('IK: ' + currentProfile.ik_number);
   document.getElementById('invvBizMeta').textContent = bizMeta.join('\n');
+  // Praxisstempel (M2.4): aus dem PRIVATEN Bucket, als Data-URL eingebettet — nie als URL im Beleg.
+  const stempelEl = document.getElementById('invvStempel');
+  if (stempelEl) {
+    stempelEl.hidden = true; stempelEl.removeAttribute('src');
+    const pfad = brandingAus(currentProfile).stempelPfad;
+    if (pfad) {
+      const url = await ladeStempelDataUrl(d.supabase, pfad);
+      if (url) { stempelEl.src = url; stempelEl.hidden = false; }
+    }
+  }
   const footerEl = document.getElementById('invvFooterText');
   if (footerEl) footerEl.textContent = currentProfile.invoice_footer_text || '';
 

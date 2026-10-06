@@ -1246,6 +1246,7 @@
                   <div id="invvFooterTax">—</div>
                 </div>
               </div>
+              <img id="invvStempel" alt="Praxisstempel" hidden style="display:block;max-height:90px;max-width:240px;margin-top:18px;" />
               <div id="invvFooterText" style="margin-top:20px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:11px;color:#666;white-space:pre-line;"></div>
             </div>
 
@@ -2501,7 +2502,7 @@
             <div class="settings-group">
               <div class="settings-group-label">Allgemein</div>
 
-              <div class="settings-section">
+              <div class="settings-section" id="settingsProfileSection">
                 <div class="settings-section-title" data-i18n="set_profile">Profil</div>
                 <div class="settings-section-body">
                   <div class="form-group">
@@ -2819,6 +2820,32 @@
                     <div class="form-hint">Nur für Grußtext o. Ä. — Steuernummer, USt-IdNr. und Bankverbindung stehen bereits automatisch auf jeder Rechnung, hier nicht wiederholen.</div>
                   </div>
                   <button class="btn-primary" id="brandingSaveBtn">Branding speichern</button>
+
+                  <!-- KHS M2.4 (module/branding-ui.js): Inhaber, Stempel, „Was fehlt noch?" -->
+                  <div id="brandingExtras" style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);">
+                    <div class="form-group">
+                      <label class="form-label" for="brandingInhaber">Name der Inhaberin / des Inhabers</label>
+                      <input class="form-input" id="brandingInhaber" type="text" maxlength="200" autocomplete="name" placeholder="Vor- und Nachname, wie auf der Rechnung" />
+                      <div class="form-hint">Pflichtangabe auf Rechnungen (§ 14 UStG). Wird beim Verlassen des Feldes gespeichert.</div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Praxisstempel</label>
+                      <div class="form-hint" style="margin-bottom:10px;">Optional — erscheint auf Rechnungen. Bitte einen Stempel <strong>ohne Unterschrift</strong> hochladen: Eine eingescannte Unterschrift ersetzt keine Unterschrift und erhöht das Missbrauchsrisiko. PNG oder JPEG, wird automatisch verkleinert. Name, Anschrift und Steuernummer stehen auf der Rechnung ohnehin als Text.</div>
+                      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                        <div id="brandingStempelPreview" style="display:none;">
+                          <img id="brandingStempelImg" alt="Praxisstempel" style="max-height:80px;max-width:220px;border-radius:4px;border:1px solid var(--border);padding:4px;background:#fff;" />
+                        </div>
+                        <input type="file" id="brandingStempelInput" accept="image/png,image/jpeg" hidden />
+                        <button class="btn-secondary btn-sm" id="brandingStempelUploadBtn" type="button">Stempel hochladen</button>
+                        <button class="btn-ghost btn-sm" id="brandingStempelRemoveBtn" type="button" style="display:none;color:#f87171;">Entfernen</button>
+                      </div>
+                      <div class="form-hint" id="brandingStempelRechte" hidden>Nur die Inhaberin bzw. der Inhaber kann Stempel und Namen ändern.</div>
+                    </div>
+                    <div class="form-group">
+                      <div class="form-label">Was fehlt noch?</div>
+                      <div id="brandingLuecken" aria-live="polite"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -3913,6 +3940,7 @@
     .m13-art-toggle{ border:0; background:transparent; color:var(--primary); font:inherit; font-size:13px; font-weight:600; cursor:pointer; padding:6px 2px; min-height:32px; text-decoration:underline; }
     .m13-art-hinweis{ flex-basis:100%; font-size:13px; color:var(--warning); }
     .m13-gkv-zu .m13-gkv{ display:none !important; }
+    .branding-liste{ margin:2px 0 10px 18px; padding:0; font-size:13px; } .branding-liste a{ color:var(--primary); }
     .m13-bgblock{ display:none; margin:0 0 14px; padding:12px 14px; border:1px solid var(--border); border-radius:8px; background:var(--bg-card-solid); }
     .m13-art-bg .m13-bgblock{ display:block; }
     .m13-bg-kopf{ font-weight:700; color:var(--text-main); margin-bottom:8px; }
@@ -5789,7 +5817,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261006e"></script>
+  <script type="module" src="dashboard.js?v=20261006f"></script>
 </body>
 
 </html>

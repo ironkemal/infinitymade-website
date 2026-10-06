@@ -1,0 +1,86 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Probe: Branding-Einstellungen (Inhaber, Stempel, Was fehlt noch?)</title>
+<!--
+  Fasst den ECHTEN Abschnitt `#settingsBrandingSection` aus dashboard.html an (Markup und IDs),
+  mit erfundener Supabase-Antwort und einem im Browser erzeugten PNG. Kein Login.
+  Prüft: Lückenliste, Stempel-Upload (echte Canvas-Kodierung → PNG, Pfad statt URL),
+  Mitarbeiter darf nichts schreiben, Inhaber-Feld speichert beim Verlassen.
+-->
+<div id="buehne" style="max-width:720px"></div>
+<script type="module">
+const ergebnis = [];
+const pruef = (name, ok, detail = '') => ergebnis.push({ name, ok: !!ok, detail: String(detail) });
+try {
+  const html = await (await fetch('../../dashboard.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const abschnitt = doc.getElementById('settingsBrandingSection');
+  pruef('dashboard.html enthält den Branding-Abschnitt samt #brandingExtras', !!abschnitt?.querySelector('#brandingExtras'));
+  document.getElementById('buehne').appendChild(document.importNode(abschnitt, true));
+  for (const st of doc.querySelectorAll('style')) { if (st.textContent.includes('branding-liste')) { const n = document.createElement('style'); n.textContent = st.textContent; document.head.appendChild(n); } }
+
+  const OWNER = '11111111-1111-1111-1111-111111111111';
+  const log = []; let profilZeile = { business_name: 'Praxis Nord', street: 'Weg', plz: '1', city: 'Ort', steuernummer: '1/2/3', tax_exempt_note: '§ 4 Nr. 14 UStG', iban: 'DE02', phone: '1', ik_number: '123456789' };
+  const gespeichert = {};
+  const sb = {
+    storage: { from: (b) => ({
+      upload: async (pfad, blob, opt) => { log.push(['upload', b, pfad, blob.type, blob.size, opt]); gespeichert[pfad] = blob; return { error: null }; },
+      remove: async (p) => { log.push(['remove', b, p]); p.forEach(x => delete gespeichert[x]); return { error: null }; },
+      download: async (pfad) => gespeichert[pfad] ? { data: gespeichert[pfad], error: null } : { data: null, error: new Error('404') },
+    }) },
+    from: (t) => ({ update: (w) => ({ eq: (f, v) => ({ select: async () => { log.push(['profil', t, w, v]); Object.assign(profilZeile, w); return { data: [{ id: v }], error: null }; } }) }) }),
+  };
+  let owner = true; const toasts = [];
+  const { mountBrandingExtras } = await import('../../module/branding-ui.js?v=20261006e');
+  const h = mountBrandingExtras({
+    supabase: sb, ownerId: () => OWNER, istOwner: () => owner, profil: () => profilZeile,
+    profilAktualisieren: (p) => Object.assign(profilZeile, p), toast: (m, a) => toasts.push([m, a]),
+  });
+  await h.aktualisieren();
+  const $ = (id) => document.getElementById(id);
+  const luecke = $('brandingLuecken').innerText;
+  pruef('Lückenliste nennt den fehlenden Inhabernamen (Pflicht)', /Name der Inhaberin/.test(luecke), luecke.replace(/\n/g, ' | '));
+  pruef('Lücken verlinken auf die Einstellung', !!$('brandingLuecken').querySelector('[data-sprung="settingsBrandingSection"]'));
+  pruef('Stempel-Vorschau ist ohne Stempel unsichtbar', $('brandingStempelPreview').style.display === 'none');
+
+  // Inhaber speichern (beim Verlassen)
+  $('brandingInhaber').value = '  Erika Muster ';
+  $('brandingInhaber').dispatchEvent(new Event('change', { bubbles: true }));
+  await new Promise(r => setTimeout(r, 50));
+  pruef('Inhaber wird getrimmt in profiles.praxis_inhaber gespeichert', profilZeile.praxis_inhaber === 'Erika Muster', JSON.stringify(log.at(-1)));
+  pruef('danach fehlt der Inhaber nicht mehr', !/Name der Inhaberin/.test($('brandingLuecken').innerText));
+
+  // Stempel hochladen — echtes PNG aus einem Canvas, echte Kodierung
+  const c = document.createElement('canvas'); c.width = 2400; c.height = 1200;
+  const g = c.getContext('2d'); g.fillStyle = '#336'; g.fillRect(0, 0, 2400, 1200);
+  const png = await new Promise(r => c.toBlob(r, 'image/png'));
+  const datei = new File([png], 'stempel.png', { type: 'image/png' });
+  const dt = new DataTransfer(); dt.items.add(datei);
+  $('brandingStempelInput').files = dt.files;
+  $('brandingStempelInput').dispatchEvent(new Event('change', { bubbles: true }));
+  await new Promise(r => setTimeout(r, 400));
+  const up = log.find(l => l[0] === 'upload');
+  pruef('Upload in den PRIVATEN Bucket mit festem Pfad', up && up[1] === 'praxis-stempel' && up[2] === `${OWNER}/stempel.png`, JSON.stringify(up?.slice(0, 4)));
+  pruef('Upload ist ein neu kodiertes PNG, upsert', up && up[3] === 'image/png' && up[5].upsert === true);
+  pruef('Profil bekommt den Pfad, keine URL', profilZeile.praxis_stempel_path === `${OWNER}/stempel.png`, profilZeile.praxis_stempel_path);
+  pruef('Vorschau zeigt den Stempel als Data-URL', $('brandingStempelPreview').style.display !== 'none' && $('brandingStempelImg').src.startsWith('data:image/png;base64,'));
+  pruef('Entfernen-Knopf erscheint für den Owner', $('brandingStempelRemoveBtn').style.display !== 'none');
+
+  // Entfernen
+  $('brandingStempelRemoveBtn').click();
+  await new Promise(r => setTimeout(r, 100));
+  pruef('Entfernen löscht Datei und Profil-Pfad', log.some(l => l[0] === 'remove') && profilZeile.praxis_stempel_path === null);
+
+  // Mitarbeiter: nichts schreibbar
+  owner = false;
+  await h.aktualisieren();
+  const vorher = log.length;
+  $('brandingInhaber').value = 'Fremd'; $('brandingInhaber').dispatchEvent(new Event('change', { bubbles: true }));
+  await new Promise(r => setTimeout(r, 50));
+  pruef('Mitarbeiter: Felder gesperrt, Hinweis sichtbar', $('brandingInhaber').disabled && $('brandingStempelUploadBtn').disabled && !$('brandingStempelRechte').hidden);
+  pruef('Mitarbeiter: kein Schreibzugriff abgesetzt', log.length === vorher);
+} catch (e) {
+  pruef('Probe läuft durch', false, e?.stack || e?.message || String(e));
+}
+window.__probe = ergebnis;
+</script>

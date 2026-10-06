@@ -63,7 +63,7 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261004m
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261004m113';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006b';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006e'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006e'; import { brandingAus, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261006e';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260930f';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
@@ -5897,19 +5897,7 @@ function printSeriterminConfirmation({ patientName, appointments, serviceTitle }
 }
 
 // Briefkopf der Praxis — einmal gebaut, von beiden Druckwegen benutzt.
-function terminzettelPraxis() {
-  return {
-    praxis: {
-      name: currentProfile?.business_name || '',
-      strasse: [currentProfile?.street, currentProfile?.house_number].filter(Boolean).join(' '),
-      ort: [currentProfile?.zip, currentProfile?.city].filter(Boolean).join(' '),
-      telefon: currentProfile?.phone || currentProfile?.whatsapp_number || '',
-      iban: currentProfile?.iban || '',
-      bic: currentProfile?.bic || '',
-      bank: currentProfile?.bank_name || '',
-    },
-  };
-}
+function terminzettelPraxis() { return terminzettelPraxisAus(brandingAus(ownerProfile || currentProfile)); }
 
 // ============================================================
 // AI Series Scheduler — KI-Vorschlag flow
@@ -11672,7 +11660,7 @@ document.getElementById('setBrandingLogo')?.addEventListener('input', e => updat
   };
 })();
 
-document.getElementById('brandingSaveBtn')?.addEventListener('click', async () => {
+mountBrandingExtras({ supabase, ownerId: () => getOwnerId(), istOwner: () => currentProfile?.role === 'owner', profil: () => ownerProfile || currentProfile || {}, profilAktualisieren: (p) => Object.assign(ownerProfile || currentProfile || {}, p), toast: showToast }); document.getElementById('brandingSaveBtn')?.addEventListener('click', async () => {
   const logoUrl = (document.getElementById('setBrandingLogo')?.value || '').trim();
   const footerText = (document.getElementById('setBrandingFooter')?.value || '').trim();
   const { error } = await supabase.from('profiles').update({
@@ -15151,7 +15139,7 @@ async function init() {
       supabase, apiBasis: API,
       token: async () => (await supabase.auth.getSession()).data.session?.access_token,
       liste: () => invListCache,
-      profile: () => currentProfile,
+      profile: () => ownerProfile || currentProfile,   // Praxis-Daten gehören dem Owner (Mitarbeiter-Profil ist leer)
       escapeHtml, formatEur, showToast,
       starteZahlungseingang, fuelleBelegPositionen, aggregateInvLines, leistungszeitraum,
       neuLaden: () => loadRechnungen(),

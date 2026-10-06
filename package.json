@@ -13,7 +13,7 @@
     "test:merkez": "node --test \"merkez/test/**/*.test.js\"",
     "test:tools": "node --test \"tools/**/*.test.js\"",
     "typecheck": "tsc -p jsconfig.json",
-    "probe": "node tools/browser-probe/layout-probe.mjs && node tools/browser-probe/modul-probe.mjs && node tools/browser-probe/render-probe.mjs && node tools/browser-probe/leistungen-probe.mjs && node tools/browser-probe/verordnung-maske-probe.mjs && node tools/browser-probe/podo-maske-probe.mjs && node tools/browser-probe/podo-einheiten-probe.mjs && node tools/browser-probe/icd-dg-probe.mjs && node tools/browser-probe/abrechnung-probe.mjs && node tools/browser-probe/abrechnung-verlauf-layout-probe.mjs"
+    "probe": "node tools/browser-probe/layout-probe.mjs && node tools/browser-probe/modul-probe.mjs && node tools/browser-probe/render-probe.mjs && node tools/browser-probe/leistungen-probe.mjs && node tools/browser-probe/verordnung-maske-probe.mjs && node tools/browser-probe/podo-maske-probe.mjs && node tools/browser-probe/podo-einheiten-probe.mjs && node tools/browser-probe/icd-dg-probe.mjs && node tools/browser-probe/abrechnung-probe.mjs && node tools/browser-probe/abrechnung-verlauf-layout-probe.mjs && node tools/browser-probe/branding-probe.mjs"
   },
   "dependencies": {
     "nodemailer": "^6.9.14"

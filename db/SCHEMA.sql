@@ -3004,7 +3004,9 @@ CREATE TABLE public.profiles (
   tablet_kiosk_pin_set boolean DEFAULT false NOT NULL,
   selbstzahler_stufen jsonb DEFAULT '[]'::jsonb NOT NULL,
   buchungskonten jsonb DEFAULT '[]'::jsonb NOT NULL,
-  gps_checkin_pruefen boolean DEFAULT false NOT NULL
+  gps_checkin_pruefen boolean DEFAULT false NOT NULL,
+  praxis_stempel_path text,
+  praxis_inhaber text
 );
 --   FK id -> auth.users(id)
 --   FK owner_id -> profiles(id)
@@ -3018,6 +3020,12 @@ COMMENT ON COLUMN public.profiles.tablet_kiosk_pin_set IS 'Kiosk-PIN hinterlegt?
 COMMENT ON COLUMN public.profiles.selbstzahler_stufen IS 'Ops #266: benannte Selbstzahler-Preisstufen des Owners, [{id,name,betrag_eur}]. Eingabehelfer bei der Rechnungserfassung — der berechnete Betrag wird in invoices.line_items festgeschrieben, nicht die Stufe.';
 COMMENT ON COLUMN public.profiles.buchungskonten IS 'Owner-gepflegter Kontenrahmen: [{code,label,aktiv}] — Form und Normalisierung in module/buchungskonten.js. Leer = Modul-Standard (1000 Kasse, 1100 Postbank, 1200 Bank, 1210 Bank 2, 8700 Erloesschmaelerung, 4900 Teilabsetzung). Gebuchte Zeilen referenzieren NICHT hierher, sie speichern code+label als Snapshot (GoBD Rz. 107).';
 COMMENT ON COLUMN public.profiles.gps_checkin_pruefen IS 'Owner-Einstellung: beim Check-in einmalig pruefen, ob der Mitarbeiter im 150-m-Umkreis der Praxis ist. Gespeichert wird nur das Ergebnis, nie Koordinaten. Standard aus.';
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_praxis_inhaber_laenge_check CHECK (((praxis_inhaber IS NULL) OR (char_length(praxis_inhaber) <= 200)));
+
+ALTER TABLE ONLY public.profiles
+  ADD CONSTRAINT profiles_praxis_stempel_path_check CHECK (((praxis_stempel_path IS NULL) OR (praxis_stempel_path ~ '^[0-9a-f-]{36}/stempel\.(png|jpg)$'::text)));
 
 ALTER TABLE ONLY public.profiles
   ADD CONSTRAINT profiles_anrede_check CHECK (anrede = ANY (ARRAY['Herr'::text, 'Frau'::text, 'Divers'::text]));

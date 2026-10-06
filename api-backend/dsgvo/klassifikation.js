@@ -605,6 +605,11 @@ export const BUCKETS = [
     bucket: 'referrals',
     pfadQuellen: [],
   },
+  {
+    // Praxisstempel (KHS M2.4, Migration 0069): Ordner `<owner_id>/`, Daten der Praxis, kein PHI.
+    bucket: 'praxis-stempel',
+    pfadQuellen: [],
+  },
 ];
 
 /**
