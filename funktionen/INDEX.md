@@ -344,7 +344,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `loadPodologieBilling()` — [module/podologie-abrechnung.js:488](module/podologie-abrechnung.js#L488-L1221) · 734 satır · podologie_behandlungen:insert
 
 **Yol 2 — `behandlungenVerknuepfen()`** · Ekran: _UI yolu çözülemedi_
-- `behandlungenVerknuepfen()` — [module/rechnung-bruecke.js:188](module/rechnung-bruecke.js#L188-L201) · 14 satır · podologie_behandlungen:update
+- `behandlungenVerknuepfen()` — [module/rechnung-bruecke.js:188](module/rechnung-bruecke.js#L188-L217) · 30 satır · podologie_behandlungen:update
 
 ### `prescription_documents` — 2 bağımsız yazma yolu
 

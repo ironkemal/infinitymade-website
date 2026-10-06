@@ -75,7 +75,7 @@ import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
-import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261006b';
+import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261006c';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261006b';
@@ -13779,7 +13779,7 @@ async function saveInvoice() {
     // Erst nach erfolgreichem Speichern markieren: schlägt das Speichern fehl,
     // darf keine Sitzung als abgerechnet gelten.
     if (inserted?.id && invBehandlungIds.length) {
-      await behandlungenVerknuepfen(supabase, { invoiceId: inserted.id, behandlungIds: invBehandlungIds });
+      const vk = await behandlungenVerknuepfen(supabase, { invoiceId: inserted.id, behandlungIds: invBehandlungIds }); if (!vk.ok) showToast(vk.meldung, 'error');
       invBehandlungIds = [];
     }
     // Zahlungsart abfragen (Ops #271, 08.09.2026) — Verzweigung nach

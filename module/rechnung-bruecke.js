@@ -188,16 +188,32 @@ export function zeilenAusBehandlungen(behandlungen, { verordnung, services, kata
 export async function behandlungenVerknuepfen(sb, { invoiceId, behandlungIds }) {
   const ids = (behandlungIds || []).filter(Boolean);
   if (!invoiceId || !ids.length) return { ok: true, anzahl: 0 };
-  const { error } = await sb
+  // `.select('id')` ist der Nachweis (wie bei PATCH /rezept/:id): ein UPDATE, das die
+  // Zeilensicherheit (`owner_behandlungen`: nur der Inhaber) auf 0 Zeilen kürzt, meldet
+  // sonst KEINEN Fehler — die Sitzungen blieben „offen" und könnten doppelt abgerechnet
+  // werden (db-ustasi 05.10.2026, KHS M2.3).
+  const { data, error } = await sb
     .from('podologie_behandlungen')
     .update({ invoice_id: invoiceId })
     // Zweite Tür vor derselben Regel: eine stornierte Behandlung kommt auf
     // keine Rechnung, auch wenn ihre id aus einer älteren Auswahl stammt
     // (Migration 0026).
     .is('storniert_am', null)
-    .in('id', ids);
-  if (error) { console.error('[bruecke:verknuepfen]', error); return { ok: false, error }; }
-  return { ok: true, anzahl: ids.length };
+    .in('id', ids)
+    .select('id');
+  if (error) {
+    console.error('[bruecke:verknuepfen]', error);
+    return { ok: false, error, anzahl: 0, meldung: 'Die Behandlungen wurden nicht als abgerechnet markiert (Datenbankfehler). Bitte nicht erneut abrechnen, sondern den Support fragen.' };
+  }
+  const getroffen = (data || []).length;
+  if (getroffen < ids.length) {
+    return {
+      ok: false, anzahl: getroffen,
+      meldung: `Rechnung gespeichert, aber nur ${getroffen} von ${ids.length} Behandlungen wurden als abgerechnet markiert (fehlende Berechtigung?). `
+             + 'Doppelte Abrechnung möglich — bitte die Inhaberin bzw. den Inhaber die Verknüpfung prüfen lassen.',
+    };
+  }
+  return { ok: true, anzahl: getroffen };
 }
 
 /**

@@ -6,7 +6,7 @@
  */
 
 import { verordnungenZuruecksetzen } from './rechnung-verordnung.js?v=20261006b';
-import { preisAusService } from './rechnung-bruecke.js?v=20261006b';
+import { preisAusService } from './rechnung-bruecke.js?v=20261006c';
 
 /**
  * Lädt die Termine eines Patienten für die Einzeltermin-Auswahl (Selbstzahler).
