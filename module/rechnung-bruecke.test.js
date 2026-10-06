@@ -71,3 +71,28 @@ test('Verknüpfen: Datenbankfehler -> ok:false', async () => {
   const r = await behandlungenVerknuepfen(sb, { invoiceId: 'i', behandlungIds: ['a'] });
   assert.equal(r.ok, false);
 });
+
+// ── M2.7: patientenverständlicher Zeilentext (PE-006 C) ─────────────────────
+import { zeilenAusBehandlungen } from './rechnung-bruecke.js';
+
+test('Privatzeile 78020/78010 ohne eigene Leistung: Klartext statt „groß/klein", nie „Komplexbehandlung"', () => {
+  const beh = [{ behandlungsdatum: '2026-09-20', hpnr_codes: ['78020', '78010'] }];
+  const katalog = [{ code: '78020', title: 'Podologische Behandlung (groß)' }, { code: '78010', title: 'Podologische Behandlung (klein)' }];
+  const { zeilen } = zeilenAusBehandlungen(beh, { verordnung: { rezeptart: 'privat' }, services: [], katalogPodo: katalog });
+  assert.equal(zeilen[0].title, 'Podologische Behandlung (Hornhaut und Nägel), Therapiezeit über 20 Minuten');
+  assert.equal(zeilen[1].title, 'Podologische Behandlung (Hornhaut und Nägel), Therapiezeit bis 20 Minuten');
+  assert.ok(zeilen.every(z => !/Komplex/.test(z.title)));
+});
+
+test('Eigene Leistung der Praxis hat Vorrang vor dem Klartext', () => {
+  const beh = [{ behandlungsdatum: '2026-09-20', hpnr_codes: ['78020'] }];
+  const services = [{ gkv_position_nr: '78020', title: 'Meine große Behandlung', price: 60 }];
+  const { zeilen } = zeilenAusBehandlungen(beh, { verordnung: {}, services, katalogPodo: [] });
+  assert.equal(zeilen[0].title, 'Meine große Behandlung');
+});
+
+test('Andere Kodes behalten den Katalogtitel', () => {
+  const beh = [{ behandlungsdatum: '2026-09-20', hpnr_codes: ['78030'] }];
+  const { zeilen } = zeilenAusBehandlungen(beh, { verordnung: {}, services: [], katalogPodo: [{ code: '78030', title: 'Podologische Befundung' }] });
+  assert.equal(zeilen[0].title, 'Podologische Befundung');
+});
