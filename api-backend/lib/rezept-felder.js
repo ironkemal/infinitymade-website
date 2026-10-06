@@ -160,3 +160,75 @@ export async function kostentraegerIkAufloesen(supabase, patient, { stichtag } =
   const ziele = await kostentraegerEndzieleAufloesen(supabase, treffer, heute);
   return ziele?.size === 1 ? [...ziele][0] : null;
 }
+
+// ── Verordnungsart + podologische Zusatzfelder (KHS M2.1, PE-006 A) ─────────
+//
+// Bis 05.10.2026 schrieben `POST /rezept/confirm` und `PATCH /rezept/:id` weder
+// `rezeptart` noch `nagel` noch `behandlungsanlass` — NULL war der Normalfall
+// für Kassen-Verordnungen, und der Behandlungsanlass (Rechnungstext bei
+// Privat/Selbstzahler/BG) ging beim Speichern aus der Maske verloren.
+// Gespiegelt in `module/rezeptart.js` (Frontend: gleiche Wertelisten).
+
+const ARTEN = ['kassen', 'privat', 'selbstzahler', 'bg'];
+const ART_ALIAS = { gkv: 'kassen', kasse: 'kassen', pkv: 'privat' };
+
+function artNormalisieren(roh) {
+  const w = String(roh).trim().toLowerCase();
+  return ARTEN.includes(w) ? w : (ART_ALIAS[w] || null);
+}
+
+const textOderNull = (w) => { const t = String(w ?? '').trim(); return t || null; };
+
+/**
+ * Die Spalten `rezeptart`, `behandlungsanlass`, `nagel` für INSERT/UPDATE.
+ *
+ * - `rezeptart`: Neuanlage ohne Angabe = ausdrücklich `kassen`; Ändern ohne
+ *   Angabe = Spalte unberührt. Ein unbekannter Wert wirft (kein stilles Raten:
+ *   NULL/kassen würde den §302-Guard passieren).
+ * - `behandlungsanlass`/`nagel`: nur wenn der Schlüssel im Rumpf steht.
+ * - `wagner_grad` wird nie geschrieben (Festschreibung 0020, Maske sendet es nicht).
+ *
+ * @param {object} rezept  `parsed.rezept` des Rumpfes
+ * @param {{neu: boolean}} opt
+ * @returns {{rezeptart?:string, behandlungsanlass?:?string, nagel?:?string}}
+ */
+export function artFelderAusRezept(rezept = {}, { neu = false } = {}) {
+  const out = {};
+  const roh = rezept?.rezeptart;
+  if (roh !== undefined && roh !== null && String(roh).trim() !== '') {
+    const art = artNormalisieren(roh);
+    if (!art) throw new Error(`rezeptart ungültig: ${String(roh).slice(0, 20)}`);
+    out.rezeptart = art;
+  } else if (neu) {
+    out.rezeptart = 'kassen';
+  }
+  if (rezept && rezept.behandlungsanlass !== undefined) out.behandlungsanlass = textOderNull(rezept.behandlungsanlass);
+  if (rezept && rezept.nagel !== undefined) out.nagel = textOderNull(rezept.nagel);
+  return out;
+}
+
+/**
+ * Darf die Art einer bestehenden Verordnung geändert werden?
+ *
+ * Die Festschreibung (Trigger 0020) greift erst ab `belegnummer` — die setzen
+ * nur die DTA-Wege; Privat/Selbstzahler/BG bekommen nie eine. Deshalb hier die
+ * zusätzliche Bedingung „es gibt eine festgeschriebene Rechnung" (Status ≠
+ * draft/cancelled): sonst würde bei Rückwechsel auf Kasse still doppelt
+ * abgerechnet (PE-006 A, gkv-302 F2). Die Belegnummer-Sperre steht schon in
+ * der Route (409 davor).
+ *
+ * @param {{bestehend: ?string, neu: ?string, hatFestgeschriebeneRechnung: boolean}} a
+ * @returns {{ok: true, statusZuruecksetzen: boolean} | {ok: false, status: number, error: string}}
+ */
+export function rezeptartWechselPruefen({ bestehend, neu, hatFestgeschriebeneRechnung }) {
+  if (neu === undefined || neu === null) return { ok: true, statusZuruecksetzen: false };
+  const alt = artNormalisieren(bestehend ?? 'kassen') || 'kassen';
+  if (alt === neu) return { ok: true, statusZuruecksetzen: false };
+  if (hatFestgeschriebeneRechnung) {
+    return {
+      ok: false, status: 409,
+      error: 'Zu dieser Verordnung gibt es eine Rechnung. Bitte zuerst die Rechnung stornieren, danach lässt sich die Art ändern.',
+    };
+  }
+  return { ok: true, statusZuruecksetzen: alt === 'kassen' && neu !== 'kassen' };
+}

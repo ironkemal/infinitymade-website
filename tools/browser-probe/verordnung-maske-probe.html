@@ -138,6 +138,43 @@ try {
     maske.nutzlastAusMaske({ icd10: 'E11.74' }).icd10_2 === null,
     String(maske.nutzlastAusMaske({ icd10: 'E11.74' }).icd10_2));
 
+  // ── Abrechnung über (KHS M2.1): Umschalter in der echten Maske ──────────
+  //
+  // Eingeklappt, nicht versteckt: bei nicht-Kasse sind die GKV-Felder weg, aber
+  // ihre Werte bleiben, und der Knopf holt sie zurück. Zurück auf Kasse = alles da.
+  const um = await import('../../module/rezeptart-umschalter.js?v=20261006a');
+  // Die Stilregeln stehen in dashboard.html, nicht im herausgeschnittenen Modal — mitnehmen,
+  // und das Modal aufdecken, sonst ist alles „unsichtbar" und die Probe beweist nichts.
+  for (const st of doc.querySelectorAll('style')) {
+    if (st.textContent.includes('m13-gkv-zu')) { const n = document.createElement('style'); n.textContent = st.textContent; document.head.appendChild(n); }
+  }
+  const modalEl = document.getElementById('rezeptModal');
+  modalEl.hidden = false; modalEl.removeAttribute('hidden'); modalEl.style.cssText = 'display:block;position:static;opacity:1;visibility:visible';
+  const sichtbar = (id) => { const e = document.getElementById(id); return !!e && e.getClientRects().length > 0; };
+  maske.fuelleMuster13({ diagnosegruppe: 'DF', rezeptart: 'kassen' }, { alsVorlage: false });
+  pruef('Leiste hat vier Arten', document.querySelectorAll('#rzArtLeiste [data-art]').length === 4);
+  pruef('Kasse: Diagnosegruppe + Krankenkasse sichtbar', sichtbar('rzDg') && sichtbar('rzPatKasse'));
+  um.setzeArt(document, 'privat');
+  pruef('Privat: GKV-Felder eingeklappt', !sichtbar('rzDg') && !sichtbar('rzPatKasse') && !sichtbar('rzPatVersNr'));
+  pruef('Privat: Wert der Diagnosegruppe bleibt stehen', document.getElementById('rzDg').value === 'DF');
+  pruef('Privat: Patientenname bleibt sichtbar', sichtbar('rzPatName'));
+  pruef('Privat: Aufklapp-Knopf da', sichtbar('rzGkvToggle'));
+  document.getElementById('rzGkvToggle').click();
+  pruef('Aufklappen holt die GKV-Felder zurück', sichtbar('rzDg') && sichtbar('rzPatKasse'));
+  um.setzeArt(document, 'kassen');
+  pruef('Zurück auf Kasse: alles sichtbar, Knopf weg', sichtbar('rzDg') && !sichtbar('rzGkvToggle'));
+  um.setzeArt(document, 'bg');
+  pruef('nutzlastAusMaske schreibt rezeptart ausdrücklich',
+    maske.nutzlastAusMaske({ icd10: 'E11.74' }).rezeptart === 'bg');
+  um.setzeArt(document, 'kassen');
+  pruef('Kasse wird als kassen geschrieben, nie gkv',
+    maske.nutzlastAusMaske({ icd10: 'E11.74' }).rezeptart === 'kassen');
+  um.setzeSperre(document, { belegnummer: '7-3' });
+  pruef('Sperre: andere Arten nicht wählbar, Hinweis steht da',
+    document.querySelector('#rzArtLeiste [data-art="privat"]').disabled && sichtbar('rzArtHinweis'));
+  um.setzeSperre(document, {});
+  pruef('Ohne Sperre wieder wählbar', !document.querySelector('#rzArtLeiste [data-art="privat"]').disabled);
+
 } catch (e) {
   pruef('Probe läuft durch', false, e?.stack || e?.message || String(e));
 }

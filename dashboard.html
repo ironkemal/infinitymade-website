@@ -3484,6 +3484,21 @@
           <span class="m13-picker-hint" id="rzPatientHint"></span>
         </div>
 
+        <!-- Abrechnung über: Kasse / Privat / Selbstzahler / BG (KHS M2.1, PE-006 A).
+             Setzt data-rezeptart an #rzMaskeWrap; bei nicht-Kasse klappt die Maske die
+             GKV-Angaben (.m13-gkv) ein — Werte bleiben stehen. Logik: module/rezeptart-umschalter.js -->
+        <div class="m13-art" id="rzArtLeiste">
+          <span class="m13-art-lbl" id="rzArtLbl">Abrechnung über</span>
+          <div class="m13-art-btns" role="radiogroup" aria-labelledby="rzArtLbl">
+            <button type="button" role="radio" aria-checked="true" data-art="kassen" class="on">Kasse (GKV)</button>
+            <button type="button" role="radio" aria-checked="false" data-art="privat" tabindex="-1">Privat (PKV/Beihilfe)</button>
+            <button type="button" role="radio" aria-checked="false" data-art="selbstzahler" tabindex="-1">Selbstzahler</button>
+            <button type="button" role="radio" aria-checked="false" data-art="bg" tabindex="-1">BG / Unfallkasse</button>
+          </div>
+          <button type="button" class="m13-art-toggle" id="rzGkvToggle" hidden aria-expanded="false">GKV-Angaben anzeigen (Krankenkasse, Diagnosegruppe …)</button>
+          <div class="m13-art-hinweis" id="rzArtHinweis" role="status" hidden></div>
+        </div>
+
         <!-- ================= DAS PAPIER ================= -->
         <div class="m13">
           <div class="m13-sheet">
@@ -3499,7 +3514,7 @@
                   <div>BVG</div>
                 </div>
                 <div class="m13-insinner">
-                  <div class="m13-insrow">
+                  <div class="m13-insrow m13-gkv">
                     <div class="m13-cell" style="flex:1;">
                       <div class="m13-cap">Krankenkasse bzw. Kostenträger</div>
                       <div style="display:flex;align-items:flex-start;">
@@ -3525,7 +3540,7 @@
                       <input class="m13-v m13-sm" id="rzPatOrt" placeholder="">
                     </div>
                   </div>
-                  <div class="m13-insrow">
+                  <div class="m13-insrow m13-gkv">
                     <div class="m13-cell" style="flex:1.3;">
                       <div class="m13-cap">Kostenträgerkennung</div>
                       <input class="m13-v m13-sm" id="rzPatKasseIk" placeholder="IK Karte" title="IK der Krankenkasse von der Versichertenkarte (9 Ziffern)" inputmode="numeric">
@@ -3591,7 +3606,7 @@
                 <input class="m13-v m13-uline" id="rzIcd2" autocomplete="off" placeholder="">
                 <span class="m13-cap">2. ICD-10-Code<br>(nur falls auf dem Rezept)</span>
               </div>
-              <div class="m13-dgrow">
+              <div class="m13-dgrow m13-gkv">
                 <div class="m13-dgfield">
                   <span class="m13-cap">Diagnose&shy;gruppe</span>
                   <input class="m13-v m13-uline m13-center" id="rzDg" autocomplete="off" placeholder="" style="width:84px;">
@@ -3605,7 +3620,7 @@
                 <div class="m13-dgfield" style="text-align:right;"><span class="m13-cap">patientenindividuelle<br>Leitsymptomatik</span></div>
                 <label class="m13-th"><input type="checkbox" id="rzLsD" class="m13-cbx"><span class="m13-chk"></span></label>
               </div>
-              <div style="margin-top:12px;">
+              <div class="m13-gkv" style="margin-top:12px;">
                 <div class="m13-cap">Leitsymptomatik (patientenindividuelle Leitsymptomatik als Freitext angeben)</div>
                 <input class="m13-v m13-uline" id="rzLsDText" placeholder="" style="display:none;">
               </div>
@@ -3660,7 +3675,7 @@
               <div class="m13-vart-row">
                 <label class="m13-th"><input type="checkbox" id="rzBlanko" class="m13-cbx"><span class="m13-chk"></span> Blankoverordnung</label>
                 <label class="m13-th"><input type="checkbox" id="rzLhbBvb" class="m13-cbx"><span class="m13-chk"></span> LHB / BVB</label>
-                <label class="m13-th"><input type="checkbox" id="rzZuzahlungBefreit" class="m13-cbx"><span class="m13-chk"></span> Zuzahlungsbefreit</label>
+                <label class="m13-th m13-gkv"><input type="checkbox" id="rzZuzahlungBefreit" class="m13-cbx"><span class="m13-chk"></span> Zuzahlungsbefreit</label>
               </div>
             </div>
 
@@ -3868,6 +3883,19 @@
       font-family:"Courier New",monospace; font-size:15px; font-weight:700; color:#0f1f38; background:transparent; outline:none; padding:3px; }
     .m13-ta:focus{ background:#eef4ff; }
 
+    /* Abrechnung über (KHS M2.1): Segmentleiste + eingeklappte GKV-Angaben. Nur Theme-Variablen. */
+    .m13-art{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:0 0 14px; }
+    .m13-art-lbl{ font-weight:700; font-size:15px; color:var(--text-main); }
+    .m13-art-btns{ display:inline-flex; flex-wrap:wrap; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--bg-card-solid); }
+    .m13-art-btns button{ border:0; background:transparent; color:var(--text-main); font:inherit; font-size:14px; padding:8px 14px; min-height:40px; cursor:pointer; }
+    .m13-art-btns button + button{ border-left:1px solid var(--border); }
+    .m13-art-btns button.on{ background:var(--primary); color:#fff; font-weight:700; }
+    .m13-art-btns button:disabled:not(.on){ opacity:.5; cursor:not-allowed; }
+    .m13-art-btns button:focus-visible, .m13-art-toggle:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+    .m13-art-toggle{ border:0; background:transparent; color:var(--primary); font:inherit; font-size:13px; font-weight:600; cursor:pointer; padding:6px 2px; min-height:32px; text-decoration:underline; }
+    .m13-art-hinweis{ flex-basis:100%; font-size:13px; color:var(--warning); }
+    .m13-gkv-zu .m13-gkv{ display:none !important; }
+    @media (max-width:520px){ .m13-art-btns{ display:grid; grid-template-columns:1fr 1fr; width:100%; } .m13-art-btns button + button{ border-left:0; } .m13-art-btns button:nth-child(even){ border-left:1px solid var(--border); } .m13-art-btns button:nth-child(n+3){ border-top:1px solid var(--border); } }
     .m13-vart{ margin-top:18px; border:1.4px solid #a9bdd6; border-radius:6px; padding:10px 14px 12px; background:rgba(255,255,255,.45); }
     .m13-vart-row{ display:flex; flex-wrap:wrap; align-items:center; gap:16px 22px; }
     .m13-nachweis-group{ display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
@@ -5732,7 +5760,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261005k6"></script>
+  <script type="module" src="dashboard.js?v=20261006a"></script>
 </body>
 
 </html>

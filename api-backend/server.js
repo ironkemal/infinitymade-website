@@ -26,7 +26,7 @@ import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import dsgvoRouter from './routes/dsgvo.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
-import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren } from './lib/rezept-felder.js';
+import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren, artFelderAusRezept, rezeptartWechselPruefen } from './lib/rezept-felder.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
@@ -2651,6 +2651,9 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     // Auflösung braucht — siehe dortigen Dateikopf. ---
     const kostentraegerIk = await kostentraegerIkAufloesen(supabase, patient);
     const heilmittelPosition = heilmittelPositionAufloesen(rezept);
+    let artFelder;
+    try { artFelder = artFelderAusRezept(rezept, { neu: true }); }
+    catch (e) { return res.status(400).json({ error: e.message }); }
 
     // --- Insert prescription row ---
     const { data: rx, error: rxErr } = await supabase
@@ -2659,6 +2662,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         owner_id: tenantId,
         patient_id: patientId,
         arzt_id: arztId,
+        ...artFelder,   // rezeptart (ausdrücklich), behandlungsanlass, nagel — PE-006 A
         image_storage_path: storage_path || null,
         image_uploaded_at: storage_path ? new Date().toISOString() : null,
         status: 'confirmed',
@@ -2788,7 +2792,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
     // --- Requirement 2 zuerst: existiert die Zeile, gehört sie diesem Mandanten? ---
     const { data: bestehend, error: findErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, abrechnung_status, belegnummer')
+      .select('id, owner_id, abrechnung_status, belegnummer, rezeptart')
       .eq('id', id)
       .maybeSingle();
     if (findErr) return res.status(500).json({ error: findErr.message });
@@ -2858,8 +2862,31 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
     const kostentraegerIk = await kostentraegerIkAufloesen(supabase, patient);
     const heilmittelPosition = heilmittelPositionAufloesen(rezept);
 
+    // --- Verordnungsart (PE-006 A): Wechsel nur ohne festgeschriebene Rechnung ---
+    let artFelder;
+    try { artFelder = artFelderAusRezept(rezept, { neu: false }); }
+    catch (e) { return res.status(400).json({ error: e.message }); }
+    let statusZuruecksetzen = false;
+    if (artFelder.rezeptart !== undefined) {
+      const { data: rechnungen, error: reErr } = await supabase
+        .from('invoices').select('id')
+        .eq('owner_id', tenantId)
+        .or(`prescription_id.eq.${id},verordnung_id.eq.${id}`)
+        .in('status', ['sent', 'paid'])
+        .limit(1);
+      if (reErr) return res.status(500).json({ error: reErr.message });
+      const wechsel = rezeptartWechselPruefen({
+        bestehend: bestehend.rezeptart, neu: artFelder.rezeptart,
+        hatFestgeschriebeneRechnung: !!(rechnungen && rechnungen.length),
+      });
+      if (!wechsel.ok) return res.status(wechsel.status).json({ error: wechsel.error });
+      statusZuruecksetzen = wechsel.statusZuruecksetzen && bestehend.abrechnung_status === 'bereit';
+    }
+
     const patch = {
       ...(patientId ? { patient_id: patientId } : {}),
+      ...artFelder,   // rezeptart, behandlungsanlass, nagel — nur was mitkam
+      ...(statusZuruecksetzen ? { abrechnung_status: null } : {}),   // „bereit“ gilt nur für Kasse
       arzt_id: arztId,
       icd10: rezept.icd10 || null,
       icd10_2: rezept.icd10_2 || null,

@@ -5,6 +5,8 @@ import {
   heilmittelPositionAufloesen,
   kostentraegerIkAufloesen,
   kartenIkNormalisieren,
+  artFelderAusRezept,
+  rezeptartWechselPruefen,
 } from './rezept-felder.js';
 
 // ── kartenIkNormalisieren ───────────────────────────────────────────────────
@@ -324,4 +326,56 @@ test('kostentraegerIkAufloesen: expliziter Stichtag steuert valid_from/valid_to 
 test('kostentraegerIkAufloesen: kaputter Stichtag -> null (kein Raten)', async () => {
   const supabase = makeSupabaseStub([{ name: 'X', ik: '111111111' }]);
   assert.equal(await kostentraegerIkAufloesen(supabase, { krankenkasse_ik: '111111111' }, { stichtag: '2026-13-40' }), null);
+});
+
+// ── artFelderAusRezept (KHS M2.1, PE-006 A) ─────────────────────────────────
+
+test('artFelderAusRezept: Neuanlage ohne Wert schreibt ausdrücklich kassen', () => {
+  assert.deepEqual(artFelderAusRezept({}, { neu: true }), { rezeptart: 'kassen' });
+});
+
+test('artFelderAusRezept: Ändern ohne Wert lässt rezeptart unberührt', () => {
+  assert.deepEqual(artFelderAusRezept({}, { neu: false }), {});
+});
+
+test('artFelderAusRezept: gkv/pkv werden gemappt, bg bleibt', () => {
+  assert.equal(artFelderAusRezept({ rezeptart: 'gkv' }, { neu: true }).rezeptart, 'kassen');
+  assert.equal(artFelderAusRezept({ rezeptart: 'pkv' }, { neu: false }).rezeptart, 'privat');
+  assert.equal(artFelderAusRezept({ rezeptart: 'bg' }, { neu: false }).rezeptart, 'bg');
+});
+
+test('artFelderAusRezept: unbekannter Wert wirft (nie still zu kassen raten)', () => {
+  assert.throws(() => artFelderAusRezept({ rezeptart: 'xyz' }, { neu: true }), /rezeptart/);
+});
+
+test('artFelderAusRezept: behandlungsanlass/nagel nur wenn der Schlüssel mitkommt', () => {
+  assert.deepEqual(artFelderAusRezept({ behandlungsanlass: '  Nagelspange ', nagel: '' }, { neu: false }),
+    { behandlungsanlass: 'Nagelspange', nagel: null });
+  assert.deepEqual(artFelderAusRezept({ behandlungsanlass: null }, { neu: false }), { behandlungsanlass: null });
+  assert.deepEqual(artFelderAusRezept({ wagner_grad: 'W1' }, { neu: false }), {}, 'wagner_grad wird nie geschrieben');
+});
+
+// ── rezeptartWechselPruefen ─────────────────────────────────────────────────
+
+test('Wechsel: gleiche Art ist immer erlaubt (auch mit Rechnung)', () => {
+  const r = rezeptartWechselPruefen({ bestehend: null, neu: 'kassen', hatFestgeschriebeneRechnung: true });
+  assert.equal(r.ok, true);
+  assert.equal(r.statusZuruecksetzen, false);
+});
+
+test('Wechsel: mit festgeschriebener Rechnung 409 + Hinweis Storno', () => {
+  const r = rezeptartWechselPruefen({ bestehend: 'privat', neu: 'kassen', hatFestgeschriebeneRechnung: true });
+  assert.equal(r.ok, false);
+  assert.equal(r.status, 409);
+  assert.match(r.error, /Rechnung/);
+});
+
+test('Wechsel weg von Kasse setzt „bereit“ zurück, Wechsel zu Kasse nicht', () => {
+  assert.equal(rezeptartWechselPruefen({ bestehend: null, neu: 'privat', hatFestgeschriebeneRechnung: false }).statusZuruecksetzen, true);
+  assert.equal(rezeptartWechselPruefen({ bestehend: 'privat', neu: 'kassen', hatFestgeschriebeneRechnung: false }).statusZuruecksetzen, false);
+});
+
+test('Wechsel: NULL zählt als Kasse (Altzeilen), neu undefined = kein Wechsel', () => {
+  assert.equal(rezeptartWechselPruefen({ bestehend: null, neu: undefined, hatFestgeschriebeneRechnung: true }).ok, true);
+  assert.equal(rezeptartWechselPruefen({ bestehend: null, neu: 'kassen', hatFestgeschriebeneRechnung: true }).ok, true);
 });

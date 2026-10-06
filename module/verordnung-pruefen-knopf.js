@@ -37,6 +37,7 @@
 import { pruefeVerordnung, zaehleBefunde, SCHWERE } from './verordnung-pruefung.js?v=20261004m113';
 import { markiereBefunde, loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { regelsatzLaden } from './verordnung-regelsatz-cache.js?v=20261001e';
+import { normalisiereRezeptart } from './rezeptart.js?v=20261006a';
 
 const $ = (id) => document.getElementById(id);
 const wert = (id) => ($(id)?.value ?? '').toString().trim();
@@ -83,7 +84,7 @@ function lesenMuster13() {
     kasseIk:            wert('rzPatKasseIk'),
     arztLanr:           wert('rzLanr'),
     arztBsnr:           wert('rzBsnr'),
-    rezeptart:          'gkv',
+    rezeptart:          normalisiereRezeptart(document.getElementById('rzMaskeWrap')?.dataset.rezeptart),
   };
 }
 

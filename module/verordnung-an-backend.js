@@ -121,10 +121,16 @@ function geparstAusMaske({ nutzlast, patientFelder }) {
       // nach `hinweise` (api-backend/server.js:2493). Eine eigene Spalte gibt
       // es nicht, und zwei Regeln dafuer waeren der alte Fehler.
       therapieziele: n.hinweise || null,
-      // Podologie: an der Verordnung, nicht an der Behandlung.
-      nagel: n.nagel ?? null,
+      // Verordnungsart (PE-006 A): ohne Angabe bleibt der Schlüssel weg — der
+      // Server nimmt beim Anlegen dann `kassen` und lässt beim Ändern die
+      // Spalte unberührt.
+      ...(n.rezeptart ? { rezeptart: n.rezeptart } : {}),
+      // Podologie: an der Verordnung, nicht an der Behandlung. Nur wenn die Maske
+      // den Schlüssel kennt (ausserhalb der Podologie fehlt er) — ein `null`
+      // würde auf dem Server sonst einen vorhandenen Wert löschen.
+      ...('nagel' in n ? { nagel: n.nagel ?? null } : {}),
       wagner_grad: n.wagner_grad ?? null,
-      behandlungsanlass: n.behandlungsanlass ?? null,
+      ...('behandlungsanlass' in n ? { behandlungsanlass: n.behandlungsanlass ?? null } : {}),
     },
   };
 }

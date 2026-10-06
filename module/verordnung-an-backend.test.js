@@ -212,3 +212,19 @@ test('verordnungFuerBackend und verordnungFuerAendern liefern krankenkasse_ik un
   assert.equal('kostentraeger_ik' in aendern.parsed.patient, false);
 });
 
+
+test('rezeptart geht mit, fehlt der Wert, fehlt auch der Schlüssel', () => {
+  const mit = verordnungFuerBackend({ nutzlast: { ...NUTZLAST, rezeptart: 'bg' } });
+  assert.equal(mit.parsed.rezept.rezeptart, 'bg');
+  const ohne = verordnungFuerBackend({ nutzlast: NUTZLAST });
+  assert.equal('rezeptart' in ohne.parsed.rezept, false);
+});
+
+test('nagel/behandlungsanlass: ohne Schlüssel in der Nutzlast fehlt er im Rumpf (kein null-Überschreiben)', () => {
+  const { nagel, behandlungsanlass, ...rest } = NUTZLAST;
+  const r = verordnungFuerAendern({ nutzlast: rest }).parsed.rezept;
+  assert.equal('nagel' in r, false);
+  assert.equal('behandlungsanlass' in r, false);
+  const leer = verordnungFuerAendern({ nutzlast: { ...rest, behandlungsanlass: null } }).parsed.rezept;
+  assert.equal(leer.behandlungsanlass, null);
+});

@@ -42,11 +42,13 @@
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20261004m113';
-import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20260930c';
+import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261006a';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261001g';
+import { rezeptartFuerSpeichern, vorauswahlAusPatient } from './rezeptart.js?v=20261006a';
+import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261006a';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -146,7 +148,12 @@ export function maskeHeimschicken() {
   // Bearbeitung stehengebliebenes `rezeptart=privat` darf für die nächste,
   // per „+ Neue Verordnung" geöffnete Maske nicht mehr gelten
   // (module/verordnung-podo.js liest dieses Attribut, s. `fuelleMuster13()`).
-  if (wrap) wrap.dataset.rezeptart = 'kassen';
+  if (wrap) {
+    delete wrap.dataset.artManuell; delete wrap.dataset.gkvOffen;
+    setzeSperre(document, {});
+    setzeArt(document, 'kassen');
+    verdrahteLeiste(document, { nachziehen: podoMaskeNachziehen });
+  }
   // Der Belegstreifen gehoert zum Scan. Wer die Maske von Hand oeffnet,
   // soll nicht das Foto der vorherigen Verordnung sehen.
   const beleg = document.getElementById('rzScanBeleg');
@@ -201,6 +208,7 @@ export async function maskeEinbetten({ host, rx }) {
   // Kassensuche + Karten-IK-Hinweis (rzPatKasse) hing ebenfalls nur an openRezeptModal().
   // Idempotent (katalogWired).
   _bruecke?.verdrahteKasse?.();
+  verdrahteLeiste(document, { nachziehen: podoMaskeNachziehen });
 
   // Im Modal beendet „Abbrechen" die Eingabe. In der Seite gäbe es nichts zu
   // schliessen — der Knopf würde nur so aussehen, als täte er etwas.
@@ -226,6 +234,12 @@ export async function maskeEinbetten({ host, rx }) {
     catch (e) { console.warn('[verordnung-maske] Patientenkopf:', e?.message); }
   }
   fuelleMuster13(rx, { alsVorlage: false });
+  // Sperre der Umschaltung: Belegnummer (= Trigger 0020) oder festgeschriebene
+  // Rechnung (sonst doppelt abgerechnet). Das Backend erzwingt dasselbe.
+  setzeSperre(document, { belegnummer: rx.belegnummer || null });
+  ladeOffeneRechnung(rx.id).then((offen) => {
+    if (offen && _bearbeitung?.id === rx.id) setzeSperre(document, { belegnummer: rx.belegnummer || null, offeneRechnung: true });
+  }).catch(() => {});
 
   // Das Suchfeld oben ("Patient auswählen") gehört zum selben wiederverwendeten
   // Maskenknoten (s.o., "Die Brücke zu dashboard.js") und überlebt das Umhängen
@@ -268,6 +282,29 @@ export async function maskeEinbetten({ host, rx }) {
     wrap.addEventListener('change', merken, true);
   }
   return true;
+}
+
+/**
+ * Gibt es zu dieser Verordnung eine festgeschriebene (versendete/bezahlte)
+ * Rechnung? Nur Lesen; ohne Antwort gilt „nein" — der Server prüft ohnehin.
+ */
+async function ladeOffeneRechnung(rxId) {
+  const sb = _bruecke?.supabase;
+  if (!sb || !rxId) return false;
+  const { data, error } = await sb.from('invoices').select('id')
+    .or(`prescription_id.eq.${rxId},verordnung_id.eq.${rxId}`)
+    .in('status', ['sent', 'paid']).limit(1);
+  return !error && !!(data && data.length);
+}
+
+/**
+ * Vorauswahl der Art nach Patiententyp (`leads.insurance_type`) — einseitig:
+ * nur `privat`. Nur bei Neuanlage und solange niemand selbst gewählt hat.
+ */
+export function vorauswahlArtAusPatient(lead) {
+  const wrap = document.getElementById('rzMaskeWrap');
+  if (!wrap || _bearbeitung || wrap.dataset.artManuell === '1') return;
+  setzeArt(document, vorauswahlAusPatient(lead?.insurance_type), { nachziehen: podoMaskeNachziehen });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -388,8 +425,14 @@ export function fuelleMuster13(rx, opt = {}) {
   // unabhängige Lücke, kein hier zu behebender Fehler — gkv-302: P2,
   // eigenes Ticket vor dem ersten PKV-Verordnungsfall. Der Code hier ist
   // bereits korrekt FÜR den Tag, an dem ein Rezeptart-Umschalter zurückkommt.
+  // Seit KHS M2.1 (05.10.2026) gibt es den Umschalter (module/rezeptart-umschalter.js);
+  // beim Bearbeiten gilt der gespeicherte Wert (NULL/gkv = Kasse), eine Vorlage
+  // startet immer als Kasse.
   const maskeWrap = g('rzMaskeWrap');
-  if (maskeWrap) maskeWrap.dataset.rezeptart = alsVorlage ? 'kassen' : (rx.rezeptart || 'kassen');
+  if (maskeWrap) {
+    verdrahteLeiste(document, { nachziehen: podoMaskeNachziehen });
+    setzeArt(document, alsVorlage ? 'kassen' : rx.rezeptart);
+  }
   // Bei einer Vorlage werden nur gefüllte Werte gesetzt (die Maske ist frisch
   // zurückgesetzt); beim Bearbeiten muss auch ein LEERER Wert ankommen, sonst
   // bliebe der Rest der vorherigen Verordnung stehen.
@@ -632,6 +675,8 @@ export function nutzlastAusMaske(v) {
 
   return {
     patient_id: v.patientId,
+    // Immer ausdrücklich (kassen|privat|selbstzahler|bg) — nie `gkv`, nie NULL (PE-006 A).
+    rezeptart: rezeptartFuerSpeichern(el('rzMaskeWrap')?.dataset.rezeptart),
     arzt_id: v.arztId,
     ausstellungsdatum: v.ausstDate,
     icd10: v.icd10 ? nurIcdKode(v.icd10) : null,

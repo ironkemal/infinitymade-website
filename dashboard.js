@@ -53,10 +53,10 @@ import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUeb
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261001e';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
-import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261004m113';
+import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261006a';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
-import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode }
-  from './module/verordnung-maske.js?v=20261004m113';
+import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient }
+  from './module/verordnung-maske.js?v=20261006a'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261004m113';
@@ -14362,7 +14362,7 @@ async function fillRzPatientFromLead(leadId) {
   g('rzPatVersNr').value = lead.versichertennummer || md.krankenkassennummer || '';
   g('rzPatStatus').value = lead.versichertenstatus || '';
   const kasse = lead.krankenkasse || md.krankenkasse || '';
-  g('rzPatKasse').value = kasse;
+  g('rzPatKasse').value = kasse; vorauswahlArtAusPatient(lead);
   // Karten-IK aus der Akte (S3.8b), NICHT aus der Kassenliste (dort: Kostenträger-IK, gkv-302)
   g('rzPatKasseIk').value = lead.krankenkasse_ik || ''; tazeleIkHinweis(g('rzPatKasseIk'));
 
@@ -14537,7 +14537,7 @@ async function saveRezept() {
     const missing = [];
     if (!ausstDate) missing.push('Ausstellungsdatum');
     if (!icd10) missing.push('ICD-10-Code');
-    if (!val('rzDg')) missing.push('Diagnosegruppe');
+    if (!val('rzDg') && istKasse(document.getElementById('rzMaskeWrap')?.dataset.rezeptart)) missing.push('Diagnosegruppe');
     if (!val('rzHm')) missing.push('Heilmittel');
     if (!anzahl) missing.push('Behandlungseinheiten');
     if (!rzLanr) missing.push('Arzt-Nr. (LANR)');
