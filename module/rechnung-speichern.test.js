@@ -224,6 +224,9 @@ function createTestEnvironment(customMocks = {}) {
       tax_summary: { steuer: 0, details: [] }
     }),
     leistungszeitraum: () => ({ von: '2026-10-01', bis: '2026-10-04' }),
+    // KHS M2: festgeschriebene Rechnungen schreiben nur noch erlaubte Spalten (module/rechnung-festschreibung.js)
+    payloadFuerUpdate: (payload) => payload,
+    invListCache: [],
     verordnungAuswahl: () => ({ prescriptionId: null, notizZeile: null }),
     steuerhinweisText: () => 'Kein Steuerausweis',
     behandlungenVerknuepfen: customMocks.behandlungenVerknuepfen || (async (sb, opts) => {

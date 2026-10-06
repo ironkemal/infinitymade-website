@@ -29,7 +29,7 @@ import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_pos
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
 import { berlinHeute } from '../../lib/berlin-tag.js';
-import { bgFehltFuerRechnung } from '../../lib/rezept-felder.js';
+import { bgFehltFuerRechnung, nichtGkvAbrechenbarMeldung } from '../../lib/rezept-felder.js';
 import { reserviereUndLadeHoch, veroeffentliche, registriereVeroeffentlicht } from './artefakt-registry.js';
 import { listeArtefaktVersionen, ladeArtefaktVersion } from './artefakt-historie.js';
 import { entferneUnsignierteDta, wiederholeAusmusterung, dtaEntfernungAktiv } from './artefakt-ausmustern.js';
@@ -872,7 +872,7 @@ router.post('/abrechnung/create', async (req, res) => {
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
         doctor_lanr, doctor_bsnr, leitsymptomatik, pat_leitsymptomatik,
         zuzahlung_eur, zuzahlung_befreit,
-        abrechnung_status, therapie_bereich,
+        abrechnung_status, therapie_bereich, rezeptart,
         bericht_angefordert,
         bericht_status,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer, street, plz, city),
@@ -910,6 +910,9 @@ router.post('/abrechnung/create', async (req, res) => {
           error: `Rezept ${r.id.slice(0,8)} ist eine podologische Verordnung — bitte über die Podologie-Abrechnung einreichen.`,
         });
       }
+      // KHS M2 (gkv-302): Privat/Selbstzahler/BG nie in die Kassendatei — bisher hielt nur die zufällige IK-Gleichheit sie heraus.
+      const artMeldung = nichtGkvAbrechenbarMeldung(r);
+      if (artMeldung) return res.status(422).json({ error: artMeldung });
       if (r.kostentraeger_ik !== kostentraegerIk) {
         const alt = altKtMap.get(r.id);
         if (alt && alt !== r.kostentraeger_ik) {

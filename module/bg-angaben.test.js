@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BG_FELDER, bgAusWerte, bgFehltFuerRechnung, bgHinweiseBeimSpeichern, bgEmpfaengerBlock, bgAusZeile, bgKostenzusageHinweis, EINVERSTAENDNIS_TEXT } from './bg-angaben.js';
+import { BG_FELDER, bgAusWerte, bgFehltFuerRechnung, bgHinweiseBeimSpeichern, bgEmpfaengerBlock, bgAusZeile, bgKostenzusageHinweis, bgHinweiseBeiRechnung, bgAusMaske, EINVERSTAENDNIS_VERSION, EINVERSTAENDNIS_TEXT } from './bg-angaben.js';
 
 const VOLL = {
   traeger_name: 'BG Holz und Metall', traeger_anschrift: 'Musterstr. 1\n12345 Musterstadt',
@@ -72,4 +72,18 @@ test('Kostenzusage-Hinweis: nur bei BG ohne Datum, sonst null', () => {
   assert.equal(bgKostenzusageHinweis({ rezeptart: 'privat' }), null);
   assert.equal(bgKostenzusageHinweis({}), null);
   assert.equal(bgKostenzusageHinweis(null), null);
+});
+
+test('Rechnungs-Hinweise (nicht blockierend): Einverständnis und Kostenzusage', () => {
+  assert.deepEqual(bgHinweiseBeiRechnung(VOLL), []);
+  assert.deepEqual(bgHinweiseBeiRechnung({ ...VOLL, einverstaendnis_am: null }), ['Einverständnis zur Übermittlung an den UV-Träger nicht erfasst']);
+  assert.equal(bgHinweiseBeiRechnung({}).length, 2);
+});
+
+test('bgAusMaske: Version des Wortlauts nur zusammen mit dem Einverständnis-Datum', () => {
+  const doc = (werte) => ({ getElementById: (id) => ({ value: werte[id] ?? '' }) });
+  const mit = bgAusMaske(doc({ rzBgEinverstaendnis: '2026-09-21' }));
+  assert.equal(mit.einverstaendnis_version, EINVERSTAENDNIS_VERSION);
+  assert.match(EINVERSTAENDNIS_VERSION, /^bg-einverstaendnis-v1-/);
+  assert.equal(bgAusMaske(doc({})).einverstaendnis_version, null);
 });

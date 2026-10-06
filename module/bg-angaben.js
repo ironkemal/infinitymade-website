@@ -23,6 +23,9 @@ export const BG_FELDER = [
   { key: 'einverstaendnis_am',   id: 'rzBgEinverstaendnis', label: 'Einverständnis zur Übermittlung', datum: true },
 ];
 
+/** Version des Wortlauts unten — wird mit dem Einverständnis-Datum gespeichert (Nachweis: WELCHEM Text zugestimmt wurde). */
+export const EINVERSTAENDNIS_VERSION = 'bg-einverstaendnis-v1-2026-10-05';
+
 /** Wortlaut legal-de 05.10.2026 (compliance/LEGAL_DECISIONS.md, F1). */
 export const EINVERSTAENDNIS_TEXT =
   'Ich bin damit einverstanden, dass die Praxis die für die Abrechnung erforderlichen Angaben zu meiner Behandlung '
@@ -85,7 +88,9 @@ export function bgEmpfaengerBlock(bg = {}, { patientName = '', geburtsdatum = nu
 export function bgAusMaske(doc) {
   const w = {};
   for (const f of BG_FELDER) w[f.key] = doc.getElementById(f.id)?.value;
-  return bgAusWerte(w);
+  const b = bgAusWerte(w);
+  // Zum Datum gehört die Version des Wortlauts (legal-de 06.10.2026) — ohne Datum keine Version.
+  return { ...b, einverstaendnis_version: b.einverstaendnis_am ? EINVERSTAENDNIS_VERSION : null };
 }
 
 /** Zeile aus `prescriptions` -> Maske (leert, wenn die Spalten fehlen). */
@@ -115,4 +120,17 @@ const f10 = (key) => !!BG_FELDER.find(f => f.key === key)?.datum;
 export function bgKostenzusageHinweis(v) {
   if (String(v?.rezeptart ?? '').trim().toLowerCase() !== 'bg') return null;
   return String(v?.bg_kostenzusage_datum ?? '').trim() ? null : 'Kostenzusage der BG fehlt — vor der Behandlung einholen';
+}
+
+/**
+ * Hinweise beim ERSTELLEN der BG-Rechnung, die nicht blockieren (legal-de 06.10.2026): ohne dokumentiertes
+ * Einverständnis legt die Rechnung Angaben ohne nachweisbare Befugnis offen (§ 203 StGB / § 100 SGB X);
+ * ohne Kostenzusage zahlt die BG womöglich nicht.
+ */
+export function bgHinweiseBeiRechnung(bg = {}) {
+  const b = bgAusWerte(bg);
+  const h = [];
+  if (!b.einverstaendnis_am) h.push('Einverständnis zur Übermittlung an den UV-Träger nicht erfasst');
+  if (!b.kostenzusage_datum) h.push('Kostenzusage der BG nicht erfasst');
+  return h;
 }

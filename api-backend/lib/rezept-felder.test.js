@@ -10,6 +10,7 @@ import {
   bgFelderAusRezept,
   bgAenderungGesperrt,
   bgFehltFuerRechnung,
+  nichtGkvAbrechenbarMeldung,
 } from './rezept-felder.js';
 
 // ── kartenIkNormalisieren ───────────────────────────────────────────────────
@@ -389,14 +390,16 @@ const BG = {
   traeger_name: ' BG Holz und Metall ', traeger_anschrift: 'Musterstr. 1\n12345 Musterstadt',
   unfalltag: '2026-09-15', aktenzeichen: ' AZ 123/26 ',
   kostenzusage_datum: '2026-09-20', kostenzusage_zeichen: 'KZ-77', einverstaendnis_am: '2026-09-21',
+  einverstaendnis_version: ' bg-einverstaendnis-v1-2026-10-05 ',
 };
 
-test('bgFelderAusRezept: bei BG werden die sieben Spalten geschrieben, Text getrimmt', () => {
+test('bgFelderAusRezept: bei BG werden die acht Spalten geschrieben, Text getrimmt', () => {
   const c = bgFelderAusRezept({ bg: BG }, { art: 'bg', explicitArt: true });
   assert.deepEqual(c, {
     bg_traeger_name: 'BG Holz und Metall', bg_traeger_anschrift: 'Musterstr. 1\n12345 Musterstadt',
     bg_unfalltag: '2026-09-15', bg_aktenzeichen: 'AZ 123/26',
     bg_kostenzusage_datum: '2026-09-20', bg_kostenzusage_zeichen: 'KZ-77', bg_einverstaendnis_am: '2026-09-21',
+    bg_einverstaendnis_version: 'bg-einverstaendnis-v1-2026-10-05',
   });
 });
 
@@ -411,9 +414,9 @@ test('bgFelderAusRezept: ohne bg-Objekt bleibt bei BG alles unberührt', () => {
   assert.deepEqual(bgFelderAusRezept({}, { art: 'bg' }), {});
 });
 
-test('bgFelderAusRezept: ausdrücklicher Wechsel weg von BG leert alle sieben Spalten', () => {
+test('bgFelderAusRezept: ausdrücklicher Wechsel weg von BG leert alle acht Spalten', () => {
   const c = bgFelderAusRezept({ bg: BG }, { art: 'privat', explicitArt: true });
-  assert.equal(Object.keys(c).length, 7);
+  assert.equal(Object.keys(c).length, 8);
   assert.ok(Object.values(c).every(v => v === null));
 });
 
@@ -442,4 +445,14 @@ test('bgFehltFuerRechnung: Träger (Name+Anschrift) und Unfalltag, sonst nichts'
   assert.deepEqual(bgFehltFuerRechnung({}), ['UV-Träger (Name)', 'UV-Träger (Anschrift)', 'Unfalltag']);
   assert.deepEqual(bgFehltFuerRechnung({ bg_traeger_name: 'BG', bg_traeger_anschrift: 'X', bg_unfalltag: '2026-09-15' }), []);
   assert.deepEqual(bgFehltFuerRechnung({ bg_traeger_name: ' ', bg_traeger_anschrift: 'X', bg_unfalltag: '2026-09-15' }), ['UV-Träger (Name)']);
+});
+
+test('nichtGkvAbrechenbarMeldung: Kasse/NULL/gkv ok, privat/selbstzahler/bg gesperrt', () => {
+  for (const art of [null, undefined, '', 'kassen', 'gkv', ' KASSEN ']) assert.equal(nichtGkvAbrechenbarMeldung({ id: 'abcdef12-0000', rezeptart: art }), null, String(art));
+  for (const art of ['privat', 'selbstzahler', 'bg']) {
+    const m = nichtGkvAbrechenbarMeldung({ id: 'abcdef12-0000', rezeptart: art });
+    assert.match(m, /abcdef12/);
+    assert.match(m, new RegExp(art));
+    assert.match(m, /nicht GKV-abrechenbar/);
+  }
 });

@@ -49,7 +49,7 @@ import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261001g';
 import { rezeptartFuerSpeichern, vorauswahlAusPatient } from './rezeptart.js?v=20261006a';
 import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261006a';
-import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261006h';
+import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261006i';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.

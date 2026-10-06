@@ -74,3 +74,22 @@ test('Ungefüllte Platzhalter bleiben sichtbar [key] (nie stilles Weglassen) —
   assert.match(t, /\[praxis_name\]/);
   assert.doesNotMatch(t, /\[(software_satz|dsb_satz|ki_absatz|bereitstellung)\]/);
 });
+
+test('Steuerberater-Satz: Rechnungen ja, Befunde/Diagnosen nein, selbst zur Verschwiegenheit verpflichtet (legal-de 06.10.)', () => {
+  const t = ds({});
+  assert.match(t, /Rechnungen, jedoch ohne Befunde und Diagnosen/);
+  assert.match(t, /Steuerberater, der ebenfalls zur Verschwiegenheit verpflichtet ist/);
+  assert.doesNotMatch(t, /ohne Behandlungsinhalte/);
+});
+
+test('KI-Absatz: durchgängig Europäischer Wirtschaftsraum, nie „außerhalb der EU“', () => {
+  const t = ds({ kiAktiv: true });
+  assert.match(t, /Länder außerhalb des Europäischen Wirtschaftsraums ist nicht vorgesehen/);
+  assert.doesNotMatch(t, /außerhalb der EU/);
+});
+
+test('Box + KI aktiv: Hersteller ist für die KI Auftragsverarbeiter; Box ohne KI und SaaS bekommen den Satz nicht', () => {
+  assert.match(ds({ betrieb: 'kutu', kiAktiv: true }), /Nur für die optionale KI-Unterstützung \(siehe unten\) handelt der Softwareanbieter, InfinityMade \(Siegburg\), als Auftragsverarbeiter/);
+  assert.doesNotMatch(ds({ betrieb: 'kutu' }), /Nur für die optionale KI-Unterstützung/);
+  assert.doesNotMatch(ds({ betrieb: 'saas', kiAktiv: true }), /Nur für die optionale KI-Unterstützung \(siehe unten\) handelt/);
+});

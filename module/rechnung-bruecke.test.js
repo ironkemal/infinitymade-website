@@ -96,3 +96,21 @@ test('Andere Kodes behalten den Katalogtitel', () => {
   const { zeilen } = zeilenAusBehandlungen(beh, { verordnung: {}, services: [], katalogPodo: [{ code: '78030', title: 'Podologische Befundung' }] });
   assert.equal(zeilen[0].title, 'Podologische Befundung');
 });
+
+test('BG ohne Einverständnis/Kostenzusage: Warnung, aber die Rechnung wird trotzdem angelegt (nicht blockierend)', async () => {
+  const kette = { select: () => kette, eq: () => kette, is: () => kette, in: () => kette,
+    order: () => Promise.resolve({ data: [{ id: 'b1', behandlungsdatum: '2026-09-20', hpnr_codes: ['78020'], invoice_id: null }], error: null }) };
+  const meldungen = []; let editor = false; let entwurf = null;
+  await starteRechnungAusVerordnung({
+    sb: { from: () => kette }, ownerId: 'o',
+    verordnung: { id: 'v', rezeptart: 'bg', bg_traeger_name: 'BG', bg_traeger_anschrift: 'Weg 1', bg_unfalltag: '2026-09-15' },
+    services: [{ gkv_position_nr: '78020', title: 'X', price: 50 }], katalogPodo: [],
+    switchPanel: () => {}, openInvEditor: async () => { editor = true; }, setzeEntwurf: (e) => { entwurf = e; },
+    toast: (t, art) => meldungen.push([t, art]),
+  });
+  assert.equal(editor, true);
+  assert.equal(entwurf.zahlertyp, 'bg');
+  const w = meldungen.find(m => m[1] === 'warning' && /Einverständnis/.test(m[0]));
+  assert.ok(w, JSON.stringify(meldungen));
+  assert.match(w[0], /Kostenzusage/);
+});

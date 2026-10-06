@@ -184,7 +184,8 @@ export const EINWILLIGUNG_TEXTE = {
           + 'Unfallversicherungsträger (Berufsgenossenschaft/Unfallkasse) die für die Abrechnung '
           + 'erforderlichen Angaben. Der verordnende Arzt erhält die nach der '
           + 'Heilmittel-Richtlinie vorgesehenen Rückmeldungen. Rechnungs- und Buchungsdaten '
-          + '(ohne Behandlungsinhalte) erhält, soweit beauftragt, unser Steuerberater. '
+          + '(Rechnungen, jedoch ohne Befunde und Diagnosen) erhält, soweit beauftragt, unser Steuerberater, '
+          + 'der ebenfalls zur Verschwiegenheit verpflichtet ist. '
           + 'Andere Empfänger gibt es nur, wenn Sie eingewilligt haben oder ein Gesetz es vorschreibt.',
       },
       {
@@ -200,8 +201,8 @@ export const EINWILLIGUNG_TEXTE = {
           + 'erfolgt in einem Rechenzentrum in Schweden (EU). Microsoft ist Unterauftragsverarbeiter '
           + 'des Softwareanbieters und an einen Auftragsverarbeitungsvertrag gebunden. Zum Schutz vor '
           + 'Missbrauch kann Microsoft auffällige Anfragen speichern und durch Mitarbeiter im '
-          + 'Europäischen Wirtschaftsraum prüfen lassen. Eine Übermittlung in Länder außerhalb der EU '
-          + 'ist nicht vorgesehen. Weil Microsoft zu einem Konzern mit Sitz in den USA gehört, sind '
+          + 'Europäischen Wirtschaftsraum prüfen lassen. Eine Übermittlung in Länder außerhalb des Europäischen '
+          + 'Wirtschaftsraums ist nicht vorgesehen. Weil Microsoft zu einem Konzern mit Sitz in den USA gehört, sind '
           + 'Zugriffe nach US-Recht nicht völlig auszuschließen. Microsoft ist nach dem EU-US Data '
           + 'Privacy Framework zertifiziert (Angemessenheitsbeschluss der EU-Kommission vom 10.07.2023), '
           + 'zusätzlich gelten EU-Standardvertragsklauseln. Rechtsgrundlage ist Art. 9 Abs. 2 lit. h '
@@ -341,6 +342,11 @@ function ersetze(str, ctx) {
  * alles andere = SaaS (Praxura als Auftragsverarbeiter). Bewusst OHNE § 203-Halbsatz (erst, wenn die
  * Klausel in Praxuras eigener AVV steht) und OHNE Hosting-Ort (`Server in Deutschland` ist nicht geprüft).
  */
+// Box + aktives KI-Modul: nur für die KI-Unterstützung ist der Hersteller Auftragsverarbeiter (LEGAL_DECISIONS Nachtrag 4 Nr. 1).
+// Ohne diesen Satz widerspräche „hat keinen Zugriff" dem KI-Absatz („Unterauftragsverarbeiter des Softwareanbieters").
+const KI_AV_SATZ_KUTU = ' Nur für die optionale KI-Unterstützung (siehe unten) handelt der Softwareanbieter, InfinityMade (Siegburg), '
+  + 'als Auftragsverarbeiter der Praxis (Art. 28 DSGVO).';
+
 function softwareSatz(betrieb) {
   if (betrieb === 'kutu') {
     return 'Die Praxis nutzt die Praxissoftware Praxura, die auf einem Rechner in den Räumen der Praxis betrieben wird. '
@@ -382,7 +388,7 @@ export function renderEinwilligungText(type, ctx = {}) {
     ...ctx,
     ausfall_regel: ctx.ausfall_regel || ausfallRegelText(ctx.profile),
     optionen: optionenText(def, ctx.optionen),
-    software_satz: softwareSatz(ctx.betrieb),
+    software_satz: softwareSatz(ctx.betrieb) + (ctx.betrieb === 'kutu' && ctx.kiAktiv === true ? KI_AV_SATZ_KUTU : ''),
     dsb_satz: ctx.dsb_kontakt ? ` Unsere Datenschutzbeauftragte bzw. unseren Datenschutzbeauftragten erreichen Sie unter ${ctx.dsb_kontakt}.` : '',
   };
 

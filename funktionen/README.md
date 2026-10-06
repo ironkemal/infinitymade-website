@@ -133,6 +133,50 @@ En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 - ⚠️ Kör nokta: `merkez/` haritanın `SCAN_ROOTS`'unda yok (06.10'da INDEX.json'da 0 kayıt), `*.sh` hiç taranmaz. Bu
   yüzden dev-server, helper ve install.sh yardımcıları INDEX.json'da görünmez — tek kayıt burası. `merkez` kapsama
   alınacaksa düzeltme `tools/funktionskarte.mjs`'te yapılır.
+### 06.10.2026 · KHS M2 (M2.1–M2.8) — Rezeptart-Umschalter, BG, Branding/Stempel, Einrichtungsring (8967ecc d2da247 6757809 09266f3 e14697a 9726ebc 329fc99 bfae06f)
+- **`module/rezeptart.js`** (M2.1) — Werteliste `kassen|privat|selbstzahler|bg`, `gkv`/NULL→`kassen`, Vorauswahl, Sperrmeldung.
+  Niye: tek yazım değeri. **`module/rezeptart-umschalter.js`** — Muster-13 maskesinde "Abrechnung über" segment çubuğu
+  (`data-rezeptart`). Backend aynası: `api-backend/lib/rezept-felder.js` `artFelderAusRezept`/`rezeptartWechselPruefen`
+  (ARTEN listesi ön yüz REZEPTARTEN'in aynası — bilinçli çift). İlk kullanım: `dashboard.js` `fillRzPatientFromLead`/
+  `saveRezept`, `verordnung-maske.js`. ⚠️ Okuyucular toleranslı bırakıldı → **ayna adayları** (`|| 'kassen'` kopyaları):
+  `verordnung-podo.js`, `podologie-abrechnung.js`, `rechnung-bruecke.js` `istPrivatRezeptart`, `abrechnung-auswahl.js` (2×),
+  `verordnung-uebersicht.js`. `rezeptinfo-geld.js` `zahlerTyp` bg→'privat' daraltır (gkv/privat ekseni, katman — kopya değil).
+- **`module/bg-angaben.js`** (M2.2) — `BG_FELDER`, `bgAusWerte`, `bgFehltFuerRechnung`, `bgHinweiseBeimSpeichern`,
+  `bgEmpfaengerBlock`, `bgAusZeile`, `bgAusMaske`, `bgInMaske`. Niye: BG-Verordnung yalnız dolu alanlarla (PE-006 B),
+  Pflicht "Träger + Unfalltag" Rechnung başlatırken. Backend aynası: `rezept-felder.js` `bgFelderAusRezept`/
+  `bgAenderungGesperrt`/`bgFehltFuerRechnung` (bilinçli ayna, iki BG_FELDER listesi). İlk kullanım: `verordnung-maske.js`
+  `nutzlastAusMaske`, `rechnung-bruecke.js` `starteRechnungAusVerordnung`, `rechnung-ansicht.js` `openInvView` +
+  `billing/pdf/rechnung.template.js` (alıcı = UV-Träger). `booking_requests.bg_name/bg_aktenzeichen` ayrı tablo — birleştirme.
+- **`module/rechnung-bruecke.js`** — `zahlertypAusRezeptart` (bg artık 'bg', `invoices_invoice_type_check` zaten izinli),
+  `PRIVAT_ANZEIGE` (78010/78020 düz metni, yalnız fatura satırı; öncelik `services.title` > PRIVAT_ANZEIGE > katalog —
+  `GKV_LEISTUNGSKATALOG`/`heilmittel_katalog` başlıklarının yerine geçmez, katman), `behandlungenVerknuepfen` isabet sayar
+  (RLS 0-satır tuzağı, M2.3).
+- **`module/branding.js`** (M2.4) — `brandingAus`, `brandingLuecken`, `terminzettelPraxis`, `BRANDING_SPALTEN`,
+  `STEMPEL_PFAD_RE`. Niye: belge başlığının TEK kaynağı (logo yalnız https, S-49; plz||zip). `dashboard.js`
+  `terminzettelPraxis` artık ince sarmalayıcı (owner||current). **Kalan ayna adayları:** `beleg-druck.js`
+  `ladePraxisAbrechnungsProfil` (+ `fehlend` §14 UStG listesi ↔ `brandingLuecken` ↔ backend `fehlendePflichtangaben`),
+  backend `abrechnung.routes.js` `PRAXIS_DRUCK_FELDER` + praxis nesnesi, `ausfall.routes.js` select + praxis nesnesi.
+- **`module/stempel.js`** — `stempelHochladen`/`stempelEntfernen` (owner satırı, `praxis_stempel_path`, private bucket),
+  `ladeStempelDataUrl` (belgeye data-URL), `kodiereAlsPng`, `zielGroesse`. **`module/branding-ui.js`** `mountBrandingExtras`
+  (Stempel, Inhaber `praxis_inhaber`, "Was fehlt noch"). Görüntü yeniden kodlamanın üçüncü yolu: logo kaydı
+  (`dashboard.js` `initBrandingLogoUpload`, cropper→PNG, `avatars`) ve avatar (`dashboard.js` cropper→JPEG 400) dokunulmadı.
+- **`module/einrichtung-fortschritt.js`** `einrichtungFortschritt`, `ringStrich` + **`module/einrichtung-ring.js`**
+  `mountEinrichtungRing` (M2.6) — kopf çubuğunda kurulum halkası. Uygulamadaki ilk halka bileşeni (öncesi yalnız
+  çubuklar: `zeichneRezeptFortschritt`, `booking-request.js` `buildProgressBar`). Halka/ilerleme lazımsa **bunu kullan**.
+- **`api-backend/setup/branding-felder.js`** `brandingFelderPruefen` + `POST /setup/branding` (M2.5) — kurulum asistanının
+  atlanabilir Branding adımı, 11 kolon beyaz liste + biçim kuralı.
+- **`module/einwilligung-texte.js`** (M2.8) — `softwareSatz`, absatz filtresi `nur:'ki'`, `OPTIONALE_PLATZHALTER`.
+  Datenschutztext v3 (legal-de).
+- **fonksiyon-ustasi bulguları (06.10.2026, karar kullanıcıda, dokunulmadı):**
+  1. 🔴 Aynı profil kolonları **farklı kurallarla** yazılıyor: `POST /setup/branding` IBAN/BIC/PLZ/IK/USt-IdNr biçimini
+     doğruluyor; Einstellungen `profileSaveBtn`/`billingSaveBtn` (`dashboard.js`) aynı kolonları doğrulamasız `|| null`
+     yazıyor ve `currentSession.user.id` satırına (owner değil). IK için üçüncü yol `abrechnung-einstellungen.js` `ikSaveBtn`
+     (9 hane kontrolü var).
+  2. 🟠 `brandingAus`'u atlayan okuyucular (https filtresi + owner fallback devre dışı): `dashboard.js` Terminzettel/
+     Behandlungsbestätigung çağrılarında `logoUrl: currentProfile?.praxis_logo_url` (3 yer), `getVorlagenSampleHtml`;
+     `rechnung-ansicht.js` başlık meta (street/plz/phone/ik) ve alt bilgi (bank/iban/steuer) hâlâ `currentProfile`'dan.
+  3. 🟡 Cropper iki kopya (`dashboard.js` avatar ↔ logo) + `stempel.js` `kodiereAlsPng` = canvas→blob üç yerde.
+- Harita bfae06f'de üretildi (3016 kayıt). ⚠️ Kısa yardımcı adlarda (`t`, `esc`, `zeile`) `calledBy` ad çakışmasıyla şişik.
 
 ### 06.10.2026 · K2b.5a Kutu kaydı: kod env'den, kayıt sonrası IP, kimlik volume testi
 - `codeAufloesen(o, env)` (`api-backend/merkez-istemci/kayit.js`, yeni export). Niye: kurulum kodu argv yerine

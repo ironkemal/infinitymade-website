@@ -23,7 +23,7 @@
  * Erste Verwendung: dashboard.js, Rechnungen-Panel (`#panel-rechnungen`).
  */
 
-import { bgEmpfaengerBlock, bgAusZeile } from './bg-angaben.js?v=20261006h';
+import { bgEmpfaengerBlock, bgAusZeile } from './bg-angaben.js?v=20261006i';
 import { brandingAus } from './branding.js?v=20261006g';
 import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
 

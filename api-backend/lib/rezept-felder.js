@@ -250,6 +250,7 @@ const BG_FELDER = [
   ['kostenzusage_datum', 'bg_kostenzusage_datum', 'datum'],
   ['kostenzusage_zeichen', 'bg_kostenzusage_zeichen', 80],
   ['einverstaendnis_am', 'bg_einverstaendnis_am', 'datum'],
+  ['einverstaendnis_version', 'bg_einverstaendnis_version', 60],
 ];
 
 function isoDatumPruefen(roh, name) {
@@ -319,4 +320,17 @@ export function bgFehltFuerRechnung(rx = {}) {
   if (!String(rx?.bg_traeger_anschrift ?? '').trim()) fehlt.push('UV-Träger (Anschrift)');
   if (!bgNorm(rx?.bg_unfalltag)) fehlt.push('Unfalltag');
   return fehlt;
+}
+
+/**
+ * §302-Guard als Funktion (gkv-302 06.10.2026, KHS M2): eine Verordnung mit rezeptart ≠ kassen darf nie in eine Kassendatei.
+ * NULL gilt als Kasse (Altzeilen). Der Physio-Weg `/abrechnung/create` hatte bisher KEINEN solchen Guard — nur die zufällige
+ * Gleichheit der Kostenträger-IK hielt eine Privat-/BG-Verordnung heraus (BG kann eine Karten-IK tragen).
+ * @param {{id: string, rezeptart?: ?string}} rx
+ * @returns {?string} deutsche Fehlermeldung oder null
+ */
+export function nichtGkvAbrechenbarMeldung(rx) {
+  const art = String(rx?.rezeptart ?? '').trim().toLowerCase();
+  if (!art || art === 'kassen' || art === 'gkv') return null;
+  return `Rezept ${String(rx.id).slice(0, 8)}: Rezeptart „${art}" ist nicht GKV-abrechenbar und kann nicht per §302 eingereicht werden.`;
 }

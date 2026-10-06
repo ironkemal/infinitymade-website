@@ -51,7 +51,7 @@ const T = {
     brandingSub: 'Diese Angaben stehen später auf Ihren Rechnungen. Sie können den Schritt überspringen und alles in den Einstellungen nachtragen — dort auch Logo, Stempel und Fußzeile.',
     lblBrStreet: 'Straße und Hausnummer', lblBrPlz: 'Postleitzahl', lblBrCity: 'Ort', lblBrPhone: 'Telefon',
     lblBrSteuernummer: 'Steuernummer', lblBrUstId: 'oder USt-IdNr.',
-    lblBrTaxNote: 'Hinweis zur Steuerbefreiung (steht auf der Rechnung)',
+    lblBrTaxNote: 'Hinweis zur Umsatzsteuer (steht auf der Rechnung)',
     lblBrIban: 'IBAN', lblBrBic: 'BIC', lblBrBank: 'Bank', lblBrIk: 'Institutionskennzeichen (IK)',
     brandingSkip: 'Überspringen', brandingSave: 'Speichern und weiter',
     brandingFehlgeschlagen: 'Die Angaben konnten nicht gespeichert werden. Sie lassen sich später in den Einstellungen nachtragen.',

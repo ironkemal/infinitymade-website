@@ -63,7 +63,7 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261004m
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261004m113';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006g'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261006g';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006g'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261006k'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261006g';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260930f';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
@@ -75,7 +75,7 @@ import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
-import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261006d';
+import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261006i';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261006b';
@@ -5883,7 +5883,7 @@ function printSeriterminConfirmation({ patientName, appointments, serviceTitle }
     patientName,
     titel: 'Terminbestätigung',
     format: 'A4',
-    logoUrl: currentProfile?.praxis_logo_url || '',
+    logoUrl: brandingAus(ownerProfile || currentProfile).logoUrl || '',
     hinweis: currentProfile?.invoice_footer_text
       || 'Bitte bringen Sie dieses Dokument zu Ihrem nächsten Termin mit.',
     termine: (appointments || []).map(a => ({
@@ -7060,7 +7060,7 @@ document.getElementById('bkActionTerminzettelBtn')?.addEventListener('click', as
 
   const ok = druckeTerminzettel({
     ...terminzettelPraxis(),
-    logoUrl: currentProfile?.praxis_logo_url || '',
+    logoUrl: brandingAus(ownerProfile || currentProfile).logoUrl || '',
     patientName,
     anrede: anredeAusGeschlecht(bkActionLeadCache),
     oeffnungszeiten: zeiten || [],
@@ -7348,7 +7348,7 @@ async function openPatientDetailModal(lead) {
   document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
   renderPatientenkarte(lead, {
     sb: supabase, ownerId: getOwnerId(), name: displayName, icons: ICON, onSprung: pdSpringeZu,
-    praxis: terminzettelPraxis().praxis, logoUrl: currentProfile?.praxis_logo_url || '',
+    praxis: terminzettelPraxis().praxis, logoUrl: brandingAus(ownerProfile || currentProfile).logoUrl || '',
   });
   document.querySelectorAll('.pd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'verlauf'));
   document.querySelectorAll('.pd-panel').forEach(p => p.classList.toggle('active', p.id === 'pdPanelVerlauf'));
@@ -13755,7 +13755,7 @@ async function saveInvoice() {
     // Trigger invoice_festschreibung() ohnehin.
     const bearbeitet = window._currentInvoiceId;
     const { data: inserted, error } = bearbeitet
-      ? await supabase.from('invoices').update(payload).eq('id', bearbeitet).select('id, invoice_number').maybeSingle()
+      ? await supabase.from('invoices').update(payloadFuerUpdate(payload, invListCache.find(i => i.id === bearbeitet)?.status)).eq('id', bearbeitet).select('id, invoice_number').maybeSingle()
       : await supabase.from('invoices').insert(payload).select('id, invoice_number').maybeSingle();
     if (error) { console.error('[invoice save]', error); showToast('Fehler beim Speichern: ' + error.message, 'error'); return; }
     const invoiceNumber = inserted?.invoice_number || '';
@@ -13767,7 +13767,7 @@ async function saveInvoice() {
     // Erst nach erfolgreichem Speichern markieren: schlägt das Speichern fehl,
     // darf keine Sitzung als abgerechnet gelten.
     if (inserted?.id && invBehandlungIds.length) {
-      const vk = await behandlungenVerknuepfen(supabase, { invoiceId: inserted.id, behandlungIds: invBehandlungIds }); if (!vk.ok) showToast(vk.meldung, 'error');
+      const vk = await behandlungenVerknuepfen(supabase, { invoiceId: inserted.id, behandlungIds: invBehandlungIds }); if (vk && !vk.ok) showToast(vk.meldung, 'error');
       invBehandlungIds = [];
     }
     // Zahlungsart abfragen (Ops #271, 08.09.2026) — Verzweigung nach

@@ -44,7 +44,7 @@
  */
 
 import { leistungsartVorschlag, zeilenSteuerVon } from './rechnung-steuer.js?v=20260816';
-import { bgFehltFuerRechnung, bgAusZeile } from './bg-angaben.js?v=20261006h';
+import { bgFehltFuerRechnung, bgAusZeile, bgHinweiseBeiRechnung } from './bg-angaben.js?v=20261006i';
 
 /** Rezeptarten, die nicht über die Kasse laufen. */
 const PRIVATE_ARTEN = ['privat', 'selbstzahler', 'bg'];
@@ -274,6 +274,9 @@ export async function starteRechnungAusVerordnung(ctx) {
       toast?.(`BG-Rechnung: Es fehlen ${fehlt.join(', ')}. Bitte in der Verordnung ergänzen.`, 'error');
       return;
     }
+    // Nicht blockierend, aber nicht still: ohne Einverständnis fehlt die Befugnis zur Übermittlung (legal-de 06.10.2026).
+    const hinweise = bgHinweiseBeiRechnung(bgAusZeile(verordnung));
+    if (hinweise.length) toast?.(`BG-Rechnung: ${hinweise.join('; ')}. Bitte in der Verordnung nachtragen.`, 'warning');
   }
 
   const offene = await offeneBehandlungen(sb, { ownerId, verordnungId: verordnung.id });

@@ -2820,7 +2820,8 @@ CREATE TABLE public.prescriptions (
   bg_aktenzeichen text,
   bg_kostenzusage_datum date,
   bg_kostenzusage_zeichen text,
-  bg_einverstaendnis_am date
+  bg_einverstaendnis_am date,
+  bg_einverstaendnis_version text
 );
 --   FK abrechnung_id -> abrechnung(id)
 --   FK abrechnung_status_manuell_von -> auth.users(id)
@@ -2897,6 +2898,9 @@ ALTER TABLE ONLY public.prescriptions
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_rezeptart_check CHECK (rezeptart IS NULL OR (rezeptart = ANY (ARRAY['kassen'::text, 'privat'::text, 'selbstzahler'::text, 'bg'::text])));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_bg_einverstaendnis_version_check CHECK (((bg_einverstaendnis_version IS NULL) OR (char_length(bg_einverstaendnis_version) <= 60)));
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_bg_laengen_check CHECK (((bg_traeger_name IS NULL) OR (char_length(bg_traeger_name) <= 200)) AND ((bg_traeger_anschrift IS NULL) OR (char_length(bg_traeger_anschrift) <= 500)) AND ((bg_aktenzeichen IS NULL) OR (char_length(bg_aktenzeichen) <= 80)) AND ((bg_kostenzusage_zeichen IS NULL) OR (char_length(bg_kostenzusage_zeichen) <= 80)));
