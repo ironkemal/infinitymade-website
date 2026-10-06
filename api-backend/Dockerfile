@@ -57,8 +57,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 # Run as non-root for safety
 # Verzeichnisse für Box-Identität und acme-dns anlegen, damit frische benannte
 # Volumes die Rechte für Benutzer app erben (O-161, K2b.5 — verhindert EACCES in kayit.js).
-# TODO K2b.4: Caddy läuft als anderer Benutzer und liest acmedns.json (0600, Eigentümer app).
-# In K2b.4 klären; Dateirechte in kayit.js bleiben vorerst unverändert.
+# Caddy läuft als root und liest acmedns.json problemlos; Dateirechte in kayit.js
+# bleiben 0600 für Benutzer app (O-161, onprem-Bedingung 10).
 RUN addgroup -S app && adduser -S app -G app && chown -R app:app /app \
   && mkdir -p /var/lib/praxura/kimlik /var/lib/praxura/acmedns \
   && chown -R app:app /var/lib/praxura \

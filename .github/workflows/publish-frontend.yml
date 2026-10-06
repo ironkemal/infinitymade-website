@@ -178,6 +178,42 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Smoke test — acmedns-Modul + TLS-Modi
+        run: |
+          set -e
+          # 1. Modul dns.providers.acmedns muss im Caddy-Binary vorhanden sein
+          if ! docker run --rm --entrypoint caddy praxura-frontend:smoke list-modules | grep -qx 'dns.providers.acmedns'; then
+            echo "✗ Caddy-Modul dns.providers.acmedns fehlt im frontend-Image"
+            exit 1
+          fi
+          echo "✓ Modul dns.providers.acmedns vorhanden"
+
+          # 2. acmedns-Modus mit acmedns.json: Caddyfile-Validierung gelingt
+          mkdir -p /tmp/acmedns && printf '%s' '{"praxis-smoke-1.praxura.de":{"username":"u","password":"p","subdomain":"s","fulldomain":"s.acme.invalid","server_url":"https://acme.invalid"}}' > /tmp/acmedns/acmedns.json
+          docker run --rm -v /tmp/acmedns:/etc/praxura/acmedns:ro \
+            -e SITE_URL=https://praxis-smoke-1.praxura.de \
+            -e CADDY_TLS_MODUS=acmedns \
+            -e SUPABASE_PUBLIC_URL=https://smoke.invalid \
+            -e SUPABASE_PUBLIC_WSS= \
+            -e HSTS_MAX_AGE=86400 \
+            --entrypoint caddy praxura-frontend:smoke validate --config /etc/caddy/Caddyfile
+          echo "✓ acmedns mit Datei validiert"
+
+          # 3. acmedns-Modus OHNE Volume: muss fehlschlagen (O-171)
+          if docker run --rm \
+            -e SITE_URL=https://praxis-smoke-1.praxura.de \
+            -e CADDY_TLS_MODUS=acmedns \
+            -e SUPABASE_PUBLIC_URL=https://smoke.invalid \
+            -e SUPABASE_PUBLIC_WSS= \
+            -e HSTS_MAX_AGE=86400 \
+            --entrypoint caddy praxura-frontend:smoke validate --config /etc/caddy/Caddyfile; then
+            echo "✗ acmedns liest die Datei nicht"
+            exit 1
+          fi
+          echo "✓ acmedns ohne Datei schlaegt wie erwartet fehl (O-171)"
+
+      # Deckt "klassisch ohne Datei startet" ab: laeuft ohne CADDY_TLS_MODUS
+      # (Default klassisch) und ohne acmedns-Volume.
       - name: Smoke test — startet das Image, liefert es /login.html aus?
         run: |
           set -e

@@ -318,8 +318,11 @@ if ($profile -and $profile.NetworkCategory -ne 'Private') {
 
 # ── 9  Wurzelzertifikat + hosts ──────────────────────────────────────────────
 Log '[9/11] Wurzelzertifikat der Box + Adresse auf diesem PC'
+$tlsModus = BoxEnv 'CADDY_TLS_MODUS'
 $tls = BoxEnv 'CADDY_TLS_ARG'
-if ($tls -eq 'internal') {
+if ($tlsModus -eq 'acmedns') {
+  Ok "echtes Zertifikat (Let's Encrypt ueber den Praxura-Namensdienst) — kein Import noetig"
+} elseif ($tls -eq 'internal') {
   $crt = Join-Path $DatenOrt 'praxura-wurzelzertifikat.crt'
   $crtWsl = '/mnt/' + $crt.Substring(0, 1).ToLower() + ($crt.Substring(2) -replace '\\', '/')
   InWsl "cd $BoxPfad && docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt '$crtWsl'" | Out-Null

@@ -24,12 +24,33 @@
 #  die Box zeigt dort den SVG-Fallback statt des zygotebody.com-iFrames
 #  (O-55, Feature-Entscheidung separat offen).
 #
+
+# ── TLS-Konfiguration (K2b.4, O-161 / O-171) ─────────────────────────────────
+# klassisch: bisheriges Verhalten (internal fuer LAN-CA oder E-Mail fuer LE per HTTP).
+# acmedns: Box mit Einrichtungscode, DNS-01 ueber Praxura-Namensdienst.
+# NUR Let's Encrypt (kein ZeroSSL-Fallback — CAA erlaubt nur letsencrypt.org, O-161 (9)).
+# Die Datei acmedns.json wird beim Caddy-Start gelesen — fehlt sie, startet Caddy
+# bewusst nicht (O-171). Im acmedns-Zweig darf nichts die interne CA aktivieren
+# (kein internal, kein local_certs, keine IP/localhost-Adresse — guvenlik S-47 Bedingung 2).
+(tls_klassisch) {
+	tls {$CADDY_TLS_ARG}
+}
+
+(tls_acmedns) {
+	tls {
+		issuer acme {
+			dir https://acme-v02.api.letsencrypt.org/directory
+			dns acmedns {$CADDY_ACMEDNS_DATEI:/etc/praxura/acmedns/acmedns.json}
+		}
+	}
+}
+
 {$SITE_URL} {
 
-	# "internal" = Caddys eigene selbstsignierte CA (LAN-only, Normalfall der
-	# ersten Box). Eine E-Mail-Adresse hier = echtes Let's-Encrypt-Zertifikat —
-	# dann muss SITE_URL eine von aussen erreichbare, echte Domain sein.
-	tls {$CADDY_TLS_ARG}
+	# TLS-Modus: klassisch (internal/E-Mail) oder acmedns (DNS-01 ueber Namensdienst).
+	# Default steht in der Datei, nicht nur in compose — der CI-Smoke-Test und alte
+	# compose-Dateien setzen CADDY_TLS_MODUS nicht (onprem-Bedingung 1).
+	import tls_{$CADDY_TLS_MODUS:klassisch}
 
 	encode gzip
 
@@ -38,9 +59,9 @@
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		# Permissions-Policy steht unten in zwei Matchern (A-19).
-		# Nur bei echtem Zertifikat sinnvoll (HSTS_MAX_AGE=0 bei "internal"/
-		# selbstsigniert lassen — sonst sperrt der Browser den Host fest auf
-		# HTTPS, und der Rückweg liegt beim Kunden, nicht bei uns. O-52).
+		# HSTS: bei acmedns 86400 (1 Tag) bis Ablaufueberwachung existiert (O-172,
+		# S-47 Bedingung 5); 0 bei internal (selbstsigniert lassen, O-52);
+		# 63072000 bei klassisch mit E-Mail.
 		Strict-Transport-Security "max-age={$HSTS_MAX_AGE}; includeSubDomains"
 		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' {$SUPABASE_PUBLIC_URL} {$SUPABASE_PUBLIC_WSS}; frame-src 'none'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self';"
 		-Server

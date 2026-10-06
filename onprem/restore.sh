@@ -483,7 +483,11 @@ fi
 # vertrauenswuerdig importiert haben, sehen KEINE Zertifikatswarnung. Ohne
 # diesen Schritt haette eine neu aufgesetzte Box eine neue CA erzeugt.
 CADDY_PKI_NEU=0
-if [ -f "$YEDEK_DIR/caddy-pki.tar.gz" ]; then
+# acmedns-Box (K2b.4, guvenlik S-47 Bedingung 1): keine interne CA — eine alte
+# Sicherung aus der internal-Zeit darf den CA-Schlüssel (S-43) nicht zurückschreiben.
+if [ "$(env_wert CADDY_TLS_MODUS)" = "acmedns" ]; then
+  log "  (acmedns-Box: keine interne CA — caddy-pki aus dem Backup wird bewusst NICHT zurückgespielt, S-43/S-47.)"
+elif [ -f "$YEDEK_DIR/caddy-pki.tar.gz" ]; then
   TMP_PKI="$(mktemp -d)"
   if tar -xzf "$YEDEK_DIR/caddy-pki.tar.gz" -C "$TMP_PKI" 2>>"$LOG_FILE"      && docker compose cp "$TMP_PKI/caddy-pki/." caddy:/data/caddy/pki >>"$LOG_FILE" 2>&1; then
     ok "Caddy-Wurzel-CA wiederhergestellt"

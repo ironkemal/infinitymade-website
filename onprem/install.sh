@@ -208,6 +208,8 @@ KAYIT_CODE=""
 KAYIT_MODUS="adresse"
 SITE_URL=""
 HOST_PART=""
+CADDY_TLS_MODUS_VALUE="klassisch"
+CADDY_TLS_ARG_VALUE="internal"
 
 # Wiederholungsprüfung: Vor dem Code-Dialog prüfen, ob die Box schon registriert ist (O-161)
 # (Fehler wird toleriert, da das Image beim Erstlauf noch fehlen darf; --pull never: vor der
@@ -423,12 +425,14 @@ ok "alle Pflichtfelder gefüllt"
 # ── Schritt 10 — TLS-Modus ───────────────────────────────────────────────────
 log "[10/17] TLS-Modus"
 if [ "$KAYIT_MODUS" = "code" ] || [ "$KAYIT_MODUS" = "vorhanden" ]; then
-  CADDY_TLS_ARG_VALUE="internal"
-  set_env CADDY_TLS_ARG "$CADDY_TLS_ARG_VALUE"
-  set_env HSTS_MAX_AGE "0"
-  ok "TLS: internes Zertifikat (Caddy-eigene Zertifizierungsstelle)"
-  log "  Hinweis: Bis zum Caddy-DNS-Image (K2b.4) wird für die Box-Adresse ein internes Zertifikat verwendet."
+  if [ "$KAYIT_MODUS" = "code" ]; then
+    log "  TLS: Let's Encrypt über den Praxura-Namensdienst (DNS-01) — wird nach der Registrierung festgelegt."
+  else
+    log "  TLS: Let's Encrypt über den Praxura-Namensdienst (DNS-01) — wird vor dem Start geprüft."
+  fi
 else
+  set_env CADDY_TLS_MODUS "klassisch"
+  CADDY_TLS_MODUS_VALUE="klassisch"
   log "  Ist ${SITE_URL} von ausserhalb dieses Netzes über eine echte Domain"
   log "  erreichbar (öffentliches DNS), UND soll Let's Encrypt ein echtes"
   log "  Zertifikat ausstellen?"
@@ -663,6 +667,27 @@ if [ "$KAYIT_MODUS" = "vorhanden" ] && [ ! -f "$SCRIPT_DIR/volumes/ip/modus" ]; 
     printf '%s\n' "$v_lan_ip" > "$SCRIPT_DIR/volumes/ip/lan-ip.tmp"
     chmod 0644 "$SCRIPT_DIR/volumes/ip/lan-ip.tmp"
     mv -f "$SCRIPT_DIR/volumes/ip/lan-ip.tmp" "$SCRIPT_DIR/volumes/ip/lan-ip"
+  fi
+fi
+
+# TLS-Modus für Code-/Vorhanden-Weg festlegen (K2b.4, O-161 / O-171):
+# Liegt NACH der Registrierung und textlich VOR dem ersten 'docker compose up -d',
+# das caddy startet (onprem-tls-modus).
+if [ "$KAYIT_MODUS" = "code" ] || [ "$KAYIT_MODUS" = "vorhanden" ]; then
+  durum_tls_json="$(docker compose --profile kurulum run --rm --no-deps --pull never kayit --durum --json 2>/dev/null || true)"
+  if printf '%s' "$durum_tls_json" | grep -qE '"acmedns"[[:space:]]*:[[:space:]]*true'; then
+    set_env CADDY_TLS_MODUS "acmedns"
+    set_env HSTS_MAX_AGE "86400"
+    CADDY_TLS_MODUS_VALUE="acmedns"
+    ok "TLS: Let's Encrypt über den Praxura-Namensdienst (DNS-01)"
+  else
+    set_env CADDY_TLS_MODUS "klassisch"
+    set_env CADDY_TLS_ARG "internal"
+    set_env HSTS_MAX_AGE "0"
+    CADDY_TLS_MODUS_VALUE="klassisch"
+    CADDY_TLS_ARG_VALUE="internal"
+    warn "Zertifikatszugang der Box fehlt — Rückfall auf internes Zertifikat"
+    log "      Was tun: install.sh erneut ausführen; hilft das nicht: Support (siehe KURULUM.md §9)"
   fi
 fi
 
@@ -944,7 +969,9 @@ else
     log "    — ODER: als A-Eintrag im Praxis-Router/DNS, dann entfällt das pro Rechner"
   fi
 fi
-if [ "$CADDY_TLS_ARG_VALUE" = "internal" ]; then
+if [ "$CADDY_TLS_MODUS_VALUE" = "acmedns" ]; then
+  log "  Zertifikat:             Let's Encrypt — auf keinem Gerät muss etwas importiert werden."
+elif [ "$CADDY_TLS_MODUS_VALUE" = "klassisch" ] && [ "$CADDY_TLS_ARG_VALUE" = "internal" ]; then
   log "  Zertifikat der Box:     'docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .'"
   log "                          — pro Praxisrechner einmalig als vertrauenswürdig importieren."
 fi

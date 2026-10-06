@@ -9,6 +9,9 @@
 #  unbemerkt vom Caddyfile weg. Gebaut aus demselben Commit wie `praxura/api`
 #  (siehe .github/workflows/publish-frontend.yml), beide Tags laufen parallel.
 #
+#  K2b.4 (06.10.2026): Eigenes Caddy-Binary mit dem Plugin `caddy-dns/acmedns`
+#  für DNS-01-Zertifikate über den Praxura-Namensdienst (O-161 / O-171).
+#
 #  Build-Kontext ist das Repo-Root (nicht onprem/) — die Quelldateien liegen
 #  dort. `docker build -f onprem/frontend.Dockerfile .`
 #
@@ -43,10 +46,19 @@
 #                                           explizit ("paketin kök adresi
 #                                           doğrudan login/dashboard'a gitmeli").
 #
-# ARG vor FROM ist Pflicht (Docker-Einschraenkung) — der Fallback deckt den
-# Fall ab, dass jemand ohne --build-arg baut (z. B. lokal von Hand).
-ARG VERSION_CADDY=2.9-alpine
-FROM caddy:${VERSION_CADDY}
+# ── Stufe 1: Caddy mit acmedns-Plugin bauen ─────────────────────────────────
+# Versionsbindung per Tag + Go-Prüfsumme (sum.golang.org), gebaut in CI,
+# nie in der Box (guvenlik S-47 Bedingung 3).
+ARG VERSION_CADDY=2.11.6
+FROM caddy:${VERSION_CADDY}-builder-alpine AS caddybau
+
+RUN xcaddy build \
+    --with github.com/caddy-dns/acmedns@v0.7.0
+
+# ── Stufe 2: Laufzeit-Image mit Oberfläche ──────────────────────────────────
+FROM caddy:${VERSION_CADDY}-alpine
+
+COPY --from=caddybau /usr/bin/caddy /usr/bin/caddy
 
 COPY onprem/Caddyfile /etc/caddy/Caddyfile
 

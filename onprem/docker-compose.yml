@@ -567,6 +567,7 @@ services:
       start_period: 5s
     environment:
       SITE_URL: ${SITE_URL}
+      CADDY_TLS_MODUS: ${CADDY_TLS_MODUS:-klassisch}
       CADDY_TLS_ARG: ${CADDY_TLS_ARG:-internal}
       SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
       SUPABASE_PUBLIC_WSS: ${SUPABASE_PUBLIC_WSS:-}
@@ -577,6 +578,8 @@ services:
       # acme-dns-Zugangsdaten für TLS-DNS-01 (K2b.4, O-161).
       # Eigener Pfad, bewusst NICHT unter /data gemountet (backup.sh sichert
       # /data/caddy/pki; acmedns gehört nie ins Backup).
+      # Lesen der 0600-Datei (Eigentümer app) klappt nur, weil das caddy-Image
+      # als root läuft — wird es auf non-root umgestellt, bricht das (onprem-Bedingung 10).
       - acmedns:/etc/praxura/acmedns:ro
 
 networks:

@@ -44,16 +44,39 @@ function schreibeAcmedns(dir, fqdn, acmedns) {
 
 /**
  * Status der Box-Identität ohne Netzaufruf und ohne Code prüfen.
- * Gibt nie Schlüsselmaterial zurück.
- * @returns {{registriert: boolean, ad: string|null, fqdn: string|null}}
+ * Gibt nie Schlüsselmaterial oder Passwörter zurück.
+ * @param {{kimlikDir?: string, acmednsDir?: string}} [options]
+ * @returns {{registriert: boolean, ad: string|null, fqdn: string|null, acmedns: boolean}}
  */
-export function durum({ kimlikDir = kimlikVerzeichnis() } = {}) {
+export function durum({ kimlikDir = kimlikVerzeichnis(), acmednsDir = acmednsVerzeichnis() } = {}) {
   const k = ladeKimlik({ dir: kimlikDir });
   const registriert = Boolean(k?.ad);
+  const fqdn = registriert ? (k.fqdn ?? null) : null;
+  let acmednsGueltig = false;
+  if (registriert && fqdn) {
+    try {
+      const dateiPfad = path.join(acmednsDir, 'acmedns.json');
+      const inhalt = fs.readFileSync(dateiPfad, 'utf8');
+      const parsed = JSON.parse(inhalt);
+      const e = parsed && typeof parsed === 'object' ? parsed[fqdn] : null;
+      if (
+        e &&
+        typeof e.username === 'string' && e.username.trim() !== '' &&
+        typeof e.password === 'string' && e.password.trim() !== '' &&
+        typeof e.subdomain === 'string' && e.subdomain.trim() !== '' &&
+        typeof e.server_url === 'string' && e.server_url.trim() !== ''
+      ) {
+        acmednsGueltig = true;
+      }
+    } catch {
+      acmednsGueltig = false;
+    }
+  }
   return {
     registriert,
     ad: registriert ? k.ad : null,
-    fqdn: registriert ? (k.fqdn ?? null) : null,
+    fqdn,
+    acmedns: acmednsGueltig,
   };
 }
 
@@ -175,11 +198,15 @@ async function main() {
   const frage = async (q) => { rl ??= readline.createInterface({ input: process.stdin, output: process.stderr }); return rl.question(q); };
   try {
     if (o.durum) {
-      const d = durum({ kimlikDir: process.env.KIMLIK_DIR || kimlikVerzeichnis() });
+      const d = durum({
+        kimlikDir: process.env.KIMLIK_DIR || kimlikVerzeichnis(),
+        acmednsDir: process.env.ACMEDNS_DIR || acmednsVerzeichnis(),
+      });
       if (o.json) {
         console.log(JSON.stringify(d));
       } else {
-        console.log(d.registriert ? `Registriert: ${d.ad} (${d.fqdn || 'ohne FQDN'})` : 'Nicht registriert');
+        const zert = d.acmedns ? 'ja' : 'nein';
+        console.log(d.registriert ? `Registriert: ${d.ad} (${d.fqdn || 'ohne FQDN'}) · Zertifikatszugang: ${zert}` : 'Nicht registriert');
       }
       return;
     }

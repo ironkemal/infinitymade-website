@@ -18285,7 +18285,9 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "kayitAusfuehren"
+    "durum",
+    "kayitAusfuehren",
+    "main"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -18337,9 +18339,9 @@
    "name": "durum",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 50,
-   "end": 58,
-   "lines": 9,
+   "start": 51,
+   "end": 81,
+   "lines": 31,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18347,6 +18349,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "acmednsVerzeichnis",
     "kimlikVerzeichnis",
     "ladeKimlik"
    ],
@@ -18361,8 +18364,8 @@
    "name": "kayitAusfuehren",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 63,
-   "end": 134,
+   "start": 86,
+   "end": 157,
    "lines": 72,
    "spiegelHinweis": null,
    "tables": [],
@@ -18392,8 +18395,8 @@
    "name": "fehlerText",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 136,
-   "end": 145,
+   "start": 159,
+   "end": 168,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -18447,8 +18450,8 @@
    "name": "args",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 147,
-   "end": 170,
+   "start": 170,
+   "end": 193,
    "lines": 24,
    "spiegelHinweis": null,
    "tables": [],
@@ -18468,9 +18471,9 @@
    "name": "main",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 172,
-   "end": 212,
-   "lines": 41,
+   "start": 195,
+   "end": 239,
+   "lines": 45,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18478,6 +18481,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "acmednsVerzeichnis",
     "args",
     "close",
     "codeAufloesen",
@@ -18495,8 +18499,8 @@
    "name": "frage",
    "kind": "arrow",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 175,
-   "end": 175,
+   "start": 198,
+   "end": 198,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -148248,7 +148252,7 @@
    "name": "main",
    "orte": [
     "api-backend/check_diagnosegruppen_icd.js:94",
-    "api-backend/merkez-istemci/kayit.js:172",
+    "api-backend/merkez-istemci/kayit.js:195",
     "api-backend/preise_autoupdate.mjs:194",
     "api-backend/preise_pruefen.mjs:240",
     "api-backend/sync_heilmittel_katalog.js:151"
@@ -148821,7 +148825,7 @@
   {
    "name": "fehlerText",
    "orte": [
-    "api-backend/merkez-istemci/kayit.js:136",
+    "api-backend/merkez-istemci/kayit.js:159",
     "module/abrechnung-auswahl.js:334"
    ],
    "aynalar": []

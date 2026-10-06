@@ -220,7 +220,7 @@ test('Registrierung: fqdn landet in box.json und ladeKimlik liefert fqdn (abwär
   assert.equal(kAlt.ad, 'altes-format');
   assert.equal(kAlt.fqdn, null);
   // install.sh bricht in diesem Fall ab (kein "https://" als SITE_URL) — durum meldet fqdn ausdrücklich null
-  assert.deepEqual(durum({ kimlikDir }), { registriert: true, ad: 'altes-format', fqdn: null });
+  assert.deepEqual(durum({ kimlikDir }), { registriert: true, ad: 'altes-format', fqdn: null, acmedns: false });
 });
 
 test('durum: vor Registrierung registriert:false, nach Registrierung registriert:true mit ad und fqdn (kein Schlüsselmaterial)', async () => {
@@ -230,15 +230,15 @@ test('durum: vor Registrierung registriert:false, nach Registrierung registriert
   const { fetchImpl } = baueMockFetch();
 
   // 1) Vor Registrierung (Verzeichnis existiert noch nicht)
-  const vorVerzeichnis = durum({ kimlikDir });
-  assert.deepEqual(vorVerzeichnis, { registriert: false, ad: null, fqdn: null });
+  const vorVerzeichnis = durum({ kimlikDir, acmednsDir });
+  assert.deepEqual(vorVerzeichnis, { registriert: false, ad: null, fqdn: null, acmedns: false });
   assert.equal(vorVerzeichnis.privateKey, undefined);
   assert.equal(vorVerzeichnis.publicKey, undefined);
 
   // 2) Vor Registrierung (Schlüssel erzeugt, aber noch nicht registriert)
   erzeugeKimlik({ dir: kimlikDir });
-  const vorReg = durum({ kimlikDir });
-  assert.deepEqual(vorReg, { registriert: false, ad: null, fqdn: null });
+  const vorReg = durum({ kimlikDir, acmednsDir });
+  assert.deepEqual(vorReg, { registriert: false, ad: null, fqdn: null, acmedns: false });
   assert.equal(vorReg.privateKey, undefined);
   assert.equal(vorReg.publicKey, undefined);
 
@@ -252,14 +252,112 @@ test('durum: vor Registrierung registriert:false, nach Registrierung registriert
     acmednsDir,
   });
 
-  const nachReg = durum({ kimlikDir });
+  const nachReg = durum({ kimlikDir, acmednsDir });
   assert.deepEqual(nachReg, {
     registriert: true,
     ad: 'sonne-tal-42',
     fqdn: 'sonne-tal-42.box.beispiel.test',
+    acmedns: true,
   });
   assert.equal(nachReg.privateKey, undefined);
   assert.equal(nachReg.publicKey, undefined);
+  assert.equal(nachReg.password, undefined);
+});
+
+test('durum acmedns: nicht registriert -> acmedns false', () => {
+  const dir = tmp();
+  const kimlikDir = path.join(dir, 'kimlik');
+  const acmednsDir = path.join(dir, 'acmedns');
+  fs.mkdirSync(acmednsDir, { recursive: true });
+  fs.writeFileSync(path.join(acmednsDir, 'acmedns.json'), JSON.stringify({
+    'box.example.test': { username: 'u', password: 'p', subdomain: 's', server_url: 'https://acme.test' },
+  }));
+  const res = durum({ kimlikDir, acmednsDir });
+  assert.equal(res.registriert, false);
+  assert.equal(res.acmedns, false);
+});
+
+test('durum acmedns: registriert + passende Datei -> acmedns true, kein Passwort in Rückgabe', async () => {
+  const dir = tmp();
+  const kimlikDir = path.join(dir, 'kimlik');
+  const acmednsDir = path.join(dir, 'acmedns');
+  const { fetchImpl } = baueMockFetch();
+  await kayitAusfuehren({
+    code: 'ABCD-1234-EFGH-5678',
+    auto: true,
+    baseUrl: 'https://merkez.example.org',
+    fetchImpl,
+    kimlikDir,
+    acmednsDir,
+  });
+  const res = durum({ kimlikDir, acmednsDir });
+  assert.equal(res.registriert, true);
+  assert.equal(res.fqdn, 'sonne-tal-42.box.beispiel.test');
+  assert.equal(res.acmedns, true);
+  assert.equal(res.password, undefined);
+  assert.equal(res.username, undefined);
+  assert.equal(res.server_url, undefined);
+});
+
+test('durum acmedns: Datei für anderen fqdn -> acmedns false', async () => {
+  const dir = tmp();
+  const kimlikDir = path.join(dir, 'kimlik');
+  const acmednsDir = path.join(dir, 'acmedns');
+  const { fetchImpl } = baueMockFetch();
+  await kayitAusfuehren({
+    code: 'ABCD-1234-EFGH-5678',
+    auto: true,
+    baseUrl: 'https://merkez.example.org',
+    fetchImpl,
+    kimlikDir,
+    acmednsDir,
+  });
+  fs.writeFileSync(path.join(acmednsDir, 'acmedns.json'), JSON.stringify({
+    'anderer-fqdn.box.beispiel.test': {
+      username: 'u', password: 'p', subdomain: 's', server_url: 'https://acme.test',
+    },
+  }));
+  const res = durum({ kimlikDir, acmednsDir });
+  assert.equal(res.registriert, true);
+  assert.equal(res.acmedns, false);
+});
+
+test('durum acmedns: kaputtes JSON -> acmedns false', async () => {
+  const dir = tmp();
+  const kimlikDir = path.join(dir, 'kimlik');
+  const acmednsDir = path.join(dir, 'acmedns');
+  const { fetchImpl } = baueMockFetch();
+  await kayitAusfuehren({
+    code: 'ABCD-1234-EFGH-5678',
+    auto: true,
+    baseUrl: 'https://merkez.example.org',
+    fetchImpl,
+    kimlikDir,
+    acmednsDir,
+  });
+  fs.writeFileSync(path.join(acmednsDir, 'acmedns.json'), '{ kaputt json !!!');
+  const res = durum({ kimlikDir, acmednsDir });
+  assert.equal(res.registriert, true);
+  assert.equal(res.acmedns, false);
+});
+
+test('durum acmedns: fehlende Datei -> acmedns false', async () => {
+  const dir = tmp();
+  const kimlikDir = path.join(dir, 'kimlik');
+  const acmednsDir = path.join(dir, 'acmedns');
+  const { fetchImpl } = baueMockFetch();
+  await kayitAusfuehren({
+    code: 'ABCD-1234-EFGH-5678',
+    auto: true,
+    baseUrl: 'https://merkez.example.org',
+    fetchImpl,
+    kimlikDir,
+    acmednsDir,
+  });
+  fs.unlinkSync(path.join(acmednsDir, 'acmedns.json'));
+  const res = durum({ kimlikDir, acmednsDir });
+  assert.equal(res.registriert, true);
+  assert.equal(res.acmedns, false);
 });
 
 test('args: Option --durum wird erkannt', () => {

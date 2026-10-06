@@ -167,7 +167,10 @@ sema_versiyonu_oku() {
 # Liegt sie nur im Docker-Volume, entsteht nach einem Neuaufsetzen eine NEUE
 # CA — und auf allen Geraeten erscheint wieder die Zertifikatswarnung. Nur
 # pki/ (nicht das ganze /data): Volume-Name haengt am Compose-Projektnamen.
-if docker compose cp caddy:/data/caddy/pki "$TMP_DIR/caddy-pki" >>"$LOG_FILE" 2>&1; then
+# acmedns.json und LE-Kontoschlüssel kommen ohnehin nie ins Backup.
+if [ "$(env_wert CADDY_TLS_MODUS)" = "acmedns" ]; then
+  ok "acmedns-Box: keine interne CA, caddy/pki wird bewusst nicht gesichert (S-43/S-47)"
+elif docker compose cp caddy:/data/caddy/pki "$TMP_DIR/caddy-pki" >>"$LOG_FILE" 2>&1; then
   tar -czf "$TMP_DIR/caddy-pki.tar.gz" -C "$TMP_DIR" caddy-pki 2>>"$LOG_FILE" && rm -rf "$TMP_DIR/caddy-pki"
   ok "Caddy-Wurzel-CA gesichert"
 else

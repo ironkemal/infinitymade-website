@@ -108,9 +108,9 @@ haben:
 - **j** — nur, wenn die Box unter einer echten Internet-Domain von außen
   erreichbar ist (Let's Encrypt).
 
-*Hinweis:* Bis zum nächsten Update arbeitet auch die Box mit Einrichtungscode
-vorübergehend noch mit dem internen Zertifikat (Stand 06.10.2026). Daher muss
-aktuell auch bei ihr das Wurzelzertifikat einmalig importiert werden (§4).
+*Hinweis:* Die Box mit Einrichtungscode bekommt ein echtes
+Let's-Encrypt-Zertifikat über den Praxura-Namensdienst (DNS-01); auf keinem
+Gerät muss etwas importiert werden.
 
 ### 2.3 Update-Kanal
 - **beta** (Enter) — jede veröffentlichte Version. Für die Pilot-/Testphase.
@@ -196,9 +196,7 @@ blockt die Firewall die anderen Geräte. Das Skript warnt, wenn es „Öffentlic
 
 ## 4. Wurzelzertifikat auf jedem Gerät vertrauen
 
-> **Gilt für:** Nur für den Weg „eigene Adresse“ mit internem Zertifikat — und
-> vorübergehend auch für den Weg mit Einrichtungscode, solange die Box noch mit
-> dem internen Zertifikat arbeitet (siehe §2.2).
+> **Gilt für:** Nur für den Weg „eigene Adresse“ mit internem Zertifikat.
 
 Datei holen:
 - **Windows-Box:** liegt schon unter `C:\ProgramData\Praxura\praxura-wurzelzertifikat.crt`
@@ -326,7 +324,7 @@ Praxura-Namensdienst betreiben oder umstellen können.
   besteht — darauf sollten Sie sich nicht verlassen. Ändert sich die IP-Adresse
   der Box, wird der Name nicht mehr nachgeführt; geben Sie der Box deshalb im
   Router eine **feste IP-Adresse** (DHCP-Reservierung). Sobald die Box ein echtes
-  Zertifikat über den Namensdienst bezieht (folgt mit einem Update), läuft es
+  Zertifikat über den Namensdienst bezieht, läuft es
   ohne Dienst spätestens nach **90 Tagen** ab.
   ⚠️ **Ihre Daten in der Box sind davon NICHT betroffen** — alles läuft lokal
   in Ihrer Praxis.
@@ -344,11 +342,13 @@ Nutzen Sie einen Namen unter Ihrer eigenen Praxis-Domain (z. B. `box.praxis-beis
    SITE_URL=https://box.praxis-beispiel.de
    API_EXTERNAL_URL=https://box.praxis-beispiel.de
    SUPABASE_PUBLIC_URL=https://box.praxis-beispiel.de
+   CADDY_TLS_MODUS=klassisch
    CADDY_TLS_ARG=internal
    ```
-   Mit `internal` muss jedes Gerät einmal das Wurzelzertifikat der Box
-   vertrauen (§4). Nutzen Sie eine FRITZ!Box, tragen Sie auch diesen Namen als
-   Ausnahme beim DNS-Rebind-Schutz ein (§3).
+   Wichtig: Ohne die Zeile `CADDY_TLS_MODUS=klassisch` bleibt die Box im
+   Namensdienst-Modus. Mit `internal` muss jedes Gerät einmal das
+   Wurzelzertifikat der Box vertrauen (§4). Nutzen Sie eine FRITZ!Box, tragen
+   Sie auch diesen Namen als Ausnahme beim DNS-Rebind-Schutz ein (§3).
    *(Nur wenn die Box tatsächlich aus dem Internet erreichbar ist — etwa ein
    eigener Cloud-Server —, tragen Sie bei `CADDY_TLS_ARG` stattdessen eine
    E-Mail-Adresse für Let's Encrypt ein. Für eine Box im Praxisnetz: dafür
@@ -370,6 +370,7 @@ Nutzen Sie einen Namen unter Ihrer eigenen Praxis-Domain (z. B. `box.praxis-beis
 ### Weg 2 — Letzter Ausweg ohne Domain
 Haben Sie keine eigene Internet-Domain, wählen Sie einen rein internen Namen:
 - Interner Name (z. B. `https://praxis.home.arpa`) in `.env`.
+- `CADDY_TLS_MODUS=klassisch` in `.env`.
 - `CADDY_TLS_ARG=internal` in `.env`.
 - Wurzelzertifikat auf jedem Praxisgerät importieren (siehe §4).
 - Name im Router oder in den `hosts`-Dateien eintragen (siehe §3).
@@ -387,6 +388,7 @@ Haben Sie keine eigene Internet-Domain, wählen Sie einen rein internen Namen:
 | Windows: „Port 80 oder 443 ist belegt" | ein anderes Programm (IIS, Skype, anderer Webserver) beenden |
 | `install.sh`: „Images konnten nicht geholt werden" | Internet des Servers prüfen; Kanal `stable` evtl. noch nicht veröffentlicht → `beta` |
 | Sicherung bricht ab | Sicherungsplatte nicht angesteckt / Markierungsdatei fehlt (§6) |
+| Box-Oberfläche lädt gar nicht, `docker compose logs caddy` zeigt `Failed to read config file` | Zertifikatszugang der Box (`acmedns.json`) fehlt → `install.sh` erneut ausführen (legt Zugang über den Code-Weg neu an oder fällt auf internes Zertifikat zurück); als Notlösung in `.env` `CADDY_TLS_MODUS=klassisch` + `CADDY_TLS_ARG=internal` setzen und `docker compose up -d` (dann §4) |
 
 Alle Meldungen nennen **Gefunden · Erwartet · Was tun**. Bei Rückfragen an
 den Support bitte die passende Protokolldatei (ohne `.env`!) mitschicken —

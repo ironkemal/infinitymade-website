@@ -110,7 +110,12 @@ test('backup.sh: Sicherungsquellen als Positivliste — weder kimlik noch acmedn
 
   // Darf kimlik, acmedns oder /var/lib/praxura nicht enthalten
   assert.ok(!inhalt.includes('kimlik'), 'backup.sh darf kimlik nicht erwähnen');
-  assert.ok(!inhalt.includes('acmedns'), 'backup.sh darf acmedns nicht erwähnen');
+  // acmedns: nur als TLS-Modus-Wert (K2b.4: im acmedns-Modus wird caddy/pki übersprungen) —
+  // nie als Volume, Pfad oder Datei (kein `acmedns:`, `acmedns/`, `acmedns.json`).
+  assert.ok(!/acmedns[:/.]/.test(inhalt), 'backup.sh darf das acmedns-Volume/die Datei nicht anfassen');
+  for (const z of inhalt.split('\n').filter((z) => z.includes('acmedns'))) {
+    assert.match(z, /CADDY_TLS_MODUS\)" = "acmedns"|ok "acmedns-Box:/, `unerwartete acmedns-Zeile in backup.sh: ${z.trim()}`);
+  }
   assert.ok(!inhalt.includes('/var/lib/praxura'), 'backup.sh darf /var/lib/praxura nicht erwähnen');
 
   // Bekannte Quellen als Positivliste vorhanden
