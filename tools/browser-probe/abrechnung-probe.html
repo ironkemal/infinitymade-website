@@ -29,6 +29,9 @@
     <div id="invvPatient"></div>
     <div id="invvRxBlock" hidden><div id="invvRx"></div></div>
     <div id="invvNotesWrap" hidden><div id="invvNotes"></div></div>
+    <div id="invvEigenRow"><span id="invvEigenPct">0</span><span id="invvEigenEur"></span></div>
+    <div id="invvKasseRow"><span id="invvKasse"></span></div>
+    <div><span id="invvTotalLabel">Zu zahlen (Patient)</span><span id="invvTotal"></span></div>
     <div id="invvTaxExemptNote"></div>
     <div id="invvFooterContact"></div>
     <div id="invvFooterBank"></div>
@@ -37,7 +40,8 @@
 
   <script type="module">
     import { mountRechnungsansicht, rechnungsModus, zeigeRechnungsModus, renderInvList, openInvView, closeInvView }
-      from '../../module/rechnung-ansicht.js?v=20261006g';
+      from '../../module/rechnung-ansicht.js?v=20261006n';
+    import { fuelleBelegPositionen } from '../../module/rechnung-druck.js?v=20261006n';
 
     window.__probe = { rechnungsModus, zeigeRechnungsModus, renderInvList, openInvView, closeInvView };
 
@@ -88,7 +92,7 @@
       formatEur: (n) => Number(n).toFixed(2).replace('.', ',') + ' €',
       showToast: (msg) => { window.__letzterToast = msg; },
       starteZahlungseingang: async () => false,
-      fuelleBelegPositionen: () => {},
+      fuelleBelegPositionen,   // die echte Funktion: Summenzeilen und Beschriftung je Zahler
       aggregateInvLines: (lines) => lines,
       leistungszeitraum: () => ({ von: null, bis: null }),
       neuLaden: async () => {},

@@ -59,12 +59,15 @@ const bgR = await page.evaluate(async () => {
   window.__setListe([{ id: 'rbg', invoice_number: '2026-015', patient_name: 'Anna Muster', patient_id: 'p-bg', status: 'sent',
     total_patient: 40, issued_at: '2026-10-06', created_at: '2026-10-06', invoice_type: 'bg', verordnung_id: 'rx-bg-1' }]);
   await window.__probe.openInvView('rbg');
-  return { empfaenger: document.getElementById('invvPatient').innerText, rx: document.getElementById('invvRx').innerText };
+  return { empfaenger: document.getElementById('invvPatient').innerText, rx: document.getElementById('invvRx').innerText,
+    label: document.getElementById('invvTotalLabel').textContent, eigen: document.getElementById('invvEigenRow').style.display, kasse: document.getElementById('invvKasseRow').style.display };
 });
 P('Träger steht als Empfänger oben', /^BG Holz & Metall/.test(bgR.empfaenger), bgR.empfaenger.slice(0, 60).replace(/\n/g, ' | '));
 P('Anschrift des Trägers, Unfalltag und Aktenzeichen im Bezug', /Musterstadt/.test(bgR.empfaenger) && /Unfalltag: 15\.09\.2026/.test(bgR.empfaenger) && /Aktenzeichen: AZ 1\/26/.test(bgR.empfaenger));
 P('Versicherte Person mit Geburtsdatum', /Versicherte Person: Anna Muster \(geb\. 08\.03\.1970\)/.test(bgR.empfaenger));
 P('Patient steht nicht als Empfänger (keine Kasse/Versichertennr.)', !/AOK X|A123/.test(bgR.empfaenger));
+P('BG: Endsumme heißt nicht „Zu zahlen (Patient)“, sondern nennt den Unfallversicherungsträger', /Unfallversicherungsträger/.test(bgR.label) && !/Patient/.test(bgR.label), bgR.label);
+P('BG: keine Eigenanteil-/Kassenzuzahlungszeilen', bgR.eigen === 'none' && bgR.kasse === 'none', `${bgR.eigen}/${bgR.kasse}`);
 P('keine Diagnose auf der BG-Rechnung', !/ICD-10|E11/.test(bgR.rx), bgR.rx);
 
 const mit0 = await page.evaluate(() => {

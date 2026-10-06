@@ -114,3 +114,16 @@ test('BG ohne Einverständnis/Kostenzusage: Warnung, aber die Rechnung wird trot
   assert.ok(w, JSON.stringify(meldungen));
   assert.match(w[0], /Kostenzusage/);
 });
+
+test('Standardleistung der Praxis mit unverändertem Katalogtitel „(groß)“: Klartext statt Katalogname, Preis bleibt (Live-Test F3)', () => {
+  const beh = [{ behandlungsdatum: '2026-09-20', hpnr_codes: ['78020', '78010'] }];
+  const services = [
+    { gkv_position_nr: '78020', title: 'Podologische Behandlung (groß)', price: 51.92 },
+    { gkv_position_nr: '78010', title: ' Podologische Behandlung (klein) ', price: 36.1 },
+  ];
+  const { zeilen } = zeilenAusBehandlungen(beh, { verordnung: { rezeptart: 'privat' }, services, katalogPodo: [] });
+  assert.match(zeilen[0].title, /Hornhaut und Nägel\), Therapiezeit über 20 Minuten/);
+  assert.match(zeilen[1].title, /Therapiezeit bis 20 Minuten/);
+  assert.equal(zeilen[0].unit_price, 51.92);
+  assert.ok(zeilen.every(z => !/groß|klein|Komplex/.test(z.title)));
+});

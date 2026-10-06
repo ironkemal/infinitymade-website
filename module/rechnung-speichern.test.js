@@ -1,3 +1,4 @@
+import { rechnungsSummen } from './rechnung-summen.js';
 import test, { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -226,6 +227,7 @@ function createTestEnvironment(customMocks = {}) {
     leistungszeitraum: () => ({ von: '2026-10-01', bis: '2026-10-04' }),
     // KHS M2: festgeschriebene Rechnungen schreiben nur noch erlaubte Spalten (module/rechnung-festschreibung.js)
     payloadFuerUpdate: (payload) => payload,
+    rechnungsSummen,
     invListCache: [],
     verordnungAuswahl: () => ({ prescriptionId: null, notizZeile: null }),
     steuerhinweisText: () => 'Kein Steuerausweis',

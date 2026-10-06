@@ -25,6 +25,8 @@
  * die Sache tatsächlich hängt.
  */
 
+import { summenAnzeige } from './rechnung-summen.js?v=20261006n';
+
 /** Sichtbarkeit über style.display, nicht über das hidden-Attribut:
  *  `.invoice-print-total-row` setzt `display:flex` und würde `hidden`
  *  überstimmen — die Zeile bliebe trotz `hidden` sichtbar. */
@@ -104,8 +106,11 @@ export function fuelleBelegPositionen(inv, { formatEur, escapeHtml, aggregateInv
   zeile('invvThEinzel', zeigePreise);
   zeile('invvThGesamt', zeigePreise);
   zeile('invvSubtotalRow', zeigePreise);
-  zeile('invvEigenRow', zeigePreise);
-  zeile('invvKasseRow', zeigePreise);
+  // Privat/Selbstzahler/BG haben keinen Kassenanteil: keine Eigenanteil-/Zuzahlungszeilen, Endsumme anders beschriftet
+  // (BG: zahlt der Unfallversicherungsträger, nicht der Patient — Live-Test 06.10.2026, F4/F6).
+  const anzeige = summenAnzeige(inv);
+  zeile('invvEigenRow', zeigePreise && anzeige.eigenZeigen);
+  zeile('invvKasseRow', zeigePreise && anzeige.kasseZeigen);
 
   const setzen = (id, wert) => {
     const el = document.getElementById(id);
@@ -118,6 +123,7 @@ export function fuelleBelegPositionen(inv, { formatEur, escapeHtml, aggregateInv
   setzen('invvKasse', formatEur(inv.kassenzuzahlung || 0));
   // Bleibt immer stehen — das ist die einzige Zahl, die der Patient braucht.
   setzen('invvTotal', formatEur(inv.total_patient || 0));
+  setzen('invvTotalLabel', anzeige.label);
 
   return zeigePreise;
 }

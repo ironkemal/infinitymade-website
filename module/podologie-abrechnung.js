@@ -63,7 +63,7 @@
 import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
-import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20261006i';
+import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20261006n';
 import { bgKostenzusageHinweis } from './bg-angaben.js?v=20261006i';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001b';
@@ -91,7 +91,7 @@ import { podAbrechnetZaehler } from './podo-abrechnet-zaehler.js?v=20260920u';
 // Vorbelegung im Tagesbehandlungs-Formular. Zweite Kopie der rohen Positions-
 // Ermittlung wird NICHT geschrieben — die von `verordnung-pruefung.js`
 // wiederverwendet, dort für `heilmittelPosition` bereits export-fähig gemacht.
-import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261004m113';
+import { erstePositionAusItems } from './verordnung-pruefung.js?v=20261006n';
 import { tagesVorbelegungGrund, verordnetZeile } from './podo-vorbelegung-grund.js?v=20261001i';
 import { bestehenderBehandlungstag, zweiterBehandlungstagFrage, abrechenbareBehandlungstage } from './podo-behandlungstag-regel.js?v=20261003a';
 import { POD_HEILMITTEL_KATALOG, POD_HEILMITTEL_DGS } from './podo-heilmittel-katalog.js?v=20261001g';
@@ -597,7 +597,7 @@ async function loadPodologieBilling() {
       padding:12px 14px;border:1px solid ${isSelected?'var(--primary)':'var(--border-subtle,var(--border))'};
       border-radius:8px;cursor:pointer;background:${isSelected?'var(--bg-card)':'transparent'};
       margin-bottom:8px;transition:border-color .15s;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px 12px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
           <span style="font-weight:600;color:var(--text-main);">${ctx.escapeHtml(patientAnzeigename(v) || '—')}</span>${belegnummerRosette(v, { patientennummer: v.leads?.patientennummer, escapeHtml: ctx.escapeHtml, titel: 'Patientennummer-Verordnungsnummer — dieselbe Nummer steht auf Rechnung und Abrechnungsdatei' })}
           <span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${ctx.escapeHtml(
@@ -611,7 +611,7 @@ async function loadPodologieBilling() {
           ${v.status && v.status !== 'aktiv' ? abrStatusBadge(v.status) : ''}
           ${v.absetzung_betrag ? `<span style="font-size:11px;color:#c2410c;font-weight:600;">−${Number(v.absetzung_betrag).toFixed(2).replace('.', ',')} €</span>` : ''}
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:100%;">
           <span style="font-size:12px;color:var(--text-muted);">${v.ausstellungsdatum ? new Date(v.ausstellungsdatum).toLocaleDateString('de-DE') : '—'}</span>
           ${statusBtnHtml}
           ${rechnungButtonHtml(v, { label: ctx.t('pod_rechnung') })}

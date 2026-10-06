@@ -41,7 +41,7 @@
  */
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
-import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20261004m113';
+import { podoVerordnungsfelder, podoMaskeNachziehen, podoFelderBereitstellen } from './verordnung-podo.js?v=20261006m';
 import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261006b';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
@@ -519,6 +519,7 @@ export function fuelleMuster13(rx, opt = {}) {
   // Podologische Zusatzangaben — die Felder legt module/verordnung-podo.js
   // an, sobald der Bereich auf Podologie steht. Steht er nicht darauf,
   // greift `setz` ins Leere und tut nichts.
+  podoFelderBereitstellen();   // sonst gibt es die Felder beim ersten Öffnen noch nicht (Live-Test F2)
   setz('rzPodoNagel', rx.nagel || '');
   setz('rzPodoAnlass', rx.behandlungsanlass || '');
   haken('rzUnterschrift', rx.unterschrift_vorhanden);

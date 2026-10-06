@@ -43,13 +43,13 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261006h';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261006n';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261004m113';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz } from './module/fahrtenbuch-regeln.js?v=20261001e';
 import { exportFahrtenbuchCsv, exportAenderungsprotokollCsv, exportPatientenverzeichnisCsv } from './module/fahrtenbuch-export.js?v=20261001b';
 import { fahrtEndOeffnen, fahrtEndAktuell, fahrtEndAbschluss, leadIdFuerFahrt } from './module/fahrt-beenden.js?v=20261001b';
-import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261004m113';
+import { mountVerordnungPodo, heilmittelKatalogVorschlaege, heilmittelAuswahlUebernehmen } from './module/verordnung-podo.js?v=20261006m';
 import { verordnungPatientenAbgleich } from './module/verordnung-patient-abgleich.js?v=20261003e';
 import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korrektur.js?v=20261001e';
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
@@ -63,11 +63,11 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261004m
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261004m113';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006g'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261006k'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261006g';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006n'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261006k'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261006n'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261006g';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260930f';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
-import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
+import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261006n';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261006b';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20261006b';
@@ -75,7 +75,7 @@ import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
-import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261006i';
+import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261006n';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
 import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261006b';
@@ -13636,16 +13636,12 @@ function updateInvForInsuranceType() {
 }
 
 function calcInvTotals() {
-  const enforceNoZuzahlung = invPatientInsuranceType === 'privat' || invPatientInsuranceType === 'bg';
-  const sub = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
-  const eigenPct = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invEigenPct').value) || 0);
-  const eigenEur = sub * (eigenPct / 100);
-  const kasse = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invKasse').value) || 0);
-  const total = eigenEur + kasse;
-  document.getElementById('invSubtotal').textContent = formatEur(sub);
-  document.getElementById('invEigenEur').textContent = formatEur(eigenEur);
-  document.getElementById('invKasseDisplay').textContent = formatEur(kasse);
-  document.getElementById('invTotalPatient').textContent = formatEur(total);
+  // Eine Stelle für Editor UND Speichern: module/rechnung-summen.js (Privat/Selbstzahler/BG ohne Zuzahlungsabzug).
+  const r = rechnungsSummen(invLines, invPatientInsuranceType, document.getElementById('invEigenPct').value, document.getElementById('invKasse').value);
+  document.getElementById('invSubtotal').textContent = formatEur(r.sub);
+  document.getElementById('invEigenEur').textContent = formatEur(r.eigenEur);
+  document.getElementById('invKasseDisplay').textContent = formatEur(r.kasse);
+  document.getElementById('invTotalPatient').textContent = formatEur(r.total);
 }
 
 
@@ -13706,12 +13702,7 @@ async function saveInvoice() {
     // Collapse duplicates so the printed invoice and the DB row stay tidy
     invLines = aggregateInvLines(invLines);
     renderInvLines(); calcInvTotals();
-    const subtotal = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
-    const enforceNoZuzahlung = invPatientInsuranceType === 'privat' || invPatientInsuranceType === 'bg';
-    const eigenPct = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invEigenPct').value) || 0);
-    const eigenEur = subtotal * (eigenPct / 100);
-    const kasse = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invKasse').value) || 0);
-    const total = enforceNoZuzahlung ? subtotal : (eigenEur + kasse);
+    const { sub: subtotal, eigenPct, eigenEur, kasse, total } = rechnungsSummen(invLines, invPatientInsuranceType, document.getElementById('invEigenPct').value, document.getElementById('invKasse').value);
     const ownerId = getOwnerId();
     const patientName = patientSel.options[patientSel.selectedIndex].text;
     // Nummer NICHT hier vergeben: das macht der Trigger set_invoice_nummer()
@@ -14534,7 +14525,7 @@ async function saveRezept() {
 
     // Format-Fehler (nur wenn ausgefüllt)
     const arzt = podoArztHinweise({ bereich: val('rzTherapieBereich'), lanr: rzLanr, bsnr: rzBsnr, unterschrift: document.getElementById('rzUnterschrift').checked });
-    const formatErrors = [...arzt.hinweise, ...kartenIkHinweise(val('rzPatKasseIk')), ...await icdSpeicherHinweise(supabase, { bereich: val('rzTherapieBereich'), icdFelder: [val('rzIcd'), val('rzIcd2')], dg: val('rzDg') })];
+    const formatErrors = [...arzt.hinweise, ...(istKasse(document.getElementById('rzMaskeWrap')?.dataset.rezeptart) ? kartenIkHinweise(val('rzPatKasseIk')) : []), ...await icdSpeicherHinweise(supabase, { bereich: val('rzTherapieBereich'), icdFelder: [val('rzIcd'), val('rzIcd2')], dg: val('rzDg') })];
     if (rzLanr && !/^\d{9}$/.test(rzLanr)) formatErrors.push('LANR muss 9 Ziffern haben');
     if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
     if (icdMehrAlsEinKodeJeFeld(val('rzIcd'), val('rzIcd2'))) formatErrors.push(t('pod_icd_je_feld'));

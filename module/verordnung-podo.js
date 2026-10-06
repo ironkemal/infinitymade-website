@@ -42,7 +42,7 @@ import { NAGEL_WERTE, nagelLabel } from './eingangsbefundung-regel.js?v=20261003
 import { sitzungsplan } from './sitzungsplan.js?v=20261003a';
 import { TOPF } from './verordnung-topf.js?v=20260930c';
 import { POD_KATALOG, POD_HOECHSTMENGE, POD_ORIENTIEREND, dgWurzel } from './verordnung-regeln.js?v=20260918';
-import { heilmittelGegenLeitsymptomatik } from './verordnung-pruefung.js?v=20261004m113';
+import { heilmittelGegenLeitsymptomatik } from './verordnung-pruefung.js?v=20261006n';
 
 // [Q1] Heilmittelkatalog Podologische Therapie, Höchstmenge und orientierende
 // Menge je Diagnosegruppe stehen zentral in `verordnung-regeln.js` — dort
@@ -724,6 +724,18 @@ function podoFelderEl() {
       <input type="text" id="rzPodoAnlass" placeholder="${POD_ANLASS_DEFAULT}" style="${FELD_STIL}">
     </div>`;
   return inBlock(el) ? el : null;
+}
+
+/**
+ * Die podologischen Zusatzfelder (Nagel, Behandlungsanlass) JETZT anlegen, falls der Bereich Podologie ist.
+ *
+ * Live-Test 06.10.2026 (F2): die Felder entstehen sonst erst im nächsten Durchlauf der Automatik
+ * (`podoMaskeNachziehen()` → setTimeout) — NACH `fuelleMuster13()`. Beim ersten Öffnen einer Verordnung
+ * nach dem Laden der Seite griff `setz('rzPodoAnlass', …)` ins Leere, das Feld blieb leer, und das nächste
+ * Speichern schrieb den Standardtext darüber (Datenverlust des Anlasses; dasselbe galt für `nagel`).
+ */
+export function podoFelderBereitstellen() {
+  if (istPodo()) podoFelderEl();
 }
 
 /**

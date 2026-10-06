@@ -129,6 +129,9 @@ export function privatpreisFuer(code, services) {
  * NUR Rechnungstext — Katalog-`label`, DTA und GKV-Beleg bleiben beim amtlichen Namen.
  * Die eigene Leistung der Praxis (services.title) hat immer Vorrang.
  */
+/** Titel, mit denen die Standardleistungen aus dem Katalog angelegt werden (`GKV_LEISTUNGSKATALOG` in dashboard.js). */
+const STANDARD_KATALOGTITEL = new Set(['Podologische Behandlung (groß)', 'Podologische Behandlung (klein)']);
+
 const PRIVAT_ANZEIGE = Object.freeze({
   '78010': 'Podologische Behandlung (Hornhaut und Nägel), Therapiezeit bis 20 Minuten',
   '78020': 'Podologische Behandlung (Hornhaut und Nägel), Therapiezeit über 20 Minuten',
@@ -174,7 +177,11 @@ export function zeilenAusBehandlungen(behandlungen, { verordnung, services, kata
     for (const code of codes) {
       const eigen = privatpreisFuer(code, services);
       const katalogEintrag = (katalogPodo || []).find(k => k.code === String(code));
-      const titel = eigen?.title || PRIVAT_ANZEIGE[String(code)] || katalogEintrag?.title || String(code);
+      // Eine eigene Leistung gewinnt — AUSSER ihr Titel ist noch der unveränderte Standardtext des Katalogs
+      // („… (groß)"): die Standardleistungen entstehen aus dem Katalog und wurden nie bewusst benannt
+      // (Live-Test 06.10.2026, F3). Den Preis der Leistung behält die Zeile.
+      const eigenerTitel = eigen?.title && !STANDARD_KATALOGTITEL.has(String(eigen.title).trim()) ? eigen.title : null;
+      const titel = eigenerTitel || PRIVAT_ANZEIGE[String(code)] || eigen?.title || katalogEintrag?.title || String(code);
       const preis = eigen?.preis || 0;
       if (!preis) offenePreise++;
       zeilen.push({

@@ -64,7 +64,7 @@
 
 import { berechneZuzahlung, wirksameEinheiten } from './zuzahlung-rechnen.js?v=20260920s';
 import { verordnungStatusInfo } from './abrechnungsstatus.js?v=20261003c';
-import { preisAusService } from './rechnung-bruecke.js?v=20261006i';
+import { preisAusService } from './rechnung-bruecke.js?v=20261006n';
 
 const fmt = (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n || 0);
 

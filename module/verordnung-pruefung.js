@@ -66,7 +66,8 @@ const PFLICHTFELDER = [
   { feld: 'versichertennummer', label: 'Versichertennummer', schwere: SCHWERE.blocker, nurGkv: true },
   { feld: 'kasseIk',            label: 'IK der Krankenkasse (Karte)', schwere: SCHWERE.blocker, nurGkv: true },
   { feld: 'ausstellungsdatum',  label: 'Ausstellungsdatum',  schwere: SCHWERE.blocker },
-  { feld: 'diagnosegruppe',     label: 'Diagnosegruppe',     schwere: SCHWERE.blocker },
+  // Die Diagnosegruppe ist Kassen-Pflicht (HeilM-RL § 13); bei Privat/Selbstzahler/BG nicht (Live-Test 06.10.2026, F9).
+  { feld: 'diagnosegruppe',     label: 'Diagnosegruppe',     schwere: SCHWERE.blocker, nurGkv: true },
   { feld: 'heilmittel',         label: 'Verordnetes Heilmittel', schwere: SCHWERE.blocker },
   { feld: 'arztLanr',           label: 'Arztnummer (LANR)',  schwere: SCHWERE.warnung, nurGkv: true },
   { feld: 'arztBsnr',           label: 'Betriebsstättennummer (BSNR)', schwere: SCHWERE.warnung, nurGkv: true },
@@ -211,7 +212,7 @@ export function pruefeVerordnung(vo, regelsatz, opt = {}) {
   // Abschnitt 3 den ICD⇄Diagnosegruppe-Abgleich wortlos.
   const icdCodes = parseIcdList(vo?.icd);
   if (!icdCodes.length) {
-    if (profil?.pflichtIcd) {
+    if (profil?.pflichtIcd && istGkv) {   // ICD bestimmt die Diagnosegruppe — und die gibt es nur bei Kasse
       melde(SCHWERE.blocker, 'PFLICHT_ICD', 'ICD-10-Kode fehlt — in der Podologie bestimmt er die Diagnosegruppe.', 'icd', QUELLE_PFLICHT);
     } else if (istGkv) {
       melde(SCHWERE.hinweis, 'ICD_FEHLT', 'Kein ICD-10-Kode erfasst. Für die §302-Abgabe wird er benötigt.', 'icd', QUELLE_PFLICHT);

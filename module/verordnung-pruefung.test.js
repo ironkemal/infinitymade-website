@@ -575,3 +575,18 @@ test('Motor: a) + 78010 im Heilmittelfeld → kein Befund; a) + „groß“ → 
   assert.equal(gross.befunde.find(x => x.code === 'LS_78020_NUR_KOMPLEX').schwere, SCHWERE.warnung);
   assert.equal(gross.ok, true);
 });
+
+// ── Live-Test 06.10.2026 F9: BG/Privat/Selbstzahler kennen keine Kassenregeln ──
+test('Diagnosegruppe und ICD sind nur bei Kasse Pflicht — Privat/Selbstzahler/BG bekommen keinen Blocker dafür', () => {
+  const regelsatz = { bereich: 'podologie', gruppen: {}, luecken: [], profil: { pflichtIcd: true } };
+  const basis = { ausstellungsdatum: '2026-09-01', heilmittel: 'Podologische Behandlung', anzahl: 4, frequenz: '1x' };
+  for (const art of ['privat', 'selbstzahler', 'bg']) {
+    const r = pruefeVerordnung({ ...basis, rezeptart: art }, regelsatz);
+    const blocker = r.befunde.filter(b => b.schwere === SCHWERE.blocker).map(b => b.text);
+    assert.deepEqual(blocker, [], `${art}: ${blocker.join(' | ')}`);
+  }
+  const kasse = pruefeVerordnung({ ...basis, rezeptart: 'kassen' }, regelsatz);
+  const text = kasse.befunde.map(b => b.text).join(' | ');
+  assert.match(text, /Diagnosegruppe fehlt/);
+  assert.match(text, /ICD-10-Kode fehlt/);
+});
