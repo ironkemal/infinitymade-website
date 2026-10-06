@@ -1,0 +1,83 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Probe: Einrichtungsassistent mit Branding-Schritt</title>
+<!--
+  Lädt die ECHTE setup.html + setup.js, ersetzt nur fetch durch eine erfundene /api/setup/*-Antwort.
+  Prüft die Schrittfolge Jeton → (Owner) → Mail → Praxisangaben → Prüfungen → Fertig, das
+  Überspringen, die Fehlerführung und den neuen Mail-Text (O-142). Kein Backend, kein Login.
+-->
+<div id="buehne"></div>
+<script type="module">
+const ergebnis = [];
+const pruef = (name, ok, detail = '') => ergebnis.push({ name, ok: !!ok, detail: String(detail) });
+const warte = (ms = 60) => new Promise(r => setTimeout(r, ms));
+try {
+  const html = await (await fetch('../../setup.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const wrap = doc.querySelector('main.setup-wrap');
+  document.getElementById('buehne').appendChild(document.importNode(wrap, true));
+
+  const anrufe = [];
+  let brandingAntwort = { status: 200, body: { ok: true, gespeichert: 2 } };
+  const echtFetch = window.fetch.bind(window);
+  window.fetch = async (url, opt = {}) => {
+    const u = String(url);
+    if (!u.includes('/setup/')) return echtFetch(url, opt);
+    const pfad = u.slice(u.indexOf('/setup/'));
+    const body = opt.body ? JSON.parse(opt.body) : null;
+    anrufe.push([pfad, body]);
+    const antwort = (status, daten) => ({ ok: status < 400, status, json: async () => daten });
+    if (pfad === '/setup/status') return antwort(200, { abgeschlossen: false, verfuegbar: true });
+    if (pfad === '/setup/verify') return antwort(200, body?.pruefungen
+      ? { ok: true, billigePruefungen: { schema: { status: 'yesil' }, rls: { status: 'yesil' }, sifreleme: { status: 'yesil' } } }
+      : { ok: true, ownerAngelegt: true });
+    if (pfad === '/setup/test-smtp') return antwort(200, { eingerichtet: false });
+    if (pfad === '/setup/branding') return antwort(brandingAntwort.status, brandingAntwort.body);
+    if (pfad === '/setup/abschluss') return antwort(200, { ok: true });
+    return antwort(404, {});
+  };
+
+  await import('../../setup.js?v=20261006a');
+  await warte(100);
+  const $ = (id) => document.getElementById(id);
+  const sichtbar = (id) => !$(id).hidden;
+
+  // Jeton → (Owner existiert) → Mail
+  $('token').value = 'jeton'; $('tokenForm').dispatchEvent(new Event('submit', { cancelable: true }));
+  await warte();
+  pruef('Nach dem Jeton folgt die Mailprüfung', sichtbar('stepSmtp') && !sichtbar('stepBranding'));
+  pruef('Schrittzähler nennt fünf Schritte', /von 5/.test($('smtpStepLabel').textContent) && /Schritt 4 von 5/.test($('brandingStepLabel').textContent) && /Schritt 5 von 5/.test($('doneStepLabel').textContent),
+    [$('smtpStepLabel').textContent, $('brandingStepLabel').textContent, $('doneStepLabel').textContent].join(' / '));
+  const txt = $('smtpSkippedMsg').textContent;
+  pruef('Mailtext nennt nur Patienten-/Termin-/Mahnungsmails (O-142)', /Patientinnen und Patienten/.test(txt) && /Mahnungen/.test(txt) && /Anmeldung braucht keine Mails/.test(txt), txt);
+  pruef('keine Aussage mehr zu Einladungs-/Passwort-Reset-Mails', !/Einladung|Passwort-Reset/.test(txt + $('smtpAckLabel').textContent));
+
+  // Weiter ohne Mail → Praxisangaben
+  $('smtpAckCheckbox').checked = true; $('smtpAckCheckbox').dispatchEvent(new Event('change'));
+  $('smtpSkipContinueBtn').click();
+  await warte();
+  pruef('Danach kommt der Branding-Schritt, noch keine Prüfungen', sichtbar('stepBranding') && !sichtbar('stepDone'));
+
+  // Fehler: Server lehnt ab → Meldung, Schritt bleibt, Überspringen geht trotzdem
+  brandingAntwort = { status: 400, body: { error: 'Postleitzahl: ungültig (fünf Ziffern)' } };
+  $('brPlz').value = '12';
+  $('brandingForm').dispatchEvent(new Event('submit', { cancelable: true }));
+  await warte();
+  pruef('Serverfehler wird gezeigt, Schritt bleibt offen', /Postleitzahl/.test($('brandingMsg').textContent) && sichtbar('stepBranding'), $('brandingMsg').textContent);
+  pruef('Speichern-Knopf ist danach wieder bedienbar', !$('brandingSaveBtn').disabled);
+
+  // Erfolg: Nutzlast = Jeton + getrimmte Felder, danach Prüfungen
+  brandingAntwort = { status: 200, body: { ok: true, gespeichert: 2 } };
+  $('brPlz').value = ' 53721 '; $('brCity').value = 'Siegburg'; $('brIban').value = 'DE02 1203 0000 0000 2020 51';
+  anrufe.length = 0;
+  $('brandingForm').dispatchEvent(new Event('submit', { cancelable: true }));
+  await warte(200);
+  const b = anrufe.find(a => a[0] === '/setup/branding')?.[1];
+  pruef('Nutzlast trägt Jeton und getrimmte Felder', b?.token === 'jeton' && b?.plz === '53721' && b?.city === 'Siegburg' && b?.iban === 'DE02 1203 0000 0000 2020 51', JSON.stringify(b));
+  pruef('Nutzlast hat NUR die elf Branding-Felder + Jeton (kein Plan/Rolle)', Object.keys(b || {}).sort().join() === ['bank_name','bic','city','iban','ik_number','phone','plz','steuernummer','street','tax_exempt_note','token','ust_id'].sort().join(), Object.keys(b || {}).join());
+  pruef('Nach dem Speichern laufen die Prüfungen', sichtbar('stepDone') && !sichtbar('stepBranding'));
+} catch (e) {
+  pruef('Probe läuft durch', false, e?.stack || e?.message || String(e));
+}
+window.__probe = ergebnis;
+</script>

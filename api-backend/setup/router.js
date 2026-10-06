@@ -33,6 +33,7 @@ import { createSMTPTransport, getMailFrom } from '../lib/mail.js';
 import { schemaZaehlerLesen } from './selbstpruefung.js';
 import { rlsNegativTest, verschluesselungsTest } from './pruefungen.js';
 import { KUTU_OWNER_PLAN } from '../lib/dagitim.js';
+import { brandingFelderPruefen } from './branding-felder.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -349,6 +350,33 @@ router.post('/abschluss', async (req, res) => {
   // Leeres Ergebnis heisst "war schon abgeschlossen" — kein Fehler, derselbe
   // Endzustand, also 200 statt 409 (Idempotenz: doppeltes Klicken ist harmlos).
   res.json({ ok: true, bereitsAbgeschlossen: !zeile || zeile.length === 0 });
+});
+
+// Schritt „Praxisangaben für Rechnungen" (KHS M2.5, überspringbar). Läuft ZWISCHEN Mailprüfung und
+// Abschluss: der Jeton ist da schon verbraucht (Schritt 2), gilt aber weiter als Ausweis (wie
+// /test-smtp, /abschluss). Nach dem Abschluss ist der Weg zu (410) — danach nur noch angemeldet in
+// den Einstellungen. Schreibt nur eine Whitelist von Profilspalten des Owners (branding-felder.js).
+router.post('/branding', async (req, res) => {
+  const { token } = req.body || {};
+  if (await istAbgeschlossen()) return res.status(410).json({ error: 'Bereits eingerichtet' });
+  if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
+
+  const { data: setupZeile } = await supabase
+    .from('praxura_setup').select('owner_user_id').eq('id', 1).maybeSingle();
+  if (!setupZeile?.owner_user_id) {
+    return res.status(409).json({ error: 'Noch kein Owner-Konto — zuerst Schritt 2 abschließen.' });
+  }
+
+  const { felder, fehler } = brandingFelderPruefen(req.body);
+  if (fehler.length) return res.status(400).json({ error: fehler.join(' · '), fehler });
+  if (!Object.keys(felder).length) return res.json({ ok: true, gespeichert: 0 });
+
+  const { data: zeile, error } = await supabase
+    .from('profiles').update(felder).eq('id', setupZeile.owner_user_id).select('id');
+  if (error || !zeile || zeile.length === 0) {
+    return res.status(500).json({ error: 'Die Angaben konnten nicht gespeichert werden. Sie lassen sich später in den Einstellungen nachtragen.' });
+  }
+  res.json({ ok: true, gespeichert: Object.keys(felder).length });
 });
 
 export default router;

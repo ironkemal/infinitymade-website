@@ -176,7 +176,7 @@
 
       <!-- Schritt 1: Jeton -->
       <section id="stepToken">
-        <p class="step-indicator" id="tokenStepLabel">Schritt 1 von 4</p>
+        <p class="step-indicator" id="tokenStepLabel">Schritt 1 von 5</p>
         <h1 id="tokenTitle">Einrichtung starten</h1>
         <p class="sub" id="tokenSub">Das Einrichtungsjeton stand am Ende von <code>install.sh</code> im Terminal.</p>
         <form id="tokenForm">
@@ -189,7 +189,7 @@
 
       <!-- Schritt 2: Owner-Konto -->
       <section id="stepOwner" hidden>
-        <p class="step-indicator" id="ownerStepLabel">Schritt 2 von 4</p>
+        <p class="step-indicator" id="ownerStepLabel">Schritt 2 von 5</p>
         <h1 id="ownerTitle">Praxis und Konto</h1>
         <p class="sub" id="ownerSub">Diese Angaben legen das erste Inhaber-Konto an.</p>
         <form id="ownerForm">
@@ -229,17 +229,17 @@
 
       <!-- Schritt 3: SMTP testen -->
       <section id="stepSmtp" hidden>
-        <p class="step-indicator" id="smtpStepLabel">Schritt 3 von 4</p>
+        <p class="step-indicator" id="smtpStepLabel">Schritt 3 von 5</p>
         <h1 id="smtpTitle">Mailversand prüfen</h1>
         <p class="sub" id="smtpIntro">Wir prüfen jetzt, ob die Box wirklich Mails verschicken kann.</p>
 
         <div id="smtpChecking" class="msg info show">Wird geprüft …</div>
 
         <div id="smtpSkipped" hidden>
-          <div class="msg warn show" id="smtpSkippedMsg">Kein SMTP eingerichtet — es werden keine Einladungs-, Passwort-Reset- oder Terminmails verschickt.</div>
+          <div class="msg warn show" id="smtpSkippedMsg">Kein E-Mail-Konto verbunden — Mails an Patientinnen und Patienten (z. B. Terminbestätigungen, Mahnungen) werden nicht verschickt. Die Anmeldung braucht keine Mails.</div>
           <label class="check-row">
             <input type="checkbox" id="smtpAckCheckbox" />
-            <span id="smtpAckLabel">Ich bin mir bewusst, dass keine Mails verschickt werden, und möchte trotzdem fortfahren.</span>
+            <span id="smtpAckLabel">Ich bin mir bewusst, dass keine Mails an Patientinnen und Patienten verschickt werden, und möchte trotzdem fortfahren.</span>
           </label>
           <button type="button" class="btn-primary" id="smtpSkipContinueBtn" disabled>Weiter</button>
         </div>
@@ -265,9 +265,63 @@
         </div>
       </section>
 
+      <!-- Schritt 4: Praxisangaben für Rechnungen (überspringbar, KHS M2.5) -->
+      <section id="stepBranding" hidden>
+        <p class="step-indicator" id="brandingStepLabel">Schritt 4 von 5</p>
+        <h1 id="brandingTitle">Praxisangaben für Rechnungen</h1>
+        <p class="sub" id="brandingSub">Diese Angaben stehen später auf Ihren Rechnungen. Sie können den Schritt überspringen und alles in den Einstellungen nachtragen — dort auch Logo, Stempel und Fußzeile.</p>
+        <form id="brandingForm" novalidate>
+          <label for="brStreet" id="lblBrStreet">Straße und Hausnummer</label>
+          <input type="text" id="brStreet" autocomplete="address-line1" maxlength="120" />
+          <div class="row-2">
+            <div>
+              <label for="brPlz" id="lblBrPlz">Postleitzahl</label>
+              <input type="text" id="brPlz" inputmode="numeric" maxlength="5" autocomplete="postal-code" />
+            </div>
+            <div>
+              <label for="brCity" id="lblBrCity">Ort</label>
+              <input type="text" id="brCity" autocomplete="address-level2" maxlength="80" />
+            </div>
+          </div>
+          <label for="brPhone" id="lblBrPhone">Telefon</label>
+          <input type="tel" id="brPhone" autocomplete="tel" maxlength="40" />
+          <div class="row-2">
+            <div>
+              <label for="brSteuernummer" id="lblBrSteuernummer">Steuernummer</label>
+              <input type="text" id="brSteuernummer" maxlength="30" autocomplete="off" />
+            </div>
+            <div>
+              <label for="brUstId" id="lblBrUstId">oder USt-IdNr.</label>
+              <input type="text" id="brUstId" maxlength="14" autocomplete="off" placeholder="DE123456789" />
+            </div>
+          </div>
+          <label for="brTaxNote" id="lblBrTaxNote">Hinweis zur Steuerbefreiung (steht auf der Rechnung)</label>
+          <input type="text" id="brTaxNote" maxlength="300" autocomplete="off" placeholder="z. B. Umsatzsteuerfrei nach § 4 Nr. 14 Buchst. a UStG" />
+          <label for="brIban" id="lblBrIban">IBAN</label>
+          <input type="text" id="brIban" autocomplete="off" spellcheck="false" placeholder="DE…" />
+          <div class="row-2">
+            <div>
+              <label for="brBic" id="lblBrBic">BIC</label>
+              <input type="text" id="brBic" maxlength="11" autocomplete="off" spellcheck="false" />
+            </div>
+            <div>
+              <label for="brBank" id="lblBrBank">Bank</label>
+              <input type="text" id="brBank" maxlength="100" autocomplete="off" />
+            </div>
+          </div>
+          <label for="brIk" id="lblBrIk">Institutionskennzeichen (IK)</label>
+          <input type="text" id="brIk" inputmode="numeric" maxlength="9" autocomplete="off" />
+          <div id="brandingMsg" class="msg"></div>
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" id="brandingSkipBtn">Überspringen</button>
+            <button type="submit" class="btn-primary" id="brandingSaveBtn" style="margin-top:0;">Speichern und weiter</button>
+          </div>
+        </form>
+      </section>
+
       <!-- Schritt 4: Prüfungen + Abschluss -->
       <section id="stepDone" hidden>
-        <p class="step-indicator" id="doneStepLabel">Schritt 4 von 4</p>
+        <p class="step-indicator" id="doneStepLabel">Schritt 5 von 5</p>
 
         <div id="pruefChecking" class="msg info show">Kontrollen laufen …</div>
 
@@ -306,6 +360,6 @@
     </div>
   </main>
 
-  <script type="module" src="setup.js?v=20261001x"></script>
+  <script type="module" src="setup.js?v=20261006a"></script>
 </body>
 </html>
