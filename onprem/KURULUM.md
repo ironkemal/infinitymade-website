@@ -1,6 +1,6 @@
 # Praxura Praxis-Box — Installationsanleitung
 
-> Stand 02.10.2026 · Version 0.2.0 · gilt für **Linux-Server** und **Windows-PC**.
+> Stand 06.10.2026 · Version 0.2.0 · gilt für **Linux-Server** und **Windows-PC**.
 > Diese Anleitung ist so geschrieben, dass eine technisch interessierte Person
 > die Box ohne uns einrichten kann. Wir haben **keinen Zugang** zu Ihrer Box —
 > alle Schlüssel entstehen auf Ihrem Gerät und bleiben dort.
@@ -18,9 +18,10 @@
 | Zugang | `sudo`/root per SSH | ein Konto mit Administratorrechten |
 
 Außerdem:
-- ein **Name** für die Box im Praxisnetz, z. B. `praxis.home.arpa` (siehe §3)
+- ein **Einrichtungscode** von Praxura (16 Zeichen im Format `XXXX-XXXX-XXXX-XXXX`), den Sie vorab erhalten
 - für Sicherungen: eine **externe Platte oder ein NAS** (siehe §6)
 - ein Ort für den **Datenschlüssel** (Tresor/Ausdruck, siehe §2.4) — *nicht* auf der Box
+- (nur bei Ausstiegsweg ohne Code: ein eigener **Name** für die Box, siehe §3 und §8)
 
 Die Einrichtung dauert 20–40 Minuten, fast alles davon ist Herunterladen.
 
@@ -79,16 +80,37 @@ Konto.
 
 ## 2. Die Fragen von `install.sh`
 
-### 2.1 Adresse (`SITE_URL`)
-`https://praxis.home.arpa` — ohne Port, ohne Pfad. `.home.arpa` ist der für
-Heimnetze reservierte Namensraum. Bei einer FRITZ!Box geht auch
-`https://<pc-name>.fritz.box` (siehe §3).
+### 2.1 Einrichtungscode und Name der Box
+`install.sh` fragt zuerst nach Ihrem **Einrichtungscode** (16 Zeichen im
+Format `XXXX-XXXX-XXXX-XXXX`, von Praxura erhalten). Die Eingabe bleibt
+unsichtbar und wird nirgends im Protokoll oder auf der Box gespeichert.
 
-### 2.2 Echtes Zertifikat?
-**n** — die Box ist nur im Praxisnetz erreichbar. Sie stellt sich dann selbst
-ein Zertifikat aus; jedes Gerät muss deren Wurzelzertifikat einmal
-vertrauen (§4). (`j` nur, wenn die Box unter einer echten Internet-Domain
-erreichbar ist.)
+Nach der Eingabe schlägt die Box automatisch einen Namen vor — zwei einfache
+Wörter und eine Zahl (z. B. `sonne-tal-42`):
+- **J** (oder Enter) übernimmt den vorgeschlagenen Namen.
+- **N** fordert einen neuen Namensvorschlag an.
+
+Der übernommene Name ist danach fest. Anschließend ist die Adresse
+`https://<name>.<Domain>` (z. B. `https://sonne-tal-42.praxura.de`) auf jedem
+Gerät im Praxisnetz ohne zusätzlichen Eintrag in Router oder Netzwerkdateien
+erreichbar.
+
+**Enter ohne Code:** Wenn Sie keinen Code eingeben und direkt Enter drücken,
+wählen Sie die manuelle Konfiguration mit einer eigenen Adresse (Ausstiegsweg,
+siehe §8).
+
+### 2.2 Echtes Zertifikat? (nur Weg „eigene Adresse“)
+Diese Frage erscheint nur, wenn Sie in §2.1 keinen Einrichtungscode eingegeben
+haben:
+- **n** — für ein rein internes Praxisnetz. Die Box stellt sich selbst ein
+  internes Zertifikat aus; jedes Gerät muss deren Wurzelzertifikat einmal
+  vertrauen (§4).
+- **j** — nur, wenn die Box unter einer echten Internet-Domain von außen
+  erreichbar ist (Let's Encrypt).
+
+*Hinweis:* Bis zum nächsten Update arbeitet auch die Box mit Einrichtungscode
+vorübergehend noch mit dem internen Zertifikat (Stand 06.10.2026). Daher muss
+aktuell auch bei ihr das Wurzelzertifikat einmalig importiert werden (§4).
 
 ### 2.3 Update-Kanal
 - **beta** (Enter) — jede veröffentlichte Version. Für die Pilot-/Testphase.
@@ -115,6 +137,41 @@ Warnung).
 
 ## 3. Den Namen der Box im Praxisnetz bekannt machen
 
+Beim Standardweg mit **Einrichtungscode** entfällt das Eintragen in Router oder
+`hosts`-Dateien vollständig. Die Box wird unter ihrem Namen automatisch im
+Praxisnetz gefunden.
+
+### FRITZ!Box: DNS-Rebind-Schutz
+Nutzen Sie eine FRITZ!Box, müssen Sie eine Ausnahme eintragen, da der Box-Name
+auf eine interne IP-Adresse im Praxisnetz verweist:
+1. FRITZ!Box-Benutzeroberfläche im Browser öffnen (`fritz.box`).
+2. *Heimnetz → Netzwerk → Netzwerkeinstellungen*.
+3. Nach unten scrollen zum Bereich **DNS-Rebind-Schutz**.
+4. Unter *Ausnahmen* den vollständigen Namen der Box eintragen
+   (z. B. `sonne-tal-42.praxura.de`).
+5. Übernehmen / Speichern.
+
+**Telekom Speedport:** Es ist kein Eintrag nötig (in Messungen geprüft, der
+Speedport blockiert die interne Namensauflösung nicht).
+
+### Verhalten bei Internetausfall
+Die Geräte im Praxisnetz lösen den Namen über das Internet auf. Fällt die
+Internetverbindung der Praxis aus, können Geräte den Namen nach einiger Zeit
+nicht mehr finden (sobald der lokale Zwischenspeicher abgelaufen ist).
+
+- **Auf dem Box-PC selbst:** `https://localhost` geht wegen des Zertifikats
+  nicht. Deshalb trägt die Einrichtung den Namen fest in die lokale
+  `hosts`-Datei des Box-Rechners ein (der Windows-Starter erledigt das
+  automatisch). Auf dem Box-Rechner selbst lässt sich die Anwendung daher auch
+  bei Internetausfall öffnen.
+- **Für die anderen Geräte (Tablets, weitere PCs):** Hier hilft bei einem
+  Internetausfall aktuell nur das Abwarten, bis die Verbindung wieder steht
+  (eine Messung der genauen Ausfallzeit folgt).
+
+---
+
+### Nur für den Weg „eigene Adresse“ (ohne Einrichtungscode)
+
 Die Box antwortet **nur auf ihren Namen**, nicht auf die IP allein.
 
 - **Der Box-PC selbst (Windows):** erledigt das Skript (`hosts`-Eintrag).
@@ -131,13 +188,17 @@ Die Box antwortet **nur auf ihren Namen**, nicht auf die IP allein.
   `192.168.x.y  praxis.home.arpa`
   — auf Tablets ist das nicht möglich, dort geht nur der Router-Weg.
 
-**Windows-Netzwerkprofil:** Das Praxisnetz muss in Windows als **„Privat"**
-eingestuft sein (Einstellungen → Netzwerk → Eigenschaften), sonst blockt die
-Firewall die anderen Geräte. Das Skript warnt, wenn es „Öffentlich" ist.
+**Windows-Netzwerkprofil (gilt immer):** Das Praxisnetz muss in Windows als
+**„Privat"** eingestuft sein (Einstellungen → Netzwerk → Eigenschaften), sonst
+blockt die Firewall die anderen Geräte. Das Skript warnt, wenn es „Öffentlich" ist.
 
 ---
 
 ## 4. Wurzelzertifikat auf jedem Gerät vertrauen
+
+> **Gilt für:** Nur für den Weg „eigene Adresse“ mit internem Zertifikat — und
+> vorübergehend auch für den Weg mit Einrichtungscode, solange die Box noch mit
+> dem internen Zertifikat arbeitet (siehe §2.2).
 
 Datei holen:
 - **Windows-Box:** liegt schon unter `C:\ProgramData\Praxura\praxura-wurzelzertifikat.crt`
@@ -161,12 +222,12 @@ die Geräte es **nicht** neu importieren.
 
 ## 5. Erster Start im Browser
 
-1. `https://praxis.home.arpa/setup.html` öffnen.
+1. `https://<ihre-box-adresse>/setup.html` öffnen (z. B. `https://sonne-tal-42.praxura.de/setup.html` oder `https://praxis.home.arpa/setup.html`).
 2. Einrichtungs-Jeton aus §2.5 eingeben.
-3. **Inhaber-Konto** anlegen (E-Mail, Passwort ≥ 8 Zeichen, Praxisname,
+3. **Inhaber-Konto** anlegen (E-Mail, Passwort ≥ 12 Zeichen, Praxisname,
    Fachbereich). Es braucht **keine Bestätigungsmail** — die Box verschickt für
    Konten grundsätzlich keine Mails.
-4. Danach `https://praxis.home.arpa/login.html` — fertig.
+4. Danach `https://<ihre-box-adresse>/login.html` — fertig.
 
 **Mitarbeitende:** im Dashboard unter *Team* anlegen; die Box zeigt einen
 **Einrichtungscode**. Damit setzt die Person ihr Passwort selbst. Passwort
@@ -247,11 +308,79 @@ Windows: jeden Befehl mit `wsl -d Praxura -- ` davor ausführen, z. B.
 
 ---
 
-## 8. Wenn etwas nicht geht
+## 8. Ausstiegsweg: ohne Praxura-Namensdienst
+
+Dieser Abschnitt beschreibt, wie Sie die Praxis-Box unabhängig vom
+Praxura-Namensdienst betreiben oder umstellen können.
+
+- **Wann dieser Weg greift:**
+  - Sie haben keinen Einrichtungscode oder möchten keinen externen Namensdienst nutzen.
+  - Der Praxura-Dienst ist dauerhaft nicht erreichbar oder Praxura existiert nicht mehr.
+  - Eine Erstinstallation auf **neuer Hardware** mit „Enter ohne Code“ (siehe §2.1)
+    führt ebenfalls direkt auf diesen Weg. ⚠️ War die Box schon einmal mit Code
+    eingerichtet, übernimmt auch `install.sh --neu` den alten Namen wieder
+    (die Box-Identität bleibt erhalten) — dann nach der Installation die Werte
+    aus Weg 1 bzw. 2 erneut in `.env` eintragen und die Box neu starten.
+- **Was passiert, wenn der Namensdienst wegfällt:**
+  Der bisherige Name bleibt nur so lange im DNS, wie die Domain dahinter
+  besteht — darauf sollten Sie sich nicht verlassen. Ändert sich die IP-Adresse
+  der Box, wird der Name nicht mehr nachgeführt; geben Sie der Box deshalb im
+  Router eine **feste IP-Adresse** (DHCP-Reservierung). Sobald die Box ein echtes
+  Zertifikat über den Namensdienst bezieht (folgt mit einem Update), läuft es
+  ohne Dienst spätestens nach **90 Tagen** ab.
+  ⚠️ **Ihre Daten in der Box sind davon NICHT betroffen** — alles läuft lokal
+  in Ihrer Praxis.
+  **Planen Sie den Umstieg bei einer Kündigung, nicht erst, wenn das Zertifikat
+  abläuft.**
+
+### Weg 1 — Eigene Domain der Praxis
+Nutzen Sie einen Namen unter Ihrer eigenen Praxis-Domain (z. B. `box.praxis-beispiel.de`):
+1. **DNS-Eintrag anlegen:** Beim eigenen DNS-Anbieter einen A-Eintrag für den
+   Namen (z. B. `box.praxis-beispiel.de`) auf die lokale IP-Adresse der Box im
+   Praxisnetz setzen.
+2. **Konfiguration in `.env` anpassen:** In `/opt/praxura/onprem/.env` folgende
+   Werte eintragen:
+   ```env
+   SITE_URL=https://box.praxis-beispiel.de
+   API_EXTERNAL_URL=https://box.praxis-beispiel.de
+   SUPABASE_PUBLIC_URL=https://box.praxis-beispiel.de
+   CADDY_TLS_ARG=internal
+   ```
+   Mit `internal` muss jedes Gerät einmal das Wurzelzertifikat der Box
+   vertrauen (§4). Nutzen Sie eine FRITZ!Box, tragen Sie auch diesen Namen als
+   Ausnahme beim DNS-Rebind-Schutz ein (§3).
+   *(Nur wenn die Box tatsächlich aus dem Internet erreichbar ist — etwa ein
+   eigener Cloud-Server —, tragen Sie bei `CADDY_TLS_ARG` stattdessen eine
+   E-Mail-Adresse für Let's Encrypt ein. Für eine Box im Praxisnetz: dafür
+   **keine Ports im Router öffnen**; mit einer internen IP-Adresse schlägt
+   dieser Weg ohnehin fehl.)*
+3. **Box neu starten:**
+   ```bash
+   cd /opt/praxura/onprem && sudo docker compose up -d
+   ```
+   **Windows:** zuerst `wsl -d Praxura -- bash -c "cd /opt/praxura/onprem && docker compose up -d"`,
+   danach `praxura-installieren.ps1` erneut als Administrator ausführen. Es liest
+   die neue Adresse aus `.env` und ersetzt den Eintrag in der `hosts`-Datei des
+   Box-PCs — ohne diesen Eintrag lässt sich die Box auf dem Box-PC selbst nicht
+   öffnen.
+4. **Hinweis:** Passwörter bleiben gültig, aber alle Mitarbeiter müssen sich
+   unter der neuen Adresse **einmal neu anmelden**. Links in bereits früher
+   verschickten Patienten-Mails zeigen weiterhin auf die alte Adresse.
+
+### Weg 2 — Letzter Ausweg ohne Domain
+Haben Sie keine eigene Internet-Domain, wählen Sie einen rein internen Namen:
+- Interner Name (z. B. `https://praxis.home.arpa`) in `.env`.
+- `CADDY_TLS_ARG=internal` in `.env`.
+- Wurzelzertifikat auf jedem Praxisgerät importieren (siehe §4).
+- Name im Router oder in den `hosts`-Dateien eintragen (siehe §3).
+
+---
+
+## 9. Wenn etwas nicht geht
 
 | Symptom | Ursache / Lösung |
 |---|---|
-| Browser: „Website nicht erreichbar" auf dem Tablet | Name nicht im Router (§3), Box-PC schläft, oder Windows-Netz ist „Öffentlich" (§3) |
+| Browser: „Website nicht erreichbar" auf dem Tablet | Name nicht im Router (§3), Box-PC schläft, Windows-Netz ist „Öffentlich" (§3), oder FRITZ!Box-Rebind-Schutz blockiert (§3) |
 | Browser: Zertifikatswarnung | Wurzelzertifikat auf diesem Gerät nicht vertraut (§4); iPad: Schritt „Zertifikatsvertrauen" vergessen |
 | Seite bleibt weiß | Adresse in der Leiste ≠ `SITE_URL` aus §2.1 — immer genau den Namen benutzen |
 | Windows: Box nach Neustart weg | Windows-Passwort geändert → `praxura-installieren.ps1` erneut ausführen |
@@ -262,3 +391,33 @@ Windows: jeden Befehl mit `wsl -d Praxura -- ` davor ausführen, z. B.
 Alle Meldungen nennen **Gefunden · Erwartet · Was tun**. Bei Rückfragen an
 den Support bitte die passende Protokolldatei (ohne `.env`!) mitschicken —
 sie enthält keine Geheimnisse.
+
+### Box neu verbinden (Wiederverbindungs-Code)
+
+#### Fall A — Neue Hardware oder Rücksicherung (Identität fehlt)
+Führen Sie die normale Installation aus (`install.sh` bzw.
+`praxura-installieren.ps1`). Geben Sie den vom Support erhaltenen
+Wiederverbindungs-Code ein — der bisherige Name wird automatisch übernommen.
+
+#### Fall B — Identität vorhanden, Schlüssel soll ersetzt werden
+Dieser Schritt erfolgt **nur auf ausdrückliche Anweisung des Supports**
+(z. B. wenn ein Schlüssel ausgetauscht werden soll).
+
+Führen Sie genau diesen Befehl aus (nicht abwandeln, und den Code nicht als Teil
+der Kommandozeile tippen):
+
+```bash
+cd /opt/praxura/onprem
+read -rs KAYIT_CODE; export KAYIT_CODE
+docker compose --profile kurulum run --rm --no-deps -e KAYIT_CODE kayit --neuer-schluessel
+unset KAYIT_CODE
+```
+
+Windows:
+```powershell
+wsl -d Praxura -- bash -c "cd /opt/praxura/onprem && read -rs KAYIT_CODE; export KAYIT_CODE; docker compose --profile kurulum run --rm --no-deps -e KAYIT_CODE kayit --neuer-schluessel; unset KAYIT_CODE"
+```
+
+⚠️ **Hinweis:** Die Box-Identität (Volumes `kimlik`, `acmedns`) gehört nicht in
+die Sicherung und wird bei `install.sh --neu` nicht gelöscht — nicht von Hand
+löschen.
