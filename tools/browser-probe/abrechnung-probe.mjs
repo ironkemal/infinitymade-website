@@ -54,6 +54,19 @@ const podo = await page.evaluate(async () => {
 P('Rezept-Block wird für verordnung_id-Rechnung eingeblendet', podo.rxSichtbar === false, `hidden=${podo.rxSichtbar}`);
 P('Heilmittel aus der aufgelösten Verordnung steht drin', /Podologische Komplexbehandlung/.test(podo.rxHtml), podo.rxHtml.slice(0, 80));
 
+console.log('\n══ BG-RECHNUNG (KHS M2.2): Empfänger ist der UV-Träger');
+const bgR = await page.evaluate(async () => {
+  window.__setListe([{ id: 'rbg', invoice_number: '2026-015', patient_name: 'Anna Muster', patient_id: 'p-bg', status: 'sent',
+    total_patient: 40, issued_at: '2026-10-06', created_at: '2026-10-06', invoice_type: 'bg', verordnung_id: 'rx-bg-1' }]);
+  await window.__probe.openInvView('rbg');
+  return { empfaenger: document.getElementById('invvPatient').innerText, rx: document.getElementById('invvRx').innerText };
+});
+P('Träger steht als Empfänger oben', /^BG Holz & Metall/.test(bgR.empfaenger), bgR.empfaenger.slice(0, 60).replace(/\n/g, ' | '));
+P('Anschrift des Trägers, Unfalltag und Aktenzeichen im Bezug', /Musterstadt/.test(bgR.empfaenger) && /Unfalltag: 15\.09\.2026/.test(bgR.empfaenger) && /Aktenzeichen: AZ 1\/26/.test(bgR.empfaenger));
+P('Versicherte Person mit Geburtsdatum', /Versicherte Person: Anna Muster \(geb\. 08\.03\.1970\)/.test(bgR.empfaenger));
+P('Patient steht nicht als Empfänger (keine Kasse/Versichertennr.)', !/AOK X|A123/.test(bgR.empfaenger));
+P('keine Diagnose auf der BG-Rechnung', !/ICD-10|E11/.test(bgR.rx), bgR.rx);
+
 const mit0 = await page.evaluate(() => {
   window.__setListe([]);
   window.__probe.renderInvList();

@@ -26,7 +26,7 @@ import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import dsgvoRouter from './routes/dsgvo.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
-import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren, artFelderAusRezept, rezeptartWechselPruefen } from './lib/rezept-felder.js';
+import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren, artFelderAusRezept, rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt } from './lib/rezept-felder.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { fetchWithTimeout } from './lib/fetch-with-timeout.js';
@@ -2652,8 +2652,11 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     const kostentraegerIk = await kostentraegerIkAufloesen(supabase, patient);
     const heilmittelPosition = heilmittelPositionAufloesen(rezept);
     let artFelder;
-    try { artFelder = artFelderAusRezept(rezept, { neu: true }); }
-    catch (e) { return res.status(400).json({ error: e.message }); }
+    let bgFelder;
+    try {
+      artFelder = artFelderAusRezept(rezept, { neu: true });
+      bgFelder = bgFelderAusRezept(rezept, { art: artFelder.rezeptart, explicitArt: false });   // nur bei BG
+    } catch (e) { return res.status(400).json({ error: e.message }); }
 
     // --- Insert prescription row ---
     const { data: rx, error: rxErr } = await supabase
@@ -2663,6 +2666,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         patient_id: patientId,
         arzt_id: arztId,
         ...artFelder,   // rezeptart (ausdrücklich), behandlungsanlass, nagel — PE-006 A
+        ...bgFelder,    // bg_* (nur bei BG) — PE-006 B
         image_storage_path: storage_path || null,
         image_uploaded_at: storage_path ? new Date().toISOString() : null,
         status: 'confirmed',
@@ -2792,7 +2796,7 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
     // --- Requirement 2 zuerst: existiert die Zeile, gehört sie diesem Mandanten? ---
     const { data: bestehend, error: findErr } = await supabase
       .from('prescriptions')
-      .select('id, owner_id, abrechnung_status, belegnummer, rezeptart')
+      .select('id, owner_id, abrechnung_status, belegnummer, rezeptart, bg_traeger_name, bg_traeger_anschrift, bg_unfalltag, bg_aktenzeichen, bg_kostenzusage_datum, bg_kostenzusage_zeichen, bg_einverstaendnis_am')
       .eq('id', id)
       .maybeSingle();
     if (findErr) return res.status(500).json({ error: findErr.message });
@@ -2863,11 +2867,14 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
     const heilmittelPosition = heilmittelPositionAufloesen(rezept);
 
     // --- Verordnungsart (PE-006 A): Wechsel nur ohne festgeschriebene Rechnung ---
-    let artFelder;
-    try { artFelder = artFelderAusRezept(rezept, { neu: false }); }
-    catch (e) { return res.status(400).json({ error: e.message }); }
+    let artFelder; let bgFelder;
+    try {
+      artFelder = artFelderAusRezept(rezept, { neu: false });
+      const wirksameArt = artFelder.rezeptart ?? (['kassen', 'privat', 'selbstzahler', 'bg'].includes(bestehend.rezeptart) ? bestehend.rezeptart : 'kassen');
+      bgFelder = bgFelderAusRezept(rezept, { art: wirksameArt, explicitArt: artFelder.rezeptart !== undefined });
+    } catch (e) { return res.status(400).json({ error: e.message }); }
     let statusZuruecksetzen = false;
-    if (artFelder.rezeptart !== undefined) {
+    if (artFelder.rezeptart !== undefined || Object.keys(bgFelder).length) {
       const { data: rechnungen, error: reErr } = await supabase
         .from('invoices').select('id')
         .eq('owner_id', tenantId)
@@ -2880,12 +2887,17 @@ app.patch('/api/rezept/:id', requireAuthAI, async (req, res) => {
         hatFestgeschriebeneRechnung: !!(rechnungen && rechnungen.length),
       });
       if (!wechsel.ok) return res.status(wechsel.status).json({ error: wechsel.error });
+      // BG-Angaben (Empfänger, Unfalltag …) stehen auf der festgeschriebenen Rechnung — nicht still ändern.
+      if (rechnungen && rechnungen.length && bgAenderungGesperrt(bestehend, bgFelder)) {
+        return res.status(409).json({ error: 'Zu dieser Verordnung gibt es eine Rechnung. Die BG-Angaben lassen sich erst nach Storno der Rechnung ändern.' });
+      }
       statusZuruecksetzen = wechsel.statusZuruecksetzen && bestehend.abrechnung_status === 'bereit';
     }
 
     const patch = {
       ...(patientId ? { patient_id: patientId } : {}),
       ...artFelder,   // rezeptart, behandlungsanlass, nagel — nur was mitkam
+      ...bgFelder,    // bg_* — nur bei BG bzw. beim ausdrücklichen Wechsel weg von BG (leert)
       ...(statusZuruecksetzen ? { abrechnung_status: null } : {}),   // „bereit“ gilt nur für Kasse
       arzt_id: arztId,
       icd10: rezept.icd10 || null,

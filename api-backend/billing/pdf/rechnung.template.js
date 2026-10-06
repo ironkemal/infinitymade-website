@@ -15,6 +15,12 @@ const fmtDate = (d) => {
   return dt.toLocaleDateString('de-DE');
 };
 
+// TT.MM.JJJJ mit führenden Nullen (BG-Bezug: der UV-Träger ordnet nach Datum zu).
+const fmtDateLang = (d) => {
+  const dt = d instanceof Date ? d : new Date(d);
+  return Number.isNaN(dt.getTime()) ? '' : dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
 // rechnung_privat trägt den Fachbereich im Titel — der wird übergeben, damit auf
 // einer Podologie-Rechnung nicht "Physiotherapeutische Leistungen" steht.
 const TYPE_TITLES = {
@@ -50,6 +56,11 @@ export function renderRechnung(opts) {
 
   const title = TYPE_TITLES[type] || `Rechnung – ${bereichTitel}`;
   const isBg = type === 'rechnung_bg';
+  // KHS M2.2 (PE-006 B): bei BG ist der UV-Träger der Rechnungsempfänger; der Patient
+  // steht als „Versicherte Person" im Bezug. Keine Diagnose/Kasse/KVNR (legal-de).
+  // Ohne Trägerangaben (Altfall) bleibt das alte Verhalten.
+  const bg = isBg && rechnung.bg?.traeger_name ? rechnung.bg : null;
+  const bgAnschrift = bg ? String(bg.traeger_anschrift || '').split(/\r?\n/).map(z => z.trim()).filter(Boolean) : [];
 
   // Steuernummer ODER USt-IdNr. genügt (§ 14 Abs. 4 Nr. 2 UStG).
   const steuerLabel = praxis.steuernummer ? 'Steuer-Nr.' : 'USt-IdNr.';
@@ -118,21 +129,28 @@ export function renderRechnung(opts) {
   <section class="addresses">
     <div class="box">
       <div class="label">Rechnungsempfänger</div>
-      <strong>${escapeHtml(patient.vorname || '')} ${escapeHtml(patient.nachname || '')}</strong><br>
+      ${bg
+        ? `<strong>${escapeHtml(bg.traeger_name)}</strong>${bgAnschrift.map(z => `<br>${escapeHtml(z)}`).join('')}`
+        : `<strong>${escapeHtml(patient.vorname || '')} ${escapeHtml(patient.nachname || '')}</strong><br>
       ${escapeHtml(patient.strasse || '')}<br>
-      ${escapeHtml(patient.plz || '')} ${escapeHtml(patient.ort || '')}
+      ${escapeHtml(patient.plz || '')} ${escapeHtml(patient.ort || '')}`}
     </div>
     <div class="box">
       <dl class="invoice-meta">
         <dt>Rechnungsnummer</dt><dd>${escapeHtml(rechnung.nummer || '')}</dd>
         <dt>Rechnungsdatum</dt><dd>${fmtDate(rechnung.datum)}</dd>
         <dt>Fällig am</dt><dd>${fmtDate(rechnung.faelligkeit)}</dd>
-        ${isBg
-          ? `<dt>BG-Aktenzeichen</dt><dd>${escapeHtml(rechnung.bg_aktenzeichen || '—')}</dd>`
-          : `<dt>Patient KVNR</dt><dd>${escapeHtml(rechnung.kvnr || rechnung.kvnr || '—')}</dd>`
-        }
+        ${bg
+          ? `<dt>Versicherte Person</dt><dd>${escapeHtml([patient.vorname, patient.nachname].filter(Boolean).join(' '))}${patient.geburtsdatum ? ` (geb. ${fmtDateLang(patient.geburtsdatum)})` : ''}</dd>
+        ${bg.unfalltag ? `<dt>Unfalltag</dt><dd>${fmtDateLang(bg.unfalltag)}</dd>` : ''}
+        ${bg.aktenzeichen ? `<dt>Aktenzeichen</dt><dd>${escapeHtml(bg.aktenzeichen)}</dd>` : ''}
+        <dt>Verordnung vom</dt><dd>${fmtDate(verordnung.ausstellungsdatum)}</dd>`
+          : `${isBg
+            ? `<dt>BG-Aktenzeichen</dt><dd>${escapeHtml(rechnung.bg_aktenzeichen || '—')}</dd>`
+            : `<dt>Patient KVNR</dt><dd>${escapeHtml(rechnung.kvnr || rechnung.kvnr || '—')}</dd>`
+          }
         <dt>Krankenkasse</dt><dd>${escapeHtml(verordnung.krankenkasse || '—')}</dd>
-        <dt>Verordnung vom</dt><dd>${fmtDate(verordnung.ausstellungsdatum)}</dd>
+        <dt>Verordnung vom</dt><dd>${fmtDate(verordnung.ausstellungsdatum)}</dd>`}
       </dl>
     </div>
   </section>

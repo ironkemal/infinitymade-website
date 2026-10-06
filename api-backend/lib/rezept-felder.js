@@ -232,3 +232,91 @@ export function rezeptartWechselPruefen({ bestehend, neu, hatFestgeschriebeneRec
   }
   return { ok: true, statusZuruecksetzen: alt === 'kassen' && neu !== 'kassen' };
 }
+
+// ── BG-Angaben (KHS M2.2, PE-006 B, legal-de/gkv-302 05.10.2026) ────────────
+//
+// Nur belegt: UV-Träger (Rechnungsempfänger), Unfalltag, Aktenzeichen (optional),
+// Kostenzusage (Datum/Zeichen), Einverständnis zur Übermittlung. Kein
+// Aktenzeichen-Format (je Träger verschieden, nicht belegt). Keine Diagnose.
+// Die Pflicht „Träger + Unfalltag" gilt erst beim Erstellen der Rechnung
+// (Frontend, module/bg-angaben.js) — beim Speichern der Verordnung wird nur
+// auf Gültigkeit geprüft (warnen, nicht blockieren).
+
+const BG_FELDER = [
+  ['traeger_name', 'bg_traeger_name', 200],
+  ['traeger_anschrift', 'bg_traeger_anschrift', 500],
+  ['unfalltag', 'bg_unfalltag', 'datum'],
+  ['aktenzeichen', 'bg_aktenzeichen', 80],
+  ['kostenzusage_datum', 'bg_kostenzusage_datum', 'datum'],
+  ['kostenzusage_zeichen', 'bg_kostenzusage_zeichen', 80],
+  ['einverstaendnis_am', 'bg_einverstaendnis_am', 'datum'],
+];
+
+function isoDatumPruefen(roh, name) {
+  const t = String(roh ?? '').trim();
+  if (!t) return null;
+  const m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const d = m && new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  if (!m || d.getUTCFullYear() !== +m[1] || d.getUTCMonth() !== +m[2] - 1 || d.getUTCDate() !== +m[3]) {
+    throw new Error(`${name}: ungültiges Datum (JJJJ-MM-TT erwartet)`);
+  }
+  return t;
+}
+
+/**
+ * Die `bg_*`-Spalten für INSERT/UPDATE.
+ *
+ * @param {object} rezept  `parsed.rezept` (`rezept.bg` = Objekt mit den sieben Feldern)
+ * @param {{art: string, explicitArt?: boolean}} opt
+ *   `art`: wirksame Art. Nicht-BG schreibt nur dann (alle auf null), wenn die Art
+ *   ausdrücklich gesetzt wurde — Verordnungsdaten ausserhalb von BG tragen keine
+ *   Unfall-/Trägerangaben.
+ */
+export function bgFelderAusRezept(rezept = {}, { art, explicitArt = false } = {}) {
+  if (art !== 'bg') {
+    return explicitArt ? Object.fromEntries(BG_FELDER.map(([, sp]) => [sp, null])) : {};
+  }
+  const bg = rezept?.bg;
+  if (!bg || typeof bg !== 'object') return {};
+  const out = {};
+  for (const [key, spalte, regel] of BG_FELDER) {
+    if (bg[key] === undefined) continue;
+    if (regel === 'datum') {
+      out[spalte] = isoDatumPruefen(bg[key], key);
+      if (key === 'unfalltag' && out[spalte] && out[spalte] > berlinHeute()) {
+        throw new Error('unfalltag: liegt in der Zukunft');
+      }
+    } else {
+      const t = String(bg[key] ?? '').trim();
+      if (t.length > regel) throw new Error(`${key}: zu lang (höchstens ${regel} Zeichen)`);
+      out[spalte] = t || null;
+    }
+  }
+  return out;
+}
+
+// Datum aus der Spalte kann als '2026-09-15' oder als Zeitstempel kommen — nur der Tag zählt.
+const bgNorm = (w) => {
+  if (w == null || String(w).trim() === '') return null;
+  const t = String(w).trim();
+  return /^\d{4}-\d{2}-\d{2}/.test(t) ? t.slice(0, 10) : t;
+};
+
+/** Würde dieses Update eine bestehende `bg_*`-Angabe inhaltlich ändern? (Sperre bei festgeschriebener Rechnung) */
+export function bgAenderungGesperrt(bestehend = {}, neu = {}) {
+  return Object.entries(neu).some(([spalte, wert]) => bgNorm(bestehend?.[spalte]) !== bgNorm(wert));
+}
+
+/**
+ * Was für eine BG-Rechnung fehlt (Spiegel von `bgFehltFuerRechnung` in
+ * `module/bg-angaben.js`): UV-Träger (Name + Anschrift) und Unfalltag.
+ * @param {object} rx  Zeile aus `prescriptions` (bg_*-Spalten)
+ * @returns {string[]}
+ */
+export function bgFehltFuerRechnung(rx = {}) {
+  const fehlt = [];
+  if (!String(rx?.bg_traeger_name ?? '').trim()) fehlt.push('UV-Träger (Name)');
+  if (!String(rx?.bg_traeger_anschrift ?? '').trim()) fehlt.push('UV-Träger (Anschrift)');
+  if (!bgNorm(rx?.bg_unfalltag)) fehlt.push('Unfalltag');
+  return fehlt;
+}

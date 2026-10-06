@@ -125,6 +125,8 @@ function geparstAusMaske({ nutzlast, patientFelder }) {
       // Server nimmt beim Anlegen dann `kassen` und lässt beim Ändern die
       // Spalte unberührt.
       ...(n.rezeptart ? { rezeptart: n.rezeptart } : {}),
+      // BG-Angaben (nur bei Art bg, sonst fehlt der Schlüssel; der Server leert sie bei Wechsel weg von BG).
+      ...(n.bg ? { bg: n.bg } : {}),
       // Podologie: an der Verordnung, nicht an der Behandlung. Nur wenn die Maske
       // den Schlüssel kennt (ausserhalb der Podologie fehlt er) — ein `null`
       // würde auf dem Server sonst einen vorhandenen Wert löschen.

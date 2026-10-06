@@ -37,7 +37,7 @@
 
   <script type="module">
     import { mountRechnungsansicht, rechnungsModus, zeigeRechnungsModus, renderInvList, openInvView, closeInvView }
-      from '../../module/rechnung-ansicht.js?v=20260909';
+      from '../../module/rechnung-ansicht.js?v=20261006b';
 
     window.__probe = { rechnungsModus, zeigeRechnungsModus, renderInvList, openInvView, closeInvView };
 
@@ -63,6 +63,15 @@
             maybeSingle: async () => {
               if (table === 'prescriptions' && feld === 'id' && wert === 'rx-podo-1') {
                 return { data: { rezept_typ: 'blanko', heilmittel: 'Podologische Komplexbehandlung', icd10: 'E11.40' } };
+              }
+              if (table === 'prescriptions' && wert === 'rx-bg-1') {
+                return { data: { rezept_typ: 'standard', rezeptart: 'bg', heilmittel: 'Podologische Behandlung', icd10: 'E11.40',
+                  bg_traeger_name: 'BG Holz & Metall', bg_traeger_anschrift: 'Musterstr. 1\n12345 Musterstadt',
+                  bg_unfalltag: '2026-09-15', bg_aktenzeichen: 'AZ 1/26' } };
+              }
+              if (table === 'leads' && wert === 'p-bg') {
+                return { data: { first_name: 'Anna', last_name: 'Muster', geburtsdatum: '1970-03-08', street: 'Weg 2', plz: '54321', city: 'Stadt',
+                  krankenkasse: 'AOK X', versichertennummer: 'A123' } };
               }
               return { data: null };
             },

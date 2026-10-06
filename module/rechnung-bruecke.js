@@ -44,9 +44,15 @@
  */
 
 import { leistungsartVorschlag, zeilenSteuerVon } from './rechnung-steuer.js?v=20260816';
+import { bgFehltFuerRechnung, bgAusZeile } from './bg-angaben.js?v=20261006b';
 
 /** Rezeptarten, die nicht über die Kasse laufen. */
 const PRIVATE_ARTEN = ['privat', 'selbstzahler', 'bg'];
+
+/** Wer zahlt? selbstzahler/bg eigene Typen (bg: Rechnung an den UV-Träger), alles andere Nicht-Kasse = privat. */
+export function zahlertypAusRezeptart(rezeptart) {
+  return rezeptart === 'selbstzahler' ? 'selbstzahler' : rezeptart === 'bg' ? 'bg' : 'privat';
+}
 
 export function istPrivatRezeptart(rezeptart) {
   return PRIVATE_ARTEN.includes(String(rezeptart || 'kassen'));
@@ -232,6 +238,16 @@ export async function starteRechnungAusVerordnung(ctx) {
           switchPanel, openInvEditor, setzeEntwurf, toast } = ctx;
   if (!verordnung) return;
 
+  // BG (KHS M2.2, PE-006 B): der UV-Träger ist Rechnungsempfänger — ohne Träger, Anschrift
+  // und Unfalltag gibt es keine Rechnung (Pflicht gilt erst hier, nicht beim Speichern).
+  if (verordnung.rezeptart === 'bg') {
+    const fehlt = bgFehltFuerRechnung(bgAusZeile(verordnung));
+    if (fehlt.length) {
+      toast?.(`BG-Rechnung: Es fehlen ${fehlt.join(', ')}. Bitte in der Verordnung ergänzen.`, 'error');
+      return;
+    }
+  }
+
   const offene = await offeneBehandlungen(sb, { ownerId, verordnungId: verordnung.id });
   if (!offene.length) {
     toast?.('Alle Behandlungen dieser Verordnung sind bereits abgerechnet.', 'info');
@@ -251,7 +267,7 @@ export async function starteRechnungAusVerordnung(ctx) {
     behandlungIds: offene.map(b => b.id),
     // `rezeptart` sagt, WER zahlt. Der Steuersatz steht davon unabhängig an der
     // Zeile — siehe module/rechnung-steuer.js.
-    zahlertyp: verordnung.rezeptart === 'selbstzahler' ? 'selbstzahler' : 'privat',
+    zahlertyp: zahlertypAusRezeptart(verordnung.rezeptart),
   });
 
   if (offenePreise > 0) {

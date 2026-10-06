@@ -42,13 +42,14 @@
 
 import { loescheMarkierungen } from './verordnung-feldmarker.js?v=20260906';
 import { podoVerordnungsfelder, podoMaskeNachziehen } from './verordnung-podo.js?v=20261004m113';
-import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261006a';
+import { verordnungFuerBackend, verordnungFuerAendern } from './verordnung-an-backend.js?v=20261006b';
 import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261001g';
 import { rezeptartFuerSpeichern, vorauswahlAusPatient } from './rezeptart.js?v=20261006a';
 import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261006a';
+import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261006b';
 
 /**
  * Woher der Inhalt der Maske stammt, wenn er gescannt wurde.
@@ -298,6 +299,15 @@ async function ladeOffeneRechnung(rxId) {
 }
 
 /**
+ * Hinweise für die „noch leer"-Liste beim Speichern — nur bei BG, blockiert nie
+ * (PE-006 B: Pflicht erst beim Rechnungserstellen).
+ */
+export function bgHinweiseAusMaske() {
+  const wrap = document.getElementById('rzMaskeWrap');
+  return wrap?.dataset.rezeptart === 'bg' ? bgHinweiseBeimSpeichern(bgAusMaske(document)) : [];
+}
+
+/**
  * Vorauswahl der Art nach Patiententyp (`leads.insurance_type`) — einseitig:
  * nur `privat`. Nur bei Neuanlage und solange niemand selbst gewählt hat.
  */
@@ -432,6 +442,8 @@ export function fuelleMuster13(rx, opt = {}) {
   if (maskeWrap) {
     verdrahteLeiste(document, { nachziehen: podoMaskeNachziehen });
     setzeArt(document, alsVorlage ? 'kassen' : rx.rezeptart);
+    // BG-Angaben gehören zum Unfall, nicht zur Vorlage — bei einer Vorlage leer.
+    bgInMaske(document, alsVorlage ? {} : rx);
   }
   // Bei einer Vorlage werden nur gefüllte Werte gesetzt (die Maske ist frisch
   // zurückgesetzt); beim Bearbeiten muss auch ein LEERER Wert ankommen, sonst
@@ -677,6 +689,7 @@ export function nutzlastAusMaske(v) {
     patient_id: v.patientId,
     // Immer ausdrücklich (kassen|privat|selbstzahler|bg) — nie `gkv`, nie NULL (PE-006 A).
     rezeptart: rezeptartFuerSpeichern(el('rzMaskeWrap')?.dataset.rezeptart),
+    ...(el('rzMaskeWrap')?.dataset.rezeptart === 'bg' ? { bg: bgAusMaske(document) } : {}),
     arzt_id: v.arztId,
     ausstellungsdatum: v.ausstDate,
     icd10: v.icd10 ? nurIcdKode(v.icd10) : null,

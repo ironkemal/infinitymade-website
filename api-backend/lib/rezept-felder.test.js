@@ -7,6 +7,9 @@ import {
   kartenIkNormalisieren,
   artFelderAusRezept,
   rezeptartWechselPruefen,
+  bgFelderAusRezept,
+  bgAenderungGesperrt,
+  bgFehltFuerRechnung,
 } from './rezept-felder.js';
 
 // ── kartenIkNormalisieren ───────────────────────────────────────────────────
@@ -378,4 +381,65 @@ test('Wechsel weg von Kasse setzt „bereit“ zurück, Wechsel zu Kasse nicht',
 test('Wechsel: NULL zählt als Kasse (Altzeilen), neu undefined = kein Wechsel', () => {
   assert.equal(rezeptartWechselPruefen({ bestehend: null, neu: undefined, hatFestgeschriebeneRechnung: true }).ok, true);
   assert.equal(rezeptartWechselPruefen({ bestehend: null, neu: 'kassen', hatFestgeschriebeneRechnung: true }).ok, true);
+});
+
+// ── BG-Angaben (KHS M2.2, PE-006 B) ─────────────────────────────────────────
+
+const BG = {
+  traeger_name: ' BG Holz und Metall ', traeger_anschrift: 'Musterstr. 1\n12345 Musterstadt',
+  unfalltag: '2026-09-15', aktenzeichen: ' AZ 123/26 ',
+  kostenzusage_datum: '2026-09-20', kostenzusage_zeichen: 'KZ-77', einverstaendnis_am: '2026-09-21',
+};
+
+test('bgFelderAusRezept: bei BG werden die sieben Spalten geschrieben, Text getrimmt', () => {
+  const c = bgFelderAusRezept({ bg: BG }, { art: 'bg', explicitArt: true });
+  assert.deepEqual(c, {
+    bg_traeger_name: 'BG Holz und Metall', bg_traeger_anschrift: 'Musterstr. 1\n12345 Musterstadt',
+    bg_unfalltag: '2026-09-15', bg_aktenzeichen: 'AZ 123/26',
+    bg_kostenzusage_datum: '2026-09-20', bg_kostenzusage_zeichen: 'KZ-77', bg_einverstaendnis_am: '2026-09-21',
+  });
+});
+
+test('bgFelderAusRezept: leere Felder werden null, kein Format wird erfunden', () => {
+  const c = bgFelderAusRezept({ bg: { traeger_name: 'BG', unfalltag: '', aktenzeichen: '   ' } }, { art: 'bg' });
+  assert.equal(c.bg_unfalltag, null);
+  assert.equal(c.bg_aktenzeichen, null);
+  assert.equal(c.bg_traeger_name, 'BG');
+});
+
+test('bgFelderAusRezept: ohne bg-Objekt bleibt bei BG alles unberührt', () => {
+  assert.deepEqual(bgFelderAusRezept({}, { art: 'bg' }), {});
+});
+
+test('bgFelderAusRezept: ausdrücklicher Wechsel weg von BG leert alle sieben Spalten', () => {
+  const c = bgFelderAusRezept({ bg: BG }, { art: 'privat', explicitArt: true });
+  assert.equal(Object.keys(c).length, 7);
+  assert.ok(Object.values(c).every(v => v === null));
+});
+
+test('bgFelderAusRezept: andere Art ohne ausdrücklichen Wechsel schreibt nichts', () => {
+  assert.deepEqual(bgFelderAusRezept({ bg: BG }, { art: 'kassen', explicitArt: false }), {});
+});
+
+test('bgFelderAusRezept: ungültiges Datum, Zukunft und Überlänge werfen', () => {
+  assert.throws(() => bgFelderAusRezept({ bg: { unfalltag: '15.09.2026' } }, { art: 'bg' }), /unfalltag/);
+  assert.throws(() => bgFelderAusRezept({ bg: { unfalltag: '2026-02-30' } }, { art: 'bg' }), /unfalltag/);
+  assert.throws(() => bgFelderAusRezept({ bg: { unfalltag: '2999-01-01' } }, { art: 'bg' }), /Zukunft/);
+  assert.throws(() => bgFelderAusRezept({ bg: { aktenzeichen: 'x'.repeat(81) } }, { art: 'bg' }), /aktenzeichen/);
+  assert.throws(() => bgFelderAusRezept({ bg: { traeger_name: 'x'.repeat(201) } }, { art: 'bg' }), /traeger_name/);
+});
+
+test('bgAenderungGesperrt: gleiche Werte (auch null/leer) sperren nicht, geänderte schon', () => {
+  const alt = { bg_traeger_name: 'BG', bg_unfalltag: '2026-09-15', bg_aktenzeichen: null };
+  assert.equal(bgAenderungGesperrt(alt, { bg_traeger_name: 'BG', bg_aktenzeichen: null }), false);
+  assert.equal(bgAenderungGesperrt(alt, { bg_aktenzeichen: '' }), false);
+  assert.equal(bgAenderungGesperrt(alt, { bg_unfalltag: '2026-09-16' }), true);
+  assert.equal(bgAenderungGesperrt(alt, { bg_traeger_name: 'Andere BG' }), true);
+  assert.equal(bgAenderungGesperrt(alt, {}), false);
+});
+
+test('bgFehltFuerRechnung: Träger (Name+Anschrift) und Unfalltag, sonst nichts', () => {
+  assert.deepEqual(bgFehltFuerRechnung({}), ['UV-Träger (Name)', 'UV-Träger (Anschrift)', 'Unfalltag']);
+  assert.deepEqual(bgFehltFuerRechnung({ bg_traeger_name: 'BG', bg_traeger_anschrift: 'X', bg_unfalltag: '2026-09-15' }), []);
+  assert.deepEqual(bgFehltFuerRechnung({ bg_traeger_name: ' ', bg_traeger_anschrift: 'X', bg_unfalltag: '2026-09-15' }), ['UV-Träger (Name)']);
 });

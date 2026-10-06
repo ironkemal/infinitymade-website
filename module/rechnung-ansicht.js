@@ -23,6 +23,8 @@
  * Erste Verwendung: dashboard.js, Rechnungen-Panel (`#panel-rechnungen`).
  */
 
+import { bgEmpfaengerBlock, bgAusZeile } from './bg-angaben.js?v=20261006b';
+
 let d = null;
 
 /** Muss vor jedem Aufruf einmal gesetzt sein — siehe dashboard.js. */
@@ -135,7 +137,7 @@ export async function openInvView(invoiceId) {
       .eq('id', inv.patient_id).maybeSingle(),
     rezeptId
       ? d.supabase.from('prescriptions')
-        .select('rezept_typ,status,heilmittel,icd10,diagnosegruppe,anzahl_einheiten,frequenz,ausstellungsdatum,gueltig_bis,dmrz_exported_at, aerzte ( arzt_name, lanr, bsnr )')
+        .select('rezept_typ,status,rezeptart,bg_traeger_name,bg_traeger_anschrift,bg_unfalltag,bg_aktenzeichen,heilmittel,icd10,diagnosegruppe,anzahl_einheiten,frequenz,ausstellungsdatum,gueltig_bis,dmrz_exported_at, aerzte ( arzt_name, lanr, bsnr )')
         .eq('id', rezeptId).maybeSingle()
       : Promise.resolve({ data: null }),
     // Buchungstermine für den Leistungszeitraum-Fallback gibt es nur für den
@@ -218,13 +220,22 @@ export async function openInvView(invoiceId) {
     patientLines.push('<strong style="color:var(--danger);">Kein Patient verknüpft</strong>');
     patientLines.push('<span style="color:var(--text-muted);">Bitte die Rechnung einem Patienten zuordnen — der Name wird immer aus der Patientenakte übernommen.</span>');
   }
+  // BG (KHS M2.2, PE-006 B): Rechnungsempfänger ist der UV-Träger, die versicherte Person steht
+  // im Bezug — und KEINE Diagnose auf der Rechnung (legal-de 05.10.2026).
+  const istBg = inv.invoice_type === 'bg' && rx?.rezeptart === 'bg' && !!rx.bg_traeger_name;
+  if (istBg) {
+    const blk = bgEmpfaengerBlock(bgAusZeile(rx), { patientName: fullName, geburtsdatum: patient?.geburtsdatum || null });
+    patientLines.length = 0;
+    blk.empfaenger.forEach((z, i) => patientLines.push(i === 0 ? `<strong>${escapeHtml(z)}</strong>` : escapeHtml(z)));
+    blk.bezug.forEach((z, i) => patientLines.push(i === 0 ? `<span style="display:block;margin-top:6px;">${escapeHtml(z)}</span>` : escapeHtml(z)));
+  }
   document.getElementById('invvPatient').innerHTML = patientLines.join('<br>');
 
   if (rx) {
     document.getElementById('invvRxBlock').hidden = false;
     document.getElementById('invvRx').innerHTML = [
       `<div>Heilmittel: <strong>${escapeHtml(rx.heilmittel || '—')}</strong></div>`,
-      rx.icd10 ? `<div>ICD-10: ${escapeHtml(rx.icd10)}${rx.diagnosegruppe ? ' · Diagnosegruppe ' + escapeHtml(rx.diagnosegruppe) : ''}</div>` : '',
+      rx.icd10 && !istBg ? `<div>ICD-10: ${escapeHtml(rx.icd10)}${rx.diagnosegruppe ? ' · Diagnosegruppe ' + escapeHtml(rx.diagnosegruppe) : ''}</div>` : '',
       rx.ausstellungsdatum ? `<div>Ausgestellt: ${new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE')}${rx.gueltig_bis ? ' · Gültig bis: ' + new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : ''}</div>` : '',
       rx.frequenz ? `<div>Frequenz: ${escapeHtml(rx.frequenz)}</div>` : '',
       arzt?.arzt_name

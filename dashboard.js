@@ -43,7 +43,7 @@ import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20261001
 import { renderAusfallSettings } from './module/ausfall-einstellungen.js?v=20260906';
 import { renderAbrechnungSettings, wireAbrechnungSettings } from './module/abrechnung-einstellungen.js?v=20261003f';
 import { renderPreisstufenSettings, stufenAusProfil, ladeLetztePreise } from './module/selbstzahler-stufen.js?v=20260906';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261004m113';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung, renderZaaUploadResult } from './module/podologie-abrechnung.js?v=20261006b';
 import { setzeAkteReiter, verdrahteAkteKopf } from './module/akte-podo.js?v=20261001p';
 import { oeffnePodoBehandlungen as oeffnePodoBehandlungenModul, terminIstPodo, terminStartenPodo } from './module/podo-behandlungen-oeffnen.js?v=20261004m113';
 import { fahrtZweckUndZiel, fahrtAnzeigeText, fahrtReferenz } from './module/fahrtenbuch-regeln.js?v=20261001e';
@@ -55,30 +55,30 @@ import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korr
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261006a';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
-import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient }
-  from './module/verordnung-maske.js?v=20261006a'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske }
+  from './module/verordnung-maske.js?v=20261006b'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261004m113';
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261004m113';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20260909';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006b';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260930f';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20260930c';
-import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260930c';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261006b';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20261006b';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
-import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260920s';
+import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20261006b';
 import { oeffneBefreiungsFormular, verdrahteZuzahlungsbefreitCheckbox } from './module/zuzahlung-befreiung.js?v=20261005a';
 import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260919';
-import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261003m16';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20261006b';
 import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
 import { setzeAktionsSichtbarkeit, zeichneTerminkarte, zeichnePatientAbzeichen, zeichneAnamnese, rendereNotizen, zeichneVerlauf, standardVerordnung, zeichneSitzungenLeer, zeigeSitzungenArbeit } from './module/termin-panel.js?v=20261004m113';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20261002d';
@@ -13611,7 +13611,7 @@ function renderInvLines() {
 
 function updateInvForInsuranceType() {
   const isGkv = invPatientInsuranceType === 'gkv';
-  const isPrivat = invPatientInsuranceType === 'privat' || invPatientInsuranceType === 'selbstzahler';
+  const isPrivat = ['privat', 'selbstzahler', 'bg'].includes(invPatientInsuranceType);   // bg: Rechnung an den UV-Träger, kein Zuzahlungsabzug (KHS M2.2)
 
   // Zuzahlung section: visible for GKV, hidden for Privat
   const zuzRow = document.getElementById('invZuzahlungRow');
@@ -13636,7 +13636,7 @@ function updateInvForInsuranceType() {
       typeBadge.textContent = 'GKV-Rechnung';
       typeBadge.style.cssText = 'display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);margin-left:8px;';
     } else if (isPrivat) {
-      typeBadge.textContent = 'Privatrechnung';
+      typeBadge.textContent = invPatientInsuranceType === 'bg' ? 'BG-Rechnung' : 'Privatrechnung';
       typeBadge.style.cssText = 'display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(177,137,27,0.15);color:#b1891b;border:1px solid rgba(177,137,27,0.3);margin-left:8px;';
     } else {
       typeBadge.textContent = '';
@@ -13648,7 +13648,7 @@ function updateInvForInsuranceType() {
 }
 
 function calcInvTotals() {
-  const enforceNoZuzahlung = invPatientInsuranceType === 'privat';
+  const enforceNoZuzahlung = invPatientInsuranceType === 'privat' || invPatientInsuranceType === 'bg';
   const sub = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
   const eigenPct = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invEigenPct').value) || 0);
   const eigenEur = sub * (eigenPct / 100);
@@ -13719,7 +13719,7 @@ async function saveInvoice() {
     invLines = aggregateInvLines(invLines);
     renderInvLines(); calcInvTotals();
     const subtotal = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
-    const enforceNoZuzahlung = invPatientInsuranceType === 'privat';
+    const enforceNoZuzahlung = invPatientInsuranceType === 'privat' || invPatientInsuranceType === 'bg';
     const eigenPct = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invEigenPct').value) || 0);
     const eigenEur = subtotal * (eigenPct / 100);
     const kasse = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invKasse').value) || 0);
@@ -14534,7 +14534,7 @@ async function saveRezept() {
     const val = id => (document.getElementById(id)?.value || '').trim();
 
     // --- Pflichtfeld-Prüfung: warnt, lässt aber „trotzdem speichern" zu ---
-    const missing = [];
+    const missing = bgHinweiseAusMaske();   // nur bei BG (module/bg-angaben.js), sonst leer
     if (!ausstDate) missing.push('Ausstellungsdatum');
     if (!icd10) missing.push('ICD-10-Code');
     if (!val('rzDg') && istKasse(document.getElementById('rzMaskeWrap')?.dataset.rezeptart)) missing.push('Diagnosegruppe');

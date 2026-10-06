@@ -29,6 +29,7 @@ import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_pos
 import { renderBegleitzettelBundle } from '../pdf/begleitzettel.template.js';
 import { ladeAnnahmestelle, annahmestelleFehlt, ladePapierannahmestelle } from '../kostentraeger/annahmestelle.js';
 import { berlinHeute } from '../../lib/berlin-tag.js';
+import { bgFehltFuerRechnung } from '../../lib/rezept-felder.js';
 import { reserviereUndLadeHoch, veroeffentliche, registriereVeroeffentlicht } from './artefakt-registry.js';
 import { listeArtefaktVersionen, ladeArtefaktVersion } from './artefakt-historie.js';
 import { entferneUnsignierteDta, wiederholeAusmusterung, dtaEntfernungAktiv } from './artefakt-ausmustern.js';
@@ -3028,6 +3029,17 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
         brutto: preis_eur
       }));
+      // BG (KHS M2.2): Rechnungsempfänger ist der UV-Träger. Pflicht: Träger + Anschrift + Unfalltag.
+      let bgBlock = null;
+      if (type === 'rechnung_bg' && rx.rezeptart === 'bg') {
+        const bgFehlt = bgFehltFuerRechnung(rx);
+        if (bgFehlt.length) {
+          res.set('Content-Type', 'text/html; charset=utf-8');
+          return res.status(400).send(`<p style="font-family:sans-serif">Für die BG-Rechnung fehlen Angaben in der Verordnung: <strong>${bgFehlt.join(', ')}</strong>. Bitte in der Verordnung ergänzen.</p>`);
+        }
+        bgBlock = { traeger_name: rx.bg_traeger_name, traeger_anschrift: rx.bg_traeger_anschrift,
+                    unfalltag: rx.bg_unfalltag, aktenzeichen: rx.bg_aktenzeichen };
+      }
       html = renderRechnung({
         type,
         praxis: praxisData,
@@ -3038,7 +3050,8 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
           datum: new Date(),
           faelligkeit: new Date(Date.now() + zahlungszielTage * 24 * 60 * 60 * 1000),
           kvnr: rx.leads?.versichertennummer || '',
-          bg_aktenzeichen: rx.bg_aktenzeichen || ''
+          bg_aktenzeichen: rx.bg_aktenzeichen || '',
+          bg: bgBlock
         },
         sessions: printSessions,
         totals: { brutto: bruttoSum, netto: bruttoSum, mwst: 0, gesamt: bruttoSum },

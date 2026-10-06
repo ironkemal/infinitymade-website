@@ -3499,6 +3499,24 @@
           <div class="m13-art-hinweis" id="rzArtHinweis" role="status" hidden></div>
         </div>
 
+        <!-- BG-Angaben (KHS M2.2, PE-006 B) — nur bei „BG / Unfallkasse". Pflicht erst beim Rechnungserstellen;
+             hier wird nur gewarnt. Logik: module/bg-angaben.js. Keine Diagnose, kein festes Aktenzeichen-Format. -->
+        <div class="m13-bgblock" id="rzBgBlock">
+          <div class="m13-bg-kopf">BG-Angaben <small>(Rechnung geht an den Unfallversicherungsträger)</small></div>
+          <div class="m13-bg-grid">
+            <label class="m13-bg-f"><span>UV-Träger (Name)</span><input class="form-input" id="rzBgTraegerName" autocomplete="off" maxlength="200"></label>
+            <label class="m13-bg-f"><span>Unfalltag</span><input class="form-input" id="rzBgUnfalltag" type="date"></label>
+            <label class="m13-bg-f m13-bg-breit"><span>UV-Träger (Anschrift)</span><textarea class="form-input" id="rzBgTraegerAnschrift" rows="2" maxlength="500"></textarea></label>
+            <label class="m13-bg-f"><span>Aktenzeichen <em>(falls bekannt)</em></span><input class="form-input" id="rzBgAktenzeichen" autocomplete="off" maxlength="80"></label>
+            <label class="m13-bg-f"><span>Kostenzusage der BG (Datum)</span><input class="form-input" id="rzBgKostenzusageDatum" type="date"></label>
+            <label class="m13-bg-f"><span>Kostenzusage (Zeichen)</span><input class="form-input" id="rzBgKostenzusageZeichen" autocomplete="off" maxlength="80"></label>
+            <label class="m13-bg-f"><span>Einverständnis liegt vor am</span><input class="form-input" id="rzBgEinverstaendnis" type="date"></label>
+          </div>
+          <details class="m13-bg-text"><summary>Wortlaut des Einverständnisses</summary>
+            <p>Ich bin damit einverstanden, dass die Praxis die für die Abrechnung erforderlichen Angaben zu meiner Behandlung (Name, Geburtsdatum, Unfalltag, Behandlungsdaten und -leistungen) an den zuständigen Unfallversicherungsträger übermittelt und diesem auf Anforderung die zur Prüfung erforderlichen Auskünfte erteilt (§ 100 SGB X). Ohne dieses Einverständnis kann die Behandlung nur privat abgerechnet werden.</p>
+          </details>
+        </div>
+
         <!-- ================= DAS PAPIER ================= -->
         <div class="m13">
           <div class="m13-sheet">
@@ -3895,6 +3913,17 @@
     .m13-art-toggle{ border:0; background:transparent; color:var(--primary); font:inherit; font-size:13px; font-weight:600; cursor:pointer; padding:6px 2px; min-height:32px; text-decoration:underline; }
     .m13-art-hinweis{ flex-basis:100%; font-size:13px; color:var(--warning); }
     .m13-gkv-zu .m13-gkv{ display:none !important; }
+    .m13-bgblock{ display:none; margin:0 0 14px; padding:12px 14px; border:1px solid var(--border); border-radius:8px; background:var(--bg-card-solid); }
+    .m13-art-bg .m13-bgblock{ display:block; }
+    .m13-bg-kopf{ font-weight:700; color:var(--text-main); margin-bottom:8px; }
+    .m13-bg-kopf small{ font-weight:400; color:var(--text-muted); }
+    .m13-bg-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 14px; }
+    .m13-bg-f{ display:flex; flex-direction:column; gap:4px; font-size:13px; color:var(--text-muted); }
+    .m13-bg-f em{ font-style:normal; opacity:.8; }
+    .m13-bg-breit{ grid-column:1 / -1; }
+    .m13-bg-text{ margin-top:8px; font-size:12px; color:var(--text-muted); }
+    .m13-bg-text summary{ cursor:pointer; color:var(--primary); }
+    @media (max-width:520px){ .m13-bg-grid{ grid-template-columns:minmax(0,1fr); } }
     @media (max-width:520px){ .m13-art-btns{ display:grid; grid-template-columns:1fr 1fr; width:100%; } .m13-art-btns button + button{ border-left:0; } .m13-art-btns button:nth-child(even){ border-left:1px solid var(--border); } .m13-art-btns button:nth-child(n+3){ border-top:1px solid var(--border); } }
     .m13-vart{ margin-top:18px; border:1.4px solid #a9bdd6; border-radius:6px; padding:10px 14px 12px; background:rgba(255,255,255,.45); }
     .m13-vart-row{ display:flex; flex-wrap:wrap; align-items:center; gap:16px 22px; }
@@ -5760,7 +5789,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261006a"></script>
+  <script type="module" src="dashboard.js?v=20261006c"></script>
 </body>
 
 </html>

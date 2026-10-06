@@ -1960,7 +1960,7 @@ ALTER TABLE ONLY public.invoices
   ADD CONSTRAINT invoices_ein_verordnungsbezug CHECK (prescription_id IS NULL OR verordnung_id IS NULL);
 
 ALTER TABLE ONLY public.invoices
-  ADD CONSTRAINT invoices_invoice_type_check CHECK (invoice_type IS NULL OR (invoice_type = ANY (ARRAY['gkv'::text, 'privat'::text, 'selbstzahler'::text])));
+  ADD CONSTRAINT invoices_invoice_type_check CHECK (invoice_type IS NULL OR (invoice_type = ANY (ARRAY['gkv'::text, 'privat'::text, 'selbstzahler'::text, 'bg'::text])));
 
 ALTER TABLE ONLY public.invoices
   ADD CONSTRAINT invoices_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE SET NULL;
@@ -2813,7 +2813,14 @@ CREATE TABLE public.prescriptions (
   nagel text,
   krankenkasse_ik text,
   abrechnung_status_manuell_am timestamp with time zone,
-  abrechnung_status_manuell_von uuid
+  abrechnung_status_manuell_von uuid,
+  bg_traeger_name text,
+  bg_traeger_anschrift text,
+  bg_unfalltag date,
+  bg_aktenzeichen text,
+  bg_kostenzusage_datum date,
+  bg_kostenzusage_zeichen text,
+  bg_einverstaendnis_am date
 );
 --   FK abrechnung_id -> abrechnung(id)
 --   FK abrechnung_status_manuell_von -> auth.users(id)
@@ -2890,6 +2897,9 @@ ALTER TABLE ONLY public.prescriptions
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_rezeptart_check CHECK (rezeptart IS NULL OR (rezeptart = ANY (ARRAY['kassen'::text, 'privat'::text, 'selbstzahler'::text, 'bg'::text])));
+
+ALTER TABLE ONLY public.prescriptions
+  ADD CONSTRAINT prescriptions_bg_laengen_check CHECK (((bg_traeger_name IS NULL) OR (char_length(bg_traeger_name) <= 200)) AND ((bg_traeger_anschrift IS NULL) OR (char_length(bg_traeger_anschrift) <= 500)) AND ((bg_aktenzeichen IS NULL) OR (char_length(bg_aktenzeichen) <= 80)) AND ((bg_kostenzusage_zeichen IS NULL) OR (char_length(bg_kostenzusage_zeichen) <= 80)));
 
 ALTER TABLE ONLY public.prescriptions
   ADD CONSTRAINT prescriptions_signature_confidence_check CHECK (signature_confidence = ANY (ARRAY['high'::text, 'medium'::text, 'low'::text]));

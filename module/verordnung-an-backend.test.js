@@ -228,3 +228,9 @@ test('nagel/behandlungsanlass: ohne Schlüssel in der Nutzlast fehlt er im Rumpf
   const leer = verordnungFuerAendern({ nutzlast: { ...rest, behandlungsanlass: null } }).parsed.rezept;
   assert.equal(leer.behandlungsanlass, null);
 });
+
+test('bg-Angaben gehen mit, ohne bg fehlt der Schlüssel', () => {
+  const bg = { traeger_name: 'BG', unfalltag: '2026-09-15' };
+  assert.deepEqual(verordnungFuerAendern({ nutzlast: { ...NUTZLAST, rezeptart: 'bg', bg } }).parsed.rezept.bg, bg);
+  assert.equal('bg' in verordnungFuerAendern({ nutzlast: NUTZLAST }).parsed.rezept, false);
+});

@@ -169,6 +169,25 @@ try {
   um.setzeArt(document, 'kassen');
   pruef('Kasse wird als kassen geschrieben, nie gkv',
     maske.nutzlastAusMaske({ icd10: 'E11.74' }).rezeptart === 'kassen');
+  // BG-Block (KHS M2.2): nur bei BG sichtbar, Werte reisen in der Nutzlast, bei anderer Art nicht
+  um.setzeArt(document, 'kassen');
+  pruef('BG-Block bei Kasse unsichtbar', !sichtbar('rzBgTraegerName'));
+  um.setzeArt(document, 'bg');
+  pruef('BG-Block bei BG sichtbar', sichtbar('rzBgTraegerName') && sichtbar('rzBgUnfalltag'));
+  document.getElementById('rzBgTraegerName').value = ' BG Holz ';
+  document.getElementById('rzBgUnfalltag').value = '2026-09-15';
+  const nl = maske.nutzlastAusMaske({ icd10: 'E11.74' });
+  pruef('Nutzlast trägt bg getrimmt', nl.bg?.traeger_name === 'BG Holz' && nl.bg?.unfalltag === '2026-09-15' && nl.bg?.aktenzeichen === null, JSON.stringify(nl.bg));
+  pruef('Hinweise beim Speichern nennen Anschrift/Kostenzusage/Einverständnis',
+    maske.bgHinweiseAusMaske().length === 3, maske.bgHinweiseAusMaske().join(' | '));
+  um.setzeArt(document, 'privat');
+  pruef('bei Privat kein bg in der Nutzlast, keine BG-Hinweise',
+    maske.nutzlastAusMaske({ icd10: 'E11.74' }).bg === undefined && maske.bgHinweiseAusMaske().length === 0);
+  maske.fuelleMuster13({ rezeptart: 'bg', bg_traeger_name: 'BG X', bg_unfalltag: '2026-09-15T00:00:00' }, { alsVorlage: false });
+  pruef('fuelleMuster13 füllt die BG-Felder (Datum auf 10 Zeichen)',
+    document.getElementById('rzBgTraegerName').value === 'BG X' && document.getElementById('rzBgUnfalltag').value === '2026-09-15');
+  maske.fuelleMuster13({ rezeptart: 'bg', bg_traeger_name: 'BG X' }, { alsVorlage: true });
+  pruef('Vorlage übernimmt keine BG-Angaben', document.getElementById('rzBgTraegerName').value === '');
   um.setzeSperre(document, { belegnummer: '7-3' });
   pruef('Sperre: andere Arten nicht wählbar, Hinweis steht da',
     document.querySelector('#rzArtLeiste [data-art="privat"]').disabled && sichtbar('rzArtHinweis'));
