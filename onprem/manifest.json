@@ -1,7 +1,7 @@
 {
   "surum": "0.4.0",
   "dateien": [
-    { "yol": "docker-compose.yml", "sha256": "b119867b46674b9287f2eefa701f3f61a374beca97a78ac432332d97161ba747" },
+    { "yol": "docker-compose.yml", "sha256": "2082f96316c45b739c8011b8b786e5a046d3faad1436f5eb945affc637534c7b" },
     { "yol": ".env.template", "sha256": "a9f99f51368f3fb60233b75f919f4c0a671379d5f7d18bf28f5733e85bb5cae2" },
     { "yol": "install.sh", "sha256": "920c7056bc513238e5e08ec44041dcb90ec0c9d1d9e314a487166172e8a8fa94" },
     { "yol": "update.sh", "sha256": "82c37b75bfe0f2459c84959d8a8a8e2986da10e84c1bb4c0ac15e5d6e880c6c5" },
@@ -10,7 +10,7 @@
     { "yol": "ip-melden.sh", "sha256": "9d897767ce87981683655253810a7df560c0a0bd4d0bc5d54de758a5e9b53838" },
     { "yol": "backup.sh", "sha256": "ca3461e6d5551b5161889be334ba78675ea5312b523b4fcff7d2e2e3c02bceb5" },
     { "yol": "restore.sh", "sha256": "72a9e97dc8992743dac7de510a1ffdf7c09c07e5f7f342285d6b225a64ef963e" },
-    { "yol": "reset-owner-passwort.sh", "sha256": "96ea06998dc4d0cc78bbad103b6617808bd8cb564c6aab6f537fcf86daeec782" },
+    { "yol": "reset-owner-passwort.sh", "sha256": "a9e3c7090940aefdd744d9e998c6462a668930813e41d3800abc574cfda9c451" },
     { "yol": "volumes/api/kong.yml", "sha256": "ffa5733a1ef043f4d62cc6b957d8591343886293645cfe16a200d7a1e89a73e8" },
     { "yol": "volumes/api/kong-entrypoint.sh", "sha256": "399394576635f7477dfee32e870f509567fc496f0dc86a5a6611f58d1099031f" },
     { "yol": "volumes/db/_supabase.sql", "sha256": "9dce462adc04137d6afabcf28efa60a6c355270a4b32d7af58891ac4eb964c5f" },

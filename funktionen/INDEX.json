@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-06",
- "dateien": 362,
- "funktionen": 3030,
+ "dateien": 364,
+ "funktionen": 3034,
  "module": [
   "abrechnung",
   "anamnese",
@@ -17556,6 +17556,82 @@
    "uiPfad": []
   },
   {
+   "name": "minPasswortLaenge",
+   "kind": "function",
+   "file": "api-backend/lib/passwort-regel.js",
+   "start": 16,
+   "end": 18,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "fmt",
+    "pruefePasswort"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 30 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "pruefePasswort",
+   "kind": "function",
+   "file": "api-backend/lib/passwort-regel.js",
+   "start": 26,
+   "end": 32,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "minPasswortLaenge"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "getKey",
    "kind": "function",
    "file": "api-backend/lib/phi-encrypt.js",
@@ -19824,8 +19900,8 @@
    "name": "cleanSlug",
    "kind": "function",
    "file": "api-backend/routes/mitarbeiter-zugang.js",
-   "start": 33,
-   "end": 40,
+   "start": 34,
+   "end": 41,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -19843,8 +19919,8 @@
    "name": "genericFail",
    "kind": "arrow",
    "file": "api-backend/routes/mitarbeiter-zugang.js",
-   "start": 513,
-   "end": 528,
+   "start": 514,
+   "end": 529,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -20927,8 +21003,8 @@
    "name": "stdinZeile",
    "kind": "function",
    "file": "api-backend/setup/owner-passwort-reset.mjs",
-   "start": 28,
-   "end": 32,
+   "start": 29,
+   "end": 33,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -20946,8 +21022,8 @@
    "name": "ende",
    "kind": "function",
    "file": "api-backend/setup/owner-passwort-reset.mjs",
-   "start": 34,
-   "end": 37,
+   "start": 35,
+   "end": 38,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -21013,8 +21089,8 @@
    "name": "tokenGueltig",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 54,
-   "end": 61,
+   "start": 55,
+   "end": 62,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -21032,8 +21108,8 @@
    "name": "ownerAngelegt",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 70,
-   "end": 78,
+   "start": 71,
+   "end": 79,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [
@@ -21053,8 +21129,8 @@
    "name": "istAbgeschlossen",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 79,
-   "end": 87,
+   "start": 80,
+   "end": 88,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [
@@ -21074,8 +21150,8 @@
    "name": "schemaZaehlerUebersetzen",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 106,
-   "end": 114,
+   "start": 107,
+   "end": 115,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -21098,8 +21174,8 @@
    "name": "fmt",
    "kind": "arrow",
    "file": "api-backend/setup/router.js",
-   "start": 112,
-   "end": 113,
+   "start": 113,
+   "end": 114,
    "lines": 2,
    "spiegelHinweis": null,
    "tables": [],
@@ -21166,8 +21242,8 @@
    "name": "einfachUebersetzen",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 115,
-   "end": 122,
+   "start": 116,
+   "end": 123,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -21189,8 +21265,8 @@
    "name": "billigePruefungenLaufen",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 124,
-   "end": 150,
+   "start": 125,
+   "end": 151,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -39686,6 +39762,7 @@
     "loadVorlagenPanel",
     "makeShape",
     "markActiveShape",
+    "minPasswortLaenge",
     "mitarbeiterEntfernen",
     "mountBrandingExtras",
     "mountEinrichtungRing",
@@ -55685,8 +55762,8 @@
    "name": "applyLang",
    "kind": "function",
    "file": "login.js",
-   "start": 50,
-   "end": 80,
+   "start": 51,
+   "end": 81,
    "lines": 31,
    "spiegelHinweis": null,
    "tables": [],
@@ -55706,8 +55783,8 @@
    "name": "showView",
    "kind": "function",
    "file": "login.js",
-   "start": 89,
-   "end": 98,
+   "start": 90,
+   "end": 99,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -55761,8 +55838,8 @@
    "name": "showMsg",
    "kind": "function",
    "file": "login.js",
-   "start": 100,
-   "end": 103,
+   "start": 101,
+   "end": 104,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -55782,8 +55859,8 @@
    "name": "clearMsg",
    "kind": "function",
    "file": "login.js",
-   "start": 104,
-   "end": 107,
+   "start": 105,
+   "end": 108,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -55801,8 +55878,8 @@
    "name": "showPanelMsg",
    "kind": "function",
    "file": "login.js",
-   "start": 109,
-   "end": 113,
+   "start": 110,
+   "end": 114,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -55820,8 +55897,8 @@
    "name": "isAdmin",
    "kind": "function",
    "file": "login.js",
-   "start": 132,
-   "end": 139,
+   "start": 133,
+   "end": 140,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [
@@ -55843,8 +55920,8 @@
    "name": "routeAfterAuth",
    "kind": "function",
    "file": "login.js",
-   "start": 141,
-   "end": 144,
+   "start": 142,
+   "end": 145,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -93888,6 +93965,82 @@
    "uiPfad": [
     "ortak yardımcı — 30 modülden çağrılıyor"
    ]
+  },
+  {
+   "name": "minPasswortLaenge",
+   "kind": "function",
+   "file": "module/passwort-regel.js",
+   "start": 16,
+   "end": 18,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "fmt",
+    "pruefePasswort"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 30 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "pruefePasswort",
+   "kind": "function",
+   "file": "module/passwort-regel.js",
+   "start": 26,
+   "end": 32,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "minPasswortLaenge"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "escapeHtml",
@@ -148054,7 +148207,7 @@
   {
    "name": "fmt",
    "orte": [
-    "api-backend/setup/router.js:112",
+    "api-backend/setup/router.js:113",
     "dashboard.js:3334",
     "dashboard.js:7803",
     "dashboard.js:9623",
@@ -148428,7 +148581,7 @@
    "orte": [
     "admin-login.js:15",
     "attendance.js:69",
-    "login.js:100"
+    "login.js:101"
    ],
    "aynalar": []
   },
@@ -148437,7 +148590,7 @@
    "orte": [
     "admin-login.js:18",
     "api/_lib/auth.js:90",
-    "login.js:132"
+    "login.js:133"
    ],
    "aynalar": []
   },
@@ -148508,7 +148661,7 @@
    "name": "applyLang",
    "orte": [
     "kalender.js:67",
-    "login.js:50",
+    "login.js:51",
     "setup.js:84"
    ],
    "aynalar": []
@@ -148607,7 +148760,7 @@
    "name": "clearMsg",
    "orte": [
     "admin-login.js:16",
-    "login.js:104"
+    "login.js:105"
    ],
    "aynalar": []
   },
@@ -148854,6 +149007,22 @@
    "aynalar": []
   },
   {
+   "name": "minPasswortLaenge",
+   "orte": [
+    "api-backend/lib/passwort-regel.js:16",
+    "module/passwort-regel.js:16"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "pruefePasswort",
+   "orte": [
+    "api-backend/lib/passwort-regel.js:26",
+    "module/passwort-regel.js:26"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "kartenIkNormalisieren",
    "orte": [
     "api-backend/lib/rezept-felder.js:113",
@@ -149084,7 +149253,7 @@
   {
    "name": "showView",
    "orte": [
-    "login.js:89",
+    "login.js:90",
     "ops/app.js:185"
    ],
    "aynalar": []

@@ -183,6 +183,9 @@ services:
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
       GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM}
 
+      # = MIN_MITARBEITER, untere Schranke für jeden Weg inkl. direktem updateUser; bestehende Passwörter bleiben gültig (GoTrue prüft nur beim Setzen).
+      GOTRUE_PASSWORD_MIN_LENGTH: "8"
+
       # Kein SMTP fuer GoTrue (O-142, Entscheidung 01.10.2026 — KHS K2.5):
       # Konten entstehen in der Box OHNE Mail. Inhaber: Einrichtungsassistent
       # (admin.createUser, email_confirm:true); Mitarbeiter: Einrichtungscode

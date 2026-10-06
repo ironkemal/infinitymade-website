@@ -34,6 +34,7 @@ import { schemaZaehlerLesen } from './selbstpruefung.js';
 import { rlsNegativTest, verschluesselungsTest } from './pruefungen.js';
 import { KUTU_OWNER_PLAN } from '../lib/dagitim.js';
 import { brandingFelderPruefen } from './branding-felder.js';
+import { pruefePasswort } from '../lib/passwort-regel.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -186,8 +187,9 @@ router.post('/owner', async (req, res) => {
   if (typeof email !== 'string' || !email.includes('@')) {
     return res.status(400).json({ error: 'Ungültige E-Mail-Adresse' });
   }
-  if (typeof password !== 'string' || password.length < 8) {
-    return res.status(400).json({ error: 'Passwort zu kurz (mindestens 8 Zeichen)' });
+  const pwFehler = pruefePasswort('owner', password);
+  if (pwFehler) {
+    return res.status(400).json({ error: pwFehler });
   }
   if (!FACHBEREICHE.has(sector)) {
     return res.status(400).json({ error: 'Ungültiger Fachbereich' });

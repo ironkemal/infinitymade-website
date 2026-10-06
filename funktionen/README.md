@@ -116,6 +116,17 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 06.10.2026 · K2b.11 Kurulum jetonu URL-Fragment'te (commit 85d463e7)
+- `module/setup-fragment.js` (yeni): `jetonAusHash(hash)` — saf; URL hash'inden hex kurulum jetonu (16–128 karakter)
+  çıkarır, uymazsa boş. Ayrıca modül yüklenirken **yan etkili** `export const fragmentJeton`: `location.hash`'i okur,
+  `history.replaceState` ile adresten siler. Niye: jeton praksise gösterilmesin (K-19 h). **`setup.js`'in İLK
+  import'u olmak zorunda** — `supabase-config.js` yüklenirken fetch atıyor, jeton ondan önce adresten silinmeli
+  (guvenlik S-48). Import sırasını değiştiren, bu modülü başka bir import'un arkasına alan bu korumayı kırar.
+  Nerede: yalnız `setup.js` (kutuya özel sayfa).
+- `setup.js` `pruefeJeton(token)` (yeni): eski submit handler'ın gövdesi çıkarıldı; link (fragment) ve form aynı
+  yoldan doğrular. Jeton doğrulaması için ikinci yol yazılmasın.
+- Kopya kontrolü: hash'ten jeton/parametre okuyan ortak bir yardımcı haritada yok — kopya değil.
+
 ### 06.10.2026 · K2b.6 Kutu IP eşitlemesi (ad ≤15 dk içinde yeni iç IP'ye)
 - `api-backend/merkez-istemci/ip-abgleich.js` (yeni): `starteIpAbgleich()`, `ipAbgleichSchritt()`, `istGueltigesIpv4`,
   `istRfc1918`, `erzeugeZustand`. Niye: kutunun iç IP'si değişince adın A kaydı ≤15 dk içinde yeniden doğru yeri

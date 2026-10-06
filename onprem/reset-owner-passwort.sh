@@ -42,7 +42,8 @@ if [ -z "$pw1" ]; then
 else
   read -r -s -p "  Wiederholen:     " pw2; echo
   [ "$pw1" = "$pw2" ] || fail "Die Eingaben stimmen nicht überein" "Erneut starten."
-  [ "${#pw1}" -ge 8 ] || fail "Passwort zu kurz (mindestens 8 Zeichen)" "Erneut starten."
+  # Frühe Warnung; die verbindliche Prüfung macht owner-passwort-reset.mjs aus der Backend-Regel (onprem: Bundle und Image werden getrennt aktualisiert).
+  [ "${#pw1}" -ge 12 ] || fail "Passwort zu kurz (mindestens 12 Zeichen)" "Erneut starten."
 fi
 
 set +e

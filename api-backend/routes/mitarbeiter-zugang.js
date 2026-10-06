@@ -13,6 +13,7 @@ import {
   isCodeExpired,
   calculateExpiryDate,
 } from './mitarbeiter-zugang-code.js';
+import { pruefePasswort } from '../lib/passwort-regel.js';
 
 const router = express.Router();
 
@@ -539,10 +540,11 @@ router.post('/team/erstanmeldung', erstanmeldungLimiter, async (req, res) => {
       return genericFail();
     }
 
-    // Passwort-Validierung (min. 12 Zeichen)
-    if (typeof passwort !== 'string' || passwort.length < 12) {
+    // Passwort-Validierung (Vorprüfung Untergrenze MIN_MITARBEITER verhindert DB-Hit und Mail-Orakel)
+    const untergrenzeFehler = pruefePasswort('employee', passwort);
+    if (untergrenzeFehler) {
       return res.status(400).json({
-        error: 'Das Passwort muss mindestens 12 Zeichen lang sein.'
+        error: untergrenzeFehler
       });
     }
 
@@ -556,6 +558,14 @@ router.post('/team/erstanmeldung', erstanmeldungLimiter, async (req, res) => {
 
     if (pErr || !profile) {
       return genericFail();
+    }
+
+    // Verbindliche Prüfung mit der Rolle aus der DB (profiles.role)
+    const pwFehler = pruefePasswort(profile.role, passwort);
+    if (pwFehler) {
+      return res.status(400).json({
+        error: pwFehler
+      });
     }
 
     // 2. Nutzer-Daten aus auth.admin laden

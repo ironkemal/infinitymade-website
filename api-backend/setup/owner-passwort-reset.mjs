@@ -18,6 +18,7 @@
 // Kullanım: printf '%s\n' "$pw" | docker compose exec -T api node setup/owner-passwort-reset.mjs
 // Exit: 0 ok · 2 kein Owner · 3 Konto geloescht · 4 Passwort ungueltig · 1 sonstiger Fehler
 import { createClient } from '@supabase/supabase-js';
+import { MIN_INHABER } from '../lib/passwort-regel.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -37,7 +38,7 @@ function ende(code, meldung) {
 }
 
 const passwort = await stdinZeile();
-if (!passwort || passwort.length < 8) ende(4, 'Passwort zu kurz (mindestens 8 Zeichen).');
+if (!passwort || passwort.length < MIN_INHABER) ende(4, `Passwort zu kurz (mindestens ${MIN_INHABER} Zeichen).`);
 
 const { data: setup, error: setupErr } = await supabase
   .from('praxura_setup').select('owner_user_id').eq('id', 1).maybeSingle();

@@ -17,7 +17,7 @@ import { verdrahteRezeptPatientenfeld, ladePatientenCache } from './module/rezep
 import { heuteAktualisieren } from './module/termin-heute.js?v=20261004m113';
 import { wireAboButtons } from './module/subscription-ui.js?v=20260914';
 import { emit, on } from './module/signal.js?v=20260813';
-import { podoArztHinweise } from './module/podo-arztangaben.js?v=20261001g'; import { icdSpeicherHinweise } from './module/verordnung-speichern-hinweise.js?v=20261004m113'; import { aktualisiereArztSperreBanner, installiereArztSperreBanner } from './module/arztangaben-banner.js?v=20261001g';
+import { podoArztHinweise } from './module/podo-arztangaben.js?v=20261001g'; import { icdSpeicherHinweise } from './module/verordnung-speichern-hinweise.js?v=20261004m113'; import { aktualisiereArztSperreBanner, installiereArztSperreBanner } from './module/arztangaben-banner.js?v=20261001g'; import { minPasswortLaenge } from './module/passwort-regel.js?v=20261006';
 import { zeigeTerminFehler as terminFehler, loescheTerminFehler, verdrahteTerminFehler } from './module/termin-fehler.js?v=20260929q';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
@@ -12493,7 +12493,7 @@ document.getElementById('tiSaveBtn')?.addEventListener('click', async () => {
 
 document.getElementById('pwChangeBtn').addEventListener('click', async () => {
   const pw = document.getElementById('setPw').value;
-  if (pw.length < 6) { showToast(t('err_generic'), 'error'); return; }
+  if (pw.length < minPasswortLaenge(currentProfile?.role)) { showToast(t('err_generic'), 'error'); return; }
   const { error } = await supabase.auth.updateUser({ password: pw });
   if (error) { showToast(t('err_generic'), 'error'); return; }
   document.getElementById('setPw').value = '';

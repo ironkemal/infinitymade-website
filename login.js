@@ -1,5 +1,6 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, IST_KUTU, API_BASE } from './supabase-config.js';
+import { minPasswortLaenge, MIN_MITARBEITER } from './module/passwort-regel.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -38,7 +39,7 @@ const T = {
     newpw_submit: 'Passwort ändern',
     newpw_saving: 'Wird gespeichert…',
     newpw_mismatch: 'Die Passwörter stimmen nicht überein.',
-    newpw_short: 'Das Passwort muss mindestens 8 Zeichen lang sein.',
+    newpw_short: (min = 12) => `Das Passwort muss mindestens ${min} Zeichen lang sein.`,
     newpw_success: 'Passwort geändert. Sie werden weitergeleitet…',
     newpw_error: 'Fehler beim Ändern des Passworts. Bitte versuchen Sie es erneut.',
   },
@@ -259,7 +260,16 @@ document.getElementById('newPwSubmitBtn').addEventListener('click', async () => 
   const pw2 = document.getElementById('newPw2').value;
   const btn = document.getElementById('newPwSubmitBtn');
 
-  if (pw.length < 8) { showPanelMsg('newPwMsg', t.newpw_short, 'error'); return; }
+  const { data: authData } = await supabase.auth.getUser();
+  const userId = authData?.user?.id;
+  let role;
+  if (userId) {
+    const { data: prof } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
+    role = prof?.role;
+  }
+  const min = minPasswortLaenge(role);
+
+  if (pw.length < min) { showPanelMsg('newPwMsg', t.newpw_short(min), 'error'); return; }
   if (pw !== pw2)    { showPanelMsg('newPwMsg', t.newpw_mismatch, 'error'); return; }
 
   btn.disabled = true;
@@ -296,7 +306,7 @@ document.getElementById('erstSubmitBtn').addEventListener('click', async () => {
   const pw2 = document.getElementById('erstPw2').value;
   const btn = document.getElementById('erstSubmitBtn');
   if (!email || !code) { showPanelMsg('erstMsg', 'Bitte E-Mail-Adresse und Einrichtungscode eingeben.', 'error'); return; }
-  if (pw.length < 12) { showPanelMsg('erstMsg', 'Das Passwort muss mindestens 12 Zeichen lang sein.', 'error'); return; }
+  if (pw.length < MIN_MITARBEITER) { showPanelMsg('erstMsg', `Das Passwort muss mindestens ${MIN_MITARBEITER} Zeichen lang sein.`, 'error'); return; }
   if (pw !== pw2) { showPanelMsg('erstMsg', 'Die Passwörter stimmen nicht überein.', 'error'); return; }
   btn.disabled = true;
   try {
