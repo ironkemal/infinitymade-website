@@ -47,8 +47,8 @@ import { pruefeNeueMenge } from './verordnung-einheiten.js?v=20260902';
 import { kartenIkNormalisieren, tazeleIkHinweis } from './krankenkasse-suche.js?v=20261003e';
 import { hinweisFuerGespeichertenKode } from '../katalog-suche.js?v=20261001a';
 import { aktualisiereArztSperreBanner } from './arztangaben-banner.js?v=20261001g';
-import { rezeptartFuerSpeichern, vorauswahlAusPatient } from './rezeptart.js?v=20261006a';
-import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261006a';
+import { rezeptartFuerSpeichern, vorauswahlAusPatient, istKasse } from './rezeptart.js?v=20261006a';
+import { setzeArt, setzeSperre, verdrahteLeiste } from './rezeptart-umschalter.js?v=20261006p';
 import { bgAusMaske, bgInMaske, bgHinweiseBeimSpeichern } from './bg-angaben.js?v=20261006i';
 
 /**
@@ -296,6 +296,11 @@ async function ladeOffeneRechnung(rxId) {
     .or(`prescription_id.eq.${rxId},verordnung_id.eq.${rxId}`)
     .in('status', ['sent', 'paid']).limit(1);
   return !error && !!(data && data.length);
+}
+
+/** Steht die Maske auf „Kasse"? Kassen-Pflichten (Diagnosegruppe, ICD, Karten-IK, Arztangaben des Podologie-Vertrags) gelten nur dann. */
+export function maskeIstKasse() {
+  return istKasse(document.getElementById('rzMaskeWrap')?.dataset.rezeptart);
 }
 
 /**

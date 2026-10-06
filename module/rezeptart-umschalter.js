@@ -91,7 +91,10 @@ export function verdrahteLeiste(doc, { nachziehen } = {}) {
     const knopf = ev.target.closest?.('[data-art]');
     if (knopf && wrap) {
       if (wrap.dataset.artSperre) { leisteZeichnen(doc, wrap); return; }
-      wrap.dataset.artManuell = '1';   // ab jetzt keine Vorauswahl mehr aus dem Patienten
+      // Eine bewusste Abweichung von „Kasse" (Privat/Selbstzahler/BG) schützt vor der Vorauswahl aus dem Patienten.
+      // „Kasse" ist der Normalzustand: wer nur herumklickt und bei Kasse landet, hat nichts gewählt
+      // (Live-Nachtest N2-a: Pfeiltasten hin und zurück sperrten die Vorauswahl).
+      if (knopf.dataset.art === 'kassen') delete wrap.dataset.artManuell; else wrap.dataset.artManuell = '1';
       setzeArt(doc, knopf.dataset.art, { nachziehen });
       knopf.dispatchEvent(new Event('change', { bubbles: true }));
       return;

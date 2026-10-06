@@ -55,12 +55,12 @@ import { korrigiereNoShow, kalenderNeuLaden } from './module/booking-status-korr
 import { markiereNichtErschienen, ausgefalleneEinheiten, rueckfahrkarteRxId } from './module/termin-nicht-erschienen.js?v=20260916b';
 import { montiereVerordnungPruefen, pruefeMaske } from './module/verordnung-pruefen-knopf.js?v=20261006a';
 // Die Muster-13-Maske gibt es genau EINMAL. Sie wohnt im Rezept-Modal und zieht in die untere Hälfte der Seite „Verordnungen" um, wenn dort eine gespeicherte Verordnung aufgeschlagen wird (module/verordnung-maske.js).
-import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske }
-  from './module/verordnung-maske.js?v=20261006b'; import { istKasse } from './module/rezeptart.js?v=20261006a';
+import { setzeMaskeBruecke, maskeHeimschicken, pruefeAenderungErlaubt, schreibeVerordnung, istPatientNeu, scanHerkunft, nurIcdKode, vorauswahlArtAusPatient, bgHinweiseAusMaske, maskeIstKasse }
+  from './module/verordnung-maske.js?v=20261006p'; import { istKasse } from './module/rezeptart.js?v=20261006a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20261004m113';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261004m113';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261004m113';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261006p';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
 import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006n'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { payloadFuerUpdate } from './module/rechnung-festschreibung.js?v=20261006k'; import { rechnungsSummen } from './module/rechnung-summen.js?v=20261006n'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261006g';
@@ -14515,8 +14515,8 @@ async function saveRezept() {
     // --- Pflichtfeld-Prüfung: warnt, lässt aber „trotzdem speichern" zu ---
     const missing = bgHinweiseAusMaske();   // nur bei BG (module/bg-angaben.js), sonst leer
     if (!ausstDate) missing.push('Ausstellungsdatum');
-    if (!icd10) missing.push('ICD-10-Code');
-    if (!val('rzDg') && istKasse(document.getElementById('rzMaskeWrap')?.dataset.rezeptart)) missing.push('Diagnosegruppe');
+    if (!icd10 && maskeIstKasse()) missing.push('ICD-10-Code');   // bei Privat/Selbstzahler/BG kein Kassen-Pflichtfeld (Live-Nachtest N5-a)
+    if (!val('rzDg') && maskeIstKasse()) missing.push('Diagnosegruppe');
     if (!val('rzHm')) missing.push('Heilmittel');
     if (!anzahl) missing.push('Behandlungseinheiten');
     if (!rzLanr) missing.push('Arzt-Nr. (LANR)');
@@ -14524,8 +14524,8 @@ async function saveRezept() {
     if (!document.getElementById('rzUnterschrift').checked) missing.push('Unterschrift des Arztes');
 
     // Format-Fehler (nur wenn ausgefüllt)
-    const arzt = podoArztHinweise({ bereich: val('rzTherapieBereich'), lanr: rzLanr, bsnr: rzBsnr, unterschrift: document.getElementById('rzUnterschrift').checked });
-    const formatErrors = [...arzt.hinweise, ...(istKasse(document.getElementById('rzMaskeWrap')?.dataset.rezeptart) ? kartenIkHinweise(val('rzPatKasseIk')) : []), ...await icdSpeicherHinweise(supabase, { bereich: val('rzTherapieBereich'), icdFelder: [val('rzIcd'), val('rzIcd2')], dg: val('rzDg') })];
+    const arzt = maskeIstKasse() ? podoArztHinweise({ bereich: val('rzTherapieBereich'), lanr: rzLanr, bsnr: rzBsnr, unterschrift: document.getElementById('rzUnterschrift').checked }) : { hinweise: [], satz: '' };   // Arztangaben des Podologie-Vertrags: nur Kasse
+    const formatErrors = [...arzt.hinweise, ...(maskeIstKasse() ? kartenIkHinweise(val('rzPatKasseIk')) : []), ...await icdSpeicherHinweise(supabase, { bereich: val('rzTherapieBereich'), icdFelder: [val('rzIcd'), val('rzIcd2')], dg: val('rzDg') })];
     if (rzLanr && !/^\d{9}$/.test(rzLanr)) formatErrors.push('LANR muss 9 Ziffern haben');
     if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
     if (icdMehrAlsEinKodeJeFeld(val('rzIcd'), val('rzIcd2'))) formatErrors.push(t('pod_icd_je_feld'));

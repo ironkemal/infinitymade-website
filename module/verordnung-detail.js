@@ -88,7 +88,7 @@ import { ausTopf } from './verordnung-topf.js?v=20260930c';
 // Die untere Hälfte zeigt seit dem 06.09.2026 nicht mehr Text, sondern die
 // Muster-13-Maske selbst — dasselbe Formular wie „+ Neue Verordnung", nur
 // gefüllt und änderbar. Umzug und Riegel: module/verordnung-maske.js.
-import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261006b';
+import { maskeEinbetten, maskeHeimschicken } from './verordnung-maske.js?v=20261006p';
 import { pruefeMaske } from './verordnung-pruefen-knopf.js?v=20261006a';
 import { aktiveSitzungszeilen } from './sitzung-aktiv.js?v=20260914';
 
@@ -268,7 +268,7 @@ const _LEER = (text, esc) => `<div style="font-size:12px;color:var(--text-muted)
  * Katalogtreffer geht mit 0 € in die Summe ein und sieht dann aus wie eine
  * vollständige Rechnung, die sie nicht ist.
  */
-function _summeHtml(summe, esc) {
+function _summeHtml(summe, esc, ohneZuzahlung = false) {
   if (!summe) return '';
   const zeile = (label, wert, fett) =>
     `<div style="display:flex;justify-content:space-between;gap:8px;${fett ? 'font-weight:700;' : ''}">
@@ -278,7 +278,7 @@ function _summeHtml(summe, esc) {
 
   return `<div style="border-top:2px solid var(--border);margin-top:6px;padding-top:6px;display:flex;flex-direction:column;gap:3px;">
     ${zeile('Gesamt', _euro(summe.brutto), true)}
-    ${summe.befreit
+    ${ohneZuzahlung ? '' : summe.befreit
       ? zeile('Zuzahlung', 'befreit')
       : zeile(`Zuzahlung (${_euro(summe.prozent)} + ${_euro(summe.pauschale)} Pauschale)`, _euro(summe.gesamt))}
     ${summe.unbekannt?.length
@@ -324,7 +324,9 @@ function _verschreibung(rx, esc, quelle, summe) {
       </div>`;
     }).join('');
 
-    return _spaltenKasten('Verschreibung', zeilen + _summeHtml(summe, esc), esc);
+    // Privat/Selbstzahler/BG: keine Kassenzuzahlung (Live-Nachtest N5-a) — nur der Gesamtbetrag.
+    const ohneZuzahlung = ['privat', 'selbstzahler', 'bg'].includes(String(rx?.rezeptart || '').toLowerCase());
+    return _spaltenKasten('Verschreibung', zeilen + _summeHtml(summe, esc, ohneZuzahlung), esc);
   }
 
   const sitzungen = (Array.isArray(rx.prescription_sessions) ? rx.prescription_sessions : [])

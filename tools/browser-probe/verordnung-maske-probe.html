@@ -142,7 +142,7 @@ try {
   //
   // Eingeklappt, nicht versteckt: bei nicht-Kasse sind die GKV-Felder weg, aber
   // ihre Werte bleiben, und der Knopf holt sie zurück. Zurück auf Kasse = alles da.
-  const um = await import('../../module/rezeptart-umschalter.js?v=20261006a');
+  const um = await import('../../module/rezeptart-umschalter.js?v=20261006p');
   // Die Stilregeln stehen in dashboard.html, nicht im herausgeschnittenen Modal — mitnehmen,
   // und das Modal aufdecken, sonst ist alles „unsichtbar" und die Probe beweist nichts.
   for (const st of doc.querySelectorAll('style')) {
@@ -203,6 +203,16 @@ try {
   maske.maskeHeimschicken();
   maske.vorauswahlArtAusPatient({ insurance_type: 'privat' });
   pruef('Vorauswahl privat greift nach Neuöffnen (auch nach manuellem Klick davor)', document.getElementById('rzMaskeWrap').dataset.rezeptart === 'privat', document.getElementById('rzMaskeWrap').dataset.rezeptart);
+  // N2-a (Nachtest): hin und zurück auf „Kasse" ist keine Wahl — die Vorauswahl greift trotzdem
+  maske.maskeHeimschicken();
+  document.querySelector('#rzArtLeiste [data-art="privat"]').click();
+  document.querySelector('#rzArtLeiste [data-art="kassen"]').click();
+  maske.vorauswahlArtAusPatient({ insurance_type: 'privat' });
+  pruef('Vorauswahl greift auch nach Herumklicken, das bei Kasse endet', document.getElementById('rzMaskeWrap').dataset.rezeptart === 'privat');
+  // aber eine bewusste Wahl (BG) bleibt
+  document.querySelector('#rzArtLeiste [data-art="bg"]').click();
+  maske.vorauswahlArtAusPatient({ insurance_type: 'privat' });
+  pruef('Bewusst gewähltes BG wird nicht von der Vorauswahl überschrieben', document.getElementById('rzMaskeWrap').dataset.rezeptart === 'bg');
   maske.maskeHeimschicken();
   maske.vorauswahlArtAusPatient({ insurance_type: 'gkv' });
   pruef('gkv bleibt Kasse', document.getElementById('rzMaskeWrap').dataset.rezeptart === 'kassen');

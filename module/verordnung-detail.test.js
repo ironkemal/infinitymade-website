@@ -216,3 +216,14 @@ test('Freitextfelder werden maskiert', () => {
   assert.doesNotMatch(html, /<script>/);
   assert.match(html, /&lt;script&gt;/);
 });
+
+test('Podologie, Privat/Selbstzahler/BG: Gesamtbetrag ja, Kassenzuzahlung nein (Live-Nachtest N5-a)', () => {
+  const summe = { brutto: 103.84, prozent: 10.38, pauschale: 10, gesamt: 20.38, befreit: false, unbekannt: [] };
+  for (const art of ['privat', 'selbstzahler', 'bg']) {
+    const html = verordnungDetailHtml({ ...PODO, rezeptart: art }, { escapeHtml: esc, quelle: 'podologie', summe });
+    assert.match(html, /Gesamt/, art);
+    assert.doesNotMatch(html, /Zuzahlung \(/, art);
+  }
+  const kasse = verordnungDetailHtml({ ...PODO, rezeptart: 'kassen' }, { escapeHtml: esc, quelle: 'podologie', summe });
+  assert.match(kasse, /Zuzahlung \(/);
+});
