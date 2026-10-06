@@ -5,7 +5,7 @@
  * Hier landen die Teile, die beim Live-Test vom 15.08.2026 aufgefallen sind.
  */
 
-import { verordnungenZuruecksetzen } from './rechnung-verordnung.js?v=20261006q';
+import { verordnungenZuruecksetzen } from './rechnung-verordnung.js?v=20261006r';
 import { preisAusService } from './rechnung-bruecke.js?v=20261006q';
 
 /**

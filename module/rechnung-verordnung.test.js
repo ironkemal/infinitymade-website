@@ -314,3 +314,19 @@ test('Behandlungen mit invoice_id werden schon in der Abfrage ausgeschlossen (Do
   assert.ok(spion.some(([t, sp, w]) => t === 'podologie_behandlungen' && sp === 'invoice_id' && w === null), JSON.stringify(spion));
   assert.ok(spion.some(([t, sp]) => t === 'podologie_behandlungen' && sp === 'storniert_am'));
 });
+
+test('Privat/BG mit übergebenen Leistungen: Preis aus der eigenen Leistung, nicht der GKV-Preis; ohne Preis 0,00 € + Hinweis', async () => {
+  const sb = (art) => fakeSb({
+    prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-09-01', diagnosegruppe: 'DF', heilmittel_items: [{ code: '78020' }], anzahl_einheiten: 4, rezeptart: art }],
+    podologie_behandlungen: [{ id: 'b1', verordnung_id: 'v1', behandlungsdatum: '2026-09-05', hpnr_codes: ['78020'], betrag_gkv: null }],
+  });
+  const eigene = [{ gkv_position_nr: '78020', title: 'Podologische Behandlung (groß)', price: 80 }];
+  const privat = (await verordnungenLaden(sb('privat'), { ...OPTS, katalogPodo: KATALOG_GROSS, services: eigene }))[0].behandlungen[0];
+  assert.equal(privat.zeilen[0].unit_price, 80);
+  assert.match(privat.zeilen[0].title, /Hornhaut und Nägel/);
+  const ohne = (await verordnungenLaden(sb('bg'), { ...OPTS, katalogPodo: KATALOG_GROSS, services: [] }))[0].behandlungen[0];
+  assert.equal(ohne.zeilen[0].unit_price, 0);
+  assert.match(ohne.hinweis, /kein Privatpreis/);
+  const kasse = (await verordnungenLaden(sb('kassen'), { ...OPTS, katalogPodo: KATALOG_GROSS, services: eigene }))[0].behandlungen[0];
+  assert.equal(kasse.zeilen[0].unit_price, 51.92, 'Kasse behält den Katalogpreis');
+});

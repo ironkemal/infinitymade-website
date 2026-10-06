@@ -70,7 +70,7 @@ import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20261006n';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden, leererEditorZustand, terminLeistungen, terminBeschriftung } from './module/rechnung-editor.js?v=20261006b';
-import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20261006q';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20261006r';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { katalogNachladen } from './module/leistungskatalog.js?v=20260909';
 import { ZAHLARTEN, zahlartLabel as zahlartLabelBase, zahlartChipsHtml } from './module/zahlarten.js?v=20260910';
@@ -13855,9 +13855,9 @@ function bindInvEvents() {
     // gewollt (zwei Wege, einer gewinnt). Kommentar hier, damit es niemand
     // für einen Fehler hält: wer eine Verordnung anhakt, dessen Terminhäkchen
     // werden abgeräumt, und umgekehrt.
-    const vords = await verordnungenLaden(supabase, {
+    await ensureLeistungskatalog(); const vords = await verordnungenLaden(supabase, {
       ownerId: getOwnerId(), leadId: invPatientId,
-      sector: getSector(), katalogPodo: GKV_LEISTUNGSKATALOG.podologie,
+      sector: getSector(), katalogPodo: GKV_LEISTUNGSKATALOG.podologie, services: ownerServices,
     });
     if (vords.length > 0) {
       vordWrap.hidden = false;

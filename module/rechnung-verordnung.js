@@ -42,6 +42,7 @@ import { belegnummerText } from './belegnummer.js?v=20260817';
 import { ausTopf } from './verordnung-topf.js?v=20260930c';
 import { terminLeistungen } from './rechnung-editor.js?v=20261006b';
 import { rechnungsTitel, istNichtKasse } from './rechnung-anzeige.js?v=20261006q';
+import { privatpreisFuer } from './rechnung-bruecke.js?v=20261006q';
 
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────
 let _liste = [];    // normalisierte Verordnungsliste aus verordnungenLaden
@@ -96,7 +97,7 @@ function _nummerAnzeige(row) {
  * @param {number} betraGkv    betrag_gkv als letzter Fallback
  * @returns {{ zeilen: Array, hinweis: string|null }}
  */
-function _zeilenAusCodes(beh, katalogPodo, vordTitel, betraGkv, rezeptart) {
+function _zeilenAusCodes(beh, katalogPodo, vordTitel, betraGkv, rezeptart, services) {
   const codes = beh.hpnr_codes || [];
   if (!codes.length) {
     // Kein Code — auf betrag_gkv zurückfallen
@@ -110,19 +111,27 @@ function _zeilenAusCodes(beh, katalogPodo, vordTitel, betraGkv, rezeptart) {
 
   const zeilen = [];
   const unbekannt = [];
+  const offen = [];
   for (const code of codes) {
     const entry = katalogPodo.find(k => k.code === String(code));
     if (entry) {
       // Rechnung an Patient/PKV/BG: Klartext statt „… (groß)" (Live-Test G1); Kassen-Zeilen behalten den amtlichen Titel.
-      const titel = istNichtKasse(rezeptart) ? rechnungsTitel(code, null, entry.title) : entry.title;
-      zeilen.push({ title: titel, quantity: 1, unit_price: entry.price });
+      const nichtKasse = istNichtKasse(rezeptart);
+      // Privat/BG: frei kalkuliert — der GKV-Preis gilt dort nicht (podoloji; wer ihn still übernimmt, rechnet unter Wert ab).
+      // Preis und Name kommen aus der eigenen Leistung der Praxis; fehlt der Preis, bleibt 0,00 € + Hinweis.
+      // Ohne übergebene Leistungen (alte Aufrufer/Tests) bleibt der bisherige Katalogpreis.
+      const eigen = nichtKasse && Array.isArray(services) ? privatpreisFuer(code, services) : null;
+      const titel = nichtKasse ? rechnungsTitel(code, eigen?.title, entry.title) : entry.title;
+      const preis = nichtKasse && Array.isArray(services) ? (eigen?.preis || 0) : entry.price;
+      if (nichtKasse && Array.isArray(services) && !preis) offen.push(code);
+      zeilen.push({ title: titel, quantity: 1, unit_price: preis });
     } else {
       unbekannt.push(code);
     }
   }
   const hinweis = unbekannt.length
     ? 'Position' + (unbekannt.length > 1 ? 'en' : '') + ' ' + unbekannt.join(', ') + ' unbekannt'
-    : null;
+    : (offen.length ? 'kein Privatpreis hinterlegt (' + offen.join(', ') + ') — bitte Betrag eintragen' : null);
   return { zeilen, hinweis };
 }
 
@@ -137,6 +146,7 @@ function _zeilenAusCodes(beh, katalogPodo, vordTitel, betraGkv, rezeptart) {
  * @param {string} opts.leadId  Patienten-ID (aus leads.id)
  * @param {string} opts.sector  getSector()-Rückgabe
  * @param {Array}  opts.katalogPodo  GKV_LEISTUNGSKATALOG.podologie (nach applyGueltigePreise)
+ * @param {Array}  [opts.services]   eigene Leistungen der Praxis — für Privat/Selbstzahler/BG-Preise (sonst GKV-Preis)
  *
  * @returns {Promise<Array>} Liste normalisierter Verordnungen:
  *   [{
@@ -145,7 +155,7 @@ function _zeilenAusCodes(beh, katalogPodo, vordTitel, betraGkv, rezeptart) {
  *     gesamt
  *   }]
  */
-export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPodo }) {
+export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPodo, services }) {
   if (!ownerId || !leadId) return [];
 
   // ── Podologie-Weg ──────────────────────────────────────────────────────────
@@ -200,7 +210,7 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
       if (!vordTitelStr) vordTitelStr = v.diagnosegruppe || 'Verordnung';
 
       const behandlungen = behs.map(b => {
-        const { zeilen, hinweis } = _zeilenAusCodes(b, kpodo, vordTitelStr, b.betrag_gkv, v.rezeptart);
+        const { zeilen, hinweis } = _zeilenAusCodes(b, kpodo, vordTitelStr, b.betrag_gkv, v.rezeptart, services);
         const betrag = zeilen.reduce((s, z) => s + (z.quantity || 1) * (z.unit_price || 0), 0);
         return {
           id: b.id,
