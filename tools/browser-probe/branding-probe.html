@@ -31,7 +31,7 @@ try {
     from: (t) => ({ update: (w) => ({ eq: (f, v) => ({ select: async () => { log.push(['profil', t, w, v]); Object.assign(profilZeile, w); return { data: [{ id: v }], error: null }; } }) }) }),
   };
   let owner = true; const toasts = [];
-  const { mountBrandingExtras } = await import('../../module/branding-ui.js?v=20261006e');
+  const { mountBrandingExtras } = await import('../../module/branding-ui.js?v=20261006g');
   const h = mountBrandingExtras({
     supabase: sb, ownerId: () => OWNER, istOwner: () => owner, profil: () => profilZeile,
     profilAktualisieren: (p) => Object.assign(profilZeile, p), toast: (m, a) => toasts.push([m, a]),
@@ -79,6 +79,33 @@ try {
   await new Promise(r => setTimeout(r, 50));
   pruef('Mitarbeiter: Felder gesperrt, Hinweis sichtbar', $('brandingInhaber').disabled && $('brandingStempelUploadBtn').disabled && !$('brandingStempelRechte').hidden);
   pruef('Mitarbeiter: kein Schreibzugriff abgesetzt', log.length === vorher);
+
+  // ── Einrichtungsring (KHS M2.6) in der echten Kopfleiste ────────────────
+  const wrapRing = doc.querySelector('.einrichtung-wrap');
+  pruef('dashboard.html enthält den Einrichtungsring in der Kopfleiste', !!wrapRing?.querySelector('#einrichtungRing') && !!wrapRing?.querySelector('#einrichtungPopover'));
+  document.getElementById('buehne').appendChild(document.importNode(wrapRing, true));
+  for (const st of doc.querySelectorAll('style')) { if (st.textContent.includes('einrichtung-ring')) { const n = document.createElement('style'); n.textContent = st.textContent; document.head.appendChild(n); } }
+  const { mountEinrichtungRing } = await import('../../module/einrichtung-ring.js?v=20261006g');
+  let ringProfil = { id: 'p', business_name: 'X' }; let ringOwner = true; const spruenge = [];
+  const ring = mountEinrichtungRing({ profil: () => ringProfil, istOwner: () => ringOwner, springe: (id) => spruenge.push(id) });
+  const knopf = document.getElementById('einrichtungRing'); const pop = document.getElementById('einrichtungPopover');
+  pruef('Ring sichtbar, nennt Prozent', !knopf.hidden && /\d+ %/.test(knopf.textContent), knopf.textContent.trim());
+  pruef('Ring hat eine zugängliche Beschriftung', /Einrichtung zu \d+ Prozent/.test(knopf.getAttribute('aria-label')));
+  knopf.click();
+  pruef('Klick öffnet die Liste mit den Lücken', !pop.hidden && pop.querySelectorAll('[data-ziel]').length >= 5, String(pop.querySelectorAll('[data-ziel]').length));
+  pop.querySelector('[data-ziel="settingsBillingSection"]').click();
+  pruef('Klick auf einen Eintrag springt zur Einstellung und schließt die Liste', spruenge[0] === 'settingsBillingSection' && pop.hidden, spruenge.join());
+  knopf.click(); document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  pruef('Escape schließt die Liste', pop.hidden);
+  ringOwner = false; ring.aktualisieren();
+  pruef('Mitarbeiter sehen den Ring nicht', knopf.hidden);
+  ringOwner = true;
+  ringProfil = { id: 'p', business_name: 'Praxis', owner_first_name: 'E', owner_last_name: 'M', street: 'W', plz: '12345', city: 'O', steuernummer: '1', tax_exempt_note: 'x', iban: 'DE02', phone: '1', ik_number: '123456789' };
+  ring.aktualisieren();
+  pruef('Bei 100 % verschwindet der Ring', knopf.hidden);
+  ringProfil = null; ring.aktualisieren();
+  pruef('Ohne geladenes Profil: unsichtbar, kein Fehler', knopf.hidden);
+  ring.stop();
 } catch (e) {
   pruef('Probe läuft durch', false, e?.stack || e?.message || String(e));
 }

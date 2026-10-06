@@ -24,8 +24,8 @@
  */
 
 import { bgEmpfaengerBlock, bgAusZeile } from './bg-angaben.js?v=20261006b';
-import { brandingAus } from './branding.js?v=20261006e';
-import { ladeStempelDataUrl } from './stempel.js?v=20261006e';
+import { brandingAus } from './branding.js?v=20261006g';
+import { ladeStempelDataUrl } from './stempel.js?v=20261006g';
 
 let d = null;
 

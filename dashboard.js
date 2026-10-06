@@ -63,7 +63,7 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20261004m
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20261004m113';
 import { downloadDmrzForInvoice } from './module/rechnung-dmrz.js?v=20261001c';
 import { renderKontenSettings } from './module/buchungskonten.js?v=20260909';
-import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006e'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006e'; import { brandingAus, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261006e';
+import { mountRechnungsansicht, renderInvList, openInvView, closeInvView, zeigeRechnungsModus } from './module/rechnung-ansicht.js?v=20261006g'; import { mountBrandingExtras } from './module/branding-ui.js?v=20261006g'; import { mountEinrichtungRing } from './module/einrichtung-ring.js?v=20261006g'; import { brandingAus, BRANDING_SPALTEN, terminzettelPraxis as terminzettelPraxisAus } from './module/branding.js?v=20261006g';
 import { starteZahlungseingang, zahlungsartNachRechnungAbfragen } from './module/rechnung-zahlungseingang.js?v=20260930f';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260920s';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
@@ -614,7 +614,7 @@ async function renderSidebar() {
   const role = currentProfile.role || 'owner';
 
   if (role === 'employee' && !ownerProfile && currentProfile.owner_id) {
-    const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status,selbstzahler_stufen').eq('id', currentProfile.owner_id).maybeSingle();
+    const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status,selbstzahler_stufen,' + BRANDING_SPALTEN).eq('id', currentProfile.owner_id).maybeSingle();
     if (ownerErr) console.error('[renderSidebar ownerProfile]', ownerErr);
     if (owner) {
       ownerProfile = owner;
@@ -11660,7 +11660,7 @@ document.getElementById('setBrandingLogo')?.addEventListener('input', e => updat
   };
 })();
 
-mountBrandingExtras({ supabase, ownerId: () => getOwnerId(), istOwner: () => currentProfile?.role === 'owner', profil: () => ownerProfile || currentProfile || {}, profilAktualisieren: (p) => Object.assign(ownerProfile || currentProfile || {}, p), toast: showToast }); document.getElementById('brandingSaveBtn')?.addEventListener('click', async () => {
+mountBrandingExtras({ supabase, ownerId: () => getOwnerId(), istOwner: () => currentProfile?.role === 'owner', profil: () => ownerProfile || currentProfile || {}, profilAktualisieren: (p) => { Object.assign(ownerProfile || currentProfile || {}, p); document.dispatchEvent(new Event('praxis-profil:geaendert')); }, toast: showToast }); mountEinrichtungRing({ profil: () => currentProfile?.role === 'owner' ? currentProfile : null, istOwner: () => currentProfile?.role === 'owner', springe: (id) => { switchPanel('settings'); setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); } }); document.getElementById('brandingSaveBtn')?.addEventListener('click', async () => {
   const logoUrl = (document.getElementById('setBrandingLogo')?.value || '').trim();
   const footerText = (document.getElementById('setBrandingFooter')?.value || '').trim();
   const { error } = await supabase.from('profiles').update({
@@ -17720,7 +17720,7 @@ function initDruckeinstellungen() {
     // `currentProfile.language` wird nicht mehr angewendet — die Oberflaeche ist deutsch (28.08.2026).
 
     if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
-      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status,selbstzahler_stufen').eq('id', currentProfile.owner_id).maybeSingle();
+      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status,selbstzahler_stufen,' + BRANDING_SPALTEN).eq('id', currentProfile.owner_id).maybeSingle();
       if (ownerErr) console.error('[ownerProfile]', ownerErr);
       if (owner) {
         ownerProfile = owner;

@@ -59,6 +59,11 @@
         <button id="rezeptScanBtn" class="btn-primary" type="button"
           style="display:none;padding:8px 14px;font-size:13px;margin-right:8px;"
           title="Muster 13 / Blankoverordnung mit Kamera scannen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> <span class="rezept-scan-label">Rezept scannen</span></button>
+        <!-- Einrichtungsring (KHS M2.6): zeigt, was für vollständige Rechnungen noch fehlt. Blockiert nie. module/einrichtung-ring.js -->
+        <div class="einrichtung-wrap">
+          <button id="einrichtungRing" class="einrichtung-ring" type="button" hidden aria-haspopup="true" aria-expanded="false"></button>
+          <div id="einrichtungPopover" class="einrichtung-pop" hidden role="dialog" aria-label="Einrichtung"></div>
+        </div>
         <span id="liveClock" class="live-clock"></span>
         <button id="themeToggle" class="theme-toggle" type="button" aria-label="Dunkelmodus umschalten" title="Hell / Dunkel umschalten">
           <svg class="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -3940,6 +3945,17 @@
     .m13-art-toggle{ border:0; background:transparent; color:var(--primary); font:inherit; font-size:13px; font-weight:600; cursor:pointer; padding:6px 2px; min-height:32px; text-decoration:underline; }
     .m13-art-hinweis{ flex-basis:100%; font-size:13px; color:var(--warning); }
     .m13-gkv-zu .m13-gkv{ display:none !important; }
+    .einrichtung-wrap{ position:relative; display:inline-flex; margin-right:10px; }
+    .einrichtung-ring{ display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); background:var(--bg-card-solid); color:var(--text-main); border-radius:999px; padding:3px 12px 3px 4px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; min-height:36px; }
+    .einrichtung-ring:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+    .einrichtung-pop{ position:absolute; top:calc(100% + 8px); right:0; z-index:60; width:300px; max-width:88vw; background:var(--bg-card-solid); color:var(--text-main); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 28px rgba(0,0,0,.25); padding:12px; font-size:13px; }
+    .einrichtung-pop-kopf{ font-weight:700; margin-bottom:8px; }
+    .einrichtung-pop ul{ list-style:none; margin:0; padding:0; }
+    .einrichtung-pop li button{ display:flex; flex-direction:column; align-items:flex-start; width:100%; text-align:left; border:0; background:transparent; color:var(--text-main); font:inherit; padding:8px 6px; border-radius:6px; cursor:pointer; min-height:40px; }
+    .einrichtung-pop li button:hover, .einrichtung-pop li button:focus-visible{ background:var(--bg-hover, rgba(127,127,127,.12)); outline:none; }
+    .einrichtung-pop li small{ color:var(--text-muted); font-size:11px; }
+    .einrichtung-pop-fuss{ margin-top:8px; font-size:11px; color:var(--text-muted); }
+    @media (max-width:520px){ .einrichtung-ring-text{ display:none; } .einrichtung-ring{ padding:3px 4px; } .einrichtung-pop{ position:fixed; top:56px; left:8px; right:8px; width:auto; max-width:none; } }
     .branding-liste{ margin:2px 0 10px 18px; padding:0; font-size:13px; } .branding-liste a{ color:var(--primary); }
     .m13-bgblock{ display:none; margin:0 0 14px; padding:12px 14px; border:1px solid var(--border); border-radius:8px; background:var(--bg-card-solid); }
     .m13-art-bg .m13-bgblock{ display:block; }
@@ -5817,7 +5833,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20261006f"></script>
+  <script type="module" src="dashboard.js?v=20261006h"></script>
 </body>
 
 </html>

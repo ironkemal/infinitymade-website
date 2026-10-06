@@ -15,6 +15,16 @@
 
 export const STEMPEL_PFAD_RE = /^[0-9a-f-]{36}\/stempel\.(png|jpg)$/;
 
+/**
+ * Die Profilspalten, die ein MITARBEITER von der Praxis (Owner-Zeile) lesen muss, damit Belege
+ * vollständig sind — bewusst eine Liste statt `*`: Stripe-IDs & Co. gehören nicht in den Browser
+ * eines Mitarbeiters. Der Mitarbeiter-Weg in dashboard.js (`ownerProfile`) lud bisher nur
+ * `sector,plan,plan_status,selbstzahler_stufen` — Belege liefen dort mit leerem Kopf.
+ */
+export const BRANDING_SPALTEN = 'business_name,praxis_inhaber,owner_first_name,owner_last_name,street,house_number,plz,zip,city,'
+  + 'phone,whatsapp_number,email,ik_number,praxis_logo_url,praxis_stempel_path,invoice_footer_text,iban,bic,bank_name,'
+  + 'steuernummer,ust_id,tax_exempt_note';
+
 const t = (w) => String(w ?? '').trim();
 
 const httpsUrl = (w) => { const u = t(w); return /^https:\/\/\S+$/i.test(u) ? u : ''; };
@@ -28,7 +38,8 @@ export function brandingAus(p) {
   const pfad = t(x.praxis_stempel_path);
   return {
     name: t(x.business_name),
-    inhaber: t(x.praxis_inhaber),
+    // `praxis_inhaber` (ausdrücklich gesetzt) hat Vorrang; sonst die Namen aus dem Einrichtungsassistenten.
+    inhaber: t(x.praxis_inhaber) || [t(x.owner_first_name), t(x.owner_last_name)].filter(Boolean).join(' '),
     strasseName: t(x.street), strasse, plz, ort, plzOrt: [plz, ort].filter(Boolean).join(' '),
     telefon: t(x.phone), whatsapp: t(x.whatsapp_number), email: t(x.email),
     ik: t(x.ik_number),

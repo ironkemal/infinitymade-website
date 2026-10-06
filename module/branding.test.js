@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { brandingAus, terminzettelPraxis, brandingLuecken, STEMPEL_PFAD_RE } from './branding.js';
+import { brandingAus, terminzettelPraxis, brandingLuecken, STEMPEL_PFAD_RE, BRANDING_SPALTEN } from './branding.js';
 
 const VOLL = {
   business_name: ' Praxis Nord ', praxis_inhaber: 'Erika Muster', street: 'Hauptstr.', house_number: '5',
@@ -78,4 +78,18 @@ test('Lücken: Steuernummer ODER USt-IdNr. genügt; nur Leerzeichen zählt als l
   assert.ok(leer.pflicht.some(x => x.schluessel === 'steuer_id'));
   const halbeAnschrift = brandingLuecken(brandingAus({ ...VOLL, street: ' ' }));
   assert.ok(halbeAnschrift.pflicht.some(x => x.schluessel === 'anschrift'));
+});
+
+test('Inhaber: praxis_inhaber hat Vorrang, sonst Vor- und Nachname aus dem Assistenten', () => {
+  assert.equal(brandingAus({ praxis_inhaber: 'Dr. X', owner_first_name: 'A', owner_last_name: 'B' }).inhaber, 'Dr. X');
+  assert.equal(brandingAus({ owner_first_name: ' Erika ', owner_last_name: 'Muster' }).inhaber, 'Erika Muster');
+  assert.equal(brandingAus({ owner_last_name: 'Muster' }).inhaber, 'Muster');
+  assert.equal(brandingAus({}).inhaber, '');
+});
+
+test('BRANDING_SPALTEN: nur Beleg-Felder, nie Stripe/Plan/Rolle', () => {
+  const s = BRANDING_SPALTEN.split(',');
+  for (const nein of ['stripe_customer_id', 'stripe_subscription_id', 'plan', 'role', 'owner_id', 'company_code']) assert.ok(!s.includes(nein), nein);
+  for (const ja of ['business_name', 'iban', 'steuernummer', 'praxis_stempel_path', 'praxis_logo_url']) assert.ok(s.includes(ja), ja);
+  assert.equal(new Set(s).size, s.length, 'keine Doppelten');
 });
