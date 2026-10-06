@@ -5,8 +5,8 @@
  * Hier landen die Teile, die beim Live-Test vom 15.08.2026 aufgefallen sind.
  */
 
-import { verordnungenZuruecksetzen } from './rechnung-verordnung.js?v=20261006b';
-import { preisAusService } from './rechnung-bruecke.js?v=20261006n';
+import { verordnungenZuruecksetzen } from './rechnung-verordnung.js?v=20261006q';
+import { preisAusService } from './rechnung-bruecke.js?v=20261006q';
 
 /**
  * Lädt die Termine eines Patienten für die Einzeltermin-Auswahl (Selbstzahler).

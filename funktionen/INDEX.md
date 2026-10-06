@@ -3,7 +3,7 @@
 > Üretim: 2026-10-06 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3040 fonksiyon** · 365 dosya · 41 sidebar modülü
+**3042 fonksiyon** · 366 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -347,7 +347,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `loadPodologieBilling()` — [module/podologie-abrechnung.js:489](module/podologie-abrechnung.js#L489-L1224) · 736 satır · podologie_behandlungen:insert
 
 **Yol 2 — `behandlungenVerknuepfen()`** · Ekran: _UI yolu çözülemedi_
-- `behandlungenVerknuepfen()` — [module/rechnung-bruecke.js:207](module/rechnung-bruecke.js#L207-L236) · 30 satır · podologie_behandlungen:update
+- `behandlungenVerknuepfen()` — [module/rechnung-bruecke.js:189](module/rechnung-bruecke.js#L189-L218) · 30 satır · podologie_behandlungen:update
 
 ### `prescription_documents` — 2 bağımsız yazma yolu
 

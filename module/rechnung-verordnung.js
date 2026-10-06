@@ -41,6 +41,7 @@
 import { belegnummerText } from './belegnummer.js?v=20260817';
 import { ausTopf } from './verordnung-topf.js?v=20260930c';
 import { terminLeistungen } from './rechnung-editor.js?v=20261006b';
+import { rechnungsTitel, istNichtKasse } from './rechnung-anzeige.js?v=20261006q';
 
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────
 let _liste = [];    // normalisierte Verordnungsliste aus verordnungenLaden
@@ -95,7 +96,7 @@ function _nummerAnzeige(row) {
  * @param {number} betraGkv    betrag_gkv als letzter Fallback
  * @returns {{ zeilen: Array, hinweis: string|null }}
  */
-function _zeilenAusCodes(beh, katalogPodo, vordTitel, betraGkv) {
+function _zeilenAusCodes(beh, katalogPodo, vordTitel, betraGkv, rezeptart) {
   const codes = beh.hpnr_codes || [];
   if (!codes.length) {
     // Kein Code — auf betrag_gkv zurückfallen
@@ -112,7 +113,9 @@ function _zeilenAusCodes(beh, katalogPodo, vordTitel, betraGkv) {
   for (const code of codes) {
     const entry = katalogPodo.find(k => k.code === String(code));
     if (entry) {
-      zeilen.push({ title: entry.title, quantity: 1, unit_price: entry.price });
+      // Rechnung an Patient/PKV/BG: Klartext statt „… (groß)" (Live-Test G1); Kassen-Zeilen behalten den amtlichen Titel.
+      const titel = istNichtKasse(rezeptart) ? rechnungsTitel(code, null, entry.title) : entry.title;
+      zeilen.push({ title: titel, quantity: 1, unit_price: entry.price });
     } else {
       unbekannt.push(code);
     }
@@ -168,6 +171,9 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
         .select('id, verordnung_id, behandlungsdatum, hpnr_codes, diagnosegruppe, betrag_gkv')
         .eq('owner_id', ownerId)
         .is('storniert_am', null)      // stornierte Behandlungen gehören auf keine Rechnung (0026)
+        // Eine Behandlung, die schon auf einer Rechnung steht, ist nicht mehr wählbar — sonst Doppelabrechnung
+        // (Live-Nachtest: alte Behandlungen waren vorangehakt). `verknuepfungLoesen` setzt invoice_id beim Storno zurück.
+        .is('invoice_id', null)
         .in('verordnung_id', vordIds)
         .order('behandlungsdatum', { ascending: true });
       if (bErr) { console.error('[verordnungenLaden:podo:behandlungen]', bErr); }
@@ -194,7 +200,7 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
       if (!vordTitelStr) vordTitelStr = v.diagnosegruppe || 'Verordnung';
 
       const behandlungen = behs.map(b => {
-        const { zeilen, hinweis } = _zeilenAusCodes(b, kpodo, vordTitelStr, b.betrag_gkv);
+        const { zeilen, hinweis } = _zeilenAusCodes(b, kpodo, vordTitelStr, b.betrag_gkv, v.rezeptart);
         const betrag = zeilen.reduce((s, z) => s + (z.quantity || 1) * (z.unit_price || 0), 0);
         return {
           id: b.id,

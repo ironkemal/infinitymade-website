@@ -276,3 +276,41 @@ test('Verordnung ohne dokumentierte Behandlung bleibt bei 0', async () => {
   assert.equal(liste[0].behandlungen.length, 0);
   assert.equal(liste[0].gesamt, 0);
 });
+
+// ── Live-Nachtest 06.10.2026 (G1): Klartext auf Privat/BG-Rechnungen und keine schon berechneten Behandlungen ──
+function fakeSbMitSpion(tabellen, spion) {
+  const kette = (tabelle) => {
+    const selbst = {
+      select: () => selbst, eq: () => selbst, in: () => selbst,
+      is: (spalte, wert) => { spion.push([tabelle, spalte, wert]); return selbst; },
+      order: () => Promise.resolve({ data: tabellen[tabelle] || [], error: null }),
+      then: (res) => res({ data: tabellen[tabelle] || [], error: null }),
+    };
+    return selbst;
+  };
+  return { from: kette };
+}
+const KATALOG_GROSS = [{ code: '78020', title: 'Podologische Behandlung (groß)', price: 51.92 }];
+
+test('Privat/BG/Selbstzahler: Zeilentitel im Klartext, Preis bleibt; Kasse behält den amtlichen Titel', async () => {
+  for (const [art, klar] of [['privat', true], ['bg', true], ['selbstzahler', true], ['kassen', false], [null, false]]) {
+    const liste = await verordnungenLaden(fakeSb({
+      prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-09-01', diagnosegruppe: 'DF', heilmittel_items: [{ code: '78020' }], anzahl_einheiten: 4, rezeptart: art }],
+      podologie_behandlungen: [{ id: 'b1', verordnung_id: 'v1', behandlungsdatum: '2026-09-05', hpnr_codes: ['78020'], betrag_gkv: null }],
+    }), { ...OPTS, katalogPodo: KATALOG_GROSS });
+    const z = liste[0].behandlungen[0].zeilen[0];
+    assert.equal(z.unit_price, 51.92, String(art));
+    if (klar) { assert.match(z.title, /Hornhaut und Nägel\), Therapiezeit über 20 Minuten/, String(art)); assert.doesNotMatch(z.title, /groß|Komplex/); }
+    else assert.equal(z.title, 'Podologische Behandlung (groß)', String(art));
+  }
+});
+
+test('Behandlungen mit invoice_id werden schon in der Abfrage ausgeschlossen (Doppelabrechnung)', async () => {
+  const spion = [];
+  await verordnungenLaden(fakeSbMitSpion({
+    prescriptions: [{ id: 'v1', ausstellungsdatum: '2026-09-01', diagnosegruppe: 'DF', heilmittel_items: [], anzahl_einheiten: 1, rezeptart: 'privat' }],
+    podologie_behandlungen: [],
+  }, spion), OPTS);
+  assert.ok(spion.some(([t, sp, w]) => t === 'podologie_behandlungen' && sp === 'invoice_id' && w === null), JSON.stringify(spion));
+  assert.ok(spion.some(([t, sp]) => t === 'podologie_behandlungen' && sp === 'storniert_am'));
+});
