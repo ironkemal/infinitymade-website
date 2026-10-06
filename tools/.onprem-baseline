@@ -61,7 +61,12 @@ cdn_host=0
 # Artış reddedilir. Kapı NOTICE.md'ye BAKMAZ — lisans satırını eklemek
 # insanın işi (O-42), makinenin değil. Taban bilinçli olarak yükseltilirse
 # gerekçesi sicile yazılır.
-onprem_image=8
+#
+# ⚠️ 06.10.2026 — 8→9, BİLİNÇLİ (O-161 / K2b.5, box kimlik kaydı).
+# Artan 1 satır, yeni `kayit` servisi (profiles: [kurulum]); DEMSELBEN
+# `${PRAXURA_API_IMAGE}` imajını kullanır (yabancı konteyner değil, güncelleme
+# yolu api ile özdeş). NOTICE.md satırı gerektirmez.
+onprem_image=9
 
 # vercel.json CSP'sindeki "https://…" token sayısı (O-52, 11.09.2026 ölçüldü).
 # Kapı bu dosyaya ilk kez bakıyor; hedef sıfır DEĞİL — SaaS'ın kendi bulut

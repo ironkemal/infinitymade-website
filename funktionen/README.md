@@ -116,6 +116,18 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 06.10.2026 · K2b.5a Kutu kaydı: kod env'den, kayıt sonrası IP, kimlik volume testi
+- `codeAufloesen(o, env)` (`api-backend/merkez-istemci/kayit.js`, yeni export). Niye: kurulum kodu argv yerine
+  `KAYIT_CODE` env'den gelebilsin — `ps`/log'a düşmesin. Nerede: ilk `kayit.js` `main()`; ileride `install.sh`
+  `docker compose run -e KAYIT_CODE kayit`.
+- `args()` aynı dosyada export edildi (yalnız test için). `kayitAusfuehren` yeni `ip` parametresi: kayıttan hemen sonra
+  tek imzalı `/v1/ip` (merkez register A kaydı yazmıyor; ad ancak bununla çözülür). Taşıyıcı mevcut `merkezFetch` —
+  ikinci imza/taşıyıcı yazılmadı (05.10 K2b.17 sözleşmesi korunuyor).
+- `dienstBlock(text, name)` (`tools/onprem-kimlik-yedek.test.js`, export). Niye: compose servis bloğunu YAML bağımlılığı
+  olmadan girintiyle okur; kimlik/acmedns volume'larının yedeğe ve yanlış konteynere girmediğini sabitler (O-161).
+  Başka compose metin testi gerekirse **bunu kullan**, ikinci parser yazma. ⚠️ `tools/` haritanın kapsamı dışında —
+  bu yüzden INDEX.json'da görünmez; tek kayıt burası. Haritada karşılığı yok (grep 06.10: başka compose-blok okuyucu yok).
+
 ### 05.10.2026 · K2b.17 Kutu-Identität (Ed25519) + K2b.2 Merkez-Namensdienst (07fab61)
 - `api-backend/merkez-istemci/` — `signatur.js` (`signiereAnfrage`, `pruefeSignatur`, `boxIdAusPublicKey`), `kimlik.js`
   (`erzeugeKimlik`, `ladeKimlik`, `speichereAd`), `merkez-fetch.js` (`merkezFetch`), `kayit.js` (CLI). Niye: her kutu→merkez

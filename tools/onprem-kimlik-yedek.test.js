@@ -1,0 +1,139 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, '..');
+
+const composePfad = path.join(repoRoot, 'onprem', 'docker-compose.yml');
+const backupPfad = path.join(repoRoot, 'onprem', 'backup.sh');
+const installPfad = path.join(repoRoot, 'onprem', 'install.sh');
+
+/**
+ * Hilfsfunktion: extrahiert den Compose-Dienstblock ab `^  name:$`
+ * bis zur nächsten Zeile mit genau 2 Leerzeichen Einrückung + Bezeichner + `:`
+ * oder einer Zeile ohne Einrückung. Nur innerhalb von `services:` (unter `volumes:`
+ * stehen gleich eingerückte Volume-Namen), Kommentarzeilen zählen nicht.
+ */
+export function dienstBlock(text, name) {
+  const alle = text.split(/\r?\n/);
+  const start = alle.findIndex((z) => /^services:\s*$/.test(z));
+  const ende = alle.findIndex((z, i) => i > start && /^[^\s#]/.test(z));
+  const zeilen = alle.slice(start + 1, ende === -1 ? undefined : ende).filter((z) => !/^\s*#/.test(z));
+  const startRegex = new RegExp(`^  ${name}:\\s*$`);
+  const naechsterDienstRegex = /^  [a-zA-Z0-9_-]+:\s*$/;
+  const topLevelRegex = /^[^\s#]/;
+
+  let erfassen = false;
+  const block = [];
+
+  for (const zeile of zeilen) {
+    if (!erfassen) {
+      if (startRegex.test(zeile)) {
+        erfassen = true;
+        block.push(zeile);
+      }
+    } else {
+      if (naechsterDienstRegex.test(zeile) || topLevelRegex.test(zeile)) {
+        break;
+      }
+      block.push(zeile);
+    }
+  }
+  return block.join('\n');
+}
+
+test('Compose: Dienst api bindet kimlik mit :ro ein und enthält kein acmedns', () => {
+  const inhalt = fs.readFileSync(composePfad, 'utf8');
+  const api = dienstBlock(inhalt, 'api');
+  assert.ok(api, 'Dienst api muss in docker-compose.yml existieren');
+  assert.match(api, /kimlik:[^\n]*:ro/, 'api muss kimlik mit :ro einbinden');
+  assert.ok(!api.includes('acmedns'), 'api darf acmedns nicht enthalten');
+});
+
+test('Compose: Dienst caddy bindet acmedns mit :ro ein und enthält kein kimlik', () => {
+  const inhalt = fs.readFileSync(composePfad, 'utf8');
+  const caddy = dienstBlock(inhalt, 'caddy');
+  assert.ok(caddy, 'Dienst caddy muss in docker-compose.yml existieren');
+  assert.match(caddy, /acmedns:[^\n]*:ro/, 'caddy muss acmedns mit :ro einbinden');
+  assert.ok(!caddy.includes('kimlik'), 'caddy darf kimlik nicht enthalten');
+});
+
+test('Compose: Dienst kayit hat profiles [kurulum], keine ports/depends_on, keine DB/Krypto-Geheimnisse', () => {
+  const inhalt = fs.readFileSync(composePfad, 'utf8');
+  const kayit = dienstBlock(inhalt, 'kayit');
+  assert.ok(kayit, 'Dienst kayit muss in docker-compose.yml existieren');
+
+  // profiles mit kurulum
+  assert.match(kayit, /profiles:\s*\[[^\]]*"kurulum"[^\]]*\]/, 'kayit muss profiles: ["kurulum"] haben');
+
+  // kein depends_on, keine ports
+  assert.ok(!/^\s+depends_on:/m.test(kayit), 'kayit darf kein depends_on haben');
+  assert.ok(!/^\s+ports:/m.test(kayit), 'kayit darf keine ports haben');
+
+  // Environment darf keine der sensiblen Schlüssel enthalten
+  const verboteneSchluessel = [
+    'SERVICE_ROLE_KEY',
+    'DATABASE_URL',
+    'DATA_ENCRYPTION_KEY',
+    'SETUP_TOKEN',
+    'POSTGRES_PASSWORD',
+  ];
+  for (const schluessel of verboteneSchluessel) {
+    assert.ok(!kayit.includes(schluessel), `kayit-Environment darf ${schluessel} nicht enthalten`);
+  }
+});
+
+test('Compose: Kein anderer Dienst als api, kayit, caddy erwähnt kimlik oder acmedns', () => {
+  const inhalt = fs.readFileSync(composePfad, 'utf8');
+  const servicesTeil = inhalt.split(/^services:\s*$/m)[1].split(/^[^\s#]/m)[0];
+  const alleDiensteMatches = servicesTeil.match(/^  ([a-zA-Z0-9_-]+):\s*$/gm) || [];
+  assert.ok(alleDiensteMatches.length >= 8, 'Dienste unter services: nicht gefunden');
+  const alleDienste = alleDiensteMatches.map((m) => m.trim().replace(/:$/, ''));
+
+  const erlaubteDienste = new Set(['api', 'kayit', 'caddy']);
+
+  for (const dienst of alleDienste) {
+    if (!erlaubteDienste.has(dienst)) {
+      const block = dienstBlock(inhalt, dienst);
+      assert.ok(!block.includes('kimlik'), `Dienst ${dienst} darf kimlik nicht erwähnen`);
+      assert.ok(!block.includes('acmedns'), `Dienst ${dienst} darf acmedns nicht erwähnen`);
+    }
+  }
+});
+
+test('backup.sh: Sicherungsquellen als Positivliste — weder kimlik noch acmedns noch /var/lib/praxura, bekannte Quellen vorhanden', () => {
+  // Kommentarzeilen zählen nicht (eine Erklärung wie „kimlik wird nicht gesichert“ soll den Test nicht brechen).
+  const inhalt = fs.readFileSync(backupPfad, 'utf8').split(/\r?\n/).filter((z) => !/^\s*#/.test(z)).join('\n');
+
+  // Darf kimlik, acmedns oder /var/lib/praxura nicht enthalten
+  assert.ok(!inhalt.includes('kimlik'), 'backup.sh darf kimlik nicht erwähnen');
+  assert.ok(!inhalt.includes('acmedns'), 'backup.sh darf acmedns nicht erwähnen');
+  assert.ok(!inhalt.includes('/var/lib/praxura'), 'backup.sh darf /var/lib/praxura nicht erwähnen');
+
+  // Bekannte Quellen als Positivliste vorhanden
+  assert.ok(inhalt.includes('volumes/storage'), 'backup.sh muss volumes/storage sichern');
+  assert.ok(inhalt.includes('caddy:/data/caddy/pki'), 'backup.sh muss caddy PKI sichern');
+  assert.ok(inhalt.includes('pg_dump'), 'backup.sh muss pg_dump ausführen');
+  assert.ok(inhalt.includes('db.dump'), 'backup.sh muss db.dump schreiben');
+});
+
+test('install.sh: kein down -v/--volumes, erwähnt bei --neu-Löschen nicht kimlik/acmedns', () => {
+  // Kommentarzeilen zählen nicht (der Kopfkommentar des --neu-Blocks erklärt `down -v`).
+  const inhalt = fs.readFileSync(installPfad, 'utf8').split(/\r?\n/).filter((z) => !/^\s*#/.test(z)).join('\n');
+
+  // Keine Zeile ruft docker compose down mit -v oder --volumes auf
+  assert.ok(!/docker\s+compose\s+down[^\n]*(\s+-v\b|\s+--volumes\b)/.test(inhalt), 'install.sh darf kein docker compose down -v oder --volumes aufrufen');
+
+  // Im --neu-Löschblock dürfen kimlik und acmedns nicht als zu löschende Volumes aufgeführt sein
+  const neuMatch = inhalt.match(/NEU_BESTAETIGT[\s\S]*?ok "Alte Datenbank entfernt"/);
+  assert.ok(neuMatch, '--neu Löschblock muss in install.sh vorhanden sein');
+  const neuBlock = neuMatch[0];
+
+  // Die Löschung läuft über eine Schleife (`docker volume rm $v_ids`) — darum den ganzen Block prüfen, nicht nur die rm-Zeile.
+  assert.doesNotMatch(neuBlock, /\b(kimlik|acmedns)\b/, '--neu-Löschblock darf kimlik/acmedns nicht anfassen');
+  assert.match(neuBlock, /docker\s+volume\s+rm/, '--neu-Löschblock muss Volumes gezielt entfernen');
+  assert.ok(/db-config\s+caddy_data\s+caddy_config/.test(neuBlock), 'Löschung muss gezielt db-config, caddy_data, caddy_config ansprechen');
+});

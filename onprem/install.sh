@@ -214,7 +214,26 @@ ok "SITE_URL = ${SITE_URL}"
 # ── Jetzt erst, nach allen Vorprüfungen: alte Datenbank löschen (falls --neu) ─
 if [ "$NEU_BESTAETIGT" -eq 1 ]; then
   log "Vorprüfungen bestanden — lösche jetzt die vorhandene Datenbank (--neu)"
-  docker compose down -v --remove-orphans >/dev/null 2>&1 || true
+  # O-161 (K3, K2b.5): `docker compose down -v` würde auch `kimlik` und `acmedns`
+  # vernichten. Der Einrichtungscode ist einmalig und Merkez kennt den alten Schlüssel;
+  # ein gelöschtes kimlik-Volume erzeugt jedes Mal einen Support-Fall (kod-rebind).
+  # Daher nur Container stoppen (--remove-orphans) und gezielt NUR db-config,
+  # caddy_data und caddy_config löschen. kimlik und acmedns bleiben für Wiederverbindung.
+  docker compose down --remove-orphans >/dev/null 2>&1 || true
+  # Projektname = oberste `name:`-Zeile der Compose-Datei (nur Spalte 0 — das
+  # eingerückte `name:` unter networks ist der Netzname, nicht das Projekt).
+  PROJEKT_NAME="${COMPOSE_PROJECT_NAME:-}"
+  if [ -z "$PROJEKT_NAME" ] && [ -f "$SCRIPT_DIR/docker-compose.yml" ]; then
+    PROJEKT_NAME="$(awk '/^name:[[:space:]]*/{sub(/\r$/, "", $2); print $2; exit}' "$SCRIPT_DIR/docker-compose.yml" 2>/dev/null || true)"
+  fi
+  [ -n "$PROJEKT_NAME" ] || PROJEKT_NAME="$(basename "$SCRIPT_DIR")"
+  for vol in db-config caddy_data caddy_config; do
+    v_ids="$(docker volume ls -q --filter "label=com.docker.compose.project=${PROJEKT_NAME}" --filter "label=com.docker.compose.volume=${vol}" 2>/dev/null || true)"
+    if [ -n "$v_ids" ]; then
+      # shellcheck disable=SC2086  # mehrere IDs möglich
+      docker volume rm $v_ids >/dev/null 2>&1 || warn "Volume ${vol} konnte nicht entfernt werden (läuft noch ein Container?) — 'docker volume ls' prüfen"
+    fi
+  done
   rm -rf "$SCRIPT_DIR/volumes/db/data" "$SCRIPT_DIR/volumes/storage"
   ok "Alte Datenbank entfernt"
 fi

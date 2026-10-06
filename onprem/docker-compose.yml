@@ -413,6 +413,11 @@ services:
         condition: service_healthy
       kong:
         condition: service_healthy
+    volumes:
+      # Kutu-Identität (Ed25519, K2b.17/O-161): der langlebige Dienst signiert
+      # nur ausgehende Anfragen an Merkez — Schlüsseltausch und Registrierung
+      # macht ausschließlich `kayit`. Daher :ro. KEIN acmedns hier.
+      - kimlik:/var/lib/praxura/kimlik:ro
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -431,6 +436,10 @@ services:
       # vom Browser ab (Origin-Header wird auch same-origin gesendet). auth
       # (:160) und caddy (:516) lesen SITE_URL bereits, api bisher nicht.
       SITE_URL: ${SITE_URL}
+
+      # Praxura-Namensdienst (K2b.6 IP-Abgleich, später KI-Jeton K-20) — signiert
+      # mit der Kutu-Identität aus dem kimlik-Volume. Leer = Box ohne Namensdienst.
+      MERKEZ_URL: ${MERKEZ_URL:-}
 
       # ★ BINDEND: supabase_admin, nicht postgres.
       # Von den 24 `ALTER DEFAULT PRIVILEGES`-Zeilen der Baseline sagen 12
@@ -486,6 +495,34 @@ services:
       TZ: ${TZ:-Europe/Berlin}
 
   # ─────────────────────────────────────────────────────────────────────────
+  # kayit — Einmalige Registrierung der Box-Identität beim Praxura-Namensdienst
+  #         (K2b.17, O-161). Läuft nur gezielt im Profil "kurulum" (startet nie
+  #         beim regulären `docker compose up`). Erzeugt/tauscht die Ed25519-
+  #         Box-Identität und holt acme-dns-Zugangsdaten für Caddy.
+  #
+  #         Beispielaufruf:
+  #           docker compose --profile kurulum run --rm -e KAYIT_CODE kayit --nur-vorschlag --json
+  #
+  #         KAYIT_CODE wird von install.sh nur als Prozess-Umgebung an
+  #         `docker compose run -e KAYIT_CODE` übergeben, NIE in .env geschrieben.
+  # ─────────────────────────────────────────────────────────────────────────
+  kayit:
+    image: ${PRAXURA_API_IMAGE}
+    pull_policy: ${PRAXURA_PULL_POLICY:-always}
+    profiles: ["kurulum"]
+    restart: "no"
+    entrypoint: ["node", "merkez-istemci/kayit.js"]
+    environment:
+      MERKEZ_URL: ${MERKEZ_URL:-}
+      KIMLIK_DIR: /var/lib/praxura/kimlik
+      ACMEDNS_DIR: /var/lib/praxura/acmedns
+      KAYIT_CODE: ${KAYIT_CODE:-}
+      TZ: ${TZ:-Europe/Berlin}
+    volumes:
+      - kimlik:/var/lib/praxura/kimlik
+      - acmedns:/var/lib/praxura/acmedns
+
+  # ─────────────────────────────────────────────────────────────────────────
   # caddy — Reverse Proxy + TLS + statische Oberflaeche. Das EINZIGE, was aus
   #         dem Praxisnetz erreichbar ist (siehe REGEL 3 oben). Buendelt
   #         Oberflaeche + Proxy in einem Image (onprem/frontend.Dockerfile),
@@ -533,6 +570,10 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+      # acme-dns-Zugangsdaten für TLS-DNS-01 (K2b.4, O-161).
+      # Eigener Pfad, bewusst NICHT unter /data gemountet (backup.sh sichert
+      # /data/caddy/pki; acmedns gehört nie ins Backup).
+      - acmedns:/etc/praxura/acmedns:ro
 
 networks:
   default:
@@ -542,3 +583,7 @@ volumes:
   db-config:
   caddy_data:
   caddy_config:
+  # Box-Identität (Ed25519) und acme-dns-Zugangsdaten (O-161 / K2b.17).
+  # Nie im Backup, nie im Image — Bindeglied zum zentralen Praxura-Namensdienst.
+  kimlik:
+  acmedns:

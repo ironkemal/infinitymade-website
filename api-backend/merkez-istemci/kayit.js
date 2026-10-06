@@ -6,8 +6,10 @@
 //   node merkez-istemci/kayit.js --code … --nur-vorschlag --json            nur Name vorschlagen (für den Assistenten)
 //   node merkez-istemci/kayit.js --code … --name sonne-tal-42               zuvor vorgeschlagenen Namen übernehmen
 //   --neuer-schluessel  vorhandene (bereits registrierte) Identität ersetzen (Neu-Bindung mit Wiederverbindungs-Code)
+//   --lan-ip <IPv4>     direkt nach Registrierung private LAN-IP (/v1/ip) setzen
+//   --internet          direkt nach Registrierung öffentliche Quell-IP (/v1/ip) setzen
 //
-// Env: MERKEZ_URL (Pflicht), KIMLIK_DIR, ACMEDNS_DIR. Der Code wird nie geloggt.
+// Env: MERKEZ_URL (Pflicht), KIMLIK_DIR, ACMEDNS_DIR, KAYIT_CODE. Der Code wird nie geloggt.
 import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline/promises';
@@ -17,6 +19,10 @@ import { merkezFetch } from './merkez-fetch.js';
 
 export function acmednsVerzeichnis() {
   return process.env.ACMEDNS_DIR || '/var/lib/praxura/acmedns';
+}
+
+export function codeAufloesen(o = {}, env = process.env) {
+  return o.code || env?.KAYIT_CODE || null;
 }
 
 // Format der caddy-dns/acmedns-Speicherdatei: { "<domain>": { username, password, fulldomain, subdomain, server_url } }
@@ -30,10 +36,11 @@ function schreibeAcmedns(dir, fqdn, acmedns) {
 }
 
 /**
- * @returns {Promise<{name:string, fqdn:string, boxId:string, acmednsDatei:string}|{vorschlag:object}>}
+ * @returns {Promise<{name:string, fqdn:string, boxId:string, acmednsDatei:string, ip?:{ok:boolean, fehler?:string}}|{vorschlag:object}>}
  */
 export async function kayitAusfuehren({
   code, name, auto = false, nurVorschlag = false, neuerSchluessel = false,
+  ip = null,
   kimlikDir = kimlikVerzeichnis(), acmednsDir = acmednsVerzeichnis(),
   fetchImpl, baseUrl, frage, ausgabe = () => {},
 }) {
@@ -76,7 +83,32 @@ export async function kayitAusfuehren({
   const acmednsDatei = schreibeAcmedns(acmednsDir, r.json.fqdn, r.json.acmedns);
   if (kimlik.neu) uebernehmeNeueKimlik({ dir: kimlikDir });
   speichereAd({ dir: kimlikDir, ad: r.json.name });
-  return { name: r.json.name, fqdn: r.json.fqdn, boxId: kimlik.boxId, acmednsDatei };
+
+  let ipErgebnis;
+  if (ip && !nurVorschlag) {
+    try {
+      const aktiveKimlik = ladeKimlik({ dir: kimlikDir });
+      const rIp = await merkezFetch('/v1/ip', {
+        body: ip,
+        kimlik: aktiveKimlik,
+        ...opt,
+      });
+      if (rIp.ok) {
+        ipErgebnis = { ok: true };
+      } else {
+        const fehler = rIp.json?.fehler || `HTTP ${rIp.status}`;
+        ipErgebnis = { ok: false, fehler };
+      }
+    } catch (e) {
+      ipErgebnis = { ok: false, fehler: e.message };
+    }
+  }
+
+  const rueckgabe = { name: r.json.name, fqdn: r.json.fqdn, boxId: kimlik.boxId, acmednsDatei };
+  if (ipErgebnis !== undefined) {
+    rueckgabe.ip = ipErgebnis;
+  }
+  return rueckgabe;
 }
 
 function fehlerText(r) {
@@ -90,7 +122,7 @@ function fehlerText(r) {
   return hilfe ? `${hilfe} (${f})` : `Merkez-Fehler: ${f}`;
 }
 
-function args(argv) {
+export function args(argv) {
   const o = {};
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -99,8 +131,17 @@ function args(argv) {
     else if (a === '--auto') o.auto = true;
     else if (a === '--nur-vorschlag') o.nurVorschlag = true;
     else if (a === '--neuer-schluessel') o.neuerSchluessel = true;
+    else if (a === '--lan-ip') {
+      const val = argv[++i];
+      if (!val || !/^\d{1,3}(\.\d{1,3}){3}$/.test(val)) throw new Error('--lan-ip erfordert eine IPv4-Adresse');
+      o.lanIp = val;
+    }
+    else if (a === '--internet') o.internet = true;
     else if (a === '--json') o.json = true;
     else throw new Error('Unbekannte Option: ' + a);
+  }
+  if (o.lanIp && o.internet) {
+    throw new Error('--lan-ip und --internet schließen sich gegenseitig aus');
   }
   return o;
 }
@@ -110,11 +151,21 @@ async function main() {
   let rl;
   const frage = async (q) => { rl ??= readline.createInterface({ input: process.stdin, output: process.stderr }); return rl.question(q); };
   try {
+    o.code = codeAufloesen(o, process.env);
     if (!o.code) {
       if (!process.stdin.isTTY) throw new Error('--code fehlt (nicht interaktiv)');
       o.code = await frage('Einrichtungscode (XXXX-XXXX-XXXX-XXXX): ');
     }
-    const ergebnis = await kayitAusfuehren({ ...o, frage, ausgabe: o.json ? () => {} : (t) => console.error(t) });
+    let ip = null;
+    if (o.lanIp) {
+      ip = { modus: 'lan', ip: o.lanIp };
+    } else if (o.internet) {
+      ip = { modus: 'internet' };
+    }
+    const ergebnis = await kayitAusfuehren({ ...o, ip, frage, ausgabe: o.json ? () => {} : (t) => console.error(t) });
+    if (ergebnis.ip && !ergebnis.ip.ok) {
+      console.error('Adresse registriert, aber IP noch nicht eingetragen — wird beim nächsten IP-Abgleich nachgeholt');
+    }
     if (o.json) console.log(JSON.stringify(ergebnis));
     else if (ergebnis.vorschlag) console.log(`Vorschlag: ${ergebnis.vorschlag.fqdn}`);
     else console.log(`Registriert: ${ergebnis.fqdn}`);
