@@ -10,13 +10,26 @@ export function kimlikVerzeichnis() {
   return process.env.KIMLIK_DIR || '/var/lib/praxura/kimlik';
 }
 
+function wrapFsFehler(dir, fn) {
+  try {
+    return fn();
+  } catch (e) {
+    if (e.code === 'EACCES' || e.code === 'EPERM') {
+      throw new Error(`Keine Schreibrechte in ${dir} (${e.code}). Volumes vorbereiten: install.sh erneut ausführen.`);
+    }
+    throw e;
+  }
+}
+
 function schreibeNeu(dir, endung, privateKey, publicKey) {
   const boxId = boxIdAusPublicKey(publicKey);
-  // Flag 'wx': scheitert, wenn die Datei schon da ist (kein Prüfen-dann-Schreiben-Rennen, keine stille Überschreibung)
-  fs.writeFileSync(path.join(dir, 'box.key' + endung), privateKey.export({ type: 'pkcs8', format: 'pem' }), { mode: 0o600, flag: 'wx' });
-  fs.chmodSync(path.join(dir, 'box.key' + endung), 0o600);
-  fs.writeFileSync(path.join(dir, 'box.pub' + endung), publicKey.export({ type: 'spki', format: 'pem' }), { mode: 0o644, flag: 'wx' });
-  fs.writeFileSync(path.join(dir, 'box.json' + endung), JSON.stringify({ box_id: boxId, ad: null }, null, 2), { mode: 0o600, flag: 'wx' });
+  wrapFsFehler(dir, () => {
+    // Flag 'wx': scheitert, wenn die Datei schon da ist (kein Prüfen-dann-Schreiben-Rennen, keine stille Überschreibung)
+    fs.writeFileSync(path.join(dir, 'box.key' + endung), privateKey.export({ type: 'pkcs8', format: 'pem' }), { mode: 0o600, flag: 'wx' });
+    fs.chmodSync(path.join(dir, 'box.key' + endung), 0o600);
+    fs.writeFileSync(path.join(dir, 'box.pub' + endung), publicKey.export({ type: 'spki', format: 'pem' }), { mode: 0o644, flag: 'wx' });
+    fs.writeFileSync(path.join(dir, 'box.json' + endung), JSON.stringify({ box_id: boxId, ad: null, fqdn: null }, null, 2), { mode: 0o600, flag: 'wx' });
+  });
 }
 
 /**
@@ -30,7 +43,7 @@ function schreibeNeu(dir, endung, privateKey, publicKey) {
  * Rückgabe enthält `neu: true`, wenn es das .neu-Paar ist.
  */
 export function erzeugeKimlik({ dir = kimlikVerzeichnis(), ersetzen = false } = {}) {
-  fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+  wrapFsFehler(dir, () => fs.mkdirSync(dir, { recursive: true, mode: 0o700 }));
   if (ersetzen) {
     if (fs.existsSync(path.join(dir, 'box.key.neu'))) return ladeKimlik({ dir, endung: '.neu' });
     const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
@@ -49,9 +62,11 @@ export function erzeugeKimlik({ dir = kimlikVerzeichnis(), ersetzen = false } = 
 
 /** *.neu → aktiv (erst NACH erfolgreicher Registrierung). Schlüssel zuletzt, damit box.json nie vor dem Schlüssel wechselt. */
 export function uebernehmeNeueKimlik({ dir = kimlikVerzeichnis() } = {}) {
-  for (const f of ['box.pub', 'box.json', 'box.key']) {
-    if (fs.existsSync(path.join(dir, f + '.neu'))) fs.renameSync(path.join(dir, f + '.neu'), path.join(dir, f));
-  }
+  wrapFsFehler(dir, () => {
+    for (const f of ['box.pub', 'box.json', 'box.key']) {
+      if (fs.existsSync(path.join(dir, f + '.neu'))) fs.renameSync(path.join(dir, f + '.neu'), path.join(dir, f));
+    }
+  });
 }
 
 /** Identität laden. null, wenn keine vorhanden. */
@@ -66,6 +81,7 @@ export function ladeKimlik({ dir = kimlikVerzeichnis(), endung = '' } = {}) {
   return {
     boxId,
     ad: meta.ad ?? null,
+    fqdn: meta.fqdn ?? null,
     privateKey,
     publicKey,
     publicKeyBase64url: publicKeyAlsBase64url(publicKey),
@@ -75,9 +91,11 @@ export function ladeKimlik({ dir = kimlikVerzeichnis(), endung = '' } = {}) {
 }
 
 /** Zugeteilten Namen festhalten (nach erfolgreicher Registrierung). */
-export function speichereAd({ dir = kimlikVerzeichnis(), ad }) {
+export function speichereAd({ dir = kimlikVerzeichnis(), ad, fqdn = null }) {
   const pfad = path.join(dir, 'box.json');
   const boxId = ladeKimlik({ dir })?.boxId;
   if (!boxId) throw new Error('Keine Kimlik in ' + dir);
-  fs.writeFileSync(pfad, JSON.stringify({ box_id: boxId, ad }, null, 2), { mode: 0o600 });
+  wrapFsFehler(dir, () => {
+    fs.writeFileSync(pfad, JSON.stringify({ box_id: boxId, ad, fqdn: fqdn ?? null }, null, 2), { mode: 0o600 });
+  });
 }

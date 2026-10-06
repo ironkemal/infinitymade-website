@@ -85,6 +85,25 @@ env_get() {
   awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print; f=1} END{if(!f) print ""}' "$ENV_FILE" 2>/dev/null || true
 }
 
+# LAN-IP der Maschine für Namensdienst und Ausgabe bestimmen
+lan_ip_ermitteln() {
+  local ip
+  ip="$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}')"
+  [ -n "$ip" ] || ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
+  printf '%s' "$ip"
+}
+
+# Prüft, ob eine IPv4-Adresse im privaten RFC1918-Bereich liegt (10/8, 172.16-31, 192.168/16)
+ist_rfc1918() {
+  local ip="$1"
+  case "$ip" in
+    10.*) return 0 ;;
+    192.168.*) return 0 ;;
+    172.1[6-9].*|172.2[0-9].*|172.3[0-1].*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 : > "$LOG_FILE"
 log "Praxura On-Premise — Einrichtung $(date '+%Y-%m-%d %H:%M:%S')"
 log ""
@@ -189,27 +208,83 @@ else
   warn "'ss' nicht gefunden — Port-Vorprüfung übersprungen. 'docker compose up' meldet einen Portkonflikt notfalls selbst, aber später und weniger klar."
 fi
 
-# ── Schritt 4 — Adresse (O-59) ────────────────────────────────────────────────
-log "[4/17] Adresse der Box"
-log "  Unter welcher Adresse ruft der Praxisrechner die Box im Browser auf?"
-log "  Beispiel: https://praxis.local  (ohne Port — Caddy hört auf 443)"
-read -r -p "  SITE_URL: " SITE_URL_INPUT
-case "$SITE_URL_INPUT" in
-  https://*) : ;;
-  *) fail "Falsches Schema" "$SITE_URL_INPUT" "https://… (kein http, TLS ist Pflicht)" "Erneut mit https:// beginnen." ;;
-esac
-# Port oder Pfad im Host-Anteil verboten (O-59: Caddy site-address matcht
-# exakten Host, keinen Pfad).
-HOST_PART="${SITE_URL_INPUT#https://}"
-HOST_PART="${HOST_PART%/}"
-case "$HOST_PART" in
-  *:*) fail "Adresse enthält einen Port" "$SITE_URL_INPUT" "kein Port — https://name, ohne :nnnn" \
-    "Ohne Port eintragen. Caddy hört ohnehin fest auf 443." ;;
-  */*) fail "Adresse enthält einen Pfad" "$SITE_URL_INPUT" "nur der Host — https://name, kein /irgendwas" \
-    "Nur die Domain/den Hostnamen eintragen, ohne alles nach dem ersten '/'." ;;
-esac
-SITE_URL="https://${HOST_PART}"
-ok "SITE_URL = ${SITE_URL}"
+# ── Schritt 4 — Einrichtungscode / Adresse (O-161, K2b.5b) ─────────────────────
+log "[4/17] Einrichtungscode / Adresse der Box"
+
+# Umgebung vor Vorlage: erlaubt den lokalen Test gegen merkez/test/dev-server.js (docker compose
+# übernimmt ein exportiertes MERKEZ_URL per ${MERKEZ_URL:-} auch in den kayit-Dienst).
+MERKEZ_URL_VORLAGE="${MERKEZ_URL:-}"
+[ -n "$MERKEZ_URL_VORLAGE" ] || MERKEZ_URL_VORLAGE="$(awk -F= '$1=="MERKEZ_URL"{sub(/^[^=]*=/,""); print; f=1} END{if(!f) print ""}' "$ENV_TEMPLATE" 2>/dev/null || true)"
+if [ -z "$MERKEZ_URL_VORLAGE" ] && [ -f "$ENV_FILE" ]; then
+  MERKEZ_URL_VORLAGE="$(env_get MERKEZ_URL)"
+fi
+
+KAYIT_CODE=""
+KAYIT_MODUS="adresse"
+SITE_URL=""
+HOST_PART=""
+
+# Wiederholungsprüfung: Vor dem Code-Dialog prüfen, ob die Box schon registriert ist (O-161)
+# (Fehler wird toleriert, da das Image beim Erstlauf noch fehlen darf; --pull never: vor der
+# Kanalwahl in Schritt 11 kein Image holen — Schritt 13 prüft nach dem Pull erneut)
+durum_json_vorab="$(docker compose --profile kurulum run --rm --no-deps --pull never kayit --durum --json 2>/dev/null || true)"
+if printf '%s' "$durum_json_vorab" | grep -qE '"registriert"[[:space:]]*:[[:space:]]*true'; then
+  durum_fqdn="$(printf '%s' "$durum_json_vorab" | sed -n 's/.*"fqdn"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  durum_ad="$(printf '%s' "$durum_json_vorab" | sed -n 's/.*"ad"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  [ -n "$durum_fqdn" ] || fail "Box-Identität ohne Adresse" "registriert als ${durum_ad:-?}, aber ohne fqdn" "box.json mit fqdn" \
+    "Support kontaktieren (Wiederverbindungs-Code) — die Box-Identität bitte NICHT löschen."
+  SITE_URL="https://${durum_fqdn}"
+  HOST_PART="${durum_fqdn}"
+  KAYIT_MODUS="vorhanden"
+  log "  Box bereits registriert als ${durum_ad:-$durum_fqdn} (${SITE_URL})"
+  ok "Bereits registrierte Identität übernommen (KAYIT_MODUS=vorhanden)"
+elif [ -z "$MERKEZ_URL_VORLAGE" ]; then
+  log "  Keine MERKEZ_URL konfiguriert — Einrichtungscode nicht verfügbar."
+  log "  Verwende manuelle Adresseingabe (Ausstiegsweg)."
+else
+  log "  Einrichtungscode (XXXX-XXXX-XXXX-XXXX) eingeben."
+  log "  (Enter ohne Eingabe = eigene Adresse manuell konfigurieren)"
+  read -r -s -p "  Einrichtungscode: " RAW_CODE
+  echo ""
+  CLEAN_CODE="$(printf '%s' "$RAW_CODE" | tr -d '[:space:]')"
+  if [ -n "$CLEAN_CODE" ]; then
+    # Alphabet: FORMAT_KUTU (0123456789ABCDEFGHJKMNPQRSTVWXYZ, inkl. I, L, O-Toleranz)
+    if printf '%s' "$CLEAN_CODE" | grep -qE '^[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}$'; then
+      KAYIT_CODE="$CLEAN_CODE"
+    elif printf '%s' "$CLEAN_CODE" | grep -qE '^[0-9A-Za-z]{16}$'; then
+      KAYIT_CODE="${CLEAN_CODE:0:4}-${CLEAN_CODE:4:4}-${CLEAN_CODE:8:4}-${CLEAN_CODE:12:4}"
+    else
+      fail "Ungültiges Code-Format" "Eingabe entspricht nicht dem Format XXXX-XXXX-XXXX-XXXX" \
+        "XXXX-XXXX-XXXX-XXXX (16 Zeichen aus Ziffern/Buchstaben)" \
+        "Den von Praxura erhaltenen Einrichtungscode im Format XXXX-XXXX-XXXX-XXXX eingeben."
+    fi
+    KAYIT_MODUS="code"
+    unset RAW_CODE CLEAN_CODE
+    ok "Einrichtungscode erfasst (wird nicht geloggt)"
+  fi
+fi
+
+if [ "$KAYIT_MODUS" = "adresse" ]; then
+  log "  Unter welcher Adresse ruft der Praxisrechner die Box im Browser auf?"
+  log "  Beispiel: https://praxis.local  (ohne Port — Caddy hört auf 443)"
+  read -r -p "  SITE_URL: " SITE_URL_INPUT
+  case "$SITE_URL_INPUT" in
+    https://*) : ;;
+    *) fail "Falsches Schema" "$SITE_URL_INPUT" "https://… (kein http, TLS ist Pflicht)" "Erneut mit https:// beginnen." ;;
+  esac
+  # Port oder Pfad im Host-Anteil verboten (O-59: Caddy site-address matcht
+  # exakten Host, keinen Pfad).
+  HOST_PART="${SITE_URL_INPUT#https://}"
+  HOST_PART="${HOST_PART%/}"
+  case "$HOST_PART" in
+    *:*) fail "Adresse enthält einen Port" "$SITE_URL_INPUT" "kein Port — https://name, ohne :nnnn" \
+      "Ohne Port eintragen. Caddy hört ohnehin fest auf 443." ;;
+    */*) fail "Adresse enthält einen Pfad" "$SITE_URL_INPUT" "nur der Host — https://name, kein /irgendwas" \
+      "Nur die Domain/den Hostnamen eintragen, ohne alles nach dem ersten '/'." ;;
+  esac
+  SITE_URL="https://${HOST_PART}"
+  ok "SITE_URL = ${SITE_URL}"
+fi
 
 # ── Jetzt erst, nach allen Vorprüfungen: alte Datenbank löschen (falls --neu) ─
 if [ "$NEU_BESTAETIGT" -eq 1 ]; then
@@ -268,9 +343,11 @@ set_env() {
   unset SET_ENV_VALUE
 }
 
-set_env SITE_URL "$SITE_URL"
-set_env API_EXTERNAL_URL "$SITE_URL"
-set_env SUPABASE_PUBLIC_URL "$SITE_URL"
+if [ "$KAYIT_MODUS" != "code" ]; then
+  set_env SITE_URL "$SITE_URL"
+  set_env API_EXTERNAL_URL "$SITE_URL"
+  set_env SUPABASE_PUBLIC_URL "$SITE_URL"
+fi
 
 # ── Schritt 6 — Geheimnisse würfeln (G2, ausschliesslich auf diesem Server) ──
 log "[6/17] Geheimnisse erzeugen (auf diesem Server, G2)"
@@ -345,32 +422,47 @@ ok "leer gelassen (SUPABASE_PUBLIC_URL = SITE_URL, ein Origin)"
 
 # ── Schritt 9 — Pflichtfeld-Tor (O-53) ───────────────────────────────────────
 log "[9/17] Pflichtfelder prüfen, bevor irgendetwas startet"
-for key in SUPABASE_PUBLIC_URL ANON_KEY SERVICE_ROLE_KEY JWT_SECRET POSTGRES_PASSWORD DATA_ENCRYPTION_KEY SETUP_TOKEN PG_AUTHENTICATOR_PASSWORD PG_AUTH_ADMIN_PASSWORD PG_STORAGE_ADMIN_PASSWORD; do
+PFLICHTFELDER="ANON_KEY SERVICE_ROLE_KEY JWT_SECRET POSTGRES_PASSWORD DATA_ENCRYPTION_KEY SETUP_TOKEN PG_AUTHENTICATOR_PASSWORD PG_AUTH_ADMIN_PASSWORD PG_STORAGE_ADMIN_PASSWORD"
+if [ "$KAYIT_MODUS" != "code" ]; then
+  PFLICHTFELDER="SITE_URL SUPABASE_PUBLIC_URL $PFLICHTFELDER"
+fi
+for key in $PFLICHTFELDER; do
   wert="$(env_get "$key")"
   [ -n "$wert" ] || fail "Pflichtfeld leer: ${key}" "leer" "erzeugter Wert" "Skript erneut mit --neu starten — dies deutet auf einen Fehler in Schritt 6/7 hin."
+  if [ "$key" = "SITE_URL" ] || [ "$key" = "SUPABASE_PUBLIC_URL" ]; then
+    [ "$wert" != "https://praxis.local" ] || fail "Platzhalter nicht ersetzt: ${key}" "$wert" "echte Adresse" "Gültige SITE_URL angeben."
+  fi
 done
 ok "alle Pflichtfelder gefüllt"
 
 # ── Schritt 10 — TLS-Modus ───────────────────────────────────────────────────
 log "[10/17] TLS-Modus"
-log "  Ist ${SITE_URL} von ausserhalb dieses Netzes über eine echte Domain"
-log "  erreichbar (öffentliches DNS), UND soll Let's Encrypt ein echtes"
-log "  Zertifikat ausstellen?"
-read -r -p "  Echtes Zertifikat einrichten? [j/N] " tls_antwort
-if [ "$tls_antwort" = "j" ] || [ "$tls_antwort" = "J" ]; then
-  read -r -p "  E-Mail-Adresse für Let's-Encrypt-Benachrichtigungen: " acme_mail
-  [ -n "$acme_mail" ] || fail "Keine E-Mail-Adresse" "leer" "eine gültige E-Mail-Adresse" "Erneut ausführen und Adresse eintragen."
-  CADDY_TLS_ARG_VALUE="$acme_mail"
-  set_env CADDY_TLS_ARG "$CADDY_TLS_ARG_VALUE"
-  set_env HSTS_MAX_AGE "63072000"
-  ok "TLS: Let's Encrypt (${acme_mail})"
-else
+if [ "$KAYIT_MODUS" = "code" ] || [ "$KAYIT_MODUS" = "vorhanden" ]; then
   CADDY_TLS_ARG_VALUE="internal"
   set_env CADDY_TLS_ARG "$CADDY_TLS_ARG_VALUE"
   set_env HSTS_MAX_AGE "0"
-  ok "TLS: Caddys eigene Zertifizierungsstelle (selbstsigniert, LAN-only)"
-  log "  ⚠️  Jeder Praxisrechner muss Caddys Root-Zertifikat einmalig als vertrauenswürdig"
-  log "      einstufen (letzter Schritt zeigt, wo es liegt), sonst zeigt der Browser eine Warnung."
+  ok "TLS: internes Zertifikat (Caddy-eigene Zertifizierungsstelle)"
+  log "  Hinweis: Bis zum Caddy-DNS-Image (K2b.4) wird für die Box-Adresse ein internes Zertifikat verwendet."
+else
+  log "  Ist ${SITE_URL} von ausserhalb dieses Netzes über eine echte Domain"
+  log "  erreichbar (öffentliches DNS), UND soll Let's Encrypt ein echtes"
+  log "  Zertifikat ausstellen?"
+  read -r -p "  Echtes Zertifikat einrichten? [j/N] " tls_antwort
+  if [ "$tls_antwort" = "j" ] || [ "$tls_antwort" = "J" ]; then
+    read -r -p "  E-Mail-Adresse für Let's-Encrypt-Benachrichtigungen: " acme_mail
+    [ -n "$acme_mail" ] || fail "Keine E-Mail-Adresse" "leer" "eine gültige E-Mail-Adresse" "Erneut ausführen und Adresse eintragen."
+    CADDY_TLS_ARG_VALUE="$acme_mail"
+    set_env CADDY_TLS_ARG "$CADDY_TLS_ARG_VALUE"
+    set_env HSTS_MAX_AGE "63072000"
+    ok "TLS: Let's Encrypt (${acme_mail})"
+  else
+    CADDY_TLS_ARG_VALUE="internal"
+    set_env CADDY_TLS_ARG "$CADDY_TLS_ARG_VALUE"
+    set_env HSTS_MAX_AGE "0"
+    ok "TLS: Caddys eigene Zertifizierungsstelle (selbstsigniert, LAN-only)"
+    log "  ⚠️  Jeder Praxisrechner muss Caddys Root-Zertifikat einmalig als vertrauenswürdig"
+    log "      einstufen (letzter Schritt zeigt, wo es liegt), sonst zeigt der Browser eine Warnung."
+  fi
 fi
 
 # ── Schritt 11 — Update-Kanal (KHS K2.1, onprem O-148) ───────────────────────
@@ -445,13 +537,120 @@ else
   warn "Yedek hedefi boş bırakıldı — yedekler kutu içinde kalacak (backups/). Sonradan .env'de BACKUP_ZIEL ile değiştirilebilir."
 fi
 
-# ── Schritt 13 — pull + up ───────────────────────────────────────────────────
-log "[13/17] Container-Images holen und starten"
+# ── Schritt 13 — pull, Volumes, Registrierung + up ───────────────────────────
+log "[13/17] Container-Images holen, Identität registrieren und starten"
 if ! docker compose pull 2>&1 | tee -a "$LOG_FILE"; then
   fail "Images konnten nicht geholt werden" "docker compose pull ist fehlgeschlagen" \
     "${api_img} und ${fe_img} erreichbar (ghcr.io, ohne Anmeldung)" \
     "Internetverbindung des Servers prüfen ('curl -I https://ghcr.io'). Ist der Kanal 'stable' noch nie veröffentlicht worden: 'bash install.sh --neu' und Kanal 'beta' wählen."
 fi
+
+# Volumes vorbereiten (K13) — in JEDEM Weg (code/adresse/vorhanden)
+log "  Bereite Volumes für Identität und DNS vor (K13)..."
+if ! docker compose --profile kurulum run --rm --no-deps --entrypoint true kayit 2>&1 | tee -a "$LOG_FILE"; then
+  fail "Volumes konnten nicht vorbereitet werden" "kayit entrypoint true fehlgeschlagen" \
+    "Erfolgreiche Volume-Initialisierung (kimlik/acmedns)" \
+    "Docker-Berechtigungen und Volume-Speicherplatz prüfen."
+fi
+ok "Volumes für Box-Identität und DNS vorbereitet (K13)"
+
+# Registrierung im Code-Weg
+if [ "$KAYIT_MODUS" = "code" ]; then
+  # Nochmals --durum prüfen: falls schon registriert → überspringen
+  durum_json_nochmals="$(docker compose --profile kurulum run --rm --no-deps kayit --durum --json 2>/dev/null || true)"
+  if printf '%s' "$durum_json_nochmals" | grep -qE '"registriert"[[:space:]]*:[[:space:]]*true'; then
+    durum_fqdn="$(printf '%s' "$durum_json_nochmals" | sed -n 's/.*"fqdn"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+    durum_ad="$(printf '%s' "$durum_json_nochmals" | sed -n 's/.*"ad"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+    [ -n "$durum_fqdn" ] || fail "Box-Identität ohne Adresse" "registriert als ${durum_ad:-?}, aber ohne fqdn" "box.json mit fqdn" \
+      "Support kontaktieren (Wiederverbindungs-Code) — die Box-Identität bitte NICHT löschen."
+    SITE_URL="https://${durum_fqdn}"
+    HOST_PART="${durum_fqdn}"
+    set_env SITE_URL "$SITE_URL"
+    set_env API_EXTERNAL_URL "$SITE_URL"
+    set_env SUPABASE_PUBLIC_URL "$SITE_URL"
+    KAYIT_MODUS="vorhanden"
+    log "  Box bereits registriert als ${durum_ad:-$durum_fqdn} (${SITE_URL})"
+    ok "Registrierung übersprungen (bereits vorhanden)"
+    unset KAYIT_CODE
+  else
+    log "  Fordere Namensvorschlag von Merkez an..."
+    gewaehlter_name=""
+    while true; do
+      vorschlag_json="$(KAYIT_CODE="$KAYIT_CODE" docker compose --profile kurulum run --rm --no-deps -e KAYIT_CODE kayit --nur-vorschlag --json 2>>"$LOG_FILE" || true)"
+      fehler_msg="$(printf '%s' "$vorschlag_json" | sed -n 's/.*"fehler"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+      if [ -n "$fehler_msg" ]; then
+        fail "Namensvorschlag fehlgeschlagen" "$fehler_msg" "Gültiger Namensvorschlag von Merkez" \
+          "Einrichtungscode und Erreichbarkeit von MERKEZ_URL prüfen."
+      fi
+      v_name="$(printf '%s' "$vorschlag_json" | sed -n 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+      v_fqdn="$(printf '%s' "$vorschlag_json" | sed -n 's/.*"fqdn"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+      if [ -z "$v_fqdn" ]; then
+        fail "Ungültige Antwort von Merkez" "$vorschlag_json" "JSON mit fqdn und name" \
+          "Erreichbarkeit von MERKEZ_URL prüfen."
+      fi
+      log "  Vorgeschlagene Adresse: https://${v_fqdn}"
+      if printf '%s' "$vorschlag_json" | grep -qE '"rebind"[[:space:]]*:[[:space:]]*true'; then
+        gewaehlter_name="$v_name"
+        log "  Wiederverbindungs-Code: bisherige Adresse wird übernommen"
+        break
+      fi
+      read -r -p "  Diesen Namen übernehmen? [J]a / [N]euen Namen vorschlagen: " name_antwort
+      case "$name_antwort" in
+        j|J|ja|Ja|JA|"")
+          gewaehlter_name="$v_name"
+          break
+          ;;
+        *)
+          log "  Fordere neuen Namensvorschlag an..."
+          ;;
+      esac
+    done
+
+    log "  Registriere Box mit Namen '${gewaehlter_name}' bei Merkez..."
+    LAN_IP="$(lan_ip_ermitteln)"
+    ip_param="--internet"
+    if [ -n "$LAN_IP" ] && ist_rfc1918 "$LAN_IP"; then
+      ip_param="--lan-ip $LAN_IP"
+    fi
+
+    # shellcheck disable=SC2086
+    reg_json="$(KAYIT_CODE="$KAYIT_CODE" docker compose --profile kurulum run --rm --no-deps -e KAYIT_CODE kayit --name "$gewaehlter_name" $ip_param --json 2>>"$LOG_FILE" || true)"
+    unset KAYIT_CODE
+
+    fehler_msg="$(printf '%s' "$reg_json" | sed -n 's/.*"fehler"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+    if [ -n "$fehler_msg" ]; then
+      fail "Registrierung bei Merkez fehlgeschlagen" "$fehler_msg" "Erfolgreiche Registrierung" \
+        "Meldung prüfen (Internet, Einrichtungscode). Einzelheiten in $LOG_FILE. Bei verbrauchtem Code: Support kontaktieren."
+    fi
+
+    reg_fqdn="$(printf '%s' "$reg_json" | sed -n 's/.*"fqdn"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+    if [ -z "$reg_fqdn" ]; then
+      fail "Keine FQDN in Registrierungsantwort" "$reg_json" "JSON mit fqdn" \
+        "Support kontaktieren."
+    fi
+
+    if printf '%s' "$reg_json" | grep -qE '"ip"[[:space:]]*:[[:space:]]*\{[^{}]*"ok"[[:space:]]*:[[:space:]]*false'; then
+      warn "Adresse registriert, aber IP noch nicht eingetragen — wird beim nächsten IP-Abgleich nachgeholt"
+    fi
+
+    SITE_URL="https://${reg_fqdn}"
+    HOST_PART="${reg_fqdn}"
+    set_env SITE_URL "$SITE_URL"
+    set_env API_EXTERNAL_URL "$SITE_URL"
+    set_env SUPABASE_PUBLIC_URL "$SITE_URL"
+    ok "Box erfolgreich registriert: ${SITE_URL}"
+  fi
+fi
+
+# Pflichtfeld-Tor direkt vor dem Start: SITE_URL darf nicht leer und kein Platzhalter sein
+site_tor="$(env_get SITE_URL)"
+[ -n "$site_tor" ] || fail "Pflichtfeld vor Start leer: SITE_URL" "leer" "gesetzte Adresse" "Registrierung oder Adresseingabe wiederholen."
+[ "$site_tor" != "https://praxis.local" ] || fail "Platzhalter in SITE_URL nicht ersetzt" "$site_tor" "echte Adresse" "Registrierung bei Merkez oder Adresseingabe wiederholen."
+for k in API_EXTERNAL_URL SUPABASE_PUBLIC_URL; do
+  v="$(env_get "$k")"
+  [ -n "$v" ] && [ "$v" != "https://praxis.local" ] || fail "Pflichtfeld $k vor Start ungültig" "${v:-leer}" "echte Adresse" "Registrierung oder Adresseingabe wiederholen."
+done
+
 if ! docker compose up -d 2>&1 | tee -a "$LOG_FILE"; then
   log "  Letzte Zeilen von 'api' (haeufigste Ursache — Migrationskette):"
   docker compose logs --tail=40 api 2>&1 | tee -a "$LOG_FILE" || true
@@ -655,23 +854,29 @@ fi
 # auch eine interne Docker-Bridge-Adresse (typ. 172.17.0.1) an erster Stelle
 # zurückgeben (O-59-Nachbarfund, Gegenlesen 11.09.2026). Trotzdem nur ein
 # Hinweis, keine Wahrheit — immer gegen die tatsächliche Praxisnetz-IP prüfen.
-LAN_IP="$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}')"
-[ -n "$LAN_IP" ] || LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+LAN_IP="$(lan_ip_ermitteln)"
 
 log "[17/17] Fertig"
 log ""
 log "  Box erreichbar unter:  ${SITE_URL}"
 [ -n "$LAN_IP" ] && log "  Eine Server-Adresse:    ${LAN_IP} (PRÜFEN, ob das die echte Praxisnetz-IP ist, nicht z. B. eine Docker-interne)"
-# O-59: Caddy antwortet NUR auf den Host-Namen in SITE_URL — die IP allein
-# oeffnet nichts. Ohne diese Zeile draengt sich der Eindruck auf, die Adresse
-# stehe schon "fertig" da; sie ist erst nach diesem Schritt auf jedem
-# Praxisrechner verwendbar (onprem-Review 12.09.2026).
-if [ -n "$LAN_IP" ]; then
+if [ "$KAYIT_MODUS" = "code" ] || [ "$KAYIT_MODUS" = "vorhanden" ]; then
   log ""
-  log "  Auf JEDEM Praxisrechner eintragen, sonst wird ${SITE_URL} nicht gefunden:"
-  log "    — hosts-Datei (Windows: C:\\Windows\\System32\\drivers\\etc\\hosts, Mac/Linux: /etc/hosts):"
-  log "        ${LAN_IP}  ${HOST_PART}"
-  log "    — ODER: als A-Eintrag im Praxis-Router/DNS, dann entfällt das pro Rechner"
+  log "  Adresse: ${SITE_URL} — auf jedem Gerät im Praxisnetz direkt aufrufbar."
+  log "  Hinweis: FRITZ!Box-DNS-Rebind-Schutz kann lokale Auflösung öffentlicher Domains blockieren."
+  log "           Ausnahme für '${HOST_PART}' im Router eintragen (Details: KURULUM.md)."
+else
+  # O-59: Caddy antwortet NUR auf den Host-Namen in SITE_URL — die IP allein
+  # oeffnet nichts. Ohne diese Zeile draengt sich der Eindruck auf, die Adresse
+  # stehe schon "fertig" da; sie ist erst nach diesem Schritt auf jedem
+  # Praxisrechner verwendbar (onprem-Review 12.09.2026).
+  if [ -n "$LAN_IP" ]; then
+    log ""
+    log "  Auf JEDEM Praxisrechner eintragen, sonst wird ${SITE_URL} nicht gefunden:"
+    log "    — hosts-Datei (Windows: C:\\Windows\\System32\\drivers\\etc\\hosts, Mac/Linux: /etc/hosts):"
+    log "        ${LAN_IP}  ${HOST_PART}"
+    log "    — ODER: als A-Eintrag im Praxis-Router/DNS, dann entfällt das pro Rechner"
+  fi
 fi
 if [ "$CADDY_TLS_ARG_VALUE" = "internal" ]; then
   log "  Zertifikat der Box:     'docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .'"

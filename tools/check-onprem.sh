@@ -117,6 +117,10 @@ absender_fest=$(git grep --cached -c "noreply@praxura\.de" -- api-backend/ 2>/de
 #    satır bazlı sayımı burada işe yaramaz, host eklense bile satır 1 kalır.
 csp_host=$(git grep --cached -oE "https?://[a-zA-Z0-9.*-]+" -- vercel.json 2>/dev/null | wc -l | tr -d ' ')
 
+# 11) Merkez istemcisinde sabit praxura.de adresi (O-161 a, K6). Merkez adresi
+#    yalnızca env'den (MERKEZ_URL) gelmeli, koda sabit host yazılmaz.
+merkez_istemci_host=$(git grep --cached -c "praxura\.de" -- 'api-backend/merkez-istemci/' ':(exclude)*.test.js' 2>/dev/null | awk -F: '{s+=$NF} END{print s+0}')
+
 # --- Yıkıcı DDL kapısı (sayaç değil, doğrudan kontrol) --------------------
 #
 # :beta ve :stable AYNI ANDA canlı. Eski image yeni şemayla çalışabilmek zorunda.
@@ -506,6 +510,8 @@ kontrol absender_fest "$absender_fest" "Koda gömülü yeni gönderen adresi. Ku
                                    "Çıkış: adresi .env'den oku (SMTP_FROM, lib/mail.js getMailFrom), altı çağrıyı tek yardımcıya bağla."
 kontrol csp_host    "$csp_host"    "vercel.json'ın CSP'sine yeni bir bulut adresi eklendi. Kutuya kopyalanırsa (O-52) tarayıcı onu ENGELLEMEZ." \
                                    "Çıkış: gerçekten SaaS'a mı özel? Öyleyse kabul; onprem/Caddyfile'a asla kopyalama."
+kontrol merkez_istemci_host "$merkez_istemci_host" "Merkez istemcisine sabit praxura.de adresi eklendi (O-161 a, K6)." \
+                                                   "Çıkış: Merkez adresi MERKEZ_URL env var'ından gelmeli, koda sabit yazılmaz."
 
 # --- Sonuç ----------------------------------------------------------------
 if [ -n "$ihlal" ]; then

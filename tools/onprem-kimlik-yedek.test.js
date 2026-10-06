@@ -137,3 +137,24 @@ test('install.sh: kein down -v/--volumes, erwähnt bei --neu-Löschen nicht kiml
   assert.match(neuBlock, /docker\s+volume\s+rm/, '--neu-Löschblock muss Volumes gezielt entfernen');
   assert.ok(/db-config\s+caddy_data\s+caddy_config/.test(neuBlock), 'Löschung muss gezielt db-config, caddy_data, caddy_config ansprechen');
 });
+
+test('install.sh: Code wird nie per set_env geschrieben, nie als --code übergeben, read -r -s für Code, Volume-Init vor erstem up', () => {
+  const inhalt = fs.readFileSync(installPfad, 'utf8');
+
+  // Code wird nie per set_env geschrieben (set_env KAYIT_CODE kommt nicht vor)
+  assert.ok(!/set_env\s+KAYIT_CODE\b/.test(inhalt), 'install.sh darf KAYIT_CODE nie per set_env schreiben');
+
+  // Code wird nie als CLI-Argument --code übergeben
+  assert.ok(!/--code\b/.test(inhalt), 'install.sh darf den Code nie per --code übergeben');
+
+  // read -r -s für geheime Code-Eingabe vorhanden
+  assert.match(inhalt, /read\s+[^;\n]*-r\s+[^;\n]*-s|read\s+[^;\n]*-s\s+[^;\n]*-r/, 'install.sh muss read -r -s für die Code-Eingabe verwenden');
+
+  // --entrypoint true kayit kommt vor dem ersten docker compose up -d vor
+  const posEntrypoint = inhalt.indexOf('--entrypoint true kayit');
+  // nur Befehlszeilen zählen (Schritt 0 nennt `docker compose up -d` als Text in einer Meldung)
+  const posComposeUp = inhalt.search(/^\s*(if\s+!\s+)?docker\s+compose\s+up\s+-d/m);
+  assert.ok(posEntrypoint !== -1, 'install.sh muss --entrypoint true kayit enthalten');
+  assert.ok(posComposeUp !== -1, 'install.sh muss docker compose up -d enthalten');
+  assert.ok(posEntrypoint < posComposeUp, '--entrypoint true kayit muss vor dem ersten docker compose up -d vorkommen');
+});

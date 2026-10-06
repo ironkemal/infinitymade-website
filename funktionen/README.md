@@ -116,6 +116,24 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 06.10.2026 · K2b.5b Kayıt durumu, volume sahiplik mesajı, yerel sahte merkez, LAN-IP yardımcıları
+- `durum({kimlikDir})` (`api-backend/merkez-istemci/kayit.js`). Niye: `install.sh` yeniden çalıştığında (`--neu` vb.)
+  kurulum kodunu ikinci kez harcamasın — ağsız/kodsuz `{registriert, ad, fqdn}` döner, anahtar dönmez. Nerede:
+  `kayit.js --durum --json` ← `install.sh` adım 4 + 13.
+- `wrapFsFehler(dir, fn)` (`kimlik.js`, iç yardımcı). Niye: EACCES/EPERM'i "Volumes vorbereiten: install.sh erneut
+  ausführen" mesajına çevirir (K13 sahiplik tuzağı). Kimlik dizinine yazan dört yol (`erzeugeKimlik`, `schreibeNeu`,
+  `speichereAd`, `uebernehmeNeueKimlik`) bunun üzerinden geçer — yeni yazan yol eklenirse **bunu kullan**.
+  `speichereAd` artık `fqdn` da yazıyor (`durum` onu okuyor).
+- `starteDevServer()`, `erstelleProtokollierendesCloudflare()` (`merkez/test/dev-server.js`, yeni). Niye: yalnız yerel
+  test için sahte merkez (`MERKEZ_DEV=1`, 127.0.0.1). `merkez/test/helper.js`'teki `fakeAcmeDns` yeniden kullanıldı.
+  🟡 **Kopya adayı (birleştirilmedi, karar sonra):** `erstelleProtokollierendesCloudflare` ↔ `helper.js` `fakeCloudflare`
+  — aynı sahte, biri log basıyor. Olası tek yol: `fakeCloudflare({ log })` parametresi. Yalnız test kodu, veri riski yok.
+- `lan_ip_ermitteln`, `ist_rfc1918` (`onprem/install.sh`, bash). Niye: adım 17'deki IP tespiti tek yere çekildi;
+  K2b.6 zamanlayıcısı da bunu kullanacak — **ikinci IP tespiti yazma.**
+- ⚠️ Kör nokta: `merkez/` haritanın `SCAN_ROOTS`'unda yok (06.10'da INDEX.json'da 0 kayıt), `*.sh` hiç taranmaz. Bu
+  yüzden dev-server, helper ve install.sh yardımcıları INDEX.json'da görünmez — tek kayıt burası. `merkez` kapsama
+  alınacaksa düzeltme `tools/funktionskarte.mjs`'te yapılır.
+
 ### 06.10.2026 · K2b.5a Kutu kaydı: kod env'den, kayıt sonrası IP, kimlik volume testi
 - `codeAufloesen(o, env)` (`api-backend/merkez-istemci/kayit.js`, yeni export). Niye: kurulum kodu argv yerine
   `KAYIT_CODE` env'den gelebilsin — `ps`/log'a düşmesin. Nerede: ilk `kayit.js` `main()`; ileride `install.sh`

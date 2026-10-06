@@ -40,6 +40,26 @@ node admin.js adresse-loeschen <name>   # nur nach iptal
 BOX_DOMAIN=… CF_ZONE_ID=… CF_API_TOKEN=… ACME_DNS_INTERN_URL=… ACME_DNS_URL=… node server.js
 ```
 
+## Lokal testen
+
+1. Dev-Server mit Fake-DNS und In-Memory-acme-dns starten:
+```bash
+MERKEZ_DEV=1 node test/dev-server.js
+```
+Der Server gibt beim Start einen gültigen Einrichtungscode aus.
+
+2. `kayit.js` lokal gegen den Dev-Server ausführen:
+```bash
+MERKEZ_URL=http://127.0.0.1:8788 KIMLIK_DIR=/tmp/test-kimlik ACMEDNS_DIR=/tmp/test-acmedns node api-backend/merkez-istemci/kayit.js --code <CODE> --auto --lan-ip 192.168.2.111
+```
+
+3. Für Docker: gitignoriertes `onprem/docker-compose.override.yml` anlegen:
+```yaml
+services:
+  kayit:
+    network_mode: host
+```
+
 ## Schnittstellen
 
 `POST /v1/vorschlag` (Code) · `POST /v1/register` (mit neuem Schlüssel signiert) ·

@@ -28,11 +28,33 @@ export function codeAufloesen(o = {}, env = process.env) {
 // Format der caddy-dns/acmedns-Speicherdatei: { "<domain>": { username, password, fulldomain, subdomain, server_url } }
 // (in K2b.4 gegen das Caddy-Modul verifizieren)
 function schreibeAcmedns(dir, fqdn, acmedns) {
-  fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
-  const pfad = path.join(dir, 'acmedns.json');
-  fs.writeFileSync(pfad, JSON.stringify({ [fqdn]: acmedns }, null, 2), { mode: 0o600 });
-  fs.chmodSync(pfad, 0o600);
-  return pfad;
+  try {
+    fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    const pfad = path.join(dir, 'acmedns.json');
+    fs.writeFileSync(pfad, JSON.stringify({ [fqdn]: acmedns }, null, 2), { mode: 0o600 });
+    fs.chmodSync(pfad, 0o600);
+    return pfad;
+  } catch (e) {
+    if (e.code === 'EACCES' || e.code === 'EPERM') {
+      throw new Error(`Keine Schreibrechte in ${dir} (${e.code}). Volumes vorbereiten: install.sh erneut ausführen.`);
+    }
+    throw e;
+  }
+}
+
+/**
+ * Status der Box-Identität ohne Netzaufruf und ohne Code prüfen.
+ * Gibt nie Schlüsselmaterial zurück.
+ * @returns {{registriert: boolean, ad: string|null, fqdn: string|null}}
+ */
+export function durum({ kimlikDir = kimlikVerzeichnis() } = {}) {
+  const k = ladeKimlik({ dir: kimlikDir });
+  const registriert = Boolean(k?.ad);
+  return {
+    registriert,
+    ad: registriert ? k.ad : null,
+    fqdn: registriert ? (k.fqdn ?? null) : null,
+  };
 }
 
 /**
@@ -82,7 +104,7 @@ export async function kayitAusfuehren({
   //    Admin gibt per kod-rebind einen neuen Code, kayit.js --neuer-schluessel nimmt das vorhandene *.neu wieder auf.
   const acmednsDatei = schreibeAcmedns(acmednsDir, r.json.fqdn, r.json.acmedns);
   if (kimlik.neu) uebernehmeNeueKimlik({ dir: kimlikDir });
-  speichereAd({ dir: kimlikDir, ad: r.json.name });
+  speichereAd({ dir: kimlikDir, ad: r.json.name, fqdn: r.json.fqdn });
 
   let ipErgebnis;
   if (ip && !nurVorschlag) {
@@ -131,6 +153,7 @@ export function args(argv) {
     else if (a === '--auto') o.auto = true;
     else if (a === '--nur-vorschlag') o.nurVorschlag = true;
     else if (a === '--neuer-schluessel') o.neuerSchluessel = true;
+    else if (a === '--durum') o.durum = true;
     else if (a === '--lan-ip') {
       const val = argv[++i];
       if (!val || !/^\d{1,3}(\.\d{1,3}){3}$/.test(val)) throw new Error('--lan-ip erfordert eine IPv4-Adresse');
@@ -151,6 +174,15 @@ async function main() {
   let rl;
   const frage = async (q) => { rl ??= readline.createInterface({ input: process.stdin, output: process.stderr }); return rl.question(q); };
   try {
+    if (o.durum) {
+      const d = durum({ kimlikDir: process.env.KIMLIK_DIR || kimlikVerzeichnis() });
+      if (o.json) {
+        console.log(JSON.stringify(d));
+      } else {
+        console.log(d.registriert ? `Registriert: ${d.ad} (${d.fqdn || 'ohne FQDN'})` : 'Nicht registriert');
+      }
+      return;
+    }
     o.code = codeAufloesen(o, process.env);
     if (!o.code) {
       if (!process.stdin.isTTY) throw new Error('--code fehlt (nicht interaktiv)');
@@ -170,7 +202,9 @@ async function main() {
     else if (ergebnis.vorschlag) console.log(`Vorschlag: ${ergebnis.vorschlag.fqdn}`);
     else console.log(`Registriert: ${ergebnis.fqdn}`);
   } catch (e) {
-    console.error(o.json ? JSON.stringify({ fehler: e.message }) : `Fehler: ${e.message}`);
+    // --json: Fehler-JSON auf stdout, damit install.sh es neben dem Ergebnis-JSON lesen kann
+    if (o.json) console.log(JSON.stringify({ fehler: e.message }));
+    else console.error(`Fehler: ${e.message}`);
     process.exitCode = 1;
   } finally {
     rl?.close();

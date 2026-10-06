@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-06",
  "dateien": 359,
- "funktionen": 3017,
+ "funktionen": 3019,
  "module": [
   "abrechnung",
   "anamnese",
@@ -18161,8 +18161,8 @@
    "kind": "function",
    "file": "api-backend/merkez-istemci/kayit.js",
    "start": 30,
-   "end": 36,
-   "lines": 7,
+   "end": 43,
+   "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18178,11 +18178,35 @@
    "uiPfad": []
   },
   {
+   "name": "durum",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kayit.js",
+   "start": 50,
+   "end": 58,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "kimlikVerzeichnis",
+    "ladeKimlik"
+   ],
+   "calledBy": [
+    "main"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "kayitAusfuehren",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 41,
-   "end": 112,
+   "start": 63,
+   "end": 134,
    "lines": 72,
    "spiegelHinweis": null,
    "tables": [],
@@ -18212,8 +18236,8 @@
    "name": "fehlerText",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 114,
-   "end": 123,
+   "start": 136,
+   "end": 145,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -18267,9 +18291,9 @@
    "name": "args",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 125,
-   "end": 147,
-   "lines": 23,
+   "start": 147,
+   "end": 170,
+   "lines": 24,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18288,9 +18312,9 @@
    "name": "main",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 149,
-   "end": 178,
-   "lines": 30,
+   "start": 172,
+   "end": 212,
+   "lines": 41,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18301,8 +18325,10 @@
     "args",
     "close",
     "codeAufloesen",
+    "durum",
     "frage",
-    "kayitAusfuehren"
+    "kayitAusfuehren",
+    "kimlikVerzeichnis"
    ],
    "calledBy": [],
    "modules": [],
@@ -18313,8 +18339,8 @@
    "name": "frage",
    "kind": "arrow",
    "file": "api-backend/merkez-istemci/kayit.js",
-   "start": 152,
-   "end": 152,
+   "start": 175,
+   "end": 175,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -18381,9 +18407,37 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "durum",
     "erzeugeKimlik",
     "kayitAusfuehren",
     "ladeKimlik",
+    "main",
+    "speichereAd",
+    "uebernehmeNeueKimlik"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "wrapFsFehler",
+   "kind": "function",
+   "file": "api-backend/merkez-istemci/kimlik.js",
+   "start": 13,
+   "end": 22,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "fn"
+   ],
+   "calledBy": [
+    "erzeugeKimlik",
+    "schreibeNeu",
     "speichereAd",
     "uebernehmeNeueKimlik"
    ],
@@ -18395,9 +18449,9 @@
    "name": "schreibeNeu",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kimlik.js",
-   "start": 13,
-   "end": 20,
-   "lines": 8,
+   "start": 24,
+   "end": 33,
+   "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18405,7 +18459,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "boxIdAusPublicKey"
+    "boxIdAusPublicKey",
+    "wrapFsFehler"
    ],
    "calledBy": [
     "erzeugeKimlik"
@@ -18418,8 +18473,8 @@
    "name": "erzeugeKimlik",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kimlik.js",
-   "start": 32,
-   "end": 48,
+   "start": 45,
+   "end": 61,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -18430,7 +18485,8 @@
    "calls": [
     "kimlikVerzeichnis",
     "ladeKimlik",
-    "schreibeNeu"
+    "schreibeNeu",
+    "wrapFsFehler"
    ],
    "calledBy": [
     "kayitAusfuehren"
@@ -18443,9 +18499,9 @@
    "name": "uebernehmeNeueKimlik",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kimlik.js",
-   "start": 51,
-   "end": 55,
-   "lines": 5,
+   "start": 64,
+   "end": 70,
+   "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18453,7 +18509,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "kimlikVerzeichnis"
+    "kimlikVerzeichnis",
+    "wrapFsFehler"
    ],
    "calledBy": [
     "kayitAusfuehren"
@@ -18466,9 +18523,9 @@
    "name": "ladeKimlik",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kimlik.js",
-   "start": 58,
-   "end": 75,
-   "lines": 18,
+   "start": 73,
+   "end": 91,
+   "lines": 19,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18481,6 +18538,7 @@
     "publicKeyAlsBase64url"
    ],
    "calledBy": [
+    "durum",
     "erzeugeKimlik",
     "kayitAusfuehren",
     "merkezFetch",
@@ -18494,9 +18552,9 @@
    "name": "speichereAd",
    "kind": "function",
    "file": "api-backend/merkez-istemci/kimlik.js",
-   "start": 78,
-   "end": 83,
-   "lines": 6,
+   "start": 94,
+   "end": 101,
+   "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -18505,7 +18563,8 @@
    "storage": [],
    "calls": [
     "kimlikVerzeichnis",
-    "ladeKimlik"
+    "ladeKimlik",
+    "wrapFsFehler"
    ],
    "calledBy": [
     "kayitAusfuehren"
@@ -55358,7 +55417,8 @@
     "fmt",
     "fuehreAus",
     "mitTermin",
-    "safe"
+    "safe",
+    "wrapFsFehler"
    ],
    "modules": [
     "abrechnung",
@@ -147942,7 +148002,7 @@
    "name": "main",
    "orte": [
     "api-backend/check_diagnosegruppen_icd.js:94",
-    "api-backend/merkez-istemci/kayit.js:149",
+    "api-backend/merkez-istemci/kayit.js:172",
     "api-backend/preise_autoupdate.mjs:194",
     "api-backend/preise_pruefen.mjs:240",
     "api-backend/sync_heilmittel_katalog.js:151"
@@ -148506,7 +148566,7 @@
   {
    "name": "fehlerText",
    "orte": [
-    "api-backend/merkez-istemci/kayit.js:114",
+    "api-backend/merkez-istemci/kayit.js:136",
     "module/abrechnung-auswahl.js:334"
    ],
    "aynalar": []

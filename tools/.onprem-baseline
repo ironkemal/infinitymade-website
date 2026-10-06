@@ -82,3 +82,6 @@ csp_host=53
 # başındaki açıklayıcı yorum satırı (eski durumu anlatıyor, kod değil).
 # Artış reddedilir — yeni bir sabit adres eklenirse getMailFrom() atlanmış demektir.
 absender_fest=2
+
+# Merkez istemcisinde sabit praxura.de adresi (O-161 (a): Merkez adresi yalnız env'den).
+merkez_istemci_host=0

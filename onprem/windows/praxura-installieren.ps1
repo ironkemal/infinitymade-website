@@ -23,10 +23,10 @@
    4  systemd an, Docker Engine IN der Linux-Umgebung (nicht Docker Desktop)
    5  Programmdateien nach /opt/praxura (Linux-Dateisystem — NICHT /mnt/c:
       die Datenbank braucht Linux-Dateirechte und waere dort langsam)
-   6  install.sh (fragt Adresse, TLS, Kanal, Sicherungsziel)
+   6  install.sh (fragt Einrichtungscode/Adresse, TLS, Kanal, Sicherungsziel)
    7  Autostart: geplante Aufgabe "beim Systemstart", auch ohne Anmeldung
    8  Firewall: 80/443 nur im PRIVATEN Netz (Hyper-V- + Windows-Firewall)
-   9  Wurzelzertifikat der Box in Windows + hosts-Eintrag fuer diesen PC
+   9  Wurzelzertifikat der Box in Windows (bei internem TLS) + hosts-Eintrag fuer diesen PC (O-163)
   10  Energie: am Netzteil kein Standby/Ruhezustand, Deckel zu = nichts tun
   11  Sicherungsziel: externe Platte/NAS (Hinweise; eingebunden wird in Linux)
 
@@ -254,8 +254,9 @@ if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
 } else {
   Log ''
   Log '  Gleich stellt die Einrichtung Fragen. Empfehlungen fuer diesen PC:'
-  Log "    Adresse (SITE_URL):  https://praxis.home.arpa   (oder: https://$($env:COMPUTERNAME.ToLower()).fritz.box)"
-  Log '    Echtes Zertifikat:   n   (Praxisnetz, nicht aus dem Internet erreichbar)'
+  Log '    Einrichtungscode:    Einrichtungscode (von Praxura erhalten) eingeben — Enter ohne Code = eigene Adresse (Ausnahmefall)'
+  Log "    Eigene Adresse:      (nur im Ausnahmefall): https://praxis.home.arpa  (oder: https://$($env:COMPUTERNAME.ToLower()).fritz.box)"
+  Log '    Echtes Zertifikat:   n   (Praxisnetz, nicht aus dem Internet erreichbar; entfaellt bei Einrichtungscode)'
   Log '    Kanal:               Enter (beta) fuer die Testphase'
   Log '    Sicherungsziel:      siehe Schritt 11 unten — fuer den Anfang leer lassen geht auch'
   Log ''
@@ -331,13 +332,22 @@ if ($tls -eq 'internal') {
 } else {
   Ok "echtes Zertifikat (Let's Encrypt) — kein Import noetig"
 }
+# O-163: Mirrored WSL leitet eigene LAN-IP nicht an WSL weiter -> 127.0.0.1 in hosts erforderlich.
+# Bei Neueinrichtung (anderer Name): ALLE alten '# Praxura Box'-Zeilen entfernen und genau
+# eine neue schreiben. Kodierung der Datei bleibt (System-ANSI lesen/schreiben = wie Notepad;
+# ASCII wuerde Umlaute in fremden Kommentaren zu '?' machen).
 $hosts = "$env:SystemRoot\System32\drivers\etc\hosts"
 $zeile = "127.0.0.1`t$hostName`t# Praxura Box"
-if (-not (Select-String -Path $hosts -Pattern ([regex]::Escape($hostName)) -Quiet)) {
-  Add-Content -Path $hosts -Value "`r`n$zeile" -Encoding ASCII
-  Ok "hosts-Eintrag: $hostName -> 127.0.0.1 (nur fuer diesen PC)"
-} else {
+$ansi  = [Text.Encoding]::Default
+$alt   = if (Test-Path $hosts) { [IO.File]::ReadAllLines($hosts, $ansi) } else { @() }
+$box   = @($alt | Where-Object { $_ -match '# Praxura Box' })
+if ($box.Count -eq 1 -and $box[0] -eq $zeile) {
   Ok "hosts-Eintrag fuer $hostName schon vorhanden"
+} else {
+  $rest = @($alt | Where-Object { $_ -notmatch '# Praxura Box' })
+  [IO.File]::WriteAllText($hosts, ((@($rest) + $zeile) -join "`r`n") + "`r`n", $ansi)
+  if ($box.Count -gt 0) { Ok "hosts-Eintrag ersetzt: $hostName -> 127.0.0.1 (vorherige Praxura-Box-Zeile entfernt)" }
+  else { Ok "hosts-Eintrag: $hostName -> 127.0.0.1 (nur fuer diesen PC)" }
 }
 
 # ── 10 Energie ───────────────────────────────────────────────────────────────
