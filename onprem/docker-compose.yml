@@ -418,6 +418,10 @@ services:
       # nur ausgehende Anfragen an Merkez — Schlüsseltausch und Registrierung
       # macht ausschließlich `kayit`. Daher :ro. KEIN acmedns hier.
       - kimlik:/var/lib/praxura/kimlik:ro
+      # IP-Abgleich (K2b.6, O-161 / L5): Host-Timer schreibt LAN-IP atomar in
+      # dieses Verzeichnis. Verzeichnis-Mount (nicht Datei), damit Inode-Wechsel
+      # durch atomaren mv sichtbar bleibt. Read-only.
+      - ./volumes/ip:/var/lib/praxura/ip:ro
     environment:
       NODE_ENV: production
       PORT: 3000

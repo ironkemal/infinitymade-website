@@ -1,11 +1,13 @@
 {
   "surum": "0.4.0",
   "dateien": [
-    { "yol": "docker-compose.yml", "sha256": "293c11410f964e256f7d406832c906ade254e2fc0ce7ad7c188ee260e2c13ab1" },
+    { "yol": "docker-compose.yml", "sha256": "2526566c9b8748d8423387be73524539b003f85b87cc8e27c479100fdd385c9c" },
     { "yol": ".env.template", "sha256": "e20346474bc6fc63e486571025e980cb9f64588e0b78e2dea78bc7a6e9acddd9" },
-    { "yol": "install.sh", "sha256": "8b89eef34d6acb82d8c5d9924f7be68994f3f627def164c5b25343932fbde64f" },
+    { "yol": "install.sh", "sha256": "64caaa9138a21d50ea224b8d8d7adeac5dece7eaccff8ecd127f7bebaddb3f6a" },
     { "yol": "update.sh", "sha256": "f33a1d13cf73c1886511718c974bdbeba61e705c52ed5802572faf5ddaf93291" },
     { "yol": "lib-health.sh", "sha256": "ac3df970f980f9810db85e9b8daf78f1b63d7cc287c73b83a5ae77eeeb37b819" },
+    { "yol": "lib-ip.sh", "sha256": "c0296d855e2722429234ed58770f677adbb66a668302c955bd7a5930815bed47" },
+    { "yol": "ip-melden.sh", "sha256": "9d897767ce87981683655253810a7df560c0a0bd4d0bc5d54de758a5e9b53838" },
     { "yol": "backup.sh", "sha256": "3e7c5b744f454f7e8a5c9a66b8088a44fb73749917fdb0e919c378d9f76a6dd9" },
     { "yol": "restore.sh", "sha256": "2d5c2ef0eeeb8e4c0ea195f9584e72e1c026f2f56585ce6a9ea39173b5788433" },
     { "yol": "reset-owner-passwort.sh", "sha256": "96ea06998dc4d0cc78bbad103b6617808bd8cb564c6aab6f537fcf86daeec782" },

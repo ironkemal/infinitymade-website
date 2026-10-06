@@ -116,6 +116,29 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 06.10.2026 · K2b.6 Kutu IP eşitlemesi (ad ≤15 dk içinde yeni iç IP'ye)
+- `api-backend/merkez-istemci/ip-abgleich.js` (yeni): `starteIpAbgleich()`, `ipAbgleichSchritt()`, `istGueltigesIpv4`,
+  `istRfc1918`, `erzeugeZustand`. Niye: kutunun iç IP'si değişince adın A kaydı ≤15 dk içinde yeniden doğru yeri
+  göstersin (K2b.6). Nerede: `server.js` açılışında `starteIpAbgleich()` (`scheduleAttendanceAutoClose` kalıbı);
+  yalnız kutuda iş yapar — `MERKEZ_URL` yoksa (SaaS) hiçbir şey yapmaz. `ipAbgleichSchritt` testlerin sürdüğü tek
+  tick. Taşıyıcı var olan `merkezFetch` — merkeze ikinci bir fetch yolu yazılmadı.
+- `onprem/lib-ip.sh` (yeni): `lan_ip_ermitteln`, `ist_rfc1918` `install.sh`'tan buraya taşındı (K2b.5b kaydındaki
+  "ikinci IP tespiti yazma" notunun karşılığı). Kullananlar: `install.sh` (`source`) + `onprem/ip-melden.sh` (host
+  zamanlayıcısı, yeni). Kutu tarafında IP tespiti için **tek yer budur.**
+- `ip_timer_einrichten` (`onprem/install.sh`, yeni). Niye: host zamanlayıcısını kurar. Nerede: `install.sh`; ileride
+  `update.sh`'tan da çağrılacak — orada yeniden yazılmasın, bu fonksiyon `lib-ip.sh`'a ya da ortak bir dosyaya
+  taşınarak paylaşılsın.
+- 🟡 **Kopya adayı — bilinçli ayrı, birleştirilmedi (karar sonra):** IPv4 doğrulama/RFC1918 kuralı **üç yerde**:
+  `merkez/ip.js` `parseIpv4`/`klassifiziereIpv4` (merkez dağıtımı) · `ip-abgleich.js` `istGueltigesIpv4`/`istRfc1918`
+  (kutu imajı) · `lib-ip.sh` `ist_rfc1918` (host bash). Gerekçe: kutu imajı `merkez/`'i içermez, bash JS'i çağıramaz.
+  06.10'da karşılaştırıldı, kurallar şu an **aynı** (öndeki sıfır reddi, 10/8 · 172.16/12 · 192.168/16). Kural
+  değişirse (ör. CGNAT kabulü) üçü birden güncellenir. Küçük fark: JS `istRfc1918` ve bash `ist_rfc1918` biçim
+  doğrulamaz — JS'te `istGueltigesIpv4` önce çağrıldığı için sorun değil; bash'te girdi `ip` komutundan geliyor,
+  merkez L1 kuralıyla zaten reddeder.
+- ⚠️ Kör nokta (K2b.5b'deki gibi): `*.sh` ve `merkez/` haritada taranmaz — `lib-ip.sh`, `ip-melden.sh`,
+  `ip_timer_einrichten` ve `merkez/ip.js` INDEX.json'da yok, tek kayıt burası. `starteIpAbgleich`'in `calledBy`'ı
+  haritada boş görünür; çağrı `server.js`'te üst düzey (fonksiyon dışı) — ölü kod değil.
+
 ### 06.10.2026 · K2b.5b Kayıt durumu, volume sahiplik mesajı, yerel sahte merkez, LAN-IP yardımcıları
 - `durum({kimlikDir})` (`api-backend/merkez-istemci/kayit.js`). Niye: `install.sh` yeniden çalıştığında (`--neu` vb.)
   kurulum kodunu ikinci kez harcamasın — ağsız/kodsuz `{registriert, ad, fqdn}` döner, anahtar dönmez. Nerede:

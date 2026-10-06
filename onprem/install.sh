@@ -85,24 +85,9 @@ env_get() {
   awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print; f=1} END{if(!f) print ""}' "$ENV_FILE" 2>/dev/null || true
 }
 
-# LAN-IP der Maschine für Namensdienst und Ausgabe bestimmen
-lan_ip_ermitteln() {
-  local ip
-  ip="$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}')"
-  [ -n "$ip" ] || ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
-  printf '%s' "$ip"
-}
-
-# Prüft, ob eine IPv4-Adresse im privaten RFC1918-Bereich liegt (10/8, 172.16-31, 192.168/16)
-ist_rfc1918() {
-  local ip="$1"
-  case "$ip" in
-    10.*) return 0 ;;
-    192.168.*) return 0 ;;
-    172.1[6-9].*|172.2[0-9].*|172.3[0-1].*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
+# Geteilte IP-Ermittlung mit ip-melden.sh (K2b.6, O-161 L3)
+# shellcheck source=./lib-ip.sh
+source "$SCRIPT_DIR/lib-ip.sh"
 
 : > "$LOG_FILE"
 log "Praxura On-Premise — Einrichtung $(date '+%Y-%m-%d %H:%M:%S')"
@@ -608,8 +593,14 @@ if [ "$KAYIT_MODUS" = "code" ]; then
 
     log "  Registriere Box mit Namen '${gewaehlter_name}' bei Merkez..."
     LAN_IP="$(lan_ip_ermitteln)"
+    # Leere IP = Netz noch nicht bereit (DHCP). NICHT still auf 'internet' fallen —
+    # der Modus wird hier einmalig festgelegt (O-161 L1) und bliebe dauerhaft falsch.
+    [ -n "$LAN_IP" ] || fail "Keine Netzwerkadresse gefunden" "keine Default-Route" "verbundenes Netzwerk" \
+      "Netzwerkkabel/WLAN prüfen, ein paar Sekunden warten und install.sh erneut starten (der Code ist noch nicht verbraucht)."
+    ip_modus="internet"
     ip_param="--internet"
-    if [ -n "$LAN_IP" ] && ist_rfc1918 "$LAN_IP"; then
+    if ist_rfc1918 "$LAN_IP"; then
+      ip_modus="lan"
       ip_param="--lan-ip $LAN_IP"
     fi
 
@@ -639,6 +630,39 @@ if [ "$KAYIT_MODUS" = "code" ]; then
     set_env API_EXTERNAL_URL "$SITE_URL"
     set_env SUPABASE_PUBLIC_URL "$SITE_URL"
     ok "Box erfolgreich registriert: ${SITE_URL}"
+
+    # Modus einmalig bei der Einrichtung festlegen (K2b.6 / L1, L5)
+    mkdir -p "$SCRIPT_DIR/volumes/ip"
+    chmod 0755 "$SCRIPT_DIR/volumes/ip"
+    printf '%s\n' "$ip_modus" > "$SCRIPT_DIR/volumes/ip/modus.tmp"
+    chmod 0644 "$SCRIPT_DIR/volumes/ip/modus.tmp"
+    mv -f "$SCRIPT_DIR/volumes/ip/modus.tmp" "$SCRIPT_DIR/volumes/ip/modus"
+    if [ "$ip_modus" = "lan" ]; then
+      printf '%s\n' "$LAN_IP" > "$SCRIPT_DIR/volumes/ip/lan-ip.tmp"
+      chmod 0644 "$SCRIPT_DIR/volumes/ip/lan-ip.tmp"
+      mv -f "$SCRIPT_DIR/volumes/ip/lan-ip.tmp" "$SCRIPT_DIR/volumes/ip/lan-ip"
+    fi
+  fi
+fi
+
+# Verzeichnis für IP-Mount vor erstem Start immer anlegen (L5, Adress-Weg ohne Dateien)
+mkdir -p "$SCRIPT_DIR/volumes/ip"
+chmod 0755 "$SCRIPT_DIR/volumes/ip"
+
+# Im Weg 'vorhanden' (falls Datei fehlt): Modus ebenfalls festlegen (L1)
+if [ "$KAYIT_MODUS" = "vorhanden" ] && [ ! -f "$SCRIPT_DIR/volumes/ip/modus" ]; then
+  v_lan_ip="$(lan_ip_ermitteln)"
+  v_modus="internet"
+  if [ -n "$v_lan_ip" ] && ist_rfc1918 "$v_lan_ip"; then
+    v_modus="lan"
+  fi
+  printf '%s\n' "$v_modus" > "$SCRIPT_DIR/volumes/ip/modus.tmp"
+  chmod 0644 "$SCRIPT_DIR/volumes/ip/modus.tmp"
+  mv -f "$SCRIPT_DIR/volumes/ip/modus.tmp" "$SCRIPT_DIR/volumes/ip/modus"
+  if [ "$v_modus" = "lan" ]; then
+    printf '%s\n' "$v_lan_ip" > "$SCRIPT_DIR/volumes/ip/lan-ip.tmp"
+    chmod 0644 "$SCRIPT_DIR/volumes/ip/lan-ip.tmp"
+    mv -f "$SCRIPT_DIR/volumes/ip/lan-ip.tmp" "$SCRIPT_DIR/volumes/ip/lan-ip"
   fi
 fi
 
@@ -734,7 +758,7 @@ ok "SERVICE_ROLE_KEY akzeptiert (200)"
 # ausgecheckten onprem/-Baums, wie install.sh selbst — J10 in §7J: das Bundle
 # ersetzt diesen Weg NICHT, das ist eine offene, spätere Entscheidung).
 log "[16/17] Automatische Aktualisierung + Yedekleme einrichten (nächtlich)"
-chmod +x "$SCRIPT_DIR/update.sh" "$SCRIPT_DIR/lib-health.sh"
+chmod +x "$SCRIPT_DIR/update.sh" "$SCRIPT_DIR/lib-health.sh" "$SCRIPT_DIR/lib-ip.sh" "$SCRIPT_DIR/ip-melden.sh"
 
 # Taban für update.sh's erste .env-Zusammenführung (§7J J4): ohne diese Kopie
 # hätte der allererste Lauf nichts, wogegen er "was haben WIR geändert"
@@ -848,9 +872,51 @@ else
   warn "systemctl nicht gefunden — automatische Aktualisierung/Yedekleme NICHT eingerichtet. 'bash update.sh --jetzt' / 'bash backup.sh --sebep manuel' manuell/per Cron einrichten."
 fi
 
+# ── IP-Timer (K2b.6, O-161 / L7, L10) ───────────────────────────────────────
+# In Funktion gekapselt, damit update.sh dies später idempotent aufrufen kann.
+ip_timer_einrichten() {
+  # Nur einrichten, wenn volumes/ip/modus existiert (L10)
+  [ -f "$SCRIPT_DIR/volumes/ip/modus" ] || return 0
+
+  chmod +x "$SCRIPT_DIR/ip-melden.sh" "$SCRIPT_DIR/lib-ip.sh" 2>/dev/null || true
+
+  if command -v systemctl >/dev/null 2>&1; then
+    cat > /etc/systemd/system/praxura-ip.service <<EOF
+[Unit]
+Description=Praxura On-Premise — LAN-IP ermitteln und bereitstellen (K2b.6, O-161)
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=${SCRIPT_DIR}
+ExecStart=/bin/bash ${SCRIPT_DIR}/ip-melden.sh
+EOF
+
+    cat > /etc/systemd/system/praxura-ip.timer <<EOF
+[Unit]
+Description=Praxura On-Premise — periodische LAN-IP-Prüfung (Timer)
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target
+EOF
+
+    systemctl daemon-reload
+    systemctl enable --now praxura-ip.timer >/dev/null 2>&1
+    ok "praxura-ip.timer aktiv (alle 2 Min, Start 1 Min nach Boot)"
+  else
+    warn "systemctl nicht gefunden — praxura-ip.timer NICHT eingerichtet. IP-Meldung per Cron einrichten."
+  fi
+}
+ip_timer_einrichten
+
 # ── Schritt 17 — Ausgabe ──────────────────────────────────────────────────────
 # Die Route zu einer beliebigen oeffentlichen Adresse zeigt zuverlaessiger
-# auf die echte Praxisnetz-Schnittstelle als "hostname -I" — letzteres kann
+# auf die echte Praxisnetz-Schnittstelle als andere Schnittstellen — letztere koennen
 # auch eine interne Docker-Bridge-Adresse (typ. 172.17.0.1) an erster Stelle
 # zurückgeben (O-59-Nachbarfund, Gegenlesen 11.09.2026). Trotzdem nur ein
 # Hinweis, keine Wahrheit — immer gegen die tatsächliche Praxisnetz-IP prüfen.

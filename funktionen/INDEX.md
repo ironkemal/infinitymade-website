@@ -3,7 +3,7 @@
 > Üretim: 2026-10-06 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3022 fonksiyon** · 360 dosya · 41 sidebar modülü
+**3028 fonksiyon** · 361 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -444,7 +444,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:28 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · module/geld.js:48
 - `zeile` — module/branding-ui.js:39 · module/einrichtung-ring.js:40 · module/rechnung-druck.js:31 · module/verordnung-detail.js:273 · module/verordnung-detail.js:400 · module/verordnung-detail.js:457 · module/verordnung-pruefen-knopf.js:116
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:70 · api-backend/ai/tasks/b2c-draft.js:59 · api-backend/ai/tasks/rezept-normalize.js:113 · api-backend/ai/tasks/rezept-ocr.js:166 · api-backend/ai/tasks/rezept-validate.js:9 · api-backend/ai/tasks/series-scheduler.js:118
-- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:302 · api-backend/server.js:1448
+- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:303 · api-backend/server.js:1449
 - `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:93 · api-backend/billing/api/artefakt-registry.js:23 · api-backend/billing/api/zuzahlungsforderung.routes.js:38 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73 · api-backend/merkez-istemci/signatur.js:22 · module/einwilligung-texte.js:421
 - `zeichne` — module/abrechnung-auswahl.js:767 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:27 · module/patienten-einwilligung.js:494 · module/praxis-standort.js:115 · module/rezeptinfo-geld.js:355
 - `mockResponse` — api-backend/ai/tasks/appointment-confirm-draft.js:56 · api-backend/ai/tasks/b2c-draft.js:47 · api-backend/ai/tasks/rezept-normalize.js:45 · api-backend/ai/tasks/rezept-ocr.js:95 · api-backend/ai/tasks/series-scheduler.js:104
@@ -466,7 +466,7 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `isAdmin` — admin-login.js:18 · api/_lib/auth.js:90 · login.js:132
 - `showToast` — admin.js:22 · dashboard.js:928 · module/kiosk.js:55
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rezept-in-maske.js:218
-- `setzen` — api-backend/server.js:4233 · module/praxis-standort.js:143 · module/rechnung-druck.js:110
+- `tick` — api-backend/merkez-istemci/ip-abgleich.js:203 · api-backend/server.js:3895 · dashboard.js:13505
+- `setzen` — api-backend/server.js:4236 · module/praxis-standort.js:143 · module/rechnung-druck.js:110
 - `loadTeam` — booking-request.js:622 · dashboard.js:9660 · kalender.js:219
 - `initCalendar` — booking-request.js:671 · dashboard.js:2136 · kalender.js:269
-- `f` — dashboard.js:1113 · module/branding.js:73 · module/kiosk.js:199

@@ -40,6 +40,8 @@ const BUNDLE_DATEILER = [
   'install.sh',
   'update.sh',
   'lib-health.sh',
+  'lib-ip.sh',
+  'ip-melden.sh',
   'backup.sh',
   'restore.sh',
   'reset-owner-passwort.sh',

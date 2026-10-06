@@ -14,6 +14,8 @@ on:
       - 'onprem/install.sh'
       - 'onprem/update.sh'
       - 'onprem/lib-health.sh'
+      - 'onprem/lib-ip.sh'
+      - 'onprem/ip-melden.sh'
       - 'onprem/backup.sh'
       - 'onprem/restore.sh'
       - 'onprem/reset-owner-passwort.sh'
@@ -256,7 +258,7 @@ jobs:
       - name: Smoke test — onprem-Bundle ist im Image
         run: |
           set -e
-          BUNDLE_DATEIEN="docker-compose.yml .env.template install.sh update.sh lib-health.sh backup.sh restore.sh reset-owner-passwort.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql volumes/db/praxura-rollen.sql"
+          BUNDLE_DATEIEN="docker-compose.yml .env.template install.sh update.sh lib-health.sh lib-ip.sh ip-melden.sh backup.sh restore.sh reset-owner-passwort.sh manifest.json volumes/api/kong.yml volumes/api/kong-entrypoint.sh volumes/db/webhooks.sql volumes/db/no-pg-net.sql volumes/db/roles.sql volumes/db/jwt.sql volumes/db/realtime.sql volumes/db/_supabase.sql volumes/db/praxura-rollen.sql"
           bundle_anzahl=$(echo $BUNDLE_DATEIEN | wc -w)
 
           docker create --name bundle-check calendar-api:smoke >/dev/null

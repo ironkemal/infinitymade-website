@@ -150,6 +150,11 @@ test('install.sh: Code wird nie per set_env geschrieben, nie als --code übergeb
   // read -r -s für geheime Code-Eingabe vorhanden
   assert.match(inhalt, /read\s+[^;\n]*-r\s+[^;\n]*-s|read\s+[^;\n]*-s\s+[^;\n]*-r/, 'install.sh muss read -r -s für die Code-Eingabe verwenden');
 
+  // set -u: ip_modus muss vor der ersten Verwendung gesetzt werden (K2b.6-Review: Absturz nach Registrierung)
+  const posModusSetzen = inhalt.search(/^\s*ip_modus=/m);
+  const posModusLesen = inhalt.indexOf('"$ip_modus"');
+  assert.ok(posModusLesen === -1 || (posModusSetzen !== -1 && posModusSetzen < posModusLesen), 'ip_modus muss vor der Verwendung gesetzt werden');
+
   // --entrypoint true kayit kommt vor dem ersten docker compose up -d vor
   const posEntrypoint = inhalt.indexOf('--entrypoint true kayit');
   // nur Befehlszeilen zählen (Schritt 0 nennt `docker compose up -d` als Text in einer Meldung)
@@ -157,4 +162,38 @@ test('install.sh: Code wird nie per set_env geschrieben, nie als --code übergeb
   assert.ok(posEntrypoint !== -1, 'install.sh muss --entrypoint true kayit enthalten');
   assert.ok(posComposeUp !== -1, 'install.sh muss docker compose up -d enthalten');
   assert.ok(posEntrypoint < posComposeUp, '--entrypoint true kayit muss vor dem ersten docker compose up -d vorkommen');
+});
+
+test('install.sh: enthält kein hostname -I mehr und sourct lib-ip.sh (K2b.6 / L2, L3)', () => {
+  const inhalt = fs.readFileSync(installPfad, 'utf8');
+  assert.ok(!inhalt.includes('hostname -I'), 'install.sh darf kein hostname -I mehr enthalten');
+  assert.match(inhalt, /source\s+["']?\$SCRIPT_DIR\/lib-ip\.sh["']?/, 'install.sh muss lib-ip.sh sourcen');
+});
+
+test('ip-melden.sh: schreibt nur bei lan-Modus und nutzt mv atomar (K2b.6 / L1, L5)', () => {
+  const ipMeldenPfad = path.join(repoRoot, 'onprem', 'ip-melden.sh');
+  assert.ok(fs.existsSync(ipMeldenPfad), 'ip-melden.sh muss existieren');
+  const inhalt = fs.readFileSync(ipMeldenPfad, 'utf8');
+
+  // sourct lib-ip.sh
+  assert.match(inhalt, /source\s+["']?\$SCRIPT_DIR\/lib-ip\.sh["']?/, 'ip-melden.sh muss lib-ip.sh sourcen');
+
+  // Prüft auf lan-Modus
+  assert.match(inhalt, /\[\s*"\$MODUS"\s*=\s*"lan"\s*\]/, 'ip-melden.sh muss auf lan-Modus prüfen');
+
+  // Nutzt mv für atomaren Tausch
+  assert.match(inhalt, /mv\s+(-f\s+)?["']?\$TMP_DATEI["']?\s+["']?\$LAN_IP_DATEI["']?/, 'ip-melden.sh muss mv für atomaren Tausch nutzen');
+});
+
+test('Compose: Dienst api bindet ./volumes/ip:/var/lib/praxura/ip:ro ein (K2b.6 / L5)', () => {
+  const inhalt = fs.readFileSync(composePfad, 'utf8');
+  const api = dienstBlock(inhalt, 'api');
+  assert.ok(api, 'Dienst api muss in docker-compose.yml existieren');
+  assert.match(api, /\.\/volumes\/ip:\/var\/lib\/praxura\/ip:ro/, 'api muss ./volumes/ip:/var/lib/praxura/ip:ro einbinden');
+});
+
+test('.gitignore: enthält onprem/volumes/ip/ (K2b.6 / L6)', () => {
+  const gitignorePfad = path.join(repoRoot, '.gitignore');
+  const inhalt = fs.readFileSync(gitignorePfad, 'utf8');
+  assert.match(inhalt, /onprem\/volumes\/ip\//, '.gitignore muss onprem/volumes/ip/ enthalten');
 });

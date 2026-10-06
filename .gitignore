@@ -69,6 +69,7 @@ __pycache__/
 # altındaki .gitignore İSTİSNA — o upstream vendor kopyasının kendi dosyası, dokunulmadı.
 onprem/volumes/db/data/
 onprem/volumes/storage/
+onprem/volumes/ip/
 
 # On-Prem Kundenbox: die erzeugte .env traegt Geheimnisse (G2) und bleibt
 # draussen. Die VORLAGE dagegen muss ins Repository — sonst kann niemand eine

@@ -45,6 +45,7 @@ import { resolveOrCreateArzt } from './lib/arzt-registry.js';
 import { gpsCheckinErgebnisRein } from './lib/gps-checkin.js';
 import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import { createSMTPTransport, getMailFrom } from './lib/mail.js';
+import { starteIpAbgleich } from './merkez-istemci/ip-abgleich.js';
 
 dotenv.config();
 
@@ -3910,6 +3911,8 @@ app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
   setTimeout(tick, 30_000); // Açılışta kaçırılan günler (DB hazır olsun diye kısa gecikme)
   setInterval(tick, 60_000); // Her dakika kontrol et
 })();
+
+starteIpAbgleich();
 
 // ---- Gece 03:00 hesap temizliği — ABGESCHALTET (KHS K1.4, 02.10.2026) ----
 // delete_expired_accounts() lief seit Juli nie durch und hätte repariert Behandlungsdoku
