@@ -3,7 +3,7 @@
   "dateien": [
     { "yol": "docker-compose.yml", "sha256": "b119867b46674b9287f2eefa701f3f61a374beca97a78ac432332d97161ba747" },
     { "yol": ".env.template", "sha256": "a9f99f51368f3fb60233b75f919f4c0a671379d5f7d18bf28f5733e85bb5cae2" },
-    { "yol": "install.sh", "sha256": "64c13f787e3a753adb75fd4cdb0b21a6ece2c9205d4aaa85ca89dee2e3ce1068" },
+    { "yol": "install.sh", "sha256": "920c7056bc513238e5e08ec44041dcb90ec0c9d1d9e314a487166172e8a8fa94" },
     { "yol": "update.sh", "sha256": "82c37b75bfe0f2459c84959d8a8a8e2986da10e84c1bb4c0ac15e5d6e880c6c5" },
     { "yol": "lib-health.sh", "sha256": "ac3df970f980f9810db85e9b8daf78f1b63d7cc287c73b83a5ae77eeeb37b819" },
     { "yol": "lib-ip.sh", "sha256": "3e01908849fbe18da0c5a64250404c20935f6fe47046f67e210f0f0227b70db8" },

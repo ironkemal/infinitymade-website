@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-06",
- "dateien": 361,
- "funktionen": 3028,
+ "dateien": 362,
+ "funktionen": 3030,
  "module": [
   "abrechnung",
   "anamnese",
@@ -21640,6 +21640,7 @@
     "patchBooking",
     "pinStatus",
     "preflight",
+    "pruefeJeton",
     "r2",
     "requireAuth",
     "resolveArzt",
@@ -111029,6 +111030,25 @@
    "uiPfad": []
   },
   {
+   "name": "jetonAusHash",
+   "kind": "function",
+   "file": "module/setup-fragment.js",
+   "start": 13,
+   "end": 28,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "setDebug",
    "kind": "function",
    "file": "module/signal.js",
@@ -143152,8 +143172,8 @@
    "name": "applyLang",
    "kind": "function",
    "file": "setup.js",
-   "start": 80,
-   "end": 120,
+   "start": 84,
+   "end": 124,
    "lines": 41,
    "spiegelHinweis": null,
    "tables": [],
@@ -143175,8 +143195,8 @@
    "name": "setText",
    "kind": "arrow",
    "file": "setup.js",
-   "start": 83,
-   "end": 83,
+   "start": 87,
+   "end": 87,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -143196,8 +143216,8 @@
    "name": "zeigeMsg",
    "kind": "function",
    "file": "setup.js",
-   "start": 130,
-   "end": 133,
+   "start": 136,
+   "end": 139,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -143206,7 +143226,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
+   "calledBy": [
+    "pruefeJeton"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -143215,8 +143237,8 @@
    "name": "verstecken",
    "kind": "function",
    "file": "setup.js",
-   "start": 135,
-   "end": 137,
+   "start": 141,
+   "end": 143,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -143228,6 +143250,7 @@
    "calledBy": [
     "abschliessen",
     "init",
+    "pruefeJeton",
     "zuBranding",
     "zuPruefungenUndAbschluss"
    ],
@@ -143236,11 +143259,37 @@
    "uiPfad": []
   },
   {
+   "name": "pruefeJeton",
+   "kind": "function",
+   "file": "setup.js",
+   "start": 151,
+   "end": 202,
+   "lines": 52,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [
+    "/setup/verify"
+   ],
+   "storage": [],
+   "calls": [
+    "json",
+    "testeSmtp",
+    "verstecken",
+    "zeigeMsg"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "init",
    "kind": "function",
    "file": "setup.js",
-   "start": 141,
-   "end": 156,
+   "start": 204,
+   "end": 219,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -143265,8 +143314,8 @@
    "name": "smtpZeige",
    "kind": "function",
    "file": "setup.js",
-   "start": 250,
-   "end": 252,
+   "start": 293,
+   "end": 295,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -143286,8 +143335,8 @@
    "name": "zuBranding",
    "kind": "function",
    "file": "setup.js",
-   "start": 258,
-   "end": 261,
+   "start": 301,
+   "end": 304,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -143307,8 +143356,8 @@
    "name": "wert",
    "kind": "arrow",
    "file": "setup.js",
-   "start": 268,
-   "end": 274,
+   "start": 311,
+   "end": 317,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -143366,8 +143415,8 @@
    "name": "pruefZeileZeichnen",
    "kind": "function",
    "file": "setup.js",
-   "start": 317,
-   "end": 326,
+   "start": 360,
+   "end": 369,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -143387,8 +143436,8 @@
    "name": "zuPruefungenUndAbschluss",
    "kind": "function",
    "file": "setup.js",
-   "start": 328,
-   "end": 365,
+   "start": 371,
+   "end": 408,
    "lines": 38,
    "spiegelHinweis": null,
    "tables": [],
@@ -143413,8 +143462,8 @@
    "name": "abschliessen",
    "kind": "function",
    "file": "setup.js",
-   "start": 367,
-   "end": 379,
+   "start": 410,
+   "end": 422,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -143438,8 +143487,8 @@
    "name": "testeSmtp",
    "kind": "function",
    "file": "setup.js",
-   "start": 386,
-   "end": 411,
+   "start": 429,
+   "end": 454,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -143453,7 +143502,9 @@
     "json",
     "smtpZeige"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "pruefeJeton"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -148109,7 +148160,7 @@
     "dashboard.js:15135",
     "kalender.js:130",
     "onboarding.js:77",
-    "setup.js:141"
+    "setup.js:204"
    ],
    "aynalar": []
   },
@@ -148358,7 +148409,7 @@
     "module/anfrage-bearbeiten.js:171",
     "module/fahrtenbuch-regeln.js:280",
     "module/verordnung-pruefen-knopf.js:43",
-    "setup.js:268"
+    "setup.js:311"
    ],
    "aynalar": []
   },
@@ -148458,7 +148509,7 @@
    "orte": [
     "kalender.js:67",
     "login.js:50",
-    "setup.js:80"
+    "setup.js:84"
    ],
    "aynalar": []
   },

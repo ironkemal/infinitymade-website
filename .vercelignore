@@ -75,6 +75,7 @@ blog/component-lab.html
 # auf der oeffentlichen Flaeche sichtbar (Register-Regel "Yayin yuezeyi", CLAUDE.md).
 setup.html
 setup.js
+module/setup-fragment.js
 # script.js, chatbot.js, pakete/, ai chatbot proje/ — 09.09.2026 nach archive/
 # verschoben (archive/ oben schon ausgeschlossen), Regeln nicht mehr noetig
 # lib/ — 28.08.2026 nach archive/lib-orphan/ verschoben, Regel nicht mehr noetig

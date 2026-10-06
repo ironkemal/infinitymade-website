@@ -16,14 +16,18 @@
 // NULL ist, sperrt server.js die anonyme Patienten-Oberfläche (Buchung).
 // Schritt 4 ("Einrichtung abschließen") hebt das auf — deshalb ist der
 // Übergang zu "Fertig" ein expliziter POST, kein automatischer Redirect.
+// Erster Import (Reihenfolge ist Absicht): liest den Jeton aus #… und entfernt ihn,
+// BEVOR supabase-config.js beim Laden fetch aufruft (module/setup-fragment.js, K2b.11).
+import { fragmentJeton } from './module/setup-fragment.js';
 import { API_BASE } from './supabase-config.js';
 
 const T = {
   de: {
     tokenStepLabel: 'Schritt 1 von 5', tokenTitle: 'Einrichtung starten',
-    tokenSub: 'Das Einrichtungsjeton stand am Ende von install.sh im Terminal.',
+    tokenSub: 'Normalerweise öffnet sich diese Seite nach der Installation von selbst. Falls nicht: den Link vom Ende von install.sh öffnen oder den Jeton hier eintragen.',
+    tokenAuto: 'Einrichtung wird geprüft …',
     tokenLabel: 'Einrichtungs-Jeton', tokenSubmit: 'Weiter',
-    tokenInvalid: 'Jeton wird nicht akzeptiert. Bitte aus dem Terminal-Ausdruck von install.sh kopieren.',
+    tokenInvalid: 'Jeton wird nicht akzeptiert. Bitte den Link vom Ende von install.sh erneut öffnen.',
     netzwerkfehler: 'Verbindung fehlgeschlagen. Bitte erneut versuchen.',
 
     ownerStepLabel: 'Schritt 2 von 5', ownerTitle: 'Praxis und Konto',
@@ -82,7 +86,7 @@ function applyLang() {
   document.documentElement.lang = lang;
   const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   setText('tokenStepLabel', t.tokenStepLabel); setText('tokenTitle', t.tokenTitle);
-  setText('tokenSub', t.tokenSub); setText('tokenLabel', t.tokenLabel);
+  setText('tokenSub', t.tokenSub); setText('tokenAuto', t.tokenAuto); setText('tokenLabel', t.tokenLabel);
   setText('tokenSubmitBtn', t.tokenSubmit);
 
   setText('ownerStepLabel', t.ownerStepLabel); setText('ownerTitle', t.ownerTitle);
@@ -126,6 +130,8 @@ const stepSmtp = document.getElementById('stepSmtp');
 const stepBranding = document.getElementById('stepBranding');
 const stepDone = document.getElementById('stepDone');
 const stepClosed = document.getElementById('stepClosed');
+const tokenAuto = document.getElementById('tokenAuto');
+const tokenForm = document.getElementById('tokenForm');
 
 function zeigeMsg(el, text, art) {
   el.textContent = text;
@@ -137,6 +143,63 @@ function verstecken(...sections) {
 }
 
 let gueltigerToken = null;
+// Jeton aus dem Link, solange er nicht abgelehnt wurde: nach einem Netzwerkfehler
+// beim automatischen Start soll „Weiter" ihn erneut prüfen — die Praxis hat ihn nie
+// gesehen und kann ihn nicht eintippen (das Fragment ist schon aus der Adresse).
+let ausstehenderJeton = fragmentJeton;
+
+async function pruefeJeton(token) {
+  const btn = document.getElementById('tokenSubmitBtn');
+  const msg = document.getElementById('tokenMsg');
+  const tokenInput = document.getElementById('token');
+
+  btn.disabled = true;
+  try {
+    const res = await fetch(API_BASE + '/setup/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (res.status === 410) {
+      tokenAuto.hidden = true;
+      tokenForm.hidden = false;
+      verstecken(stepToken, stepOwner, stepSmtp, stepBranding, stepDone);
+      stepClosed.hidden = false;
+      return;
+    }
+    if (!res.ok) {
+      ausstehenderJeton = null;
+      tokenInput.required = true;
+      tokenAuto.hidden = true;
+      tokenForm.hidden = false;
+      tokenInput.value = '';
+      zeigeMsg(msg, T[lang].tokenInvalid, 'error');
+      return;
+    }
+    gueltigerToken = token;
+    ausstehenderJeton = null;
+    tokenAuto.hidden = true;
+    verstecken(stepToken);
+    if (data.ownerAngelegt) {
+      // Wiederaufnahme: Owner existiert schon, direkt zu Schritt 3.
+      stepSmtp.hidden = false;
+      testeSmtp();
+    } else {
+      stepOwner.hidden = false;
+    }
+  } catch {
+    tokenAuto.hidden = true;
+    tokenForm.hidden = false;
+    tokenInput.value = '';
+    // Leeres Feld + „Weiter" prüft den Link-Jeton erneut (required würde das blockieren).
+    tokenInput.required = !ausstehenderJeton;
+    zeigeMsg(msg, T[lang].netzwerkfehler, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
 
 async function init() {
   try {
@@ -154,46 +217,26 @@ async function init() {
     // eigentliche Fehler kommt dann beim Absenden — kein Doppelrisiko.
   }
 }
-init();
 
-document.getElementById('tokenForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = document.getElementById('tokenSubmitBtn');
-  const msg = document.getElementById('tokenMsg');
-  const token = document.getElementById('token').value.trim();
+if (fragmentJeton) {
+  tokenForm.hidden = true;
+  tokenAuto.hidden = false;
+}
 
-  btn.disabled = true;
-  try {
-    const res = await fetch(API_BASE + '/setup/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-    });
-    const data = await res.json().catch(() => ({}));
-
-    if (res.status === 410) {
-      verstecken(stepToken, stepOwner, stepSmtp, stepBranding, stepDone);
-      stepClosed.hidden = false;
-      return;
-    }
-    if (!res.ok) {
-      zeigeMsg(msg, T[lang].tokenInvalid, 'error');
-      return;
-    }
-    gueltigerToken = token;
-    verstecken(stepToken);
-    if (data.ownerAngelegt) {
-      // Wiederaufnahme: Owner existiert schon, direkt zu Schritt 3.
-      stepSmtp.hidden = false;
-      testeSmtp();
-    } else {
-      stepOwner.hidden = false;
-    }
-  } catch {
-    zeigeMsg(msg, T[lang].netzwerkfehler, 'error');
-  } finally {
-    btn.disabled = false;
+init().then(async () => {
+  if (fragmentJeton && !stepToken.hidden) {
+    await pruefeJeton(fragmentJeton);
   }
+}).catch(() => {
+  // Nie im Zustand „wird geprüft …" hängen bleiben — manueller Weg bleibt offen.
+  tokenAuto.hidden = true;
+  tokenForm.hidden = false;
+});
+
+tokenForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const token = document.getElementById('token').value.trim() || ausstehenderJeton || '';
+  await pruefeJeton(token);
 });
 
 document.getElementById('ownerForm').addEventListener('submit', async (e) => {

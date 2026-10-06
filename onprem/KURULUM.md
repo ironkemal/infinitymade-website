@@ -131,7 +131,12 @@ Warnung).
   einen Passwort-Tresor, **nicht** in den Sicherungsordner. Ohne ihn sind die
   verschlüsselten Felder auch mit einer vollständigen Sicherung verloren.
   `install.sh` wartet, bis Sie `GESICHERT` tippen.
-- **Einrichtungs-Jeton** (`SETUP_TOKEN`) — für den ersten Schritt im Browser.
+- **Einrichtungs-Link** — unter Windows öffnet sich die Einrichtungsseite am Ende
+  der Installation automatisch im Browser. Unter Linux zeigt `install.sh` am Ende
+  einen einmaligen Link (`https://<ihre-box-adresse>/setup.html#<jeton>`), den Sie
+  im Browser eines Praxisgeräts öffnen. Den Link **nicht per Mail oder Chat weitergeben**
+  (er ist bis zum Anlegen des Inhaber-Kontos gültig). Als Notlösung lässt sich der Jeton
+  auch manuell aus der `.env` (`SETUP_TOKEN`) auslesen und auf `setup.html` eintragen.
 
 ---
 
@@ -220,8 +225,16 @@ die Geräte es **nicht** neu importieren.
 
 ## 5. Erster Start im Browser
 
-1. `https://<ihre-box-adresse>/setup.html` öffnen (z. B. `https://sonne-tal-42.praxura.de/setup.html` oder `https://praxis.home.arpa/setup.html`).
-2. Einrichtungs-Jeton aus §2.5 eingeben.
+1. **Einrichtungsseite öffnen:** Unter Windows öffnet sich die Einrichtungsseite
+   am Ende der Installation automatisch im Standardbrowser. Unter Linux den am
+   Ende von `install.sh` angezeigten Link (`https://<ihre-box-adresse>/setup.html#<jeton>`)
+   im Browser eines Praxisgeräts öffnen.
+   ⚠️ **Diesen Link nicht per Mail oder Chat weitergeben** — er ist bis zum
+   Anlegen des Inhaber-Kontos gültig.
+   *(Notlösung: `https://<ihre-box-adresse>/setup.html` direkt öffnen und den
+   Jeton aus der `.env` unter `SETUP_TOKEN` im Formular eintragen.)*
+2. Die Box prüft den Jeton aus dem Fragment automatisch (der Jeton wird nach dem
+   Laden sofort aus der Adresszeile entfernt und verlässt den Browser nicht).
 3. **Inhaber-Konto** anlegen (E-Mail, Passwort ≥ 12 Zeichen, Praxisname,
    Fachbereich). Es braucht **keine Bestätigungsmail** — die Box verschickt für
    Konten grundsätzlich keine Mails.

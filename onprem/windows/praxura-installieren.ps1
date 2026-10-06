@@ -249,6 +249,7 @@ if ($NurVorbereiten) {
 
 # ── 6  install.sh ────────────────────────────────────────────────────────────
 Log '[6/11] Einrichtung der Box (install.sh)'
+$installiertJetzt = $false
 if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
   Ok 'Box ist schon eingerichtet (.env vorhanden) — install.sh wird NICHT erneut ausgefuehrt'
 } else {
@@ -260,10 +261,11 @@ if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
   Log '    Kanal:               Enter (beta) fuer die Testphase'
   Log '    Sicherungsziel:      siehe Schritt 11 unten — fuer den Anfang leer lassen geht auch'
   Log ''
-  & wsl.exe -d $Distro -u root -- bash "$BoxPfad/install.sh"
+  & wsl.exe -d $Distro -u root -- env PRAXURA_BROWSER_OEFFNEN=1 bash "$BoxPfad/install.sh"
   if ($LASTEXITCODE -ne 0) {
     Fehler 'install.sh ist nicht durchgelaufen' "Rueckgabe $LASTEXITCODE" "Meldung oben lesen; Protokoll: wsl -d $Distro -- cat $BoxPfad/install.log"
   }
+  $installiertJetzt = $true
 }
 $siteUrl = BoxEnv 'SITE_URL'
 $hostName = ($siteUrl -replace '^https://', '').Trim().TrimEnd('/')
@@ -399,3 +401,33 @@ if ($lanIp) {
 }
 Log '  ════════════════════════════════════════════════════════════════'
 Log "  Protokoll: $LogDatei"
+
+# hosts-Eintrag (Schritt 9) ist dann schon gesetzt, deshalb erst am Ende.
+if ($installiertJetzt) {
+  $jeton = BoxEnv 'SETUP_TOKEN'
+  if ($jeton) {
+    # Im acmedns-Modus kann das Let's-Encrypt-Zertifikat direkt nach der
+    # Installation noch fehlen; Caddy bricht TLS dann ab und der Browser
+    # zeigt nicht einmal "trotzdem fortfahren". Bis zu ~120 s auf /health warten.
+    $bereit = $false
+    for ($i = 0; $i -lt 24; $i++) {
+      try {
+        $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 -Uri "$siteUrl/health" -ErrorAction Stop
+        if ($r.StatusCode -eq 200) { $bereit = $true; break }
+      } catch {
+        # Noch nicht bereit oder TLS-Handshake noch nicht moeglich
+      }
+      Start-Sleep -Seconds 5
+    }
+    if (-not $bereit) {
+      Warn 'Die Seite ist evtl. noch nicht bereit — in 1-2 Minuten im Browser neu laden (F5).'
+    }
+    Log '  Die Einrichtung oeffnet sich jetzt im Browser.'
+    try {
+      Start-Process "$siteUrl/setup.html#$jeton"
+    } catch {
+      Warn "Browser liess sich nicht oeffnen — Link: $siteUrl/setup.html (Jeton steht in .env unter SETUP_TOKEN)"
+    }
+  }
+}
+

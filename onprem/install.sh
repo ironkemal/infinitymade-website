@@ -953,11 +953,17 @@ while true; do
   [ "$dek_bestaetigt" = "GESICHERT" ] && break
   log "  Nicht akzeptiert ('$dek_bestaetigt') — bitte exakt GESICHERT eintippen, erst NACHDEM der Schlüssel oben in einen Tresor/zweiten Datenträger kopiert wurde."
 done
-reveal_once ""
-reveal_once "  Einrichtungs-Jeton für den Assistenten (einmalig, NICHT in install.log):"
-reveal_once ""
-reveal_once "    ${SETUP_TOKEN}"
-reveal_once ""
+if [ "${PRAXURA_BROWSER_OEFFNEN:-}" = "1" ]; then
+  log ""
+  log "  Der Browser öffnet sich am Ende der Einrichtung automatisch."
+  log ""
+else
+  reveal_once ""
+  reveal_once "  Einrichtung im Browser öffnen (Link einmalig, NICHT in install.log):"
+  reveal_once ""
+  reveal_once "    ${SITE_URL}/setup.html#${SETUP_TOKEN}"
+  reveal_once ""
+fi
 log "  Weiter im Browser:     ${SITE_URL}/login.html"
 log ""
 log "  Ablauf dieser Einrichtung: $LOG_FILE (ohne Geheimnisse)"
