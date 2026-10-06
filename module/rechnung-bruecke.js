@@ -44,7 +44,7 @@
  */
 
 import { leistungsartVorschlag, zeilenSteuerVon } from './rechnung-steuer.js?v=20260816';
-import { bgFehltFuerRechnung, bgAusZeile } from './bg-angaben.js?v=20261006b';
+import { bgFehltFuerRechnung, bgAusZeile } from './bg-angaben.js?v=20261006h';
 
 /** Rezeptarten, die nicht über die Kasse laufen. */
 const PRIVATE_ARTEN = ['privat', 'selbstzahler', 'bg'];

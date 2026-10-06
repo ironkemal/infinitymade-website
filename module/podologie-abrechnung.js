@@ -64,6 +64,7 @@ import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20261001b';
 import { searchHeilmittel, heilmittelOptionsHtml } from '../katalog-suche.js?v=20261001a';
 import { statusBadge as abrStatusBadge, oeffneStatusDialogFuer } from './abrechnungsstatus.js?v=20261003c';
 import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20261006d';
+import { bgKostenzusageHinweis } from './bg-angaben.js?v=20261006h';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { loadDgIcdRules, getDgIcdRules } from './diagnosegruppen-regeln.js?v=20261001b';
 import { leiteBehandlungsbeginnAb } from './behandlungsbeginn.js?v=20260920s';
@@ -572,6 +573,8 @@ async function loadPodologieBilling() {
     }
     // Absetzungsgrund = Arbeitsanweisung für die Korrektur, gehört an die Zeile.
     if (v.absetzung_grund) alerts.push({ type: 'danger', msg: `Kasse: ${v.absetzung_grund.split('\n')[0]}` });
+    const kz = bgKostenzusageHinweis(v);   // BG: ohne Kostenzusage zahlt die BG nicht — vor der Behandlung warnen (M2.2)
+    if (kz) alerts.push({ type: 'warn', msg: kz });
     return alerts;
   }
 

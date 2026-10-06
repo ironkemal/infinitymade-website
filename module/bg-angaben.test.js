@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BG_FELDER, bgAusWerte, bgFehltFuerRechnung, bgHinweiseBeimSpeichern, bgEmpfaengerBlock, bgAusZeile, EINVERSTAENDNIS_TEXT } from './bg-angaben.js';
+import { BG_FELDER, bgAusWerte, bgFehltFuerRechnung, bgHinweiseBeimSpeichern, bgEmpfaengerBlock, bgAusZeile, bgKostenzusageHinweis, EINVERSTAENDNIS_TEXT } from './bg-angaben.js';
 
 const VOLL = {
   traeger_name: 'BG Holz und Metall', traeger_anschrift: 'Musterstr. 1\n12345 Musterstadt',
@@ -63,4 +63,13 @@ test('bgAusZeile liest die bg_*-Spalten, Datum auf 10 Zeichen, null bleibt null'
   assert.equal(z.unfalltag, '2026-09-15');
   assert.equal(z.aktenzeichen, null);
   assert.equal(bgAusZeile(null).traeger_name, null);
+});
+
+test('Kostenzusage-Hinweis: nur bei BG ohne Datum, sonst null', () => {
+  assert.match(bgKostenzusageHinweis({ rezeptart: 'bg' }), /Kostenzusage der BG fehlt/);
+  assert.match(bgKostenzusageHinweis({ rezeptart: 'bg', bg_kostenzusage_datum: '  ' }), /vor der Behandlung/);
+  assert.equal(bgKostenzusageHinweis({ rezeptart: 'bg', bg_kostenzusage_datum: '2026-09-20' }), null);
+  assert.equal(bgKostenzusageHinweis({ rezeptart: 'privat' }), null);
+  assert.equal(bgKostenzusageHinweis({}), null);
+  assert.equal(bgKostenzusageHinweis(null), null);
 });

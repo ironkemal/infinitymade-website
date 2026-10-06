@@ -38,7 +38,7 @@
     "trigger": 92,
     "index": 313,
     "auth_trigger": 1,
-    "storage_bucket": 5,
+    "storage_bucket": 6,
     "publication_uye_tablo": 1,
     "extension": 8,
     "rls_kapali_tablolar": [
@@ -54,5 +54,5 @@
   "_hinweis_0066": "0066_prescriptions_clientrechte (guvenlik M16-5, 05.10.2026): +1 Funktion (pruefe_prescriptions_clientrechte, SECURITY INVOKER), +1 Trigger (trg_a_prescriptions_clientrechte BEFORE INSERT/UPDATE/DELETE). Kein Tabelle/Policy/Index. PHYSISCH gemessen als Delta auf der lokalen Kette 0000-0065 -> 0000-0066 (fonksiyon 98->99, trigger 91->92).",
   "_hinweis_0067": "0067_prescriptions_rezeptart_bg (KHS M2.1, 06.10.2026): nur CHECK prescriptions_rezeptart_check erweitert (+bg). Keine Funktion/Trigger/Policy/Index/Tabelle -> alle Zaehler unveraendert (nachgerechnet nach README Kural 6 dritter Weg, nicht physisch gemessen; Zaehler/gemessen_am bleiben).",
   "_hinweis_0068": "0068_prescriptions_bg_angaben (KHS M2.2, 06.10.2026): +7 Spalten auf prescriptions (bg_*), +1 CHECK (prescriptions_bg_laengen_check), invoices_invoice_type_check +bg. Keine Funktion/Trigger/Policy/Index/Tabelle -> alle Zaehler unveraendert (nachgerechnet nach README Kural 6 dritter Weg, nicht physisch gemessen).",
-  "_hinweis_0069": "0069_praxis_stempel_branding (KHS M2.4, 06.10.2026): +2 Spalten profiles (praxis_stempel_path, praxis_inhaber), +2 CHECK, Bucket praxis-stempel (storage.buckets) + 4 Policies im Schema STORAGE (schema-zaehler zaehlt nur public -> rls_policy unveraendert). Keine Funktion/Trigger/Index/Tabelle in public -> alle Zaehler unveraendert (nachgerechnet, README Kural 6 dritter Weg)."
+  "_hinweis_0069": "0069_praxis_stempel_branding (KHS M2.4, 06.10.2026): +2 Spalten profiles (praxis_stempel_path, praxis_inhaber), +2 CHECK, +1 Bucket praxis-stempel (storage.buckets) und 4 Policies im Schema STORAGE. Der Zaehler storage_bucket (SELECT count(*) FROM storage.buckets, OHNE Schemafilter) steigt 5 -> 6 (O-170: der erste Hinweistext hatte das uebersehen); rls_policy (nur public) und alle anderen Zaehler bleiben. Nachgerechnet, nicht physisch gemessen (README Kural 6 dritter Weg)."
 }

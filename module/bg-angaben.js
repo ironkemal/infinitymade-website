@@ -105,3 +105,14 @@ export function bgAusZeile(rx = {}) {
   return bgAusWerte(Object.fromEntries(Object.entries(w).map(([k, v]) => [k, v == null ? v : String(v).slice(0, f10(k) ? 10 : undefined)])));
 }
 const f10 = (key) => !!BG_FELDER.find(f => f.key === key)?.datum;
+
+/**
+ * Hinweis an der Verordnungszeile VOR der Behandlung (podoloji 06.10.2026): ohne Kostenzusage
+ * zahlt die BG nicht (ZFD-Merkblatt) — und bei der Rechnung ist die Behandlung schon erbracht.
+ * Warnt, blockiert nie. `v` = Verordnungszeile (Spalten `bg_*`, Alias aus `ausTopf` bleiben erhalten).
+ * @returns {?string}
+ */
+export function bgKostenzusageHinweis(v) {
+  if (String(v?.rezeptart ?? '').trim().toLowerCase() !== 'bg') return null;
+  return String(v?.bg_kostenzusage_datum ?? '').trim() ? null : 'Kostenzusage der BG fehlt — vor der Behandlung einholen';
+}

@@ -5027,7 +5027,7 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 17 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-146 · O-156 · O-158 · **O-166** · **O-168** |
+| `offen` | 18 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-146 · O-156 · O-158 · **O-166** · **O-168** · **O-170** (06.10.2026) |
 | `geplant` | 27 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 · **O-155** (K2b, kısmi) · **O-159** · **O-161** · **O-162** · **O-163** · **O-164** · **O-165** · **O-157** (K2b.14) · **O-169** (K-20) |
 | 🟡 `kısmen gelöst` | 25 | O-01 · O-02 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · O-116 · O-118 · O-120 · O-125 · O-126 · **O-123** · **O-142** · **O-144** · **O-151** |
 | `gelöst` | 84 | O-06 · O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-105 · O-106 · O-109 · O-114 · O-117 · O-122 · O-124 · O-130 · O-131 · O-133 · O-140 · O-143 · **O-03** · **O-09** · **O-107** · **O-129** · **O-136** · **O-147** · **O-148** · **O-149** · **O-150** · **O-152** · **O-153** · **O-154** · **O-160** |
@@ -5406,3 +5406,31 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 | **Kutuda ne olur** | **Normal:** jeton bellekte; ömrü dolunca ya da restart'ta yenisi alınır. **İnternet yok:** Azure'a zaten çıkılamaz → KI düğmeleri pasif, kutunun geri kalanı çalışır. **Merkez kapalı:** eldeki jetonun ömrü kadar (≤90 dk) KI çalışır, sonra pasif. **Sınır doldu / kutu iptal / lisans salt-okunur (K9):** merkez jeton vermez → ≤90 dk'da KI pasif. **429 (TPM):** istek kuyruğa, kullanıcıya açık mesaj. Entra jetonu süresi dolmadan **geri çekilemez** (doğrulanmalı) → sızan jetonun zarar penceresi ömrü kadar, maliyeti TPM ile sınırlı. ⚠️ Bugün `azureClient.js:38-40` jeton/anahtar yokken üretimde `throw` ediyor → düzeltilmeden jeton modu kutuyu bozar |
 | **Çözüm** | **Şartlar (K-20'nin uygulama kapısı):** (1) **Jeton yalnız süreç belleğinde** — disk, `.env`, DB, yedek ve tanılama paketine girmez. (2) **Kutu kimliği = K-18'in tek Ed25519 çifti** (O-161); özel anahtar kalıcı volume'da ayrı dosya, `0600`, yalnız `api`'ye mount; `.env`/DB/tanılama paketine girmez. Merkez yalnız açık anahtarı tutar; istek imzalı + zaman damgalı. (3) **Endpoint TAM host adıyla, image'daki izin listesine karşı denetlenir** (joker yok) — jeton cevabı endpoint taşısa bile; ele geçirilmiş merkez maskeli metni başka hosta yönlendiremez. Merkez URL'si env'den (tip C yok). (4) **Kutular için ayrı service principal**, rolü yalnız o tek Azure OpenAI kaynağında **özel rol** (yalnız chat/completions data action); SaaS VPS'teki mevcut KI ayrı kimlik. (5) **`store:false`**; Responses/Assistants/Files/Batch/stored completions kullanılmaz, kaynakta stateful özellikler kapalı. Paylaşılan kaynakta bir kutunun başka praksisin saklanmış içeriğini okuması (mandant sınırı) böyle kapanır. (6) **Sınır merkezin verdiği jeton sayısına dayanır**; kutunun bildirdiği toplu kullanım (görev + token in/out, jeton isteğine eklenir, hasta verisi yok) yalnız bilgi. v1: kutu başına sabit aylık sınır, Stripe/kredi yok, beta süresince ücretsiz. (7) **TPM düşük + budget alert → merkezde otomatik jeton kesme**; gece Azure toplamı ile verilen jeton/bildirilen kullanım karşılaştırılır. (8) SP sırrı yalnız merkezde (G2 ikinci cümlesi); kutu Entra'ya hiç çıkmaz. (9) Jeton ucu `merkez/` VPS'inde — SaaS VPS'te değil (O-159), Vercel `api/`'de değil (G8), n8n'de değil (G3). (10) `direkt` (BYO) önceliklidir ve silinmez. (11) Açılış sırası: series-scheduler + rezept-normalize önce; mail taslakları (appointment-confirm, b2c, b2b) avukat cevabından sonra. Betalar kutuya `AI_MODE=aus` ile geçer. **Görev:** Faz 3.5 (yönetilen AI: jeton ucu + sınır + bekçi) · Faz 1.3 / O-135 (anahtar kaynağı soyutlaması) · M4.1 (`AI_*` okuma + `throw` kaldırma). **KHS:** 3b.4 (merkez jeton ucu, Hat K) · M4.11 (kutu jeton modu, Hat M) · K2b.17 (tek kutu kimliği, Hat K) · §5 ORG (avukat, Microsoft, Azure kurulumu, belgeler); tutanak `konsey/tutanak/2026-10-05-ki-tek-hesap-jeton.md` |
 | **Durum** | `geplant` (K-20, 05.10.2026). Uygulama öncesi Microsoft belgesinden doğrulanacak: Entra jeton ömrü ve erken iptal edilemezliği · özel rolün yalnız chat/completions'a kısıtlanabildiği · diagnostic loglarda çağıran kimliğinin görünüp görünmediği |
+
+---
+
+## 7AD — KHS M2 (06.10.2026): Migrationen 0067–0069 + Einrichtungsschritt „Praxisangaben"
+
+> Nachträgliche Prüfung (Commits `8967ecc` · `d2da247` · `e14697a` · `9726ebc`). Ergebnis
+> insgesamt GEÇER: 0067/0068 nur nullable Spalten + erweiterte CHECKs (Expand, `:stable`
+> schreibt die neuen Werte nie); 0069 läuft auf der Box (`storage.foldername` und
+> `storage.objects`-Policies stehen schon 13×/18× in `0000_baseline.sql`, `public.auth_tenant_id()`
+> in `0000_baseline.sql:257`, `storage.buckets(file_size_limit, allowed_mime_types)` nutzt die
+> Baseline bereits in Zeile 12498-12502 mit demselben `ON CONFLICT`); DSGVO-Löschkette kennt den
+> Bucket (`api-backend/dsgvo/klassifikation.js:610`, kein PHI). `POST /api/setup/branding`:
+> Typ G (Box-Seite), kein A/C/E/F; G1/G2/G3/G8 unberührt — neue Route in Express, nicht Vercel;
+> im SaaS tot, weil `tokenGueltig()` ohne `SETUP_TOKEN` immer `false` liefert
+> (`api-backend/setup/router.js:54-56`, Regel aus CLAUDE.md „SETUP_TOKEN — SET ETME" gilt weiter).
+> Kollision mit Kemals K2b am Router: keine sichtbare — letzter fremder Commit `d807c3e`
+> (02.10.) ist Vorfahre, `origin/main` hat nichts Neues unter `api-backend/setup/`. Einziger Fund:
+
+### O-170 — `_hinweis_0069` nennt 0069 zählerneutral, aber `storage_bucket` zählt `storage.buckets`: frische Box zeigt Selbstcheck rot 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | 0069 legt den Bucket `praxis-stempel` an. Der Zähler `storage_bucket` ist `SELECT count(*) FROM storage.buckets` — **nicht** auf `public` beschränkt. Erwartet bleibt 5, die Box hat danach 6 |
+| **Nerede** | `api-backend/db/schema-zaehler.js` (`storage_bucket`-Abfrage) · `api-backend/db/erwartete-zaehler.json` (`"storage_bucket": 5`, `_hinweis_0069`: „nur public gezählt … alle Zaehler unveraendert") · `api-backend/db/migrations/0069_praxis_stempel_branding.sql` (INSERT INTO storage.buckets) · Anzeige `api-backend/setup/router.js:113` |
+| **Tip** | D |
+| **Kutuda ne olur** | Jede frisch installierte oder auf 0069 aktualisierte Box meldet im Einrichtungs-/Statuspanel `kirmizi`: „Abweichung: storage_bucket soll=5 ist=6". Blockiert nicht (Dilim-2-Regel: Kontrollen zeigen, sperren nicht), aber ein roter Selbstcheck auf **jeder** Box ist Falschalarm — und lehrt Kunden und uns, Rot zu ignorieren. SaaS merkt nichts (dort läuft der Selbstcheck nicht gegen diese Erwartung) |
+| **Çözüm** | `builder`: in `erwartete-zaehler.json` `zaehler.storage_bucket` 5 → **6**, `_hinweis_0069` korrigieren (Bucket +1, `ON CONFLICT (id)` macht es auf frischer **und** aktualisierter Box genau +1; Policies in `storage` bleiben für `rls_policy` neutral — der Teil stimmt). `gemessen_am` bleibt, Wert ist nachgerechnet. Vor dem nächsten Release (0.5.0) erledigen. Lehre: genau die Falle, vor der Kural 6 seit 13.09.2026 warnt („`storage.buckets`-INSERT ist Daten, ändert aber den Zähler") — Argument für die offene Kapı-Hälfte von **O-108** (maschinenlesbares `-- ZAEHLER:` + Prüfung, dass bei `storage.buckets` im Diff der Wert sich ändert) |
+| **Durum** | 🔴 **offen** — gefunden 06.10.2026 in der Nachprüfung KHS M2 |
