@@ -498,6 +498,7 @@ services:
       # Container liest seine Umgebung nur beim Start, ein Wert, der erst
       # danach entsteht, kaeme hier nie an (Gegenlesen 11.09.2026).
       SETUP_TOKEN: ${SETUP_TOKEN:-}
+      SETUP_TOKEN_SEIT: ${SETUP_TOKEN_SEIT:-}
 
       TZ: ${TZ:-Europe/Berlin}
 

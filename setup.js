@@ -75,6 +75,8 @@ const T = {
     closedTitle: 'Bereits eingerichtet',
     closedSub: 'Diese Box hat bereits ein Inhaber-Konto. Die Ersteinrichtung läuft nur einmal.',
     closedLoginBtn: 'Zur Anmeldung',
+    abgelaufenTitle: 'Einrichtungslink abgelaufen',
+    abgelaufenSub: 'Der Link gilt 14 Tage. Einen neuen erzeugt auf dem Server: sudo bash install.sh --neuer-jeton (Windows-PC: praxura-installieren.ps1 -NeuerJeton).',
   },
 };
 
@@ -130,6 +132,19 @@ const stepSmtp = document.getElementById('stepSmtp');
 const stepBranding = document.getElementById('stepBranding');
 const stepDone = document.getElementById('stepDone');
 const stepClosed = document.getElementById('stepClosed');
+
+// K2b.7a: Endbildschirm für "bereits eingerichtet" (410 vom Tor, oder 404 —
+// nach dem Abschluss leeren install.sh/update.sh SETUP_TOKEN, dann hängt
+// server.js den Router gar nicht mehr ein) und für "Link abgelaufen" (410 mit
+// abgelaufen:true, 14 Tage). Derselbe Abschnitt, nur andere Texte.
+function zeigeGeschlossen(abgelaufen) {
+  verstecken(stepToken, stepOwner, stepSmtp, stepBranding, stepDone);
+  document.getElementById('closedTitle').textContent = abgelaufen ? T[lang].abgelaufenTitle : T[lang].closedTitle;
+  document.getElementById('closedSub').textContent = abgelaufen ? T[lang].abgelaufenSub : T[lang].closedSub;
+  // style statt hidden: der Knopf hat inline display:block (setup.html)
+  document.getElementById('closedLoginBtn').style.display = abgelaufen ? 'none' : 'block';
+  stepClosed.hidden = false;
+}
 const tokenAuto = document.getElementById('tokenAuto');
 const tokenForm = document.getElementById('tokenForm');
 
@@ -165,8 +180,7 @@ async function pruefeJeton(token) {
     if (res.status === 410) {
       tokenAuto.hidden = true;
       tokenForm.hidden = false;
-      verstecken(stepToken, stepOwner, stepSmtp, stepBranding, stepDone);
-      stepClosed.hidden = false;
+      zeigeGeschlossen(!!data.abgelaufen);
       return;
     }
     if (!res.ok) {
@@ -204,11 +218,11 @@ async function pruefeJeton(token) {
 async function init() {
   try {
     const res = await fetch(API_BASE + '/setup/status');
+    // 404: Router nicht eingehängt (SETUP_TOKEN nach Abschluss geleert, K2b.7a)
+    if (res.status === 404) { zeigeGeschlossen(false); return; }
     const data = await res.json();
-    if (data.abgeschlossen) {
-      verstecken(stepToken, stepOwner, stepSmtp, stepBranding, stepDone);
-      stepClosed.hidden = false;
-    }
+    if (data.abgeschlossen) zeigeGeschlossen(false);
+    else if (data.abgelaufen) zeigeGeschlossen(true);
     // abgeschlossen:false, verfuegbar:false (Owner existiert, Abschluss fehlt)
     // zeigt trotzdem stepToken — der Jeton bleibt der Ausweis, um zurück ins
     // Verfahren zu kommen; /verify entscheidet dann per ownerAngelegt, wohin.
@@ -264,8 +278,7 @@ document.getElementById('ownerForm').addEventListener('submit', async (e) => {
     const data = await res.json().catch(() => ({}));
 
     if (res.status === 410) {
-      verstecken(stepToken, stepOwner, stepSmtp, stepBranding, stepDone);
-      stepClosed.hidden = false;
+      zeigeGeschlossen(!!data.abgelaufen);
       return;
     }
     if (!res.ok) {
@@ -324,8 +337,7 @@ document.getElementById('brandingForm').addEventListener('submit', async (e) => 
     });
     const data = await res.json().catch(() => ({}));
     if (res.status === 410) {
-      verstecken(stepToken, stepOwner, stepSmtp, stepBranding, stepDone);
-      stepClosed.hidden = false;
+      zeigeGeschlossen(!!data.abgelaufen);
       return;
     }
     if (!res.ok) {

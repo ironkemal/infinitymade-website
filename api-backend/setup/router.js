@@ -35,6 +35,7 @@ import { rlsNegativTest, verschluesselungsTest } from './pruefungen.js';
 import { KUTU_OWNER_PLAN } from '../lib/dagitim.js';
 import { brandingFelderPruefen } from './branding-felder.js';
 import { pruefePasswort } from '../lib/passwort-regel.js';
+import { setupKapisi, jetonAbgelaufen } from './kapi.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -87,15 +88,23 @@ async function istAbgeschlossen() {
   return data.abgeschlossen_am !== null;
 }
 
+// K2b.7a: EIN Tor vor allen Routen (kapi.js) — MUSS die erste Schicht bleiben,
+// darunter definierte Routen sind damit automatisch nach Abschluss/Ablauf zu
+// (tools/onprem-setup-kapi.test.js prüft das am Router-Stack).
+router.use(setupKapisi({ istAbgeschlossen }));
+
 router.get('/status', async (req, res) => {
   const { data } = await supabase
     .from('praxura_setup')
     .select('verbraucht_am, abgeschlossen_am')
     .eq('id', 1)
     .maybeSingle();
+  const abgeschlossen = !!(data && data.abgeschlossen_am !== null);
   res.json({
     verfuegbar: !data || data.verbraucht_am === null,
-    abgeschlossen: !!(data && data.abgeschlossen_am !== null),
+    abgeschlossen,
+    // Nur zur Anzeige (setup.js) — das Tor ist setupKapisi, nicht dieses Feld.
+    abgelaufen: !abgeschlossen && jetonAbgelaufen(process.env.SETUP_TOKEN_SEIT),
   });
 });
 
@@ -160,7 +169,6 @@ async function billigePruefungenLaufen(ownerUserId) {
 // Testkonten in auth.users erzeugen (onprem-Konsultation, 12.09.2026).
 router.post('/verify', async (req, res) => {
   const { token, pruefungen } = req.body || {};
-  if (await istAbgeschlossen()) return res.status(410).json({ error: 'Bereits eingerichtet' });
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
 
   const ownerAngelegtErgebnis = await ownerAngelegt();
@@ -178,7 +186,6 @@ router.post('/verify', async (req, res) => {
 router.post('/owner', async (req, res) => {
   const { token, email, password, business_name, owner_first_name, owner_last_name, sector } = req.body || {};
 
-  if (await istAbgeschlossen()) return res.status(410).json({ error: 'Bereits eingerichtet' });
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
   // Owner existiert schon (Wiederaufnahme-Fall) — kein zweites Konto anlegen,
   // das Frontend haette hier gar nicht erst hinschicken sollen.
@@ -261,10 +268,10 @@ let letzterTestmailVersand = 0;
 
 router.post('/test-smtp', async (req, res) => {
   const { token } = req.body || {};
-  // Bewusst NUR tokenGueltig(), kein istAbgeschlossen()-Check: genau nach der
-  // Owner-Anlage (Schritt 2), noch VOR dem Abschluss (Schritt 4), will man
-  // die Mail testen koennen. Das Jeton bleibt die Pruefung, nicht der
-  // Setup-Fortschritt.
+  // Hier NUR tokenGueltig(): genau nach der Owner-Anlage (Schritt 2), noch VOR
+  // dem Abschluss (Schritt 4), will man die Mail testen koennen. NACH dem
+  // Abschluss ist die Route zu — das macht seit K2b.7a das Tor oben
+  // (setupKapisi, 410), vorher war sie mit dem Jeton weiter offen (S-50).
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
 
   if (!process.env.SMTP_HOST) {
@@ -349,8 +356,10 @@ router.post('/abschluss', async (req, res) => {
     .is('abgeschlossen_am', null)
     .select('id');
   if (error) return res.status(500).json({ error: 'Abschluss konnte nicht gespeichert werden.' });
-  // Leeres Ergebnis heisst "war schon abgeschlossen" — kein Fehler, derselbe
-  // Endzustand, also 200 statt 409 (Idempotenz: doppeltes Klicken ist harmlos).
+  // Leeres Ergebnis heisst "war schon abgeschlossen" (Wettlauf zweier
+  // gleichzeitiger Klicks) — derselbe Endzustand, also 200 statt 409. Ein
+  // späterer zweiter Klick endet seit K2b.7a schon am Tor (410); setup.js
+  // wertet die Antwort nicht aus und zeigt "Fertig" in beiden Fällen.
   res.json({ ok: true, bereitsAbgeschlossen: !zeile || zeile.length === 0 });
 });
 
@@ -360,7 +369,6 @@ router.post('/abschluss', async (req, res) => {
 // den Einstellungen. Schreibt nur eine Whitelist von Profilspalten des Owners (branding-felder.js).
 router.post('/branding', async (req, res) => {
   const { token } = req.body || {};
-  if (await istAbgeschlossen()) return res.status(410).json({ error: 'Bereits eingerichtet' });
   if (!tokenGueltig(token)) return res.status(401).json({ error: 'Ungültiges Jeton' });
 
   const { data: setupZeile } = await supabase

@@ -148,7 +148,7 @@ test('install.sh: set_env CADDY_TLS_MODUS acmedns nur nach acmedns-Prüfung, CAD
   // Erstes docker compose up -d (Befehlszeile in Schritt 13, die den caddy-Dienst startet)
   // Robuste Erkennung: Wir suchen nach der Befehlszeile `docker compose up -d` in Schritt 13 (nicht Hilfetexte/Meldungen in Schritt 0)
   const posSetEnvAcmedns = inhalt.search(/set_env\s+CADDY_TLS_MODUS\s+["']?acmedns["']?/);
-  const matchComposeUp = inhalt.search(/^\s*(if\s+!\s+)?docker\s+compose\s+up\s+-d/m);
+  const matchComposeUp = inhalt.search(/^\s*(if\s+!\s+)?docker\s+compose\s+up\s+-d(?!\s+(--no-deps\s+)?api\b)/m); // K2b.7a: 'up -d --no-deps api' (--neuer-jeton/Aufräumen) zählt nicht
   assert.ok(matchComposeUp !== -1, 'install.sh muss docker compose up -d enthalten');
   assert.ok(posSetEnvAcmedns < matchComposeUp, 'Erstes set_env CADDY_TLS_MODUS acmedns muss textlich VOR dem ersten echten docker compose up -d stehen');
 });

@@ -41,6 +41,7 @@ const BUNDLE_DATEILER = [
   'update.sh',
   'lib-health.sh',
   'lib-ip.sh',
+  'lib-setup-jeton.sh',
   'ip-melden.sh',
   'backup.sh',
   'restore.sh',

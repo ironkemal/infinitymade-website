@@ -1,7 +1,7 @@
 {
- "erzeugt": "2026-10-06",
- "dateien": 366,
- "funktionen": 3042,
+ "erzeugt": "2026-10-07",
+ "dateien": 367,
+ "funktionen": 3045,
  "module": [
   "abrechnung",
   "anamnese",
@@ -21001,6 +21001,50 @@
    "uiPfad": []
   },
   {
+   "name": "jetonAbgelaufen",
+   "kind": "function",
+   "file": "api-backend/setup/kapi.js",
+   "start": 22,
+   "end": 27,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "setupKapisi"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "setupKapisi",
+   "kind": "function",
+   "file": "api-backend/setup/kapi.js",
+   "start": 29,
+   "end": 48,
+   "lines": 20,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istAbgeschlossen",
+    "jetonAbgelaufen",
+    "json"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "stdinZeile",
    "kind": "function",
    "file": "api-backend/setup/owner-passwort-reset.mjs",
@@ -21090,8 +21134,8 @@
    "name": "tokenGueltig",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 55,
-   "end": 62,
+   "start": 56,
+   "end": 63,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -21109,8 +21153,8 @@
    "name": "ownerAngelegt",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 71,
-   "end": 79,
+   "start": 72,
+   "end": 80,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [
@@ -21130,8 +21174,8 @@
    "name": "istAbgeschlossen",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 80,
-   "end": 88,
+   "start": 81,
+   "end": 89,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [
@@ -21142,7 +21186,9 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
+   "calledBy": [
+    "setupKapisi"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -21151,8 +21197,8 @@
    "name": "schemaZaehlerUebersetzen",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 107,
-   "end": 115,
+   "start": 116,
+   "end": 124,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -21175,8 +21221,8 @@
    "name": "fmt",
    "kind": "arrow",
    "file": "api-backend/setup/router.js",
-   "start": 113,
-   "end": 114,
+   "start": 122,
+   "end": 123,
    "lines": 2,
    "spiegelHinweis": null,
    "tables": [],
@@ -21243,8 +21289,8 @@
    "name": "einfachUebersetzen",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 116,
-   "end": 123,
+   "start": 125,
+   "end": 132,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -21266,8 +21312,8 @@
    "name": "billigePruefungenLaufen",
    "kind": "function",
    "file": "api-backend/setup/router.js",
-   "start": 125,
-   "end": 151,
+   "start": 134,
+   "end": 160,
    "lines": 27,
    "spiegelHinweis": null,
    "tables": [
@@ -21730,6 +21776,7 @@
     "runZaaUpload",
     "savePositionOverride",
     "sendeAnServer",
+    "setupKapisi",
     "setzeStatus",
     "showPlanWall",
     "starteZahlungseingang",
@@ -118443,7 +118490,8 @@
     "zeichneVerlauf"
    ],
    "calledBy": [
-    "rendereNotizen"
+    "rendereNotizen",
+    "zeigeGeschlossen"
    ],
    "modules": [
     "abrechnung",
@@ -143707,8 +143755,8 @@
    "name": "applyLang",
    "kind": "function",
    "file": "setup.js",
-   "start": 84,
-   "end": 124,
+   "start": 86,
+   "end": 126,
    "lines": 41,
    "spiegelHinweis": null,
    "tables": [],
@@ -143730,8 +143778,8 @@
    "name": "setText",
    "kind": "arrow",
    "file": "setup.js",
-   "start": 87,
-   "end": 87,
+   "start": 89,
+   "end": 89,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -143748,11 +143796,36 @@
    "uiPfad": []
   },
   {
+   "name": "zeigeGeschlossen",
+   "kind": "function",
+   "file": "setup.js",
+   "start": 140,
+   "end": 147,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "block",
+    "verstecken"
+   ],
+   "calledBy": [
+    "init",
+    "pruefeJeton"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "zeigeMsg",
    "kind": "function",
    "file": "setup.js",
-   "start": 136,
-   "end": 139,
+   "start": 151,
+   "end": 154,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -143772,8 +143845,8 @@
    "name": "verstecken",
    "kind": "function",
    "file": "setup.js",
-   "start": 141,
-   "end": 143,
+   "start": 156,
+   "end": 158,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -143784,8 +143857,8 @@
    "calls": [],
    "calledBy": [
     "abschliessen",
-    "init",
     "pruefeJeton",
+    "zeigeGeschlossen",
     "zuBranding",
     "zuPruefungenUndAbschluss"
    ],
@@ -143797,9 +143870,9 @@
    "name": "pruefeJeton",
    "kind": "function",
    "file": "setup.js",
-   "start": 151,
-   "end": 202,
-   "lines": 52,
+   "start": 166,
+   "end": 216,
+   "lines": 51,
    "spiegelHinweis": null,
    "tables": [],
    "rpcs": [],
@@ -143812,6 +143885,7 @@
     "json",
     "testeSmtp",
     "verstecken",
+    "zeigeGeschlossen",
     "zeigeMsg"
    ],
    "calledBy": [],
@@ -143823,8 +143897,8 @@
    "name": "init",
    "kind": "function",
    "file": "setup.js",
-   "start": 204,
-   "end": 219,
+   "start": 218,
+   "end": 233,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -143836,7 +143910,7 @@
    "storage": [],
    "calls": [
     "json",
-    "verstecken"
+    "zeigeGeschlossen"
    ],
    "calledBy": [
     "initSentry"
@@ -143849,8 +143923,8 @@
    "name": "smtpZeige",
    "kind": "function",
    "file": "setup.js",
-   "start": 293,
-   "end": 295,
+   "start": 306,
+   "end": 308,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -143870,8 +143944,8 @@
    "name": "zuBranding",
    "kind": "function",
    "file": "setup.js",
-   "start": 301,
-   "end": 304,
+   "start": 314,
+   "end": 317,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -143891,8 +143965,8 @@
    "name": "wert",
    "kind": "arrow",
    "file": "setup.js",
-   "start": 311,
-   "end": 317,
+   "start": 324,
+   "end": 330,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -143950,8 +144024,8 @@
    "name": "pruefZeileZeichnen",
    "kind": "function",
    "file": "setup.js",
-   "start": 360,
-   "end": 369,
+   "start": 372,
+   "end": 381,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -143971,8 +144045,8 @@
    "name": "zuPruefungenUndAbschluss",
    "kind": "function",
    "file": "setup.js",
-   "start": 371,
-   "end": 408,
+   "start": 383,
+   "end": 420,
    "lines": 38,
    "spiegelHinweis": null,
    "tables": [],
@@ -143997,8 +144071,8 @@
    "name": "abschliessen",
    "kind": "function",
    "file": "setup.js",
-   "start": 410,
-   "end": 422,
+   "start": 422,
+   "end": 434,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -144022,8 +144096,8 @@
    "name": "testeSmtp",
    "kind": "function",
    "file": "setup.js",
-   "start": 429,
-   "end": 454,
+   "start": 441,
+   "end": 466,
    "lines": 26,
    "spiegelHinweis": null,
    "tables": [],
@@ -148589,7 +148663,7 @@
   {
    "name": "fmt",
    "orte": [
-    "api-backend/setup/router.js:113",
+    "api-backend/setup/router.js:122",
     "dashboard.js:3334",
     "dashboard.js:7803",
     "dashboard.js:9623",
@@ -148695,7 +148769,7 @@
     "dashboard.js:15126",
     "kalender.js:130",
     "onboarding.js:77",
-    "setup.js:204"
+    "setup.js:218"
    ],
    "aynalar": []
   },
@@ -148954,7 +149028,7 @@
     "module/anfrage-bearbeiten.js:171",
     "module/fahrtenbuch-regeln.js:280",
     "module/verordnung-pruefen-knopf.js:43",
-    "setup.js:311"
+    "setup.js:324"
    ],
    "aynalar": []
   },
@@ -149045,7 +149119,7 @@
    "orte": [
     "kalender.js:67",
     "login.js:51",
-    "setup.js:84"
+    "setup.js:86"
    ],
    "aynalar": []
   },

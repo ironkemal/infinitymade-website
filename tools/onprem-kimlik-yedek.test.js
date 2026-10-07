@@ -163,7 +163,8 @@ test('install.sh: Code wird nie per set_env geschrieben, nie als --code übergeb
   // --entrypoint true kayit kommt vor dem ersten docker compose up -d vor
   const posEntrypoint = inhalt.indexOf('--entrypoint true kayit');
   // nur Befehlszeilen zählen (Schritt 0 nennt `docker compose up -d` als Text in einer Meldung)
-  const posComposeUp = inhalt.search(/^\s*(if\s+!\s+)?docker\s+compose\s+up\s+-d/m);
+  // K2b.7a: 'up -d --no-deps api' (--neuer-jeton / Jeton-Aufräumen, vor Schritt 0 beendet) zählt nicht
+  const posComposeUp = inhalt.search(/^\s*(if\s+!\s+)?docker\s+compose\s+up\s+-d(?!\s+(--no-deps\s+)?api\b)/m);
   assert.ok(posEntrypoint !== -1, 'install.sh muss --entrypoint true kayit enthalten');
   assert.ok(posComposeUp !== -1, 'install.sh muss docker compose up -d enthalten');
   assert.ok(posEntrypoint < posComposeUp, '--entrypoint true kayit muss vor dem ersten docker compose up -d vorkommen');

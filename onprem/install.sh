@@ -21,6 +21,10 @@
 #  die Box braucht keinen Mailserver mehr (optional nur fuer Patientenmails,
 #  von Hand in .env, siehe .env.template §4).
 #
+#  07.10.2026 (K2b.7a): Jeton gilt 14 Tage (SETUP_TOKEN_SEIT); --neuer-jeton gibt
+#  einen neuen aus, solange die Einrichtung offen ist; wiederholter Lauf leert
+#  den Jeton nach Abschluss (lib-setup-jeton.sh).
+#
 #  Was dieses Skript TUT: Hardware/Software prüfen, .env erzeugen, Geheimnisse
 #  AUF DIESEM SERVER würfeln (G2 — keins davon kommt von uns oder geht an uns),
 #  ANON_KEY/SERVICE_ROLE_KEY aus JWT_SECRET ableiten (O-60 — NICHT würfeln),
@@ -89,25 +93,42 @@ env_get() {
 # shellcheck source=./lib-ip.sh
 source "$SCRIPT_DIR/lib-ip.sh"
 
-: > "$LOG_FILE"
-log "Praxura On-Premise — Einrichtung $(date '+%Y-%m-%d %H:%M:%S')"
-log ""
+# Einrichtungs-Jeton und Hygiene (K2b.7a, O-161 K2b.7)
+# shellcheck source=./lib-setup-jeton.sh
+source "$SCRIPT_DIR/lib-setup-jeton.sh"
+
+NEU=0
+NEUER_JETON=0
+for arg in "$@"; do
+  [ "$arg" = "--neu" ] && NEU=1
+  [ "$arg" = "--neuer-jeton" ] && NEUER_JETON=1
+done
+
+if [ "$NEU" -eq 1 ] && [ "$NEUER_JETON" -eq 1 ]; then
+  fail "Konflikt bei Optionen" "--neu und --neuer-jeton gleichzeitig gesetzt" "genau einen Modus wählen" \
+    "Nur einen Modus wählen: 'sudo bash install.sh --neu' (Neuinstallation) ODER 'sudo bash install.sh --neuer-jeton' (neuer Jeton)."
+fi
+
+if [ "$NEUER_JETON" -eq 1 ]; then
+  printf '\n─── %s (--neuer-jeton) ───\n' "$(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
+  log "Praxura On-Premise — Neuer Einrichtungs-Jeton $(date '+%Y-%m-%d %H:%M:%S')"
+  log ""
+else
+  : > "$LOG_FILE"
+  log "Praxura On-Premise — Einrichtung $(date '+%Y-%m-%d %H:%M:%S')"
+  log ""
+fi
 
 # Das Skript fragt mehrfach interaktiv (Adresse, TLS-Modus, Kanal, ggf. --neu-
 # Bestätigung, ggf. Docker-Installation). Aus einer Pipe heraus gestartet
 # (z. B. "curl … | sudo bash") liest `read` dann vom Installationsskript
 # selbst statt von einer Person — das Fehlermodell (K10: klare Meldung statt
 # stillem Abbruch) wäre komplett umgangen (Gegenlesen 11.09.2026, 3. Runde).
-if [ ! -t 0 ]; then
+if [ "$NEUER_JETON" -ne 1 ] && [ ! -t 0 ]; then
   fail "Kein interaktives Terminal" "Eingabe kommt nicht von einer Tastatur (z. B. aus einer Pipe)" \
     "direkter Aufruf in einem Terminal" \
     "Repository klonen und 'sudo bash install.sh' direkt in einer SSH-Sitzung ausführen, nicht über eine Pipe."
 fi
-
-NEU=0
-for arg in "$@"; do
-  [ "$arg" = "--neu" ] && NEU=1
-done
 
 # ── Schritt 0 — Wurzel + Idempotenz ─────────────────────────────────────────
 log "[0/17] Wurzel- und Wiederholungsprüfung"
@@ -116,9 +137,73 @@ if [ "$(id -u)" -ne 0 ]; then
     "Mit 'sudo bash install.sh' erneut starten."
 fi
 
+if [ "$NEUER_JETON" -eq 1 ]; then
+  if [ ! -f "$ENV_FILE" ]; then
+    fail "Box nie eingerichtet" "keine .env-Datei ($ENV_FILE)" "vorhandene .env-Datei" \
+      "Die Box wurde noch nie eingerichtet. Normale Installation mit 'sudo bash install.sh' starten."
+  fi
+
+  STATUS_ABG="$(setup_abgeschlossen_lesen)"
+  case "$STATUS_ABG" in
+    ja)
+      SITE_URL_JETON="$(env_get SITE_URL)"
+      [ -n "$SITE_URL_JETON" ] || SITE_URL_JETON="https://<adresse>"
+      fail "Einrichtung ist bereits abgeschlossen" "abgeschlossen in der Datenbank" "offene Einrichtung" \
+        "Anmeldung unter ${SITE_URL_JETON}/login.html; Passwort vergessen: 'sudo bash reset-owner-passwort.sh'."
+      ;;
+    unbekannt)
+      fail "Datenbank nicht lesbar" "Datenbank antwortet nicht oder praxura_setup fehlt" "lesbare Datenbank" \
+        "'docker compose up -d' ausführen und nach 1 Minute erneut versuchen."
+      ;;
+    nein)
+      : # Einrichtung ist offen — weiter
+      ;;
+  esac
+
+  JETON="$(setup_jeton_neu)"
+  if ! docker compose up -d --no-deps api >>"$LOG_FILE" 2>&1; then
+    fail "api-Dienst konnte nicht neu gestartet werden" "'docker compose up -d --no-deps api' fehlgeschlagen" "laufender api-Dienst" \
+      "Container-Protokolle prüfen: 'docker compose logs api'."
+  fi
+  ok "Neuer Einrichtungs-Jeton erzeugt und api neu gestartet"
+
+  if [ "${PRAXURA_BROWSER_OEFFNEN:-}" = "1" ]; then
+    log ""
+    log "  Der Browser öffnet sich gleich."
+    log ""
+  else
+    SITE_URL_JETON="$(env_get SITE_URL)"
+    [ -n "$SITE_URL_JETON" ] || SITE_URL_JETON="https://<adresse>"
+    reveal_once ""
+    reveal_once "  Einrichtung im Browser öffnen (Link einmalig, NICHT in install.log):"
+    reveal_once ""
+    reveal_once "    ${SITE_URL_JETON}/setup.html#${JETON}"
+    reveal_once ""
+    reveal_once "  Der Link gilt 14 Tage."
+    reveal_once ""
+  fi
+  exit 0
+fi
+
 if [ -f "$ENV_FILE" ] && [ "$NEU" -ne 1 ]; then
-  fail ".env existiert bereits" "$ENV_FILE" "kein .env, ODER --neu bewusst gesetzt" \
-    "Box neu starten: 'docker compose up -d'. Wirklich neu erzeugen (LÖSCHT DIE DATENBANK): 'bash install.sh --neu'."
+  AUFRAEUM_ERG="$(setup_jeton_aufraeumen)"
+  case "$AUFRAEUM_ERG" in
+    geleert)
+      ok "Einrichtungs-Jeton aus .env entfernt (Einrichtung abgeschlossen)"
+      docker compose up -d --no-deps api >>"$LOG_FILE" 2>&1 || warn "api-Dienst konnte nach Jeton-Bereinigung nicht neu gestartet werden"
+      ;;
+    unbekannt)
+      warn "Einrichtungsstatus nicht lesbar — Jeton bleibt"
+      ;;
+  esac
+
+  WAS_TUN="Box neu starten: 'docker compose up -d'."
+  if [ "$AUFRAEUM_ERG" = "offen" ]; then
+    WAS_TUN="$WAS_TUN Neuer Einrichtungslink: 'sudo bash install.sh --neuer-jeton'."
+  fi
+  WAS_TUN="$WAS_TUN Wirklich neu erzeugen (LÖSCHT DIE DATENBANK): 'bash install.sh --neu'."
+
+  fail ".env existiert bereits" "$ENV_FILE" "kein .env, ODER --neu bewusst gesetzt" "$WAS_TUN"
 fi
 
 NEU_BESTAETIGT=0
@@ -372,6 +457,7 @@ set_env S3_PROTOCOL_ACCESS_KEY_ID "$S3_KEY_ID"
 set_env S3_PROTOCOL_ACCESS_KEY_SECRET "$S3_KEY_SECRET"
 set_env DATA_ENCRYPTION_KEY "$DATA_ENCRYPTION_KEY"
 set_env SETUP_TOKEN "$SETUP_TOKEN"
+set_env SETUP_TOKEN_SEIT "$(date +%s)"
 set_env PG_AUTHENTICATOR_PASSWORD "$PG_AUTHENTICATOR_PASSWORD"
 set_env PG_AUTH_ADMIN_PASSWORD "$PG_AUTH_ADMIN_PASSWORD"
 set_env PG_STORAGE_ADMIN_PASSWORD "$PG_STORAGE_ADMIN_PASSWORD"
@@ -963,7 +1049,10 @@ else
   reveal_once ""
   reveal_once "    ${SITE_URL}/setup.html#${SETUP_TOKEN}"
   reveal_once ""
+  reveal_once "  Der Link gilt 14 Tage."
+  reveal_once ""
 fi
+log "  Link abgelaufen:       sudo bash install.sh --neuer-jeton"
 log "  Weiter im Browser:     ${SITE_URL}/login.html"
 log ""
 log "  Ablauf dieser Einrichtung: $LOG_FILE (ohne Geheimnisse)"

@@ -93,6 +93,19 @@
 	# ── Supabase-Dienste über Kong ──────────────────────────────────────────
 	# Bewusst OHNE /functions/*: keine Deno-Laufzeit in der Box (O-11), Kong
 	# selbst kennt die Route ohnehin nicht mehr (kong.yml, "kong-trim.py").
+	# K2b.7a (guvenlik S-50 (d), onprem O-161 K2b.7 Bed. 6): GoTrue-Verwaltung,
+	# Selbstregistrierung und Einladung sind von außen 404. `api` spricht GoTrue
+	# intern über kong:8000 (docker-compose.yml SUPABASE_URL), nicht über Caddy —
+	# es bricht also nichts; der Browser ruft keinen dieser Pfade auf (signUp/
+	# admin/invite gibt es nur in api-backend/, grep 07.10.2026). recover/verify/
+	# token bleiben offen. Benannter Matcher VOR @supabase: Caddy prüft handle-
+	# Blöcke mit benannten Matchern in Schreibreihenfolge. Pfadvergleich in Caddy
+	# ist ohne Groß-/Kleinschreibung. Test: tools/onprem-setup-kapi.test.js.
+	@authgesperrt path /auth/v1/admin* /auth/v1/signup* /auth/v1/invite*
+	handle @authgesperrt {
+		respond 404
+	}
+
 	@supabase path /auth/* /rest/* /realtime/* /storage/* /sso/* /.well-known/*
 	handle @supabase {
 		reverse_proxy kong:8000

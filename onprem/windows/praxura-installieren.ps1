@@ -11,6 +11,8 @@
 
  Aufruf (PowerShell ALS ADMINISTRATOR):
    powershell -ExecutionPolicy Bypass -File .\praxura-installieren.ps1
+   # Wenn die Einrichtung noch offen, der 14-Tage-Link aber abgelaufen ist:
+   powershell -ExecutionPolicy Bypass -File .\praxura-installieren.ps1 -NeuerJeton
 
  Entwurf mit dem onprem-Agenten, 02.10.2026 (onprem/REGISTER.md, K2.11):
    1  Vorpruefung: Windows 11 22H2+, Administrator, Virtualisierung, >= 8 GB
@@ -38,6 +40,8 @@ param(
   [switch]$Fortsetzen,
   # Nur Schritte 1-5 (Test/Fehlersuche): install.sh danach von Hand.
   [switch]$NurVorbereiten,
+  # Einrichtung noch offen, Link abgelaufen (14 Tage): neuen Einrichtungslink erzeugen und oeffnen.
+  [switch]$NeuerJeton,
   [string]$Repo = 'https://github.com/ironkemal/infinitymade-website.git',
   [string]$Zweig = 'main'
 )
@@ -106,6 +110,21 @@ Log "Praxura Praxis-Box — Windows-Einrichtung $(Get-Date -Format 'dd.MM.yyyy H
 if ($Fortsetzen) {
   Log '  (Fortsetzung nach Neustart)'
   Unregister-ScheduledTask -TaskName $AufgabeFortsetzen -Confirm:$false -ErrorAction SilentlyContinue
+}
+
+if ($NeuerJeton) {
+  & wsl.exe -d $Distro -u root -- env PRAXURA_BROWSER_OEFFNEN=1 bash "$BoxPfad/install.sh" --neuer-jeton
+  if ($LASTEXITCODE -ne 0) {
+    Fehler 'install.sh --neuer-jeton ist nicht durchgelaufen' "Rueckgabe $LASTEXITCODE" "Meldung oben lesen; Protokoll: wsl -d $Distro -- cat $BoxPfad/install.log"
+  }
+  $siteUrl = BoxEnv 'SITE_URL'
+  $jeton = BoxEnv 'SETUP_TOKEN'
+  try {
+    Start-Process "$siteUrl/setup.html#$jeton"
+  } catch {
+    Warn "Browser liess sich nicht oeffnen — Link: $siteUrl/setup.html (Jeton steht in .env unter SETUP_TOKEN)"
+  }
+  exit 0
 }
 
 # ── 1  Vorpruefung ───────────────────────────────────────────────────────────

@@ -684,6 +684,30 @@ else
   fi
 fi
 
+# ── Schritt 8b — Einrichtungs-Jeton aufräumen (K2b.7a, O-161 K2b.7) ─────────
+# Frische lib-setup-jeton.sh sourcen (wurde in Schritt 7 geschrieben).
+# Hygiene: Einrichtungs-Jeton aus .env leeren, wenn die Einrichtung abgeschlossen ist.
+# Kein eigenes 'up -d' nötig — das folgende up -d übernimmt die geänderte Umgebung.
+# Rollback (geri_yukle) stellt den alten Jeton wieder her — harmlos, Tor ist die DB.
+if [ -f "$SCRIPT_DIR/lib-setup-jeton.sh" ]; then
+  # shellcheck source=./lib-setup-jeton.sh
+  source "$SCRIPT_DIR/lib-setup-jeton.sh"
+  u_jeton_erg="$(setup_jeton_aufraeumen || true)"
+  case "$u_jeton_erg" in
+    geleert)
+      ok "Einrichtungs-Jeton aus .env entfernt (Einrichtung abgeschlossen)"
+      ;;
+    unbekannt)
+      warn "Einrichtungsstatus nicht lesbar — Jeton bleibt"
+      ;;
+    *)
+      :
+      ;;
+  esac
+else
+  warn "lib-setup-jeton.sh fehlt — Jeton-Bereinigung übersprungen"
+fi
+
 # ── Schritt 9 — pull + up ───────────────────────────────────────────────────
 # ⚠️ `up -d` burada `set -e`'ye bırakılmaz (`|| true` ile yumuşatılır): image
 # geçersizse (ör. bozuk bir :stable etiketi) komut doğrudan başarısız olur ve
