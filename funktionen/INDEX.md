@@ -3,7 +3,7 @@
 > Üretim: 2026-10-07 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3116 fonksiyon** (3045 JS · 63 bash · 8 ps1) · 378 dosya · 41 sidebar modülü
+**3136 fonksiyon** (3061 JS · 67 bash · 8 ps1) · 381 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -443,9 +443,10 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `schliessen` — cookie-consent.js:76 · module/abrechnung-freigabe.js:165 · module/abrechnungsstatus.js:596 · module/arzt-register.js:276 · module/rechnung-zahlungseingang.js:432 · module/verordnung-feldmarker.js:240 · module/zuzahlung-befreiung.js:151 · module/zuzahlung-korrektur.js:209
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:28 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · module/geld.js:48
 - `zeile` — module/branding-ui.js:39 · module/einrichtung-ring.js:40 · module/rechnung-druck.js:33 · module/verordnung-detail.js:273 · module/verordnung-detail.js:402 · module/verordnung-detail.js:459 · module/verordnung-pruefen-knopf.js:116
-- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:303 · api-backend/server.js:1449
+- `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:304 · api-backend/server.js:1450
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:70 · api-backend/ai/tasks/b2c-draft.js:59 · api-backend/ai/tasks/rezept-normalize.js:113 · api-backend/ai/tasks/rezept-ocr.js:166 · api-backend/ai/tasks/rezept-validate.js:9 · api-backend/ai/tasks/series-scheduler.js:118
 - `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:93 · api-backend/billing/api/artefakt-registry.js:23 · api-backend/billing/api/zuzahlungsforderung.routes.js:38 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73 · api-backend/merkez-istemci/signatur.js:22 · module/einwilligung-texte.js:421
+- `wert` — module/anfrage-bearbeiten.js:171 · module/fahrtenbuch-regeln.js:280 · module/hausbesuch-route.js:31 · module/mail-entwurf.js:41 · module/verordnung-pruefen-knopf.js:43 · setup.js:324
 - `zeichne` — module/abrechnung-auswahl.js:767 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:27 · module/patienten-einwilligung.js:494 · module/praxis-standort.js:115 · module/rezeptinfo-geld.js:355
 - `cleanup` — dashboard.js:6349 · dashboard.js:6378 · dashboard.js:6465 · dashboard.js:18761 · module/absagegrund-modal.js:81
 - `el` — module/arzt-register.js:251 · module/fussbefund.js:214 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:690
@@ -463,31 +464,34 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `speichern` — cookie-consent.js:69 · module/arzt-register.js:292 · module/fussbefund.js:732 · module/verordnung-detail.js:826
 - `v` — dashboard.js:12441 · dashboard.js:12463 · dashboard.js:12483 · dashboard.js:14912
 - `warn` — onprem/backup.sh:49 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
-- `wert` — module/anfrage-bearbeiten.js:171 · module/fahrtenbuch-regeln.js:280 · module/verordnung-pruefen-knopf.js:43 · setup.js:324
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:218
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208
 - `applyLang` — kalender.js:67 · login.js:51 · setup.js:86
 - `DE` — module/behandlungsbestaetigung.js:41 · module/patientenkarte.js:38 · module/verordnung-uebersicht.js:106
-- `env_wert` — onprem/backup.sh:84 · onprem/restore.sh:93 · onprem/update.sh:132
+- `env_wert` — onprem/backup.sh:142 · onprem/restore.sh:93 · onprem/update.sh:132
 - `f` — dashboard.js:1113 · module/branding.js:73 · module/kiosk.js:199
 
 ## Shell (onprem/)
 
 ### `onprem/backup.sh`
-- `log()` — Zeile 47 · calledBy: fehler, onprem/backup.sh
+- `log()` — Zeile 47 · calledBy: fehler, onprem/backup.sh, sicherung_alarm
 - `ok()` — Zeile 48 · calledBy: onprem/backup.sh
-- `warn()` — Zeile 49 · calledBy: onprem/backup.sh
+- `warn()` — Zeile 49 · calledBy: onprem/backup.sh, sicherung_alarm
 - `fehler()` — Zeile 50 · calledBy: onprem/backup.sh
-- `env_wert()` — Zeile 84 · calledBy: onprem/backup.sh
-- `temizle()` — Zeile 156
-- `sema_versiyonu_oku()` — Zeile 210 · calledBy: onprem/backup.sh
-- `parmak_izi_dek()` — Zeile 285 · calledBy: onprem/backup.sh
-- `parmak_izi_db_taraf()` — Zeile 305 · calledBy: onprem/backup.sh
-- `kanonischer_meta_text()` — Zeile 359 · calledBy: onprem/backup.sh
-- `meta_hmac_berechnen()` — Zeile 366 · calledBy: onprem/backup.sh
-- `json_deger()` — Zeile 399 · calledBy: onprem/backup.sh
-- `rotasyon_vor_migration()` — Zeile 443 · calledBy: onprem/backup.sh
-- `rotasyon_nightly()` — Zeile 446 · calledBy: onprem/backup.sh
+- `sicherung_alarm()` — Zeile 97 · calledBy: bitis, bitis_alarm
+- `sicherung_status_yaz()` — Zeile 135 · calledBy: sicherung_alarm
+- `env_wert()` — Zeile 142 · calledBy: onprem/backup.sh, sicherung_alarm
+- `bitis_alarm()` — Zeile 148
+- `temizle()` — Zeile 219 · calledBy: bitis
+- `bitis()` — Zeile 224
+- `sema_versiyonu_oku()` — Zeile 279 · calledBy: onprem/backup.sh
+- `parmak_izi_dek()` — Zeile 354 · calledBy: onprem/backup.sh
+- `parmak_izi_db_taraf()` — Zeile 374 · calledBy: onprem/backup.sh
+- `kanonischer_meta_text()` — Zeile 428 · calledBy: onprem/backup.sh
+- `meta_hmac_berechnen()` — Zeile 435 · calledBy: onprem/backup.sh
+- `json_deger()` — Zeile 468 · calledBy: onprem/backup.sh
+- `rotasyon_vor_migration()` — Zeile 512 · calledBy: onprem/backup.sh
+- `rotasyon_nightly()` — Zeile 515 · calledBy: onprem/backup.sh
 
 ### `onprem/install.sh`
 - sources: `lib-ip.sh`, `lib-setup-jeton.sh`, `||`, `lib-health.sh`
@@ -498,8 +502,8 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fail()` — Zeile 73 · calledBy: onprem/install.sh
 - `env_get()` — Zeile 93 · calledBy: onprem/install.sh
 - `set_env()` — Zeile 103 · calledBy: onprem/install.sh
-- `b64url()` — Zeile 637 · calledBy: sign_jwt
-- `sign_jwt()` — Zeile 638 · calledBy: onprem/install.sh
+- `b64url()` — Zeile 654 · calledBy: sign_jwt
+- `sign_jwt()` — Zeile 655 · calledBy: onprem/install.sh
 
 ### `onprem/ip-melden.sh`
 - sources: `lib-ip.sh`

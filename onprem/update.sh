@@ -670,6 +670,32 @@ if [ "$BEKLEYEN_VAR" -eq 0 ]; then
   ok "Bekleyen migration yok — bu gece yedek atlandı (RELEASE-STANDARD.md §4.3)."
 else
   log "  Bekleyen migration var (ya da belirsiz) — yedek alınıyor."
+  # O-175 (K2b.18 d, onprem + guvenlik 07.10.2026): şifrelemeden önce kurulmuş
+  # kutuda BACKUP_EMPFAENGER yok → yeni backup.sh fail-closed exit 1 verir,
+  # geri_yukle eski install.sh'ı geri koyar ve o `--sicherungsschluessel`
+  # bilmez — kutu her gece aynı yerde durur, eski backup.sh düz yedeğe devam
+  # eder. Bu ön kontrol backup.sh:89-104'ün AYNISI (age + biçim) ve onun
+  # YERİNE geçmez, ikinci katmandır. Anahtarı update.sh ASLA kendisi üretmez.
+  # Kurtarma yolu: yeni paketin install.sh'ı kutu kökünde ayrı adla kalır —
+  # manifest dışı olduğu için J3 sapma kontrolü görmez, geri_yukle dokunmaz
+  # (degisen_dosyalar'da yok); SCRIPT_DIR doğru çıkar. Schritt 11 'ok'da siler.
+  yedek_anahtar="$(env_wert BACKUP_EMPFAENGER)"
+  if ! command -v age >/dev/null 2>&1 || ! printf '%s' "$yedek_anahtar" | grep -qE '^age1[0-9a-z]{58}$'; then
+    KURTARMA_SKRIPT="$SCRIPT_DIR/install-sicherungsschluessel.sh"
+    KURTARMA_WEG="Einmal ausführen: sudo bash install-sicherungsschluessel.sh --sicherungsschluessel (im Box-Ordner)."
+    if ! { [ -f "$BUNDLE_TMP/bundle/install.sh" ] \
+           && cp "$BUNDLE_TMP/bundle/install.sh" "$KURTARMA_SKRIPT" && chmod 700 "$KURTARMA_SKRIPT"; }; then
+      warn "Rettungskopie install-sicherungsschluessel.sh konnte nicht angelegt werden"
+      KURTARMA_WEG="Aktuelles Paket über den Support anfordern (KURULUM.md §5)."
+    fi
+    geri_yukle
+    fehler "Sicherungsschlüssel fehlt — Update angehalten, Dateien zurückgerollt" \
+      "Box vor der Sicherungsverschlüsselung eingerichtet (BACKUP_EMPFAENGER leer/ungültig oder age fehlt)" \
+      "eingerichteter Sicherungsschlüssel (age1...)" \
+      "$KURTARMA_WEG Bis dahin gibt es KEINE Updates, und die nächtliche Sicherung dieser alten Version läuft UNVERSCHLÜSSELT. Siehe KURULUM.md §5."
+    durumu_yaz "yedek_basarisiz" "\"grund\": \"sicherungsschluessel_fehlt\","
+    exit 1
+  fi
   if ! PRAXURA_LOCK_HELD=1 bash "$SCRIPT_DIR/backup.sh" --sebep vor-migration; then
     # ⚠️ backup.sh kendi geri_yukle()'sine sahip değil (update.sh'ın dahili
     # fonksiyonu) — Schritt 7 bu noktada zaten dosya yazdı ve .env'i
@@ -766,6 +792,8 @@ if [ "$sonuc" = "ok" ]; then
   # erişilebilir olduğu kanıtlanmış tek an. `|| true`: önbellek tazeleme
   # başarısız olsa bile "ok" sonucu bundan etkilenmemeli.
   owner_bilgisini_guncelle || true
+  # O-175: Kurtarma kopyası işini gördü (anahtar artık var, güncelleme geçti).
+  rm -f "$SCRIPT_DIR/install-sicherungsschluessel.sh"
 fi
 
 if [ -n "$catisan_anahtarlar" ]; then

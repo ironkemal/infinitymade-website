@@ -474,6 +474,20 @@ Die Box erzeugt dann einen Schlüssel und zeigt ihn einmal an — oder Sie geben
 eigenen öffentlichen Schlüssel (`age1…`) ein. Wird ein vorhandener Schlüssel
 ersetzt, lassen sich ältere Sicherungen nur noch mit dem **alten** Schlüssel öffnen.
 
+**Box vor der Sicherungsverschlüsselung eingerichtet:** Auf so einer Box kennt das
+alte `install.sh` den Befehl oben noch nicht. Das automatische Update hält dann an,
+rollt alles zurück, schickt eine Mail und legt im Box-Ordner eine Kopie des neuen
+Programms ab. Bis Sie den Schlüssel einrichten, kommen **keine Updates**, und die
+nächtliche Sicherung der alten Version läuft **unverschlüsselt**. Einmal ausführen:
+```bash
+cd /opt/praxura/onprem && sudo bash install-sicherungsschluessel.sh --sicherungsschluessel
+```
+Das nächste Update läuft danach normal durch und entfernt die Kopie wieder.
+
+**Alarm-Mail:** Schlägt die nächtliche Sicherung fehl, bekommt die Inhaber-Adresse
+eine kurze Mail (nur wenn ein Mailserver eingerichtet ist; Wiederholung höchstens
+alle 7 Tage). Die Ursache steht in `backup.log` im Box-Ordner.
+
 **Wiederherstellen:**
 ```bash
 cd /opt/praxura/onprem && sudo bash restore.sh --von <ordnername>

@@ -16,7 +16,10 @@ test('backup.sh: fail-closed ohne BACKUP_EMPFAENGER/age, kein Schalter für Klar
   assert.match(s, /BACKUP_EMPFAENGER/);
   assert.match(s, /install\.sh --sicherungsschluessel/);
   assert.doesNotMatch(s, /UNVERSCHLUESSELT_ERLAUBT|ALLOW_PLAINTEXT|--ohne-verschluesselung/i);
-  assert.match(s, /trap [^\n]*EXIT INT TERM/, 'Arbeitsordner auch bei Ctrl+C/SIGTERM aufräumen');
+  assert.match(s, /trap bitis EXIT/, 'Aufräumen + Alarm bei EXIT (O-175)');
+  assert.match(s, /trap 'exit 130' INT/, 'Ctrl+C beendet, EXIT-Trap räumt auf');
+  assert.match(s, /trap 'exit 143' TERM/);
+  assert.match(s, /bitis\(\) \{ local rc=\$\?; set \+e \+u \+o pipefail; temizle; sicherung_alarm "\$rc"; exit "\$rc"; \}/, 'Exit-Code vor dem Aufräumen festhalten');
   assert.match(s, /\.backup-tmp/, 'Klartext nur auf der Box-Platte');
 });
 
@@ -69,4 +72,45 @@ test('install.sh: Backup-Timer wird erst NACH der GESICHERT-Bestätigung eingesc
   const iOn = s.indexOf('systemctl enable --now praxura-backup.timer');
   assert.ok(iBest > 0 && iOn > iBest, 'enable --now praxura-backup.timer muss nach der Bestätigung stehen');
   assert.equal((s.match(/enable --now praxura-backup\.timer/g) || []).length, 2, 'Befehl + Hinweistext, sonst nirgends');
+});
+
+// O-175 / K2b.18 d (07.10.2026) — alte Box ohne Schlüssel. WSL-Testbox gemessen:
+// nightly ohne Schlüssel → rc 1 + 1 Alarm, zweiter Lauf still, manuel ohne Alarm;
+// install-sicherungsschluessel.sh läuft ohne lib-Dateien; andere Modi brechen weiter ab.
+test('update.sh: Schlüssel-Vorprüfung VOR backup.sh, Rettungskopie VOR geri_yukle, Aufräumen bei ok', () => {
+  const s = lies('onprem', 'update.sh');
+  const iPruef = s.indexOf("grep -qE '^age1[0-9a-z]{58}$'");
+  const iKopie = s.indexOf('"$KURTARMA_SKRIPT" && chmod 700');
+  const iGeri = s.indexOf('geri_yukle', iKopie);
+  const iBackup = s.indexOf('bash "$SCRIPT_DIR/backup.sh" --sebep vor-migration');
+  assert.ok(iPruef > 0 && iPruef < iBackup, 'Vorprüfung vor backup.sh');
+  assert.ok(iKopie > iPruef && iGeri > iKopie && iGeri < iBackup, 'Kopie vor dem Zurückrollen');
+  assert.match(s, /durumu_yaz "yedek_basarisiz" "\\"grund\\": \\"sicherungsschluessel_fehlt\\","/, 'bekannter Status für das alte Image');
+  assert.match(s, /rm -f "\$SCRIPT_DIR\/install-sicherungsschluessel\.sh"/);
+  assert.doesNotMatch(s, /age-keygen/, 'update.sh erzeugt nie selbst einen Schlüssel');
+});
+
+test('backup.sh: Alarm-Trap vor der Schlüsselprüfung, nur nightly, fester Text, 7-Tage-Ruhe', () => {
+  const s = lies('onprem', 'backup.sh');
+  const iTrap = s.indexOf('trap bitis_alarm EXIT');
+  const iCheck = s.indexOf('BACKUP_EMPFAENGER nicht gesetzt');
+  assert.ok(iTrap > 0 && iTrap < iCheck, 'Trap muss den häufigsten Fehler (kein Schlüssel) fangen');
+  assert.match(s, /\[ "\$SEBEP" = "nightly" \] \|\| return 0/);
+  assert.match(s, /son-sicherung-bildirim\.json/);
+  assert.match(s, /7\*86400/);
+  assert.doesNotMatch(s, /\$'\x01'|\x01/, 'kein Steuerzeichen (Escape-Schaden, 07.10 gemessen)');
+  const m = lies('api-backend', 'setup', 'update-alarm-mail.mjs');
+  for (const k of ['sicherung_fehlgeschlagen', 'sicherungsschluessel_fehlt']) assert.match(m, new RegExp(`${k}:`));
+});
+
+test('install.sh: --sicherungsschluessel ohne lib-Dateien lauffähig, sonst source wie bisher', () => {
+  const s = lies('onprem', 'install.sh');
+  assert.match(s, /if \[ "\$_NUR_SCHLUESSEL" -ne 1 \] \|\| \[ -f "\$SCRIPT_DIR\/lib-ip\.sh" \]; then source/);
+  assert.match(s, /if \[ "\$_NUR_SCHLUESSEL" -ne 1 \] \|\| \[ -f "\$SCRIPT_DIR\/lib-setup-jeton\.sh" \]; then source/);
+  const a = s.indexOf('# ── Modus: --sicherungsschluessel');
+  const b = s.indexOf('exit 0\nfi', a);
+  const zweig = s.slice(a, b);
+  for (const fn of ['lan_ip_ermitteln', 'ip_modus_yaz', 'ip_timer_kur', '_sj_env_lesen', '_sj_env_setzen', 'setup_abgeschlossen_lesen', 'setup_jeton_aufraeumen', 'setup_jeton_neu']) {
+    assert.ok(!zweig.includes(fn), `Schlüsselzweig darf ${fn} (lib) nicht rufen`);
+  }
 });

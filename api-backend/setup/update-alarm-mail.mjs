@@ -26,11 +26,18 @@ const METINLER = {
   geri_alindi: 'Update fehlgeschlagen und automatisch zurückgerollt — die Box läuft wieder auf dem vorherigen Stand.',
   bakim_modu: 'Update fehlgeschlagen, Rückrollen ebenfalls nicht erfolgreich — die Box benötigt manuelle Hilfe.',
   yedek_basarisiz: 'Update NICHT durchgeführt: die Sicherung vor dem Update ist fehlgeschlagen.',
+  // O-175 (07.10.2026) — von backup.sh (nächtliche Sicherung), nicht von update.sh.
+  // guvenlik: nur fester Text, kein Log-Auszug, kein Pfad, kein Schlüssel.
+  sicherung_fehlgeschlagen: 'Die nächtliche Sicherung ist fehlgeschlagen — es gibt keine neue Sicherung.',
+  sicherungsschluessel_fehlt: 'Die nächtliche Sicherung wurde NICHT erstellt: es ist kein Sicherungsschlüssel eingerichtet. Einmal ausführen: sudo bash install.sh --sicherungsschluessel',
 };
 
+const SICHERUNG = new Set(['sicherung_fehlgeschlagen', 'sicherungsschluessel_fehlt']);
 const betreff = sonuc === 'ok'
   ? 'Praxura — Entwarnung: automatisches Update wieder ok'
-  : 'Praxura — automatisches Update braucht Aufmerksamkeit';
+  : SICHERUNG.has(sonuc)
+    ? 'Praxura — nächtliche Sicherung braucht Aufmerksamkeit'
+    : 'Praxura — automatisches Update braucht Aufmerksamkeit';
 const zeile = METINLER[sonuc] || `Automatisches Update: unbekannter Status "${sonuc}".`;
 
 const transport = createSMTPTransport();
@@ -44,7 +51,7 @@ try {
       <h2>${betreff}</h2>
       <p>${zeile}</p>
       <p style="color:#666;font-size:13px">Status: <code>${sonuc}</code> · ${new Date().toISOString()}</p>
-      <p style="color:#666;font-size:13px">Details: update.log auf dem Server.</p>
+      <p style="color:#666;font-size:13px">Details: ${SICHERUNG.has(sonuc) ? 'backup.log' : 'update.log'} auf dem Server.</p>
     </div>`,
   });
 } catch (err) {

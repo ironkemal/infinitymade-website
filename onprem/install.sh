@@ -108,18 +108,27 @@ set_env() {
     awk -v k="$key" 'BEGIN{FS=OFS="="} $1==k{$0=k"="ENVIRON["SET_ENV_VALUE"]} {print}' "$ENV_FILE" > "$tmp"
     mv "$tmp" "$ENV_FILE"
   else
+    # Alte .env ohne Zeilenende am Schluss: sonst klebte der Schlüssel an die letzte Zeile.
+    if [ -s "$ENV_FILE" ] && [ -n "$(tail -c 1 "$ENV_FILE")" ]; then printf '\n' >> "$ENV_FILE"; fi
     printf '%s=%s\n' "$key" "$SET_ENV_VALUE" >> "$ENV_FILE"
   fi
   unset SET_ENV_VALUE
 }
 
+# O-175: als install-sicherungsschluessel.sh auf einer ALTEN Box (update.sh legt
+# die Kopie ab) fehlen lib-ip.sh/lib-setup-jeton.sh evtl. — der Modus
+# --sicherungsschluessel braucht keine ihrer Funktionen. Jeder andere Modus
+# bricht wie bisher am fehlenden source ab.
+_NUR_SCHLUESSEL=0
+for _a in "$@"; do [ "$_a" = "--sicherungsschluessel" ] && _NUR_SCHLUESSEL=1; done
+
 # Geteilte IP-Ermittlung mit ip-melden.sh (K2b.6, O-161 L3)
 # shellcheck source=./lib-ip.sh
-source "$SCRIPT_DIR/lib-ip.sh"
+if [ "$_NUR_SCHLUESSEL" -ne 1 ] || [ -f "$SCRIPT_DIR/lib-ip.sh" ]; then source "$SCRIPT_DIR/lib-ip.sh"; fi
 
 # Einrichtungs-Jeton und Hygiene (K2b.7a, O-161 K2b.7)
 # shellcheck source=./lib-setup-jeton.sh
-source "$SCRIPT_DIR/lib-setup-jeton.sh"
+if [ "$_NUR_SCHLUESSEL" -ne 1 ] || [ -f "$SCRIPT_DIR/lib-setup-jeton.sh" ]; then source "$SCRIPT_DIR/lib-setup-jeton.sh"; fi
 
 NEU=0
 NEUER_JETON=0
@@ -223,6 +232,14 @@ if [ "$SICHERUNGSSCHLUESSEL" -eq 1 ]; then
   if [ ! -f "$ENV_FILE" ]; then
     fail "Box nie eingerichtet" "keine .env-Datei ($ENV_FILE)" "vorhandene .env-Datei" \
       "Die Box wurde noch nie eingerichtet. Normale Installation mit 'sudo bash install.sh' starten."
+  fi
+
+  # Gleiche Sperre wie update.sh/backup.sh: sonst könnte ein nächtliches Update
+  # .env während der Eingabe zurückrollen oder diese Rettungskopie löschen (O-175).
+  exec 9>"$SCRIPT_DIR/.praxura-update.lock"
+  if ! flock -n 9; then
+    fail "Update oder Sicherung läuft gerade" ".praxura-update.lock belegt" "freie Sperre" \
+      "Einige Minuten warten und erneut ausführen."
   fi
 
   # age-Werkzeuge prüfen und bei Bedarf installieren

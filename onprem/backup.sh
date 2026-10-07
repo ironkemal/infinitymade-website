@@ -81,9 +81,72 @@ if [ ! -f "$ENV_FILE" ]; then
   exit 0
 fi
 
+# ── Alarm bei nächtlichem Fehlschlag (O-175, onprem + guvenlik 07.10.2026) ────
+# Vorher war backup.log die einzige Spur — eine Box ohne Sicherung fiel niemandem
+# auf. Nur `--sebep nightly` und Exit≠0: vor-migration meldet update.sh selbst
+# (sonst zwei Mails), `exit 0`-Wege (keine .env, Lock belegt) sind kein Fehler.
+# Mail = fester Text aus update-alarm-mail.mjs (METINLER), NIE Log-/stderr-Auszug
+# (pg_dump-Fehler kann Zeileninhalt = PHI tragen), kein Pfad, kein Schlüssel.
+# Ein Fehlschlag beim Mailen ändert den Exit-Code nicht (Trap ruft kein exit).
+# ⚠️ KOPIE von update.sh mail_gonder_container() + bildirim_degerlendir()
+# (bewusst, onprem: lib-Datei hätte ein Bootstrap-Problem auf alten Boxen) —
+# gemeinsamer Vertrag ist die argv von setup/update-alarm-mail.mjs. Ändert sich
+# einer der beiden, den anderen mitziehen.
+SICHERUNG_NOTIFY_FILE="$SCRIPT_DIR/.praxura-stand/son-sicherung-bildirim.json"
+OWNER_MAIL_CACHE="$SCRIPT_DIR/.praxura-stand/owner-bilgi.json"
+sicherung_alarm() {
+  local rc="$1" sonuc eposta isim eski eski_epoch simdi
+  [ "$SEBEP" = "nightly" ] || return 0
+  simdi="$(date -u +%s)"
+  if [ "$rc" -eq 0 ]; then
+    # „ok" nur nach einer wirklich fertigen Sicherung (temizlendi=1 nach dem mv) —
+    # ein belegter Lock endet auch mit exit 0 und darf einen Fehlerzustand nicht
+    # löschen (kalter agy-Review 07.10).
+    [ "${temizlendi:-0}" -eq 1 ] && [ -f "$SICHERUNG_NOTIFY_FILE" ] && sicherung_status_yaz ok 0
+    return 0
+  fi
+  if printf '%s' "$(env_wert BACKUP_EMPFAENGER)" | grep -qE '^age1[0-9a-z]{58}$' && command -v age >/dev/null 2>&1; then
+    sonuc="sicherung_fehlgeschlagen"
+  else
+    sonuc="sicherungsschluessel_fehlt"
+  fi
+  eski="$(grep -oE '"son_sonuc"[[:space:]]*:[[:space:]]*"[^"]*"' "$SICHERUNG_NOTIFY_FILE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || true)"
+  eski_epoch="$(grep -oE '"son_basarili_gonderim_epoch"[[:space:]]*:[[:space:]]*[0-9]+' "$SICHERUNG_NOTIFY_FILE" 2>/dev/null | grep -oE '[0-9]+$' || true)"
+  [ -n "$eski_epoch" ] || eski_epoch=0
+  # Gleicher Zustand und < 7 Tage seit der letzten erfolgreichen Mail → still.
+  if [ "$eski" = "$sonuc" ] && [ "$eski_epoch" -gt 0 ] && [ $(( simdi - eski_epoch )) -lt $((7*86400)) ]; then
+    return 0
+  fi
+  [ "$eski" = "$sonuc" ] || eski_epoch=0
+  [ -f "$OWNER_MAIL_CACHE" ] || { warn "Alarm: Owner-Adresse nicht im Cache — keine Mail"; return 0; }
+  eposta="$(grep -oE '"email"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || true)"
+  isim="$(grep -oE '"business_name"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || true)"
+  [ -n "$eposta" ] || return 0
+  if timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1 \
+     || timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1; then
+    log "  Alarm-Mail gesendet ($sonuc)"
+    eski_epoch="$simdi"
+  else
+    warn "Alarm-Mail nicht gesendet ($sonuc) — nächster Lauf versucht es erneut"
+  fi
+  sicherung_status_yaz "$sonuc" "$eski_epoch"
+}
+# Atomar (tmp + mv): bei voller Platte bleibt die alte Datei samt 7-Tage-Stempel stehen.
+sicherung_status_yaz() {
+  mkdir -p "$(dirname "$SICHERUNG_NOTIFY_FILE")" 2>/dev/null || true
+  printf '{ "son_sonuc": "%s", "son_basarili_gonderim_epoch": %s }\n' "$1" "$2" > "$SICHERUNG_NOTIFY_FILE.tmp" 2>/dev/null \
+    && mv "$SICHERUNG_NOTIFY_FILE.tmp" "$SICHERUNG_NOTIFY_FILE" 2>/dev/null
+  rm -f "$SICHERUNG_NOTIFY_FILE.tmp" 2>/dev/null || true
+}
+
 env_wert() {
   awk -F= -v k="$1" '$1==k{ sub(/^[^=]*=/,""); print; f=1 } END{ if(!f) print "" }' "$ENV_FILE" 2>/dev/null || true
 }
+
+# Trap erst hier: alles, was sicherung_alarm braucht, ist jetzt definiert. Im
+# Trap alle strengen Schalter aus; Exit-Code ausdrücklich weitergeben.
+bitis_alarm() { local rc=$?; set +e +u +o pipefail; sicherung_alarm "$rc"; exit "$rc"; }
+trap bitis_alarm EXIT
 
 # ── Verschlüsselungsvoraussetzungen (O-173, guvenlik S-22: Fail-Closed) ───────
 if ! command -v age >/dev/null 2>&1; then
@@ -157,7 +220,13 @@ temizle() {
   rm -rf "$LOKAL_TMP"
   [ "$temizlendi" -eq 1 ] || rm -rf "$TMP_DIR"
 }
-trap temizle EXIT INT TERM
+# EXIT: Aufräumen + Alarm (O-175); den Exit-Code VOR temizle() festhalten.
+bitis() { local rc=$?; set +e +u +o pipefail; temizle; sicherung_alarm "$rc"; exit "$rc"; }
+trap bitis EXIT
+# Signal: beenden statt nach dem Aufräumen weiterzulaufen (vorher lief das Skript
+# mit gelöschten Arbeitsordnern weiter); der EXIT-Trap räumt auf und meldet.
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # ── Yer kontrolü — §4.3 madde 4.1: 2×(db+storage)+pay + Box-Platte (O-173) ─
 DB_BOYUTU_BYTE="$(docker compose exec -T db psql -U postgres -d "$DB_NAME" -tAc 'SELECT pg_database_size(current_database());' 2>>"$LOG_FILE" | tr -d '[:space:]')"
