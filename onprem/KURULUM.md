@@ -242,7 +242,7 @@ Wörter und eine Zahl (z. B. `sonne-tal-42`):
 - **N** fordert einen neuen Namensvorschlag an.
 
 Der übernommene Name ist danach fest. Anschließend ist die Adresse
-`https://<name>.<Domain>` (z. B. `https://sonne-tal-42.praxura.de`) auf jedem
+`https://<name>.<Domain>` (z. B. `https://sonne-tal-42.box.praxura.de`) auf jedem
 Gerät im Praxisnetz ohne zusätzlichen Eintrag in Router oder Netzwerkdateien
 erreichbar.
 
@@ -328,7 +328,7 @@ nach Weg C ist dieser Schritt nicht nötig):
 2. *Heimnetz → Netzwerk → Netzwerkeinstellungen*.
 3. Nach unten scrollen zum Bereich **DNS-Rebind-Schutz**.
 4. Unter *Ausnahmen* den vollständigen Namen der Box eintragen
-   (z. B. `sonne-tal-42.praxura.de`).
+   (z. B. `sonne-tal-42.box.praxura.de`).
 5. Übernehmen / Speichern.
 
 **Telekom Speedport:** Es ist kein Eintrag nötig (in Messungen geprüft, der
