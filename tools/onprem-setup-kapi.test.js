@@ -149,7 +149,8 @@ test('install.sh: SETUP_TOKEN_SEIT direkt nach SETUP_TOKEN; --neuer-jeton vor Lo
   assert.ok(iNeuer < iEnvFail, '--neuer-jeton muss vor dem .env-Abbruch laufen');
   assert.ok(iAufr < iEnvFail, 'Aufräumen muss vor dem .env-Abbruch laufen');
   assert.ok(iLeeren === -1 || s.indexOf('NEUER_JETON') < iLeeren, 'install.log darf im --neuer-jeton-Modus nicht geleert werden');
-  assert.match(s, /if \[ "\$NEU" -eq 1 \] && \[ "\$NEUER_JETON" -eq 1 \]; then\n\s+fail /, '--neu + --neuer-jeton muss abgewiesen werden');
+  // seit O-173 (07.10.2026): drei Modi, ein Zähler — jede Kombination wird abgewiesen
+  assert.match(s, /MODUS_ANZAHL=\$\(\( NEU \+ NEUER_JETON \+ SICHERUNGSSCHLUESSEL \)\)\nif \[ "\$MODUS_ANZAHL" -gt 1 \]; then\n\s+fail /, 'Modus-Kombination muss abgewiesen werden');
 });
 
 test('update.sh: Aufräumen vor Schritt 9 (up -d), lib frisch gesourct', () => {

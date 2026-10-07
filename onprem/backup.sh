@@ -28,6 +28,13 @@
 #
 #  Kapsam (bu turda YOK, bilinçli): SSH/rsync hedef sürücüsü (yalnız dizin
 #  yolu — lokal ya da önceden mount edilmiş NAS/SMB/NFS), restore.sh.
+#
+#  07.10.2026 (O-173, guvenlik S-22): Verschlüsselte Sicherung mit age.
+#  db.dump.age, storage.tar.gz.age, caddy-pki.tar.gz.age. Kein Klartext auf dem Ziel
+#  ($SCRIPT_DIR/.backup-tmp als lokaler Arbeitsordner, per trap bereinigt).
+#  backup.meta.json bleibt Klartext mit verschluesselung=age-v1, sha256-Map und hmac
+#  (HMAC-SHA256 über DEK via api-Container, Domain praxura-backup-meta-v1).
+#  Fail-closed wenn age fehlt oder BACKUP_EMPFAENGER leer/ungültig.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -78,6 +85,25 @@ env_wert() {
   awk -F= -v k="$1" '$1==k{ sub(/^[^=]*=/,""); print; f=1 } END{ if(!f) print "" }' "$ENV_FILE" 2>/dev/null || true
 }
 
+# ── Verschlüsselungsvoraussetzungen (O-173, guvenlik S-22: Fail-Closed) ───────
+if ! command -v age >/dev/null 2>&1; then
+  fehler "age fehlt" "age nicht auf dem Host installiert" "installiertes age-Paket" \
+    "Sicherungswerkzeug installieren: sudo apt-get install -y age (oder sudo bash install.sh --sicherungsschluessel)."
+  exit 1
+fi
+
+BACKUP_EMPFAENGER="$(env_wert BACKUP_EMPFAENGER)"
+if [ -z "$BACKUP_EMPFAENGER" ]; then
+  fehler "BACKUP_EMPFAENGER nicht gesetzt" "leer in .env" "öffentlicher age-Schlüssel (age1...)" \
+    "Sicherungsschlüssel einrichten: sudo bash install.sh --sicherungsschluessel"
+  exit 1
+fi
+if ! printf '%s' "$BACKUP_EMPFAENGER" | grep -qE '^age1[0-9a-z]{58}$'; then
+  fehler "BACKUP_EMPFAENGER ungültig" "$BACKUP_EMPFAENGER" "Format ^age1[0-9a-z]{58}$ (62 Zeichen)" \
+    "Sicherungsschlüssel neu einrichten: sudo bash install.sh --sicherungsschluessel"
+  exit 1
+fi
+
 # ── Kilit — update.sh:in ÖNCE Schritt 0'da açtığı deseninin aynısı ─────────
 if [ -z "${PRAXURA_LOCK_HELD:-}" ]; then
   exec 9>"$LOCK_FILE"
@@ -121,38 +147,62 @@ ZAMAN="$(date -u +%Y%m%dT%H%M%SZ)"
 AD="${SEBEP}-${ZAMAN}"
 TMP_DIR="$HEDEF_DIR/.tmp-${AD}"
 NIHAI_DIR="$HEDEF_DIR/${AD}"
+LOKAL_TMP="$SCRIPT_DIR/.backup-tmp"
 
-rm -rf "$TMP_DIR"
-mkdir -p "$TMP_DIR"
-chmod 700 "$TMP_DIR"
+rm -rf "$TMP_DIR" "$LOKAL_TMP"
+mkdir -p "$TMP_DIR" "$LOKAL_TMP"
+chmod 700 "$TMP_DIR" "$LOKAL_TMP"
 temizlendi=0
-temizle() { [ "$temizlendi" -eq 1 ] || rm -rf "$TMP_DIR"; }
-trap temizle EXIT
+temizle() {
+  rm -rf "$LOKAL_TMP"
+  [ "$temizlendi" -eq 1 ] || rm -rf "$TMP_DIR"
+}
+trap temizle EXIT INT TERM
 
-# ── Yer kontrolü — §4.3 madde 4.1: 2×(db+storage)+pay ──────────────────────
+# ── Yer kontrolü — §4.3 madde 4.1: 2×(db+storage)+pay + Box-Platte (O-173) ─
 DB_BOYUTU_BYTE="$(docker compose exec -T db psql -U postgres -d "$DB_NAME" -tAc 'SELECT pg_database_size(current_database());' 2>>"$LOG_FILE" | tr -d '[:space:]')"
 STORAGE_BOYUTU_BYTE="$(du -sb "$SCRIPT_DIR/volumes/storage" 2>/dev/null | awk '{print $1}')"
 [ -n "$STORAGE_BOYUTU_BYTE" ] || STORAGE_BOYUTU_BYTE=0
 BOS_ALAN_KB="$(df -k "$HEDEF_DIR" 2>/dev/null | tail -n 1 | awk '{print $4}')"
-if [ -n "$DB_BOYUTU_BYTE" ] && [ -n "$BOS_ALAN_KB" ] && [ "$DB_BOYUTU_BYTE" -gt 0 ] 2>/dev/null; then
-  GEREKEN_KB=$(( ((DB_BOYUTU_BYTE + STORAGE_BOYUTU_BYTE) * 2 / 1024) + 102400 ))
-  if [ "$BOS_ALAN_KB" -lt "$GEREKEN_KB" ]; then
-    fehler "Yedek için yeterli disk yeri yok" "${BOS_ALAN_KB} KB boş ($HEDEF_DIR)" "en az ${GEREKEN_KB} KB (2×(DB+storage)+pay)" \
-      "RELEASE-STANDARD.md §6.6: dolu diskte yedek denemek Postgres'i de durdurabilir. Disk temizle, sonra 'bash backup.sh --sebep $SEBEP' ile yeniden dene."
+BOS_ALAN_BOX_KB="$(df -k "$SCRIPT_DIR" 2>/dev/null | tail -n 1 | awk '{print $4}')"
+
+if [ -n "$DB_BOYUTU_BYTE" ] && [ "$DB_BOYUTU_BYTE" -gt 0 ] 2>/dev/null; then
+  # 1) Box-Platte: DB-Größe + 100 MB Puffer für den lokalen Arbeitsordner ($LOKAL_TMP)
+  GEREKEN_BOX_KB=$(( (DB_BOYUTU_BYTE / 1024) + 102400 ))
+  if [ -n "$BOS_ALAN_BOX_KB" ] && [ "$BOS_ALAN_BOX_KB" -lt "$GEREKEN_BOX_KB" ]; then
+    fehler "Kutu diskinde yerel yedek çalışma alanı için yeterli yer yok" \
+      "${BOS_ALAN_BOX_KB} KB boş ($SCRIPT_DIR)" "en az ${GEREKEN_BOX_KB} KB (DB + pay)" \
+      "Kutu diskinde yer aç. Dolu diskte dump almak veritabanını da tehlikeye atabilir."
     exit 1
+  fi
+
+  # 2) Ziel-Laufwerk: 2×(DB+Storage) + 100 MB Puffer
+  if [ -n "$BOS_ALAN_KB" ]; then
+    GEREKEN_KB=$(( ((DB_BOYUTU_BYTE + STORAGE_BOYUTU_BYTE) * 2 / 1024) + 102400 ))
+    if [ "$BOS_ALAN_KB" -lt "$GEREKEN_KB" ]; then
+      fehler "Yedek için yeterli disk yeri yok" "${BOS_ALAN_KB} KB boş ($HEDEF_DIR)" "en az ${GEREKEN_KB} KB (2×(DB+storage)+pay)" \
+        "RELEASE-STANDARD.md §6.6: dolu diskte yedek denemek Postgres'i de durdurabilir. Disk temizle, sonra 'bash backup.sh --sebep $SEBEP' ile yeniden dene."
+      exit 1
+    fi
   fi
 else
   warn "Disk yeri / DB boyutu ölçülemedi (db henüz erişilemiyor olabilir) — yer kontrolü atlandı, asıl adımlar aşağıda başarısız olacak."
 fi
 
-# ── 1) Storage arşivi — DB'DEN ÖNCE ─────────────────────────────────────────
-log "Storage arşivleniyor..."
+# ── 1) Storage arşivi — DB'DEN ÖNCE (direkt streamen & verschlüsseln) ───────
+log "Storage arşivleniyor ve şifreleniyor..."
 if [ -d "$SCRIPT_DIR/volumes/storage" ]; then
-  if ! tar -czf "$TMP_DIR/storage.tar.gz" -C "$SCRIPT_DIR/volumes" storage 2>>"$LOG_FILE"; then
-    fehler "Storage arşivi başarısız" "tar hata verdi (bkz. $LOG_FILE)" "başarılı bir tar" "Disk/izin sorunlarını kontrol et."
+  set +e
+  tar -czf - -C "$SCRIPT_DIR/volumes" storage 2>>"$LOG_FILE" \
+    | age -r "$BACKUP_EMPFAENGER" -o "$TMP_DIR/storage.tar.gz.age" 2>>"$LOG_FILE"
+  st_pipes=("${PIPESTATUS[@]}")
+  set -e
+  if [ "${st_pipes[0]:-1}" -ne 0 ] || [ "${st_pipes[1]:-1}" -ne 0 ] || [ ! -s "$TMP_DIR/storage.tar.gz.age" ]; then
+    fehler "Storage arşivi/şifreleme başarısız" "tar=${st_pipes[0]:-?}, age=${st_pipes[1]:-?} (bkz. $LOG_FILE)" "başarılı bir storage.tar.gz.age" \
+      "Disk/izin/age sorunlarını kontrol et."
     exit 1
   fi
-  ok "Storage arşivlendi ($(du -h "$TMP_DIR/storage.tar.gz" 2>/dev/null | cut -f1))"
+  ok "Storage arşivlendi ve şifrelendi ($(du -h "$TMP_DIR/storage.tar.gz.age" 2>/dev/null | cut -f1))"
 else
   warn "onprem/volumes/storage dizini yok — storage arşivi atlandı (henüz hiç dosya yüklenmemiş olabilir)."
 fi
@@ -161,47 +211,50 @@ sema_versiyonu_oku() {
   docker compose exec -T db psql -U postgres -d "$DB_NAME" -tAc "SELECT COALESCE(MAX(version), 'none') FROM praxura_migrations;" 2>>"$LOG_FILE" | tr -d '[:space:]' || true
 }
 
-# ── 1b) Caddy-Zertifizierungsstelle (O-153, KHS K2.10) ─────────────────────
+# ── 1b) Caddy-Zertifizierungsstelle (O-153, KHS K2.10, O-173 verschlüsselt) ─
 # Bei TLS "internal" stellt Caddy eine eigene Wurzel-CA aus, die JEDER
 # Praxisrechner/jedes Tablet einmalig als vertrauenswuerdig importiert hat.
-# Liegt sie nur im Docker-Volume, entsteht nach einem Neuaufsetzen eine NEUE
-# CA — und auf allen Geraeten erscheint wieder die Zertifikatswarnung. Nur
-# pki/ (nicht das ganze /data): Volume-Name haengt am Compose-Projektnamen.
-# acmedns.json und LE-Kontoschlüssel kommen ohnehin nie ins Backup.
+# Kopie erfolgt lokal nach $LOKAL_TMP (nie Klartext auf dem Ziel) und wird
+# direkt in caddy-pki.tar.gz.age verschlüsselt.
 if [ "$(env_wert CADDY_TLS_MODUS)" = "acmedns" ]; then
   ok "acmedns-Box: keine interne CA, caddy/pki wird bewusst nicht gesichert (S-43/S-47)"
-elif docker compose cp caddy:/data/caddy/pki "$TMP_DIR/caddy-pki" >>"$LOG_FILE" 2>&1; then
-  tar -czf "$TMP_DIR/caddy-pki.tar.gz" -C "$TMP_DIR" caddy-pki 2>>"$LOG_FILE" && rm -rf "$TMP_DIR/caddy-pki"
-  ok "Caddy-Wurzel-CA gesichert"
+elif docker compose cp caddy:/data/caddy/pki "$LOKAL_TMP/caddy-pki" >>"$LOG_FILE" 2>&1; then
+  set +e
+  tar -czf - -C "$LOKAL_TMP" caddy-pki 2>>"$LOG_FILE" \
+    | age -r "$BACKUP_EMPFAENGER" -o "$TMP_DIR/caddy-pki.tar.gz.age" 2>>"$LOG_FILE"
+  pki_pipes=("${PIPESTATUS[@]}")
+  set -e
+  rm -rf "$LOKAL_TMP/caddy-pki"
+  if [ "${pki_pipes[0]:-1}" -eq 0 ] && [ "${pki_pipes[1]:-1}" -eq 0 ] && [ -s "$TMP_DIR/caddy-pki.tar.gz.age" ]; then
+    ok "Caddy-Wurzel-CA gesichert und verschlüsselt"
+  else
+    rm -f "$TMP_DIR/caddy-pki.tar.gz.age"
+    warn "Caddy-PKI Archivierung/Verschlüsselung fehlgeschlagen — übersprungen."
+  fi
 else
-  rm -rf "$TMP_DIR/caddy-pki"
+  rm -rf "$LOKAL_TMP/caddy-pki"
   warn "Caddy-PKI konnte nicht kopiert werden (Let's-Encrypt-Box oder caddy aus) — übersprungen."
 fi
 
 # ── 2) Veritabanı dump'ı ────────────────────────────────────────────────────
-# ⚠️ onprem-Gegenlesen (13.09.2026, O-26 bildirim turu): `server.js`'in her
-# PM2 işçisi açılışta `runMigrations()` çalıştırıyor (Dockerfile: `pm2-runtime
-# -i 2`) — bir işçi HERHANGİ bir sebeple (OOM-kill, çökme, Watchtower)
-# yeniden başlarsa migration'lar sessizce tekrar uygulanabilir, TAM `pg_dump`
-# ile çakışan bir anda. Künye o zaman dump'ın İÇİNDEKİNDEN bir sürüm ileri
-# `schema_version` iddia ederdi — `restore.sh` yanlış sayıya güvenirdi. Bu
-# yüzden dump'tan ÖNCE ve SONRA okuyup karşılaştırıyoruz; farklıysa DB o
-# birkaç saniyede değişti demektir, yedek güvenilmez sayılıp iptal edilir.
+# Dump landet im lokalen Arbeitsordner $LOKAL_TMP auf der Box-Platte (chmod 700),
+# wird dort per pg_restore -l geprüft und anschließend verschlüsselt nach
+# $TMP_DIR/db.dump.age geschrieben. Die unverschlüsselte lokale Datei wird sofort gelöscht.
 SEMA_ONCE="$(sema_versiyonu_oku)"
 log "Veritabanı yedekleniyor..."
-if ! docker compose exec -T db pg_dump -U postgres -d "$DB_NAME" -Fc > "$TMP_DIR/db.dump" 2>>"$LOG_FILE"; then
+if ! docker compose exec -T db pg_dump -U postgres -d "$DB_NAME" -Fc > "$LOKAL_TMP/db.dump" 2>>"$LOG_FILE"; then
   fehler "pg_dump başarısız" "pg_dump hata verdi (bkz. $LOG_FILE)" "başarılı bir pg_dump çıktısı" \
     "'db' konteynerinin çalıştığından ve .env'deki POSTGRES_DB/POSTGRES_PASSWORD'ün doğru olduğundan emin ol."
   exit 1
 fi
-if [ ! -s "$TMP_DIR/db.dump" ]; then
+if [ ! -s "$LOKAL_TMP/db.dump" ]; then
   fehler "Yedek dosyası boş çıktı" "0 byte" "dolu bir pg_dump çıktısı" "pg_dump sessizce boş döndü — 'db' konteynerinin sağlığını kontrol et."
   exit 1
 fi
 
 # ── 3) Bütünlük testi — pg_restore -l (O-77'den taşındı) ───────────────────
 KONTROL_HEDEF="/tmp/praxura-yedek-kontrol.dump"
-if ! docker compose cp "$TMP_DIR/db.dump" "db:$KONTROL_HEDEF" >>"$LOG_FILE" 2>&1 \
+if ! docker compose cp "$LOKAL_TMP/db.dump" "db:$KONTROL_HEDEF" >>"$LOG_FILE" 2>&1 \
    || ! docker compose exec -T db pg_restore -l "$KONTROL_HEDEF" >/dev/null 2>>"$LOG_FILE"; then
   docker compose exec -T db rm -f "$KONTROL_HEDEF" >/dev/null 2>&1 || true
   fehler "Yedek dosyası bozuk çıktı (pg_restore -l başarısız)" "pg_restore -l hata verdi (bkz. $LOG_FILE)" \
@@ -214,43 +267,45 @@ SCHEMA_VERSION="$(sema_versiyonu_oku)"
 if [ -n "$SEMA_ONCE" ] && [ -n "$SCHEMA_VERSION" ] && [ "$SEMA_ONCE" != "$SCHEMA_VERSION" ]; then
   fehler "Şema sürümü dump sırasında değişti — yedek iptal edildi" \
     "önce: ${SEMA_ONCE} · sonra: ${SCHEMA_VERSION}" "pg_dump boyunca sabit bir sürüm" \
-    "Bir PM2 işçisi (Dockerfile: pm2-runtime -i 2) tam bu yedek anında migration uyguladı — künye yanlış sürüm iddia ederdi. Yeniden dene; sık tekrarlanıyorsa 'api' konteynerinin neden yeniden başladığını incele (OOM? mem_limit yok — O-48 yalnız Kong'a verildi)."
+    "Bir PM2 işçisi tam bu yedek anında migration uyguladı — künye yanlış sürüm iddia ederdi. Yeniden dene; sık tekrarlanıyorsa 'api' konteynerinin neden yeniden başladığını incele (OOM? mem_limit yok — O-48 yalnız Kong'a verildi)."
   exit 1
 fi
-ok "Veritabanı yedeklendi ve doğrulandı ($(du -h "$TMP_DIR/db.dump" 2>/dev/null | cut -f1))"
 
-# ── 4) Künye — backup.meta.json (§4.4) ──────────────────────────────────────
-# Üç parmak izi de İLGİLİ KONTEYNERİN KENDİ ortamından hesaplanır — sır hiçbir
-# zaman host'un komut satırına/`ps`'ine düşmez (onprem, O-26 1. tur):
-#   - DEK: yalnız `api` konteynerinde var (compose'ta öyle) → node'un kendi
-#     crypto modülü, container İÇİNDE, argv'de sır yok.
-#   - JWT_SECRET / POSTGRES_PASSWORD: yalnız `db` konteynerinde var → o
-#     konteynerin KENDİ shell'i `$JWT_SECRET`'i genişletir, host'un gördüğü
-#     argv'de yalnız değişmeyen "$JWT_SECRET" METNİ vardır, değeri değil.
+# Lokale Dump-Datei mit age verschlüsseln, danach Klartext löschen
+log "Veritabanı şifreleniyor (age)..."
+if ! age -r "$BACKUP_EMPFAENGER" -o "$TMP_DIR/db.dump.age" "$LOKAL_TMP/db.dump" 2>>"$LOG_FILE"; then
+  fehler "Veritabanı şifreleme başarısız (age)" "age hata verdi (bkz. $LOG_FILE)" "başarılı bir db.dump.age" \
+    "BACKUP_EMPFAENGER anahtarını ve disk izinlerini kontrol et."
+  exit 1
+fi
+rm -f "$LOKAL_TMP/db.dump"
+ok "Veritabanı yedeklendi, doğrulandı ve şifrelendi ($(du -h "$TMP_DIR/db.dump.age" 2>/dev/null | cut -f1))"
+
+# ── 4) Künye — backup.meta.json (§4.4, O-173 verschluesselung/sha256/hmac) ─
 parmak_izi_dek() {
-  docker compose exec -T api node -e '
-    const crypto = require("crypto");
-    const k = process.env.DATA_ENCRYPTION_KEY || "";
-    if (!k) { process.exit(1); }
-    process.stdout.write(crypto.createHmac("sha256", k).update("praxura-backup-fingerprint-v1:dek").digest("hex"));
-  ' 2>>"$LOG_FILE" | head -c 16
+  local fp=""
+  if docker compose ps --status running -q api 2>/dev/null | grep -q .; then
+    fp="$(docker compose exec -T api node -e '
+      const crypto = require("crypto");
+      const k = process.env.DATA_ENCRYPTION_KEY || "";
+      if (!k) { process.exit(1); }
+      process.stdout.write(crypto.createHmac("sha256", k).update("praxura-backup-fingerprint-v1:dek").digest("hex"));
+    ' 2>>"$LOG_FILE" || true)"
+  fi
+  if [ -z "$fp" ]; then
+    fp="$(docker compose run --rm --no-deps -T api node -e '
+      const crypto = require("crypto");
+      const k = process.env.DATA_ENCRYPTION_KEY || "";
+      if (!k) { process.exit(1); }
+      process.stdout.write(crypto.createHmac("sha256", k).update("praxura-backup-fingerprint-v1:dek").digest("hex"));
+    ' 2>>"$LOG_FILE" || true)"
+  fi
+  printf '%s' "$fp" | head -c 16
 }
 parmak_izi_db_taraf() {
-  # $1 = konteynerin env değişkeni adı (JWT_SECRET|POSTGRES_PASSWORD), $2 = domain etiketi.
-  # ⚠️ `db` konteynerinde (supabase/postgres) openssl CLI YOK (gerçek kutuda
-  # denendi: "sh: openssl: not found") — onun yerine zaten kurulu `pgcrypto`
-  # uzantısının `hmac()` fonksiyonu kullanılıyor.
-  # ⚠️ İKİNCİ bulgu (gerçek kutuda denendi): psql'in `:'var'` değişken
-  # ilintileme sözdizimi `-c`/`-tAc` (satır içi komut) ile ÇALIŞMIYOR
-  # ("syntax error at or near ':'") — yalnız gerçek bir SCRIPT DOSYASI
-  # (`-f`) üzerinden okunduğunda çalışıyor. Bu yüzden sorgu sabit bir `.sql`
-  # dosyasına yazılıp konteynere kopyalanıyor (sır İÇERMEZ); sır yalnız `-v`
-  # argümanında ve o da konteynerin KENDİ kabuğunda `$JWT_SECRET` /
-  # `$POSTGRES_PASSWORD` olarak genişliyor — host'un argv'sinde literal
-  # "$JWT_SECRET" metni durur, gerçek değeri değil.
   local envvar="$1"
   local alan="$2"
-  local sqldosya="$TMP_DIR/.fp-${alan}.sql"
+  local sqldosya="$LOKAL_TMP/.fp-${alan}.sql"
   local sonuc=""
   printf "SELECT encode(hmac(:'dom', :'key', 'sha256'), 'hex');\n" > "$sqldosya"
   if docker compose cp "$sqldosya" "db:/tmp/.fp-${alan}.sql" >>"$LOG_FILE" 2>&1; then
@@ -268,26 +323,92 @@ PGPW_FP="$(parmak_izi_db_taraf POSTGRES_PASSWORD pgpw || true)"
 [ -n "$JWT_FP" ] || { JWT_FP=null; warn "JWT_SECRET parmak izi alınamadı — künyede null."; }
 [ -n "$PGPW_FP" ] || { PGPW_FP=null; warn "POSTGRES_PASSWORD parmak izi alınamadı — künyede null."; }
 
-# SCHEMA_VERSION zaten yukarıda (dump sonrası, önce/sonra tutarlılık
-# kontrolünün parçası olarak) okundu — burada tekrar sorgulanmıyor.
 [ -n "$SCHEMA_VERSION" ] || SCHEMA_VERSION=null
 APP_VERSION="$(env_wert PRAXURA_API_IMAGE)"
 [ -n "$APP_VERSION" ] || APP_VERSION=null
 IMAGE_DIGEST="$(docker inspect --format='{{.Image}}' praxura-api 2>/dev/null || true)"
 [ -n "$IMAGE_DIGEST" ] || IMAGE_DIGEST=null
-DB_BYTES_FIELD="$(wc -c < "$TMP_DIR/db.dump" | tr -d '[:space:]')"
+DB_BYTES_FIELD="$(wc -c < "$TMP_DIR/db.dump.age" | tr -d '[:space:]')"
 STORAGE_BYTES_FIELD=0
-[ -f "$TMP_DIR/storage.tar.gz" ] && STORAGE_BYTES_FIELD="$(wc -c < "$TMP_DIR/storage.tar.gz" | tr -d '[:space:]')"
+[ -f "$TMP_DIR/storage.tar.gz.age" ] && STORAGE_BYTES_FIELD="$(wc -c < "$TMP_DIR/storage.tar.gz.age" | tr -d '[:space:]')"
+
+# SHA256-Map aller .age-Dateien im Ziel (pfadsicher ohne ls, LC_ALL=C sortiert)
+SHA_LINES=""
+for f in "$TMP_DIR"/*.age; do
+  [ -f "$f" ] || continue
+  fname="$(basename "$f")"
+  fsha="$(sha256sum "$f" | awk '{print $1}')"
+  if [ -n "$SHA_LINES" ]; then
+    SHA_LINES="${SHA_LINES}"$'\n'"${fname}=${fsha}"
+  else
+    SHA_LINES="${fname}=${fsha}"
+  fi
+done
+if [ -n "$SHA_LINES" ]; then
+  SHA_LINES="$(printf '%s\n' "$SHA_LINES" | LC_ALL=C sort)"
+fi
+
+[ -n "$SHA_LINES" ] || {
+  fehler "Hiçbir şifreli yedek dosyası üretilemedi" "TMP_DIR boş" "en az db.dump.age" "Yedek adımlarını kontrol et."
+  exit 1
+}
+
+TAKEN_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# Kanonik metin ve HMAC hesaplama (Domain: praxura-backup-meta-v1)
+kanonischer_meta_text() {
+  local v="$1" empf="$2" taken="$3" seb="$4" sch="$5" db_b="$6" st_b="$7" sha_l="$8"
+  printf 'verschluesselung=%s\nbackup_empfaenger=%s\ntaken_at=%s\nsebep=%s\nschema_version=%s\ndump_bytes=%s\nstorage_bytes=%s\n%s\n' \
+    "$v" "$empf" "$taken" "$seb" "$sch" "$db_b" "$st_b" "$sha_l"
+}
+KANONISCH="$(kanonischer_meta_text "age-v1" "$BACKUP_EMPFAENGER" "$TAKEN_AT" "$SEBEP" "$SCHEMA_VERSION" "$DB_BYTES_FIELD" "$STORAGE_BYTES_FIELD" "$SHA_LINES")"
+
+meta_hmac_berechnen() {
+  local input="$1"
+  local hmac=""
+  if docker compose ps --status running -q api 2>/dev/null | grep -q .; then
+    hmac="$(printf '%s' "$input" | docker compose exec -T api node -e '
+      const fs = require("fs");
+      const crypto = require("crypto");
+      const k = process.env.DATA_ENCRYPTION_KEY || "";
+      if (!k) { process.exit(1); }
+      const data = fs.readFileSync(0, "utf8");
+      process.stdout.write(crypto.createHmac("sha256", k).update("praxura-backup-meta-v1\n" + data).digest("hex"));
+    ' 2>>"$LOG_FILE" || true)"
+  fi
+  if [ -z "$hmac" ]; then
+    hmac="$(printf '%s' "$input" | docker compose run --rm --no-deps -T api node -e '
+      const fs = require("fs");
+      const crypto = require("crypto");
+      const k = process.env.DATA_ENCRYPTION_KEY || "";
+      if (!k) { process.exit(1); }
+      const data = fs.readFileSync(0, "utf8");
+      process.stdout.write(crypto.createHmac("sha256", k).update("praxura-backup-meta-v1\n" + data).digest("hex"));
+    ' 2>>"$LOG_FILE" || true)"
+  fi
+  printf '%s' "$hmac"
+}
+
+HMAC_WERT="$(meta_hmac_berechnen "$KANONISCH" || true)"
+if [ -z "$HMAC_WERT" ]; then
+  fehler "HMAC-Signatur konnte nicht berechnet werden" "leere Ausgabe aus api-Container" "gültiger HMAC-SHA256" \
+    "Prüfen, ob Docker/api läuft und DATA_ENCRYPTION_KEY in .env gesetzt ist."
+  exit 1
+fi
 
 json_deger() {
   # null olduğu gibi (tırnaksız) kalır, aksi hâlde tek satır string olarak tırnaklanır.
   [ "$1" = "null" ] && printf 'null' || printf '"%s"' "$1"
 }
 
+SHA_JSON_BLOCK="$(printf '%s\n' "$SHA_LINES" | awk -F= '{lines[NR]=sprintf("    \"%s\": \"%s\"", $1, $2)} END {for (i=1; i<=NR; i++) {printf "%s%s\n", lines[i], (i<NR?",":"")}}' || true)"
+
 cat > "$TMP_DIR/backup.meta.json" <<EOF
 {
+  "verschluesselung": "age-v1",
+  "backup_empfaenger": "${BACKUP_EMPFAENGER}",
   "sebep": "${SEBEP}",
-  "taken_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "taken_at": "${TAKEN_AT}",
   "schema_version": $(json_deger "$SCHEMA_VERSION"),
   "app_version": $(json_deger "$APP_VERSION"),
   "image_digest": $(json_deger "$IMAGE_DIGEST"),
@@ -296,7 +417,11 @@ cat > "$TMP_DIR/backup.meta.json" <<EOF
   "ziel_ausserhalb": ${ZIEL_DISI},
   "data_key_fingerprint": $(json_deger "$DEK_FP"),
   "jwt_secret_fingerprint": $(json_deger "$JWT_FP"),
-  "postgres_password_fingerprint": $(json_deger "$PGPW_FP")
+  "postgres_password_fingerprint": $(json_deger "$PGPW_FP"),
+  "sha256": {
+${SHA_JSON_BLOCK}
+  },
+  "hmac": "${HMAC_WERT}"
 }
 EOF
 

@@ -148,10 +148,9 @@ Dieser Weg steht gleichwertig neben Weg A und B.
 - **Sicherung bei Hetzner:** Als Sicherungsziel dient eine Hetzner Storage Box
   (im Praxis-Konto buchbar, ca. 4 €/Monat; Einbindung siehe §5) oder ein separates
   Hetzner Volume (nach Größe abgerechnet). Wir benennen die Grenze offen und ehrlich:
-  Eine solche Sicherung schützt zuverlässig vor einem Serverausfall, nicht aber vor
-  einem unbefugten Einblick beim Speicheranbieter (auf dem Speicherziel derzeit
-  unverschlüsselt abgelegt; Verschlüsselung in der Box vor dem Versand ist in
-  Vorbereitung; siehe §9). Zusätzliche Hetzner-Snapshots oder Server-Backups können
+  Die Box verschlüsselt jede Sicherung, bevor sie auf das Ziel geschrieben wird;
+  öffnen kann sie nur, wer den **Sicherungsschlüssel** hat (§2.5 — liegt nur bei
+  Ihnen). Zusätzliche Hetzner-Snapshots oder Server-Backups können
   Sie als Ergänzung nutzen; beachten Sie aber, dass diese stets das gesamte
   Plattenabbild einschließlich der Konfigurationsdatei `.env` und damit des
   Datenschlüssels (`DATA_ENCRYPTION_KEY`) enthalten.
@@ -286,11 +285,16 @@ Siehe §5.
   Festplatte unter Windows wächst dynamisch und gibt freien Speicherplatz auf
   Laufwerk C: nicht automatisch wieder frei.
 
-### 2.5 Am Ende: zwei Werte, die nur EINMAL angezeigt werden
+### 2.5 Am Ende: Werte, die nur EINMAL angezeigt werden
 - **`DATA_ENCRYPTION_KEY`** — verschlüsselt Patientenfelder. Ausdrucken oder in
   einen Passwort-Tresor, **nicht** in den Sicherungsordner. Ohne ihn sind die
   verschlüsselten Felder auch mit einer vollständigen Sicherung verloren.
-  `install.sh` wartet, bis Sie `GESICHERT` tippen.
+- **Sicherungsschlüssel** (`AGE-SECRET-KEY-1…`) — öffnet Ihre Sicherungen. Die Box
+  behält nur den öffentlichen Teil und kann damit verschlüsseln, aber nichts
+  öffnen. Zusammen mit dem `DATA_ENCRYPTION_KEY` auf denselben Notfallzettel bzw.
+  in denselben Tresor, **nicht** in den Sicherungsordner. **Ohne ihn sind alle
+  Sicherungen unlesbar** — auch für Praxura.
+- `install.sh` wartet, bis Sie `GESICHERT` tippen (eine Bestätigung für beide Schlüssel).
 - **Einrichtungs-Link** — unter Windows öffnet sich die Einrichtungsseite am Ende
   der Installation automatisch im Browser. Unter Linux zeigt `install.sh` am Ende
   einen Link (`https://<ihre-box-adresse>/setup.html#<jeton>`), den Sie im Browser
@@ -461,10 +465,23 @@ allen Geräten entfernen und die Box neu einrichten. *(Hinweis: Beim Standardweg
 mit Einrichtungscode wird kein privater CA-Schlüssel gesichert, da die Zertifikate
 über Let's Encrypt bezogen werden.)*
 
+**Sicherungsschlüssel:** Ist keiner eingerichtet (z. B. Box vor Oktober 2026), bricht
+die Sicherung ab und nennt den Weg — einmal ausführen:
+```bash
+cd /opt/praxura/onprem && sudo bash install.sh --sicherungsschluessel
+```
+Die Box erzeugt dann einen Schlüssel und zeigt ihn einmal an — oder Sie geben einen
+eigenen öffentlichen Schlüssel (`age1…`) ein. Wird ein vorhandener Schlüssel
+ersetzt, lassen sich ältere Sicherungen nur noch mit dem **alten** Schlüssel öffnen.
+
 **Wiederherstellen:**
 ```bash
 cd /opt/praxura/onprem && sudo bash restore.sh --von <ordnername>
 ```
+`restore.sh` fragt nach dem Sicherungsschlüssel (Eingabe unsichtbar) — oder er
+liegt als Datei vor, z. B. auf einem USB-Stick: `--schluessel /pfad/zur/datei`.
+Vor jeder Änderung prüft `restore.sh`, ob die Sicherung unverändert und von dieser
+Box ist und ob der Schlüssel passt; sonst bricht es ab, ohne etwas anzufassen.
 Am Ende zeigt `restore.sh` die **§302-Referenzzähler** an. Wurden nach dem
 Zeitpunkt der Sicherung noch Abrechnungsdateien verschickt, steht der Zähler zu
 niedrig — die Annahmestelle würde eine schon benutzte Nummer ablehnen.
@@ -685,11 +702,9 @@ der Datenverarbeitung Ihrer Patientendaten einnimmt.
 - **Sicherung bei Hetzner:**
   Als Sicherungsziel dient eine Hetzner Storage Box (im Praxis-Konto buchbar, ca.
   4 €/Monat), ein separates Hetzner Volume (nach Größe abgerechnet) oder eine externe
-  Sicherung. Sicherungen werden auf dem Speicherziel derzeit unverschlüsselt abgelegt;
-  Verschlüsselung in der Box vor dem Versand ist in Vorbereitung (siehe Kasten
-  „Noch offen"). Bis dahin gilt: Eine unverschlüsselte Sicherung auf einer Storage
-  Box oder einem Volume schützt vor einem Serverausfall, nicht aber vor einem
-  theoretischen Einblick beim Speicheranbieter.
+  Sicherung. Die Box verschlüsselt die Sicherung, bevor sie auf das Speicherziel
+  geschrieben wird; der Schlüssel zum Öffnen liegt nur bei der Praxis (§2.5). Geht
+  dieser Schlüssel verloren, sind die Sicherungen unlesbar.
 - **KI-Modul:**
   Das optionale KI-Modul ist standardmäßig deaktiviert (`AI_MODE=aus`). Vor einer
   eventuellen Aktivierung gelten gesonderte Hinweise (die rechtliche Prüfung dazu läuft).
@@ -703,8 +718,6 @@ der Datenverarbeitung Ihrer Patientendaten einnimmt.
 >   Verpflichtung nach § 203 StGB enthält, ist von der Praxis zu prüfen.
 > - **Storage Box:** Die C5-Abdeckung und genaue Standortbindung der Storage Box sind
 >   bislang nicht abschließend geprüft.
-> - **Verschlüsselung der Sicherung:** Auf dem Speicherziel derzeit unverschlüsselt
->   abgelegt; Verschlüsselung in der Box vor dem Versand ist in Vorbereitung.
 
 > Stand: 07.10.2026
 

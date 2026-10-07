@@ -3,7 +3,7 @@
 > Üretim: 2026-10-07 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3111 fonksiyon** (3045 JS · 58 bash · 8 ps1) · 378 dosya · 41 sidebar modülü
+**3116 fonksiyon** (3045 JS · 63 bash · 8 ps1) · 378 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -457,47 +457,49 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `closeModal` — dashboard.js:911 · dashboard.js:11566 · dashboard.js:11987 · ops/app.js:162
 - `load` — ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `loadServices` — booking-request.js:528 · booking.js:164 · dashboard.js:8617 · kalender.js:643
-- `log` — onprem/backup.sh:40 · onprem/install.sh:63 · onprem/restore.sh:38 · onprem/update.sh:59
-- `ok` — onprem/backup.sh:41 · onprem/install.sh:64 · onprem/restore.sh:39 · onprem/update.sh:60
+- `log` — onprem/backup.sh:47 · onprem/install.sh:68 · onprem/restore.sh:44 · onprem/update.sh:59
+- `ok` — onprem/backup.sh:48 · onprem/install.sh:69 · onprem/restore.sh:45 · onprem/update.sh:60
 - `onEsc` — dashboard.js:6472 · module/rechnung-leistung-picker.js:46 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
 - `speichern` — cookie-consent.js:69 · module/arzt-register.js:292 · module/fussbefund.js:732 · module/verordnung-detail.js:826
 - `v` — dashboard.js:12441 · dashboard.js:12463 · dashboard.js:12483 · dashboard.js:14912
-- `warn` — onprem/backup.sh:42 · onprem/install.sh:65 · onprem/restore.sh:40 · onprem/update.sh:61
+- `warn` — onprem/backup.sh:49 · onprem/install.sh:70 · onprem/restore.sh:46 · onprem/update.sh:61
 - `wert` — module/anfrage-bearbeiten.js:171 · module/fahrtenbuch-regeln.js:280 · module/verordnung-pruefen-knopf.js:43 · setup.js:324
 - `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:218
 - `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208
 - `applyLang` — kalender.js:67 · login.js:51 · setup.js:86
 - `DE` — module/behandlungsbestaetigung.js:41 · module/patientenkarte.js:38 · module/verordnung-uebersicht.js:106
-- `env_wert` — onprem/backup.sh:77 · onprem/restore.sh:83 · onprem/update.sh:132
+- `env_wert` — onprem/backup.sh:84 · onprem/restore.sh:93 · onprem/update.sh:132
 - `f` — dashboard.js:1113 · module/branding.js:73 · module/kiosk.js:199
 
 ## Shell (onprem/)
 
 ### `onprem/backup.sh`
-- `log()` — Zeile 40 · calledBy: fehler, onprem/backup.sh
-- `ok()` — Zeile 41 · calledBy: onprem/backup.sh
-- `warn()` — Zeile 42 · calledBy: onprem/backup.sh
-- `fehler()` — Zeile 43 · calledBy: onprem/backup.sh
-- `env_wert()` — Zeile 77 · calledBy: onprem/backup.sh
-- `temizle()` — Zeile 129
-- `sema_versiyonu_oku()` — Zeile 160 · calledBy: onprem/backup.sh
-- `parmak_izi_dek()` — Zeile 230 · calledBy: onprem/backup.sh
-- `parmak_izi_db_taraf()` — Zeile 238 · calledBy: onprem/backup.sh
-- `json_deger()` — Zeile 282 · calledBy: onprem/backup.sh
-- `rotasyon_vor_migration()` — Zeile 318 · calledBy: onprem/backup.sh
-- `rotasyon_nightly()` — Zeile 321 · calledBy: onprem/backup.sh
+- `log()` — Zeile 47 · calledBy: fehler, onprem/backup.sh
+- `ok()` — Zeile 48 · calledBy: onprem/backup.sh
+- `warn()` — Zeile 49 · calledBy: onprem/backup.sh
+- `fehler()` — Zeile 50 · calledBy: onprem/backup.sh
+- `env_wert()` — Zeile 84 · calledBy: onprem/backup.sh
+- `temizle()` — Zeile 156
+- `sema_versiyonu_oku()` — Zeile 210 · calledBy: onprem/backup.sh
+- `parmak_izi_dek()` — Zeile 285 · calledBy: onprem/backup.sh
+- `parmak_izi_db_taraf()` — Zeile 305 · calledBy: onprem/backup.sh
+- `kanonischer_meta_text()` — Zeile 359 · calledBy: onprem/backup.sh
+- `meta_hmac_berechnen()` — Zeile 366 · calledBy: onprem/backup.sh
+- `json_deger()` — Zeile 399 · calledBy: onprem/backup.sh
+- `rotasyon_vor_migration()` — Zeile 443 · calledBy: onprem/backup.sh
+- `rotasyon_nightly()` — Zeile 446 · calledBy: onprem/backup.sh
 
 ### `onprem/install.sh`
 - sources: `lib-ip.sh`, `lib-setup-jeton.sh`, `||`, `lib-health.sh`
-- `log()` — Zeile 63 · calledBy: fail, onprem/install.sh
-- `ok()` — Zeile 64 · calledBy: onprem/install.sh
-- `warn()` — Zeile 65 · calledBy: onprem/install.sh
-- `reveal_once()` — Zeile 66 · calledBy: onprem/install.sh
-- `fail()` — Zeile 68 · calledBy: onprem/install.sh
-- `env_get()` — Zeile 88 · calledBy: onprem/install.sh
-- `set_env()` — Zeile 420 · calledBy: onprem/install.sh
-- `b64url()` — Zeile 486 · calledBy: sign_jwt
-- `sign_jwt()` — Zeile 487 · calledBy: onprem/install.sh
+- `log()` — Zeile 68 · calledBy: fail, onprem/install.sh
+- `ok()` — Zeile 69 · calledBy: onprem/install.sh
+- `warn()` — Zeile 70 · calledBy: onprem/install.sh
+- `reveal_once()` — Zeile 71 · calledBy: onprem/install.sh
+- `fail()` — Zeile 73 · calledBy: onprem/install.sh
+- `env_get()` — Zeile 93 · calledBy: onprem/install.sh
+- `set_env()` — Zeile 103 · calledBy: onprem/install.sh
+- `b64url()` — Zeile 637 · calledBy: sign_jwt
+- `sign_jwt()` — Zeile 638 · calledBy: onprem/install.sh
 
 ### `onprem/ip-melden.sh`
 - sources: `lib-ip.sh`
@@ -522,14 +524,17 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fail()` — Zeile 22 · calledBy: onprem/reset-owner-passwort.sh
 
 ### `onprem/restore.sh`
-- `log()` — Zeile 38 · calledBy: fehler, onprem/restore.sh
-- `ok()` — Zeile 39 · calledBy: onprem/restore.sh
-- `warn()` — Zeile 40 · calledBy: onprem/restore.sh
-- `fehler()` — Zeile 41 · calledBy: onprem/restore.sh
-- `env_wert()` — Zeile 83 · calledBy: onprem/restore.sh
-- `meta_alan()` — Zeile 109 · calledBy: onprem/restore.sh
-- `parmak_izi_dek()` — Zeile 188 · calledBy: onprem/restore.sh
-- `parmak_izi_db_taraf()` — Zeile 196 · calledBy: onprem/restore.sh
+- `log()` — Zeile 44 · calledBy: fehler, onprem/restore.sh
+- `ok()` — Zeile 45 · calledBy: onprem/restore.sh
+- `warn()` — Zeile 46 · calledBy: onprem/restore.sh
+- `fehler()` — Zeile 47 · calledBy: onprem/restore.sh
+- `env_wert()` — Zeile 93 · calledBy: onprem/restore.sh
+- `meta_alan()` — Zeile 119 · calledBy: onprem/restore.sh
+- `restore_temizle()` — Zeile 217 · calledBy: onprem/restore.sh
+- `kanonischer_meta_text()` — Zeile 286 · calledBy: onprem/restore.sh
+- `meta_hmac_berechnen()` — Zeile 294 · calledBy: onprem/restore.sh
+- `parmak_izi_dek()` — Zeile 456 · calledBy: onprem/restore.sh
+- `parmak_izi_db_taraf()` — Zeile 464 · calledBy: onprem/restore.sh
 
 ### `onprem/update.sh`
 - sources: `lib-health.sh`, `lib-ip.sh`, `lib-setup-jeton.sh`

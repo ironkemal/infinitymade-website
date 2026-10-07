@@ -57,6 +57,13 @@ export const MUSTER = [
     grund: 'Privater kryptografischer Schlüssel',
   },
   {
+    // O-173 (07.10.2026): Sicherungsschlüssel der Box — install.sh zeigt ihn an,
+    // er darf nie (z. B. aus einem Terminal-Mitschnitt) ins öffentliche Repo.
+    name: 'age-Sicherungsschlüssel',
+    re: /AGE-SECRET-KEY-1[0-9A-Z]{58}/,
+    grund: 'Privater age-Schlüssel (öffnet Praxis-Sicherungen)',
+  },
+  {
     name: 'Azure/allgemein Schlüssel-Zuweisung',
     re: /(api[_-]?key|secret|password|passwort|token)\s*(?::=|[:=])\s*['"][A-Za-z0-9+/_\-]{24,}['"]/i,
     grund: 'Explizite Schlüssel- oder Passwort-Zuweisung',

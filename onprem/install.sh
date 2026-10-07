@@ -25,6 +25,11 @@
 #  einen neuen aus, solange die Einrichtung offen ist; wiederholter Lauf leert
 #  den Jeton nach Abschluss (lib-setup-jeton.sh).
 #
+#  07.10.2026 (O-173, guvenlik S-22): Verschlüsselte Sicherung mit age.
+#  Schritt 2 prüft/installiert age; Erstinstallation erzeugt Schlüsselpaar,
+#  zeigt privaten Schlüssel einmalig (reveal_once) im selben Block wie DEK;
+#  neuer Modus --sicherungsschluessel zur Schlüsselverwaltung.
+#
 #  Was dieses Skript TUT: Hardware/Software prüfen, .env erzeugen, Geheimnisse
 #  AUF DIESEM SERVER würfeln (G2 — keins davon kommt von uns oder geht an uns),
 #  ANON_KEY/SERVICE_ROLE_KEY aus JWT_SECRET ableiten (O-60 — NICHT würfeln),
@@ -89,6 +94,25 @@ env_get() {
   awk -F= -v k="$1" '$1==k{sub(/^[^=]*=/,""); print; f=1} END{if(!f) print ""}' "$ENV_FILE" 2>/dev/null || true
 }
 
+# set_env KEY VALUE — ersetzt "KEY=" Zeile in .env, ohne den Wert zu loggen.
+#
+# ACHTUNG: der Wert geht über ENVIRON, NICHT über ein zweites "-v v=...".
+# awks "-v"-Zuweisung interpretiert Backslash-Escapes im ÜBERGEBENEN Wert
+# (z. B. wird "\b" zu einem Backspace-Byte). ENVIRON liest die Shell-Variable
+# roh, ohne dass awk sie nochmal interpretiert.
+set_env() {
+  local key="$1"
+  export SET_ENV_VALUE="$2"
+  if grep -q "^${key}=" "$ENV_FILE"; then
+    local tmp; tmp="$(mktemp -p "$SCRIPT_DIR")"
+    awk -v k="$key" 'BEGIN{FS=OFS="="} $1==k{$0=k"="ENVIRON["SET_ENV_VALUE"]} {print}' "$ENV_FILE" > "$tmp"
+    mv "$tmp" "$ENV_FILE"
+  else
+    printf '%s=%s\n' "$key" "$SET_ENV_VALUE" >> "$ENV_FILE"
+  fi
+  unset SET_ENV_VALUE
+}
+
 # Geteilte IP-Ermittlung mit ip-melden.sh (K2b.6, O-161 L3)
 # shellcheck source=./lib-ip.sh
 source "$SCRIPT_DIR/lib-ip.sh"
@@ -99,17 +123,24 @@ source "$SCRIPT_DIR/lib-setup-jeton.sh"
 
 NEU=0
 NEUER_JETON=0
+SICHERUNGSSCHLUESSEL=0
 for arg in "$@"; do
   [ "$arg" = "--neu" ] && NEU=1
   [ "$arg" = "--neuer-jeton" ] && NEUER_JETON=1
+  [ "$arg" = "--sicherungsschluessel" ] && SICHERUNGSSCHLUESSEL=1
 done
 
-if [ "$NEU" -eq 1 ] && [ "$NEUER_JETON" -eq 1 ]; then
-  fail "Konflikt bei Optionen" "--neu und --neuer-jeton gleichzeitig gesetzt" "genau einen Modus wählen" \
-    "Nur einen Modus wählen: 'sudo bash install.sh --neu' (Neuinstallation) ODER 'sudo bash install.sh --neuer-jeton' (neuer Jeton)."
+MODUS_ANZAHL=$(( NEU + NEUER_JETON + SICHERUNGSSCHLUESSEL ))
+if [ "$MODUS_ANZAHL" -gt 1 ]; then
+  fail "Konflikt bei Optionen" "--neu, --neuer-jeton oder --sicherungsschluessel kombiniert" "genau einen Modus wählen" \
+    "Nur einen Modus wählen: 'sudo bash install.sh --neu' (Neuinstallation) ODER 'sudo bash install.sh --neuer-jeton' (neuer Jeton) ODER 'sudo bash install.sh --sicherungsschluessel' (Sicherungsschlüssel)."
 fi
 
-if [ "$NEUER_JETON" -eq 1 ]; then
+if [ "$SICHERUNGSSCHLUESSEL" -eq 1 ]; then
+  printf '\n─── %s (--sicherungsschluessel) ───\n' "$(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
+  log "Praxura On-Premise — Sicherungsschlüssel $(date '+%Y-%m-%d %H:%M:%S')"
+  log ""
+elif [ "$NEUER_JETON" -eq 1 ]; then
   printf '\n─── %s (--neuer-jeton) ───\n' "$(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
   log "Praxura On-Premise — Neuer Einrichtungs-Jeton $(date '+%Y-%m-%d %H:%M:%S')"
   log ""
@@ -131,7 +162,9 @@ if [ "$NEUER_JETON" -ne 1 ] && [ ! -t 0 ]; then
 fi
 
 # ── Schritt 0 — Wurzel + Idempotenz ─────────────────────────────────────────
-log "[0/17] Wurzel- und Wiederholungsprüfung"
+if [ "$SICHERUNGSSCHLUESSEL" -ne 1 ] && [ "$NEUER_JETON" -ne 1 ]; then
+  log "[0/17] Wurzel- und Wiederholungsprüfung"
+fi
 if [ "$(id -u)" -ne 0 ]; then
   fail "Kein Root" "Benutzer $(id -un)" "root (Docker-Setup, Port 80/443, Dateirechte brauchen es)" \
     "Mit 'sudo bash install.sh' erneut starten."
@@ -182,6 +215,115 @@ if [ "$NEUER_JETON" -eq 1 ]; then
     reveal_once "  Der Link gilt 14 Tage."
     reveal_once ""
   fi
+  exit 0
+fi
+
+# ── Modus: --sicherungsschluessel (O-173, guvenlik S-22) ─────────────────────
+if [ "$SICHERUNGSSCHLUESSEL" -eq 1 ]; then
+  if [ ! -f "$ENV_FILE" ]; then
+    fail "Box nie eingerichtet" "keine .env-Datei ($ENV_FILE)" "vorhandene .env-Datei" \
+      "Die Box wurde noch nie eingerichtet. Normale Installation mit 'sudo bash install.sh' starten."
+  fi
+
+  # age-Werkzeuge prüfen und bei Bedarf installieren
+  if ! command -v age >/dev/null 2>&1 || ! command -v age-keygen >/dev/null 2>&1; then
+    if command -v apt-get >/dev/null 2>&1; then
+      log "  age / age-keygen fehlt — installiere Paket 'age'..."
+      if ! apt-get install -y age >>"$LOG_FILE" 2>&1; then
+        fail "age konnte nicht installiert werden" "apt-get install -y age fehlgeschlagen" "Paket 'age' aus universe" \
+          "universe-Paketquelle aktivieren: sudo add-apt-repository universe && sudo apt-get update && sudo apt-get install -y age"
+      fi
+    else
+      fail "age / age-keygen fehlt" "nicht installiert" "age und age-keygen auf dem Host" \
+        "age installieren (unter Ubuntu: sudo add-apt-repository universe && sudo apt-get install -y age)."
+    fi
+  fi
+
+  ALT_EMPFAENGER="$(env_get BACKUP_EMPFAENGER)"
+  if [ -n "$ALT_EMPFAENGER" ]; then
+    log ""
+    log "  ⚠️  In .env ist bereits ein Sicherungsschlüssel eingetragen:"
+    log "      BACKUP_EMPFAENGER=${ALT_EMPFAENGER}"
+    log ""
+    log "      Wird dieser Schlüssel ersetzt, lassen sich bestehende alte Sicherungen"
+    log "      nur noch mit dem ALTEN privaten Schlüssel wiederherstellen!"
+    log ""
+    read -r -p "  Zum Fortfahren genau tippen: ERSETZEN " ers_confirm
+    [ "$ers_confirm" = "ERSETZEN" ] || fail "Bestätigung nicht erhalten" "'$ers_confirm'" "'ERSETZEN'" \
+      "Abgebrochen, vorhandener Sicherungsschlüssel wurde nicht verändert."
+  fi
+
+  log ""
+  log "  Wie soll der Sicherungsschlüssel eingerichtet werden?"
+  log "    [1] Neues Schlüsselpaar in der Box erzeugen (empfohlen)"
+  log "    [2] Eigenen öffentlichen Schlüssel (age1...) einfügen"
+  read -r -p "  Auswahl [1/2] (Enter = 1): " wahl
+  wahl="${wahl:-1}"
+
+  case "$wahl" in
+    1)
+      age_out="$(age-keygen 2>/dev/null || true)"
+      sec_k="$(printf '%s\n' "$age_out" | grep -E '^AGE-SECRET-KEY-1[0-9A-Z]{58}$' | tr -d '[:space:]' || true)"
+      pub_k="$(printf '%s\n' "$age_out" | grep -E '^# public key: age1[0-9a-z]{58}$' | sed 's/^# public key: //' | tr -d '[:space:]' || true)"
+      unset age_out
+      if [ -z "$sec_k" ] || [ -z "$pub_k" ]; then
+        fail "age-keygen fehlgeschlagen" "Schlüsselpaar konnte nicht erzeugt werden" "gültige age-Schlüssel" \
+          "Überprüfen, ob 'age-keygen' ordnungsgemäß funktioniert."
+      fi
+      pub_check="$(printf '%s\n' "$sec_k" | age-keygen -y 2>/dev/null | tr -d '[:space:]' || true)"
+      if [ "$pub_check" != "$pub_k" ]; then
+        unset sec_k pub_k pub_check
+        fail "Schlüsselpaar ungültig" "abgeleiteter öffentlicher Schlüssel weicht ab" "übereinstimmendes Paar" \
+          "Erneut versuchen: sudo bash install.sh --sicherungsschluessel"
+      fi
+      unset pub_check
+
+      set_env BACKUP_EMPFAENGER "$pub_k"
+
+      reveal_once ""
+      reveal_once "  ════════════════════════════════════════════════════════════════"
+      reveal_once "  SICHERUNGSSCHLÜSSEL (privater age-Schlüssel):"
+      reveal_once "  (wird NIE wieder angezeigt, NICHT auf der Box gespeichert, NICHT in install.log)"
+      reveal_once ""
+      reveal_once "    ${sec_k}"
+      reveal_once ""
+      reveal_once "  Öffentlicher Schlüssel (in .env gespeichert):"
+      reveal_once "    ${pub_k}"
+      reveal_once ""
+      reveal_once "  In einen Tresor oder einen ZWEITEN Datenträger notieren — NICHT"
+      reveal_once "  in den Sicherungsordner! Ohne diesen privaten Schlüssel sind"
+      reveal_once "  alle ab jetzt erstellten Sicherungen UNLESBAR."
+      reveal_once "  ════════════════════════════════════════════════════════════════"
+      reveal_once ""
+
+      while true; do
+        read -r -p "  Zum Fortfahren genau tippen, sobald der private Schlüssel gesichert ist: GESICHERT " gesichert_bestaetigt
+        [ "$gesichert_bestaetigt" = "GESICHERT" ] && break
+        log "  Nicht akzeptiert ('$gesichert_bestaetigt') — bitte exakt GESICHERT eintippen, erst NACHDEM der Schlüssel notiert wurde."
+      done
+      unset sec_k pub_k
+      ;;
+    2)
+      read -r -p "  Öffentlichen Schlüssel eingeben (age1...): " pub_eingabe
+      pub_eingabe="$(printf '%s' "$pub_eingabe" | tr -d '[:space:]')"
+      if ! printf '%s' "$pub_eingabe" | grep -qE '^age1[0-9a-z]{58}$'; then
+        fail "Ungültiger age-Schlüssel" "$pub_eingabe" "Format ^age1[0-9a-z]{58}$ (62 Zeichen)" \
+          "Einen gültigen öffentlichen age-Schlüssel eingeben (z. B. erzeugt mit 'age-keygen')."
+      fi
+      set_env BACKUP_EMPFAENGER "$pub_eingabe"
+      ok "Öffentlicher Sicherungsschlüssel in .env eingetragen: $pub_eingabe"
+      log "  (Der private Schlüssel verbleibt außerhalb der Box und kommt nie hierher.)"
+      unset pub_eingabe
+      ;;
+    *)
+      fail "Ungültige Auswahl" "'$wahl'" "1 oder 2" "Erneut ausführen und 1 oder 2 wählen."
+      ;;
+  esac
+
+  # Kein Container-Neustart nötig: backup.sh läuft auf dem Host und liest
+  # .env vor jedem Lauf eigenständig via env_wert() aus. Die Docker-Container
+  # benötigen BACKUP_EMPFAENGER nicht (Verschlüsselung erfolgt auf dem Host).
+  ok "Sicherungsschlüssel erfolgreich eingerichtet (kein Container-Neustart erforderlich)"
   exit 0
 fi
 
@@ -259,6 +401,20 @@ fi
 log "[2/17] Software-Vorprüfung"
 command -v curl >/dev/null 2>&1 || fail "curl fehlt" "nicht installiert" "curl" "apt install curl"
 command -v openssl >/dev/null 2>&1 || fail "openssl fehlt" "nicht installiert" "openssl" "apt install openssl"
+
+if ! command -v age >/dev/null 2>&1 || ! command -v age-keygen >/dev/null 2>&1; then
+  if command -v apt-get >/dev/null 2>&1; then
+    log "  age / age-keygen fehlt — installiere Paket 'age'..."
+    if ! apt-get install -y age >>"$LOG_FILE" 2>&1; then
+      fail "age konnte nicht installiert werden" "apt-get install -y age fehlgeschlagen" "Paket 'age' aus universe" \
+        "universe-Paketquelle aktivieren: sudo add-apt-repository universe && sudo apt-get update && sudo apt-get install -y age"
+    fi
+  else
+    fail "age / age-keygen fehlt" "nicht installiert" "age und age-keygen auf dem Host" \
+      "age installieren (unter Ubuntu: sudo add-apt-repository universe && sudo apt-get install -y age)."
+  fi
+fi
+ok "age + age-keygen vorhanden"
 
 if ! printf 'x' | base64 -w0 >/dev/null 2>&1; then
   fail "base64 unterstützt -w0 nicht" "$(base64 --version 2>&1 | head -1)" "GNU coreutils base64" \
@@ -408,28 +564,6 @@ chmod 600 "$ENV_FILE"
 chown root:root "$ENV_FILE" 2>/dev/null || true
 ok ".env angelegt, chmod 600 (O-61)"
 
-# set_env KEY VALUE — ersetzt "KEY=" Zeile in .env, ohne den Wert zu loggen.
-#
-# ACHTUNG: der Wert geht über ENVIRON, NICHT über ein zweites "-v v=...".
-# awks "-v"-Zuweisung interpretiert Backslash-Escapes im ÜBERGEBENEN Wert
-# (z. B. wird "\b" zu einem Backspace-Byte) — bei den gewürfelten Hex-Werten
-# fiel das nie auf, aber SMTP_PASS ist beliebiger Text von Menschenhand, und
-# ein Passwort mit Backslash würde so lautlos verstümmelt. ENVIRON liest die
-# Shell-Variable roh, ohne dass awk sie nochmal interpretiert (geprüft: ein
-# "\b" im Wert kommt unverändert in .env an).
-set_env() {
-  local key="$1"
-  export SET_ENV_VALUE="$2"
-  if grep -q "^${key}=" "$ENV_FILE"; then
-    local tmp; tmp="$(mktemp -p "$SCRIPT_DIR")"
-    awk -v k="$key" 'BEGIN{FS=OFS="="} $1==k{$0=k"="ENVIRON["SET_ENV_VALUE"]} {print}' "$ENV_FILE" > "$tmp"
-    mv "$tmp" "$ENV_FILE"
-  else
-    printf '%s=%s\n' "$key" "$SET_ENV_VALUE" >> "$ENV_FILE"
-  fi
-  unset SET_ENV_VALUE
-}
-
 if [ "$KAYIT_MODUS" != "code" ]; then
   set_env SITE_URL "$SITE_URL"
   set_env API_EXTERNAL_URL "$SITE_URL"
@@ -464,6 +598,22 @@ PG_AUTHENTICATOR_PASSWORD="$(openssl rand -hex 24)"
 PG_AUTH_ADMIN_PASSWORD="$(openssl rand -hex 24)"
 PG_STORAGE_ADMIN_PASSWORD="$(openssl rand -hex 24)"
 
+# O-173 (guvenlik S-22): Schlüsselpaar für verschlüsselte Sicherung (age)
+# Ausgabe NUR in Shell-Variablen — privater Schlüssel NIE auf Platte, NIE in install.log!
+AGE_KEYPAIR="$(age-keygen 2>/dev/null || true)"
+AGE_SECRET_KEY="$(printf '%s\n' "$AGE_KEYPAIR" | grep -E '^AGE-SECRET-KEY-1[0-9A-Z]{58}$' | tr -d '[:space:]' || true)"
+BACKUP_EMPFAENGER="$(printf '%s\n' "$AGE_KEYPAIR" | grep -E '^# public key: age1[0-9a-z]{58}$' | sed 's/^# public key: //' | tr -d '[:space:]' || true)"
+unset AGE_KEYPAIR
+[ -n "$AGE_SECRET_KEY" ] && [ -n "$BACKUP_EMPFAENGER" ] || fail "age-keygen fehlgeschlagen" "Schlüsselpaar konnte nicht erzeugt werden" "gültiges age-Schlüsselpaar" \
+  "age-Installation prüfen (age-keygen)."
+pub_check="$(printf '%s\n' "$AGE_SECRET_KEY" | age-keygen -y 2>/dev/null | tr -d '[:space:]' || true)"
+if [ "$pub_check" != "$BACKUP_EMPFAENGER" ]; then
+  unset AGE_SECRET_KEY BACKUP_EMPFAENGER pub_check
+  fail "Schlüsselpaar ungültig" "abgeleiteter öffentlicher Schlüssel weicht ab" "übereinstimmendes Paar" \
+    "age-Installation prüfen (age-keygen)."
+fi
+unset pub_check
+
 set_env POSTGRES_PASSWORD "$POSTGRES_PASSWORD"
 set_env JWT_SECRET "$JWT_SECRET"
 set_env SECRET_KEY_BASE "$SECRET_KEY_BASE"
@@ -471,12 +621,13 @@ set_env REALTIME_DB_ENC_KEY "$REALTIME_DB_ENC_KEY"
 set_env S3_PROTOCOL_ACCESS_KEY_ID "$S3_KEY_ID"
 set_env S3_PROTOCOL_ACCESS_KEY_SECRET "$S3_KEY_SECRET"
 set_env DATA_ENCRYPTION_KEY "$DATA_ENCRYPTION_KEY"
+set_env BACKUP_EMPFAENGER "$BACKUP_EMPFAENGER"
 set_env SETUP_TOKEN "$SETUP_TOKEN"
 set_env SETUP_TOKEN_SEIT "$(date +%s)"
 set_env PG_AUTHENTICATOR_PASSWORD "$PG_AUTHENTICATOR_PASSWORD"
 set_env PG_AUTH_ADMIN_PASSWORD "$PG_AUTH_ADMIN_PASSWORD"
 set_env PG_STORAGE_ADMIN_PASSWORD "$PG_STORAGE_ADMIN_PASSWORD"
-ok "elf Geheimnisse erzeugt (Werte NICHT geloggt)"
+ok "Geheimnisse und Sicherungsschlüssel erzeugt (Werte NICHT geloggt)"
 
 # ── Schritt 7 — ANON_KEY / SERVICE_ROLE_KEY aus JWT_SECRET ableiten (O-60) ───
 log "[7/17] ANON_KEY / SERVICE_ROLE_KEY aus JWT_SECRET ableiten"
@@ -510,7 +661,7 @@ ok "leer gelassen (SUPABASE_PUBLIC_URL = SITE_URL, ein Origin)"
 
 # ── Schritt 9 — Pflichtfeld-Tor (O-53) ───────────────────────────────────────
 log "[9/17] Pflichtfelder prüfen, bevor irgendetwas startet"
-PFLICHTFELDER="ANON_KEY SERVICE_ROLE_KEY JWT_SECRET POSTGRES_PASSWORD DATA_ENCRYPTION_KEY SETUP_TOKEN PG_AUTHENTICATOR_PASSWORD PG_AUTH_ADMIN_PASSWORD PG_STORAGE_ADMIN_PASSWORD"
+PFLICHTFELDER="ANON_KEY SERVICE_ROLE_KEY JWT_SECRET POSTGRES_PASSWORD DATA_ENCRYPTION_KEY BACKUP_EMPFAENGER SETUP_TOKEN PG_AUTHENTICATOR_PASSWORD PG_AUTH_ADMIN_PASSWORD PG_STORAGE_ADMIN_PASSWORD"
 if [ "$KAYIT_MODUS" != "code" ]; then
   PFLICHTFELDER="SITE_URL SUPABASE_PUBLIC_URL $PFLICHTFELDER"
 fi
@@ -520,8 +671,12 @@ for key in $PFLICHTFELDER; do
   if [ "$key" = "SITE_URL" ] || [ "$key" = "SUPABASE_PUBLIC_URL" ]; then
     [ "$wert" != "https://praxis.local" ] || fail "Platzhalter nicht ersetzt: ${key}" "$wert" "echte Adresse" "Gültige SITE_URL angeben."
   fi
+  if [ "$key" = "BACKUP_EMPFAENGER" ]; then
+    printf '%s' "$wert" | grep -qE '^age1[0-9a-z]{58}$' || fail "BACKUP_EMPFAENGER ungültig" "$wert" "Format ^age1[0-9a-z]{58}$" "Skript erneut mit --neu starten."
+  fi
 done
 ok "alle Pflichtfelder gefüllt"
+
 
 # ── Schritt 10 — TLS-Modus ───────────────────────────────────────────────────
 log "[10/17] TLS-Modus"
@@ -979,8 +1134,11 @@ WantedBy=timers.target
 EOF
 
   systemctl daemon-reload
-  systemctl enable --now praxura-backup.timer >/dev/null 2>&1
-  ok "praxura-backup.timer aktiv (nächtlich 01:00 + bis zu 15 Min Zufallsverzögerung)"
+  # O-173 (guvenlik 07.10.2026): erst NACH der GESICHERT-Bestätigung einschalten (s. u.) —
+  # bräche die Einrichtung vorher ab, würden nächtliche Sicherungen auf einen Schlüssel
+  # verschlüsselt, den nie jemand gesehen hat.
+  BACKUP_TIMER_EINSCHALTEN=1
+  ok "praxura-backup.timer eingerichtet (nächtlich 01:00 + bis zu 15 Min) — wird nach Bestätigung der Schlüssel eingeschaltet"
 else
   warn "systemctl nicht gefunden — automatische Aktualisierung/Yedekleme NICHT eingerichtet. 'bash update.sh --jetzt' / 'bash backup.sh --sebep manuel' manuell/per Cron einrichten."
 fi
@@ -1035,25 +1193,37 @@ elif [ "$CADDY_TLS_MODUS_VALUE" = "klassisch" ] && [ "$CADDY_TLS_ARG_VALUE" = "i
 fi
 log ""
 reveal_once "  ════════════════════════════════════════════════════════════════"
-reveal_once "  DATA_ENCRYPTION_KEY (wird NIE wieder angezeigt, NICHT in install.log):"
+reveal_once "  GEHEIMNISSE FÜR DEN NOTFALL (wird NIE wieder angezeigt):"
 reveal_once ""
-reveal_once "    ${DATA_ENCRYPTION_KEY}"
+reveal_once "  1) DATA_ENCRYPTION_KEY (Datenbank-Verschlüsselung der Patientenfelder):"
+reveal_once "     ${DATA_ENCRYPTION_KEY}"
 reveal_once ""
-reveal_once "  In einen Tresor oder einen ZWEITEN Datenträger — NICHT in den Backup-"
-reveal_once "  Ordner (O-61). Geht dieser Wert verloren, sind die verschlüsselten"
-reveal_once "  Patientenfelder auch mit einem vollständigen Backup unlesbar."
+reveal_once "  2) SICHERUNGSSCHLÜSSEL (privater age-Schlüssel zur Wiederherstellung):"
+reveal_once "     ${AGE_SECRET_KEY}"
+reveal_once ""
+reveal_once "     Öffentlicher Empfänger (in .env gespeichert):"
+reveal_once "     ${BACKUP_EMPFAENGER}"
+reveal_once ""
+reveal_once "  Beide Schlüssel auf denselben Notfallzettel oder in den Tresor"
+reveal_once "  notieren — NICHT in den Sicherungsordner (O-61, O-173, S-22)!"
+reveal_once "  Ohne den Sicherungsschlüssel sind alle Sicherungen unlesbar;"
+reveal_once "  ohne DATA_ENCRYPTION_KEY sind die Patientendaten in der DB unlesbar."
 reveal_once "  ════════════════════════════════════════════════════════════════"
 reveal_once ""
-# O-29 (2): bis hierher wurde der Schlüssel nur GEZEIGT, nie eine Bestätigung
-# VERLANGT — ein Enter-Reflex ohne Lesen/Sichern war möglich. Kein Abbruch bei
-# Falscheingabe (anders als "LÖSCHEN" oben, Zeile 122): die Installation ist
-# an diesem Punkt bereits vollständig fertig, es gibt nichts abzubrechen —
-# nur eine Schleife, bis die Bestätigung wirklich kommt.
+# O-29 (2) / O-173: bis hierher wurden die Schlüssel nur GEZEIGT, nie eine Bestätigung
+# VERLANGT — ein Enter-Reflex ohne Lesen/Sichern war möglich. Eine gemeinsame Schleife,
+# bis die Bestätigung wirklich kommt.
 while true; do
-  read -r -p "  Zum Fortfahren genau tippen, sobald der Schlüssel gesichert ist: GESICHERT " dek_bestaetigt
-  [ "$dek_bestaetigt" = "GESICHERT" ] && break
-  log "  Nicht akzeptiert ('$dek_bestaetigt') — bitte exakt GESICHERT eintippen, erst NACHDEM der Schlüssel oben in einen Tresor/zweiten Datenträger kopiert wurde."
+  read -r -p "  Zum Fortfahren genau tippen, sobald BEIDE Schlüssel gesichert sind: GESICHERT " schluessel_bestaetigt
+  [ "$schluessel_bestaetigt" = "GESICHERT" ] && break
+  log "  Nicht akzeptiert ('$schluessel_bestaetigt') — bitte exakt GESICHERT eintippen, erst NACHDEM beide Schlüssel notiert wurden."
 done
+unset DATA_ENCRYPTION_KEY AGE_SECRET_KEY
+if [ "${BACKUP_TIMER_EINSCHALTEN:-0}" = "1" ]; then
+  systemctl enable --now praxura-backup.timer >/dev/null 2>&1 \
+    && ok "praxura-backup.timer aktiv" \
+    || warn "praxura-backup.timer ließ sich nicht einschalten — 'sudo systemctl enable --now praxura-backup.timer'"
+fi
 if [ "${PRAXURA_BROWSER_OEFFNEN:-}" = "1" ]; then
   log ""
   log "  Der Browser öffnet sich am Ende der Einrichtung automatisch."

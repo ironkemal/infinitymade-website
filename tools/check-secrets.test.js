@@ -240,8 +240,8 @@ test('17. Binärdateien mit Null-Byte in den ersten 8000 Bytes werden übersprun
   assert.equal(pruefeText(normalerText, 'bild.png').length, 1);
 });
 
-test('18. MUSTER enthält alle 11 geforderten Mustertypen mit name, re und grund', () => {
-  assert.equal(MUSTER.length, 11);
+test('18. MUSTER enthält alle 12 geforderten Mustertypen mit name, re und grund', () => {
+  assert.equal(MUSTER.length, 12);
   const erwarteteNamen = [
     'JWT',
     'Stripe geheim',
@@ -252,6 +252,7 @@ test('18. MUSTER enthält alle 11 geforderten Mustertypen mit name, re und grund
     'Slack',
     'OpenAI/Anthropic',
     'Privater Schlüssel',
+    'age-Sicherungsschlüssel',
     'Azure/allgemein Schlüssel-Zuweisung',
     'Verbindungs-URL mit Passwort',
   ];
@@ -295,4 +296,13 @@ test('20. Verbindungs-URL mit Variable oder Platzhalter ist kein Fund', () => {
   assert.equal(pruefeText('URL=postgres' + 'ql://u:${DB_PASSWORD}@h:5432/x', 'a.yml', s).length, 0);
   assert.equal(pruefeText('# postgres' + '://user:PASSWORT@host', 'a.sh', s).length, 0);
   assert.equal(pruefeText('URL=postgres' + '://u:geheim' + 'Wort99@h/x', 'a.yml', s).length, 1);
+});
+
+test('age-Sicherungsschlüssel wird erkannt, öffentlicher age1-Schlüssel nicht (O-173)', async () => {
+  const { MUSTER } = await import('./check-secrets.mjs');
+  const m = MUSTER.find((x) => x.name === 'age-Sicherungsschlüssel');
+  assert.ok(m);
+  assert.ok(m.re.test('AGE-SECRET-KEY-1' + 'Q'.repeat(58)));
+  assert.ok(!m.re.test('age1' + 'q'.repeat(58)));
+  assert.ok(!m.re.test('AGE-SECRET-KEY-1…'), 'Platzhalter in Doku ist kein Treffer');
 });
