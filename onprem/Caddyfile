@@ -108,7 +108,15 @@
 
 	@supabase path /auth/* /rest/* /realtime/* /storage/* /sso/* /.well-known/*
 	handle @supabase {
-		reverse_proxy kong:8000
+		reverse_proxy kong:8000 {
+			# K2b.7b: Schlüssel für GoTrues Brute-Force-Bremse (docker-compose.yml auth,
+			# GOTRUE_RATE_LIMIT_HEADER). header_up ERSETZT einen vom Client
+			# mitgeschickten Wert — sonst bekäme jeder Versuch einen frischen Eimer.
+			# {remote_host} = TCP-Gegenstelle, nicht X-Forwarded-For (Caddy vertraut
+			# keinem Proxy davor). ⚠️ Windows/WSL-Box: dort sieht Caddy evtl. alle
+			# Geräte als Docker-Gateway (ein Eimer) — Messung im Kutu-Test (S-50).
+			header_up X-Praxura-Client-IP {remote_host}
+		}
 	}
 
 	# ── Wurzel → Login (spiegelt vercel.json-Redirect für app.praxura.de) ───

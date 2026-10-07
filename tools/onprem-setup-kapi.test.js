@@ -242,3 +242,19 @@ test('Verhalten: setup_jeton_neu schreibt 48-Hex-Jeton + SEIT, gibt den Jeton au
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// ── K2b.7b: GoTrue-Bremse, Schlüssel von Caddy ───────────────────────────────
+
+test('K2b.7b: auth hat GOTRUE_RATE_LIMIT_HEADER + TOKEN_REFRESH fest in compose (nicht .env)', () => {
+  const c = lies('onprem', 'docker-compose.yml');
+  assert.match(c, /^\s+GOTRUE_RATE_LIMIT_HEADER: X-Praxura-Client-IP$/m);
+  assert.match(c, /^\s+GOTRUE_RATE_LIMIT_TOKEN_REFRESH: "30"$/m);
+  assert.doesNotMatch(lies('onprem', '.env.template'), /GOTRUE_RATE_LIMIT/);
+});
+
+test('K2b.7b: Caddy setzt X-Praxura-Client-IP aus {remote_host} im Kong-Proxy (überschreibt Client-Wert)', () => {
+  const c = lies('onprem', 'Caddyfile').split(/\r?\n/).filter((z) => !/^\s*#/.test(z)).join('\n');
+  const block = c.slice(c.indexOf('handle @supabase'), c.indexOf('@root'));
+  assert.match(block, /reverse_proxy kong:8000 \{\s*header_up X-Praxura-Client-IP \{remote_host\}\s*\}/);
+  assert.doesNotMatch(block, /X-Forwarded-For/, 'Schlüssel nicht aus fälschbarem XFF');
+});

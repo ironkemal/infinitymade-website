@@ -1,7 +1,7 @@
 {
   "surum": "0.4.0",
   "dateien": [
-    { "yol": "docker-compose.yml", "sha256": "d80054baaf3c6a07d30e9963cae10bfb89ba4dfd9007e83a5e29ef39dbb8627d" },
+    { "yol": "docker-compose.yml", "sha256": "3fc9fd2bee7d4b4a09c534203e6d095a2603749015c287f70e987ec44f42770a" },
     { "yol": ".env.template", "sha256": "ad511a3a856a17bbe273381f8625e223c6a9a3f84f513ab2506c5adf71487a00" },
     { "yol": "install.sh", "sha256": "d12bdfef7f553b66673577fd23d3293466ed76d926fed32b831127c3c6df228b" },
     { "yol": "update.sh", "sha256": "035d8c877ace624b55c21dd44576b6ee2aca16f7e71aeb4e936d2ae2b5217a07" },

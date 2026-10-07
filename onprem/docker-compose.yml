@@ -186,6 +186,17 @@ services:
       # = MIN_MITARBEITER, untere Schranke für jeden Weg inkl. direktem updateUser; bestehende Passwörter bleiben gültig (GoTrue prüft nur beim Setzen).
       GOTRUE_PASSWORD_MIN_LENGTH: "8"
 
+      # K2b.7b (07.10.2026, onprem O-161 / guvenlik S-50): Brute-Force-Bremse.
+      # Ohne HEADER drosselt GoTrue GAR NICHT (gemessen: 60 Fehlversuche, 0× 429;
+      # v2.189.0 middleware.go: leerer Header = kein Limit). Den Wert setzt Caddy
+      # (Caddyfile @supabase, header_up — überschreibt, was der Client schickt).
+      # Gemessen mit Header: 429 ab Versuch 31, Eimer je Header-Wert (erster Wert
+      # vor dem Komma), interne Aufrufe von api über kong:8000 ohne Header = kein
+      # Limit (gewollt). TOKEN_REFRESH gilt für den ganzen /token-Eimer (password +
+      # refresh): 30 je 5 min + feste Burst 30. Fest hier, nicht in .env (Politik).
+      GOTRUE_RATE_LIMIT_HEADER: X-Praxura-Client-IP
+      GOTRUE_RATE_LIMIT_TOKEN_REFRESH: "30"
+
       # Kein SMTP fuer GoTrue (O-142, Entscheidung 01.10.2026 — KHS K2.5):
       # Konten entstehen in der Box OHNE Mail. Inhaber: Einrichtungsassistent
       # (admin.createUser, email_confirm:true); Mitarbeiter: Einrichtungscode
