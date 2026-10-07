@@ -3,7 +3,7 @@
 > Üretim: 2026-10-07 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3045 fonksiyon** · 367 dosya · 41 sidebar modülü
+**3111 fonksiyon** (3045 JS · 58 bash · 8 ps1) · 378 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -437,36 +437,127 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fmtDate` — api-backend/billing/dta/encoding.js:85 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:29 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:980 · ops/app.js:84
 - `render` — calendar-widget.js:127 · dashboard.js:12706 · dashboard.js:18011 · ops/board.js:206 · ops/decisions.js:14 · ops/files.js:52 · ops/finance.js:959 · ops/meetings.js:23 · ops/wissen.js:66 · patient-suche.js:116
 - `$` — attendance.js:10 · module/anamnese.js:42 · module/branding-ui.js:31 · module/kiosk.js:72 · module/rechnung-zahlungseingang.js:376 · module/verordnung-podo.js:83 · module/verordnung-pruefen-knopf.js:42 · module/zuzahlung-korrektur.js:206 · ops/app.js:48
-- `resolveAuth` — api-backend/billing/api/ausfall.routes.js:27 · api-backend/billing/api/mahnwesen.routes.js:22 · api-backend/billing/api/podo-empfangsnachweis.routes.js:12 · api-backend/billing/api/rechnung-zahlung.routes.js:84 · api-backend/billing/api/statistik.routes.js:19 · api-backend/billing/api/verordnung-status.routes.js:47 · api-backend/billing/api/warteliste.routes.js:21 · api-backend/billing/api/zuzahlung.routes.js:47
-- `init` — attendance.js:299 · booking-request.js:1410 · booking.js:63 · cookie-consent.js:139 · dashboard.js:15126 · kalender.js:130 · onboarding.js:77 · setup.js:218
-- `schliessen` — cookie-consent.js:76 · module/abrechnung-freigabe.js:165 · module/abrechnungsstatus.js:596 · module/arzt-register.js:276 · module/rechnung-zahlungseingang.js:432 · module/verordnung-feldmarker.js:240 · module/zuzahlung-befreiung.js:151 · module/zuzahlung-korrektur.js:209
 - `g` — dashboard.js:14152 · dashboard.js:14165 · dashboard.js:14319 · dashboard.js:14389 · module/rezept-in-maske.js:39 · module/verordnung-anlegen.js:28 · module/verordnung-maske.js:421 · module/verordnung-nachweis.js:28
+- `init` — attendance.js:299 · booking-request.js:1410 · booking.js:63 · cookie-consent.js:139 · dashboard.js:15126 · kalender.js:130 · onboarding.js:77 · setup.js:218
+- `resolveAuth` — api-backend/billing/api/ausfall.routes.js:27 · api-backend/billing/api/mahnwesen.routes.js:22 · api-backend/billing/api/podo-empfangsnachweis.routes.js:12 · api-backend/billing/api/rechnung-zahlung.routes.js:84 · api-backend/billing/api/statistik.routes.js:19 · api-backend/billing/api/verordnung-status.routes.js:47 · api-backend/billing/api/warteliste.routes.js:21 · api-backend/billing/api/zuzahlung.routes.js:47
+- `schliessen` — cookie-consent.js:76 · module/abrechnung-freigabe.js:165 · module/abrechnungsstatus.js:596 · module/arzt-register.js:276 · module/rechnung-zahlungseingang.js:432 · module/verordnung-feldmarker.js:240 · module/zuzahlung-befreiung.js:151 · module/zuzahlung-korrektur.js:209
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:28 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · module/geld.js:48
 - `zeile` — module/branding-ui.js:39 · module/einrichtung-ring.js:40 · module/rechnung-druck.js:33 · module/verordnung-detail.js:273 · module/verordnung-detail.js:402 · module/verordnung-detail.js:459 · module/verordnung-pruefen-knopf.js:116
-- `run` — api-backend/ai/tasks/appointment-confirm-draft.js:70 · api-backend/ai/tasks/b2c-draft.js:59 · api-backend/ai/tasks/rezept-normalize.js:113 · api-backend/ai/tasks/rezept-ocr.js:166 · api-backend/ai/tasks/rezept-validate.js:9 · api-backend/ai/tasks/series-scheduler.js:118
 - `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:303 · api-backend/server.js:1449
+- `run` — api-backend/ai/tasks/appointment-confirm-draft.js:70 · api-backend/ai/tasks/b2c-draft.js:59 · api-backend/ai/tasks/rezept-normalize.js:113 · api-backend/ai/tasks/rezept-ocr.js:166 · api-backend/ai/tasks/rezept-validate.js:9 · api-backend/ai/tasks/series-scheduler.js:118
 - `sha256Hex` — api-backend/billing/api/abrechnung.routes.js:93 · api-backend/billing/api/artefakt-registry.js:23 · api-backend/billing/api/zuzahlungsforderung.routes.js:38 · api-backend/billing/dta/zuzahlungsforderung-ursprung.js:73 · api-backend/merkez-istemci/signatur.js:22 · module/einwilligung-texte.js:421
 - `zeichne` — module/abrechnung-auswahl.js:767 · module/abrechnungsstatus.js:609 · module/einrichtung-ring.js:27 · module/patienten-einwilligung.js:494 · module/praxis-standort.js:115 · module/rezeptinfo-geld.js:355
-- `mockResponse` — api-backend/ai/tasks/appointment-confirm-draft.js:56 · api-backend/ai/tasks/b2c-draft.js:47 · api-backend/ai/tasks/rezept-normalize.js:45 · api-backend/ai/tasks/rezept-ocr.js:95 · api-backend/ai/tasks/series-scheduler.js:104
-- `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:63 · api-backend/billing/dta/preflight.js:159
-- `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:288 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:98
-- `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
-- `t` — dashboard.js:505 · module/anamnese.js:381 · module/bg-angaben.js:36 · module/branding.js:28 · module/kiosk.js:56
 - `cleanup` — dashboard.js:6349 · dashboard.js:6378 · dashboard.js:6465 · dashboard.js:18761 · module/absagegrund-modal.js:81
 - `el` — module/arzt-register.js:251 · module/fussbefund.js:214 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:690
-- `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:218
-- `loadServices` — booking-request.js:528 · booking.js:164 · dashboard.js:8617 · kalender.js:643
-- `speichern` — cookie-consent.js:69 · module/arzt-register.js:292 · module/fussbefund.js:732 · module/verordnung-detail.js:826
+- `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:288 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:98
+- `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
+- `mockResponse` — api-backend/ai/tasks/appointment-confirm-draft.js:56 · api-backend/ai/tasks/b2c-draft.js:47 · api-backend/ai/tasks/rezept-normalize.js:45 · api-backend/ai/tasks/rezept-ocr.js:95 · api-backend/ai/tasks/series-scheduler.js:104
+- `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:63 · api-backend/billing/dta/preflight.js:159
+- `t` — dashboard.js:505 · module/anamnese.js:381 · module/bg-angaben.js:36 · module/branding.js:28 · module/kiosk.js:56
 - `closeModal` — dashboard.js:911 · dashboard.js:11566 · dashboard.js:11987 · ops/app.js:162
-- `onEsc` — dashboard.js:6472 · module/rechnung-leistung-picker.js:46 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
-- `v` — dashboard.js:12441 · dashboard.js:12463 · dashboard.js:12483 · dashboard.js:14912
-- `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208
-- `wert` — module/anfrage-bearbeiten.js:171 · module/fahrtenbuch-regeln.js:280 · module/verordnung-pruefen-knopf.js:43 · setup.js:324
 - `load` — ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
-- `showMsg` — admin-login.js:15 · attendance.js:69 · login.js:101
-- `isAdmin` — admin-login.js:18 · api/_lib/auth.js:90 · login.js:133
-- `showToast` — admin.js:22 · dashboard.js:928 · module/kiosk.js:55
-- `tick` — api-backend/merkez-istemci/ip-abgleich.js:203 · api-backend/server.js:3895 · dashboard.js:13505
-- `setzen` — api-backend/server.js:4236 · module/praxis-standort.js:143 · module/rechnung-druck.js:115
-- `loadTeam` — booking-request.js:622 · dashboard.js:9660 · kalender.js:219
-- `initCalendar` — booking-request.js:671 · dashboard.js:2136 · kalender.js:269
+- `loadServices` — booking-request.js:528 · booking.js:164 · dashboard.js:8617 · kalender.js:643
+- `log` — onprem/backup.sh:40 · onprem/install.sh:63 · onprem/restore.sh:38 · onprem/update.sh:59
+- `ok` — onprem/backup.sh:41 · onprem/install.sh:64 · onprem/restore.sh:39 · onprem/update.sh:60
+- `onEsc` — dashboard.js:6472 · module/rechnung-leistung-picker.js:46 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
+- `speichern` — cookie-consent.js:69 · module/arzt-register.js:292 · module/fussbefund.js:732 · module/verordnung-detail.js:826
+- `v` — dashboard.js:12441 · dashboard.js:12463 · dashboard.js:12483 · dashboard.js:14912
+- `warn` — onprem/backup.sh:42 · onprem/install.sh:65 · onprem/restore.sh:40 · onprem/update.sh:61
+- `wert` — module/anfrage-bearbeiten.js:171 · module/fahrtenbuch-regeln.js:280 · module/verordnung-pruefen-knopf.js:43 · setup.js:324
+- `zahl` — api-backend/lib/gps-checkin.js:11 · module/frequenz-pruefung.js:137 · module/rechnung-summen.js:11 · module/rezept-in-maske.js:218
+- `zeigeFehler` — module/abrechnung-detail.js:576 · module/abrechnung-detail.js:618 · module/zuzahlung-befreiung.js:150 · module/zuzahlung-korrektur.js:208
+- `applyLang` — kalender.js:67 · login.js:51 · setup.js:86
+- `DE` — module/behandlungsbestaetigung.js:41 · module/patientenkarte.js:38 · module/verordnung-uebersicht.js:106
+- `env_wert` — onprem/backup.sh:77 · onprem/restore.sh:83 · onprem/update.sh:132
+- `f` — dashboard.js:1113 · module/branding.js:73 · module/kiosk.js:199
+
+## Shell (onprem/)
+
+### `onprem/backup.sh`
+- `log()` — Zeile 40 · calledBy: fehler, onprem/backup.sh
+- `ok()` — Zeile 41 · calledBy: onprem/backup.sh
+- `warn()` — Zeile 42 · calledBy: onprem/backup.sh
+- `fehler()` — Zeile 43 · calledBy: onprem/backup.sh
+- `env_wert()` — Zeile 77 · calledBy: onprem/backup.sh
+- `temizle()` — Zeile 129
+- `sema_versiyonu_oku()` — Zeile 160 · calledBy: onprem/backup.sh
+- `parmak_izi_dek()` — Zeile 230 · calledBy: onprem/backup.sh
+- `parmak_izi_db_taraf()` — Zeile 238 · calledBy: onprem/backup.sh
+- `json_deger()` — Zeile 282 · calledBy: onprem/backup.sh
+- `rotasyon_vor_migration()` — Zeile 318 · calledBy: onprem/backup.sh
+- `rotasyon_nightly()` — Zeile 321 · calledBy: onprem/backup.sh
+
+### `onprem/install.sh`
+- sources: `lib-ip.sh`, `lib-setup-jeton.sh`, `||`, `lib-health.sh`
+- `log()` — Zeile 63 · calledBy: fail, onprem/install.sh
+- `ok()` — Zeile 64 · calledBy: onprem/install.sh
+- `warn()` — Zeile 65 · calledBy: onprem/install.sh
+- `reveal_once()` — Zeile 66 · calledBy: onprem/install.sh
+- `fail()` — Zeile 68 · calledBy: onprem/install.sh
+- `env_get()` — Zeile 88 · calledBy: onprem/install.sh
+- `set_env()` — Zeile 405 · calledBy: onprem/install.sh
+- `b64url()` — Zeile 471 · calledBy: sign_jwt
+- `sign_jwt()` — Zeile 472 · calledBy: onprem/install.sh
+
+### `onprem/ip-melden.sh`
+- sources: `lib-ip.sh`
+
+### `onprem/lib-health.sh`
+- `warte_auf_gesundheit()` — Zeile 21 · calledBy: onprem/install.sh, onprem/update.sh
+
+### `onprem/lib-ip.sh`
+- `lan_ip_ermitteln()` — Zeile 22 · calledBy: onprem/install.sh, onprem/ip-melden.sh, onprem/update.sh
+- `ist_rfc1918()` — Zeile 34 · calledBy: ip_modus_yaz, onprem/install.sh, onprem/ip-melden.sh
+- `ip_modus_yaz()` — Zeile 50 · calledBy: onprem/install.sh, onprem/update.sh
+- `ip_timer_kur()` — Zeile 97 · calledBy: onprem/install.sh, onprem/update.sh
+
+### `onprem/lib-setup-jeton.sh`
+- `_sj_env_lesen()` — Zeile 18 · calledBy: setup_abgeschlossen_lesen, setup_jeton_aufraeumen
+- `_sj_env_setzen()` — Zeile 24 · calledBy: setup_jeton_aufraeumen, setup_jeton_neu
+- `setup_abgeschlossen_lesen()` — Zeile 49 · calledBy: onprem/install.sh, setup_jeton_aufraeumen
+- `setup_jeton_aufraeumen()` — Zeile 82 · calledBy: onprem/install.sh, onprem/update.sh
+- `setup_jeton_neu()` — Zeile 110 · calledBy: onprem/install.sh
+
+### `onprem/reset-owner-passwort.sh`
+- `fail()` — Zeile 22 · calledBy: onprem/reset-owner-passwort.sh
+
+### `onprem/restore.sh`
+- `log()` — Zeile 38 · calledBy: fehler, onprem/restore.sh
+- `ok()` — Zeile 39 · calledBy: onprem/restore.sh
+- `warn()` — Zeile 40 · calledBy: onprem/restore.sh
+- `fehler()` — Zeile 41 · calledBy: onprem/restore.sh
+- `env_wert()` — Zeile 83 · calledBy: onprem/restore.sh
+- `meta_alan()` — Zeile 109 · calledBy: onprem/restore.sh
+- `parmak_izi_dek()` — Zeile 188 · calledBy: onprem/restore.sh
+- `parmak_izi_db_taraf()` — Zeile 196 · calledBy: onprem/restore.sh
+
+### `onprem/update.sh`
+- sources: `lib-health.sh`, `lib-ip.sh`, `lib-setup-jeton.sh`
+- `log()` — Zeile 59 · calledBy: fehler, onprem/update.sh
+- `ok()` — Zeile 60 · calledBy: bildirim_degerlendir, onprem/update.sh
+- `warn()` — Zeile 61 · calledBy: bildirim_degerlendir, mail_gonder_container, onprem/update.sh
+- `fehler()` — Zeile 65 · calledBy: fail, onprem/update.sh
+- `fail()` — Zeile 79
+- `env_wert()` — Zeile 132 · calledBy: onprem/update.sh, owner_bilgisini_guncelle
+- `manifest_feld()` — Zeile 180 · calledBy: onprem/update.sh
+- `dateien_sha_icerik()` — Zeile 227 · calledBy: durumu_yaz
+- `onceki_sha()` — Zeile 230 · calledBy: onprem/update.sh
+- `durumu_yaz()` — Zeile 236 · calledBy: onprem/update.sh
+- `owner_bilgisini_guncelle()` — Zeile 264 · calledBy: onprem/update.sh
+- `bildirim_alani_oku()` — Zeile 280 · calledBy: bildirim_degerlendir
+- `bildirim_kaydet()` — Zeile 292 · calledBy: bildirim_degerlendir
+- `mail_gonder_container()` — Zeile 305 · calledBy: bildirim_degerlendir
+- `bildirim_degerlendir()` — Zeile 327 · calledBy: durumu_yaz
+- `geri_yukle()` — Zeile 475 · calledBy: onprem/update.sh
+- `anahtarlari_oku()` — Zeile 494 · calledBy: onprem/update.sh
+- `deger_oku()` — Zeile 498 · calledBy: onprem/update.sh
+
+### `onprem/windows/praxura-installieren.ps1`
+- `Log()` — Zeile 64 · calledBy: Fehler, Ok, Warn, onprem/windows/praxura-installieren.ps1
+- `Ok()` — Zeile 65 · calledBy: onprem/windows/praxura-installieren.ps1
+- `Warn()` — Zeile 66 · calledBy: onprem/windows/praxura-installieren.ps1
+- `Fehler()` — Zeile 67 · calledBy: onprem/windows/praxura-installieren.ps1
+- `Frage()` — Zeile 76 · calledBy: onprem/windows/praxura-installieren.ps1
+- `InWsl()` — Zeile 88 · calledBy: onprem/windows/praxura-installieren.ps1
+- `BoxEnv()` — Zeile 97 · calledBy: onprem/windows/praxura-installieren.ps1
+- `DistroVorhanden()` — Zeile 102

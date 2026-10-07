@@ -17,7 +17,8 @@
 // cümle: "harita güncelle". Eski harita hiç haritadan kötüdür — okuyan ona inanır.
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { join, relative, sep, dirname, basename } from 'node:path';
+import { shellFunktionenFinden, shellQuellen, shellAufrufe } from './funktionskarte-shell.mjs';
 
 const ROOT = process.cwd();
 const OUT_DIR = join(ROOT, 'funktionen');
@@ -32,16 +33,17 @@ const SKIP_DIRS = new Set([
 // haritanın kör noktası tam da büyümesi beklenen yer olurdu.
 const SCAN_ROOTS = ['.', 'module', 'api', 'api-backend', 'ops', 'lib'];
 
-function walk(dir, acc = []) {
+function walk(dir, acc = [], isFile = null, skipExtra = null) {
   let entries;
   try { entries = readdirSync(dir); } catch { return acc; }
   for (const e of entries) {
     if (SKIP_DIRS.has(e)) continue;
+    if (skipExtra && skipExtra(e, dir)) continue;
     const p = join(dir, e);
     let st;
     try { st = statSync(p); } catch { continue; }
-    if (st.isDirectory()) walk(p, acc);
-    else if (/\.(js|mjs)$/.test(e) && !/\.(test|spec)\.(js|mjs)$/.test(e)) acc.push(p);
+    if (st.isDirectory()) walk(p, acc, isFile, skipExtra);
+    else if (isFile ? isFile(e, p) : (/\.(js|mjs)$/.test(e) && !/\.(test|spec)\.(js|mjs)$/.test(e))) acc.push(p);
   }
   return acc;
 }
@@ -57,6 +59,18 @@ const files = [...new Set(
 )].sort();
 
 const rel = (p) => relative(ROOT, p).split(sep).join('/');
+
+// Kabuk dosyaları (onprem/**/*.sh ve onprem/**/*.ps1) — upstream kopyası supabase-docker hariç
+const onpremDir = join(ROOT, 'onprem');
+const shellFiles = existsSync(onpremDir)
+  ? walk(
+      onpremDir,
+      [],
+      (e) => /\.(sh|ps1)$/.test(e) && !/\.(test|spec)\./.test(e),
+      (e) => e === 'supabase-docker' || e === 'node_modules'
+    ).sort()
+  : [];
+const allFiles = [...files, ...shellFiles];
 
 // ── Fonksiyon çıkarımı ──────────────────────────────────────────────────────
 // Bu proje vanilla JS; üst seviye fonksiyonlar `function x()` veya
@@ -175,6 +189,7 @@ for (const f of files) {
       const end = bodyEnd(lines, i);
       const fn = {
         name, kind,
+        lang: 'js',
         file: rel(f),
         start: i + 1,
         end: end + 1,
@@ -364,18 +379,128 @@ for (const [table, set] of tableWriters) {
 }
 clusters.sort((a, b) => b.anzahl - a.anzahl || a.tabelle.localeCompare(b.tabelle));
 
-// Aynı isim, birden fazla tanım
-const doppelteNamen = [...byName.entries()]
-  .filter(([, arr]) => arr.length > 1)
-  .map(([name, arr]) => ({
-    name,
-    orte: arr.map(f => `${f.file}:${f.start}`),
-    // Bazi konumlar bilincli ayna olabilir (bkz. asagidaki bilinciAynalar).
-    // Karisik kume (bazisi ayna, bazisi degil) burada gorunur kalir -
-    // script "3 tanimdan 2si ayna" demez, hangisinin ayna oldugunu sayar.
-    aynalar: arr.filter(f => f.spiegelHinweis).map(f => `${f.file}:${f.start} — ${f.spiegelHinweis}`),
-  }))
-  .sort((a, b) => b.orte.length - a.orte.length);
+// ── Kabuk fonksiyonları (onprem/ altı: bash + ps1) ──────────────────────────
+// JS isim alanından KESİNLİKLE ayrı: Shell fonksiyonları kendi haritalarında yaşar.
+const shellFunctions = [];
+const shellDateienInfo = [];
+const fnsByShellFile = new Map();
+
+for (const sf of shellFiles) {
+  const fileRel = rel(sf);
+  const src = readFileSync(sf, 'utf8');
+  const lang = sf.endsWith('.ps1') ? 'ps1' : 'bash';
+  const sources = shellQuellen(src);
+  const fns = shellFunktionenFinden(src, fileRel, lang);
+
+  for (const fn of fns) {
+    fn.tables = [];
+    fn.writes = [];
+    fn.rpcs = [];
+    fn.storage = [];
+    fn.endpoints = [];
+    fn.modules = [];
+    fn.uiPfad = [];
+    fn.gemeinsam = false;
+    fn.sources = sources;
+    fn.calls = [];
+    fn.calledBy = [];
+    fn._calledBySet = new Set();
+    shellFunctions.push(fn);
+  }
+
+  fnsByShellFile.set(fileRel, fns);
+  shellDateienInfo.push({
+    file: fileRel,
+    lang,
+    sources,
+    functions: fns,
+    src,
+  });
+}
+
+// Shell çağrı grafiği: görünür isimler = dosyanın kendi fonksiyonları + sourced lib'ler
+for (const info of shellDateienInfo) {
+  const fileRel = info.file;
+  const dir = dirname(fileRel);
+  const eigeneFns = fnsByShellFile.get(fileRel) || [];
+
+  const sichtbareFns = [...eigeneFns];
+  for (const s of info.sources) {
+    const target = shellDateienInfo.find(other => dirname(other.file) === dir && basename(other.file) === s);
+    if (target) {
+      sichtbareFns.push(...target.functions);
+    }
+  }
+
+  const sichtbareMap = new Map();
+  for (const fn of sichtbareFns) {
+    if (!sichtbareMap.has(fn.name)) {
+      sichtbareMap.set(fn.name, fn);
+    }
+  }
+  const sichtbareNamen = new Set(sichtbareMap.keys());
+
+  // 1. Fonksiyon gövdelerindeki çağrılar
+  for (const fn of eigeneFns) {
+    const calls = shellAufrufe(fn.body, sichtbareNamen, fn.name, fn.lang);
+    fn.calls = calls;
+    for (const c of calls) {
+      const hedef = sichtbareMap.get(c);
+      if (hedef) {
+        hedef._calledBySet.add(fn.name);
+      }
+    }
+  }
+
+  // 2. Dosya düzeyindeki çağrılar (fonksiyon dışındaki kod)
+  const lines = info.src.split('\n');
+  for (const fn of eigeneFns) {
+    for (let l = fn.start - 1; l < fn.end; l++) {
+      lines[l] = '';
+    }
+  }
+  const dateiCode = lines.join('\n');
+  const dateiCalls = shellAufrufe(dateiCode, sichtbareNamen, null, info.lang);
+  for (const c of dateiCalls) {
+    const hedef = sichtbareMap.get(c);
+    if (hedef) {
+      hedef._calledBySet.add(fileRel);
+    }
+  }
+}
+
+for (const fn of shellFunctions) {
+  fn.calledBy = [...fn._calledBySet].sort();
+  delete fn._calledBySet;
+}
+
+const byNameBash = new Map();
+const byNamePs1  = new Map();
+for (const fn of shellFunctions) {
+  const map = fn.lang === 'ps1' ? byNamePs1 : byNameBash;
+  if (!map.has(fn.name)) map.set(fn.name, []);
+  map.get(fn.name).push(fn);
+}
+
+// Aynı isim, birden fazla tanım (yalnızca aynı lang içinde)
+const doppelteNamen = [];
+for (const langMap of [byName, byNameBash, byNamePs1]) {
+  for (const [name, arr] of langMap.entries()) {
+    if (arr.length > 1) {
+      doppelteNamen.push({
+        name,
+        orte: arr.map(f => `${f.file}:${f.start}`),
+        // Bazi konumlar bilincli ayna olabilir (bkz. asagidaki bilinciAynalar).
+        // Karisik kume (bazisi ayna, bazisi degil) burada gorunur kalir -
+        // script "3 tanimdan 2si ayna" demez, hangisinin ayna oldugunu sayar.
+        aynalar: arr.filter(f => f.spiegelHinweis).map(f => `${f.file}:${f.start} — ${f.spiegelHinweis}`),
+      });
+    }
+  }
+}
+doppelteNamen.sort((a, b) => b.orte.length - a.orte.length || a.name.localeCompare(b.name));
+
+const allFunctions = [...functions, ...shellFunctions];
 
 // Bilincli aynalar: kod kendi yorumunda "Spiegel von X" / "Identisch mit X"
 // diyor - frontend/backend paylasilan modul yolu olmadigi icin AYNI mantigin
@@ -383,7 +508,7 @@ const doppelteNamen = [...byName.entries()]
 // tutulur: onlar "neden iki tane var" sorusu, bunlar "zaten neden iki tane
 // olmasi gerektigi" belgelenmis satirlar. Isim FARKLI olabilir (dgStamm/dgRoot
 // gibi) - o yuzden doppelteNamen bunlarin hepsini yakalamaz, bu liste yakalar.
-const bilinciAynalar = functions
+const bilinciAynalar = allFunctions
   .filter(f => f.spiegelHinweis)
   .map(f => ({ name: f.name, file: f.file, start: f.start, end: f.end, hinweis: f.spiegelHinweis }))
   .sort((a, b) => a.name.localeCompare(b.name) || a.file.localeCompare(b.file));
@@ -393,10 +518,10 @@ if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
 
 const index = {
   erzeugt: new Date().toISOString().slice(0, 10),
-  dateien: files.length,
-  funktionen: functions.length,
+  dateien: allFiles.length,
+  funktionen: allFunctions.length,
   module: [...moduleEntries.keys()].sort(),
-  eintraege: functions
+  eintraege: allFunctions
     .map(({ body, ...rest }) => rest)
     .sort((a, b) => a.file.localeCompare(b.file) || a.start - b.start),
   kopieKandidaten: clusters,
@@ -410,11 +535,15 @@ const jsonOut = JSON.stringify(index, null, 1) + '\n';
 const topTables = [...tableWriters.entries()]
   .map(([t, s]) => [t, s.size]).sort((a, b) => b[1] - a[1]).slice(0, 20);
 
+const jsCount = functions.length;
+const bashCount = shellFunctions.filter(f => f.lang === 'bash').length;
+const ps1Count = shellFunctions.filter(f => f.lang === 'ps1').length;
+
 const md = [];
 md.push('# Funktionskarte', '');
 md.push(`> Üretim: ${index.erzeugt} · \`node tools/funktionskarte.mjs\``);
 md.push('> **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.', '');
-md.push(`**${index.funktionen} fonksiyon** · ${index.dateien} dosya · ${index.module.length} sidebar modülü`, '');
+md.push(`**${index.funktionen} fonksiyon** (${jsCount} JS · ${bashCount} bash · ${ps1Count} ps1) · ${index.dateien} dosya · ${index.module.length} sidebar modülü`, '');
 md.push('## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar', '');
 md.push('Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanlama var');
 md.push('(ortak taban + alana göre modifikasyon); onu script ayırt edemez. Karar insanın.', '');
@@ -451,6 +580,21 @@ if (doppelteNamen.length) {
   }
   md.push('');
 }
+if (shellDateienInfo.length) {
+  md.push('## Shell (onprem/)', '');
+  for (const sf of shellDateienInfo) {
+    if (!sf.sources.length && !sf.functions.length) continue;
+    md.push(`### \`${sf.file}\``);
+    if (sf.sources.length) {
+      md.push(`- sources: ${sf.sources.map(s => '`' + s + '`').join(', ')}`);
+    }
+    for (const f of sf.functions) {
+      const cb = f.calledBy.length ? ` · calledBy: ${f.calledBy.join(', ')}` : '';
+      md.push(`- \`${f.name}()\` — Zeile ${f.start}${cb}`);
+    }
+    md.push('');
+  }
+}
 const mdOut = md.join('\n');
 
 // -- Yazma ya da kontrol --------------------------------------------------
@@ -485,7 +629,7 @@ if (process.argv.includes('--check')) {
     console.error('  (diskte ' + index.funktionen + ' fonksiyon / ' + index.dateien + ' dosya bekleniyordu)');
     process.exit(1);
   }
-  console.log('OK Harita taze -- ' + index.funktionen + ' fonksiyon / ' + index.dateien + ' dosya');
+  console.log(`OK Harita taze -- ${index.funktionen} fonksiyon (${jsCount} JS, ${bashCount} bash, ${ps1Count} ps1) / ${index.dateien} dosya`);
   process.exit(0);
 }
 
@@ -493,7 +637,7 @@ writeFileSync(jsonPfad, jsonOut);
 writeFileSync(mdPfad, mdOut);
 
 
-console.log(`✓ ${index.funktionen} fonksiyon / ${index.dateien} dosya`);
+console.log(`✓ ${index.funktionen} fonksiyon (${jsCount} JS, ${bashCount} bash, ${ps1Count} ps1) / ${index.dateien} dosya`);
 console.log(`✓ ${clusters.length} kopya adayı kümesi`);
 console.log(`✓ ${doppelteNamen.length} çift isim`);
 console.log(`✓ ${bilinciAynalar.length} bilinçli ayna (Spiegel von / Identisch mit)`);
