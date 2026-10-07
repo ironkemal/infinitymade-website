@@ -495,9 +495,9 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `reveal_once()` — Zeile 66 · calledBy: onprem/install.sh
 - `fail()` — Zeile 68 · calledBy: onprem/install.sh
 - `env_get()` — Zeile 88 · calledBy: onprem/install.sh
-- `set_env()` — Zeile 405 · calledBy: onprem/install.sh
-- `b64url()` — Zeile 471 · calledBy: sign_jwt
-- `sign_jwt()` — Zeile 472 · calledBy: onprem/install.sh
+- `set_env()` — Zeile 420 · calledBy: onprem/install.sh
+- `b64url()` — Zeile 486 · calledBy: sign_jwt
+- `sign_jwt()` — Zeile 487 · calledBy: onprem/install.sh
 
 ### `onprem/ip-melden.sh`
 - sources: `lib-ip.sh`

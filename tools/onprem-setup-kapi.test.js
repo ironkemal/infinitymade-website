@@ -258,3 +258,22 @@ test('K2b.7b: Caddy setzt X-Praxura-Client-IP aus {remote_host} im Kong-Proxy (�
   assert.match(block, /reverse_proxy kong:8000 \{\s*header_up X-Praxura-Client-IP \{remote_host\}\s*\}/);
   assert.doesNotMatch(block, /X-Forwarded-For/, 'Schlüssel nicht aus fälschbarem XFF');
 });
+
+// ── K2b.18 b/c: Architektur-Abbruch, SSH-Passwort-Warnung ────────────────────
+
+test('install.sh: x86_64-Prüfung im Hardware-Schritt, VOR Software/Docker; SSH-Passwort nur Warnung', () => {
+  const s = lies('onprem', 'install.sh');
+  const iArch = s.indexOf('[ "$ARCH" = "x86_64" ] || fail');
+  assert.ok(iArch > s.indexOf('log "[1/17]') && iArch < s.indexOf('log "[2/17]'), 'Arch-Prüfung muss in Schritt 1 stehen');
+  const ssh = s.slice(s.indexOf('if command -v sshd'), s.indexOf('log "[2/17]'));
+  assert.match(ssh, /sshd -T 2>\/dev\/null \| grep -qi '\^passwordauthentication yes'/);
+  assert.match(ssh, /warn "SSH erlaubt/);
+  assert.doesNotMatch(ssh, /\bfail\b|sed -i|sshd_config/, 'nur warnen, nichts ändern (K10)');
+});
+
+test('praxura-installieren.ps1: bricht auf ARM vor jeder Installation ab (O-174)', () => {
+  const s = lies('onprem', 'windows', 'praxura-installieren.ps1');
+  const iArch = s.indexOf("if ($arch -ne 'AMD64')");
+  assert.ok(iArch > 0 && iArch < s.indexOf('[2/11]'), 'Architektur-Prüfung in Schritt 1');
+  assert.match(s, /PROCESSOR_ARCHITEW6432/);
+});

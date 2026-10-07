@@ -129,6 +129,13 @@ if ($NeuerJeton) {
 
 # ── 1  Vorpruefung ───────────────────────────────────────────────────────────
 Log '[1/11] Vorpruefung'
+# O-174: Images nur fuer x86 (amd64). Auf einem ARM-Laptop wuerden sonst erst
+# WSL und Docker installiert und install.sh bricht danach ab. PROCESSOR_ARCHITEW6432
+# zuerst: aus einer 32-Bit-PowerShell meldet PROCESSOR_ARCHITECTURE sonst "x86".
+$arch = if ($env:PROCESSOR_ARCHITEW6432) { $env:PROCESSOR_ARCHITEW6432 } else { $env:PROCESSOR_ARCHITECTURE }
+if ($arch -ne 'AMD64') {
+  Fehler 'Prozessor wird nicht unterstuetzt' "Architektur $arch" 'Die Praxis-Box laeuft nur auf PCs mit Intel- oder AMD-Prozessor (x64), nicht auf ARM (z. B. Snapdragon). Einen anderen PC oder einen Linux-Server verwenden.'
+}
 $build = [int](Get-CimInstance Win32_OperatingSystem).BuildNumber
 if ($build -lt 22621) {
   Fehler 'Windows-Version zu alt' "Build $build" 'Windows 11 ab Version 22H2 (Build 22621) wird benoetigt — das gespiegelte WSL-Netzwerk gibt es erst dort. Windows aktualisieren oder einen Linux-Server verwenden.'

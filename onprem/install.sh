@@ -226,6 +226,12 @@ MEM_GB=$(( MEM_KB / 1024 / 1024 ))
 DISK_KB="$(df -Pk "$SCRIPT_DIR" 2>/dev/null | awk 'NR==2{print $4}' || echo 0)"
 DISK_GB=$(( DISK_KB / 1024 / 1024 ))
 
+# O-174 (K2b.18 b): unsere Images gibt es nur für amd64 — auf ARM (z. B. Hetzner
+# CAX) bräche das erste "docker compose pull" mitten in der Einrichtung mit
+# "no matching manifest" ab. Lieber hier, vor jeder Änderung, klar abbrechen.
+ARCH="$(uname -m 2>/dev/null || echo unbekannt)"
+[ "$ARCH" = "x86_64" ] || fail "Prozessor-Architektur wird nicht unterstützt" "$ARCH" "x86_64 (Intel/AMD)" \
+  "Einen x86-Server verwenden (bei Hetzner z. B. CX33, nicht CAX/ARM) — siehe KURULUM.md Weg C."
 [ "$CPU_COUNT" -ge 2 ] || fail "Zu wenige CPU-Kerne" "$CPU_COUNT" "mindestens 2" "Server mit mindestens 2 vCPU verwenden (Playbook Phase 2.1c)."
 # Schwelle 3, nicht 4: ein nominell "4 GB"-Server meldet durch Kernel-/
 # Hypervisor-Reservierung oft nur 3,7-3,9 GB freien MemTotal — die
@@ -238,6 +244,15 @@ if command -v swapon >/dev/null 2>&1; then
   swapon --show 2>/dev/null | grep -q . || warn "Kein Swap eingerichtet — bei Speicherdruck beendet der Kernel einen Container statt zu bremsen (gemessenes Risiko, heutige VPS)."
 else
   warn "swapon nicht gefunden — Swap-Status konnte nicht geprüft werden."
+fi
+
+# K2b.18 c (onprem O-161 K2b.7 (e), guvenlik S-50 Bed. 4): nur WARNEN, nicht
+# ändern — die Box gehört der Praxis (K10), wir sagen es nur. Ohne sshd (z. B.
+# Windows/WSL-Box) gibt es nichts zu prüfen.
+if command -v sshd >/dev/null 2>&1; then
+  if sshd -T 2>/dev/null | grep -qi '^passwordauthentication yes'; then
+    warn "SSH erlaubt Anmeldung mit Passwort — für einen Server im Internet unsicher. Anleitung: KURULUM.md „Linux-Server absichern“."
+  fi
 fi
 
 # ── Schritt 2 — Software ─────────────────────────────────────────────────────
