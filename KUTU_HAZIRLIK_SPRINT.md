@@ -312,6 +312,23 @@ yer tutucu çağrı başına rastgele nonce'lu (`⟦NAME_x7f2_1⟧`) · kullanı
 
 ---
 
+## 5b. Kemal ile toplu test listesi (07.10.2026 kuralı)
+
+**Kural (Kemal 07.10):** Claude'un kendi başına yapamadığı her test buraya **eklenir**, iş arasında Kemal'e sorulmaz.
+Sprint sonunda (K3'ten önce) hepsi tek oturumda birlikte yapılır. Claude'un kendisi yapabildiği ölçümleri (WSL test
+kutusunda betikle) hemen yapar, buraya yazmaz. Yapılan satır ✅ + tarih alır, silinmez.
+
+| # | Ne | Nasıl / beklenen | Kaynak |
+|---|---|---|---|
+| T1 | Telefon LAN'dan → Caddy gerçek IP mi görüyor | telefon login sayfasını açarken kutuda `docker compose exec caddy netstat -tn | grep ':443'` → telefonun LAN IP'si (değilse WSL'de tek kova, risk 2) | S-50 Bed. 3.3 · K2b.7b |
+| T2 | Kemal'in risk kabulü K2b.7b (a) global limit yok (b) WSL tek kova olabilir (c) recover/verify ölçülmemiş varsayılan | sözlü onay → `guvenlik/REGISTER.md` S-50 | fortschritte/2026-10-07.md |
+| T3 | Refresh davranışı dolu kovada | aynı IP'den 31 hatalı giriş, sonra açık oturum ne yapıyor; 5 dk sonra toparlanıyor mu; başka cihazdan giriş | S-50 Bed. 3.2 |
+| T4 | `install.sh --neuer-jeton` (WSL, açık kurulum) | eski jeton 401, yeni link açılıyor, `docker compose exec api printenv SETUP_TOKEN_SEIT` yeni | O-161 K2b.7a |
+| T5 | Bitmiş kutuda jeton hijyeni | `update.sh --jetzt` sonrası .env'de `SETUP_TOKEN=` ve `SETUP_TOKEN_SEIT=` boş, `/api/setup/status` 404, setup.html "Bereits eingerichtet" | O-161 K2b.7a |
+| T6 | `/auth/v1%2Fadmin/users` 404 | curl `--path-as-is` | S-50 |
+| T7 | Önceki listeden (06.10 devri): K13 volume sahipliği, isim döngüsü, ip route/VPN, IP timer, mount inode, K2b.4 LE ilk sertifika (VPS), K2b.11 Edge `Start-Process` fragment, K2b.12 7 karakter updateUser reddi | §6 K2b devam prompt'u | 06.10 |
+| T8 | Hetzner'de dış istekte gerçek istemci IP'si | K2b.8 ile, VPS/Hetzner kutusu gerekince | O-161 |
+
 ## 6. Aşama sonu protokolü + yeni oturum prompt'ları
 
 **Her alt parça bitince:** testler (`npm test`, ilgili `node --test`) → commit (`git pull --rebase` önce) → push (ana bağlamda, ön planda).
