@@ -760,7 +760,7 @@ if [ "$KAYIT_MODUS" = "code" ] || [ "$KAYIT_MODUS" = "vorhanden" ]; then
     CADDY_TLS_MODUS_VALUE="klassisch"
     CADDY_TLS_ARG_VALUE="internal"
     warn "Zertifikatszugang der Box fehlt — Rückfall auf internes Zertifikat"
-    log "      Was tun: install.sh erneut ausführen; hilft das nicht: Support (siehe KURULUM.md §9)"
+    log "      Was tun: install.sh erneut ausführen; hilft das nicht: Support (siehe KURULUM.md §10)"
   fi
 fi
 

@@ -25,7 +25,7 @@
 Praxura SaaS olarak hasta verisi (randevu, reçete, tanı, KVNR) işliyor. Bu, **§393 SGB V** gereği BSI **C5 Typ-2 testatı** zorunluluğu doğuruyor (Temmuz 2025'ten beri yürürlükte; maliyet köprü çözümle bile €15–40k, tam testatla €200k'ya kadar — mevcut bütçeyle karşılanamaz). Ayrıca DSGVO'da Auftragsverarbeiter rolü (AVV, DSFA, ihlal sorumluluğu) bizde.
 
 **Çözüm:** Yazılım müşterinin kendi sunucusunda çalışırsa:
-- §393 uygulanmaz (kanun yalnızca "Cloud-Computing-Dienste"yi kapsar),
+- §393 **Praxura için** uygulanmaz (kanun yalnızca "Cloud-Computing-Dienste"yi kapsar); ⚠️ 07.10.2026 (legal-de): kutu bulut sunucusunda (ör. Hetzner Cloud) çalışırsa §393 **praksis için** uygulanır — kriterler ve açık noktalar `onprem/KURULUM.md` §9,
 - Auftragsverarbeiter rolü düşer (veriye erişimli Fernwartung olmadığı sürece),
 - veri ihlali/yedek sorumluluğu müşteriye geçer.
 
@@ -50,7 +50,7 @@ Praxura SaaS olarak hasta verisi (randevu, reçete, tanı, KVNR) işliyor. Bu, *
 | K9 | **Lisans kill-switch = salt-okunur mod, tam kilit DEĞİL** | Hasta dokümantasyonuna erişim yasal zorunluluk; "iptal edersen verin rehin" Almanya'da satış zehiri |
 | K10 | **Destek modeli: veriye uzak erişim YOK** — "Tanılama paketi indir → bize gönder" butonu; opsiyonel ekran-paylaşımlı seans (müşteri başında, veri erişimi yok) | Veriye erişimli Fernwartung = Auftragsverarbeiter rolü geri gelir |
 | K11 | **Kanal sistemi:** `:beta` (her push otomatik, beta müşterileri) / `:stable` (yalnızca release'te, ücretli müşteriler). Tek codebase, fork yok | Beta feedback döngüsü (bugünkü "push = anında görürler") korunur; ücretliler denemelerden izole |
-| K12 | **Beta müşteri planı 3 aşamalı:** (1) şimdilik mevcut SaaS'ta, değişiklik yok → (2) paket hazır olunca sponsor Hetzner instance'ları (biz öderiz, ~€6/müşteri/ay, `:beta` kanalı) → (3) ücretlendirme anında sunucu kendi Hetzner hesaplarına devredilir | Para almadığımız müşteriye sunucu ödetemeyiz; sponsor dönem migration+kurulum hattının gerçek testidir |
+| K12 | **Beta müşteri planı 3 aşamalı:** (1) şimdilik mevcut SaaS'ta, değişiklik yok → (2) paket hazır olunca sponsor Hetzner instance'ları (biz öderiz, ~€6/müşteri/ay, `:beta` kanalı) → (3) ücretlendirme anında sunucu kendi Hetzner hesaplarına devredilir. ⚠️ 07.10.2026 (legal-de): aşama 2'de de sunucu **praksisin** Hetzner hesabında açılır, ödemeyi biz iade/indirimle karşılarız — bizim hesabımızda açılırsa Auftragsverarbeiter rolü ve §393 bize geri gelir | Para almadığımız müşteriye sunucu ödetemeyiz; sponsor dönem migration+kurulum hattının gerçek testidir |
 | K13 | **Fiyat iletişimi:** kalem kalem değil toplam — "€49/ay + ~€10 sunucu (kendi hesabınızda), veriniz %100 sizde". AI maliyeti sihirbazda tahminle gösterilir (~50 rezept ≈ €2/ay) | Kalem sayısı psikolojik yük; toplam + kıyas (Theorg/Optica daha pahalı) satışı kolaylaştırır |
 | K14 | **Geçiş takvimi:** PoC şimdi → normal geliştirme "buluta yeni zincir ekleme" kuralıyla devam → paketleme sprinti ürün olgunlaşınca (para almadan önce) | Tam paralel çalışma tek kişilik ekipte özellik geliştirmeyi öldürür; sona bırakmak makası açar |
 

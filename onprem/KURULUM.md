@@ -1,26 +1,26 @@
 # Praxura Praxis-Box — Installationsanleitung
 
-> Stand 06.10.2026 · Version 0.2.0 · gilt für **Linux-Server** und **Windows-PC**.
+> Stand 07.10.2026 · Version 0.4.0 · gilt für **Linux-Server**, **Windows-PC** und **Server bei Hetzner Cloud**.
 > Diese Anleitung ist so geschrieben, dass eine technisch interessierte Person
 > die Box ohne uns einrichten kann. Wir haben **keinen Zugang** zu Ihrer Box —
-> alle Schlüssel entstehen auf Ihrem Gerät und bleiben dort.
+> alle Schlüssel entstehen auf Ihrem Server bzw. PC und bleiben dort.
 
 ---
 
 ## 0. Überblick — was Sie brauchen
 
-| | Linux-Server | Windows-PC |
-|---|---|---|
-| System | Ubuntu 24.04 LTS | Windows 11 ab 22H2 (Home reicht) |
-| Prozessor / RAM | 2 Kerne · 4 GB | 4 Kerne · **8 GB** (die Box bekommt die Hälfte) |
-| Freier Speicher | 40 GB | 50 GB auf C: |
-| Netz | fest im Praxisnetz, Internet für Updates | dito; PC bleibt **eingeschaltet** |
-| Zugang | `sudo`/root per SSH | ein Konto mit Administratorrechten |
+| | Linux-Server (Praxis) | Windows-PC (Praxis) | Hetzner Cloud Server |
+|---|---|---|---|
+| System | Ubuntu 24.04 LTS | Windows 11 ab 22H2 (Home reicht) | Ubuntu 24.04 LTS (x86) |
+| Typ / RAM | 2 Kerne · 4 GB | 4 Kerne · **8 GB** (die Box bekommt die Hälfte) | CX33 (4 vCPU · 8 GB RAM) |
+| Freier Speicher | 40 GB | 50 GB auf C: | 80 GB (CX33) |
+| Netz | fest im Praxisnetz, Internet für Updates | dito; PC bleibt **eingeschaltet** | Hetzner Cloud Firewall (80, 443; 22 eingeschränkt) |
+| Zugang | `sudo`/root per SSH | ein Konto mit Administratorrechten | SSH-Schlüssel (root) |
 
 Außerdem:
 - ein **Einrichtungscode** von Praxura (16 Zeichen im Format `XXXX-XXXX-XXXX-XXXX`), den Sie vorab erhalten
-- für Sicherungen: eine **externe Platte oder ein NAS** (siehe §6)
-- ein Ort für den **Datenschlüssel** (Tresor/Ausdruck, siehe §2.4) — *nicht* auf der Box
+- für Sicherungen: eine **externe Platte oder ein NAS** bei lokalem Betrieb bzw. ein **Hetzner Volume oder Storage Box** bei Cloud-Betrieb (siehe §5)
+- ein Ort für den **Datenschlüssel** (Tresor/Ausdruck, siehe §2.5) — *nicht* auf der Box
 - (nur bei Ausstiegsweg ohne Code: ein eigener **Name** für die Box, siehe §3 und §8)
 
 Die Einrichtung dauert 20–40 Minuten, fast alles davon ist Herunterladen.
@@ -76,6 +76,158 @@ Schlüssel der Box. Den Box-PC deshalb mit einem **eigenen, nicht geteilten**
 Windows-Konto betreiben; Mitarbeitende arbeiten im Browser, nicht an diesem
 Konto.
 
+### Grenzen eines einzelnen Windows-PCs
+
+- **PC ausgeschaltet:** Ist der PC aus, läuft die Praxis-Box nicht.
+- **Schlaf- und Ruhezustand:** Wechselt der PC in den Energiesparmodus, können
+  weder Tablets noch weitere Praxis-PCs auf die Anwendung zugreifen. Ein Laptop
+  muss dauerhaft am Netzteil betrieben werden.
+- **Windows-Passwort zwingend:** Ohne ein hinterlegtes Windows-Passwort startet
+  die Box erst, wenn sich ein Benutzer am PC anmeldet. In diesem Fall laufen
+  auch die nächtliche Sicherung (01:00 Uhr) und das nächtliche Update (02:00 Uhr)
+  nicht automatisch durch.
+- **Benutzerkonto nicht teilen:** Nutzen Sie ein eigenes Windows-Konto für die
+  Box, wie oben beschrieben.
+- **Hinweis zu Fehlversuchen (nicht gemessen):** Unter Windows sieht die Box
+  andere Praxisgeräte netzwerkbedingt eventuell alle unter derselben internen
+  Adresse. In diesem Fall zählen fehlgeschlagene Anmeldeversuche für alle Geräte
+  gemeinsam: Mehrere falsche Passworteingaben hintereinander können die Anmeldung
+  für alle Praxisgeräte für einige Minuten sperren. (Dieser Punkt wird derzeit
+  in Messungen genauer untersucht.)
+- **Sicherungsziel extern anbinden:** Unter Windows sollte das Sicherungsziel
+  unmittelbar nach der Installation auf eine externe USB-Festplatte gelegt
+  werden (siehe §2.4 und §5), da die interne virtuelle Festplatte sonst stetig
+  anwächst.
+
+## 1. Weg C — Server bei Hetzner Cloud
+
+Sie können die Box auf einem eigenen Cloud-Server bei Hetzner Cloud betreiben.
+Dieser Weg steht gleichwertig neben Weg A und B.
+
+- **Servertyp:** Wählen Sie den Typ **CX33** (x86-Architektur, 4 vCPU, 8 GB RAM,
+  80 GB Festplatte). Wählen Sie *nicht* den kleineren Typ CX23: Dessen 40-GB-Platte
+  bietet nach Abzug des Betriebssystems nur ca. 36 GB freien Speicherplatz —
+  `install.sh` bricht unter 40 GB freiem Speicherplatz bewusst ab.
+- **Architektur nur x86:** Wählen Sie keine Server mit ARM-Prozessor (keine CAX-Typen).
+  Die Software-Pakete liegen derzeit nur für `amd64` (x86) vor; auf ARM bricht
+  die Installation mit einem Fehler („no matching manifest") ab.
+- **Standort:** Wir empfehlen ein Rechenzentrum in Deutschland (Falkenstein oder Nürnberg).
+  Ein europäischer Standort wie Helsinki (EU) ist rechtlich ebenfalls möglich
+  (Details zu § 393 SGB V in **§9**).
+- **Betriebssystem & Zugang:** Wählen Sie **Ubuntu 24.04**. Hinterlegen Sie beim
+  Erstellen des Servers Ihren **SSH-Schlüssel** (Hetzner vergibt dann kein unsicheres
+  Root-Passwort).
+- **Firewall:** Nutzen Sie die **Hetzner Cloud Firewall** in der Hetzner-Konsole,
+  **nicht** `ufw` auf dem Server. *(Hintergrund: Von Docker veröffentlichte Ports
+  umgehen die lokale Linux-Firewall `ufw` standardmäßig.)*
+  Richten Sie in der Hetzner Cloud Firewall folgende Regeln ein:
+  - **Eingehend:**
+    - `80/tcp` — Quelle: Any IPv4 + Any IPv6
+    - `443/tcp` — Quelle: Any IPv4 + Any IPv6
+    - `443/udp` — Quelle: Any IPv4 + Any IPv6 (für HTTP/3)
+    - `22/tcp` (SSH) — Quelle: nur Ihre eigene feste Admin-IP-Adresse oder gar nicht
+      freigeben (für Notfälle steht die browserbasierte Web-Konsole von Hetzner bereit)
+  - **Ausgehend:** Keine Regeln einschränken (die Box benötigt ausgehenden Zugang
+    für System-Updates, Zertifikatsabrufe und den Namensdienst).
+- **Installation durchführen:** Verbinden Sie sich per SSH mit Ihrem Server und
+  führen Sie dieselben Befehle wie bei Weg A aus:
+  ```bash
+  sudo apt update && sudo apt install -y git
+  sudo git clone --depth 1 --filter=blob:none --sparse \
+    https://github.com/ironkemal/infinitymade-website.git /opt/praxura
+  cd /opt/praxura && sudo git sparse-checkout set onprem
+  cd /opt/praxura/onprem
+  sudo bash install.sh
+  ```
+  Ihr Einrichtungscode funktioniert auch auf dem Cloud-Server unverändert. Die Box
+  erkennt die öffentliche IP-Adresse automatisch. Der FRITZ!Box-Rebind-Schritt
+  aus §3 entfällt hier vollständig.
+- **Schlüssel bleiben bei der Praxis:** Praxura erhält keinen SSH-Schlüssel zu
+  Ihrem Server. Auch wenn Sie bei technischen Fragen eine gemeinsame
+  Bildschirmfreigabe nutzen, verwenden Sie ausschließlich Ihren eigenen Schlüssel.
+- **Sicherung bei Hetzner:** Als Sicherungsziel dient eine Hetzner Storage Box
+  (im Praxis-Konto buchbar, ca. 4 €/Monat; Einbindung siehe §5) oder ein separates
+  Hetzner Volume (nach Größe abgerechnet). Wir benennen die Grenze offen und ehrlich:
+  Eine solche Sicherung schützt zuverlässig vor einem Serverausfall, nicht aber vor
+  einem unbefugten Einblick beim Speicheranbieter (auf dem Speicherziel derzeit
+  unverschlüsselt abgelegt; Verschlüsselung in der Box vor dem Versand ist in
+  Vorbereitung; siehe §9). Zusätzliche Hetzner-Snapshots oder Server-Backups können
+  Sie als Ergänzung nutzen; beachten Sie aber, dass diese stets das gesamte
+  Plattenabbild einschließlich der Konfigurationsdatei `.env` und damit des
+  Datenschlüssels (`DATA_ENCRYPTION_KEY`) enthalten.
+
+### Linux-Server absichern (gilt für Weg A und Weg C)
+
+Führen Sie diese Schritte auf jedem Linux-Server (Praxis-Server oder Hetzner Cloud)
+aus, um das System abzusichern:
+
+1. **SSH absichern:**
+   Legen Sie die Datei `/etc/ssh/sshd_config.d/00-praxura.conf` mit folgendem
+   Inhalt an:
+   ```text
+   PasswordAuthentication no
+   PermitRootLogin prohibit-password
+   ```
+   *(Der Name beginnt bewusst mit `00-`, da der SSH-Dienst die erste gefundene
+   Einstellung nutzt und spätere Konfigurationsdateien wie `50-cloud-init.conf`
+   sonst Vorrang hätten.)*
+   Konfiguration neu laden:
+   ```bash
+   sudo systemctl reload ssh
+   ```
+   Prüfen, ob die Werte aktiv sind:
+   ```bash
+   sudo sshd -T | grep -E 'passwordauthentication|permitrootlogin'
+   ```
+2. **Automatische Sicherheitsupdates prüfen:**
+   Ubuntu 24.04 spielt über `unattended-upgrades` standardmäßig Sicherheitsupdates
+   ein. Prüfen Sie die Einstellung mit:
+   ```bash
+   sudo dpkg-reconfigure -plow unattended-upgrades
+   ```
+3. **Docker von automatischen Updates ausschließen:**
+   Damit Docker nicht unkontrolliert im Praxisbetrieb neu startet, schließen Sie
+   die Docker-Pakete von unbeaufsichtigten Updates aus. Erstellen Sie die Datei
+   `/etc/apt/apt.conf.d/51praxura-unattended`:
+   ```text
+   Unattended-Upgrade::Package-Blacklist {
+     "docker-ce";
+     "docker-ce-cli";
+     "containerd.io";
+     "docker-compose-plugin";
+     "docker-buildx-plugin";
+     "docker-ce-rootless-extras";
+   };
+   Unattended-Upgrade::Automatic-Reboot "true";
+   Unattended-Upgrade::Automatic-Reboot-Time "05:30";
+   ```
+   Docker selbst aktualisieren Sie bei Bedarf manuell in einer ruhigen Stunde
+   (etwa einmal im Monat).
+4. **Zeitpunkt für Systemneustarts anpassen:**
+   Passen Sie den täglichen Aktualisierungs-Timer an:
+   ```bash
+   sudo systemctl edit apt-daily-upgrade.timer
+   ```
+   Fügen Sie folgenden Inhalt ein:
+   ```ini
+   [Timer]
+   OnCalendar=
+   OnCalendar=*-*-* 04:30
+   RandomizedDelaySec=0
+   ```
+   *Begründung des Zeitplans:* Die Praxura-Sicherung startet um 01:00 Uhr (Dauer
+   bis zu 15 Minuten). Das automatische Praxura-Update startet um 02:00 Uhr
+   (mit einer zufälligen Verzögerung von bis zu 2 Stunden, also Start bis
+   spätestens 04:00 Uhr). Ein eventueller Systemneustart erfolgt um 05:30 Uhr.
+   Beide Praxura-Dienste holen verpasste Läufe beim Hochfahren automatisch nach.
+
+*(Hinweis für Windows-PCs: Das Gegenstück zu diesen Einstellungen ist Windows
+Update. Unter Windows 11 Home lässt sich die genaue Neustartzeit nicht frei
+wählen; die Nutzungszeit kann maximal 18 Stunden umfassen. Ein nächtlicher
+Windows-Neustart kann Sicherung und Update verschieben; beide laufen nach dem
+Start von selbst nach, sofern das Windows-Passwort für den automatischen Start
+hinterlegt ist.)*
+
 ---
 
 ## 2. Die Fragen von `install.sh`
@@ -104,11 +256,11 @@ Diese Frage erscheint nur, wenn Sie in §2.1 keinen Einrichtungscode eingegeben
 haben:
 - **n** — für ein rein internes Praxisnetz. Die Box stellt sich selbst ein
   internes Zertifikat aus; jedes Gerät muss deren Wurzelzertifikat einmal
-  vertrauen (§4).
+  vertrauen (siehe §8.3).
 - **j** — nur, wenn die Box unter einer echten Internet-Domain von außen
   erreichbar ist (Let's Encrypt).
 
-*Hinweis:* Die Box mit Einrichtungscode bekommt ein echtes
+*Hinweis:* Die Box mit Einrichtungscode bekommt ein anerkanntes
 Let's-Encrypt-Zertifikat über den Praxura-Namensdienst (DNS-01); auf keinem
 Gerät muss etwas importiert werden.
 
@@ -123,8 +275,16 @@ bisherigen Stand weiter. Kanal ändern: in `.env` die beiden Zeilen
 `PRAXURA_API_IMAGE=…:beta` / `PRAXURA_FRONTEND_IMAGE=…:beta` anpassen.
 
 ### 2.4 Sicherungsziel
-Siehe §6. Für den Anfang darf es leer bleiben (dann auf der Box selbst — mit
-Warnung).
+Siehe §5.
+- **Linux-Server (Praxis):** Für den Anfang darf die Eingabe leer bleiben (dann
+  sichert die Box auf die eigene Festplatte — mit Warnung). Bei einem **Hetzner
+  Cloud Server** tragen Sie hier den Pfad zum eingebundenen Sicherungsvolume /
+  zur Storage Box ein (z. B. `/mnt/sicherung/praxura`, siehe Weg C in §1 und §5).
+- **Windows:** Für den Anfang darf die Eingabe leer bleiben. Richten Sie die
+  Sicherung unmittelbar nach der Installation gemäß §5 auf einer externen
+  USB-Festplatte ein (z. B. `/mnt/praxura-sicherung/praxura`). Die virtuelle
+  Festplatte unter Windows wächst dynamisch und gibt freien Speicherplatz auf
+  Laufwerk C: nicht automatisch wieder frei.
 
 ### 2.5 Am Ende: zwei Werte, die nur EINMAL angezeigt werden
 - **`DATA_ENCRYPTION_KEY`** — verschlüsselt Patientenfelder. Ausdrucken oder in
@@ -133,10 +293,20 @@ Warnung).
   `install.sh` wartet, bis Sie `GESICHERT` tippen.
 - **Einrichtungs-Link** — unter Windows öffnet sich die Einrichtungsseite am Ende
   der Installation automatisch im Browser. Unter Linux zeigt `install.sh` am Ende
-  einen einmaligen Link (`https://<ihre-box-adresse>/setup.html#<jeton>`), den Sie
-  im Browser eines Praxisgeräts öffnen. Den Link **nicht per Mail oder Chat weitergeben**
-  (er ist bis zum Anlegen des Inhaber-Kontos gültig). Als Notlösung lässt sich der Jeton
-  auch manuell aus der `.env` (`SETUP_TOKEN`) auslesen und auf `setup.html` eintragen.
+  einen Link (`https://<ihre-box-adresse>/setup.html#<jeton>`), den Sie im Browser
+  eines Praxisgeräts öffnen.
+  - Der Link ist **14 Tage lang gültig**.
+  - Den Link **nicht per Mail oder Chat weitergeben**.
+  - Der Link bleibt gültig, bis Sie den **letzten Schritt der Einrichtung**
+    („Einrichtung abschließen") durchführen (nicht nur bis zum Anlegen des
+    Inhaber-Kontos).
+  - Ist der Link abgelaufen oder verloren gegangen, erzeugen Sie vor Abschluss
+    der Einrichtung einen neuen:
+    - Linux: `sudo bash install.sh --neuer-jeton`
+    - Windows: `powershell -ExecutionPolicy Bypass -File .\praxura-installieren.ps1 -NeuerJeton`
+    Ein neuer Link macht den bisherigen Link sofort ungültig.
+  - Als Notlösung lässt sich der Jeton auch manuell aus der `.env` (`SETUP_TOKEN`)
+    auslesen und im Formular auf `setup.html` eintragen.
 
 ---
 
@@ -147,8 +317,9 @@ Beim Standardweg mit **Einrichtungscode** entfällt das Eintragen in Router oder
 Praxisnetz gefunden.
 
 ### FRITZ!Box: DNS-Rebind-Schutz
-Nutzen Sie eine FRITZ!Box, müssen Sie eine Ausnahme eintragen, da der Box-Name
-auf eine interne IP-Adresse im Praxisnetz verweist:
+Nutzen Sie eine FRITZ!Box im Praxisnetz, müssen Sie eine Ausnahme eintragen, da der
+Box-Name auf eine interne IP-Adresse im Praxisnetz verweist (bei Cloud-Servern
+nach Weg C ist dieser Schritt nicht nötig):
 1. FRITZ!Box-Benutzeroberfläche im Browser öffnen (`fritz.box`).
 2. *Heimnetz → Netzwerk → Netzwerkeinstellungen*.
 3. Nach unten scrollen zum Bereich **DNS-Rebind-Schutz**.
@@ -192,6 +363,8 @@ Die Box antwortet **nur auf ihren Namen**, nicht auf die IP allein.
   (`C:\Windows\System32\drivers\etc\hosts`, als Administrator bearbeiten):
   `192.168.x.y  praxis.home.arpa`
   — auf Tablets ist das nicht möglich, dort geht nur der Router-Weg.
+- **Zertifikat:** Bei diesem Weg muss jedes Gerät einmal das interne
+  Wurzelzertifikat der Box importieren (siehe §8.3).
 
 **Windows-Netzwerkprofil (gilt immer):** Das Praxisnetz muss in Windows als
 **„Privat"** eingestuft sein (Einstellungen → Netzwerk → Eigenschaften), sonst
@@ -199,38 +372,19 @@ blockt die Firewall die anderen Geräte. Das Skript warnt, wenn es „Öffentlic
 
 ---
 
-## 4. Wurzelzertifikat auf jedem Gerät vertrauen
-
-> **Gilt für:** Nur für den Weg „eigene Adresse“ mit internem Zertifikat.
-
-Datei holen:
-- **Windows-Box:** liegt schon unter `C:\ProgramData\Praxura\praxura-wurzelzertifikat.crt`
-  und ist auf diesem PC bereits eingetragen.
-- **Linux-Server:** `cd /opt/praxura/onprem && sudo docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./praxura-wurzelzertifikat.crt`
-
-Dann je Gerät:
-
-| Gerät | So geht's |
-|---|---|
-| Windows (Chrome, Edge) | Doppelklick auf die `.crt` → *Zertifikat installieren* → **Lokaler Computer** → *Alle Zertifikate in folgendem Speicher* → **Vertrauenswürdige Stammzertifizierungsstellen** |
-| Firefox | *Einstellungen → Datenschutz & Sicherheit → Zertifikate anzeigen → Zertifizierungsstellen → Importieren* (Haken „Websites vertrauen") |
-| iPad / iPhone | Datei per Mail/AirDrop öffnen → *Einstellungen → Profil geladen → Installieren*, danach **zusätzlich** *Einstellungen → Allgemein → Info → Zertifikatsvertrauenseinstellungen* → Schalter für „Caddy Local Authority" **einschalten** |
-| Android | *Einstellungen → Sicherheit → Verschlüsselung & Anmeldedaten → Zertifikat installieren → CA-Zertifikat* |
-| Mac | Doppelklick → Schlüsselbund *System* → Zertifikat öffnen → *Vertrauen: Immer vertrauen* |
-
-Das Zertifikat wird mitgesichert (§6) — nach einer Wiederherstellung müssen
-die Geräte es **nicht** neu importieren.
-
----
-
-## 5. Erster Start im Browser
+## 4. Erster Start im Browser
 
 1. **Einrichtungsseite öffnen:** Unter Windows öffnet sich die Einrichtungsseite
    am Ende der Installation automatisch im Standardbrowser. Unter Linux den am
    Ende von `install.sh` angezeigten Link (`https://<ihre-box-adresse>/setup.html#<jeton>`)
    im Browser eines Praxisgeräts öffnen.
-   ⚠️ **Diesen Link nicht per Mail oder Chat weitergeben** — er ist bis zum
-   Anlegen des Inhaber-Kontos gültig.
+   - Der Link ist **14 Tage gültig**.
+   - ⚠️ **Diesen Link nicht per Mail oder Chat weitergeben.**
+   - Ist der Link verloren oder abgelaufen, fordern Sie vor Abschluss der Einrichtung
+     einen neuen Link an:
+     - Linux: `sudo bash install.sh --neuer-jeton`
+     - Windows: `powershell -ExecutionPolicy Bypass -File .\praxura-installieren.ps1 -NeuerJeton`
+     Der neue Link macht den vorherigen ungültig.
    *(Notlösung: `https://<ihre-box-adresse>/setup.html` direkt öffnen und den
    Jeton aus der `.env` unter `SETUP_TOKEN` im Formular eintragen.)*
 2. Die Box prüft den Jeton aus dem Fragment automatisch (der Jeton wird nach dem
@@ -238,7 +392,12 @@ die Geräte es **nicht** neu importieren.
 3. **Inhaber-Konto** anlegen (E-Mail, Passwort ≥ 12 Zeichen, Praxisname,
    Fachbereich). Es braucht **keine Bestätigungsmail** — die Box verschickt für
    Konten grundsätzlich keine Mails.
-4. Danach `https://<ihre-box-adresse>/login.html` — fertig.
+4. **Einrichtung abschließen:** Nach dem letzten Schritt der Ersteinrichtung
+   wird der Einrichtungslink dauerhaft ungültig. Rufen Sie die Einrichtungsseite
+   später erneut auf, zeigt sie „Bereits eingerichtet" und verweist auf die
+   Anmeldung. Das nächste nächtliche Update entfernt den Jeton auch vollständig
+   aus der `.env`.
+5. Danach Anmeldung unter `https://<ihre-box-adresse>/login.html` — fertig.
 
 **Mitarbeitende:** im Dashboard unter *Team* anlegen; die Box zeigt einen
 **Einrichtungscode**. Damit setzt die Person ihr Passwort selbst. Passwort
@@ -254,7 +413,7 @@ offenen Sitzungen des Inhabers werden dabei beendet.
 
 ---
 
-## 6. Sicherung
+## 5. Sicherung
 
 Die Box sichert **jede Nacht um 01:00** (Datenbank, Dateien, Box-Zertifikat)
 und zusätzlich vor jedem Update, das die Datenbank ändert.
@@ -262,35 +421,45 @@ und zusätzlich vor jedem Update, das die Datenbank ändert.
 **Ziel einrichten** — die Sicherung muss auf einem **anderen Datenträger**
 liegen als die Box, sonst ist bei einem Plattendefekt beides weg.
 
-- **Linux:** NAS/Platte dauerhaft einbinden (`/etc/fstab`), z. B. nach
+- **Linux-Server (Praxis):** NAS/Platte dauerhaft einbinden (`/etc/fstab`), z. B. nach
   `/mnt/sicherung`, dann bei §2.4 `/mnt/sicherung/praxura` angeben.
 - **Windows, externe USB-Platte (z. B. Laufwerk E:):**
   ```powershell
   wsl -d Praxura -- bash -c "mkdir -p /mnt/praxura-sicherung && echo 'E: /mnt/praxura-sicherung drvfs defaults,nofail 0 0' >> /etc/fstab && mount -a && mkdir -p /mnt/praxura-sicherung/praxura"
   ```
   und `BACKUP_ZIEL=/mnt/praxura-sicherung/praxura` in `/opt/praxura/onprem/.env`.
+- **Hetzner Cloud Server:** Storage Box oder Volume nach Hetzner-Anleitung dauerhaft
+  einbinden (z. B. unter `/mnt/sicherung`), dann bei §2.4 bzw. in `.env`
+  `BACKUP_ZIEL=/mnt/sicherung/praxura` und die Markierungsdatei wie unten anlegen
+  (rechtliche Hinweise siehe §9).
 
 **Wichtig — die Markierungsdatei:** `install.sh` legt im Ziel eine Datei
 `.praxura-backup-ziel` an. Wird das Ziel nachträglich gesetzt, einmal von Hand:
 ```bash
-sudo touch /mnt/…/praxura/.praxura-backup-ziel
+sudo touch /mnt/<sicherungsordner>/praxura/.praxura-backup-ziel
+```
+Windows:
+```powershell
+wsl -d Praxura -- touch /mnt/praxura-sicherung/praxura/.praxura-backup-ziel
 ```
 Ist die Platte einmal **nicht angesteckt**, fehlt die Datei — die Sicherung
-bricht dann **laut ab** (Meldung „Yedek hedefi bağlı değil"), statt still auf
-die Box-Platte zu schreiben. Das Update in derselben Nacht wird dann ebenfalls
-nicht ausgeführt (ohne Sicherung kein Update).
+bricht dann **laut ab** (Meldung „Yedek hedefi bağlı değil" / Sicherungsziel nicht
+verbunden), statt still auf die Box-Platte zu schreiben. Das Update in derselben
+Nacht wird dann ebenfalls nicht ausgeführt (ohne Sicherung kein Update).
 
 **Empfehlung:** Box-Platte und Sicherungsplatte verschlüsseln (Windows:
 BitLocker; Linux: LUKS bei der Installation). Für den Betrieb der Box und die
 Patientendaten auf ihr ist die Praxis verantwortlich, nicht Praxura.
 
-⚠️ **Die Sicherungsplatte ist so schutzwürdig wie die Box selbst.** Sie enthält
-neben den Patientendaten auch den **privaten Schlüssel der Box-Zertifizierungs-
-stelle**. Weil jedes Praxisgerät dieser Stelle vertraut, könnte jemand mit der
-Platte (und Zugang zum Praxisnetz) gefälschte Zertifikate für beliebige
-Webseiten ausstellen. Platte verschlüsseln, verschlossen aufbewahren, nicht
-verleihen. Geht sie verloren: Wurzelzertifikat auf allen Geräten entfernen und
-die Box neu einrichten.
+⚠️ **Gilt nur bei internem Zertifikat (§8.3):** Die Sicherungsplatte ist in diesem
+Fall so schutzwürdig wie die Box selbst. Sie enthält neben den Patientendaten auch
+den **privaten Schlüssel der Box-Zertifizierungsstelle**. Weil jedes Praxisgerät
+dieser Stelle vertraut, könnte jemand mit der Platte (und Zugang zum Praxisnetz)
+gefälschte Zertifikate für beliebige Webseiten ausstellen. Platte verschlüsseln,
+verschlossen aufbewahren, nicht verleihen. Geht sie verloren: Wurzelzertifikat auf
+allen Geräten entfernen und die Box neu einrichten. *(Hinweis: Beim Standardweg
+mit Einrichtungscode wird kein privater CA-Schlüssel gesichert, da die Zertifikate
+über Let's Encrypt bezogen werden.)*
 
 **Wiederherstellen:**
 ```bash
@@ -303,7 +472,7 @@ niedrig — die Annahmestelle würde eine schon benutzte Nummer ablehnen.
 
 ---
 
-## 7. Betrieb
+## 6. Betrieb
 
 | Was | Wie |
 |---|---|
@@ -319,6 +488,40 @@ Windows: jeden Befehl mit `wsl -d Praxura -- ` davor ausführen, z. B.
 
 ---
 
+## 7. Von unterwegs zugreifen (FRITZ!Box WireGuard)
+
+Möchten Sie von unterwegs (z. B. bei Hausbesuchen oder von zu Hause) auf eine
+in der Praxis stehende Box zugreifen, nutzen Sie das gesicherte VPN Ihrer Praxis.
+Die Box selbst wird dafür **nicht** direkt für das Internet geöffnet:
+Es werden **keine Portfreigaben** für Port 80 oder 443 in Ihrem Router eingerichtet.
+Von außen erreichbar ist ausschließlich der WireGuard-Port Ihrer FRITZ!Box. Praxura
+ist an diesem Verbindungsweg nicht beteiligt.
+
+- **Voraussetzung:** FRITZ!Box mit FRITZ!OS ab Version 7.50.
+- **WireGuard einrichten:** *Internet → Freigaben → VPN (WireGuard) → Gerät hinzufügen → QR-Code* mit der WireGuard-App scannen.
+- `[Bild: FRITZ!Box WireGuard – folgt]`
+- **Wichtig zur Namensauflösung:** Verwenden Sie die von der FRITZ!Box erzeugte
+  Konfiguration unverändert (dort ist die FRITZ!Box als DNS-Server eingetragen).
+  Andernfalls greift die DNS-Rebind-Ausnahme aus §3 nicht, und der DNS-Dienst
+  des Mobilfunkanbieters verwirft die interne IP-Adresse der Praxis-Box.
+
+### Mögliche Fehlerquellen bei VPN
+
+- **Falle 1: DS-Lite / CGNAT (keine öffentliche IPv4-Adresse):**
+  Manche Internetanschlüsse (häufig bei Kabel- oder Glasfaseranschlüssen) verfügen
+  über keine eigene öffentliche IPv4-Adresse. In diesem Fall kann der WireGuard-Tunnel
+  aus manchen Mobilfunknetzen heraus unzuverlässig sein. Wenden Sie sich bei Bedarf
+  an Ihren Internetanbieter, um eine echte öffentliche IPv4-Adresse zu buchen, oder
+  ziehen Sie Ihren IT-Dienstleister hinzu.
+- **Falle 2: Gleicher Adressbereich zuhause und in der Praxis:**
+  Haben Ihr Heimnetz und das Praxisnetz denselben Standard-Adressbereich (beide
+  `192.168.178.0/24`), kann der VPN-Tunnel Daten nicht eindeutig leiten.
+  *Lösung:* Stellen Sie das Praxisnetz vorab im Router auf ein anderes Subnetz um
+  (z. B. `192.168.188.0/24`). Die Box erkennt ihre neue IP-Adresse selbstständig
+  und aktualisiert ihren Eintrag beim Namensdienst alle zwei Minuten.
+
+---
+
 ## 8. Ausstiegsweg: ohne Praxura-Namensdienst
 
 Dieser Abschnitt beschreibt, wie Sie die Praxis-Box unabhängig vom
@@ -328,10 +531,10 @@ Praxura-Namensdienst betreiben oder umstellen können.
   - Sie haben keinen Einrichtungscode oder möchten keinen externen Namensdienst nutzen.
   - Der Praxura-Dienst ist dauerhaft nicht erreichbar oder Praxura existiert nicht mehr.
   - Eine Erstinstallation auf **neuer Hardware** mit „Enter ohne Code“ (siehe §2.1)
-    führt ebenfalls direkt auf diesen Weg. ⚠️ War die Box schon einmal mit Code
-    eingerichtet, übernimmt auch `install.sh --neu` den alten Namen wieder
-    (die Box-Identität bleibt erhalten) — dann nach der Installation die Werte
-    aus Weg 1 bzw. 2 erneut in `.env` eintragen und die Box neu starten.
+     führt ebenfalls direkt auf diesen Weg. ⚠️ War die Box schon einmal mit Code
+     eingerichtet, übernimmt auch `install.sh --neu` den alten Namen wieder
+     (die Box-Identität bleibt erhalten) — dann nach der Installation die Werte
+     aus Weg 1 bzw. 2 erneut in `.env` eintragen und die Box neu starten.
 - **Was passiert, wenn der Namensdienst wegfällt:**
   Der bisherige Name bleibt nur so lange im DNS, wie die Domain dahinter
   besteht — darauf sollten Sie sich nicht verlassen. Ändert sich die IP-Adresse
@@ -339,12 +542,12 @@ Praxura-Namensdienst betreiben oder umstellen können.
   Router eine **feste IP-Adresse** (DHCP-Reservierung). Sobald die Box ein echtes
   Zertifikat über den Namensdienst bezieht, läuft es
   ohne Dienst spätestens nach **90 Tagen** ab.
-  ⚠️ **Ihre Daten in der Box sind davon NICHT betroffen** — alles läuft lokal
-  in Ihrer Praxis.
+  ⚠️ **Ihre Daten in der Box sind davon NICHT betroffen** — alles läuft auf
+  Ihrem Server bzw. PC.
   **Planen Sie den Umstieg bei einer Kündigung, nicht erst, wenn das Zertifikat
   abläuft.**
 
-### Weg 1 — Eigene Domain der Praxis
+### 8.1 Weg 1 — Eigene Domain der Praxis
 Nutzen Sie einen Namen unter Ihrer eigenen Praxis-Domain (z. B. `box.praxis-beispiel.de`):
 1. **DNS-Eintrag anlegen:** Beim eigenen DNS-Anbieter einen A-Eintrag für den
    Namen (z. B. `box.praxis-beispiel.de`) auf die lokale IP-Adresse der Box im
@@ -360,7 +563,7 @@ Nutzen Sie einen Namen unter Ihrer eigenen Praxis-Domain (z. B. `box.praxis-beis
    ```
    Wichtig: Ohne die Zeile `CADDY_TLS_MODUS=klassisch` bleibt die Box im
    Namensdienst-Modus. Mit `internal` muss jedes Gerät einmal das
-   Wurzelzertifikat der Box vertrauen (§4). Nutzen Sie eine FRITZ!Box, tragen
+   Wurzelzertifikat der Box vertrauen (siehe §8.3). Nutzen Sie eine FRITZ!Box, tragen
    Sie auch diesen Namen als Ausnahme beim DNS-Rebind-Schutz ein (§3).
    *(Nur wenn die Box tatsächlich aus dem Internet erreichbar ist — etwa ein
    eigener Cloud-Server —, tragen Sie bei `CADDY_TLS_ARG` stattdessen eine
@@ -380,28 +583,145 @@ Nutzen Sie einen Namen unter Ihrer eigenen Praxis-Domain (z. B. `box.praxis-beis
    unter der neuen Adresse **einmal neu anmelden**. Links in bereits früher
    verschickten Patienten-Mails zeigen weiterhin auf die alte Adresse.
 
-### Weg 2 — Letzter Ausweg ohne Domain
+### 8.2 Weg 2 — Letzter Ausweg ohne Domain
 Haben Sie keine eigene Internet-Domain, wählen Sie einen rein internen Namen:
 - Interner Name (z. B. `https://praxis.home.arpa`) in `.env`.
 - `CADDY_TLS_MODUS=klassisch` in `.env`.
 - `CADDY_TLS_ARG=internal` in `.env`.
-- Wurzelzertifikat auf jedem Praxisgerät importieren (siehe §4).
+- Wurzelzertifikat auf jedem Praxisgerät importieren (siehe §8.3).
 - Name im Router oder in den `hosts`-Dateien eintragen (siehe §3).
+
+### 8.3 Nur bei internem Zertifikat: Wurzelzertifikat auf jedem Gerät vertrauen
+
+> **Gilt nur für:** Den Weg „eigene Adresse“ mit rein internem Zertifikat
+> (`CADDY_TLS_ARG=internal`).
+> Beim regulären Weg mit Einrichtungscode über den Praxura-Namensdienst ist
+> dieser Schritt **nicht erforderlich**, da die Box ein reguläres Let's-Encrypt-Zertifikat
+> nutzt.
+
+Datei holen:
+- **Windows-Box:** liegt schon unter `C:\ProgramData\Praxura\praxura-wurzelzertifikat.crt`
+  und ist auf diesem PC bereits eingetragen.
+- **Linux-Server:** `cd /opt/praxura/onprem && sudo docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./praxura-wurzelzertifikat.crt`
+
+Dann je Gerät:
+
+| Gerät | So geht's |
+|---|---|
+| Windows (Chrome, Edge) | Doppelklick auf die `.crt` → *Zertifikat installieren* → **Lokaler Computer** → *Alle Zertifikate in folgendem Speicher* → **Vertrauenswürdige Stammzertifizierungsstellen** |
+| Firefox | *Einstellungen → Datenschutz & Sicherheit → Zertifikate anzeigen → Zertifizierungsstellen → Importieren* (Haken „Websites vertrauen") |
+| iPad / iPhone | Datei per Mail/AirDrop öffnen → *Einstellungen → Profil geladen → Installieren*, danach **zusätzlich** *Einstellungen → Allgemein → Info → Zertifikatsvertrauenseinstellungen* → Schalter für „Caddy Local Authority" **einschalten** |
+| Android | *Einstellungen → Sicherheit → Verschlüsselung & Anmeldedaten → Zertifikat installieren → CA-Zertifikat* |
+| Mac | Doppelklick → Schlüsselbund *System* → Zertifikat öffnen → *Vertrauen: Immer vertrauen* |
+
+Das Zertifikat wird bei internem Modus mitgesichert (§5) — nach einer
+Wiederherstellung müssen die Geräte es **nicht** neu importieren.
 
 ---
 
-## 9. Wenn etwas nicht geht
+## 9. Hetzner Cloud und § 393 SGB V — Hinweise für die Praxis
+
+> **Hinweis:** Keine Rechtsberatung. Verantwortlich für die Datenverarbeitung ist Ihre Praxis.
+
+Betreibt Ihre Praxis die Box auf einem Server bei Hetzner Cloud, verarbeitet Ihre
+Praxis Gesundheitsdaten über einen Cloud-Computing-Dienst im Sinne von § 393 Abs. 1
+SGB V. Wir gehen vorsichtig davon aus, dass die Anforderungen des § 393 SGB V in
+diesem Fall von Ihrer Praxis beachtet werden müssen. Für Praxura gilt § 393 SGB V
+nicht, da Praxura zu keinem Zeitpunkt Zugriff auf Ihre Daten hat und keine Rolle bei
+der Datenverarbeitung Ihrer Patientendaten einnimmt.
+
+### Die gesetzlichen Kriterien im Überblick (§ 393 SGB V)
+
+1. **Inland und europäischer Sitz (§ 393 Abs. 2 SGB V):**
+   Die Verarbeitung erfolgt im Inland bzw. in der EU; der Anbieter Hetzner Online
+   GmbH hat seinen Sitz in Deutschland (Gunzenhausen).
+2. **Technische und organisatorische Maßnahmen (§ 393 Abs. 3 Nr. 1 SGB V):**
+   Die Festlegung und Umsetzung angemessener technischer und organisatorischer
+   Maßnahmen (TOM) liegt in der Verantwortung Ihrer Praxis.
+3. **C5-Typ-2-Prüfbericht (§ 393 Abs. 3 Nr. 2 SGB V):**
+   Hetzner verfügt laut Unternehmensmitteilung vom 25.03.2026 über ein Testat nach
+   dem C5-Kriterienkatalog (Typ 2). Ob dieses Testat auch Hetzner Cloud Server
+   und die gewählten Standorte vollständig abdeckt, ist aktuell noch nicht
+   abschließend geprüft (siehe Kasten „Noch offen").
+4. **Kundenkriterien aus dem Prüfbericht (§ 393 Abs. 3 Nr. 3 SGB V):**
+   Die im C5-Bericht definierten korrespondierenden Kriterien für Kunden müssen
+   von Ihrer Praxis umgesetzt werden. Fordern Sie den C5-Prüfbericht nach Abschluss
+   des Auftragsverarbeitungsvertrags im Hetzner-Konto an (*accounts.hetzner.com → DPA*).
+   Wichtige Basismaßnahmen der Praxis:
+   - Zwei-Faktor-Authentifizierung (2FA) im Hetzner-Kundenkonto aktivieren.
+     *(Hinweis: 2FA im Hetzner-Konto schützt den Infrastrukturzugang und ist
+     unabhängig von der Benutzeranmeldung an der Praxis-Box.)*
+   - Keine Hetzner-API-Token herausgeben oder ungesichert speichern.
+   - Hetzner Cloud Firewall strikt auf die benötigten Ports beschränken (80/tcp, 443/tcp, 443/udp sowie 22/tcp nur von der eigenen Admin-IP, ausgehend unbeschränkt; siehe Weg C in §1).
+   - Datensicherungen sorgfältig schützen.
+
+### Vertragliche Grundlagen und Verantwortung
+
+- **Auftragsverarbeitungsvertrag (Art. 28 DSGVO):**
+  Den AVV schließt Ihre Praxis direkt mit Hetzner per Klick im Hetzner-Kundenportal
+  ab. Vertragspartner von Hetzner ist Ihre Praxis, nicht Praxura. Der Server und
+  das Abrechnungskonto gehören ausschließlich Ihrer Praxis.
+- **Standortauswahl:**
+  Wir empfehlen einen Standort in Deutschland: Falkenstein (FSN1) oder Nürnberg
+  (NBG1). Ein europäischer Standort wie Helsinki (EU) ist rechtlich möglich.
+  Standorte außerhalb der Europäischen Union (wie USA oder Singapur) dürfen für
+  den Betrieb der Praxis-Box keinesfalls gewählt werden.
+- **Ärztliche Schweigepflicht (§ 203 StGB):**
+  Hetzner ist in dieser Konstellation als mitwirkende Person nach § 203 Abs. 3
+  Satz 2 StGB anzusehen. Die Praxis ist verpflichtet, mitwirkende Personen zur
+  Verschwiegenheit zu verpflichten (§ 203 Abs. 4 Satz 2 Nr. 1 StGB). Ob der
+  Standard-AVV von Hetzner bereits eine ausdrückliche § 203-Klausel enthält, ist
+  derzeit noch nicht geprüft und muss von der Praxis geprüft werden. Beim Betrieb
+  eines Cloud-Servers (IaaS) hat das Personal von Hetzner im Normalbetrieb keinen
+  logischen Zugriff auf das laufende Betriebssystem.
+- **Zugang und Schlüssel:**
+  Die SSH-Schlüssel für den Serverzugang liegen ausschließlich bei Ihrer Praxis.
+  Praxura erhält keinen Zugang und nimmt keine Schlüssel entgegen. Unterstützung
+  durch Praxura erfolgt im Bedarfsfall ausschließlich per Diagnosepaket oder
+  gemeinsamer Bildschirmfreigabe. Gibt die Praxis einem externen IT-Dienstleister
+  Zugang (auch über die Hetzner-Konsole oder das Rescue-System), muss die Praxis
+  mit diesem Dienstleister einen eigenen AVV sowie eine Verschwiegenheitsverpflichtung
+  nach § 203 StGB abschließen.
+- **Sicherung bei Hetzner:**
+  Als Sicherungsziel dient eine Hetzner Storage Box (im Praxis-Konto buchbar, ca.
+  4 €/Monat), ein separates Hetzner Volume (nach Größe abgerechnet) oder eine externe
+  Sicherung. Sicherungen werden auf dem Speicherziel derzeit unverschlüsselt abgelegt;
+  Verschlüsselung in der Box vor dem Versand ist in Vorbereitung (siehe Kasten
+  „Noch offen"). Bis dahin gilt: Eine unverschlüsselte Sicherung auf einer Storage
+  Box oder einem Volume schützt vor einem Serverausfall, nicht aber vor einem
+  theoretischen Einblick beim Speicheranbieter.
+- **KI-Modul:**
+  Das optionale KI-Modul ist standardmäßig deaktiviert (`AI_MODE=aus`). Vor einer
+  eventuellen Aktivierung gelten gesonderte Hinweise (die rechtliche Prüfung dazu läuft).
+
+> ### Noch offen (Stand 07.10.2026)
+> - **C5-Typ-2-Abdeckung:** Ob das C5-Testat von Hetzner neben der Rechenzentrumsinfrastruktur
+>   auch Hetzner Cloud Server und die Standorte Falkenstein und Nürnberg vollständig
+>   abdeckt, ist derzeit noch nicht abschließend geprüft. Bis zur Klärung empfiehlt
+>   es sich, den Prüfbericht bei Hetzner anzufordern.
+> - **§ 203-Klausel:** Ob der Standard-AVV im Hetzner-Portal bereits eine ausdrückliche
+>   Verpflichtung nach § 203 StGB enthält, ist von der Praxis zu prüfen.
+> - **Storage Box:** Die C5-Abdeckung und genaue Standortbindung der Storage Box sind
+>   bislang nicht abschließend geprüft.
+> - **Verschlüsselung der Sicherung:** Auf dem Speicherziel derzeit unverschlüsselt
+>   abgelegt; Verschlüsselung in der Box vor dem Versand ist in Vorbereitung.
+
+> Stand: 07.10.2026
+
+---
+
+## 10. Wenn etwas nicht geht
 
 | Symptom | Ursache / Lösung |
 |---|---|
 | Browser: „Website nicht erreichbar" auf dem Tablet | Name nicht im Router (§3), Box-PC schläft, Windows-Netz ist „Öffentlich" (§3), oder FRITZ!Box-Rebind-Schutz blockiert (§3) |
-| Browser: Zertifikatswarnung | Wurzelzertifikat auf diesem Gerät nicht vertraut (§4); iPad: Schritt „Zertifikatsvertrauen" vergessen |
+| Browser: Zertifikatswarnung | Wurzelzertifikat auf diesem Gerät nicht vertraut (§8.3); iPad: Schritt „Zertifikatsvertrauen" vergessen |
 | Seite bleibt weiß | Adresse in der Leiste ≠ `SITE_URL` aus §2.1 — immer genau den Namen benutzen |
 | Windows: Box nach Neustart weg | Windows-Passwort geändert → `praxura-installieren.ps1` erneut ausführen |
 | Windows: „Port 80 oder 443 ist belegt" | ein anderes Programm (IIS, Skype, anderer Webserver) beenden |
 | `install.sh`: „Images konnten nicht geholt werden" | Internet des Servers prüfen; Kanal `stable` evtl. noch nicht veröffentlicht → `beta` |
-| Sicherung bricht ab | Sicherungsplatte nicht angesteckt / Markierungsdatei fehlt (§6) |
-| Box-Oberfläche lädt gar nicht, `docker compose logs caddy` zeigt `Failed to read config file` | Zertifikatszugang der Box (`acmedns.json`) fehlt → `install.sh` erneut ausführen (legt Zugang über den Code-Weg neu an oder fällt auf internes Zertifikat zurück); als Notlösung in `.env` `CADDY_TLS_MODUS=klassisch` + `CADDY_TLS_ARG=internal` setzen und `docker compose up -d` (dann §4) |
+| Sicherung bricht ab | Sicherungsplatte nicht angesteckt / Markierungsdatei fehlt (§5) |
+| Box-Oberfläche lädt gar nicht, `docker compose logs caddy` zeigt `Failed to read config file` | Zertifikatszugang der Box (`acmedns.json`) fehlt → `install.sh` erneut ausführen (legt Zugang über den Code-Weg neu an oder fällt auf internes Zertifikat zurück); als Notlösung in `.env` `CADDY_TLS_MODUS=klassisch` + `CADDY_TLS_ARG=internal` setzen und `docker compose up -d` (dann §8.3) |
 
 Alle Meldungen nennen **Gefunden · Erwartet · Was tun**. Bei Rückfragen an
 den Support bitte die passende Protokolldatei (ohne `.env`!) mitschicken —

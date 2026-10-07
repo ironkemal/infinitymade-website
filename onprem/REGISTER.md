@@ -5027,12 +5027,14 @@ kaybolmaya açıklar, ileride kendi girdilerine terfi etmeliler.
 
 | Durum | Adet | Maddeler |
 |---|---|---|
-| `offen` | 18 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-146 · O-156 · O-158 · **O-166** · **O-168** · **O-170** (06.10.2026) |
+| `offen` | 20 | O-18 · O-23 · O-32 · O-46 · O-75 · O-108 · O-110 · O-113 · O-119 · O-127 · O-128 · O-132 · O-146 · O-156 · O-158 · **O-166** · **O-168** · **O-170** (06.10.2026) · **O-173** · **O-174** (07.10.2026) |
 | `geplant` | 28 | O-07 · O-08 · O-10 · O-13 · O-19 · O-21 · O-27 · O-28 · O-31 · O-43 · O-91 · O-94 · O-121 · O-135 · O-138 · O-139 · O-141 · O-145 · **O-155** (K2b, kısmi) · **O-159** · **O-161** · **O-162** · **O-163** · **O-164** · **O-165** · **O-157** (K2b.14) · **O-169** (K-20) · **O-172** (K2b.4) |
 | 🟡 `kısmen gelöst` | 25 | O-01 · O-02 · O-11 · O-30 · O-33 · O-40 · O-42 · O-45 · O-51 · O-55 · O-58 · O-61 · O-82 · O-87 · O-88 · O-115 · O-116 · O-118 · O-120 · O-125 · O-126 · **O-123** · **O-142** · **O-144** · **O-151** |
 | `gelöst` | 85 | O-06 · O-15 · O-16 · O-20 · O-25 · O-26 · O-29 · O-36 · O-38 · O-39 · O-41 · O-44 · O-47 · O-48 · O-49 · O-50 · O-52 · O-53 · O-56 · O-57 · O-59 · O-60 · O-62 · O-63 · O-64 · O-65 · O-66 · O-67 · O-68 · O-69 · O-70 · O-71 · O-72 · O-73 · O-74 · O-76 · O-77 · O-78 · O-79 · O-80 · O-81 · O-83 · O-84 · O-85 · O-86 · O-89 · O-90 · O-92 · O-93 · O-95 · O-96 · O-97 · O-98 · O-99 · O-100 · O-101 · O-102 · O-103 · O-104 · O-105 · O-106 · O-109 · O-114 · O-117 · O-122 · O-124 · O-130 · O-131 · O-133 · O-140 · O-143 · **O-03** · **O-09** · **O-107** · **O-129** · **O-136** · **O-147** · **O-148** · **O-149** · **O-150** · **O-152** · **O-153** · **O-154** · **O-160** · **O-171** (`004fc537`) |
 | `unkritisch` | 13 | O-04 · O-05 · O-12 · O-14 · O-17 · O-22 · O-24 · O-34 · O-35 · O-37 · O-54 · O-111 · O-112 |
 | `widerlegt` | 3 | **O-134** · **O-137** · **O-167** (05.10.2026, K-20) |
+
+> ✅ **07.10.2026 (K2b.8 kısım 2 ön sorusu) — yeniden toplandı:** 20 + 28 + 25 + 85 + 13 + 3 = **174**, en yüksek **O-174**. Uyuşuyor. Yeni: O-173 (Hetzner yedeği şifresiz — kılavuz tek başına S-50 şart 5'i karşılayamaz), O-174 (imajlar yalnız amd64, mimari ön kontrolü yok; CX23 disk kontrolüne takılır).
 
 > ✅ **06.10.2026 (K2b.4 commit `004fc537` / L10 `ec37573a`) — yeniden toplandı:** O-171 `geplant`→`gelöst`. 18 + 28 + 25 + 85 + 13 + 3 = **172**, en yüksek **O-172**. Uyuşuyor.
 
@@ -5479,3 +5481,28 @@ Aşağıdaki bulguların playbook'ta **karşılığı yok** — plan güncellene
 | **Kutuda ne olur** | Merkez >~60 gün kapalı kalırsa ya da biz ortadan kalkarsak sertifika ≤90 günde düşer. HSTS=0: kullanıcı uyarıyı tıklayıp geçer, praksis çalışır. HSTS=1 yıl: o adı bir kez görmüş **her** cihaz kutuyu açamaz, kaçış yalnız kutu PC'sinde `localhost` / çıkış yoluna geçiş. Aynı şey K2b.8 son çaresinde (aynı ada `tls internal`) CA'yı henüz içe aktarmamış cihazlarda da olur. HSTS'nin LAN'daki kazancı (SSL-strip) gerçek ama küçük; adres yer imi/kısayolla `https://` açılıyor |
 | **Çözüm** | **06.10.2026 güncelleme — uygulanan: 86400** (koordinatör + `guvenlik` S-47 şart 5; bu sicilin 0 önerisi görüşüldü, kabul edildi: kilit en fazla 24 saat sürer, aynı adın LAN'da başka cihaza gitmesine karşı koruma kazanılır). Asıl öneri (0) tarihî kayıt olarak aşağıda: K2b.4: acmedns modunda `HSTS_MAX_AGE=0`. 31536000'e yükseltme (includeSubDomains kalabilir, preload yok) **iki şartla:** (i) gerçek bir kutuda en az bir otomatik yenileme gözlendi, (ii) panelde/selbstcheck'te "sertifika <21 gün" uyarısı var — yoksa merkez kesintisi sessizce kilide döner. ⚠️ **Yükseltme J4 ile GİTMEZ (06.10.2026 düzeltme):** 86400'ü şablon değil `install.sh:680` yazıyor; şablon `HSTS_MAX_AGE=0`. J4'te kutunun değeri (86400) tabandan (0) farklı → "müşteri değiştirdi" sayılır, yeni şablon değeri uygulanmaz, çakışma uyarısı çıkar. 1 yıla geçiş için `update.sh`'a mod-koşullu ayrı adım (yalnız `CADDY_TLS_MODUS=acmedns` **ve** değer tam `86400` ise yükselt) ya da ayrı bir anahtar gerekir — yükseltme turunun işi. `guvenlik` görüşü alınır; veto konusu değil |
 | **Durum** | `geplant` — 06.10.2026: 86400 kodda (`install.sh:680`, `.env.template:142` açıklaması), commit bekliyor. 31536000'e geçiş açık: iki şart + yukarıdaki J4 tuzağı (1 yıl yükseltmesi J4 ile gitmez, `update.sh`'ta mod-koşullu adım gerekir) · **`004fc537` ile commit'lendi.** · **06.10.2026 ek (`guvenlik` yan bulgusu):** `install.sh:~445` klassisch+e-posta yolu (müşterinin kendi alan adı, LE HTTP-01/TLS-ALPN) HSTS'i bitiş izlemesi **olmadan** 63072000 (2 yıl) yapıyor. Orada yenileme bizim zincirimize bağlı değil (K9 argümanı zayıf) ama kilit sınıfı aynı: port 80/443 dışa kapanır ya da alan adı düşerse sertifika biter, adı görmüş her cihaz 2 yıl geçemez. **Öneri (bu turda kod değişmedi):** iki mod tek kural — '<21 gün' uyarısı yazılana kadar 86400, sonra 31536000; 63072000/preload gereksiz. Aynı J4 tuzağı: değeri `install.sh` yazıyor, düşürmek de `update.sh`'ta mod-koşullu adım ister (yalnız değer tam `63072000` ise 86400'e çek). Sahada canlı kutu yok; HSTS turuna bağlandı |
+
+## 7AE — K2b.8 kısım 2 ön sorusu (07.10.2026): Hetzner sayfası + genel Linux sertleştirme
+
+### O-173 — `backup.sh` arşivi düz yazar: internete açık (Hetzner) kutuda "şifreli yedek" şartını kılavuz tek başına karşılayamaz 🔴 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | `backup.sh` storage'ı `tar -czf` (`:151`) ve DB'yi pg_dump ile **şifresiz** yazar; arşiv seviyesinde şifreleme yok (grep `gpg`/`age`/`openssl enc` → 0). Hasta alanlarının bir kısmı DEK ile şifreli (O-29), geri kalan PHI dökümde düz |
+| **Nerede** | `onprem/backup.sh:94-101` (hedef), `:148-155` (storage), DB dökümü aynı dosyada · şart kaynağı: `guvenlik/REGISTER.md` S-50 şart 5 (S-22/S-43 öneri 2) |
+| **Tip** | G (kutu işletimi) — dış çağrı yok; G1/G2 temiz (yedek praksisin hedefinde) |
+| **Kutuda ne olur** | Praksis/LAN kutusunda kılavuzun "BitLocker/LUKS ile şifreli disk" tavsiyesi (KURULUM §6) yeterli. Hetzner kutusunda hedef pratikte bir Hetzner Volume ya da Storage Box olur; disk-seviyesi şifreleme anahtarı aynı sunucuda durduğu için kılavuz "şifreli yedek" diye bir adım **tarif edemez** — yazılırsa yanlış güvence olur |
+| **Çözüm** | İki parça: (1) **kod (builder, KHS'e yeni satır önerisi):** `backup.sh` istemci tarafı arşiv şifrelemesi — açık anahtar kutuda, özel anahtar DEK gibi kutu dışında (kurulumda bir kez gösterilir); `restore.sh` simetriği. Araç seçimi (`age` vs. `openssl`) `guvenlik` kararı. (2) **kılavuz (K2b.8 kısım 2, şimdi):** Hetzner sayfasında hedef = ayrı Hetzner Volume, sınır açık yazılır ("Volume derselben Firma — schützt vor Serverausfall, nicht vor Zugriff beim Anbieter; verschlüsselte Sicherung folgt"); Hetzner'in kendi "Backups/Snapshots" özelliği ek katman olarak anılabilir ama `.env` (DEK) dahil tüm diski içerdiği **yazılır** |
+| **Durum** | `offen` — parça (1)'in sahibi yok; KHS'e satır açılmadan K3'e çıkılmaz (S-50 şart 5 ilk internete açık kutudan önce) |
+
+### O-174 — Imajlar yalnız amd64; `install.sh` mimari kontrolü yapmıyor, ve CX23 (40 GB) disk ön kontrolüne takılır 🟡 **offen**
+
+| Alan | İçerik |
+|---|---|
+| **Ne** | Yayın workflow'larında `platforms:` yok (`grep -rn platforms .github/workflows/` → 0; `publish-frontend.yml:171`, `publish-calendar-api.yml:197/296` `build-push-action`, runner `ubuntu-latest`) → `api`/`frontend` imajları yalnız amd64. `install.sh`'ta `uname -m` kontrolü yok. Ayrıca `install.sh:234` **boş** alan ≥ 40 GB ister; 40 GB diskli sunucuda (Hetzner CX23) boş alan ~36 GB kalır |
+| **Nerede** | `.github/workflows/publish-*.yml` · `onprem/install.sh:224-235` |
+| **Tip** | G (kurulum ön kontrolü) |
+| **Kutuda ne olur** | Hetzner CAX (ARM) seçen praksiste kurulum `docker compose pull`'da "no matching manifest" ile ortada düşer, mesaj "Was tun" vermez. CX23 seçen praksis ön kontrolde "Zu wenig freier Speicher" alır |
+| **Çözüm** | Kılavuz (K2b.8 kısım 2, şimdi): öneri **CX33** (4 vCPU · 8 GB · 80 GB, x86), "kein CAX/ARM". Kod (küçük, builder): `install.sh` ön kontrolüne `uname -m` = `x86_64` değilse `fail` (Gefunden/Erwartet/Was tun). Çoklu mimari yayın şimdilik gerekmez (`unkritisch` adayı, mini-PC/ARM müşterisi gelirse yeniden) |
+| **Durum** | `offen` — kılavuz kısmı K2b.8 kısım 2, kod kısmı sahipsiz (L-listesine küçük iş) |
+
