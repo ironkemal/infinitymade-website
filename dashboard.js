@@ -8,7 +8,7 @@ import { zeigePatientTermine } from './module/patient-termine.js?v=20260908';
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE, IST_KUTU } from './supabase-config.js';
 import { initLeadSuche } from './module/lead-suche.js?v=20261002';
-import './module/hausbesuch-route.js?v=20261002a';
+import './module/hausbesuch-route.js?v=20261007a'; import './module/support-kontakt.js?v=20261007a'; import './module/mail-entwurf.js?v=20261007a'; // Box-Anpassungen (K2b.15)
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20261001a';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20261003m16';
@@ -26,7 +26,7 @@ import { attachLeadKartenIk, pruefeLeadKartenIk } from './module/lead-karten-ik.
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20261004m113';
 import { leadGeburtsdatum, leadHausbesuch, leadMetadataZusammenfuehren } from './module/lead-felder.js?v=20260929a';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260914';
-import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
+import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20261007a';
 import { istBerichtOffen, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 // §302-Bildschirm: ein Einstieg, eine Auswahlliste fuer alle vier Fachbereiche (ABRECHNUNG_BILDSCHIRM_PLAN.md Phase 1). fmtEur kommt ab jetzt aus module/geld.js — die lokale Kopie hier ist mit dem alten Assistenten entfallen.
 import { fmtEur } from './module/geld.js?v=20260909';
@@ -146,7 +146,7 @@ const BIZ_STORAGE_KEY = 'infinitymade.active_business';
 const BIZ_PREF_KEY = 'selected_business';
 const ENTERPRISE_PLANS = new Set(['enterprise']);
 const PLAN_EMPLOYEE_LIMITS = { starter: 2, professional: 8, klinik: 15, enterprise: Infinity };
-function employeeLimit() { return PLAN_EMPLOYEE_LIMITS[(currentProfile?.plan || 'starter').toLowerCase()] ?? 2; }
+function employeeLimit() { return IST_KUTU ? Infinity : (PLAN_EMPLOYEE_LIMITS[(currentProfile?.plan || 'starter').toLowerCase()] ?? 2); } // Box: kein Mitarbeiter-Limit bis zur Lizenz (K-19 f)
 
 
 const T = {
@@ -18967,7 +18967,7 @@ function nachrichtAnPatient(requestId) {
         });
         const json = await r.json();
         if (!r.ok) throw new Error(json.error || 'Fehler');
-        showToast(tl.anfragen_nachricht_ok, 'success');
+        if (globalThis.mailEntwurfOeffnen?.(json.mailEntwurf)) showToast('Mail-Entwurf im Mailprogramm geöffnet — bitte dort senden.', 'info'); else showToast(tl.anfragen_nachricht_ok, 'success'); // Box: K2b.15
       } catch (e) {
         showToast(e.message || 'Fehler beim Senden', 'error');
         return false;
@@ -19083,7 +19083,7 @@ async function declineAnfrage(requestId) {
         });
         const json = await r.json();
         if (!r.ok) throw new Error(json.error || 'Fehler');
-        showToast(gegenangebot ? tl.anfragen_alt_gesendet : 'Anfrage abgelehnt', gegenangebot ? 'success' : 'info');
+        if (globalThis.mailEntwurfOeffnen?.(json.mailEntwurf)) showToast('Mail-Entwurf im Mailprogramm geöffnet — bitte dort senden.', 'info'); else showToast(gegenangebot ? tl.anfragen_alt_gesendet : 'Anfrage abgelehnt', gegenangebot ? 'success' : 'info'); // Box: K2b.15
         loadAnfragen(anfragenCurrentStatus);
       } catch (e) {
         showToast(e.message || 'Fehler beim Ablehnen', 'error');

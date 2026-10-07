@@ -25,6 +25,7 @@ import setupRouter from './setup/router.js';
 import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import dsgvoRouter from './routes/dsgvo.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
+import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { heilmittelPositionAufloesen, kostentraegerIkAufloesen, kartenIkNormalisieren, artFelderAusRezept, rezeptartWechselPruefen, bgFelderAusRezept, bgAenderungGesperrt } from './lib/rezept-felder.js';
 import { statusAusAbrechnungStatus } from './billing/utils/einreichbar.js';
@@ -4336,7 +4337,18 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
       })
       .eq('id', request_id);
 
-    if (bookReq.patients?.email && process.env.SMTP_HOST) {
+    // Box ohne SMTP: Entwurf an den Inhaber statt Versand (K2b.15, lib/mail-entwurf.js)
+    if (bookReq.patients?.email && mailEntwurfStattVersand()) {
+      const [{ data: ownerP }, { data: empP }] = await Promise.all([
+        supabase.from('profiles').select('business_name').eq('id', owner_id).maybeSingle(),
+        supabase.from('profiles').select('owner_first_name, owner_last_name, business_name').eq('id', empId).maybeSingle(),
+      ]);
+      result.mailEntwurf = entwurfBestaetigt({
+        to: bookReq.patients.email, vorname: bookReq.patients.vorname, praxis: ownerP?.business_name,
+        datum: anfrage.preferred_date, uhrzeit: anfrage.preferred_time,
+        therapeut: [empP?.owner_first_name, empP?.owner_last_name].filter(Boolean).join(' ') || empP?.business_name || '',
+      });
+    } else if (bookReq.patients?.email && process.env.SMTP_HOST) {
       const [{ data: ownerP }, { data: empP }] = await Promise.all([
         supabase.from('profiles').select('business_name, email').eq('id', owner_id).maybeSingle(),
         // `profiles` hat keine Spalte `full_name` — dieser Select lief mit 400 ins
@@ -4386,6 +4398,12 @@ app.post('/api/booking-request/decline', requireAuthAI, bookingRequestApprovalLi
 
     await supabase.from('booking_requests').update({ status: 'declined' }).eq('id', request_id);
 
+    if (bookReq.patients?.email && mailEntwurfStattVersand()) {
+      const { data: ownerP } = await supabase.from('profiles').select('business_name').eq('id', owner_id).maybeSingle();
+      return res.json({ ok: true, mailEntwurf: entwurfAbgelehnt({
+        to: bookReq.patients.email, vorname: bookReq.patients.vorname, praxis: ownerP?.business_name, grund: reason,
+      }) });
+    }
     if (bookReq.patients?.email && process.env.SMTP_HOST) {
       const { data: ownerP } = await supabase.from('profiles').select('business_name, email').eq('id', owner_id).maybeSingle();
       const t = createSMTPTransport();
@@ -4481,6 +4499,13 @@ app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimi
     }).eq('id', request_id);
     if (updErr) throw updErr;
 
+    if (bookReq.patients?.email && mailEntwurfStattVersand()) {
+      const { data: ownerP } = await supabase.from('profiles').select('business_name').eq('id', owner_id).maybeSingle();
+      return res.json({ ok: true, angeboten: gespeichert.length, mailEntwurf: entwurfGegenangebot({
+        to: bookReq.patients.email, vorname: bookReq.patients.vorname, praxis: ownerP?.business_name,
+        grund: reason, termine: gespeichert,
+      }) });
+    }
     if (process.env.SMTP_HOST) {
       const { data: ownerP } = await supabase.from('profiles')
         .select('business_name, email').eq('id', owner_id).maybeSingle();
@@ -4529,6 +4554,12 @@ app.post('/api/booking-request/message', requireAuthAI, bookingRequestApprovalLi
       .eq('id', request_id).eq('owner_id', owner_id).maybeSingle();
     if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
     if (!bookReq.patients?.email) return res.status(400).json({ error: 'Für diesen Patienten ist keine E-Mail-Adresse hinterlegt' });
+    if (mailEntwurfStattVersand()) {
+      const { data: ownerP } = await supabase.from('profiles').select('business_name').eq('id', owner_id).maybeSingle();
+      return res.json({ ok: true, mailEntwurf: entwurfNachricht({
+        to: bookReq.patients.email, vorname: bookReq.patients.vorname, praxis: ownerP?.business_name, nachricht,
+      }) });
+    }
     if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'E-Mail-Versand ist nicht eingerichtet' });
 
     const { data: ownerP } = await supabase.from('profiles')

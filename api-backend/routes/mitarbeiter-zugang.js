@@ -4,7 +4,7 @@ import rateLimit from 'express-rate-limit';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuth } from '../ai/auth.js';
 import { logAccess } from '../_lib/access-log.js';
-import { appBaseUrl as kutuAppBaseUrl } from '../lib/dagitim.js';
+import { appBaseUrl as kutuAppBaseUrl, istKutu } from '../lib/dagitim.js';
 import {
   generateSetupCode,
   formatSetupCode,
@@ -115,7 +115,8 @@ router.post('/team/mitarbeiter', requireAuth, createEmployeeLimiter, async (req,
 
     // 3. Plan-Limit serverseitig prüfen
     const plan = (callerProfile.plan || 'starter').toLowerCase();
-    const lim = PLAN_EMPLOYEE_LIMITS[plan] ?? 2;
+    // Box: kein Mitarbeiter-Limit, bis die Lizenz (K-11) es traegt (K-19 f) — Infinity → p_limit null.
+    const lim = istKutu() ? Infinity : (PLAN_EMPLOYEE_LIMITS[plan] ?? 2);
 
     const { count, error: countErr } = await supabase
       .from('profiles')

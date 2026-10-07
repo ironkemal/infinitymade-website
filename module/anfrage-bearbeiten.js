@@ -274,7 +274,7 @@ export async function oeffneAnfrageBearbeiten(req) {
           fehlerZeigen(json.error || 'Bestätigung fehlgeschlagen.');
           return false;
         }
-        ergebnisMelden(json);
+        ergebnisMelden(json); globalThis.mailEntwurfOeffnen?.(json.mailEntwurf); // Box ohne SMTP: mailto (module/mail-entwurf.js, K2b.15)
         onFertig?.();
       } catch (e) {
         fehlerZeigen(e.message || 'Bestätigung fehlgeschlagen.');
