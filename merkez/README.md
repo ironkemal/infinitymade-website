@@ -5,6 +5,11 @@ Läuft **nur in der Zentrale** (eigene kleine VPS, nicht auf dem n8n-/calendar-a
 **Nicht für Boxen:** dieser Ordner gehört nicht in das Box-Image (`api-backend/Dockerfile` kopiert
 Verzeichnisse einzeln) und nicht ins Web (`.vercelignore`).
 
+**Auf der VPS (07.10.2026):** Sparse-Checkout reicht mit `/merkez/` allein NICHT — `server.js`/`admin.js`
+importieren zwei Dateien aus `api-backend/`. Muster (`git sparse-checkout set --no-cone`):
+`/merkez/` · `/api-backend/routes/mitarbeiter-zugang-code.js` · `/api-backend/merkez-istemci/signatur.js`.
+Kommt ein neuer `../api-backend/`-Import dazu, muss das Muster auf der VPS mitwachsen.
+
 Was es tut: Einrichtungscode → zufälliger Name (`wort-wort-NN`) → DNS-Einträge bei Cloudflare
 (`_acme-challenge`-CNAME, CAA, später A) + ein acme-dns-Konto. Die Box beweist ihre Identität mit
 einem Ed25519-Schlüssel (`api-backend/merkez-istemci/`); Merkez speichert nur den öffentlichen Teil.
