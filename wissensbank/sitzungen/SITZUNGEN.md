@@ -32,8 +32,14 @@ Hier steht das Wichtigste aus einzelnen Arbeitssitzungen (Claude Code, Melih/Kem
 
 ## Übersicht
 
+**Offene M3-Abnahme:** [[2026-10-07_m3-offene-abnahme]] — echte Kamera, Handykamera auf HTTPS-Testbox, anschließend Abnahme dokumentieren.
+
 | Datum | Ticket | Notiz | Stand beim Schreiben |
 |---|---|---|---|
+| 2026-10-08 | KUTU M4 / Übergabe | [[2026-10-08_m4-fortschritt-und-kemal-uebergabe]] | Fortschritt gespeichert: M4 lokal geprüft; Kemal lokal freigegeben · Remote-Abgleich: K2b.7a/7b bereits dokumentiert umgesetzt; weiter mit aktuellem Hat-K-Prompt (ORG/O-178/§5b) · Cold-FAIL und K3-/KI-/Produktionsgrenzen bleiben offen |
+| 2026-10-08 | KUTU M4 | [[2026-10-08_m4-qa-bericht]] | Lokal umgesetzt und erneut geprüft: 3117 Tests, Probesuite, Merkez48/48, API14/14 · NO_NER · Cold36/156 Restlecks: Freitextqualität FAIL · lokale Kemal-Weiterarbeit freigegeben; aktuelle Reihenfolge nach Remote-Abgleich: `KEMAL_M4_UEBERGABE.md` · K3-/Anbieter-/Produktionsfreigabe offen |
+| 2026-10-07 / 08 | KUTU M4 | [[2026-10-07_m4-analyse-und-plan]] | M4.1–M4.11 analysiert; Plan 1 bewertet, Plan 2 mit Gates ausgearbeitet · Umsetzung/Aktivierung nicht gestartet |
+| 2026-10-07 | KUTU M3 | [[2026-10-07_m3-offene-abnahme]] | ✅* durch Melih lokal abgenommen; physische Kamera und HTTPS-Handytest offen · Checkliste für Punkte 1–3 |
 | 2026-09-21 | Ops #302 | [[2026-09-21_ops-302_komplex-suche-78020]] | umgesetzt, getestet, committet · Migration `0039` **nicht live** (Stand 21.09.2026) |
 | 2026-09-21 | Ops #303 | [[2026-09-21_ops-303_heilmittel-aufteilung-nur-physio-ergo]] | Board-Karten umgesetzt · Code-Kommentare committet (`3c0f04e`) und gepusht (21.09.2026, Merge `ff39026`) · SPEC-RULES-Korrektur offen |
 | 2026-09-21 | Ops #300 | [[2026-09-21_ops-300_ik-suche-kassenfeld]] | Frontend (`4078c8c`) und Migration `0040` (`a2d8e68`) committet und gepusht (21.09.2026, Merge `ff39026`) · **View nicht live angewandt** — bis dahin wirkungslos · Live-Anwendung durch Melih offen |
