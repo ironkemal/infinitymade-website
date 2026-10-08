@@ -40,6 +40,11 @@
 	tls {
 		issuer acme {
 			dir https://acme-v02.api.letsencrypt.org/directory
+			# K2b.4b (08.10.2026, Testbox gemessen): nach einem Fehlschlag wiederholt Caddy sonst gegen
+			# die LE-Staging-CA — deren Konto steht nie im CAA accounturi, die Box bliebe für immer ohne
+			# Zertifikat (nach Verlust von caddy_data gemessen: Staging-Schleife, CAA-403). Wiederholungen
+			# darum gegen dieselbe Produktions-CA; die Pausen (Backoff) bleiben.
+			test_dir https://acme-v02.api.letsencrypt.org/directory
 			dns acmedns {$CADDY_ACMEDNS_DATEI:/etc/praxura/acmedns/acmedns.json}
 			# K2b.3 (08.10.2026, WSL-Testbox gemessen): Caddys eigene Ausbreitungsprüfung
 			# lief mit acme-dns (CNAME → auth.praxura.de) immer in "timed out waiting for

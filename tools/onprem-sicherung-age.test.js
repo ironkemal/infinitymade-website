@@ -121,6 +121,9 @@ test('Caddyfile acmedns: ohne Ausbreitungsprüfung, mit Pause', () => {
   const blk = s.slice(s.indexOf('(tls_acmedns)'), s.indexOf('{$SITE_URL}'));
   assert.match(blk, /propagation_delay 20s/);
   assert.match(blk, /propagation_timeout -1/);
+  // K2b.4b: Wiederholung NIE gegen Staging — Staging-Konto steht nicht im CAA accounturi (gemessen 08.10)
+  assert.ok(blk.includes('test_dir https://acme-v02.api.letsencrypt.org/directory'));
+  assert.doesNotMatch(blk, /acme-staging/);
 });
 
 test('install.sh: TLS-Wartezeit vor dem Schlüsseltest, --neu-Port nur eigene Box, caddy_data bleibt mit Namensdienst', () => {
