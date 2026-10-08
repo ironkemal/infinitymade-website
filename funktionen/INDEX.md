@@ -1,6 +1,6 @@
 # Funktionskarte
 
-> Üretim: 2026-10-07 · `node tools/funktionskarte.mjs`
+> Üretim: 2026-10-08 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
 **3136 fonksiyon** (3061 JS · 67 bash · 8 ps1) · 381 dosya · 41 sidebar modülü
@@ -502,8 +502,8 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fail()` — Zeile 73 · calledBy: onprem/install.sh
 - `env_get()` — Zeile 93 · calledBy: onprem/install.sh
 - `set_env()` — Zeile 103 · calledBy: onprem/install.sh
-- `b64url()` — Zeile 654 · calledBy: sign_jwt
-- `sign_jwt()` — Zeile 655 · calledBy: onprem/install.sh
+- `b64url()` — Zeile 662 · calledBy: sign_jwt
+- `sign_jwt()` — Zeile 663 · calledBy: onprem/install.sh
 
 ### `onprem/ip-melden.sh`
 - sources: `lib-ip.sh`

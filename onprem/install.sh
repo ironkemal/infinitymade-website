@@ -457,6 +457,14 @@ if command -v ss >/dev/null 2>&1; then
   for port in 80 443; do
     if ss -ltn 2>/dev/null | awk '{print $4}' | grep -q ":${port}\$"; then
       besetzer="$(ss -ltnp 2>/dev/null | awk -v p=":${port}\$" '$4 ~ p {print $0}' | head -1)"
+      # K2b.3 (08.10.2026 gemessen): bei --neu hält die EIGENE laufende Box den Port —
+      # sie wird nach den Vorprüfungen ohnehin gestoppt (docker compose down, unten).
+      # onprem 08.10: nur wenn genau DIESES Compose-Projekt den Port veröffentlicht.
+      if [ "$NEU_BESTAETIGT" -eq 1 ] && printf '%s' "$besetzer" | grep -q 'docker-proxy' \
+         && docker compose port caddy "$port" 2>/dev/null | grep -q ":${port}\$"; then
+        log "  Port ${port} gehört der laufenden Box — wird bei --neu gleich gestoppt"
+        continue
+      fi
       fail "Port ${port} ist belegt" "${besetzer:-unbekannter Prozess}" "Port ${port} frei (Caddy braucht ihn)" \
         "Den Dienst auf Port ${port} stoppen oder auf einem anderen Server installieren."
     fi
@@ -553,7 +561,7 @@ if [ "$NEU_BESTAETIGT" -eq 1 ]; then
   # vernichten. Der Einrichtungscode ist einmalig und Merkez kennt den alten Schlüssel;
   # ein gelöschtes kimlik-Volume erzeugt jedes Mal einen Support-Fall (kod-rebind).
   # Daher nur Container stoppen (--remove-orphans) und gezielt NUR db-config,
-  # caddy_data und caddy_config löschen. kimlik und acmedns bleiben für Wiederverbindung.
+  # caddy_config (caddy_data nur ohne Namensdienst, s. u.) löschen. kimlik + acmedns bleiben.
   docker compose down --remove-orphans >/dev/null 2>&1 || true
   # Projektname = oberste `name:`-Zeile der Compose-Datei (nur Spalte 0 — das
   # eingerückte `name:` unter networks ist der Netzname, nicht das Projekt).
@@ -562,7 +570,17 @@ if [ "$NEU_BESTAETIGT" -eq 1 ]; then
     PROJEKT_NAME="$(awk '/^name:[[:space:]]*/{sub(/\r$/, "", $2); print $2; exit}' "$SCRIPT_DIR/docker-compose.yml" 2>/dev/null || true)"
   fi
   [ -n "$PROJEKT_NAME" ] || PROJEKT_NAME="$(basename "$SCRIPT_DIR")"
-  for vol in db-config caddy_data caddy_config; do
+  NEU_VOLUMES="db-config caddy_data caddy_config"
+  # guvenlik S-47 Nachtrag 08.10.2026: Box mit Namensdienst (Code/registriert) behält
+  # caddy_data (LE-Konto + Zertifikat). Sonst je --neu ein neues LE-Konto + Zertifikat:
+  # 5/Woche je Name (Box bis 168 h ohne Zertifikat, O-172), mit CAA accounturi (K2b.4b)
+  # gar keins. Kein Sicherheitsverlust — kimlik + acmedns bleiben ohnehin; Kompromittierung
+  # läuft über S-47 Bed. 4 (Wiederverbindungs-Code, Widerruf), nicht über --neu.
+  if [ "$KAYIT_MODUS" != "adresse" ]; then
+    NEU_VOLUMES="db-config caddy_config"
+    log "  caddy_data bleibt (Let's-Encrypt-Konto + Zertifikat der Box)"
+  fi
+  for vol in $NEU_VOLUMES; do
     v_ids="$(docker volume ls -q --filter "label=com.docker.compose.project=${PROJEKT_NAME}" --filter "label=com.docker.compose.volume=${vol}" 2>/dev/null || true)"
     if [ -n "$v_ids" ]; then
       # shellcheck disable=SC2086  # mehrere IDs möglich
@@ -1003,6 +1021,23 @@ RESOLVE_VAL="${HOST_PART}:443:127.0.0.1"
 # auf jeder Installation, RLS filtert für `anon` auf eine leere Liste ([]),
 # aber der HTTP-Status beweist weiterhin exakt das, was O-60 wissen will.
 TESTPFAD="${SITE_URL}/rest/v1/profiles?limit=1"
+# K2b.3 (08.10.2026, WSL-Testbox gemessen): im acmedns-Modus holt Caddy das Zertifikat erst
+# nach dem Start (DNS-01, gemessen 20 s). Bis dahin scheitert schon der TLS-Handshake (HTTP 000)
+# und der Schlüsseltest unten fiele durch, obwohl der Schlüssel stimmt. Darum hier bis zu
+# 5 Minuten auf das erste Zertifikat warten — -k bleibt, gemessen wird der Schlüssel, nicht TLS.
+if [ "$CADDY_TLS_MODUS_VALUE" = "acmedns" ]; then
+  log "  Warte auf das Let's-Encrypt-Zertifikat (bis zu 5 Minuten) ..."
+  zert_da=0
+  for _ in $(seq 1 60); do
+    if [ "$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' "$TESTPFAD" || true)" != "000" ]; then
+      zert_da=1; break
+    fi
+    sleep 5
+  done
+  [ "$zert_da" -eq 1 ] || fail "Kein Zertifikat erhalten" "nach 5 Minuten noch kein TLS auf ${HOST_PART}" "Let's-Encrypt-Zertifikat per DNS-01" \
+    "'docker compose logs caddy' prüfen (DNS-01 über den Praxura-Namensdienst). Internet der Box und Port 53 ausgehend prüfen, dann 'sudo bash install.sh' erneut."
+  ok "Zertifikat vorhanden"
+fi
 ohne_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' "$TESTPFAD" || echo 000)"
 mit_key="$(curl -sk "$RESOLVE_ARG" "$RESOLVE_VAL" -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${ANON_KEY}" -H "apikey: ${ANON_KEY}" "$TESTPFAD" || echo 000)"
 # Verfälschter Schlüssel — NUR im Authorization-Header, apikey bleibt echt:

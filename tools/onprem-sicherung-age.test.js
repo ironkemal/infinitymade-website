@@ -114,3 +114,20 @@ test('install.sh: --sicherungsschluessel ohne lib-Dateien lauffähig, sonst sour
     assert.ok(!zweig.includes(fn), `Schlüsselzweig darf ${fn} (lib) nicht rufen`);
   }
 });
+
+// K2b.3 (08.10.2026) — erste echte Box mit Code (WSL), drei gemessene Fehler + guvenlik S-47 Nachtrag.
+test('Caddyfile acmedns: ohne Ausbreitungsprüfung, mit Pause', () => {
+  const s = lies('onprem', 'Caddyfile');
+  const blk = s.slice(s.indexOf('(tls_acmedns)'), s.indexOf('{$SITE_URL}'));
+  assert.match(blk, /propagation_delay 20s/);
+  assert.match(blk, /propagation_timeout -1/);
+});
+
+test('install.sh: TLS-Wartezeit vor dem Schlüsseltest, --neu-Port nur eigene Box, caddy_data bleibt mit Namensdienst', () => {
+  const s = lies('onprem', 'install.sh');
+  const iWarte = s.indexOf("Warte auf das Let's-Encrypt-Zertifikat");
+  const iTest = s.indexOf('mit_key="$(curl');
+  assert.ok(iWarte > 0 && iWarte < iTest, 'erst Zertifikat, dann Schlüsseltest');
+  assert.match(s, /docker compose port caddy "\$port"/, 'nur der eigene Compose-Port wird übersprungen');
+  assert.match(s, /if \[ "\$KAYIT_MODUS" != "adresse" \]; then\n\s+NEU_VOLUMES="db-config caddy_config"/);
+});

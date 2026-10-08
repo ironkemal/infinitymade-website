@@ -41,6 +41,13 @@
 		issuer acme {
 			dir https://acme-v02.api.letsencrypt.org/directory
 			dns acmedns {$CADDY_ACMEDNS_DATEI:/etc/praxura/acmedns/acmedns.json}
+			# K2b.3 (08.10.2026, WSL-Testbox gemessen): Caddys eigene Ausbreitungsprüfung
+			# lief mit acme-dns (CNAME → auth.praxura.de) immer in "timed out waiting for
+			# record to fully propagate", obwohl der TXT bei ns1, 1.1.1.1 und im Container
+			# sichtbar war. Ohne Prüfung + 20 s Pause: Zertifikat nach 20 s. Die echte
+			# Prüfung macht Let's Encrypt selbst; schlägt sie fehl, versucht Caddy erneut.
+			propagation_delay 20s
+			propagation_timeout -1
 		}
 	}
 }

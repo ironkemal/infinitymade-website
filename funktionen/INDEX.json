@@ -1,5 +1,5 @@
 {
- "erzeugt": "2026-10-07",
+ "erzeugt": "2026-10-08",
  "dateien": 381,
  "funktionen": 3136,
  "module": [
@@ -139046,8 +139046,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 654,
-   "end": 654,
+   "start": 662,
+   "end": 662,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -139074,8 +139074,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 655,
-   "end": 665,
+   "start": 663,
+   "end": 673,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
