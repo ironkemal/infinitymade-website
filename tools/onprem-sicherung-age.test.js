@@ -131,3 +131,12 @@ test('install.sh: TLS-Wartezeit vor dem Schlüsseltest, --neu-Port nur eigene Bo
   assert.match(s, /docker compose port caddy "\$port"/, 'nur der eigene Compose-Port wird übersprungen');
   assert.match(s, /if \[ "\$KAYIT_MODUS" != "adresse" \]; then\n\s+NEU_VOLUMES="db-config caddy_config"/);
 });
+
+// K2b.4b (08.10.2026): MERKEZ_URL nur über die Vorlage verteilt — war leer, dadurch liefen IP- und
+// CAA-Abgleich auf KEINER Box (G7-Tor sah aus wie SaaS). Darf nie wieder still leer werden (onprem).
+test('.env.template: MERKEZ_URL gesetzt und https://', () => {
+  const s = lies('onprem', '.env.template');
+  const m = s.match(/^MERKEZ_URL=(.*)$/m);
+  assert.ok(m, 'MERKEZ_URL-Zeile fehlt');
+  assert.match(m[1].trim(), /^https:\/\/[a-z0-9.-]+$/, 'MERKEZ_URL leer oder nicht https');
+});
