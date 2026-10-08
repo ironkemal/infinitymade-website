@@ -21,6 +21,7 @@ on:
       - 'attendance.js'
       - 'setup.html'
       - 'setup.js'
+      - 'ueber.html'
       - 'booking.html'
       - 'booking.js'
       - 'booking-request.html'

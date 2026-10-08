@@ -33,6 +33,12 @@ eine Stückliste (SBOM) für jedes ausgelieferte Produkt.
 > Die belastbare Aussage entsteht erst mit dem SBOM-Schritt (Playbook Phase 6.1a);
 > bis dahin ist diese Tabelle eine Arbeitsgrundlage, keine Rechtsauskunft.
 
+### Betriebssystem-Pakete der Basis-Images
+
+Die Container-Images enthalten außerdem Betriebssystem-Pakete ihrer Basis-Images (z. B. Alpine Linux: busybox, musl; Debian/Ubuntu in den Supabase-Images). Diese stehen unter ihren eigenen Lizenzen, teils GPL-2.0. Praxura verändert sie nicht; der Quellcode ist beim jeweiligen Upstream-Projekt erhältlich (alpinelinux.org, debian.org, ubuntu.com) bzw. über die Quell-Links der Basis-Images.
+
+Die npm-Pakete der Server-Komponente und die Bibliotheken/Schriften der Oberfläche stehen mit vollem Lizenztext in „Über diese Software" (`/api/ueber/lizenzen`, `vendor/LICENSES.txt`; O-178).
+
 ## Bewusst nicht enthalten
 
 | Bestandteil | Warum nicht |

@@ -428,12 +428,18 @@
 
       <a href="/login.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none;margin-top:1.2rem;">Zur Anmeldung</a>
 
-      <div class="links" style="margin-top:20px; text-align:center; font-size:0.85rem; color:var(--ink-mute);">
+      <div class="links" data-rechtslinks style="margin-top:20px; text-align:center; font-size:0.85rem; color:var(--ink-mute);">
         <a href="/impressum.html" style="color:inherit; text-decoration:underline;">Impressum</a> · 
         <a href="/datenschutz.html" style="color:inherit; text-decoration:underline;">Datenschutz</a> · 
         <a href="/datenschutz.html#cookie-einstellungen" style="color:inherit; text-decoration:underline;">Cookie-Einstellungen</a>
       </div>
     </div>
   </main>
+<script type="module">
+  // O-178 / K2b.16: in der Box „Über diese Software" statt Praxura-Impressum/Datenschutz.
+  import { IST_KUTU } from './supabase-config.js';
+  import { rechtslinksFuerKutu } from './module/ueber.js?v=20261008';
+  rechtslinksFuerKutu(IST_KUTU);
+</script>
 </body>
 </html>

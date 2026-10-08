@@ -76,6 +76,9 @@ blog/component-lab.html
 setup.html
 setup.js
 module/setup-fragment.js
+# „Über diese Software" (O-178 / K2b.16) — nur Box. module/ueber.js bleibt
+# öffentlich: login.js (auch SaaS) importiert rechtslinksFuerKutu daraus.
+ueber.html
 # script.js, chatbot.js, pakete/, ai chatbot proje/ — 09.09.2026 nach archive/
 # verschoben (archive/ oben schon ausgeschlossen), Regeln nicht mehr noetig
 # lib/ — 28.08.2026 nach archive/lib-orphan/ verschoben, Regel nicht mehr noetig

@@ -24,6 +24,7 @@ import wartelisteRouter from './billing/api/warteliste.routes.js';
 import setupRouter from './setup/router.js';
 import mitarbeiterZugangRouter from './routes/mitarbeiter-zugang.js';
 import dsgvoRouter from './routes/dsgvo.js';
+import ueberRouter from './routes/ueber.js';
 import { istKutu, appBaseUrl } from './lib/dagitim.js';
 import { mailEntwurfStattVersand, entwurfBestaetigt, entwurfAbgelehnt, entwurfGegenangebot, entwurfNachricht } from './lib/mail-entwurf.js';
 import { PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
@@ -534,6 +535,8 @@ app.use('/api/warteliste', wartelisteRouter);
 // Mitarbeiter-Zugang (Erstanmeldung mit Einrichtungscode).
 app.use('/api', mitarbeiterZugangRouter);
 app.use('/api', dsgvoRouter);
+// „Über diese Software" (O-178 / K2b.16): Version, Außenverbindungen, Lizenzen.
+app.use('/api', ueberRouter);
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {

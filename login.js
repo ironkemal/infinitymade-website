@@ -1,6 +1,7 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, IST_KUTU, API_BASE } from './supabase-config.js';
 import { minPasswortLaenge, MIN_MITARBEITER } from './module/passwort-regel.js';
+import { rechtslinksFuerKutu } from './module/ueber.js?v=20261008';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -125,8 +126,9 @@ applyLang();
 if (IST_KUTU) {
   registerBlock.remove();
   document.getElementById('backHome')?.remove();
-  document.getElementById('saasFooter')?.remove();
 }
+// O-178 / K2b.16: statt Fußzeile entfernen → „Über diese Software" (Box).
+rechtslinksFuerKutu(IST_KUTU);
 
 const ADMIN_URL = 'https://admin.praxura.de/';
 

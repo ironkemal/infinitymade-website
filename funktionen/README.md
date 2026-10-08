@@ -116,6 +116,25 @@ Harita bir fonksiyonun *ne* olduğunu tutar, *niye* yazıldığını/değiştiri
 Builder/oturumlar yazdıktan sonra bildirir (CLAUDE.md → "sor **ve** bildir"); kısa kayıt buraya.
 En yeni üstte. Satır numarası yazılmaz — harita onu tutar.
 
+### 08.10.2026 · O-178 / K2b.16 „Über diese Software" (Lizenzen, Verbindungen, Rechtslinks in der Box)
+- `api-backend/tools/lizenzen-erzeugen.mjs` (yeni): `bewerteLizenz`, `sammlePakete`, `pruefe`, `erzeugeBericht` —
+  imajdaki `node_modules`'un lisans kapısı + THIRD-PARTY-NOTICES üretimi; boş/UNKNOWN/yasak lisansta build kırılır.
+  İlk kullanım: `api-backend/Dockerfile` RUN. **O-42 izinli/yasak lisans listesinin TEK yeri burası** — başka
+  bir yerde ikinci liste açılmaz. `tools/vendor-lizenzen.mjs` aynı fonksiyonları import ederek `vendor/` + fonts
+  için `vendor/LICENSES.txt` üretiyor (kopya değil, yeniden kullanım — doğrulandı).
+- `api-backend/lib/verbindungen.js` (yeni): `verbindungenListe` — kutunun dış bağlantı listesi env'den
+  (MERKEZ_URL, CADDY_TLS_MODUS, AI_MODE, SMTP_HOST). **Yeni bir dış bağlantı eklenen her iş buraya da yazar**,
+  yoksa sayfa eksik beyan eder (G1). `AI_MODE`'u okuyan İLK kod — M4.1/M4.11 aynı değer adlarını
+  (`aus`/`direkt`/`jeton`) kullanmalı. Kutu tespiti `lib/dagitim.js` `istKutu()` üzerinden, ikinci tespit yok.
+  İlk kullanım: `routes/ueber.js`.
+- `api-backend/routes/ueber.js` (yeni): `/api/ueber` (sürüm), `/ueber/verbindungen`, `/ueber/lizenzen` — yalnız
+  kutu + `requireAuth` (ai/auth.js) + rate limit. Sürüm `IMAGE_VERSION || 'dev'` (`/health` ile aynı ifade).
+- `module/ueber.js` (yeni): `ueberSeiteStarten` (`ueber.html`) · `rechtslinksFuerKutu(istKutu)` — kutuda
+  `data-rechtslinks` işaretli Impressum/Datenschutz bloğunu „Über diese Software" linkine çevirir. Kullanım:
+  `login.js` (eski `#saasFooter` `.remove()` satırının YERİNE geçti, iki mekanizma yok), `confirm.html`,
+  `employee-signup.html`. Yeni bir public sayfada aynı alt satır varsa `data-rechtslinks` + bu çağrı — ikinci
+  bir kutu-link mantığı yazılmaz. `RECHTEVERMERK = null` bilinçli yer tutucu (KHS §5b T21).
+
 ### 06.10.2026 · K2b.11 Kurulum jetonu URL-Fragment'te (commit 85d463e7)
 - `module/setup-fragment.js` (yeni): `jetonAusHash(hash)` — saf; URL hash'inden hex kurulum jetonu (16–128 karakter)
   çıkarır, uymazsa boş. Ayrıca modül yüklenirken **yan etkili** `export const fragmentJeton`: `location.hash`'i okur,

@@ -6,6 +6,17 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 
+# Lizenztor + Lizenztexte + SBOM (O-178 / K2b.16, O-42) — direkt auf dem eben
+# installierten Baum, nicht auf der Lockfile (npm install ≠ npm ci). Verbotene
+# oder unbekannte Lizenz → dieser RUN schlägt fehl, es entsteht kein Image.
+# SBOM (CycloneDX) = CRA-Stückliste, liegt mit im Image.
+COPY tools/lizenzen-erzeugen.mjs ./tools/
+RUN node tools/lizenzen-erzeugen.mjs --wurzel /app --ausgabe /app/lizenzen/THIRD-PARTY-NOTICES.txt \
+  && npm sbom --omit=dev --sbom-format cyclonedx > /app/lizenzen/sbom.cdx.json
+# Container-Komponenten der Box (Postgres, GoTrue, Kong, Caddy …) — dieselbe
+# Tabelle wie onprem/NOTICE.md, ausgeliefert über GET /api/ueber/lizenzen.
+COPY --from=onprem NOTICE.md ./lizenzen/NOTICE-komponenten.md
+
 # Then copy source.
 # ACHTUNG: Diese Liste ist vollstaendig aufzufuehren — es gibt kein "COPY . .".
 # Ein neues Quellverzeichnis, das hier fehlt, fehlt auch im Image: server.js
@@ -43,6 +54,11 @@ COPY --from=onprem volumes/db/_supabase.sql volumes/db/jwt.sql volumes/db/no-pg-
 
 ENV NODE_ENV=production
 ENV PORT=3000
+# Produktversion für /health und /api/ueber (O-178 Bedingung 4). CI setzt
+# <VERSION>+<sha7>; ohne build-arg bleibt es "dev". Bewusst so spät im
+# Dockerfile: ein neuer Wert pro Commit soll keine teuren Schichten neu bauen.
+ARG IMAGE_VERSION=dev
+ENV IMAGE_VERSION=${IMAGE_VERSION}
 EXPOSE 3000
 
 # Lebendigkeits-Prüfung. Ohne sie meldet Docker einen dauerhaft neustartenden

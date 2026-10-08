@@ -462,6 +462,12 @@ services:
       # mit der Kutu-Identität aus dem kimlik-Volume. Leer = Box ohne Namensdienst.
       MERKEZ_URL: ${MERKEZ_URL:-}
 
+      # O-178 / K2b.16: nur Anzeige — ueber.html listet die Außenverbindungen aus
+      # der echten Einstellung (Let's Encrypt ja/nein). api ruft damit nichts auf.
+      # Dieselben Defaults wie beim caddy-Dienst unten.
+      CADDY_TLS_MODUS: ${CADDY_TLS_MODUS:-klassisch}
+      CADDY_TLS_ARG: ${CADDY_TLS_ARG:-internal}
+
       # ★ BINDEND: supabase_admin, nicht postgres.
       # Von den 24 `ALTER DEFAULT PRIVILEGES`-Zeilen der Baseline sagen 12
       # `FOR ROLE supabase_admin`, und `postgres` darf fremde Vorgaberechte

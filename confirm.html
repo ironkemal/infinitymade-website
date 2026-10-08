@@ -128,7 +128,7 @@
       <p class="sub" id="sub">Bitte warten Sie einen Moment.</p>
       <div id="actions" style="display:none;"></div>
     </div>
-    <nav class="nf-links">
+    <nav class="nf-links" data-rechtslinks>
       <a href="/impressum.html">Impressum</a>
       <a href="/datenschutz.html">Datenschutz</a>
     </nav>
@@ -136,7 +136,9 @@
 
   <script type="module">
     import { createClient } from './vendor/supabase-js.js?v=20260813';
-    import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+    import { SUPABASE_URL, SUPABASE_ANON_KEY, IST_KUTU } from './supabase-config.js';
+    import { rechtslinksFuerKutu } from './module/ueber.js?v=20261008';
+    rechtslinksFuerKutu(IST_KUTU);
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

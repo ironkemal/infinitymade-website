@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Über diese Software — Praxura</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="theme-color" content="#F8F3E8" />
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <link rel="stylesheet" href="assets/system.css?v=20261001" />
+  <!-- O-178 / K2b.16 (08.10.2026): nur in der Box (frontend.Dockerfile), auf SaaS in .vercelignore. -->
+  <style>
+    body { padding: 2.5rem 1rem 3rem; }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    .brand {
+      display: inline-block; font-family: var(--serif); font-size: 1.4rem; font-weight: 500;
+      letter-spacing: -0.02em; color: var(--ink); text-decoration: none; margin-bottom: 1.8rem;
+    }
+    .brand em { font-style: italic; color: var(--bronze); }
+    h1 { font-family: var(--serif); font-weight: 500; font-size: 2rem; margin: 0 0 0.4rem; color: var(--ink); }
+    .lead { color: var(--ink-mute); margin: 0 0 2rem; }
+    section {
+      background: var(--bg-card); border: 1px solid var(--line); border-radius: 18px;
+      padding: 1.4rem 1.6rem; margin-bottom: 1.1rem;
+    }
+    h2 { font-size: 1.05rem; margin: 0 0 0.7rem; color: var(--ink); }
+    p { color: var(--ink-soft); line-height: 1.55; margin: 0.3rem 0; }
+    .hinweis { color: var(--ink-mute); font-size: 0.92rem; }
+    .vermerk { margin-top: 0.6rem; }
+    a { color: var(--bronze-deep); }
+    code { font-family: var(--mono); font-size: 0.86em; }
+    .tabelle-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { text-align: left; vertical-align: top; padding: 0.5rem 0.6rem; border-top: 1px solid var(--line); color: var(--ink-soft); }
+    th { color: var(--ink); font-weight: 600; border-top: none; }
+    td small { color: var(--ink-mute); }
+    pre {
+      max-height: 60vh; overflow: auto; white-space: pre-wrap; word-break: break-word;
+      font-family: var(--mono); font-size: 0.78rem; background: var(--bg); border: 1px solid var(--line);
+      border-radius: 10px; padding: 0.9rem; margin: 0.6rem 0 0;
+    }
+    .btn-ghost {
+      font: inherit; cursor: pointer; background: transparent; color: var(--ink);
+      border: 1px solid var(--line); border-radius: 999px; padding: 0.45rem 1rem;
+    }
+    .fuss { text-align: center; margin-top: 1.8rem; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="brand" href="/login.html">Pra<em>x</em>ura</a>
+    <h1>Über diese Software</h1>
+    <p class="lead">Praxissoftware für Heilmittelerbringer, betrieben von Ihrer Praxis.</p>
+
+    <section>
+      <h2>Version</h2>
+      <p>Server-Version: <span id="version">…</span></p>
+    </section>
+
+    <section>
+      <h2>Hersteller</h2>
+      <div id="hersteller"></div>
+    </section>
+
+    <section>
+      <h2>Betrieb dieser Installation</h2>
+      <p>Diese Installation läuft auf einem Rechner oder Server Ihrer Praxis und wird von Ihrer Praxis
+         betrieben. Die Praxisdaten werden dort gespeichert; welche Verbindungen nach außen bestehen,
+         steht unten. Für Impressum und Datenschutzerklärung gegenüber Patientinnen und Patienten ist
+         die Praxis verantwortlich.</p>
+    </section>
+
+    <section>
+      <h2>Verbindungen nach außen</h2>
+      <p class="hinweis">Diese Liste wird aus der tatsächlichen Einstellung dieser Installation erzeugt.</p>
+      <div id="verbindungen"><p class="hinweis">Wird geladen …</p></div>
+    </section>
+
+    <section>
+      <h2>Lizenzen</h2>
+      <p>Diese Software enthält Open-Source-Bestandteile. Ihre Lizenzen und Urheberrechtshinweise:</p>
+      <p><strong>Oberfläche</strong> (Bibliotheken und Schriften):
+         <a href="/vendor/LICENSES.txt" target="_blank" rel="noopener">Lizenztexte öffnen</a></p>
+      <p><strong>Server-Komponente und Basis-Komponenten</strong> (Datenbank, Anmeldung, Proxy):</p>
+      <div id="server-lizenzen"><p class="hinweis">Wird geladen …</p></div>
+    </section>
+
+    <p class="fuss"><a href="/login.html">Zur Anmeldung</a></p>
+  </main>
+
+  <script type="module">
+    import { createClient } from './vendor/supabase-js.js?v=20260813';
+    import { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE } from './supabase-config.js';
+    import { ueberSeiteStarten } from './module/ueber.js?v=20261008';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    ueberSeiteStarten({
+      apiBase: API_BASE,
+      holeToken: async () => (await supabase.auth.getSession()).data.session?.access_token || null,
+    });
+  </script>
+</body>
+</html>

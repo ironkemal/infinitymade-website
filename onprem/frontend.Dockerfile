@@ -84,6 +84,11 @@ COPY attendance.html attendance.js ./
 # und steht deshalb in .vercelignore — sie existiert NUR in diesem Image.
 COPY setup.html setup.js ./
 
+# ── „Über diese Software" (O-178 / K2b.16, NUR in der Box) ─────────────────
+# Ersetzt in der Box die Praxura-Impressum/Datenschutz-Links (legal-de 08.10).
+# module/ueber.js kommt über COPY module, vendor/LICENSES.txt über COPY vendor.
+COPY ueber.html ./
+
 # ── Öffentliche Patienten-Seiten (kein Login, Slug-basiert) ─────────────────
 COPY booking.html booking.js ./
 COPY booking-request.html booking-request.css booking-request.js ./

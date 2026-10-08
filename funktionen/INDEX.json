@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-08",
- "dateien": 383,
- "funktionen": 3155,
+ "dateien": 387,
+ "funktionen": 3179,
  "module": [
   "abrechnung",
   "anamnese",
@@ -810,6 +810,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "apiGet",
     "escapeHtml",
     "fmtEUR",
@@ -2497,6 +2498,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "getRegExp"
    ],
    "calledBy": [
@@ -2623,6 +2625,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "getRegExp"
    ],
    "calledBy": [
@@ -4007,6 +4010,7 @@
    "calls": [],
    "calledBy": [
     "entferneUnsignierteDta",
+    "lizenzAusdruck",
     "wiederholeAusmusterung"
    ],
    "modules": [],
@@ -5498,7 +5502,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [],
    "modules": [],
    "gemeinsam": false,
@@ -6167,6 +6173,7 @@
     "abrechnungen"
    ],
    "calls": [
+    "add",
     "aktualisiereArtefaktVersion",
     "artefaktVersuchPfad",
     "baueBegleitzettel",
@@ -7771,6 +7778,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "assertNichtSoftwareHerstellerIkAlsAbsender",
     "buildAuftragsdatei",
     "buildLogischerDateiname",
@@ -9343,6 +9351,7 @@
    "storage": [],
    "calls": [
     "W",
+    "add",
     "behandlungstageJeDatum",
     "escapeEdifact",
     "getIcdDgRules",
@@ -9432,6 +9441,7 @@
    "storage": [],
    "calls": [
     "E",
+    "add",
     "behandlungstageJeDatum",
     "escapeEdifact",
     "getIcdDgRules",
@@ -9517,6 +9527,7 @@
    "calls": [
     "E",
     "W",
+    "add",
     "behandlungstageJeDatum",
     "escapeEdifact",
     "getIcdDgRules",
@@ -10939,6 +10950,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "berlinHeute",
     "felderTrennen",
     "istStichtag",
@@ -11069,6 +11081,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "kassenartAusQuelle"
    ],
    "calledBy": [
@@ -11489,6 +11502,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "besteJeIk",
     "kostentraegerZeile",
     "patch",
@@ -11516,6 +11530,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "set"
    ],
    "calledBy": [
@@ -11593,6 +11608,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "ns",
     "ohneVonBis",
     "schluessel",
@@ -12937,6 +12953,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -12993,6 +13010,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -15090,6 +15108,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "tagVon"
    ],
    "calledBy": [
@@ -15500,6 +15519,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "istKartenIk",
     "set"
    ],
@@ -15761,6 +15781,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "bestaetigungNochGueltig",
     "set"
    ],
@@ -17329,6 +17350,7 @@
    ],
    "storage": [],
    "calls": [
+    "add",
     "bereinigeStorage",
     "bezug",
     "hatZeilenIn",
@@ -17358,7 +17380,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "kontoLoeschenIntern"
    ],
@@ -17402,7 +17426,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "kontoLoeschenIntern"
    ],
@@ -17447,6 +17473,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "listRekursiv"
    ],
    "calledBy": [
@@ -17820,7 +17847,9 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "mailEntwurfStattVersand"
+    "mailEntwurfStattVersand",
+    "nurKutu",
+    "verbindungenListe"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -19041,6 +19070,252 @@
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
+  },
+  {
+   "name": "host",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/verbindungen.js",
+   "start": 16,
+   "end": 18,
+   "lines": 3,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "add",
+    "verbindungenListe"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 31 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "verbindungenListe",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/lib/verbindungen.js",
+   "start": 24,
+   "end": 85,
+   "lines": 62,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "add",
+    "host",
+    "istKutu"
+   ],
+   "calledBy": [
+    "nurKutu"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "add",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/lib/verbindungen.js",
+   "start": 26,
+   "end": 49,
+   "lines": 24,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "host"
+   ],
+   "calledBy": [
+    "E",
+    "W",
+    "_compileRe",
+    "_wireEinmal",
+    "abrechenbareBehandlungstage",
+    "autoSelectDg",
+    "baueHeuteIndex",
+    "bereinigeStorage",
+    "bezug",
+    "bindAccount",
+    "bindEvents",
+    "bindOwner",
+    "bindPlan",
+    "boardNotice",
+    "buildDtaFile",
+    "buildTeamButton",
+    "copyWithFeedback",
+    "createZuzahlungsforderungRouter",
+    "dgVorschlag",
+    "einmalJeSitzung",
+    "enterKioskMode",
+    "erfasseVerordnung",
+    "fieldError",
+    "fmt",
+    "goStep",
+    "gueltigBestaetigteIds",
+    "handleAcceptFlow",
+    "handleCancelFlow",
+    "init",
+    "initAnfragenPanel",
+    "initCalendar",
+    "initLeadSuche",
+    "initStep0",
+    "kontoLoeschenIntern",
+    "kostentraegerFrischAbleiten",
+    "ladeAbrechnungAuswahl",
+    "ladeAktiveVerordnungen",
+    "loadBookingSlots",
+    "loadScheduleBookings",
+    "loadServices",
+    "loadTeam",
+    "matchIcdToDg",
+    "mountCalendar",
+    "moveTo",
+    "newTodo",
+    "normName",
+    "normalisiereKonten",
+    "normalisiereStufen",
+    "nurZiffern",
+    "oeffneArztDetail",
+    "on",
+    "openBookingPanel",
+    "openDrawer",
+    "openEmpDetail",
+    "openSidebar",
+    "parseOriginalDtaMessage",
+    "patch",
+    "planKind",
+    "planKostentraeger",
+    "podGeplanteHpnr",
+    "prefillForms",
+    "preflight",
+    "preflightGruende",
+    "printArea",
+    "pruefeRelation",
+    "rebindeNoShowSitzungen",
+    "render",
+    "renderAICopilot",
+    "renderBefundListe",
+    "renderBookingCalendar",
+    "renderCalendar",
+    "renderDayView",
+    "renderHoursMiniCal",
+    "renderHoursStandortDays",
+    "renderSideItems",
+    "renderSlots",
+    "renderStatus",
+    "renderVendorPortfolio",
+    "renderWoche",
+    "selectDate",
+    "setFreqValue",
+    "setSideHead",
+    "setzeAkteReiter",
+    "setzeKlasse",
+    "showFieldError",
+    "showStep",
+    "showSuccessScreen",
+    "switchPanel",
+    "syncServices",
+    "teamReihenfolge",
+    "terminAuswahlLaden",
+    "toggleGroup",
+    "togglePopover",
+    "toggleStandortDay",
+    "updateProgressBar",
+    "updateSidebar",
+    "verbindungenListe",
+    "verdrahteAbwahl",
+    "verdrahteAktionsleiste",
+    "verordnungenRendern",
+    "verteileWochentage",
+    "waehleAnnahmestelle",
+    "wire",
+    "wireM13Toggles",
+    "withTimeout",
+    "zuzahlungFuerPodoVerordnung"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 31 modülden çağrılıyor"
+   ]
   },
   {
    "name": "istGueltigesIpv4",
@@ -20897,12 +21172,60 @@
    "uiPfad": []
   },
   {
+   "name": "lizenzenLesen",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/routes/ueber.js",
+   "start": 33,
+   "end": 42,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "nurKutu"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "nurKutu",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/routes/ueber.js",
+   "start": 44,
+   "end": 79,
+   "lines": 36,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "istKutu",
+    "json",
+    "lizenzenLesen",
+    "set",
+    "verbindungenListe"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "newOAuthClient",
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 211,
-   "end": 224,
+   "start": 212,
+   "end": 225,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -20923,8 +21246,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 228,
-   "end": 232,
+   "start": 229,
+   "end": 233,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -20945,8 +21268,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 233,
-   "end": 242,
+   "start": 234,
+   "end": 243,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -20965,8 +21288,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 248,
-   "end": 251,
+   "start": 249,
+   "end": 252,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -20987,8 +21310,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 252,
-   "end": 256,
+   "start": 253,
+   "end": 257,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -21009,8 +21332,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 260,
-   "end": 268,
+   "start": 261,
+   "end": 269,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -21032,8 +21355,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 271,
-   "end": 278,
+   "start": 272,
+   "end": 279,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [],
@@ -21054,8 +21377,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 281,
-   "end": 285,
+   "start": 282,
+   "end": 286,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -21081,8 +21404,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 288,
-   "end": 294,
+   "start": 289,
+   "end": 295,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -21105,8 +21428,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 297,
-   "end": 302,
+   "start": 298,
+   "end": 303,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [],
@@ -21130,8 +21453,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 304,
-   "end": 308,
+   "start": 305,
+   "end": 309,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -21155,8 +21478,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 313,
-   "end": 323,
+   "start": 314,
+   "end": 324,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -21180,8 +21503,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 466,
-   "end": 477,
+   "start": 467,
+   "end": 478,
    "lines": 12,
    "spiegelHinweis": null,
    "tables": [
@@ -21202,8 +21525,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 746,
-   "end": 1006,
+   "start": 749,
+   "end": 1009,
    "lines": 261,
    "spiegelHinweis": null,
    "tables": [
@@ -21243,8 +21566,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1403,
-   "end": 1408,
+   "start": 1406,
+   "end": 1411,
    "lines": 6,
    "spiegelHinweis": null,
    "tables": [
@@ -21265,8 +21588,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1450,
-   "end": 1454,
+   "start": 1453,
+   "end": 1457,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -21290,8 +21613,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1533,
-   "end": 1651,
+   "start": 1536,
+   "end": 1654,
    "lines": 119,
    "spiegelHinweis": null,
    "tables": [],
@@ -21318,8 +21641,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1535,
-   "end": 1651,
+   "start": 1538,
+   "end": 1654,
    "lines": 117,
    "spiegelHinweis": null,
    "tables": [],
@@ -21346,8 +21669,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1550,
-   "end": 1565,
+   "start": 1553,
+   "end": 1568,
    "lines": 16,
    "spiegelHinweis": null,
    "tables": [],
@@ -21372,8 +21695,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1551,
-   "end": 1565,
+   "start": 1554,
+   "end": 1568,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -21398,8 +21721,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1755,
-   "end": 1803,
+   "start": 1758,
+   "end": 1806,
    "lines": 49,
    "spiegelHinweis": null,
    "tables": [
@@ -21428,8 +21751,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1803,
-   "end": 1803,
+   "start": 1806,
+   "end": 1806,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -21452,8 +21775,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1804,
-   "end": 1804,
+   "start": 1807,
+   "end": 1807,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -21475,8 +21798,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1815,
-   "end": 1819,
+   "start": 1818,
+   "end": 1822,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -21495,8 +21818,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1864,
-   "end": 1941,
+   "start": 1867,
+   "end": 1944,
    "lines": 78,
    "spiegelHinweis": null,
    "tables": [],
@@ -21523,8 +21846,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 1952,
-   "end": 1998,
+   "start": 1955,
+   "end": 2001,
    "lines": 47,
    "spiegelHinweis": null,
    "tables": [],
@@ -21549,8 +21872,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2094,
-   "end": 2110,
+   "start": 2097,
+   "end": 2113,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -21571,8 +21894,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2326,
-   "end": 2330,
+   "start": 2329,
+   "end": 2333,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -21591,8 +21914,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 2451,
-   "end": 2457,
+   "start": 2454,
+   "end": 2460,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -21614,8 +21937,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3375,
-   "end": 3383,
+   "start": 3378,
+   "end": 3386,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -21639,8 +21962,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3385,
-   "end": 3389,
+   "start": 3388,
+   "end": 3392,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -21661,8 +21984,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3391,
-   "end": 3403,
+   "start": 3394,
+   "end": 3406,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -21683,8 +22006,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3424,
-   "end": 3438,
+   "start": 3427,
+   "end": 3441,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -21705,8 +22028,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3605,
-   "end": 3614,
+   "start": 3608,
+   "end": 3617,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -21727,8 +22050,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3607,
-   "end": 3620,
+   "start": 3610,
+   "end": 3623,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -21751,8 +22074,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3620,
-   "end": 3622,
+   "start": 3623,
+   "end": 3625,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -21775,8 +22098,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3884,
-   "end": 3894,
+   "start": 3887,
+   "end": 3897,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [
@@ -21838,8 +22161,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 3896,
-   "end": 3910,
+   "start": 3899,
+   "end": 3913,
    "lines": 15,
    "spiegelHinweis": null,
    "tables": [],
@@ -21862,8 +22185,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4027,
-   "end": 4033,
+   "start": 4030,
+   "end": 4036,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [
@@ -21884,8 +22207,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4235,
-   "end": 4289,
+   "start": 4238,
+   "end": 4292,
    "lines": 55,
    "spiegelHinweis": null,
    "tables": [
@@ -21908,8 +22231,8 @@
    "kind": "arrow",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4237,
-   "end": 4237,
+   "start": 4240,
+   "end": 4240,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -21968,8 +22291,8 @@
    "kind": "function",
    "lang": "js",
    "file": "api-backend/server.js",
-   "start": 4453,
-   "end": 4456,
+   "start": 4456,
+   "end": 4459,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -22758,6 +23081,312 @@
    "uiPfad": []
   },
   {
+   "name": "normalisiereName",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 61,
+   "end": 65,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "bewerteLizenz"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "lizenzAusdruck",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 68,
+   "end": 73,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "einzeln"
+   ],
+   "calledBy": [
+    "paket",
+    "sammlePakete"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "einzeln",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 70,
+   "end": 78,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "entferneUnsignierteDta",
+    "lizenzAusdruck",
+    "wiederholeAusmusterung"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "bewerteLizenz",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 80,
+   "end": 92,
+   "lines": 13,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "normalisiereName"
+   ],
+   "calledBy": [
+    "pruefe"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "lizenzDateien",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 98,
+   "end": 103,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "paket",
+    "sammlePakete"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "ausDateiErkennen",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 106,
+   "end": 112,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "paket",
+    "sammlePakete"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "sammlePakete",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 120,
+   "end": 152,
+   "lines": 33,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "ausDateiErkennen",
+    "besuche",
+    "lizenzAusdruck",
+    "lizenzDateien",
+    "paket",
+    "set"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "besuche",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 122,
+   "end": 131,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "paket"
+   ],
+   "calledBy": [
+    "paket",
+    "sammlePakete"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "paket",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 132,
+   "end": 149,
+   "lines": 18,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "ausDateiErkennen",
+    "besuche",
+    "lizenzAusdruck",
+    "lizenzDateien",
+    "set"
+   ],
+   "calledBy": [
+    "besuche",
+    "sammlePakete"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "devPfadeAusLock",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 155,
+   "end": 158,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "pruefe",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 163,
+   "end": 178,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "bewerteLizenz"
+   ],
+   "calledBy": [
+    "kontoLoeschenIntern"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "erzeugeBericht",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 185,
+   "end": 209,
+   "lines": 25,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "arg",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/tools/lizenzen-erzeugen.mjs",
+   "start": 213,
+   "end": 216,
+   "lines": 4,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "getAuthedUser",
    "kind": "function",
    "lang": "js",
@@ -22899,6 +23528,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "$",
     "E",
     "W",
     "_doStripePortalRedirect",
@@ -22976,6 +23606,7 @@
     "neuerEinrichtungscode",
     "noopMiddleware",
     "nurInhaber",
+    "nurKutu",
     "oeffneAnfrageBearbeiten",
     "oeffneZahlungseingang",
     "oeffneZuzahlungKorrektur",
@@ -23007,6 +23638,7 @@
     "testeSmtp",
     "top",
     "triggerStorno",
+    "ueberSeiteStarten",
     "updateCalendarEvent",
     "uploadRezeptImage",
     "verrechneGuthaben",
@@ -24018,6 +24650,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -24074,6 +24707,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -24827,6 +25461,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "formatDate",
     "formatDuration",
     "formatTime",
@@ -25145,7 +25780,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "fieldError",
     "handleSubmit",
@@ -25260,6 +25897,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "showFieldError"
    ],
    "calledBy": [
@@ -25580,7 +26218,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "showStep"
    ],
@@ -25651,6 +26291,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "updateProgressBar"
    ],
    "calledBy": [
@@ -25727,6 +26368,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "clearFieldError",
     "hide",
     "show"
@@ -26037,6 +26679,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "apiFetch",
     "clearFieldError",
     "escHtml",
@@ -26209,6 +26852,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "apiFetch",
     "buildTeamButton"
    ],
@@ -26273,6 +26917,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "fetchAndRenderSlots",
     "getInitials"
    ],
@@ -26356,6 +27001,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "clearFieldError",
     "dateStr",
     "fetchAndRenderSlots"
@@ -26443,6 +27089,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "clearFieldError",
     "todayStr"
    ],
@@ -26797,6 +27444,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "hide",
     "show"
    ],
@@ -26822,6 +27470,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "apiFetch",
     "hide"
    ],
@@ -26847,6 +27496,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "apiFetch",
     "hide"
    ],
@@ -26996,6 +27646,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "buildProgressBar",
     "currentLogicalStep",
     "getPublicClient",
@@ -27036,7 +27687,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "loadBookingSlots",
     "loadServices"
@@ -27123,7 +27776,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "init",
     "loadBookingSlots",
@@ -27184,6 +27839,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "ladeKennung",
     "loadServices",
     "showError",
@@ -27213,6 +27869,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "goStep",
     "mountBookingCalendar",
     "updateSidebar"
@@ -27281,6 +27938,7 @@
    ],
    "storage": [],
    "calls": [
+    "add",
     "goStep",
     "json",
     "updateSidebar"
@@ -27346,6 +28004,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "loadBookingSlots"
    ],
    "calledBy": [
@@ -27483,6 +28142,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "findFirstAvailable",
     "injectCSS",
     "loadMonthDots",
@@ -27651,6 +28311,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "selectDate",
     "toStr"
    ],
@@ -27738,7 +28399,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "mountCalendar",
     "selectDate"
@@ -27794,7 +28457,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "initCalendar",
     "loadSlots",
@@ -27819,6 +28484,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "log",
     "parseStr",
     "render",
@@ -29455,6 +30121,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "cancelMoveBooking",
     "checkB2bSetup",
     "checkB2cSetup",
@@ -29571,7 +30238,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [],
    "modules": [],
    "gemeinsam": false,
@@ -31034,6 +31703,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "getOwnerId",
     "mitDeckkraft",
     "openBookingActionModal",
@@ -32036,6 +32706,7 @@
    "storage": [],
    "calls": [
     "abwesenheitsGrund",
+    "add",
     "formatDateDE",
     "getOwnerId",
     "handleRxSessionDropToModal",
@@ -40443,6 +41114,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "toggleStandortDay"
    ],
    "calledBy": [
@@ -40505,6 +41177,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "refreshActiveScheduleView",
     "renderHoursStandortDays",
     "showToast",
@@ -40632,6 +41305,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "getOwnerId",
     "renderSpecialDaysList"
    ],
@@ -41362,6 +42036,7 @@
     "_exitAnsichtEditMode",
     "_resizeVorlagenIframe",
     "abrechnungsprofilCacheLeeren",
+    "add",
     "aiAddMsg",
     "applyI18n",
     "b2bStatusBadge",
@@ -42010,6 +42685,7 @@
     "avatars"
    ],
    "calls": [
+    "add",
     "buildBookingUrl",
     "closeCropModal",
     "countWorkDays",
@@ -43300,7 +43976,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "fmt"
    ],
@@ -43648,11 +44326,13 @@
     "naeher",
     "norm",
     "normalizedCurrent",
+    "nurKutu",
     "nurZiffern",
     "oeffneArztDetail",
     "offeneJeVerordnung",
     "on",
     "p",
+    "paket",
     "papierFuer",
     "patch",
     "planKind",
@@ -43669,6 +44349,7 @@
     "renderKartenLegende",
     "renderVendorPortfolio",
     "saldoJeRezept",
+    "sammlePakete",
     "schluessel",
     "schreibeItsgTrustAnchors",
     "setze",
@@ -47519,7 +48200,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "druckeInline"
    ],
@@ -48778,6 +49461,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "fillRzPatientFromLead",
     "verdrahteLhbNachweis",
     "verdrahteRezeptPatientenfeld",
@@ -54894,6 +55578,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "loadAnfragen",
     "showToast"
    ],
@@ -54953,6 +55638,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "set"
    ],
    "calledBy": [
@@ -55423,6 +56109,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "autoSelectDg",
     "dgSperrenFuerIcd",
     "dgsAcceptingIcd",
@@ -56102,6 +56789,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "isWithinWorkingHours",
     "openBookingPanel",
     "patchBooking",
@@ -56132,7 +56820,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "initCalendar"
    ],
@@ -56611,6 +57301,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -56667,6 +57358,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -56787,6 +57479,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -56843,6 +57536,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -58092,8 +58786,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 51,
-   "end": 81,
+   "start": 52,
+   "end": 82,
    "lines": 31,
    "spiegelHinweis": null,
    "tables": [],
@@ -58114,8 +58808,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 90,
-   "end": 99,
+   "start": 91,
+   "end": 100,
    "lines": 10,
    "spiegelHinweis": null,
    "tables": [],
@@ -58170,8 +58864,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 101,
-   "end": 104,
+   "start": 102,
+   "end": 105,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -58192,8 +58886,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 105,
-   "end": 108,
+   "start": 106,
+   "end": 109,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -58212,8 +58906,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 110,
-   "end": 114,
+   "start": 111,
+   "end": 115,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -58232,8 +58926,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 133,
-   "end": 140,
+   "start": 135,
+   "end": 142,
    "lines": 8,
    "spiegelHinweis": null,
    "tables": [
@@ -58256,8 +58950,8 @@
    "kind": "function",
    "lang": "js",
    "file": "login.js",
-   "start": 142,
-   "end": 145,
+   "start": 144,
+   "end": 147,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -58588,6 +59282,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -58644,6 +59339,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -59523,7 +60219,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "fehlerMitGruenden"
    ],
@@ -60008,6 +60706,7 @@
     "_findePhysioPosition",
     "_ladeDateieinheitenNach",
     "_physioHinweise",
+    "add",
     "auswahlStand",
     "baueGruppen",
     "checkPrescriptionCompliance",
@@ -60312,6 +61011,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -60368,6 +61068,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -61158,6 +61859,7 @@
     "_erstelleGruppen",
     "_leisteAktualisieren",
     "_uebersteuere",
+    "add",
     "auswahlStand",
     "ladeAbrechnungAuswahl",
     "resolve",
@@ -62180,6 +62882,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -62236,6 +62939,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -65066,6 +65770,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -65122,6 +65827,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -68696,6 +69402,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "akteReiterPlan",
     "frei"
    ],
@@ -70814,6 +71521,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -70870,6 +71578,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -74049,6 +74758,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -74105,6 +74815,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -75037,6 +75748,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "arztMetaText",
     "datum",
     "esc",
@@ -78027,6 +78739,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -78083,6 +78796,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -79032,7 +79746,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "kontenAusProfil",
     "kontenFuer",
@@ -81092,6 +81808,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -81148,6 +81865,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -83433,6 +84151,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "round"
    ],
    "calledBy": [
@@ -86710,6 +87429,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "displayName",
     "el",
     "gruppiereBefunde",
@@ -90025,7 +90745,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "loadTeam"
    ],
@@ -90559,6 +91281,7 @@
    "calls": [
     "abwesendeMitarbeiterIds",
     "abwesenheitsGrund",
+    "add",
     "alsISODatum",
     "aufLangenDruck",
     "escapeHtml",
@@ -91574,6 +92297,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "auditKiosk",
     "getBookingsChannel",
     "hintergrundInert",
@@ -93733,6 +94457,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -93789,6 +94514,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -94655,6 +95381,7 @@
    ],
    "storage": [],
    "calls": [
+    "add",
     "filterDocsCache",
     "getOwnerId",
     "hideDocProgress",
@@ -97309,6 +98036,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "bestaetigungNochGueltig",
     "set"
    ],
@@ -97994,6 +98722,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -98050,6 +98779,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -99544,6 +100274,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -99600,6 +100331,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -101304,6 +102036,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "aktiv",
     "tagVon"
    ],
@@ -102022,6 +102755,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -102078,6 +102812,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -105720,6 +106455,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "alsISODatum",
     "getOwnerId",
     "positionVon"
@@ -109682,6 +110418,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "leer",
     "terminLeistungen"
    ],
@@ -111383,6 +112120,7 @@
    "storage": [],
    "calls": [
     "_datumDE",
+    "add",
     "formatEur",
     "gesperrt"
    ],
@@ -112172,6 +112910,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -112228,6 +112967,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -114801,6 +115541,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "neueStufenId",
     "round"
    ],
@@ -115264,6 +116005,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "off",
     "set"
    ],
@@ -117724,6 +118466,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "norm"
    ],
    "calledBy": [
@@ -118063,6 +118806,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "el",
     "oeffneAnlegenWahl",
     "oeffneFolgetermin",
@@ -119208,6 +119952,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "alsBerlinDatum",
     "baueHeuteIndex",
     "berlinTagesgrenzen",
@@ -119457,6 +120202,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "naeher",
     "nurZiffern",
     "parseNameMitGeburt",
@@ -121487,7 +122233,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "ausgefalleneEinheiten",
     "rebindeNoShowSitzungen"
@@ -121698,6 +122446,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "einmalJeSitzung",
     "emit"
    ],
@@ -123380,6 +124129,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "resetVerordnungFelder",
     "setzeWert"
    ],
@@ -123558,6 +124308,337 @@
    ]
   },
   {
+   "name": "esc",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/ueber.js",
+   "start": 28,
+   "end": 43,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "verbindungenHtml"
+   ],
+   "calledBy": [
+    "$",
+    "$$",
+    "_LEER",
+    "_erfasseZahlung",
+    "_erstelleGruppen",
+    "_feld",
+    "_feldEinheiten",
+    "_freitextBlock",
+    "_manuellHinweis",
+    "_merkmale",
+    "_summeHtml",
+    "_termine",
+    "_terminePodo",
+    "_ueberschrift",
+    "_verschreibung",
+    "aktionenHtml",
+    "aktualisiereKopf",
+    "anamneseFehltNotizHtml",
+    "attachArztSearch",
+    "attachDiagnoseSearch",
+    "attachHeilmittelSearch",
+    "attachKrankenkasseSuche",
+    "belegnummerRosette",
+    "boardNotice",
+    "cardHTML",
+    "confirmDialog",
+    "count",
+    "darf",
+    "dat",
+    "dateiversionenHtml",
+    "detailTabelleHtml",
+    "digits",
+    "druckeInline",
+    "eingabeHtml",
+    "eur",
+    "fachbereich",
+    "fehlerhaftHtml",
+    "feld",
+    "fmtDate",
+    "fmtDateTime",
+    "fn",
+    "form",
+    "formExpense",
+    "formHtml",
+    "frageBerichtFreigabe",
+    "fussbefundBoxHtml",
+    "geldHtml",
+    "gruppeHtml",
+    "heilmittelOptionsHtml",
+    "herstellerHtml",
+    "hinweiseHtml",
+    "inline",
+    "karteHtml",
+    "kartenIkHinweisHtml",
+    "kopfHtml",
+    "kopieOeffnen",
+    "korrekturHtml",
+    "kostentraegerFehltHtml",
+    "kurzOf",
+    "ladePatientenAnamnese",
+    "ladeRxKontext",
+    "langOf",
+    "leerHtml",
+    "loadAnamnese",
+    "loadTree",
+    "loadVehicles",
+    "md",
+    "memberById",
+    "mountBrandingExtras",
+    "mountEinrichtungRing",
+    "oeffneArztDetail",
+    "oeffneBefreiungsFormular",
+    "oeffneZahlungseingang",
+    "oeffneZuzahlungKorrektur",
+    "openDasGuideModalController",
+    "openFile",
+    "openIn",
+    "optionenHtml",
+    "passt",
+    "protokollFehlerHtml",
+    "pruefStatusHtml",
+    "render",
+    "renderAICopilot",
+    "renderArztRegister",
+    "renderCatBar",
+    "renderCategoryBreakdown",
+    "renderCostsTab",
+    "renderEinwilligungListe",
+    "renderFixcostDetail",
+    "renderFussbefundArchiv",
+    "renderList",
+    "renderMahnung",
+    "renderStammdaten",
+    "renderStep",
+    "renderTripsTab",
+    "renderVehiclesTab",
+    "renderVendorPortfolio",
+    "renderVerlauf",
+    "renderZaaUploadResult",
+    "rozetHtml",
+    "showAbsagegrundModal",
+    "showHistory",
+    "stift",
+    "todoForm",
+    "toggleMenu",
+    "togglePopover",
+    "verbindungenHtml",
+    "verordnungDetailHtml",
+    "verwerfungHtml",
+    "vkz01AusnahmeHtml",
+    "vorschlag",
+    "wagnerRozetHtml",
+    "withTimeout",
+    "zeichne",
+    "zeichneLuecken",
+    "zeichnePodoEinheiten",
+    "zeichneVerlauf",
+    "zeigeAbrechnungDetail",
+    "zeigeVerordnungDetail",
+    "zeigeVorschlaege",
+    "zeile",
+    "zeileDetailHtml",
+    "zeileHtml",
+    "zeitraumHtml"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 30 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "verbindungenHtml",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/ueber.js",
+   "start": 31,
+   "end": 43,
+   "lines": 13,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "esc"
+   ],
+   "calledBy": [
+    "esc",
+    "ueberSeiteStarten"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 30 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "herstellerHtml",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/ueber.js",
+   "start": 45,
+   "end": 50,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "esc"
+   ],
+   "calledBy": [
+    "$",
+    "ueberSeiteStarten"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "ueberSeiteStarten",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/ueber.js",
+   "start": 53,
+   "end": 88,
+   "lines": 36,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "herstellerHtml",
+    "json",
+    "text",
+    "verbindungenHtml"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "$",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "module/ueber.js",
+   "start": 54,
+   "end": 60,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "herstellerHtml",
+    "json"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "rechtslinksFuerKutu",
+   "kind": "function",
+   "lang": "js",
+   "file": "module/ueber.js",
+   "start": 95,
+   "end": 100,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "text",
    "kind": "arrow",
    "lang": "js",
@@ -123589,6 +124670,7 @@
     "setAfStatus",
     "stripeRequest",
     "trennePlzOrt",
+    "ueberSeiteStarten",
     "updateStatus"
    ],
    "modules": [
@@ -126560,6 +127642,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -126616,6 +127699,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -126866,7 +127950,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "markiereBefunde"
    ],
@@ -127034,6 +128120,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "esc",
     "neuPositionieren",
     "positioniertPopover",
@@ -134368,6 +135455,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -134424,6 +135512,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -134628,6 +135717,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "belegnummerRosette",
     "belegnummerText",
     "frag",
@@ -136909,6 +137999,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -136965,6 +138056,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -137146,6 +138238,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -137202,6 +138295,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -138000,6 +139094,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "berechneZuzahlungAusPosten",
     "findePosition",
     "r2",
@@ -138332,7 +139427,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "add"
+   ],
    "calledBy": [
     "loadProfile"
    ],
@@ -138439,6 +139536,7 @@
    ],
    "storage": [],
    "calls": [
+    "add",
     "goToStep",
     "json",
     "loadProfile",
@@ -138566,6 +139664,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "goToStep",
     "saveSessionProfile",
     "showError"
@@ -138716,6 +139815,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "autoSeedGkvServices",
     "syncServices"
    ],
@@ -138749,6 +139849,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "normName"
    ],
    "calledBy": [
@@ -138922,6 +140023,7 @@
    ],
    "storage": [],
    "calls": [
+    "add",
     "json",
     "showError"
    ],
@@ -141157,6 +142259,7 @@
     "geldHtml",
     "gruppeHtml",
     "heilmittelOptionsHtml",
+    "herstellerHtml",
     "hinweiseHtml",
     "inline",
     "karteHtml",
@@ -141213,6 +142316,7 @@
     "todoForm",
     "toggleMenu",
     "togglePopover",
+    "verbindungenHtml",
     "verordnungDetailHtml",
     "verwerfungHtml",
     "vkz01AusnahmeHtml",
@@ -143460,6 +144564,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "assigneeName",
     "auditValue",
     "blockersOf",
@@ -143580,6 +144685,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "assigneeName",
     "auditValue",
     "blockersOf",
@@ -144266,6 +145372,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "byId",
     "colKeyOf",
     "dropIndexIn",
@@ -144390,6 +145497,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "kidsOf"
    ],
    "calledBy": [
@@ -144886,6 +145994,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "assigneeName",
     "byId",
     "colKeyOf",
@@ -145383,6 +146492,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "fail",
     "openModal",
     "readForm",
@@ -145918,6 +147028,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "loadEntriesAndCosts",
     "openTripModal",
     "openVehicleModal",
@@ -146424,6 +147535,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "esc",
     "openFile"
    ],
@@ -147055,6 +148167,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "confirmDialog",
     "esc",
     "exportEuerCSV",
@@ -147139,6 +148252,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "add",
     "esc",
     "fmtDate",
     "fmtEuro",
@@ -154934,6 +156048,7 @@
     "module/patientenkarte.js:44",
     "module/podo-einheiten.js:372",
     "module/rechnung-zahlungseingang.js:165",
+    "module/ueber.js:28",
     "module/verordnung-feldmarker.js:80",
     "module/verordnung-uebersicht.js:112",
     "module/zuzahlung-befreiung.js:305",
@@ -154981,6 +156096,22 @@
    "aynalar": []
   },
   {
+   "name": "$",
+   "orte": [
+    "attendance.js:10",
+    "module/anamnese.js:42",
+    "module/branding-ui.js:31",
+    "module/kiosk.js:72",
+    "module/rechnung-zahlungseingang.js:376",
+    "module/ueber.js:54",
+    "module/verordnung-podo.js:83",
+    "module/verordnung-pruefen-knopf.js:42",
+    "module/zuzahlung-korrektur.js:206",
+    "ops/app.js:48"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "fmtDate",
    "orte": [
     "api-backend/billing/dta/encoding.js:85",
@@ -155009,21 +156140,6 @@
     "ops/meetings.js:23",
     "ops/wissen.js:66",
     "patient-suche.js:116"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "$",
-   "orte": [
-    "attendance.js:10",
-    "module/anamnese.js:42",
-    "module/branding-ui.js:31",
-    "module/kiosk.js:72",
-    "module/rechnung-zahlungseingang.js:376",
-    "module/verordnung-podo.js:83",
-    "module/verordnung-pruefen-knopf.js:42",
-    "module/zuzahlung-korrektur.js:206",
-    "ops/app.js:48"
    ],
    "aynalar": []
   },
@@ -155116,8 +156232,8 @@
     "api-backend/ai/validators/lhbBvbRules.js:24",
     "api-backend/ai/validators/standardRules.js:42",
     "api-backend/billing/api/mahnwesen.routes.js:45",
-    "api-backend/server.js:304",
-    "api-backend/server.js:1450"
+    "api-backend/server.js:305",
+    "api-backend/server.js:1453"
    ],
    "aynalar": []
   },
@@ -155372,7 +156488,7 @@
    "name": "applyLang",
    "orte": [
     "kalender.js:67",
-    "login.js:51",
+    "login.js:52",
     "setup.js:86"
    ],
    "aynalar": []
@@ -155454,7 +156570,7 @@
    "orte": [
     "admin-login.js:18",
     "api/_lib/auth.js:90",
-    "login.js:133"
+    "login.js:135"
    ],
    "aynalar": []
   },
@@ -155515,7 +156631,7 @@
   {
    "name": "setzen",
    "orte": [
-    "api-backend/server.js:4237",
+    "api-backend/server.js:4240",
     "module/praxis-standort.js:143",
     "module/rechnung-druck.js:115"
    ],
@@ -155526,7 +156642,7 @@
    "orte": [
     "admin-login.js:15",
     "attendance.js:69",
-    "login.js:101"
+    "login.js:102"
    ],
    "aynalar": []
   },
@@ -155543,7 +156659,7 @@
    "name": "tick",
    "orte": [
     "api-backend/merkez-istemci/ip-abgleich.js:257",
-    "api-backend/server.js:3896",
+    "api-backend/server.js:3899",
     "dashboard.js:13505"
    ],
    "aynalar": []
@@ -155598,6 +156714,14 @@
    "aynalar": []
   },
   {
+   "name": "arg",
+   "orte": [
+    "api-backend/tools/lizenzen-erzeugen.mjs:213",
+    "ops/tools/ingest.mjs:46"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "authHeaders",
    "orte": [
     "attendance.js:82",
@@ -155616,7 +156740,7 @@
   {
    "name": "berlinOffsetMin",
    "orte": [
-    "api-backend/server.js:260",
+    "api-backend/server.js:261",
     "api/demo-booking.js:98"
    ],
    "aynalar": []
@@ -155659,7 +156783,7 @@
    "name": "clearMsg",
    "orte": [
     "admin-login.js:16",
-    "login.js:105"
+    "login.js:106"
    ],
    "aynalar": []
   },
@@ -155748,6 +156872,14 @@
    "orte": [
     "api-backend/billing/dta/preflight.js:169",
     "dashboard.js:11804"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "einzeln",
+   "orte": [
+    "api-backend/billing/api/artefakt-ausmustern.js:50",
+    "api-backend/tools/lizenzen-erzeugen.mjs:70"
    ],
    "aynalar": []
   },
@@ -156116,6 +157248,14 @@
    "aynalar": []
   },
   {
+   "name": "pruefe",
+   "orte": [
+    "api-backend/dsgvo/loeschen.js:463",
+    "api-backend/tools/lizenzen-erzeugen.mjs:163"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "pruefen",
    "orte": [
     "module/kvnr.js:111",
@@ -156168,7 +157308,7 @@
   {
    "name": "schliesse",
    "orte": [
-    "api-backend/server.js:3884",
+    "api-backend/server.js:3887",
     "module/kalender-kontextmenue.js:91"
    ],
    "aynalar": []
@@ -156232,7 +157372,7 @@
   {
    "name": "showView",
    "orte": [
-    "login.js:90",
+    "login.js:91",
     "ops/app.js:185"
    ],
    "aynalar": []

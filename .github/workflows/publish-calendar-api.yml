@@ -24,6 +24,8 @@ on:
       - 'onprem/volumes/api/kong.yml'
       - 'onprem/volumes/api/kong-entrypoint.sh'
       - 'onprem/volumes/db/*.sql'
+      # O-178: Container-Lizenztabelle wird ins api-Image kopiert (/api/ueber/lizenzen).
+      - 'onprem/NOTICE.md'
       - '.github/workflows/publish-calendar-api.yml'
       # O-25/R5 (12.09.2026): api- und frontend-Image teilen sich EINE Produkt-
       # version (VERSION am Repo-Root). Jede Änderung daran löst BEIDE Workflows
@@ -89,6 +91,8 @@ jobs:
           set -e
           VERSION="$(tr -d '[:space:]' < VERSION)"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          # O-178 Bedingung 4: Version im Image (/health, /api/ueber) = VERSION+sha7.
+          echo "bild=${VERSION}+${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
           if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
             echo "release=false" >> "$GITHUB_OUTPUT"
@@ -200,6 +204,8 @@ jobs:
           file: ./api-backend/Dockerfile
           build-contexts: |
             onprem=./onprem
+          build-args: |
+            IMAGE_VERSION=${{ steps.version.outputs.bild }}
           push: false
           load: true
           tags: calendar-api:smoke
@@ -292,6 +298,21 @@ jobs:
           fi
           echo "✓ manifest.json listet genau ${erwartet}/${erwartet} Dateien, keine überzähligen"
 
+      # O-178 / K2b.16: Lizenztexte, Komponenten-Tabelle und SBOM liegen im Image
+      # (der Lizenztor selbst läuft schon im Dockerfile-RUN — ein verbotenes Paket
+      # hätte den Build oben bereits gebrochen). Und /health zeigt die echte Version.
+      - name: Smoke test — Lizenzdateien + Version im Image
+        run: |
+          set -e
+          docker run --rm --entrypoint sh calendar-api:smoke -c '
+            for f in THIRD-PARTY-NOTICES.txt NOTICE-komponenten.md sbom.cdx.json; do
+              test -s /app/lizenzen/$f || { echo "✗ fehlt im Image: /app/lizenzen/$f"; exit 1; }
+            done
+            echo "✓ Lizenzdateien im Image ($(head -3 /app/lizenzen/THIRD-PARTY-NOTICES.txt | tail -1))"
+            [ "$IMAGE_VERSION" = "${{ steps.version.outputs.bild }}" ] || { echo "✗ IMAGE_VERSION=$IMAGE_VERSION"; exit 1; }
+            echo "✓ IMAGE_VERSION=$IMAGE_VERSION"
+          '
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -299,6 +320,8 @@ jobs:
           file: ./api-backend/Dockerfile
           build-contexts: |
             onprem=./onprem
+          build-args: |
+            IMAGE_VERSION=${{ steps.version.outputs.bild }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
