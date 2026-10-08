@@ -666,7 +666,13 @@ Haben Sie keine eigene Internet-Domain, wählen Sie einen rein internen Namen:
 Datei holen:
 - **Windows-Box:** liegt schon unter `C:\ProgramData\Praxura\praxura-wurzelzertifikat.crt`
   und ist auf diesem PC bereits eingetragen.
-- **Linux-Server:** `cd /opt/praxura/onprem && sudo docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./praxura-wurzelzertifikat.crt`
+- **Linux-Server:** `sudo cp /opt/praxura/onprem/volumes/caddy-ca/root.crt ./praxura-wurzelzertifikat.crt`
+
+Das Zertifikat gilt **nur für den Namen Ihrer Box** (z. B. `praxis.home.arpa`) — für
+andere Adressen kann damit nichts ausgestellt werden, auch nicht von jemandem, der die
+Box übernimmt. Es läuft nach 5 Jahren ab; 90 Tage vorher meldet die Box das per Mail.
+Der Name muss mindestens drei Teile haben (`praxis.home.arpa`, `pc-name.fritz.box`);
+`fritz.box`, `home.arpa` oder Namen auf `.local` lehnt die Einrichtung ab.
 
 Dann je Gerät:
 

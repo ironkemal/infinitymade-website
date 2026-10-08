@@ -31,6 +31,8 @@ const METINLER = {
   sicherung_fehlgeschlagen: 'Die nächtliche Sicherung ist fehlgeschlagen — es gibt keine neue Sicherung.',
   sicherungsschluessel_fehlt: 'Die nächtliche Sicherung wurde NICHT erstellt: es ist kein Sicherungsschlüssel eingerichtet. Einmal ausführen: sudo bash install.sh --sicherungsschluessel',
   // O-172 / S-47 Bed. 5 (08.10.2026) — von update.sh, eigener Zustand, nicht son-bildirim.json.
+  // K2b.19 (S-53 Nr. 5): die lokale CA der Box ("eigene Adresse") erneuert sich nicht selbst.
+  lokale_ca_laeuft_ab: 'Die Zertifizierungsstelle der Box läuft in weniger als 90 Tagen ab und erneuert sich nicht von selbst. Bitte den Support kontaktieren: Die Box braucht ein neues Zertifikat, das danach auf jedem Praxisgerät einmal neu importiert wird.',
   zertifikat_laeuft_ab: 'Das Sicherheitszertifikat der Box läuft in weniger als 21 Tagen ab und wurde noch nicht automatisch erneuert. Bitte prüfen, ob die Box Internetzugang hat; besteht das Problem weiter, den Support kontaktieren.',
 };
 
@@ -39,7 +41,7 @@ const betreff = sonuc === 'ok'
   ? 'Praxura — Entwarnung: automatisches Update wieder ok'
   : SICHERUNG.has(sonuc)
     ? 'Praxura — nächtliche Sicherung braucht Aufmerksamkeit'
-    : sonuc === 'zertifikat_laeuft_ab'
+    : (sonuc === 'zertifikat_laeuft_ab' || sonuc === 'lokale_ca_laeuft_ab')
       ? 'Praxura — Zertifikat der Box läuft bald ab'
       : 'Praxura — automatisches Update braucht Aufmerksamkeit';
 const zeile = METINLER[sonuc] || `Automatisches Update: unbekannter Status "${sonuc}".`;

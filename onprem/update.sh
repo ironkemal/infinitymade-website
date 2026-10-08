@@ -167,7 +167,21 @@ ZERT_STAND="$STAND_DIR/son-zertifikat-bildirim.json"
 zertifikat_pruefen() {
   local modus tls_arg host pem simdi letzte
   modus="$(env_wert CADDY_TLS_MODUS)"; tls_arg="$(env_wert CADDY_TLS_ARG)"
-  if [ "$modus" != "acmedns" ] && { [ -z "$tls_arg" ] || [ "$tls_arg" = "internal" ]; }; then return 0; fi
+  if [ "$modus" != "acmedns" ] && { [ -z "$tls_arg" ] || [ "$tls_arg" = "internal" ]; }; then
+    # K2b.19 (S-53 Nr. 5): die lokale Zwischen-CA erneuert sich NICHT selbst (Root-
+    # Schlüssel gelöscht) — 90 Tage vorher warnen, Erneuerung: install.sh --neu + Geräte.
+    local zw="$SCRIPT_DIR/volumes/caddy-ca/intermediate.crt"
+    [ -f "$zw" ] || return 0
+    if openssl x509 -in "$zw" -noout -checkend 7776000 >/dev/null 2>&1; then rm -f "$ZERT_STAND"; return 0; fi
+    warn "  Lokale Zertifizierungsstelle läuft in < 90 Tagen ab ($(openssl x509 -in "$zw" -noout -enddate 2>/dev/null))"
+    simdi="$(date -u +%s)"
+    letzte="$(grep -oE '[0-9]+' "$ZERT_STAND" 2>/dev/null | head -1 || true)"
+    if [ -n "$letzte" ] && [ $(( simdi - letzte )) -lt "$BILDIRIM_ARALIK_SANIYE" ]; then return 0; fi
+    if mail_gonder_container lokale_ca_laeuft_ab; then
+      printf '{ "son_gonderim_epoch": %s }\n' "$simdi" > "$ZERT_STAND"
+    fi
+    return 0
+  fi
   host="$(env_wert SITE_URL)"; host="${host#https://}"; host="${host%%/*}"
   [ -n "$host" ] || return 0
   pem="$(timeout 15 openssl s_client -connect 127.0.0.1:443 -servername "$host" </dev/null 2>/dev/null \

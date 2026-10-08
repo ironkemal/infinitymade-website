@@ -793,10 +793,34 @@ fi
 # vertrauenswuerdig importiert haben, sehen KEINE Zertifikatswarnung. Ohne
 # diesen Schritt haette eine neu aufgesetzte Box eine neue CA erzeugt.
 CADDY_PKI_NEU=0
+# K2b.19 (O-177): _praxura-ca/ aus dem Archiv → volumes/caddy-ca (Bind-Mount),
+# NICHT nach caddy_data. Danach Caddy neu starten, damit pki.caddy greift.
+pki_ca_zurueck() {
+  local quelle="$1/_praxura-ca"
+  [ -d "$quelle" ] || return 0
+  install -d -m 0755 "$SCRIPT_DIR/volumes/caddy-ca"
+  cp -a "$quelle/." "$SCRIPT_DIR/volumes/caddy-ca/"
+  [ ! -f "$SCRIPT_DIR/volumes/caddy-ca/intermediate.key" ] || chmod 600 "$SCRIPT_DIR/volumes/caddy-ca/intermediate.key"
+  rm -rf -- "${quelle:?}"
+  docker compose restart caddy >>"$LOG_FILE" 2>&1 || true
+}
+# Erfolg = CA zurück (K2b.19) ODER Caddys Altdaten zurück. Nach dem Herausnehmen von
+# _praxura-ca kann caddy-pki leer sein — dann kein 'docker compose cp' (schlüge auf einer
+# frischen Box ohne /data/caddy/pki fehl und meldete fälschlich einen Fehler).
+pki_zurueckspielen() {
+  local d="$1" erg=1
+  if [ -d "$d/_praxura-ca" ]; then pki_ca_zurueck "$d" && erg=0; fi
+  if [ -n "$(ls -A "$d" 2>/dev/null)" ]; then
+    docker compose cp "$d/." caddy:/data/caddy/pki >>"$LOG_FILE" 2>&1 && erg=0
+  fi
+  return "$erg"
+}
 # acmedns-Box (K2b.4, guvenlik S-47 Bedingung 1): keine interne CA — eine alte
 # Sicherung aus der internal-Zeit darf den CA-Schlüssel (S-43) nicht zurückschreiben.
 if [ "$(env_wert CADDY_TLS_MODUS)" = "acmedns" ]; then
   log "  (acmedns-Box: keine interne CA — caddy-pki aus dem Backup wird bewusst NICHT zurückgespielt, S-43/S-47.)"
+  # K2b.19: eine liegengebliebene pki-Datei aus der internal-Zeit zwänge Caddy eine interne CA auf.
+  rm -f -- "$SCRIPT_DIR/volumes/caddy-ca/pki.caddy"
 elif [ "$IST_VERSCHLUESSELT" -eq 1 ] && printf '%s\n' "$M_SHA_LINES" | grep -q '^caddy-pki\.tar\.gz\.age=' && [ -f "$YEDEK_DIR/caddy-pki.tar.gz.age" ]; then
   TMP_PKI="$(mktemp -d)"
   set +e
@@ -804,7 +828,7 @@ elif [ "$IST_VERSCHLUESSELT" -eq 1 ] && printf '%s\n' "$M_SHA_LINES" | grep -q '
   PIPE_PKI=("${PIPESTATUS[@]}")
   set -e
   if [ "${PIPE_PKI[1]:-1}" -eq 0 ] && [ "${PIPE_PKI[2]:-1}" -eq 0 ] && [ -d "$TMP_PKI/caddy-pki" ] \
-     && docker compose cp "$TMP_PKI/caddy-pki/." caddy:/data/caddy/pki >>"$LOG_FILE" 2>&1; then
+     && pki_zurueckspielen "$TMP_PKI/caddy-pki"; then
     ok "Caddy-Wurzel-CA wiederhergestellt"
     CADDY_PKI_NEU=1
   else
@@ -814,7 +838,7 @@ elif [ "$IST_VERSCHLUESSELT" -eq 1 ] && printf '%s\n' "$M_SHA_LINES" | grep -q '
 elif [ "$IST_VERSCHLUESSELT" -eq 0 ] && [ -f "$YEDEK_DIR/caddy-pki.tar.gz" ]; then
   TMP_PKI="$(mktemp -d)"
   if tar -xzf "$YEDEK_DIR/caddy-pki.tar.gz" -C "$TMP_PKI" 2>>"$LOG_FILE" \
-     && docker compose cp "$TMP_PKI/caddy-pki/." caddy:/data/caddy/pki >>"$LOG_FILE" 2>&1; then
+     && pki_zurueckspielen "$TMP_PKI/caddy-pki"; then
     ok "Caddy-Wurzel-CA wiederhergestellt"
     CADDY_PKI_NEU=1
   else

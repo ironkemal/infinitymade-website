@@ -719,6 +719,87 @@ done
 ok "alle Pflichtfelder gefüllt"
 
 
+# ── Lokale Zertifizierungsstelle für "eigene Adresse" (K2b.19, O-177, guvenlik S-53) ──
+# Caddy's eigene interne CA legte einen unbeschränkten Root-Schlüssel auf die Box:
+# wer die Box übernimmt, könnte Zertifikate für JEDE Domain ausstellen, und jeder
+# Praxisrechner vertraut ihnen (S-43). Stattdessen: Root + Zwischen-CA mit
+# Namensbeschränkung auf genau diesen Box-Namen (IP-Adressen ausgeschlossen, nur
+# serverAuth); der Root-Schlüssel entsteht in /dev/shm und wird gelöscht. Caddy
+# bekommt nur den Root OHNE Schlüssel + die Zwischen-CA (5 Jahre, Caddy erneuert
+# sie nicht). Gemessen 08.10.2026 (WSL, echtes Caddy-Image): Box-Name 200,
+# evil.example und IP-Blatt von der Zwischen-CA → "verification failed".
+CA_DIR="$SCRIPT_DIR/volumes/caddy-ca"
+
+lokaler_name_pruefen() {
+  # $1 = Hostname. Nur EIN eigener Name darf in der Beschränkung stehen — ein
+  # Oberbegriff (fritz.box, home.arpa) gäbe das ganze Heimnetz frei (S-53 Nr. 4).
+  local h="$1" teile
+  case "$h" in
+    ''|.*|*..*|*.) fail "Ungültiger Box-Name" "'$h'" "voller Name, z. B. praxis.home.arpa" "Erneut ausführen (--neu) und den vollen Namen eintragen." ;;
+  esac
+  if printf '%s' "$h" | grep -qE '^[0-9.]+$|:'; then
+    fail "IP-Adresse statt Name" "'$h'" "ein Name, keine IP" "Erneut ausführen (--neu), z. B. https://praxis.home.arpa — die Box antwortet nur auf ihren Namen."
+  fi
+  teile="$(printf '%s' "$h" | awk -F. '{print NF}')"
+  if [ "$teile" -lt 3 ]; then
+    fail "Box-Name zu kurz" "'$h' ($teile Teile)" "mindestens drei Teile, z. B. praxis.home.arpa oder pc-name.fritz.box" \
+      "Erneut ausführen (--neu). Namen wie 'fritz.box', 'home.arpa', 'praxis.local' oder 'praxis.lan' gehen nicht."
+  fi
+  case "$h" in
+    *.local) fail "Endung .local nicht möglich" "'$h'" "z. B. praxis.home.arpa" "Erneut ausführen (--neu) mit einem Namen unter home.arpa oder fritz.box." ;;
+  esac
+}
+
+lokale_ca_vorbereiten() {
+  # $1 = Hostname. Behält eine vorhandene CA, wenn sie GENAU für diesen Namen gilt
+  # und die Zwischen-CA noch > 90 Tage läuft — sonst neu (Geräte müssen dann den
+  # neuen Root importieren; install.ps1 entfernt den alten per Fingerabdruck).
+  local h="$1" nc tmpk
+  lokaler_name_pruefen "$h"
+  install -d -m 0755 "$CA_DIR"
+  if [ -f "$CA_DIR/root.crt" ] && [ -f "$CA_DIR/intermediate.crt" ] && [ -f "$CA_DIR/intermediate.key" ] \
+     && openssl x509 -in "$CA_DIR/root.crt" -noout -ext nameConstraints 2>/dev/null | sed -e 's/^[[:space:]]*//' | grep -Fxq "DNS:$h" \
+     && openssl x509 -in "$CA_DIR/intermediate.crt" -noout -checkend 7776000 >/dev/null 2>&1; then
+    ok "Lokale Zertifizierungsstelle für $h vorhanden (Name passt, > 90 Tage gültig)"
+  else
+    nc="critical,permitted;DNS:$h,excluded;IP:0.0.0.0/0.0.0.0,excluded;IP:::/::"
+    tmpk="$(mktemp -d -p /dev/shm 2>/dev/null || mktemp -d)"
+    chmod 700 "$tmpk"
+    # Auch Strg+C/SIGTERM zwischen Erzeugen und Löschen darf root.key nicht liegen lassen
+    # (install.sh hat sonst keinen EXIT-Trap — wird unten wieder aufgehoben).
+    _CA_TMPK="$tmpk"
+    trap 'rm -rf -- "${_CA_TMPK:-/nonexistent-praxura}"' EXIT
+    trap 'rm -rf -- "${_CA_TMPK:-/nonexistent-praxura}"; exit 130' INT TERM HUP
+    openssl req -x509 -new -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes \
+      -keyout "$tmpk/root.key" -out "$tmpk/root.crt" -days 1856 -subj "/CN=Praxura Box CA $h" \
+      -addext "basicConstraints=critical,CA:true,pathlen:1" -addext "keyUsage=critical,keyCertSign,cRLSign" \
+      -addext "extendedKeyUsage=serverAuth" -addext "nameConstraints=$nc" -addext "subjectKeyIdentifier=hash" \
+      >>"$LOG_FILE" 2>&1 || { rm -rf -- "${tmpk:?}"; fail "Root-Zertifikat nicht erzeugt" "openssl req" "OpenSSL 3" "Protokoll prüfen: $LOG_FILE"; }
+    # Jeder Fehlerpfad räumt tmpk (mit root.key) selbst — set -e bräche sonst hier ab und
+    # ließe den Root-Schlüssel liegen (im mktemp-Fallback sogar auf der Platte).
+    openssl req -new -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -keyout "$tmpk/intermediate.key" \
+      -out "$tmpk/int.csr" -subj "/CN=Praxura Box Intermediate $h" >>"$LOG_FILE" 2>&1 \
+      || { rm -rf -- "${tmpk:?}"; fail "Zwischen-Schlüssel nicht erzeugt" "openssl req" "OpenSSL 3" "Protokoll prüfen: $LOG_FILE"; }
+    printf 'basicConstraints=critical,CA:true,pathlen:0\nkeyUsage=critical,keyCertSign,cRLSign\nextendedKeyUsage=serverAuth\nnameConstraints=%s\nsubjectKeyIdentifier=hash\nauthorityKeyIdentifier=keyid:always\n' "$nc" > "$tmpk/int.ext"
+    openssl x509 -req -in "$tmpk/int.csr" -CA "$tmpk/root.crt" -CAkey "$tmpk/root.key" \
+      -set_serial "0x$(openssl rand -hex 16)" -days 1826 -extfile "$tmpk/int.ext" -out "$tmpk/intermediate.crt" >>"$LOG_FILE" 2>&1 \
+      || { rm -rf -- "${tmpk:?}"; fail "Zwischen-Zertifikat nicht erzeugt" "openssl x509 -req" "signierte Zwischen-CA" "Protokoll prüfen: $LOG_FILE"; }
+    rm -f -- "$tmpk/root.key"   # S-53 Nr. 1: der Root-Schlüssel existiert nach diesem Punkt nirgends mehr
+    install -m 0644 "$tmpk/root.crt" "$CA_DIR/root.crt"
+    install -m 0644 "$tmpk/intermediate.crt" "$CA_DIR/intermediate.crt"
+    install -m 0600 "$tmpk/intermediate.key" "$CA_DIR/intermediate.key"
+    rm -rf -- "${tmpk:?}"
+    trap - EXIT INT TERM HUP; _CA_TMPK=""
+    LOKALE_CA_NEU=1
+    ok "Lokale Zertifizierungsstelle für $h erzeugt (nur dieser Name, Root-Schlüssel gelöscht)"
+  fi
+  printf 'pki {\n\tca local {\n\t\troot {\n\t\t\tcert /etc/praxura/ca/root.crt\n\t\t}\n\t\tintermediate {\n\t\t\tcert /etc/praxura/ca/intermediate.crt\n\t\t\tkey /etc/praxura/ca/intermediate.key\n\t\t}\n\t}\n}\nskip_install_trust\n' > "$CA_DIR/pki.caddy"
+  chmod 0644 "$CA_DIR/pki.caddy"
+  # Altlast einer früheren Caddy-eigenen CA (S-43 b): Schlüssel weg aus caddy_data.
+  docker compose run --rm --no-deps --pull never --entrypoint sh caddy -c 'rm -rf /data/caddy/pki/authorities/local' >>"$LOG_FILE" 2>&1 || true
+}
+LOKALE_CA_NEU=0
+
 # ── Schritt 10 — TLS-Modus ───────────────────────────────────────────────────
 log "[10/17] TLS-Modus"
 if [ "$KAYIT_MODUS" = "code" ] || [ "$KAYIT_MODUS" = "vorhanden" ]; then
@@ -742,11 +823,12 @@ else
     set_env HSTS_MAX_AGE "86400"   # O-172: 1 Tag, bis eine Erneuerung beobachtet ist (nicht 2 Jahre)
     ok "TLS: Let's Encrypt (${acme_mail})"
   else
+    lokaler_name_pruefen "$HOST_PART"   # früh scheitern, nicht erst vor dem Start
     CADDY_TLS_ARG_VALUE="internal"
     set_env CADDY_TLS_ARG "$CADDY_TLS_ARG_VALUE"
     set_env HSTS_MAX_AGE "0"
-    ok "TLS: Caddys eigene Zertifizierungsstelle (selbstsigniert, LAN-only)"
-    log "  ⚠️  Jeder Praxisrechner muss Caddys Root-Zertifikat einmalig als vertrauenswürdig"
+    ok "TLS: eigene Zertifizierungsstelle der Box (nur für ${HOST_PART}, LAN-only)"
+    log "  ⚠️  Jeder Praxisrechner muss das Root-Zertifikat der Box einmalig als vertrauenswürdig"
     log "      einstufen (letzter Schritt zeigt, wo es liegt), sonst zeigt der Browser eine Warnung."
   fi
 fi
@@ -1018,6 +1100,15 @@ for k in API_EXTERNAL_URL SUPABASE_PUBLIC_URL; do
   [ -n "$v" ] && [ "$v" != "https://praxis.local" ] || fail "Pflichtfeld $k vor Start ungültig" "${v:-leer}" "echte Adresse" "Registrierung oder Adresseingabe wiederholen."
 done
 
+# K2b.19: lokale CA nur bei klassisch+internal; sonst darf keine pki-Datei Caddy
+# eine interne CA aufzwingen (acmedns: S-47 Bedingung 2).
+if [ "$(env_get CADDY_TLS_MODUS)" != "acmedns" ] && [ "$(env_get CADDY_TLS_ARG)" = "internal" ]; then
+  _ca_host="${site_tor#https://}"; _ca_host="${_ca_host%%/*}"
+  lokale_ca_vorbereiten "$_ca_host"
+else
+  rm -f -- "$CA_DIR/pki.caddy"
+fi
+
 if ! docker compose up -d 2>&1 | tee -a "$LOG_FILE"; then
   log "  Letzte Zeilen von 'api' (haeufigste Ursache — Migrationskette):"
   docker compose logs --tail=40 api 2>&1 | tee -a "$LOG_FILE" || true
@@ -1280,8 +1371,12 @@ fi
 if [ "$CADDY_TLS_MODUS_VALUE" = "acmedns" ]; then
   log "  Zertifikat:             Let's Encrypt — auf keinem Gerät muss etwas importiert werden."
 elif [ "$CADDY_TLS_MODUS_VALUE" = "klassisch" ] && [ "$CADDY_TLS_ARG_VALUE" = "internal" ]; then
-  log "  Zertifikat der Box:     'docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .'"
+  log "  Zertifikat der Box:     ${CA_DIR}/root.crt"
   log "                          — pro Praxisrechner einmalig als vertrauenswürdig importieren."
+  if [ "$LOKALE_CA_NEU" -eq 1 ]; then
+    log "                          ⚠️ NEU erzeugt: auf Geräten, die schon ein älteres Praxura-Box-"
+    log "                          Zertifikat haben, das alte entfernen und dieses importieren."
+  fi
 fi
 log ""
 reveal_once "  ════════════════════════════════════════════════════════════════"

@@ -112,8 +112,10 @@ test('.env.template: enthält CADDY_TLS_MODUS=klassisch und kein VERSION_CADDY='
 
 test('backup.sh: CADDY_TLS_MODUS- / acmedns-Prüfung steht vor docker compose cp caddy:/data/caddy/pki', () => {
   const inhalt = fs.readFileSync(backupPfad, 'utf8');
-  const cpPos = inhalt.indexOf('caddy:/data/caddy/pki');
-  assert.ok(cpPos !== -1, 'backup.sh muss caddy:/data/caddy/pki enthalten');
+  // K2b.19: das Kopieren steckt in pki_sammeln() — maßgeblich ist der AUFRUF, nicht die Definition
+  assert.match(inhalt, /if \[ "\$\(env_wert CADDY_TLS_MODUS\)" = "acmedns" \]; then\n[^\n]*\nelif pki_sammeln; then/, 'acmedns-Zweig vor dem Sammeln');
+  const cpPos = inhalt.indexOf('elif pki_sammeln; then');
+  assert.ok(cpPos !== -1, 'backup.sh muss pki_sammeln aufrufen');
 
   const abschnittVorCp = inhalt.slice(0, cpPos);
   const pkiAbschnittStart = abschnittVorCp.lastIndexOf('# ── 1b)');
@@ -177,7 +179,8 @@ test('praxura-installieren.ps1: beginnt mit UTF-8-BOM und Import-Certificate-Zwe
 test('restore.sh: acmedns-Box spielt caddy-pki nicht zurück (guvenlik S-47 Bedingung 1)', () => {
   const inhalt = fs.readFileSync(path.join(repoRoot, 'onprem', 'restore.sh'), 'utf8');
   const posModus = inhalt.search(/env_wert CADDY_TLS_MODUS\)"\s*=\s*"acmedns"/);
-  const posCp = inhalt.indexOf('caddy:/data/caddy/pki');
+  // K2b.19: das Zurückspielen steckt in pki_zurueckspielen() — maßgeblich ist der erste AUFRUF
+  const posCp = inhalt.indexOf('pki_zurueckspielen "$TMP_PKI/caddy-pki"');
   assert.ok(posModus !== -1, 'restore.sh muss CADDY_TLS_MODUS=acmedns prüfen');
   assert.ok(posCp !== -1 && posModus < posCp, 'acmedns-Prüfung muss VOR dem Zurückspielen von caddy/pki stehen');
 });
@@ -189,7 +192,8 @@ test('O-172: kein HSTS 2 Jahre mehr; update.sh senkt den Altwert und prüft den 
   assert.doesNotMatch(inst, /set_env HSTS_MAX_AGE "63072000"/);
   assert.match(upd, /HSTS_MAX_AGE\)" = "63072000" \]/, 'Senkung nur für den exakten Altwert');
   assert.match(upd, /-checkend 1814400/, '21 Tage');
-  assert.match(upd, /= "internal" \]; \}; then return 0; fi/, 'internal (12-h-Blatt) wird nicht bewertet');
+  // internal: das 12-h-Blatt wird nicht bewertet, nur die lokale Zwischen-CA (90 Tage, K2b.19)
+  assert.match(upd, /= "internal" \]; \}; then\n[\s\S]*?-checkend 7776000[\s\S]*?return 0\n  fi/, 'internal-Zweig prüft nur die lokale CA');
   // guvenlik S-47: frühe Ausstiege (Disk-Gate, Pull, Bundle) dürfen die Warnung nicht stummschalten
   const iPruef = upd.indexOf('zertifikat_pruefen || true');
   assert.ok(iPruef > upd.indexOf('if [ ! -f "$ENV_FILE" ]'), 'nach Lock/.env-Prüfung');
@@ -197,4 +201,24 @@ test('O-172: kein HSTS 2 Jahre mehr; update.sh senkt den Altwert und prüft den 
   assert.ok(iPruef < upd.indexOf('# ── Schritt 1 — nur das eigene Image ziehen'), 'vor dem Pull');
   assert.ok(upd.indexOf('mail_gonder_container() {') < iPruef, 'Mailfunktion vorher definiert');
   assert.match(mail, /zertifikat_laeuft_ab:/);
+});
+
+test('K2b.19 (O-177, S-53): namensbeschränkte lokale CA, Root-Schlüssel gelöscht, gesichert, nur bei internal', () => {
+  const lies = (...p) => fs.readFileSync(path.join(repoRoot, ...p), 'utf8');
+  const inst = lies('onprem', 'install.sh');
+  const caddy = lies('onprem', 'Caddyfile');
+  assert.match(caddy, /^\{\n\timport \/etc\/praxura\/ca\/\*\.caddy\n\}/m, 'globaler Import der pki-Datei');
+  assert.match(lies('onprem', 'docker-compose.yml'), /- \.\/volumes\/caddy-ca:\/etc\/praxura\/ca:ro/);
+  assert.match(inst, /permitted;DNS:\$h,excluded;IP:0\.0\.0\.0\/0\.0\.0\.0,excluded;IP:::\/::/, 'Name + alle IPs ausgeschlossen');
+  assert.match(inst, /extendedKeyUsage=serverAuth/);
+  assert.match(inst, /rm -f -- "\$tmpk\/root\.key"/, 'Root-Schlüssel wird gelöscht');
+  assert.doesNotMatch(inst, /install [^\n]*root\.key/, 'Root-Schlüssel wird nie installiert');
+  assert.match(inst, /rm -f -- "\$CA_DIR\/pki\.caddy"/, 'acmedns: keine pki-Datei');
+  assert.match(lies('onprem', 'backup.sh'), /_praxura-ca/);
+  const rest = lies('onprem', 'restore.sh');
+  assert.equal(rest.split('pki_zurueckspielen "$TMP_PKI/caddy-pki"').length, 3, 'beide Restore-Wege (age + alt)');
+  assert.match(rest, /"acmedns" \]; then\n[^\n]*\n[^\n]*\n  rm -f -- "\$SCRIPT_DIR\/volumes\/caddy-ca\/pki\.caddy"/, 'acmedns: pki-Datei weg');
+  assert.match(inst, /trap 'rm -rf -- "\$\{_CA_TMPK:-\/nonexistent-praxura\}"' EXIT/, 'Trap räumt root.key auch bei Abbruch');
+  assert.match(lies('installieren', 'install.ps1'), /volumes\/caddy-ca\/root\.crt/);
+  assert.match(lies('api-backend', 'setup', 'update-alarm-mail.mjs'), /lokale_ca_laeuft_ab:/);
 });

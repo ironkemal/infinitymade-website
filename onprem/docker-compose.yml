@@ -596,6 +596,11 @@ services:
       # Lesen der 0600-Datei (Eigentümer app) klappt nur, weil das caddy-Image
       # als root läuft — wird es auf non-root umgestellt, bricht das (onprem-Bedingung 10).
       - acmedns:/etc/praxura/acmedns:ro
+      # Namensbeschränkte lokale CA nur für "eigene Adresse" (K2b.19, O-177, S-53):
+      # Bind-Mount statt Volume: bleibt bei neu angelegten Volumes erhalten, sonst
+      # müsste jedes Gerät den Root neu importieren. backup.sh sichert den Ordner
+      # verschlüsselt im caddy-pki-Archiv (Unterordner _praxura-ca).
+      - ./volumes/caddy-ca:/etc/praxura/ca:ro
 
 networks:
   default:

@@ -417,9 +417,19 @@ if ($tlsModus -eq 'acmedns') {
 } elseif ($tls -eq 'internal') {
   $crt = Join-Path $DatenOrt 'praxura-wurzelzertifikat.crt'
   $crtWsl = '/mnt/' + $crt.Substring(0, 1).ToLower() + ($crt.Substring(2) -replace '\\', '/')
-  InWsl "cd $BoxPfad && docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt '$crtWsl'" | Out-Null
+  # K2b.19: namensbeschraenkter Root aus volumes/caddy-ca; aeltere Boxen: Caddys eigener Root.
+  if (Test-Path $crt) { Remove-Item $crt -Force }
+  InWsl "cd $BoxPfad && if [ -f volumes/caddy-ca/root.crt ]; then cp volumes/caddy-ca/root.crt '$crtWsl'; else docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt '$crtWsl'; fi" | Out-Null
   if (Test-Path $crt) {
+    # Fingerabdruck aus der DATEI (Import-Certificate liefert bei schon vorhandenem Zertifikat ggf. nichts).
+    $neuThumb = (New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 $crt).Thumbprint
     Import-Certificate -FilePath $crt -CertStoreLocation Cert:\LocalMachine\Root | Out-Null
+    # Frueher importierte Roots GENAU dieser Box (anderer Fingerabdruck) entfernen (S-53 Nr. 5) —
+    # nur dieser Name, damit eine zweite Praxura-Box im selben Netz ihren Root behaelt.
+    if ($neuThumb) {
+      Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $_.Subject -eq "CN=Praxura Box CA $hostName" -and $_.Thumbprint -ne $neuThumb } |
+        ForEach-Object { Remove-Item -Path $_.PSPath -Force; Ok "alten Praxura-Root entfernt ($($_.Thumbprint))" }
+    }
     Ok "Zertifikat in Windows als vertrauenswuerdig eingetragen ($crt — diese Datei auch auf Tablets/anderen PCs importieren)"
   } else {
     Warn 'Zertifikat noch nicht vorhanden (caddy startet evtl. noch) — Skript spaeter erneut ausfuehren.'

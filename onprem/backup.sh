@@ -285,9 +285,21 @@ sema_versiyonu_oku() {
 # Praxisrechner/jedes Tablet einmalig als vertrauenswuerdig importiert hat.
 # Kopie erfolgt lokal nach $LOKAL_TMP (nie Klartext auf dem Ziel) und wird
 # direkt in caddy-pki.tar.gz.age verschlüsselt.
+# K2b.19 (O-177): die namensbeschränkte CA liegt in volumes/caddy-ca (Root OHNE
+# Schlüssel + Zwischen-CA mit Schlüssel) — kommt als _praxura-ca/ ins selbe
+# verschlüsselte Archiv. caddy_data/pki ist dann meist leer oder fehlt; das Archiv
+# entsteht trotzdem, sobald eine der beiden Quellen etwas enthält.
+pki_sammeln() {
+  mkdir -p "$LOKAL_TMP/caddy-pki"
+  docker compose cp caddy:/data/caddy/pki/. "$LOKAL_TMP/caddy-pki/" >>"$LOG_FILE" 2>&1 || true
+  if [ -d "$SCRIPT_DIR/volumes/caddy-ca" ] && [ -n "$(ls -A "$SCRIPT_DIR/volumes/caddy-ca" 2>/dev/null)" ]; then
+    cp -a "$SCRIPT_DIR/volumes/caddy-ca" "$LOKAL_TMP/caddy-pki/_praxura-ca"
+  fi
+  [ -n "$(ls -A "$LOKAL_TMP/caddy-pki" 2>/dev/null)" ]
+}
 if [ "$(env_wert CADDY_TLS_MODUS)" = "acmedns" ]; then
   ok "acmedns-Box: keine interne CA, caddy/pki wird bewusst nicht gesichert (S-43/S-47)"
-elif docker compose cp caddy:/data/caddy/pki "$LOKAL_TMP/caddy-pki" >>"$LOG_FILE" 2>&1; then
+elif pki_sammeln; then
   set +e
   tar -czf - -C "$LOKAL_TMP" caddy-pki 2>>"$LOG_FILE" \
     | age -r "$BACKUP_EMPFAENGER" -o "$TMP_DIR/caddy-pki.tar.gz.age" 2>>"$LOG_FILE"

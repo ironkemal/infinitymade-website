@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-08",
  "dateien": 382,
- "funktionen": 3146,
+ "funktionen": 3151,
  "module": [
   "abrechnung",
   "anamnese",
@@ -139088,12 +139088,35 @@
    ]
   },
   {
+   "name": "pki_sammeln",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "onprem/backup.sh",
+   "start": 292,
+   "end": 299,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "onprem/backup.sh"
+   ]
+  },
+  {
    "name": "parmak_izi_dek",
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/backup.sh",
-   "start": 354,
-   "end": 373,
+   "start": 366,
+   "end": 385,
    "lines": 20,
    "spiegelHinweis": null,
    "tables": [],
@@ -139115,8 +139138,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/backup.sh",
-   "start": 374,
-   "end": 386,
+   "start": 386,
+   "end": 398,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -139138,8 +139161,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/backup.sh",
-   "start": 428,
-   "end": 432,
+   "start": 440,
+   "end": 444,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -139161,8 +139184,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/backup.sh",
-   "start": 435,
-   "end": 459,
+   "start": 447,
+   "end": 471,
    "lines": 25,
    "spiegelHinweis": null,
    "tables": [],
@@ -139184,8 +139207,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/backup.sh",
-   "start": 468,
-   "end": 471,
+   "start": 480,
+   "end": 483,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -139207,8 +139230,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/backup.sh",
-   "start": 512,
-   "end": 514,
+   "start": 524,
+   "end": 526,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -139230,8 +139253,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/backup.sh",
-   "start": 515,
-   "end": 558,
+   "start": 527,
+   "end": 570,
    "lines": 44,
    "spiegelHinweis": null,
    "tables": [],
@@ -139302,6 +139325,7 @@
    ],
    "calls": [],
    "calledBy": [
+    "lokale_ca_vorbereiten",
     "onprem/install.sh"
    ]
   },
@@ -139388,6 +139412,8 @@
     "log"
    ],
    "calledBy": [
+    "lokale_ca_vorbereiten",
+    "lokaler_name_pruefen",
     "onprem/install.sh"
    ]
   },
@@ -139500,6 +139526,69 @@
    ],
    "calls": [
     "b64url"
+   ],
+   "calledBy": [
+    "onprem/install.sh"
+   ]
+  },
+  {
+   "name": "lokaler_name_pruefen",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "onprem/install.sh",
+   "start": 733,
+   "end": 751,
+   "lines": 19,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "lib-ip.sh",
+    "lib-setup-jeton.sh",
+    "||",
+    "lib-health.sh"
+   ],
+   "calls": [
+    "fail"
+   ],
+   "calledBy": [
+    "lokale_ca_vorbereiten",
+    "onprem/install.sh"
+   ]
+  },
+  {
+   "name": "lokale_ca_vorbereiten",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "onprem/install.sh",
+   "start": 753,
+   "end": 800,
+   "lines": 48,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "lib-ip.sh",
+    "lib-setup-jeton.sh",
+    "||",
+    "lib-health.sh"
+   ],
+   "calls": [
+    "fail",
+    "lokaler_name_pruefen",
+    "ok"
    ],
    "calledBy": [
     "onprem/install.sh"
@@ -140062,6 +140151,54 @@
    ]
   },
   {
+   "name": "pki_ca_zurueck",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "onprem/restore.sh",
+   "start": 798,
+   "end": 806,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "pki_zurueckspielen"
+   ]
+  },
+  {
+   "name": "pki_zurueckspielen",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "onprem/restore.sh",
+   "start": 810,
+   "end": 817,
+   "lines": 8,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "pki_ca_zurueck"
+   ],
+   "calledBy": [
+    "onprem/restore.sh"
+   ]
+  },
+  {
    "name": "log",
    "kind": "bash-function",
    "lang": "bash",
@@ -140271,8 +140408,8 @@
    "lang": "bash",
    "file": "onprem/update.sh",
    "start": 167,
-   "end": 192,
-   "lines": 26,
+   "end": 206,
+   "lines": 40,
    "spiegelHinweis": null,
    "tables": [],
    "writes": [],
@@ -140303,8 +140440,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 239,
-   "end": 242,
+   "start": 253,
+   "end": 256,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -140330,8 +140467,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 286,
-   "end": 288,
+   "start": 300,
+   "end": 302,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -140357,8 +140494,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 289,
-   "end": 293,
+   "start": 303,
+   "end": 307,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -140384,8 +140521,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 295,
-   "end": 311,
+   "start": 309,
+   "end": 325,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -140414,8 +140551,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 323,
-   "end": 336,
+   "start": 337,
+   "end": 350,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -140443,8 +140580,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 339,
-   "end": 349,
+   "start": 353,
+   "end": 363,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -140470,8 +140607,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 351,
-   "end": 359,
+   "start": 365,
+   "end": 373,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -140497,8 +140634,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 368,
-   "end": 397,
+   "start": 382,
+   "end": 411,
    "lines": 30,
    "spiegelHinweis": null,
    "tables": [],
@@ -140530,8 +140667,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 517,
-   "end": 529,
+   "start": 531,
+   "end": 543,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -140557,8 +140694,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 536,
-   "end": 539,
+   "start": 550,
+   "end": 553,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -140584,8 +140721,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 540,
-   "end": 548,
+   "start": 554,
+   "end": 562,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -155543,7 +155680,7 @@
   {
    "name": "kanonischer_meta_text",
    "orte": [
-    "onprem/backup.sh:428",
+    "onprem/backup.sh:440",
     "onprem/restore.sh:286"
    ],
    "aynalar": []
@@ -155617,7 +155754,7 @@
   {
    "name": "meta_hmac_berechnen",
    "orte": [
-    "onprem/backup.sh:435",
+    "onprem/backup.sh:447",
     "onprem/restore.sh:294"
    ],
    "aynalar": []
@@ -155729,7 +155866,7 @@
   {
    "name": "parmak_izi_db_taraf",
    "orte": [
-    "onprem/backup.sh:374",
+    "onprem/backup.sh:386",
     "onprem/restore.sh:464"
    ],
    "aynalar": []
@@ -155737,7 +155874,7 @@
   {
    "name": "parmak_izi_dek",
    "orte": [
-    "onprem/backup.sh:354",
+    "onprem/backup.sh:366",
     "onprem/restore.sh:456"
    ],
    "aynalar": []

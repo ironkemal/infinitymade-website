@@ -25,6 +25,15 @@
 #  (O-55, Feature-Entscheidung separat offen).
 #
 
+# ── Globale Optionen (K2b.19, O-177 / guvenlik S-53) ─────────────────────────
+# pki.caddy schreibt install.sh NUR bei klassisch+internal ("eigene Adresse"):
+# namensbeschränkte Root (ohne Schlüssel) + Zwischen-CA aus volumes/caddy-ca.
+# Bei acmedns gibt es die Datei nicht — ein leerer Glob ist nur eine Warnung
+# (gemessen, caddy adapt rc=0), es entsteht keine interne CA.
+{
+	import /etc/praxura/ca/*.caddy
+}
+
 # ── TLS-Konfiguration (K2b.4, O-161 / O-171) ─────────────────────────────────
 # klassisch: bisheriges Verhalten (internal fuer LAN-CA oder E-Mail fuer LE per HTTP).
 # acmedns: Box mit Einrichtungscode, DNS-01 ueber Praxura-Namensdienst.
