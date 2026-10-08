@@ -140211,8 +140211,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 132,
-   "end": 138,
+   "start": 125,
+   "end": 131,
    "lines": 7,
    "spiegelHinweis": null,
    "tables": [],
@@ -140236,12 +140236,75 @@
    ]
   },
   {
+   "name": "mail_gonder_container",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "onprem/update.sh",
+   "start": 141,
+   "end": 156,
+   "lines": 16,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "lib-health.sh",
+    "lib-ip.sh",
+    "lib-setup-jeton.sh"
+   ],
+   "calls": [
+    "warn"
+   ],
+   "calledBy": [
+    "bildirim_degerlendir",
+    "zertifikat_pruefen"
+   ]
+  },
+  {
+   "name": "zertifikat_pruefen",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "onprem/update.sh",
+   "start": 167,
+   "end": 192,
+   "lines": 26,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "lib-health.sh",
+    "lib-ip.sh",
+    "lib-setup-jeton.sh"
+   ],
+   "calls": [
+    "env_wert",
+    "log",
+    "mail_gonder_container",
+    "ok",
+    "warn"
+   ],
+   "calledBy": [
+    "onprem/update.sh"
+   ]
+  },
+  {
    "name": "manifest_feld",
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 180,
-   "end": 183,
+   "start": 239,
+   "end": 242,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -140267,8 +140330,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 227,
-   "end": 229,
+   "start": 286,
+   "end": 288,
    "lines": 3,
    "spiegelHinweis": null,
    "tables": [],
@@ -140294,8 +140357,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 230,
-   "end": 234,
+   "start": 289,
+   "end": 293,
    "lines": 5,
    "spiegelHinweis": null,
    "tables": [],
@@ -140321,8 +140384,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 236,
-   "end": 252,
+   "start": 295,
+   "end": 311,
    "lines": 17,
    "spiegelHinweis": null,
    "tables": [],
@@ -140351,8 +140414,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 264,
-   "end": 277,
+   "start": 323,
+   "end": 336,
    "lines": 14,
    "spiegelHinweis": null,
    "tables": [],
@@ -140380,8 +140443,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 280,
-   "end": 290,
+   "start": 339,
+   "end": 349,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -140407,8 +140470,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 292,
-   "end": 300,
+   "start": 351,
+   "end": 359,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -140430,42 +140493,12 @@
    ]
   },
   {
-   "name": "mail_gonder_container",
-   "kind": "bash-function",
-   "lang": "bash",
-   "file": "onprem/update.sh",
-   "start": 305,
-   "end": 320,
-   "lines": 16,
-   "spiegelHinweis": null,
-   "tables": [],
-   "writes": [],
-   "rpcs": [],
-   "storage": [],
-   "endpoints": [],
-   "modules": [],
-   "uiPfad": [],
-   "gemeinsam": false,
-   "sources": [
-    "lib-health.sh",
-    "lib-ip.sh",
-    "lib-setup-jeton.sh"
-   ],
-   "calls": [
-    "warn"
-   ],
-   "calledBy": [
-    "bildirim_degerlendir",
-    "zertifikat_pruefen"
-   ]
-  },
-  {
    "name": "bildirim_degerlendir",
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 327,
-   "end": 356,
+   "start": 368,
+   "end": 397,
    "lines": 30,
    "spiegelHinweis": null,
    "tables": [],
@@ -140493,45 +140526,12 @@
    ]
   },
   {
-   "name": "zertifikat_pruefen",
-   "kind": "bash-function",
-   "lang": "bash",
-   "file": "onprem/update.sh",
-   "start": 374,
-   "end": 399,
-   "lines": 26,
-   "spiegelHinweis": null,
-   "tables": [],
-   "writes": [],
-   "rpcs": [],
-   "storage": [],
-   "endpoints": [],
-   "modules": [],
-   "uiPfad": [],
-   "gemeinsam": false,
-   "sources": [
-    "lib-health.sh",
-    "lib-ip.sh",
-    "lib-setup-jeton.sh"
-   ],
-   "calls": [
-    "env_wert",
-    "log",
-    "mail_gonder_container",
-    "ok",
-    "warn"
-   ],
-   "calledBy": [
-    "onprem/update.sh"
-   ]
-  },
-  {
    "name": "geri_yukle",
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 510,
-   "end": 522,
+   "start": 517,
+   "end": 529,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -140557,8 +140557,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 529,
-   "end": 532,
+   "start": 536,
+   "end": 539,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -140584,8 +140584,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 533,
-   "end": 541,
+   "start": 540,
+   "end": 548,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],
@@ -155034,7 +155034,7 @@
    "orte": [
     "onprem/backup.sh:142",
     "onprem/restore.sh:93",
-    "onprem/update.sh:132"
+    "onprem/update.sh:125"
    ],
    "aynalar": []
   },

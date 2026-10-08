@@ -4,7 +4,7 @@
     { "yol": "docker-compose.yml", "sha256": "3fc9fd2bee7d4b4a09c534203e6d095a2603749015c287f70e987ec44f42770a" },
     { "yol": ".env.template", "sha256": "4d15ce9a6e8121d2545b6494caa2457e357e6a4f97951d6a137308eaed8d2bc9" },
     { "yol": "install.sh", "sha256": "f6b83d6c8799857f36b87addea24de13b24900374ab08383371f053b4fcdb5ee" },
-    { "yol": "update.sh", "sha256": "f66cb6c2e3af9ed20919241b534713e7160b51e1150ad95c47651133b0cd1b67" },
+    { "yol": "update.sh", "sha256": "3dcdc5a3c7b550db2a3c41a6b254d79a2fbb84cad48bb621dda15ad1da10b5ad" },
     { "yol": "lib-health.sh", "sha256": "ac3df970f980f9810db85e9b8daf78f1b63d7cc287c73b83a5ae77eeeb37b819" },
     { "yol": "lib-ip.sh", "sha256": "3e01908849fbe18da0c5a64250404c20935f6fe47046f67e210f0f0227b70db8" },
     { "yol": "lib-setup-jeton.sh", "sha256": "17d41626ecb01aac61cf253100bea4c73a4631d8b6f96189fa1df927fd72f5f5" },

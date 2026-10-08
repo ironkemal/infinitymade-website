@@ -190,6 +190,11 @@ test('O-172: kein HSTS 2 Jahre mehr; update.sh senkt den Altwert und prüft den 
   assert.match(upd, /HSTS_MAX_AGE\)" = "63072000" \]/, 'Senkung nur für den exakten Altwert');
   assert.match(upd, /-checkend 1814400/, '21 Tage');
   assert.match(upd, /= "internal" \]; \}; then return 0; fi/, 'internal (12-h-Blatt) wird nicht bewertet');
-  assert.ok(upd.indexOf('zertifikat_pruefen || true') < upd.indexOf('# ── Schritt 3 — Durak-Tor'), 'vor dem Durak-Tor');
+  // guvenlik S-47: frühe Ausstiege (Disk-Gate, Pull, Bundle) dürfen die Warnung nicht stummschalten
+  const iPruef = upd.indexOf('zertifikat_pruefen || true');
+  assert.ok(iPruef > upd.indexOf('if [ ! -f "$ENV_FILE" ]'), 'nach Lock/.env-Prüfung');
+  assert.ok(iPruef < upd.indexOf('platz_frei_pct=$(df'), 'vor dem Disk-Gate');
+  assert.ok(iPruef < upd.indexOf('# ── Schritt 1 — nur das eigene Image ziehen'), 'vor dem Pull');
+  assert.ok(upd.indexOf('mail_gonder_container() {') < iPruef, 'Mailfunktion vorher definiert');
   assert.match(mail, /zertifikat_laeuft_ab:/);
 });

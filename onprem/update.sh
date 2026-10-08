@@ -115,13 +115,6 @@ if [ ! -f "$ENV_FILE" ]; then
   exit 0
 fi
 
-platz_frei_pct=$(df -P "$SCRIPT_DIR" | awk 'NR==2 {print 100 - $5}' | tr -d '%')
-if [ -n "$platz_frei_pct" ] && [ "$platz_frei_pct" -lt 8 ]; then
-  fehler "Zu wenig freier Speicher für ein sicheres Update" "${platz_frei_pct}% frei" "mindestens 8% frei" \
-    "Speicher freigeben (alte Backups, Docker-Images: 'docker system prune'), dann erneut versuchen."
-  exit 1
-fi
-
 log "[1/11] update.sh gestartet ($([ "${1:-}" = "--jetzt" ] && echo "manuell" || echo "Timer"))"
 
 # shellcheck source=./lib-health.sh
@@ -139,6 +132,72 @@ env_wert() {
 API_IMAGE="$(env_wert PRAXURA_API_IMAGE)"
 if [ -z "$API_IMAGE" ]; then
   fehler "PRAXURA_API_IMAGE fehlt in .env" "leer" "ein Image-Tag" "install.sh erneut prüfen — diese Zeile sollte dort geschrieben worden sein."
+  exit 1
+fi
+
+# Önce çalışan konteynerin içinden dener (hızlı yol). `bakim_modu`'da `api`
+# sağlıksız/durmuş olabilir — o zaman `run --rm` ile imajdan tek seferlik bir
+# konteyner başlatır (servis sağlıklı olmasa bile image kendisi çalışır).
+mail_gonder_container() {
+  local sonuc="$1" eposta isim
+  [ -f "$OWNER_MAIL_CACHE" ] || { warn "  bildirim: owner e-postası önbellekte yok (henüz hiç 'ok' koşusu olmamış olabilir), mail atlanıyor"; return 1; }
+  eposta="$(grep -oE '"email"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || echo '')"
+  isim="$(grep -oE '"business_name"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || echo '')"
+  [ -n "$eposta" ] || { warn "  bildirim: önbellek bozuk/boş, mail atlanıyor"; return 1; }
+  if timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1; then
+    return 0
+  fi
+  warn "  bildirim: 'exec' başarısız oldu (api container sağlıksız olabilir) — 'run --rm' ile tek seferlik deneniyor"
+  # --pull never: compose'un `pull_policy: always`'ı olmasa bile 'run' varsayılan
+  # olarak önce dışarı çıkmayı dener — internetsiz kutu (bakim_modu'nun en
+  # olası eşlikçisi) bu yüzden burada da takılırdı (onprem-Gegenlesen 13.09.2026).
+  # İmaj zaten yerel: konteyner ondan koşuyordu.
+  timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1
+}
+
+# ── Zertifikats-Ablauf (O-172, guvenlik S-47 Bed. 5, 08.10.2026) ───────────
+# Gemessen wird das Zertifikat, das ein Browser bekommt (s_client gegen die
+# eigene Box), nicht eine Datei in caddy_data (Caddys internes Layout).
+# Steht VOR Schritt 1 (guvenlik S-47, 08.10.2026): Disk-Gate, fehlgeschlagener
+# Pull oder fehlendes Bundle beenden den Lauf früh — die Warnung darf dann nicht schweigen.
+# Nur Let's-Encrypt-Modi: bei 'internal' lebt das Blattzertifikat ~12 h, die
+# 21-Tage-Schwelle würde jede Nacht auslösen. Eigener Zustand — NICHT
+# son-bildirim.json, sonst überschriebe das "ok" des Updates den Alarm (Entwarnung).
+ZERT_STAND="$STAND_DIR/son-zertifikat-bildirim.json"
+zertifikat_pruefen() {
+  local modus tls_arg host pem simdi letzte
+  modus="$(env_wert CADDY_TLS_MODUS)"; tls_arg="$(env_wert CADDY_TLS_ARG)"
+  if [ "$modus" != "acmedns" ] && { [ -z "$tls_arg" ] || [ "$tls_arg" = "internal" ]; }; then return 0; fi
+  host="$(env_wert SITE_URL)"; host="${host#https://}"; host="${host%%/*}"
+  [ -n "$host" ] || return 0
+  pem="$(timeout 15 openssl s_client -connect 127.0.0.1:443 -servername "$host" </dev/null 2>/dev/null \
+    | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' || true)"
+  if [ -z "$pem" ]; then
+    log "  Zertifikat: nicht lesbar (Caddy aus?) — keine Bewertung"
+    return 0
+  fi
+  if printf '%s\n' "$pem" | openssl x509 -noout -checkend 1814400 >/dev/null 2>&1; then
+    rm -f "$ZERT_STAND"
+    log "  Zertifikat: länger als 21 Tage gültig"
+    return 0
+  fi
+  warn "  Zertifikat läuft in < 21 Tagen ab ($(printf '%s\n' "$pem" | openssl x509 -noout -enddate 2>/dev/null))"
+  simdi="$(date -u +%s)"
+  letzte="$(grep -oE '[0-9]+' "$ZERT_STAND" 2>/dev/null | head -1 || true)"
+  if [ -n "$letzte" ] && [ $(( simdi - letzte )) -lt "$BILDIRIM_ARALIK_SANIYE" ]; then return 0; fi
+  if mail_gonder_container zertifikat_laeuft_ab; then
+    printf '{ "son_gonderim_epoch": %s }\n' "$simdi" > "$ZERT_STAND"
+    ok "  Zertifikats-Warnung per Mail verschickt"
+  fi
+}
+zertifikat_pruefen || true
+
+# Disk-Gate erst NACH der Zertifikatsprüfung (guvenlik S-47, 08.10.2026): ein
+# voller Datenträger darf die Ablaufwarnung nicht stummschalten.
+platz_frei_pct=$(df -P "$SCRIPT_DIR" | awk 'NR==2 {print 100 - $5}' | tr -d '%')
+if [ -n "$platz_frei_pct" ] && [ "$platz_frei_pct" -lt 8 ]; then
+  fehler "Zu wenig freier Speicher für ein sicheres Update" "${platz_frei_pct}% frei" "mindestens 8% frei" \
+    "Speicher freigeben (alte Backups, Docker-Images: 'docker system prune'), dann erneut versuchen."
   exit 1
 fi
 
@@ -299,25 +358,7 @@ EOF
   mv "$NOTIFY_FILE.tmp" "$NOTIFY_FILE"
 }
 
-# Önce çalışan konteynerin içinden dener (hızlı yol). `bakim_modu`'da `api`
-# sağlıksız/durmuş olabilir — o zaman `run --rm` ile imajdan tek seferlik bir
-# konteyner başlatır (servis sağlıklı olmasa bile image kendisi çalışır).
-mail_gonder_container() {
-  local sonuc="$1" eposta isim
-  [ -f "$OWNER_MAIL_CACHE" ] || { warn "  bildirim: owner e-postası önbellekte yok (henüz hiç 'ok' koşusu olmamış olabilir), mail atlanıyor"; return 1; }
-  eposta="$(grep -oE '"email"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || echo '')"
-  isim="$(grep -oE '"business_name"[[:space:]]*:[[:space:]]*"[^"]*"' "$OWNER_MAIL_CACHE" 2>/dev/null | sed -E 's/.*"([^"]*)"$/\1/' || echo '')"
-  [ -n "$eposta" ] || { warn "  bildirim: önbellek bozuk/boş, mail atlanıyor"; return 1; }
-  if timeout 30 docker compose exec -T api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1; then
-    return 0
-  fi
-  warn "  bildirim: 'exec' başarısız oldu (api container sağlıksız olabilir) — 'run --rm' ile tek seferlik deneniyor"
-  # --pull never: compose'un `pull_policy: always`'ı olmasa bile 'run' varsayılan
-  # olarak önce dışarı çıkmayı dener — internetsiz kutu (bakim_modu'nun en
-  # olası eşlikçisi) bu yüzden burada da takılırdı (onprem-Gegenlesen 13.09.2026).
-  # İmaj zaten yerel: konteyner ondan koşuyordu.
-  timeout 30 docker compose run --rm --no-deps --pull never api node setup/update-alarm-mail.mjs "$sonuc" "$eposta" "$isim" >>"$LOG_FILE" 2>&1
-}
+# mail_gonder_container(): oben vor Schritt 1 definiert (O-172 — die Zertifikatsprüfung braucht sie früh).
 
 # Ne zaman gönderilir: (a) durum bir öncekinden FARKLIysa, (b) hâlâ aynı
 # "dur" dalındaysa ve son BAŞARILI gönderimden bu yana 7 gün geçtiyse (owner
@@ -364,40 +405,6 @@ bildirim_degerlendir() {
 # fonksiyon zaten `return 0` yapıp eski önbelleği korur, kayıp yok.
 owner_bilgisini_guncelle || true
 
-# ── Zertifikats-Ablauf (O-172, guvenlik S-47 Bed. 5, 08.10.2026) ───────────
-# Gemessen wird das Zertifikat, das ein Browser bekommt (s_client gegen die
-# eigene Box), nicht eine Datei in caddy_data (Caddys internes Layout).
-# Nur Let's-Encrypt-Modi: bei 'internal' lebt das Blattzertifikat ~12 h, die
-# 21-Tage-Schwelle würde jede Nacht auslösen. Eigener Zustand — NICHT
-# son-bildirim.json, sonst überschriebe das "ok" des Updates den Alarm (Entwarnung).
-ZERT_STAND="$STAND_DIR/son-zertifikat-bildirim.json"
-zertifikat_pruefen() {
-  local modus tls_arg host pem simdi letzte
-  modus="$(env_wert CADDY_TLS_MODUS)"; tls_arg="$(env_wert CADDY_TLS_ARG)"
-  if [ "$modus" != "acmedns" ] && { [ -z "$tls_arg" ] || [ "$tls_arg" = "internal" ]; }; then return 0; fi
-  host="$(env_wert SITE_URL)"; host="${host#https://}"; host="${host%%/*}"
-  [ -n "$host" ] || return 0
-  pem="$(timeout 15 openssl s_client -connect 127.0.0.1:443 -servername "$host" </dev/null 2>/dev/null \
-    | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' || true)"
-  if [ -z "$pem" ]; then
-    log "  Zertifikat: nicht lesbar (Caddy aus?) — keine Bewertung"
-    return 0
-  fi
-  if printf '%s\n' "$pem" | openssl x509 -noout -checkend 1814400 >/dev/null 2>&1; then
-    rm -f "$ZERT_STAND"
-    log "  Zertifikat: länger als 21 Tage gültig"
-    return 0
-  fi
-  warn "  Zertifikat läuft in < 21 Tagen ab ($(printf '%s\n' "$pem" | openssl x509 -noout -enddate 2>/dev/null))"
-  simdi="$(date -u +%s)"
-  letzte="$(grep -oE '[0-9]+' "$ZERT_STAND" 2>/dev/null | head -1 || true)"
-  if [ -n "$letzte" ] && [ $(( simdi - letzte )) -lt "$BILDIRIM_ARALIK_SANIYE" ]; then return 0; fi
-  if mail_gonder_container zertifikat_laeuft_ab; then
-    printf '{ "son_gonderim_epoch": %s }\n' "$simdi" > "$ZERT_STAND"
-    ok "  Zertifikats-Warnung per Mail verschickt"
-  fi
-}
-zertifikat_pruefen || true
 
 # ── Schritt 3 — Durak-Tor ────────────────────────────────────────────────────
 if [ "$BUNDLE_DURAK" = "true" ]; then
