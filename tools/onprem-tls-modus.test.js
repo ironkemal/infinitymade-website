@@ -13,7 +13,7 @@ const composePfad = path.join(repoRoot, 'onprem', 'docker-compose.yml');
 const envTemplatePfad = path.join(repoRoot, 'onprem', '.env.template');
 const backupPfad = path.join(repoRoot, 'onprem', 'backup.sh');
 const installPfad = path.join(repoRoot, 'onprem', 'install.sh');
-const ps1Pfad = path.join(repoRoot, 'onprem', 'windows', 'praxura-installieren.ps1');
+const ps1Pfad = path.join(repoRoot, 'installieren', 'install.ps1');
 
 /**
  * Hilfsfunktion: extrahiert den Compose-Dienstblock ab `^  name:$`
@@ -64,7 +64,8 @@ test('Caddyfile: Snippet (tls_acmedns) nutzt Let\'s Encrypt + dns acmedns, schli
   const inhalt = fs.readFileSync(caddyfilePfad, 'utf8');
   const acmednsMatch = inhalt.match(/^\(tls_acmedns\) \{\r?\n[\s\S]*?\r?\n\}/m);
   assert.ok(acmednsMatch, 'Snippet (tls_acmedns) muss im Caddyfile existieren');
-  const snippet = acmednsMatch[0];
+  // Kommentarzeilen zählen nicht (K2b.4b: der test_dir-Kommentar erklärt die Staging-Schleife)
+  const snippet = acmednsMatch[0].split(/\r?\n/).filter((z) => !/^\s*#/.test(z)).join('\n');
 
   // LE Directory und dns acmedns vorhanden
   assert.ok(snippet.includes('dir https://acme-v02.api.letsencrypt.org/directory'), 'Snippet muss LE-Directory enthalten');

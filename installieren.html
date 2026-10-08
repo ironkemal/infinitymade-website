@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ===== SEO / Meta ===== -->
+  <title>Praxura-Box installieren — Praxura</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="author" content="Praxura" />
+
+  <!-- ===== Favicons ===== -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="theme-color" content="#F8F3E8" />
+
+  <!-- ===== Typography ===== -->
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+
+  <!-- ===== Shared design system ===== -->
+  <link rel="stylesheet" href="assets/system.css?v=20261001" />
+
+  <!-- ===== Page-specific styles ===== -->
+  <style>
+    .install-lede {
+      font-size: 1.12rem;
+      line-height: 1.65;
+      color: var(--ink-soft);
+      max-width: 44rem;
+      margin-bottom: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    /* Hinweis für macOS / iOS / Android */
+    .os-notice {
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--bronze);
+      border-radius: 14px;
+      padding: 1.2rem 1.4rem;
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: var(--ink-soft);
+      box-shadow: 0 2px 8px -2px rgba(26, 22, 17, 0.04);
+    }
+    .os-notice-icon {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--bg-deep);
+      color: var(--bronze-deep);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      margin-top: 0.1rem;
+    }
+    .os-notice strong {
+      color: var(--ink);
+      display: block;
+      margin-bottom: 0.2rem;
+      font-size: 1rem;
+    }
+
+    /* Installationsblöcke */
+    .install-blocks {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      margin-bottom: 3.5rem;
+    }
+    .install-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 2.2rem 2.4rem;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.7) inset,
+        0 12px 30px -16px rgba(26, 22, 17, 0.08),
+        0 2px 6px -2px rgba(26, 22, 17, 0.03);
+      position: relative;
+      transition: border-color 240ms ease, box-shadow 240ms ease;
+    }
+    .install-card.is-highlighted {
+      border: 2px solid var(--bronze);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.8) inset,
+        0 16px 36px -12px rgba(107, 85, 56, 0.2),
+        0 4px 12px -3px rgba(26, 22, 17, 0.08);
+    }
+    .install-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.1rem;
+      flex-wrap: wrap;
+    }
+    .install-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin: 0;
+    }
+    .install-card-icon {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      color: var(--bronze);
+      background: var(--bg-warm);
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+    .install-card-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+    .install-badge {
+      display: none;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: var(--bg-warm);
+      color: var(--bronze-deep);
+      border: 1px solid rgba(107, 85, 56, 0.25);
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .install-card.is-highlighted .install-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg-deep);
+    }
+    .install-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--bronze);
+    }
+    .install-card-desc {
+      font-size: 0.98rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Code-Box */
+    .code-box {
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      margin: 0.85rem 0 1rem;
+      border: 1px solid rgba(26, 22, 17, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      max-width: 100%;
+      box-sizing: border-box;
+      box-shadow: 0 4px 16px -4px rgba(26, 22, 17, 0.25);
+    }
+    .code-box pre {
+      margin: 0;
+      padding: 0;
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .code-box code {
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      color: var(--bg);
+      white-space: pre;
+      display: inline-block;
+    }
+    .copy-btn {
+      flex-shrink: 0;
+      background: rgba(248, 243, 232, 0.12);
+      color: var(--bg);
+      border: 1px solid rgba(248, 243, 232, 0.22);
+      border-radius: 8px;
+      padding: 0.55rem 0.95rem;
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 120ms ease;
+      white-space: nowrap;
+    }
+    .copy-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover {
+      background: rgba(248, 243, 232, 0.22);
+      border-color: rgba(248, 243, 232, 0.38);
+    }
+    .copy-btn:active {
+      transform: scale(0.97);
+    }
+    .copy-btn.is-copied {
+      background: var(--emerald-deep);
+      border-color: var(--sage);
+      color: var(--bg);
+    }
+
+    /* Abschnitte */
+    .install-section {
+      margin-top: 4.5rem;
+      padding-top: 3rem;
+      border-top: 1px solid var(--line);
+    }
+    .install-section h2 {
+      font-family: var(--serif);
+      font-size: 1.85rem;
+      font-weight: 400;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+      margin-bottom: 0.8rem;
+    }
+    .install-section-intro {
+      font-size: 1.02rem;
+      line-height: 1.65;
+      color: var(--ink-soft);
+      max-width: 44rem;
+      margin-bottom: 1.8rem;
+    }
+
+    /* Voraussetzungen */
+    .req-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-top: 1.8rem;
+    }
+    .req-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.6rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .req-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--bg-warm);
+      color: var(--bronze);
+      display: grid;
+      place-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .req-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+    .req-title {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .req-body {
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: var(--ink-soft);
+    }
+    .req-body strong {
+      color: var(--ink);
+    }
+
+    /* Lieber erst prüfen? */
+    .verify-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    .verify-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.8rem 1.6rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .verify-card h3 {
+      font-family: var(--serif);
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin: 0 0 1.2rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .verify-step {
+      margin-bottom: 1.2rem;
+    }
+    .verify-step:last-child {
+      margin-bottom: 0;
+    }
+    .verify-step-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-quiet);
+      margin-bottom: 0.35rem;
+      display: block;
+    }
+    .verify-subtext {
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: var(--ink-soft);
+      margin-top: 0.4rem;
+    }
+    .verify-subtext code {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      color: var(--ink);
+    }
+
+    .verify-callout {
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1.3rem 1.6rem;
+      margin-top: 2rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1.1rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+    }
+    .verify-callout-icon {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--bg-deep);
+      color: var(--bronze-deep);
+      display: grid;
+      place-items: center;
+      margin-top: 0.1rem;
+    }
+    .verify-callout-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+    .verify-callout strong {
+      color: var(--ink);
+      font-size: 1rem;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    .verify-callout a {
+      color: var(--bronze);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 500;
+      transition: color 180ms ease;
+    }
+    .verify-callout a:hover {
+      color: var(--bronze-deep);
+    }
+
+    /* Support Box */
+    .install-help {
+      margin-top: 4rem;
+      padding: 1.8rem 2rem;
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+    }
+    .install-help strong {
+      color: var(--ink);
+    }
+    .install-help a {
+      color: var(--bronze);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 500;
+      transition: color 180ms ease;
+    }
+    .install-help a:hover {
+      color: var(--bronze-deep);
+    }
+
+    /* Responsive Anpassungen */
+    @media (max-width: 900px) {
+      .req-grid {
+        grid-template-columns: 1fr;
+      }
+      .verify-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 600px) {
+      .install-card {
+        padding: 1.5rem 1.15rem;
+      }
+      .code-box {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 0.9rem;
+      }
+      .code-box pre {
+        width: 100%;
+        padding-bottom: 0.35rem;
+      }
+      .copy-btn {
+        align-self: flex-end;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ────────────── Nav ────────────── -->
+<nav class="nav" id="nav" aria-label="Hauptnavigation">
+  <a href="/" class="nav-brand">Prax<em>ura</em></a>
+  <a href="/#services" class="nav-link">Leistungen</a>
+  <a href="/praxis.html" class="nav-link">Praxura</a>
+  <a href="/blog/" class="nav-link">Insights</a>
+  <a href="/login.html" class="nav-login">Login</a>
+  <a href="/#kontakt" class="nav-cta">
+    Analysegespräch
+    <span class="nav-cta-circle" aria-hidden="true">↗</span>
+  </a>
+</nav>
+
+<!-- ────────────── Main Content ────────────── -->
+<main class="doc">
+  <span class="doc-eyebrow">
+    <span class="doc-eyebrow-dot"></span>
+    Praxura · Setup &amp; Installation
+  </span>
+
+  <h1>Praxura-Box <em>installieren</em></h1>
+
+  <p class="install-lede">
+    Die Box läuft auf einem Windows-PC oder Linux-Server in Ihrer Praxis oder auf Ihrem eigenen Hetzner-Server. Für die Einrichtung brauchen Sie Ihren Einrichtungscode; die ausführliche Anleitung erhalten Sie zusammen mit dem Code.
+  </p>
+
+  <!-- Hinweis für macOS / iOS / Android (per JS gesteuert) -->
+  <div id="os-notice" class="os-notice" style="display: none;" role="note">
+    <div class="os-notice-icon" aria-hidden="true">ℹ</div>
+    <div>
+      <strong>Hinweis für dieses Gerät</strong>
+      Auf diesem Gerät wird die Box nicht installiert — es nutzt sie später nur im Browser. Installieren Sie die Box auf einem Windows-PC oder Linux-Server.
+    </div>
+  </div>
+
+  <!-- Installationsblöcke (Reihenfolge passt sich per JS dem Betriebssystem an) -->
+  <div id="install-blocks" class="install-blocks">
+    <!-- Windows-Block -->
+    <section id="block-windows" class="install-card" aria-labelledby="heading-windows">
+      <div class="install-card-head">
+        <h2 id="heading-windows" class="install-card-title">
+          <span class="install-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
+            </svg>
+          </span>
+          Windows
+        </h2>
+        <span class="install-badge">
+          <span class="install-badge-dot"></span>
+          <span class="install-badge-text">Erkanntes System</span>
+        </span>
+      </div>
+      <p class="install-card-desc">
+        PowerShell als Administrator öffnen (Startmenü → PowerShell → Rechtsklick → Als Administrator ausführen) und diese Zeile einfügen:
+      </p>
+      <div class="code-box">
+        <pre><code id="code-win">&amp; ([scriptblock]::Create((irm https://praxura.de/install.ps1)))</code></pre>
+        <button type="button" class="copy-btn" data-target="code-win" aria-label="PowerShell-Befehl kopieren">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span class="copy-label">Kopieren</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Linux-Block (auch Hetzner Cloud) -->
+    <section id="block-linux" class="install-card" aria-labelledby="heading-linux">
+      <div class="install-card-head">
+        <h2 id="heading-linux" class="install-card-title">
+          <span class="install-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 17 10 11 4 5"></polyline>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
+            </svg>
+          </span>
+          Linux (auch Hetzner Cloud)
+        </h2>
+        <span class="install-badge">
+          <span class="install-badge-dot"></span>
+          <span class="install-badge-text">Erkanntes System</span>
+        </span>
+      </div>
+      <p class="install-card-desc">
+        Terminal bzw. SSH-Sitzung auf Ihrem Linux-Server öffnen und diesen Befehl ausführen:
+      </p>
+      <div class="code-box">
+        <pre><code id="code-linux">curl --proto '=https' --tlsv1.2 -fsSL https://praxura.de/install.sh | sudo bash</code></pre>
+        <button type="button" class="copy-btn" data-target="code-linux" aria-label="Linux-Befehl kopieren">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span class="copy-label">Kopieren</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ────────────── Abschnitt: Voraussetzungen ────────────── -->
+  <section class="install-section" aria-labelledby="heading-voraussetzungen">
+    <h2 id="heading-voraussetzungen">Voraussetzungen</h2>
+    <p class="install-section-intro">
+      Für einen reibungslosen Betrieb der Praxura-Box sollte das Zielsystem folgende Mindestanforderungen erfüllen:
+    </p>
+
+    <div class="req-grid">
+      <div class="req-card">
+        <div class="req-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <rect x="9" y="9" width="6" height="6"/>
+            <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
+          </svg>
+        </div>
+        <div class="req-title">Prozessor (CPU)</div>
+        <div class="req-body">
+          <strong>64-Bit Intel oder AMD</strong> (x86_64 / amd64). Kein ARM (keine ARM-Prozessoren, kein Raspberry Pi).
+        </div>
+      </div>
+
+      <div class="req-card">
+        <div class="req-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <div class="req-title">Betriebssystem</div>
+        <div class="req-body">
+          <strong>Windows 10 / 11 64-Bit</strong> mit im BIOS/UEFI aktivierter Virtualisierung, oder <strong>Ubuntu 22.04 / 24.04</strong> bzw. <strong>Debian 12</strong>.
+        </div>
+      </div>
+
+      <div class="req-card">
+        <div class="req-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12H2"/>
+            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+            <line x1="6" y1="16" x2="6.01" y2="16"/>
+            <line x1="10" y1="16" x2="10.01" y2="16"/>
+          </svg>
+        </div>
+        <div class="req-title">Ressourcen</div>
+        <div class="req-body">
+          Mindestens <strong>4&nbsp;GB RAM</strong> und <strong>40&nbsp;GB freier Speicherplatz</strong> auf der internen Festplatte bzw. SSD.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────── Abschnitt: Lieber erst prüfen? ────────────── -->
+  <section class="install-section" aria-labelledby="heading-pruefen">
+    <h2 id="heading-pruefen">Lieber erst prüfen?</h2>
+    <p class="install-section-intro">
+      Sie möchten das Installationsskript vor dem Ausführen überprüfen? Laden Sie die Datei separat herunter und gleichen Sie vor dem Start die SHA-256-Prüfsumme ab.
+    </p>
+
+    <div class="verify-grid">
+      <!-- Linux Prüfung -->
+      <div class="verify-card">
+        <h3>Linux (auch Hetzner Cloud)</h3>
+
+        <div class="verify-step">
+          <span class="verify-step-label">1. Skript herunterladen</span>
+          <div class="code-box">
+            <pre><code id="code-chk-linux-dl">curl --proto '=https' --tlsv1.2 -fsSL -O https://praxura.de/install.sh</code></pre>
+            <button type="button" class="copy-btn" data-target="code-chk-linux-dl" aria-label="Download-Befehl kopieren">
+              <span class="copy-label">Kopieren</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="verify-step">
+          <span class="verify-step-label">2. Prüfsumme vergleichen</span>
+          <div class="code-box">
+            <pre><code id="code-chk-linux-hash">sha256sum install.sh</code></pre>
+            <button type="button" class="copy-btn" data-target="code-chk-linux-hash" aria-label="Hash-Befehl kopieren">
+              <span class="copy-label">Kopieren</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="verify-step">
+          <span class="verify-step-label">3. Ausführen</span>
+          <div class="code-box">
+            <pre><code id="code-chk-linux-run">sudo bash install.sh</code></pre>
+            <button type="button" class="copy-btn" data-target="code-chk-linux-run" aria-label="Ausführungs-Befehl kopieren">
+              <span class="copy-label">Kopieren</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Windows Prüfung -->
+      <div class="verify-card">
+        <h3>Windows</h3>
+
+        <div class="verify-step">
+          <span class="verify-step-label">1. Skript herunterladen</span>
+          <div class="code-box">
+            <pre><code id="code-chk-win-dl">irm https://praxura.de/install.ps1 -OutFile install.ps1</code></pre>
+            <button type="button" class="copy-btn" data-target="code-chk-win-dl" aria-label="Download-Befehl kopieren">
+              <span class="copy-label">Kopieren</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="verify-step">
+          <span class="verify-step-label">2. Prüfsumme vergleichen</span>
+          <div class="code-box">
+            <pre><code id="code-chk-win-hash">Get-FileHash .\install.ps1</code></pre>
+            <button type="button" class="copy-btn" data-target="code-chk-win-hash" aria-label="Hash-Befehl kopieren">
+              <span class="copy-label">Kopieren</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="verify-step">
+          <span class="verify-step-label">3. Ausführen</span>
+          <p class="verify-subtext">
+            In der Administrator-PowerShell <code>.\install.ps1</code> ausführen — oder per Rechtsklick auf die Datei <code>install.ps1</code> → <em>Mit PowerShell ausführen</em> (als Administrator).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Callout zu GitHub Prüfsummen -->
+    <div class="verify-callout">
+      <div class="verify-callout-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      <div>
+        <strong>Prüfsummen auf separatem Weg prüfen</strong>
+        Die gültige SHA-256-Prüfsumme steht bewusst <strong>nicht</strong> auf dieser Seite, sondern in den <a href="https://github.com/ironkemal/infinitymade-website/releases" target="_blank" rel="noopener noreferrer">Versionshinweisen auf GitHub</a> oder kommt von uns auf separatem Weg (z.&nbsp;B. zusammen mit Ihrem persönlichen Einrichtungscode).
+      </div>
+    </div>
+  </section>
+
+  <!-- Support Box -->
+  <div class="install-help">
+    <strong>Fragen zur Bereitstellung?</strong>
+    Wenn Sie Unterstützung bei der Installation oder der Wahl des passenden Servers benötigen, erreichen Sie uns per E-Mail unter <a href="mailto:kontakt@praxura.de">kontakt@praxura.de</a>.
+  </div>
+</main>
+
+<!-- ────────────── Footer ────────────── -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Prax<em>ura</em></div>
+      <div class="footer-tagline">Software, die Zeit zurückgibt — speziell für Heilmittel-Praxen in Deutschland.</div>
+    </div>
+    <div class="footer-col">
+      <h4>Produkte</h4>
+      <ul>
+        <li><a href="/praxis.html">Praxura</a></li>
+        <li><a href="/heilmittelabrechnung-software.html">§ 302-Abrechnung</a></li>
+        <li><a href="/ti-anbindung-heilmittel.html">TI-Anbindung</a></li>
+        <li><a href="/blog/">Insights</a></li>
+        <li><a href="/#kontakt">Analysegespräch</a></li>
+        <li><a href="/login.html">Login</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><a href="/impressum.html">Impressum</a></li>
+        <li><a href="/datenschutz.html">Datenschutz</a></li>
+        <li><a href="/datenschutz.html#cookie-einstellungen">Cookie-Einstellungen</a></li>
+        <li><a href="/agb.html">AGB</a></li>
+        <li><a href="/dpa.html">AVV / DPA</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Yavuz Kemal Demir · Made in NRW</span>
+    <span>Siegburg · Köln · Bonn</span>
+  </div>
+</footer>
+
+<!-- ────────────── Scripts ────────────── -->
+<script>
+  (function () {
+    // 1. Geräteerkennung per JS
+    try {
+      var rawPlatform = (navigator.userAgentData && navigator.userAgentData.platform)
+        || navigator.platform
+        || navigator.userAgent
+        || '';
+      var p = (rawPlatform || '').toLowerCase();
+      var ua = (navigator.userAgent || '').toLowerCase();
+
+      var isIOS = /iphone|ipad|ipod/.test(p) || /iphone|ipad|ipod/.test(ua) || (p.indexOf('mac') !== -1 && navigator.maxTouchPoints > 1);
+      var isAndroid = p.indexOf('android') !== -1 || ua.indexOf('android') !== -1;
+      var isMac = !isIOS && (p.indexOf('mac') !== -1 || ua.indexOf('macintosh') !== -1 || ua.indexOf('mac os') !== -1);
+      var isWindows = p.indexOf('win') !== -1 || ua.indexOf('windows') !== -1;
+      var isLinux = !isAndroid && (p.indexOf('linux') !== -1 || ua.indexOf('linux') !== -1);
+
+      var winBlock = document.getElementById('block-windows');
+      var linuxBlock = document.getElementById('block-linux');
+      var container = document.getElementById('install-blocks');
+      var notice = document.getElementById('os-notice');
+
+      if (isWindows && winBlock && container) {
+        container.insertBefore(winBlock, linuxBlock);
+        winBlock.classList.add('is-highlighted');
+        var badgeWin = winBlock.querySelector('.install-badge-text');
+        if (badgeWin) badgeWin.textContent = 'Empfohlen für Ihr System';
+      } else if (isLinux && linuxBlock && container && winBlock) {
+        container.insertBefore(linuxBlock, winBlock);
+        linuxBlock.classList.add('is-highlighted');
+        var badgeLinux = linuxBlock.querySelector('.install-badge-text');
+        if (badgeLinux) badgeLinux.textContent = 'Empfohlen für Ihr System';
+      } else if (isMac || isIOS || isAndroid) {
+        if (notice) {
+          notice.style.display = 'flex';
+        }
+      }
+    } catch (_) {
+      // Bei Fehlern in der Erkennung bleiben beide Blöcke sichtbar
+    }
+
+    // 2. Kopierfunktion mit Fallback
+    function fallbackSelect(codeEl, btn, originalText) {
+      try {
+        var range = document.createRange();
+        range.selectNodeContents(codeEl);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } catch (_) {}
+
+      var label = btn.querySelector('.copy-label') || btn;
+      label.textContent = 'Mit Strg+C kopieren';
+      btn.classList.add('is-copied');
+
+      setTimeout(function () {
+        label.textContent = originalText;
+        btn.classList.remove('is-copied');
+      }, 3000);
+    }
+
+    function copySuccess(btn, originalText) {
+      var label = btn.querySelector('.copy-label') || btn;
+      label.textContent = 'Kopiert';
+      btn.classList.add('is-copied');
+
+      setTimeout(function () {
+        label.textContent = originalText;
+        btn.classList.remove('is-copied');
+      }, 2000);
+    }
+
+    var copyButtons = document.querySelectorAll('.copy-btn');
+    copyButtons.forEach(function (btn) {
+      var label = btn.querySelector('.copy-label') || btn;
+      var originalText = label.textContent.trim() || 'Kopieren';
+      btn.setAttribute('data-original-text', originalText);
+
+      btn.addEventListener('click', function () {
+        var targetId = btn.getAttribute('data-target');
+        var codeEl = document.getElementById(targetId);
+        if (!codeEl) return;
+        var text = (codeEl.innerText || codeEl.textContent || '').trim();
+
+        if (navigator.clipboard && window.isSecureContext && typeof navigator.clipboard.writeText === 'function') {
+          navigator.clipboard.writeText(text).then(function () {
+            copySuccess(btn, originalText);
+          }).catch(function () {
+            fallbackSelect(codeEl, btn, originalText);
+          });
+        } else {
+          fallbackSelect(codeEl, btn, originalText);
+        }
+      });
+    });
+  })();
+</script>
+
+<script src="assets/system.js?v=20260524"></script>
+<script src="/cookie-consent.js?v=20260829"></script>
+
+</body>
+</html>

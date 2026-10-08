@@ -1,5 +1,4 @@
-﻿#Requires -RunAsAdministrator
-<#
+﻿<#
 ════════════════════════════════════════════════════════════════════════════
  Praxura Praxis-Box — Einrichtung auf einem Windows-PC  (KHS K2.11, K-7)
 ════════════════════════════════════════════════════════════════════════════
@@ -9,10 +8,17 @@
  die dieses Skript einrichtet. Danach startet es die normale Einrichtung
  (install.sh) — dieselbe wie auf einem Linux-Server.
 
- Aufruf (PowerShell ALS ADMINISTRATOR):
-   powershell -ExecutionPolicy Bypass -File .\praxura-installieren.ps1
+ Aufruf (PowerShell, am besten ALS ADMINISTRATOR — sonst fragt Windows nach):
+   & ([scriptblock]::Create((irm https://praxura.de/install.ps1)))
+   # oder heruntergeladen: powershell -ExecutionPolicy Bypass -File .\install.ps1
    # Wenn die Einrichtung noch offen, der 14-Tage-Link aber abgelaufen ist:
-   powershell -ExecutionPolicy Bypass -File .\praxura-installieren.ps1 -NeuerJeton
+   powershell -ExecutionPolicy Bypass -File "$env:ProgramData\Praxura\install.ps1" -NeuerJeton
+
+ K2b.14 (O-157/O-176, guvenlik S-52): Die Programmdateien kommen NICHT mehr
+ aus git, sondern aus dem Container-Image des gewaehlten Kanals (Schritt 5) —
+ Dateien und Image sind damit immer dieselbe Version. Das Skript legt sich
+ selbst unter %ProgramData%\Praxura\install.ps1 ab (Neustart-Fortsetzung,
+ -NeuerJeton) und startet sich ohne Administratorrechte als Administrator neu.
 
  Entwurf mit dem onprem-Agenten, 02.10.2026 (onprem/REGISTER.md, K2.11):
    1  Vorpruefung: Windows 11 22H2+, Administrator, Virtualisierung, >= 8 GB
@@ -42,8 +48,9 @@ param(
   [switch]$NurVorbereiten,
   # Einrichtung noch offen, Link abgelaufen (14 Tage): neuen Einrichtungslink erzeugen und oeffnen.
   [switch]$NeuerJeton,
-  [string]$Repo = 'https://github.com/ironkemal/infinitymade-website.git',
-  [string]$Zweig = 'main'
+  # Update-Kanal; 'stable' fehlt noch -> Rueckfrage, ob 'beta' (O-148: Kanal nur vorwaerts).
+  [ValidateSet('stable', 'beta')]
+  [string]$Kanal = 'stable'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -59,8 +66,33 @@ $AufgabeFortsetzen = 'Praxura Box (Einrichtung fortsetzen)'
 # dokumentiert) — ohne Regel dort erreicht im gespiegelten Netz nichts aus
 # dem LAN die Box, egal was die Windows-Firewall sagt.
 $WslVmCreatorId = '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}'
+$ApiImageBasis = 'ghcr.io/ironkemal/infinitymade-website/calendar-api'  # = onprem/.env.template (check-onprem)
+$SkriptKopie   = Join-Path $DatenOrt 'install.ps1'
+
+# K2b.14: eigener Text — aus der Datei oder (irm | scriptblock) aus dem Speicher.
+# Nur auf oberster Ebene gueltig ($MyInvocation in einer Funktion waere die Funktion).
+$eigenerText = if ($PSCommandPath) { [IO.File]::ReadAllText($PSCommandPath) } else { $MyInvocation.MyCommand.ScriptBlock.ToString() }
+$utf8Bom = New-Object System.Text.UTF8Encoding $true   # PS 5.1 liest Umlaute nur mit BOM richtig
+$istAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $istAdmin) {
+  $tmpKopie = Join-Path $env:TEMP 'praxura-install.ps1'
+  [IO.File]::WriteAllText($tmpKopie, $eigenerText, $utf8Bom)
+  $argListe = @('-NoProfile', '-NoExit', '-ExecutionPolicy', 'Bypass', '-File', "`"$tmpKopie`"")
+  foreach ($p in $PSBoundParameters.GetEnumerator()) {
+    if ($p.Value -is [System.Management.Automation.SwitchParameter]) { if ($p.Value) { $argListe += "-$($p.Key)" } }
+    else { $argListe += "-$($p.Key)"; $argListe += [string]$p.Value }
+  }
+  Write-Host 'Die Einrichtung braucht Administratorrechte — Windows fragt gleich nach.'
+  try { Start-Process powershell.exe -Verb RunAs -ArgumentList $argListe | Out-Null }
+  catch { Write-Host 'Abgebrochen: ohne Administratorrechte geht es nicht. PowerShell als Administrator oeffnen und erneut starten.'; exit 1 }
+  exit 0
+}
 
 New-Item -ItemType Directory -Force -Path $DatenOrt | Out-Null
+# Dauerhafte Kopie: Neustart-Fortsetzung und -NeuerJeton brauchen eine Datei.
+if (-not ($PSCommandPath -and ((Resolve-Path $PSCommandPath).Path -eq $SkriptKopie))) {
+  [IO.File]::WriteAllText($SkriptKopie, $eigenerText, $utf8Bom)
+}
 function Log([string]$t)  { $z = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $t"; Add-Content -Path $LogDatei -Value $z -Encoding UTF8; Write-Host $t }
 function Ok([string]$t)   { Log "  [ok] $t" }
 function Warn([string]$t) { Log "  [Hinweis] $t" }
@@ -214,8 +246,11 @@ if (DistroVorhanden) {
     # Typisch beim allerersten Mal: das Windows-Feature "Subsystem fuer Linux"
     # wurde gerade erst eingeschaltet und braucht einen Neustart.
     if (($out | Out-String) -match 'restart|Neustart|neu gestartet|reboot' -or $code -eq 3010) {
-      $skript = $MyInvocation.MyCommand.Path
-      $akt = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoExit -ExecutionPolicy Bypass -File `"$skript`" -Fortsetzen"
+      # Dauerhafte Kopie, nicht $MyInvocation (bei irm | scriptblock gibt es keine Datei)
+      $weiterArgs = ''
+      if ($PSBoundParameters.ContainsKey('Kanal')) { $weiterArgs += " -Kanal $Kanal" }
+      if ($NurVorbereiten) { $weiterArgs += ' -NurVorbereiten' }
+      $akt = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoExit -ExecutionPolicy Bypass -File `"$SkriptKopie`" -Fortsetzen$weiterArgs"
       $trg = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
       $prn = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
       Register-ScheduledTask -TaskName $AufgabeFortsetzen -Action $akt -Trigger $trg -Principal $prn -Force | Out-Null
@@ -244,8 +279,13 @@ if ((InWsl '[ "$(ps -p 1 -o comm=)" = systemd ]') -ne 0) {
 }
 if ((InWsl 'command -v docker >/dev/null && docker compose version >/dev/null 2>&1') -ne 0) {
   Log '  Docker Engine wird installiert (dauert einige Minuten) ...'
-  if ((InWsl 'apt-get update -qq && apt-get install -y -qq curl ca-certificates git openssl >/dev/null && curl -fsSL https://get.docker.com | sh >/tmp/docker-install.log 2>&1') -ne 0) {
-    Fehler 'Docker-Installation fehlgeschlagen' 'get.docker.com meldet einen Fehler' "In der Linux-Umgebung nachsehen: wsl -d $Distro -- cat /tmp/docker-install.log"
+  # guvenlik S-52 Nr. 9: aus dem signierten apt-Repository von Docker, kein 'get.docker.com | sh'.
+  $dockerApt = 'set -e; exec >/tmp/docker-install.log 2>&1; apt-get update -qq; apt-get install -y -qq curl ca-certificates openssl; install -m 0755 -d /etc/apt/keyrings; ' +
+               'curl --proto ''=https'' --tlsv1.2 -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc; chmod a+r /etc/apt/keyrings/docker.asc; ' +
+               'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list; ' +
+               'apt-get update -qq; apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin'
+  if ((InWsl $dockerApt) -ne 0) {
+    Fehler 'Docker-Installation fehlgeschlagen' 'apt (download.docker.com) meldet einen Fehler' "In der Linux-Umgebung nachsehen: wsl -d $Distro -- cat /tmp/docker-install.log"
   }
 }
 InWsl 'systemctl enable --now docker >/dev/null 2>&1' | Out-Null
@@ -256,15 +296,33 @@ Ok 'systemd aktiv, Docker Engine laeuft'
 
 # ── 5  Programmdateien ───────────────────────────────────────────────────────
 Log '[5/11] Programmdateien nach /opt/praxura'
-if ((InWsl "[ -f $BoxPfad/install.sh ]") -eq 0) {
-  Ok 'schon vorhanden (Aktualisierung uebernimmt danach update.sh, nicht dieses Skript)'
+if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
+  # Eingerichtete Box: Dateien gehoeren update.sh (manifest/.praxura-stand, J3) — nicht ueberschreiben.
+  Ok 'Box schon eingerichtet — Programmdateien bleiben (Aktualisierung macht update.sh)'
 } else {
-  # Nur der onprem/-Teil des Repositorys (ganzes Repo ~1 GB, gebraucht werden wenige MB).
-  $cmd = "rm -rf /opt/praxura && git clone --depth 1 --filter=blob:none --sparse --branch $Zweig $Repo /opt/praxura >/dev/null 2>&1 && cd /opt/praxura && git sparse-checkout set onprem >/dev/null 2>&1"
-  if ((InWsl $cmd) -ne 0) {
-    Fehler 'Herunterladen fehlgeschlagen' "git clone $Repo" 'Internetverbindung pruefen und Skript erneut starten.'
+  # K2b.14 (O-157/O-176): Dateien aus DEMSELBEN Image wie spaeter der Betrieb, per Digest.
+  if ((InWsl "docker manifest inspect ${ApiImageBasis}:$Kanal >/dev/null 2>&1") -ne 0) {
+    if ($Kanal -eq 'stable' -and -not $PSBoundParameters.ContainsKey('Kanal')) {
+      Warn "Der Kanal 'stable' ist noch nicht veroeffentlicht."
+      if (-not (Frage "Mit 'beta' installieren? (Wechsel zu 'stable' geht erst, wenn 'stable' Ihre Version erreicht hat)" $true)) {
+        Fehler 'Abgebrochen' "Kanal 'stable' nicht verfuegbar" 'Spaeter erneut starten oder mit -Kanal beta.'
+      }
+      $Kanal = 'beta'
+    }
+    if ((InWsl "docker manifest inspect ${ApiImageBasis}:$Kanal >/dev/null 2>&1") -ne 0) {
+      Fehler 'Image nicht erreichbar' "${ApiImageBasis}:$Kanal" 'Internetverbindung pruefen (ghcr.io) und Skript erneut starten.'
+    }
   }
-  Ok "geladen nach $BoxPfad"
+  $holen = 'set -e; img=' + $ApiImageBasis + ':' + $Kanal + '; docker pull -q "$img" >/dev/null; ' +
+           'd="$(docker image inspect -f ''{{index .RepoDigests 0}}'' "$img")"; [ -n "$d" ]; echo "  Image: $d"; ' +
+           't="$(mktemp -d)"; docker rm -f praxura-starter-tmp >/dev/null 2>&1 || true; ' +
+           'docker create --name praxura-starter-tmp "$d" >/dev/null; docker cp praxura-starter-tmp:/app/onprem-bundle "$t/bundle" >/dev/null; ' +
+           'docker rm -f praxura-starter-tmp >/dev/null; [ -f "$t/bundle/install.sh" ] && [ -f "$t/bundle/manifest.json" ]; ' +
+           'install -d -m 0755 /opt/praxura; rm -rf -- /opt/praxura/onprem; mv "$t/bundle" /opt/praxura/onprem; rmdir "$t"'
+  if ((InWsl $holen) -ne 0) {
+    Fehler 'Programmdateien nicht geladen' "${ApiImageBasis}:$Kanal" 'Internetverbindung pruefen und Skript erneut starten.'
+  }
+  Ok "Programmdateien (Kanal $Kanal) nach $BoxPfad"
 }
 
 if ($NurVorbereiten) {
@@ -284,10 +342,9 @@ if ((InWsl "[ -f $BoxPfad/.env ]") -eq 0) {
   Log '    Einrichtungscode:    Einrichtungscode (von Praxura erhalten) eingeben — Enter ohne Code = eigene Adresse (Ausnahmefall)'
   Log "    Eigene Adresse:      (nur im Ausnahmefall): https://praxis.home.arpa  (oder: https://$($env:COMPUTERNAME.ToLower()).fritz.box)"
   Log '    Echtes Zertifikat:   n   (Praxisnetz, nicht aus dem Internet erreichbar; entfaellt bei Einrichtungscode)'
-  Log '    Kanal:               Enter (beta) fuer die Testphase'
   Log '    Sicherungsziel:      siehe Schritt 11 unten — fuer den Anfang leer lassen geht auch'
   Log ''
-  & wsl.exe -d $Distro -u root -- env PRAXURA_BROWSER_OEFFNEN=1 bash "$BoxPfad/install.sh"
+  & wsl.exe -d $Distro -u root -- env PRAXURA_BROWSER_OEFFNEN=1 bash "$BoxPfad/install.sh" "--kanal=$Kanal"
   if ($LASTEXITCODE -ne 0) {
     Fehler 'install.sh ist nicht durchgelaufen' "Rueckgabe $LASTEXITCODE" "Meldung oben lesen; Protokoll: wsl -d $Distro -- cat $BoxPfad/install.log"
   }

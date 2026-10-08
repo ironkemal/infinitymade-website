@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-08",
- "dateien": 381,
- "funktionen": 3139,
+ "dateien": 382,
+ "funktionen": 3145,
  "module": [
   "abrechnung",
   "anamnese",
@@ -55220,6 +55220,357 @@
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
+  },
+  {
+   "name": "Log",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 96,
+   "end": 96,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "Fehler",
+    "Ok",
+    "Warn",
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "Ok",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 97,
+   "end": 97,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "Log"
+   ],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "Warn",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 98,
+   "end": 98,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "Log"
+   ],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "Fehler",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 99,
+   "end": 107,
+   "lines": 9,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [
+    "Log"
+   ],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "Frage",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 108,
+   "end": 113,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "InWsl",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 120,
+   "end": 125,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "BoxEnv",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 129,
+   "end": 133,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": [
+    "installieren/install.ps1"
+   ]
+  },
+  {
+   "name": "DistroVorhanden",
+   "kind": "ps-function",
+   "lang": "ps1",
+   "file": "installieren/install.ps1",
+   "start": 134,
+   "end": 138,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [],
+   "calls": [],
+   "calledBy": []
+  },
+  {
+   "name": "log",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "installieren/install.sh",
+   "start": 19,
+   "end": 19,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "os-release"
+   ],
+   "calls": [],
+   "calledBy": [
+    "docker_installieren",
+    "main"
+   ]
+  },
+  {
+   "name": "ok",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "installieren/install.sh",
+   "start": 20,
+   "end": 20,
+   "lines": 1,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "os-release"
+   ],
+   "calls": [],
+   "calledBy": [
+    "docker_installieren",
+    "main"
+   ]
+  },
+  {
+   "name": "fehler",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "installieren/install.sh",
+   "start": 22,
+   "end": 26,
+   "lines": 5,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "os-release"
+   ],
+   "calls": [],
+   "calledBy": [
+    "docker_installieren",
+    "main"
+   ]
+  },
+  {
+   "name": "hilfe",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "installieren/install.sh",
+   "start": 28,
+   "end": 41,
+   "lines": 14,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "os-release"
+   ],
+   "calls": [],
+   "calledBy": []
+  },
+  {
+   "name": "docker_installieren",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "installieren/install.sh",
+   "start": 43,
+   "end": 77,
+   "lines": 35,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "os-release"
+   ],
+   "calls": [
+    "fehler",
+    "log",
+    "ok"
+   ],
+   "calledBy": [
+    "main"
+   ]
+  },
+  {
+   "name": "main",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "installieren/install.sh",
+   "start": 79,
+   "end": 198,
+   "lines": 120,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "os-release"
+   ],
+   "calls": [
+    "docker_installieren",
+    "fehler",
+    "log",
+    "ok"
+   ],
+   "calledBy": [
+    "installieren/install.sh"
+   ]
   },
   {
    "name": "showKalToast",
@@ -139101,8 +139452,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 672,
-   "end": 672,
+   "start": 678,
+   "end": 678,
    "lines": 1,
    "spiegelHinweis": null,
    "tables": [],
@@ -139129,8 +139480,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/install.sh",
-   "start": 673,
-   "end": 683,
+   "start": 679,
+   "end": 689,
    "lines": 11,
    "spiegelHinweis": null,
    "tables": [],
@@ -140216,197 +140567,6 @@
    "calledBy": [
     "onprem/update.sh"
    ]
-  },
-  {
-   "name": "Log",
-   "kind": "ps-function",
-   "lang": "ps1",
-   "file": "onprem/windows/praxura-installieren.ps1",
-   "start": 64,
-   "end": 64,
-   "lines": 1,
-   "spiegelHinweis": null,
-   "tables": [],
-   "writes": [],
-   "rpcs": [],
-   "storage": [],
-   "endpoints": [],
-   "modules": [],
-   "uiPfad": [],
-   "gemeinsam": false,
-   "sources": [],
-   "calls": [],
-   "calledBy": [
-    "Fehler",
-    "Ok",
-    "Warn",
-    "onprem/windows/praxura-installieren.ps1"
-   ]
-  },
-  {
-   "name": "Ok",
-   "kind": "ps-function",
-   "lang": "ps1",
-   "file": "onprem/windows/praxura-installieren.ps1",
-   "start": 65,
-   "end": 65,
-   "lines": 1,
-   "spiegelHinweis": null,
-   "tables": [],
-   "writes": [],
-   "rpcs": [],
-   "storage": [],
-   "endpoints": [],
-   "modules": [],
-   "uiPfad": [],
-   "gemeinsam": false,
-   "sources": [],
-   "calls": [
-    "Log"
-   ],
-   "calledBy": [
-    "onprem/windows/praxura-installieren.ps1"
-   ]
-  },
-  {
-   "name": "Warn",
-   "kind": "ps-function",
-   "lang": "ps1",
-   "file": "onprem/windows/praxura-installieren.ps1",
-   "start": 66,
-   "end": 66,
-   "lines": 1,
-   "spiegelHinweis": null,
-   "tables": [],
-   "writes": [],
-   "rpcs": [],
-   "storage": [],
-   "endpoints": [],
-   "modules": [],
-   "uiPfad": [],
-   "gemeinsam": false,
-   "sources": [],
-   "calls": [
-    "Log"
-   ],
-   "calledBy": [
-    "onprem/windows/praxura-installieren.ps1"
-   ]
-  },
-  {
-   "name": "Fehler",
-   "kind": "ps-function",
-   "lang": "ps1",
-   "file": "onprem/windows/praxura-installieren.ps1",
-   "start": 67,
-   "end": 75,
-   "lines": 9,
-   "spiegelHinweis": null,
-   "tables": [],
-   "writes": [],
-   "rpcs": [],
-   "storage": [],
-   "endpoints": [],
-   "modules": [],
-   "uiPfad": [],
-   "gemeinsam": false,
-   "sources": [],
-   "calls": [
-    "Log"
-   ],
-   "calledBy": [
-    "onprem/windows/praxura-installieren.ps1"
-   ]
-  },
-  {
-   "name": "Frage",
-   "kind": "ps-function",
-   "lang": "ps1",
-   "file": "onprem/windows/praxura-installieren.ps1",
-   "start": 76,
-   "end": 81,
-   "lines": 6,
-   "spiegelHinweis": null,
-   "tables": [],
-   "writes": [],
-   "rpcs": [],
-   "storage": [],
-   "endpoints": [],
-   "modules": [],
-   "uiPfad": [],
-   "gemeinsam": false,
-   "sources": [],
-   "calls": [],
-   "calledBy": [
-    "onprem/windows/praxura-installieren.ps1"
-   ]
-  },
-  {
-   "name": "InWsl",
-   "kind": "ps-function",
-   "lang": "ps1",
-   "file": "onprem/windows/praxura-installieren.ps1",
-   "start": 88,
-   "end": 93,
-   "lines": 6,
-   "spiegelHinweis": null,
-   "tables": [],
-   "writes": [],
-   "rpcs": [],
-   "storage": [],
-   "endpoints": [],
-   "modules": [],
-   "uiPfad": [],
-   "gemeinsam": false,
-   "sources": [],
-   "calls": [],
-   "calledBy": [
-    "onprem/windows/praxura-installieren.ps1"
-   ]
-  },
-  {
-   "name": "BoxEnv",
-   "kind": "ps-function",
-   "lang": "ps1",
-   "file": "onprem/windows/praxura-installieren.ps1",
-   "start": 97,
-   "end": 101,
-   "lines": 5,
-   "spiegelHinweis": null,
-   "tables": [],
-   "writes": [],
-   "rpcs": [],
-   "storage": [],
-   "endpoints": [],
-   "modules": [],
-   "uiPfad": [],
-   "gemeinsam": false,
-   "sources": [],
-   "calls": [],
-   "calledBy": [
-    "onprem/windows/praxura-installieren.ps1"
-   ]
-  },
-  {
-   "name": "DistroVorhanden",
-   "kind": "ps-function",
-   "lang": "ps1",
-   "file": "onprem/windows/praxura-installieren.ps1",
-   "start": 102,
-   "end": 106,
-   "lines": 5,
-   "spiegelHinweis": null,
-   "tables": [],
-   "writes": [],
-   "rpcs": [],
-   "storage": [],
-   "endpoints": [],
-   "modules": [],
-   "uiPfad": [],
-   "gemeinsam": false,
-   "sources": [],
-   "calls": [],
-   "calledBy": []
   },
   {
    "name": "boundedLock",
@@ -154648,6 +154808,17 @@
    "aynalar": []
   },
   {
+   "name": "log",
+   "orte": [
+    "installieren/install.sh:19",
+    "onprem/backup.sh:47",
+    "onprem/install.sh:68",
+    "onprem/restore.sh:44",
+    "onprem/update.sh:59"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "main",
    "orte": [
     "api-backend/check_diagnosegruppen_icd.js:94",
@@ -154666,6 +154837,17 @@
     "api-backend/ai/tasks/rezept-normalize.js:45",
     "api-backend/ai/tasks/rezept-ocr.js:95",
     "api-backend/ai/tasks/series-scheduler.js:104"
+   ],
+   "aynalar": []
+  },
+  {
+   "name": "ok",
+   "orte": [
+    "installieren/install.sh:20",
+    "onprem/backup.sh:48",
+    "onprem/install.sh:69",
+    "onprem/restore.sh:45",
+    "onprem/update.sh:60"
    ],
    "aynalar": []
   },
@@ -154702,6 +154884,16 @@
    "aynalar": []
   },
   {
+   "name": "fehler",
+   "orte": [
+    "installieren/install.sh:22",
+    "onprem/backup.sh:50",
+    "onprem/restore.sh:47",
+    "onprem/update.sh:65"
+   ],
+   "aynalar": []
+  },
+  {
    "name": "load",
    "orte": [
     "ops/board.js:111",
@@ -154718,26 +154910,6 @@
     "booking.js:164",
     "dashboard.js:8617",
     "kalender.js:643"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "log",
-   "orte": [
-    "onprem/backup.sh:47",
-    "onprem/install.sh:68",
-    "onprem/restore.sh:44",
-    "onprem/update.sh:59"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "ok",
-   "orte": [
-    "onprem/backup.sh:48",
-    "onprem/install.sh:69",
-    "onprem/restore.sh:45",
-    "onprem/update.sh:60"
    ],
    "aynalar": []
   },
@@ -154843,15 +155015,6 @@
     "onprem/install.sh:73",
     "onprem/reset-owner-passwort.sh:22",
     "onprem/update.sh:79"
-   ],
-   "aynalar": []
-  },
-  {
-   "name": "fehler",
-   "orte": [
-    "onprem/backup.sh:50",
-    "onprem/restore.sh:47",
-    "onprem/update.sh:65"
    ],
    "aynalar": []
   },

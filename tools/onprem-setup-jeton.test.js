@@ -14,7 +14,7 @@ const setupHtmlPfad = path.join(repoRoot, 'setup.html');
 const setupJsPfad = path.join(repoRoot, 'setup.js');
 const supabaseConfigPfad = path.join(repoRoot, 'supabase-config.js');
 const installShPfad = path.join(repoRoot, 'onprem', 'install.sh');
-const ps1Pfad = path.join(repoRoot, 'onprem', 'windows', 'praxura-installieren.ps1');
+const ps1Pfad = path.join(repoRoot, 'installieren', 'install.ps1');
 
 test('setup.html: genau ein script-Tag (setup.js als module, relative Quelle) und keine externen http/https-Quellen in script/link', () => {
   const inhalt = fs.readFileSync(setupHtmlPfad, 'utf8');

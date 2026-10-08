@@ -169,7 +169,7 @@ test('compose / Vorlage / Manifest kennen SETUP_TOKEN_SEIT bzw. die lib', () => 
 });
 
 test('praxura-installieren.ps1: -NeuerJeton ruft install.sh --neuer-jeton und öffnet den Link', () => {
-  const s = lies('onprem', 'windows', 'praxura-installieren.ps1');
+  const s = lies('installieren', 'install.ps1');
   assert.match(s, /\[switch\]\$NeuerJeton/);
   assert.match(s, /install\.sh" --neuer-jeton/);
 });
@@ -273,7 +273,7 @@ test('install.sh: x86_64-Prüfung im Hardware-Schritt, VOR Software/Docker; SSH-
 });
 
 test('praxura-installieren.ps1: bricht auf ARM vor jeder Installation ab (O-174)', () => {
-  const s = lies('onprem', 'windows', 'praxura-installieren.ps1');
+  const s = lies('installieren', 'install.ps1');
   const iArch = s.indexOf("if ($arch -ne 'AMD64')");
   assert.ok(iArch > 0 && iArch < s.indexOf('[2/11]'), 'Architektur-Prüfung in Schritt 1');
   assert.match(s, /PROCESSOR_ARCHITEW6432/);

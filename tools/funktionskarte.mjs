@@ -60,16 +60,18 @@ const files = [...new Set(
 
 const rel = (p) => relative(ROOT, p).split(sep).join('/');
 
-// Kabuk dosyaları (onprem/**/*.sh ve onprem/**/*.ps1) — upstream kopyası supabase-docker hariç
-const onpremDir = join(ROOT, 'onprem');
-const shellFiles = existsSync(onpremDir)
-  ? walk(
-      onpremDir,
-      [],
-      (e) => /\.(sh|ps1)$/.test(e) && !/\.(test|spec)\./.test(e),
-      (e) => e === 'supabase-docker' || e === 'node_modules'
-    ).sort()
-  : [];
+// Kabuk dosyaları (onprem/** ve installieren/** altındaki .sh/.ps1) — upstream kopyası supabase-docker hariç
+// installieren/ = praxura.de'den yayınlanan başlatıcılar (K2b.14, O-176)
+const shellFiles = ['onprem', 'installieren']
+  .map((d) => join(ROOT, d))
+  .filter((d) => existsSync(d))
+  .flatMap((d) => walk(
+    d,
+    [],
+    (e) => /\.(sh|ps1)$/.test(e) && !/\.(test|spec)\./.test(e),
+    (e) => e === 'supabase-docker' || e === 'node_modules'
+  ))
+  .sort();
 const allFiles = [...files, ...shellFiles];
 
 // ── Fonksiyon çıkarımı ──────────────────────────────────────────────────────

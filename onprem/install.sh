@@ -133,11 +133,21 @@ if [ "$_NUR_SCHLUESSEL" -ne 1 ] || [ -f "$SCRIPT_DIR/lib-setup-jeton.sh" ]; then
 NEU=0
 NEUER_JETON=0
 SICHERUNGSSCHLUESSEL=0
+# K2b.14 (O-176): der Starter (praxura.de/install.sh bzw. install.ps1) hat den
+# Kanal schon gewählt und das Bundle aus GENAU diesem Image geholt — Schritt 11
+# fragt dann nicht noch einmal (sonst Bundle aus einem Kanal, Image aus dem
+# anderen = O-157).
+KANAL_VORGABE=""
 for arg in "$@"; do
   [ "$arg" = "--neu" ] && NEU=1
   [ "$arg" = "--neuer-jeton" ] && NEUER_JETON=1
   [ "$arg" = "--sicherungsschluessel" ] && SICHERUNGSSCHLUESSEL=1
+  case "$arg" in --kanal=*) KANAL_VORGABE="${arg#--kanal=}" ;; esac
 done
+case "$KANAL_VORGABE" in
+  ""|beta|stable) : ;;
+  *) echo "Unbekannter Kanal in --kanal=: '$KANAL_VORGABE' (erlaubt: beta, stable)" >&2; exit 1 ;;
+esac
 
 MODUS_ANZAHL=$(( NEU + NEUER_JETON + SICHERUNGSSCHLUESSEL ))
 if [ "$MODUS_ANZAHL" -gt 1 ]; then
@@ -167,7 +177,7 @@ fi
 if [ "$NEUER_JETON" -ne 1 ] && [ ! -t 0 ]; then
   fail "Kein interaktives Terminal" "Eingabe kommt nicht von einer Tastatur (z. B. aus einer Pipe)" \
     "direkter Aufruf in einem Terminal" \
-    "Repository klonen und 'sudo bash install.sh' direkt in einer SSH-Sitzung ausführen, nicht über eine Pipe."
+    "Den Starter verwenden: curl --proto '=https' --tlsv1.2 -fsSL https://praxura.de/install.sh | sudo bash — oder 'sudo bash install.sh' direkt in einer SSH-Sitzung."
 fi
 
 # ── Schritt 0 — Wurzel + Idempotenz ─────────────────────────────────────────
@@ -439,14 +449,10 @@ if ! printf 'x' | base64 -w0 >/dev/null 2>&1; then
 fi
 ok "base64 -w0 verfügbar (GNU coreutils)"
 
+# K2b.14: Docker installiert der Starter (aus dem signierten apt-Repository,
+# guvenlik S-52 Nr. 9) — hier nur noch die Prüfung, kein 'get.docker.com | sh'.
 if ! command -v docker >/dev/null 2>&1; then
-  warn "Docker nicht gefunden."
-  read -r -p "  Offizielles Docker-Installationsskript jetzt ausführen (curl https://get.docker.com | sh)? [j/N] " antwort
-  if [ "$antwort" = "j" ] || [ "$antwort" = "J" ]; then
-    curl -fsSL https://get.docker.com | sh
-  else
-    fail "Docker nicht installiert" "nicht installiert" "Docker Engine + Compose-Plugin" "https://docs.docker.com/engine/install/ubuntu/ folgen, dann erneut starten."
-  fi
+  fail "Docker nicht installiert" "nicht installiert" "Docker Engine + Compose-Plugin"     "Mit dem Starter einrichten (installiert Docker): curl --proto '=https' --tlsv1.2 -fsSL https://praxura.de/install.sh | sudo bash"
 fi
 docker compose version >/dev/null 2>&1 || fail "Docker-Compose-Plugin fehlt" "nicht gefunden" "'docker compose' (Plugin, nicht das alte docker-compose)" "apt install docker-compose-plugin"
 ok "docker + docker compose vorhanden"
@@ -756,10 +762,15 @@ fi
 # Kanalwechsel später = nur VORWÄRTS sinnvoll: beta→stable, solange stable
 # älter ist, hält der Migrations-Runner mit 'downgrade' an (migrate.js).
 log "[11/17] Update-Kanal"
-log "  beta   = jede veröffentlichte Version (Test-/Pilotbox, Entscheidung K-1)"
-log "  stable = nur Versionen, die vorher 72 Stunden auf einer Testbox liefen"
-read -r -p "  Kanal [beta/stable] (Enter = beta): " kanal
-kanal="${kanal:-beta}"
+if [ -n "$KANAL_VORGABE" ]; then
+  kanal="$KANAL_VORGABE"
+  log "  vom Starter gewählt: ${kanal}"
+else
+  log "  beta   = jede veröffentlichte Version (Test-/Pilotbox, Entscheidung K-1)"
+  log "  stable = nur Versionen, die vorher 72 Stunden auf einer Testbox liefen"
+  read -r -p "  Kanal [beta/stable] (Enter = beta): " kanal
+  kanal="${kanal:-beta}"
+fi
 case "$kanal" in
   beta|stable) : ;;
   *) fail "Unbekannter Kanal" "'$kanal'" "beta oder stable" "Erneut ausführen und 'beta' oder 'stable' eintippen." ;;
@@ -772,7 +783,9 @@ fe_img="${fe_img%:*}:${kanal}"
 # scheiterte das erst in Schritt 13, nach allen Fragen (Y2: ':stable' wurde
 # bis 0.2.0 nie veröffentlicht). Ohne Netz kein Abbruch, nur eine Warnung.
 if ! docker manifest inspect "$api_img" >/dev/null 2>&1; then
-  if [ "$kanal" = "stable" ]; then
+  if [ "$kanal" = "stable" ] && [ -n "$KANAL_VORGABE" ]; then
+    fail "Kanal 'stable' nicht verfügbar" "$api_img nicht in der Registry" "der Kanal, aus dem der Starter das Bundle geholt hat"       "Starter erneut ausführen — er bietet dann 'beta' an."
+  elif [ "$kanal" = "stable" ]; then
     warn "Kanal 'stable' ist (noch) nicht veröffentlicht: $api_img"
     read -r -p "  Stattdessen 'beta' verwenden? [J/n] " auf_beta
     if [ "$auf_beta" = "n" ] || [ "$auf_beta" = "N" ]; then
@@ -823,6 +836,33 @@ if ! docker compose pull 2>&1 | tee -a "$LOG_FILE"; then
   fail "Images konnten nicht geholt werden" "docker compose pull ist fehlgeschlagen" \
     "${api_img} und ${fe_img} erreichbar (ghcr.io, ohne Anmeldung)" \
     "Internetverbindung des Servers prüfen ('curl -I https://ghcr.io'). Ist der Kanal 'stable' noch nie veröffentlicht worden: 'bash install.sh --neu' und Kanal 'beta' wählen."
+fi
+# K2b.14 (O-176): Dateien und Images müssen aus DERSELBEN Version stammen —
+# sonst läuft z. B. eine neuere compose-Datei gegen ein älteres Image (O-157).
+# Fängt auch ab, dass ':stable' während der Einrichtung weitergezogen ist.
+# Hart nur auf dem Starter-Weg (--kanal= gesetzt): ein git-Checkout trägt die
+# manifest.json von HEAD, ':stable' kann dort legitim älter sein → nur Warnung.
+bundle_surum=""
+if [ -f "$SCRIPT_DIR/manifest.json" ]; then
+  bundle_surum="$(grep -o '"surum"[[:space:]]*:[[:space:]]*"[^"]*"' "$SCRIPT_DIR/manifest.json" | head -1 | sed 's/.*"\([^"]*\)"$/\1/' || true)"
+fi
+if [ -n "$bundle_surum" ]; then
+  _abweichung=""
+  for _img in "$api_img" "$fe_img"; do
+    _v="$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.version"}}' "$_img" 2>/dev/null || true)"
+    [ "$_v" != "<no value>" ] || _v=""
+    [ "$_v" = "$bundle_surum" ] || _abweichung="$_abweichung $_img='${_v:-unbekannt}'"
+  done
+  if [ -z "$_abweichung" ]; then
+    ok "Dateien und Images: Version ${bundle_surum}"
+  elif [ -n "$KANAL_VORGABE" ]; then
+    fail "Version passt nicht zusammen" "Dateien ${bundle_surum},${_abweichung}" "gleiche Version" \
+      "Starter erneut ausführen (holt Dateien und Image neu aus demselben Kanal)."
+  else
+    warn "Dateien ${bundle_surum}, Images${_abweichung} — ohne Starter installiert; update.sh gleicht beim nächsten Lauf an."
+  fi
+else
+  warn "manifest.json fehlt — Versionsabgleich übersprungen (Installation ohne Starter)"
 fi
 
 # Volumes vorbereiten (K13) — in JEDEM Weg (code/adresse/vorhanden)

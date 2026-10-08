@@ -3,7 +3,7 @@
 > Üretim: 2026-10-08 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3139 fonksiyon** (3063 JS · 68 bash · 8 ps1) · 381 dosya · 41 sidebar modülü
+**3145 fonksiyon** (3063 JS · 74 bash · 8 ps1) · 382 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -451,15 +451,16 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `cleanup` — dashboard.js:6349 · dashboard.js:6378 · dashboard.js:6465 · dashboard.js:18761 · module/absagegrund-modal.js:81
 - `el` — module/arzt-register.js:251 · module/fussbefund.js:214 · module/termin-aktionsleiste.js:49 · module/termin-panel.js:39 · module/verordnung-maske.js:690
 - `leer` — api-backend/billing/dta/auftragsdatei.js:53 · module/fahrtenbuch-regeln.js:288 · module/fussbefund-archiv.js:199 · module/sitzungsplan.js:114 · module/verordnung-pruefung.js:98
+- `log` — installieren/install.sh:19 · onprem/backup.sh:47 · onprem/install.sh:68 · onprem/restore.sh:44 · onprem/update.sh:59
 - `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/merkez-istemci/kayit.js:195 · api-backend/preise_autoupdate.mjs:194 · api-backend/preise_pruefen.mjs:240 · api-backend/sync_heilmittel_katalog.js:151
 - `mockResponse` — api-backend/ai/tasks/appointment-confirm-draft.js:56 · api-backend/ai/tasks/b2c-draft.js:47 · api-backend/ai/tasks/rezept-normalize.js:45 · api-backend/ai/tasks/rezept-ocr.js:95 · api-backend/ai/tasks/series-scheduler.js:104
+- `ok` — installieren/install.sh:20 · onprem/backup.sh:48 · onprem/install.sh:69 · onprem/restore.sh:45 · onprem/update.sh:60
 - `parseDate` — api-backend/ai/validators/blankoRules.js:23 · api-backend/ai/validators/lhbBvbRules.js:19 · api-backend/ai/validators/standardRules.js:35 · api-backend/billing/dta/builder.js:63 · api-backend/billing/dta/preflight.js:159
 - `t` — dashboard.js:505 · module/anamnese.js:381 · module/bg-angaben.js:36 · module/branding.js:28 · module/kiosk.js:56
 - `closeModal` — dashboard.js:911 · dashboard.js:11566 · dashboard.js:11987 · ops/app.js:162
+- `fehler` — installieren/install.sh:22 · onprem/backup.sh:50 · onprem/restore.sh:47 · onprem/update.sh:65
 - `load` — ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `loadServices` — booking-request.js:528 · booking.js:164 · dashboard.js:8617 · kalender.js:643
-- `log` — onprem/backup.sh:47 · onprem/install.sh:68 · onprem/restore.sh:44 · onprem/update.sh:59
-- `ok` — onprem/backup.sh:48 · onprem/install.sh:69 · onprem/restore.sh:45 · onprem/update.sh:60
 - `onEsc` — dashboard.js:6472 · module/rechnung-leistung-picker.js:46 · module/zuzahlung-befreiung.js:156 · module/zuzahlung-korrektur.js:214
 - `speichern` — cookie-consent.js:69 · module/arzt-register.js:292 · module/fussbefund.js:732 · module/verordnung-detail.js:826
 - `v` — dashboard.js:12441 · dashboard.js:12463 · dashboard.js:12483 · dashboard.js:14912
@@ -469,9 +470,27 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `applyLang` — kalender.js:67 · login.js:51 · setup.js:86
 - `DE` — module/behandlungsbestaetigung.js:41 · module/patientenkarte.js:38 · module/verordnung-uebersicht.js:106
 - `env_wert` — onprem/backup.sh:142 · onprem/restore.sh:93 · onprem/update.sh:132
-- `f` — dashboard.js:1113 · module/branding.js:73 · module/kiosk.js:199
 
 ## Shell (onprem/)
+
+### `installieren/install.ps1`
+- `Log()` — Zeile 96 · calledBy: Fehler, Ok, Warn, installieren/install.ps1
+- `Ok()` — Zeile 97 · calledBy: installieren/install.ps1
+- `Warn()` — Zeile 98 · calledBy: installieren/install.ps1
+- `Fehler()` — Zeile 99 · calledBy: installieren/install.ps1
+- `Frage()` — Zeile 108 · calledBy: installieren/install.ps1
+- `InWsl()` — Zeile 120 · calledBy: installieren/install.ps1
+- `BoxEnv()` — Zeile 129 · calledBy: installieren/install.ps1
+- `DistroVorhanden()` — Zeile 134
+
+### `installieren/install.sh`
+- sources: `os-release`
+- `log()` — Zeile 19 · calledBy: docker_installieren, main
+- `ok()` — Zeile 20 · calledBy: docker_installieren, main
+- `fehler()` — Zeile 22 · calledBy: docker_installieren, main
+- `hilfe()` — Zeile 28
+- `docker_installieren()` — Zeile 43 · calledBy: main
+- `main()` — Zeile 79 · calledBy: installieren/install.sh
 
 ### `onprem/backup.sh`
 - `log()` — Zeile 47 · calledBy: fehler, onprem/backup.sh, sicherung_alarm
@@ -502,8 +521,8 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `fail()` — Zeile 73 · calledBy: onprem/install.sh
 - `env_get()` — Zeile 93 · calledBy: onprem/install.sh
 - `set_env()` — Zeile 103 · calledBy: onprem/install.sh
-- `b64url()` — Zeile 672 · calledBy: sign_jwt
-- `sign_jwt()` — Zeile 673 · calledBy: onprem/install.sh
+- `b64url()` — Zeile 678 · calledBy: sign_jwt
+- `sign_jwt()` — Zeile 679 · calledBy: onprem/install.sh
 
 ### `onprem/ip-melden.sh`
 - sources: `lib-ip.sh`, `||`
@@ -561,13 +580,3 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `geri_yukle()` — Zeile 475 · calledBy: onprem/update.sh
 - `anahtarlari_oku()` — Zeile 494 · calledBy: onprem/update.sh
 - `deger_oku()` — Zeile 498 · calledBy: onprem/update.sh
-
-### `onprem/windows/praxura-installieren.ps1`
-- `Log()` — Zeile 64 · calledBy: Fehler, Ok, Warn, onprem/windows/praxura-installieren.ps1
-- `Ok()` — Zeile 65 · calledBy: onprem/windows/praxura-installieren.ps1
-- `Warn()` — Zeile 66 · calledBy: onprem/windows/praxura-installieren.ps1
-- `Fehler()` — Zeile 67 · calledBy: onprem/windows/praxura-installieren.ps1
-- `Frage()` — Zeile 76 · calledBy: onprem/windows/praxura-installieren.ps1
-- `InWsl()` — Zeile 88 · calledBy: onprem/windows/praxura-installieren.ps1
-- `BoxEnv()` — Zeile 97 · calledBy: onprem/windows/praxura-installieren.ps1
-- `DistroVorhanden()` — Zeile 102

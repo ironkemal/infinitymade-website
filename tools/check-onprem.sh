@@ -459,6 +459,37 @@ if [ -n "$major_ihlal" ]; then
 "
 fi
 
+# K2b.14 (O-176): Starter unter installieren/ (praxura.de/install.sh|.ps1).
+# Taban 0, keine Ausnahme: jede Abweichung bringt O-157 zurück (Dateien aus
+# einer anderen Version als das Image) oder legt den Starter lahm.
+starter_ihlal=""
+if git cat-file -e ":installieren/install.sh" 2>/dev/null; then
+  st_sh=$(git show ":installieren/install.sh")
+  st_ps=$(git show ":installieren/install.ps1" 2>/dev/null || true)
+  tmpl_basis=$(git show ":onprem/.env.template" | sed -n 's/^PRAXURA_API_IMAGE=//p' | head -1 | tr -d ' \r')
+  tmpl_basis=${tmpl_basis%:*}
+  if git grep --cached -I -n -E "git clone|github\.com|--branch" -- installieren/ >/dev/null 2>&1; then
+    starter_ihlal="$starter_ihlal git/github-Bezug in installieren/ (O-157 zurück);"
+  fi
+  sh_basis=$(printf '%s\n' "$st_sh" | sed -n 's/^API_IMAGE_BASIS="\([^"]*\)".*/\1/p' | head -1)
+  ps_basis=$(printf '%s\n' "$st_ps" | awk -F"'" '/^[$]ApiImageBasis *=/ {print $2; exit}')
+  [ -n "$tmpl_basis" ] && [ "$sh_basis" = "$tmpl_basis" ] || starter_ihlal="$starter_ihlal install.sh Image-Basis '$sh_basis' ≠ .env.template '$tmpl_basis';"
+  [ -n "$tmpl_basis" ] && [ "$ps_basis" = "$tmpl_basis" ] || starter_ihlal="$starter_ihlal install.ps1 Image-Basis '$ps_basis' ≠ .env.template '$tmpl_basis';"
+  git show ":onprem/install.sh" | grep -q -- '--kanal=\*)' || starter_ihlal="$starter_ihlal onprem/install.sh kennt --kanal= nicht mehr;"
+  printf '%s\n' "$st_sh" | bash -n 2>/dev/null || starter_ihlal="$starter_ihlal bash -n installieren/install.sh schlägt fehl;"
+  if git show ":.vercelignore" 2>/dev/null | tr -d '\r' | grep -qE '^/?installieren|^\*\.(sh|ps1)$'; then
+    starter_ihlal="$starter_ihlal .vercelignore blendet den Starter aus;"
+  fi
+fi
+if [ -n "$starter_ihlal" ]; then
+  ihlal="$ihlal
+    ✗ Starter (installieren/) inkonsistent:$starter_ihlal
+      O-176: Starter und Paket kommen aus verschiedenen Quellen (praxura.de vs. Image) —
+      ihre einzige Schnittstelle ist --kanal= und die Image-Basis aus onprem/.env.template.
+      Çıkış: Abweichung angleichen (onprem-Agent fragen, wenn die Basis wirklich wechselt).
+"
+fi
+
 if [ -n "$surum_ihlal" ]; then
   ihlal="$ihlal
     ✗ manifest.json ile VERSION uyuşmuyor: $surum_ihlal

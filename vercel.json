@@ -99,6 +99,13 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
+    },
+    {
+      "source": "/(install.sh|install.ps1|installieren/install.sh|installieren/install.ps1)",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
     }
   ],
   "redirects": [
@@ -344,6 +351,8 @@
     { "source": "/employee-signup.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/employee-signup.html", "permanent": false }
   ],
   "rewrites": [
+    { "source": "/install.sh", "destination": "/installieren/install.sh" },
+    { "source": "/install.ps1", "destination": "/installieren/install.ps1" },
     {
       "source": "/praxis",
       "destination": "/praxis.html"

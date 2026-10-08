@@ -29,29 +29,45 @@ Die Einrichtung dauert 20–40 Minuten, fast alles davon ist Herunterladen.
 
 ## 1. Weg A — Linux-Server
 
+Ubuntu 22.04/24.04 oder Debian 12, 64-Bit Intel/AMD (kein ARM). In einer
+SSH-Sitzung bzw. einem Terminal:
+
 ```bash
-sudo apt update && sudo apt install -y git
-sudo git clone --depth 1 --filter=blob:none --sparse \
-  https://github.com/ironkemal/infinitymade-website.git /opt/praxura
-cd /opt/praxura && sudo git sparse-checkout set onprem
-cd /opt/praxura/onprem
-sudo bash install.sh
+curl --proto '=https' --tlsv1.2 -fsSL https://praxura.de/install.sh | sudo bash
 ```
 
-`install.sh` prüft die Hardware, bietet bei fehlendem Docker die Installation an
-und stellt dann die Fragen aus **§2**. Danach weiter mit **§3**.
+Der Starter prüft Rechte und Prozessor, bietet bei fehlendem Docker die
+Installation aus dem offiziellen Docker-Paketarchiv an, lädt die
+Programmdateien aus dem Programmpaket des gewählten Kanals (Vorgabe `stable`;
+solange es `stable` noch nicht gibt, fragt er, ob `beta` verwendet werden soll)
+und startet dann `install.sh` mit den Fragen aus **§2**. Danach weiter mit **§3**.
+
+**Lieber erst prüfen?** Starter herunterladen, Prüfsumme vergleichen, dann ausführen:
+```bash
+curl --proto '=https' --tlsv1.2 -fsSL -O https://praxura.de/install.sh
+sha256sum install.sh   # Vergleich mit dem Wert aus den Versionshinweisen auf GitHub
+sudo bash install.sh
+```
+Die gültige Prüfsumme steht bewusst **nicht** auf praxura.de, sondern in den
+Versionshinweisen (github.com/ironkemal/infinitymade-website/releases) oder
+kommt von uns auf einem separaten Weg.
 
 ## 1. Weg B — Windows-PC
 
 1. **Docker Desktop**, falls vorhanden, beenden und den Autostart ausschalten
    (besser: deinstallieren). Die Box bringt ihren eigenen Docker mit.
-2. Datei `praxura-installieren.ps1` herunterladen:
-   `https://raw.githubusercontent.com/ironkemal/infinitymade-website/main/onprem/windows/praxura-installieren.ps1`
-3. Startmenü → „PowerShell" → Rechtsklick → **Als Administrator ausführen**:
+2. Startmenü → „PowerShell" → Rechtsklick → **Als Administrator ausführen**
+   und diese Zeile einfügen:
    ```powershell
-   cd $env:USERPROFILE\Downloads
-   powershell -ExecutionPolicy Bypass -File .\praxura-installieren.ps1
+   & ([scriptblock]::Create((irm https://praxura.de/install.ps1)))
    ```
+   Ohne Administratorrechte gestartet, fragt Windows nach und das Skript startet
+   sich selbst als Administrator neu. Es legt sich unter
+   `C:\ProgramData\Praxura\install.ps1` ab — von dort laufen später die
+   Fortsetzung nach einem Neustart und `-NeuerJeton`.
+3. Lieber erst prüfen: `irm https://praxura.de/install.ps1 -OutFile install.ps1`,
+   `Get-FileHash .\install.ps1` mit dem Wert aus den Versionshinweisen auf GitHub
+   vergleichen, dann `powershell -ExecutionPolicy Bypass -File .\install.ps1`.
 4. Das Skript richtet eine eigene Linux-Umgebung namens **Praxura** ein
    (Ubuntu 24.04 in WSL2, getrennt von einem evtl. schon vorhandenen Ubuntu).
    Beim allerersten Mal verlangt Windows evtl. einen **Neustart** — danach läuft
@@ -130,14 +146,10 @@ Dieser Weg steht gleichwertig neben Weg A und B.
   - **Ausgehend:** Keine Regeln einschränken (die Box benötigt ausgehenden Zugang
     für System-Updates, Zertifikatsabrufe und den Namensdienst).
 - **Installation durchführen:** Verbinden Sie sich per SSH mit Ihrem Server und
-  führen Sie dieselben Befehle wie bei Weg A aus:
+  führen Sie denselben Befehl wie bei Weg A aus (Servertyp **CX**/**CPX**, nicht
+  CAX — ARM wird nicht unterstützt):
   ```bash
-  sudo apt update && sudo apt install -y git
-  sudo git clone --depth 1 --filter=blob:none --sparse \
-    https://github.com/ironkemal/infinitymade-website.git /opt/praxura
-  cd /opt/praxura && sudo git sparse-checkout set onprem
-  cd /opt/praxura/onprem
-  sudo bash install.sh
+  curl --proto '=https' --tlsv1.2 -fsSL https://praxura.de/install.sh | sudo bash
   ```
   Ihr Einrichtungscode funktioniert auch auf dem Cloud-Server unverändert. Die Box
   erkennt die öffentliche IP-Adresse automatisch. Der FRITZ!Box-Rebind-Schritt
@@ -307,7 +319,7 @@ Siehe §5.
   - Ist der Link abgelaufen oder verloren gegangen, erzeugen Sie vor Abschluss
     der Einrichtung einen neuen:
     - Linux: `sudo bash install.sh --neuer-jeton`
-    - Windows: `powershell -ExecutionPolicy Bypass -File .\praxura-installieren.ps1 -NeuerJeton`
+    - Windows: `powershell -ExecutionPolicy Bypass -File "C:\ProgramData\Praxura\install.ps1" -NeuerJeton`
     Ein neuer Link macht den bisherigen Link sofort ungültig.
   - Als Notlösung lässt sich der Jeton auch manuell aus der `.env` (`SETUP_TOKEN`)
     auslesen und im Formular auf `setup.html` eintragen.
@@ -408,7 +420,7 @@ blockt die Firewall die anderen Geräte. Das Skript warnt, wenn es „Öffentlic
    - Ist der Link verloren oder abgelaufen, fordern Sie vor Abschluss der Einrichtung
      einen neuen Link an:
      - Linux: `sudo bash install.sh --neuer-jeton`
-     - Windows: `powershell -ExecutionPolicy Bypass -File .\praxura-installieren.ps1 -NeuerJeton`
+     - Windows: `powershell -ExecutionPolicy Bypass -File "C:\ProgramData\Praxura\install.ps1" -NeuerJeton`
      Der neue Link macht den vorherigen ungültig.
    *(Notlösung: `https://<ihre-box-adresse>/setup.html` direkt öffnen und den
    Jeton aus der `.env` unter `SETUP_TOKEN` im Formular eintragen.)*
@@ -627,7 +639,7 @@ Nutzen Sie einen Namen unter Ihrer eigenen Praxis-Domain (z. B. `box.praxis-beis
    cd /opt/praxura/onprem && sudo docker compose up -d
    ```
    **Windows:** zuerst `wsl -d Praxura -- bash -c "cd /opt/praxura/onprem && docker compose up -d"`,
-   danach `praxura-installieren.ps1` erneut als Administrator ausführen. Es liest
+   danach `C:\ProgramData\Praxura\install.ps1` erneut als Administrator ausführen. Es liest
    die neue Adresse aus `.env` und ersetzt den Eintrag in der `hosts`-Datei des
    Box-PCs — ohne diesen Eintrag lässt sich die Box auf dem Box-PC selbst nicht
    öffnen.
@@ -775,7 +787,7 @@ der Datenverarbeitung Ihrer Patientendaten einnimmt.
 | Browser: „Website nicht erreichbar" auf dem Tablet | Name nicht im Router (§3), Box-PC schläft, Windows-Netz ist „Öffentlich" (§3), oder FRITZ!Box-Rebind-Schutz blockiert (§3) |
 | Browser: Zertifikatswarnung | Wurzelzertifikat auf diesem Gerät nicht vertraut (§8.3); iPad: Schritt „Zertifikatsvertrauen" vergessen |
 | Seite bleibt weiß | Adresse in der Leiste ≠ `SITE_URL` aus §2.1 — immer genau den Namen benutzen |
-| Windows: Box nach Neustart weg | Windows-Passwort geändert → `praxura-installieren.ps1` erneut ausführen |
+| Windows: Box nach Neustart weg | Windows-Passwort geändert → `C:\ProgramData\Praxura\install.ps1` erneut ausführen |
 | Windows: „Port 80 oder 443 ist belegt" | ein anderes Programm (IIS, Skype, anderer Webserver) beenden |
 | `install.sh`: „Images konnten nicht geholt werden" | Internet des Servers prüfen; Kanal `stable` evtl. noch nicht veröffentlicht → `beta` |
 | Sicherung bricht ab | Sicherungsplatte nicht angesteckt / Markierungsdatei fehlt (§5) |
@@ -789,7 +801,7 @@ sie enthält keine Geheimnisse.
 
 #### Fall A — Neue Hardware oder Rücksicherung (Identität fehlt)
 Führen Sie die normale Installation aus (`install.sh` bzw.
-`praxura-installieren.ps1`). Geben Sie den vom Support erhaltenen
+`C:\ProgramData\Praxura\install.ps1`). Geben Sie den vom Support erhaltenen
 Wiederverbindungs-Code ein — der bisherige Name wird automatisch übernommen.
 
 #### Fall B — Identität vorhanden, Schlüssel soll ersetzt werden
