@@ -364,6 +364,41 @@ bildirim_degerlendir() {
 # fonksiyon zaten `return 0` yapıp eski önbelleği korur, kayıp yok.
 owner_bilgisini_guncelle || true
 
+# ── Zertifikats-Ablauf (O-172, guvenlik S-47 Bed. 5, 08.10.2026) ───────────
+# Gemessen wird das Zertifikat, das ein Browser bekommt (s_client gegen die
+# eigene Box), nicht eine Datei in caddy_data (Caddys internes Layout).
+# Nur Let's-Encrypt-Modi: bei 'internal' lebt das Blattzertifikat ~12 h, die
+# 21-Tage-Schwelle würde jede Nacht auslösen. Eigener Zustand — NICHT
+# son-bildirim.json, sonst überschriebe das "ok" des Updates den Alarm (Entwarnung).
+ZERT_STAND="$STAND_DIR/son-zertifikat-bildirim.json"
+zertifikat_pruefen() {
+  local modus tls_arg host pem simdi letzte
+  modus="$(env_wert CADDY_TLS_MODUS)"; tls_arg="$(env_wert CADDY_TLS_ARG)"
+  if [ "$modus" != "acmedns" ] && { [ -z "$tls_arg" ] || [ "$tls_arg" = "internal" ]; }; then return 0; fi
+  host="$(env_wert SITE_URL)"; host="${host#https://}"; host="${host%%/*}"
+  [ -n "$host" ] || return 0
+  pem="$(timeout 15 openssl s_client -connect 127.0.0.1:443 -servername "$host" </dev/null 2>/dev/null \
+    | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' || true)"
+  if [ -z "$pem" ]; then
+    log "  Zertifikat: nicht lesbar (Caddy aus?) — keine Bewertung"
+    return 0
+  fi
+  if printf '%s\n' "$pem" | openssl x509 -noout -checkend 1814400 >/dev/null 2>&1; then
+    rm -f "$ZERT_STAND"
+    log "  Zertifikat: länger als 21 Tage gültig"
+    return 0
+  fi
+  warn "  Zertifikat läuft in < 21 Tagen ab ($(printf '%s\n' "$pem" | openssl x509 -noout -enddate 2>/dev/null))"
+  simdi="$(date -u +%s)"
+  letzte="$(grep -oE '[0-9]+' "$ZERT_STAND" 2>/dev/null | head -1 || true)"
+  if [ -n "$letzte" ] && [ $(( simdi - letzte )) -lt "$BILDIRIM_ARALIK_SANIYE" ]; then return 0; fi
+  if mail_gonder_container zertifikat_laeuft_ab; then
+    printf '{ "son_gonderim_epoch": %s }\n' "$simdi" > "$ZERT_STAND"
+    ok "  Zertifikats-Warnung per Mail verschickt"
+  fi
+}
+zertifikat_pruefen || true
+
 # ── Schritt 3 — Durak-Tor ────────────────────────────────────────────────────
 if [ "$BUNDLE_DURAK" = "true" ]; then
   log "[3/11] durak=true — dieses Update erfordert einen manuellen Schritt. Nichts wird angefasst."
@@ -534,6 +569,17 @@ if [ -f "$TABAN_ENV" ]; then
   fi
 else
   log "  İlk çalıştırma — .env için taban şablonu henüz yok, bu turda .env birleştirmesi atlandı."
+fi
+
+# O-172 (08.10.2026): klassisch + eigene E-Mail schrieb install.sh früher HSTS 2 Jahre
+# (63072000) — ohne Ablaufüberwachung ein Sperrrisiko. Der Wert kommt aus install.sh,
+# nicht aus der Vorlage, darum greift J4 nicht: gezielt nur den exakten Altwert senken.
+# Snapshot (Schritt 6) liegt davor, ein Rollback stellt .env konsistent zurück.
+if [ "$(env_wert CADDY_TLS_MODUS)" != "acmedns" ] && [ "$(env_wert HSTS_MAX_AGE)" = "63072000" ]; then
+  tmp_env="$ENV_FILE.tmp"
+  sed -E "s|^HSTS_MAX_AGE=.*|HSTS_MAX_AGE=86400|" "$ENV_FILE" > "$tmp_env" && mv "$tmp_env" "$ENV_FILE"
+  chmod 600 "$ENV_FILE"
+  log "  HSTS_MAX_AGE 63072000 → 86400 (O-172)"
 fi
 
 # ── Schritt 7 — Yeni dosyaları yaz ──────────────────────────────────────────

@@ -739,7 +739,7 @@ else
     [ -n "$acme_mail" ] || fail "Keine E-Mail-Adresse" "leer" "eine gültige E-Mail-Adresse" "Erneut ausführen und Adresse eintragen."
     CADDY_TLS_ARG_VALUE="$acme_mail"
     set_env CADDY_TLS_ARG "$CADDY_TLS_ARG_VALUE"
-    set_env HSTS_MAX_AGE "63072000"
+    set_env HSTS_MAX_AGE "86400"   # O-172: 1 Tag, bis eine Erneuerung beobachtet ist (nicht 2 Jahre)
     ok "TLS: Let's Encrypt (${acme_mail})"
   else
     CADDY_TLS_ARG_VALUE="internal"

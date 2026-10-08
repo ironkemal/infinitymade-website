@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-08",
  "dateien": 382,
- "funktionen": 3145,
+ "funktionen": 3146,
  "module": [
   "abrechnung",
   "anamnese",
@@ -140086,7 +140086,8 @@
    "calls": [],
    "calledBy": [
     "fehler",
-    "onprem/update.sh"
+    "onprem/update.sh",
+    "zertifikat_pruefen"
    ]
   },
   {
@@ -140114,7 +140115,8 @@
    "calls": [],
    "calledBy": [
     "bildirim_degerlendir",
-    "onprem/update.sh"
+    "onprem/update.sh",
+    "zertifikat_pruefen"
    ]
   },
   {
@@ -140143,7 +140145,8 @@
    "calledBy": [
     "bildirim_degerlendir",
     "mail_gonder_container",
-    "onprem/update.sh"
+    "onprem/update.sh",
+    "zertifikat_pruefen"
    ]
   },
   {
@@ -140228,7 +140231,8 @@
    "calls": [],
    "calledBy": [
     "onprem/update.sh",
-    "owner_bilgisini_guncelle"
+    "owner_bilgisini_guncelle",
+    "zertifikat_pruefen"
    ]
   },
   {
@@ -140451,7 +140455,8 @@
     "warn"
    ],
    "calledBy": [
-    "bildirim_degerlendir"
+    "bildirim_degerlendir",
+    "zertifikat_pruefen"
    ]
   },
   {
@@ -140488,12 +140493,45 @@
    ]
   },
   {
+   "name": "zertifikat_pruefen",
+   "kind": "bash-function",
+   "lang": "bash",
+   "file": "onprem/update.sh",
+   "start": 374,
+   "end": 399,
+   "lines": 26,
+   "spiegelHinweis": null,
+   "tables": [],
+   "writes": [],
+   "rpcs": [],
+   "storage": [],
+   "endpoints": [],
+   "modules": [],
+   "uiPfad": [],
+   "gemeinsam": false,
+   "sources": [
+    "lib-health.sh",
+    "lib-ip.sh",
+    "lib-setup-jeton.sh"
+   ],
+   "calls": [
+    "env_wert",
+    "log",
+    "mail_gonder_container",
+    "ok",
+    "warn"
+   ],
+   "calledBy": [
+    "onprem/update.sh"
+   ]
+  },
+  {
    "name": "geri_yukle",
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 475,
-   "end": 487,
+   "start": 510,
+   "end": 522,
    "lines": 13,
    "spiegelHinweis": null,
    "tables": [],
@@ -140519,8 +140557,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 494,
-   "end": 497,
+   "start": 529,
+   "end": 532,
    "lines": 4,
    "spiegelHinweis": null,
    "tables": [],
@@ -140546,8 +140584,8 @@
    "kind": "bash-function",
    "lang": "bash",
    "file": "onprem/update.sh",
-   "start": 498,
-   "end": 506,
+   "start": 533,
+   "end": 541,
    "lines": 9,
    "spiegelHinweis": null,
    "tables": [],

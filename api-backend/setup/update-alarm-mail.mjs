@@ -30,6 +30,8 @@ const METINLER = {
   // guvenlik: nur fester Text, kein Log-Auszug, kein Pfad, kein Schlüssel.
   sicherung_fehlgeschlagen: 'Die nächtliche Sicherung ist fehlgeschlagen — es gibt keine neue Sicherung.',
   sicherungsschluessel_fehlt: 'Die nächtliche Sicherung wurde NICHT erstellt: es ist kein Sicherungsschlüssel eingerichtet. Einmal ausführen: sudo bash install.sh --sicherungsschluessel',
+  // O-172 / S-47 Bed. 5 (08.10.2026) — von update.sh, eigener Zustand, nicht son-bildirim.json.
+  zertifikat_laeuft_ab: 'Das Sicherheitszertifikat der Box läuft in weniger als 21 Tagen ab und wurde noch nicht automatisch erneuert. Bitte prüfen, ob die Box Internetzugang hat; besteht das Problem weiter, den Support kontaktieren.',
 };
 
 const SICHERUNG = new Set(['sicherung_fehlgeschlagen', 'sicherungsschluessel_fehlt']);
@@ -37,7 +39,9 @@ const betreff = sonuc === 'ok'
   ? 'Praxura — Entwarnung: automatisches Update wieder ok'
   : SICHERUNG.has(sonuc)
     ? 'Praxura — nächtliche Sicherung braucht Aufmerksamkeit'
-    : 'Praxura — automatisches Update braucht Aufmerksamkeit';
+    : sonuc === 'zertifikat_laeuft_ab'
+      ? 'Praxura — Zertifikat der Box läuft bald ab'
+      : 'Praxura — automatisches Update braucht Aufmerksamkeit';
 const zeile = METINLER[sonuc] || `Automatisches Update: unbekannter Status "${sonuc}".`;
 
 const transport = createSMTPTransport();

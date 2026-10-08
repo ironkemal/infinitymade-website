@@ -181,3 +181,15 @@ test('restore.sh: acmedns-Box spielt caddy-pki nicht zurück (guvenlik S-47 Bedi
   assert.ok(posModus !== -1, 'restore.sh muss CADDY_TLS_MODUS=acmedns prüfen');
   assert.ok(posCp !== -1 && posModus < posCp, 'acmedns-Prüfung muss VOR dem Zurückspielen von caddy/pki stehen');
 });
+
+test('O-172: kein HSTS 2 Jahre mehr; update.sh senkt den Altwert und prüft den Zertifikatsablauf', () => {
+  const inst = fs.readFileSync(path.join(repoRoot, 'onprem', 'install.sh'), 'utf8');
+  const upd = fs.readFileSync(path.join(repoRoot, 'onprem', 'update.sh'), 'utf8');
+  const mail = fs.readFileSync(path.join(repoRoot, 'api-backend', 'setup', 'update-alarm-mail.mjs'), 'utf8');
+  assert.doesNotMatch(inst, /set_env HSTS_MAX_AGE "63072000"/);
+  assert.match(upd, /HSTS_MAX_AGE\)" = "63072000" \]/, 'Senkung nur für den exakten Altwert');
+  assert.match(upd, /-checkend 1814400/, '21 Tage');
+  assert.match(upd, /= "internal" \]; \}; then return 0; fi/, 'internal (12-h-Blatt) wird nicht bewertet');
+  assert.ok(upd.indexOf('zertifikat_pruefen || true') < upd.indexOf('# ── Schritt 3 — Durak-Tor'), 'vor dem Durak-Tor');
+  assert.match(mail, /zertifikat_laeuft_ab:/);
+});

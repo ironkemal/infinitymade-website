@@ -71,9 +71,9 @@
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		# Permissions-Policy steht unten in zwei Matchern (A-19).
-		# HSTS: bei acmedns 86400 (1 Tag) bis Ablaufueberwachung existiert (O-172,
-		# S-47 Bedingung 5); 0 bei internal (selbstsigniert lassen, O-52);
-		# 63072000 bei klassisch mit E-Mail.
+		# HSTS: 86400 (1 Tag) bei acmedns und klassisch mit E-Mail, bis eine
+		# Erneuerung auf einer echten Box beobachtet ist (O-172, S-47 Bed. 5);
+		# 0 bei internal (selbstsigniert lassen, O-52).
 		Strict-Transport-Security "max-age={$HSTS_MAX_AGE}; includeSubDomains"
 		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' {$SUPABASE_PUBLIC_URL} {$SUPABASE_PUBLIC_WSS}; frame-src 'none'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self';"
 		-Server

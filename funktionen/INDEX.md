@@ -3,7 +3,7 @@
 > Üretim: 2026-10-08 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**3145 fonksiyon** (3063 JS · 74 bash · 8 ps1) · 382 dosya · 41 sidebar modülü
+**3146 fonksiyon** (3063 JS · 75 bash · 8 ps1) · 382 dosya · 41 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -562,12 +562,12 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 
 ### `onprem/update.sh`
 - sources: `lib-health.sh`, `lib-ip.sh`, `lib-setup-jeton.sh`
-- `log()` — Zeile 59 · calledBy: fehler, onprem/update.sh
-- `ok()` — Zeile 60 · calledBy: bildirim_degerlendir, onprem/update.sh
-- `warn()` — Zeile 61 · calledBy: bildirim_degerlendir, mail_gonder_container, onprem/update.sh
+- `log()` — Zeile 59 · calledBy: fehler, onprem/update.sh, zertifikat_pruefen
+- `ok()` — Zeile 60 · calledBy: bildirim_degerlendir, onprem/update.sh, zertifikat_pruefen
+- `warn()` — Zeile 61 · calledBy: bildirim_degerlendir, mail_gonder_container, onprem/update.sh, zertifikat_pruefen
 - `fehler()` — Zeile 65 · calledBy: fail, onprem/update.sh
 - `fail()` — Zeile 79
-- `env_wert()` — Zeile 132 · calledBy: onprem/update.sh, owner_bilgisini_guncelle
+- `env_wert()` — Zeile 132 · calledBy: onprem/update.sh, owner_bilgisini_guncelle, zertifikat_pruefen
 - `manifest_feld()` — Zeile 180 · calledBy: onprem/update.sh
 - `dateien_sha_icerik()` — Zeile 227 · calledBy: durumu_yaz
 - `onceki_sha()` — Zeile 230 · calledBy: onprem/update.sh
@@ -575,8 +575,9 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 - `owner_bilgisini_guncelle()` — Zeile 264 · calledBy: onprem/update.sh
 - `bildirim_alani_oku()` — Zeile 280 · calledBy: bildirim_degerlendir
 - `bildirim_kaydet()` — Zeile 292 · calledBy: bildirim_degerlendir
-- `mail_gonder_container()` — Zeile 305 · calledBy: bildirim_degerlendir
+- `mail_gonder_container()` — Zeile 305 · calledBy: bildirim_degerlendir, zertifikat_pruefen
 - `bildirim_degerlendir()` — Zeile 327 · calledBy: durumu_yaz
-- `geri_yukle()` — Zeile 475 · calledBy: onprem/update.sh
-- `anahtarlari_oku()` — Zeile 494 · calledBy: onprem/update.sh
-- `deger_oku()` — Zeile 498 · calledBy: onprem/update.sh
+- `zertifikat_pruefen()` — Zeile 374 · calledBy: onprem/update.sh
+- `geri_yukle()` — Zeile 510 · calledBy: onprem/update.sh
+- `anahtarlari_oku()` — Zeile 529 · calledBy: onprem/update.sh
+- `deger_oku()` — Zeile 533 · calledBy: onprem/update.sh
