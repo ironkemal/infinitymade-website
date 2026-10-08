@@ -39,7 +39,7 @@ Praxura SaaS olarak hasta verisi (randevu, reçete, tanı, KVNR) işliyor. Bu, *
 
 | # | Karar | Gerekçe (kısa) |
 |---|---|---|
-| K1 | **İki SKU:** "Praxura Lokal" (yeni ana ürün) + mevcut SaaS (beta müşterileri için yaşar, yeni satış on-prem'e) | SaaS şu an §393 açısından yasal açıkta; on-prem tek ödenebilir uyum yolu |
+| K1 | **04.10.2026 (kurucu kararı) — DEĞİŞTİ: tek ürün = kutu ("Praxura Lokal"). SaaS satılmaz** — ne yeni müşteriye ne yenilemede; "SaaS kullanın" bir çözüm önerisi değildir. Mevcut `app.praxura.de` depo bölme günü kapanır (KHS K-19 (l)/(m): sprint sonu, Kemal'in kendi kutu testinden sonra, betalardan önce). Kutu: Windows-PC, Linux-sunucu ya da praksisin **kendi** Hetzner Cloud sunucusu (KURULUM Weg A/B/C). <br>~~**İki SKU:** "Praxura Lokal" (yeni ana ürün) + mevcut SaaS (beta müşterileri için yaşar, yeni satış on-prem'e)~~ *(2026-07-06 metni)* | SaaS şu an §393 açısından yasal açıkta; on-prem tek ödenebilir uyum yolu. İki ürünü taşımak tek kişilik ekipte iki destek yüzeyi demekti (O-165) |
 | K2 | **Supabase kaldırılmıyor, self-host ediliyor** — müşteri paketinin içinde görünmez bileşen; müşteri Supabase hesabı AÇMAZ | Açık kaynak (Apache-2.0); Auth+Realtime+PostgREST+RLS+Vault self-host'ta mevcut; kod değişikliği minimal. NOT: Kullanıcının "denemiştik olmamıştı" hatırası leaked-password Pro özelliğiydi (cloud Pro planı), self-host sorunu değil |
 | K3 | **Merkezi sistem kalır (praxura.de):** müşteri kaydı, Stripe, lisans sunucusu, provisioning sayfası. **Hasta verisi asla girmez** → sadece normal B2B DSGVO; supabase.com cloud'da kalabilir | Kim ödedi/hangi plan bilgisi bizde olmalı; hasta verisi olmadığından C5/DSFA tetiklenmez |
 | K4 | **05.10.2026 (K-20, konsey + Kemal) — DEĞİŞTİ: AI = tek Praxura Azure OpenAI kaynağı (Sweden Central) + kutuya kısa ömürlü (60–90 dk) Entra jetonu.** Kutu merkezden kutu kimliğiyle jeton alır, Azure'a doğrudan gider; kalıcı anahtar kutuya hiç girmez, içerik merkezden geçmez, merkez yalnız jeton + sayaç tutar. `AI_MODE=aus\|direkt\|jeton`; müşterinin kendi anahtarı (`direkt`, BYO) **silinmez, istisna olarak kalır**. Hukuki ön şartlar (28.09 B kararı) ve şartlar: `onprem/REGISTER.md` O-169. <br>~~**AI: IONOS AI Model Hub, BYO-key** (müşterinin kendi IONOS hesabı/anahtarı). Azure yalnızca "zaten Azure'um var" istisnası için seçenek kalır~~ *(2026-07-06 metni)* | **K-20 gerekçesi:** praksislerin kendi bulut hesabı açması pratikte mümkün değil; STACKIT hesap açmadı (01.10); merkezi relay konseyde reddedildi (legal-de/guvenlik); APIM ve kendi model sunucumuz pahalı. <br>~~Azure'un vaktiyle seçilme sebebi IONOS'ta vision model olmamasıydı; artık LightOnOCR-2 + Mistral Small 24B (vision) var. IONOS: Alman şirket, OpenAI-uyumlu API, token başı ödeme, müşterilerin çoğu IONOS'u zaten tanıyor (eski 1&1)~~ |
@@ -50,7 +50,7 @@ Praxura SaaS olarak hasta verisi (randevu, reçete, tanı, KVNR) işliyor. Bu, *
 | K9 | **Lisans kill-switch = salt-okunur mod, tam kilit DEĞİL** | Hasta dokümantasyonuna erişim yasal zorunluluk; "iptal edersen verin rehin" Almanya'da satış zehiri |
 | K10 | **Destek modeli: veriye uzak erişim YOK** — "Tanılama paketi indir → bize gönder" butonu; opsiyonel ekran-paylaşımlı seans (müşteri başında, veri erişimi yok) | Veriye erişimli Fernwartung = Auftragsverarbeiter rolü geri gelir |
 | K11 | **Kanal sistemi:** `:beta` (her push otomatik, beta müşterileri) / `:stable` (yalnızca release'te, ücretli müşteriler). Tek codebase, fork yok | Beta feedback döngüsü (bugünkü "push = anında görürler") korunur; ücretliler denemelerden izole |
-| K12 | **Beta müşteri planı 3 aşamalı:** (1) şimdilik mevcut SaaS'ta, değişiklik yok → (2) paket hazır olunca sponsor Hetzner instance'ları (biz öderiz, ~€6/müşteri/ay, `:beta` kanalı) → (3) ücretlendirme anında sunucu kendi Hetzner hesaplarına devredilir. ⚠️ 07.10.2026 (legal-de): aşama 2'de de sunucu **praksisin** Hetzner hesabında açılır, ödemeyi biz iade/indirimle karşılarız — bizim hesabımızda açılırsa Auftragsverarbeiter rolü ve §393 bize geri gelir | Para almadığımız müşteriye sunucu ödetemeyiz; sponsor dönem migration+kurulum hattının gerçek testidir |
+| K12 | **05.10.2026 (KHS K-19 (k), Kemal) — DEĞİŞTİ: beta kutuları baştan praksisin KENDİ yerinde:** kendi PC'si ya da kendi Hetzner hesabı (`:beta` kanalı). **Bizim Hetzner hesabımızda sponsorlu instance yok** — orada hasta verisi bizim bulut sözleşmemizde durur, Auftragsverarbeiter rolü + §393 bize geri gelir (K6'nın kapattığı kapı, O-165). Sunucu maliyetini üstlenmek istersek iade/indirimle yaparız, sözleşme praksiste kalır (legal-de 07.10). Beta sırası: SaaS'taki beta hesapları kutu hazır olunca kutuya geçer, sonra `app.praxura.de` kapanır. Hetzner'de §393 praksis için geçerlidir; C5 Typ 2 Cloud Server + Storage Box'ı kapsıyor (Hetzner kaynağı, KURULUM §9, K2b.9). <br>~~**Beta müşteri planı 3 aşamalı:** (1) şimdilik mevcut SaaS'ta, değişiklik yok → (2) paket hazır olunca sponsor Hetzner instance'ları (biz öderiz, ~€6/müşteri/ay, `:beta` kanalı) → (3) ücretlendirme anında sunucu kendi Hetzner hesaplarına devredilir~~ *(2026-07-06 metni)* | Para almadığımız müşteriye sunucu ödetemeyiz; sponsor dönem migration+kurulum hattının gerçek testidir |
 | K13 | **Fiyat iletişimi:** kalem kalem değil toplam — "€49/ay + ~€10 sunucu (kendi hesabınızda), veriniz %100 sizde". AI maliyeti sihirbazda tahminle gösterilir (~50 rezept ≈ €2/ay) | Kalem sayısı psikolojik yük; toplam + kıyas (Theorg/Optica daha pahalı) satışı kolaylaştırır |
 | K14 | **Geçiş takvimi:** PoC şimdi → normal geliştirme "buluta yeni zincir ekleme" kuralıyla devam → paketleme sprinti ürün olgunlaşınca (para almadan önce) | Tam paralel çalışma tek kişilik ekipte özellik geliştirmeyi öldürür; sona bırakmak makası açar |
 
@@ -281,12 +281,12 @@ Görevler:
 Görevler:
 - [ ] 5.1 **Tenant export scripti:** Supabase cloud'dan tek bir `owner_id`'nin TÜM verisini (profiles, bookings, services, businesses, prescriptions, billing kayıtları, **5 bucket'taki storage dosyaları**, **vault secret'ları — düz metin export etme, hedefte yeniden şifrele (D6)** — şemadan tam liste çıkar) tutarlı şekilde çek (FK sırasına dikkat) → taşınabilir arşiv. **Ölü tabloları taşıma (D7, doğrulanmış liste):** yalnızca `user_credits`, `applications`, `accommodations`, `trip_plans`, `trip_history` kapsam dışı. `leads` (hasta kayıtları!), `scraper_data`, `attendance`, `vehicles`, `fahrten`, `chatbot_usage` (DSGVO kodu referanslı) TAŞINIR/şemada kalır. Export kapsamı `api/dsgvo.js`'teki USER_TABLES listesiyle çapraz doğrulanmalı. Referans tabloları (`heilmittel_tarif`, `dta_schluessel`, `icd10_titles`, `krankenkassen`, `heilmittel_catalog`, `diagnosegruppen`, `kostentraeger`, `heilmittel_position`) tenant-verisi değil → paket seed-data'sından gelir, export'a girmez.
 - [ ] 5.2 **Import scripti:** arşivi on-prem Postgres'e yükle; auth kullanıcılarını yeniden oluştur (parola sıfırlama maili akışıyla); doğrulama raporu (satır sayıları kaynak=hedef).
-- [ ] 5.3 Beta müşterileri için sponsor instance'lar (K12): bizim ödediğimiz Hetzner sunucuları, `:beta` kanalı; her müşteri için export→import→müşteriyle birlikte doğrulama.
+- [ ] 5.3 Beta müşterilerinin kutusu (K12, 05.10.2026): praksisin kendi PC'si ya da kendi Hetzner hesabı, `:beta` kanalı, kurulum `praxura.de/install.sh`/`install.ps1` (K2b.14); her müşteri için export→import→müşteriyle birlikte doğrulama. ~~bizim ödediğimiz Hetzner sunucuları~~ *(bizim hesapta sunucu yok — O-165)*
 - [ ] 5.4 Eski SaaS erişimini müşteri bazında kapatma prosedürü (yönlendirme sayfası + veri silme takvimi, DSGVO-uyumlu).
 
 **Kabul kriterleri:**
 - ✅ Bir test tenant'ı uçtan uca taşındı; satır sayıları ve örnek kayıtlar birebir; kullanıcı login olabildi.
-- ✅ En az bir gerçek beta müşterisi sponsor instance'da sorunsuz 2 hafta geçirdi.
+- ✅ En az bir gerçek beta müşterisi kendi kutusunda (kendi PC'si ya da kendi Hetzner hesabı, K12) sorunsuz 2 hafta geçirdi. ~~sponsor instance'da~~ *(05.10.2026, O-165)*
 
 ---
 
@@ -319,9 +319,9 @@ Görevler:
 |---|---|---|
 | Müşteri | Hetzner sunucu (CX22 sınıfı) | ~€6/ay |
 | Müşteri | Storage Box (yedek) | ~€4/ay |
-| Müşteri | IONOS AI kullanımı | ~€2–5/ay (kullanıma göre; PoC'de doğrulanacak) |
-| Müşteri | Praxura lisansı | mevcut plan fiyatları (€29/49/99) |
-| Biz | Beta sponsor sunucuları (geçici) | ~€6 × müşteri sayısı/ay |
+| Müşteri | KI (Rezept-Scan) — K4/K-20: Praxura'nın Azure kaynağı + kutuya kısa ömürlü jeton | lisansa dahil mi ayrı mı: fiyatla birlikte belirlenecek ~~IONOS AI kullanımı ~€2–5/ay~~ |
+| Müşteri | Praxura lisansı | **fiyat henüz belirlenmedi** (10.09.2026 kararı; en düşük paket ~59'dan) ~~mevcut plan fiyatları (€29/49/99)~~ |
+| Biz | ~~Beta sponsor sunucuları (geçici)~~ | yok — beta kutuları praksisin kendi hesabında (K12, O-165); istenirse iade/indirim |
 | Biz | Merkez (Vercel+Supabase küçük ölçek+domain) | mevcut düzeyde |
 | Biz | Geliştirme eforu | ~2,5–4 ay (Faz 0–6 toplamı) |
 | Biz | DÜŞEN kalem | C5/ISO 27001 (€15–200k) — uygulanmaz hale gelir |
