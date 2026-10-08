@@ -188,7 +188,7 @@ jobs:
       # Morgen in JEDER Kundenbox gleichzeitig (ONPREM_MIGRATION_PLAYBOOK.md,
       # onprem/RELEASE-STANDARD.md, Register O-40/O-41).
       #
-      # Der Test läuft mit dem ECHTEN CMD (pm2-runtime) — nicht mit `npm start`,
+      # Der Test läuft mit dem ECHTEN CMD (node start.mjs, O-179) — nicht mit `npm start`,
       # nicht mit `npx`. Der Unterschied war schon einmal die Ursache.
       # Die Zugangsdaten sind absichtlich Dummys: geprüft wird der Start, nicht
       # die Funktion. Deshalb fragt der Test /health (Leben) und nicht
@@ -217,7 +217,7 @@ jobs:
             -e GOOGLE_REDIRECT_URL=https://smoke.invalid/cb \
             calendar-api:smoke
 
-          # 30 s Geduld: PM2 forkt zwei Worker, das dauert im Runner spürbar.
+          # 30 s Geduld: start.mjs forkt zwei Worker, das dauert im Runner spürbar.
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:3000/health > /tmp/health.json 2>/dev/null; then
               echo "✓ Container antwortet nach ${i}s:"

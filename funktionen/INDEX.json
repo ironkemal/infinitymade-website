@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-10-08",
- "dateien": 382,
- "funktionen": 3151,
+ "dateien": 383,
+ "funktionen": 3155,
  "module": [
   "abrechnung",
   "anamnese",
@@ -1325,7 +1325,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "log"
+   ],
    "calledBy": [],
    "modules": [],
    "gemeinsam": false,
@@ -6180,6 +6182,7 @@
     "json",
     "ladeBetriebsart",
     "ladeDtaOriginalbytes",
+    "log",
     "logAccess",
     "matchesFrozenIntent",
     "parseOriginalDtaMessage",
@@ -16974,6 +16977,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "log",
     "normalise",
     "pruefeRegex",
     "regelnAusJson"
@@ -17067,6 +17071,7 @@
    "storage": [],
    "calls": [
     "erwarteteZaehlerLesen",
+    "log",
     "migrationenLesen",
     "planErstellen",
     "pruefeVersionen",
@@ -17094,6 +17099,7 @@
    "storage": [],
    "calls": [
     "erwarteteZaehlerLesen",
+    "log",
     "zaehlerPruefen"
    ],
    "calledBy": [
@@ -19121,6 +19127,7 @@
     "istRfc1918",
     "kimlikVerzeichnis",
     "ladeKimlik",
+    "log",
     "merkezFetch"
    ],
    "calledBy": [
@@ -19170,6 +19177,7 @@
    "calls": [
     "kimlikVerzeichnis",
     "ladeKimlik",
+    "log",
     "merkezFetch"
    ],
    "calledBy": [
@@ -19457,7 +19465,8 @@
     "durum",
     "frage",
     "kayitAusfuehren",
-    "kimlikVerzeichnis"
+    "kimlikVerzeichnis",
+    "log"
    ],
    "calledBy": [],
    "modules": [],
@@ -20212,6 +20221,7 @@
    "storage": [],
    "calls": [
     "ladeXmlAusZip",
+    "log",
     "neuesterStand",
     "parseXml",
     "vergleiche",
@@ -20477,6 +20487,7 @@
    "calls": [
     "formatBericht",
     "ladeXmlAusZip",
+    "log",
     "neuesterStand",
     "parseXml",
     "vergleiche"
@@ -21777,7 +21788,9 @@
    ],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "log"
+   ],
    "calledBy": [
     "oeffne",
     "tick",
@@ -22383,6 +22396,195 @@
    "uiPfad": []
   },
   {
+   "name": "log",
+   "kind": "arrow",
+   "lang": "js",
+   "file": "api-backend/start.mjs",
+   "start": 35,
+   "end": 44,
+   "lines": 10,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "set",
+    "starte"
+   ],
+   "calledBy": [
+    "assertEUDataBoundary",
+    "caaAbgleichSchritt",
+    "createZuzahlungsforderungRouter",
+    "getSector",
+    "init",
+    "initAnamnese",
+    "initCalendar",
+    "ipAbgleichSchritt",
+    "main",
+    "mountCalendar",
+    "mountEinwilligung",
+    "neuerBkKanal",
+    "renderBkActionFahrtState",
+    "renderCalEmpList",
+    "renderSidebar",
+    "runMigrations",
+    "schliesse",
+    "selectDate",
+    "showToast",
+    "starte",
+    "stoppe",
+    "zaehlerLaufen"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 35 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "starte",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/start.mjs",
+   "start": 39,
+   "end": 44,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "log",
+    "set"
+   ],
+   "calledBy": [
+    "log"
+   ],
+   "modules": [
+    "abrechnung",
+    "anamnese",
+    "anfragen",
+    "b2b",
+    "belegliste",
+    "bkActionArrivedBtn",
+    "bkActionFahrtEndBtn",
+    "bkActionFahrtStartBtn",
+    "bkActionHbCopyBtn",
+    "doctors",
+    "fahrtenbuch",
+    "fbFahrtenExportCsv",
+    "fbFahrtenExportProt",
+    "fbFahrtenExportVerz",
+    "fbFahrtenRefresh",
+    "fbReportRefresh",
+    "fbVehicleAddBtn",
+    "feSaveBtn",
+    "fsAddVehicleBtn",
+    "fsSaveBtn",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "mahnwesen",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "settings",
+    "team",
+    "ueberblick",
+    "vehEditSaveBtn",
+    "verordnungen",
+    "vorlagen",
+    "warteliste"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 35 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "rssKb",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/start.mjs",
+   "start": 62,
+   "end": 67,
+   "lines": 6,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "stoppe",
+   "kind": "function",
+   "lang": "js",
+   "file": "api-backend/start.mjs",
+   "start": 79,
+   "end": 85,
+   "lines": 7,
+   "spiegelHinweis": null,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "log"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "physioRows",
    "kind": "function",
    "lang": "js",
@@ -22545,6 +22747,7 @@
    "calls": [
     "KEY",
     "buildInsertSql",
+    "log",
     "normalise",
     "physioRows",
     "podoRows"
@@ -27283,6 +27486,7 @@
     "findFirstAvailable",
     "injectCSS",
     "loadMonthDots",
+    "log",
     "parseStr",
     "render",
     "renderSideItems",
@@ -27615,6 +27819,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "log",
     "parseStr",
     "render",
     "renderSideItems"
@@ -28517,7 +28722,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "log"
+   ],
    "calledBy": [
     "_getDiagnoseBereich",
     "autoSeedGkvServices",
@@ -29012,6 +29219,7 @@
     "hasModuleAccess",
     "loadModulePermissions",
     "loadVisibilityMatrix",
+    "log",
     "switchPanel",
     "t"
    ],
@@ -31305,6 +31513,7 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "log",
     "updateCalendarForEmployee"
    ],
    "calledBy": [
@@ -31609,6 +31818,7 @@
     "handleRxSessionDropToModal",
     "isPraxisSector",
     "loadSlots",
+    "log",
     "mountCalendar",
     "renderCalEmpChips",
     "renderCalEmpList",
@@ -32987,6 +33197,7 @@
    "storage": [],
    "calls": [
     "getOwnerId",
+    "log",
     "parseNameMitGeburt"
    ],
    "calledBy": [
@@ -43430,6 +43641,7 @@
     "loadPatientDetailRezepte",
     "loadSettings",
     "loadTherapeutenStatistik",
+    "log",
     "lookupExistingPatient",
     "markiereBefunde",
     "mountEmpfangsnachweise",
@@ -43461,6 +43673,7 @@
     "schreibeItsgTrustAnchors",
     "setze",
     "sollZeilen",
+    "starte",
     "summenFuer",
     "tally",
     "togglePopover",
@@ -43503,11 +43716,12 @@
     "ueberblick",
     "vehEditSaveBtn",
     "verordnungen",
-    "vorlagen"
+    "vorlagen",
+    "warteliste"
    ],
    "gemeinsam": true,
    "uiPfad": [
-    "ortak yardımcı — 34 modülden çağrılıyor"
+    "ortak yardımcı — 35 modülden çağrılıyor"
    ]
   },
   {
@@ -49874,6 +50088,7 @@
     "loadDataSharing",
     "loadRechnungen",
     "loadTeam",
+    "log",
     "lsWireToggle",
     "montiereVerordnungPruefen",
     "mountRechnungsansicht",
@@ -49929,6 +50144,7 @@
     "initAnamnese",
     "installiereArztSperreBanner",
     "loadAerzte",
+    "log",
     "lsWireToggle",
     "montiereVerordnungPruefen",
     "mountVerordnungPodo",
@@ -70725,6 +70941,7 @@
    "storage": [],
    "calls": [
     "aktualisiereKopf",
+    "log",
     "pruefeKlick",
     "zeichneFormular"
    ],
@@ -90462,7 +90679,9 @@
    "writes": [],
    "endpoints": [],
    "storage": [],
-   "calls": [],
+   "calls": [
+    "log"
+   ],
    "calledBy": [
     "_doStripePortalRedirect",
     "_enterAnsichtEditMode",
@@ -98023,7 +98242,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
-    "ensureRoot"
+    "ensureRoot",
+    "log"
    ],
    "calledBy": [
     "initKioskModeWired"

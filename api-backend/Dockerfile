@@ -15,6 +15,7 @@ RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 # Zeile ergaenzen.
 COPY server.js ./
 COPY instrument.js ./
+COPY start.mjs ./
 COPY _lib ./_lib
 COPY ai ./ai
 COPY billing ./billing
@@ -63,33 +64,22 @@ RUN addgroup -S app && adduser -S app -G app && chown -R app:app /app \
   && mkdir -p /var/lib/praxura/kimlik /var/lib/praxura/acmedns \
   && chown -R app:app /var/lib/praxura \
   && chmod 700 /var/lib/praxura/kimlik /var/lib/praxura/acmedns
+# PM2_HOME bleibt nur für Phase 1 von O-179: der SaaS-VPS überschreibt CMD noch
+# per compose-"command:" mit pm2-runtime (api-backend/docker-compose.yml). Fällt mit pm2.
 ENV PM2_HOME=/tmp/.pm2
 USER app
 
-# ESM mode: Sentry must be loaded via --import to instrument Express BEFORE
-# the app code runs. See https://docs.sentry.io/platforms/javascript/guides/express/install/esm/
-#
-# Explicit path to the pm2-runtime bin: node_modules/.bin is NOT on the image
-# PATH, so a bare "pm2-runtime" CMD fails with MODULE_NOT_FOUND (verified in a
-# real container). --node-args forwards --import to each forked cluster worker
-# so Sentry instruments every worker, not just the PM2 master.
-#
-# O-83 (12.09.2026): drei Schichten gegen unbegrenztes Wachstum, in dieser
-# Reihenfolge feuernd (onprem-Konsultation) — Node sieht die Docker-cgroup-
-# Grenze NICHT von selbst (kein "mem_limit"-Bewusstsein), ohne die inneren
-# zwei Schichten garantiert `mem_limit` allein nur ein zufällig getimtes
-# SIGKILL statt es zu verhindern:
-#   1. --max-old-space-size=256   V8-Heap pro Worker (JS-Objekte/Closures;
-#      Buffer/base64-Rezeptbilder liegen AUSSERHALB des Heaps, treffen das
-#      hier nicht — das ist bewusst, siehe 2.)
-#   2. --max-memory-restart 500M  RSS pro Worker (PM2) — faengt genau das,
-#      was 1. nicht sieht: Buffer/native Speicher. Bei Ueberschreitung
-#      startet PM2 NUR den betroffenen Worker sauber neu, der andere
-#      bedient weiter — kontrollierter Ausfall statt Kernel-SIGKILL.
-#      Gemessen (WSL-Testbox, 13.09.2026): 2 gleichzeitige ~15MB-Rezept-
-#      Anfragen (Grenze aus server.js:89) trieben einen Worker auf ~295 MB
-#      RSS — 500M laesst dafuer Luft, faengt aber echtes Ausufern ab.
-#   3. mem_limit im docker-compose.yml (Container-Gesamtgrenze) — letzte
-#      Instanz, soll im Normalbetrieb NIE greifen.
-# Herkunft/Bezug: onprem/REGISTER.md O-83.
-CMD ["./node_modules/.bin/pm2-runtime", "start", "server.js", "-i", "2", "--max-memory-restart", "500M", "--node-args", "--max-old-space-size=256 --import ./instrument.js"]
+# O-179 (08.10.2026): start.mjs statt pm2-runtime — pm2 (AGPL-3.0) ruft täglich
+# version.pm2.io auf, nicht abschaltbar (G1). start.mjs übernimmt 1:1:
+#   · 2 Worker (node:cluster), NODE_APP_INSTANCE 0/1 (server.js 23:55-Tor, ip-abgleich)
+#   · --import ./instrument.js je Worker (Sentry vor Express, ESM)
+#   · O-83 drei Schichten gegen unbegrenztes Wachstum:
+#       1. --max-old-space-size=256  V8-Heap pro Worker
+#       2. RSS > 500 MB je Worker (/proc) → nur dieser Worker startet neu
+#          (gemessen 13.09.2026: 2 gleichzeitige ~15MB-Rezepte ≈ 295 MB RSS)
+#       3. mem_limit im docker-compose.yml — letzte Instanz
+#   · SIGTERM an die Worker, Absturz → Neustart mit wachsender Pause.
+# Gemessen 08.10.2026 im echten Image (Stub-server.js): 2 Worker verteilt, docker stop
+# 0,4 s, Absturz-Backoff 2/4/8 s, 660-MB-Worker nach ≤ 30 s neu, der andere blieb.
+# "node" liegt im Image auf dem PATH (anders als node_modules/.bin, Docker-CMD-Lehre).
+CMD ["node", "start.mjs"]
