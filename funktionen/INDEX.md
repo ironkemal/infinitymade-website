@@ -474,14 +474,14 @@ Bu bir kopya listesi değil, bir isim çakışması listesi — aynı isim farkl
 ## Shell (onprem/)
 
 ### `installieren/install.ps1`
-- `Log()` — Zeile 96 · calledBy: Fehler, Ok, Warn, installieren/install.ps1
-- `Ok()` — Zeile 97 · calledBy: installieren/install.ps1
-- `Warn()` — Zeile 98 · calledBy: installieren/install.ps1
-- `Fehler()` — Zeile 99 · calledBy: installieren/install.ps1
-- `Frage()` — Zeile 108 · calledBy: installieren/install.ps1
-- `InWsl()` — Zeile 120 · calledBy: installieren/install.ps1
-- `BoxEnv()` — Zeile 129 · calledBy: installieren/install.ps1
-- `DistroVorhanden()` — Zeile 134
+- `Log()` — Zeile 103 · calledBy: Fehler, Ok, Warn, installieren/install.ps1
+- `Ok()` — Zeile 104 · calledBy: installieren/install.ps1
+- `Warn()` — Zeile 105 · calledBy: installieren/install.ps1
+- `Fehler()` — Zeile 106 · calledBy: installieren/install.ps1
+- `Frage()` — Zeile 115 · calledBy: installieren/install.ps1
+- `InWsl()` — Zeile 127 · calledBy: installieren/install.ps1
+- `BoxEnv()` — Zeile 136 · calledBy: installieren/install.ps1
+- `DistroVorhanden()` — Zeile 141
 
 ### `installieren/install.sh`
 - sources: `os-release`

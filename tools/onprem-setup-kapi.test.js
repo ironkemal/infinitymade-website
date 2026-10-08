@@ -272,6 +272,22 @@ test('install.sh: x86_64-Prüfung im Hardware-Schritt, VOR Software/Docker; SSH-
   assert.doesNotMatch(ssh, /\bfail\b|sed -i|sshd_config/, 'nur warnen, nichts ändern (K10)');
 });
 
+test('install.ps1: Endmarke ist letzte Zeile, Prüfung steht vor jedem Schritt (guvenlik S-52 Nr. 1)', () => {
+  const s = lies('installieren', 'install.ps1');
+  assert.ok(s.trimEnd().endsWith('# PRAXURA-SKRIPT-ENDE'), 'letzte Zeile muss die Endmarke sein');
+  const iPruef = s.indexOf("EndsWith('# PRAXURA-' + 'SKRIPT-ENDE')");
+  assert.ok(iPruef > 0, 'Prüfung der Endmarke fehlt');
+  assert.ok(iPruef < s.indexOf('Start-Process powershell.exe -Verb RunAs'), 'vor der Selbst-Elevation');
+  assert.ok(iPruef < s.indexOf('[1/11]'), 'vor Schritt 1');
+  assert.equal(s.split('# PRAXURA-SKRIPT-ENDE').length, 2, 'Marke genau einmal (die Prüfzeile setzt sie zusammen)');
+});
+
+test('installieren/install.sh: Aufruf nur in der letzten Zeile (guvenlik S-52 Nr. 1)', () => {
+  const s = lies('installieren', 'install.sh').trimEnd().split('\n');
+  assert.equal(s[s.length - 1], 'main "$@"');
+  assert.equal(s.filter((z) => /^main "\$@"/.test(z)).length, 1);
+});
+
 test('praxura-installieren.ps1: bricht auf ARM vor jeder Installation ab (O-174)', () => {
   const s = lies('installieren', 'install.ps1');
   const iArch = s.indexOf("if ($arch -ne 'AMD64')");

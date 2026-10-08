@@ -72,6 +72,13 @@ $SkriptKopie   = Join-Path $DatenOrt 'install.ps1'
 # K2b.14: eigener Text — aus der Datei oder (irm | scriptblock) aus dem Speicher.
 # Nur auf oberster Ebene gueltig ($MyInvocation in einer Funktion waere die Funktion).
 $eigenerText = if ($PSCommandPath) { [IO.File]::ReadAllText($PSCommandPath) } else { $MyInvocation.MyCommand.ScriptBlock.ToString() }
+# guvenlik S-52 Nr. 1: ein an einem Zeilenende abgerissener Download parst sauber und liefe bis
+# zur Abrissstelle. Deshalb VOR jedem Schritt: endet der eigene Text mit der Endmarke? (Die Marke
+# wird hier zusammengesetzt, damit diese Zeile sie nicht selbst enthält.)
+if (-not $eigenerText.TrimEnd().EndsWith('# PRAXURA-' + 'SKRIPT-ENDE')) {
+  Write-Host 'Das Skript wurde nicht vollstaendig geladen (Verbindung abgebrochen?). Es wurde nichts veraendert — bitte erneut starten.'
+  exit 1
+}
 $utf8Bom = New-Object System.Text.UTF8Encoding $true   # PS 5.1 liest Umlaute nur mit BOM richtig
 $istAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $istAdmin) {
@@ -514,3 +521,5 @@ if ($installiertJetzt) {
   }
 }
 
+
+# PRAXURA-SKRIPT-ENDE
